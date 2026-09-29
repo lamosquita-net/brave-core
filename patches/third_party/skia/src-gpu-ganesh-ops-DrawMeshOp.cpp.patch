@@ -1,0 +1,19 @@
+diff --git a/src/gpu/ganesh/ops/DrawMeshOp.cpp b/src/gpu/ganesh/ops/DrawMeshOp.cpp
+index b2db7d873a2b2709b474c7a736b3142bc47e1889..c02825b10c7d239113273e5717be98e008b99703 100644
+--- a/src/gpu/ganesh/ops/DrawMeshOp.cpp
++++ b/src/gpu/ganesh/ops/DrawMeshOp.cpp
+@@ -1000,10 +1000,13 @@ GrOp::CombineResult MeshOp::onCombineIfPossible(GrOp* t, SkArenaAlloc*, const Gr
+         return CombineResult::kCannotCombine;
+     }
+ 
++    if (fVertexCount > INT32_MAX - that->fVertexCount) {
++        return CombineResult::kCannotCombine;
++    }
+     if (SkToBool(fIndexCount) != SkToBool(that->fIndexCount)) {
+         return CombineResult::kCannotCombine;
+     }
+-    if (SkToBool(fIndexCount) && fVertexCount + that->fVertexCount > SkToInt(UINT16_MAX)) {
++    if (SkToBool(fIndexCount) && fVertexCount > SkToInt(UINT16_MAX) - that->fVertexCount) {
+         return CombineResult::kCannotCombine;
+     }
+ 

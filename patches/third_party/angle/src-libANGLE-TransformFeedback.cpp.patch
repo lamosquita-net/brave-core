@@ -1,0 +1,23 @@
+diff --git a/src/libANGLE/TransformFeedback.cpp b/src/libANGLE/TransformFeedback.cpp
+index af1875ac503cdef37f21c3dc4e15aa4ab2b3ad04..7a9ed97e91c48fed53157b63d0b8d2952711771a 100644
+--- a/src/libANGLE/TransformFeedback.cpp
++++ b/src/libANGLE/TransformFeedback.cpp
+@@ -329,6 +329,18 @@ rx::TransformFeedbackImpl *TransformFeedback::getImplementation() const
+     return mImplementation;
+ }
+ 
++bool TransformFeedback::isBufferBound(BufferID bufferID) const
++{
++    for (const auto &buffer : mState.mIndexedBuffers)
++    {
++        if (buffer.id() == bufferID)
++        {
++            return true;
++        }
++    }
++    return false;
++}
++
+ void TransformFeedback::onBindingChanged(const Context *context, bool bound)
+ {
+     for (auto &buffer : mState.mIndexedBuffers)
