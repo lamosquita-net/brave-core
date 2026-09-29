@@ -40,6 +40,7 @@ from lib.l10n.grd_string_replacements import (flyweb_message_kind,
 from lib.l10n.grd_utils import get_fingerprint_for_xtb  # needs FP
 
 XTB_ID_RE = re.compile(r'(<translation id=")(\d+)(")')
+XTB_LANG_RE = re.compile(r'<translationbundle lang="([^"]+)"')
 XTB_MSG_RE = re.compile(r'(<translation id="(\d+)"[^>]*>)(.*?)(</translation>)',
                         re.S)
 
@@ -72,9 +73,10 @@ def inner_xml(elem):
 
 def rebrand_xtb(text, kinds):
     """Rebrands each translation as its English message was rebranded."""
+    lang = XTB_LANG_RE.search(text).group(1)
     return XTB_MSG_RE.sub(
-        lambda m: m.group(1) + flyweb_rebrand_as(kinds.get(m.group(2)),
-                                                 m.group(3)) + m.group(4),
+        lambda m: m.group(1) + flyweb_rebrand_as(
+            kinds.get(m.group(2)), m.group(3), lang) + m.group(4),
         text)
 
 
