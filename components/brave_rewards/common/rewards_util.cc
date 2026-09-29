@@ -26,25 +26,6 @@ namespace brave_rewards {
 
 namespace {
 
-bool IsDisabledByPolicy(PrefService* prefs) {
-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
-  DCHECK(prefs);
-  return prefs->IsManagedPreference(prefs::kDisabledByPolicy) &&
-         prefs->GetBoolean(prefs::kDisabledByPolicy);
-#else
-  return false;
-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
-}
-
-bool IsDisabledByFeature() {
-#if BUILDFLAG(IS_ANDROID)
-  if (!base::FeatureList::IsEnabled(features::kBraveRewards)) {
-    return true;
-  }
-#endif  // BUILDFLAG(IS_ANDROID)
-  return false;
-}
-
 bool IsOFACSanctionedRegion(const std::string& country_code) {
   return brave_l10n::IsISOCountryCodeOFACSanctioned(country_code);
 }
@@ -56,11 +37,11 @@ const std::string GetCountryCode() {
 }  // namespace
 
 bool IsSupported(PrefService* prefs, IsSupportedOptions options) {
-  bool is_supported = !IsDisabledByPolicy(prefs) && !IsDisabledByFeature();
-  if (is_supported && options != IsSupportedOptions::kSkipRegionCheck) {
-    return !IsUnsupportedRegion();
-  }
-  return is_supported;
+  // FlyWeb: Brave Rewards (BAT, ads, creator tipping) is always off. This is
+  // the same path Brave takes when the BraveRewardsDisabled policy is set:
+  // RewardsServiceFactory::GetForProfile() returns nullptr and the Rewards
+  // WebUI and toolbar button are not created.
+  return false;
 }
 
 bool IsUnsupportedRegion() {
