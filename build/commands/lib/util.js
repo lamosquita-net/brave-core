@@ -49,7 +49,23 @@ async function applyPatches() {
     s => s.path = path.join('third_party', 'catapult', s.path))
   devtoolsFrontendPatchStatus.forEach(
     s => s.path = path.join('third_party', 'devtools-frontend', 'src', s.path))
-  const allPatchStatus = [...chromiumPatchStatus, ...v8PatchStatus, ...catapultPatchStatus, ...devtoolsFrontendPatchStatus]
+  // FlyWeb: security backports for third-party repos that Brave itself does
+  // not patch. Patches live in patches/<repo path>/ and are applied the same
+  // way as the upstream ones.
+  const flywebRepos = [
+    path.join('third_party', 'angle'),
+    path.join('third_party', 'skia'),
+    path.join('third_party', 'libvpx', 'source', 'libvpx'),
+  ]
+  const flywebPatchStatus = []
+  for (const repo of flywebRepos) {
+    const patcher = new GitPatcher(path.join(patchesPath, repo),
+                                   path.join(chromiumRepoPath, repo))
+    const status = await patcher.applyPatches()
+    status.forEach(s => s.path = path.join(repo, s.path))
+    flywebPatchStatus.push(...status)
+  }
+  const allPatchStatus = [...chromiumPatchStatus, ...v8PatchStatus, ...catapultPatchStatus, ...devtoolsFrontendPatchStatus, ...flywebPatchStatus]
   Log.allPatchStatus(allPatchStatus, 'Chromium')
 
   const hasPatchError = allPatchStatus.some(p => p.error)

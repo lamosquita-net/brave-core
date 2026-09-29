@@ -1,0 +1,66 @@
+diff --git a/src/libANGLE/validationES2.cpp b/src/libANGLE/validationES2.cpp
+index ab807e8d6f1f041b164fafafb445ea08a2488531..497cff023e174c01a7af6fb2b8e30fadd5b99b75 100644
+--- a/src/libANGLE/validationES2.cpp
++++ b/src/libANGLE/validationES2.cpp
+@@ -3640,11 +3640,26 @@ bool ValidateBufferData(const Context *context,
+         return false;
+     }
+ 
+-    if (buffer->hasWebGLXFBBindingConflict(context->isWebGL()))
++    // Do some additional WebGL-specific validation
++    if (ANGLE_UNLIKELY(context->isWebGL()))
+     {
+-        context->validationError(entryPoint, GL_INVALID_OPERATION,
+-                                 kBufferBoundForTransformFeedback);
+-        return false;
++        if (buffer->hasWebGLXFBBindingConflict(true))
++        {
++            context->validationError(entryPoint, GL_INVALID_OPERATION,
++                                     kBufferBoundForTransformFeedback);
++            return false;
++        }
++
++        const TransformFeedback *transformFeedbackObject =
++            context->getState().getCurrentTransformFeedback();
++        if (transformFeedbackObject && transformFeedbackObject->isActive() &&
++            !transformFeedbackObject->isPaused() &&
++            transformFeedbackObject->isBufferBound(buffer->id()))
++        {
++            context->validationError(entryPoint, GL_INVALID_OPERATION,
++                                     kBufferBoundForTransformFeedback);
++            return false;
++        }
+     }
+ 
+     if (buffer->isImmutable())
+@@ -3699,11 +3714,26 @@ bool ValidateBufferSubData(const Context *context,
+         return false;
+     }
+ 
+-    if (buffer->hasWebGLXFBBindingConflict(context->isWebGL()))
++    // Do some additional WebGL-specific validation
++    if (ANGLE_UNLIKELY(context->isWebGL()))
+     {
+-        context->validationError(entryPoint, GL_INVALID_OPERATION,
+-                                 kBufferBoundForTransformFeedback);
+-        return false;
++        if (buffer->hasWebGLXFBBindingConflict(true))
++        {
++            context->validationError(entryPoint, GL_INVALID_OPERATION,
++                                     kBufferBoundForTransformFeedback);
++            return false;
++        }
++
++        const TransformFeedback *transformFeedbackObject =
++            context->getState().getCurrentTransformFeedback();
++        if (transformFeedbackObject && transformFeedbackObject->isActive() &&
++            !transformFeedbackObject->isPaused() &&
++            transformFeedbackObject->isBufferBound(buffer->id()))
++        {
++            context->validationError(entryPoint, GL_INVALID_OPERATION,
++                                     kBufferBoundForTransformFeedback);
++            return false;
++        }
+     }
+ 
+     if (buffer->isImmutable() &&
