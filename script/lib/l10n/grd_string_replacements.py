@@ -76,3 +76,13 @@ main_text_only_replacements = [
     ('Copyright \xa9', 'Copyright'),
     ('Copyright', 'Copyright \xa9'),
 ]
+
+
+# FlyWeb: the browser is called FlyWeb. Brave's own services keep their name
+# (they are Brave's, and FlyWeb disables most of them), as do legal notices.
+# Applied after all the replacements above, so Chromium strings end up as
+# Chrome -> Brave -> FlyWeb. Idempotent.
+flyweb_replacements = [
+    (r'\bBrave\b(?!\s+(?:Wallet|Rewards|News|VPN|Vpn|Search|Talk|Ads|Software'
+     r'|Authors|Sync|Today|Leo)\b)', r'FlyWeb'),
+]

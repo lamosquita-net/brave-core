@@ -15,6 +15,7 @@ import lxml.etree  # pylint: disable=import-error
 from lib.l10n.grd_string_replacements import (branding_replacements,
                                               default_replacements,
                                               fixup_replacements,
+                                              flyweb_replacements,
                                               main_text_only_replacements)
 from lib.l10n.validation import validate_tags_in_one_string
 
@@ -36,6 +37,8 @@ def braveify_grd_text(text, is_main_text, branding_replacements_only):
         for (pattern, to) in default_replacements:
             text = re.sub(pattern, to, text)
     for (pattern, to) in fixup_replacements:
+        text = re.sub(pattern, to, text)
+    for (pattern, to) in flyweb_replacements:
         text = re.sub(pattern, to, text)
     if is_main_text:
         for (pattern, to) in main_text_only_replacements:
