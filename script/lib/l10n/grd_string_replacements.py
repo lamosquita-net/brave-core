@@ -95,6 +95,22 @@ flyweb_replacements = [
 FLYWEB_LEGAL_MARKER = 'Brave Software'
 FLYWEB_COMPANY = ('Brave Software Inc', 'lamosquita')
 
+# The about pages' copyright line credits lamosquita next to The Brave
+# Authors. Translations cannot be edited word by word (the order changes per
+# language and the previous pass turned "Brave Authors" into "FlyWeb
+# Authors"), so they are rewritten from a template: Spanish by hand, English
+# for the rest.
+_FLYWEB_COPYRIGHT_RE = re.compile(
+    r'(\s*Copyright \xa9 (?:<ph[^>]*>.*?</ph>|<ph[^>]*/>) )'
+    r'(?:lamosquita and )?(The Brave Authors\. All rights reserved\.\s*)$', re.S)
+_FLYWEB_COPYRIGHT_PH_RE = re.compile(r'<ph name="[^"]+" ?/>')
+FLYWEB_COPYRIGHT = {
+    'es': 'Copyright \xa9 {ph} lamosquita y los creadores de Brave. '
+          'Todos los derechos reservados.',
+    '': 'Copyright \xa9 {ph} lamosquita and The Brave Authors. '
+        'All rights reserved.',
+}
+
 _FLYWEB_MESSAGE_RE = re.compile(r'(<(message|translation)\b[^>]*>)(.*?)(</\2>)',
                                 re.S)
 
@@ -106,16 +122,28 @@ def _flyweb_plain(text):
 
 
 def flyweb_message_kind(text):
-    """'company', 'legal' or None, from a message's English text."""
+    """'company', 'copyright', 'legal' or None, from a message's English
+    text."""
     if text.strip() == FLYWEB_COMPANY[0]:
         return 'company'
+    if _FLYWEB_COPYRIGHT_RE.match(text):
+        return 'copyright'
     if FLYWEB_LEGAL_MARKER in text:
         return 'legal'
     return None
 
 
-def flyweb_rebrand_as(kind, text):
-    """Rebrands a message (or its translation) of the given kind."""
+def flyweb_rebrand_as(kind, text, lang=None):
+    """Rebrands a message of the given kind: its English text (lang None) or
+    its translation into lang."""
+    if kind == 'copyright':
+        if lang is None:
+            return _FLYWEB_COPYRIGHT_RE.sub(r'\1lamosquita and \2', text)
+        ph = _FLYWEB_COPYRIGHT_PH_RE.search(text)
+        if not ph:
+            return text
+        template = FLYWEB_COPYRIGHT.get(lang.split('-')[0], FLYWEB_COPYRIGHT[''])
+        return template.format(ph=ph.group(0))
     if kind == 'company':
         # Whole text, whitespace kept: translations say e.g. "Brave Authors".
         stripped = text.strip()
