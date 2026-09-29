@@ -34,23 +34,48 @@ sys.path.insert(1, os.path.join(SRC_ROOT, 'tools', 'grit', 'grit', 'extern'))
 sys.path.insert(1, os.path.join(BRAVE_ROOT, 'script'))
 
 # pylint: disable=wrong-import-position
-from lib.l10n.grd_string_replacements import flyweb_replacements
+from lib.l10n.grd_string_replacements import (flyweb_message_kind,
+                                              flyweb_rebrand,
+                                              flyweb_rebrand_as)
 from lib.l10n.grd_utils import get_fingerprint_for_xtb  # needs FP
 
 XTB_ID_RE = re.compile(r'(<translation id=")(\d+)(")')
+XTB_MSG_RE = re.compile(r'(<translation id="(\d+)"[^>]*>)(.*?)(</translation>)',
+                        re.S)
 
 
 def rebrand(text):
-    for pattern, to in flyweb_replacements:
-        text = re.sub(pattern, to, text)
-    return text
+    return flyweb_rebrand(text)
+
+
+def parse_messages(xml_bytes):
+    parser = lxml.etree.XMLParser(remove_blank_text=False,
+                                  resolve_entities=False)
+    return list(lxml.etree.fromstring(xml_bytes, parser).iter('message'))
 
 
 def message_fps(xml_bytes):
-    parser = lxml.etree.XMLParser(remove_blank_text=False,
-                                  resolve_entities=False)
-    root = lxml.etree.fromstring(xml_bytes, parser)
-    return [get_fingerprint_for_xtb(m) for m in root.iter('message')]
+    return [get_fingerprint_for_xtb(m) for m in parse_messages(xml_bytes)]
+
+
+def message_kinds(old_bytes, new_fps):
+    """{new fingerprint: kind}, the kind judged on the original English."""
+    return {fp: flyweb_message_kind(inner_xml(m))
+            for m, fp in zip(parse_messages(old_bytes), new_fps)}
+
+
+def inner_xml(elem):
+    # Same text flyweb_rebrand() judges: the message body with its markup.
+    return (elem.text or '') + ''.join(
+        lxml.etree.tostring(c, encoding='unicode') for c in elem)
+
+
+def rebrand_xtb(text, kinds):
+    """Rebrands each translation as its English message was rebranded."""
+    return XTB_MSG_RE.sub(
+        lambda m: m.group(1) + flyweb_rebrand_as(kinds.get(m.group(2)),
+                                                 m.group(3)) + m.group(4),
+        text)
 
 
 def parts_of(path, root):
@@ -65,6 +90,7 @@ def parts_of(path, root):
 
 def process(check):
     fp_maps = {}      # file path -> {old_fp: new_fp}
+    kind_maps = {}    # file path -> {new_fp: kind}
     new_content = {}  # file path -> rebranded text (grd/grdp)
     grds = []
     for dirpath, dirnames, filenames in os.walk(BRAVE_ROOT):
@@ -86,6 +112,7 @@ def process(check):
         if not xtbs:
             continue  # resources only, no translated strings
         grd_map = {}
+        grd_kinds = {}
         for path in parts_of(grd, grd_root):
             if path not in fp_maps:
                 with open(path, encoding='utf-8') as f:
@@ -96,9 +123,11 @@ def process(check):
                 assert len(old_fps) == len(new_fps), path
                 fp_maps[path] = {o: n for o, n in zip(old_fps, new_fps)
                                  if o != n}
+                kind_maps[path] = message_kinds(old.encode('utf-8'), new_fps)
                 if new != old:
                     new_content[path] = new
             grd_map.update(fp_maps[path])
+            grd_kinds.update(kind_maps[path])
 
         for xtb in xtbs:
             if not os.path.exists(xtb):
@@ -108,7 +137,7 @@ def process(check):
             new = XTB_ID_RE.sub(
                 lambda m: m.group(1) + grd_map.get(m.group(2), m.group(2)) +
                 m.group(3), old)
-            new = rebrand(new)
+            new = rebrand_xtb(new, grd_kinds)
             if new != old:
                 changed_files.add(xtb)
                 if not check:

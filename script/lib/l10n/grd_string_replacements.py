@@ -5,6 +5,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import re
 
 # Strings we want to replace but that we also replace automatically
 # for XTB files
@@ -86,3 +87,60 @@ flyweb_replacements = [
     (r'\bBrave\b(?!\s+(?:Wallet|Rewards|News|VPN|Vpn|Search|Talk|Ads|Software'
      r'|Authors|Sync|Today|Leo)\b)', r'FlyWeb'),
 ]
+
+# Messages that name the company are legal notices ("Brave is a registered
+# trademark of Brave Software", disclaimers): they keep "Brave" in every
+# language. The only exception is the company line of the about pages, which
+# names who ships FlyWeb.
+FLYWEB_LEGAL_MARKER = 'Brave Software'
+FLYWEB_COMPANY = ('Brave Software Inc', 'lamosquita')
+
+_FLYWEB_MESSAGE_RE = re.compile(r'(<(message|translation)\b[^>]*>)(.*?)(</\2>)',
+                                re.S)
+
+
+def _flyweb_plain(text):
+    for (pattern, to) in flyweb_replacements:
+        text = re.sub(pattern, to, text)
+    return text
+
+
+def flyweb_message_kind(text):
+    """'company', 'legal' or None, from a message's English text."""
+    if text.strip() == FLYWEB_COMPANY[0]:
+        return 'company'
+    if FLYWEB_LEGAL_MARKER in text:
+        return 'legal'
+    return None
+
+
+def flyweb_rebrand_as(kind, text):
+    """Rebrands a message (or its translation) of the given kind."""
+    if kind == 'company':
+        # Whole text, whitespace kept: translations say e.g. "Brave Authors".
+        stripped = text.strip()
+        return (text.replace(stripped, FLYWEB_COMPANY[1])
+                if stripped else FLYWEB_COMPANY[1])
+    if kind == 'legal':
+        return text
+    return _flyweb_plain(text)
+
+
+def _flyweb_message(text):
+    return flyweb_rebrand_as(flyweb_message_kind(text), text)
+
+
+def flyweb_rebrand(text):
+    """Applies flyweb_replacements to an English message text, or to a whole
+    .grd/.grdp file message by message. Idempotent. Translations (.xtb) must
+    follow their English message: see flyweb_rebrand_as()."""
+    if not _FLYWEB_MESSAGE_RE.search(text):
+        return _flyweb_message(text)
+    out, pos = [], 0
+    for m in _FLYWEB_MESSAGE_RE.finditer(text):
+        out.append(_flyweb_plain(text[pos:m.start()]))
+        out.append(_flyweb_plain(m.group(1)) + _flyweb_message(m.group(3)) +
+                   m.group(4))
+        pos = m.end()
+    out.append(_flyweb_plain(text[pos:]))
+    return ''.join(out)
