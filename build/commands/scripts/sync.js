@@ -78,9 +78,15 @@ function buildDefaultGClientConfig() {
         'src/chrome/tools/test/reference_build/chrome': '%None%',
         'src/chrome/tools/test/reference_build/chrome_linux': '%None%',
         'src/chrome/tools/test/reference_build/chrome_mac': '%None%',
-        'src/chrome/tools/test/reference_build/chrome_win': '%None%'
+        'src/chrome/tools/test/reference_build/chrome_win': '%None%',
+        // FlyWeb: dEQP/Vulkan-GL conformance suite, only used by standalone
+        // ANGLE test builds (build_angle_deqp_tests is false in Chromium).
+        'src/third_party/angle/third_party/VK-GL-CTS/src': '%None%'
       },
       custom_vars: {
+        // FlyWeb: Brave builds with enable_nacl=false, so the NaCl
+        // toolchains that Chromium 116 fetches on Intel Macs are unused.
+        'checkout_nacl': '%False%',
         'checkout_rust': '%True%',
         'checkout_pgo_profiles': config.isBraveReleaseBuild() ? '%True%' :
                                                                 '%False%'
