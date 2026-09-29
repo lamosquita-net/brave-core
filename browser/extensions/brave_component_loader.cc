@@ -126,9 +126,8 @@ void BraveComponentLoader::AddDefaultComponentExtensions(
 
 #if BUILDFLAG(ETHEREUM_REMOTE_CLIENT_ENABLED)
 void BraveComponentLoader::AddEthereumRemoteClientExtension() {
-  AddExtension(ethereum_remote_client_extension_id,
-               ethereum_remote_client_extension_name,
-               ethereum_remote_client_extension_public_key);
+  // FlyWeb: no crypto wallets. The legacy Crypto Wallets extension is never
+  // loaded, neither on startup nor when chosen as default wallet.
 }
 
 void BraveComponentLoader::AddEthereumRemoteClientExtensionOnStartup() {
