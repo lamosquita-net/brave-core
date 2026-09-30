@@ -558,6 +558,23 @@ GetBravePrepopulatedEnginesForCountryID(
   BravePrepopulatedEngineID default_id =
       GetDefaultSearchEngine(country_id, version);
 
+  // FlyWeb: DuckDuckGo (the regional variant offered in this country) is the
+  // default instead of Brave Search. Where no DuckDuckGo variant is offered
+  // (e.g. KR), keep the regional default unless it is Brave Search.
+  bool flyweb_has_duckduckgo = false;
+  for (BravePrepopulatedEngineID id : brave_engine_ids) {
+    if (id == PREPOPULATED_ENGINE_ID_DUCKDUCKGO ||
+        id == PREPOPULATED_ENGINE_ID_DUCKDUCKGO_DE ||
+        id == PREPOPULATED_ENGINE_ID_DUCKDUCKGO_AU_NZ_IE) {
+      default_id = id;
+      flyweb_has_duckduckgo = true;
+      break;
+    }
+  }
+  if (!flyweb_has_duckduckgo && default_id == PREPOPULATED_ENGINE_ID_BRAVE) {
+    default_id = PREPOPULATED_ENGINE_ID_GOOGLE;
+  }
+
   // Build a vector PrepopulatedEngines from BravePrepopulatedEngineIDs and
   // also get the default engine index
   std::vector<const PrepopulatedEngine*> engines = GetEnginesFromEngineIDs(

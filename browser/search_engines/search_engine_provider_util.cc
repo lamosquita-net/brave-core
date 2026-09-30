@@ -23,9 +23,10 @@
 
 namespace brave {
 
+// FlyWeb: private windows use the same prepopulated default as normal ones
+// (DuckDuckGo, see template_url_prepopulate_data.cc) instead of Brave Search.
 void SetBraveAsDefaultPrivateSearchProvider(PrefService* prefs) {
-  auto data = TemplateURLPrepopulateData::GetPrepopulatedEngine(
-      prefs, TemplateURLPrepopulateData::PREPOPULATED_ENGINE_ID_BRAVE);
+  auto data = TemplateURLPrepopulateData::GetPrepopulatedDefaultSearch(prefs);
   DCHECK(data);
   prefs->SetString(prefs::kSyncedDefaultPrivateSearchProviderGUID,
                    data->sync_guid);
