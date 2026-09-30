@@ -174,14 +174,21 @@ BraveShieldsActionView::GetImageSource() {
 }
 
 gfx::ImageSkia BraveShieldsActionView::GetIconImage(bool is_enabled) {
+  // FlyWeb: one bitmap per scale factor, drawn at its real size
+  // (kBraveActionGraphicSize = 18 pt), instead of a single 64 px PNG that is
+  // always resampled and looks blurry.
   ui::ResourceBundle& rb = ui::ResourceBundle::GetSharedInstance();
   gfx::ImageSkia image;
-  const SkBitmap bitmap =
-      rb.GetImageNamed(is_enabled ? IDR_BRAVE_SHIELDS_ICON_64
-                                  : IDR_BRAVE_SHIELDS_ICON_64_DISABLED)
-          .AsBitmap();
-  float scale = static_cast<float>(bitmap.width()) / kBraveActionGraphicSize;
-  image.AddRepresentation(gfx::ImageSkiaRep(bitmap, scale));
+  image.AddRepresentation(gfx::ImageSkiaRep(
+      rb.GetImageNamed(is_enabled ? IDR_FLYWEB_SHIELDS_ICON_18
+                                  : IDR_FLYWEB_SHIELDS_ICON_18_DISABLED)
+          .AsBitmap(),
+      1.0f));
+  image.AddRepresentation(gfx::ImageSkiaRep(
+      rb.GetImageNamed(is_enabled ? IDR_FLYWEB_SHIELDS_ICON_36
+                                  : IDR_FLYWEB_SHIELDS_ICON_36_DISABLED)
+          .AsBitmap(),
+      2.0f));
   return image;
 }
 
