@@ -1,0 +1,32 @@
+diff --git a/src/text/gpu/StrikeCache.cpp b/src/text/gpu/StrikeCache.cpp
+index 2945e450ff5b48aa7ec294f186d78195c0786dec..aa9748f8f23068ee08edf646c90bbd413a9471a8 100644
+--- a/src/text/gpu/StrikeCache.cpp
++++ b/src/text/gpu/StrikeCache.cpp
+@@ -44,20 +44,21 @@ uint32_t StrikeCache::HashTraits::Hash(const SkDescriptor& descriptor) {
+ 
+ TextStrike::TextStrike(const SkStrikeSpec& strikeSpec) : fStrikeSpec{strikeSpec} {}
+ 
+-Glyph* TextStrike::getGlyph(SkPackedGlyphID packedGlyphID) {
+-    Glyph* glyph = fCache.findOrNull(packedGlyphID);
++Glyph* TextStrike::getGlyph(SkPackedGlyphID packedGlyphID, skgpu::MaskFormat maskFormat) {
++    const Glyph::Key key(packedGlyphID, maskFormat);
++    Glyph* glyph = fCache.findOrNull(key);
+     if (glyph == nullptr) {
+-        glyph = fAlloc.make<Glyph>(packedGlyphID);
++        glyph = fAlloc.make<Glyph>(packedGlyphID, maskFormat);
+         fCache.set(glyph);
+     }
+     return glyph;
+ }
+ 
+-const SkPackedGlyphID& TextStrike::HashTraits::GetKey(const Glyph* glyph) {
+-    return glyph->fPackedID;
++const Glyph::Key& TextStrike::HashTraits::GetKey(const Glyph* glyph) {
++    return glyph->fKey;
+ }
+ 
+-uint32_t TextStrike::HashTraits::Hash(SkPackedGlyphID key) {
++uint32_t TextStrike::HashTraits::Hash(const Glyph::Key& key) {
+     return key.hash();
+ }
+ 
