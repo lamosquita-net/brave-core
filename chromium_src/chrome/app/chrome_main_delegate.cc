@@ -75,16 +75,11 @@ absl::optional<int> ChromeMainDelegate::BasicStartupComplete() {
 
   command_line.AppendSwitchASCII(switches::kLsoUrl, kDummyUrl);
 
-  // Brave variations
-  command_line.AppendSwitchASCII(variations::switches::kVariationsServerURL,
-                                 BUILDFLAG(BRAVE_VARIATIONS_SERVER_URL));
-  // Insecure fall-back for variations is set to the same (secure) URL. This is
-  // done so that if VariationsService tries to fall back to insecure url the
-  // check for kHttpScheme in VariationsService::MaybeRetryOverHTTP would
-  // prevent it from doing so as we don't want to use an insecure fall-back.
-  command_line.AppendSwitchASCII(
-      variations::switches::kVariationsInsecureServerURL,
-      BUILDFLAG(BRAVE_VARIATIONS_SERVER_URL));
+  // FlyWeb: no variations seed fetch. In a non Google-branded build
+  // VariationsService::IsFetchingEnabled() is false unless
+  // --variations-server-url is passed, so Brave's switches (pointing at
+  // BRAVE_VARIATIONS_SERVER_URL, an inert URL in FlyWeb) are not appended.
+  // Without this, the browser requested that URL at startup (F1.6 audit).
 
   // Runtime-enabled features. To override Chromium features default state
   // please see: brave/chromium_src/base/feature_override.h
