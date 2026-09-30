@@ -122,7 +122,9 @@ void DeletePromoCodeFile(const base::FilePath& promo_code_file) {
   }
 }
 
-std::string ReadPromoCode(const base::FilePath& promo_code_file) {
+// FlyWeb: only used on Android now (Start() no longer reads the promo code).
+[[maybe_unused]] std::string ReadPromoCode(
+    const base::FilePath& promo_code_file) {
   std::string promo_code;
 
   if (!base::PathExists(promo_code_file)) {
