@@ -1,0 +1,31 @@
+diff --git a/src/text/gpu/SubRunContainer.cpp b/src/text/gpu/SubRunContainer.cpp
+index 24a57ac264bc8f38dd9b290c11a6aa3e393dc088..dcb6d3caa9183a44f6616ffff64c9a592b51a407 100644
+--- a/src/text/gpu/SubRunContainer.cpp
++++ b/src/text/gpu/SubRunContainer.cpp
+@@ -764,7 +764,7 @@ public:
+     int glyphSrcPadding() const override { return 0; }
+ 
+     void testingOnly_packedGlyphIDToGlyph(StrikeCache* cache) const override {
+-        fGlyphs.packedGlyphIDToGlyph(cache);
++        fGlyphs.packedGlyphIDToGlyph(cache, this->maskFormat());
+     }
+ 
+ #if defined(SK_GANESH)
+@@ -975,7 +975,7 @@ public:
+     const AtlasSubRun* testingOnly_atlasSubRun() const override { return this; }
+ 
+     void testingOnly_packedGlyphIDToGlyph(StrikeCache *cache) const override {
+-        fGlyphs.packedGlyphIDToGlyph(cache);
++        fGlyphs.packedGlyphIDToGlyph(cache, this->maskFormat());
+     }
+ 
+     int glyphCount() const override { return SkCount(fGlyphs.glyphs()); }
+@@ -1218,7 +1218,7 @@ public:
+     const AtlasSubRun* testingOnly_atlasSubRun() const override { return this; }
+ 
+     void testingOnly_packedGlyphIDToGlyph(StrikeCache *cache) const override {
+-        fGlyphs.packedGlyphIDToGlyph(cache);
++        fGlyphs.packedGlyphIDToGlyph(cache, this->maskFormat());
+     }
+ 
+     int glyphCount() const override { return fVertexFiller.count(); }

@@ -1,0 +1,21 @@
+diff --git a/src/text/gpu/GlyphVector.cpp b/src/text/gpu/GlyphVector.cpp
+index 915be8199df7dce2e7f9b55f91cdca81833a0b61..e43d4edb07869469ccd41a390e202ed3d326acec 100644
+--- a/src/text/gpu/GlyphVector.cpp
++++ b/src/text/gpu/GlyphVector.cpp
+@@ -99,14 +99,14 @@ SkSpan<const Glyph*> GlyphVector::glyphs() const {
+ 
+ // packedGlyphIDToGlyph must be run in single-threaded mode.
+ // If fSkStrike is not sk_sp<SkStrike> then the conversion to Glyph* has not happened.
+-void GlyphVector::packedGlyphIDToGlyph(StrikeCache* cache) {
++void GlyphVector::packedGlyphIDToGlyph(StrikeCache* cache, skgpu::MaskFormat maskFormat) {
+     if (fTextStrike == nullptr) {
+         SkStrike* strike = fStrikePromise.strike();
+         fTextStrike = cache->findOrCreateStrike(strike->strikeSpec());
+ 
+         // Get all the atlas locations for each glyph.
+         for (Variant& variant : fGlyphs) {
+-            variant.glyph = fTextStrike->getGlyph(variant.packedGlyphID);
++            variant.glyph = fTextStrike->getGlyph(variant.packedGlyphID, maskFormat);
+         }
+ 
+         // This must be pinned for the Atlas filling to work.
