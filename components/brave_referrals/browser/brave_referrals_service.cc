@@ -40,9 +40,6 @@
 #include "services/network/public/mojom/fetch_api.mojom-shared.h"
 #include "services/network/public/mojom/url_response_head.mojom.h"
 
-// Perform finalization checks once a day.
-const int kFinalizationChecksFrequency = 60 * 60 * 24;
-
 // Report initialization once a day (after initial failure).
 const int kReportInitializationFrequency = 60 * 60 * 24;
 
@@ -239,39 +236,9 @@ void BraveReferralsService::Start() {
   if (initialized_)
     return;
 
-  // Retrieve first run time.
-  GetFirstRunTime();
-
-  // Periodically perform finalization checks.
-  DCHECK(!finalization_checks_timer_);
-  finalization_checks_timer_ = std::make_unique<base::RepeatingTimer>();
-  finalization_checks_timer_->Start(
-      FROM_HERE,
-      base::Seconds(
-          brave_base::random::Geometric(kFinalizationChecksFrequency)),
-      this, &BraveReferralsService::OnFinalizationChecksTimerFired);
-  DCHECK(finalization_checks_timer_->IsRunning());
-
-  // Read the promo code from user-data-dir and initialize the referral,
-  // retrying if necessary.
-  bool has_initialized = pref_service_->GetBoolean(kReferralInitialization);
-  // TODO(keur): This can be removed eventually. This prevents existing
-  // users without download_ids from initializing.
-  bool checked_for_promo_code_file =
-      pref_service_->GetBoolean(kReferralCheckedForPromoCodeFile);
-  std::string download_id = pref_service_->GetString(kReferralDownloadID);
-  if (!checked_for_promo_code_file && !has_initialized && download_id.empty()) {
-#if !BUILDFLAG(IS_ANDROID)
-    task_runner_->PostTaskAndReplyWithResult(
-        FROM_HERE, base::BindOnce(&ReadPromoCode, GetPromoCodeFileName()),
-        base::BindOnce(&BraveReferralsService::OnReadPromoCodeComplete,
-                       weak_factory_.GetWeakPtr()));
-
-#else
-    InitAndroidReferrer();
-#endif
-  }
-
+  // FlyWeb: no referral program. Nothing is read or sent to Brave's referral
+  // server (promo code initialization, periodic finalization checks); the
+  // service only reports itself initialized so that its dependants go on.
   initialized_ = true;
 
   DCHECK(delegate_);

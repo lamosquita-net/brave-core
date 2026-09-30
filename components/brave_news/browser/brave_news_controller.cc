@@ -67,9 +67,11 @@ bool GetIsEnabled(PrefService* prefs) {
 
 // static
 void BraveNewsController::RegisterProfilePrefs(PrefRegistrySimple* registry) {
-  registry->RegisterBooleanPref(prefs::kShouldShowToolbarButton, true);
-  registry->RegisterBooleanPref(prefs::kNewTabPageShowToday,
-                                IsUserInDefaultEnabledLocale());
+  // FlyWeb: Brave News (feeds fetched from Brave's servers) is off by default:
+  // no card on the new tab page and no toolbar button. It can still be turned
+  // on in Settings.
+  registry->RegisterBooleanPref(prefs::kShouldShowToolbarButton, false);
+  registry->RegisterBooleanPref(prefs::kNewTabPageShowToday, false);
   registry->RegisterBooleanPref(prefs::kBraveNewsOptedIn, false);
   registry->RegisterDictionaryPref(prefs::kBraveNewsSources);
   registry->RegisterDictionaryPref(prefs::kBraveNewsChannels);
