@@ -570,12 +570,8 @@ SidebarItem SidebarService::GetBuiltInItemForType(
     SidebarItem::BuiltInItemType type) const {
   switch (type) {
     case SidebarItem::BuiltInItemType::kBraveTalk:
-      return SidebarItem::Create(GURL(kBraveTalkURL),
-                                 brave_l10n::GetLocalizedResourceUTF16String(
-                                     IDS_SIDEBAR_BRAVE_TALK_ITEM_TITLE),
-                                 SidebarItem::Type::kTypeBuiltIn,
-                                 SidebarItem::BuiltInItemType::kBraveTalk,
-                                 /* open_in_panel = */ false);
+      // FlyWeb: no Brave Talk (talk.brave.com) in the sidebar.
+      return SidebarItem();
     case SidebarItem::BuiltInItemType::kWallet: {
       if (brave_wallet::IsAllowed(prefs_)) {
         return SidebarItem::Create(GURL("chrome://wallet/"),

@@ -461,7 +461,9 @@ void BraveStatsUpdater::SendUserTriggeredPing() {
 void RegisterLocalStatePrefs(PrefRegistrySimple* registry) {
   registry->RegisterBooleanPref(kFirstCheckMade, false);
   registry->RegisterBooleanPref(kThresholdCheckMade, false);
-  registry->RegisterBooleanPref(kStatsReportingEnabled, true);
+  // FlyWeb: no daily usage ping by default (its server is also inert, see
+  // softmac FlyWeb/scripts/build.sh).
+  registry->RegisterBooleanPref(kStatsReportingEnabled, false);
   registry->RegisterStringPref(kThresholdQuery, std::string());
   registry->RegisterIntegerPref(kLastCheckWOY, 0);
   registry->RegisterIntegerPref(kLastCheckMonth, 0);
