@@ -89,6 +89,14 @@ absl::optional<int> ChromeMainDelegate::BasicStartupComplete() {
   // please see: brave/chromium_src/base/feature_override.h
   std::unordered_set<const char*> disabled_features = {};
 
+  // FlyWeb: no TurboFan. Sites allowed to use the JIT (claude.ai, Google…;
+  // the rest run jitless) keep Ignition + Sparkplug but lose the optimizing
+  // compiler, where most exploited V8 bugs after Chromium 116 live
+  // (FlyWeb/docs/cve-triage.md). Passing it as a command-line feature makes
+  // gin set --no-turbofan in every renderer (SetV8FlagsIfOverridden only
+  // reacts to overridden features, not to default changes).
+  disabled_features.insert("V8Turbofan");
+
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(
           switches::kDisableDnsOverHttps)) {
     disabled_features.insert(features::kDnsOverHttps.name);
