@@ -19,3 +19,13 @@ Also here, though it is not a branch-5845 merge (fixed in Chrome 120):
 | Bug | Component | Upstream fix | Files |
 |---|---|---|---|
 | CVE-2023-7024 (crbug 1513170, exploited) | WebRTC audio sink: invalid audio parameters accepted in `OnSetFormat` → heap overflow | chromium 340b7e300 (main #1239233): `DCHECK` → `CHECK` | `third_party-blink-renderer-platform-peerconnection-webrtc_audio_sink.cc.patch` |
+
+## V8 (also in this branch)
+
+| Bug | Component | Upstream fix | Files |
+|---|---|---|---|
+| CVE-2024-0519 (crbug 1517354, exploited) | Runtime: fast deletion of an object's last property (undoing the map transition) interacts badly with other optimizations → OOB | v8 389ea9be7 removes that path; hand-ported (116 still uses raw `JSObject` instead of `Tagged<>`, same code otherwise) | `v8/src-runtime-runtime-object.cc.patch` |
+
+Triaged and **not ported**: CVE-2025-10585, CVE-2025-13223, CVE-2026-3910, CVE-2026-85046 (TurboFan/Maglev: jitless
+mitigates them; CVE-2026-3910 is Maglev, not enabled on desktop in 116), CVE-2024-4761 and CVE-2026-87491 (Wasm,
+disabled by jitless), CVE-2026-11645 (`TryFastAddDataProperty` does not exist in V8 11.6).
