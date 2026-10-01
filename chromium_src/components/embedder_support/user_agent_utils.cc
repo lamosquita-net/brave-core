@@ -12,12 +12,6 @@
 #include "components/embedder_support/switches.h"
 #include "third_party/blink/public/common/features.h"
 
-namespace {
-
-constexpr char kBraveBrandNameForCHUA[] = "Brave";
-
-}  // namespace
-
 // Chromium uses `version_info::GetProductName()` to get the browser's "brand"
 // name, but on MacOS we use different names for different channels (adding Beta
 // or Nightly, for example). In the UA client hint, though, we want a consistent
@@ -25,7 +19,10 @@ constexpr char kBraveBrandNameForCHUA[] = "Brave";
 // IDS_PRODUCT_NAME from app/chromium_strings.grd (brave_strings.grd) in
 // constructing the UA in brave/browser/brave_content_browser_client.cc, but we
 // can't use it here in the //components.
-#define BRAVE_GET_USER_AGENT_BRAND_LIST brand = kBraveBrandNameForCHUA;
+// FlyWeb: no own brand in the client hints at all (only "Chromium" plus the
+// GREASE brand, like an unbranded Chromium). Sending "Brave" would be Brave
+// branding, and a rare "FlyWeb" brand would make users easier to fingerprint.
+#define BRAVE_GET_USER_AGENT_BRAND_LIST brand = absl::nullopt;
 
 #define GetUserAgentMetadata GetUserAgentMetadata_ChromiumImpl
 #include "src/components/embedder_support/user_agent_utils.cc"
