@@ -14,6 +14,12 @@ OVERRIDE_FEATURE_DEFAULT_STATES({{
 #if BUILDFLAG(IS_WIN)
     {kWinrtGeolocationImplementation, base::FEATURE_ENABLED_BY_DEFAULT},
 #endif  // BUILDFLAG(IS_WIN)
+#if BUILDFLAG(IS_MAC)
+    // FlyWeb: use macOS Location Services (CoreLocation) instead of the
+    // network provider, which sends nearby Wi-Fi networks to a Google API
+    // (with a placeholder key in FlyWeb, so it would not even work).
+    {kMacCoreLocationBackend, base::FEATURE_ENABLED_BY_DEFAULT},
+#endif  // BUILDFLAG(IS_MAC)
 }});
 
 }  // namespace features
