@@ -1,0 +1,13 @@
+diff --git a/src/ast/scopes.cc b/src/ast/scopes.cc
+index 215dba2e0be7bc9e3bfcad595fa62e4c252f535c..5449cf9b37ea86aa0b700c9ea6a557c70cb404c1 100644
+--- a/src/ast/scopes.cc
++++ b/src/ast/scopes.cc
+@@ -2411,7 +2411,7 @@ bool Scope::MustAllocate(Variable* var) {
+     var->set_is_used();
+     if (inner_scope_calls_eval_ && !var->is_this()) var->SetMaybeAssigned();
+   }
+-  DCHECK(!var->has_forced_context_allocation() || var->is_used());
++  CHECK(!var->has_forced_context_allocation() || var->is_used());
+   // Global variables do not need to be allocated.
+   return !var->IsGlobalObjectProperty() && var->is_used();
+ }
