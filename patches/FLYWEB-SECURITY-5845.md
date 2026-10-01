@@ -10,6 +10,12 @@ Chromium 116.0.5845.188 was the last 116 stable for macOS, but branch-heads/5845
 | crbug 1475798 | Extensions: `ExtensionLocalizationURLLoader` / DataPipeProducer UAF when CSS requests are cancelled | chromium 454452c4e (cherry-pick of b6e060e17) | `extensions-renderer-extension_localization_throttle.cc.patch` |
 | crbug 1478889 | Password export: `PasswordManagerPorter` called back by an open file dialog after destruction (UAF) | chromium 9998ceadc (cherry-pick of 9dea1181c) | `chrome-browser-ui-passwords-settings-password_manager_porter.cc.patch` |
 
-All three apply unchanged: the files are identical at 116.0.5845.188 and at the parent of each branch commit.
+The three branch fixes apply unchanged: the files are identical at 116.0.5845.188 and at the parent of each branch commit.
 Unit tests are left out. Not compiled in the cloud: LOCAL must build it.
 Left out on purpose: chromium 51fe1f3 (Windows/Intel video swap chain), 7d0de2b (Android WebView), infra and XTB updates.
+
+Also here, though it is not a branch-5845 merge (fixed in Chrome 120):
+
+| Bug | Component | Upstream fix | Files |
+|---|---|---|---|
+| CVE-2023-7024 (crbug 1513170, exploited) | WebRTC audio sink: invalid audio parameters accepted in `OnSetFormat` → heap overflow | chromium 340b7e300 (main #1239233): `DCHECK` → `CHECK` | `third_party-blink-renderer-platform-peerconnection-webrtc_audio_sink.cc.patch` |
