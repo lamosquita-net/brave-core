@@ -1,0 +1,13 @@
+diff --git a/third_party/blink/renderer/platform/peerconnection/webrtc_audio_sink.cc b/third_party/blink/renderer/platform/peerconnection/webrtc_audio_sink.cc
+index cd9f2edbf6ef456bd9389c697b921b41981e338d..a3c194961afec4453cef041d506408ad6b7c7281 100644
+--- a/third_party/blink/renderer/platform/peerconnection/webrtc_audio_sink.cc
++++ b/third_party/blink/renderer/platform/peerconnection/webrtc_audio_sink.cc
+@@ -121,7 +121,7 @@ void WebRtcAudioSink::OnData(const media::AudioBus& audio_bus,
+ }
+ 
+ void WebRtcAudioSink::OnSetFormat(const media::AudioParameters& params) {
+-  DCHECK(params.IsValid());
++  CHECK(params.IsValid());  // FlyWeb: CVE-2023-7024 (crbug 1513170).
+   SendLogMessage(base::StringPrintf("OnSetFormat([label=%s] {params=[%s]})",
+                                     adapter_->label().c_str(),
+                                     params.AsHumanReadableString().c_str()));
