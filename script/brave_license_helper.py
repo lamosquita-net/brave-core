@@ -153,6 +153,8 @@ def AddBraveCredits(root, prune_paths, special_cases, prune_dirs,
                      'connection', 'wireguard', 'win',
                      'brave_vpn_wireguard_service'),
         os.path.join('brave', 'components', 'filecoin'),
+        # FlyWeb: core-js polyfills bundle.
+        os.path.join('brave', 'components', 'flyweb_polyfills', 'resources'),
     ]
 
     # Add all Android libraries since they're not directly contained
