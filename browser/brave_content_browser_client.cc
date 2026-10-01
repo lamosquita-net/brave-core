@@ -1231,8 +1231,10 @@ blink::UserAgentMetadata BraveContentBrowserClient::GetUserAgentMetadata() {
   if (command_line->HasSwitch(embedder_support::kUserAgent)) {
     return metadata;
   }
-  DCHECK_EQ(3UL, metadata.brand_version_list.size());
-  DCHECK_EQ(3UL, metadata.brand_full_version_list.size());
+  // FlyWeb: two, without the "Brave" brand (see the chromium_src override of
+  // components/embedder_support/user_agent_utils.cc).
+  DCHECK_EQ(2UL, metadata.brand_version_list.size());
+  DCHECK_EQ(2UL, metadata.brand_full_version_list.size());
   // Zero out the last 3 version components in full version list versions.
   for (auto& brand_version : metadata.brand_full_version_list) {
     base::Version version(brand_version.version);
