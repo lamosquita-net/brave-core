@@ -19,6 +19,7 @@
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "brave/renderer/brave_render_thread_observer.h"
 #include "brave/renderer/brave_wallet/brave_wallet_render_frame_observer.h"
+#include "brave/renderer/flyweb/flyweb_polyfills_render_frame_observer.h"
 #include "chrome/common/chrome_isolated_world_ids.h"
 #include "chrome/renderer/chrome_render_thread_observer.h"
 #include "content/public/renderer/render_thread.h"
@@ -86,6 +87,10 @@ void BraveContentRendererClient::RenderThreadStarted() {
 void BraveContentRendererClient::RenderFrameCreated(
     content::RenderFrame* render_frame) {
   ChromeContentRendererClient::RenderFrameCreated(render_frame);
+
+  if (base::FeatureList::IsEnabled(flyweb::kFlyWebPolyfills)) {
+    new flyweb::FlyWebPolyfillsRenderFrameObserver(render_frame);
+  }
 
   if (base::FeatureList::IsEnabled(
           brave_shields::features::kBraveAdblockCosmeticFiltering)) {
