@@ -225,8 +225,6 @@ leo_icons = [
   "notification.svg",
   "plus-add.svg",
   "product-bat-outline.svg",
-  "product-brave-color.svg",
-  "product-brave-monochrome.svg",
   "product-brave-wallet.svg",
   "product-sync.svg",
   "product-translate.svg",
@@ -285,16 +283,26 @@ if (enable_brave_vpn_panel) {
   ]
 }
 
+# FlyWeb: Brave's logos from @brave/leo are replaced by the FlyWeb fly. They
+# keep Leo's file names so every <leo-icon name="product-brave-*"> shows it.
+flyweb_icons = [
+  "product-brave-color.svg",
+  "product-brave-monochrome.svg",
+]
+
 generate_grd("icons_grdp") {
   grd_prefix = "brave_icons"
   resource_path_prefix = "brave-icons"
   out_grd = "$brave_resources_extra_grdps_path/brave_icons_resources.grdp"
 
-  input_files = leo_icons
+  input_files = leo_icons + flyweb_icons
   input_files_base_dir =
       rebase_path("$brave_resources_extra_grdps_path/icons/", root_build_dir)
 
-  deps = [ ":icons_copy" ]
+  deps = [
+    ":flyweb_icons_copy",
+    ":icons_copy",
+  ]
 }
 
 # Static files should be put relative to //ui/webui/resources main resources GRD
@@ -318,6 +326,11 @@ copy("fonts_copy") {
 
 copy("icons_copy") {
   sources = rebase_path(leo_icons, ".", leo_icons_base_path)
+  outputs = [ "$brave_resources_extra_grdps_path/icons/{{source_file_part}}" ]
+}
+
+copy("flyweb_icons_copy") {
+  sources = rebase_path(flyweb_icons, ".", "flyweb_icons")
   outputs = [ "$brave_resources_extra_grdps_path/icons/{{source_file_part}}" ]
 }
 
