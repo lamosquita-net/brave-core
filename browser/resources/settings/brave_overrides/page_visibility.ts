@@ -53,6 +53,12 @@ function getPageVisibility () {
     // custom properties
     braveSync: !loadTimeData.getBoolean('isSyncDisabled'),
     braveWallet: loadTimeData.getBoolean('isBraveWalletAllowed'),
+    // FlyWeb: no Web3 section. Without the wallet only IPFS and the Web3
+    // domains (ENS, SNS, Unstoppable) were left, and those resolve through
+    // the wallet's RPC services, which FlyWeb removes.
+    braveWeb3: false,
+    braveIPFS: false,
+    braveWeb3Domains: false,
   }
   // Proxy so we can respond to any other property
   return new Proxy(staticProps, {
