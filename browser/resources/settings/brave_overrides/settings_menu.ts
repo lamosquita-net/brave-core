@@ -324,7 +324,7 @@ RegisterPolymerTemplateModifications({
       loadTimeData.getString('braveWeb3'),
       '/web3',
       'product-brave-wallet',
-      'wallet',
+      'braveWeb3',
     )
 
     extensionEl.insertAdjacentElement('afterend', web3El)
