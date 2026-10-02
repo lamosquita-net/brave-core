@@ -21,13 +21,17 @@ namespace flyweb {
 // even though everything works. Per site and not global because a site that
 // believes it talks to a newer Chrome may use features 116 lacks.
 //
-// Tune without rebuilding:
-//   --enable-features=FlyWebUserAgentOverride:chrome_major/154/sites/drive.google.com,docs.google.com
+// Tune without rebuilding (the commas inside a parameter must be written as
+// %2C, because --enable-features itself is comma-separated):
+//   --enable-features=FlyWebUserAgentOverride:chrome_major/154/sites/drive.google.com%2Cdocs.google.com
 // Turn off: --disable-features=FlyWebUserAgentOverride
 BASE_DECLARE_FEATURE(kFlyWebUserAgentOverride);
 extern const base::FeatureParam<int> kDeclaredChromeMajor;
 // Comma-separated hosts; each also matches its subdomains.
 extern const base::FeatureParam<std::string> kOverrideSites;
+// macOS version declared in the platformVersion client hint on those sites.
+// The real one (10.14) is older than any macOS the declared Chrome supports.
+extern const base::FeatureParam<std::string> kDeclaredPlatformVersion;
 
 // Exposed for tests.
 bool HostMatchesSites(const std::string& host, const std::string& sites);

@@ -28,7 +28,10 @@ BASE_FEATURE(kFlyWebUserAgentOverride,
 const base::FeatureParam<int> kDeclaredChromeMajor{&kFlyWebUserAgentOverride,
                                                    "chrome_major", 153};
 const base::FeatureParam<std::string> kOverrideSites{
-    &kFlyWebUserAgentOverride, "sites", "drive.google.com,docs.google.com"};
+    &kFlyWebUserAgentOverride, "sites",
+    "drive.google.com,docs.google.com,mail.google.com"};
+const base::FeatureParam<std::string> kDeclaredPlatformVersion{
+    &kFlyWebUserAgentOverride, "platform_version", "14.7.0"};
 
 bool HostMatchesSites(const std::string& host, const std::string& sites) {
   for (const auto& site : base::SplitStringPiece(
@@ -55,6 +58,12 @@ std::string ReplaceMajor(const std::string& version,
   return version;
 }
 
+// "153.1.57.64" -> "153.0.0.0", as BraveContentBrowserClient does for the
+// normal metadata: the full versions would otherwise carry Brave's version.
+std::string ReduceToMajor(const std::string& version) {
+  return base::StrCat({version.substr(0, version.find('.')), ".0.0.0"});
+}
+
 blink::UserAgentOverride BuildOverride() {
   const std::string current = version_info::GetMajorVersionNumber();
   const std::string declared =
@@ -74,10 +83,12 @@ blink::UserAgentOverride BuildOverride() {
         ReplaceMajor(brand_version.version, current, declared);
   }
   for (auto& brand_version : metadata.brand_full_version_list) {
-    brand_version.version =
-        ReplaceMajor(brand_version.version, current, declared);
+    brand_version.version = ReduceToMajor(
+        ReplaceMajor(brand_version.version, current, declared));
   }
-  metadata.full_version = ReplaceMajor(metadata.full_version, current, declared);
+  metadata.full_version =
+      ReduceToMajor(ReplaceMajor(metadata.full_version, current, declared));
+  metadata.platform_version = kDeclaredPlatformVersion.Get();
   ua_override.ua_metadata_override = metadata;
   return ua_override;
 }
