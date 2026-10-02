@@ -87,8 +87,11 @@ std::vector<GURL> BraveConfigurator::UpdateUrl() const {
   return configurator_impl_.UpdateUrl();
 }
 
+// FlyWeb: no pings. They report install and update events (with download
+// timings and error codes) to the server after the fact; the update check
+// itself does not need them.
 std::vector<GURL> BraveConfigurator::PingUrl() const {
-  return configurator_impl_.PingUrl();
+  return {};
 }
 
 std::string BraveConfigurator::GetProdId() const {
