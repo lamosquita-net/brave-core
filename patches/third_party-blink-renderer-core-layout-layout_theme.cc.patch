@@ -1,0 +1,27 @@
+diff --git a/third_party/blink/renderer/core/layout/layout_theme.cc b/third_party/blink/renderer/core/layout/layout_theme.cc
+index 06fb69c7401baea56daccc25947de427fcf34bf1..24f637e8652d06f25538faf62909de22e575bba6 100644
+--- a/third_party/blink/renderer/core/layout/layout_theme.cc
++++ b/third_party/blink/renderer/core/layout/layout_theme.cc
+@@ -21,6 +21,7 @@
+ 
+ #include "third_party/blink/renderer/core/layout/layout_theme.h"
+ 
++#include "base/logging.h"
+ #include "build/build_config.h"
+ #include "third_party/blink/public/strings/grit/blink_strings.h"
+ #include "third_party/blink/public/web/blink.h"
+@@ -703,7 +704,13 @@ Color LayoutTheme::DefaultSystemColor(
+     default:
+       break;
+   }
+-  NOTREACHED();
++  // FlyWeb: some pages (claude.ai) reach this with a keyword that is not a
++  // system color. Chromium 116 builds turn NOTREACHED into a crash dump of
++  // the renderer each time, without closing the tab. Keep the result
++  // (transparent, as upstream) but only log which keyword it was.
++  LOG(ERROR) << "LayoutTheme::DefaultSystemColor: "
++             << getValueName(css_value_id)
++             << " is not a recognized system color";
+   return Color();
+ }
+ 
