@@ -66,9 +66,12 @@ void BraveBrowsingDataRemoverDelegate::RemoveEmbedderData(
     ClearIPFSCache();
 #endif
   // Brave News feed cache
+  // FlyWeb: there is no Brave News controller (brave_news_controller_factory).
   if (remove_mask & chrome_browsing_data_remover::DATA_TYPE_HISTORY) {
-    brave_news::BraveNewsControllerFactory::GetForContext(profile_)
-        ->ClearHistory();
+    if (auto* controller =
+            brave_news::BraveNewsControllerFactory::GetForContext(profile_)) {
+      controller->ClearHistory();
+    }
   }
 }
 

@@ -62,21 +62,11 @@ BraveNewsControllerFactory::~BraveNewsControllerFactory() = default;
 
 KeyedService* BraveNewsControllerFactory::BuildServiceInstanceFor(
     content::BrowserContext* context) const {
-  if (!brave::IsRegularProfile(context)) {
-    return nullptr;
-  }
-  auto* profile = Profile::FromBrowserContext(context);
-  if (!profile) {
-    return nullptr;
-  }
-  auto* favicon_service = FaviconServiceFactory::GetForProfile(
-      profile, ServiceAccessType::EXPLICIT_ACCESS);
-  auto* ads_service = brave_ads::AdsServiceFactory::GetForProfile(profile);
-  auto* history_service = HistoryServiceFactory::GetForProfile(
-      profile, ServiceAccessType::EXPLICIT_ACCESS);
-  return new BraveNewsController(profile->GetPrefs(), favicon_service,
-                                 ads_service, history_service,
-                                 profile->GetURLLoaderFactory());
+  // FlyWeb: no Brave News. It talks to Brave's servers and carries
+  // advertising, against FlyWeb's policy. Without a controller nothing is
+  // fetched; every caller copes with null (the new tab page does not bind the
+  // interface, the tab helper and the location bar button are not created).
+  return nullptr;
 }
 
 }  // namespace brave_news

@@ -102,7 +102,8 @@ export default class Settings extends React.PureComponent<Props, State> {
     // Cache allowed tabs array on instance.
     // Feature flags won't change during page lifecycle, so we don't need to
     // change this when props change.
-    this.allTabTypes = [...Object.values(TabType)]
+    // FlyWeb: no Brave News tab (no Brave News at all).
+    this.allTabTypes = Object.values(TabType).filter(t => t !== TabType.BraveNews)
     this.allTabTypesWithoutBackground = [...this.allTabTypes]
     this.allTabTypesWithoutBackground.splice(
       this.allTabTypesWithoutBackground.indexOf(TabType.BackgroundImage), 1
