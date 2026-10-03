@@ -5,12 +5,16 @@
 
 import styled from 'styled-components'
 
+import { familia } from '../flyweb/estilo'
+
 export const Box = styled.div`
   position: relative;
   max-width: 800px;
-  border-radius: 30px;
-  color: white;
-  font-family: ${(p) => p.theme.fontFamily.heading};
+  border-radius: 14px;
+  /* FlyWeb: black D-DIN on the translucent white card (prototype). */
+  color: #000;
+  font-family: ${familia};
+  -webkit-font-smoothing: antialiased;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -18,9 +22,9 @@ export const Box = styled.div`
   text-align: center;
 
   .view-backdrop {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(15px);
-    border-radius: 30px;
+    background: rgba(255, 255, 255, 0.62);
+    backdrop-filter: blur(6px);
+    border-radius: 14px;
     position: absolute;
     top: 0;
     z-index: 1;
@@ -33,10 +37,11 @@ export const Box = styled.div`
     }
   }
 
+  /* FlyWeb: less room on top; Brave's 3D logo was bigger than the fly. */
   .view-header-box {
     display: grid;
     grid-template-columns: 0.2fr 1.5fr 0.2fr;
-    padding: 100px 40px 50px 40px;
+    padding: 56px 40px 40px 40px;
   }
 
   .view-content {
@@ -67,9 +72,12 @@ export const Box = styled.div`
   }
 
   /* FlyWeb: the fly peeks over the top edge of the card (prototype). */
+  /* The box gets the fly's real size (116 × 96, the SVG's 113.59 × 94.01):
+     with height auto, the WebUI rule that sizes every svg left it almost
+     empty, so translate(-62%) did not lift the fly and it sat inside. */
   .view-logo-box {
     width: 116px;
-    height: auto;
+    height: 96px;
     position: absolute;
     top: 0;
     left: 50%;

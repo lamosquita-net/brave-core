@@ -21,10 +21,13 @@ const dibujo = svgEnReact(moscaSvg)
 
 const Contenedor = styled('div')`
   width: 116px;
+  height: 96px;
 
+  /* Explicit size: WebUI pages style every svg (fill, size). */
   svg {
     display: block;
-    width: 100%;
+    width: 116px !important;
+    height: 96px !important;
     overflow: visible;
   }
   .cuerpo {
