@@ -41,6 +41,12 @@ export const Box = styled.div`
     color: #000;
     font-family: ${familia};
   }
+  /* The step titles are h1: Brave's text_defaults_md.css (WebUI) sets Poppins
+     on every heading, so they do not inherit our typeface. */
+  .content-box h1, .content-box h2, .content-box h3,
+  .content-box h4, .content-box h5, .content-box h6 {
+    font-family: ${familia} !important;
+  }
   .content-box button[data-primary] {
     color: ${boton.texto};
   }
