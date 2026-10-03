@@ -39,9 +39,11 @@ void ComponentInstaller::Register(RegisterCallback register_callback,
     "ojhpjlocmbogdgmfpkhlaaeamibhnphh",  // Zxcvbn Data Dictionaries
     "gonpemdgkjcecdgbnaabipppbmgfggbe",  // First Party Sets
     "dhlpobdgcjafebgbbhjdnapejmpkgiie",  // Desktop Sharing Hub
+    // FlyWeb: also on desktop. It is a Google model for address bar
+    // suggestions, downloaded per locale; FlyWeb does not serve it.
+    "obedbbhbpmojnkanicioggnmelmoomoc",  // OnDeviceHeadSuggest
 #if BUILDFLAG(IS_ANDROID)
     "lmelglejhemejginpboagddgdfbepgmp",  // Optimization Hints
-    "obedbbhbpmojnkanicioggnmelmoomoc"   // OnDeviceHeadSuggest
 #endif
   };
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
