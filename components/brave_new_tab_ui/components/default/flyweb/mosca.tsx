@@ -15,6 +15,10 @@ import * as React from 'react'
 import styled from 'styled-components'
 
 import moscaSvg from './moscaSvg'
+import svgEnReact from './svgEnReact'
+
+// Built once: React elements, not an HTML string (Trusted Types, see svgEnReact.tsx).
+const dibujo = svgEnReact(moscaSvg)
 
 // What to touch to tune the flight.
 const AJUSTES = {
@@ -269,7 +273,8 @@ export default function Mosca () {
     <Contenedor
       ref={ref}
       aria-hidden='true'
-      dangerouslySetInnerHTML={{ __html: moscaSvg }}
-    />
+    >
+      {dibujo}
+    </Contenedor>
   )
 }

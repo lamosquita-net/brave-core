@@ -14,6 +14,10 @@ import * as React from 'react'
 import styled from 'styled-components'
 
 import moscaSvg from './moscaSvg'
+import svgEnReact from './svgEnReact'
+
+// Built once: React elements, not an HTML string (Trusted Types, see svgEnReact.tsx).
+const dibujo = svgEnReact(moscaSvg)
 
 const Contenedor = styled('div')`
   width: 116px;
@@ -65,7 +69,8 @@ export default function MoscaZumbido () {
   return (
     <Contenedor
       aria-hidden='true'
-      dangerouslySetInnerHTML={{ __html: moscaSvg }}
-    />
+    >
+      {dibujo}
+    </Contenedor>
   )
 }
