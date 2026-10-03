@@ -32,10 +32,9 @@ bool ShouldUpdateLanguagesList() {
          features::kUpdateLanguageListParam.Get();
 }
 
+// FlyWeb: always Google's endpoints, never translate.brave.com.
 bool UseGoogleTranslateEndpoint() {
-  return IsBraveTranslateGoAvailable() &&
-         base::CommandLine::ForCurrentProcess()->HasSwitch(
-             switches::kBraveTranslateUseGoogleEndpoint);
+  return IsBraveTranslateGoAvailable();
 }
 
 bool IsBraveAutoTranslateEnabled() {
