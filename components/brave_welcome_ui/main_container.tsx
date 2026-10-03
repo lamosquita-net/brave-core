@@ -9,7 +9,6 @@ import DataContext from './state/context'
 import { shouldPlayAnimations } from './state/hooks'
 import { ViewType } from './state/component_types'
 
-import HelpImprove from './components/help-improve'
 import ImportInProgress from './components/import-in-progress'
 import Background from './components/background'
 import Welcome from './components/welcome'
@@ -50,9 +49,14 @@ function MainContainer () {
     mainEl = <p>Failed...</p>
   }
 
-  if (viewType === ViewType.HelpImprove) {
-    mainEl = <HelpImprove />
-  }
+  // FlyWeb: no "Help improve" step. P3A is compiled out and there is no
+  // diagnostics server, so it would offer something that does not exist (and
+  // its "Finish" turned both on). Reaching it ends the first run.
+  React.useEffect(() => {
+    if (viewType === ViewType.HelpImprove) {
+      window.open('chrome://newtab', '_self')
+    }
+  }, [viewType])
 
   if (viewType === ViewType.DefaultBrowser) {
     mainEl = <Welcome />

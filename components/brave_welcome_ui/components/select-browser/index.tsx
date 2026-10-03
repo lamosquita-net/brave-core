@@ -13,6 +13,7 @@ import { ViewType } from '../../state/component_types'
 import { getUniqueBrowserTypes } from '../../state/utils'
 import { WelcomeBrowserProxyImpl, ImportDataBrowserProxyImpl, defaultImportTypes } from '../../api/welcome_browser_proxy'
 import { getLocale } from '$web-common/locale'
+import { loadTimeData } from '$web-common/loadTimeData'
 
 import ChromeCanarySVG from '../svg/browser-icons/chrome-canary'
 import ChromeSVG from '../svg/browser-icons/chrome'
@@ -27,6 +28,12 @@ import VivaldiSVG from '../svg/browser-icons/vivaldi'
 import WhaleSVG from '../svg/browser-icons/whale'
 import YandexSVG from '../svg/browser-icons/yandex'
 import MicrosoftIE from '../svg/browser-icons/ie'
+
+// FlyWeb: Brave left this option untranslated. Until it gets a real string
+// (grd + translations, with the l10n script), Spanish and English here.
+const otroChromium = loadTimeData.getString('language').startsWith('es')
+  ? 'Otro navegador basado en Chromium'
+  : 'Other Chromium-based browser'
 
 interface BrowserItemButtonProps {
   browserName: string
@@ -133,7 +140,7 @@ function SelectBrowser () {
             return (
               <BrowserItemButton
                 key={id}
-                browserName={entry ?? 'Chromium-based browser'}
+                browserName={entry ?? otroChromium}
                 onChange={handleSelectionChange}
                 isActive={entry === currentSelectedBrowser}
               />
