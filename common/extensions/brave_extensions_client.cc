@@ -51,8 +51,12 @@ void BraveExtensionsClient::InitializeWebStoreUrls(
   ChromeExtensionsClient::InitializeWebStoreUrls(command_line);
 }
 
+// FlyWeb: Chrome Web Store extensions install and update straight from Google
+// (Chromium's URL), as decided for step 35. Brave sent them to its
+// go-updater, which redirected to Google; FlyWeb's components server neither
+// redirects nor answers without the services key, so installs failed (403).
 const GURL& BraveExtensionsClient::GetWebstoreUpdateURL() const {
-  return webstore_update_url_;
+  return ChromeExtensionsClient::GetWebstoreUpdateURL();
 }
 
 }  // namespace extensions
