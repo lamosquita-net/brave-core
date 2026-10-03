@@ -68,16 +68,8 @@ export async function getInitialData (): Promise<InitialData> {
           resolve(supported)
         })
       }),
-      new Promise((resolve) => {
-        if (!('braveTalk' in chrome)) {
-          resolve(false)
-          return
-        }
-
-        chrome.braveTalk.isSupported((supported: boolean) => {
-          resolve(supported)
-        })
-      }),
+      // FlyWeb: no Brave Talk (no card, no widget, no toggle).
+      Promise.resolve(false),
       getNTPBrowserAPI().pageHandler.isSearchPromotionEnabled().then(({ enabled }) => enabled),
       getNTPBrowserAPI().pageHandler.getBraveBackgrounds().then(({ backgrounds }) => {
         return backgrounds.map(background => ({ type: 'brave', wallpaperImageUrl: background.imageUrl.url, author: background.author, link: background.link.url }))

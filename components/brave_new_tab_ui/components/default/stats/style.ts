@@ -49,7 +49,9 @@ export const StyledStatsItemCounter = styled('span')<{}>`
 `
 
 export const StyledStatsItemText = styled('span')<{}>`
+  /* FlyWeb: the unit ("B", "segundos") in bold like its number (mockup). */
   font-size: 21px;
+  font-weight: 700;
   font-family: ${familia};
   margin-left: 2px;
   display: inline;

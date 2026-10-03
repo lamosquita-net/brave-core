@@ -17,7 +17,9 @@ import {
   StyledUploadIconContainer,
   StyledUploadLabel
 } from '../../../components/default'
-import braveBackground from './assets/brave-background.png'
+// FlyWeb: the thumbnail of "FlyWeb backgrounds" is one of ours, never a Brave photo.
+import { fondos } from '../../../components/default/flyweb/recursos'
+const braveBackground = fondos[0].wallpaperImageUrl
 import UploadIcon from './assets/upload-icon'
 import { Toggle } from '../../../components/toggle'
 

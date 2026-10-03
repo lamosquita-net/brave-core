@@ -81,8 +81,8 @@ base::Value::Dict GetPreferencesDictionary(PrefService* prefs) {
   pref_data.Set("showClock", prefs->GetBoolean(kNewTabPageShowClock));
   pref_data.Set("clockFormat", prefs->GetString(kNewTabPageClockFormat));
   pref_data.Set("showStats", prefs->GetBoolean(kNewTabPageShowStats));
-  pref_data.Set("showToday",
-                prefs->GetBoolean(brave_news::prefs::kNewTabPageShowToday));
+  // FlyWeb: Brave News never shows (there is no Brave News controller).
+  pref_data.Set("showToday", false);
   pref_data.Set("showRewards", prefs->GetBoolean(kNewTabPageShowRewards));
   pref_data.Set("isBrandedWallpaperNotificationDismissed",
                 prefs->GetBoolean(kBrandedWallpaperNotificationDismissed));
@@ -408,9 +408,11 @@ void BraveNewTabMessageHandler::HandleSaveNewTabPagePref(
   } else if (settingsKeyInput == "showStats") {
     settingsKey = kNewTabPageShowStats;
   } else if (settingsKeyInput == "showToday") {
-    settingsKey = brave_news::prefs::kNewTabPageShowToday;
+    // FlyWeb: Brave News cannot be turned on.
+    return;
   } else if (settingsKeyInput == "isBraveNewsOptedIn") {
-    settingsKey = brave_news::prefs::kBraveNewsOptedIn;
+    // FlyWeb: no Brave News.
+    return;
   } else if (settingsKeyInput == "showRewards") {
     settingsKey = kNewTabPageShowRewards;
   } else if (settingsKeyInput == "isBrandedWallpaperNotificationDismissed") {

@@ -108,7 +108,7 @@ function TopSite (props: Props) {
   return <SiteTile site={props.siteData} draggable={sortable} isMenuShowing={showMenu}>
     {!siteData.defaultSRTopSite
       ? <TileActionsContainer>
-        <TileAction ref={setEditMenuRef} onClick={(e) => {
+        <TileAction ref={setEditMenuRef} aria-label={getLocale('editSiteTileMenuItem')} onClick={(e) => {
           e.preventDefault()
           setShowMenu(true)
         }}>

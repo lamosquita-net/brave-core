@@ -59,8 +59,9 @@ export const Box = styled.div`
     grid-column: 2;
   }
 
+  /* FlyWeb: D-DIN has regular and bold only. */
   .view-title {
-    font-weight: 600;
+    font-weight: 700;
     font-size: 36px;
     margin: 0 0 18px 0;
   }

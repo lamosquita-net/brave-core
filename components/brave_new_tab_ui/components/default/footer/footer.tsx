@@ -69,7 +69,8 @@ export default class FooterInfo extends React.PureComponent<Props, {}> {
           <Navigation>
             <IconButtonContainer textDirection={textDirection}>
               <IconButtonSideText textDirection={textDirection}>
-                <IconButton onClick={onClickSettings}>
+                {/* FlyWeb: accessible name (screen readers read an empty button). */}
+                <IconButton onClick={onClickSettings} aria-label={getLocale('customize')}>
                   <SettingsIcon />
                 </IconButton>
                 {getLocale('customize')}

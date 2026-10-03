@@ -149,9 +149,8 @@ void AttachTabHelpers(content::WebContents* web_contents) {
   ipfs::IPFSTabHelper::MaybeCreateForWebContents(web_contents);
 #endif
 
-  if (!web_contents->GetBrowserContext()->IsOffTheRecord()) {
-    BraveNewsTabHelper::CreateForWebContents(web_contents);
-  }
+  // FlyWeb: no BraveNewsTabHelper (no Brave News; it looked up the page's
+  // feeds and Brave's publisher list on every tab).
 
   brave_stats::BraveStatsTabHelper::CreateForWebContents(web_contents);
 

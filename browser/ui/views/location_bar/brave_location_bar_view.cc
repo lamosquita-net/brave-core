@@ -103,14 +103,8 @@ void BraveLocationBarView::Init() {
     }
   }
 
-  if (!browser_->profile()->IsOffTheRecord()) {
-    brave_news_location_view_ =
-        AddChildView(std::make_unique<BraveNewsLocationView>(
-            browser_->profile(), this, this));
-    brave_news_location_view_->SetVisible(false);
-    views::InkDrop::Get(brave_news_location_view_)
-        ->SetVisibleOpacity(GetPageActionInkDropVisibleOpacity());
-  }
+  // FlyWeb: no "Follow in Brave News" button (no Brave News); every use of
+  // brave_news_location_view_ already checks for null.
 #if BUILDFLAG(ENABLE_TOR)
   onion_location_view_ =
       AddChildView(std::make_unique<OnionLocationView>(browser_->profile()));
