@@ -86,6 +86,8 @@ main_text_only_replacements = [
 flyweb_replacements = [
     (r'\bBrave\b(?!\s+(?:Wallet|Rewards|News|VPN|Vpn|Search|Talk|Ads|Software'
      r'|Authors|Sync|Today|Leo)\b)', r'FlyWeb'),
+    # FlyWeb's internal pages are flyweb://, never brave:// (kBraveUIScheme).
+    (r'\bbrave://', r'flyweb://'),
 ]
 
 # Messages that name the company are legal notices ("Brave is a registered

@@ -741,7 +741,7 @@ void BraveAddLocalizedStrings(content::WebUIDataSource* html_source,
   BravePrivacyHandler::AddLoadTimeData(html_source, profile);
   BraveAddSyncStrings(html_source);
 
-  // Load time data for brave://settings/rewards
+  // Load time data for flyweb://settings/rewards
   html_source->AddBoolean("inlineTipButtonsEnabled",
                           profile->GetPrefs()->GetBoolean(
                               brave_rewards::prefs::kInlineTipButtonsEnabled));
@@ -755,7 +755,7 @@ void BraveAddLocalizedStrings(content::WebUIDataSource* html_source,
                           profile->GetPrefs()->GetBoolean(
                               brave_rewards::prefs::kInlineTipGithubEnabled));
 
-  // Load time data for brave://settings/extensions
+  // Load time data for flyweb://settings/extensions
   html_source->AddBoolean(
       "signInAllowedOnNextStartupInitialValue",
       profile->GetPrefs()->GetBoolean(prefs::kSigninAllowedOnNextStartup));

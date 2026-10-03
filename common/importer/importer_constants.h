@@ -17,7 +17,7 @@ constexpr char kChromeLocalStateFile[] = "Local State";
 
 // Browser names section, the names mostly match the identifier that is used to
 // identify the default browser, if you change these constants(or adding a new
-// one) make sure that brave://welcome page will identify this browser as the
+// one) make sure that flyweb://welcome page will identify this browser as the
 // default one
 constexpr char kGoogleChromeBrowser[] = "Google Chrome";
 constexpr char kGoogleChromeBrowserBeta[] = "Google Chrome Beta";

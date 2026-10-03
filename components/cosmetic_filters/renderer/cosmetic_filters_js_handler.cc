@@ -157,7 +157,7 @@ namespace cosmetic_filters {
 
 // A class to record performance events from content_filter.ts.
 // The events are reported as async traces and/or UMAs and can be retrived by
-// brave://tracing & brave://histograms.
+// flyweb://tracing & flyweb://histograms.
 class CosmeticFilterPerfTracker {
  public:
   int OnHandleMutationsBegin() {

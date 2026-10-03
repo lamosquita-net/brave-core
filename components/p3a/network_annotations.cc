@@ -27,7 +27,7 @@ net::NetworkTrafficAnnotationTag GetRandomnessRequestAnnotation() {
     policy {
       cookies_allowed: NO
       setting:
-        "Users can enable or disable it in brave://settings/privacy"
+        "Users can enable or disable it in flyweb://settings/privacy"
        policy_exception_justification:
          "Not implemented."
     })");
@@ -52,7 +52,7 @@ net::NetworkTrafficAnnotationTag GetRandomnessServerInfoAnnotation() {
     policy {
       cookies_allowed: NO
       setting:
-        "Users can enable or disable it in brave://settings/privacy"
+        "Users can enable or disable it in flyweb://settings/privacy"
        policy_exception_justification:
          "Not implemented."
     })");
@@ -82,7 +82,7 @@ net::NetworkTrafficAnnotationTag GetP3AUploadAnnotation(
           policy {
             cookies_allowed: NO
             setting:
-              "Users can enable or disable it in brave://settings/privacy"
+              "Users can enable or disable it in flyweb://settings/privacy"
              policy_exception_justification:
                "Not implemented."
           })");
@@ -108,7 +108,7 @@ net::NetworkTrafficAnnotationTag GetP3AUploadAnnotation(
           cookies_allowed: NO
           setting:
             "Users can enable or disable it by enabling or disabling Brave "
-            "rewards or ads in brave://rewards."
+            "rewards or ads in flyweb://rewards."
            policy_exception_justification:
              "Not implemented."
         })");
@@ -131,7 +131,7 @@ net::NetworkTrafficAnnotationTag GetP3AUploadAnnotation(
           policy {
             cookies_allowed: NO
             setting:
-              "Users can enable or disable it in brave://settings/privacy"
+              "Users can enable or disable it in flyweb://settings/privacy"
              policy_exception_justification:
                "Not implemented."
           })");
@@ -155,7 +155,7 @@ net::NetworkTrafficAnnotationTag GetP3AUploadAnnotation(
           cookies_allowed: NO
           setting:
             "Users can enable or disable it by enabling or disabling Brave "
-            "rewards or ads in brave://rewards."
+            "rewards or ads in flyweb://rewards."
            policy_exception_justification:
              "Not implemented."
         })");

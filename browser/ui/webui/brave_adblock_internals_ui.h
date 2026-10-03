@@ -10,7 +10,7 @@
 
 #include "content/public/browser/web_ui_controller.h"
 
-// The WebUI for brave://adblock-internals
+// The WebUI for flyweb://adblock-internals
 class BraveAdblockInternalsUI : public content::WebUIController {
  public:
   BraveAdblockInternalsUI(content::WebUI* web_ui, const std::string& name);

@@ -119,7 +119,7 @@ class AdBlockService {
 
   void EnableTag(const std::string& tag, bool enabled);
 
-  // Methods for brave://adblock-internals.
+  // Methods for flyweb://adblock-internals.
   using GetDebugInfoCallback =
       base::OnceCallback<void(base::Value::Dict, base::Value::Dict)>;
   void GetDebugInfoAsync(GetDebugInfoCallback callback);

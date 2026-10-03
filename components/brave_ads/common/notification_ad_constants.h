@@ -12,7 +12,7 @@
 
 namespace brave_ads {
 
-// Brave Ads per hour are user configurable within the brave://rewards ads UI
+// Brave Ads per hour are user configurable within the flyweb://rewards ads UI
 constexpr int64_t kDefaultBraveRewardsNotificationAdsPerHour = 10;
 
 // Default ad notification timeout in seconds.

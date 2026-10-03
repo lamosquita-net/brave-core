@@ -107,7 +107,7 @@ const AssetsPanel = (props: Props) => {
       () => {
         if (contractAddress === '') {
           routeToAssetDetails(
-            `brave://wallet${
+            `flyweb://wallet${
               WalletRoutes.PortfolioAssets //
             }/${
               chainId //
@@ -117,7 +117,7 @@ const AssetsPanel = (props: Props) => {
         }
         if (tokenId !== '') {
           routeToAssetDetails(
-            `brave://wallet${
+            `flyweb://wallet${
               WalletRoutes.PortfolioNFTs //
             }/${
               chainId //
@@ -128,7 +128,7 @@ const AssetsPanel = (props: Props) => {
           return
         }
         routeToAssetDetails(
-          `brave://wallet${
+          `flyweb://wallet${
             WalletRoutes.PortfolioAssets //
           }/${
             chainId //

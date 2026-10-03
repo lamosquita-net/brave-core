@@ -36,7 +36,7 @@ struct MemoryMetric {
     {"malloc", "size"},
 };
 
-// Class acting as a controller of the brave://adblock-internals WebUI.
+// Class acting as a controller of the flyweb://adblock-internals WebUI.
 class BraveAdblockInternalsMessageHandler
     : public content::WebUIMessageHandler {
  public:

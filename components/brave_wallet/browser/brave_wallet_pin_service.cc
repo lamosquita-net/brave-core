@@ -201,7 +201,7 @@ void ContentTypeChecker::CheckContentTypeSupported(
             policy {
               cookies_allowed: NO
               setting:
-                "You can enable or disable this feature in brave://settings."
+                "You can enable or disable this feature in flyweb://settings."
               policy_exception_justification:
                 "Not implemented."
             }
