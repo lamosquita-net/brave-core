@@ -9,17 +9,16 @@
 #include "src/chrome/browser/component_updater/registration.cc"
 #undef RegisterComponentsForUpdate
 
-#include "brave/browser/brave_shields/https_everywhere_component_installer.h"
-#include "chrome/browser/browser_process.h"
-
 namespace component_updater {
 
 void RegisterComponentsForUpdate() {
   RegisterComponentsForUpdate_ChromiumImpl();
-  ComponentUpdateService* cus = g_browser_process->component_updater();
   // FlyWeb: no "Brave Wallet data files" component (token lists for the
   // wallet, which FlyWeb disables): it would be downloaded for nothing.
-  brave_shields::RegisterHTTPSEverywhereComponent(cus);
+  // FlyWeb: no HTTPS Everywhere component either. FlyWeb enables HTTPS by
+  // Default (net::features::kBraveHttpsByDefault), which uses Chromium's HTTPS
+  // upgrades plus the exceptions list of the Local Data component, and skips
+  // the HTTPS Everywhere rules altogether (BraveRequestHandler::SetupCallbacks).
 }
 
 }  // namespace component_updater

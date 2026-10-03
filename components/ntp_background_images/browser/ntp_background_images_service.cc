@@ -109,10 +109,11 @@ NTPBackgroundImagesService::NTPBackgroundImagesService(
 NTPBackgroundImagesService::~NTPBackgroundImagesService() = default;
 
 void NTPBackgroundImagesService::Init() {
-  // FlyWeb: only Brave's photo wallpapers. Sponsored images (NTP ads) and
-  // super referral wallpapers are never registered, so their components are
-  // not downloaded and GetBrandedImagesData() has nothing to return.
-  RegisterBackgroundImagesComponent();
+  // FlyWeb: no component at all. Sponsored images (NTP ads) and super referral
+  // wallpapers are never registered, and Brave's photo wallpapers neither:
+  // FlyWeb's new tab page ships its own backgrounds (brave_new_tab_ui
+  // components/default/flyweb). GetBackgroundImagesData() and
+  // GetBrandedImagesData() have nothing to return.
 }
 
 void NTPBackgroundImagesService::CheckNTPSIComponentUpdateIfNeeded() {

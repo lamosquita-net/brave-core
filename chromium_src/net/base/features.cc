@@ -59,9 +59,12 @@ BASE_FEATURE(kBraveTorWindowsHttpsOnly,
              base::FEATURE_ENABLED_BY_DEFAULT);
 
 // Enabled HTTPS by Default.
+// FlyWeb: on by default. Brave rolled it out through its variations server,
+// which FlyWeb does not use; it replaces HTTPS Everywhere, whose component
+// FlyWeb no longer registers.
 BASE_FEATURE(kBraveHttpsByDefault,
              "HttpsByDefault",
-             base::FEATURE_DISABLED_BY_DEFAULT);
+             base::FEATURE_ENABLED_BY_DEFAULT);
 
 // Add "Forget by default" cookie blocking mode which cleanups storage after a
 // website is closed.
