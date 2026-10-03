@@ -45,7 +45,10 @@ function analizar (svg: string): Nodo {
 function aReact (n: Nodo | string, clave: number): React.ReactNode {
   if (typeof n === 'string') return n
   if (!VALIDAS.has(n.etiqueta)) return null
-  const props: { [k: string]: string | number } = { key: clave }
+  const props: { [k: string]: string | number | object } = { key: clave }
+  // The drawing relies on the default black fill; WebUI pages set `fill` on
+  // every <svg> (currentColor: grey on the new tab, white on the welcome page).
+  if (n.etiqueta === 'svg') props.style = { fill: '#000' }
   for (const [k, v] of Object.entries(n.atributos)) {
     if (k === 'class') props.className = v
     else if (k === 'xmlns' || k.startsWith('data-')) continue
