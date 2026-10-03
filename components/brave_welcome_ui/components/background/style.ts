@@ -5,6 +5,8 @@
 
 import styled from 'styled-components'
 
+import { boton, familia } from '../flyweb/estilo'
+
 export const Box = styled.div`
   .content-box {
     position: fixed;
@@ -15,6 +17,32 @@ export const Box = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  /* FlyWeb: every step's root sets white text in Brave's heading font; on our
+     light photograph and card the text is black D-DIN (prototype). */
+  .content-box > * {
+    color: #000 !important;
+    font-family: ${familia} !important;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* FlyWeb: buttons in the project's colours instead of Brave's blue. The
+     primary background, its hover and the focus ring come from these
+     variables (web-components/button); the other buttons and "Skip" in black,
+     like the card's text. */
+  .content-box {
+    --interactive5: ${boton.fondo};
+    --interactive4: ${boton.encima};
+    --interactive6: ${boton.encima};
+    --focus-border: ${boton.fondo};
+  }
+  .content-box button {
+    color: #000;
+    font-family: ${familia};
+  }
+  .content-box button[data-primary] {
+    color: ${boton.texto};
   }
 
   .background-img {

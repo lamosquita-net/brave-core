@@ -16,6 +16,7 @@
 #include "brave/browser/ui/webui/settings/brave_import_bulk_data_handler.h"
 #include "brave/browser/ui/webui/settings/brave_search_engines_handler.h"
 #include "brave/browser/ui/webui/welcome_page/welcome_dom_handler.h"
+#include "brave/common/brave_channel_info.h"
 #include "brave/components/brave_welcome/common/features.h"
 #include "brave/components/brave_welcome/resources/grit/brave_welcome_generated_map.h"
 #include "brave/components/constants/pref_names.h"
@@ -147,6 +148,10 @@ BraveWelcomeUI::BraveWelcomeUI(content::WebUI* web_ui, const std::string& name)
 
   // Variables considered when determining which onboarding cards to show
   source->AddString("countryString", CountryIDToCountryString(country_id));
+  // FlyWeb: the buttons take the colour of this channel's app icon: purple for
+  // the development builds (not official, icon O1), orange for the rest (M1).
+  source->AddBoolean("flywebDesarrollo",
+                     brave::GetChannelName() == "developer");
   source->AddBoolean(
       "showRewardsCard",
       base::FeatureList::IsEnabled(brave_welcome::features::kShowRewardsCard));
