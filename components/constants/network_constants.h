@@ -19,6 +19,7 @@ extern const char kBraveReferralsActivityPath[];
 extern const char kBraveSafeBrowsing2Proxy[];
 extern const char kBraveSafeBrowsingSslProxy[];
 extern const char kBraveRedirectorProxy[];
+extern const char kFlyWebBlockedURL[];
 extern const char kBraveClients4Proxy[];
 extern const char kBraveStaticProxy[];
 

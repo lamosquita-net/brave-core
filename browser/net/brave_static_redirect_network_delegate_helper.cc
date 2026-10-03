@@ -16,6 +16,7 @@
 #include "brave/components/constants/network_constants.h"
 #include "extensions/common/url_pattern.h"
 #include "net/base/net_errors.h"
+#include "url/gurl.h"
 
 namespace brave {
 
@@ -71,8 +72,6 @@ int OnBeforeURLRequest_StaticRedirectWorkForGURL(
       URLPattern::SCHEME_HTTP | URLPattern::SCHEME_HTTPS, kCRLSetPrefix3);
   static URLPattern crlSet_pattern4(
       URLPattern::SCHEME_HTTP | URLPattern::SCHEME_HTTPS, kCRLSetPrefix4);
-  static URLPattern crxDownload_pattern(
-      URLPattern::SCHEME_HTTP | URLPattern::SCHEME_HTTPS, kCRXDownloadPrefix);
   static URLPattern autofill_pattern(
       URLPattern::SCHEME_HTTPS, kAutofillPrefix);
   static URLPattern gvt1_pattern(
@@ -115,44 +114,43 @@ int OnBeforeURLRequest_StaticRedirectWorkForGURL(
     return net::OK;
   }
 
-  if (crxDownload_pattern.MatchesURL(request_url)) {
-    replacements.SetSchemeStr("https");
-    replacements.SetHostStr("crxdownload.brave.com");
-    *new_url = request_url.ReplaceComponents(replacements);
-    return net::OK;
-  }
+  // FlyWeb: Chrome Web Store downloads go straight to Google (only when the
+  // user installs or updates an extension), not through Brave's
+  // crxdownload.brave.com.
 
+  // FlyWeb: no autofill data from Google's servers (Brave proxied it through
+  // static1.brave.com); autofill keeps working with local data.
+  // The error cancels page requests; system requests (OnBeforeSystemRequest)
+  // ignore it and only follow new_url, which never resolves (.invalid).
   if (autofill_pattern.MatchesURL(request_url)) {
-    replacements.SetSchemeStr("https");
-    replacements.SetHostStr(kBraveStaticProxy);
-    *new_url = request_url.ReplaceComponents(replacements);
-    return net::OK;
+    *new_url = GURL(kFlyWebBlockedURL);
+    return net::ERR_BLOCKED_BY_CLIENT;
   }
 
   if (crlSet_pattern1.MatchesURL(request_url)) {
     replacements.SetSchemeStr("https");
-    replacements.SetHostStr("redirector.brave.com");
+    replacements.SetHostStr(kBraveRedirectorProxy);
     *new_url = request_url.ReplaceComponents(replacements);
     return net::OK;
   }
 
   if (crlSet_pattern2.MatchesURL(request_url)) {
     replacements.SetSchemeStr("https");
-    replacements.SetHostStr("redirector.brave.com");
+    replacements.SetHostStr(kBraveRedirectorProxy);
     *new_url = request_url.ReplaceComponents(replacements);
     return net::OK;
   }
 
   if (crlSet_pattern3.MatchesURL(request_url)) {
     replacements.SetSchemeStr("https");
-    replacements.SetHostStr("redirector.brave.com");
+    replacements.SetHostStr(kBraveRedirectorProxy);
     *new_url = request_url.ReplaceComponents(replacements);
     return net::OK;
   }
 
   if (crlSet_pattern4.MatchesURL(request_url)) {
     replacements.SetSchemeStr("https");
-    replacements.SetHostStr("redirector.brave.com");
+    replacements.SetHostStr(kBraveRedirectorProxy);
     *new_url = request_url.ReplaceComponents(replacements);
     return net::OK;
   }
