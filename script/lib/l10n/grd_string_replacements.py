@@ -84,8 +84,10 @@ main_text_only_replacements = [
 # Applied after all the replacements above, so Chromium strings end up as
 # Chrome -> Brave -> FlyWeb. Idempotent.
 flyweb_replacements = [
+    # "Brave Sync" is rebranded too: FlyWeb syncs with its own server
+    # (sync.flyweb.lamosquita.net).
     (r'\bBrave\b(?!\s+(?:Wallet|Rewards|News|VPN|Vpn|Search|Talk|Ads|Software'
-     r'|Authors|Sync|Today|Leo)\b)', r'FlyWeb'),
+     r'|Authors|Today|Leo)\b)', r'FlyWeb'),
     # FlyWeb's internal pages are flyweb://, never brave:// (kBraveUIScheme).
     (r'\bbrave://', r'flyweb://'),
 ]
