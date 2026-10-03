@@ -23,7 +23,6 @@ import {
   ToggleCardsSwitch,
   ToggleCardsText
 } from '../../../components/default'
-import braveTalkBanner from './assets/brave-talk.png'
 import rewardsBanner from './assets/braverewards.png'
 import HideIcon from './assets/hide-icon'
 import { Toggle } from '../../../components/toggle'
@@ -68,10 +67,8 @@ class CardsSettings extends React.PureComponent<Props, {}> {
   }
 
   render () {
+    // FlyWeb: no Brave Talk card (Talk is out).
     const {
-      toggleShowBraveTalk,
-      showBraveTalk,
-      braveTalkSupported,
       toggleShowRewards,
       showRewards,
       braveRewardsSupported,
@@ -80,22 +77,6 @@ class CardsSettings extends React.PureComponent<Props, {}> {
     } = this.props
     return (
       <StyledWidgetSettings>
-        {
-          braveTalkSupported
-          ? <FeaturedSettingsWidget>
-              <StyledBannerImage src={braveTalkBanner} />
-              <StyledSettingsInfo>
-                <StyledSettingsTitle>
-                  {getLocale('braveTalkWidgetTitle')}
-                </StyledSettingsTitle>
-                <StyledSettingsCopy>
-                  {getLocale('braveTalkWidgetWelcomeTitle')}
-                </StyledSettingsCopy>
-              </StyledSettingsInfo>
-              {this.renderToggleButton(showBraveTalk, toggleShowBraveTalk)}
-            </FeaturedSettingsWidget>
-          : null
-        }
         {
           braveRewardsSupported
             ? <SettingsWidget>
