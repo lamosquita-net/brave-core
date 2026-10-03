@@ -32,16 +32,18 @@
 
 namespace {
 
-const char kAdBlockDefaultComponentName[] = "Brave Ad Block Updater";
-const char kAdBlockDefaultComponentId[] = "iodkpdagapdfkphljnddpjlldadblomo";
+const char kAdBlockDefaultComponentName[] = "FlyWeb Shields: default list";
+// FlyWeb: own component, signed on bak (softmac FlyWeb/servidor/componentes);
+// Brave's update server needs Brave's private service key.
+const char kAdBlockDefaultComponentId[] = "oncmalfeabebooncbcbcaofghlfnkjgc";
 const char kAdBlockDefaultComponentBase64PublicKey[] =
-    "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsD/B/MGdz0gh7WkcFARn"
-    "ZTBX9KAw2fuGeogijoI+fET38IK0L+P/trCT2NshqhRNmrDpLzV2+Dmes6PvkA+O"
-    "dQkUV6VbChJG+baTfr3Oo5PdE0WxmP9Xh8XD7p85DQrk0jJilKuElxpK7Yq0JhcT"
-    "Sc3XNHeTwBVqCnHwWZZ+XysYQfjuDQ0MgQpS/s7U04OZ63NIPe/iCQm32stvS/pE"
-    "ya7KdBZXgRBQ59U6M1n1Ikkp3vfECShbBld6VrrmNrl59yKWlEPepJ9oqUc2Wf2M"
-    "q+SDNXROG554RnU4BnDJaNETTkDTZ0Pn+rmLmp1qY5Si0yGsfHkrv3FS3vdxVozO"
-    "PQIDAQAB";
+    "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtCBU/b6xx7lC72kZMOed"
+    "zjWLjJOwsHTe843GW61kbpOwz27zkqz5sbhuZQ6+bfHRYw9WZC96r73rxseCtlCZ"
+    "y6iWLEJa/rOw0okbArkpN04zeHcxAe3vD6HbfvFJa7btpF6AzCkPoOuhX7k7xami"
+    "X4AQYfYu8INkEpCoo3YwTBcwj4AdLrdysBN3SGa+H6vzcNQ0tuo1nIE910yvLB+x"
+    "U4GwFk2ryyKvfoL2AnbjW7u/tgeNTqGp7aXhdbIm/pdYlb+Ek7KH8IdeXJ4cuX11"
+    "iaVl0ea2dRxvKPHAl+nAc3KJMZrJFOBF4r04W3TJpSH0RdwJz5n2ApH4YjZ9R7ar"
+    "pwIDAQAB";
 
 const char kAdBlockExceptionComponentName[] =
     "Brave Ad Block First Party Filters";
