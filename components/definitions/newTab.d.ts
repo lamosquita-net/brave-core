@@ -28,6 +28,15 @@ declare namespace NewTab {
     // Picked by our rotating algorithm. When it's false, it means that the user
     // has picked this background.
     random?: boolean
+
+    // FlyWeb: our bundled backgrounds carry the colours of the texts on them.
+    flyweb?: FlyWebColores
+  }
+
+  // FlyWeb: colour of the labels (counters, top sites) and of the photo credit.
+  export type FlyWebColores = {
+    texto: string
+    pie: string
   }
 
   export type BackgroundWallpaper = ColorBackground | ImageBackground | BraveBackground

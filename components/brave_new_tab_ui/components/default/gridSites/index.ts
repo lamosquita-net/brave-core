@@ -5,15 +5,17 @@
 
 import styled, { css } from 'styled-components'
 
+import { familia } from '../flyweb/estilos'
+
 export const TileTitle = styled('p')<{}>`
   margin: 0;
-  font-family: Poppins;
+  font-family: ${familia};
   font-weight: 400;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 17px;
   max-width: 100%;
   height: 17px;
-  color: var(--override-readability-color, white);
+  color: var(--flyweb-texto);
   padding: 0 2px;
   overflow: hidden;
   white-space: nowrap;

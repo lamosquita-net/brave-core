@@ -14,6 +14,7 @@ import ImportInProgress from './components/import-in-progress'
 import Background from './components/background'
 import Welcome from './components/welcome'
 import Loader from './components/loader'
+import { EstiloFlyWeb } from './components/flyweb/estilo'
 
 const SelectBrowser = React.lazy(() => import('./components/select-browser'))
 const SelectProfile = React.lazy(() => import('./components/select-profile'))
@@ -62,14 +63,17 @@ function MainContainer () {
   }
 
   return (
-    <Background
-      static={!shouldPlayAnimations}
-      onLoad={onBackgroundImgLoad}
-    >
-      <React.Suspense fallback={<Loader />}>
-        {mainEl}
-      </React.Suspense>
-    </Background>
+    <>
+      <EstiloFlyWeb />
+      <Background
+        static={!shouldPlayAnimations}
+        onLoad={onBackgroundImgLoad}
+      >
+        <React.Suspense fallback={<Loader />}>
+          {mainEl}
+        </React.Suspense>
+      </Background>
+    </>
   )
 }
 

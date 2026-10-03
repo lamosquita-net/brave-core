@@ -66,18 +66,15 @@ export const Box = styled.div`
     margin: 0;
   }
 
+  /* FlyWeb: the fly peeks over the top edge of the card (prototype). */
   .view-logo-box {
-    width: 150px;
+    width: 116px;
     height: auto;
     position: absolute;
-    top: calc(-160px / 2);
-    left: calc(50% - 160px/2);
-    z-index: 2;
-
-    img {
-      width: 100%;
-      height: auto;
-    }
+    top: 0;
+    left: 50%;
+    transform: translate(-50%, -62%);
+    z-index: 4;
   }
 `
 
@@ -89,7 +86,5 @@ export const ActionBox = styled.div`
   max-width: 450px;
   margin: 0 auto 40px auto;
 
-  button {
-    color: white;
-  }
+  /* FlyWeb: buttons keep their own colours on the light card. */
 `

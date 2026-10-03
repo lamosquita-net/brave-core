@@ -2,26 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-export const images: NewTab.BraveBackground[] = [{
-  'type': 'brave',
-  'wallpaperImageUrl': 'dylan-malval_sea-min.webp',
-  'author': 'Dylan Malval',
-  'link': 'https://www.instagram.com/vass_captures/',
-  'originalUrl': 'Contributor sent the hi-res version through email',
-  'license': 'used with permission'
-}]
-// If you change the size of this array (e.g. adding a new background, adding a new property),
-// then you must also update `script/generate_licenses.py`
+// FlyWeb: our own photographs (components/flyweb_ntp/resources/fondos) replace
+// Brave's. They are bundled, so the "NTP Background Images" component is not
+// needed for them.
+import { fondos } from '../components/default/flyweb/recursos'
 
-export const updateImages = (newImages: NewTab.BraveBackground[]) => {
-  if (!newImages.length) {
-    // This can happen when the component for NTP is not downloaded yet on
-    // a fresh profile.
-    return
-  }
+export const images: NewTab.BraveBackground[] = [...fondos]
 
-  images.splice(0, images.length, ...newImages)
-}
+// FlyWeb: the component's images (Brave's photographers) are no longer used.
+export const updateImages = (_newImages: NewTab.BraveBackground[]) => {}
 
 export const defaultSolidBackgroundColor = '#151E9A'
 
