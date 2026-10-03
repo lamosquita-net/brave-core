@@ -318,6 +318,11 @@ AdBlockService::AdBlockService(
   custom_filters_provider_ =
       std::make_unique<AdBlockCustomFiltersProvider>(local_state_);
 
+  // FlyWeb diagnostic (nube/shields-diagnostico): remove after F2.6.
+  LOG(WARNING) << "FLYWEB-SHIELDS engines default="
+               << static_cast<const void*>(default_engine_.get())
+               << " additional="
+               << static_cast<const void*>(additional_filters_engine_.get());
   default_service_observer_ = std::make_unique<SourceProviderObserver>(
       default_engine_.get(), default_filters_provider_.get(),
       resource_provider_.get(), GetTaskRunner());

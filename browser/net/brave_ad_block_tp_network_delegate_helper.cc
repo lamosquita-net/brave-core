@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "base/feature_list.h"
+#include "base/logging.h"
 #include "base/metrics/histogram_macros.h"
 #include "base/strings/string_util.h"
 #include "brave/browser/brave_browser_process.h"
@@ -351,6 +352,22 @@ void OnBeforeURLRequestAdBlockTP(const ResponseCallback& next_callback,
 
 int OnBeforeURLRequest_AdBlockTPPreWork(const ResponseCallback& next_callback,
                                         std::shared_ptr<BraveRequestInfo> ctx) {
+  // FlyWeb diagnostic (nube/shields-diagnostico): remove after F2.6. Only the
+  // test hosts of the ad-blocking check, to keep the log short.
+  {
+    const std::string h = ctx->request_url.host();
+    if (h.find("googletagmanager") != std::string::npos ||
+        h.find("doubleclick") != std::string::npos ||
+        h.find("google-analytics") != std::string::npos ||
+        h.find("googlesyndication") != std::string::npos ||
+        h.find("taboola") != std::string::npos) {
+      LOG(WARNING) << "FLYWEB-SHIELDS request " << h
+                   << " initiator=" << ctx->initiator_url.spec()
+                   << " shields=" << ctx->allow_brave_shields
+                   << " allow_ads=" << ctx->allow_ads
+                   << " type=" << static_cast<int>(ctx->resource_type);
+    }
+  }
   // If the following info isn't available, then proper content settings can't
   // be looked up, so do nothing.
   if (ctx->request_url.is_empty() ||

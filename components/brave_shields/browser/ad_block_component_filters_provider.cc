@@ -9,6 +9,8 @@
 #include <string>
 #include <utility>
 
+#include "base/logging.h"
+
 #include "base/files/file_path.h"
 #include "base/task/thread_pool.h"
 #include "brave/components/brave_shields/browser/ad_block_component_installer.h"
@@ -54,6 +56,9 @@ void AdBlockComponentFiltersProvider::UnregisterComponent() {
 void AdBlockComponentFiltersProvider::OnComponentReady(
     const base::FilePath& path) {
   component_path_ = path;
+  // FlyWeb diagnostic (nube/shields-diagnostico): remove after F2.6.
+  LOG(WARNING) << "FLYWEB-SHIELDS component ready " << component_id_ << " "
+               << path;
 
   NotifyObservers();
 }

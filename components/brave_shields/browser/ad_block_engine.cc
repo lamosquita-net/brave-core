@@ -8,6 +8,8 @@
 #include <set>
 #include <string>
 #include <utility>
+
+#include "base/logging.h"
 #include <vector>
 
 #include "base/containers/contains.h"
@@ -119,6 +121,11 @@ void AdBlockEngine::ShouldStartRequest(const GURL& url,
                             ResourceTypeToString(resource_type), did_match_rule,
                             did_match_exception, did_match_important,
                             mock_data_url, rewritten_url);
+  // FlyWeb diagnostic (nube/shields-diagnostico): remove after F2.6.
+  LOG(WARNING) << "FLYWEB-SHIELDS check " << static_cast<const void*>(this)
+               << " " << url.host() << " tab=" << tab_host
+               << " 3p=" << is_third_party << " rule=" << *did_match_rule
+               << " exception=" << *did_match_exception;
 
   // LOG(ERROR) << "AdBlockEngine::ShouldStartRequest(), host: "
   //  << tab_host
@@ -270,6 +277,10 @@ void AdBlockEngine::OnListSourceLoaded(const DATFileDataBuffer& filters,
                                        const std::string& resources_json) {
   auto engine = std::make_unique<adblock::Engine>(
       reinterpret_cast<const char*>(filters.data()), filters.size());
+  // FlyWeb diagnostic (nube/shields-diagnostico): remove after F2.6.
+  LOG(WARNING) << "FLYWEB-SHIELDS engine " << static_cast<const void*>(this)
+               << " loaded list of " << filters.size() << " bytes, resources "
+               << resources_json.size() << " bytes";
   UpdateAdBlockClient(std::move(engine), resources_json);
 }
 
