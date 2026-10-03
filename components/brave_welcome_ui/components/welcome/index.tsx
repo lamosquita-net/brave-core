@@ -17,7 +17,7 @@ import DataContext from '../../state/context'
 import { ViewType } from '../../state/component_types'
 import { shouldPlayAnimations } from '../../state/hooks'
 
-import braveLogoUrl from '../../assets/brave_logo_3d@2x.webp'
+import MoscaZumbido from '../flyweb/mosca'
 
 function Welcome () {
   const { setViewType, scenes, browserProfiles } = React.useContext(DataContext)
@@ -48,17 +48,13 @@ function Welcome () {
     if (!ref.current) return
     if (!shouldPlayAnimations) return
 
-    const logoBoxEl = ref.current.querySelector('.view-logo-box')
     const backdropEl = ref.current.querySelector('.view-backdrop')
     const contentEl = ref.current.querySelector('.view-content')
 
     const s1 = new WebAnimationPlayer()
 
-    s1.to(logoBoxEl, {
-        transform: 'translateY(-20px)',
-        filter: 'drop-shadow(7px 2px 5px rgba(14, 1, 41, 0.2)) drop-shadow(14px 3px 10px rgba(32, 5, 89, 0.3)) drop-shadow(20px 3px 15px rgba(37, 7, 87, 0.2))  drop-shadow(25px 5px 30px rgba(25, 3, 73, 0.1)) drop-shadow(50px 4px 50px rgba(19, 3, 40, 0.1))'
-        }, { fill: 'forwards', easing: 'ease-out' })
-      .to(backdropEl, { scale: 1, opacity: 1 }, { duration: 250, delay: 200, easing: 'ease-out' })
+    // FlyWeb: the fly stays where it is (it buzzes on its own, CSS only).
+    s1.to(backdropEl, { scale: 1, opacity: 1 }, { duration: 250, delay: 200, easing: 'ease-out' })
       .to(contentEl, { transform: 'translateY(0px)', opacity: 1 }, { duration: 250, delay: 200, easing: 'ease-out' })
 
     s1.play()
@@ -72,7 +68,7 @@ function Welcome () {
   return (
     <S.Box ref={shouldPlayAnimations ? ref : null}>
       <div className="view-logo-box">
-        <img src={braveLogoUrl} />
+        <MoscaZumbido />
       </div>
       <div className={classnames({ 'view-content': true, 'initial': shouldPlayAnimations })}>
         <div className="view-header-box">

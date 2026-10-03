@@ -25,7 +25,7 @@ import {
   HistoryIcon
 } from 'brave-ui/components/icons'
 
-import BraveTalkIcon from './braveTalkIcon'
+import { credito } from '../flyweb/recursos'
 
 // Helpers
 import { getLocale } from '../../../../common/locale'
@@ -42,7 +42,6 @@ export default class FooterInfo extends React.PureComponent<Props, {}> {
   render () {
     const {
       textDirection,
-      supportsBraveTalk,
       backgroundImageInfo,
       showPhotoInfo,
       onClickSettings
@@ -53,6 +52,8 @@ export default class FooterInfo extends React.PureComponent<Props, {}> {
         { showPhotoInfo && backgroundImageInfo?.type === 'brave' &&
           <S.GridItemCredits>
             <PhotoName>
+              {/* FlyWeb: our photographs carry their own credit. */}
+              {backgroundImageInfo.flyweb ? credito : <>
               {`${getLocale('photoBy')} `}
               { backgroundImageInfo.link
                   ? <Link href={backgroundImageInfo.link} rel='noreferrer noopener' target='_blank'>
@@ -60,6 +61,7 @@ export default class FooterInfo extends React.PureComponent<Props, {}> {
                     </Link>
                   : <Label> {backgroundImageInfo.author} </Label>
               }
+              </>}
             </PhotoName>
           </S.GridItemCredits>
         }
@@ -82,11 +84,7 @@ export default class FooterInfo extends React.PureComponent<Props, {}> {
             <IconLink title={getLocale('historyPageTitle')} href='chrome://history'>
               <HistoryIcon />
             </IconLink>
-            { supportsBraveTalk &&
-              <IconLink title={getLocale('braveTalkPromptTitle')} href='https://talk.brave.com/widget'>
-                <BraveTalkIcon />
-              </IconLink>
-            }
+            {/* FlyWeb: no Brave Talk icon (human's decision, F7.2). */}
           </Navigation>
         </S.GridItemNavigation>
       </>

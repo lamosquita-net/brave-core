@@ -19,6 +19,9 @@ import * as Page from '../../components/default/page'
 import TopSitesGrid from './gridSites'
 import SiteRemovalNotification from './notification'
 import Stats from './stats'
+import Mosca from '../../components/default/flyweb/mosca'
+import { EstiloFlyWeb } from '../../components/default/flyweb/estilos'
+import { esFondoFlyWeb } from '../../components/default/flyweb/recursos'
 
 // Helpers
 import isReadableOnBackground from '../../helpers/colorUtil'
@@ -559,6 +562,9 @@ class NewTabPage extends React.Component<Props, State> {
     const isShowingBrandedWallpaper = !!newTabData.brandedWallpaper
 
     const hasWallpaperInfo = newTabData.backgroundWallpaper?.type === 'brave'
+    // FlyWeb: on one of our backgrounds, no dark veil and our text colours.
+    const fondo = newTabData.backgroundWallpaper
+    const coloresFlyWeb = hasImage && esFondoFlyWeb(fondo) ? fondo.flyweb : undefined
     const colorForBackground = newTabData.backgroundWallpaper?.type === 'color' ? newTabData.backgroundWallpaper.wallpaperColor : undefined
 
     let cryptoContent = this.renderCryptoContent()
@@ -589,8 +595,11 @@ class NewTabPage extends React.Component<Props, State> {
         imageSrc={this.imageSource}
         imageHasLoaded={this.state.backgroundHasLoaded}
         colorForBackground={colorForBackground}
+        sinVelo={!!coloresFlyWeb}
         data-show-news-prompt={((this.state.backgroundHasLoaded || colorForBackground) && this.state.isPromptingBraveNews) ? true : undefined}>
         <OverrideReadabilityColor override={ this.shouldOverrideReadabilityColor(this.props.newTabData) } />
+        <EstiloFlyWeb colores={coloresFlyWeb} />
+        <Mosca />
         <BraveNewsContextProvider>
         <Page.Page
             hasImage={hasImage}
@@ -599,6 +608,7 @@ class NewTabPage extends React.Component<Props, State> {
             showClock={showClock}
             showStats={showStats}
             colorForBackground={colorForBackground}
+            sinVelo={!!coloresFlyWeb}
             showCryptoContent={!!cryptoContent}
             showTopSites={showTopSites}
             showBrandedWallpaper={isShowingBrandedWallpaper}

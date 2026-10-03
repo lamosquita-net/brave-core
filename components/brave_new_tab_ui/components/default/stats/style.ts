@@ -4,6 +4,9 @@
 
 import styled from 'styled-components'
 
+import { colores } from '../flyweb/recursos'
+import { familia } from '../flyweb/estilos'
+
 export const StyledStatsItemContainer = styled('ul')<{}>`
   -webkit-font-smoothing: antialiased;
   display: inline-flex;
@@ -23,19 +26,21 @@ export const StyledStatsItem = styled('li')<{}>`
   font-size: inherit;
   font-family: inherit;
   margin: 10px 16px;
-  &:first-child { color: var(--override-readability-color, var(--interactive2)); }
-  &:nth-child(2) { color: var(--override-readability-color, var(--interactive9)); }
-  &:last-child { 
-    color: var(--override-readability-color, #FFFFFF); 
+  /* FlyWeb: the project's colours, one per counter, on any background. */
+  &:first-child { color: ${colores.naranja}; }
+  &:nth-child(2) { color: ${colores.rojo}; }
+  &:last-child {
+    color: ${colores.morado};
     margin-right: 0;
   }
 `
 
 export const StyledStatsItemCounter = styled('span')<{}>`
   color: inherit;
-  font-family: ${p => p.theme.fontFamily.heading};
-  font-size: 40px;
-  font-weight: 400;
+  font-family: ${familia};
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1;
   width: 7ch;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -44,17 +49,17 @@ export const StyledStatsItemCounter = styled('span')<{}>`
 `
 
 export const StyledStatsItemText = styled('span')<{}>`
-  font-size: 24px;
-  font-family: ${p => p.theme.fontFamily.heading};
-  margin-left: 4px;
+  font-size: 21px;
+  font-family: ${familia};
+  margin-left: 2px;
   display: inline;
   letter-spacing: 0;
 `
 
 export const StyledStatsItemDescription = styled('div')<{}>`
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--override-readability-color-rgb, #FFFFFF);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--flyweb-texto);
   margin-top: 8px;
-  font-family: ${p => p.theme.fontFamily.heading};
+  font-family: ${familia};
 `

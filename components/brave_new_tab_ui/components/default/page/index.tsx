@@ -6,6 +6,7 @@
 import * as React from 'react'
 import styled, { createGlobalStyle, css } from 'styled-components'
 import { requestAnimationFrameThrottle } from '../../../../common/throttle'
+import { familia } from '../flyweb/estilos'
 
 const breakpointLargeBlocks = '980px'
 const breakpointEveryBlock = '870px'
@@ -22,6 +23,8 @@ interface HasImageProps {
   imageHasLoaded: boolean
   imageSrc?: string
   colorForBackground?: string
+  // FlyWeb: our backgrounds are shown as they are, without the dark veil.
+  sinVelo?: boolean
 }
 
 type AppProps = {
@@ -336,12 +339,12 @@ function getPageBackground (p: HasImageProps) {
       `};
       ${p => p.hasImage && p.imageSrc && css`
         opacity: var(--bg-opacity);
-        background: linear-gradient(
+        background: ${p.sinVelo ? '' : `linear-gradient(
               rgba(0, 0, 0, 0.8),
               rgba(0, 0, 0, 0) 35%,
               rgba(0, 0, 0, 0) 80%,
               rgba(0, 0, 0, 0.6) 100%
-            ), url("${p.imageSrc}");
+            ), `}url("${p.imageSrc}");
         background-size: cover;
         background-repeat: no-repeat;
         background-attachment: fixed;
@@ -389,8 +392,8 @@ export const PhotoName = styled('div')<{}>`
   -webkit-font-smoothing: antialiased;
   box-sizing: border-box;
   font-size: 12px;
-  font-family: Poppins, sans-serif;
-  color: rgba(255, 255, 255, 0.6);
+  font-family: ${familia};
+  color: var(--flyweb-pie);
   white-space: nowrap;
 `
 
@@ -413,8 +416,8 @@ export const IconLink = styled('a')<{}>`
   height: 24px;
   margin: 8px;
   cursor: pointer;
-  color: var(--override-readability-color, #ffffff);
-  opacity: 0.7;
+  color: var(--flyweb-tinta);
+  opacity: 0.85;
   transition: opacity 0.15s ease, filter 0.15s ease;
 
   &:hover {
@@ -432,9 +435,9 @@ export const IconButton = styled('button')<IconButtonProps>`
   outline: none;
   margin: ${p => p.isClickMenu ? '7' : '0 12'}px;
   cursor: pointer;
-  color: var(--override-readability-color, #ffffff);
+  color: var(--flyweb-tinta);
   background-color: transparent;
-  opacity: 0.7;
+  opacity: 0.85;
   transition: opacity 0.15s ease, filter 0.15s ease;
   &:hover {
     opacity: 0.95;
@@ -484,14 +487,14 @@ interface IconButtonContainerProps {
 }
 
 export const IconButtonContainer = styled('div')<IconButtonContainerProps>`
-  font-family: ${p => p.theme.fontFamily.heading};
+  font-family: ${familia};
   font-size: 13px;
-  font-weight: 600;
-  color: rgba(var(--override-readability-color-rgb, 255, 255, 255), 0.8);
+  font-weight: 700;
+  color: var(--flyweb-tinta);
   margin-right: ${p => p.textDirection === 'ltr' && '8px'};
   margin-left: ${p => p.textDirection === 'rtl' && '8px'};
-  border-right: ${p => p.textDirection === 'ltr' && '1px solid rgba(var(--override-readability-color-rgb, 255, 255, 255), 0.6)'};
-  border-left: ${p => p.textDirection === 'rtl' && '1px solid rgba(var(--override-readability-color-rgb, 255, 255, 255), 0.6)'};
+  border-right: ${p => p.textDirection === 'ltr' && '1px solid var(--flyweb-tinta)'};
+  border-left: ${p => p.textDirection === 'rtl' && '1px solid var(--flyweb-tinta)'};
 
   &:hover {
     color: ${p => p.color};
