@@ -149,7 +149,7 @@ export class BaseQueryCache {
 
       // Get all networks
       const filteredSupportedCoinTypes = SupportedCoinTypes.filter((coin) => {
-        // FIL and SOL networks, unless enabled by brave://flags
+        // FIL and SOL networks, unless enabled by flyweb://flags
         return (
           (coin === BraveWallet.CoinType.FIL && isFilecoinEnabled) ||
           (coin === BraveWallet.CoinType.SOL && isSolanaEnabled) ||

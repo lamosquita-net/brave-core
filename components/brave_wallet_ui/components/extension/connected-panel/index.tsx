@@ -156,7 +156,7 @@ export const ConnectedPanel = (props: Props) => {
     if (isPermissionDenied) {
       const contentPath = selectedCoin === BraveWallet.CoinType.SOL ? 'solana' : 'ethereum'
       chrome.tabs.create({
-        url: `brave://settings/content/${contentPath}`
+        url: `flyweb://settings/content/${contentPath}`
       }).catch((e) => { console.error(e) })
       return
     }

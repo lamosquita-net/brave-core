@@ -471,7 +471,7 @@
           "brave-adblock-cookie-list-default",                                 \
           "Treat 'Easylist-Cookie List' as a default list source",             \
           "Enables the 'Easylist-Cookie List' regional list if its toggle in " \
-          "brave://adblock hasn't otherwise been modified",                    \
+          "flyweb://adblock hasn't otherwise been modified",                    \
           kOsAll,                                                              \
           FEATURE_VALUE_TYPE(                                                  \
               brave_shields::features::kBraveAdblockCookieListDefault),        \
@@ -517,7 +517,7 @@
           "source",                                                            \
                                                                                \
           "Enables the 'Fanboy's Mobile Notifications List' regional list if " \
-          "its toggle in brave://adblock hasn't otherwise been modified",      \
+          "its toggle in flyweb://adblock hasn't otherwise been modified",      \
           kOsAll,                                                              \
           FEATURE_VALUE_TYPE(brave_shields::features::                         \
                                  kBraveAdblockMobileNotificationsListDefault), \

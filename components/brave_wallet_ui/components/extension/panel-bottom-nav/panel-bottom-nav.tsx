@@ -32,7 +32,7 @@ export const PanelBottomNav = (props: Props) => {
       onNavigate('activity')
       return
     }
-    const url = `brave://wallet${option.route}`
+    const url = `flyweb://wallet${option.route}`
     chrome.tabs.create({ url: url }, () => {
       if (chrome.runtime.lastError) {
         console.error('tabs.create failed: ' + chrome.runtime.lastError.message)
