@@ -13,6 +13,7 @@
 // FontFace API.
 
 import * as React from 'react'
+import { loadTimeData } from '$web-common/loadTimeData'
 
 import dDinRegular from '../../../flyweb_ntp/resources/fuentes/D-DIN.woff2'
 import dDinBold from '../../../flyweb_ntp/resources/fuentes/D-DIN-Bold.woff2'
@@ -21,6 +22,15 @@ import fondoBoot from '../../../flyweb_ntp/resources/fondos/fondo-boot.jpg'
 export { fondoBoot }
 
 export const familia = "'D-DIN', sans-serif"
+
+// Buttons in the colour of this channel's app icon (FlyWeb/branding): purple
+// with white text for the development builds, orange with black text for the
+// rest. Black on that purple would not be readable (contrast 2.7:1).
+// flywebDesarrollo: brave_welcome_ui.cc.
+const desarrollo = loadTimeData.getBoolean('flywebDesarrollo')
+export const boton = desarrollo
+  ? { fondo: 'rgb(149, 27, 129)', encima: 'rgb(125, 20, 108)', texto: '#fff' }
+  : { fondo: 'rgb(255, 153, 0)', encima: 'rgb(235, 138, 0)', texto: '#000' }
 
 let fuentesCargadas = false
 function cargarFuentes () {
