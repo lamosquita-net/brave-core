@@ -32,28 +32,32 @@
 
 namespace {
 
-const char kAdBlockDefaultComponentName[] = "Brave Ad Block Updater";
-const char kAdBlockDefaultComponentId[] = "iodkpdagapdfkphljnddpjlldadblomo";
+const char kAdBlockDefaultComponentName[] = "FlyWeb Shields: default list";
+// FlyWeb: own component, signed on bak (softmac FlyWeb/servidor/componentes);
+// Brave's update server needs Brave's private service key.
+const char kAdBlockDefaultComponentId[] = "oncmalfeabebooncbcbcaofghlfnkjgc";
 const char kAdBlockDefaultComponentBase64PublicKey[] =
-    "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsD/B/MGdz0gh7WkcFARn"
-    "ZTBX9KAw2fuGeogijoI+fET38IK0L+P/trCT2NshqhRNmrDpLzV2+Dmes6PvkA+O"
-    "dQkUV6VbChJG+baTfr3Oo5PdE0WxmP9Xh8XD7p85DQrk0jJilKuElxpK7Yq0JhcT"
-    "Sc3XNHeTwBVqCnHwWZZ+XysYQfjuDQ0MgQpS/s7U04OZ63NIPe/iCQm32stvS/pE"
-    "ya7KdBZXgRBQ59U6M1n1Ikkp3vfECShbBld6VrrmNrl59yKWlEPepJ9oqUc2Wf2M"
-    "q+SDNXROG554RnU4BnDJaNETTkDTZ0Pn+rmLmp1qY5Si0yGsfHkrv3FS3vdxVozO"
-    "PQIDAQAB";
+    "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtCBU/b6xx7lC72kZMOed"
+    "zjWLjJOwsHTe843GW61kbpOwz27zkqz5sbhuZQ6+bfHRYw9WZC96r73rxseCtlCZ"
+    "y6iWLEJa/rOw0okbArkpN04zeHcxAe3vD6HbfvFJa7btpF6AzCkPoOuhX7k7xami"
+    "X4AQYfYu8INkEpCoo3YwTBcwj4AdLrdysBN3SGa+H6vzcNQ0tuo1nIE910yvLB+x"
+    "U4GwFk2ryyKvfoL2AnbjW7u/tgeNTqGp7aXhdbIm/pdYlb+Ek7KH8IdeXJ4cuX11"
+    "iaVl0ea2dRxvKPHAl+nAc3KJMZrJFOBF4r04W3TJpSH0RdwJz5n2ApH4YjZ9R7ar"
+    "pwIDAQAB";
 
 const char kAdBlockExceptionComponentName[] =
-    "Brave Ad Block First Party Filters";
-const char kAdBlockExceptionComponentId[] = "adcocjohghhfpidemphmcmlmhnfgikei";
+    "FlyWeb Shields: first-party list";
+// FlyWeb: own component, signed on bak (softmac FlyWeb/servidor/componentes);
+// Brave's update server needs Brave's private service key.
+const char kAdBlockExceptionComponentId[] = "mnmbjcpndlefpohoejchjphbipaohjpi";
 const char kAdBlockExceptionComponentBase64PublicKey[] =
-    "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtvmLp4MOseThuH/vFSc7"
-    "kjr+CDCzR/ieGI8TJZyFQhzA1SKWRl4y0wB+HGkmoq0KPOzKNZq6hxK7jdm/r/nx"
-    "xOjqutPoUEL+ysxePErMTse2XeWu3psGSTEjPFdQTPEwH8MF2SwXXneOraD0V/GS"
-    "iCCvlx8yKIXNX7V9ujMo+QoD6hPGslKUZQJAg+OaZ7pAfq5cOuWXNN6jv12UL0eM"
-    "t6Dhl31yEu4kZWeTkiccHqdlB/KvPiqXTrV+qd3Tjvsk6kmUlexu3/zlOwVDz5H/"
-    "kPuOGvW7kYaW22NWQ9TH6fjffgVcSgHDbZETDiP8fHd76kyi1SZ5YJ09XHTE+i9i"
-    "kQIDAQAB";
+    "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApMzE8N0NZT2pDonIkX9w"
+    "CSRp5nbOjTYWL5AOLU/dU6PhbCXGLI16kZfl8OIrJy3DOA3sU2e5g5OO6zEQTptd"
+    "AXBtSaIyoRhBnoIPwUC4r/65+BWo3I5lVADUeeXY1QUcPxB95jfJo/ctWG2MYiWC"
+    "AITZ5lbLFGc0kcjELn9qOv49zhV2TTpTjabOhnNEmiqrdsbjd3kI+nVNrr5YiKR+"
+    "GSr17KNQTN4tia2oDnHrpaJoMsE08aCjIe1zYZz5uEhcTmCCvcZSSMHhvTx/Qmqy"
+    "bFmktaSppkTJK92tNMKWrFphzNxYpl2f04XSO3KfQCuAy+PGSoGo6vYqvl8e9LGW"
+    "PwIDAQAB";
 
 std::string g_ad_block_default_component_id_(kAdBlockDefaultComponentId);
 std::string g_ad_block_default_component_base64_public_key_(
