@@ -13,6 +13,7 @@
 #include "brave/components/constants/network_constants.h"
 #include "extensions/common/url_pattern.h"
 #include "net/base/net_errors.h"
+#include "url/gurl.h"
 
 namespace brave {
 
@@ -77,11 +78,12 @@ int OnBeforeURLRequest_CommonStaticRedirectWorkForGURL(
     return net::OK;
   }
 
+  // FlyWeb: clients4.google.com (Chrome sync, which FlyWeb disables) is
+  // blocked instead of going through Brave's clients4.brave.com.
+  // (new_url too: system requests ignore the error; .invalid never resolves.)
   if (clients4_pattern.MatchesHost(request_url)) {
-    replacements.SetSchemeStr("https");
-    replacements.SetHostStr(kBraveClients4Proxy);
-    *new_url = request_url.ReplaceComponents(replacements);
-    return net::OK;
+    *new_url = GURL(kFlyWebBlockedURL);
+    return net::ERR_BLOCKED_BY_CLIENT;
   }
 
   if (bugsChromium_pattern.MatchesURL(request_url)) {

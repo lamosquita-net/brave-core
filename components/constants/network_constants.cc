@@ -17,9 +17,15 @@ const char kBraveReferralsServer[] = "laptop-updates.brave.com";
 const char kBraveReferralsInitPath[] = "/promo/initialize/nonua";
 const char kBraveReferralsActivityPath[] = "/promo/activity";
 
-const char kBraveSafeBrowsing2Proxy[] = "safebrowsing2.brave.com";
-const char kBraveSafeBrowsingSslProxy[] = "sb-ssl.brave.com";
-const char kBraveRedirectorProxy[] = "redirector.brave.com";
+// FlyWeb: Safe Browsing (download checks, extension list) and Google's
+// download hosts (spell-check dictionaries) go through FlyWeb's own proxy on
+// ns2 (softmac FlyWeb/servidor/e0, proxy.flyweb.lamosquita.net), never through
+// Brave's. Google sees ns2's address, not the user's.
+const char kBraveSafeBrowsing2Proxy[] = "proxy.flyweb.lamosquita.net";
+const char kBraveSafeBrowsingSslProxy[] = "proxy.flyweb.lamosquita.net";
+const char kBraveRedirectorProxy[] = "proxy.flyweb.lamosquita.net";
+// FlyWeb: where blocked Google requests are sent (RFC 2606: never resolves).
+const char kFlyWebBlockedURL[] = "https://blocked.flyweb.invalid/";
 const char kBraveClients4Proxy[] = "clients4.brave.com";
 const char kBraveStaticProxy[] = "static1.brave.com";
 
