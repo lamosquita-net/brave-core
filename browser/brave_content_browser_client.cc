@@ -28,6 +28,7 @@
 #include "brave/browser/debounce/debounce_service_factory.h"
 #include "brave/browser/ephemeral_storage/ephemeral_storage_service_factory.h"
 #include "brave/browser/ethereum_remote_client/buildflags/buildflags.h"
+#include "brave/browser/flyweb/declared_version.h"
 #include "brave/browser/net/brave_proxying_url_loader_factory.h"
 #include "brave/browser/net/brave_proxying_web_socket.h"
 #include "brave/browser/profiles/brave_renderer_updater.h"
@@ -1222,6 +1223,26 @@ void BraveContentBrowserClient::OverrideWebkitPrefs(WebContents* web_contents,
 #endif
 }
 
+std::string BraveContentBrowserClient::GetUserAgent() {
+  const std::string user_agent = ChromeContentBrowserClient::GetUserAgent();
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          embedder_support::kUserAgent)) {
+    return user_agent;
+  }
+  return flyweb::DeclareUserAgent(user_agent);
+}
+
+std::string BraveContentBrowserClient::GetUserAgentBasedOnPolicy(
+    content::BrowserContext* context) {
+  const std::string user_agent =
+      ChromeContentBrowserClient::GetUserAgentBasedOnPolicy(context);
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          embedder_support::kUserAgent)) {
+    return user_agent;
+  }
+  return flyweb::DeclareUserAgent(user_agent);
+}
+
 blink::UserAgentMetadata BraveContentBrowserClient::GetUserAgentMetadata() {
   blink::UserAgentMetadata metadata =
       ChromeContentBrowserClient::GetUserAgentMetadata();
@@ -1231,6 +1252,15 @@ blink::UserAgentMetadata BraveContentBrowserClient::GetUserAgentMetadata() {
   if (command_line->HasSwitch(embedder_support::kUserAgent)) {
     return metadata;
   }
+  // FlyWeb: declared engine level in the client hints too (GREASE brand
+  // versions are left alone).
+  for (auto& brand_version : metadata.brand_version_list) {
+    brand_version.version = flyweb::DeclareVersion(brand_version.version);
+  }
+  for (auto& brand_version : metadata.brand_full_version_list) {
+    brand_version.version = flyweb::DeclareVersion(brand_version.version);
+  }
+  metadata.full_version = flyweb::DeclareVersion(metadata.full_version);
   // FlyWeb: two, without the "Brave" brand (see the chromium_src override of
   // components/embedder_support/user_agent_utils.cc).
   DCHECK_EQ(2UL, metadata.brand_version_list.size());

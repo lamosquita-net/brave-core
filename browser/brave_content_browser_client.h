@@ -161,6 +161,10 @@ class BraveContentBrowserClient : public ChromeContentBrowserClient {
 
   void OverrideWebkitPrefs(content::WebContents* web_contents,
                            blink::web_pref::WebPreferences* prefs) override;
+  // FlyWeb: User-Agent with the declared engine level (flyweb/declared_version.h).
+  std::string GetUserAgent() override;
+  std::string GetUserAgentBasedOnPolicy(
+      content::BrowserContext* context) override;
   blink::UserAgentMetadata GetUserAgentMetadata() override;
 
  private:
