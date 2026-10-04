@@ -104,6 +104,16 @@ UserAgentOverrideTabHelper::~UserAgentOverrideTabHelper() = default;
 
 void UserAgentOverrideTabHelper::DidStartNavigation(
     content::NavigationHandle* navigation_handle) {
+  Decide(navigation_handle);
+}
+
+void UserAgentOverrideTabHelper::DidRedirectNavigation(
+    content::NavigationHandle* navigation_handle) {
+  Decide(navigation_handle);
+}
+
+void UserAgentOverrideTabHelper::Decide(
+    content::NavigationHandle* navigation_handle) {
   if (!navigation_handle->IsInPrimaryMainFrame() ||
       navigation_handle->IsSameDocument()) {
     return;

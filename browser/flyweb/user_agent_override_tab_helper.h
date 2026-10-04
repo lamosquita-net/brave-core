@@ -48,8 +48,16 @@ class UserAgentOverrideTabHelper
   // content::WebContentsObserver:
   void DidStartNavigation(
       content::NavigationHandle* navigation_handle) override;
+  // A navigation that starts elsewhere (gmail.com, accounts.google.com, a
+  // link in an email) and is redirected to a listed site is decided again:
+  // Chromium recomputes the User-Agent and the client hints of the redirected
+  // request after this call (NavigationRequest::OnRedirectChecksComplete).
+  void DidRedirectNavigation(
+      content::NavigationHandle* navigation_handle) override;
 
  private:
+  void Decide(content::NavigationHandle* navigation_handle);
+
   explicit UserAgentOverrideTabHelper(content::WebContents* web_contents);
   friend class content::WebContentsUserData<UserAgentOverrideTabHelper>;
 
