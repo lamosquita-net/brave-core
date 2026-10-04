@@ -1,0 +1,32 @@
+diff --git a/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc b/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
+index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..d52e77dd2446d2a2b79e16418ae26b34a9a0f056 100644
+--- a/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
++++ b/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
+@@ -804,10 +804,14 @@ CSSLightDarkValuePair* ConsumeInternalLightDark(Func consume_value,
+                                                 CSSParserTokenRange& range,
+                                                 const CSSParserContext& context,
+                                                 Args&&... args) {
+-  if (range.Peek().FunctionId() != CSSValueID::kInternalLightDark) {
++  // FlyWeb: also the public light-dark() (Chromium 123); -internal-light-dark()
++  // stays limited to UA sheets.
++  const CSSValueID function_id = range.Peek().FunctionId();
++  if (function_id != CSSValueID::kInternalLightDark &&
++      function_id != CSSValueID::kLightDark) {
+     return nullptr;
+   }
+-  if (!isValueAllowedInMode(CSSValueID::kInternalLightDark, context.Mode())) {
++  if (!isValueAllowedInMode(function_id, context.Mode())) {
+     return nullptr;
+   }
+   CSSParserTokenRange range_copy = range;
+@@ -3646,6 +3650,10 @@ CSSValue* ConsumeImage(
+         IsGeneratedImage(id)) {
+       return ConsumeGeneratedImage(range, context);
+     }
++    // FlyWeb: light-dark() for images is not public (as in Chromium 123).
++    if (id != CSSValueID::kInternalLightDark) {
++      return nullptr;
++    }
+     return ConsumeInternalLightDark(ConsumeImageOrNone, range, context);
+   }
+   return nullptr;
