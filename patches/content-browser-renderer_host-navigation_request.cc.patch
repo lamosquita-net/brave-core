@@ -1,5 +1,5 @@
 diff --git a/content/browser/renderer_host/navigation_request.cc b/content/browser/renderer_host/navigation_request.cc
-index a09b5bc4973fc3abdfc02627be515f7eaf87f2c1..efec9991015fb7f548ee9f14159de44a1677f02e 100644
+index a09b5bc4973fc3abdfc02627be515f7eaf87f2c1..04c56d9f1652fd41b6af737c60e48a405f833915 100644
 --- a/content/browser/renderer_host/navigation_request.cc
 +++ b/content/browser/renderer_host/navigation_request.cc
 @@ -3153,6 +3153,7 @@ void NavigationRequest::OnRequestRedirected(
@@ -18,13 +18,3 @@ index a09b5bc4973fc3abdfc02627be515f7eaf87f2c1..efec9991015fb7f548ee9f14159de44a
    // TODO(clamy): Avoid cloning the navigation params and create the
    // ResourceRequest directly here.
    std::vector<std::unique_ptr<NavigationLoaderInterceptor>> interceptor;
-@@ -6555,6 +6557,9 @@ void NavigationRequest::OnWillRedirectRequestProcessed(
-       DCHECK(is_safe_to_delete_);
-       base::AutoReset<bool> resetter(&is_safe_to_delete_, false);
- #endif
-+      // FlyWeb: observers may change the User-Agent override on redirect, as
-+      // in DidStartNavigation; OnRedirectChecksComplete recomputes the headers.
-+      base::AutoReset<bool> flyweb_resetter(&ua_change_requires_reload_, false);
-       GetDelegate()->DidRedirectNavigation(this);
-     }
-   } else {

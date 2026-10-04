@@ -1,0 +1,27 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/grid/ng_grid_item.cc b/third_party/blink/renderer/core/layout/ng/grid/ng_grid_item.cc
+index f87687be958af2457ebbbafe7f8ee73448941030..c0015d78d52b704a7d620759dc2d0aa33488d333 100644
+--- a/third_party/blink/renderer/core/layout/ng/grid/ng_grid_item.cc
++++ b/third_party/blink/renderer/core/layout/ng/grid/ng_grid_item.cc
+@@ -297,6 +297,8 @@ void GridItemData::ComputeSetIndices(
+   DCHECK(!IsOutOfFlow());
+ 
+   const auto track_direction = track_collection.Direction();
++  DCHECK(MustCachePlacementIndices(track_direction));
++
+   auto& range_indices = RangeIndices(track_direction);
+ 
+ #if DCHECK_IS_ON()
+@@ -407,6 +409,13 @@ void GridItemData::ComputeOutOfFlowItemPlacement(
+   }
+ }
+ 
++GridItems::GridItems(const GridItems& other) {
++  item_data_.ReserveInitialCapacity(other.item_data_.size());
++  for (const auto& grid_item : other.item_data_) {
++    item_data_.emplace_back(std::make_unique<GridItemData>(*grid_item));
++  }
++}
++
+ void GridItems::Append(GridItems* other) {
+   item_data_.reserve(item_data_.size() + other->item_data_.size());
+   for (auto& grid_item : other->item_data_)

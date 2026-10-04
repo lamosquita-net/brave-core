@@ -1,0 +1,14 @@
+diff --git a/third_party/blink/renderer/core/css/element_rule_collector.cc b/third_party/blink/renderer/core/css/element_rule_collector.cc
+index b345b1685f369aeee519023e0b6ccbc258fa7142..a7a30eb3f973e20b3c3c6eb924d33beb80c62a80 100644
+--- a/third_party/blink/renderer/core/css/element_rule_collector.cc
++++ b/third_party/blink/renderer/core/css/element_rule_collector.cc
+@@ -472,7 +472,8 @@ void ElementRuleCollector::CollectMatchingRulesForListInternal(
+       selector_statistics_collector.EndCollectionForCurrentRule();
+       selector_statistics_collector.BeginCollectionForRule(&rule_data);
+     }
+-    if (!is_initial && rule_data.IsStartingStyle()) {
++    if ((!is_initial || mode_ != SelectorChecker::kResolvingStyle) &&
++        rule_data.IsStartingStyle()) {
+       continue;
+     }
+     if (can_use_fast_reject_ &&
