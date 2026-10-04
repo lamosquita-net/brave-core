@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/css/media_values_cached.h b/third_party/blink/renderer/core/css/media_values_cached.h
-index 20389fef2146927c45e7660be2c92cf81f1cf0fc..253033974a6f388491b7643b8fddd145e475a107 100644
+index 20389fef2146927c45e7660be2c92cf81f1cf0fc..a04164ca535222eb6e33f0bd4c8045c681f71535 100644
 --- a/third_party/blink/renderer/core/css/media_values_cached.h
 +++ b/third_party/blink/renderer/core/css/media_values_cached.h
-@@ -56,6 +56,7 @@ class CORE_EXPORT MediaValuesCached final : public MediaValues {
+@@ -8,6 +8,7 @@
+ #include "services/device/public/mojom/device_posture_provider.mojom-blink.h"
+ #include "third_party/blink/public/common/css/forced_colors.h"
+ #include "third_party/blink/public/common/css/navigation_controls.h"
++#include "third_party/blink/public/common/css/scripting.h"
+ #include "third_party/blink/public/mojom/css/preferred_color_scheme.mojom-blink.h"
+ #include "third_party/blink/public/mojom/css/preferred_contrast.mojom-blink.h"
+ #include "third_party/blink/public/mojom/manifest/display_mode.mojom-blink.h"
+@@ -56,6 +57,7 @@ class CORE_EXPORT MediaValuesCached final : public MediaValues {
      float ex_size = 8.f;
      float ch_size = 8.f;
      float ic_size = 16.f;
@@ -10,7 +18,31 @@ index 20389fef2146927c45e7660be2c92cf81f1cf0fc..253033974a6f388491b7643b8fddd145
      float line_height = 0;
      bool three_d_enabled = false;
      bool strict_mode = true;
-@@ -166,6 +167,8 @@ class CORE_EXPORT MediaValuesCached final : public MediaValues {
+@@ -75,6 +77,7 @@ class CORE_EXPORT MediaValuesCached final : public MediaValues {
+     int vertical_viewport_segments = 0;
+     device::mojom::blink::DevicePostureType device_posture =
+         device::mojom::blink::DevicePostureType::kContinuous;
++    Scripting scripting = Scripting::kNone;
+ 
+     MediaValuesCachedData();
+     explicit MediaValuesCachedData(Document&);
+@@ -113,6 +116,7 @@ class CORE_EXPORT MediaValuesCached final : public MediaValues {
+       data.horizontal_viewport_segments = horizontal_viewport_segments;
+       data.vertical_viewport_segments = vertical_viewport_segments;
+       data.device_posture = device_posture;
++      data.scripting = scripting;
+       return data;
+     }
+   };
+@@ -151,6 +155,7 @@ class CORE_EXPORT MediaValuesCached final : public MediaValues {
+   int GetHorizontalViewportSegments() const override;
+   int GetVerticalViewportSegments() const override;
+   device::mojom::blink::DevicePostureType GetDevicePosture() const override;
++  Scripting GetScripting() const override;
+ 
+   void OverrideViewportDimensions(double width, double height);
+ 
+@@ -166,6 +171,8 @@ class CORE_EXPORT MediaValuesCached final : public MediaValues {
    float RicFontSize(float zoom) const override;
    float LineHeight(float zoom) const override;
    float RootLineHeight(float zoom) const override;

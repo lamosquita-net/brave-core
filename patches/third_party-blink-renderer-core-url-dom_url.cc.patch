@@ -1,0 +1,22 @@
+diff --git a/third_party/blink/renderer/core/url/dom_url.cc b/third_party/blink/renderer/core/url/dom_url.cc
+index c3266eaec8a3aa06a639035f6f3f752312be1fee..0ebf5a1490231600316151b319ec9ed5921e6775 100644
+--- a/third_party/blink/renderer/core/url/dom_url.cc
++++ b/third_party/blink/renderer/core/url/dom_url.cc
+@@ -70,6 +70,17 @@ void DOMURL::Trace(Visitor* visitor) const {
+   ScriptWrappable::Trace(visitor);
+ }
+ 
++// static
++bool DOMURL::canParse(const String& url) {
++  return KURL(NullURL(), url).IsValid();
++}
++
++// static
++bool DOMURL::canParse(const String& url, const String& base) {
++  KURL base_url(base);
++  return base_url.IsValid() && KURL(base_url, url).IsValid();
++}
++
+ void DOMURL::setHref(const String& value, ExceptionState& exception_state) {
+   KURL url(value);
+   if (!url.IsValid()) {

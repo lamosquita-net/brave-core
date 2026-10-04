@@ -1,8 +1,25 @@
 diff --git a/third_party/blink/renderer/core/css/media_values.h b/third_party/blink/renderer/core/css/media_values.h
-index daa9cebd939ecccf6065bc0f20f0ec177a139996..ffa260a4a25a0f94382182a575cf22b195e1c576 100644
+index daa9cebd939ecccf6065bc0f20f0ec177a139996..fdc113c0c2aa011e4c610448544659cafbbef9d9 100644
 --- a/third_party/blink/renderer/core/css/media_values.h
 +++ b/third_party/blink/renderer/core/css/media_values.h
-@@ -126,6 +126,7 @@ class CORE_EXPORT MediaValues : public GarbageCollected<MediaValues>,
+@@ -30,6 +30,7 @@ enum class CSSValueID;
+ enum class ColorSpaceGamut;
+ enum class ForcedColors;
+ enum class NavigationControls;
++enum class Scripting;
+ 
+ mojom::blink::PreferredColorScheme CSSValueIDToPreferredColorScheme(
+     CSSValueID id);
+@@ -113,6 +114,8 @@ class CORE_EXPORT MediaValues : public GarbageCollected<MediaValues>,
+   // when computing the computed value of a style() container query.
+   virtual Element* ContainerElement() const { return nullptr; }
+ 
++  virtual Scripting GetScripting() const = 0;
++
+  protected:
+   static double CalculateViewportWidth(LocalFrame*);
+   static double CalculateViewportHeight(LocalFrame*);
+@@ -126,6 +129,7 @@ class CORE_EXPORT MediaValues : public GarbageCollected<MediaValues>,
    static float CalculateExSize(LocalFrame*);
    static float CalculateChSize(LocalFrame*);
    static float CalculateIcSize(LocalFrame*);
@@ -10,3 +27,11 @@ index daa9cebd939ecccf6065bc0f20f0ec177a139996..ffa260a4a25a0f94382182a575cf22b1
    static float CalculateLineHeight(LocalFrame*);
    static int CalculateDeviceWidth(LocalFrame*);
    static int CalculateDeviceHeight(LocalFrame*);
+@@ -156,6 +160,7 @@ class CORE_EXPORT MediaValues : public GarbageCollected<MediaValues>,
+   static int CalculateVerticalViewportSegments(LocalFrame*);
+   static device::mojom::blink::DevicePostureType CalculateDevicePosture(
+       LocalFrame*);
++  static Scripting CalculateScripting(LocalFrame*);
+ 
+   bool ComputeLengthImpl(double value,
+                          CSSPrimitiveValue::UnitType,

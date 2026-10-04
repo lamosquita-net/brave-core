@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/css/media_values_dynamic.cc b/third_party/blink/renderer/core/css/media_values_dynamic.cc
-index 088a0a5737bbf9626299369e0186ddeca969b6aa..e769e9669d83d121725c86085ef85c58b5fee796 100644
+index 088a0a5737bbf9626299369e0186ddeca969b6aa..8585894d751ad5e6bff0c2a7de61064cdd63a7c7 100644
 --- a/third_party/blink/renderer/core/css/media_values_dynamic.cc
 +++ b/third_party/blink/renderer/core/css/media_values_dynamic.cc
-@@ -101,6 +101,17 @@ float MediaValuesDynamic::RootLineHeight(float zoom) const {
+@@ -6,6 +6,7 @@
+ 
+ #include "third_party/blink/public/common/css/forced_colors.h"
+ #include "third_party/blink/public/common/css/navigation_controls.h"
++#include "third_party/blink/public/common/css/scripting.h"
+ #include "third_party/blink/renderer/core/css/css_primitive_value.h"
+ #include "third_party/blink/renderer/core/css/css_resolution_units.h"
+ #include "third_party/blink/renderer/core/css/css_to_length_conversion_data.h"
+@@ -101,6 +102,17 @@ float MediaValuesDynamic::RootLineHeight(float zoom) const {
    return CalculateLineHeight(frame_);
  }
  
@@ -20,3 +28,14 @@ index 088a0a5737bbf9626299369e0186ddeca969b6aa..e769e9669d83d121725c86085ef85c58
  double MediaValuesDynamic::ViewportWidth() const {
    if (viewport_dimensions_overridden_) {
      return viewport_width_override_;
+@@ -251,6 +263,10 @@ device::mojom::blink::DevicePostureType MediaValuesDynamic::GetDevicePosture()
+   return CalculateDevicePosture(frame_);
+ }
+ 
++Scripting MediaValuesDynamic::GetScripting() const {
++  return CalculateScripting(frame_);
++}
++
+ Document* MediaValuesDynamic::GetDocument() const {
+   return frame_->GetDocument();
+ }

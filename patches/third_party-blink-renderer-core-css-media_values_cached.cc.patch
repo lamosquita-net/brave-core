@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/css/media_values_cached.cc b/third_party/blink/renderer/core/css/media_values_cached.cc
-index 86907c5e020bd0f3312b9336cbcfffa17ef33f05..a4c0cee1a3ccc3c41f644ec166c7ce37eb85d277 100644
+index 86907c5e020bd0f3312b9336cbcfffa17ef33f05..41d7f273740c6b25f118a6ca43826182a43b9574 100644
 --- a/third_party/blink/renderer/core/css/media_values_cached.cc
 +++ b/third_party/blink/renderer/core/css/media_values_cached.cc
-@@ -150,6 +150,18 @@ float MediaValuesCached::RootLineHeight(float zoom) const {
+@@ -81,6 +81,7 @@ MediaValuesCached::MediaValuesCachedData::MediaValuesCachedData(
+     vertical_viewport_segments =
+         MediaValues::CalculateVerticalViewportSegments(frame);
+     device_posture = MediaValues::CalculateDevicePosture(frame);
++    scripting = MediaValues::CalculateScripting(frame);
+   }
+ }
+ 
+@@ -150,6 +151,18 @@ float MediaValuesCached::RootLineHeight(float zoom) const {
    return data_.line_height;
  }
  
@@ -21,3 +29,12 @@ index 86907c5e020bd0f3312b9336cbcfffa17ef33f05..a4c0cee1a3ccc3c41f644ec166c7ce37
  double MediaValuesCached::ViewportWidth() const {
    return data_.viewport_width;
  }
+@@ -308,4 +321,8 @@ device::mojom::blink::DevicePostureType MediaValuesCached::GetDevicePosture()
+   return data_.device_posture;
+ }
+ 
++Scripting MediaValuesCached::GetScripting() const {
++  return data_.scripting;
++}
++
+ }  // namespace blink
