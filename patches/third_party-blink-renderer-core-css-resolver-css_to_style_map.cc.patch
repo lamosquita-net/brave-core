@@ -1,0 +1,27 @@
+diff --git a/third_party/blink/renderer/core/css/resolver/css_to_style_map.cc b/third_party/blink/renderer/core/css/resolver/css_to_style_map.cc
+index 5202bee0827376b003ac51cbb26db1eb48b4a84a..e05fec3957528a1094be549bf7d0938bf8cb8102 100644
+--- a/third_party/blink/renderer/core/css/resolver/css_to_style_map.cc
++++ b/third_party/blink/renderer/core/css/resolver/css_to_style_map.cc
+@@ -394,6 +394,22 @@ AtomicString CSSToStyleMap::MapAnimationName(StyleResolverState& state,
+   return CSSAnimationData::InitialName();
+ }
+ 
++CSSTransitionData::TransitionBehavior CSSToStyleMap::MapAnimationBehavior(
++    StyleResolverState& state,
++    const CSSValue& value) {
++  if (auto* ident_value = DynamicTo<CSSIdentifierValue>(value)) {
++    switch (ident_value->GetValueID()) {
++      case CSSValueID::kNormal:
++        return CSSTransitionData::TransitionBehavior::kNormal;
++      case CSSValueID::kAllowDiscrete:
++        return CSSTransitionData::TransitionBehavior::kAllowDiscrete;
++      default:
++        break;
++    }
++  }
++  return CSSTransitionData::InitialBehavior();
++}
++
+ StyleTimeline CSSToStyleMap::MapAnimationTimeline(StyleResolverState& state,
+                                                   const CSSValue& value) {
+   DCHECK(value.IsScopedValue());

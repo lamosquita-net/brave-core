@@ -1,0 +1,58 @@
+diff --git a/third_party/blink/renderer/core/css/css_property_equality.cc b/third_party/blink/renderer/core/css/css_property_equality.cc
+index 13ae48a03df3d22ad52dc3c103159816c93e7655..ad1fde957c02f507dae934c1718d64859b253009 100644
+--- a/third_party/blink/renderer/core/css/css_property_equality.cc
++++ b/third_party/blink/renderer/core/css/css_property_equality.cc
+@@ -822,6 +822,9 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
+       return base::ValuesEquivalent<TransformOperation>(a.Rotate(), b.Rotate());
+     case CSSPropertyID::kScale:
+       return base::ValuesEquivalent<TransformOperation>(a.Scale(), b.Scale());
++    case CSSPropertyID::kSize:
++      return a.GetPageSizeType() == b.GetPageSizeType() &&
++             a.PageSize() == b.PageSize();
+     case CSSPropertyID::kTransformOrigin:
+       return a.GetTransformOrigin() == b.GetTransformOrigin();
+     case CSSPropertyID::kWebkitPerspectiveOriginX:
+@@ -1247,6 +1250,7 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
+     case CSSPropertyID::kToggleGroup:
+     case CSSPropertyID::kToggleRoot:
+     case CSSPropertyID::kToggleTrigger:
++    case CSSPropertyID::kTransitionBehavior:
+     case CSSPropertyID::kTransitionDelay:
+     case CSSPropertyID::kTransitionDuration:
+     case CSSPropertyID::kTransitionProperty:
+@@ -1258,13 +1262,12 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
+       NOTREACHED() << property.GetCSSPropertyName().ToAtomicString().Ascii();
+       return true;
+ 
+-    // Invalid properties.
++    // TODO(crbug.com/1459374): Implement comparison for these properties. They
++    // are reachable via transitions now.
+     case CSSPropertyID::kAdditiveSymbols:
+-    case CSSPropertyID::kAll:
+     case CSSPropertyID::kAscentOverride:
+     case CSSPropertyID::kBasePalette:
+     case CSSPropertyID::kDescentOverride:
+-    case CSSPropertyID::kInvalid:
+     case CSSPropertyID::kFallback:
+     case CSSPropertyID::kFontDisplay:
+     case CSSPropertyID::kInherits:
+@@ -1275,7 +1278,6 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
+     case CSSPropertyID::kPad:
+     case CSSPropertyID::kPrefix:
+     case CSSPropertyID::kRange:
+-    case CSSPropertyID::kSize:
+     case CSSPropertyID::kSpeakAs:
+     case CSSPropertyID::kSrc:
+     case CSSPropertyID::kSuffix:
+@@ -1283,6 +1285,11 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
+     case CSSPropertyID::kSyntax:
+     case CSSPropertyID::kSystem:
+     case CSSPropertyID::kUnicodeRange:
++      return true;
++
++    // Invalid properties.
++    case CSSPropertyID::kAll:
++    case CSSPropertyID::kInvalid:
+     case CSSPropertyID::kVariable:
+       NOTREACHED() << property.GetCSSPropertyName().ToAtomicString().Ascii();
+       return true;

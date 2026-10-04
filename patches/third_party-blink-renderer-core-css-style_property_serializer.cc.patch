@@ -1,0 +1,25 @@
+diff --git a/third_party/blink/renderer/core/css/style_property_serializer.cc b/third_party/blink/renderer/core/css/style_property_serializer.cc
+index f32faf3a9bbfdeda831980efd36919c571227e0f..f98196745cddd60cbadd42ce3d941e477ee1db6e 100644
+--- a/third_party/blink/renderer/core/css/style_property_serializer.cc
++++ b/third_party/blink/renderer/core/css/style_property_serializer.cc
+@@ -1644,6 +1644,20 @@ String StylePropertySerializer::GetLayeredShorthandValue(
+         }
+         is_initial_value = true;
+       }
++      if (property->IDEquals(CSSPropertyID::kTransitionBehavior)) {
++        auto* ident = DynamicTo<CSSIdentifierValue>(value);
++        CHECK(ident) << " transition-behavior should only have a "
++                        "CSSIdentifierValue for a value. CssText: "
++                     << value->CssText();
++        if (ident->GetValueID() == CSSValueID::kNormal) {
++          // transition-behavior overrides InitialValue to return "normal"
++          // instead of "initial", but we don't want to include "normal" in the
++          // shorthand serialization, so this special case is needed.
++          // TODO(http://crbug.com/501673): We should have a better solution
++          // before fixing all CSS properties to fix the above bug.
++          is_initial_value = true;
++        }
++      }
+ 
+       if (!is_initial_value) {
+         if (property->IDEquals(CSSPropertyID::kBackgroundSize) ||

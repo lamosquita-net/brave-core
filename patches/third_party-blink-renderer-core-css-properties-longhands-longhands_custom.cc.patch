@@ -1,0 +1,41 @@
+diff --git a/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc b/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc
+index 3e784902ddee52b0a6754e762a3c911bb41876fc..77e9107570e0b474f26666e55ed7ad0b6ab3841b 100644
+--- a/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc
++++ b/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc
+@@ -8550,6 +8550,36 @@ const CSSValue* TransitionProperty::InitialValue() const {
+   return CSSIdentifierValue::Create(CSSValueID::kAll);
+ }
+ 
++namespace {
++CSSIdentifierValue* ConsumeIdentNoTemplate(CSSParserTokenRange& range,
++                                           const CSSParserContext&) {
++  return css_parsing_utils::ConsumeIdent(range);
++}
++}  // namespace
++
++const CSSValue* TransitionBehavior::ParseSingleValue(
++    CSSParserTokenRange& range,
++    const CSSParserContext& context,
++    const CSSParserLocalContext&) const {
++  CSSValueList* list = css_parsing_utils::ConsumeCommaSeparatedList(
++      ConsumeIdentNoTemplate, range, context);
++  if (!list || !css_parsing_utils::IsValidTransitionBehaviorList(*list)) {
++    return nullptr;
++  }
++  return list;
++}
++
++const CSSValue* TransitionBehavior::CSSValueFromComputedStyleInternal(
++    const ComputedStyle& style,
++    const LayoutObject*,
++    bool allow_visited_style) const {
++  return ComputedStyleUtils::ValueForTransitionBehavior(style.Transitions());
++}
++
++const CSSValue* TransitionBehavior::InitialValue() const {
++  return CSSIdentifierValue::Create(CSSValueID::kNormal);
++}
++
+ const CSSValue* TransitionTimingFunction::ParseSingleValue(
+     CSSParserTokenRange& range,
+     const CSSParserContext& context,

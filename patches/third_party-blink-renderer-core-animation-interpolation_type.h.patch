@@ -1,0 +1,18 @@
+diff --git a/third_party/blink/renderer/core/animation/interpolation_type.h b/third_party/blink/renderer/core/animation/interpolation_type.h
+index 4e7ffa6a6cf4657459388ae9e21978d5098b871d..94dafa598ad4ba9e2bddcf67af158951c171b3c6 100644
+--- a/third_party/blink/renderer/core/animation/interpolation_type.h
++++ b/third_party/blink/renderer/core/animation/interpolation_type.h
+@@ -109,6 +109,13 @@ class CORE_EXPORT InterpolationType {
+                      const NonInterpolableValue*,
+                      InterpolationEnvironment&) const = 0;
+ 
++  // If this returns true, then transition-behavior:allow-discrete must be set
++  // in order to use this InterpolationType. Discrete properties generally don't
++  // have an InterpolationType set because there is nothing to interpolate, but
++  // some of them do in order to flip at the beginning or end of the animation
++  // instead of in the middle.
++  virtual bool IsDiscrete() const { return false; }
++
+   // Implement reference equality checking via pointer equality checking as
+   // these are singletons.
+   bool operator==(const InterpolationType& other) const {

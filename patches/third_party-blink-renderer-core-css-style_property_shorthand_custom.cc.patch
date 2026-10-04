@@ -1,0 +1,24 @@
+diff --git a/third_party/blink/renderer/core/css/style_property_shorthand_custom.cc b/third_party/blink/renderer/core/css/style_property_shorthand_custom.cc
+index 192f06fd8a334b961b86d6b91b1285f79d136f86..c2e26de82feb02b295d1285dd8523e277549303f 100644
+--- a/third_party/blink/renderer/core/css/style_property_shorthand_custom.cc
++++ b/third_party/blink/renderer/core/css/style_property_shorthand_custom.cc
+@@ -36,7 +36,18 @@ const StylePropertyShorthand& transitionShorthandForParsing() {
+   static StylePropertyShorthand transition_longhands(
+       CSSPropertyID::kTransition, kTransitionProperties,
+       std::size(kTransitionProperties));
+-  return transition_longhands;
++
++  static const CSSProperty* kTransitionPropertiesWithAnimationType[] = {
++      &GetCSSPropertyTransitionBehavior(), &GetCSSPropertyTransitionDuration(),
++      &GetCSSPropertyTransitionTimingFunction(),
++      &GetCSSPropertyTransitionDelay(), &GetCSSPropertyTransitionProperty()};
++  static StylePropertyShorthand transition_longhands_with_animation_type(
++      CSSPropertyID::kTransition, kTransitionPropertiesWithAnimationType,
++      std::size(kTransitionPropertiesWithAnimationType));
++
++  return RuntimeEnabledFeatures::CSSTransitionDiscreteEnabled()
++             ? transition_longhands_with_animation_type
++             : transition_longhands;
+ }
+ 
+ unsigned indexOfShorthandForLonghand(
