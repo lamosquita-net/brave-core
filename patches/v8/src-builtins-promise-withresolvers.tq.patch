@@ -1,0 +1,43 @@
+diff --git a/src/builtins/promise-withresolvers.tq b/src/builtins/promise-withresolvers.tq
+new file mode 100644
+index 0000000000000000000000000000000000000000..4269e19096d1faf80406844f29be9dfc91d3b165
+--- /dev/null
++++ b/src/builtins/promise-withresolvers.tq
+@@ -0,0 +1,37 @@
++// Copyright 2023 the V8 project authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++namespace promise {
++
++extern macro AllocatePromiseWithResolversResult(implicit context: Context)(
++    JSAny, JSAny, JSAny): JSObject;
++
++// https://tc39.es/proposal-promise-with-resolvers/#sec-promise.withResolvers
++transitioning javascript builtin PromiseWithResolvers(
++    js-implicit context: Context, receiver: JSAny)(): JSAny {
++  // 1. Let C be the this value.
++  const receiver = Cast<JSReceiver>(receiver)
++      otherwise ThrowTypeError(
++      MessageTemplate::kCalledOnNonObject, 'Promise.withResolvers');
++
++  // 2. Let promiseCapability be ? NewPromiseCapability(C).
++  const capability = NewPromiseCapability(receiver, False);
++
++  // 3. Let obj be OrdinaryObjectCreate(%Object.prototype%).
++  // 4. Perform ! CreateDataPropertyOrThrow(obj, "promise",
++  //    promiseCapability.[[Promise]]).
++  // 5. Perform ! CreateDataPropertyOrThrow(obj, "resolve",
++  //    promiseCapability.[[Resolve]]).
++  // 6. Perform ! CreateDataPropertyOrThrow(obj, "reject",
++  //    promiseCapability.[[Reject]]).
++  // 7. Return obj.
++  // FlyWeb: V8 11.6 types PromiseCapability's resolve/reject as Object (V8
++  // retyped them as JSAny in the same CL); NewPromiseCapability always stores
++  // JS values there.
++  return AllocatePromiseWithResolversResult(
++      capability.promise, UnsafeCast<JSAny>(capability.resolve),
++      UnsafeCast<JSAny>(capability.reject));
++}
++
++}  // namespace promise

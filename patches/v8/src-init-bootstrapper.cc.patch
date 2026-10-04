@@ -1,8 +1,96 @@
 diff --git a/src/init/bootstrapper.cc b/src/init/bootstrapper.cc
-index e0cb54827981631ecebadd95226c54cbd8698bc3..0f3a165c0997a0c3582b955dc4ccf17797b19caa 100644
+index e0cb54827981631ecebadd95226c54cbd8698bc3..62980d5fdc6688c42e7c065cc78cfdebb18edf03 100644
 --- a/src/init/bootstrapper.cc
 +++ b/src/init/bootstrapper.cc
-@@ -4933,21 +4933,8 @@ void Genesis::InitializeGlobal_harmony_struct() {
+@@ -717,6 +717,29 @@ void InstallToStringTag(Isolate* isolate, Handle<JSObject> holder,
+                      isolate->factory()->InternalizeUtf8String(value));
+ }
+ 
++// Create a map for result objects returned from builtins in such a way that
++// it's exactly the same map as the one produced by object literals. E.g.,
++// iterator result objects have the same map as literals in the form `{value,
++// done}`.
++//
++// This way we have better sharing of maps (i.e. less polymorphism) and also
++// make it possible to hit the fast-paths in various builtins (i.e. promises and
++// collections) with user defined iterators.
++template <size_t N>
++Handle<Map> CreateLiteralObjectMapFromCache(
++    Isolate* isolate, const std::array<Handle<Name>, N>& properties) {
++  Factory* factory = isolate->factory();
++  Handle<NativeContext> native_context = isolate->native_context();
++  Handle<Map> map = factory->ObjectLiteralMapFromCache(native_context, N);
++  for (Handle<Name> name : properties) {
++    map = Map::CopyWithField(isolate, map, name, FieldType::Any(isolate), NONE,
++                             PropertyConstness::kConst,
++                             Representation::Tagged(), INSERT_TRANSITION)
++              .ToHandleChecked();
++  }
++  return map;
++}
++
+ }  // namespace
+ 
+ Handle<JSFunction> Genesis::CreateEmptyFunction() {
+@@ -3744,28 +3767,9 @@ void Genesis::InitializeGlobal(Handle<JSGlobalObject> global_object,
+   }
+ 
+   {  // -- I t e r a t o r R e s u l t
+-    // Setup the map for IterResultObjects created from builtins in such a
+-    // way that it's exactly the same map as the one produced by object
+-    // literals in the form `{value, done}`. This way we have better sharing
+-    // of maps (i.e. less polymorphism) and also make it possible to hit the
+-    // fast-paths in various builtins (i.e. promises and collections) with
+-    // user defined iterators.
+-    Handle<Map> map = factory->ObjectLiteralMapFromCache(native_context(), 2);
+-
+-    // value
+-    map = Map::CopyWithField(isolate(), map, factory->value_string(),
+-                             FieldType::Any(isolate()), NONE,
+-                             PropertyConstness::kConst,
+-                             Representation::Tagged(), INSERT_TRANSITION)
+-              .ToHandleChecked();
+-
+-    // done
+-    map = Map::CopyWithField(isolate(), map, factory->done_string(),
+-                             FieldType::Any(isolate()), NONE,
+-                             PropertyConstness::kConst,
+-                             Representation::HeapObject(), INSERT_TRANSITION)
+-              .ToHandleChecked();
+-
++    std::array<Handle<Name>, 2> fields{factory->value_string(),
++                                       factory->done_string()};
++    Handle<Map> map = CreateLiteralObjectMapFromCache(isolate(), fields);
+     native_context()->set_iterator_result_map(*map);
+   }
+ 
+@@ -4673,6 +4677,25 @@ void Genesis::InitializeGlobal_harmony_iterator_helpers() {
+ #undef ITERATOR_HELPERS
+ }
+ 
++void Genesis::InitializeGlobal_harmony_promise_withresolvers() {
++  if (!v8_flags.harmony_promise_withresolvers) return;
++
++  Factory* factory = isolate()->factory();
++
++  // FlyWeb: "promise" is not a read-only root (heap symbol) in V8 11.6;
++  // adding one would change the generated static roots. Internalize it here.
++  std::array<Handle<Name>, 3> fields{factory->InternalizeUtf8String("promise"),
++                                     factory->resolve_string(),
++                                     factory->reject_string()};
++  Handle<Map> result_map = CreateLiteralObjectMapFromCache(isolate(), fields);
++  native_context()->set_promise_withresolvers_result_map(*result_map);
++
++  Handle<JSFunction> promise_fun =
++      handle(native_context()->promise_function(), isolate());
++  InstallFunctionWithBuiltinId(isolate(), promise_fun, "withResolvers",
++                               Builtin::kPromiseWithResolvers, 0, true);
++}
++
+ void Genesis::InitializeGlobal_harmony_set_methods() {
+   if (!v8_flags.harmony_set_methods) return;
+ 
+@@ -4933,21 +4956,8 @@ void Genesis::InitializeGlobal_harmony_struct() {
  void Genesis::InitializeGlobal_harmony_array_grouping() {
    if (!v8_flags.harmony_array_grouping) return;
  
