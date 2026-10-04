@@ -34,9 +34,9 @@ std::string GetUpdateChannel() {
   std::string channel_name = brave::GetChannelName();
   if (channel_name == "release")
     channel_name = "stable";
-  return base::SysInfo::OperatingSystemArchitecture() == "x86_64"
-             ? channel_name
-             : channel_name + "-arm64";
+  // FlyWeb is x86_64 only (it runs under Rosetta on Apple silicon), so there
+  // is no "-arm64" feed.
+  return channel_name;
 }
 
 NSString* GetVersionFromAppcastItem(id item) {
@@ -447,8 +447,10 @@ std::string GetDescriptionFromAppcastItem(id item) {
         command->GetSwitchValueASCII(switches::kUpdateFeedURL));
   }
 
-  return [NSString stringWithFormat:@"https://updates.bravesoftware.com/"
-                                    @"sparkle/Brave-Browser/%s/appcast.xml",
+  // FlyWeb: our own appcast, signed with our EdDSA key on bak (softmac
+  // FlyWeb/servidor/actualizaciones). Never Brave's.
+  return [NSString stringWithFormat:@"https://updates.flyweb.lamosquita.net/"
+                                    @"%s/appcast.xml",
                                     GetUpdateChannel().c_str()];
 }
 @end

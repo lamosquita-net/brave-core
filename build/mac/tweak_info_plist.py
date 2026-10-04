@@ -43,7 +43,7 @@ def _RemoveKeys(plist, *keys):
             pass
 
 
-def _OverrideVersionKey(plist, brave_version):
+def _OverrideVersionKey(plist, brave_version, flyweb_build=0):
     """ `minor.build` version string is used for update.
     When we begin to use the Major version component, Brave version string will
     be `1.0.0` for example and `Minor.Build` (`0.0`) would be used for update
@@ -56,6 +56,9 @@ def _OverrideVersionKey(plist, brave_version):
     if int(version_values[0]) >= 1:
         adjusted_minor = int(version_values[1]) + (100 * int(version_values[0]))
         plist['CFBundleVersion'] = str(adjusted_minor) + '.' + version_values[2]
+        # FlyWeb: our releases on the same Brave base (157.64 -> 157.64.N).
+        if flyweb_build > 0:
+            plist['CFBundleVersion'] += '.' + str(flyweb_build)
 
 
 def Main():
@@ -74,6 +77,8 @@ def Main():
         default=None, help='Public EdDSA key for update')
     parser.add_argument('--brave_version', dest='brave_version', action='store',
         default=None, help='brave version string')
+    parser.add_argument('--flyweb_build', dest='flyweb_build', type=int,
+        default=0, help='FlyWeb release build number (1.0 = 0)')
     parser.add_argument('--format', choices=('binary1', 'xml1', 'json'),
         default='xml1', help='Format to use when writing property list '
             '(default: %(default)s)')
@@ -108,7 +113,7 @@ def Main():
     if args.brave_eddsa_key:
         plist['SUPublicEDKey'] = args.brave_eddsa_key
 
-    _OverrideVersionKey(plist, args.brave_version)
+    _OverrideVersionKey(plist, args.brave_version, args.flyweb_build)
 
     # Explicitly disable profiling
     plist['SUEnableSystemProfiling'] = False
