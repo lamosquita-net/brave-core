@@ -248,141 +248,20 @@ class CaptivePortalServiceTest : public testing::Test,
   std::unique_ptr<CaptivePortalService> service_;
 };
 
-// Verify that an observer doesn't get messages from the wrong browser_context.
-TEST_F(CaptivePortalServiceTest, CaptivePortalTwoBrowserContexts) {
-  Initialize(CaptivePortalService::NOT_TESTING);
-  content::TestBrowserContext browser_context2;
-
-  TestingPrefServiceSimple pref_service2;
-  pref_service2.registry()->RegisterBooleanPref(
-      embedder_support::kAlternateErrorPagesEnabled, true);
-
-  std::unique_ptr<CaptivePortalService> service2(
-      new CaptivePortalService(&browser_context2, &pref_service2));
-  CaptivePortalObserver observer2(service2.get());
-
-  RunTest(RESULT_INTERNET_CONNECTED, net::OK, 204, 0, nullptr);
-  EXPECT_EQ(0, observer2.num_results_received());
-}
-
-// Checks exponential backoff when the Internet is connected.
-TEST_F(CaptivePortalServiceTest, CaptivePortalRecheckInternetConnected) {
-  Initialize(CaptivePortalService::NOT_TESTING);
-
-  // This value should have no effect on this test, until the end.
-  set_initial_backoff_portal(base::Seconds(1));
-
-  set_initial_backoff_no_portal(base::Seconds(100));
-  RunBackoffTest(RESULT_INTERNET_CONNECTED, net::OK, 204);
-
-  // Make sure that getting a new result resets the timer.
-  RunTest(RESULT_BEHIND_CAPTIVE_PORTAL, net::OK, 200, 1600, nullptr);
-  RunTest(RESULT_BEHIND_CAPTIVE_PORTAL, net::OK, 200, 0, nullptr);
-  RunTest(RESULT_BEHIND_CAPTIVE_PORTAL, net::OK, 200, 1, nullptr);
-  RunTest(RESULT_BEHIND_CAPTIVE_PORTAL, net::OK, 200, 2, nullptr);
-}
-
-// Checks exponential backoff when there's an HTTP error.
-TEST_F(CaptivePortalServiceTest, CaptivePortalRecheckError) {
-  Initialize(CaptivePortalService::NOT_TESTING);
-
-  // This value should have no effect on this test.
-  set_initial_backoff_portal(base::Days(1));
-
-  set_initial_backoff_no_portal(base::Seconds(100));
-  RunBackoffTest(RESULT_NO_RESPONSE, net::OK, 500);
-
-  // Make sure that getting a new result resets the timer.
-  RunTest(RESULT_INTERNET_CONNECTED, net::OK, 204, 1600, nullptr);
-  RunTest(RESULT_INTERNET_CONNECTED, net::OK, 204, 0, nullptr);
-  RunTest(RESULT_INTERNET_CONNECTED, net::OK, 204, 100, nullptr);
-}
-
-// Checks exponential backoff when there's a captive portal.
-TEST_F(CaptivePortalServiceTest, CaptivePortalRecheckBehindPortal) {
-  Initialize(CaptivePortalService::NOT_TESTING);
-
-  // This value should have no effect on this test, until the end.
-  set_initial_backoff_no_portal(base::Seconds(250));
-
-  set_initial_backoff_portal(base::Seconds(100));
-  RunBackoffTest(RESULT_BEHIND_CAPTIVE_PORTAL, net::OK, 200);
-
-  // Make sure that getting a new result resets the timer.
-  RunTest(RESULT_INTERNET_CONNECTED, net::OK, 204, 1600, nullptr);
-  RunTest(RESULT_INTERNET_CONNECTED, net::OK, 204, 0, nullptr);
-  RunTest(RESULT_INTERNET_CONNECTED, net::OK, 204, 250, nullptr);
-}
-
-// Checks that jitter gives us values in the correct range.
-TEST_F(CaptivePortalServiceTest, CaptivePortalJitter) {
-  Initialize(CaptivePortalService::NOT_TESTING);
-  set_jitter_factor(0.3);
-  set_initial_backoff_no_portal(base::Seconds(100));
-  RunTest(RESULT_INTERNET_CONNECTED, net::OK, 204, 0, nullptr);
-  RunTest(RESULT_INTERNET_CONNECTED, net::OK, 204, 0, nullptr);
-
-  for (int i = 0; i < 50; ++i) {
-    int interval_sec = GetTimeUntilNextRequest().InSeconds();
-    // Allow for roundoff, though shouldn't be necessary.
-    EXPECT_LE(69, interval_sec);
-    EXPECT_LE(interval_sec, 101);
-  }
-}
-
-// Check a Retry-After header that contains a delay in seconds.
-TEST_F(CaptivePortalServiceTest, CaptivePortalRetryAfterSeconds) {
-  Initialize(CaptivePortalService::NOT_TESTING);
-  set_initial_backoff_no_portal(base::Seconds(100));
-  const char* retry_after = "HTTP/1.1 503 OK\nRetry-After: 101\n\n";
-
-  // Check that Retry-After headers work both on the first request to return a
-  // result and on subsequent requests.
-  RunTest(RESULT_NO_RESPONSE, net::OK, 503, 0, retry_after);
-  RunTest(RESULT_NO_RESPONSE, net::OK, 503, 101, retry_after);
-  RunTest(RESULT_INTERNET_CONNECTED, net::OK, 204, 101, nullptr);
-
-  // Make sure that there's no effect on the next captive portal check after
-  // login.
-  EXPECT_EQ(base::Seconds(0), GetTimeUntilNextRequest());
-}
-
-// Check that the RecheckPolicy is still respected on 503 responses with
-// Retry-After headers.
-TEST_F(CaptivePortalServiceTest, CaptivePortalRetryAfterSecondsTooShort) {
-  Initialize(CaptivePortalService::NOT_TESTING);
-  set_initial_backoff_no_portal(base::Seconds(100));
-  const char* retry_after = "HTTP/1.1 503 OK\nRetry-After: 99\n\n";
-
-  RunTest(RESULT_NO_RESPONSE, net::OK, 503, 0, retry_after);
-  // Normally would be no delay on the first check with a new result.
-  RunTest(RESULT_NO_RESPONSE, net::OK, 503, 99, retry_after);
-  EXPECT_EQ(base::Seconds(100), GetTimeUntilNextRequest());
-}
-
-// Check a Retry-After header that contains a date.
-TEST_F(CaptivePortalServiceTest, CaptivePortalRetryAfterDate) {
-  Initialize(CaptivePortalService::NOT_TESTING);
-  set_initial_backoff_no_portal(base::Seconds(50));
-
-  // base has a function to get a time in the right format from a string, but
-  // not the other way around.
-  base::Time start_time;
-  ASSERT_TRUE(
-      base::Time::FromString("Tue, 17 Apr 2012 18:02:00 GMT", &start_time));
-  SetTime(start_time);
-
-  RunTest(RESULT_NO_RESPONSE, net::OK, 503, 0,
-          "HTTP/1.1 503 OK\nRetry-After: Tue, 17 Apr 2012 18:02:51 GMT\n\n");
-  EXPECT_EQ(base::Seconds(51), GetTimeUntilNextRequest());
-}
-
-// Check detector uses brave url.
-TEST_F(CaptivePortalServiceTest, UsingBraveURL) {
-  Initialize(CaptivePortalService::NOT_TESTING);
+// FlyWeb: captive portal detection is always off, even with the "resolve
+// navigation errors" pref on. Brave's tests here checked that detection worked
+// with its own host; FlyWeb removes that behavior on purpose (it told Brave the
+// user's IP; macOS detects captive portals itself).
+TEST_F(CaptivePortalServiceTest, FlyWebNeverProbes) {
+  Initialize(CaptivePortalService::NOT_TESTING);  // pref on
+  CaptivePortalObserver observer(service());
+  service()->DetectCaptivePortal();
+  base::RunLoop().RunUntilIdle();
+  EXPECT_FALSE(FetchingURL());
   EXPECT_TRUE(get_probe_url().is_empty());
-  RunTest(RESULT_INTERNET_CONNECTED, net::OK, 204, 0, nullptr);
-  EXPECT_EQ(get_probe_url().spec(), "http://detectportal.brave-http-only.com/");
+  // Disabled, the service reports an Internet connection so pages go on.
+  EXPECT_EQ(1, observer.num_results_received());
+  EXPECT_EQ(RESULT_INTERNET_CONNECTED, observer.captive_portal_result());
 }
 
 }  // namespace captive_portal
