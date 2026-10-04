@@ -15,6 +15,7 @@
 #include "brave/browser/brave_stats/brave_stats_tab_helper.h"
 #include "brave/browser/brave_wallet/brave_wallet_tab_helper.h"
 #include "brave/browser/ephemeral_storage/ephemeral_storage_tab_helper.h"
+#include "brave/browser/flyweb/user_agent_override_tab_helper.h"
 #include "brave/browser/misc_metrics/page_metrics_tab_helper.h"
 #include "brave/browser/ntp_background/ntp_tab_helper.h"
 #include "brave/browser/ui/bookmark/brave_bookmark_tab_helper.h"
@@ -95,6 +96,9 @@ void AttachTabHelpers(content::WebContents* web_contents) {
 #endif
   brave_shields::BraveShieldsWebContentsObserver::CreateForWebContents(
       web_contents);
+  if (base::FeatureList::IsEnabled(flyweb::kFlyWebUserAgentOverride)) {
+    flyweb::UserAgentOverrideTabHelper::CreateForWebContents(web_contents);
+  }
 #if BUILDFLAG(IS_ANDROID)
   BackgroundVideoPlaybackTabHelper::CreateForWebContents(web_contents);
 #else
