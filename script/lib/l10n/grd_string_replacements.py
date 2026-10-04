@@ -90,6 +90,9 @@ flyweb_replacements = [
      r'|Authors|Today|Leo)\b)', r'FlyWeb'),
     # FlyWeb's internal pages are flyweb://, never brave:// (kBraveUIScheme).
     (r'\bbrave://', r'flyweb://'),
+    # Nor chrome:// in the Chromium strings Brave copies into brave-core: the
+    # pages answer to flyweb:// too, and the address bar shows flyweb://.
+    (r'\bchrome://', r'flyweb://'),
 ]
 
 # Messages that name the company are legal notices ("Brave is a registered
