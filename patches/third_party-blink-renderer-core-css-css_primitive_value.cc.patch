@@ -1,0 +1,39 @@
+diff --git a/third_party/blink/renderer/core/css/css_primitive_value.cc b/third_party/blink/renderer/core/css/css_primitive_value.cc
+index fa8d1823f8941b8edbcb0675b96d3f8f8f574f8a..99e4f087135eacbdd28140eb769a7557cab19d6f 100644
+--- a/third_party/blink/renderer/core/css/css_primitive_value.cc
++++ b/third_party/blink/renderer/core/css/css_primitive_value.cc
+@@ -566,6 +566,12 @@ bool CSSPrimitiveValue::UnitTypeToLengthUnitType(UnitType unit_type,
+     case CSSPrimitiveValue::UnitType::kIcs:
+       length_type = kUnitTypeIdeographicFullWidth;
+       return true;
++    case CSSPrimitiveValue::UnitType::kCaps:
++      length_type = kUnitTypeFontCapitalHeight;
++      return true;
++    case CSSPrimitiveValue::UnitType::kRcaps:
++      length_type = kUnitTypeRootFontCapitalHeight;
++      return true;
+     case CSSPrimitiveValue::UnitType::kLhs:
+       length_type = kUnitTypeLineHeight;
+       return true;
+@@ -691,6 +697,10 @@ CSSPrimitiveValue::UnitType CSSPrimitiveValue::LengthUnitTypeToUnitType(
+       return CSSPrimitiveValue::UnitType::kChs;
+     case kUnitTypeIdeographicFullWidth:
+       return CSSPrimitiveValue::UnitType::kIcs;
++    case kUnitTypeFontCapitalHeight:
++      return CSSPrimitiveValue::UnitType::kCaps;
++    case kUnitTypeRootFontCapitalHeight:
++      return CSSPrimitiveValue::UnitType::kRcaps;
+     case kUnitTypeLineHeight:
+       return CSSPrimitiveValue::UnitType::kLhs;
+     case kUnitTypeRootLineHeight:
+@@ -793,6 +803,10 @@ const char* CSSPrimitiveValue::UnitTypeToString(UnitType type) {
+       return "lh";
+     case UnitType::kRlhs:
+       return "rlh";
++    case UnitType::kCaps:
++      return "cap";
++    case UnitType::kRcaps:
++      return "rcap";
+     case UnitType::kPixels:
+       return "px";
+     case UnitType::kCentimeters:

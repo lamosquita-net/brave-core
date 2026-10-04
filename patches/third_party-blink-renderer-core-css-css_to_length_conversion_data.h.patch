@@ -1,0 +1,31 @@
+diff --git a/third_party/blink/renderer/core/css/css_to_length_conversion_data.h b/third_party/blink/renderer/core/css/css_to_length_conversion_data.h
+index 5840e04a6b60e1bbf283234cd7bb5eedb2ca0e18..7cb1e2850fffbd721a368c56c682ed9acaf18b63 100644
+--- a/third_party/blink/renderer/core/css/css_to_length_conversion_data.h
++++ b/third_party/blink/renderer/core/css/css_to_length_conversion_data.h
+@@ -75,6 +75,8 @@ class CORE_EXPORT CSSToLengthConversionData : public CSSLengthResolver {
+     float Rch(float zoom) const;
+     float Ic(float zoom) const;
+     float Ric(float zoom) const;
++    float Cap(float zoom) const;
++    float Rcap(float zoom) const;
+ 
+    private:
+     float em_ = 0;
+@@ -216,7 +218,7 @@ class CORE_EXPORT CSSToLengthConversionData : public CSSLengthResolver {
+     kEm = 1u << 0,
+     // rem
+     kRootFontRelative = 1u << 1,
+-    // ex, ch, ic, lh
++    // ex, ch, ic, lh, cap, rcap
+     kGlyphRelative = 1u << 2,
+     // rex, rch, ric have both kRootFontRelative and kGlyphRelative
+     // lh
+@@ -266,6 +268,8 @@ class CORE_EXPORT CSSToLengthConversionData : public CSSLengthResolver {
+   float RicFontSize(float zoom) const override;
+   float LineHeight(float zoom) const override;
+   float RootLineHeight(float zoom) const override;
++  float CapFontSize(float zoom) const override;
++  float RcapFontSize(float zoom) const override;
+   double ViewportWidth() const override;
+   double ViewportHeight() const override;
+   double SmallViewportWidth() const override;

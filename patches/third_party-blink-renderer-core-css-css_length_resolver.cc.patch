@@ -1,0 +1,17 @@
+diff --git a/third_party/blink/renderer/core/css/css_length_resolver.cc b/third_party/blink/renderer/core/css/css_length_resolver.cc
+index b8eb7fd2f99b68308ddb0b21f8f4047bc6fc655e..111ee6b3dbe192b933e9ded388cbb29853b888a9 100644
+--- a/third_party/blink/renderer/core/css/css_length_resolver.cc
++++ b/third_party/blink/renderer/core/css/css_length_resolver.cc
+@@ -291,6 +291,12 @@ double CSSLengthResolver::ZoomedComputedPixels(
+     case CSSPrimitiveValue::UnitType::kRlhs:
+       return value * RootLineHeight(Zoom());
+ 
++    case CSSPrimitiveValue::UnitType::kCaps:
++      return value * CapFontSize(Zoom());
++
++    case CSSPrimitiveValue::UnitType::kRcaps:
++      return value * RcapFontSize(Zoom());
++
+     default:
+       NOTREACHED();
+       return 0;

@@ -1,0 +1,23 @@
+diff --git a/third_party/blink/renderer/core/css/media_values_cached.cc b/third_party/blink/renderer/core/css/media_values_cached.cc
+index 86907c5e020bd0f3312b9336cbcfffa17ef33f05..a4c0cee1a3ccc3c41f644ec166c7ce37eb85d277 100644
+--- a/third_party/blink/renderer/core/css/media_values_cached.cc
++++ b/third_party/blink/renderer/core/css/media_values_cached.cc
+@@ -150,6 +150,18 @@ float MediaValuesCached::RootLineHeight(float zoom) const {
+   return data_.line_height;
+ }
+ 
++float MediaValuesCached::CapFontSize(float zoom) const {
++  DCHECK_EQ(1.0f, zoom);
++  // For media queries cap units are based on the initial font.
++  return data_.cap_size;
++}
++
++float MediaValuesCached::RcapFontSize(float zoom) const {
++  DCHECK_EQ(1.0f, zoom);
++  // For media queries rcap units are based on the initial font.
++  return data_.cap_size;
++}
++
+ double MediaValuesCached::ViewportWidth() const {
+   return data_.viewport_width;
+ }
