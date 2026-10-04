@@ -1,0 +1,20 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.cc b/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.cc
+index 4125fe51de0e63b2708dedf02f62c5347554df45..e3ef709f2c3ea0b7606a5000e87eba0a0b99cbcd 100644
+--- a/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.cc
++++ b/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.cc
+@@ -182,6 +182,15 @@ bool NGLineInfo::ShouldHangTrailingSpaces() const {
+   NOTREACHED();
+ }
+ 
++bool NGLineInfo::IsHyphenated() const {
++  for (const NGInlineItemResult& item_result : base::Reversed(Results())) {
++    if (item_result.Length()) {
++      return item_result.is_hyphenated;
++    }
++  }
++  return false;
++}
++
+ void NGLineInfo::UpdateTextAlign() {
+   text_align_ = GetTextAlign(IsLastLine());
+   allow_hang_for_alignment_ = false;
