@@ -17,7 +17,7 @@ namespace brave_federated {
 
 namespace {
 constexpr char kWikiUrl[] =
-    "https://flyweb.lamosquita.net/ayuda/#privacidad";
+    "https://github.com/brave/brave-browser/wiki/Operational-Patterns";
 }  // namespace
 
 int GetCollectionSlot() {

@@ -43,7 +43,7 @@ net::NetworkTrafficAnnotationTag GetNetworkTrafficAnnotationTag() {
           sender: "Operational Patterns"
           description:
             "Report of anonymized engagement statistics. For more info see "
-            "https://flyweb.lamosquita.net/ayuda/#privacidad"
+            "https://github.com/brave/brave-browser/wiki/Operational-Patterns"
           trigger:
             "Reports are automatically generated on startup and at intervals "
             "while Brave is running."
