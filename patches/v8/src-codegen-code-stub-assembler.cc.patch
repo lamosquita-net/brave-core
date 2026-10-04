@@ -1,0 +1,14 @@
+diff --git a/src/codegen/code-stub-assembler.cc b/src/codegen/code-stub-assembler.cc
+index 012bf976222b186abb035e74a4df35ac5fafec00..43b30fcbbd00a9c93c0dfd63c2614d68df5baa77 100644
+--- a/src/codegen/code-stub-assembler.cc
++++ b/src/codegen/code-stub-assembler.cc
+@@ -17233,7 +17233,8 @@ TNode<FixedArray> CodeStubAssembler::ArrayListElements(TNode<ArrayList> array) {
+   // TODO(v8:12499): Consider supporting other ElementsKinds.
+   constexpr ElementsKind kind = ElementsKind::PACKED_ELEMENTS;
+   TNode<IntPtrT> length = PositiveSmiUntag(ArrayListGetLength(array));
+-  TNode<FixedArrayBase> elements = AllocateFixedArray(kind, length);
++  TNode<FixedArrayBase> elements = AllocateFixedArray(
++      kind, length, AllocationFlag::kAllowLargeObjectAllocation);
+   CopyElements(kind, elements, IntPtrConstant(0), array,
+                IntPtrConstant(ArrayList::kFirstIndex), length);
+   return CAST(elements);
