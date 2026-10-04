@@ -1,0 +1,24 @@
+diff --git a/third_party/blink/renderer/core/html/forms/html_form_control_element.h b/third_party/blink/renderer/core/html/forms/html_form_control_element.h
+index 659b8346afdec49fc55961ddb1aca8e8f4b25cb3..9f13845f49f4173dac89357e49aa39d088fd737f 100644
+--- a/third_party/blink/renderer/core/html/forms/html_form_control_element.h
++++ b/third_party/blink/renderer/core/html/forms/html_form_control_element.h
+@@ -172,6 +172,10 @@ class CORE_EXPORT HTMLFormControlElement : public HTMLElement,
+ 
+   int32_t GetAxId() const;
+ 
++  void SetInteractedSinceLastFormSubmit(bool);
++  bool MatchesUserInvalidPseudo();
++  bool MatchesUserValidPseudo();
++
+  protected:
+   HTMLFormControlElement(const QualifiedName& tag_name, Document&);
+ 
+@@ -205,6 +209,8 @@ class CORE_EXPORT HTMLFormControlElement : public HTMLElement,
+   bool prevent_highlighting_of_autofilled_fields_ : 1;
+ 
+   bool blocks_form_submission_ : 1;
++
++  bool interacted_since_last_form_submit_ : 1;
+ };
+ 
+ template <>

@@ -1,0 +1,47 @@
+diff --git a/third_party/blink/renderer/core/html/forms/html_form_control_element.cc b/third_party/blink/renderer/core/html/forms/html_form_control_element.cc
+index bec63ab174351a66ccd85fc0332749d9420a72e5..d68266df91e17f3adf493d96e39464481ce71c2a 100644
+--- a/third_party/blink/renderer/core/html/forms/html_form_control_element.cc
++++ b/third_party/blink/renderer/core/html/forms/html_form_control_element.cc
+@@ -56,7 +56,8 @@ HTMLFormControlElement::HTMLFormControlElement(const QualifiedName& tag_name,
+                                                Document& document)
+     : HTMLElement(tag_name, document),
+       autofill_state_(WebAutofillState::kNotFilled),
+-      blocks_form_submission_(false) {
++      blocks_form_submission_(false),
++      interacted_since_last_form_submit_(false) {
+   SetHasCustomStyleCallbacks();
+   static uint64_t next_free_unique_id = 1;
+   unique_renderer_form_control_id_ = next_free_unique_id++;
+@@ -113,6 +114,7 @@ bool HTMLFormControlElement::FormNoValidate() const {
+ void HTMLFormControlElement::Reset() {
+   SetAutofillState(WebAutofillState::kNotFilled);
+   ResetImpl();
++  SetInteractedSinceLastFormSubmit(false);
+ }
+ 
+ void HTMLFormControlElement::AttributeChanged(
+@@ -570,4 +572,24 @@ int32_t HTMLFormControlElement::GetAxId() const {
+   return 0;
+ }
+ 
++void HTMLFormControlElement::SetInteractedSinceLastFormSubmit(
++    bool interacted_since_last_form_submit) {
++  if (interacted_since_last_form_submit_ == interacted_since_last_form_submit) {
++    return;
++  }
++  interacted_since_last_form_submit_ = interacted_since_last_form_submit;
++  PseudoStateChanged(CSSSelector::kPseudoUserInvalid);
++  PseudoStateChanged(CSSSelector::kPseudoUserValid);
++}
++
++bool HTMLFormControlElement::MatchesUserInvalidPseudo() {
++  return interacted_since_last_form_submit_ && MatchesValidityPseudoClasses() &&
++         !ListedElement::IsValidElement();
++}
++
++bool HTMLFormControlElement::MatchesUserValidPseudo() {
++  return interacted_since_last_form_submit_ && MatchesValidityPseudoClasses() &&
++         ListedElement::IsValidElement();
++}
++
+ }  // namespace blink

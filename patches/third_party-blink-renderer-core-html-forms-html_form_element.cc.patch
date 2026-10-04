@@ -1,0 +1,17 @@
+diff --git a/third_party/blink/renderer/core/html/forms/html_form_element.cc b/third_party/blink/renderer/core/html/forms/html_form_element.cc
+index be19c42cdc45a5f0b8ba52918b98dba07b6bd0e1..515998c56871da429b685519e74fa3faf844a644 100644
+--- a/third_party/blink/renderer/core/html/forms/html_form_element.cc
++++ b/third_party/blink/renderer/core/html/forms/html_form_element.cc
+@@ -338,6 +338,12 @@ void HTMLFormElement::PrepareForSubmission(
+     }
+   }
+ 
++  for (ListedElement* element : ListedElements()) {
++    if (auto* form_control = DynamicTo<HTMLFormControlElement>(element)) {
++      form_control->SetInteractedSinceLastFormSubmit(true);
++    }
++  }
++
+   bool should_submit;
+   {
+     base::AutoReset<bool> submit_event_handler_scope(&in_user_js_submit_event_,

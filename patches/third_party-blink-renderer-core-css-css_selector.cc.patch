@@ -1,0 +1,44 @@
+diff --git a/third_party/blink/renderer/core/css/css_selector.cc b/third_party/blink/renderer/core/css/css_selector.cc
+index afc7a7561a68eb74e9a9a69e4ccd77cd3ca96bc2..9838c5bc3b389f32524b3e4d79e664d8bad8f0ae 100644
+--- a/third_party/blink/renderer/core/css/css_selector.cc
++++ b/third_party/blink/renderer/core/css/css_selector.cc
+@@ -399,6 +399,8 @@ PseudoId CSSSelector::GetPseudoId(PseudoType type) {
+     case kPseudoTrue:
+     case kPseudoUnknown:
+     case kPseudoUnparsed:
++    case kPseudoUserInvalid:
++    case kPseudoUserValid:
+     case kPseudoValid:
+     case kPseudoVertical:
+     case kPseudoVideoPersistent:
+@@ -538,6 +540,8 @@ const static NameToPseudoStruct kPseudoTypeWithoutArgumentsMap[] = {
+     {"start", CSSSelector::kPseudoStart},
+     {"target", CSSSelector::kPseudoTarget},
+     {"target-text", CSSSelector::kPseudoTargetText},
++    {"user-invalid", CSSSelector::kPseudoUserInvalid},
++    {"user-valid", CSSSelector::kPseudoUserValid},
+     {"valid", CSSSelector::kPseudoValid},
+     {"vertical", CSSSelector::kPseudoVertical},
+     {"view-transition", CSSSelector::kPseudoViewTransition},
+@@ -666,6 +670,12 @@ CSSSelector::PseudoType CSSSelector::NameToPseudoType(
+     return CSSSelector::kPseudoUnknown;
+   }
+ 
++  if ((match->type == CSSSelector::kPseudoUserInvalid ||
++       match->type == CSSSelector::kPseudoUserValid) &&
++      !RuntimeEnabledFeatures::UserValidUserInvalidEnabled()) {
++    return CSSSelector::kPseudoUnknown;
++  }
++
+   return static_cast<CSSSelector::PseudoType>(match->type);
+ }
+ 
+@@ -867,6 +877,8 @@ void CSSSelector::UpdatePseudoType(const AtomicString& value,
+     case kPseudoTrue:
+     case kPseudoUnknown:
+     case kPseudoUnparsed:
++    case kPseudoUserInvalid:
++    case kPseudoUserValid:
+     case kPseudoValid:
+     case kPseudoVertical:
+     case kPseudoVisited:

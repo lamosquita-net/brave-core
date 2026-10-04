@@ -1,0 +1,23 @@
+diff --git a/third_party/blink/renderer/core/css/selector_checker.cc b/third_party/blink/renderer/core/css/selector_checker.cc
+index 0a5aae9deb41a6b65270600424a857e4ba8d6980..23b3de6cd3dc0a7fa5e13e569f6a1911a666fc92 100644
+--- a/third_party/blink/renderer/core/css/selector_checker.cc
++++ b/third_party/blink/renderer/core/css/selector_checker.cc
+@@ -1639,6 +1639,18 @@ bool SelectorChecker::CheckPseudoClass(const SelectorCheckingContext& context,
+       return element.IsOptionalFormControl();
+     case CSSSelector::kPseudoRequired:
+       return element.IsRequiredFormControl();
++    case CSSSelector::kPseudoUserInvalid:
++      CHECK(RuntimeEnabledFeatures::UserValidUserInvalidEnabled());
++      if (auto* form_control = DynamicTo<HTMLFormControlElement>(element)) {
++        return form_control->MatchesUserInvalidPseudo();
++      }
++      return false;
++    case CSSSelector::kPseudoUserValid:
++      CHECK(RuntimeEnabledFeatures::UserValidUserInvalidEnabled());
++      if (auto* form_control = DynamicTo<HTMLFormControlElement>(element)) {
++        return form_control->MatchesUserValidPseudo();
++      }
++      return false;
+     case CSSSelector::kPseudoValid:
+       return element.MatchesValidityPseudoClasses() && element.IsValidElement();
+     case CSSSelector::kPseudoInvalid:
