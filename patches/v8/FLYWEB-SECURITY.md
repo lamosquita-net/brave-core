@@ -11,6 +11,7 @@ Backports onto V8 11.6.189.20 (65d8fbecd, the V8 of Chromium 116.0.5845.188). Tr
 | CVE-2025-6554 (crbug 427663123, exploited) | Ignition TDZ hole-check elision across optional chains | v8 22e9d9621 (M132-LTS f39628536, same diff) | `src-interpreter-bytecode-generator.cc.patch` |
 | CVE-2024-5274 (crbug 341663589, exploited) | Parser: class static blocks parsed with the outer ExpressionScope | v8 3e037e195 (M120-LTS 8f1c780b3) | `src-parsing-parser-base.h.patch`, `src-ast-scopes.cc.patch` |
 | CVE-2025-13223 (crbug 460017370, exploited) | TurboFan: property backing store extension copied slots with the wrong machine type | v8 4cf9311 (TurboFan part) + 9b5250b9 (crbug 475479135: field representation dependency, a bug introduced by 4cf9311) | `src-compiler-access-builder.cc.patch`, `src-compiler-access-builder.h.patch`, `src-compiler-js-native-context-specialization.cc.patch` |
+| CVE-2024-7971 (crbug 360700873, exploited) | Liftoff (Wasm baseline): loop inputs left in registers were mixed up when merging on the back edge (f64 bits read as a reference) | v8 9797576 (functional part only) | `src-wasm-baseline-liftoff-assembler.cc.patch`, `src-wasm-baseline-liftoff-assembler.h.patch`, `src-wasm-baseline-liftoff-compiler.cc.patch` |
 
 Notes:
 - The two branch-heads/11.6 fixes landed after 11.6.189.20 and Chromium 116 never shipped them (Chrome 117 used V8
@@ -38,3 +39,12 @@ CVE-2025-13223 (SEGURIDAD, 05-10-2026):
   `dcheck_always_on`): no warnings; regress-475479135-1/-2 and a FlyWeb test with Smi/Double/HeapObject/Tagged
   fields interleaved with accessors pass (the TurboFan graph shows the expected per-slot representation and the
   descriptor-walk DCHECK holds); mjsunit compiler/wasm/regress/es6-9/harmony: 4891 passed, 0 failed.
+
+CVE-2024-7971 (SEGURIDAD, 05-10-2026):
+- 11.6 has the same `PrepareLoopArgs()`. The upstream regression test (regress-360700873.js, from 4ddcbf2)
+  **crashes the unpatched 11.6 d8** (`(address & kHeapObjectTagMask) == 0`: the f64 bit pattern 0x3 is used as a
+  heap pointer) and passes with the patch. Wasm is off with jitless, so it only matters on the sites that keep the
+  JIT.
+- Ported: `PrepareLoopArgs()` -> `SpillLoopArgs()` (spill every loop input before the loop). Left out: the range-for
+  cleanups of `SpillLocals()`/`SpillAllRegisters()` and the DCHECKs of 4ddcbf2 (in `parallel-move.cc`, which 11.6
+  does not have). Cost: Liftoff code only (baseline tier), one spill per loop input.
