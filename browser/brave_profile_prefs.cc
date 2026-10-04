@@ -297,6 +297,11 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
   // Show download prompt by default
   registry->SetDefaultPrefValue(prefs::kPromptForDownload, base::Value(true));
 
+  // FlyWeb: page translation is off by default (Settings > Languages turns it
+  // on). When on, it goes straight to Google, which receives the page text.
+  registry->SetDefaultPrefValue(translate::prefs::kOfferTranslateEnabled,
+                                base::Value(false));
+
   // Not using chrome's web service for resolving navigation errors
   registry->SetDefaultPrefValue(embedder_support::kAlternateErrorPagesEnabled,
                                 base::Value(false));

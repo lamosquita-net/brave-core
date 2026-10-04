@@ -17,8 +17,10 @@
 
 namespace translate {
 namespace google_apis {
+// FlyWeb: no key. Brave sent its services key to translate.brave.com; FlyWeb
+// talks to Google directly and must not hand it FlyWeb's components key.
 std::string GetAPIKey() {
-  return BUILDFLAG(BRAVE_SERVICES_KEY);
+  return std::string();
 }
 }  // namespace google_apis
 }  // namespace translate
@@ -29,9 +31,13 @@ std::string GetAPIKey() {
 
 namespace translate {
 
-// Redirect the translate script request to the Brave endpoints.
+// FlyWeb: the script comes from Google itself (no redirect to the Brave
+// endpoints; UseGoogleTranslateEndpoint() is always true).
 GURL ChromiumTranslateScript::AddHostLocaleToUrl(const GURL& url) {
   GURL result = ::translate::AddHostLocaleToUrl(url);
+  if (translate::UseGoogleTranslateEndpoint()) {
+    return result;
+  }
   const GURL google_translate_script(kScriptURL);
   if (result.host_piece() == google_translate_script.host_piece()) {
     const GURL brave_translate_script(kBraveTranslateScriptURL);
