@@ -1,0 +1,16 @@
+diff --git a/third_party/blink/renderer/core/layout/layout_box_model_object.h b/third_party/blink/renderer/core/layout/layout_box_model_object.h
+index d25b05a6ffe8b4756157cad2017f2f5a07c3fc80..b695930a40814548512ad2628c7d2df4852229f5 100644
+--- a/third_party/blink/renderer/core/layout/layout_box_model_object.h
++++ b/third_party/blink/renderer/core/layout/layout_box_model_object.h
+@@ -413,6 +413,11 @@ class CORE_EXPORT LayoutBoxModelObject : public LayoutObject {
+     return MarginStart() + MarginEnd();
+   }
+ 
++  NGPhysicalBoxStrut MarginOutsets() const {
++    NOT_DESTROYED();
++    return {MarginTop(), MarginRight(), MarginBottom(), MarginLeft()};
++  }
++
+   virtual LayoutUnit ContainingBlockLogicalWidthForContent() const;
+ 
+   virtual void ChildBecameNonInline(LayoutObject* /*child*/) {

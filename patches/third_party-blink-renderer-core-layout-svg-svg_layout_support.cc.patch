@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/svg/svg_layout_support.cc b/third_party/blink/renderer/core/layout/svg/svg_layout_support.cc
-index 7a9626ce2920bb84a41183cad9d032b250f9af02..5afd870d065ca100a681cf0529334cb02320ef5d 100644
+index 7a9626ce2920bb84a41183cad9d032b250f9af02..64144290263e9cb660eda72e15e773c6b0c53849 100644
 --- a/third_party/blink/renderer/core/layout/svg/svg_layout_support.cc
 +++ b/third_party/blink/renderer/core/layout/svg/svg_layout_support.cc
 @@ -203,9 +203,8 @@ void SVGLayoutSupport::MapLocalToAncestor(const LayoutObject* object,
@@ -56,26 +56,35 @@ index 7a9626ce2920bb84a41183cad9d032b250f9af02..5afd870d065ca100a681cf0529334cb0
    }
    NOTREACHED();
    return false;
-@@ -318,13 +321,13 @@ bool SVGLayoutSupport::IntersectsClipPath(const LayoutObject& object,
-                                           const gfx::RectF& reference_box,
-                                           const HitTestLocation& location) {
-   ClipPathOperation* clip_path_operation = object.StyleRef().ClipPath();
+@@ -314,27 +317,6 @@ gfx::RectF SVGLayoutSupport::ComputeVisualRectForText(
+   return visual_rect;
+ }
+ 
+-bool SVGLayoutSupport::IntersectsClipPath(const LayoutObject& object,
+-                                          const gfx::RectF& reference_box,
+-                                          const HitTestLocation& location) {
+-  ClipPathOperation* clip_path_operation = object.StyleRef().ClipPath();
 -  if (!clip_path_operation)
-+  if (!clip_path_operation) {
-     return true;
+-    return true;
 -  if (clip_path_operation->GetType() == ClipPathOperation::kShape) {
 -    ShapeClipPathOperation& clip_path =
 -        To<ShapeClipPathOperation>(*clip_path_operation);
-+  }
-+  if (auto* shape_clip =
-+          DynamicTo<ShapeClipPathOperation>(*clip_path_operation)) {
-     float zoom = object.StyleRef().EffectiveZoom();
+-    float zoom = object.StyleRef().EffectiveZoom();
 -    return clip_path.GetPath(gfx::ScaleRect(reference_box, zoom), zoom)
-+    return shape_clip->GetPath(gfx::ScaleRect(reference_box, zoom), zoom)
-         .Transform(AffineTransform::MakeScale(1.f / zoom))
-         .Contains(location.TransformedPoint());
-   }
-@@ -375,8 +378,8 @@ void SVGLayoutSupport::ApplyStrokeStyleToStrokeData(StrokeData& stroke_data,
+-        .Transform(AffineTransform::MakeScale(1.f / zoom))
+-        .Contains(location.TransformedPoint());
+-  }
+-  DCHECK_EQ(clip_path_operation->GetType(), ClipPathOperation::kReference);
+-  SVGResourceClient* client = SVGResources::GetClient(object);
+-  auto* clipper = GetSVGResourceAsType(
+-      *client, To<ReferenceClipPathOperation>(*clip_path_operation));
+-  return !clipper || clipper->HitTestClipContent(reference_box, location);
+-}
+-
+ DashArray SVGLayoutSupport::ResolveSVGDashArray(
+     const SVGDashArray& svg_dash_array,
+     const ComputedStyle& style,
+@@ -375,8 +357,8 @@ void SVGLayoutSupport::ApplyStrokeStyleToStrokeData(StrokeData& stroke_data,
  bool SVGLayoutSupport::IsLayoutableTextNode(const LayoutObject* object) {
    DCHECK(object->IsText());
    // <br> is marked as text, but is not handled by the SVG layout code-path.

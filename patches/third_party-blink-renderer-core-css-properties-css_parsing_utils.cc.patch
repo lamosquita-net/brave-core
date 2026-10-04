@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc b/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
-index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a6f1628021e8d1a2cdf41ca69017d3f92d35e063 100644
+index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a3f79a1cb9903dd20751461336076e1c190cd195 100644
 --- a/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
 +++ b/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
 @@ -804,10 +804,14 @@ CSSLightDarkValuePair* ConsumeInternalLightDark(Func consume_value,
@@ -43,7 +43,22 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a6f1628021e8d1a2cdf41ca69017d3f9
      return ConsumeInternalLightDark(ConsumeImageOrNone, range, context);
    }
    return nullptr;
-@@ -7356,6 +7370,29 @@ bool IsValidPropertyList(const CSSValueList& value_list) {
+@@ -3670,6 +3684,14 @@ CSSIdentifierValue* ConsumeCoordBox(CSSParserTokenRange& range) {
+                       CSSValueID::kStrokeBox, CSSValueID::kViewBox>(range);
+ }
+ 
++// https://drafts.fxtf.org/css-masking/#typedef-geometry-box
++CSSIdentifierValue* ConsumeGeometryBox(CSSParserTokenRange& range) {
++  return ConsumeIdent<CSSValueID::kBorderBox, CSSValueID::kPaddingBox,
++                      CSSValueID::kContentBox, CSSValueID::kMarginBox,
++                      CSSValueID::kFillBox, CSSValueID::kStrokeBox,
++                      CSSValueID::kViewBox>(range);
++}
++
+ void AddProperty(CSSPropertyID resolved_property,
+                  CSSPropertyID current_shorthand,
+                  const CSSValue& value,
+@@ -7356,6 +7378,29 @@ bool IsValidPropertyList(const CSSValueList& value_list) {
    return true;
  }
  

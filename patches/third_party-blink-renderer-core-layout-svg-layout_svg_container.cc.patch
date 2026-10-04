@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/layout/svg/layout_svg_container.cc b/third_party/blink/renderer/core/layout/svg/layout_svg_container.cc
-index 7e17f69f679dca58778d0e409b4748eb6c51ae0f..847e55da0080160c453b6d7b7d90d68c702d4c94 100644
+index 7e17f69f679dca58778d0e409b4748eb6c51ae0f..ac51b37bccc551c54296ac33a755c5c458c12ecc 100644
 --- a/third_party/blink/renderer/core/layout/svg/layout_svg_container.cc
 +++ b/third_party/blink/renderer/core/layout/svg/layout_svg_container.cc
-@@ -36,7 +36,9 @@ LayoutSVGContainer::LayoutSVGContainer(SVGElement* node)
+@@ -28,6 +28,7 @@
+ #include "third_party/blink/renderer/core/layout/svg/svg_resources.h"
+ #include "third_party/blink/renderer/core/layout/svg/transform_helper.h"
+ #include "third_party/blink/renderer/core/layout/svg/transformed_hit_test_location.h"
++#include "third_party/blink/renderer/core/paint/clip_path_clipper.h"
+ #include "third_party/blink/renderer/core/paint/svg_container_painter.h"
+ 
+ namespace blink {
+@@ -36,7 +37,9 @@ LayoutSVGContainer::LayoutSVGContainer(SVGElement* node)
      : LayoutSVGModelObject(node),
        object_bounding_box_valid_(false),
        needs_boundaries_update_(true),
@@ -12,7 +20,7 @@ index 7e17f69f679dca58778d0e409b4748eb6c51ae0f..847e55da0080160c453b6d7b7d90d68c
        has_non_isolated_blending_descendants_(false),
        has_non_isolated_blending_descendants_dirty_(false) {}
  
-@@ -51,22 +53,22 @@ void LayoutSVGContainer::UpdateLayout() {
+@@ -51,22 +54,22 @@ void LayoutSVGContainer::UpdateLayout() {
    NOT_DESTROYED();
    DCHECK(NeedsLayout());
  
@@ -39,7 +47,7 @@ index 7e17f69f679dca58778d0e409b4748eb6c51ae0f..847e55da0080160c453b6d7b7d90d68c
        SVGLayoutSupport::LayoutSizeOfNearestViewportChanged(this);
  
    content_.Layout(layout_info);
-@@ -81,13 +83,29 @@ void LayoutSVGContainer::UpdateLayout() {
+@@ -81,13 +84,29 @@ void LayoutSVGContainer::UpdateLayout() {
    if (EverHadLayout() && (SelfNeedsLayout() || bbox_changed))
      SVGResourceInvalidator(*this).InvalidateEffects();
  
@@ -71,7 +79,7 @@ index 7e17f69f679dca58778d0e409b4748eb6c51ae0f..847e55da0080160c453b6d7b7d90d68c
    if (!IsSVGHiddenContainer()) {
      SetTransformAffectsVectorEffect(false);
      ClearSVGDescendantMayHaveTransformRelatedAnimation();
-@@ -98,10 +116,22 @@ void LayoutSVGContainer::UpdateLayout() {
+@@ -98,10 +117,22 @@ void LayoutSVGContainer::UpdateLayout() {
            child->SVGDescendantMayHaveTransformRelatedAnimation()) {
          SetSVGDescendantMayHaveTransformRelatedAnimation();
        }
@@ -94,7 +102,19 @@ index 7e17f69f679dca58778d0e409b4748eb6c51ae0f..847e55da0080160c453b6d7b7d90d68c
    ClearNeedsLayout();
  }
  
-@@ -235,8 +265,16 @@ bool LayoutSVGContainer::NodeAtPoint(HitTestResult& result,
+@@ -207,9 +238,9 @@ bool LayoutSVGContainer::NodeAtPoint(HitTestResult& result,
+                                             LocalToSVGParentTransform());
+   if (!local_location)
+     return false;
+-  if (!SVGLayoutSupport::IntersectsClipPath(*this, content_.ObjectBoundingBox(),
+-                                            *local_location))
++  if (HasClipPath() && !ClipPathClipper::HitTest(*this, *local_location)) {
+     return false;
++  }
+ 
+   if (!ChildPaintBlockedByDisplayLock() &&
+       content_.HitTest(result, *local_location, phase))
+@@ -235,8 +266,16 @@ bool LayoutSVGContainer::NodeAtPoint(HitTestResult& result,
    return false;
  }
  

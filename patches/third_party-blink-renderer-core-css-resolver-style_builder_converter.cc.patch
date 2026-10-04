@@ -1,0 +1,38 @@
+diff --git a/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc b/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
+index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..9bc75b61f6864e1174d4ac2b6ac2ec907c3b4b4a 100644
+--- a/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
++++ b/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
+@@ -71,6 +71,7 @@
+ #include "third_party/blink/renderer/core/style/anchor_specifier_value.h"
+ #include "third_party/blink/renderer/core/style/computed_style_constants.h"
+ #include "third_party/blink/renderer/core/style/coord_box_offset_path_operation.h"
++#include "third_party/blink/renderer/core/style/geometry_box_clip_path_operation.h"
+ #include "third_party/blink/renderer/core/style/offset_path_operation.h"
+ #include "third_party/blink/renderer/core/style/reference_clip_path_operation.h"
+ #include "third_party/blink/renderer/core/style/reference_offset_path_operation.h"
+@@ -185,8 +186,23 @@ LengthBox StyleBuilderConverter::ConvertClip(StyleResolverState& state,
+ scoped_refptr<ClipPathOperation> StyleBuilderConverter::ConvertClipPath(
+     StyleResolverState& state,
+     const CSSValue& value) {
+-  if (value.IsBasicShapeValue() || value.IsPathValue()) {
+-    return ShapeClipPathOperation::Create(BasicShapeForValue(state, value));
++  if (const auto* list = DynamicTo<CSSValueList>(value)) {
++    if (list->First().IsBasicShapeValue() || list->First().IsPathValue()) {
++      const CSSValue& shape_value = list->First();
++      const CSSIdentifierValue* geometry_box_value = nullptr;
++      if (list->length() == 2) {
++        geometry_box_value = DynamicTo<CSSIdentifierValue>(list->Item(1));
++      }
++      // If <geometry-box> is omitted, default to border-box.
++      GeometryBox geometry_box =
++          geometry_box_value ? geometry_box_value->ConvertTo<GeometryBox>()
++                             : GeometryBox::kBorderBox;
++      return ShapeClipPathOperation::Create(
++          BasicShapeForValue(state, shape_value), geometry_box);
++    }
++    auto& geometry_box_value = To<CSSIdentifierValue>(list->First());
++    GeometryBox geometry_box = geometry_box_value.ConvertTo<GeometryBox>();
++    return GeometryBoxClipPathOperation::Create(geometry_box);
+   }
+ 
+   if (const auto* url_value = DynamicTo<cssvalue::CSSURIValue>(value)) {

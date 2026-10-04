@@ -1,0 +1,63 @@
+diff --git a/third_party/blink/renderer/core/css/css_primitive_value_mappings.h b/third_party/blink/renderer/core/css/css_primitive_value_mappings.h
+index d8614b4af5e314e224d5e76e3841851a8f1a17c9..a083016a56ba6a3254f608a502ab7f9e41e39f2c 100644
+--- a/third_party/blink/renderer/core/css/css_primitive_value_mappings.h
++++ b/third_party/blink/renderer/core/css/css_primitive_value_mappings.h
+@@ -1710,6 +1710,58 @@ inline CSSIdentifierValue::CSSIdentifierValue(CoordBox coord_box)
+   }
+ }
+ 
++template <>
++inline GeometryBox CSSIdentifierValue::ConvertTo() const {
++  switch (GetValueID()) {
++    case CSSValueID::kBorderBox:
++      return GeometryBox::kBorderBox;
++    case CSSValueID::kPaddingBox:
++      return GeometryBox::kPaddingBox;
++    case CSSValueID::kContentBox:
++      return GeometryBox::kContentBox;
++    case CSSValueID::kMarginBox:
++      return GeometryBox::kMarginBox;
++    case CSSValueID::kFillBox:
++      return GeometryBox::kFillBox;
++    case CSSValueID::kStrokeBox:
++      return GeometryBox::kStrokeBox;
++    case CSSValueID::kViewBox:
++      return GeometryBox::kViewBox;
++    default:
++      break;
++  }
++  NOTREACHED();
++  return GeometryBox::kBorderBox;
++}
++
++template <>
++inline CSSIdentifierValue::CSSIdentifierValue(GeometryBox geometry_box)
++    : CSSValue(kIdentifierClass) {
++  switch (geometry_box) {
++    case GeometryBox::kBorderBox:
++      value_id_ = CSSValueID::kBorderBox;
++      break;
++    case GeometryBox::kPaddingBox:
++      value_id_ = CSSValueID::kPaddingBox;
++      break;
++    case GeometryBox::kContentBox:
++      value_id_ = CSSValueID::kContentBox;
++      break;
++    case GeometryBox::kMarginBox:
++      value_id_ = CSSValueID::kMarginBox;
++      break;
++    case GeometryBox::kFillBox:
++      value_id_ = CSSValueID::kFillBox;
++      break;
++    case GeometryBox::kStrokeBox:
++      value_id_ = CSSValueID::kStrokeBox;
++      break;
++    case GeometryBox::kViewBox:
++      value_id_ = CSSValueID::kViewBox;
++      break;
++  }
++}
++
+ template <>
+ inline TextUnderlinePosition CSSIdentifierValue::ConvertTo() const {
+   switch (GetValueID()) {

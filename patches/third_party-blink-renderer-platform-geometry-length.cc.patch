@@ -1,0 +1,32 @@
+diff --git a/third_party/blink/renderer/platform/geometry/length.cc b/third_party/blink/renderer/platform/geometry/length.cc
+index 3f83cf96be0d18ac3c6f9cc441319fa3850ce971..a5400b28402a61df752914f6eccca7d2542441ca 100644
+--- a/third_party/blink/renderer/platform/geometry/length.cc
++++ b/third_party/blink/renderer/platform/geometry/length.cc
+@@ -162,6 +162,27 @@ Length Length::SubtractFromOneHundredPercent() const {
+   return Length::Fixed(result->Pixels());
+ }
+ 
++Length Length::Add(const Length& other) const {
++  CHECK(IsSpecified());
++  if (IsFixed() && other.IsFixed()) {
++    return Length::Fixed(Pixels() + other.Pixels());
++  }
++  if (IsPercent() && other.IsPercent()) {
++    return Length::Percent(Percent() + other.Percent());
++  }
++
++  scoped_refptr<const CalculationValue> result =
++      AsCalculationValue()->Add(*other.AsCalculationValue());
++  if (result->IsExpression() ||
++      (result->Pixels() != 0 && result->Percent() != 0)) {
++    return Length(std::move(result));
++  }
++  if (result->Percent()) {
++    return Length::Percent(result->Percent());
++  }
++  return Length::Fixed(result->Pixels());
++}
++
+ Length Length::Zoom(double factor) const {
+   switch (GetType()) {
+     case kFixed:
