@@ -21,11 +21,18 @@ extern const char kWebDiscoveryLearnMoreUrl[];
 extern const char kBraveSearchHost[];
 extern const char kWidevineLearnMoreUrl[];
 
+// FlyWeb: our help page (softmac FlyWeb/docs/web-flyweb.md, W8), the page that
+// explains how to report a problem (it replaces Brave's webcompat reporter) and
+// the release notes.
+extern const char kFlyWebHelpURL[];
+extern const char kFlyWebReportProblemURL[];
+extern const char kFlyWebReleaseNotesURL[];
+
 // This is introduced to replace |kDownloadChromeUrl| in
 // outdated_upgrade_bubble_view.cc"
 // |kDownloadChromeUrl| couldn't be replaced with char array because array
 // should be initialized with initialize list or string literal.
 // So, this macro is used.
-#define kDownloadBraveUrl "https://www.brave.com/download"
+#define kDownloadBraveUrl "https://flyweb.lamosquita.net/descargas/"
 
 #endif  // BRAVE_COMPONENTS_CONSTANTS_URL_CONSTANTS_H_

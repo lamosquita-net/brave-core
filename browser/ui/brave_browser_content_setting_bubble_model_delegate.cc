@@ -5,11 +5,10 @@
 
 #include "brave/browser/ui/brave_browser_content_setting_bubble_model_delegate.h"
 
+#include "base/strings/strcat.h"
 #include "brave/components/constants/url_constants.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_tabstrip.h"
-
-const char kBraveCommunitySupportUrl[] = "https://community.brave.com/";
 
 BraveBrowserContentSettingBubbleModelDelegate::
 BraveBrowserContentSettingBubbleModelDelegate(Browser* browser) :
@@ -30,7 +29,7 @@ BraveBrowserContentSettingBubbleModelDelegate::ShowWidevineLearnMorePage() {
 void BraveBrowserContentSettingBubbleModelDelegate::ShowLearnMorePage(
     ContentSettingsType type) {
   // TODO(yrliou): Use specific support pages for each content setting type
-  GURL learn_more_url(kBraveCommunitySupportUrl);
+  GURL learn_more_url(base::StrCat({kFlyWebHelpURL, "#permisos"}));
   chrome::AddSelectedTabWithURL(browser_, learn_more_url,
                                 ui::PAGE_TRANSITION_LINK);
 }

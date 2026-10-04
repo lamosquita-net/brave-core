@@ -1,0 +1,16 @@
+diff --git a/src/builtins/object-groupby.tq b/src/builtins/object-groupby.tq
+index 9c0b53d345d2fe53196a53d92e86f73d5a38598f..e0e0eed32e0e021c7b15e0aeee9ef17034ac09db 100644
+--- a/src/builtins/object-groupby.tq
++++ b/src/builtins/object-groupby.tq
+@@ -122,7 +122,10 @@ ObjectGroupBy(js-implicit context: NativeContext, receiver: JSAny)(
+         AllocateSwissNameDictionary(Convert<intptr>(iter.usedCapacity));
+   }
+   @ifnot(V8_ENABLE_SWISS_NAME_DICTIONARY) {
+-    properties = AllocateNameDictionary(Convert<intptr>(iter.usedCapacity));
++    // FlyWeb (from V8 11.7): many groups need a large-object allocation.
++    properties = AllocateNameDictionary(
++        Convert<intptr>(iter.usedCapacity),
++        AllocationFlag::kAllowLargeObjectAllocation);
+   }
+   const nullProtoMap = LoadSlowObjectWithNullPrototypeMap(context);
+   const obj = AllocateJSObjectFromMap(nullProtoMap, properties);

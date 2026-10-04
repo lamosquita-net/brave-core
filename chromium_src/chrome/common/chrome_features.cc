@@ -14,6 +14,13 @@
 namespace features {
 
 OVERRIDE_FEATURE_DEFAULT_STATES({{
+    // FlyWeb: secure DNS starts off, so lookups go to the system's DNS only.
+    // Enabled, the default mode was "automatic": with a known resolver in the
+    // system settings (8.8.8.8, 1.1.1.1) it switched to that provider's DoH
+    // endpoint and probed it (dns.google, chrome.cloudflare-dns.com). The
+    // setting stays in Privacy and security (kDnsOverHttpsShowUiParam below);
+    // the stub resolver follows the pref, not this feature.
+    {kDnsOverHttps, base::FEATURE_DISABLED_BY_DEFAULT},
     {kHttpsFirstModeV2, base::FEATURE_ENABLED_BY_DEFAULT},
     {kKAnonymityService, base::FEATURE_DISABLED_BY_DEFAULT},
     {kSCTAuditing, base::FEATURE_DISABLED_BY_DEFAULT},

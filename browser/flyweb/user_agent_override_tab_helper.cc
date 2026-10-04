@@ -19,9 +19,13 @@
 
 namespace flyweb {
 
+// FlyWeb: off by default (decision of 04-10-2026). FlyWeb declares its real
+// engine level everywhere (declared_version.h) and raises it as the engine
+// grows, so sites that warn about an old browser show where it stands. Kept as
+// an escape hatch: --enable-features=FlyWebUserAgentOverride turns it back on.
 BASE_FEATURE(kFlyWebUserAgentOverride,
              "FlyWebUserAgentOverride",
-             base::FEATURE_ENABLED_BY_DEFAULT);
+             base::FEATURE_DISABLED_BY_DEFAULT);
 
 // Current stable Chrome when this was written (01-10-2026). Raise it in each
 // maintenance cycle (FlyWeb/docs/compatibilidad.md).
@@ -103,6 +107,16 @@ UserAgentOverrideTabHelper::UserAgentOverrideTabHelper(
 UserAgentOverrideTabHelper::~UserAgentOverrideTabHelper() = default;
 
 void UserAgentOverrideTabHelper::DidStartNavigation(
+    content::NavigationHandle* navigation_handle) {
+  Decide(navigation_handle);
+}
+
+void UserAgentOverrideTabHelper::DidRedirectNavigation(
+    content::NavigationHandle* navigation_handle) {
+  Decide(navigation_handle);
+}
+
+void UserAgentOverrideTabHelper::Decide(
     content::NavigationHandle* navigation_handle) {
   if (!navigation_handle->IsInPrimaryMainFrame() ||
       navigation_handle->IsSameDocument()) {
