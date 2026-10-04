@@ -52,6 +52,8 @@
 #include "components/autofill/core/common/autofill_prefs.h"
 #include "components/content_settings/core/common/pref_names.h"
 #include "components/embedder_support/pref_names.h"
+// FlyWeb: kOfferTranslateEnabled is used on every platform (step 39), not only Android.
+#include "components/translate/core/browser/translate_pref_names.h"
 #include "components/gcm_driver/gcm_buildflags.h"
 #include "components/password_manager/core/common/password_manager_pref_names.h"
 #include "components/policy/core/common/policy_pref_names.h"
