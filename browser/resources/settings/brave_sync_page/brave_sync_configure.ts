@@ -116,7 +116,9 @@ export class SettingsBraveSyncConfigureElement extends SettingsBraveSyncConfigur
 
   async onAddDevice_() {
     await this.ensureSetSyncCode_()
-    this.syncCodeDialogType_ = 'choose'
+    // FlyWeb: straight to the code words. FlyWeb only exists for computers,
+    // and Brave's mobile apps sync with Brave's servers, not ours.
+    this.syncCodeDialogType_ = 'words'
   }
 
   onSyncCodeDialogDone_() {

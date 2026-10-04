@@ -61,8 +61,10 @@ const char16_t kUnstoppableDomainsLearnMoreURL[] =
     u"Resolve-Methods-for-Unstoppable-Domains";
 const char16_t kEnsOffchainLookupLearnMoreURL[] =
     u"https://github.com/brave/brave-browser/wiki/ENS-offchain-lookup";
+// FlyWeb: our own sync help page (softmac FlyWeb/docs/web-flyweb.md, W7), not
+// Brave's FAQ: FlyWeb syncs with its own server.
 const char16_t kBraveSyncGuideUrl[] =
-    u"https://support.brave.com/hc/en-us/articles/360047642371-Sync-FAQ";
+    u"https://flyweb.lamosquita.net/ayuda/sincronizar";
 const char16_t kDeAmpLearnMoreUrl[] =
     u"https://support.brave.com/hc/en-us/articles/8611298579981";
 const char16_t kDebounceLearnMoreUrl[] =

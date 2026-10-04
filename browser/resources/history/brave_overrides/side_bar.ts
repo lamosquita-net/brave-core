@@ -36,11 +36,6 @@ RegisterStyleOverride(
       .cr-nav-menu-item paper-ripple {
         display: none !important;
       }
-
-      /* FlyWeb: no sync, so no "Tabs from other devices". */
-      #syncedTabs {
-        display: none !important;
-      }
     </style>
   `
 )

@@ -10,10 +10,9 @@
 namespace brave_sync {
 namespace features {
 
-// FlyWeb: off. Its endpoint is inert (build.sh), so the Settings page and the
-// menu entry would offer a service that cannot work. Disabled, Brave adds
-// --disable-sync at startup (BraveBrowserMainParts::PreProfileInit).
-BASE_FEATURE(kBraveSync, "BraveSync", base::FEATURE_DISABLED_BY_DEFAULT);
+// FlyWeb: on again, with our own server (sync.flyweb.lamosquita.net, set in
+// softmac FlyWeb/scripts/build.sh; server in FlyWeb/servidor/sync).
+BASE_FEATURE(kBraveSync, "BraveSync", base::FEATURE_ENABLED_BY_DEFAULT);
 
 // When this feature is enabled through flyweb://flags it adds to history entry's
 // title additional info for sync diagnostics:
