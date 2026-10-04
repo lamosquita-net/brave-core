@@ -17,4 +17,8 @@ std::string GetBraveChromiumVersionNumber() {
   return constants::kBraveChromiumVersion;
 }
 
+std::string GetFlyWebVersion() {
+  return constants::kFlyWebVersion;
+}
+
 }  // namespace version_info

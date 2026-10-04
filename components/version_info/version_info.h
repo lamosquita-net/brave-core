@@ -20,6 +20,9 @@ constexpr std::string GetBraveVersionNumberForDisplay() {
 
 std::string GetBraveChromiumVersionNumber();
 
+// FlyWeb's own version ("1.1"), the one users see.
+std::string GetFlyWebVersion();
+
 }  // namespace version_info
 
 #endif  // BRAVE_COMPONENTS_VERSION_INFO_VERSION_INFO_H_

@@ -8,14 +8,17 @@
 
 #include <string>
 
+#include "brave/components/version_info/version_info_values.h"
+
 namespace flyweb {
 
 // Chrome major version FlyWeb declares to websites (User-Agent and client
 // hints): the last complete engine level, not the real 116. Raised only when
 // every Baseline feature Chrome shipped up to that version is in FlyWeb
 // (softmac FlyWeb/docs/motor.md). Extensions, components and the updater keep
-// using the real version.
-inline constexpr int kDeclaredEngineLevel = 117;
+// using the real version. Set in brave/build/config.gni (flyweb_engine_level).
+inline constexpr int kDeclaredEngineLevel =
+    version_info::constants::kFlyWebEngineLevel;
 
 // "117"
 std::string DeclaredMajor();

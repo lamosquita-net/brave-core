@@ -21,8 +21,8 @@
 #include "brave/browser/update_util.h"
 #include "brave/common/brave_channel_info.h"
 #include "brave/components/constants/brave_switches.h"
+#include "brave/components/version_info/version_info.h"
 #include "chrome/common/channel_info.h"
-#include "chrome/common/chrome_constants.h"
 
 #if !defined(__has_feature) || !__has_feature(objc_arc)
 #error "This file requires ARC support."
@@ -297,7 +297,11 @@ std::string GetDescriptionFromAppcastItem(id item) {
     // then don't even bother comparing versions.
     status = kAutoupdateInstalled;
   } else {
-    NSString* currentVersion = base::SysUTF8ToNSString(chrome::kChromeVersion);
+    // FlyWeb: CFBundleShortVersionString on disk is FlyWeb's version (1.1),
+    // so compare with ours; chrome::kChromeVersion never changes between
+    // FlyWeb releases and an update applied by Sparkle went unnoticed.
+    NSString* currentVersion =
+        base::SysUTF8ToNSString(version_info::GetFlyWebVersion());
     if (!version) {
       // If the version on disk could not be determined, assume that
       // whatever's running is current.

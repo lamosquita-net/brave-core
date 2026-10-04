@@ -79,6 +79,9 @@ def Main():
         default=None, help='brave version string')
     parser.add_argument('--flyweb_build', dest='flyweb_build', type=int,
         default=0, help='FlyWeb release build number (1.0 = 0)')
+    parser.add_argument('--flyweb_version', dest='flyweb_version',
+        action='store', default=None,
+        help='FlyWeb version shown to the user (1.1)')
     parser.add_argument('--format', choices=('binary1', 'xml1', 'json'),
         default='xml1', help='Format to use when writing property list '
             '(default: %(default)s)')
@@ -114,6 +117,10 @@ def Main():
         plist['SUPublicEDKey'] = args.brave_eddsa_key
 
     _OverrideVersionKey(plist, args.brave_version, args.flyweb_build)
+    # FlyWeb: Finder and the update status (sparkle_glue.mm compares it with
+    # version_info::GetFlyWebVersion()) show our version, not Chromium's.
+    if args.flyweb_version:
+        plist['CFBundleShortVersionString'] = args.flyweb_version
 
     # Explicitly disable profiling
     plist['SUEnableSystemProfiling'] = False

@@ -120,8 +120,7 @@ void BraveSettingsUI::AddResources(content::WebUIDataSource* html_source,
 
   html_source->AddBoolean("isSyncDisabled", !syncer::IsSyncAllowedByFlag());
   html_source->AddString(
-      "braveProductVersion",
-      version_info::GetBraveVersionWithoutChromiumMajorVersion());
+      "braveProductVersion", version_info::GetFlyWebVersion());
   NavigationBarDataProvider::Initialize(html_source, profile);
   if (auto* service = ViewCounterServiceFactory::GetForProfile(profile)) {
     service->InitializeWebUIDataSource(html_source);
