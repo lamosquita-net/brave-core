@@ -23,6 +23,9 @@ std::string GetBraveChromiumVersionNumber();
 // FlyWeb's own version ("1.1"), the one users see.
 std::string GetFlyWebVersion();
 
+// brave-core commit of this build, or "flyweb" (the branch) when unknown.
+std::string GetFlyWebSourceCommit();
+
 }  // namespace version_info
 
 #endif  // BRAVE_COMPONENTS_VERSION_INFO_VERSION_INFO_H_

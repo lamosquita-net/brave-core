@@ -76,18 +76,6 @@ constexpr webui::LocalizedString kLocalizedStrings[] = {
     {"braveWelcomeSelectThemeDarkLabel",
      IDS_BRAVE_WELCOME_SELECT_THEME_DARK_LABEL}};
 
-void OpenJapanWelcomePage(Profile* profile) {
-  DCHECK(profile);
-  Browser* browser = chrome::FindBrowserWithProfile(profile);
-  if (browser) {
-    content::OpenURLParams open_params(
-        GURL("https://brave.com/ja/desktop-ntp-tutorial"), content::Referrer(),
-        WindowOpenDisposition::NEW_BACKGROUND_TAB,
-        ui::PAGE_TRANSITION_AUTO_TOPLEVEL, false);
-    browser->OpenURL(open_params);
-  }
-}
-
 // Converts Chromium country ID to 2 digit country string
 // For more info see src/components/country_codes/country_codes.h
 std::string CountryIDToCountryString(int country_id) {
@@ -130,15 +118,8 @@ BraveWelcomeUI::BraveWelcomeUI(content::WebUI* web_ui, const std::string& name)
   web_ui->AddMessageHandler(
       std::make_unique<settings::BraveSearchEnginesHandler>(profile));
 
-  // Open additional page in Japanese region
+  // FlyWeb: no extra brave.com tutorial tab for the Japanese region.
   int country_id = country_codes::GetCountryIDFromPrefs(profile->GetPrefs());
-  if (!profile->GetPrefs()->GetBoolean(prefs::kHasSeenWelcomePage)) {
-    if (country_id == country_codes::CountryStringToCountryID("JP")) {
-      base::SingleThreadTaskRunner::GetCurrentDefault()->PostDelayedTask(
-          FROM_HERE, base::BindOnce(&OpenJapanWelcomePage, profile),
-          base::Seconds(3));
-    }
-  }
 
   for (const auto& str : kLocalizedStrings) {
     std::u16string l10n_str =

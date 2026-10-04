@@ -7,7 +7,7 @@
 
 namespace google_apis {
 const char kBraveAPIKeysDevelopersHowToURL[] =
-    "https://community.brave.com";
+    "https://flyweb.lamosquita.net/ayuda/";
 }  // namespace google_apis
 
 #define kAPIKeysDevelopersHowToURL kBraveAPIKeysDevelopersHowToURL

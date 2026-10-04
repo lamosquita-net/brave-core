@@ -12,11 +12,15 @@
 
 #include "base/json/json_writer.h"
 #include "base/values.h"
+#include "brave/components/constants/url_constants.h"
 #include "brave/components/constants/webui_url_constants.h"
 #include "chrome/browser/ui/webui/constrained_web_dialog_ui.h"
+#include "content/public/browser/page_navigator.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/browser/web_ui_message_handler.h"
+#include "ui/base/page_transition_types.h"
+#include "ui/base/window_open_disposition.h"
 #include "ui/web_dialogs/web_dialog_delegate.h"
 #include "url/gurl.h"
 #include "url/origin.h"
@@ -102,7 +106,18 @@ bool WebcompatReporterDialogDelegate::ShouldShowDialogTitle() const {
   return false;
 }
 
+// FlyWeb: Brave's reporter sends the site, the Shields settings and the
+// details to webcompat.brave.com. FlyWeb opens its own page instead, which
+// says how to report a broken site to us. (Brave's dialog is kept below for
+// a possible report form of our own.)
 void OpenWebcompatReporterDialog(content::WebContents* initiator) {
+  initiator->OpenURL(content::OpenURLParams(
+      GURL(kFlyWebReportProblemURL), content::Referrer(),
+      WindowOpenDisposition::NEW_FOREGROUND_TAB, ui::PAGE_TRANSITION_LINK,
+      /*is_renderer_initiated=*/false));
+}
+
+void OpenBraveWebcompatReporterDialog(content::WebContents* initiator) {
   base::Value::Dict params_dict;
   params_dict.Set("siteUrl", initiator->GetLastCommittedURL().spec());
 

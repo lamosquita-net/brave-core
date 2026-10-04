@@ -8,42 +8,13 @@
 #include <memory>
 #include <string>
 
-#include "base/strings/string_split.h"
-#include "base/strings/string_util.h"
 #include "brave/components/constants/network_constants.h"
+#include "brave/components/constants/url_constants.h"
 #include "extensions/common/url_pattern.h"
 #include "net/base/net_errors.h"
 #include "url/gurl.h"
 
 namespace brave {
-
-namespace {
-
-bool RewriteBugReportingURL(const GURL& request_url, GURL* new_url) {
-  GURL url("https://github.com/brave/brave-browser/issues/new");
-  std::string query = "title=Crash%20Report&labels=crash";
-  // We are expecting 3 query keys: comment, template, and labels
-  base::StringPairs pairs;
-  if (!base::SplitStringIntoKeyValuePairs(request_url.query(), '=', '&',
-                                          &pairs) || pairs.size() != 3) {
-      return false;
-  }
-  for (const auto& pair : pairs) {
-    if (pair.first == "comment") {
-      query += "&body=" + pair.second;
-      base::ReplaceSubstringsAfterOffset(&query, 0, "Chrome", "Brave");
-    } else if (pair.first != "template" && pair.first != "labels") {
-      return false;
-    }
-  }
-
-  GURL::Replacements replacements;
-  replacements.SetQueryStr(query);
-  *new_url = url.ReplaceComponents(replacements);
-  return true;
-}
-
-}  // namespace
 
 int OnBeforeURLRequest_CommonStaticRedirectWork(
     const ResponseCallback& next_callback,
@@ -86,9 +57,11 @@ int OnBeforeURLRequest_CommonStaticRedirectWorkForGURL(
     return net::ERR_BLOCKED_BY_CLIENT;
   }
 
+  // FlyWeb: Chromium's "report a bug" links (crash pages) go to our page on
+  // how to report a problem, not to Brave's GitHub.
   if (bugsChromium_pattern.MatchesURL(request_url)) {
-    if (RewriteBugReportingURL(request_url, new_url))
-      return net::OK;
+    *new_url = GURL(kFlyWebReportProblemURL);
+    return net::OK;
   }
 
   return net::OK;

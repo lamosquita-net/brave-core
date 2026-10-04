@@ -21,4 +21,9 @@ std::string GetFlyWebVersion() {
   return constants::kFlyWebVersion;
 }
 
+std::string GetFlyWebSourceCommit() {
+  const std::string commit = constants::kFlyWebSourceCommit;
+  return commit.empty() ? "flyweb" : commit;
+}
+
 }  // namespace version_info

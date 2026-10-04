@@ -10,20 +10,17 @@ const char kBraveUIScheme[] = "flyweb";  // FlyWeb: flyweb:// instead of brave:/
 const char kMagnetScheme[] = "magnet";
 const char kWidevineTOS[] = "https://policies.google.com/terms";
 const char kRewardsUpholdSupport[] = "https://uphold.com/en/brave/support";
-const char kP3ALearnMoreURL[] = "https://brave.com/P3A";
+const char kP3ALearnMoreURL[] = "https://flyweb.lamosquita.net/ayuda/#privacidad";
 const char kP3ASettingsLink[] = "chrome://settings/privacy";
-const char kImportDataHelpURL[] =
-    "https://support.brave.com/hc/en-us/articles/360019782291#safari";
-const char kCryptoWalletsLearnMoreURL[] =
-    "https://support.brave.com/hc/en-us/articles/360034535452";
+const char kImportDataHelpURL[] = "https://flyweb.lamosquita.net/ayuda/#importar";
+const char kCryptoWalletsLearnMoreURL[] = "https://flyweb.lamosquita.net/ayuda/";
 const char kPermissionPromptLearnMoreUrl[] =
-    "https://github.com/brave/brave-browser/wiki/Web-API-Permissions";
-const char kSpeedreaderLearnMoreUrl[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360045031392-What-is-SpeedReader";
-const char kWebDiscoveryLearnMoreUrl[] =
-    "https://brave.com/privacy/browser/#web-discovery-project";
+    "https://flyweb.lamosquita.net/ayuda/#permisos";
+const char kSpeedreaderLearnMoreUrl[] = "https://flyweb.lamosquita.net/ayuda/";
+const char kWebDiscoveryLearnMoreUrl[] = "https://flyweb.lamosquita.net/ayuda/#privacidad";
 const char kBraveSearchHost[] = "search.brave.com";
-const char kWidevineLearnMoreUrl[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360023851591-How-do-I-view-DRM-protected-content-";
+const char kWidevineLearnMoreUrl[] = "https://flyweb.lamosquita.net/ayuda/#drm";
+const char kFlyWebHelpURL[] = "https://flyweb.lamosquita.net/ayuda/";
+const char kFlyWebReportProblemURL[] = "https://flyweb.lamosquita.net/ayuda/#informar";
+const char kFlyWebReleaseNotesURL[] =
+    "https://flyweb.lamosquita.net/descargas/#novedades";

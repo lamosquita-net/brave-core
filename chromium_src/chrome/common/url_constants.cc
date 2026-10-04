@@ -11,57 +11,54 @@
 
 namespace chrome {
 
-const char kAccessCodeCastLearnMoreURL[] = "https://support.brave.com/";
+const char kAccessCodeCastLearnMoreURL[] =
+    "https://flyweb.lamosquita.net/ayuda/";
 
 const char kAccessibilityLabelsLearnMoreURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/";
 
-const char kAdPrivacyLearnMoreURL[] = "https://support.brave.com/";
+const char kAdPrivacyLearnMoreURL[] =
+    "https://flyweb.lamosquita.net/ayuda/#privacidad";
 
 const char kAutomaticSettingsResetLearnMoreURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360017903152-How-do-I-reset-Brave-settings-to-default-";
+    "https://flyweb.lamosquita.net/ayuda/#restablecer";
 
 const char kAdvancedProtectionDownloadLearnMoreURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/#descargas";
 
 const char kBatterySaverModeLearnMoreUrl[] =
-    "https://support.brave.com/hc/en-us/articles/13380606172557";
+    "https://flyweb.lamosquita.net/ayuda/#rendimiento";
 
 const char kBluetoothAdapterOffHelpURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/";
 
-const char kCastCloudServicesHelpURL[] =
-    "https://support.brave.com/";
+const char kCastCloudServicesHelpURL[] = "https://flyweb.lamosquita.net/ayuda/";
 
 const char kCastNoDestinationFoundURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/";
 
 const char kChooserHidOverviewUrl[] =
-    "https://github.com/brave/brave-browser/wiki/Web-API-Permissions";
+    "https://flyweb.lamosquita.net/ayuda/#permisos";
 
 const char kChooserSerialOverviewUrl[] =
-    "https://github.com/brave/brave-browser/wiki/Web-API-Permissions";
+    "https://flyweb.lamosquita.net/ayuda/#permisos";
 
 const char kChooserUsbOverviewURL[] =
-    "https://github.com/brave/brave-browser/wiki/Web-API-Permissions";
+    "https://flyweb.lamosquita.net/ayuda/#permisos";
 
-const char kChromeBetaForumURL[] =
-    "https://community.brave.com/c/beta-builds";
+const char kChromeBetaForumURL[] = "https://flyweb.lamosquita.net/ayuda/";
 
 const char kChromeFixUpdateProblems[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/#actualizaciones";
 
-const char kChromeHelpViaKeyboardURL[] =
-    "https://support.brave.com/";
+const char kChromeHelpViaKeyboardURL[] = "https://flyweb.lamosquita.net/ayuda/";
 
-const char kChromeHelpViaMenuURL[] =
-    "https://support.brave.com/";
+const char kChromeHelpViaMenuURL[] = "https://flyweb.lamosquita.net/ayuda/";
 
-const char kChromeHelpViaWebUIURL[] =
-    "https://support.brave.com/";
+const char kChromeHelpViaWebUIURL[] = "https://flyweb.lamosquita.net/ayuda/";
 
-const char kFirstPartySetsLearnMoreURL[] = "https://support.brave.com/";
+const char kFirstPartySetsLearnMoreURL[] =
+    "https://flyweb.lamosquita.net/ayuda/#permisos";
 
 const char kIsolatedAppScheme[] = "isolated-app";
 
@@ -83,39 +80,30 @@ const char kChromeSearchScheme[] = "chrome-search";
 const char kChromeUIUntrustedNewTabPageUrl[] =
     "chrome-untrusted://new-tab-page/";
 
-const char kChromiumProjectURL[] = "https://github.com/brave/brave-browser/";
+const char kChromiumProjectURL[] = "https://www.chromium.org/";
 
 const char kContentSettingsExceptionsLearnMoreURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360018205431-How-do-I-change-site-permissions-";
+    "https://flyweb.lamosquita.net/ayuda/#permisos";
 
 const char kCookiesSettingsHelpCenterURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360018205431-How-do-I-change-site-permissions-";
+    "https://flyweb.lamosquita.net/ayuda/#permisos";
 
-const char kCrashReasonURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360018192251-How-do-I-fix-page-crashes-and-other-page-loading-errors-";
+const char kCrashReasonURL[] = "https://flyweb.lamosquita.net/ayuda/#fallos";
 
 const char kCrashReasonFeedbackDisplayedURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360018192251-How-do-I-fix-page-crashes-and-other-page-loading-errors-";
+    "https://flyweb.lamosquita.net/ayuda/#fallos";
 
 const char kDoNotTrackLearnMoreURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360017905612-How-do-I-turn-Do-Not-Track-on-or-off-";
+    "https://flyweb.lamosquita.net/ayuda/#privacidad";
 
 const char kDownloadInterruptedLearnMoreURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360018192491-How-do-I-fix-file-download-errors-";
+    "https://flyweb.lamosquita.net/ayuda/#descargas";
 
 const char kDownloadScanningLearnMoreURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360018192491-How-do-I-fix-file-download-errors-";
+    "https://flyweb.lamosquita.net/ayuda/#descargas";
 
 const char kExtensionControlledSettingLearnMoreURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360018185651-How-do-I-stop-extensions-from-changing-my-settings-";
+    "https://flyweb.lamosquita.net/ayuda/#extensiones";
 
 const char kExtensionInvalidRequestURL[] = "chrome-extension://invalid/";
 
@@ -123,146 +111,142 @@ const char kFlashDeprecationLearnMoreURL[] =
     "https://blog.chromium.org/2017/07/so-long-and-thanks-for-all-flash.html";
 
 const char kGoogleAccountActivityControlsURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/#privacidad";
 
 const char kGoogleAccountActivityControlsURLInPrivacyGuide[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/#privacidad";
 
-const char kGoogleAccountURL[] = "https://support.brave.com/";
+const char kGoogleAccountURL[] = "https://flyweb.lamosquita.net/ayuda/";
 
-const char kGoogleAccountChooserURL[] = "https://support.brave.com/";
+const char kGoogleAccountChooserURL[] = "https://flyweb.lamosquita.net/ayuda/";
 
-const char kGoogleAccountDeviceActivityURL[] = "https://support.brave.com/";
+const char kGoogleAccountDeviceActivityURL[] =
+    "https://flyweb.lamosquita.net/ayuda/";
 
-const char kGooglePasswordManagerURL[] = "https://support.brave.com";
+const char kGooglePasswordManagerURL[] =
+    "https://flyweb.lamosquita.net/ayuda/#contrasenas";
 
 const char kLearnMoreReportingURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360017905872-How-do-I-enable-or-disable-automatic-crash-reporting-";
+    "https://flyweb.lamosquita.net/ayuda/#privacidad";
 
 const char kHighEfficiencyModeLearnMoreUrl[] =
-    "https://support.brave.com/hc/en-us/articles/13383683902733";
+    "https://flyweb.lamosquita.net/ayuda/#rendimiento";
 
 const char kHighEfficiencyModeTabDiscardingHelpUrl[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/#rendimiento";
 
-const char kManagedUiLearnMoreUrl[] = "https://support.brave.com/";
+const char kManagedUiLearnMoreUrl[] = "https://flyweb.lamosquita.net/ayuda/";
 
 const char kInsecureDownloadBlockingLearnMoreUrl[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/#descargas";
 
 const char kMyActivityUrlInClearBrowsingData[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/#privacidad";
 
 const char kOmniboxLearnMoreURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360017479752-How-do-I-set-my-default-search-engine-";
+    "https://flyweb.lamosquita.net/ayuda/#buscador";
 
 const char kPageInfoHelpCenterURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360018185871-How-do-I-check-if-a-site-s-connection-is-secure-";
+    "https://flyweb.lamosquita.net/ayuda/#seguridad";
 
-const char kPasswordCheckLearnMoreURL[] = "https://support.brave.com/";
+const char kPasswordCheckLearnMoreURL[] =
+    "https://flyweb.lamosquita.net/ayuda/#contrasenas";
 
-const char kPasswordGenerationLearnMoreURL[] = "https://support.brave.com/";
+const char kPasswordGenerationLearnMoreURL[] =
+    "https://flyweb.lamosquita.net/ayuda/#contrasenas";
 
 const char kPasswordManagerLearnMoreURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360018185951-How-do-I-use-the-built-in-password-manager-";
+    "https://flyweb.lamosquita.net/ayuda/#contrasenas";
 
-const char kPaymentMethodsURL[] = "https://support.brave.com";
+const char kPaymentMethodsURL[] =
+    "https://flyweb.lamosquita.net/ayuda/#autorrelleno";
 
 const char kPrivacyLearnMoreURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360017989132-How-do-I-change-my-Privacy-Settings-";
+    "https://flyweb.lamosquita.net/ayuda/#privacidad";
 
 const char kRemoveNonCWSExtensionURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360017914832-Why-am-I-seeing-the-message-extensions-disabled-by-Brave-";
+    "https://flyweb.lamosquita.net/ayuda/#extensiones";
 
 const char kResetProfileSettingsLearnMoreURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360017903152-How-do-I-reset-Brave-settings-to-default-";
+    "https://flyweb.lamosquita.net/ayuda/#restablecer";
 
 const char kSafeBrowsingHelpCenterURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "15222663599629-Safe-Browsing-in-Brave";
+    "https://flyweb.lamosquita.net/ayuda/#seguridad";
 
 const char kSafetyTipHelpCenterURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/#seguridad";
 
 const char kSearchHistoryUrlInClearBrowsingData[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/#privacidad";
 
 const char kSeeMoreSecurityTipsURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/#seguridad";
 
 const char kSettingsSearchHelpURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/#buscador";
 
 const char kSyncAndGoogleServicesLearnMoreURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/sincronizar";
 
 const char kSyncEncryptionHelpURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/sincronizar";
 
 const char kSyncErrorsHelpURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/sincronizar";
 
 const char kSyncGoogleDashboardURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/sincronizar";
 
 const char kSyncLearnMoreURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/sincronizar";
 
 const char kSigninInterceptManagedDisclaimerLearnMoreURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/";
 
 #if !BUILDFLAG(IS_ANDROID)
-const char kSyncTrustedVaultOptInURL[] = "https://support.brave.com/";
+const char kSyncTrustedVaultOptInURL[] =
+    "https://flyweb.lamosquita.net/ayuda/sincronizar";
 #endif
 
-const char kSyncTrustedVaultLearnMoreURL[] = "https://support.brave.com/";
+const char kSyncTrustedVaultLearnMoreURL[] =
+    "https://flyweb.lamosquita.net/ayuda/sincronizar";
 
 const char kUpgradeHelpCenterBaseURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360025390311-How-do-I-download-and-install-Brave-";
+    "https://flyweb.lamosquita.net/ayuda/#actualizaciones";
 
 const char kWhoIsMyAdministratorHelpURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/";
 
 const char kCwsEnhancedSafeBrowsingLearnMoreURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/#seguridad";
 
 #if BUILDFLAG(IS_ANDROID)
 const char kEnhancedPlaybackNotificationLearnMoreURL[] =
 // Keep in sync with chrome/android/java/strings/android_chrome_strings.grd
-    "https://community.brave.com";
+    "https://flyweb.lamosquita.net/ayuda/";
 #endif
 
 #if BUILDFLAG(IS_MAC)
 const char kChromeEnterpriseSignInLearnMoreURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/";
 
 const char kMacOsObsoleteURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "18347246446733-Changes-to-macOS-desktop-browser-requirements";
+    "https://flyweb.lamosquita.net/ayuda/#actualizaciones";
 #endif
 
 #if BUILDFLAG(IS_WIN)
 const char kWindowsXPVistaDeprecationURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/";
 
-const char kWindows78DeprecationURL[] =
-    "https://support.brave.com/hc/en-us/articles/11197967945613";
+const char kWindows78DeprecationURL[] = "https://flyweb.lamosquita.net/ayuda/";
 #endif  // BUILDFLAG(IS_WIN)
 
-const char kChromeSyncLearnMoreURL[] = "https://support.brave.com/";
+const char kChromeSyncLearnMoreURL[] =
+    "https://flyweb.lamosquita.net/ayuda/sincronizar";
 
 #if BUILDFLAG(ENABLE_PLUGINS)
 const char kOutdatedPluginLearnMoreURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360018163151-How-do-I-manage-Flash-audio-video-";
+    "https://flyweb.lamosquita.net/ayuda/";
 #endif
 
 #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
@@ -278,8 +262,9 @@ const char kChromeRootStoreSettingsHelpCenterURL[] =
 #endif
 
 const char kAddressesAndPaymentMethodsLearnMoreURL[] =
-    "https://support.brave.com";
+    "https://flyweb.lamosquita.net/ayuda/#autorrelleno";
 
-const char kPasswordManagerImportLearnMoreURL[] = "https://support.brave.com";
+const char kPasswordManagerImportLearnMoreURL[] =
+    "https://flyweb.lamosquita.net/ayuda/#contrasenas";
 
 }  // namespace chrome

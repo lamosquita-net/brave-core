@@ -10,6 +10,10 @@ namespace content {
 class WebContents;
 }
 
+// FlyWeb: opens flyweb.lamosquita.net's "report a problem" page.
 void OpenWebcompatReporterDialog(content::WebContents* initiator);
+
+// Brave's reporter dialog (sends to webcompat_report_api_endpoint). Unused.
+void OpenBraveWebcompatReporterDialog(content::WebContents* initiator);
 
 #endif  // BRAVE_BROWSER_UI_WEBUI_WEBCOMPAT_REPORTER_WEBCOMPAT_REPORTER_DIALOG_H_
