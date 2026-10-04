@@ -1,0 +1,31 @@
+diff --git a/third_party/blink/renderer/core/layout/svg/layout_svg_viewport_container.h b/third_party/blink/renderer/core/layout/svg/layout_svg_viewport_container.h
+index 13e34ea5ceb0a215fc256d9125a37b5877dfff34..f7e364fc6f1474ca90b96e6ad35439932901a0f0 100644
+--- a/third_party/blink/renderer/core/layout/svg/layout_svg_viewport_container.h
++++ b/third_party/blink/renderer/core/layout/svg/layout_svg_viewport_container.h
+@@ -44,8 +44,6 @@ class LayoutSVGViewportContainer final : public LayoutSVGContainer {
+     return is_layout_size_changed_;
+   }
+ 
+-  void SetNeedsTransformUpdate() override;
+-
+   const char* GetName() const override {
+     NOT_DESTROYED();
+     return "LayoutSVGViewportContainer";
+@@ -65,7 +63,8 @@ class LayoutSVGViewportContainer final : public LayoutSVGContainer {
+ 
+   void UpdateLayout() override;
+ 
+-  SVGTransformChange CalculateLocalTransform(bool bounds_changed) override;
++  SVGTransformChange UpdateLocalTransform(
++      const gfx::RectF& reference_box) override;
+ 
+   bool NodeAtPoint(HitTestResult&,
+                    const HitTestLocation&,
+@@ -77,7 +76,6 @@ class LayoutSVGViewportContainer final : public LayoutSVGContainer {
+   gfx::RectF viewport_;
+   mutable AffineTransform local_to_parent_transform_;
+   bool is_layout_size_changed_ : 1;
+-  bool needs_transform_update_ : 1;
+ };
+ 
+ template <>

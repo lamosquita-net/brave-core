@@ -1,0 +1,40 @@
+diff --git a/third_party/blink/renderer/core/style/computed_style.h b/third_party/blink/renderer/core/style/computed_style.h
+index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..8009da9a575ad718a6e6b2641adc23f7495750a1 100644
+--- a/third_party/blink/renderer/core/style/computed_style.h
++++ b/third_party/blink/renderer/core/style/computed_style.h
+@@ -44,7 +44,7 @@
+ #include "third_party/blink/renderer/core/css/style_color.h"
+ #include "third_party/blink/renderer/core/layout/geometry/box_sides.h"
+ #include "third_party/blink/renderer/core/layout/geometry/logical_size.h"
+-#include "third_party/blink/renderer/core/layout/geometry/physical_size.h"
++#include "third_party/blink/renderer/core/layout/geometry/physical_rect.h"
+ #include "third_party/blink/renderer/core/layout/ng/geometry/ng_box_strut.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_outline_type.h"
+ #include "third_party/blink/renderer/core/scroll/scroll_types.h"
+@@ -918,9 +918,6 @@ class ComputedStyle : public ComputedStyleBase,
+     return MarkerStartResource() || MarkerMidResource() || MarkerEndResource();
+   }
+ 
+-  // paint-order helper
+-  EPaintOrderType PaintOrderType(unsigned index) const;
+-
+   // stroke helpers
+   bool HasStroke() const { return !StrokePaint().IsNone(); }
+   bool HasVisibleStroke() const {
+@@ -2161,14 +2158,14 @@ class ComputedStyle : public ComputedStyleBase,
+   };
+   void ApplyTransform(gfx::Transform&,
+                       const LayoutBox* box,
+-                      PhysicalSize border_box_data_size,
++                      const PhysicalRect& reference_box,
+                       ApplyTransformOperations,
+                       ApplyTransformOrigin,
+                       ApplyMotionPath,
+                       ApplyIndependentTransformProperties) const;
+   void ApplyTransform(gfx::Transform&,
+                       const LayoutBox* box,
+-                      const gfx::RectF& bounding_box,
++                      const gfx::RectF& reference_box,
+                       ApplyTransformOperations,
+                       ApplyTransformOrigin,
+                       ApplyMotionPath,

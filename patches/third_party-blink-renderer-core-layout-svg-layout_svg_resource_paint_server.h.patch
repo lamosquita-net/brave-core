@@ -1,0 +1,20 @@
+diff --git a/third_party/blink/renderer/core/layout/svg/layout_svg_resource_paint_server.h b/third_party/blink/renderer/core/layout/svg/layout_svg_resource_paint_server.h
+index a50422c9d07fd9cfb07f2b6b2698fafce8baa08b..85b9ef9b62d10a16bb9a79a92effa80d0802e456 100644
+--- a/third_party/blink/renderer/core/layout/svg/layout_svg_resource_paint_server.h
++++ b/third_party/blink/renderer/core/layout/svg/layout_svg_resource_paint_server.h
+@@ -40,10 +40,11 @@ class LayoutSVGResourcePaintServer : public LayoutSVGResourceContainer {
+ };
+ 
+ template <>
+-inline bool IsResourceOfType<LayoutSVGResourcePaintServer>(
+-    const LayoutSVGResourceContainer* container) {
+-  return container->IsSVGPaintServer();
+-}
++struct DowncastTraits<LayoutSVGResourcePaintServer> {
++  static bool AllowFrom(const LayoutSVGResourceContainer& container) {
++    return container.IsSVGPaintServer();
++  }
++};
+ 
+ }  // namespace blink
+ 

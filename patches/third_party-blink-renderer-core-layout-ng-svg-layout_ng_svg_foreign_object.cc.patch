@@ -1,0 +1,28 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/svg/layout_ng_svg_foreign_object.cc b/third_party/blink/renderer/core/layout/ng/svg/layout_ng_svg_foreign_object.cc
+index 2e51470f629554cedfe56762f762f5ac5a85a622..81e5ac173156ecc94b096c563681885acf350191 100644
+--- a/third_party/blink/renderer/core/layout/ng/svg/layout_ng_svg_foreign_object.cc
++++ b/third_party/blink/renderer/core/layout/ng/svg/layout_ng_svg_foreign_object.cc
+@@ -50,6 +50,11 @@ gfx::RectF LayoutNGSVGForeignObject::ObjectBoundingBox() const {
+ }
+ 
+ gfx::RectF LayoutNGSVGForeignObject::StrokeBoundingBox() const {
++  NOT_DESTROYED();
++  return viewport_;
++}
++
++gfx::RectF LayoutNGSVGForeignObject::DecoratedBoundingBox() const {
+   NOT_DESTROYED();
+   return VisualRectInLocalSVGCoordinates();
+ }
+@@ -100,10 +105,7 @@ void LayoutNGSVGForeignObject::UpdateLayout() {
+   // TODO(fs): Remove this. AFAICS in all cases where descendants compute some
+   // form of CTM, they stop at their nearest ancestor LayoutSVGRoot, and thus
+   // will not care about (reach) this value.
+-  if (needs_transform_update_) {
+-    local_transform_ =
+-        foreign->CalculateTransform(SVGElement::kIncludeMotionTransform);
+-  }
++  UpdateTransformBeforeLayout();
+ 
+   LayoutRect old_frame_rect = FrameRect();
+ 

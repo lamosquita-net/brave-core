@@ -1,0 +1,30 @@
+diff --git a/third_party/blink/renderer/core/svg/svg_mask_element.cc b/third_party/blink/renderer/core/svg/svg_mask_element.cc
+index 31b75bf1159b3cf22d96b24d2481d8900238ddeb..b8c92fea547559a47dfbaaf2d8c58889148ceacb 100644
+--- a/third_party/blink/renderer/core/svg/svg_mask_element.cc
++++ b/third_party/blink/renderer/core/svg/svg_mask_element.cc
+@@ -126,9 +126,9 @@ void SVGMaskElement::SvgAttributeChanged(
+     }
+ 
+     auto* layout_object = To<LayoutSVGResourceContainer>(GetLayoutObject());
+-    if (layout_object)
+-      layout_object->InvalidateCacheAndMarkForLayout();
+-
++    if (layout_object) {
++      layout_object->InvalidateCache();
++    }
+     return;
+   }
+ 
+@@ -141,9 +141,9 @@ void SVGMaskElement::ChildrenChanged(const ChildrenChange& change) {
+   if (change.ByParser())
+     return;
+ 
+-  if (LayoutObject* object = GetLayoutObject()) {
+-    object->SetNeedsLayoutAndFullPaintInvalidation(
+-        layout_invalidation_reason::kChildChanged);
++  auto* layout_object = To<LayoutSVGResourceContainer>(GetLayoutObject());
++  if (layout_object) {
++    layout_object->InvalidateCache();
+   }
+ }
+ 

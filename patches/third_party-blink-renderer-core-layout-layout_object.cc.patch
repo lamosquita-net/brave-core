@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_object.cc b/third_party/blink/renderer/core/layout/layout_object.cc
-index 98f0936193142d342d2083f61151ce24e10ad7a9..6c49e5af2891dc904702002ba2a3beee1484da4a 100644
+index 98f0936193142d342d2083f61151ce24e10ad7a9..4d24da0e010b26fdbdfa006d62290e85df90f620 100644
 --- a/third_party/blink/renderer/core/layout/layout_object.cc
 +++ b/third_party/blink/renderer/core/layout/layout_object.cc
 @@ -1598,7 +1598,7 @@ void LayoutObject::InvalidateIntersectionObserverCachedRects() {
@@ -38,3 +38,36 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..6c49e5af2891dc904702002ba2a3beee
      // Don't invalidate the outermost object of an unrooted subtree. That object
      // will be invalidated when the subtree is added to the document.
      LayoutObject* container = IntrinsicContainer(o);
+@@ -4480,6 +4491,12 @@ gfx::RectF LayoutObject::StrokeBoundingBox() const {
+   return gfx::RectF();
+ }
+ 
++gfx::RectF LayoutObject::DecoratedBoundingBox() const {
++  NOT_DESTROYED();
++  NOTREACHED();
++  return gfx::RectF();
++}
++
+ gfx::RectF LayoutObject::VisualRectInLocalSVGCoordinates() const {
+   NOT_DESTROYED();
+   NOTREACHED();
+@@ -4990,6 +5007,19 @@ void LayoutObject::SetSVGDescendantMayHaveTransformRelatedAnimation() {
+   }
+ }
+ 
++void LayoutObject::SetSVGSelfOrDescendantHasViewportDependency() {
++  NOT_DESTROYED();
++  auto* object = this;
++  do {
++    DCHECK(object->IsSVGChild());
++    if (object->SVGSelfOrDescendantHasViewportDependency()) {
++      break;
++    }
++    object->bitfields_.SetSVGSelfOrDescendantHasViewportDependency(true);
++    object = object->Parent();
++  } while (object && !object->IsSVGRoot());
++}
++
+ void LayoutObject::InvalidateSubtreePositionFallback(bool mark_style_dirty) {
+   NOT_DESTROYED();
+ 

@@ -1,0 +1,19 @@
+diff --git a/third_party/blink/renderer/core/layout/svg/layout_svg_root.cc b/third_party/blink/renderer/core/layout/svg/layout_svg_root.cc
+index e05337d6f5bc83ba7b6dd603ba1f7201d75f7922..df1e33ac8d9fb9c1e5330a4dea08d290a02f1836 100644
+--- a/third_party/blink/renderer/core/layout/svg/layout_svg_root.cc
++++ b/third_party/blink/renderer/core/layout/svg/layout_svg_root.cc
+@@ -186,13 +186,7 @@ void LayoutSVGRoot::UpdateLayout() {
+   // current{Scale,Translate}, decorations and 'overflow'.
+   const bool viewport_may_have_changed =
+       SelfNeedsLayout() || old_size != SizeFromNG();
+-
+-  auto* svg = To<SVGSVGElement>(GetNode());
+-  DCHECK(svg);
+-  // When hasRelativeLengths() is false, no descendants have relative lengths
+-  // (hence no one is interested in viewport size changes).
+-  is_layout_size_changed_ =
+-      viewport_may_have_changed && svg->HasRelativeLengths();
++  is_layout_size_changed_ = viewport_may_have_changed;
+ 
+   SVGContainerLayoutInfo layout_info;
+   layout_info.scale_factor_changed = did_screen_scale_factor_change_;

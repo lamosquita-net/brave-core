@@ -1,8 +1,53 @@
 diff --git a/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc b/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc
-index 3e784902ddee52b0a6754e762a3c911bb41876fc..77e9107570e0b474f26666e55ed7ad0b6ab3841b 100644
+index 3e784902ddee52b0a6754e762a3c911bb41876fc..98db102da2b93fdaf424d5e20ae5d9e606d0ec76 100644
 --- a/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc
 +++ b/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc
-@@ -8550,6 +8550,36 @@ const CSSValue* TransitionProperty::InitialValue() const {
+@@ -61,6 +61,7 @@
+ #include "third_party/blink/renderer/core/style/computed_style.h"
+ #include "third_party/blink/renderer/core/style/coord_box_offset_path_operation.h"
+ #include "third_party/blink/renderer/core/style/grid_area.h"
++#include "third_party/blink/renderer/core/style/paint_order_array.h"
+ #include "third_party/blink/renderer/core/style/reference_clip_path_operation.h"
+ #include "third_party/blink/renderer/core/style/reference_offset_path_operation.h"
+ #include "third_party/blink/renderer/core/style/shape_clip_path_operation.h"
+@@ -6408,31 +6409,12 @@ const CSSValue* PaintOrder::CSSValueFromComputedStyleInternal(
+     return CSSIdentifierValue::Create(CSSValueID::kNormal);
+   }
+ 
+-  // Table mapping to the shortest (canonical) form of the property.
+-  //
+-  // Per spec, if any keyword is omitted it will be added last using
+-  // the standard ordering. So "stroke" implies an order "stroke fill
+-  // markers" etc. From a serialization PoV this means we never need
+-  // to emit the last keyword.
+-  //
+-  // https://svgwg.org/svg2-draft/painting.html#PaintOrder
+-  static const uint8_t canonical_form[][2] = {
+-      // kPaintOrderNormal is handled above.
+-      {PT_FILL, PT_NONE},       // kPaintOrderFillStrokeMarkers
+-      {PT_FILL, PT_MARKERS},    // kPaintOrderFillMarkersStroke
+-      {PT_STROKE, PT_NONE},     // kPaintOrderStrokeFillMarkers
+-      {PT_STROKE, PT_MARKERS},  // kPaintOrderStrokeMarkersFill
+-      {PT_MARKERS, PT_NONE},    // kPaintOrderMarkersFillStroke
+-      {PT_MARKERS, PT_STROKE},  // kPaintOrderMarkersStrokeFill
+-  };
+-  DCHECK_LT(static_cast<size_t>(paint_order) - 1, std::size(canonical_form));
++  const unsigned canonical_length =
++      PaintOrderArray::CanonicalLength(paint_order);
+   CSSValueList* list = CSSValueList::CreateSpaceSeparated();
+-  for (const auto& keyword : canonical_form[paint_order - 1]) {
+-    const auto paint_order_type = static_cast<EPaintOrderType>(keyword);
+-    if (paint_order_type == PT_NONE) {
+-      break;
+-    }
+-    list->Append(*CSSIdentifierValue::Create(paint_order_type));
++  const PaintOrderArray paint_order_array(paint_order);
++  for (unsigned i = 0; i < canonical_length; ++i) {
++    list->Append(*CSSIdentifierValue::Create(paint_order_array[i]));
+   }
+   return list;
+ }
+@@ -8550,6 +8532,36 @@ const CSSValue* TransitionProperty::InitialValue() const {
    return CSSIdentifierValue::Create(CSSValueID::kAll);
  }
  

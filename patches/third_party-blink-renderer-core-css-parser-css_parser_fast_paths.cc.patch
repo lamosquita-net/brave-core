@@ -1,0 +1,18 @@
+diff --git a/third_party/blink/renderer/core/css/parser/css_parser_fast_paths.cc b/third_party/blink/renderer/core/css/parser/css_parser_fast_paths.cc
+index ba8ea7b8cf8d725e4bb39adc0625855e574bcbfd..f9ed826fcb999e93bb0cf8cf78427bf3e7b95d47 100644
+--- a/third_party/blink/renderer/core/css/parser/css_parser_fast_paths.cc
++++ b/third_party/blink/renderer/core/css/parser/css_parser_fast_paths.cc
+@@ -1544,6 +1544,13 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
+              value_id == CSSValueID::kBalance ||
+              value_id == CSSValueID::kPretty;
+     case CSSPropertyID::kTransformBox:
++      if (RuntimeEnabledFeatures::CSSTransformBoxAdditionalKeywordsEnabled()) {
++        return value_id == CSSValueID::kContentBox ||
++               value_id == CSSValueID::kBorderBox ||
++               value_id == CSSValueID::kStrokeBox ||
++               value_id == CSSValueID::kFillBox ||
++               value_id == CSSValueID::kViewBox;
++      }
+       return value_id == CSSValueID::kFillBox ||
+              value_id == CSSValueID::kViewBox;
+     case CSSPropertyID::kTransformStyle:
