@@ -21,11 +21,11 @@ GetExecutingScriptsImpl(Isolate* isolate, bool all, bool include_position) {
     frame->GetFunctions(&functions);
     for (const auto& shared : functions) {
       Object maybe_script = shared.script();
-      if (!maybe_script.IsScript()) {
+      if (!IsScript(maybe_script)) {
         continue;
       }
 
-      const int script_id = Script::cast(maybe_script).id();
+      const int script_id = Script::cast(maybe_script)->id();
       if (script_id <= 0) {
         continue;
       }
