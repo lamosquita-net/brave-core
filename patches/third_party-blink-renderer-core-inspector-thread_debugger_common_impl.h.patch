@@ -1,0 +1,17 @@
+diff --git a/third_party/blink/renderer/core/inspector/thread_debugger_common_impl.h b/third_party/blink/renderer/core/inspector/thread_debugger_common_impl.h
+index 6b16b26c543f878bb32f752f157ec26a4ee9772c..40125e1bea88f047b446983a3316c3c93a362cd1 100644
+--- a/third_party/blink/renderer/core/inspector/thread_debugger_common_impl.h
++++ b/third_party/blink/renderer/core/inspector/thread_debugger_common_impl.h
+@@ -74,9 +74,10 @@ class ThreadDebuggerCommonImpl : public ThreadDebugger {
+  private:
+   // V8InspectorClient implementation.
+   void beginUserGesture() override;
+-  std::unique_ptr<v8_inspector::WebDriverValue> serializeToWebDriverValue(
++  std::unique_ptr<v8_inspector::DeepSerializationResult> deepSerialize(
+       v8::Local<v8::Value> v8_value,
+-      int max_depth) override;
++      int max_depth,
++      v8::Local<v8::Object> additional_parameters) override;
+   std::unique_ptr<v8_inspector::StringBuffer> valueSubtype(
+       v8::Local<v8::Value>) override;
+   std::unique_ptr<v8_inspector::StringBuffer> descriptionForValueSubtype(

@@ -1,8 +1,8 @@
 diff --git a/src/utils/version.h b/src/utils/version.h
-index fb6783b63cf22e916a7cca217bc73cbf543e1a95..6dbf0d4692a836e2105985b852a9f8573285cd36 100644
+index fb6783b63cf22e916a7cca217bc73cbf543e1a95..26397ddbdfed86d17ebaa9e23c602f9939d12897 100644
 --- a/src/utils/version.h
 +++ b/src/utils/version.h
-@@ -27,9 +27,16 @@ class V8_EXPORT Version {
+@@ -27,9 +27,18 @@ class V8_EXPORT Version {
    static int GetPatch() { return patch_; }
    static const char* GetEmbedder() { return embedder_; }
    static bool IsCandidate() { return candidate_; }
@@ -10,8 +10,10 @@ index fb6783b63cf22e916a7cca217bc73cbf543e1a95..6dbf0d4692a836e2105985b852a9f857
 +  // against this hash and the non-default flags, so FlyWeb's own V8 changes
 +  // (new builtins, runtime functions, flags shipped by default) would accept
 +  // code cached by an earlier FlyWeb and crash. Raise kFlyWebCacheEpoch with
-+  // every change to FlyWeb's V8 patches. 2 = engine level 117 (FlyWeb 1.1.1),
-+  // 3 = engine level 119 (Promise.withResolvers).
++  // every change to FlyWeb's V8 patches. 2 = FlyWeb 1.1.1 (V8 11.6), 3 = V8
++  // 11.6 with Promise.withResolvers. From engine level 118 each level has its
++  // own V8 version, which changes the hash by itself; still raise it when the
++  // patches change within the same V8 version.
 +  static constexpr int kFlyWebCacheEpoch = 3;
    static uint32_t Hash() {
 -    return static_cast<uint32_t>(
