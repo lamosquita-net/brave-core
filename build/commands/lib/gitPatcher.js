@@ -160,6 +160,12 @@ module.exports = class GitPatcher {
     // Detect if any of the files the patch applies to have changed
     for (const {path: localPath, checksum} of appliesTo) {
       const fullPath = path.join(this.repoPath, localPath)
+      // FlyWeb: a file created by a patch can be missing while its .patchinfo
+      // is still there (reset removed it and the apply failed, or it was
+      // deleted by hand). Treat that as changed instead of dying with ENOENT.
+      if (!(await fs.pathExists(fullPath))) {
+        return patchApplyReasons.SRC_CHANGED
+      }
       const currentChecksum = await calculateFileChecksum(fullPath)
       if (currentChecksum !== checksum) {
         return patchApplyReasons.SRC_CHANGED
