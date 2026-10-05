@@ -1,0 +1,13 @@
+diff --git a/third_party/blink/renderer/core/svg/svg_resource.cc b/third_party/blink/renderer/core/svg/svg_resource.cc
+index 55fa51bd9283532ebc31e219b60bd08b7087e2a6..581e8e84ec4189643814c02ba5c687fdd6e45f39 100644
+--- a/third_party/blink/renderer/core/svg/svg_resource.cc
++++ b/third_party/blink/renderer/core/svg/svg_resource.cc
+@@ -40,7 +40,7 @@ void SVGResource::AddClient(SVGResourceClient& client) {
+ 
+ void SVGResource::RemoveClient(SVGResourceClient& client) {
+   auto it = clients_.find(&client);
+-  DCHECK(it != clients_.end());
++  CHECK_NE(it, clients_.end());
+   it->value.count--;
+   if (it->value.count)
+     return;
