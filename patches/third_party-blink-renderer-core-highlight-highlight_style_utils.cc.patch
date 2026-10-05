@@ -1,0 +1,36 @@
+diff --git a/third_party/blink/renderer/core/highlight/highlight_style_utils.cc b/third_party/blink/renderer/core/highlight/highlight_style_utils.cc
+index b0b83fa3072a787cc75aeb70eb6e98d5cd819f2f..dc253ce6025a82ee39def5da62fb0775f66a4620 100644
+--- a/third_party/blink/renderer/core/highlight/highlight_style_utils.cc
++++ b/third_party/blink/renderer/core/highlight/highlight_style_utils.cc
+@@ -485,6 +485,11 @@ absl::optional<Color> HighlightStyleUtils::HighlightTextDecorationColor(
+ bool HighlightStyleUtils::ShouldInvalidateVisualOverflow(
+     const Node& node,
+     DocumentMarker::MarkerType type) {
++  if ((type == DocumentMarker::kSpelling || type == DocumentMarker::kGrammar) &&
++      RuntimeEnabledFeatures::CSSPaintingForSpellingGrammarErrorsEnabled()) {
++    return true;
++  }
++
+   // Custom highlights are handled separately. Here we just need to handle
+   // spelling, grammar and target-text. Note that we assume
+   // RuntimeEnabledFeatures::HighlightInheritanceEnabled() is true to avoid
+@@ -502,17 +507,13 @@ bool HighlightStyleUtils::ShouldInvalidateVisualOverflow(
+       break;
+ 
+     case DocumentMarker::kSpelling:
+-      if (RuntimeEnabledFeatures::CSSSpellingGrammarErrorsEnabled() ||
+-          RuntimeEnabledFeatures::
+-              CSSPaintingForSpellingGrammarErrorsEnabled()) {
++      if (RuntimeEnabledFeatures::CSSSpellingGrammarErrorsEnabled()) {
+         pseudo_style = style->HighlightData()->SpellingError();
+       }
+       break;
+ 
+     case DocumentMarker::kGrammar:
+-      if (RuntimeEnabledFeatures::CSSSpellingGrammarErrorsEnabled() ||
+-          RuntimeEnabledFeatures::
+-              CSSPaintingForSpellingGrammarErrorsEnabled()) {
++      if (RuntimeEnabledFeatures::CSSSpellingGrammarErrorsEnabled()) {
+         pseudo_style = style->HighlightData()->GrammarError();
+       }
+       break;
