@@ -17,6 +17,7 @@ uses V8 **11.8.172.18** (36e4828ab658, `FlyWeb/v8-revision`), checked out by `Fl
 | `src-wasm-baseline-liftoff-{assembler.cc,assembler.h,compiler.cc}.patch` | CVE-2024-7971 (crbug 360700873, exploited): Liftoff loop inputs, v8 9797576 | SEGURIDAD; step 55 regenerated; the upstream regression test **crashes this 11.8 without it** |
 | `src-builtins-builtins-collections-gen.{cc,h}.patch`, `src-builtins-object-groupby.tq.patch`, `src-runtime-runtime-collections.cc.patch` | groupBy renderer crash with huge inputs: v8 77df647d (crbug 438364208) + runtime part of 92aba703 (crbug 405910175) | SEGURIDAD; step 56 redone on the native groupBy of 11.8, which has the same bug (reproduced) |
 | `src-compiler-access-info.cc.patch`, `src-maglev-maglev-graph-builder.cc.patch` | CVE-2024-4947 (crbug 340221135, exploited): Maglev stores to module exports, v8 b3c01ac1 | SEGURIDAD; **new with 11.8: Maglev is on by default from this V8** (it was off in 11.6) |
+| `src-flags-flag-definitions.h.patch` (also NUBE's) | **Maglev off by default** (`maglev` = `false`), as in Chromium 116 (decision of the HUMAN, 05-10-2026: less JIT attack surface; TurboFan stays) | SEGURIDAD |
 | `src-flags-flag-definitions.h.patch` (also NUBE's) | CVE-2026-3910 (crbug 491410818, exploited): `maglev_untagged_phis` off, exactly upstream's fix v8 7076ba1 | SEGURIDAD; **new with 11.8** (Maglev on) |
 
 **SEGURIDAD (05-10, FS.4):** triage redone for 11.8.172.18 in `cve-triage.md` (softmac); the original note said: it has to be redone (fixes after
