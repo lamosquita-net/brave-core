@@ -16,7 +16,7 @@ namespace internal {
 static std::string ToPageGraphArg(Isolate* isolate, Handle<Object> object) {
 #ifdef OBJECT_PRINT  // Enabled with v8_enable_object_print=true gn arg.
   std::ostringstream stream;
-  object->Print(stream);
+  Print(*object, stream);
   return stream.str();
 #else   // OBJECT_PRINT
   return Object::NoSideEffectsToString(isolate, object)->ToCString().get();
@@ -26,7 +26,7 @@ static std::string ToPageGraphArg(Isolate* isolate, Handle<Object> object) {
 void ReportBuiltinCallAndResponse(Isolate* isolate,
                                   const char* builtin_name,
                                   const BuiltinArguments& builtin_args,
-                                  const Object& builtin_result) {
+                                  const Tagged<Object>& builtin_result) {
   HandleScope scope(isolate);
   std::vector<std::string> args;
   // Start from 1 to skip receiver arg.
