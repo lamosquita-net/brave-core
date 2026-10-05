@@ -1,0 +1,14 @@
+diff --git a/third_party/blink/renderer/core/layout/svg/layout_svg_resource_masker.h b/third_party/blink/renderer/core/layout/svg/layout_svg_resource_masker.h
+index eddfbc91a4180a15eb1d64516a05028f2a5fe54c..a78141182efbd5435c0c1e0f76db1a3fe7e6ba6c 100644
+--- a/third_party/blink/renderer/core/layout/svg/layout_svg_resource_masker.h
++++ b/third_party/blink/renderer/core/layout/svg/layout_svg_resource_masker.h
+@@ -56,6 +56,9 @@ class LayoutSVGResourceMasker final : public LayoutSVGResourceContainer {
+   }
+ 
+   PaintRecord CreatePaintRecord(const AffineTransform&, GraphicsContext&);
++  // FlyWeb (CSS mask-image: url(#mask), level 120): as upstream, without a
++  // containing context; the caller sets the SubtreeContentTransformScope.
++  PaintRecord CreatePaintRecord();
+ 
+  private:
+   absl::optional<PaintRecord> cached_paint_record_;

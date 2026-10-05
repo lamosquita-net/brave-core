@@ -1,0 +1,46 @@
+diff --git a/third_party/blink/renderer/core/css/css_image_value.h b/third_party/blink/renderer/core/css/css_image_value.h
+index b9a48ac66cf95bb0313376c599c415018e6f3595..980844fccd887abd845feacb0afa546467809e83 100644
+--- a/third_party/blink/renderer/core/css/css_image_value.h
++++ b/third_party/blink/renderer/core/css/css_image_value.h
+@@ -34,6 +34,7 @@ namespace blink {
+ 
+ class Document;
+ class KURL;
++class ProxySVGResourceClient;
+ class StyleImage;
+ 
+ class CORE_EXPORT CSSImageValue : public CSSValue {
+@@ -62,6 +63,8 @@ class CORE_EXPORT CSSImageValue : public CSSValue {
+ 
+   const String& Url() const { return absolute_url_; }
+   const String& RelativeUrl() const { return relative_url_; }
++  bool IsLocal(const Document&) const;
++  AtomicString NormalizedFragmentIdentifier() const;
+ 
+   void ReResolveURL(const Document&) const;
+ 
+@@ -76,6 +79,7 @@ class CORE_EXPORT CSSImageValue : public CSSValue {
+         absolute_url_, KURL(absolute_url_), Referrer(), origin_clean_,
+         is_ad_related_, cached_image_.Get());
+   }
++  CSSImageValue* ComputedCSSValueMaybeLocal() const;
+ 
+   CSSImageValue* Clone() const {
+     return MakeGarbageCollected<CSSImageValue>(
+@@ -88,6 +92,8 @@ class CORE_EXPORT CSSImageValue : public CSSValue {
+   void TraceAfterDispatch(blink::Visitor*) const;
+   void RestoreCachedResourceIfNeeded(const Document&) const;
+ 
++  ProxySVGResourceClient* GetSVGResourceClient();
++
+  private:
+   AtomicString relative_url_;
+   Referrer referrer_;
+@@ -96,6 +102,7 @@ class CORE_EXPORT CSSImageValue : public CSSValue {
+   // Cached image data.
+   mutable AtomicString absolute_url_;
+   mutable Member<StyleImage> cached_image_;
++  Member<ProxySVGResourceClient> proxy_svg_resource_client_;
+ 
+   // Whether the stylesheet that requested this image is origin-clean:
+   // https://drafts.csswg.org/cssom-1/#concept-css-style-sheet-origin-clean-flag

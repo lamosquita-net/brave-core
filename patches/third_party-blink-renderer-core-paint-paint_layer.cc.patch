@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/paint/paint_layer.cc b/third_party/blink/renderer/core/paint/paint_layer.cc
-index 36810e9fa0cbbe6f4e6a6ac5b5a9541cd809f6da..ca4559869f20680a4eeff77c47825c8ec483ba4a 100644
+index 36810e9fa0cbbe6f4e6a6ac5b5a9541cd809f6da..fd880b0005b9f3102c6c60a7a694b3eed8536c52 100644
 --- a/third_party/blink/renderer/core/paint/paint_layer.cc
 +++ b/third_party/blink/renderer/core/paint/paint_layer.cc
 @@ -71,7 +71,6 @@
@@ -37,7 +37,17 @@ index 36810e9fa0cbbe6f4e6a6ac5b5a9541cd809f6da..ca4559869f20680a4eeff77c47825c8e
          ComputedStyle::kIncludeTransformOperations,
          ComputedStyle::kIncludeTransformOrigin,
          ComputedStyle::kIncludeMotionPath,
-@@ -2011,38 +2011,8 @@ bool PaintLayer::HitTestClippedOutByClipPath(
+@@ -1957,8 +1957,7 @@ PaintLayer* PaintLayer::HitTestChildren(
+ void PaintLayer::UpdateFilterReferenceBox() {
+   if (!HasFilterThatMovesPixels())
+     return;
+-  PhysicalRect result = LocalBoundingBox();
+-  ExpandRectForSelfPaintingDescendants(result);
++  PhysicalRect result = LocalBoundingBoxIncludingSelfPaintingDescendants();
+   gfx::RectF reference_box(result);
+   if (!ResourceInfo() ||
+       ResourceInfo()->FilterReferenceBox() != reference_box) {
+@@ -2011,38 +2010,8 @@ bool PaintLayer::HitTestClippedOutByClipPath(
      ConvertToLayerCoords(&root_layer, origin);
    }
  
@@ -78,3 +88,17 @@ index 36810e9fa0cbbe6f4e6a6ac5b5a9541cd809f6da..ca4559869f20680a4eeff77c47825c8e
  }
  
  PhysicalRect PaintLayer::LocalBoundingBox() const {
+@@ -2129,6 +2098,13 @@ bool PaintLayer::KnownToClipSubtreeToPaddingBox() const {
+   return false;
+ }
+ 
++PhysicalRect PaintLayer::LocalBoundingBoxIncludingSelfPaintingDescendants()
++    const {
++  PhysicalRect result = LocalBoundingBox();
++  ExpandRectForSelfPaintingDescendants(result);
++  return result;
++}
++
+ bool PaintLayer::SupportsSubsequenceCaching() const {
+   if (const LayoutBox* box = GetLayoutBox()) {
+     // TODO(crbug.com/1253797): Revisit this when implementing correct paint

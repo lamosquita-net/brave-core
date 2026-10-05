@@ -1,0 +1,186 @@
+diff --git a/third_party/blink/renderer/core/paint/background_image_geometry.cc b/third_party/blink/renderer/core/paint/background_image_geometry.cc
+index 9a0571cc4f92994ec48a906baab7a5f2e3b3a2a8..e6cd09c9ea1bcbc12567f1a7edc546d3e256d8c4 100644
+--- a/third_party/blink/renderer/core/paint/background_image_geometry.cc
++++ b/third_party/blink/renderer/core/paint/background_image_geometry.cc
+@@ -385,6 +385,29 @@ void BackgroundImageGeometry::ComputeDestRectAdjustments(
+     NGPhysicalBoxStrut& unsnapped_dest_adjust,
+     NGPhysicalBoxStrut& snapped_dest_adjust) const {
+   switch (fill_layer.Clip()) {
++    case EFillBox::kNoClip: {
++      PhysicalRect border_box;
++      if (positioning_box_->IsBox()) {
++        border_box = To<LayoutBox>(positioning_box_)->PhysicalBorderBoxRect();
++      } else {
++        border_box =
++            To<LayoutInline>(positioning_box_)->PhysicalLinesBoundingBox();
++      }
++      PhysicalRect visual_overflow =
++          positioning_box_->Layer()
++              ->LocalBoundingBoxIncludingSelfPaintingDescendants();
++      unsnapped_dest_adjust =
++          NGPhysicalBoxStrut(visual_overflow.Y() - border_box.Y(),
++                             border_box.Right() - visual_overflow.Right(),
++                             border_box.Bottom() - visual_overflow.Bottom(),
++                             visual_overflow.X() - border_box.X());
++      snapped_dest_adjust = unsnapped_dest_adjust;
++      return;
++    }
++    case EFillBox::kFillBox:
++    // Spec: For elements with associated CSS layout box, the used values for
++    // fill-box compute to content-box.
++    // https://drafts.fxtf.org/css-masking/#the-mask-clip
+     case EFillBox::kContent:
+       // If the PaddingOutsets are zero then this is equivalent to
+       // kPadding and we should apply the snapping logic.
+@@ -422,6 +445,11 @@ void BackgroundImageGeometry::ComputeDestRectAdjustments(
+                                      LayoutUnit(inner_border_rect.bottom());
+       }
+       return;
++    case EFillBox::kStrokeBox:
++    case EFillBox::kViewBox:
++    // Spec: For elements with associated CSS layout box, ... stroke-box and
++    // view-box compute to border-box.
++    // https://drafts.fxtf.org/css-masking/#the-mask-clip
+     case EFillBox::kBorder: {
+       if (disallow_border_derived_adjustment) {
+         // All adjustments remain 0.
+@@ -481,6 +509,10 @@ void BackgroundImageGeometry::ComputePositioningAreaAdjustments(
+     NGPhysicalBoxStrut& unsnapped_box_outset,
+     NGPhysicalBoxStrut& snapped_box_outset) const {
+   switch (fill_layer.Origin()) {
++    case EFillBox::kFillBox:
++    // Spec: For elements with associated CSS layout box, the used values for
++    // fill-box compute to content-box.
++    // https://drafts.fxtf.org/css-masking/#the-mask-clip
+     case EFillBox::kContent:
+       // If the PaddingOutsets are zero then this is equivalent to
+       // kPadding and we should apply the snapping logic.
+@@ -518,16 +550,37 @@ void BackgroundImageGeometry::ComputePositioningAreaAdjustments(
+                                     LayoutUnit(inner_border_rect.bottom());
+       }
+       return;
++    case EFillBox::kStrokeBox:
++    case EFillBox::kViewBox:
++    // Spec: For elements with associated CSS layout box, ... stroke-box and
++    // view-box compute to border-box.
++    // https://drafts.fxtf.org/css-masking/#the-mask-clip
+     case EFillBox::kBorder:
+       // All adjustments remain 0.
+       snapped_box_outset = unsnapped_box_outset = NGPhysicalBoxStrut();
+       return;
++    case EFillBox::kNoClip:
+     case EFillBox::kText:
+-      return;
++      // These are not supported mask-origin values.
++      NOTREACHED();
+   }
+ }
+ 
+-void BackgroundImageGeometry::ComputePositioningArea(
++PhysicalRect BackgroundImageGeometry::ComputePositioningArea(
++    const PaintInfo& paint_info,
++    const FillLayer& fill_layer,
++    const PhysicalRect& paint_rect) const {
++  if (ShouldUseFixedAttachment(fill_layer)) {
++    return FixedAttachmentPositioningArea(paint_info);
++  }
++  if (painting_view_ || cell_using_container_background_ ||
++      box_has_multiple_fragments_) {
++    return {PhysicalOffset(), positioning_size_override_};
++  }
++  return paint_rect;
++}
++
++void BackgroundImageGeometry::AdjustPositioningArea(
+     const PaintInfo& paint_info,
+     const FillLayer& fill_layer,
+     const PhysicalRect& paint_rect,
+@@ -536,19 +589,11 @@ void BackgroundImageGeometry::ComputePositioningArea(
+     PhysicalOffset& unsnapped_box_offset,
+     PhysicalOffset& snapped_box_offset) {
+   if (ShouldUseFixedAttachment(fill_layer)) {
+-    // No snapping for fixed attachment.
+-    unsnapped_positioning_area = FixedAttachmentPositioningArea(paint_info);
+     unsnapped_dest_rect_ = snapped_dest_rect_ = snapped_positioning_area =
+         unsnapped_positioning_area;
+   } else {
+     unsnapped_dest_rect_ = paint_rect;
+ 
+-    if (painting_view_ || cell_using_container_background_ ||
+-        box_has_multiple_fragments_)
+-      unsnapped_positioning_area.size = positioning_size_override_;
+-    else
+-      unsnapped_positioning_area = unsnapped_dest_rect_;
+-
+     // Attempt to shrink the destination rect if possible while also ensuring
+     // that it paints to the border:
+     //
+@@ -731,6 +776,15 @@ void BackgroundImageGeometry::CalculateFillTileSize(
+   return;
+ }
+ 
++void BackgroundImageGeometry::SetGeometryForSVGMask(
++    const gfx::RectF& mask_area,
++    const PhysicalOffset& box_offset) {
++  unsnapped_dest_rect_ = PhysicalRect::EnclosingRect(mask_area);
++  unsnapped_dest_rect_.Move(box_offset);
++  snapped_dest_rect_ = PhysicalRect(ToPixelSnappedRect(unsnapped_dest_rect_));
++  tile_size_ = unsnapped_dest_rect_.size;
++}
++
+ void BackgroundImageGeometry::Calculate(const PaintInfo& paint_info,
+                                         const FillLayer& fill_layer,
+                                         const PhysicalRect& paint_rect) {
+@@ -740,7 +794,8 @@ void BackgroundImageGeometry::Calculate(const PaintInfo& paint_info,
+   // Unsnapped positioning area is used to derive quantities
+   // that reference source image maps and define non-integer values, such
+   // as phase and position.
+-  PhysicalRect unsnapped_positioning_area;
++  PhysicalRect unsnapped_positioning_area =
++      ComputePositioningArea(paint_info, fill_layer, paint_rect);
+ 
+   // Snapped positioning area is used for sizing images based on the
+   // background area (like cover and contain), and for setting the repeat
+@@ -752,16 +807,16 @@ void BackgroundImageGeometry::Calculate(const PaintInfo& paint_info,
+   PhysicalOffset snapped_box_offset;
+ 
+   // This method also sets the destination rects.
+-  ComputePositioningArea(paint_info, fill_layer, paint_rect,
+-                         unsnapped_positioning_area, snapped_positioning_area,
+-                         unsnapped_box_offset, snapped_box_offset);
++  AdjustPositioningArea(paint_info, fill_layer, paint_rect,
++                        unsnapped_positioning_area, snapped_positioning_area,
++                        unsnapped_box_offset, snapped_box_offset);
+ 
+   // Sets the tile_size_.
+   CalculateFillTileSize(fill_layer, unsnapped_positioning_area.size,
+                         snapped_positioning_area.size);
+ 
+-  EFillRepeat background_repeat_x = fill_layer.RepeatX();
+-  EFillRepeat background_repeat_y = fill_layer.RepeatY();
++  EFillRepeat background_repeat_x = fill_layer.Repeat().x;
++  EFillRepeat background_repeat_y = fill_layer.Repeat().y;
+ 
+   // Maintain both snapped and unsnapped available widths and heights.
+   // Unsnapped values are used for most thing, but snapped are used
+@@ -884,12 +939,14 @@ void BackgroundImageGeometry::Calculate(const PaintInfo& paint_info,
+   if (ShouldUseFixedAttachment(fill_layer))
+     UseFixedAttachment(paint_rect.offset);
+ 
+-  // Clip the final output rect to the paint rect.
+-  unsnapped_dest_rect_.Intersect(paint_rect);
+-
+-  // Clip the snapped rect, and re-snap the dest rect as we may have
+-  // adjusted it with unsnapped values.
+-  snapped_dest_rect_.Intersect(paint_rect);
++  // The actual painting area can be bigger than the provided background
++  // geometry (`paint_rect`) for `mask-clip: no-clip`, so avoid clipping.
++  if (fill_layer.Clip() != EFillBox::kNoClip) {
++    // Clip the final output rect to the paint rect.
++    unsnapped_dest_rect_.Intersect(paint_rect);
++    snapped_dest_rect_.Intersect(paint_rect);
++  }
++  // Re-snap the dest rect as we may have adjusted it with unsnapped values.
+   snapped_dest_rect_ = PhysicalRect(ToPixelSnappedRect(snapped_dest_rect_));
+ }
+ 

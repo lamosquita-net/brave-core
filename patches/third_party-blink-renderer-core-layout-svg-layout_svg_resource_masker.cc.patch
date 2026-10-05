@@ -1,0 +1,32 @@
+diff --git a/third_party/blink/renderer/core/layout/svg/layout_svg_resource_masker.cc b/third_party/blink/renderer/core/layout/svg/layout_svg_resource_masker.cc
+index e559868e7d03d8e913998391a17fcfe39b72e247..bffbf392ff1350b7ccf74cc3fe01c5cbdfd62483 100644
+--- a/third_party/blink/renderer/core/layout/svg/layout_svg_resource_masker.cc
++++ b/third_party/blink/renderer/core/layout/svg/layout_svg_resource_masker.cc
+@@ -71,6 +71,27 @@ PaintRecord LayoutSVGResourceMasker::CreatePaintRecord(
+   return *cached_paint_record_;
+ }
+ 
++PaintRecord LayoutSVGResourceMasker::CreatePaintRecord() {
++  NOT_DESTROYED();
++  if (cached_paint_record_)
++    return *cached_paint_record_;
++
++  auto* builder = MakeGarbageCollected<PaintRecordBuilder>();
++  for (const SVGElement& child_element :
++       Traversal<SVGElement>::ChildrenOf(*GetElement())) {
++    const LayoutObject* layout_object = child_element.GetLayoutObject();
++    if (!layout_object)
++      continue;
++    if (DisplayLockUtilities::LockedAncestorPreventingLayout(*layout_object) ||
++        layout_object->StyleRef().Display() == EDisplay::kNone)
++      continue;
++    SVGObjectPainter(*layout_object).PaintResourceSubtree(builder->Context());
++  }
++
++  cached_paint_record_ = builder->EndRecording();
++  return *cached_paint_record_;
++}
++
+ SVGUnitTypes::SVGUnitType LayoutSVGResourceMasker::MaskUnits() const {
+   NOT_DESTROYED();
+   return To<SVGMaskElement>(GetElement())->maskUnits()->CurrentEnumValue();

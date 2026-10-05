@@ -1,0 +1,17 @@
+diff --git a/third_party/blink/renderer/core/css/resolver/style_cascade.cc b/third_party/blink/renderer/core/css/resolver/style_cascade.cc
+index bedb7ec7720796c722b00ec96cf9a00d41f32e10..24b7fb3a08903cabf5efdf53d158d8349a7935b0 100644
+--- a/third_party/blink/renderer/core/css/resolver/style_cascade.cc
++++ b/third_party/blink/renderer/core/css/resolver/style_cascade.cc
+@@ -198,6 +198,12 @@ void StyleCascade::Apply(CascadeFilter filter) {
+     LookupAndApply(GetCSSPropertyMathDepth(), resolver);
+   }
+ 
++  if (map_.NativeBitset().Has(CSSPropertyID::kMaskImage)) {
++    // mask-image needs to be applied before {-webkit-}mask-composite,
++    // otherwise {-webkit-}mask-composite has no effect.
++    LookupAndApply(GetCSSPropertyMaskImage(), resolver);
++  }
++
+   if (map_.NativeBitset().Has(CSSPropertyID::kWebkitMaskImage)) {
+     // -webkit-mask-image needs to be applied before -webkit-mask-composite,
+     // otherwise -webkit-mask-composite has no effect.

@@ -1,0 +1,26 @@
+diff --git a/third_party/blink/renderer/core/animation/css_interpolation_types_map.cc b/third_party/blink/renderer/core/animation/css_interpolation_types_map.cc
+index 0292018a92aee057dfffa0423c8523c0f61215ec..9767bc20c2e969fb4ec13c5134b0b77ecd2806c2 100644
+--- a/third_party/blink/renderer/core/animation/css_interpolation_types_map.cc
++++ b/third_party/blink/renderer/core/animation/css_interpolation_types_map.cc
+@@ -287,8 +287,12 @@ const InterpolationTypes& CSSInterpolationTypesMap::Get(
+         applicable_types->push_back(
+             std::make_unique<CSSImageInterpolationType>(used_property));
+         break;
+-      case CSSPropertyID::kBackgroundImage:
+       case CSSPropertyID::kWebkitMaskImage:
++        if (RuntimeEnabledFeatures::CSSMaskingInteropEnabled()) {
++          break;
++        }
++        [[fallthrough]];
++      case CSSPropertyID::kBackgroundImage:
+         applicable_types->push_back(
+             std::make_unique<CSSImageListInterpolationType>(used_property));
+         break;
+@@ -364,6 +368,7 @@ const InterpolationTypes& CSSInterpolationTypesMap::Get(
+         break;
+       case CSSPropertyID::kBackgroundSize:
+       case CSSPropertyID::kWebkitMaskSize:
++      case CSSPropertyID::kMaskSize:
+         applicable_types->push_back(
+             std::make_unique<CSSSizeListInterpolationType>(used_property));
+         break;

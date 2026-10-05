@@ -1,8 +1,19 @@
 diff --git a/third_party/blink/renderer/core/css/parser/css_parser_fast_paths.cc b/third_party/blink/renderer/core/css/parser/css_parser_fast_paths.cc
-index ba8ea7b8cf8d725e4bb39adc0625855e574bcbfd..f9ed826fcb999e93bb0cf8cf78427bf3e7b95d47 100644
+index ba8ea7b8cf8d725e4bb39adc0625855e574bcbfd..c2d02c149f13fc1d8301ec7a2a0e41f52744ac07 100644
 --- a/third_party/blink/renderer/core/css/parser/css_parser_fast_paths.cc
 +++ b/third_party/blink/renderer/core/css/parser/css_parser_fast_paths.cc
-@@ -1544,6 +1544,13 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
+@@ -1142,10 +1142,6 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
+               value_id <= CSSValueID::kMathematical);
+     case CSSPropertyID::kAll:
+       return false;  // Only accepts css-wide keywords
+-    case CSSPropertyID::kBackgroundRepeatX:
+-    case CSSPropertyID::kBackgroundRepeatY:
+-      return value_id == CSSValueID::kRepeat ||
+-             value_id == CSSValueID::kNoRepeat;
+     case CSSPropertyID::kBaselineSource:
+       DCHECK(RuntimeEnabledFeatures::CSSBaselineSourceEnabled());
+       return value_id == CSSValueID::kAuto || value_id == CSSValueID::kFirst ||
+@@ -1544,6 +1540,13 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
               value_id == CSSValueID::kBalance ||
               value_id == CSSValueID::kPretty;
      case CSSPropertyID::kTransformBox:
@@ -16,3 +27,12 @@ index ba8ea7b8cf8d725e4bb39adc0625855e574bcbfd..f9ed826fcb999e93bb0cf8cf78427bf3
        return value_id == CSSValueID::kFillBox ||
               value_id == CSSValueID::kViewBox;
      case CSSPropertyID::kTransformStyle:
+@@ -1623,8 +1626,6 @@ CSSBitset CSSParserFastPaths::handled_by_keyword_fast_paths_properties_{{
+     CSSPropertyID::kAppearance,
+     CSSPropertyID::kMixBlendMode,
+     CSSPropertyID::kIsolation,
+-    CSSPropertyID::kBackgroundRepeatX,
+-    CSSPropertyID::kBackgroundRepeatY,
+     CSSPropertyID::kBaselineSource,
+     CSSPropertyID::kBorderBottomStyle,
+     CSSPropertyID::kBorderCollapse,

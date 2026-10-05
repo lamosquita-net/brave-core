@@ -1,8 +1,199 @@
 diff --git a/third_party/blink/renderer/core/css/properties/computed_style_utils.cc b/third_party/blink/renderer/core/css/properties/computed_style_utils.cc
-index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..b5330b60c543c017aee522445d37fb9b51b4b11d 100644
+index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..06e323d9673ab323cf19d3086ec9336bf4b221ac 100644
 --- a/third_party/blink/renderer/core/css/properties/computed_style_utils.cc
 +++ b/third_party/blink/renderer/core/css/properties/computed_style_utils.cc
-@@ -1984,16 +1984,27 @@ CSSValue* ComputedStyleUtils::ValueForGridTrackList(
+@@ -299,6 +299,7 @@ const CSSValueList* ComputedStyleUtils::CreatePositionListForLayer(
+   CSSValueList* position_list = CSSValueList::CreateSpaceSeparated();
+   if (layer.IsBackgroundXOriginSet()) {
+     DCHECK(property.IDEquals(CSSPropertyID::kBackgroundPosition) ||
++           property.IDEquals(CSSPropertyID::kMaskPosition) ||
+            property.IDEquals(CSSPropertyID::kWebkitMaskPosition));
+     position_list->Append(
+         *CSSIdentifierValue::Create(layer.BackgroundXOrigin()));
+@@ -307,6 +308,7 @@ const CSSValueList* ComputedStyleUtils::CreatePositionListForLayer(
+       *ZoomAdjustedPixelValueForLength(layer.PositionX(), style));
+   if (layer.IsBackgroundYOriginSet()) {
+     DCHECK(property.IDEquals(CSSPropertyID::kBackgroundPosition) ||
++           property.IDEquals(CSSPropertyID::kMaskPosition) ||
+            property.IDEquals(CSSPropertyID::kWebkitMaskPosition));
+     position_list->Append(
+         *CSSIdentifierValue::Create(layer.BackgroundYOrigin()));
+@@ -316,26 +318,30 @@ const CSSValueList* ComputedStyleUtils::CreatePositionListForLayer(
+   return position_list;
+ }
+ 
+-const CSSValue* ComputedStyleUtils::ValueForFillRepeat(EFillRepeat x_repeat,
+-                                                       EFillRepeat y_repeat) {
+-  // For backwards compatibility, if both values are equal, just return one of
+-  // them. And if the two values are equivalent to repeat-x or repeat-y, just
+-  // return the shorthand.
+-  if (x_repeat == y_repeat) {
+-    return CSSIdentifierValue::Create(x_repeat);
+-  }
+-  if (x_repeat == EFillRepeat::kRepeatFill &&
+-      y_repeat == EFillRepeat::kNoRepeatFill) {
+-    return CSSIdentifierValue::Create(CSSValueID::kRepeatX);
+-  }
+-  if (x_repeat == EFillRepeat::kNoRepeatFill &&
+-      y_repeat == EFillRepeat::kRepeatFill) {
+-    return CSSIdentifierValue::Create(CSSValueID::kRepeatY);
++const CSSValue* ComputedStyleUtils::ValueForFillRepeat(
++    const FillLayer* curr_layer) {
++  const auto& fill_repeat = curr_layer->Repeat();
++
++  return MakeGarbageCollected<CSSRepeatStyleValue>(
++      CSSIdentifierValue::Create(fill_repeat.x),
++      CSSIdentifierValue::Create(fill_repeat.y));
++}
++
++const CSSValue* ComputedStyleUtils::RepeatStyle(const FillLayer* curr_layer) {
++  CSSValueList* list = CSSValueList::CreateCommaSeparated();
++
++  for (; curr_layer; curr_layer = curr_layer->Next()) {
++    list->Append(*ValueForFillRepeat(curr_layer));
+   }
+ 
+-  CSSValueList* list = CSSValueList::CreateSpaceSeparated();
+-  list->Append(*CSSIdentifierValue::Create(x_repeat));
+-  list->Append(*CSSIdentifierValue::Create(y_repeat));
++  return list;
++}
++
++const CSSValue* ComputedStyleUtils::MaskMode(const FillLayer* curr_layer) {
++  CSSValueList* list = CSSValueList::CreateCommaSeparated();
++  for (; curr_layer; curr_layer = curr_layer->Next()) {
++    list->Append(*CSSIdentifierValue::Create(curr_layer->MaskMode()));
++  }
+   return list;
+ }
+ 
+@@ -359,8 +365,7 @@ const CSSValueList* ComputedStyleUtils::ValuesForBackgroundShorthand(
+                              ? *curr_layer->GetImage()->ComputedCSSValue(
+                                    style, allow_visited_style)
+                              : *CSSIdentifierValue::Create(CSSValueID::kNone));
+-    before_slash->Append(
+-        *ValueForFillRepeat(curr_layer->RepeatX(), curr_layer->RepeatY()));
++    before_slash->Append(*ValueForFillRepeat(curr_layer));
+     before_slash->Append(*CSSIdentifierValue::Create(curr_layer->Attachment()));
+     before_slash->Append(*CreatePositionListForLayer(
+         GetCSSPropertyBackgroundPosition(), *curr_layer, style));
+@@ -375,14 +380,108 @@ const CSSValueList* ComputedStyleUtils::ValuesForBackgroundShorthand(
+   return result;
+ }
+ 
+-const CSSValue* ComputedStyleUtils::BackgroundRepeatOrWebkitMaskRepeat(
+-    const FillLayer* curr_layer) {
+-  CSSValueList* list = CSSValueList::CreateCommaSeparated();
+-  for (; curr_layer; curr_layer = curr_layer->Next()) {
+-    list->Append(
+-        *ValueForFillRepeat(curr_layer->RepeatX(), curr_layer->RepeatY()));
++namespace {
++
++// Append clip and origin vals (https://drafts.fxtf.org/css-masking/#the-mask):
++// * If one <geometry-box> value and the no-clip keyword are present then
++//   <geometry-box> sets mask-origin and no-clip sets mask-clip to that value.
++// * If one <geometry-box> value and no no-clip keyword are present then
++//   <geometry-box> sets both mask-origin and mask-clip to that value.
++// * If two <geometry-box> values are present, then the first sets mask-origin
++//   and the second mask-clip.
++// Additionally, simplifies when possible.
++void AppendValuesForMaskClipAndOrigin(CSSValueList* result_list,
++                                      EFillBox origin,
++                                      EFillBox clip) {
++  if (origin == clip) {
++    // If both values are border-box, omit everything as it is the default.
++    if (origin == EFillBox::kBorder) {
++      return;
++    }
++    // If the values are the same, only emit one value. Note that mask-origin
++    // does not support no-clip, so there is no need to consider no-clip
++    // special cases.
++    result_list->Append(*CSSIdentifierValue::Create(origin));
++  } else if (origin == EFillBox::kBorder && clip == EFillBox::kNoClip) {
++    // Mask-origin does not support no-clip, so mask-origin can be omitted if it
++    // is the default.
++    result_list->Append(*CSSIdentifierValue::Create(clip));
++  } else {
++    result_list->Append(*CSSIdentifierValue::Create(origin));
++    result_list->Append(*CSSIdentifierValue::Create(clip));
+   }
+-  return list;
++}
++
++}  // namespace
++
++const CSSValueList* ComputedStyleUtils::ValuesForMaskShorthand(
++    const StylePropertyShorthand&,
++    const ComputedStyle& style,
++    const LayoutObject* layout_object,
++    bool allow_visited_style) {
++  CHECK(RuntimeEnabledFeatures::CSSMaskingInteropEnabled());
++  // Canonical order (https://drafts.fxtf.org/css-masking/#typedef-mask-layer):
++  //   <mask-reference>              ||
++  //   <position> [ / <bg-size> ]?   ||
++  //   <repeat-style>                ||
++  //   <geometry-box>                ||
++  //   [ <geometry-box> | no-clip ]  ||
++  //   <compositing-operator>        ||
++  //   <masking-mode>
++  // The logic below omits initial values due to the following spec:
++  // https://drafts.csswg.org/cssom/#serialize-a-css-value
++  // "If component values can be omitted or replaced with a shorter
++  // representation without changing the meaning of the value, omit/replace
++  // them".
++  CSSValueList* result = CSSValueList::CreateCommaSeparated();
++  const FillLayer* layer = &style.MaskLayers();
++  for (; layer; layer = layer->Next()) {
++    CSSValueList* list = CSSValueList::CreateSpaceSeparated();
++    // <mask-reference>
++    if (layer->GetImage()) {
++      list->Append(
++          *layer->GetImage()->ComputedCSSValue(style, allow_visited_style));
++    }
++    // <position> [ / <bg-size> ]?
++    if (layer->PositionX() !=
++            FillLayer::InitialFillPositionX(EFillLayerType::kMask) ||
++        layer->PositionY() !=
++            FillLayer::InitialFillPositionY(EFillLayerType::kMask) ||
++        layer->Size() != FillLayer::InitialFillSize(EFillLayerType::kMask)) {
++      CSSValueList* position_size_list = CSSValueList::CreateSlashSeparated();
++      position_size_list->Append(*CreatePositionListForLayer(
++          GetCSSPropertyWebkitMaskPosition(), *layer, style));
++      if (layer->Size() != FillLayer::InitialFillSize(EFillLayerType::kMask)) {
++        position_size_list->Append(*ValueForFillSize(layer->Size(), style));
++      }
++      list->Append(*position_size_list);
++    }
++    // <repeat-style>
++    if (layer->Repeat() !=
++        FillLayer::InitialFillRepeat(EFillLayerType::kMask)) {
++      list->Append(*ValueForFillRepeat(layer));
++    }
++    // <geometry-box>
++    // [ <geometry-box> | no-clip ]
++    AppendValuesForMaskClipAndOrigin(list, layer->Origin(), layer->Clip());
++    // <compositing-operator>
++    if (layer->CompositingOperator() !=
++        FillLayer::InitialFillCompositingOperator(EFillLayerType::kMask)) {
++      list->Append(*CSSIdentifierValue::Create(layer->CompositingOperator()));
++    }
++    // <masking-mode>
++    if (layer->MaskMode() !=
++        FillLayer::InitialFillMaskMode(EFillLayerType::kMask)) {
++      list->Append(*CSSIdentifierValue::Create(layer->MaskMode()));
++    }
++
++    if (list->length()) {
++      result->Append(*list);
++    } else {
++      result->Append(*CSSIdentifierValue::Create(CSSValueID::kNone));
++    }
++  }
++  return result;
+ }
+ 
+ const CSSValue* ComputedStyleUtils::BackgroundPositionOrWebkitMaskPosition(
+@@ -1984,16 +2083,27 @@ CSSValue* ComputedStyleUtils::ValueForGridTrackList(
      is_track_list_empty = positions.size() == 1;
    }
  
@@ -37,7 +228,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..b5330b60c543c017aee522445d37fb9b
      return CSSIdentifierValue::Create(CSSValueID::kNone);
    }
  
-@@ -2046,8 +2057,8 @@ CSSValue* ComputedStyleUtils::ValueForGridTrackList(
+@@ -2046,8 +2156,8 @@ CSSValue* ComputedStyleUtils::ValueForGridTrackList(
    // Otherwise, the resolved value is the computed value, preserving repeat().
    OrderedNamedLinesCollector collector(
        computed_grid_track_list.ordered_named_grid_lines,
@@ -48,7 +239,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..b5330b60c543c017aee522445d37fb9b
    PopulateGridTrackListForNonGrid(list, collector, ng_track_list, style);
    return list;
  }
-@@ -2917,6 +2928,18 @@ CSSValue* ComputedStyleUtils::CreateTransitionPropertyValue(
+@@ -2917,6 +3027,18 @@ CSSValue* ComputedStyleUtils::CreateTransitionPropertyValue(
            .GetPropertyNameAtomicString());
  }
  
@@ -67,7 +258,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..b5330b60c543c017aee522445d37fb9b
  CSSValue* ComputedStyleUtils::ValueForTransitionProperty(
      const CSSTransitionData* transition_data) {
    CSSValueList* list = CSSValueList::CreateCommaSeparated();
-@@ -2931,6 +2954,19 @@ CSSValue* ComputedStyleUtils::ValueForTransitionProperty(
+@@ -2931,6 +3053,19 @@ CSSValue* ComputedStyleUtils::ValueForTransitionProperty(
    return list;
  }
  

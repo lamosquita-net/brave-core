@@ -1,0 +1,30 @@
+diff --git a/third_party/blink/renderer/core/paint/box_paint_invalidator.cc b/third_party/blink/renderer/core/paint/box_paint_invalidator.cc
+index 49caea9bc6039d030f420d73e84ec2543fcd8296..d5b6c872b80155c46d43efd45357a32975ea591a 100644
+--- a/third_party/blink/renderer/core/paint/box_paint_invalidator.cc
++++ b/third_party/blink/renderer/core/paint/box_paint_invalidator.cc
+@@ -34,9 +34,10 @@ static bool ShouldFullyInvalidateFillLayersOnWidthChange(
+   if (!image || !image->CanRender())
+     return false;
+ 
+-  if (layer.RepeatX() != EFillRepeat::kRepeatFill &&
+-      layer.RepeatX() != EFillRepeat::kNoRepeatFill)
++  if (layer.Repeat().x != EFillRepeat::kRepeatFill &&
++      layer.Repeat().x != EFillRepeat::kNoRepeatFill) {
+     return true;
++  }
+ 
+   // TODO(alancutter): Make this work correctly for calc lengths.
+   if (layer.PositionX().IsPercentOrCalc() && !layer.PositionX().IsZero())
+@@ -76,9 +77,10 @@ static bool ShouldFullyInvalidateFillLayersOnHeightChange(
+   if (!image || !image->CanRender())
+     return false;
+ 
+-  if (layer.RepeatY() != EFillRepeat::kRepeatFill &&
+-      layer.RepeatY() != EFillRepeat::kNoRepeatFill)
++  if (layer.Repeat().y != EFillRepeat::kRepeatFill &&
++      layer.Repeat().y != EFillRepeat::kNoRepeatFill) {
+     return true;
++  }
+ 
+   // TODO(alancutter): Make this work correctly for calc lengths.
+   if (layer.PositionY().IsPercentOrCalc() && !layer.PositionY().IsZero())

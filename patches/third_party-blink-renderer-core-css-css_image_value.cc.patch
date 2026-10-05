@@ -1,0 +1,52 @@
+diff --git a/third_party/blink/renderer/core/css/css_image_value.cc b/third_party/blink/renderer/core/css/css_image_value.cc
+index aecc146c6bf91a8e73ca77f797de90ae67a09026..f965a637db1401e6199d2abf255862b7e15a9762 100644
+--- a/third_party/blink/renderer/core/css/css_image_value.cc
++++ b/third_party/blink/renderer/core/css/css_image_value.cc
+@@ -31,6 +31,7 @@
+ #include "third_party/blink/renderer/core/frame/local_frame_client.h"
+ #include "third_party/blink/renderer/core/loader/resource/image_resource_content.h"
+ #include "third_party/blink/renderer/core/style/style_fetched_image.h"
++#include "third_party/blink/renderer/core/svg/proxy_svg_resource_client.h"
+ #include "third_party/blink/renderer/platform/loader/fetch/cross_origin_attribute_value.h"
+ #include "third_party/blink/renderer/platform/loader/fetch/fetch_initiator_type_names.h"
+ #include "third_party/blink/renderer/platform/loader/fetch/fetch_parameters.h"
+@@ -181,9 +182,39 @@ String CSSImageValue::CustomCSSText() const {
+ 
+ void CSSImageValue::TraceAfterDispatch(blink::Visitor* visitor) const {
+   visitor->Trace(cached_image_);
++  visitor->Trace(proxy_svg_resource_client_);
+   CSSValue::TraceAfterDispatch(visitor);
+ }
+ 
++// FlyWeb: 116 has no CSSUrlData; same logic as CSSURIValue::IsLocal().
++bool CSSImageValue::IsLocal(const Document& document) const {
++  return relative_url_.StartsWith('#') ||
++         EqualIgnoringFragmentIdentifier(KURL(absolute_url_), document.Url());
++}
++
++CSSImageValue* CSSImageValue::ComputedCSSValueMaybeLocal() const {
++  if (relative_url_.StartsWith('#')) {
++    return Clone();
++  }
++  return ComputedCSSValue();
++}
++
++ProxySVGResourceClient* CSSImageValue::GetSVGResourceClient() {
++  if (!proxy_svg_resource_client_) {
++    proxy_svg_resource_client_ =
++        MakeGarbageCollected<ProxySVGResourceClient>(*this);
++  }
++  return proxy_svg_resource_client_.Get();
++}
++
++AtomicString CSSImageValue::NormalizedFragmentIdentifier() const {
++  // Always use KURL's FragmentIdentifier to ensure that we're handling the
++  // fragment in a consistent manner.
++  return AtomicString(DecodeURLEscapeSequences(
++      KURL(absolute_url_).FragmentIdentifier(),
++      DecodeURLMode::kUTF8OrIsomorphic));
++}
++
+ void CSSImageValue::ReResolveURL(const Document& document) const {
+   KURL url = document.CompleteURL(relative_url_);
+   AtomicString url_string(url.GetString());

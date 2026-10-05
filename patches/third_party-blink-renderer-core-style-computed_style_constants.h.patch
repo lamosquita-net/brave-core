@@ -1,8 +1,70 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style_constants.h b/third_party/blink/renderer/core/style/computed_style_constants.h
-index 5b46c39d6d9d2acb73b8f9a62df64da58d16bd98..5207b80c653a000daa53dbcc3892d2721ef55292 100644
+index 5b46c39d6d9d2acb73b8f9a62df64da58d16bd98..fabef6618e97447f15b27c2fcc19b59259a381ea 100644
 --- a/third_party/blink/renderer/core/style/computed_style_constants.h
 +++ b/third_party/blink/renderer/core/style/computed_style_constants.h
-@@ -378,7 +378,7 @@ inline ScrollbarGutter& operator|=(ScrollbarGutter& a, ScrollbarGutter b) {
+@@ -165,9 +165,41 @@ enum class EVerticalAlign : unsigned {
+ 
+ enum class EFillAttachment : unsigned { kScroll, kLocal, kFixed };
+ 
+-enum class EFillBox : unsigned { kBorder, kPadding, kContent, kText };
++// `EFillBox` is used for {-webkit-}background-clip, {-webkit-}mask-clip, and
++// {-webkit-}mask-origin. Not all properties support all of these values.
++//
++// Background-clip (https://drafts.csswg.org/css-backgrounds/#background-clip)
++// supports <visual-box> (border-box, padding-box, content-box), as well as the
++// non-standard `text` value.
++//
++// Mask-clip (https://drafts.fxtf.org/css-masking/#the-mask-clip) supports
++// <coord-box> (border-box, padding-box, content-box, fill-box, stroke-box,
++// view-box), `no-clip`, as well as the non-standard `text` value.
++//
++// Mask-origin (https://drafts.fxtf.org/css-masking/#the-mask-origin) supports
++// <coord-box> (border-box, padding-box, content-box, fill-box, stroke-box,
++// view-box).
++enum class EFillBox : unsigned {
++  kBorder,
++  kPadding,
++  kContent,
++  kText,
++  kFillBox,
++  kStrokeBox,
++  kViewBox,
++  kNoClip
++};
+ 
+ inline EFillBox EnclosingFillBox(EFillBox box_a, EFillBox box_b) {
++  if (box_a == EFillBox::kNoClip || box_b == EFillBox::kNoClip) {
++    return EFillBox::kNoClip;
++  }
++  if (box_a == EFillBox::kViewBox || box_b == EFillBox::kViewBox) {
++    return EFillBox::kViewBox;
++  }
++  if (box_a == EFillBox::kStrokeBox || box_b == EFillBox::kStrokeBox) {
++    return EFillBox::kStrokeBox;
++  }
+   // background-clip:text is clipped to the border box.
+   if (box_a == EFillBox::kBorder || box_a == EFillBox::kText ||
+       box_b == EFillBox::kBorder || box_b == EFillBox::kText) {
+@@ -176,6 +208,9 @@ inline EFillBox EnclosingFillBox(EFillBox box_a, EFillBox box_b) {
+   if (box_a == EFillBox::kPadding || box_b == EFillBox::kPadding) {
+     return EFillBox::kPadding;
+   }
++  if (box_a == EFillBox::kFillBox || box_b == EFillBox::kFillBox) {
++    return EFillBox::kFillBox;
++  }
+   DCHECK_EQ(box_a, EFillBox::kContent);
+   DCHECK_EQ(box_b, EFillBox::kContent);
+   return EFillBox::kContent;
+@@ -188,6 +223,8 @@ enum class EFillRepeat : unsigned {
+   kSpaceFill
+ };
+ 
++enum class EFillMaskMode : unsigned { kAlpha, kLuminance, kMatchSource };
++
+ enum class EFillLayerType : unsigned { kBackground, kMask };
+ 
+ // CSS3 Background Values
+@@ -378,7 +415,7 @@ inline ScrollbarGutter& operator|=(ScrollbarGutter& a, ScrollbarGutter b) {
  
  enum class EBaselineShiftType : unsigned { kLength, kSub, kSuper };
  
@@ -11,7 +73,7 @@ index 5b46c39d6d9d2acb73b8f9a62df64da58d16bd98..5207b80c653a000daa53dbcc3892d272
    PT_NONE = 0,
    PT_FILL = 1,
    PT_STROKE = 2,
-@@ -415,6 +415,20 @@ enum class CoordBox {
+@@ -415,6 +452,43 @@ enum class CoordBox {
    kViewBox
  };
  
@@ -27,6 +89,29 @@ index 5b46c39d6d9d2acb73b8f9a62df64da58d16bd98..5207b80c653a000daa53dbcc3892d272
 +  kFillBox,
 +  kStrokeBox,
 +  kViewBox
++};
++
++// https://drafts.fxtf.org/css-masking/#typedef-compositing-operator
++enum class CompositingOperator : unsigned {
++  // <compositing-operator> = add | subtract | intersect | exclude
++  kAdd,
++  kSubtract,
++  kIntersect,
++  kExclude,
++
++  // The following are non-standard values used by -webkit-mask-composite.
++  kClear,
++  kCopy,
++  kSourceOver,
++  kSourceIn,
++  kSourceOut,
++  kSourceAtop,
++  kDestinationOver,
++  kDestinationIn,
++  kDestinationOut,
++  kDestinationAtop,
++  kXOR,
++  kPlusLighter
 +};
 +
  }  // namespace blink

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/css_properties.json5 b/third_party/blink/renderer/core/css/css_properties.json5
-index 871edc0924403a04bf16f4d5602f421d3882473c..221a470797bb9c14a92db3b4a6ade61605df0ce1 100644
+index 871edc0924403a04bf16f4d5602f421d3882473c..f07ead5539636a4dd175eb4550964dd348aac419 100644
 --- a/third_party/blink/renderer/core/css/css_properties.json5
 +++ b/third_party/blink/renderer/core/css/css_properties.json5
 @@ -991,6 +991,19 @@
@@ -22,7 +22,40 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..221a470797bb9c14a92db3b4a6ade616
      {
        name: "transition-timing-function",
        property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal", "InitialValue"],
-@@ -2446,7 +2459,7 @@
+@@ -1821,29 +1834,15 @@
+       supports_incremental_style: true,
+     },
+     {
+-      name: "background-repeat-x",
+-      property_methods: ["CSSValueFromComputedStyleInternal"],
+-      style_builder_template: "background_layer",
+-      style_builder_template_args: {
+-        fill_type: "RepeatX",
+-      },
+-      valid_for_first_letter: true,
+-      valid_for_first_line: true,
+-      valid_for_cue: true,
+-      computable: false,
+-      supports_incremental_style: true,
+-    },
+-    {
+-      name: "background-repeat-y",
+-      property_methods: ["CSSValueFromComputedStyleInternal"],
++      name: "background-repeat",
++      property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
+       style_builder_template: "background_layer",
+       style_builder_template_args: {
+-        fill_type: "RepeatY",
++        fill_type: "Repeat",
+       },
+       valid_for_first_letter: true,
+       valid_for_first_line: true,
+       valid_for_cue: true,
+-      computable: false,
+       supports_incremental_style: true,
+     },
+     {
+@@ -2446,7 +2445,7 @@
        type_name: "ClipPathOperation",
        computed_style_custom_functions: ["getter", "setter"],
        converter: "ConvertClipPath",
@@ -31,7 +64,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..221a470797bb9c14a92db3b4a6ade616
        typedom_types: ["Keyword"],
      },
      {
-@@ -5228,7 +5241,7 @@
+@@ -5228,7 +5227,7 @@
        name: "transform-box",
        property_methods: ["CSSValueFromComputedStyleInternal"],
        field_template: "keyword",
@@ -40,7 +73,178 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..221a470797bb9c14a92db3b4a6ade616
        default_value: "view-box",
        typedom_types: ["Keyword"],
        computable: false,
-@@ -7387,7 +7400,8 @@
+@@ -5761,6 +5760,30 @@
+         modifier_type: "Width",
+       },
+     },
++    {
++      name: "mask-clip",
++      property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
++      style_builder_template: "mask_layer",
++      style_builder_template_args: {
++        fill_type: "Clip",
++      },
++      runtime_flag: "CSSMaskingInterop",
++    },
++    {
++      name: "mask-mode",
++      property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
++      style_builder_template: "mask_layer",
++      style_builder_template_args: {
++        fill_type: "MaskMode",
++      },
++      runtime_flag: "CSSMaskingInterop",
++    },
++    {
++      name: "-webkit-alternative-mask-clip",
++      alternative_of: "-webkit-mask-clip",
++      alias_for: "mask-clip",
++      runtime_flag: "CSSMaskingInterop",
++    },
+     {
+       name: "-webkit-mask-clip",
+       property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
+@@ -5769,13 +5792,44 @@
+         fill_type: "Clip",
+       },
+     },
++    {
++      name: "mask-composite",
++      property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
++      style_builder_template: "mask_layer",
++      style_builder_template_args: {
++        fill_type: "CompositingOperator",
++      },
++      runtime_flag: "CSSMaskingInterop",
++    },
++    {
++      name: "-webkit-alternative-mask-composite",
++      alternative_of: "-webkit-mask-composite",
++      alias_for: "mask-composite",
++      runtime_flag: "CSSMaskingInterop",
++    },
+     {
+       name: "-webkit-mask-composite",
+       property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
+       style_builder_template: "mask_layer",
+       style_builder_template_args: {
+-        fill_type: "Composite",
++        fill_type: "CompositingOperator",
++      },
++    },
++    {
++      name: "mask-image",
++      property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
++      style_builder_template: "mask_layer",
++      style_builder_template_args: {
++        fill_type: "Image",
++        fill_type_getter: "GetImage"
+       },
++      runtime_flag: "CSSMaskingInterop",
++    },
++    {
++      name: "-webkit-alternative-mask-image",
++      alternative_of: "-webkit-mask-image",
++      alias_for: "mask-image",
++      runtime_flag: "CSSMaskingInterop",
+     },
+     {
+       name: "-webkit-mask-image",
+@@ -5787,6 +5841,21 @@
+         fill_type_getter: "GetImage"
+       },
+     },
++    {
++      name: "mask-origin",
++      property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
++      style_builder_template: "mask_layer",
++      style_builder_template_args: {
++        fill_type: "Origin",
++      },
++      runtime_flag: "CSSMaskingInterop",
++    },
++    {
++      name: "-webkit-alternative-mask-origin",
++      alternative_of: "-webkit-mask-origin",
++      alias_for: "mask-origin",
++      runtime_flag: "CSSMaskingInterop",
++    },
+     {
+       name: "-webkit-mask-origin",
+       property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
+@@ -5816,20 +5885,43 @@
+       computable: false,
+     },
+     {
+-      name: "-webkit-mask-repeat-x",
++      name: "mask-repeat",
++      property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
+       style_builder_template: "mask_layer",
+       style_builder_template_args: {
+-        fill_type: "RepeatX",
++        fill_type: "Repeat",
+       },
+-      computable: false,
++      runtime_flag: "CSSMaskingInterop",
++    },
++    {
++      name: "-webkit-alternative-mask-repeat",
++      alternative_of: "-webkit-mask-repeat",
++      alias_for: "mask-repeat",
++      runtime_flag: "CSSMaskingInterop",
+     },
+     {
+-      name: "-webkit-mask-repeat-y",
++      name: "-webkit-mask-repeat",
++      property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
+       style_builder_template: "mask_layer",
+       style_builder_template_args: {
+-        fill_type: "RepeatY",
++        fill_type: "Repeat",
+       },
+-      computable: false,
++    },
++    {
++      name: "mask-size",
++      property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
++      interpolable: true,
++      style_builder_template: "mask_layer",
++      style_builder_template_args: {
++        fill_type: "Size",
++      },
++      runtime_flag: "CSSMaskingInterop",
++    },
++    {
++      name: "-webkit-alternative-mask-size",
++      alternative_of: "-webkit-mask-size",
++      alias_for: "mask-size",
++      runtime_flag: "CSSMaskingInterop",
+     },
+     {
+       name: "-webkit-mask-size",
+@@ -6863,7 +6955,7 @@
+       name: "background",
+       longhands: [
+         "background-image", "background-position-x", "background-position-y",
+-        "background-size", "background-repeat-x", "background-repeat-y",
++        "background-size", "background-repeat",
+         "background-attachment", "background-origin", "background-clip",
+         "background-color"
+       ],
+@@ -6877,12 +6969,6 @@
+       computable: true,
+       supports_incremental_style: true,
+     },
+-    {
+-      name: "background-repeat",
+-      longhands: ["background-repeat-x", "background-repeat-y"],
+-      property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
+-      computable: true,
+-    },
+     {
+       name: "border",
+       longhands: [
+@@ -7387,7 +7473,8 @@
        name: "transition",
        longhands: [
          "transition-property", "transition-duration",
@@ -49,4 +253,68 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..221a470797bb9c14a92db3b4a6ade616
 +        "transition-behavior",
        ],
        property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
+     },
+@@ -7440,15 +7527,35 @@
+       longhands: ["column-width", "column-count"],
+       property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
+     },
++    // This alternative of mask is active when CSSMaskingInterop is enabled.
++    {
++      name: "-alternative-mask",
++      alternative_of: "mask",
++      longhands: [
++        "mask-image", "-webkit-mask-position-x",
++        "-webkit-mask-position-y", "mask-size", "mask-repeat", "mask-origin",
++        "mask-clip", "mask-composite", "mask-mode"
++      ],
++      property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
++      runtime_flag: "CSSMaskingInterop",
++    },
+     {
+       name: "-webkit-mask",
+       longhands: [
+         "-webkit-mask-image", "-webkit-mask-position-x",
+-        "-webkit-mask-position-y", "-webkit-mask-size", "-webkit-mask-repeat-x",
+-        "-webkit-mask-repeat-y", "-webkit-mask-origin", "-webkit-mask-clip"
++        "-webkit-mask-position-y", "-webkit-mask-size", "-webkit-mask-repeat",
++        "-webkit-mask-origin", "-webkit-mask-clip"
+       ],
+       property_methods: ["ParseShorthand"],
+     },
++    // This alternative of -webkit-mask is active when CSSMaskingInterop is
++    // enabled.
++    {
++      name: "-webkit-alternative-mask",
++      alternative_of: "-webkit-mask",
++      alias_for: "-alternative-mask",
++      runtime_flag: "CSSMaskingInterop",
++    },
+     {
+       name: "-webkit-mask-box-image",
+       longhands: [
+@@ -7460,14 +7567,22 @@
+       computable: true,
+     },
+     {
+-      name: "-webkit-mask-position",
++      name: "mask-position",
+       longhands: ["-webkit-mask-position-x", "-webkit-mask-position-y"],
+       property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
+       computable: true,
++      runtime_flag: "CSSMaskingInterop",
+     },
+     {
+-      name: "-webkit-mask-repeat",
+-      longhands: ["-webkit-mask-repeat-x", "-webkit-mask-repeat-y"],
++      name: "-webkit-alternative-mask-position",
++      alternative_of: "-webkit-mask-position",
++      alias_for: "mask-position",
++      computable: false,
++      runtime_flag: "CSSMaskingInterop",
++    },
++    {
++      name: "-webkit-mask-position",
++      longhands: ["-webkit-mask-position-x", "-webkit-mask-position-y"],
+       property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
+       computable: true,
      },

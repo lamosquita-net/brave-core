@@ -1,0 +1,50 @@
+diff --git a/third_party/blink/renderer/core/paint/background_image_geometry.h b/third_party/blink/renderer/core/paint/background_image_geometry.h
+index cbc0d4fd109214bbe4658eeb864ec2c52283ccae..f69d94c3a043ef3713f7492efe6ef181357b7567 100644
+--- a/third_party/blink/renderer/core/paint/background_image_geometry.h
++++ b/third_party/blink/renderer/core/paint/background_image_geometry.h
+@@ -43,6 +43,12 @@ class BackgroundImageGeometry {
+ 
+   explicit BackgroundImageGeometry(const NGPhysicalBoxFragment&);
+ 
++  // Compute the initial position area based on the geometry for the object
++  // this BackgroundImageGeometry was created for.
++  PhysicalRect ComputePositioningArea(const PaintInfo& paint_info,
++                                      const FillLayer& fill_layer,
++                                      const PhysicalRect& paint_rect) const;
++
+   // Calculates data members. This must be called before any of the following
+   // getters is called. The document lifecycle phase must be at least
+   // PrePaintClean.
+@@ -50,6 +56,11 @@ class BackgroundImageGeometry {
+                  const FillLayer&,
+                  const PhysicalRect& paint_rect);
+ 
++  // Replacement for `Calculate()` when a layer is referencing an SVG <mask>
++  // element.
++  void SetGeometryForSVGMask(const gfx::RectF& mask_area,
++                             const PhysicalOffset& box_offset);
++
+   // Destination rects define the area into which the image will paint.
+   // For cases where no explicit background size is requested, the destination
+   // also defines the subset of the image to be drawn. Both border-snapped
+@@ -146,13 +157,13 @@ class BackgroundImageGeometry {
+                                          NGPhysicalBoxStrut&,
+                                          NGPhysicalBoxStrut&) const;
+ 
+-  void ComputePositioningArea(const PaintInfo&,
+-                              const FillLayer&,
+-                              const PhysicalRect&,
+-                              PhysicalRect&,
+-                              PhysicalRect&,
+-                              PhysicalOffset&,
+-                              PhysicalOffset&);
++  void AdjustPositioningArea(const PaintInfo&,
++                             const FillLayer&,
++                             const PhysicalRect&,
++                             PhysicalRect&,
++                             PhysicalRect&,
++                             PhysicalOffset&,
++                             PhysicalOffset&);
+   void CalculateFillTileSize(const FillLayer&,
+                              const PhysicalSize&,
+                              const PhysicalSize&);

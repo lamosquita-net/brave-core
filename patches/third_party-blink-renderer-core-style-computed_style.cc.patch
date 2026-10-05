@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style.cc b/third_party/blink/renderer/core/style/computed_style.cc
-index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..9f0466d3b50d1e284784ec15508a4030d86c73c3 100644
+index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..718a073b16f622e79ae0a89a81674ce203aba01d 100644
 --- a/third_party/blink/renderer/core/style/computed_style.cc
 +++ b/third_party/blink/renderer/core/style/computed_style.cc
-@@ -1344,14 +1344,14 @@ void ComputedStyle::LoadDeferredImages(Document& document) const {
+@@ -1206,6 +1206,7 @@ static bool HasPropertyThatCreatesStackingContext(
+       case CSSPropertyID::kOffsetPath:
+       case CSSPropertyID::kOffsetPosition:
+       case CSSPropertyID::kWebkitMask:
++      case CSSPropertyID::kAlternativeMask:
+       case CSSPropertyID::kWebkitMaskBoxImage:
+       case CSSPropertyID::kClipPath:
+       case CSSPropertyID::kWebkitBoxReflect:
+@@ -1344,14 +1345,14 @@ void ComputedStyle::LoadDeferredImages(Document& document) const {
  void ComputedStyle::ApplyTransform(
      gfx::Transform& result,
      const LayoutBox* box,
@@ -20,7 +28,7 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..9f0466d3b50d1e284784ec15508a4030
                   apply_independent_transform_properties);
  }
  
-@@ -2534,45 +2534,6 @@ absl::optional<blink::Color> ComputedStyle::AccentColorResolved() const {
+@@ -2534,45 +2535,6 @@ absl::optional<blink::Color> ComputedStyle::AccentColorResolved() const {
    return auto_color.Resolve(GetCurrentColor(), UsedColorScheme());
  }
  

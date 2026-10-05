@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc b/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc
-index 3e784902ddee52b0a6754e762a3c911bb41876fc..d63a4d1a188788b98a8c34af74f73b3145e0921e 100644
+index 3e784902ddee52b0a6754e762a3c911bb41876fc..08355a07813f59218e08f433512d5793a6117faf 100644
 --- a/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc
 +++ b/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc
 @@ -60,7 +60,9 @@
@@ -12,7 +12,37 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..d63a4d1a188788b98a8c34af74f73b31
  #include "third_party/blink/renderer/core/style/reference_clip_path_operation.h"
  #include "third_party/blink/renderer/core/style/reference_offset_path_operation.h"
  #include "third_party/blink/renderer/core/style/shape_clip_path_operation.h"
-@@ -1732,12 +1734,40 @@ const CSSValue* ClipPath::ParseSingleValue(CSSParserTokenRange& range,
+@@ -885,7 +887,7 @@ const CSSValue* BackgroundSize::ParseSingleValue(
+     CSSParserTokenRange& range,
+     const CSSParserContext& context,
+     const CSSParserLocalContext& local_context) const {
+-  return css_parsing_utils::ParseBackgroundOrMaskSize(
++  return css_parsing_utils::ParseBackgroundSize(
+       range, context, local_context, WebFeature::kNegativeBackgroundSize);
+ }
+ 
+@@ -897,6 +899,20 @@ const CSSValue* BackgroundSize::CSSValueFromComputedStyleInternal(
+   return ComputedStyleUtils::BackgroundImageOrWebkitMaskSize(style, fill_layer);
+ }
+ 
++const CSSValue* BackgroundRepeat::ParseSingleValue(
++    CSSParserTokenRange& range,
++    const CSSParserContext& context,
++    const CSSParserLocalContext& local_context) const {
++  return css_parsing_utils::ParseRepeatStyle(range);
++}
++
++const CSSValue* BackgroundRepeat::CSSValueFromComputedStyleInternal(
++    const ComputedStyle& style,
++    const LayoutObject*,
++    bool allow_visited_style) const {
++  return ComputedStyleUtils::RepeatStyle(&style.BackgroundLayers());
++}
++
+ const CSSValue* BaselineSource::CSSValueFromComputedStyleInternal(
+     const ComputedStyle& style,
+     const LayoutObject*,
+@@ -1732,12 +1748,40 @@ const CSSValue* ClipPath::ParseSingleValue(CSSParserTokenRange& range,
    if (range.Peek().Id() == CSSValueID::kNone) {
      return css_parsing_utils::ConsumeIdent(range);
    }
@@ -55,7 +85,7 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..d63a4d1a188788b98a8c34af74f73b31
  }
  
  const CSSValue* ClipPath::CSSValueFromComputedStyleInternal(
-@@ -1745,9 +1775,21 @@ const CSSValue* ClipPath::CSSValueFromComputedStyleInternal(
+@@ -1745,9 +1789,21 @@ const CSSValue* ClipPath::CSSValueFromComputedStyleInternal(
      const LayoutObject*,
      bool allow_visited_style) const {
    if (ClipPathOperation* operation = style.ClipPath()) {
@@ -80,7 +110,7 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..d63a4d1a188788b98a8c34af74f73b31
      }
      if (operation->GetType() == ClipPathOperation::kReference) {
        AtomicString url = To<ReferenceClipPathOperation>(operation)->Url();
-@@ -6408,31 +6450,12 @@ const CSSValue* PaintOrder::CSSValueFromComputedStyleInternal(
+@@ -6408,31 +6464,12 @@ const CSSValue* PaintOrder::CSSValueFromComputedStyleInternal(
      return CSSIdentifierValue::Create(CSSValueID::kNormal);
    }
  
@@ -117,7 +147,7 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..d63a4d1a188788b98a8c34af74f73b31
    }
    return list;
  }
-@@ -8550,6 +8573,36 @@ const CSSValue* TransitionProperty::InitialValue() const {
+@@ -8550,6 +8587,36 @@ const CSSValue* TransitionProperty::InitialValue() const {
    return CSSIdentifierValue::Create(CSSValueID::kAll);
  }
  
@@ -154,3 +184,246 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..d63a4d1a188788b98a8c34af74f73b31
  const CSSValue* TransitionTimingFunction::ParseSingleValue(
      CSSParserTokenRange& range,
      const CSSParserContext& context,
+@@ -9265,6 +9332,34 @@ const CSSValue* WebkitMaskBoxImageWidth::CSSValueFromComputedStyleInternal(
+       style.MaskBoxImage().BorderSlices(), style);
+ }
+ 
++const CSSValue* MaskClip::ParseSingleValue(
++    CSSParserTokenRange& range,
++    const CSSParserContext&,
++    const CSSParserLocalContext& local_context) const {
++  CHECK(RuntimeEnabledFeatures::CSSMaskingInteropEnabled());
++  if (local_context.UseAliasParsing()) {
++    return css_parsing_utils::ConsumeCommaSeparatedList(
++        css_parsing_utils::ConsumePrefixedBackgroundBox, range,
++        css_parsing_utils::AllowTextValue::kAllow);
++  }
++  return css_parsing_utils::ConsumeCommaSeparatedList(
++      css_parsing_utils::ConsumeCoordBoxOrNoClip, range);
++}
++
++const CSSValue* MaskClip::CSSValueFromComputedStyleInternal(
++    const ComputedStyle& style,
++    const LayoutObject*,
++    bool allow_visited_style) const {
++  CHECK(RuntimeEnabledFeatures::CSSMaskingInteropEnabled());
++  CSSValueList* list = CSSValueList::CreateCommaSeparated();
++  const FillLayer* curr_layer = &style.MaskLayers();
++  for (; curr_layer; curr_layer = curr_layer->Next()) {
++    EFillBox box = curr_layer->Clip();
++    list->Append(*CSSIdentifierValue::Create(box));
++  }
++  return list;
++}
++
+ const CSSValue* WebkitMaskClip::ParseSingleValue(
+     CSSParserTokenRange& range,
+     const CSSParserContext&,
+@@ -9287,12 +9382,38 @@ const CSSValue* WebkitMaskClip::CSSValueFromComputedStyleInternal(
+   return list;
+ }
+ 
++const CSSValue* MaskComposite::ParseSingleValue(
++    CSSParserTokenRange& range,
++    const CSSParserContext&,
++    const CSSParserLocalContext& local_context) const {
++  CHECK(RuntimeEnabledFeatures::CSSMaskingInteropEnabled());
++  if (local_context.UseAliasParsing()) {
++    return css_parsing_utils::ConsumeCommaSeparatedList(
++        css_parsing_utils::ConsumePrefixedMaskComposite, range);
++  }
++  return css_parsing_utils::ConsumeCommaSeparatedList(
++      css_parsing_utils::ConsumeMaskComposite, range);
++}
++
++const CSSValue* MaskComposite::CSSValueFromComputedStyleInternal(
++    const ComputedStyle& style,
++    const LayoutObject*,
++    bool allow_visited_style) const {
++  CSSValueList* list = CSSValueList::CreateCommaSeparated();
++  const FillLayer* curr_layer = &style.MaskLayers();
++  for (; curr_layer; curr_layer = curr_layer->Next()) {
++    list->Append(
++        *CSSIdentifierValue::Create(curr_layer->CompositingOperator()));
++  }
++  return list;
++}
++
+ const CSSValue* WebkitMaskComposite::ParseSingleValue(
+     CSSParserTokenRange& range,
+     const CSSParserContext&,
+     const CSSParserLocalContext&) const {
+   return css_parsing_utils::ConsumeCommaSeparatedList(
+-      css_parsing_utils::ConsumeBackgroundComposite, range);
++      css_parsing_utils::ConsumePrefixedMaskComposite, range);
+ }
+ 
+ const CSSValue* WebkitMaskComposite::CSSValueFromComputedStyleInternal(
+@@ -9302,7 +9423,8 @@ const CSSValue* WebkitMaskComposite::CSSValueFromComputedStyleInternal(
+   CSSValueList* list = CSSValueList::CreateCommaSeparated();
+   const FillLayer* curr_layer = &style.MaskLayers();
+   for (; curr_layer; curr_layer = curr_layer->Next()) {
+-    list->Append(*CSSIdentifierValue::Create(curr_layer->Composite()));
++    list->Append(
++        *CSSIdentifierValue::Create(curr_layer->CompositingOperator()));
+   }
+   return list;
+ }
+@@ -9324,6 +9446,65 @@ const CSSValue* WebkitMaskImage::CSSValueFromComputedStyleInternal(
+       style, allow_visited_style, fill_layer);
+ }
+ 
++const CSSValue* MaskImage::ParseSingleValue(
++    CSSParserTokenRange& range,
++    const CSSParserContext& context,
++    const CSSParserLocalContext&) const {
++  CHECK(RuntimeEnabledFeatures::CSSMaskingInteropEnabled());
++  return css_parsing_utils::ConsumeCommaSeparatedList(
++      css_parsing_utils::ConsumeImageOrNone, range, context);
++}
++
++const CSSValue* MaskImage::CSSValueFromComputedStyleInternal(
++    const ComputedStyle& style,
++    const LayoutObject*,
++    bool allow_visited_style) const {
++  CHECK(RuntimeEnabledFeatures::CSSMaskingInteropEnabled());
++  const FillLayer& fill_layer = style.MaskLayers();
++  return ComputedStyleUtils::BackgroundImageOrWebkitMaskImage(
++      style, allow_visited_style, fill_layer);
++}
++
++const CSSValue* MaskOrigin::ParseSingleValue(
++    CSSParserTokenRange& range,
++    const CSSParserContext&,
++    const CSSParserLocalContext& local_context) const {
++  if (local_context.UseAliasParsing()) {
++    return css_parsing_utils::ConsumeCommaSeparatedList(
++        css_parsing_utils::ConsumePrefixedBackgroundBox, range,
++        css_parsing_utils::AllowTextValue::kForbid);
++  }
++  return css_parsing_utils::ConsumeCommaSeparatedList(
++      css_parsing_utils::ConsumeCoordBox, range);
++}
++
++const CSSValue* MaskOrigin::CSSValueFromComputedStyleInternal(
++    const ComputedStyle& style,
++    const LayoutObject*,
++    bool allow_visited_style) const {
++  CSSValueList* list = CSSValueList::CreateCommaSeparated();
++  const FillLayer* curr_layer = &style.MaskLayers();
++  for (; curr_layer; curr_layer = curr_layer->Next()) {
++    EFillBox box = curr_layer->Origin();
++    list->Append(*CSSIdentifierValue::Create(box));
++  }
++  return list;
++}
++
++const CSSValue* MaskMode::ParseSingleValue(CSSParserTokenRange& range,
++                                           const CSSParserContext&,
++                                           const CSSParserLocalContext&) const {
++  return css_parsing_utils::ConsumeCommaSeparatedList(
++      css_parsing_utils::ConsumeMaskMode, range);
++}
++
++const CSSValue* MaskMode::CSSValueFromComputedStyleInternal(
++    const ComputedStyle& style,
++    const LayoutObject*,
++    bool) const {
++  return ComputedStyleUtils::MaskMode(&style.MaskLayers());
++}
++
+ const CSSValue* WebkitMaskOrigin::ParseSingleValue(
+     CSSParserTokenRange& range,
+     const CSSParserContext&,
+@@ -9388,8 +9569,9 @@ const CSSValue* WebkitMaskSize::ParseSingleValue(
+     CSSParserTokenRange& range,
+     const CSSParserContext& context,
+     const CSSParserLocalContext& local_context) const {
+-  return css_parsing_utils::ParseBackgroundOrMaskSize(
+-      range, context, local_context, WebFeature::kNegativeMaskSize);
++  CHECK(!RuntimeEnabledFeatures::CSSMaskingInteropEnabled());
++  return css_parsing_utils::ParseMaskSize(range, context, local_context,
++                                          WebFeature::kNegativeMaskSize);
+ }
+ 
+ const CSSValue* WebkitMaskSize::CSSValueFromComputedStyleInternal(
+@@ -9400,6 +9582,51 @@ const CSSValue* WebkitMaskSize::CSSValueFromComputedStyleInternal(
+   return ComputedStyleUtils::BackgroundImageOrWebkitMaskSize(style, fill_layer);
+ }
+ 
++const CSSValue* MaskRepeat::ParseSingleValue(
++    CSSParserTokenRange& range,
++    const CSSParserContext& context,
++    const CSSParserLocalContext& local_context) const {
++  return css_parsing_utils::ParseRepeatStyle(range);
++}
++
++const CSSValue* MaskRepeat::CSSValueFromComputedStyleInternal(
++    const ComputedStyle& style,
++    const LayoutObject*,
++    bool allow_visited_style) const {
++  return ComputedStyleUtils::RepeatStyle(&style.MaskLayers());
++}
++
++const CSSValue* WebkitMaskRepeat::ParseSingleValue(
++    CSSParserTokenRange& range,
++    const CSSParserContext& context,
++    const CSSParserLocalContext& local_context) const {
++  return css_parsing_utils::ParseRepeatStyle(range);
++}
++
++const CSSValue* WebkitMaskRepeat::CSSValueFromComputedStyleInternal(
++    const ComputedStyle& style,
++    const LayoutObject*,
++    bool allow_visited_style) const {
++  return ComputedStyleUtils::RepeatStyle(&style.MaskLayers());
++}
++
++const CSSValue* MaskSize::ParseSingleValue(
++    CSSParserTokenRange& range,
++    const CSSParserContext& context,
++    const CSSParserLocalContext& local_context) const {
++  return css_parsing_utils::ParseMaskSize(range, context, local_context,
++                                          WebFeature::kNegativeMaskSize);
++}
++
++const CSSValue* MaskSize::CSSValueFromComputedStyleInternal(
++    const ComputedStyle& style,
++    const LayoutObject*,
++    bool allow_visited_style) const {
++  CHECK(RuntimeEnabledFeatures::CSSMaskingInteropEnabled());
++  const FillLayer& fill_layer = style.MaskLayers();
++  return ComputedStyleUtils::BackgroundImageOrWebkitMaskSize(style, fill_layer);
++}
++
+ const CSSValue* WebkitPerspectiveOriginX::ParseSingleValue(
+     CSSParserTokenRange& range,
+     const CSSParserContext& context,
+@@ -10557,27 +10784,5 @@ const CSSValue* InternalEmptyLineHeight::ParseSingleValue(
+                                          CSSValueID::kNone>(range);
+ }
+ 
+-const CSSValue* BackgroundRepeatX::CSSValueFromComputedStyleInternal(
+-    const ComputedStyle& style,
+-    const LayoutObject*,
+-    bool allow_visited_style) const {
+-  CSSValueList* list = CSSValueList::CreateCommaSeparated();
+-  for (const FillLayer* curr_layer = &style.BackgroundLayers(); curr_layer; curr_layer = curr_layer->Next()) {
+-    list->Append(*CSSIdentifierValue::Create(curr_layer->RepeatX()));
+-  }
+-  return list;
+-}
+-
+-const CSSValue* BackgroundRepeatY::CSSValueFromComputedStyleInternal(
+-    const ComputedStyle& style,
+-    const LayoutObject*,
+-    bool allow_visited_style) const {
+-  CSSValueList* list = CSSValueList::CreateCommaSeparated();
+-  for (const FillLayer* curr_layer = &style.BackgroundLayers(); curr_layer; curr_layer = curr_layer->Next()) {
+-    list->Append(*CSSIdentifierValue::Create(curr_layer->RepeatY()));
+-  }
+-  return list;
+-}
+-
+ }  // namespace css_longhand
+ }  // namespace blink
