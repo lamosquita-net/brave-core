@@ -1,8 +1,16 @@
 diff --git a/src/builtins/object-groupby.tq b/src/builtins/object-groupby.tq
-index 9c0b53d345d2fe53196a53d92e86f73d5a38598f..f3b23d80d1361c7dade0432c7fd3cbaa5d5dd46f 100644
+index 9c0b53d345d2fe53196a53d92e86f73d5a38598f..0e5bfadaaa1004f366dac715eb66953a0aff8380 100644
 --- a/src/builtins/object-groupby.tq
 +++ b/src/builtins/object-groupby.tq
-@@ -11,12 +11,25 @@ extern macro CollectionsBuiltinsAssembler::NormalizeNumberKey(JSAny): JSAny;
+@@ -5,18 +5,32 @@
+ namespace collections {
+ 
+ extern macro CollectionsBuiltinsAssembler::AddValueToKeyedGroup(
+-    OrderedHashMap, Object, Object, String): OrderedHashMap;
++    implicit context: Context)(OrderedHashMap, Object, Object,
++    String): OrderedHashMap;
+ 
+ extern macro CollectionsBuiltinsAssembler::NormalizeNumberKey(JSAny): JSAny;
  
  }  // namespace collections
  
@@ -32,7 +40,7 @@ index 9c0b53d345d2fe53196a53d92e86f73d5a38598f..f3b23d80d1361c7dade0432c7fd3cbaa
  
    // 4. Let iteratorRecord be ? GetIterator(items, sync).
    const fastIteratorResultMap = GetIteratorResultMap();
-@@ -58,18 +71,7 @@ transitioning builtin GroupByGeneric(implicit context: Context)(
+@@ -58,18 +72,7 @@ transitioning builtin GroupByGeneric(implicit context: Context)(
      let key: JSAny;
      try {
        key = Call(context, callbackfn, Undefined, value, k);
@@ -52,7 +60,7 @@ index 9c0b53d345d2fe53196a53d92e86f73d5a38598f..f3b23d80d1361c7dade0432c7fd3cbaa
      } catch (e, message) {
        // f. and g.ii.
        // IfAbruptCloseIterator(key, iteratorRecord).
-@@ -89,7 +91,7 @@ transitioning builtin GroupByGeneric(implicit context: Context)(
+@@ -89,7 +92,7 @@ transitioning builtin GroupByGeneric(implicit context: Context)(
  
  // https://tc39.es/proposal-array-grouping/#sec-group-by
  transitioning macro GroupByImpl(implicit context: Context)(
@@ -61,7 +69,7 @@ index 9c0b53d345d2fe53196a53d92e86f73d5a38598f..f3b23d80d1361c7dade0432c7fd3cbaa
      methodName: constexpr string): OrderedHashMap {
    // 1. Perform ? RequireObjectCoercible(items).
    RequireObjectCoercible(items, methodName);
-@@ -98,16 +100,74 @@ transitioning macro GroupByImpl(implicit context: Context)(
+@@ -98,16 +101,74 @@ transitioning macro GroupByImpl(implicit context: Context)(
    const callbackfn = Cast<Callable>(callback)
        otherwise ThrowTypeError(MessageTemplate::kCalledNonCallable, callback);
  
@@ -140,7 +148,7 @@ index 9c0b53d345d2fe53196a53d92e86f73d5a38598f..f3b23d80d1361c7dade0432c7fd3cbaa
  
    let iter = collections::NewUnmodifiedOrderedHashMapIterator(groups);
  
-@@ -122,7 +182,9 @@ ObjectGroupBy(js-implicit context: NativeContext, receiver: JSAny)(
+@@ -122,7 +183,9 @@ ObjectGroupBy(js-implicit context: NativeContext, receiver: JSAny)(
          AllocateSwissNameDictionary(Convert<intptr>(iter.usedCapacity));
    }
    @ifnot(V8_ENABLE_SWISS_NAME_DICTIONARY) {
