@@ -1,0 +1,35 @@
+diff --git a/third_party/blink/renderer/core/css/style_rule_import.h b/third_party/blink/renderer/core/css/style_rule_import.h
+index ce2d4989d34cbb72967b74cd1873cb245da5d7f2..8919210ed2f42cc83b2d8ab116ebed9d5eb39344 100644
+--- a/third_party/blink/renderer/core/css/style_rule_import.h
++++ b/third_party/blink/renderer/core/css/style_rule_import.h
+@@ -41,6 +41,8 @@ class StyleRuleImport : public StyleRuleBase {
+  public:
+   StyleRuleImport(const String& href,
+                   LayerName&& layer,
++                  bool supported,
++                  String&& supports,
+                   const MediaQuerySet*,
+                   OriginClean origin_clean);
+   ~StyleRuleImport();
+@@ -71,6 +73,9 @@ class StyleRuleImport : public StyleRuleBase {
+   const LayerName& GetLayerName() const { return layer_; }
+   String GetLayerNameAsString() const;
+ 
++  bool IsSupported() const { return supported_; }
++  String GetSupportsString() const { return supports_string_; }
++
+   void TraceAfterDispatch(blink::Visitor*) const;
+ 
+  private:
+@@ -110,9 +115,11 @@ class StyleRuleImport : public StyleRuleBase {
+   Member<ImportedStyleSheetClient> style_sheet_client_;
+   String str_href_;
+   LayerName layer_;
++  String supports_string_;
+   Member<const MediaQuerySet> media_queries_;
+   Member<StyleSheetContents> style_sheet_;
+   bool loading_;
++  bool supported_;
+   // Whether the style sheet that has this import rule is origin-clean:
+   // https://drafts.csswg.org/cssom-1/#concept-css-style-sheet-origin-clean-flag
+   const OriginClean origin_clean_;

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/element.cc b/third_party/blink/renderer/core/dom/element.cc
-index 603363d44dba6a56412a2408af11a821e39bde00..428fb041c0a40263bdbafba53f4dd9b71d003d42 100644
+index 603363d44dba6a56412a2408af11a821e39bde00..ed70e31d57925a03deb9b5ed596fcc8ba03a487c 100644
 --- a/third_party/blink/renderer/core/dom/element.cc
 +++ b/third_party/blink/renderer/core/dom/element.cc
 @@ -166,6 +166,7 @@
@@ -494,3 +494,62 @@ index 603363d44dba6a56412a2408af11a821e39bde00..428fb041c0a40263bdbafba53f4dd9b7
    if (ShadowRoot* shadow_root = GetShadowRoot()) {
      shadow_root->SetNeedsAssignmentRecalc();
    }
+@@ -8377,9 +8827,34 @@ FocusgroupFlags Element::GetFocusgroupFlags() const {
+ }
+ 
+ bool Element::checkVisibility(CheckVisibilityOptions* options) const {
+-  // Unlock ancestor content-visibility:auto elements. If this element is
++  if (options->contentVisibilityAuto()) {
++    UseCounter::Count(
++        GetDocument(),
++        WebFeature::kElementCheckVisibilityOptionContentVisibilityAuto);
++  }
++  if (options->opacityProperty()) {
++    UseCounter::Count(GetDocument(),
++                      WebFeature::kElementCheckVisibilityOptionOpacityProperty);
++  }
++  if (options->visibilityProperty()) {
++    UseCounter::Count(
++        GetDocument(),
++        WebFeature::kElementCheckVisibilityOptionVisibilityProperty);
++  }
++
++  // If we're checking content-visibility: auto, then we can just check if we're
++  // display locked at all. This is because, content-visibility: hidden is
++  // always checked, so regardless of _why_ we're locked, the answer will be
++  // false if we're locked.
++  if (RuntimeEnabledFeatures::CheckVisibilityExtraPropertiesEnabled() &&
++      options->contentVisibilityAuto() &&
++      DisplayLockUtilities::IsDisplayLockedPreventingPaint(this)) {
++    return false;
++  }
++
++  // Now, unlock ancestor content-visibility:auto elements. If this element is
+   // offscreen and locked due to content-visibility:auto, this method should not
+-  // count that as invisible.
++  // count that as invisible. That's checked above.
+   DisplayLockUtilities::ScopedForcedUpdate force_locks(
+       this, DisplayLockContext::ForcedPhase::kStyleAndLayoutTree,
+       /*include_self=*/false, /*only_cv_auto=*/true,
+@@ -8396,7 +8871,9 @@ bool Element::checkVisibility(CheckVisibilityOptions* options) const {
+   }
+ 
+   DCHECK(options);
+-  if (options->checkVisibilityCSS() &&
++  if ((options->checkVisibilityCSS() ||
++       (RuntimeEnabledFeatures::CheckVisibilityExtraPropertiesEnabled() &&
++        options->visibilityProperty())) &&
+       style->Visibility() != EVisibility::kVisible) {
+     return false;
+   }
+@@ -8415,7 +8892,9 @@ bool Element::checkVisibility(CheckVisibilityOptions* options) const {
+     }
+ 
+     // Check for opacity:0
+-    if (options->checkOpacity()) {
++    if (options->checkOpacity() ||
++        (RuntimeEnabledFeatures::CheckVisibilityExtraPropertiesEnabled() &&
++         options->opacityProperty())) {
+       if (style = ancestor.GetComputedStyle(); style) {
+         if (style->Opacity() == 0.f) {
+           return false;
