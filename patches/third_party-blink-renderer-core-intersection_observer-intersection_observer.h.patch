@@ -1,0 +1,42 @@
+diff --git a/third_party/blink/renderer/core/intersection_observer/intersection_observer.h b/third_party/blink/renderer/core/intersection_observer/intersection_observer.h
+index 0ad7393e451652a2d1a7ee087ad345fa4e9fbad5..41fc46b37def5c14e27f3e4621c160a40ee316ea 100644
+--- a/third_party/blink/renderer/core/intersection_observer/intersection_observer.h
++++ b/third_party/blink/renderer/core/intersection_observer/intersection_observer.h
+@@ -121,9 +121,10 @@ class CORE_EXPORT IntersectionObserver final
+       bool needs_initial_observation_with_detached_target = true,
+       ExceptionState& = ASSERT_NO_EXCEPTION);
+ 
+-  explicit IntersectionObserver(IntersectionObserverDelegate&,
+-                                Node*,
++  explicit IntersectionObserver(IntersectionObserverDelegate& delegate,
++                                Node* root,
+                                 const Vector<Length>& margin,
++                                const Vector<Length>& scroll_margin,
+                                 const Vector<float>& thresholds,
+                                 ThresholdInterpretation semantics,
+                                 DOMHighResTimeStamp delay,
+@@ -142,6 +143,7 @@ class CORE_EXPORT IntersectionObserver final
+   // API attributes.
+   Node* root() const { return root_.Get(); }
+   String rootMargin() const;
++  String scrollMargin() const;
+   const Vector<float>& thresholds() const { return thresholds_; }
+   DOMHighResTimeStamp delay() const { return delay_; }
+   bool trackVisibility() const { return track_visibility_; }
+@@ -169,6 +171,8 @@ class CORE_EXPORT IntersectionObserver final
+     return margin_target_ == kApplyMarginToTarget ? margin_ : Vector<Length>();
+   }
+ 
++  Vector<Length> ScrollMargin() const { return scroll_margin_; }
++
+   // Returns the number of IntersectionObservations that recomputed geometry.
+   int64_t ComputeIntersections(unsigned flags,
+                                absl::optional<base::TimeTicks>& monotonic_time);
+@@ -216,6 +220,7 @@ class CORE_EXPORT IntersectionObserver final
+   Vector<float> thresholds_;
+   DOMHighResTimeStamp delay_;
+   Vector<Length> margin_;
++  Vector<Length> scroll_margin_;
+   MarginTarget margin_target_;
+   unsigned root_is_implicit_ : 1;
+   unsigned track_visibility_ : 1;

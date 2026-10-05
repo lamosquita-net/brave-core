@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_object.h b/third_party/blink/renderer/core/layout/layout_object.h
-index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..7dd8c1c107078126324df05652efc997f3b799b3 100644
+index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..d819c16c8d77321f99fb9db0f8f77c135106a21b 100644
 --- a/third_party/blink/renderer/core/layout/layout_object.h
 +++ b/third_party/blink/renderer/core/layout/layout_object.h
-@@ -1343,10 +1343,16 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+@@ -98,6 +98,7 @@ enum VisualRectFlags {
+   // When mapping to absolute coordinates and the main frame is remote, don't
+   // apply the main frame root scroller's overflow clip.
+   kDontApplyMainFrameOverflowClip = 1 << 2,
++  kIgnoreLocalClipPath = 1 << 3,
+ };
+ 
+ enum CursorDirective { kSetCursorBasedOnStyle, kSetCursor, kDoNotSetCursor };
+@@ -1343,10 +1344,16 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
    // coordinate space is the viewport space.
    virtual gfx::RectF VisualRectInLocalSVGCoordinates() const;
  
@@ -20,7 +28,17 @@ index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..7dd8c1c107078126324df05652efc997
  
    // This returns the transform applying to the local SVG coordinate space,
    // which combines the CSS transform properties and animation motion transform.
-@@ -3515,6 +3521,17 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+@@ -2709,7 +2716,8 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+   // from the coordinate system of the property container.
+   const LayoutObject* GetPropertyContainer(
+       AncestorSkipInfo*,
+-      PropertyTreeStateOrAlias* = nullptr) const;
++      PropertyTreeStateOrAlias* = nullptr,
++      VisualRectFlags = kDefaultVisualRectFlags) const;
+ 
+   // Do a rect-based hit test with this object as the stop node.
+   HitTestResult HitTestForOcclusion(const PhysicalRect&) const;
+@@ -3515,6 +3523,17 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
    }
    void SetSVGDescendantMayHaveTransformRelatedAnimation();
  
@@ -38,7 +56,7 @@ index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..7dd8c1c107078126324df05652efc997
    bool ShouldSkipNextLayoutShiftTracking() const {
      NOT_DESTROYED();
      return bitfields_.ShouldSkipNextLayoutShiftTracking();
-@@ -4300,6 +4317,11 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+@@ -4300,6 +4319,11 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
      ADD_BOOLEAN_BITFIELD(svg_descendant_may_have_transform_related_animation_,
                           SVGDescendantMayHaveTransformRelatedAnimation);
  
