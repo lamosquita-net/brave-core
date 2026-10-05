@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/node.cc b/third_party/blink/renderer/core/dom/node.cc
-index 9788cd4895f9418df8c38a03468d3e199a3a15b2..5c9dc4bf18800ed2e04ae49aee5d812ceb1669b9 100644
+index 9788cd4895f9418df8c38a03468d3e199a3a15b2..bb7cc8ae6ac49b1ead02b5f8cb013f8ff7168f21 100644
 --- a/third_party/blink/renderer/core/dom/node.cc
 +++ b/third_party/blink/renderer/core/dom/node.cc
 @@ -2896,8 +2896,9 @@ DispatchEventResult Node::DispatchEventInternal(Event& event) {
@@ -13,3 +13,66 @@ index 9788cd4895f9418df8c38a03468d3e199a3a15b2..5c9dc4bf18800ed2e04ae49aee5d812c
  
  #if DCHECK_IS_ON()
    DCHECK(!EventDispatchForbiddenScope::IsEventDispatchForbidden());
+@@ -3334,6 +3335,11 @@ void Node::FlatTreeParentChanged() {
+ }
+ 
+ void Node::AddCandidateDirectionalityForSlot() {
++  if (RuntimeEnabledFeatures::CSSPseudoDirEnabled()) {
++    // This code is not needed for the new dir=auto inheritance rules.
++    return;
++  }
++
+   ShadowRoot* root = ShadowRootOfParent();
+   if (!root || !root->HasSlotAssignment()) {
+     // We should add this node as a candidate that needs to recalculate its
+@@ -3393,6 +3399,50 @@ HashSet<Member<TreeScope>> Node::GetAncestorTreeScopes() const {
+   return ancestor_tree_scopes;
+ }
+ 
++void Node::SetCachedDirectionality(TextDirection direction) {
++  switch (direction) {
++    case TextDirection::kRtl:
++      SetFlag(kCachedDirectionalityIsRtl);
++      break;
++    case TextDirection::kLtr:
++      ClearFlag(kCachedDirectionalityIsRtl);
++      break;
++  }
++  if (!RuntimeEnabledFeatures::CSSPseudoDirEnabled()) {
++    ClearFlag(kNeedsInheritDirectionalityFromParent);
++  }
++}
++
++bool Node::NeedsInheritDirectionalityFromParent() const {
++  CHECK(!RuntimeEnabledFeatures::CSSPseudoDirEnabled());
++  return GetFlag(kNeedsInheritDirectionalityFromParent);
++}
++
++void Node::SetNeedsInheritDirectionalityFromParent() {
++  CHECK(!RuntimeEnabledFeatures::CSSPseudoDirEnabled());
++  SetFlag(kNeedsInheritDirectionalityFromParent);
++}
++
++void Node::ClearNeedsInheritDirectionalityFromParent() {
++  CHECK(!RuntimeEnabledFeatures::CSSPseudoDirEnabled());
++  ClearFlag(kNeedsInheritDirectionalityFromParent);
++}
++
++bool Node::DirAutoInheritsFromParent() const {
++  return RuntimeEnabledFeatures::CSSPseudoDirEnabled() &&
++         GetFlag(kDirAutoInheritsFromParent);
++}
++
++void Node::SetDirAutoInheritsFromParent() {
++  CHECK(RuntimeEnabledFeatures::CSSPseudoDirEnabled());
++  return SetFlag(kDirAutoInheritsFromParent);
++}
++
++void Node::ClearDirAutoInheritsFromParent() {
++  CHECK(RuntimeEnabledFeatures::CSSPseudoDirEnabled());
++  return ClearFlag(kDirAutoInheritsFromParent);
++}
++
+ void Node::Trace(Visitor* visitor) const {
+   visitor->Trace(parent_or_shadow_host_node_);
+   visitor->Trace(previous_);

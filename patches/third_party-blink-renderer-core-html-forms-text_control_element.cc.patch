@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/html/forms/text_control_element.cc b/third_party/blink/renderer/core/html/forms/text_control_element.cc
-index c608dcf782dd95f69b94fc1c8505aef63b021b2d..438b5e04e5c5c153d178e31db1c8a9355683fed1 100644
+index c608dcf782dd95f69b94fc1c8505aef63b021b2d..cf2f30911fb250332a195f95f071bcd1ee36d2eb 100644
 --- a/third_party/blink/renderer/core/html/forms/text_control_element.cc
 +++ b/third_party/blink/renderer/core/html/forms/text_control_element.cc
-@@ -285,6 +285,7 @@ void TextControlElement::DispatchFormControlChangeEvent() {
+@@ -49,6 +49,7 @@
+ #include "third_party/blink/renderer/core/editing/text_affinity.h"
+ #include "third_party/blink/renderer/core/editing/visible_position.h"
+ #include "third_party/blink/renderer/core/frame/local_frame.h"
++#include "third_party/blink/renderer/core/html/forms/html_input_element.h"
+ #include "third_party/blink/renderer/core/html/forms/text_control_inner_elements.h"
+ #include "third_party/blink/renderer/core/html/html_br_element.h"
+ #include "third_party/blink/renderer/core/html/html_div_element.h"
+@@ -285,6 +286,7 @@ void TextControlElement::DispatchFormControlChangeEvent() {
        !EqualIgnoringNullity(value_before_first_user_edit_, Value())) {
      ClearValueBeforeFirstUserEdit();
      DispatchChangeEvent();
@@ -10,3 +18,18 @@ index c608dcf782dd95f69b94fc1c8505aef63b021b2d..438b5e04e5c5c153d178e31db1c8a935
    } else {
      ClearValueBeforeFirstUserEdit();
    }
+@@ -985,8 +987,13 @@ String TextControlElement::DirectionForFormData() const {
+        element = Traversal<HTMLElement>::FirstAncestor(*element)) {
+     const AtomicString& dir_attribute_value =
+         element->FastGetAttribute(html_names::kDirAttr);
+-    if (dir_attribute_value.IsNull())
++    if (dir_attribute_value.IsNull()) {
++      auto* input_element = DynamicTo<HTMLInputElement>(*this);
++      if (input_element && input_element->IsTelephone()) {
++        break;
++      }
+       continue;
++    }
+ 
+     if (EqualIgnoringASCIICase(dir_attribute_value, "rtl") ||
+         EqualIgnoringASCIICase(dir_attribute_value, "ltr"))

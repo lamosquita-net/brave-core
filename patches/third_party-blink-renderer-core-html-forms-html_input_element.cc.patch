@@ -1,0 +1,46 @@
+diff --git a/third_party/blink/renderer/core/html/forms/html_input_element.cc b/third_party/blink/renderer/core/html/forms/html_input_element.cc
+index d408b73d03898c039b5450de0e766770c7c0ae61..7754abd95a23a53fc9a6e25e3307715d534518c4 100644
+--- a/third_party/blink/renderer/core/html/forms/html_input_element.cc
++++ b/third_party/blink/renderer/core/html/forms/html_input_element.cc
+@@ -467,9 +467,18 @@ void HTMLInputElement::UpdateType() {
+   const bool previously_selectable = input_type_->SupportsSelectionAPI();
+ 
+   input_type_view_->WillBeDestroyed();
++  InputType* old_type = input_type_;
+   input_type_ = new_type;
+   input_type_view_ = input_type_->CreateView();
+ 
++  const AtomicString& dir = FastGetAttribute(html_names::kDirAttr);
++  if ((!dir && (old_type->IsTelephoneInputType() || IsTelephone())) ||
++      (EqualIgnoringASCIICase(dir, "auto") &&
++       (old_type->ShouldAutoDirUseValue() || ShouldAutoDirUseValue()))) {
++    const AtomicString& value_dir = AtomicString(DirectionForFormData());
++    UpdateDirectionalityAfterInputTypeChange(dir, value_dir);
++  }
++
+   input_type_view_->CreateShadowSubtreeIfNeeded();
+ 
+   UpdateWillValidateCache();
+@@ -914,6 +923,7 @@ void HTMLInputElement::ParseAttribute(
+ void HTMLInputElement::ParserDidSetAttributes() {
+   DCHECK(parsing_in_progress_);
+   InitializeTypeInParsing();
++  TextControlElement::ParserDidSetAttributes();
+ }
+ 
+ void HTMLInputElement::FinishParsingChildren() {
+@@ -1004,6 +1014,14 @@ bool HTMLInputElement::IsTextField() const {
+   return input_type_->IsTextField();
+ }
+ 
++bool HTMLInputElement::IsTelephone() const {
++  return input_type_->IsTelephoneInputType();
++}
++
++bool HTMLInputElement::ShouldAutoDirUseValue() const {
++  return input_type_->ShouldAutoDirUseValue();
++}
++
+ bool HTMLInputElement::HasBeenPasswordField() const {
+   return has_been_password_field_;
+ }

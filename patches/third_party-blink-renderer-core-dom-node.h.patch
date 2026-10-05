@@ -1,0 +1,58 @@
+diff --git a/third_party/blink/renderer/core/dom/node.h b/third_party/blink/renderer/core/dom/node.h
+index fa4aa4b83535a1e1bccd3e2a0a43d06f73b0cd16..8c726b744ab1eb989ec88688e3c61aa90a9edf12 100644
+--- a/third_party/blink/renderer/core/dom/node.h
++++ b/third_party/blink/renderer/core/dom/node.h
+@@ -972,26 +972,16 @@ class CORE_EXPORT Node : public EventTargetWithInlineData {
+     return (node_flags_ & kCachedDirectionalityIsRtl) ? TextDirection::kRtl
+                                                       : TextDirection::kLtr;
+   }
+-  void SetCachedDirectionality(TextDirection direction) {
+-    switch (direction) {
+-      case TextDirection::kRtl:
+-        SetFlag(kCachedDirectionalityIsRtl);
+-        break;
+-      case TextDirection::kLtr:
+-        ClearFlag(kCachedDirectionalityIsRtl);
+-        break;
+-    }
+-    ClearFlag(kNeedsInheritDirectionalityFromParent);
+-  }
+-  bool NeedsInheritDirectionalityFromParent() const {
+-    return GetFlag(kNeedsInheritDirectionalityFromParent);
+-  }
+-  void SetNeedsInheritDirectionalityFromParent() {
+-    SetFlag(kNeedsInheritDirectionalityFromParent);
+-  }
+-  void ClearNeedsInheritDirectionalityFromParent() {
+-    ClearFlag(kNeedsInheritDirectionalityFromParent);
+-  }
++  void SetCachedDirectionality(TextDirection direction);
++
++  bool NeedsInheritDirectionalityFromParent() const;
++  void SetNeedsInheritDirectionalityFromParent();
++  void ClearNeedsInheritDirectionalityFromParent();
++
++  bool DirAutoInheritsFromParent() const;
++  void SetDirAutoInheritsFromParent();
++  void ClearDirAutoInheritsFromParent();
++
+   void Trace(Visitor*) const override;
+ 
+  private:
+@@ -1042,7 +1032,16 @@ class CORE_EXPORT Node : public EventTargetWithInlineData {
+ 
+     kSelfOrAncestorHasDirAutoAttribute = 1 << 28,
+     kCachedDirectionalityIsRtl = 1 << 29,
++    // TODO(https://crbug.com/576815): Remove this duplication once new
++    // dir=auto handling ships as part of
++    // RuntimeEnabledFeatures::CSSPseudoDirEnabled().
++    //
++    // This has the same value as the next flag; this one is used only when
++    // !RuntimeEnabledFeatures::CSSPseudoDirEnabled():
+     kNeedsInheritDirectionalityFromParent = 1u << 30,
++    // This has the same value as the previous flag; this one is used only when
++    // RuntimeEnabledFeatures::CSSPseudoDirEnabled():
++    kDirAutoInheritsFromParent = 1u << 30,
+ 
+     kDefaultNodeFlags = kIsFinishedParsingChildrenFlag,
+ 

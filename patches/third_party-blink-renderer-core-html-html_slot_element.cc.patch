@@ -1,0 +1,32 @@
+diff --git a/third_party/blink/renderer/core/html/html_slot_element.cc b/third_party/blink/renderer/core/html/html_slot_element.cc
+index 612f504b7a77af75dacb5f932256ae7bbbeb34a5..2f2e089e6ccd0654ff50adb272195c1299a2d987 100644
+--- a/third_party/blink/renderer/core/html/html_slot_element.cc
++++ b/third_party/blink/renderer/core/html/html_slot_element.cc
+@@ -387,9 +387,19 @@ void HTMLSlotElement::AttributeChanged(
+   HTMLElement::AttributeChanged(params);
+ }
+ 
++// When the result of `SupportsAssignment()` changes, the behavior of a
++// <slot> element for ancestors with dir=auto changes.
++void HTMLSlotElement::UpdateDirAutoAncestorsForSupportsAssignmentChange() {
++  if (RuntimeEnabledFeatures::CSSPseudoDirEnabled() &&
++      SelfOrAncestorHasDirAutoAttribute()) {
++    UpdateAncestorWithDirAuto(UpdateAncestorTraversal::ExcludeSelf);
++  }
++}
++
+ Node::InsertionNotificationRequest HTMLSlotElement::InsertedInto(
+     ContainerNode& insertion_point) {
+   HTMLElement::InsertedInto(insertion_point);
++  UpdateDirAutoAncestorsForSupportsAssignmentChange();
+   if (SupportsAssignment()) {
+     ShadowRoot* root = ContainingShadowRoot();
+     DCHECK(root);
+@@ -462,6 +472,7 @@ void HTMLSlotElement::RemovedFrom(ContainerNode& insertion_point) {
+     DCHECK(assigned_nodes_.empty());
+   }
+ 
++  UpdateDirAutoAncestorsForSupportsAssignmentChange();
+   HTMLElement::RemovedFrom(insertion_point);
+ }
+ 

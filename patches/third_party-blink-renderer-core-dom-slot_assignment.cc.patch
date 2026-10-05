@@ -1,0 +1,28 @@
+diff --git a/third_party/blink/renderer/core/dom/slot_assignment.cc b/third_party/blink/renderer/core/dom/slot_assignment.cc
+index e57ff55125680a668b55177b1ae3ef5b44310cda..ff6e1335cb379535be477968c56928369f42e27f 100644
+--- a/third_party/blink/renderer/core/dom/slot_assignment.cc
++++ b/third_party/blink/renderer/core/dom/slot_assignment.cc
+@@ -331,11 +331,23 @@ void SlotAssignment::RecalcAssignment() {
+     }
+   }
+ 
++  if (RuntimeEnabledFeatures::CSSPseudoDirEnabled()) {
++    // TODO(https://crbug.com/576815): Once incorrect use of
++    // FlatTreeTraversal is fixed, this can probably move into
++    // DidRecalcAssignedNodes above.
++    for (HTMLSlotElement* slot : Slots()) {
++      if (slot->HasDirectionAuto()) {
++        slot->AdjustDirectionAutoAfterRecalcAssignedNodes();
++      }
++    }
++  }
++
+   // Update an dir=auto flag from a host of slots to its all descendants.
+   // We should call below functions outside FlatTreeTraversalForbiddenScope
+   // because we can go a tree walk to either their ancestors or descendants
+   // if needed.
+   if (owner_->NeedsDirAutoAttributeUpdate()) {
++    CHECK(!RuntimeEnabledFeatures::CSSPseudoDirEnabled());
+     owner_->SetNeedsDirAutoAttributeUpdate(false);
+     if (auto* element = DynamicTo<HTMLElement>(owner_->host())) {
+       element->UpdateDescendantHasDirAutoAttribute(

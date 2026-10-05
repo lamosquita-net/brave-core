@@ -1,0 +1,44 @@
+diff --git a/third_party/blink/renderer/core/dom/element.h b/third_party/blink/renderer/core/dom/element.h
+index 640e53d474d0e132bf72388ac410015f66b55f48..51be160561a7dd7e9ffea626a19a2a0b5616c18e 100644
+--- a/third_party/blink/renderer/core/dom/element.h
++++ b/third_party/blink/renderer/core/dom/element.h
+@@ -1204,6 +1204,14 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+   // https://drafts.csswg.org/css-anchor-1/#implicit-anchor-element
+   Element* ImplicitAnchorElement();
+ 
++  void UpdateDirectionalityAndDescendant(TextDirection direction);
++  void UpdateDescendantHasDirAutoAttribute(bool has_dir_auto);
++  enum class UpdateAncestorTraversal {
++    IncludeSelf,  // self and ancestors
++    ExcludeSelf,  // ancestors, but not self
++  };
++  void UpdateAncestorWithDirAuto(UpdateAncestorTraversal traversal);
++
+  protected:
+   bool HasElementData() const { return element_data_; }
+   const ElementData* GetElementData() const { return element_data_.Get(); }
+@@ -1300,6 +1308,15 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+   // changes.
+   void LangAttributeChanged();
+ 
++  TextDirection ParentDirectionality() const;
++  void AdjustDirectionalityIfNeededAfterChildrenChanged(
++      const ChildrenChange& change);
++  bool RecalcSelfOrAncestorHasDirAuto();
++  template <typename Traversal>
++  absl::optional<TextDirection> ResolveAutoDirectionality(
++      bool& is_deferred,
++      Node* stay_within) const;
++
+  private:
+   friend class AXObject;
+   struct AffectedByPseudoStateChange;
+@@ -1420,6 +1437,8 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+     DetachPseudoElement(kPseudoIdFirstLetter, performing_reattach);
+   }
+ 
++  void RecomputeDirectionFromParent();
++
+   ShadowRoot& CreateAndAttachShadowRoot(ShadowRootType);
+ 
+   // FIXME: Everyone should allow author shadows.

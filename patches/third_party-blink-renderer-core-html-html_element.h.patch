@@ -1,0 +1,68 @@
+diff --git a/third_party/blink/renderer/core/html/html_element.h b/third_party/blink/renderer/core/html/html_element.h
+index 1160747542fa4d2f2111ea8803443db31d5841b0..27e49d77463dd64fe5783e8b77500dd078f7c9ec 100644
+--- a/third_party/blink/renderer/core/html/html_element.h
++++ b/third_party/blink/renderer/core/html/html_element.h
+@@ -45,6 +45,7 @@ class FormAssociated;
+ class HTMLFormElement;
+ class HTMLSelectMenuElement;
+ class KeyboardEvent;
++class TextControlElement;
+ class V8UnionStringLegacyNullToEmptyStringOrTrustedScript;
+ 
+ enum TranslateAttributeMode {
+@@ -158,6 +159,17 @@ class CORE_EXPORT HTMLElement : public Element {
+ 
+   bool HasDirectionAuto() const;
+ 
++  static bool IsValidDirAttribute(const AtomicString& value);
++  static bool ElementAffectsDirectionality(const Node* node);
++  static bool ElementInheritsDirectionality(const Node* node);
++  static const TextControlElement* ElementIfAutoDirShouldUseValueOrNull(
++      const Element* element);
++  static TextControlElement* ElementIfAutoDirShouldUseValueOrNull(
++      Element* element) {
++    return const_cast<TextControlElement*>(ElementIfAutoDirShouldUseValueOrNull(
++        const_cast<const Element*>(element)));
++  }
++
+   virtual bool IsHTMLBodyElement() const { return false; }
+   // TODO(crbug.com/1123606): Remove this virtual method once the fenced frame
+   // origin trial is over.
+@@ -211,11 +223,12 @@ class CORE_EXPORT HTMLElement : public Element {
+ 
+   static void AdjustCandidateDirectionalityForSlot(
+       HeapHashSet<Member<Node>> candidate_set);
+-  void UpdateDescendantHasDirAutoAttribute(bool has_dir_auto);
+-  void UpdateDirectionalityAndDescendant(TextDirection direction);
+   void UpdateDescendantDirectionality(TextDirection direction);
++  void UpdateDirectionalityAfterInputTypeChange(const AtomicString& old_value,
++                                                const AtomicString& new_value);
+   void AdjustDirectionalityIfNeededAfterShadowRootChanged();
+-  void ParserDidSetAttributes() override;
++  void AdjustDirectionAutoAfterRecalcAssignedNodes();
++  bool CalculateAndAdjustAutoDirectionality(Node* stay_within);
+ 
+   V8UnionBooleanOrStringOrUnrestrictedDouble* hidden() const;
+   void setHidden(const V8UnionBooleanOrStringOrUnrestrictedDouble*);
+@@ -326,7 +339,6 @@ class CORE_EXPORT HTMLElement : public Element {
+   unsigned ParseBorderWidthAttribute(const AtomicString&) const;
+ 
+   void ChildrenChanged(const ChildrenChange&) override;
+-  bool CalculateAndAdjustAutoDirectionality(Node* stay_within);
+ 
+   InsertionNotificationRequest InsertedInto(ContainerNode&) override;
+   void RemovedFrom(ContainerNode& insertion_point) override;
+@@ -349,13 +361,6 @@ class CORE_EXPORT HTMLElement : public Element {
+   DocumentFragment* TextToFragment(const String&, ExceptionState&);
+ 
+   void AdjustDirectionalityIfNeededAfterChildAttributeChanged(Element* child);
+-  void AdjustDirectionalityIfNeededAfterChildrenChanged(
+-      const ChildrenChange& change);
+-
+-  template <typename Traversal>
+-  absl::optional<TextDirection> ResolveAutoDirectionality(
+-      bool& is_deferred,
+-      Node* stay_within) const;
+ 
+   TranslateAttributeMode GetTranslateAttributeMode() const;
+ 

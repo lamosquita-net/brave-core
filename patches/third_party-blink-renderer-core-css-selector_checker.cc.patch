@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/css/selector_checker.cc b/third_party/blink/renderer/core/css/selector_checker.cc
-index 0a5aae9deb41a6b65270600424a857e4ba8d6980..23b3de6cd3dc0a7fa5e13e569f6a1911a666fc92 100644
+index 0a5aae9deb41a6b65270600424a857e4ba8d6980..712c45232b10fb30f82cadab57cd79a62095f2e6 100644
 --- a/third_party/blink/renderer/core/css/selector_checker.cc
 +++ b/third_party/blink/renderer/core/css/selector_checker.cc
-@@ -1639,6 +1639,18 @@ bool SelectorChecker::CheckPseudoClass(const SelectorCheckingContext& context,
+@@ -47,6 +47,7 @@
+ #include "third_party/blink/renderer/core/dom/nth_index_cache.h"
+ #include "third_party/blink/renderer/core/dom/popover_data.h"
+ #include "third_party/blink/renderer/core/dom/shadow_root.h"
++#include "third_party/blink/renderer/core/dom/slot_assignment_engine.h"
+ #include "third_party/blink/renderer/core/dom/text.h"
+ #include "third_party/blink/renderer/core/editing/frame_selection.h"
+ #include "third_party/blink/renderer/core/frame/local_frame.h"
+@@ -1639,6 +1640,18 @@ bool SelectorChecker::CheckPseudoClass(const SelectorCheckingContext& context,
        return element.IsOptionalFormControl();
      case CSSSelector::kPseudoRequired:
        return element.IsRequiredFormControl();
@@ -21,3 +29,23 @@ index 0a5aae9deb41a6b65270600424a857e4ba8d6980..23b3de6cd3dc0a7fa5e13e569f6a1911
      case CSSSelector::kPseudoValid:
        return element.MatchesValidityPseudoClasses() && element.IsValidElement();
      case CSSSelector::kPseudoInvalid:
+@@ -1696,10 +1709,16 @@ bool SelectorChecker::CheckPseudoClass(const SelectorCheckingContext& context,
+         break;
+       }
+ 
+-      if (auto* html_element = DynamicTo<HTMLElement>(element)) {
+-        return html_element->CachedDirectionality() == direction;
++      // Recomputing the slot assignment can update cached directionality.  In
++      // most cases it's OK for this code to be run when slot assignments are
++      // dirty; however for API calls like Element.matches() we should recalc
++      // them now.
++      Document& document = element.GetDocument();
++      if (mode_ == kQueryingRules && document.IsSlotAssignmentDirty()) {
++        document.GetSlotAssignmentEngine().RecalcSlotAssignments();
+       }
+-      break;
++
++      return element.CachedDirectionality() == direction;
+     }
+     case CSSSelector::kPseudoPopoverInTopLayer:
+       if (auto* html_element = DynamicTo<HTMLElement>(element);
