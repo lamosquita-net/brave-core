@@ -1,0 +1,31 @@
+diff --git a/third_party/blink/renderer/core/layout/custom_scrollbar.h b/third_party/blink/renderer/core/layout/custom_scrollbar.h
+index 7ef76bedc5689a98a969b356e665a4aad8866076..177a407ca0cb51bf3327237cde062650d2a77ef1 100644
+--- a/third_party/blink/renderer/core/layout/custom_scrollbar.h
++++ b/third_party/blink/renderer/core/layout/custom_scrollbar.h
+@@ -36,7 +36,7 @@
+ namespace blink {
+ 
+ class ComputedStyle;
+-class Element;
++class LayoutObject;
+ class LayoutCustomScrollbarPart;
+ 
+ // Custom scrollbars are created when a box has -webkit-scrollbar* pseudo
+@@ -46,7 +46,7 @@ class CORE_EXPORT CustomScrollbar final : public Scrollbar {
+  public:
+   CustomScrollbar(ScrollableArea*,
+                   ScrollbarOrientation,
+-                  Element* style_source,
++                  const LayoutObject* style_source,
+                   bool suppress_use_counters = false);
+   ~CustomScrollbar() override;
+ 
+@@ -54,7 +54,7 @@ class CORE_EXPORT CustomScrollbar final : public Scrollbar {
+   // constructing the real scrollbar.
+   static int HypotheticalScrollbarThickness(const ScrollableArea*,
+                                             ScrollbarOrientation,
+-                                            Element* style_source);
++                                            const LayoutObject* style_source);
+ 
+   gfx::Rect ButtonRect(ScrollbarPart) const;
+   gfx::Rect TrackRect(int start_length, int end_length) const;

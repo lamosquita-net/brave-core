@@ -1,0 +1,20 @@
+diff --git a/ui/native_theme/native_theme.cc b/ui/native_theme/native_theme.cc
+index 8f13ff7194c8420038583b9c82ccb8b586d86aac..71d4a1efa1b893a9c3a8c865cd3f05d041c2a0c4 100644
+--- a/ui/native_theme/native_theme.cc
++++ b/ui/native_theme/native_theme.cc
+@@ -25,9 +25,15 @@
+ 
+ namespace ui {
+ 
++#if BUILDFLAG(IS_APPLE)
++NativeTheme::ExtraParams::ExtraParams() : scrollbar_extra() {
++  memset(this, 0, sizeof(*this));
++}
++#else
+ NativeTheme::ExtraParams::ExtraParams() {
+   memset(this, 0, sizeof(*this));
+ }
++#endif
+ 
+ NativeTheme::ExtraParams::ExtraParams(const ExtraParams& other) {
+   memcpy(this, &other, sizeof(*this));

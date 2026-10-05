@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style.cc b/third_party/blink/renderer/core/style/computed_style.cc
-index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..718a073b16f622e79ae0a89a81674ce203aba01d 100644
+index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..e596e20ccfc3c0125da13cf7a1a1b8ba2bc46e42 100644
 --- a/third_party/blink/renderer/core/style/computed_style.cc
 +++ b/third_party/blink/renderer/core/style/computed_style.cc
 @@ -1206,6 +1206,7 @@ static bool HasPropertyThatCreatesStackingContext(
@@ -28,7 +28,7 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..718a073b16f622e79ae0a89a81674ce2
                   apply_independent_transform_properties);
  }
  
-@@ -2534,45 +2535,6 @@ absl::optional<blink::Color> ComputedStyle::AccentColorResolved() const {
+@@ -2534,43 +2535,24 @@ absl::optional<blink::Color> ComputedStyle::AccentColorResolved() const {
    return auto_color.Resolve(GetCurrentColor(), UsedColorScheme());
  }
  
@@ -39,8 +39,16 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..718a073b16f622e79ae0a89a81674ce2
 -                                   EPaintOrderType third) {
 -  return (((third << kPaintOrderBitwidth) | second) << kPaintOrderBitwidth) |
 -         first;
--}
--
++absl::optional<blink::Color> ComputedStyle::ScrollbarThumbColorResolved()
++    const {
++  const absl::optional<StyleScrollbarColor>& scrollbar_color = ScrollbarColor();
++  if (scrollbar_color.has_value()) {
++    return scrollbar_color.value().GetThumbColor().Resolve(GetCurrentColor(),
++                                                           UsedColorScheme());
++  }
++  return absl::nullopt;
+ }
+ 
 -EPaintOrderType ComputedStyle::PaintOrderType(unsigned index) const {
 -  unsigned pt = 0;
 -  DCHECK(index < ((1 << kPaintOrderBitwidth) - 1));
@@ -64,13 +72,18 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..718a073b16f622e79ae0a89a81674ce2
 -    case kPaintOrderMarkersStrokeFill:
 -      pt = PaintOrderSequence(PT_MARKERS, PT_STROKE, PT_FILL);
 -      break;
--  }
++absl::optional<blink::Color> ComputedStyle::ScrollbarTrackColorResolved()
++    const {
++  const absl::optional<StyleScrollbarColor>& scrollbar_color = ScrollbarColor();
++  if (scrollbar_color.has_value()) {
++    return scrollbar_color.value().GetTrackColor().Resolve(GetCurrentColor(),
++                                                           UsedColorScheme());
+   }
 -
 -  pt =
 -      (pt >> (kPaintOrderBitwidth * index)) & ((1u << kPaintOrderBitwidth) - 1);
 -  return static_cast<EPaintOrderType>(pt);
--}
--
++  return absl::nullopt;
+ }
+ 
  bool ComputedStyle::ShouldApplyAnyContainment(const Element& element,
-                                               const DisplayStyle& display_style,
-                                               unsigned effective_containment) {

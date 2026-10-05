@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_resolver.cc b/third_party/blink/renderer/core/css/resolver/style_resolver.cc
-index 93961854002a6b49631aa73a2fe6bc798520a480..630352b29900caaebf9ca419da6746b9d8765085 100644
+index 93961854002a6b49631aa73a2fe6bc798520a480..02b604b07d87e39ff917f002fd6360b9652f58da 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_resolver.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_resolver.cc
 @@ -256,6 +256,11 @@ String ComputeBaseComputedStyleDiff(const ComputedStyle* base_computed_style,
@@ -14,3 +14,34 @@ index 93961854002a6b49631aa73a2fe6bc798520a480..630352b29900caaebf9ca419da6746b9
    if (!CSSPropertyEquality::PropertiesEqual(
            PropertyHandle(CSSProperty::Get(CSSPropertyID::kWebkitMaskImage)),
            *base_computed_style, computed_style)) {
+@@ -2731,6 +2736,19 @@ void StyleResolver::PropagateStyleToViewport() {
+     PROPAGATE_VALUE(overflow_anchor, OverflowAnchor, SetOverflowAnchor);
+   }
+ 
++  // Color
++  {
++    Color color = StyleColor(CSSValueID::kCanvastext).GetColor();
++    if (document_element_style) {
++      color =
++          document_element_style->VisitedDependentColor(GetCSSPropertyColor());
++    }
++    if (viewport_style.VisitedDependentColor(GetCSSPropertyColor()) != color) {
++      changed = true;
++      new_viewport_style_builder.SetColor(StyleColor(color));
++    }
++  }
++
+   // Misc
+   {
+     PROPAGATE_FROM(document_element_style, EffectiveTouchAction,
+@@ -2743,6 +2761,10 @@ void StyleResolver::PropagateStyleToViewport() {
+                    SetColorSchemeForced, false);
+     PROPAGATE_FROM(document_element_style, ScrollbarGutter, SetScrollbarGutter,
+                    kScrollbarGutterAuto);
++    PROPAGATE_FROM(document_element_style, ScrollbarWidth, SetScrollbarWidth,
++                   EScrollbarWidth::kAuto);
++    PROPAGATE_FROM(document_element_style, ScrollbarColor, SetScrollbarColor,
++                   absl::nullopt);
+     PROPAGATE_FROM(document_element_style, ForcedColorAdjust,
+                    SetForcedColorAdjust, EForcedColorAdjust::kAuto);
+   }

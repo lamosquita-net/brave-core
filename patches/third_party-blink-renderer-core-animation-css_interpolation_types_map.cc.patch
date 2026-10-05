@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/animation/css_interpolation_types_map.cc b/third_party/blink/renderer/core/animation/css_interpolation_types_map.cc
-index 0292018a92aee057dfffa0423c8523c0f61215ec..9767bc20c2e969fb4ec13c5134b0b77ecd2806c2 100644
+index 0292018a92aee057dfffa0423c8523c0f61215ec..9210bd237d62e72b6cfb2b247e2d03e6e7bcd961 100644
 --- a/third_party/blink/renderer/core/animation/css_interpolation_types_map.cc
 +++ b/third_party/blink/renderer/core/animation/css_interpolation_types_map.cc
-@@ -287,8 +287,12 @@ const InterpolationTypes& CSSInterpolationTypesMap::Get(
+@@ -47,6 +47,7 @@
+ #include "third_party/blink/renderer/core/animation/css_resolution_interpolation_type.h"
+ #include "third_party/blink/renderer/core/animation/css_rotate_interpolation_type.h"
+ #include "third_party/blink/renderer/core/animation/css_scale_interpolation_type.h"
++#include "third_party/blink/renderer/core/animation/css_scrollbar_color_interpolation_type.h"
+ #include "third_party/blink/renderer/core/animation/css_shadow_list_interpolation_type.h"
+ #include "third_party/blink/renderer/core/animation/css_size_list_interpolation_type.h"
+ #include "third_party/blink/renderer/core/animation/css_text_indent_interpolation_type.h"
+@@ -287,8 +288,12 @@ const InterpolationTypes& CSSInterpolationTypesMap::Get(
          applicable_types->push_back(
              std::make_unique<CSSImageInterpolationType>(used_property));
          break;
@@ -16,11 +24,23 @@ index 0292018a92aee057dfffa0423c8523c0f61215ec..9767bc20c2e969fb4ec13c5134b0b77e
          applicable_types->push_back(
              std::make_unique<CSSImageListInterpolationType>(used_property));
          break;
-@@ -364,6 +368,7 @@ const InterpolationTypes& CSSInterpolationTypesMap::Get(
+@@ -364,6 +369,7 @@ const InterpolationTypes& CSSInterpolationTypesMap::Get(
          break;
        case CSSPropertyID::kBackgroundSize:
        case CSSPropertyID::kWebkitMaskSize:
 +      case CSSPropertyID::kMaskSize:
          applicable_types->push_back(
              std::make_unique<CSSSizeListInterpolationType>(used_property));
+         break;
+@@ -443,6 +449,11 @@ const InterpolationTypes& CSSInterpolationTypesMap::Get(
+         applicable_types->push_back(
+             std::make_unique<CSSOverlayInterpolationType>(used_property));
+         break;
++      case CSSPropertyID::kScrollbarColor:
++        applicable_types->push_back(
++            std::make_unique<CSSScrollbarColorInterpolationType>(
++                used_property));
++        break;
+       default:
+         DCHECK(!css_property.IsInterpolable());
          break;

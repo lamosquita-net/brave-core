@@ -1,7 +1,28 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_box.cc b/third_party/blink/renderer/core/layout/layout_box.cc
-index c2f1775ffaed54914a1cdd313a207364ba7d887d..ae6115796ad7b474af37ab175e04ab5cf9595fff 100644
+index c2f1775ffaed54914a1cdd313a207364ba7d887d..93d8c6ba5bfd965226473577c2593b133fee5ee8 100644
 --- a/third_party/blink/renderer/core/layout/layout_box.cc
 +++ b/third_party/blink/renderer/core/layout/layout_box.cc
+@@ -560,13 +560,13 @@ void LayoutBox::StyleWillChange(StyleDifference diff,
+     if (flow_thread && flow_thread != this)
+       flow_thread->FlowThreadDescendantStyleWillChange(this, diff, new_style);
+ 
+-    // The background of the root element or the body element could propagate up
+-    // to the canvas. Just dirty the entire canvas when our style changes
+-    // substantially.
+-    if ((diff.NeedsNormalPaintInvalidation() || diff.NeedsLayout()) &&
+-        GetNode() &&
+-        (IsDocumentElement() || IsA<HTMLBodyElement>(*GetNode()))) {
+-      View()->SetShouldDoFullPaintInvalidation();
++    if (IsDocumentElement() || IsBody()) {
++      // The background of the root element or the body element could propagate
++      // up to the canvas. Just dirty the entire canvas when our style changes
++      // substantially.
++      if (diff.NeedsNormalPaintInvalidation() || diff.NeedsLayout()) {
++        View()->SetShouldDoFullPaintInvalidation();
++      }
+     }
+ 
+     // When a layout hint happens and an object's position style changes, we
 @@ -1532,10 +1532,10 @@ PhysicalRect LayoutBox::PhysicalBackgroundRect(
        bool layer_known_opaque = false;
        // Check if the image is opaque and fills the clip.

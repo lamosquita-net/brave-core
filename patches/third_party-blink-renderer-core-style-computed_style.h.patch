@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style.h b/third_party/blink/renderer/core/style/computed_style.h
-index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..8009da9a575ad718a6e6b2641adc23f7495750a1 100644
+index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..b4222db514af11841ed0e2d7540070a9a9917f03 100644
 --- a/third_party/blink/renderer/core/style/computed_style.h
 +++ b/third_party/blink/renderer/core/style/computed_style.h
 @@ -44,7 +44,7 @@
@@ -11,7 +11,27 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..8009da9a575ad718a6e6b2641adc23f7
  #include "third_party/blink/renderer/core/layout/ng/geometry/ng_box_strut.h"
  #include "third_party/blink/renderer/core/layout/ng/ng_outline_type.h"
  #include "third_party/blink/renderer/core/scroll/scroll_types.h"
-@@ -918,9 +918,6 @@ class ComputedStyle : public ComputedStyleBase,
+@@ -733,11 +733,16 @@ class ComputedStyle : public ComputedStyleBase,
+     return ScrollbarGutter() & kScrollbarGutterBothEdges;
+   }
+ 
+-  // ignore non-standard ::-webkit-scrollbar when standard properties are in use
++  bool UsesStandardScrollbarStyle() const {
++    return ScrollbarWidth() != EScrollbarWidth::kAuto ||
++           ScrollbarColor().has_value();
++  }
++
++  // Ignore non-standard ::-webkit-scrollbar when standard properties are in
++  // use.
+   bool HasCustomScrollbarStyle() const {
+     return HasPseudoElementStyle(kPseudoIdScrollbar) &&
+-           ScrollbarWidth() == EScrollbarWidth::kAuto &&
+-           ScrollbarColor() == absl::nullopt;
++           !UsesStandardScrollbarStyle();
+   }
+ 
+   // shape-outside (aka -webkit-shape-outside)
+@@ -918,9 +923,6 @@ class ComputedStyle : public ComputedStyleBase,
      return MarkerStartResource() || MarkerMidResource() || MarkerEndResource();
    }
  
@@ -21,7 +41,19 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..8009da9a575ad718a6e6b2641adc23f7
    // stroke helpers
    bool HasStroke() const { return !StrokePaint().IsNone(); }
    bool HasVisibleStroke() const {
-@@ -2161,14 +2158,14 @@ class ComputedStyle : public ComputedStyleBase,
+@@ -937,6 +939,11 @@ class ComputedStyle : public ComputedStyleBase,
+   // An empty optional means the accent-color is 'auto'
+   absl::optional<blink::Color> AccentColorResolved() const;
+ 
++  // scrollbar-color
++  // An empty optional means the scrollbar-color is 'auto'
++  absl::optional<blink::Color> ScrollbarThumbColorResolved() const;
++  absl::optional<blink::Color> ScrollbarTrackColorResolved() const;
++
+   // Comparison operators
+   // FIXME: Replace callers of operator== wth a named method instead, e.g.
+   // inheritedEquals().
+@@ -2161,14 +2168,14 @@ class ComputedStyle : public ComputedStyleBase,
    };
    void ApplyTransform(gfx::Transform&,
                        const LayoutBox* box,
