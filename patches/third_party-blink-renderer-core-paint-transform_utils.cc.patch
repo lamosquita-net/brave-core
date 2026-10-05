@@ -1,47 +1,46 @@
 diff --git a/third_party/blink/renderer/core/paint/transform_utils.cc b/third_party/blink/renderer/core/paint/transform_utils.cc
-new file mode 100644
-index 0000000000000000000000000000000000000000..1e645c949d4531debd7e2a259c745b7812cad3b9
---- /dev/null
+index 1e645c949d4531debd7e2a259c745b7812cad3b9..c9a9409382a4d520be73ce218db3adc4f8ae1b00 100644
+--- a/third_party/blink/renderer/core/paint/transform_utils.cc
 +++ b/third_party/blink/renderer/core/paint/transform_utils.cc
-@@ -0,0 +1,41 @@
-+// Copyright 2023 The Chromium Authors
-+// Use of this source code is governed by a BSD-style license that can be
-+// found in the LICENSE file.
+@@ -10,8 +10,11 @@
+ 
+ namespace blink {
+ 
+-PhysicalRect ComputeReferenceBox(const NGPhysicalBoxFragment& fragment) {
+-  PhysicalRect fragment_reference_box = fragment.LocalRect();
++namespace {
 +
-+#include "third_party/blink/renderer/core/paint/transform_utils.h"
-+
-+#include "third_party/blink/renderer/core/layout/layout_box.h"
-+#include "third_party/blink/renderer/core/layout/ng/ng_physical_box_fragment.h"
-+#include "third_party/blink/renderer/core/style/computed_style.h"
-+
-+namespace blink {
++PhysicalRect ComputeReferenceBoxInternal(const NGPhysicalBoxFragment& fragment,
++                                         PhysicalRect border_box_rect) {
++  PhysicalRect fragment_reference_box = border_box_rect;
+   switch (fragment.Style().TransformBox()) {
+     case ETransformBox::kFillBox:
+     case ETransformBox::kContentBox:
+@@ -26,16 +29,19 @@ PhysicalRect ComputeReferenceBox(const NGPhysicalBoxFragment& fragment) {
+   return fragment_reference_box;
+ }
+ 
++}  // namespace
 +
 +PhysicalRect ComputeReferenceBox(const NGPhysicalBoxFragment& fragment) {
-+  PhysicalRect fragment_reference_box = fragment.LocalRect();
-+  switch (fragment.Style().TransformBox()) {
-+    case ETransformBox::kFillBox:
-+    case ETransformBox::kContentBox:
-+      fragment_reference_box.Contract(fragment.Borders() + fragment.Padding());
-+      fragment_reference_box.size.ClampNegativeToZero();
-+      break;
-+    case ETransformBox::kStrokeBox:
-+    case ETransformBox::kBorderBox:
-+    case ETransformBox::kViewBox:
-+      break;
-+  }
-+  return fragment_reference_box;
++  return ComputeReferenceBoxInternal(fragment, fragment.LocalRect());
 +}
 +
-+PhysicalRect ComputeReferenceBox(const LayoutBox& box) {
-+  switch (box.StyleRef().TransformBox()) {
-+    case ETransformBox::kFillBox:
-+    case ETransformBox::kContentBox:
-+      return box.PhysicalContentBoxRect();
-+    case ETransformBox::kStrokeBox:
-+    case ETransformBox::kBorderBox:
-+    case ETransformBox::kViewBox:
-+      return box.PhysicalBorderBoxRect();
-+  }
-+}
-+
-+}  // namespace blink
+ PhysicalRect ComputeReferenceBox(const LayoutBox& box) {
+-  switch (box.StyleRef().TransformBox()) {
+-    case ETransformBox::kFillBox:
+-    case ETransformBox::kContentBox:
+-      return box.PhysicalContentBoxRect();
+-    case ETransformBox::kStrokeBox:
+-    case ETransformBox::kBorderBox:
+-    case ETransformBox::kViewBox:
+-      return box.PhysicalBorderBoxRect();
++  // If the box is fragment-less return an empty reference box.
++  if (box.PhysicalFragmentCount() == 0u) {
++    return PhysicalRect();
+   }
++  return ComputeReferenceBoxInternal(*box.GetPhysicalFragment(0),
++                                     box.PhysicalBorderBoxRect());
+ }
+ 
+ }  // namespace blink
