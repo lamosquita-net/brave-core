@@ -1,5 +1,5 @@
 diff --git a/src/flags/flag-definitions.h b/src/flags/flag-definitions.h
-index fcf6fbb3f0fbc94febfee0417f26b679e76fee66..59a5e373f5d08564bb2179eb6f2753d54e389774 100644
+index fcf6fbb3f0fbc94febfee0417f26b679e76fee66..9a64bb3114fa0bd4a26fa94e40e311128043ed0b 100644
 --- a/src/flags/flag-definitions.h
 +++ b/src/flags/flag-definitions.h
 @@ -277,8 +277,11 @@ DEFINE_BOOL(js_shipping, true, "enable all shipped JavaScript features")
@@ -26,3 +26,24 @@ index fcf6fbb3f0fbc94febfee0417f26b679e76fee66..59a5e373f5d08564bb2179eb6f2753d5
  
  #define JAVASCRIPT_SHIPPING_FEATURES_BASE(V)
  
+@@ -516,7 +518,9 @@ DEFINE_BOOL(force_emit_interrupt_budget_checks, false,
+             "force emit tier-up logic from all non-turbofan code, even if it "
+             "is the top enabled tier")
+ #ifdef V8_ENABLE_MAGLEV
+-DEFINE_BOOL(maglev, ENABLE_MAGLEV_BY_DEFAULT,
++// FlyWeb: Maglev stays off, as in Chromium 116 (HUMANO, 05-10-2026): less JIT
++// attack surface on the sites that keep the JIT; TurboFan is still there.
++DEFINE_BOOL(maglev, false,
+             "enable the maglev optimizing compiler")
+ DEFINE_WEAK_IMPLICATION(future, maglev)
+ DEFINE_EXPERIMENTAL_FEATURE(
+@@ -566,7 +570,8 @@ DEFINE_WEAK_VALUE_IMPLICATION(turbofan,
+ DEFINE_WEAK_VALUE_IMPLICATION(turbofan, min_maglev_inlining_frequency, 0.95)
+ DEFINE_BOOL(maglev_reuse_stack_slots, true,
+             "reuse stack slots in the maglev optimizing compiler")
+-DEFINE_BOOL(maglev_untagged_phis, true,
++// FlyWeb: off, as upstream did for CVE-2026-3910 (v8 7076ba1, crbug 491410818).
++DEFINE_BOOL(maglev_untagged_phis, false,
+             "enable phi untagging in the maglev optimizing compiler")
+ 
+ DEFINE_BOOL(

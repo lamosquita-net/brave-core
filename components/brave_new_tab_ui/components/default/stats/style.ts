@@ -59,6 +59,7 @@ export const StyledStatsItemText = styled('span')<{}>`
 `
 
 export const StyledStatsItemDescription = styled('div')<{}>`
+  /* FlyWeb: 14px, fixed, as in the human's mockup (confirmed 05/10: not 16). */
   font-size: 14px;
   font-weight: 400;
   color: var(--flyweb-texto);
