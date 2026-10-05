@@ -1,16 +1,17 @@
 diff --git a/third_party/blink/renderer/core/layout/svg/svg_resources.cc b/third_party/blink/renderer/core/layout/svg/svg_resources.cc
-index 49486a8897dd2c0f7821f79b7c9d33863617832e..f2b89683062df27c5194e83697bc3068db7567b6 100644
+index 49486a8897dd2c0f7821f79b7c9d33863617832e..b27457a55a257ac48289fd17225a77035d6761ad 100644
 --- a/third_party/blink/renderer/core/layout/svg/svg_resources.cc
 +++ b/third_party/blink/renderer/core/layout/svg/svg_resources.cc
-@@ -29,6 +29,7 @@
+@@ -29,6 +29,8 @@
  #include "third_party/blink/renderer/core/style/style_svg_resource.h"
  #include "third_party/blink/renderer/core/svg/graphics/filters/svg_filter_builder.h"
  #include "third_party/blink/renderer/core/svg/svg_filter_primitive_standard_attributes.h"
-+#include "third_party/blink/renderer/core/svg/svg_length_functions.h"
++#include "third_party/blink/renderer/core/svg/svg_element.h"
++#include "third_party/blink/renderer/core/svg/svg_length_context.h"
  #include "third_party/blink/renderer/core/svg/svg_resource.h"
  #include "third_party/blink/renderer/platform/graphics/filters/filter.h"
  #include "third_party/blink/renderer/platform/graphics/filters/filter_effect.h"
-@@ -47,15 +48,8 @@ SVGElementResourceClient& SVGResources::EnsureClient(
+@@ -47,15 +49,8 @@ SVGElementResourceClient& SVGResources::EnsureClient(
  }
  
  gfx::RectF SVGResources::ReferenceBoxForEffects(
@@ -28,7 +29,7 @@ index 49486a8897dd2c0f7821f79b7c9d33863617832e..f2b89683062df27c5194e83697bc3068
    // Text "sub-elements" (<tspan>, <textpath>, <a>) should use the entire
    // <text>s object bounding box rather then their own.
    // https://svgwg.org/svg2-draft/text.html#ObjectBoundingBoxUnitsTextObjects
-@@ -65,7 +59,40 @@ gfx::RectF SVGResources::ReferenceBoxForEffects(
+@@ -65,7 +60,43 @@ gfx::RectF SVGResources::ReferenceBoxForEffects(
          LayoutNGSVGText::LocateLayoutSVGTextAncestor(&layout_object);
    }
    DCHECK(obb_layout_object);
@@ -47,8 +48,11 @@ index 49486a8897dd2c0f7821f79b7c9d33863617832e..f2b89683062df27c5194e83697bc3068
 +      box = obb_layout_object->StrokeBoundingBox();
 +      break;
 +    case GeometryBox::kViewBox: {
-+      const SVGViewportResolver viewport_resolver(obb_layout_object);
-+      box.set_size(viewport_resolver.ResolveViewport());
++      // FlyWeb: 116 has no SVGViewportResolver; SVGLengthContext resolves the
++      // same nearest viewport from the element.
++      const SVGLengthContext length_context(
++          DynamicTo<SVGElement>(obb_layout_object->GetNode()));
++      box.set_size(length_context.ResolveViewport());
 +      break;
 +    }
 +    default:
