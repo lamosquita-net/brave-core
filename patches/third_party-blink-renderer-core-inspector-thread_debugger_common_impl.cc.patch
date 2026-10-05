@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/inspector/thread_debugger_common_impl.cc b/third_party/blink/renderer/core/inspector/thread_debugger_common_impl.cc
-index addc162ef20a40a301e65d871d4d8ce85230a58e..a25df6237f6def0214f9690880ffb51aaf7a7948 100644
+index addc162ef20a40a301e65d871d4d8ce85230a58e..1cdf02c66ba6c0560271001be73bc66c302c2c00 100644
 --- a/third_party/blink/renderer/core/inspector/thread_debugger_common_impl.cc
 +++ b/third_party/blink/renderer/core/inspector/thread_debugger_common_impl.cc
 @@ -37,6 +37,7 @@
@@ -451,3 +451,12 @@ index addc162ef20a40a301e65d871d4d8ce85230a58e..a25df6237f6def0214f9690880ffb51a
    }
  
    return nullptr;
+@@ -495,7 +654,7 @@ bool ThreadDebuggerCommonImpl::isInspectableHeapObject(
+   if (object->InternalFieldCount() < kV8DefaultWrapperInternalFieldCount)
+     return true;
+   v8::Local<v8::Value> wrapper =
+-      object->GetInternalField(kV8DOMWrapperObjectIndex);
++      object->GetInternalField(kV8DOMWrapperObjectIndex).As<v8::Value>();
+   // Skip wrapper boilerplates which are like regular wrappers but don't have
+   // native object.
+   if (!wrapper.IsEmpty() && wrapper->IsUndefined())
