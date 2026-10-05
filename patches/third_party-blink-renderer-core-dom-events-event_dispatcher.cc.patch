@@ -1,0 +1,25 @@
+diff --git a/third_party/blink/renderer/core/dom/events/event_dispatcher.cc b/third_party/blink/renderer/core/dom/events/event_dispatcher.cc
+index a4ce699181fc14dbc52fc5be2322b6cb391ee2ad..4e49212f21b46514ff2db4e982f4dfaa275926af 100644
+--- a/third_party/blink/renderer/core/dom/events/event_dispatcher.cc
++++ b/third_party/blink/renderer/core/dom/events/event_dispatcher.cc
+@@ -224,20 +224,6 @@ DispatchEventResult EventDispatcher::Dispatch() {
+     }
+   }
+ 
+-#if DCHECK_IS_ON()
+-  // If Mutation Events are disabled, we should never dispatch trusted ones.
+-  if (event_->isTrusted() &&
+-      (event_->type() == event_type_names::kDOMCharacterDataModified ||
+-       event_->type() == event_type_names::kDOMSubtreeModified ||
+-       event_->type() == event_type_names::kDOMNodeInserted ||
+-       event_->type() == event_type_names::kDOMNodeInsertedIntoDocument ||
+-       event_->type() == event_type_names::kDOMNodeRemoved ||
+-       event_->type() == event_type_names::kDOMNodeRemovedFromDocument)) {
+-    DCHECK(RuntimeEnabledFeatures::MutationEventsEnabled());
+-    DCHECK(ContextFeatures::MutationEventsEnabled(&document));
+-  }
+-#endif
+-
+   // 6. Let isActivationEvent be true, if event is a MouseEvent object and
+   // event's type attribute is "click", and false otherwise.
+   //

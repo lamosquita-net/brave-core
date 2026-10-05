@@ -1,8 +1,20 @@
 diff --git a/third_party/blink/renderer/platform/runtime_enabled_features.json5 b/third_party/blink/renderer/platform/runtime_enabled_features.json5
-index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c1896bc7f95a63d1bf3112309d9d5a3ea0980ae4 100644
+index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f33dc23e234276c957a428fdaafaeb14c48e3ae2 100644
 --- a/third_party/blink/renderer/platform/runtime_enabled_features.json5
 +++ b/third_party/blink/renderer/platform/runtime_enabled_features.json5
-@@ -621,6 +621,16 @@
+@@ -276,8 +276,10 @@
+       public: true,
+     },
+     {
++      // Shipping in M120.  Flag should be removed after M120 has been
++      // shipping to stable for a few weeks.
+       name: "AccordionPattern",
+-      status: "experimental",
++      status: "stable",
+     },
+     {
+       name: "AddIdentityInCanMakePaymentEvent",
+@@ -621,6 +623,16 @@
        status: "experimental",
        base_feature: "none",
      },
@@ -19,7 +31,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c1896bc7f95a63d1bf3112309d9d5a3e
      {
        name: "CloseWatcher",
      },
-@@ -796,6 +806,10 @@
+@@ -796,6 +808,10 @@
        name: "CSSCalcSimplificationAndSerialization",
        base_feature: "none",
      },
@@ -30,7 +42,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c1896bc7f95a63d1bf3112309d9d5a3e
      {
        // Support case-sensitive attribute selector modifier
        // https://drafts.csswg.org/selectors-4/#attribute-case
-@@ -815,7 +829,8 @@
+@@ -815,7 +831,8 @@
      },
      {
        name: "CSSContainIntrinsicSizeAutoNone",
@@ -40,7 +52,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c1896bc7f95a63d1bf3112309d9d5a3e
      },
      // Ablation study to try to measure very roughly memory savings from not saving
      // pretokenized strings in CSS custom properties.
-@@ -846,7 +861,7 @@
+@@ -846,7 +863,7 @@
      },
      {
        name: "CSSExponentialFunctions",
@@ -49,7 +61,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c1896bc7f95a63d1bf3112309d9d5a3e
      },
      {
        name: "CSSFocusVisible",
-@@ -909,7 +924,8 @@
+@@ -909,7 +926,8 @@
      },
      {
        name: "CSSInitialPseudo",
@@ -59,7 +71,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c1896bc7f95a63d1bf3112309d9d5a3e
        base_feature: "none",
      },
      {
-@@ -976,6 +992,13 @@
+@@ -976,6 +994,13 @@
        // Support nested selectors that start with idents.
        name: "CSSNestingIdent",
      },
@@ -73,7 +85,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c1896bc7f95a63d1bf3112309d9d5a3e
      {
        name: "CSSObjectViewBox",
        status: "stable",
-@@ -1152,7 +1175,8 @@
+@@ -1152,7 +1177,8 @@
      // `text-wrap: pretty`. crbug.com/1432798
      {
        name: "CSSTextWrapPretty",
@@ -83,7 +95,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c1896bc7f95a63d1bf3112309d9d5a3e
        depends_on: ["CSSTextWrap", "CSSWhiteSpaceShorthand"],
      },
      // Support for CSS Toggles, https://tabatkins.github.io/css-toggle/
-@@ -1170,12 +1194,21 @@
+@@ -1170,12 +1196,21 @@
        //
        // See: https://github.com/w3c/csswg-drafts/issues/8189
        name: "CSSTopLayerForTransitions",
@@ -107,7 +119,22 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c1896bc7f95a63d1bf3112309d9d5a3e
      },
      {
        // A kill switch for the fix for part of https://crbug.com/1180387 .
-@@ -1996,6 +2029,11 @@
+@@ -1303,6 +1338,14 @@
+       name: "DesktopPWAsSubApps",
+       status: "test",
+     },
++    {
++      // This flag makes the details element's toggle events use the
++      // ToggleEvent class instead of being a regular Event.
++      // http://crbug.com/1416738
++      // https://github.com/whatwg/html/pull/8893
++      name: "DetailsElementToggleEvent",
++      status: "stable",
++    },
+     {
+       name: "DeviceAttributes",
+       origin_trial_feature_name: "DeviceAttributes",
+@@ -1996,6 +2039,11 @@
        name: "HTMLPopoverHint",
        status: "experimental",
      },
@@ -119,7 +146,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c1896bc7f95a63d1bf3112309d9d5a3e
      {
        name: "HTMLSelectMenuElement",
        status: "experimental",
-@@ -2137,7 +2175,8 @@
+@@ -2137,7 +2185,8 @@
      },
      {
        name: "LayoutNGSubgrid",
@@ -129,7 +156,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c1896bc7f95a63d1bf3112309d9d5a3e
        base_feature: "none",
      },
      {
-@@ -3109,6 +3148,10 @@
+@@ -3109,6 +3158,10 @@
        status: "stable",
        base_feature: "none",
      },
@@ -140,7 +167,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c1896bc7f95a63d1bf3112309d9d5a3e
      {
        name: "ScrollableAreaNoSnapping",
        status: "stable",
-@@ -3453,6 +3496,10 @@
+@@ -3453,6 +3506,10 @@
        name: "SvgMapLocalToAncestorFix",
        status: "stable",
      },
@@ -151,7 +178,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c1896bc7f95a63d1bf3112309d9d5a3e
      {
        name: "SvgRasterOptimizations",
        status: "experimental",
-@@ -3638,6 +3685,10 @@
+@@ -3638,6 +3695,10 @@
        origin_trial_feature_name: "UnrestrictedSharedArrayBuffer",
        origin_trial_os: ["win", "mac", "linux", "fuchsia", "chromeos"],
      },
@@ -162,7 +189,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c1896bc7f95a63d1bf3112309d9d5a3e
      {
        name: "URLPatternCompareComponent",
        status: "experimental",
-@@ -3657,6 +3708,11 @@
+@@ -3657,6 +3718,11 @@
        name: "UserAgentClientHint",
        status: "stable",
      },
@@ -174,7 +201,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c1896bc7f95a63d1bf3112309d9d5a3e
      {
        name: "V8IdleTasks",
        base_feature: "none",
-@@ -4167,6 +4223,12 @@
+@@ -4167,6 +4233,12 @@
        name: "WindowPlacementFullscreenOnScreensChange",
        status: "experimental",
      },

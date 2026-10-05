@@ -1,0 +1,40 @@
+diff --git a/third_party/blink/renderer/core/events/mutation_event.cc b/third_party/blink/renderer/core/events/mutation_event.cc
+index b87779ca8e7e9757f79cb26d775d39454b1c8ea9..dd7f71a4ed03e6c2f2d974719ada37f36171cd5c 100644
+--- a/third_party/blink/renderer/core/events/mutation_event.cc
++++ b/third_party/blink/renderer/core/events/mutation_event.cc
+@@ -22,7 +22,11 @@
+ 
+ #include "third_party/blink/renderer/core/events/mutation_event.h"
+ 
++#include "third_party/blink/renderer/core/dom/context_features.h"
++#include "third_party/blink/renderer/core/dom/document.h"
++#include "third_party/blink/renderer/core/dom/events/event_dispatcher.h"
+ #include "third_party/blink/renderer/core/event_interface_names.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+ 
+ namespace blink {
+ 
+@@ -69,6 +73,23 @@ const AtomicString& MutationEvent::InterfaceName() const {
+   return event_interface_names::kMutationEvent;
+ }
+ 
++DispatchEventResult MutationEvent::DispatchEvent(EventDispatcher& dispatcher) {
++  Event& event = dispatcher.GetEvent();
++  if (event.isTrusted()) {
++    Document& document = dispatcher.GetNode().GetDocument();
++
++    // If Mutation Events are disabled, we should never dispatch trusted ones.
++    // FlyWeb: 116 has no Document::SupportsLegacyDOMMutations(); keep the
++    // 116 checks (DCHECKs, as they were in EventDispatcher::Dispatch).
++    DCHECK(RuntimeEnabledFeatures::MutationEventsEnabled());
++    DCHECK(ContextFeatures::MutationEventsEnabled(&document));
++
++    CHECK(!document.ShouldSuppressMutationEvents());
++  }
++
++  return Event::DispatchEvent(dispatcher);
++}
++
+ void MutationEvent::Trace(Visitor* visitor) const {
+   visitor->Trace(related_node_);
+   Event::Trace(visitor);

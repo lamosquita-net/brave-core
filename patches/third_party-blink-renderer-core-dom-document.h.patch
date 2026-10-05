@@ -1,0 +1,28 @@
+diff --git a/third_party/blink/renderer/core/dom/document.h b/third_party/blink/renderer/core/dom/document.h
+index 88c64a875224ac49cf82ce9d15fcf01e6c96b604..24e67e3a91694a77c561d5a5e6520f36ab1e3f6f 100644
+--- a/third_party/blink/renderer/core/dom/document.h
++++ b/third_party/blink/renderer/core/dom/document.h
+@@ -1784,6 +1784,15 @@ class CORE_EXPORT Document : public ContainerNode,
+     return slot_assignment_recalc_depth_ == 1;
+   }
+ 
++  bool ShouldSuppressMutationEvents() const {
++    return suppress_mutation_events_;
++  }
++  // To be called from MutationEventSuppressionScope.
++  void SetSuppressMutationEvents(bool suppress) {
++    CHECK_NE(suppress, suppress_mutation_events_);
++    suppress_mutation_events_ = suppress;
++  }
++
+   bool IsVerticalScrollEnforced() const { return is_vertical_scroll_enforced_; }
+   bool IsFocusAllowed() const;
+ 
+@@ -2601,6 +2610,7 @@ class CORE_EXPORT Document : public ContainerNode,
+ #endif
+   unsigned slot_assignment_recalc_depth_ = 0;
+   unsigned flat_tree_traversal_forbidden_recursion_depth_ = 0;
++  bool suppress_mutation_events_ = false;
+ 
+   Member<DOMFeaturePolicy> policy_;
+ 

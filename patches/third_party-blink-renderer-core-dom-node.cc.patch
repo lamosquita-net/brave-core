@@ -1,0 +1,15 @@
+diff --git a/third_party/blink/renderer/core/dom/node.cc b/third_party/blink/renderer/core/dom/node.cc
+index 9788cd4895f9418df8c38a03468d3e199a3a15b2..5c9dc4bf18800ed2e04ae49aee5d812ceb1669b9 100644
+--- a/third_party/blink/renderer/core/dom/node.cc
++++ b/third_party/blink/renderer/core/dom/node.cc
+@@ -2896,8 +2896,9 @@ DispatchEventResult Node::DispatchEventInternal(Event& event) {
+ }
+ 
+ void Node::DispatchSubtreeModifiedEvent() {
+-  if (IsInShadowTree())
++  if (IsInShadowTree() || GetDocument().ShouldSuppressMutationEvents()) {
+     return;
++  }
+ 
+ #if DCHECK_IS_ON()
+   DCHECK(!EventDispatchForbiddenScope::IsEventDispatchForbidden());

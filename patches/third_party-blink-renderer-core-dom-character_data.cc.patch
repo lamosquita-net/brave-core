@@ -1,0 +1,14 @@
+diff --git a/third_party/blink/renderer/core/dom/character_data.cc b/third_party/blink/renderer/core/dom/character_data.cc
+index 7f7c208a8f18355bdaeeb4e78febced3924d7d45..419896829893075d25cb5fe915c4f5fa7fdbff9a 100644
+--- a/third_party/blink/renderer/core/dom/character_data.cc
++++ b/third_party/blink/renderer/core/dom/character_data.cc
+@@ -240,7 +240,8 @@ void CharacterData::DidModifyData(const String& old_data, UpdateSource source) {
+   // Skip DOM mutation events if the modification is from parser.
+   // Note that mutation observer events will still fire.
+   // Spec: https://html.spec.whatwg.org/C/#insert-a-character
+-  if (source != kUpdateFromParser && !IsInShadowTree()) {
++  if (source != kUpdateFromParser && !IsInShadowTree() &&
++      !GetDocument().ShouldSuppressMutationEvents()) {
+     if (GetDocument().HasListenerType(
+             Document::kDOMCharacterDataModifiedListener)) {
+       DispatchScopedEvent(*MutationEvent::Create(

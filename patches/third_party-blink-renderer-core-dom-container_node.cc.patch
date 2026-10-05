@@ -1,0 +1,59 @@
+diff --git a/third_party/blink/renderer/core/dom/container_node.cc b/third_party/blink/renderer/core/dom/container_node.cc
+index 95c727e3671f865de9cf4b09d4a4b3edf6fd97fe..ceca0323c82fe19006c56389143edd79cc5227aa 100644
+--- a/third_party/blink/renderer/core/dom/container_node.cc
++++ b/third_party/blink/renderer/core/dom/container_node.cc
+@@ -1326,25 +1326,26 @@ StaticElementList* ContainerNode::QuerySelectorAll(
+ }
+ 
+ static void DispatchChildInsertionEvents(Node& child) {
+-  if (child.IsInShadowTree())
++  Document& document = child.GetDocument();
++  if (child.IsInShadowTree() || document.ShouldSuppressMutationEvents()) {
+     return;
++  }
+ 
+ #if DCHECK_IS_ON()
+   DCHECK(!EventDispatchForbiddenScope::IsEventDispatchForbidden());
+ #endif
+ 
+   Node* c = &child;
+-  Document* document = &child.GetDocument();
+ 
+   if (c->parentNode() &&
+-      document->HasListenerType(Document::kDOMNodeInsertedListener)) {
++      document.HasListenerType(Document::kDOMNodeInsertedListener)) {
+     c->DispatchScopedEvent(
+         *MutationEvent::Create(event_type_names::kDOMNodeInserted,
+                                Event::Bubbles::kYes, c->parentNode()));
+   }
+ 
+   // dispatch the DOMNodeInsertedIntoDocument event to all descendants
+-  if (c->isConnected() && document->HasListenerType(
++  if (c->isConnected() && document.HasListenerType(
+                               Document::kDOMNodeInsertedIntoDocumentListener)) {
+     for (; c; c = NodeTraversal::Next(*c, &child)) {
+       c->DispatchScopedEvent(*MutationEvent::Create(
+@@ -1354,8 +1355,10 @@ static void DispatchChildInsertionEvents(Node& child) {
+ }
+ 
+ static void DispatchChildRemovalEvents(Node& child) {
+-  if (child.IsInShadowTree()) {
+-    probe::WillRemoveDOMNode(&child);
++  probe::WillRemoveDOMNode(&child);
++
++  Document& document = child.GetDocument();
++  if (child.IsInShadowTree() || document.ShouldSuppressMutationEvents()) {
+     return;
+   }
+ 
+@@ -1363,10 +1366,7 @@ static void DispatchChildRemovalEvents(Node& child) {
+   DCHECK(!EventDispatchForbiddenScope::IsEventDispatchForbidden());
+ #endif
+ 
+-  probe::WillRemoveDOMNode(&child);
+-
+   Node* c = &child;
+-  Document& document = child.GetDocument();
+ 
+   // Dispatch pre-removal mutation events.
+   if (c->parentNode() &&
