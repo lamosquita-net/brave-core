@@ -20,3 +20,18 @@ Notes:
   CHECK (crash instead of a type confusion if the invariant breaks again).
 - Unit tests and golden files are left out (tests are not built). **Not compiled in the cloud**: LOCAL must build it.
 - jitless does **not** mitigate these: they are in the parser, the bytecode generator and builtins.
+
+Object.groupBy / Map.groupBy crash (SEGURIDAD, 05-10-2026, security review of the engine-level-117 port, FS.3):
+- With FlyWeb's groupBy port (steps 46-50), any page can crash the renderer, with or without JIT:
+  `Object.groupBy(iterable, x => x)` with ~17M distinct keys makes the groups OrderedHashMap exceed its maximum
+  capacity, and `AddValueToKeyedGroup()` calls `Runtime::kOrderedHashMapGrow` with **no context**; throwing the
+  RangeError then dereferences a null context. Reproduced on a release (no-DCHECK) d8 with all of FlyWeb's V8 patches
+  and the default heap limit: `SEGV_MAPERR ffffffffffffffff`, both `Object.groupBy` and `Map.groupBy`.
+- Ported v8 77df647d (crbug 438364208): pass the caller's context to the grow runtime call. Also ported the runtime part
+  of v8 92aba703 (crbug 405910175): the four grow runtime functions clear the RangeError already thrown by
+  `OrderedHashTable::Allocate()` before throwing their own (11.6 threw a second exception on top of a pending one;
+  a DCHECK failure in debug, harmless in release for plain `Map`/`Set`). Left out: 92aba703's message changes in
+  `ordered-hash-table.cc` and `keys.cc` (cosmetic) and its lower-limits test folder.
+- The four `.patch` files are LOCAL's (steps 49-50) regenerated from `flyweb` 837babd7 with these changes on top.
+- Code cache: no builtin, runtime function or flag is added or renamed, so caches stay compatible; still follow
+  LOCAL's rule (raise `kFlyWebCacheEpoch` once per release that changes V8 patches).

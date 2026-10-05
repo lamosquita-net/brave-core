@@ -1,8 +1,8 @@
 diff --git a/src/runtime/runtime-collections.cc b/src/runtime/runtime-collections.cc
-index 805ea467de5072462a5080ea6f6365b038191c2d..7a44d9640d8cf52b71b3cbf97e8888281fb6119a 100644
+index 805ea467de5072462a5080ea6f6365b038191c2d..ea215abde369f78a46f57d74f93376f9bfbddafb 100644
 --- a/src/runtime/runtime-collections.cc
 +++ b/src/runtime/runtime-collections.cc
-@@ -17,13 +17,13 @@ RUNTIME_FUNCTION(Runtime_TheHole) {
+@@ -17,14 +17,18 @@ RUNTIME_FUNCTION(Runtime_TheHole) {
    return ReadOnlyRoots(isolate).the_hole_value();
  }
  
@@ -16,27 +16,42 @@ index 805ea467de5072462a5080ea6f6365b038191c2d..7a44d9640d8cf52b71b3cbf97e888828
 -      OrderedHashSet::EnsureGrowable(isolate, table);
 +      OrderedHashSet::EnsureCapacityForAdding(isolate, table);
    if (!table_candidate.ToHandle(&table)) {
++    // FlyWeb: replace the RangeError already thrown by Allocate() instead of
++    // throwing a second exception on top of it (v8 92aba703, crbug 405910175).
++    DCHECK(isolate->has_pending_exception());
++    isolate->clear_pending_exception();
      THROW_NEW_ERROR_RETURN_FAILURE(
          isolate, NewRangeError(MessageTemplate::kOutOfMemory, method_name));
-@@ -37,7 +37,7 @@ RUNTIME_FUNCTION(Runtime_SetGrow) {
+   }
+@@ -37,8 +41,12 @@ RUNTIME_FUNCTION(Runtime_SetGrow) {
    Handle<JSSet> holder = args.at<JSSet>(0);
    Handle<OrderedHashSet> table(OrderedHashSet::cast(holder->table()), isolate);
    MaybeHandle<OrderedHashSet> table_candidate =
 -      OrderedHashSet::EnsureGrowable(isolate, table);
 +      OrderedHashSet::EnsureCapacityForAdding(isolate, table);
    if (!table_candidate.ToHandle(&table)) {
++    // FlyWeb: replace the RangeError already thrown by Allocate() instead of
++    // throwing a second exception on top of it (v8 92aba703, crbug 405910175).
++    DCHECK(isolate->has_pending_exception());
++    isolate->clear_pending_exception();
      THROW_NEW_ERROR_RETURN_FAILURE(
          isolate,
-@@ -74,7 +74,7 @@ RUNTIME_FUNCTION(Runtime_MapGrow) {
+         NewRangeError(MessageTemplate::kCollectionGrowFailed,
+@@ -74,8 +82,12 @@ RUNTIME_FUNCTION(Runtime_MapGrow) {
    Handle<JSMap> holder = args.at<JSMap>(0);
    Handle<OrderedHashMap> table(OrderedHashMap::cast(holder->table()), isolate);
    MaybeHandle<OrderedHashMap> table_candidate =
 -      OrderedHashMap::EnsureGrowable(isolate, table);
 +      OrderedHashMap::EnsureCapacityForAdding(isolate, table);
    if (!table_candidate.ToHandle(&table)) {
++    // FlyWeb: replace the RangeError already thrown by Allocate() instead of
++    // throwing a second exception on top of it (v8 92aba703, crbug 405910175).
++    DCHECK(isolate->has_pending_exception());
++    isolate->clear_pending_exception();
      THROW_NEW_ERROR_RETURN_FAILURE(
          isolate,
-@@ -85,6 +85,20 @@ RUNTIME_FUNCTION(Runtime_MapGrow) {
+         NewRangeError(MessageTemplate::kCollectionGrowFailed,
+@@ -85,6 +97,24 @@ RUNTIME_FUNCTION(Runtime_MapGrow) {
    return ReadOnlyRoots(isolate).undefined_value();
  }
  
@@ -48,6 +63,10 @@ index 805ea467de5072462a5080ea6f6365b038191c2d..7a44d9640d8cf52b71b3cbf97e888828
 +  MaybeHandle<OrderedHashMap> table_candidate =
 +      OrderedHashMap::EnsureCapacityForAdding(isolate, table);
 +  if (!table_candidate.ToHandle(&table)) {
++    // FlyWeb: replace the RangeError already thrown by Allocate() instead of
++    // throwing a second exception on top of it (v8 92aba703, crbug 405910175).
++    DCHECK(isolate->has_pending_exception());
++    isolate->clear_pending_exception();
 +    THROW_NEW_ERROR_RETURN_FAILURE(
 +        isolate, NewRangeError(MessageTemplate::kOutOfMemory, methodName));
 +  }
@@ -57,7 +76,7 @@ index 805ea467de5072462a5080ea6f6365b038191c2d..7a44d9640d8cf52b71b3cbf97e888828
  RUNTIME_FUNCTION(Runtime_WeakCollectionDelete) {
    HandleScope scope(isolate);
    DCHECK_EQ(3, args.length());
-@@ -130,19 +144,5 @@ RUNTIME_FUNCTION(Runtime_WeakCollectionSet) {
+@@ -130,19 +160,5 @@ RUNTIME_FUNCTION(Runtime_WeakCollectionSet) {
    return *weak_collection;
  }
  
