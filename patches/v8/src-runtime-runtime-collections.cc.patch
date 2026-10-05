@@ -1,0 +1,48 @@
+diff --git a/src/runtime/runtime-collections.cc b/src/runtime/runtime-collections.cc
+index aebb8a3ac6e866b81beb25e15b56642aee4e84b5..882f3abef16b12d118e79ad89e42b169622de348 100644
+--- a/src/runtime/runtime-collections.cc
++++ b/src/runtime/runtime-collections.cc
+@@ -25,6 +25,10 @@ RUNTIME_FUNCTION(Runtime_OrderedHashSetGrow) {
+   MaybeHandle<OrderedHashSet> table_candidate =
+       OrderedHashSet::EnsureCapacityForAdding(isolate, table);
+   if (!table_candidate.ToHandle(&table)) {
++    // FlyWeb: replace the RangeError already thrown by Allocate() instead of
++    // throwing a second exception on top of it (v8 92aba703, crbug 405910175).
++    DCHECK(isolate->has_pending_exception());
++    isolate->clear_pending_exception();
+     THROW_NEW_ERROR_RETURN_FAILURE(
+         isolate, NewRangeError(MessageTemplate::kOutOfMemory, method_name));
+   }
+@@ -39,6 +43,10 @@ RUNTIME_FUNCTION(Runtime_SetGrow) {
+   MaybeHandle<OrderedHashSet> table_candidate =
+       OrderedHashSet::EnsureCapacityForAdding(isolate, table);
+   if (!table_candidate.ToHandle(&table)) {
++    // FlyWeb: replace the RangeError already thrown by Allocate() instead of
++    // throwing a second exception on top of it (v8 92aba703, crbug 405910175).
++    DCHECK(isolate->has_pending_exception());
++    isolate->clear_pending_exception();
+     THROW_NEW_ERROR_RETURN_FAILURE(
+         isolate,
+         NewRangeError(MessageTemplate::kCollectionGrowFailed,
+@@ -84,6 +92,10 @@ RUNTIME_FUNCTION(Runtime_MapGrow) {
+   MaybeHandle<OrderedHashMap> table_candidate =
+       OrderedHashMap::EnsureCapacityForAdding(isolate, table);
+   if (!table_candidate.ToHandle(&table)) {
++    // FlyWeb: replace the RangeError already thrown by Allocate() instead of
++    // throwing a second exception on top of it (v8 92aba703, crbug 405910175).
++    DCHECK(isolate->has_pending_exception());
++    isolate->clear_pending_exception();
+     THROW_NEW_ERROR_RETURN_FAILURE(
+         isolate,
+         NewRangeError(MessageTemplate::kCollectionGrowFailed,
+@@ -101,6 +113,10 @@ RUNTIME_FUNCTION(Runtime_OrderedHashMapGrow) {
+   MaybeHandle<OrderedHashMap> table_candidate =
+       OrderedHashMap::EnsureCapacityForAdding(isolate, table);
+   if (!table_candidate.ToHandle(&table)) {
++    // FlyWeb: replace the RangeError already thrown by Allocate() instead of
++    // throwing a second exception on top of it (v8 92aba703, crbug 405910175).
++    DCHECK(isolate->has_pending_exception());
++    isolate->clear_pending_exception();
+     THROW_NEW_ERROR_RETURN_FAILURE(
+         isolate, NewRangeError(MessageTemplate::kOutOfMemory, methodName));
+   }
