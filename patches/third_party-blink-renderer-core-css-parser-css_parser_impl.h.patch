@@ -1,0 +1,54 @@
+diff --git a/third_party/blink/renderer/core/css/parser/css_parser_impl.h b/third_party/blink/renderer/core/css/parser/css_parser_impl.h
+index c4ca914fffc56b86e4d6fe69c86a680f5468f74c..e028a86d722be5b3f7dcb341b2e0d3f3756df55d 100644
+--- a/third_party/blink/renderer/core/css/parser/css_parser_impl.h
++++ b/third_party/blink/renderer/core/css/parser/css_parser_impl.h
+@@ -159,11 +159,19 @@ class CORE_EXPORT CSSParserImpl {
+       wtf_size_t offset,
+       const CSSParserContext*);
+ 
+-  // Consumes a value from the remaining tokens in the (possibly bounded)
+-  // stream.
++  // A value for a standard property has the following restriction:
++  // it can not contain braces unless it's the whole value [1].
++  // This function makes use of that restriction to early-out of the
++  // streaming tokenizer as soon as possible.
+   //
+-  // See also CSSParserTokenStream::Boundary.
+-  static CSSTokenizedValue ConsumeValue(CSSParserTokenStream&);
++  // [1] https://github.com/w3c/csswg-drafts/issues/9317
++  static CSSTokenizedValue ConsumeRestrictedPropertyValue(
++      CSSParserTokenStream&);
++
++  // Custom properties (as well as descriptors) do not have the restriction
++  // explained above. This function will simply consume until AtEnd.
++  static CSSTokenizedValue ConsumeUnrestrictedPropertyValue(
++      CSSParserTokenStream&);
+ 
+   static bool RemoveImportantAnnotationIfPresent(CSSTokenizedValue&);
+ 
+@@ -250,6 +258,13 @@ class CORE_EXPORT CSSParserImpl {
+       CSSNestingType,
+       StyleRule* parent_rule_for_nesting,
+       HeapVector<Member<StyleRuleBase>, 4>* child_rules);
++
++  void ConsumeRuleListOrNestedDeclarationList(
++      CSSParserTokenStream&,
++      CSSNestingType,
++      StyleRule* parent_rule_for_nesting,
++      HeapVector<Member<StyleRuleBase>, 4>* child_rules);
++
+   // If id is absl::nullopt, we're parsing a qualified style rule;
+   // otherwise, we're parsing an at-rule.
+   StyleRuleBase* ConsumeNestedRule(absl::optional<CSSAtRuleID> id,
+@@ -268,6 +283,11 @@ class CORE_EXPORT CSSParserImpl {
+                             bool important,
+                             bool is_animation_tainted);
+ 
++  // Consumes tokens from the stream using the provided function, and wraps
++  // the result in a CSSTokenizedValue.
++  template <typename ConsumeFunction>
++  static CSSTokenizedValue ConsumeValue(CSSParserTokenStream&, ConsumeFunction);
++
+   static std::unique_ptr<Vector<KeyframeOffset>> ConsumeKeyframeKeyList(
+       const CSSParserContext*,
+       CSSParserTokenRange);
