@@ -54,10 +54,11 @@ String ToPageGraphBlinkArg(TextMetrics* result) {
       << ", emHeightAscent: " << result->emHeightAscent()
       << ", emHeightDescent: " << result->emHeightDescent();
 
-  Baselines* baselines = result->getBaselines();
-  result_buffer << ", hangingBaseline: " << baselines->hanging()
-                << ", alphabeticBaseline: " << baselines->alphabetic()
-                << ", ideographicBaseline: " << baselines->ideographic();
+  // FlyWeb: TextMetrics exposes the baselines as attributes since engine
+  // level 118 (getBaselines() is gone).
+  result_buffer << ", hangingBaseline: " << result->hangingBaseline()
+                << ", alphabeticBaseline: " << result->alphabeticBaseline()
+                << ", ideographicBaseline: " << result->ideographicBaseline();
 
   return String(result_buffer.str());
 }
