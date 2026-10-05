@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/runtime_enabled_features.json5 b/third_party/blink/renderer/platform/runtime_enabled_features.json5
-index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..71b9d0c7cad15ac284a6b875e262af1dd8686852 100644
+index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..24be663ab108508ca992f91e82bb169c4bc070c8 100644
 --- a/third_party/blink/renderer/platform/runtime_enabled_features.json5
 +++ b/third_party/blink/renderer/platform/runtime_enabled_features.json5
 @@ -276,8 +276,10 @@
@@ -78,6 +78,15 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..71b9d0c7cad15ac284a6b875e262af1d
        name: "CSSInitialPseudo",
 -      status: "experimental",
 +      // FlyWeb: on, as shipped in Chromium 117 (engine level 117).
++      status: "stable",
+       base_feature: "none",
+     },
+     {
+@@ -923,7 +945,7 @@
+     },
+     {
+       name: "CSSLogical",
+-      status: "experimental",
 +      status: "stable",
        base_feature: "none",
      },
@@ -183,7 +192,29 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..71b9d0c7cad15ac284a6b875e262af1d
      {
        name: "DeviceAttributes",
        origin_trial_feature_name: "DeviceAttributes",
-@@ -1996,6 +2054,11 @@
+@@ -1811,8 +1869,7 @@
+     },
+     {
+       name: "FontVariantPosition",
+-      status: "experimental",
+-      base_feature: "none",
++      status: "stable",
+     },
+     {
+       // TODO(crbug.com/1231644): This flag is being kept (even though the
+@@ -1942,6 +1999,11 @@
+       },
+       base_feature: "none",
+     },
++    {
++      name: "HasUAVisualTransition",
++      status: "stable",
++      base_feature: "none",
++    },
+     // HighlightAPI's custom highlights use HighlightInheritance's behavior even
+     // if the HighlightInheritance feature is not enabled.
+     {
+@@ -1996,6 +2058,11 @@
        name: "HTMLPopoverHint",
        status: "experimental",
      },
@@ -195,7 +226,20 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..71b9d0c7cad15ac284a6b875e262af1d
      {
        name: "HTMLSelectMenuElement",
        status: "experimental",
-@@ -2137,7 +2200,8 @@
+@@ -2075,6 +2142,12 @@
+     {
+       "name": "IntersectionOptimization",
+     },
++    {
++      // If enabled, IntersectionObserverScrollMargin will be parsed.
++      // FlyWeb: stable, as in Chromium 120 (engine level 120).
++      name: "IntersectionObserverScrollMargin",
++      status: "stable",
++    },
+     {
+       name: "JavaScriptCompileHintsMagicRuntime",
+       status: "experimental",
+@@ -2137,7 +2210,8 @@
      },
      {
        name: "LayoutNGSubgrid",
@@ -205,7 +249,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..71b9d0c7cad15ac284a6b875e262af1d
        base_feature: "none",
      },
      {
-@@ -3109,18 +3173,23 @@
+@@ -3109,18 +3183,23 @@
        status: "stable",
        base_feature: "none",
      },
@@ -232,7 +276,16 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..71b9d0c7cad15ac284a6b875e262af1d
      },
      {
        name: "ScrollCustomization",
-@@ -3453,6 +3522,10 @@
+@@ -3449,10 +3528,19 @@
+       name: "StylusHandwriting",
+       base_feature: "none",
+     },
++    {
++      // FlyWeb: stable, as in Chromium 118 (engine level 118).
++      name: "SvgCrossOriginAttribute",
++      status: "stable",
++    },
+     {
        name: "SvgMapLocalToAncestorFix",
        status: "stable",
      },
@@ -243,7 +296,18 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..71b9d0c7cad15ac284a6b875e262af1d
      {
        name: "SvgRasterOptimizations",
        status: "experimental",
-@@ -3638,6 +3711,10 @@
+@@ -3513,6 +3601,10 @@
+       status: {"Android": "stable"},
+       base_feature: "none",
+     },
++    {
++      name: "TextMetricsBaselines",
++      status: "stable",
++    },
+     {
+       name: "ThirdPartyCookiesUserBypass",
+       status: "experimental",
+@@ -3638,11 +3730,19 @@
        origin_trial_feature_name: "UnrestrictedSharedArrayBuffer",
        origin_trial_os: ["win", "mac", "linux", "fuchsia", "chromeos"],
      },
@@ -254,7 +318,16 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..71b9d0c7cad15ac284a6b875e262af1d
      {
        name: "URLPatternCompareComponent",
        status: "experimental",
-@@ -3657,6 +3734,11 @@
+       base_feature: "none",
+     },
++    {
++      name: "URLSearchParamsHasAndDeleteMultipleArgs",
++      status: "stable",
++    },
+     {
+       // Makes the global root scrollbars follow the preferred color scheme
+       // by default. Please see more details: crbug.com/1423087.
+@@ -3657,6 +3757,11 @@
        name: "UserAgentClientHint",
        status: "stable",
      },
@@ -266,7 +339,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..71b9d0c7cad15ac284a6b875e262af1d
      {
        name: "V8IdleTasks",
        base_feature: "none",
-@@ -4167,6 +4249,12 @@
+@@ -4167,6 +4272,12 @@
        name: "WindowPlacementFullscreenOnScreensChange",
        status: "experimental",
      },

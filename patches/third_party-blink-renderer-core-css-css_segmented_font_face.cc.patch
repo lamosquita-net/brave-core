@@ -1,0 +1,25 @@
+diff --git a/third_party/blink/renderer/core/css/css_segmented_font_face.cc b/third_party/blink/renderer/core/css/css_segmented_font_face.cc
+index 72cbab1a3e9cabf57086401e4d64557f22a6afc8..ed5c039d7f6df7d01b6fcc1fed4755a9681809ad 100644
+--- a/third_party/blink/renderer/core/css/css_segmented_font_face.cc
++++ b/third_party/blink/renderer/core/css/css_segmented_font_face.cc
+@@ -225,16 +225,16 @@ void CSSSegmentedFontFace::WillUseRange(
+       font_description, range_set));
+ }
+ 
+-bool CSSSegmentedFontFace::CheckFont(const String& text) const {
++bool CSSSegmentedFontFace::CheckFont(UChar32 c) const {
+   return font_faces_->ForEachUntilFalse(WTF::BindRepeating(
+-      [](const String& text, Member<FontFace> font_face) -> bool {
++      [](UChar32 c, Member<FontFace> font_face) -> bool {
+         if (font_face->LoadStatus() != FontFace::kLoaded &&
+-            font_face->CssFontFace()->Ranges()->IntersectsWith(text)) {
++            font_face->CssFontFace()->Ranges()->Contains(c)) {
+           return false;
+         }
+         return true;
+       },
+-      text));
++      c));
+ }
+ 
+ void CSSSegmentedFontFace::Match(const String& text,

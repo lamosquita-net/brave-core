@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_object.cc b/third_party/blink/renderer/core/layout/layout_object.cc
-index 98f0936193142d342d2083f61151ce24e10ad7a9..4d24da0e010b26fdbdfa006d62290e85df90f620 100644
+index 98f0936193142d342d2083f61151ce24e10ad7a9..8cdb0c27eb68aa991914aab630b6a89a3869068e 100644
 --- a/third_party/blink/renderer/core/layout/layout_object.cc
 +++ b/third_party/blink/renderer/core/layout/layout_object.cc
 @@ -1598,7 +1598,7 @@ void LayoutObject::InvalidateIntersectionObserverCachedRects() {
@@ -38,7 +38,50 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..4d24da0e010b26fdbdfa006d62290e85
      // Don't invalidate the outermost object of an unrooted subtree. That object
      // will be invalidated when the subtree is added to the document.
      LayoutObject* container = IntrinsicContainer(o);
-@@ -4480,6 +4491,12 @@ gfx::RectF LayoutObject::StrokeBoundingBox() const {
+@@ -2138,8 +2149,8 @@ bool LayoutObject::MapToVisualRectInAncestorSpaceInternalFastPath(
+ 
+   AncestorSkipInfo skip_info(ancestor);
+   PropertyTreeState container_properties = PropertyTreeState::Uninitialized();
+-  const LayoutObject* property_container =
+-      GetPropertyContainer(&skip_info, &container_properties);
++  const LayoutObject* property_container = GetPropertyContainer(
++      &skip_info, &container_properties, visual_rect_flags);
+   if (!property_container)
+     return false;
+ 
+@@ -2215,7 +2226,8 @@ bool LayoutObject::MapToVisualRectInAncestorSpaceInternal(
+ 
+ const LayoutObject* LayoutObject::GetPropertyContainer(
+     AncestorSkipInfo* skip_info,
+-    PropertyTreeStateOrAlias* container_properties) const {
++    PropertyTreeStateOrAlias* container_properties,
++    VisualRectFlags visual_rect_flags) const {
+   NOT_DESTROYED();
+   const LayoutObject* property_container = this;
+   while (!property_container->FirstFragment().HasLocalBorderBoxProperties()) {
+@@ -2227,11 +2239,21 @@ const LayoutObject* LayoutObject::GetPropertyContainer(
+   if (container_properties) {
+     if (property_container == this) {
+       *container_properties = FirstFragment().LocalBorderBoxProperties();
++
++      if (visual_rect_flags & kIgnoreLocalClipPath) {
++        if (auto* properties =
++                property_container->FirstFragment().PaintProperties()) {
++          if (auto* clip_path_clip = properties->ClipPathClip()) {
++            container_properties->SetClip(*clip_path_clip->Parent());
++          }
++        }
++      }
+     } else {
+       *container_properties =
+           property_container->FirstFragment().ContentsProperties();
+     }
+   }
++
+   return property_container;
+ }
+ 
+@@ -4480,6 +4502,12 @@ gfx::RectF LayoutObject::StrokeBoundingBox() const {
    return gfx::RectF();
  }
  
@@ -51,7 +94,7 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..4d24da0e010b26fdbdfa006d62290e85
  gfx::RectF LayoutObject::VisualRectInLocalSVGCoordinates() const {
    NOT_DESTROYED();
    NOTREACHED();
-@@ -4990,6 +5007,19 @@ void LayoutObject::SetSVGDescendantMayHaveTransformRelatedAnimation() {
+@@ -4990,6 +5018,19 @@ void LayoutObject::SetSVGDescendantMayHaveTransformRelatedAnimation() {
    }
  }
  
