@@ -12,6 +12,6 @@
 namespace permissions {
 
 const char kChooserBluetoothOverviewURL[] =
-    "https://github.com/brave/brave-browser/wiki/Web-API-Permissions";
+    "https://flyweb.lamosquita.net/ayuda/#permisos";
 
 }  // namespace permissions

@@ -1,0 +1,60 @@
+diff --git a/third_party/blink/renderer/core/layout/svg/layout_svg_model_object.cc b/third_party/blink/renderer/core/layout/svg/layout_svg_model_object.cc
+index cd946977d90fe7059f82357b4629ecae72f76f37..da5bcc0ace4a3644a69f42456a56e1757305789c 100644
+--- a/third_party/blink/renderer/core/layout/svg/layout_svg_model_object.cc
++++ b/third_party/blink/renderer/core/layout/svg/layout_svg_model_object.cc
+@@ -74,7 +74,8 @@ void LayoutSVGModelObject::MapAncestorToLocal(
+ void LayoutSVGModelObject::AbsoluteQuads(Vector<gfx::QuadF>& quads,
+                                          MapCoordinatesFlags mode) const {
+   NOT_DESTROYED();
+-  quads.push_back(LocalToAbsoluteQuad(gfx::QuadF(StrokeBoundingBox()), mode));
++  quads.push_back(
++      LocalToAbsoluteQuad(gfx::QuadF(DecoratedBoundingBox()), mode));
+ }
+ 
+ // This method is called from inside PaintOutline(), and since we call
+@@ -98,7 +99,7 @@ void LayoutSVGModelObject::AddOutlineRects(OutlineRectCollector& collector,
+ 
+ gfx::RectF LayoutSVGModelObject::LocalBoundingBoxRectForAccessibility() const {
+   NOT_DESTROYED();
+-  return StrokeBoundingBox();
++  return DecoratedBoundingBox();
+ }
+ 
+ void LayoutSVGModelObject::WillBeDestroyed() {
+@@ -107,14 +108,6 @@ void LayoutSVGModelObject::WillBeDestroyed() {
+   LayoutObject::WillBeDestroyed();
+ }
+ 
+-AffineTransform LayoutSVGModelObject::CalculateLocalTransform() const {
+-  NOT_DESTROYED();
+-  auto* element = GetElement();
+-  if (element->HasTransform(SVGElement::kIncludeMotionTransform))
+-    return element->CalculateTransform(SVGElement::kIncludeMotionTransform);
+-  return AffineTransform();
+-}
+-
+ bool LayoutSVGModelObject::CheckForImplicitTransformChange(
+     bool bbox_changed) const {
+   NOT_DESTROYED();
+@@ -124,6 +117,9 @@ bool LayoutSVGModelObject::CheckForImplicitTransformChange(
+     case ETransformBox::kViewBox:
+       return SVGLayoutSupport::LayoutSizeOfNearestViewportChanged(this);
+     case ETransformBox::kFillBox:
++    case ETransformBox::kContentBox:
++    case ETransformBox::kStrokeBox:
++    case ETransformBox::kBorderBox:
+       return bbox_changed;
+   }
+   NOTREACHED();
+@@ -169,6 +165,11 @@ void LayoutSVGModelObject::StyleDidChange(StyleDifference diff,
+ void LayoutSVGModelObject::InsertedIntoTree() {
+   NOT_DESTROYED();
+   LayoutObject::InsertedIntoTree();
++  // Ensure that the viewport dependency flag gets set on the ancestor chain.
++  if (SVGSelfOrDescendantHasViewportDependency()) {
++    ClearSVGSelfOrDescendantHasViewportDependency();
++    SetSVGSelfOrDescendantHasViewportDependency();
++  }
+   LayoutSVGResourceContainer::MarkForLayoutAndParentResourceInvalidation(*this,
+                                                                          false);
+   if (StyleRef().HasSVGEffect())

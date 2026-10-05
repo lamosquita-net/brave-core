@@ -1,0 +1,24 @@
+diff --git a/third_party/blink/renderer/core/svg/svg_element.h b/third_party/blink/renderer/core/svg/svg_element.h
+index f9cf6571b20c7ba01db8a38093189850311a20ab..4bdc4159d03071dab31e868f3d5676241f0fba73 100644
+--- a/third_party/blink/renderer/core/svg/svg_element.h
++++ b/third_party/blink/renderer/core/svg/svg_element.h
+@@ -73,12 +73,16 @@ class CORE_EXPORT SVGElement : public Element {
+   }
+   static bool IsAnimatableCSSProperty(const QualifiedName&);
+ 
+-  enum ApplyMotionTransform {
++  bool HasMotionTransform() const { return HasSVGRareData(); }
++  // Apply any "motion transform" contribution (if existing.)
++  void ApplyMotionTransform(AffineTransform&) const;
++
++  enum ApplyMotionTransformTag {
+     kExcludeMotionTransform,
+     kIncludeMotionTransform
+   };
+-  bool HasTransform(ApplyMotionTransform) const;
+-  AffineTransform CalculateTransform(ApplyMotionTransform) const;
++  bool HasTransform(ApplyMotionTransformTag) const;
++  AffineTransform CalculateTransform(ApplyMotionTransformTag) const;
+ 
+   enum CTMScope {
+     kNearestViewportScope,  // Used by SVGGraphicsElement::getCTM()

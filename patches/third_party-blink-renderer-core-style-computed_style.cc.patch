@@ -1,0 +1,68 @@
+diff --git a/third_party/blink/renderer/core/style/computed_style.cc b/third_party/blink/renderer/core/style/computed_style.cc
+index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..9f0466d3b50d1e284784ec15508a4030d86c73c3 100644
+--- a/third_party/blink/renderer/core/style/computed_style.cc
++++ b/third_party/blink/renderer/core/style/computed_style.cc
+@@ -1344,14 +1344,14 @@ void ComputedStyle::LoadDeferredImages(Document& document) const {
+ void ComputedStyle::ApplyTransform(
+     gfx::Transform& result,
+     const LayoutBox* box,
+-    PhysicalSize border_box_size,
++    const PhysicalRect& reference_box,
+     ApplyTransformOperations apply_operations,
+     ApplyTransformOrigin apply_origin,
+     ApplyMotionPath apply_motion_path,
+     ApplyIndependentTransformProperties apply_independent_transform_properties)
+     const {
+-  ApplyTransform(result, box, gfx::RectF(gfx::SizeF(border_box_size)),
+-                 apply_operations, apply_origin, apply_motion_path,
++  ApplyTransform(result, box, gfx::RectF(reference_box), apply_operations,
++                 apply_origin, apply_motion_path,
+                  apply_independent_transform_properties);
+ }
+ 
+@@ -2534,45 +2534,6 @@ absl::optional<blink::Color> ComputedStyle::AccentColorResolved() const {
+   return auto_color.Resolve(GetCurrentColor(), UsedColorScheme());
+ }
+ 
+-static const int kPaintOrderBitwidth = 2;
+-
+-static unsigned PaintOrderSequence(EPaintOrderType first,
+-                                   EPaintOrderType second,
+-                                   EPaintOrderType third) {
+-  return (((third << kPaintOrderBitwidth) | second) << kPaintOrderBitwidth) |
+-         first;
+-}
+-
+-EPaintOrderType ComputedStyle::PaintOrderType(unsigned index) const {
+-  unsigned pt = 0;
+-  DCHECK(index < ((1 << kPaintOrderBitwidth) - 1));
+-  switch (PaintOrder()) {
+-    case kPaintOrderNormal:
+-    case kPaintOrderFillStrokeMarkers:
+-      pt = PaintOrderSequence(PT_FILL, PT_STROKE, PT_MARKERS);
+-      break;
+-    case kPaintOrderFillMarkersStroke:
+-      pt = PaintOrderSequence(PT_FILL, PT_MARKERS, PT_STROKE);
+-      break;
+-    case kPaintOrderStrokeFillMarkers:
+-      pt = PaintOrderSequence(PT_STROKE, PT_FILL, PT_MARKERS);
+-      break;
+-    case kPaintOrderStrokeMarkersFill:
+-      pt = PaintOrderSequence(PT_STROKE, PT_MARKERS, PT_FILL);
+-      break;
+-    case kPaintOrderMarkersFillStroke:
+-      pt = PaintOrderSequence(PT_MARKERS, PT_FILL, PT_STROKE);
+-      break;
+-    case kPaintOrderMarkersStrokeFill:
+-      pt = PaintOrderSequence(PT_MARKERS, PT_STROKE, PT_FILL);
+-      break;
+-  }
+-
+-  pt =
+-      (pt >> (kPaintOrderBitwidth * index)) & ((1u << kPaintOrderBitwidth) - 1);
+-  return static_cast<EPaintOrderType>(pt);
+-}
+-
+ bool ComputedStyle::ShouldApplyAnyContainment(const Element& element,
+                                               const DisplayStyle& display_style,
+                                               unsigned effective_containment) {

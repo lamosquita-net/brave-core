@@ -1,0 +1,29 @@
+diff --git a/third_party/blink/renderer/core/svg/svg_clip_path_element.cc b/third_party/blink/renderer/core/svg/svg_clip_path_element.cc
+index a9a0a434bba2422db8d7f97abf206f5962d522b7..fbae7c0ac2b35819ab9c67018946ecf6cc90e93b 100644
+--- a/third_party/blink/renderer/core/svg/svg_clip_path_element.cc
++++ b/third_party/blink/renderer/core/svg/svg_clip_path_element.cc
+@@ -45,8 +45,9 @@ void SVGClipPathElement::SvgAttributeChanged(
+     SVGElement::InvalidationGuard invalidation_guard(this);
+ 
+     auto* layout_object = To<LayoutSVGResourceContainer>(GetLayoutObject());
+-    if (layout_object)
+-      layout_object->InvalidateCacheAndMarkForLayout();
++    if (layout_object) {
++      layout_object->InvalidateCache();
++    }
+     return;
+   }
+ 
+@@ -59,9 +60,9 @@ void SVGClipPathElement::ChildrenChanged(const ChildrenChange& change) {
+   if (change.ByParser())
+     return;
+ 
+-  if (LayoutObject* object = GetLayoutObject()) {
+-    object->SetNeedsLayoutAndFullPaintInvalidation(
+-        layout_invalidation_reason::kChildChanged);
++  auto* layout_object = To<LayoutSVGResourceContainer>(GetLayoutObject());
++  if (layout_object) {
++    layout_object->InvalidateCache();
+   }
+ }
+ 

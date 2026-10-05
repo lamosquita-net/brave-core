@@ -1,0 +1,37 @@
+diff --git a/third_party/blink/renderer/core/svg/svg_marker_element.cc b/third_party/blink/renderer/core/svg/svg_marker_element.cc
+index 5fd97d19ba1ba7c212edf1efffb8fe6680f3dc40..cfbc9322ab5a8505731f075e2c3ed9823ff6c83a 100644
+--- a/third_party/blink/renderer/core/svg/svg_marker_element.cc
++++ b/third_party/blink/renderer/core/svg/svg_marker_element.cc
+@@ -116,13 +116,16 @@ void SVGMarkerElement::SvgAttributeChanged(
+     auto* resource_container =
+         To<LayoutSVGResourceContainer>(GetLayoutObject());
+     if (resource_container) {
++      resource_container->InvalidateCache();
++
+       // The marker transform depends on both viewbox attributes, and the marker
+       // size attributes (width, height).
+-      if (viewbox_attribute_changed || length_attribute_changed)
++      if (viewbox_attribute_changed || length_attribute_changed) {
+         resource_container->SetNeedsTransformUpdate();
+-      resource_container->InvalidateCacheAndMarkForLayout();
++        resource_container->SetNeedsLayoutAndFullPaintInvalidation(
++            layout_invalidation_reason::kSvgResourceInvalidated);
++      }
+     }
+-
+     return;
+   }
+ 
+@@ -135,9 +138,9 @@ void SVGMarkerElement::ChildrenChanged(const ChildrenChange& change) {
+   if (change.ByParser())
+     return;
+ 
+-  if (LayoutObject* object = GetLayoutObject()) {
+-    object->SetNeedsLayoutAndFullPaintInvalidation(
+-        layout_invalidation_reason::kChildChanged);
++  auto* resource_container = To<LayoutSVGResourceContainer>(GetLayoutObject());
++  if (resource_container) {
++    resource_container->InvalidateCache();
+   }
+ }
+ 

@@ -160,6 +160,12 @@ module.exports = class GitPatcher {
     // Detect if any of the files the patch applies to have changed
     for (const {path: localPath, checksum} of appliesTo) {
       const fullPath = path.join(this.repoPath, localPath)
+      // FlyWeb: a file created by a patch can be missing while its .patchinfo
+      // is still there (reset removed it and the apply failed, or it was
+      // deleted by hand). Treat that as changed instead of dying with ENOENT.
+      if (!(await fs.pathExists(fullPath))) {
+        return patchApplyReasons.SRC_CHANGED
+      }
       const currentChecksum = await calculateFileChecksum(fullPath)
       if (currentChecksum !== checksum) {
         return patchApplyReasons.SRC_CHANGED
@@ -276,8 +282,26 @@ module.exports = class GitPatcher {
     await fs.writeFile(patchInfoPath, JSON.stringify(patchInfo), { encoding: encodingPatchInfo })
   }
 
-  resetRepoFiles (filePaths) {
-    return util.runGitAsync(this.repoPath, ['checkout', ...filePaths])
+  async resetRepoFiles (filePaths) {
+    // FlyWeb: `git checkout a b c` fails as a whole if one of the paths is not
+    // tracked by git (a patch that creates a new file, e.g. the engine-level
+    // ports), and then every old patch stays applied and the new ones fail.
+    // Delete the untracked paths (they only exist because a patch created
+    // them) and check out the tracked ones.
+    if (!filePaths.length) {
+      return
+    }
+    const tracked = new Set(
+      (await util.runGitAsync(this.repoPath, ['ls-files', '-z', '--', ...filePaths]))
+        .split('\0').filter(s => s))
+    for (const filePath of filePaths) {
+      if (!tracked.has(filePath)) {
+        await fs.remove(path.join(this.repoPath, filePath))
+      }
+    }
+    if (tracked.size) {
+      return util.runGitAsync(this.repoPath, ['checkout', '--', ...tracked])
+    }
   }
 
   async handleObsoletePatchInfos (patchInfosObsolete) {

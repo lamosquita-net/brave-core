@@ -1,0 +1,16 @@
+diff --git a/third_party/blink/renderer/core/svg/svg_stop_element.cc b/third_party/blink/renderer/core/svg/svg_stop_element.cc
+index 5246b602351e0470527d70e45113ce6004b825a8..a2166e3b40f797a8abb0b3da883a7a2491052e0b 100644
+--- a/third_party/blink/renderer/core/svg/svg_stop_element.cc
++++ b/third_party/blink/renderer/core/svg/svg_stop_element.cc
+@@ -51,8 +51,9 @@ void InvalidateInstancesAndAncestorResources(SVGStopElement* stop_element) {
+   SVGElement::InvalidationGuard invalidation_guard(stop_element);
+ 
+   Element* parent = stop_element->parentElement();
+-  if (auto* gradient = DynamicTo<SVGGradientElement>(parent))
+-    gradient->InvalidateGradient(layout_invalidation_reason::kChildChanged);
++  if (auto* gradient = DynamicTo<SVGGradientElement>(parent)) {
++    gradient->InvalidateGradient();
++  }
+ }
+ 
+ }  // namespace

@@ -1,0 +1,25 @@
+diff --git a/third_party/blink/renderer/core/layout/svg/layout_svg_transformable_container.h b/third_party/blink/renderer/core/layout/svg/layout_svg_transformable_container.h
+index 372a1e060f5a8fd75826d4fe62bf404eae823049..3a4f355c921b6993b63477917f17748e289c2c0d 100644
+--- a/third_party/blink/renderer/core/layout/svg/layout_svg_transformable_container.h
++++ b/third_party/blink/renderer/core/layout/svg/layout_svg_transformable_container.h
+@@ -44,18 +44,15 @@ class LayoutSVGTransformableContainer final : public LayoutSVGContainer {
+     return additional_translation_;
+   }
+ 
+-  void SetNeedsTransformUpdate() override;
+-
+  private:
+   void StyleDidChange(StyleDifference, const ComputedStyle* old_style) override;
+-  SVGTransformChange CalculateLocalTransform(bool bounds_changed) override;
++  SVGTransformChange UpdateLocalTransform(
++      const gfx::RectF& reference_box) override;
+   AffineTransform LocalSVGTransform() const override {
+     NOT_DESTROYED();
+     return local_transform_;
+   }
+ 
+-  bool needs_transform_update_ : 1;
+-  bool transform_uses_reference_box_ : 1;
+   AffineTransform local_transform_;
+   gfx::Vector2dF additional_translation_;
+ };

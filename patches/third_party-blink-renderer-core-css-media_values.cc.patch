@@ -1,0 +1,20 @@
+diff --git a/third_party/blink/renderer/core/css/media_values.cc b/third_party/blink/renderer/core/css/media_values.cc
+index 4c09f249217609a2095ea62d77c4e4f6d4d741e5..6fbb572766bba7add119e9a252b03d8e91ddb4f0 100644
+--- a/third_party/blink/renderer/core/css/media_values.cc
++++ b/third_party/blink/renderer/core/css/media_values.cc
+@@ -249,6 +249,15 @@ float MediaValues::CalculateIcSize(LocalFrame* frame) {
+       .Ic(/* zoom */ 1.0f);
+ }
+ 
++float MediaValues::CalculateCapSize(LocalFrame* frame) {
++  DCHECK(frame);
++  DCHECK(frame->GetDocument());
++  const ComputedStyle* style = frame->GetDocument()->GetComputedStyle();
++  DCHECK(style);
++  return CSSToLengthConversionData::FontSizes(style->GetFontSizeStyle(), style)
++      .Cap(/* zoom */ 1.0f);
++}
++
+ float MediaValues::CalculateLineHeight(LocalFrame* frame) {
+   DCHECK(frame);
+   DCHECK(frame->GetDocument());

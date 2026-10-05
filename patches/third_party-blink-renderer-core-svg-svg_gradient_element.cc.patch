@@ -1,0 +1,47 @@
+diff --git a/third_party/blink/renderer/core/svg/svg_gradient_element.cc b/third_party/blink/renderer/core/svg/svg_gradient_element.cc
+index 0e06df89b085b513450615d009e99ff91d06f621..4ff08ef6bf7823a17fc963de55841aedaf0e54a4 100644
+--- a/third_party/blink/renderer/core/svg/svg_gradient_element.cc
++++ b/third_party/blink/renderer/core/svg/svg_gradient_element.cc
+@@ -82,7 +82,7 @@ void SVGGradientElement::BuildPendingResource() {
+   if (auto* gradient = DynamicTo<SVGGradientElement>(target))
+     AddReferenceTo(gradient);
+ 
+-  InvalidateGradient(layout_invalidation_reason::kSvgResourceInvalidated);
++  InvalidateGradient();
+ }
+ 
+ void SVGGradientElement::ClearResourceReferences() {
+@@ -116,7 +116,7 @@ void SVGGradientElement::SvgAttributeChanged(
+       attr_name == svg_names::kGradientTransformAttr ||
+       attr_name == svg_names::kSpreadMethodAttr) {
+     SVGElement::InvalidationGuard invalidation_guard(this);
+-    InvalidateGradient(layout_invalidation_reason::kAttributeChanged);
++    InvalidateGradient();
+     return;
+   }
+ 
+@@ -147,20 +147,18 @@ void SVGGradientElement::ChildrenChanged(const ChildrenChange& change) {
+   SVGElement::ChildrenChanged(change);
+ 
+   if (!change.ByParser())
+-    InvalidateGradient(layout_invalidation_reason::kChildChanged);
++    InvalidateGradient();
+ }
+ 
+-void SVGGradientElement::InvalidateGradient(
+-    LayoutInvalidationReasonForTracing reason) {
++void SVGGradientElement::InvalidateGradient() {
+   if (auto* layout_object = To<LayoutSVGResourceContainer>(GetLayoutObject()))
+-    layout_object->InvalidateCacheAndMarkForLayout(reason);
++    layout_object->InvalidateCache();
+ }
+ 
+ void SVGGradientElement::InvalidateDependentGradients() {
+   NotifyIncomingReferences([](SVGElement& element) {
+     if (auto* gradient = DynamicTo<SVGGradientElement>(element)) {
+-      gradient->InvalidateGradient(
+-          layout_invalidation_reason::kSvgResourceInvalidated);
++      gradient->InvalidateGradient();
+     }
+   });
+ }

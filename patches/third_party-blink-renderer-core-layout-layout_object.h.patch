@@ -1,0 +1,52 @@
+diff --git a/third_party/blink/renderer/core/layout/layout_object.h b/third_party/blink/renderer/core/layout/layout_object.h
+index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..7dd8c1c107078126324df05652efc997f3b799b3 100644
+--- a/third_party/blink/renderer/core/layout/layout_object.h
++++ b/third_party/blink/renderer/core/layout/layout_object.h
+@@ -1343,10 +1343,16 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+   // coordinate space is the viewport space.
+   virtual gfx::RectF VisualRectInLocalSVGCoordinates() const;
+ 
++  // Compute the SVG stroke bounding box per
++  // https://www.w3.org/TR/SVG2/coords.html#TermStrokeBoundingBox .
++  virtual gfx::RectF StrokeBoundingBox() const;
++
+   // Like VisualRectInLocalSVGCoordinates() but does not include visual overflow
+   // (name is misleading). May be zoomed (currently only for <foreignObject>,
+   // which represents this via its LocalToSVGParentTransform()).
+-  virtual gfx::RectF StrokeBoundingBox() const;
++  // It mostly corresponds to the "decorated bounding box" from the SVG spec.
++  // (https://svgwg.org/svg2-draft/coords.html#BoundingBoxes)
++  virtual gfx::RectF DecoratedBoundingBox() const;
+ 
+   // This returns the transform applying to the local SVG coordinate space,
+   // which combines the CSS transform properties and animation motion transform.
+@@ -3515,6 +3521,17 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+   }
+   void SetSVGDescendantMayHaveTransformRelatedAnimation();
+ 
++  bool SVGSelfOrDescendantHasViewportDependency() const {
++    NOT_DESTROYED();
++    return bitfields_.SVGSelfOrDescendantHasViewportDependency();
++  }
++  void SetSVGSelfOrDescendantHasViewportDependency();
++  void ClearSVGSelfOrDescendantHasViewportDependency() {
++    NOT_DESTROYED();
++    DCHECK(IsSVGChild());
++    bitfields_.SetSVGSelfOrDescendantHasViewportDependency(false);
++  }
++
+   bool ShouldSkipNextLayoutShiftTracking() const {
+     NOT_DESTROYED();
+     return bitfields_.ShouldSkipNextLayoutShiftTracking();
+@@ -4300,6 +4317,11 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+     ADD_BOOLEAN_BITFIELD(svg_descendant_may_have_transform_related_animation_,
+                          SVGDescendantMayHaveTransformRelatedAnimation);
+ 
++    // For SVG objects, indicates if this object or any descendant depends on
++    // the dimensions of the viewport.
++    ADD_BOOLEAN_BITFIELD(svg_self_or_descendant_has_viewport_dependency_,
++                         SVGSelfOrDescendantHasViewportDependency);
++
+     ADD_BOOLEAN_BITFIELD(is_layout_ng_object_for_formatted_text,
+                          IsLayoutNGObjectForFormattedText);
+ 

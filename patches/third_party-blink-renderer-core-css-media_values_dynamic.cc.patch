@@ -1,0 +1,22 @@
+diff --git a/third_party/blink/renderer/core/css/media_values_dynamic.cc b/third_party/blink/renderer/core/css/media_values_dynamic.cc
+index 088a0a5737bbf9626299369e0186ddeca969b6aa..e769e9669d83d121725c86085ef85c58b5fee796 100644
+--- a/third_party/blink/renderer/core/css/media_values_dynamic.cc
++++ b/third_party/blink/renderer/core/css/media_values_dynamic.cc
+@@ -101,6 +101,17 @@ float MediaValuesDynamic::RootLineHeight(float zoom) const {
+   return CalculateLineHeight(frame_);
+ }
+ 
++float MediaValuesDynamic::CapFontSize(float zoom) const {
++  DCHECK_EQ(1.0f, zoom);
++  return CalculateCapSize(frame_);
++}
++
++float MediaValuesDynamic::RcapFontSize(float zoom) const {
++  DCHECK_EQ(1.0f, zoom);
++  // For media queries cap and rcap units are both based on the initial font.
++  return CalculateCapSize(frame_);
++}
++
+ double MediaValuesDynamic::ViewportWidth() const {
+   if (viewport_dimensions_overridden_) {
+     return viewport_width_override_;
