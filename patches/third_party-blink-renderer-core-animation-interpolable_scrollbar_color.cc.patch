@@ -1,9 +1,9 @@
 diff --git a/third_party/blink/renderer/core/animation/interpolable_scrollbar_color.cc b/third_party/blink/renderer/core/animation/interpolable_scrollbar_color.cc
 new file mode 100644
-index 0000000000000000000000000000000000000000..b5d0e9af4b5906d3ed4399f801ee2451db908a85
+index 0000000000000000000000000000000000000000..b381904c51e8e6b203dff1d19adec42432fa6d3d
 --- /dev/null
 +++ b/third_party/blink/renderer/core/animation/interpolable_scrollbar_color.cc
-@@ -0,0 +1,100 @@
+@@ -0,0 +1,101 @@
 +// Copyright 2022 The Chromium Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -49,8 +49,9 @@ index 0000000000000000000000000000000000000000..b5d0e9af4b5906d3ed4399f801ee2451
 +
 +InterpolableScrollbarColor* InterpolableScrollbarColor::RawCloneAndZero()
 +    const {
-+  return new InterpolableScrollbarColor(*thumb_color_.CloneAndZero(),
-+                                        *track_color_.CloneAndZero());
++  return new InterpolableScrollbarColor(
++      To<InterpolableColor>(*thumb_color_.CloneAndZero()),
++      To<InterpolableColor>(*track_color_.CloneAndZero()));
 +}
 +
 +StyleScrollbarColor InterpolableScrollbarColor::GetScrollbarColor(
