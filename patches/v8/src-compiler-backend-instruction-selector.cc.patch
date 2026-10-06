@@ -1,0 +1,19 @@
+diff --git a/src/compiler/backend/instruction-selector.cc b/src/compiler/backend/instruction-selector.cc
+index c84e90685ea534a7e36d9092eae845b3a7e96221..38e57e5204d92ac0d65e91cb6c9a4c8664cacc9b 100644
+--- a/src/compiler/backend/instruction-selector.cc
++++ b/src/compiler/backend/instruction-selector.cc
+@@ -5433,6 +5433,14 @@ bool InstructionSelectorT<Adapter>::ZeroExtendsWord32ToWord64(
+   const int kMaxRecursionDepth = 100;
+ 
+   if (this->IsPhi(node)) {
++    // Intermediate results from previous calls are not necessarily correct.
++    if (recursion_depth == 0) {
++      static_assert(sizeof(Upper32BitsState) == 1);
++      memset(phi_states_.data(),
++             static_cast<int>(Upper32BitsState::kNotYetChecked),
++             phi_states_.size());
++    }
++
+     Upper32BitsState current = phi_states_[this->id(node)];
+     if (current != Upper32BitsState::kNotYetChecked) {
+       return current == Upper32BitsState::kUpperBitsGuaranteedZero;

@@ -1,0 +1,17 @@
+diff --git a/src/wasm/baseline/liftoff-assembler.h b/src/wasm/baseline/liftoff-assembler.h
+index 1ed564d18745f75a6e46304cd9fa62ecb5ea14e2..237301d52f3019e860d0dbd5d605184c00f7f9ac 100644
+--- a/src/wasm/baseline/liftoff-assembler.h
++++ b/src/wasm/baseline/liftoff-assembler.h
+@@ -542,9 +542,9 @@ class LiftoffAssembler : public MacroAssembler {
+   // the bottom of the stack.
+   void DropExceptionValueAtOffset(int offset);
+ 
+-  // Ensure that the loop inputs are either in a register or spilled to the
+-  // stack, so that we can merge different values on the back-edge.
+-  void PrepareLoopArgs(int num);
++  // Spill all loop inputs to the stack to free registers and to ensure that we
++  // can merge different values on the back-edge.
++  void SpillLoopArgs(int num);
+ 
+   V8_INLINE static int NextSpillOffset(ValueKind kind, int top_spill_offset);
+   V8_INLINE int NextSpillOffset(ValueKind kind);

@@ -1,0 +1,13 @@
+diff --git a/src/builtins/builtins-array.cc b/src/builtins/builtins-array.cc
+index 60dc19367aa38997721ed85df6210f9de3a44313..dc82b658df09e5850ef2688fae1d748cb9873917 100644
+--- a/src/builtins/builtins-array.cc
++++ b/src/builtins/builtins-array.cc
+@@ -51,7 +51,7 @@ inline bool HasOnlySimpleElements(Isolate* isolate,
+   DisallowGarbageCollection no_gc;
+   PrototypeIterator iter(isolate, receiver, kStartAtReceiver);
+   for (; !iter.IsAtEnd(); iter.Advance()) {
+-    if (IsJSProxy(iter.GetCurrent())) return false;
++    if (!IsJSObject(iter.GetCurrent())) return false;
+     Tagged<JSObject> current = iter.GetCurrent<JSObject>();
+     if (!HasSimpleElements(current)) return false;
+   }
