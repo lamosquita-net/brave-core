@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/parser/css_parser_fast_paths.cc b/third_party/blink/renderer/core/css/parser/css_parser_fast_paths.cc
-index ba8ea7b8cf8d725e4bb39adc0625855e574bcbfd..c2d02c149f13fc1d8301ec7a2a0e41f52744ac07 100644
+index ba8ea7b8cf8d725e4bb39adc0625855e574bcbfd..a51301f360120cf8683bab801aad3c6b8ea7e37b 100644
 --- a/third_party/blink/renderer/core/css/parser/css_parser_fast_paths.cc
 +++ b/third_party/blink/renderer/core/css/parser/css_parser_fast_paths.cc
 @@ -1142,10 +1142,6 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
@@ -13,7 +13,16 @@ index ba8ea7b8cf8d725e4bb39adc0625855e574bcbfd..c2d02c149f13fc1d8301ec7a2a0e41f5
      case CSSPropertyID::kBaselineSource:
        DCHECK(RuntimeEnabledFeatures::CSSBaselineSourceEnabled());
        return value_id == CSSValueID::kAuto || value_id == CSSValueID::kFirst ||
-@@ -1544,6 +1540,13 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
+@@ -1469,6 +1465,8 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
+     case CSSPropertyID::kFlexWrap:
+       return value_id == CSSValueID::kNowrap || value_id == CSSValueID::kWrap ||
+              value_id == CSSValueID::kWrapReverse;
++    case CSSPropertyID::kFieldSizing:
++      return value_id == CSSValueID::kFixed || value_id == CSSValueID::kContent;
+     case CSSPropertyID::kHyphens:
+ #if BUILDFLAG(USE_MINIKIN_HYPHENATION) || BUILDFLAG(IS_APPLE)
+       return value_id == CSSValueID::kAuto || value_id == CSSValueID::kNone ||
+@@ -1544,6 +1542,13 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
               value_id == CSSValueID::kBalance ||
               value_id == CSSValueID::kPretty;
      case CSSPropertyID::kTransformBox:
@@ -27,7 +36,7 @@ index ba8ea7b8cf8d725e4bb39adc0625855e574bcbfd..c2d02c149f13fc1d8301ec7a2a0e41f5
        return value_id == CSSValueID::kFillBox ||
               value_id == CSSValueID::kViewBox;
      case CSSPropertyID::kTransformStyle:
-@@ -1623,8 +1626,6 @@ CSSBitset CSSParserFastPaths::handled_by_keyword_fast_paths_properties_{{
+@@ -1623,8 +1628,6 @@ CSSBitset CSSParserFastPaths::handled_by_keyword_fast_paths_properties_{{
      CSSPropertyID::kAppearance,
      CSSPropertyID::kMixBlendMode,
      CSSPropertyID::kIsolation,
@@ -36,3 +45,11 @@ index ba8ea7b8cf8d725e4bb39adc0625855e574bcbfd..c2d02c149f13fc1d8301ec7a2a0e41f5
      CSSPropertyID::kBaselineSource,
      CSSPropertyID::kBorderBottomStyle,
      CSSPropertyID::kBorderCollapse,
+@@ -1644,6 +1647,7 @@ CSSBitset CSSParserFastPaths::handled_by_keyword_fast_paths_properties_{{
+     CSSPropertyID::kEmptyCells,
+     CSSPropertyID::kFillRule,
+     CSSPropertyID::kFloat,
++    CSSPropertyID::kFieldSizing,
+     CSSPropertyID::kForcedColorAdjust,
+     CSSPropertyID::kHyphens,
+     CSSPropertyID::kImageRendering,

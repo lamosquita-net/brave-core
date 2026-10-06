@@ -1,0 +1,19 @@
+diff --git a/third_party/blink/renderer/core/html/forms/text_control_inner_elements.cc b/third_party/blink/renderer/core/html/forms/text_control_inner_elements.cc
+index 839a17def3afa95baec3e8b60992f76be3cfb9e8..c68e2cde3cab5de7f357eacd0473d9d1bbfdb78e 100644
+--- a/third_party/blink/renderer/core/html/forms/text_control_inner_elements.cc
++++ b/third_party/blink/renderer/core/html/forms/text_control_inner_elements.cc
+@@ -150,6 +150,14 @@ TextControlInnerEditorElement::CustomStyleForLayoutObject(
+           : EUserModify::kReadWritePlaintextOnly);
+   style_builder.SetDisplay(EDisplay::kBlock);
+   style_builder.SetHasLineIfEmpty(true);
++  if (!start_style.ApplyControlFixedSize(host)) {
++    Length caret_width(GetDocument().View()->CaretWidth(), Length::kFixed);
++    if (IsHorizontalWritingMode(style_builder.GetWritingMode())) {
++      style_builder.SetMinWidth(caret_width);
++    } else {
++      style_builder.SetMinHeight(caret_width);
++    }
++  }
+   style_builder.SetShouldIgnoreOverflowPropertyForInlineBlockBaseline();
+ 
+   if (!IsA<HTMLTextAreaElement>(host)) {

@@ -1,8 +1,18 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style.cc b/third_party/blink/renderer/core/style/computed_style.cc
-index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..e596e20ccfc3c0125da13cf7a1a1b8ba2bc46e42 100644
+index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..834314e1d160cd3a138ec074537997d70c39e45b 100644
 --- a/third_party/blink/renderer/core/style/computed_style.cc
 +++ b/third_party/blink/renderer/core/style/computed_style.cc
-@@ -1206,6 +1206,7 @@ static bool HasPropertyThatCreatesStackingContext(
+@@ -23,6 +23,9 @@
+ 
+ #include "third_party/blink/renderer/core/style/computed_style.h"
+ 
++#include "third_party/blink/renderer/core/html/forms/html_form_control_element.h"
++#include "third_party/blink/public/web/web_autofill_state.h"
++
+ #include <algorithm>
+ #include <memory>
+ #include <utility>
+@@ -1206,6 +1209,7 @@ static bool HasPropertyThatCreatesStackingContext(
        case CSSPropertyID::kOffsetPath:
        case CSSPropertyID::kOffsetPosition:
        case CSSPropertyID::kWebkitMask:
@@ -10,7 +20,7 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..e596e20ccfc3c0125da13cf7a1a1b8ba
        case CSSPropertyID::kWebkitMaskBoxImage:
        case CSSPropertyID::kClipPath:
        case CSSPropertyID::kWebkitBoxReflect:
-@@ -1344,14 +1345,14 @@ void ComputedStyle::LoadDeferredImages(Document& document) const {
+@@ -1344,14 +1348,14 @@ void ComputedStyle::LoadDeferredImages(Document& document) const {
  void ComputedStyle::ApplyTransform(
      gfx::Transform& result,
      const LayoutBox* box,
@@ -28,7 +38,7 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..e596e20ccfc3c0125da13cf7a1a1b8ba
                   apply_independent_transform_properties);
  }
  
-@@ -2534,43 +2535,24 @@ absl::optional<blink::Color> ComputedStyle::AccentColorResolved() const {
+@@ -2534,43 +2538,24 @@ absl::optional<blink::Color> ComputedStyle::AccentColorResolved() const {
    return auto_color.Resolve(GetCurrentColor(), UsedColorScheme());
  }
  
@@ -87,3 +97,25 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..e596e20ccfc3c0125da13cf7a1a1b8ba
  }
  
  bool ComputedStyle::ShouldApplyAnyContainment(const Element& element,
+@@ -2656,6 +2641,21 @@ bool ComputedStyle::IsRenderedInTopLayer(const Element& element) const {
+          StyleType() == kPseudoIdBackdrop;
+ }
+ 
++// FlyWeb: field-sizing (Chromium e8512735d258, 489159f25a02; level 123).
++bool ComputedStyle::ApplyControlFixedSize(const Node* node) const {
++  if (FieldSizing() == EFieldSizing::kFixed) {
++    return true;
++  }
++  if (!node) {
++    return false;
++  }
++  const auto* control = DynamicTo<HTMLFormControlElement>(node);
++  if (!control) {
++    control = DynamicTo<HTMLFormControlElement>(node->OwnerShadowHost());
++  }
++  return control && control->GetAutofillState() != WebAutofillState::kNotFilled;
++}
++
+ ComputedStyleBuilder::ComputedStyleBuilder(const ComputedStyle& style) {
+   style_ = base::AdoptRef(new ComputedStyle(style));
+   SetStyleBase(*style_);

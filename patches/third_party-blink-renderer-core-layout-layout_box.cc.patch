@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_box.cc b/third_party/blink/renderer/core/layout/layout_box.cc
-index c2f1775ffaed54914a1cdd313a207364ba7d887d..93d8c6ba5bfd965226473577c2593b133fee5ee8 100644
+index c2f1775ffaed54914a1cdd313a207364ba7d887d..d9e25cf81da55df8f3cb1db888a39b5ebd244d7f 100644
 --- a/third_party/blink/renderer/core/layout/layout_box.cc
 +++ b/third_party/blink/renderer/core/layout/layout_box.cc
 @@ -560,13 +560,13 @@ void LayoutBox::StyleWillChange(StyleDifference diff,
@@ -23,7 +23,79 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..93d8c6ba5bfd965226473577c2593b13
      }
  
      // When a layout hint happens and an object's position style changes, we
-@@ -1532,10 +1532,10 @@ PhysicalRect LayoutBox::PhysicalBackgroundRect(
+@@ -1324,17 +1324,21 @@ LayoutUnit LayoutBox::DefaultIntrinsicContentInlineSize() const {
+     return kIndefiniteSize;
+   const Element& element = *To<Element>(GetNode());
+ 
++  const bool apply_fixed_size = StyleRef().ApplyControlFixedSize(&element);
+   const auto* select = DynamicTo<HTMLSelectElement>(element);
+   if (UNLIKELY(select && select->UsesMenuList())) {
+-    return MenuListIntrinsicInlineSize(*select, *this);
++    return apply_fixed_size ? MenuListIntrinsicInlineSize(*select, *this)
++                            : kIndefiniteSize;
+   }
+   const auto* input = DynamicTo<HTMLInputElement>(element);
+   if (UNLIKELY(input)) {
+-    if (input->IsTextField())
++    if (input->IsTextField() && apply_fixed_size) {
+       return TextFieldIntrinsicInlineSize(*input, *this);
++    }
+     const AtomicString& type = input->type();
+-    if (type == input_type_names::kFile)
++    if (type == input_type_names::kFile && apply_fixed_size) {
+       return FileUploadControlIntrinsicInlineSize(*input, *this);
++    }
+     if (type == input_type_names::kRange)
+       return SliderIntrinsicInlineSize(*this);
+     auto effective_appearance = StyleRef().EffectiveAppearance();
+@@ -1349,8 +1353,9 @@ LayoutUnit LayoutBox::DefaultIntrinsicContentInlineSize() const {
+     return kIndefiniteSize;
+   }
+   const auto* textarea = DynamicTo<HTMLTextAreaElement>(element);
+-  if (UNLIKELY(textarea))
++  if (UNLIKELY(textarea) && apply_fixed_size) {
+     return TextAreaIntrinsicInlineSize(*textarea, *this);
++  }
+   if (IsSliderContainer(element))
+     return SliderIntrinsicInlineSize(*this);
+ 
+@@ -1363,6 +1368,19 @@ LayoutUnit LayoutBox::DefaultIntrinsicContentBlockSize() const {
+   // get here.
+   DCHECK(!HasOverrideIntrinsicContentLogicalHeight());
+ 
++  // FlyWeb: field-sizing (engine level 123), ordered as in Chromium 123.
++  auto effective_appearance = StyleRef().EffectiveAppearance();
++  if (effective_appearance == kCheckboxPart) {
++    return ThemePartIntrinsicSize(*this, WebThemeEngine::kPartCheckbox)
++        .block_size;
++  }
++  if (effective_appearance == kRadioPart) {
++    return ThemePartIntrinsicSize(*this, WebThemeEngine::kPartRadio).block_size;
++  }
++
++  if (!StyleRef().ApplyControlFixedSize(GetNode())) {
++    return kIndefiniteSize;
++  }
+   if (const auto* select = DynamicTo<HTMLSelectElement>(GetNode())) {
+     if (select->UsesMenuList())
+       return MenuListIntrinsicBlockSize(*select, *this);
+@@ -1377,15 +1395,6 @@ LayoutUnit LayoutBox::DefaultIntrinsicContentBlockSize() const {
+                                       *this);
+   }
+ 
+-  auto effective_appearance = StyleRef().EffectiveAppearance();
+-  if (effective_appearance == kCheckboxPart) {
+-    return ThemePartIntrinsicSize(*this, WebThemeEngine::kPartCheckbox)
+-        .block_size;
+-  }
+-  if (effective_appearance == kRadioPart) {
+-    return ThemePartIntrinsicSize(*this, WebThemeEngine::kPartRadio).block_size;
+-  }
+-
+   return kIndefiniteSize;
+ }
+ 
+@@ -1532,10 +1541,10 @@ PhysicalRect LayoutBox::PhysicalBackgroundRect(
        bool layer_known_opaque = false;
        // Check if the image is opaque and fills the clip.
        if (const StyleImage* image = cur->GetImage()) {

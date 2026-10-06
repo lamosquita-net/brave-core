@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/css_properties.json5 b/third_party/blink/renderer/core/css/css_properties.json5
-index 871edc0924403a04bf16f4d5602f421d3882473c..d1522428ffab41104608877ff11eafc6fe4b1640 100644
+index 871edc0924403a04bf16f4d5602f421d3882473c..0c23ee7a890cd29e5f4b06bf1a47ebf843fc2ac2 100644
 --- a/third_party/blink/renderer/core/css/css_properties.json5
 +++ b/third_party/blink/renderer/core/css/css_properties.json5
 @@ -991,6 +991,19 @@
@@ -22,7 +22,24 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..d1522428ffab41104608877ff11eafc6
      {
        name: "transition-timing-function",
        property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal", "InitialValue"],
-@@ -1821,29 +1834,15 @@
+@@ -1448,6 +1461,16 @@
+       valid_for_highlight_legacy: true,
+       computable: false,
+     },
++    {
++      name: "field-sizing",
++      field_group: "visual",
++      field_template: "keyword",
++      property_methods: ["CSSValueFromComputedStyleInternal"],
++      keywords: ["fixed", "content"],
++      default_value: "fixed",
++      typedom_types: ["Keyword"],
++      runtime_flag: "CssFieldSizing",
++    },
+     {
+       name: "-webkit-locale",
+       property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
+@@ -1821,29 +1844,15 @@
        supports_incremental_style: true,
      },
      {
@@ -55,7 +72,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..d1522428ffab41104608877ff11eafc6
        supports_incremental_style: true,
      },
      {
-@@ -2446,7 +2445,7 @@
+@@ -2446,7 +2455,7 @@
        type_name: "ClipPathOperation",
        computed_style_custom_functions: ["getter", "setter"],
        converter: "ConvertClipPath",
@@ -64,7 +81,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..d1522428ffab41104608877ff11eafc6
        typedom_types: ["Keyword"],
      },
      {
-@@ -4139,7 +4138,7 @@
+@@ -4139,7 +4148,7 @@
        supports_incremental_style: true,
      },
      {
@@ -73,7 +90,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..d1522428ffab41104608877ff11eafc6
        name: "scrollbar-color",
        property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
        inherited: true,
-@@ -5228,7 +5227,7 @@
+@@ -5228,7 +5237,7 @@
        name: "transform-box",
        property_methods: ["CSSValueFromComputedStyleInternal"],
        field_template: "keyword",
@@ -82,7 +99,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..d1522428ffab41104608877ff11eafc6
        default_value: "view-box",
        typedom_types: ["Keyword"],
        computable: false,
-@@ -5761,6 +5760,30 @@
+@@ -5761,6 +5770,30 @@
          modifier_type: "Width",
        },
      },
@@ -113,7 +130,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..d1522428ffab41104608877ff11eafc6
      {
        name: "-webkit-mask-clip",
        property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
-@@ -5769,14 +5792,45 @@
+@@ -5769,14 +5802,45 @@
          fill_type: "Clip",
        },
      },
@@ -160,7 +177,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..d1522428ffab41104608877ff11eafc6
      {
        name: "-webkit-mask-image",
        property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
-@@ -5787,6 +5841,21 @@
+@@ -5787,6 +5851,21 @@
          fill_type_getter: "GetImage"
        },
      },
@@ -182,7 +199,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..d1522428ffab41104608877ff11eafc6
      {
        name: "-webkit-mask-origin",
        property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
-@@ -5816,20 +5885,43 @@
+@@ -5816,20 +5895,43 @@
        computable: false,
      },
      {
@@ -196,15 +213,15 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..d1522428ffab41104608877ff11eafc6
        },
 -      computable: false,
 +      runtime_flag: "CSSMaskingInterop",
-+    },
-+    {
+     },
+     {
+-      name: "-webkit-mask-repeat-y",
 +      name: "-webkit-alternative-mask-repeat",
 +      alternative_of: "-webkit-mask-repeat",
 +      alias_for: "mask-repeat",
 +      runtime_flag: "CSSMaskingInterop",
-     },
-     {
--      name: "-webkit-mask-repeat-y",
++    },
++    {
 +      name: "-webkit-mask-repeat",
 +      property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
        style_builder_template: "mask_layer",
@@ -232,7 +249,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..d1522428ffab41104608877ff11eafc6
      },
      {
        name: "-webkit-mask-size",
-@@ -6863,7 +6955,7 @@
+@@ -6863,7 +6965,7 @@
        name: "background",
        longhands: [
          "background-image", "background-position-x", "background-position-y",
@@ -241,7 +258,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..d1522428ffab41104608877ff11eafc6
          "background-attachment", "background-origin", "background-clip",
          "background-color"
        ],
-@@ -6877,12 +6969,6 @@
+@@ -6877,12 +6979,6 @@
        computable: true,
        supports_incremental_style: true,
      },
@@ -254,7 +271,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..d1522428ffab41104608877ff11eafc6
      {
        name: "border",
        longhands: [
-@@ -7387,7 +7473,8 @@
+@@ -7387,7 +7483,8 @@
        name: "transition",
        longhands: [
          "transition-property", "transition-duration",
@@ -264,7 +281,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..d1522428ffab41104608877ff11eafc6
        ],
        property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
      },
-@@ -7440,15 +7527,35 @@
+@@ -7440,15 +7537,35 @@
        longhands: ["column-width", "column-count"],
        property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
      },
@@ -302,7 +319,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..d1522428ffab41104608877ff11eafc6
      {
        name: "-webkit-mask-box-image",
        longhands: [
-@@ -7460,14 +7567,22 @@
+@@ -7460,14 +7577,22 @@
        computable: true,
      },
      {

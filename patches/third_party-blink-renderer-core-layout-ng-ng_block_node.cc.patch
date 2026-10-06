@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/ng_block_node.cc b/third_party/blink/renderer/core/layout/ng/ng_block_node.cc
-index 368a745eda9491456cdb14281e1d2eddf15f942d..8a46b9471c61be3094cc46754a5fdf16579c0fa4 100644
+index 368a745eda9491456cdb14281e1d2eddf15f942d..015da3958005092707cab1ba31b06e39a8012c89 100644
 --- a/third_party/blink/renderer/core/layout/ng/ng_block_node.cc
 +++ b/third_party/blink/renderer/core/layout/ng/ng_block_node.cc
 @@ -79,6 +79,7 @@
@@ -10,7 +10,29 @@ index 368a745eda9491456cdb14281e1d2eddf15f942d..8a46b9471c61be3094cc46754a5fdf16
  #include "third_party/blink/renderer/platform/runtime_enabled_features.h"
  #include "third_party/blink/renderer/platform/text/writing_mode.h"
  #include "third_party/blink/renderer/platform/wtf/allocator/allocator.h"
-@@ -1719,8 +1720,9 @@ absl::optional<gfx::Transform> NGBlockNode::GetTransformForChildFragment(
+@@ -316,14 +317,18 @@ absl::optional<LayoutUnit> ContentMinimumInlineSize(
+   else
+     inline_size += border_padding.InlineSum();
+ 
+-  if (block_node.IsTextControl())
++  const bool apply_form_sizing = style.ApplyControlFixedSize(node);
++  if (block_node.IsTextControl() && apply_form_sizing) {
+     return inline_size;
+-  if (IsA<HTMLSelectElement>(node))
++  }
++  if (IsA<HTMLSelectElement>(node) && apply_form_sizing) {
+     return inline_size;
++  }
+   if (const auto* input_element = DynamicTo<HTMLInputElement>(node)) {
+     const AtomicString& type = input_element->type();
+-    if (type == input_type_names::kFile)
++    if (type == input_type_names::kFile && apply_form_sizing) {
+       return inline_size;
++    }
+     if (type == input_type_names::kRange)
+       return inline_size;
+   }
+@@ -1719,8 +1724,9 @@ absl::optional<gfx::Transform> NGBlockNode::GetTransformForChildFragment(
      // us. Calculate it now.
      fragment_transform.emplace();
      fragment_transform->MakeIdentity();

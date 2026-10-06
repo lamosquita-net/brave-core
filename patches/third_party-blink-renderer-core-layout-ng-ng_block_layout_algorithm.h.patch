@@ -1,0 +1,25 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/ng_block_layout_algorithm.h b/third_party/blink/renderer/core/layout/ng/ng_block_layout_algorithm.h
+index 093e3faa16e59d0bbe861ac937bad1caabb27186..8eb20ea4961a62704bcb024f7c05191ce24bb936 100644
+--- a/third_party/blink/renderer/core/layout/ng/ng_block_layout_algorithm.h
++++ b/third_party/blink/renderer/core/layout/ng/ng_block_layout_algorithm.h
+@@ -360,9 +360,19 @@ class CORE_EXPORT NGBlockLayoutAlgorithm
+ 
+   // Layout |placeholder| content, and decide the location of |placeholder|.
+   // This is called only if |this| is a text control.
+-  void HandleTextControlPlaceholder(
++  // This function returns a new value for `NGPreviousInflowPosition::
++  // logical_block_offset`.
++  LayoutUnit HandleTextControlPlaceholder(
+       NGBlockNode placeholder,
+       const NGPreviousInflowPosition& previous_inflow_position);
++  // A helper for HandleTextControlPlaceholder().
++  // This function returns a new value for `NGPreviousInflowPosition::
++  // logical_block_offset`.
++  LayoutUnit FinishTextControlPlaceholder(
++      const NGLayoutResult* result,
++      const LogicalOffset& offset,
++      bool apply_fixed_size,
++      const NGPreviousInflowPosition& previous_inflow_position);
+ 
+   // Adjusts the inline offset of the slider thumb box from the value of
+   // HTMLInputElement.
