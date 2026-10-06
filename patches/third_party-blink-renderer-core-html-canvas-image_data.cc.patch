@@ -1,0 +1,22 @@
+diff --git a/third_party/blink/renderer/core/html/canvas/image_data.cc b/third_party/blink/renderer/core/html/canvas/image_data.cc
+index 2bf8eab8cfbfa5e02de02b0b173e9017c9821b37..e01b611250ea49d3056968681dbfbe3d53376b66 100644
+--- a/third_party/blink/renderer/core/html/canvas/image_data.cc
++++ b/third_party/blink/renderer/core/html/canvas/image_data.cc
+@@ -102,7 +102,7 @@ ImageData* ImageData::ValidateAndCreate(
+       }
+     }
+     if (!size_in_elements_checked.IsValid() ||
+-        size_in_elements_checked.ValueOrDie() > v8::TypedArray::kMaxLength) {
++        size_in_elements_checked.ValueOrDie() > v8::TypedArray::kMaxByteLength) {
+       exception_state.ThrowRangeError("Out of memory at ImageData creation.");
+       return nullptr;
+     }
+@@ -264,7 +264,7 @@ ImageData* ImageData::CreateForTest(const gfx::Size& size) {
+   data_size *= size.width();
+   data_size *= size.height();
+   if (!data_size.IsValid() ||
+-      data_size.ValueOrDie() > v8::TypedArray::kMaxLength)
++      data_size.ValueOrDie() > v8::TypedArray::kMaxByteLength)
+     return nullptr;
+ 
+   NotShared<DOMUint8ClampedArray> byte_array(
