@@ -1,0 +1,27 @@
+diff --git a/third_party/blink/renderer/core/url_pattern/url_pattern.cc b/third_party/blink/renderer/core/url_pattern/url_pattern.cc
+index 787351037b717ff0ea4e871e67fcd5c30835e7e1..5d7a437f8fa64b629b55a95de9e2f5ff880fc950 100644
+--- a/third_party/blink/renderer/core/url_pattern/url_pattern.cc
++++ b/third_party/blink/renderer/core/url_pattern/url_pattern.cc
+@@ -4,6 +4,7 @@
+ 
+ #include "third_party/blink/renderer/core/url_pattern/url_pattern.h"
+ 
++#include "base/ranges/algorithm.h"
+ #include "base/strings/string_util.h"
+ #include "third_party/blink/renderer/bindings/core/v8/script_regexp.h"
+ #include "third_party/blink/renderer/bindings/core/v8/to_v8_traits.h"
+@@ -476,6 +477,14 @@ String URLPattern::hash() const {
+   return hash_->GeneratePatternString();
+ }
+ 
++bool URLPattern::hasRegExpGroups() const {
++  const url_pattern::Component* components[] = {protocol_, username_, password_,
++                                                hostname_, port_,     pathname_,
++                                                search_,   hash_};
++  return base::ranges::any_of(components,
++                              &url_pattern::Component::HasRegExpGroups);
++}
++
+ // static
+ int URLPattern::compareComponent(const V8URLPatternComponent& component,
+                                  const URLPattern* left,

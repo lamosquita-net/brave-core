@@ -1,0 +1,20 @@
+diff --git a/third_party/liburlpattern/pattern.cc b/third_party/liburlpattern/pattern.cc
+index 6d520e6fea839a32ab77e45e148d3b06338d3878..ec08e6a18322d67ba8c32393e074819a9e469db6 100644
+--- a/third_party/liburlpattern/pattern.cc
++++ b/third_party/liburlpattern/pattern.cc
+@@ -450,6 +450,15 @@ std::string Pattern::GenerateRegexString(
+   return result;
+ }
+ 
++bool Pattern::HasRegexGroups() const {
++  for (const Part& part : part_list_) {
++    if (part.type == PartType::kRegex) {
++      return true;
++    }
++  }
++  return false;
++}
++
+ bool Pattern::CanDirectMatch() const {
+   // We currently only support direct matching with the options used by
+   // URLPattern.

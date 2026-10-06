@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_resolver.cc b/third_party/blink/renderer/core/css/resolver/style_resolver.cc
-index 93961854002a6b49631aa73a2fe6bc798520a480..02b604b07d87e39ff917f002fd6360b9652f58da 100644
+index 93961854002a6b49631aa73a2fe6bc798520a480..df360184f1c9e555123902570e784640b848254e 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_resolver.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_resolver.cc
 @@ -256,6 +256,11 @@ String ComputeBaseComputedStyleDiff(const ComputedStyle* base_computed_style,
@@ -14,7 +14,22 @@ index 93961854002a6b49631aa73a2fe6bc798520a480..02b604b07d87e39ff917f002fd6360b9
    if (!CSSPropertyEquality::PropertiesEqual(
            PropertyHandle(CSSProperty::Get(CSSPropertyID::kWebkitMaskImage)),
            *base_computed_style, computed_style)) {
-@@ -2731,6 +2736,19 @@ void StyleResolver::PropagateStyleToViewport() {
+@@ -1100,8 +1105,12 @@ scoped_refptr<const ComputedStyle> StyleResolver::ResolveStyle(
+ 
+ static bool AllowsInheritance(const StyleRequest& style_request,
+                               const ComputedStyle* parent_style) {
+-  // The spec disallows inheritance for ::backdrop.
+-  return parent_style && style_request.pseudo_id != kPseudoIdBackdrop;
++  // ::backdrop inherits from its originating element (CSS Position 4); before
++  // that the spec disallowed inheritance for it.
++  // FlyWeb: adapted from Chromium 2c6568489879 to the StyleResolver of 116.
++  return parent_style &&
++         (style_request.pseudo_id != kPseudoIdBackdrop ||
++          RuntimeEnabledFeatures::BackdropInheritOriginatingEnabled());
+ }
+ 
+ void StyleResolver::ApplyInheritance(Element& element,
+@@ -2731,6 +2740,19 @@ void StyleResolver::PropagateStyleToViewport() {
      PROPAGATE_VALUE(overflow_anchor, OverflowAnchor, SetOverflowAnchor);
    }
  
@@ -34,7 +49,7 @@ index 93961854002a6b49631aa73a2fe6bc798520a480..02b604b07d87e39ff917f002fd6360b9
    // Misc
    {
      PROPAGATE_FROM(document_element_style, EffectiveTouchAction,
-@@ -2743,6 +2761,10 @@ void StyleResolver::PropagateStyleToViewport() {
+@@ -2743,6 +2765,10 @@ void StyleResolver::PropagateStyleToViewport() {
                     SetColorSchemeForced, false);
      PROPAGATE_FROM(document_element_style, ScrollbarGutter, SetScrollbarGutter,
                     kScrollbarGutterAuto);

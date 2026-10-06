@@ -1,0 +1,15 @@
+diff --git a/third_party/blink/renderer/core/url_pattern/url_pattern_component.h b/third_party/blink/renderer/core/url_pattern/url_pattern_component.h
+index fd40a7cc28c841a9d361f2c8fca912bd070f1468..703ad67f258925c83cd8c9db04d8a2d76bfd4be9 100644
+--- a/third_party/blink/renderer/core/url_pattern/url_pattern_component.h
++++ b/third_party/blink/renderer/core/url_pattern/url_pattern_component.h
+@@ -84,6 +84,10 @@ class Component final : public GarbageCollected<Component> {
+   // `data:foo`.  This should only be called for kProtocol components.
+   bool ShouldTreatAsStandardURL() const;
+ 
++  // Returns if this component has at least one part that uses an ECMAScript
++  // regular expression.
++  bool HasRegExpGroups() const { return pattern_.HasRegexGroups(); }
++
+   void Trace(Visitor* visitor) const;
+ 
+  private:
