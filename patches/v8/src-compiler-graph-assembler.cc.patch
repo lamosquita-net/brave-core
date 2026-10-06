@@ -1,0 +1,43 @@
+diff --git a/src/compiler/graph-assembler.cc b/src/compiler/graph-assembler.cc
+index 40f3bd666a7af9ed401f65e11eaf055730d3805e..2e330e601779119f3fb8ca865a6d2df6afd5d74b 100644
+--- a/src/compiler/graph-assembler.cc
++++ b/src/compiler/graph-assembler.cc
+@@ -670,8 +670,17 @@ class ArrayBufferViewAccessBuilder {
+           AccessBuilder::ForJSArrayBufferViewByteOffset(), view,
+           UseInfo::Word());
+ 
+-      return a.UintPtrDiv(a.UintPtrSub(byte_length, byte_offset),
+-                          a.ChangeUint32ToUintPtr(element_size));
++      return a
++          .MachineSelectIf<UintPtrT>(
++              a.UintPtrLessThanOrEqual(byte_offset, byte_length))
++          .Then([&]() {
++            // length = floor((byte_length - byte_offset) / element_size)
++            return a.UintPtrDiv(a.UintPtrSub(byte_length, byte_offset),
++                                a.ChangeUint32ToUintPtr(element_size));
++          })
++          .Else([&]() { return a.UintPtrConstant(0); })
++          .ExpectTrue()
++          .Value();
+     };
+ 
+     return a.MachineSelectIf<UintPtrT>(length_tracking_bit)
+@@ -791,7 +800,17 @@ class ArrayBufferViewAccessBuilder {
+       TNode<UintPtrT> byte_offset = MachineLoadField<UintPtrT>(
+           AccessBuilder::ForJSArrayBufferViewByteOffset(), view,
+           UseInfo::Word());
+-      return RoundDownToElementSize(a.UintPtrSub(byte_length, byte_offset));
++
++      return a
++          .MachineSelectIf<UintPtrT>(
++              a.UintPtrLessThanOrEqual(byte_offset, byte_length))
++          .Then([&]() {
++            return RoundDownToElementSize(
++                a.UintPtrSub(byte_length, byte_offset));
++          })
++          .Else([&]() { return a.UintPtrConstant(0); })
++          .ExpectTrue()
++          .Value();
+     };
+ 
+     return a.MachineSelectIf<UintPtrT>(length_tracking_bit)

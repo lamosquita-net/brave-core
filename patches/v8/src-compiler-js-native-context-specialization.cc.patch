@@ -1,0 +1,92 @@
+diff --git a/src/compiler/js-native-context-specialization.cc b/src/compiler/js-native-context-specialization.cc
+index 3e7b604e97a7aef2492f7903e0680b50af07d72a..6ab70bc5a91c9f33cf9f19cb87da41f0cea6ab71 100644
+--- a/src/compiler/js-native-context-specialization.cc
++++ b/src/compiler/js-native-context-specialization.cc
+@@ -34,6 +34,7 @@
+ #include "src/objects/elements-kind.h"
+ #include "src/objects/feedback-vector.h"
+ #include "src/objects/heap-number.h"
++#include "src/objects/property-details.h"
+ #include "src/objects/string.h"
+ 
+ namespace v8 {
+@@ -3932,20 +3933,63 @@ Node* JSNativeContextSpecialization::BuildExtendPropertiesBackingStore(
+   // for intermediate states of chains of property additions. That makes
+   // it unclear what the best approach is here.
+   DCHECK_EQ(map.UnusedPropertyFields(), 0);
+-  int length = map.NextFreePropertyIndex() - map.GetInObjectProperties();
++  int in_object_length = map.GetInObjectProperties();
++  int length = map.NextFreePropertyIndex() - in_object_length;
+   int new_length = length + JSObject::kFieldsAdded;
++
++  // Find the descriptor index corresponding to the first out-of-object
++  // property.
++  DescriptorArrayRef descs = map.instance_descriptors(broker());
++  InternalIndex first_out_of_object_descriptor(in_object_length);
++  InternalIndex number_of_descriptors(descs.object()->number_of_descriptors());
++  for (InternalIndex i(in_object_length); i < number_of_descriptors; ++i) {
++    PropertyDetails details = descs.GetPropertyDetails(i);
++    // Skip over non-field properties.
++    if (details.location() != PropertyLocation::kField) {
++      continue;
++    }
++    // Skip over in-object fields.
++    // TODO(leszeks): We could make this smarter, like a binary search.
++    if (details.field_index() < in_object_length) {
++      continue;
++    }
++    first_out_of_object_descriptor = i;
++    break;
++  }
++
+   // Collect the field values from the {properties}.
+-  ZoneVector<Node*> values(zone());
++  ZoneVector<std::pair<Node*, Representation>> values(zone());
+   values.reserve(new_length);
+-  for (int i = 0; i < length; ++i) {
++
++  // Walk the property descriptors alongside the property values, to make
++  // sure to get and store them with the right machine type.
++  InternalIndex descriptor = first_out_of_object_descriptor;
++  for (int i = 0; i < length; ++i, ++descriptor) {
++    PropertyDetails details = descs.GetPropertyDetails(descriptor);
++    while (details.location() != PropertyLocation::kField) {
++      ++descriptor;
++      details = descs.GetPropertyDetails(descriptor);
++    }
++    DCHECK_EQ(i, details.field_index() - in_object_length);
++    // FlyWeb: the representation dependency comes from v8 9b5250b9
++    // (crbug 475479135); without it, an in-place generalization of the field
++    // (HeapObject -> Tagged) would leave this code loading a Smi as a pointer.
++    // V8 11.6 has no DependOnFieldRepresentation(), so record the existing
++    // FieldRepresentationDependency directly.
++    Representation repr = details.representation();
++    MapRef field_owner_map = map.FindFieldOwner(broker(), descriptor);
++    dependencies()->RecordDependency(
++        dependencies()->FieldRepresentationDependencyOffTheRecord(
++            map, field_owner_map, descriptor, repr));
+     Node* value = effect = graph()->NewNode(
+-        simplified()->LoadField(AccessBuilder::ForFixedArraySlot(i)),
++        simplified()->LoadField(AccessBuilder::ForPropertyArraySlot(i, repr)),
+         properties, effect, control);
+-    values.push_back(value);
++    values.push_back({value, repr});
+   }
+   // Initialize the new fields to undefined.
+   for (int i = 0; i < JSObject::kFieldsAdded; ++i) {
+-    values.push_back(jsgraph()->UndefinedConstant());
++    values.push_back(
++        {jsgraph()->UndefinedConstant(), Representation::Tagged()});
+   }
+ 
+   // Compute new length and hash.
+@@ -3983,7 +4027,8 @@ Node* JSNativeContextSpecialization::BuildExtendPropertiesBackingStore(
+   a.Store(AccessBuilder::ForMap(), jsgraph()->PropertyArrayMapConstant());
+   a.Store(AccessBuilder::ForPropertyArrayLengthAndHash(), new_length_and_hash);
+   for (int i = 0; i < new_length; ++i) {
+-    a.Store(AccessBuilder::ForFixedArraySlot(i), values[i]);
++    a.Store(AccessBuilder::ForPropertyArraySlot(i, values[i].second),
++            values[i].first);
+   }
+   return a.Finish();
+ }
