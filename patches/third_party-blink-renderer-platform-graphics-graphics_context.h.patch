@@ -1,8 +1,22 @@
 diff --git a/third_party/blink/renderer/platform/graphics/graphics_context.h b/third_party/blink/renderer/platform/graphics/graphics_context.h
-index 182457f4add7882f560a643cb0d344b0ba01f781..4b7b38593f90bbe4f36a9dfa44c39c8eeef118d1 100644
+index 182457f4add7882f560a643cb0d344b0ba01f781..fc0980a222a0b9f629c02f345bb9ab7da5092af9 100644
 --- a/third_party/blink/renderer/platform/graphics/graphics_context.h
 +++ b/third_party/blink/renderer/platform/graphics/graphics_context.h
-@@ -455,7 +455,7 @@ class PLATFORM_EXPORT GraphicsContext {
+@@ -249,6 +249,13 @@ class PLATFORM_EXPORT GraphicsContext {
+     return ImmutableState()->TextDrawingMode();
+   }
+ 
++  void SetTextPaintOrder(const TextPaintOrder& order) {
++    MutableState()->SetTextPaintOrder(order);
++  }
++  TextPaintOrder GetTextPaintOrder() const {
++    return ImmutableState()->GetTextPaintOrder();
++  }
++
+   void SetImageInterpolationQuality(InterpolationQuality quality) {
+     MutableState()->SetInterpolationQuality(quality);
+   }
+@@ -455,7 +462,7 @@ class PLATFORM_EXPORT GraphicsContext {
    // the backdrop (i.e. EndLayer()).
    void BeginLayer(float opacity = 1.0f);
    void BeginLayer(SkBlendMode);

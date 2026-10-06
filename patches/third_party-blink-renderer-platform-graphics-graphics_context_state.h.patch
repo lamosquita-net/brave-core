@@ -1,0 +1,22 @@
+diff --git a/third_party/blink/renderer/platform/graphics/graphics_context_state.h b/third_party/blink/renderer/platform/graphics/graphics_context_state.h
+index 417b0b62d07e05a3d1b532478dd29af9580b9ad9..ca12490e6d33c4bd25f9e85ebf5e6c8304037f33 100644
+--- a/third_party/blink/renderer/platform/graphics/graphics_context_state.h
++++ b/third_party/blink/renderer/platform/graphics/graphics_context_state.h
+@@ -93,6 +93,9 @@ class PLATFORM_EXPORT GraphicsContextState final {
+   }
+   void SetFillColor(const Color&);
+ 
++  void SetTextPaintOrder(TextPaintOrder order) { text_paint_order_ = order; }
++  TextPaintOrder GetTextPaintOrder() const { return text_paint_order_; }
++
+   // Shadow. (This will need tweaking if we use draw loopers for other things.)
+   SkDrawLooper* DrawLooper() const {
+     DCHECK_EQ(fill_flags_.getLooper(), stroke_flags_.getLooper());
+@@ -123,6 +126,7 @@ class PLATFORM_EXPORT GraphicsContextState final {
+   // fetched for use.
+   mutable cc::PaintFlags stroke_flags_;
+   cc::PaintFlags fill_flags_;
++  TextPaintOrder text_paint_order_ = kFillStroke;
+ 
+   StrokeData stroke_data_;
+ 

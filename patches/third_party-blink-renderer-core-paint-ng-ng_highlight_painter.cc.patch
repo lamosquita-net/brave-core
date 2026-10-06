@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/paint/ng/ng_highlight_painter.cc b/third_party/blink/renderer/core/paint/ng/ng_highlight_painter.cc
-index cc671bb5ea413ec5a1c054dff13d1cf5b6111d5e..3b7677a5c6d531b99ca78600d45e6c23b825e45d 100644
+index cc671bb5ea413ec5a1c054dff13d1cf5b6111d5e..ac36b1e806de65fac8e12d89f80a09298451ca0b 100644
 --- a/third_party/blink/renderer/core/paint/ng/ng_highlight_painter.cc
 +++ b/third_party/blink/renderer/core/paint/ng/ng_highlight_painter.cc
 @@ -204,8 +204,8 @@ bool HasNonTrivialSpellingGrammarStyles(const NGFragmentItem& fragment_item,
@@ -13,3 +13,19 @@ index cc671bb5ea413ec5a1c054dff13d1cf5b6111d5e..3b7677a5c6d531b99ca78600d45e6c23
      if (pseudo_style->TextDecorationsInEffect() !=
          (pseudo == kPseudoIdSpellingError
               ? TextDecorationLine::kSpellingError
+@@ -578,6 +578,7 @@ void NGHighlightPainter::Paint(Phase phase) {
+           text_style.current_color = platform_matched_color;
+           text_style.stroke_width = originating_style_.TextStrokeWidth();
+           text_style.color_scheme = originating_style_.UsedColorScheme();
++          text_style.paint_order = originating_style_.PaintOrder();
+         }
+         text_painter_.Paint(
+             fragment_paint_info_.Slice(paint_start_offset, paint_end_offset),
+@@ -643,6 +644,7 @@ void NGHighlightPainter::Paint(Phase phase) {
+         text_style.stroke_width = originating_style_.TextStrokeWidth();
+         text_style.color_scheme = originating_style_.UsedColorScheme();
+         text_style.shadow = nullptr;
++        text_style.paint_order = originating_style_.PaintOrder();
+ 
+         const TextPaintStyle final_text_style =
+             HighlightStyleUtils::HighlightPaintingStyle(

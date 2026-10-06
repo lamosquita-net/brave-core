@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/graphics/graphics_context.cc b/third_party/blink/renderer/platform/graphics/graphics_context.cc
-index ee3c1e01e4c83444e504980978f5275ef76c2233..914fa24ae700a992db25cbfaab2264bd6890d612 100644
+index ee3c1e01e4c83444e504980978f5275ef76c2233..fa636789eb869db4fafb53dfca843dcbd68f743b 100644
 --- a/third_party/blink/renderer/platform/graphics/graphics_context.cc
 +++ b/third_party/blink/renderer/platform/graphics/graphics_context.cc
 @@ -260,9 +260,13 @@ void GraphicsContext::BeginLayer(SkBlendMode xfermode) {
@@ -17,3 +17,29 @@ index ee3c1e01e4c83444e504980978f5275ef76c2233..914fa24ae700a992db25cbfaab2264bd
    BeginLayer(flags);
  }
  
+@@ -585,8 +589,10 @@ void GraphicsContext::DrawTextPasses(const AutoDarkMode& auto_dark_mode,
+                                      const DrawTextFunc& draw_text) {
+   TextDrawingModeFlags mode_flags = TextDrawingMode();
+ 
+-  if (mode_flags & kTextModeFill) {
+-    draw_text(ImmutableState()->FillFlags());
++  if (ImmutableState()->GetTextPaintOrder() == kFillStroke) {
++    if (mode_flags & kTextModeFill) {
++      draw_text(ImmutableState()->FillFlags());
++    }
+   }
+ 
+   if ((mode_flags & kTextModeStroke) && GetStrokeStyle() != kNoStroke &&
+@@ -598,6 +604,12 @@ void GraphicsContext::DrawTextPasses(const AutoDarkMode& auto_dark_mode,
+     }
+     draw_text(stroke_flags);
+   }
++
++  if (ImmutableState()->GetTextPaintOrder() == kStrokeFill) {
++    if (mode_flags & kTextModeFill) {
++      draw_text(ImmutableState()->FillFlags());
++    }
++  }
+ }
+ 
+ void GraphicsContext::DrawText(const Font& font,
