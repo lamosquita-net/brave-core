@@ -1,0 +1,68 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/ng_layout_utils.cc b/third_party/blink/renderer/core/layout/ng/ng_layout_utils.cc
+index 9bd7e4bbece6abe55997eb6ae5c2da7e2d196d11..04b238132592d946970003ef553d8d25fc7386b4 100644
+--- a/third_party/blink/renderer/core/layout/ng/ng_layout_utils.cc
++++ b/third_party/blink/renderer/core/layout/ng/ng_layout_utils.cc
+@@ -5,6 +5,7 @@
+ #include "third_party/blink/renderer/core/layout/ng/ng_layout_utils.h"
+ 
+ #include "third_party/blink/renderer/core/html/html_element.h"
++#include "third_party/blink/renderer/core/layout/ng/ng_block_layout_algorithm_utils.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_box_fragment.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_constraint_space.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_layout_result.h"
+@@ -360,19 +361,11 @@ NGLayoutCacheStatus CalculateSizeBasedLayoutCacheStatusWithGeometry(
+   if (new_space.IsTableCell()) {
+     DCHECK(old_space.IsTableCell());
+ 
+-    switch (style.VerticalAlign()) {
+-      case EVerticalAlign::kTop:
++    switch (ComputeContentAlignmentForTableCell(style)) {
++      case BlockContentAlignment::kStart:
+         // Do nothing special for 'top' vertical alignment.
+         break;
+-      case EVerticalAlign::kBaselineMiddle:
+-      case EVerticalAlign::kSub:
+-      case EVerticalAlign::kSuper:
+-      case EVerticalAlign::kTextTop:
+-      case EVerticalAlign::kTextBottom:
+-      case EVerticalAlign::kLength:
+-        // All of the above are treated as 'baseline' for the purposes of
+-        // table-cell vertical alignment.
+-      case EVerticalAlign::kBaseline: {
++      case BlockContentAlignment::kBaseline: {
+         auto new_alignment_baseline = new_space.TableCellAlignmentBaseline();
+         auto old_alignment_baseline = old_space.TableCellAlignmentBaseline();
+ 
+@@ -398,13 +391,30 @@ NGLayoutCacheStatus CalculateSizeBasedLayoutCacheStatusWithGeometry(
+           return NGLayoutCacheStatus::kNeedsLayout;
+         break;
+       }
+-      case EVerticalAlign::kMiddle:
+-      case EVerticalAlign::kBottom:
++      case BlockContentAlignment::kUnsafeCenter:
++      case BlockContentAlignment::kSafeCenter:
++      case BlockContentAlignment::kUnsafeEnd:
++      case BlockContentAlignment::kSafeEnd:
+         // 'middle', and 'bottom' vertical alignment depend on the block-size.
+         if (!is_block_size_equal)
+           return NGLayoutCacheStatus::kNeedsLayout;
+         break;
+     }
++  } else {
++    switch (ComputeContentAlignmentForBlock(style)) {
++      case BlockContentAlignment::kStart:
++      case BlockContentAlignment::kBaseline:
++        // Do nothing special.
++        break;
++      case BlockContentAlignment::kUnsafeCenter:
++      case BlockContentAlignment::kSafeCenter:
++      case BlockContentAlignment::kUnsafeEnd:
++      case BlockContentAlignment::kSafeEnd:
++        if (!is_block_size_equal) {
++          return NGLayoutCacheStatus::kNeedsLayout;
++        }
++        break;
++    }
+   }
+ 
+   // If we've reached here we know that we can potentially "stretch"/"shrink"

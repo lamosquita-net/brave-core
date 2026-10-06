@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/ng_block_layout_algorithm.cc b/third_party/blink/renderer/core/layout/ng/ng_block_layout_algorithm.cc
-index 02fc89f19dac75f0e6bc56eaa8b5b9903a862621..0409cc44c6b006669f6817d67350d0985bcceb57 100644
+index 02fc89f19dac75f0e6bc56eaa8b5b9903a862621..d967a5c39073830a270e6116d9af0a2c812d44b1 100644
 --- a/third_party/blink/renderer/core/layout/ng/ng_block_layout_algorithm.cc
 +++ b/third_party/blink/renderer/core/layout/ng/ng_block_layout_algorithm.cc
 @@ -276,9 +276,15 @@ MinMaxSizesResult NGBlockLayoutAlgorithm::ComputeMinMaxSizes(
@@ -34,7 +34,25 @@ index 02fc89f19dac75f0e6bc56eaa8b5b9903a862621..0409cc44c6b006669f6817d67350d098
  
    if (UNLIKELY(ConstraintSpace().IsNewFormattingContext() &&
                 !ignore_line_clamp_ && lines_until_clamp_ == 0 &&
-@@ -2732,7 +2741,7 @@ NGConstraintSpace NGBlockLayoutAlgorithm::CreateConstraintSpaceForChild(
+@@ -1101,14 +1110,9 @@ const NGLayoutResult* NGBlockLayoutAlgorithm::FinishLayout(
+   if (ConstraintSpace().IsTableCell()) {
+     NGTableAlgorithmUtils::FinalizeTableCellLayout(intrinsic_block_size_,
+                                                    &container_builder_);
+-  }
+-
+-  if (Style().AlignContentBlockCenter() &&
+-      !IsBreakInside(container_builder_.PreviousBreakToken())) {
+-    container_builder_.MoveChildrenInBlockDirection(
+-        (container_builder_.FragmentBlockSize() -
+-         unconstrained_intrinsic_block_size) /
+-        2);
++  } else {
++    AlignBlockContent(Style(), BreakToken(), unconstrained_intrinsic_block_size,
++                      container_builder_);
+   }
+ 
+   NGOutOfFlowLayoutPart(Node(), ConstraintSpace(), &container_builder_).Run();
+@@ -2732,7 +2736,7 @@ NGConstraintSpace NGBlockLayoutAlgorithm::CreateConstraintSpaceForChild(
  
      // Always shrink-to-fit children within a <mtd> element.
      if (Node().GetDOMNode() &&
@@ -43,7 +61,7 @@ index 02fc89f19dac75f0e6bc56eaa8b5b9903a862621..0409cc44c6b006669f6817d67350d098
        builder.SetInlineAutoBehavior(NGAutoBehavior::kFitContent);
      }
  
-@@ -3233,17 +3242,19 @@ void NGBlockLayoutAlgorithm::HandleRubyText(NGBlockNode ruby_text_child) {
+@@ -3233,17 +3237,19 @@ void NGBlockLayoutAlgorithm::HandleRubyText(NGBlockNode ruby_text_child) {
                                 LogicalOffset(LayoutUnit(), ruby_text_box_top));
  }
  
@@ -68,7 +86,7 @@ index 02fc89f19dac75f0e6bc56eaa8b5b9903a862621..0409cc44c6b006669f6817d67350d098
      if (child.IsTextControlContainer()) {
        const auto& grand_children = child.PostLayoutChildren();
        const auto begin = grand_children.begin();
-@@ -3266,14 +3277,14 @@ void NGBlockLayoutAlgorithm::HandleTextControlPlaceholder(
+@@ -3266,14 +3272,14 @@ void NGBlockLayoutAlgorithm::HandleTextControlPlaceholder(
    const NGLayoutResult* result = placeholder.Layout(space);
    LogicalOffset offset = BorderScrollbarPadding().StartOffset();
    if (Node().IsTextArea()) {
@@ -87,7 +105,7 @@ index 02fc89f19dac75f0e6bc56eaa8b5b9903a862621..0409cc44c6b006669f6817d67350d098
    }
    NGBoxFragment fragment(ConstraintSpace().GetWritingDirection(),
                           To<NGPhysicalBoxFragment>(result->PhysicalFragment()));
-@@ -3282,13 +3293,43 @@ void NGBlockLayoutAlgorithm::HandleTextControlPlaceholder(
+@@ -3282,13 +3288,43 @@ void NGBlockLayoutAlgorithm::HandleTextControlPlaceholder(
    // might be the block-end margin.
    // |fragment| has no FirstBaseline() if it consists of only white-spaces.
    if (fragment.FirstBaseline().has_value()) {

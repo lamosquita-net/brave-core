@@ -1,0 +1,174 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/ng_block_layout_algorithm_utils.cc b/third_party/blink/renderer/core/layout/ng/ng_block_layout_algorithm_utils.cc
+index e17b275b7129fa8441bb2d1b49bcb64b4986a8d5..fab4c18848d34a3f2ec0966976569a78949f032e 100644
+--- a/third_party/blink/renderer/core/layout/ng/ng_block_layout_algorithm_utils.cc
++++ b/third_party/blink/renderer/core/layout/ng/ng_block_layout_algorithm_utils.cc
+@@ -5,10 +5,106 @@
+ #include "third_party/blink/renderer/core/layout/ng/ng_block_layout_algorithm_utils.h"
+ 
+ #include "third_party/blink/renderer/core/layout/ng/exclusions/ng_exclusion_space.h"
++#include "third_party/blink/renderer/core/layout/ng/ng_box_fragment_builder.h"
++#include "third_party/blink/renderer/core/layout/ng/ng_fragmentation_utils.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_length_utils.h"
++#include "third_party/blink/renderer/core/style/computed_style.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+ 
+ namespace blink {
+ 
++namespace {
++
++BlockContentAlignment ComputeContentAlignment(const ComputedStyle& style,
++                                              bool is_table_cell) {
++  const StyleContentAlignmentData& alignment = style.AlignContent();
++  ContentPosition position = alignment.GetPosition();
++  OverflowAlignment overflow = alignment.Overflow();
++  // https://drafts.csswg.org/css-align/#distribution-block
++  // If a <content-distribution> is specified its fallback alignment is used
++  // instead.
++  switch (alignment.Distribution()) {
++    case ContentDistributionType::kDefault:
++      break;
++    case ContentDistributionType::kSpaceBetween:
++    case ContentDistributionType::kStretch:
++      position = ContentPosition::kFlexStart;
++      break;
++    case ContentDistributionType::kSpaceAround:
++    case ContentDistributionType::kSpaceEvenly:
++      overflow = OverflowAlignment::kSafe;
++      position = ContentPosition::kCenter;
++      break;
++  }
++  if (position == ContentPosition::kLastBaseline) {
++    overflow = OverflowAlignment::kSafe;
++    position = ContentPosition::kEnd;
++  }
++
++  if (!RuntimeEnabledFeatures::AlignContentForBlocksEnabled()) {
++    position = ContentPosition::kNormal;
++  }
++
++  // https://drafts.csswg.org/css-align/#typedef-overflow-position
++  // The "smart" default value (OverflowAlignment::kDefault) is not implemented.
++  // We handle it as kUnsafe.
++  const bool is_safe = overflow == OverflowAlignment::kSafe;
++  switch (position) {
++    case ContentPosition::kCenter:
++      return is_safe ? BlockContentAlignment::kSafeCenter
++                     : BlockContentAlignment::kUnsafeCenter;
++
++    case ContentPosition::kEnd:
++    case ContentPosition::kFlexEnd:
++      return is_safe ? BlockContentAlignment::kSafeEnd
++                     : BlockContentAlignment::kUnsafeEnd;
++
++    case ContentPosition::kNormal:
++      if (!is_table_cell) {
++        return BlockContentAlignment::kStart;
++      }
++      switch (style.VerticalAlign()) {
++        case EVerticalAlign::kTop:
++          // Do nothing for 'top' vertical alignment.
++          return BlockContentAlignment::kStart;
++
++        case EVerticalAlign::kBaselineMiddle:
++        case EVerticalAlign::kSub:
++        case EVerticalAlign::kSuper:
++        case EVerticalAlign::kTextTop:
++        case EVerticalAlign::kTextBottom:
++        case EVerticalAlign::kLength:
++          // All of the above are treated as 'baseline' for the purposes of
++          // table-cell vertical alignment.
++        case EVerticalAlign::kBaseline:
++          return BlockContentAlignment::kBaseline;
++
++        case EVerticalAlign::kMiddle:
++          return BlockContentAlignment::kUnsafeCenter;
++
++        case EVerticalAlign::kBottom:
++          return BlockContentAlignment::kUnsafeEnd;
++      }
++      break;
++
++    case ContentPosition::kStart:
++    case ContentPosition::kFlexStart:
++      return BlockContentAlignment::kStart;
++
++    case ContentPosition::kBaseline:
++      return BlockContentAlignment::kBaseline;
++
++    case ContentPosition::kLastBaseline:
++    case ContentPosition::kLeft:
++    case ContentPosition::kRight:
++      NOTREACHED();
++  }
++  return BlockContentAlignment::kStart;
++}
++
++}  // namespace
++
++
+ LayoutUnit CalculateOutOfFlowStaticInlineLevelOffset(
+     const ComputedStyle& container_style,
+     const NGBfcOffset& origin_bfc_offset,
+@@ -49,4 +145,62 @@ LayoutUnit CalculateOutOfFlowStaticInlineLevelOffset(
+   return inline_offset;
+ }
+ 
++BlockContentAlignment ComputeContentAlignmentForBlock(
++    const ComputedStyle& style) {
++  // ruby-text uses BlockLayoutAlgorithm, but they are not a block container
++  // officially (Chromium 5a747003c03f).
++  if (!style.IsDisplayBlockContainer()) {
++    return BlockContentAlignment::kStart;
++  }
++  return ComputeContentAlignment(style, /* is_table_cell */ false);
++}
++
++BlockContentAlignment ComputeContentAlignmentForTableCell(
++    const ComputedStyle& style) {
++  return ComputeContentAlignment(style, /* is_table_cell */ true);
++}
++
++// FlyWeb: Chromium b490d8b49001 (shared by block and multicol containers).
++void AlignBlockContent(const ComputedStyle& style,
++                       const NGBlockBreakToken* break_token,
++                       LayoutUnit content_block_size,
++                       NGBoxFragmentBuilder& builder) {
++  if (IsBreakInside(break_token)) {
++    // Do nothing for the second or later fragments.
++    return;
++  }
++
++  LayoutUnit free_space = builder.FragmentBlockSize() - content_block_size;
++  if (style.AlignContentBlockCenter()) {
++    builder.MoveChildrenInBlockDirection(free_space / 2);
++    return;
++  }
++
++  if (!RuntimeEnabledFeatures::AlignContentForBlocksEnabled() ||
++      !ShouldIncludeBlockEndBorderPadding(builder)) {
++    // Do nothing for the first fragment without block-end border and padding.
++    // See css/css-align/blocks/align-content-block-break-overflow-010.html
++    return;
++  }
++
++  BlockContentAlignment alignment = ComputeContentAlignmentForBlock(style);
++  if (alignment == BlockContentAlignment::kSafeCenter ||
++      alignment == BlockContentAlignment::kSafeEnd) {
++    free_space = free_space.ClampNegativeToZero();
++  }
++  switch (alignment) {
++    case BlockContentAlignment::kStart:
++    case BlockContentAlignment::kBaseline:
++      // Nothing to do.
++      break;
++    case BlockContentAlignment::kSafeCenter:
++    case BlockContentAlignment::kUnsafeCenter:
++      builder.MoveChildrenInBlockDirection(free_space / 2);
++      break;
++    case BlockContentAlignment::kSafeEnd:
++    case BlockContentAlignment::kUnsafeEnd:
++      builder.MoveChildrenInBlockDirection(free_space);
++  }
++}
++
+ }  // namespace blink

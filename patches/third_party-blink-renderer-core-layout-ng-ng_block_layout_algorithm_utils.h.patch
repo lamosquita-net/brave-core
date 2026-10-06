@@ -1,0 +1,40 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/ng_block_layout_algorithm_utils.h b/third_party/blink/renderer/core/layout/ng/ng_block_layout_algorithm_utils.h
+index 21de46676267f0b3d63055fc2b51070cb63588ff..eb3ae2bb25f925351668b32aca9279b71e427886 100644
+--- a/third_party/blink/renderer/core/layout/ng/ng_block_layout_algorithm_utils.h
++++ b/third_party/blink/renderer/core/layout/ng/ng_block_layout_algorithm_utils.h
+@@ -10,6 +10,8 @@
+ namespace blink {
+ 
+ class ComputedStyle;
++class NGBlockBreakToken;
++class NGBoxFragmentBuilder;
+ struct NGBfcOffset;
+ class NGExclusionSpace;
+ 
+@@ -27,6 +29,26 @@ LayoutUnit CalculateOutOfFlowStaticInlineLevelOffset(
+     const NGExclusionSpace&,
+     LayoutUnit child_available_inline_size);
+ 
++// Final result of merging `align-content` value and `vertical-align` value.
++// This is only for boxes with `display: block` and `display: table-cell`.
++enum class BlockContentAlignment {
++  kStart,
++  kBaseline,
++  kSafeCenter,
++  kUnsafeCenter,
++  kSafeEnd,
++  kUnsafeEnd
++};
++BlockContentAlignment ComputeContentAlignmentForBlock(
++    const ComputedStyle& style);
++BlockContentAlignment ComputeContentAlignmentForTableCell(
++    const ComputedStyle& style);
++
++void AlignBlockContent(const ComputedStyle& style,
++                       const NGBlockBreakToken* break_token,
++                       LayoutUnit content_block_size,
++                       NGBoxFragmentBuilder& builder);
++
+ }  // namespace blink
+ 
+ #endif  // THIRD_PARTY_BLINK_RENDERER_CORE_LAYOUT_NG_NG_BLOCK_LAYOUT_ALGORITHM_UTILS_H_

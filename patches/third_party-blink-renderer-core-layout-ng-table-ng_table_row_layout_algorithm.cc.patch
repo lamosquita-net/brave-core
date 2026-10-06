@@ -1,0 +1,22 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/table/ng_table_row_layout_algorithm.cc b/third_party/blink/renderer/core/layout/ng/table/ng_table_row_layout_algorithm.cc
+index 7ef7fabcdc2f1c621e42eabc577a189a164de2d1..cb8cbf14191abfca422c712c6a39179621cf3f56 100644
+--- a/third_party/blink/renderer/core/layout/ng/table/ng_table_row_layout_algorithm.cc
++++ b/third_party/blink/renderer/core/layout/ng/table/ng_table_row_layout_algorithm.cc
+@@ -5,6 +5,7 @@
+ #include "third_party/blink/renderer/core/layout/ng/table/ng_table_row_layout_algorithm.h"
+ 
+ #include "third_party/blink/renderer/core/layout/ng/ng_block_break_token.h"
++#include "third_party/blink/renderer/core/layout/ng/ng_block_layout_algorithm_utils.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_block_child_iterator.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_box_fragment.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_constraint_space_builder.h"
+@@ -195,7 +196,8 @@ const NGLayoutResult* NGTableRowLayoutAlgorithm::Layout() {
+                                    physical_fragment);
+       row_baseline_tabulator.ProcessCell(
+           fragment,
+-          NGTableAlgorithmUtils::IsBaseline(cell_style.VerticalAlign()),
++          ComputeContentAlignmentForTableCell(cell_style) ==
++              BlockContentAlignment::kBaseline,
+           has_rowspan,
+           cell_data.has_descendant_that_depends_on_percentage_block_size);
+       if (min_block_size_should_encompass_intrinsic_size) {

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/runtime_enabled_features.json5 b/third_party/blink/renderer/platform/runtime_enabled_features.json5
-index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c4d63877e35f59782c7ddab5f720ae13a3868f81 100644
+index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c1cc29aecc6aebbe870af0f88c1806be77803f26 100644
 --- a/third_party/blink/renderer/platform/runtime_enabled_features.json5
 +++ b/third_party/blink/renderer/platform/runtime_enabled_features.json5
 @@ -276,8 +276,10 @@
@@ -14,7 +14,20 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c4d63877e35f59782c7ddab5f720ae13
      },
      {
        name: "AddIdentityInCanMakePaymentEvent",
-@@ -404,6 +406,10 @@
+@@ -304,6 +306,12 @@
+       status: "test",
+       base_feature: "none",
+     },
++    {
++      // crbug.com/1500511
++      // FlyWeb: stable, as in Chromium 123 (engine level 123).
++      name: "AlignContentForBlocks",
++      status: "stable",
++    },
+     {
+       name: "AllowContentInitiatedDataUrlNavigations",
+       base_feature: "none",
+@@ -404,6 +412,10 @@
        public: true,
        settable_from_internals: true,
      },
@@ -25,7 +38,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c4d63877e35f59782c7ddab5f720ae13
      // When enabled, enforces new interoperable semantics for 3D transforms.
      // See crbug.com/1008483.
      {
-@@ -588,6 +594,11 @@
+@@ -588,6 +600,11 @@
        status: "stable",
        base_feature: "none",
      },
@@ -37,7 +50,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c4d63877e35f59782c7ddab5f720ae13
      {
        name: "ClickToCapturedPointer",
        status: "experimental",
-@@ -611,6 +622,10 @@
+@@ -611,6 +628,10 @@
        name: "ClipboardCustomFormats",
        status: "stable",
      },
@@ -48,7 +61,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c4d63877e35f59782c7ddab5f720ae13
      {
        name: "ClipboardSvg",
        status: "experimental",
-@@ -621,6 +636,16 @@
+@@ -621,6 +642,16 @@
        status: "experimental",
        base_feature: "none",
      },
@@ -65,7 +78,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c4d63877e35f59782c7ddab5f720ae13
      {
        name: "CloseWatcher",
      },
-@@ -796,6 +821,10 @@
+@@ -796,6 +827,10 @@
        name: "CSSCalcSimplificationAndSerialization",
        base_feature: "none",
      },
@@ -76,7 +89,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c4d63877e35f59782c7ddab5f720ae13
      {
        // Support case-sensitive attribute selector modifier
        // https://drafts.csswg.org/selectors-4/#attribute-case
-@@ -815,7 +844,8 @@
+@@ -815,7 +850,8 @@
      },
      {
        name: "CSSContainIntrinsicSizeAutoNone",
@@ -86,7 +99,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c4d63877e35f59782c7ddab5f720ae13
      },
      // Ablation study to try to measure very roughly memory savings from not saving
      // pretokenized strings in CSS custom properties.
-@@ -846,7 +876,11 @@
+@@ -846,7 +882,11 @@
      },
      {
        name: "CSSExponentialFunctions",
@@ -99,7 +112,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c4d63877e35f59782c7ddab5f720ae13
      },
      {
        name: "CSSFocusVisible",
-@@ -909,9 +943,14 @@
+@@ -909,9 +949,14 @@
      },
      {
        name: "CSSInitialPseudo",
@@ -115,7 +128,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c4d63877e35f59782c7ddab5f720ae13
      {
        name: "CSSLayoutAPI",
        status: "experimental",
-@@ -923,7 +962,7 @@
+@@ -923,7 +968,7 @@
      },
      {
        name: "CSSLogical",
@@ -124,7 +137,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c4d63877e35f59782c7ddab5f720ae13
        base_feature: "none",
      },
      {
-@@ -960,6 +999,14 @@
+@@ -960,6 +1005,14 @@
        implied_by: ["MathMLCore"],
        base_feature: "none",
      },
@@ -139,7 +152,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c4d63877e35f59782c7ddab5f720ae13
      {
        name: "CSSMixBlendModePlusLighter",
        status: "stable",
-@@ -975,6 +1022,14 @@
+@@ -975,6 +1028,14 @@
      {
        // Support nested selectors that start with idents.
        name: "CSSNestingIdent",
@@ -154,7 +167,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c4d63877e35f59782c7ddab5f720ae13
      },
      {
        name: "CSSObjectViewBox",
-@@ -1042,8 +1097,9 @@
+@@ -1042,8 +1103,9 @@
        base_feature: "none",
      },
      {
@@ -165,7 +178,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c4d63877e35f59782c7ddab5f720ae13
        base_feature: "none",
      },
      {
-@@ -1099,8 +1155,9 @@
+@@ -1099,8 +1161,9 @@
        // https://drafts.csswg.org/css-pseudo-4/#selectordef-grammar-error
        // https://drafts.csswg.org/css-text-decor-4/#valdef-text-decoration-line-spelling-error
        // https://drafts.csswg.org/css-text-decor-4/#valdef-text-decoration-line-grammar-error
@@ -176,7 +189,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c4d63877e35f59782c7ddab5f720ae13
        base_feature: "none",
      },
      {
-@@ -1129,6 +1186,11 @@
+@@ -1129,6 +1192,11 @@
        name: "CSSSuperRulesets",
        status: "experimental",
      },
@@ -188,7 +201,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c4d63877e35f59782c7ddab5f720ae13
      {
        name: "CSSSystemAccentColor",
        status: "experimental",
-@@ -1152,7 +1214,8 @@
+@@ -1152,7 +1220,8 @@
      // `text-wrap: pretty`. crbug.com/1432798
      {
        name: "CSSTextWrapPretty",
@@ -198,7 +211,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c4d63877e35f59782c7ddab5f720ae13
        depends_on: ["CSSTextWrap", "CSSWhiteSpaceShorthand"],
      },
      // Support for CSS Toggles, https://tabatkins.github.io/css-toggle/
-@@ -1170,12 +1233,21 @@
+@@ -1170,12 +1239,21 @@
        //
        // See: https://github.com/w3c/csswg-drafts/issues/8189
        name: "CSSTopLayerForTransitions",
@@ -222,7 +235,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c4d63877e35f59782c7ddab5f720ae13
      },
      {
        // A kill switch for the fix for part of https://crbug.com/1180387 .
-@@ -1303,6 +1375,14 @@
+@@ -1303,6 +1381,14 @@
        name: "DesktopPWAsSubApps",
        status: "test",
      },
@@ -237,7 +250,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c4d63877e35f59782c7ddab5f720ae13
      {
        name: "DeviceAttributes",
        origin_trial_feature_name: "DeviceAttributes",
-@@ -1811,8 +1891,7 @@
+@@ -1811,8 +1897,7 @@
      },
      {
        name: "FontVariantPosition",
@@ -247,7 +260,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c4d63877e35f59782c7ddab5f720ae13
      },
      {
        // TODO(crbug.com/1231644): This flag is being kept (even though the
-@@ -1942,6 +2021,11 @@
+@@ -1942,6 +2027,11 @@
        },
        base_feature: "none",
      },
@@ -259,7 +272,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c4d63877e35f59782c7ddab5f720ae13
      // HighlightAPI's custom highlights use HighlightInheritance's behavior even
      // if the HighlightInheritance feature is not enabled.
      {
-@@ -1996,6 +2080,11 @@
+@@ -1996,6 +2086,11 @@
        name: "HTMLPopoverHint",
        status: "experimental",
      },
@@ -271,7 +284,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c4d63877e35f59782c7ddab5f720ae13
      {
        name: "HTMLSelectMenuElement",
        status: "experimental",
-@@ -2075,6 +2164,12 @@
+@@ -2075,6 +2170,12 @@
      {
        "name": "IntersectionOptimization",
      },
@@ -284,7 +297,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c4d63877e35f59782c7ddab5f720ae13
      {
        name: "JavaScriptCompileHintsMagicRuntime",
        status: "experimental",
-@@ -2137,7 +2232,8 @@
+@@ -2137,7 +2238,8 @@
      },
      {
        name: "LayoutNGSubgrid",
@@ -294,7 +307,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c4d63877e35f59782c7ddab5f720ae13
        base_feature: "none",
      },
      {
-@@ -2372,6 +2468,10 @@
+@@ -2372,6 +2474,10 @@
        name: "NavigateEventCommitBehavior",
        status: "experimental",
      },
@@ -305,7 +318,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c4d63877e35f59782c7ddab5f720ae13
      {
        name: "NavigationId",
        status: "experimental",
-@@ -3109,18 +3209,23 @@
+@@ -3109,18 +3215,23 @@
        status: "stable",
        base_feature: "none",
      },
@@ -332,7 +345,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c4d63877e35f59782c7ddab5f720ae13
      },
      {
        name: "ScrollCustomization",
-@@ -3449,10 +3554,19 @@
+@@ -3449,10 +3560,19 @@
        name: "StylusHandwriting",
        base_feature: "none",
      },
@@ -352,7 +365,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c4d63877e35f59782c7ddab5f720ae13
      {
        name: "SvgRasterOptimizations",
        status: "experimental",
-@@ -3467,6 +3581,13 @@
+@@ -3467,6 +3587,13 @@
        status: "experimental",
        base_feature: "none",
      },
@@ -366,7 +379,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c4d63877e35f59782c7ddab5f720ae13
      // For unit tests.
      {
        name: "TestFeature",
-@@ -3513,6 +3634,10 @@
+@@ -3513,6 +3640,10 @@
        status: {"Android": "stable"},
        base_feature: "none",
      },
@@ -377,7 +390,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c4d63877e35f59782c7ddab5f720ae13
      {
        name: "ThirdPartyCookiesUserBypass",
        status: "experimental",
-@@ -3638,11 +3763,24 @@
+@@ -3638,11 +3769,24 @@
        origin_trial_feature_name: "UnrestrictedSharedArrayBuffer",
        origin_trial_os: ["win", "mac", "linux", "fuchsia", "chromeos"],
      },
@@ -402,7 +415,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c4d63877e35f59782c7ddab5f720ae13
      {
        // Makes the global root scrollbars follow the preferred color scheme
        // by default. Please see more details: crbug.com/1423087.
-@@ -3657,6 +3795,11 @@
+@@ -3657,6 +3801,11 @@
        name: "UserAgentClientHint",
        status: "stable",
      },
@@ -414,7 +427,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..c4d63877e35f59782c7ddab5f720ae13
      {
        name: "V8IdleTasks",
        base_feature: "none",
-@@ -4167,6 +4310,12 @@
+@@ -4167,6 +4316,12 @@
        name: "WindowPlacementFullscreenOnScreensChange",
        status: "experimental",
      },

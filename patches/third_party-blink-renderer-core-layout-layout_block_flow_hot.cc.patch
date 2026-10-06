@@ -1,0 +1,22 @@
+diff --git a/third_party/blink/renderer/core/layout/layout_block_flow_hot.cc b/third_party/blink/renderer/core/layout/layout_block_flow_hot.cc
+index 96965f9b52c4d7b2e86ae0567256f116d9a70999..212368bbc0671cf46b2c75e2c8e900eaf8dfe1f8 100644
+--- a/third_party/blink/renderer/core/layout/layout_block_flow_hot.cc
++++ b/third_party/blink/renderer/core/layout/layout_block_flow_hot.cc
+@@ -30,6 +30,17 @@ bool LayoutBlockFlow::CreatesNewFormattingContext() const {
+     return true;
+   }
+ 
++  // https://drafts.csswg.org/css-align/#distribution-block
++  // All values other than normal force the block container to establish an
++  // independent formatting context.
++  if (RuntimeEnabledFeatures::AlignContentForBlocksEnabled()) {
++    if (StyleRef().AlignContent().GetPosition() != ContentPosition::kNormal ||
++        StyleRef().AlignContent().Distribution() !=
++            ContentDistributionType::kDefault) {
++      return true;
++    }
++  }
++
+   if (IsRenderedLegend())
+     return true;
+ 

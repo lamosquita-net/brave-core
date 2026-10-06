@@ -1,0 +1,36 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/ng_column_layout_algorithm.cc b/third_party/blink/renderer/core/layout/ng/ng_column_layout_algorithm.cc
+index 4d8428c4eff11e315dfefd60017607e2cb87897e..345be5b21625246b5e62cc13f8f7e10dd5a0459c 100644
+--- a/third_party/blink/renderer/core/layout/ng/ng_column_layout_algorithm.cc
++++ b/third_party/blink/renderer/core/layout/ng/ng_column_layout_algorithm.cc
+@@ -11,6 +11,7 @@
+ #include "third_party/blink/renderer/core/layout/ng/geometry/ng_margin_strut.h"
+ #include "third_party/blink/renderer/core/layout/ng/list/ng_unpositioned_list_marker.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_block_layout_algorithm.h"
++#include "third_party/blink/renderer/core/layout/ng/ng_block_layout_algorithm_utils.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_box_fragment.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_column_spanner_path.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_constraint_space_builder.h"
+@@ -296,6 +297,7 @@ const NGLayoutResult* NGColumnLayoutAlgorithm::Layout() {
+   if (const auto* token = BreakToken())
+     previously_consumed_block_size = token->ConsumedBlockSize();
+ 
++  const LayoutUnit unconstrained_intrinsic_block_size = intrinsic_block_size_;
+   intrinsic_block_size_ =
+       ClampIntrinsicBlockSize(ConstraintSpace(), Node(), BreakToken(),
+                               BorderScrollbarPadding(), intrinsic_block_size_);
+@@ -337,9 +339,13 @@ const NGLayoutResult* NGColumnLayoutAlgorithm::Layout() {
+ #endif
+   }
+ 
++  // FlyWeb: align-content for multicol containers (Chromium b490d8b49001).
+   if (ConstraintSpace().IsTableCell()) {
+-    NGTableAlgorithmUtils::FinalizeTableCellLayout(intrinsic_block_size_,
+-                                                   &container_builder_);
++    NGTableAlgorithmUtils::FinalizeTableCellLayout(
++        unconstrained_intrinsic_block_size, &container_builder_);
++  } else {
++    AlignBlockContent(Style(), BreakToken(), unconstrained_intrinsic_block_size,
++                      container_builder_);
+   }
+ 
+   NGOutOfFlowLayoutPart(Node(), ConstraintSpace(), &container_builder_).Run();
