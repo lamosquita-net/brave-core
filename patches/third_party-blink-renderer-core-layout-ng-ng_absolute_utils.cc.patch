@@ -1,0 +1,311 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/ng_absolute_utils.cc b/third_party/blink/renderer/core/layout/ng/ng_absolute_utils.cc
+index 4398d013109e9c18cb370c9cee71892726f35e74..05de69e14dbf2d502d980f6723a64e77cb5c93ee 100644
+--- a/third_party/blink/renderer/core/layout/ng/ng_absolute_utils.cc
++++ b/third_party/blink/renderer/core/layout/ng/ng_absolute_utils.cc
+@@ -14,11 +14,91 @@
+ #include "third_party/blink/renderer/core/layout/ng/ng_length_utils.h"
+ #include "third_party/blink/renderer/core/style/computed_style.h"
+ #include "third_party/blink/renderer/platform/geometry/length_functions.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
++#include "third_party/blink/renderer/platform/text/writing_mode.h"
+ 
+ namespace blink {
+ 
+ namespace {
+ 
++// FlyWeb: align-self/justify-self for absolutely positioned boxes (Chromium
++// d5e6d59db47c, LayoutAlignForPositioned; engine level 122). Chromium 122
++// does this through the "inset-modified containing block", which 116 does
++// not have; this applies the same rules to the insets/sizes of 116.
++enum class OofAlignmentBias { kStart, kCenter, kEnd };
++
++StyleSelfAlignmentData OofAlignSelf(const ComputedStyle& style) {
++  return RuntimeEnabledFeatures::LayoutAlignForPositionedEnabled()
++             ? style.ResolvedAlignSelf(ItemPosition::kNormal)
++             : StyleSelfAlignmentData(ItemPosition::kNormal,
++                                      OverflowAlignment::kDefault);
++}
++
++StyleSelfAlignmentData OofJustifySelf(const ComputedStyle& style) {
++  return RuntimeEnabledFeatures::LayoutAlignForPositionedEnabled()
++             ? style.ResolvedJustifySelf(ItemPosition::kNormal)
++             : StyleSelfAlignmentData(ItemPosition::kNormal,
++                                      OverflowAlignment::kDefault);
++}
++
++// The alignment of |style| in its inline (|is_inline_axis|) or block axis.
++// justify-self applies to the inline axis of the containing block.
++StyleSelfAlignmentData OofAlignmentForAxis(
++    const ComputedStyle& style,
++    WritingDirectionMode container_writing_direction,
++    bool is_inline_axis) {
++  const bool is_parallel = IsParallelWritingMode(
++      container_writing_direction.GetWritingMode(), style.GetWritingMode());
++  const bool is_justify_axis = is_parallel == is_inline_axis;
++  return is_justify_axis ? OofJustifySelf(style) : OofAlignSelf(style);
++}
++
++// Which edge (relative to the box's own writing direction) the box keeps when
++// both insets are set and its size does not fill the space between them.
++// |is_start_dominant| tells whether the box's start edge is the containing
++// block's start edge in this axis.
++OofAlignmentBias OofAlignmentBiasForAxis(
++    const StyleSelfAlignmentData& alignment,
++    WritingDirectionMode container_writing_direction,
++    bool is_start_dominant,
++    bool is_justify_axis,
++    absl::optional<OofAlignmentBias>* safe_bias) {
++  const OofAlignmentBias container_start =
++      is_start_dominant ? OofAlignmentBias::kStart : OofAlignmentBias::kEnd;
++  const OofAlignmentBias container_end =
++      is_start_dominant ? OofAlignmentBias::kEnd : OofAlignmentBias::kStart;
++  if (alignment.Overflow() == OverflowAlignment::kSafe) {
++    *safe_bias = container_start;
++  }
++  switch (alignment.GetPosition()) {
++    case ItemPosition::kCenter:
++      return OofAlignmentBias::kCenter;
++    case ItemPosition::kEnd:
++    case ItemPosition::kFlexEnd:
++    case ItemPosition::kLastBaseline:
++      return container_end;
++    case ItemPosition::kSelfStart:
++      return OofAlignmentBias::kStart;
++    case ItemPosition::kSelfEnd:
++      return OofAlignmentBias::kEnd;
++    case ItemPosition::kLeft:
++      if (!is_justify_axis) {
++        return container_start;
++      }
++      return container_writing_direction.IsLtr() ? container_start
++                                                 : container_end;
++    case ItemPosition::kRight:
++      if (!is_justify_axis) {
++        return container_start;
++      }
++      return container_writing_direction.IsRtl() ? container_start
++                                                 : container_end;
++    default:
++      // start, flex-start, baseline, stretch, normal.
++      return container_start;
++  }
++}
++
+ // Dominant side:
+ // htb ltr => top left
+ // htb rtl => top right
+@@ -156,6 +236,8 @@ void ComputeInsets(const LayoutUnit margin_percentage_resolution_size,
+                    StaticPositionEdge static_position_edge,
+                    bool is_start_dominant,
+                    bool is_block_direction,
++                   OofAlignmentBias alignment_bias,
++                   absl::optional<OofAlignmentBias> safe_alignment_bias,
+                    LayoutUnit size,
+                    LayoutUnit* inset_start_out,
+                    LayoutUnit* inset_end_out,
+@@ -205,11 +287,26 @@ void ComputeInsets(const LayoutUnit margin_percentage_resolution_size,
+       // Are the values over-constrained?
+       LayoutUnit margin_extra = margin_space - *margin_start - *margin_end;
+       if (margin_extra) {
+-        // Relax the end.
+-        if (is_start_dominant)
+-          inset_end = *inset_end + margin_extra;
+-        else
+-          inset_start = *inset_start + margin_extra;
++        // FlyWeb: move the edge(s) given by the self-alignment; "normal"
++        // keeps the containing block's start edge, as before.
++        OofAlignmentBias bias = alignment_bias;
++        if (safe_alignment_bias && margin_extra < LayoutUnit()) {
++          bias = *safe_alignment_bias;
++        }
++        switch (bias) {
++          case OofAlignmentBias::kStart:
++            inset_end = *inset_end + margin_extra;
++            break;
++          case OofAlignmentBias::kEnd:
++            inset_start = *inset_start + margin_extra;
++            break;
++          case OofAlignmentBias::kCenter: {
++            const LayoutUnit half = margin_extra / 2;
++            inset_start = *inset_start + half;
++            inset_end = *inset_end + (margin_extra - half);
++            break;
++          }
++        }
+       }
+     }
+   }
+@@ -246,17 +343,33 @@ void ComputeInsets(const LayoutUnit margin_percentage_resolution_size,
+   *margin_end_out = *margin_end;
+ }
+ 
+-bool CanComputeBlockSizeWithoutLayout(const NGBlockNode& node) {
++bool CanComputeBlockSizeWithoutLayout(
++    const NGBlockNode& node,
++    WritingDirectionMode container_writing_direction) {
+   if (node.IsTable())
+     return false;
+   if (node.IsReplaced())
+     return true;
+   const auto& style = node.Style();
+-  return !style.LogicalHeight().IsContentOrIntrinsic() &&
+-         !style.LogicalMinHeight().IsContentOrIntrinsic() &&
+-         !style.LogicalMaxHeight().IsContentOrIntrinsic() &&
+-         (!style.LogicalHeight().IsAuto() ||
+-          (!style.LogicalTop().IsAuto() && !style.LogicalBottom().IsAuto()));
++  if (style.LogicalHeight().IsContentOrIntrinsic() ||
++      style.LogicalMinHeight().IsContentOrIntrinsic() ||
++      style.LogicalMaxHeight().IsContentOrIntrinsic()) {
++    return false;
++  }
++  if (!style.LogicalHeight().IsAuto()) {
++    return true;
++  }
++  // Any 'auto' inset will trigger shrink-to-fit sizing.
++  if (style.LogicalTop().IsAuto() || style.LogicalBottom().IsAuto()) {
++    return false;
++  }
++  // FlyWeb: so does any alignment other than normal/stretch.
++  const ItemPosition block_alignment_position =
++      OofAlignmentForAxis(style, container_writing_direction,
++                          /* is_inline_axis */ false)
++          .GetPosition();
++  return block_alignment_position == ItemPosition::kNormal ||
++         block_alignment_position == ItemPosition::kStretch;
+ }
+ 
+ }  // namespace
+@@ -356,7 +469,7 @@ bool ComputeOutOfFlowInlineDimensions(
+ 
+   const bool is_table = node.IsTable();
+   const bool can_compute_block_size_without_layout =
+-      CanComputeBlockSizeWithoutLayout(node);
++      CanComputeBlockSizeWithoutLayout(node, container_writing_direction);
+ 
+   if (is_table) {
+     computed_available_size.inline_size = std::min(
+@@ -404,17 +517,40 @@ bool ComputeOutOfFlowInlineDimensions(
+     Length main_inline_length = style.LogicalWidth();
+     Length min_inline_length = style.LogicalMinWidth();
+ 
+-    const bool stretch_inline_size =
+-        !style.LogicalLeft().IsAuto() && !style.LogicalRight().IsAuto();
++    const bool has_auto_inline_inset =
++        style.LogicalLeft().IsAuto() || style.LogicalRight().IsAuto();
++    const bool has_auto_block_inset =
++        style.LogicalTop().IsAuto() || style.LogicalBottom().IsAuto();
++    const ItemPosition alignment_position =
++        OofAlignmentForAxis(style, container_writing_direction,
++                            /* is_inline_axis */ true)
++            .GetPosition();
++    const ItemPosition block_alignment_position =
++        OofAlignmentForAxis(style, container_writing_direction,
++                            /* is_inline_axis */ false)
++            .GetPosition();
++    // FlyWeb: only normal/stretch alignment stretches an auto inline-size.
++    const bool is_implicit_stretch =
++        !has_auto_inline_inset && alignment_position == ItemPosition::kNormal;
++    const bool is_explicit_stretch =
++        !has_auto_inline_inset && alignment_position == ItemPosition::kStretch;
++    const bool stretch_inline_size = is_implicit_stretch || is_explicit_stretch;
++    // If our block constraint is strong/explicit.
++    const bool is_block_explicit =
++        !style.LogicalHeight().IsAuto() ||
++        (!has_auto_block_inset &&
++         block_alignment_position == ItemPosition::kStretch);
+ 
+     // Determine how "auto" should resolve.
+     if (main_inline_length.IsAuto()) {
+       if (is_table) {
+-        // Tables always shrink-to-fit.
+-        main_inline_length = Length::FitContent();
++        // Tables always shrink-to-fit unless explicitly asked to stretch.
++        main_inline_length = is_explicit_stretch ? Length::FillAvailable()
++                                                 : Length::FitContent();
+       } else if (!style.AspectRatio().IsAuto() &&
+                  can_compute_block_size_without_layout &&
+-                 (!stretch_inline_size || !style.LogicalHeight().IsAuto())) {
++                 (!stretch_inline_size ||
++                  (is_implicit_stretch && is_block_explicit))) {
+         // We'd like to apply the aspect-ratio.
+         // The aspect-ratio applies from the block-axis if we can compute our
+         // block-size without invoking layout, and either:
+@@ -455,13 +591,23 @@ bool ComputeOutOfFlowInlineDimensions(
+                         IsTopDominant(writing_direction);
+   }
+ 
++  absl::optional<OofAlignmentBias> safe_alignment_bias;
++  const bool is_inline_justify_axis = IsParallelWritingMode(
++      container_writing_direction.GetWritingMode(), style.GetWritingMode());
++  const OofAlignmentBias alignment_bias = OofAlignmentBiasForAxis(
++      OofAlignmentForAxis(style, container_writing_direction,
++                          /* is_inline_axis */ true),
++      container_writing_direction, is_start_dominant, is_inline_justify_axis,
++      &safe_alignment_bias);
++
+   ComputeInsets(
+       space.PercentageResolutionInlineSizeForParentWritingMode(),
+       space.AvailableSize().inline_size, computed_available_size.inline_size,
+       style.MarginStart(), style.MarginEnd(), insets.inline_start,
+       insets.inline_end, static_position.offset.inline_offset,
+       GetStaticPositionEdge(static_position.inline_edge), is_start_dominant,
+-      false /* is_block_direction */, inline_size,
++      false /* is_block_direction */, alignment_bias, safe_alignment_bias,
++      inline_size,
+       &dimensions->inset.inline_start, &dimensions->inset.inline_end,
+       &dimensions->margins.inline_start, &dimensions->margins.inline_end);
+ 
+@@ -534,14 +680,25 @@ const NGLayoutResult* ComputeOutOfFlowBlockDimensions(
+   } else {
+     Length main_block_length = style.LogicalHeight();
+ 
++    // FlyWeb: only normal/stretch alignment stretches an auto block-size.
++    const ItemPosition alignment_position =
++        OofAlignmentForAxis(style, container_writing_direction,
++                            /* is_inline_axis */ false)
++            .GetPosition();
++    const bool has_auto_block_inset =
++        style.LogicalTop().IsAuto() || style.LogicalBottom().IsAuto();
++    const bool is_explicit_stretch =
++        !has_auto_block_inset && alignment_position == ItemPosition::kStretch;
+     const bool stretch_block_size =
+-        !style.LogicalTop().IsAuto() && !style.LogicalBottom().IsAuto();
++        !has_auto_block_inset &&
++        (alignment_position == ItemPosition::kNormal || is_explicit_stretch);
+ 
+     // Determine how "auto" should resolve.
+     if (main_block_length.IsAuto()) {
+       if (is_table) {
+-        // Tables always shrink-to-fit.
+-        main_block_length = Length::FitContent();
++        // Tables always shrink-to-fit unless explicitly asked to stretch.
++        main_block_length = is_explicit_stretch ? Length::FillAvailable()
++                                                : Length::FitContent();
+       } else if (!style.AspectRatio().IsAuto() &&
+                  dimensions->size.inline_size != kIndefiniteSize) {
+         main_block_length = Length::FitContent();
+@@ -583,13 +740,23 @@ const NGLayoutResult* ComputeOutOfFlowBlockDimensions(
+                         IsLeftDominant(writing_direction);
+   }
+ 
++  absl::optional<OofAlignmentBias> safe_alignment_bias;
++  const bool is_block_justify_axis = !IsParallelWritingMode(
++      container_writing_direction.GetWritingMode(), style.GetWritingMode());
++  const OofAlignmentBias alignment_bias = OofAlignmentBiasForAxis(
++      OofAlignmentForAxis(style, container_writing_direction,
++                          /* is_inline_axis */ false),
++      container_writing_direction, is_start_dominant, is_block_justify_axis,
++      &safe_alignment_bias);
++
+   ComputeInsets(
+       space.PercentageResolutionInlineSizeForParentWritingMode(),
+       space.AvailableSize().block_size, computed_available_size.block_size,
+       style.MarginBefore(), style.MarginAfter(), insets.block_start,
+       insets.block_end, static_position.offset.block_offset,
+       GetStaticPositionEdge(static_position.block_edge), is_start_dominant,
+-      true /* is_block_direction */, block_size, &dimensions->inset.block_start,
++      true /* is_block_direction */, alignment_bias, safe_alignment_bias,
++      block_size, &dimensions->inset.block_start,
+       &dimensions->inset.block_end, &dimensions->margins.block_start,
+       &dimensions->margins.block_end);
+ 
