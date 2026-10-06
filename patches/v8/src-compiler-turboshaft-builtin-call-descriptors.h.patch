@@ -1,0 +1,36 @@
+diff --git a/src/compiler/turboshaft/builtin-call-descriptors.h b/src/compiler/turboshaft/builtin-call-descriptors.h
+index bb7e79ee8686b0fa5ff4dd11dd22a196c53fce59..0449da5811404f74354aa860e6694a9267a15492 100644
+--- a/src/compiler/turboshaft/builtin-call-descriptors.h
++++ b/src/compiler/turboshaft/builtin-call-descriptors.h
+@@ -125,7 +125,10 @@ struct BuiltinCallDescriptor {
+     static constexpr bool kNeedsFrameState = false;
+     static constexpr bool kNeedsContext = true;
+     static constexpr Operator::Properties kProperties = Operator::kEliminatable;
+-    static constexpr OpEffects kEffects = base_effects.CanReadMemory();
++    // TODO(chromium:1489500, nicohartmann@): We can probably relax this to
++    // base_effects.AssumesConsistentHeap().CanReadMemory() but for now we go
++    // with stronger effects until we better understand the recent crashes.
++    static constexpr OpEffects kEffects = OpEffects().CanCallAnything();
+   };
+   using FindOrderedHashMapEntry =
+       FindOrderedHashEntry<Builtin::kFindOrderedHashMapEntry>;
+@@ -201,7 +204,8 @@ struct BuiltinCallDescriptor {
+     static constexpr bool kNeedsFrameState = false;
+     static constexpr bool kNeedsContext = false;
+     static constexpr Operator::Properties kProperties = Operator::kEliminatable;
+-    static constexpr OpEffects kEffects = base_effects.CanReadMemory();
++    static constexpr OpEffects kEffects =
++        base_effects.CanReadMemory().CanAllocate();
+   };
+ 
+   struct SameValueNumbersOnly : public Descriptor<SameValueNumbersOnly> {
+@@ -278,7 +282,8 @@ struct BuiltinCallDescriptor {
+     static constexpr bool kNeedsFrameState = false;
+     static constexpr bool kNeedsContext = false;
+     static constexpr Operator::Properties kProperties = Operator::kEliminatable;
+-    static constexpr OpEffects kEffects = base_effects.CanReadMemory();
++    static constexpr OpEffects kEffects =
++        base_effects.CanReadMemory().CanAllocate();
+   };
+   using StringLessThan = StringComparison<Builtin::kStringLessThan>;
+   using StringLessThanOrEqual =

@@ -1,0 +1,22 @@
+diff --git a/src/compiler/turboshaft/operations.h b/src/compiler/turboshaft/operations.h
+index 6aaf51d72d5642005c25e5d46cc8db4fd35c7f5b..b6b3de68656ac0b658f6dac68227c97abc95c305 100644
+--- a/src/compiler/turboshaft/operations.h
++++ b/src/compiler/turboshaft/operations.h
+@@ -2565,6 +2565,17 @@ struct LoadOp : OperationT<LoadOp> {
+     return input_count == 2 ? input(1) : OpIndex::Invalid();
+   }
+ 
++  // FlyWeb: v8 7c0f4cc3 (crbug 1520362), without its new DCHECKs.
++  static constexpr bool OffsetIsValid(int32_t offset, bool tagged_base) {
++    if (tagged_base) {
++      // When a Load has the tagged_base Kind, it means that {offset} will
++      // eventually need a "-kHeapObjectTag" eventually. If the {offset} is
++      // min_int, then subtracting kHeapObjectTag will underflow.
++      return offset >= std::numeric_limits<int32_t>::min() + kHeapObjectTag;
++    }
++    return true;
++  }
++
+   LoadOp(OpIndex base, OptionalOpIndex index, Kind kind,
+          MemoryRepresentation loaded_rep, RegisterRepresentation result_rep,
+          int32_t offset, uint8_t element_size_log2)
