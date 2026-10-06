@@ -30,9 +30,10 @@ export const applyCosmeticFilter = (host: string, selector: string) => {
   }
 }
 
-// parent menu
+// parent menu (FlyWeb: Chromium shows this title, not the manifest name, when
+// the extension has a single top-level item)
 chrome.contextMenus.create({
-  title: 'Brave',
+  title: 'FlyWeb',
   id: 'brave',
   contexts: ['all']
 })
