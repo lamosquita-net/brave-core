@@ -1,0 +1,17 @@
+diff --git a/third_party/blink/renderer/core/frame/local_frame_mojo_handler.cc b/third_party/blink/renderer/core/frame/local_frame_mojo_handler.cc
+index 57e1e45f9c8aa0dbae982ab4e921d2a785841c22..62f50822d190da804e9de49d1c35801b56e7fec9 100644
+--- a/third_party/blink/renderer/core/frame/local_frame_mojo_handler.cc
++++ b/third_party/blink/renderer/core/frame/local_frame_mojo_handler.cc
+@@ -1129,8 +1129,10 @@ void LocalFrameMojoHandler::GetOpenGraphMetadata(
+ }
+ 
+ void LocalFrameMojoHandler::SetNavigationApiHistoryEntriesForRestore(
+-    mojom::blink::NavigationApiHistoryEntryArraysPtr entry_arrays) {
+-  frame_->DomWindow()->navigation()->SetEntriesForRestore(entry_arrays);
++    mojom::blink::NavigationApiHistoryEntryArraysPtr entry_arrays,
++    mojom::blink::NavigationApiEntryRestoreReason restore_reason) {
++  frame_->DomWindow()->navigation()->SetEntriesForRestore(entry_arrays,
++                                                          restore_reason);
+ }
+ 
+ void LocalFrameMojoHandler::NotifyNavigationApiOfDisposedEntries(

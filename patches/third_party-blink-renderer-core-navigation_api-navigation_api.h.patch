@@ -1,0 +1,56 @@
+diff --git a/third_party/blink/renderer/core/navigation_api/navigation_api.h b/third_party/blink/renderer/core/navigation_api/navigation_api.h
+index 60abf4432c9e0fa9e765b2db4bd572cac667dab8..9eb842c458b72d4a679f1914a3d7672771b233da 100644
+--- a/third_party/blink/renderer/core/navigation_api/navigation_api.h
++++ b/third_party/blink/renderer/core/navigation_api/navigation_api.h
+@@ -28,6 +28,7 @@ class NavigationApiNavigation;
+ class NavigationUpdateCurrentEntryOptions;
+ class NavigationHistoryEntry;
+ class NavigateEvent;
++class NavigationActivation;
+ class NavigationNavigateOptions;
+ class NavigationReloadOptions;
+ class NavigationResult;
+@@ -48,10 +49,12 @@ class CORE_EXPORT NavigationApi final : public EventTargetWithInlineData {
+                               CommitReason,
+                               NavigationApi* previous,
+                               const WebVector<WebHistoryItem>& back_entries,
+-                              const WebVector<WebHistoryItem>& forward_entries);
++                              const WebVector<WebHistoryItem>& forward_entries,
++                              HistoryItem* previous_entry);
+   void UpdateForNavigation(HistoryItem&, WebFrameLoadType);
+   void SetEntriesForRestore(
+-      const mojom::blink::NavigationApiHistoryEntryArraysPtr&);
++      const mojom::blink::NavigationApiHistoryEntryArraysPtr&,
++      mojom::blink::NavigationApiEntryRestoreReason);
+ 
+   // The entries indicated by |keys| have been removed from the session history
+   // in the browser process and should be disposed. In many cases, this won't
+@@ -77,6 +80,7 @@ class CORE_EXPORT NavigationApi final : public EventTargetWithInlineData {
+   void updateCurrentEntry(NavigationUpdateCurrentEntryOptions*,
+                           ExceptionState&);
+   NavigationTransition* transition() const { return transition_; }
++  NavigationActivation* activation() const;
+ 
+   bool canGoBack() const;
+   bool canGoForward() const;
+@@ -136,9 +140,12 @@ class CORE_EXPORT NavigationApi final : public EventTargetWithInlineData {
+   NavigationHistoryEntry* GetEntryForRestore(
+       const mojom::blink::NavigationApiHistoryEntryPtr&);
+   void PopulateKeySet();
++  void UpdateActivation(HistoryItem* previous_entry, WebFrameLoadType);
+   void AbortOngoingNavigation(ScriptState*);
+   void DidFinishOngoingNavigation();
+   void DidFailOngoingNavigation(ScriptValue);
++  NavigationHistoryEntry* GetExistingEntryFor(const String& key,
++                                              const String& id);
+ 
+   NavigationResult* PerformNonTraverseNavigation(
+       ScriptState*,
+@@ -166,6 +173,7 @@ class CORE_EXPORT NavigationApi final : public EventTargetWithInlineData {
+   bool has_dropped_navigation_ = false;
+ 
+   Member<NavigationTransition> transition_;
++  Member<NavigationActivation> activation_;
+ 
+   Member<NavigationApiNavigation> ongoing_navigation_;
+   HeapHashMap<String, Member<NavigationApiNavigation>> upcoming_traversals_;

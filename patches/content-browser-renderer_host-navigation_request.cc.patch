@@ -1,5 +1,5 @@
 diff --git a/content/browser/renderer_host/navigation_request.cc b/content/browser/renderer_host/navigation_request.cc
-index a09b5bc4973fc3abdfc02627be515f7eaf87f2c1..04c56d9f1652fd41b6af737c60e48a405f833915 100644
+index a09b5bc4973fc3abdfc02627be515f7eaf87f2c1..4ad5f218e356e463b565734b3593a3d5f3d1d99e 100644
 --- a/content/browser/renderer_host/navigation_request.cc
 +++ b/content/browser/renderer_host/navigation_request.cc
 @@ -3153,6 +3153,7 @@ void NavigationRequest::OnRequestRedirected(
@@ -18,3 +18,47 @@ index a09b5bc4973fc3abdfc02627be515f7eaf87f2c1..04c56d9f1652fd41b6af737c60e48a40
    // TODO(clamy): Avoid cloning the navigation params and create the
    // ResourceRequest directly here.
    std::vector<std::unique_ptr<NavigationLoaderInterceptor>> interceptor;
+@@ -5778,7 +5780,8 @@ void NavigationRequest::CommitPageActivation() {
+                                                                   : nullptr);
+           rfh->GetAssociatedLocalFrame()
+               ->SetNavigationApiHistoryEntriesForRestore(
+-                  std::move(entry_arrays));
++                  std::move(entry_arrays),
++                  blink::mojom::NavigationApiEntryRestoreReason::kBFCache);
+           return RenderFrameHost::FrameIterationAction::kContinue;
+         });
+ 
+@@ -5862,6 +5865,33 @@ void NavigationRequest::CommitPageActivation() {
+     stored_page->SetViewTransitionState(
+         std::exchange(commit_params_->view_transition_state, {}));
+ 
++    // Update navigation API entries. A prerendered page has only a single
++    // history entry, but now it has access to a full back/forward list.
++    rfh->ForEachRenderFrameHostWithAction([this, &stored_page](
++                                              RenderFrameHostImpl* rfh) {
++      // Currently, prerender activation only happens for DIFFERENT_DOCUMENT
++      // navigations. If that ever changes, `reason` calculation will need to be
++      // updated (and new NavigationApiEntryRestoreReason values added).
++      DCHECK_EQ(common_params_->navigation_type,
++                blink::mojom::NavigationType::DIFFERENT_DOCUMENT);
++      blink::mojom::NavigationApiEntryRestoreReason reason =
++          common_params_->should_replace_current_entry
++              ? blink::mojom::NavigationApiEntryRestoreReason::
++                    kPrerenderActivationReplace
++              : blink::mojom::NavigationApiEntryRestoreReason::
++                    kPrerenderActivationPush;
++      // |this| is given as a parameter to
++      // GetNavigationApiHistoryEntryVectors() only for the frame being
++      // committed (i.e., the top frame).
++      auto entry_arrays =
++          rfh->frame_tree()->controller().GetNavigationApiHistoryEntryVectors(
++              rfh->frame_tree_node(),
++              stored_page->render_frame_host() == rfh ? this : nullptr);
++      rfh->GetAssociatedLocalFrame()->SetNavigationApiHistoryEntriesForRestore(
++          std::move(entry_arrays), reason);
++      return RenderFrameHost::FrameIterationAction::kContinue;
++    });
++
+     // Move the StoredPage into RenderFrameHostManager, in
+     // preparation for committing. This entry may be used for prerendering.
+     frame_tree_node_->render_manager()->ActivatePrerender(
