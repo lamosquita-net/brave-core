@@ -1,0 +1,15 @@
+diff --git a/src/objects/js-objects.cc b/src/objects/js-objects.cc
+index 6993dc9b5016c0c3d053cbe8fff5c2ac9fcd1345..d47d4fe91b7874e7e5330e0888b2b9e78f952372 100644
+--- a/src/objects/js-objects.cc
++++ b/src/objects/js-objects.cc
+@@ -429,9 +429,7 @@ Maybe<bool> JSReceiver::SetOrCopyDataProperties(
+       Nothing<bool>());
+ 
+   if (!from->HasFastProperties() && target->HasFastProperties() &&
+-      !IsJSGlobalProxy(*target)) {
+-    // JSProxy is always in slow-mode.
+-    DCHECK(!IsJSProxy(*target));
++      IsJSObject(*target) && !IsJSGlobalProxy(*target)) {
+     // Convert to slow properties if we're guaranteed to overflow the number of
+     // descriptors.
+     int source_length;

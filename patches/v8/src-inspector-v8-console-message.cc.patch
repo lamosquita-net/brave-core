@@ -1,0 +1,13 @@
+diff --git a/src/inspector/v8-console-message.cc b/src/inspector/v8-console-message.cc
+index 8b678c00f1d8bfe94e656a218fee67fd0b655fb6..949c85eab12e6d900603247f90f55656d86131cf 100644
+--- a/src/inspector/v8-console-message.cc
++++ b/src/inspector/v8-console-message.cc
+@@ -313,6 +313,8 @@ void V8ConsoleMessage::reportToFrontend(protocol::Runtime::Frontend* frontend,
+                                         bool generatePreview) const {
+   int contextGroupId = session->contextGroupId();
+   V8InspectorImpl* inspector = session->inspector();
++  // Protect against reentrant debugger calls via interrupts.
++  v8::debug::PostponeInterruptsScope no_interrupts(inspector->isolate());
+ 
+   if (m_origin == V8MessageOrigin::kException) {
+     std::unique_ptr<protocol::Runtime::RemoteObject> exception =

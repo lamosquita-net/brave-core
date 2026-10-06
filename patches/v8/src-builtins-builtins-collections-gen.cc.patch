@@ -1,0 +1,22 @@
+diff --git a/src/builtins/builtins-collections-gen.cc b/src/builtins/builtins-collections-gen.cc
+index 26b33d85558f5a01f29824c3e0dd2e9d060e2e17..630e360ead59cd21595fc7df6c4c47e6e92c1fe4 100644
+--- a/src/builtins/builtins-collections-gen.cc
++++ b/src/builtins/builtins-collections-gen.cc
+@@ -2309,11 +2309,12 @@ TF_BUILTIN(FindOrderedHashSetEntry, CollectionsBuiltinsAssembler) {
+ }
+ 
+ const TNode<OrderedHashMap> CollectionsBuiltinsAssembler::AddValueToKeyedGroup(
+-    const TNode<OrderedHashMap> groups, const TNode<Object> key,
+-    const TNode<Object> value, const TNode<String> methodName) {
+-  GrowCollection<OrderedHashMap> grow = [this, groups, methodName]() {
+-    TNode<OrderedHashMap> new_groups = CAST(CallRuntime(
+-        Runtime::kOrderedHashMapGrow, NoContextConstant(), groups, methodName));
++    const TNode<Context> context, const TNode<OrderedHashMap> groups,
++    const TNode<Object> key, const TNode<Object> value,
++    const TNode<String> methodName) {
++  GrowCollection<OrderedHashMap> grow = [&]() {
++    TNode<OrderedHashMap> new_groups = CAST(
++        CallRuntime(Runtime::kOrderedHashMapGrow, context, groups, methodName));
+     // The groups OrderedHashMap is not escaped to user script while grouping
+     // items, so there can't be live iterators. So we don't need to keep the
+     // pointer from the old table to the new one.
