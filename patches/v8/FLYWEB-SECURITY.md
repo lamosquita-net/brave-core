@@ -10,7 +10,7 @@ SEGURIDAD, FS.6 (06-10-2026).
 Applied as is: 1e1a2073, 2944ee98 (CVE-2024-4947), 73c61498, 872ec583, 8856a2a6, 8f1c780b (CVE-2024-5274; same
 as NUBE's former patches), ae63f970 (CVE-2024-7971), d6287039, de7a07b7 (CVE-2024-4761), ff462a28. From the
 original main commit: b91805d0 (8a69c788). By hand: 8d0519c8 (canonical types limit) and 41a7b57b (exception type
-canonicalization; `Handle` instead of `DirectHandle`). Already in 12.2.281.22: ce430536, 6feeaeae, Turboshaft A1 (afc18842). Not ported: d5bede9c (Maglev, which is off).
+canonicalization; `Handle` instead of `DirectHandle`). Already in 12.2.281.22: ce430536, 6feeaeae, Turboshaft A1 (afc18842). Not ported: d5bede9c (Maglev, which is off; an earlier commit of this branch carried only its `maglev-ir.cc` half, which broke a DCHECK in Maglev tests: removed).
 In 12.2 the instance passed to `WasmTagObject::New` comes from `trusted_instance_data->instance_object()`.
 
 ## On top (as on level 120)
