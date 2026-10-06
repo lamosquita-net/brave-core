@@ -1,0 +1,19 @@
+diff --git a/src/compiler/access-info.cc b/src/compiler/access-info.cc
+index 5cbc657438d5c95021eec2df158a4274a84b2fb5..1e0ba125dcc30e3cfabbcff0905f0e5eb502e74a 100644
+--- a/src/compiler/access-info.cc
++++ b/src/compiler/access-info.cc
+@@ -526,6 +526,14 @@ PropertyAccessInfo AccessorAccessInfoHelper(
+         Cell::cast(module_namespace->module()->exports()->Lookup(
+             isolate, name.object(),
+             Smi::ToInt(Object::GetHash(*name.object())))));
++    if (IsAnyStore(access_mode)) {
++      // ES#sec-module-namespace-exotic-objects-set-p-v-receiver
++      // ES#sec-module-namespace-exotic-objects-defineownproperty-p-desc
++      //
++      // Storing to a module namespace object is always an error or a no-op in
++      // JS.
++      return PropertyAccessInfo::Invalid(zone);
++    }
+     if (IsTheHole(cell->value(kRelaxedLoad), isolate)) {
+       // This module has not been fully initialized yet.
+       return PropertyAccessInfo::Invalid(zone);
