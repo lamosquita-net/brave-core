@@ -1,0 +1,23 @@
+diff --git a/third_party/blink/renderer/bindings/core/v8/remote_window_proxy.cc b/third_party/blink/renderer/bindings/core/v8/remote_window_proxy.cc
+index a2af872829743b4c51fa4f71e30b3e7948567852..e6cca561bd810428f394f377cacc176231d85a4c 100644
+--- a/third_party/blink/renderer/bindings/core/v8/remote_window_proxy.cc
++++ b/third_party/blink/renderer/bindings/core/v8/remote_window_proxy.cc
+@@ -73,7 +73,6 @@ void RemoteWindowProxy::DisposeContext(Lifecycle next_status,
+        next_status == Lifecycle::kGlobalObjectIsDetached) &&
+       !global_proxy_.IsEmpty()) {
+     v8::HandleScope handle_scope(GetIsolate());
+-    global_proxy_.SetWrapperClassId(0);
+     V8DOMWrapper::ClearNativeInfo(GetIsolate(),
+                                   global_proxy_.Get(GetIsolate()));
+ #if DCHECK_IS_ON()
+@@ -135,10 +134,6 @@ void RemoteWindowProxy::SetupWindowPrototypeChain() {
+   v8::Local<v8::Object> global_proxy = global_proxy_.Get(GetIsolate());
+   V8DOMWrapper::SetNativeInfo(GetIsolate(), global_proxy, wrapper_type_info,
+                               window);
+-  // Mark the handle to be traced by Oilpan, since the global proxy has a
+-  // reference to the DOMWindow.
+-  global_proxy_.SetWrapperClassId(wrapper_type_info->wrapper_class_id);
+-
+   // The global object, aka window wrapper object.
+   v8::Local<v8::Object> window_wrapper =
+       global_proxy->GetPrototype().As<v8::Object>();
