@@ -1,0 +1,112 @@
+diff --git a/src/compiler/turboshaft/machine-optimization-reducer.h b/src/compiler/turboshaft/machine-optimization-reducer.h
+index 444bf37d8a55e08f661d78abce02b111c73255d2..c7589530e2926e6691dc0004b53a945e7eeee243 100644
+--- a/src/compiler/turboshaft/machine-optimization-reducer.h
++++ b/src/compiler/turboshaft/machine-optimization-reducer.h
+@@ -1684,8 +1684,8 @@ class MachineOptimizationReducer : public Next {
+       if (stored_rep.SizeInBytes() <= 4) {
+         value = TryRemoveWord32ToWord64Conversion(value);
+       }
+-      index =
+-          ReduceMemoryIndex(index.value_or_invalid(), &offset, &element_scale);
++      index = ReduceMemoryIndex(index.value_or_invalid(), &offset,
++                                &element_scale, kind.tagged_base);
+       switch (stored_rep) {
+         case MemoryRepresentation::Uint8():
+         case MemoryRepresentation::Int8():
+@@ -1721,13 +1721,14 @@ class MachineOptimizationReducer : public Next {
+                        uint8_t element_scale) {
+     while (true) {
+       if (ShouldSkipOptimizationStep()) break;
+-      index =
+-          ReduceMemoryIndex(index.value_or_invalid(), &offset, &element_scale);
++      index = ReduceMemoryIndex(index.value_or_invalid(), &offset,
++                                &element_scale, kind.tagged_base);
+       if (!kind.tagged_base && !index.valid()) {
+         if (OpIndex left, right;
+             matcher.MatchWordAdd(base_idx, &left, &right,
+                                  WordRepresentation::PointerSized()) &&
+-            TryAdjustOffset(&offset, matcher.Get(right), element_scale)) {
++            TryAdjustOffset(&offset, matcher.Get(right), element_scale,
++                            kind.tagged_base)) {
+           base_idx = left;
+           continue;
+         }
+@@ -1747,8 +1748,7 @@ class MachineOptimizationReducer : public Next {
+           AllowHandleDereference allow_handle_dereference;
+ 
+           OptionalMapRef map = TryMakeRef(broker, base.handle()->map());
+-          if (map.has_value() && map->is_stable() && !map->is_deprecated()) {
+-            broker->dependencies()->DependOnStableMap(*map);
++          if (MapLoadCanBeConstantFolded(map)) {
+             return __ HeapConstant(map->object());
+           }
+         }
+@@ -1769,7 +1769,7 @@ class MachineOptimizationReducer : public Next {
+   // Try to match a constant and add it to `offset`. Return `true` if
+   // successful.
+   bool TryAdjustOffset(int32_t* offset, const Operation& maybe_constant,
+-                       uint8_t element_scale) {
++                       uint8_t element_scale, bool tagged_base) {
+     if (!maybe_constant.Is<ConstantOp>()) return false;
+     const ConstantOp& constant = maybe_constant.Cast<ConstantOp>();
+     if (constant.rep != WordRepresentation::PointerSized()) {
+@@ -1785,7 +1785,8 @@ class MachineOptimizationReducer : public Next {
+         !base::bits::SignedAddOverflow32(
+             *offset,
+             static_cast<int32_t>(base::bits::Unsigned(diff) << element_scale),
+-            &new_offset)) {
++            &new_offset) &&
++        LoadOp::OffsetIsValid(new_offset, tagged_base)) {
+       *offset = new_offset;
+       return true;
+     }
+@@ -1812,10 +1813,10 @@ class MachineOptimizationReducer : public Next {
+   // `element_scale` and returning the updated `index`.
+   // Return `OpIndex::Invalid()` if the resulting index is zero.
+   OpIndex ReduceMemoryIndex(OpIndex index, int32_t* offset,
+-                            uint8_t* element_scale) {
++                            uint8_t* element_scale, bool tagged_base) {
+     while (index.valid()) {
+       const Operation& index_op = matcher.Get(index);
+-      if (TryAdjustOffset(offset, index_op, *element_scale)) {
++      if (TryAdjustOffset(offset, index_op, *element_scale, tagged_base)) {
+         index = OpIndex::Invalid();
+         *element_scale = 0;
+       } else if (const ShiftOp* shift_op = index_op.TryCast<ShiftOp>()) {
+@@ -1828,7 +1829,7 @@ class MachineOptimizationReducer : public Next {
+                      index_op.TryCast<WordBinopOp>()) {
+         if (binary_op->kind == WordBinopOp::Kind::kAdd &&
+             TryAdjustOffset(offset, matcher.Get(binary_op->right()),
+-                            *element_scale)) {
++                            *element_scale, tagged_base)) {
+           index = binary_op->left();
+           continue;
+         }
+@@ -2202,6 +2203,27 @@ class MachineOptimizationReducer : public Next {
+     return base::nullopt;
+   }
+ 
++  // Returns true if loading the map of an object with map {map} can be constant
++  // folded and done at compile time or not. For instance, doing this for
++  // strings is not safe, since the map of a string could change during a GC,
++  // but doing this for a HeapNumber is always safe.
++  bool MapLoadCanBeConstantFolded(OptionalMapRef map) {
++    if (!map.has_value()) return false;
++
++    if (map->IsJSObjectMap() && map->is_stable()) {
++      broker->dependencies()->DependOnStableMap(*map);
++      // For JS objects, this is only safe is the map is stable.
++      return true;
++    }
++
++    if (map->instance_type() ==
++        any_of(BIG_INT_BASE_TYPE, HEAP_NUMBER_TYPE, ODDBALL_TYPE)) {
++      return true;
++    }
++
++    return false;
++  }
++
+   uint16_t CountLeadingSignBits(int64_t c, WordRepresentation rep) {
+     return base::bits::CountLeadingSignBits(c) - (64 - rep.bit_width());
+   }

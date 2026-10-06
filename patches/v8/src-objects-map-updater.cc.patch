@@ -1,0 +1,29 @@
+diff --git a/src/objects/map-updater.cc b/src/objects/map-updater.cc
+index 7d04b0641778365d6818cc362ed7c2f0e33071fd..b7b83ad235aee5d0703b9346d552c72b0812694f 100644
+--- a/src/objects/map-updater.cc
++++ b/src/objects/map-updater.cc
+@@ -1036,14 +1036,21 @@ MapUpdater::State MapUpdater::ConstructNewMap() {
+   Handle<Map> new_map =
+       Map::AddMissingTransitions(isolate_, split_map, new_descriptors);
+ 
++  bool had_any_enum_cache =
++      split_map->instance_descriptors(isolate_)
++              ->enum_cache()
++              ->keys()
++              ->length() > 0 ||
++      old_descriptors_->enum_cache()->keys()->length() > 0;
++
+   // Deprecated part of the transition tree is no longer reachable, so replace
+   // current instance descriptors in the "survived" part of the tree with
+   // the new descriptors to maintain descriptors sharing invariant.
+   split_map->ReplaceDescriptors(isolate_, *new_descriptors);
+ 
+-  // If the old descriptors had an enum cache, make sure the new ones do too.
+-  if (old_descriptors_->enum_cache()->keys()->length() > 0 &&
+-      new_map->NumberOfEnumerableProperties() > 0) {
++  // If the old descriptors had an enum cache (or if {split_map}'s descriptors
++  // had one), make sure the new ones do too.
++  if (had_any_enum_cache && new_map->NumberOfEnumerableProperties() > 0) {
+     FastKeyAccumulator::InitializeFastPropertyEnumCache(
+         isolate_, new_map, new_map->NumberOfEnumerableProperties());
+   }

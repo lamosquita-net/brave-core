@@ -1,0 +1,48 @@
+diff --git a/src/compiler/backend/instruction-selector.cc b/src/compiler/backend/instruction-selector.cc
+index 064f0755546ae3b36520f3a382766059f9b9753d..9be6f5c0f97efbe4bbf0552eaf2400f8993ffa52 100644
+--- a/src/compiler/backend/instruction-selector.cc
++++ b/src/compiler/backend/instruction-selector.cc
+@@ -7,6 +7,7 @@
+ #include <limits>
+ 
+ #include "src/base/iterator.h"
++#include "src/base/v8-fallthrough.h"
+ #include "src/codegen/machine-type.h"
+ #include "src/codegen/tick-counter.h"
+ #include "src/common/globals.h"
+@@ -694,6 +695,20 @@ InstructionOperand OperandForDeopt(Isolate* isolate,
+     case IrOpcode::kObjectState:
+     case IrOpcode::kTypedObjectState:
+       UNREACHABLE();
++    // FlyWeb: V8 86c99d86 (crbug 1520697), TurboFan part only: a Smi
++    // constant built as BitcastWordToTaggedSigned(Int32Constant) goes into
++    // the deopt data as an immediate, not as a register.
++    case IrOpcode::kBitcastWordToTaggedSigned: {
++      if (input->InputAt(0)->opcode() == IrOpcode::kInt32Constant) {
++        int32_t value = OpParameter<int32_t>(input->InputAt(0)->op());
++        if constexpr (Is64()) {
++          return g->UseImmediate64(value);
++        } else {
++          return g->UseImmediate(value);
++        }
++      }
++    }
++      V8_FALLTHROUGH;
+     default:
+       switch (kind) {
+         case FrameStateInputKind::kStackSlot:
+@@ -5231,6 +5246,14 @@ bool InstructionSelectorT<Adapter>::ZeroExtendsWord32ToWord64(
+   const int kMaxRecursionDepth = 100;
+ 
+   if (this->IsPhi(node)) {
++    // Intermediate results from previous calls are not necessarily correct.
++    if (recursion_depth == 0) {
++      static_assert(sizeof(Upper32BitsState) == 1);
++      memset(phi_states_.data(),
++             static_cast<int>(Upper32BitsState::kNotYetChecked),
++             phi_states_.size());
++    }
++
+     Upper32BitsState current = phi_states_[this->id(node)];
+     if (current != Upper32BitsState::kNotYetChecked) {
+       return current == Upper32BitsState::kUpperBitsGuaranteedZero;

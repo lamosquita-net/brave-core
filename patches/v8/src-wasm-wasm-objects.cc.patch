@@ -1,0 +1,22 @@
+diff --git a/src/wasm/wasm-objects.cc b/src/wasm/wasm-objects.cc
+index 86c6eddb1b9ba1d54fca5c032a24a9460639b947..de8c509a490c9a9f6207c323932e5af0ad31493c 100644
+--- a/src/wasm/wasm-objects.cc
++++ b/src/wasm/wasm-objects.cc
+@@ -1821,7 +1821,8 @@ void WasmArray::SetTaggedElement(uint32_t index, Handle<Object> value,
+ Handle<WasmTagObject> WasmTagObject::New(Isolate* isolate,
+                                          const wasm::FunctionSig* sig,
+                                          uint32_t canonical_type_index,
+-                                         Handle<HeapObject> tag) {
++                                         Handle<HeapObject> tag,
++                                         Handle<HeapObject> instance) {
+   Handle<JSFunction> tag_cons(isolate->native_context()->wasm_tag_constructor(),
+                               isolate);
+ 
+@@ -1842,6 +1843,7 @@ Handle<WasmTagObject> WasmTagObject::New(Isolate* isolate,
+   tag_wrapper->set_serialized_signature(*serialized_sig);
+   tag_wrapper->set_canonical_type_index(canonical_type_index);
+   tag_wrapper->set_tag(*tag);
++  tag_wrapper->set_instance(*instance);
+ 
+   return tag_wrapper;
+ }
