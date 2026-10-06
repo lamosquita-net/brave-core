@@ -1,0 +1,20 @@
+diff --git a/third_party/blink/renderer/platform/bindings/script_wrappable.h b/third_party/blink/renderer/platform/bindings/script_wrappable.h
+index 3e44c89e70fb5310a1071a120b79b3927316169c..d4a284406d6e0f18b3e1056d62124ca3199d5643 100644
+--- a/third_party/blink/renderer/platform/bindings/script_wrappable.h
++++ b/third_party/blink/renderer/platform/bindings/script_wrappable.h
+@@ -190,9 +190,13 @@ class PLATFORM_EXPORT ScriptWrappable
+       wrapper = MainWorldWrapper(isolate);
+       return false;
+     }
+-    main_world_wrapper_.Reset(isolate, wrapper);
++    if (wrapper_type_info->SupportsDroppingWrapper()) {
++      main_world_wrapper_.Reset(
++          isolate, wrapper, TraceWrapperV8Reference<v8::Object>::IsDroppable{});
++    } else {
++      main_world_wrapper_.Reset(isolate, wrapper);
++    }
+     DCHECK(ContainsWrapper());
+-    wrapper_type_info->ConfigureWrapper(&main_world_wrapper_);
+     return true;
+   }
+ 

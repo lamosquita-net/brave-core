@@ -1,0 +1,19 @@
+diff --git a/third_party/blink/renderer/platform/bindings/custom_wrappable.cc b/third_party/blink/renderer/platform/bindings/custom_wrappable.cc
+index 396d0122d119c27e47a543005d93442930074594..9a004af34ffb2f732ec918a307caf8839adb0583 100644
+--- a/third_party/blink/renderer/platform/bindings/custom_wrappable.cc
++++ b/third_party/blink/renderer/platform/bindings/custom_wrappable.cc
+@@ -44,8 +44,12 @@ v8::Local<v8::Object> CustomWrappable::Wrap(ScriptState* script_state) {
+           .ToLocalChecked();
+   V8DOMWrapper::AssociateObjectWithWrapper(
+       isolate, this, &custom_wrappable_info, wrapper_object);
+-  wrapper_.Reset(isolate, wrapper_object);
+-  custom_wrappable_info.ConfigureWrapper(&wrapper_);
++  if (custom_wrappable_info.SupportsDroppingWrapper()) {
++    wrapper_.Reset(isolate, wrapper_object,
++                   TraceWrapperV8Reference<v8::Object>::IsDroppable{});
++  } else {
++    wrapper_.Reset(isolate, wrapper_object);
++  }
+   return wrapper_object;
+ }
+ 

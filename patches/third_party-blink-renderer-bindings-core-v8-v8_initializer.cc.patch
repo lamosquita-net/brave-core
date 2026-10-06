@@ -1,0 +1,29 @@
+diff --git a/third_party/blink/renderer/bindings/core/v8/v8_initializer.cc b/third_party/blink/renderer/bindings/core/v8/v8_initializer.cc
+index 4a0ae5a492e35b8f11d9f4f98083a63050e0bbe0..8fee33a137bc84d51bb239506dd58af5eb0259cf 100644
+--- a/third_party/blink/renderer/bindings/core/v8/v8_initializer.cc
++++ b/third_party/blink/renderer/bindings/core/v8/v8_initializer.cc
+@@ -587,14 +587,6 @@ bool WasmInstanceOverride(const v8::FunctionCallbackInfo<v8::Value>& args) {
+   return false;
+ }
+ 
+-bool WasmGCEnabledCallback(v8::Local<v8::Context> context) {
+-  ExecutionContext* execution_context = ToExecutionContext(context);
+-  if (!execution_context) {
+-    return false;
+-  }
+-  return RuntimeEnabledFeatures::WebAssemblyGCEnabled(execution_context);
+-}
+-
+ bool JavaScriptCompileHintsMagicEnabledCallback(
+     v8::Local<v8::Context> context) {
+   ExecutionContext* execution_context = ToExecutionContext(context);
+@@ -712,7 +704,8 @@ void InitializeV8Common(v8::Isolate* isolate) {
+   isolate->SetUseCounterCallback(&UseCounterCallback);
+   isolate->SetWasmModuleCallback(WasmModuleOverride);
+   isolate->SetWasmInstanceCallback(WasmInstanceOverride);
+-  isolate->SetWasmGCEnabledCallback(WasmGCEnabledCallback);
++  // FlyWeb: V8 12.3 (engine level 123) removed SetWasmGCEnabledCallback();
++  // Wasm GC is decided by V8's own flags, as in Chromium 123.
+   isolate->SetSharedArrayBufferConstructorEnabledCallback(
+       SharedArrayBufferConstructorEnabledCallback);
+   isolate->SetJavaScriptCompileHintsMagicEnabledCallback(
