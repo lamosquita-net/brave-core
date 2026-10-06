@@ -1,0 +1,32 @@
+diff --git a/third_party/blink/renderer/core/inspector/inspector_page_agent.cc b/third_party/blink/renderer/core/inspector/inspector_page_agent.cc
+index 8f4b06c584a0d75a605d0afbdc2a47eee7292b6e..02be062d77ddf66640489a28cd7021a14c78e673 100644
+--- a/third_party/blink/renderer/core/inspector/inspector_page_agent.cc
++++ b/third_party/blink/renderer/core/inspector/inspector_page_agent.cc
+@@ -1018,18 +1018,15 @@ void InspectorPageAgent::EvaluateScriptOnNewDocument(
+     return;
+   }
+ 
+-  std::unique_ptr<v8_inspector::V8InspectorSession::CommandLineAPIScope> scope;
+-  if (include_command_line_api_for_scripts_to_evaluate_on_load_.Get(
+-          script_identifier)) {
+-    scope = v8_session_->initializeCommandLineAPIScope(
+-        v8_inspector::V8ContextInfo::executionContextId(
+-            script_state->GetContext()));
+-    DCHECK(scope);
+-  }
+-  ClassicScript::CreateUnspecifiedScript(
+-      scripts_to_evaluate_on_load_.Get(script_identifier))
+-      ->RunScriptOnScriptState(
+-          script_state, ExecuteScriptPolicy::kExecuteScriptWhenScriptsDisabled);
++  // FlyWeb: V8 12.2 (engine level 122) removed
++  // V8InspectorSession::CommandLineAPIScope; evaluate through the session as
++  // Chromium 122 does.
++  v8_session_->evaluate(
++      script_state->GetContext(),
++      ToV8InspectorStringView(
++          scripts_to_evaluate_on_load_.Get(script_identifier)),
++      include_command_line_api_for_scripts_to_evaluate_on_load_.Get(
++          script_identifier));
+ }
+ 
+ void InspectorPageAgent::DomContentLoadedEventFired(LocalFrame* frame) {
