@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/element.cc b/third_party/blink/renderer/core/dom/element.cc
-index 603363d44dba6a56412a2408af11a821e39bde00..ed70e31d57925a03deb9b5ed596fcc8ba03a487c 100644
+index 603363d44dba6a56412a2408af11a821e39bde00..05f9e10768cec8f9be8c44a32f75f18a4f81e02d 100644
 --- a/third_party/blink/renderer/core/dom/element.cc
 +++ b/third_party/blink/renderer/core/dom/element.cc
 @@ -166,6 +166,7 @@
@@ -494,6 +494,33 @@ index 603363d44dba6a56412a2408af11a821e39bde00..ed70e31d57925a03deb9b5ed596fcc8b
    if (ShadowRoot* shadow_root = GetShadowRoot()) {
      shadow_root->SetNeedsAssignmentRecalc();
    }
+@@ -5720,7 +6170,7 @@ void Element::SetInnerHTMLInternal(const String& html,
+     setTextContent(html);
+   } else {
+     if (DocumentFragment* fragment = CreateFragmentForInnerOuterHTML(
+-            html, this, kAllowScriptingContent, "innerHTML",
++            html, this, kAllowScriptingContent,
+             include_shadow_roots, exception_state)) {
+       ContainerNode* container = this;
+       if (auto* template_element = DynamicTo<HTMLTemplateElement>(*this)) {
+@@ -5783,7 +6233,7 @@ void Element::setOuterHTML(const String& html,
+   Node* next = nextSibling();
+ 
+   DocumentFragment* fragment = CreateFragmentForInnerOuterHTML(
+-      html, parent, kAllowScriptingContent, "outerHTML",
++      html, parent, kAllowScriptingContent,
+       /*include_shadow_roots=*/false, exception_state);
+   if (exception_state.HadException()) {
+     return;
+@@ -5994,7 +6444,7 @@ void Element::insertAdjacentHTML(const String& where,
+ 
+   // Step 3 of http://domparsing.spec.whatwg.org/#insertadjacenthtml()
+   DocumentFragment* fragment = CreateFragmentForInnerOuterHTML(
+-      markup, context_element, kAllowScriptingContent, "insertAdjacentHTML",
++      markup, context_element, kAllowScriptingContent,
+       /*include_shadow_roots=*/false, exception_state);
+   if (!fragment) {
+     return;
 @@ -8377,9 +8827,34 @@ FocusgroupFlags Element::GetFocusgroupFlags() const {
  }
  
@@ -553,3 +580,14 @@ index 603363d44dba6a56412a2408af11a821e39bde00..ed70e31d57925a03deb9b5ed596fcc8b
        if (style = ancestor.GetComputedStyle(); style) {
          if (style->Opacity() == 0.f) {
            return false;
+@@ -8850,4 +9329,10 @@ Element* Element::ImplicitAnchorElement() {
+   return nullptr;
+ }
+ 
++void Element::setHTMLUnsafe(const String& html,
++                            ExceptionState& exception_state) {
++  CHECK(RuntimeEnabledFeatures::HTMLUnsafeMethodsEnabled());
++  SetInnerHTMLInternal(html, /*include_shadow_roots=*/true, exception_state);
++}
++
+ }  // namespace blink

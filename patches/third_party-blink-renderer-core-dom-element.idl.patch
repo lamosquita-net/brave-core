@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/element.idl b/third_party/blink/renderer/core/dom/element.idl
-index 7b0edf82d70b4cbcf8a337321d1a05b66ff531f5..a8319400f4170b4d6e926b5699b14485633dc477 100644
+index 7b0edf82d70b4cbcf8a337321d1a05b66ff531f5..579783853ac6355a21cee6c843fe2bbe0435f893 100644
 --- a/third_party/blink/renderer/core/dom/element.idl
 +++ b/third_party/blink/renderer/core/dom/element.idl
 @@ -28,6 +28,9 @@ callback ScrollStateCallback = void (ScrollState scrollState);
@@ -12,3 +12,12 @@ index 7b0edf82d70b4cbcf8a337321d1a05b66ff531f5..a8319400f4170b4d6e926b5699b14485
  };
  
  // https://dom.spec.whatwg.org/#interface-element
+@@ -103,6 +106,8 @@ dictionary CheckVisibilityOptions {
+     [CEReactions, RuntimeCallStatsCounter=ElementInnerHTML, RaisesException=Setter] attribute [LegacyNullToEmptyString, StringContext=TrustedHTML] DOMString innerHTML;
+     [CEReactions, RaisesException=Setter] attribute [LegacyNullToEmptyString, StringContext=TrustedHTML] DOMString outerHTML;
+     [CEReactions, RaisesException] void insertAdjacentHTML(DOMString position, HTMLString text);
++    // https://github.com/whatwg/html/pull/9538
++    [RuntimeEnabled=HTMLUnsafeMethods,RaisesException,MeasureAs=SetHTMLUnsafe,CEReactions] void setHTMLUnsafe(HTMLString html);
+ 
+     // Declarative Shadow DOM getInnerHTML() function.
+     [Affects=Nothing, MeasureAs=ElementGetInnerHTML] HTMLString getInnerHTML(optional GetInnerHTMLOptions options = {});

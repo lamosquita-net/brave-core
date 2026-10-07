@@ -1,0 +1,32 @@
+diff --git a/third_party/blink/renderer/core/dom/shadow_root.cc b/third_party/blink/renderer/core/dom/shadow_root.cc
+index b195e78714b4cdefc1ef8706ff7885ae49556634..66f21d996d3939e4304e73a9125407a1e1521b63 100644
+--- a/third_party/blink/renderer/core/dom/shadow_root.cc
++++ b/third_party/blink/renderer/core/dom/shadow_root.cc
+@@ -150,7 +150,7 @@ String ShadowRoot::getInnerHTML(const GetInnerHTMLOptions* options) const {
+ void ShadowRoot::setInnerHTML(const String& html,
+                               ExceptionState& exception_state) {
+   if (DocumentFragment* fragment = CreateFragmentForInnerOuterHTML(
+-          html, &host(), kAllowScriptingContent, "innerHTML",
++          html, &host(), kAllowScriptingContent,
+           /*include_shadow_roots=*/false, exception_state)) {
+     ReplaceChildrenWithFragment(this, fragment, exception_state);
+     if (auto* element = DynamicTo<HTMLElement>(host()))
+@@ -158,6 +158,18 @@ void ShadowRoot::setInnerHTML(const String& html,
+   }
+ }
+ 
++void ShadowRoot::setHTMLUnsafe(const String& html,
++                               ExceptionState& exception_state) {
++  if (DocumentFragment* fragment = CreateFragmentForInnerOuterHTML(
++          html, &host(), kAllowScriptingContent,
++          /*include_shadow_roots=*/true, exception_state)) {
++    ReplaceChildrenWithFragment(this, fragment, exception_state);
++    if (auto* element = DynamicTo<HTMLElement>(host())) {
++      element->AdjustDirectionalityIfNeededAfterShadowRootChanged();
++    }
++  }
++}
++
+ void ShadowRoot::RebuildLayoutTree(WhitespaceAttacher& whitespace_attacher) {
+   DCHECK(!NeedsReattachLayoutTree());
+   DCHECK(!ChildNeedsReattachLayoutTree());

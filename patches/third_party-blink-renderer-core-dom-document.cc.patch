@@ -1,0 +1,44 @@
+diff --git a/third_party/blink/renderer/core/dom/document.cc b/third_party/blink/renderer/core/dom/document.cc
+index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..83237162e892723df275d85b745e3bee5cb09258 100644
+--- a/third_party/blink/renderer/core/dom/document.cc
++++ b/third_party/blink/renderer/core/dom/document.cc
+@@ -377,6 +377,8 @@ namespace blink {
+ 
+ namespace {
+ 
++constexpr char kTextHtml[] = "text/html";
++
+ // This enum must match the numbering for RequestStorageResult in
+ // histograms/enums.xml. Do not reorder or remove items, only add new items
+ // at the end.
+@@ -1562,7 +1564,7 @@ String Document::SuggestedMIMEType() const {
+   if (xmlStandalone())
+     return "text/xml";
+   if (IsA<HTMLDocument>(this))
+-    return "text/html";
++    return kTextHtml;
+ 
+   if (DocumentLoader* document_loader = Loader())
+     return document_loader->MimeType();
+@@ -9296,6 +9298,21 @@ Resource* Document::GetPendingLinkPreloadForTesting(const KURL& url) {
+   return nullptr;
+ }
+ 
++// static
++Document* Document::parseHTMLUnsafe(ExecutionContext* context,
++                                    const String& html) {
++  CHECK(RuntimeEnabledFeatures::HTMLUnsafeMethodsEnabled());
++  Document* doc = DocumentInit::Create()
++                      .WithTypeFrom(kTextHtml)
++                      .WithExecutionContext(context)
++                      .WithAgent(*context->GetAgent())
++                      .CreateDocument();
++  doc->setAllowDeclarativeShadowRoots(true);
++  doc->SetContent(html);
++  doc->SetMimeType(AtomicString(kTextHtml));
++  return doc;
++}
++
+ template class CORE_TEMPLATE_EXPORT Supplement<Document>;
+ 
+ }  // namespace blink
