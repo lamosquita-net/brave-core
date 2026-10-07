@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/selector_checker.cc b/third_party/blink/renderer/core/css/selector_checker.cc
-index 0a5aae9deb41a6b65270600424a857e4ba8d6980..712c45232b10fb30f82cadab57cd79a62095f2e6 100644
+index 0a5aae9deb41a6b65270600424a857e4ba8d6980..c7513b89c4e74317eae481fc37397255acc9fa67 100644
 --- a/third_party/blink/renderer/core/css/selector_checker.cc
 +++ b/third_party/blink/renderer/core/css/selector_checker.cc
 @@ -47,6 +47,7 @@
@@ -49,3 +49,21 @@ index 0a5aae9deb41a6b65270600424a857e4ba8d6980..712c45232b10fb30f82cadab57cd79a6
      }
      case CSSSelector::kPseudoPopoverInTopLayer:
        if (auto* html_element = DynamicTo<HTMLElement>(element);
+@@ -1827,10 +1846,16 @@ bool SelectorChecker::CheckPseudoClass(const SelectorCheckingContext& context,
+         return false;
+       }
+       return !element.GetDocument().GetPage()->GetFocusController().IsActive();
+-    case CSSSelector::kPseudoState: {
++    case CSSSelector::kPseudoStateDeprecatedSyntax: {
++      CHECK(RuntimeEnabledFeatures::CSSCustomStateDeprecatedSyntaxEnabled());
+       return element.DidAttachInternals() &&
+              element.EnsureElementInternals().HasState(selector.Value());
+     }
++    case CSSSelector::kPseudoState: {
++      CHECK(RuntimeEnabledFeatures::CSSCustomStateNewSyntaxEnabled());
++      return element.DidAttachInternals() &&
++             element.EnsureElementInternals().HasState(selector.Argument());
++    }
+     case CSSSelector::kPseudoHorizontal:
+     case CSSSelector::kPseudoVertical:
+     case CSSSelector::kPseudoDecrement:

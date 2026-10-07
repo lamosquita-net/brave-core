@@ -1,8 +1,14 @@
 diff --git a/third_party/blink/renderer/core/css/css_selector.cc b/third_party/blink/renderer/core/css/css_selector.cc
-index afc7a7561a68eb74e9a9a69e4ccd77cd3ca96bc2..9838c5bc3b389f32524b3e4d79e664d8bad8f0ae 100644
+index afc7a7561a68eb74e9a9a69e4ccd77cd3ca96bc2..76db4290ceb315c46efc6989bc4cbd996aaf69ab 100644
 --- a/third_party/blink/renderer/core/css/css_selector.cc
 +++ b/third_party/blink/renderer/core/css/css_selector.cc
-@@ -399,6 +399,8 @@ PseudoId CSSSelector::GetPseudoId(PseudoType type) {
+@@ -394,11 +394,14 @@ PseudoId CSSSelector::GetPseudoId(PseudoType type) {
+     case kPseudoSpatialNavigationInterest:
+     case kPseudoStart:
+     case kPseudoState:
++    case kPseudoStateDeprecatedSyntax:
+     case kPseudoTarget:
+     case kPseudoToggle:
      case kPseudoTrue:
      case kPseudoUnknown:
      case kPseudoUnparsed:
@@ -11,7 +17,7 @@ index afc7a7561a68eb74e9a9a69e4ccd77cd3ca96bc2..9838c5bc3b389f32524b3e4d79e664d8
      case kPseudoValid:
      case kPseudoVertical:
      case kPseudoVideoPersistent:
-@@ -538,6 +540,8 @@ const static NameToPseudoStruct kPseudoTypeWithoutArgumentsMap[] = {
+@@ -538,6 +541,8 @@ const static NameToPseudoStruct kPseudoTypeWithoutArgumentsMap[] = {
      {"start", CSSSelector::kPseudoStart},
      {"target", CSSSelector::kPseudoTarget},
      {"target-text", CSSSelector::kPseudoTargetText},
@@ -20,7 +26,27 @@ index afc7a7561a68eb74e9a9a69e4ccd77cd3ca96bc2..9838c5bc3b389f32524b3e4d79e664d8
      {"valid", CSSSelector::kPseudoValid},
      {"vertical", CSSSelector::kPseudoVertical},
      {"view-transition", CSSSelector::kPseudoViewTransition},
-@@ -666,6 +670,12 @@ CSSSelector::PseudoType CSSSelector::NameToPseudoType(
+@@ -563,6 +568,7 @@ const static NameToPseudoStruct kPseudoTypeWithArgumentsMap[] = {
+     {"nth-of-type", CSSSelector::kPseudoNthOfType},
+     {"part", CSSSelector::kPseudoPart},
+     {"slotted", CSSSelector::kPseudoSlotted},
++    {"state", CSSSelector::kPseudoState},
+     {"toggle", CSSSelector::kPseudoToggle},
+     {"view-transition-group", CSSSelector::kPseudoViewTransitionGroup},
+     {"view-transition-image-pair", CSSSelector::kPseudoViewTransitionImagePair},
+@@ -649,6 +655,11 @@ CSSSelector::PseudoType CSSSelector::NameToPseudoType(
+     return CSSSelector::kPseudoUnknown;
+   }
+ 
++  if (match->type == CSSSelector::kPseudoState &&
++      !RuntimeEnabledFeatures::CSSCustomStateNewSyntaxEnabled()) {
++    return CSSSelector::kPseudoUnknown;
++  }
++
+   if ((match->type == CSSSelector::kPseudoSpellingError ||
+        match->type == CSSSelector::kPseudoGrammarError) &&
+       !RuntimeEnabledFeatures::CSSSpellingGrammarErrorsEnabled()) {
+@@ -666,6 +677,12 @@ CSSSelector::PseudoType CSSSelector::NameToPseudoType(
      return CSSSelector::kPseudoUnknown;
    }
  
@@ -33,7 +59,22 @@ index afc7a7561a68eb74e9a9a69e4ccd77cd3ca96bc2..9838c5bc3b389f32524b3e4d79e664d8
    return static_cast<CSSSelector::PseudoType>(match->type);
  }
  
-@@ -867,6 +877,8 @@ void CSSSelector::UpdatePseudoType(const AtomicString& value,
+@@ -725,7 +742,7 @@ void CSSSelector::UpdatePseudoType(const AtomicString& value,
+   PseudoType pseudo_type = CSSSelectorParser::ParsePseudoType(
+       lower_value, has_arguments, context.GetDocument());
+   SetPseudoType(pseudo_type);
+-  SetValue(pseudo_type == kPseudoState ? value : lower_value);
++  SetValue(pseudo_type == kPseudoStateDeprecatedSyntax ? value : lower_value);
+ 
+   switch (GetPseudoType()) {
+     case kPseudoAfter:
+@@ -862,11 +879,14 @@ void CSSSelector::UpdatePseudoType(const AtomicString& value,
+     case kPseudoSingleButton:
+     case kPseudoStart:
+     case kPseudoState:
++    case kPseudoStateDeprecatedSyntax:
+     case kPseudoTarget:
+     case kPseudoToggle:
      case kPseudoTrue:
      case kPseudoUnknown:
      case kPseudoUnparsed:
@@ -42,3 +83,29 @@ index afc7a7561a68eb74e9a9a69e4ccd77cd3ca96bc2..9838c5bc3b389f32524b3e4d79e664d8
      case kPseudoValid:
      case kPseudoVertical:
      case kPseudoVisited:
+@@ -960,7 +980,7 @@ bool CSSSelector::SerializeSimpleSelector(StringBuilder& builder) const {
+   } else if (match_ == kPseudoClass || match_ == kPagePseudoClass) {
+     if (GetPseudoType() == kPseudoUnparsed) {
+       builder.Append(Value());
+-    } else if (GetPseudoType() != kPseudoState &&
++    } else if (GetPseudoType() != kPseudoStateDeprecatedSyntax &&
+                GetPseudoType() != kPseudoParent &&
+                GetPseudoType() != kPseudoTrue) {
+       builder.Append(':');
+@@ -1007,6 +1027,7 @@ bool CSSSelector::SerializeSimpleSelector(StringBuilder& builder) const {
+       }
+       case kPseudoDir:
+       case kPseudoLang:
++      case kPseudoState:
+         builder.Append('(');
+         SerializeIdentifier(Argument(), builder);
+         builder.Append(')');
+@@ -1024,7 +1045,7 @@ bool CSSSelector::SerializeSimpleSelector(StringBuilder& builder) const {
+       case kPseudoNot:
+         DCHECK(SelectorList());
+         break;
+-      case kPseudoState:
++      case kPseudoStateDeprecatedSyntax:
+         builder.Append(':');
+         SerializeIdentifier(SerializingValue(), builder);
+         break;
