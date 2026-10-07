@@ -1,11 +1,51 @@
 diff --git a/third_party/blink/renderer/core/url/dom_url.cc b/third_party/blink/renderer/core/url/dom_url.cc
-index c3266eaec8a3aa06a639035f6f3f752312be1fee..0ebf5a1490231600316151b319ec9ed5921e6775 100644
+index c3266eaec8a3aa06a639035f6f3f752312be1fee..470ed6543228af63299f3e420fca7423a4165bcb 100644
 --- a/third_party/blink/renderer/core/url/dom_url.cc
 +++ b/third_party/blink/renderer/core/url/dom_url.cc
-@@ -70,6 +70,17 @@ void DOMURL::Trace(Visitor* visitor) const {
+@@ -32,6 +32,7 @@
+ #include "third_party/blink/renderer/core/url/url_search_params.h"
+ #include "third_party/blink/renderer/platform/bindings/exception_state.h"
+ #include "third_party/blink/renderer/platform/loader/fetch/memory_cache.h"
++#include "third_party/blink/renderer/platform/weborigin/kurl.h"
+ 
+ namespace blink {
+ 
+@@ -63,6 +64,9 @@ DOMURL::DOMURL(PassKey,
+     exception_state.ThrowTypeError("Invalid URL");
+ }
+ 
++DOMURL::DOMURL(PassKey, const KURL& url): url_(url) {
++}
++
+ DOMURL::~DOMURL() = default;
+ 
+ void DOMURL::Trace(Visitor* visitor) const {
+@@ -70,6 +74,39 @@ void DOMURL::Trace(Visitor* visitor) const {
    ScriptWrappable::Trace(visitor);
  }
  
++// static
++DOMURL* DOMURL::parse(const String& str) {
++  KURL url(str);
++  if (!url.IsValid()) {
++    return nullptr;
++  }
++  return MakeGarbageCollected<DOMURL>(PassKey(), url);
++}
++
++// static
++DOMURL* DOMURL::parse(const String& str, const String& base) {
++  KURL base_url(base);
++  if (!base_url.IsValid()) {
++    return nullptr;
++  }
++  KURL url(base_url, str);
++  if (!url.IsValid()) {
++    return nullptr;
++  }
++  return MakeGarbageCollected<DOMURL>(PassKey(), url);
++}
++
 +// static
 +bool DOMURL::canParse(const String& url) {
 +  return KURL(NullURL(), url).IsValid();

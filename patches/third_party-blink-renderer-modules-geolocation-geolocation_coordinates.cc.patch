@@ -1,0 +1,41 @@
+diff --git a/third_party/blink/renderer/modules/geolocation/geolocation_coordinates.cc b/third_party/blink/renderer/modules/geolocation/geolocation_coordinates.cc
+index fb01ad304c663d46412410bbc50fcc0a9d6fecee..7075c381311ef36fd3d1426d4ec8e145e4be2fd7 100644
+--- a/third_party/blink/renderer/modules/geolocation/geolocation_coordinates.cc
++++ b/third_party/blink/renderer/modules/geolocation/geolocation_coordinates.cc
+@@ -25,6 +25,8 @@
+ 
+ #include "third_party/blink/renderer/modules/geolocation/geolocation_coordinates.h"
+ 
++#include "third_party/blink/renderer/bindings/core/v8/v8_object_builder.h"
++
+ namespace blink {
+ 
+ absl::optional<double> GeolocationCoordinates::altitude() const {
+@@ -51,4 +53,27 @@ absl::optional<double> GeolocationCoordinates::speed() const {
+   return absl::nullopt;
+ }
+ 
++void GeolocationCoordinates::AddToJSON(V8ObjectBuilder& builder) const {
++  auto add = [&builder](const char* name, absl::optional<double> value) {
++    if (value) {
++      builder.AddNumber(name, *value);
++    } else {
++      builder.AddNull(name);
++    }
++  };
++  builder.AddNumber("accuracy", accuracy_);
++  builder.AddNumber("latitude", latitude_);
++  builder.AddNumber("longitude", longitude_);
++  add("altitude", altitude());
++  add("altitudeAccuracy", altitudeAccuracy());
++  add("heading", heading());
++  add("speed", speed());
++}
++
++ScriptValue GeolocationCoordinates::toJSON(ScriptState* script_state) const {
++  V8ObjectBuilder builder(script_state);
++  AddToJSON(builder);
++  return builder.GetScriptValue();
++}
++
+ }  // namespace blink

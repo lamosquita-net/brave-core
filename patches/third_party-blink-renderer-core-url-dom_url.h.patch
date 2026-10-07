@@ -1,11 +1,17 @@
 diff --git a/third_party/blink/renderer/core/url/dom_url.h b/third_party/blink/renderer/core/url/dom_url.h
-index 663939a9f387b4f3b3740b2e50a1e77bfbcdcf50..6c8c712ca89f92edd548fae46784804c11f3ae36 100644
+index 663939a9f387b4f3b3740b2e50a1e77bfbcdcf50..f2461ca18199db1eb15b805583c5a11972551ead 100644
 --- a/third_party/blink/renderer/core/url/dom_url.h
 +++ b/third_party/blink/renderer/core/url/dom_url.h
-@@ -58,6 +58,9 @@ class CORE_EXPORT DOMURL final : public ScriptWrappable, public DOMURLUtils {
+@@ -56,8 +56,15 @@ class CORE_EXPORT DOMURL final : public ScriptWrappable, public DOMURLUtils {
+                         ExceptionState& exception_state);
+ 
    DOMURL(PassKey, const String& url, const KURL& base, ExceptionState&);
++  DOMURL(PassKey, const KURL& url);
    ~DOMURL() override;
  
++  static DOMURL* parse(const String& url);
++  static DOMURL* parse(const String& url, const String& base);
++
 +  static bool canParse(const String& url);
 +  static bool canParse(const String& url, const String& base);
 +

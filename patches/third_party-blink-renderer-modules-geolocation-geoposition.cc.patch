@@ -1,0 +1,27 @@
+diff --git a/third_party/blink/renderer/modules/geolocation/geoposition.cc b/third_party/blink/renderer/modules/geolocation/geoposition.cc
+new file mode 100644
+index 0000000000000000000000000000000000000000..1b7d5879a3e84dea19cf68f819ae7dabc6e854a5
+--- /dev/null
++++ b/third_party/blink/renderer/modules/geolocation/geoposition.cc
+@@ -0,0 +1,21 @@
++// Copyright 2024 The Chromium Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "third_party/blink/renderer/modules/geolocation/geoposition.h"
++
++#include "third_party/blink/renderer/bindings/core/v8/v8_object_builder.h"
++
++namespace blink {
++
++// FlyWeb (Chromium 733c562491c, Chrome 126).
++ScriptValue Geoposition::toJSON(ScriptState* script_state) const {
++  V8ObjectBuilder builder(script_state);
++  builder.AddNumber("timestamp", timestamp_);
++  V8ObjectBuilder coords(script_state);
++  coordinates_->AddToJSON(coords);
++  builder.Add("coords", coords);
++  return builder.GetScriptValue();
++}
++
++}  // namespace blink

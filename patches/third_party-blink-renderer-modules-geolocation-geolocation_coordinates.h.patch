@@ -1,0 +1,29 @@
+diff --git a/third_party/blink/renderer/modules/geolocation/geolocation_coordinates.h b/third_party/blink/renderer/modules/geolocation/geolocation_coordinates.h
+index 968a3f3f11085c86a756182ce8b2233248b30a52..510d7b1939083bb7ca8d7fbf813fcdf4d1887941 100644
+--- a/third_party/blink/renderer/modules/geolocation/geolocation_coordinates.h
++++ b/third_party/blink/renderer/modules/geolocation/geolocation_coordinates.h
+@@ -27,11 +27,14 @@
+ #define THIRD_PARTY_BLINK_RENDERER_MODULES_GEOLOCATION_GEOLOCATION_COORDINATES_H_
+ 
+ #include "third_party/abseil-cpp/absl/types/optional.h"
++#include "third_party/blink/renderer/bindings/core/v8/script_value.h"
+ #include "third_party/blink/renderer/modules/event_modules.h"
+ #include "third_party/blink/renderer/platform/bindings/script_wrappable.h"
+ 
+ namespace blink {
+ 
++class V8ObjectBuilder;
++
+ class GeolocationCoordinates : public ScriptWrappable {
+   DEFINE_WRAPPERTYPEINFO();
+ 
+@@ -66,6 +69,9 @@ class GeolocationCoordinates : public ScriptWrappable {
+   absl::optional<double> altitudeAccuracy() const;
+   absl::optional<double> heading() const;
+   absl::optional<double> speed() const;
++  // FlyWeb (Chromium 733c562491c, Chrome 126).
++  ScriptValue toJSON(ScriptState* script_state) const;
++  void AddToJSON(V8ObjectBuilder& builder) const;
+ 
+  private:
+   double latitude_;
