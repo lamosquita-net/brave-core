@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/selector_checker.cc b/third_party/blink/renderer/core/css/selector_checker.cc
-index 0a5aae9deb41a6b65270600424a857e4ba8d6980..5b4d441fdda311951f46571603cc4928c4aa2e4e 100644
+index 0a5aae9deb41a6b65270600424a857e4ba8d6980..4bddbfd21076d34a8f58b3eeb3784de788455f2c 100644
 --- a/third_party/blink/renderer/core/css/selector_checker.cc
 +++ b/third_party/blink/renderer/core/css/selector_checker.cc
 @@ -47,6 +47,7 @@
@@ -94,3 +94,26 @@ index 0a5aae9deb41a6b65270600424a857e4ba8d6980..5b4d441fdda311951f46571603cc4928
      case CSSSelector::kPseudoUnparsed:
        // Only kept around for parsing; can never match anything
        // (because we don't know what it's supposed to mean).
+@@ -2005,8 +2050,20 @@ bool SelectorChecker::CheckPseudoElement(const SelectorCheckingContext& context,
+         return false;
+       }
+       result.dynamic_pseudo = context.pseudo_id;
+-      return selector.Argument() == CSSSelector::UniversalSelectorAtom() ||
+-             selector.Argument() == pseudo_argument_;
++      if (selector.Argument() != CSSSelector::UniversalSelectorAtom() &&
++          selector.Argument() != pseudo_argument_) {
++        return false;
++      }
++      // FlyWeb (Chromium 125): every class of the selector has to be in the
++      // view-transition-class of the captured element (pseudo_ident_list_).
++      if (const Vector<AtomicString>* classes = selector.PartNames()) {
++        for (const AtomicString& class_name : *classes) {
++          if (!pseudo_ident_list_.Contains(class_name)) {
++            return false;
++          }
++        }
++      }
++      return true;
+     }
+     case CSSSelector::kPseudoScrollbarButton:
+     case CSSSelector::kPseudoScrollbarCorner:

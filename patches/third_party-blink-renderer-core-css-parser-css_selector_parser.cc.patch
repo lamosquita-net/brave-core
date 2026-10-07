@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/parser/css_selector_parser.cc b/third_party/blink/renderer/core/css/parser/css_selector_parser.cc
-index 5bdb7220e0a0dddbbf5bf86f6fc6f789bdd722f7..3a72d685f6a76c9a7d7e356c96bb3fb29855bad9 100644
+index 5bdb7220e0a0dddbbf5bf86f6fc6f789bdd722f7..40ceb0228d1680bd334e831bf459dec958aba9e1 100644
 --- a/third_party/blink/renderer/core/css/parser/css_selector_parser.cc
 +++ b/third_party/blink/renderer/core/css/parser/css_selector_parser.cc
 @@ -14,8 +14,10 @@
@@ -65,7 +65,7 @@ index 5bdb7220e0a0dddbbf5bf86f6fc6f789bdd722f7..3a72d685f6a76c9a7d7e356c96bb3fb2
        const CSSParserToken& ident = block.ConsumeIncludingWhitespace();
        if (ident.GetType() != kIdentToken || !block.AtEnd()) {
          return false;
-@@ -1670,6 +1697,33 @@ bool CSSSelectorParser::ConsumePseudo(CSSParserTokenRange& range) {
+@@ -1670,28 +1697,83 @@ bool CSSSelectorParser::ConsumePseudo(CSSParserTokenRange& range) {
        output_.push_back(std::move(selector));
        return true;
      }
@@ -99,3 +99,62 @@ index 5bdb7220e0a0dddbbf5bf86f6fc6f789bdd722f7..3a72d685f6a76c9a7d7e356c96bb3fb2
      case CSSSelector::kPseudoViewTransitionGroup:
      case CSSSelector::kPseudoViewTransitionImagePair:
      case CSSSelector::kPseudoViewTransitionOld:
+     case CSSSelector::kPseudoViewTransitionNew: {
+-      const CSSParserToken& ident = block.ConsumeIncludingWhitespace();
+-      if (!block.AtEnd()) {
+-        return false;
+-      }
+-
++      // FlyWeb (Chromium 125): <pt-name-selector> <pt-class-selector>?, e.g.
++      // (name.class), (*.class) or (.class). The classes are stored in the
++      // selector's part names.
+       absl::optional<AtomicString> argument;
+-      if (ident.GetType() == kIdentToken) {
+-        argument = ident.Value().ToAtomicString();
+-      } else if (ident.GetType() == kDelimiterToken &&
+-                 ident.Delimiter() == '*') {
++      if (RuntimeEnabledFeatures::CSSViewTransitionClassEnabled() &&
++          block.Peek().GetType() == kDelimiterToken &&
++          block.Peek().Delimiter() == '.') {
+         argument = CSSSelector::UniversalSelectorAtom();
++      } else {
++        const CSSParserToken& ident = block.Consume();
++        if (ident.GetType() == kIdentToken) {
++          argument = ident.Value().ToAtomicString();
++        } else if (ident.GetType() == kDelimiterToken &&
++                   ident.Delimiter() == '*') {
++          argument = CSSSelector::UniversalSelectorAtom();
++        }
+       }
+ 
+       if (!argument) {
+         return false;
+       }
+ 
++      Vector<AtomicString> classes;
++      if (RuntimeEnabledFeatures::CSSViewTransitionClassEnabled()) {
++        while (!block.AtEnd() && block.Peek().GetType() != kWhitespaceToken) {
++          if (block.Peek().GetType() != kDelimiterToken ||
++              block.Consume().Delimiter() != '.') {
++            return false;
++          }
++          if (block.Peek().GetType() != kIdentToken) {
++            return false;
++          }
++          classes.push_back(block.Consume().Value().ToAtomicString());
++        }
++      }
++
++      block.ConsumeWhitespace();
++      if (!block.AtEnd()) {
++        return false;
++      }
++
+       selector.SetArgument(*argument);
++      if (!classes.empty()) {
++        selector.SetPartNames(
++            std::make_unique<Vector<AtomicString>>(std::move(classes)));
++      }
+       output_.push_back(std::move(selector));
+       return true;
+     }

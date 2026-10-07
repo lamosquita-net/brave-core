@@ -1,0 +1,16 @@
+diff --git a/third_party/blink/renderer/core/view_transition/view_transition_pseudo_element_base.cc b/third_party/blink/renderer/core/view_transition/view_transition_pseudo_element_base.cc
+index 151ab7a9336bfee377aab3a81246e3d4df51d26a..2d67619fac636f55855632cd27eb60e73c4175e8 100644
+--- a/third_party/blink/renderer/core/view_transition/view_transition_pseudo_element_base.cc
++++ b/third_party/blink/renderer/core/view_transition/view_transition_pseudo_element_base.cc
+@@ -49,6 +49,11 @@ ViewTransitionPseudoElementBase::CustomStyleForLayoutObject(
+       GetPseudoId(), ParentOrShadowHostElement()->GetComputedStyle(),
+       view_transition_name());
+   style_request.rules_to_include = style_tracker_->StyleRulesToInclude();
++  // FlyWeb (Chromium 125): view-transition-class.
++  if (GetPseudoId() != kPseudoIdViewTransition) {
++    style_request.pseudo_ident_list =
++        style_tracker_->GetViewTransitionClassList(view_transition_name());
++  }
+   // Use the document element to get the style for the pseudo element, since the
+   // documentElement is the originating element for the view transition pseudo
+   // elements.

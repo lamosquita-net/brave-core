@@ -1,0 +1,38 @@
+diff --git a/third_party/blink/renderer/core/view_transition/view_transition_style_tracker.cc b/third_party/blink/renderer/core/view_transition/view_transition_style_tracker.cc
+index 1f12a1e22ba066e99b725f7862ee62c4027c3dfe..282f905fba1a2fc02aba78c152db3f0529ea1d00 100644
+--- a/third_party/blink/renderer/core/view_transition/view_transition_style_tracker.cc
++++ b/third_party/blink/renderer/core/view_transition/view_transition_style_tracker.cc
+@@ -689,6 +689,9 @@ bool ViewTransitionStyleTracker::Capture() {
+     element_data->target_element = element;
+     element_data->element_index = next_index++;
+     element_data->old_snapshot_id = snapshot_id;
++    if (const ComputedStyle* style = element->GetComputedStyle()) {
++      element_data->class_list = style->ViewTransitionClass();
++    }
+     element_data_map_.insert(name, std::move(element_data));
+   }
+ 
+@@ -814,6 +817,9 @@ bool ViewTransitionStyleTracker::Start() {
+     DCHECK(!element_data->target_element);
+     element_data->target_element = element;
+     element_data->new_snapshot_id = snapshot_id;
++    if (const ComputedStyle* style = element->GetComputedStyle()) {
++      element_data->class_list = style->ViewTransitionClass();
++    }
+     // Verify that the element_index assigned in Capture is less than next_index
+     // here, just as a sanity check.
+     DCHECK_LT(element_data->element_index, next_index);
+@@ -1434,6 +1440,13 @@ bool ViewTransitionStyleTracker::IsRootTransitioning() const {
+   return false;
+ }
+ 
++Vector<AtomicString> ViewTransitionStyleTracker::GetViewTransitionClassList(
++    const AtomicString& name) const {
++  auto it = element_data_map_.find(name);
++  return it == element_data_map_.end() ? Vector<AtomicString>()
++                                       : it->value->class_list;
++}
++
+ StyleRequest::RulesToInclude ViewTransitionStyleTracker::StyleRulesToInclude()
+     const {
+   switch (state_) {

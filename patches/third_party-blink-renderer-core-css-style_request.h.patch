@@ -1,12 +1,27 @@
 diff --git a/third_party/blink/renderer/core/css/style_request.h b/third_party/blink/renderer/core/css/style_request.h
-index 6a8f758b144abf36579dd18883e1d984de3cbe85..8576c9686c3ef6727bc00c43fb896dc8a1e52541 100644
+index 6a8f758b144abf36579dd18883e1d984de3cbe85..2fe1a7e73e9aedfe97b7593a16246369e5af4d2c 100644
 --- a/third_party/blink/renderer/core/css/style_request.h
 +++ b/third_party/blink/renderer/core/css/style_request.h
-@@ -32,6 +32,7 @@
+@@ -28,10 +28,12 @@
+ #include "third_party/blink/renderer/core/scroll/scroll_types.h"
+ #include "third_party/blink/renderer/core/style/computed_style_constants.h"
+ #include "third_party/blink/renderer/platform/wtf/text/atomic_string.h"
++#include "third_party/blink/renderer/platform/wtf/vector.h"
+ 
  namespace blink {
  
  class ComputedStyle;
 +class Element;
  
  enum RuleMatchingBehavior { kMatchAllRules, kMatchAllRulesExcludingSMIL };
+ 
+@@ -61,6 +63,9 @@ class StyleRequest {
+   ScrollbarPart scrollbar_part{kNoPart};
+   CustomScrollbar* scrollbar{nullptr};
+   AtomicString pseudo_argument{g_null_atom};
++  // FlyWeb (Chromium 125): view-transition-class of a view transition
++  // pseudo-element.
++  Vector<AtomicString> pseudo_ident_list;
+   RulesToInclude rules_to_include{kAll};
+   bool can_trigger_animations{true};
  

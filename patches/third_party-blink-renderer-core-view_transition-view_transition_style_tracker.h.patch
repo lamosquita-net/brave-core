@@ -1,0 +1,28 @@
+diff --git a/third_party/blink/renderer/core/view_transition/view_transition_style_tracker.h b/third_party/blink/renderer/core/view_transition/view_transition_style_tracker.h
+index 06edf08e490fdc412d23e4e860767346dddaf9fe..1a1afafdfc73502b2e19222e8cbacaa6a863e03d 100644
+--- a/third_party/blink/renderer/core/view_transition/view_transition_style_tracker.h
++++ b/third_party/blink/renderer/core/view_transition/view_transition_style_tracker.h
+@@ -166,6 +166,12 @@ class ViewTransitionStyleTracker
+   // rules based on the current phase of the transition.
+   StyleRequest::RulesToInclude StyleRulesToInclude() const;
+ 
++  // FlyWeb (Chromium 125).
++  // https://drafts.csswg.org/css-view-transitions-2/#captured-element-class-list
++  // Returns the class list for a captured element by name.
++  Vector<AtomicString> GetViewTransitionClassList(
++      const AtomicString& name) const;
++
+   VectorOf<Element> GetTransitioningElements() const;
+ 
+   // In physical pixels. Returns the size of the snapshot root rect. This is
+@@ -255,6 +261,10 @@ class ViewTransitionStyleTracker
+     // the outgoing element's (if any) writing mode, and then switches to the
+     // incoming element's writing mode, if one exists.
+     WritingMode container_writing_mode = WritingMode::kHorizontalTb;
++
++    // FlyWeb (Chromium 125).
++    // https://drafts.csswg.org/css-view-transitions-2/#captured-element-class-list
++    Vector<AtomicString> class_list;
+   };
+ 
+   struct RootData {
