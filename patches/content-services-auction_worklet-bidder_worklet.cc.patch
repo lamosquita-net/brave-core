@@ -1,0 +1,15 @@
+diff --git a/content/services/auction_worklet/bidder_worklet.cc b/content/services/auction_worklet/bidder_worklet.cc
+index 90e02d32821f10f772bfe40638346e7b7738c04a..19e318fdcfc4591f62779fa134a4ccd36cfb0827 100644
+--- a/content/services/auction_worklet/bidder_worklet.cc
++++ b/content/services/auction_worklet/bidder_worklet.cc
+@@ -75,7 +75,9 @@ class DeepFreezeAllowAll : public v8::Context::DeepFreezeDelegate {
+  public:
+   bool FreezeEmbedderObjectAndGetChildren(
+       v8::Local<v8::Object> obj,
+-      std::vector<v8::Local<v8::Object>>& children_out) override {
++      // FlyWeb: V8 12.4 (engine level 124) only has the LocalVector
++      // overload (Chromium 8678c471f1c9).
++      v8::LocalVector<v8::Object>& children_out) override {
+     return true;
+   }
+ };
