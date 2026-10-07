@@ -1,0 +1,21 @@
+diff --git a/third_party/blink/renderer/modules/peerconnection/rtc_rtp_receiver.h b/third_party/blink/renderer/modules/peerconnection/rtc_rtp_receiver.h
+index 52b5396fafcba802c1095016e14d87da0728db9e..eeb7c96d257aa6702ea3fcb3eda0da8c0e439bee 100644
+--- a/third_party/blink/renderer/modules/peerconnection/rtc_rtp_receiver.h
++++ b/third_party/blink/renderer/modules/peerconnection/rtc_rtp_receiver.h
+@@ -60,6 +60,8 @@ class RTCRtpReceiver final : public ScriptWrappable,
+   RTCDtlsTransport* rtcpTransport();
+   absl::optional<double> playoutDelayHint() const;
+   void setPlayoutDelayHint(absl::optional<double>, ExceptionState&);
++  absl::optional<double> jitterBufferTarget() const;
++  void setJitterBufferTarget(absl::optional<double>, ExceptionState&);
+   RTCRtpReceiveParameters* getParameters();
+   HeapVector<Member<RTCRtpSynchronizationSource>> getSynchronizationSources(
+       ScriptState*,
+@@ -126,6 +128,7 @@ class RTCRtpReceiver final : public ScriptWrappable,
+   // observed delay may differ depending on the congestion control. |nullopt|
+   // means default value must be used.
+   absl::optional<double> playout_delay_hint_;
++  absl::optional<double> jitter_buffer_target_;
+ 
+   // Insertable Streams flag, |True| if the receiver has been configured to
+   // use Encoded Insertable Streams.
