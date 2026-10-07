@@ -1,0 +1,38 @@
+diff --git a/third_party/blink/renderer/core/fetch/fetch_manager.cc b/third_party/blink/renderer/core/fetch/fetch_manager.cc
+index 27328dfb5cb7d84346d9dc407ef37520ea45b017..287294d5019082c7b7e287b33a988aacd3eb0fe7 100644
+--- a/third_party/blink/renderer/core/fetch/fetch_manager.cc
++++ b/third_party/blink/renderer/core/fetch/fetch_manager.cc
+@@ -689,10 +689,20 @@ void FetchManager::Loader::Dispose() {
+   execution_context_ = nullptr;
+ }
+ 
++// https://fetch.spec.whatwg.org/#abort-fetch
+ void FetchManager::Loader::Abort() {
+   if (resolver_) {
+-    resolver_->Reject(
+-        MakeGarbageCollected<DOMException>(DOMExceptionCode::kAbortError));
++    // 1. Reject promise with error (the signal's abort reason).
++    // FlyWeb: backported from Chromium 124; the 116 always rejected with an
++    // AbortError, so AbortSignal.timeout() gave AbortError, not TimeoutError.
++    ScriptState* script_state = resolver_->GetScriptState();
++    if (script_state->ContextIsValid()) {
++      ScriptState::Scope scope(script_state);
++      resolver_->Reject(signal_->reason(script_state).V8Value());
++    } else {
++      resolver_->Reject(
++          MakeGarbageCollected<DOMException>(DOMExceptionCode::kAbortError));
++    }
+     resolver_.Clear();
+   }
+   if (threadable_loader_) {
+@@ -981,8 +991,8 @@ ScriptPromise FetchManager::Fetch(ScriptState* script_state,
+                                   ExceptionState& exception_state) {
+   DCHECK(signal);
+   if (signal->aborted()) {
+-    exception_state.ThrowDOMException(DOMExceptionCode::kAbortError,
+-                                      "The user aborted a request.");
++    // FlyWeb: throw the signal's abort reason (Chromium 124).
++    exception_state.RethrowV8Exception(signal->reason(script_state).V8Value());
+     return ScriptPromise();
+   }
+ 
