@@ -1,8 +1,18 @@
 diff --git a/third_party/blink/renderer/core/dom/shadow_root.h b/third_party/blink/renderer/core/dom/shadow_root.h
-index 26796e955550ddeaae310705541d84ec74a5ede3..fbb7a10a8a247af650f2e84697248f545371573f 100644
+index 26796e955550ddeaae310705541d84ec74a5ede3..178b62a452d8fcf4f77fc17a8a5eb3becefd24e3 100644
 --- a/third_party/blink/renderer/core/dom/shadow_root.h
 +++ b/third_party/blink/renderer/core/dom/shadow_root.h
-@@ -128,6 +128,7 @@ class CORE_EXPORT ShadowRoot final : public DocumentFragment,
+@@ -94,6 +94,9 @@ class CORE_EXPORT ShadowRoot final : public DocumentFragment,
+   }
+ 
+   bool IsOpen() const { return GetType() == ShadowRootType::kOpen; }
++
++  bool clonable() const { return clonable_; }
++  void setClonable(bool clonable) { clonable_ = clonable; }
+   bool IsUserAgent() const { return GetType() == ShadowRootType::kUserAgent; }
+ 
+   InsertionNotificationRequest InsertedInto(ContainerNode&) override;
+@@ -128,6 +131,7 @@ class CORE_EXPORT ShadowRoot final : public DocumentFragment,
    String innerHTML() const;
    String getInnerHTML(const GetInnerHTMLOptions* options) const;
    void setInnerHTML(const String&, ExceptionState& = ASSERT_NO_EXCEPTION);
@@ -10,3 +20,13 @@ index 26796e955550ddeaae310705541d84ec74a5ede3..fbb7a10a8a247af650f2e84697248f54
  
    Node* Clone(Document&, CloneChildrenFlag) const override;
  
+@@ -220,7 +224,8 @@ class CORE_EXPORT ShadowRoot final : public DocumentFragment,
+   unsigned available_to_element_internals_ : 1;
+   unsigned needs_dir_auto_attribute_update_ : 1;
+   unsigned has_focusgroup_attribute_on_descendant_ : 1;
+-  unsigned unused_ : 7;
++  unsigned clonable_ : 1;
++  unsigned unused_ : 6;
+ };
+ 
+ inline bool Node::IsInUserAgentShadowRoot() const {

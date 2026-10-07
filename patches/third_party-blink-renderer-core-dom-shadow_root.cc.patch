@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/dom/shadow_root.cc b/third_party/blink/renderer/core/dom/shadow_root.cc
-index b195e78714b4cdefc1ef8706ff7885ae49556634..66f21d996d3939e4304e73a9125407a1e1521b63 100644
+index b195e78714b4cdefc1ef8706ff7885ae49556634..093f89e6857d5e991b03198d1460de1e6bb72d44 100644
 --- a/third_party/blink/renderer/core/dom/shadow_root.cc
 +++ b/third_party/blink/renderer/core/dom/shadow_root.cc
-@@ -150,7 +150,7 @@ String ShadowRoot::getInnerHTML(const GetInnerHTMLOptions* options) const {
+@@ -73,6 +73,7 @@ ShadowRoot::ShadowRoot(Document& document, ShadowRootType type)
+       slot_assignment_mode_(static_cast<unsigned>(SlotAssignmentMode::kNamed)),
+       needs_dir_auto_attribute_update_(false),
+       has_focusgroup_attribute_on_descendant_(false),
++      clonable_(false),
+       unused_(0) {}
+ 
+ ShadowRoot::~ShadowRoot() = default;
+@@ -150,7 +151,7 @@ String ShadowRoot::getInnerHTML(const GetInnerHTMLOptions* options) const {
  void ShadowRoot::setInnerHTML(const String& html,
                                ExceptionState& exception_state) {
    if (DocumentFragment* fragment = CreateFragmentForInnerOuterHTML(
@@ -11,7 +19,7 @@ index b195e78714b4cdefc1ef8706ff7885ae49556634..66f21d996d3939e4304e73a9125407a1
            /*include_shadow_roots=*/false, exception_state)) {
      ReplaceChildrenWithFragment(this, fragment, exception_state);
      if (auto* element = DynamicTo<HTMLElement>(host()))
-@@ -158,6 +158,18 @@ void ShadowRoot::setInnerHTML(const String& html,
+@@ -158,6 +159,18 @@ void ShadowRoot::setInnerHTML(const String& html,
    }
  }
  

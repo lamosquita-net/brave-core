@@ -1,0 +1,24 @@
+diff --git a/third_party/blink/renderer/core/editing/serializers/markup_accumulator.cc b/third_party/blink/renderer/core/editing/serializers/markup_accumulator.cc
+index e0085fa19eaf3f45e861b7ec8cabab1743e4b644..a4d0f17e9dc5fe6d2653ec1ddce7258aa4b2db23 100644
+--- a/third_party/blink/renderer/core/editing/serializers/markup_accumulator.cc
++++ b/third_party/blink/renderer/core/editing/serializers/markup_accumulator.cc
+@@ -41,6 +41,7 @@
+ #include "third_party/blink/renderer/core/keywords.h"
+ #include "third_party/blink/renderer/core/xml_names.h"
+ #include "third_party/blink/renderer/core/xmlns_names.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+ #include "third_party/blink/renderer/platform/weborigin/kurl.h"
+ #include "third_party/blink/renderer/platform/wtf/text/character_names.h"
+ 
+@@ -581,6 +582,11 @@ std::pair<Node*, Element*> MarkupAccumulator::GetAuxiliaryDOMTree(
+     template_element->SetBooleanAttribute(
+         html_names::kShadowrootdelegatesfocusAttr, true);
+   }
++  if (shadow_root->clonable() &&
++      RuntimeEnabledFeatures::ShadowRootClonableEnabled()) {
++    template_element->SetBooleanAttribute(html_names::kShadowrootclonableAttr,
++                                          true);
++  }
+   return std::pair<Node*, Element*>(shadow_root, template_element);
+ }
+ 

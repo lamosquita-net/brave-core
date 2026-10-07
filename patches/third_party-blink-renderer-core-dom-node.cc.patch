@@ -1,8 +1,19 @@
 diff --git a/third_party/blink/renderer/core/dom/node.cc b/third_party/blink/renderer/core/dom/node.cc
-index 9788cd4895f9418df8c38a03468d3e199a3a15b2..bb7cc8ae6ac49b1ead02b5f8cb013f8ff7168f21 100644
+index 9788cd4895f9418df8c38a03468d3e199a3a15b2..8dc5bc1e5d9bd5746a13e525ccd7a436f01aec45 100644
 --- a/third_party/blink/renderer/core/dom/node.cc
 +++ b/third_party/blink/renderer/core/dom/node.cc
-@@ -2896,8 +2896,9 @@ DispatchEventResult Node::DispatchEventInternal(Event& event) {
+@@ -992,7 +992,9 @@ Node* Node::cloneNode(bool deep, ExceptionState& exception_state) const {
+   // true, and the clone shadows flag set if this is a DocumentFragment whose
+   // host is an HTML template element.
+   auto* fragment = DynamicTo<DocumentFragment>(this);
+-  bool clone_shadows_flag = fragment && fragment->IsTemplateContent();
++  bool clone_shadows_flag =
++      !RuntimeEnabledFeatures::ShadowRootClonableEnabled() && fragment &&
++      fragment->IsTemplateContent();
+   return Clone(GetDocument(),
+                deep ? (clone_shadows_flag ? CloneChildrenFlag::kCloneWithShadows
+                                           : CloneChildrenFlag::kClone)
+@@ -2896,8 +2898,9 @@ DispatchEventResult Node::DispatchEventInternal(Event& event) {
  }
  
  void Node::DispatchSubtreeModifiedEvent() {
@@ -13,7 +24,7 @@ index 9788cd4895f9418df8c38a03468d3e199a3a15b2..bb7cc8ae6ac49b1ead02b5f8cb013f8f
  
  #if DCHECK_IS_ON()
    DCHECK(!EventDispatchForbiddenScope::IsEventDispatchForbidden());
-@@ -3334,6 +3335,11 @@ void Node::FlatTreeParentChanged() {
+@@ -3334,6 +3337,11 @@ void Node::FlatTreeParentChanged() {
  }
  
  void Node::AddCandidateDirectionalityForSlot() {
@@ -25,7 +36,7 @@ index 9788cd4895f9418df8c38a03468d3e199a3a15b2..bb7cc8ae6ac49b1ead02b5f8cb013f8f
    ShadowRoot* root = ShadowRootOfParent();
    if (!root || !root->HasSlotAssignment()) {
      // We should add this node as a candidate that needs to recalculate its
-@@ -3393,6 +3399,50 @@ HashSet<Member<TreeScope>> Node::GetAncestorTreeScopes() const {
+@@ -3393,6 +3401,50 @@ HashSet<Member<TreeScope>> Node::GetAncestorTreeScopes() const {
    return ancestor_tree_scopes;
  }
  

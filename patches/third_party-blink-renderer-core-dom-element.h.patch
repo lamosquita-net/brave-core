@@ -1,8 +1,18 @@
 diff --git a/third_party/blink/renderer/core/dom/element.h b/third_party/blink/renderer/core/dom/element.h
-index 640e53d474d0e132bf72388ac410015f66b55f48..bfbe6360e63ee79e4301bfe6a057a01334c83e24 100644
+index 640e53d474d0e132bf72388ac410015f66b55f48..7f553dece60130985665bf8ecb0da7f4a7b9a711 100644
 --- a/third_party/blink/renderer/core/dom/element.h
 +++ b/third_party/blink/renderer/core/dom/element.h
-@@ -840,6 +840,12 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -674,7 +674,8 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+       ShadowRootType,
+       FocusDelegation focus_delegation = FocusDelegation::kNone,
+       SlotAssignmentMode slot_assignment_mode = SlotAssignmentMode::kNamed,
+-      CustomElementRegistry* registry = nullptr);
++      CustomElementRegistry* registry = nullptr,
++      bool clonable = false);
+ 
+   // Returns the shadow root attached to this element if it is a shadow host.
+   ShadowRoot* GetShadowRoot() const;
+@@ -840,6 +841,12 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    String getInnerHTML(const GetInnerHTMLOptions* options) const;
    void setOuterHTML(const String&, ExceptionState& = ASSERT_NO_EXCEPTION);
  
@@ -15,7 +25,7 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..bfbe6360e63ee79e4301bfe6a057a013
    void setPointerCapture(PointerId poinetr_id, ExceptionState&);
    void releasePointerCapture(PointerId pointer_id, ExceptionState&);
  
-@@ -1204,6 +1210,14 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1204,6 +1211,14 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    // https://drafts.csswg.org/css-anchor-1/#implicit-anchor-element
    Element* ImplicitAnchorElement();
  
@@ -30,7 +40,7 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..bfbe6360e63ee79e4301bfe6a057a013
   protected:
    bool HasElementData() const { return element_data_; }
    const ElementData* GetElementData() const { return element_data_.Get(); }
-@@ -1300,6 +1314,15 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1300,6 +1315,15 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    // changes.
    void LangAttributeChanged();
  
@@ -46,7 +56,7 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..bfbe6360e63ee79e4301bfe6a057a013
   private:
    friend class AXObject;
    struct AffectedByPseudoStateChange;
-@@ -1420,6 +1443,8 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1420,6 +1444,8 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
      DetachPseudoElement(kPseudoIdFirstLetter, performing_reattach);
    }
  

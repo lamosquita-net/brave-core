@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/document.cc b/third_party/blink/renderer/core/dom/document.cc
-index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..83237162e892723df275d85b745e3bee5cb09258 100644
+index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..fb82555c5c504c26d67331f7556b093e05467802 100644
 --- a/third_party/blink/renderer/core/dom/document.cc
 +++ b/third_party/blink/renderer/core/dom/document.cc
 @@ -377,6 +377,8 @@ namespace blink {
@@ -11,7 +11,18 @@ index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..83237162e892723df275d85b745e3bee
  // This enum must match the numbering for RequestStorageResult in
  // histograms/enums.xml. Do not reorder or remove items, only add new items
  // at the end.
-@@ -1562,7 +1564,7 @@ String Document::SuggestedMIMEType() const {
+@@ -1355,7 +1357,9 @@ Node* Document::importNode(Node* imported_node,
+   // if deep is true, and the clone shadows flag set if this is a
+   // DocumentFragment whose host is an HTML template element.
+   auto* fragment = DynamicTo<DocumentFragment>(imported_node);
+-  bool clone_shadows_flag = fragment && fragment->IsTemplateContent();
++  bool clone_shadows_flag =
++      !RuntimeEnabledFeatures::ShadowRootClonableEnabled() && fragment &&
++      fragment->IsTemplateContent();
+   return imported_node->Clone(
+       *this, deep ? (clone_shadows_flag ? CloneChildrenFlag::kCloneWithShadows
+                                         : CloneChildrenFlag::kClone)
+@@ -1562,7 +1566,7 @@ String Document::SuggestedMIMEType() const {
    if (xmlStandalone())
      return "text/xml";
    if (IsA<HTMLDocument>(this))
@@ -20,7 +31,7 @@ index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..83237162e892723df275d85b745e3bee
  
    if (DocumentLoader* document_loader = Loader())
      return document_loader->MimeType();
-@@ -9296,6 +9298,21 @@ Resource* Document::GetPendingLinkPreloadForTesting(const KURL& url) {
+@@ -9296,6 +9300,21 @@ Resource* Document::GetPendingLinkPreloadForTesting(const KURL& url) {
    return nullptr;
  }
  
