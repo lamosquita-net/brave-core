@@ -14,7 +14,8 @@ namespace chrome {
 
 bool BraveTabStripModelDelegate::CanMoveTabsToWindow(
     const std::vector<int>& indices) {
-  if (!base::FeatureList::IsEnabled(tabs::features::kBraveSharedPinnedTabs)) {
+  if (!SharedPinnedTabServiceFactory::IsEnabledForProfile(
+          browser_->profile())) {
     return BrowserTabStripModelDelegate::CanMoveTabsToWindow(indices);
   }
 
@@ -28,7 +29,8 @@ void BraveTabStripModelDelegate::CacheWebContents(
     const std::vector<std::unique_ptr<TabStripModel::DetachedWebContents>>&
         web_contents) {
   BrowserTabStripModelDelegate::CacheWebContents(web_contents);
-  if (!base::FeatureList::IsEnabled(tabs::features::kBraveSharedPinnedTabs)) {
+  if (!SharedPinnedTabServiceFactory::IsEnabledForProfile(
+          browser_->profile())) {
     return;
   }
 
