@@ -1,5 +1,5 @@
 diff --git a/src/parsing/parser-base.h b/src/parsing/parser-base.h
-index cc899086d3b8ad0e09963a144a4e58de4d20788c..688d30a12970d5eecbd733f8f2465cdce3b76735 100644
+index cc899086d3b8ad0e09963a144a4e58de4d20788c..059133f32d30c94e400de96313734b64c5421b09 100644
 --- a/src/parsing/parser-base.h
 +++ b/src/parsing/parser-base.h
 @@ -2619,6 +2619,7 @@ typename ParserBase<Impl>::BlockT ParserBase<Impl>::ParseClassStaticBlock(
@@ -10,3 +10,15 @@ index cc899086d3b8ad0e09963a144a4e58de4d20788c..688d30a12970d5eecbd733f8f2465cdc
    AcceptINScope accept_in(this, true);
  
    // Each static block has its own var and lexical scope, so make a new var
+@@ -3823,9 +3824,9 @@ ParserBase<Impl>::ParseSuperExpression() {
+         impl()->ReportMessage(MessageTemplate::kOptionalChainingNoSuper);
+         return impl()->FailureExpression();
+       }
+-      Scope* home_object_scope = scope->RecordSuperPropertyUsage();
++      scope->RecordSuperPropertyUsage();
+       UseThis();
+-      return impl()->NewSuperPropertyReference(home_object_scope, pos);
++      return impl()->NewSuperPropertyReference(pos);
+     }
+     // super() is only allowed in derived constructor. new super() is never
+     // allowed; it's reported as an error by
