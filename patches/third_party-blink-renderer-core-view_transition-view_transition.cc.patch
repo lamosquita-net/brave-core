@@ -1,0 +1,129 @@
+diff --git a/third_party/blink/renderer/core/view_transition/view_transition.cc b/third_party/blink/renderer/core/view_transition/view_transition.cc
+index bfe5e6bb174a883c7ffc2e1fa84c0dc93943a769..f1dc3d0d82e34bd1d6a34cd8621dfe315b38f14f 100644
+--- a/third_party/blink/renderer/core/view_transition/view_transition.cc
++++ b/third_party/blink/renderer/core/view_transition/view_transition.cc
+@@ -32,12 +32,14 @@
+ #include "third_party/blink/renderer/core/page/chrome_client.h"
+ #include "third_party/blink/renderer/core/page/page.h"
+ #include "third_party/blink/renderer/core/paint/paint_layer.h"
++#include "third_party/blink/renderer/core/view_transition/view_transition_type_set.h"
+ #include "third_party/blink/renderer/platform/bindings/script_state.h"
+ #include "third_party/blink/renderer/platform/graphics/compositing/paint_artifact_compositor.h"
+ #include "third_party/blink/renderer/platform/graphics/compositor_element_id.h"
+ #include "third_party/blink/renderer/platform/graphics/paint/clip_paint_property_node.h"
+ #include "third_party/blink/renderer/platform/heap/cross_thread_handle.h"
+ #include "third_party/blink/renderer/platform/heap/garbage_collected.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+ #include "third_party/blink/renderer/platform/scheduler/public/event_loop.h"
+ #include "third_party/blink/renderer/platform/wtf/cross_thread_functional.h"
+ #include "third_party/blink/renderer/platform/wtf/hash_map.h"
+@@ -209,14 +211,16 @@ ViewTransition* ViewTransition::CreateFromScript(
+     Document* document,
+     ScriptState* script_state,
+     V8ViewTransitionCallback* callback,
++    const absl::optional<Vector<String>>& types,
+     Delegate* delegate) {
+   return MakeGarbageCollected<ViewTransition>(document, script_state, callback,
+-                                              delegate);
++                                              types, delegate);
+ }
+ 
+ ViewTransition::ViewTransition(Document* document,
+                                ScriptState* script_state,
+                                V8ViewTransitionCallback* update_dom_callback,
++                               const absl::optional<Vector<String>>& types,
+                                Delegate* delegate)
+     : ActiveScriptWrappable<ViewTransition>({}),
+       ExecutionContextLifecycleObserver(document->GetExecutionContext()),
+@@ -230,6 +234,17 @@ ViewTransition::ViewTransition(Document* document,
+                                                  update_dom_callback)),
+       style_tracker_(
+           MakeGarbageCollected<ViewTransitionStyleTracker>(*document_)) {
++  // FlyWeb (Chromium 125): types and :active-view-transition.
++  if (RuntimeEnabledFeatures::ViewTransitionTypesEnabled()) {
++    types_ = MakeGarbageCollected<ViewTransitionTypeSet>(
++        this, types.value_or(Vector<String>()));
++    if (auto* originating_element = document_->documentElement()) {
++      originating_element->ActiveViewTransitionStateChanged();
++      if (!types_->IsEmpty()) {
++        originating_element->ActiveViewTransitionTypeStateChanged();
++      }
++    }
++  }
+   ProcessCurrentState();
+ }
+ 
+@@ -388,7 +403,18 @@ ScriptPromise ViewTransition::updateCallbackDone() const {
+ bool ViewTransition::AdvanceTo(State state) {
+   DCHECK(CanAdvanceTo(state)) << "Current state " << static_cast<int>(state_)
+                               << " new state " << static_cast<int>(state);
++  bool was_initial = state_ == State::kInitial;
+   state_ = state;
++  // FlyWeb (Chromium 125): :active-view-transition stops matching.
++  if (!was_initial && IsTerminalState(state_) && IsCreatedViaScriptAPI() &&
++      RuntimeEnabledFeatures::ViewTransitionTypesEnabled()) {
++    if (auto* originating_element = document_->documentElement()) {
++      originating_element->ActiveViewTransitionStateChanged();
++      if (types_ && !types_->IsEmpty()) {
++        originating_element->ActiveViewTransitionTypeStateChanged();
++      }
++    }
++  }
+ 
+   // If we need to run in a lifecycle, but we're not in one, then make sure to
+   // schedule an animation in case we wouldn't get one naturally.
+@@ -708,12 +734,54 @@ void ViewTransition::Trace(Visitor* visitor) const {
+   visitor->Trace(document_);
+   visitor->Trace(style_tracker_);
+   visitor->Trace(script_bound_state_);
++  visitor->Trace(types_);
+ 
+   ScriptWrappable::Trace(visitor);
+   ActiveScriptWrappable::Trace(visitor);
+   ExecutionContextLifecycleObserver::Trace(visitor);
+ }
+ 
++ViewTransitionTypeSet* ViewTransition::types() {
++  if (!types_) {
++    types_ = MakeGarbageCollected<ViewTransitionTypeSet>(this, Vector<String>());
++  }
++  return types_.Get();
++}
++
++bool ViewTransition::MatchForActiveViewTransition() const {
++  // Only script-initiated (same-document) transitions in the 116.
++  return IsCreatedViaScriptAPI() && !IsTerminalState(state_);
++}
++
++bool ViewTransition::MatchForActiveViewTransitionType(
++    const Vector<AtomicString>& pseudo_types) const {
++  if (!MatchForActiveViewTransition()) {
++    return false;
++  }
++  CHECK(!pseudo_types.empty());
++  // If types are not specified, then there is no match.
++  if (!types_ || types_->IsEmpty()) {
++    return false;
++  }
++  // At least one pseudo type has to match at least one of the transition
++  // types.
++  for (const AtomicString& pseudo_type : pseudo_types) {
++    if (types_->Contains(pseudo_type)) {
++      return true;
++    }
++  }
++  return false;
++}
++
++void ViewTransition::TypesChanged() {
++  if (!MatchForActiveViewTransition()) {
++    return;
++  }
++  if (auto* originating_element = document_->documentElement()) {
++    originating_element->ActiveViewTransitionTypeStateChanged();
++  }
++}
++
+ bool ViewTransition::MatchForOnlyChild(
+     PseudoId pseudo_id,
+     const AtomicString& view_transition_name) const {

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/parser/css_selector_parser.cc b/third_party/blink/renderer/core/css/parser/css_selector_parser.cc
-index 5bdb7220e0a0dddbbf5bf86f6fc6f789bdd722f7..b9fb17f7c4146fbe4f306163a08290550cb415e9 100644
+index 5bdb7220e0a0dddbbf5bf86f6fc6f789bdd722f7..3a72d685f6a76c9a7d7e356c96bb3fb29855bad9 100644
 --- a/third_party/blink/renderer/core/css/parser/css_selector_parser.cc
 +++ b/third_party/blink/renderer/core/css/parser/css_selector_parser.cc
 @@ -14,8 +14,10 @@
@@ -65,3 +65,37 @@ index 5bdb7220e0a0dddbbf5bf86f6fc6f789bdd722f7..b9fb17f7c4146fbe4f306163a0829055
        const CSSParserToken& ident = block.ConsumeIncludingWhitespace();
        if (ident.GetType() != kIdentToken || !block.AtEnd()) {
          return false;
+@@ -1670,6 +1697,33 @@ bool CSSSelectorParser::ConsumePseudo(CSSParserTokenRange& range) {
+       output_.push_back(std::move(selector));
+       return true;
+     }
++    case CSSSelector::kPseudoActiveViewTransitionType: {
++      // FlyWeb (Chromium 125): the types are stored like ::part() names.
++      if (!RuntimeEnabledFeatures::ViewTransitionTypesEnabled()) {
++        return false;
++      }
++
++      Vector<AtomicString> types;
++      for (;;) {
++        const CSSParserToken& ident = block.ConsumeIncludingWhitespace();
++        if (ident.GetType() != kIdentToken) {
++          return false;
++        }
++        types.push_back(ident.Value().ToAtomicString());
++
++        if (block.AtEnd()) {
++          break;
++        }
++
++        const CSSParserToken& comma = block.ConsumeIncludingWhitespace();
++        if (comma.GetType() != kCommaToken || block.AtEnd()) {
++          return false;
++        }
++      }
++      selector.SetPartNames(std::make_unique<Vector<AtomicString>>(types));
++      output_.push_back(std::move(selector));
++      return true;
++    }
+     case CSSSelector::kPseudoViewTransitionGroup:
+     case CSSSelector::kPseudoViewTransitionImagePair:
+     case CSSSelector::kPseudoViewTransitionOld:

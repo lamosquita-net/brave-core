@@ -1,8 +1,28 @@
 diff --git a/third_party/blink/renderer/core/css/css_selector.cc b/third_party/blink/renderer/core/css/css_selector.cc
-index afc7a7561a68eb74e9a9a69e4ccd77cd3ca96bc2..76db4290ceb315c46efc6989bc4cbd996aaf69ab 100644
+index afc7a7561a68eb74e9a9a69e4ccd77cd3ca96bc2..5f2b5eee0a786032e68fc04f00a1042babe2de72 100644
 --- a/third_party/blink/renderer/core/css/css_selector.cc
 +++ b/third_party/blink/renderer/core/css/css_selector.cc
-@@ -394,11 +394,14 @@ PseudoId CSSSelector::GetPseudoId(PseudoType type) {
+@@ -139,6 +139,10 @@ inline unsigned CSSSelector::SpecificityForOneSelector() const {
+       return kIdSpecificity;
+     case kPseudoClass:
+       switch (GetPseudoType()) {
++        case kPseudoActiveViewTransitionType:
++          CHECK(PartNames() && !PartNames()->empty());
++          // TODO(csswg-drafts:10071): Figure out the specificity.
++          return 2 * kClassLikeSpecificity;
+         case kPseudoWhere:
+           return 0;
+         case kPseudoHost:
+@@ -306,6 +310,8 @@ PseudoId CSSSelector::GetPseudoId(PseudoType type) {
+     case kPseudoViewTransitionNew:
+       return kPseudoIdViewTransitionNew;
+     case kPseudoActive:
++    case kPseudoActiveViewTransition:
++    case kPseudoActiveViewTransitionType:
+     case kPseudoAny:
+     case kPseudoAnyLink:
+     case kPseudoAutofill:
+@@ -394,11 +400,14 @@ PseudoId CSSSelector::GetPseudoId(PseudoType type) {
      case kPseudoSpatialNavigationInterest:
      case kPseudoStart:
      case kPseudoState:
@@ -17,7 +37,15 @@ index afc7a7561a68eb74e9a9a69e4ccd77cd3ca96bc2..76db4290ceb315c46efc6989bc4cbd99
      case kPseudoValid:
      case kPseudoVertical:
      case kPseudoVideoPersistent:
-@@ -538,6 +541,8 @@ const static NameToPseudoStruct kPseudoTypeWithoutArgumentsMap[] = {
+@@ -471,6 +480,7 @@ const static NameToPseudoStruct kPseudoTypeWithoutArgumentsMap[] = {
+     {"-webkit-scrollbar-track", CSSSelector::kPseudoScrollbarTrack},
+     {"-webkit-scrollbar-track-piece", CSSSelector::kPseudoScrollbarTrackPiece},
+     {"active", CSSSelector::kPseudoActive},
++    {"active-view-transition", CSSSelector::kPseudoActiveViewTransition},
+     {"after", CSSSelector::kPseudoAfter},
+     {"any-link", CSSSelector::kPseudoAnyLink},
+     {"autofill", CSSSelector::kPseudoAutofill},
+@@ -538,6 +548,8 @@ const static NameToPseudoStruct kPseudoTypeWithoutArgumentsMap[] = {
      {"start", CSSSelector::kPseudoStart},
      {"target", CSSSelector::kPseudoTarget},
      {"target-text", CSSSelector::kPseudoTargetText},
@@ -26,7 +54,16 @@ index afc7a7561a68eb74e9a9a69e4ccd77cd3ca96bc2..76db4290ceb315c46efc6989bc4cbd99
      {"valid", CSSSelector::kPseudoValid},
      {"vertical", CSSSelector::kPseudoVertical},
      {"view-transition", CSSSelector::kPseudoViewTransition},
-@@ -563,6 +568,7 @@ const static NameToPseudoStruct kPseudoTypeWithArgumentsMap[] = {
+@@ -548,6 +560,8 @@ const static NameToPseudoStruct kPseudoTypeWithoutArgumentsMap[] = {
+ 
+ const static NameToPseudoStruct kPseudoTypeWithArgumentsMap[] = {
+     {"-webkit-any", CSSSelector::kPseudoAny},
++    {"active-view-transition-type",
++     CSSSelector::kPseudoActiveViewTransitionType},
+     {"cue", CSSSelector::kPseudoCue},
+     {"dir", CSSSelector::kPseudoDir},
+     {"has", CSSSelector::kPseudoHas},
+@@ -563,6 +577,7 @@ const static NameToPseudoStruct kPseudoTypeWithArgumentsMap[] = {
      {"nth-of-type", CSSSelector::kPseudoNthOfType},
      {"part", CSSSelector::kPseudoPart},
      {"slotted", CSSSelector::kPseudoSlotted},
@@ -34,7 +71,7 @@ index afc7a7561a68eb74e9a9a69e4ccd77cd3ca96bc2..76db4290ceb315c46efc6989bc4cbd99
      {"toggle", CSSSelector::kPseudoToggle},
      {"view-transition-group", CSSSelector::kPseudoViewTransitionGroup},
      {"view-transition-image-pair", CSSSelector::kPseudoViewTransitionImagePair},
-@@ -649,6 +655,11 @@ CSSSelector::PseudoType CSSSelector::NameToPseudoType(
+@@ -649,6 +664,17 @@ CSSSelector::PseudoType CSSSelector::NameToPseudoType(
      return CSSSelector::kPseudoUnknown;
    }
  
@@ -43,10 +80,16 @@ index afc7a7561a68eb74e9a9a69e4ccd77cd3ca96bc2..76db4290ceb315c46efc6989bc4cbd99
 +    return CSSSelector::kPseudoUnknown;
 +  }
 +
++  if ((match->type == CSSSelector::kPseudoActiveViewTransition ||
++       match->type == CSSSelector::kPseudoActiveViewTransitionType) &&
++      !RuntimeEnabledFeatures::ViewTransitionTypesEnabled()) {
++    return CSSSelector::kPseudoUnknown;
++  }
++
    if ((match->type == CSSSelector::kPseudoSpellingError ||
         match->type == CSSSelector::kPseudoGrammarError) &&
        !RuntimeEnabledFeatures::CSSSpellingGrammarErrorsEnabled()) {
-@@ -666,6 +677,12 @@ CSSSelector::PseudoType CSSSelector::NameToPseudoType(
+@@ -666,6 +692,12 @@ CSSSelector::PseudoType CSSSelector::NameToPseudoType(
      return CSSSelector::kPseudoUnknown;
    }
  
@@ -59,7 +102,7 @@ index afc7a7561a68eb74e9a9a69e4ccd77cd3ca96bc2..76db4290ceb315c46efc6989bc4cbd99
    return static_cast<CSSSelector::PseudoType>(match->type);
  }
  
-@@ -725,7 +742,7 @@ void CSSSelector::UpdatePseudoType(const AtomicString& value,
+@@ -725,7 +757,7 @@ void CSSSelector::UpdatePseudoType(const AtomicString& value,
    PseudoType pseudo_type = CSSSelectorParser::ParsePseudoType(
        lower_value, has_arguments, context.GetDocument());
    SetPseudoType(pseudo_type);
@@ -68,7 +111,16 @@ index afc7a7561a68eb74e9a9a69e4ccd77cd3ca96bc2..76db4290ceb315c46efc6989bc4cbd99
  
    switch (GetPseudoType()) {
      case kPseudoAfter:
-@@ -862,11 +879,14 @@ void CSSSelector::UpdatePseudoType(const AtomicString& value,
+@@ -790,6 +822,8 @@ void CSSSelector::UpdatePseudoType(const AtomicString& value,
+       [[fallthrough]];
+     // For pseudo classes
+     case kPseudoActive:
++    case kPseudoActiveViewTransition:
++    case kPseudoActiveViewTransitionType:
+     case kPseudoAny:
+     case kPseudoAnyLink:
+     case kPseudoAutofill:
+@@ -862,11 +896,14 @@ void CSSSelector::UpdatePseudoType(const AtomicString& value,
      case kPseudoSingleButton:
      case kPseudoStart:
      case kPseudoState:
@@ -83,7 +135,7 @@ index afc7a7561a68eb74e9a9a69e4ccd77cd3ca96bc2..76db4290ceb315c46efc6989bc4cbd99
      case kPseudoValid:
      case kPseudoVertical:
      case kPseudoVisited:
-@@ -960,7 +980,7 @@ bool CSSSelector::SerializeSimpleSelector(StringBuilder& builder) const {
+@@ -960,7 +997,7 @@ bool CSSSelector::SerializeSimpleSelector(StringBuilder& builder) const {
    } else if (match_ == kPseudoClass || match_ == kPagePseudoClass) {
      if (GetPseudoType() == kPseudoUnparsed) {
        builder.Append(Value());
@@ -92,7 +144,7 @@ index afc7a7561a68eb74e9a9a69e4ccd77cd3ca96bc2..76db4290ceb315c46efc6989bc4cbd99
                 GetPseudoType() != kPseudoParent &&
                 GetPseudoType() != kPseudoTrue) {
        builder.Append(':');
-@@ -1007,6 +1027,7 @@ bool CSSSelector::SerializeSimpleSelector(StringBuilder& builder) const {
+@@ -1007,6 +1044,7 @@ bool CSSSelector::SerializeSimpleSelector(StringBuilder& builder) const {
        }
        case kPseudoDir:
        case kPseudoLang:
@@ -100,7 +152,7 @@ index afc7a7561a68eb74e9a9a69e4ccd77cd3ca96bc2..76db4290ceb315c46efc6989bc4cbd99
          builder.Append('(');
          SerializeIdentifier(Argument(), builder);
          builder.Append(')');
-@@ -1024,7 +1045,7 @@ bool CSSSelector::SerializeSimpleSelector(StringBuilder& builder) const {
+@@ -1024,10 +1062,23 @@ bool CSSSelector::SerializeSimpleSelector(StringBuilder& builder) const {
        case kPseudoNot:
          DCHECK(SelectorList());
          break;
@@ -109,3 +161,19 @@ index afc7a7561a68eb74e9a9a69e4ccd77cd3ca96bc2..76db4290ceb315c46efc6989bc4cbd99
          builder.Append(':');
          SerializeIdentifier(SerializingValue(), builder);
          break;
++      case kPseudoActiveViewTransitionType: {
++        CHECK(PartNames() && !PartNames()->empty());
++        String separator = "(";
++        for (AtomicString type : *PartNames()) {
++          builder.Append(separator);
++          if (separator == "(") {
++            separator = ", ";
++          }
++          SerializeIdentifier(type, builder);
++        }
++        builder.Append(')');
++        break;
++      }
+       case kPseudoHost:
+       case kPseudoHostContext:
+       case kPseudoAny:

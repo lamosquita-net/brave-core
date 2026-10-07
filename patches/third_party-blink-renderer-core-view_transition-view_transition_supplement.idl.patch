@@ -1,0 +1,15 @@
+diff --git a/third_party/blink/renderer/core/view_transition/view_transition_supplement.idl b/third_party/blink/renderer/core/view_transition/view_transition_supplement.idl
+index a56ce912ab2aef8f0a9dd02c3f6477fa6b75baa9..60e2d76bdc7fac72b28aa7ce7932fcff3556541c 100644
+--- a/third_party/blink/renderer/core/view_transition/view_transition_supplement.idl
++++ b/third_party/blink/renderer/core/view_transition/view_transition_supplement.idl
+@@ -6,5 +6,9 @@
+     ImplementedAs=ViewTransitionSupplement,
+     RuntimeEnabled=ViewTransition
+ ] partial interface Document {
+-    [MeasureAs=ViewTransition, CallWith=ScriptState, RaisesException] ViewTransition startViewTransition(optional ViewTransitionCallback? callback = null);
++    // FlyWeb (Chromium 125): the update callback or the options dictionary
++    // with the transition types.
++    [MeasureAs=ViewTransition, CallWith=ScriptState, RaisesException] ViewTransition startViewTransition();
++    [MeasureAs=ViewTransition, CallWith=ScriptState, RaisesException] ViewTransition startViewTransition(ViewTransitionCallback update);
++    [MeasureAs=ViewTransition, CallWith=ScriptState, RaisesException, RuntimeEnabled=ViewTransitionTypes] ViewTransition startViewTransition(ViewTransitionOptions opts);
+ };

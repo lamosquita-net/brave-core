@@ -1,0 +1,24 @@
+diff --git a/third_party/blink/renderer/core/css/style_change_reason.cc b/third_party/blink/renderer/core/css/style_change_reason.cc
+index 092f2556e8c1a8e8911ecc86b0eecc20b335b28d..b2e7cf70b4a6f2d1235fd0120312c72c4d4342c3 100644
+--- a/third_party/blink/renderer/core/css/style_change_reason.cc
++++ b/third_party/blink/renderer/core/css/style_change_reason.cc
+@@ -56,6 +56,8 @@ const char kZoom[] = "Zoom";
+ 
+ namespace style_change_extra_data {
+ DEFINE_GLOBAL(AtomicString, g_active);
++DEFINE_GLOBAL(AtomicString, g_active_view_transition);
++DEFINE_GLOBAL(AtomicString, g_active_view_transition_type);
+ DEFINE_GLOBAL(AtomicString, g_disabled);
+ DEFINE_GLOBAL(AtomicString, g_drag);
+ DEFINE_GLOBAL(AtomicString, g_focus);
+@@ -70,6 +72,10 @@ void Init() {
+   DCHECK(IsMainThread());
+ 
+   new (WTF::NotNullTag::kNotNull, (void*)&g_active) AtomicString(":active");
++  new (WTF::NotNullTag::kNotNull, (void*)&g_active_view_transition)
++      AtomicString(":active-view-transition");
++  new (WTF::NotNullTag::kNotNull, (void*)&g_active_view_transition_type)
++      AtomicString(":active-view-transition-type");
+   new (WTF::NotNullTag::kNotNull, (void*)&g_disabled) AtomicString(":disabled");
+   new (WTF::NotNullTag::kNotNull, (void*)&g_drag) AtomicString(":-webkit-drag");
+   new (WTF::NotNullTag::kNotNull, (void*)&g_focus) AtomicString(":focus");

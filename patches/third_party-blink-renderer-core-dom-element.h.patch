@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/element.h b/third_party/blink/renderer/core/dom/element.h
-index 640e53d474d0e132bf72388ac410015f66b55f48..fc481391d1b7e5748bec211792e7369de1f8220d 100644
+index 640e53d474d0e132bf72388ac410015f66b55f48..3366c5a4ff519bb81be897ab5f172065be224f74 100644
 --- a/third_party/blink/renderer/core/dom/element.h
 +++ b/third_party/blink/renderer/core/dom/element.h
 @@ -93,6 +93,7 @@ class ElementIntersectionObserverData;
@@ -10,7 +10,18 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..fc481391d1b7e5748bec211792e7369d
  class GetInnerHTMLOptions;
  class HTMLTemplateElement;
  class Image;
-@@ -674,7 +675,9 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -638,6 +639,10 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+   void HandleSubtreeModifications();
+   void PseudoStateChanged(CSSSelector::PseudoType);
+   void PseudoStateChangedForTesting(CSSSelector::PseudoType);
++  // :active-view-transition and :active-view-transition-type() (FlyWeb,
++  // Chromium 125).
++  void ActiveViewTransitionStateChanged();
++  void ActiveViewTransitionTypeStateChanged();
+   void SetAnimationStyleChange(bool);
+   void SetNeedsAnimationStyleRecalc();
+ 
+@@ -674,7 +679,9 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
        ShadowRootType,
        FocusDelegation focus_delegation = FocusDelegation::kNone,
        SlotAssignmentMode slot_assignment_mode = SlotAssignmentMode::kNamed,
@@ -21,7 +32,7 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..fc481391d1b7e5748bec211792e7369d
  
    // Returns the shadow root attached to this element if it is a shadow host.
    ShadowRoot* GetShadowRoot() const;
-@@ -838,8 +841,15 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -838,8 +845,15 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    void setInnerHTML(const String&, ExceptionState& = ASSERT_NO_EXCEPTION);
    void setInnerHTMLWithDeclarativeShadowDOMForTesting(const String& html);
    String getInnerHTML(const GetInnerHTMLOptions* options) const;
@@ -37,7 +48,7 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..fc481391d1b7e5748bec211792e7369d
    void setPointerCapture(PointerId poinetr_id, ExceptionState&);
    void releasePointerCapture(PointerId pointer_id, ExceptionState&);
  
-@@ -1204,6 +1214,14 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1204,6 +1218,14 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    // https://drafts.csswg.org/css-anchor-1/#implicit-anchor-element
    Element* ImplicitAnchorElement();
  
@@ -52,7 +63,7 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..fc481391d1b7e5748bec211792e7369d
   protected:
    bool HasElementData() const { return element_data_; }
    const ElementData* GetElementData() const { return element_data_.Get(); }
-@@ -1300,6 +1318,15 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1300,6 +1322,15 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    // changes.
    void LangAttributeChanged();
  
@@ -68,7 +79,7 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..fc481391d1b7e5748bec211792e7369d
   private:
    friend class AXObject;
    struct AffectedByPseudoStateChange;
-@@ -1420,6 +1447,8 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1420,6 +1451,8 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
      DetachPseudoElement(kPseudoIdFirstLetter, performing_reattach);
    }
  

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/rule_feature_set.cc b/third_party/blink/renderer/core/css/rule_feature_set.cc
-index c320f4a9da5ff5958f0f0a90d6e038d2862f33dc..202c749dc1127d44a5da521268adc4d0a96f918a 100644
+index c320f4a9da5ff5958f0f0a90d6e038d2862f33dc..3caf4028f7883439042c514ab184daca86d5a16c 100644
 --- a/third_party/blink/renderer/core/css/rule_feature_set.cc
 +++ b/third_party/blink/renderer/core/css/rule_feature_set.cc
 @@ -89,6 +89,7 @@ bool SupportsInvalidation(CSSSelector::PseudoType type) {
@@ -19,7 +19,16 @@ index c320f4a9da5ff5958f0f0a90d6e038d2862f33dc..202c749dc1127d44a5da521268adc4d0
      case CSSSelector::kPseudoValid:
      case CSSSelector::kPseudoInvalid:
      case CSSSelector::kPseudoIndeterminate:
-@@ -714,6 +717,9 @@ InvalidationSet* RuleFeatureSet::InvalidationSetForSimpleSelector(
+@@ -196,6 +199,8 @@ bool SupportsInvalidation(CSSSelector::PseudoType type) {
+     case CSSSelector::kPseudoViewTransitionNew:
+     case CSSSelector::kPseudoViewTransitionOld:
+     case CSSSelector::kPseudoToggle:
++    case CSSSelector::kPseudoActiveViewTransition:
++    case CSSSelector::kPseudoActiveViewTransitionType:
+       return true;
+     case CSSSelector::kPseudoUnknown:
+     case CSSSelector::kPseudoLeftPage:
+@@ -714,6 +719,9 @@ InvalidationSet* RuleFeatureSet::InvalidationSetForSimpleSelector(
        case CSSSelector::kPseudoReadOnly:
        case CSSSelector::kPseudoReadWrite:
        case CSSSelector::kPseudoState:
@@ -29,3 +38,12 @@ index c320f4a9da5ff5958f0f0a90d6e038d2862f33dc..202c749dc1127d44a5da521268adc4d0
        case CSSSelector::kPseudoValid:
        case CSSSelector::kPseudoInvalid:
        case CSSSelector::kPseudoIndeterminate:
+@@ -741,6 +749,8 @@ InvalidationSet* RuleFeatureSet::InvalidationSetForSimpleSelector(
+       case CSSSelector::kPseudoModal:
+       case CSSSelector::kPseudoSelectorFragmentAnchor:
+       case CSSSelector::kPseudoToggle:
++      case CSSSelector::kPseudoActiveViewTransition:
++      case CSSSelector::kPseudoActiveViewTransitionType:
+         return &EnsurePseudoInvalidationSet(selector.GetPseudoType(), type,
+                                             position);
+       case CSSSelector::kPseudoFirstOfType:

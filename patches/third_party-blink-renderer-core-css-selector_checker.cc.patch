@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/selector_checker.cc b/third_party/blink/renderer/core/css/selector_checker.cc
-index 0a5aae9deb41a6b65270600424a857e4ba8d6980..c7513b89c4e74317eae481fc37397255acc9fa67 100644
+index 0a5aae9deb41a6b65270600424a857e4ba8d6980..5b4d441fdda311951f46571603cc4928c4aa2e4e 100644
 --- a/third_party/blink/renderer/core/css/selector_checker.cc
 +++ b/third_party/blink/renderer/core/css/selector_checker.cc
 @@ -47,6 +47,7 @@
@@ -67,3 +67,30 @@ index 0a5aae9deb41a6b65270600424a857e4ba8d6980..c7513b89c4e74317eae481fc37397255
      case CSSSelector::kPseudoHorizontal:
      case CSSSelector::kPseudoVertical:
      case CSSSelector::kPseudoDecrement:
+@@ -1900,6 +1925,26 @@ bool SelectorChecker::CheckPseudoClass(const SelectorCheckingContext& context,
+         return !toggle->ValueMatches(State(0));
+       }
+     }
++    case CSSSelector::kPseudoActiveViewTransition: {
++      // FlyWeb (Chromium 125). Only valid on the html element, while there is
++      // a transition.
++      if (!IsA<HTMLElement>(element)) {
++        return false;
++      }
++      auto* transition =
++          ViewTransitionUtils::GetActiveTransition(element.GetDocument());
++      return transition && transition->MatchForActiveViewTransition();
++    }
++    case CSSSelector::kPseudoActiveViewTransitionType: {
++      if (!IsA<HTMLElement>(element)) {
++        return false;
++      }
++      auto* transition =
++          ViewTransitionUtils::GetActiveTransition(element.GetDocument());
++      return transition && selector.PartNames() &&
++             transition->MatchForActiveViewTransitionType(
++                 *selector.PartNames());
++    }
+     case CSSSelector::kPseudoUnparsed:
+       // Only kept around for parsing; can never match anything
+       // (because we don't know what it's supposed to mean).

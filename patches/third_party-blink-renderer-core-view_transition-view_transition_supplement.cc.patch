@@ -1,0 +1,80 @@
+diff --git a/third_party/blink/renderer/core/view_transition/view_transition_supplement.cc b/third_party/blink/renderer/core/view_transition/view_transition_supplement.cc
+index fab6e16cef65eee0d2060fe98bc5082af868fdfb..28dde79f8febe1a7efcf55132b85d5022026a64f 100644
+--- a/third_party/blink/renderer/core/view_transition/view_transition_supplement.cc
++++ b/third_party/blink/renderer/core/view_transition/view_transition_supplement.cc
+@@ -7,6 +7,7 @@
+ #include "cc/trees/layer_tree_host.h"
+ #include "cc/view_transition/view_transition_request.h"
+ #include "third_party/blink/renderer/bindings/core/v8/v8_view_transition_callback.h"
++#include "third_party/blink/renderer/bindings/core/v8/v8_view_transition_options.h"
+ #include "third_party/blink/renderer/core/dom/document.h"
+ #include "third_party/blink/renderer/core/frame/local_frame.h"
+ #include "third_party/blink/renderer/core/frame/local_frame_view.h"
+@@ -87,6 +88,39 @@ ViewTransition* ViewTransitionSupplement::startViewTransition(
+     Document& document,
+     V8ViewTransitionCallback* callback,
+     ExceptionState& exception_state) {
++  return StartViewTransitionInternal(script_state, document, callback,
++                                     absl::nullopt, exception_state);
++}
++
++// static
++ViewTransition* ViewTransitionSupplement::startViewTransition(
++    ScriptState* script_state,
++    Document& document,
++    ViewTransitionOptions* options,
++    ExceptionState& exception_state) {
++  CHECK(!options || (options->hasUpdate() && options->hasTypes()));
++  return StartViewTransitionInternal(
++      script_state, document, options ? options->update() : nullptr,
++      options ? options->types() : absl::nullopt, exception_state);
++}
++
++// static
++ViewTransition* ViewTransitionSupplement::startViewTransition(
++    ScriptState* script_state,
++    Document& document,
++    ExceptionState& exception_state) {
++  return StartViewTransitionInternal(
++      script_state, document, static_cast<V8ViewTransitionCallback*>(nullptr),
++      absl::nullopt, exception_state);
++}
++
++// static
++ViewTransition* ViewTransitionSupplement::StartViewTransitionInternal(
++    ScriptState* script_state,
++    Document& document,
++    V8ViewTransitionCallback* callback,
++    const absl::optional<Vector<String>>& types,
++    ExceptionState& exception_state) {
+   DCHECK(script_state);
+   DCHECK(ThreadScheduler::Current());
+   auto* supplement = From(document);
+@@ -99,7 +133,7 @@ ViewTransition* ViewTransitionSupplement::startViewTransition(
+       callback->SetParentTaskId(id);
+     }
+   }
+-  return supplement->StartTransition(script_state, document, callback,
++  return supplement->StartTransition(script_state, document, callback, types,
+                                      exception_state);
+ }
+ 
+@@ -107,6 +141,7 @@ ViewTransition* ViewTransitionSupplement::StartTransition(
+     ScriptState* script_state,
+     Document& document,
+     V8ViewTransitionCallback* callback,
++    const absl::optional<Vector<String>>& types,
+     ExceptionState& exception_state) {
+   // Disallow script initiated transitions during a navigation initiated
+   // transition.
+@@ -124,8 +159,8 @@ ViewTransition* ViewTransitionSupplement::StartTransition(
+     return nullptr;
+   }
+ 
+-  transition_ =
+-      ViewTransition::CreateFromScript(&document, script_state, callback, this);
++  transition_ = ViewTransition::CreateFromScript(&document, script_state,
++                                                callback, types, this);
+ 
+   // If there is a transition in a parent frame, give that precedence over a
+   // transition in a child frame.

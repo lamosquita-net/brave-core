@@ -1,0 +1,75 @@
+diff --git a/third_party/blink/renderer/core/view_transition/view_transition.h b/third_party/blink/renderer/core/view_transition/view_transition.h
+index 5830898ee13587d7a594b3396556716e2afcb869..127a28677778fc09f20641c0ff050f5d72338011 100644
+--- a/third_party/blink/renderer/core/view_transition/view_transition.h
++++ b/third_party/blink/renderer/core/view_transition/view_transition.h
+@@ -38,6 +38,7 @@ class Document;
+ class Element;
+ class LayoutObject;
+ class PseudoElement;
++class ViewTransitionTypeSet;
+ class ScriptPromise;
+ class ScriptState;
+ 
+@@ -58,10 +59,12 @@ class CORE_EXPORT ViewTransition : public ScriptWrappable,
+ 
+   // Creates and starts a same-document ViewTransition initiated using the
+   // script API.
+-  static ViewTransition* CreateFromScript(Document*,
+-                                          ScriptState*,
+-                                          V8ViewTransitionCallback*,
+-                                          Delegate*);
++  static ViewTransition* CreateFromScript(
++      Document*,
++      ScriptState*,
++      V8ViewTransitionCallback*,
++      const absl::optional<Vector<String>>& types,
++      Delegate*);
+ 
+   // Creates a ViewTransition to cache the state of a Document before a
+   // navigation. The cached state is provided to the caller using the
+@@ -80,7 +83,11 @@ class CORE_EXPORT ViewTransition : public ScriptWrappable,
+                                                          ViewTransitionState,
+                                                          Delegate*);
+ 
+-  ViewTransition(Document*, ScriptState*, V8ViewTransitionCallback*, Delegate*);
++  ViewTransition(Document*,
++                 ScriptState*,
++                 V8ViewTransitionCallback*,
++                 const absl::optional<Vector<String>>& types,
++                 Delegate*);
+   ViewTransition(Document*, ViewTransitionStateCallback, Delegate*);
+   ViewTransition(Document*, ViewTransitionState, Delegate*);
+ 
+@@ -90,12 +97,22 @@ class CORE_EXPORT ViewTransition : public ScriptWrappable,
+   ScriptPromise finished() const;
+   ScriptPromise ready() const;
+   ScriptPromise updateCallbackDone() const;
++  // FlyWeb (Chromium 125): ViewTransition.types.
++  ViewTransitionTypeSet* types();
+ 
+   // GC functionality.
+   void Trace(Visitor* visitor) const override;
+ 
+   // Returns true if the pseudo element corresponding to the given id and name
+   // is the only child.
++  // :active-view-transition and :active-view-transition-type() (FlyWeb,
++  // Chromium 125).
++  bool MatchForActiveViewTransition() const;
++  bool MatchForActiveViewTransitionType(
++      const Vector<AtomicString>& pseudo_types) const;
++  // Called by ViewTransitionTypeSet when the types change.
++  void TypesChanged();
++
+   bool MatchForOnlyChild(PseudoId pseudo_id,
+                          const AtomicString& view_transition_name) const;
+ 
+@@ -371,6 +388,9 @@ class CORE_EXPORT ViewTransition : public ScriptWrappable,
+ 
+   Member<ViewTransitionStyleTracker> style_tracker_;
+ 
++  // FlyWeb (Chromium 125): types of a script-initiated transition.
++  Member<ViewTransitionTypeSet> types_;
++
+   // Manages pausing rendering of the Document between capture and updateDOM
+   // callback finishing.
+   // If the Document is the local root frame then the backing CC instance is
