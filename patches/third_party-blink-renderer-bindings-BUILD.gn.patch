@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/bindings/BUILD.gn b/third_party/blink/renderer/bindings/BUILD.gn
-index 01d5bdc58ddc5e2b4e13c86bf16c8ca8e577dc72..9f7ba12f895783aaa036386f0767b4893626c8f6 100644
+index 01d5bdc58ddc5e2b4e13c86bf16c8ca8e577dc72..8104cee831a019a75f02d3457c008e751a1554c0 100644
 --- a/third_party/blink/renderer/bindings/BUILD.gn
 +++ b/third_party/blink/renderer/bindings/BUILD.gn
 @@ -174,6 +174,7 @@ template("generate_bindings") {
@@ -10,3 +10,26 @@ index 01d5bdc58ddc5e2b4e13c86bf16c8ca8e577dc72..9f7ba12f895783aaa036386f0767b489
    }
  }
  
+@@ -182,6 +183,9 @@ generate_bindings("generate_bindings_all") {
+ 
+   targets = []
+   outputs = []
++  targets += [ "async_iterator" ]
++  outputs += generated_async_iterator_sources_in_core +
++             generated_async_iterator_sources_in_modules
+   targets += [ "callback_function" ]
+   outputs += generated_callback_function_sources_in_core +
+              generated_callback_function_sources_in_modules +
+@@ -249,6 +253,12 @@ action_with_pydeps("check_generated_file_list") {
+ 
+   file_list = []
+   file_list += [ "--for_prod" ]
++  file_list += [
++    "--kind",
++    "async_iterator",
++  ]
++  file_list += generated_async_iterator_sources_in_core +
++               generated_async_iterator_sources_in_modules
+   file_list += [
+     "--kind",
+     "callback_function",

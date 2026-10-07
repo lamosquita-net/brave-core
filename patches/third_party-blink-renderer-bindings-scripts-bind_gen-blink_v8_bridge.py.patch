@@ -1,0 +1,48 @@
+diff --git a/third_party/blink/renderer/bindings/scripts/bind_gen/blink_v8_bridge.py b/third_party/blink/renderer/bindings/scripts/bind_gen/blink_v8_bridge.py
+index acbd9f63c4241e0d3df89cb129df9713cf65d13e..af947efae44fef306a84fe58ee47c745154456ed 100644
+--- a/third_party/blink/renderer/bindings/scripts/bind_gen/blink_v8_bridge.py
++++ b/third_party/blink/renderer/bindings/scripts/bind_gen/blink_v8_bridge.py
+@@ -43,6 +43,9 @@ def blink_class_name(idl_definition):
+         # cases.  Plus, we prefer a simple naming rule conformant to the
+         # Chromium coding style.  So, we go with this way.
+         return "V8Union{}".format("Or".join(idl_definition.member_tokens))
++    elif isinstance(idl_definition, web_idl.AsyncIterator):
++        return "AsyncIterator<{}>".format(
++            blink_class_name(idl_definition.interface))
+     elif isinstance(idl_definition, web_idl.SyncIterator):
+         return "SyncIterator<{}>".format(
+             blink_class_name(idl_definition.interface))
+@@ -54,13 +57,16 @@ def v8_bridge_class_name(idl_definition):
+     """
+     Returns the name of V8-from/to-Blink bridge class.
+     """
+-    assert isinstance(idl_definition,
+-                      (web_idl.CallbackInterface, web_idl.Interface,
+-                       web_idl.Namespace, web_idl.SyncIterator))
++    assert isinstance(
++        idl_definition,
++        (web_idl.AsyncIterator, web_idl.CallbackInterface, web_idl.Interface,
++         web_idl.Namespace, web_idl.SyncIterator))
+ 
+     assert idl_definition.identifier[0].isupper()
+     # Do not apply |name_style.class_| due to the same reason as
+     # |blink_class_name|.
++    if isinstance(idl_definition, web_idl.AsyncIterator):
++        return "V8AsyncIterator{}".format(idl_definition.interface.identifier)
+     if isinstance(idl_definition, web_idl.SyncIterator):
+         return "V8SyncIterator{}".format(idl_definition.interface.identifier)
+     return "V8{}".format(idl_definition.identifier)
+@@ -363,6 +369,13 @@ def blink_type_info(idl_type):
+                             clear_member_var_fmt="{}.clear()")
+ 
+     if real_type.is_promise:
++        # FlyWeb: [IDLTypeImplementedAsV8Promise] backported from Chromium 124
++        # (async iterators, whose base class lives in platform/).
++        if "IDLTypeImplementedAsV8Promise" in real_type.extended_attributes:
++            return TypeInfo("v8::Local<v8::Promise>",
++                            ref_fmt="{}&",
++                            const_ref_fmt="const {}&",
++                            is_traceable=True)
+         return TypeInfo("ScriptPromise",
+                         ref_fmt="{}&",
+                         const_ref_fmt="const {}&",

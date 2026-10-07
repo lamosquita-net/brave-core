@@ -1,0 +1,134 @@
+diff --git a/third_party/blink/renderer/bindings/scripts/web_idl/idl_compiler.py b/third_party/blink/renderer/bindings/scripts/web_idl/idl_compiler.py
+index d40e23cd8f84437abfe0796a95ef010d3f0cd28d..63aa7b92aef5c5591d292e69b012bedb5a57d297 100644
+--- a/third_party/blink/renderer/bindings/scripts/web_idl/idl_compiler.py
++++ b/third_party/blink/renderer/bindings/scripts/web_idl/idl_compiler.py
+@@ -9,6 +9,7 @@ import posixpath
+ 
+ from blinkbuild.name_style_converter import NameStyleConverter
+ 
++from .argument import Argument
+ from .callback_function import CallbackFunction
+ from .callback_interface import CallbackInterface
+ from .composition_parts import DebugInfo
+@@ -23,6 +24,7 @@ from .exposure import ExposureMutable
+ from .extended_attribute import ExtendedAttribute
+ from .extended_attribute import ExtendedAttributesMutable
+ from .idl_type import IdlTypeFactory
++from .interface import AsyncIterator
+ from .interface import Interface
+ from .interface import LegacyWindowAlias
+ from .interface import SyncIterator
+@@ -107,6 +109,7 @@ class IdlCompiler(object):
+ 
+         self._copy_legacy_factory_function_extattrs()
+ 
++        self._create_async_iterators()
+         self._create_sync_iterators()
+ 
+         # Make groups of overloaded functions including inherited ones.
+@@ -486,6 +489,88 @@ class IdlCompiler(object):
+                 copy_extattrs(new_ir.extended_attributes,
+                               legacy_factory_function_ir)
+ 
++    def _create_async_iterators(self):
++        # FlyWeb: backported from Chromium 124 (_create_async_iterator_irs) to
++        # the 116 design, where the iterator is owned by the interface.
++        old_irs = self._ir_map.irs_of_kind(IRMap.IR.Kind.INTERFACE)
++
++        self._ir_map.move_to_new_phase()
++
++        for old_ir in old_irs:
++            new_ir = self._maybe_make_copy(old_ir)
++            self._ir_map.add(new_ir)
++
++            if not new_ir.async_iterable:
++                continue
++
++            assert not new_ir.async_iterator
++            iterable = new_ir.async_iterable
++            component = new_ir.components[0]
++            debug_info = DebugInfo()
++            debug_info.add_locations(iterable.debug_info.all_locations)
++
++            def promise_of_object():
++                # The return type is a promise type resolving to an iterator
++                # result.
++                # https://webidl.spec.whatwg.org/#iterator-result
++                return self._idl_type_factory.promise_type(
++                    result_type=self._idl_type_factory.simple_type('object'),
++                    extended_attributes=ExtendedAttributesMutable([
++                        ExtendedAttribute(key='IDLTypeImplementedAsV8Promise'),
++                    ]))
++
++            # 'next' and 'return' properties are defined at:
++            # https://webidl.spec.whatwg.org/#es-asynchronous-iterator-prototype-object
++            operations = [
++                Operation.IR(
++                    identifier=Identifier('next'),
++                    arguments=[],
++                    return_type=promise_of_object(),
++                    extended_attributes=ExtendedAttributesMutable([
++                        ExtendedAttribute(key="CallWith",
++                                          values="ScriptState"),
++                        ExtendedAttribute(key="RaisesException"),
++                    ]),
++                    component=component)
++            ]
++            # Define the 'return' property if and only if an asynchronous
++            # iterator return algorithm is defined for the interface.
++            if "HasAsyncIteratorReturnAlgorithm" in iterable.extended_attributes:
++                return_op = Operation.IR(
++                    identifier=Identifier('return'),
++                    # Can be called without arguments (e.g.
++                    # AsyncIteratorClose()) or with one argument (e.g.
++                    # yield*).
++                    # https://tc39.es/ecma262/#sec-asynciteratorclose
++                    arguments=[
++                        Argument.IR(
++                            identifier=Identifier('value'),
++                            index=0,
++                            idl_type=self._idl_type_factory.simple_type(
++                                'any', is_optional=True))
++                    ],
++                    return_type=promise_of_object(),
++                    extended_attributes=ExtendedAttributesMutable([
++                        ExtendedAttribute(key="CallWith",
++                                          values="ScriptState"),
++                        ExtendedAttribute(key="RaisesException"),
++                        ExtendedAttribute(key="ImplementedAs",
++                                          values="returnForBinding"),
++                    ]),
++                    component=component)
++                # [ImplementedAs] has already been propagated to
++                # code_generator_info at this point.
++                return_op.code_generator_info.set_property_implemented_as(
++                    'returnForBinding')
++                operations.append(return_op)
++            new_ir.async_iterator = AsyncIterator.IR(
++                interface_ir=new_ir,
++                component=component,
++                debug_info=debug_info,
++                key_type=iterable.key_type,
++                value_type=iterable.value_type,
++                operations=operations)
++
+     def _create_sync_iterators(self):
+         old_irs = self._ir_map.irs_of_kind(IRMap.IR.Kind.INTERFACE)
+ 
+@@ -557,13 +642,14 @@ class IdlCompiler(object):
+             if not isinstance(new_ir, Interface.IR):
+                 continue
+ 
+-            for item in (new_ir.iterable, new_ir.maplike, new_ir.setlike):
++            for item in (new_ir.async_iterable, new_ir.iterable,
++                         new_ir.maplike, new_ir.setlike):
+                 if item:
+                     assert not item.operation_groups
+                     item.operation_groups = make_groups(
+                         OperationGroup.IR, item.operations)
+ 
+-            for item in (new_ir.sync_iterator, ):
++            for item in (new_ir.async_iterator, new_ir.sync_iterator):
+                 if item:
+                     assert not item.operation_groups
+                     item.operation_groups = make_groups(

@@ -1,0 +1,15 @@
+diff --git a/third_party/blink/renderer/bindings/core/v8/generated_code_helper.cc b/third_party/blink/renderer/bindings/core/v8/generated_code_helper.cc
+index 5dd3876fc334c2d4ead63f500a6e0f8b6863fceb..e89cad6bbc7f49b5a93a50020c9f1fe2fda07da8 100644
+--- a/third_party/blink/renderer/bindings/core/v8/generated_code_helper.cc
++++ b/third_party/blink/renderer/bindings/core/v8/generated_code_helper.cc
+@@ -163,7 +163,9 @@ void SetupIDLSyncIteratorTemplate(
+     v8::Local<v8::FunctionTemplate> interface_template,
+     v8::Intrinsic parent_intrinsic_prototype,
+     const char* class_string) {
+-  DCHECK(parent_intrinsic_prototype == v8::Intrinsic::kIteratorPrototype ||
++  // FlyWeb: also used for async iterators (%AsyncIteratorPrototype%).
++  DCHECK(parent_intrinsic_prototype == v8::Intrinsic::kAsyncIteratorPrototype ||
++         parent_intrinsic_prototype == v8::Intrinsic::kIteratorPrototype ||
+          parent_intrinsic_prototype == v8::Intrinsic::kMapIteratorPrototype ||
+          parent_intrinsic_prototype == v8::Intrinsic::kSetIteratorPrototype);
+ 

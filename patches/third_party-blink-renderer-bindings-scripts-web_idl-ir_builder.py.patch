@@ -1,0 +1,114 @@
+diff --git a/third_party/blink/renderer/bindings/scripts/web_idl/ir_builder.py b/third_party/blink/renderer/bindings/scripts/web_idl/ir_builder.py
+index 0a6dd91a14e09dd339f0789ee8ac4348f5774b75..73c2f2bf1625a88a35f7a9a46d25a121860fd45d 100644
+--- a/third_party/blink/renderer/bindings/scripts/web_idl/ir_builder.py
++++ b/third_party/blink/renderer/bindings/scripts/web_idl/ir_builder.py
+@@ -22,11 +22,13 @@ from .extended_attribute import ExtendedAttribute
+ from .extended_attribute import ExtendedAttributes
+ from .idl_type import IdlTypeFactory
+ from .includes import Includes
++from .interface import AsyncIterable
+ from .interface import Interface
+ from .interface import Iterable
+ from .interface import Maplike
+ from .interface import Setlike
+ from .literal_constant import LiteralConstant
++from .make_copy import make_copy
+ from .namespace import Namespace
+ from .operation import Operation
+ from .typedef import Typedef
+@@ -114,6 +116,7 @@ class _IRBuilder(object):
+         child_nodes = list(node.GetChildren())
+         inherited = self._take_inheritance(child_nodes)
+         stringifier_members = self._take_stringifier(child_nodes)
++        async_iterable = self._take_async_iterable(child_nodes)
+         iterable = self._take_iterable(child_nodes)
+         maplike = self._take_maplike(
+             child_nodes, interface_identifier=identifier)
+@@ -155,6 +158,7 @@ class _IRBuilder(object):
+                             constructors=constructors,
+                             legacy_factory_functions=legacy_factory_functions,
+                             operations=operations,
++                            async_iterable=async_iterable,
+                             iterable=iterable,
+                             maplike=maplike,
+                             setlike=setlike,
+@@ -513,6 +517,30 @@ class _IRBuilder(object):
+         assert node.GetName() == '...'
+         return True
+ 
++    def _build_async_iterable(self, node):
++        assert node.GetClass() == 'AsyncIterable'
++        child_nodes = list(node.GetChildren())
++        arguments = self._take_arguments(child_nodes)
++        extended_attributes = self._take_extended_attributes(child_nodes)
++        types = list(map(self._build_type, child_nodes))
++        assert len(types) == 1 or len(types) == 2
++        iter_ops = self._create_async_iterable_operations(
++            node, arguments, extended_attributes)
++        if len(types) == 1:  # value iterator
++            key_type, value_type = (None, types[0])
++            iter_ops[Identifier('values')].is_async_iterator = True
++            operations = [iter_ops[Identifier('values')]]
++        else:  # pair iterator
++            key_type, value_type = types
++            iter_ops[Identifier('entries')].is_async_iterator = True
++            operations = list(iter_ops.values())
++        return AsyncIterable.IR(key_type=key_type,
++                                value_type=value_type,
++                                operations=operations,
++                                arguments=arguments,
++                                extended_attributes=extended_attributes,
++                                debug_info=self._build_debug_info(node))
++
+     def _build_iterable(self, node):
+         assert node.GetClass() == 'Iterable'
+         types = list(map(self._build_type, node.GetChildren()))
+@@ -1015,6 +1043,37 @@ class _IRBuilder(object):
+             for key, values in key_values.items()
+         ])
+ 
++    def _create_async_iterable_operations(self, node, arguments,
++                                          extended_attributes):
++        """
++        Constructs a set of async iterable operations.
++
++        https://webidl.spec.whatwg.org/#define-the-asynchronous-iteration-methods
++        """
++
++        def make_ext_attrs(key_values):
++            return ExtendedAttributes(
++                list(extended_attributes or []) +
++                list(self._create_extended_attributes(key_values)))
++
++        def make_op(name, impl_name):
++            return self._create_operation(
++                Identifier(name),
++                arguments=make_copy(arguments),
++                return_type=Identifier('AsyncIteratorType'),
++                extended_attributes=make_ext_attrs({
++                    'CallWith': 'ScriptState',
++                    'RaisesException': None,
++                    'ImplementedAs': impl_name,
++                }),
++                node=node)
++
++        return {
++            Identifier('entries'): make_op('entries', 'entriesForBinding'),
++            Identifier('keys'): make_op('keys', 'keysForBinding'),
++            Identifier('values'): make_op('values', 'valuesForBinding'),
++        }
++
+     def _create_iterator_operations(self, node):
+         """Constructs a set of iterator operations."""
+         return {
+@@ -1118,6 +1177,10 @@ class _IRBuilder(object):
+                 return build_func(node, **kwargs)
+         return None
+ 
++    def _take_async_iterable(self, node_list):
++        return self._take_and_build('AsyncIterable',
++                                    self._build_async_iterable, node_list)
++
+     def _take_arguments(self, node_list):
+         return self._take_and_build('Arguments', self._build_arguments,
+                                     node_list)

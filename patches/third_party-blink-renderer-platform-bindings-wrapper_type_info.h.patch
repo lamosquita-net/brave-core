@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/platform/bindings/wrapper_type_info.h b/third_party/blink/renderer/platform/bindings/wrapper_type_info.h
-index 1ba218e8924fe17f584e4aa4e71d05f3619cce32..b068f24ac5e1e806aa9d1a3e4108b3dc382fbb1a 100644
+index 1ba218e8924fe17f584e4aa4e71d05f3619cce32..a02bb4af91cdc48735a66f54b454014eda241f13 100644
 --- a/third_party/blink/renderer/platform/bindings/wrapper_type_info.h
 +++ b/third_party/blink/renderer/platform/bindings/wrapper_type_info.h
-@@ -109,9 +109,8 @@ struct PLATFORM_EXPORT WrapperTypeInfo final {
+@@ -89,6 +89,7 @@ struct PLATFORM_EXPORT WrapperTypeInfo final {
+     kIdlBufferSourceType,
+     kIdlObservableArray,
+     kIdlSyncIterator,
++    kIdlAsyncIterator,
+     kCustomWrappableKind,
+   };
+ 
+@@ -109,9 +110,8 @@ struct PLATFORM_EXPORT WrapperTypeInfo final {
      return false;
    }
  
@@ -14,3 +22,11 @@ index 1ba218e8924fe17f584e4aa4e71d05f3619cce32..b068f24ac5e1e806aa9d1a3e4108b3dc
    }
  
    // Returns a v8::Template of interface object, namespace object, or the
+@@ -122,6 +122,7 @@ struct PLATFORM_EXPORT WrapperTypeInfo final {
+   // - kIdlCallbackInterface: v8::FunctionTemplate of legacy callback
+   //       interface object
+   // - kIdlSyncIterator: v8::FunctionTemplate of default iterator object
++  // - kIdlAsyncIterator: v8::FunctionTemplate of default async iterator object
+   // - kCustomWrappableKind: v8::FunctionTemplate
+   v8::Local<v8::Template> GetV8ClassTemplate(
+       v8::Isolate* isolate,

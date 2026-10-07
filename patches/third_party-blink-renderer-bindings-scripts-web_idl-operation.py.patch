@@ -1,0 +1,35 @@
+diff --git a/third_party/blink/renderer/bindings/scripts/web_idl/operation.py b/third_party/blink/renderer/bindings/scripts/web_idl/operation.py
+index 102f965fe93ff5ecdd60e718f1606effe1666c9a..597bc94b38d7a660e4961d8835d1076c508740c7 100644
+--- a/third_party/blink/renderer/bindings/scripts/web_idl/operation.py
++++ b/third_party/blink/renderer/bindings/scripts/web_idl/operation.py
+@@ -57,6 +57,7 @@ class Operation(FunctionLike, WithExtendedAttributes, WithCodeGeneratorInfo,
+             self.is_deleter = is_deleter
+             self.is_stringifier = False
+             self.stringifier_attribute = None
++            self.is_async_iterator = False
+             self.is_iterator = False
+             self.is_optionally_defined = False
+ 
+@@ -78,6 +79,7 @@ class Operation(FunctionLike, WithExtendedAttributes, WithCodeGeneratorInfo,
+         self._is_deleter = ir.is_deleter
+         self._is_stringifier = ir.is_stringifier
+         self._stringifier_attribute = ir.stringifier_attribute
++        self._is_async_iterator = ir.is_async_iterator
+         self._is_iterator = ir.is_iterator
+         self._is_optionally_defined = ir.is_optionally_defined
+ 
+@@ -127,6 +129,14 @@ class Operation(FunctionLike, WithExtendedAttributes, WithCodeGeneratorInfo,
+         """
+         return self._stringifier_attribute
+ 
++    @property
++    def is_async_iterator(self):
++        """
++        Returns True if this operation must be exposed as @@asyncIterator in
++        addition to a property with the identifier.
++        """
++        return self._is_async_iterator
++
+     @property
+     def is_iterator(self):
+         """
