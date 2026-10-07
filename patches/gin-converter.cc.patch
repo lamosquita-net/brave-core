@@ -1,0 +1,16 @@
+diff --git a/gin/converter.cc b/gin/converter.cc
+index 4eb8c3d8c8392512eeb235bc18012589549b872b..f6a93a1f74668e69b425a87c42e05c1adbc5cf54 100644
+--- a/gin/converter.cc
++++ b/gin/converter.cc
+@@ -285,6 +285,11 @@ v8::Local<v8::String> StringToSymbol(v8::Isolate* isolate,
+       .ToLocalChecked();
+ }
+ 
++base::Location V8ToBaseLocation(const v8::SourceLocation& location) {
++  return base::Location::Current(location.Function(), location.FileName(),
++                                 location.Line());
++}
++
+ std::string V8ToString(v8::Isolate* isolate, v8::Local<v8::Value> value) {
+   if (value.IsEmpty())
+     return std::string();

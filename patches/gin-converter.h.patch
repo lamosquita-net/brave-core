@@ -1,0 +1,28 @@
+diff --git a/gin/converter.h b/gin/converter.h
+index eb704fcd56dee861e18e9cd64a857d68dea6f415..342a718d94f1d7c23e73f66e6f73fcca7405f2ff 100644
+--- a/gin/converter.h
++++ b/gin/converter.h
+@@ -13,12 +13,14 @@
+ #include <vector>
+ 
+ #include "base/check.h"
++#include "base/location.h"
+ #include "base/notreached.h"
+ #include "base/strings/string_piece.h"
+ #include "gin/gin_export.h"
+ #include "v8/include/v8-container.h"
+ #include "v8/include/v8-forward.h"
+ #include "v8/include/v8-isolate.h"
++#include "v8/include/v8-source-location.h"
+ 
+ namespace base {
+ class TimeTicks;
+@@ -292,6 +294,8 @@ GIN_EXPORT v8::Local<v8::String> StringToSymbol(v8::Isolate* isolate,
+ GIN_EXPORT v8::Local<v8::String> StringToSymbol(v8::Isolate* isolate,
+                                                 const base::StringPiece16& val);
+ 
++GIN_EXPORT base::Location V8ToBaseLocation(const v8::SourceLocation& location);
++
+ template<typename T>
+ bool ConvertFromV8(v8::Isolate* isolate, v8::Local<v8::Value> input,
+                    T* result) {
