@@ -113,7 +113,9 @@ void BraveTabStrip::MaybeStartDrag(
     }
   }
 
-  if (base::FeatureList::IsEnabled(tabs::features::kBraveSharedPinnedTabs)) {
+  if (controller_->GetBrowser() &&
+      SharedPinnedTabServiceFactory::IsEnabledForProfile(
+          controller_->GetBrowser()->profile())) {
     // When source tab is bound for dummy web contents for a shared pinned tab,
     // we shouldn't kick off drag-and-drop session as the web contents will be
     // replaced soon.
