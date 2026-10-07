@@ -1,0 +1,15 @@
+diff --git a/third_party/blink/renderer/core/css/css_value_clamping_utils.cc b/third_party/blink/renderer/core/css/css_value_clamping_utils.cc
+index 6f30e747d37fabd54c2556ba9c175cf521f1c2cf..50489481f8a373cc36a1c87223a8128eb8775f06 100644
+--- a/third_party/blink/renderer/core/css/css_value_clamping_utils.cc
++++ b/third_party/blink/renderer/core/css/css_value_clamping_utils.cc
+@@ -20,8 +20,9 @@ namespace blink {
+ constexpr static double kApproxDoubleInfinityAngle = 2867080569122160;
+ 
+ double CSSValueClampingUtils::ClampDouble(double value) {
++  // https://www.w3.org/TR/css-values-4/#top-level-calculation
+   if (std::isnan(value)) {
+-    value = std::numeric_limits<double>::max();
++    value = 0;
+   }
+   return ClampTo<double>(value);
+ }
