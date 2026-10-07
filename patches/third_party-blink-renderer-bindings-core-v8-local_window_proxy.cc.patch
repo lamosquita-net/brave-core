@@ -1,0 +1,25 @@
+diff --git a/third_party/blink/renderer/bindings/core/v8/local_window_proxy.cc b/third_party/blink/renderer/bindings/core/v8/local_window_proxy.cc
+index 1cada05806cb35a82822507f708d43979d97de61..45ecbb6fbbbb902cb12b36f83e477c84cd2b1fb2 100644
+--- a/third_party/blink/renderer/bindings/core/v8/local_window_proxy.cc
++++ b/third_party/blink/renderer/bindings/core/v8/local_window_proxy.cc
+@@ -116,7 +116,8 @@ void LocalWindowProxy::DisposeContext(Lifecycle next_status,
+       CHECK_EQ(ToScriptWrappable(context->Global()),
+                ToScriptWrappable(
+                    context->Global()->GetPrototype().As<v8::Object>()));
+-      global_proxy_.SetWrapperClassId(0);
++      // FlyWeb: V8 12.3 (engine level 123) removed wrapper class ids
++      // (Chromium 04bb7a49838e, 15fcb656b756).
+     }
+     V8DOMWrapper::ClearNativeInfo(GetIsolate(), context->Global());
+     script_state_->DetachGlobalObject();
+@@ -292,10 +293,6 @@ void LocalWindowProxy::SetupWindowPrototypeChain() {
+   CHECK(global_proxy_ == global_proxy);
+   V8DOMWrapper::SetNativeInfo(GetIsolate(), global_proxy, wrapper_type_info,
+                               window);
+-  // Mark the handle to be traced by Oilpan, since the global proxy has a
+-  // reference to the DOMWindow.
+-  global_proxy_.SetWrapperClassId(wrapper_type_info->wrapper_class_id);
+-
+   // The global object, aka window wrapper object.
+   v8::Local<v8::Object> window_wrapper =
+       global_proxy->GetPrototype().As<v8::Object>();
