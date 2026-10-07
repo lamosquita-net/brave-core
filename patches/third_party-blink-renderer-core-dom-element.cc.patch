@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/dom/element.cc b/third_party/blink/renderer/core/dom/element.cc
-index 603363d44dba6a56412a2408af11a821e39bde00..69c9b1866f3d498bbb39bc2b074198f778b120f3 100644
+index 603363d44dba6a56412a2408af11a821e39bde00..4f5e544ea5527976040a50d081f9536911e88bce 100644
 --- a/third_party/blink/renderer/core/dom/element.cc
 +++ b/third_party/blink/renderer/core/dom/element.cc
-@@ -166,6 +166,7 @@
+@@ -43,6 +43,7 @@
+ #include "third_party/blink/renderer/bindings/core/v8/script_promise_resolver.h"
+ #include "third_party/blink/renderer/bindings/core/v8/v8_aria_notification_options.h"
+ #include "third_party/blink/renderer/bindings/core/v8/v8_check_visibility_options.h"
++#include "third_party/blink/renderer/bindings/core/v8/v8_get_html_options.h"
+ #include "third_party/blink/renderer/bindings/core/v8/v8_get_inner_html_options.h"
+ #include "third_party/blink/renderer/bindings/core/v8/v8_pointer_lock_options.h"
+ #include "third_party/blink/renderer/bindings/core/v8/v8_scroll_into_view_options.h"
+@@ -166,6 +167,7 @@
  #include "third_party/blink/renderer/core/html/html_template_element.h"
  #include "third_party/blink/renderer/core/html/nesting_level_incrementer.h"
  #include "third_party/blink/renderer/core/html/parser/html_parser_idioms.h"
@@ -10,7 +18,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..69c9b1866f3d498bbb39bc2b074198f7
  #include "third_party/blink/renderer/core/html_element_type_helpers.h"
  #include "third_party/blink/renderer/core/html_names.h"
  #include "third_party/blink/renderer/core/input/event_handler.h"
-@@ -219,6 +220,7 @@
+@@ -219,6 +221,7 @@
  #include "third_party/blink/renderer/platform/language.h"
  #include "third_party/blink/renderer/platform/region_capture_crop_id.h"
  #include "third_party/blink/renderer/platform/runtime_enabled_features.h"
@@ -18,7 +26,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..69c9b1866f3d498bbb39bc2b074198f7
  #include "third_party/blink/renderer/platform/wtf/casting.h"
  #include "third_party/blink/renderer/platform/wtf/hash_functions.h"
  #include "third_party/blink/renderer/platform/wtf/text/atomic_string.h"
-@@ -640,16 +642,20 @@ bool Element::IsBaseElementFocusableStyle() const {
+@@ -640,16 +643,20 @@ bool Element::IsBaseElementFocusableStyle() const {
  }
  
  Node* Element::Clone(Document& factory, CloneChildrenFlag flag) const {
@@ -49,17 +57,17 @@ index 603363d44dba6a56412a2408af11a821e39bde00..69c9b1866f3d498bbb39bc2b074198f7
        // 7.1 Run attach a shadow root with shadow host equal to copy, mode equal
        // to node’s shadow root’s mode, and delegates focus equal to node’s
        // shadow root’s delegates focus.
-@@ -657,7 +663,8 @@ Node* Element::Clone(Document& factory, CloneChildrenFlag flag) const {
+@@ -657,7 +664,8 @@ Node* Element::Clone(Document& factory, CloneChildrenFlag flag) const {
            shadow_root->GetType(),
            shadow_root->delegatesFocus() ? FocusDelegation::kDelegateFocus
                                          : FocusDelegation::kNone,
 -          shadow_root->GetSlotAssignmentMode());
 +          shadow_root->GetSlotAssignmentMode(), /*registry*/ nullptr,
-+          /*clonable*/ true);
++          /*clonable*/ true, shadow_root->serializable());
        // 7.2 If node’s shadow root’s "is declarative shadow root" is true, then
        // set copy’s shadow root’s "is declarative shadow root" property to true.
        cloned_shadow_root.SetIsDeclarativeShadowRoot(
-@@ -673,7 +680,10 @@ Node* Element::Clone(Document& factory, CloneChildrenFlag flag) const {
+@@ -673,7 +681,10 @@ Node* Element::Clone(Document& factory, CloneChildrenFlag flag) const {
        // shadow root and append them to copy’s shadow root, with document as
        // specified, the clone children flag being set, and the clone shadows
        // flag being set.
@@ -71,7 +79,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..69c9b1866f3d498bbb39bc2b074198f7
      }
    }
    return copy;
-@@ -2647,6 +2657,8 @@ Node::InsertionNotificationRequest Element::InsertedInto(
+@@ -2647,6 +2658,8 @@ Node::InsertionNotificationRequest Element::InsertedInto(
  
    DCHECK(!HasRareData() || !GetElementRareData()->HasPseudoElements());
  
@@ -80,7 +88,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..69c9b1866f3d498bbb39bc2b074198f7
    if (!insertion_point.IsInTreeScope()) {
      return kInsertionDone;
    }
-@@ -2772,6 +2784,8 @@ void Element::RemovedFrom(ContainerNode& insertion_point) {
+@@ -2772,6 +2785,8 @@ void Element::RemovedFrom(ContainerNode& insertion_point) {
      }
    }
  
@@ -89,7 +97,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..69c9b1866f3d498bbb39bc2b074198f7
    document.GetRootScrollerController().ElementRemoved(*this);
  
    if (IsInTopLayer()) {
-@@ -4048,6 +4062,446 @@ void Element::NotifyIfMatchedDocumentRulesSelectorsChanged(
+@@ -4048,6 +4063,446 @@ void Element::NotifyIfMatchedDocumentRulesSelectorsChanged(
    }
  }
  
@@ -536,12 +544,15 @@ index 603363d44dba6a56412a2408af11a821e39bde00..69c9b1866f3d498bbb39bc2b074198f7
  ShadowRoot& Element::CreateAndAttachShadowRoot(ShadowRootType type) {
  #if DCHECK_IS_ON()
    NestingLevelIncrementer slot_assignment_recalc_forbidden_scope(
-@@ -4445,14 +4899,16 @@ ShadowRoot* Element::attachShadow(const ShadowRootInit* shadow_root_init_dict,
+@@ -4445,14 +4900,20 @@ ShadowRoot* Element::attachShadow(const ShadowRootInit* shadow_root_init_dict,
    CustomElementRegistry* registry = shadow_root_init_dict->hasRegistry()
                                          ? shadow_root_init_dict->registry()
                                          : nullptr;
 +  bool clonable =
 +      shadow_root_init_dict->hasClonable() && shadow_root_init_dict->clonable();
++  bool serializable = RuntimeEnabledFeatures::ElementGetHTMLEnabled() &&
++                      shadow_root_init_dict->hasSerializable() &&
++                      shadow_root_init_dict->serializable();
    if (const char* error_message = ErrorMessageForAttachShadow()) {
      exception_state.ThrowDOMException(DOMExceptionCode::kNotSupportedError,
                                        error_message);
@@ -550,58 +561,73 @@ index 603363d44dba6a56412a2408af11a821e39bde00..69c9b1866f3d498bbb39bc2b074198f7
  
 -  ShadowRoot& shadow_root = AttachShadowRootInternal(type, focus_delegation,
 -                                                     slot_assignment, registry);
-+  ShadowRoot& shadow_root = AttachShadowRootInternal(
-+      type, focus_delegation, slot_assignment, registry, clonable);
++  ShadowRoot& shadow_root =
++      AttachShadowRootInternal(type, focus_delegation, slot_assignment,
++                               registry, clonable, serializable);
  
    // Ensure that the returned shadow root is not marked as declarative so that
    // attachShadow() calls after the first one do not succeed for a shadow host
-@@ -4482,8 +4938,12 @@ bool Element::AttachStreamingDeclarativeShadowRoot(
+@@ -4482,8 +4943,17 @@ bool Element::AttachStreamingDeclarativeShadowRoot(
      return false;
    }
  
-+  // Declarative shadow roots are clonable only with shadowrootclonable.
+-  ShadowRoot& shadow_root =
+-      AttachShadowRootInternal(type, focus_delegation, slot_assignment);
++  // Declarative shadow roots are clonable only with shadowrootclonable, and
++  // serializable only with shadowrootserializable.
 +  bool clonable =
 +      template_element.FastHasAttribute(html_names::kShadowrootclonableAttr);
-   ShadowRoot& shadow_root =
--      AttachShadowRootInternal(type, focus_delegation, slot_assignment);
-+      AttachShadowRootInternal(type, focus_delegation, slot_assignment,
-+                               /*registry*/ nullptr, clonable);
++  bool serializable =
++      RuntimeEnabledFeatures::DeclarativeShadowDOMSerializableEnabled() &&
++      template_element.FastHasAttribute(
++          html_names::kShadowrootserializableAttr);
++  ShadowRoot& shadow_root = AttachShadowRootInternal(
++      type, focus_delegation, slot_assignment,
++      /*registry*/ nullptr, clonable, serializable);
    // 13.1. Set declarative shadow host element's shadow host's "is declarative
    // shadow root" property to true.
    shadow_root.SetIsDeclarativeShadowRoot(true);
-@@ -4520,8 +4980,12 @@ bool Element::AttachDeprecatedNonStreamingDeclarativeShadowRoot(
+@@ -4520,8 +4990,17 @@ bool Element::AttachDeprecatedNonStreamingDeclarativeShadowRoot(
      return false;
    }
  
-+  // Declarative shadow roots are clonable only with shadowrootclonable.
+-  ShadowRoot& shadow_root =
+-      AttachShadowRootInternal(type, focus_delegation, slot_assignment);
++  // Declarative shadow roots are clonable only with shadowrootclonable, and
++  // serializable only with shadowrootserializable.
 +  bool clonable =
 +      template_element.FastHasAttribute(html_names::kShadowrootclonableAttr);
-   ShadowRoot& shadow_root =
--      AttachShadowRootInternal(type, focus_delegation, slot_assignment);
-+      AttachShadowRootInternal(type, focus_delegation, slot_assignment,
-+                               /*registry*/ nullptr, clonable);
++  bool serializable =
++      RuntimeEnabledFeatures::DeclarativeShadowDOMSerializableEnabled() &&
++      template_element.FastHasAttribute(
++          html_names::kShadowrootserializableAttr);
++  ShadowRoot& shadow_root = AttachShadowRootInternal(
++      type, focus_delegation, slot_assignment,
++      /*registry*/ nullptr, clonable, serializable);
    // 13.1. Set declarative shadow host element's shadow host's "is declarative
    // shadow root" property to true.
    shadow_root.SetIsDeclarativeShadowRoot(true);
-@@ -4550,7 +5014,8 @@ ShadowRoot& Element::AttachShadowRootInternal(
+@@ -4550,7 +5029,9 @@ ShadowRoot& Element::AttachShadowRootInternal(
      ShadowRootType type,
      FocusDelegation focus_delegation,
      SlotAssignmentMode slot_assignment_mode,
 -    CustomElementRegistry* registry) {
 +    CustomElementRegistry* registry,
-+    bool clonable) {
++    bool clonable,
++    bool serializable) {
    // SVG <use> is a special case for using this API to create a closed shadow
    // root.
    DCHECK(CanAttachShadowRoot() || IsA<SVGUseElement>(*this));
-@@ -4579,6 +5044,7 @@ ShadowRoot& Element::AttachShadowRootInternal(
+@@ -4579,6 +5060,8 @@ ShadowRoot& Element::AttachShadowRootInternal(
    shadow_root.SetIsDeclarativeShadowRoot(false);
  
    shadow_root.SetRegistry(registry);
 +  shadow_root.setClonable(clonable);
++  shadow_root.setSerializable(serializable);
  
    // 7. If this’s custom element state is "precustomized" or "custom", then set
    // shadow’s available to element internals to true.
-@@ -4709,6 +5175,10 @@ void Element::ChildrenChanged(const ChildrenChange& change) {
+@@ -4709,6 +5192,10 @@ void Element::ChildrenChanged(const ChildrenChange& change) {
      }
    }
  
@@ -612,7 +638,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..69c9b1866f3d498bbb39bc2b074198f7
    if (ShadowRoot* shadow_root = GetShadowRoot()) {
      shadow_root->SetNeedsAssignmentRecalc();
    }
-@@ -5720,7 +6190,7 @@ void Element::SetInnerHTMLInternal(const String& html,
+@@ -5720,7 +6207,7 @@ void Element::SetInnerHTMLInternal(const String& html,
      setTextContent(html);
    } else {
      if (DocumentFragment* fragment = CreateFragmentForInnerOuterHTML(
@@ -621,7 +647,28 @@ index 603363d44dba6a56412a2408af11a821e39bde00..69c9b1866f3d498bbb39bc2b074198f7
              include_shadow_roots, exception_state)) {
        ContainerNode* container = this;
        if (auto* template_element = DynamicTo<HTMLTemplateElement>(*this)) {
-@@ -5783,7 +6253,7 @@ void Element::setOuterHTML(const String& html,
+@@ -5760,6 +6247,20 @@ String Element::getInnerHTML(const GetInnerHTMLOptions* options) const {
+       include_closed_roots);
+ }
+ 
++String Element::getHTML(const GetHTMLOptions* options) const {
++  // Chromium 125: serializableShadowRoots includes any shadow root marked
++  // serializable (open or closed); shadowRoots are always included.
++  ClosedRootsSet include_shadow_roots;
++  for (auto& shadow_root : options->shadowRoots()) {
++    include_shadow_roots.insert(shadow_root);
++  }
++  return CreateMarkup(this, kChildrenOnly, kDoNotResolveURLs,
++                      options->serializableShadowRoots()
++                          ? kIncludeSerializableShadowRoots
++                          : kOnlyProvidedShadowRoots,
++                      include_shadow_roots);
++}
++
+ void Element::setOuterHTML(const String& html,
+                            ExceptionState& exception_state) {
+   Node* p = parentNode();
+@@ -5783,7 +6284,7 @@ void Element::setOuterHTML(const String& html,
    Node* next = nextSibling();
  
    DocumentFragment* fragment = CreateFragmentForInnerOuterHTML(
@@ -630,7 +677,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..69c9b1866f3d498bbb39bc2b074198f7
        /*include_shadow_roots=*/false, exception_state);
    if (exception_state.HadException()) {
      return;
-@@ -5994,7 +6464,7 @@ void Element::insertAdjacentHTML(const String& where,
+@@ -5994,7 +6495,7 @@ void Element::insertAdjacentHTML(const String& where,
  
    // Step 3 of http://domparsing.spec.whatwg.org/#insertadjacenthtml()
    DocumentFragment* fragment = CreateFragmentForInnerOuterHTML(
@@ -639,7 +686,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..69c9b1866f3d498bbb39bc2b074198f7
        /*include_shadow_roots=*/false, exception_state);
    if (!fragment) {
      return;
-@@ -8377,9 +8847,34 @@ FocusgroupFlags Element::GetFocusgroupFlags() const {
+@@ -8377,9 +8878,34 @@ FocusgroupFlags Element::GetFocusgroupFlags() const {
  }
  
  bool Element::checkVisibility(CheckVisibilityOptions* options) const {
@@ -676,7 +723,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..69c9b1866f3d498bbb39bc2b074198f7
    DisplayLockUtilities::ScopedForcedUpdate force_locks(
        this, DisplayLockContext::ForcedPhase::kStyleAndLayoutTree,
        /*include_self=*/false, /*only_cv_auto=*/true,
-@@ -8396,7 +8891,9 @@ bool Element::checkVisibility(CheckVisibilityOptions* options) const {
+@@ -8396,7 +8922,9 @@ bool Element::checkVisibility(CheckVisibilityOptions* options) const {
    }
  
    DCHECK(options);
@@ -687,7 +734,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..69c9b1866f3d498bbb39bc2b074198f7
        style->Visibility() != EVisibility::kVisible) {
      return false;
    }
-@@ -8415,7 +8912,9 @@ bool Element::checkVisibility(CheckVisibilityOptions* options) const {
+@@ -8415,7 +8943,9 @@ bool Element::checkVisibility(CheckVisibilityOptions* options) const {
      }
  
      // Check for opacity:0
@@ -698,7 +745,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..69c9b1866f3d498bbb39bc2b074198f7
        if (style = ancestor.GetComputedStyle(); style) {
          if (style->Opacity() == 0.f) {
            return false;
-@@ -8850,4 +9349,10 @@ Element* Element::ImplicitAnchorElement() {
+@@ -8850,4 +9380,10 @@ Element* Element::ImplicitAnchorElement() {
    return nullptr;
  }
  

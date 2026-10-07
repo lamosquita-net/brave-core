@@ -1,16 +1,42 @@
 diff --git a/third_party/blink/renderer/core/dom/shadow_root.cc b/third_party/blink/renderer/core/dom/shadow_root.cc
-index b195e78714b4cdefc1ef8706ff7885ae49556634..093f89e6857d5e991b03198d1460de1e6bb72d44 100644
+index b195e78714b4cdefc1ef8706ff7885ae49556634..3d92f21684376a9bb935b24fc395ca35ffd954b8 100644
 --- a/third_party/blink/renderer/core/dom/shadow_root.cc
 +++ b/third_party/blink/renderer/core/dom/shadow_root.cc
-@@ -73,6 +73,7 @@ ShadowRoot::ShadowRoot(Document& document, ShadowRootType type)
+@@ -27,6 +27,7 @@
+ #include "third_party/blink/renderer/core/dom/shadow_root.h"
+ 
+ #include "third_party/blink/public/platform/platform.h"
++#include "third_party/blink/renderer/bindings/core/v8/v8_get_html_options.h"
+ #include "third_party/blink/renderer/bindings/core/v8/v8_get_inner_html_options.h"
+ #include "third_party/blink/renderer/bindings/core/v8/v8_observable_array_css_style_sheet.h"
+ #include "third_party/blink/renderer/core/css/resolver/style_resolver.h"
+@@ -73,6 +74,8 @@ ShadowRoot::ShadowRoot(Document& document, ShadowRootType type)
        slot_assignment_mode_(static_cast<unsigned>(SlotAssignmentMode::kNamed)),
        needs_dir_auto_attribute_update_(false),
        has_focusgroup_attribute_on_descendant_(false),
 +      clonable_(false),
++      serializable_(false),
        unused_(0) {}
  
  ShadowRoot::~ShadowRoot() = default;
-@@ -150,7 +151,7 @@ String ShadowRoot::getInnerHTML(const GetInnerHTMLOptions* options) const {
+@@ -147,10 +150,24 @@ String ShadowRoot::getInnerHTML(const GetInnerHTMLOptions* options) const {
+       include_closed_roots);
+ }
+ 
++String ShadowRoot::getHTML(const GetHTMLOptions* options) const {
++  // Chromium 125: serializableShadowRoots includes any shadow root marked
++  // serializable (open or closed); shadowRoots are always included.
++  ClosedRootsSet include_shadow_roots;
++  for (auto& shadow_root : options->shadowRoots()) {
++    include_shadow_roots.insert(shadow_root);
++  }
++  return CreateMarkup(this, kChildrenOnly, kDoNotResolveURLs,
++                      options->serializableShadowRoots()
++                          ? kIncludeSerializableShadowRoots
++                          : kOnlyProvidedShadowRoots,
++                      include_shadow_roots);
++}
++
  void ShadowRoot::setInnerHTML(const String& html,
                                ExceptionState& exception_state) {
    if (DocumentFragment* fragment = CreateFragmentForInnerOuterHTML(
@@ -19,7 +45,7 @@ index b195e78714b4cdefc1ef8706ff7885ae49556634..093f89e6857d5e991b03198d1460de1e
            /*include_shadow_roots=*/false, exception_state)) {
      ReplaceChildrenWithFragment(this, fragment, exception_state);
      if (auto* element = DynamicTo<HTMLElement>(host()))
-@@ -158,6 +159,18 @@ void ShadowRoot::setInnerHTML(const String& html,
+@@ -158,6 +175,18 @@ void ShadowRoot::setInnerHTML(const String& html,
    }
  }
  

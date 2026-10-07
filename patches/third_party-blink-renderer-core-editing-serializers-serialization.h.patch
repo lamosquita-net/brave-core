@@ -1,8 +1,26 @@
 diff --git a/third_party/blink/renderer/core/editing/serializers/serialization.h b/third_party/blink/renderer/core/editing/serializers/serialization.h
-index 4b5c1b9f7d430191e68d6b2a96f22c1127e78e3e..a50cbb5fd65c259623b12486446ef87902764389 100644
+index 4b5c1b9f7d430191e68d6b2a96f22c1127e78e3e..05ad782609f4b2bbeadae574d5e317309f4939e6 100644
 --- a/third_party/blink/renderer/core/editing/serializers/serialization.h
 +++ b/third_party/blink/renderer/core/editing/serializers/serialization.h
-@@ -65,7 +65,6 @@ DocumentFragment* CreateFragmentFromMarkupWithContext(Document&,
+@@ -47,7 +47,16 @@ class Node;
+ class CSSPropertyValueSet;
+ 
+ enum ChildrenOnly { kIncludeNode, kChildrenOnly };
+-enum IncludeShadowRoots { kNoShadowRoots, kIncludeShadowRoots };
++// kIncludeShadowRoots is the deprecated getInnerHTML(): open shadow roots plus
++// the closed ones in the set. The getHTML() modes (Chromium 125) serialize the
++// shadow roots in the set, open or closed, and with
++// kIncludeSerializableShadowRoots also any shadow root marked serializable.
++enum IncludeShadowRoots {
++  kNoShadowRoots,
++  kIncludeShadowRoots,
++  kIncludeSerializableShadowRoots,
++  kOnlyProvidedShadowRoots,
++};
+ 
+ DocumentFragment* CreateFragmentFromText(const EphemeralRange& context,
+                                          const String& text);
+@@ -65,7 +74,6 @@ DocumentFragment* CreateFragmentFromMarkupWithContext(Document&,
  DocumentFragment* CreateFragmentForInnerOuterHTML(const String&,
                                                    Element*,
                                                    ParserContentPolicy,

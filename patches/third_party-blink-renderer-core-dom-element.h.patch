@@ -1,19 +1,31 @@
 diff --git a/third_party/blink/renderer/core/dom/element.h b/third_party/blink/renderer/core/dom/element.h
-index 640e53d474d0e132bf72388ac410015f66b55f48..7f553dece60130985665bf8ecb0da7f4a7b9a711 100644
+index 640e53d474d0e132bf72388ac410015f66b55f48..fc481391d1b7e5748bec211792e7369de1f8220d 100644
 --- a/third_party/blink/renderer/core/dom/element.h
 +++ b/third_party/blink/renderer/core/dom/element.h
-@@ -674,7 +674,8 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -93,6 +93,7 @@ class ElementIntersectionObserverData;
+ class ElementRareDataVector;
+ class ExceptionState;
+ class FocusOptions;
++class GetHTMLOptions;
+ class GetInnerHTMLOptions;
+ class HTMLTemplateElement;
+ class Image;
+@@ -674,7 +675,9 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
        ShadowRootType,
        FocusDelegation focus_delegation = FocusDelegation::kNone,
        SlotAssignmentMode slot_assignment_mode = SlotAssignmentMode::kNamed,
 -      CustomElementRegistry* registry = nullptr);
 +      CustomElementRegistry* registry = nullptr,
-+      bool clonable = false);
++      bool clonable = false,
++      bool serializable = false);
  
    // Returns the shadow root attached to this element if it is a shadow host.
    ShadowRoot* GetShadowRoot() const;
-@@ -840,6 +841,12 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -838,8 +841,15 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+   void setInnerHTML(const String&, ExceptionState& = ASSERT_NO_EXCEPTION);
+   void setInnerHTMLWithDeclarativeShadowDOMForTesting(const String& html);
    String getInnerHTML(const GetInnerHTMLOptions* options) const;
++  String getHTML(const GetHTMLOptions* options) const;
    void setOuterHTML(const String&, ExceptionState& = ASSERT_NO_EXCEPTION);
  
 +  // The setHTMLUnsafe method is like `setInnerHTML()` except that a) it parses
@@ -25,7 +37,7 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..7f553dece60130985665bf8ecb0da7f4
    void setPointerCapture(PointerId poinetr_id, ExceptionState&);
    void releasePointerCapture(PointerId pointer_id, ExceptionState&);
  
-@@ -1204,6 +1211,14 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1204,6 +1214,14 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    // https://drafts.csswg.org/css-anchor-1/#implicit-anchor-element
    Element* ImplicitAnchorElement();
  
@@ -40,7 +52,7 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..7f553dece60130985665bf8ecb0da7f4
   protected:
    bool HasElementData() const { return element_data_; }
    const ElementData* GetElementData() const { return element_data_.Get(); }
-@@ -1300,6 +1315,15 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1300,6 +1318,15 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    // changes.
    void LangAttributeChanged();
  
@@ -56,7 +68,7 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..7f553dece60130985665bf8ecb0da7f4
   private:
    friend class AXObject;
    struct AffectedByPseudoStateChange;
-@@ -1420,6 +1444,8 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1420,6 +1447,8 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
      DetachPseudoElement(kPseudoIdFirstLetter, performing_reattach);
    }
  

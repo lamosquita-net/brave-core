@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/editing/serializers/markup_accumulator.cc b/third_party/blink/renderer/core/editing/serializers/markup_accumulator.cc
-index e0085fa19eaf3f45e861b7ec8cabab1743e4b644..a4d0f17e9dc5fe6d2653ec1ddce7258aa4b2db23 100644
+index e0085fa19eaf3f45e861b7ec8cabab1743e4b644..06094aaa93200de76826c47629825b4044716c73 100644
 --- a/third_party/blink/renderer/core/editing/serializers/markup_accumulator.cc
 +++ b/third_party/blink/renderer/core/editing/serializers/markup_accumulator.cc
 @@ -41,6 +41,7 @@
@@ -10,10 +10,60 @@ index e0085fa19eaf3f45e861b7ec8cabab1743e4b644..a4d0f17e9dc5fe6d2653ec1ddce7258a
  #include "third_party/blink/renderer/platform/weborigin/kurl.h"
  #include "third_party/blink/renderer/platform/wtf/text/character_names.h"
  
-@@ -581,6 +582,11 @@ std::pair<Node*, Element*> MarkupAccumulator::GetAuxiliaryDOMTree(
+@@ -553,7 +554,7 @@ bool MarkupAccumulator::SerializeAsHTML() const {
+ std::pair<Node*, Element*> MarkupAccumulator::GetAuxiliaryDOMTree(
+     const Element& element) const {
+   ShadowRoot* shadow_root = element.GetShadowRoot();
+-  if (!shadow_root || include_shadow_roots_ != kIncludeShadowRoots)
++  if (!shadow_root || include_shadow_roots_ == kNoShadowRoots)
+     return std::pair<Node*, Element*>();
+   AtomicString shadowroot_type;
+   switch (shadow_root->GetType()) {
+@@ -567,20 +568,46 @@ std::pair<Node*, Element*> MarkupAccumulator::GetAuxiliaryDOMTree(
+       shadowroot_type = keywords::kClosed;
+       break;
+   }
+-  if (shadow_root->GetType() == ShadowRootType::kClosed &&
+-      !include_closed_roots_.Contains(shadow_root)) {
+-    return std::pair<Node*, Element*>();
++  // include_closed_roots_ holds the shadow roots passed by the caller
++  // (closedRoots in getInnerHTML(), shadowRoots in getHTML()).
++  if (!include_closed_roots_.Contains(shadow_root)) {
++    switch (include_shadow_roots_) {
++      case kNoShadowRoots:
++      case kOnlyProvidedShadowRoots:
++        return std::pair<Node*, Element*>();
++      case kIncludeShadowRoots:
++        if (shadow_root->GetType() == ShadowRootType::kClosed) {
++          return std::pair<Node*, Element*>();
++        }
++        break;
++      case kIncludeSerializableShadowRoots:
++        if (!shadow_root->serializable()) {
++          return std::pair<Node*, Element*>();
++        }
++        break;
++    }
+   }
+ 
+-  // Wrap the shadowroot into a declarative Shadow DOM <template shadowroot>
+-  // element.
++  // Wrap the shadowroot into a declarative Shadow DOM <template shadowrootmode>
++  // element (as in Chromium 125; the 116 wrote the old shadowroot attribute).
+   auto* template_element = MakeGarbageCollected<Element>(
+       html_names::kTemplateTag, &(element.GetDocument()));
+-  template_element->setAttribute(html_names::kShadowrootAttr, shadowroot_type);
++  template_element->setAttribute(html_names::kShadowrootmodeAttr,
++                                 shadowroot_type);
+   if (shadow_root->delegatesFocus()) {
      template_element->SetBooleanAttribute(
          html_names::kShadowrootdelegatesfocusAttr, true);
    }
++  if (shadow_root->serializable() &&
++      RuntimeEnabledFeatures::DeclarativeShadowDOMSerializableEnabled()) {
++    template_element->SetBooleanAttribute(
++        html_names::kShadowrootserializableAttr, true);
++  }
 +  if (shadow_root->clonable() &&
 +      RuntimeEnabledFeatures::ShadowRootClonableEnabled()) {
 +    template_element->SetBooleanAttribute(html_names::kShadowrootclonableAttr,
