@@ -1,0 +1,15 @@
+diff --git a/src/execution/isolate.cc b/src/execution/isolate.cc
+index c2cc0458bb644ca362e848a50935c458621475fa..135610b911753dcc0bcdc3060f92ac77eb369ee1 100644
+--- a/src/execution/isolate.cc
++++ b/src/execution/isolate.cc
+@@ -2403,6 +2403,10 @@ HandlerTable::CatchPrediction PredictException(JavaScriptFrame* frame) {
+       PtrComprCageBase cage_base(frame->isolate());
+       for (size_t i = summaries.size(); i != 0; i--) {
+         const FrameSummary& summary = summaries[i - 1];
++        // FlyWeb: v8 ab08344c (M126-LTS, crbug 367734947). This can happen
++        // when WASM is inlined by TurboFan. For now we ignore frames that are
++        // not JavaScript.
++        if (!summary.IsJavaScript()) continue;
+         Handle<AbstractCode> code = summary.AsJavaScript().abstract_code();
+         if (code->kind(cage_base) == CodeKind::BUILTIN) {
+           auto prediction = CatchPredictionFor(code->GetCode()->builtin_id());

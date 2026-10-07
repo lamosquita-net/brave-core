@@ -1,0 +1,13 @@
+diff --git a/src/builtins/builtins-definitions.h b/src/builtins/builtins-definitions.h
+index cf1ec0d4ad31f0d1a58c8ac956bf5304be0562cf..7da7a989f106a8a442a9cf24e01a602a9b4dbf7c 100644
+--- a/src/builtins/builtins-definitions.h
++++ b/src/builtins/builtins-definitions.h
+@@ -715,6 +715,8 @@ namespace internal {
+   TFS(IterableToListMayPreserveHoles, NeedsContext::kYes, kIterable,           \
+       kIteratorFn)                                                             \
+   TFS(IterableToListConvertHoles, NeedsContext::kYes, kIterable, kIteratorFn)  \
++  /* FlyWeb: CVE-2026-87491 (v8 36079c36), was a Torque builtin. */           \
++  IF_WASM(TFS, WasmGetOwnProperty, NeedsContext::kYes, kObject, kUniqueName)   \
+   IF_WASM(TFS, IterableToFixedArrayForWasm, NeedsContext::kYes, kIterable,     \
+           kExpectedLength)                                                     \
+                                                                                \

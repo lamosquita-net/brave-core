@@ -1,0 +1,27 @@
+diff --git a/src/compiler/turboshaft/machine-lowering-reducer-inl.h b/src/compiler/turboshaft/machine-lowering-reducer-inl.h
+index 8f37ef00f7edc1395586439fad4c39f426520d87..25d60765d2501c135ba384316491da47d4caa626 100644
+--- a/src/compiler/turboshaft/machine-lowering-reducer-inl.h
++++ b/src/compiler/turboshaft/machine-lowering-reducer-inl.h
+@@ -2372,9 +2372,19 @@ class MachineLoweringReducer : public Next {
+   }
+ 
+   V<Object> REDUCE(LoadStackArgument)(V<WordPtr> base, V<WordPtr> index) {
+-    V<WordPtr> argument = __ template LoadNonArrayBufferElement<WordPtr>(
+-        base, AccessBuilder::ForStackArgument(), index);
+-    return __ BitcastWordPtrToTagged(argument);
++    // FlyWeb: v8 96493c74 (crbug 347724915): load the argument as a Tagged
++    // value instead of a raw word bitcast to Tagged, so the GC sees it.
++    // Note that this is a load of a Tagged value
++    // (MemoryRepresentation::TaggedPointer()), but since it's on the stack
++    // where stack slots are all kSystemPointerSize, we use kSystemPointerSize
++    // for element_size_log2. On 64-bit plateforms with pointer compression,
++    // this means that we're kinda loading a 32-bit value from an array of
++    // 64-bit values.
++    return __ Load(
++        base, index, LoadOp::Kind::RawAligned(),
++        MemoryRepresentation::TaggedPointer(),
++        CommonFrameConstants::kFixedFrameSizeAboveFp - kSystemPointerSize,
++        kSystemPointerSizeLog2);
+   }
+ 
+   OpIndex REDUCE(StoreTypedElement)(OpIndex buffer, V<Object> base,

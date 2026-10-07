@@ -1,0 +1,15 @@
+diff --git a/src/objects/keys.cc b/src/objects/keys.cc
+index 08893c6841bee571ec13cbcbc20e00136ee8ecd7..1ba689a02169c293dbdf84a451c3fd2430ad80c8 100644
+--- a/src/objects/keys.cc
++++ b/src/objects/keys.cc
+@@ -318,9 +318,8 @@ void TrySettingEmptyEnumCache(Tagged<JSReceiver> object) {
+   Tagged<Map> map = object->map();
+   DCHECK_EQ(kInvalidEnumCacheSentinel, map->EnumLength());
+   if (!map->OnlyHasSimpleProperties()) return;
+-  if (IsJSProxyMap(map)) return;
++  DCHECK(IsJSObjectMap(map));  // Implied by {OnlyHasSimpleProperties}.
+   if (map->NumberOfEnumerableProperties() > 0) return;
+-  DCHECK(IsJSObject(object));
+   map->SetEnumLength(0);
+ }
+ 

@@ -1,0 +1,107 @@
+diff --git a/src/compiler/js-native-context-specialization.cc b/src/compiler/js-native-context-specialization.cc
+index 2066b3f101e8b9111c0eb7f3bfc15470fc993d9d..82f5f036b1e68273c9e4414b63ef5e5d1a1ff3e8 100644
+--- a/src/compiler/js-native-context-specialization.cc
++++ b/src/compiler/js-native-context-specialization.cc
+@@ -35,6 +35,7 @@
+ #include "src/objects/elements-kind.h"
+ #include "src/objects/feedback-vector.h"
+ #include "src/objects/heap-number.h"
++#include "src/objects/property-details.h"
+ #include "src/objects/string.h"
+ 
+ namespace v8 {
+@@ -880,7 +881,9 @@ JSNativeContextSpecialization::InferHasInPrototypeChain(
+       // might be a different object each time, so it's much simpler to include
+       // {prototype}. That does, however, mean that we must check {prototype}'s
+       // map stability.
+-      if (!prototype.map(broker()).is_stable()) return kMayBeInPrototypeChain;
++      if (!prototype.IsJSObject() || !prototype.map(broker()).is_stable()) {
++        return kMayBeInPrototypeChain;
++      }
+       last_prototype = prototype.AsJSObject();
+     }
+     WhereToStart start = result == NodeProperties::kUnreliableMaps
+@@ -3957,25 +3960,67 @@ Node* JSNativeContextSpecialization::BuildExtendPropertiesBackingStore(
+   // for intermediate states of chains of property additions. That makes
+   // it unclear what the best approach is here.
+   DCHECK_EQ(map.UnusedPropertyFields(), 0);
+-  int length = map.NextFreePropertyIndex() - map.GetInObjectProperties();
++  int in_object_length = map.GetInObjectProperties();
++  int length = map.NextFreePropertyIndex() - in_object_length;
+   // Under normal circumstances, NextFreePropertyIndex() will always be larger
+   // than GetInObjectProperties(). However, an attacker able to corrupt heap
+   // memory can break this invariant, in which case we'll get confused here,
+   // potentially causing a sandbox violation. This CHECK defends against that.
+   SBXCHECK_GE(length, 0);
+   int new_length = length + JSObject::kFieldsAdded;
++
++  // Find the descriptor index corresponding to the first out-of-object
++  // property.
++  DescriptorArrayRef descs = map.instance_descriptors(broker());
++  InternalIndex first_out_of_object_descriptor(in_object_length);
++  InternalIndex number_of_descriptors(descs.object()->number_of_descriptors());
++  for (InternalIndex i(in_object_length); i < number_of_descriptors; ++i) {
++    PropertyDetails details = descs.GetPropertyDetails(i);
++    // Skip over non-field properties.
++    if (details.location() != PropertyLocation::kField) {
++      continue;
++    }
++    // Skip over in-object fields.
++    // TODO(leszeks): We could make this smarter, like a binary search.
++    if (details.field_index() < in_object_length) {
++      continue;
++    }
++    first_out_of_object_descriptor = i;
++    break;
++  }
++
+   // Collect the field values from the {properties}.
+-  ZoneVector<Node*> values(zone());
++  ZoneVector<std::pair<Node*, Representation>> values(zone());
+   values.reserve(new_length);
+-  for (int i = 0; i < length; ++i) {
++
++  // Walk the property descriptors alongside the property values, to make
++  // sure to get and store them with the right machine type.
++  InternalIndex descriptor = first_out_of_object_descriptor;
++  for (int i = 0; i < length; ++i, ++descriptor) {
++    PropertyDetails details = descs.GetPropertyDetails(descriptor);
++    while (details.location() != PropertyLocation::kField) {
++      ++descriptor;
++      details = descs.GetPropertyDetails(descriptor);
++    }
++    DCHECK_EQ(i, details.field_index() - in_object_length);
++    // FlyWeb: the representation dependency comes from v8 9b5250b9
++    // (crbug 475479135); without it, an in-place generalization of the field
++    // (HeapObject -> Tagged) would leave this code loading a Smi as a pointer.
++    // Record the existing FieldRepresentationDependency directly.
++    Representation repr = details.representation();
++    MapRef field_owner_map = map.FindFieldOwner(broker(), descriptor);
++    dependencies()->RecordDependency(
++        dependencies()->FieldRepresentationDependencyOffTheRecord(
++            map, field_owner_map, descriptor, repr));
+     Node* value = effect = graph()->NewNode(
+-        simplified()->LoadField(AccessBuilder::ForFixedArraySlot(i)),
++        simplified()->LoadField(AccessBuilder::ForPropertyArraySlot(i, repr)),
+         properties, effect, control);
+-    values.push_back(value);
++    values.push_back({value, repr});
+   }
+   // Initialize the new fields to undefined.
+   for (int i = 0; i < JSObject::kFieldsAdded; ++i) {
+-    values.push_back(jsgraph()->UndefinedConstant());
++    values.push_back(
++        {jsgraph()->UndefinedConstant(), Representation::Tagged()});
+   }
+ 
+   // Compute new length and hash.
+@@ -4013,7 +4058,8 @@ Node* JSNativeContextSpecialization::BuildExtendPropertiesBackingStore(
+   a.Store(AccessBuilder::ForMap(), jsgraph()->PropertyArrayMapConstant());
+   a.Store(AccessBuilder::ForPropertyArrayLengthAndHash(), new_length_and_hash);
+   for (int i = 0; i < new_length; ++i) {
+-    a.Store(AccessBuilder::ForFixedArraySlot(i), values[i]);
++    a.Store(AccessBuilder::ForPropertyArraySlot(i, values[i].second),
++            values[i].first);
+   }
+   return a.Finish();
+ }
