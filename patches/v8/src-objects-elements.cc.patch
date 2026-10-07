@@ -1,0 +1,14 @@
+diff --git a/src/objects/elements.cc b/src/objects/elements.cc
+index 9752a7237437d4c15d8980a23cd97eb008b9a7a2..710f5c51ac8b6919dbabb5aa88fed03d065d2143 100644
+--- a/src/objects/elements.cc
++++ b/src/objects/elements.cc
+@@ -3924,7 +3924,8 @@ class TypedElementsAccessor
+     // them.
+     if (IsNull(source_proto, isolate)) return false;
+     if (IsJSProxy(source_proto)) return true;
+-    if (!context->native_context()->is_initial_array_prototype(
++    if (IsJSObject(source_proto) &&
++        !context->native_context()->is_initial_array_prototype(
+             JSObject::cast(source_proto))) {
+       return true;
+     }

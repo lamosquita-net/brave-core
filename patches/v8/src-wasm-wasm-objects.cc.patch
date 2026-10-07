@@ -1,8 +1,64 @@
 diff --git a/src/wasm/wasm-objects.cc b/src/wasm/wasm-objects.cc
-index 221679f0ef3a093cc5cc4fe15d8e0071ab8d8ca3..ea7519d5a9d2823e426a917b6bc99f0ddf116436 100644
+index 221679f0ef3a093cc5cc4fe15d8e0071ab8d8ca3..1634bf9b5a84c12a8279cb0ed8c78c72050565af 100644
 --- a/src/wasm/wasm-objects.cc
 +++ b/src/wasm/wasm-objects.cc
-@@ -1770,7 +1770,8 @@ void WasmArray::SetTaggedElement(uint32_t index, Handle<Object> value,
+@@ -1399,7 +1399,29 @@ WasmTrustedInstanceData::GetOrCreateWasmInternalFunction(
+                            function_index)),
+                    isolate);
+ 
++  // FlyWeb: v8 c8c02de5 (crbug 348963663), adapted to 12.3. Only use the
++  // generic wasm-to-js wrapper if it supports the import call kind (it does not
++  // support constructors, for instance); otherwise keep the call target of the
++  // per-signature wrapper, as V8 12.2 did.
++  uint32_t sig_index = module->functions[function_index].sig_index;
++  const wasm::FunctionSig* sig = module->signature(sig_index);
++  bool setup_new_ref_with_generic_wrapper = false;
+   if (v8_flags.wasm_to_js_generic_wrapper && IsWasmApiFunctionRef(*ref)) {
++    auto wafr = Handle<WasmApiFunctionRef>::cast(ref);
++    const wasm::WellKnownImportsList& preknown_imports =
++        module->type_feedback.well_known_imports;
++    uint32_t canonical_type_index =
++        module->isorecursive_canonical_type_ids[sig_index];
++    auto callable =
++        handle<JSReceiver>(JSReceiver::cast(wafr->callable()), isolate);
++    wasm::WasmImportData resolved(
++        trusted_instance_data, function_index, callable, sig,
++        canonical_type_index, preknown_imports.get(function_index));
++    setup_new_ref_with_generic_wrapper =
++        UseGenericWasmToJSWrapper(resolved.kind(), sig, resolved.suspend());
++  }
++
++  if (setup_new_ref_with_generic_wrapper) {
+     Handle<WasmApiFunctionRef> wafr = Handle<WasmApiFunctionRef>::cast(ref);
+     ref = isolate->factory()->NewWasmApiFunctionRef(
+         handle(wafr->callable(), isolate),
+@@ -1407,7 +1429,6 @@ WasmTrustedInstanceData::GetOrCreateWasmInternalFunction(
+         handle(wafr->instance(), isolate), handle(wafr->sig(), isolate));
+   }
+ 
+-  int sig_index = module->functions[function_index].sig_index;
+   // TODO(14034): Create funcref RTTs lazily?
+   Handle<Map> rtt = handle(
+       Map::cast(trusted_instance_data->managed_object_maps()->get(sig_index)),
+@@ -1419,15 +1440,13 @@ WasmTrustedInstanceData::GetOrCreateWasmInternalFunction(
+   // cannot be found anymore. Avoiding setting the call target makes the wrapper
+   // tiers behave more consistently, which can prevent surprising bugs.
+   auto result = isolate->factory()->NewWasmInternalFunction(
+-      IsWasmApiFunctionRef(*ref)
++      setup_new_ref_with_generic_wrapper
+           ? 0
+           : trusted_instance_data->GetCallTarget(function_index),
+       ref, rtt, function_index);
+ 
+-  if (IsWasmApiFunctionRef(*ref)) {
++  if (setup_new_ref_with_generic_wrapper) {
+     Handle<WasmApiFunctionRef> wafr = Handle<WasmApiFunctionRef>::cast(ref);
+-    const wasm::FunctionSig* sig =
+-        module->signature(module->functions[function_index].sig_index);
+     if (wasm::IsJSCompatibleSignature(sig)) {
+       DCHECK(UseGenericWasmToJSWrapper(wasm::kDefaultImportCallKind, sig,
+                                        wasm::Suspend::kNoSuspend));
+@@ -1770,7 +1789,8 @@ void WasmArray::SetTaggedElement(uint32_t index, Handle<Object> value,
  Handle<WasmTagObject> WasmTagObject::New(Isolate* isolate,
                                           const wasm::FunctionSig* sig,
                                           uint32_t canonical_type_index,
@@ -12,7 +68,7 @@ index 221679f0ef3a093cc5cc4fe15d8e0071ab8d8ca3..ea7519d5a9d2823e426a917b6bc99f0d
    Handle<JSFunction> tag_cons(isolate->native_context()->wasm_tag_constructor(),
                                isolate);
  
-@@ -1791,6 +1792,7 @@ Handle<WasmTagObject> WasmTagObject::New(Isolate* isolate,
+@@ -1791,13 +1811,14 @@ Handle<WasmTagObject> WasmTagObject::New(Isolate* isolate,
    tag_wrapper->set_serialized_signature(*serialized_sig);
    tag_wrapper->set_canonical_type_index(canonical_type_index);
    tag_wrapper->set_tag(*tag);
@@ -20,3 +76,12 @@ index 221679f0ef3a093cc5cc4fe15d8e0071ab8d8ca3..ea7519d5a9d2823e426a917b6bc99f0d
  
    return tag_wrapper;
  }
+ 
+ bool WasmTagObject::MatchesSignature(uint32_t expected_canonical_type_index) {
+-  return wasm::GetWasmEngine()->type_canonicalizer()->IsCanonicalSubtype(
+-      this->canonical_type_index(), expected_canonical_type_index);
++  return static_cast<uint32_t>(this->canonical_type_index()) ==
++         expected_canonical_type_index;
+ }
+ 
+ const wasm::FunctionSig* WasmCapiFunction::GetSignature(Zone* zone) const {

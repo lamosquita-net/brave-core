@@ -1,0 +1,19 @@
+diff --git a/src/compiler/pipeline.cc b/src/compiler/pipeline.cc
+index 3ea64d117865b75efe8530fe9c43094a147a82e1..86eeafd3441d574fb7714ad2b1c7cf37c081ae1f 100644
+--- a/src/compiler/pipeline.cc
++++ b/src/compiler/pipeline.cc
+@@ -2850,6 +2850,14 @@ CompilationJob::Status FinalizeWrapperCompilation(
+                                        Handle<AbstractCode>::cast(code),
+                                        info->GetDebugName().get()));
+     }
++    // Set the wasm-to-js specific code fields needed to scan the incoming stack
++    // parameters.
++    if (code->kind() == CodeKind::WASM_TO_JS_FUNCTION) {
++      code->set_wasm_js_tagged_parameter_count(
++          call_descriptor->GetTaggedParameterSlots() & 0xffff);
++      code->set_wasm_js_first_tagged_parameter(
++          call_descriptor->GetTaggedParameterSlots() >> 16);
++    }
+     return CompilationJob::SUCCEEDED;
+   }
+   return CompilationJob::FAILED;

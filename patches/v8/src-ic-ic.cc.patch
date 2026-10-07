@@ -1,7 +1,16 @@
 diff --git a/src/ic/ic.cc b/src/ic/ic.cc
-index 688633125885e346d23459a39d9e7a60929028bb..bf10c530f5e590c77afcf8b951c5570cbfd91ec2 100644
+index 688633125885e346d23459a39d9e7a60929028bb..5693d6ac3c4d1897357fcec4c9a0ec80611488bb 100644
 --- a/src/ic/ic.cc
 +++ b/src/ic/ic.cc
+@@ -1899,7 +1899,7 @@ MaybeHandle<Object> StoreIC::Store(Handle<Object> object, Handle<Name> name,
+   // present. We can also skip this for private names since they are not
+   // bound by configurability or extensibility checks, and errors would've
+   // been thrown if the private field already exists in the object.
+-  if (IsAnyDefineOwn() && !name->IsPrivateName() && !IsJSProxy(*object) &&
++  if (IsAnyDefineOwn() && !name->IsPrivateName() && IsJSObject(*object) &&
+       !Handle<JSObject>::cast(object)->HasNamedInterceptor()) {
+     Maybe<bool> can_define = JSObject::CheckIfCanDefineAsConfigurable(
+         isolate(), &it, value, Nothing<ShouldThrow>());
 @@ -2376,15 +2376,16 @@ Handle<Object> KeyedStoreIC::StoreElementHandler(
                isolate()),
        IsStoreInArrayLiteralIC());
@@ -25,3 +34,22 @@ index 688633125885e346d23459a39d9e7a60929028bb..bf10c530f5e590c77afcf8b951c5570c
    }
  
    // TODO(ishell): move to StoreHandler::StoreElement().
+@@ -2607,14 +2608,12 @@ MaybeHandle<Object> KeyedStoreIC::Store(Handle<Object> object,
+     Handle<JSReceiver> receiver = Handle<JSReceiver>::cast(object);
+     old_receiver_map = handle(receiver->map(), isolate());
+     is_arguments = IsJSArgumentsObject(*receiver);
+-    bool is_proxy = IsJSProxy(*receiver);
++    bool is_jsobject = IsJSObject(*receiver);
+     size_t index;
+     key_is_valid_index = IntPtrKeyToSize(maybe_index, receiver, &index);
+-    if (!is_arguments && !is_proxy) {
+-      if (key_is_valid_index) {
+-        Handle<JSObject> receiver_object = Handle<JSObject>::cast(object);
+-        store_mode = GetStoreMode(receiver_object, index);
+-      }
++    if (is_jsobject && !is_arguments && key_is_valid_index) {
++      Handle<JSObject> receiver_object = Handle<JSObject>::cast(object);
++      store_mode = GetStoreMode(receiver_object, index);
+     }
+   }
+ 

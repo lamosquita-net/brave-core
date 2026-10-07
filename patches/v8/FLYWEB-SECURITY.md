@@ -13,6 +13,25 @@ original main commit: b91805d0 (8a69c788). By hand: 8d0519c8 (canonical types li
 canonicalization; `Handle` instead of `DirectHandle`). Already in 12.3.219.16: also 1e1a2073's neighbours graph-assembler/map-updater/module-decoder fixes; ce430536, 6feeaeae, Turboshaft A1 (afc18842). Not ported: d5bede9c (Maglev, which is off; an earlier commit of this branch carried only its `maglev-ir.cc` half, which broke a DCHECK in Maglev tests: removed).
 As in 12.2, the instance passed to `WasmTagObject::New` comes from `trusted_instance_data->instance_object()`.
 
+## FlyWeb 1.7.1: Google's M126-LTS fixes and the generic wasm-to-js wrapper (SEGURIDAD, 07-10-2026)
+
+Google's M120-LTS (used above) stopped in 08-2024; M126-LTS (V8 12.6.228.x, up to 01-2025) has later fixes for code that
+12.3 shares, and the JIT and WebAssembly run on every site since FlyWeb 1.6. Applied as is: c34adcef (TurboFan
+`SameValue` with `None`), 96932a98 (TurboFan `CallWithSpread`), 7c536445 (interpreter: hole elision scope in switch jump
+tables; also without JIT), fd73f2e2 (Liftoff x64), e379c539 (Wasm default externref/exnref), 6e1cc25a (TurboFan,
+WasmStruct in `InferHasInPrototypeChain`), 77a4fa1e (Wasm wrapper), 4f4cd3f0 (Wasm streaming module size), 96a23b24
+(Wasm Tag imports), 7acd3517 (parser `HomeObjectScope`), ba6cab40 (Liftoff). By hand: ab08344c (skip non-JavaScript
+summaries in `PredictException`, JS-to-Wasm inlining is on), 40f9e572 (`JSObject::cast()` on objects that are not
+JSObjects, e.g. Wasm GC structs; without `src/api/` but for the `WasmModuleObject` `ToLocal`), 8d6bd5e1 (GC scanning of
+the tagged parameters of tiered-up wasm-to-js wrapper frames) and c8c02de5 (only use the generic wasm-to-js wrapper for
+funcrefs of imports whose call kind it supports, e.g. not constructors; 12.3 had dropped 12.2's
+`setup_new_ref_with_generic_wrapper` switch, which comes back decided that way). Not applicable: 4cc886d6
+(`TryFastAddDataProperty` does not exist in 12.3).
+
+**`wasm_to_js_generic_wrapper` off**, as in V8 12.0-12.2 (FlyWeb 1.6) and on levels 124-125: it is new and on by default
+in 12.3; with the switch above it can be off without inconsistencies (it could not before: 12.3 always used the generic
+wrapper for funcrefs of imports). c8c02de5 and 8d6bd5e1 stay as defense in depth.
+
 ## On top (as on level 120)
 
 - CVE-2025-6554 (NUBE, `src-interpreter-bytecode-generator.cc.patch`); Brave's `BUILD.gn`/`src-codegen-compiler.cc`;
@@ -34,3 +53,6 @@ patches: no build errors, `--no-maglev`, `--turboshaft`, `--no-turboshaft-instru
 pass, groupBy throws RangeError, **mjsunit 6618/6618**. The upstream test of CVE-2026-87491 (regress-543557673) cannot
 validate the fix on 12.3: it corrupts sandbox memory using 2026 object layouts and crashes before its check.
 **FlyWeb itself is not compiled in the cloud**: LOCAL must build it.
+**1.7.1 (07-10-2026):** on a 12.3.219.16 d8 with all of the above: 12 regression tests (also the M126-LTS ones) pass with
+the generic wrapper off and on, groupBy throws RangeError, **mjsunit 6623/6623**, and the Wasm tests with
+`--wasm-to-js-generic-wrapper` 751/751.

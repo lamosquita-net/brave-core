@@ -1,0 +1,25 @@
+diff --git a/src/objects/code.h b/src/objects/code.h
+index 8aca7f6152bfb541cbaf53432474e467773b9a32..30cfe25ef965cc2a6a7d2ccabd9bebc02cdaf743 100644
+--- a/src/objects/code.h
++++ b/src/objects/code.h
+@@ -129,6 +129,9 @@ class Code : public ExposedTrustedObject {
+   // deoptimization_data field will be populated.
+   inline bool uses_deoptimization_data() const;
+ 
++  DECL_PRIMITIVE_ACCESSORS(wasm_js_tagged_parameter_count, uint16_t)
++  DECL_PRIMITIVE_ACCESSORS(wasm_js_first_tagged_parameter, uint16_t)
++
+   // If neither deoptimization data nor bytecode/interpreter data are used
+   // (e.g. for builtin code), the respective field will contain Smi::zero().
+   inline void clear_deoptimization_data_and_interpreter_data();
+@@ -492,6 +495,10 @@ class GcSafeCode : public HeapObject {
+   inline bool CanDeoptAt(Isolate* isolate, Address pc) const;
+   inline Tagged<Object> raw_instruction_stream(
+       PtrComprCageBase code_cage_base) const;
++  // The two following accessors repurpose the InlinedBytecodeSize field, see
++  // comment in code-inl.h.
++  inline uint16_t wasm_js_tagged_parameter_count() const;
++  inline uint16_t wasm_js_first_tagged_parameter() const;
+ 
+  private:
+   OBJECT_CONSTRUCTORS(GcSafeCode, HeapObject);

@@ -1,5 +1,5 @@
 diff --git a/src/compiler/js-native-context-specialization.cc b/src/compiler/js-native-context-specialization.cc
-index bc1f457ddf917124bac9a50b3d67220cc815930c..a6ca100d008770f4ef3e962d1dbda884a869bbe4 100644
+index bc1f457ddf917124bac9a50b3d67220cc815930c..ad5cf89ff280272483cac90680b3e7f5d00cd6e8 100644
 --- a/src/compiler/js-native-context-specialization.cc
 +++ b/src/compiler/js-native-context-specialization.cc
 @@ -35,6 +35,7 @@
@@ -10,7 +10,18 @@ index bc1f457ddf917124bac9a50b3d67220cc815930c..a6ca100d008770f4ef3e962d1dbda884
  #include "src/objects/string.h"
  
  namespace v8 {
-@@ -3958,20 +3959,63 @@ Node* JSNativeContextSpecialization::BuildExtendPropertiesBackingStore(
+@@ -880,7 +881,9 @@ JSNativeContextSpecialization::InferHasInPrototypeChain(
+       // might be a different object each time, so it's much simpler to include
+       // {prototype}. That does, however, mean that we must check {prototype}'s
+       // map stability.
+-      if (!prototype.map(broker()).is_stable()) return kMayBeInPrototypeChain;
++      if (!prototype.IsJSObject() || !prototype.map(broker()).is_stable()) {
++        return kMayBeInPrototypeChain;
++      }
+       last_prototype = prototype.AsJSObject();
+     }
+     WhereToStart start = result == NodeProperties::kUnreliableMaps
+@@ -3958,20 +3961,63 @@ Node* JSNativeContextSpecialization::BuildExtendPropertiesBackingStore(
    // for intermediate states of chains of property additions. That makes
    // it unclear what the best approach is here.
    DCHECK_EQ(map.UnusedPropertyFields(), 0);
@@ -80,7 +91,7 @@ index bc1f457ddf917124bac9a50b3d67220cc815930c..a6ca100d008770f4ef3e962d1dbda884
    }
  
    // Compute new length and hash.
-@@ -4009,7 +4053,8 @@ Node* JSNativeContextSpecialization::BuildExtendPropertiesBackingStore(
+@@ -4009,7 +4055,8 @@ Node* JSNativeContextSpecialization::BuildExtendPropertiesBackingStore(
    a.Store(AccessBuilder::ForMap(), jsgraph()->PropertyArrayMapConstant());
    a.Store(AccessBuilder::ForPropertyArrayLengthAndHash(), new_length_and_hash);
    for (int i = 0; i < new_length; ++i) {

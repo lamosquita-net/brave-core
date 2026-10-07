@@ -1,5 +1,5 @@
 diff --git a/src/builtins/builtins-array.cc b/src/builtins/builtins-array.cc
-index 60dc19367aa38997721ed85df6210f9de3a44313..dc82b658df09e5850ef2688fae1d748cb9873917 100644
+index 60dc19367aa38997721ed85df6210f9de3a44313..418211a78254da0cdeaa54bbf95e3b6f7134dc87 100644
 --- a/src/builtins/builtins-array.cc
 +++ b/src/builtins/builtins-array.cc
 @@ -51,7 +51,7 @@ inline bool HasOnlySimpleElements(Isolate* isolate,
@@ -10,4 +10,13 @@ index 60dc19367aa38997721ed85df6210f9de3a44313..dc82b658df09e5850ef2688fae1d748c
 +    if (!IsJSObject(iter.GetCurrent())) return false;
      Tagged<JSObject> current = iter.GetCurrent<JSObject>();
      if (!HasSimpleElements(current)) return false;
+   }
+@@ -1073,6 +1073,8 @@ void CollectElementIndices(Isolate* isolate, Handle<JSObject> object,
+   if (!iter.IsAtEnd()) {
+     // The prototype will usually have no inherited element indices,
+     // but we have to check.
++    // Casting to JSObject is safe because we ran {HasOnlySimpleElements} on
++    // the receiver before, which checks the prototype chain.
+     CollectElementIndices(
+         isolate, PrototypeIterator::GetCurrent<JSObject>(iter), range, indices);
    }

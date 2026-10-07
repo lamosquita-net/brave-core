@@ -1,8 +1,60 @@
 diff --git a/src/ast/scopes.cc b/src/ast/scopes.cc
-index 581156baf34e6d470a205a3d0347ee4a2760cd78..91130ac73eab0e6d052bb8877dffbb394c03aa13 100644
+index 581156baf34e6d470a205a3d0347ee4a2760cd78..2298d6bcfefb99abca4eecfceb1de629195ee673 100644
 --- a/src/ast/scopes.cc
 +++ b/src/ast/scopes.cc
-@@ -2442,7 +2442,7 @@ bool Scope::MustAllocate(Variable* var) {
+@@ -1529,26 +1529,22 @@ DeclarationScope* Scope::GetConstructorScope() {
+ }
+ 
+ Scope* Scope::GetHomeObjectScope() {
+-  Scope* scope = this;
+-  while (scope != nullptr && !scope->is_home_object_scope()) {
+-    if (scope->is_function_scope()) {
+-      FunctionKind function_kind = scope->AsDeclarationScope()->function_kind();
+-      // "super" in arrow functions binds outside the arrow function. But if we
+-      // find a function which doesn't bind "super" (is not a method etc.) and
+-      // not an arrow function, we know "super" here doesn't bind anywhere and
+-      // we can return nullptr.
+-      if (!IsArrowFunction(function_kind) && !BindsSuper(function_kind)) {
+-        return nullptr;
+-      }
+-    }
+-    if (scope->private_name_lookup_skips_outer_class()) {
+-      DCHECK(scope->outer_scope()->is_class_scope());
+-      scope = scope->outer_scope()->outer_scope();
+-    } else {
+-      scope = scope->outer_scope();
+-    }
+-  }
+-  return scope;
++  Scope* scope = GetReceiverScope();
++  DCHECK(scope->is_function_scope());
++  FunctionKind kind = scope->AsDeclarationScope()->function_kind();
++  // "super" in arrow functions binds outside the arrow function. Arrow
++  // functions are also never receiver scopes since they close over the
++  // receiver.
++  DCHECK(!IsArrowFunction(kind));
++  // If we find a function which doesn't bind "super" (is not a method etc.), we
++  // know "super" here doesn't bind anywhere and we can return nullptr.
++  if (!BindsSuper(kind)) return nullptr;
++  // Functions that bind "super" can only syntactically occur nested inside home
++  // object scopes (i.e. class scopes and object literal scopes), so directly
++  // return the outer scope.
++  Scope* outer_scope = scope->outer_scope();
++  CHECK(outer_scope->is_home_object_scope());
++  return outer_scope;
+ }
+ 
+ DeclarationScope* Scope::GetScriptScope() {
+@@ -2301,7 +2297,7 @@ void Scope::ResolveVariable(VariableProxy* proxy) {
+     //
+     // Because of the above, start resolving home objects directly at the home
+     // object scope instead of the current scope.
+-    Scope* scope = GetDeclarationScope()->GetHomeObjectScope();
++    Scope* scope = GetHomeObjectScope();
+     DCHECK_NOT_NULL(scope);
+     if (scope->scope_info_.is_null()) {
+       var = Lookup<kParsedScope>(proxy, scope, nullptr);
+@@ -2442,7 +2438,7 @@ bool Scope::MustAllocate(Variable* var) {
      var->set_is_used();
      if (inner_scope_calls_eval_ && !var->is_this()) var->SetMaybeAssigned();
    }

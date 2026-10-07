@@ -1,5 +1,5 @@
 diff --git a/src/objects/js-objects.cc b/src/objects/js-objects.cc
-index af21b605e3d921659fc6fcb8070420ff5bd66765..de37b4fcb1774f8054c1247b58544544d8330aa7 100644
+index af21b605e3d921659fc6fcb8070420ff5bd66765..6796f11968cd189a11814edf4a74ec5b9de1b4d0 100644
 --- a/src/objects/js-objects.cc
 +++ b/src/objects/js-objects.cc
 @@ -432,9 +432,7 @@ Maybe<bool> JSReceiver::SetOrCopyDataProperties(
@@ -13,3 +13,29 @@ index af21b605e3d921659fc6fcb8070420ff5bd66765..de37b4fcb1774f8054c1247b58544544
      // Convert to slow properties if we're guaranteed to overflow the number of
      // descriptors.
      int source_length;
+@@ -1450,8 +1448,6 @@ Maybe<bool> JSReceiver::ValidateAndApplyPropertyDescriptor(
+     Maybe<ShouldThrow> should_throw, Handle<Name> property_name) {
+   // We either need a LookupIterator, or a property name.
+   DCHECK((it == nullptr) != property_name.is_null());
+-  Handle<JSObject> object;
+-  if (it != nullptr) object = Handle<JSObject>::cast(it->GetReceiver());
+   bool desc_is_data_descriptor = PropertyDescriptor::IsDataDescriptor(desc);
+   bool desc_is_accessor_descriptor =
+       PropertyDescriptor::IsAccessorDescriptor(desc);
+@@ -3522,6 +3518,7 @@ void JSObject::AddProperty(Isolate* isolate, Handle<JSObject> object,
+ #ifdef DEBUG
+   uint32_t index;
+   DCHECK(!IsJSProxy(*object));
++  DCHECK(!IsWasmObject(*object));
+   DCHECK(!name->AsArrayIndex(&index));
+   Maybe<PropertyAttributes> maybe = GetPropertyAttributes(&it);
+   DCHECK(maybe.IsJust());
+@@ -5115,7 +5112,7 @@ Maybe<bool> JSObject::SetPrototype(Isolate* isolate, Handle<JSObject> object,
+     DCHECK(!IsAccessCheckNeeded(*object));
+   }
+ 
+-  // Silently ignore the change if value is not a JSObject or null.
++  // Silently ignore the change if value is not a JSReceiver or null.
+   // SpiderMonkey behaves this way.
+   if (!IsJSReceiver(*value) && !IsNull(*value, isolate)) return Just(true);
+ 

@@ -1,0 +1,19 @@
+diff --git a/src/wasm/wasm-engine.cc b/src/wasm/wasm-engine.cc
+index 1ff6bc73ee6ea70990f1f8c59ee0582516282726..7f9c24efc06214306e83c43fc9908797c20fa9fd 100644
+--- a/src/wasm/wasm-engine.cc
++++ b/src/wasm/wasm-engine.cc
+@@ -1919,10 +1919,11 @@ uint32_t max_table_init_entries() {
+ 
+ // {max_module_size} is declared in wasm-limits.h.
+ size_t max_module_size() {
+-  // Clamp the value of --wasm-max-module-size between 16 and just below 2GB.
++  // Clamp the value of --wasm-max-module-size between 16 and the maximum
++  // that the implementation supports.
+   constexpr size_t kMin = 16;
+-  constexpr size_t kMax = RoundDown<kSystemPointerSize>(size_t{kMaxInt});
+-  static_assert(kMin <= kV8MaxWasmModuleSize && kV8MaxWasmModuleSize <= kMax);
++  constexpr size_t kMax = kV8MaxWasmModuleSize;
++  static_assert(kMin <= kV8MaxWasmModuleSize);
+   return std::clamp(v8_flags.wasm_max_module_size.value(), kMin, kMax);
+ }
+ 

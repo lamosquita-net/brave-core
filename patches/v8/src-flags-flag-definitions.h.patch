@@ -1,5 +1,5 @@
 diff --git a/src/flags/flag-definitions.h b/src/flags/flag-definitions.h
-index 42a3c52d70beb9586cb9e8718bab67dc517d4d3f..2b0a3c3a80b3fcfd55379dcd0da2034b52e0f235 100644
+index 42a3c52d70beb9586cb9e8718bab67dc517d4d3f..5ed80fde579562d31c4c6df0cce2a335ef5926ed 100644
 --- a/src/flags/flag-definitions.h
 +++ b/src/flags/flag-definitions.h
 @@ -522,7 +522,9 @@ DEFINE_BOOL(force_emit_interrupt_budget_checks, false,
@@ -35,3 +35,15 @@ index 42a3c52d70beb9586cb9e8718bab67dc517d4d3f..2b0a3c3a80b3fcfd55379dcd0da2034b
              "run instruction selection on Turboshaft IR directly")
  #else
  DEFINE_BOOL(turboshaft_instruction_selection, false,
+@@ -1370,7 +1376,10 @@ DEFINE_VALUE_IMPLICATION(optimize_for_size, max_semi_space_size, size_t{1})
+ DEFINE_BOOL(wasm_generic_wrapper, true,
+             "allow use of the generic js-to-wasm wrapper instead of "
+             "per-signature wrappers")
+-DEFINE_BOOL(wasm_to_js_generic_wrapper, true,
++// FlyWeb: off, as in V8 12.0-12.2 and on levels 124-125 (SEGURIDAD, 07-10-2026):
++// the generic wasm-to-js wrapper (on by default since 12.3) needed later fixes;
++// c8c02de5 and 8d6bd5e1 are also ported, as defense in depth.
++DEFINE_BOOL(wasm_to_js_generic_wrapper, false,
+             "allow use of the generic wasm-to-js wrapper instead of "
+             "per-signature wrappers")
+ DEFINE_BOOL(wasm_js_js_generic_wrapper, true,
