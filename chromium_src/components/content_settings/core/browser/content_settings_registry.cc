@@ -232,14 +232,17 @@ void ContentSettingsRegistry::BraveInit() {
           WebsiteSettingsRegistry::PLATFORM_ANDROID,
       WebsiteSettingsInfo::DONT_INHERIT_IN_INCOGNITO);
 
-  // FlyWeb: V8 runs without JIT (and without WebAssembly) by default, because
-  // most exploited V8 bugs are in the JIT compilers and this Chromium 116 base
-  // no longer receives upstream security fixes. Sites that need JIT are
-  // allowed through the JavaScriptJitAllowedForSites policy.
+  // FlyWeb: V8 JIT is allowed by default since FlyWeb 1.6 (HUMAN, 07-10-2026):
+  // without it, heavy web apps (the WordPress editor) are too slow, and
+  // jitless only neutralizes 4 of the 25 exploited bugs triaged for FlyWeb.
+  // Maglev stays off and exploited V8 bugs are backported by SEGURIDAD.
+  // Sites can still be blocked per site (JavaScriptJitBlockedForSites policy
+  // or site settings), and DefaultJavaScriptJitSetting = 2 turns JIT off
+  // everywhere again without a rebuild.
   content_settings_info_.erase(ContentSettingsType::JAVASCRIPT_JIT);
   website_settings_registry_->UnRegister(ContentSettingsType::JAVASCRIPT_JIT);
   Register(ContentSettingsType::JAVASCRIPT_JIT, "javascript-jit",
-           CONTENT_SETTING_BLOCK, WebsiteSettingsInfo::UNSYNCABLE,
+           CONTENT_SETTING_ALLOW, WebsiteSettingsInfo::UNSYNCABLE,
            /*allowlisted_schemes=*/{},
            /*valid_settings=*/{CONTENT_SETTING_ALLOW, CONTENT_SETTING_BLOCK},
            WebsiteSettingsInfo::TOP_ORIGIN_ONLY_SCOPE,
