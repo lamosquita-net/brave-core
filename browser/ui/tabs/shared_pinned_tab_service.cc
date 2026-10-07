@@ -251,6 +251,19 @@ void SharedPinnedTabService::OnBrowserClosing(Browser* browser) {
 void SharedPinnedTabService::OnBrowserRemoved(Browser* browser) {
   DVLOG(2) << __FUNCTION__;
   closing_browsers_.erase(browser);
+
+  // FlyWeb: backported from later Brave (OnBrowserClosed). On Mac, even after
+  // the last browser is closed, the app could be still alive in the
+  // background. The shared contents were destroyed with that browser, so the
+  // data must be cleaned up: otherwise a new window would get dummy tabs
+  // pointing at destroyed WebContents (use-after-free when activated).
+  if (last_active_browser_ == browser) {
+    last_active_browser_ = nullptr;
+  }
+
+  if (browsers_.empty()) {
+    pinned_tab_data_.clear();
+  }
 }
 
 void SharedPinnedTabService::OnTabStripModelChanged(
