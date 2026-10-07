@@ -1,0 +1,15 @@
+diff --git a/src/objects/map.cc b/src/objects/map.cc
+index 1fb1f1b98858019d4530d2a15c1fa2ecb376f3b4..7700d50764a3c7a60379dc272a6565b9e717e24c 100644
+--- a/src/objects/map.cc
++++ b/src/objects/map.cc
+@@ -1904,8 +1904,8 @@ Handle<Map> Map::PrepareForDataProperty(Isolate* isolate, Handle<Map> map,
+                                         InternalIndex descriptor,
+                                         PropertyConstness constness,
+                                         Handle<Object> value) {
+-  // Update to the newest map before storing the property.
+-  map = Update(isolate, map);
++  // The map should already be fully updated before storing the property.
++  DCHECK(!map->is_deprecated());
+   // Dictionaries can store any property value.
+   DCHECK(!map->is_dictionary_map());
+   return UpdateDescriptorForValue(isolate, map, descriptor, constness, value);

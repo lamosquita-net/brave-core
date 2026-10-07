@@ -1,0 +1,152 @@
+diff --git a/src/wasm/wasm-js.cc b/src/wasm/wasm-js.cc
+index 6cbef07f3dddfadbe6dec1f9bb87f42bf810149b..1a515579793ad214b2bcec144276d8af82c1c2b5 100644
+--- a/src/wasm/wasm-js.cc
++++ b/src/wasm/wasm-js.cc
+@@ -195,8 +195,8 @@ GET_FIRST_ARGUMENT_AS(Tag)
+ #undef GET_FIRST_ARGUMENT_AS
+ 
+ i::wasm::ModuleWireBytes GetFirstArgumentAsBytes(
+-    const v8::FunctionCallbackInfo<v8::Value>& info, ErrorThrower* thrower,
+-    bool* is_shared) {
++    const v8::FunctionCallbackInfo<v8::Value>& info, size_t max_length,
++    ErrorThrower* thrower, bool* is_shared) {
+   DCHECK(i::ValidateCallbackInfo(info));
+   const uint8_t* start = nullptr;
+   size_t length = 0;
+@@ -227,7 +227,6 @@ i::wasm::ModuleWireBytes GetFirstArgumentAsBytes(
+   if (length == 0) {
+     thrower->CompileError("BufferSource argument is empty");
+   }
+-  size_t max_length = i::wasm::max_module_size();
+   if (length > max_length) {
+     // The spec requires a CompileError for implementation-defined limits, see
+     // https://webassembly.github.io/spec/js-api/index.html#limits.
+@@ -624,7 +623,8 @@ void WebAssemblyCompileImpl(const v8::FunctionCallbackInfo<v8::Value>& info) {
+       new AsyncCompilationResolver(isolate, context, promise_resolver));
+ 
+   bool is_shared = false;
+-  auto bytes = GetFirstArgumentAsBytes(info, &thrower, &is_shared);
++  auto bytes = GetFirstArgumentAsBytes(info, i::wasm::max_module_size(),
++                                       &thrower, &is_shared);
+   if (thrower.error()) {
+     resolver->OnCompilationFailed(thrower.Reify());
+     return;
+@@ -656,8 +656,11 @@ void WasmStreamingCallbackForTesting(
+       v8::WasmStreaming::Unpack(info.GetIsolate(), info.Data());
+ 
+   bool is_shared = false;
++  // We don't check the buffer length up front, to allow d8 to test that the
++  // streaming decoder implementation handles overly large inputs correctly.
++  size_t unlimited = std::numeric_limits<size_t>::max();
+   i::wasm::ModuleWireBytes bytes =
+-      GetFirstArgumentAsBytes(info, &thrower, &is_shared);
++      GetFirstArgumentAsBytes(info, unlimited, &thrower, &is_shared);
+   if (thrower.error()) {
+     streaming->Abort(Utils::ToLocal(thrower.Reify()));
+     return;
+@@ -759,7 +762,8 @@ void WebAssemblyValidateImpl(const v8::FunctionCallbackInfo<v8::Value>& info) {
+   ErrorThrower thrower(i_isolate, "WebAssembly.validate()");
+ 
+   bool is_shared = false;
+-  auto bytes = GetFirstArgumentAsBytes(info, &thrower, &is_shared);
++  auto bytes = GetFirstArgumentAsBytes(info, i::wasm::max_module_size(),
++                                       &thrower, &is_shared);
+ 
+   v8::ReturnValue<v8::Value> return_value = info.GetReturnValue();
+ 
+@@ -838,7 +842,8 @@ void WebAssemblyModuleImpl(const v8::FunctionCallbackInfo<v8::Value>& info) {
+   }
+ 
+   bool is_shared = false;
+-  auto bytes = GetFirstArgumentAsBytes(info, &thrower, &is_shared);
++  auto bytes = GetFirstArgumentAsBytes(info, i::wasm::max_module_size(),
++                                       &thrower, &is_shared);
+ 
+   if (thrower.error()) {
+     return;
+@@ -1156,7 +1161,8 @@ void WebAssemblyInstantiateImpl(
+   }
+ 
+   bool is_shared = false;
+-  auto bytes = GetFirstArgumentAsBytes(info, &thrower, &is_shared);
++  auto bytes = GetFirstArgumentAsBytes(info, i::wasm::max_module_size(),
++                                       &thrower, &is_shared);
+   if (thrower.error()) {
+     resolver->OnInstantiationFailed(thrower.Reify());
+     return;
+@@ -1297,9 +1303,12 @@ i::Handle<i::HeapObject> DefaultReferenceValue(i::Isolate* isolate,
+   DCHECK(type.is_object_reference());
+   // Use undefined for JS type (externref) but null for wasm types as wasm does
+   // not know undefined.
+-  if (type.heap_representation() == i::wasm::HeapType::kExtern ||
+-      type.heap_representation() == i::wasm::HeapType::kNoExtern) {
++  if (type.heap_representation() == i::wasm::HeapType::kExtern) {
+     return isolate->factory()->undefined_value();
++  } else if (type.heap_representation() == i::wasm::HeapType::kNoExtern ||
++             type.heap_representation() == i::wasm::HeapType::kExn ||
++             type.heap_representation() == i::wasm::HeapType::kNoExn) {
++    return isolate->factory()->null_value();
+   }
+   return isolate->factory()->wasm_null();
+ }
+@@ -1868,7 +1877,8 @@ void WebAssemblyTagImpl(const v8::FunctionCallbackInfo<v8::Value>& info) {
+       i::wasm::GetWasmEngine()->type_canonicalizer()->AddRecursiveGroup(&sig);
+ 
+   i::Handle<i::JSObject> tag_object =
+-      i::WasmTagObject::New(i_isolate, &sig, canonical_type_index, tag);
++      i::WasmTagObject::New(i_isolate, &sig, canonical_type_index, tag,
++                            i_isolate->factory()->undefined_value());
+   info.GetReturnValue().Set(Utils::ToLocal(tag_object));
+ }
+ 
+@@ -1914,6 +1924,7 @@ uint32_t GetEncodedSize(i::Handle<i::WasmTagObject> tag_object) {
+ 
+ void EncodeExceptionValues(v8::Isolate* isolate,
+                            i::Handle<i::PodArray<i::wasm::ValueType>> signature,
++                           i::Handle<i::WasmTagObject> tag_object,
+                            const Local<Value>& arg, ErrorThrower* thrower,
+                            i::Handle<i::FixedArray> values_out) {
+   Local<Context> context = isolate->GetCurrentContext();
+@@ -1971,6 +1982,19 @@ void EncodeExceptionValues(v8::Isolate* isolate,
+       case i::wasm::kRefNull: {
+         const char* error_message;
+         i::Handle<i::Object> value_handle = Utils::OpenHandle(*value);
++
++        if (type.has_index()) {
++          // Canonicalize the type using the tag's original module.
++          i::Tagged<i::HeapObject> maybe_instance = tag_object->instance();
++          CHECK(!i::IsUndefined(maybe_instance));
++          auto instance = i::WasmInstanceObject::cast(maybe_instance);
++          const i::wasm::WasmModule* module = instance->module();
++          uint32_t canonical_index =
++              module->isorecursive_canonical_type_ids[type.ref_index()];
++          type = i::wasm::ValueType::RefMaybeNull(canonical_index,
++                                                  type.nullability());
++        }
++
+         if (!internal::wasm::JSToWasmObject(i_isolate, value_handle, type,
+                                             &error_message)
+                  .ToHandle(&value_handle)) {
+@@ -2026,7 +2050,8 @@ void WebAssemblyExceptionImpl(const v8::FunctionCallbackInfo<v8::Value>& info) {
+                                                   runtime_exception));
+   i::Handle<i::PodArray<i::wasm::ValueType>> signature(
+       tag_object->serialized_signature(), i_isolate);
+-  EncodeExceptionValues(isolate, signature, info[1], &thrower, values);
++  EncodeExceptionValues(isolate, signature, tag_object, info[1], &thrower,
++                        values);
+   if (thrower.error()) return;
+ 
+   // Third argument: optional ExceptionOption ({traceStack: <bool>}).
+@@ -3244,9 +3269,9 @@ void WasmJs::PrepareForSnapshot(Isolate* isolate) {
+     // Note the canonical_type_index is reset in WasmJs::Install s.t.
+     // type_canonicalizer bookkeeping remains valid.
+     static constexpr uint32_t kInitialCanonicalTypeIndex = 0;
+-    Handle<JSObject> js_tag_object =
+-        WasmTagObject::New(isolate, &kWasmExceptionTagSignature,
+-                           kInitialCanonicalTypeIndex, js_tag);
++    Handle<JSObject> js_tag_object = WasmTagObject::New(
++        isolate, &kWasmExceptionTagSignature, kInitialCanonicalTypeIndex,
++        js_tag, isolate->factory()->undefined_value());
+     native_context->set_wasm_js_tag(*js_tag_object);
+     JSObject::AddProperty(isolate, webassembly, "JSTag", js_tag_object,
+                           ro_attributes);

@@ -1,0 +1,15 @@
+diff --git a/src/wasm/module-instantiate.cc b/src/wasm/module-instantiate.cc
+index 4bb2a39b7e79d516cf6003728fb543b6f85e938f..5adaee25f27fe2253d679211c484c7013975172c 100644
+--- a/src/wasm/module-instantiate.cc
++++ b/src/wasm/module-instantiate.cc
+@@ -2646,7 +2646,9 @@ void InstanceBuilder::ProcessExports(
+           uint32_t canonical_sig_index =
+               module_->isorecursive_canonical_type_ids[tag.sig_index];
+           wrapper = WasmTagObject::New(isolate_, tag.sig, canonical_sig_index,
+-                                       tag_object);
++                                       tag_object,
++                                       handle(trusted_instance_data->instance_object(),
++                                              isolate_));
+           tags_wrappers_[exp.index] = wrapper;
+         }
+         value = wrapper;

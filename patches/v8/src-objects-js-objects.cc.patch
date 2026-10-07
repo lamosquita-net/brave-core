@@ -1,0 +1,18 @@
+diff --git a/src/objects/js-objects.cc b/src/objects/js-objects.cc
+index 4351e156a6a863832c9007233714ed21886e1379..cde757e17368657dee3f008a8eaf1e227bdb19dc 100644
+--- a/src/objects/js-objects.cc
++++ b/src/objects/js-objects.cc
+@@ -3545,7 +3545,12 @@ bool TryFastAddDataProperty(Isolate* isolate, Handle<JSObject> object,
+   DCHECK(!map->is_dictionary_map());
+ 
+   Handle<Map> new_map = handle(map, isolate);
+-  InternalIndex descriptor = map->LastAdded();
++  if (map->is_deprecated()) {
++    new_map = Map::Update(isolate, new_map);
++    if (new_map->is_dictionary_map()) return false;
++  }
++
++  InternalIndex descriptor = new_map->LastAdded();
+   new_map = Map::PrepareForDataProperty(isolate, new_map, descriptor,
+                                         PropertyConstness::kConst, value);
+   JSObject::MigrateToMap(isolate, object, new_map);

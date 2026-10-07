@@ -1,0 +1,18 @@
+diff --git a/src/execution/isolate.cc b/src/execution/isolate.cc
+index 0126e50b615c032abc2045d9b4b7e5c0f55473a1..0f904708a9eda125cfe04e7042c70b577d13a91d 100644
+--- a/src/execution/isolate.cc
++++ b/src/execution/isolate.cc
+@@ -2432,6 +2432,13 @@ HandlerTable::CatchPrediction CatchPredictionFor(Builtin builtin_id) {
+ 
+ HandlerTable::CatchPrediction PredictException(const FrameSummary& summary,
+                                                Isolate* isolate) {
++  if (!summary.IsJavaScript()) {
++    // This can happen when WASM is inlined by TurboFan. For now we ignore
++    // frames that are not JavaScript.
++    // TODO(https://crbug.com/349588762): We should also check Wasm code
++    // for exception handling.
++    return HandlerTable::UNCAUGHT;
++  }
+   PtrComprCageBase cage_base(isolate);
+   Handle<AbstractCode> code = summary.AsJavaScript().abstract_code();
+   if (code->kind(cage_base) == CodeKind::BUILTIN) {

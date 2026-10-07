@@ -1,0 +1,49 @@
+diff --git a/src/flags/flag-definitions.h b/src/flags/flag-definitions.h
+index f5f9e24a2bb6a9de6037e53193b6807923cb09f2..fb4acc249c61c726c7fbfaa9763fa6caa8fba1b1 100644
+--- a/src/flags/flag-definitions.h
++++ b/src/flags/flag-definitions.h
+@@ -515,7 +515,9 @@ DEFINE_BOOL(force_emit_interrupt_budget_checks, false,
+             "force emit tier-up logic from all non-turbofan code, even if it "
+             "is the top enabled tier")
+ #ifdef V8_ENABLE_MAGLEV
+-DEFINE_BOOL(maglev, true, "enable the maglev optimizing compiler")
++// FlyWeb: Maglev stays off, as in Chromium 116 (HUMANO, 05-10-2026): less JIT
++// attack surface; TurboFan is still there.
++DEFINE_BOOL(maglev, false, "enable the maglev optimizing compiler")
+ #if !ENABLE_MAGLEV
+ // Enable Maglev on Future for platforms in which it's not enabled by default
+ // (eg, Android).
+@@ -601,7 +603,8 @@ DEFINE_WEAK_VALUE_IMPLICATION(turbofan,
+ DEFINE_WEAK_VALUE_IMPLICATION(turbofan, min_maglev_inlining_frequency, 0.95)
+ DEFINE_BOOL(maglev_reuse_stack_slots, true,
+             "reuse stack slots in the maglev optimizing compiler")
+-DEFINE_BOOL(maglev_untagged_phis, true,
++// FlyWeb: off, as upstream did for CVE-2026-3910 (v8 7076ba1, crbug 491410818).
++DEFINE_BOOL(maglev_untagged_phis, false,
+             "enable phi untagging in the maglev optimizing compiler")
+ DEFINE_BOOL(maglev_hoist_osr_value_phi_untagging, true,
+             "enable phi untagging to hoist untagging of osr values")
+@@ -1319,7 +1322,10 @@ DEFINE_BOOL(turboshaft_wasm_load_elimination, false,
+             "enable Turboshaft's WasmLoadElimination")
+ DEFINE_WEAK_IMPLICATION(turboshaft_wasm, turboshaft_wasm_load_elimination)
+ 
+-DEFINE_BOOL(turboshaft_instruction_selection, true,
++// FlyWeb: off, as on levels 120-123 (HUMANO, 06-10-2026): TurboFan's
++// instruction selection keeps the JIT surface already covered by FlyWeb's
++// security backports.
++DEFINE_BOOL(turboshaft_instruction_selection, false,
+             "run instruction selection on Turboshaft IR directly")
+ 
+ DEFINE_BOOL(turboshaft_load_elimination, false,
+@@ -1410,7 +1416,10 @@ DEFINE_VALUE_IMPLICATION(optimize_for_size, max_semi_space_size, size_t{1})
+ DEFINE_BOOL(wasm_generic_wrapper, true,
+             "allow use of the generic js-to-wasm wrapper instead of "
+             "per-signature wrappers")
+-DEFINE_BOOL(wasm_to_js_generic_wrapper, true,
++// FlyWeb: off, as in V8 12.0-12.2 (SEGURIDAD, 07-10-2026): the generic
++// wasm-to-js wrapper (on by default since 12.3) needed later fixes that are not
++// in this V8 (v8 c8c02de5, 8d6bd5e1); the per-signature wrappers are used.
++DEFINE_BOOL(wasm_to_js_generic_wrapper, false,
+             "allow use of the generic wasm-to-js wrapper instead of "
+             "per-signature wrappers")
+ DEFINE_BOOL(expose_wasm, true, "expose wasm interface to JavaScript")
