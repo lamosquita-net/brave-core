@@ -1,0 +1,30 @@
+diff --git a/third_party/blink/renderer/modules/scheduler/script_wrappable_task_state.cc b/third_party/blink/renderer/modules/scheduler/script_wrappable_task_state.cc
+index c50614506f12bccc36f15aeba9a856d20f79eebf..f4c055dcab6dfa04b59cd3057c53cf70463aebfc 100644
+--- a/third_party/blink/renderer/modules/scheduler/script_wrappable_task_state.cc
++++ b/third_party/blink/renderer/modules/scheduler/script_wrappable_task_state.cc
+@@ -35,8 +35,10 @@ ScriptWrappableTaskState* ScriptWrappableTaskState::GetCurrent(
+   ScriptState::Scope scope(script_state);
+   v8::Local<v8::Context> context = script_state->GetContext();
+   DCHECK(!context.IsEmpty());
++  // FlyWeb: V8 12.4 keeps this data on the isolate, not on the context
++  // (as Chromium 124).
+   v8::Local<v8::Value> v8_value =
+-      context->GetContinuationPreservedEmbedderData();
++      script_state->GetIsolate()->GetContinuationPreservedEmbedderData();
+   if (v8_value->IsNullOrUndefined()) {
+     return nullptr;
+   }
+@@ -73,11 +75,11 @@ void ScriptWrappableTaskState::SetCurrent(
+   DCHECK(!context.IsEmpty());
+ 
+   if (task_state) {
+-    context->SetContinuationPreservedEmbedderData(
++    isolate->SetContinuationPreservedEmbedderData(
+         ToV8Traits<ScriptWrappableTaskState>::ToV8(script_state, task_state)
+             .ToLocalChecked());
+   } else {
+-    context->SetContinuationPreservedEmbedderData(v8::Local<v8::Value>());
++    isolate->SetContinuationPreservedEmbedderData(v8::Undefined(isolate));
+   }
+ }
+ 
