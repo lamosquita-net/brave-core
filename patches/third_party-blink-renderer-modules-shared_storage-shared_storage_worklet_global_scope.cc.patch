@@ -1,18 +1,20 @@
 diff --git a/third_party/blink/renderer/modules/shared_storage/shared_storage_worklet_global_scope.cc b/third_party/blink/renderer/modules/shared_storage/shared_storage_worklet_global_scope.cc
-index 17f2104043ec9e7b49d46607ddf2d52957f08e10..52ce063c846fef012df50a2becedfe750901962f 100644
+index 17f2104043ec9e7b49d46607ddf2d52957f08e10..1b4638fa6ae8b42a501830a703fd64f15fef80d2 100644
 --- a/third_party/blink/renderer/modules/shared_storage/shared_storage_worklet_global_scope.cc
 +++ b/third_party/blink/renderer/modules/shared_storage/shared_storage_worklet_global_scope.cc
-@@ -598,7 +598,8 @@ int64_t SharedStorageWorkletGlobalScope::GetCurrentOperationId() {
+@@ -596,9 +596,8 @@ int64_t SharedStorageWorkletGlobalScope::GetCurrentOperationId() {
+   ScriptState* script_state = ScriptController()->GetScriptState();
+   DCHECK(script_state);
  
-   v8::Local<v8::Context> context = script_state->GetContext();
- 
+-  v8::Local<v8::Context> context = script_state->GetContext();
+-
 -  v8::Local<v8::Value> data = context->GetContinuationPreservedEmbedderData();
 +  v8::Local<v8::Value> data =
 +      script_state->GetIsolate()->GetContinuationPreservedEmbedderData();
    return data.As<v8::BigInt>()->Int64Value();
  }
  
-@@ -718,7 +719,7 @@ base::OnceClosure SharedStorageWorkletGlobalScope::StartOperation(
+@@ -718,7 +717,7 @@ base::OnceClosure SharedStorageWorkletGlobalScope::StartOperation(
    v8::HandleScope handle_scope(script_state->GetIsolate());
    v8::Local<v8::Context> context = script_state->GetContext();
  
