@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/bindings/scripts/bind_gen/interface.py b/third_party/blink/renderer/bindings/scripts/bind_gen/interface.py
-index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..9bfe173042d465ade9df8edae5c3c71aa1a275e2 100644
+index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..3712483218ffbd4060e7ea490c1a3bfaee311801 100644
 --- a/third_party/blink/renderer/bindings/scripts/bind_gen/interface.py
 +++ b/third_party/blink/renderer/bindings/scripts/bind_gen/interface.py
 @@ -1713,8 +1713,10 @@ def make_v8_set_return_value(cg_context):
@@ -46,16 +46,23 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..9bfe173042d465ade9df8edae5c3c71a
      if collectionlike:
  
          def should_define(target):
-@@ -5741,6 +5747,39 @@ ${prototype_object}->Delete(
+@@ -5741,6 +5747,46 @@ ${prototype_object}->Delete(
      ${v8_context}, V8AtomicString(${isolate}, "constructor")).ToChecked();
  """))
  
 +    if class_like.is_async_iterator:
++        # FlyWeb: in 116, V8ObjectConstructor::CreateInterfaceObject() only
++        # passes a prototype object for kWrapperTypeObjectPrototype types, and
++        # iterators are kWrapperTypeNoPrototype, so it is empty here (116's
++        # sync iterators keep "constructor" too). Deleting through the empty
++        # handle crashed the renderer on the first ReadableStream iteration.
 +        nodes.append(
 +            TextNode("""\
 +// V8 defines "constructor" property on the prototype object by default.
-+${prototype_object}->Delete(
-+    ${v8_context}, V8AtomicString(${isolate}, "constructor")).ToChecked();
++if (!${prototype_object}.IsEmpty()) {
++  ${prototype_object}->Delete(
++      ${v8_context}, V8AtomicString(${isolate}, "constructor")).ToChecked();
++}
 +"""))
 +
 +    # Install @@asyncIterator property.
@@ -86,7 +93,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..9bfe173042d465ade9df8edae5c3c71a
      collectionlike = interface and (interface.iterable or interface.maplike
                                      or interface.setlike)
      if collectionlike:
-@@ -5907,6 +5946,22 @@ def make_install_interface_template(cg_context, function_name, class_name,
+@@ -5907,6 +5953,22 @@ def make_install_interface_template(cg_context, function_name, class_name,
                "${interface_function_template});"),
              EmptyNode(),
          ])
@@ -109,7 +116,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..9bfe173042d465ade9df8edae5c3c71a
      elif cg_context.sync_iterator:
          if cg_context.sync_iterator.interface.iterable:
              parent_intrinsic_prototype = "v8::Intrinsic::kIteratorPrototype"
-@@ -7080,6 +7135,8 @@ const WrapperTypeInfo ${class_name}::wrapper_type_info_{{
+@@ -7080,6 +7142,8 @@ const WrapperTypeInfo ${class_name}::wrapper_type_info_{{
          idl_definition_kind = "WrapperTypeInfo::kIdlNamespace"
      elif class_like.is_callback_interface:
          idl_definition_kind = "WrapperTypeInfo::kIdlCallbackInterface"
@@ -118,7 +125,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..9bfe173042d465ade9df8edae5c3c71a
      elif class_like.is_sync_iterator:
          idl_definition_kind = "WrapperTypeInfo::kIdlSyncIterator"
      wrapper_type_info_def.append(
-@@ -7093,7 +7150,8 @@ const WrapperTypeInfo ${class_name}::wrapper_type_info_{{
+@@ -7093,7 +7157,8 @@ const WrapperTypeInfo ${class_name}::wrapper_type_info_{{
                active_script_wrappable_inheritance),
            idl_definition_kind=idl_definition_kind))
  
@@ -128,7 +135,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..9bfe173042d465ade9df8edae5c3c71a
          blink_class = blink_class_name(class_like)
          pattern = """\
  const WrapperTypeInfo& {blink_class}::wrapper_type_info_ =
-@@ -7326,7 +7384,8 @@ return ${class_name}::{func}(
+@@ -7326,7 +7391,8 @@ return ${class_name}::{func}(
  def _collect_include_headers(class_like):
      assert isinstance(
          class_like,
@@ -138,7 +145,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..9bfe173042d465ade9df8edae5c3c71a
  
      headers = set(class_like.code_generator_info.blink_headers or [])
  
-@@ -7361,7 +7420,10 @@ def _collect_include_headers(class_like):
+@@ -7361,7 +7427,10 @@ def _collect_include_headers(class_like):
      operations.extend(class_like.constructors)
      operations.extend(class_like.operations)
      if class_like.is_interface:
@@ -150,7 +157,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..9bfe173042d465ade9df8edae5c3c71a
              if x:
                  operations.extend(x.operations)
          for exposed_construct in class_like.exposed_constructs:
-@@ -7393,10 +7455,12 @@ def _collect_include_headers(class_like):
+@@ -7393,10 +7462,12 @@ def _collect_include_headers(class_like):
  
  
  def generate_class_like(class_like,
@@ -164,7 +171,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..9bfe173042d465ade9df8edae5c3c71a
  
      path_manager = PathManager(class_like)
      api_component = path_manager.api_component
-@@ -7421,6 +7485,9 @@ def generate_class_like(class_like,
+@@ -7421,6 +7492,9 @@ def generate_class_like(class_like,
          namespace = class_like
          cg_context = CodeGenContext(namespace=namespace,
                                      class_name=api_class_name)
@@ -174,7 +181,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..9bfe173042d465ade9df8edae5c3c71a
      elif class_like.is_sync_iterator:
          cg_context = CodeGenContext(sync_iterator=class_like,
                                      class_name=api_class_name)
-@@ -7809,7 +7876,7 @@ def generate_class_like(class_like,
+@@ -7809,7 +7883,7 @@ def generate_class_like(class_like,
              make_forward_declarations(impl_source_node.accumulator),
              EmptyNode(),
          ])
@@ -183,7 +190,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..9bfe173042d465ade9df8edae5c3c71a
          api_header_node.accumulator.add_class_decls(
              [blink_class_name(class_like.interface)])
      else:
-@@ -7849,6 +7916,14 @@ def generate_class_like(class_like,
+@@ -7849,6 +7923,14 @@ def generate_class_like(class_like,
          _collect_include_headers(class_like))
  
      # Assemble the parts.
@@ -198,7 +205,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..9bfe173042d465ade9df8edae5c3c71a
      if generate_sync_iterator_blink_impl_class_callback:
          assert isinstance(class_like, web_idl.SyncIterator)
          generate_sync_iterator_blink_impl_class_callback(
-@@ -8306,3 +8381,4 @@ def generate_interfaces(task_queue):
+@@ -8306,3 +8388,4 @@ def generate_interfaces(task_queue):
                           "InitIDLInterfacesForTesting",
                           "init_idl_interfaces_for_testing",
                           for_testing=True)
