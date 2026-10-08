@@ -18,6 +18,9 @@ class SharedPinnedTabService;
 class SharedPinnedTabServiceFactory : public ProfileKeyedServiceFactory {
  public:
   static SharedPinnedTabService* GetForProfile(Profile* profile);
+  // FlyWeb: true if the feature is on and the profile has the service, which
+  // is only created when brave.tabs.shared_pinned_tab is on (F7.8).
+  static bool IsEnabledForProfile(Profile* profile);
 
   static SharedPinnedTabServiceFactory* GetInstance();
 

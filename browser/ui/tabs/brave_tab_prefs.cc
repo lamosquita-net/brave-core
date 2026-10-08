@@ -18,6 +18,9 @@ const char kVerticalTabsShowTitleOnWindow[] =
     "brave.tabs.vertical_tabs_show_title_on_window";
 const char kVerticalTabsFloatingEnabled[] =
     "brave.tabs.vertical_tabs_floating_enabled";
+// FlyWeb: share pinned tabs across the windows of a profile (F7.8). Read when
+// the profile is created, so changes apply after relaunching.
+const char kSharedPinnedTab[] = "brave.tabs.shared_pinned_tab";
 const char kVerticalTabsExpandedWidth[] =
     "brave.tabs.vertical_tabs_expanded_width";
 
@@ -34,6 +37,7 @@ void RegisterBraveProfilePrefs(PrefRegistrySimple* registry) {
 #endif
   registry->RegisterBooleanPref(kVerticalTabsFloatingEnabled, true);
   registry->RegisterIntegerPref(kVerticalTabsExpandedWidth, 250);
+  registry->RegisterBooleanPref(kSharedPinnedTab, true);
 }
 
 bool AreTooltipsEnabled(PrefService* prefs) {

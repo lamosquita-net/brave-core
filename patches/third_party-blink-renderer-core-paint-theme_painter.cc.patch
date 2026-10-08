@@ -1,0 +1,56 @@
+diff --git a/third_party/blink/renderer/core/paint/theme_painter.cc b/third_party/blink/renderer/core/paint/theme_painter.cc
+index 925d40b39e695cb993543ddb76dfe278917122bc..6e267444caa027661973fb01f1bf9afa9b728921 100644
+--- a/third_party/blink/renderer/core/paint/theme_painter.cc
++++ b/third_party/blink/renderer/core/paint/theme_painter.cc
+@@ -303,17 +303,18 @@ void ThemePainter::PaintSliderTicks(const LayoutObject& o,
+ 
+   ControlPart part = o.StyleRef().EffectiveAppearance();
+   // We don't support ticks on alternate sliders like MediaVolumeSliders.
+-  if (part != kSliderHorizontalPart &&
+-      (part != kSliderVerticalPart ||
+-       RuntimeEnabledFeatures::
+-           RemoveNonStandardAppearanceValueSliderVerticalEnabled())) {
++  // FlyWeb: 861a584846565 (Chromium 124) with the 116 flag naming.
++  bool is_slider_vertical =
++      !RuntimeEnabledFeatures::
++          RemoveNonStandardAppearanceValueSliderVerticalEnabled() &&
++      part == kSliderVerticalPart;
++  bool is_writing_mode_vertical =
++      RuntimeEnabledFeatures::FormControlsVerticalWritingModeSupportEnabled() &&
++      !IsHorizontalWritingMode(o.StyleRef().GetWritingMode());
++  if (!(part == kSliderHorizontalPart || is_slider_vertical)) {
+     return;
+   }
+-  bool is_horizontal =
+-      part == kSliderHorizontalPart &&
+-      !(RuntimeEnabledFeatures::
+-            FormControlsVerticalWritingModeSupportEnabled() &&
+-        !IsHorizontalWritingMode(o.StyleRef().GetWritingMode()));
++  bool is_horizontal = !is_writing_mode_vertical && !is_slider_vertical;
+ 
+   gfx::Size thumb_size;
+   LayoutObject* thumb_layout_object =
+@@ -363,6 +364,11 @@ void ThemePainter::PaintSliderTicks(const LayoutObject& o,
+     tick_region_width = track_bounds.height() - thumb_size.height();
+   }
+   HTMLDataListOptionsCollection* options = data_list->options();
++  bool flip_tick_direction =
++      (is_horizontal && o.StyleRef().IsLeftToRightDirection()) ||
++      (RuntimeEnabledFeatures::
++           FormControlsVerticalWritingModeDirectionSupportEnabled() &&
++       is_writing_mode_vertical && o.StyleRef().IsLeftToRightDirection());
+   for (unsigned i = 0; HTMLOptionElement* option_element = options->Item(i);
+        i++) {
+     String value = option_element->value();
+@@ -373,9 +379,8 @@ void ThemePainter::PaintSliderTicks(const LayoutObject& o,
+     double parsed_value =
+         ParseToDoubleForNumberType(input->SanitizeValue(value));
+     double tick_fraction = (parsed_value - min) / (max - min);
+-    double tick_ratio = is_horizontal && o.StyleRef().IsLeftToRightDirection()
+-                            ? tick_fraction
+-                            : 1.0 - tick_fraction;
++    double tick_ratio =
++        flip_tick_direction ? tick_fraction : 1.0 - tick_fraction;
+     double tick_position =
+         round(tick_region_side_margin + tick_region_width * tick_ratio);
+     if (is_horizontal)

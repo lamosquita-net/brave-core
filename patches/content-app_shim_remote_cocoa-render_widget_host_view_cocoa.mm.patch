@@ -1,0 +1,139 @@
+diff --git a/content/app_shim_remote_cocoa/render_widget_host_view_cocoa.mm b/content/app_shim_remote_cocoa/render_widget_host_view_cocoa.mm
+index fffe1327634f7bad0ccbd4022f157b03c03ea87a..a256565827bc1ecb284942ef19a64e785b0aa8d7 100644
+--- a/content/app_shim_remote_cocoa/render_widget_host_view_cocoa.mm
++++ b/content/app_shim_remote_cocoa/render_widget_host_view_cocoa.mm
+@@ -976,7 +976,7 @@ void ExtractUnderlines(NSAttributedString* string,
+   // omnibox (https://crbug.com/338736) or from closing another window
+   // (https://crbug.com/155492).
+   if (eventType == NSEventTypeKeyUp) {
+-    auto numErased = _keyDownCodes.erase(keyCode);
++    auto numErased = _unmatchedKeyDownCodes.erase(keyCode);
+     if (numErased < 1)
+       return;
+   }
+@@ -1004,7 +1004,7 @@ void ExtractUnderlines(NSAttributedString* string,
+     return;
+   }
+ 
+-  _keyDownCodes.insert(keyCode);
++  _unmatchedKeyDownCodes.insert(keyCode);
+ 
+   base::scoped_nsobject<RenderWidgetHostViewCocoa> keepSelfAlive([self retain]);
+ 
+@@ -1013,11 +1013,11 @@ void ExtractUnderlines(NSAttributedString* string,
+   BOOL oldHasMarkedText = _hasMarkedText;
+ 
+   // This method should not be called recursively.
+-  DCHECK(!_handlingKeyDown);
++  DCHECK(![self isHandlingKeyDown]);
+ 
+   // Tells insertText: and doCommandBySelector: that we are handling a key
+   // down event.
+-  _handlingKeyDown = YES;
++  _currentKeyDownCode = keyCode;
+ 
+   // This is to handle an edge case for the "Live Conversion" feature in default
+   // Japanese IME. When the feature is on, pressing the left key at the
+@@ -1061,7 +1061,7 @@ void ExtractUnderlines(NSAttributedString* string,
+     // as if it were a key press. As a result, with the insertion point
+     // in a web text box, after typing something like "Function e" to invoke
+     // the Emoji palette, we would wind up in -insertText:replacementRange:.
+-    // The logic there (_handlingKeyDown && replacementRange.location ==
++    // The logic there ([self isHandlingKeyDown] && replacementRange.location ==
+     // NSNotFound) would create an invisible placeholder for the character. This
+     // invisible placeholder would cause macOS to position the palette at the
+     // upper-left corner of the webcontents instead of at the insertion point.
+@@ -1098,7 +1098,7 @@ void ExtractUnderlines(NSAttributedString* string,
+     }
+   }
+ 
+-  _handlingKeyDown = NO;
++  _currentKeyDownCode.reset();
+ 
+   // Indicates if we should send the key event and corresponding editor commands
+   // after processing the input method result.
+@@ -1228,7 +1228,7 @@ void ExtractUnderlines(NSAttributedString* string,
+ }
+ 
+ - (BOOL)suppressNextKeyUpForTesting:(int)keyCode {
+-  return _keyDownCodes.count(keyCode) == 0;
++  return _unmatchedKeyDownCodes.count(keyCode) == 0;
+ }
+ 
+ - (void)forceTouchEvent:(NSEvent*)theEvent {
+@@ -2000,7 +2000,7 @@ extern NSString* NSTextInputReplacementRangeAttributeName;
+ 
+   // If we are handling a key down event, then FinishComposingText() will be
+   // called in keyEvent: method.
+-  if (!_handlingKeyDown) {
++  if (![self isHandlingKeyDown]) {
+     _host->ImeFinishComposingText();
+   } else {
+     _unmarkTextCalled = YES;
+@@ -2083,7 +2083,7 @@ extern NSString* NSTextInputReplacementRangeAttributeName;
+   // is empty to update the input method state. (Our input method backend
+   // automatically cancels an ongoing composition when we send an empty text.
+   // So, it is OK to send an empty text to the renderer.)
+-  if (_handlingKeyDown && !_isReconversionTriggered) {
++  if ([self isHandlingKeyDown] && !_isReconversionTriggered) {
+     _setMarkedTextReplacementRange = gfx::Range(replacementRange);
+   } else {
+     _host->ImeSetComposition(_markedText, _ime_text_spans,
+@@ -2108,7 +2108,36 @@ extern NSString* NSTextInputReplacementRangeAttributeName;
+   // If this method is called when handling a key down event, then we need to
+   // handle the command in the key event handler. Otherwise we can just handle
+   // it here.
+-  if (_handlingKeyDown) {
++  if ([self isHandlingKeyDown]) {
++    if ((_textInputFlags & blink::kWebTextInputFlagVertical)) {
++      // Commands assigned to arrow keys are ignored and Blink handles key down
++      // events because macOS doesn't work well with some vertical writing
++      // modes. See editing_behavior.cc.
++      //
++      // The following bindings are affected:
++      //                 Left: moveLeft
++      //           Shift-Left: moveLeftAndModifySelection
++      //          Option-Left: moveWordLeft
++      //    Option-Shift-Left: moveWordLeftAndModifySelection
++      //                Right: moveRight
++      //          Shift-Right: moveRightAndModifySelection
++      //         Option-Right: moveWordRight
++      //   Option-Shift-Right: moveWordRightAndModifySelection
++      //                   Up: moveUp
++      //             Shift-Up: moveUpAndModifySelection
++      //            Option-Up: moveBackward + moveToBeginningOfParagraph
++      //                 Down: moveDown
++      //           Shift-Down: moveDownAndModifySelection
++      //          Option-Down: moveForward + moveToEndOfParagraph:
++      //
++      // This doesn't affect Fn + an arrow key, which produces a keyCode for
++      // PageUp, PageDown, Home, or End.
++      unsigned short keyCode = *_currentKeyDownCode;
++      if (keyCode == kVK_LeftArrow || keyCode == kVK_RightArrow ||
++          keyCode == kVK_DownArrow || keyCode == kVK_UpArrow) {
++        return;
++      }
++    }
+     _hasEditCommands = YES;
+     // We ignore commands that insert characters, because this was causing
+     // strange behavior (e.g. tab always inserted a tab rather than moving to
+@@ -2137,7 +2166,7 @@ extern NSString* NSTextInputReplacementRangeAttributeName;
+   // sent as an input method event as well.
+   BOOL isAttributedString = [string isKindOfClass:[NSAttributedString class]];
+   NSString* imText = isAttributedString ? [string string] : string;
+-  if (_handlingKeyDown && replacementRange.location == NSNotFound) {
++  if ([self isHandlingKeyDown] && replacementRange.location == NSNotFound) {
+     // The user uses keyboard to type in a char without an IME or select a word
+     // on the IME. Don't commit the change to the render, because the event is
+     // being processed in |keyEvent:|. The commit will happen later after
+@@ -2378,6 +2407,10 @@ extern NSString* NSTextInputReplacementRangeAttributeName;
+   return [super makeTouchBar];
+ }
+ 
++- (BOOL)isHandlingKeyDown {
++  return _currentKeyDownCode.has_value();
++}
++
+ @end
+ 
+ //
