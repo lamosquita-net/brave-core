@@ -1,8 +1,23 @@
 diff --git a/third_party/blink/renderer/core/editing/editing_behavior.cc b/third_party/blink/renderer/core/editing/editing_behavior.cc
-index 0fcc2d41af5993524c19f1d0409027f749ab3780..7294c385753eaa0a41dbde0f7a140990fd916d16 100644
+index 0fcc2d41af5993524c19f1d0409027f749ab3780..6aea2698d2da79fd53012bdb1848e35a2ba6a5ba 100644
 --- a/third_party/blink/renderer/core/editing/editing_behavior.cc
 +++ b/third_party/blink/renderer/core/editing/editing_behavior.cc
-@@ -109,10 +109,10 @@ const KeyboardCodeKeyDownEntry kKeyboardCodeKeyDownEntries[] = {
+@@ -81,6 +81,14 @@ struct DomKeyKeyDownEntry {
+   const char* name;
+ };
+ 
++// FlyWeb: from Chromium 124 with the table below (the port took the table but
++// not this macro).
++#if BUILDFLAG(IS_MAC)
++#define OPTION_OR_CTRL_KEY kOptionKey
++#else
++#define OPTION_OR_CTRL_KEY kCtrlKey
++#endif
++
+ // Key bindings with command key on Mac and alt key on other platforms are
+ // marked as system key events and will be ignored (with the exception
+ // of Command-B and Command-I) so they shouldn't be added here.
+@@ -109,10 +117,10 @@ const KeyboardCodeKeyDownEntry kKeyboardCodeKeyDownEntries[] = {
      {VKEY_DOWN, 0, "MoveDown"},
      {VKEY_DOWN, kShiftKey, "MoveDownAndModifySelection"},
      {VKEY_NEXT, kShiftKey, "MovePageDownAndModifySelection"},
@@ -15,7 +30,7 @@ index 0fcc2d41af5993524c19f1d0409027f749ab3780..7294c385753eaa0a41dbde0f7a140990
      {VKEY_DOWN, kCtrlKey | kShiftKey, "MoveParagraphForwardAndModifySelection"},
      {VKEY_PRIOR, 0, "MovePageUp"},
      {VKEY_NEXT, 0, "MovePageDown"},
-@@ -210,10 +210,53 @@ const char* LookupCommandNameFromDomKeyKeyDown(const String& key,
+@@ -210,10 +218,52 @@ const char* LookupCommandNameFromDomKeyKeyDown(const String& key,
    return nullptr;
  }
  
@@ -43,7 +58,6 @@ index 0fcc2d41af5993524c19f1d0409027f749ab3780..7294c385753eaa0a41dbde0f7a140990
 +  DCHECK_EQ(2, static_cast<uint8_t>(WritingMode::kVerticalLr));
 +  DCHECK_EQ(3, static_cast<uint8_t>(WritingMode::kSidewaysRl));
 +  DCHECK_EQ(4, static_cast<uint8_t>(WritingMode::kSidewaysLr));
-+  DCHECK_EQ(4, static_cast<uint8_t>(WritingMode::kMaxWritingMode));
 +  unsigned index = static_cast<uint8_t>(writing_mode) - 1;
 +  switch (key_code) {
 +    case VKEY_LEFT:
@@ -71,7 +85,7 @@ index 0fcc2d41af5993524c19f1d0409027f749ab3780..7294c385753eaa0a41dbde0f7a140990
    const WebKeyboardEvent* key_event = event.KeyEvent();
    if (!key_event)
      return "";
-@@ -251,7 +294,9 @@ const char* EditingBehavior::InterpretKeyEvent(
+@@ -251,7 +301,9 @@ const char* EditingBehavior::InterpretKeyEvent(
    };
  
    if (key_event->GetType() == WebInputEvent::Type::kRawKeyDown) {
