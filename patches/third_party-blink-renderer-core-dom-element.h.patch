@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/element.h b/third_party/blink/renderer/core/dom/element.h
-index 640e53d474d0e132bf72388ac410015f66b55f48..3366c5a4ff519bb81be897ab5f172065be224f74 100644
+index 640e53d474d0e132bf72388ac410015f66b55f48..648c42b7eaef36854d83e14c49ed0bf70c7bdb5f 100644
 --- a/third_party/blink/renderer/core/dom/element.h
 +++ b/third_party/blink/renderer/core/dom/element.h
 @@ -93,6 +93,7 @@ class ElementIntersectionObserverData;
@@ -79,6 +79,15 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..3366c5a4ff519bb81be897ab5f172065
   private:
    friend class AXObject;
    struct AffectedByPseudoStateChange;
+@@ -1324,7 +1355,7 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+       delete;  // This will catch anyone doing an unnecessary check.
+ 
+   bool CanAttachShadowRoot() const;
+-  const char* ErrorMessageForAttachShadow() const;
++  const char* ErrorMessageForAttachShadow(bool for_declarative) const;
+ 
+   void StyleAttributeChanged(const AtomicString& new_style_string,
+                              AttributeModificationReason);
 @@ -1420,6 +1451,8 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
      DetachPseudoElement(kPseudoIdFirstLetter, performing_reattach);
    }
