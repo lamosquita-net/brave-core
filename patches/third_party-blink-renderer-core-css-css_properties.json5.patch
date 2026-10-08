@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/css_properties.json5 b/third_party/blink/renderer/core/css/css_properties.json5
-index 871edc0924403a04bf16f4d5602f421d3882473c..0c23ee7a890cd29e5f4b06bf1a47ebf843fc2ac2 100644
+index 871edc0924403a04bf16f4d5602f421d3882473c..762d3e1ce3e28e4a32e30fdb613acddfa5145c66 100644
 --- a/third_party/blink/renderer/core/css/css_properties.json5
 +++ b/third_party/blink/renderer/core/css/css_properties.json5
 @@ -991,6 +991,19 @@
@@ -81,7 +81,35 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..0c23ee7a890cd29e5f4b06bf1a47ebf8
        typedom_types: ["Keyword"],
      },
      {
-@@ -4139,7 +4148,7 @@
+@@ -3759,6 +3768,13 @@
+       },
+       runtime_flag: "CSSLogicalOverflow",
+     },
++    {
++      name: "-internal-overflow-inline",
++      logical_property_group: {
++        name: "overflow",
++        resolver: "inline",
++      },
++    },
+     {
+       name: "overflow-block",
+       logical_property_group: {
+@@ -3767,6 +3783,13 @@
+       },
+       runtime_flag: "CSSLogicalOverflow",
+     },
++    {
++      name: "-internal-overflow-block",
++      logical_property_group: {
++        name: "overflow",
++        resolver: "block",
++      },
++    },
+     {
+       name: "overflow-clip-margin",
+       property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
+@@ -4139,7 +4162,7 @@
        supports_incremental_style: true,
      },
      {
@@ -90,7 +118,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..0c23ee7a890cd29e5f4b06bf1a47ebf8
        name: "scrollbar-color",
        property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
        inherited: true,
-@@ -5228,7 +5237,7 @@
+@@ -5228,7 +5251,7 @@
        name: "transform-box",
        property_methods: ["CSSValueFromComputedStyleInternal"],
        field_template: "keyword",
@@ -99,7 +127,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..0c23ee7a890cd29e5f4b06bf1a47ebf8
        default_value: "view-box",
        typedom_types: ["Keyword"],
        computable: false,
-@@ -5761,6 +5770,30 @@
+@@ -5761,6 +5784,30 @@
          modifier_type: "Width",
        },
      },
@@ -130,7 +158,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..0c23ee7a890cd29e5f4b06bf1a47ebf8
      {
        name: "-webkit-mask-clip",
        property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
-@@ -5769,14 +5802,45 @@
+@@ -5769,13 +5816,44 @@
          fill_type: "Clip",
        },
      },
@@ -156,8 +184,8 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..0c23ee7a890cd29e5f4b06bf1a47ebf8
        style_builder_template_args: {
 -        fill_type: "Composite",
 +        fill_type: "CompositingOperator",
-       },
-     },
++      },
++    },
 +    {
 +      name: "mask-image",
 +      property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
@@ -165,7 +193,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..0c23ee7a890cd29e5f4b06bf1a47ebf8
 +      style_builder_template_args: {
 +        fill_type: "Image",
 +        fill_type_getter: "GetImage"
-+      },
+       },
 +      runtime_flag: "CSSMaskingInterop",
 +    },
 +    {
@@ -173,11 +201,10 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..0c23ee7a890cd29e5f4b06bf1a47ebf8
 +      alternative_of: "-webkit-mask-image",
 +      alias_for: "mask-image",
 +      runtime_flag: "CSSMaskingInterop",
-+    },
+     },
      {
        name: "-webkit-mask-image",
-       property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
-@@ -5787,6 +5851,21 @@
+@@ -5787,6 +5865,21 @@
          fill_type_getter: "GetImage"
        },
      },
@@ -199,7 +226,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..0c23ee7a890cd29e5f4b06bf1a47ebf8
      {
        name: "-webkit-mask-origin",
        property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
-@@ -5816,20 +5895,43 @@
+@@ -5816,20 +5909,43 @@
        computable: false,
      },
      {
@@ -249,7 +276,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..0c23ee7a890cd29e5f4b06bf1a47ebf8
      },
      {
        name: "-webkit-mask-size",
-@@ -6863,7 +6965,7 @@
+@@ -6863,7 +6979,7 @@
        name: "background",
        longhands: [
          "background-image", "background-position-x", "background-position-y",
@@ -258,7 +285,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..0c23ee7a890cd29e5f4b06bf1a47ebf8
          "background-attachment", "background-origin", "background-clip",
          "background-color"
        ],
-@@ -6877,12 +6979,6 @@
+@@ -6877,12 +6993,6 @@
        computable: true,
        supports_incremental_style: true,
      },
@@ -271,7 +298,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..0c23ee7a890cd29e5f4b06bf1a47ebf8
      {
        name: "border",
        longhands: [
-@@ -7387,7 +7483,8 @@
+@@ -7387,7 +7497,8 @@
        name: "transition",
        longhands: [
          "transition-property", "transition-duration",
@@ -281,7 +308,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..0c23ee7a890cd29e5f4b06bf1a47ebf8
        ],
        property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
      },
-@@ -7440,15 +7537,35 @@
+@@ -7440,15 +7551,35 @@
        longhands: ["column-width", "column-count"],
        property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
      },
@@ -319,7 +346,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..0c23ee7a890cd29e5f4b06bf1a47ebf8
      {
        name: "-webkit-mask-box-image",
        longhands: [
-@@ -7460,14 +7577,22 @@
+@@ -7460,14 +7591,22 @@
        computable: true,
      },
      {

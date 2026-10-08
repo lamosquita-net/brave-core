@@ -1,8 +1,46 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_box.cc b/third_party/blink/renderer/core/layout/layout_box.cc
-index c2f1775ffaed54914a1cdd313a207364ba7d887d..d9e25cf81da55df8f3cb1db888a39b5ebd244d7f 100644
+index c2f1775ffaed54914a1cdd313a207364ba7d887d..aad4adfa4caa7c65edaab74ba59c0154ce6fa1c3 100644
 --- a/third_party/blink/renderer/core/layout/layout_box.cc
 +++ b/third_party/blink/renderer/core/layout/layout_box.cc
-@@ -560,13 +560,13 @@ void LayoutBox::StyleWillChange(StyleDifference diff,
+@@ -310,24 +310,27 @@ LayoutUnit ListBoxDefaultItemHeight(const LayoutBox& box) {
+ // TODO(crbug.com/1040826): This function is written in LayoutObject API
+ // so that this works in both of the legacy layout and LayoutNG. We
+ // should have LayoutNG-specific code.
+-LayoutUnit ListBoxItemHeight(const HTMLSelectElement& select,
+-                             const LayoutBox& box) {
++LayoutUnit ListBoxItemBlockSize(const HTMLSelectElement& select,
++                                const LayoutBox& box) {
+   const auto& items = select.GetListItems();
+   if (items.empty() || box.ShouldApplySizeContainment())
+     return ListBoxDefaultItemHeight(box);
+ 
+-  LayoutUnit max_height;
++  LayoutUnit max_block_size;
+   for (Element* element : items) {
+     if (auto* optgroup = DynamicTo<HTMLOptGroupElement>(element))
+       element = &optgroup->OptGroupLabelElement();
+-    LayoutUnit item_height;
+-    if (auto* layout_box = element->GetLayoutBox())
+-      item_height = layout_box->Size().Height();
+-    else
+-      item_height = ListBoxDefaultItemHeight(box);
+-    max_height = std::max(max_height, item_height);
++    LayoutUnit item_block_size;
++    if (auto* layout_box = element->GetLayoutBox()) {
++      item_block_size = box.StyleRef().IsHorizontalWritingMode()
++                            ? layout_box->Size().Height()
++                            : layout_box->Size().Width();
++    } else {
++      item_block_size = ListBoxDefaultItemHeight(box);
++    }
++    max_block_size = std::max(max_block_size, item_block_size);
+   }
+-  return max_height;
++  return max_block_size;
+ }
+ 
+ LayoutUnit MenuListIntrinsicInlineSize(const HTMLSelectElement& select,
+@@ -560,13 +563,13 @@ void LayoutBox::StyleWillChange(StyleDifference diff,
      if (flow_thread && flow_thread != this)
        flow_thread->FlowThreadDescendantStyleWillChange(this, diff, new_style);
  
@@ -23,7 +61,7 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..d9e25cf81da55df8f3cb1db888a39b5e
      }
  
      // When a layout hint happens and an object's position style changes, we
-@@ -1324,17 +1324,21 @@ LayoutUnit LayoutBox::DefaultIntrinsicContentInlineSize() const {
+@@ -1324,17 +1327,21 @@ LayoutUnit LayoutBox::DefaultIntrinsicContentInlineSize() const {
      return kIndefiniteSize;
    const Element& element = *To<Element>(GetNode());
  
@@ -48,7 +86,7 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..d9e25cf81da55df8f3cb1db888a39b5e
      if (type == input_type_names::kRange)
        return SliderIntrinsicInlineSize(*this);
      auto effective_appearance = StyleRef().EffectiveAppearance();
-@@ -1349,8 +1353,9 @@ LayoutUnit LayoutBox::DefaultIntrinsicContentInlineSize() const {
+@@ -1349,8 +1356,9 @@ LayoutUnit LayoutBox::DefaultIntrinsicContentInlineSize() const {
      return kIndefiniteSize;
    }
    const auto* textarea = DynamicTo<HTMLTextAreaElement>(element);
@@ -59,7 +97,7 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..d9e25cf81da55df8f3cb1db888a39b5e
    if (IsSliderContainer(element))
      return SliderIntrinsicInlineSize(*this);
  
-@@ -1363,6 +1368,19 @@ LayoutUnit LayoutBox::DefaultIntrinsicContentBlockSize() const {
+@@ -1363,10 +1371,23 @@ LayoutUnit LayoutBox::DefaultIntrinsicContentBlockSize() const {
    // get here.
    DCHECK(!HasOverrideIntrinsicContentLogicalHeight());
  
@@ -79,7 +117,12 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..d9e25cf81da55df8f3cb1db888a39b5e
    if (const auto* select = DynamicTo<HTMLSelectElement>(GetNode())) {
      if (select->UsesMenuList())
        return MenuListIntrinsicBlockSize(*select, *this);
-@@ -1377,15 +1395,6 @@ LayoutUnit LayoutBox::DefaultIntrinsicContentBlockSize() const {
+-    return ListBoxItemHeight(*select, *this) * select->ListBoxSize() -
++    return ListBoxItemBlockSize(*select, *this) * select->ListBoxSize() -
+            ComputeLogicalScrollbars().BlockSum();
+   }
+   if (IsTextField()) {
+@@ -1377,15 +1398,6 @@ LayoutUnit LayoutBox::DefaultIntrinsicContentBlockSize() const {
                                        *this);
    }
  
@@ -95,7 +138,7 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..d9e25cf81da55df8f3cb1db888a39b5e
    return kIndefiniteSize;
  }
  
-@@ -1532,10 +1541,10 @@ PhysicalRect LayoutBox::PhysicalBackgroundRect(
+@@ -1532,10 +1544,10 @@ PhysicalRect LayoutBox::PhysicalBackgroundRect(
        bool layer_known_opaque = false;
        // Check if the image is opaque and fills the clip.
        if (const StyleImage* image = cur->GetImage()) {

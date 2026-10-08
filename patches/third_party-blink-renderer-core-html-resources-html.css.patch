@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/resources/html.css b/third_party/blink/renderer/core/html/resources/html.css
-index b7077b29c8c494080a291d96067a16ca5198b366..d722b60d9fd2a02d60a32911f37113e1d4e1fc78 100644
+index b7077b29c8c494080a291d96067a16ca5198b366..ed1b9c77c985b16347c5f1772580b2b83a6a53fb 100644
 --- a/third_party/blink/renderer/core/html/resources/html.css
 +++ b/third_party/blink/renderer/core/html/resources/html.css
 @@ -54,7 +54,7 @@ div {
@@ -11,14 +11,85 @@ index b7077b29c8c494080a291d96067a16ca5198b366..d722b60d9fd2a02d60a32911f37113e1
      display: block
  }
  
-@@ -516,6 +516,10 @@ input[type="url" i] {
-   padding: 1px 2px;
+@@ -407,11 +407,6 @@ button {
+     appearance: auto;
  }
  
-+input[type="tel" i] {
-+  direction: ltr;
+-/* Form controls don't go vertical. */
+-input:not([type="range"]):not([type="color"]):not([type="button"]):not([type="reset"]):not([type="submit"]):not([type="file"]), select {
+-    writing-mode: horizontal-tb !important;
+-}
+-
+ input, textarea, select, button {
+     margin: 0__qem;
+     font: -webkit-small-control;
+@@ -513,7 +508,12 @@ input[type="search" i],
+ input[type="tel" i],
+ input[type="text" i],
+ input[type="url" i] {
+-  padding: 1px 2px;
++  padding-block: 1px;
++  padding-inline: 2px;
 +}
 +
++input[type="tel" i] {
++  direction: ltr;
+ }
+ 
  input::-webkit-inner-spin-button {
-     appearance: auto;
+@@ -866,9 +866,10 @@ input[type="color" i][list]::-webkit-color-swatch {
+ 
+ input::-webkit-calendar-picker-indicator {
      display: inline-block;
+-    width: 0.66em;
+-    height: 0.66em;
+-    padding: 0.17em 0.34em;
++    inline-size: 0.66em;
++    block-size: 0.66em;
++    padding-block: 0.17em;
++    padding-inline: 0.34em;
+     -webkit-user-modify: read-only !important;
+     opacity: 0;
+     cursor: default;
+@@ -930,8 +931,8 @@ select:disabled {
+ select:-internal-list-box {
+     appearance: auto;
+     align-items: flex-start;
+-    overflow-x: hidden;
+-    overflow-y: scroll;
++    -internal-overflow-inline: hidden;
++    -internal-overflow-block: scroll;
+     vertical-align: text-bottom;
+     white-space: nowrap;
+     border-radius: 2px;
+@@ -1225,8 +1226,8 @@ input[type="week" i]::-webkit-calendar-picker-indicator {
+   background-origin: content-box;
+   background-repeat: no-repeat;
+   background-size: contain;
+-  height: 1.0em;
+-  width: 1.0em;
++  block-size: 1.0em;
++  inline-size: 1.0em;
+   opacity: 1;
+   outline: none;
+   padding: 2px;
+@@ -1245,15 +1246,14 @@ input[type="time" i]::-webkit-calendar-picker-indicator {
+   background-origin: content-box;
+   background-repeat: no-repeat;
+   background-size: contain;
+-  height: 1.05em;
+-  margin-inline-start: 8px;
+   opacity: 1;
+   outline: none;
+-  padding-bottom: 3px;
++  margin-inline-start: 8px;
+   padding-inline-start: 3px;
+   padding-inline-end: 3px;
+-  padding-top: 3px;
+-  width: 1.05em;
++  padding-block: 3px;
++  block-size: 1.05em;
++  inline-size: 1.05em;
+ }
+ 
+ input[type="time" i]::-webkit-calendar-picker-indicator:focus-visible {
