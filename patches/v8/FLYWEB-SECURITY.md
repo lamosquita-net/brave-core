@@ -91,4 +91,4 @@ these patches (the 27 non-Brave files apply to the clean tree and give the teste
 
 **FlyWeb itself is not compiled in the cloud**: LOCAL must build it. Also for LOCAL: the PDFium patches of
 `patches/third_party/pdfium/` must apply on PDFium `6c2c8ce8` (the DEPS revision of Chromium 116), which the cloud
-container cannot reach; `chk116.py` (softmac) checks the Chromium/Blink patches only: 1033/1033 apply on 116.0.5845.188.
+container cannot reach; `chk116.py` (softmac) checks the Chromium/Blink patches only: 1056/1056 apply on 116.0.5845.188 (at 2697eff3).
