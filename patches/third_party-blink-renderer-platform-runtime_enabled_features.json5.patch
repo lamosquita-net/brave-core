@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/runtime_enabled_features.json5 b/third_party/blink/renderer/platform/runtime_enabled_features.json5
-index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..b8f2fe793a045664f6dd4c06685232bfa9249244 100644
+index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..66c416b6a0031b64da9fb5bea1f81d63e1e8682d 100644
 --- a/third_party/blink/renderer/platform/runtime_enabled_features.json5
 +++ b/third_party/blink/renderer/platform/runtime_enabled_features.json5
 @@ -276,8 +276,10 @@
@@ -326,7 +326,31 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..b8f2fe793a045664f6dd4c06685232bf
      },
      {
        // TODO(crbug.com/1231644): This flag is being kept (even though the
-@@ -1942,6 +2051,11 @@
+@@ -1857,11 +1966,22 @@
+       name: "FormControlRestoreStateIfAutocompleteOff",
+     },
+     {
++      // TODO(crbug.com/1432009) Allow form controls with vertical writing mode
++      // to have direction affect the flow of the control.
+       name: "FormControlsVerticalWritingModeDirectionSupport",
++      status: "stable",
+     },
+     {
++      // Allow these form controls to have vertical writing mode: select, meter,
++      // progress, button and non-text-based input types.
+       name: "FormControlsVerticalWritingModeSupport",
+-      status: "experimental",
++      status: "stable",
++    },
++    {
++      // Allow text-based form controls to have vertical writing mode: textarea
++      // and input types email, number, password, search, tel, text, url.
++      name: "FormControlsVerticalWritingModeTextSupport",
++      status: "stable",
+     },
+     {
+       name: "FormRelAttribute",
+@@ -1942,6 +2062,11 @@
        },
        base_feature: "none",
      },
@@ -338,7 +362,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..b8f2fe793a045664f6dd4c06685232bf
      // HighlightAPI's custom highlights use HighlightInheritance's behavior even
      // if the HighlightInheritance feature is not enabled.
      {
-@@ -1996,11 +2110,20 @@
+@@ -1996,11 +2121,20 @@
        name: "HTMLPopoverHint",
        status: "experimental",
      },
@@ -359,7 +383,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..b8f2fe793a045664f6dd4c06685232bf
      {
        name: "IDBBatchGetAll",
        status:"experimental",
-@@ -2075,6 +2198,12 @@
+@@ -2075,6 +2209,12 @@
      {
        "name": "IntersectionOptimization",
      },
@@ -372,7 +396,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..b8f2fe793a045664f6dd4c06685232bf
      {
        name: "JavaScriptCompileHintsMagicRuntime",
        status: "experimental",
-@@ -2094,6 +2223,10 @@
+@@ -2094,6 +2234,10 @@
        base_feature: "none",
        settable_from_internals: true,
      },
@@ -383,7 +407,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..b8f2fe793a045664f6dd4c06685232bf
      {
        name: "LayoutDisableWebkitBoxSafeAlignment",
        status: "stable",
-@@ -2137,7 +2270,8 @@
+@@ -2137,7 +2281,8 @@
      },
      {
        name: "LayoutNGSubgrid",
@@ -393,7 +417,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..b8f2fe793a045664f6dd4c06685232bf
        base_feature: "none",
      },
      {
-@@ -2372,6 +2506,10 @@
+@@ -2372,6 +2517,10 @@
        name: "NavigateEventCommitBehavior",
        status: "experimental",
      },
@@ -404,7 +428,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..b8f2fe793a045664f6dd4c06685232bf
      {
        name: "NavigationId",
        status: "experimental",
-@@ -2888,6 +3026,10 @@
+@@ -2888,6 +3037,10 @@
        status: "experimental",
        base_feature: "none",
      },
@@ -415,7 +439,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..b8f2fe793a045664f6dd4c06685232bf
      {
        name: "ReadableStreamTeeCloneForBranch2",
        status: "stable",
-@@ -3044,6 +3186,10 @@
+@@ -3044,6 +3197,10 @@
      // Legacy callback-based getStats() has limited availability unless this
      // Deprecation Trial is enabled.
      // TODO(https://crbug.com/822696): Remove when origin trial ends.
@@ -426,7 +450,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..b8f2fe793a045664f6dd4c06685232bf
      {
        name: "RTCLegacyCallbackBasedGetStats",
        origin_trial_feature_name: "RTCLegacyCallbackBasedGetStats",
-@@ -3109,18 +3255,23 @@
+@@ -3109,18 +3266,23 @@
        status: "stable",
        base_feature: "none",
      },
@@ -453,7 +477,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..b8f2fe793a045664f6dd4c06685232bf
      },
      {
        name: "ScrollCustomization",
-@@ -3231,6 +3382,10 @@
+@@ -3231,6 +3393,10 @@
        origin_trial_feature_name: "ServiceWorkerStaticRouter",
        public: true,
      },
@@ -464,7 +488,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..b8f2fe793a045664f6dd4c06685232bf
      {
        name: "SharedArrayBuffer",
        base_feature: "none",
-@@ -3449,10 +3604,19 @@
+@@ -3449,10 +3615,19 @@
        name: "StylusHandwriting",
        base_feature: "none",
      },
@@ -484,7 +508,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..b8f2fe793a045664f6dd4c06685232bf
      {
        name: "SvgRasterOptimizations",
        status: "experimental",
-@@ -3467,6 +3631,13 @@
+@@ -3467,6 +3642,13 @@
        status: "experimental",
        base_feature: "none",
      },
@@ -498,7 +522,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..b8f2fe793a045664f6dd4c06685232bf
      // For unit tests.
      {
        name: "TestFeature",
-@@ -3513,6 +3684,10 @@
+@@ -3513,6 +3695,10 @@
        status: {"Android": "stable"},
        base_feature: "none",
      },
@@ -509,7 +533,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..b8f2fe793a045664f6dd4c06685232bf
      {
        name: "ThirdPartyCookiesUserBypass",
        status: "experimental",
-@@ -3638,11 +3813,24 @@
+@@ -3638,11 +3824,24 @@
        origin_trial_feature_name: "UnrestrictedSharedArrayBuffer",
        origin_trial_os: ["win", "mac", "linux", "fuchsia", "chromeos"],
      },
@@ -534,7 +558,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..b8f2fe793a045664f6dd4c06685232bf
      {
        // Makes the global root scrollbars follow the preferred color scheme
        // by default. Please see more details: crbug.com/1423087.
-@@ -3657,6 +3845,11 @@
+@@ -3657,6 +3856,11 @@
        name: "UserAgentClientHint",
        status: "stable",
      },
@@ -546,7 +570,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..b8f2fe793a045664f6dd4c06685232bf
      {
        name: "V8IdleTasks",
        base_feature: "none",
-@@ -3723,6 +3916,10 @@
+@@ -3723,6 +3927,10 @@
        // See https://drafts.csswg.org/css-view-transitions-1/.
        name: "ViewTransitionOnNavigation",
      },
@@ -557,7 +581,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..b8f2fe793a045664f6dd4c06685232bf
      {
        name: "VisibilityCollapseColumn",
        base_feature: "none",
-@@ -4031,6 +4228,10 @@
+@@ -4031,6 +4239,10 @@
        status: "test",
        base_feature: "none",
      },
@@ -568,7 +592,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..b8f2fe793a045664f6dd4c06685232bf
      {
        name: "WebSocketStream",
        status: "experimental",
-@@ -4167,6 +4368,12 @@
+@@ -4167,6 +4379,12 @@
        name: "WindowPlacementFullscreenOnScreensChange",
        status: "experimental",
      },

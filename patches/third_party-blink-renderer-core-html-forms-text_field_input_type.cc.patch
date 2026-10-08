@@ -1,8 +1,41 @@
 diff --git a/third_party/blink/renderer/core/html/forms/text_field_input_type.cc b/third_party/blink/renderer/core/html/forms/text_field_input_type.cc
-index 5842bb60b1b1c952571f093f0da93283074931ff..2854923eaad1ac6a85dcba7c546af2d939b316c0 100644
+index 5842bb60b1b1c952571f093f0da93283074931ff..15273b16d67d89b1468a2410e7e7bbafa9c16d2e 100644
 --- a/third_party/blink/renderer/core/html/forms/text_field_input_type.cc
 +++ b/third_party/blink/renderer/core/html/forms/text_field_input_type.cc
-@@ -588,6 +588,8 @@ void TextFieldInputType::SubtreeHasChanged() {
+@@ -32,6 +32,7 @@
+ #include "third_party/blink/renderer/core/html/forms/text_field_input_type.h"
+ 
+ #include "third_party/blink/renderer/core/dom/events/event_dispatch_forbidden_scope.h"
++#include "third_party/blink/renderer/core/dom/node_computed_style.h"
+ #include "third_party/blink/renderer/core/dom/shadow_root.h"
+ #include "third_party/blink/renderer/core/editing/frame_selection.h"
+ #include "third_party/blink/renderer/core/events/before_text_inserted_event.h"
+@@ -230,12 +231,21 @@ void TextFieldInputType::HandleKeydownEventForSpinButton(KeyboardEvent& event) {
+   if (GetElement().IsDisabledOrReadOnly())
+     return;
+   const String& key = event.key();
+-  if (key == "ArrowUp")
++  bool is_horizontal =
++      GetElement().GetComputedStyle()
++          ? GetElement().GetComputedStyle()->IsHorizontalWritingMode()
++          : true;
++
++  if ((is_horizontal && key == "ArrowUp") ||
++      (!is_horizontal && key == "ArrowRight")) {
+     SpinButtonStepUp();
+-  else if (key == "ArrowDown" && !event.altKey())
++  } else if (((is_horizontal && key == "ArrowDown") ||
++              (!is_horizontal && key == "ArrowLeft")) &&
++             !event.altKey()) {
+     SpinButtonStepDown();
+-  else
++  } else {
+     return;
++  }
+   GetElement().DispatchFormControlChangeEvent();
+   event.SetDefaultHandled();
+ }
+@@ -588,6 +598,8 @@ void TextFieldInputType::SubtreeHasChanged() {
    GetElement().UpdatePlaceholderVisibility();
    GetElement().PseudoStateChanged(CSSSelector::kPseudoValid);
    GetElement().PseudoStateChanged(CSSSelector::kPseudoInvalid);

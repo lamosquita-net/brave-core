@@ -8,10 +8,12 @@
 #include <set>
 
 #include "brave/browser/ui/tabs/features.h"
+#include "brave/browser/ui/tabs/shared_pinned_tab_service_factory.h"
 #include "brave/browser/ui/views/frame/brave_browser_view.h"
 #include "brave/browser/ui/views/frame/vertical_tab_strip_region_view.h"
 #include "brave/browser/ui/views/frame/vertical_tab_strip_widget_delegate_view.h"
 #include "brave/browser/ui/views/tabs/vertical_tab_utils.h"
+#include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/tabs/tab_group.h"
 #include "chrome/browser/ui/tabs/tab_group_model.h"
 #include "chrome/browser/ui/views/tabs/window_finder.h"
@@ -55,7 +57,15 @@ void TabDragController::Init(TabDragContext* source_context,
                                   mouse_offset, source_view_offset,
                                   initial_selection_model, event_source);
 
-  if (base::FeatureList::IsEnabled(tabs::features::kBraveSharedPinnedTabs)) {
+  // FlyWeb: only when pinned tabs are shared for this profile (F7.8).
+  auto* source_widget = source_view ? source_view->GetWidget() : nullptr;
+  auto* source_browser_view =
+      source_widget ? BrowserView::GetBrowserViewForNativeWindow(
+                          source_widget->GetNativeWindow())
+                    : nullptr;
+  if (source_browser_view &&
+      SharedPinnedTabServiceFactory::IsEnabledForProfile(
+          source_browser_view->browser()->profile())) {
     if (base::ranges::any_of(dragging_views, [](auto* slot_view) {
           // We don't allow sharable pinned tabs to be detached.
           return slot_view->GetTabSlotViewType() ==

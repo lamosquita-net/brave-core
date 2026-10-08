@@ -1,0 +1,24 @@
+diff --git a/third_party/blink/renderer/core/editing/editing_behavior.h b/third_party/blink/renderer/core/editing/editing_behavior.h
+index cea818e7374205766d8d5fb06846c90e8839738d..1ed98b77910ad637a9017a5d6ac8eb58a576b8c8 100644
+--- a/third_party/blink/renderer/core/editing/editing_behavior.h
++++ b/third_party/blink/renderer/core/editing/editing_behavior.h
+@@ -27,7 +27,9 @@
+ #include "third_party/blink/renderer/platform/wtf/allocator/allocator.h"
+ 
+ namespace blink {
++
+ class KeyboardEvent;
++enum class WritingMode : uint8_t;
+ 
+ class CORE_EXPORT EditingBehavior {
+   STACK_ALLOCATED();
+@@ -136,7 +138,8 @@ class CORE_EXPORT EditingBehavior {
+ 
+   // Convert a KeyboardEvent to a command name like "Copy", "Undo" and so on.
+   // If nothing, return empty string.
+-  const char* InterpretKeyEvent(const KeyboardEvent&) const;
++  const char* InterpretKeyEvent(const KeyboardEvent&,
++                                WritingMode writing_mode) const;
+ 
+   bool ShouldInsertCharacter(const KeyboardEvent&) const;
+ 
