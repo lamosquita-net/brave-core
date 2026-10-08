@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_theme.cc b/third_party/blink/renderer/core/layout/layout_theme.cc
-index 06fb69c7401baea56daccc25947de427fcf34bf1..24f637e8652d06f25538faf62909de22e575bba6 100644
+index 06fb69c7401baea56daccc25947de427fcf34bf1..10c60ff15cf3f330b46961f468d1594d96853e67 100644
 --- a/third_party/blink/renderer/core/layout/layout_theme.cc
 +++ b/third_party/blink/renderer/core/layout/layout_theme.cc
 @@ -21,6 +21,7 @@
@@ -10,7 +10,43 @@ index 06fb69c7401baea56daccc25947de427fcf34bf1..24f637e8652d06f25538faf62909de22
  #include "build/build_config.h"
  #include "third_party/blink/public/strings/grit/blink_strings.h"
  #include "third_party/blink/public/web/blink.h"
-@@ -703,7 +704,13 @@ Color LayoutTheme::DefaultSystemColor(
+@@ -465,16 +466,11 @@ void LayoutTheme::AdjustSliderContainerStyle(
+     ComputedStyleBuilder& builder) const {
+   DCHECK(IsSliderContainer(element));
+ 
+-  if (!RuntimeEnabledFeatures::
+-          RemoveNonStandardAppearanceValueSliderVerticalEnabled() &&
+-      builder.EffectiveAppearance() == kSliderVerticalPart) {
+-    builder.SetTouchAction(TouchAction::kPanX);
+-    builder.SetWritingMode(WritingMode::kVerticalRl);
+-    // It's always in RTL because the slider value increases up even in LTR.
+-    builder.SetDirection(TextDirection::kRtl);
+-  } else if (RuntimeEnabledFeatures::
+-                 FormControlsVerticalWritingModeSupportEnabled() &&
+-             !IsHorizontalWritingMode(builder.GetWritingMode())) {
++  // FlyWeb: 861a584846565 (Chromium 124) with the 116 flag naming
++  // (RemoveNonStandardAppearanceValueSliderVertical): vertical writing mode
++  // first; appearance: slider-vertical keeps its old always-RTL behavior.
++  if (RuntimeEnabledFeatures::FormControlsVerticalWritingModeSupportEnabled() &&
++      !IsHorizontalWritingMode(builder.GetWritingMode())) {
+     builder.SetTouchAction(TouchAction::kPanX);
+     // If FormControlsVerticalWritingModeDirectionSupport disabled, then it is
+     // always RTL because the slider value increases up even in LTR.
+@@ -482,6 +478,13 @@ void LayoutTheme::AdjustSliderContainerStyle(
+             FormControlsVerticalWritingModeDirectionSupportEnabled()) {
+       builder.SetDirection(TextDirection::kRtl);
+     }
++  } else if (!RuntimeEnabledFeatures::
++                 RemoveNonStandardAppearanceValueSliderVerticalEnabled() &&
++             builder.EffectiveAppearance() == kSliderVerticalPart) {
++    builder.SetTouchAction(TouchAction::kPanX);
++    builder.SetWritingMode(WritingMode::kVerticalRl);
++    // It's always in RTL because the slider value increases up even in LTR.
++    builder.SetDirection(TextDirection::kRtl);
+   } else {
+     builder.SetTouchAction(TouchAction::kPanY);
+     builder.SetWritingMode(WritingMode::kHorizontalTb);
+@@ -703,7 +706,13 @@ Color LayoutTheme::DefaultSystemColor(
      default:
        break;
    }

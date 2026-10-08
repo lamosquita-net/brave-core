@@ -1,8 +1,45 @@
 diff --git a/ui/native_theme/native_theme.h b/ui/native_theme/native_theme.h
-index 5ee7cd7952f7b956c32e793e251d5b0cb457026a..31d9b0d5eb601cfe8c06558412ca217ea0efca2d 100644
+index 5ee7cd7952f7b956c32e793e251d5b0cb457026a..289e2797ea3b19fcae47ef34c484147e0fec7b05 100644
 --- a/ui/native_theme/native_theme.h
 +++ b/ui/native_theme/native_theme.h
-@@ -294,6 +294,11 @@ class NATIVE_THEME_EXPORT NativeTheme {
+@@ -192,9 +192,16 @@ class NATIVE_THEME_EXPORT NativeTheme {
+     SkColor default_background_color;
+   };
+ 
++  enum class SpinArrowsDirection : int {
++    kLeftRight,
++    kUpDown,
++  };
++
+   struct InnerSpinButtonExtraParams {
+     bool spin_up;
+     bool read_only;
++    // FlyWeb: backported from Chromium 124 (5fd7fcbfdecc1).
++    SpinArrowsDirection spin_arrows_direction;
+     int classic_state;  // Used on Windows when uxtheme is not available.
+   };
+ 
+@@ -224,12 +231,19 @@ class NATIVE_THEME_EXPORT NativeTheme {
+     int corner_radius;
+   };
+ 
++  enum class ArrowDirection : int {
++    kDown,
++    kLeft,
++    kRight,
++  };
++
+   struct MenuListExtraParams {
+     bool has_border;
+     bool has_border_radius;
+     int arrow_x;
+     int arrow_y;
+     int arrow_size;
++    ArrowDirection arrow_direction;
+     SkColor arrow_color;
+     SkColor background_color;
+     int classic_state;  // Used on Windows when uxtheme is not available.
+@@ -294,6 +308,11 @@ class NATIVE_THEME_EXPORT NativeTheme {
      ScrollbarOverlayColorTheme scrollbar_theme;
      ScrollbarOrientation orientation;  // Used on Mac for drawing gradients.
      float scale_from_dip;
