@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/editing/serializers/markup_accumulator.cc b/third_party/blink/renderer/core/editing/serializers/markup_accumulator.cc
-index e0085fa19eaf3f45e861b7ec8cabab1743e4b644..06094aaa93200de76826c47629825b4044716c73 100644
+index e0085fa19eaf3f45e861b7ec8cabab1743e4b644..26745ddd604ede676f95572e659933b936638967 100644
 --- a/third_party/blink/renderer/core/editing/serializers/markup_accumulator.cc
 +++ b/third_party/blink/renderer/core/editing/serializers/markup_accumulator.cc
 @@ -41,6 +41,7 @@
@@ -72,3 +72,30 @@ index e0085fa19eaf3f45e861b7ec8cabab1743e4b644..06094aaa93200de76826c47629825b40
    return std::pair<Node*, Element*>(shadow_root, template_element);
  }
  
+@@ -616,12 +643,9 @@ void MarkupAccumulator::SerializeNodesWithNamespaces(
+       // null content() - don't serialize contents in this case.
+       parent = template_element->content();
+     }
+-    if (parent) {
+-      for (const Node& child : Strategy::ChildrenOf(*parent))
+-        SerializeNodesWithNamespaces<Strategy>(child, kIncludeNode);
+-    }
+ 
+-    // Traverses other DOM tree, i.e., shadow tree.
++    // Traverses the shadow tree first: getHTML() writes the <template
++    // shadowrootmode> before the light children (Chromium 125, 09e2fe4b993e2).
+     std::pair<Node*, Element*> auxiliary_pair =
+         GetAuxiliaryDOMTree(target_element);
+     if (Node* auxiliary_tree = auxiliary_pair.first) {
+@@ -635,6 +659,11 @@ void MarkupAccumulator::SerializeNodesWithNamespaces(
+         AppendEndTag(*enclosing_element, enclosing_element_prefix);
+     }
+ 
++    if (parent) {
++      for (const Node& child : Strategy::ChildrenOf(*parent))
++        SerializeNodesWithNamespaces<Strategy>(child, kIncludeNode);
++    }
++
+     if (!children_only)
+       AppendEndTag(target_element, prefix_override);
+   }
