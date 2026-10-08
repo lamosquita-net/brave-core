@@ -1,0 +1,15 @@
+diff --git a/src/objects/js-date-time-format.cc b/src/objects/js-date-time-format.cc
+index 4a9ddde08749d125652f6bae641e73ba072ac7c3..28dd297b6267d699d1e53253d669050cd1c534b5 100644
+--- a/src/objects/js-date-time-format.cc
++++ b/src/objects/js-date-time-format.cc
+@@ -1696,6 +1696,10 @@ base::Optional<std::string> GetOffsetTimeZone(Isolate* isolate,
+   if (m0 == ':') {
+     // Ignore ':'
+     p++;
++    if (len == p) {
++      // Error
++      return std::nullopt;
++    }
+     m0 = flat.Get(p);
+   }
+   if (len - p != 2) {

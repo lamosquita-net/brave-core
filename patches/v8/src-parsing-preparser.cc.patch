@@ -1,0 +1,21 @@
+diff --git a/src/parsing/preparser.cc b/src/parsing/preparser.cc
+index 3da36c7415f3a510ebfd9fa0f41189798bdad427..ddfb9927ee6ec7c8cfe6d71e0ae0561236ffe730 100644
+--- a/src/parsing/preparser.cc
++++ b/src/parsing/preparser.cc
+@@ -46,12 +46,13 @@ PreParserIdentifier GetIdentifierHelper(Scanner* scanner,
+   if (string == avf->name_string()) {
+     return PreParserIdentifier::Name();
+   }
+-  if (scanner->literal_contains_escapes()) {
+-    return PreParserIdentifier::Default();
+-  }
++  // FlyWeb: v8 9a884b1b (crbug 430344952): "eval" with escapes is still eval.
+   if (string == avf->eval_string()) {
+     return PreParserIdentifier::Eval();
+   }
++  if (scanner->literal_contains_escapes()) {
++    return PreParserIdentifier::Default();
++  }
+   if (string == avf->arguments_string()) {
+     return PreParserIdentifier::Arguments();
+   }

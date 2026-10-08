@@ -1,0 +1,15 @@
+diff --git a/src/compiler/js-call-reducer.cc b/src/compiler/js-call-reducer.cc
+index d4c551a29e8169aeba37ebda4c44d994a543bd99..f0bc182bac6ecb699860de09949eb211fb643707 100644
+--- a/src/compiler/js-call-reducer.cc
++++ b/src/compiler/js-call-reducer.cc
+@@ -4640,6 +4640,10 @@ Reduction JSCallReducer::ReduceJSCall(Node* node) {
+       // succeed.
+       FixedArrayRef bound_arguments = function.bound_arguments(broker());
+       const int bound_arguments_length = bound_arguments.length();
++      // FlyWeb: v8 d3577087 (crbug 385155406).
++      if (arity + bound_arguments_length > Code::kMaxArguments) {
++        return NoChange();
++      }
+       static constexpr int kInlineSize = 16;  // Arbitrary.
+       base::SmallVector<Node*, kInlineSize> args;
+       for (int i = 0; i < bound_arguments_length; ++i) {
