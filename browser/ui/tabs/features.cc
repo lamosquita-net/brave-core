@@ -21,8 +21,10 @@ BASE_FEATURE(kBraveChangeActiveTabOnScrollEvent,
              base::FEATURE_ENABLED_BY_DEFAULT);
 #endif  // BUILDFLAG(IS_LINUX)
 
+// FlyWeb: on by default (HUMANO, 07-10, F7.8); users turn it off with the
+// brave.tabs.shared_pinned_tab pref in Settings > Appearance > Tabs.
 BASE_FEATURE(kBraveSharedPinnedTabs,
              "BraveSharedPinnedTabs",
-             base::FEATURE_DISABLED_BY_DEFAULT);
+             base::FEATURE_ENABLED_BY_DEFAULT);
 
 }  // namespace tabs::features

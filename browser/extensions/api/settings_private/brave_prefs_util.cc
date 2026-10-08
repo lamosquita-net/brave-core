@@ -313,6 +313,9 @@ const PrefsUtil::TypedPrefMap& BravePrefsUtil::GetAllowlistedKeys() {
         settings_api::PrefType::PREF_TYPE_BOOLEAN;
     (*s_brave_allowlist)[brave_tabs::kVerticalTabsShowTitleOnWindow] =
         settings_api::PrefType::PREF_TYPE_BOOLEAN;
+    // FlyWeb: shared pinned tabs (F7.8).
+    (*s_brave_allowlist)[brave_tabs::kSharedPinnedTab] =
+        settings_api::PrefType::PREF_TYPE_BOOLEAN;
   }
 #endif
   return *s_brave_allowlist;

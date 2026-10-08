@@ -17,7 +17,8 @@
 
 TabRendererData TabRendererData::FromTabInModel(TabStripModel* model,
                                                 int index) {
-  if (base::FeatureList::IsEnabled(tabs::features::kBraveSharedPinnedTabs)) {
+  if (SharedPinnedTabServiceFactory::IsEnabledForProfile(
+          model->GetProfile())) {
     if (index < model->IndexOfFirstNonPinnedTab()) {
       auto* shared_pinned_tab_service =
           SharedPinnedTabServiceFactory::GetForProfile(model->GetProfile());

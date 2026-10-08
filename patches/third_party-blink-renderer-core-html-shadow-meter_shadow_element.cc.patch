@@ -1,0 +1,19 @@
+diff --git a/third_party/blink/renderer/core/html/shadow/meter_shadow_element.cc b/third_party/blink/renderer/core/html/shadow/meter_shadow_element.cc
+index d564ca629f5817a3d8bdba3ddc27ff76b3058f68..3933a06bd58d7d628348f6a8c80b555e2fd68bd8 100644
+--- a/third_party/blink/renderer/core/html/shadow/meter_shadow_element.cc
++++ b/third_party/blink/renderer/core/html/shadow/meter_shadow_element.cc
+@@ -21,9 +21,11 @@ HTMLMeterElement* MeterShadowElement::MeterElement() const {
+ void MeterShadowElement::AdjustStyle(ComputedStyleBuilder& builder) {
+   const ComputedStyle* meter_style = MeterElement()->GetComputedStyle();
+   DCHECK(meter_style);
+-  // For vertical writing-mode, we need to set the direction to rtl so that
+-  // the meter value bar is rendered bottom up.
+-  if (!IsHorizontalWritingMode(builder.GetWritingMode())) {
++  // For vertical writing-mode, if direction is not supported, we need to set
++  // the direction to rtl so that the meter value bar is rendered bottom up.
++  if (!RuntimeEnabledFeatures::
++          FormControlsVerticalWritingModeDirectionSupportEnabled() &&
++      !IsHorizontalWritingMode(builder.GetWritingMode())) {
+     builder.SetDirection(TextDirection::kRtl);
+   }
+ }

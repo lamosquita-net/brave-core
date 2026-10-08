@@ -1,0 +1,48 @@
+diff --git a/third_party/blink/renderer/core/layout/layout_block.cc b/third_party/blink/renderer/core/layout/layout_block.cc
+index d932baa4ec2aff7379169456633c686a279862ff..8494873319959a426e73ec7e55b8523b70d6c9a5 100644
+--- a/third_party/blink/renderer/core/layout/layout_block.cc
++++ b/third_party/blink/renderer/core/layout/layout_block.cc
+@@ -750,11 +750,12 @@ absl::optional<LayoutUnit> LayoutBlock::BaselineForEmptyLine() const {
+   if (!font_data)
+     return absl::nullopt;
+   const auto& font_metrics = font_data->GetFontMetrics();
++  const auto baseline_type = style->GetFontBaseline();
+   const LayoutUnit line_height = FirstLineHeight();
+   const LayoutUnit border_padding = style->IsHorizontalWritingMode()
+                                         ? BorderTop() + PaddingTop()
+                                         : BorderRight() + PaddingRight();
+-  return LayoutUnit((font_metrics.Ascent() +
++  return LayoutUnit((font_metrics.Ascent(baseline_type) +
+                      (line_height - font_metrics.Height()) / 2 + border_padding)
+                         .ToInt());
+ }
+@@ -839,11 +840,25 @@ LayoutRect LayoutBlock::LocalCaretRect(
+     return LayoutBox::LocalCaretRect(caret_offset, extra_width_to_end_of_line);
+   }
+ 
+-  LayoutRect caret_rect =
+-      LocalCaretRectForEmptyElement(Size().Width(), TextIndentOffset());
++  const ComputedStyle& style = StyleRef();
++  const bool is_horizontal = style.IsHorizontalWritingMode();
++
++  LayoutRect caret_rect;
++  if (is_horizontal) {
++    caret_rect =
++        LocalCaretRectForEmptyElement(Size().Width(), TextIndentOffset());
+ 
+-  if (extra_width_to_end_of_line)
+-    *extra_width_to_end_of_line = Size().Width() - caret_rect.MaxX();
++    if (extra_width_to_end_of_line) {
++      *extra_width_to_end_of_line = Size().Width() - caret_rect.MaxX();
++    }
++  } else {
++    caret_rect =
++        LocalCaretRectForEmptyElement(Size().Height(), TextIndentOffset());
++
++    if (extra_width_to_end_of_line) {
++      *extra_width_to_end_of_line = Size().Height() - caret_rect.MaxY();
++    }
++  }
+ 
+   return caret_rect;
+ }
