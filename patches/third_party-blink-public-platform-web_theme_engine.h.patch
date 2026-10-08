@@ -1,8 +1,48 @@
 diff --git a/third_party/blink/public/platform/web_theme_engine.h b/third_party/blink/public/platform/web_theme_engine.h
-index 97f1dbf351c6251907db86f69b062721db92d94c..07252442d0d8fcffbf1823e78a0328eb5f88c1ac 100644
+index 97f1dbf351c6251907db86f69b062721db92d94c..04bdb5e6f4b93d2d4aa6c3e666abc0cfc54bbb9a 100644
 --- a/third_party/blink/public/platform/web_theme_engine.h
 +++ b/third_party/blink/public/platform/web_theme_engine.h
-@@ -205,6 +205,11 @@ class WebThemeEngine {
+@@ -132,6 +132,12 @@ class WebThemeEngine {
+     float zoom;
+   };
+ 
++  enum class ArrowDirection : int {
++    kDown,
++    kLeft,
++    kRight,
++  };
++
+   // Extra parameters for PartMenuList
+   struct MenuListExtraParams {
+     bool has_border;
+@@ -139,6 +145,7 @@ class WebThemeEngine {
+     int arrow_x;
+     int arrow_y;
+     int arrow_size;
++    ArrowDirection arrow_direction;
+     SkColor arrow_color;
+     SkColor background_color;
+     bool fill_content_area;
+@@ -155,10 +162,18 @@ class WebThemeEngine {
+     bool right_to_left;
+   };
+ 
++  enum class SpinArrowsDirection : int {
++    kLeftRight,
++    kUpDown,
++  };
++
+   // Extra parameters for PartInnerSpinButton
+   struct InnerSpinButtonExtraParams {
+     bool spin_up;
+     bool read_only;
++    // FlyWeb: backported from Chromium 124 (5fd7fcbfdecc1). No default
++    // member initializer: this struct is a member of the ExtraParams union.
++    SpinArrowsDirection spin_arrows_direction;
+   };
+ 
+   // Extra parameters for PartProgressBar
+@@ -205,6 +220,11 @@ class WebThemeEngine {
      mojom::ColorScheme scrollbar_theme;
      ScrollbarOrientation orientation;
      float scale_from_dip;
@@ -14,7 +54,7 @@ index 97f1dbf351c6251907db86f69b062721db92d94c..07252442d0d8fcffbf1823e78a0328eb
    };
  #endif
  
-@@ -220,6 +225,8 @@ class WebThemeEngine {
+@@ -220,6 +240,8 @@ class WebThemeEngine {
      ScrollbarButtonExtraParams scrollbar_button;
  #if BUILDFLAG(IS_MAC)
      ScrollbarExtraParams scrollbar_extra;
