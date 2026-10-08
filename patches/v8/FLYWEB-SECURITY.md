@@ -29,6 +29,7 @@ per file): of its 42 patch files, 25 are already in.
 | `src-builtins-builtins-wasm-gen.cc.patch`, `src-builtins-wasm.tq.patch`, `src-builtins-builtins-definitions.h.patch` | CVE-2026-87491 (exploited, 08-09-2026): `WasmGetOwnProperty` in CSA without invoking getters (v8 36079c36) | as on 12.5 |
 | `src-builtins-builtins-collections-gen.{cc,h}.patch`, `src-builtins-object-groupby.tq.patch`, `src-runtime-runtime-collections.cc.patch` | `Object.groupBy`/`Map.groupBy` with too many groups: `RangeError`, not a crash (77df647d + 92aba703) | as on 12.5 |
 | `src-flags-flag-definitions.h.patch` | Attack-surface options, see below | |
+| `src-compiler-turboshaft-late-load-elimination-reducer.cc.patch`, `src-compiler-turboshaft-snapshot-table-opindex.h.patch` | M132-LTS 5cf18d03 (crbug 417169470): a map store invalidates the known maps of **all** objects, not only of its base (they can alias). Needed because load elimination is on here (upstream's tracing code left out) | new on this level |
 | 12 new files: `src-codegen-handler-table.cc`, `src-bigint-fromstring.cc`, `src-compiler-representation-change.cc`, `src-objects-js-date-time-format.cc`, `src-compiler-access-info.cc`, `src-compiler-property-access-builder.cc`, `src-deoptimizer-deoptimizer.cc`, `src-objects-code.h`, `src-parsing-preparser.cc`, `src-compiler-js-call-reducer.cc`, `src-compiler-js-inlining.cc`, `src-objects-js-regexp.cc` | M132-LTS, see next section | new on this level |
 
 ## New on this level: Google's M132-LTS branch (V8 13.2.152.x, up to 13.2.152.56, 09-2025)
@@ -58,7 +59,7 @@ Not applicable to 12.6: 91343bb4 (no `TrustedHeapConstant` yet), ccc23e07 (no `O
 `StructType::operator==`, which includes mutability), d0e4805f/72d0b3a6 (call_indirect inlining: `turboshaft_wasm` and
 the experimental flag, both off), 2603ba09. Native or equal: 80600881, f3962853, 9209292e, 3c2d220a, b27e7ac0, 97e828af,
 7e36549f. Not ported on purpose: Maglev (off), ARM, JSPI (off: d6e86387, 86e6857f), Turboshaft-Wasm (off), Turboshaft
-load elimination and loop unrolling (5cf18d03, 2e96808d: off, see below), 5a7e02c2 (Intl: out-of-resources `FATAL` ->
+loop unrolling for huge Wasm functions (2e96808d), 5a7e02c2 (Intl: out-of-resources `FATAL` ->
 exception, availability only), fc26d62d, 65a1429d.
 
 ## Attack surface (flags)
@@ -67,11 +68,12 @@ exception, availability only), fc26d62d, 65a1429d.
 - Turboshaft instruction selection off (HUMAN, 06-10).
 - `wasm_to_js_generic_wrapper` off, as on 1.7.1-1.9 and before (SEGURIDAD, 07-10). V8 12.6 has the later fixes
   (c8c02de5, 8d6bd5e1), so it *could* be on; it stays off for coherence with the earlier levels. The HUMAN can reverse it.
-- **New: `turboshaft_load_elimination` off and `turboshaft_loop_unrolling` off.** They are on by default only since
-  V8 12.6 (off in 12.0-12.5, so in every FlyWeb before 1.10); the M132-LTS branch fixed a bug in the first one
-  (5cf18d03). A flag-by-flag comparison of 12.5.227.13 and 12.6.228.49 shows nothing else changes its default
-  (`enable_avx_vnni` is new, but it is a CPU feature switch tested at run time, not a requirement). SEGURIDAD,
-  08-10-2026; decision for the HUMAN (speed of optimised JS vs. attack surface), reversible with two lines.
+- **`turboshaft_load_elimination` and `turboshaft_loop_unrolling` stay ON**, as in V8 12.6 (they are on by default since
+  12.6; off in 12.0-12.5). Decision of the HUMAN, 08-10-2026 ("we move forward, not back"). SEGURIDAD had left them off
+  as a precaution; with them on, the load-elimination fix of the M132-LTS (5cf18d03) is ported (see above) and the
+  loop-unrolling fix 2e96808d is not (it is about huge Wasm functions; 12.6's unroller has no unroll count, and
+  `turboshaft_wasm` is off). A flag-by-flag comparison of 12.5.227.13 and 12.6.228.49 shows nothing else changes its
+  default (`enable_avx_vnni` is new, but it is a CPU feature switch tested at run time, not a requirement).
 
 ## Tests (SEGURIDAD, 08-10-2026)
 
@@ -79,11 +81,11 @@ On a Linux x64 `d8` of 12.6.228.49 built with `FlyWeb/scripts/v8-d8.sh` (Release
 these patches (the 27 non-Brave files apply to the clean tree and give the tested tree byte for byte):
 
 - `d8` version 12.6.228.49; `--no-maglev`, `--no-maglev-untagged-phis`, `--no-turboshaft-instruction-selection`,
-  `--no-turboshaft-load-elimination`, `--no-turboshaft-loop-unrolling` and `--no-wasm-to-js-generic-wrapper` by default.
+  and `--no-wasm-to-js-generic-wrapper` by default; `--turboshaft-load-elimination` and `--turboshaft-loop-unrolling` on, as in V8.
 - Regression tests (`FlyWeb/tools/v8-pruebas/`, upstream's `regress-420636529`, `regress-543557673`, `regress-430344952`,
   the groupBy test with 17 M groups -> `RangeError`, CVE-2025-13223 and CVE-2024-7971 tests, the M126-LTS ones that
   ship with the tree): all pass.
-- **mjsunit: 6810/6810** (`tools/run-tests.py --outdir=out/x64 -j4 mjsunit`).
+- **mjsunit: 6810/6810** (`tools/run-tests.py --outdir=out/x64 -j4 mjsunit`), with load elimination and loop unrolling on (second round, after the HUMAN decision).
 - Ad-hoc sanity checks of the ported behaviour (regexp `source` escapes, parameter limit, escaped `eval`, `bind` with
   30 000 arguments).
 

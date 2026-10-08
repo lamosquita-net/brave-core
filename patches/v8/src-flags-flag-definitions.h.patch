@@ -1,5 +1,5 @@
 diff --git a/src/flags/flag-definitions.h b/src/flags/flag-definitions.h
-index 686ce7445741f9afb21983098d64549d6e827447..f6c712e35834f947e2d878f7703e811286b4bab3 100644
+index 686ce7445741f9afb21983098d64549d6e827447..f0628b2beaaf4a483886d4738f2a83694f206773 100644
 --- a/src/flags/flag-definitions.h
 +++ b/src/flags/flag-definitions.h
 @@ -526,7 +526,9 @@ DEFINE_BOOL(force_emit_interrupt_budget_checks, false,
@@ -23,7 +23,7 @@ index 686ce7445741f9afb21983098d64549d6e827447..f6c712e35834f947e2d878f7703e8112
              "enable phi untagging in the maglev optimizing compiler")
  DEFINE_BOOL(maglev_hoist_osr_value_phi_untagging, true,
              "enable phi untagging to hoist untagging of osr values")
-@@ -1331,13 +1334,20 @@ DEFINE_BOOL(turboshaft_wasm_load_elimination, false,
+@@ -1331,7 +1334,10 @@ DEFINE_BOOL(turboshaft_wasm_load_elimination, false,
              "enable Turboshaft's WasmLoadElimination")
  DEFINE_WEAK_IMPLICATION(turboshaft_wasm, turboshaft_wasm_load_elimination)
  
@@ -34,20 +34,8 @@ index 686ce7445741f9afb21983098d64549d6e827447..f6c712e35834f947e2d878f7703e8112
 +DEFINE_BOOL(turboshaft_instruction_selection, false,
              "run instruction selection on Turboshaft IR directly")
  
--DEFINE_BOOL(turboshaft_load_elimination, true,
-+// FlyWeb: load elimination and loop unrolling are on by default only since
-+// V8 12.6 (off in 12.0-12.5, as in every FlyWeb level before 126). Off here to
-+// keep the JIT surface of levels 120-125 (SEGURIDAD, 08-10-2026; the HUMAN can
-+// reverse it).
-+DEFINE_BOOL(turboshaft_load_elimination, false,
-             "enable Turboshaft's low-level load elimination for JS")
- DEFINE_BOOL(turboshaft_loop_peeling, false, "enable Turboshaft's loop peeling")
--DEFINE_BOOL(turboshaft_loop_unrolling, true,
-+DEFINE_BOOL(turboshaft_loop_unrolling, false,
-             "enable Turboshaft's loop unrolling")
- 
- DEFINE_EXPERIMENTAL_FEATURE(turboshaft_typed_optimizations,
-@@ -1427,7 +1437,11 @@ DEFINE_VALUE_IMPLICATION(optimize_for_size, max_semi_space_size, size_t{1})
+ DEFINE_BOOL(turboshaft_load_elimination, true,
+@@ -1427,7 +1433,11 @@ DEFINE_VALUE_IMPLICATION(optimize_for_size, max_semi_space_size, size_t{1})
  DEFINE_BOOL(wasm_generic_wrapper, true,
              "allow use of the generic js-to-wasm wrapper instead of "
              "per-signature wrappers")
