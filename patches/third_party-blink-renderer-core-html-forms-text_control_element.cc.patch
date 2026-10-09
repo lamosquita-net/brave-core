@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/forms/text_control_element.cc b/third_party/blink/renderer/core/html/forms/text_control_element.cc
-index c608dcf782dd95f69b94fc1c8505aef63b021b2d..cf2f30911fb250332a195f95f071bcd1ee36d2eb 100644
+index c608dcf782dd95f69b94fc1c8505aef63b021b2d..cb2ab2181a1d87805c8cbc792edaaf9aee5bfe13 100644
 --- a/third_party/blink/renderer/core/html/forms/text_control_element.cc
 +++ b/third_party/blink/renderer/core/html/forms/text_control_element.cc
 @@ -49,6 +49,7 @@
@@ -18,7 +18,44 @@ index c608dcf782dd95f69b94fc1c8505aef63b021b2d..cf2f30911fb250332a195f95f071bcd1
    } else {
      ClearValueBeforeFirstUserEdit();
    }
-@@ -985,8 +987,13 @@ String TextControlElement::DirectionForFormData() const {
+@@ -473,12 +475,20 @@ bool TextControlElement::SetSelectionRange(
+ 
+   // TODO(crbug.com/927646): The focused element should always be connected, but
+   // we fail to ensure so in some cases. Fix it.
+-  if (ShouldApplySelectionCache() || !isConnected())
++  if (ShouldApplySelectionCache() || !isConnected()) {
++    if (did_change) {
++      ScheduleSelectionchangeEvent();
++    }
+     return did_change;
++  }
+ 
+   HTMLElement* inner_editor = EnsureInnerEditorElement();
+-  if (!frame || !inner_editor)
++  if (!frame || !inner_editor) {
++    if (did_change) {
++      ScheduleSelectionchangeEvent();
++    }
+     return did_change;
++  }
+ 
+   Position start_position = PositionForIndex(inner_editor, start);
+   Position end_position =
+@@ -778,6 +788,13 @@ void TextControlElement::ScheduleSelectEvent() {
+   GetDocument().EnqueueAnimationFrameEvent(event);
+ }
+ 
++void TextControlElement::ScheduleSelectionchangeEvent() {
++  if (RuntimeEnabledFeatures::DispatchSelectionchangeEventPerElementEnabled()) {
++    EnqueueEvent(*Event::CreateBubble(event_type_names::kSelectionchange),
++                 TaskType::kMiscPlatformAPI);
++  }
++}
++
+ void TextControlElement::ParseAttribute(
+     const AttributeModificationParams& params) {
+   if (params.name == html_names::kPlaceholderAttr) {
+@@ -985,8 +1002,13 @@ String TextControlElement::DirectionForFormData() const {
         element = Traversal<HTMLElement>::FirstAncestor(*element)) {
      const AtomicString& dir_attribute_value =
          element->FastGetAttribute(html_names::kDirAttr);
