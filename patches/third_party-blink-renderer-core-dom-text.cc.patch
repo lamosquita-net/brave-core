@@ -1,0 +1,43 @@
+diff --git a/third_party/blink/renderer/core/dom/text.cc b/third_party/blink/renderer/core/dom/text.cc
+index e907f6bb3f8163e646217517c3d853443378c425..e4942e36fb5f3264960d619e13912cd7d5628072 100644
+--- a/third_party/blink/renderer/core/dom/text.cc
++++ b/third_party/blink/renderer/core/dom/text.cc
+@@ -41,6 +41,7 @@
+ #include "third_party/blink/renderer/platform/bindings/dom_data_store.h"
+ #include "third_party/blink/renderer/platform/bindings/exception_state.h"
+ #include "third_party/blink/renderer/platform/wtf/text/string_builder.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+ 
+ namespace blink {
+ 
+@@ -126,11 +127,26 @@ Text* Text::splitText(unsigned offset, ExceptionState& exception_state) {
+   if (exception_state.HadException())
+     return nullptr;
+ 
+-  if (GetLayoutObject()) {
+-    GetLayoutObject()->SetTextWithOffset(data(), 0, old_str.length());
+-    if (ContainsOnlyWhitespaceOrEmpty()) {
++  if (LayoutText* layout_text = GetLayoutObject()) {
++    // FlyWeb (engine level 127): TextDiffSplitFix (Chromium faa6b2f5d67 and
++    // 1fb194ccced): report only the deleted tail to LayoutText, and do not
++    // notify it when the layout tree is rebuilt anyway. In the 116,
++    // SetTextWithOffset(text, offset, length) takes the replaced range of
++    // the old text, i.e. TextDiffRange::Delete(offset, length).
++    if (RuntimeEnabledFeatures::TextDiffSplitFixEnabled()) {
+       // To avoid |LayoutText| has empty text, we rebuild layout tree.
+-      SetForceReattachLayoutTree();
++      if (ContainsOnlyWhitespaceOrEmpty()) {
++        SetForceReattachLayoutTree();
++      } else {
++        layout_text->SetTextWithOffset(data(), offset,
++                                       old_str.length() - offset);
++      }
++    } else {
++      layout_text->SetTextWithOffset(data(), 0, old_str.length());
++      if (ContainsOnlyWhitespaceOrEmpty()) {
++        // To avoid |LayoutText| has empty text, we rebuild layout tree.
++        SetForceReattachLayoutTree();
++      }
+     }
+   }
+ 
