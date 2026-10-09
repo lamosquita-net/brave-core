@@ -63,6 +63,15 @@ default in 12.7. **New defaults in 12.7, left as Chrome 127 ships them (HUMAN to
 `kFlyWebCacheEpoch` 5 → **6** (MOTOR-2 set 5 for level 127; 1.10 ships with 4). 12.7.224.20 already changes
 `Version::Hash()`; the epoch is raised by the rule.
 
-## 6. Tests
+## 6. Tests (cloud `d8`, Linux x64, V8 only; `FlyWeb/scripts/v8-d8.sh`)
 
-See `docs/TAREAS.md`, FS.9.
+- Options as above by default (`--print-flag-values`).
+- FlyWeb's regression tests (`FlyWeb/tools/v8-pruebas/`: CVE-2025-5419, CVE-2025-13223 and 9b5250b9, CVE-2024-7971,
+  CVE-2026-87491, `ev\u0061l`, groupBy 17 M -> `RangeError`) and upstream ones for fixes judged not applicable
+  (371237564, 377971725, 363538434, 366323452, 364422411, 372819446): **14/14**.
+- **mjsunit 6892/6895.** The 3: `regress-v8-6716` needs the same test change Google made with f6961c4 (`kMaxArguments`;
+  passes with it, like `regress-11491` and `regress-crbug-724153`); `turboshaft/turboshaft-maglev-frontend` and
+  `turboshaft/maglev-frontend/throw` exercise the experimental `--turboshaft-from-maglev`, which needs Turboshaft
+  instruction selection (off here): with `--turboshaft-instruction-selection` all 43 `turboshaft/*` tests pass.
+- Not covered by the `d8`: Intl (5a7e02c, 815da990; built without ICU) and the libc++ of Chromium 116. **Not compiled in
+  FlyWeb**: LOCAL builds it.
