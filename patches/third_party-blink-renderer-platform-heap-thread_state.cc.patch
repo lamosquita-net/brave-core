@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/heap/thread_state.cc b/third_party/blink/renderer/platform/heap/thread_state.cc
-index 854859114edbf75b446d7997b819ccecfec3efcd..ebdb6868cd72e04ec7ae7e55d31857dc16dd310a 100644
+index 854859114edbf75b446d7997b819ccecfec3efcd..d2eb54eed41af295d2901dd22c0c72f5f4466905 100644
 --- a/third_party/blink/renderer/platform/heap/thread_state.cc
 +++ b/third_party/blink/renderer/platform/heap/thread_state.cc
 @@ -8,6 +8,7 @@
@@ -50,3 +50,12 @@ index 854859114edbf75b446d7997b819ccecfec3efcd..ebdb6868cd72e04ec7ae7e55d31857dc
      const v8::TracedReference<v8::Object>& traced = handle.As<v8::Object>();
      return DOMWrapperWorld::UnsetMainWorldWrapperIfSet(
          ToScriptWrappable(traced), traced);
+@@ -164,7 +160,7 @@ void ThreadState::NotifyGarbageCollection(v8::GCType type,
+     // required for testing code that cannot use GC internals but rather has
+     // to rely on window.gc(). Only schedule additional GCs if the last GC was
+     // using conservative stack scanning.
+-    if (type == v8::kGCTypeScavenge || type == v8::kGCTypeMinorMarkCompact) {
++    if (type == v8::kGCTypeScavenge || type == v8::kGCTypeMinorMarkSweep) {
+       forced_scheduled_gc_for_testing_ = true;
+     } else if (type == v8::kGCTypeMarkSweepCompact) {
+       forced_scheduled_gc_for_testing_ =

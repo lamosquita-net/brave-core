@@ -1,8 +1,8 @@
 diff --git a/src/interpreter/bytecode-generator.cc b/src/interpreter/bytecode-generator.cc
-index 4feae1fd44acea1af6ddeed231405edd206cd4c7..8b8c0dbfce80a8e862dbf2f2d1e35cc2d3972403 100644
+index 5323d4675b1faf0c205be7e971f375a66e360c47..09230c45c12c8bcad9ca88b104ffde4ba196a3d0 100644
 --- a/src/interpreter/bytecode-generator.cc
 +++ b/src/interpreter/bytecode-generator.cc
-@@ -1151,7 +1151,8 @@ class V8_NODISCARD BytecodeGenerator::OptionalChainNullLabelScope final {
+@@ -1172,7 +1172,8 @@ class V8_NODISCARD BytecodeGenerator::OptionalChainNullLabelScope final {
   public:
    explicit OptionalChainNullLabelScope(BytecodeGenerator* bytecode_generator)
        : bytecode_generator_(bytecode_generator),
@@ -12,7 +12,7 @@ index 4feae1fd44acea1af6ddeed231405edd206cd4c7..8b8c0dbfce80a8e862dbf2f2d1e35cc2
      prev_ = bytecode_generator_->optional_chaining_null_labels_;
      bytecode_generator_->optional_chaining_null_labels_ = &labels_;
    }
-@@ -1166,6 +1167,9 @@ class V8_NODISCARD BytecodeGenerator::OptionalChainNullLabelScope final {
+@@ -1187,6 +1188,9 @@ class V8_NODISCARD BytecodeGenerator::OptionalChainNullLabelScope final {
    BytecodeGenerator* bytecode_generator_;
    BytecodeLabels labels_;
    BytecodeLabels* prev_;
@@ -22,7 +22,7 @@ index 4feae1fd44acea1af6ddeed231405edd206cd4c7..8b8c0dbfce80a8e862dbf2f2d1e35cc2
  };
  
  // LoopScope delimits the scope of {loop}, from its header to its final jump.
-@@ -6043,9 +6047,6 @@ template <typename ExpressionFunc>
+@@ -6050,9 +6054,6 @@ template <typename ExpressionFunc>
  void BytecodeGenerator::BuildOptionalChain(ExpressionFunc expression_func) {
    BytecodeLabel done;
    OptionalChainNullLabelScope label_scope(this);

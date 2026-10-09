@@ -72,7 +72,7 @@ v8::Local<v8::Value> RunScript(v8::Local<v8::Context> context,
                                  v8::MicrotasksScope::kDoNotRunMicrotasks);
   v8::TryCatch try_catch(context->GetIsolate());
   try_catch.SetCaptureMessage(true);
-  v8::ScriptOrigin origin(context->GetIsolate(), name);
+  v8::ScriptOrigin origin(name);
   v8::ScriptCompiler::Source script_source(code, origin);
   v8::Local<v8::Script> script;
   if (!v8::ScriptCompiler::Compile(

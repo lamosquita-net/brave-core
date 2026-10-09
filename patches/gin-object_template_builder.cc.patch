@@ -1,0 +1,20 @@
+diff --git a/gin/object_template_builder.cc b/gin/object_template_builder.cc
+index 3f0995c7ab6ad5241e9ead966d950147fa03020e..c34f694822dda77123eddb9d19ef8909df97fc83 100644
+--- a/gin/object_template_builder.cc
++++ b/gin/object_template_builder.cc
+@@ -170,11 +170,10 @@ ObjectTemplateBuilder& ObjectTemplateBuilder::AddNamedPropertyInterceptor() {
+ }
+ 
+ ObjectTemplateBuilder& ObjectTemplateBuilder::AddIndexedPropertyInterceptor() {
+-  template_->SetIndexedPropertyHandler(&IndexedPropertyGetter,
+-                                       &IndexedPropertySetter,
+-                                       NULL,
+-                                       NULL,
+-                                       &IndexedPropertyEnumerator);
++  // FlyWeb: V8 12.7 removed SetIndexedPropertyHandler (Chromium does the same).
++  template_->SetHandler(v8::IndexedPropertyHandlerConfiguration(
++      &IndexedPropertyGetter, &IndexedPropertySetter, nullptr, nullptr,
++      &IndexedPropertyEnumerator));
+   return *this;
+ }
+ 

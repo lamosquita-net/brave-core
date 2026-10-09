@@ -6,6 +6,8 @@
 #include "src/v8/src/builtins/builtins.cc"
 
 #if BUILDFLAG(ENABLE_BRAVE_PAGE_GRAPH_WEBAPI_PROBES)
+#include "src/builtins/builtins-inl.h"
+#include "src/builtins/builtins-utils-inl.h"
 #include "src/builtins/builtins-utils.h"
 #endif  // BUILDFLAG(ENABLE_BRAVE_PAGE_GRAPH_WEBAPI_PROBES)
 
