@@ -1,0 +1,35 @@
+diff --git a/third_party/blink/renderer/core/paint/paint_layer_resource_info.h b/third_party/blink/renderer/core/paint/paint_layer_resource_info.h
+index 914b7bccdbdb9ba2ff2bbd99b1c04b4a85e81dd3..a92fea0fb3d4d54cd9c8aacd91cc2965f985b63a 100644
+--- a/third_party/blink/renderer/core/paint/paint_layer_resource_info.h
++++ b/third_party/blink/renderer/core/paint/paint_layer_resource_info.h
+@@ -35,6 +35,8 @@
+ #include "third_party/blink/renderer/platform/heap/member.h"
+ #include "third_party/blink/renderer/platform/heap/visitor.h"
+ #include "ui/gfx/geometry/rect_f.h"
++#include "third_party/abseil-cpp/absl/types/optional.h"
++#include "ui/gfx/geometry/size_f.h"
+ 
+ namespace blink {
+ 
+@@ -59,6 +61,13 @@ class PaintLayerResourceInfo final
+   ~PaintLayerResourceInfo() override;
+ 
+   gfx::RectF FilterReferenceBox() const { return filter_reference_box_; }
++  // FlyWeb (engine level 127): viewport for userSpaceOnUse SVG filters.
++  const absl::optional<gfx::SizeF>& FilterViewport() const {
++    return filter_viewport_;
++  }
++  void SetFilterViewport(absl::optional<gfx::SizeF> viewport) {
++    filter_viewport_ = viewport;
++  }
+   void SetFilterReferenceBox(const gfx::RectF& rect) {
+     filter_reference_box_ = rect;
+   }
+@@ -73,6 +82,7 @@ class PaintLayerResourceInfo final
+   // |ClearLayer| must be called before *layer_ becomes invalid.
+   Member<PaintLayer> layer_;
+   gfx::RectF filter_reference_box_;
++  absl::optional<gfx::SizeF> filter_viewport_;
+ };
+ 
+ }  // namespace blink

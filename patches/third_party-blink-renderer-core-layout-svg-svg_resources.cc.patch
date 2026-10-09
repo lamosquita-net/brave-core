@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/svg/svg_resources.cc b/third_party/blink/renderer/core/layout/svg/svg_resources.cc
-index 49486a8897dd2c0f7821f79b7c9d33863617832e..b27457a55a257ac48289fd17225a77035d6761ad 100644
+index 49486a8897dd2c0f7821f79b7c9d33863617832e..f6af77d131edf851004b6ebfd60345472485fe2d 100644
 --- a/third_party/blink/renderer/core/layout/svg/svg_resources.cc
 +++ b/third_party/blink/renderer/core/layout/svg/svg_resources.cc
 @@ -29,6 +29,8 @@
@@ -74,3 +74,12 @@ index 49486a8897dd2c0f7821f79b7c9d33863617832e..b27457a55a257ac48289fd17225a7703
  }
  
  void SVGResources::UpdateEffects(LayoutObject& object,
+@@ -329,7 +360,7 @@ void SVGElementResourceClient::UpdateFilterData(
+       reference_box == operations.ReferenceBox())
+     return;
+   const ComputedStyle& style = object.StyleRef();
+-  FilterEffectBuilder builder(reference_box, 1);
++  FilterEffectBuilder builder(reference_box, absl::nullopt, 1);
+   builder.SetShorthandScale(1 / style.EffectiveZoom());
+   const FilterOperations& filter = style.Filter();
+   // If the filter is a single 'url(...)' reference we can optimize some

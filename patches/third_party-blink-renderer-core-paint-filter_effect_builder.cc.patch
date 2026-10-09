@@ -1,0 +1,57 @@
+diff --git a/third_party/blink/renderer/core/paint/filter_effect_builder.cc b/third_party/blink/renderer/core/paint/filter_effect_builder.cc
+index 5ea24810855cf4d02ff39f5f5a9348a85ace01cb..b0f9a210f975b1f65c95e285e31acb4e93230fad 100644
+--- a/third_party/blink/renderer/core/paint/filter_effect_builder.cc
++++ b/third_party/blink/renderer/core/paint/filter_effect_builder.cc
+@@ -50,6 +50,7 @@
+ #include "third_party/blink/renderer/platform/wtf/math_extras.h"
+ #include "ui/gfx/geometry/point_conversions.h"
+ #include "ui/gfx/geometry/vector2d_conversions.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+ 
+ namespace blink {
+ 
+@@ -125,11 +126,16 @@ Vector<float> SepiaMatrix(double amount) {
+ }  // namespace
+ 
+ FilterEffectBuilder::FilterEffectBuilder(const gfx::RectF& reference_box,
++                                         absl::optional<gfx::SizeF> viewport,
+                                          float zoom,
+                                          const cc::PaintFlags* fill_flags,
+                                          const cc::PaintFlags* stroke_flags,
+                                          SkTileMode blur_tile_mode)
+     : reference_box_(reference_box),
++      viewport_(
++          RuntimeEnabledFeatures::SvgFilterUserSpaceViewportForNonSvgEnabled()
++              ? viewport
++              : absl::nullopt),
+       zoom_(zoom),
+       shorthand_scale_(1),
+       fill_flags_(fill_flags),
+@@ -506,10 +512,17 @@ Filter* FilterEffectBuilder::BuildReferenceFilter(
+   if (auto* resource_container = resource->ResourceContainerNoCycleCheck())
+     resource_container->ClearInvalidationMask();
+ 
++  absl::optional<gfx::SizeF> unzoomed_viewport;
++  if (viewport_) {
++    gfx::SizeF unzoomed = *viewport_;
++    unzoomed.InvScale(zoom_);
++    unzoomed_viewport = unzoomed;
++  }
++
+   gfx::RectF filter_region =
+       SVGLengthContext::ResolveRectangle<SVGFilterElement>(
+           filter_element, filter_element->filterUnits()->CurrentEnumValue(),
+-          reference_box_);
++          reference_box_, unzoomed_viewport);
+   bool primitive_bounding_box_mode =
+       filter_element->primitiveUnits()->CurrentEnumValue() ==
+       SVGUnitTypes::kSvgUnitTypeObjectboundingbox;
+@@ -523,7 +536,7 @@ Filter* FilterEffectBuilder::BuildReferenceFilter(
+   // If the filter has an empty region, then return a Filter without any
+   // primitives since the behavior in these two cases (no primitives, empty
+   // region) should match.
+-  if (node_map && filter_region.IsEmpty())
++  if (filter_region.IsEmpty() && (viewport_ || node_map))
+     return result;
+ 
+   if (!previous_effect)

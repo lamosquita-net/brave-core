@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/paint/paint_layer.cc b/third_party/blink/renderer/core/paint/paint_layer.cc
-index 36810e9fa0cbbe6f4e6a6ac5b5a9541cd809f6da..fd880b0005b9f3102c6c60a7a694b3eed8536c52 100644
+index 36810e9fa0cbbe6f4e6a6ac5b5a9541cd809f6da..5b310b00f78e41e6607827db08c320fc7ff03405 100644
 --- a/third_party/blink/renderer/core/paint/paint_layer.cc
 +++ b/third_party/blink/renderer/core/paint/paint_layer.cc
 @@ -71,7 +71,6 @@
@@ -37,7 +37,26 @@ index 36810e9fa0cbbe6f4e6a6ac5b5a9541cd809f6da..fd880b0005b9f3102c6c60a7a694b3ee
          ComputedStyle::kIncludeTransformOperations,
          ComputedStyle::kIncludeTransformOrigin,
          ComputedStyle::kIncludeMotionPath,
-@@ -1957,8 +1957,7 @@ PaintLayer* PaintLayer::HitTestChildren(
+@@ -1954,14 +1954,31 @@ PaintLayer* PaintLayer::HitTestChildren(
+   return result_layer;
+ }
+ 
++// FlyWeb (engine level 127, Chromium 24decde21a6): the viewport for
++// userSpaceOnUse SVG filters on HTML content is the border box (the lines box
++// of an inline), as in Gecko.
++static absl::optional<gfx::SizeF> ComputeFilterViewport(
++    const PaintLayer& layer) {
++  if (const auto* layout_inline =
++          DynamicTo<LayoutInline>(layer.GetLayoutObject())) {
++    return gfx::SizeF(layout_inline->PhysicalLinesBoundingBox().size);
++  }
++  const auto* box = layer.GetLayoutBox();
++  if (box->IsSVGForeignObject()) {
++    return absl::nullopt;
++  }
++  return gfx::SizeF(box->Size());
++}
++
  void PaintLayer::UpdateFilterReferenceBox() {
    if (!HasFilterThatMovesPixels())
      return;
@@ -45,9 +64,40 @@ index 36810e9fa0cbbe6f4e6a6ac5b5a9541cd809f6da..fd880b0005b9f3102c6c60a7a694b3ee
 -  ExpandRectForSelfPaintingDescendants(result);
 +  PhysicalRect result = LocalBoundingBoxIncludingSelfPaintingDescendants();
    gfx::RectF reference_box(result);
++  absl::optional<gfx::SizeF> viewport(ComputeFilterViewport(*this));
    if (!ResourceInfo() ||
-       ResourceInfo()->FilterReferenceBox() != reference_box) {
-@@ -2011,38 +2010,8 @@ bool PaintLayer::HitTestClippedOutByClipPath(
+-      ResourceInfo()->FilterReferenceBox() != reference_box) {
++      ResourceInfo()->FilterReferenceBox() != reference_box ||
++      ResourceInfo()->FilterViewport() != viewport) {
+     if (GetLayoutObject().GetDocument().Lifecycle().GetState() ==
+         DocumentLifecycle::kInPrePaint) {
+       GetLayoutObject()
+@@ -1970,8 +1987,23 @@ void PaintLayer::UpdateFilterReferenceBox() {
+     } else {
+       GetLayoutObject().SetNeedsPaintPropertyUpdate();
+     }
++    if (ResourceInfo() && ResourceInfo()->FilterViewport() != viewport) {
++      filter_on_effect_node_dirty_ = true;
++    }
+   }
+-  EnsureResourceInfo().SetFilterReferenceBox(reference_box);
++  auto& resource_info = EnsureResourceInfo();
++  resource_info.SetFilterReferenceBox(reference_box);
++  resource_info.SetFilterViewport(viewport);
++}
++
++absl::optional<gfx::SizeF> PaintLayer::FilterViewport() const {
++#if DCHECK_IS_ON()
++  DCHECK_GE(GetLayoutObject().GetDocument().Lifecycle().GetState(),
++            DocumentLifecycle::kInPrePaint);
++#endif
++  if (ResourceInfo())
++    return ResourceInfo()->FilterViewport();
++  return absl::nullopt;
+ }
+ 
+ gfx::RectF PaintLayer::FilterReferenceBox() const {
+@@ -2011,38 +2043,8 @@ bool PaintLayer::HitTestClippedOutByClipPath(
      ConvertToLayerCoords(&root_layer, origin);
    }
  
@@ -88,7 +138,7 @@ index 36810e9fa0cbbe6f4e6a6ac5b5a9541cd809f6da..fd880b0005b9f3102c6c60a7a694b3ee
  }
  
  PhysicalRect PaintLayer::LocalBoundingBox() const {
-@@ -2129,6 +2098,13 @@ bool PaintLayer::KnownToClipSubtreeToPaddingBox() const {
+@@ -2129,6 +2131,13 @@ bool PaintLayer::KnownToClipSubtreeToPaddingBox() const {
    return false;
  }
  
@@ -102,3 +152,23 @@ index 36810e9fa0cbbe6f4e6a6ac5b5a9541cd809f6da..fd880b0005b9f3102c6c60a7a694b3ee
  bool PaintLayer::SupportsSubsequenceCaching() const {
    if (const LayoutBox* box = GetLayoutBox()) {
      // TODO(crbug.com/1253797): Revisit this when implementing correct paint
+@@ -2408,7 +2417,8 @@ void PaintLayer::UpdateCompositorFilterOperationsForFilter(
+     return;
+ 
+   operations =
+-      FilterEffectBuilder(reference_box, zoom).BuildFilterOperations(filter);
++      FilterEffectBuilder(reference_box, FilterViewport(), zoom)
++          .BuildFilterOperations(filter);
+   filter_on_effect_node_dirty_ = false;
+ }
+ 
+@@ -2447,7 +2457,8 @@ void PaintLayer::UpdateCompositorFilterOperationsForBackdropFilter(
+   filter_operations.Operations().AppendVector(style.Filter().Operations());
+   // Use kClamp tile mode to avoid pixel moving filters bringing in black
+   // transparent pixels from the viewport edge.
+-  operations = FilterEffectBuilder(reference_box, zoom, nullptr, nullptr,
++  operations = FilterEffectBuilder(reference_box, FilterViewport(), zoom,
++                                   nullptr, nullptr,
+                                    SkTileMode::kClamp)
+                    .BuildFilterOperations(filter_operations);
+   // Note that |operations| may be empty here, if the |filter_operations| list
