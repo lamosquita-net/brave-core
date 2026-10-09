@@ -1,0 +1,114 @@
+diff --git a/third_party/blink/renderer/core/script/import_map.cc b/third_party/blink/renderer/core/script/import_map.cc
+index 64717b4b5447b938d1e8d2756dcb65fc2b5b44a0..039b094078395277e48a4e23d707c95027634454 100644
+--- a/third_party/blink/renderer/core/script/import_map.cc
++++ b/third_party/blink/renderer/core/script/import_map.cc
+@@ -15,6 +15,7 @@
+ #include "third_party/blink/renderer/platform/json/json_parser.h"
+ #include "third_party/blink/renderer/platform/json/json_values.h"
+ #include "third_party/blink/renderer/platform/loader/fetch/console_logger.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+ #include "third_party/blink/renderer/platform/weborigin/scheme_registry.h"
+ #include "third_party/blink/renderer/platform/wtf/text/string_builder.h"
+ 
+@@ -274,14 +275,69 @@ ImportMap* ImportMap::Parse(const String& input,
+               });
+   }
+ 
+-  // TODO(hiroshige): Implement Step 7.
++  // FlyWeb (engine level 127): integrity, from Chromium 18f9d2c2c61.
++  // <spec step="7">Let normalizedIntegrity be an empty map.</spec>
++  IntegrityMap normalized_integrity_map;
++
++  // <spec step="8">If parsed["integrity"] exists, then:</spec>
++  if (RuntimeEnabledFeatures::ImportMapIntegrityEnabled() &&
++      parsed_map->Get("integrity")) {
++    // <spec step="8.1">If parsed["integrity"] is not a map, then throw a
++    // TypeError.</spec>
++    JSONObject* integrity = parsed_map->GetJSONObject("integrity");
++    if (!integrity) {
++      *error_to_rethrow =
++          ImportMapError(ImportMapError::Type::kTypeError,
++                         "Failed to parse import map: \"integrity\" "
++                         "top-level key must be a JSON object.");
++      return MakeGarbageCollected<ImportMap>();
++    }
++
++    // <spec step="8.2">Set normalizedIntegrity to the result of normalizing
++    // a module integrity map given parsed["integrity"] and baseURL.</spec>
++    for (wtf_size_t i = 0; i < integrity->size(); ++i) {
++      const JSONObject::Entry& entry = integrity->at(i);
++
++      // Let normalizedSpecifierKey be the result of resolving a URL-like
++      // module specifier given specifierKey and baseURL.
++      ParsedSpecifier parsed_specifier =
++          ParsedSpecifier::Create(entry.first, base_url);
++      KURL resolved_url = parsed_specifier.GetUrl();
++
++      // If normalizedSpecifierKey is null, then continue.
++      if (resolved_url.IsNull()) {
++        AddIgnoredValueMessage(
++            logger, entry.first,
++            "Integrity key is not a valid absolute URL or relative URL "
++            "starting with '/', './', or '../'");
++        continue;
++      }
++
++      // If value is not a string, then continue.
++      if (entry.second->GetType() != JSONValue::ValueType::kTypeString) {
++        AddIgnoredValueMessage(logger, entry.first,
++                               "Integrity value is not a string.");
++        continue;
++      }
++
++      // Set normalized[resolvedURL] to value.
++      String value_string;
++      if (integrity->GetString(entry.first, &value_string)) {
++        normalized_integrity_map.Set(resolved_url, value_string);
++      } else {
++        AddIgnoredValueMessage(logger, entry.first,
++                               "Internal error in GetString().");
++      }
++    }
++  }
+ 
+-  // <spec step="8">Return the import map whose imports are
+-  // sortedAndNormalizedImports and whose scopes scopes are
+-  // sortedAndNormalizedScopes.</spec>
++  // <spec step="10">Return the import map whose imports are
++  // sortedAndNormalizedImports, whose scopes are sortedAndNormalizedScopes,
++  // and whose integrity is normalizedIntegrity.</spec>
+   return MakeGarbageCollected<ImportMap>(
+       std::move(sorted_and_normalized_imports),
+-      std::move(sorted_and_normalized_scopes));
++      std::move(sorted_and_normalized_scopes),
++      std::move(normalized_integrity_map));
+ }
+ 
+ // <specdef
+@@ -389,8 +445,12 @@ absl::optional<ImportMap::MatchResult> ImportMap::MatchPrefix(
+ 
+ ImportMap::ImportMap() = default;
+ 
+-ImportMap::ImportMap(SpecifierMap&& imports, ScopeType&& scopes)
+-    : imports_(std::move(imports)), scopes_(std::move(scopes)) {}
++ImportMap::ImportMap(SpecifierMap&& imports,
++                     ScopeType&& scopes,
++                     IntegrityMap&& integrity)
++    : imports_(std::move(imports)),
++      scopes_(std::move(scopes)),
++      integrity_(std::move(integrity)) {}
+ 
+ // <specdef
+ // href="https://wicg.github.io/import-maps/#resolve-a-module-specifier">
+@@ -536,6 +596,11 @@ static void SpecifierMapToString(StringBuilder& builder,
+   builder.Append("}");
+ }
+ 
++String ImportMap::GetIntegrity(const KURL& module_url) const {
++  IntegrityMap::const_iterator it = integrity_.find(module_url);
++  return it != integrity_.end() ? it->value : String();
++}
++
+ String ImportMap::ToString() const {
+   StringBuilder builder;
+   builder.Append("{\"imports\":");

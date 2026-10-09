@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/loader/modulescript/module_tree_linker.cc b/third_party/blink/renderer/core/loader/modulescript/module_tree_linker.cc
-index 4de68c34765a435c5fc24915e12d222839501cf2..2ac0fbca2f307f3cc68d6703bbdb30e53de9b24e 100644
+index 4de68c34765a435c5fc24915e12d222839501cf2..fe1a7f7955c6d5551f61bb6b4979f47d221b3f3a 100644
 --- a/third_party/blink/renderer/core/loader/modulescript/module_tree_linker.cc
 +++ b/third_party/blink/renderer/core/loader/modulescript/module_tree_linker.cc
 @@ -435,6 +435,7 @@ void ModuleTreeLinker::FetchDescendants(const ModuleScript* module_script) {
@@ -10,3 +10,23 @@ index 4de68c34765a435c5fc24915e12d222839501cf2..2ac0fbca2f307f3cc68d6703bbdb30e5
  
    // <spec step="8">For each moduleRequest in moduleRequests, ...</spec>
    //
+@@ -446,9 +447,18 @@ void ModuleTreeLinker::FetchDescendants(const ModuleScript* module_script) {
+     // procedure given moduleRequest, fetch client settings object, destination,
+     // options, module script's settings object, visited set, and module
+     // script's base URL. ...</spec>
++    //
++    // FlyWeb (engine level 127, Chromium 18f9d2c2c61): the descendant's
++    // integrity metadata comes from the import map's "integrity" entry for its
++    // URL (resolving a module integrity metadata).
++    ScriptFetchOptions descendant_options = options;
++    descendant_options.SetIntegrityMetadata(
++        modulator_->GetIntegrityMetadata(module_request.url));
++    descendant_options.SetIntegrityAttributeValue(
++        modulator_->GetIntegrityMetadataString(module_request.url));
+     ModuleScriptFetchRequest request(
+         module_request.url, module_request.module_type, context_type_,
+-        destination_, options, module_script->BaseUrl().GetString(),
++        destination_, descendant_options, module_script->BaseUrl().GetString(),
+         module_request.position);
+ 
+     // <spec label="IMSGF" step="1">Assert: visited set contains url.</spec>

@@ -1,0 +1,23 @@
+diff --git a/third_party/blink/renderer/core/script/modulator.h b/third_party/blink/renderer/core/script/modulator.h
+index 8ef3392256572a7c8bc9ba6424bd3c1531eb464f..0b8d96899188a6ad8435bf6536c3df8b0dfb2339 100644
+--- a/third_party/blink/renderer/core/script/modulator.h
++++ b/third_party/blink/renderer/core/script/modulator.h
+@@ -21,6 +21,7 @@
+ #include "third_party/blink/renderer/platform/bindings/script_wrappable.h"
+ #include "third_party/blink/renderer/platform/bindings/v8_per_context_data.h"
+ #include "third_party/blink/renderer/platform/heap/garbage_collected.h"
++#include "third_party/blink/renderer/platform/loader/fetch/integrity_metadata.h"
+ #include "third_party/blink/renderer/platform/weborigin/kurl.h"
+ #include "third_party/blink/renderer/platform/wtf/text/text_position.h"
+ #include "third_party/blink/renderer/platform/wtf/text/wtf_string.h"
+@@ -218,6 +219,10 @@ class CORE_EXPORT Modulator : public GarbageCollected<Modulator>,
+       ModuleScriptCustomFetchType,
+       base::PassKey<ModuleScriptLoader> pass_key) = 0;
+ 
++  // https://html.spec.whatwg.org/C/#resolving-a-module-integrity-metadata
++  virtual String GetIntegrityMetadataString(const KURL&) const = 0;
++  virtual IntegrityMetadataSet GetIntegrityMetadata(const KURL&) const = 0;
++
+   // Produce V8 code cache for the given ModuleScript and its submodules.
+   virtual void ProduceCacheModuleTreeTopLevel(ModuleScript*) = 0;
+ 

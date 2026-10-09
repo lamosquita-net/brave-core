@@ -1,0 +1,45 @@
+diff --git a/third_party/blink/renderer/core/script/import_map.h b/third_party/blink/renderer/core/script/import_map.h
+index a3519322e5a8d7acdb33e424a62dca0010fbef4a..92853996598645e08ed7f4fae33ac86b7d692552 100644
+--- a/third_party/blink/renderer/core/script/import_map.h
++++ b/third_party/blink/renderer/core/script/import_map.h
+@@ -9,6 +9,7 @@
+ #include "third_party/blink/renderer/core/core_export.h"
+ #include "third_party/blink/renderer/core/script/import_map_error.h"
+ #include "third_party/blink/renderer/platform/heap/garbage_collected.h"
++#include "third_party/blink/renderer/platform/loader/fetch/integrity_metadata.h"
+ #include "third_party/blink/renderer/platform/weborigin/kurl.h"
+ #include "third_party/blink/renderer/platform/weborigin/kurl_hash.h"
+ #include "third_party/blink/renderer/platform/wtf/hash_map.h"
+@@ -47,7 +48,12 @@ class CORE_EXPORT ImportMap final : public GarbageCollected<ImportMap> {
+   // Empty import map.
+   ImportMap();
+ 
+-  ImportMap(SpecifierMap&& imports, ScopeType&& scopes);
++  // https://html.spec.whatwg.org/C#concept-import-map-integrity
++  using IntegrityMap = HashMap<KURL, String>;
++
++  ImportMap(SpecifierMap&& imports,
++            ScopeType&& scopes,
++            IntegrityMap&& integrity);
+ 
+   // Return values of Resolve(), ResolveImportsMatch() and
+   // ResolveImportsMatchInternal():
+@@ -59,6 +65,8 @@ class CORE_EXPORT ImportMap final : public GarbageCollected<ImportMap> {
+                                const KURL& base_url,
+                                String* debug_message) const;
+ 
++  String GetIntegrity(const KURL& module_url) const;
++
+   String ToString() const;
+ 
+   void Trace(Visitor*) const {}
+@@ -85,6 +93,9 @@ class CORE_EXPORT ImportMap final : public GarbageCollected<ImportMap> {
+ 
+   // https://wicg.github.io/import-maps/#import-map-scopes.
+   ScopeType scopes_;
++
++  // https://html.spec.whatwg.org/C#concept-import-map-integrity
++  IntegrityMap integrity_;
+ };
+ 
+ }  // namespace blink

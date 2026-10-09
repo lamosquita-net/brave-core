@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/loader/preload_helper.cc b/third_party/blink/renderer/core/loader/preload_helper.cc
-index d1e0e2b3778a604b4cfe472cf4d40cdeab61fad6..d5867062483455336ef853c6e7a57aeeeeafb760 100644
+index d1e0e2b3778a604b4cfe472cf4d40cdeab61fad6..e4e1c806c61d9cae0fe69d6c49ebceddd5937b85 100644
 --- a/third_party/blink/renderer/core/loader/preload_helper.cc
 +++ b/third_party/blink/renderer/core/loader/preload_helper.cc
 @@ -218,6 +218,22 @@ bool IsResourceLoadAllowed(PreloadHelper::LoadLinksFromHeaderMode mode,
@@ -25,7 +25,39 @@ index d1e0e2b3778a604b4cfe472cf4d40cdeab61fad6..d5867062483455336ef853c6e7a57aee
  }  // namespace
  
  void PreloadHelper::DnsPrefetchIfNeeded(
-@@ -748,6 +764,12 @@ void PreloadHelper::LoadLinksFromHeader(
+@@ -602,7 +618,8 @@ void PreloadHelper::ModulePreloadIfNeeded(
+   // Step 8. "Let integrity metadata be the value of the integrity attribute, if
+   // it is specified, or the empty string otherwise." [spec text]
+   IntegrityMetadataSet integrity_metadata;
+-  if (!params.integrity.empty()) {
++  String integrity_value = params.integrity;
++  if (!integrity_value.empty()) {
+     SubresourceIntegrity::IntegrityFeatures integrity_features =
+         SubresourceIntegrityHelper::GetFeatures(document.GetExecutionContext());
+     SubresourceIntegrity::ReportInfo report_info;
+@@ -610,6 +627,12 @@ void PreloadHelper::ModulePreloadIfNeeded(
+         params.integrity, integrity_features, integrity_metadata, &report_info);
+     SubresourceIntegrityHelper::DoReport(*document.GetExecutionContext(),
+                                          report_info);
++  } else if (integrity_value.IsNull()) {
++    // "If el does not have an integrity attribute, then set integrity
++    // metadata to the result of resolving a module integrity metadata with url
++    // and settings object." [spec text] (FlyWeb, engine level 127)
++    integrity_value = modulator->GetIntegrityMetadataString(params.href);
++    integrity_metadata = modulator->GetIntegrityMetadata(params.href);
+   }
+ 
+   // Step 9. "Let referrer policy be the current state of the element's
+@@ -622,7 +645,7 @@ void PreloadHelper::ModulePreloadIfNeeded(
+   // and referrer policy is referrer policy." [spec text]
+   ModuleScriptFetchRequest request(
+       params.href, ModuleType::kJavaScript, context_type, destination,
+-      ScriptFetchOptions(params.nonce, integrity_metadata, params.integrity,
++      ScriptFetchOptions(params.nonce, integrity_metadata, integrity_value,
+                          kNotParserInserted, credentials_mode,
+                          params.referrer_policy,
+                          mojom::blink::FetchPriorityHint::kAuto,
+@@ -748,6 +771,12 @@ void PreloadHelper::LoadLinksFromHeader(
      LinkLoadParameters params(header, base_url);
      bool change_rel_to_prefetch = false;
  

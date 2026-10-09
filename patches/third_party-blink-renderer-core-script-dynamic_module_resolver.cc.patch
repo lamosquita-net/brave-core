@@ -1,10 +1,18 @@
 diff --git a/third_party/blink/renderer/core/script/dynamic_module_resolver.cc b/third_party/blink/renderer/core/script/dynamic_module_resolver.cc
-index cdc5ffd98e9625a12e78ff3188559138088088c1..9e724b50ce464e4bb0db85f36560715504d4a2ae 100644
+index cdc5ffd98e9625a12e78ff3188559138088088c1..eb6d3eb380e9e565c58be5f6691543476af9837b 100644
 --- a/third_party/blink/renderer/core/script/dynamic_module_resolver.cc
 +++ b/third_party/blink/renderer/core/script/dynamic_module_resolver.cc
-@@ -285,6 +285,7 @@ void DynamicModuleResolver::ResolveDynamically(
-       referrer_info.ParserState(), referrer_info.CredentialsMode(),
-       referrer_info.GetReferrerPolicy(), mojom::blink::FetchPriorityHint::kAuto,
+@@ -281,10 +281,12 @@ void DynamicModuleResolver::ResolveDynamically(
+   // dynamic imports get kAuto. Only the main script resource is impacted by
+   // Priority Hints.
+   ScriptFetchOptions options(
+-      referrer_info.Nonce(), IntegrityMetadataSet(), String(),
+-      referrer_info.ParserState(), referrer_info.CredentialsMode(),
+-      referrer_info.GetReferrerPolicy(), mojom::blink::FetchPriorityHint::kAuto,
++      referrer_info.Nonce(), modulator_->GetIntegrityMetadata(url),
++      modulator_->GetIntegrityMetadataString(url), referrer_info.ParserState(),
++      referrer_info.CredentialsMode(), referrer_info.GetReferrerPolicy(),
++      mojom::blink::FetchPriorityHint::kAuto,
        RenderBlockingBehavior::kNonBlocking);
 +  BRAVE_DYNAMIC_MODULE_RESOLVER_RESOLVE_DYNAMICALLY
  

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/script/script_loader.cc b/third_party/blink/renderer/core/script/script_loader.cc
-index b219bdafce6b233094351528e659ee1ad8b0f495..f8b4e0f5fbe649bad1cf0e9bdb99da566c288940 100644
+index b219bdafce6b233094351528e659ee1ad8b0f495..15095dc2fd8f712efdeeebfe196a77e76d950e22 100644
 --- a/third_party/blink/renderer/core/script/script_loader.cc
 +++ b/third_party/blink/renderer/core/script/script_loader.cc
 @@ -714,6 +714,7 @@ PendingScript* ScriptLoader::PrepareScript(
@@ -10,3 +10,18 @@ index b219bdafce6b233094351528e659ee1ad8b0f495..f8b4e0f5fbe649bad1cf0e9bdb99da56
  
    // <spec step="28">Let settings object be el's node document's relevant
    // settings object.</spec>
+@@ -921,6 +922,14 @@ PendingScript* ScriptLoader::PrepareScript(
+         // options.</spec>
+         Modulator* modulator = Modulator::From(
+             ToScriptStateForMainWorld(context_window->GetFrame()));
++        if (integrity_attr.IsNull()) {
++          // <spec step="31.11.B">If el does not have an integrity attribute,
++          // then set options's integrity metadata to the result of resolving a
++          // module integrity metadata with url and settings object </spec>
++          options.SetIntegrityMetadata(modulator->GetIntegrityMetadata(url));
++          options.SetIntegrityAttributeValue(
++              modulator->GetIntegrityMetadataString(url));
++        }
+         FetchModuleScriptTree(url, fetch_client_settings_object_fetcher,
+                               modulator, options);
+       } break;

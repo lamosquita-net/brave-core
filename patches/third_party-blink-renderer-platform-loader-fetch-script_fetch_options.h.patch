@@ -1,0 +1,31 @@
+diff --git a/third_party/blink/renderer/platform/loader/fetch/script_fetch_options.h b/third_party/blink/renderer/platform/loader/fetch/script_fetch_options.h
+index 28f729836aec3cda4c975e229a545d9fdd0ae342..6b5b503abf0ba902630d1cad1e8379f6315bf8f7 100644
+--- a/third_party/blink/renderer/platform/loader/fetch/script_fetch_options.h
++++ b/third_party/blink/renderer/platform/loader/fetch/script_fetch_options.h
+@@ -57,9 +57,15 @@ class PLATFORM_EXPORT ScriptFetchOptions final {
+   const IntegrityMetadataSet& GetIntegrityMetadata() const {
+     return integrity_metadata_;
+   }
++  void SetIntegrityMetadata(IntegrityMetadataSet metadata) {
++    integrity_metadata_ = metadata;
++  }
+   const String& GetIntegrityAttributeValue() const {
+     return integrity_attribute_;
+   }
++  void SetIntegrityAttributeValue(const String& value) {
++    integrity_attribute_ = value;
++  }
+   const ParserDisposition& ParserState() const { return parser_state_; }
+   network::mojom::CredentialsMode CredentialsMode() const {
+     return credentials_mode_;
+@@ -97,8 +103,8 @@ class PLATFORM_EXPORT ScriptFetchOptions final {
+   const String nonce_;
+ 
+   // https://html.spec.whatwg.org/C/#concept-script-fetch-options-integrity
+-  const IntegrityMetadataSet integrity_metadata_;
+-  const String integrity_attribute_;
++  IntegrityMetadataSet integrity_metadata_;
++  String integrity_attribute_;
+ 
+   // https://html.spec.whatwg.org/C/#concept-script-fetch-options-parser
+   const ParserDisposition parser_state_;
