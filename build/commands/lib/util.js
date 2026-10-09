@@ -56,6 +56,8 @@ async function applyPatches() {
     path.join('third_party', 'angle'),
     path.join('third_party', 'skia'),
     path.join('third_party', 'libvpx', 'source', 'libvpx'),
+    // FlyWeb level 126: fxjs adapted to the V8 12.6 accessor API.
+    path.join('third_party', 'pdfium'),
   ]
   const flywebPatchStatus = []
   for (const repo of flywebRepos) {
