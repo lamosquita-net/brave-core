@@ -1,0 +1,54 @@
+diff --git a/third_party/blink/renderer/core/svg/svg_length_context.h b/third_party/blink/renderer/core/svg/svg_length_context.h
+index e9593677186081cab47ab5b47d3a67a8cc081f41..94209caad6ca0bf3dbec68b4daa16973e7071b59 100644
+--- a/third_party/blink/renderer/core/svg/svg_length_context.h
++++ b/third_party/blink/renderer/core/svg/svg_length_context.h
+@@ -26,6 +26,8 @@
+ #include "third_party/blink/renderer/core/svg/svg_unit_types.h"
+ #include "third_party/blink/renderer/platform/geometry/length.h"
+ #include "ui/gfx/geometry/rect_f.h"
++#include "third_party/abseil-cpp/absl/types/optional.h"
++#include "ui/gfx/geometry/size_f.h"
+ 
+ namespace gfx {
+ class SizeF;
+@@ -50,22 +52,29 @@ class CORE_EXPORT SVGLengthContext {
+   explicit SVGLengthContext(const SVGElement*);
+ 
+   template <typename T>
+-  static gfx::RectF ResolveRectangle(const T* context,
+-                                     SVGUnitTypes::SVGUnitType type,
+-                                     const gfx::RectF& viewport) {
++  // FlyWeb (engine level 127, Chromium 24decde21a6): |override_viewport|
++  // resolves userSpaceOnUse percentages for non-SVG content (HTML elements,
++  // <canvas>), where the element has no SVG viewport.
++  static gfx::RectF ResolveRectangle(
++      const T* context,
++      SVGUnitTypes::SVGUnitType type,
++      const gfx::RectF& viewport,
++      const absl::optional<gfx::SizeF>& override_viewport = absl::nullopt) {
+     return ResolveRectangle(
+         context, type, viewport, *context->x()->CurrentValue(),
+         *context->y()->CurrentValue(), *context->width()->CurrentValue(),
+-        *context->height()->CurrentValue());
++        *context->height()->CurrentValue(), override_viewport);
+   }
+ 
+-  static gfx::RectF ResolveRectangle(const SVGElement*,
+-                                     SVGUnitTypes::SVGUnitType,
+-                                     const gfx::RectF& viewport,
+-                                     const SVGLength& x,
+-                                     const SVGLength& y,
+-                                     const SVGLength& width,
+-                                     const SVGLength& height);
++  static gfx::RectF ResolveRectangle(
++      const SVGElement*,
++      SVGUnitTypes::SVGUnitType,
++      const gfx::RectF& viewport,
++      const SVGLength& x,
++      const SVGLength& y,
++      const SVGLength& width,
++      const SVGLength& height,
++      const absl::optional<gfx::SizeF>& override_viewport = absl::nullopt);
+   gfx::Vector2dF ResolveLengthPair(const Length& x_length,
+                                    const Length& y_length,
+                                    const ComputedStyle&) const;

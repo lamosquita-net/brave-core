@@ -1,0 +1,32 @@
+diff --git a/third_party/blink/renderer/core/paint/filter_effect_builder.h b/third_party/blink/renderer/core/paint/filter_effect_builder.h
+index f0cc157f7a466a3fd4670a1684c14f8d3ce720a0..d76a90ec17dc4ebcf07f148e44bf2681c2269006 100644
+--- a/third_party/blink/renderer/core/paint/filter_effect_builder.h
++++ b/third_party/blink/renderer/core/paint/filter_effect_builder.h
+@@ -31,6 +31,8 @@
+ #include "third_party/blink/renderer/platform/wtf/allocator/allocator.h"
+ #include "third_party/skia/include/core/SkTileMode.h"
+ #include "ui/gfx/geometry/rect_f.h"
++#include "third_party/abseil-cpp/absl/types/optional.h"
++#include "ui/gfx/geometry/size_f.h"
+ 
+ namespace blink {
+ 
+@@ -45,7 +47,10 @@ class CORE_EXPORT FilterEffectBuilder final {
+   STACK_ALLOCATED();
+ 
+  public:
++  // FlyWeb (engine level 127, Chromium 24decde21a6): |viewport| resolves
++  // userSpaceOnUse filter regions of non-SVG content (absl::nullopt for SVG).
+   FilterEffectBuilder(const gfx::RectF& reference_box,
++                      absl::optional<gfx::SizeF> viewport,
+                       float zoom,
+                       const cc::PaintFlags* fill_flags = nullptr,
+                       const cc::PaintFlags* stroke_flags = nullptr,
+@@ -66,6 +71,7 @@ class CORE_EXPORT FilterEffectBuilder final {
+ 
+  private:
+   const gfx::RectF reference_box_;
++  const absl::optional<gfx::SizeF> viewport_;
+   const float zoom_;
+   float shorthand_scale_;  // Scale factor for shorthand filter functions.
+   const cc::PaintFlags* fill_flags_;

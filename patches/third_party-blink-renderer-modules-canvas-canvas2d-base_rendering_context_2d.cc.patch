@@ -1,8 +1,19 @@
 diff --git a/third_party/blink/renderer/modules/canvas/canvas2d/base_rendering_context_2d.cc b/third_party/blink/renderer/modules/canvas/canvas2d/base_rendering_context_2d.cc
-index 8ea02ffddf1a38ecb628ffd969738056ebf96ed8..29002264c682e35dc88461115d53aeb6d49c3425 100644
+index 8ea02ffddf1a38ecb628ffd969738056ebf96ed8..7ff5fd4785eb604ba0b77f94404a9c26ec8f3120 100644
 --- a/third_party/blink/renderer/modules/canvas/canvas2d/base_rendering_context_2d.cc
 +++ b/third_party/blink/renderer/modules/canvas/canvas2d/base_rendering_context_2d.cc
-@@ -2044,6 +2044,7 @@ ImageData* BaseRenderingContext2D::getImageData(
+@@ -200,8 +200,9 @@ void BaseRenderingContext2D::beginLayer(ScriptState* script_state,
+ 
+   CanvasRenderingContext2DState& state = GetState();
+   if (filter_init != nullptr) {
++    const gfx::SizeF canvas_viewport(Width(), Height());
+     FilterEffectBuilder filter_effect_builder(
+-        gfx::RectF(Width(), Height()),
++        gfx::RectF(canvas_viewport), canvas_viewport,
+         1.0f);  // Deliberately ignore zoom on the canvas element.
+     // Save the layer's filter in the parent state, along with all the other
+     // render states impacting the layer. Technically, this is only required so
+@@ -2044,6 +2045,7 @@ ImageData* BaseRenderingContext2D::getImageData(
  }
  
  ImageData* BaseRenderingContext2D::getImageDataInternal(
@@ -10,7 +21,7 @@ index 8ea02ffddf1a38ecb628ffd969738056ebf96ed8..29002264c682e35dc88461115d53aeb6
      int sx,
      int sy,
      int sw,
-@@ -2184,6 +2185,7 @@ ImageData* BaseRenderingContext2D::getImageDataInternal(
+@@ -2184,6 +2186,7 @@ ImageData* BaseRenderingContext2D::getImageDataInternal(
        DCHECK(!bounds.intersect(SkIRect::MakeXYWH(sx, sy, sw, sh)));
      }
    }

@@ -1,8 +1,25 @@
 diff --git a/third_party/blink/renderer/core/paint/paint_layer.h b/third_party/blink/renderer/core/paint/paint_layer.h
-index 6446097b448e7cd6cbf2fef8ba06ecc8549993b8..44efe676d6b3d8d97c031695fc3aa2141ee2e3b6 100644
+index 6446097b448e7cd6cbf2fef8ba06ecc8549993b8..f11bb32a02a12c1de97d75bb33883bfbe5d2dd5f 100644
 --- a/third_party/blink/renderer/core/paint/paint_layer.h
 +++ b/third_party/blink/renderer/core/paint/paint_layer.h
-@@ -542,6 +542,8 @@ class CORE_EXPORT PaintLayer : public GarbageCollected<PaintLayer>,
+@@ -59,6 +59,8 @@
+ #include "third_party/blink/renderer/core/paint/paint_result.h"
+ #include "third_party/blink/renderer/platform/graphics/overlay_scrollbar_clip_behavior.h"
+ #include "third_party/blink/renderer/platform/wtf/allocator/allocator.h"
++#include "third_party/abseil-cpp/absl/types/optional.h"
++#include "ui/gfx/geometry/size_f.h"
+ 
+ namespace blink {
+ 
+@@ -381,6 +383,7 @@ class CORE_EXPORT PaintLayer : public GarbageCollected<PaintLayer>,
+   // Filter reference box is the area over which the filter is computed, in the
+   // local coordinate system of the effect node containing the filter.
+   gfx::RectF FilterReferenceBox() const;
++  absl::optional<gfx::SizeF> FilterViewport() const;
+   gfx::RectF BackdropFilterReferenceBox() const;
+   gfx::RRectF BackdropFilterBounds() const;
+ 
+@@ -542,6 +545,8 @@ class CORE_EXPORT PaintLayer : public GarbageCollected<PaintLayer>,
  
    void Trace(Visitor*) const override;
  
