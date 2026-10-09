@@ -35,7 +35,6 @@ Ported because their code exists in 12.7 (not in 12.6, or not reachable there):
 | Fix | What |
 |---|---|
 | 7929e3e + f58e00f + 917b1e2 | TurboFan-Wasm: 12.7 puts the non-null `TypeGuard` of `br_on_non_null` before the null check, without a control dependency (type confusion); `br_on_cast` with a null type; endless loop in the `WasmTyper`. Wasm inlining ships on by default in 12.7 |
-| 91343bb | TurboFan escape analysis must not touch `TrustedHeapConstant` (exists in 12.7, not in 12.6) |
 | 19301b9 | Upper 32 bits of `Int32MulOvfCheck` are not zero |
 | 22e3faf | Turboshaft loop unrolling: signed division overflow (unrolling is on) |
 | 2e96808 (by hand) | Turboshaft: no partial unrolling in functions over 1 M operations (memory/hang) |
@@ -45,7 +44,7 @@ Ported because their code exists in 12.7 (not in 12.6, or not reachable there):
 
 Checked and **not applicable** to 12.7 (or off in FlyWeb): Maglev (off), JSPI, `wasm_deopt` and `call_indirect` inlining
 (experimental), Turboshaft-Wasm (off by default in 12.7), ARM/LoongArch/MIPS, `d8`/build-only, the wasm-to-js wrapper
-tier-up across instances (153d4e8: the generic wasm-to-js wrapper is off here), the 13.x type canonicalizer fixes
+`TrustedHeapConstant` escape analysis (91343bb: no such opcode in 12.7, the build caught it), the wasm-to-js wrapper tier-up across instances (153d4e8: the generic wasm-to-js wrapper is off here), the 13.x type canonicalizer fixes
 (a4a402d, 7615ae1, 77b7318, 0e98fad: 12.7 compares whole `ValueType` bit fields, relative bit included, and
 `StructType::operator==` includes mutability), and bugs in code born in 12.8+ (ScopeInfo reuse, side-step transitions —
 off in 12.7 —, the `Object.assign` fast path, `FastCloneJSObject`, the deserializer's `ExpectedTransition`, the global
