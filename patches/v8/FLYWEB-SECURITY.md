@@ -22,7 +22,8 @@ per file): of its 42 patch files, 25 are already in.
 |---|---|---|
 | `BUILD.gn.patch`, `src-codegen-compiler.cc.patch` | Brave (chromium_src include dir, PageGraph eval hook) | NUBE's rebase |
 | `src-interpreter-bytecode-generator.cc.patch` | CVE-2025-6554 (exploited): TDZ hole-check elision across optional chains (M132-LTS f3962853) | NUBE's, identical to mine on 12.5 (the switch hunks are native) |
-| `src-utils-version.h.patch` | `kFlyWebCacheEpoch` in `Version::Hash()` | NUBE's, epoch 3 |
+| `src-utils-version.h.patch` | `kFlyWebCacheEpoch` in `Version::Hash()` | NUBE's; epoch 4 since LOCAL's `gni-v8.gni.patch` (rule: every change to `patches/v8` raises it) |
+| `gni-v8.gni.patch` | Build only (LOCAL, 502c090f): `v8_use_perfetto` keeps 12.5's condition `build_with_chromium && use_perfetto_client_library`; the 116 has no Perfetto chrome/v8 protos on Mac | patched file = 12.5.227.13's `gni/v8.gni` except one comment line; V8 without Perfetto, as in the tested `d8`. No security effect |
 | `src-compiler-js-native-context-specialization.cc.patch`, `src-compiler-access-builder.{cc,h}.patch` | CVE-2025-13223 (exploited, TurboFan `BuildExtendPropertiesBackingStore`) + 9b5250b9 (crbug 475479135, the representation dependency) | as on 12.5 (the `InferHasInPrototypeChain` hunk is native) |
 | `src-compiler-turboshaft-store-store-elimination-reducer-inl.h.patch` | CVE-2025-5419 (exploited; 7bc0a67e = M132-LTS 80600881) + Turboshaft store-store elimination loop fixes (67c8f3a9) | as on 12.5 |
 | `src-compiler-turboshaft-operations.cc.patch` | `IsOnlyUserOf` with saturated use counts | as on 12.5 |
