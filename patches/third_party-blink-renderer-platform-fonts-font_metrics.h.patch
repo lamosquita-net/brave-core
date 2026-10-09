@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/fonts/font_metrics.h b/third_party/blink/renderer/platform/fonts/font_metrics.h
-index 568e77367075dc2c20924d12fbcac8f113abcfbf..8a1b77aca902536216c4662141b76145611bf1d0 100644
+index 568e77367075dc2c20924d12fbcac8f113abcfbf..56853e08f0fc43cf4e31a074d7449132a40c2933 100644
 --- a/third_party/blink/renderer/platform/fonts/font_metrics.h
 +++ b/third_party/blink/renderer/platform/fonts/font_metrics.h
 @@ -20,6 +20,7 @@
@@ -72,7 +72,24 @@ index 568e77367075dc2c20924d12fbcac8f113abcfbf..8a1b77aca902536216c4662141b76145
    }
  
    int Height() const { return int_ascent_ + int_descent_; }
-@@ -166,6 +179,30 @@ class FontMetrics {
+@@ -142,16 +155,6 @@ class FontMetrics {
+     has_zero_width_ = has_zero_width;
+   }
+ 
+-  // The approximated advance of fullwidth ideographic characters. This is
+-  // currently used to support the [`ic` unit].
+-  // [`ic` unit]: https://drafts.csswg.org/css-values-4/#ic
+-  absl::optional<float> IdeographicFullWidth() const {
+-    return ideographic_full_width_;
+-  }
+-  void SetIdeographicFullWidth(absl::optional<float> width) {
+-    ideographic_full_width_ = width;
+-  }
+-
+   absl::optional<float> UnderlineThickness() const {
+     return underline_thickness_;
+   }
+@@ -166,6 +169,30 @@ class FontMetrics {
      underline_position_ = underline_position;
    }
  
@@ -103,7 +120,11 @@ index 568e77367075dc2c20924d12fbcac8f113abcfbf..8a1b77aca902536216c4662141b76145
    // Unfortunately we still need to keep metrics adjustments for certain Mac
    // fonts, see crbug.com/445830. Also, a potentially better solution for the
    // subpixel_ascent_descent flag would be to move line layout to LayoutUnit
-@@ -198,10 +235,17 @@ class FontMetrics {
+@@ -194,14 +221,20 @@ class FontMetrics {
+     line_gap_ = 0;
+     line_spacing_ = 0;
+     x_height_ = 0;
+-    ideographic_full_width_.reset();
      has_x_height_ = false;
      underline_thickness_.reset();
      underline_position_.reset();
@@ -123,8 +144,11 @@ index 568e77367075dc2c20924d12fbcac8f113abcfbf..8a1b77aca902536216c4662141b76145
  
    unsigned units_per_em_ = kGDefaultUnitsPerEm;
    float cap_height_ = 0;
-@@ -214,6 +258,9 @@ class FontMetrics {
-   absl::optional<float> ideographic_full_width_;
+@@ -211,9 +244,11 @@ class FontMetrics {
+   float line_spacing_ = 0;
+   float x_height_ = 0;
+   float zero_width_ = 0;
+-  absl::optional<float> ideographic_full_width_;
    absl::optional<float> underline_thickness_;
    absl::optional<float> underline_position_;
 +  absl::optional<float> ideographic_baseline_position_;

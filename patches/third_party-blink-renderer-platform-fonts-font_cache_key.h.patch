@@ -1,0 +1,22 @@
+diff --git a/third_party/blink/renderer/platform/fonts/font_cache_key.h b/third_party/blink/renderer/platform/fonts/font_cache_key.h
+index 1244c41e90730d2262450f2b948bc1e27385f6b1..f89d9bfb46eda2a3a80b934395a3278b0222cf93 100644
+--- a/third_party/blink/renderer/platform/fonts/font_cache_key.h
++++ b/third_party/blink/renderer/platform/fonts/font_cache_key.h
+@@ -34,6 +34,7 @@
+ #include <limits>
+ 
+ #include "base/memory/values_equivalent.h"
++#include "base/numerics/safe_conversions.h"
+ #include "build/build_config.h"
+ #include "third_party/blink/renderer/platform/fonts/font_face_creation_params.h"
+ #include "third_party/blink/renderer/platform/fonts/font_palette.h"
+@@ -67,7 +68,8 @@ struct FontCacheKey {
+                bool is_unique_match,
+                bool is_generic_family)
+       : creation_params_(creation_params),
+-        font_size_(font_size * kFontSizePrecisionMultiplier),
++        font_size_(base::saturated_cast<unsigned>(
++            font_size * kFontSizePrecisionMultiplier)),
+         options_(options),
+         device_scale_factor_(device_scale_factor),
+         size_adjust_(size_adjust),

@@ -1,0 +1,20 @@
+diff --git a/third_party/blink/renderer/platform/fonts/shaping/harfbuzz_face.cc b/third_party/blink/renderer/platform/fonts/shaping/harfbuzz_face.cc
+index f9a2711ef1f5d8a30f2a57ae3d44f47ebecdff7e..d43a68e58c7b06a92842dad065ea11056e9af90f 100644
+--- a/third_party/blink/renderer/platform/fonts/shaping/harfbuzz_face.cc
++++ b/third_party/blink/renderer/platform/fonts/shaping/harfbuzz_face.cc
+@@ -492,6 +492,15 @@ static_assert(
+     "Skia and HarfBuzz Variation parameter types must match in structure and "
+     "size.");
+ 
++const OpenTypeVerticalData& HarfBuzzFace::VerticalData() const {
++  // Ensure `HarfBuzzFontData` and its `OpenTypeVerticalData` is up-to-date,
++  // with `kPrepareForVerticalLayout`, even when this font isn't used for
++  // vertical flow. See `GetScaledFont()`.
++  harfbuzz_font_data_->UpdateFallbackMetricsAndScale(
++      *platform_data_, HarfBuzzFace::kPrepareForVerticalLayout);
++  return *harfbuzz_font_data_->VerticalData();
++}
++
+ hb_font_t* HarfBuzzFace::GetScaledFont(scoped_refptr<UnicodeRangeSet> range_set,
+                                        VerticalLayoutCallbacks vertical_layout,
+                                        float specified_size) const {

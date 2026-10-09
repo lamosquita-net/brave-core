@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc b/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
-index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..88b575eb7dcc3af1d8e5fe18a73e8bd9312a6afa 100644
+index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..cec391526167cbb2c2933c18b322b4a70d35a896 100644
 --- a/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
 +++ b/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
 @@ -4,7 +4,9 @@
@@ -877,3 +877,21 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..88b575eb7dcc3af1d8e5fe18a73e8bd9
  CSSValue* ConsumeBorderColorSide(CSSParserTokenRange& range,
                                   const CSSParserContext& context,
                                   const CSSParserLocalContext& local_context) {
+@@ -7580,10 +8065,15 @@ CSSValue* ConsumeFontSizeAdjust(CSSParserTokenRange& range,
+ 
+   CSSIdentifierValue* font_metric =
+       ConsumeIdent<CSSValueID::kExHeight, CSSValueID::kCapHeight,
+-                   CSSValueID::kChWidth, CSSValueID::kIcWidth>(range);
++                   CSSValueID::kChWidth, CSSValueID::kIcWidth,
++                   CSSValueID::kIcHeight>(range);
+ 
+-  CSSPrimitiveValue* value = css_parsing_utils::ConsumeNumber(
++  CSSValue* value = css_parsing_utils::ConsumeNumber(
+       range, context, CSSPrimitiveValue::ValueRange::kNonNegative);
++  if (!value) {
++    value = ConsumeIdent<CSSValueID::kFromFont>(range);
++  }
++
+   if (!value || !font_metric ||
+       font_metric->GetValueID() == CSSValueID::kExHeight) {
+     return value;

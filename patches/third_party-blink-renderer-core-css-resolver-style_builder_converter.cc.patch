@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc b/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
-index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..1dbfcc6808f0d762c387ebe8bf2e27ee4ad49e41 100644
+index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..d305a963b888537ffc8e2ffb9ed3e6bde0d43a2c 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
 @@ -71,6 +71,7 @@
@@ -36,7 +36,59 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..1dbfcc6808f0d762c387ebe8bf2e27ee
    }
  
    if (const auto* url_value = DynamicTo<cssvalue::CSSURIValue>(value)) {
-@@ -2147,6 +2163,22 @@ scoped_refptr<SVGDashArray> StyleBuilderConverter::ConvertStrokeDasharray(
+@@ -700,6 +716,7 @@ FontDescription::Size StyleBuilderConverter::ConvertFontSize(
+ }
+ 
+ FontSizeAdjust StyleBuilderConverterBase::ConvertFontSizeAdjust(
++    const StyleResolverState& state,
+     const CSSValue& value) {
+   auto* identifier_value = DynamicTo<CSSIdentifierValue>(value);
+   if (identifier_value && identifier_value->GetValueID() == CSSValueID::kNone) {
+@@ -710,6 +727,12 @@ FontSizeAdjust StyleBuilderConverterBase::ConvertFontSizeAdjust(
+     return FontBuilder::InitialSizeAdjust();
+   }
+ 
++  if (identifier_value &&
++      identifier_value->GetValueID() == CSSValueID::kFromFont) {
++    return FontSizeAdjust(FontSizeAdjust::kFontSizeAdjustNone,
++                          FontSizeAdjust::ValueType::kFromFont);
++  }
++
+   if (value.IsPrimitiveValue()) {
+     const auto& primitive_value = To<CSSPrimitiveValue>(value);
+     DCHECK(primitive_value.IsNumber());
+@@ -718,15 +741,25 @@ FontSizeAdjust StyleBuilderConverterBase::ConvertFontSizeAdjust(
+ 
+   DCHECK(value.IsValuePair());
+   const auto& pair = To<CSSValuePair>(value);
+-  return FontSizeAdjust(
+-      To<CSSPrimitiveValue>(pair.Second()).GetFloatValue(),
+-      To<CSSIdentifierValue>(pair.First()).ConvertTo<FontSizeAdjust::Metric>());
++  auto metric =
++      To<CSSIdentifierValue>(pair.First()).ConvertTo<FontSizeAdjust::Metric>();
++
++  if (pair.Second().IsPrimitiveValue()) {
++    const auto& primitive_value = To<CSSPrimitiveValue>(pair.Second());
++    DCHECK(primitive_value.IsNumber());
++    return FontSizeAdjust(primitive_value.GetFloatValue(), metric);
++  }
++
++  DCHECK(To<CSSIdentifierValue>(pair.Second()).GetValueID() ==
++         CSSValueID::kFromFont);
++  return FontSizeAdjust(FontSizeAdjust::kFontSizeAdjustNone, metric,
++                        FontSizeAdjust::ValueType::kFromFont);
+ }
+ 
+ FontSizeAdjust StyleBuilderConverter::ConvertFontSizeAdjust(
+-    StyleResolverState&,
++    StyleResolverState& state,
+     const CSSValue& value) {
+-  return StyleBuilderConverterBase::ConvertFontSizeAdjust(value);
++  return StyleBuilderConverterBase::ConvertFontSizeAdjust(state, value);
+ }
+ 
+ FontSelectionValue StyleBuilderConverterBase::ConvertFontStretch(
+@@ -2147,6 +2180,22 @@ scoped_refptr<SVGDashArray> StyleBuilderConverter::ConvertStrokeDasharray(
    return array;
  }
  

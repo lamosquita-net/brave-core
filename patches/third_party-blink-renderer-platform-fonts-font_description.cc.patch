@@ -1,0 +1,25 @@
+diff --git a/third_party/blink/renderer/platform/fonts/font_description.cc b/third_party/blink/renderer/platform/fonts/font_description.cc
+index 90e377803e5a1ba9b1e0203e223975e4ac99e379..457cc2b248540e81281188418181bcbff57970a3 100644
+--- a/third_party/blink/renderer/platform/fonts/font_description.cc
++++ b/third_party/blink/renderer/platform/fonts/font_description.cc
+@@ -716,7 +716,7 @@ String FontDescription::ToString() const {
+       "family_list=[%s], feature_settings=[%s], variation_settings=[%s], "
+       "locale=%s, "
+       "specified_size=%f, computed_size=%f, adjusted_size=%f, "
+-      "size_adjust=%f, letter_spacing=%f, word_spacing=%f, "
++      "size_adjust=%s, letter_spacing=%f, word_spacing=%f, "
+       "font_selection_request=[%s], "
+       "typesetting_features=[%s], "
+       "orientation=%s, width_variant=%s, variant_caps=%s, "
+@@ -736,8 +736,9 @@ String FontDescription::ToString() const {
+       // hyphenation and script. Consider adding a more detailed
+       // string method.
+       (locale_ ? locale_->LocaleString().Ascii().c_str() : ""), specified_size_,
+-      computed_size_, adjusted_size_, size_adjust_.Value(), letter_spacing_,
+-      word_spacing_, font_selection_request_.ToString().Ascii().c_str(),
++      computed_size_, adjusted_size_, size_adjust_.ToString().Ascii().c_str(),
++      letter_spacing_, word_spacing_,
++      font_selection_request_.ToString().Ascii().c_str(),
+       blink::ToString(
+           static_cast<TypesettingFeatures>(fields_.typesetting_features_))
+           .Ascii()

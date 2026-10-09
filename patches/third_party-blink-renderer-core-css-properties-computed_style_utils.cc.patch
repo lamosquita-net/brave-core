@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/properties/computed_style_utils.cc b/third_party/blink/renderer/core/css/properties/computed_style_utils.cc
-index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..9627edd71021974b43eb39b1ab50202b2ef001f7 100644
+index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..fcb97c117bcd0b1eafbdc60ed192b2f550acaca0 100644
 --- a/third_party/blink/renderer/core/css/properties/computed_style_utils.cc
 +++ b/third_party/blink/renderer/core/css/properties/computed_style_utils.cc
 @@ -299,6 +299,7 @@ const CSSValueList* ComputedStyleUtils::CreatePositionListForLayer(
@@ -193,7 +193,40 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..9627edd71021974b43eb39b1ab50202b
  }
  
  const CSSValue* ComputedStyleUtils::BackgroundPositionOrWebkitMaskPosition(
-@@ -1984,16 +2083,27 @@ CSSValue* ComputedStyleUtils::ValueForGridTrackList(
+@@ -949,23 +1048,24 @@ CSSPrimitiveValue* ComputedStyleUtils::ValueForFontSize(
+ 
+ CSSValue* ComputedStyleUtils::ValueForFontSizeAdjust(
+     const ComputedStyle& style) {
+-  if (!style.HasFontSizeAdjust()) {
++  if (!style.HasFontSizeAdjust() ||
++      style.FontSizeAdjust().Value() == FontSizeAdjust::kFontSizeAdjustNone) {
+     return CSSIdentifierValue::Create(CSSValueID::kNone);
+   }
+ 
++  // A resolved value is to be returned. Compare CSS WG discussion.
++  // https://github.com/w3c/csswg-drafts/issues/9050
+   FontSizeAdjust font_size_adjust = style.FontSizeAdjust();
+   if (font_size_adjust.GetMetric() == FontSizeAdjust::Metric::kExHeight) {
+     return CSSNumericLiteralValue::Create(style.FontSizeAdjust().Value(),
+                                           CSSPrimitiveValue::UnitType::kNumber);
+   }
+ 
+-  CSSIdentifierValue* metric =
+-      CSSIdentifierValue::Create(font_size_adjust.GetMetric());
+-  CSSPrimitiveValue* value = CSSNumericLiteralValue::Create(
+-      style.FontSizeAdjust().Value(), CSSPrimitiveValue::UnitType::kNumber);
+-
+-  return MakeGarbageCollected<CSSValuePair>(metric, value,
+-                                            CSSValuePair::kKeepIdenticalValues);
++  return MakeGarbageCollected<CSSValuePair>(
++      CSSIdentifierValue::Create(font_size_adjust.GetMetric()),
++      CSSNumericLiteralValue::Create(style.FontSizeAdjust().Value(),
++                                     CSSPrimitiveValue::UnitType::kNumber),
++      CSSValuePair::kKeepIdenticalValues);
+ }
+ 
+ CSSPrimitiveValue* ComputedStyleUtils::ValueForFontStretch(
+@@ -1984,16 +2084,27 @@ CSSValue* ComputedStyleUtils::ValueForGridTrackList(
      is_track_list_empty = positions.size() == 1;
    }
  
@@ -228,7 +261,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..9627edd71021974b43eb39b1ab50202b
      return CSSIdentifierValue::Create(CSSValueID::kNone);
    }
  
-@@ -2046,8 +2156,8 @@ CSSValue* ComputedStyleUtils::ValueForGridTrackList(
+@@ -2046,8 +2157,8 @@ CSSValue* ComputedStyleUtils::ValueForGridTrackList(
    // Otherwise, the resolved value is the computed value, preserving repeat().
    OrderedNamedLinesCollector collector(
        computed_grid_track_list.ordered_named_grid_lines,
@@ -239,7 +272,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..9627edd71021974b43eb39b1ab50202b
    PopulateGridTrackListForNonGrid(list, collector, ng_track_list, style);
    return list;
  }
-@@ -2917,6 +3027,18 @@ CSSValue* ComputedStyleUtils::CreateTransitionPropertyValue(
+@@ -2917,6 +3028,18 @@ CSSValue* ComputedStyleUtils::CreateTransitionPropertyValue(
            .GetPropertyNameAtomicString());
  }
  
@@ -258,7 +291,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..9627edd71021974b43eb39b1ab50202b
  CSSValue* ComputedStyleUtils::ValueForTransitionProperty(
      const CSSTransitionData* transition_data) {
    CSSValueList* list = CSSValueList::CreateCommaSeparated();
-@@ -2931,6 +3053,19 @@ CSSValue* ComputedStyleUtils::ValueForTransitionProperty(
+@@ -2931,6 +3054,19 @@ CSSValue* ComputedStyleUtils::ValueForTransitionProperty(
    return list;
  }
  
@@ -278,7 +311,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..9627edd71021974b43eb39b1ab50202b
  CSSValueID ValueForQuoteType(const QuoteType quote_type) {
    switch (quote_type) {
      case QuoteType::kNoOpen:
-@@ -2985,7 +3120,8 @@ CSSValue* ComputedStyleUtils::ValueForContentData(const ComputedStyle& style,
+@@ -2985,7 +3121,8 @@ CSSValue* ComputedStyleUtils::ValueForContentData(const ComputedStyle& style,
        list->Append(*CSSIdentifierValue::Create(ValueForQuoteType(quote_type)));
      } else if (content_data->IsAltText()) {
        alt_text = MakeGarbageCollected<CSSStringValue>(
