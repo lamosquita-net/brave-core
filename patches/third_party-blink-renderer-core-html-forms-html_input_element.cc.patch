@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/forms/html_input_element.cc b/third_party/blink/renderer/core/html/forms/html_input_element.cc
-index d408b73d03898c039b5450de0e766770c7c0ae61..7754abd95a23a53fc9a6e25e3307715d534518c4 100644
+index d408b73d03898c039b5450de0e766770c7c0ae61..31cb3457a8235b5c4fd48782a3daa93dd8a0b427 100644
 --- a/third_party/blink/renderer/core/html/forms/html_input_element.cc
 +++ b/third_party/blink/renderer/core/html/forms/html_input_element.cc
 @@ -467,9 +467,18 @@ void HTMLInputElement::UpdateType() {
@@ -43,4 +43,14 @@ index d408b73d03898c039b5450de0e766770c7c0ae61..7754abd95a23a53fc9a6e25e3307715d
 +
  bool HTMLInputElement::HasBeenPasswordField() const {
    return has_been_password_field_;
+ }
+@@ -2301,6 +2319,9 @@ void HTMLInputElement::showPicker(ExceptionState& exception_state) {
+         "HTMLInputElement::showPicker() requires a user gesture.");
+     return;
+   }
++  if (RuntimeEnabledFeatures::ShowPickerConsumeUserActivationEnabled()) {
++    LocalFrame::ConsumeTransientUserActivation(frame);
++  }
+ 
+   input_type_view_->OpenPopupView();
  }

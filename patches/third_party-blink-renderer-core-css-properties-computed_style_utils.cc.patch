@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/properties/computed_style_utils.cc b/third_party/blink/renderer/core/css/properties/computed_style_utils.cc
-index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..06e323d9673ab323cf19d3086ec9336bf4b221ac 100644
+index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..9627edd71021974b43eb39b1ab50202b2ef001f7 100644
 --- a/third_party/blink/renderer/core/css/properties/computed_style_utils.cc
 +++ b/third_party/blink/renderer/core/css/properties/computed_style_utils.cc
 @@ -299,6 +299,7 @@ const CSSValueList* ComputedStyleUtils::CreatePositionListForLayer(
@@ -278,3 +278,13 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..06e323d9673ab323cf19d3086ec9336b
  CSSValueID ValueForQuoteType(const QuoteType quote_type) {
    switch (quote_type) {
      case QuoteType::kNoOpen:
+@@ -2985,7 +3120,8 @@ CSSValue* ComputedStyleUtils::ValueForContentData(const ComputedStyle& style,
+       list->Append(*CSSIdentifierValue::Create(ValueForQuoteType(quote_type)));
+     } else if (content_data->IsAltText()) {
+       alt_text = MakeGarbageCollected<CSSStringValue>(
+-          To<AltTextContentData>(content_data)->GetText());
++          To<AltTextContentData>(content_data)->ConcatenateAltText());
++      break;
+     } else {
+       NOTREACHED();
+     }

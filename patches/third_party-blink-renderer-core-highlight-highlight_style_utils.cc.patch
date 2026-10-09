@@ -1,8 +1,35 @@
 diff --git a/third_party/blink/renderer/core/highlight/highlight_style_utils.cc b/third_party/blink/renderer/core/highlight/highlight_style_utils.cc
-index b0b83fa3072a787cc75aeb70eb6e98d5cd819f2f..dc253ce6025a82ee39def5da62fb0775f66a4620 100644
+index b0b83fa3072a787cc75aeb70eb6e98d5cd819f2f..26bc41b64381ecda750b725e53d0a3a89b21d9fe 100644
 --- a/third_party/blink/renderer/core/highlight/highlight_style_utils.cc
 +++ b/third_party/blink/renderer/core/highlight/highlight_style_utils.cc
-@@ -485,6 +485,11 @@ absl::optional<Color> HighlightStyleUtils::HighlightTextDecorationColor(
+@@ -267,7 +267,7 @@ bool UseForcedColors(const Document& document,
+ 
+ // Paired cascade: when we encounter any highlight colors, we make all other
+ // highlight color properties default to initial, rather than the UA default.
+-// https://drafts.csswg.org/css-pseudo-4/#highlight-cascade
++// https://drafts.csswg.org/css-pseudo-4/#paired-defaults
+ bool UseDefaultHighlightColors(const ComputedStyle* pseudo_style,
+                                PseudoId pseudo,
+                                const CSSProperty& property) {
+@@ -317,6 +317,17 @@ Color HighlightStyleUtils::ResolveColor(
+ // Returns highlight styles for the given node, inheriting through the “tree” of
+ // highlight pseudo styles mirroring the originating element tree. None of the
+ // returned styles are influenced by originating elements or pseudo-elements.
++bool HighlightStyleUtils::UsesDefaultSelectionColors(
++    Node* node,
++    const ComputedStyle& style) {
++  scoped_refptr<const ComputedStyle> pseudo_style =
++      HighlightPseudoStyle(node, style, kPseudoIdSelection);
++  return UseDefaultHighlightColors(pseudo_style.get(), kPseudoIdSelection,
++                                   GetCSSPropertyColor()) &&
++         UseDefaultHighlightColors(pseudo_style.get(), kPseudoIdSelection,
++                                   GetCSSPropertyBackgroundColor());
++}
++
+ scoped_refptr<const ComputedStyle> HighlightStyleUtils::HighlightPseudoStyle(
+     Node* node,
+     const ComputedStyle& style,
+@@ -485,6 +496,11 @@ absl::optional<Color> HighlightStyleUtils::HighlightTextDecorationColor(
  bool HighlightStyleUtils::ShouldInvalidateVisualOverflow(
      const Node& node,
      DocumentMarker::MarkerType type) {
@@ -14,7 +41,7 @@ index b0b83fa3072a787cc75aeb70eb6e98d5cd819f2f..dc253ce6025a82ee39def5da62fb0775
    // Custom highlights are handled separately. Here we just need to handle
    // spelling, grammar and target-text. Note that we assume
    // RuntimeEnabledFeatures::HighlightInheritanceEnabled() is true to avoid
-@@ -502,17 +507,13 @@ bool HighlightStyleUtils::ShouldInvalidateVisualOverflow(
+@@ -502,17 +518,13 @@ bool HighlightStyleUtils::ShouldInvalidateVisualOverflow(
        break;
  
      case DocumentMarker::kSpelling:

@@ -1,8 +1,25 @@
 diff --git a/third_party/blink/renderer/core/paint/ng/ng_highlight_painter.cc b/third_party/blink/renderer/core/paint/ng/ng_highlight_painter.cc
-index cc671bb5ea413ec5a1c054dff13d1cf5b6111d5e..ac36b1e806de65fac8e12d89f80a09298451ca0b 100644
+index cc671bb5ea413ec5a1c054dff13d1cf5b6111d5e..1d76b192480fb87fb13a74cc4983944636762776 100644
 --- a/third_party/blink/renderer/core/paint/ng/ng_highlight_painter.cc
 +++ b/third_party/blink/renderer/core/paint/ng/ng_highlight_painter.cc
-@@ -204,8 +204,8 @@ bool HasNonTrivialSpellingGrammarStyles(const NGFragmentItem& fragment_item,
+@@ -101,9 +101,13 @@ Color SelectionBackgroundColor(const Document& document,
+     return Color();
+   }
+ 
+-  // If the text color ends up being the same as the selection background,
+-  // invert the selection background.
+-  if (text_color == color) {
++  // If the text color ends up being the same as the selection background
++  // and we are using default colors, invert the background color. We do not
++  // do this when the author has requested colors in a ::selection pseudo
++  // (FlyWeb, engine level 127: SelectionRespectsColors, Chromium d6e378fda75).
++  if (text_color == color &&
++      (!RuntimeEnabledFeatures::SelectionRespectsColorsEnabled() ||
++       HighlightStyleUtils::UsesDefaultSelectionColors(node, style))) {
+     if (node) {
+       UseCounter::Count(node->GetDocument(),
+                         WebFeature::kSelectionBackgroundColorInversion);
+@@ -204,8 +208,8 @@ bool HasNonTrivialSpellingGrammarStyles(const NGFragmentItem& fragment_item,
  
      // If the ‘text-decoration-line’ is not ‘spelling-error’ or ‘grammar-error’,
      // depending on the pseudo. ‘text-decoration-color’ can vary without hurting
@@ -13,7 +30,7 @@ index cc671bb5ea413ec5a1c054dff13d1cf5b6111d5e..ac36b1e806de65fac8e12d89f80a0929
      if (pseudo_style->TextDecorationsInEffect() !=
          (pseudo == kPseudoIdSpellingError
               ? TextDecorationLine::kSpellingError
-@@ -578,6 +578,7 @@ void NGHighlightPainter::Paint(Phase phase) {
+@@ -578,6 +582,7 @@ void NGHighlightPainter::Paint(Phase phase) {
            text_style.current_color = platform_matched_color;
            text_style.stroke_width = originating_style_.TextStrokeWidth();
            text_style.color_scheme = originating_style_.UsedColorScheme();
@@ -21,7 +38,7 @@ index cc671bb5ea413ec5a1c054dff13d1cf5b6111d5e..ac36b1e806de65fac8e12d89f80a0929
          }
          text_painter_.Paint(
              fragment_paint_info_.Slice(paint_start_offset, paint_end_offset),
-@@ -643,6 +644,7 @@ void NGHighlightPainter::Paint(Phase phase) {
+@@ -643,6 +648,7 @@ void NGHighlightPainter::Paint(Phase phase) {
          text_style.stroke_width = originating_style_.TextStrokeWidth();
          text_style.color_scheme = originating_style_.UsedColorScheme();
          text_style.shadow = nullptr;
