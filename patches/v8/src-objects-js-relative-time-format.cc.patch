@@ -1,0 +1,22 @@
+diff --git a/src/objects/js-relative-time-format.cc b/src/objects/js-relative-time-format.cc
+index 71c44cb73714811e8b6e2fa422af3de573fb3cc7..7ac86a9cca7802f10e34e087166886a33b102927 100644
+--- a/src/objects/js-relative-time-format.cc
++++ b/src/objects/js-relative-time-format.cc
+@@ -109,13 +109,12 @@ MaybeHandle<JSRelativeTimeFormat> JSRelativeTimeFormat::New(
+   // ResolveLocale(%RelativeTimeFormat%.[[AvailableLocales]],
+   //               requestedLocales, opt,
+   //               %RelativeTimeFormat%.[[RelevantExtensionKeys]], localeData).
+-  Maybe<Intl::ResolvedLocale> maybe_resolve_locale =
+-      Intl::ResolveLocale(isolate, JSRelativeTimeFormat::GetAvailableLocales(),
+-                          requested_locales, matcher, {"nu"});
+-  if (maybe_resolve_locale.IsNothing()) {
++  Intl::ResolvedLocale r;
++  if (!Intl::ResolveLocale(isolate, JSRelativeTimeFormat::GetAvailableLocales(),
++                           requested_locales, matcher, {"nu"})
++           .To(&r)) {
+     THROW_NEW_ERROR(isolate, NewRangeError(MessageTemplate::kIcuError));
+   }
+-  Intl::ResolvedLocale r = maybe_resolve_locale.FromJust();
+ 
+   UErrorCode status = U_ZERO_ERROR;
+ 

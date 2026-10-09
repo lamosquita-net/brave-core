@@ -1,0 +1,22 @@
+diff --git a/src/objects/js-plural-rules.cc b/src/objects/js-plural-rules.cc
+index 3870598118d72a07f049aecf5595ae9a09d57157..c27ce760068aceda09dfc812820808d5854cc8da 100644
+--- a/src/objects/js-plural-rules.cc
++++ b/src/objects/js-plural-rules.cc
+@@ -105,13 +105,12 @@ MaybeHandle<JSPluralRules> JSPluralRules::New(Isolate* isolate,
+   // 11. Let r be ResolveLocale(%PluralRules%.[[AvailableLocales]],
+   // requestedLocales, opt, %PluralRules%.[[RelevantExtensionKeys]],
+   // localeData).
+-  Maybe<Intl::ResolvedLocale> maybe_resolve_locale =
+-      Intl::ResolveLocale(isolate, JSPluralRules::GetAvailableLocales(),
+-                          requested_locales, matcher, {});
+-  if (maybe_resolve_locale.IsNothing()) {
++  Intl::ResolvedLocale r;
++  if (!Intl::ResolveLocale(isolate, JSPluralRules::GetAvailableLocales(),
++                           requested_locales, matcher, {})
++           .To(&r)) {
+     THROW_NEW_ERROR(isolate, NewRangeError(MessageTemplate::kIcuError));
+   }
+-  Intl::ResolvedLocale r = maybe_resolve_locale.FromJust();
+   DirectHandle<String> locale_str =
+       isolate->factory()->NewStringFromAsciiChecked(r.locale.c_str());
+ 

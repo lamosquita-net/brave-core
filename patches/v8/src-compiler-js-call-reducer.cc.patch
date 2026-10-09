@@ -1,0 +1,50 @@
+diff --git a/src/compiler/js-call-reducer.cc b/src/compiler/js-call-reducer.cc
+index 5a23acac26268886a3723fed368be55049a9a6b0..c8a39a0889113594d8b535a86e7c0fedc7021765 100644
+--- a/src/compiler/js-call-reducer.cc
++++ b/src/compiler/js-call-reducer.cc
+@@ -3786,14 +3786,13 @@ bool CanInlineJSToWasmCall(const wasm::FunctionSig* wasm_signature) {
+     return false;
+   }
+ 
+-  wasm::ValueType externRefNonNull = wasm::kWasmExternRef.AsNonNull();
+   for (auto type : wasm_signature->all()) {
+ #if defined(V8_TARGET_ARCH_32_BIT)
+     if (type == wasm::kWasmI64) return false;
+ #endif
+     if (type != wasm::kWasmI32 && type != wasm::kWasmI64 &&
+         type != wasm::kWasmF32 && type != wasm::kWasmF64 &&
+-        type != wasm::kWasmExternRef && type != externRefNonNull) {
++        type != wasm::kWasmExternRef) {
+       return false;
+     }
+   }
+@@ -4662,6 +4661,10 @@ Reduction JSCallReducer::ReduceJSCall(Node* node) {
+       // succeed.
+       FixedArrayRef bound_arguments = function.bound_arguments(broker());
+       const int bound_arguments_length = bound_arguments.length();
++      // FlyWeb: v8 d3577087 (crbug 385155406).
++      if (arity + bound_arguments_length > Code::kMaxArguments) {
++        return NoChange();
++      }
+       static constexpr int kInlineSize = 16;  // Arbitrary.
+       base::SmallVector<Node*, kInlineSize> args;
+       for (int i = 0; i < bound_arguments_length; ++i) {
+@@ -5215,6 +5218,18 @@ TNode<Object> JSCallReducerAssembler::ReduceJSCallWithArrayLikeOrSpreadOfEmpty(
+   DCHECK_EQ(static_cast<Node*>(arguments_list)->opcode(),
+             IrOpcode::kJSCreateEmptyLiteralArray);
+ 
++  // Check that arguments_list's prototype is still an array prototype.
++  TNode<Map> map = LoadMap(TNode<HeapObject>::UncheckedCast(arguments_list));
++  TNode<HeapObject> proto = TNode<HeapObject>::UncheckedCast(
++      LoadField(AccessBuilder::ForMapPrototype(), map));
++  TNode<HeapObject> initial_array_prototype =
++      HeapConstant(broker()
++                       ->target_native_context()
++                       .initial_array_prototype(broker())
++                       .object());
++  TNode<Boolean> check = ReferenceEqual(proto, initial_array_prototype);
++  CheckIf(check, DeoptimizeReason::kWrongMap, p.feedback());
++
+   // Turn the JSCallWithArrayLike or JSCallWithSpread roughly into:
+   //
+   //      "arguments_list array is still empty?"

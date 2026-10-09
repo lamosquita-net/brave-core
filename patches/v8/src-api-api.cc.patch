@@ -1,0 +1,23 @@
+diff --git a/src/api/api.cc b/src/api/api.cc
+index 25ec0de2ff0b71451c64b47e83006e22813c44fa..85596ec040f22a95e7457cf16878ebcff93488b6 100644
+--- a/src/api/api.cc
++++ b/src/api/api.cc
+@@ -10761,7 +10761,8 @@ bool MicrotasksScope::IsRunningMicrotasks(Isolate* v8_isolate) {
+   return microtask_queue->IsRunningMicrotasks();
+ }
+ 
+-String::Utf8Value::Utf8Value(v8::Isolate* v8_isolate, v8::Local<v8::Value> obj)
++String::Utf8Value::Utf8Value(v8::Isolate* v8_isolate, v8::Local<v8::Value> obj,
++                             WriteOptions options)
+     : str_(nullptr), length_(0) {
+   if (obj.IsEmpty()) return;
+   i::Isolate* i_isolate = reinterpret_cast<i::Isolate*>(v8_isolate);
+@@ -10773,7 +10774,7 @@ String::Utf8Value::Utf8Value(v8::Isolate* v8_isolate, v8::Local<v8::Value> obj)
+   if (!obj->ToString(context).ToLocal(&str)) return;
+   length_ = str->Utf8Length(v8_isolate);
+   str_ = i::NewArray<char>(length_ + 1);
+-  str->WriteUtf8(v8_isolate, str_);
++  str->WriteUtf8(v8_isolate, str_, -1, nullptr, options);
+ }
+ 
+ String::Utf8Value::~Utf8Value() { i::DeleteArray(str_); }

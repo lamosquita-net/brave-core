@@ -1,0 +1,43 @@
+diff --git a/src/compiler/turboshaft/loop-unrolling-reducer.h b/src/compiler/turboshaft/loop-unrolling-reducer.h
+index b51f9fa2aa690b51101988f5b802d2fb306f59a4..448357266f84e50d790812a204256efa808afbdc 100644
+--- a/src/compiler/turboshaft/loop-unrolling-reducer.h
++++ b/src/compiler/turboshaft/loop-unrolling-reducer.h
+@@ -193,6 +193,18 @@ class V8_EXPORT_PRIVATE LoopUnrollingAnalyzer {
+            info.op_count < kMaxLoopSizeForPartialUnrolling;
+   }
+ 
++  // FlyWeb: v8 2e96808 (crbug 383661627). The returned unroll count is the
++  // total number of copies of the loop body in the resulting graph. Don't
++  // unroll if the function is already huge (pathological runtimes and memory
++  // usage, e.g. in register allocation); an unroll count of one still runs the
++  // phase, which produces loops in a compact block order.
++  size_t GetPartialUnrollCount(const Block* loop_header) const {
++    if (input_graph_->op_id_count() > kMaxFunctionSizeForPartialUnrolling) {
++      return 1;
++    }
++    return kPartialUnrollingCount;
++  }
++
+   bool ShouldRemoveLoop(const Block* loop_header) const {
+     auto iter_count = GetIterationCount(loop_header);
+     return iter_count.IsExact() && iter_count.exact_count() == 0;
+@@ -220,6 +232,9 @@ class V8_EXPORT_PRIVATE LoopUnrollingAnalyzer {
+   // trade-off. In particular, having the number of iterations to unroll be a
+   // function of the loop's size and a MaxLoopSize could make sense.
+   static constexpr size_t kMaxLoopSizeForFullUnrolling = 150;
++  // FlyWeb: v8 2e96808. Large enough that JavaScript probably never hits it,
++  // lower than the operation count of some huge Wasm functions (1.7M).
++  static constexpr size_t kMaxFunctionSizeForPartialUnrolling = 1'000'000;
+   static constexpr size_t kJSMaxLoopSizeForPartialUnrolling = 50;
+   static constexpr size_t kWasmMaxLoopSizeForPartialUnrolling = 80;
+   static constexpr size_t kMaxLoopIterationsForFullUnrolling = 4;
+@@ -502,7 +517,8 @@ void LoopUnrollingReducer<Next>::PartiallyUnrollLoop(const Block* header) {
+   auto loop_body = analyzer_.GetLoopBody(header);
+   current_loop_header_ = header;
+ 
+-  int unroll_count = LoopUnrollingAnalyzer::kPartialUnrollingCount;
++  int unroll_count = static_cast<int>(analyzer_.GetPartialUnrollCount(header));
++  DCHECK_GT(unroll_count, 0);
+ 
+   ScopedModification<bool> set_true(__ turn_loop_without_backedge_into_merge(),
+                                     false);

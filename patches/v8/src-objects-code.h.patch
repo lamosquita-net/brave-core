@@ -1,0 +1,15 @@
+diff --git a/src/objects/code.h b/src/objects/code.h
+index 764f256703136157636e482c00c81dc79ce58030..11469354042026b147f42552f8f48dbd4be24464 100644
+--- a/src/objects/code.h
++++ b/src/objects/code.h
+@@ -435,7 +435,9 @@ class Code : public ExposedTrustedObject {
+ 
+   // Reserve one argument count value as the "don't adapt arguments" sentinel.
+   static const int kArgumentsBits = 16;
+-  static const int kMaxArguments = (1 << kArgumentsBits) - 2;
++  // Slightly less than 2^kArgumentBits-1 to allow for extra implicit arguments
++  // on the call nodes without overflowing the uint16_t input_count.
++  static const int kMaxArguments = (1 << kArgumentsBits) - 10;
+ 
+  private:
+   inline void set_instruction_start(IsolateForSandbox isolate, Address value);

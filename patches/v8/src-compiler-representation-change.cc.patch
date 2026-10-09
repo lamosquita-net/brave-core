@@ -1,0 +1,18 @@
+diff --git a/src/compiler/representation-change.cc b/src/compiler/representation-change.cc
+index 41edf33192cdca9dfe6e510bbedc92bb112b9ebe..b839b4d96bbb75df9144a15993df40bc77c3cda9 100644
+--- a/src/compiler/representation-change.cc
++++ b/src/compiler/representation-change.cc
+@@ -1241,7 +1241,12 @@ Node* RepresentationChanger::GetWord64RepresentationFor(
+     }
+   } else if (output_rep == MachineRepresentation::kTaggedSigned) {
+     if (output_type.Is(Type::SignedSmall())) {
+-      op = simplified()->ChangeTaggedSignedToInt64();
++      if (output_type.IsRange() && output_type.AsRange()->Min() >= 0) {
++        node = InsertChangeTaggedSignedToInt32(node);
++        op = machine()->ChangeUint32ToUint64();
++      } else {
++        op = simplified()->ChangeTaggedSignedToInt64();
++      }
+     } else {
+       return TypeError(node, output_rep, output_type,
+                        MachineRepresentation::kWord64);

@@ -1,0 +1,32 @@
+diff --git a/src/builtins/wasm.tq b/src/builtins/wasm.tq
+index 82401f7b1a2794e63dac4bdc3fb356a01e12b9cd..a00a816e14149d0aacff8338b5935683f918e1b8 100644
+--- a/src/builtins/wasm.tq
++++ b/src/builtins/wasm.tq
+@@ -732,25 +732,8 @@ extern macro SmiConstant(constexpr OnNonExistent): Smi;
+ extern transitioning builtin GetPropertyWithReceiver(
+     implicit context: Context)(JSAny, Name, JSAny, Smi): JSAny;
+ 
+-transitioning builtin WasmGetOwnProperty(
+-    implicit context: Context)(object: Object, uniqueName: Name): JSAny {
+-  try {
+-    const heapObject: HeapObject =
+-        TaggedToHeapObject(object) otherwise NotFound;
+-    const receiver: JSReceiver =
+-        Cast<JSReceiver>(heapObject) otherwise NotFound;
+-    try {
+-      TryHasOwnProperty(
+-          receiver, receiver.map, receiver.instanceType, uniqueName)
+-          otherwise Found, NotFound, NotFound;
+-    } label Found {
+-      tail GetPropertyWithReceiver(
+-          receiver, uniqueName, receiver, SmiConstant(kReturnUndefined));
+-    }
+-  } label NotFound deferred {
+-    return Undefined;
+-  }
+-}
++// FlyWeb: WasmGetOwnProperty moved to CSA (builtins-wasm-gen.cc) without
++// invoking getters (CVE-2026-87491, v8 36079c36).
+ 
+ // Trap builtins.
+ 

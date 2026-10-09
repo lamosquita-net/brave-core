@@ -1,0 +1,25 @@
+diff --git a/src/objects/source-text-module.cc b/src/objects/source-text-module.cc
+index 180ac445decdd2b9ca0709cc2ff412c626556b56..a28306e8bfef950717393fb0fe605a0a2dcb0c6f 100644
+--- a/src/objects/source-text-module.cc
++++ b/src/objects/source-text-module.cc
+@@ -631,8 +631,8 @@ void SourceTextModule::GatherAsyncParentCompletions(
+ 
+       // a. If execList does not contain m and
+       //    m.[[CycleRoot]].[[EvaluationError]] is empty, then
+-      if (exec_list->find(m) == exec_list->end() &&
+-          m->GetCycleRoot(isolate)->status() != kErrored) {
++      if (m->GetCycleRoot(isolate)->status() != kErrored &&
++          exec_list->find(m) == exec_list->end()) {
+         // i. Assert: m.[[EvaluationError]] is empty.
+         DCHECK_NE(m->status(), kErrored);
+ 
+@@ -713,7 +713,8 @@ bool SourceTextModule::MaybeHandleEvaluationException(
+ 
+ MaybeHandle<Object> SourceTextModule::Evaluate(
+     Isolate* isolate, Handle<SourceTextModule> module) {
+-  CHECK(module->status() == kLinked || module->status() == kEvaluated);
++  CHECK(module->status() == kLinked || module->status() == kEvaluatingAsync ||
++        module->status() == kEvaluated);
+ 
+   // 5. Let stack be a new empty List.
+   Zone zone(isolate->allocator(), ZONE_NAME);

@@ -1,0 +1,41 @@
+diff --git a/src/objects/js-date-time-format.cc b/src/objects/js-date-time-format.cc
+index 1658734463a7e691560b075df04c9eb8f45094cc..579901a8a3dcd38b6f18f7373aae2c74fd7034f5 100644
+--- a/src/objects/js-date-time-format.cc
++++ b/src/objects/js-date-time-format.cc
+@@ -1691,6 +1691,10 @@ base::Optional<std::string> GetOffsetTimeZone(Isolate* isolate,
+   if (m0 == ':') {
+     // Ignore ':'
+     p++;
++    if (len == p) {
++      // Error
++      return std::nullopt;
++    }
+     m0 = flat.Get(p);
+   }
+   if (len - p != 2) {
+@@ -2246,20 +2250,19 @@ MaybeHandle<JSDateTimeFormat> JSDateTimeFormat::CreateDateTimeFormat(
+   // ecma402/#sec-intl.datetimeformat-internal-slots
+   // The value of the [[RelevantExtensionKeys]] internal slot is
+   // « "ca", "nu", "hc" ».
+-  std::set<std::string> relevant_extension_keys = {"nu", "ca", "hc"};
+ 
+   // 10. Let localeData be %DateTimeFormat%.[[LocaleData]].
+   // 11. Let r be ResolveLocale( %DateTimeFormat%.[[AvailableLocales]],
+   //     requestedLocales, opt, %DateTimeFormat%.[[RelevantExtensionKeys]],
+   //     localeData).
+   //
+-  Maybe<Intl::ResolvedLocale> maybe_resolve_locale = Intl::ResolveLocale(
+-      isolate, JSDateTimeFormat::GetAvailableLocales(), requested_locales,
+-      locale_matcher, relevant_extension_keys);
+-  if (maybe_resolve_locale.IsNothing()) {
++  Intl::ResolvedLocale r;
++  if (!Intl::ResolveLocale(isolate, JSDateTimeFormat::GetAvailableLocales(),
++                           requested_locales, locale_matcher,
++                           {"nu", "ca", "hc"})
++           .To(&r)) {
+     THROW_NEW_ERROR(isolate, NewRangeError(MessageTemplate::kIcuError));
+   }
+-  Intl::ResolvedLocale r = maybe_resolve_locale.FromJust();
+ 
+   icu::Locale icu_locale = r.icu_locale;
+   DCHECK(!icu_locale.isBogus());

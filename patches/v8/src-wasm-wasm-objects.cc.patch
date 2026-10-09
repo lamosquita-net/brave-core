@@ -1,0 +1,15 @@
+diff --git a/src/wasm/wasm-objects.cc b/src/wasm/wasm-objects.cc
+index e1cef6ce9aae14cabc8093a5ceec90260983a301..2caf203a748135b06485dd2ae5724467da35d1ee 100644
+--- a/src/wasm/wasm-objects.cc
++++ b/src/wasm/wasm-objects.cc
+@@ -1852,8 +1852,8 @@ Handle<WasmTagObject> WasmTagObject::New(Isolate* isolate,
+ }
+ 
+ bool WasmTagObject::MatchesSignature(uint32_t expected_canonical_type_index) {
+-  return wasm::GetWasmEngine()->type_canonicalizer()->IsCanonicalSubtype(
+-      this->canonical_type_index(), expected_canonical_type_index);
++  return static_cast<uint32_t>(this->canonical_type_index()) ==
++         expected_canonical_type_index;
+ }
+ 
+ const wasm::FunctionSig* WasmCapiFunction::GetSignature(Zone* zone) const {
