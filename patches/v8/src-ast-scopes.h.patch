@@ -1,0 +1,22 @@
+diff --git a/src/ast/scopes.h b/src/ast/scopes.h
+index 421da0d20241ebdb1941c956f7949703e0713d56..fb7de9b153cd3138fd9364267ec286c08a6940ef 100644
+--- a/src/ast/scopes.h
++++ b/src/ast/scopes.h
+@@ -108,6 +108,8 @@ class V8_EXPORT_PRIVATE Scope : public NON_EXPORTED_BASE(ZoneObject) {
+   ClassScope* AsClassScope();
+   const ClassScope* AsClassScope() const;
+ 
++  bool is_reparsed() const { return !scope_info_.is_null(); }
++
+   class Snapshot final {
+    public:
+     inline explicit Snapshot(Scope* scope);
+@@ -1419,8 +1421,6 @@ class V8_EXPORT_PRIVATE ClassScope : public Scope {
+                                IsStaticFlag is_static_flag, bool* was_added);
+   Variable* RedeclareSyntheticContextVariable(const AstRawString* name);
+ 
+-  bool is_reparsed() const { return !scope_info_.is_null(); }
+-
+   // Try resolving all unresolved private names found in the current scope.
+   // Called from DeclarationScope::AllocateVariables() when reparsing a
+   // method to generate code or when eval() is called to access private names.

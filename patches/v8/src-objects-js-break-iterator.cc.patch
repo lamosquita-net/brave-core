@@ -1,0 +1,22 @@
+diff --git a/src/objects/js-break-iterator.cc b/src/objects/js-break-iterator.cc
+index 75f36109fb74e13f9016a6ed7da6f70a22ea8bd1..54dfa6f9504173f765bcbc50d4ca17a01e8fb68a 100644
+--- a/src/objects/js-break-iterator.cc
++++ b/src/objects/js-break-iterator.cc
+@@ -47,13 +47,12 @@ MaybeHandle<JSV8BreakIterator> JSV8BreakIterator::New(
+   MAYBE_RETURN(maybe_locale_matcher, MaybeHandle<JSV8BreakIterator>());
+   Intl::MatcherOption matcher = maybe_locale_matcher.FromJust();
+ 
+-  Maybe<Intl::ResolvedLocale> maybe_resolve_locale =
+-      Intl::ResolveLocale(isolate, JSV8BreakIterator::GetAvailableLocales(),
+-                          requested_locales, matcher, {});
+-  if (maybe_resolve_locale.IsNothing()) {
++  Intl::ResolvedLocale r;
++  if (!Intl::ResolveLocale(isolate, JSV8BreakIterator::GetAvailableLocales(),
++                           requested_locales, matcher, {})
++           .To(&r)) {
+     THROW_NEW_ERROR(isolate, NewRangeError(MessageTemplate::kIcuError));
+   }
+-  Intl::ResolvedLocale r = maybe_resolve_locale.FromJust();
+ 
+   // Extract type from options
+   Maybe<Type> maybe_type = GetStringOption<Type>(

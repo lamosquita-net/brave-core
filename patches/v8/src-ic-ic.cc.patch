@@ -1,0 +1,25 @@
+diff --git a/src/ic/ic.cc b/src/ic/ic.cc
+index dfa63ffc399b18c22cb0a726585a3645757a38da..e305ca9374ee5d23dde539128fd4fee602f218f2 100644
+--- a/src/ic/ic.cc
++++ b/src/ic/ic.cc
+@@ -3271,7 +3271,9 @@ FastCloneObjectMode GetCloneModeForMap(DirectHandle<Map> map,
+   }
+ 
+   // TODO(olivf): Think about cases where cross-context copies are safe.
+-  if (*map->map()->native_context() != *isolate->native_context()) {
++  // FlyWeb: v8 bc67262 (crbug 364422411): the meta map of a remote object is
++  // contextless.
++  if (!map->BelongsToSameNativeContextAs(isolate->context())) {
+     return FastCloneObjectMode::kNotSupported;
+   }
+ 
+@@ -3519,6 +3521,9 @@ std::optional<Tagged<Map>> GetCloneTargetMap(Isolate* isolate,
+                                              DirectHandle<Map> override_map,
+                                              Handle<Symbol> name) {
+   if (!v8_flags.clone_object_sidestep_transitions) return {};
++  // FlyWeb: v8 bc67262 (crbug 364422411): ensure we can follow the sidestep
++  // transition NativeContext-wise.
++  if (!source_map->BelongsToSameNativeContextAs(isolate->context())) return {};
+   ReadOnlyRoots roots(isolate);
+   auto maybe_target =
+       TransitionsAccessor(isolate, *source_map).SearchSpecial(*name);

@@ -1,0 +1,22 @@
+diff --git a/src/wasm/baseline/x64/liftoff-assembler-x64-inl.h b/src/wasm/baseline/x64/liftoff-assembler-x64-inl.h
+index 4837a9f6f31c792413948cd863b0dec4ec7aebfa..a4657c70ffd4a82e1356cd5105fca4c7d9236a63 100644
+--- a/src/wasm/baseline/x64/liftoff-assembler-x64-inl.h
++++ b/src/wasm/baseline/x64/liftoff-assembler-x64-inl.h
+@@ -51,6 +51,8 @@ constexpr Operand kInstanceDataOperand =
+ 
+ constexpr Operand kOSRTargetSlot = GetStackSlot(kOSRTargetOffset);
+ 
++// Note: The returned Operand might contain {kScratchRegister2}; make sure not
++// to clobber that until after the last use of the Operand.
+ inline Operand GetMemOp(LiftoffAssembler* assm, Register addr,
+                         Register offset_reg, uintptr_t offset_imm,
+                         ScaleFactor scale_factor = times_1) {
+@@ -61,7 +63,7 @@ inline Operand GetMemOp(LiftoffAssembler* assm, Register addr,
+                : Operand(addr, offset_reg, scale_factor, offset_imm32);
+   }
+   // Offset immediate does not fit in 31 bits.
+-  Register scratch = kScratchRegister;
++  Register scratch = kScratchRegister2;
+   assm->MacroAssembler::Move(scratch, offset_imm);
+   if (offset_reg != no_reg) assm->addq(scratch, offset_reg);
+   return Operand(addr, scratch, scale_factor, 0);

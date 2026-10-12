@@ -1,0 +1,17 @@
+diff --git a/src/bigint/fromstring.cc b/src/bigint/fromstring.cc
+index d5d1d4081ea7ccdd90bb6609072e497d791d31b6..165006a4e359b3ed9f4f9a71f2dae9351d257c6b 100644
+--- a/src/bigint/fromstring.cc
++++ b/src/bigint/fromstring.cc
+@@ -90,7 +90,11 @@ void ProcessorImpl::FromStringLarge(RWDigits Z,
+                                     FromStringAccumulator* accumulator) {
+   int num_parts = static_cast<int>(accumulator->heap_parts_.size());
+   DCHECK(num_parts >= 2);
+-  DCHECK(Z.len() >= num_parts);
++  // This is a release-mode check to guard against concurrent in-sandbox
++  // corruption. Due to the rotating-buffer scheme described above, if Z
++  // was too short, the algorithm would get confused and eventually perform
++  // OOB writes into {multipliers_storage} (allocated below).
++  CHECK(Z.len() >= num_parts);
+   RWDigits parts(accumulator->heap_parts_.data(), num_parts);
+   Storage multipliers_storage(num_parts);
+   RWDigits multipliers(multipliers_storage.get(), num_parts);

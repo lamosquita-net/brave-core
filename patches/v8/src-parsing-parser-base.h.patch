@@ -1,0 +1,25 @@
+diff --git a/src/parsing/parser-base.h b/src/parsing/parser-base.h
+index 5a703fe372cfc385e21c69bc08b000406e026dcb..6a28ec6327d6741d79b1e7b477e88574b14b7fbb 100644
+--- a/src/parsing/parser-base.h
++++ b/src/parsing/parser-base.h
+@@ -1209,8 +1209,10 @@ class ParserBase {
+   // Needs to be called if the reference needs to be available from the current
+   // point. It causes the receiver to be context allocated if necessary.
+   // Returns the receiver variable that we're referencing.
+-  V8_INLINE Variable* UseThis() {
+-    DeclarationScope* closure_scope = scope()->GetClosureScope();
++  V8_INLINE void UseThis() {
++    Scope* scope = this->scope();
++    if (scope->is_reparsed()) return;
++    DeclarationScope* closure_scope = scope->GetClosureScope();
+     DeclarationScope* receiver_scope = closure_scope->GetReceiverScope();
+     Variable* var = receiver_scope->receiver();
+     var->set_is_used();
+@@ -1223,7 +1225,6 @@ class ParserBase {
+       closure_scope->set_has_this_reference();
+       var->ForceContextAllocation();
+     }
+-    return var;
+   }
+ 
+   V8_INLINE IdentifierT ParseAndClassifyIdentifier(Token::Value token);

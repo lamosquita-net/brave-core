@@ -1,0 +1,23 @@
+diff --git a/src/objects/js-duration-format.cc b/src/objects/js-duration-format.cc
+index 80816570772844e5c9cdc6b9bfbe31e36a15be62..65930a53dda028ed26fdd26c3f81425ed8d1325e 100644
+--- a/src/objects/js-duration-format.cc
++++ b/src/objects/js-duration-format.cc
+@@ -286,13 +286,12 @@ MaybeHandle<JSDurationFormat> JSDurationFormat::New(
+   // 9. Let r be ResolveLocale(%DurationFormat%.[[AvailableLocales]],
+   // requestedLocales, opt, %DurationFormat%.[[RelevantExtensionKeys]],
+   // %DurationFormat%.[[LocaleData]]).
+-  std::set<std::string> relevant_extension_keys{"nu"};
+   Intl::ResolvedLocale r;
+-  MAYBE_ASSIGN_RETURN_ON_EXCEPTION_VALUE(
+-      isolate, r,
+-      Intl::ResolveLocale(isolate, JSDurationFormat::GetAvailableLocales(),
+-                          requested_locales, matcher, relevant_extension_keys),
+-      Handle<JSDurationFormat>());
++  if (!Intl::ResolveLocale(isolate, JSDurationFormat::GetAvailableLocales(),
++                           requested_locales, matcher, {"nu"})
++           .To(&r)) {
++    THROW_NEW_ERROR(isolate, NewRangeError(MessageTemplate::kIcuError));
++  }
+ 
+   // 10. Let locale be r.[[locale]].
+   icu::Locale r_locale = r.icu_locale;

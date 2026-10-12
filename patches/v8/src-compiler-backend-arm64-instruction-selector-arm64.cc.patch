@@ -1,0 +1,27 @@
+diff --git a/src/compiler/backend/arm64/instruction-selector-arm64.cc b/src/compiler/backend/arm64/instruction-selector-arm64.cc
+index f87fc743488027a4d860aed28ef60fe385078055..e34e3859aa4654fcca209e0d7e0b8602d5db67cb 100644
+--- a/src/compiler/backend/arm64/instruction-selector-arm64.cc
++++ b/src/compiler/backend/arm64/instruction-selector-arm64.cc
+@@ -4490,9 +4490,19 @@ bool InstructionSelectorT<TurboshaftAdapter>::ZeroExtendsWord32ToWord64NoPhis(
+       return op.Cast<ShiftOp>().rep == WordRepresentation::Word32();
+     case Opcode::kComparison:
+       return op.Cast<ComparisonOp>().rep == RegisterRepresentation::Word32();
+-    case Opcode::kOverflowCheckedBinop:
+-      return op.Cast<OverflowCheckedBinopOp>().rep ==
+-             WordRepresentation::Word32();
++    case Opcode::kOverflowCheckedBinop: {
++      const OverflowCheckedBinopOp& binop = op.Cast<OverflowCheckedBinopOp>();
++      if (binop.rep != WordRepresentation::Word32()) return false;
++      switch (binop.kind) {
++        case OverflowCheckedBinopOp::Kind::kSignedAdd:
++        case OverflowCheckedBinopOp::Kind::kSignedSub:
++          return true;
++        case OverflowCheckedBinopOp::Kind::kSignedMul:
++          // EmitInt32MulWithOverflow doesn't zero-extend because Arm64 doesn't
++          // have a flag-setting int32 multiplication.
++          return false;
++      }
++    }
+     case Opcode::kProjection:
+       return ZeroExtendsWord32ToWord64NoPhis(op.Cast<ProjectionOp>().input());
+     case Opcode::kLoad: {
