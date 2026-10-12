@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_theme.cc b/third_party/blink/renderer/core/layout/layout_theme.cc
-index 06fb69c7401baea56daccc25947de427fcf34bf1..10c60ff15cf3f330b46961f468d1594d96853e67 100644
+index 06fb69c7401baea56daccc25947de427fcf34bf1..1091fb443f430e47dbfcf116d99ad4ac14837f0c 100644
 --- a/third_party/blink/renderer/core/layout/layout_theme.cc
 +++ b/third_party/blink/renderer/core/layout/layout_theme.cc
 @@ -21,6 +21,7 @@
@@ -10,7 +10,17 @@ index 06fb69c7401baea56daccc25947de427fcf34bf1..10c60ff15cf3f330b46961f468d1594d
  #include "build/build_config.h"
  #include "third_party/blink/public/strings/grit/blink_strings.h"
  #include "third_party/blink/public/web/blink.h"
-@@ -465,16 +466,11 @@ void LayoutTheme::AdjustSliderContainerStyle(
+@@ -283,6 +284,9 @@ void LayoutTheme::AdjustStyle(const Element* element,
+ }
+ 
+ String LayoutTheme::ExtraDefaultStyleSheet() {
++  if (RuntimeEnabledFeatures::CssDisplayRubyEnabled()) {
++    return "ruby { display: ruby; }\nruby > rt { display: ruby-text; }\n";
++  }
+   return g_empty_string;
+ }
+ 
+@@ -465,16 +469,11 @@ void LayoutTheme::AdjustSliderContainerStyle(
      ComputedStyleBuilder& builder) const {
    DCHECK(IsSliderContainer(element));
  
@@ -32,7 +42,7 @@ index 06fb69c7401baea56daccc25947de427fcf34bf1..10c60ff15cf3f330b46961f468d1594d
      builder.SetTouchAction(TouchAction::kPanX);
      // If FormControlsVerticalWritingModeDirectionSupport disabled, then it is
      // always RTL because the slider value increases up even in LTR.
-@@ -482,6 +478,13 @@ void LayoutTheme::AdjustSliderContainerStyle(
+@@ -482,6 +481,13 @@ void LayoutTheme::AdjustSliderContainerStyle(
              FormControlsVerticalWritingModeDirectionSupportEnabled()) {
        builder.SetDirection(TextDirection::kRtl);
      }
@@ -46,7 +56,7 @@ index 06fb69c7401baea56daccc25947de427fcf34bf1..10c60ff15cf3f330b46961f468d1594d
    } else {
      builder.SetTouchAction(TouchAction::kPanY);
      builder.SetWritingMode(WritingMode::kHorizontalTb);
-@@ -703,7 +706,13 @@ Color LayoutTheme::DefaultSystemColor(
+@@ -703,7 +709,13 @@ Color LayoutTheme::DefaultSystemColor(
      default:
        break;
    }

@@ -1,0 +1,15 @@
+diff --git a/third_party/blink/renderer/core/editing/commands/editing_commands_utilities.cc b/third_party/blink/renderer/core/editing/commands/editing_commands_utilities.cc
+index e58f3750002b014c011edce4049dadd7972ebf7c..6ca70be965db0f63292bd1c33bf63aa2f8afffec 100644
+--- a/third_party/blink/renderer/core/editing/commands/editing_commands_utilities.cc
++++ b/third_party/blink/renderer/core/editing/commands/editing_commands_utilities.cc
+@@ -102,7 +102,9 @@ bool IsInline(const Node* node) {
+     return false;
+ 
+   const ComputedStyle* style = node->GetComputedStyle();
+-  return style && style->Display() == EDisplay::kInline;
++  // Should we apply IsDisplayInlineType()?
++  return style && (style->Display() == EDisplay::kInline ||
++                   style->Display() == EDisplay::kRuby);
+ }
+ 
+ // FIXME: This method should not need to call

@@ -1,0 +1,37 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_base.cc b/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_base.cc
+index 9617e15eeda46b16424a94cbd2c8839bed9197f2..21c7b2693a09a8d2ea8d52de0d204828adcb3d31 100644
+--- a/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_base.cc
++++ b/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_base.cc
+@@ -70,7 +70,8 @@ void LayoutNGRubyBase::MoveInlineChildrenTo(LayoutNGRubyBase& to_base,
+     }
+   }
+   // Move our inline children into the target block we determined above.
+-  MoveChildrenTo(to_block, FirstChild(), before_child);
++  MoveChildrenTo(to_block, FirstChild(), before_child,
++                 RuntimeEnabledFeatures::RubySimplePairingEnabled());
+ }
+ 
+ void LayoutNGRubyBase::MoveBlockChildrenTo(LayoutNGRubyBase& to_base,
+@@ -111,10 +112,21 @@ void LayoutNGRubyBase::MoveBlockChildrenTo(LayoutNGRubyBase& to_base,
+     // using |full_remove_insert| can prevent inconsistent LayoutObject tree
+     // that leads to CHECK failures.
+     full_remove_insert |= ChildrenInline();
++    full_remove_insert |= RuntimeEnabledFeatures::RubySimplePairingEnabled();
+     MoveAllChildrenIncludingFloatsTo(&to_base, full_remove_insert);
+   } else {
+-    MoveChildrenTo(&to_base, FirstChild(), before_child);
++    MoveChildrenTo(&to_base, FirstChild(), before_child,
++                   RuntimeEnabledFeatures::RubySimplePairingEnabled());
+   }
+ }
+ 
++bool LayoutNGRubyBase::IsPlaceholder() const {
++  NOT_DESTROYED();
++  return is_placeholder_;
++}
++void LayoutNGRubyBase::SetPlaceholder() {
++  NOT_DESTROYED();
++  is_placeholder_ = true;
++}
++
+ }  // namespace blink

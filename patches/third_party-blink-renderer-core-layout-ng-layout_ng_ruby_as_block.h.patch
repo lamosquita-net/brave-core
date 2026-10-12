@@ -1,0 +1,45 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_as_block.h b/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_as_block.h
+index 0f5ba4a9553972e6f46f1bedc36bb534ce2d3d3d..32be9293ba9612165a7079a2c70c6760411819a1 100644
+--- a/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_as_block.h
++++ b/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_as_block.h
+@@ -10,12 +10,19 @@
+ 
+ namespace blink {
+ 
+-// Represents <ruby> with "display: block" or "display: inline-block".
+-// If we supports "display: block ruby", we can remove this class.
++class RubyContainer;
++
++// This is a general block container wrapping an anonymous LayoutRubyAsInline.
++//
++// https://drafts.csswg.org/css-ruby/#block-ruby
++// > If an element has an inner display type of ruby and an outer display type
++// > other than inline, then it generates two boxes: a principal box of the
++// > required outer display type, and an inline-level ruby container.
+ class CORE_EXPORT LayoutNGRubyAsBlock : public LayoutNGBlockFlow {
+  public:
+   explicit LayoutNGRubyAsBlock(Element*);
+   ~LayoutNGRubyAsBlock() override;
++  void Trace(Visitor* visitor) const override;
+ 
+   const char* GetName() const override {
+     NOT_DESTROYED();
+@@ -28,6 +35,18 @@ class CORE_EXPORT LayoutNGRubyAsBlock : public LayoutNGBlockFlow {
+   void StyleDidChange(StyleDifference, const ComputedStyle* old_style) override;
+   bool CreatesAnonymousWrapper() const override;
+   void RemoveLeftoverAnonymousBlock(LayoutBlock*) override;
++
++  void DidRemoveChildFromColumn(LayoutObject& child);
++
++ private:
++  Member<RubyContainer> ruby_container_;
++};
++
++template <>
++struct DowncastTraits<LayoutNGRubyAsBlock> {
++  static bool AllowFrom(const LayoutObject& object) {
++    return object.IsRuby() && !object.IsLayoutInline();
++  }
+ };
+ 
+ }  // namespace blink

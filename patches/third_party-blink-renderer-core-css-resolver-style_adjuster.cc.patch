@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_adjuster.cc b/third_party/blink/renderer/core/css/resolver/style_adjuster.cc
-index 1beefec6e5711effd887fce2cbf842672a4fb41a..586e7e4648cb9a93f273b71820935b81c9500278 100644
+index 1beefec6e5711effd887fce2cbf842672a4fb41a..ab5d443c34a87af7958bce80c5ac63339ba5c5f6 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_adjuster.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_adjuster.cc
 @@ -69,6 +69,7 @@
@@ -39,3 +39,53 @@ index 1beefec6e5711effd887fce2cbf842672a4fb41a..586e7e4648cb9a93f273b71820935b81
  }
  
  bool ElementForcesStackingContext(Element* element) {
+@@ -165,6 +181,7 @@ static EDisplay EquivalentBlockDisplay(EDisplay display) {
+     case EDisplay::kFlex:
+     case EDisplay::kGrid:
+     case EDisplay::kBlockMath:
++    case EDisplay::kBlockRuby:
+     case EDisplay::kListItem:
+     case EDisplay::kFlowRoot:
+     case EDisplay::kLayoutCustom:
+@@ -179,6 +196,8 @@ static EDisplay EquivalentBlockDisplay(EDisplay display) {
+       return EDisplay::kGrid;
+     case EDisplay::kMath:
+       return EDisplay::kBlockMath;
++    case EDisplay::kRuby:
++      return EDisplay::kBlockRuby;
+     case EDisplay::kInlineLayoutCustom:
+       return EDisplay::kLayoutCustom;
+     case EDisplay::kInlineListItem:
+@@ -199,6 +218,7 @@ static EDisplay EquivalentBlockDisplay(EDisplay display) {
+     case EDisplay::kTableColumn:
+     case EDisplay::kTableCell:
+     case EDisplay::kTableCaption:
++    case EDisplay::kRubyText:
+       return EDisplay::kBlock;
+     case EDisplay::kNone:
+       NOTREACHED();
+@@ -233,10 +253,13 @@ static bool IsAtMediaUAShadowBoundary(const Element* element) {
+ // to manually stop text-decorations to apply to text inside media controls.
+ static bool StopPropagateTextDecorations(const ComputedStyleBuilder& builder,
+                                          const Element* element) {
++  const bool is_ruby_text = RuntimeEnabledFeatures::CssDisplayRubyEnabled()
++                                ? (builder.Display() == EDisplay::kRubyText)
++                                : IsA<HTMLRTElement>(element);
+   return builder.IsDisplayReplacedType() ||
+          IsAtMediaUAShadowBoundary(element) || builder.IsFloating() ||
+          builder.HasOutOfFlowPosition() || IsOutermostSVGElement(element) ||
+-         IsA<HTMLRTElement>(element);
++         is_ruby_text;
+ }
+ 
+ static bool LayoutParentStyleForcesZIndexToCreateStackingContext(
+@@ -400,7 +423,8 @@ static void AdjustStyleForHTMLElement(ComputedStyleBuilder& builder,
+         element.GetDocument().GetStyleResolver().InitialZoom());
+   }
+ 
+-  if (IsA<HTMLRTElement>(element)) {
++  if (IsA<HTMLRTElement>(element) &&
++      !RuntimeEnabledFeatures::CssDisplayRubyEnabled()) {
+     // Ruby text does not support float or position. This might change with
+     // evolution of the specification.
+     builder.SetPosition(EPosition::kStatic);

@@ -1,0 +1,14 @@
+diff --git a/third_party/blink/renderer/core/html/html_rt_element.cc b/third_party/blink/renderer/core/html/html_rt_element.cc
+index 6e1a2e08c8cbd4f421307d5d46c9cb7248bfba03..763fd827f3f7d215fd328a9609db5da7e21338ee 100644
+--- a/third_party/blink/renderer/core/html/html_rt_element.cc
++++ b/third_party/blink/renderer/core/html/html_rt_element.cc
+@@ -15,6 +15,9 @@ HTMLRTElement::HTMLRTElement(Document& document)
+     : HTMLElement(html_names::kRtTag, document) {}
+ 
+ LayoutObject* HTMLRTElement::CreateLayoutObject(const ComputedStyle& style) {
++  if (RuntimeEnabledFeatures::CssDisplayRubyEnabled()) {
++    return LayoutObject::CreateObject(this, style);
++  }
+   if (style.Display() == EDisplay::kBlock)
+     return MakeGarbageCollected<LayoutNGRubyText>(this);
+   return LayoutObject::CreateObject(this, style);

@@ -1,0 +1,18 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/ng_physical_box_fragment.cc b/third_party/blink/renderer/core/layout/ng/ng_physical_box_fragment.cc
+index d0e75911e507fe18eed91c366a9034e21c71fa14..d50abcb2c8211428ea177896014d30bc36ccce1a 100644
+--- a/third_party/blink/renderer/core/layout/ng/ng_physical_box_fragment.cc
++++ b/third_party/blink/renderer/core/layout/ng/ng_physical_box_fragment.cc
+@@ -904,11 +904,11 @@ PhysicalRect NGPhysicalBoxFragment::ScrollableOverflow(
+   if (height_type == TextHeightType::kEmHeight && IsRubyBox()) {
+     return ScrollableOverflowFromChildren(height_type);
+   }
+-  if (layout_object->IsBox()) {
++  if (const auto* layout_box = DynamicTo<LayoutBox>(layout_object)) {
+     if (HasNonVisibleOverflow())
+       return PhysicalRect({}, Size());
+     // Legacy is the source of truth for overflow
+-    return PhysicalRect(To<LayoutBox>(layout_object)->LayoutOverflowRect());
++    return layout_box->PhysicalLayoutOverflowRect();
+   } else if (layout_object->IsLayoutInline()) {
+     // Inline overflow is a union of child overflows.
+     PhysicalRect overflow;

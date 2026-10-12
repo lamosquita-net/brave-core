@@ -1,0 +1,23 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_base.h b/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_base.h
+index 2071f670300c061940d9d584ae3e854d40082d82..7357c5149966effe5fb80af56a0292796d497f88 100644
+--- a/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_base.h
++++ b/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_base.h
+@@ -29,11 +29,18 @@ class CORE_EXPORT LayoutNGRubyBase final : public LayoutNGBlockFlow {
+   void MoveChildren(LayoutNGRubyBase& to_base,
+                     LayoutObject* before_child = nullptr);
+ 
++  // Returns true if this object was created for a RubyText without a
++  // corresponding RubyBase.
++  bool IsPlaceholder() const;
++  void SetPlaceholder();
++
+  private:
+   void MoveInlineChildrenTo(LayoutNGRubyBase& to_base,
+                             LayoutObject* before_child);
+   void MoveBlockChildrenTo(LayoutNGRubyBase& to_base,
+                            LayoutObject* before_child);
++
++  bool is_placeholder_ = false;
+ };
+ 
+ template <>

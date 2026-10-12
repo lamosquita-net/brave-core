@@ -1,0 +1,19 @@
+diff --git a/third_party/blink/renderer/core/display_lock/display_lock_context.cc b/third_party/blink/renderer/core/display_lock/display_lock_context.cc
+index b0b50d6e1de97cb8f23b7df0bfa03abdbd1fe3a4..c5f3d9f2c856c274224fb10dd51207afb3ea9dc9 100644
+--- a/third_party/blink/renderer/core/display_lock/display_lock_context.cc
++++ b/third_party/blink/renderer/core/display_lock/display_lock_context.cc
+@@ -1070,12 +1070,10 @@ const char* DisplayLockContext::ShouldForceUnlock() const {
+   // table element other than display: table-cell, if the element is an
+   // internal ruby element, or if the element’s principal box is a
+   // non-atomic inline-level box, layout containment has no effect.
+-  // (Note we're allowing display:none for display locked elements, and a bit
+-  // more restrictive on ruby - banning <ruby> elements entirely).
+-  auto* html_element = DynamicTo<HTMLElement>(element_.Get());
++  // (Note we're allowing display:none for display locked elements).
+   if ((style->IsDisplayTableType() &&
+        style->Display() != EDisplay::kTableCell) ||
+-      (!html_element || IsA<HTMLRubyElement>(html_element)) ||
++      style->Display() == EDisplay::kRubyText ||
+       (style->IsDisplayInlineType() && !style->IsDisplayReplacedType())) {
+     return rejection_names::kContainmentNotSatisfied;
+   }

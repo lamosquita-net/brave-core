@@ -1,0 +1,45 @@
+diff --git a/third_party/blink/renderer/core/layout/layout_ruby.h b/third_party/blink/renderer/core/layout/layout_ruby.h
+index 6327b52360d13e6a8b2a013041379dadd5d8383d..13d3c699cc262a4aee46537449ffdaaaa7164327 100644
+--- a/third_party/blink/renderer/core/layout/layout_ruby.h
++++ b/third_party/blink/renderer/core/layout/layout_ruby.h
+@@ -36,6 +36,7 @@
+ namespace blink {
+ 
+ class LayoutNGRubyRun;
++class RubyContainer;
+ 
+ // Following the HTML 5 spec, the box object model for a <ruby> element allows
+ // several runs of ruby
+@@ -60,6 +61,7 @@ class LayoutRubyAsInline final : public LayoutInline {
+  public:
+   LayoutRubyAsInline(Element*);
+   ~LayoutRubyAsInline() override;
++  void Trace(Visitor* visitor) const override;
+ 
+   void AddChild(LayoutObject* child,
+                 LayoutObject* before_child = nullptr) override;
+@@ -70,6 +72,8 @@ class LayoutRubyAsInline final : public LayoutInline {
+     return "LayoutRuby (inline)";
+   }
+ 
++  void DidRemoveChildFromColumn(LayoutObject& child);
++
+   static LayoutNGRubyRun* LastRubyRun(const LayoutObject& ruby);
+   static LayoutNGRubyRun* FindRubyRunParent(LayoutObject* child);
+ 
+@@ -85,6 +89,15 @@ class LayoutRubyAsInline final : public LayoutInline {
+     NOT_DESTROYED();
+     return true;
+   }
++
++  Member<RubyContainer> ruby_container_;
++};
++
++template <>
++struct DowncastTraits<LayoutRubyAsInline> {
++  static bool AllowFrom(const LayoutObject& object) {
++    return object.IsRuby() && object.IsLayoutInline();
++  }
+ };
+ 
+ }  // namespace blink
