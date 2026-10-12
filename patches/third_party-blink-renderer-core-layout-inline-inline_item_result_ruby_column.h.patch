@@ -1,0 +1,40 @@
+diff --git a/third_party/blink/renderer/core/layout/inline/inline_item_result_ruby_column.h b/third_party/blink/renderer/core/layout/inline/inline_item_result_ruby_column.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..fa9b5667fb4663aa8aa2f1853d61b38222ec7f9e
+--- /dev/null
++++ b/third_party/blink/renderer/core/layout/inline/inline_item_result_ruby_column.h
+@@ -0,0 +1,34 @@
++// Copyright 2024 The Chromium Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef THIRD_PARTY_BLINK_RENDERER_CORE_LAYOUT_INLINE_INLINE_ITEM_RESULT_RUBY_COLUMN_H_
++#define THIRD_PARTY_BLINK_RENDERER_CORE_LAYOUT_INLINE_INLINE_ITEM_RESULT_RUBY_COLUMN_H_
++
++#include "third_party/blink/renderer/core/layout/ng/inline/ng_line_info.h"
++
++namespace blink {
++
++// A data specific to NGInlineItemResults with NGInlineItem::kOpenRubyColumn
++// type.
++struct InlineItemResultRubyColumn
++    : public GarbageCollected<InlineItemResultRubyColumn> {
++  void Trace(Visitor* visitor) const {
++    visitor->Trace(base_line);
++    visitor->Trace(annotation_line_list);
++  }
++
++  // A NGLineInfo for the base level.
++  NGLineInfo base_line;
++
++  // A list of annotation level NGLineInfo.  [0] is the outermost one.
++  HeapVector<NGLineInfo, 1> annotation_line_list;
++
++  // A list of ruby-position values.  The size of this list must be same as
++  // annotation_line_list.
++  Vector<RubyPosition, 1> position_list;
++};
++
++}  // namespace blink
++
++#endif  // THIRD_PARTY_BLINK_RENDERER_CORE_LAYOUT_INLINE_INLINE_ITEM_RESULT_RUBY_COLUMN_H_

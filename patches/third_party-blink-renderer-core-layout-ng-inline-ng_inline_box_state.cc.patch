@@ -1,0 +1,28 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_box_state.cc b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_box_state.cc
+index 9453b2f2167e231c67fbfbbfa329c379be52afcc..bb5a6352aa115a174390bec77abf877de7bdc047 100644
+--- a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_box_state.cc
++++ b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_box_state.cc
+@@ -37,6 +37,11 @@ FontHeight ComputeEmphasisMarkOutsets(const ComputedStyle& style,
+ 
+ }  // namespace
+ 
++void LogicalRubyColumn::Trace(Visitor* visitor) const {
++  visitor->Trace(annotation_items);
++  visitor->Trace(ruby_column_list);
++}
++
+ NGInlineBoxState::NGInlineBoxState(const NGInlineBoxState&& state)
+     : fragment_start(state.fragment_start),
+       item(state.item),
+@@ -1176,6 +1181,11 @@ FontHeight NGInlineLayoutStateStack::MetricsForTopAndBottomAlign(
+   return max;
+ }
+ 
++LogicalRubyColumn& NGInlineLayoutStateStack::CreateRubyColumn() {
++  ruby_column_list_.push_back(MakeGarbageCollected<LogicalRubyColumn>());
++  return *ruby_column_list_.back();
++}
++
+ #if DCHECK_IS_ON()
+ void NGInlineLayoutStateStack::CheckSame(
+     const NGInlineLayoutStateStack& other) const {

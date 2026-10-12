@@ -1,0 +1,69 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_fragment_items_builder.h b/third_party/blink/renderer/core/layout/ng/inline/ng_fragment_items_builder.h
+index b126f73a74d1c86a0dd9c9c5e9d3b38f7d42cba1..4121066bf3f85d12ca37a66a42394ebda4c16d03 100644
+--- a/third_party/blink/renderer/core/layout/ng/inline/ng_fragment_items_builder.h
++++ b/third_party/blink/renderer/core/layout/ng/inline/ng_fragment_items_builder.h
+@@ -17,6 +17,7 @@ namespace blink {
+ class NGFragmentItem;
+ class NGFragmentItems;
+ class NGInlineNode;
++class LogicalLineContainer;
+ 
+ // This class builds |NGFragmentItems|.
+ //
+@@ -56,26 +57,28 @@ class CORE_EXPORT NGFragmentItemsBuilder {
+   // creates and positions children within a line box, but its parent algorithm
+   // positions the line box.
+   //
+-  // 1. |AcquireLogicalLineItems| to get an instance of |NGLogicalLineItems|.
+-  // 2. Add items to |NGLogicalLineItems| and create |NGPhysicalFragment|,
+-  //    then associate them by |AssociateLogicalLineItems|.
++  // 1. |AcquireLogicalLineContainer| to get an instance of
++  //    |LogicalLineContainer|.
++  // 2. Add items to |LogicalLineContainer::BaseLine()| and create
++  //    |NGPhysicalFragment|, then associate them by
++  //    |AssociateLogicalLineContainer|.
+   // 3. |AddLine| adds the |NGPhysicalLineBoxFragment|.
+   //
+   // |NGBlockLayoutAlgorithm| runs these phases in the order for each line. In
+-  // this case, one instance of |NGLogicalLineItems| is reused for all lines to
+-  // reduce memory allocations.
++  // this case, one instance of |LogicalLineContainer| is reused for all lines
++  // to reduce memory allocations.
+   //
+   // Custom layout produces all line boxes first by running only 1 and 2 (in
+   // |NGInlineLayoutAlgorithm|). Then after worklet determined the position and
+   // the order of line boxes, it runs 3 for each line. In this case,
+   // |NGFragmentItemsBuilder| allocates new instance for each line, and keeps
+   // them alive until |AddLine|.
+-  NGLogicalLineItems* AcquireLogicalLineItems();
+-  void ReleaseCurrentLogicalLineItems();
++  LogicalLineContainer* AcquireLogicalLineContainer();
++  void ReleaseCurrentLogicalLineContainer();
+   const NGLogicalLineItems& LogicalLineItems(
+       const NGPhysicalLineBoxFragment&) const;
+-  void AssociateLogicalLineItems(NGLogicalLineItems* line_items,
+-                                 const NGPhysicalFragment& line_fragment);
++  void AssociateLogicalLineContainer(LogicalLineContainer* line_container,
++                                     const NGPhysicalFragment& line_fragment);
+   void AddLine(const NGPhysicalLineBoxFragment& line,
+                const LogicalOffset& offset);
+ 
+@@ -159,13 +162,13 @@ class CORE_EXPORT NGFragmentItemsBuilder {
+   String first_line_text_content_;
+ 
+   // Keeps children of a line until the offset is determined. See |AddLine|.
+-  NGLogicalLineItems* current_line_items_ = nullptr;
++  LogicalLineContainer* current_line_container_ = nullptr;
+   const NGPhysicalFragment* current_line_fragment_ = nullptr;
+ 
+-  HeapHashMap<Member<const NGPhysicalFragment>, Member<NGLogicalLineItems>>
+-      line_items_map_;
+-  NGLogicalLineItems* const line_items_pool_ =
+-      MakeGarbageCollected<NGLogicalLineItems>();
++  HeapHashMap<Member<const NGPhysicalFragment>, Member<LogicalLineContainer>>
++      line_container_map_;
++  LogicalLineContainer* const line_container_pool_ =
++      MakeGarbageCollected<LogicalLineContainer>();
+ 
+   NGInlineNode node_;
+ 

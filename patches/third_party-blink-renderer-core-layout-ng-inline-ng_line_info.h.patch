@@ -1,8 +1,28 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.h b/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.h
-index 6b241a91e27ab7c4b3045b8d7f7e6d4a3ed85f18..1809b549c9a4f2c4f43cd541acf86e4b38fec870 100644
+index 6b241a91e27ab7c4b3045b8d7f7e6d4a3ed85f18..70e1b79d2a9628336b393b35571c7e8efa4d9b6f 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.h
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.h
-@@ -150,6 +150,9 @@ class CORE_EXPORT NGLineInfo {
+@@ -28,9 +28,10 @@ struct NGInlineItemsData;
+ //
+ // NGLineBreaker produces, and NGInlineLayoutAlgorithm consumes.
+ class CORE_EXPORT NGLineInfo {
+-  STACK_ALLOCATED();
++  DISALLOW_NEW();
+ 
+  public:
++  void Trace(Visitor* visitor) const;
+   void Reset();
+ 
+   const NGInlineItemsData& ItemsData() const {
+@@ -46,6 +47,7 @@ class CORE_EXPORT NGLineInfo {
+   void SetLineStyle(const NGInlineNode&,
+                     const NGInlineItemsData&,
+                     bool use_first_line_style);
++  void OverrideLineStyle(const ComputedStyle& style) { line_style_ = &style; }
+ 
+   // Use ::first-line style if true.
+   // https://drafts.csswg.org/css-pseudo/#selectordef-first-line
+@@ -150,6 +152,9 @@ class CORE_EXPORT NGLineInfo {
    bool HasOverflow() const { return has_overflow_; }
    void SetHasOverflow(bool value = true) { has_overflow_ = value; }
  
@@ -12,3 +32,30 @@ index 6b241a91e27ab7c4b3045b8d7f7e6d4a3ed85f18..1809b549c9a4f2c4f43cd541acf86e4b
    void SetBfcOffset(const NGBfcOffset& bfc_offset) { bfc_offset_ = bfc_offset; }
    void SetWidth(LayoutUnit available_width, LayoutUnit width) {
      available_width_ = available_width;
+@@ -243,16 +248,16 @@ class CORE_EXPORT NGLineInfo {
+   LayoutUnit ComputeTrailingSpaceWidth(
+       unsigned* end_offset_out = nullptr) const;
+ 
+-  const NGInlineItemsData* items_data_ = nullptr;
++  Member<const NGInlineItemsData> items_data_;
+   scoped_refptr<const ComputedStyle> line_style_;
+   NGInlineItemResults results_;
+ 
+   NGBfcOffset bfc_offset_;
+ 
+-  const NGInlineBreakToken* break_token_ = nullptr;
++  Member<const NGInlineBreakToken> break_token_;
+   HeapVector<Member<const NGBlockBreakToken>> propagated_break_tokens_;
+ 
+-  const NGLayoutResult* block_in_inline_layout_result_ = nullptr;
++  Member<const NGLayoutResult> block_in_inline_layout_result_;
+ 
+   LayoutUnit available_width_;
+   LayoutUnit width_;
+@@ -296,4 +301,6 @@ std::ostream& operator<<(std::ostream& ostream, const NGLineInfo& line_info);
+ 
+ }  // namespace blink
+ 
++WTF_ALLOW_CLEAR_UNUSED_SLOTS_WITH_MEM_FUNCTIONS(blink::NGLineInfo)
++
+ #endif  // THIRD_PARTY_BLINK_RENDERER_CORE_LAYOUT_NG_INLINE_NG_LINE_INFO_H_

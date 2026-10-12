@@ -1,0 +1,58 @@
+diff --git a/third_party/blink/renderer/core/layout/inline/logical_line_container.cc b/third_party/blink/renderer/core/layout/inline/logical_line_container.cc
+new file mode 100644
+index 0000000000000000000000000000000000000000..0cb314bf1eb3e88e28b89ce87cb9ce9ea95a94b0
+--- /dev/null
++++ b/third_party/blink/renderer/core/layout/inline/logical_line_container.cc
+@@ -0,0 +1,52 @@
++// Copyright 2024 The Chromium Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "third_party/blink/renderer/core/layout/inline/logical_line_container.h"
++
++#include "third_party/blink/renderer/core/layout/ng/inline/ng_logical_line_item.h"
++
++namespace blink {
++
++LogicalLineContainer::LogicalLineContainer()
++    : base_line_(MakeGarbageCollected<NGLogicalLineItems>()) {}
++
++void LogicalLineContainer::Trace(Visitor* visitor) const {
++  visitor->Trace(base_line_);
++  visitor->Trace(annotation_line_list_);
++}
++
++void LogicalLineContainer::Clear() {
++  base_line_->clear();
++  annotation_metrics_list_.clear();
++  for (auto& line : annotation_line_list_) {
++    line->clear();
++  }
++  annotation_line_list_.clear();
++}
++
++void LogicalLineContainer::Shrink() {
++  base_line_->Shrink(0);
++  annotation_metrics_list_.Shrink(0);
++  for (auto& line : annotation_line_list_) {
++    line->clear();
++  }
++  annotation_line_list_.Shrink(0);
++}
++
++void LogicalLineContainer::MoveInBlockDirection(LayoutUnit delta) {
++  base_line_->MoveInBlockDirection(delta);
++  for (auto& line : annotation_line_list_) {
++    line->MoveInBlockDirection(delta);
++  }
++}
++
++wtf_size_t LogicalLineContainer::EstimatedFragmentItemCount() const {
++  wtf_size_t count = 1 + base_line_->size();
++  for (const auto& line : annotation_line_list_) {
++    count += 1 + line->size();
++  }
++  return count;
++}
++
++}  // namespace blink

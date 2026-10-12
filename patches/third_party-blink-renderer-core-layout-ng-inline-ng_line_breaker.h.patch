@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_line_breaker.h b/third_party/blink/renderer/core/layout/ng/inline/ng_line_breaker.h
-index be47a676d33890436858d55bae489e23a029f8ab..436a2eb0f8b6f5faf1ec120e71257e3148fbf47d 100644
+index be47a676d33890436858d55bae489e23a029f8ab..d308c1134bcd14fb1b5f9a5d2ceb89782012cc4f 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_line_breaker.h
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_line_breaker.h
-@@ -53,6 +53,9 @@ class CORE_EXPORT NGLineBreaker {
+@@ -29,6 +29,7 @@ class NGLineBreakCandidateContext;
+ class NGLineInfo;
+ class ResolvedTextLayoutAttributesIterator;
+ class ShapingLineBreaker;
++struct AnnotationBreakTokenData;
+ 
+ // The line breaker needs to know which mode its in to properly handle floats.
+ enum class NGLineBreakerMode { kContent, kMinContent, kMaxContent };
+@@ -53,6 +54,9 @@ class CORE_EXPORT NGLineBreaker {
  
    const NGInlineItemsData& ItemsData() const { return items_data_; }
  
@@ -12,7 +20,27 @@ index be47a676d33890436858d55bae489e23a029f8ab..436a2eb0f8b6f5faf1ec120e71257e31
    // True if the last line has `box-decoration-break: clone`, which affected the
    // size.
    bool HasClonedBoxDecorations() const { return has_cloned_box_decorations_; }
-@@ -236,6 +239,7 @@ class CORE_EXPORT NGLineBreaker {
+@@ -205,6 +209,19 @@ class CORE_EXPORT NGLineBreaker {
+   void HandleBlockInInline(const NGInlineItem&, NGLineInfo*);
+   void ComputeMinMaxContentSizeForBlockChild(const NGInlineItem&,
+                                              NGInlineItemResult*);
++  // Returns false if we can't handle the current NGInlineItem as a ruby.
++  bool HandleRuby(NGLineInfo* line_info);
++  NGLineInfo CreateSubLineInfo(NGInlineItemTextIndex start,
++                               wtf_size_t end_item_index,
++                               LayoutUnit limit);
++  NGInlineItemResult* AddRubyColumnResult(
++      const NGInlineItem& item,
++      const NGLineInfo& base_line_info,
++      const HeapVector<NGLineInfo, 1>& annotation_line_list,
++      const Vector<AnnotationBreakTokenData, 1>& annotation_data_list,
++      LayoutUnit ruby_size,
++      NGLineInfo& line_info);
++  bool CanBreakAfterRubyColumn(const NGInlineItemResult& column_result) const;
+ 
+   bool CanBreakAfterAtomicInline(const NGInlineItem& item) const;
+   bool CanBreakAfter(const NGInlineItem& item) const;
+@@ -236,6 +253,7 @@ class CORE_EXPORT NGLineBreaker {
    bool IsPreviousItemOfType(NGInlineItem::NGInlineItemType);
    void MoveToNextOf(const NGInlineItem&);
    void MoveToNextOf(const NGInlineItemResult&);
@@ -20,7 +48,7 @@ index be47a676d33890436858d55bae489e23a029f8ab..436a2eb0f8b6f5faf1ec120e71257e31
  
    void ComputeBaseDirection();
    void RecalcClonedBoxDecorations();
-@@ -342,6 +346,10 @@ class CORE_EXPORT NGLineBreaker {
+@@ -342,6 +360,10 @@ class CORE_EXPORT NGLineBreaker {
  
    const NGInlineItemsData& items_data_;
  

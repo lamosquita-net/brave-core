@@ -1,8 +1,28 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.cc b/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.cc
-index 4125fe51de0e63b2708dedf02f62c5347554df45..e3ef709f2c3ea0b7606a5000e87eba0a0b99cbcd 100644
+index 4125fe51de0e63b2708dedf02f62c5347554df45..f34d7aef71148eb1a9112de61dd60a0459b4743d 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.cc
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.cc
-@@ -182,6 +182,15 @@ bool NGLineInfo::ShouldHangTrailingSpaces() const {
+@@ -8,10 +8,19 @@
+ #include "third_party/blink/renderer/core/layout/layout_object_inlines.h"
+ #include "third_party/blink/renderer/core/layout/ng/inline/ng_inline_break_token.h"
+ #include "third_party/blink/renderer/core/layout/ng/inline/ng_inline_node.h"
++#include "third_party/blink/renderer/core/layout/ng/ng_layout_result.h"
+ #include "third_party/blink/renderer/platform/fonts/shaping/shape_result_view.h"
+ 
+ namespace blink {
+ 
++void NGLineInfo::Trace(Visitor* visitor) const {
++  visitor->Trace(results_);
++  visitor->Trace(items_data_);
++  visitor->Trace(break_token_);
++  visitor->Trace(propagated_break_tokens_);
++  visitor->Trace(block_in_inline_layout_result_);
++}
++
+ void NGLineInfo::Reset() {
+   items_data_ = nullptr;
+   line_style_ = nullptr;
+@@ -182,6 +191,15 @@ bool NGLineInfo::ShouldHangTrailingSpaces() const {
    NOTREACHED();
  }
  
