@@ -1,5 +1,5 @@
 diff --git a/fxjs/cfxjs_engine.cpp b/fxjs/cfxjs_engine.cpp
-index 35653c980e137095c05faa6cc8774efab292d5bd..8a772b6b9a47f6bf5dc304cdfe4c6eccdb32ea36 100644
+index 35653c980e137095c05faa6cc8774efab292d5bd..2cb9d9a280d27bcde55a95fd9da9660feeeab626 100644
 --- a/fxjs/cfxjs_engine.cpp
 +++ b/fxjs/cfxjs_engine.cpp
 @@ -199,9 +199,9 @@ class CFXJS_ObjDefinition {
@@ -15,7 +15,25 @@ index 35653c980e137095c05faa6cc8774efab292d5bd..8a772b6b9a47f6bf5dc304cdfe4c6ecc
    }
  
    void DefineMethod(v8::Local<v8::String> sMethodName,
-@@ -435,8 +435,8 @@ void CFXJS_Engine::DefineObjMethod(uint32_t nObjDefnID,
+@@ -212,12 +212,11 @@ class CFXJS_ObjDefinition {
+     GetInstanceTemplate()->Set(sMethodName, fun, v8::ReadOnly);
+   }
+ 
+-  void DefineAllProperties(
+-      v8::GenericNamedPropertyQueryCallback pPropQurey,
+-      v8::GenericNamedPropertyGetterCallback pPropGet,
+-      v8::GenericNamedPropertySetterCallback pPropPut,
+-      v8::GenericNamedPropertyDeleterCallback pPropDel,
+-      v8::GenericNamedPropertyEnumeratorCallback pPropEnum) {
++  void DefineAllProperties(v8::NamedPropertyQueryCallback pPropQurey,
++                           v8::NamedPropertyGetterCallback pPropGet,
++                           v8::NamedPropertySetterCallback pPropPut,
++                           v8::NamedPropertyDeleterCallback pPropDel,
++                           v8::NamedPropertyEnumeratorCallback pPropEnum) {
+     GetInstanceTemplate()->SetHandler(v8::NamedPropertyHandlerConfiguration(
+         pPropGet, pPropPut, pPropQurey, pPropDel, pPropEnum,
+         v8::Local<v8::Value>(),
+@@ -435,8 +434,8 @@ void CFXJS_Engine::DefineObjMethod(uint32_t nObjDefnID,
  
  void CFXJS_Engine::DefineObjProperty(uint32_t nObjDefnID,
                                       const char* sPropName,
@@ -23,6 +41,23 @@ index 35653c980e137095c05faa6cc8774efab292d5bd..8a772b6b9a47f6bf5dc304cdfe4c6ecc
 -                                     v8::AccessorSetterCallback pPropPut) {
 +                                     v8::AccessorNameGetterCallback pPropGet,
 +                                     v8::AccessorNameSetterCallback pPropPut) {
+   v8::Isolate::Scope isolate_scope(GetIsolate());
+   v8::HandleScope handle_scope(GetIsolate());
+   FXJS_PerIsolateData* pIsolateData = FXJS_PerIsolateData::Get(GetIsolate());
+@@ -446,11 +445,11 @@ void CFXJS_Engine::DefineObjProperty(uint32_t nObjDefnID,
+ 
+ void CFXJS_Engine::DefineObjAllProperties(
+     uint32_t nObjDefnID,
+-    v8::GenericNamedPropertyQueryCallback pPropQurey,
+-    v8::GenericNamedPropertyGetterCallback pPropGet,
+-    v8::GenericNamedPropertySetterCallback pPropPut,
+-    v8::GenericNamedPropertyDeleterCallback pPropDel,
+-    v8::GenericNamedPropertyEnumeratorCallback pPropEnum) {
++    v8::NamedPropertyQueryCallback pPropQurey,
++    v8::NamedPropertyGetterCallback pPropGet,
++    v8::NamedPropertySetterCallback pPropPut,
++    v8::NamedPropertyDeleterCallback pPropDel,
++    v8::NamedPropertyEnumeratorCallback pPropEnum) {
    v8::Isolate::Scope isolate_scope(GetIsolate());
    v8::HandleScope handle_scope(GetIsolate());
    FXJS_PerIsolateData* pIsolateData = FXJS_PerIsolateData::Get(GetIsolate());

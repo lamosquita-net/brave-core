@@ -1,15 +1,28 @@
 diff --git a/fxjs/cfxjs_engine.h b/fxjs/cfxjs_engine.h
-index b0011fc025b21ee4431e9a3f222c12894fdcf6cf..724391c19ffd5c1da88468d7106fc8eb102e0fe3 100644
+index b0011fc025b21ee4431e9a3f222c12894fdcf6cf..6c272695b8ad2fb8e27f5f0d0f557abb85e938e3 100644
 --- a/fxjs/cfxjs_engine.h
 +++ b/fxjs/cfxjs_engine.h
-@@ -108,8 +108,8 @@ class CFXJS_Engine : public CFX_V8 {
+@@ -108,15 +108,14 @@ class CFXJS_Engine : public CFX_V8 {
                         v8::FunctionCallback pMethodCall);
    void DefineObjProperty(uint32_t nObjDefnID,
                           const char* sPropName,
 -                         v8::AccessorGetterCallback pPropGet,
 -                         v8::AccessorSetterCallback pPropPut);
+-  void DefineObjAllProperties(
+-      uint32_t nObjDefnID,
+-      v8::GenericNamedPropertyQueryCallback pPropQurey,
+-      v8::GenericNamedPropertyGetterCallback pPropGet,
+-      v8::GenericNamedPropertySetterCallback pPropPut,
+-      v8::GenericNamedPropertyDeleterCallback pPropDel,
+-      v8::GenericNamedPropertyEnumeratorCallback pPropEnum);
 +                         v8::AccessorNameGetterCallback pPropGet,
 +                         v8::AccessorNameSetterCallback pPropPut);
-   void DefineObjAllProperties(
-       uint32_t nObjDefnID,
-       v8::GenericNamedPropertyQueryCallback pPropQurey,
++  void DefineObjAllProperties(uint32_t nObjDefnID,
++                              v8::NamedPropertyQueryCallback pPropQurey,
++                              v8::NamedPropertyGetterCallback pPropGet,
++                              v8::NamedPropertySetterCallback pPropPut,
++                              v8::NamedPropertyDeleterCallback pPropDel,
++                              v8::NamedPropertyEnumeratorCallback pPropEnum);
+   void DefineObjConst(uint32_t nObjDefnID,
+                       const char* sConstName,
+                       v8::Local<v8::Value> pDefault);
