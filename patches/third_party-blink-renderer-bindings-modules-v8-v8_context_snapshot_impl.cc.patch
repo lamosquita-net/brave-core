@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/bindings/modules/v8/v8_context_snapshot_impl.cc b/third_party/blink/renderer/bindings/modules/v8/v8_context_snapshot_impl.cc
-index e5076dda1df3cf72b8179433c6480cd936e7fa62..76d54c650c84f43b889402a43d4ee010f72d779e 100644
+index e5076dda1df3cf72b8179433c6480cd936e7fa62..5d23c50349eee2402159446c5168cb33a8c0a6ed 100644
 --- a/third_party/blink/renderer/bindings/modules/v8/v8_context_snapshot_impl.cc
 +++ b/third_party/blink/renderer/bindings/modules/v8/v8_context_snapshot_impl.cc
 @@ -14,6 +14,7 @@
@@ -24,3 +24,41 @@ index e5076dda1df3cf72b8179433c6480cd936e7fa62..76d54c650c84f43b889402a43d4ee010
        CHECK(result);
        break;
      }
+@@ -270,6 +272,22 @@ void DeserializeInternalFieldCallback(v8::Local<v8::Object> object,
+   }
+ }
+ 
++namespace {
++// We only care for WrapperTypeInfo and do not supply an actual instance of
++// the document. Since we need a script wrappable to get type info now, this
++// class is a minimal implementation of ScriptWrappable that returns correct
++// type info for HTMLDocument.
++class DummyHTMLDocumentForSnapshot : public ScriptWrappable {
++ public:
++  DummyHTMLDocumentForSnapshot() = default;
++
++ private:
++  const WrapperTypeInfo* GetWrapperTypeInfo() const override {
++    return V8HTMLDocument::GetWrapperTypeInfo();
++  }
++};
++}  // namespace
++
+ void TakeSnapshotForWorld(v8::SnapshotCreator* snapshot_creator,
+                           const DOMWrapperWorld& world) {
+   v8::Isolate* isolate = snapshot_creator->GetIsolate();
+@@ -299,11 +317,9 @@ void TakeSnapshotForWorld(v8::SnapshotCreator* snapshot_creator,
+     v8::Local<v8::Object> document_wrapper = CreatePlatformObject(
+         isolate, context, world, document_wrapper_type_info);
+ 
+-    int indices[] = {kV8DOMWrapperObjectIndex, kV8DOMWrapperTypeIndex};
+-    void* values[] = {nullptr,
+-                      const_cast<WrapperTypeInfo*>(document_wrapper_type_info)};
+-    document_wrapper->SetAlignedPointerInInternalFields(std::size(indices),
+-                                                        indices, values);
++    V8DOMWrapper::SetNativeInfo(
++        isolate, document_wrapper, document_wrapper_type_info,
++        MakeGarbageCollected<DummyHTMLDocumentForSnapshot>());
+ 
+     V8PrivateProperty::GetWindowDocumentCachedAccessor(isolate).Set(
+         context->Global(), document_wrapper);
