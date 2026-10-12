@@ -1,8 +1,24 @@
 diff --git a/third_party/blink/renderer/core/dom/document.cc b/third_party/blink/renderer/core/dom/document.cc
-index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..fb82555c5c504c26d67331f7556b093e05467802 100644
+index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..d0d95f43e7ad6a65328ce4fbfd2eae3eee5612d6 100644
 --- a/third_party/blink/renderer/core/dom/document.cc
 +++ b/third_party/blink/renderer/core/dom/document.cc
-@@ -377,6 +377,8 @@ namespace blink {
+@@ -79,6 +79,7 @@
+ #include "third_party/blink/renderer/bindings/core/v8/script_promise_resolver.h"
+ #include "third_party/blink/renderer/bindings/core/v8/script_value.h"
+ #include "third_party/blink/renderer/bindings/core/v8/v8_aria_notification_options.h"
++#include "third_party/blink/renderer/bindings/core/v8/v8_caret_position_from_point_options.h"
+ #include "third_party/blink/renderer/bindings/core/v8/v8_element_creation_options.h"
+ #include "third_party/blink/renderer/bindings/core/v8/v8_element_registration_options.h"
+ #include "third_party/blink/renderer/bindings/core/v8/v8_observable_array_css_style_sheet.h"
+@@ -99,6 +100,7 @@
+ #include "third_party/blink/renderer/core/css/css_property_value_set.h"
+ #include "third_party/blink/renderer/core/css/css_style_declaration.h"
+ #include "third_party/blink/renderer/core/css/css_style_sheet.h"
++#include "third_party/blink/renderer/core/css/cssom/caret_position.h"
+ #include "third_party/blink/renderer/core/css/cssom/computed_style_property_map.h"
+ #include "third_party/blink/renderer/core/css/element_rule_collector.h"
+ #include "third_party/blink/renderer/core/css/font_face_set_document.h"
+@@ -377,6 +379,8 @@ namespace blink {
  
  namespace {
  
@@ -11,7 +27,42 @@ index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..fb82555c5c504c26d67331f7556b093e
  // This enum must match the numbering for RequestStorageResult in
  // histograms/enums.xml. Do not reorder or remove items, only add new items
  // at the end.
-@@ -1355,7 +1357,9 @@ Node* Document::importNode(Node* imported_node,
+@@ -927,18 +931,29 @@ Document::~Document() {
+ 
+ Range* Document::CreateRangeAdjustedToTreeScope(const TreeScope& tree_scope,
+                                                 const Position& position) {
++  const Position& adjusted_position =
++      PositionAdjustedToTreeScope(tree_scope, position);
++  return MakeGarbageCollected<Range>(tree_scope.GetDocument(),
++                                     adjusted_position, adjusted_position);
++}
++
++CaretPosition* Document::CreateCaretPosition(const Position& position) {
++  return MakeGarbageCollected<CaretPosition>(
++      position.AnchorNode(), position.ComputeOffsetInContainerNode());
++}
++
++const Position Document::PositionAdjustedToTreeScope(
++    const TreeScope& tree_scope,
++    const Position& position) {
+   DCHECK(position.IsNotNull());
+   // Note: Since |Position::ComputeContainerNode()| returns |nullptr| if
+   // |position| is |BeforeAnchor| or |AfterAnchor|.
+   Node* const anchor_node = position.AnchorNode();
+   if (anchor_node->GetTreeScope() == tree_scope) {
+-    return MakeGarbageCollected<Range>(tree_scope.GetDocument(), position,
+-                                       position);
++    return position;
+   }
+   Node* const shadow_host = tree_scope.AncestorInThisScope(anchor_node);
+-  return MakeGarbageCollected<Range>(tree_scope.GetDocument(),
+-                                     Position::BeforeNode(*shadow_host),
+-                                     Position::BeforeNode(*shadow_host));
++  return Position::BeforeNode(*shadow_host);
+ }
+ 
+ SelectorQueryCache& Document::GetSelectorQueryCache() {
+@@ -1355,7 +1370,9 @@ Node* Document::importNode(Node* imported_node,
    // if deep is true, and the clone shadows flag set if this is a
    // DocumentFragment whose host is an HTML template element.
    auto* fragment = DynamicTo<DocumentFragment>(imported_node);
@@ -22,7 +73,7 @@ index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..fb82555c5c504c26d67331f7556b093e
    return imported_node->Clone(
        *this, deep ? (clone_shadows_flag ? CloneChildrenFlag::kCloneWithShadows
                                          : CloneChildrenFlag::kClone)
-@@ -1562,7 +1566,7 @@ String Document::SuggestedMIMEType() const {
+@@ -1562,7 +1579,7 @@ String Document::SuggestedMIMEType() const {
    if (xmlStandalone())
      return "text/xml";
    if (IsA<HTMLDocument>(this))
@@ -31,7 +82,47 @@ index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..fb82555c5c504c26d67331f7556b093e
  
    if (DocumentLoader* document_loader = Loader())
      return document_loader->MimeType();
-@@ -9296,6 +9300,21 @@ Resource* Document::GetPendingLinkPreloadForTesting(const KURL& url) {
+@@ -1601,6 +1618,39 @@ Range* Document::caretRangeFromPoint(int x, int y) {
+   return CreateRangeAdjustedToTreeScope(*this, range_compliant_position);
+ }
+ 
++CaretPosition* Document::caretPositionFromPoint(
++    float x,
++    float y,
++    const CaretPositionFromPointOptions* options) {
++  if (!GetLayoutView()) {
++    return nullptr;
++  }
++
++  HitTestResult result = HitTestInDocument(this, x, y);
++  PositionWithAffinity position_with_affinity = result.GetPosition();
++  if (position_with_affinity.IsNull()) {
++    return nullptr;
++  }
++
++  Node* anchor_node = position_with_affinity.AnchorNode();
++  if (TextControlElement* text_control = EnclosingTextControl(anchor_node)) {
++    anchor_node = text_control;
++  }
++  bool adjust_position = false;
++  while (anchor_node->IsInShadowTree() &&
++         !(options->hasShadowRoots() &&
++           options->shadowRoots().Contains(anchor_node->GetTreeScope()))) {
++    anchor_node = anchor_node->OwnerShadowHost();
++    adjust_position = true;
++  }
++  Position adjusted_position = adjust_position
++                                   ? Position::InParentBeforeNode(*anchor_node)
++                                   : position_with_affinity.GetPosition();
++  CHECK(!adjusted_position.IsNull());
++
++  return CreateCaretPosition(adjusted_position.ParentAnchoredEquivalent());
++}
++
+ Element* Document::scrollingElement() {
+   if (RuntimeEnabledFeatures::ScrollTopLeftInteropEnabled() && InQuirksMode())
+     UpdateStyleAndLayoutTree();
+@@ -9296,6 +9346,21 @@ Resource* Document::GetPendingLinkPreloadForTesting(const KURL& url) {
    return nullptr;
  }
  

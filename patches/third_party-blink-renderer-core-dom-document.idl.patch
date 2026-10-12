@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/document.idl b/third_party/blink/renderer/core/dom/document.idl
-index a2913255fd80766992f0de50a503507e985d5042..1f684bcf02b5093909b3d1250f581508ca9a2ea7 100644
+index a2913255fd80766992f0de50a503507e985d5042..6361965b725c7e7a37e560e13c018021f1781180 100644
 --- a/third_party/blink/renderer/core/dom/document.idl
 +++ b/third_party/blink/renderer/core/dom/document.idl
 @@ -80,6 +80,9 @@ typedef (HTMLScriptElement or SVGScriptElement) HTMLOrSVGScriptElement;
@@ -12,3 +12,13 @@ index a2913255fd80766992f0de50a503507e985d5042..1f684bcf02b5093909b3d1250f581508
      // resource metadata management
  
      [PutForwards=href, LegacyUnforgeable] readonly attribute Location? location;
+@@ -180,6 +183,9 @@ typedef (HTMLScriptElement or SVGScriptElement) HTMLOrSVGScriptElement;
+     // Non-standard APIs
+     [MeasureAs=DocumentCaretRangeFromPoint] Range caretRangeFromPoint(optional long x = 0, optional long y = 0);
+ 
++    // https://www.w3.org/TR/cssom-view/#dom-document-caretpositionfrompoint
++    [NewObject, MeasureAs=CaretPositionFromPoint, RuntimeEnabled=CaretPositionFromPoint] CaretPosition? caretPositionFromPoint(float x, float y, optional CaretPositionFromPointOptions options = {});
++
+     // Storage Access API
+     [CallWith=ScriptState, NewObject, RuntimeEnabled=StorageAccessAPI, MeasureAs=StorageAccessAPI_HasStorageAccess_Method] Promise<boolean> hasStorageAccess();
+     [CallWith=ScriptState, NewObject, RuntimeEnabled=StorageAccessAPI, MeasureAs=StorageAccessAPI_requestStorageAccess_Method] Promise<void> requestStorageAccess();

@@ -1,8 +1,44 @@
 diff --git a/third_party/blink/renderer/core/dom/document.h b/third_party/blink/renderer/core/dom/document.h
-index 88c64a875224ac49cf82ce9d15fcf01e6c96b604..97ac127b0f5e36d12440b36d73d4330890b865df 100644
+index 88c64a875224ac49cf82ce9d15fcf01e6c96b604..27e6e75500e4913fc8a4dce24b1893b997ae1edb 100644
 --- a/third_party/blink/renderer/core/dom/document.h
 +++ b/third_party/blink/renderer/core/dom/document.h
-@@ -1784,6 +1784,15 @@ class CORE_EXPORT Document : public ContainerNode,
+@@ -131,6 +131,8 @@ class AnimationClock;
+ class AriaNotificationOptions;
+ class Attr;
+ class BeforeUnloadEventListener;
++class CaretPosition;
++class CaretPositionFromPointOptions;
+ class CDATASection;
+ class CSSStyleSheet;
+ class CSSToggleInference;
+@@ -375,6 +377,10 @@ class CORE_EXPORT Document : public ContainerNode,
+ 
+   static Range* CreateRangeAdjustedToTreeScope(const TreeScope&,
+                                                const Position&);
++  static CaretPosition* CreateCaretPosition(const Position& position);
++
++  static const Position PositionAdjustedToTreeScope(const TreeScope&,
++                                                    const Position&);
+ 
+   // Support JS introspection of frame policy (e.g. permissions policy).
+   DOMFeaturePolicy* featurePolicy();
+@@ -485,6 +491,15 @@ class CORE_EXPORT Document : public ContainerNode,
+                             const CreateElementFlags = CreateElementFlags());
+ 
+   Range* caretRangeFromPoint(int x, int y);
++
++  // Returns a |CaretPosition| from given point. If the point is inside a shadow
++  // tree, then |CaretPosition| only points inside the shadow tree if it's
++  // provided in the |shadowRoots| vector in |options| argument.
++  // https://drafts.csswg.org/cssom-view/#ref-for-dom-document-caretpositionfrompoint
++  CaretPosition* caretPositionFromPoint(
++      float x,
++      float y,
++      const CaretPositionFromPointOptions* options);
+   Element* scrollingElement();
+ 
+   // When calling from C++ code, use this method. scrollingElement() is
+@@ -1784,6 +1799,15 @@ class CORE_EXPORT Document : public ContainerNode,
      return slot_assignment_recalc_depth_ == 1;
    }
  
@@ -18,7 +54,7 @@ index 88c64a875224ac49cf82ce9d15fcf01e6c96b604..97ac127b0f5e36d12440b36d73d43308
    bool IsVerticalScrollEnforced() const { return is_vertical_scroll_enforced_; }
    bool IsFocusAllowed() const;
  
-@@ -1949,8 +1958,10 @@ class CORE_EXPORT Document : public ContainerNode,
+@@ -1949,8 +1973,10 @@ class CORE_EXPORT Document : public ContainerNode,
      Document& document_;
    };
  
@@ -31,7 +67,7 @@ index 88c64a875224ac49cf82ce9d15fcf01e6c96b604..97ac127b0f5e36d12440b36d73d43308
  
    ResizeObserver& EnsureResizeObserver();
  
-@@ -1983,6 +1994,10 @@ class CORE_EXPORT Document : public ContainerNode,
+@@ -1983,6 +2009,10 @@ class CORE_EXPORT Document : public ContainerNode,
  
    void ResetAgent(Agent& agent);
  
@@ -42,7 +78,7 @@ index 88c64a875224ac49cf82ce9d15fcf01e6c96b604..97ac127b0f5e36d12440b36d73d43308
   protected:
    void ClearXMLVersion() { xml_version_ = String(); }
  
-@@ -2601,6 +2616,7 @@ class CORE_EXPORT Document : public ContainerNode,
+@@ -2601,6 +2631,7 @@ class CORE_EXPORT Document : public ContainerNode,
  #endif
    unsigned slot_assignment_recalc_depth_ = 0;
    unsigned flat_tree_traversal_forbidden_recursion_depth_ = 0;
@@ -50,7 +86,7 @@ index 88c64a875224ac49cf82ce9d15fcf01e6c96b604..97ac127b0f5e36d12440b36d73d43308
  
    Member<DOMFeaturePolicy> policy_;
  
-@@ -2672,7 +2688,7 @@ class CORE_EXPORT Document : public ContainerNode,
+@@ -2672,7 +2703,7 @@ class CORE_EXPORT Document : public ContainerNode,
    bool had_find_in_page_render_subtree_active_match_ = false;
    bool had_find_in_page_beforematch_expanded_hidden_matchable_ = false;
  
