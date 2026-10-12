@@ -1,18 +1,20 @@
 diff --git a/fxjs/cfxjs_engine.cpp b/fxjs/cfxjs_engine.cpp
-index 35653c980e137095c05faa6cc8774efab292d5bd..763f6a27f1f86866e86733f469b7e79990988f72 100644
+index 35653c980e137095c05faa6cc8774efab292d5bd..8a772b6b9a47f6bf5dc304cdfe4c6eccdb32ea36 100644
 --- a/fxjs/cfxjs_engine.cpp
 +++ b/fxjs/cfxjs_engine.cpp
-@@ -199,8 +199,8 @@ class CFXJS_ObjDefinition {
+@@ -199,9 +199,9 @@ class CFXJS_ObjDefinition {
    }
  
    void DefineProperty(v8::Local<v8::String> sPropName,
 -                      v8::AccessorGetterCallback pPropGet,
 -                      v8::AccessorSetterCallback pPropPut) {
+-    GetInstanceTemplate()->SetAccessor(sPropName, pPropGet, pPropPut);
 +                      v8::AccessorNameGetterCallback pPropGet,
 +                      v8::AccessorNameSetterCallback pPropPut) {
-     GetInstanceTemplate()->SetAccessor(sPropName, pPropGet, pPropPut);
++    GetInstanceTemplate()->SetNativeDataProperty(sPropName, pPropGet, pPropPut);
    }
  
+   void DefineMethod(v8::Local<v8::String> sMethodName,
 @@ -435,8 +435,8 @@ void CFXJS_Engine::DefineObjMethod(uint32_t nObjDefnID,
  
  void CFXJS_Engine::DefineObjProperty(uint32_t nObjDefnID,

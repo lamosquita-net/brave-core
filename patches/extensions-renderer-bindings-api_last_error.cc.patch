@@ -1,0 +1,19 @@
+diff --git a/extensions/renderer/bindings/api_last_error.cc b/extensions/renderer/bindings/api_last_error.cc
+index f437ed8785454cd0163e5bd4925a7a647ef3ab75..2caf1caa03320e869796633fb9c83463e6295716 100644
+--- a/extensions/renderer/bindings/api_last_error.cc
++++ b/extensions/renderer/bindings/api_last_error.cc
+@@ -260,10 +260,10 @@ void APILastError::SetErrorOnPrimaryParent(v8::Local<v8::Context> context,
+       return;
+     }
+     DCHECK(!last_error.IsEmpty());
+-    // This SetAccessor() can fail, but there's nothing to do if it does (the
+-    // exception will be caught by the TryCatch in SetError()).
+-    std::ignore = parent->SetAccessor(context, key, &LastErrorGetter,
+-                                      &LastErrorSetter, last_error);
++    // This SetNativeDataProperty() can fail, but there's nothing to do if it
++    // does (the exception will be caught by the TryCatch in SetError()).
++    std::ignore = parent->SetNativeDataProperty(context, key, &LastErrorGetter,
++                                                &LastErrorSetter, last_error);
+   }
+ }
+ 

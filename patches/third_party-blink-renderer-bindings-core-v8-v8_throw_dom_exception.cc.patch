@@ -1,0 +1,21 @@
+diff --git a/third_party/blink/renderer/bindings/core/v8/v8_throw_dom_exception.cc b/third_party/blink/renderer/bindings/core/v8/v8_throw_dom_exception.cc
+index a7d8303ec34ca061fa74484f8b991f7767a1f3bf..ea86b99b1eb4872909709a3d59e9bf79e0c1501e 100644
+--- a/third_party/blink/renderer/bindings/core/v8/v8_throw_dom_exception.cc
++++ b/third_party/blink/renderer/bindings/core/v8/v8_throw_dom_exception.cc
+@@ -93,11 +93,12 @@ v8::Local<v8::Value> V8ThrowDOMException::AttachStackProperty(
+   v8::Local<v8::Value> error =
+       v8::Exception::Error(V8String(isolate, dom_exception->message()));
+ 
+-  // The context passed to SetAccessor is used to create an error object if
+-  // needed, and so should be the isolate's current context.
++  // The context passed to SetNativeDataProperty is used to create an error
++  // object if needed, and so should be the isolate's current context.
+   exception_obj
+-      ->SetAccessor(current_context, V8AtomicString(isolate, "stack"),
+-                    DomExceptionStackGetter, DomExceptionStackSetter, error)
++      ->SetNativeDataProperty(current_context, V8AtomicString(isolate, "stack"),
++                              DomExceptionStackGetter, DomExceptionStackSetter,
++                              error)
+       .ToChecked();
+ 
+   auto private_error =
