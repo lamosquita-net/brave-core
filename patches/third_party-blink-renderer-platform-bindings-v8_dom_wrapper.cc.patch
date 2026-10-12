@@ -1,0 +1,14 @@
+diff --git a/third_party/blink/renderer/platform/bindings/v8_dom_wrapper.cc b/third_party/blink/renderer/platform/bindings/v8_dom_wrapper.cc
+index 95b7db8b86b3d6acef68397619d4595071adfe2f..7e3857a7eb92f436aad1dc127e99e00d0f3a3340 100644
+--- a/third_party/blink/renderer/platform/bindings/v8_dom_wrapper.cc
++++ b/third_party/blink/renderer/platform/bindings/v8_dom_wrapper.cc
+@@ -103,8 +103,7 @@ bool V8DOMWrapper::HasInternalFieldsSet(v8::Local<v8::Value> value) {
+   if (object->InternalFieldCount() < kV8DefaultWrapperInternalFieldCount)
+     return false;
+ 
+-  // The untyped wrappable can either be ScriptWrappable or CustomWrappable.
+-  const void* untrused_wrappable = ToUntypedWrappable(object);
++  const ScriptWrappable* untrused_wrappable = ToScriptWrappable(object);
+   const WrapperTypeInfo* untrusted_wrapper_type_info =
+       ToWrapperTypeInfo(object);
+   return untrused_wrappable && untrusted_wrapper_type_info &&
