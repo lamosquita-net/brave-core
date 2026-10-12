@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/bindings/scripts/bind_gen/interface.py b/third_party/blink/renderer/bindings/scripts/bind_gen/interface.py
-index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e07fdba339 100644
+index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..056e69d7222472a7ea1578c4f6b7b059b981b601 100644
 --- a/third_party/blink/renderer/bindings/scripts/bind_gen/interface.py
 +++ b/third_party/blink/renderer/bindings/scripts/bind_gen/interface.py
 @@ -26,6 +26,7 @@ from .code_node import WeakDependencyNode
@@ -119,7 +119,19 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
              init_args.append("${property_name}")
          if cg_context.is_return_type_promise_type:
              exception_to_reject_promise = (
-@@ -506,6 +524,13 @@ def bind_callback_local_vars(code_node, cg_context):
+@@ -476,8 +494,9 @@ def bind_callback_local_vars(code_node, cg_context):
+                 "LocalDOMWindow* ${blink_receiver} = &UnsafeTo<LocalDOMWindow>("
+                 "*${class_name}::ToWrappableUnsafe(${v8_receiver}));")
+     else:
+-        pattern = ("{_1}* ${blink_receiver} = "
+-                   "${class_name}::ToWrappableUnsafe(${v8_receiver});")
++        pattern = (
++            "{_1}* ${blink_receiver} = "
++            "${class_name}::ToWrappableUnsafe(${isolate}, ${v8_receiver});")
+         _1 = blink_class_name(cg_context.class_like)
+         text = _format(pattern, _1=_1)
+     local_vars.append(S("blink_receiver", text))
+@@ -506,6 +525,13 @@ def bind_callback_local_vars(code_node, cg_context):
  
      # v8_return_value
      def create_v8_return_value(symbol_node):
@@ -133,7 +145,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
          return SymbolDefinitionNode(
              symbol_node,
              [
-@@ -516,19 +541,12 @@ def bind_callback_local_vars(code_node, cg_context):
+@@ -516,19 +542,12 @@ def bind_callback_local_vars(code_node, cg_context):
                          "(${script_state}, ${return_value})"
                          ".ToLocal(&${v8_return_value})",
                          native_value_tag(cg_context.return_type)),
@@ -154,7 +166,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      code_node.add_template_vars(template_vars)
      # Allow implementation-specific symbol definitions to have priority.
      for symbol_node in local_vars:
-@@ -536,6 +554,27 @@ def bind_callback_local_vars(code_node, cg_context):
+@@ -536,6 +555,27 @@ def bind_callback_local_vars(code_node, cg_context):
              code_node.register_code_symbol(symbol_node)
  
  
@@ -182,7 +194,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
  def _make_reflect_content_attribute_key(code_node, cg_context):
      assert isinstance(code_node, SymbolScopeNode)
      assert isinstance(cg_context, CodeGenContext)
-@@ -849,10 +888,14 @@ def bind_return_value(code_node, cg_context, overriding_args=None):
+@@ -849,10 +889,14 @@ def bind_return_value(code_node, cg_context, overriding_args=None):
              nodes.append(CxxBreakableBlockNode(branches))
  
          if cg_context.may_throw_exception:
@@ -198,7 +210,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
  
          if "ReflectOnly" in cg_context.member_like.extended_attributes:
              # [ReflectOnly]
-@@ -924,14 +967,15 @@ def make_check_argument_length(cg_context):
+@@ -924,14 +968,15 @@ def make_check_argument_length(cg_context):
      if num_of_required_args == 0:
          return None
  
@@ -222,7 +234,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
  
  
  def make_check_constructor_call(cg_context):
-@@ -983,6 +1027,11 @@ def make_check_coop_restrict_properties_access(cg_context):
+@@ -983,6 +1028,11 @@ def make_check_coop_restrict_properties_access(cg_context):
      elif cg_context.attribute_set and not ("Setter" in values):
          return None
  
@@ -234,7 +246,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      return CxxUnlikelyIfNode(
          cond=("UNLIKELY(${blink_receiver}->"
                "IsAccessBlockedByCoopRestrictProperties(${isolate}))"),
-@@ -992,7 +1041,7 @@ ${exception_state}.ThrowSecurityError(
+@@ -992,7 +1042,7 @@ ${exception_state}.ThrowSecurityError(
  "Cross-Origin-Opener-Policy: 'restrict-properties' blocked the access.",
  "Cross-Origin-Opener-Policy: 'restrict-properties' blocked the access.");\
  """),
@@ -243,7 +255,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
          ])
  
  
-@@ -1645,28 +1694,37 @@ def make_steps_of_put_forwards(cg_context):
+@@ -1645,28 +1695,37 @@ def make_steps_of_put_forwards(cg_context):
  
      T = TextNode
  
@@ -298,7 +310,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      ])
  
  
-@@ -1678,11 +1736,11 @@ def make_steps_of_replaceable(cg_context):
+@@ -1678,11 +1737,11 @@ def make_steps_of_replaceable(cg_context):
      return SequenceNode([
          T("// [Replaceable]"),
          T("bool did_create;"),
@@ -315,7 +327,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      ])
  
  
-@@ -1713,8 +1771,10 @@ def make_v8_set_return_value(cg_context):
+@@ -1713,8 +1772,10 @@ def make_v8_set_return_value(cg_context):
          return T("bindings::V8SetReturnValue(${info}, ${return_value}, "
                   "${isolate}, ${blink_receiver});")
  
@@ -328,7 +340,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
          # and set iterator objects) are implemented as ScriptWrappable
          # instances.
          return T("bindings::V8SetReturnValue(${info}, ${return_value}, "
-@@ -1810,6 +1870,8 @@ def make_v8_set_return_value(cg_context):
+@@ -1810,6 +1871,8 @@ def make_v8_set_return_value(cg_context):
                   "${blink_receiver});")
  
      if return_type.is_promise:
@@ -337,7 +349,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
          return T("bindings::V8SetReturnValue"
                   "(${info}, ${return_value}.V8Value());")
  
-@@ -1820,6 +1882,7 @@ def _make_empty_callback_def(cg_context, function_name):
+@@ -1820,6 +1883,7 @@ def _make_empty_callback_def(cg_context, function_name):
      assert isinstance(cg_context, CodeGenContext)
      assert isinstance(function_name, str)
  
@@ -345,7 +357,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      if cg_context.v8_callback_type == CodeGenContext.V8_FUNCTION_CALLBACK:
          arg_decls = ["const v8::FunctionCallbackInfo<v8::Value>& info"]
          arg_names = ["info"]
-@@ -1838,13 +1901,22 @@ def _make_empty_callback_def(cg_context, function_name):
+@@ -1838,13 +1902,22 @@ def _make_empty_callback_def(cg_context, function_name):
              "const v8::PropertyCallbackInfo<void>& info",
          ]
          arg_names = ["v8_property_name", "v8_property_value", "info"]
@@ -371,7 +383,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
          arg_names = ["v8_property_name", "v8_property_value", "info"]
  
      if cg_context.no_alloc_direct_call_for_testing:
-@@ -1852,8 +1924,9 @@ def _make_empty_callback_def(cg_context, function_name):
+@@ -1852,8 +1925,9 @@ def _make_empty_callback_def(cg_context, function_name):
              "v8::FastApiCallbackOptions& v8_fast_api_callback_options")
          arg_names.append("v8_fast_api_callback_options")
  
@@ -383,7 +395,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      func_def.set_base_template_vars(cg_context.template_bindings())
      body = func_def.body
  
-@@ -1895,6 +1968,12 @@ def make_attribute_get_callback_def(cg_context, function_name):
+@@ -1895,6 +1969,12 @@ def make_attribute_get_callback_def(cg_context, function_name):
          text = _format("${class_name}::{}(${info});",
                         custom_function_name(cg_context))
          body.append(TextNode(text))
@@ -396,7 +408,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
          return func_def
  
      body.extend([
-@@ -1905,6 +1984,8 @@ def make_attribute_get_callback_def(cg_context, function_name):
+@@ -1905,6 +1985,8 @@ def make_attribute_get_callback_def(cg_context, function_name):
          make_report_high_entropy_direct(cg_context),
          make_return_value_cache_update_value(cg_context),
      ])
@@ -405,7 +417,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
  
      return func_def
  
-@@ -2064,6 +2145,9 @@ EventListener* event_handler = JSEventHandler::CreateOrNull(
+@@ -2064,6 +2146,9 @@ EventListener* event_handler = JSEventHandler::CreateOrNull(
  
      body.append(make_v8_set_return_value(cg_context))
  
@@ -415,7 +427,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      return func_def
  
  
-@@ -2420,11 +2504,13 @@ def make_no_alloc_direct_call_callback_def(cg_context, function_name,
+@@ -2420,11 +2505,13 @@ def make_no_alloc_direct_call_callback_def(cg_context, function_name,
          unwrapped_idl_type = argument.idl_type.unwrap()
          if unwrapped_idl_type.is_interface:
              return ("v8::Local<v8::Value>",
@@ -434,7 +446,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
          elif unwrapped_idl_type.is_sequence:
  
              def create_definition(symbol_node):
-@@ -2805,8 +2891,9 @@ def make_stringifier_callback_def(cg_context, function_name):
+@@ -2805,8 +2892,9 @@ def make_stringifier_callback_def(cg_context, function_name):
  # ----------------------------------------------------------------------------
  
  
@@ -446,7 +458,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      assert isinstance(cg_context, CodeGenContext)
      assert isinstance(function_name, str)
      assert isinstance(arg_decls, (list, tuple))
-@@ -2816,21 +2903,21 @@ def _make_interceptor_callback(cg_context, function_name, arg_decls, arg_names,
+@@ -2816,21 +2904,21 @@ def _make_interceptor_callback(cg_context, function_name, arg_decls, arg_names,
      assert _is_none_or_str(class_name)
      assert isinstance(runtime_call_timer_name, str)
  
@@ -476,7 +488,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
                                     runtime_call_timer_name):
      assert isinstance(cg_context, CodeGenContext)
      assert isinstance(function_name, str)
-@@ -2841,11 +2928,10 @@ def _make_interceptor_callback_def(cg_context, function_name, arg_decls,
+@@ -2841,11 +2929,10 @@ def _make_interceptor_callback_def(cg_context, function_name, arg_decls,
      assert _is_none_or_str(class_name)
      assert isinstance(runtime_call_timer_name, str)
  
@@ -492,7 +504,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      func_def.set_base_template_vars(cg_context.template_bindings())
      body = func_def.body
      for arg_name in arg_names:
-@@ -2860,27 +2946,70 @@ def _make_interceptor_callback_def(cg_context, function_name, arg_decls,
+@@ -2860,27 +2947,70 @@ def _make_interceptor_callback_def(cg_context, function_name, arg_decls,
      return func_def
  
  
@@ -575,7 +587,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
  """))
          return func_decl, func_def
  
-@@ -2890,12 +3019,16 @@ ${class_name}::NamedPropertyGetterCallback(property_name, ${info});
+@@ -2890,12 +3020,16 @@ ${class_name}::NamedPropertyGetterCallback(property_name, ${info});
          TextNode("""\
  // LegacyPlatformObjectGetOwnProperty
  // https://webidl.spec.whatwg.org/#LegacyPlatformObjectGetOwnProperty
@@ -596,7 +608,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      ])
  
      return func_decl, func_def
-@@ -2905,46 +3038,40 @@ def make_indexed_property_setter_callback(cg_context, function_name):
+@@ -2905,46 +3039,40 @@ def make_indexed_property_setter_callback(cg_context, function_name):
      assert isinstance(cg_context, CodeGenContext)
      assert isinstance(function_name, str)
  
@@ -663,7 +675,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
          return func_decl, func_def
  
      bind_return_value(
-@@ -2956,7 +3083,8 @@ if (${info}.ShouldThrowOnError()) {
+@@ -2956,7 +3084,8 @@ if (${info}.ShouldThrowOnError()) {
              "blink_property_value",
              "${v8_property_value}",
              cg_context.indexed_property_setter.arguments[1].idl_type,
@@ -673,7 +685,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
  
      body.extend([
          TextNode("""\
-@@ -2972,13 +3100,14 @@ if (${info}.ShouldThrowOnError()) {
+@@ -2972,13 +3101,14 @@ if (${info}.ShouldThrowOnError()) {
                              make_steps_of_ce_reactions(cg_context),
                              EmptyNode(),
                              make_v8_set_return_value(cg_context),
@@ -691,7 +703,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
  """),
      ])
  
-@@ -2989,42 +3118,39 @@ def make_indexed_property_deleter_callback(cg_context, function_name):
+@@ -2989,42 +3119,39 @@ def make_indexed_property_deleter_callback(cg_context, function_name):
      assert isinstance(cg_context, CodeGenContext)
      assert isinstance(function_name, str)
  
@@ -755,7 +767,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
  
      return func_decl, func_def
  
-@@ -3033,66 +3159,61 @@ def make_indexed_property_definer_callback(cg_context, function_name):
+@@ -3033,66 +3160,61 @@ def make_indexed_property_definer_callback(cg_context, function_name):
      assert isinstance(cg_context, CodeGenContext)
      assert isinstance(function_name, str)
  
@@ -857,7 +869,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      ${index},
      ${v8_property_desc}.has_value()
          ? ${v8_property_desc}.value()
-@@ -3107,29 +3228,25 @@ def make_indexed_property_descriptor_callback(cg_context, function_name):
+@@ -3107,29 +3229,25 @@ def make_indexed_property_descriptor_callback(cg_context, function_name):
      assert isinstance(cg_context, CodeGenContext)
      assert isinstance(function_name, str)
  
@@ -894,7 +906,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
  // step 1.2.3. If operation was defined without an identifier, then set
  //   value to the result of performing the steps listed in the interface
  //   description to determine the value of an indexed property with index
-@@ -3137,22 +3254,25 @@ ${class_name}::NamedPropertyDescriptorCallback(property_name, ${info});
+@@ -3137,22 +3255,25 @@ ${class_name}::NamedPropertyDescriptorCallback(property_name, ${info});
  // step 1.2.4. Otherwise, operation was defined with an identifier. Set
  //   value to the result of performing the steps listed in the description
  //   of operation with index as the only argument value.
@@ -928,7 +940,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      writable = bool(
          cg_context.interface.indexed_and_named_properties.indexed_setter)
      cxx_writable = "true" if writable else "false"
-@@ -3168,12 +3288,11 @@ def make_indexed_property_enumerator_callback(cg_context, function_name):
+@@ -3168,12 +3289,11 @@ def make_indexed_property_enumerator_callback(cg_context, function_name):
      if not cg_context.interface.indexed_and_named_properties.indexed_getter:
          return None, None
  
@@ -945,7 +957,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      body = func_def.body
  
      body.append(
-@@ -3200,32 +3319,24 @@ def make_named_property_getter_callback(cg_context, function_name):
+@@ -3200,32 +3320,24 @@ def make_named_property_getter_callback(cg_context, function_name):
      assert isinstance(cg_context, CodeGenContext)
      assert isinstance(function_name, str)
  
@@ -986,7 +998,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      elif type.is_string:
          not_found_expr = "${return_value}.IsNull()"
      elif type.is_interface:
-@@ -3235,29 +3346,41 @@ def make_named_property_getter_callback(cg_context, function_name):
+@@ -3235,29 +3347,41 @@ def make_named_property_getter_callback(cg_context, function_name):
      else:
          assert False
  
@@ -1045,7 +1057,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      ])
  
      return func_decl, func_def
-@@ -3267,19 +3390,34 @@ def make_named_property_setter_callback(cg_context, function_name):
+@@ -3267,19 +3391,34 @@ def make_named_property_setter_callback(cg_context, function_name):
      assert isinstance(cg_context, CodeGenContext)
      assert isinstance(function_name, str)
  
@@ -1090,7 +1102,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
          body.append(
              TextNode("""\
  // 3.9.2. [[Set]]
-@@ -3293,28 +3431,23 @@ def make_named_property_setter_callback(cg_context, function_name):
+@@ -3293,28 +3432,23 @@ def make_named_property_setter_callback(cg_context, function_name):
  // [LegacyOverrideBuiltIns]
  if (${info}.Holder()->GetRealNamedPropertyAttributesInPrototypeChain(
          ${current_context}, ${v8_property_name}).IsJust()) {
@@ -1133,7 +1145,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
          return func_decl, func_def
  
      bind_return_value(
-@@ -3326,15 +3459,8 @@ if (!is_creating) {
+@@ -3326,15 +3460,8 @@ if (!is_creating) {
              "blink_property_value",
              "${v8_property_value}",
              cg_context.named_property_setter.arguments[1].idl_type,
@@ -1151,7 +1163,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
  
      body.extend([
          TextNode("""\
-@@ -3351,17 +3477,23 @@ if (!is_creating) {
+@@ -3351,17 +3478,23 @@ if (!is_creating) {
                              EmptyNode(),
                              make_v8_set_return_value(cg_context),
                              TextNode("""\
@@ -1180,7 +1192,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
  """),
      ])
  
-@@ -3372,18 +3504,35 @@ def make_named_property_deleter_callback(cg_context, function_name):
+@@ -3372,18 +3505,35 @@ def make_named_property_deleter_callback(cg_context, function_name):
      assert isinstance(cg_context, CodeGenContext)
      assert isinstance(function_name, str)
  
@@ -1225,7 +1237,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      if (not cg_context.named_property_deleter
              and "NotEnumerable" in props.named_getter.extended_attributes):
          body.append(
-@@ -3397,11 +3546,12 @@ def make_named_property_deleter_callback(cg_context, function_name):
+@@ -3397,11 +3547,12 @@ def make_named_property_deleter_callback(cg_context, function_name):
  //
  // There is no easy way to determine whether the named property is visible
  // or not.  Just do not intercept and fallback to the default behavior.
@@ -1239,7 +1251,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
              TextNode("""\
  // 3.9.4. [[Delete]]
  // https://webidl.spec.whatwg.org/#legacy-platform-object-delete
-@@ -3410,35 +3560,25 @@ def make_named_property_deleter_callback(cg_context, function_name):
+@@ -3410,35 +3561,25 @@ def make_named_property_deleter_callback(cg_context, function_name):
  //   named property visibility algorithm with property name P and object O
  //   is true, then:
  // step 2.1. If O does not implement an interface with a named property
@@ -1288,7 +1300,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      body.extend([
          TextNode("""\
  // 3.9.4. [[Delete]]
-@@ -3447,17 +3587,17 @@ if (does_exist) {
+@@ -3447,17 +3588,17 @@ if (does_exist) {
          make_steps_of_ce_reactions(cg_context),
          EmptyNode(),
          make_v8_set_return_value(cg_context),
@@ -1317,7 +1329,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      ])
  
      return func_decl, func_def
-@@ -3467,58 +3607,67 @@ def make_named_property_definer_callback(cg_context, function_name):
+@@ -3467,58 +3608,67 @@ def make_named_property_definer_callback(cg_context, function_name):
      assert isinstance(cg_context, CodeGenContext)
      assert isinstance(function_name, str)
  
@@ -1421,7 +1433,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
              TextNode("""\
  // 3.9.3. [[DefineOwnProperty]]
  // https://webidl.spec.whatwg.org/#legacy-platform-object-defineownproperty
-@@ -3526,27 +3675,30 @@ if (!is_creating) {
+@@ -3526,27 +3676,30 @@ if (!is_creating) {
  //   then:
  // step 2.2.2.1. If the result of calling IsDataDescriptor(Desc) is false,
  //   then return false.
@@ -1467,7 +1479,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
  
      return func_decl, func_def
  
-@@ -3555,75 +3707,88 @@ def make_named_property_descriptor_callback(cg_context, function_name):
+@@ -3555,75 +3708,88 @@ def make_named_property_descriptor_callback(cg_context, function_name):
      assert isinstance(cg_context, CodeGenContext)
      assert isinstance(function_name, str)
  
@@ -1599,7 +1611,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
  
      return func_decl, func_def
  
-@@ -3636,15 +3801,13 @@ def make_named_property_query_callback(cg_context, function_name):
+@@ -3636,15 +3802,13 @@ def make_named_property_query_callback(cg_context, function_name):
      if "NotEnumerable" in props.named_getter.extended_attributes:
          return None, None
  
@@ -1622,7 +1634,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      body = func_def.body
  
      flags = []
-@@ -3660,20 +3823,16 @@ def make_named_property_query_callback(cg_context, function_name):
+@@ -3660,20 +3824,16 @@ def make_named_property_query_callback(cg_context, function_name):
          property_attribute = " | ".join(flags)
  
      body.extend([
@@ -1648,7 +1660,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      ])
  
      return func_decl, func_def
-@@ -3687,34 +3846,32 @@ def make_named_property_enumerator_callback(cg_context, function_name):
+@@ -3687,34 +3847,32 @@ def make_named_property_enumerator_callback(cg_context, function_name):
      if "NotEnumerable" in props.named_getter.extended_attributes:
          return None, None
  
@@ -1698,7 +1710,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
  
      return func_decl, func_def
  
-@@ -3724,149 +3881,41 @@ bindings::V8SetReturnValue(
+@@ -3724,149 +3882,41 @@ bindings::V8SetReturnValue(
  # ----------------------------------------------------------------------------
  
  
@@ -1875,7 +1887,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
  
      return func_def
  
-@@ -3875,14 +3924,10 @@ def make_named_props_obj_named_getter_callback(cg_context, function_name):
+@@ -3875,14 +3925,10 @@ def make_named_props_obj_named_getter_callback(cg_context, function_name):
      assert isinstance(cg_context, CodeGenContext)
      assert isinstance(function_name, str)
  
@@ -1893,7 +1905,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
          "NamedPropertiesObject_NamedPropertyGetter")
      body = func_def.body
  
-@@ -3890,10 +3935,13 @@ def make_named_props_obj_named_getter_callback(cg_context, function_name):
+@@ -3890,10 +3936,13 @@ def make_named_props_obj_named_getter_callback(cg_context, function_name):
          TextNode("""\
  // 3.6.4.1. [[GetOwnProperty]]
  // https://webidl.spec.whatwg.org/#named-properties-object-getownproperty
@@ -1911,7 +1923,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
  """))
  
      return func_def
-@@ -3903,30 +3951,24 @@ def make_named_props_obj_named_setter_callback(cg_context, function_name):
+@@ -3903,30 +3952,24 @@ def make_named_props_obj_named_setter_callback(cg_context, function_name):
      assert isinstance(cg_context, CodeGenContext)
      assert isinstance(function_name, str)
  
@@ -1954,7 +1966,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
  
      return func_def
  
-@@ -3935,30 +3977,25 @@ def make_named_props_obj_named_deleter_callback(cg_context, function_name):
+@@ -3935,30 +3978,25 @@ def make_named_props_obj_named_deleter_callback(cg_context, function_name):
      assert isinstance(cg_context, CodeGenContext)
      assert isinstance(function_name, str)
  
@@ -1998,7 +2010,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
  
      return func_def
  
-@@ -3967,30 +4004,24 @@ def make_named_props_obj_named_definer_callback(cg_context, function_name):
+@@ -3967,30 +4005,24 @@ def make_named_props_obj_named_definer_callback(cg_context, function_name):
      assert isinstance(cg_context, CodeGenContext)
      assert isinstance(function_name, str)
  
@@ -2041,7 +2053,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
  
      return func_def
  
-@@ -3999,14 +4030,10 @@ def make_named_props_obj_named_descriptor_callback(cg_context, function_name):
+@@ -3999,14 +4031,10 @@ def make_named_props_obj_named_descriptor_callback(cg_context, function_name):
      assert isinstance(cg_context, CodeGenContext)
      assert isinstance(function_name, str)
  
@@ -2059,7 +2071,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
          "NamedPropertiesObject_NamedPropertyDescriptor")
      body = func_def.body
  
-@@ -4018,25 +4045,27 @@ def make_named_props_obj_named_descriptor_callback(cg_context, function_name):
+@@ -4018,25 +4046,27 @@ def make_named_props_obj_named_descriptor_callback(cg_context, function_name):
  //   with property name P and object object is true, then:
  if (${v8_receiver}->GetRealNamedPropertyAttributesInPrototypeChain(
          ${current_context}, ${v8_property_name}).IsJust()) {
@@ -2095,7 +2107,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
  """))
  
      return func_def
-@@ -4083,23 +4112,61 @@ def make_cross_origin_access_check_callback(cg_context, function_name):
+@@ -4083,23 +4113,61 @@ def make_cross_origin_access_check_callback(cg_context, function_name):
      return func_def
  
  
@@ -2165,7 +2177,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
          return func_def
  
      bind_return_value(body, cg_context, overriding_args=["${index}"])
-@@ -4112,112 +4179,56 @@ def make_cross_origin_indexed_getter_callback(cg_context, function_name):
+@@ -4112,112 +4180,56 @@ def make_cross_origin_indexed_getter_callback(cg_context, function_name):
      ])
  
      body.extend([
@@ -2300,7 +2312,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
  """))
  
      return func_def
-@@ -4227,11 +4238,10 @@ def make_cross_origin_indexed_enumerator_callback(cg_context, function_name):
+@@ -4227,11 +4239,10 @@ def make_cross_origin_indexed_enumerator_callback(cg_context, function_name):
      assert isinstance(cg_context, CodeGenContext)
      assert isinstance(function_name, str)
  
@@ -2315,7 +2327,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
          "CrossOriginProperty_IndexedPropertyEnumerator")
      body = func_def.body
  
-@@ -4253,68 +4263,76 @@ def make_cross_origin_named_getter_callback(cg_context, function_name):
+@@ -4253,68 +4264,76 @@ def make_cross_origin_named_getter_callback(cg_context, function_name):
      assert isinstance(cg_context, CodeGenContext)
      assert isinstance(function_name, str)
  
@@ -2434,7 +2446,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      ])
  
      return func_def
-@@ -4324,15 +4342,10 @@ def make_cross_origin_named_setter_callback(cg_context, function_name):
+@@ -4324,15 +4343,10 @@ def make_cross_origin_named_setter_callback(cg_context, function_name):
      assert isinstance(cg_context, CodeGenContext)
      assert isinstance(function_name, str)
  
@@ -2453,7 +2465,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
          "CrossOriginProperty_NamedPropertySetter")
      body = func_def.body
  
-@@ -4341,75 +4354,31 @@ def make_cross_origin_named_setter_callback(cg_context, function_name):
+@@ -4341,75 +4355,31 @@ def make_cross_origin_named_setter_callback(cg_context, function_name):
          TextNode("""\
  for (const auto& attribute : kCrossOriginAttributeTable) {
    if (${blink_property_name} == attribute.name && attribute.set_value) {
@@ -2538,7 +2550,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
          "CrossOriginProperty_NamedPropertyDescriptor")
      body = func_def.body
  
-@@ -4431,13 +4400,14 @@ for (const auto& attribute : kCrossOriginAttributeTable) {
+@@ -4431,13 +4401,14 @@ for (const auto& attribute : kCrossOriginAttributeTable) {
             ${info}.GetIsolate(), attribute.set_callback, 1,
             ${class_name}::GetWrapperTypeInfo())
             .ToLocal(&set)) {
@@ -2555,7 +2567,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
  }
  for (const auto& operation : kCrossOriginOperationTable) {
    if (${blink_property_name} != operation.name)
-@@ -4447,36 +4417,34 @@ for (const auto& operation : kCrossOriginOperationTable) {
+@@ -4447,36 +4418,34 @@ for (const auto& operation : kCrossOriginOperationTable) {
             ${info}.GetIsolate(), operation.callback, operation.func_length,
             ${class_name}::GetWrapperTypeInfo())
             .ToLocal(&function)) {
@@ -2602,7 +2614,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
          EmptyNode(),
          TextNode("""\
  // 7.2.3.2 CrossOriginPropertyFallback ( P )
-@@ -4488,10 +4456,11 @@ if (bindings::IsSupportedInCrossOriginPropertyFallback(
+@@ -4488,10 +4457,11 @@ if (bindings::IsSupportedInCrossOriginPropertyFallback(
    desc.set_enumerable(false);
    desc.set_configurable(true);
    bindings::V8SetReturnValue(${info}, desc);
@@ -2616,7 +2628,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      ])
  
      return func_def
-@@ -4501,14 +4470,10 @@ def make_cross_origin_named_query_callback(cg_context, function_name):
+@@ -4501,14 +4471,10 @@ def make_cross_origin_named_query_callback(cg_context, function_name):
      assert isinstance(cg_context, CodeGenContext)
      assert isinstance(function_name, str)
  
@@ -2634,7 +2646,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
          "CrossOriginProperty_NamedPropertyQuery")
      body = func_def.body
  
-@@ -4524,20 +4489,21 @@ for (const auto& attribute : kCrossOriginAttributeTable) {
+@@ -4524,20 +4490,21 @@ for (const auto& attribute : kCrossOriginAttributeTable) {
    if (!attribute.set_callback)
      v8_property_attribute |= v8::ReadOnly;
    bindings::V8SetReturnValue(${info}, v8_property_attribute);
@@ -2660,7 +2672,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
          EmptyNode(),
          TextNode("""\
  // 7.2.3.2 CrossOriginPropertyFallback ( P )
-@@ -4546,8 +4512,9 @@ if (bindings::IsSupportedInCrossOriginPropertyFallback(
+@@ -4546,8 +4513,9 @@ if (bindings::IsSupportedInCrossOriginPropertyFallback(
          ${info}.GetIsolate(), ${v8_property_name})) {
    int32_t v8_property_attribute = v8::DontEnum | v8::ReadOnly;
    bindings::V8SetReturnValue(${info}, v8_property_attribute);
@@ -2671,7 +2683,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
  """),
      ])
  
-@@ -4558,11 +4525,10 @@ def make_cross_origin_named_enumerator_callback(cg_context, function_name):
+@@ -4558,11 +4526,10 @@ def make_cross_origin_named_enumerator_callback(cg_context, function_name):
      assert isinstance(cg_context, CodeGenContext)
      assert isinstance(function_name, str)
  
@@ -2686,7 +2698,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
          "CrossOriginProperty_NamedPropertyEnumerator")
      body = func_def.body
  
-@@ -4579,195 +4545,6 @@ bindings::V8SetReturnValue(
+@@ -4579,195 +4546,6 @@ bindings::V8SetReturnValue(
      return func_def
  
  
@@ -2882,7 +2894,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
  # ----------------------------------------------------------------------------
  # Installer functions
  # ----------------------------------------------------------------------------
-@@ -4818,7 +4595,8 @@ def bind_installer_local_vars(code_node, cg_context):
+@@ -4818,7 +4596,8 @@ def bind_installer_local_vars(code_node, cg_context):
             "${class_name}::GetWrapperTypeInfo();")),
      ])
  
@@ -2892,7 +2904,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
          local_vars.extend([
              S("interface_function_template",
                ("v8::Local<v8::FunctionTemplate> "
-@@ -5661,8 +5439,9 @@ def make_property_entries_and_callback_defs(cg_context, attribute_entries,
+@@ -5661,8 +5440,9 @@ def make_property_entries_and_callback_defs(cg_context, attribute_entries,
          iterate(class_like.operation_groups, process_operation_group)
      if interface and interface.stringifier:
          iterate([interface.stringifier.operation], process_stringifier)
@@ -2904,7 +2916,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      if collectionlike:
  
          def should_define(target):
-@@ -5741,6 +5520,46 @@ ${prototype_object}->Delete(
+@@ -5741,6 +5521,46 @@ ${prototype_object}->Delete(
      ${v8_context}, V8AtomicString(${isolate}, "constructor")).ToChecked();
  """))
  
@@ -2951,7 +2963,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      collectionlike = interface and (interface.iterable or interface.maplike
                                      or interface.setlike)
      if collectionlike:
-@@ -5907,6 +5726,22 @@ def make_install_interface_template(cg_context, function_name, class_name,
+@@ -5907,6 +5727,22 @@ def make_install_interface_template(cg_context, function_name, class_name,
                "${interface_function_template});"),
              EmptyNode(),
          ])
@@ -2974,7 +2986,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      elif cg_context.sync_iterator:
          if cg_context.sync_iterator.interface.iterable:
              parent_intrinsic_prototype = "v8::Intrinsic::kIteratorPrototype"
-@@ -6432,8 +6267,7 @@ def make_indexed_and_named_property_callbacks_and_install_node(cg_context):
+@@ -6432,8 +6268,7 @@ def make_indexed_and_named_property_callbacks_and_install_node(cg_context):
      install_node = SequenceNode()
  
      interface = cg_context.interface
@@ -2984,7 +2996,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
          return func_decls, func_defs, install_node
      props = interface.indexed_and_named_properties
  
-@@ -6450,26 +6284,33 @@ def make_indexed_and_named_property_callbacks_and_install_node(cg_context):
+@@ -6450,26 +6285,33 @@ def make_indexed_and_named_property_callbacks_and_install_node(cg_context):
      cg_context = cg_context.make_copy(
          v8_callback_type=CodeGenContext.V8_OTHER_CALLBACK)
  
@@ -3027,7 +3039,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
          impl_bridge = v8_bridge_class_name(
              most_derived_interface(
                  props.named_getter.owner, props.named_setter
-@@ -6514,19 +6355,25 @@ interface.indexed_and_named_properties.named_getter.extended_attributes:
+@@ -6514,19 +6356,25 @@ interface.indexed_and_named_properties.named_getter.extended_attributes:
  
      if props.own_indexed_getter or props.own_named_getter:
          add_callback(*make_indexed_property_getter_callback(
@@ -3059,7 +3071,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
  
      if props.indexed_getter or props.named_getter:
          impl_bridge = v8_bridge_class_name(
-@@ -6596,30 +6443,34 @@ def make_named_properties_object_callbacks_and_install_node(cg_context):
+@@ -6596,30 +6444,34 @@ def make_named_properties_object_callbacks_and_install_node(cg_context):
  
      func_defs = [
          make_named_props_obj_named_getter_callback(
@@ -3109,7 +3121,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      text = """\
  // Named interceptors
  ${npo_prototype_template}->SetHandler(
-@@ -6688,7 +6539,7 @@ def make_cross_origin_property_callbacks_and_install_node(
+@@ -6688,7 +6540,7 @@ def make_cross_origin_property_callbacks_and_install_node(
                  attribute=attribute,
                  attribute_get=True,
                  v8_callback_type=(
@@ -3118,7 +3130,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
              get_value = callback_function_name(cgc, for_cross_origin=True)
              func_def = make_attribute_get_callback_def(cgc, get_value)
              callback_defs.extend([func_def, EmptyNode()])
-@@ -6698,7 +6549,7 @@ def make_cross_origin_property_callbacks_and_install_node(
+@@ -6698,7 +6550,7 @@ def make_cross_origin_property_callbacks_and_install_node(
                  attribute=attribute,
                  attribute_set=True,
                  v8_callback_type=(
@@ -3127,7 +3139,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
              set_value = callback_function_name(cgc, for_cross_origin=True)
              func_def = make_attribute_set_callback_def(cgc, set_value)
              callback_defs.extend([func_def, EmptyNode()])
-@@ -6751,33 +6602,41 @@ def make_cross_origin_property_callbacks_and_install_node(
+@@ -6751,33 +6603,41 @@ def make_cross_origin_property_callbacks_and_install_node(
          make_cross_origin_access_check_callback(
              cg_context, "CrossOriginAccessCheckCallback"),
          make_cross_origin_named_getter_callback(
@@ -3187,7 +3199,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      ]
      for func_def in func_defs:
          callback_defs.append(func_def)
-@@ -6818,45 +6677,6 @@ ${instance_object_template}->SetAccessCheckCallbackAndHandler(
+@@ -6818,45 +6678,6 @@ ${instance_object_template}->SetAccessCheckCallbackAndHandler(
              "third_party/blink/renderer/platform/bindings/v8_cross_origin_property_support.h",
          ]))
  
@@ -3233,7 +3245,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      return callback_defs, install_node
  
  
-@@ -7080,6 +6900,8 @@ const WrapperTypeInfo ${class_name}::wrapper_type_info_{{
+@@ -7080,6 +6901,8 @@ const WrapperTypeInfo ${class_name}::wrapper_type_info_{{
          idl_definition_kind = "WrapperTypeInfo::kIdlNamespace"
      elif class_like.is_callback_interface:
          idl_definition_kind = "WrapperTypeInfo::kIdlCallbackInterface"
@@ -3242,7 +3254,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      elif class_like.is_sync_iterator:
          idl_definition_kind = "WrapperTypeInfo::kIdlSyncIterator"
      wrapper_type_info_def.append(
-@@ -7093,7 +6915,8 @@ const WrapperTypeInfo ${class_name}::wrapper_type_info_{{
+@@ -7093,7 +6916,8 @@ const WrapperTypeInfo ${class_name}::wrapper_type_info_{{
                active_script_wrappable_inheritance),
            idl_definition_kind=idl_definition_kind))
  
@@ -3252,7 +3264,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
          blink_class = blink_class_name(class_like)
          pattern = """\
  const WrapperTypeInfo& {blink_class}::wrapper_type_info_ =
-@@ -7107,11 +6930,6 @@ const WrapperTypeInfo& {blink_class}::wrapper_type_info_ =
+@@ -7107,11 +6931,6 @@ const WrapperTypeInfo& {blink_class}::wrapper_type_info_ =
  static_assert(
      std::is_base_of<ActiveScriptWrappableBase, {blink_class}>::value,
      "{blink_class} does not inherit from ActiveScriptWrappable<> despite "
@@ -3264,7 +3276,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      "the IDL has [ActiveScriptWrappable] extended attribute.");"""
      else:
          pattern = """\
-@@ -7119,11 +6937,6 @@ static_assert(
+@@ -7119,11 +6938,6 @@ static_assert(
  static_assert(
      !std::is_base_of<ActiveScriptWrappableBase, {blink_class}>::value,
      "{blink_class} inherits from ActiveScriptWrappable<> without "
@@ -3276,7 +3288,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      "[ActiveScriptWrappable] extended attribute.");"""
      if class_like.is_interface:
          wrapper_type_info_def.append(F(pattern, blink_class=blink_class))
-@@ -7140,6 +6953,7 @@ def make_v8_context_snapshot_api(cg_context, component, attribute_entries,
+@@ -7140,6 +6954,7 @@ def make_v8_context_snapshot_api(cg_context, component, attribute_entries,
                                   constant_entries, constructor_entries,
                                   exposed_construct_entries, operation_entries,
                                   named_properties_object_callback_defs,
@@ -3284,7 +3296,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
                                   cross_origin_property_callback_defs,
                                   install_context_independent_func_name):
      assert isinstance(cg_context, CodeGenContext)
-@@ -7176,7 +6990,7 @@ def make_v8_context_snapshot_api(cg_context, component, attribute_entries,
+@@ -7176,7 +6991,7 @@ def make_v8_context_snapshot_api(cg_context, component, attribute_entries,
                                      cg_context.class_name), attribute_entries,
          constant_entries, constructor_entries, exposed_construct_entries,
          operation_entries, named_properties_object_callback_defs,
@@ -3293,7 +3305,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
  
      add_func(*_make_v8_context_snapshot_install_props_per_context_function(
          cg_context, name_style.func("InstallPropsOf",
-@@ -7193,7 +7007,7 @@ def make_v8_context_snapshot_api(cg_context, component, attribute_entries,
+@@ -7193,7 +7008,7 @@ def make_v8_context_snapshot_api(cg_context, component, attribute_entries,
  def _make_v8_context_snapshot_get_reference_table_function(
          cg_context, function_name, attribute_entries, constant_entries,
          constructor_entries, exposed_construct_entries, operation_entries,
@@ -3302,7 +3314,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
          cross_origin_property_callback_defs):
      callback_names = ["${class_name}::GetWrapperTypeInfo()"]
  
-@@ -7224,6 +7038,11 @@ def _make_v8_context_snapshot_get_reference_table_function(
+@@ -7224,6 +7039,11 @@ def _make_v8_context_snapshot_get_reference_table_function(
      collect_callbacks(named_properties_object_callback_defs)
      collect_callbacks(cross_origin_property_callback_defs)
  
@@ -3314,7 +3326,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      entry_nodes = list(
          map(
              lambda name: TextNode("reinterpret_cast<intptr_t>({}),".format(name
-@@ -7326,7 +7145,8 @@ return ${class_name}::{func}(
+@@ -7326,7 +7146,8 @@ return ${class_name}::{func}(
  def _collect_include_headers(class_like):
      assert isinstance(
          class_like,
@@ -3324,7 +3336,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
  
      headers = set(class_like.code_generator_info.blink_headers or [])
  
-@@ -7361,7 +7181,10 @@ def _collect_include_headers(class_like):
+@@ -7361,7 +7182,10 @@ def _collect_include_headers(class_like):
      operations.extend(class_like.constructors)
      operations.extend(class_like.operations)
      if class_like.is_interface:
@@ -3336,7 +3348,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
              if x:
                  operations.extend(x.operations)
          for exposed_construct in class_like.exposed_constructs:
-@@ -7393,10 +7216,12 @@ def _collect_include_headers(class_like):
+@@ -7393,10 +7217,12 @@ def _collect_include_headers(class_like):
  
  
  def generate_class_like(class_like,
@@ -3350,7 +3362,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
  
      path_manager = PathManager(class_like)
      api_component = path_manager.api_component
-@@ -7421,6 +7246,9 @@ def generate_class_like(class_like,
+@@ -7421,6 +7247,9 @@ def generate_class_like(class_like,
          namespace = class_like
          cg_context = CodeGenContext(namespace=namespace,
                                      class_name=api_class_name)
@@ -3360,7 +3372,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      elif class_like.is_sync_iterator:
          cg_context = CodeGenContext(sync_iterator=class_like,
                                      class_name=api_class_name)
-@@ -7609,14 +7437,6 @@ def generate_class_like(class_like,
+@@ -7609,14 +7438,6 @@ def generate_class_like(class_like,
          operation_entries=operation_entries)
      supplemental_install_node = SequenceNode()
  
@@ -3375,7 +3387,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      # Named properties object
      (named_properties_object_callback_defs,
       named_properties_object_install_node) = (
-@@ -7634,6 +7454,14 @@ def generate_class_like(class_like,
+@@ -7634,6 +7455,14 @@ def generate_class_like(class_like,
      supplemental_install_node.append(cross_origin_property_install_node)
      supplemental_install_node.append(EmptyNode())
  
@@ -3390,7 +3402,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      # Installer functions
      is_unconditional = lambda entry: entry.exposure_conditional.is_always_true
      is_context_dependent = lambda entry: entry.is_context_dependent
-@@ -7748,7 +7576,7 @@ def generate_class_like(class_like,
+@@ -7748,7 +7577,7 @@ def generate_class_like(class_like,
           cg_context, impl_component, attribute_entries, constant_entries,
           constructor_entries, exposed_construct_entries, operation_entries,
           named_properties_object_callback_defs,
@@ -3399,7 +3411,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
           (install_context_independent_props_def
            and FN_INSTALL_CONTEXT_INDEPENDENT_PROPS))
  
-@@ -7809,7 +7637,7 @@ def generate_class_like(class_like,
+@@ -7809,7 +7638,7 @@ def generate_class_like(class_like,
              make_forward_declarations(impl_source_node.accumulator),
              EmptyNode(),
          ])
@@ -3408,7 +3420,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
          api_header_node.accumulator.add_class_decls(
              [blink_class_name(class_like.interface)])
      else:
-@@ -7849,6 +7677,14 @@ def generate_class_like(class_like,
+@@ -7849,6 +7678,14 @@ def generate_class_like(class_like,
          _collect_include_headers(class_like))
  
      # Assemble the parts.
@@ -3423,7 +3435,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e0
      if generate_sync_iterator_blink_impl_class_callback:
          assert isinstance(class_like, web_idl.SyncIterator)
          generate_sync_iterator_blink_impl_class_callback(
-@@ -8306,3 +8142,4 @@ def generate_interfaces(task_queue):
+@@ -8306,3 +8143,4 @@ def generate_interfaces(task_queue):
                           "InitIDLInterfacesForTesting",
                           "init_idl_interfaces_for_testing",
                           for_testing=True)
