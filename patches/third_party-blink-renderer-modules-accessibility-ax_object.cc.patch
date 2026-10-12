@@ -1,0 +1,25 @@
+diff --git a/third_party/blink/renderer/modules/accessibility/ax_object.cc b/third_party/blink/renderer/modules/accessibility/ax_object.cc
+index 9a14209954c399d54ba01823ff1ec4f8749f5563..950b396949a661deeee02db075604718531ee9e8 100644
+--- a/third_party/blink/renderer/modules/accessibility/ax_object.cc
++++ b/third_party/blink/renderer/modules/accessibility/ax_object.cc
+@@ -2133,6 +2133,20 @@ void AXObject::SerializeTableAttributes(ui::AXNodeData* node_data) {
+       node_data->AddIntAttribute(
+           ax::mojom::blink::IntAttribute::kAriaCellColumnIndex, aria_colindex);
+     }
++
++    if (RuntimeEnabledFeatures::AriaRowColIndexTextEnabled()) {
++      const AtomicString& aria_cell_row_index_text =
++          GetAOMPropertyOrARIAAttribute(AOMStringProperty::kRowIndexText);
++      TruncateAndAddStringAttribute(
++          node_data, ax::mojom::blink::StringAttribute::kAriaCellRowIndexText,
++          aria_cell_row_index_text);
++      const AtomicString& aria_cell_column_index_text =
++          GetAOMPropertyOrARIAAttribute(AOMStringProperty::kColIndexText);
++      TruncateAndAddStringAttribute(
++          node_data,
++          ax::mojom::blink::StringAttribute::kAriaCellColumnIndexText,
++          aria_cell_column_index_text);
++    }
+   }
+ 
+   if (ui::IsTableHeader(RoleValue()) &&
