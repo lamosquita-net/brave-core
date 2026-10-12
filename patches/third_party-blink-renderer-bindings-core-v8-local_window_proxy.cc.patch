@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/bindings/core/v8/local_window_proxy.cc b/third_party/blink/renderer/bindings/core/v8/local_window_proxy.cc
-index 1cada05806cb35a82822507f708d43979d97de61..08fd07e3900b76e22a8af5df818cf04884eb9da1 100644
+index 1cada05806cb35a82822507f708d43979d97de61..fa146865dae10428f531a839a41e6dcf1803595c 100644
 --- a/third_party/blink/renderer/bindings/core/v8/local_window_proxy.cc
 +++ b/third_party/blink/renderer/bindings/core/v8/local_window_proxy.cc
 @@ -111,16 +111,25 @@ void LocalWindowProxy::DisposeContext(Lifecycle next_status,
@@ -35,7 +35,17 @@ index 1cada05806cb35a82822507f708d43979d97de61..08fd07e3900b76e22a8af5df818cf048
  #if DCHECK_IS_ON()
      DidDetachGlobalObject();
  #endif
-@@ -290,11 +299,12 @@ void LocalWindowProxy::SetupWindowPrototypeChain() {
+@@ -248,8 +257,7 @@ void LocalWindowProxy::CreateContext() {
+   DidAttachGlobalObject();
+ #endif
+ 
+-  script_state_ = MakeGarbageCollected<ScriptState>(context, world_,
+-                                                    GetFrame()->DomWindow());
++  script_state_ = ScriptState::Create(context, world_, GetFrame()->DomWindow());
+ 
+   DCHECK(lifecycle_ == Lifecycle::kContextIsUninitialized ||
+          lifecycle_ == Lifecycle::kGlobalObjectIsDetached);
+@@ -290,11 +298,12 @@ void LocalWindowProxy::SetupWindowPrototypeChain() {
    // The global proxy object.  Note this is not the global object.
    v8::Local<v8::Object> global_proxy = context->Global();
    CHECK(global_proxy_ == global_proxy);
@@ -51,7 +61,7 @@ index 1cada05806cb35a82822507f708d43979d97de61..08fd07e3900b76e22a8af5df818cf048
  
    // The global object, aka window wrapper object.
    v8::Local<v8::Object> window_wrapper =
-@@ -441,6 +451,8 @@ void LocalWindowProxy::UpdateDocumentForMainWorld() {
+@@ -441,6 +450,8 @@ void LocalWindowProxy::UpdateDocumentForMainWorld() {
    UpdateSecurityOrigin(GetFrame()->DomWindow()->GetSecurityOrigin());
  }
  
@@ -60,7 +70,7 @@ index 1cada05806cb35a82822507f708d43979d97de61..08fd07e3900b76e22a8af5df818cf048
  // GetNamedProperty(), Getter(), NamedItemAdded(), and NamedItemRemoved()
  // optimize property access performance for Document.
  //
-@@ -453,11 +465,10 @@ void LocalWindowProxy::UpdateDocumentForMainWorld() {
+@@ -453,11 +464,10 @@ void LocalWindowProxy::UpdateDocumentForMainWorld() {
  //
  // See crbug.com/614559 for how this affected benchmarks.
  
@@ -76,7 +86,7 @@ index 1cada05806cb35a82822507f708d43979d97de61..08fd07e3900b76e22a8af5df818cf048
    if (!html_document->HasNamedItem(key))
      return v8::Local<v8::Value>();
  
-@@ -477,14 +488,14 @@ static v8::Local<v8::Value> GetNamedProperty(
+@@ -477,14 +487,14 @@ static v8::Local<v8::Value> GetNamedProperty(
    return ToV8(items, creation_context, isolate);
  }
  
@@ -94,7 +104,7 @@ index 1cada05806cb35a82822507f708d43979d97de61..08fd07e3900b76e22a8af5df818cf048
    DCHECK(html_document);
    v8::Local<v8::Value> result =
        GetNamedProperty(html_document, name, info.Holder(), info.GetIsolate());
-@@ -500,6 +511,15 @@ static void Getter(v8::Local<v8::Name> property,
+@@ -500,6 +510,15 @@ static void Getter(v8::Local<v8::Name> property,
      V8SetReturnValue(info, value);
  }
  
@@ -110,7 +120,7 @@ index 1cada05806cb35a82822507f708d43979d97de61..08fd07e3900b76e22a8af5df818cf048
  void LocalWindowProxy::NamedItemAdded(HTMLDocument* document,
                                        const AtomicString& name) {
    DCHECK(world_->IsMainWorld());
-@@ -515,14 +535,15 @@ void LocalWindowProxy::NamedItemAdded(HTMLDocument* document,
+@@ -515,14 +534,15 @@ void LocalWindowProxy::NamedItemAdded(HTMLDocument* document,
  
    ScriptState::Scope scope(script_state_);
    v8::Local<v8::Object> document_wrapper =
@@ -131,7 +141,7 @@ index 1cada05806cb35a82822507f708d43979d97de61..08fd07e3900b76e22a8af5df818cf048
  }
  
  void LocalWindowProxy::NamedItemRemoved(HTMLDocument* document,
-@@ -542,7 +563,7 @@ void LocalWindowProxy::NamedItemRemoved(HTMLDocument* document,
+@@ -542,7 +562,7 @@ void LocalWindowProxy::NamedItemRemoved(HTMLDocument* document,
      return;
    ScriptState::Scope scope(script_state_);
    v8::Local<v8::Object> document_wrapper =

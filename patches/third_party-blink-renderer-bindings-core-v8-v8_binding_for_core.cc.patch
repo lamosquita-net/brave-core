@@ -1,24 +1,82 @@
 diff --git a/third_party/blink/renderer/bindings/core/v8/v8_binding_for_core.cc b/third_party/blink/renderer/bindings/core/v8/v8_binding_for_core.cc
-index ff7153fc60f470296b5c141ff2edf642e83384c3..e5abebf6e3e7c5cf8f7a296d5e537b91bd5b417f 100644
+index ff7153fc60f470296b5c141ff2edf642e83384c3..3624f526b521608a19d03b6ec8319889aaadc83c 100644
 --- a/third_party/blink/renderer/bindings/core/v8/v8_binding_for_core.cc
 +++ b/third_party/blink/renderer/bindings/core/v8/v8_binding_for_core.cc
-@@ -643,7 +643,8 @@ LocalDOMWindow* ToLocalDOMWindow(v8::Local<v8::Context> context) {
+@@ -34,6 +34,7 @@
+ #include "third_party/blink/renderer/bindings/core/v8/idl_types.h"
+ #include "third_party/blink/renderer/bindings/core/v8/native_value_traits_impl.h"
+ #include "third_party/blink/renderer/bindings/core/v8/script_controller.h"
++#include "third_party/blink/renderer/bindings/core/v8/script_state_impl.h"
+ #include "third_party/blink/renderer/bindings/core/v8/v8_element.h"
+ #include "third_party/blink/renderer/bindings/core/v8/v8_event_target.h"
+ #include "third_party/blink/renderer/bindings/core/v8/v8_html_link_element.h"
+@@ -630,20 +631,21 @@ String ReplaceUnmatchedSurrogates(String string) {
+   return String::Adopt(result);
+ }
+ 
++LocalDOMWindow* ToLocalDOMWindow(const ScriptState* script_state) {
++  return DynamicTo<LocalDOMWindow>(ToExecutionContext(script_state));
++}
++
++ExecutionContext* ToExecutionContext(const ScriptState* script_state) {
++  RUNTIME_CALL_TIMER_SCOPE(script_state->GetIsolate(),
++                           RuntimeCallStats::CounterId::kToExecutionContext);
++  return static_cast<const ScriptStateImpl*>(script_state)
++      ->GetExecutionContext();
++}
++
+ LocalDOMWindow* ToLocalDOMWindow(v8::Local<v8::Context> context) {
+   if (context.IsEmpty())
      return nullptr;
-   }
-   return To<LocalDOMWindow>(
+-  v8::Local<v8::Object> global = context->Global();
+-
+-  // There are several global objects that are not ScriptWrappable, and
+-  // therefore are definitely not a LocalDOMWindow (GC context, DevTools'
+-  // context (debug context), and maybe more). These types do not have any
+-  // internal fields, and will therefore crash if passed to ToScriptWrappable().
+-  if (global->InternalFieldCount() == 0) {
+-    return nullptr;
+-  }
+-  return To<LocalDOMWindow>(
 -      ToScriptWrappable(global)->ToMostDerived<DOMWindow>());
-+      ToScriptWrappable(context->GetIsolate(), global)
-+          ->ToMostDerived<DOMWindow>());
++  return DynamicTo<LocalDOMWindow>(ToExecutionContext(context));
  }
  
  LocalDOMWindow* EnteredDOMWindow(v8::Isolate* isolate) {
-@@ -681,7 +682,8 @@ ExecutionContext* ToExecutionContext(v8::Local<v8::Context> context) {
-   if (global_proxy->InternalFieldCount() == 0)
-     return nullptr;
+@@ -665,34 +667,8 @@ LocalDOMWindow* CurrentDOMWindow(v8::Isolate* isolate) {
  
+ ExecutionContext* ToExecutionContext(v8::Local<v8::Context> context) {
+   DCHECK(!context.IsEmpty());
+-
+-  RUNTIME_CALL_TIMER_SCOPE(context->GetIsolate(),
+-                           RuntimeCallStats::CounterId::kToExecutionContext);
+-
+-  v8::Local<v8::Object> global_proxy = context->Global();
+-
+-  DCHECK(!global_proxy.IsEmpty());
+-  DCHECK(global_proxy->IsObject());
+-
+-  // There are several global objects that are not ScriptWrappable, and
+-  // therefore are definitely not an ExecutionContext (GC context, DevTools'
+-  // context (debug context), and maybe more). These types do not have any
+-  // internal fields, and will therefore crash if passed to ToScriptWrappable().
+-  if (global_proxy->InternalFieldCount() == 0)
+-    return nullptr;
+-
 -  ScriptWrappable::TypeDispatcher dispatcher(ToScriptWrappable(global_proxy));
-+  ScriptWrappable::TypeDispatcher dispatcher(
-+      ToScriptWrappable(context->GetIsolate(), global_proxy));
-   if (auto* x = dispatcher.ToMostDerived<DOMWindow>())
-     return x->GetExecutionContext();
-   if (auto* x = dispatcher.DowncastTo<WorkerGlobalScope>())
+-  if (auto* x = dispatcher.ToMostDerived<DOMWindow>())
+-    return x->GetExecutionContext();
+-  if (auto* x = dispatcher.DowncastTo<WorkerGlobalScope>())
+-    return x->GetExecutionContext();
+-  if (auto* x = dispatcher.DowncastTo<WorkletGlobalScope>())
+-    return x->GetExecutionContext();
+-  if (auto* x = dispatcher.ToMostDerived<ShadowRealmGlobalScope>())
+-    return x->GetExecutionContext();
+-
+-  NOTREACHED();
+-  return nullptr;
++  ScriptState* script_state = ScriptState::MaybeFrom(context);
++  return script_state ? ToExecutionContext(script_state) : nullptr;
+ }
+ 
+ ExecutionContext* CurrentExecutionContext(v8::Isolate* isolate) {

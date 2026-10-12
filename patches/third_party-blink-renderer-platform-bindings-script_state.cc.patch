@@ -1,0 +1,27 @@
+diff --git a/third_party/blink/renderer/platform/bindings/script_state.cc b/third_party/blink/renderer/platform/bindings/script_state.cc
+index 7cf8c2e690c24ee3dbc5c0b898ae4f08d45aab17..7ff8785cd64c1264a88f91f7bd3292c6943f58ea 100644
+--- a/third_party/blink/renderer/platform/bindings/script_state.cc
++++ b/third_party/blink/renderer/platform/bindings/script_state.cc
+@@ -11,6 +11,22 @@
+ 
+ namespace blink {
+ 
++ScriptState::CreateCallback ScriptState::s_create_callback_ = nullptr;
++
++// static
++void ScriptState::SetCreateCallback(CreateCallback create_callback) {
++  DCHECK(create_callback);
++  DCHECK(!s_create_callback_);
++  s_create_callback_ = create_callback;
++}
++
++// static
++ScriptState* ScriptState::Create(v8::Local<v8::Context> context,
++                                 scoped_refptr<DOMWrapperWorld> world,
++                                 ExecutionContext* execution_context) {
++  return s_create_callback_(context, std::move(world), execution_context);
++}
++
+ ScriptState::ScriptState(v8::Local<v8::Context> context,
+                          scoped_refptr<DOMWrapperWorld> world,
+                          ExecutionContext* execution_context)

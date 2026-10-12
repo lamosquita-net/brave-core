@@ -1,8 +1,18 @@
 diff --git a/third_party/blink/renderer/core/execution_context/execution_context.cc b/third_party/blink/renderer/core/execution_context/execution_context.cc
-index d2bd394b1d57722f9cc302fb2ec5aef798555021..e12d9f29e216acf522a2c235e878628c7ebe5a0d 100644
+index d2bd394b1d57722f9cc302fb2ec5aef798555021..9b78561e91c3444702f1ec3e607a9d630284d9e2 100644
 --- a/third_party/blink/renderer/core/execution_context/execution_context.cc
 +++ b/third_party/blink/renderer/core/execution_context/execution_context.cc
-@@ -694,7 +694,7 @@ WorldType GetWorldType(const ExecutionContext& execution_context) {
+@@ -95,8 +95,7 @@ ExecutionContext::~ExecutionContext() = default;
+ 
+ // static
+ ExecutionContext* ExecutionContext::From(const ScriptState* script_state) {
+-  v8::HandleScope scope(script_state->GetIsolate());
+-  return ToExecutionContext(script_state->GetContext());
++  return ToExecutionContext(script_state);
+ }
+ 
+ // static
+@@ -694,7 +693,7 @@ WorldType GetWorldType(const ExecutionContext& execution_context) {
        return WorldType::WORLD_REG_EXP;
      case DOMWrapperWorld::WorldType::kForV8ContextSnapshotNonMain:
        return WorldType::WORLD_FOR_V8_CONTEXT_SNAPSHOT_NON_MAIN;
