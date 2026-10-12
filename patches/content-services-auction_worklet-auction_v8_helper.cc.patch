@@ -1,0 +1,38 @@
+diff --git a/content/services/auction_worklet/auction_v8_helper.cc b/content/services/auction_worklet/auction_v8_helper.cc
+index 04b217af6d25a66ef77bd32e0a9c35aa1cca5417..cff97e22904e0e4cc4d2b1647ca35071c98fca7d 100644
+--- a/content/services/auction_worklet/auction_v8_helper.cc
++++ b/content/services/auction_worklet/auction_v8_helper.cc
+@@ -124,8 +124,6 @@ class TrivialSerializerDelegate : public v8::ValueSerializer::Delegate {
+ // Utility class to timeout running a v8::Script or calling a v8::Function.
+ // Instantiate a ScriptTimeoutHelper, and it will terminate script if
+ // `script_timeout` passes before it is destroyed.
+-//
+-// Creates a v8::SafeForTerminationScope(), so the caller doesn't have to.
+ class AuctionV8Helper::ScriptTimeoutHelper {
+  public:
+   ScriptTimeoutHelper(
+@@ -133,7 +131,6 @@ class AuctionV8Helper::ScriptTimeoutHelper {
+       scoped_refptr<base::SequencedTaskRunner> timer_task_runner,
+       base::TimeDelta script_timeout)
+       : v8_helper_(v8_helper),
+-        termination_scope_(v8_helper->isolate()),
+         remaining_delay_(script_timeout),
+         timer_task_runner_(std::move(timer_task_runner)) {
+     DCHECK_CALLED_ON_VALID_SEQUENCE(v8_sequence_checker_);
+@@ -255,7 +252,6 @@ class AuctionV8Helper::ScriptTimeoutHelper {
+ 
+   // `this` exists a local in `v8_helper_`'s method.
+   const raw_ptr<AuctionV8Helper> v8_helper_;
+-  v8::Isolate::SafeForTerminationScope termination_scope_;
+   base::TimeDelta remaining_delay_;
+   base::TimeTicks last_start_;
+ 
+@@ -508,7 +504,7 @@ v8::MaybeLocal<v8::UnboundScript> AuctionV8Helper::Compile(
+   v8::TryCatch try_catch(isolate());
+   v8::ScriptCompiler::Source script_source(
+       src_string.ToLocalChecked(),
+-      v8::ScriptOrigin(v8_isolate, origin_string.ToLocalChecked()));
++      v8::ScriptOrigin(origin_string.ToLocalChecked()));
+   auto result = v8::ScriptCompiler::CompileUnboundScript(
+       v8_isolate, &script_source, v8::ScriptCompiler::kNoCompileOptions,
+       v8::ScriptCompiler::NoCacheReason::kNoCacheNoReason);
