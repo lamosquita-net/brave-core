@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/element.cc b/third_party/blink/renderer/core/dom/element.cc
-index 603363d44dba6a56412a2408af11a821e39bde00..59bbe53155ccf5045925d91a12741301cecaf169 100644
+index 603363d44dba6a56412a2408af11a821e39bde00..234ba5a1d22bd17aef0972a48cc244a7eb2cfb9d 100644
 --- a/third_party/blink/renderer/core/dom/element.cc
 +++ b/third_party/blink/renderer/core/dom/element.cc
 @@ -43,6 +43,7 @@
@@ -79,7 +79,26 @@ index 603363d44dba6a56412a2408af11a821e39bde00..59bbe53155ccf5045925d91a12741301
      }
    }
    return copy;
-@@ -2647,6 +2658,8 @@ Node::InsertionNotificationRequest Element::InsertedInto(
+@@ -1497,6 +1508,18 @@ int Element::clientHeight() {
+   return result;
+ }
+ 
++double Element::currentCSSZoom() {
++  GetDocument().UpdateStyleAndLayoutTreeForNode(
++      this, DocumentUpdateReason::kComputedStyle);
++  if (const auto* layout_object = GetLayoutObject()) {
++    // FlyWeb: the 116 has no StandardizedBrowserZoom, so EffectiveZoom()
++    // includes the browser zoom; divide it out, as upstream 4c05a0c8ccd does.
++    return layout_object->StyleRef().EffectiveZoom() /
++           GetDocument().GetStyleEngine().GetStyleResolver().InitialZoom();
++  }
++  return 1.0;
++}
++
+ LayoutBox* Element::GetLayoutBoxForScrolling() const {
+   LayoutBox* box = GetLayoutBox();
+   if (!box || !box->IsScrollContainer()) {
+@@ -2647,6 +2670,8 @@ Node::InsertionNotificationRequest Element::InsertedInto(
  
    DCHECK(!HasRareData() || !GetElementRareData()->HasPseudoElements());
  
@@ -88,7 +107,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..59bbe53155ccf5045925d91a12741301
    if (!insertion_point.IsInTreeScope()) {
      return kInsertionDone;
    }
-@@ -2772,6 +2785,8 @@ void Element::RemovedFrom(ContainerNode& insertion_point) {
+@@ -2772,6 +2797,8 @@ void Element::RemovedFrom(ContainerNode& insertion_point) {
      }
    }
  
@@ -97,7 +116,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..59bbe53155ccf5045925d91a12741301
    document.GetRootScrollerController().ElementRemoved(*this);
  
    if (IsInTopLayer()) {
-@@ -4048,6 +4063,446 @@ void Element::NotifyIfMatchedDocumentRulesSelectorsChanged(
+@@ -4048,6 +4075,446 @@ void Element::NotifyIfMatchedDocumentRulesSelectorsChanged(
    }
  }
  
@@ -544,7 +563,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..59bbe53155ccf5045925d91a12741301
  ShadowRoot& Element::CreateAndAttachShadowRoot(ShadowRootType type) {
  #if DCHECK_IS_ON()
    NestingLevelIncrementer slot_assignment_recalc_forbidden_scope(
-@@ -4184,6 +4639,29 @@ void Element::PseudoStateChanged(CSSSelector::PseudoType pseudo) {
+@@ -4184,6 +4651,29 @@ void Element::PseudoStateChanged(CSSSelector::PseudoType pseudo) {
    PseudoStateChanged(pseudo, AffectedByPseudoStateChange(pseudo, *this));
  }
  
@@ -574,7 +593,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..59bbe53155ccf5045925d91a12741301
  void Element::PseudoStateChangedForTesting(CSSSelector::PseudoType pseudo) {
    PseudoStateChanged(pseudo, AffectedByPseudoStateChange());
  }
-@@ -4380,7 +4858,7 @@ bool Element::CanAttachShadowRoot() const {
+@@ -4380,7 +4870,7 @@ bool Element::CanAttachShadowRoot() const {
           tag_name == html_names::kSelectmenuTag;
  }
  
@@ -583,7 +602,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..59bbe53155ccf5045925d91a12741301
    // https://dom.spec.whatwg.org/#concept-attach-a-shadow-root
    // 1. If shadow host’s namespace is not the HTML namespace, then throw a
    // "NotSupportedError" DOMException.
-@@ -4413,9 +4891,19 @@ const char* Element::ErrorMessageForAttachShadow() const {
+@@ -4413,9 +4903,19 @@ const char* Element::ErrorMessageForAttachShadow() const {
      }
    }
  
@@ -604,7 +623,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..59bbe53155ccf5045925d91a12741301
      return "Shadow root cannot be created on a host "
             "which already hosts a shadow tree.";
    }
-@@ -4445,14 +4933,34 @@ ShadowRoot* Element::attachShadow(const ShadowRootInit* shadow_root_init_dict,
+@@ -4445,14 +4945,34 @@ ShadowRoot* Element::attachShadow(const ShadowRootInit* shadow_root_init_dict,
    CustomElementRegistry* registry = shadow_root_init_dict->hasRegistry()
                                          ? shadow_root_init_dict->registry()
                                          : nullptr;
@@ -642,7 +661,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..59bbe53155ccf5045925d91a12741301
  
    // Ensure that the returned shadow root is not marked as declarative so that
    // attachShadow() calls after the first one do not succeed for a shadow host
-@@ -4473,7 +4981,8 @@ bool Element::AttachStreamingDeclarativeShadowRoot(
+@@ -4473,7 +4993,8 @@ bool Element::AttachStreamingDeclarativeShadowRoot(
    // host element, mode equal to declarative shadow mode, and delegates focus
    // equal to declarative shadow delegates focus. If an exception was thrown by
    // attach a shadow root, catch it, and ignore the exception.
@@ -652,7 +671,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..59bbe53155ccf5045925d91a12741301
      template_element.SetDeclarativeShadowRootType(
          DeclarativeShadowRootType::kNone);
      GetDocument().AddConsoleMessage(MakeGarbageCollected<ConsoleMessage>(
-@@ -4482,8 +4991,17 @@ bool Element::AttachStreamingDeclarativeShadowRoot(
+@@ -4482,8 +5003,17 @@ bool Element::AttachStreamingDeclarativeShadowRoot(
      return false;
    }
  
@@ -672,7 +691,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..59bbe53155ccf5045925d91a12741301
    // 13.1. Set declarative shadow host element's shadow host's "is declarative
    // shadow root" property to true.
    shadow_root.SetIsDeclarativeShadowRoot(true);
-@@ -4511,7 +5029,8 @@ bool Element::AttachDeprecatedNonStreamingDeclarativeShadowRoot(
+@@ -4511,7 +5041,8 @@ bool Element::AttachDeprecatedNonStreamingDeclarativeShadowRoot(
    // host element, mode equal to declarative shadow mode, and delegates focus
    // equal to declarative shadow delegates focus. If an exception was thrown by
    // attach a shadow root, catch it, and ignore the exception.
@@ -682,7 +701,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..59bbe53155ccf5045925d91a12741301
      template_element.SetDeclarativeShadowRootType(
          DeclarativeShadowRootType::kNone);
      GetDocument().AddConsoleMessage(MakeGarbageCollected<ConsoleMessage>(
-@@ -4520,8 +5039,17 @@ bool Element::AttachDeprecatedNonStreamingDeclarativeShadowRoot(
+@@ -4520,8 +5051,17 @@ bool Element::AttachDeprecatedNonStreamingDeclarativeShadowRoot(
      return false;
    }
  
@@ -702,7 +721,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..59bbe53155ccf5045925d91a12741301
    // 13.1. Set declarative shadow host element's shadow host's "is declarative
    // shadow root" property to true.
    shadow_root.SetIsDeclarativeShadowRoot(true);
-@@ -4550,7 +5078,9 @@ ShadowRoot& Element::AttachShadowRootInternal(
+@@ -4550,7 +5090,9 @@ ShadowRoot& Element::AttachShadowRootInternal(
      ShadowRootType type,
      FocusDelegation focus_delegation,
      SlotAssignmentMode slot_assignment_mode,
@@ -713,7 +732,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..59bbe53155ccf5045925d91a12741301
    // SVG <use> is a special case for using this API to create a closed shadow
    // root.
    DCHECK(CanAttachShadowRoot() || IsA<SVGUseElement>(*this));
-@@ -4579,6 +5109,8 @@ ShadowRoot& Element::AttachShadowRootInternal(
+@@ -4579,6 +5121,8 @@ ShadowRoot& Element::AttachShadowRootInternal(
    shadow_root.SetIsDeclarativeShadowRoot(false);
  
    shadow_root.SetRegistry(registry);
@@ -722,7 +741,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..59bbe53155ccf5045925d91a12741301
  
    // 7. If this’s custom element state is "precustomized" or "custom", then set
    // shadow’s available to element internals to true.
-@@ -4709,6 +5241,10 @@ void Element::ChildrenChanged(const ChildrenChange& change) {
+@@ -4709,6 +5253,10 @@ void Element::ChildrenChanged(const ChildrenChange& change) {
      }
    }
  
@@ -733,7 +752,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..59bbe53155ccf5045925d91a12741301
    if (ShadowRoot* shadow_root = GetShadowRoot()) {
      shadow_root->SetNeedsAssignmentRecalc();
    }
-@@ -5720,7 +6256,7 @@ void Element::SetInnerHTMLInternal(const String& html,
+@@ -5720,7 +6268,7 @@ void Element::SetInnerHTMLInternal(const String& html,
      setTextContent(html);
    } else {
      if (DocumentFragment* fragment = CreateFragmentForInnerOuterHTML(
@@ -742,7 +761,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..59bbe53155ccf5045925d91a12741301
              include_shadow_roots, exception_state)) {
        ContainerNode* container = this;
        if (auto* template_element = DynamicTo<HTMLTemplateElement>(*this)) {
-@@ -5760,6 +6296,20 @@ String Element::getInnerHTML(const GetInnerHTMLOptions* options) const {
+@@ -5760,6 +6308,20 @@ String Element::getInnerHTML(const GetInnerHTMLOptions* options) const {
        include_closed_roots);
  }
  
@@ -763,7 +782,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..59bbe53155ccf5045925d91a12741301
  void Element::setOuterHTML(const String& html,
                             ExceptionState& exception_state) {
    Node* p = parentNode();
-@@ -5783,7 +6333,7 @@ void Element::setOuterHTML(const String& html,
+@@ -5783,7 +6345,7 @@ void Element::setOuterHTML(const String& html,
    Node* next = nextSibling();
  
    DocumentFragment* fragment = CreateFragmentForInnerOuterHTML(
@@ -772,7 +791,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..59bbe53155ccf5045925d91a12741301
        /*include_shadow_roots=*/false, exception_state);
    if (exception_state.HadException()) {
      return;
-@@ -5994,7 +6544,7 @@ void Element::insertAdjacentHTML(const String& where,
+@@ -5994,7 +6556,7 @@ void Element::insertAdjacentHTML(const String& where,
  
    // Step 3 of http://domparsing.spec.whatwg.org/#insertadjacenthtml()
    DocumentFragment* fragment = CreateFragmentForInnerOuterHTML(
@@ -781,7 +800,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..59bbe53155ccf5045925d91a12741301
        /*include_shadow_roots=*/false, exception_state);
    if (!fragment) {
      return;
-@@ -8377,9 +8927,34 @@ FocusgroupFlags Element::GetFocusgroupFlags() const {
+@@ -8377,9 +8939,34 @@ FocusgroupFlags Element::GetFocusgroupFlags() const {
  }
  
  bool Element::checkVisibility(CheckVisibilityOptions* options) const {
@@ -818,7 +837,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..59bbe53155ccf5045925d91a12741301
    DisplayLockUtilities::ScopedForcedUpdate force_locks(
        this, DisplayLockContext::ForcedPhase::kStyleAndLayoutTree,
        /*include_self=*/false, /*only_cv_auto=*/true,
-@@ -8396,7 +8971,9 @@ bool Element::checkVisibility(CheckVisibilityOptions* options) const {
+@@ -8396,7 +8983,9 @@ bool Element::checkVisibility(CheckVisibilityOptions* options) const {
    }
  
    DCHECK(options);
@@ -829,7 +848,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..59bbe53155ccf5045925d91a12741301
        style->Visibility() != EVisibility::kVisible) {
      return false;
    }
-@@ -8415,7 +8992,9 @@ bool Element::checkVisibility(CheckVisibilityOptions* options) const {
+@@ -8415,7 +9004,9 @@ bool Element::checkVisibility(CheckVisibilityOptions* options) const {
      }
  
      // Check for opacity:0
@@ -840,7 +859,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..59bbe53155ccf5045925d91a12741301
        if (style = ancestor.GetComputedStyle(); style) {
          if (style->Opacity() == 0.f) {
            return false;
-@@ -8850,4 +9429,10 @@ Element* Element::ImplicitAnchorElement() {
+@@ -8850,4 +9441,10 @@ Element* Element::ImplicitAnchorElement() {
    return nullptr;
  }
  
