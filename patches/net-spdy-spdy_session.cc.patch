@@ -1,0 +1,25 @@
+diff --git a/net/spdy/spdy_session.cc b/net/spdy/spdy_session.cc
+index 54521afee77381e12e942bc49e811d96b0cb73b5..2b342940052afe6ed3c605833ede1929c6bba83d 100644
+--- a/net/spdy/spdy_session.cc
++++ b/net/spdy/spdy_session.cc
+@@ -874,7 +874,10 @@
+       enable_priority_update_(enable_priority_update),
+       max_concurrent_streams_(kInitialMaxConcurrentStreams),
+       max_concurrent_pushed_streams_(
+-          initial_settings.at(spdy::SETTINGS_MAX_CONCURRENT_STREAMS)),
++          base::Contains(initial_settings,
++                         spdy::SETTINGS_MAX_CONCURRENT_STREAMS)
++              ? initial_settings.at(spdy::SETTINGS_MAX_CONCURRENT_STREAMS)
++              : kSpdyMaxConcurrentPushedStreams),
+       last_read_time_(time_func()),
+       session_max_recv_window_size_(session_max_recv_window_size),
+       session_max_queued_capped_frames_(session_max_queued_capped_frames),
+@@ -904,8 +907,6 @@
+   });
+ 
+   DCHECK(base::Contains(initial_settings_, spdy::SETTINGS_HEADER_TABLE_SIZE));
+-  DCHECK(
+-      base::Contains(initial_settings_, spdy::SETTINGS_MAX_CONCURRENT_STREAMS));
+   DCHECK(base::Contains(initial_settings_, spdy::SETTINGS_INITIAL_WINDOW_SIZE));
+ 
+   if (greased_http2_frame_) {

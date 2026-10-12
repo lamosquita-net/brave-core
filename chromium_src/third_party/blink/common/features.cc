@@ -47,9 +47,11 @@ OVERRIDE_FEATURE_DEFAULT_STATES({{
 }});
 
 // Allow certain client hints in request header.
+// FlyWeb: on (F4.8). Chrome sends Sec-CH-UA, -Mobile and -Platform with every
+// request; without them bot managers (Akamai, Cloudflare) block or challenge.
 BASE_FEATURE(kAllowCertainClientHints,
              "AllowCertainClientHints",
-             base::FEATURE_DISABLED_BY_DEFAULT);
+             base::FEATURE_ENABLED_BY_DEFAULT);
 
 // Clamp platform version client hint's patch field.
 // Platform version client hint is only sent when requested and when the

@@ -8,6 +8,7 @@
 #include "base/check_op.h"
 #include "base/command_line.h"
 #include "base/strings/stringprintf.h"
+#include "base/strings/string_number_conversions.h"
 #include "base/version.h"
 #include "components/embedder_support/switches.h"
 #include "third_party/blink/public/common/features.h"
@@ -42,6 +43,29 @@ blink::UserAgentMetadata GetUserAgentMetadata(const PrefService* pref_service) {
   if (command_line->HasSwitch(kUserAgent)) {
     return metadata;
   }
+  // FlyWeb (F4.8): the client hints declare the engine level, built the way
+  // Chromium builds them for that version (the GREASE brand is seeded by the
+  // major version), so Sec-CH-UA, navigator.userAgentData and the User-Agent
+  // agree. Every caller goes through here: the request headers
+  // (client_hints::ClientHints) and the renderer (ContentBrowserClient).
+  const std::string declared_major =
+      base::NumberToString(version_info::constants::kFlyWebEngineLevel);
+  const std::string declared_full =
+      version_info::constants::kFlyWebEngineFullVersion;
+  bool enable_updated_grease_by_policy = true;
+  if (pref_service &&
+      pref_service->HasPrefPath(
+          policy::policy_prefs::kUserAgentClientHintsGREASEUpdateEnabled)) {
+    enable_updated_grease_by_policy = pref_service->GetBoolean(
+        policy::policy_prefs::kUserAgentClientHintsGREASEUpdateEnabled);
+  }
+  metadata.brand_version_list = GetUserAgentBrandList(
+      declared_major, enable_updated_grease_by_policy, declared_full,
+      blink::UserAgentBrandVersionType::kMajorVersion);
+  metadata.brand_full_version_list = GetUserAgentBrandList(
+      declared_major, enable_updated_grease_by_policy, declared_full,
+      blink::UserAgentBrandVersionType::kFullVersion);
+  metadata.full_version = declared_full;
   if (base::FeatureList::IsEnabled(
           blink::features::kClampPlatformVersionClientHint)) {
     // Clamp platform version
