@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/probe/core_probes.pidl b/third_party/blink/renderer/core/probe/core_probes.pidl
-index 794db0a57446f3f69f8f9771c628134a4b632ac6..cb566b9f6b73f5af56d465913dfcd62d07a45d4f 100644
+index 794db0a57446f3f69f8f9771c628134a4b632ac6..b8d0599f25b45f268b8c18c9ab22b6f5b3d7d178 100644
 --- a/third_party/blink/renderer/core/probe/core_probes.pidl
 +++ b/third_party/blink/renderer/core/probe/core_probes.pidl
 @@ -162,7 +162,7 @@ interface CoreProbes {
@@ -11,3 +11,12 @@ index 794db0a57446f3f69f8f9771c628134a4b632ac6..cb566b9f6b73f5af56d465913dfcd62d
    RecalculateStyle(Document* document);
    UpdateLayout(Document* document);
    ExecuteScript([Keep] ExecutionContext* context, const v8::Local<v8::Context>& v8_context, const String& script_url, int script_id);
+@@ -178,7 +178,7 @@ interface CoreProbes {
+   void ShouldForceCorsPreflight(ExecutionContext*, bool* result);
+   void ShouldBlockRequest(CoreProbeSink*, const KURL&, bool* result);
+   void ShouldBypassServiceWorker(ExecutionContext* context, bool* result);
+-  void ConsoleTimeStamp(ExecutionContext*, const String& title);
++  void ConsoleTimeStamp([Keep] v8::Isolate* isolate, v8::Local<v8::String> label);
+   void WillStartDebuggerTask(CoreProbeSink*);
+   void DidFinishDebuggerTask(CoreProbeSink*);
+   void LifecycleEvent([Keep] LocalFrame*, DocumentLoader*, const char* name, double timestamp);
