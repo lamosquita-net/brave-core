@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/bindings/v8_dom_wrapper.h b/third_party/blink/renderer/platform/bindings/v8_dom_wrapper.h
-index 72ec882dfeac3ba4b1cc4dd6c32b1477181a9c8a..51a79ce261a84d2851d154a5121de4c7fc171345 100644
+index 72ec882dfeac3ba4b1cc4dd6c32b1477181a9c8a..79f68f50352296fd7e291b10937cd3962562d399 100644
 --- a/third_party/blink/renderer/platform/bindings/v8_dom_wrapper.h
 +++ b/third_party/blink/renderer/platform/bindings/v8_dom_wrapper.h
 @@ -33,7 +33,6 @@
@@ -10,6 +10,15 @@ index 72ec882dfeac3ba4b1cc4dd6c32b1477181a9c8a..51a79ce261a84d2851d154a5121de4c7
  #include "third_party/blink/renderer/platform/bindings/dom_data_store.h"
  #include "third_party/blink/renderer/platform/bindings/runtime_call_stats.h"
  #include "third_party/blink/renderer/platform/bindings/script_wrappable.h"
+@@ -55,7 +54,7 @@ class V8DOMWrapper {
+   PLATFORM_EXPORT static v8::MaybeLocal<v8::Object> CreateWrapper(
+       ScriptState*,
+       const WrapperTypeInfo*);
+-  PLATFORM_EXPORT static bool IsWrapper(v8::Isolate*, v8::Local<v8::Value>);
++  PLATFORM_EXPORT static bool IsWrapper(v8::Isolate*, v8::Local<v8::Object>);
+ 
+   // Associates the given ScriptWrappable with the given |wrapper| if the
+   // ScriptWrappable is not yet associated with any wrapper.  Returns the
 @@ -66,59 +65,31 @@ class V8DOMWrapper {
                               ScriptWrappable*,
                               const WrapperTypeInfo*,
@@ -51,7 +60,7 @@ index 72ec882dfeac3ba4b1cc4dd6c32b1477181a9c8a..51a79ce261a84d2851d154a5121de4c7
 +  // may not be a Blink's wrapper object.  In order to make sure of it, use
 +  // IsWrapper() instead.
 +  PLATFORM_EXPORT static bool HasInternalFieldsSet(v8::Isolate*,
-+                                                   v8::Local<v8::Value>);
++                                                   v8::Local<v8::Object>);
  };
  
 -inline void V8DOMWrapper::SetNativeInfoInternal(

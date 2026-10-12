@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/bindings/core/v8/v8_initializer.cc b/third_party/blink/renderer/bindings/core/v8/v8_initializer.cc
-index 4a0ae5a492e35b8f11d9f4f98083a63050e0bbe0..3a38bad77b4a096bb285347c973c60c1f78bd628 100644
+index 4a0ae5a492e35b8f11d9f4f98083a63050e0bbe0..d5a76dd7cdf3394d7ada12b859025f6f1a058677 100644
 --- a/third_party/blink/renderer/bindings/core/v8/v8_initializer.cc
 +++ b/third_party/blink/renderer/bindings/core/v8/v8_initializer.cc
 @@ -78,6 +78,7 @@
@@ -10,6 +10,21 @@ index 4a0ae5a492e35b8f11d9f4f98083a63050e0bbe0..3a38bad77b4a096bb285347c973c60c1
  #include "third_party/blink/renderer/platform/bindings/source_location.h"
  #include "third_party/blink/renderer/platform/bindings/v8_dom_wrapper.h"
  #include "third_party/blink/renderer/platform/bindings/v8_per_context_data.h"
+@@ -273,10 +274,10 @@ static void PromiseRejectHandler(v8::PromiseRejectMessage data,
+   ExecutionContext* context = ExecutionContext::From(script_state);
+ 
+   v8::Local<v8::Value> exception = data.GetValue();
+-  if (V8DOMWrapper::IsWrapper(isolate, exception)) {
+-    // Try to get the stack & location from a wrapped exception object (e.g.
+-    // DOMException).
+-    DCHECK(exception->IsObject());
++  if (V8PerIsolateData::From(isolate)->HasInstance(
++          DOMException::GetStaticWrapperTypeInfo(), exception)) {
++    // Try to get the stack & location from a wrapped DOMException object.
++    CHECK(exception->IsObject());
+     auto private_error = V8PrivateProperty::GetSymbol(
+         isolate, kPrivatePropertyDOMExceptionError);
+     v8::Local<v8::Value> error;
 @@ -367,10 +368,14 @@ static void PromiseRejectHandlerInWorker(v8::PromiseRejectMessage data) {
  static void FailedAccessCheckCallbackInMainThread(v8::Local<v8::Object> holder,
                                                    v8::AccessType type,

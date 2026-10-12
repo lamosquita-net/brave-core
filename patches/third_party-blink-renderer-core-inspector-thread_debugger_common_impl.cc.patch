@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/inspector/thread_debugger_common_impl.cc b/third_party/blink/renderer/core/inspector/thread_debugger_common_impl.cc
-index addc162ef20a40a301e65d871d4d8ce85230a58e..f5982e83f1aeda19d79e83449e709c1e3e576834 100644
+index addc162ef20a40a301e65d871d4d8ce85230a58e..028f1ee72d9cf51c4c04c397bd8f8c4d6d0b305c 100644
 --- a/third_party/blink/renderer/core/inspector/thread_debugger_common_impl.cc
 +++ b/third_party/blink/renderer/core/inspector/thread_debugger_common_impl.cc
 @@ -37,6 +37,7 @@
@@ -287,7 +287,7 @@ index addc162ef20a40a301e65d871d4d8ce85230a58e..f5982e83f1aeda19d79e83449e709c1e
  
    v8::Local<v8::Value> value_v8_object =
        node_v8_object
-@@ -365,39 +412,151 @@ std::unique_ptr<v8_inspector::WebDriverValue> DeepSerializeNode(
+@@ -365,39 +412,160 @@ std::unique_ptr<v8_inspector::WebDriverValue> DeepSerializeNode(
    std::unique_ptr<v8_inspector::StringBuffer> type_string_buffer =
        ToV8InspectorStringBuffer(type_string_view);
  
@@ -410,25 +410,33 @@ index addc162ef20a40a301e65d871d4d8ce85230a58e..f5982e83f1aeda19d79e83449e709c1e
 +        std::move(error_message));
 +  }
 +
++  if (!v8_value->IsObject()) {
++    return nullptr;
++  }
++  v8::Local<v8::Object> object = v8_value.As<v8::Object>();
++
    // Serialize according to https://w3c.github.io/webdriver-bidi.
-   if (Node* node = V8Node::ToWrappable(isolate_, v8_value)) {
+-  if (Node* node = V8Node::ToWrappable(isolate_, v8_value)) {
 -    return DeepSerializeNode(node, isolate_);
++  if (Node* node = V8Node::ToWrappable(isolate_, object)) {
 +    return std::make_unique<v8_inspector::DeepSerializationResult>(
 +        DeepSerializeNode(node, isolate_, max_node_depth, include_shadow_tree));
    }
  
    // Serialize as a regular array
    if (HTMLCollection* html_collection =
-           V8HTMLCollection::ToWrappable(isolate_, v8_value)) {
+-          V8HTMLCollection::ToWrappable(isolate_, v8_value)) {
 -    return DeepSerializeHtmlCollection(html_collection, isolate_, max_depth);
++          V8HTMLCollection::ToWrappable(isolate_, object)) {
 +    return std::make_unique<v8_inspector::DeepSerializationResult>(
 +        DeepSerializeHtmlCollection(html_collection, isolate_, max_depth,
 +                                    max_node_depth, include_shadow_tree));
    }
  
    // Serialize as a regular array
-   if (NodeList* node_list = V8NodeList::ToWrappable(isolate_, v8_value)) {
+-  if (NodeList* node_list = V8NodeList::ToWrappable(isolate_, v8_value)) {
 -    return DeepSerializeNodeList(node_list, isolate_, max_depth);
++  if (NodeList* node_list = V8NodeList::ToWrappable(isolate_, object)) {
 +    return std::make_unique<v8_inspector::DeepSerializationResult>(
 +        DeepSerializeNodeList(node_list, isolate_, max_depth, max_node_depth,
 +                              include_shadow_tree));
@@ -437,21 +445,26 @@ index addc162ef20a40a301e65d871d4d8ce85230a58e..f5982e83f1aeda19d79e83449e709c1e
 -  if (V8Window::HasInstance(isolate_, v8_value)) {
 -    return std::make_unique<v8_inspector::WebDriverValue>(
 -        ToV8InspectorStringBuffer("window"));
-+  if (DOMWindow* window = V8Window::ToWrappable(isolate_, v8_value)) {
++  if (DOMWindow* window = V8Window::ToWrappable(isolate_, object)) {
 +    return std::make_unique<v8_inspector::DeepSerializationResult>(
 +        DeepSerializeWindow(window, isolate_));
    }
  
-   if (V8DOMWrapper::IsWrapper(isolate_, v8_value)) {
+-  if (V8DOMWrapper::IsWrapper(isolate_, v8_value)) {
 -    return std::make_unique<v8_inspector::WebDriverValue>(
 -        ToV8InspectorStringBuffer("platformobject"));
++  // TODO(caseq): consider object->IsApiWrapper() + checking for all kinds
++  // of (Typed)?Array(Buffers)?. IsApiWrapper() returns true for these, but
++  // we want them to fall through to default serialization and not be treated
++  // as "platform objects".
++  if (V8DOMWrapper::IsWrapper(isolate_, object)) {
 +    return std::make_unique<v8_inspector::DeepSerializationResult>(
 +        std::make_unique<v8_inspector::DeepSerializedValue>(
 +            ToV8InspectorStringBuffer("platformobject")));
    }
  
    return nullptr;
-@@ -492,15 +651,7 @@ double ThreadDebuggerCommonImpl::currentTimeMS() {
+@@ -492,15 +660,7 @@ double ThreadDebuggerCommonImpl::currentTimeMS() {
  
  bool ThreadDebuggerCommonImpl::isInspectableHeapObject(
      v8::Local<v8::Object> object) {
