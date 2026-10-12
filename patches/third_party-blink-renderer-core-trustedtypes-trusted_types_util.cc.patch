@@ -1,0 +1,27 @@
+diff --git a/third_party/blink/renderer/core/trustedtypes/trusted_types_util.cc b/third_party/blink/renderer/core/trustedtypes/trusted_types_util.cc
+index 1686af8efc9796cdc0b9d89c30978f0cb003a07e..845969884c2c78429f1562effdb5ad21f54afa80 100644
+--- a/third_party/blink/renderer/core/trustedtypes/trusted_types_util.cc
++++ b/third_party/blink/renderer/core/trustedtypes/trusted_types_util.cc
+@@ -116,7 +116,7 @@ const char* GetMessage(TrustedTypeViolationKind kind) {
+ String GetSamplePrefix(const ExceptionContext& exception_context,
+                        const String& value) {
+   const char* interface_name = exception_context.GetClassName();
+-  const char* property_name = exception_context.GetPropertyName();
++  const String& property_name = exception_context.GetPropertyName();
+ 
+   // We have two sample formats, one for eval and one for assignment.
+   // If we don't have the required values being passed in, just leave the
+@@ -130,11 +130,11 @@ String GetSamplePrefix(const ExceptionContext& exception_context,
+                                                             : "eval");
+   } else if ((strcmp("Worker", interface_name) == 0 ||
+               strcmp("SharedWorker", interface_name) == 0) &&
+-             !property_name) {
++             property_name.IsNull()) {
+     // Worker/SharedWorker constructor has nullptr as property_name.
+     sample_prefix.Append(interface_name);
+     sample_prefix.Append(" constructor");
+-  } else if (interface_name && property_name) {
++  } else if (interface_name && !property_name.IsNull()) {
+     sample_prefix.Append(interface_name);
+     sample_prefix.Append(" ");
+     sample_prefix.Append(property_name);

@@ -1,0 +1,21 @@
+diff --git a/third_party/blink/renderer/platform/bindings/v8_binding.h b/third_party/blink/renderer/platform/bindings/v8_binding.h
+index c063b6363e07935c9f521e860bcee9f1879e7312..0b9048312bbb5ba5131638692670a58fdde6f018 100644
+--- a/third_party/blink/renderer/platform/bindings/v8_binding.h
++++ b/third_party/blink/renderer/platform/bindings/v8_binding.h
+@@ -209,6 +209,16 @@ inline AtomicString ToCoreAtomicString(v8::Local<v8::String> value) {
+   return ToBlinkString<AtomicString>(value, kExternalize);
+ }
+ 
++inline AtomicString ToCoreAtomicString(v8::Local<v8::Name> value) {
++  DCHECK(!value.IsEmpty());
++  // TODO(crbug.com/1476064): Support converting `value` when it is a symbol
++  // instead of a string.
++  if (!value->IsString()) {
++    return AtomicString();
++  }
++  return ToBlinkString<AtomicString>(value.As<v8::String>(), kExternalize);
++}
++
+ // This method will return a null String if the v8::Value does not contain a
+ // v8::String.  It will not call ToString() on the v8::Value. If you want
+ // ToString() to be called, please use the TONATIVE_FOR_V8STRINGRESOURCE_*()
