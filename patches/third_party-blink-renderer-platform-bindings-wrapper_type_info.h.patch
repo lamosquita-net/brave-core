@@ -1,8 +1,8 @@
 diff --git a/third_party/blink/renderer/platform/bindings/wrapper_type_info.h b/third_party/blink/renderer/platform/bindings/wrapper_type_info.h
-index 1ba218e8924fe17f584e4aa4e71d05f3619cce32..7ea761cde843a346d7008730fcfaa37cda6ac531 100644
+index 1ba218e8924fe17f584e4aa4e71d05f3619cce32..7251975429e3566f8bc4d293f4e5fb0fe55ceb05 100644
 --- a/third_party/blink/renderer/platform/bindings/wrapper_type_info.h
 +++ b/third_party/blink/renderer/platform/bindings/wrapper_type_info.h
-@@ -41,7 +41,6 @@
+@@ -41,19 +41,11 @@
  
  namespace blink {
  
@@ -10,7 +10,21 @@ index 1ba218e8924fe17f584e4aa4e71d05f3619cce32..7ea761cde843a346d7008730fcfaa37c
  class DOMWrapperWorld;
  class ScriptWrappable;
  
-@@ -89,6 +88,7 @@ struct PLATFORM_EXPORT WrapperTypeInfo final {
+-static const int kV8DOMWrapperTypeIndex =
+-    static_cast<int>(gin::kWrapperInfoIndex);
+-static const int kV8DOMWrapperObjectIndex =
+-    static_cast<int>(gin::kEncodedValueIndex);
+-static const int kV8DefaultWrapperInternalFieldCount =
+-    static_cast<int>(gin::kNumberOfInternalFields);
+-// The value of the following field isn't used (only its presence), hence no
+-// corresponding Index constant exists for it.
+-static const int kV8PrototypeInternalFieldcount = 1;
++static constexpr v8::CppHeapPointerTag kDOMWrappersTag =
++    v8::CppHeapPointerTag::kDefaultTag;
+ 
+ // This struct provides a way to store a bunch of information that is helpful
+ // when unwrapping v8 objects. Each v8 bindings class has exactly one static
+@@ -89,6 +81,7 @@ struct PLATFORM_EXPORT WrapperTypeInfo final {
      kIdlBufferSourceType,
      kIdlObservableArray,
      kIdlSyncIterator,
@@ -18,7 +32,7 @@ index 1ba218e8924fe17f584e4aa4e71d05f3619cce32..7ea761cde843a346d7008730fcfaa37c
      kCustomWrappableKind,
    };
  
-@@ -109,9 +109,8 @@ struct PLATFORM_EXPORT WrapperTypeInfo final {
+@@ -109,9 +102,8 @@ struct PLATFORM_EXPORT WrapperTypeInfo final {
      return false;
    }
  
@@ -30,7 +44,7 @@ index 1ba218e8924fe17f584e4aa4e71d05f3619cce32..7ea761cde843a346d7008730fcfaa37c
    }
  
    // Returns a v8::Template of interface object, namespace object, or the
-@@ -122,6 +121,7 @@ struct PLATFORM_EXPORT WrapperTypeInfo final {
+@@ -122,6 +114,7 @@ struct PLATFORM_EXPORT WrapperTypeInfo final {
    // - kIdlCallbackInterface: v8::FunctionTemplate of legacy callback
    //       interface object
    // - kIdlSyncIterator: v8::FunctionTemplate of default iterator object
@@ -38,41 +52,55 @@ index 1ba218e8924fe17f584e4aa4e71d05f3619cce32..7ea761cde843a346d7008730fcfaa37c
    // - kCustomWrappableKind: v8::FunctionTemplate
    v8::Local<v8::Template> GetV8ClassTemplate(
        v8::Isolate* isolate,
-@@ -165,10 +165,10 @@ struct PLATFORM_EXPORT WrapperTypeInfo final {
+@@ -147,6 +140,15 @@ struct PLATFORM_EXPORT WrapperTypeInfo final {
+            kInheritFromActiveScriptWrappable;
+   }
+ 
++  static bool HasLegacyInternalFieldsSet(v8::Local<v8::Object> object) {
++    for (int i = 0, n = object->InternalFieldCount(); i < n; ++i) {
++      if (object->GetAlignedPointerFromInternalField(i)) {
++        return true;
++      }
++    }
++    return false;
++  }
++
+   // This field must be the first member of the struct WrapperTypeInfo.
+   // See also static_assert() in .cpp file.
+   const gin::GinEmbedder gin_embedder;
+@@ -164,63 +166,21 @@ struct PLATFORM_EXPORT WrapperTypeInfo final {
+   unsigned idl_definition_kind : 3;  // IdlDefinitionKind
  };
  
- template <typename T, int offset>
+-template <typename T, int offset>
 -inline T* GetInternalField(const v8::TracedReference<v8::Object>& global) {
 -  DCHECK_LT(offset, v8::Object::InternalFieldCount(global));
-+inline T* GetInternalField(const v8::TracedReference<v8::Object>& wrapper) {
-+  DCHECK_LT(offset, v8::Object::InternalFieldCount(wrapper));
-   return reinterpret_cast<T*>(
+-  return reinterpret_cast<T*>(
 -      v8::Object::GetAlignedPointerFromInternalField(global, offset));
-+      v8::Object::GetAlignedPointerFromInternalField(wrapper, offset));
- }
- 
- template <typename T, int offset>
-@@ -179,48 +179,29 @@ inline T* GetInternalField(v8::Local<v8::Object> wrapper) {
- }
- 
- template <typename T, int offset>
--inline T* GetInternalField(v8::Object* wrapper) {
-+inline T* GetInternalField(v8::Isolate* isolate,
-+                           v8::Local<v8::Object> wrapper) {
-   DCHECK_LT(offset, wrapper->InternalFieldCount());
-   return reinterpret_cast<T*>(
+-}
+-
+-template <typename T, int offset>
+-inline T* GetInternalField(v8::Local<v8::Object> wrapper) {
+-  DCHECK_LT(offset, wrapper->InternalFieldCount());
+-  return reinterpret_cast<T*>(
 -      wrapper->GetAlignedPointerFromInternalField(offset));
-+      wrapper->GetAlignedPointerFromInternalField(isolate, offset));
- }
- 
+-}
+-
+-template <typename T, int offset>
+-inline T* GetInternalField(v8::Object* wrapper) {
+-  DCHECK_LT(offset, wrapper->InternalFieldCount());
+-  return reinterpret_cast<T*>(
+-      wrapper->GetAlignedPointerFromInternalField(offset));
+-}
+-
  // The return value can be null if |wrapper| is a global proxy, which points to
  // nothing while a navigation.
  inline ScriptWrappable* ToScriptWrappable(
 +    v8::Isolate* isolate,
      const v8::TracedReference<v8::Object>& wrapper) {
-   return GetInternalField<ScriptWrappable, kV8DOMWrapperObjectIndex>(wrapper);
- }
- 
+-  return GetInternalField<ScriptWrappable, kV8DOMWrapperObjectIndex>(wrapper);
+-}
+-
 -inline ScriptWrappable* ToScriptWrappable(v8::Local<v8::Object> wrapper) {
 -  return GetInternalField<ScriptWrappable, kV8DOMWrapperObjectIndex>(wrapper);
 -}
@@ -92,17 +120,17 @@ index 1ba218e8924fe17f584e4aa4e71d05f3619cce32..7ea761cde843a346d7008730fcfaa37c
 -
 -inline void* ToUntypedWrappable(v8::Local<v8::Object> wrapper) {
 -  return GetInternalField<void, kV8DOMWrapperObjectIndex>(wrapper);
-+inline ScriptWrappable* ToScriptWrappable(v8::Isolate* isolate,
-+                                          v8::Local<v8::Object> wrapper) {
-+  return GetInternalField<ScriptWrappable, kV8DOMWrapperObjectIndex>(isolate,
-+                                                                     wrapper);
++  return v8::Object::Unwrap<kDOMWrappersTag, ScriptWrappable>(isolate, wrapper);
  }
  
 -inline const WrapperTypeInfo* ToWrapperTypeInfo(
 -    const v8::TracedReference<v8::Object>& wrapper) {
 -  return GetInternalField<WrapperTypeInfo, kV8DOMWrapperTypeIndex>(wrapper);
--}
--
++inline ScriptWrappable* ToScriptWrappable(v8::Isolate* isolate,
++                                          v8::Local<v8::Object> wrapper) {
++  return v8::Object::Unwrap<kDOMWrappersTag, ScriptWrappable>(isolate, wrapper);
+ }
+ 
 -inline const WrapperTypeInfo* ToWrapperTypeInfo(v8::Local<v8::Object> wrapper) {
 -  return GetInternalField<WrapperTypeInfo, kV8DOMWrapperTypeIndex>(wrapper);
 -}

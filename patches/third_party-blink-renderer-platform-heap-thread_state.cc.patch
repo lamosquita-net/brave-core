@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/heap/thread_state.cc b/third_party/blink/renderer/platform/heap/thread_state.cc
-index 854859114edbf75b446d7997b819ccecfec3efcd..7155786b1145fad63e4086d675b6fdd1321f29fb 100644
+index 854859114edbf75b446d7997b819ccecfec3efcd..f82cc95671df550895ea03731f878db74db5166d 100644
 --- a/third_party/blink/renderer/platform/heap/thread_state.cc
 +++ b/third_party/blink/renderer/platform/heap/thread_state.cc
 @@ -8,7 +8,9 @@
@@ -75,6 +75,17 @@ index 854859114edbf75b446d7997b819ccecfec3efcd..7155786b1145fad63e4086d675b6fdd1
    isolate_->SetEmbedderRootsHandler(embedder_roots_handler_.get());
  }
  
+@@ -134,8 +135,8 @@ ThreadState::ThreadState(v8::Platform* platform)
+     : cpp_heap_(v8::CppHeap::Create(
+           platform,
+           {CustomSpaces::CreateCustomSpaces(),
+-           v8::WrapperDescriptor(kV8DOMWrapperTypeIndex,
+-                                 kV8DOMWrapperObjectIndex,
++           v8::WrapperDescriptor(gin::kWrapperInfoIndex,
++                                 gin::kEncodedValueIndex,
+                                  gin::GinEmbedder::kEmbedderBlink)})),
+       heap_handle_(cpp_heap_->GetHeapHandle()),
+       thread_id_(CurrentThread()) {}
 @@ -164,7 +165,7 @@ void ThreadState::NotifyGarbageCollection(v8::GCType type,
      // required for testing code that cannot use GC internals but rather has
      // to rely on window.gc(). Only schedule additional GCs if the last GC was

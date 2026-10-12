@@ -1,8 +1,26 @@
 diff --git a/third_party/blink/renderer/bindings/core/v8/generated_code_helper.cc b/third_party/blink/renderer/bindings/core/v8/generated_code_helper.cc
-index 5dd3876fc334c2d4ead63f500a6e0f8b6863fceb..93a2a8c6fb111595fb94840144e193e710033d22 100644
+index 5dd3876fc334c2d4ead63f500a6e0f8b6863fceb..d03edce1b85aca633c29da71238846c3f8a8198b 100644
 --- a/third_party/blink/renderer/bindings/core/v8/generated_code_helper.cc
 +++ b/third_party/blink/renderer/bindings/core/v8/generated_code_helper.cc
-@@ -163,7 +163,9 @@ void SetupIDLSyncIteratorTemplate(
+@@ -119,8 +119,6 @@ void SetupIDLInterfaceTemplate(
+   prototype_template->Set(
+       v8::Symbol::GetToStringTag(isolate), class_string,
+       static_cast<v8::PropertyAttribute>(v8::ReadOnly | v8::DontEnum));
+-
+-  instance_template->SetInternalFieldCount(kV8DefaultWrapperInternalFieldCount);
+ }
+ 
+ void SetupIDLNamespaceTemplate(
+@@ -151,8 +149,6 @@ void SetupIDLObservableArrayBackingListTemplate(
+     v8::Local<v8::FunctionTemplate> interface_template) {
+   interface_template->SetClassName(
+       V8AtomicString(isolate, wrapper_type_info->interface_name));
+-
+-  instance_template->SetInternalFieldCount(kV8DefaultWrapperInternalFieldCount);
+ }
+ 
+ void SetupIDLSyncIteratorTemplate(
+@@ -163,7 +159,9 @@ void SetupIDLSyncIteratorTemplate(
      v8::Local<v8::FunctionTemplate> interface_template,
      v8::Intrinsic parent_intrinsic_prototype,
      const char* class_string) {
@@ -13,7 +31,25 @@ index 5dd3876fc334c2d4ead63f500a6e0f8b6863fceb..93a2a8c6fb111595fb94840144e193e7
           parent_intrinsic_prototype == v8::Intrinsic::kMapIteratorPrototype ||
           parent_intrinsic_prototype == v8::Intrinsic::kSetIteratorPrototype);
  
-@@ -404,7 +406,7 @@ void PerformAttributeSetCEReactionsReflect(
+@@ -193,8 +191,6 @@ void SetupIDLSyncIteratorTemplate(
+   prototype_template->Set(
+       v8::Symbol::GetToStringTag(isolate), v8_class_string,
+       static_cast<v8::PropertyAttribute>(v8::ReadOnly | v8::DontEnum));
+-
+-  instance_template->SetInternalFieldCount(kV8DefaultWrapperInternalFieldCount);
+ }
+ 
+ absl::optional<size_t> FindIndexInEnumStringTable(
+@@ -319,8 +315,6 @@ v8::MaybeLocal<v8::Value> CreateLegacyFactoryFunctionFunction(
+             .As<v8::FunctionTemplate>();
+     function_template->Inherit(interface_template);
+     function_template->SetClassName(V8AtomicString(isolate, func_name));
+-    function_template->InstanceTemplate()->SetInternalFieldCount(
+-        kV8DefaultWrapperInternalFieldCount);
+     per_isolate_data->AddV8Template(world, callback_key, function_template);
+   }
+ 
+@@ -404,7 +398,7 @@ void PerformAttributeSetCEReactionsReflect(
  
    CEReactionsScope ce_reactions_scope;
  

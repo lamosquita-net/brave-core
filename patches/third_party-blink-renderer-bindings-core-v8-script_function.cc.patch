@@ -1,8 +1,8 @@
 diff --git a/third_party/blink/renderer/bindings/core/v8/script_function.cc b/third_party/blink/renderer/bindings/core/v8/script_function.cc
-index b23d840d812a93a1b59d600f50b3709ad8452c5b..66dda89cbcdb28fc328e0110af1817d9e0c8ddc8 100644
+index b23d840d812a93a1b59d600f50b3709ad8452c5b..b3cefcbd5f5994f26aba51bd21715fbfdf1ee5e4 100644
 --- a/third_party/blink/renderer/bindings/core/v8/script_function.cc
 +++ b/third_party/blink/renderer/bindings/core/v8/script_function.cc
-@@ -4,14 +4,39 @@
+@@ -4,14 +4,36 @@
  
  #include "third_party/blink/renderer/bindings/core/v8/script_function.h"
  
@@ -19,9 +19,6 @@ index b23d840d812a93a1b59d600f50b3709ad8452c5b..66dda89cbcdb28fc328e0110af1817d9
 +void InstallCallableHolderTemplate(v8::Isolate*,
 +                                   const DOMWrapperWorld&,
 +                                   v8::Local<v8::Template> interface_template) {
-+  v8::Local<v8::ObjectTemplate> instance_template =
-+      interface_template.As<v8::FunctionTemplate>()->InstanceTemplate();
-+  instance_template->SetInternalFieldCount(kV8DefaultWrapperInternalFieldCount);
 +}
 +
 +const WrapperTypeInfo callable_holder_info = {
@@ -44,7 +41,7 @@ index b23d840d812a93a1b59d600f50b3709ad8452c5b..66dda89cbcdb28fc328e0110af1817d9
   public:
    static v8::Local<v8::Function> Create(ScriptState* script_state,
                                          ScriptFunction::Callable* callable) {
-@@ -20,7 +45,8 @@ class CallableHolder final : public CustomWrappable {
+@@ -20,7 +42,8 @@ class CallableHolder final : public CustomWrappable {
      // The wrapper is held alive by the CallHandlerInfo internally in V8 as long
      // as the function is alive.
      return v8::Function::New(script_state->GetContext(), CallCallback,
@@ -54,7 +51,7 @@ index b23d840d812a93a1b59d600f50b3709ad8452c5b..66dda89cbcdb28fc328e0110af1817d9
                               v8::ConstructorBehavior::kThrow)
          .ToLocalChecked();
    }
-@@ -29,7 +55,8 @@ class CallableHolder final : public CustomWrappable {
+@@ -29,7 +52,8 @@ class CallableHolder final : public CustomWrappable {
      RUNTIME_CALL_TIMER_SCOPE_DISABLED_BY_DEFAULT(args.GetIsolate(),
                                                   "Blink_CallCallback");
      v8::Local<v8::Object> data = v8::Local<v8::Object>::Cast(args.Data());
@@ -64,7 +61,7 @@ index b23d840d812a93a1b59d600f50b3709ad8452c5b..66dda89cbcdb28fc328e0110af1817d9
      ScriptState* script_state =
          ScriptState::From(args.GetIsolate()->GetCurrentContext());
      holder->callable_->CallRaw(script_state, args);
-@@ -43,14 +70,18 @@ class CallableHolder final : public CustomWrappable {
+@@ -43,14 +67,18 @@ class CallableHolder final : public CustomWrappable {
  
    void Trace(Visitor* visitor) const override {
      visitor->Trace(callable_);
@@ -85,7 +82,7 @@ index b23d840d812a93a1b59d600f50b3709ad8452c5b..66dda89cbcdb28fc328e0110af1817d9
  
  ScriptValue ScriptFunction::Callable::Call(ScriptState*, ScriptValue) {
    NOTREACHED();
-@@ -65,10 +96,9 @@ void ScriptFunction::Callable::CallRaw(
+@@ -65,10 +93,9 @@ void ScriptFunction::Callable::CallRaw(
    V8SetReturnValue(args, result.V8Value());
  }
  

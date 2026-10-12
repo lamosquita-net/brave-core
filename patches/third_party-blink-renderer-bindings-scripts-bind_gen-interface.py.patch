@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/bindings/scripts/bind_gen/interface.py b/third_party/blink/renderer/bindings/scripts/bind_gen/interface.py
-index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..b9c73887d8637c578cd2c65014044f2929448df9 100644
+index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..24710193fbb94048f27da2f3f54caa508e4df8da 100644
 --- a/third_party/blink/renderer/bindings/scripts/bind_gen/interface.py
 +++ b/third_party/blink/renderer/bindings/scripts/bind_gen/interface.py
 @@ -26,6 +26,7 @@ from .code_node import WeakDependencyNode
@@ -2949,7 +2949,25 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..b9c73887d8637c578cd2c65014044f29
          local_vars.extend([
              S("interface_function_template",
                ("v8::Local<v8::FunctionTemplate> "
-@@ -5661,8 +5444,9 @@ def make_property_entries_and_callback_defs(cg_context, attribute_entries,
+@@ -4922,14 +4705,9 @@ ${npo_prototype_template}->Set(
+     v8::Symbol::GetToStringTag(${isolate}),
+     V8AtomicString(${isolate}, "${interface.identifier}Properties"),
+     static_cast<v8::PropertyAttribute>(v8::ReadOnly | v8::DontEnum));
+-// Make the named properties object look like the global object.  Note that
+-// the named properties object is _not_ a prototype object, plus, we'd like
+-// the named properties object to behave just like the global object (= the
+-// wrapper object of the global object) from the point of view of named
+-// properties.
+-// https://webidl.spec.whatwg.org/#named-properties-object
+-${npo_prototype_template}->SetInternalFieldCount(
+-    kV8DefaultWrapperInternalFieldCount);
++// FlyWeb: no internal fields; LocalWindowProxy associates the named
++// properties object with the window through v8::Object::Wrap(), as upstream
++// does for WindowProperties (Chromium 04bd00feaa86).
+ """
+     local_vars.append(S("npo_interface_template", text))
+     local_vars.append(
+@@ -5661,8 +5439,9 @@ def make_property_entries_and_callback_defs(cg_context, attribute_entries,
          iterate(class_like.operation_groups, process_operation_group)
      if interface and interface.stringifier:
          iterate([interface.stringifier.operation], process_stringifier)
@@ -2961,7 +2979,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..b9c73887d8637c578cd2c65014044f29
      if collectionlike:
  
          def should_define(target):
-@@ -5741,6 +5525,46 @@ ${prototype_object}->Delete(
+@@ -5741,6 +5520,46 @@ ${prototype_object}->Delete(
      ${v8_context}, V8AtomicString(${isolate}, "constructor")).ToChecked();
  """))
  
@@ -3008,7 +3026,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..b9c73887d8637c578cd2c65014044f29
      collectionlike = interface and (interface.iterable or interface.maplike
                                      or interface.setlike)
      if collectionlike:
-@@ -5907,6 +5731,22 @@ def make_install_interface_template(cg_context, function_name, class_name,
+@@ -5907,6 +5726,22 @@ def make_install_interface_template(cg_context, function_name, class_name,
                "${interface_function_template});"),
              EmptyNode(),
          ])
@@ -3031,7 +3049,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..b9c73887d8637c578cd2c65014044f29
      elif cg_context.sync_iterator:
          if cg_context.sync_iterator.interface.iterable:
              parent_intrinsic_prototype = "v8::Intrinsic::kIteratorPrototype"
-@@ -6432,8 +6272,7 @@ def make_indexed_and_named_property_callbacks_and_install_node(cg_context):
+@@ -6432,8 +6267,7 @@ def make_indexed_and_named_property_callbacks_and_install_node(cg_context):
      install_node = SequenceNode()
  
      interface = cg_context.interface
@@ -3041,7 +3059,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..b9c73887d8637c578cd2c65014044f29
          return func_decls, func_defs, install_node
      props = interface.indexed_and_named_properties
  
-@@ -6450,26 +6289,33 @@ def make_indexed_and_named_property_callbacks_and_install_node(cg_context):
+@@ -6450,26 +6284,33 @@ def make_indexed_and_named_property_callbacks_and_install_node(cg_context):
      cg_context = cg_context.make_copy(
          v8_callback_type=CodeGenContext.V8_OTHER_CALLBACK)
  
@@ -3084,7 +3102,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..b9c73887d8637c578cd2c65014044f29
          impl_bridge = v8_bridge_class_name(
              most_derived_interface(
                  props.named_getter.owner, props.named_setter
-@@ -6514,19 +6360,25 @@ interface.indexed_and_named_properties.named_getter.extended_attributes:
+@@ -6514,19 +6355,25 @@ interface.indexed_and_named_properties.named_getter.extended_attributes:
  
      if props.own_indexed_getter or props.own_named_getter:
          add_callback(*make_indexed_property_getter_callback(
@@ -3116,7 +3134,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..b9c73887d8637c578cd2c65014044f29
  
      if props.indexed_getter or props.named_getter:
          impl_bridge = v8_bridge_class_name(
-@@ -6596,30 +6448,34 @@ def make_named_properties_object_callbacks_and_install_node(cg_context):
+@@ -6596,30 +6443,34 @@ def make_named_properties_object_callbacks_and_install_node(cg_context):
  
      func_defs = [
          make_named_props_obj_named_getter_callback(
@@ -3166,7 +3184,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..b9c73887d8637c578cd2c65014044f29
      text = """\
  // Named interceptors
  ${npo_prototype_template}->SetHandler(
-@@ -6688,7 +6544,7 @@ def make_cross_origin_property_callbacks_and_install_node(
+@@ -6688,7 +6539,7 @@ def make_cross_origin_property_callbacks_and_install_node(
                  attribute=attribute,
                  attribute_get=True,
                  v8_callback_type=(
@@ -3175,7 +3193,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..b9c73887d8637c578cd2c65014044f29
              get_value = callback_function_name(cgc, for_cross_origin=True)
              func_def = make_attribute_get_callback_def(cgc, get_value)
              callback_defs.extend([func_def, EmptyNode()])
-@@ -6698,7 +6554,7 @@ def make_cross_origin_property_callbacks_and_install_node(
+@@ -6698,7 +6549,7 @@ def make_cross_origin_property_callbacks_and_install_node(
                  attribute=attribute,
                  attribute_set=True,
                  v8_callback_type=(
@@ -3184,7 +3202,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..b9c73887d8637c578cd2c65014044f29
              set_value = callback_function_name(cgc, for_cross_origin=True)
              func_def = make_attribute_set_callback_def(cgc, set_value)
              callback_defs.extend([func_def, EmptyNode()])
-@@ -6751,33 +6607,41 @@ def make_cross_origin_property_callbacks_and_install_node(
+@@ -6751,33 +6602,41 @@ def make_cross_origin_property_callbacks_and_install_node(
          make_cross_origin_access_check_callback(
              cg_context, "CrossOriginAccessCheckCallback"),
          make_cross_origin_named_getter_callback(
@@ -3244,7 +3262,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..b9c73887d8637c578cd2c65014044f29
      ]
      for func_def in func_defs:
          callback_defs.append(func_def)
-@@ -6818,45 +6682,6 @@ ${instance_object_template}->SetAccessCheckCallbackAndHandler(
+@@ -6818,45 +6677,6 @@ ${instance_object_template}->SetAccessCheckCallbackAndHandler(
              "third_party/blink/renderer/platform/bindings/v8_cross_origin_property_support.h",
          ]))
  
@@ -3290,7 +3308,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..b9c73887d8637c578cd2c65014044f29
      return callback_defs, install_node
  
  
-@@ -7080,6 +6905,8 @@ const WrapperTypeInfo ${class_name}::wrapper_type_info_{{
+@@ -7080,6 +6900,8 @@ const WrapperTypeInfo ${class_name}::wrapper_type_info_{{
          idl_definition_kind = "WrapperTypeInfo::kIdlNamespace"
      elif class_like.is_callback_interface:
          idl_definition_kind = "WrapperTypeInfo::kIdlCallbackInterface"
@@ -3299,7 +3317,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..b9c73887d8637c578cd2c65014044f29
      elif class_like.is_sync_iterator:
          idl_definition_kind = "WrapperTypeInfo::kIdlSyncIterator"
      wrapper_type_info_def.append(
-@@ -7093,7 +6920,8 @@ const WrapperTypeInfo ${class_name}::wrapper_type_info_{{
+@@ -7093,7 +6915,8 @@ const WrapperTypeInfo ${class_name}::wrapper_type_info_{{
                active_script_wrappable_inheritance),
            idl_definition_kind=idl_definition_kind))
  
@@ -3309,7 +3327,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..b9c73887d8637c578cd2c65014044f29
          blink_class = blink_class_name(class_like)
          pattern = """\
  const WrapperTypeInfo& {blink_class}::wrapper_type_info_ =
-@@ -7107,11 +6935,6 @@ const WrapperTypeInfo& {blink_class}::wrapper_type_info_ =
+@@ -7107,11 +6930,6 @@ const WrapperTypeInfo& {blink_class}::wrapper_type_info_ =
  static_assert(
      std::is_base_of<ActiveScriptWrappableBase, {blink_class}>::value,
      "{blink_class} does not inherit from ActiveScriptWrappable<> despite "
@@ -3321,7 +3339,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..b9c73887d8637c578cd2c65014044f29
      "the IDL has [ActiveScriptWrappable] extended attribute.");"""
      else:
          pattern = """\
-@@ -7119,11 +6942,6 @@ static_assert(
+@@ -7119,11 +6937,6 @@ static_assert(
  static_assert(
      !std::is_base_of<ActiveScriptWrappableBase, {blink_class}>::value,
      "{blink_class} inherits from ActiveScriptWrappable<> without "
@@ -3333,7 +3351,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..b9c73887d8637c578cd2c65014044f29
      "[ActiveScriptWrappable] extended attribute.");"""
      if class_like.is_interface:
          wrapper_type_info_def.append(F(pattern, blink_class=blink_class))
-@@ -7140,6 +6958,7 @@ def make_v8_context_snapshot_api(cg_context, component, attribute_entries,
+@@ -7140,6 +6953,7 @@ def make_v8_context_snapshot_api(cg_context, component, attribute_entries,
                                   constant_entries, constructor_entries,
                                   exposed_construct_entries, operation_entries,
                                   named_properties_object_callback_defs,
@@ -3341,7 +3359,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..b9c73887d8637c578cd2c65014044f29
                                   cross_origin_property_callback_defs,
                                   install_context_independent_func_name):
      assert isinstance(cg_context, CodeGenContext)
-@@ -7176,7 +6995,7 @@ def make_v8_context_snapshot_api(cg_context, component, attribute_entries,
+@@ -7176,7 +6990,7 @@ def make_v8_context_snapshot_api(cg_context, component, attribute_entries,
                                      cg_context.class_name), attribute_entries,
          constant_entries, constructor_entries, exposed_construct_entries,
          operation_entries, named_properties_object_callback_defs,
@@ -3350,7 +3368,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..b9c73887d8637c578cd2c65014044f29
  
      add_func(*_make_v8_context_snapshot_install_props_per_context_function(
          cg_context, name_style.func("InstallPropsOf",
-@@ -7193,7 +7012,7 @@ def make_v8_context_snapshot_api(cg_context, component, attribute_entries,
+@@ -7193,7 +7007,7 @@ def make_v8_context_snapshot_api(cg_context, component, attribute_entries,
  def _make_v8_context_snapshot_get_reference_table_function(
          cg_context, function_name, attribute_entries, constant_entries,
          constructor_entries, exposed_construct_entries, operation_entries,
@@ -3359,7 +3377,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..b9c73887d8637c578cd2c65014044f29
          cross_origin_property_callback_defs):
      callback_names = ["${class_name}::GetWrapperTypeInfo()"]
  
-@@ -7224,6 +7043,11 @@ def _make_v8_context_snapshot_get_reference_table_function(
+@@ -7224,6 +7038,11 @@ def _make_v8_context_snapshot_get_reference_table_function(
      collect_callbacks(named_properties_object_callback_defs)
      collect_callbacks(cross_origin_property_callback_defs)
  
@@ -3371,7 +3389,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..b9c73887d8637c578cd2c65014044f29
      entry_nodes = list(
          map(
              lambda name: TextNode("reinterpret_cast<intptr_t>({}),".format(name
-@@ -7326,7 +7150,8 @@ return ${class_name}::{func}(
+@@ -7326,7 +7145,8 @@ return ${class_name}::{func}(
  def _collect_include_headers(class_like):
      assert isinstance(
          class_like,
@@ -3381,7 +3399,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..b9c73887d8637c578cd2c65014044f29
  
      headers = set(class_like.code_generator_info.blink_headers or [])
  
-@@ -7361,7 +7186,10 @@ def _collect_include_headers(class_like):
+@@ -7361,7 +7181,10 @@ def _collect_include_headers(class_like):
      operations.extend(class_like.constructors)
      operations.extend(class_like.operations)
      if class_like.is_interface:
@@ -3393,7 +3411,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..b9c73887d8637c578cd2c65014044f29
              if x:
                  operations.extend(x.operations)
          for exposed_construct in class_like.exposed_constructs:
-@@ -7393,10 +7221,12 @@ def _collect_include_headers(class_like):
+@@ -7393,10 +7216,12 @@ def _collect_include_headers(class_like):
  
  
  def generate_class_like(class_like,
@@ -3407,7 +3425,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..b9c73887d8637c578cd2c65014044f29
  
      path_manager = PathManager(class_like)
      api_component = path_manager.api_component
-@@ -7421,6 +7251,9 @@ def generate_class_like(class_like,
+@@ -7421,6 +7246,9 @@ def generate_class_like(class_like,
          namespace = class_like
          cg_context = CodeGenContext(namespace=namespace,
                                      class_name=api_class_name)
@@ -3417,7 +3435,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..b9c73887d8637c578cd2c65014044f29
      elif class_like.is_sync_iterator:
          cg_context = CodeGenContext(sync_iterator=class_like,
                                      class_name=api_class_name)
-@@ -7609,14 +7442,6 @@ def generate_class_like(class_like,
+@@ -7609,14 +7437,6 @@ def generate_class_like(class_like,
          operation_entries=operation_entries)
      supplemental_install_node = SequenceNode()
  
@@ -3432,7 +3450,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..b9c73887d8637c578cd2c65014044f29
      # Named properties object
      (named_properties_object_callback_defs,
       named_properties_object_install_node) = (
-@@ -7634,6 +7459,14 @@ def generate_class_like(class_like,
+@@ -7634,6 +7454,14 @@ def generate_class_like(class_like,
      supplemental_install_node.append(cross_origin_property_install_node)
      supplemental_install_node.append(EmptyNode())
  
@@ -3447,7 +3465,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..b9c73887d8637c578cd2c65014044f29
      # Installer functions
      is_unconditional = lambda entry: entry.exposure_conditional.is_always_true
      is_context_dependent = lambda entry: entry.is_context_dependent
-@@ -7748,7 +7581,7 @@ def generate_class_like(class_like,
+@@ -7748,7 +7576,7 @@ def generate_class_like(class_like,
           cg_context, impl_component, attribute_entries, constant_entries,
           constructor_entries, exposed_construct_entries, operation_entries,
           named_properties_object_callback_defs,
@@ -3456,7 +3474,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..b9c73887d8637c578cd2c65014044f29
           (install_context_independent_props_def
            and FN_INSTALL_CONTEXT_INDEPENDENT_PROPS))
  
-@@ -7809,7 +7642,7 @@ def generate_class_like(class_like,
+@@ -7809,7 +7637,7 @@ def generate_class_like(class_like,
              make_forward_declarations(impl_source_node.accumulator),
              EmptyNode(),
          ])
@@ -3465,7 +3483,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..b9c73887d8637c578cd2c65014044f29
          api_header_node.accumulator.add_class_decls(
              [blink_class_name(class_like.interface)])
      else:
-@@ -7849,6 +7682,14 @@ def generate_class_like(class_like,
+@@ -7849,6 +7677,14 @@ def generate_class_like(class_like,
          _collect_include_headers(class_like))
  
      # Assemble the parts.
@@ -3480,7 +3498,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..b9c73887d8637c578cd2c65014044f29
      if generate_sync_iterator_blink_impl_class_callback:
          assert isinstance(class_like, web_idl.SyncIterator)
          generate_sync_iterator_blink_impl_class_callback(
-@@ -8306,3 +8147,4 @@ def generate_interfaces(task_queue):
+@@ -8306,3 +8142,4 @@ def generate_interfaces(task_queue):
                           "InitIDLInterfacesForTesting",
                           "init_idl_interfaces_for_testing",
                           for_testing=True)

@@ -1,0 +1,13 @@
+diff --git a/content/renderer/v8_value_converter_impl.cc b/content/renderer/v8_value_converter_impl.cc
+index 0142e5422673f87ea684050b0e0daf534d8db645..3288616158d8fbd346819608a992aaffc3d51984 100644
+--- a/content/renderer/v8_value_converter_impl.cc
++++ b/content/renderer/v8_value_converter_impl.cc
+@@ -556,7 +556,7 @@ std::unique_ptr<base::Value> V8ValueConverterImpl::FromV8Object(
+   // See also http://crbug.com/330559.
+   base::Value::Dict result;
+ 
+-  if (val->InternalFieldCount())
++  if (val->IsApiWrapper())
+     return std::make_unique<base::Value>(std::move(result));
+ 
+   v8::Local<v8::Array> property_names;

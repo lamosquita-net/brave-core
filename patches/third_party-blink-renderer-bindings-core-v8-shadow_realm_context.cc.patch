@@ -1,8 +1,8 @@
 diff --git a/third_party/blink/renderer/bindings/core/v8/shadow_realm_context.cc b/third_party/blink/renderer/bindings/core/v8/shadow_realm_context.cc
-index 8aea29a5700be33d7c37fd1d7fbd5522dc1d3cfa..fd0c413d290f7dc31b439c77c8d29c90be6087c3 100644
+index 8aea29a5700be33d7c37fd1d7fbd5522dc1d3cfa..b483b9b3c0876c7539f7e9729335d4cdb91ca66f 100644
 --- a/third_party/blink/renderer/bindings/core/v8/shadow_realm_context.cc
 +++ b/third_party/blink/renderer/bindings/core/v8/shadow_realm_context.cc
-@@ -90,8 +90,8 @@ v8::MaybeLocal<v8::Context> OnCreateShadowRealmV8Context(
+@@ -90,16 +90,15 @@ v8::MaybeLocal<v8::Context> OnCreateShadowRealmV8Context(
    context->UseDefaultSecurityToken();
  
    // Associate the Blink object with the v8::Context.
@@ -13,3 +13,13 @@ index 8aea29a5700be33d7c37fd1d7fbd5522dc1d3cfa..fd0c413d290f7dc31b439c77c8d29c90
  
    // Associate the Blink object with the v8::Objects.
    global_proxy = context->Global();
+-  V8DOMWrapper::SetNativeInfo(isolate, global_proxy, wrapper_type_info,
+-                              shadow_realm_global_scope);
++  V8DOMWrapper::SetNativeInfo(isolate, global_proxy, shadow_realm_global_scope);
+   v8::Local<v8::Object> global_object =
+       global_proxy->GetPrototype().As<v8::Object>();
+-  V8DOMWrapper::SetNativeInfo(isolate, global_object, wrapper_type_info,
++  V8DOMWrapper::SetNativeInfo(isolate, global_object,
+                               shadow_realm_global_scope);
+ 
+   // Install context-dependent properties.

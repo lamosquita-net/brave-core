@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/bindings/wrapper_type_info.cc b/third_party/blink/renderer/platform/bindings/wrapper_type_info.cc
-index ce61e53d8b35cd40a51be5e59d6710deaf92c03c..dff938033875ea002d23e9d2a79b3c35ec7a5545 100644
+index ce61e53d8b35cd40a51be5e59d6710deaf92c03c..807007a32d797885afd2fa7d8659f4148051e5ee 100644
 --- a/third_party/blink/renderer/platform/bindings/wrapper_type_info.cc
 +++ b/third_party/blink/renderer/platform/bindings/wrapper_type_info.cc
 @@ -4,7 +4,6 @@
@@ -20,18 +20,15 @@ index ce61e53d8b35cd40a51be5e59d6710deaf92c03c..dff938033875ea002d23e9d2a79b3c35
      case kCustomWrappableKind:
        v8_template = v8::FunctionTemplate::New(isolate);
        break;
-@@ -58,4 +60,14 @@ v8::Local<v8::Template> WrapperTypeInfo::GetV8ClassTemplate(
+@@ -58,4 +60,11 @@ v8::Local<v8::Template> WrapperTypeInfo::GetV8ClassTemplate(
    return v8_template;
  }
  
 +const WrapperTypeInfo* ToWrapperTypeInfo(v8::Local<v8::Object> wrapper) {
 +  const auto* wrappable = ToScriptWrappable(wrapper->GetIsolate(), wrapper);
-+  const WrapperTypeInfo* type_info =
-+      wrappable ? wrappable->GetWrapperTypeInfo() : nullptr;
-+  DCHECK_EQ(
-+      type_info,
-+      (GetInternalField<WrapperTypeInfo, kV8DOMWrapperTypeIndex>(wrapper)));
-+  return type_info;
++  // It's either us or legacy embedders
++  DCHECK(!wrappable || !WrapperTypeInfo::HasLegacyInternalFieldsSet(wrapper));
++  return wrappable ? wrappable->GetWrapperTypeInfo() : nullptr;
 +}
 +
  }  // namespace blink
