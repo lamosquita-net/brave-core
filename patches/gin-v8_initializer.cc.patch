@@ -1,0 +1,63 @@
+diff --git a/gin/v8_initializer.cc b/gin/v8_initializer.cc
+index 45da70dd0d164bd5be17ef4e3731f2a3c597571f..8a46d362973bf29445c653f1a63305a599808ced 100644
+--- a/gin/v8_initializer.cc
++++ b/gin/v8_initializer.cc
+@@ -291,7 +291,6 @@ void SetFlags(IsolateHolder::ScriptMode mode,
+   SetV8FlagsIfOverridden(features::kV8MegaDomIC, "--mega-dom-ic",
+                          "--no-mega-dom-ic");
+   SetV8FlagsIfOverridden(features::kV8Maglev, "--maglev", "--no-maglev");
+-  SetV8FlagsIfOverridden(features::kV8MinorMC, "--minor-mc", "--no-minor-mc");
+   SetV8FlagsIfOverridden(features::kV8Sparkplug, "--sparkplug",
+                          "--no-sparkplug");
+   SetV8FlagsIfOverridden(features::kV8Turbofan, "--turbofan", "--no-turbofan");
+@@ -309,9 +308,6 @@ void SetFlags(IsolateHolder::ScriptMode mode,
+                          "--no-write-protect-code-memory");
+   SetV8FlagsIfOverridden(features::kV8SlowHistograms, "--slow-histograms",
+                          "--no-slow-histograms");
+-  SetV8FlagsIfOverridden(features::kV8MemoryReducerSingleGC,
+-                         "--memory-reducer-single-gc",
+-                         "--no-memory-reducer-single-gc");
+ 
+   if (base::FeatureList::IsEnabled(features::kV8ConcurrentSparkplug)) {
+     if (int max_threads = features::kV8ConcurrentSparkplugMaxThreads.Get()) {
+@@ -355,30 +351,6 @@ void SetFlags(IsolateHolder::ScriptMode mode,
+                          "--no-ignition-elide-redundant-tdz-checks");
+ 
+   // JavaScript language features.
+-  SetV8FlagsIfOverridden(features::kJavaScriptSymbolAsWeakMapKey,
+-                         "--harmony-symbol-as-weakmap-key",
+-                         "--no-harmony-symbol-as-weakmap-key");
+-  SetV8FlagsIfOverridden(features::kJavaScriptChangeArrayByCopy,
+-                         "--harmony-change-array-by-copy",
+-                         "--no-harmony-change-array-by-copy");
+-  if (base::FeatureList::IsEnabled(features::kJavaScriptRabGsab)) {
+-    SetV8Flags("--harmony-rab-gsab");
+-  } else {
+-    SetV8Flags("--no-harmony-rab-gsab");
+-  }
+-  SetV8FlagsIfOverridden(features::kJavaScriptStringIsWellFormed,
+-                         "--harmony-string-is-well-formed",
+-                         "--no-harmony-string-is-well-formed");
+-  SetV8FlagsIfOverridden(features::kJavaScriptRegExpUnicodeSets,
+-                         "--harmony-regexp-unicode-sets",
+-                         "--no-harmony-regexp-unicode-sets");
+-  SetV8FlagsIfOverridden(features::kJavaScriptJsonParseWithSource,
+-                         "--harmony-json-parse-with-source",
+-                         "--no-harmony-json-parse-with-source");
+-  SetV8FlagsIfOverridden(features::kJavaScriptArrayBufferTransfer,
+-                         "--harmony-rab-gsab-transfer",
+-                         "--no-harmony-rab-gsab-transfer");
+-
+   if (IsolateHolder::kStrictMode == mode) {
+     SetV8Flags("--use_strict");
+   }
+@@ -396,9 +368,6 @@ void SetFlags(IsolateHolder::ScriptMode mode,
+ 
+   // WebAssembly features.
+ 
+-  SetV8FlagsIfOverridden(features::kWebAssemblyTailCall,
+-                         "--experimental-wasm-return-call",
+-                         "--no-experimental-wasm-return-call");
+   SetV8FlagsIfOverridden(features::kWebAssemblyInlining,
+                          "--experimental-wasm-inlining",
+                          "--no-experimental-wasm-inlining");
