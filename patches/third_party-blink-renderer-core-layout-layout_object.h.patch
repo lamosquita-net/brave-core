@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_object.h b/third_party/blink/renderer/core/layout/layout_object.h
-index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..7a499221156bc07ba2a4b089f8af0860b789df8d 100644
+index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..2620f5fa371805fdb784db0c760ebcfd2bbbd6ad 100644
 --- a/third_party/blink/renderer/core/layout/layout_object.h
 +++ b/third_party/blink/renderer/core/layout/layout_object.h
 @@ -40,6 +40,7 @@
@@ -28,7 +28,20 @@ index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..7a499221156bc07ba2a4b089f8af0860
    bool RequiresAnonymousTableWrappers(const LayoutObject*) const;
  
   public:
-@@ -1343,10 +1348,16 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+@@ -1008,6 +1013,12 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+     NOT_DESTROYED();
+     return IsOfType(kLayoutObjectRubyText);
+   }
++  // For line-breakable ruby. This returns true only if RubyLineBreakable
++  // flag is enabled.
++  bool IsInlineRuby() const;
++  // For line-breakable ruby. This returns true only if RubyLineBreakable
++  // flag is enabled.
++  bool IsInlineRubyText() const;
+   bool IsTable() const {
+     NOT_DESTROYED();
+     return IsOfType(kLayoutObjectTable);
+@@ -1343,10 +1354,16 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
    // coordinate space is the viewport space.
    virtual gfx::RectF VisualRectInLocalSVGCoordinates() const;
  
@@ -46,7 +59,7 @@ index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..7a499221156bc07ba2a4b089f8af0860
  
    // This returns the transform applying to the local SVG coordinate space,
    // which combines the CSS transform properties and animation motion transform.
-@@ -1864,6 +1875,14 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+@@ -1864,6 +1881,14 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
    // instead of flex box. crbug.com/226252.
    bool BehavesLikeBlockContainer() const {
      NOT_DESTROYED();
@@ -61,7 +74,7 @@ index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..7a499221156bc07ba2a4b089f8af0860
      return (IsLayoutBlockFlow() && StyleRef().IsDisplayBlockContainer()) ||
             IsButton();
    }
-@@ -2709,7 +2728,8 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+@@ -2709,7 +2734,8 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
    // from the coordinate system of the property container.
    const LayoutObject* GetPropertyContainer(
        AncestorSkipInfo*,
@@ -71,7 +84,7 @@ index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..7a499221156bc07ba2a4b089f8af0860
  
    // Do a rect-based hit test with this object as the stop node.
    HitTestResult HitTestForOcclusion(const PhysicalRect&) const;
-@@ -3515,6 +3535,17 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+@@ -3515,6 +3541,17 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
    }
    void SetSVGDescendantMayHaveTransformRelatedAnimation();
  
@@ -89,7 +102,7 @@ index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..7a499221156bc07ba2a4b089f8af0860
    bool ShouldSkipNextLayoutShiftTracking() const {
      NOT_DESTROYED();
      return bitfields_.ShouldSkipNextLayoutShiftTracking();
-@@ -4300,6 +4331,11 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+@@ -4300,6 +4337,11 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
      ADD_BOOLEAN_BITFIELD(svg_descendant_may_have_transform_related_animation_,
                           SVGDescendantMayHaveTransformRelatedAnimation);
  

@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_base.cc b/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_base.cc
-index 9617e15eeda46b16424a94cbd2c8839bed9197f2..34d67f4cd294854ed70d4a4b44ac34cb54d594ee 100644
+index 9617e15eeda46b16424a94cbd2c8839bed9197f2..e5ff6ed4e762d050f8b2ad635c8a665e03053634 100644
 --- a/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_base.cc
 +++ b/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_base.cc
-@@ -70,7 +70,8 @@ void LayoutNGRubyBase::MoveInlineChildrenTo(LayoutNGRubyBase& to_base,
+@@ -7,6 +7,7 @@
+ namespace blink {
+ 
+ LayoutNGRubyBase::LayoutNGRubyBase() : LayoutNGBlockFlow(nullptr) {
++  DCHECK(!RuntimeEnabledFeatures::RubyLineBreakableEnabled());
+   SetInline(false);
+ }
+ 
+@@ -70,7 +71,8 @@ void LayoutNGRubyBase::MoveInlineChildrenTo(LayoutNGRubyBase& to_base,
      }
    }
    // Move our inline children into the target block we determined above.
@@ -12,7 +20,7 @@ index 9617e15eeda46b16424a94cbd2c8839bed9197f2..34d67f4cd294854ed70d4a4b44ac34cb
  }
  
  void LayoutNGRubyBase::MoveBlockChildrenTo(LayoutNGRubyBase& to_base,
-@@ -103,18 +104,20 @@ void LayoutNGRubyBase::MoveBlockChildrenTo(LayoutNGRubyBase& to_base,
+@@ -103,18 +105,20 @@ void LayoutNGRubyBase::MoveBlockChildrenTo(LayoutNGRubyBase& to_base,
    // Move all remaining children normally. If moving all children, include our
    // float list.
    if (!before_child) {

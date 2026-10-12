@@ -1,0 +1,23 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.h b/third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.h
+index 000e18d6f1c3637b17141ceef8573a63cc5cad3d..03db56adc40a6d93636f163a067d958b2cf8fefa 100644
+--- a/third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.h
++++ b/third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.h
+@@ -13,6 +13,7 @@ namespace blink {
+ class ComputedStyle;
+ class NGLineInfo;
+ class NGLogicalLineItems;
++class NGPhysicalBoxFragment;
+ class ShapeResultView;
+ struct FontHeight;
+ struct NGInlineItemResult;
+@@ -25,6 +26,10 @@ PhysicalRect AdjustTextRectForEmHeight(const PhysicalRect& rect,
+                                        const ShapeResultView* shape_view,
+                                        WritingMode writing_mode);
+ 
++// FlyWeb: upstream moved the em-height box code here (b40c24e2e02); the 116
++// still computes it with NGPhysicalBoxFragment::ScrollableOverflow(kEmHeight).
++PhysicalRect ComputeRubyEmHeightBox(const NGPhysicalBoxFragment& box_fragment);
++
+ struct NGAnnotationOverhang {
+   LayoutUnit start;
+   LayoutUnit end;

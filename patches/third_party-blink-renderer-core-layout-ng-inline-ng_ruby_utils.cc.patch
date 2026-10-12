@@ -1,0 +1,23 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.cc b/third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.cc
+index bb7994b813c853fd54441c07a53bb8709c986488..9fcc4a03d0c87b593fcd9caa62fb7b9ab0cf96c5 100644
+--- a/third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.cc
++++ b/third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.cc
+@@ -259,8 +259,7 @@ NGAnnotationMetrics ComputeAnnotationOverflow(
+       const auto* fragment = item.PhysicalFragment();
+       if (fragment && fragment->IsRubyRun()) {
+         PhysicalRect rect =
+-            To<NGPhysicalBoxFragment>(fragment)->ScrollableOverflow(
+-                NGPhysicalFragment::kEmHeight);
++            ComputeRubyEmHeightBox(*To<NGPhysicalBoxFragment>(fragment));
+         LayoutUnit block_size;
+         if (IsHorizontalWritingMode(line_style.GetWritingMode())) {
+           item_under = item_over + rect.Bottom();
+@@ -335,4 +334,8 @@ NGAnnotationMetrics ComputeAnnotationOverflow(
+           (line_under - content_under).ClampNegativeToZero()};
+ }
+ 
++PhysicalRect ComputeRubyEmHeightBox(const NGPhysicalBoxFragment& box_fragment) {
++  return box_fragment.ScrollableOverflow(NGPhysicalFragment::kEmHeight);
++}
++
+ }  // namespace blink

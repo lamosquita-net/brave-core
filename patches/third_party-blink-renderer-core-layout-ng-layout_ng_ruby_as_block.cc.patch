@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_as_block.cc b/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_as_block.cc
-index 6dc72ce4b8e71be6d00e1b41f78a0decb4933ff1..16e433eeb06c190989d876e5febf7d39a6183959 100644
+index 6dc72ce4b8e71be6d00e1b41f78a0decb4933ff1..50f6d6bff69016f0ca2c259e66248ad23bd33982 100644
 --- a/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_as_block.cc
 +++ b/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_as_block.cc
 @@ -4,6 +4,7 @@
@@ -10,7 +10,7 @@ index 6dc72ce4b8e71be6d00e1b41f78a0decb4933ff1..16e433eeb06c190989d876e5febf7d39
  #include "third_party/blink/renderer/core/frame/web_feature.h"
  #include "third_party/blink/renderer/core/layout/layout_ruby.h"
  #include "third_party/blink/renderer/core/layout/ng/layout_ng_ruby_run.h"
-@@ -25,56 +26,28 @@ bool LayoutNGRubyAsBlock::IsOfType(LayoutObjectType type) const {
+@@ -25,56 +26,32 @@ bool LayoutNGRubyAsBlock::IsOfType(LayoutObjectType type) const {
  void LayoutNGRubyAsBlock::AddChild(LayoutObject* child,
                                     LayoutObject* before_child) {
    NOT_DESTROYED();
@@ -19,13 +19,19 @@ index 6dc72ce4b8e71be6d00e1b41f78a0decb4933ff1..16e433eeb06c190989d876e5febf7d39
 -    LayoutNGBlockFlow::AddChild(child, before_child);
 -    return;
 -  }
--
+ 
 -  if (before_child) {
 -    // insert child into run
 -    LayoutObject* run = before_child;
 -    while (run && !run->IsRubyRun()) {
 -      run = run->Parent();
--    }
++  LayoutObject* inline_ruby = FirstChild();
++  if (!inline_ruby) {
++    if (RuntimeEnabledFeatures::RubyLineBreakableEnabled()) {
++      inline_ruby = MakeGarbageCollected<LayoutInline>(nullptr);
++    } else {
++      inline_ruby = MakeGarbageCollected<LayoutRubyAsInline>(nullptr);
+     }
 -    if (run) {
 -      if (before_child == run) {
 -        before_child = To<LayoutNGRubyRun>(before_child)->FirstChild();
@@ -37,7 +43,7 @@ index 6dc72ce4b8e71be6d00e1b41f78a0decb4933ff1..16e433eeb06c190989d876e5febf7d39
 -    NOTREACHED();  // before_child should always have a run as parent!
 -                   // Emergency fallback: fall through and just append.
 -  }
- 
+-
 -  // If the new child would be appended, try to add the child to the previous
 -  // run if possible, or create a new run otherwise.
 -  // (The LayoutNGRubyRun object will handle the details)
@@ -46,9 +52,6 @@ index 6dc72ce4b8e71be6d00e1b41f78a0decb4933ff1..16e433eeb06c190989d876e5febf7d39
 -    last_run = &LayoutNGRubyRun::Create(this, *this);
 -    LayoutNGBlockFlow::AddChild(last_run, before_child);
 -    last_run->EnsureRubyBase();
-+  LayoutObject* inline_ruby = FirstChild();
-+  if (!inline_ruby) {
-+    inline_ruby = MakeGarbageCollected<LayoutRubyAsInline>(nullptr);
 +    inline_ruby->SetDocumentForAnonymous(&GetDocument());
 +    ComputedStyleBuilder new_style_builder =
 +        GetDocument().GetStyleResolver().CreateAnonymousStyleBuilderWithDisplay(
@@ -79,7 +82,7 @@ index 6dc72ce4b8e71be6d00e1b41f78a0decb4933ff1..16e433eeb06c190989d876e5febf7d39
  }
  
  void LayoutNGRubyAsBlock::StyleDidChange(StyleDifference diff,
-@@ -82,6 +55,17 @@ void LayoutNGRubyAsBlock::StyleDidChange(StyleDifference diff,
+@@ -82,6 +59,17 @@ void LayoutNGRubyAsBlock::StyleDidChange(StyleDifference diff,
    NOT_DESTROYED();
    LayoutNGBlockFlow::StyleDidChange(diff, old_style);
    PropagateStyleToAnonymousChildren();

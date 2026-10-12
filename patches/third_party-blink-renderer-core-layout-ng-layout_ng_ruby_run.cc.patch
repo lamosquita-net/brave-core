@@ -1,8 +1,8 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_run.cc b/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_run.cc
-index 1e53b9d524517e32191c992b630cafd34fb54c16..1c155e6d967e1583f42b11e8add90c60044be251 100644
+index 1e53b9d524517e32191c992b630cafd34fb54c16..4f60dc97274adb7abb2b655b8d51eda68d539795 100644
 --- a/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_run.cc
 +++ b/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_run.cc
-@@ -5,11 +5,24 @@
+@@ -5,12 +5,26 @@
  #include "third_party/blink/renderer/core/layout/ng/layout_ng_ruby_run.h"
  
  #include "third_party/blink/renderer/core/css/resolver/style_resolver.h"
@@ -25,9 +25,11 @@ index 1e53b9d524517e32191c992b630cafd34fb54c16..1c155e6d967e1583f42b11e8add90c60
 +}  // namespace
 +
  LayoutNGRubyRun::LayoutNGRubyRun() : LayoutNGBlockFlow(nullptr) {
++  DCHECK(!RuntimeEnabledFeatures::RubyLineBreakableEnabled());
    SetInline(true);
    SetIsAtomicInlineLevel(true);
-@@ -67,7 +80,7 @@ LayoutNGRubyBase& LayoutNGRubyRun::EnsureRubyBase() {
+ }
+@@ -67,7 +81,7 @@ LayoutNGRubyBase& LayoutNGRubyRun::EnsureRubyBase() {
    if (auto* base = RubyBase()) {
      return *base;
    }
@@ -36,7 +38,7 @@ index 1e53b9d524517e32191c992b630cafd34fb54c16..1c155e6d967e1583f42b11e8add90c60
    LayoutBlockFlow::AddChild(&new_base);
    return new_base;
  }
-@@ -89,97 +102,69 @@ void LayoutNGRubyRun::AddChild(LayoutObject* child,
+@@ -89,97 +103,69 @@ void LayoutNGRubyRun::AddChild(LayoutObject* child,
        DCHECK(!HasRubyText());
        // prepend ruby texts as first child
        LayoutBlockFlow::AddChild(child, FirstChild());

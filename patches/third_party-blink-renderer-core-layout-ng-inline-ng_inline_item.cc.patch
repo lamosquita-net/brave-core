@@ -1,0 +1,29 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_item.cc b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_item.cc
+index 2b63a53ac9d534868040a4e304d060e664489418..eb349e2b4c7a0128144fd97bb86ac497b9d62a8b 100644
+--- a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_item.cc
++++ b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_item.cc
+@@ -169,6 +169,10 @@ const char* NGInlineItem::NGInlineItemTypeToString(NGInlineItemType val) const {
+       return "ListMerker";
+     case kBidiControl:
+       return "BidiControl";
++    case kOpenRubyColumn:
++      return "OpenRubyColumn";
++    case kCloseRubyColumn:
++      return "CloseRubyColumn";
+   }
+   NOTREACHED_NORETURN();
+ }
+@@ -230,9 +234,10 @@ const Font& NGInlineItem::FontWithSvgScaling() const {
+ }
+ 
+ String NGInlineItem::ToString() const {
+-  return String::Format("NGInlineItem. Type: '%s'. LayoutObject: '%s'",
+-                        NGInlineItemTypeToString(Type()),
+-                        GetLayoutObject()->DebugName().Ascii().c_str());
++  return String::Format(
++      "NGInlineItem. Type: '%s'. LayoutObject: '%s'",
++      NGInlineItemTypeToString(Type()),
++      GetLayoutObject() ? GetLayoutObject()->DebugName().Ascii().c_str() : "");
+ }
+ 
+ // Split |items[index]| to 2 items at |offset|.

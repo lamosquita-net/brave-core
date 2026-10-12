@@ -1,0 +1,88 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_items_builder.cc b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_items_builder.cc
+index a81fab13f92986aa84d18e0713423db458479c4c..0852ce2d1d5e5ba69e82777e5bad33b2135c7ff7 100644
+--- a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_items_builder.cc
++++ b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_items_builder.cc
+@@ -1329,21 +1329,35 @@ void NGInlineItemsBuilderTemplate<OffsetMappingBuilder>::EnterInline(
+     }
+   }
+ 
++  has_ruby_ = has_ruby_ || node->IsInlineRubyText();
++  if (node->IsInlineRubyText() && !node->Parent()->IsInlineRuby()) {
++    // This creates a ruby column with no ruby-base items.
++    AppendOpaque(NGInlineItem::kOpenRubyColumn,
++                 IsLtr(style->Direction()) ? kLeftToRightIsolateCharacter
++                                           : kRightToLeftIsolateCharacter,
++                 nullptr);
++  }
+   AppendOpaque(NGInlineItem::kOpenTag, node);
+ 
+-  if (!NeedsBoxInfo())
+-    return;
+-
+-  // Set |ShouldCreateBoxFragment| of the parent box if needed.
+-  BoxInfo* current_box =
+-      &boxes_.emplace_back(items_->size() - 1, items_->back());
+-  if (boxes_.size() > 1) {
+-    BoxInfo* parent_box = std::prev(current_box);
+-    if (!parent_box->should_create_box_fragment &&
+-        parent_box->ShouldCreateBoxFragmentForChild(*current_box)) {
+-      parent_box->SetShouldCreateBoxFragment(items_);
++  if (NeedsBoxInfo()) {
++    // Set |ShouldCreateBoxFragment| of the parent box if needed.
++    BoxInfo* current_box =
++        &boxes_.emplace_back(items_->size() - 1, items_->back());
++    if (boxes_.size() > 1) {
++      BoxInfo* parent_box = std::prev(current_box);
++      if (!parent_box->should_create_box_fragment &&
++          parent_box->ShouldCreateBoxFragmentForChild(*current_box)) {
++        parent_box->SetShouldCreateBoxFragment(items_);
++      }
+     }
+   }
++
++  if (node->IsInlineRuby()) {
++    AppendOpaque(NGInlineItem::kOpenRubyColumn,
++                 IsLtr(style->Direction()) ? kLeftToRightIsolateCharacter
++                                           : kRightToLeftIsolateCharacter,
++                 node);
++  }
+ }
+ 
+ template <typename OffsetMappingBuilder>
+@@ -1361,6 +1375,11 @@ void NGInlineItemsBuilderTemplate<OffsetMappingBuilder>::ExitInline(
+     LayoutObject* node) {
+   DCHECK(node);
+ 
++  if (node->IsInlineRuby()) {
++    AppendOpaque(NGInlineItem::kCloseRubyColumn, kPopDirectionalIsolateCharacter,
++                 node);
++  }
++
+   if (NeedsBoxInfo()) {
+     BoxInfo* current_box = &boxes_.back();
+     if (!current_box->should_create_box_fragment) {
+@@ -1402,6 +1421,24 @@ void NGInlineItemsBuilderTemplate<OffsetMappingBuilder>::ExitInline(
+ 
+   AppendOpaque(NGInlineItem::kCloseTag, node);
+ 
++  if (node->IsInlineRubyText()) {
++    if (node->Parent()->IsInlineRuby()) {
++      LayoutObject* ruby_container = node->Parent();
++      AppendOpaque(NGInlineItem::kCloseRubyColumn,
++                   kPopDirectionalIsolateCharacter, ruby_container);
++      // This produces empty ruby-columns if </ruby> follows.  NGLineBreaker
++      // should ignore such ruby-columns.
++      AppendOpaque(NGInlineItem::kOpenRubyColumn,
++                   IsLtr(node->Parent()->Style()->Direction())
++                       ? kLeftToRightIsolateCharacter
++                       : kRightToLeftIsolateCharacter,
++                   ruby_container);
++    } else {
++      AppendOpaque(NGInlineItem::kCloseRubyColumn,
++                   kPopDirectionalIsolateCharacter, nullptr);
++    }
++  }
++
+   Exit(node);
+ }
+ 

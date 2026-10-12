@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/ng_block_layout_algorithm.cc b/third_party/blink/renderer/core/layout/ng/ng_block_layout_algorithm.cc
-index 02fc89f19dac75f0e6bc56eaa8b5b9903a862621..d73842b69bb9b6d800e1a6333f39e0daaf44c594 100644
+index 02fc89f19dac75f0e6bc56eaa8b5b9903a862621..c321fbc74a6d26f98bfd0a8d2e134878da1b540f 100644
 --- a/third_party/blink/renderer/core/layout/ng/ng_block_layout_algorithm.cc
 +++ b/third_party/blink/renderer/core/layout/ng/ng_block_layout_algorithm.cc
-@@ -276,9 +276,15 @@ MinMaxSizesResult NGBlockLayoutAlgorithm::ComputeMinMaxSizes(
+@@ -16,6 +16,7 @@
+ #include "third_party/blink/renderer/core/layout/ng/inline/ng_inline_cursor.h"
+ #include "third_party/blink/renderer/core/layout/ng/inline/ng_inline_node.h"
+ #include "third_party/blink/renderer/core/layout/ng/inline/ng_physical_line_box_fragment.h"
++#include "third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.h"
+ #include "third_party/blink/renderer/core/layout/ng/legacy_layout_tree_walking.h"
+ #include "third_party/blink/renderer/core/layout/ng/list/ng_unpositioned_list_marker.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_block_child_iterator.h"
+@@ -276,9 +277,15 @@ MinMaxSizesResult NGBlockLayoutAlgorithm::ComputeMinMaxSizes(
      // We don't check IsRubyText() here intentionally. RubyText width should
      // affect this width.
      if (child.IsOutOfFlowPositioned() ||
@@ -20,7 +28,7 @@ index 02fc89f19dac75f0e6bc56eaa8b5b9903a862621..d73842b69bb9b6d800e1a6333f39e0da
  
      const ComputedStyle& child_style = child.Style();
      const EClear child_clear = child_style.Clear(Style());
-@@ -820,8 +826,11 @@ inline const NGLayoutResult* NGBlockLayoutAlgorithm::Layout(
+@@ -820,8 +827,11 @@ inline const NGLayoutResult* NGBlockLayoutAlgorithm::Layout(
  
    if (ruby_text_child)
      HandleRubyText(ruby_text_child);
@@ -34,7 +42,7 @@ index 02fc89f19dac75f0e6bc56eaa8b5b9903a862621..d73842b69bb9b6d800e1a6333f39e0da
  
    if (UNLIKELY(ConstraintSpace().IsNewFormattingContext() &&
                 !ignore_line_clamp_ && lines_until_clamp_ == 0 &&
-@@ -1101,14 +1110,9 @@ const NGLayoutResult* NGBlockLayoutAlgorithm::FinishLayout(
+@@ -1101,14 +1111,9 @@ const NGLayoutResult* NGBlockLayoutAlgorithm::FinishLayout(
    if (ConstraintSpace().IsTableCell()) {
      NGTableAlgorithmUtils::FinalizeTableCellLayout(intrinsic_block_size_,
                                                     &container_builder_);
@@ -52,7 +60,7 @@ index 02fc89f19dac75f0e6bc56eaa8b5b9903a862621..d73842b69bb9b6d800e1a6333f39e0da
    }
  
    NGOutOfFlowLayoutPart(Node(), ConstraintSpace(), &container_builder_).Run();
-@@ -2732,7 +2736,7 @@ NGConstraintSpace NGBlockLayoutAlgorithm::CreateConstraintSpaceForChild(
+@@ -2732,7 +2737,7 @@ NGConstraintSpace NGBlockLayoutAlgorithm::CreateConstraintSpaceForChild(
  
      // Always shrink-to-fit children within a <mtd> element.
      if (Node().GetDOMNode() &&
@@ -61,7 +69,7 @@ index 02fc89f19dac75f0e6bc56eaa8b5b9903a862621..d73842b69bb9b6d800e1a6333f39e0da
        builder.SetInlineAutoBehavior(NGAutoBehavior::kFitContent);
      }
  
-@@ -3163,33 +3167,38 @@ void NGBlockLayoutAlgorithm::HandleRubyText(NGBlockNode ruby_text_child) {
+@@ -3163,33 +3168,38 @@ void NGBlockLayoutAlgorithm::HandleRubyText(NGBlockNode ruby_text_child) {
    const NGLayoutResult* result =
        ruby_text_child.Layout(builder.ToConstraintSpace(), break_token);
  
@@ -69,10 +77,11 @@ index 02fc89f19dac75f0e6bc56eaa8b5b9903a862621..d73842b69bb9b6d800e1a6333f39e0da
    const NGPhysicalBoxFragment& ruby_text_fragment =
        To<NGPhysicalBoxFragment>(result->PhysicalFragment());
    const LogicalRect ruby_text_box = ruby_text_fragment.ConvertChildToLogical(
-       ruby_text_fragment.ScrollableOverflow(NGPhysicalFragment::kEmHeight));
+-      ruby_text_fragment.ScrollableOverflow(NGPhysicalFragment::kEmHeight));
 -  RubyPosition block_start_position = Style().IsFlippedLinesWritingMode()
 -                                          ? RubyPosition::kAfter
 -                                          : RubyPosition::kBefore;
++      ComputeRubyEmHeightBox(ruby_text_fragment));
 +
 +  // Find the ruby-base fragment.
 +  const NGPhysicalBoxFragment* ruby_base_fragment = nullptr;
@@ -113,13 +122,13 @@ index 02fc89f19dac75f0e6bc56eaa8b5b9903a862621..d73842b69bb9b6d800e1a6333f39e0da
 +      first_line_top =
 +          ruby_base_block_offset +
 +          ruby_base_fragment
-+              ->ConvertChildToLogical(ruby_base_fragment->ScrollableOverflow(
-+                  NGPhysicalFragment::kEmHeight))
++              ->ConvertChildToLogical(
++                  ComputeRubyEmHeightBox(*ruby_base_fragment))
 +              .offset.block_offset;
      }
      ruby_text_box_top = first_line_top - last_line_ruby_text_bottom;
      const LayoutUnit ruby_text_top =
-@@ -3199,33 +3208,26 @@ void NGBlockLayoutAlgorithm::HandleRubyText(NGBlockNode ruby_text_child) {
+@@ -3199,33 +3209,26 @@ void NGBlockLayoutAlgorithm::HandleRubyText(NGBlockNode ruby_text_child) {
    } else {
      LayoutUnit first_line_ruby_text_top = ruby_text_box.offset.block_offset;
  
@@ -154,8 +163,8 @@ index 02fc89f19dac75f0e6bc56eaa8b5b9903a862621..d73842b69bb9b6d800e1a6333f39e0da
 +      last_line_bottom =
 +          ruby_base_block_offset +
 +          ruby_base_fragment
-+              ->ConvertChildToLogical(ruby_base_fragment->ScrollableOverflow(
-+                  NGPhysicalFragment::kEmHeight))
++              ->ConvertChildToLogical(
++                  ComputeRubyEmHeightBox(*ruby_base_fragment))
 +              .BlockEndOffset();
 +      base_logical_bottom = ruby_base_block_offset + base_block_size;
      }
@@ -169,7 +178,7 @@ index 02fc89f19dac75f0e6bc56eaa8b5b9903a862621..d73842b69bb9b6d800e1a6333f39e0da
      if (logical_bottom_overflow > LayoutUnit())
        container_builder_.SetAnnotationOverflow(logical_bottom_overflow);
    }
-@@ -3233,17 +3235,19 @@ void NGBlockLayoutAlgorithm::HandleRubyText(NGBlockNode ruby_text_child) {
+@@ -3233,17 +3236,19 @@ void NGBlockLayoutAlgorithm::HandleRubyText(NGBlockNode ruby_text_child) {
                                 LogicalOffset(LayoutUnit(), ruby_text_box_top));
  }
  
@@ -194,7 +203,7 @@ index 02fc89f19dac75f0e6bc56eaa8b5b9903a862621..d73842b69bb9b6d800e1a6333f39e0da
      if (child.IsTextControlContainer()) {
        const auto& grand_children = child.PostLayoutChildren();
        const auto begin = grand_children.begin();
-@@ -3266,14 +3270,14 @@ void NGBlockLayoutAlgorithm::HandleTextControlPlaceholder(
+@@ -3266,14 +3271,14 @@ void NGBlockLayoutAlgorithm::HandleTextControlPlaceholder(
    const NGLayoutResult* result = placeholder.Layout(space);
    LogicalOffset offset = BorderScrollbarPadding().StartOffset();
    if (Node().IsTextArea()) {
@@ -213,7 +222,7 @@ index 02fc89f19dac75f0e6bc56eaa8b5b9903a862621..d73842b69bb9b6d800e1a6333f39e0da
    }
    NGBoxFragment fragment(ConstraintSpace().GetWritingDirection(),
                           To<NGPhysicalBoxFragment>(result->PhysicalFragment()));
-@@ -3282,13 +3286,43 @@ void NGBlockLayoutAlgorithm::HandleTextControlPlaceholder(
+@@ -3282,13 +3287,43 @@ void NGBlockLayoutAlgorithm::HandleTextControlPlaceholder(
    // might be the block-end margin.
    // |fragment| has no FirstBaseline() if it consists of only white-spaces.
    if (fragment.FirstBaseline().has_value()) {
