@@ -1,8 +1,32 @@
 diff --git a/third_party/blink/renderer/core/workers/worklet_global_scope.cc b/third_party/blink/renderer/core/workers/worklet_global_scope.cc
-index 80e2f2e4e9d686e153feeaa310c45736601fd2e2..e68b2af07eaaf3abf9dc4304ef8ab051858d7d8a 100644
+index 80e2f2e4e9d686e153feeaa310c45736601fd2e2..5e878bb6e56cedcefdb64c47b97ab53ed7b15eb1 100644
 --- a/third_party/blink/renderer/core/workers/worklet_global_scope.cc
 +++ b/third_party/blink/renderer/core/workers/worklet_global_scope.cc
-@@ -347,4 +347,8 @@ void WorkletGlobalScope::Trace(Visitor* visitor) const {
+@@ -93,7 +93,9 @@ WorkletGlobalScope::WorkletGlobalScope(
+           std::move(creation_params->content_settings_client),
+           std::move(creation_params->web_worker_fetch_context),
+           reporting_proxy,
+-          /*is_worker_loaded_from_data_url=*/false),
++          /*is_worker_loaded_from_data_url=*/false,
++          /*is_default_world_of_isolate=*/
++          creation_params->is_default_world_of_isolate),
+       ActiveScriptWrappable<WorkletGlobalScope>({}),
+       url_(creation_params->script_url),
+       user_agent_(creation_params->user_agent),
+@@ -116,6 +118,12 @@ WorkletGlobalScope::WorkletGlobalScope(
+   DCHECK((thread_type_ == ThreadType::kMainThread && frame_) ||
+          (thread_type_ == ThreadType::kOffMainThread && worker_thread_));
+ 
++  // Default world implies that we are at least off main thread. Off main
++  // thread may still have cases where threads are shared between multiple
++  // worklets (and thus the Isolate may not be owned by this world)..
++  CHECK(!creation_params->is_default_world_of_isolate ||
++        thread_type == ThreadType::kOffMainThread);
++
+   // Worklet should be in the owner's agent cluster.
+   // https://html.spec.whatwg.org/C/#obtain-a-worklet-agent
+   DCHECK(creation_params->agent_cluster_id ||
+@@ -347,4 +355,8 @@ void WorkletGlobalScope::Trace(Visitor* visitor) const {
    WorkerOrWorkletGlobalScope::Trace(visitor);
  }
  

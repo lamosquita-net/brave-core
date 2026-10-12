@@ -1,0 +1,21 @@
+diff --git a/third_party/blink/renderer/core/inspector/main_thread_debugger.cc b/third_party/blink/renderer/core/inspector/main_thread_debugger.cc
+index afe62a4714918ca33d5a82d792ff5711032051ac..87b1be177adf3de955c09bd17115ed12ac6e6d49 100644
+--- a/third_party/blink/renderer/core/inspector/main_thread_debugger.cc
++++ b/third_party/blink/renderer/core/inspector/main_thread_debugger.cc
+@@ -145,12 +145,13 @@ void MainThreadDebugger::ContextCreated(ScriptState* script_state,
+   StringBuilder aux_data_builder;
+   aux_data_builder.Append("{\"isDefault\":");
+   aux_data_builder.Append(world.IsMainWorld() ? "true" : "false");
+-  if (world.IsMainWorld())
++  if (world.IsMainWorld()) {
+     aux_data_builder.Append(",\"type\":\"default\"");
+-  else if (world.IsIsolatedWorld())
++  } else if (world.IsIsolatedWorld()) {
+     aux_data_builder.Append(",\"type\":\"isolated\"");
+-  else if (world.IsWorkerWorld())
++  } else if (world.IsWorkerOrWorkletWorld()) {
+     aux_data_builder.Append(",\"type\":\"worker\"");
++  }
+   aux_data_builder.Append(",\"frameId\":\"");
+   aux_data_builder.Append(IdentifiersFactory::FrameId(frame));
+   aux_data_builder.Append("\"}");

@@ -1,7 +1,25 @@
 diff --git a/third_party/blink/renderer/modules/scheduler/scheduled_action.cc b/third_party/blink/renderer/modules/scheduler/scheduled_action.cc
-index 83bccd730d8af40e162bc0b0f6f4b78ddcca2244..18a8f071d4b4bd73a001c3f8e36f9f3a73e650e8 100644
+index 83bccd730d8af40e162bc0b0f6f4b78ddcca2244..092a77f37214c5108aaf6d75ec3be1a4b8cc2dba 100644
 --- a/third_party/blink/renderer/modules/scheduler/scheduled_action.cc
 +++ b/third_party/blink/renderer/modules/scheduler/scheduled_action.cc
+@@ -56,7 +56,7 @@ ScheduledAction::ScheduledAction(ScriptState* script_state,
+                                  const HeapVector<ScriptValue>& arguments)
+     : script_state_(
+           MakeGarbageCollected<ScriptStateProtectingContext>(script_state)) {
+-  if (script_state->World().IsWorkerWorld() ||
++  if (script_state->World().IsWorkerOrWorkletWorld() ||
+       BindingSecurity::ShouldAllowAccessTo(
+           EnteredDOMWindow(script_state->GetIsolate()),
+           To<LocalDOMWindow>(&target))) {
+@@ -77,7 +77,7 @@ ScheduledAction::ScheduledAction(ScriptState* script_state,
+                                  const String& handler)
+     : script_state_(
+           MakeGarbageCollected<ScriptStateProtectingContext>(script_state)) {
+-  if (script_state->World().IsWorkerWorld() ||
++  if (script_state->World().IsWorkerOrWorkletWorld() ||
+       BindingSecurity::ShouldAllowAccessTo(
+           EnteredDOMWindow(script_state->GetIsolate()),
+           To<LocalDOMWindow>(&target))) {
 @@ -89,6 +89,7 @@ ScheduledAction::ScheduledAction(ScriptState* script_state,
    } else {
      UseCounter::Count(target, WebFeature::kScheduledActionIgnored);

@@ -1,0 +1,13 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/custom/custom_layout_fragment.cc b/third_party/blink/renderer/core/layout/ng/custom/custom_layout_fragment.cc
+index 2849e98acf8b4e423a75847f2982c051c6cbba52..16f8ccae82940286b0d6ccd07e2d254f56e044ed 100644
+--- a/third_party/blink/renderer/core/layout/ng/custom/custom_layout_fragment.cc
++++ b/third_party/blink/renderer/core/layout/ng/custom/custom_layout_fragment.cc
+@@ -44,7 +44,7 @@ ScriptValue CustomLayoutFragment::data(ScriptState* script_state) const {
+   // to return the same deserialized object. We don't need to check which world
+   // it is being accessed from.
+   DCHECK(ExecutionContext::From(script_state)->IsLayoutWorkletGlobalScope());
+-  DCHECK(script_state->World().IsWorkerWorld());
++  DCHECK(script_state->World().IsWorkerOrWorkletWorld());
+ 
+   if (layout_worklet_world_v8_data_.IsEmpty())
+     return ScriptValue::CreateNull(script_state->GetIsolate());

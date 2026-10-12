@@ -1,8 +1,31 @@
 diff --git a/third_party/blink/renderer/core/workers/worker_or_worklet_global_scope.cc b/third_party/blink/renderer/core/workers/worker_or_worklet_global_scope.cc
-index d93321c18c97c2e303e25615def5f2cec833bd57..a8ea391ad554403527e056463d620a9c212ed443 100644
+index d93321c18c97c2e303e25615def5f2cec833bd57..88c052a006111be3d9e46c33c427065476d72745 100644
 --- a/third_party/blink/renderer/core/workers/worker_or_worklet_global_scope.cc
 +++ b/third_party/blink/renderer/core/workers/worker_or_worklet_global_scope.cc
-@@ -250,12 +250,6 @@ v8::Local<v8::Object> WorkerOrWorkletGlobalScope::AssociateWithWrapper(
+@@ -203,7 +203,8 @@ WorkerOrWorkletGlobalScope::WorkerOrWorkletGlobalScope(
+     std::unique_ptr<WebContentSettingsClient> content_settings_client,
+     scoped_refptr<WebWorkerFetchContext> web_worker_fetch_context,
+     WorkerReportingProxy& reporting_proxy,
+-    bool is_worker_loaded_from_data_url)
++    bool is_worker_loaded_from_data_url,
++    bool is_default_world_of_isolate)
+     : ExecutionContext(isolate, agent),
+       is_creator_secure_context_(is_creator_secure_context),
+       name_(name),
+@@ -211,8 +212,10 @@ WorkerOrWorkletGlobalScope::WorkerOrWorkletGlobalScope(
+       worker_clients_(worker_clients),
+       content_settings_client_(std::move(content_settings_client)),
+       web_worker_fetch_context_(std::move(web_worker_fetch_context)),
+-      script_controller_(
+-          MakeGarbageCollected<WorkerOrWorkletScriptController>(this, isolate)),
++      script_controller_(MakeGarbageCollected<WorkerOrWorkletScriptController>(
++          this,
++          isolate,
++          /*is_default_world_of_isolate=*/is_default_world_of_isolate)),
+       v8_cache_options_(v8_cache_options),
+       reporting_proxy_(reporting_proxy) {
+   GetSecurityContext().SetIsWorkerLoadedFromDataURL(
+@@ -250,12 +253,6 @@ v8::Local<v8::Object> WorkerOrWorkletGlobalScope::AssociateWithWrapper(
    return v8::Local<v8::Object>();
  }
  

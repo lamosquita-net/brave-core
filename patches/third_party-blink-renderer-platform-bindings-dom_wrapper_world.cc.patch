@@ -1,8 +1,88 @@
 diff --git a/third_party/blink/renderer/platform/bindings/dom_wrapper_world.cc b/third_party/blink/renderer/platform/bindings/dom_wrapper_world.cc
-index 00804501dfd68c1571998818f0f0501e29fd6739..413aa1f1407ca99bcad9138d6c0603890ade57c8 100644
+index 00804501dfd68c1571998818f0f0501e29fd6739..627d1daaf8d49b261999a462c1e5918b288da952 100644
 --- a/third_party/blink/renderer/platform/bindings/dom_wrapper_world.cc
 +++ b/third_party/blink/renderer/platform/bindings/dom_wrapper_world.cc
-@@ -303,13 +303,27 @@ bool DOMWrapperWorld::HasWrapperInAnyWorldInMainThread(
+@@ -69,22 +69,27 @@ static bool IsMainWorldId(int32_t world_id) {
+ }
+ #endif
+ 
+-scoped_refptr<DOMWrapperWorld> DOMWrapperWorld::Create(v8::Isolate* isolate,
+-                                                       WorldType world_type) {
++scoped_refptr<DOMWrapperWorld> DOMWrapperWorld::Create(
++    v8::Isolate* isolate,
++    WorldType world_type,
++    bool is_default_world_of_isolate) {
+   DCHECK_NE(WorldType::kIsolated, world_type);
+   int32_t world_id = GenerateWorldIdForType(world_type);
+   if (world_id == kInvalidWorldId)
+     return nullptr;
+-  return base::AdoptRef(new DOMWrapperWorld(isolate, world_type, world_id));
++  return base::AdoptRef(new DOMWrapperWorld(isolate, world_type, world_id,
++                                            is_default_world_of_isolate));
+ }
+ 
+ DOMWrapperWorld::DOMWrapperWorld(v8::Isolate* isolate,
+                                  WorldType world_type,
+-                                 int32_t world_id)
++                                 int32_t world_id,
++                                 bool is_default_world_of_isolate)
+     : world_type_(world_type),
+       world_id_(world_id),
+       dom_data_store_(
+-          MakeGarbageCollected<DOMDataStore>(isolate, IsMainWorld())),
++          MakeGarbageCollected<DOMDataStore>(isolate,
++                                             is_default_world_of_isolate)),
+       v8_object_data_store_(MakeGarbageCollected<V8ObjectDataStore>()) {
+   switch (world_type_) {
+     case WorldType::kMain:
+@@ -94,7 +99,7 @@ DOMWrapperWorld::DOMWrapperWorld(v8::Isolate* isolate,
+     case WorldType::kInspectorIsolated:
+     case WorldType::kRegExp:
+     case WorldType::kForV8ContextSnapshotNonMain:
+-    case WorldType::kWorker:
++    case WorldType::kWorkerOrWorklet:
+     case WorldType::kShadowRealm: {
+       WorldMap& map = GetWorldMap();
+       DCHECK(!map.Contains(world_id_));
+@@ -110,7 +115,8 @@ DOMWrapperWorld& DOMWrapperWorld::MainWorld() {
+   DCHECK(IsMainThread());
+   DEFINE_STATIC_REF(
+       DOMWrapperWorld, cached_main_world,
+-      (DOMWrapperWorld::Create(v8::Isolate::GetCurrent(), WorldType::kMain)));
++      (DOMWrapperWorld::Create(v8::Isolate::GetCurrent(), WorldType::kMain,
++                               /*is_default_world_of_isolate=*/true)));
+   return *cached_main_world;
+ }
+ 
+@@ -128,7 +134,7 @@ DOMWrapperWorld::~DOMWrapperWorld() {
+     number_of_non_main_worlds_in_main_thread_--;
+ 
+   // WorkerWorld should be disposed of before the dtor.
+-  if (!IsWorkerWorld())
++  if (!IsWorkerOrWorkletWorld())
+     Dispose();
+   DCHECK(!GetWorldMap().Contains(world_id_));
+ }
+@@ -162,7 +168,8 @@ scoped_refptr<DOMWrapperWorld> DOMWrapperWorld::EnsureIsolatedWorld(
+   }
+ 
+   return base::AdoptRef(
+-      new DOMWrapperWorld(isolate, WorldType::kIsolated, world_id));
++      new DOMWrapperWorld(isolate, WorldType::kIsolated, world_id,
++                          /*is_default_world_of_isolate=*/false));
+ }
+ 
+ typedef HashMap<int, scoped_refptr<SecurityOrigin>>
+@@ -278,7 +285,7 @@ int DOMWrapperWorld::GenerateWorldIdForType(WorldType world_type) {
+     }
+     case WorldType::kRegExp:
+     case WorldType::kForV8ContextSnapshotNonMain:
+-    case WorldType::kWorker:
++    case WorldType::kWorkerOrWorklet:
+     case WorldType::kShadowRealm: {
+       CHECK_GE(next_world_id, kUnspecifiedWorldIdStart);
+       return next_world_id++;
+@@ -303,13 +310,27 @@ bool DOMWrapperWorld::HasWrapperInAnyWorldInMainThread(
  }
  
  // static

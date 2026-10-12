@@ -1,0 +1,12 @@
+diff --git a/third_party/blink/renderer/core/workers/worker_thread.cc b/third_party/blink/renderer/core/workers/worker_thread.cc
+index b52cbc1f1393551e95f885b415ae12a1c2d58ab0..8fb1170c2deeb56e6f2989a8c97a7e375b8c351e 100644
+--- a/third_party/blink/renderer/core/workers/worker_thread.cc
++++ b/third_party/blink/renderer/core/workers/worker_thread.cc
+@@ -608,6 +608,7 @@ void WorkerThread::InitializeOnWorkerThread(
+     DCHECK_EQ(ThreadState::kNotStarted, thread_state_);
+ 
+     if (IsOwningBackingThread()) {
++      global_scope_creation_params->is_default_world_of_isolate = true;
+       DCHECK(thread_startup_data.has_value());
+       GetWorkerBackingThread().InitializeOnBackingThread(*thread_startup_data);
+     } else {
