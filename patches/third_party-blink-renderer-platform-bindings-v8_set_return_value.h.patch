@@ -1,0 +1,64 @@
+diff --git a/third_party/blink/renderer/platform/bindings/v8_set_return_value.h b/third_party/blink/renderer/platform/bindings/v8_set_return_value.h
+index d42bfeb33cd2bec9320001980255d6ecfd00da11..18ae66886dbe7b6a9ecdb4a53ec10289ea0765cd 100644
+--- a/third_party/blink/renderer/platform/bindings/v8_set_return_value.h
++++ b/third_party/blink/renderer/platform/bindings/v8_set_return_value.h
+@@ -105,14 +105,9 @@ PLATFORM_EXPORT inline void V8SetReturnValue(
+ }
+ 
+ PLATFORM_EXPORT inline void V8SetReturnValue(
+-    const v8::PropertyCallbackInfo<v8::Value>& info,
++    const v8::PropertyCallbackInfo<void>& info,
+     IndexedPropertySetterResult value) {
+-  if (value == IndexedPropertySetterResult::kDidNotIntercept) {
+-    // Do not set the return value to indicate that the request was not
+-    // intercepted.
+-    return;
+-  }
+-  info.GetReturnValue().SetNull();
++  // Setter callback is not expected to set the return value.
+ }
+ 
+ PLATFORM_EXPORT inline void V8SetReturnValue(
+@@ -125,25 +120,30 @@ PLATFORM_EXPORT inline void V8SetReturnValue(
+ }
+ 
+ PLATFORM_EXPORT inline void V8SetReturnValue(
+-    const v8::PropertyCallbackInfo<v8::Value>& info,
++    const v8::PropertyCallbackInfo<void>& info,
+     NamedPropertySetterResult value) {
+-  if (value == NamedPropertySetterResult::kDidNotIntercept) {
+-    // Do not set the return value to indicate that the request was not
+-    // intercepted.
+-    return;
+-  }
+-  info.GetReturnValue().SetNull();
++  // Setter callback is not expected to set the return value.
+ }
+ 
++PLATFORM_EXPORT inline void V8SetReturnValue(
++    const v8::PropertyCallbackInfo<void>& info,
++    NamedPropertyDeleterResult value) {}
++
+ PLATFORM_EXPORT inline void V8SetReturnValue(
+     const v8::PropertyCallbackInfo<v8::Boolean>& info,
+     NamedPropertyDeleterResult value) {
+-  if (value == NamedPropertyDeleterResult::kDidNotIntercept) {
+-    // Do not set the return value to indicate that the request was not
+-    // intercepted.
+-    return;
++  switch (value) {
++    case NamedPropertyDeleterResult::kDidNotIntercept:
++      // Deleter callback doesn't have to set the return value if the
++      // operation was not intercepted.
++      return;
++
++    case NamedPropertyDeleterResult::kDidNotDelete:
++    case NamedPropertyDeleterResult::kDeleted:
++      info.GetReturnValue().Set(value == NamedPropertyDeleterResult::kDeleted);
++      return;
+   }
+-  info.GetReturnValue().Set(value == NamedPropertyDeleterResult::kDeleted);
++  NOTREACHED();
+ }
+ 
+ // nullptr

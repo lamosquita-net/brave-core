@@ -1,0 +1,16 @@
+diff --git a/third_party/blink/renderer/modules/peerconnection/rtc_stats_response.cc b/third_party/blink/renderer/modules/peerconnection/rtc_stats_response.cc
+index 53d191a2e135313838521a78fb9472dabd5faff3..a8c847691eaec0c737354b8c8d76563d518fa66f 100644
+--- a/third_party/blink/renderer/modules/peerconnection/rtc_stats_response.cc
++++ b/third_party/blink/renderer/modules/peerconnection/rtc_stats_response.cc
+@@ -34,6 +34,11 @@ RTCLegacyStatsReport* RTCStatsResponse::namedItem(const AtomicString& name) {
+   return nullptr;
+ }
+ 
++bool RTCStatsResponse::NamedPropertyQuery(const AtomicString& name,
++                                          ExceptionState&) {
++  return namedItem(name);
++}
++
+ void RTCStatsResponse::AddStats(const RTCLegacyStats& stats) {
+   result_.push_back(MakeGarbageCollected<RTCLegacyStatsReport>(
+       stats.Id(), stats.GetType(), stats.Timestamp()));

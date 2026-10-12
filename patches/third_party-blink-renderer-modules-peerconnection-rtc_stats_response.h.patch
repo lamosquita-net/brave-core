@@ -1,0 +1,24 @@
+diff --git a/third_party/blink/renderer/modules/peerconnection/rtc_stats_response.h b/third_party/blink/renderer/modules/peerconnection/rtc_stats_response.h
+index 0ec9f0cf2ec5a8516b4c8d775cf02147acbcabf2..8f2805d606d747016cc277ea996dc82dd2e07d66 100644
+--- a/third_party/blink/renderer/modules/peerconnection/rtc_stats_response.h
++++ b/third_party/blink/renderer/modules/peerconnection/rtc_stats_response.h
+@@ -36,6 +36,8 @@
+ 
+ namespace blink {
+ 
++class ExceptionState;
++
+ class RTCStatsResponse final : public RTCStatsResponseBase {
+   DEFINE_WRAPPERTYPEINFO();
+ 
+@@ -46,6 +48,10 @@ class RTCStatsResponse final : public RTCStatsResponseBase {
+     return result_;
+   }
+   RTCLegacyStatsReport* namedItem(const AtomicString& name);
++  // FlyWeb: the bindings of the new V8 interceptor API (Chromium
++  // fbaf6ccfe4ba) ask for property existence; upstream had already removed
++  // this legacy getStats() response.
++  bool NamedPropertyQuery(const AtomicString& name, ExceptionState&);
+ 
+   void AddStats(const RTCLegacyStats&) override;
+ 

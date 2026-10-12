@@ -1,8 +1,25 @@
 diff --git a/third_party/blink/renderer/bindings/scripts/bind_gen/codegen_context.py b/third_party/blink/renderer/bindings/scripts/bind_gen/codegen_context.py
-index c3fd4d1b09c7cd48c1dab3d1043ccc00f77ad406..7783530130ba8c732b71c0e3529d0648f0795f87 100644
+index c3fd4d1b09c7cd48c1dab3d1043ccc00f77ad406..d825a043b0dcc3d3535f186be6b7c3b3d1f3bc58 100644
 --- a/third_party/blink/renderer/bindings/scripts/bind_gen/codegen_context.py
 +++ b/third_party/blink/renderer/bindings/scripts/bind_gen/codegen_context.py
-@@ -78,6 +78,7 @@ class CodeGenContext(object):
+@@ -61,10 +61,12 @@ class CodeGenContext(object):
+     # void (*)(v8::Local<v8::Name>, v8::Local<v8::Value>,
+     #          const v8::PropertyCallbackInfo<void>&)
+     V8_ACCESSOR_NAME_SETTER_CALLBACK = "v8::AccessorNameSetterCallback"
+-    # void (*)(v8::Local<v8::Name>, v8::Local<v8::Value>,
+-    #          const v8::PropertyCallbackInfo<v8::Value>&)
+-    V8_GENERIC_NAMED_PROPERTY_SETTER_CALLBACK = (
+-        "v8::GenericNamedPropertySetterCallback")
++    # v8::Intercepted (*)(v8::Local<v8::Name>,
++    #                     const v8::PropertyCallbackInfo<v8::Value>&)
++    V8_NAMED_PROPERTY_GETTER_CALLBACK = "v8::NamedPropertyGetterCallback"
++    # v8::Intercepted (*)(v8::Local<v8::Name>, v8::Local<v8::Value>,
++    #                     const v8::PropertyCallbackInfo<void>&)
++    V8_NAMED_PROPERTY_SETTER_CALLBACK = "v8::NamedPropertySetterCallback"
+     # Others
+     V8_OTHER_CALLBACK = "other callback type"
+ 
+@@ -78,6 +80,7 @@ class CodeGenContext(object):
          #   attribute name: default value
          cls._context_attrs = {
              # Top-level definition
@@ -10,7 +27,7 @@ index c3fd4d1b09c7cd48c1dab3d1043ccc00f77ad406..7783530130ba8c732b71c0e3529d0648
              "callback_function": None,
              "callback_interface": None,
              "dictionary": None,
-@@ -104,8 +105,10 @@ class CodeGenContext(object):
+@@ -104,8 +107,10 @@ class CodeGenContext(object):
              "operation_group": None,
  
              # Special member-ish definition
@@ -21,7 +38,7 @@ index c3fd4d1b09c7cd48c1dab3d1043ccc00f77ad406..7783530130ba8c732b71c0e3529d0648
              "named_property_getter": None,
              "named_property_setter": None,
              "named_property_deleter": None,
-@@ -230,8 +233,9 @@ class CodeGenContext(object):
+@@ -230,8 +235,9 @@ class CodeGenContext(object):
  
      @property
      def class_like(self):
@@ -33,3 +50,21 @@ index c3fd4d1b09c7cd48c1dab3d1043ccc00f77ad406..7783530130ba8c732b71c0e3529d0648
  
      @property
      def does_override_idl_return_type(self):
+@@ -286,6 +292,17 @@ class CodeGenContext(object):
+             return self.operation_group[0].return_type.unwrap().is_promise
+         return False
+ 
++    @property
++    def is_interceptor_returning_v8intercepted(self):
++        return bool((self.indexed_interceptor_kind
++                     and self.indexed_interceptor_kind != "Enumerator")
++                    or (self.named_interceptor_kind
++                        and self.named_interceptor_kind != "Enumerator")
++                    or (self.v8_callback_type
++                        == CodeGenContext.V8_NAMED_PROPERTY_GETTER_CALLBACK)
++                    or (self.v8_callback_type
++                        == CodeGenContext.V8_NAMED_PROPERTY_SETTER_CALLBACK))
++
+     @property
+     def logging_target(self):
+         return (self.attribute or self.constant or self.constructor

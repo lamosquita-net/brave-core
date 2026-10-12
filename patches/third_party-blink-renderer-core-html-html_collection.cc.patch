@@ -1,0 +1,22 @@
+diff --git a/third_party/blink/renderer/core/html/html_collection.cc b/third_party/blink/renderer/core/html/html_collection.cc
+index 567292156b6b2c167821092ecad3e38a0366d83d..cba715a609f470ad0d91aa54b2794e55654a8400 100644
+--- a/third_party/blink/renderer/core/html/html_collection.cc
++++ b/third_party/blink/renderer/core/html/html_collection.cc
+@@ -555,6 +555,17 @@ void HTMLCollection::NamedItems(const AtomicString& name,
+     result.AppendVector(*name_results);
+ }
+ 
++bool HTMLCollection::HasNamedItems(const AtomicString& name) const {
++  if (name.empty()) {
++    return false;
++  }
++
++  UpdateIdNameCache();
++
++  const NamedItemCache& cache = GetNamedItemCache();
++  return cache.GetElementsById(name) || cache.GetElementsByName(name);
++}
++
+ HTMLCollection::NamedItemCache::NamedItemCache() = default;
+ 
+ void HTMLCollection::Trace(Visitor* visitor) const {

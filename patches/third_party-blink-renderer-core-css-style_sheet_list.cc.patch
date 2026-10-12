@@ -1,0 +1,16 @@
+diff --git a/third_party/blink/renderer/core/css/style_sheet_list.cc b/third_party/blink/renderer/core/css/style_sheet_list.cc
+index 719f49a4af7f0756c881bd5cd41c8dc13e39d903..3eb768b291b38da99a2313fa03dca4f3967f8e7b 100644
+--- a/third_party/blink/renderer/core/css/style_sheet_list.cc
++++ b/third_party/blink/renderer/core/css/style_sheet_list.cc
+@@ -89,6 +89,11 @@ CSSStyleSheet* StyleSheetList::AnonymousNamedGetter(const AtomicString& name) {
+   return sheet;
+ }
+ 
++bool StyleSheetList::NamedPropertyQuery(const AtomicString& name,
++                                        ExceptionState&) {
++  return AnonymousNamedGetter(name);
++}
++
+ void StyleSheetList::Trace(Visitor* visitor) const {
+   visitor->Trace(tree_scope_);
+   visitor->Trace(style_sheet_vector_);

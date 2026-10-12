@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/forms/html_form_element.cc b/third_party/blink/renderer/core/html/forms/html_form_element.cc
-index be19c42cdc45a5f0b8ba52918b98dba07b6bd0e1..515998c56871da429b685519e74fa3faf844a644 100644
+index be19c42cdc45a5f0b8ba52918b98dba07b6bd0e1..631563330925657b3c45f943781b4ba2586db55e 100644
 --- a/third_party/blink/renderer/core/html/forms/html_form_element.cc
 +++ b/third_party/blink/renderer/core/html/forms/html_form_element.cc
 @@ -338,6 +338,12 @@ void HTMLFormElement::PrepareForSubmission(
@@ -15,3 +15,30 @@ index be19c42cdc45a5f0b8ba52918b98dba07b6bd0e1..515998c56871da429b685519e74fa3fa
    bool should_submit;
    {
      base::AutoReset<bool> submit_event_handler_scope(&in_user_js_submit_event_,
+@@ -953,6 +959,14 @@ void HTMLFormElement::GetNamedElements(
+   }
+ }
+ 
++bool HTMLFormElement::HasNamedElements(const AtomicString& name) {
++  // http://www.whatwg.org/specs/web-apps/current-work/multipage/forms.html#dom-form-nameditem
++  if (elements()->HasNamedItems(name)) {
++    return true;
++  }
++  return ElementFromPastNamesMap(name);
++}
++
+ bool HTMLFormElement::ShouldAutocomplete() const {
+   return !EqualIgnoringASCIICase(
+       FastGetAttribute(html_names::kAutocompleteAttr), "off");
+@@ -1013,6 +1027,11 @@ V8UnionElementOrRadioNodeList* HTMLFormElement::AnonymousNamedGetter(
+       GetRadioNodeList(name, only_match_img));
+ }
+ 
++bool HTMLFormElement::NamedPropertyQuery(const AtomicString& name,
++                                         ExceptionState&) {
++  return HasNamedElements(name);
++}
++
+ void HTMLFormElement::InvalidateDefaultButtonStyle() const {
+   for (ListedElement* control : ListedElements()) {
+     auto* html_form_control = DynamicTo<HTMLFormControlElement>(control);
