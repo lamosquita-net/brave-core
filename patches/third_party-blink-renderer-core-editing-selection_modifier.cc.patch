@@ -1,0 +1,38 @@
+diff --git a/third_party/blink/renderer/core/editing/selection_modifier.cc b/third_party/blink/renderer/core/editing/selection_modifier.cc
+index 3b1187b4a0553e3e80327e2fba44f4dfe096cbb5..8332f98921b1abc24d099808e71aacd39129fa61 100644
+--- a/third_party/blink/renderer/core/editing/selection_modifier.cc
++++ b/third_party/blink/renderer/core/editing/selection_modifier.cc
+@@ -44,6 +44,7 @@
+ #include "third_party/blink/renderer/core/layout/ng/inline/ng_offset_mapping.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_physical_fragment.h"
+ #include "third_party/blink/renderer/core/page/spatial_navigation.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+ 
+ namespace blink {
+ 
+@@ -94,7 +95,11 @@ VisiblePositionInFlatTree SelectionModifier::PreviousParagraphPosition(
+         new_position.DeepEquivalent() == position.DeepEquivalent())
+       break;
+     position = new_position;
+-  } while (InSameParagraph(passed_position, position));
++  } while (InSameParagraph(
++      passed_position, position,
++      RuntimeEnabledFeatures::ModifyParagraphCrossEditingoundaryEnabled()
++          ? kCanCrossEditingBoundary
++          : kCannotCrossEditingBoundary));
+   return position;
+ }
+ 
+@@ -111,7 +116,11 @@ VisiblePositionInFlatTree SelectionModifier::NextParagraphPosition(
+         new_position.DeepEquivalent() == position.DeepEquivalent())
+       break;
+     position = new_position;
+-  } while (InSameParagraph(passed_position, position));
++  } while (InSameParagraph(
++      passed_position, position,
++      RuntimeEnabledFeatures::ModifyParagraphCrossEditingoundaryEnabled()
++          ? kCanCrossEditingBoundary
++          : kCannotCrossEditingBoundary));
+   return position;
+ }
+ 
