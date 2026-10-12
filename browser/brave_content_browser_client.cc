@@ -1252,28 +1252,11 @@ blink::UserAgentMetadata BraveContentBrowserClient::GetUserAgentMetadata() {
   if (command_line->HasSwitch(embedder_support::kUserAgent)) {
     return metadata;
   }
-  // FlyWeb: declared engine level in the client hints too (GREASE brand
-  // versions are left alone).
-  for (auto& brand_version : metadata.brand_version_list) {
-    brand_version.version = flyweb::DeclareVersion(brand_version.version);
-  }
-  for (auto& brand_version : metadata.brand_full_version_list) {
-    brand_version.version = flyweb::DeclareVersion(brand_version.version);
-  }
-  metadata.full_version = flyweb::DeclareVersion(metadata.full_version);
-  // FlyWeb: two, without the "Brave" brand (see the chromium_src override of
-  // components/embedder_support/user_agent_utils.cc).
+  // FlyWeb: embedder_support::GetUserAgentMetadata() already declares the
+  // engine level and a real full version of it (chromium_src override, F4.8),
+  // for the request headers too; no zeroed "127.0.0.0" full versions, which
+  // no Chrome 127 sends. Two brands, without "Brave".
   DCHECK_EQ(2UL, metadata.brand_version_list.size());
   DCHECK_EQ(2UL, metadata.brand_full_version_list.size());
-  // Zero out the last 3 version components in full version list versions.
-  for (auto& brand_version : metadata.brand_full_version_list) {
-    base::Version version(brand_version.version);
-    brand_version.version =
-        base::StrCat({base::NumberToString(version.components()[0]), ".0.0.0"});
-  }
-  // Zero out the last 3 version components in full version.
-  base::Version version(metadata.full_version);
-  metadata.full_version =
-      base::StrCat({base::NumberToString(version.components()[0]), ".0.0.0"});
   return metadata;
 }
