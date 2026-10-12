@@ -1,0 +1,22 @@
+diff --git a/third_party/blink/renderer/platform/bindings/to_v8.h b/third_party/blink/renderer/platform/bindings/to_v8.h
+index 94aea1c209307901d0b8b00fe09e7cc3e9f68a0f..cbf77053f92817408be3fa28ca718dee05b4ef7d 100644
+--- a/third_party/blink/renderer/platform/bindings/to_v8.h
++++ b/third_party/blink/renderer/platform/bindings/to_v8.h
+@@ -38,13 +38,13 @@ inline v8::Local<v8::Value> ToV8(ScriptWrappable* impl,
+                                  v8::Isolate* isolate) {
+   if (UNLIKELY(!impl))
+     return v8::Null(isolate);
+-  v8::Local<v8::Value> wrapper = DOMDataStore::GetWrapper(impl, isolate);
+-  if (!wrapper.IsEmpty())
+-    return wrapper;
++  v8::Local<v8::Object> wrapper_object;
++  if (DOMDataStore::GetWrapper(isolate, impl).ToLocal(&wrapper_object))
++    return wrapper_object;
+ 
+   ScriptState* script_state =
+       ScriptState::From(creation_context->GetCreationContextChecked());
+-  wrapper = impl->Wrap(script_state).ToLocalChecked();
++  v8::Local<v8::Value> wrapper = impl->Wrap(script_state).ToLocalChecked();
+   DCHECK(!wrapper.IsEmpty());
+   return wrapper;
+ }

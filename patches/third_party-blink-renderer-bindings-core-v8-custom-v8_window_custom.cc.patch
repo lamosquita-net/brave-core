@@ -1,7 +1,16 @@
 diff --git a/third_party/blink/renderer/bindings/core/v8/custom/v8_window_custom.cc b/third_party/blink/renderer/bindings/core/v8/custom/v8_window_custom.cc
-index 73c9ea39d6e9064ad2d65511d6fa55161ccb9ee6..f6b9c953d3d463896efd1b6d8af749a6d231b391 100644
+index 73c9ea39d6e9064ad2d65511d6fa55161ccb9ee6..c97026b8ffe06f460f8e3a1224de3f55c8663ef7 100644
 --- a/third_party/blink/renderer/bindings/core/v8/custom/v8_window_custom.cc
 +++ b/third_party/blink/renderer/bindings/core/v8/custom/v8_window_custom.cc
+@@ -90,7 +90,7 @@ static void LocationAttributeGet(const CallbackInfo& info) {
+             ->NewRemoteInstance()
+             .ToLocalChecked();
+ 
+-    DCHECK(!DOMDataStore::ContainsWrapper(location, isolate));
++    DCHECK(!DOMDataStore::ContainsWrapper(isolate, location));
+     wrapper = V8DOMWrapper::AssociateObjectWithWrapper(
+         isolate, location, location_wrapper_type, new_wrapper);
+   } else {
 @@ -183,141 +183,4 @@ void V8Window::OpenerAttributeSetterCustom(
    }
  }

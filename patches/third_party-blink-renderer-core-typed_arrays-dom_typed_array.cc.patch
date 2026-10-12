@@ -1,0 +1,13 @@
+diff --git a/third_party/blink/renderer/core/typed_arrays/dom_typed_array.cc b/third_party/blink/renderer/core/typed_arrays/dom_typed_array.cc
+index cf387caeb5a1665e8552b736e2a208cc6b67a10c..5dd4f223c657fed54ee934fa69ea989a11f487b8 100644
+--- a/third_party/blink/renderer/core/typed_arrays/dom_typed_array.cc
++++ b/third_party/blink/renderer/core/typed_arrays/dom_typed_array.cc
+@@ -12,7 +12,7 @@ namespace blink {
+ template <typename T, typename V8TypedArray, bool clamped>
+ v8::MaybeLocal<v8::Value> DOMTypedArray<T, V8TypedArray, clamped>::Wrap(
+     ScriptState* script_state) {
+-  DCHECK(!DOMDataStore::ContainsWrapper(this, script_state->GetIsolate()));
++  DCHECK(!DOMDataStore::ContainsWrapper(script_state->GetIsolate(), this));
+ 
+   const WrapperTypeInfo* wrapper_type_info = GetWrapperTypeInfo();
+   DOMArrayBufferBase* buffer = BufferBase();

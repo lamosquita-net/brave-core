@@ -1,8 +1,8 @@
 diff --git a/third_party/blink/renderer/bindings/core/v8/remote_window_proxy.cc b/third_party/blink/renderer/bindings/core/v8/remote_window_proxy.cc
-index a2af872829743b4c51fa4f71e30b3e7948567852..3caa238f10adc7294cac000aedf326d097758362 100644
+index a2af872829743b4c51fa4f71e30b3e7948567852..673ef02fc5134eb174538d98c9b490b502271447 100644
 --- a/third_party/blink/renderer/bindings/core/v8/remote_window_proxy.cc
 +++ b/third_party/blink/renderer/bindings/core/v8/remote_window_proxy.cc
-@@ -73,9 +73,9 @@ void RemoteWindowProxy::DisposeContext(Lifecycle next_status,
+@@ -73,12 +73,19 @@ void RemoteWindowProxy::DisposeContext(Lifecycle next_status,
         next_status == Lifecycle::kGlobalObjectIsDetached) &&
        !global_proxy_.IsEmpty()) {
      v8::HandleScope handle_scope(GetIsolate());
@@ -11,11 +11,22 @@ index a2af872829743b4c51fa4f71e30b3e7948567852..3caa238f10adc7294cac000aedf326d0
 -                                  global_proxy_.Get(GetIsolate()));
 +    v8::Local<v8::Object> global = global_proxy_.Get(GetIsolate());
 +    V8DOMWrapper::ClearNativeInfo(GetIsolate(), global);
-+    DOMWrapperWorld::ClearWrapperIfEqualTo(GetFrame()->DomWindow(), global);
++    world_->DomDataStore().ClearIfEqualTo(GetFrame()->DomWindow(), global);
  #if DCHECK_IS_ON()
++    Vector<scoped_refptr<DOMWrapperWorld>> all_worlds;
++    // FlyWeb: the 116 has no AllWorldsInIsolate(); same set of worlds.
++    DOMWrapperWorld::AllWorldsInCurrentThread(all_worlds);
++    for (auto& world : all_worlds) {
++      DCHECK(!world->DomDataStore().EqualTo(GetFrame()->DomWindow(), global));
++    }
++
      DidDetachGlobalObject();
- #endif
-@@ -135,9 +135,9 @@ void RemoteWindowProxy::SetupWindowPrototypeChain() {
+-#endif
++#endif  // DCHECK_IS_ON()
+   }
+ 
+   DCHECK_EQ(lifecycle_, Lifecycle::kContextIsInitialized);
+@@ -135,9 +142,9 @@ void RemoteWindowProxy::SetupWindowPrototypeChain() {
    v8::Local<v8::Object> global_proxy = global_proxy_.Get(GetIsolate());
    V8DOMWrapper::SetNativeInfo(GetIsolate(), global_proxy, wrapper_type_info,
                                window);

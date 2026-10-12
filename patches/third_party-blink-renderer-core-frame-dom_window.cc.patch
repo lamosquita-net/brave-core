@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/frame/dom_window.cc b/third_party/blink/renderer/core/frame/dom_window.cc
-index 3338414fca47e05ed26897ec09198a61a3861637..7fd20a4cc94bc733b1e8ba99292fe63a24730563 100644
+index 3338414fca47e05ed26897ec09198a61a3861637..bbe4a08b39c66ce7fd461677aad78394544d424f 100644
 --- a/third_party/blink/renderer/core/frame/dom_window.cc
 +++ b/third_party/blink/renderer/core/frame/dom_window.cc
 @@ -9,6 +9,7 @@
@@ -44,7 +44,7 @@ index 3338414fca47e05ed26897ec09198a61a3861637..7fd20a4cc94bc733b1e8ba99292fe63a
    return frame->GetWindowProxy(script_state->World())
        ->GlobalProxyIfNotDetached();
  }
-@@ -90,8 +98,21 @@ v8::Local<v8::Object> DOMWindow::AssociateWithWrapper(
+@@ -90,8 +98,22 @@ v8::Local<v8::Object> DOMWindow::AssociateWithWrapper(
      v8::Isolate*,
      const WrapperTypeInfo*,
      v8::Local<v8::Object> wrapper) {
@@ -60,7 +60,8 @@ index 3338414fca47e05ed26897ec09198a61a3861637..7fd20a4cc94bc733b1e8ba99292fe63a
 +    v8::Local<v8::Object> wrapper) {
 +  // Using the world directly avoids fetching it from a potentially
 +  // half-initialized context.
-+  if (world->DomDataStore().Set(isolate, this, wrapper_type_info, wrapper)) {
++  if (world->DomDataStore().Set</*entered_context=*/false>(
++          isolate, this, wrapper_type_info, wrapper)) {
 +    V8DOMWrapper::SetNativeInfo(isolate, wrapper, wrapper_type_info, this);
 +    DCHECK(V8DOMWrapper::HasInternalFieldsSet(wrapper));
 +  }
@@ -68,7 +69,7 @@ index 3338414fca47e05ed26897ec09198a61a3861637..7fd20a4cc94bc733b1e8ba99292fe63a
  }
  
  const AtomicString& DOMWindow::InterfaceName() const {
-@@ -251,6 +272,125 @@ DOMWindow* DOMWindow::AnonymousIndexedGetter(uint32_t index) {
+@@ -251,6 +273,125 @@ DOMWindow* DOMWindow::AnonymousIndexedGetter(uint32_t index) {
    return child ? child->DomWindow() : nullptr;
  }
  

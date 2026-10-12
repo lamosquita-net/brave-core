@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/text.cc b/third_party/blink/renderer/core/dom/text.cc
-index e907f6bb3f8163e646217517c3d853443378c425..e4942e36fb5f3264960d619e13912cd7d5628072 100644
+index e907f6bb3f8163e646217517c3d853443378c425..c95d13bf8b2218191adb71347d5047c40a7e1d60 100644
 --- a/third_party/blink/renderer/core/dom/text.cc
 +++ b/third_party/blink/renderer/core/dom/text.cc
 @@ -41,6 +41,7 @@
@@ -41,3 +41,12 @@ index e907f6bb3f8163e646217517c3d853443378c425..e4942e36fb5f3264960d619e13912cd7
      }
    }
  
+@@ -142,7 +158,7 @@ Text* Text::splitText(unsigned offset, ExceptionState& exception_state) {
+   // [NewObject] must always create a new wrapper.  Check that a wrapper
+   // does not exist yet.
+   DCHECK(
+-      DOMDataStore::GetWrapper(new_text, v8::Isolate::GetCurrent()).IsEmpty());
++      DOMDataStore::GetWrapper(v8::Isolate::GetCurrent(), new_text).IsEmpty());
+ 
+   return new_text;
+ }

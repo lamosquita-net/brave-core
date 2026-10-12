@@ -1,0 +1,31 @@
+diff --git a/third_party/blink/renderer/bindings/core/v8/to_v8_traits.h b/third_party/blink/renderer/bindings/core/v8/to_v8_traits.h
+index 55536f5e64233fdc3d8b7d94801d2ade2fd3495b..9f1f45cbffba56f833eb119419f20b4446a2687c 100644
+--- a/third_party/blink/renderer/bindings/core/v8/to_v8_traits.h
++++ b/third_party/blink/renderer/bindings/core/v8/to_v8_traits.h
+@@ -226,9 +226,10 @@ inline v8::MaybeLocal<v8::Value> ToV8HelperScriptWrappable(
+     ScriptState* script_state,
+     ScriptWrappable* script_wrappable) {
+   CHECK(script_wrappable);
+-  v8::Local<v8::Value> wrapper =
+-      DOMDataStore::GetWrapper(script_wrappable, script_state->GetIsolate());
+-  if (!wrapper.IsEmpty()) {
++  v8::Local<v8::Object> wrapper;
++  if (LIKELY(
++          DOMDataStore::GetWrapper(script_state->GetIsolate(), script_wrappable)
++              .ToLocal(&wrapper))) {
+     return wrapper;
+   }
+ 
+@@ -241,9 +242,9 @@ inline v8::MaybeLocal<v8::Value> ToV8HelperScriptWrappable(
+     ScriptWrappable* script_wrappable,
+     v8::Local<v8::Object> creation_context_object) {
+   CHECK(script_wrappable);
+-  v8::Local<v8::Value> wrapper =
+-      DOMDataStore::GetWrapper(script_wrappable, isolate);
+-  if (!wrapper.IsEmpty()) {
++  v8::Local<v8::Object> wrapper;
++  if (LIKELY(DOMDataStore::GetWrapper(isolate, script_wrappable)
++                 .ToLocal(&wrapper))) {
+     return wrapper;
+   }
+ 

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/bindings/dom_wrapper_world.cc b/third_party/blink/renderer/platform/bindings/dom_wrapper_world.cc
-index 00804501dfd68c1571998818f0f0501e29fd6739..2a3e9f2af7f6ca5e2b492c823ac3ceffca8e70c6 100644
+index 00804501dfd68c1571998818f0f0501e29fd6739..5a59ea5811568d2eb37932f147ea1a685bc3893c 100644
 --- a/third_party/blink/renderer/platform/bindings/dom_wrapper_world.cc
 +++ b/third_party/blink/renderer/platform/bindings/dom_wrapper_world.cc
 @@ -69,22 +69,28 @@ static bool IsMainWorldId(int32_t world_id) {
@@ -83,31 +83,39 @@ index 00804501dfd68c1571998818f0f0501e29fd6739..2a3e9f2af7f6ca5e2b492c823ac3ceff
      case WorldType::kShadowRealm: {
        CHECK_GE(next_world_id, kUnspecifiedWorldIdStart);
        return next_world_id++;
-@@ -303,13 +311,27 @@ bool DOMWrapperWorld::HasWrapperInAnyWorldInMainThread(
- }
- 
- // static
--bool DOMWrapperWorld::UnsetNonMainWorldWrapperIfSet(
-+bool DOMWrapperWorld::ClearNonMainWorldWrapperIfEqualTo(
-+    ScriptWrappable* object,
-+    const v8::Local<v8::Object>& handle) {
-+  for (DOMWrapperWorld* world : GetWorldMap().Values()) {
-+    DOMDataStore& data_store = world->DomDataStore();
-+    if (data_store.ClearWrapperIfEqualTo(object, handle)) {
+@@ -296,20 +304,34 @@ bool DOMWrapperWorld::HasWrapperInAnyWorldInMainThread(
+   DOMWrapperWorld::AllWorldsInCurrentThread(worlds);
+   for (const auto& world : worlds) {
+     DOMDataStore& dom_data_store = world->DomDataStore();
+-    if (dom_data_store.ContainsWrapper(script_wrappable))
++    if (dom_data_store.Contains(script_wrappable))
 +      return true;
-+    }
 +  }
 +  return false;
 +}
 +
 +// static
-+bool DOMWrapperWorld::ClearNonMainWorldWrapperIfEqualTo(
++bool DOMWrapperWorld::ClearWrapperInAnyNonInlineStorageWorldIfEqualTo(
++    ScriptWrappable* object,
++    const v8::Local<v8::Object>& handle) {
++  for (DOMWrapperWorld* world : GetWorldMap().Values()) {
++    DOMDataStore& data_store = world->DomDataStore();
++    if (data_store.ClearInMapIfEqualTo(object, handle)) {
+       return true;
++    }
+   }
+   return false;
+ }
+ 
+ // static
+-bool DOMWrapperWorld::UnsetNonMainWorldWrapperIfSet(
++bool DOMWrapperWorld::ClearWrapperInAnyNonInlineStorageWorldIfEqualTo(
      ScriptWrappable* object,
      const v8::TracedReference<v8::Object>& handle) {
    for (DOMWrapperWorld* world : GetWorldMap().Values()) {
      DOMDataStore& data_store = world->DomDataStore();
 -    if (data_store.UnsetSpecificWrapperIfSet(object, handle))
-+    if (data_store.ClearWrapperIfEqualTo(object, handle)) {
++    if (data_store.ClearInMapIfEqualTo(object, handle)) {
        return true;
 +    }
    }

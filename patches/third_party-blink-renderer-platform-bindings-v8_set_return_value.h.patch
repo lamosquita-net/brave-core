@@ -1,7 +1,28 @@
 diff --git a/third_party/blink/renderer/platform/bindings/v8_set_return_value.h b/third_party/blink/renderer/platform/bindings/v8_set_return_value.h
-index d42bfeb33cd2bec9320001980255d6ecfd00da11..18ae66886dbe7b6a9ecdb4a53ec10289ea0765cd 100644
+index d42bfeb33cd2bec9320001980255d6ecfd00da11..72fb19e30c93994effec885bf5984cebc8ec41ba 100644
 --- a/third_party/blink/renderer/platform/bindings/v8_set_return_value.h
 +++ b/third_party/blink/renderer/platform/bindings/v8_set_return_value.h
+@@ -50,16 +50,16 @@ struct V8ReturnValue {
+   enum InterfaceObject { kInterfaceObject };
+   enum NamespaceObject { kNamespaceObject };
+ 
+-  // Selects the appropriate creation context.
+-  static v8::Local<v8::Object> CreationContext(
++  // Selects the appropriate receiver from which e.g. the creation context can
++  // be retrieved.
++  static v8::Local<v8::Object> GetReceiver(
+       const v8::FunctionCallbackInfo<v8::Value>& info) {
+     return info.This();
+   }
+-  static v8::Local<v8::Object> CreationContext(
++  static v8::Local<v8::Object> GetReceiver(
+       const v8::PropertyCallbackInfo<v8::Value>& info) {
+     return info.Holder();
+   }
+-
+   // Helper function for ScriptWrappable
+   template <typename CallbackInfo>
+   static void SetWrapper(const CallbackInfo& info,
 @@ -105,14 +105,9 @@ PLATFORM_EXPORT inline void V8SetReturnValue(
  }
  
@@ -62,3 +83,87 @@ index d42bfeb33cd2bec9320001980255d6ecfd00da11..18ae66886dbe7b6a9ecdb4a53ec10289
  }
  
  // nullptr
+@@ -283,12 +283,13 @@ void V8SetReturnValue(const CallbackInfo& info,
+   if (UNLIKELY(!value))
+     return info.GetReturnValue().SetNull();
+   ScriptWrappable* wrappable = const_cast<ScriptWrappable*>(value);
+-  if (DOMDataStore::SetReturnValueForMainWorld(info.GetReturnValue(),
+-                                               wrappable))
++  if (DOMDataStore::SetReturnValueFromInlineStorage(info.GetReturnValue(),
++                                                    wrappable)) {
+     return;
++  }
+   V8ReturnValue::SetWrapper(
+       info, wrappable,
+-      V8ReturnValue::CreationContext(info)->GetCreationContextChecked());
++      V8ReturnValue::GetReceiver(info)->GetCreationContextChecked());
+ }
+ 
+ template <typename CallbackInfo>
+@@ -297,12 +298,13 @@ void V8SetReturnValue(const CallbackInfo& info,
+                       V8ReturnValue::MainWorld) {
+   DCHECK(DOMWrapperWorld::Current(info.GetIsolate()).IsMainWorld());
+   ScriptWrappable* wrappable = const_cast<ScriptWrappable*>(&value);
+-  if (DOMDataStore::SetReturnValueForMainWorld(info.GetReturnValue(),
+-                                               wrappable))
++  if (DOMDataStore::SetReturnValueFromInlineStorage(info.GetReturnValue(),
++                                                    wrappable)) {
+     return;
++  }
+   V8ReturnValue::SetWrapper(
+       info, wrappable,
+-      V8ReturnValue::CreationContext(info)->GetCreationContextChecked());
++      V8ReturnValue::GetReceiver(info)->GetCreationContextChecked());
+ }
+ 
+ template <typename CallbackInfo>
+@@ -313,13 +315,13 @@ void V8SetReturnValue(const CallbackInfo& info,
+     return info.GetReturnValue().SetNull();
+   ScriptWrappable* wrappable = const_cast<ScriptWrappable*>(value);
+   if (DOMDataStore::SetReturnValueFast(info.GetReturnValue(), wrappable,
+-                                       V8ReturnValue::CreationContext(info),
++                                       V8ReturnValue::GetReceiver(info),
+                                        receiver)) {
+     return;
+   }
+   V8ReturnValue::SetWrapper(
+       info, wrappable,
+-      V8ReturnValue::CreationContext(info)->GetCreationContextChecked());
++      V8ReturnValue::GetReceiver(info)->GetCreationContextChecked());
+ }
+ 
+ template <typename CallbackInfo>
+@@ -328,13 +330,13 @@ void V8SetReturnValue(const CallbackInfo& info,
+                       const ScriptWrappable* receiver) {
+   ScriptWrappable* wrappable = const_cast<ScriptWrappable*>(&value);
+   if (DOMDataStore::SetReturnValueFast(info.GetReturnValue(), wrappable,
+-                                       V8ReturnValue::CreationContext(info),
++                                       V8ReturnValue::GetReceiver(info),
+                                        receiver)) {
+     return;
+   }
+   V8ReturnValue::SetWrapper(
+       info, wrappable,
+-      V8ReturnValue::CreationContext(info)->GetCreationContextChecked());
++      V8ReturnValue::GetReceiver(info)->GetCreationContextChecked());
+ }
+ 
+ template <typename CallbackInfo>
+@@ -346,7 +348,7 @@ void V8SetReturnValue(const CallbackInfo& info,
+     return info.GetReturnValue().SetNull();
+   ScriptWrappable* wrappable = const_cast<ScriptWrappable*>(value);
+   if (DOMDataStore::SetReturnValueFast(info.GetReturnValue(), wrappable,
+-                                       V8ReturnValue::CreationContext(info),
++                                       V8ReturnValue::GetReceiver(info),
+                                        receiver)) {
+     return;
+   }
+@@ -372,7 +374,7 @@ void V8SetReturnValue(const CallbackInfo& info,
+                       V8ReturnValue::MaybeCrossOriginWindow) {
+   ScriptWrappable* wrappable = const_cast<ScriptWrappable*>(&value);
+   if (DOMDataStore::SetReturnValueFast(info.GetReturnValue(), wrappable,
+-                                       V8ReturnValue::CreationContext(info),
++                                       V8ReturnValue::GetReceiver(info),
+                                        receiver)) {
+     return;
+   }

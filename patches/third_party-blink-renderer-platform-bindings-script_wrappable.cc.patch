@@ -1,0 +1,22 @@
+diff --git a/third_party/blink/renderer/platform/bindings/script_wrappable.cc b/third_party/blink/renderer/platform/bindings/script_wrappable.cc
+index c41d5ffb692d486d58c3675dc381f084571f26d9..ebc04804e6f1209e1430b7978d2af77e7f50c1af 100644
+--- a/third_party/blink/renderer/platform/bindings/script_wrappable.cc
++++ b/third_party/blink/renderer/platform/bindings/script_wrappable.cc
+@@ -22,7 +22,7 @@ ASSERT_SIZE(ScriptWrappable, SameSizeAsScriptWrappable);
+ v8::MaybeLocal<v8::Value> ScriptWrappable::Wrap(ScriptState* script_state) {
+   const WrapperTypeInfo* wrapper_type_info = GetWrapperTypeInfo();
+ 
+-  DCHECK(!DOMDataStore::ContainsWrapper(this, script_state->GetIsolate()));
++  DCHECK(!DOMDataStore::ContainsWrapper(script_state->GetIsolate(), this));
+ 
+   v8::Local<v8::Object> wrapper;
+   if (!V8DOMWrapper::CreateWrapper(script_state, wrapper_type_info)
+@@ -42,7 +42,7 @@ v8::Local<v8::Object> ScriptWrappable::AssociateWithWrapper(
+ }
+ 
+ void ScriptWrappable::Trace(Visitor* visitor) const {
+-  visitor->Trace(main_world_wrapper_);
++  visitor->Trace(wrapper_);
+ }
+ 
+ const char* ScriptWrappable::NameInHeapSnapshot() const {
