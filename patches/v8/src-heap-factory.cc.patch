@@ -1,0 +1,22 @@
+diff --git a/src/heap/factory.cc b/src/heap/factory.cc
+index 2becca079e010aed2c19836e8bc20c69d0efc457..b64279db33e76b96052b8f348884c164bc4163cb 100644
+--- a/src/heap/factory.cc
++++ b/src/heap/factory.cc
+@@ -2913,10 +2913,15 @@ void Factory::InitializeJSObjectFromMap(Tagged<JSObject> obj,
+   // fixed array (e.g. Heap::empty_fixed_array()).  Currently, the object
+   // verification code has to cope with (temporarily) invalid objects.  See
+   // for example, JSArray::JSArrayVerify).
+-  InitializeJSObjectBody(obj, map, JSObject::kHeaderSize);
+-
+   DCHECK_EQ(IsJSApiWrapperObject(map),
+             new_js_object_type == NewJSObjectType::kAPIWrapper);
++  // FlyWeb: v8 aaa23fc87, desaparece con la 12.8. Temporary development patch
++  // (FM.17 phase 3d): do not overwrite the CppHeapPointerHandle of a published
++  // API wrapper (JSGlobalProxy reinitialization). Never on nube/motor-127.
++  InitializeJSObjectBody(obj, map,
++                         new_js_object_type == NewJSObjectType::kNoAPIWrapper
++                             ? JSObject::kHeaderSize
++                             : JSAPIObjectWithEmbedderSlots::kHeaderSize);
+   if (new_js_object_type == NewJSObjectType::kAPIWrapper) {
+     InitializeCppHeapWrapper(obj);
+   }
