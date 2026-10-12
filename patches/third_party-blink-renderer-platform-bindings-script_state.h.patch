@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/bindings/script_state.h b/third_party/blink/renderer/platform/bindings/script_state.h
-index 9f4a8614466df29243d5193e5615c68d8d99b85b..7109852950cde0a6553000421faacefb39366b41 100644
+index 9f4a8614466df29243d5193e5615c68d8d99b85b..8be11a1315b02747c9132bd1b9e0cb7589467db8 100644
 --- a/third_party/blink/renderer/platform/bindings/script_state.h
 +++ b/third_party/blink/renderer/platform/bindings/script_state.h
 @@ -75,7 +75,7 @@ class V8PerContextData;
@@ -34,7 +34,7 @@ index 9f4a8614466df29243d5193e5615c68d8d99b85b..7109852950cde0a6553000421faacefb
  
    static ScriptState* Current(v8::Isolate* isolate) {  // DEPRECATED
      return From(isolate->GetCurrentContext());
-@@ -172,6 +171,19 @@ class PLATFORM_EXPORT ScriptState final : public GarbageCollected<ScriptState> {
+@@ -172,6 +171,26 @@ class PLATFORM_EXPORT ScriptState final : public GarbageCollected<ScriptState> {
      return script_state;
    }
  
@@ -42,19 +42,26 @@ index 9f4a8614466df29243d5193e5615c68d8d99b85b..7109852950cde0a6553000421faacefb
 +  // associated with a ScriptState. This is necessary in unit tests when a
 +  // v8::Context is created directly on the v8 API without going through the
 +  // usual blink codepaths.
++  // This is also called in some situations where DissociateContext() has
++  // already been called and therefore the ScriptState pointer on the
++  // v8::Context has already been nulled.
 +  static ScriptState* MaybeFrom(v8::Local<v8::Context> context) {
 +    DCHECK(!context.IsEmpty());
 +    if (context->GetNumberOfEmbedderDataFields() <=
 +        kV8ContextPerContextDataIndex) {
 +      return nullptr;
 +    }
-+    return From(context);
++    ScriptState* script_state =
++        static_cast<ScriptState*>(context->GetAlignedPointerFromEmbedderData(
++            kV8ContextPerContextDataIndex));
++    SECURITY_CHECK(!script_state || script_state->context_ == context);
++    return script_state;
 +  }
 +
    v8::Isolate* GetIsolate() const { return isolate_; }
    DOMWrapperWorld& World() const { return *world_; }
    const V8ContextToken& GetToken() const { return token_; }
-@@ -194,6 +206,11 @@ class PLATFORM_EXPORT ScriptState final : public GarbageCollected<ScriptState> {
+@@ -194,6 +213,11 @@ class PLATFORM_EXPORT ScriptState final : public GarbageCollected<ScriptState> {
    // termination.
    void DissociateContext();
  
@@ -66,7 +73,7 @@ index 9f4a8614466df29243d5193e5615c68d8d99b85b..7109852950cde0a6553000421faacefb
   private:
    static void OnV8ContextCollectedCallback(
        const v8::WeakCallbackInfo<ScriptState>&);
-@@ -225,6 +242,13 @@ class PLATFORM_EXPORT ScriptState final : public GarbageCollected<ScriptState> {
+@@ -225,6 +249,13 @@ class PLATFORM_EXPORT ScriptState final : public GarbageCollected<ScriptState> {
    // context in browser/renderer communications.
    V8ContextToken token_;
  
