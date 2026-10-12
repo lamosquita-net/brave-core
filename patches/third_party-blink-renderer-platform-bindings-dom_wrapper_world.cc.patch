@@ -1,0 +1,34 @@
+diff --git a/third_party/blink/renderer/platform/bindings/dom_wrapper_world.cc b/third_party/blink/renderer/platform/bindings/dom_wrapper_world.cc
+index 00804501dfd68c1571998818f0f0501e29fd6739..413aa1f1407ca99bcad9138d6c0603890ade57c8 100644
+--- a/third_party/blink/renderer/platform/bindings/dom_wrapper_world.cc
++++ b/third_party/blink/renderer/platform/bindings/dom_wrapper_world.cc
+@@ -303,13 +303,27 @@ bool DOMWrapperWorld::HasWrapperInAnyWorldInMainThread(
+ }
+ 
+ // static
+-bool DOMWrapperWorld::UnsetNonMainWorldWrapperIfSet(
++bool DOMWrapperWorld::ClearNonMainWorldWrapperIfEqualTo(
++    ScriptWrappable* object,
++    const v8::Local<v8::Object>& handle) {
++  for (DOMWrapperWorld* world : GetWorldMap().Values()) {
++    DOMDataStore& data_store = world->DomDataStore();
++    if (data_store.ClearWrapperIfEqualTo(object, handle)) {
++      return true;
++    }
++  }
++  return false;
++}
++
++// static
++bool DOMWrapperWorld::ClearNonMainWorldWrapperIfEqualTo(
+     ScriptWrappable* object,
+     const v8::TracedReference<v8::Object>& handle) {
+   for (DOMWrapperWorld* world : GetWorldMap().Values()) {
+     DOMDataStore& data_store = world->DomDataStore();
+-    if (data_store.UnsetSpecificWrapperIfSet(object, handle))
++    if (data_store.ClearWrapperIfEqualTo(object, handle)) {
+       return true;
++    }
+   }
+   return false;
+ }

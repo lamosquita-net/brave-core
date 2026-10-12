@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/bindings/script_wrappable.h b/third_party/blink/renderer/platform/bindings/script_wrappable.h
-index 3e44c89e70fb5310a1071a120b79b3927316169c..13ab7df76c376bc8a27562b4c1d6937b333cbb7a 100644
+index 3e44c89e70fb5310a1071a120b79b3927316169c..a12151466c12a2b71d720b5a001762970d7109cc 100644
 --- a/third_party/blink/renderer/platform/bindings/script_wrappable.h
 +++ b/third_party/blink/renderer/platform/bindings/script_wrappable.h
 @@ -104,15 +104,6 @@ class PLATFORM_EXPORT ScriptWrappable
@@ -34,3 +34,28 @@ index 3e44c89e70fb5310a1071a120b79b3927316169c..13ab7df76c376bc8a27562b4c1d6937b
      return true;
    }
  
+@@ -216,8 +211,8 @@ class PLATFORM_EXPORT ScriptWrappable
+   }
+ 
+   // Clear the main world wrapper if it is set to |handle|.
+-  bool UnsetMainWorldWrapperIfSet(
+-      const v8::TracedReference<v8::Object>& handle);
++  template <typename HandleType>
++  inline bool ClearMainWorldWrapperIfEqualTo(const HandleType& handle);
+ 
+   static_assert(
+       std::is_trivially_destructible<
+@@ -230,11 +225,10 @@ class PLATFORM_EXPORT ScriptWrappable
+   // world wrapper.
+   friend class DOMDataStore;
+   friend class DOMWrapperWorld;
+-  friend class HeapSnaphotWrapperVisitor;
+ };
+ 
+-inline bool ScriptWrappable::UnsetMainWorldWrapperIfSet(
+-    const v8::TracedReference<v8::Object>& handle) {
++template <typename HandleType>
++bool ScriptWrappable::ClearMainWorldWrapperIfEqualTo(const HandleType& handle) {
+   if (main_world_wrapper_ == handle) {
+     main_world_wrapper_.Reset();
+     return true;

@@ -1,8 +1,44 @@
 diff --git a/third_party/blink/renderer/core/frame/dom_window.h b/third_party/blink/renderer/core/frame/dom_window.h
-index 25642b379aa2f0ad45e9f8db5a3545df374f1df8..e0252858142c3965879f23219f6daf585757da2b 100644
+index 25642b379aa2f0ad45e9f8db5a3545df374f1df8..47a0137c9ac009b53b3af4f98d2403f3ba4c945a 100644
 --- a/third_party/blink/renderer/core/frame/dom_window.h
 +++ b/third_party/blink/renderer/core/frame/dom_window.h
-@@ -117,6 +117,8 @@ class CORE_EXPORT DOMWindow : public EventTargetWithInlineData {
+@@ -5,6 +5,7 @@
+ #ifndef THIRD_PARTY_BLINK_RENDERER_CORE_FRAME_DOM_WINDOW_H_
+ #define THIRD_PARTY_BLINK_RENDERER_CORE_FRAME_DOM_WINDOW_H_
+ 
++#include "base/memory/scoped_refptr.h"
+ #include "mojo/public/cpp/bindings/remote.h"
+ #include "services/network/public/mojom/cross_origin_opener_policy.mojom-blink.h"
+ #include "third_party/blink/public/common/messaging/message_port_channel.h"
+@@ -23,6 +24,7 @@
+ 
+ namespace blink {
+ 
++class DOMWrapperWorld;
+ class InputDeviceCapabilitiesConstants;
+ class LocalDOMWindow;
+ class Location;
+@@ -32,6 +34,7 @@ class SerializedScriptValue;
+ class UserActivation;
+ class WindowPostMessageOptions;
+ class WindowProxyManager;
++struct WrapperTypeInfo;
+ 
+ struct BlinkTransferableMessage;
+ 
+@@ -78,6 +81,11 @@ class CORE_EXPORT DOMWindow : public EventTargetWithInlineData {
+       v8::Isolate*,
+       const WrapperTypeInfo*,
+       v8::Local<v8::Object> wrapper) final;
++  v8::Local<v8::Object> AssociateWithWrapper(
++      v8::Isolate* isolate,
++      scoped_refptr<DOMWrapperWorld> world,
++      const WrapperTypeInfo* wrapper_type_info,
++      v8::Local<v8::Object> wrapper);
+ 
+   // EventTarget overrides:
+   const AtomicString& InterfaceName() const override;
+@@ -117,6 +125,8 @@ class CORE_EXPORT DOMWindow : public EventTargetWithInlineData {
    // Indexed properties
    DOMWindow* AnonymousIndexedGetter(uint32_t index);
  
@@ -11,7 +47,7 @@ index 25642b379aa2f0ad45e9f8db5a3545df374f1df8..e0252858142c3965879f23219f6daf58
    // Returns the opener and collects cross-origin access metrics.
    DOMWindow* OpenerWithMetrics() const;
  
-@@ -190,6 +192,7 @@ class CORE_EXPORT DOMWindow : public EventTargetWithInlineData {
+@@ -190,6 +200,7 @@ class CORE_EXPORT DOMWindow : public EventTargetWithInlineData {
  
    void DisconnectFromFrame() { frame_ = nullptr; }
  
