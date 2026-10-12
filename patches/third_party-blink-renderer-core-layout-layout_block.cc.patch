@@ -1,7 +1,16 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_block.cc b/third_party/blink/renderer/core/layout/layout_block.cc
-index d932baa4ec2aff7379169456633c686a279862ff..8494873319959a426e73ec7e55b8523b70d6c9a5 100644
+index d932baa4ec2aff7379169456633c686a279862ff..75ec31c694f625ac37681a078c5529810aac15c0 100644
 --- a/third_party/blink/renderer/core/layout/layout_block.cc
 +++ b/third_party/blink/renderer/core/layout/layout_block.cc
+@@ -154,7 +154,7 @@ void LayoutBlock::WillBeDestroyed() {
+ void LayoutBlock::StyleWillChange(StyleDifference diff,
+                                   const ComputedStyle& new_style) {
+   NOT_DESTROYED();
+-  SetIsAtomicInlineLevel(new_style.IsDisplayInlineType());
++  SetIsAtomicInlineLevel(ShouldBeHandledAsInline(new_style));
+   LayoutBox::StyleWillChange(diff, new_style);
+ }
+ 
 @@ -750,11 +750,12 @@ absl::optional<LayoutUnit> LayoutBlock::BaselineForEmptyLine() const {
    if (!font_data)
      return absl::nullopt;

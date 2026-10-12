@@ -1,15 +1,13 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_as_block.h b/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_as_block.h
-index 0f5ba4a9553972e6f46f1bedc36bb534ce2d3d3d..32be9293ba9612165a7079a2c70c6760411819a1 100644
+index 0f5ba4a9553972e6f46f1bedc36bb534ce2d3d3d..4b39db5ec8726e9b97a7977e8400823f6d4494ee 100644
 --- a/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_as_block.h
 +++ b/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_as_block.h
-@@ -10,12 +10,19 @@
+@@ -10,8 +10,12 @@
  
  namespace blink {
  
 -// Represents <ruby> with "display: block" or "display: inline-block".
 -// If we supports "display: block ruby", we can remove this class.
-+class RubyContainer;
-+
 +// This is a general block container wrapping an anonymous LayoutRubyAsInline.
 +//
 +// https://drafts.csswg.org/css-ruby/#block-ruby
@@ -19,27 +17,17 @@ index 0f5ba4a9553972e6f46f1bedc36bb534ce2d3d3d..32be9293ba9612165a7079a2c70c6760
  class CORE_EXPORT LayoutNGRubyAsBlock : public LayoutNGBlockFlow {
   public:
    explicit LayoutNGRubyAsBlock(Element*);
-   ~LayoutNGRubyAsBlock() override;
-+  void Trace(Visitor* visitor) const override;
- 
-   const char* GetName() const override {
-     NOT_DESTROYED();
-@@ -28,6 +35,18 @@ class CORE_EXPORT LayoutNGRubyAsBlock : public LayoutNGBlockFlow {
-   void StyleDidChange(StyleDifference, const ComputedStyle* old_style) override;
-   bool CreatesAnonymousWrapper() const override;
+@@ -30,6 +34,13 @@ class CORE_EXPORT LayoutNGRubyAsBlock : public LayoutNGBlockFlow {
    void RemoveLeftoverAnonymousBlock(LayoutBlock*) override;
-+
-+  void DidRemoveChildFromColumn(LayoutObject& child);
-+
-+ private:
-+  Member<RubyContainer> ruby_container_;
-+};
-+
+ };
+ 
 +template <>
 +struct DowncastTraits<LayoutNGRubyAsBlock> {
 +  static bool AllowFrom(const LayoutObject& object) {
 +    return object.IsRuby() && !object.IsLayoutInline();
 +  }
- };
- 
++};
++
  }  // namespace blink
+ 
+ #endif  // THIRD_PARTY_BLINK_RENDERER_CORE_LAYOUT_NG_LAYOUT_NG_RUBY_AS_BLOCK_H_

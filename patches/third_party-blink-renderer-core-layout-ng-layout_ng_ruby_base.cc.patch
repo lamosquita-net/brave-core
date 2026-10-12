@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_base.cc b/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_base.cc
-index 9617e15eeda46b16424a94cbd2c8839bed9197f2..21c7b2693a09a8d2ea8d52de0d204828adcb3d31 100644
+index 9617e15eeda46b16424a94cbd2c8839bed9197f2..34d67f4cd294854ed70d4a4b44ac34cb54d594ee 100644
 --- a/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_base.cc
 +++ b/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_base.cc
 @@ -70,7 +70,8 @@ void LayoutNGRubyBase::MoveInlineChildrenTo(LayoutNGRubyBase& to_base,
@@ -8,20 +8,28 @@ index 9617e15eeda46b16424a94cbd2c8839bed9197f2..21c7b2693a09a8d2ea8d52de0d204828
    // Move our inline children into the target block we determined above.
 -  MoveChildrenTo(to_block, FirstChild(), before_child);
 +  MoveChildrenTo(to_block, FirstChild(), before_child,
-+                 RuntimeEnabledFeatures::RubySimplePairingEnabled());
++                 /* full_remove_insert */ true);
  }
  
  void LayoutNGRubyBase::MoveBlockChildrenTo(LayoutNGRubyBase& to_base,
-@@ -111,10 +112,21 @@ void LayoutNGRubyBase::MoveBlockChildrenTo(LayoutNGRubyBase& to_base,
-     // using |full_remove_insert| can prevent inconsistent LayoutObject tree
-     // that leads to CHECK failures.
-     full_remove_insert |= ChildrenInline();
-+    full_remove_insert |= RuntimeEnabledFeatures::RubySimplePairingEnabled();
-     MoveAllChildrenIncludingFloatsTo(&to_base, full_remove_insert);
+@@ -103,18 +104,20 @@ void LayoutNGRubyBase::MoveBlockChildrenTo(LayoutNGRubyBase& to_base,
+   // Move all remaining children normally. If moving all children, include our
+   // float list.
+   if (!before_child) {
+-    bool full_remove_insert = to_base.HasLayer() || HasLayer();
+-    // TODO(kojii): |this| is |!ChildrenInline()| when we enter this function,
+-    // but it may turn to |ChildrenInline()| when |anon_block_here| is destroyed
+-    // above. Probably the correct fix is to do it earlier and switch to
+-    // |MoveInlineChildren()| if this happens. For the short term safe fix,
+-    // using |full_remove_insert| can prevent inconsistent LayoutObject tree
+-    // that leads to CHECK failures.
+-    full_remove_insert |= ChildrenInline();
+-    MoveAllChildrenIncludingFloatsTo(&to_base, full_remove_insert);
++    MoveAllChildrenIncludingFloatsTo(&to_base, /* full_remove_insert */ true);
    } else {
 -    MoveChildrenTo(&to_base, FirstChild(), before_child);
 +    MoveChildrenTo(&to_base, FirstChild(), before_child,
-+                   RuntimeEnabledFeatures::RubySimplePairingEnabled());
++                   /* full_remove_insert */ true);
    }
  }
  

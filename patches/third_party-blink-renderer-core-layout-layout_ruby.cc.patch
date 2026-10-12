@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_ruby.cc b/third_party/blink/renderer/core/layout/layout_ruby.cc
-index 6a655080fffe75be068f7ec8f56afe1e2a148bbe..490d357c4079eaa8dae78bd788b927c894a2f968 100644
+index 6a655080fffe75be068f7ec8f56afe1e2a148bbe..ace6b4fc62eca69168c292488e80e9c5a0284a64 100644
 --- a/third_party/blink/renderer/core/layout/layout_ruby.cc
 +++ b/third_party/blink/renderer/core/layout/layout_ruby.cc
 @@ -31,7 +31,9 @@
@@ -12,16 +12,14 @@ index 6a655080fffe75be068f7ec8f56afe1e2a148bbe..490d357c4079eaa8dae78bd788b927c8
  #include "third_party/blink/renderer/platform/instrumentation/use_counter.h"
  
  namespace blink {
-@@ -53,12 +55,22 @@ LayoutNGRubyRun* LayoutRubyAsInline::FindRubyRunParent(LayoutObject* child) {
+@@ -53,12 +55,20 @@ LayoutNGRubyRun* LayoutRubyAsInline::FindRubyRunParent(LayoutObject* child) {
  // === ruby as inline object ===
  
  LayoutRubyAsInline::LayoutRubyAsInline(Element* element)
 -    : LayoutInline(element) {
 -  UseCounter::Count(GetDocument(), WebFeature::kRenderRuby);
 +    : LayoutInline(element),
-+      ruby_container_(RuntimeEnabledFeatures::RubySimplePairingEnabled()
-+                          ? MakeGarbageCollected<RubyContainer>(*this)
-+                          : nullptr) {
++      ruby_container_(MakeGarbageCollected<RubyContainer>(*this)) {
 +  if (element) {
 +    UseCounter::Count(GetDocument(), WebFeature::kRenderRuby);
 +  }
@@ -37,35 +35,53 @@ index 6a655080fffe75be068f7ec8f56afe1e2a148bbe..490d357c4079eaa8dae78bd788b927c8
  void LayoutRubyAsInline::StyleDidChange(StyleDifference diff,
                                          const ComputedStyle* old_style) {
    NOT_DESTROYED();
-@@ -75,6 +87,11 @@ void LayoutRubyAsInline::AddChild(LayoutObject* child,
+@@ -75,32 +85,7 @@ void LayoutRubyAsInline::AddChild(LayoutObject* child,
      return;
    }
  
-+  if (RuntimeEnabledFeatures::RubySimplePairingEnabled()) {
-+    ruby_container_->AddChild(child, before_child);
-+    return;
-+  }
-+
-   if (before_child) {
-     // insert child into run
-     LayoutObject* run = before_child;
-@@ -113,10 +130,19 @@ void LayoutRubyAsInline::RemoveChild(LayoutObject* child) {
-     return;
-   }
- 
-+  if (RuntimeEnabledFeatures::RubySimplePairingEnabled()) {
-+    NOTREACHED();
-+    return;
-+  }
-+
-   // Otherwise find the containing run and remove it from there.
-   auto* run = FindRubyRunParent(child);
-   DCHECK(run);
-   run->RemoveChild(child);
+-  if (before_child) {
+-    // insert child into run
+-    LayoutObject* run = before_child;
+-    while (run && !run->IsRubyRun())
+-      run = run->Parent();
+-    if (run) {
+-      if (before_child == run)
+-        before_child = To<LayoutNGRubyRun>(before_child)->FirstChild();
+-      DCHECK(!before_child || before_child->IsDescendantOf(run));
+-      run->AddChild(child, before_child);
+-      return;
+-    }
+-    NOTREACHED();  // before_child should always have a run as parent!
+-                   // Emergency fallback: fall through and just append.
+-  }
+-
+-  // If the new child would be appended, try to add the child to the previous
+-  // run if possible, or create a new run otherwise.
+-  // (The LayoutRubyRun object will handle the details)
+-  auto* last_run = LastRubyRun(*this);
+-  if (!last_run || last_run->HasRubyText()) {
+-    last_run = &LayoutNGRubyRun::Create(this, *ContainingBlock());
+-    LayoutInline::AddChild(last_run, before_child);
+-    last_run->EnsureRubyBase();
+-  }
+-  last_run->AddChild(child);
++  ruby_container_->AddChild(child, before_child);
  }
  
-+void LayoutRubyAsInline::DidRemoveChildFromColumn(LayoutObject& child) {
-+  ruby_container_->DidRemoveChildFromColumn(child);
+ void LayoutRubyAsInline::RemoveChild(LayoutObject* child) {
+@@ -113,10 +98,11 @@ void LayoutRubyAsInline::RemoveChild(LayoutObject* child) {
+     return;
+   }
+ 
+-  // Otherwise find the containing run and remove it from there.
+-  auto* run = FindRubyRunParent(child);
+-  DCHECK(run);
+-  run->RemoveChild(child);
++  NOTREACHED() << child;
 +}
 +
++void LayoutRubyAsInline::DidRemoveChildFromColumn(LayoutObject& child) {
++  ruby_container_->DidRemoveChildFromColumn(child);
+ }
+ 
  }  // namespace blink

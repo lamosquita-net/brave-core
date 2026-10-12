@@ -1,13 +1,12 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_run.cc b/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_run.cc
-index 1e53b9d524517e32191c992b630cafd34fb54c16..33c7d23f3b179b4e3e2a936cb6f8bb169e4ba4cd 100644
+index 1e53b9d524517e32191c992b630cafd34fb54c16..1c155e6d967e1583f42b11e8add90c60044be251 100644
 --- a/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_run.cc
 +++ b/third_party/blink/renderer/core/layout/ng/layout_ng_ruby_run.cc
-@@ -5,11 +5,25 @@
+@@ -5,11 +5,24 @@
  #include "third_party/blink/renderer/core/layout/ng/layout_ng_ruby_run.h"
  
  #include "third_party/blink/renderer/core/css/resolver/style_resolver.h"
 +#include "third_party/blink/renderer/core/layout/layout_ruby.h"
-+#include "third_party/blink/renderer/core/layout/ng/layout_ng_ruby_as_block.h"
  #include "third_party/blink/renderer/core/layout/ng/layout_ng_ruby_base.h"
  #include "third_party/blink/renderer/core/layout/ng/layout_ng_ruby_text.h"
  
@@ -28,7 +27,7 @@ index 1e53b9d524517e32191c992b630cafd34fb54c16..33c7d23f3b179b4e3e2a936cb6f8bb16
  LayoutNGRubyRun::LayoutNGRubyRun() : LayoutNGBlockFlow(nullptr) {
    SetInline(true);
    SetIsAtomicInlineLevel(true);
-@@ -67,7 +81,7 @@ LayoutNGRubyBase& LayoutNGRubyRun::EnsureRubyBase() {
+@@ -67,7 +80,7 @@ LayoutNGRubyBase& LayoutNGRubyRun::EnsureRubyBase() {
    if (auto* base = RubyBase()) {
      return *base;
    }
@@ -37,71 +36,96 @@ index 1e53b9d524517e32191c992b630cafd34fb54c16..33c7d23f3b179b4e3e2a936cb6f8bb16
    LayoutBlockFlow::AddChild(&new_base);
    return new_base;
  }
-@@ -90,6 +104,7 @@ void LayoutNGRubyRun::AddChild(LayoutObject* child,
+@@ -89,97 +102,69 @@ void LayoutNGRubyRun::AddChild(LayoutObject* child,
+       DCHECK(!HasRubyText());
        // prepend ruby texts as first child
        LayoutBlockFlow::AddChild(child, FirstChild());
-     } else if (before_child->IsRubyText()) {
-+      DCHECK(!RuntimeEnabledFeatures::RubySimplePairingEnabled());
-       // New text is inserted just before another.
-       // In this case the new text takes the place of the old one, and
-       // the old text goes into a new run that is inserted as next sibling.
-@@ -107,6 +122,7 @@ void LayoutNGRubyRun::AddChild(LayoutObject* child,
-       LayoutBlockFlow::RemoveChild(before_child);
-       new_run.AddChild(before_child);
-     } else if (RubyBase()->FirstChild()) {
-+      DCHECK(!RuntimeEnabledFeatures::RubySimplePairingEnabled());
-       // Insertion before a ruby base object.
-       // In this case we need insert a new run before the current one and split
-       // the base.
-@@ -118,7 +134,13 @@ void LayoutNGRubyRun::AddChild(LayoutObject* child,
- 
-       EnsureRubyBase().MoveChildren(new_base, before_child);
+-    } else if (before_child->IsRubyText()) {
+-      // New text is inserted just before another.
+-      // In this case the new text takes the place of the old one, and
+-      // the old text goes into a new run that is inserted as next sibling.
+-      DCHECK_EQ(before_child->Parent(), this);
+-      LayoutObject* ruby = Parent();
+-      DCHECK(ruby->IsRuby());
+-      auto& new_run = Create(ruby, *ContainingBlock());
+-      ruby->AddChild(&new_run, NextSibling());
+-      new_run.EnsureRubyBase();
+-      // Add the new ruby text and move the old one to the new run
+-      // Note: Doing it in this order and not using LayoutNGRubyRun's methods,
+-      // in order to avoid automatic removal of the ruby run in case there is no
+-      // other child besides the old ruby text.
+-      LayoutBlockFlow::AddChild(child, before_child);
+-      LayoutBlockFlow::RemoveChild(before_child);
+-      new_run.AddChild(before_child);
+-    } else if (RubyBase()->FirstChild()) {
+-      // Insertion before a ruby base object.
+-      // In this case we need insert a new run before the current one and split
+-      // the base.
+-      LayoutObject* ruby = Parent();
+-      LayoutNGRubyRun& new_run = Create(ruby, *ContainingBlock());
+-      ruby->AddChild(&new_run, this);
+-      auto& new_base = new_run.EnsureRubyBase();
+-      new_run.AddChild(child);
+-
+-      EnsureRubyBase().MoveChildren(new_base, before_child);
++    } else {
++      NOTREACHED() << before_child;
      }
-+  } else if (RuntimeEnabledFeatures::RubySimplePairingEnabled() &&
-+             child->IsRubyBase()) {
++  } else if (child->IsRubyBase()) {
 +    DCHECK(!before_child);
 +    DCHECK(!RubyBase());
 +    LayoutBlockFlow::AddChild(child);
    } else {
-+    DCHECK(!RuntimeEnabledFeatures::RubySimplePairingEnabled());
-     // child is not a text -> insert it into the base
-     // (append it instead if beforeChild is the ruby text)
-     auto& base = EnsureRubyBase();
-@@ -137,7 +159,8 @@ void LayoutNGRubyRun::RemoveChild(LayoutObject* child) {
-   NOT_DESTROYED();
-   // If the child is a ruby text, then merge the ruby base with the base of
-   // the right sibling run, if possible.
--  if (!BeingDestroyed() && !DocumentBeingDestroyed() && child->IsRubyText()) {
-+  if (!RuntimeEnabledFeatures::RubySimplePairingEnabled() &&
-+      !BeingDestroyed() && !DocumentBeingDestroyed() && child->IsRubyText()) {
-     auto* base = RubyBase();
-     LayoutObject* right_neighbour = NextSibling();
-     if (base->FirstChild() && right_neighbour && right_neighbour->IsRubyRun()) {
-@@ -155,6 +178,18 @@ void LayoutNGRubyRun::RemoveChild(LayoutObject* child) {
- 
-   LayoutBlockFlow::RemoveChild(child);
- 
-+  if (RuntimeEnabledFeatures::RubySimplePairingEnabled()) {
-+    if (!DocumentBeingDestroyed()) {
-+      DCHECK(child->IsRubyBase() || child->IsRubyText());
-+      if (auto* inline_ruby = DynamicTo<LayoutRubyAsInline>(Parent())) {
-+        inline_ruby->DidRemoveChildFromColumn(*child);
-+      } else {
-+        To<LayoutNGRubyAsBlock>(Parent())->DidRemoveChildFromColumn(*child);
-+      }
-+      // Do nothing here! `this` might be destroyed by RubyContainer::Repair().
-+    }
-+    return;
-+  }
-   if (!BeingDestroyed() && !DocumentBeingDestroyed()) {
-     // If this has only an empty LayoutRubyBase, destroy this sub-tree.
-     LayoutBlockFlow* base = RubyBase();
-@@ -166,20 +201,44 @@ void LayoutNGRubyRun::RemoveChild(LayoutObject* child) {
+-    // child is not a text -> insert it into the base
+-    // (append it instead if beforeChild is the ruby text)
+-    auto& base = EnsureRubyBase();
+-    if (before_child == &base) {
+-      before_child = base.FirstChild();
+-    }
+-    if (before_child && before_child->IsRubyText()) {
+-      before_child = nullptr;
+-    }
+-    DCHECK(!before_child || before_child->IsDescendantOf(&base));
+-    base.AddChild(child, before_child);
++    NOTREACHED() << child;
    }
  }
  
--LayoutNGRubyBase& LayoutNGRubyRun::CreateRubyBase() const {
--  NOT_DESTROYED();
+ void LayoutNGRubyRun::RemoveChild(LayoutObject* child) {
+   NOT_DESTROYED();
+-  // If the child is a ruby text, then merge the ruby base with the base of
+-  // the right sibling run, if possible.
+-  if (!BeingDestroyed() && !DocumentBeingDestroyed() && child->IsRubyText()) {
+-    auto* base = RubyBase();
+-    LayoutObject* right_neighbour = NextSibling();
+-    if (base->FirstChild() && right_neighbour && right_neighbour->IsRubyRun()) {
+-      auto* right_run = To<LayoutNGRubyRun>(right_neighbour);
+-      auto& right_base = right_run->EnsureRubyBase();
+-      if (right_base.FirstChild()) {
+-        // Collect all children in a single base, then swap the bases.
+-        right_base.MoveChildren(*base);
+-        MoveChildTo(right_run, base);
+-        right_run->MoveChildTo(this, &right_base);
+-        DCHECK(!RubyBase()->FirstChild());
+-      }
++  LayoutBlockFlow::RemoveChild(child);
++
++  if (!DocumentBeingDestroyed()) {
++    DCHECK(child->IsRubyBase() || child->IsRubyText());
++    if (auto* inline_ruby = DynamicTo<LayoutRubyAsInline>(Parent())) {
++      inline_ruby->DidRemoveChildFromColumn(*child);
+     }
++    // Do nothing here! `this` might be destroyed by RubyContainer::Repair().
+   }
++}
+ 
+-  LayoutBlockFlow::RemoveChild(child);
+-
+-  if (!BeingDestroyed() && !DocumentBeingDestroyed()) {
+-    // If this has only an empty LayoutRubyBase, destroy this sub-tree.
+-    LayoutBlockFlow* base = RubyBase();
+-    if (!HasRubyText() && !base->FirstChild()) {
+-      LayoutBlockFlow::RemoveChild(base);
 +void LayoutNGRubyRun::RemoveAllChildren() {
 +  if (auto* text = RubyText()) {
 +    LayoutBlockFlow::RemoveChild(text);
@@ -111,11 +135,14 @@ index 1e53b9d524517e32191c992b630cafd34fb54c16..33c7d23f3b179b4e3e2a936cb6f8bb16
 +    if (base->IsPlaceholder()) {
 +      // This RubyBase was created for a RubyText without a corresponding
 +      // RubyBase.  It should be destroyed here.
-+      base->Destroy();
-+    }
-+  }
-+}
-+
+       base->Destroy();
+-      Destroy();
+     }
+   }
+ }
+ 
+-LayoutNGRubyBase& LayoutNGRubyRun::CreateRubyBase() const {
+-  NOT_DESTROYED();
 +// static
 +LayoutNGRubyBase& LayoutNGRubyRun::CreateRubyBase(
 +    const LayoutObject& reference) {

@@ -1,0 +1,29 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/table/layout_ng_table.cc b/third_party/blink/renderer/core/layout/ng/table/layout_ng_table.cc
+index ada6ab3634f1feaf7c9f86bcc04fa2c56a902f4d..1bc17a69b8ec70d79db5cc02fc72083cc492dda9 100644
+--- a/third_party/blink/renderer/core/layout/ng/table/layout_ng_table.cc
++++ b/third_party/blink/renderer/core/layout/ng/table/layout_ng_table.cc
+@@ -41,12 +41,22 @@ LayoutNGTable::LayoutNGTable(Element* element)
+ 
+ LayoutNGTable::~LayoutNGTable() = default;
+ 
++// https://drafts.csswg.org/css-tables-3/#fixup-algorithm
++// 3.2. If the box’s parent is an inline, run-in, or ruby box (or any box that
++// would perform inlinification of its children), then an inline-table box must
++// be generated; otherwise it must be a table box.
++bool LayoutNGTable::ShouldCreateInlineAnonymous(const LayoutObject& parent) {
++  return parent.IsLayoutInline() || parent.IsRubyBase() || parent.IsRubyText();
++}
++
+ LayoutNGTable* LayoutNGTable::CreateAnonymousWithParent(
+     const LayoutObject& parent) {
++  const ComputedStyle& parent_style = parent.StyleRef();
+   scoped_refptr<const ComputedStyle> new_style =
+       parent.GetDocument().GetStyleResolver().CreateAnonymousStyleWithDisplay(
+-          parent.StyleRef(),
+-          parent.IsLayoutInline() ? EDisplay::kInlineTable : EDisplay::kTable);
++          parent_style, ShouldCreateInlineAnonymous(parent)
++                            ? EDisplay::kInlineTable
++                            : EDisplay::kTable);
+   auto* new_table = MakeGarbageCollected<LayoutNGTable>(nullptr);
+   new_table->SetDocumentForAnonymous(&parent.GetDocument());
+   new_table->SetStyle(std::move(new_style));

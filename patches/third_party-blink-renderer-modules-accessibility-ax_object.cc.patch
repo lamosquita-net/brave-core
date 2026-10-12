@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/modules/accessibility/ax_object.cc b/third_party/blink/renderer/modules/accessibility/ax_object.cc
-index 9a14209954c399d54ba01823ff1ec4f8749f5563..950b396949a661deeee02db075604718531ee9e8 100644
+index 9a14209954c399d54ba01823ff1ec4f8749f5563..7e233da1c8d4312de59778b3ffbddee29d98b292 100644
 --- a/third_party/blink/renderer/modules/accessibility/ax_object.cc
 +++ b/third_party/blink/renderer/modules/accessibility/ax_object.cc
 @@ -2133,6 +2133,20 @@ void AXObject::SerializeTableAttributes(ui::AXNodeData* node_data) {
@@ -23,3 +23,23 @@ index 9a14209954c399d54ba01823ff1ec4f8749f5563..950b396949a661deeee02db075604718
    }
  
    if (ui::IsTableHeader(RoleValue()) &&
+@@ -3608,7 +3622,7 @@ bool AXObject::ComputeAccessibilityIsIgnoredButIncludedInTree() const {
+       return true;
+     }
+     // Necessary to calculate the accessible description of a ruby node.
+-    if (IsA<HTMLRTElement>(parent_node)) {
++    if (parent_node->HasTagName(html_names::kRtTag)) {
+       return true;
+     }
+   }
+@@ -3747,8 +3761,9 @@ bool AXObject::ComputeAccessibilityIsIgnoredButIncludedInTree() const {
+   // browsers that do not support ruby. Hence, their contents should not be
+   // included in the accessible description, unless another condition in this
+   // method decides to keep them in the tree for some reason.
+-  if (IsA<HTMLRTElement>(element))
++  if (element->HasTagName(html_names::kRtTag)) {
+     return true;
++  }
+ 
+   // Preserve SVG grouping elements.
+   if (IsA<SVGGElement>(element))

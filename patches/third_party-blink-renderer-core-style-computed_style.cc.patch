@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style.cc b/third_party/blink/renderer/core/style/computed_style.cc
-index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..834314e1d160cd3a138ec074537997d70c39e45b 100644
+index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..5acc8091ec71deddb7a8c387df93aa5f08230ad9 100644
 --- a/third_party/blink/renderer/core/style/computed_style.cc
 +++ b/third_party/blink/renderer/core/style/computed_style.cc
 @@ -23,6 +23,9 @@
@@ -12,7 +12,17 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..834314e1d160cd3a138ec074537997d7
  #include <algorithm>
  #include <memory>
  #include <utility>
-@@ -1206,6 +1209,7 @@ static bool HasPropertyThatCreatesStackingContext(
+@@ -413,7 +416,8 @@ ComputedStyle::ComputeDifferenceIgnoringInheritedFirstLineStyle(
+     return Difference::kDescendantAffecting;
+   }
+   if (old_style.Display() != new_style.Display() &&
+-      old_style.BlockifiesChildren() != new_style.BlockifiesChildren()) {
++      (old_style.BlockifiesChildren() != new_style.BlockifiesChildren() ||
++       old_style.InlinifiesChildren() != new_style.InlinifiesChildren())) {
+     return Difference::kDescendantAffecting;
+   }
+   // TODO(crbug.com/1213888): Only recalc affected descendants.
+@@ -1206,6 +1210,7 @@ static bool HasPropertyThatCreatesStackingContext(
        case CSSPropertyID::kOffsetPath:
        case CSSPropertyID::kOffsetPosition:
        case CSSPropertyID::kWebkitMask:
@@ -20,7 +30,7 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..834314e1d160cd3a138ec074537997d7
        case CSSPropertyID::kWebkitMaskBoxImage:
        case CSSPropertyID::kClipPath:
        case CSSPropertyID::kWebkitBoxReflect:
-@@ -1344,14 +1348,14 @@ void ComputedStyle::LoadDeferredImages(Document& document) const {
+@@ -1344,14 +1349,14 @@ void ComputedStyle::LoadDeferredImages(Document& document) const {
  void ComputedStyle::ApplyTransform(
      gfx::Transform& result,
      const LayoutBox* box,
@@ -38,7 +48,7 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..834314e1d160cd3a138ec074537997d7
                   apply_independent_transform_properties);
  }
  
-@@ -2534,43 +2538,24 @@ absl::optional<blink::Color> ComputedStyle::AccentColorResolved() const {
+@@ -2534,43 +2539,24 @@ absl::optional<blink::Color> ComputedStyle::AccentColorResolved() const {
    return auto_color.Resolve(GetCurrentColor(), UsedColorScheme());
  }
  
@@ -97,7 +107,7 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..834314e1d160cd3a138ec074537997d7
  }
  
  bool ComputedStyle::ShouldApplyAnyContainment(const Element& element,
-@@ -2656,6 +2641,21 @@ bool ComputedStyle::IsRenderedInTopLayer(const Element& element) const {
+@@ -2656,6 +2642,21 @@ bool ComputedStyle::IsRenderedInTopLayer(const Element& element) const {
           StyleType() == kPseudoIdBackdrop;
  }
  

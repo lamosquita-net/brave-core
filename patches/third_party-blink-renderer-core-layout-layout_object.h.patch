@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_object.h b/third_party/blink/renderer/core/layout/layout_object.h
-index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..cf6dce164b08417795b55ad450f8f59e0ee43799 100644
+index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..7a499221156bc07ba2a4b089f8af0860b789df8d 100644
 --- a/third_party/blink/renderer/core/layout/layout_object.h
 +++ b/third_party/blink/renderer/core/layout/layout_object.h
 @@ -40,6 +40,7 @@
@@ -18,7 +18,17 @@ index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..cf6dce164b08417795b55ad450f8f59e
  };
  
  enum CursorDirective { kSetCursorBasedOnStyle, kSetCursor, kDoNotSetCursor };
-@@ -1343,10 +1345,16 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+@@ -810,6 +812,9 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+ #endif
+ 
+   void AddAbsoluteRectForLayer(gfx::Rect& result);
++
++ protected:
++  // A helper for AddChild().
+   bool RequiresAnonymousTableWrappers(const LayoutObject*) const;
+ 
+  public:
+@@ -1343,10 +1348,16 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
    // coordinate space is the viewport space.
    virtual gfx::RectF VisualRectInLocalSVGCoordinates() const;
  
@@ -36,7 +46,7 @@ index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..cf6dce164b08417795b55ad450f8f59e
  
    // This returns the transform applying to the local SVG coordinate space,
    // which combines the CSS transform properties and animation motion transform.
-@@ -1864,6 +1872,13 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+@@ -1864,6 +1875,14 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
    // instead of flex box. crbug.com/226252.
    bool BehavesLikeBlockContainer() const {
      NOT_DESTROYED();
@@ -44,13 +54,14 @@ index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..cf6dce164b08417795b55ad450f8f59e
 +    // <rt> had display:block, and :first-letter worked accidentally.
 +    // Test: fast/ruby/ruby-first-letter.html.
 +    // TODO(crbug.com/1501719): Remove rt:first-letter support.
-+    if (IsRubyText() && IsA<HTMLRTElement>(GetNode())) {
++    if (IsRubyText() && GetNode() &&
++        GetNode()->HasTagName(html_names::kRtTag)) {
 +      return true;
 +    }
      return (IsLayoutBlockFlow() && StyleRef().IsDisplayBlockContainer()) ||
             IsButton();
    }
-@@ -2709,7 +2724,8 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+@@ -2709,7 +2728,8 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
    // from the coordinate system of the property container.
    const LayoutObject* GetPropertyContainer(
        AncestorSkipInfo*,
@@ -60,7 +71,7 @@ index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..cf6dce164b08417795b55ad450f8f59e
  
    // Do a rect-based hit test with this object as the stop node.
    HitTestResult HitTestForOcclusion(const PhysicalRect&) const;
-@@ -3515,6 +3531,17 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+@@ -3515,6 +3535,17 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
    }
    void SetSVGDescendantMayHaveTransformRelatedAnimation();
  
@@ -78,7 +89,7 @@ index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..cf6dce164b08417795b55ad450f8f59e
    bool ShouldSkipNextLayoutShiftTracking() const {
      NOT_DESTROYED();
      return bitfields_.ShouldSkipNextLayoutShiftTracking();
-@@ -4300,6 +4327,11 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+@@ -4300,6 +4331,11 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
      ADD_BOOLEAN_BITFIELD(svg_descendant_may_have_transform_related_animation_,
                           SVGDescendantMayHaveTransformRelatedAnimation);
  

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/modules/accessibility/ax_node_object.cc b/third_party/blink/renderer/modules/accessibility/ax_node_object.cc
-index bab762a111725a735b0ab8cfd9d10eca10506235..f6f244137f62c12a17fc087a13de7a5cbc052938 100644
+index bab762a111725a735b0ab8cfd9d10eca10506235..de5fa6828feb4c4868bf66de55eea54636aaeea1 100644
 --- a/third_party/blink/renderer/modules/accessibility/ax_node_object.cc
 +++ b/third_party/blink/renderer/modules/accessibility/ax_node_object.cc
 @@ -795,8 +795,9 @@ absl::optional<String> AXNodeObject::GetCSSAltText(const Node* node) {
@@ -23,3 +23,24 @@ index bab762a111725a735b0ab8cfd9d10eca10506235..f6f244137f62c12a17fc087a13de7a5c
    }
  
    return absl::nullopt;
+@@ -1160,8 +1161,9 @@ ax::mojom::blink::Role AXNodeObject::NativeRoleIgnoringAria() const {
+   if (IsA<HTMLLegendElement>(*GetNode()))
+     return ax::mojom::blink::Role::kLegend;
+ 
+-  if (IsA<HTMLRubyElement>(*GetNode()))
++  if (GetNode()->HasTagName(html_names::kRubyTag)) {
+     return ax::mojom::blink::Role::kRuby;
++  }
+ 
+   if (IsA<HTMLDListElement>(*GetNode()))
+     return ax::mojom::blink::Role::kDescriptionList;
+@@ -5726,7 +5728,8 @@ String AXNodeObject::Description(
+     AXObject* ruby_annotation_ax_object = nullptr;
+     for (const auto& child : children_) {
+       if (child->RoleValue() == ax::mojom::blink::Role::kRubyAnnotation &&
+-          child->GetNode() && IsA<HTMLRTElement>(child->GetNode())) {
++          child->GetNode() &&
++          child->GetNode()->HasTagName(html_names::kRtTag)) {
+         ruby_annotation_ax_object = child;
+         break;
+       }

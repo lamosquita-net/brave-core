@@ -1,0 +1,26 @@
+diff --git a/third_party/blink/renderer/core/layout/layout_block_flow.cc b/third_party/blink/renderer/core/layout/layout_block_flow.cc
+index c13fbbc8b23c8c1a9835f1ae2f98f65c4783ee92..fc389568fab5d88563b2abe042cc21afcd39c0c2 100644
+--- a/third_party/blink/renderer/core/layout/layout_block_flow.cc
++++ b/third_party/blink/renderer/core/layout/layout_block_flow.cc
+@@ -59,6 +59,7 @@
+ #include "third_party/blink/renderer/core/layout/ng/ng_layout_result.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_physical_box_fragment.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_unpositioned_float.h"
++#include "third_party/blink/renderer/core/layout/ng/table/layout_ng_table.h"
+ #include "third_party/blink/renderer/core/layout/shapes/shape_outside_info.h"
+ #include "third_party/blink/renderer/core/layout/text_autosizer.h"
+ #include "third_party/blink/renderer/core/paint/block_flow_paint_invalidator.h"
+@@ -219,8 +220,12 @@ void LayoutBlockFlow::AddChild(LayoutObject* new_child,
+   // children as blocks.
+   // So, if our children are currently inline and a block child has to be
+   // inserted, we move all our inline children into anonymous block boxes.
++  const bool child_is_inline_level =
++      new_child->IsInline() ||
++      (LayoutObject::RequiresAnonymousTableWrappers(new_child) &&
++       LayoutNGTable::ShouldCreateInlineAnonymous(*this));
+   bool child_is_block_level =
+-      !new_child->IsInline() && !new_child->IsFloatingOrOutOfFlowPositioned();
++      !child_is_inline_level && !new_child->IsFloatingOrOutOfFlowPositioned();
+ 
+   if (ChildrenInline()) {
+     if (child_is_block_level) {
