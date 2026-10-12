@@ -1,8 +1,8 @@
 diff --git a/third_party/blink/renderer/platform/bindings/dom_wrapper_world.cc b/third_party/blink/renderer/platform/bindings/dom_wrapper_world.cc
-index 00804501dfd68c1571998818f0f0501e29fd6739..627d1daaf8d49b261999a462c1e5918b288da952 100644
+index 00804501dfd68c1571998818f0f0501e29fd6739..2a3e9f2af7f6ca5e2b492c823ac3ceffca8e70c6 100644
 --- a/third_party/blink/renderer/platform/bindings/dom_wrapper_world.cc
 +++ b/third_party/blink/renderer/platform/bindings/dom_wrapper_world.cc
-@@ -69,22 +69,27 @@ static bool IsMainWorldId(int32_t world_id) {
+@@ -69,22 +69,28 @@ static bool IsMainWorldId(int32_t world_id) {
  }
  #endif
  
@@ -12,6 +12,7 @@ index 00804501dfd68c1571998818f0f0501e29fd6739..627d1daaf8d49b261999a462c1e5918b
 +    v8::Isolate* isolate,
 +    WorldType world_type,
 +    bool is_default_world_of_isolate) {
++  DCHECK(isolate);
    DCHECK_NE(WorldType::kIsolated, world_type);
    int32_t world_id = GenerateWorldIdForType(world_type);
    if (world_id == kInvalidWorldId)
@@ -35,7 +36,7 @@ index 00804501dfd68c1571998818f0f0501e29fd6739..627d1daaf8d49b261999a462c1e5918b
        v8_object_data_store_(MakeGarbageCollected<V8ObjectDataStore>()) {
    switch (world_type_) {
      case WorldType::kMain:
-@@ -94,7 +99,7 @@ DOMWrapperWorld::DOMWrapperWorld(v8::Isolate* isolate,
+@@ -94,7 +100,7 @@ DOMWrapperWorld::DOMWrapperWorld(v8::Isolate* isolate,
      case WorldType::kInspectorIsolated:
      case WorldType::kRegExp:
      case WorldType::kForV8ContextSnapshotNonMain:
@@ -44,7 +45,7 @@ index 00804501dfd68c1571998818f0f0501e29fd6739..627d1daaf8d49b261999a462c1e5918b
      case WorldType::kShadowRealm: {
        WorldMap& map = GetWorldMap();
        DCHECK(!map.Contains(world_id_));
-@@ -110,7 +115,8 @@ DOMWrapperWorld& DOMWrapperWorld::MainWorld() {
+@@ -110,7 +116,8 @@ DOMWrapperWorld& DOMWrapperWorld::MainWorld() {
    DCHECK(IsMainThread());
    DEFINE_STATIC_REF(
        DOMWrapperWorld, cached_main_world,
@@ -54,7 +55,7 @@ index 00804501dfd68c1571998818f0f0501e29fd6739..627d1daaf8d49b261999a462c1e5918b
    return *cached_main_world;
  }
  
-@@ -128,7 +134,7 @@ DOMWrapperWorld::~DOMWrapperWorld() {
+@@ -128,7 +135,7 @@ DOMWrapperWorld::~DOMWrapperWorld() {
      number_of_non_main_worlds_in_main_thread_--;
  
    // WorkerWorld should be disposed of before the dtor.
@@ -63,7 +64,7 @@ index 00804501dfd68c1571998818f0f0501e29fd6739..627d1daaf8d49b261999a462c1e5918b
      Dispose();
    DCHECK(!GetWorldMap().Contains(world_id_));
  }
-@@ -162,7 +168,8 @@ scoped_refptr<DOMWrapperWorld> DOMWrapperWorld::EnsureIsolatedWorld(
+@@ -162,7 +169,8 @@ scoped_refptr<DOMWrapperWorld> DOMWrapperWorld::EnsureIsolatedWorld(
    }
  
    return base::AdoptRef(
@@ -73,7 +74,7 @@ index 00804501dfd68c1571998818f0f0501e29fd6739..627d1daaf8d49b261999a462c1e5918b
  }
  
  typedef HashMap<int, scoped_refptr<SecurityOrigin>>
-@@ -278,7 +285,7 @@ int DOMWrapperWorld::GenerateWorldIdForType(WorldType world_type) {
+@@ -278,7 +286,7 @@ int DOMWrapperWorld::GenerateWorldIdForType(WorldType world_type) {
      }
      case WorldType::kRegExp:
      case WorldType::kForV8ContextSnapshotNonMain:
@@ -82,7 +83,7 @@ index 00804501dfd68c1571998818f0f0501e29fd6739..627d1daaf8d49b261999a462c1e5918b
      case WorldType::kShadowRealm: {
        CHECK_GE(next_world_id, kUnspecifiedWorldIdStart);
        return next_world_id++;
-@@ -303,13 +310,27 @@ bool DOMWrapperWorld::HasWrapperInAnyWorldInMainThread(
+@@ -303,13 +311,27 @@ bool DOMWrapperWorld::HasWrapperInAnyWorldInMainThread(
  }
  
  // static

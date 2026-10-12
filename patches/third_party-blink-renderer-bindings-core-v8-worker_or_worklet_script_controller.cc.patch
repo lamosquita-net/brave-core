@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/bindings/core/v8/worker_or_worklet_script_controller.cc b/third_party/blink/renderer/bindings/core/v8/worker_or_worklet_script_controller.cc
-index 89c59263ebd8fa078cc2110a9915322d265d075b..94ea24232c321a52ab509c445d14c9e65bd5b0c9 100644
+index 89c59263ebd8fa078cc2110a9915322d265d075b..134948cec3a6aae4cbffcf17212212a9c9b7d153 100644
 --- a/third_party/blink/renderer/bindings/core/v8/worker_or_worklet_script_controller.cc
 +++ b/third_party/blink/renderer/bindings/core/v8/worker_or_worklet_script_controller.cc
 @@ -39,6 +39,7 @@
@@ -10,7 +10,7 @@ index 89c59263ebd8fa078cc2110a9915322d265d075b..94ea24232c321a52ab509c445d14c9e6
  #include "third_party/blink/renderer/platform/bindings/extensions_registry.h"
  #include "third_party/blink/renderer/platform/bindings/origin_trial_features.h"
  #include "third_party/blink/renderer/platform/bindings/v8_dom_wrapper.h"
-@@ -51,13 +52,16 @@ namespace blink {
+@@ -51,14 +52,15 @@ namespace blink {
  
  WorkerOrWorkletScriptController::WorkerOrWorkletScriptController(
      WorkerOrWorkletGlobalScope* global_scope,
@@ -19,14 +19,16 @@ index 89c59263ebd8fa078cc2110a9915322d265d075b..94ea24232c321a52ab509c445d14c9e6
 +    bool is_default_world_of_isolate)
      : global_scope_(global_scope),
        isolate_(isolate),
-       rejected_promises_(RejectedPromises::Create()) {
-   DCHECK(isolate);
+-      rejected_promises_(RejectedPromises::Create()) {
+-  DCHECK(isolate);
 -  world_ =
 -      DOMWrapperWorld::Create(isolate, DOMWrapperWorld::WorldType::kWorker);
-+  // TODO(chromium:1520621): Pass along `is_default_world_of_isolate` and enable
-+  // inline storage for additional worlds.
-+  world_ = DOMWrapperWorld::Create(
-+      isolate, DOMWrapperWorld::WorldType::kWorkerOrWorklet);
- }
+-}
++      world_(
++          DOMWrapperWorld::Create(isolate,
++                                  DOMWrapperWorld::WorldType::kWorkerOrWorklet,
++                                  is_default_world_of_isolate)),
++      rejected_promises_(RejectedPromises::Create()) {}
  
  WorkerOrWorkletScriptController::~WorkerOrWorkletScriptController() {
+   DCHECK(!rejected_promises_);
