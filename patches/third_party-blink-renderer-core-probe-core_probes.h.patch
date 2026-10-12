@@ -1,0 +1,23 @@
+diff --git a/third_party/blink/renderer/core/probe/core_probes.h b/third_party/blink/renderer/core/probe/core_probes.h
+index e71ea00fc481d3ece7506525e694dfb4747ec6e7..e0733c23806af058359864c69151da0256a88101 100644
+--- a/third_party/blink/renderer/core/probe/core_probes.h
++++ b/third_party/blink/renderer/core/probe/core_probes.h
+@@ -31,6 +31,7 @@
+ #ifndef THIRD_PARTY_BLINK_RENDERER_CORE_PROBE_CORE_PROBES_H_
+ #define THIRD_PARTY_BLINK_RENDERER_CORE_PROBE_CORE_PROBES_H_
+ 
++#include "third_party/blink/renderer/bindings/core/v8/v8_binding_for_core.h"
+ #include "third_party/blink/renderer/core/core_export.h"
+ #include "third_party/blink/renderer/core/dom/document.h"
+ #include "third_party/blink/renderer/core/execution_context/execution_context.h"
+@@ -124,6 +125,10 @@ inline CoreProbeSink* ToCoreProbeSink(ExecutionContext* context) {
+   return context ? context->GetProbeSink() : nullptr;
+ }
+ 
++inline CoreProbeSink* ToCoreProbeSink(v8::Isolate* isolate) {
++  return isolate ? CurrentExecutionContext(isolate)->GetProbeSink() : nullptr;
++}
++
+ inline CoreProbeSink* ToCoreProbeSink(Document& document) {
+   return ToCoreProbeSink(document.GetExecutionContext());
+ }

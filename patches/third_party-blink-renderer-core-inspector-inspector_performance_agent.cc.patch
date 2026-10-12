@@ -1,0 +1,20 @@
+diff --git a/third_party/blink/renderer/core/inspector/inspector_performance_agent.cc b/third_party/blink/renderer/core/inspector/inspector_performance_agent.cc
+index 1beafa362a90cbd6e339708315134c93e45a76b4..efdc831c93da2aed5e37f3325c609a9a7337b07d 100644
+--- a/third_party/blink/renderer/core/inspector/inspector_performance_agent.cc
++++ b/third_party/blink/renderer/core/inspector/inspector_performance_agent.cc
+@@ -274,12 +274,13 @@ protocol::Response InspectorPerformanceAgent::getMetrics(
+   return protocol::Response::Success();
+ }
+ 
+-void InspectorPerformanceAgent::ConsoleTimeStamp(const String& title) {
++void InspectorPerformanceAgent::ConsoleTimeStamp(v8::Isolate* isolate,
++                                                 v8::Local<v8::String> label) {
+   if (!enabled_.Get())
+     return;
+   std::unique_ptr<protocol::Array<protocol::Performance::Metric>> metrics;
+   getMetrics(&metrics);
+-  GetFrontend()->metrics(std::move(metrics), title);
++  GetFrontend()->metrics(std::move(metrics), ToCoreString(label));
+ }
+ 
+ void InspectorPerformanceAgent::ScriptStarts() {

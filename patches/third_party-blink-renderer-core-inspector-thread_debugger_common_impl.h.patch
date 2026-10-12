@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/inspector/thread_debugger_common_impl.h b/third_party/blink/renderer/core/inspector/thread_debugger_common_impl.h
-index 6b16b26c543f878bb32f752f157ec26a4ee9772c..40125e1bea88f047b446983a3316c3c93a362cd1 100644
+index 6b16b26c543f878bb32f752f157ec26a4ee9772c..f480113816c1fec64de88e08e58a68e17d83bd1b 100644
 --- a/third_party/blink/renderer/core/inspector/thread_debugger_common_impl.h
 +++ b/third_party/blink/renderer/core/inspector/thread_debugger_common_impl.h
 @@ -74,9 +74,10 @@ class ThreadDebuggerCommonImpl : public ThreadDebugger {
@@ -15,3 +15,18 @@ index 6b16b26c543f878bb32f752f157ec26a4ee9772c..40125e1bea88f047b446983a3316c3c9
    std::unique_ptr<v8_inspector::StringBuffer> valueSubtype(
        v8::Local<v8::Value>) override;
    std::unique_ptr<v8_inspector::StringBuffer> descriptionForValueSubtype(
+@@ -84,9 +85,11 @@ class ThreadDebuggerCommonImpl : public ThreadDebugger {
+       v8::Local<v8::Value>) override;
+   double currentTimeMS() override;
+   bool isInspectableHeapObject(v8::Local<v8::Object>) override;
+-  void consoleTime(const v8_inspector::StringView& title) override;
+-  void consoleTimeEnd(const v8_inspector::StringView& title) override;
+-  void consoleTimeStamp(const v8_inspector::StringView& title) override;
++  void consoleTime(v8::Isolate* isolate, v8::Local<v8::String> label) override;
++  void consoleTimeEnd(v8::Isolate* isolate,
++                      v8::Local<v8::String> label) override;
++  void consoleTimeStamp(v8::Isolate* isolate,
++                        v8::Local<v8::String> label) override;
+   void startRepeatingTimer(double,
+                            v8_inspector::V8InspectorClient::TimerCallback,
+                            void* data) override;
