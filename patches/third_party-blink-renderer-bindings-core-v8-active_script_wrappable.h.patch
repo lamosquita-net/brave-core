@@ -1,0 +1,37 @@
+diff --git a/third_party/blink/renderer/bindings/core/v8/active_script_wrappable.h b/third_party/blink/renderer/bindings/core/v8/active_script_wrappable.h
+index 8d51d0d05cec3aabc1f478de81ec8b3b4750a77b..d700038bf96c7fcf02e6ac6ac281ab142475ab35 100644
+--- a/third_party/blink/renderer/bindings/core/v8/active_script_wrappable.h
++++ b/third_party/blink/renderer/bindings/core/v8/active_script_wrappable.h
+@@ -29,8 +29,8 @@ class ExecutionContext;
+ // ActiveScriptWrappableCreationKey as a friend.
+ //
+ // The objects should derive from ActiveScriptWrappable<T>, and override
+-// `ScriptWrappable::HasPendingActivity()`. The method is not allowed to
+-// allocate.
++// `ActiveScriptWrappableBase::HasPendingActivity()`. The method is not allowed
++// to allocate.
+ //
+ // Caveat:
+ // - To avoid leaking objects after the context is destroyed, users of
+@@ -60,10 +60,6 @@ class ActiveScriptWrappable : public ActiveScriptWrappableBase {
+     return IsContextDestroyedForActiveScriptWrappable(
+         static_cast<const T*>(this)->GetExecutionContext());
+   }
+-
+-  bool DispatchHasPendingActivity() const final {
+-    return static_cast<const T*>(this)->HasPendingActivity();
+-  }
+ };
+ 
+ // Same as ActiveScriptWrappable with the difference the the object is not
+@@ -89,10 +85,6 @@ class LazyActiveScriptWrappable : public ActiveScriptWrappableBase {
+         static_cast<const T*>(this)->GetExecutionContext());
+   }
+ 
+-  bool DispatchHasPendingActivity() const final {
+-    return static_cast<const T*>(this)->HasPendingActivity();
+-  }
+-
+  protected:
+   explicit LazyActiveScriptWrappable(ActiveScriptWrappableCreationKey) {}
+ };

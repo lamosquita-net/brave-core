@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/bindings/scripts/bind_gen/interface.py b/third_party/blink/renderer/bindings/scripts/bind_gen/interface.py
-index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..9d3de73a5aa3d401b50de4321480743e491940f1 100644
+index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..6d30249f84a212fe86ba7dcbd1a3a7e07fdba339 100644
 --- a/third_party/blink/renderer/bindings/scripts/bind_gen/interface.py
 +++ b/third_party/blink/renderer/bindings/scripts/bind_gen/interface.py
 @@ -26,6 +26,7 @@ from .code_node import WeakDependencyNode
@@ -2333,7 +2333,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..9d3de73a5aa3d401b50de4321480743e
          "CrossOriginProperty_NamedPropertyGetter")
      body = func_def.body
  
--    string_case_body = []
+     string_case_body = []
 -    string_case_body.append(
 -        TextNode("""\
 -for (const auto& attribute : kCrossOriginAttributeTable) {
@@ -2359,7 +2359,6 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..9d3de73a5aa3d401b50de4321480743e
 -  return;
 -}
 -"""))
-+    string_case_body = []
 +    string_case_body.extend([
 +        CxxForLoopNode(
 +            cond="const auto& attribute : kCrossOriginAttributeTable",
@@ -3253,7 +3252,31 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..9d3de73a5aa3d401b50de4321480743e
          blink_class = blink_class_name(class_like)
          pattern = """\
  const WrapperTypeInfo& {blink_class}::wrapper_type_info_ =
-@@ -7140,6 +6963,7 @@ def make_v8_context_snapshot_api(cg_context, component, attribute_entries,
+@@ -7107,11 +6930,6 @@ const WrapperTypeInfo& {blink_class}::wrapper_type_info_ =
+ static_assert(
+     std::is_base_of<ActiveScriptWrappableBase, {blink_class}>::value,
+     "{blink_class} does not inherit from ActiveScriptWrappable<> despite "
+-    "the IDL has [ActiveScriptWrappable] extended attribute.");
+-static_assert(
+-    !std::is_same<decltype(&{blink_class}::HasPendingActivity),
+-                  decltype(&ScriptWrappable::HasPendingActivity)>::value,
+-    "{blink_class} is not overriding hasPendingActivity() despite "
+     "the IDL has [ActiveScriptWrappable] extended attribute.");"""
+     else:
+         pattern = """\
+@@ -7119,11 +6937,6 @@ static_assert(
+ static_assert(
+     !std::is_base_of<ActiveScriptWrappableBase, {blink_class}>::value,
+     "{blink_class} inherits from ActiveScriptWrappable<> without "
+-    "[ActiveScriptWrappable] extended attribute.");
+-static_assert(
+-    std::is_same<decltype(&{blink_class}::HasPendingActivity),
+-                 decltype(&ScriptWrappable::HasPendingActivity)>::value,
+-    "{blink_class} is overriding hasPendingActivity() without "
+     "[ActiveScriptWrappable] extended attribute.");"""
+     if class_like.is_interface:
+         wrapper_type_info_def.append(F(pattern, blink_class=blink_class))
+@@ -7140,6 +6953,7 @@ def make_v8_context_snapshot_api(cg_context, component, attribute_entries,
                                   constant_entries, constructor_entries,
                                   exposed_construct_entries, operation_entries,
                                   named_properties_object_callback_defs,
@@ -3261,7 +3284,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..9d3de73a5aa3d401b50de4321480743e
                                   cross_origin_property_callback_defs,
                                   install_context_independent_func_name):
      assert isinstance(cg_context, CodeGenContext)
-@@ -7176,7 +7000,7 @@ def make_v8_context_snapshot_api(cg_context, component, attribute_entries,
+@@ -7176,7 +6990,7 @@ def make_v8_context_snapshot_api(cg_context, component, attribute_entries,
                                      cg_context.class_name), attribute_entries,
          constant_entries, constructor_entries, exposed_construct_entries,
          operation_entries, named_properties_object_callback_defs,
@@ -3270,7 +3293,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..9d3de73a5aa3d401b50de4321480743e
  
      add_func(*_make_v8_context_snapshot_install_props_per_context_function(
          cg_context, name_style.func("InstallPropsOf",
-@@ -7193,7 +7017,7 @@ def make_v8_context_snapshot_api(cg_context, component, attribute_entries,
+@@ -7193,7 +7007,7 @@ def make_v8_context_snapshot_api(cg_context, component, attribute_entries,
  def _make_v8_context_snapshot_get_reference_table_function(
          cg_context, function_name, attribute_entries, constant_entries,
          constructor_entries, exposed_construct_entries, operation_entries,
@@ -3279,7 +3302,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..9d3de73a5aa3d401b50de4321480743e
          cross_origin_property_callback_defs):
      callback_names = ["${class_name}::GetWrapperTypeInfo()"]
  
-@@ -7224,6 +7048,11 @@ def _make_v8_context_snapshot_get_reference_table_function(
+@@ -7224,6 +7038,11 @@ def _make_v8_context_snapshot_get_reference_table_function(
      collect_callbacks(named_properties_object_callback_defs)
      collect_callbacks(cross_origin_property_callback_defs)
  
@@ -3291,7 +3314,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..9d3de73a5aa3d401b50de4321480743e
      entry_nodes = list(
          map(
              lambda name: TextNode("reinterpret_cast<intptr_t>({}),".format(name
-@@ -7326,7 +7155,8 @@ return ${class_name}::{func}(
+@@ -7326,7 +7145,8 @@ return ${class_name}::{func}(
  def _collect_include_headers(class_like):
      assert isinstance(
          class_like,
@@ -3301,7 +3324,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..9d3de73a5aa3d401b50de4321480743e
  
      headers = set(class_like.code_generator_info.blink_headers or [])
  
-@@ -7361,7 +7191,10 @@ def _collect_include_headers(class_like):
+@@ -7361,7 +7181,10 @@ def _collect_include_headers(class_like):
      operations.extend(class_like.constructors)
      operations.extend(class_like.operations)
      if class_like.is_interface:
@@ -3313,7 +3336,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..9d3de73a5aa3d401b50de4321480743e
              if x:
                  operations.extend(x.operations)
          for exposed_construct in class_like.exposed_constructs:
-@@ -7393,10 +7226,12 @@ def _collect_include_headers(class_like):
+@@ -7393,10 +7216,12 @@ def _collect_include_headers(class_like):
  
  
  def generate_class_like(class_like,
@@ -3327,7 +3350,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..9d3de73a5aa3d401b50de4321480743e
  
      path_manager = PathManager(class_like)
      api_component = path_manager.api_component
-@@ -7421,6 +7256,9 @@ def generate_class_like(class_like,
+@@ -7421,6 +7246,9 @@ def generate_class_like(class_like,
          namespace = class_like
          cg_context = CodeGenContext(namespace=namespace,
                                      class_name=api_class_name)
@@ -3337,7 +3360,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..9d3de73a5aa3d401b50de4321480743e
      elif class_like.is_sync_iterator:
          cg_context = CodeGenContext(sync_iterator=class_like,
                                      class_name=api_class_name)
-@@ -7609,14 +7447,6 @@ def generate_class_like(class_like,
+@@ -7609,14 +7437,6 @@ def generate_class_like(class_like,
          operation_entries=operation_entries)
      supplemental_install_node = SequenceNode()
  
@@ -3352,7 +3375,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..9d3de73a5aa3d401b50de4321480743e
      # Named properties object
      (named_properties_object_callback_defs,
       named_properties_object_install_node) = (
-@@ -7634,6 +7464,14 @@ def generate_class_like(class_like,
+@@ -7634,6 +7454,14 @@ def generate_class_like(class_like,
      supplemental_install_node.append(cross_origin_property_install_node)
      supplemental_install_node.append(EmptyNode())
  
@@ -3367,7 +3390,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..9d3de73a5aa3d401b50de4321480743e
      # Installer functions
      is_unconditional = lambda entry: entry.exposure_conditional.is_always_true
      is_context_dependent = lambda entry: entry.is_context_dependent
-@@ -7748,7 +7586,7 @@ def generate_class_like(class_like,
+@@ -7748,7 +7576,7 @@ def generate_class_like(class_like,
           cg_context, impl_component, attribute_entries, constant_entries,
           constructor_entries, exposed_construct_entries, operation_entries,
           named_properties_object_callback_defs,
@@ -3376,7 +3399,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..9d3de73a5aa3d401b50de4321480743e
           (install_context_independent_props_def
            and FN_INSTALL_CONTEXT_INDEPENDENT_PROPS))
  
-@@ -7809,7 +7647,7 @@ def generate_class_like(class_like,
+@@ -7809,7 +7637,7 @@ def generate_class_like(class_like,
              make_forward_declarations(impl_source_node.accumulator),
              EmptyNode(),
          ])
@@ -3385,7 +3408,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..9d3de73a5aa3d401b50de4321480743e
          api_header_node.accumulator.add_class_decls(
              [blink_class_name(class_like.interface)])
      else:
-@@ -7849,6 +7687,14 @@ def generate_class_like(class_like,
+@@ -7849,6 +7677,14 @@ def generate_class_like(class_like,
          _collect_include_headers(class_like))
  
      # Assemble the parts.
@@ -3400,7 +3423,7 @@ index 70f6bd8a166c83fa629ec86a4b11bfb948fc88c2..9d3de73a5aa3d401b50de4321480743e
      if generate_sync_iterator_blink_impl_class_callback:
          assert isinstance(class_like, web_idl.SyncIterator)
          generate_sync_iterator_blink_impl_class_callback(
-@@ -8306,3 +8152,4 @@ def generate_interfaces(task_queue):
+@@ -8306,3 +8142,4 @@ def generate_interfaces(task_queue):
                           "InitIDLInterfacesForTesting",
                           "init_idl_interfaces_for_testing",
                           for_testing=True)

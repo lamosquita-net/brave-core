@@ -1,0 +1,21 @@
+diff --git a/third_party/blink/renderer/platform/bindings/active_script_wrappable_base.h b/third_party/blink/renderer/platform/bindings/active_script_wrappable_base.h
+index 8936c1c59616156161a8414e90e2024a279da31f..23aff4fc0bbb22426e7689534e60cd8ef606c8fa 100644
+--- a/third_party/blink/renderer/platform/bindings/active_script_wrappable_base.h
++++ b/third_party/blink/renderer/platform/bindings/active_script_wrappable_base.h
+@@ -25,7 +25,15 @@ class PLATFORM_EXPORT ActiveScriptWrappableBase : public GarbageCollectedMixin {
+   virtual ~ActiveScriptWrappableBase() = default;
+ 
+   virtual bool IsContextDestroyed() const = 0;
+-  virtual bool DispatchHasPendingActivity() const = 0;
++
++  // `HasPendingActivity()` overrides the lifetime of ScriptWrappable objects
++  // when needed. If `HasPendingActivity()` returns true and the corresponding
++  // ExecutionContext is not destroyed, the objects will not be reclaimed by the
++  // GC, even if they are otherwise unreachable.
++  //
++  // Note: These methods are queried during garbage collection and *must not*
++  // allocate any new objects.
++  virtual bool HasPendingActivity() const = 0;
+ 
+  protected:
+   ActiveScriptWrappableBase() = default;
