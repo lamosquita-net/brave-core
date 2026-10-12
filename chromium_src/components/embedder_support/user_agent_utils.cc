@@ -10,6 +10,7 @@
 #include "base/strings/stringprintf.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/version.h"
+#include "build/build_config.h"
 #include "components/embedder_support/switches.h"
 #include "third_party/blink/public/common/features.h"
 
@@ -79,6 +80,13 @@ blink::UserAgentMetadata GetUserAgentMetadata(const PrefService* pref_service) {
         blink::features::kClampPlatformVersionClientHintPatchValue.Get()
             .c_str());
   }
+#if BUILDFLAG(IS_MAC)
+  // FlyWeb (F4.8): never a macOS older than the declared Chrome supports.
+  const base::Version min_macos(version_info::constants::kFlyWebMinMacOSVersion);
+  if (base::Version(metadata.platform_version) < min_macos) {
+    metadata.platform_version = min_macos.GetString();
+  }
+#endif
   return metadata;
 }
 
