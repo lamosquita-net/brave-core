@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/bindings/wrapper_type_info.cc b/third_party/blink/renderer/platform/bindings/wrapper_type_info.cc
-index ce61e53d8b35cd40a51be5e59d6710deaf92c03c..abfaeeb8d40fe56b12895b21d7d04702c3efaa36 100644
+index ce61e53d8b35cd40a51be5e59d6710deaf92c03c..50ea21ef2f057a5d37992cc3638b8e3f1d5f2318 100644
 --- a/third_party/blink/renderer/platform/bindings/wrapper_type_info.cc
 +++ b/third_party/blink/renderer/platform/bindings/wrapper_type_info.cc
 @@ -4,7 +4,6 @@
@@ -20,3 +20,17 @@ index ce61e53d8b35cd40a51be5e59d6710deaf92c03c..abfaeeb8d40fe56b12895b21d7d04702
      case kCustomWrappableKind:
        v8_template = v8::FunctionTemplate::New(isolate);
        break;
+@@ -58,4 +60,13 @@ v8::Local<v8::Template> WrapperTypeInfo::GetV8ClassTemplate(
+   return v8_template;
+ }
+ 
++const WrapperTypeInfo* ToWrapperTypeInfo(
++    const v8::TracedReference<v8::Object>& wrapper) {
++  return GetInternalField<WrapperTypeInfo, kV8DOMWrapperTypeIndex>(wrapper);
++}
++
++const WrapperTypeInfo* ToWrapperTypeInfo(v8::Local<v8::Object> wrapper) {
++  return GetInternalField<WrapperTypeInfo, kV8DOMWrapperTypeIndex>(wrapper);
++}
++
+ }  // namespace blink

@@ -1,8 +1,8 @@
 diff --git a/third_party/blink/renderer/bindings/core/v8/local_window_proxy.cc b/third_party/blink/renderer/bindings/core/v8/local_window_proxy.cc
-index 1cada05806cb35a82822507f708d43979d97de61..cc5e2a3607bf314d6fe149a4fe5c4c17a32c002f 100644
+index 1cada05806cb35a82822507f708d43979d97de61..08fd07e3900b76e22a8af5df818cf04884eb9da1 100644
 --- a/third_party/blink/renderer/bindings/core/v8/local_window_proxy.cc
 +++ b/third_party/blink/renderer/bindings/core/v8/local_window_proxy.cc
-@@ -111,16 +111,24 @@ void LocalWindowProxy::DisposeContext(Lifecycle next_status,
+@@ -111,16 +111,25 @@ void LocalWindowProxy::DisposeContext(Lifecycle next_status,
    if (next_status == Lifecycle::kV8MemoryIsForciblyPurged ||
        next_status == Lifecycle::kGlobalObjectIsDetached) {
      // Clean up state on the global proxy, which will be reused.
@@ -14,8 +14,9 @@ index 1cada05806cb35a82822507f708d43979d97de61..cc5e2a3607bf314d6fe149a4fe5c4c17
 -                   context->Global()->GetPrototype().As<v8::Object>()));
 -      global_proxy_.SetWrapperClassId(0);
 +      CHECK(global_proxy_ == global);
-+      CHECK_EQ(ToScriptWrappable(global),
-+               ToScriptWrappable(global->GetPrototype().As<v8::Object>()));
++      CHECK_EQ(ToScriptWrappable(GetIsolate(), global),
++               ToScriptWrappable(GetIsolate(),
++                                 global->GetPrototype().As<v8::Object>()));
      }
 -    V8DOMWrapper::ClearNativeInfo(GetIsolate(), context->Global());
 +    V8DOMWrapper::ClearNativeInfo(GetIsolate(), global);
@@ -34,7 +35,7 @@ index 1cada05806cb35a82822507f708d43979d97de61..cc5e2a3607bf314d6fe149a4fe5c4c17
  #if DCHECK_IS_ON()
      DidDetachGlobalObject();
  #endif
-@@ -290,11 +298,12 @@ void LocalWindowProxy::SetupWindowPrototypeChain() {
+@@ -290,11 +299,12 @@ void LocalWindowProxy::SetupWindowPrototypeChain() {
    // The global proxy object.  Note this is not the global object.
    v8::Local<v8::Object> global_proxy = context->Global();
    CHECK(global_proxy_ == global_proxy);
@@ -50,7 +51,7 @@ index 1cada05806cb35a82822507f708d43979d97de61..cc5e2a3607bf314d6fe149a4fe5c4c17
  
    // The global object, aka window wrapper object.
    v8::Local<v8::Object> window_wrapper =
-@@ -441,6 +450,8 @@ void LocalWindowProxy::UpdateDocumentForMainWorld() {
+@@ -441,6 +451,8 @@ void LocalWindowProxy::UpdateDocumentForMainWorld() {
    UpdateSecurityOrigin(GetFrame()->DomWindow()->GetSecurityOrigin());
  }
  
@@ -59,7 +60,7 @@ index 1cada05806cb35a82822507f708d43979d97de61..cc5e2a3607bf314d6fe149a4fe5c4c17
  // GetNamedProperty(), Getter(), NamedItemAdded(), and NamedItemRemoved()
  // optimize property access performance for Document.
  //
-@@ -453,11 +464,10 @@ void LocalWindowProxy::UpdateDocumentForMainWorld() {
+@@ -453,11 +465,10 @@ void LocalWindowProxy::UpdateDocumentForMainWorld() {
  //
  // See crbug.com/614559 for how this affected benchmarks.
  
@@ -75,7 +76,7 @@ index 1cada05806cb35a82822507f708d43979d97de61..cc5e2a3607bf314d6fe149a4fe5c4c17
    if (!html_document->HasNamedItem(key))
      return v8::Local<v8::Value>();
  
-@@ -477,8 +487,8 @@ static v8::Local<v8::Value> GetNamedProperty(
+@@ -477,14 +488,14 @@ static v8::Local<v8::Value> GetNamedProperty(
    return ToV8(items, creation_context, isolate);
  }
  
@@ -86,7 +87,14 @@ index 1cada05806cb35a82822507f708d43979d97de61..cc5e2a3607bf314d6fe149a4fe5c4c17
    if (!property->IsString())
      return;
    // FIXME: Consider passing StringImpl directly.
-@@ -500,6 +510,15 @@ static void Getter(v8::Local<v8::Name> property,
+   AtomicString name = ToCoreAtomicString(property.As<v8::String>());
+   HTMLDocument* html_document =
+-      V8HTMLDocument::ToWrappableUnsafe(info.Holder());
++      V8HTMLDocument::ToWrappableUnsafe(info.GetIsolate(), info.Holder());
+   DCHECK(html_document);
+   v8::Local<v8::Value> result =
+       GetNamedProperty(html_document, name, info.Holder(), info.GetIsolate());
+@@ -500,6 +511,15 @@ static void Getter(v8::Local<v8::Name> property,
      V8SetReturnValue(info, value);
  }
  
@@ -102,7 +110,7 @@ index 1cada05806cb35a82822507f708d43979d97de61..cc5e2a3607bf314d6fe149a4fe5c4c17
  void LocalWindowProxy::NamedItemAdded(HTMLDocument* document,
                                        const AtomicString& name) {
    DCHECK(world_->IsMainWorld());
-@@ -515,14 +534,15 @@ void LocalWindowProxy::NamedItemAdded(HTMLDocument* document,
+@@ -515,14 +535,15 @@ void LocalWindowProxy::NamedItemAdded(HTMLDocument* document,
  
    ScriptState::Scope scope(script_state_);
    v8::Local<v8::Object> document_wrapper =
@@ -123,7 +131,7 @@ index 1cada05806cb35a82822507f708d43979d97de61..cc5e2a3607bf314d6fe149a4fe5c4c17
  }
  
  void LocalWindowProxy::NamedItemRemoved(HTMLDocument* document,
-@@ -542,7 +562,7 @@ void LocalWindowProxy::NamedItemRemoved(HTMLDocument* document,
+@@ -542,7 +563,7 @@ void LocalWindowProxy::NamedItemRemoved(HTMLDocument* document,
      return;
    ScriptState::Scope scope(script_state_);
    v8::Local<v8::Object> document_wrapper =

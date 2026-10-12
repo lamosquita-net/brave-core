@@ -1,7 +1,20 @@
 diff --git a/third_party/blink/renderer/bindings/core/v8/binding_security.cc b/third_party/blink/renderer/bindings/core/v8/binding_security.cc
-index 2a9c497cf602da8f38001711adbe76a42e87a47d..5f8d4105f950fd2a333fa299c2813cda30c8ef5f 100644
+index 2a9c497cf602da8f38001711adbe76a42e87a47d..4f312b00a246b6218f678d5ad94eac1b6a01fbbd 100644
 --- a/third_party/blink/renderer/bindings/core/v8/binding_security.cc
 +++ b/third_party/blink/renderer/bindings/core/v8/binding_security.cc
+@@ -205,10 +205,10 @@ DOMWindow* FindWindow(v8::Isolate* isolate,
+                       const WrapperTypeInfo* type,
+                       v8::Local<v8::Object> holder) {
+   if (V8Window::GetWrapperTypeInfo()->Equals(type))
+-    return V8Window::ToWrappableUnsafe(holder);
++    return V8Window::ToWrappableUnsafe(isolate, holder);
+ 
+   if (V8Location::GetWrapperTypeInfo()->Equals(type))
+-    return V8Location::ToWrappableUnsafe(holder)->DomWindow();
++    return V8Location::ToWrappableUnsafe(isolate, holder)->DomWindow();
+ 
+   // This function can handle only those types listed above.
+   NOTREACHED();
 @@ -346,7 +346,8 @@ void BindingSecurity::RethrowWrapperCreationException(
  
  void BindingSecurity::FailedAccessCheckFor(v8::Isolate* isolate,

@@ -1,7 +1,16 @@
 diff --git a/third_party/blink/renderer/bindings/core/v8/observable_array_exotic_object_impl.cc b/third_party/blink/renderer/bindings/core/v8/observable_array_exotic_object_impl.cc
-index dbb9116030f659dbb661e38244fa1adf838b6361..c1303aad434a5f5daf627f92dc67a8e17dc8c32a 100644
+index dbb9116030f659dbb661e38244fa1adf838b6361..f77f081fd7c1aa7726b4b0fd67a2a94f3691ed4a 100644
 --- a/third_party/blink/renderer/bindings/core/v8/observable_array_exotic_object_impl.cc
 +++ b/third_party/blink/renderer/bindings/core/v8/observable_array_exotic_object_impl.cc
+@@ -53,7 +53,7 @@ ObservableArrayExoticObjectImpl::ProxyTargetToObservableArrayBaseOrDie(
+   // Crash when author script managed to pass something else other than the
+   // right proxy target object.
+   CHECK(backing_list_wrapper->IsObject());
+-  return ToScriptWrappable(backing_list_wrapper.As<v8::Object>())
++  return ToScriptWrappable(isolate, backing_list_wrapper.As<v8::Object>())
+       ->ToImpl<bindings::ObservableArrayBase>();
+ }
+ 
 @@ -64,7 +64,7 @@ ObservableArrayExoticObjectImpl::ObservableArrayExoticObjectImpl(
  v8::MaybeLocal<v8::Value> ObservableArrayExoticObjectImpl::Wrap(
      ScriptState* script_state) {

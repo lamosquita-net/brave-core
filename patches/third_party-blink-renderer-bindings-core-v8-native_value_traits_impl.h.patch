@@ -1,0 +1,56 @@
+diff --git a/third_party/blink/renderer/bindings/core/v8/native_value_traits_impl.h b/third_party/blink/renderer/bindings/core/v8/native_value_traits_impl.h
+index d7bce2cab9f343696e12bc20cbf29727219578af..9595b7b03426eb79cbe16aadb017a17f8b016e3a 100644
+--- a/third_party/blink/renderer/bindings/core/v8/native_value_traits_impl.h
++++ b/third_party/blink/renderer/bindings/core/v8/native_value_traits_impl.h
+@@ -1496,7 +1496,8 @@ struct NativeValueTraits<
+                                ExceptionState& exception_state) {
+     const WrapperTypeInfo* wrapper_type_info = T::GetStaticWrapperTypeInfo();
+     if (V8PerIsolateData::From(isolate)->HasInstance(wrapper_type_info, value))
+-      return ToScriptWrappable(value.As<v8::Object>())->template ToImpl<T>();
++      return ToScriptWrappable(isolate, value.As<v8::Object>())
++          ->template ToImpl<T>();
+ 
+     bindings::NativeValueTraitsInterfaceNotOfType(wrapper_type_info,
+                                                   exception_state);
+@@ -1508,8 +1509,11 @@ struct NativeValueTraits<
+                                  v8::Local<v8::Value> value,
+                                  ExceptionState& exception_state) {
+     const WrapperTypeInfo* wrapper_type_info = T::GetStaticWrapperTypeInfo();
+-    if (V8PerIsolateData::From(isolate)->HasInstance(wrapper_type_info, value))
+-      return ToScriptWrappable(value.As<v8::Object>())->template ToImpl<T>();
++    if (V8PerIsolateData::From(isolate)->HasInstance(wrapper_type_info,
++                                                     value)) {
++      return ToScriptWrappable(isolate, value.As<v8::Object>())
++          ->template ToImpl<T>();
++    }
+ 
+     bindings::NativeValueTraitsInterfaceNotOfType(
+         wrapper_type_info, argument_index, exception_state);
+@@ -1526,8 +1530,11 @@ struct NativeValueTraits<
+                                v8::Local<v8::Value> value,
+                                ExceptionState& exception_state) {
+     const WrapperTypeInfo* wrapper_type_info = T::GetStaticWrapperTypeInfo();
+-    if (V8PerIsolateData::From(isolate)->HasInstance(wrapper_type_info, value))
+-      return ToScriptWrappable(value.As<v8::Object>())->template ToImpl<T>();
++    if (V8PerIsolateData::From(isolate)->HasInstance(wrapper_type_info,
++                                                     value)) {
++      return ToScriptWrappable(isolate, value.As<v8::Object>())
++          ->template ToImpl<T>();
++    }
+ 
+     if (value->IsNullOrUndefined())
+       return nullptr;
+@@ -1542,8 +1549,11 @@ struct NativeValueTraits<
+                                  v8::Local<v8::Value> value,
+                                  ExceptionState& exception_state) {
+     const WrapperTypeInfo* wrapper_type_info = T::GetStaticWrapperTypeInfo();
+-    if (V8PerIsolateData::From(isolate)->HasInstance(wrapper_type_info, value))
+-      return ToScriptWrappable(value.As<v8::Object>())->template ToImpl<T>();
++    if (V8PerIsolateData::From(isolate)->HasInstance(wrapper_type_info,
++                                                     value)) {
++      return ToScriptWrappable(isolate, value.As<v8::Object>())
++          ->template ToImpl<T>();
++    }
+ 
+     if (value->IsNullOrUndefined())
+       return nullptr;

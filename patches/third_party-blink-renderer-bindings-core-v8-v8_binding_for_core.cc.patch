@@ -1,0 +1,24 @@
+diff --git a/third_party/blink/renderer/bindings/core/v8/v8_binding_for_core.cc b/third_party/blink/renderer/bindings/core/v8/v8_binding_for_core.cc
+index ff7153fc60f470296b5c141ff2edf642e83384c3..e5abebf6e3e7c5cf8f7a296d5e537b91bd5b417f 100644
+--- a/third_party/blink/renderer/bindings/core/v8/v8_binding_for_core.cc
++++ b/third_party/blink/renderer/bindings/core/v8/v8_binding_for_core.cc
+@@ -643,7 +643,8 @@ LocalDOMWindow* ToLocalDOMWindow(v8::Local<v8::Context> context) {
+     return nullptr;
+   }
+   return To<LocalDOMWindow>(
+-      ToScriptWrappable(global)->ToMostDerived<DOMWindow>());
++      ToScriptWrappable(context->GetIsolate(), global)
++          ->ToMostDerived<DOMWindow>());
+ }
+ 
+ LocalDOMWindow* EnteredDOMWindow(v8::Isolate* isolate) {
+@@ -681,7 +682,8 @@ ExecutionContext* ToExecutionContext(v8::Local<v8::Context> context) {
+   if (global_proxy->InternalFieldCount() == 0)
+     return nullptr;
+ 
+-  ScriptWrappable::TypeDispatcher dispatcher(ToScriptWrappable(global_proxy));
++  ScriptWrappable::TypeDispatcher dispatcher(
++      ToScriptWrappable(context->GetIsolate(), global_proxy));
+   if (auto* x = dispatcher.ToMostDerived<DOMWindow>())
+     return x->GetExecutionContext();
+   if (auto* x = dispatcher.DowncastTo<WorkerGlobalScope>())

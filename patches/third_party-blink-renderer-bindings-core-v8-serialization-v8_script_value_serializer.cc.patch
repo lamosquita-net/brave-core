@@ -1,0 +1,22 @@
+diff --git a/third_party/blink/renderer/bindings/core/v8/serialization/v8_script_value_serializer.cc b/third_party/blink/renderer/bindings/core/v8/serialization/v8_script_value_serializer.cc
+index 8fbff46b443fc5adefd6a528d09eed6e538e7783..2c6f9b97815bd90a80ef9a973f625b1b5bcdf705 100644
+--- a/third_party/blink/renderer/bindings/core/v8/serialization/v8_script_value_serializer.cc
++++ b/third_party/blink/renderer/bindings/core/v8/serialization/v8_script_value_serializer.cc
+@@ -871,7 +871,7 @@ v8::Maybe<bool> V8ScriptValueSerializer::WriteHostObject(
+                                       "An object could not be cloned.");
+     return v8::Nothing<bool>();
+   }
+-  ScriptWrappable* wrappable = ToScriptWrappable(object);
++  ScriptWrappable* wrappable = ToScriptWrappable(isolate, object);
+   // TODO(crbug.com/1353299): Remove this CHECK after an investigation.
+   CHECK(wrappable);
+   bool wrote_dom_object = WriteDOMObject(wrappable, exception_state);
+@@ -902,7 +902,7 @@ DOMSharedArrayBuffer* ToSharedArrayBuffer(v8::Isolate* isolate,
+   v8::Local<v8::SharedArrayBuffer> v8_shared_array_buffer =
+       value.As<v8::SharedArrayBuffer>();
+   if (DOMSharedArrayBuffer* shared_array_buffer =
+-          ToScriptWrappable(v8_shared_array_buffer)
++          ToScriptWrappable(isolate, v8_shared_array_buffer)
+               ->ToImpl<DOMSharedArrayBuffer>()) {
+     return shared_array_buffer;
+   }

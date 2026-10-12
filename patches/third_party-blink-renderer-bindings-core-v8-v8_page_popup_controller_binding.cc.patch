@@ -1,8 +1,18 @@
 diff --git a/third_party/blink/renderer/bindings/core/v8/v8_page_popup_controller_binding.cc b/third_party/blink/renderer/bindings/core/v8/v8_page_popup_controller_binding.cc
-index f37b6b0d43d200830aefade172d8324089b7d12d..579dbc7a9d2f1e9829740647b486af54ca1cb550 100644
+index f37b6b0d43d200830aefade172d8324089b7d12d..7a8e7a0537bc205bf1380225875e86d511f57f17 100644
 --- a/third_party/blink/renderer/bindings/core/v8/v8_page_popup_controller_binding.cc
 +++ b/third_party/blink/renderer/bindings/core/v8/v8_page_popup_controller_binding.cc
-@@ -51,9 +51,10 @@ void V8PagePopupControllerBinding::InstallPagePopupController(
+@@ -22,7 +22,8 @@ void PagePopupControllerAttributeGetter(
+     const v8::PropertyCallbackInfo<v8::Value>& info) {
+   v8::Local<v8::Object> holder = info.Holder();
+   LocalFrame* frame =
+-      To<LocalDOMWindow>(V8Window::ToWrappableUnsafe(holder))->GetFrame();
++      To<LocalDOMWindow>(V8Window::ToWrappableUnsafe(info.GetIsolate(), holder))
++          ->GetFrame();
+   if (!frame) {
+     V8SetReturnValue(info, v8::Null(info.GetIsolate()));
+     return;
+@@ -51,9 +52,10 @@ void V8PagePopupControllerBinding::InstallPagePopupController(
      return;
  
    window_wrapper

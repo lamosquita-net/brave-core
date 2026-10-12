@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/bindings/v8_dom_wrapper.h b/third_party/blink/renderer/platform/bindings/v8_dom_wrapper.h
-index 72ec882dfeac3ba4b1cc4dd6c32b1477181a9c8a..d4b2f3c4add96b042b473752bbbac111ad1a50f8 100644
+index 72ec882dfeac3ba4b1cc4dd6c32b1477181a9c8a..07f3b370e3849c7ec5e4c0f40c90387d320e7a2b 100644
 --- a/third_party/blink/renderer/platform/bindings/v8_dom_wrapper.h
 +++ b/third_party/blink/renderer/platform/bindings/v8_dom_wrapper.h
 @@ -33,7 +33,6 @@
@@ -10,7 +10,7 @@ index 72ec882dfeac3ba4b1cc4dd6c32b1477181a9c8a..d4b2f3c4add96b042b473752bbbac111
  #include "third_party/blink/renderer/platform/bindings/dom_data_store.h"
  #include "third_party/blink/renderer/platform/bindings/runtime_call_stats.h"
  #include "third_party/blink/renderer/platform/bindings/script_wrappable.h"
-@@ -66,24 +65,10 @@ class V8DOMWrapper {
+@@ -66,44 +65,25 @@ class V8DOMWrapper {
                               ScriptWrappable*,
                               const WrapperTypeInfo*,
                               v8::Local<v8::Object> wrapper);
@@ -35,17 +35,23 @@ index 72ec882dfeac3ba4b1cc4dd6c32b1477181a9c8a..d4b2f3c4add96b042b473752bbbac111
 +                            ScriptWrappable* script_wrappable);
    static void ClearNativeInfo(v8::Isolate*, v8::Local<v8::Object>);
  
-   // hasInternalFieldsSet only checks if the value has the internal fields for
-@@ -91,19 +76,13 @@ class V8DOMWrapper {
-   // value may not be a Blink's wrapper object.  In order to make sure of it,
-   // Use isWrapper function instead.
-   PLATFORM_EXPORT static bool HasInternalFieldsSet(v8::Local<v8::Value>);
+-  // hasInternalFieldsSet only checks if the value has the internal fields for
+-  // wrapper obejct and type, and does not check if it's valid or not.  The
+-  // value may not be a Blink's wrapper object.  In order to make sure of it,
+-  // Use isWrapper function instead.
+-  PLATFORM_EXPORT static bool HasInternalFieldsSet(v8::Local<v8::Value>);
 -
 - private:
 -  static void SetNativeInfoInternal(v8::Isolate*,
 -                                    v8::Local<v8::Object>,
 -                                    const WrapperTypeInfo*,
 -                                    void*);
++  // HasInternalFieldsSet only checks if the value has the internal fields for
++  // wrapper object and type, and does not check if it's valid or not. The value
++  // may not be a Blink's wrapper object.  In order to make sure of it, use
++  // IsWrapper() instead.
++  PLATFORM_EXPORT static bool HasInternalFieldsSet(v8::Isolate*,
++                                                   v8::Local<v8::Value>);
  };
  
 -inline void V8DOMWrapper::SetNativeInfoInternal(
@@ -58,7 +64,15 @@ index 72ec882dfeac3ba4b1cc4dd6c32b1477181a9c8a..d4b2f3c4add96b042b473752bbbac111
    DCHECK_GE(wrapper->InternalFieldCount(), 2);
    DCHECK(wrappable);
    DCHECK(wrapper_type_info);
-@@ -136,18 +115,6 @@ inline v8::Local<v8::Object> V8DOMWrapper::AssociateObjectWithWrapper(
+@@ -130,24 +110,12 @@ inline v8::Local<v8::Object> V8DOMWrapper::AssociateObjectWithWrapper(
+       isolate, RuntimeCallStats::CounterId::kAssociateObjectWithWrapper);
+   if (DOMDataStore::SetWrapper(isolate, impl, wrapper_type_info, wrapper)) {
+     SetNativeInfo(isolate, wrapper, wrapper_type_info, impl);
+-    DCHECK(HasInternalFieldsSet(wrapper));
++    DCHECK(HasInternalFieldsSet(isolate, wrapper));
+   }
+-  SECURITY_CHECK(ToScriptWrappable(wrapper) == impl);
++  SECURITY_CHECK(ToScriptWrappable(isolate, wrapper) == impl);
    return wrapper;
  }
  

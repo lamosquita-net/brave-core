@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/bindings/core/v8/script_function.cc b/third_party/blink/renderer/bindings/core/v8/script_function.cc
-index b23d840d812a93a1b59d600f50b3709ad8452c5b..65a4fe57016f9ee56307b7f20bfdd88722a4e907 100644
+index b23d840d812a93a1b59d600f50b3709ad8452c5b..66dda89cbcdb28fc328e0110af1817d9e0c8ddc8 100644
 --- a/third_party/blink/renderer/bindings/core/v8/script_function.cc
 +++ b/third_party/blink/renderer/bindings/core/v8/script_function.cc
 @@ -4,14 +4,39 @@
@@ -54,16 +54,17 @@ index b23d840d812a93a1b59d600f50b3709ad8452c5b..65a4fe57016f9ee56307b7f20bfdd887
                               v8::ConstructorBehavior::kThrow)
          .ToLocalChecked();
    }
-@@ -29,7 +55,7 @@ class CallableHolder final : public CustomWrappable {
+@@ -29,7 +55,8 @@ class CallableHolder final : public CustomWrappable {
      RUNTIME_CALL_TIMER_SCOPE_DISABLED_BY_DEFAULT(args.GetIsolate(),
                                                   "Blink_CallCallback");
      v8::Local<v8::Object> data = v8::Local<v8::Object>::Cast(args.Data());
 -    auto* holder = static_cast<CallableHolder*>(ToCustomWrappable(data));
-+    auto* holder = static_cast<CallableHolder*>(ToScriptWrappable(data));
++    auto* holder = static_cast<CallableHolder*>(
++        ToScriptWrappable(args.GetIsolate(), data));
      ScriptState* script_state =
          ScriptState::From(args.GetIsolate()->GetCurrentContext());
      holder->callable_->CallRaw(script_state, args);
-@@ -43,14 +69,18 @@ class CallableHolder final : public CustomWrappable {
+@@ -43,14 +70,18 @@ class CallableHolder final : public CustomWrappable {
  
    void Trace(Visitor* visitor) const override {
      visitor->Trace(callable_);
@@ -84,7 +85,7 @@ index b23d840d812a93a1b59d600f50b3709ad8452c5b..65a4fe57016f9ee56307b7f20bfdd887
  
  ScriptValue ScriptFunction::Callable::Call(ScriptState*, ScriptValue) {
    NOTREACHED();
-@@ -65,10 +95,9 @@ void ScriptFunction::Callable::CallRaw(
+@@ -65,10 +96,9 @@ void ScriptFunction::Callable::CallRaw(
    V8SetReturnValue(args, result.V8Value());
  }
  

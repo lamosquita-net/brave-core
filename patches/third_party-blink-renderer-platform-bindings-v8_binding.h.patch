@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/bindings/v8_binding.h b/third_party/blink/renderer/platform/bindings/v8_binding.h
-index c063b6363e07935c9f521e860bcee9f1879e7312..ae2351bdfd592dc2bd63fda9038745e13dec183a 100644
+index c063b6363e07935c9f521e860bcee9f1879e7312..c16b2900aa5eaa3837f98399bf2c35d86e84a986 100644
 --- a/third_party/blink/renderer/platform/bindings/v8_binding.h
 +++ b/third_party/blink/renderer/platform/bindings/v8_binding.h
 @@ -209,6 +209,16 @@ inline AtomicString ToCoreAtomicString(v8::Local<v8::String> value) {
@@ -19,7 +19,17 @@ index c063b6363e07935c9f521e860bcee9f1879e7312..ae2351bdfd592dc2bd63fda9038745e1
  // This method will return a null String if the v8::Value does not contain a
  // v8::String.  It will not call ToString() on the v8::Value. If you want
  // ToString() to be called, please use the TONATIVE_FOR_V8STRINGRESOURCE_*()
-@@ -351,6 +361,27 @@ enum class NamedPropertyDeleterResult {
+@@ -313,7 +323,8 @@ template <typename Collection>
+ static void IndexedPropertyEnumerator(
+     const v8::PropertyCallbackInfo<v8::Array>& info) {
+   Collection* collection =
+-      ToScriptWrappable(info.Holder())->ToImpl<Collection>();
++      ToScriptWrappable(info.GetIsolate(), info.Holder())
++          ->ToImpl<Collection>();
+   int length = collection->length();
+   v8::Local<v8::Array> properties = v8::Array::New(info.GetIsolate(), length);
+   v8::Local<v8::Context> context = info.GetIsolate()->GetCurrentContext();
+@@ -351,6 +362,27 @@ enum class NamedPropertyDeleterResult {
    kDidNotDelete,     // Intercepted but failed to delete.
  };
  
