@@ -1,9 +1,9 @@
 diff --git a/third_party/blink/renderer/core/layout/inline/justification_utils.cc b/third_party/blink/renderer/core/layout/inline/justification_utils.cc
 new file mode 100644
-index 0000000000000000000000000000000000000000..2813b796a8a562b46e2e2479aa5328a2d569f45e
+index 0000000000000000000000000000000000000000..ed14825718e9962089f1f9722c33cbf9dca0c845
 --- /dev/null
 +++ b/third_party/blink/renderer/core/layout/inline/justification_utils.cc
-@@ -0,0 +1,365 @@
+@@ -0,0 +1,366 @@
 +// Copyright 2016 The Chromium Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -68,10 +68,11 @@ index 0000000000000000000000000000000000000000..2813b796a8a562b46e2e2479aa5328a2
 +          const NGLineInfo& base_line = item_result.ruby_column->base_line;
 +          const NGInlineItemResults& base_results = base_line.Results();
 +          if (!base_results.empty()) {
++            const unsigned base_end =
++                std::min(base_results.back().EndOffset(), end_offset);
 +            line_text_builder.Append(BuildJustificationText(
 +                text_content, base_results, base_results.front().StartOffset(),
-+                base_line.EndOffsetForJustify(),
-+                base_line.MayHaveTextCombineOrRubyItem()));
++                base_end, base_line.MayHaveTextCombineOrRubyItem()));
 +          }
 +        } else {
 +          line_text_builder.Append(kObjectReplacementCharacter);

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_cursor.cc b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_cursor.cc
-index 8c124e8c82816ab4b501e4cda7652dcf1080b327..cc1181eb25c40216909ecb8e753c934fb7961504 100644
+index 8c124e8c82816ab4b501e4cda7652dcf1080b327..9ebb77748d0a64f70ec285b3e7bf5268f0ac93cd 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_cursor.cc
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_cursor.cc
 @@ -19,6 +19,7 @@
@@ -19,7 +19,22 @@ index 8c124e8c82816ab4b501e4cda7652dcf1080b327..cc1181eb25c40216909ecb8e753c934f
      case NGFragmentItem::kInvalid:
        NOTREACHED();
        break;
-@@ -1714,6 +1717,7 @@ void NGInlineCursor::MoveToVisualFirstForSameLayoutObject() {
+@@ -1548,8 +1551,13 @@ const LayoutObject* NGInlineCursor::CulledInlineTraversal::Find(
+       return child;
+ 
+     if (child->IsBox()) {
+-      if (!child->IsFloatingOrOutOfFlowPositioned())
++      if (!child->IsFloatingOrOutOfFlowPositioned() &&
++          // Some objects are out of the IFC although they look like in-flow
++          // (`!IsFloatingOrOutOfFlowPositioned()`), such as ruby annotations or
++          // after block-in-inline splits.
++          child->IsInLayoutNGInlineFormattingContext()) {
+         return child;
++      }
+       child = child->NextInPreOrderAfterChildren(layout_inline_);
+       continue;
+     }
+@@ -1714,6 +1722,7 @@ void NGInlineCursor::MoveToVisualFirstForSameLayoutObject() {
  void NGInlineCursor::MoveToVisualFirstOrLastForCulledInline(bool last) {
    NGInlineCursorPosition found_position;
    absl::optional<size_t> found_index;
@@ -27,7 +42,7 @@ index 8c124e8c82816ab4b501e4cda7652dcf1080b327..cc1181eb25c40216909ecb8e753c934f
  
    // Iterate through the remaining fragments to find the lowest/greatest index.
    for (; Current(); MoveToNextForSameLayoutObject()) {
-@@ -1724,6 +1728,7 @@ void NGInlineCursor::MoveToVisualFirstOrLastForCulledInline(bool last) {
+@@ -1724,6 +1733,7 @@ void NGInlineCursor::MoveToVisualFirstOrLastForCulledInline(bool last) {
          (!last && index < *found_index)) {
        found_position = Current();
        found_index = index;
@@ -35,7 +50,7 @@ index 8c124e8c82816ab4b501e4cda7652dcf1080b327..cc1181eb25c40216909ecb8e753c934f
  
        // Break if there cannot be any fragment lower/greater than this one.
        if ((last && index == fragment_items_->Size() - 1) ||
-@@ -1733,6 +1738,13 @@ void NGInlineCursor::MoveToVisualFirstOrLastForCulledInline(bool last) {
+@@ -1733,6 +1743,13 @@ void NGInlineCursor::MoveToVisualFirstOrLastForCulledInline(bool last) {
    }
  
    DCHECK(found_position);

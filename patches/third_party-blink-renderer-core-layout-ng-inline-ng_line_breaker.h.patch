@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_line_breaker.h b/third_party/blink/renderer/core/layout/ng/inline/ng_line_breaker.h
-index be47a676d33890436858d55bae489e23a029f8ab..b09787a42c3a31a34953d78c88cee79e05a4c626 100644
+index be47a676d33890436858d55bae489e23a029f8ab..8d39ff50142c32be7335ba7a57b2fb99c536b7b2 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_line_breaker.h
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_line_breaker.h
 @@ -29,6 +29,8 @@ class NGLineBreakCandidateContext;
@@ -37,10 +37,13 @@ index be47a676d33890436858d55bae489e23a029f8ab..b09787a42c3a31a34953d78c88cee79e
  
    String TextContentForLineBreak() const;
  
-@@ -205,6 +213,34 @@ class CORE_EXPORT NGLineBreaker {
+@@ -204,7 +212,36 @@ class CORE_EXPORT NGLineBreaker {
+   void HandleAtomicInline(const NGInlineItem&, NGLineInfo*);
    void HandleBlockInInline(const NGInlineItem&, NGLineInfo*);
    void ComputeMinMaxContentSizeForBlockChild(const NGInlineItem&,
-                                              NGInlineItemResult*);
+-                                             NGInlineItemResult*);
++                                             NGInlineItemResult*,
++                                             const NGLineBreaker* root_breaker);
 +  // Returns false if we can't handle the current NGInlineItem as a ruby.
 +  // NOINLINE prevents a compiler for Android 64bit from inlining
 +  // HandleRuby() twice.
@@ -72,7 +75,7 @@ index be47a676d33890436858d55bae489e23a029f8ab..b09787a42c3a31a34953d78c88cee79e
  
    bool CanBreakAfterAtomicInline(const NGInlineItem& item) const;
    bool CanBreakAfter(const NGInlineItem& item) const;
-@@ -214,6 +250,7 @@ class CORE_EXPORT NGLineBreaker {
+@@ -214,6 +251,7 @@ class CORE_EXPORT NGLineBreaker {
    bool MayBeAtomicInline(wtf_size_t offset) const;
    const NGInlineItem* TryGetAtomicInlineItemAfter(
        const NGInlineItem& item) const;
@@ -80,7 +83,7 @@ index be47a676d33890436858d55bae489e23a029f8ab..b09787a42c3a31a34953d78c88cee79e
  
    void HandleFloat(const NGInlineItem&,
                     NGLineInfo*);
-@@ -236,6 +273,7 @@ class CORE_EXPORT NGLineBreaker {
+@@ -236,6 +274,7 @@ class CORE_EXPORT NGLineBreaker {
    bool IsPreviousItemOfType(NGInlineItem::NGInlineItemType);
    void MoveToNextOf(const NGInlineItem&);
    void MoveToNextOf(const NGInlineItemResult&);
@@ -88,7 +91,7 @@ index be47a676d33890436858d55bae489e23a029f8ab..b09787a42c3a31a34953d78c88cee79e
  
    void ComputeBaseDirection();
    void RecalcClonedBoxDecorations();
-@@ -247,7 +285,10 @@ class CORE_EXPORT NGLineBreaker {
+@@ -247,7 +286,10 @@ class CORE_EXPORT NGLineBreaker {
    LayoutUnit RemainingAvailableWidth() const {
      return AvailableWidthToFit() - position_;
    }
@@ -100,7 +103,7 @@ index be47a676d33890436858d55bae489e23a029f8ab..b09787a42c3a31a34953d78c88cee79e
    void UpdateAvailableWidth();
  
    // True if the current line is hyphenated.
-@@ -275,6 +316,9 @@ class CORE_EXPORT NGLineBreaker {
+@@ -275,10 +317,19 @@ class CORE_EXPORT NGLineBreaker {
    // |WhitespaceState| of the current end. When a line is broken, this indicates
    // the state of trailing whitespaces.
    WhitespaceState trailing_whitespace_;
@@ -110,7 +113,17 @@ index be47a676d33890436858d55bae489e23a029f8ab..b09787a42c3a31a34953d78c88cee79e
  
    // The current position from inline_start. Unlike NGInlineLayoutAlgorithm
    // that computes position in visual order, this position in logical order.
-@@ -304,6 +348,9 @@ class CORE_EXPORT NGLineBreaker {
+   LayoutUnit position_;
++
++  // Offset of this (sub-)line's start from the tab-stop origin, i.e. the start
++  // content edge of the nearest block container ancestor. Non-zero only for
++  // ruby sub-LineBreakers.
++  LayoutUnit tab_stop_offset_;
++
+   LayoutUnit available_width_;
+   NGLineLayoutOpportunity line_opportunity_;
+ 
+@@ -304,6 +355,9 @@ class CORE_EXPORT NGLineBreaker {
    // True when current box allows line wrapping.
    bool auto_wrap_ = false;
  
@@ -120,7 +133,7 @@ index be47a676d33890436858d55bae489e23a029f8ab..b09787a42c3a31a34953d78c88cee79e
    // True when current box has 'word-break/word-wrap: break-word'.
    bool break_anywhere_if_overflow_ = false;
  
-@@ -340,7 +387,11 @@ class CORE_EXPORT NGLineBreaker {
+@@ -340,7 +394,11 @@ class CORE_EXPORT NGLineBreaker {
    bool has_considered_creating_break_token_ = false;
  #endif
  
@@ -133,7 +146,7 @@ index be47a676d33890436858d55bae489e23a029f8ab..b09787a42c3a31a34953d78c88cee79e
  
    // The text content of this node. This is same as |items_data_.text_content|
    // except when sticky images quirk is needed. See
-@@ -350,6 +401,9 @@ class CORE_EXPORT NGLineBreaker {
+@@ -350,6 +408,9 @@ class CORE_EXPORT NGLineBreaker {
    const NGConstraintSpace& constraint_space_;
    NGExclusionSpace* exclusion_space_;
    const NGInlineBreakToken* break_token_;
@@ -143,7 +156,7 @@ index be47a676d33890436858d55bae489e23a029f8ab..b09787a42c3a31a34953d78c88cee79e
    const NGColumnSpannerPath* column_spanner_path_;
    scoped_refptr<const ComputedStyle> current_style_;
  
-@@ -405,6 +459,9 @@ class CORE_EXPORT NGLineBreaker {
+@@ -405,6 +466,9 @@ class CORE_EXPORT NGLineBreaker {
  
    // This has a valid object if is_svg_text_.
    std::unique_ptr<ResolvedTextLayoutAttributesIterator> svg_resolved_iterator_;
