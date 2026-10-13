@@ -1,9 +1,9 @@
 diff --git a/third_party/blink/renderer/core/layout/inline/logical_line_builder.cc b/third_party/blink/renderer/core/layout/inline/logical_line_builder.cc
 new file mode 100644
-index 0000000000000000000000000000000000000000..ebde10edfd4e43561d9abca9c88936af3e8089ac
+index 0000000000000000000000000000000000000000..80fa4a5ce10d26b234f33ef1592ea9b847bc89ae
 --- /dev/null
 +++ b/third_party/blink/renderer/core/layout/inline/logical_line_builder.cc
-@@ -0,0 +1,593 @@
+@@ -0,0 +1,638 @@
 +// Copyright 2016 The Chromium Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -18,10 +18,12 @@ index 0000000000000000000000000000000000000000..ebde10edfd4e43561d9abca9c88936af
 +#include "third_party/blink/renderer/core/layout/inline/justification_utils.h"
 +#include "third_party/blink/renderer/core/layout/ng/inline/ng_bidi_paragraph.h"
 +#include "third_party/blink/renderer/core/layout/ng/inline/ng_inline_box_state.h"
++#include "third_party/blink/renderer/core/layout/ng/inline/ng_inline_break_token.h"
 +#include "third_party/blink/renderer/core/layout/ng/inline/ng_inline_child_layout_context.h"
 +#include "third_party/blink/renderer/core/layout/ng/inline/ng_inline_item_result.h"
 +#include "third_party/blink/renderer/core/layout/ng/inline/ng_inline_layout_algorithm.h"
 +#include "third_party/blink/renderer/core/layout/ng/inline/ng_inline_node.h"
++#include "third_party/blink/renderer/core/layout/ng/inline/ng_line_breaker.h"
 +#include "third_party/blink/renderer/core/layout/ng/inline/ng_line_info.h"
 +#include "third_party/blink/renderer/core/layout/ng/inline/ng_logical_line_item.h"
 +#include "third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.h"
@@ -38,10 +40,12 @@ index 0000000000000000000000000000000000000000..ebde10edfd4e43561d9abca9c88936af
 +LogicalLineBuilder::LogicalLineBuilder(
 +    NGInlineNode node,
 +    const NGConstraintSpace& constraint_space,
++    const NGInlineBreakToken* break_token,
 +    NGInlineLayoutStateStack* state_stack,
 +    NGInlineChildLayoutContext* context)
 +    : node_(node),
 +      constraint_space_(constraint_space),
++      break_token_(break_token),
 +      box_states_(state_stack),
 +      context_(context),
 +      baseline_type_(node.Style().GetFontBaseline()),
@@ -166,7 +170,7 @@ index 0000000000000000000000000000000000000000..ebde10edfd4e43561d9abca9c88936af
 +      PlaceControlItem(item, line_info.ItemsData().text_content, &item_result,
 +                       line_box, box);
 +    } else if (item.Type() == NGInlineItem::kOpenTag) {
-+      box = HandleOpenTag(item, item_result, line_box, box_states_);
++      box = HandleOpenTag(item, item_result, line_box);
 +    } else if (item.Type() == NGInlineItem::kCloseTag) {
 +      box = HandleCloseTag(item, item_result, line_box, box);
 +    } else if (item.Type() == NGInlineItem::kAtomicInline) {
@@ -249,9 +253,8 @@ index 0000000000000000000000000000000000000000..ebde10edfd4e43561d9abca9c88936af
 +NGInlineBoxState* LogicalLineBuilder::HandleOpenTag(
 +    const NGInlineItem& item,
 +    const NGInlineItemResult& item_result,
-+    NGLogicalLineItems* line_box,
-+    NGInlineLayoutStateStack* box_states) const {
-+  NGInlineBoxState* box = box_states->OnOpenTag(
++    NGLogicalLineItems* line_box) {
++  NGInlineBoxState* box = box_states_->OnOpenTag(
 +      constraint_space_, item, item_result, baseline_type_, line_box);
 +  // Compute text metrics for all inline boxes since even empty inlines
 +  // influence the line height, except when quirks mode and the box is empty
@@ -420,8 +423,20 @@ index 0000000000000000000000000000000000000000..ebde10edfd4e43561d9abca9c88936af
 +    NGLogicalLineItems& line_box,
 +    NGInlineBoxState* box) {
 +  InlineItemResultRubyColumn& ruby_column = *item_result.ruby_column;
++  bool on_start_edge = false;
++  bool on_end_edge = false;
++  if (RuntimeEnabledFeatures::RubyLineEdgeAlignmentEnabled() &&
++      !node_.IsBidiEnabled()) {
++    on_start_edge =
++        ruby_column.base_line.StartOffset() == line_info.StartOffset() ||
++        item_result.StartOffset() == line_info.StartOffset();
++    wtf_size_t end_text_offset = ruby_column.base_line.EndTextOffset();
++    wtf_size_t inflow_end = line_info.InflowEndOffsetWithoutForcedBreak();
++    on_end_edge = end_text_offset == inflow_end;
++  }
 +  std::pair<LayoutUnit, LayoutUnit> base_insets =
-+      ApplyRubyAlign(item_result.inline_size, ruby_column.base_line);
++      ApplyRubyAlign(item_result.inline_size, on_start_edge, on_end_edge,
++                     ruby_column.base_line);
 +
 +  // Set up LogicalRubyColumns. This should be done before consuming the base
 +  // NGInlineItemResults because it might contain ruby columns, and annotation
@@ -473,11 +488,20 @@ index 0000000000000000000000000000000000000000..ebde10edfd4e43561d9abca9c88936af
 +    NGLineInfo& annotation_line,
 +    LogicalRubyColumn& logical_column) {
 +  std::pair<LayoutUnit, LayoutUnit> insets =
-+      ApplyRubyAlign(item_result.inline_size, annotation_line);
++      ApplyRubyAlign(item_result.inline_size, /* on_start_edge */ false,
++                     /* on_end_edge */ false, annotation_line);
 +
 +  auto* line_items = MakeGarbageCollected<NGLogicalLineItems>();
-+  LogicalLineBuilder annotation_builder(node_, constraint_space_,
++  LogicalLineBuilder annotation_builder(node_, constraint_space_, nullptr,
 +                                        &logical_column.state_stack, context_);
++  if (item_result.ruby_column->is_continuation &&
++      !annotation_line.Results().empty()) {
++    CHECK(break_token_->RubyData());
++    annotation_builder.RebuildBoxStates(
++        annotation_line,
++        break_token_->RubyData()->annotation_data[index].start_item_index,
++        annotation_line.Results()[0].item_index);
++  }
 +  annotation_builder.CreateLine(&annotation_line, line_items,
 +                                /* main_line_helper */ nullptr);
 +  ApplyLeftAndRightExpansion(insets.first, insets.second, line_items->begin(),
@@ -594,6 +618,27 @@ index 0000000000000000000000000000000000000000..ebde10edfd4e43561d9abca9c88936af
 +          return diff != 0 ? (diff > 0) : (column1->size > column2->size);
 +        });
 +  }
++}
++
++void LogicalLineBuilder::RebuildBoxStates(const NGLineInfo& line_info,
++                                          wtf_size_t start_item_index,
++                                          wtf_size_t end_item_index) {
++  // Compute which tags are not closed at the beginning of this line.
++  NGInlineItemsData::OpenTagItems open_items;
++  line_info.ItemsData().GetOpenTagItems(
++      start_item_index, end_item_index - start_item_index, &open_items);
++
++  // Create box states for tags that are not closed yet.
++  NGLogicalLineItems& line_box = context_->AcquireTempLogicalLineItems();
++  box_states_->OnBeginPlaceItems(node_, line_info.LineStyle(), baseline_type_,
++                                 quirks_mode_, &line_box);
++  for (const NGInlineItem* item : open_items) {
++    NGInlineItemResult item_result;
++    NGLineBreaker::ComputeOpenTagResult(*item, constraint_space_,
++                                      node_.IsSvgText(), &item_result);
++    HandleOpenTag(*item, item_result, &line_box);
++  }
++  context_->ReleaseTempLogicalLineItems(line_box);
 +}
 +
 +}  // namespace blink

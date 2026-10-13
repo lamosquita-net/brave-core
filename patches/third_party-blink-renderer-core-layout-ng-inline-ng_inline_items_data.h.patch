@@ -1,0 +1,19 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_items_data.h b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_items_data.h
+index 4adfabae58e0da569957f490f43813a34cf5d6e0..cdffc394453e3312c5f901a1c5c1183ec91e756a 100644
+--- a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_items_data.h
++++ b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_items_data.h
+@@ -59,9 +59,12 @@ struct CORE_EXPORT NGInlineItemsData
+     items[index].AssertEndOffset(offset);
+   }
+ 
+-  // Get a list of |kOpenTag| that are open at |size|.
++  // Get a list of `kOpenTag` items between `start_index` to
++  // `start_index + size`.
+   using OpenTagItems = Vector<const NGInlineItem*, 16>;
+-  void GetOpenTagItems(wtf_size_t size, OpenTagItems* open_items) const;
++  void GetOpenTagItems(wtf_size_t start_index,
++                       wtf_size_t size,
++                       OpenTagItems* open_items) const;
+ 
+ #if DCHECK_IS_ON()
+   void CheckConsistency() const;

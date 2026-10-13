@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/runtime_enabled_features.json5 b/third_party/blink/renderer/platform/runtime_enabled_features.json5
-index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..a0627cb710200603ad4d693d20680e4e124cb669 100644
+index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..455780bd6f083e079a3481782f67d6ce0e179ad9 100644
 --- a/third_party/blink/renderer/platform/runtime_enabled_features.json5
 +++ b/third_party/blink/renderer/platform/runtime_enabled_features.json5
 @@ -276,8 +276,10 @@
@@ -551,19 +551,25 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..a0627cb710200603ad4d693d20680e4e
      {
        name: "RTCLegacyCallbackBasedGetStats",
        origin_trial_feature_name: "RTCLegacyCallbackBasedGetStats",
-@@ -3070,6 +3267,11 @@
+@@ -3070,6 +3267,17 @@
        name: "RTCSvcScalabilityMode",
        status: "stable",
      },
 +    {
 +      // crbug.com/324111880
 +      name: "RubyLineBreakable",
-+      status: "test",
++      status: "experimental",
++    },
++    {
++      // crbug.com/340041662
++      name: "RubyLineEdgeAlignment",
++      status: "experimental",
++      depends_on: ["RubyLineBreakable"],
 +    },
      {
        name: "SanitizerAPI",
        status: "experimental",
-@@ -3109,18 +3311,23 @@
+@@ -3109,18 +3317,23 @@
        status: "stable",
        base_feature: "none",
      },
@@ -590,7 +596,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..a0627cb710200603ad4d693d20680e4e
      },
      {
        name: "ScrollCustomization",
-@@ -3182,6 +3389,14 @@
+@@ -3182,6 +3395,14 @@
        status: "stable",
        base_feature: "none",
      },
@@ -605,7 +611,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..a0627cb710200603ad4d693d20680e4e
      {
        name: "SendBeaconThrowForBlobWithNonSimpleType",
        public: true,
-@@ -3231,6 +3446,10 @@
+@@ -3231,6 +3452,10 @@
        origin_trial_feature_name: "ServiceWorkerStaticRouter",
        public: true,
      },
@@ -616,7 +622,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..a0627cb710200603ad4d693d20680e4e
      {
        name: "SharedArrayBuffer",
        base_feature: "none",
-@@ -3266,6 +3485,13 @@
+@@ -3266,6 +3491,13 @@
        status: {"Android": "", "default": "stable"},
        base_feature: "none",
      },
@@ -630,7 +636,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..a0627cb710200603ad4d693d20680e4e
      {
        name: "SignatureBasedIntegrity",
        origin_trial_feature_name: "SignatureBasedIntegrity",
-@@ -3449,10 +3675,27 @@
+@@ -3449,10 +3681,27 @@
        name: "StylusHandwriting",
        base_feature: "none",
      },
@@ -658,7 +664,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..a0627cb710200603ad4d693d20680e4e
      {
        name: "SvgRasterOptimizations",
        status: "experimental",
-@@ -3467,6 +3710,13 @@
+@@ -3467,6 +3716,13 @@
        status: "experimental",
        base_feature: "none",
      },
@@ -672,7 +678,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..a0627cb710200603ad4d693d20680e4e
      // For unit tests.
      {
        name: "TestFeature",
-@@ -3496,6 +3746,10 @@
+@@ -3496,6 +3752,10 @@
        status: "experimental",
        base_feature: "none",
      },
@@ -683,7 +689,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..a0627cb710200603ad4d693d20680e4e
      {
        name: "TextFragmentAPI",
        status: "experimental",
-@@ -3513,6 +3767,10 @@
+@@ -3513,6 +3773,10 @@
        status: {"Android": "stable"},
        base_feature: "none",
      },
@@ -694,7 +700,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..a0627cb710200603ad4d693d20680e4e
      {
        name: "ThirdPartyCookiesUserBypass",
        status: "experimental",
-@@ -3638,11 +3896,28 @@
+@@ -3638,11 +3902,28 @@
        origin_trial_feature_name: "UnrestrictedSharedArrayBuffer",
        origin_trial_os: ["win", "mac", "linux", "fuchsia", "chromeos"],
      },
@@ -723,7 +729,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..a0627cb710200603ad4d693d20680e4e
      {
        // Makes the global root scrollbars follow the preferred color scheme
        // by default. Please see more details: crbug.com/1423087.
-@@ -3657,6 +3932,15 @@
+@@ -3657,6 +3938,15 @@
        name: "UserAgentClientHint",
        status: "stable",
      },
@@ -739,7 +745,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..a0627cb710200603ad4d693d20680e4e
      {
        name: "V8IdleTasks",
        base_feature: "none",
-@@ -3723,6 +4007,10 @@
+@@ -3723,6 +4013,10 @@
        // See https://drafts.csswg.org/css-view-transitions-1/.
        name: "ViewTransitionOnNavigation",
      },
@@ -750,7 +756,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..a0627cb710200603ad4d693d20680e4e
      {
        name: "VisibilityCollapseColumn",
        base_feature: "none",
-@@ -3732,6 +4020,10 @@
+@@ -3732,6 +4026,10 @@
        status: "stable",
        base_feature: "none",
      },
@@ -761,7 +767,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..a0627cb710200603ad4d693d20680e4e
      {
        // The "WakeLock" feature was originally implied_by "ScreenWakeLock" and
        // "SystemWakeLock". The former was removed after being promoted to
-@@ -4031,6 +4323,10 @@
+@@ -4031,6 +4329,10 @@
        status: "test",
        base_feature: "none",
      },
@@ -772,7 +778,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..a0627cb710200603ad4d693d20680e4e
      {
        name: "WebSocketStream",
        status: "experimental",
-@@ -4167,6 +4463,12 @@
+@@ -4167,6 +4469,12 @@
        name: "WindowPlacementFullscreenOnScreensChange",
        status: "experimental",
      },

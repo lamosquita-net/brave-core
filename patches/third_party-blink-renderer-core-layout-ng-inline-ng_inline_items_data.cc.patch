@@ -1,0 +1,19 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_items_data.cc b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_items_data.cc
+index 6ac572e1fa20705c21436f340c3946d48b36ac79..c43118847a9ba384e1596fbc35decd5a7444a31e 100644
+--- a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_items_data.cc
++++ b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_items_data.cc
+@@ -6,10 +6,12 @@
+ 
+ namespace blink {
+ 
+-void NGInlineItemsData::GetOpenTagItems(wtf_size_t size,
++void NGInlineItemsData::GetOpenTagItems(wtf_size_t start_index,
++                                        wtf_size_t size,
+                                         OpenTagItems* open_items) const {
+   DCHECK_LE(size, items.size());
+-  for (const NGInlineItem& item : base::make_span(items.data(), size)) {
++  for (const NGInlineItem& item :
++       base::make_span(items).subspan(start_index, size)) {
+     if (item.Type() == NGInlineItem::kOpenTag)
+       open_items->push_back(&item);
+     else if (item.Type() == NGInlineItem::kCloseTag)

@@ -1,14 +1,19 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.cc b/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.cc
-index 4125fe51de0e63b2708dedf02f62c5347554df45..9f00f6b0d59de479504cadf2777a37345fb99c78 100644
+index 4125fe51de0e63b2708dedf02f62c5347554df45..363f792b71c78025e0971d4a80c9e510eb771b9c 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.cc
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.cc
-@@ -8,10 +8,20 @@
+@@ -5,13 +5,25 @@
+ #include "third_party/blink/renderer/core/layout/ng/inline/ng_line_info.h"
+ 
+ #include "base/containers/adapters.h"
++#include "third_party/blink/renderer/core/layout/inline/inline_item_result_ruby_column.h"
  #include "third_party/blink/renderer/core/layout/layout_object_inlines.h"
  #include "third_party/blink/renderer/core/layout/ng/inline/ng_inline_break_token.h"
  #include "third_party/blink/renderer/core/layout/ng/inline/ng_inline_node.h"
 +#include "third_party/blink/renderer/core/layout/ng/ng_layout_result.h"
  #include "third_party/blink/renderer/platform/fonts/shaping/shape_result_view.h"
 +#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
++#include "third_party/blink/renderer/platform/wtf/text/character_names.h"
  
  namespace blink {
  
@@ -23,7 +28,7 @@ index 4125fe51de0e63b2708dedf02f62c5347554df45..9f00f6b0d59de479504cadf2777a3734
  void NGLineInfo::Reset() {
    items_data_ = nullptr;
    line_style_ = nullptr;
-@@ -51,7 +61,8 @@ void NGLineInfo::Reset() {
+@@ -51,7 +63,8 @@ void NGLineInfo::Reset() {
    needs_accurate_end_position_ = false;
    is_ruby_base_ = false;
    is_ruby_text_ = false;
@@ -33,7 +38,7 @@ index 4125fe51de0e63b2708dedf02f62c5347554df45..9f00f6b0d59de479504cadf2777a3734
    allow_hang_for_alignment_ = false;
  }
  
-@@ -63,8 +74,10 @@ void NGLineInfo::SetLineStyle(const NGInlineNode& node,
+@@ -63,8 +76,10 @@ void NGLineInfo::SetLineStyle(const NGInlineNode& node,
    const LayoutBox* box = node.GetLayoutBox();
    line_style_ = box->Style(use_first_line_style_);
    needs_accurate_end_position_ = ComputeNeedsAccurateEndPosition();
@@ -46,7 +51,7 @@ index 4125fe51de0e63b2708dedf02f62c5347554df45..9f00f6b0d59de479504cadf2777a3734
  
    // Reset block start offset related members.
    annotation_block_start_adjustment_ = LayoutUnit();
-@@ -138,12 +151,23 @@ bool NGLineInfo::ComputeNeedsAccurateEndPosition() const {
+@@ -138,22 +153,45 @@ bool NGLineInfo::ComputeNeedsAccurateEndPosition() const {
  }
  
  NGInlineItemTextIndex NGLineInfo::End() const {
@@ -72,8 +77,32 @@ index 4125fe51de0e63b2708dedf02f62c5347554df45..9f00f6b0d59de479504cadf2777a3734
 +  return ItemsData().text_content.length();
  }
  
- unsigned NGLineInfo::InflowEndOffset() const {
-@@ -182,6 +206,15 @@ bool NGLineInfo::ShouldHangTrailingSpaces() const {
+-unsigned NGLineInfo::InflowEndOffset() const {
++unsigned NGLineInfo::InflowEndOffsetInternal(bool skip_forced_break) const {
+   for (const auto& item_result : base::Reversed(Results())) {
+     DCHECK(item_result.item);
+     const NGInlineItem& item = *item_result.item;
++    if (skip_forced_break && item.Type() == NGInlineItem::kControl &&
++        ItemsData().text_content[item.StartOffset()] == kNewlineCharacter) {
++      continue;
++    }
+     if (item.Type() == NGInlineItem::kText ||
+         item.Type() == NGInlineItem::kControl ||
+-        item.Type() == NGInlineItem::kAtomicInline)
++        item.Type() == NGInlineItem::kAtomicInline) {
+       return item_result.EndOffset();
++    } else if (item_result.IsRubyColumn()) {
++      const NGLineInfo& base_line = item_result.ruby_column->base_line;
++      unsigned end_offset =
++          base_line.InflowEndOffsetInternal(skip_forced_break);
++      if (end_offset != base_line.StartOffset()) {
++        return end_offset;
++      }
++    }
+   }
+   return StartOffset();
+ }
+@@ -182,6 +220,15 @@ bool NGLineInfo::ShouldHangTrailingSpaces() const {
    NOTREACHED();
  }
  

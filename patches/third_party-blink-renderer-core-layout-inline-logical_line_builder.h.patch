@@ -1,9 +1,9 @@
 diff --git a/third_party/blink/renderer/core/layout/inline/logical_line_builder.h b/third_party/blink/renderer/core/layout/inline/logical_line_builder.h
 new file mode 100644
-index 0000000000000000000000000000000000000000..17f869fdfecf92881676c6d4eef2b5360d64c184
+index 0000000000000000000000000000000000000000..01016f9c37a9ac0a6e887aba073e4ef2ef50a80a
 --- /dev/null
 +++ b/third_party/blink/renderer/core/layout/inline/logical_line_builder.h
-@@ -0,0 +1,119 @@
+@@ -0,0 +1,124 @@
 +// Copyright 2024 The Chromium Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -17,6 +17,7 @@ index 0000000000000000000000000000000000000000..17f869fdfecf92881676c6d4eef2b536
 +namespace blink {
 +
 +class NGConstraintSpace;
++class NGInlineBreakToken;
 +class NGInlineChildLayoutContext;
 +class NGInlineLayoutAlgorithm;
 +class NGInlineLayoutStateStack;
@@ -33,8 +34,13 @@ index 0000000000000000000000000000000000000000..17f869fdfecf92881676c6d4eef2b536
 + public:
 +  LogicalLineBuilder(NGInlineNode node,
 +                     const NGConstraintSpace& constraint_space,
++                     const NGInlineBreakToken* break_token,
 +                     NGInlineLayoutStateStack* state_stack,
 +                     NGInlineChildLayoutContext* context);
++
++  void RebuildBoxStates(const NGLineInfo& line_info,
++                        wtf_size_t start_item_index,
++                        wtf_size_t end_item_index);
 +
 +  // `main_line_helper` can be nullptr if the line is for ruby annotations.
 +  void CreateLine(NGLineInfo* line_info,
@@ -53,12 +59,10 @@ index 0000000000000000000000000000000000000000..17f869fdfecf92881676c6d4eef2b536
 +    return has_relative_positioned_items_;
 +  }
 +
++ private:
 +  NGInlineBoxState* HandleOpenTag(const NGInlineItem&,
 +                                  const NGInlineItemResult&,
-+                                  NGLogicalLineItems*,
-+                                  NGInlineLayoutStateStack*) const;
-+
-+ private:
++                                  NGLogicalLineItems*);
 +  NGInlineBoxState* HandleItemResults(const NGLineInfo& line_info,
 +                                      NGInlineItemResults& line_items,
 +                                      NGLogicalLineItems* line_box,
@@ -104,6 +108,7 @@ index 0000000000000000000000000000000000000000..17f869fdfecf92881676c6d4eef2b536
 +
 +  NGInlineNode node_;
 +  const NGConstraintSpace& constraint_space_;
++  const NGInlineBreakToken* break_token_;
 +  NGInlineLayoutStateStack* box_states_;
 +  NGInlineChildLayoutContext* context_;
 +  const FontBaseline baseline_type_;

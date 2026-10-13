@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_line_breaker.cc b/third_party/blink/renderer/core/layout/ng/inline/ng_line_breaker.cc
-index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..4c2366037e25aa17aba769a3035eeac1667d9dfb 100644
+index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..c33feffc4b95b67082305180531dcda3d2a79fc9 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_line_breaker.cc
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_line_breaker.cc
 @@ -5,8 +5,10 @@
@@ -13,7 +13,15 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..4c2366037e25aa17aba769a3035eeac1
  #include "third_party/blink/renderer/core/layout/ng/inline/ng_bidi_paragraph.h"
  #include "third_party/blink/renderer/core/layout/ng/inline/ng_inline_break_token.h"
  #include "third_party/blink/renderer/core/layout/ng/inline/ng_inline_cursor.h"
-@@ -32,6 +34,7 @@
+@@ -15,6 +17,7 @@
+ #include "third_party/blink/renderer/core/layout/ng/inline/ng_line_break_candidate.h"
+ #include "third_party/blink/renderer/core/layout/ng/inline/ng_line_info.h"
+ #include "third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.h"
++#include "third_party/blink/renderer/core/layout/layout_object_inlines.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_block_break_token.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_constraint_space.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_constraint_space_builder.h"
+@@ -32,6 +35,7 @@
  #include "third_party/blink/renderer/platform/fonts/shaping/shape_result_view.h"
  #include "third_party/blink/renderer/platform/fonts/shaping/shaping_line_breaker.h"
  #include "third_party/blink/renderer/platform/text/character.h"
@@ -21,7 +29,7 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..4c2366037e25aa17aba769a3035eeac1
  
  namespace blink {
  
-@@ -189,7 +192,7 @@ inline bool IsTrailableItemType(NGInlineItem::NGInlineItemType type) {
+@@ -189,7 +193,7 @@ inline bool IsTrailableItemType(NGInlineItem::NGInlineItemType type) {
    return type != NGInlineItem::kAtomicInline &&
           type != NGInlineItem::kOutOfFlowPositioned &&
           type != NGInlineItem::kInitialLetterBox &&
@@ -30,7 +38,7 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..4c2366037e25aa17aba769a3035eeac1
  }
  
  inline bool CanBreakAfterLast(const NGInlineItemResults& item_results) {
-@@ -306,26 +309,19 @@ inline LayoutNGTextCombine* MayBeTextCombine(const NGInlineItem* item) {
+@@ -306,26 +310,19 @@ inline LayoutNGTextCombine* MayBeTextCombine(const NGInlineItem* item) {
    return DynamicTo<LayoutNGTextCombine>(item->GetLayoutObject());
  }
  
@@ -67,15 +75,23 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..4c2366037e25aa17aba769a3035eeac1
  }
  
  void NGLineBreaker::UpdateAvailableWidth() {
-@@ -367,6 +363,7 @@ NGLineBreaker::NGLineBreaker(NGInlineNode node,
+@@ -366,11 +363,12 @@ NGLineBreaker::NGLineBreaker(NGInlineNode node,
+                             node.UseFirstLineStyle()),
        sticky_images_quirk_(mode != NGLineBreakerMode::kContent &&
                             node.IsStickyImagesQuirkForContentSize()),
-       items_data_(node.ItemsData(use_first_line_style_)),
-+      end_item_index_(items_data_.items.size()),
+-      items_data_(node.ItemsData(use_first_line_style_)),
++      items_data_(&node.ItemsData(use_first_line_style_)),
++      end_item_index_(items_data_->items.size()),
        text_content_(
            !sticky_images_quirk_
-               ? items_data_.text_content
-@@ -395,6 +392,20 @@ NGLineBreaker::NGLineBreaker(NGInlineNode node,
+-              ? items_data_.text_content
+-              : NGInlineNode::TextContentForStickyImagesQuirk(items_data_)),
++              ? items_data_->text_content
++              : NGInlineNode::TextContentForStickyImagesQuirk(*items_data_)),
+       constraint_space_(space),
+       exclusion_space_(exclusion_space),
+       break_token_(break_token),
+@@ -395,6 +393,20 @@ NGLineBreaker::NGLineBreaker(NGInlineNode node,
                char_data_list);
      }
    }
@@ -96,21 +112,105 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..4c2366037e25aa17aba769a3035eeac1
  
    if (!break_token)
      return;
-@@ -448,7 +459,7 @@ inline NGInlineItemResult* NGLineBreaker::AddItem(const NGInlineItem& item,
-   DCHECK_GE(end_offset, current_.text_offset);
-   DCHECK_LE(end_offset, item.EndOffset());
+@@ -415,9 +427,10 @@ NGLineBreaker::NGLineBreaker(NGInlineNode node,
+   }
+ 
+   current_ = break_token->Start();
++  ruby_break_token_ = break_token->RubyData();
+   break_iterator_.SetStartOffset(current_.text_offset);
+   is_after_forced_break_ = break_token->IsForcedBreak();
+-  items_data_.AssertOffset(current_);
++  items_data_->AssertOffset(current_);
+   SetCurrentStyle(*line_initial_style);
+ }
+ 
+@@ -430,7 +443,7 @@ void NGLineBreaker::SetLineOpportunity(
+ }
+ 
+ void NGLineBreaker::OverrideAvailableWidth(LayoutUnit available_width) {
+-  DCHECK(available_width);
++  DCHECK_GE(available_width, LayoutUnit());
+   override_available_width_ = available_width;
+   UpdateAvailableWidth();
+ }
+@@ -443,12 +456,14 @@ void NGLineBreaker::SetBreakAt(const NGLineBreakPoint& offset) {
+ inline NGInlineItemResult* NGLineBreaker::AddItem(const NGInlineItem& item,
+                                                   unsigned end_offset,
+                                                   NGLineInfo* line_info) {
+-  DCHECK_EQ(&item, &items_data_.items[current_.item_index]);
+-  DCHECK_GE(current_.text_offset, item.StartOffset());
+-  DCHECK_GE(end_offset, current_.text_offset);
+-  DCHECK_LE(end_offset, item.EndOffset());
++  if (item.Type() != NGInlineItem::kOpenRubyColumn) {
++    DCHECK_EQ(&item, &items_data_->items[current_.item_index]);
++    DCHECK_GE(current_.text_offset, item.StartOffset());
++    DCHECK_GE(end_offset, current_.text_offset);
++    DCHECK_LE(end_offset, item.EndOffset());
++  }
    if (UNLIKELY(item.IsTextCombine()))
 -    line_info->SetHaveTextCombineItem();
 +    line_info->SetHaveTextCombineOrRubyItem();
    NGInlineItemResults* item_results = line_info->MutableResults();
    return &item_results->emplace_back(
        &item, current_.item_index,
-@@ -770,14 +781,13 @@ void NGLineBreaker::BreakLine(NGLineInfo* line_info) {
+@@ -545,7 +560,7 @@ void NGLineBreaker::RecalcClonedBoxDecorations() {
+ 
+   // Compute which tags are not closed at |current_.item_index|.
+   NGInlineItemsData::OpenTagItems open_items;
+-  items_data_.GetOpenTagItems(current_.item_index, &open_items);
++  items_data_->GetOpenTagItems(0u, current_.item_index, &open_items);
+ 
+   for (const NGInlineItem* item : open_items) {
+     if (item->Style()->BoxDecorationBreak() == EBoxDecorationBreak::kClone) {
+@@ -657,7 +672,14 @@ void NGLineBreaker::PrepareNextLine(NGLineInfo* line_info) {
+   const NGInlineItemResults& item_results = line_info->Results();
+   DCHECK(item_results.empty());
+ 
+-  if (!current_.IsZero()) {
++  if (parent_breaker_) {
++    previous_line_had_forced_break_ =
++        parent_breaker_->previous_line_had_forced_break_;
++    is_after_forced_break_ = parent_breaker_->is_after_forced_break_;
++    is_first_formatted_line_ = parent_breaker_->is_first_formatted_line_;
++    use_first_line_style_ = parent_breaker_->use_first_line_style_;
++    items_data_ = parent_breaker_->items_data_;
++  } else if (!current_.IsZero()) {
+     // We're past the first line
+     previous_line_had_forced_break_ = is_after_forced_break_;
+     is_after_forced_break_ = false;
+@@ -666,7 +688,7 @@ void NGLineBreaker::PrepareNextLine(NGLineInfo* line_info) {
+   }
+ 
+   line_info->SetStart(current_);
+-  line_info->SetLineStyle(node_, items_data_, use_first_line_style_);
++  line_info->SetLineStyle(node_, *items_data_, use_first_line_style_);
+ 
+   DCHECK(!line_info->TextIndent());
+   if (line_info->LineStyle().ShouldUseTextIndent(is_first_formatted_line_)) {
+@@ -752,6 +774,11 @@ void NGLineBreaker::NextLine(NGLineInfo* line_info) {
+     UpdateAvailableWidth();
+   }
+   ComputeLineLocation(line_info);
++  DCHECK(!ruby_break_token_);
++  const NGInlineItemResults& results = line_info->Results();
++  if (!results.empty() && results.back().IsRubyColumn()) {
++    ruby_break_token_ = results.back().ruby_column->ruby_break_token;
++  }
+   if (mode_ == NGLineBreakerMode::kContent) {
+     line_info->SetBreakToken(CreateBreakToken(*line_info));
+   }
+@@ -770,14 +797,19 @@ void NGLineBreaker::BreakLine(NGLineInfo* line_info) {
    DCHECK(!line_info->IsLastLine());
    const HeapVector<NGInlineItem>& items = Items();
    state_ = LineBreakState::kContinue;
 -  trailing_whitespace_ = WhitespaceState::kLeading;
 +  trailing_whitespace_ = initial_whitespace_;
++
++  if (ruby_break_token_) {
++    HandleRuby(ruby_break_token_, line_info);
++    ruby_break_token_ = nullptr;
++  }
++
    while (state_ != LineBreakState::kDone) {
      // If we reach at the end of the block, this is the last line.
      DCHECK_LE(current_.item_index, items.size());
@@ -123,7 +223,7 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..4c2366037e25aa17aba769a3035eeac1
          continue;
        }
        if (UNLIKELY(HasHyphen()))
-@@ -834,6 +844,12 @@ void NGLineBreaker::BreakLine(NGLineInfo* line_info) {
+@@ -834,6 +866,12 @@ void NGLineBreaker::BreakLine(NGLineInfo* line_info) {
        HandleBlockInInline(item, line_info);
        continue;
      }
@@ -136,7 +236,7 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..4c2366037e25aa17aba769a3035eeac1
  
      // Items after this point are not trailable. If we're trailing, break before
      // any non-trailable items
-@@ -851,6 +867,23 @@ void NGLineBreaker::BreakLine(NGLineInfo* line_info) {
+@@ -851,6 +889,24 @@ void NGLineBreaker::BreakLine(NGLineInfo* line_info) {
        HandleInitialLetter(item, line_info);
        continue;
      }
@@ -151,16 +251,17 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..4c2366037e25aa17aba769a3035eeac1
 +        MoveToNextOf(item);
 +        continue;
 +      }
-+      if (!HandleRuby(line_info)) {
++      if (!HandleRuby(nullptr, line_info)) {
 +        AddItem(item, line_info);
 +        MoveToNextOf(item);
 +      }
++      HandleOverflowIfNeeded(line_info);
 +      continue;
 +    }
      if (item.Type() == NGInlineItem::kOutOfFlowPositioned) {
        HandleOutOfFlowPositioned(item, line_info);
      } else if (item.Length()) {
-@@ -947,6 +980,12 @@ bool NGLineBreaker::CanBreakAfter(const NGInlineItem& item) const {
+@@ -947,6 +1003,12 @@ bool NGLineBreaker::CanBreakAfter(const NGInlineItem& item) const {
      // See NGLineBreakerTest.OverflowTab
      return can_break_after;
    }
@@ -173,7 +274,7 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..4c2366037e25aa17aba769a3035eeac1
    auto* const atomic_inline_item = TryGetAtomicInlineItemAfter(item);
    if (!atomic_inline_item)
      return can_break_after;
-@@ -1020,6 +1059,26 @@ const NGInlineItem* NGLineBreaker::TryGetAtomicInlineItemAfter(
+@@ -1020,6 +1082,26 @@ const NGInlineItem* NGLineBreaker::TryGetAtomicInlineItemAfter(
    return nullptr;
  }
  
@@ -200,7 +301,35 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..4c2366037e25aa17aba769a3035eeac1
  void NGLineBreaker::HandleText(const NGInlineItem& item,
                                 const ShapeResult& shape_result,
                                 NGLineInfo* line_info) {
-@@ -2342,7 +2401,7 @@ void NGLineBreaker::HandleForcedLineBreak(const NGInlineItem* item,
+@@ -1676,15 +1758,15 @@ scoped_refptr<ShapeResult> NGLineBreaker::ShapeText(const NGInlineItem& item,
+                                                     unsigned start,
+                                                     unsigned end) {
+   scoped_refptr<ShapeResult> shape_result;
+-  if (!items_data_.segments) {
++  if (!items_data_->segments) {
+     RunSegmenter::RunSegmenterRange segment_range =
+         NGInlineItemSegment::UnpackSegmentData(start, end, item.SegmentData());
+     shape_result = shaper_.Shape(&item.Style()->GetFont(), item.Direction(),
+                                  start, end, segment_range);
+   } else {
+-    shape_result = items_data_.segments->ShapeText(
++    shape_result = items_data_->segments->ShapeText(
+         &shaper_, &item.Style()->GetFont(), item.Direction(), start, end,
+-        base::checked_cast<unsigned>(&item - items_data_.items.begin()));
++        base::checked_cast<unsigned>(&item - items_data_->items.begin()));
+   }
+   if (UNLIKELY(spacing_.HasSpacing()))
+     shape_result->ApplySpacing(spacing_);
+@@ -2161,7 +2243,7 @@ void NGLineBreaker::RewindTrailingOpenTags(NGLineInfo* line_info) {
+         ResetRewindLoopDetector();
+         Rewind(end_index, line_info);
+         current_ = end;
+-        items_data_.AssertOffset(current_.item_index, current_.text_offset);
++        items_data_->AssertOffset(current_.item_index, current_.text_offset);
+       }
+       break;
+     }
+@@ -2342,7 +2424,7 @@ void NGLineBreaker::HandleForcedLineBreak(const NGInlineItem* item,
      // newlines and <br>s. Gecko does this only for preserved newlines (but
      // not for <br>s).
      const HeapVector<NGInlineItem>& items = Items();
@@ -209,16 +338,17 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..4c2366037e25aa17aba769a3035eeac1
        const NGInlineItem& next_item = items[current_.item_index];
        if (next_item.Type() == NGInlineItem::kCloseTag) {
          HandleCloseTag(next_item, line_info);
-@@ -2696,6 +2755,189 @@ void NGLineBreaker::HandleBlockInInline(const NGInlineItem& item,
+@@ -2696,6 +2778,283 @@ void NGLineBreaker::HandleBlockInInline(const NGInlineItem& item,
    state_ = LineBreakState::kDone;
  }
  
-+bool NGLineBreaker::HandleRuby(NGLineInfo* line_info) {
++bool NGLineBreaker::HandleRuby(const RubyBreakTokenData* ruby_token,
++                             NGLineInfo* line_info) {
 +  NGInlineItemTextIndex base_start = current_;
 +  wtf_size_t base_end_index;
 +  Vector<AnnotationBreakTokenData, 1> annotation_data;
 +  wtf_size_t open_column_item_index;
-+  {
++  if (!ruby_token) {
 +    open_column_item_index = current_.item_index;
 +    RubyItemIndexes ruby_indexes =
 +        ParseRubyInInlineItems(Items(), current_.item_index);
@@ -235,15 +365,20 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..4c2366037e25aa17aba769a3035eeac1
 +    wtf_size_t start = ruby_indexes.annotation_start;
 +    annotation_data.push_back(AnnotationBreakTokenData{
 +        {start, Items()[start].StartOffset()}, start, ruby_indexes.column_end});
++  } else {
++    open_column_item_index = ruby_token->open_column_item_index;
++    base_end_index = ruby_token->ruby_base_end_item_index;
++    annotation_data = ruby_token->annotation_data;
 +  }
-+  // TODO(crbug.com/324111880): Setup for a wrapped ruby column.
 +  const NGInlineItem& item = Items()[open_column_item_index];
 +
 +  NGLineInfo base_line_info = CreateSubLineInfo(
 +      base_start, base_end_index, NGLineBreakerMode::kMaxContent, kIndefiniteSize,
 +      trailing_whitespace_);
 +
++  const wtf_size_t number_of_annotations = annotation_data.size();
 +  HeapVector<NGLineInfo, 1> annotation_line_list;
++  annotation_line_list.reserve(number_of_annotations);
 +  for (const auto& data : annotation_data) {
 +    annotation_line_list.push_back(CreateSubLineInfo(
 +        data.start, data.end_item_index, NGLineBreakerMode::kMaxContent,
@@ -251,8 +386,9 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..4c2366037e25aa17aba769a3035eeac1
 +  }
 +
 +  LayoutUnit ruby_size = MaxLineWidth(base_line_info, annotation_line_list);
-+
-+  {
++  LayoutUnit available = RemainingAvailableWidth().ClampNegativeToZero();
++  if (ruby_size <= available ||
++      IsMonolithicRuby(base_line_info, annotation_line_list)) {
 +    // Recreate lines because lines created with NGLineBreakerMode::kMaxContent
 +    // are not usable in NGInlineLayoutAlgorithm.
 +    base_line_info =
@@ -266,14 +402,98 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..4c2366037e25aa17aba769a3035eeac1
 +    }
 +
 +    AddRubyColumnResult(item, base_line_info, annotation_line_list,
-+                        annotation_data, ruby_size, *line_info);
++                        annotation_data, ruby_size, ruby_token, *line_info);
 +    position_ += ruby_size;
 +    // Move to a kCloseRubyColumn item.
 +    current_ = annotation_line_list[0].End();
 +    return true;
 +  }
-+  // TODO(crbug.com/324111880): Break the ruby if ruby_size is longer than
-+  // RemainingAvailableWidth().
++
++  // Try to break the ruby column.
++
++  base_line_info = CreateSubLineInfo(
++      base_start, base_end_index, NGLineBreakerMode::kContent,
++      available * base_line_info.Width() / ruby_size, trailing_whitespace_);
++
++  bool annotation_is_broken = false;
++  for (wtf_size_t i = 0; i < number_of_annotations; ++i) {
++    NGLineInfo& line = annotation_line_list[i];
++    // If all items in the base line is consumed, we should consume all items
++    // in annotation lines too.  The point just after the base line might be
++    // non-breakable and we need to continue handling the following NGInlineItems
++    // in such case. However it's very difficult if annotation items remain.
++    LayoutUnit limit = base_line_info.BreakToken()
++                           ? (available * line.Width() / ruby_size)
++                           : kIndefiniteSize;
++    line = CreateSubLineInfo(
++        annotation_data[i].start, annotation_data[i].end_item_index,
++        NGLineBreakerMode::kContent, limit, WhitespaceState::kLeading);
++    annotation_is_broken = annotation_is_broken || line.BreakToken();
++  }
++
++  ruby_size = MaxLineWidth(base_line_info, annotation_line_list);
++  NGInlineItemResult* result =
++      AddRubyColumnResult(item, base_line_info, annotation_line_list,
++                          annotation_data, ruby_size, ruby_token, *line_info);
++  position_ += ruby_size;
++
++  // If the base line and annotation lines have no NGBreakToken, we should add
++  // them even though they are wider than the available width.  The
++  // NGInlineItemResult for the ruby column may be rewound.
++  if (!base_line_info.BreakToken() && !annotation_is_broken) {
++    current_ = annotation_line_list[0].End();
++    return true;
++  }
++  DCHECK(base_line_info.BreakToken());
++  current_ = base_line_info.End();
++
++  // We have a broken line, and need to provide a RubyBreakTokenData.
++  Vector<AnnotationBreakTokenData, 1> breaks;
++  breaks.reserve(number_of_annotations);
++  for (wtf_size_t i = 0; i < number_of_annotations; ++i) {
++    breaks.push_back(AnnotationBreakTokenData{
++        annotation_line_list[i].End(), annotation_data[i].start_item_index,
++        annotation_data[i].end_item_index});
++  }
++  result->ruby_column->ruby_break_token =
++      MakeGarbageCollected<RubyBreakTokenData>(open_column_item_index,
++                                               base_end_index, breaks);
++
++  // We can't handle following NGInlineItems if we break inside a ruby column.
++  if (ruby_size <= available) {
++    state_ = LineBreakState::kDone;
++  }
++  return true;
++}
++
++bool NGLineBreaker::IsMonolithicRuby(
++    const NGLineInfo& base_line,
++    const HeapVector<NGLineInfo, 1>& annotation_line_list) const {
++  // Not breakable if it's an inner ruby column of nested rubies.
++  if (end_item_index_ != Items().size()) {
++    return true;
++  }
++
++  // Not breakable if the number of the base letters is <= 4 and the number of
++  // the annotation letters is <= 8.
++  //
++  // TODO(layout-dev): Should we count glyphs?  Should we take into account of
++  // East Asian Width?
++  constexpr wtf_size_t kBaseLetterLimit = 4;
++  constexpr wtf_size_t kAnnotationLetterLimit = 8;
++  if (base_line.EndTextOffset() - base_line.StartOffset() <= kBaseLetterLimit) {
++    auto iter =
++        std::find_if(annotation_line_list.begin(), annotation_line_list.end(),
++                     [](const NGLineInfo& line) {
++                       return line.EndTextOffset() - line.StartOffset() >
++                              kAnnotationLetterLimit;
++                     });
++    if (iter == annotation_line_list.end()) {
++      return true;
++    }
++  }
++
++  return false;
 +}
 +
 +NGLineInfo NGLineBreaker::CreateSubLineInfo(
@@ -297,7 +517,7 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..4c2366037e25aa17aba769a3035eeac1
 +      /* column_spanner_path */ nullptr, &empty_exclusion_space);
 +  sub_line_breaker.disallow_auto_wrap_ = disallow_auto_wrap;
 +  sub_line_breaker.SetInputRange(start, end_item_index,
-+                                 initial_whitespace_state);
++                                 initial_whitespace_state, this);
 +  // OverrideAvailableWidth() prevents HandleFloat() from updating
 +  // available_width_.
 +  sub_line_breaker.OverrideAvailableWidth(limit);
@@ -311,6 +531,7 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..4c2366037e25aa17aba769a3035eeac1
 +    const HeapVector<NGLineInfo, 1>& annotation_line_list,
 +    const Vector<AnnotationBreakTokenData, 1>& annotation_data_list,
 +    LayoutUnit ruby_size,
++    bool is_continuation,
 +    NGLineInfo& line_info) {
 +  CHECK_EQ(item.Type(), NGInlineItem::kOpenRubyColumn);
 +  NGInlineItemResult* column_result = AddEmptyItem(item, &line_info);
@@ -324,6 +545,7 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..4c2366037e25aa17aba769a3035eeac1
 +    line_info.SetMayHaveRubyOverhang();
 +  }
 +  line_info.SetHaveTextCombineOrRubyItem();
++  data->is_continuation = is_continuation;
 +
 +  data->annotation_line_list = annotation_line_list;
 +  for (wtf_size_t i = 0; i < annotation_line_list.size(); ++i) {
@@ -333,15 +555,17 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..4c2366037e25aa17aba769a3035eeac1
 +    data->annotation_line_list[i].SetIsRubyText();
 +    data->annotation_line_list[i].UpdateTextAlign();
 +    const LayoutObject* parent = annotation_object.Parent();
-+    data->position_list.push_back(parent->IsInlineRuby()
-+                                      ? parent->Style()->GetRubyPosition()
-+                                      : RubyPosition::kOver);
++    data->position_list.push_back(
++        parent->IsInlineRuby()
++            ? parent->Style(use_first_line_style_)->GetRubyPosition()
++            : RubyPosition::kOver);
 +  }
 +  DCHECK_EQ(data->annotation_line_list.size(), data->position_list.size());
 +
 +  column_result->text_offset.end = annotation_line_list[0].EndTextOffset();
 +  column_result->should_create_line_box = true;
-+  column_result->can_break_after = CanBreakAfterRubyColumn(*column_result);
++  column_result->can_break_after = CanBreakAfterRubyColumn(
++      *column_result, annotation_data_list[0].end_item_index);
 +
 +  if (base_line_info.Width() < ruby_size) {
 +    line_info.SetMayHaveRubyOverhang();
@@ -367,7 +591,8 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..4c2366037e25aa17aba769a3035eeac1
 +}
 +
 +bool NGLineBreaker::CanBreakAfterRubyColumn(
-+    const NGInlineItemResult& column_result) const {
++    const NGInlineItemResult& column_result,
++    wtf_size_t column_end_item_index) const {
 +  DCHECK_EQ(column_result.item->Type(), NGInlineItem::kOpenRubyColumn);
 +  DCHECK(column_result.ruby_column);
 +  if (!auto_wrap_) {
@@ -384,9 +609,7 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..4c2366037e25aa17aba769a3035eeac1
 +      base_line.EndTextOffset() - base_line.StartOffset();
 +  text_content.Append(
 +      StringView(Text(), base_line.StartOffset(), base_text_length));
-+  const NGInlineItem& next_item =
-+      Items()[column_result.ruby_column->annotation_line_list[0]
-+                  .EndItemIndex()];
++  const NGInlineItem& next_item = Items()[column_end_item_index];
 +  DCHECK_EQ(next_item.Type(), NGInlineItem::kCloseRubyColumn);
 +  unsigned ignorable_bidi_length = 1 + IgnorableBidiControlLength(next_item);
 +  text_content.Append(
@@ -399,7 +622,16 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..4c2366037e25aa17aba769a3035eeac1
  // Performs layout and positions a float.
  //
  // If there is a known available_width (e.g. something has resolved the
-@@ -3157,7 +3399,6 @@ void NGLineBreaker::HandleOverflow(NGLineInfo* line_info) {
+@@ -3084,7 +3443,7 @@ void NGLineBreaker::HandleOverflow(NGLineInfo* line_info) {
+                 available_width + width_to_rewind + item_result->inline_size;
+             DCHECK_EQ(position_, line_info->ComputeWidth());
+             current_ = item_result->End();
+-            items_data_.AssertOffset(current_);
++            items_data_->AssertOffset(current_);
+             HandleTrailingSpaces(item, line_info);
+             return;
+           }
+@@ -3157,7 +3516,6 @@ void NGLineBreaker::HandleOverflow(NGLineInfo* line_info) {
  // Rewind to |new_end| on overflow. If trailable items follow at |new_end|, they
  // are included (not rewound).
  void NGLineBreaker::RewindOverflow(unsigned new_end, NGLineInfo* line_info) {
@@ -407,7 +639,7 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..4c2366037e25aa17aba769a3035eeac1
    const NGInlineItemResults& item_results = line_info->Results();
    DCHECK_LT(new_end, item_results.size());
  
-@@ -3250,7 +3491,7 @@ void NGLineBreaker::RewindOverflow(unsigned new_end, NGLineInfo* line_info) {
+@@ -3250,7 +3608,7 @@ void NGLineBreaker::RewindOverflow(unsigned new_end, NGLineInfo* line_info) {
    position_ = line_info->ComputeWidth();
    state_ = LineBreakState::kDone;
    DCHECK(!line_info->IsLastLine());
@@ -416,7 +648,7 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..4c2366037e25aa17aba769a3035eeac1
      line_info->SetIsLastLine(true);
    }
  }
-@@ -3327,7 +3568,7 @@ void NGLineBreaker::Rewind(unsigned new_end, NGLineInfo* line_info) {
+@@ -3327,7 +3685,7 @@ void NGLineBreaker::Rewind(unsigned new_end, NGLineInfo* line_info) {
      // Note: We can have multiple empty |LayoutText| by ::first-letter, nested
      // <q>, Text.splitText(), etc.
      const HeapVector<NGInlineItem>& items = Items();
@@ -425,23 +657,25 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..4c2366037e25aa17aba769a3035eeac1
             items[current_.item_index].Type() == NGInlineItem::kText &&
             !items[current_.item_index].Length()) {
        HandleEmptyText(items[current_.item_index], line_info);
-@@ -3485,6 +3726,15 @@ void NGLineBreaker::MoveToNextOf(const NGInlineItemResult& item_result) {
+@@ -3485,6 +3843,17 @@ void NGLineBreaker::MoveToNextOf(const NGInlineItemResult& item_result) {
    }
  }
  
 +void NGLineBreaker::SetInputRange(NGInlineItemTextIndex start,
 +                                wtf_size_t end_item_index,
-+                                WhitespaceState initial_whitespace_state) {
++                                WhitespaceState initial_whitespace_state,
++                                const NGLineBreaker* parent) {
 +  DCHECK(RuntimeEnabledFeatures::RubyLineBreakableEnabled());
 +  current_ = start;
 +  end_item_index_ = end_item_index;
 +  initial_whitespace_ = initial_whitespace_state;
++  parent_breaker_ = parent;
 +}
 +
  const NGInlineBreakToken* NGLineBreaker::CreateBreakToken(
      const NGLineInfo& line_info) {
  #if DCHECK_IS_ON()
-@@ -3496,7 +3746,7 @@ const NGInlineBreakToken* NGLineBreaker::CreateBreakToken(
+@@ -3496,7 +3865,7 @@ const NGInlineBreakToken* NGLineBreaker::CreateBreakToken(
    const HeapVector<NGInlineItem>& items = Items();
    DCHECK_LE(current_.item_index, items.size());
    // If we have reached the end, create no break token.
@@ -450,3 +684,12 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..4c2366037e25aa17aba769a3035eeac1
      return nullptr;
    }
  
+@@ -3546,7 +3915,7 @@ const NGInlineBreakToken* NGLineBreaker::CreateBreakToken(
+   }
+ 
+   return NGInlineBreakToken::Create(node_, current_style_.get(), current_,
+-                                    flags, sub_break_token);
++                                    flags, sub_break_token, ruby_break_token_);
+ }
+ 
+ }  // namespace blink

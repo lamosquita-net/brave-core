@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.h b/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.h
-index 6b241a91e27ab7c4b3045b8d7f7e6d4a3ed85f18..82d910de58bfc3ff9eb91ab201f85ffcf5071dc0 100644
+index 6b241a91e27ab7c4b3045b8d7f7e6d4a3ed85f18..a11da5f2a06ab3d74c17ec171a5dd8432b5fcdf4 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.h
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.h
 @@ -28,9 +28,10 @@ struct NGInlineItemsData;
@@ -44,7 +44,21 @@ index 6b241a91e27ab7c4b3045b8d7f7e6d4a3ed85f18..82d910de58bfc3ff9eb91ab201f85ffc
    void SetBfcOffset(const NGBfcOffset& bfc_offset) { bfc_offset_ = bfc_offset; }
    void SetWidth(LayoutUnit available_width, LayoutUnit width) {
      available_width_ = available_width;
-@@ -195,10 +205,19 @@ class CORE_EXPORT NGLineInfo {
+@@ -166,7 +176,12 @@ class CORE_EXPORT NGLineInfo {
+   unsigned EndTextOffset() const;
+   // End text offset of this line, excluding out-of-flow objects such as
+   // floating or positioned.
+-  unsigned InflowEndOffset() const;
++  unsigned InflowEndOffset() const {
++    return InflowEndOffsetInternal(/* skip_forced_break */ false);
++  }
++  unsigned InflowEndOffsetWithoutForcedBreak() const {
++    return InflowEndOffsetInternal(/* skip_forced_break */ true);
++  }
+   // End text offset for `text-align: justify`. This excludes preserved trailing
+   // spaces. Available only when |TextAlign()| is |kJustify|.
+   unsigned EndOffsetForJustify() const {
+@@ -195,10 +210,19 @@ class CORE_EXPORT NGLineInfo {
      block_in_inline_layout_result_ = std::move(layout_result);
    }
  
@@ -68,9 +82,11 @@ index 6b241a91e27ab7c4b3045b8d7f7e6d4a3ed85f18..82d910de58bfc3ff9eb91ab201f85ffc
  
    // Returns annotation block start adjustment base on annotation and initial
    // letter.
-@@ -243,16 +262,16 @@ class CORE_EXPORT NGLineInfo {
+@@ -242,17 +266,18 @@ class CORE_EXPORT NGLineInfo {
+   // The width of preserved trailing spaces.
    LayoutUnit ComputeTrailingSpaceWidth(
        unsigned* end_offset_out = nullptr) const;
++  unsigned InflowEndOffsetInternal(bool skip_forced_break) const;
  
 -  const NGInlineItemsData* items_data_ = nullptr;
 +  Member<const NGInlineItemsData> items_data_;
@@ -88,7 +104,7 @@ index 6b241a91e27ab7c4b3045b8d7f7e6d4a3ed85f18..82d910de58bfc3ff9eb91ab201f85ffc
  
    LayoutUnit available_width_;
    LayoutUnit width_;
-@@ -284,9 +303,13 @@ class CORE_EXPORT NGLineInfo {
+@@ -284,9 +309,13 @@ class CORE_EXPORT NGLineInfo {
    // Even if text combine item causes line break, this variable is not reset.
    // This variable is used to add spacing before/after text combine items if
    // "text-align: justify".
@@ -103,7 +119,7 @@ index 6b241a91e27ab7c4b3045b8d7f7e6d4a3ed85f18..82d910de58bfc3ff9eb91ab201f85ffc
    bool allow_hang_for_alignment_ = false;
  
    // When adding fields, pelase ensure `Reset()` is in sync.
-@@ -296,4 +319,6 @@ std::ostream& operator<<(std::ostream& ostream, const NGLineInfo& line_info);
+@@ -296,4 +325,6 @@ std::ostream& operator<<(std::ostream& ostream, const NGLineInfo& line_info);
  
  }  // namespace blink
  

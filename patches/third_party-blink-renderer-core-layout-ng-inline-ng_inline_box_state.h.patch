@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_box_state.h b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_box_state.h
-index c8a226747d32450ed2026d5e5de62c7838dfd0ef..9b94fac2951139066b45bb9948df068364a295a3 100644
+index c8a226747d32450ed2026d5e5de62c7838dfd0ef..0f028a51fe37799d1a9b36acffbc60c542d9d226 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_box_state.h
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_box_state.h
 @@ -21,6 +21,7 @@ class NGInlineItem;
@@ -38,7 +38,7 @@ index c8a226747d32450ed2026d5e5de62c7838dfd0ef..9b94fac2951139066b45bb9948df0683
    bool HasBoxFragments() const { return !box_data_list_.empty(); }
  
    // Notify when child is inserted at |index| to adjust child indexes.
-@@ -200,7 +211,16 @@ class CORE_EXPORT NGInlineLayoutStateStack {
+@@ -200,7 +211,18 @@ class CORE_EXPORT NGInlineLayoutStateStack {
                                      LayoutUnit position,
                                      bool ignore_box_margin_border_padding);
  
@@ -49,6 +49,8 @@ index c8a226747d32450ed2026d5e5de62c7838dfd0ef..9b94fac2951139066b45bb9948df0683
 +  // NGLogicalLineItems in the block direction before calling
 +  // CreateBoxFragments().
 +  void MoveBoxDataInBlockDirection(LayoutUnit diff);
++  // Same for the inline direction.
++  void MoveBoxDataInInlineDirection(LayoutUnit diff);
 +
 +  void ApplyRelativePositioning(const NGConstraintSpace&,
 +                                NGLogicalLineItems*,
@@ -56,7 +58,7 @@ index c8a226747d32450ed2026d5e5de62c7838dfd0ef..9b94fac2951139066b45bb9948df0683
    // Create box fragments. This function turns a flat list of children into
    // a box tree.
    void CreateBoxFragments(const NGConstraintSpace&,
-@@ -248,9 +268,12 @@ class CORE_EXPORT NGInlineLayoutStateStack {
+@@ -248,9 +270,12 @@ class CORE_EXPORT NGInlineLayoutStateStack {
    FontHeight MetricsForTopAndBottomAlign(const NGInlineBoxState&,
                                           const NGLogicalLineItems&) const;
  
@@ -69,7 +71,7 @@ index c8a226747d32450ed2026d5e5de62c7838dfd0ef..9b94fac2951139066b45bb9948df0683
      BoxData(unsigned start,
              unsigned end,
              const NGInlineItem* item,
-@@ -274,6 +297,8 @@ class CORE_EXPORT NGInlineLayoutStateStack {
+@@ -274,6 +299,8 @@ class CORE_EXPORT NGInlineLayoutStateStack {
      // The range of child fragments this box contains.
      unsigned fragment_start;
      unsigned fragment_end;
@@ -78,7 +80,7 @@ index c8a226747d32450ed2026d5e5de62c7838dfd0ef..9b94fac2951139066b45bb9948df0683
  
      const NGInlineItem* item;
      LogicalRect rect;
-@@ -291,13 +316,16 @@ class CORE_EXPORT NGInlineLayoutStateStack {
+@@ -291,13 +318,16 @@ class CORE_EXPORT NGInlineLayoutStateStack {
      unsigned parent_box_data_index = 0;
      unsigned fragmented_box_data_index = 0;
  
@@ -96,7 +98,7 @@ index c8a226747d32450ed2026d5e5de62c7838dfd0ef..9b94fac2951139066b45bb9948df0683
    // Update start/end of the first BoxData found at |index|.
    //
    // If inline fragmentation is found, a new BoxData is added.
-@@ -306,19 +334,49 @@ class CORE_EXPORT NGInlineLayoutStateStack {
+@@ -306,19 +336,49 @@ class CORE_EXPORT NGInlineLayoutStateStack {
    // this function.
    unsigned UpdateBoxDataFragmentRange(NGLogicalLineItems*,
                                        unsigned index,

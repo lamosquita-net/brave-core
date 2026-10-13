@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.h b/third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.h
-index 000e18d6f1c3637b17141ceef8573a63cc5cad3d..9927ba4752a3dab5da19ca168a33cbd5d510e333 100644
+index 000e18d6f1c3637b17141ceef8573a63cc5cad3d..87e642e05c250192b21b0f73106593bdfd327e5a 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.h
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.h
 @@ -5,19 +5,44 @@
@@ -59,7 +59,7 @@ index 000e18d6f1c3637b17141ceef8573a63cc5cad3d..9927ba4752a3dab5da19ca168a33cbd5
  struct NGAnnotationOverhang {
    LayoutUnit start;
    LayoutUnit end;
-@@ -50,6 +79,13 @@ bool CanApplyStartOverhang(const NGLineInfo& line_info,
+@@ -50,6 +79,15 @@ bool CanApplyStartOverhang(const NGLineInfo& line_info,
  // in |line_info|
  LayoutUnit CommitPendingEndOverhang(NGLineInfo* line_info);
  
@@ -68,12 +68,14 @@ index 000e18d6f1c3637b17141ceef8573a63cc5cad3d..9927ba4752a3dab5da19ca168a33cbd5
 +// to NGLogicalLineItems generated from `line_info` after bidi reorder.
 +[[nodiscard]] std::pair<LayoutUnit, LayoutUnit> ApplyRubyAlign(
 +    LayoutUnit available_line_size,
++    bool on_start_edge,
++    bool on_end_edge,
 +    NGLineInfo& line_info);
 +
  // Stores ComputeAnnotationOverflow() results.
  //
  // |overflow_over| and |space_over| are exclusive. Only one of them can be
-@@ -72,8 +108,130 @@ struct NGAnnotationMetrics {
+@@ -72,8 +110,130 @@ struct NGAnnotationMetrics {
  NGAnnotationMetrics ComputeAnnotationOverflow(
      const NGLogicalLineItems& logical_line,
      const FontHeight& line_box_metrics,
