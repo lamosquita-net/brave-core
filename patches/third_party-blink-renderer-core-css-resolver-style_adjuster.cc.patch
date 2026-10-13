@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_adjuster.cc b/third_party/blink/renderer/core/css/resolver/style_adjuster.cc
-index 1beefec6e5711effd887fce2cbf842672a4fb41a..f3753840e31a3268c79e80e6bb89a64e610f57c5 100644
+index 1beefec6e5711effd887fce2cbf842672a4fb41a..d1b8cc5254b8fb12c1181c0a2aee64753a5db84b 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_adjuster.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_adjuster.cc
-@@ -69,6 +69,7 @@
+@@ -62,6 +62,7 @@
+ #include "third_party/blink/renderer/core/html/shadow/shadow_element_names.h"
+ #include "third_party/blink/renderer/core/html_names.h"
+ #include "third_party/blink/renderer/core/input_type_names.h"
++#include "third_party/blink/renderer/core/inspector/console_message.h"
+ #include "third_party/blink/renderer/core/layout/layout_theme.h"
+ #include "third_party/blink/renderer/core/layout/list_marker.h"
+ #include "third_party/blink/renderer/core/layout/ng/inline/layout_ng_text_combine.h"
+@@ -69,6 +70,7 @@
  #include "third_party/blink/renderer/core/style/computed_style.h"
  #include "third_party/blink/renderer/core/style/computed_style_constants.h"
  #include "third_party/blink/renderer/core/style/style_intrinsic_length.h"
@@ -10,7 +18,7 @@ index 1beefec6e5711effd887fce2cbf842672a4fb41a..f3753840e31a3268c79e80e6bb89a64e
  #include "third_party/blink/renderer/core/svg/svg_svg_element.h"
  #include "third_party/blink/renderer/core/svg_names.h"
  #include "third_party/blink/renderer/platform/geometry/length.h"
-@@ -123,6 +124,16 @@ bool HostIsInputFile(const Element* element) {
+@@ -123,6 +125,16 @@ bool HostIsInputFile(const Element* element) {
    return false;
  }
  
@@ -27,7 +35,7 @@ index 1beefec6e5711effd887fce2cbf842672a4fb41a..f3753840e31a3268c79e80e6bb89a64e
  void AdjustStyleForSvgElement(const SVGElement& element,
                                ComputedStyleBuilder& builder) {
    // Disable some of text decoration properties.
-@@ -136,6 +147,11 @@ void AdjustStyleForSvgElement(const SVGElement& element,
+@@ -136,6 +148,11 @@ void AdjustStyleForSvgElement(const SVGElement& element,
    builder.SetTextEmphasisMark(TextEmphasisMark::kNone);
    builder.SetTextUnderlineOffset(Length());  // crbug.com/1247912
    builder.SetTextUnderlinePosition(TextUnderlinePosition::kAuto);
@@ -39,7 +47,7 @@ index 1beefec6e5711effd887fce2cbf842672a4fb41a..f3753840e31a3268c79e80e6bb89a64e
  }
  
  bool ElementForcesStackingContext(Element* element) {
-@@ -165,6 +181,7 @@ static EDisplay EquivalentBlockDisplay(EDisplay display) {
+@@ -165,6 +182,7 @@ static EDisplay EquivalentBlockDisplay(EDisplay display) {
      case EDisplay::kFlex:
      case EDisplay::kGrid:
      case EDisplay::kBlockMath:
@@ -47,7 +55,7 @@ index 1beefec6e5711effd887fce2cbf842672a4fb41a..f3753840e31a3268c79e80e6bb89a64e
      case EDisplay::kListItem:
      case EDisplay::kFlowRoot:
      case EDisplay::kLayoutCustom:
-@@ -179,6 +196,8 @@ static EDisplay EquivalentBlockDisplay(EDisplay display) {
+@@ -179,6 +197,8 @@ static EDisplay EquivalentBlockDisplay(EDisplay display) {
        return EDisplay::kGrid;
      case EDisplay::kMath:
        return EDisplay::kBlockMath;
@@ -56,7 +64,7 @@ index 1beefec6e5711effd887fce2cbf842672a4fb41a..f3753840e31a3268c79e80e6bb89a64e
      case EDisplay::kInlineLayoutCustom:
        return EDisplay::kLayoutCustom;
      case EDisplay::kInlineListItem:
-@@ -199,6 +218,7 @@ static EDisplay EquivalentBlockDisplay(EDisplay display) {
+@@ -199,6 +219,7 @@ static EDisplay EquivalentBlockDisplay(EDisplay display) {
      case EDisplay::kTableColumn:
      case EDisplay::kTableCell:
      case EDisplay::kTableCaption:
@@ -64,7 +72,7 @@ index 1beefec6e5711effd887fce2cbf842672a4fb41a..f3753840e31a3268c79e80e6bb89a64e
        return EDisplay::kBlock;
      case EDisplay::kNone:
        NOTREACHED();
-@@ -208,6 +228,63 @@ static EDisplay EquivalentBlockDisplay(EDisplay display) {
+@@ -208,6 +229,63 @@ static EDisplay EquivalentBlockDisplay(EDisplay display) {
    return EDisplay::kBlock;
  }
  
@@ -128,7 +136,7 @@ index 1beefec6e5711effd887fce2cbf842672a4fb41a..f3753840e31a3268c79e80e6bb89a64e
  static bool IsOutermostSVGElement(const Element* element) {
    auto* svg_element = DynamicTo<SVGElement>(element);
    return svg_element && svg_element->IsOutermostSVGSVGElement();
-@@ -236,7 +313,7 @@ static bool StopPropagateTextDecorations(const ComputedStyleBuilder& builder,
+@@ -236,7 +314,7 @@ static bool StopPropagateTextDecorations(const ComputedStyleBuilder& builder,
    return builder.IsDisplayReplacedType() ||
           IsAtMediaUAShadowBoundary(element) || builder.IsFloating() ||
           builder.HasOutOfFlowPosition() || IsOutermostSVGElement(element) ||
@@ -137,7 +145,7 @@ index 1beefec6e5711effd887fce2cbf842672a4fb41a..f3753840e31a3268c79e80e6bb89a64e
  }
  
  static bool LayoutParentStyleForcesZIndexToCreateStackingContext(
-@@ -400,14 +477,6 @@ static void AdjustStyleForHTMLElement(ComputedStyleBuilder& builder,
+@@ -400,14 +478,6 @@ static void AdjustStyleForHTMLElement(ComputedStyleBuilder& builder,
          element.GetDocument().GetStyleResolver().InitialZoom());
    }
  
@@ -152,17 +160,32 @@ index 1beefec6e5711effd887fce2cbf842672a4fb41a..f3753840e31a3268c79e80e6bb89a64e
    if (IsA<HTMLLegendElement>(element) &&
        builder.Display() != EDisplay::kContents) {
      // Allow any blockified display value for legends. Note that according to
-@@ -558,6 +627,15 @@ static void AdjustStyleForDisplay(ComputedStyleBuilder& builder,
+@@ -558,6 +628,30 @@ static void AdjustStyleForDisplay(ComputedStyleBuilder& builder,
      }
    }
  
 +  // We need to avoid to inlinify children of a <fieldset>, which creates a
 +  // dedicated LayoutObject and it assumes only block children.
 +  if (layout_parent_style.InlinifiesChildren() &&
-+      !builder.HasOutOfFlowPosition() && !builder.IsFloating() &&
++      !builder.HasOutOfFlowPosition() &&
 +      !(element && IsA<HTMLFieldSetElement>(element->parentNode()))) {
-+    builder.SetIsInInlinifyingDisplay();
-+    builder.SetDisplay(EquivalentInlineDisplay(builder.Display()));
++    if (RuntimeEnabledFeatures::RubyLineBreakableEnabled() &&
++        builder.IsFloating()) {
++      builder.SetFloating(EFloat::kNone);
++      if (document) {
++        document->AddConsoleMessage(
++            MakeGarbageCollected<ConsoleMessage>(
++                mojom::blink::ConsoleMessageSource::kRendering,
++                mojom::blink::ConsoleMessageLevel::kInfo,
++                "`float` property is not supported correctly inside an element "
++                "with `display: ruby` or `display: ruby-text`."),
++            true);
++      }
++    }
++    if (!builder.IsFloating()) {
++      builder.SetIsInInlinifyingDisplay();
++      builder.SetDisplay(EquivalentInlineDisplay(builder.Display()));
++    }
 +  }
 +
    if (builder.Display() == EDisplay::kBlock) {

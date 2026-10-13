@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style.h b/third_party/blink/renderer/core/style/computed_style.h
-index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..58c60e94e5e384bcae9885e718b80eb7421e0a59 100644
+index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..6e7647ca9fa25e828adf2d4d0fb57e7f1678c2af 100644
 --- a/third_party/blink/renderer/core/style/computed_style.h
 +++ b/third_party/blink/renderer/core/style/computed_style.h
 @@ -44,7 +44,7 @@
@@ -53,7 +53,7 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..58c60e94e5e384bcae9885e718b80eb7
    // Comparison operators
    // FIXME: Replace callers of operator== wth a named method instead, e.g.
    // inheritedEquals().
-@@ -1837,6 +1844,20 @@ class ComputedStyle : public ComputedStyleBase,
+@@ -1837,6 +1844,21 @@ class ComputedStyle : public ComputedStyleBase,
             (Display() == EDisplay::kContents && IsInBlockifyingDisplay());
    }
  
@@ -68,13 +68,14 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..58c60e94e5e384bcae9885e718b80eb7
 +    // If an inline box (inline flow) is inlinified, it recursively inlinifies
 +    // all of its in-flow children
 +    return IsInInlinifyingDisplay() &&
-+           (display == EDisplay::kContents || display == EDisplay::kInline);
++           (display == EDisplay::kContents || display == EDisplay::kInline ||
++            display == EDisplay::kInlineListItem);
 +  }
 +
    // Return true if an element with this computed style requires LayoutNG
    // (i.e. has no legacy layout implementation).
    bool DisplayTypeRequiresLayoutNG() const {
-@@ -2161,14 +2182,14 @@ class ComputedStyle : public ComputedStyleBase,
+@@ -2161,14 +2183,14 @@ class ComputedStyle : public ComputedStyleBase,
    };
    void ApplyTransform(gfx::Transform&,
                        const LayoutBox* box,
@@ -91,7 +92,7 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..58c60e94e5e384bcae9885e718b80eb7
                        ApplyTransformOperations,
                        ApplyTransformOrigin,
                        ApplyMotionPath,
-@@ -2552,6 +2573,11 @@ class ComputedStyle : public ComputedStyleBase,
+@@ -2552,6 +2574,11 @@ class ComputedStyle : public ComputedStyleBase,
              OverflowClipMargin()->GetMargin() != LayoutUnit());
    }
  
@@ -103,7 +104,7 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..58c60e94e5e384bcae9885e718b80eb7
   private:
    bool IsInlineSizeContainer() const {
      return ContainerType() & kContainerTypeInlineSize;
-@@ -2573,6 +2599,7 @@ class ComputedStyle : public ComputedStyleBase,
+@@ -2573,6 +2600,7 @@ class ComputedStyle : public ComputedStyleBase,
      return display == EDisplay::kBlock || display == EDisplay::kListItem ||
             display == EDisplay::kInlineBlock ||
             display == EDisplay::kFlowRoot ||
@@ -111,7 +112,7 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..58c60e94e5e384bcae9885e718b80eb7
             display == EDisplay::kInlineFlowRootListItem ||
             display == EDisplay::kTableCell ||
             display == EDisplay::kTableCaption;
-@@ -2611,7 +2638,7 @@ class ComputedStyle : public ComputedStyleBase,
+@@ -2611,7 +2639,7 @@ class ComputedStyle : public ComputedStyleBase,
  
    static bool IsDisplayInlineType(EDisplay display) {
      return display == EDisplay::kInline ||

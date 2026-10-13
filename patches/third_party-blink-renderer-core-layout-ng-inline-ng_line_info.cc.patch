@@ -1,8 +1,8 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.cc b/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.cc
-index 4125fe51de0e63b2708dedf02f62c5347554df45..363f792b71c78025e0971d4a80c9e510eb771b9c 100644
+index 4125fe51de0e63b2708dedf02f62c5347554df45..5f90c463031a7da41196c943cb42982e227e2cab 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.cc
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.cc
-@@ -5,13 +5,25 @@
+@@ -5,13 +5,45 @@
  #include "third_party/blink/renderer/core/layout/ng/inline/ng_line_info.h"
  
  #include "base/containers/adapters.h"
@@ -17,6 +17,26 @@ index 4125fe51de0e63b2708dedf02f62c5347554df45..363f792b71c78025e0971d4a80c9e510
  
  namespace blink {
  
++namespace {
++
++wtf_size_t GlyphCount(const NGInlineItemResult& item_result) {
++  if (item_result.shape_result) {
++    return item_result.shape_result->NumGlyphs();
++  } else if (item_result.layout_result) {
++    return 1;
++  } else if (item_result.IsRubyColumn()) {
++    wtf_size_t count = 0;
++    for (const auto& nested_result :
++         item_result.ruby_column->base_line.Results()) {
++      count += GlyphCount(nested_result);
++    }
++    return count;
++  }
++  return 0;
++}
++
++}  // namespace
++
 +void NGLineInfo::Trace(Visitor* visitor) const {
 +  visitor->Trace(results_);
 +  visitor->Trace(items_data_);
@@ -28,7 +48,7 @@ index 4125fe51de0e63b2708dedf02f62c5347554df45..363f792b71c78025e0971d4a80c9e510
  void NGLineInfo::Reset() {
    items_data_ = nullptr;
    line_style_ = nullptr;
-@@ -51,7 +63,8 @@ void NGLineInfo::Reset() {
+@@ -51,7 +83,8 @@ void NGLineInfo::Reset() {
    needs_accurate_end_position_ = false;
    is_ruby_base_ = false;
    is_ruby_text_ = false;
@@ -38,7 +58,7 @@ index 4125fe51de0e63b2708dedf02f62c5347554df45..363f792b71c78025e0971d4a80c9e510
    allow_hang_for_alignment_ = false;
  }
  
-@@ -63,8 +76,10 @@ void NGLineInfo::SetLineStyle(const NGInlineNode& node,
+@@ -63,8 +96,10 @@ void NGLineInfo::SetLineStyle(const NGInlineNode& node,
    const LayoutBox* box = node.GetLayoutBox();
    line_style_ = box->Style(use_first_line_style_);
    needs_accurate_end_position_ = ComputeNeedsAccurateEndPosition();
@@ -51,9 +71,29 @@ index 4125fe51de0e63b2708dedf02f62c5347554df45..363f792b71c78025e0971d4a80c9e510
  
    // Reset block start offset related members.
    annotation_block_start_adjustment_ = LayoutUnit();
-@@ -138,22 +153,45 @@ bool NGLineInfo::ComputeNeedsAccurateEndPosition() const {
+@@ -137,27 +172,84 @@ bool NGLineInfo::ComputeNeedsAccurateEndPosition() const {
+   return false;
  }
  
++unsigned NGLineInfo::InflowStartOffset() const {
++  for (const auto& item_result : Results()) {
++    const NGInlineItem& item = *item_result.item;
++    if ((item.Type() == NGInlineItem::kText ||
++         item.Type() == NGInlineItem::kControl ||
++         item.Type() == NGInlineItem::kAtomicInline) &&
++        item.Length() > 0) {
++      return item_result.StartOffset();
++    } else if (item_result.IsRubyColumn()) {
++      const NGLineInfo& base_line = item_result.ruby_column->base_line;
++      unsigned start_offset = base_line.InflowStartOffset();
++      if (start_offset != base_line.EndTextOffset()) {
++        return start_offset;
++      }
++    }
++  }
++  return EndTextOffset();
++}
++
  NGInlineItemTextIndex NGLineInfo::End() const {
 -  return BreakToken() ? BreakToken()->Start() : ItemsData().End();
 +  if (BreakToken()) {
@@ -82,9 +122,13 @@ index 4125fe51de0e63b2708dedf02f62c5347554df45..363f792b71c78025e0971d4a80c9e510
    for (const auto& item_result : base::Reversed(Results())) {
      DCHECK(item_result.item);
      const NGInlineItem& item = *item_result.item;
-+    if (skip_forced_break && item.Type() == NGInlineItem::kControl &&
-+        ItemsData().text_content[item.StartOffset()] == kNewlineCharacter) {
-+      continue;
++    if (skip_forced_break) {
++      if (item.Type() == NGInlineItem::kControl &&
++          ItemsData().text_content[item.StartOffset()] == kNewlineCharacter) {
++        continue;
++      } else if (item.Type() == NGInlineItem::kText && item.Length() == 0) {
++        continue;
++      }
 +    }
      if (item.Type() == NGInlineItem::kText ||
          item.Type() == NGInlineItem::kControl ||
@@ -102,7 +146,22 @@ index 4125fe51de0e63b2708dedf02f62c5347554df45..363f792b71c78025e0971d4a80c9e510
    }
    return StartOffset();
  }
-@@ -182,6 +220,15 @@ bool NGLineInfo::ShouldHangTrailingSpaces() const {
+ 
++bool NGLineInfo::GlyphCountIsGreaterThan(wtf_size_t limit) const {
++  wtf_size_t count = 0;
++  for (const auto& item_result : Results()) {
++    count += GlyphCount(item_result);
++    if (count > limit) {
++      return true;
++    }
++  }
++  return false;
++}
++
+ bool NGLineInfo::ShouldHangTrailingSpaces() const {
+   if (!HasTrailingSpaces())
+     return false;
+@@ -182,6 +274,15 @@ bool NGLineInfo::ShouldHangTrailingSpaces() const {
    NOTREACHED();
  }
  

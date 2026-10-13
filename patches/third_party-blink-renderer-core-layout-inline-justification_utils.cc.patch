@@ -1,9 +1,9 @@
 diff --git a/third_party/blink/renderer/core/layout/inline/justification_utils.cc b/third_party/blink/renderer/core/layout/inline/justification_utils.cc
 new file mode 100644
-index 0000000000000000000000000000000000000000..4bd436bb19c30466c8f0fc2ec32dc8ebb3b46a3d
+index 0000000000000000000000000000000000000000..8213210f7cd73970e12dc5204610c86f135c5b0e
 --- /dev/null
 +++ b/third_party/blink/renderer/core/layout/inline/justification_utils.cc
-@@ -0,0 +1,354 @@
+@@ -0,0 +1,364 @@
 +// Copyright 2016 The Chromium Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -97,11 +97,14 @@ index 0000000000000000000000000000000000000000..4bd436bb19c30466c8f0fc2ec32dc8eb
 +  return line_text_builder.ReleaseString();
 +}
 +
-+void JustifyResults(const String& text_content,
-+                    const String& line_text,
-+                    unsigned line_text_start_offset,
-+                    ShapeResultSpacing<String>& spacing,
-+                    NGInlineItemResults& results) {
++// This function returns spacing amount on the right of the last glyph.
++// It's zero if the last item is an atomic-inline.
++float JustifyResults(const String& text_content,
++                     const String& line_text,
++                     unsigned line_text_start_offset,
++                     ShapeResultSpacing<String>& spacing,
++                     NGInlineItemResults& results) {
++  float last_glyph_spacing = 0;
 +  for (wtf_size_t i = 0; i < results.size(); ++i) {
 +    NGInlineItemResult& item_result = results[i];
 +    if (item_result.has_only_trailing_spaces)
@@ -124,14 +127,15 @@ index 0000000000000000000000000000000000000000..4bd436bb19c30466c8f0fc2ec32dc8eb
 +          item_result.shape_result->CreateShapeResult();
 +      DCHECK_GE(item_result.StartOffset(), line_text_start_offset);
 +      DCHECK_EQ(shape_result->NumCharacters(), item_result.Length());
-+      shape_result->ApplySpacing(spacing, item_result.StartOffset() -
-+                                              line_text_start_offset -
-+                                              shape_result->StartIndex());
++      last_glyph_spacing = shape_result->ApplySpacing(
++          spacing, item_result.StartOffset() - line_text_start_offset -
++                       shape_result->StartIndex());
 +      item_result.inline_size = shape_result->SnappedWidth();
 +      if (UNLIKELY(item_result.is_hyphenated))
 +        item_result.inline_size += item_result.hyphen.InlineSize();
 +      item_result.shape_result = ShapeResultView::Create(shape_result.get());
 +    } else if (item_result.item->Type() == NGInlineItem::kAtomicInline) {
++      last_glyph_spacing = 0;
 +      float spacing_before = 0.0f;
 +      DCHECK_LE(line_text_start_offset, item_result.StartOffset());
 +      const unsigned line_text_offset =
@@ -153,13 +157,17 @@ index 0000000000000000000000000000000000000000..4bd436bb19c30466c8f0fc2ec32dc8eb
 +    } else if (item_result.IsRubyColumn()) {
 +      NGLineInfo& base_line = item_result.ruby_column->base_line;
 +      if (item_result.inline_size == base_line.Width()) {
-+        JustifyResults(text_content, line_text, line_text_start_offset, spacing,
-+                       *base_line.MutableResults());
++        last_glyph_spacing =
++            JustifyResults(text_content, line_text, line_text_start_offset,
++                           spacing, *base_line.MutableResults());
 +        base_line.SetWidth(base_line.AvailableWidth(),
 +                           base_line.ComputeWidth());
 +        item_result.inline_size =
 +            std::max(item_result.inline_size, base_line.Width());
++        item_result.ruby_column->last_base_glyph_spacing =
++            LayoutUnit(last_glyph_spacing);
 +      } else {
++        last_glyph_spacing = 0;
 +        [[maybe_unused]] float spacing_before = 0;
 +        unsigned offset = item_result.StartOffset() - line_text_start_offset;
 +        if (!item_result.ruby_column->is_continuation) {
@@ -191,6 +199,7 @@ index 0000000000000000000000000000000000000000..4bd436bb19c30466c8f0fc2ec32dc8eb
 +      }
 +    }
 +  }
++  return last_glyph_spacing;
 +}
 +
 +class ExpandableItemsFinder {
@@ -201,7 +210,8 @@ index 0000000000000000000000000000000000000000..4bd436bb19c30466c8f0fc2ec32dc8eb
 +            NGLogicalLineItems::iterator end) {
 +    for (auto iter = begin; iter != end; ++iter) {
 +      NGLogicalLineItem& item = *iter;
-+      if (item.shape_result || item.layout_result) {
++      if ((item.shape_result && item.shape_result->NumGlyphs() > 0) ||
++          item.layout_result) {
 +        last_item_ = &item;
 +        if (!first_item_) {
 +          first_item_ = &item;

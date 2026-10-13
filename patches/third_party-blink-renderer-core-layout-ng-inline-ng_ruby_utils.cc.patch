@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.cc b/third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.cc
-index bb7994b813c853fd54441c07a53bb8709c986488..f158c913cae2abf2aeeeeabe44e1f761f4845574 100644
+index bb7994b813c853fd54441c07a53bb8709c986488..7147248207148ca55e1b574a831dc5b4186a6cb6 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.cc
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.cc
 @@ -5,12 +5,23 @@
@@ -65,38 +65,105 @@ index bb7994b813c853fd54441c07a53bb8709c986488..f158c913cae2abf2aeeeeabe44e1f761
  PhysicalRect AdjustTextRectForEmHeight(const PhysicalRect& rect,
                                         const ComputedStyle& style,
                                         const ShapeResultView* shape_view,
-@@ -99,6 +142,30 @@ PhysicalRect AdjustTextRectForEmHeight(const PhysicalRect& rect,
+@@ -96,9 +139,59 @@ PhysicalRect AdjustTextRectForEmHeight(const PhysicalRect& rect,
+           PhysicalSize(new_line_height, rect.size.height)};
+ }
+ 
++NGAnnotationOverhang GetOverhang(
++    LayoutUnit ruby_size,
++    const NGLineInfo& base_line,
++    const HeapVector<NGLineInfo, 1> annotation_line_list) {
++  DCHECK(RuntimeEnabledFeatures::RubyLineBreakableEnabled());
++  NGAnnotationOverhang overhang;
++  ERubyAlign ruby_align = base_line.LineStyle().RubyAlign();
++  switch (ruby_align) {
++    case ERubyAlign::kSpaceBetween:
++      return overhang;
++    case ERubyAlign::kStart:
++    case ERubyAlign::kSpaceAround:
++    case ERubyAlign::kCenter:
++      break;
++  }
++  LayoutUnit half_width_of_annotation_font;
++  for (const auto& annotation_line : annotation_line_list) {
++    if (annotation_line.Width() == ruby_size) {
++      half_width_of_annotation_font =
++          LayoutUnit(annotation_line.LineStyle().FontSize() / 2);
++      break;
++    }
++  }
++  if (half_width_of_annotation_font == LayoutUnit()) {
++    return overhang;
++  }
++  LayoutUnit space = ruby_size - base_line.Width();
++  if (space <= LayoutUnit()) {
++    return overhang;
++  }
++  if (ruby_align == ERubyAlign::kStart) {
++    overhang.end = std::min(space, half_width_of_annotation_font);
++    return overhang;
++  }
++  absl::optional<LayoutUnit> inset = ComputeRubyBaseInset(space, base_line);
++  if (!inset) {
++    return overhang;
++  }
++  overhang.start = std::min(*inset, half_width_of_annotation_font);
++  overhang.end = overhang.start;
++  return overhang;
++}
++
  // See LayoutRubyRun::GetOverhang().
  NGAnnotationOverhang GetOverhang(const NGInlineItemResult& item) {
    NGAnnotationOverhang overhang;
 +  if (item.IsRubyColumn()) {
 +    DCHECK(RuntimeEnabledFeatures::RubyLineBreakableEnabled());
 +    const InlineItemResultRubyColumn& column = *item.ruby_column;
-+    LayoutUnit half_width_of_annotation_font;
-+    for (const auto& annotation_line : column.annotation_line_list) {
-+      if (annotation_line.Width() == item.inline_size) {
-+        half_width_of_annotation_font =
-+            LayoutUnit(annotation_line.LineStyle().FontSize() / 2);
-+        break;
-+      }
-+    }
-+    if (half_width_of_annotation_font == LayoutUnit()) {
-+      return overhang;
-+    }
-+    absl::optional<LayoutUnit> inset = ComputeRubyBaseInset(
-+        item.inline_size - column.base_line.Width(), column.base_line);
-+    if (!inset) {
-+      return overhang;
-+    }
-+    overhang.start = std::min(*inset, half_width_of_annotation_font);
-+    overhang.end = overhang.start;
-+    return overhang;
++    return GetOverhang(item.inline_size, column.base_line,
++                       column.annotation_line_list);
 +  }
 +
    if (!item.layout_result)
      return overhang;
  
-@@ -199,6 +266,43 @@ LayoutUnit CommitPendingEndOverhang(NGLineInfo* line_info) {
+@@ -161,18 +254,21 @@ NGAnnotationOverhang GetOverhang(const NGInlineItemResult& item) {
+ 
+ // See LayoutRubyRun::GetOverhang().
+ bool CanApplyStartOverhang(const NGLineInfo& line_info,
++                           wtf_size_t ruby_index,
++                           const ComputedStyle& ruby_style,
+                            LayoutUnit& start_overhang) {
+   if (start_overhang <= LayoutUnit())
+     return false;
+   const NGInlineItemResults& items = line_info.Results();
+-  // Requires at least the current item and the previous item.
+-  if (items.size() < 2)
++  // Requires at least the ruby item and the previous item.
++  if (ruby_index < 1) {
+     return false;
++  }
+   // Find a previous item other than kOpenTag/kCloseTag.
+   // Searching items in the logical order doesn't work well with bidi
+   // reordering. However, it's difficult to compute overhang after bidi
+   // reordering because it affects line breaking.
+-  wtf_size_t previous_index = items.size() - 2;
++  wtf_size_t previous_index = ruby_index - 1;
+   while ((items[previous_index].item->Type() == NGInlineItem::kOpenTag ||
+           items[previous_index].item->Type() == NGInlineItem::kCloseTag) &&
+          previous_index > 0)
+@@ -180,10 +276,9 @@ bool CanApplyStartOverhang(const NGLineInfo& line_info,
+   const NGInlineItemResult& previous_item = items[previous_index];
+   if (previous_item.item->Type() != NGInlineItem::kText)
+     return false;
+-  const NGInlineItem& current_item = *items.back().item;
+-  if (previous_item.item->Style()->FontSize() >
+-      current_item.Style()->FontSize())
++  if (previous_item.item->Style()->FontSize() > ruby_style.FontSize()) {
+     return false;
++  }
+   start_overhang = std::min(start_overhang, previous_item.inline_size);
+   return true;
+ }
+@@ -199,6 +294,43 @@ LayoutUnit CommitPendingEndOverhang(NGLineInfo* line_info) {
      return LayoutUnit();
    DCHECK(text_item.item->Type() == NGInlineItem::kText);
    wtf_size_t i = items->size() - 2;
@@ -140,7 +207,7 @@ index bb7994b813c853fd54441c07a53bb8709c986488..f158c913cae2abf2aeeeeabe44e1f761
    while ((*items)[i].item->Type() != NGInlineItem::kAtomicInline) {
      const auto type = (*items)[i].item->Type();
      if (type != NGInlineItem::kOpenTag && type != NGInlineItem::kCloseTag)
-@@ -228,10 +332,83 @@ LayoutUnit CommitPendingEndOverhang(NGLineInfo* line_info) {
+@@ -228,10 +360,102 @@ LayoutUnit CommitPendingEndOverhang(NGLineInfo* line_info) {
    return end_overhang;
  }
  
@@ -153,16 +220,35 @@ index bb7994b813c853fd54441c07a53bb8709c986488..f158c913cae2abf2aeeeeabe44e1f761
 +  if (space <= LayoutUnit()) {
 +    return {LayoutUnit(), LayoutUnit()};
 +  }
++
++  ERubyAlign ruby_align = line_info.LineStyle().RubyAlign();
 +  ETextAlign text_align = line_info.TextAlign();
-+  // Handle `space-around`.
++  switch (ruby_align) {
++    case ERubyAlign::kSpaceAround:
++      // We respect to the text-align value as ever if ruby-align is the
++      // initial value.
++      break;
++    case ERubyAlign::kSpaceBetween:
++      on_start_edge = true;
++      on_end_edge = true;
++      text_align = ETextAlign::kJustify;
++      break;
++    case ERubyAlign::kStart:
++      return IsLtr(line_info.BaseDirection())
++                 ? std::make_pair(LayoutUnit(), space)
++                 : std::make_pair(space, LayoutUnit());
++    case ERubyAlign::kCenter:
++      return {space / 2, space / 2};
++  }
++
++  // Handle `space-around` and `space-between`.
 +  if (text_align == ETextAlign::kJustify) {
-+    JustificationTarget target = JustificationTarget::kNormal;
-+    if (line_info.IsRubyBase()) {
-+      target = JustificationTarget::kRubyBase;
++    JustificationTarget target;
++    if (on_start_edge && on_end_edge) {
 +      // Switch to `space-between` if this needs to align both edges.
-+      if (on_start_edge && on_end_edge) {
-+        target = JustificationTarget::kNormal;
-+      }
++      target = JustificationTarget::kNormal;
++    } else if (line_info.IsRubyBase()) {
++      target = JustificationTarget::kRubyBase;
 +    } else {
 +      DCHECK(line_info.IsRubyText());
 +      target = JustificationTarget::kRubyText;
@@ -225,7 +311,7 @@ index bb7994b813c853fd54441c07a53bb8709c986488..f158c913cae2abf2aeeeeabe44e1f761
    // Min/max position of content and annotations, ignoring line-height.
    const LayoutUnit line_over;
    LayoutUnit content_over = line_over + line_box_metrics.ascent;
-@@ -246,8 +423,9 @@ NGAnnotationMetrics ComputeAnnotationOverflow(
+@@ -246,8 +470,9 @@ NGAnnotationMetrics ComputeAnnotationOverflow(
    for (const NGLogicalLineItem& item : logical_line) {
      if (!item.HasInFlowFragment())
        continue;
@@ -236,7 +322,7 @@ index bb7994b813c853fd54441c07a53bb8709c986488..f158c913cae2abf2aeeeeabe44e1f761
      LayoutUnit item_over = line_box_metrics.ascent + item.BlockOffset();
      LayoutUnit item_under = line_box_metrics.ascent + item.BlockEndOffset();
      if (item.shape_result) {
-@@ -258,9 +436,9 @@ NGAnnotationMetrics ComputeAnnotationOverflow(
+@@ -258,9 +483,9 @@ NGAnnotationMetrics ComputeAnnotationOverflow(
      } else {
        const auto* fragment = item.PhysicalFragment();
        if (fragment && fragment->IsRubyRun()) {
@@ -248,7 +334,7 @@ index bb7994b813c853fd54441c07a53bb8709c986488..f158c913cae2abf2aeeeeabe44e1f761
          LayoutUnit block_size;
          if (IsHorizontalWritingMode(line_style.GetWritingMode())) {
            item_under = item_over + rect.Bottom();
-@@ -304,6 +482,22 @@ NGAnnotationMetrics ComputeAnnotationOverflow(
+@@ -304,6 +529,22 @@ NGAnnotationMetrics ComputeAnnotationOverflow(
      }
    }
  
@@ -271,7 +357,7 @@ index bb7994b813c853fd54441c07a53bb8709c986488..f158c913cae2abf2aeeeeabe44e1f761
    // Probably this is an empty line. We should secure font-size space.
    const LayoutUnit font_size(line_style.ComputedFontSize());
    if (content_under - content_over < font_size) {
-@@ -335,4 +529,343 @@ NGAnnotationMetrics ComputeAnnotationOverflow(
+@@ -335,4 +576,353 @@ NGAnnotationMetrics ComputeAnnotationOverflow(
            (line_under - content_under).ClampNegativeToZero()};
  }
  
@@ -573,6 +659,7 @@ index bb7994b813c853fd54441c07a53bb8709c986488..f158c913cae2abf2aeeeeabe44e1f761
 +void RubyBlockPositionCalculator::RubyLine::MaybeRecordBaseIndexes(
 +    const LogicalRubyColumn& logical_column) {
 +  if (IsFirstOverLevel() || IsFirstUnderLevel()) {
++    base_index_list_.reserve(base_index_list_.size() + logical_column.size);
 +    for (wtf_size_t item_index = logical_column.start_index;
 +         item_index < logical_column.EndIndex(); ++item_index) {
 +      base_index_list_.push_back(item_index);
@@ -584,7 +671,16 @@ index bb7994b813c853fd54441c07a53bb8709c986488..f158c913cae2abf2aeeeeabe44e1f761
 +  DCHECK(metrics_.IsEmpty());
 +  metrics_ = FontHeight();
 +  for (auto& column : column_list_) {
-+    metrics_.Unite(ComputeLogicalLineEmHeight(*column->annotation_items));
++    const auto margins = column->state_stack.AnnotationBoxBlockAxisMargins();
++    if (!margins.has_value()) {
++      metrics_.Unite(ComputeLogicalLineEmHeight(*column->annotation_items));
++    } else {
++      DCHECK_GT(column->annotation_items->size(), 0u);
++      const NGLogicalLineItem& item = (*column->annotation_items)[0];
++      DCHECK(item.IsPlaceholder());
++      metrics_.Unite({-item.BlockOffset() + margins->first,
++                      item.BlockEndOffset() + margins->second});
++    }
 +  }
 +  return metrics_;
 +}

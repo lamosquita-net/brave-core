@@ -1,0 +1,17 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_offset_mapping_builder.cc b/third_party/blink/renderer/core/layout/ng/inline/ng_offset_mapping_builder.cc
+index 89cb611a9adeb43aee0127ed553bc503b928c80f..c5d68d2520a5092d6f7989f6e6074032efe6ed2b 100644
+--- a/third_party/blink/renderer/core/layout/ng/inline/ng_offset_mapping_builder.cc
++++ b/third_party/blink/renderer/core/layout/ng/inline/ng_offset_mapping_builder.cc
+@@ -86,6 +86,12 @@ void NGOffsetMappingBuilder::AppendIdentityMapping(unsigned length) {
+   has_open_unit_ = true;
+ }
+ 
++void NGOffsetMappingBuilder::RevertIdentityMapping1() {
++  CHECK(!current_layout_object_);
++  --current_offset_;
++  --destination_length_;
++}
++
+ void NGOffsetMappingBuilder::AppendCollapsedMapping(unsigned length) {
+   DCHECK_GT(length, 0u);
+   const unsigned dom_start = current_offset_;

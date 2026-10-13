@@ -1,0 +1,15 @@
+diff --git a/third_party/blink/renderer/core/paint/paint_invalidator.cc b/third_party/blink/renderer/core/paint/paint_invalidator.cc
+index 755573d5d9562eb53ee045c7a098147bf306c14a..21e4e7433a1284fe0afa5c79cb0a9142185e1d66 100644
+--- a/third_party/blink/renderer/core/paint/paint_invalidator.cc
++++ b/third_party/blink/renderer/core/paint/paint_invalidator.cc
+@@ -34,6 +34,10 @@ void PaintInvalidator::UpdatePaintingLayer(const LayoutObject& object,
+   if (object.HasLayer() &&
+       To<LayoutBoxModelObject>(object).HasSelfPaintingLayer()) {
+     context.painting_layer = To<LayoutBoxModelObject>(object).Layer();
++  } else if (object.IsInlineRubyText()) {
++    // Physical fragments and fragment items for ruby-text boxes are not
++    // managed by inline parents.
++    context.painting_layer = object.PaintingLayer();
+   } else if (object.IsColumnSpanAll() ||
+              object.IsFloatingWithNonContainingBlockParent()) {
+     // See |LayoutObject::PaintingLayer| for the special-cases of floating under

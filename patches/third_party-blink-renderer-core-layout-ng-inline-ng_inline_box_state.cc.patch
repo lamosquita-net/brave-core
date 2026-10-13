@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_box_state.cc b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_box_state.cc
-index 9453b2f2167e231c67fbfbbfa329c379be52afcc..1b2d981b616cdea506b30a1af638a59698c0a40f 100644
+index 9453b2f2167e231c67fbfbbfa329c379be52afcc..79f2d1398fca2b05a95341c14627c053c4b84ddb 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_box_state.cc
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_box_state.cc
 @@ -37,6 +37,11 @@ FontHeight ComputeEmphasisMarkOutsets(const ComputedStyle& style,
@@ -14,7 +14,17 @@ index 9453b2f2167e231c67fbfbbfa329c379be52afcc..1b2d981b616cdea506b30a1af638a596
  NGInlineBoxState::NGInlineBoxState(const NGInlineBoxState&& state)
      : fragment_start(state.fragment_start),
        item(state.item),
-@@ -197,6 +202,12 @@ bool NGInlineBoxState::CanAddTextOfStyle(
+@@ -50,8 +55,7 @@ NGInlineBoxState::NGInlineBoxState(const NGInlineBoxState&& state)
+       alignment_type(state.alignment_type),
+       has_start_edge(state.has_start_edge),
+       has_end_edge(state.has_end_edge),
+-      margin_inline_start(state.margin_inline_start),
+-      margin_inline_end(state.margin_inline_end),
++      margins(state.margins),
+       borders(state.borders),
+       padding(state.padding),
+       pending_descendants(std::move(state.pending_descendants)),
+@@ -197,6 +201,12 @@ bool NGInlineBoxState::CanAddTextOfStyle(
    return false;
  }
  
@@ -27,13 +37,53 @@ index 9453b2f2167e231c67fbfbbfa329c379be52afcc..1b2d981b616cdea506b30a1af638a596
  NGInlineBoxState* NGInlineLayoutStateStack::OnBeginPlaceItems(
      const NGInlineNode node,
      const ComputedStyle& line_style,
-@@ -446,6 +457,17 @@ void NGInlineLayoutStateStack::AddBoxData(const NGConstraintSpace& space,
+@@ -281,8 +291,7 @@ NGInlineBoxState* NGInlineLayoutStateStack::OnOpenTag(
+   box->ResetStyle(style, is_svg_text_, *item.GetLayoutObject());
+   box->item = &item;
+   box->has_start_edge = true;
+-  box->margin_inline_start = item_result.margins.inline_start;
+-  box->margin_inline_end = item_result.margins.inline_end;
++  box->margins = item_result.margins;
+   box->borders = item_result.borders;
+   box->padding = item_result.padding;
+   if (space.IsInsideRepeatableContent()) {
+@@ -419,10 +428,12 @@ void NGInlineLayoutStateStack::AddBoxData(const NGConstraintSpace& space,
+       box->fragment_start, fragment_end, box->item, placeholder.Size());
+   box_data.borders = box->borders;
+   box_data.padding = box->padding;
++  box_data.margin_line_over = box->margins.line_over;
++  box_data.margin_line_under = box->margins.line_under;
+   if (box->has_start_edge) {
+     box_data.has_line_left_edge = true;
+-    box_data.margin_line_left = box->margin_inline_start;
+-    box_data.margin_border_padding_line_left = box->margin_inline_start +
++    box_data.margin_line_left = box->margins.inline_start;
++    box_data.margin_border_padding_line_left = box->margins.inline_start +
+                                                box->borders.inline_start +
+                                                box->padding.inline_start;
+   } else {
+@@ -431,8 +442,8 @@ void NGInlineLayoutStateStack::AddBoxData(const NGConstraintSpace& space,
+   }
+   if (box->has_end_edge) {
+     box_data.has_line_right_edge = true;
+-    box_data.margin_line_right = box->margin_inline_end;
+-    box_data.margin_border_padding_line_right = box->margin_inline_end +
++    box_data.margin_line_right = box->margins.inline_end;
++    box_data.margin_border_padding_line_right = box->margins.inline_end +
+                                                 box->borders.inline_end +
+                                                 box->padding.inline_end;
+   } else {
+@@ -446,6 +457,21 @@ void NGInlineLayoutStateStack::AddBoxData(const NGConstraintSpace& space,
                box_data.margin_border_padding_line_right);
    }
  
 +  for (const auto& logical_column : ruby_column_list_) {
-+    unsigned base_start = logical_column->start_index;
-+    if (box->fragment_start <= base_start && base_start < fragment_end) {
++    // Skip a LogicalRubyColumn for which PlaceRubyAnnotation() is not done yet.
++    if (!logical_column->annotation_items) {
++      continue;
++    }
++    if (box->fragment_start <= logical_column->start_index &&
++        logical_column->EndIndex() <= fragment_end) {
 +      if (!box_data.ruby_column_list) {
 +        box_data.ruby_column_list =
 +            MakeGarbageCollected<HeapVector<Member<LogicalRubyColumn>>>();
@@ -45,7 +95,29 @@ index 9453b2f2167e231c67fbfbbfa329c379be52afcc..1b2d981b616cdea506b30a1af638a596
    DCHECK((*line_box)[box->fragment_start].IsPlaceholder());
    DCHECK_GT(fragment_end, box->fragment_start);
    if (fragment_end > box->fragment_start + 1)
-@@ -525,7 +547,7 @@ void NGInlineLayoutStateStack::UpdateAfterReorder(
+@@ -467,6 +493,21 @@ void NGInlineLayoutStateStack::AddBoxData(const NGConstraintSpace& space,
+   box_data_list_.pop_back();
+ }
+ 
++absl::optional<std::pair<LayoutUnit, LayoutUnit>>
++NGInlineLayoutStateStack::AnnotationBoxBlockAxisMargins() const {
++  if (!HasBoxFragments() || box_data_list_[0].fragment_start != 0) {
++    return absl::nullopt;
++  }
++  const BoxData& data = box_data_list_[0];
++  if (data.padding.BlockSum() == LayoutUnit() &&
++      data.borders.BlockSum() == LayoutUnit() &&
++      data.margin_line_over == LayoutUnit() &&
++      data.margin_line_under == LayoutUnit()) {
++    return absl::nullopt;
++  }
++  return std::make_pair(data.margin_line_over, data.margin_line_under);
++}
++
+ void NGInlineLayoutStateStack::ChildInserted(unsigned index) {
+   for (NGInlineBoxState& state : stack_) {
+     if (state.fragment_start >= index)
+@@ -525,7 +566,7 @@ void NGInlineLayoutStateStack::UpdateAfterReorder(
      box_data.fragment_start = box_data.fragment_end = 0;
  
    // Scan children and update start/end from their box_data_index.
@@ -54,7 +126,7 @@ index 9453b2f2167e231c67fbfbbfa329c379be52afcc..1b2d981b616cdea506b30a1af638a596
    for (unsigned index = 0; index < line_box->size();)
      index = UpdateBoxDataFragmentRange(line_box, index, &fragmented_boxes);
  
-@@ -550,7 +572,7 @@ void NGInlineLayoutStateStack::UpdateAfterReorder(
+@@ -550,7 +591,7 @@ void NGInlineLayoutStateStack::UpdateAfterReorder(
  unsigned NGInlineLayoutStateStack::UpdateBoxDataFragmentRange(
      NGLogicalLineItems* line_box,
      unsigned index,
@@ -63,7 +135,7 @@ index 9453b2f2167e231c67fbfbbfa329c379be52afcc..1b2d981b616cdea506b30a1af638a596
    // Find the first line box item that should create a box fragment.
    for (; index < line_box->size(); index++) {
      NGLogicalLineItem* start = &(*line_box)[index];
-@@ -606,7 +628,7 @@ unsigned NGInlineLayoutStateStack::UpdateBoxDataFragmentRange(
+@@ -606,7 +647,7 @@ unsigned NGInlineLayoutStateStack::UpdateBoxDataFragmentRange(
  }
  
  void NGInlineLayoutStateStack::UpdateFragmentedBoxDataEdges(
@@ -72,7 +144,7 @@ index 9453b2f2167e231c67fbfbbfa329c379be52afcc..1b2d981b616cdea506b30a1af638a596
    DCHECK(!fragmented_boxes->empty());
    // Append in the descending order of |fragmented_box_data_index| because the
    // indices will change as boxes are inserted into |box_data_list_|.
-@@ -649,7 +671,7 @@ void NGInlineLayoutStateStack::UpdateFragmentedBoxDataEdges(
+@@ -649,7 +690,7 @@ void NGInlineLayoutStateStack::UpdateFragmentedBoxDataEdges(
  }
  
  void NGInlineLayoutStateStack::BoxData::UpdateFragmentEdges(
@@ -81,7 +153,7 @@ index 9453b2f2167e231c67fbfbbfa329c379be52afcc..1b2d981b616cdea506b30a1af638a596
    DCHECK(fragmented_box_data_index);
  
    // If this box has the right edge, move it to the last fragment.
-@@ -677,8 +699,9 @@ LayoutUnit NGInlineLayoutStateStack::ComputeInlinePositions(
+@@ -677,8 +718,9 @@ LayoutUnit NGInlineLayoutStateStack::ComputeInlinePositions(
      child.rect.offset.inline_offset += position;
      // Box margins/boders/paddings will be processed later.
      // TODO(kojii): we could optimize this if the reordering did not occur.
@@ -92,7 +164,7 @@ index 9453b2f2167e231c67fbfbbfa329c379be52afcc..1b2d981b616cdea506b30a1af638a596
      position += child.inline_size;
    }
  
-@@ -750,11 +773,25 @@ LayoutUnit NGInlineLayoutStateStack::ComputeInlinePositions(
+@@ -750,11 +792,25 @@ LayoutUnit NGInlineLayoutStateStack::ComputeInlinePositions(
    return position;
  }
  
@@ -120,7 +192,7 @@ index 9453b2f2167e231c67fbfbbfa329c379be52afcc..1b2d981b616cdea506b30a1af638a596
  
    // The final position of any inline boxes, (<span>, etc) are stored on
    // |BoxData::rect|. As we don't have a mapping from |NGLogicalLineItem| to
-@@ -762,6 +799,13 @@ void NGInlineLayoutStateStack::ApplyRelativePositioning(
+@@ -762,6 +818,13 @@ void NGInlineLayoutStateStack::ApplyRelativePositioning(
    // final adjustment at the end of this function.
    Vector<LogicalOffset, 32> accumulated_offsets(line_box->size());
  
@@ -134,7 +206,7 @@ index 9453b2f2167e231c67fbfbbfa329c379be52afcc..1b2d981b616cdea506b30a1af638a596
    for (BoxData& box_data : box_data_list_) {
      unsigned start = box_data.fragment_start;
      unsigned end = box_data.fragment_end;
-@@ -779,13 +823,26 @@ void NGInlineLayoutStateStack::ApplyRelativePositioning(
+@@ -779,13 +842,26 @@ void NGInlineLayoutStateStack::ApplyRelativePositioning(
    // Apply the final accumulated relative position offset for each box.
    for (BoxData& box_data : box_data_list_)
      box_data.rect.offset += accumulated_offsets[box_data.fragment_start];
@@ -162,7 +234,7 @@ index 9453b2f2167e231c67fbfbbfa329c379be52afcc..1b2d981b616cdea506b30a1af638a596
  
    for (BoxData& box_data : box_data_list_) {
      unsigned start = box_data.fragment_start;
-@@ -847,14 +904,7 @@ const NGLayoutResult* NGInlineLayoutStateStack::BoxData::CreateBoxFragment(
+@@ -847,14 +923,7 @@ const NGLayoutResult* NGInlineLayoutStateStack::BoxData::CreateBoxFragment(
          {true, has_line_right_edge, true, has_line_left_edge});
    }
  
@@ -178,7 +250,7 @@ index 9453b2f2167e231c67fbfbbfa329c379be52afcc..1b2d981b616cdea506b30a1af638a596
      if (child.out_of_flow_positioned_box) {
        DCHECK(item->GetLayoutObject()->IsLayoutInline());
        NGBlockNode oof_box(
-@@ -868,7 +918,7 @@ const NGLayoutResult* NGInlineLayoutStateStack::BoxData::CreateBoxFragment(
+@@ -868,7 +937,7 @@ const NGLayoutResult* NGInlineLayoutStateStack::BoxData::CreateBoxFragment(
        box.AddOutOfFlowInlineChildCandidate(oof_box, static_offset,
                                             child.container_direction);
        child.out_of_flow_positioned_box = nullptr;
@@ -187,7 +259,7 @@ index 9453b2f2167e231c67fbfbbfa329c379be52afcc..1b2d981b616cdea506b30a1af638a596
      }
  
      // Propagate any OOF-positioned descendants from any atomic-inlines, etc.
-@@ -881,11 +931,36 @@ const NGLayoutResult* NGInlineLayoutStateStack::BoxData::CreateBoxFragment(
+@@ -881,11 +950,40 @@ const NGLayoutResult* NGInlineLayoutStateStack::BoxData::CreateBoxFragment(
            ComputeRelativeOffsetForOOFInInline(
                space, child.PhysicalFragment()->Style()));
      }
@@ -210,21 +282,25 @@ index 9453b2f2167e231c67fbfbbfa329c379be52afcc..1b2d981b616cdea506b30a1af638a596
    }
 +  if (ruby_column_list) {
 +    for (auto& logical_column : *ruby_column_list) {
-+      for (unsigned i = 0; i < logical_column->annotation_items->size(); ++i) {
-+        NGLogicalLineItem& child = (*logical_column->annotation_items)[i];
++      auto& annotation_items = *logical_column->annotation_items;
++      if (annotation_items.WasPropagated()) {
++        continue;
++      }
++      for (unsigned i = 0; i < annotation_items.size(); ++i) {
++        NGLogicalLineItem& child = annotation_items[i];
 +        if (child.children_count) {
 +          i += child.children_count - 1;
 +        }
 +        handle_box_child(child);
 +      }
-+      logical_column->annotation_items->SetPropagated();
++      annotation_items.SetPropagated();
 +    }
 +    ruby_column_list.Clear();
 +  }
  
    // Inline boxes that produce DisplayItemClient should do full paint
    // invalidations.
-@@ -895,6 +970,10 @@ const NGLayoutResult* NGInlineLayoutStateStack::BoxData::CreateBoxFragment(
+@@ -895,6 +993,10 @@ const NGLayoutResult* NGInlineLayoutStateStack::BoxData::CreateBoxFragment(
    return box.ToInlineBoxFragment();
  }
  
@@ -235,7 +311,7 @@ index 9453b2f2167e231c67fbfbbfa329c379be52afcc..1b2d981b616cdea506b30a1af638a596
  NGInlineLayoutStateStack::PositionPending
  NGInlineLayoutStateStack::ApplyBaselineShift(NGInlineBoxState* box,
                                               NGLogicalLineItems* line_box,
-@@ -1176,6 +1255,11 @@ FontHeight NGInlineLayoutStateStack::MetricsForTopAndBottomAlign(
+@@ -1176,6 +1278,11 @@ FontHeight NGInlineLayoutStateStack::MetricsForTopAndBottomAlign(
    return max;
  }
  
@@ -247,3 +323,13 @@ index 9453b2f2167e231c67fbfbbfa329c379be52afcc..1b2d981b616cdea506b30a1af638a596
  #if DCHECK_IS_ON()
  void NGInlineLayoutStateStack::CheckSame(
      const NGInlineLayoutStateStack& other) const {
+@@ -1208,8 +1315,7 @@ void NGInlineBoxState::CheckSame(const NGInlineBoxState& other) const {
+   DCHECK_EQ(has_start_edge, other.has_start_edge);
+   // |has_end_edge| may not match because it will be computed in |OnCloseTag|.
+ 
+-  DCHECK_EQ(margin_inline_start, other.margin_inline_start);
+-  DCHECK_EQ(margin_inline_end, other.margin_inline_end);
++  DCHECK_EQ(margins, other.margins);
+   DCHECK_EQ(borders, other.borders);
+   DCHECK_EQ(padding, other.padding);
+ 

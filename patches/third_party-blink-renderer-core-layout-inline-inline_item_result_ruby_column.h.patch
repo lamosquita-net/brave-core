@@ -1,9 +1,9 @@
 diff --git a/third_party/blink/renderer/core/layout/inline/inline_item_result_ruby_column.h b/third_party/blink/renderer/core/layout/inline/inline_item_result_ruby_column.h
 new file mode 100644
-index 0000000000000000000000000000000000000000..20fd7da5022314a552b3e372840f40b7ed47fae6
+index 0000000000000000000000000000000000000000..76d83065c67eec152ce18261adcefc99a584f9af
 --- /dev/null
 +++ b/third_party/blink/renderer/core/layout/inline/inline_item_result_ruby_column.h
-@@ -0,0 +1,44 @@
+@@ -0,0 +1,50 @@
 +// Copyright 2024 The Chromium Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -22,7 +22,8 @@ index 0000000000000000000000000000000000000000..20fd7da5022314a552b3e372840f40b7
 +  void Trace(Visitor* visitor) const {
 +    visitor->Trace(base_line);
 +    visitor->Trace(annotation_line_list);
-+    visitor->Trace(ruby_break_token);
++    visitor->Trace(start_ruby_break_token);
++    visitor->Trace(end_ruby_break_token);
 +  }
 +
 +  // A NGLineInfo for the base level.
@@ -40,9 +41,14 @@ index 0000000000000000000000000000000000000000..20fd7da5022314a552b3e372840f40b7
 +  // segment.
 +  bool is_continuation = false;
 +
-+  // A break token at the end of this ruby column.
-+  // It is stored here because of ease of rewind.
-+  Member<RubyBreakTokenData> ruby_break_token;
++  // Break tokens at the start and the end of this ruby column.
++  // They are used only in NGLineBreaker to help rewinding.
++  Member<const RubyBreakTokenData> start_ruby_break_token;
++  Member<RubyBreakTokenData> end_ruby_break_token;
++
++  // Spacing amount on the right of the last glyph. This is set on justify
++  // a line, and consumed on applying ruby-align to an annotation.
++  LayoutUnit last_base_glyph_spacing;
 +};
 +
 +}  // namespace blink

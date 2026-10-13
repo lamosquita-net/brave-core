@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.h b/third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.h
-index 000e18d6f1c3637b17141ceef8573a63cc5cad3d..87e642e05c250192b21b0f73106593bdfd327e5a 100644
+index 000e18d6f1c3637b17141ceef8573a63cc5cad3d..a05772425e76efe69097dfc8eb29d688f02bc90a 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.h
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.h
 @@ -5,19 +5,44 @@
@@ -59,7 +59,30 @@ index 000e18d6f1c3637b17141ceef8573a63cc5cad3d..87e642e05c250192b21b0f73106593bd
  struct NGAnnotationOverhang {
    LayoutUnit start;
    LayoutUnit end;
-@@ -50,6 +79,15 @@ bool CanApplyStartOverhang(const NGLineInfo& line_info,
+@@ -36,11 +65,22 @@ struct NGAnnotationOverhang {
+ // This is used by NGLineBreaker.
+ NGAnnotationOverhang GetOverhang(const NGInlineItemResult& item);
+ 
++// Returns overhang values of the specified base/annotation lines.
++// These lines should have correct LineStyle.
++//
++// This is used by NGLineBreaker.
++NGAnnotationOverhang GetOverhang(
++    LayoutUnit ruby_size,
++    const NGLineInfo& base_line,
++    const HeapVector<NGLineInfo, 1> annotation_line_list);
++
+ // Returns true if |start_overhang| is applied to a previous item, and
+ // clamp |start_overhang| to the width of the previous item.
+ //
+ // This is used by NGLineBreaker.
+ bool CanApplyStartOverhang(const NGLineInfo& line_info,
++                           wtf_size_t ruby_index,
++                           const ComputedStyle& ruby_style,
+                            LayoutUnit& start_overhang);
+ 
+ // This should be called after NGInlineItemResult for a text is added in
+@@ -50,6 +90,15 @@ bool CanApplyStartOverhang(const NGLineInfo& line_info,
  // in |line_info|
  LayoutUnit CommitPendingEndOverhang(NGLineInfo* line_info);
  
@@ -75,7 +98,7 @@ index 000e18d6f1c3637b17141ceef8573a63cc5cad3d..87e642e05c250192b21b0f73106593bd
  // Stores ComputeAnnotationOverflow() results.
  //
  // |overflow_over| and |space_over| are exclusive. Only one of them can be
-@@ -72,8 +110,130 @@ struct NGAnnotationMetrics {
+@@ -72,8 +121,130 @@ struct NGAnnotationMetrics {
  NGAnnotationMetrics ComputeAnnotationOverflow(
      const NGLogicalLineItems& logical_line,
      const FontHeight& line_box_metrics,
@@ -120,7 +143,7 @@ index 000e18d6f1c3637b17141ceef8573a63cc5cad3d..87e642e05c250192b21b0f73106593bd
 +    bool IsFirstUnderLevel() const {
 +      return level_.size() == 1u && level_[0] == -1;
 +    }
-+    const Vector<wtf_size_t> BaseIndexList() const { return base_index_list_; }
++    const Vector<wtf_size_t>& BaseIndexList() const { return base_index_list_; }
 +    // This operator defines lines below are smaller than lines above.
 +    bool operator<(const RubyLine& another) const;
 +

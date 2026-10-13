@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_items_builder.cc b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_items_builder.cc
-index a81fab13f92986aa84d18e0713423db458479c4c..a91e8f7dffced2565ec5762a3a9a6557bcb98b36 100644
+index a81fab13f92986aa84d18e0713423db458479c4c..fbadc3bcbeeeceaefdc551af8cd5dcfa302dcf38 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_items_builder.cc
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_items_builder.cc
 @@ -40,6 +40,13 @@ String NGInlineItemsBuilderTemplate<OffsetMappingBuilder>::ToString() {
@@ -44,13 +44,15 @@ index a81fab13f92986aa84d18e0713423db458479c4c..a91e8f7dffced2565ec5762a3a9a6557
            start++;
            AppendTextItem(" ", layout_object);
            continue;
-@@ -1329,20 +1337,46 @@ void NGInlineItemsBuilderTemplate<OffsetMappingBuilder>::EnterInline(
+@@ -1329,20 +1337,50 @@ void NGInlineItemsBuilderTemplate<OffsetMappingBuilder>::EnterInline(
      }
    }
  
 +  has_ruby_ = has_ruby_ || node->IsInlineRubyText();
 +  if (node->IsInlineRubyText()) {
 +    ++ruby_text_nesting_level_;
++    typename OffsetMappingBuilder::SourceNodeScope scope(&mapping_builder_,
++                                                         nullptr);
 +    if (!node->Parent()->IsInlineRuby()) {
 +      // This creates a ruby column with a placeholder-only ruby-base.
 +      AppendOpaque(NGInlineItem::kOpenRubyColumn,
@@ -87,6 +89,8 @@ index a81fab13f92986aa84d18e0713423db458479c4c..a91e8f7dffced2565ec5762a3a9a6557
 -    if (!parent_box->should_create_box_fragment &&
 -        parent_box->ShouldCreateBoxFragmentForChild(*current_box)) {
 -      parent_box->SetShouldCreateBoxFragment(items_);
++  typename OffsetMappingBuilder::SourceNodeScope scope(&mapping_builder_,
++                                                       nullptr);
 +  if (node->IsInlineRuby()) {
 +    AppendOpaque(NGInlineItem::kOpenRubyColumn,
 +                 IsLtr(style->Direction()) ? kLeftToRightIsolateCharacter
@@ -101,7 +105,7 @@ index a81fab13f92986aa84d18e0713423db458479c4c..a91e8f7dffced2565ec5762a3a9a6557
    }
  }
  
-@@ -1361,6 +1395,16 @@ void NGInlineItemsBuilderTemplate<OffsetMappingBuilder>::ExitInline(
+@@ -1361,6 +1399,32 @@ void NGInlineItemsBuilderTemplate<OffsetMappingBuilder>::ExitInline(
      LayoutObject* node) {
    DCHECK(node);
  
@@ -109,27 +113,45 @@ index a81fab13f92986aa84d18e0713423db458479c4c..a91e8f7dffced2565ec5762a3a9a6557
 +    if (kDisableForcedBreakInRubyColumn) {
 +      --ruby_text_nesting_level_;
 +    }
-+    AppendOpaque(NGInlineItem::kCloseRubyColumn, kPopDirectionalIsolateCharacter,
-+                 node);
++    typename OffsetMappingBuilder::SourceNodeScope scope(&mapping_builder_,
++                                                         nullptr);
++    wtf_size_t size = items_->size();
++    if (size >= 3 &&
++        items_->at(size - 3).Type() == NGInlineItem::kCloseRubyColumn &&
++        items_->at(size - 2).Type() == NGInlineItem::kOpenRubyColumn &&
++        items_->at(size - 1).Type() == NGInlineItem::kRubyLinePlaceholder) {
++      // Remove the last kOpenRubyColumn and kRubyLinePlaceholder.
++      text_.Resize(items_->at(size - 2).StartOffset());
++      items_->Shrink(size - 2);
++      // kOpenRubyColumn called AppendIdentityMapping(1).
++      mapping_builder_.RevertIdentityMapping1();
++    } else {
++      AppendOpaque(NGInlineItem::kCloseRubyColumn,
++                   kPopDirectionalIsolateCharacter, node);
++    }
 +  } else if (node->IsInlineRubyText()) {
++    typename OffsetMappingBuilder::SourceNodeScope scope(&mapping_builder_,
++                                                         nullptr);
 +    AppendOpaque(NGInlineItem::kRubyLinePlaceholder, node);
 +  }
 +
    if (NeedsBoxInfo()) {
      BoxInfo* current_box = &boxes_.back();
      if (!current_box->should_create_box_fragment) {
-@@ -1402,6 +1446,26 @@ void NGInlineItemsBuilderTemplate<OffsetMappingBuilder>::ExitInline(
+@@ -1402,6 +1466,28 @@ void NGInlineItemsBuilderTemplate<OffsetMappingBuilder>::ExitInline(
  
    AppendOpaque(NGInlineItem::kCloseTag, node);
  
 +  if (node->IsInlineRubyText()) {
 +    --ruby_text_nesting_level_;
++    typename OffsetMappingBuilder::SourceNodeScope scope(&mapping_builder_,
++                                                         nullptr);
 +    if (node->Parent()->IsInlineRuby()) {
 +      LayoutObject* ruby_container = node->Parent();
 +      AppendOpaque(NGInlineItem::kCloseRubyColumn,
 +                   kPopDirectionalIsolateCharacter, ruby_container);
 +      // This produces almost-empty ruby-columns if </ruby> follows.
-+      // NGLineBreaker should ignore such ruby-columns.
++      // The beginning part of this function removes such ruby-columns.
 +      AppendOpaque(NGInlineItem::kOpenRubyColumn,
 +                   IsLtr(node->Parent()->Style()->Direction())
 +                       ? kLeftToRightIsolateCharacter
