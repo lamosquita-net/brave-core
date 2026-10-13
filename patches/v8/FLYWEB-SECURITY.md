@@ -26,6 +26,7 @@ was compared on a clean 12.8.374.38 (`git apply`, `-R`, by hand).
 | 357d0dd4 (crbug 383647255), by hand | `Object.assign` fast path must not overwrite the target's identity hash |
 | 8834c16 (crbug 392521083) | `FastCloneJSObject` skipped the write barrier only checking the young generation: now `TrySkipWriteBarrier` (marking included). Upstream's `CSA_DCHECK` on a test-only runtime function left out |
 | 9b3e3bf (crbug 371237564) | Parser: no `this` var management in reparsed scopes |
+| 3349cb9fd (crbug 350350588; found by MOTOR-6, 13-10) | `MicrotaskQueue`: a completed callback that removes itself while the callbacks run was not removed when the copy-on-write vector became empty (12.8's b8235a6), so Blink 116's `EventLoop` (which removes itself and releases) was called after being freed: **use-after-free reachable from any page**, and the likely cause of the YouTube hang. 12.6/12.7 do not have b8235a6 |
 
 Checked and **not applicable** to 12.8: 91343bb (no `TrustedHeapConstant`), the big-WeakMaps revert (12.8 does not have
 them), Turboshaft-Wasm fixes (`turboshaft_wasm` off), Turboshaft ISel (off), the generic wasm-to-js wrapper tier-up
@@ -40,7 +41,7 @@ off; load elimination and loop unrolling on; Wasm inlining on (COORDINACIÓN 09-
 
 ## 4. Cache epoch
 
-`kFlyWebCacheEpoch` **10** (9 is `nube/v8-12.8-api`/`-fase4`, 8 reserved for `seg/v8-12.7`).
+`kFlyWebCacheEpoch` **11** (10 before 3349cb9fd; 9 is `nube/v8-12.8-api`/`-fase4`, 8 reserved for `seg/v8-12.7`).
 
 ## 5. Tests (cloud `d8`, Linux x64, V8 only; `FlyWeb/scripts/v8-d8.sh`)
 
