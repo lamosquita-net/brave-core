@@ -1,0 +1,33 @@
+diff --git a/third_party/blink/renderer/core/css/style_containment_scope_tree.cc b/third_party/blink/renderer/core/css/style_containment_scope_tree.cc
+index ae97236c9f5c0fe07a468b1e8da2e09c84033db5..500aa40d7408b6fc366c5b59b0a945ad1c790144 100644
+--- a/third_party/blink/renderer/core/css/style_containment_scope_tree.cc
++++ b/third_party/blink/renderer/core/css/style_containment_scope_tree.cc
+@@ -70,9 +70,11 @@ void StyleContainmentScopeTree::CreateScopeForElement(const Element& element) {
+   auto children = parent->Children();
+   // Try to find if we create a scope anywhere between the parent and existing
+   // children. If so, reattach the child and the quotes.
++  bool parent_has_changed = false;
+   for (StyleContainmentScope* child : children) {
+     if (child != scope &&
+         scope->IsAncestorOf(child->GetElement(), parent->GetElement())) {
++      parent_has_changed = true;
+       parent->RemoveChild(child);
+       scope->AppendChild(child);
+     }
+@@ -80,11 +82,15 @@ void StyleContainmentScopeTree::CreateScopeForElement(const Element& element) {
+   auto quotes = parent->Quotes();
+   for (LayoutQuote* quote : quotes) {
+     if (scope->IsAncestorOf(quote->GetOwningPseudo(), parent->GetElement())) {
++      parent_has_changed = true;
+       parent->DetachQuote(*quote);
+       scope->AttachQuote(*quote);
+     }
+   }
+-  UpdateOutermostDirtyScope(parent);
++  // Mark the parent dirty only if it has changed: dirtying scopes outside a
++  // size query container during its layout modifies the layout tree outside
++  // the container, which is not allowed (Chromium 690ccf3b8df).
++  UpdateOutermostDirtyScope(parent_has_changed ? parent : nullptr);
+ }
+ 
+ void StyleContainmentScopeTree::ElementWillBeRemoved(const Element& element) {

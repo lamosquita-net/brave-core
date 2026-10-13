@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_line_breaker.cc b/third_party/blink/renderer/core/layout/ng/inline/ng_line_breaker.cc
-index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..dcda4e60222c4c928c90f5c769dc291844858877 100644
+index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..8bd8a73946f8eb25f1b2f6c6a57c973e15f9fbb6 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_line_breaker.cc
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_line_breaker.cc
 @@ -5,8 +5,10 @@
@@ -429,7 +429,16 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..dcda4e60222c4c928c90f5c769dc2918
      // If our baseline-source is non-auto use the easier to reason about
      // "default" algorithm type.
      NGBaselineAlgorithmType baseline_algorithm_type =
-@@ -2551,9 +2652,9 @@ void NGLineBreaker::HandleAtomicInline(const NGInlineItem& item,
+@@ -2526,6 +2627,8 @@ void NGLineBreaker::HandleAtomicInline(const NGInlineItem& item,
+             .LayoutAtomicInline(constraint_space_, node_.Style(),
+                                 /* use_first_line_style */ false,
+                                 baseline_algorithm_type);
++    // Ensure `NeedsCollectInlines` isn't set, or it may cause security risks.
++    CHECK(!node_.GetLayoutBox()->NeedsCollectInlines());
+ 
+     const auto& physical_box_fragment = To<NGPhysicalBoxFragment>(
+         item_result->layout_result->PhysicalFragment());
+@@ -2551,9 +2654,9 @@ void NGLineBreaker::HandleAtomicInline(const NGInlineItem& item,
  
      item_result->inline_size += inline_margins;
    } else {
@@ -442,7 +451,7 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..dcda4e60222c4c928c90f5c769dc2918
    }
  
    item_result->should_create_line_box = true;
-@@ -2568,7 +2669,8 @@ void NGLineBreaker::HandleAtomicInline(const NGInlineItem& item,
+@@ -2568,7 +2671,8 @@ void NGLineBreaker::HandleAtomicInline(const NGInlineItem& item,
        maybe_have_end_overhang_ = true;
      }
  
@@ -452,7 +461,7 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..dcda4e60222c4c928c90f5c769dc2918
        DCHECK_EQ(item_result->margins.inline_start, LayoutUnit());
        item_result->margins.inline_start = -overhang.start;
        item_result->inline_size -= overhang.start;
-@@ -2582,17 +2684,21 @@ void NGLineBreaker::HandleAtomicInline(const NGInlineItem& item,
+@@ -2582,17 +2686,21 @@ void NGLineBreaker::HandleAtomicInline(const NGInlineItem& item,
  
  void NGLineBreaker::ComputeMinMaxContentSizeForBlockChild(
      const NGInlineItem& item,
@@ -480,9 +489,12 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..dcda4e60222c4c928c90f5c769dc2918
    NGBlockNode child(To<LayoutBox>(item.GetLayoutObject()));
  
    NGMinMaxConstraintSpaceBuilder builder(constraint_space_, node_.Style(),
-@@ -2607,21 +2713,25 @@ void NGLineBreaker::ComputeMinMaxContentSizeForBlockChild(
+@@ -2606,22 +2714,28 @@ void NGLineBreaker::ComputeMinMaxContentSizeForBlockChild(
+ 
    const MinMaxSizesResult result =
        ComputeMinAndMaxContentContribution(node_.Style(), child, space);
++  // Ensure `NeedsCollectInlines` isn't set, or it may cause security risks.
++  CHECK(!node_.GetLayoutBox()->NeedsCollectInlines());
    const LayoutUnit inline_margins = item_result->margins.InlineSum();
 -  if (mode_ == NGLineBreakerMode::kMinContent) {
 +  const NGLineBreaker* main_breaker = root_breaker;
@@ -514,7 +526,16 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..dcda4e60222c4c928c90f5c769dc2918
    item_result->inline_size = result.sizes.max_size + inline_margins;
  }
  
-@@ -2671,7 +2781,7 @@ void NGLineBreaker::HandleBlockInInline(const NGInlineItem& item,
+@@ -2653,6 +2767,8 @@ void NGLineBreaker::HandleBlockInInline(const NGInlineItem& item,
+     const NGLayoutResult* layout_result =
+         block_node.Layout(constraint_space_, incoming_block_break_token,
+                           /* early_break */ nullptr, spanner_path_for_child);
++    // Ensure `NeedsCollectInlines` isn't set, or it may cause security risks.
++    CHECK(!node_.GetLayoutBox()->NeedsCollectInlines());
+     line_info->SetBlockInInlineLayoutResult(layout_result);
+ 
+     // Early exit if the layout didn't succeed.
+@@ -2671,7 +2787,7 @@ void NGLineBreaker::HandleBlockInInline(const NGInlineItem& item,
    } else {
      DCHECK(mode_ == NGLineBreakerMode::kMaxContent ||
             mode_ == NGLineBreakerMode::kMinContent);
@@ -523,7 +544,7 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..dcda4e60222c4c928c90f5c769dc2918
    }
  
    position_ += item_result->inline_size;
-@@ -2696,6 +2806,360 @@ void NGLineBreaker::HandleBlockInInline(const NGInlineItem& item,
+@@ -2696,6 +2812,360 @@ void NGLineBreaker::HandleBlockInInline(const NGInlineItem& item,
    state_ = LineBreakState::kDone;
  }
  
@@ -884,7 +905,16 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..dcda4e60222c4c928c90f5c769dc2918
  // Performs layout and positions a float.
  //
  // If there is a known available_width (e.g. something has resolved the
-@@ -3084,7 +3548,7 @@ void NGLineBreaker::HandleOverflow(NGLineInfo* line_info) {
+@@ -2791,6 +3261,8 @@ void NGLineBreaker::HandleFloat(const NGInlineItem& item,
+ 
+   item_result->positioned_float =
+       PositionFloat(&unpositioned_float, exclusion_space_);
++  // Ensure `NeedsCollectInlines` isn't set, or it may cause security risks.
++  CHECK(!node_.GetLayoutBox()->NeedsCollectInlines());
+ 
+   if (constraint_space_.HasBlockFragmentation()) {
+     if (item_result->positioned_float->need_break_before) {
+@@ -3084,7 +3556,7 @@ void NGLineBreaker::HandleOverflow(NGLineInfo* line_info) {
                  available_width + width_to_rewind + item_result->inline_size;
              DCHECK_EQ(position_, line_info->ComputeWidth());
              current_ = item_result->End();
@@ -893,7 +923,7 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..dcda4e60222c4c928c90f5c769dc2918
              HandleTrailingSpaces(item, line_info);
              return;
            }
-@@ -3100,6 +3564,28 @@ void NGLineBreaker::HandleOverflow(NGLineInfo* line_info) {
+@@ -3100,6 +3572,28 @@ void NGLineBreaker::HandleOverflow(NGLineInfo* line_info) {
          *item_result = std::move(item_result_before);
          SetCurrentStyle(*was_current_style);
        }
@@ -922,7 +952,7 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..dcda4e60222c4c928c90f5c769dc2918
      }
    }
  
-@@ -3132,8 +3618,13 @@ void NGLineBreaker::HandleOverflow(NGLineInfo* line_info) {
+@@ -3132,8 +3626,13 @@ void NGLineBreaker::HandleOverflow(NGLineInfo* line_info) {
  
    // Restore the hyphenation states to before the loop if needed.
    DCHECK(!HasHyphen());
@@ -937,7 +967,7 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..dcda4e60222c4c928c90f5c769dc2918
  
    // If there was a break opportunity, the overflow should stop there.
    if (break_before) {
-@@ -3157,7 +3648,6 @@ void NGLineBreaker::HandleOverflow(NGLineInfo* line_info) {
+@@ -3157,7 +3656,6 @@ void NGLineBreaker::HandleOverflow(NGLineInfo* line_info) {
  // Rewind to |new_end| on overflow. If trailable items follow at |new_end|, they
  // are included (not rewound).
  void NGLineBreaker::RewindOverflow(unsigned new_end, NGLineInfo* line_info) {
@@ -945,7 +975,7 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..dcda4e60222c4c928c90f5c769dc2918
    const NGInlineItemResults& item_results = line_info->Results();
    DCHECK_LT(new_end, item_results.size());
  
-@@ -3250,7 +3740,7 @@ void NGLineBreaker::RewindOverflow(unsigned new_end, NGLineInfo* line_info) {
+@@ -3250,7 +3748,7 @@ void NGLineBreaker::RewindOverflow(unsigned new_end, NGLineInfo* line_info) {
    position_ = line_info->ComputeWidth();
    state_ = LineBreakState::kDone;
    DCHECK(!line_info->IsLastLine());
@@ -954,7 +984,7 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..dcda4e60222c4c928c90f5c769dc2918
      line_info->SetIsLastLine(true);
    }
  }
-@@ -3327,7 +3817,7 @@ void NGLineBreaker::Rewind(unsigned new_end, NGLineInfo* line_info) {
+@@ -3327,7 +3825,7 @@ void NGLineBreaker::Rewind(unsigned new_end, NGLineInfo* line_info) {
      // Note: We can have multiple empty |LayoutText| by ::first-letter, nested
      // <q>, Text.splitText(), etc.
      const HeapVector<NGInlineItem>& items = Items();
@@ -963,7 +993,7 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..dcda4e60222c4c928c90f5c769dc2918
             items[current_.item_index].Type() == NGInlineItem::kText &&
             !items[current_.item_index].Length()) {
        HandleEmptyText(items[current_.item_index], line_info);
-@@ -3336,6 +3826,9 @@ void NGLineBreaker::Rewind(unsigned new_end, NGLineInfo* line_info) {
+@@ -3336,6 +3834,9 @@ void NGLineBreaker::Rewind(unsigned new_end, NGLineInfo* line_info) {
      // When rewinding all items, use |results[0].start_offset|.
      const NGInlineItemResult& first_remove = item_results[new_end];
      current_ = first_remove.Start();
@@ -973,7 +1003,7 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..dcda4e60222c4c928c90f5c769dc2918
      trailing_whitespace_ = WhitespaceState::kLeading;
      maybe_have_end_overhang_ = false;
    }
-@@ -3485,6 +3978,17 @@ void NGLineBreaker::MoveToNextOf(const NGInlineItemResult& item_result) {
+@@ -3485,6 +3986,17 @@ void NGLineBreaker::MoveToNextOf(const NGInlineItemResult& item_result) {
    }
  }
  
@@ -991,7 +1021,7 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..dcda4e60222c4c928c90f5c769dc2918
  const NGInlineBreakToken* NGLineBreaker::CreateBreakToken(
      const NGLineInfo& line_info) {
  #if DCHECK_IS_ON()
-@@ -3496,7 +4000,7 @@ const NGInlineBreakToken* NGLineBreaker::CreateBreakToken(
+@@ -3496,7 +4008,7 @@ const NGInlineBreakToken* NGLineBreaker::CreateBreakToken(
    const HeapVector<NGInlineItem>& items = Items();
    DCHECK_LE(current_.item_index, items.size());
    // If we have reached the end, create no break token.
@@ -1000,7 +1030,7 @@ index 73213369c6bc0ed4c62f8330d0e7fc56a28c3cb8..dcda4e60222c4c928c90f5c769dc2918
      return nullptr;
    }
  
-@@ -3546,7 +4050,7 @@ const NGInlineBreakToken* NGLineBreaker::CreateBreakToken(
+@@ -3546,7 +4058,7 @@ const NGInlineBreakToken* NGLineBreaker::CreateBreakToken(
    }
  
    return NGInlineBreakToken::Create(node_, current_style_.get(), current_,

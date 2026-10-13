@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_object.cc b/third_party/blink/renderer/core/layout/layout_object.cc
-index 98f0936193142d342d2083f61151ce24e10ad7a9..cf02599c47329660adde4a5bf953605ed5414798 100644
+index 98f0936193142d342d2083f61151ce24e10ad7a9..d6d00e6eda8d01d962cb5ffab96949ef31424356 100644
 --- a/third_party/blink/renderer/core/layout/layout_object.cc
 +++ b/third_party/blink/renderer/core/layout/layout_object.cc
 @@ -82,6 +82,7 @@
@@ -79,7 +79,20 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..cf02599c47329660adde4a5bf953605e
      if (IsA<LayoutView>(object))
        return object.GetFrame()->OwnerLayoutObject();
      return object.Parent();
-@@ -1598,7 +1630,7 @@ void LayoutObject::InvalidateIntersectionObserverCachedRects() {
+@@ -1528,7 +1560,11 @@ void LayoutObject::MarkParentForSpannerOrOutOfFlowPositionedChange() {
+   //
+   // Note that this isn't necessary if we're dealing with a column spanner here,
+   // but in order to keep things simple, we'll make no difference.
+-  object->SetNeedsCollectInlines();
++  //
++  // `SetChildNeedsCollectInlines()` and not `SetNeedsCollectInlines()`: the
++  // latter can set the flag across the boundary of an inline formatting
++  // context, which is not allowed for atomic inlines (Chromium cc7d71057b7).
++  object->SetChildNeedsCollectInlines();
+ 
+   const LayoutBlock* containing_block = ContainingBlock();
+   while (object != containing_block) {
+@@ -1598,7 +1634,7 @@ void LayoutObject::InvalidateIntersectionObserverCachedRects() {
    }
  }
  
@@ -88,7 +101,7 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..cf02599c47329660adde4a5bf953605e
    // Because LayoutNG does not work on individual inline objects, we can't
    // use a dirty width on an inline as a signal that it is safe to stop --
    // inlines never get marked as clean. Instead, we need to keep going to the
-@@ -1609,6 +1641,17 @@ static inline bool NGKeepInvalidatingBeyond(LayoutObject* o) {
+@@ -1609,6 +1645,17 @@ static inline bool NGKeepInvalidatingBeyond(LayoutObject* o) {
    // LayoutNG.
    if (o->IsLayoutInline() || o->IsText() || o->IsLayoutFlowThread())
      return true;
@@ -106,7 +119,7 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..cf02599c47329660adde4a5bf953605e
    return false;
  }
  
-@@ -1629,7 +1672,7 @@ inline void LayoutObject::InvalidateContainerIntrinsicLogicalWidths() {
+@@ -1629,7 +1676,7 @@ inline void LayoutObject::InvalidateContainerIntrinsicLogicalWidths() {
  
    LayoutObject* o = IntrinsicContainer(this);
    while (o &&
@@ -115,7 +128,7 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..cf02599c47329660adde4a5bf953605e
      // Don't invalidate the outermost object of an unrooted subtree. That object
      // will be invalidated when the subtree is added to the document.
      LayoutObject* container = IntrinsicContainer(o);
-@@ -2138,8 +2181,8 @@ bool LayoutObject::MapToVisualRectInAncestorSpaceInternalFastPath(
+@@ -2138,8 +2185,8 @@ bool LayoutObject::MapToVisualRectInAncestorSpaceInternalFastPath(
  
    AncestorSkipInfo skip_info(ancestor);
    PropertyTreeState container_properties = PropertyTreeState::Uninitialized();
@@ -126,7 +139,7 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..cf02599c47329660adde4a5bf953605e
    if (!property_container)
      return false;
  
-@@ -2215,7 +2258,8 @@ bool LayoutObject::MapToVisualRectInAncestorSpaceInternal(
+@@ -2215,7 +2262,8 @@ bool LayoutObject::MapToVisualRectInAncestorSpaceInternal(
  
  const LayoutObject* LayoutObject::GetPropertyContainer(
      AncestorSkipInfo* skip_info,
@@ -136,7 +149,7 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..cf02599c47329660adde4a5bf953605e
    NOT_DESTROYED();
    const LayoutObject* property_container = this;
    while (!property_container->FirstFragment().HasLocalBorderBoxProperties()) {
-@@ -2227,11 +2271,21 @@ const LayoutObject* LayoutObject::GetPropertyContainer(
+@@ -2227,11 +2275,21 @@ const LayoutObject* LayoutObject::GetPropertyContainer(
    if (container_properties) {
      if (property_container == this) {
        *container_properties = FirstFragment().LocalBorderBoxProperties();
@@ -158,7 +171,7 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..cf02599c47329660adde4a5bf953605e
    return property_container;
  }
  
-@@ -4480,6 +4534,12 @@ gfx::RectF LayoutObject::StrokeBoundingBox() const {
+@@ -4480,6 +4538,12 @@ gfx::RectF LayoutObject::StrokeBoundingBox() const {
    return gfx::RectF();
  }
  
@@ -171,7 +184,7 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..cf02599c47329660adde4a5bf953605e
  gfx::RectF LayoutObject::VisualRectInLocalSVGCoordinates() const {
    NOT_DESTROYED();
    NOTREACHED();
-@@ -4990,6 +5050,19 @@ void LayoutObject::SetSVGDescendantMayHaveTransformRelatedAnimation() {
+@@ -4990,6 +5054,19 @@ void LayoutObject::SetSVGDescendantMayHaveTransformRelatedAnimation() {
    }
  }
  
