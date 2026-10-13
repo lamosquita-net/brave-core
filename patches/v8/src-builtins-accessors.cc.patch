@@ -1,0 +1,13 @@
+diff --git a/src/builtins/accessors.cc b/src/builtins/accessors.cc
+index 531afd1ad4b340ae0dde57acc9c5b33264b62ecc..799ba8e753ba0ce32fbb02db1bc1ae19cc432ba6 100644
+--- a/src/builtins/accessors.cc
++++ b/src/builtins/accessors.cc
+@@ -91,7 +91,7 @@ Accessors::ReplaceAccessorWithDataProperty(Isolate* isolate,
+                     LookupIterator::OWN_SKIP_INTERCEPTOR);
+   // Skip any access checks we might hit. This accessor should never hit in a
+   // situation where the caller does not have access.
+-  if (it.state() == LookupIterator::ACCESS_CHECK) {
++  while (it.state() == LookupIterator::ACCESS_CHECK) {
+     CHECK(it.HasAccess());
+     it.Next();
+   }

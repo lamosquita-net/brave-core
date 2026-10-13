@@ -1,5 +1,5 @@
 diff --git a/src/ic/ic.cc b/src/ic/ic.cc
-index dfa63ffc399b18c22cb0a726585a3645757a38da..8277637edcb34039cab357c799524b057537c811 100644
+index dfa63ffc399b18c22cb0a726585a3645757a38da..4692e0dcbb1d2c7f53daa21ca950eb2e98407543 100644
 --- a/src/ic/ic.cc
 +++ b/src/ic/ic.cc
 @@ -1887,6 +1887,11 @@ MaybeHandle<Object> StoreIC::Store(Handle<Object> object, Handle<Name> name,
@@ -35,3 +35,12 @@ index dfa63ffc399b18c22cb0a726585a3645757a38da..8277637edcb34039cab357c799524b05
    ReadOnlyRoots roots(isolate);
    auto maybe_target =
        TransitionsAccessor(isolate, *source_map).SearchSpecial(*name);
+@@ -3956,7 +3966,7 @@ RUNTIME_FUNCTION(Runtime_StorePropertyWithInterceptor) {
+ 
+   LookupIterator it(isolate, receiver, name, receiver);
+   // Skip past any access check on the receiver.
+-  if (it.state() == LookupIterator::ACCESS_CHECK) {
++  while (it.state() == LookupIterator::ACCESS_CHECK) {
+     DCHECK(it.HasAccess());
+     it.Next();
+   }

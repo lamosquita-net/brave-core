@@ -28,12 +28,13 @@ was compared on a clean 12.8.374.38 (`git apply`, `-R`, by hand).
 | 9b3e3bf (crbug 371237564) | Parser: no `this` var management in reparsed scopes |
 | 3349cb9fd (crbug 350350588; found by MOTOR-6, 13-10) | `MicrotaskQueue`: a completed callback that removes itself while the callbacks run was not removed when the copy-on-write vector became empty (12.8's b8235a6), so Blink 116's `EventLoop` (which removes itself and releases) was called after being freed: **use-after-free reachable from any page**, and the likely cause of the YouTube hang. 12.6/12.7 do not have b8235a6 |
 
-Embedder-API pass (COORDINACIÓN-5; proposals by MOTOR-6, 13-10, reviewed one by one):
+Embedder-API pass (COORDINACIÓN-5; proposals by MOTOR-6, `FlyWeb/docs/v8-12.8-blink.md` §4, 13-10, reviewed one by one):
 
 | Fix | What |
 |---|---|
 | 12e09a455 (crbug 402863536) | `DefineNamedOwnIC` (public class fields) on a `JSGlobalProxy`: the fast path ignored the attributes kept on the global object (e.g. a sealed global); now it goes to the runtime |
 | 8324ee42e (crbug 40059554), `cpp-heap.cc` only | `TracedReference` reset from a pre-finalizer freed a traced node already reclaimed in the atomic pause (**double free**, free-list corruption): pre-finalizers now run inside `SweepingOnMutatorThreadForGlobalHandlesScope`. Also affects 12.6/12.7 |
+| 6b85b7c6b (crbug 42204611) | `LookupIterator`: the global object and its global proxy give two `ACCESS_CHECK`s in a row; five places only skipped one (`if` → `while`), so they went on with the iterator still on an access check (after 12.8's branch point) |
 | 367fce4df (crbug 561672123), by hand | `ErrorUtils::Get/SetFormattedStack` read or wrote `error_stack_symbol` on access-checked receivers (cross-origin `WindowProxy`/`Location`) without an access check |
 | 279d28029 (crbug 563235411), by hand | Private-name store on an access-checked object: `CheckPrivateNameStore` moved the `LookupIterator` past `ACCESS_CHECK`, so `StoreIC` cached a fast handler on an access-checked map; the iterator is restarted, and `AddPrivateField` walks past `ACCESS_CHECK` |
 
