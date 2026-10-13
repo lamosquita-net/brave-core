@@ -1,0 +1,15 @@
+diff --git a/third_party/blink/renderer/core/dom/layout_tree_builder.h b/third_party/blink/renderer/core/dom/layout_tree_builder.h
+index bf88e493e60c2739d10011642ebc0bcefe74a48b..e1b48c95d9e6bb2849e9516b70932de1d21471e6 100644
+--- a/third_party/blink/renderer/core/dom/layout_tree_builder.h
++++ b/third_party/blink/renderer/core/dom/layout_tree_builder.h
+@@ -87,6 +87,10 @@ class LayoutTreeBuilder {
+     auto* const parent = next->Parent();
+     if (!IsAnonymousInline(parent))
+       return next;
++    // Should return a normal result for display:ruby though it can be
++    // an anonymous inline.
++    if (UNLIKELY(parent->IsInlineRuby()))
++      return next;
+     if (!LIKELY(parent->IsLayoutNGTextCombine()))
+       return parent;
+     auto* const text_combine_parent = parent->Parent();

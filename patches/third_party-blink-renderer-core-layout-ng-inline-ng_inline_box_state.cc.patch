@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_box_state.cc b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_box_state.cc
-index 9453b2f2167e231c67fbfbbfa329c379be52afcc..bb5a6352aa115a174390bec77abf877de7bdc047 100644
+index 9453b2f2167e231c67fbfbbfa329c379be52afcc..a1ec12f0504b1b24eac7574713f1d0bcceff1c9d 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_box_state.cc
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_box_state.cc
 @@ -37,6 +37,11 @@ FontHeight ComputeEmphasisMarkOutsets(const ComputedStyle& style,
@@ -8,13 +8,228 @@ index 9453b2f2167e231c67fbfbbfa329c379be52afcc..bb5a6352aa115a174390bec77abf877d
  
 +void LogicalRubyColumn::Trace(Visitor* visitor) const {
 +  visitor->Trace(annotation_items);
-+  visitor->Trace(ruby_column_list);
++  visitor->Trace(state_stack);
 +}
 +
  NGInlineBoxState::NGInlineBoxState(const NGInlineBoxState&& state)
      : fragment_start(state.fragment_start),
        item(state.item),
-@@ -1176,6 +1181,11 @@ FontHeight NGInlineLayoutStateStack::MetricsForTopAndBottomAlign(
+@@ -197,6 +202,12 @@ bool NGInlineBoxState::CanAddTextOfStyle(
+   return false;
+ }
+ 
++void NGInlineLayoutStateStack::Trace(Visitor* visitor) const {
++  // `stack_` is not traced: NGInlineBoxState has no Member in the 116.
++  visitor->Trace(box_data_list_);
++  visitor->Trace(ruby_column_list_);
++}
++
+ NGInlineBoxState* NGInlineLayoutStateStack::OnBeginPlaceItems(
+     const NGInlineNode node,
+     const ComputedStyle& line_style,
+@@ -446,6 +457,17 @@ void NGInlineLayoutStateStack::AddBoxData(const NGConstraintSpace& space,
+               box_data.margin_border_padding_line_right);
+   }
+ 
++  for (const auto& logical_column : ruby_column_list_) {
++    unsigned base_start = logical_column->start_index;
++    if (box->fragment_start <= base_start && base_start < fragment_end) {
++      if (!box_data.ruby_column_list) {
++        box_data.ruby_column_list =
++            MakeGarbageCollected<HeapVector<Member<LogicalRubyColumn>>>();
++      }
++      box_data.ruby_column_list->push_back(logical_column);
++    }
++  }
++
+   DCHECK((*line_box)[box->fragment_start].IsPlaceholder());
+   DCHECK_GT(fragment_end, box->fragment_start);
+   if (fragment_end > box->fragment_start + 1)
+@@ -525,7 +547,7 @@ void NGInlineLayoutStateStack::UpdateAfterReorder(
+     box_data.fragment_start = box_data.fragment_end = 0;
+ 
+   // Scan children and update start/end from their box_data_index.
+-  Vector<BoxData> fragmented_boxes;
++  HeapVector<BoxData> fragmented_boxes;
+   for (unsigned index = 0; index < line_box->size();)
+     index = UpdateBoxDataFragmentRange(line_box, index, &fragmented_boxes);
+ 
+@@ -550,7 +572,7 @@ void NGInlineLayoutStateStack::UpdateAfterReorder(
+ unsigned NGInlineLayoutStateStack::UpdateBoxDataFragmentRange(
+     NGLogicalLineItems* line_box,
+     unsigned index,
+-    Vector<BoxData>* fragmented_boxes) {
++    HeapVector<BoxData>* fragmented_boxes) {
+   // Find the first line box item that should create a box fragment.
+   for (; index < line_box->size(); index++) {
+     NGLogicalLineItem* start = &(*line_box)[index];
+@@ -606,7 +628,7 @@ unsigned NGInlineLayoutStateStack::UpdateBoxDataFragmentRange(
+ }
+ 
+ void NGInlineLayoutStateStack::UpdateFragmentedBoxDataEdges(
+-    Vector<BoxData>* fragmented_boxes) {
++    HeapVector<BoxData>* fragmented_boxes) {
+   DCHECK(!fragmented_boxes->empty());
+   // Append in the descending order of |fragmented_box_data_index| because the
+   // indices will change as boxes are inserted into |box_data_list_|.
+@@ -649,7 +671,7 @@ void NGInlineLayoutStateStack::UpdateFragmentedBoxDataEdges(
+ }
+ 
+ void NGInlineLayoutStateStack::BoxData::UpdateFragmentEdges(
+-    Vector<BoxData, 4>& list) {
++    HeapVector<BoxData, 4>& list) {
+   DCHECK(fragmented_box_data_index);
+ 
+   // If this box has the right edge, move it to the last fragment.
+@@ -677,8 +699,9 @@ LayoutUnit NGInlineLayoutStateStack::ComputeInlinePositions(
+     child.rect.offset.inline_offset += position;
+     // Box margins/boders/paddings will be processed later.
+     // TODO(kojii): we could optimize this if the reordering did not occur.
+-    if (!child.HasFragment())
++    if (!child.HasFragment() && !child.IsRubyLinePlaceholder()) {
+       continue;
++    }
+     position += child.inline_size;
+   }
+ 
+@@ -750,11 +773,19 @@ LayoutUnit NGInlineLayoutStateStack::ComputeInlinePositions(
+   return position;
+ }
+ 
++void NGInlineLayoutStateStack::MoveBoxDataInBlockDirection(LayoutUnit diff) {
++  for (BoxData& box_data : box_data_list_) {
++    box_data.rect.offset.block_offset += diff;
++  }
++}
++
+ void NGInlineLayoutStateStack::ApplyRelativePositioning(
+     const NGConstraintSpace& space,
+-    NGLogicalLineItems* line_box) {
+-  if (box_data_list_.empty())
++    NGLogicalLineItems* line_box,
++    const LogicalOffset* parent_offset) {
++  if (box_data_list_.empty() && ruby_column_list_.empty() && !parent_offset) {
+     return;
++  }
+ 
+   // The final position of any inline boxes, (<span>, etc) are stored on
+   // |BoxData::rect|. As we don't have a mapping from |NGLogicalLineItem| to
+@@ -762,6 +793,13 @@ void NGInlineLayoutStateStack::ApplyRelativePositioning(
+   // final adjustment at the end of this function.
+   Vector<LogicalOffset, 32> accumulated_offsets(line_box->size());
+ 
++  if (parent_offset) {
++    for (unsigned index = 0; index < line_box->size(); ++index) {
++      (*line_box)[index].rect.offset += *parent_offset;
++      accumulated_offsets[index] = *parent_offset;
++    }
++  }
++
+   for (BoxData& box_data : box_data_list_) {
+     unsigned start = box_data.fragment_start;
+     unsigned end = box_data.fragment_end;
+@@ -779,13 +817,26 @@ void NGInlineLayoutStateStack::ApplyRelativePositioning(
+   // Apply the final accumulated relative position offset for each box.
+   for (BoxData& box_data : box_data_list_)
+     box_data.rect.offset += accumulated_offsets[box_data.fragment_start];
++
++  for (auto& logical_column : ruby_column_list_) {
++    logical_column->state_stack.ApplyRelativePositioning(
++        space, logical_column->annotation_items,
++        &accumulated_offsets[logical_column->start_index]);
++  }
+ }
+ 
+ void NGInlineLayoutStateStack::CreateBoxFragments(
+     const NGConstraintSpace& space,
+     NGLogicalLineItems* line_box,
+     bool is_opaque) {
+-  DCHECK(!box_data_list_.empty());
++  for (auto& logical_column : ruby_column_list_) {
++    logical_column->state_stack.CreateBoxFragments(
++        space, logical_column->annotation_items, /* is_opaque */ false);
++  }
++
++  if (!HasBoxFragments()) {
++    return;
++  }
+ 
+   for (BoxData& box_data : box_data_list_) {
+     unsigned start = box_data.fragment_start;
+@@ -847,14 +898,7 @@ const NGLayoutResult* NGInlineLayoutStateStack::BoxData::CreateBoxFragment(
+         {true, has_line_right_edge, true, has_line_left_edge});
+   }
+ 
+-  for (unsigned i = fragment_start; i < fragment_end; i++) {
+-    NGLogicalLineItem& child = (*line_box)[i];
+-
+-    // If |child| has a fragment created by previous |CreateBoxFragment|, skip
+-    // children that were already added to |child|.
+-    if (child.children_count)
+-      i += child.children_count - 1;
+-
++  auto handle_box_child = [&](NGLogicalLineItem& child) {
+     if (child.out_of_flow_positioned_box) {
+       DCHECK(item->GetLayoutObject()->IsLayoutInline());
+       NGBlockNode oof_box(
+@@ -868,7 +912,7 @@ const NGLayoutResult* NGInlineLayoutStateStack::BoxData::CreateBoxFragment(
+       box.AddOutOfFlowInlineChildCandidate(oof_box, static_offset,
+                                            child.container_direction);
+       child.out_of_flow_positioned_box = nullptr;
+-      continue;
++      return;
+     }
+ 
+     // Propagate any OOF-positioned descendants from any atomic-inlines, etc.
+@@ -881,11 +925,36 @@ const NGLayoutResult* NGInlineLayoutStateStack::BoxData::CreateBoxFragment(
+           ComputeRelativeOffsetForOOFInInline(
+               space, child.PhysicalFragment()->Style()));
+     }
++  };
++
++  for (unsigned i = fragment_start; i < fragment_end; i++) {
++    NGLogicalLineItem& child = (*line_box)[i];
++
++    // If |child| has a fragment created by previous |CreateBoxFragment|, skip
++    // children that were already added to |child|.
++    if (child.children_count) {
++      i += child.children_count - 1;
++    }
++
++    handle_box_child(child);
+ 
+     // |NGFragmentItems| has a flat list of all descendants, except
+     // OOF-positioned descendants. We still create a |NGPhysicalBoxFragment|,
+     // but don't add children to it and keep them in the flat list.
+   }
++  if (ruby_column_list) {
++    for (auto& logical_column : *ruby_column_list) {
++      for (unsigned i = 0; i < logical_column->annotation_items->size(); ++i) {
++        NGLogicalLineItem& child = (*logical_column->annotation_items)[i];
++        if (child.children_count) {
++          i += child.children_count - 1;
++        }
++        handle_box_child(child);
++      }
++      logical_column->annotation_items->SetPropagated();
++    }
++    ruby_column_list.Clear();
++  }
+ 
+   // Inline boxes that produce DisplayItemClient should do full paint
+   // invalidations.
+@@ -895,6 +964,10 @@ const NGLayoutResult* NGInlineLayoutStateStack::BoxData::CreateBoxFragment(
+   return box.ToInlineBoxFragment();
+ }
+ 
++void NGInlineLayoutStateStack::BoxData::Trace(Visitor* visitor) const {
++  visitor->Trace(ruby_column_list);
++}
++
+ NGInlineLayoutStateStack::PositionPending
+ NGInlineLayoutStateStack::ApplyBaselineShift(NGInlineBoxState* box,
+                                              NGLogicalLineItems* line_box,
+@@ -1176,6 +1249,11 @@ FontHeight NGInlineLayoutStateStack::MetricsForTopAndBottomAlign(
    return max;
  }
  

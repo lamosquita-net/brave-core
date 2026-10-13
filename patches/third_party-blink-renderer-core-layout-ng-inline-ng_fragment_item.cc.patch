@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_fragment_item.cc b/third_party/blink/renderer/core/layout/ng/inline/ng_fragment_item.cc
-index 6e33b5d1f80097453bea6eb680c74d19571ba418..f784de8cff9f51817a750b0392f8f33b598cbc70 100644
+index 6e33b5d1f80097453bea6eb680c74d19571ba418..3bd782da5aabdaa13f7d15f5ff2c56c68139216c 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_fragment_item.cc
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_fragment_item.cc
 @@ -17,6 +17,7 @@
@@ -36,3 +36,52 @@ index 6e33b5d1f80097453bea6eb680c74d19571ba418..f784de8cff9f51817a750b0392f8f33b
  NGFragmentItem::NGFragmentItem(const NGPhysicalBoxFragment& box,
                                 TextDirection resolved_direction)
      : box_(&box, /* descendants_count */ 1),
+@@ -158,6 +178,8 @@ NGFragmentItem::NGFragmentItem(NGLogicalLineItem&& line_item,
+           line_item.text_content,
+           ToPhysicalSize(line_item.MarginSize(), writing_mode),
+           line_item.is_hidden_for_paint);
++      has_over_annotation_ = line_item.has_over_annotation;
++      has_under_annotation_ = line_item.has_under_annotation;
+       return;
+     }
+ 
+@@ -166,6 +188,8 @@ NGFragmentItem::NGFragmentItem(NGLogicalLineItem&& line_item,
+                        std::move(line_item.shape_result), line_item.text_offset,
+                        ToPhysicalSize(line_item.MarginSize(), writing_mode),
+                        line_item.is_hidden_for_paint);
++    has_over_annotation_ = line_item.has_over_annotation;
++    has_under_annotation_ = line_item.has_under_annotation;
+     return;
+   }
+ 
+@@ -204,6 +228,8 @@ NGFragmentItem::NGFragmentItem(const NGFragmentItem& source)
+       style_variant_(source.style_variant_),
+       is_hidden_for_paint_(source.is_hidden_for_paint_),
+       text_direction_(source.text_direction_),
++      has_over_annotation_(source.has_over_annotation_),
++      has_under_annotation_(source.has_under_annotation_),
+       ink_overflow_type_(static_cast<unsigned>(NGInkOverflow::Type::kNotSet)),
+       is_dirty_(source.is_dirty_),
+       is_last_for_node_(source.is_last_for_node_) {
+@@ -249,6 +275,8 @@ NGFragmentItem::NGFragmentItem(NGFragmentItem&& source)
+       style_variant_(source.style_variant_),
+       is_hidden_for_paint_(source.is_hidden_for_paint_),
+       text_direction_(source.text_direction_),
++      has_over_annotation_(source.has_over_annotation_),
++      has_under_annotation_(source.has_under_annotation_),
+       ink_overflow_type_(source.ink_overflow_type_),
+       is_dirty_(source.is_dirty_),
+       is_last_for_node_(source.is_last_for_node_) {
+@@ -923,6 +951,12 @@ void NGFragmentItem::RecalcInkOverflow(
+   }
+ 
+   if (Type() == kLine) {
++    if (!LineBoxFragment()) {
++      // NGInlinePaintContext::ScopedLineBox doesn't support nested scopes.
++      // Nested kLine items are placed at the end of the base line. So it's ok
++      // to clear the current line before handling nested lines.
++      inline_context->ClearLineBox();
++    }
+     NGInlinePaintContext::ScopedLineBox scoped_line_box(cursor, inline_context);
+     PhysicalRect contents_rect =
+         RecalcInkOverflowForDescendantsOf(cursor, inline_context);

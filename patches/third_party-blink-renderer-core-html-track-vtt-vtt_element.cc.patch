@@ -1,0 +1,23 @@
+diff --git a/third_party/blink/renderer/core/html/track/vtt/vtt_element.cc b/third_party/blink/renderer/core/html/track/vtt/vtt_element.cc
+index 55c4c5fb5f93645b3367d02bb661b53615c99a5c..18b7213a6c6bb2bc73513868307cb6131a8b6b46 100644
+--- a/third_party/blink/renderer/core/html/track/vtt/vtt_element.cc
++++ b/third_party/blink/renderer/core/html/track/vtt/vtt_element.cc
+@@ -147,11 +147,13 @@ void VTTElement::Trace(Visitor* visitor) const {
+ }
+ 
+ LayoutObject* VTTElement::CreateLayoutObject(const ComputedStyle& style) {
+-  switch (web_vtt_node_type_) {
+-    case kVTTNodeTypeRuby:
+-      return MakeGarbageCollected<LayoutRubyAsInline>(this);
+-    case kVTTNodeTypeRubyText:
+-      return MakeGarbageCollected<LayoutNGRubyText>(this);
++  if (!RuntimeEnabledFeatures::VttCueDisplayRubyEnabled()) {
++    switch (web_vtt_node_type_) {
++      case kVTTNodeTypeRuby:
++        return MakeGarbageCollected<LayoutRubyAsInline>(this);
++      case kVTTNodeTypeRubyText:
++        return MakeGarbageCollected<LayoutNGRubyText>(this);
++    }
+   }
+   return LayoutObject::CreateObject(this, style);
+ }

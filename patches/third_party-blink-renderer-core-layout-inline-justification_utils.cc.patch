@@ -1,15 +1,16 @@
 diff --git a/third_party/blink/renderer/core/layout/inline/justification_utils.cc b/third_party/blink/renderer/core/layout/inline/justification_utils.cc
 new file mode 100644
-index 0000000000000000000000000000000000000000..f980f320e4447bf79a72151bcb82daf63c4d51ab
+index 0000000000000000000000000000000000000000..1580ab5321ff2f8f9497e5ffc3b8753092c148f1
 --- /dev/null
 +++ b/third_party/blink/renderer/core/layout/inline/justification_utils.cc
-@@ -0,0 +1,176 @@
+@@ -0,0 +1,336 @@
 +// Copyright 2016 The Chromium Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
 +
 +#include "third_party/blink/renderer/core/layout/inline/justification_utils.h"
 +
++#include "third_party/blink/renderer/core/layout/inline/inline_item_result_ruby_column.h"
 +#include "third_party/blink/renderer/core/layout/ng/inline/ng_inline_item.h"
 +#include "third_party/blink/renderer/core/layout/ng/inline/ng_line_info.h"
 +#include "third_party/blink/renderer/platform/fonts/shaping/shape_result_spacing.h"
@@ -29,13 +30,13 @@ index 0000000000000000000000000000000000000000..f980f320e4447bf79a72151bcb82daf6
 +                              const NGInlineItemResults& results,
 +                              unsigned line_text_start_offset,
 +                              unsigned end_offset,
-+                              bool may_have_text_combine) {
++                              bool may_have_text_combine_or_ruby) {
 +  if (results.empty()) {
 +    return String();
 +  }
 +
 +  StringBuilder line_text_builder;
-+  if (UNLIKELY(may_have_text_combine)) {
++  if (UNLIKELY(may_have_text_combine_or_ruby)) {
 +    for (const NGInlineItemResult& item_result : results) {
 +      if (item_result.StartOffset() >= end_offset) {
 +        break;
@@ -48,6 +49,27 @@ index 0000000000000000000000000000000000000000..f980f320e4447bf79a72151bcb82daf6
 +        // Note: The spec[1] says we should treat combined text as U+FFFC.
 +        // [1] https://drafts.csswg.org/css-writing-modes-3/#text-combine-layout
 +        line_text_builder.Append(kTextCombineItemMarker);
++        continue;
++      }
++      if (item_result.item->Type() == NGInlineItem::kOpenRubyColumn &&
++          item_result.ruby_column) {
++        line_text_builder.Append(StringView(text_content,
++                                            item_result.item->StartOffset(),
++                                            item_result.item->Length()));
++        // Add the ruby-base results only if the ruby-base is wider than its
++        // ruby-text. Shorter ruby-bases don't participate in the justification
++        // for the whole line.
++        if (item_result.inline_size ==
++            item_result.ruby_column->base_line.Width()) {
++          const NGLineInfo& base_line = item_result.ruby_column->base_line;
++          const NGInlineItemResults& base_results = base_line.Results();
++          if (!base_results.empty()) {
++            line_text_builder.Append(BuildJustificationText(
++                text_content, base_results, base_results.front().StartOffset(),
++                base_line.EndOffsetForJustify(),
++                base_line.MayHaveTextCombineOrRubyItem()));
++          }
++        }
 +        continue;
 +      }
 +      line_text_builder.Append(StringView(
@@ -70,14 +92,29 @@ index 0000000000000000000000000000000000000000..f980f320e4447bf79a72151bcb82daf6
 +  return line_text_builder.ReleaseString();
 +}
 +
-+void JustifyResults(const String& line_text,
++void JustifyResults(const String& text_content,
++                    String line_text,
 +                    unsigned line_text_start_offset,
 +                    ShapeResultSpacing<String>& spacing,
 +                    NGInlineItemResults& results) {
-+  for (NGInlineItemResult& item_result : results) {
++  for (wtf_size_t i = 0; i < results.size(); ++i) {
++    NGInlineItemResult& item_result = results[i];
 +    if (item_result.has_only_trailing_spaces)
 +      break;
 +    if (item_result.shape_result) {
++#if DCHECK_IS_ON()
++      // This `if` is necessary for external/wpt/css/css-text/text-justify/
++      // text-justify-and-trailing-spaces-*.html.
++      if (item_result.StartOffset() - line_text_start_offset +
++              item_result.Length() <=
++          line_text.length()) {
++        DCHECK_EQ(StringView(text_content, item_result.StartOffset(),
++                             item_result.Length()),
++                  StringView(line_text,
++                             item_result.StartOffset() - line_text_start_offset,
++                             item_result.Length()));
++      }
++#endif
 +      scoped_refptr<ShapeResult> shape_result =
 +          item_result.shape_result->CreateShapeResult();
 +      DCHECK_GE(item_result.StartOffset(), line_text_start_offset);
@@ -108,40 +145,126 @@ index 0000000000000000000000000000000000000000..f980f320e4447bf79a72151bcb82daf6
 +        // |spacing_before| is non-zero only before CJK characters.
 +        DCHECK_EQ(spacing_before, 0.0f);
 +      }
++    } else if (item_result.item->Type() == NGInlineItem::kOpenRubyColumn &&
++               item_result.ruby_column) {
++      NGLineInfo& base_line = item_result.ruby_column->base_line;
++      if (item_result.inline_size == base_line.Width()) {
++        JustifyResults(text_content, line_text, line_text_start_offset, spacing,
++                       *base_line.MutableResults());
++        base_line.SetWidth(base_line.AvailableWidth(),
++                           base_line.ComputeWidth());
++        item_result.inline_size =
++            std::max(item_result.inline_size, base_line.Width());
++      }
++      if (i + 1 < results.size()) {
++        // Adjust line_text and line_text_start_offset because line_text is
++        // intermittent due to ruby annotations.
++        wtf_size_t next_start_offset = results[i + 1].StartOffset();
++        if (item_result.inline_size == base_line.Width()) {
++          line_text = line_text.Substring(base_line.EndTextOffset() -
++                                          line_text_start_offset);
++        } else {
++          // BuildJustificationText() didn't produce any text for this ruby
++          // column. We drop the text prior to this column.
++          line_text = line_text.Substring(base_line.StartOffset() -
++                                          line_text_start_offset);
++        }
++        line_text_start_offset = next_start_offset;
++      }
 +    }
 +  }
 +}
 +
-+}  // namespace
++class ExpandableItemsFinder {
++  STACK_ALLOCATED();
 +
-+absl::optional<LayoutUnit> ApplyJustification(LayoutUnit space,
-+                                              JustificationTarget target,
-+                                              NGLineInfo* line_info) {
++ public:
++  void Find(NGLogicalLineItems::iterator begin,
++            NGLogicalLineItems::iterator end) {
++    for (auto iter = begin; iter != end; ++iter) {
++      NGLogicalLineItem& item = *iter;
++      if (item.shape_result || item.layout_result) {
++        last_item_ = &item;
++        if (!first_item_) {
++          first_item_ = &item;
++        }
++      } else if (item.IsRubyLinePlaceholder()) {
++        last_placeholder_item_ = &item;
++        if (!first_placeholder_item_) {
++          first_placeholder_item_ = &item;
++        }
++      }
++    }
++  }
++
++  NGLogicalLineItem* FirstExpandable() const {
++    return first_item_ ? first_item_ : first_placeholder_item_;
++  }
++  NGLogicalLineItem* LastExpandable() const {
++    return last_item_ ? last_item_ : last_placeholder_item_;
++  }
++
++ private:
++  // The first or the last NGLogicalLineItem which has a ShapeResult or is an
++  // atomic-inline.
++  NGLogicalLineItem* first_item_ = nullptr;
++  NGLogicalLineItem* last_item_ = nullptr;
++  // The first or the last kRubyLinePlaceholder.
++  NGLogicalLineItem* first_placeholder_item_ = nullptr;
++  NGLogicalLineItem* last_placeholder_item_ = nullptr;
++};
++
++void ApplyLeftAndRightExpansion(LayoutUnit left_expansion,
++                                LayoutUnit right_expansion,
++                                NGLogicalLineItem& item) {
++  if (item.shape_result) {
++    scoped_refptr<ShapeResult> shape_result =
++        item.shape_result->CreateShapeResult();
++    shape_result->ApplyLeadingExpansion(left_expansion);
++    shape_result->ApplyTrailingExpansion(right_expansion);
++    item.inline_size += left_expansion + right_expansion;
++    item.shape_result = ShapeResultView::Create(shape_result.get());
++  } else if (item.layout_result) {
++    item.inline_size += left_expansion + right_expansion;
++    item.rect.offset.inline_offset += left_expansion;
++  } else {
++    DCHECK(item.IsRubyLinePlaceholder());
++    item.inline_size += left_expansion + right_expansion;
++    item.margin_line_left += left_expansion;
++  }
++}
++
++absl::optional<LayoutUnit> ApplyJustificationInternal(
++    LayoutUnit space,
++    JustificationTarget target,
++    const NGLineInfo& line_info,
++    NGInlineItemResults* results) {
 +  // Empty lines should align to start.
-+  if (line_info->IsEmptyLine())
++  if (line_info.IsEmptyLine())
 +    return absl::nullopt;
 +
 +  // Justify the end of visible text, ignoring preserved trailing spaces.
-+  unsigned end_offset = line_info->EndOffsetForJustify();
++  unsigned end_offset = line_info.EndOffsetForJustify();
 +
 +  // If this line overflows, fallback to 'text-align: start'.
 +  if (space <= 0)
 +    return absl::nullopt;
 +
 +  // Can't justify an empty string.
-+  if (end_offset == line_info->StartOffset())
++  if (end_offset == line_info.StartOffset())
 +    return absl::nullopt;
 +
-+  // Note: |line_info->StartOffset()| can be different from
++  // Note: |line_info.StartOffset()| can be different from
 +  // |NGItemsResults[0].StartOffset()|, e.g. <b><input> <input></b> when
 +  // line break before space (leading space). See http://crbug.com/1240791
 +  const unsigned line_text_start_offset =
-+      line_info->Results().front().StartOffset();
++      line_info.Results().front().StartOffset();
 +
 +  // Construct the line text to compute spacing for.
++  String text_content = line_info.ItemsData().text_content;
 +  String line_text = BuildJustificationText(
-+      line_info->ItemsData().text_content, line_info->Results(),
-+      line_text_start_offset, end_offset, line_info->MayHaveTextCombineItem());
++      text_content, line_info.Results(), line_text_start_offset, end_offset,
++      line_info.MayHaveTextCombineOrRubyItem());
 +  if (line_text.empty()) {
 +    return absl::nullopt;
 +  }
@@ -149,7 +272,7 @@ index 0000000000000000000000000000000000000000..f980f320e4447bf79a72151bcb82daf6
 +  // Compute the spacing to justify.
 +  ShapeResultSpacing<String> spacing(line_text,
 +                                     target == JustificationTarget::kSvgText);
-+  spacing.SetExpansion(space, line_info->BaseDirection());
++  spacing.SetExpansion(space, line_info.BaseDirection());
 +  const bool is_ruby = target == JustificationTarget::kRubyText ||
 +                       target == JustificationTarget::kRubyBase;
 +  if (!spacing.HasExpansion()) {
@@ -168,15 +291,52 @@ index 0000000000000000000000000000000000000000..f980f320e4447bf79a72151bcb82daf6
 +    // For ruby text,  inset it by no more than a full-width ruby character on
 +    // each side.
 +    if (target == JustificationTarget::kRubyText) {
-+      inset =
-+          std::min(LayoutUnit(2 * line_info->LineStyle().FontSize()), inset);
++      inset = std::min(LayoutUnit(2 * line_info.LineStyle().FontSize()), inset);
 +    }
-+    spacing.SetExpansion(space - inset, line_info->BaseDirection());
++    spacing.SetExpansion(space - inset, line_info.BaseDirection());
 +  }
 +
-+  JustifyResults(line_text, line_text_start_offset, spacing,
-+                 *line_info->MutableResults());
++  if (results) {
++    DCHECK_EQ(&line_info.Results(), results);
++    JustifyResults(text_content, line_text, line_text_start_offset, spacing,
++                   *results);
++  }
 +  return inset / 2;
++}
++
++}  // namespace
++
++absl::optional<LayoutUnit> ApplyJustification(LayoutUnit space,
++                                              JustificationTarget target,
++                                              NGLineInfo* line_info) {
++  return ApplyJustificationInternal(space, target, *line_info,
++                                    line_info->MutableResults());
++}
++
++absl::optional<LayoutUnit> ComputeRubyBaseInset(LayoutUnit space,
++                                                const NGLineInfo& line_info) {
++  DCHECK(line_info.IsRubyBase());
++  return ApplyJustificationInternal(space, JustificationTarget::kRubyBase,
++                                    line_info, nullptr);
++}
++
++bool ApplyLeftAndRightExpansion(LayoutUnit left_expansion,
++                                LayoutUnit right_expansion,
++                                NGLogicalLineItems::iterator begin,
++                                NGLogicalLineItems::iterator end) {
++  if (!left_expansion && !right_expansion) {
++    return true;
++  }
++  ExpandableItemsFinder finder;
++  finder.Find(begin, end);
++  NGLogicalLineItem* first_expandable = finder.FirstExpandable();
++  NGLogicalLineItem* last_expandable = finder.LastExpandable();
++  if (first_expandable && last_expandable) {
++    ApplyLeftAndRightExpansion(left_expansion, LayoutUnit(), *first_expandable);
++    ApplyLeftAndRightExpansion(LayoutUnit(), right_expansion, *last_expandable);
++    return true;
++  }
++  return false;
 +}
 +
 +}  // namespace blink

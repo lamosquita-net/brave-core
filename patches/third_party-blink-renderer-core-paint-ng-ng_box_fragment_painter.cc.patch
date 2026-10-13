@@ -1,8 +1,27 @@
 diff --git a/third_party/blink/renderer/core/paint/ng/ng_box_fragment_painter.cc b/third_party/blink/renderer/core/paint/ng/ng_box_fragment_painter.cc
-index d1c02787f5569779f0e2b01c06678ad5520ac17a..0b0d573c50dbfe064a492c6f9c358a093ec4ceb3 100644
+index d1c02787f5569779f0e2b01c06678ad5520ac17a..0db5b62ed91b6a84db05e72dbedb42048d505cf2 100644
 --- a/third_party/blink/renderer/core/paint/ng/ng_box_fragment_painter.cc
 +++ b/third_party/blink/renderer/core/paint/ng/ng_box_fragment_painter.cc
-@@ -1880,6 +1880,10 @@ NGPhysicalBoxStrut NGBoxFragmentPainter::ComputePadding() const {
+@@ -1554,8 +1554,16 @@ void NGBoxFragmentPainter::PaintInlineItems(const PaintInfo& paint_info,
+         cursor->MoveToNextSkippingChildren();
+         break;
+       case NGFragmentItem::kLine:
+-        NOTREACHED();
+-        cursor->MoveToNext();
++        // Nested kLine items are used for ruby annotations.
++        if (RuntimeEnabledFeatures::RubyLineBreakableEnabled()) {
++          NGInlineCursor line_box_cursor = cursor->CursorForDescendants();
++          PaintInlineItems(paint_info, paint_offset, parent_offset,
++                           &line_box_cursor);
++          cursor->MoveToNextSkippingChildren();
++        } else {
++          NOTREACHED();
++          cursor->MoveToNext();
++        }
+         break;
+       case NGFragmentItem::kInvalid:
+         NOTREACHED_NORETURN();
+@@ -1880,6 +1888,10 @@ NGPhysicalBoxStrut NGBoxFragmentPainter::ComputePadding() const {
    return PhysicalFragment().Padding();
  }
  
@@ -13,3 +32,42 @@ index d1c02787f5569779f0e2b01c06678ad5520ac17a..0b0d573c50dbfe064a492c6f9c358a09
  BoxPainterBase::FillLayerInfo NGBoxFragmentPainter::GetFillLayerInfo(
      const Color& color,
      const FillLayer& bg_layer,
+@@ -2465,12 +2477,20 @@ bool NGBoxFragmentPainter::HitTestItemsChildren(
+         return true;
+     } else if (item->Type() == NGFragmentItem::kLine) {
+       const NGPhysicalLineBoxFragment* child_fragment = item->LineBoxFragment();
+-      DCHECK(child_fragment);
+-      const PhysicalOffset child_offset =
+-          hit_test.inline_root_offset + item->OffsetInContainerFragment();
+-      if (HitTestLineBoxFragment(hit_test, *child_fragment, cursor,
+-                                 child_offset))
+-        return true;
++      if (child_fragment) {  // Top-level kLine items.
++        const PhysicalOffset child_offset =
++            hit_test.inline_root_offset + item->OffsetInContainerFragment();
++        if (HitTestLineBoxFragment(hit_test, *child_fragment, cursor,
++                                   child_offset)) {
++          return true;
++        }
++      } else {  // Nested kLine items for ruby annotations.
++        DCHECK(RuntimeEnabledFeatures::RubyLineBreakableEnabled());
++        if (HitTestItemsChildren(hit_test, container,
++                                 cursor.CursorForDescendants())) {
++          return true;
++        }
++      }
+     } else if (item->Type() == NGFragmentItem::kBox) {
+       if (HitTestChildBoxItem(hit_test, container, *item, cursor))
+         return true;
+@@ -2608,9 +2628,9 @@ bool NGBoxFragmentPainter::HitTestFloatingChildItems(
+       DCHECK(item->GetLayoutObject()->IsLayoutInline());
+     } else if (item->Type() == NGFragmentItem::kLine) {
+       const NGPhysicalLineBoxFragment* child_line = item->LineBoxFragment();
+-      DCHECK(child_line);
+-      if (!child_line->HasFloatingDescendantsForPaint())
++      if (child_line && !child_line->HasFloatingDescendantsForPaint()) {
+         continue;
++      }
+     } else {
+       continue;
+     }

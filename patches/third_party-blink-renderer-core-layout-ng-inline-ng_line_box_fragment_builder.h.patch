@@ -1,0 +1,30 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_line_box_fragment_builder.h b/third_party/blink/renderer/core/layout/ng/inline/ng_line_box_fragment_builder.h
+index dc4706935865b762d8b35f6d04ffa990074bc984..34acd66a7476ad8e386a400671266ce90fd715e6 100644
+--- a/third_party/blink/renderer/core/layout/ng/inline/ng_line_box_fragment_builder.h
++++ b/third_party/blink/renderer/core/layout/ng/inline/ng_line_box_fragment_builder.h
+@@ -21,6 +21,7 @@ namespace blink {
+ 
+ class ComputedStyle;
+ class NGInlineBreakToken;
++class LogicalLineContainer;
+ class NGLogicalLineItems;
+ 
+ class CORE_EXPORT NGLineBoxFragmentBuilder final : public NGFragmentBuilder {
+@@ -87,7 +88,7 @@ class CORE_EXPORT NGLineBoxFragmentBuilder final : public NGFragmentBuilder {
+   // Propagate data in |ChildList| without adding them to this builder. When
+   // adding children as fragment items, they appear in the container, but there
+   // are some data that should be propagated through line box fragments.
+-  void PropagateChildrenData(NGLogicalLineItems&);
++  void PropagateChildrenData(LogicalLineContainer& container);
+ 
+   void SetClearanceAfterLine(LayoutUnit clearance) {
+     clearance_after_line_ = clearance;
+@@ -97,6 +98,8 @@ class CORE_EXPORT NGLineBoxFragmentBuilder final : public NGFragmentBuilder {
+   const NGLayoutResult* ToLineBoxFragment();
+ 
+  private:
++  void PropagateChildrenDataFromLineItems(NGLogicalLineItems& children);
++
+   absl::optional<LayoutUnit> line_box_bfc_block_offset_;
+   LayoutUnit annotation_block_offset_adjustment_;
+   FontHeight metrics_ = FontHeight::Empty();

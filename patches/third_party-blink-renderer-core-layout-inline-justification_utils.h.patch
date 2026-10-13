@@ -1,9 +1,9 @@
 diff --git a/third_party/blink/renderer/core/layout/inline/justification_utils.h b/third_party/blink/renderer/core/layout/inline/justification_utils.h
 new file mode 100644
-index 0000000000000000000000000000000000000000..a21eb4fe539b28b595e539cba1142edf11907426
+index 0000000000000000000000000000000000000000..1208dc8ed0c47a3fb2e64f94db8ddc658bafa5a4
 --- /dev/null
 +++ b/third_party/blink/renderer/core/layout/inline/justification_utils.h
-@@ -0,0 +1,31 @@
+@@ -0,0 +1,44 @@
 +// Copyright 2016 The Chromium Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -12,6 +12,7 @@ index 0000000000000000000000000000000000000000..a21eb4fe539b28b595e539cba1142edf
 +#define THIRD_PARTY_BLINK_RENDERER_CORE_LAYOUT_INLINE_JUSTIFICATION_UTILS_H_
 +
 +#include "third_party/abseil-cpp/absl/types/optional.h"
++#include "third_party/blink/renderer/core/layout/ng/inline/ng_logical_line_item.h"
 +#include "third_party/blink/renderer/platform/geometry/layout_unit.h"
 +
 +namespace blink {
@@ -31,6 +32,18 @@ index 0000000000000000000000000000000000000000..a21eb4fe539b28b595e539cba1142edf
 +absl::optional<LayoutUnit> ApplyJustification(LayoutUnit space,
 +                                              JustificationTarget target,
 +                                              NGLineInfo* line_info);
++
++// Compute `inset` value without applying justification.
++// `line_info.IsRubyBase()` must be true.
++absl::optional<LayoutUnit> ComputeRubyBaseInset(LayoutUnit space,
++                                                const NGLineInfo& line_info);
++
++// Add spaces to a part of a line. This works only for ruby-base and ruby-text
++// for now. Returns false if we couldn't expand the line.
++bool ApplyLeftAndRightExpansion(LayoutUnit leading_expansion,
++                                LayoutUnit trailing_expansion,
++                                NGLogicalLineItems::iterator begin,
++                                NGLogicalLineItems::iterator end);
 +
 +}  // namespace blink
 +

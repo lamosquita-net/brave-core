@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/css_properties.json5 b/third_party/blink/renderer/core/css/css_properties.json5
-index 871edc0924403a04bf16f4d5602f421d3882473c..e277707a7a010a00cf20180bca42d275ccc78cdd 100644
+index 871edc0924403a04bf16f4d5602f421d3882473c..fb2d1b705ea89a80777d332ea8e1bc63260dd7a6 100644
 --- a/third_party/blink/renderer/core/css/css_properties.json5
 +++ b/third_party/blink/renderer/core/css/css_properties.json5
 @@ -991,6 +991,19 @@
@@ -196,7 +196,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..e277707a7a010a00cf20180bca42d275
      {
        name: "-webkit-mask-clip",
        property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
-@@ -5769,14 +5829,45 @@
+@@ -5769,13 +5829,44 @@
          fill_type: "Clip",
        },
      },
@@ -222,8 +222,8 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..e277707a7a010a00cf20180bca42d275
        style_builder_template_args: {
 -        fill_type: "Composite",
 +        fill_type: "CompositingOperator",
-       },
-     },
++      },
++    },
 +    {
 +      name: "mask-image",
 +      property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
@@ -231,7 +231,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..e277707a7a010a00cf20180bca42d275
 +      style_builder_template_args: {
 +        fill_type: "Image",
 +        fill_type_getter: "GetImage"
-+      },
+       },
 +      runtime_flag: "CSSMaskingInterop",
 +    },
 +    {
@@ -239,10 +239,9 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..e277707a7a010a00cf20180bca42d275
 +      alternative_of: "-webkit-mask-image",
 +      alias_for: "mask-image",
 +      runtime_flag: "CSSMaskingInterop",
-+    },
+     },
      {
        name: "-webkit-mask-image",
-       property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
 @@ -5787,6 +5878,21 @@
          fill_type_getter: "GetImage"
        },
@@ -276,8 +275,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..e277707a7a010a00cf20180bca42d275
        style_builder_template_args: {
 -        fill_type: "RepeatX",
 +        fill_type: "Repeat",
-       },
--      computable: false,
++      },
 +      runtime_flag: "CSSMaskingInterop",
 +    },
 +    {
@@ -285,26 +283,27 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..e277707a7a010a00cf20180bca42d275
 +      alternative_of: "-webkit-mask-repeat",
 +      alias_for: "mask-repeat",
 +      runtime_flag: "CSSMaskingInterop",
-     },
-     {
--      name: "-webkit-mask-repeat-y",
++    },
++    {
 +      name: "-webkit-mask-repeat",
 +      property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
-       style_builder_template: "mask_layer",
-       style_builder_template_args: {
--        fill_type: "RepeatY",
++      style_builder_template: "mask_layer",
++      style_builder_template_args: {
 +        fill_type: "Repeat",
        },
 -      computable: false,
-+    },
-+    {
+     },
+     {
+-      name: "-webkit-mask-repeat-y",
 +      name: "mask-size",
 +      property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
 +      interpolable: true,
-+      style_builder_template: "mask_layer",
-+      style_builder_template_args: {
+       style_builder_template: "mask_layer",
+       style_builder_template_args: {
+-        fill_type: "RepeatY",
 +        fill_type: "Size",
-+      },
+       },
+-      computable: false,
 +      runtime_flag: "CSSMaskingInterop",
 +    },
 +    {
@@ -315,6 +314,33 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..e277707a7a010a00cf20180bca42d275
      },
      {
        name: "-webkit-mask-size",
+@@ -5887,21 +6016,21 @@
+       name: "-webkit-ruby-position",
+       property_methods: ["CSSValueFromComputedStyleInternal"],
+       inherited: true,
+-      field_group: "*",
+-      field_template: "keyword",
+-      keywords: ["before", "after"],
+-      default_value: "before",
+       type_name: "RubyPosition",
+       converter: "ConvertRubyPosition",
+       computable: false,
++      surrogate_for: "ruby-position",
+     },
+     {
+       name: "ruby-position",
+       property_methods: ["CSSValueFromComputedStyleInternal"],
+       inherited: true,
++      field_group: "*",
++      field_template: "keyword",
++      keywords: ["over", "under"],
++      default_value: "over",
+       type_name: "RubyPosition",
+       converter: "ConvertRubyPosition",
+-      surrogate_for: "-webkit-ruby-position",
+     },
+     {
+       name: "-webkit-tap-highlight-color",
 @@ -6863,7 +6992,7 @@
        name: "background",
        longhands: [

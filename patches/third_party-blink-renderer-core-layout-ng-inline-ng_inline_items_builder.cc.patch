@@ -1,32 +1,71 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_items_builder.cc b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_items_builder.cc
-index a81fab13f92986aa84d18e0713423db458479c4c..0852ce2d1d5e5ba69e82777e5bad33b2135c7ff7 100644
+index a81fab13f92986aa84d18e0713423db458479c4c..a91e8f7dffced2565ec5762a3a9a6557bcb98b36 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_items_builder.cc
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_items_builder.cc
-@@ -1329,21 +1329,35 @@ void NGInlineItemsBuilderTemplate<OffsetMappingBuilder>::EnterInline(
+@@ -40,6 +40,13 @@ String NGInlineItemsBuilderTemplate<OffsetMappingBuilder>::ToString() {
+ }
+ 
+ namespace {
++
++// TODO(curbug.com/324111880): We can't support forced-breaks in ruby-base boxes
++// until ruby-columns become actually line-breakable. So we replace
++// forced-breaks in ruby-base boxes with spaces for now. This flag should be
++// removed before shipping RubyLineBreakable.
++constexpr bool kDisableForcedBreakInRubyColumn = true;
++
+ // The spec turned into a discussion that may change. Put this logic on hold
+ // until CSSWG resolves the issue.
+ // https://github.com/w3c/csswg-drafts/issues/337
+@@ -556,7 +563,7 @@ void NGInlineItemsBuilderTemplate<OffsetMappingBuilder>::AppendText(
+   const ComputedStyle& style = layout_object->StyleRef();
+   const bool should_not_preserve_newline =
+       (layout_object && layout_object->IsSVGInlineText()) ||
+-      UNLIKELY(is_text_combine_);
++      UNLIKELY(is_text_combine_ || ruby_text_nesting_level_ > 0);
+ 
+   RestoreTrailingCollapsibleSpaceIfRemoved();
+ 
+@@ -636,7 +643,8 @@ void NGInlineItemsBuilderTemplate<
+     // LayoutBR does not set preserve_newline, but should be preserved.
+     if (UNLIKELY(space_run_has_newline && string.length() == 1 &&
+                  layout_object && layout_object->IsBR())) {
+-      if (UNLIKELY(is_text_combine_)) {
++      // https://drafts.csswg.org/css-ruby/#anon-gen-unbreak
++      if (UNLIKELY(is_text_combine_ || ruby_text_nesting_level_ > 0)) {
+         AppendTextItem(" ", layout_object);
+       } else {
+         AppendForcedBreakCollapseWhitespace(layout_object);
+@@ -870,7 +878,7 @@ void NGInlineItemsBuilderTemplate<
+     UChar c = string[start];
+     if (IsControlItemCharacter(c)) {
+       if (c == kNewlineCharacter) {
+-        if (UNLIKELY(is_text_combine_)) {
++        if (UNLIKELY(is_text_combine_ || ruby_text_nesting_level_ > 0)) {
+           start++;
+           AppendTextItem(" ", layout_object);
+           continue;
+@@ -1329,20 +1337,46 @@ void NGInlineItemsBuilderTemplate<OffsetMappingBuilder>::EnterInline(
      }
    }
  
 +  has_ruby_ = has_ruby_ || node->IsInlineRubyText();
-+  if (node->IsInlineRubyText() && !node->Parent()->IsInlineRuby()) {
-+    // This creates a ruby column with no ruby-base items.
-+    AppendOpaque(NGInlineItem::kOpenRubyColumn,
-+                 IsLtr(style->Direction()) ? kLeftToRightIsolateCharacter
-+                                           : kRightToLeftIsolateCharacter,
-+                 nullptr);
++  if (node->IsInlineRubyText()) {
++    ++ruby_text_nesting_level_;
++    if (!node->Parent()->IsInlineRuby()) {
++      // This creates a ruby column with a placeholder-only ruby-base.
++      AppendOpaque(NGInlineItem::kOpenRubyColumn,
++                   IsLtr(style->Direction()) ? kLeftToRightIsolateCharacter
++                                             : kRightToLeftIsolateCharacter,
++                   nullptr);
++      AppendOpaque(NGInlineItem::kRubyLinePlaceholder, nullptr);
++    } else {
++      AppendOpaque(NGInlineItem::kRubyLinePlaceholder, node->Parent());
++    }
 +  }
    AppendOpaque(NGInlineItem::kOpenTag, node);
  
 -  if (!NeedsBoxInfo())
 -    return;
--
--  // Set |ShouldCreateBoxFragment| of the parent box if needed.
--  BoxInfo* current_box =
--      &boxes_.emplace_back(items_->size() - 1, items_->back());
--  if (boxes_.size() > 1) {
--    BoxInfo* parent_box = std::prev(current_box);
--    if (!parent_box->should_create_box_fragment &&
--        parent_box->ShouldCreateBoxFragmentForChild(*current_box)) {
--      parent_box->SetShouldCreateBoxFragment(items_);
 +  if (NeedsBoxInfo()) {
 +    // Set |ShouldCreateBoxFragment| of the parent box if needed.
 +    BoxInfo* current_box =
@@ -37,46 +76,66 @@ index a81fab13f92986aa84d18e0713423db458479c4c..0852ce2d1d5e5ba69e82777e5bad33b2
 +          parent_box->ShouldCreateBoxFragmentForChild(*current_box)) {
 +        parent_box->SetShouldCreateBoxFragment(items_);
 +      }
-     }
-   }
-+
++    }
++  }
+ 
+-  // Set |ShouldCreateBoxFragment| of the parent box if needed.
+-  BoxInfo* current_box =
+-      &boxes_.emplace_back(items_->size() - 1, items_->back());
+-  if (boxes_.size() > 1) {
+-    BoxInfo* parent_box = std::prev(current_box);
+-    if (!parent_box->should_create_box_fragment &&
+-        parent_box->ShouldCreateBoxFragmentForChild(*current_box)) {
+-      parent_box->SetShouldCreateBoxFragment(items_);
 +  if (node->IsInlineRuby()) {
 +    AppendOpaque(NGInlineItem::kOpenRubyColumn,
 +                 IsLtr(style->Direction()) ? kLeftToRightIsolateCharacter
 +                                           : kRightToLeftIsolateCharacter,
 +                 node);
-+  }
++    if (kDisableForcedBreakInRubyColumn) {
++      ++ruby_text_nesting_level_;
+     }
++    AppendOpaque(NGInlineItem::kRubyLinePlaceholder, node);
++  } else if (node->IsInlineRubyText()) {
++    AppendOpaque(NGInlineItem::kRubyLinePlaceholder, node);
+   }
  }
  
- template <typename OffsetMappingBuilder>
-@@ -1361,6 +1375,11 @@ void NGInlineItemsBuilderTemplate<OffsetMappingBuilder>::ExitInline(
+@@ -1361,6 +1395,16 @@ void NGInlineItemsBuilderTemplate<OffsetMappingBuilder>::ExitInline(
      LayoutObject* node) {
    DCHECK(node);
  
 +  if (node->IsInlineRuby()) {
++    if (kDisableForcedBreakInRubyColumn) {
++      --ruby_text_nesting_level_;
++    }
 +    AppendOpaque(NGInlineItem::kCloseRubyColumn, kPopDirectionalIsolateCharacter,
 +                 node);
++  } else if (node->IsInlineRubyText()) {
++    AppendOpaque(NGInlineItem::kRubyLinePlaceholder, node);
 +  }
 +
    if (NeedsBoxInfo()) {
      BoxInfo* current_box = &boxes_.back();
      if (!current_box->should_create_box_fragment) {
-@@ -1402,6 +1421,24 @@ void NGInlineItemsBuilderTemplate<OffsetMappingBuilder>::ExitInline(
+@@ -1402,6 +1446,26 @@ void NGInlineItemsBuilderTemplate<OffsetMappingBuilder>::ExitInline(
  
    AppendOpaque(NGInlineItem::kCloseTag, node);
  
 +  if (node->IsInlineRubyText()) {
++    --ruby_text_nesting_level_;
 +    if (node->Parent()->IsInlineRuby()) {
 +      LayoutObject* ruby_container = node->Parent();
 +      AppendOpaque(NGInlineItem::kCloseRubyColumn,
 +                   kPopDirectionalIsolateCharacter, ruby_container);
-+      // This produces empty ruby-columns if </ruby> follows.  NGLineBreaker
-+      // should ignore such ruby-columns.
++      // This produces almost-empty ruby-columns if </ruby> follows.
++      // NGLineBreaker should ignore such ruby-columns.
 +      AppendOpaque(NGInlineItem::kOpenRubyColumn,
 +                   IsLtr(node->Parent()->Style()->Direction())
 +                       ? kLeftToRightIsolateCharacter
 +                       : kRightToLeftIsolateCharacter,
 +                   ruby_container);
++      AppendOpaque(NGInlineItem::kRubyLinePlaceholder, node);
 +    } else {
 +      AppendOpaque(NGInlineItem::kCloseRubyColumn,
 +                   kPopDirectionalIsolateCharacter, nullptr);

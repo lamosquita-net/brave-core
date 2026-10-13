@@ -1,18 +1,21 @@
 diff --git a/third_party/blink/renderer/core/layout/inline/logical_line_builder.cc b/third_party/blink/renderer/core/layout/inline/logical_line_builder.cc
 new file mode 100644
-index 0000000000000000000000000000000000000000..1379956e437aa02efb5ae20037d2924600abac8a
+index 0000000000000000000000000000000000000000..ebde10edfd4e43561d9abca9c88936af3e8089ac
 --- /dev/null
 +++ b/third_party/blink/renderer/core/layout/inline/logical_line_builder.cc
-@@ -0,0 +1,510 @@
+@@ -0,0 +1,593 @@
 +// Copyright 2016 The Chromium Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
 +
 +#include "third_party/blink/renderer/core/layout/inline/logical_line_builder.h"
 +
++#include <algorithm>
++
 +#include "base/containers/adapters.h"
 +#include "third_party/blink/renderer/core/layout/ng/inline/layout_ng_text_combine.h"
 +#include "third_party/blink/renderer/core/layout/inline/inline_item_result_ruby_column.h"
++#include "third_party/blink/renderer/core/layout/inline/justification_utils.h"
 +#include "third_party/blink/renderer/core/layout/ng/inline/ng_bidi_paragraph.h"
 +#include "third_party/blink/renderer/core/layout/ng/inline/ng_inline_box_state.h"
 +#include "third_party/blink/renderer/core/layout/ng/inline/ng_inline_child_layout_context.h"
@@ -21,6 +24,7 @@ index 0000000000000000000000000000000000000000..1379956e437aa02efb5ae20037d29246
 +#include "third_party/blink/renderer/core/layout/ng/inline/ng_inline_node.h"
 +#include "third_party/blink/renderer/core/layout/ng/inline/ng_line_info.h"
 +#include "third_party/blink/renderer/core/layout/ng/inline/ng_logical_line_item.h"
++#include "third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.h"
 +#include "third_party/blink/renderer/core/layout/ng/ng_box_fragment.h"
 +#include "third_party/blink/renderer/core/layout/ng/ng_constraint_space.h"
 +#include "third_party/blink/renderer/core/layout/ng/ng_disable_side_effects_scope.h"
@@ -82,10 +86,19 @@ index 0000000000000000000000000000000000000000..1379956e437aa02efb5ae20037d29246
 +
 +  if (UNLIKELY(node_.IsBidiEnabled())) {
 +    box_states_->PrepareForReorder(line_box);
-+    BidiReorder(line_info->BaseDirection(), line_box);
++    BidiReorder(line_info->BaseDirection(), line_box,
++                box_states_->RubyColumnList());
 +    box_states_->UpdateAfterReorder(line_box);
 +  } else {
 +    DCHECK(IsLtr(line_info->BaseDirection()));
++  }
++
++  for (auto& logical_column : box_states_->RubyColumnList()) {
++    std::pair<LayoutUnit, LayoutUnit>& insets = logical_column->base_insets;
++    NGLogicalLineItems::iterator start =
++        line_box->begin() + logical_column->start_index;
++    ApplyLeftAndRightExpansion(insets.first, insets.second, start,
++                               start + logical_column->size);
 +  }
 +}
 +
@@ -166,7 +179,28 @@ index 0000000000000000000000000000000000000000..1379956e437aa02efb5ae20037d29246
 +      main_line_helper->PlaceBlockInInline(item, &item_result, line_box);
 +    } else if (item.Type() == NGInlineItem::kOpenRubyColumn) {
 +      DCHECK(RuntimeEnabledFeatures::RubyLineBreakableEnabled());
-+      box = PlaceRubyColumn(line_info, item_result, *line_box, box);
++      if (item_result.ruby_column) {
++        box = PlaceRubyColumn(line_info, item_result, *line_box, box);
++      } else {
++        line_box->AddChild(item.BidiLevel());
++      }
++    } else if (item.Type() == NGInlineItem::kCloseRubyColumn) {
++      DCHECK(RuntimeEnabledFeatures::RubyLineBreakableEnabled());
++      line_box->AddChild(item.BidiLevel());
++    } else if (item.Type() == NGInlineItem::kRubyLinePlaceholder) {
++      DCHECK(RuntimeEnabledFeatures::RubyLineBreakableEnabled());
++      // Overhang values are zero or negative.
++      LayoutUnit start_overhang = item_result.margins.inline_start;
++      LayoutUnit end_overhang = item_result.margins.inline_end;
++      // Adds a NGLogicalLineItem with an NGInlineItem to check its
++      // NGInlineItemType later.
++      line_box->AddChild(
++          item, item_result, item_result.TextOffset(),
++          /* block_offset */ LayoutUnit(),
++          item_result.inline_size + start_overhang + end_overhang,
++          /* text_height */ LayoutUnit(), item.BidiLevel());
++      (*line_box)[line_box->size() - 1].rect.offset.inline_offset =
++          start_overhang;
 +    } else if (item.Type() == NGInlineItem::kListMarker) {
 +      PlaceListMarker(item, &item_result);
 +    } else if (item.Type() == NGInlineItem::kOutOfFlowPositioned) {
@@ -316,7 +350,8 @@ index 0000000000000000000000000000000000000000..1379956e437aa02efb5ae20037d29246
 +      constraint_space_, item, *item_result, baseline_type_, *line_box);
 +
 +  if (LIKELY(!IsA<LayoutNGTextCombine>(layout_object))) {
-+    PlaceLayoutResult(item_result, line_box, box, box->margin_inline_start);
++    PlaceLayoutResult(item_result, line_box, box,
++                      box->margin_inline_start + item_result->spacing_before);
 +  } else {
 +    // The metrics should be as text instead of atomic inline box.
 +    const auto& style = layout_object->Parent()->StyleRef();
@@ -385,6 +420,8 @@ index 0000000000000000000000000000000000000000..1379956e437aa02efb5ae20037d29246
 +    NGLogicalLineItems& line_box,
 +    NGInlineBoxState* box) {
 +  InlineItemResultRubyColumn& ruby_column = *item_result.ruby_column;
++  std::pair<LayoutUnit, LayoutUnit> base_insets =
++      ApplyRubyAlign(item_result.inline_size, ruby_column.base_line);
 +
 +  // Set up LogicalRubyColumns. This should be done before consuming the base
 +  // NGInlineItemResults because it might contain ruby columns, and annotation
@@ -405,6 +442,23 @@ index 0000000000000000000000000000000000000000..1379956e437aa02efb5ae20037d29246
 +  for (wtf_size_t i = 0; i < ruby_column.annotation_line_list.size(); ++i) {
 +    LogicalRubyColumn& logical_column =
 +        box_states_->RubyColumnAt(ruby_column_start_index + i);
++    if (!ruby_column.annotation_line_list[i].IsEmptyLine()) {
++      if (!line_box[start_index].has_over_annotation &&
++          logical_column.ruby_position == RubyPosition::kOver) {
++        for (wtf_size_t j = start_index; j < line_box.size(); ++j) {
++          line_box[j].has_over_annotation = true;
++        }
++      }
++      if (!line_box[start_index].has_under_annotation &&
++          logical_column.ruby_position == RubyPosition::kUnder) {
++        for (wtf_size_t j = start_index; j < line_box.size(); ++j) {
++          line_box[j].has_under_annotation = true;
++        }
++      }
++    }
++    if (i == 0) {
++      logical_column.base_insets = base_insets;
++    }
 +    logical_column.size = column_base_size;
 +    PlaceRubyAnnotation(item_result, i, ruby_column.annotation_line_list[i],
 +                        logical_column);
@@ -418,22 +472,21 @@ index 0000000000000000000000000000000000000000..1379956e437aa02efb5ae20037d29246
 +    wtf_size_t index,
 +    NGLineInfo& annotation_line,
 +    LogicalRubyColumn& logical_column) {
++  std::pair<LayoutUnit, LayoutUnit> insets =
++      ApplyRubyAlign(item_result.inline_size, annotation_line);
++
 +  auto* line_items = MakeGarbageCollected<NGLogicalLineItems>();
-+  NGInlineLayoutStateStack state_stack;
-+  LogicalLineBuilder annotation_builder(node_, constraint_space_, &state_stack,
-+                                        context_);
++  LogicalLineBuilder annotation_builder(node_, constraint_space_,
++                                        &logical_column.state_stack, context_);
 +  annotation_builder.CreateLine(&annotation_line, line_items,
 +                                /* main_line_helper */ nullptr);
++  ApplyLeftAndRightExpansion(insets.first, insets.second, line_items->begin(),
++                             line_items->end());
 +
-+  state_stack.ComputeInlinePositions(
++  logical_column.state_stack.ComputeInlinePositions(
 +      line_items, LayoutUnit(), /* ignore_box_margin_border_padding */ false);
-+  if (state_stack.HasBoxFragments()) {
-+    state_stack.CreateBoxFragments(constraint_space_, line_items,
-+                                   /* is_opaque */ false);
-+  }
 +
 +  logical_column.annotation_items = line_items;
-+  logical_column.ruby_column_list = state_stack.TakeRubyColumnList();
 +}
 +
 +// Place a list marker.
@@ -445,8 +498,10 @@ index 0000000000000000000000000000000000000000..1379956e437aa02efb5ae20037d29246
 +  }
 +}
 +
-+void LogicalLineBuilder::BidiReorder(TextDirection base_direction,
-+                                     NGLogicalLineItems* line_box) {
++void LogicalLineBuilder::BidiReorder(
++    TextDirection base_direction,
++    NGLogicalLineItems* line_box,
++    HeapVector<Member<LogicalRubyColumn>>& column_list) {
 +  if (line_box->IsEmpty())
 +    return;
 +
@@ -511,6 +566,34 @@ index 0000000000000000000000000000000000000000..1379956e437aa02efb5ae20037d29246
 +  DCHECK_EQ(line_box->size(), visual_items.size());
 +  line_box->swap(visual_items);
 +  context_->ReleaseTempLogicalLineItems(visual_items);
++
++  // Adjust LogicalRubyColumn::start_index.
++  if (column_list.size() > 0) {
++    Vector<unsigned, 32> logical_to_visual(line_box->size());
++    for (unsigned i = 0; i < indices_in_visual_order.size(); ++i) {
++      logical_to_visual[indices_in_visual_order[i]] = i;
++    }
++    for (auto& column : column_list) {
++      // Find the minimum visual index in the logical range
++      // [column->start_index, column->EndIndex()).
++      //
++      // Base items in a ruby column are placed consecutively even after the
++      // reorder because they are isolated.
++      //
++      // std::min_element() below doesn't return the end iterator because we
++      // ensure there is at least one item in the range.
++      auto begin = logical_to_visual.begin();
++      column->start_index = *std::min_element(begin + column->start_index,
++                                              begin + column->EndIndex());
++    }
++    // The order is important for RubyBlockPositionCalculator::HandleRubyLine().
++    std::stable_sort(
++        column_list.begin(), column_list.end(),
++        [](const auto& column1, const auto& column2) {
++          int32_t diff = column2->start_index - column1->start_index;
++          return diff != 0 ? (diff > 0) : (column1->size > column2->size);
++        });
++  }
 +}
 +
 +}  // namespace blink

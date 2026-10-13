@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc b/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc
-index 3e784902ddee52b0a6754e762a3c911bb41876fc..14f1559ea01f79e0754609e8fc8e199b87a3b0ab 100644
+index 3e784902ddee52b0a6754e762a3c911bb41876fc..f73321a44e1cbb2916b8060e2c74b9a05031a921 100644
 --- a/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc
 +++ b/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc
 @@ -60,7 +60,9 @@
@@ -641,6 +641,37 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..14f1559ea01f79e0754609e8fc8e199b
  const CSSValue* WebkitPerspectiveOriginX::ParseSingleValue(
      CSSParserTokenRange& range,
      const CSSParserContext& context,
+@@ -9448,21 +9781,21 @@ const CSSValue* WebkitRubyPosition::CSSValueFromComputedStyleInternal(
+     const ComputedStyle& style,
+     const LayoutObject*,
+     bool allow_visited_style) const {
+-  return CSSIdentifierValue::Create(style.GetRubyPosition());
++  switch (style.GetRubyPosition()) {
++    case blink::RubyPosition::kOver:
++      return CSSIdentifierValue::Create(CSSValueID::kBefore);
++    case blink::RubyPosition::kUnder:
++      return CSSIdentifierValue::Create(CSSValueID::kAfter);
++  }
++  NOTREACHED();
++  return CSSIdentifierValue::Create(CSSValueID::kOver);
+ }
+ 
+ const CSSValue* RubyPosition::CSSValueFromComputedStyleInternal(
+     const ComputedStyle& style,
+     const LayoutObject*,
+     bool allow_visited_style) const {
+-  switch (style.GetRubyPosition()) {
+-    case blink::RubyPosition::kBefore:
+-      return CSSIdentifierValue::Create(CSSValueID::kOver);
+-    case blink::RubyPosition::kAfter:
+-      return CSSIdentifierValue::Create(CSSValueID::kUnder);
+-  }
+-  NOTREACHED();
+-  return CSSIdentifierValue::Create(CSSValueID::kOver);
++  return CSSIdentifierValue::Create(style.GetRubyPosition());
+ }
+ 
+ const CSSValue* WebkitTapHighlightColor::ParseSingleValue(
 @@ -10557,27 +10890,5 @@ const CSSValue* InternalEmptyLineHeight::ParseSingleValue(
                                           CSSValueID::kNone>(range);
  }

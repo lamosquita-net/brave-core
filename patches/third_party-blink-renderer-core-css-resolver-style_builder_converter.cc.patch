@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc b/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
-index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..d305a963b888537ffc8e2ffb9ed3e6bde0d43a2c 100644
+index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..11419a4c608bf6c708800a84797f8d7bcfe5314e 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
 @@ -71,6 +71,7 @@
@@ -111,3 +111,25 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..d305a963b888537ffc8e2ffb9ed3e6bd
  AtomicString StyleBuilderConverter::ConvertViewTransitionName(
      StyleResolverState& state,
      const CSSValue& value) {
+@@ -2812,16 +2861,16 @@ RubyPosition StyleBuilderConverter::ConvertRubyPosition(
+     const CSSValue& value) {
+   if (const auto* identifier_value = DynamicTo<CSSIdentifierValue>(value)) {
+     CSSValueID value_id = identifier_value->GetValueID();
+-    if (value_id == CSSValueID::kOver) {
+-      return RubyPosition::kBefore;
++    if (value_id == CSSValueID::kBefore) {
++      return RubyPosition::kOver;
+     }
+-    if (value_id == CSSValueID::kUnder) {
+-      return RubyPosition::kAfter;
++    if (value_id == CSSValueID::kAfter) {
++      return RubyPosition::kUnder;
+     }
+     return identifier_value->ConvertTo<blink::RubyPosition>();
+   }
+   NOTREACHED();
+-  return RubyPosition::kBefore;
++  return RubyPosition::kOver;
+ }
+ 
+ absl::optional<StyleScrollbarColor>

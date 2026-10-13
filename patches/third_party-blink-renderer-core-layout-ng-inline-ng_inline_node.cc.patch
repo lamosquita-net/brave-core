@@ -1,0 +1,82 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_node.cc b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_node.cc
+index 2099418199d9382e874334656200f5d42e8cdcf2..208b6792406ccb58ee96f9528a133dfccdb190ec 100644
+--- a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_node.cc
++++ b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_node.cc
+@@ -23,6 +23,7 @@
+ #include "third_party/blink/renderer/core/layout/ng/inline/ng_bidi_paragraph.h"
+ #include "third_party/blink/renderer/core/layout/ng/inline/ng_initial_letter_utils.h"
+ #include "third_party/blink/renderer/core/layout/ng/inline/ng_inline_break_token.h"
++#include "third_party/blink/renderer/core/layout/inline/inline_item_result_ruby_column.h"
+ #include "third_party/blink/renderer/core/layout/ng/inline/ng_inline_item.h"
+ #include "third_party/blink/renderer/core/layout/ng/inline/ng_inline_items_builder.h"
+ #include "third_party/blink/renderer/core/layout/ng/inline/ng_inline_layout_algorithm.h"
+@@ -1715,6 +1716,7 @@ static LayoutUnit ComputeContentSize(
+     const NGLineBreaker::MaxSizeCache& max_size_cache;
+     FloatsMaxSize* floats;
+     bool is_after_break = true;
++    wtf_size_t annotation_nesting_level = 0;
+ 
+     explicit MaxSizeFromMinSize(
+         const NGInlineItemsData& items_data,
+@@ -1731,7 +1733,14 @@ static LayoutUnit ComputeContentSize(
+     void AddTextUntil(const NGInlineItem* end) {
+       DCHECK(end);
+       for (; next_item != end; ++next_item) {
+-        if (next_item->Type() == NGInlineItem::kText && next_item->Length()) {
++        if (next_item->Type() == NGInlineItem::kOpenTag &&
++            next_item->GetLayoutObject()->IsInlineRubyText()) {
++          ++annotation_nesting_level;
++        } else if (next_item->Type() == NGInlineItem::kCloseTag &&
++                   next_item->GetLayoutObject()->IsInlineRubyText()) {
++          --annotation_nesting_level;
++        } else if (next_item->Type() == NGInlineItem::kText &&
++                   next_item->Length() && annotation_nesting_level == 0) {
+           DCHECK(next_item->TextShapeResult());
+           const ShapeResult& shape_result = *next_item->TextShapeResult();
+           position += shape_result.SnappedWidth().ClampNegativeToZero();
+@@ -1777,6 +1786,17 @@ static LayoutUnit ComputeContentSize(
+         is_after_break = false;
+       }
+ 
++      ComputeFromMinSizeInternal(line_info);
++
++      // Compute the forced break after all results were handled, because
++      // when close tags appear after a forced break, they are included in
++      // the line, and they may have inline sizes. crbug.com/991320.
++      if (line_info.HasForcedBreak()) {
++        ForceLineBreak(line_info);
++      }
++    }
++
++    void ComputeFromMinSizeInternal(const NGLineInfo& line_info) {
+       for (const NGInlineItemResult& result : line_info.Results()) {
+         const NGInlineItem& item = *result.item;
+         if (item.Type() == NGInlineItem::kText) {
+@@ -1811,13 +1831,12 @@ static LayoutUnit ComputeContentSize(
+             continue;
+           }
+         }
++        if (item.Type() == NGInlineItem::kOpenRubyColumn && result.ruby_column) {
++          ComputeFromMinSizeInternal(result.ruby_column->base_line);
++          continue;
++        }
+         position += result.inline_size;
+       }
+-      // Compute the forced break after all results were handled, because
+-      // when close tags appear after a forced break, they are included in
+-      // the line, and they may have inline sizes. crbug.com/991320.
+-      if (line_info.HasForcedBreak())
+-        ForceLineBreak(line_info);
+     }
+   };
+ 
+@@ -1891,7 +1910,8 @@ static LayoutUnit ComputeContentSize(
+           // `box-decoration-break: clone` clones box decorations to each
+           // fragment (line) that we cannot compute max-content from
+           // min-content.
+-          !line_breaker.HasClonedBoxDecorations();
++          !line_breaker.HasClonedBoxDecorations() &&
++          !line_info.MayHaveRubyOverhang();
+       if (can_compute_max_size_from_min_size)
+         max_size_from_min_size.ComputeFromMinSize(line_info);
+     } else {

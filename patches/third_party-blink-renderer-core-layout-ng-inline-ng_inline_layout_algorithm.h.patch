@@ -1,8 +1,17 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_layout_algorithm.h b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_layout_algorithm.h
-index 4e00f165e655aba31ae66c3bb41035806866c773..2ca95feb59f2cf19e80271c0fcc3ee4815f04d33 100644
+index 4e00f165e655aba31ae66c3bb41035806866c773..01cbd85caf93294797e475656a211ce6c3519632 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_layout_algorithm.h
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_layout_algorithm.h
-@@ -28,7 +28,7 @@ class NGInlineNode;
+@@ -5,6 +5,8 @@
+ #ifndef THIRD_PARTY_BLINK_RENDERER_CORE_LAYOUT_NG_INLINE_NG_INLINE_LAYOUT_ALGORITHM_H_
+ #define THIRD_PARTY_BLINK_RENDERER_CORE_LAYOUT_NG_INLINE_NG_INLINE_LAYOUT_ALGORITHM_H_
+ 
++#include <optional>
++
+ #include "base/dcheck_is_on.h"
+ #include "base/notreached.h"
+ #include "third_party/blink/renderer/core/core_export.h"
+@@ -28,7 +30,7 @@ class NGInlineNode;
  class NGInlineItem;
  class NGInlineLayoutStateStack;
  class NGLineInfo;
@@ -11,7 +20,7 @@ index 4e00f165e655aba31ae66c3bb41035806866c773..2ca95feb59f2cf19e80271c0fcc3ee48
  struct NGInlineItemResult;
  struct NGLeadingFloats;
  
-@@ -52,7 +52,7 @@ class CORE_EXPORT NGInlineLayoutAlgorithm final
+@@ -52,7 +54,7 @@ class CORE_EXPORT NGInlineLayoutAlgorithm final
  
    void CreateLine(const NGLineLayoutOpportunity&,
                    NGLineInfo*,
@@ -20,7 +29,7 @@ index 4e00f165e655aba31ae66c3bb41035806866c773..2ca95feb59f2cf19e80271c0fcc3ee48
  
    const NGLayoutResult* Layout() override;
  
-@@ -61,6 +61,13 @@ class CORE_EXPORT NGInlineLayoutAlgorithm final
+@@ -61,6 +63,13 @@ class CORE_EXPORT NGInlineLayoutAlgorithm final
      return MinMaxSizesResult();
    }
  
@@ -34,7 +43,7 @@ index 4e00f165e655aba31ae66c3bb41035806866c773..2ca95feb59f2cf19e80271c0fcc3ee48
   private:
    friend class NGLineWidthsTest;
  
-@@ -73,46 +80,7 @@ class CORE_EXPORT NGInlineLayoutAlgorithm final
+@@ -73,46 +82,7 @@ class CORE_EXPORT NGInlineLayoutAlgorithm final
    void RebuildBoxStates(const NGLineInfo&,
                          const NGInlineBreakToken*,
                          NGInlineLayoutStateStack*) const;
@@ -81,10 +90,11 @@ index 4e00f165e655aba31ae66c3bb41035806866c773..2ca95feb59f2cf19e80271c0fcc3ee48
    void PlaceOutOfFlowObjects(const NGLineInfo&,
                               const FontHeight&,
                               NGLogicalLineItems* line_box);
-@@ -122,12 +90,8 @@ class CORE_EXPORT NGInlineLayoutAlgorithm final
+@@ -121,13 +91,8 @@ class CORE_EXPORT NGInlineLayoutAlgorithm final
+                             LayoutUnit ruby_block_start_adjust,
                              NGLineInfo*,
                              NGLogicalLineItems* line_box);
-   void PlaceRelativePositionedItems(NGLogicalLineItems* line_box);
+-  void PlaceRelativePositionedItems(NGLogicalLineItems* line_box);
 -  void PlaceListMarker(const NGInlineItem&,
 -                       NGInlineItemResult*,
 -                       const NGLineInfo&);
@@ -94,3 +104,18 @@ index 4e00f165e655aba31ae66c3bb41035806866c773..2ca95feb59f2cf19e80271c0fcc3ee48
  
    // Add any trailing clearance requested by a BR 'clear' attribute on the line.
    // Return true if this was successful (this also includes cases where there is
+@@ -135,9 +100,11 @@ class CORE_EXPORT NGInlineLayoutAlgorithm final
+   // will be resumed in a subsequent fragmentainer.
+   bool AddAnyClearanceAfterLine(const NGLineInfo&);
+ 
+-  LayoutUnit SetAnnotationOverflow(const NGLineInfo& line_info,
+-                                   const NGLogicalLineItems& line_box,
+-                                   const FontHeight& line_box_metrics);
++  LayoutUnit SetAnnotationOverflow(
++      const NGLineInfo& line_info,
++      const NGLogicalLineItems& line_box,
++      const FontHeight& line_box_metrics,
++      std::optional<FontHeight> annotation_font_height);
+ 
+   NGInlineLayoutStateStack* box_states_;
+   NGInlineChildLayoutContext* context_;

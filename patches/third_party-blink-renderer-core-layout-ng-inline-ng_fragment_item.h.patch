@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_fragment_item.h b/third_party/blink/renderer/core/layout/ng/inline/ng_fragment_item.h
-index 738341ed238064fa0c6abe344beafd5d860e7445..4cf336ec1b8fd2b574e1b6d325646f053f9ce5f4 100644
+index 738341ed238064fa0c6abe344beafd5d860e7445..eef71d11a68ff7b98dac7255e4d49bdf1bc78510 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_fragment_item.h
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_fragment_item.h
 @@ -110,6 +110,9 @@ class CORE_EXPORT NGFragmentItem final {
@@ -12,3 +12,34 @@ index 738341ed238064fa0c6abe344beafd5d860e7445..4cf336ec1b8fd2b574e1b6d325646f05
  
    // The copy/move constructors.
    NGFragmentItem(const NGFragmentItem&);
+@@ -294,7 +297,8 @@ class CORE_EXPORT NGFragmentItem final {
+   const NGInlineBreakToken* InlineBreakToken() const {
+     if (const NGPhysicalLineBoxFragment* line_box = LineBoxFragment())
+       return To<NGInlineBreakToken>(line_box->BreakToken());
+-    NOTREACHED();
++    DCHECK_EQ(Type(), kLine);
++    // Nested kLine item doesn't have a line box fragment.
+     return nullptr;
+   }
+ 
+@@ -477,6 +481,11 @@ class CORE_EXPORT NGFragmentItem final {
+   unsigned TextOffsetForPoint(const PhysicalOffset& point,
+                               const NGFragmentItems& items) const;
+ 
++  // True if this item is associated with over/under ruby annotations.
++  // These functions are valid only if IsText() is true.
++  bool HasOverAnnotation() const { return has_over_annotation_; }
++  bool HasUnderAnnotation() const { return has_under_annotation_; }
++
+   // Whether this item was marked dirty for reuse or not.
+   bool IsDirty() const { return is_dirty_; }
+   void SetDirty() const { is_dirty_ = true; }
+@@ -614,6 +623,8 @@ class CORE_EXPORT NGFragmentItem final {
+   // Note: For |TextItem| and |GeneratedTextItem|, |text_direction_| equals to
+   // |ShapeResult::Direction()|.
+   unsigned text_direction_ : 1;  // TextDirection.
++  unsigned has_over_annotation_ : 1 = 0;
++  unsigned has_under_annotation_ : 1 = 0;
+ 
+   unsigned ink_overflow_type_ : NGInkOverflow::kTypeBits;
+ 

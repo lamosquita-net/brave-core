@@ -1,0 +1,19 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/ng_physical_fragment.cc b/third_party/blink/renderer/core/layout/ng/ng_physical_fragment.cc
+index c99767b46fca83befc38362fb9a93cb0d4e5eac0..e5e6b92a02bff46c925cd535a18631d76bfb8cb5 100644
+--- a/third_party/blink/renderer/core/layout/ng/ng_physical_fragment.cc
++++ b/third_party/blink/renderer/core/layout/ng/ng_physical_fragment.cc
+@@ -834,9 +834,11 @@ void NGPhysicalFragment::AddOutlineRectsForCursor(
+     }
+     switch (item.Type()) {
+       case NGFragmentItem::kLine: {
+-        AddOutlineRectsForDescendant(
+-            {item.LineBoxFragment(), item.OffsetInContainerFragment()},
+-            collector, additional_offset, outline_type, containing_block);
++        if (item.LineBoxFragment()) {
++          AddOutlineRectsForDescendant(
++              {item.LineBoxFragment(), item.OffsetInContainerFragment()},
++              collector, additional_offset, outline_type, containing_block);
++        }
+         break;
+       }
+       case NGFragmentItem::kGeneratedText:

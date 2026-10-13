@@ -1,11 +1,14 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.h b/third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.h
-index 000e18d6f1c3637b17141ceef8573a63cc5cad3d..3cc79087ce887f5a45fbd75e3724d3de24ab5eab 100644
+index 000e18d6f1c3637b17141ceef8573a63cc5cad3d..9927ba4752a3dab5da19ca168a33cbd5d510e333 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.h
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.h
-@@ -5,19 +5,41 @@
+@@ -5,19 +5,44 @@
  #ifndef THIRD_PARTY_BLINK_RENDERER_CORE_LAYOUT_NG_INLINE_NG_RUBY_UTILS_H_
  #define THIRD_PARTY_BLINK_RENDERER_CORE_LAYOUT_NG_INLINE_NG_RUBY_UTILS_H_
  
++#include <optional>
++#include <utility>
++
 +#include "third_party/blink/renderer/core/core_export.h"
 +#include "third_party/blink/renderer/platform/fonts/font_height.h"
  #include "third_party/blink/renderer/platform/geometry/layout_unit.h"
@@ -45,7 +48,7 @@ index 000e18d6f1c3637b17141ceef8573a63cc5cad3d..3cc79087ce887f5a45fbd75e3724d3de
  // Adjust the specified |rect| of a text fragment for 'em' height.
  // This is called on computing scrollable overflow with kEmHeight.
  PhysicalRect AdjustTextRectForEmHeight(const PhysicalRect& rect,
-@@ -25,6 +47,10 @@ PhysicalRect AdjustTextRectForEmHeight(const PhysicalRect& rect,
+@@ -25,6 +50,10 @@ PhysicalRect AdjustTextRectForEmHeight(const PhysicalRect& rect,
                                         const ShapeResultView* shape_view,
                                         WritingMode writing_mode);
  
@@ -56,10 +59,28 @@ index 000e18d6f1c3637b17141ceef8573a63cc5cad3d..3cc79087ce887f5a45fbd75e3724d3de
  struct NGAnnotationOverhang {
    LayoutUnit start;
    LayoutUnit end;
-@@ -74,6 +100,114 @@ NGAnnotationMetrics ComputeAnnotationOverflow(
-     const FontHeight& line_box_metrics,
-     const ComputedStyle& line_style);
+@@ -50,6 +79,13 @@ bool CanApplyStartOverhang(const NGLineInfo& line_info,
+ // in |line_info|
+ LayoutUnit CommitPendingEndOverhang(NGLineInfo* line_info);
  
++// Justify InlineItemResutls of the specified `line_info`.
++// Returns a pair of the left and the right insets.  They should be applied
++// to NGLogicalLineItems generated from `line_info` after bidi reorder.
++[[nodiscard]] std::pair<LayoutUnit, LayoutUnit> ApplyRubyAlign(
++    LayoutUnit available_line_size,
++    NGLineInfo& line_info);
++
+ // Stores ComputeAnnotationOverflow() results.
+ //
+ // |overflow_over| and |space_over| are exclusive. Only one of them can be
+@@ -72,8 +108,130 @@ struct NGAnnotationMetrics {
+ NGAnnotationMetrics ComputeAnnotationOverflow(
+     const NGLogicalLineItems& logical_line,
+     const FontHeight& line_box_metrics,
+-    const ComputedStyle& line_style);
++    const ComputedStyle& line_style,
++    std::optional<FontHeight> annotation_metrics);
++
 +// Update inline positions of NGLogicalLineItems for all LogicalRubyColumns
 +// linked from `column_list`.
 +void UpdateRubyColumnInlinePositions(
@@ -130,8 +151,10 @@ index 000e18d6f1c3637b17141ceef8573a63cc5cad3d..3cc79087ce887f5a45fbd75e3724d3de
 +    DISALLOW_NEW();
 +
 +    Member<LogicalRubyColumn> column;
-+    wtf_size_t over_depth = 0;
-+    wtf_size_t under_depth = 0;
++    // Nesting level on the "over" side. The value is zero or positive.
++    int32_t over_depth = 0;
++    // Nesting level on the "under" side. The value is zero or negative.
++    int32_t under_depth = 0;
 +
 +    void Trace(Visitor* visitor) const;
 +  };
@@ -153,6 +176,10 @@ index 000e18d6f1c3637b17141ceef8573a63cc5cad3d..3cc79087ce887f5a45fbd75e3724d3de
 +  // called after PlaceLines().
 +  RubyBlockPositionCalculator& AddLinesTo(LogicalLineContainer& line_container);
 +
++  // Returns a metrics including all annotation lines. This must be called
++  // after PlaceLines().
++  FontHeight NGAnnotationMetrics() const;
++
 +  const HeapVector<Member<RubyLine>, 2>& RubyLineListForTesting() const {
 +    return ruby_lines_;
 +  }
@@ -163,8 +190,15 @@ index 000e18d6f1c3637b17141ceef8573a63cc5cad3d..3cc79087ce887f5a45fbd75e3724d3de
 +  RubyLine& EnsureRubyLine(const RubyLevel& level);
 +
 +  HeapVector<Member<RubyLine>, 2> ruby_lines_;
-+};
 +
++  // Annotation distance from the base baseline.  `.ascent` is the top offset
++  // of the highest annotation from the base baseline, and `.descent` is the
++  // bottom offset of the lowest annotation from the base baseline.  They are
++  // zero if there are no higher/lower annotations.  This is available after
++  // PlaceLines().
++  FontHeight annotation_metrics_ = FontHeight::Empty();
++};
+ 
  }  // namespace blink
  
 +WTF_ALLOW_CLEAR_UNUSED_SLOTS_WITH_MEM_FUNCTIONS(

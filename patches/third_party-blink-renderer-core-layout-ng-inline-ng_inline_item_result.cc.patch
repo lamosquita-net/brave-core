@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_item_result.cc b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_item_result.cc
-index e76acdac55aa375c9b4c636461dce086b6d444f7..d044c67ddb2971b3b44d2068749de012ba3d4b8e 100644
+index e76acdac55aa375c9b4c636461dce086b6d444f7..1dde10421f4283e83564bdee34409720794b3ce7 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_item_result.cc
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_item_result.cc
 @@ -5,6 +5,7 @@
@@ -10,7 +10,19 @@ index e76acdac55aa375c9b4c636461dce086b6d444f7..d044c67ddb2971b3b44d2068749de012
  #include "third_party/blink/renderer/core/layout/ng/ng_layout_result.h"
  #include "third_party/blink/renderer/platform/fonts/shaping/harfbuzz_shaper.h"
  #include "third_party/blink/renderer/platform/fonts/shaping/shape_result_view.h"
-@@ -55,6 +56,7 @@ void NGInlineItemResult::CheckConsistency(bool allow_null_shape_result) const {
+@@ -36,6 +37,11 @@ void NGInlineItemResult::CheckConsistency(bool allow_null_shape_result) const {
+   DCHECK(item);
+   text_offset.AssertValid();
+   DCHECK_GE(text_offset.start, item->StartOffset());
++  // NGInlineItemResult for kOpenRubyColumn contains multiple NGInlineItem
++  // instances. text_offset.end and item->EndOffset() are different.
++  if (item->Type() == NGInlineItem::kOpenRubyColumn) {
++    return;
++  }
+   DCHECK_LE(text_offset.end, item->EndOffset());
+   if (item->Type() == NGInlineItem::kText) {
+     if (!Length()) {
+@@ -55,6 +61,7 @@ void NGInlineItemResult::CheckConsistency(bool allow_null_shape_result) const {
  
  void NGInlineItemResult::Trace(Visitor* visitor) const {
    visitor->Trace(layout_result);

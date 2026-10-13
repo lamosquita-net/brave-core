@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_fragment_items_builder.cc b/third_party/blink/renderer/core/layout/ng/inline/ng_fragment_items_builder.cc
-index 6da087afcb730e582fe8e37518bf54b7c19f7b6e..acc81b16e570ef02cb5a1fafa4542e8b97a4d236 100644
+index 6da087afcb730e582fe8e37518bf54b7c19f7b6e..f8860ad856854988b0c4a42725214fa9378455a5 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_fragment_items_builder.cc
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_fragment_items_builder.cc
 @@ -6,6 +6,7 @@
@@ -140,38 +140,36 @@ index 6da087afcb730e582fe8e37518bf54b7c19f7b6e..acc81b16e570ef02cb5a1fafa4542e8b
    const wtf_size_t old_capacity = items_.capacity();
    if (estimated_size > old_capacity)
      items_.reserve(std::max(estimated_size, old_capacity * 2));
-@@ -130,7 +137,29 @@ void NGFragmentItemsBuilder::AddLine(
+@@ -130,7 +137,27 @@ void NGFragmentItemsBuilder::AddLine(
    const wtf_size_t line_start_index = items_.size();
    items_.emplace_back(offset, line_fragment);
  
 -  AddItems(line_items->begin(), line_items->end());
 +  AddItems(line_items.begin(), line_items.end());
 +
-+  for (wtf_size_t i = 0; i < line_container->AnnotationSize(); ++i) {
++  for (auto& annotation_line : line_container->AnnotationLineList()) {
 +    const wtf_size_t annotation_line_start_index = items_.size();
-+    const LayoutUnit line_height =
-+        line_container->AnnotationMetricsAt(i).LineHeight();
-+    auto& annotation_line = line_container->AnnotationLineAt(i);
-+    if (!annotation_line.FirstInFlowChild()) {
++    const LayoutUnit line_height = annotation_line.metrics.LineHeight();
++    if (!annotation_line->FirstInFlowChild()) {
 +      continue;
 +    }
-+    LogicalOffset line_offset = annotation_line.FirstInFlowChild()->Offset();
++    LogicalOffset line_offset = annotation_line->FirstInFlowChild()->Offset();
 +    LayoutUnit line_inline_size =
-+        annotation_line.LastInFlowChild()->rect.InlineEndOffset() -
++        annotation_line->LastInFlowChild()->rect.InlineEndOffset() -
 +        line_offset.inline_offset;
 +    PhysicalSize size = IsHorizontalWritingMode(GetWritingMode())
 +                            ? PhysicalSize(line_inline_size, line_height)
 +                            : PhysicalSize(line_height, line_inline_size);
 +    // The offset must be relative to the base line box for now.
 +    items_.emplace_back(line_offset, size, line_fragment);
-+    AddItems(annotation_line.begin(), annotation_line.end());
++    AddItems(annotation_line->begin(), annotation_line->end());
 +    items_[annotation_line_start_index].item.SetDescendantsCount(
 +        items_.size() - annotation_line_start_index);
 +  }
  
    // All children are added. Create an item for the start of the line.
    NGFragmentItem& line_item = items_[line_start_index].item;
-@@ -141,7 +170,7 @@ void NGFragmentItemsBuilder::AddLine(
+@@ -141,7 +168,7 @@ void NGFragmentItemsBuilder::AddLine(
    // Keep children's offsets relative to |line|. They will be adjusted later in
    // |ConvertToPhysical()|.
  
@@ -180,3 +178,28 @@ index 6da087afcb730e582fe8e37518bf54b7c19f7b6e..acc81b16e570ef02cb5a1fafa4542e8b
  
    DCHECK_LE(items_.size(), estimated_size);
  }
+@@ -291,14 +318,16 @@ NGFragmentItemsBuilder::AddPreviousItems(
+       for (NGInlineCursor line = cursor.CursorForDescendants(); line;
+            line.MoveToNext()) {
+         const NGFragmentItem& line_child = *line.Current().Item();
+-        if (end_item) {
+-          // If |end_item| is given, the caller has computed the range safe to
+-          // reuse by calling |EndOfReusableItems|. All children should be safe
+-          // to reuse.
+-          DCHECK(line_child.CanReuse());
+-        } else if (!line_child.CanReuse()) {
+-          // Abort and report the failure if any child is not reusable.
+-          return AddPreviousItemsResult();
++        if (line_child.Type() != NGFragmentItem::kLine) {
++          if (end_item) {
++            // If |end_item| is given, the caller has computed the range safe
++            // to reuse by calling |EndOfReusableItems|. All children should
++            // be safe to reuse.
++            DCHECK(line_child.CanReuse());
++          } else if (!line_child.CanReuse()) {
++            // Abort and report the failure if any child is not reusable.
++            return AddPreviousItemsResult();
++          }
+         }
+ #if DCHECK_IS_ON()
+         // |RebuildFragmentTreeSpine| does not rebuild spine if |NeedsLayout|.

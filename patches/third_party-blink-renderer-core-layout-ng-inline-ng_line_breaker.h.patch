@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_line_breaker.h b/third_party/blink/renderer/core/layout/ng/inline/ng_line_breaker.h
-index be47a676d33890436858d55bae489e23a029f8ab..d308c1134bcd14fb1b5f9a5d2ceb89782012cc4f 100644
+index be47a676d33890436858d55bae489e23a029f8ab..ba62ce6252ccb728848feb9f89735f1db34e933f 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_line_breaker.h
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_line_breaker.h
 @@ -29,6 +29,7 @@ class NGLineBreakCandidateContext;
@@ -10,25 +10,31 @@ index be47a676d33890436858d55bae489e23a029f8ab..d308c1134bcd14fb1b5f9a5d2ceb8978
  
  // The line breaker needs to know which mode its in to properly handle floats.
  enum class NGLineBreakerMode { kContent, kMinContent, kMaxContent };
-@@ -53,6 +54,9 @@ class CORE_EXPORT NGLineBreaker {
- 
-   const NGInlineItemsData& ItemsData() const { return items_data_; }
+@@ -114,6 +115,11 @@ class CORE_EXPORT NGLineBreaker {
+   bool CanBreakInside(const NGLineInfo& line_info);
+   bool CanBreakInside(const NGInlineItemResult& item_result);
  
 +  // This NGLineBreaker handles only [start, end_item_index) of `Items()`.
-+  void SetInputRange(NGInlineItemTextIndex start, wtf_size_t end_item_index);
++  void SetInputRange(NGInlineItemTextIndex start,
++                     wtf_size_t end_item_index,
++                     WhitespaceState initial_whitespace_state);
 +
-   // True if the last line has `box-decoration-break: clone`, which affected the
-   // size.
-   bool HasClonedBoxDecorations() const { return has_cloned_box_decorations_; }
-@@ -205,6 +209,19 @@ class CORE_EXPORT NGLineBreaker {
+  private:
+   const String& Text() const { return text_content_; }
+   const HeapVector<NGInlineItem>& Items() const { return items_data_.items; }
+@@ -205,6 +211,23 @@ class CORE_EXPORT NGLineBreaker {
    void HandleBlockInInline(const NGInlineItem&, NGLineInfo*);
    void ComputeMinMaxContentSizeForBlockChild(const NGInlineItem&,
                                               NGInlineItemResult*);
 +  // Returns false if we can't handle the current NGInlineItem as a ruby.
 +  bool HandleRuby(NGLineInfo* line_info);
++  // `mode`: Must be kMaxContent or kContent.
++  // `limit`: Must be non-negative or kIndefiniteSize, which means no auto-wrap.
 +  NGLineInfo CreateSubLineInfo(NGInlineItemTextIndex start,
 +                               wtf_size_t end_item_index,
-+                               LayoutUnit limit);
++                               NGLineBreakerMode mode,
++                               LayoutUnit limit,
++                               WhitespaceState initial_whitespace_state);
 +  NGInlineItemResult* AddRubyColumnResult(
 +      const NGInlineItem& item,
 +      const NGLineInfo& base_line_info,
@@ -40,7 +46,15 @@ index be47a676d33890436858d55bae489e23a029f8ab..d308c1134bcd14fb1b5f9a5d2ceb8978
  
    bool CanBreakAfterAtomicInline(const NGInlineItem& item) const;
    bool CanBreakAfter(const NGInlineItem& item) const;
-@@ -236,6 +253,7 @@ class CORE_EXPORT NGLineBreaker {
+@@ -214,6 +237,7 @@ class CORE_EXPORT NGLineBreaker {
+   bool MayBeAtomicInline(wtf_size_t offset) const;
+   const NGInlineItem* TryGetAtomicInlineItemAfter(
+       const NGInlineItem& item) const;
++  unsigned IgnorableBidiControlLength(const NGInlineItem& item) const;
+ 
+   void HandleFloat(const NGInlineItem&,
+                    NGLineInfo*);
+@@ -236,6 +260,7 @@ class CORE_EXPORT NGLineBreaker {
    bool IsPreviousItemOfType(NGInlineItem::NGInlineItemType);
    void MoveToNextOf(const NGInlineItem&);
    void MoveToNextOf(const NGInlineItemResult&);
@@ -48,7 +62,27 @@ index be47a676d33890436858d55bae489e23a029f8ab..d308c1134bcd14fb1b5f9a5d2ceb8978
  
    void ComputeBaseDirection();
    void RecalcClonedBoxDecorations();
-@@ -342,6 +360,10 @@ class CORE_EXPORT NGLineBreaker {
+@@ -275,6 +300,9 @@ class CORE_EXPORT NGLineBreaker {
+   // |WhitespaceState| of the current end. When a line is broken, this indicates
+   // the state of trailing whitespaces.
+   WhitespaceState trailing_whitespace_;
++  // The state just after starting BreakLine(). This can be overridden by
++  // SetInputRange().
++  WhitespaceState initial_whitespace_ = WhitespaceState::kLeading;
+ 
+   // The current position from inline_start. Unlike NGInlineLayoutAlgorithm
+   // that computes position in visual order, this position in logical order.
+@@ -304,6 +332,9 @@ class CORE_EXPORT NGLineBreaker {
+   // True when current box allows line wrapping.
+   bool auto_wrap_ = false;
+ 
++  // Disallow line wrapping even if the ComputedStyle allows it.
++  bool disallow_auto_wrap_ = false;
++
+   // True when current box has 'word-break/word-wrap: break-word'.
+   bool break_anywhere_if_overflow_ = false;
+ 
+@@ -342,6 +373,10 @@ class CORE_EXPORT NGLineBreaker {
  
    const NGInlineItemsData& items_data_;
  

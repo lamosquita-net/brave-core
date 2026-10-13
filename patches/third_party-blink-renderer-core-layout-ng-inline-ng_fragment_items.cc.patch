@@ -1,0 +1,15 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_fragment_items.cc b/third_party/blink/renderer/core/layout/ng/inline/ng_fragment_items.cc
+index d36d809a830c3d8fdebaa5e61ea53da0e6477ec9..1f5a99d9c61038bbf69805edc1ec004fde485ede 100644
+--- a/third_party/blink/renderer/core/layout/ng/inline/ng_fragment_items.cc
++++ b/third_party/blink/renderer/core/layout/ng/inline/ng_fragment_items.cc
+@@ -191,6 +191,10 @@ void NGFragmentItems::ClearAssociatedFragments(LayoutObject* container) {
+ bool NGFragmentItems::CanReuseAll(NGInlineCursor* cursor) {
+   for (; *cursor; cursor->MoveToNext()) {
+     const NGFragmentItem& item = *cursor->Current().Item();
++    // Ignore nested kLine items though their descendants affect the result.
++    if (item.Type() == NGFragmentItem::kLine) {
++      continue;
++    }
+     if (!item.CanReuse())
+       return false;
+   }

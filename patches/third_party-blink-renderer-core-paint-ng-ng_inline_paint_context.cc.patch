@@ -1,0 +1,21 @@
+diff --git a/third_party/blink/renderer/core/paint/ng/ng_inline_paint_context.cc b/third_party/blink/renderer/core/paint/ng/ng_inline_paint_context.cc
+index 854dc7b3d326cc2c173d7439349ed0d6d399ead5..937cb9adb6ac6b0ee6b9d387007fd44e0b0c6fca 100644
+--- a/third_party/blink/renderer/core/paint/ng/ng_inline_paint_context.cc
++++ b/third_party/blink/renderer/core/paint/ng/ng_inline_paint_context.cc
+@@ -293,11 +293,11 @@ void NGInlinePaintContext::SetLineBox(const NGInlineCursor& line_cursor) {
+   //
+   // Compute the offset of the non-existent anonymous inline box.
+   PhysicalOffset offset = line_item.OffsetInContainerFragment();
+-  const NGPhysicalLineBoxFragment* fragment = line_item.LineBoxFragment();
+-  DCHECK(fragment);
+-  if (const SimpleFontData* font = style.GetFont().PrimaryFont()) {
+-    offset.top += fragment->Metrics().ascent;
+-    offset.top -= font->GetFontMetrics().FixedAscent();
++  if (const NGPhysicalLineBoxFragment* fragment = line_item.LineBoxFragment()) {
++    if (const SimpleFontData* font = style.GetFont().PrimaryFont()) {
++      offset.top += fragment->Metrics().ascent;
++      offset.top -= font->GetFontMetrics().FixedAscent();
++    }
+   }
+ 
+   // If the block has multiple decorations, all decorations have the same

@@ -1,13 +1,14 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.cc b/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.cc
-index 4125fe51de0e63b2708dedf02f62c5347554df45..f34d7aef71148eb1a9112de61dd60a0459b4743d 100644
+index 4125fe51de0e63b2708dedf02f62c5347554df45..9f00f6b0d59de479504cadf2777a37345fb99c78 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.cc
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.cc
-@@ -8,10 +8,19 @@
+@@ -8,10 +8,20 @@
  #include "third_party/blink/renderer/core/layout/layout_object_inlines.h"
  #include "third_party/blink/renderer/core/layout/ng/inline/ng_inline_break_token.h"
  #include "third_party/blink/renderer/core/layout/ng/inline/ng_inline_node.h"
 +#include "third_party/blink/renderer/core/layout/ng/ng_layout_result.h"
  #include "third_party/blink/renderer/platform/fonts/shaping/shape_result_view.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
  
  namespace blink {
  
@@ -22,7 +23,57 @@ index 4125fe51de0e63b2708dedf02f62c5347554df45..f34d7aef71148eb1a9112de61dd60a04
  void NGLineInfo::Reset() {
    items_data_ = nullptr;
    line_style_ = nullptr;
-@@ -182,6 +191,15 @@ bool NGLineInfo::ShouldHangTrailingSpaces() const {
+@@ -51,7 +61,8 @@ void NGLineInfo::Reset() {
+   needs_accurate_end_position_ = false;
+   is_ruby_base_ = false;
+   is_ruby_text_ = false;
+-  may_have_text_combine_item_ = false;
++  may_have_text_combine_or_ruby_item_ = false;
++  may_have_ruby_overhang_ = false;
+   allow_hang_for_alignment_ = false;
+ }
+ 
+@@ -63,8 +74,10 @@ void NGLineInfo::SetLineStyle(const NGInlineNode& node,
+   const LayoutBox* box = node.GetLayoutBox();
+   line_style_ = box->Style(use_first_line_style_);
+   needs_accurate_end_position_ = ComputeNeedsAccurateEndPosition();
+-  is_ruby_base_ = box->IsRubyBase();
+-  is_ruby_text_ = box->IsRubyText();
++  if (!RuntimeEnabledFeatures::RubyLineBreakableEnabled()) {
++    is_ruby_base_ = box->IsRubyBase();
++    is_ruby_text_ = box->IsRubyText();
++  }
+ 
+   // Reset block start offset related members.
+   annotation_block_start_adjustment_ = LayoutUnit();
+@@ -138,12 +151,23 @@ bool NGLineInfo::ComputeNeedsAccurateEndPosition() const {
+ }
+ 
+ NGInlineItemTextIndex NGLineInfo::End() const {
+-  return BreakToken() ? BreakToken()->Start() : ItemsData().End();
++  if (BreakToken()) {
++    return BreakToken()->Start();
++  }
++  if (end_item_index_ && end_item_index_ < ItemsData().items.size()) {
++    return {end_item_index_, ItemsData().items[end_item_index_].StartOffset()};
++  }
++  return ItemsData().End();
+ }
+ 
+ unsigned NGLineInfo::EndTextOffset() const {
+-  return BreakToken() ? BreakToken()->StartTextOffset()
+-                      : ItemsData().text_content.length();
++  if (BreakToken()) {
++    return BreakToken()->StartTextOffset();
++  }
++  if (end_item_index_ && end_item_index_ < ItemsData().items.size()) {
++    return ItemsData().items[end_item_index_].StartOffset();
++  }
++  return ItemsData().text_content.length();
+ }
+ 
+ unsigned NGLineInfo::InflowEndOffset() const {
+@@ -182,6 +206,15 @@ bool NGLineInfo::ShouldHangTrailingSpaces() const {
    NOTREACHED();
  }
  

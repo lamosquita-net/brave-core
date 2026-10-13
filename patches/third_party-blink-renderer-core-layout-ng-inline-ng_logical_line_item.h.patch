@@ -1,0 +1,61 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_logical_line_item.h b/third_party/blink/renderer/core/layout/ng/inline/ng_logical_line_item.h
+index 0a53c8ff0c10619379bb22715f24e7b80b84bc45..85211e6b385d4ecc46e23b5f3446a317caec021d 100644
+--- a/third_party/blink/renderer/core/layout/ng/inline/ng_logical_line_item.h
++++ b/third_party/blink/renderer/core/layout/ng/inline/ng_logical_line_item.h
+@@ -152,11 +152,14 @@ struct NGLogicalLineItem {
+     return layout_result && layout_result->PhysicalFragment().IsInlineBox();
+   }
+   bool HasInFlowFragment() const {
+-    return inline_item ||
++    return (inline_item &&
++            inline_item->Type() != NGInlineItem::kRubyLinePlaceholder) ||
+            (layout_result && !layout_result->PhysicalFragment().IsFloating());
+   }
+   bool HasInFlowOrFloatingFragment() const {
+-    return inline_item || layout_result || layout_object;
++    return (inline_item &&
++            inline_item->Type() != NGInlineItem::kRubyLinePlaceholder) ||
++           layout_result || layout_object;
+   }
+   bool HasOutOfFlowFragment() const { return out_of_flow_positioned_box; }
+   bool HasFragment() const {
+@@ -180,6 +183,10 @@ struct NGLogicalLineItem {
+     }
+     return false;
+   }
++  bool IsRubyLinePlaceholder() const {
++    return inline_item &&
++           inline_item->Type() == NGInlineItem::kRubyLinePlaceholder;
++  }
+ 
+   const LogicalOffset& Offset() const { return rect.offset; }
+   LayoutUnit InlineOffset() const { return rect.offset.inline_offset; }
+@@ -254,6 +261,9 @@ struct NGLogicalLineItem {
+   bool has_only_trailing_spaces = false;
+ 
+   bool is_hidden_for_paint = false;
++
++  bool has_over_annotation = false;
++  bool has_under_annotation = false;
+ };
+ 
+ CORE_EXPORT std::ostream& operator<<(std::ostream& stream,
+@@ -328,12 +338,18 @@ class CORE_EXPORT NGLogicalLineItems
+   void MoveInBlockDirection(LayoutUnit);
+   void MoveInBlockDirection(LayoutUnit, unsigned start, unsigned end);
+ 
++  void SetPropagated() { was_propagated_ = true; }
++  // Returns true if box fragments were created and were propagated to the
++  // parent.
++  bool WasPropagated() const { return was_propagated_; }
++
+   void Trace(Visitor*) const;
+ 
+  private:
+   void WillInsertChild(unsigned index);
+ 
+   HeapVector<NGLogicalLineItem, 16> children_;
++  bool was_propagated_ = false;
+ };
+ 
+ }  // namespace blink

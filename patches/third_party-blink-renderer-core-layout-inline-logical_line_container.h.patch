@@ -1,9 +1,9 @@
 diff --git a/third_party/blink/renderer/core/layout/inline/logical_line_container.h b/third_party/blink/renderer/core/layout/inline/logical_line_container.h
 new file mode 100644
-index 0000000000000000000000000000000000000000..72b2b02dfc662e71a903399108c6aed9cb9fbb40
+index 0000000000000000000000000000000000000000..633bc2951c826fd04194f19fe9e0a4130fa10dc3
 --- /dev/null
 +++ b/third_party/blink/renderer/core/layout/inline/logical_line_container.h
-@@ -0,0 +1,52 @@
+@@ -0,0 +1,61 @@
 +// Copyright 2024 The Chromium Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -28,18 +28,25 @@ index 0000000000000000000000000000000000000000..72b2b02dfc662e71a903399108c6aed9
 +  void Trace(Visitor* visitor) const;
 +
 +  NGLogicalLineItems& BaseLine() const { return *base_line_; }
-+  wtf_size_t AnnotationSize() const { return annotation_line_list_.size(); }
-+  FontHeight AnnotationMetricsAt(wtf_size_t index) const {
-+    return annotation_metrics_list_[index];
-+  }
-+  NGLogicalLineItems& AnnotationLineAt(wtf_size_t index) const {
-+    return *annotation_line_list_[index];
++  struct AnnotationLine {
++    DISALLOW_NEW();
++
++   public:
++    FontHeight metrics;
++    Member<NGLogicalLineItems> line_items;
++
++    AnnotationLine(FontHeight metrics, NGLogicalLineItems& line_items)
++        : metrics(metrics), line_items(line_items) {}
++    void Trace(Visitor* visitor) const { visitor->Trace(line_items); }
++    NGLogicalLineItems* operator->() const { return line_items.Get(); }
++  };
++  const HeapVector<AnnotationLine>& AnnotationLineList() const {
++    return annotation_line_list_;
 +  }
 +  wtf_size_t EstimatedFragmentItemCount() const;
 +
 +  void AddAnnotation(FontHeight metrics, NGLogicalLineItems& line_items) {
-+    annotation_metrics_list_.push_back(metrics);
-+    annotation_line_list_.push_back(line_items);
++    annotation_line_list_.push_back(AnnotationLine(metrics, line_items));
 +  }
 +  // Release all collection buffers.
 +  void Clear();
@@ -49,10 +56,12 @@ index 0000000000000000000000000000000000000000..72b2b02dfc662e71a903399108c6aed9
 +
 + private:
 +  Member<NGLogicalLineItems> base_line_;
-+  Vector<FontHeight> annotation_metrics_list_;
-+  HeapVector<Member<NGLogicalLineItems>> annotation_line_list_;
++  HeapVector<AnnotationLine> annotation_line_list_;
 +};
 +
 +}  // namespace blink
++
++WTF_ALLOW_CLEAR_UNUSED_SLOTS_WITH_MEM_FUNCTIONS(
++    blink::LogicalLineContainer::AnnotationLine)
 +
 +#endif  // THIRD_PARTY_BLINK_RENDERER_CORE_LAYOUT_INLINE_LOGICAL_LINE_CONTAINER_H_
