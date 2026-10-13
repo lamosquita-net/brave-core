@@ -1,8 +1,20 @@
 diff --git a/src/ic/ic.cc b/src/ic/ic.cc
-index dfa63ffc399b18c22cb0a726585a3645757a38da..e305ca9374ee5d23dde539128fd4fee602f218f2 100644
+index dfa63ffc399b18c22cb0a726585a3645757a38da..8277637edcb34039cab357c799524b057537c811 100644
 --- a/src/ic/ic.cc
 +++ b/src/ic/ic.cc
-@@ -3271,7 +3271,9 @@ FastCloneObjectMode GetCloneModeForMap(DirectHandle<Map> map,
+@@ -1887,6 +1887,11 @@ MaybeHandle<Object> StoreIC::Store(Handle<Object> object, Handle<Name> name,
+       if (!can_store.FromJust()) {
+         return isolate()->factory()->undefined_value();
+       }
++      // Restart the lookup iterator updated by CheckPrivateNameStore() for
++      // UpdateCaches() to handle access checks.
++      if (use_ic && IsAccessCheckNeeded(*object)) {
++        it.Restart();
++      }
+     }
+ 
+     // IC handling of private fields/symbols stores on JSProxy is not
+@@ -3271,7 +3276,9 @@ FastCloneObjectMode GetCloneModeForMap(DirectHandle<Map> map,
    }
  
    // TODO(olivf): Think about cases where cross-context copies are safe.
@@ -13,7 +25,7 @@ index dfa63ffc399b18c22cb0a726585a3645757a38da..e305ca9374ee5d23dde539128fd4fee6
      return FastCloneObjectMode::kNotSupported;
    }
  
-@@ -3519,6 +3521,9 @@ std::optional<Tagged<Map>> GetCloneTargetMap(Isolate* isolate,
+@@ -3519,6 +3526,9 @@ std::optional<Tagged<Map>> GetCloneTargetMap(Isolate* isolate,
                                               DirectHandle<Map> override_map,
                                               Handle<Symbol> name) {
    if (!v8_flags.clone_object_sidestep_transitions) return {};
