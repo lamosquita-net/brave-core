@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.cc b/third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.cc
-index bb7994b813c853fd54441c07a53bb8709c986488..7147248207148ca55e1b574a831dc5b4186a6cb6 100644
+index bb7994b813c853fd54441c07a53bb8709c986488..bf5a4af158a368fe31d64972a5a03376bf68ac4f 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.cc
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_ruby_utils.cc
 @@ -5,12 +5,23 @@
@@ -564,14 +564,14 @@ index bb7994b813c853fd54441c07a53bb8709c986488..7147248207148ca55e1b574a831dc5b4
 +    return *line1 < *line2;
 +  });
 +
-+  auto base_iterator = base::ranges::find_if(
++  auto* base_iterator = base::ranges::find_if(
 +      ruby_lines_,
 +      [](const Member<RubyLine>& line) { return line->Level().empty(); });
 +  CHECK_NE(base_iterator, ruby_lines_.end());
 +
 +  // Place "under" annotations from the base level to the lowest one.
 +  if (base_iterator != ruby_lines_.begin()) {
-+    auto first_under_iterator = base::ranges::find_if(
++    auto* first_under_iterator = base::ranges::find_if(
 +        ruby_lines_.begin(), base_iterator,
 +        [](const Member<RubyLine>& line) { return line->IsFirstUnderLevel(); });
 +    FontHeight em_height = ComputeLogicalLineEmHeight(
@@ -580,7 +580,7 @@ index bb7994b813c853fd54441c07a53bb8709c986488..7147248207148ca55e1b574a831dc5b4
 +      em_height = line_box_metrics;
 +    }
 +    LayoutUnit offset = em_height.descent;
-+    for (auto it = base_iterator; it != ruby_lines_.begin(); --it) {
++    for (auto* it = base_iterator; it != ruby_lines_.begin(); --it) {
 +      RubyLine& ruby_line = **std::prev(it);
 +      FontHeight metrics = ruby_line.UpdateMetrics();
 +      offset += metrics.ascent;
@@ -592,7 +592,7 @@ index bb7994b813c853fd54441c07a53bb8709c986488..7147248207148ca55e1b574a831dc5b4
 +
 +  // Place "over" annotations from the base level to the highest one.
 +  if (std::next(base_iterator) != ruby_lines_.end()) {
-+    auto first_over_iterator = base::ranges::find_if(
++    auto* first_over_iterator = base::ranges::find_if(
 +        base_iterator, ruby_lines_.end(),
 +        [](const Member<RubyLine>& line) { return line->IsFirstOverLevel(); });
 +    FontHeight em_height = ComputeLogicalLineEmHeight(
@@ -601,7 +601,7 @@ index bb7994b813c853fd54441c07a53bb8709c986488..7147248207148ca55e1b574a831dc5b4
 +      em_height = line_box_metrics;
 +    }
 +    LayoutUnit offset = -em_height.ascent;
-+    for (auto it = std::next(base_iterator); it != ruby_lines_.end(); ++it) {
++    for (auto* it = std::next(base_iterator); it != ruby_lines_.end(); ++it) {
 +      RubyLine& ruby_line = **it;
 +      FontHeight metrics = ruby_line.UpdateMetrics();
 +      offset -= metrics.descent;
