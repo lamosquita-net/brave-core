@@ -12,8 +12,11 @@
 
 #if BUILDFLAG(ENABLE_BRAVE_PAGE_GRAPH)
 
-#define rail_mutex_                                                          \
-  rail_mutex_;                                                               \
+// FlyWeb: V8 12.8 drops Isolate::rail_mutex_ (RAIL mode lost its lock), the
+// member this hook used to append the page graph members after. Use another
+// private base::Mutex declared once in isolate.h and only used in isolate.cc.
+#define managed_ptr_destructors_mutex_                                       \
+  managed_ptr_destructors_mutex_;                                            \
                                                                              \
  public:                                                                     \
   void set_page_graph_delegate(                                              \
@@ -34,7 +37,7 @@
 #include "src/v8/src/execution/isolate.h"  // IWYU pragma: export
 
 #if BUILDFLAG(ENABLE_BRAVE_PAGE_GRAPH)
-#undef rail_mutex_
+#undef managed_ptr_destructors_mutex_
 #endif  // BUILDFLAG(ENABLE_BRAVE_PAGE_GRAPH)
 
 #endif  // BRAVE_CHROMIUM_SRC_V8_SRC_EXECUTION_ISOLATE_H_
