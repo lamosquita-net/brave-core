@@ -1,8 +1,21 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_item.cc b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_item.cc
-index 2b63a53ac9d534868040a4e304d060e664489418..4287e719607beb6c0e20b2c894f41432e14ca404 100644
+index 2b63a53ac9d534868040a4e304d060e664489418..1a23e1dc61df71c5b6362f27d89e2a51ad739834 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_item.cc
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_item.cc
-@@ -169,6 +169,12 @@ const char* NGInlineItem::NGInlineItemTypeToString(NGInlineItemType val) const {
+@@ -112,6 +112,12 @@ NGInlineItem::NGInlineItem(const NGInlineItem& other,
+   DCHECK_GE(end, start);
+ }
+ 
++NGInlineItem::NGInlineItem(const NGInlineItem& other)
++    : NGInlineItem(other,
++                   other.start_offset_,
++                   other.end_offset_,
++                   other.shape_result_) {}
++
+ NGInlineItem::~NGInlineItem() = default;
+ 
+ void NGInlineItem::ComputeBoxProperties() {
+@@ -169,6 +175,12 @@ const char* NGInlineItem::NGInlineItemTypeToString(NGInlineItemType val) const {
        return "ListMerker";
      case kBidiControl:
        return "BidiControl";
@@ -15,7 +28,7 @@ index 2b63a53ac9d534868040a4e304d060e664489418..4287e719607beb6c0e20b2c894f41432
    }
    NOTREACHED_NORETURN();
  }
-@@ -230,9 +236,10 @@ const Font& NGInlineItem::FontWithSvgScaling() const {
+@@ -230,9 +242,10 @@ const Font& NGInlineItem::FontWithSvgScaling() const {
  }
  
  String NGInlineItem::ToString() const {

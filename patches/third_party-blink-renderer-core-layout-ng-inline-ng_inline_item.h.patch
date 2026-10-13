@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_item.h b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_item.h
-index 5d907e9c5662f76c74d294bf1ad6b91de4c61f66..a5561ee9c5d9f52afcc1256d24885fb2149ce851 100644
+index 5d907e9c5662f76c74d294bf1ad6b91de4c61f66..c2a153890dd54589ba1d802e1e37cb4616833aea 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_item.h
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_item.h
 @@ -40,7 +40,15 @@ class CORE_EXPORT NGInlineItem {
@@ -19,3 +19,13 @@ index 5d907e9c5662f76c74d294bf1ad6b91de4c61f66..a5561ee9c5d9f52afcc1256d24885fb2
    };
  
    enum NGCollapseType {
+@@ -67,6 +75,9 @@ class CORE_EXPORT NGInlineItem {
+                unsigned adjusted_start,
+                unsigned adjusted_end,
+                scoped_refptr<const ShapeResult>);
++  // Copying must initialize `layout_object_` atomically too, to allow for
++  // concurrently marking NGInlineItem (Chromium 9df6f20935b).
++  NGInlineItem(const NGInlineItem&);
+ 
+   NGInlineItemType Type() const { return type_; }
+   const char* NGInlineItemTypeToString(NGInlineItemType val) const;

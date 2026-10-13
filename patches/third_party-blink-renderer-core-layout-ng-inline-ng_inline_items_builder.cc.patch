@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_items_builder.cc b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_items_builder.cc
-index a81fab13f92986aa84d18e0713423db458479c4c..fbadc3bcbeeeceaefdc551af8cd5dcfa302dcf38 100644
+index a81fab13f92986aa84d18e0713423db458479c4c..06d333ab3794c9c3ac7e1691d93c7cec39193dcf 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_items_builder.cc
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_items_builder.cc
 @@ -40,6 +40,13 @@ String NGInlineItemsBuilderTemplate<OffsetMappingBuilder>::ToString() {
@@ -16,7 +16,27 @@ index a81fab13f92986aa84d18e0713423db458479c4c..fbadc3bcbeeeceaefdc551af8cd5dcfa
  // The spec turned into a discussion that may change. Put this logic on hold
  // until CSSWG resolves the issue.
  // https://github.com/w3c/csswg-drafts/issues/337
-@@ -556,7 +563,7 @@ void NGInlineItemsBuilderTemplate<OffsetMappingBuilder>::AppendText(
+@@ -469,8 +476,8 @@ bool NGInlineItemsBuilderTemplate<OffsetMappingBuilder>::AppendTextReusing(
+       // The following should be true, but some unit tests fail.
+       // DCHECK_EQ(item->Type(), NGInlineItem::kControl);
+     }
+-    NGInlineItem adjusted_item(item, start, end,
+-                               std::move(adjusted_shape_result));
++    NGInlineItem& adjusted_item = items_->emplace_back(
++        item, start, end, std::move(adjusted_shape_result));
+ 
+ #if DCHECK_IS_ON()
+     DCHECK_EQ(start, adjusted_item.StartOffset());
+@@ -481,8 +488,6 @@ bool NGInlineItemsBuilderTemplate<OffsetMappingBuilder>::AppendTextReusing(
+     }
+     DCHECK_EQ(item.IsEmptyItem(), adjusted_item.IsEmptyItem());
+ #endif
+-
+-    items_->push_back(adjusted_item);
+     DidAppendTextReusing(adjusted_item);
+   }
+   return true;
+@@ -556,7 +561,7 @@ void NGInlineItemsBuilderTemplate<OffsetMappingBuilder>::AppendText(
    const ComputedStyle& style = layout_object->StyleRef();
    const bool should_not_preserve_newline =
        (layout_object && layout_object->IsSVGInlineText()) ||
@@ -25,7 +45,7 @@ index a81fab13f92986aa84d18e0713423db458479c4c..fbadc3bcbeeeceaefdc551af8cd5dcfa
  
    RestoreTrailingCollapsibleSpaceIfRemoved();
  
-@@ -636,7 +643,8 @@ void NGInlineItemsBuilderTemplate<
+@@ -636,7 +641,8 @@ void NGInlineItemsBuilderTemplate<
      // LayoutBR does not set preserve_newline, but should be preserved.
      if (UNLIKELY(space_run_has_newline && string.length() == 1 &&
                   layout_object && layout_object->IsBR())) {
@@ -35,7 +55,7 @@ index a81fab13f92986aa84d18e0713423db458479c4c..fbadc3bcbeeeceaefdc551af8cd5dcfa
          AppendTextItem(" ", layout_object);
        } else {
          AppendForcedBreakCollapseWhitespace(layout_object);
-@@ -870,7 +878,7 @@ void NGInlineItemsBuilderTemplate<
+@@ -870,7 +876,7 @@ void NGInlineItemsBuilderTemplate<
      UChar c = string[start];
      if (IsControlItemCharacter(c)) {
        if (c == kNewlineCharacter) {
@@ -44,7 +64,7 @@ index a81fab13f92986aa84d18e0713423db458479c4c..fbadc3bcbeeeceaefdc551af8cd5dcfa
            start++;
            AppendTextItem(" ", layout_object);
            continue;
-@@ -1329,20 +1337,50 @@ void NGInlineItemsBuilderTemplate<OffsetMappingBuilder>::EnterInline(
+@@ -1329,20 +1335,50 @@ void NGInlineItemsBuilderTemplate<OffsetMappingBuilder>::EnterInline(
      }
    }
  
@@ -105,7 +125,7 @@ index a81fab13f92986aa84d18e0713423db458479c4c..fbadc3bcbeeeceaefdc551af8cd5dcfa
    }
  }
  
-@@ -1361,6 +1399,32 @@ void NGInlineItemsBuilderTemplate<OffsetMappingBuilder>::ExitInline(
+@@ -1361,6 +1397,32 @@ void NGInlineItemsBuilderTemplate<OffsetMappingBuilder>::ExitInline(
      LayoutObject* node) {
    DCHECK(node);
  
@@ -138,7 +158,7 @@ index a81fab13f92986aa84d18e0713423db458479c4c..fbadc3bcbeeeceaefdc551af8cd5dcfa
    if (NeedsBoxInfo()) {
      BoxInfo* current_box = &boxes_.back();
      if (!current_box->should_create_box_fragment) {
-@@ -1402,6 +1466,28 @@ void NGInlineItemsBuilderTemplate<OffsetMappingBuilder>::ExitInline(
+@@ -1402,6 +1464,28 @@ void NGInlineItemsBuilderTemplate<OffsetMappingBuilder>::ExitInline(
  
    AppendOpaque(NGInlineItem::kCloseTag, node);
  
