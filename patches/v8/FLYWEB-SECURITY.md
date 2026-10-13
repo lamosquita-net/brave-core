@@ -28,6 +28,21 @@ was compared on a clean 12.8.374.38 (`git apply`, `-R`, by hand).
 | 9b3e3bf (crbug 371237564) | Parser: no `this` var management in reparsed scopes |
 | 3349cb9fd (crbug 350350588; found by MOTOR-6, 13-10) | `MicrotaskQueue`: a completed callback that removes itself while the callbacks run was not removed when the copy-on-write vector became empty (12.8's b8235a6), so Blink 116's `EventLoop` (which removes itself and releases) was called after being freed: **use-after-free reachable from any page**, and the likely cause of the YouTube hang. 12.6/12.7 do not have b8235a6 |
 
+Embedder-API pass (COORDINACIÓN-5; proposals by MOTOR-6, `FlyWeb/docs/v8-12.8-blink.md` §4, 13-10, reviewed one by one):
+
+| Fix | What |
+|---|---|
+| 12e09a455 (crbug 402863536) | `DefineNamedOwnIC` (public class fields) on a `JSGlobalProxy`: the fast path ignored the attributes kept on the global object (e.g. a sealed global); now it goes to the runtime |
+| 8324ee42e (crbug 40059554), `cpp-heap.cc` only | `TracedReference` reset from a pre-finalizer freed a traced node already reclaimed in the atomic pause (**double free**, free-list corruption): pre-finalizers now run inside `SweepingOnMutatorThreadForGlobalHandlesScope`. Also affects 12.6/12.7 |
+| 6b85b7c6b (crbug 42204611) | `LookupIterator`: the global object and its global proxy give two `ACCESS_CHECK`s in a row; five places only skipped one (`if` → `while`), so they went on with the iterator still on an access check (after 12.8's branch point) |
+| 367fce4df (crbug 561672123), by hand | `ErrorUtils::Get/SetFormattedStack` read or wrote `error_stack_symbol` on access-checked receivers (cross-origin `WindowProxy`/`Location`) without an access check |
+| 279d28029 (crbug 563235411), by hand | Private-name store on an access-checked object: `CheckPrivateNameStore` moved the `LookupIterator` past `ACCESS_CHECK`, so `StoreIC` cached a fast handler on an access-checked map; the iterator is restarted, and `AddPrivateField` walks past `ACCESS_CHECK` |
+
+Left out from that pass: 874d5646f (+ its reland 60611ef01 and its follow-up 9f7485309: no black allocation of
+`CppHeapPointerTable` entries) is sandbox hardening, never merged to a release branch, needs its EPT twin acf6173ec and
+was reverted once for breaking Chromium; in 12.8 `SetPointer()` still sets the mark bit, so 9f7485309's DCHECK is valid
+there. 7ddae4164 (`IterableToList` interceptor fast path): the fast path does not exist in 12.8.
+
 Checked and **not applicable** to 12.8: 91343bb (no `TrustedHeapConstant`), the big-WeakMaps revert (12.8 does not have
 them), Turboshaft-Wasm fixes (`turboshaft_wasm` off), Turboshaft ISel (off), the generic wasm-to-js wrapper tier-up
 (153d4e8; the wrapper is off), JSPI and central-stack switching (experimental), `call_indirect` inlining
@@ -41,14 +56,15 @@ off; load elimination and loop unrolling on; Wasm inlining on (COORDINACIÓN 09-
 
 ## 4. Cache epoch
 
-`kFlyWebCacheEpoch` **11** (10 before 3349cb9fd; 9 is `nube/v8-12.8-api`/`-fase4`, 8 reserved for `seg/v8-12.7`).
+`kFlyWebCacheEpoch` **12** (11 before the embedder-API pass, 10 before 3349cb9fd; 9 is `nube/v8-12.8-api`/`-fase4`, 8 reserved for `seg/v8-12.7`).
 
 ## 5. Tests (cloud `d8`, Linux x64, V8 only; `FlyWeb/scripts/v8-d8.sh`)
 
 - Options as above by default (`--print-flag-values`).
 - FlyWeb's regression tests (`FlyWeb/tools/v8-pruebas/`) and upstream ones (371237564, 377971725, 363538434, 366323452,
-  364422411, 372819446): **14/14**.
-- **mjsunit 7114/7122** (with Google's `kMaxArguments` test changes for f6961c40). The 8: 7
+  364422411, 372819446): **14/14**; plus the upstream tests of the embedder-API pass (402863536, 561672123,
+  563235411; the last two with a test-only backport of `d8.test.createAccessCheckedObject`): **17/17**.
+- **mjsunit 7117/7125** (with the three new upstream tests; with Google's `kMaxArguments` test changes for f6961c40). The 8: 7
   `turboshaft/maglev-frontend/*` (experimental `--turboshaft-from-maglev`, needs Turboshaft ISel) and
   `maglev/extras-cped` (asserts Maglev code): with `--turboshaft-instruction-selection --maglev` all 171 `turboshaft/*`
   and that test pass, so they come from FlyWeb's options, not from the patches.
