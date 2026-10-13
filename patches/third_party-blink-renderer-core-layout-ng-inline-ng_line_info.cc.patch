@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.cc b/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.cc
-index 4125fe51de0e63b2708dedf02f62c5347554df45..5f90c463031a7da41196c943cb42982e227e2cab 100644
+index 4125fe51de0e63b2708dedf02f62c5347554df45..32035eb038558130e2a49abe2692fbb194ae3fdc 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.cc
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.cc
 @@ -5,13 +5,45 @@
@@ -71,7 +71,38 @@ index 4125fe51de0e63b2708dedf02f62c5347554df45..5f90c463031a7da41196c943cb42982e
  
    // Reset block start offset related members.
    annotation_block_start_adjustment_ = LayoutUnit();
-@@ -137,27 +172,84 @@ bool NGLineInfo::ComputeNeedsAccurateEndPosition() const {
+@@ -73,14 +108,25 @@ void NGLineInfo::SetLineStyle(const NGInlineNode& node,
+ }
+ 
+ ETextAlign NGLineInfo::GetTextAlign(bool is_last_line) const {
+-  // See LayoutRubyBase::TextAlignmentForLine().
+   if (is_ruby_base_)
+     return ETextAlign::kJustify;
+ 
+-  // See LayoutRubyText::TextAlignmentForLine().
+-  if (is_ruby_text_ && LineStyle().GetTextAlign() ==
+-                           ComputedStyleInitialValues::InitialTextAlign())
+-    return ETextAlign::kJustify;
++  if (is_ruby_text_) {
++    ETextAlign text_align = LineStyle().GetTextAlign();
++    if (!RuntimeEnabledFeatures::RubyLineBreakableEnabled()) {
++      if (text_align == ComputedStyleInitialValues::InitialTextAlign()) {
++        return ETextAlign::kJustify;
++      }
++    } else {
++      ERubyAlign ruby_align = LineStyle().RubyAlign();
++      if ((ruby_align == ERubyAlign::kSpaceAround &&
++           (text_align == ComputedStyleInitialValues::InitialTextAlign() ||
++            text_align == ETextAlign::kJustify)) ||
++          ruby_align == ERubyAlign::kSpaceBetween) {
++        return ETextAlign::kJustify;
++      }
++    }
++  }
+ 
+   return LineStyle().GetTextAlign(is_last_line);
+ }
+@@ -137,27 +183,84 @@ bool NGLineInfo::ComputeNeedsAccurateEndPosition() const {
    return false;
  }
  
@@ -161,7 +192,7 @@ index 4125fe51de0e63b2708dedf02f62c5347554df45..5f90c463031a7da41196c943cb42982e
  bool NGLineInfo::ShouldHangTrailingSpaces() const {
    if (!HasTrailingSpaces())
      return false;
-@@ -182,6 +274,15 @@ bool NGLineInfo::ShouldHangTrailingSpaces() const {
+@@ -182,6 +285,15 @@ bool NGLineInfo::ShouldHangTrailingSpaces() const {
    NOTREACHED();
  }
  
