@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/ng_physical_fragment.cc b/third_party/blink/renderer/core/layout/ng/ng_physical_fragment.cc
-index c99767b46fca83befc38362fb9a93cb0d4e5eac0..e5e6b92a02bff46c925cd535a18631d76bfb8cb5 100644
+index c99767b46fca83befc38362fb9a93cb0d4e5eac0..aa3a62ff74644dd6b3d2b15e1d05f343174ba393 100644
 --- a/third_party/blink/renderer/core/layout/ng/ng_physical_fragment.cc
 +++ b/third_party/blink/renderer/core/layout/ng/ng_physical_fragment.cc
 @@ -834,9 +834,11 @@ void NGPhysicalFragment::AddOutlineRectsForCursor(
@@ -17,3 +17,16 @@ index c99767b46fca83befc38362fb9a93cb0d4e5eac0..e5e6b92a02bff46c925cd535a18631d7
          break;
        }
        case NGFragmentItem::kGeneratedText:
+@@ -947,8 +949,10 @@ void NGPhysicalFragment::AddScrollableOverflowForInlineChild(
+     }
+ 
+     // Add all children of a culled inline box; i.e., an inline box without
+-    // margin/border/padding etc.
+-    DCHECK_EQ(item->Type(), NGFragmentItem::kBox);
++    // margin/border/padding etc. FlyWeb: nested kLine items are ruby
++    // annotation lines (RubyLB); their children are added the same way.
++    DCHECK(item->Type() == NGFragmentItem::kBox ||
++           (item->Type() == NGFragmentItem::kLine && !item->LineBoxFragment()));
+     descendants.MoveToNext();
+   }
+ }
