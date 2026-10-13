@@ -64,7 +64,7 @@ off; load elimination and loop unrolling on; Wasm inlining on (COORDINACIÓN 09-
 - FlyWeb's regression tests (`FlyWeb/tools/v8-pruebas/`) and upstream ones (371237564, 377971725, 363538434, 366323452,
   364422411, 372819446): **14/14**; plus the upstream tests of the embedder-API pass (402863536, 561672123,
   563235411; the last two with a test-only backport of `d8.test.createAccessCheckedObject`): **17/17**.
-- **mjsunit 7114/7122** (with Google's `kMaxArguments` test changes for f6961c40). The 8: 7
+- **mjsunit 7117/7125** (with the three new upstream tests; with Google's `kMaxArguments` test changes for f6961c40). The 8: 7
   `turboshaft/maglev-frontend/*` (experimental `--turboshaft-from-maglev`, needs Turboshaft ISel) and
   `maglev/extras-cped` (asserts Maglev code): with `--turboshaft-instruction-selection --maglev` all 171 `turboshaft/*`
   and that test pass, so they come from FlyWeb's options, not from the patches.
