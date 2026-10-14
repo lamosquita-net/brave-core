@@ -1,0 +1,23 @@
+diff --git a/src/wasm/wrappers.cc b/src/wasm/wrappers.cc
+index eb6326d26c3d9acf0ecee070de66efa15c2a4faf..b0bad093775abf24f0e39e0c9475069a22b4fc0b 100644
+--- a/src/wasm/wrappers.cc
++++ b/src/wasm/wrappers.cc
+@@ -934,9 +934,7 @@ class WasmWrapperTSGraphBuilder : public WasmGraphBuilderBase {
+         switch (type.heap_representation_non_shared()) {
+           // TODO(14034): Add more fast paths?
+           case wasm::HeapType::kExtern:
+-          case wasm::HeapType::kNoExtern:
+           case wasm::HeapType::kExn:
+-          case wasm::HeapType::kNoExn:
+             if (type.kind() == wasm::kRef) {
+               IF (UNLIKELY(__ TaggedEqual(input, LOAD_ROOT(NullValue)))) {
+                 CallRuntime(__ phase_zone(), Runtime::kWasmThrowJSTypeError, {},
+@@ -947,6 +945,8 @@ class WasmWrapperTSGraphBuilder : public WasmGraphBuilderBase {
+             return input;
+           case wasm::HeapType::kString:
+             return BuildCheckString(input, context, type);
++          case wasm::HeapType::kNoExtern:
++          case wasm::HeapType::kNoExn:
+           case wasm::HeapType::kNone:
+           case wasm::HeapType::kNoFunc:
+           case wasm::HeapType::kI31:

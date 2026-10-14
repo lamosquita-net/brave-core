@@ -1,5 +1,5 @@
 diff --git a/src/flags/flag-definitions.h b/src/flags/flag-definitions.h
-index 8cbafe28f2f282b6bf5208b48fb0ef584db63555..5c020605d33d900a1a0c2dd534e71fda774648a8 100644
+index 8cbafe28f2f282b6bf5208b48fb0ef584db63555..1baa257cf1dcebb68c971e938e9d5c0099f58f4d 100644
 --- a/src/flags/flag-definitions.h
 +++ b/src/flags/flag-definitions.h
 @@ -532,7 +532,9 @@ DEFINE_BOOL(force_emit_interrupt_budget_checks, false,
@@ -23,28 +23,3 @@ index 8cbafe28f2f282b6bf5208b48fb0ef584db63555..5c020605d33d900a1a0c2dd534e71fda
              "enable phi untagging in the maglev optimizing compiler")
  DEFINE_BOOL(maglev_hoist_osr_value_phi_untagging, true,
              "enable phi untagging to hoist untagging of osr values")
-@@ -1407,7 +1410,10 @@ DEFINE_BOOL(turboshaft_wasm_load_elimination, false,
-             "enable Turboshaft's WasmLoadElimination")
- DEFINE_WEAK_IMPLICATION(turboshaft_wasm, turboshaft_wasm_load_elimination)
- 
--DEFINE_BOOL(turboshaft_instruction_selection, true,
-+// FlyWeb: off, as on levels 120-125 (HUMANO, 06-10-2026): TurboFan's
-+// instruction selection keeps the JIT surface already covered by FlyWeb's
-+// security backports.
-+DEFINE_BOOL(turboshaft_instruction_selection, false,
-             "run instruction selection on Turboshaft IR directly")
- 
- DEFINE_BOOL(turboshaft_load_elimination, true,
-@@ -1505,7 +1511,11 @@ DEFINE_VALUE_IMPLICATION(optimize_for_size, max_semi_space_size, size_t{1})
- DEFINE_BOOL(wasm_generic_wrapper, true,
-             "allow use of the generic js-to-wasm wrapper instead of "
-             "per-signature wrappers")
--DEFINE_BOOL(wasm_to_js_generic_wrapper, true,
-+// FlyWeb: off, as in V8 12.0-12.2 and FlyWeb 1.7.1-1.9 (SEGURIDAD, 07-10-2026):
-+// the generic wasm-to-js wrapper (on by default since 12.3) needed large later
-+// fixes (v8 c8c02de5, 8d6bd5e1; V8 12.6 has them) and it is a JIT-adjacent
-+// surface; the per-signature wrappers are used, as in every earlier FlyWeb.
-+DEFINE_BOOL(wasm_to_js_generic_wrapper, false,
-             "allow use of the generic wasm-to-js wrapper instead of "
-             "per-signature wrappers")
- DEFINE_BOOL(expose_wasm, true, "expose wasm interface to JavaScript")
