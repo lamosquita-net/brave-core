@@ -1,0 +1,40 @@
+diff --git a/third_party/blink/renderer/modules/webaudio/audio_param_handler.h b/third_party/blink/renderer/modules/webaudio/audio_param_handler.h
+index 6343c4863b5d325a360489a3f3aab3df860d870c..cf6ec0a876c236fa3de3c5e6d3cf778eb5b9f831 100644
+--- a/third_party/blink/renderer/modules/webaudio/audio_param_handler.h
++++ b/third_party/blink/renderer/modules/webaudio/audio_param_handler.h
+@@ -123,9 +123,11 @@ class AudioParamHandler final : public ThreadSafeRefCounted<AudioParamHandler>,
+   float Value();
+   void SetValue(float);
+ 
+-  AutomationRate GetAutomationRate() const { return automation_rate_; }
++  AutomationRate GetAutomationRate() const {
++    return automation_rate_.load(std::memory_order_relaxed);
++  }
+   void SetAutomationRate(AutomationRate automation_rate) {
+-    automation_rate_ = automation_rate;
++    automation_rate_.store(automation_rate, std::memory_order_relaxed);
+   }
+ 
+   bool IsAutomationRateFixed() const {
+@@ -152,7 +154,7 @@ class AudioParamHandler final : public ThreadSafeRefCounted<AudioParamHandler>,
+     return has_values || NumberOfRenderingConnections();
+   }
+ 
+-  bool IsAudioRate() const { return automation_rate_ == kAudio; }
++  bool IsAudioRate() const { return GetAutomationRate() == kAudio; }
+ 
+   // Calculates numberOfValues parameter values starting at the context's
+   // current time.
+@@ -195,8 +197,10 @@ class AudioParamHandler final : public ThreadSafeRefCounted<AudioParamHandler>,
+ 
+   float default_value_;
+ 
+-  // The automation rate of the AudioParam (k-rate or a-rate)
+-  AutomationRate automation_rate_;
++  // The automation rate of the AudioParam (k-rate or a-rate). The main thread
++  // sets it and the audio thread reads it: atomic, so the change is not a data
++  // race (Chromium 8669b50ce1c, crbug 357391257, did it with a lock).
++  std::atomic<AutomationRate> automation_rate_;
+   // `rate_mode_` determines if the user can change the automation rate to a
+   // different value.
+   const AutomationRateMode rate_mode_;
