@@ -1,0 +1,32 @@
+diff --git a/third_party/blink/renderer/core/editing/commands/insert_node_before_command.cc b/third_party/blink/renderer/core/editing/commands/insert_node_before_command.cc
+index ae4dd837cfcb10c6650dc9c527aabb45e7ed8f40..b71bb71f164b04cd32ce98fea457cd4de9445c13 100644
+--- a/third_party/blink/renderer/core/editing/commands/insert_node_before_command.cc
++++ b/third_party/blink/renderer/core/editing/commands/insert_node_before_command.cc
+@@ -28,6 +28,7 @@
+ #include "third_party/blink/renderer/core/editing/commands/editing_state.h"
+ #include "third_party/blink/renderer/core/editing/editing_utilities.h"
+ #include "third_party/blink/renderer/platform/bindings/exception_state.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+ 
+ namespace blink {
+ 
+@@ -67,9 +68,16 @@ void InsertNodeBeforeCommand::DoApply(EditingState* editing_state) {
+ 
+ void InsertNodeBeforeCommand::DoUnapply() {
+   GetDocument().UpdateStyleAndLayoutTree();
+-  if (!IsEditable(*insert_child_))
+-    return;
+-
++  if (RuntimeEnabledFeatures::PreventUndoIfNotEditableEnabled()) {
++    ContainerNode* parent = ref_child_->parentNode();
++    if (!parent || !IsEditable(*parent)) {
++      return;
++    }
++  } else {
++    if (!IsEditable(*insert_child_)) {
++      return;
++    }
++  }
+   insert_child_->remove(IGNORE_EXCEPTION_FOR_TESTING);
+ }
+ 
