@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/modules/peerconnection/rtc_data_channel.cc b/third_party/blink/renderer/modules/peerconnection/rtc_data_channel.cc
-index edf7e09c72ee4e9dce34eee332cd13777eda993f..3562f3e193edcc9ccc1547923fb789a282374565 100644
+index edf7e09c72ee4e9dce34eee332cd13777eda993f..e3026862063c0649ff5132b4a1c974c76d557592 100644
 --- a/third_party/blink/renderer/modules/peerconnection/rtc_data_channel.cc
 +++ b/third_party/blink/renderer/modules/peerconnection/rtc_data_channel.cc
 @@ -36,9 +36,14 @@
@@ -111,7 +111,20 @@ index edf7e09c72ee4e9dce34eee332cd13777eda993f..3562f3e193edcc9ccc1547923fb789a2
    visitor->Trace(scheduled_events_);
    visitor->Trace(scheduled_event_timer_);
    EventTargetWithInlineData::Trace(visitor);
-@@ -631,7 +659,12 @@ void RTCDataChannel::OnMessage(webrtc::DataBuffer buffer) {
+@@ -601,6 +629,12 @@ void RTCDataChannel::OnStateChange(
+       if (!error.ok()) {
+         LOG(ERROR) << "DataChannel error: \"" << error.message() << "\""
+                    << ", code: " << error.sctp_cause_code().value_or(-1);
++
++        if (error.error_detail() == webrtc::RTCErrorDetailType::NONE) {
++          error.set_error_detail(
++              webrtc::RTCErrorDetailType::DATA_CHANNEL_FAILURE);
++        }
++
+         IncrementErrorCounter(error);
+         DispatchEvent(*MakeGarbageCollected<RTCErrorEvent>(
+             event_type_names::kError, error));
+@@ -631,7 +665,12 @@ void RTCDataChannel::OnMessage(webrtc::DataBuffer buffer) {
  
    if (buffer.binary) {
      if (binary_type_ == kBinaryTypeBlob) {
@@ -125,7 +138,7 @@ index edf7e09c72ee4e9dce34eee332cd13777eda993f..3562f3e193edcc9ccc1547923fb789a2
        return;
      }
      if (binary_type_ == kBinaryTypeArrayBuffer) {
-@@ -691,10 +724,19 @@ void RTCDataChannel::SendRawData(const char* data, size_t length) {
+@@ -691,10 +730,19 @@ void RTCDataChannel::SendRawData(const char* data, size_t length) {
    rtc::CopyOnWriteBuffer buffer(data, length);
    webrtc::DataBuffer data_buffer(buffer, true);
    RecordMessageSent(*channel().get(), data_buffer.size());
@@ -146,7 +159,7 @@ index edf7e09c72ee4e9dce34eee332cd13777eda993f..3562f3e193edcc9ccc1547923fb789a2
    // SCTP data channels queue the packet on failure and always return true, so
    // Send can be called asynchronously for them.
    channel()->SendAsync(std::move(data_buffer), [](webrtc::RTCError error) {
-@@ -734,4 +776,93 @@ void RTCDataChannel::CreateFeatureHandleForScheduler() {
+@@ -734,4 +782,102 @@ void RTCDataChannel::CreateFeatureHandleForScheduler() {
            {SchedulingPolicy::DisableAggressiveThrottling()});
  }
  
@@ -192,6 +205,7 @@ index edf7e09c72ee4e9dce34eee332cd13777eda993f..3562f3e193edcc9ccc1547923fb789a2
 +  message_->buffer_ = webrtc::DataBuffer(buffer, true);
 +  message_->type_ = RTCDataChannel::PendingMessage::Type::kBufferReady;
 +  data_channel_->ProcessSendQueue();
++  Dispose();
 +}
 +
 +void RTCDataChannel::BlobReader::DidFail(FileErrorCode error) {
@@ -202,6 +216,7 @@ index edf7e09c72ee4e9dce34eee332cd13777eda993f..3562f3e193edcc9ccc1547923fb789a2
 +      "Couldn't read Blob content, skipping message."));
 +  message_->type_ = RTCDataChannel::PendingMessage::Type::kBlobFailure;
 +  data_channel_->ProcessSendQueue();
++  Dispose();
 +}
 +
 +RTCDataChannel::BlobReader::BlobReader(ExecutionContext* context,
@@ -212,7 +227,8 @@ index edf7e09c72ee4e9dce34eee332cd13777eda993f..3562f3e193edcc9ccc1547923fb789a2
 +          this,
 +          GetExecutionContext()->GetTaskRunner(TaskType::kFileReading))),
 +      data_channel_(data_channel),
-+      message_(message) {}
++      message_(message),
++      keep_alive_(this) {}
 +
 +RTCDataChannel::BlobReader::~BlobReader() = default;
 +
@@ -229,6 +245,12 @@ index edf7e09c72ee4e9dce34eee332cd13777eda993f..3562f3e193edcc9ccc1547923fb789a2
 +void RTCDataChannel::BlobReader::ContextDestroyed() {
 +  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 +  loader_->Cancel();
++  Dispose();
++}
++
++void RTCDataChannel::BlobReader::Dispose() {
++  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
++  keep_alive_.Clear();
 +}
 +
 +void RTCDataChannel::BlobReader::Trace(Visitor* visitor) const {

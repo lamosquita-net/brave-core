@@ -1,8 +1,8 @@
 diff --git a/third_party/blink/renderer/modules/peerconnection/rtc_data_channel.h b/third_party/blink/renderer/modules/peerconnection/rtc_data_channel.h
-index 5998c4c23feefdeb9080bb57e60b4c120a200fdc..f81bb2924860cf9a228aecfd4231984468fe2dd3 100644
+index 5998c4c23feefdeb9080bb57e60b4c120a200fdc..ed48128397b5139d21eb21bcdeb36728f5c590ea 100644
 --- a/third_party/blink/renderer/modules/peerconnection/rtc_data_channel.h
 +++ b/third_party/blink/renderer/modules/peerconnection/rtc_data_channel.h
-@@ -26,16 +26,23 @@
+@@ -26,16 +26,24 @@
  #define THIRD_PARTY_BLINK_RENDERER_MODULES_PEERCONNECTION_RTC_DATA_CHANNEL_H_
  
  #include "base/gtest_prod_util.h"
@@ -20,13 +20,14 @@ index 5998c4c23feefdeb9080bb57e60b4c120a200fdc..f81bb2924860cf9a228aecfd42319844
 +#include "third_party/blink/renderer/platform/heap/collection_support/heap_deque.h"
  #include "third_party/blink/renderer/platform/heap/garbage_collected.h"
  #include "third_party/blink/renderer/platform/heap/prefinalizer.h"
++#include "third_party/blink/renderer/platform/heap/self_keep_alive.h"
  #include "third_party/blink/renderer/platform/scheduler/public/frame_scheduler.h"
  #include "third_party/blink/renderer/platform/timer.h"
 +#include "third_party/webrtc/api/data_channel_interface.h"
  #include "third_party/webrtc/api/peer_connection_interface.h"
  
  namespace blink {
-@@ -111,6 +118,8 @@ class MODULES_EXPORT RTCDataChannel final
+@@ -111,6 +119,8 @@ class MODULES_EXPORT RTCDataChannel final
  
    void Trace(Visitor*) const override;
  
@@ -35,7 +36,7 @@ index 5998c4c23feefdeb9080bb57e60b4c120a200fdc..f81bb2924860cf9a228aecfd42319844
   private:
    friend class Observer;
    // Implementation of webrtc::DataChannelObserver that receives events on
-@@ -164,7 +173,7 @@ class MODULES_EXPORT RTCDataChannel final
+@@ -164,7 +174,7 @@ class MODULES_EXPORT RTCDataChannel final
    void ScheduledEventTimerFired(TimerBase*);
  
    const rtc::scoped_refptr<webrtc::DataChannelInterface>& channel() const;
@@ -44,7 +45,7 @@ index 5998c4c23feefdeb9080bb57e60b4c120a200fdc..f81bb2924860cf9a228aecfd42319844
    void SendRawData(const char* data, size_t length);
    void SendDataBuffer(webrtc::DataBuffer data_buffer);
  
-@@ -195,6 +204,64 @@ class MODULES_EXPORT RTCDataChannel final
+@@ -195,6 +205,67 @@ class MODULES_EXPORT RTCDataChannel final
    // of querying the channel (which requires thread hop). This is a cached
    // value to optimize a const getter, and therefore `mutable`.
    mutable absl::optional<uint16_t> id_;
@@ -81,10 +82,13 @@ index 5998c4c23feefdeb9080bb57e60b4c120a200fdc..f81bb2924860cf9a228aecfd42319844
 +    void Trace(Visitor*) const override;
 +
 +   private:
++    void Dispose();
++
 +    Member<FileReaderLoader> loader_;
 +    Member<RTCDataChannel> data_channel_;
 +    Member<PendingMessage> message_;
 +
++    SelfKeepAlive<BlobReader> keep_alive_;
 +    SEQUENCE_CHECKER(sequence_checker_);
 +  };
 +
