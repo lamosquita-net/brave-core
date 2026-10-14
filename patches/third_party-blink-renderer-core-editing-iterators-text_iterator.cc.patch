@@ -1,0 +1,29 @@
+diff --git a/third_party/blink/renderer/core/editing/iterators/text_iterator.cc b/third_party/blink/renderer/core/editing/iterators/text_iterator.cc
+index 2efba6440fe704dfcaf40a77bef9d38a0c662c72..65ec06e2ba9d7c69226d760dd99dcd14b196947c 100644
+--- a/third_party/blink/renderer/core/editing/iterators/text_iterator.cc
++++ b/third_party/blink/renderer/core/editing/iterators/text_iterator.cc
+@@ -51,6 +51,7 @@
+ #include "third_party/blink/renderer/core/layout/ng/table/layout_ng_table_row.h"
+ #include "third_party/blink/renderer/platform/fonts/font.h"
+ #include "third_party/blink/renderer/platform/instrumentation/use_counter.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+ #include "third_party/blink/renderer/platform/wtf/text/string_builder.h"
+ 
+ namespace blink {
+@@ -439,11 +440,15 @@ void TextIteratorAlgorithm<Strategy>::Advance() {
+               Strategy::IsDescendantOf(*end_container_, *parent_node)) {
+             return;
+           }
++          // We should call the ExitNode() always if |node_| has a layout
++          // object or not and it's the last child under |parent_node|.
+           bool have_layout_object = node_->GetLayoutObject();
+           node_ = parent_node;
+           fully_clipped_stack_.Pop();
+           parent_node = Strategy::Parent(*node_);
+-          if (have_layout_object) {
++          if (RuntimeEnabledFeatures::
++                  CallExitNodeWithoutLayoutObjectEnabled() ||
++              have_layout_object) {
+             ExitNode();
+           }
+           if (text_state_.PositionNode()) {
