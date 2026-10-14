@@ -1,0 +1,42 @@
+diff --git a/third_party/blink/renderer/core/editing/commands/replace_selection_command.cc b/third_party/blink/renderer/core/editing/commands/replace_selection_command.cc
+index 44afa276cbde6df6e54be2a77f28ee200791b429..3cda0ce8969563f8432f49acd662900af006c904 100644
+--- a/third_party/blink/renderer/core/editing/commands/replace_selection_command.cc
++++ b/third_party/blink/renderer/core/editing/commands/replace_selection_command.cc
+@@ -68,6 +68,7 @@
+ #include "third_party/blink/renderer/platform/heap/garbage_collected.h"
+ #include "third_party/blink/renderer/platform/instrumentation/tracing/trace_event.h"
+ #include "third_party/blink/renderer/platform/instrumentation/use_counter.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+ #include "third_party/blink/renderer/platform/wtf/std_lib_extras.h"
+ #include "third_party/blink/renderer/platform/wtf/vector.h"
+ 
+@@ -442,6 +443,17 @@ ReplaceSelectionCommand::ReplaceSelectionCommand(
+       sanitize_fragment_(options & kSanitizeFragment),
+       should_merge_end_(false) {}
+ 
++String ReplaceSelectionCommand::TextDataForInputEvent() const {
++  // As per spec https://www.w3.org/TR/input-events-1/#overview
++  // input event data should be set for certain input types.
++  if (RuntimeEnabledFeatures::NonNullInputEventDataForTextAreaEnabled() &&
++      (input_type_ == InputEvent::InputType::kInsertFromDrop ||
++       input_type_ == InputEvent::InputType::kInsertFromPaste ||
++       input_type_ == InputEvent::InputType::kInsertReplacementText)) {
++    return input_event_data_;
++  }
++  return g_null_atom;
++}
+ static bool HasMatchingQuoteLevel(VisiblePosition end_of_existing_content,
+                                   VisiblePosition end_of_inserted_content) {
+   Position existing = end_of_existing_content.DeepEquivalent();
+@@ -2089,6 +2101,11 @@ bool ReplaceSelectionCommand::PerformTrivialReplace(
+       return false;
+   }
+ 
++  if (RuntimeEnabledFeatures::NonNullInputEventDataForTextAreaEnabled()) {
++    // Save the text to set event data for input events.
++    input_event_data_ = text_node->data();
++  }
++
+   start_of_inserted_range_ = start;
+   end_of_inserted_range_ = end;
+ 

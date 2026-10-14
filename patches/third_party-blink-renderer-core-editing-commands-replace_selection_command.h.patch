@@ -1,0 +1,21 @@
+diff --git a/third_party/blink/renderer/core/editing/commands/replace_selection_command.h b/third_party/blink/renderer/core/editing/commands/replace_selection_command.h
+index aa1fdc8e54703c48c85f8e12452e6e914dc0107c..9964edc2c97589f4e944c178efb7de813a236b11 100644
+--- a/third_party/blink/renderer/core/editing/commands/replace_selection_command.h
++++ b/third_party/blink/renderer/core/editing/commands/replace_selection_command.h
+@@ -57,6 +57,8 @@ class CORE_EXPORT ReplaceSelectionCommand final : public CompositeEditCommand {
+ 
+   void Trace(Visitor*) const override;
+ 
++  String TextDataForInputEvent() const final;
++
+  private:
+   void DoApply(EditingState*) override;
+   InputEvent::InputType GetInputType() const override;
+@@ -146,6 +148,7 @@ class CORE_EXPORT ReplaceSelectionCommand final : public CompositeEditCommand {
+   InputEvent::InputType input_type_;
+   const bool sanitize_fragment_;
+   bool should_merge_end_;
++  String input_event_data_;
+ 
+   Position start_of_inserted_range_;
+   Position end_of_inserted_range_;
