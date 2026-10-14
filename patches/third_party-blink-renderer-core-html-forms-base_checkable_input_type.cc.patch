@@ -1,0 +1,28 @@
+diff --git a/third_party/blink/renderer/core/html/forms/base_checkable_input_type.cc b/third_party/blink/renderer/core/html/forms/base_checkable_input_type.cc
+index 4db7e93be077f3b115760e01d11afbe7197c3adb..9f0487fa4352c32bae2c7d789082770b27b42caa 100644
+--- a/third_party/blink/renderer/core/html/forms/base_checkable_input_type.cc
++++ b/third_party/blink/renderer/core/html/forms/base_checkable_input_type.cc
+@@ -40,6 +40,7 @@
+ #include "third_party/blink/renderer/core/html/forms/html_input_element.h"
+ #include "third_party/blink/renderer/core/html_names.h"
+ #include "third_party/blink/renderer/platform/instrumentation/use_counter.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+ 
+ namespace blink {
+ 
+@@ -122,7 +123,14 @@ bool BaseCheckableInputType::IsCheckable() {
+ }
+ 
+ void BaseCheckableInputType::HandleBlurEvent() {
+-  GetElement().SetActive(false);
++  // The input might be the control element of a label
++  // that is in :active state. In that case the control should
++  // remain :active to avoid crbug.com/40934455.
++  HTMLInputElement& element = GetElement();
++  if (!RuntimeEnabledFeatures::KeepActiveIfLabelActiveEnabled() ||
++      !element.HasActiveLabel()) {
++    element.SetActive(false);
++  }
+ }
+ 
+ }  // namespace blink

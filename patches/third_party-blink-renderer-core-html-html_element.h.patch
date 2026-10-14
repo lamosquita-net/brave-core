@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/html_element.h b/third_party/blink/renderer/core/html/html_element.h
-index 1160747542fa4d2f2111ea8803443db31d5841b0..27e49d77463dd64fe5783e8b77500dd078f7c9ec 100644
+index 1160747542fa4d2f2111ea8803443db31d5841b0..de8117b365ca4c1c018c0f3cee1793d88217ef25 100644
 --- a/third_party/blink/renderer/core/html/html_element.h
 +++ b/third_party/blink/renderer/core/html/html_element.h
 @@ -45,6 +45,7 @@ class FormAssociated;
@@ -28,7 +28,15 @@ index 1160747542fa4d2f2111ea8803443db31d5841b0..27e49d77463dd64fe5783e8b77500dd0
    virtual bool IsHTMLBodyElement() const { return false; }
    // TODO(crbug.com/1123606): Remove this virtual method once the fenced frame
    // origin trial is over.
-@@ -211,11 +223,12 @@ class CORE_EXPORT HTMLElement : public Element {
+@@ -171,6 +183,7 @@ class CORE_EXPORT HTMLElement : public Element {
+   virtual bool IsLabelable() const;
+   // |labels| IDL attribute implementation for IsLabelable()==true elements.
+   LabelsNodeList* labels();
++  bool HasActiveLabel() const;
+ 
+   // https://html.spec.whatwg.org/C/#interactive-content
+   virtual bool IsInteractiveContent() const;
+@@ -211,11 +224,12 @@ class CORE_EXPORT HTMLElement : public Element {
  
    static void AdjustCandidateDirectionalityForSlot(
        HeapHashSet<Member<Node>> candidate_set);
@@ -44,7 +52,7 @@ index 1160747542fa4d2f2111ea8803443db31d5841b0..27e49d77463dd64fe5783e8b77500dd0
  
    V8UnionBooleanOrStringOrUnrestrictedDouble* hidden() const;
    void setHidden(const V8UnionBooleanOrStringOrUnrestrictedDouble*);
-@@ -326,7 +339,6 @@ class CORE_EXPORT HTMLElement : public Element {
+@@ -326,7 +340,6 @@ class CORE_EXPORT HTMLElement : public Element {
    unsigned ParseBorderWidthAttribute(const AtomicString&) const;
  
    void ChildrenChanged(const ChildrenChange&) override;
@@ -52,7 +60,7 @@ index 1160747542fa4d2f2111ea8803443db31d5841b0..27e49d77463dd64fe5783e8b77500dd0
  
    InsertionNotificationRequest InsertedInto(ContainerNode&) override;
    void RemovedFrom(ContainerNode& insertion_point) override;
-@@ -349,13 +361,6 @@ class CORE_EXPORT HTMLElement : public Element {
+@@ -349,13 +362,6 @@ class CORE_EXPORT HTMLElement : public Element {
    DocumentFragment* TextToFragment(const String&, ExceptionState&);
  
    void AdjustDirectionalityIfNeededAfterChildAttributeChanged(Element* child);
