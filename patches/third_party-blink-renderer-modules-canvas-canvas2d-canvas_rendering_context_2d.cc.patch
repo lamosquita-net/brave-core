@@ -1,8 +1,30 @@
 diff --git a/third_party/blink/renderer/modules/canvas/canvas2d/canvas_rendering_context_2d.cc b/third_party/blink/renderer/modules/canvas/canvas2d/canvas_rendering_context_2d.cc
-index dcf9247f80d04d4bbb6b92c3132a2cb620328994..b2e0ce42512f7a477b1f8bf6b7a7b83012507d23 100644
+index dcf9247f80d04d4bbb6b92c3132a2cb620328994..c0bd86c852b9f9217af63748aa31c925343e9050 100644
 --- a/third_party/blink/renderer/modules/canvas/canvas2d/canvas_rendering_context_2d.cc
 +++ b/third_party/blink/renderer/modules/canvas/canvas2d/canvas_rendering_context_2d.cc
-@@ -934,6 +934,7 @@ TextMetrics* CanvasRenderingContext2D::measureText(const String& text) {
+@@ -161,10 +161,6 @@ V8RenderingContext* CanvasRenderingContext2D::AsV8RenderingContext() {
+   return MakeGarbageCollected<V8RenderingContext>(this);
+ }
+ 
+-NoAllocDirectCallHost* CanvasRenderingContext2D::AsNoAllocDirectCallHost() {
+-  return this;
+-}
+-
+ CanvasRenderingContext2D::~CanvasRenderingContext2D() = default;
+ 
+ bool CanvasRenderingContext2D::IsAccelerated() const {
+@@ -213,9 +209,7 @@ void CanvasRenderingContext2D::LoseContext(LostContextMode lost_mode) {
+   if (context_lost_mode_ != kNotLostContext)
+     return;
+   context_lost_mode_ = lost_mode;
+-  PostDeferrableAction(WTF::BindOnce(
+-      [](BaseRenderingContext2D* context) { context->ResetInternal(); },
+-      WrapPersistent(this)));
++  ResetInternal();
+   if (context_lost_mode_ == kSyntheticLostContext && Host()) {
+     Host()->DiscardResourceProvider();
+   }
+@@ -934,6 +928,7 @@ TextMetrics* CanvasRenderingContext2D::measureText(const String& text) {
    if (!canvas()->GetDocument().GetFrame())
      return MakeGarbageCollected<TextMetrics>();
  

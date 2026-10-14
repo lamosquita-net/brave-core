@@ -1,3 +1,12 @@
+> **Level 129, step 1 (MOTOR-8, 14-10-2026, `nube/motor-129`):** this branch moves to **V8 12.9.202.28** (f372edd3).
+> The patches below were rebased with `v8re.sh`; 7 were dropped because 12.9 already carries them
+> (`src-builtins-accessors.cc`, `src-builtins-js-to-wasm.tq`, `src-compiler-heap-refs.cc`, `src-execution-isolate.cc`,
+> `src-objects-value-serializer.{cc,h}`, `src-wasm-graph-builder-interface.cc`) and **6 are temporarily out** until
+> SEGURIDAD-PORTES rebases them in `seg/v8-12.9` (FS.13): `src-builtins-builtins-object-gen.cc`,
+> `src-compiler-access-builder.{cc,h}`, `src-compiler-js-native-context-specialization.cc` (needs the two-argument
+> `ForPropertyArraySlot`), `src-ic-ic.cc` and `src-interpreter-bytecode-generator.cc`. **Do not ship this step**:
+> the rest of this file still describes `seg/v8-12.8` until FS.13 rewrites it.
+
 # FlyWeb: V8 12.8.374.38 (Chrome 128) and its security backports
 
 Since engine level 118 each level carries the V8 of Chrome N (FM.5). This branch uses V8 **12.8.374.38** (d213b3bb,

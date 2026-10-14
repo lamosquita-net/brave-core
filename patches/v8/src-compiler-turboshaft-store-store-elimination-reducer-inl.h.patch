@@ -1,8 +1,8 @@
 diff --git a/src/compiler/turboshaft/store-store-elimination-reducer-inl.h b/src/compiler/turboshaft/store-store-elimination-reducer-inl.h
-index c19514a84e82029b94d89d98c9ebe8f8196b8250..8ead5528205f945d4345ae3888e5b0438833b5da 100644
+index 9537eeaf1e882cf977330d26b10c616747f92e07..10a759319c5f8fcb4cbf2b8398d42903793ba2aa 100644
 --- a/src/compiler/turboshaft/store-store-elimination-reducer-inl.h
 +++ b/src/compiler/turboshaft/store-store-elimination-reducer-inl.h
-@@ -200,6 +200,16 @@ class MaybeRedundantStoresTable
+@@ -202,6 +202,16 @@ class MaybeRedundantStoresTable
      }
    }
  
@@ -19,7 +19,7 @@ index c19514a84e82029b94d89d98c9ebe8f8196b8250..8ead5528205f945d4345ae3888e5b043
    void MarkAllStoresAsGCObservable() {
      for (Key key : active_keys_) {
        auto current = Get(key);
-@@ -293,12 +303,18 @@ class RedundantStoreAnalysis {
+@@ -295,12 +305,18 @@ class RedundantStoreAnalysis {
        // If this block is a loop header, check if this loop needs to be
        // revisited.
        if (block.IsLoop()) {
@@ -40,7 +40,7 @@ index c19514a84e82029b94d89d98c9ebe8f8196b8250..8ead5528205f945d4345ae3888e5b043
            processed = back_edge->index().id() + 1;
          }
        }
-@@ -326,6 +342,10 @@ class RedundantStoreAnalysis {
+@@ -328,6 +344,10 @@ class RedundantStoreAnalysis {
            const uint8_t size = store.stored_rep.SizeInBytes();
            // For now we consider only stores of fields of objects on the heap.
            if (is_on_heap_store && is_field_store) {
@@ -51,7 +51,7 @@ index c19514a84e82029b94d89d98c9ebe8f8196b8250..8ead5528205f945d4345ae3888e5b043
              bool is_eliminable_store = false;
              switch (table_.GetObservability(store.base(), store.offset, size)) {
                case StoreObservability::kUnobservable:
-@@ -412,11 +432,17 @@ class RedundantStoreAnalysis {
+@@ -414,11 +434,17 @@ class RedundantStoreAnalysis {
            // TODO(nicohartmann@): Use the new effect flags to distinguish heap
            // access once available.
            const bool is_on_heap_load = load.kind.tagged_base;

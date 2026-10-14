@@ -1,8 +1,8 @@
 diff --git a/src/compiler/turboshaft/loop-unrolling-reducer.h b/src/compiler/turboshaft/loop-unrolling-reducer.h
-index 4888e12678427349a8300a83b6abf2f0c0bdefa3..c38fbfd152b9fffa36df758593bfad43ae22c861 100644
+index 4cc168267649a49c9b3d974baa5d7bf3614b3abf..7f4cfa02c37acfadd4f9667d7043863f4fb8f615 100644
 --- a/src/compiler/turboshaft/loop-unrolling-reducer.h
 +++ b/src/compiler/turboshaft/loop-unrolling-reducer.h
-@@ -194,6 +194,18 @@ class V8_EXPORT_PRIVATE LoopUnrollingAnalyzer {
+@@ -196,6 +196,18 @@ class V8_EXPORT_PRIVATE LoopUnrollingAnalyzer {
             info.op_count < kMaxLoopSizeForPartialUnrolling;
    }
  
@@ -21,7 +21,7 @@ index 4888e12678427349a8300a83b6abf2f0c0bdefa3..c38fbfd152b9fffa36df758593bfad43
    bool ShouldRemoveLoop(const Block* loop_header) const {
      auto iter_count = GetIterationCount(loop_header);
      return iter_count.IsExact() && iter_count.exact_count() == 0;
-@@ -221,6 +233,9 @@ class V8_EXPORT_PRIVATE LoopUnrollingAnalyzer {
+@@ -223,6 +235,9 @@ class V8_EXPORT_PRIVATE LoopUnrollingAnalyzer {
    // trade-off. In particular, having the number of iterations to unroll be a
    // function of the loop's size and a MaxLoopSize could make sense.
    static constexpr size_t kMaxLoopSizeForFullUnrolling = 150;
@@ -31,7 +31,7 @@ index 4888e12678427349a8300a83b6abf2f0c0bdefa3..c38fbfd152b9fffa36df758593bfad43
    static constexpr size_t kJSMaxLoopSizeForPartialUnrolling = 50;
    static constexpr size_t kWasmMaxLoopSizeForPartialUnrolling = 80;
    static constexpr size_t kMaxLoopIterationsForFullUnrolling = 4;
-@@ -500,7 +515,8 @@ void LoopUnrollingReducer<Next>::PartiallyUnrollLoop(const Block* header) {
+@@ -502,7 +517,8 @@ void LoopUnrollingReducer<Next>::PartiallyUnrollLoop(const Block* header) {
    auto loop_body = analyzer_.GetLoopBody(header);
    current_loop_header_ = header;
  

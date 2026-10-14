@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc b/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc
-index ca9d0d350778c546d4e26bec2c19e11a72ace8cb..b7081455e1ed68d81726612e5e5e70d42bed01a5 100644
+index ca9d0d350778c546d4e26bec2c19e11a72ace8cb..99a2519b10a4e21b010171845852494d5927e1e2 100644
 --- a/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc
 +++ b/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc
-@@ -1166,6 +1166,7 @@ String HTMLCanvasElement::ToDataURLInternal(
+@@ -96,7 +96,6 @@
+ #include "third_party/blink/renderer/core/paint/paint_layer.h"
+ #include "third_party/blink/renderer/core/probe/core_probes.h"
+ #include "third_party/blink/renderer/platform/bindings/exception_state.h"
+-#include "third_party/blink/renderer/platform/bindings/no_alloc_direct_call_host.h"
+ #include "third_party/blink/renderer/platform/graphics/canvas_2d_layer_bridge.h"
+ #include "third_party/blink/renderer/platform/graphics/canvas_resource_dispatcher.h"
+ #include "third_party/blink/renderer/platform/graphics/canvas_resource_provider.h"
+@@ -1166,6 +1165,7 @@ String HTMLCanvasElement::ToDataURLInternal(
      if (!data_buffer)
        return String("data:,");
  
@@ -10,3 +18,51 @@ index ca9d0d350778c546d4e26bec2c19e11a72ace8cb..b7081455e1ed68d81726612e5e5e70d4
      String data_url = data_buffer->ToDataURL(encoding_mime_type, quality);
      base::TimeDelta elapsed_time = base::TimeTicks::Now() - start_time;
      float sqrt_pixels =
+@@ -1800,36 +1800,22 @@ void HTMLCanvasElement::UpdateMemoryUsage() {
+   intptr_t delta_bytes =
+       externally_allocated_memory - externally_allocated_memory_;
+ 
+-  // If the the rendering context supports NoAllocDirectCall, we must use a
+-  // deferrable action to update v8's externally allocated memory to avoid
+-  // triggering garbage collection while inside a FastAPICall scope.
+   // TODO(junov): We assume that it is impossible to be inside a FastAPICall
+   // from a host interface other than the rendering context.  This assumption
+   // may need to be revisited in the future depending on how the usage of
+   // [NoAllocDirectCall] evolves.
+   if (delta_bytes) {
+-    NoAllocDirectCallHost* nadc_host =
+-        context_ ? context_->AsNoAllocDirectCallHost() : nullptr;
+-    if (nadc_host) {
+-      nadc_host->PostDeferrableAction(WTF::BindOnce(
+-          [](intptr_t delta_bytes) {
+-            v8::Isolate::GetCurrent()->AdjustAmountOfExternalAllocatedMemory(
+-                delta_bytes);
+-          },
+-          delta_bytes));
+-    } else {
+-      // Here we check "IsAllocationAllowed", but it is actually garbage
+-      // collection that is not allowed, and allocations can trigger GC.
+-      // AdjustAmountOfExternalAllocatedMemory is not an allocation but it
+-      // can trigger GC, So we use "IsAllocationAllowed" as a proxy for
+-      // "is GC allowed". When garbage collection is already in progress,
+-      // allocations are not allowed, but calling
+-      // AdjustAmountOfExternalAllocatedMemory is safe, hence the
+-      // 'diposing_' condition in the DCHECK below.
+-      DCHECK(ThreadState::Current()->IsAllocationAllowed() || disposing_);
+-      v8::Isolate::GetCurrent()->AdjustAmountOfExternalAllocatedMemory(
+-          delta_bytes);
+-    }
++    // Here we check "IsAllocationAllowed", but it is actually garbage
++    // collection that is not allowed, and allocations can trigger GC.
++    // AdjustAmountOfExternalAllocatedMemory is not an allocation but it
++    // can trigger GC, So we use "IsAllocationAllowed" as a proxy for
++    // "is GC allowed". When garbage collection is already in progress,
++    // allocations are not allowed, but calling
++    // AdjustAmountOfExternalAllocatedMemory is safe, hence the
++    // 'diposing_' condition in the DCHECK below.
++    DCHECK(ThreadState::Current()->IsAllocationAllowed() || disposing_);
++    v8::Isolate::GetCurrent()->AdjustAmountOfExternalAllocatedMemory(
++        delta_bytes);
+     externally_allocated_memory_ = externally_allocated_memory;
+   }
+ }

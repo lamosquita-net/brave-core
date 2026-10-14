@@ -1,8 +1,8 @@
 diff --git a/src/objects/js-objects.cc b/src/objects/js-objects.cc
-index ef8360b90278209dd4530c752000cf81093f9825..83ccaa50f31640f5a56c90af53e8f62ae21748d7 100644
+index b925e497eb9119e4bcb595994b0042ce0e5bc4d0..d56a1a7506e04c20b02a7df029a289065130ffdc 100644
 --- a/src/objects/js-objects.cc
 +++ b/src/objects/js-objects.cc
-@@ -1775,43 +1775,44 @@ Maybe<bool> JSReceiver::AddPrivateField(LookupIterator* it,
+@@ -1769,43 +1769,44 @@ Maybe<bool> JSReceiver::AddPrivateField(LookupIterator* it,
    DCHECK(it->GetName()->IsPrivateName());
    Handle<Symbol> symbol = Cast<Symbol>(it->GetName());
  
@@ -80,38 +80,3 @@ index ef8360b90278209dd4530c752000cf81093f9825..83ccaa50f31640f5a56c90af53e8f62a
  }
  
  // static
-@@ -1831,7 +1832,7 @@ Maybe<bool> GetPropertyDescriptorWithInterceptor(LookupIterator* it,
-                                                  PropertyDescriptor* desc) {
-   Handle<InterceptorInfo> interceptor;
- 
--  if (it->state() == LookupIterator::ACCESS_CHECK) {
-+  while (it->state() == LookupIterator::ACCESS_CHECK) {
-     if (it->HasAccess()) {
-       it->Next();
-     } else {
-@@ -1841,6 +1842,7 @@ Maybe<bool> GetPropertyDescriptorWithInterceptor(LookupIterator* it,
-         return Just(false);
-       }
-       CHECK(!interceptor.is_null());
-+      break;
-     }
-   }
-   if (it->state() == LookupIterator::INTERCEPTOR) {
-@@ -4734,7 +4736,7 @@ MaybeHandle<Object> JSObject::DefineOwnAccessorIgnoreAttributes(
- 
-   it->UpdateProtector();
- 
--  if (it->state() == LookupIterator::ACCESS_CHECK) {
-+  while (it->state() == LookupIterator::ACCESS_CHECK) {
-     if (!it->HasAccess()) {
-       RETURN_ON_EXCEPTION(
-           isolate, isolate->ReportFailedAccessCheck(it->GetHolder<JSObject>()));
-@@ -4769,7 +4771,7 @@ MaybeHandle<Object> JSObject::SetAccessor(Handle<JSObject> object,
- 
-   // Duplicate ACCESS_CHECK outside of GetPropertyAttributes for the case that
-   // the FailedAccessCheckCallbackFunction doesn't throw an exception.
--  if (it.state() == LookupIterator::ACCESS_CHECK) {
-+  while (it.state() == LookupIterator::ACCESS_CHECK) {
-     if (!it.HasAccess()) {
-       RETURN_ON_EXCEPTION(isolate, isolate->ReportFailedAccessCheck(object));
-       UNREACHABLE();

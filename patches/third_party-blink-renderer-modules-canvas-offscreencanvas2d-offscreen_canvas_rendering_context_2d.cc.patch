@@ -1,0 +1,27 @@
+diff --git a/third_party/blink/renderer/modules/canvas/offscreencanvas2d/offscreen_canvas_rendering_context_2d.cc b/third_party/blink/renderer/modules/canvas/offscreencanvas2d/offscreen_canvas_rendering_context_2d.cc
+index 41f338fe6b244429bd06f33a52f57b31bbabce30..126851d1a5c94eeb2799699cddbf0b71c8cb04ab 100644
+--- a/third_party/blink/renderer/modules/canvas/offscreencanvas2d/offscreen_canvas_rendering_context_2d.cc
++++ b/third_party/blink/renderer/modules/canvas/offscreencanvas2d/offscreen_canvas_rendering_context_2d.cc
+@@ -278,11 +278,6 @@ scoped_refptr<StaticBitmapImage> OffscreenCanvasRenderingContext2D::GetImage(
+   return image;
+ }
+ 
+-NoAllocDirectCallHost*
+-OffscreenCanvasRenderingContext2D::AsNoAllocDirectCallHost() {
+-  return this;
+-}
+-
+ V8RenderingContext* OffscreenCanvasRenderingContext2D::AsV8RenderingContext() {
+   return nullptr;
+ }
+@@ -766,9 +761,7 @@ bool OffscreenCanvasRenderingContext2D::IsCanvas2DBufferValid() const {
+ 
+ void OffscreenCanvasRenderingContext2D::DispatchContextLostEvent(
+     TimerBase* time) {
+-  PostDeferrableAction(WTF::BindOnce(
+-      [](BaseRenderingContext2D* context) { context->ResetInternal(); },
+-      WrapPersistent(this)));
++  ResetInternal();
+   BaseRenderingContext2D::DispatchContextLostEvent(time);
+ }
+ 

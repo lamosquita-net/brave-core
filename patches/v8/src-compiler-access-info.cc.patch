@@ -1,8 +1,8 @@
 diff --git a/src/compiler/access-info.cc b/src/compiler/access-info.cc
-index eea3b6eaf9eb5bc64eb902209aeaf839db4b4d86..c2dd9b44afa9d55ec3a41eecb61afda2b99cd4f7 100644
+index 595f4ad9fb5a0c744aed9226eb9c536ef156b5cf..8338b2d13daf37ef238fe5cdf22a4ff9b2a0362a 100644
 --- a/src/compiler/access-info.cc
 +++ b/src/compiler/access-info.cc
-@@ -473,8 +473,9 @@ PropertyAccessInfo AccessInfoFactory::ComputeDataFieldAccessInfo(
+@@ -474,8 +474,9 @@ PropertyAccessInfo AccessInfoFactory::ComputeDataFieldAccessInfo(
        OptionalMapRef maybe_field_map =
            TryMakeRef(broker(), FieldType::AsClass(*descriptors_field_type));
        if (!maybe_field_map.has_value()) return Invalid();
@@ -13,15 +13,7 @@ index eea3b6eaf9eb5bc64eb902209aeaf839db4b4d86..c2dd9b44afa9d55ec3a41eecb61afda2
      }
    } else {
      CHECK(details_representation.IsTagged());
-@@ -924,6 +925,7 @@ PropertyAccessInfo AccessInfoFactory::ComputePropertyAccessInfo(
-       return PropertyAccessInfo::NotFound(zone(), receiver_map, holder);
-     }
- 
-+    CHECK(prototype.IsJSObject());
-     holder = prototype.AsJSObject();
-     map = map_prototype_map;
- 
-@@ -1166,8 +1168,9 @@ PropertyAccessInfo AccessInfoFactory::LookupTransition(
+@@ -1168,8 +1169,9 @@ PropertyAccessInfo AccessInfoFactory::LookupTransition(
        OptionalMapRef maybe_field_map =
            TryMakeRef(broker(), FieldType::AsClass(*descriptors_field_type));
        if (!maybe_field_map.has_value()) return Invalid();

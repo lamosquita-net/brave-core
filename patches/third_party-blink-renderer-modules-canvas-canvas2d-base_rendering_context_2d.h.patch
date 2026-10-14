@@ -1,0 +1,27 @@
+diff --git a/third_party/blink/renderer/modules/canvas/canvas2d/base_rendering_context_2d.h b/third_party/blink/renderer/modules/canvas/canvas2d/base_rendering_context_2d.h
+index 7e4af25f19e315eb1261bf7fb02ba64eecdbb49b..aa34432017a39b2e74d478087dff7e661a194427 100644
+--- a/third_party/blink/renderer/modules/canvas/canvas2d/base_rendering_context_2d.h
++++ b/third_party/blink/renderer/modules/canvas/canvas2d/base_rendering_context_2d.h
+@@ -877,11 +877,9 @@ void BaseRenderingContext2D::Draw(
+ 
+   if (UNLIKELY(GetState().IsFilterUnresolved())) {
+     // Resolving a filter requires allocating garbage-collected objects.
+-    PostDeferrableAction(WTF::BindOnce(
+-        &BaseRenderingContext2D::DrawInternal<CurrentOverdrawOp, DrawFunc,
+-                                              DrawCoversClipBoundsFunc>,
+-        WrapPersistent(this), nullptr, draw_func, draw_covers_clip_bounds,
+-        bounds, paint_type, image_type, clip_bounds, draw_type));
++    DrawInternal<CurrentOverdrawOp, DrawFunc, DrawCoversClipBoundsFunc>(
++        nullptr, draw_func, draw_covers_clip_bounds, bounds, paint_type,
++        image_type, clip_bounds, draw_type);
+   } else {
+     DrawInternal<CurrentOverdrawOp, DrawFunc, DrawCoversClipBoundsFunc>(
+         paint_canvas, draw_func, draw_covers_clip_bounds, bounds, paint_type,
+@@ -1005,7 +1003,6 @@ ALWAYS_INLINE bool BaseRenderingContext2D::IsFullCanvasCompositeMode(
+ ALWAYS_INLINE bool BaseRenderingContext2D::StateHasFilter() {
+   const CanvasRenderingContext2DState& state = GetState();
+   if (UNLIKELY(state.IsFilterUnresolved())) {
+-    DCHECK(!IsInFastMode());  // Should de-opt before reaching this point.
+     return !!StateGetFilter();
+   }
+   // The fast path avoids the virtual call overhead of StateGetFilter

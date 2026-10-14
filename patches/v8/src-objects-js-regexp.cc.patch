@@ -1,8 +1,8 @@
 diff --git a/src/objects/js-regexp.cc b/src/objects/js-regexp.cc
-index 90f7f93d84006e8c01529172d8cf24a805584ba9..194148e3c61a32b9160df2881a909ac38f232cf1 100644
+index 98ab3f08c7d8812348b315b46f263caac8198900..385137f9c8fff5bb4b9dae1fbf3310d43ad43c61 100644
 --- a/src/objects/js-regexp.cc
 +++ b/src/objects/js-regexp.cc
-@@ -275,10 +275,15 @@ bool IsLineTerminator(int c) {
+@@ -188,10 +188,15 @@ bool IsLineTerminator(int c) {
  // WriteEscapedRegExpSource into a single function to deduplicate dispatch logic
  // and move related code closer to each other.
  template <typename Char>
@@ -21,7 +21,7 @@ index 90f7f93d84006e8c01529172d8cf24a805584ba9..194148e3c61a32b9160df2881a909ac3
    bool needs_escapes = false;
    bool in_character_class = false;
    base::Vector<const Char> src = source->GetCharVector<Char>(no_gc);
-@@ -317,14 +322,14 @@ int CountAdditionalEscapeChars(DirectHandle<String> source,
+@@ -230,14 +235,14 @@ int CountAdditionalEscapeChars(DirectHandle<String> source,
      }
    }
    DCHECK(!in_character_class);
@@ -38,7 +38,7 @@ index 90f7f93d84006e8c01529172d8cf24a805584ba9..194148e3c61a32b9160df2881a909ac3
    int s = 0;
    while (string[s] != '\0') v[(*d)++] = string[s++];
  }
-@@ -335,13 +340,13 @@ Handle<StringType> WriteEscapedRegExpSource(DirectHandle<String> source,
+@@ -248,13 +253,13 @@ Handle<StringType> WriteEscapedRegExpSource(DirectHandle<String> source,
    DisallowGarbageCollection no_gc;
    base::Vector<const Char> src = source->GetCharVector<Char>(no_gc);
    base::Vector<Char> dst(result->GetChars(no_gc), result->length());
@@ -56,7 +56,7 @@ index 90f7f93d84006e8c01529172d8cf24a805584ba9..194148e3c61a32b9160df2881a909ac3
          // This '\' is ignored since the next character itself will be escaped.
          s++;
          continue;
-@@ -349,7 +354,7 @@ Handle<StringType> WriteEscapedRegExpSource(DirectHandle<String> source,
+@@ -262,7 +267,7 @@ Handle<StringType> WriteEscapedRegExpSource(DirectHandle<String> source,
          // Escape. Copy this and next character.
          dst[d++] = src[s++];
        }
@@ -65,7 +65,7 @@ index 90f7f93d84006e8c01529172d8cf24a805584ba9..194148e3c61a32b9160df2881a909ac3
      } else if (c == '/' && !in_character_class) {
        // Not escaped forward-slash needs escape.
        dst[d++] = '\\';
-@@ -389,11 +394,13 @@ MaybeHandle<String> EscapeRegExpSource(Isolate* isolate,
+@@ -302,11 +307,13 @@ MaybeHandle<String> EscapeRegExpSource(Isolate* isolate,
    if (source->length() == 0) return isolate->factory()->query_colon_string();
    bool one_byte = String::IsOneByteRepresentationUnderneath(*source);
    bool needs_escapes = false;
