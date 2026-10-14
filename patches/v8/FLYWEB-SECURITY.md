@@ -4,7 +4,9 @@
 > `src-objects-value-serializer.{cc,h}`, `src-wasm-graph-builder-interface.cc`) and **6 are temporarily out** until
 > SEGURIDAD-PORTES rebases them in `seg/v8-12.9` (FS.13): `src-builtins-builtins-object-gen.cc`,
 > `src-compiler-access-builder.{cc,h}`, `src-compiler-js-native-context-specialization.cc` (needs the two-argument
-> `ForPropertyArraySlot`), `src-ic-ic.cc` and `src-interpreter-bytecode-generator.cc`. **Do not ship this step**:
+> `ForPropertyArraySlot`), `src-ic-ic.cc` and `src-interpreter-bytecode-generator.cc`. Added in this step: `src-compiler-backend-instruction-selector-impl.h` (FlyWeb
+> only: TurboFan's instruction selection, which FlyWeb keeps, had no `TrustedHeapConstant` since 3f714fa8, so any
+> optimized RegExp literal hit UNREACHABLE; LOCAL-3 found it on claude.ai). **Do not ship this step**:
 > the rest of this file still describes `seg/v8-12.8` until FS.13 rewrites it.
 
 # FlyWeb: V8 12.8.374.38 (Chrome 128) and its security backports
