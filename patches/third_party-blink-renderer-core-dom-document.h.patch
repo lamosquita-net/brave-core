@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/document.h b/third_party/blink/renderer/core/dom/document.h
-index 88c64a875224ac49cf82ce9d15fcf01e6c96b604..27e6e75500e4913fc8a4dce24b1893b997ae1edb 100644
+index 88c64a875224ac49cf82ce9d15fcf01e6c96b604..dae54052e15c2177afa1dd3abc6211a564be7b3c 100644
 --- a/third_party/blink/renderer/core/dom/document.h
 +++ b/third_party/blink/renderer/core/dom/document.h
 @@ -131,6 +131,8 @@ class AnimationClock;
@@ -38,7 +38,22 @@ index 88c64a875224ac49cf82ce9d15fcf01e6c96b604..27e6e75500e4913fc8a4dce24b1893b9
    Element* scrollingElement();
  
    // When calling from C++ code, use this method. scrollingElement() is
-@@ -1784,6 +1799,15 @@ class CORE_EXPORT Document : public ContainerNode,
+@@ -1469,6 +1484,14 @@ class CORE_EXPORT Document : public ContainerNode,
+   void EnqueueDisplayLockActivationTask(base::OnceClosure);
+   void EnqueueAnimationFrameTask(base::OnceClosure);
+   void EnqueueAnimationFrameEvent(Event*);
++
++  void ScheduleSelectionchangeEvent();
++
++  // Reset to false after the event gets callbacked
++  void ResetEventQueueStatus(const AtomicString& event_type) override {
++    if (event_type == event_type_names::kSelectionchange)
++      has_scheduled_selectionchange_event_on_document_ = false;
++  }
+   // Only one event for a target/event type combination will be dispatched per
+   // frame.
+   void EnqueueUniqueAnimationFrameEvent(Event*);
+@@ -1784,6 +1807,15 @@ class CORE_EXPORT Document : public ContainerNode,
      return slot_assignment_recalc_depth_ == 1;
    }
  
@@ -54,7 +69,7 @@ index 88c64a875224ac49cf82ce9d15fcf01e6c96b604..27e6e75500e4913fc8a4dce24b1893b9
    bool IsVerticalScrollEnforced() const { return is_vertical_scroll_enforced_; }
    bool IsFocusAllowed() const;
  
-@@ -1949,8 +1973,10 @@ class CORE_EXPORT Document : public ContainerNode,
+@@ -1949,8 +1981,10 @@ class CORE_EXPORT Document : public ContainerNode,
      Document& document_;
    };
  
@@ -67,7 +82,7 @@ index 88c64a875224ac49cf82ce9d15fcf01e6c96b604..27e6e75500e4913fc8a4dce24b1893b9
  
    ResizeObserver& EnsureResizeObserver();
  
-@@ -1983,6 +2009,10 @@ class CORE_EXPORT Document : public ContainerNode,
+@@ -1983,6 +2017,10 @@ class CORE_EXPORT Document : public ContainerNode,
  
    void ResetAgent(Agent& agent);
  
@@ -78,7 +93,7 @@ index 88c64a875224ac49cf82ce9d15fcf01e6c96b604..27e6e75500e4913fc8a4dce24b1893b9
   protected:
    void ClearXMLVersion() { xml_version_ = String(); }
  
-@@ -2601,6 +2631,7 @@ class CORE_EXPORT Document : public ContainerNode,
+@@ -2601,6 +2639,7 @@ class CORE_EXPORT Document : public ContainerNode,
  #endif
    unsigned slot_assignment_recalc_depth_ = 0;
    unsigned flat_tree_traversal_forbidden_recursion_depth_ = 0;
@@ -86,7 +101,7 @@ index 88c64a875224ac49cf82ce9d15fcf01e6c96b604..27e6e75500e4913fc8a4dce24b1893b9
  
    Member<DOMFeaturePolicy> policy_;
  
-@@ -2672,7 +2703,7 @@ class CORE_EXPORT Document : public ContainerNode,
+@@ -2672,12 +2711,15 @@ class CORE_EXPORT Document : public ContainerNode,
    bool had_find_in_page_render_subtree_active_match_ = false;
    bool had_find_in_page_beforematch_expanded_hidden_matchable_ = false;
  
@@ -95,3 +110,11 @@ index 88c64a875224ac49cf82ce9d15fcf01e6c96b604..27e6e75500e4913fc8a4dce24b1893b9
  
    // True if the developer supplied a media query indicating that
    // the site has support for reduced motion.
+   bool supports_reduced_motion_ = false;
+ 
++  // Indicate whether there is one scheduled selectionchange event.
++  bool has_scheduled_selectionchange_event_on_document_ = false;
++
+   Member<RenderBlockingResourceManager> render_blocking_resource_manager_;
+ 
+   bool rendering_has_begun_ = false;

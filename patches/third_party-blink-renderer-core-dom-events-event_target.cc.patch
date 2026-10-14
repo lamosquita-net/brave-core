@@ -1,8 +1,17 @@
 diff --git a/third_party/blink/renderer/core/dom/events/event_target.cc b/third_party/blink/renderer/core/dom/events/event_target.cc
-index e9e9eab7e1e75419eea085a19733d3a68be117a3..5d1039e77b3962b7ae630629ad2e6a380a8fdad6 100644
+index e9e9eab7e1e75419eea085a19733d3a68be117a3..d22f6a8631de526191ca63b11093834318551165 100644
 --- a/third_party/blink/renderer/core/dom/events/event_target.cc
 +++ b/third_party/blink/renderer/core/dom/events/event_target.cc
-@@ -478,6 +478,7 @@ bool EventTarget::AddEventListenerInternal(
+@@ -256,6 +256,8 @@ PortalHost* EventTarget::ToPortalHost() {
+   return nullptr;
+ }
+ 
++void EventTarget::ResetEventQueueStatus(const AtomicString& event_type) {}
++
+ // An instance of EventTargetImpl is returned because EventTarget
+ // is an abstract class, and making it non-abstract is unfavorable
+ // because it will increase the size of EventTarget and all of its
+@@ -478,6 +480,7 @@ bool EventTarget::AddEventListenerInternal(
    bool added = EnsureEventTargetData().event_listener_map.Add(
        event_type, listener, options, &registered_listener);
    if (added) {
@@ -10,7 +19,7 @@ index e9e9eab7e1e75419eea085a19733d3a68be117a3..5d1039e77b3962b7ae630629ad2e6a38
      if (options->hasSignal()) {
        // Instead of passing the entire |options| here, which could create a
        // circular reference due to |options| holding a Member<AbortSignal>, just
-@@ -639,6 +640,7 @@ bool EventTarget::RemoveEventListenerInternal(
+@@ -639,6 +642,7 @@ bool EventTarget::RemoveEventListenerInternal(
                                      &index_of_removed_listener,
                                      &registered_listener))
      return false;
@@ -18,3 +27,11 @@ index e9e9eab7e1e75419eea085a19733d3a68be117a3..5d1039e77b3962b7ae630629ad2e6a38
  
    // Notify firing events planning to invoke the listener at 'index' that
    // they have one less listener to invoke.
+@@ -1021,6 +1025,7 @@ void EventTarget::DispatchEnqueuedEvent(Event* event,
+     event->async_task_context()->Cancel();
+     return;
+   }
++  this->ResetEventQueueStatus(event->type());
+   probe::AsyncTask async_task(context, event->async_task_context());
+   DispatchEvent(*event);
+ }

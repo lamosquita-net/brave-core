@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/forms/text_control_element.h b/third_party/blink/renderer/core/html/forms/text_control_element.h
-index 68509a231e47c5426ed0c05981404840fc128403..d48c548b7c88694adf11e609a9fac848aeee2f2f 100644
+index 68509a231e47c5426ed0c05981404840fc128403..b7935ddcaa3548bc752d877a3c9d827036e5a200 100644
 --- a/third_party/blink/renderer/core/html/forms/text_control_element.h
 +++ b/third_party/blink/renderer/core/html/forms/text_control_element.h
 @@ -148,6 +148,9 @@ class CORE_EXPORT TextControlElement : public HTMLFormControlElementWithState {
@@ -12,11 +12,34 @@ index 68509a231e47c5426ed0c05981404840fc128403..d48c548b7c88694adf11e609a9fac848
  
    // Set the value trimmed to the max length of the field and dispatch the input
    // and change events. If |value| is empty, the autofill state is always
-@@ -213,6 +216,7 @@ class CORE_EXPORT TextControlElement : public HTMLFormControlElementWithState {
+@@ -158,6 +161,13 @@ class CORE_EXPORT TextControlElement : public HTMLFormControlElementWithState {
+   virtual void SetSuggestedValue(const String& value);
+   const String& SuggestedValue() const;
+ 
++  void ScheduleSelectionchangeEvent();
++
++  void ResetEventQueueStatus(const AtomicString& event_type) override {
++    if (event_type == event_type_names::kSelectionchange)
++      has_scheduled_selectionchange_event_ = false;
++  }
++
+   void Trace(Visitor*) const override;
+ 
+   ETextOverflow ValueForTextOverflow() const;
+@@ -213,6 +223,7 @@ class CORE_EXPORT TextControlElement : public HTMLFormControlElementWithState {
                           mojom::blink::FocusType,
                           InputDeviceCapabilities* source_capabilities) final;
    void ScheduleSelectEvent();
-+  void ScheduleSelectionchangeEvent();
++  void ScheduleSelectionchangeEventOnThisOrDocument();
    void DisabledOrReadonlyAttributeChanged(const QualifiedName&);
  
    // Returns true if user-editable value is empty. Used to check placeholder
+@@ -250,6 +261,8 @@ class CORE_EXPORT TextControlElement : public HTMLFormControlElementWithState {
+   TextFieldSelectionDirection cached_selection_direction_;
+ 
+   String suggested_value_;
++  // Indicate whether there is one scheduled selectionchange event.
++  bool has_scheduled_selectionchange_event_ = false;
+   String value_before_set_suggested_value_;
+ 
+   FRIEND_TEST_ALL_PREFIXES(TextControlElementTest, IndexForPosition);

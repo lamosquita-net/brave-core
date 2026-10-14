@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/forms/text_control_element.cc b/third_party/blink/renderer/core/html/forms/text_control_element.cc
-index c608dcf782dd95f69b94fc1c8505aef63b021b2d..cb2ab2181a1d87805c8cbc792edaaf9aee5bfe13 100644
+index c608dcf782dd95f69b94fc1c8505aef63b021b2d..20d4c2a74d0ff01679f4c94b98fde6dd911bcfe7 100644
 --- a/third_party/blink/renderer/core/html/forms/text_control_element.cc
 +++ b/third_party/blink/renderer/core/html/forms/text_control_element.cc
 @@ -49,6 +49,7 @@
@@ -25,7 +25,7 @@ index c608dcf782dd95f69b94fc1c8505aef63b021b2d..cb2ab2181a1d87805c8cbc792edaaf9a
 -  if (ShouldApplySelectionCache() || !isConnected())
 +  if (ShouldApplySelectionCache() || !isConnected()) {
 +    if (did_change) {
-+      ScheduleSelectionchangeEvent();
++      ScheduleSelectionchangeEventOnThisOrDocument();
 +    }
      return did_change;
 +  }
@@ -34,28 +34,31 @@ index c608dcf782dd95f69b94fc1c8505aef63b021b2d..cb2ab2181a1d87805c8cbc792edaaf9a
 -  if (!frame || !inner_editor)
 +  if (!frame || !inner_editor) {
 +    if (did_change) {
-+      ScheduleSelectionchangeEvent();
++      ScheduleSelectionchangeEventOnThisOrDocument();
 +    }
      return did_change;
 +  }
  
    Position start_position = PositionForIndex(inner_editor, start);
    Position end_position =
-@@ -778,6 +788,13 @@ void TextControlElement::ScheduleSelectEvent() {
+@@ -778,6 +788,16 @@ void TextControlElement::ScheduleSelectEvent() {
    GetDocument().EnqueueAnimationFrameEvent(event);
  }
  
-+void TextControlElement::ScheduleSelectionchangeEvent() {
++void TextControlElement::ScheduleSelectionchangeEventOnThisOrDocument() {
 +  if (RuntimeEnabledFeatures::DispatchSelectionchangeEventPerElementEnabled()) {
-+    EnqueueEvent(*Event::CreateBubble(event_type_names::kSelectionchange),
-+                 TaskType::kMiscPlatformAPI);
++    if (!IsInShadowTree()) {
++      ScheduleSelectionchangeEvent();
++    } else {
++      GetDocument().ScheduleSelectionchangeEvent();
++    }
 +  }
 +}
 +
  void TextControlElement::ParseAttribute(
      const AttributeModificationParams& params) {
    if (params.name == html_names::kPlaceholderAttr) {
-@@ -985,8 +1002,13 @@ String TextControlElement::DirectionForFormData() const {
+@@ -985,8 +1005,13 @@ String TextControlElement::DirectionForFormData() const {
         element = Traversal<HTMLElement>::FirstAncestor(*element)) {
      const AtomicString& dir_attribute_value =
          element->FastGetAttribute(html_names::kDirAttr);
@@ -70,3 +73,23 @@ index c608dcf782dd95f69b94fc1c8505aef63b021b2d..cb2ab2181a1d87805c8cbc792edaaf9a
  
      if (EqualIgnoringASCIICase(dir_attribute_value, "rtl") ||
          EqualIgnoringASCIICase(dir_attribute_value, "ltr"))
+@@ -1060,6 +1085,19 @@ const String& TextControlElement::SuggestedValue() const {
+   return suggested_value_;
+ }
+ 
++void TextControlElement::ScheduleSelectionchangeEvent() {
++  if (RuntimeEnabledFeatures::CoalesceSelectionchangeEventEnabled()) {
++    if (has_scheduled_selectionchange_event_)
++      return;
++    has_scheduled_selectionchange_event_ = true;
++    EnqueueEvent(*Event::CreateBubble(event_type_names::kSelectionchange),
++                 TaskType::kMiscPlatformAPI);
++  } else {
++    EnqueueEvent(*Event::CreateBubble(event_type_names::kSelectionchange),
++                 TaskType::kMiscPlatformAPI);
++  }
++}
++
+ void TextControlElement::Trace(Visitor* visitor) const {
+   visitor->Trace(inner_editor_);
+   HTMLFormControlElementWithState::Trace(visitor);

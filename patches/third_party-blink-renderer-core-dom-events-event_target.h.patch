@@ -1,0 +1,15 @@
+diff --git a/third_party/blink/renderer/core/dom/events/event_target.h b/third_party/blink/renderer/core/dom/events/event_target.h
+index 2875da6f3e7bbb174415f786f5fc49ed86a4571f..a4329676bd82ada163477bc68cb2c1ec85aa9582 100644
+--- a/third_party/blink/renderer/core/dom/events/event_target.h
++++ b/third_party/blink/renderer/core/dom/events/event_target.h
+@@ -165,6 +165,10 @@ class CORE_EXPORT EventTarget : public ScriptWrappable {
+   virtual ServiceWorker* ToServiceWorker();
+   virtual PortalHost* ToPortalHost();
+ 
++  // This method is called when the enqueued event is dispatched.
++  // The input is the event type of the current dispatched event.
++  virtual void ResetEventQueueStatus(const AtomicString& event_type);
++
+   static EventTarget* Create(ScriptState*);
+ 
+   bool addEventListener(const AtomicString& event_type, V8EventListener*);

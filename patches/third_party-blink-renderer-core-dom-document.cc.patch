@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/document.cc b/third_party/blink/renderer/core/dom/document.cc
-index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..a0ec9e9efde9f2b6b215bf968502526fd87daacd 100644
+index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..b5a4b371188b845621f8c7d44792d22de23095e9 100644
 --- a/third_party/blink/renderer/core/dom/document.cc
 +++ b/third_party/blink/renderer/core/dom/document.cc
 @@ -79,6 +79,7 @@
@@ -155,7 +155,27 @@ index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..a0ec9e9efde9f2b6b215bf968502526f
    }
  
    AtomicString old_base_target = base_target_;
-@@ -9296,6 +9358,21 @@ Resource* Document::GetPendingLinkPreloadForTesting(const KURL& url) {
+@@ -5690,6 +5752,19 @@ void Document::EnqueueAnimationFrameTask(base::OnceClosure task) {
+   scripted_animation_controller_->EnqueueTask(std::move(task));
+ }
+ 
++void Document::ScheduleSelectionchangeEvent() {
++  if (RuntimeEnabledFeatures::CoalesceSelectionchangeEventEnabled()) {
++    if (has_scheduled_selectionchange_event_on_document_)
++      return;
++    has_scheduled_selectionchange_event_on_document_ = true;
++    EnqueueEvent(*Event::Create(event_type_names::kSelectionchange),
++                 TaskType::kMiscPlatformAPI);
++  } else {
++    EnqueueEvent(*Event::Create(event_type_names::kSelectionchange),
++                 TaskType::kMiscPlatformAPI);
++  }
++}
++
+ void Document::EnqueueAnimationFrameEvent(Event* event) {
+   scripted_animation_controller_->EnqueueEvent(event);
+ }
+@@ -9296,6 +9371,21 @@ Resource* Document::GetPendingLinkPreloadForTesting(const KURL& url) {
    return nullptr;
  }
  

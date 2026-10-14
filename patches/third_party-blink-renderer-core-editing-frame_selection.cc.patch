@@ -1,8 +1,8 @@
 diff --git a/third_party/blink/renderer/core/editing/frame_selection.cc b/third_party/blink/renderer/core/editing/frame_selection.cc
-index ee2c41ec6363621465c40f2ae294f1a731da5da1..e962613e244c2de11f5dd82dd537e68e294a00a9 100644
+index ee2c41ec6363621465c40f2ae294f1a731da5da1..f0a0bdf460f39ea43077c39244b12b717b5e368f 100644
 --- a/third_party/blink/renderer/core/editing/frame_selection.cc
 +++ b/third_party/blink/renderer/core/editing/frame_selection.cc
-@@ -352,11 +352,31 @@ void FrameSelection::DidSetSelectionDeprecated(
+@@ -352,11 +352,27 @@ void FrameSelection::DidSetSelectionDeprecated(
    NotifyAccessibilityForSelectionChange();
    NotifyCompositorForSelectionChange();
    NotifyEventHandlerForSelectionChange();
@@ -17,14 +17,10 @@ index ee2c41ec6363621465c40f2ae294f1a731da5da1..e962613e244c2de11f5dd82dd537e68e
 +  if (RuntimeEnabledFeatures::DispatchSelectionchangeEventPerElementEnabled()) {
 +    TextControlElement* text_control =
 +        EnclosingTextControl(GetSelectionInDOMTree().Base());
-+    if (text_control) {
-+      text_control->EnqueueEvent(
-+          *Event::CreateBubble(event_type_names::kSelectionchange),
-+          TaskType::kMiscPlatformAPI);
++    if (text_control && !text_control->IsInShadowTree()) {
++      text_control->ScheduleSelectionchangeEvent();
 +    } else {
-+      frame_->DomWindow()->EnqueueDocumentEvent(
-+          *Event::Create(event_type_names::kSelectionchange),
-+          TaskType::kMiscPlatformAPI);
++      GetDocument().ScheduleSelectionchangeEvent();
 +    }
 +  }
 +  // When DispatchSelectionchangeEventPerElement is disabled, fall back to old
