@@ -1,0 +1,17 @@
+diff --git a/src/compiler/backend/instruction-selector-impl.h b/src/compiler/backend/instruction-selector-impl.h
+index 9ce7e49005489db572677e07fc45ed00baf1d78d..51b2500e8d09750af386ad65c9b6cc35e36260c5 100644
+--- a/src/compiler/backend/instruction-selector-impl.h
++++ b/src/compiler/backend/instruction-selector-impl.h
+@@ -468,6 +468,12 @@ class OperandGeneratorT : public Adapter {
+           return Constant(HeapConstantOf(node->op()));
+         case IrOpcode::kCompressedHeapConstant:
+           return Constant(HeapConstantOf(node->op()), true);
++        // FlyWeb: turboshaft_instruction_selection is off, so JS code goes
++        // through this TurboFan path, which 3f714fa8 (V8 12.9) left without
++        // TrustedHeapConstant (RegExp literals): UNREACHABLE below. Same
++        // constant as the Turboshaft path's kTrustedHeapObject (uncompressed).
++        case IrOpcode::kTrustedHeapConstant:
++          return Constant(HeapConstantOf(node->op()));
+         case IrOpcode::kDeadValue: {
+           switch (DeadValueRepresentationOf(node->op())) {
+             case MachineRepresentation::kBit:
