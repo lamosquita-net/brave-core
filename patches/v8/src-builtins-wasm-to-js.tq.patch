@@ -1,0 +1,22 @@
+diff --git a/src/builtins/wasm-to-js.tq b/src/builtins/wasm-to-js.tq
+index 060ebae501ca38a233e06f0ae011b2623059a0e7..f9bd930586a1a3afd8a86f9c4e57f37fffe16844 100644
+--- a/src/builtins/wasm-to-js.tq
++++ b/src/builtins/wasm-to-js.tq
+@@ -156,7 +156,7 @@ transitioning macro WasmToJSWrapper(ref: WasmImportData): WasmToJSResult {
+       outParams.objects[nextIndex++] = Convert<Number>(val);
+     } else {
+       const paramKind = paramType & kValueTypeKindBitsMask;
+-      dcheck(paramKind == ValueKind::kRef || paramKind == ValueKind::kRefNull);
++      check(paramKind == ValueKind::kRef || paramKind == ValueKind::kRefNull);
+       nextIndex++;
+       hasTaggedParams = true;
+     }
+@@ -261,7 +261,7 @@ transitioning macro WasmToJSWrapper(ref: WasmImportData): WasmToJSResult {
+       }
+     } else {
+       const retKind = retType & kValueTypeKindBitsMask;
+-      dcheck(retKind == ValueKind::kRef || retKind == ValueKind::kRefNull);
++      check(retKind == ValueKind::kRef || retKind == ValueKind::kRefNull);
+       const trustedData = TaggedIsSmi(ref.instance_data) ?
+           Undefined :
+           UnsafeCast<WasmTrustedInstanceData>(ref.instance_data);
