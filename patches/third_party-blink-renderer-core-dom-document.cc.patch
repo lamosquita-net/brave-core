@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/document.cc b/third_party/blink/renderer/core/dom/document.cc
-index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..d0d95f43e7ad6a65328ce4fbfd2eae3eee5612d6 100644
+index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..a0ec9e9efde9f2b6b215bf968502526fd87daacd 100644
 --- a/third_party/blink/renderer/core/dom/document.cc
 +++ b/third_party/blink/renderer/core/dom/document.cc
 @@ -79,6 +79,7 @@
@@ -122,7 +122,40 @@ index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..d0d95f43e7ad6a65328ce4fbfd2eae3e
  Element* Document::scrollingElement() {
    if (RuntimeEnabledFeatures::ScrollTopLeftInteropEnabled() && InQuirksMode())
      UpdateStyleAndLayoutTree();
-@@ -9296,6 +9346,21 @@ Resource* Document::GetPendingLinkPreloadForTesting(const KURL& url) {
+@@ -4569,13 +4619,25 @@ void Document::ProcessBaseElement() {
+     }
+   }
+ 
+-  if (base_element_url != base_element_url_ &&
+-      !base_element_url.ProtocolIsData() &&
+-      !base_element_url.ProtocolIsJavaScript() && GetExecutionContext() &&
+-      GetExecutionContext()->GetContentSecurityPolicy()->AllowBaseURI(
+-          base_element_url)) {
+-    base_element_url_ = base_element_url;
+-    UpdateBaseURL();
++  if (base_element_url != base_element_url_) {
++    // https://html.spec.whatwg.org/multipage/semantics.html#the-base-element
++    // > If any of the following are true:
++    // > - urlRecord is failure;
++    // > - urlRecord's scheme is "data" or "javascript"; or
++    // > - running Is base allowed for Document? on urlRecord and document
++    // >   returns "Blocked"
++    // > then set element's frozen base URL to document's fallback base URL and
++    // > return.
++    if (!base_element_url.ProtocolIsData() &&
++        !base_element_url.ProtocolIsJavaScript() && GetExecutionContext() &&
++        GetExecutionContext()->GetContentSecurityPolicy()->AllowBaseURI(
++            base_element_url)) {
++      base_element_url_ = base_element_url;
++      UpdateBaseURL();
++    } else if (RuntimeEnabledFeatures::BaseElementUrlUseFallbackEnabled()) {
++      base_element_url_ = FallbackBaseURL();
++      UpdateBaseURL();
++    }
+   }
+ 
+   AtomicString old_base_target = base_target_;
+@@ -9296,6 +9358,21 @@ Resource* Document::GetPendingLinkPreloadForTesting(const KURL& url) {
    return nullptr;
  }
  
