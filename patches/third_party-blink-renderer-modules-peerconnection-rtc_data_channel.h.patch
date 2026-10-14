@@ -1,0 +1,111 @@
+diff --git a/third_party/blink/renderer/modules/peerconnection/rtc_data_channel.h b/third_party/blink/renderer/modules/peerconnection/rtc_data_channel.h
+index 5998c4c23feefdeb9080bb57e60b4c120a200fdc..f81bb2924860cf9a228aecfd4231984468fe2dd3 100644
+--- a/third_party/blink/renderer/modules/peerconnection/rtc_data_channel.h
++++ b/third_party/blink/renderer/modules/peerconnection/rtc_data_channel.h
+@@ -26,16 +26,23 @@
+ #define THIRD_PARTY_BLINK_RENDERER_MODULES_PEERCONNECTION_RTC_DATA_CHANNEL_H_
+ 
+ #include "base/gtest_prod_util.h"
++#include "base/sequence_checker.h"
+ #include "base/task/single_thread_task_runner.h"
+ #include "base/threading/thread_checker.h"
+ #include "third_party/blink/renderer/bindings/core/v8/active_script_wrappable.h"
++#include "third_party/blink/renderer/core/execution_context/execution_context.h"
+ #include "third_party/blink/renderer/core/execution_context/execution_context_lifecycle_observer.h"
++#include "third_party/blink/renderer/core/fileapi/file_error.h"
++#include "third_party/blink/renderer/core/fileapi/file_reader_client.h"
++#include "third_party/blink/renderer/core/fileapi/file_reader_loader.h"
+ #include "third_party/blink/renderer/core/typed_arrays/array_buffer_view_helpers.h"
+ #include "third_party/blink/renderer/modules/event_target_modules.h"
++#include "third_party/blink/renderer/platform/heap/collection_support/heap_deque.h"
+ #include "third_party/blink/renderer/platform/heap/garbage_collected.h"
+ #include "third_party/blink/renderer/platform/heap/prefinalizer.h"
+ #include "third_party/blink/renderer/platform/scheduler/public/frame_scheduler.h"
+ #include "third_party/blink/renderer/platform/timer.h"
++#include "third_party/webrtc/api/data_channel_interface.h"
+ #include "third_party/webrtc/api/peer_connection_interface.h"
+ 
+ namespace blink {
+@@ -111,6 +118,8 @@ class MODULES_EXPORT RTCDataChannel final
+ 
+   void Trace(Visitor*) const override;
+ 
++  void ProcessSendQueue();
++
+  private:
+   friend class Observer;
+   // Implementation of webrtc::DataChannelObserver that receives events on
+@@ -164,7 +173,7 @@ class MODULES_EXPORT RTCDataChannel final
+   void ScheduledEventTimerFired(TimerBase*);
+ 
+   const rtc::scoped_refptr<webrtc::DataChannelInterface>& channel() const;
+-  bool ValidateSendLength(size_t length, ExceptionState& exception_state);
++  bool ValidateSendLength(uint64_t length, ExceptionState& exception_state);
+   void SendRawData(const char* data, size_t length);
+   void SendDataBuffer(webrtc::DataBuffer data_buffer);
+ 
+@@ -195,6 +204,64 @@ class MODULES_EXPORT RTCDataChannel final
+   // of querying the channel (which requires thread hop). This is a cached
+   // value to optimize a const getter, and therefore `mutable`.
+   mutable absl::optional<uint16_t> id_;
++
++  class PendingMessage;
++
++  // Reads a Blob passed to send() (f1b59d2be7b, Chrome 129).
++  class BlobReader : public GarbageCollected<BlobReader>,
++                     public ExecutionContextLifecycleObserver,
++                     public FileReaderAccumulator {
++   public:
++    static BlobReader* Create(ExecutionContext* context,
++                              RTCDataChannel* data_channel,
++                              PendingMessage* message) {
++      return MakeGarbageCollected<BlobReader>(context, data_channel, message);
++    }
++
++    BlobReader(ExecutionContext* context,
++               RTCDataChannel* data_channel,
++               PendingMessage* message);
++    ~BlobReader() override;
++
++    void Start(Blob* blob);
++    bool HasFinishedLoading() const;
++
++    // FileReaderAccumulator
++    void DidFinishLoading(FileReaderData data) override;
++    void DidFail(FileErrorCode error) override;
++
++    // ExecutionContextLifecycleObserver
++    void ContextDestroyed() override;
++
++    // GarbageCollected
++    void Trace(Visitor*) const override;
++
++   private:
++    Member<FileReaderLoader> loader_;
++    Member<RTCDataChannel> data_channel_;
++    Member<PendingMessage> message_;
++
++    SEQUENCE_CHECKER(sequence_checker_);
++  };
++
++  // Messages sent after a Blob wait for it, so the order is kept.
++  class PendingMessage final : public GarbageCollected<PendingMessage> {
++   public:
++    enum class Type {
++      kBufferReady,
++      kBufferPending,
++      kCloseEvent,
++      kBlobFailure,
++    };
++
++    void Trace(Visitor* visitor) const;
++
++    Type type_;
++    absl::optional<webrtc::DataBuffer> buffer_;
++    Member<BlobReader> blob_reader_;
++  };
++  HeapDeque<Member<PendingMessage>> pending_messages_;
++
+   unsigned buffered_amount_low_threshold_ = 0u;
+   unsigned buffered_amount_ = 0u;
+   bool stopped_ = false;
