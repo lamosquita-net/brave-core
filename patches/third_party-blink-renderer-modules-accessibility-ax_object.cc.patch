@@ -1,20 +1,50 @@
 diff --git a/third_party/blink/renderer/modules/accessibility/ax_object.cc b/third_party/blink/renderer/modules/accessibility/ax_object.cc
-index 9a14209954c399d54ba01823ff1ec4f8749f5563..7e233da1c8d4312de59778b3ffbddee29d98b292 100644
+index 9a14209954c399d54ba01823ff1ec4f8749f5563..9f6da8123f88f2c719ea03ec90475b845293e977 100644
 --- a/third_party/blink/renderer/modules/accessibility/ax_object.cc
 +++ b/third_party/blink/renderer/modules/accessibility/ax_object.cc
-@@ -2133,6 +2133,20 @@ void AXObject::SerializeTableAttributes(ui::AXNodeData* node_data) {
+@@ -506,6 +506,18 @@ void AddIntListAttributeFromOffsetVector(
+     node_data->AddIntListAttribute(attr, offset_values);
+ }
+ 
++const QualifiedName& DeprecatedAriaColtextAttrName() {
++  DEFINE_STATIC_LOCAL(QualifiedName, aria_coltext_attr,
++                      (AtomicString("aria-coltext")));
++  return aria_coltext_attr;
++}
++
++const QualifiedName& DeprecatedAriaRowtextAttrName() {
++  DEFINE_STATIC_LOCAL(QualifiedName, aria_rowtext_attr,
++                      (AtomicString("aria-rowtext")));
++  return aria_rowtext_attr;
++}
++
+ }  // namespace
+ 
+ int32_t ToAXMarkerType(DocumentMarker::MarkerType marker_type) {
+@@ -2133,6 +2145,31 @@ void AXObject::SerializeTableAttributes(ui::AXNodeData* node_data) {
        node_data->AddIntAttribute(
            ax::mojom::blink::IntAttribute::kAriaCellColumnIndex, aria_colindex);
      }
 +
 +    if (RuntimeEnabledFeatures::AriaRowColIndexTextEnabled()) {
-+      const AtomicString& aria_cell_row_index_text =
++      // TODO(accessibility): Remove deprecated attribute support for
++      // aria-rowtext/aria-coltext once Sheets uses standard attribute names
++      // aria-rowindextext/aria-colindextext.
++      AtomicString aria_cell_row_index_text =
 +          GetAOMPropertyOrARIAAttribute(AOMStringProperty::kRowIndexText);
++      if (aria_cell_row_index_text.empty()) {
++        aria_cell_row_index_text =
++            GetAttribute(DeprecatedAriaRowtextAttrName());
++      }
 +      TruncateAndAddStringAttribute(
 +          node_data, ax::mojom::blink::StringAttribute::kAriaCellRowIndexText,
 +          aria_cell_row_index_text);
-+      const AtomicString& aria_cell_column_index_text =
++      AtomicString aria_cell_column_index_text =
 +          GetAOMPropertyOrARIAAttribute(AOMStringProperty::kColIndexText);
++      if (aria_cell_column_index_text.empty()) {
++        aria_cell_column_index_text =
++            GetAttribute(DeprecatedAriaColtextAttrName());
++      }
 +      TruncateAndAddStringAttribute(
 +          node_data,
 +          ax::mojom::blink::StringAttribute::kAriaCellColumnIndexText,
@@ -23,7 +53,7 @@ index 9a14209954c399d54ba01823ff1ec4f8749f5563..7e233da1c8d4312de59778b3ffbddee2
    }
  
    if (ui::IsTableHeader(RoleValue()) &&
-@@ -3608,7 +3622,7 @@ bool AXObject::ComputeAccessibilityIsIgnoredButIncludedInTree() const {
+@@ -3608,7 +3645,7 @@ bool AXObject::ComputeAccessibilityIsIgnoredButIncludedInTree() const {
        return true;
      }
      // Necessary to calculate the accessible description of a ruby node.
@@ -32,7 +62,7 @@ index 9a14209954c399d54ba01823ff1ec4f8749f5563..7e233da1c8d4312de59778b3ffbddee2
        return true;
      }
    }
-@@ -3747,8 +3761,9 @@ bool AXObject::ComputeAccessibilityIsIgnoredButIncludedInTree() const {
+@@ -3747,8 +3784,9 @@ bool AXObject::ComputeAccessibilityIsIgnoredButIncludedInTree() const {
    // browsers that do not support ruby. Hence, their contents should not be
    // included in the accessible description, unless another condition in this
    // method decides to keep them in the tree for some reason.
