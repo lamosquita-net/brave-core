@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/editing/selection_modifier.cc b/third_party/blink/renderer/core/editing/selection_modifier.cc
-index 3b1187b4a0553e3e80327e2fba44f4dfe096cbb5..8332f98921b1abc24d099808e71aacd39129fa61 100644
+index 3b1187b4a0553e3e80327e2fba44f4dfe096cbb5..1d12eeb599ca2c6bd5fdfb08abbcd5f9310cebc0 100644
 --- a/third_party/blink/renderer/core/editing/selection_modifier.cc
 +++ b/third_party/blink/renderer/core/editing/selection_modifier.cc
 @@ -44,6 +44,7 @@
@@ -36,3 +36,33 @@ index 3b1187b4a0553e3e80327e2fba44f4dfe096cbb5..8332f98921b1abc24d099808e71aacd3
    return position;
  }
  
+@@ -510,7 +519,13 @@ VisiblePositionInFlatTree SelectionModifier::ModifyMovingForward(
+     case TextGranularity::kLineBoundary:
+       return LogicalEndOfLine(EndForPlatform());
+     case TextGranularity::kParagraphBoundary:
+-      return EndOfParagraph(EndForPlatform());
++      return EndOfParagraph(
++          EndForPlatform(),
++          RuntimeEnabledFeatures::
++                      MoveToParagraphStartOrEndSkipsNonEditableEnabled() &&
++                  IsEditablePosition(EndForPlatform().DeepEquivalent())
++              ? EditingBoundaryCrossingRule::kCanSkipOverEditingBoundary
++              : EditingBoundaryCrossingRule::kCannotCrossEditingBoundary);
+     case TextGranularity::kDocumentBoundary: {
+       const VisiblePositionInFlatTree& pos = EndForPlatform();
+       if (IsEditablePosition(pos.DeepEquivalent())) {
+@@ -703,7 +718,13 @@ VisiblePositionInFlatTree SelectionModifier::ModifyMovingBackward(
+       pos = LogicalStartOfLine(StartForPlatform());
+       break;
+     case TextGranularity::kParagraphBoundary:
+-      pos = StartOfParagraph(StartForPlatform());
++      pos = StartOfParagraph(
++          StartForPlatform(),
++          RuntimeEnabledFeatures::
++                      MoveToParagraphStartOrEndSkipsNonEditableEnabled() &&
++                  IsEditablePosition(StartForPlatform().DeepEquivalent())
++              ? EditingBoundaryCrossingRule::kCanSkipOverEditingBoundary
++              : EditingBoundaryCrossingRule::kCannotCrossEditingBoundary);
+       break;
+     case TextGranularity::kDocumentBoundary:
+       pos = StartForPlatform();
