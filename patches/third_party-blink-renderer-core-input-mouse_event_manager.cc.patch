@@ -1,0 +1,15 @@
+diff --git a/third_party/blink/renderer/core/input/mouse_event_manager.cc b/third_party/blink/renderer/core/input/mouse_event_manager.cc
+index 37bb43fee23916418058c59e0df07009d24f14c4..6a1137278d069bee4d709811aaab1e19dce0d4c0 100644
+--- a/third_party/blink/renderer/core/input/mouse_event_manager.cc
++++ b/third_party/blink/renderer/core/input/mouse_event_manager.cc
+@@ -527,7 +527,9 @@ WebInputEventResult MouseEventManager::HandleMouseFocus(
+   }
+ 
+   for (; element; element = element->ParentOrShadowHostElement()) {
+-    if (element->IsFocusable() && element->IsFocusedElementInDocument())
++    // FlyWeb (level 130): IsMouseFocusable, as 199d1a77501 (a keyboard-
++    // focusable scroller is not mouse-focusable).
++    if (element->IsMouseFocusable() && element->IsFocusedElementInDocument())
+       return WebInputEventResult::kNotHandled;
+     if (element->IsMouseFocusable() || element->DelegatesFocus())
+       break;

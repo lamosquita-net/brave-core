@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/element.cc b/third_party/blink/renderer/core/dom/element.cc
-index 603363d44dba6a56412a2408af11a821e39bde00..f78bb4ad5c994c6c317c8ca032573392cd741c18 100644
+index 603363d44dba6a56412a2408af11a821e39bde00..a91959792e2c7361bfa440b18867fb95be00b87e 100644
 --- a/third_party/blink/renderer/core/dom/element.cc
 +++ b/third_party/blink/renderer/core/dom/element.cc
 @@ -43,6 +43,7 @@
@@ -762,7 +762,53 @@ index 603363d44dba6a56412a2408af11a821e39bde00..f78bb4ad5c994c6c317c8ca032573392
    if (ShadowRoot* shadow_root = GetShadowRoot()) {
      shadow_root->SetNeedsAssignmentRecalc();
    }
-@@ -5720,7 +6269,7 @@ void Element::SetInnerHTMLInternal(const String& html,
+@@ -5391,7 +5940,15 @@ bool Element::IsBaseElementFocusable() const {
+ }
+ 
+ bool Element::IsFocusable() const {
+-  return IsMouseFocusable() || IsKeyboardFocusable();
++  if (IsMouseFocusable() || IsKeyboardFocusable()) {
++    return true;
++  }
++  // FlyWeb (level 130): as in Chromium 130, a scroller can be focused (e.g.
++  // with focus()) even when it is not in the tab order because it has
++  // focusable descendants (FocusableState::kKeyboardFocusableScroller).
++  return RuntimeEnabledFeatures::KeyboardFocusableScrollersEnabled() &&
++         isConnected() && IsFocusableStyleAfterUpdate() &&
++         IsScrollableNode(this);
+ }
+ 
+ bool Element::IsFocusableStyleAfterUpdate() const {
+@@ -5436,11 +5993,23 @@ bool Element::HasNoFocusableChildren() const {
+ }
+ 
+ bool Element::IsKeyboardFocusable() const {
+-  return isConnected() && IsFocusableStyleAfterUpdate() &&
+-         ((SupportsFocus() &&
+-           GetIntegralAttribute(html_names::kTabindexAttr, 0) >= 0) ||
+-          (RuntimeEnabledFeatures::KeyboardFocusableScrollersEnabled() &&
+-           IsScrollableNode(this) && HasNoFocusableChildren()));
++  if (!isConnected() || !IsFocusableStyleAfterUpdate()) {
++    return false;
++  }
++  // SupportsFocus() is true when the tabindex attribute is set, so an explicit
++  // tabindex decides keyboard focusability.
++  if (SupportsFocus()) {
++    return GetIntegralAttribute(html_names::kTabindexAttr, 0) >= 0;
++  }
++  // FlyWeb (level 130): KeyboardFocusableScrollers, final behavior of
++  // Chromium 130 (199d1a77501, 6f8b4173951): a scroller without keyboard-
++  // focusable descendants is keyboard-focusable (not mouse-focusable). A
++  // focused scroller stays focusable even if focusable children are added.
++  if (RuntimeEnabledFeatures::KeyboardFocusableScrollersEnabled() &&
++      IsScrollableNode(this)) {
++    return GetDocument().FocusedElement() == this || HasNoFocusableChildren();
++  }
++  return false;
+ }
+ 
+ bool Element::IsMouseFocusable() const {
+@@ -5720,7 +6289,7 @@ void Element::SetInnerHTMLInternal(const String& html,
      setTextContent(html);
    } else {
      if (DocumentFragment* fragment = CreateFragmentForInnerOuterHTML(
@@ -771,7 +817,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..f78bb4ad5c994c6c317c8ca032573392
              include_shadow_roots, exception_state)) {
        ContainerNode* container = this;
        if (auto* template_element = DynamicTo<HTMLTemplateElement>(*this)) {
-@@ -5760,6 +6309,20 @@ String Element::getInnerHTML(const GetInnerHTMLOptions* options) const {
+@@ -5760,6 +6329,20 @@ String Element::getInnerHTML(const GetInnerHTMLOptions* options) const {
        include_closed_roots);
  }
  
@@ -792,7 +838,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..f78bb4ad5c994c6c317c8ca032573392
  void Element::setOuterHTML(const String& html,
                             ExceptionState& exception_state) {
    Node* p = parentNode();
-@@ -5783,7 +6346,7 @@ void Element::setOuterHTML(const String& html,
+@@ -5783,7 +6366,7 @@ void Element::setOuterHTML(const String& html,
    Node* next = nextSibling();
  
    DocumentFragment* fragment = CreateFragmentForInnerOuterHTML(
@@ -801,7 +847,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..f78bb4ad5c994c6c317c8ca032573392
        /*include_shadow_roots=*/false, exception_state);
    if (exception_state.HadException()) {
      return;
-@@ -5994,7 +6557,7 @@ void Element::insertAdjacentHTML(const String& where,
+@@ -5994,7 +6577,7 @@ void Element::insertAdjacentHTML(const String& where,
  
    // Step 3 of http://domparsing.spec.whatwg.org/#insertadjacenthtml()
    DocumentFragment* fragment = CreateFragmentForInnerOuterHTML(
@@ -810,7 +856,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..f78bb4ad5c994c6c317c8ca032573392
        /*include_shadow_roots=*/false, exception_state);
    if (!fragment) {
      return;
-@@ -8377,9 +8940,34 @@ FocusgroupFlags Element::GetFocusgroupFlags() const {
+@@ -8377,9 +8960,34 @@ FocusgroupFlags Element::GetFocusgroupFlags() const {
  }
  
  bool Element::checkVisibility(CheckVisibilityOptions* options) const {
@@ -847,7 +893,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..f78bb4ad5c994c6c317c8ca032573392
    DisplayLockUtilities::ScopedForcedUpdate force_locks(
        this, DisplayLockContext::ForcedPhase::kStyleAndLayoutTree,
        /*include_self=*/false, /*only_cv_auto=*/true,
-@@ -8396,7 +8984,9 @@ bool Element::checkVisibility(CheckVisibilityOptions* options) const {
+@@ -8396,7 +9004,9 @@ bool Element::checkVisibility(CheckVisibilityOptions* options) const {
    }
  
    DCHECK(options);
@@ -858,7 +904,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..f78bb4ad5c994c6c317c8ca032573392
        style->Visibility() != EVisibility::kVisible) {
      return false;
    }
-@@ -8415,7 +9005,9 @@ bool Element::checkVisibility(CheckVisibilityOptions* options) const {
+@@ -8415,7 +9025,9 @@ bool Element::checkVisibility(CheckVisibilityOptions* options) const {
      }
  
      // Check for opacity:0
@@ -869,7 +915,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..f78bb4ad5c994c6c317c8ca032573392
        if (style = ancestor.GetComputedStyle(); style) {
          if (style->Opacity() == 0.f) {
            return false;
-@@ -8850,4 +9442,10 @@ Element* Element::ImplicitAnchorElement() {
+@@ -8850,4 +9462,10 @@ Element* Element::ImplicitAnchorElement() {
    return nullptr;
  }
  
