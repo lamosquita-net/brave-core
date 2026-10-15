@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc b/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc
-index 3e784902ddee52b0a6754e762a3c911bb41876fc..9c30cd5185c0223da256470ff520b8cb52b21710 100644
+index 3e784902ddee52b0a6754e762a3c911bb41876fc..838c4b9ea2aeec73fe9683e4e11a7dc053a97fb4 100644
 --- a/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc
 +++ b/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc
 @@ -60,7 +60,9 @@
@@ -482,7 +482,34 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..9c30cd5185c0223da256470ff520b8cb
  const CSSValue* TransitionTimingFunction::ParseSingleValue(
      CSSParserTokenRange& range,
      const CSSParserContext& context,
-@@ -9265,6 +9460,34 @@ const CSSValue* WebkitMaskBoxImageWidth::CSSValueFromComputedStyleInternal(
+@@ -9083,26 +9278,6 @@ const CSSValue* WebkitFontSmoothing::CSSValueFromComputedStyleInternal(
+   return CSSIdentifierValue::Create(style.GetFontDescription().FontSmoothing());
+ }
+ 
+-const CSSValue* WebkitHighlight::ParseSingleValue(
+-    CSSParserTokenRange& range,
+-    const CSSParserContext& context,
+-    const CSSParserLocalContext&) const {
+-  if (range.Peek().Id() == CSSValueID::kNone) {
+-    return css_parsing_utils::ConsumeIdent(range);
+-  }
+-  return css_parsing_utils::ConsumeString(range);
+-}
+-
+-const CSSValue* WebkitHighlight::CSSValueFromComputedStyleInternal(
+-    const ComputedStyle& style,
+-    const LayoutObject*,
+-    bool allow_visited_style) const {
+-  if (style.Highlight() == g_null_atom) {
+-    return CSSIdentifierValue::Create(CSSValueID::kNone);
+-  }
+-  return MakeGarbageCollected<CSSStringValue>(style.Highlight());
+-}
+-
+ const CSSValue* HyphenateCharacter::ParseSingleValue(
+     CSSParserTokenRange& range,
+     const CSSParserContext&,
+@@ -9265,6 +9440,34 @@ const CSSValue* WebkitMaskBoxImageWidth::CSSValueFromComputedStyleInternal(
        style.MaskBoxImage().BorderSlices(), style);
  }
  
@@ -517,7 +544,7 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..9c30cd5185c0223da256470ff520b8cb
  const CSSValue* WebkitMaskClip::ParseSingleValue(
      CSSParserTokenRange& range,
      const CSSParserContext&,
-@@ -9287,12 +9510,38 @@ const CSSValue* WebkitMaskClip::CSSValueFromComputedStyleInternal(
+@@ -9287,12 +9490,38 @@ const CSSValue* WebkitMaskClip::CSSValueFromComputedStyleInternal(
    return list;
  }
  
@@ -557,7 +584,7 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..9c30cd5185c0223da256470ff520b8cb
  }
  
  const CSSValue* WebkitMaskComposite::CSSValueFromComputedStyleInternal(
-@@ -9302,7 +9551,8 @@ const CSSValue* WebkitMaskComposite::CSSValueFromComputedStyleInternal(
+@@ -9302,7 +9531,8 @@ const CSSValue* WebkitMaskComposite::CSSValueFromComputedStyleInternal(
    CSSValueList* list = CSSValueList::CreateCommaSeparated();
    const FillLayer* curr_layer = &style.MaskLayers();
    for (; curr_layer; curr_layer = curr_layer->Next()) {
@@ -567,7 +594,7 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..9c30cd5185c0223da256470ff520b8cb
    }
    return list;
  }
-@@ -9324,6 +9574,65 @@ const CSSValue* WebkitMaskImage::CSSValueFromComputedStyleInternal(
+@@ -9324,6 +9554,65 @@ const CSSValue* WebkitMaskImage::CSSValueFromComputedStyleInternal(
        style, allow_visited_style, fill_layer);
  }
  
@@ -633,7 +660,7 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..9c30cd5185c0223da256470ff520b8cb
  const CSSValue* WebkitMaskOrigin::ParseSingleValue(
      CSSParserTokenRange& range,
      const CSSParserContext&,
-@@ -9388,8 +9697,9 @@ const CSSValue* WebkitMaskSize::ParseSingleValue(
+@@ -9388,8 +9677,9 @@ const CSSValue* WebkitMaskSize::ParseSingleValue(
      CSSParserTokenRange& range,
      const CSSParserContext& context,
      const CSSParserLocalContext& local_context) const {
@@ -645,7 +672,7 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..9c30cd5185c0223da256470ff520b8cb
  }
  
  const CSSValue* WebkitMaskSize::CSSValueFromComputedStyleInternal(
-@@ -9400,6 +9710,51 @@ const CSSValue* WebkitMaskSize::CSSValueFromComputedStyleInternal(
+@@ -9400,6 +9690,51 @@ const CSSValue* WebkitMaskSize::CSSValueFromComputedStyleInternal(
    return ComputedStyleUtils::BackgroundImageOrWebkitMaskSize(style, fill_layer);
  }
  
@@ -697,7 +724,7 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..9c30cd5185c0223da256470ff520b8cb
  const CSSValue* WebkitPerspectiveOriginX::ParseSingleValue(
      CSSParserTokenRange& range,
      const CSSParserContext& context,
-@@ -9444,27 +9799,34 @@ const CSSValue* WebkitRtlOrdering::CSSValueFromComputedStyleInternal(
+@@ -9444,27 +9779,34 @@ const CSSValue* WebkitRtlOrdering::CSSValueFromComputedStyleInternal(
                                          : CSSValueID::kLogical);
  }
  
@@ -739,7 +766,7 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..9c30cd5185c0223da256470ff520b8cb
  const CSSValue* WebkitTapHighlightColor::ParseSingleValue(
      CSSParserTokenRange& range,
      const CSSParserContext& context,
-@@ -10193,11 +10555,18 @@ const CSSValue* WhiteSpaceCollapse::CSSValueFromComputedStyleInternal(
+@@ -10193,11 +10535,18 @@ const CSSValue* WhiteSpaceCollapse::CSSValueFromComputedStyleInternal(
    return CSSIdentifierValue::Create(style.GetWhiteSpaceCollapse());
  }
  
@@ -760,7 +787,7 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..9c30cd5185c0223da256470ff520b8cb
  }
  
  const CSSValue* Widows::ParseSingleValue(CSSParserTokenRange& range,
-@@ -10557,27 +10926,5 @@ const CSSValue* InternalEmptyLineHeight::ParseSingleValue(
+@@ -10557,27 +10906,5 @@ const CSSValue* InternalEmptyLineHeight::ParseSingleValue(
                                           CSSValueID::kNone>(range);
  }
  
