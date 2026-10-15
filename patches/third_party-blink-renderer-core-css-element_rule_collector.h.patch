@@ -1,0 +1,22 @@
+diff --git a/third_party/blink/renderer/core/css/element_rule_collector.h b/third_party/blink/renderer/core/css/element_rule_collector.h
+index 3f3465848560a84952ab004ceebfb92e37deefec..e288f042a53daa7ad205cc58452364ba726cfb33 100644
+--- a/third_party/blink/renderer/core/css/element_rule_collector.h
++++ b/third_party/blink/renderer/core/css/element_rule_collector.h
+@@ -153,7 +153,7 @@ class CORE_EXPORT ElementRuleCollector {
+   StyleRuleList* MatchedStyleRuleList();
+   RuleIndexList* MatchedCSSRuleList();
+ 
+-  void CollectMatchingRules(const MatchRequest&);
++  void CollectMatchingRules(const MatchRequest&, PartNames* part_names);
+   void CollectMatchingShadowHostRules(const MatchRequest&);
+   void CollectMatchingSlottedRules(const MatchRequest&);
+   void CollectMatchingPartPseudoRules(const MatchRequest&,
+@@ -224,6 +224,8 @@ class CORE_EXPORT ElementRuleCollector {
+   };
+ 
+  private:
++  // TODO(https://crbug.com/40280846): Remove PartRequest when removing the
++  // CSSCascadeCorrectScope flag.
+   struct PartRequest {
+     PartNames& part_names;
+     // If this is true, we're matching for a pseudo-element of the part, such as

@@ -1,0 +1,26 @@
+diff --git a/third_party/blink/renderer/core/html/shadow/shadow_element_utils.cc b/third_party/blink/renderer/core/html/shadow/shadow_element_utils.cc
+index 5acc965d45e514c98e67db95903a0b49e24a8e32..fcd78ff7041e44c1a9a46168c236e909749881aa 100644
+--- a/third_party/blink/renderer/core/html/shadow/shadow_element_utils.cc
++++ b/third_party/blink/renderer/core/html/shadow/shadow_element_utils.cc
+@@ -47,4 +47,21 @@ bool IsTextControlPlaceholder(const Node* node) {
+   return element->GetIdAttribute() == shadow_element_names::kIdPlaceholder;
+ }
+ 
++namespace shadow_element_utils {
++
++const AtomicString& StringForUAShadowPseudoId(PseudoId pseudo_id) {
++  switch (pseudo_id) {
++    case kPseudoIdPlaceholder:
++      return shadow_element_names::kPseudoInputPlaceholder;
++    case kPseudoIdFileSelectorButton:
++      return shadow_element_names::kPseudoFileUploadButton;
++    case kPseudoIdDetailsContent:
++      return shadow_element_names::kIdDetailsContent;
++    default:
++      return g_null_atom;
++  }
++}
++
++}  // namespace shadow_element_utils
++
+ }  // namespace blink

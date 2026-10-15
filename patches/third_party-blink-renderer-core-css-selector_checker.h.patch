@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/selector_checker.h b/third_party/blink/renderer/core/css/selector_checker.h
-index ba4ebf8f0b5f59d41cd502278eab60f5bd111eb8..fa1359a98a10a92812d5ee57baf53efa011db51a 100644
+index ba4ebf8f0b5f59d41cd502278eab60f5bd111eb8..99cfe41952deaecedaeddf6c47394acbde8021ca 100644
 --- a/third_party/blink/renderer/core/css/selector_checker.h
 +++ b/third_party/blink/renderer/core/css/selector_checker.h
 @@ -98,6 +98,7 @@ class CORE_EXPORT SelectorChecker {
@@ -10,7 +10,19 @@ index ba4ebf8f0b5f59d41cd502278eab60f5bd111eb8..fa1359a98a10a92812d5ee57baf53efa
          scrollbar_part_(style_request.scrollbar_part),
          mode_(mode),
          is_ua_rule_(is_ua_rule) {}
-@@ -331,6 +332,7 @@ class CORE_EXPORT SelectorChecker {
+@@ -118,7 +119,10 @@ class CORE_EXPORT SelectorChecker {
+     // https://crrev.com/c/3362008
+     const CSSSelector* selector = nullptr;
+ 
+-    // Used to match the :scope pseudo-class.
++    // TODO(dbaron): I'm suspicious of how accurate the comments describing
++    // the following three members are.  We should review them for accuracy.
++    // Used to match the :scope pseudo-class.  It also tells us which
++    // TreeScope the selectors are associated with.
+     const ContainerNode* scope = nullptr;
+     // If `style_scope` is specified, that is used to match the :scope
+     // pseudo-class instead (and `scope` is ignored).
+@@ -331,6 +335,7 @@ class CORE_EXPORT SelectorChecker {
    CustomScrollbar* scrollbar_;
    PartNames* part_names_;
    const String pseudo_argument_;

@@ -1,19 +1,59 @@
 diff --git a/third_party/blink/renderer/core/css/parser/css_selector_parser.cc b/third_party/blink/renderer/core/css/parser/css_selector_parser.cc
-index 5bdb7220e0a0dddbbf5bf86f6fc6f789bdd722f7..01d709e05108e97a4eeede002b6c4b67d5625e3b 100644
+index 5bdb7220e0a0dddbbf5bf86f6fc6f789bdd722f7..00eae456516d6ecfc6c49a8113cba939f9fbc351 100644
 --- a/third_party/blink/renderer/core/css/parser/css_selector_parser.cc
 +++ b/third_party/blink/renderer/core/css/parser/css_selector_parser.cc
-@@ -14,8 +14,10 @@
+@@ -7,15 +7,24 @@
+ #include <algorithm>
+ #include <memory>
+ #include "base/auto_reset.h"
++#include "base/containers/span.h"
+ #include "base/numerics/safe_conversions.h"
++#include "third_party/blink/renderer/core/css/css_selector.h"
+ #include "third_party/blink/renderer/core/css/css_selector_list.h"
++#include "third_party/blink/renderer/core/css/parser/css_nesting_type.h"
+ #include "third_party/blink/renderer/core/css/parser/css_parser_context.h"
+ #include "third_party/blink/renderer/core/css/parser/css_parser_observer.h"
++#include "third_party/blink/renderer/core/css/parser/css_parser_token.h"
  #include "third_party/blink/renderer/core/css/parser/css_parser_token_stream.h"
  #include "third_party/blink/renderer/core/css/properties/css_parsing_utils.h"
  #include "third_party/blink/renderer/core/css/style_sheet_contents.h"
 +#include "third_party/blink/renderer/core/dom/document.h"
  #include "third_party/blink/renderer/core/dom/pseudo_element.h"
++#include "third_party/blink/renderer/core/execution_context/security_context.h"
  #include "third_party/blink/renderer/core/frame/deprecation/deprecation.h"
 +#include "third_party/blink/renderer/core/inspector/console_message.h"
++#include "third_party/blink/renderer/core/style/computed_style_constants.h"
++#include "third_party/blink/renderer/platform/heap/garbage_collected.h"
  #include "third_party/blink/renderer/platform/instrumentation/use_counter.h"
  #include "third_party/blink/renderer/platform/runtime_enabled_features.h"
  
-@@ -976,7 +978,28 @@ CSSSelector::PseudoType CSSSelectorParser::ParsePseudoType(
+@@ -55,13 +64,14 @@ bool IsHostPseudoSelector(const CSSSelector& selector) {
+ // correct implicit combinator. If no new combinator should be used,
+ // it returns RelationType::kSubSelector.
+ CSSSelector::RelationType GetImplicitShadowCombinatorForMatching(
+-    const CSSSelector& selector) {
+-  switch (selector.GetPseudoType()) {
++    CSSSelector::PseudoType pseudo_type) {
++  switch (pseudo_type) {
+     case CSSSelector::PseudoType::kPseudoSlotted:
+       return CSSSelector::RelationType::kShadowSlot;
+     case CSSSelector::PseudoType::kPseudoWebKitCustomElement:
+     case CSSSelector::PseudoType::kPseudoBlinkInternalElement:
+     case CSSSelector::PseudoType::kPseudoCue:
++    case CSSSelector::PseudoType::kPseudoDetailsContent:
+     case CSSSelector::PseudoType::kPseudoPlaceholder:
+     case CSSSelector::PseudoType::kPseudoFileSelectorButton:
+       return CSSSelector::RelationType::kUAShadow;
+@@ -73,7 +83,7 @@ CSSSelector::RelationType GetImplicitShadowCombinatorForMatching(
+ }
+ 
+ bool NeedsImplicitShadowCombinatorForMatching(const CSSSelector& selector) {
+-  return GetImplicitShadowCombinatorForMatching(selector) !=
++  return GetImplicitShadowCombinatorForMatching(selector.GetPseudoType()) !=
+          CSSSelector::RelationType::kSubSelector;
+ }
+ 
+@@ -976,15 +986,36 @@ CSSSelector::PseudoType CSSSelectorParser::ParsePseudoType(
      return CSSSelector::PseudoType::kPseudoBlinkInternalElement;
    }
    if (name.StartsWith("--")) {
@@ -43,17 +83,207 @@ index 5bdb7220e0a0dddbbf5bf86f6fc6f789bdd722f7..01d709e05108e97a4eeede002b6c4b67
    }
  
    return CSSSelector::PseudoType::kPseudoUnknown;
-@@ -1098,7 +1121,8 @@ bool IsPseudoClassValidAfterPseudoElement(
+ }
+ 
+-// static
+-PseudoId CSSSelectorParser::ParsePseudoElement(const String& selector_string,
+-                                               const Node* parent) {
++namespace {
++PseudoId ParsePseudoElementLegacy(const String& selector_string,
++                                  const Node* parent) {
+   CSSTokenizer tokenizer(selector_string);
+   const auto tokens = tokenizer.TokenizeToEOF();
+   CSSParserTokenRange range(tokens);
+@@ -1001,10 +1032,11 @@ PseudoId CSSSelectorParser::ParsePseudoElement(const String& selector_string,
+       (range.Peek().GetType() == kIdentToken ||
+        range.Peek().GetType() == kFunctionToken)) {
+     CSSParserToken selector_name_token = range.Consume();
+-    PseudoId pseudo_id = CSSSelector::GetPseudoId(
+-        ParsePseudoType(selector_name_token.Value().ToAtomicString(),
+-                        selector_name_token.GetType() == kFunctionToken,
+-                        parent ? &parent->GetDocument() : nullptr));
++    PseudoId pseudo_id =
++        CSSSelector::GetPseudoId(CSSSelectorParser::ParsePseudoType(
++            selector_name_token.Value().ToAtomicString(),
++            selector_name_token.GetType() == kFunctionToken,
++            parent ? &parent->GetDocument() : nullptr));
+ 
+     if (PseudoElement::IsWebExposed(pseudo_id, parent) &&
+         ((PseudoElementHasArguments(pseudo_id) &&
+@@ -1019,9 +1051,7 @@ PseudoId CSSSelectorParser::ParsePseudoElement(const String& selector_string,
+   return kPseudoIdNone;
+ }
+ 
+-// static
+-AtomicString CSSSelectorParser::ParsePseudoElementArgument(
+-    const String& selector_string) {
++AtomicString ParsePseudoElementArgument(const String& selector_string) {
+   CSSTokenizer tokenizer(selector_string);
+   const auto tokens = tokenizer.TokenizeToEOF();
+   CSSParserTokenRange range(tokens);
+@@ -1043,6 +1073,121 @@ AtomicString CSSSelectorParser::ParsePseudoElementArgument(
+ 
+   return range.Peek(1).Value().ToAtomicString();
+ }
++}  // namespace
++
++// static
++PseudoId CSSSelectorParser::ParsePseudoElement(const String& selector_string,
++                                               const Node* parent,
++                                               AtomicString& argument,
++                                               PseudoElementParseMode mode) {
++  if (!RuntimeEnabledFeatures::
++          CSSComputedStyleFullPseudoElementParserEnabled() ||
++      mode == PseudoElementParseMode::kLegacy) {
++    PseudoId pseudo_id = ParsePseudoElementLegacy(selector_string, parent);
++    if (PseudoElementHasArguments(pseudo_id)) {
++      argument = ParsePseudoElementArgument(selector_string);
++    }
++    return pseudo_id;
++  }
++
++  auto tokens = CSSTokenizer(selector_string).TokenizeToEOF();
++  CSSParserTokenRange range(tokens);
++  int ident_start = 0;
++  if (range.Peek().GetType() == kColonToken) {
++    ++ident_start;
++  }
++  if (range.Peek(1).GetType() == kColonToken) {
++    ++ident_start;
++  }
++
++  CSSParserToken selector_name_token = range.Peek(ident_start);
++  if (selector_name_token.GetType() == kIdentToken) {
++    if (!selector_name_token.Value().Is8Bit()) {
++      return kPseudoIdInvalid;
++    }
++    if (range.Peek(ident_start + 1).GetType() != kEOFToken) {
++      return kPseudoIdInvalid;
++    }
++
++    CSSSelector::PseudoType pseudo_type = ParsePseudoType(
++        selector_name_token.Value().ToAtomicString(),
++        /*has_arguments=*/false, parent ? &parent->GetDocument() : nullptr);
++
++    PseudoId pseudo_id = CSSSelector::GetPseudoId(pseudo_type);
++    if (pseudo_id == kPseudoIdBefore || pseudo_id == kPseudoIdAfter ||
++        pseudo_id == kPseudoIdFirstLetter || pseudo_id == kPseudoIdFirstLine) {
++      return pseudo_id;
++    }
++
++    // For ::-webkit-* and ::-internal-* pseudo-elements, act like there's
++    // no pseudo-element provided and (at least for getComputedStyle, our
++    // most significant caller) use the element style instead.
++    // TODO(https://crbug.com/363015176): We should either do something
++    // correct or treat them as unsupported.
++    if ((pseudo_type == CSSSelector::PseudoType::kPseudoWebKitCustomElement ||
++         pseudo_type == CSSSelector::PseudoType::kPseudoBlinkInternalElement ||
++         (!RuntimeEnabledFeatures::
++              PseudoElementsCorrectInGetComputedStyleEnabled() &&
++          (pseudo_type == CSSSelector::PseudoType::kPseudoCue ||
++           pseudo_type == CSSSelector::PseudoType::kPseudoPlaceholder ||
++           pseudo_type ==
++               CSSSelector::PseudoType::kPseudoFileSelectorButton))) &&
++        ident_start == 2) {
++      return kPseudoIdNone;
++    }
++  }
++
++  if (ident_start != 2) {
++    return ident_start == 1 ? kPseudoIdInvalid : kPseudoIdNone;
++  }
++
++  HeapVector<CSSSelector> arena;
++  CSSSelectorParser parser(
++      StrictCSSParserContext(SecureContextMode::kInsecureContext),
++      CSSNestingType::kNone, /*parent_rule_for_nesting=*/nullptr,
++      /*style_sheet=*/nullptr, arena);
++
++  ResetVectorAfterScope reset_vector(parser.output_);
++  if (!parser.ConsumePseudo(range)) {
++    return kPseudoIdInvalid;
++  }
++
++  auto selector = reset_vector.AddedElements();
++  if (selector.size() != 1 || !range.AtEnd()) {
++    return kPseudoIdInvalid;
++  }
++
++  const CSSSelector& result = selector[0];
++  if (!result.MatchesPseudoElement()) {
++    return kPseudoIdInvalid;
++  }
++
++  PseudoId pseudo_id = result.GetPseudoId(result.GetPseudoType());
++  if (!PseudoElement::IsWebExposed(pseudo_id, parent)) {
++    return kPseudoIdInvalid;
++  }
++
++  switch (pseudo_id) {
++    case kPseudoIdHighlight: {
++      argument = result.Argument();
++      return pseudo_id;
++    }
++
++    case kPseudoIdViewTransitionGroup:
++    case kPseudoIdViewTransitionImagePair:
++    case kPseudoIdViewTransitionOld:
++    case kPseudoIdViewTransitionNew: {
++      if (result.Argument() == CSSSelector::UniversalSelectorAtom()) {
++        return kPseudoIdInvalid;
++      }
++      argument = result.Argument();
++      return pseudo_id;
++    }
++
++    default:
++      return pseudo_id;
++  }
++}
+ 
+ namespace {
+ 
+@@ -1085,6 +1230,9 @@ bool IsUserActionPseudoClass(CSSSelector::PseudoType pseudo) {
+ bool IsPseudoClassValidAfterPseudoElement(
+     CSSSelector::PseudoType pseudo_class,
+     CSSSelector::PseudoType compound_pseudo_element) {
++  // NOTE: pseudo-class rules for ::part() and part-like pseudo-elements do
++  // not need to be handled here; they should be handled in
++  // CSSSelector::IsAllowedAfterPart() instead.
+   switch (compound_pseudo_element) {
+     case CSSSelector::kPseudoResizer:
+     case CSSSelector::kPseudoScrollbar:
+@@ -1096,9 +1244,6 @@ bool IsPseudoClassValidAfterPseudoElement(
+       return IsScrollbarPseudoClass(pseudo_class);
+     case CSSSelector::kPseudoSelection:
        return pseudo_class == CSSSelector::kPseudoWindowInactive;
-     case CSSSelector::kPseudoPart:
-       return IsUserActionPseudoClass(pseudo_class) ||
+-    case CSSSelector::kPseudoPart:
+-      return IsUserActionPseudoClass(pseudo_class) ||
 -             pseudo_class == CSSSelector::kPseudoState;
-+             pseudo_class == CSSSelector::kPseudoState ||
-+             pseudo_class == CSSSelector::kPseudoStateDeprecatedSyntax;
      case CSSSelector::kPseudoWebKitCustomElement:
      case CSSSelector::kPseudoBlinkInternalElement:
      case CSSSelector::kPseudoFileSelectorButton:
-@@ -1144,12 +1168,17 @@ bool IsSimpleSelectorValidAfterPseudoElement(
+@@ -1128,14 +1273,14 @@ bool IsSimpleSelectorValidAfterPseudoElement(
+       break;
+     case CSSSelector::kPseudoSlotted:
+       return simple_selector.IsTreeAbidingPseudoElement();
+-    case CSSSelector::kPseudoPart:
+-      if (simple_selector.IsAllowedAfterPart()) {
+-        return true;
+-      }
+-      break;
+     default:
+       break;
+   }
++  if ((compound_pseudo_element == CSSSelector::kPseudoPart ||
++       CSSSelector::IsPartLikePseudoElement(compound_pseudo_element)) &&
++      simple_selector.IsAllowedAfterPart()) {
++    return true;
++  }
+   if (simple_selector.Match() != CSSSelector::kPseudoClass) {
+     return false;
+   }
+@@ -1144,12 +1289,17 @@ bool IsSimpleSelectorValidAfterPseudoElement(
      case CSSSelector::kPseudoIs:
      case CSSSelector::kPseudoWhere:
      case CSSSelector::kPseudoNot:
@@ -72,7 +302,7 @@ index 5bdb7220e0a0dddbbf5bf86f6fc6f789bdd722f7..01d709e05108e97a4eeede002b6c4b67
      default:
        break;
    }
-@@ -1648,7 +1677,10 @@ bool CSSSelectorParser::ConsumePseudo(CSSParserTokenRange& range) {
+@@ -1648,7 +1798,10 @@ bool CSSSelectorParser::ConsumePseudo(CSSParserTokenRange& range) {
        output_.push_back(std::move(selector));
        return true;
      }
@@ -84,7 +314,7 @@ index 5bdb7220e0a0dddbbf5bf86f6fc6f789bdd722f7..01d709e05108e97a4eeede002b6c4b67
        const CSSParserToken& ident = block.ConsumeIncludingWhitespace();
        if (ident.GetType() != kIdentToken || !block.AtEnd()) {
          return false;
-@@ -1670,28 +1702,83 @@ bool CSSSelectorParser::ConsumePseudo(CSSParserTokenRange& range) {
+@@ -1670,28 +1823,83 @@ bool CSSSelectorParser::ConsumePseudo(CSSParserTokenRange& range) {
        output_.push_back(std::move(selector));
        return true;
      }
@@ -177,3 +407,21 @@ index 5bdb7220e0a0dddbbf5bf86f6fc6f789bdd722f7..01d709e05108e97a4eeede002b6c4b67
        output_.push_back(std::move(selector));
        return true;
      }
+@@ -2142,13 +2350,13 @@ void CSSSelectorParser::SplitCompoundAtImplicitShadowCrossingCombinator(
+   for (size_t i = 1; i < selectors.size(); ++i) {
+     if (NeedsImplicitShadowCombinatorForMatching(selectors[i])) {
+       CSSSelector::RelationType relation =
+-          GetImplicitShadowCombinatorForMatching(selectors[i]);
++          GetImplicitShadowCombinatorForMatching(selectors[i].GetPseudoType());
+       std::rotate(selectors.begin(), selectors.begin() + i, selectors.end());
+ 
+       base::span<CSSSelector> remaining = selectors.first(selectors.size() - i);
+-      // We might need to split the compound twice, since ::placeholder is
+-      // allowed after ::slotted and they both need an implicit combinator for
+-      // matching.
++      // We might need to split the compound multiple times, since a number of
++      // the relevant pseudo-elements can be combined, and they all need an
++      // implicit combinator for matching.
+       SplitCompoundAtImplicitShadowCrossingCombinator(remaining);
+       remaining.back().SetRelation(relation);
+       break;

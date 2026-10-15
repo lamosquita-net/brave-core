@@ -1,0 +1,15 @@
+diff --git a/third_party/blink/renderer/core/html/html_summary_element.cc b/third_party/blink/renderer/core/html/html_summary_element.cc
+index d7564dfdd131ec43524b017d26ea99c6bad54c17..74dacaf3633cef8773f7394f95632fd892b19996 100644
+--- a/third_party/blink/renderer/core/html/html_summary_element.cc
++++ b/third_party/blink/renderer/core/html/html_summary_element.cc
+@@ -35,6 +35,10 @@ HTMLSummaryElement::HTMLSummaryElement(Document& document)
+ 
+ LayoutObject* HTMLSummaryElement::CreateLayoutObject(
+     const ComputedStyle& style) {
++  if (RuntimeEnabledFeatures::DetailsStylingEnabled()) {
++    return HTMLElement::CreateLayoutObject(style);
++  }
++
+   // See: crbug.com/603928 - We manually check for other display types, then
+   // fallback to a regular LayoutBlockFlow as "display: inline;" should behave
+   // as an "inline-block".

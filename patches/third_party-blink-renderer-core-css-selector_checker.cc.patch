@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/selector_checker.cc b/third_party/blink/renderer/core/css/selector_checker.cc
-index 0a5aae9deb41a6b65270600424a857e4ba8d6980..4bddbfd21076d34a8f58b3eeb3784de788455f2c 100644
+index 0a5aae9deb41a6b65270600424a857e4ba8d6980..c1e0fa7a2c040cc2abb4a868c0834acdaf9b6e84 100644
 --- a/third_party/blink/renderer/core/css/selector_checker.cc
 +++ b/third_party/blink/renderer/core/css/selector_checker.cc
 @@ -47,6 +47,7 @@
@@ -10,7 +10,51 @@ index 0a5aae9deb41a6b65270600424a857e4ba8d6980..4bddbfd21076d34a8f58b3eeb3784de7
  #include "third_party/blink/renderer/core/dom/text.h"
  #include "third_party/blink/renderer/core/editing/frame_selection.h"
  #include "third_party/blink/renderer/core/frame/local_frame.h"
-@@ -1639,6 +1640,18 @@ bool SelectorChecker::CheckPseudoClass(const SelectorCheckingContext& context,
+@@ -461,6 +462,7 @@ SelectorChecker::MatchStatus SelectorChecker::MatchForRelation(
+       return kSelectorFailsAllSiblings;
+ 
+     case CSSSelector::kUAShadow: {
++      CHECK(is_ua_rule_ || context.scope || context.vtt_originating_element);
+       // If we're in the same tree-scope as the scoping element, then following
+       // a kUAShadow combinator would escape that and thus the scope.
+       if (context.scope && context.scope->OwnerShadowHost() &&
+@@ -479,6 +481,18 @@ SelectorChecker::MatchStatus SelectorChecker::MatchForRelation(
+         shadow_host = context.vtt_originating_element;
+       }
+       next_context.element = shadow_host;
++
++      // If this is the *last* time that we cross shadow scopes, then make
++      // sure that we've crossed *enough* shadow scopes.  This prevents
++      // ::pseudo1 from matching in a scope where it shouldn't match but where
++      // ::part(p)::pseudo1 or where ::pseudo2::pseudo1 should match.
++      if (context.scope &&
++          context.scope->GetTreeScope() !=
++              next_context.element->GetTreeScope() &&
++          !next_context.selector->CrossesTreeScopes()) {
++        return kSelectorFailsCompletely;
++      }
++
+       return MatchSelector(next_context, result);
+     }
+ 
+@@ -499,7 +513,7 @@ SelectorChecker::MatchStatus SelectorChecker::MatchForRelation(
+       // We ascend through ancestor shadow host elements until we reach the host
+       // in the TreeScope associated with the style rule. We then match against
+       // that host.
+-      while (next_context.element) {
++      while (true) {
+         next_context.element = next_context.element->OwnerShadowHost();
+         if (!next_context.element) {
+           return kSelectorFailsCompletely;
+@@ -517,7 +531,6 @@ SelectorChecker::MatchStatus SelectorChecker::MatchForRelation(
+           return MatchSelector(next_context, result);
+         }
+       }
+-      return kSelectorFailsCompletely;
+     case CSSSelector::kSubSelector:
+       break;
+     case CSSSelector::kScopeActivation:
+@@ -1639,6 +1652,18 @@ bool SelectorChecker::CheckPseudoClass(const SelectorCheckingContext& context,
        return element.IsOptionalFormControl();
      case CSSSelector::kPseudoRequired:
        return element.IsRequiredFormControl();
@@ -29,7 +73,7 @@ index 0a5aae9deb41a6b65270600424a857e4ba8d6980..4bddbfd21076d34a8f58b3eeb3784de7
      case CSSSelector::kPseudoValid:
        return element.MatchesValidityPseudoClasses() && element.IsValidElement();
      case CSSSelector::kPseudoInvalid:
-@@ -1696,10 +1709,16 @@ bool SelectorChecker::CheckPseudoClass(const SelectorCheckingContext& context,
+@@ -1696,10 +1721,16 @@ bool SelectorChecker::CheckPseudoClass(const SelectorCheckingContext& context,
          break;
        }
  
@@ -49,7 +93,7 @@ index 0a5aae9deb41a6b65270600424a857e4ba8d6980..4bddbfd21076d34a8f58b3eeb3784de7
      }
      case CSSSelector::kPseudoPopoverInTopLayer:
        if (auto* html_element = DynamicTo<HTMLElement>(element);
-@@ -1827,10 +1846,16 @@ bool SelectorChecker::CheckPseudoClass(const SelectorCheckingContext& context,
+@@ -1827,10 +1858,16 @@ bool SelectorChecker::CheckPseudoClass(const SelectorCheckingContext& context,
          return false;
        }
        return !element.GetDocument().GetPage()->GetFocusController().IsActive();
@@ -67,7 +111,7 @@ index 0a5aae9deb41a6b65270600424a857e4ba8d6980..4bddbfd21076d34a8f58b3eeb3784de7
      case CSSSelector::kPseudoHorizontal:
      case CSSSelector::kPseudoVertical:
      case CSSSelector::kPseudoDecrement:
-@@ -1900,6 +1925,26 @@ bool SelectorChecker::CheckPseudoClass(const SelectorCheckingContext& context,
+@@ -1900,6 +1937,26 @@ bool SelectorChecker::CheckPseudoClass(const SelectorCheckingContext& context,
          return !toggle->ValueMatches(State(0));
        }
      }
@@ -94,7 +138,28 @@ index 0a5aae9deb41a6b65270600424a857e4ba8d6980..4bddbfd21076d34a8f58b3eeb3784de7
      case CSSSelector::kPseudoUnparsed:
        // Only kept around for parsing; can never match anything
        // (because we don't know what it's supposed to mean).
-@@ -2005,8 +2050,20 @@ bool SelectorChecker::CheckPseudoElement(const SelectorCheckingContext& context,
+@@ -1949,7 +2006,9 @@ bool SelectorChecker::CheckPseudoElement(const SelectorCheckingContext& context,
+       return false;
+     }
+     case CSSSelector::kPseudoPart:
+-      DCHECK(part_names_);
++      if (!part_names_) {
++        return false;
++      }
+       for (const auto& part_name : *selector.PartNames()) {
+         if (!part_names_->Contains(part_name)) {
+           return false;
+@@ -1962,6 +2021,9 @@ bool SelectorChecker::CheckPseudoElement(const SelectorCheckingContext& context,
+     case CSSSelector::kPseudoPlaceholder:
+       return MatchesUAShadowElement(
+           element, shadow_element_names::kPseudoInputPlaceholder);
++    case CSSSelector::kPseudoDetailsContent:
++      return MatchesUAShadowElement(element,
++                                    shadow_element_names::kIdDetailsContent);
+     case CSSSelector::kPseudoWebKitCustomElement:
+       return MatchesUAShadowElement(element, selector.Value());
+     case CSSSelector::kPseudoBlinkInternalElement:
+@@ -2005,8 +2067,20 @@ bool SelectorChecker::CheckPseudoElement(const SelectorCheckingContext& context,
          return false;
        }
        result.dynamic_pseudo = context.pseudo_id;

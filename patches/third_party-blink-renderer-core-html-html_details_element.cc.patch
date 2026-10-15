@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/html_details_element.cc b/third_party/blink/renderer/core/html/html_details_element.cc
-index 388774079dfbbd9f3b9cf4fdb8e1150b71f55920..03adce103cf856bdeef735aa1010014887cadeca 100644
+index 388774079dfbbd9f3b9cf4fdb8e1150b71f55920..2cfdaae013645b0a20785ba350ead8234f1a9033 100644
 --- a/third_party/blink/renderer/core/html/html_details_element.cc
 +++ b/third_party/blink/renderer/core/html/html_details_element.cc
 @@ -26,6 +26,7 @@
@@ -10,7 +10,7 @@ index 388774079dfbbd9f3b9cf4fdb8e1150b71f55920..03adce103cf856bdeef735aa10100148
  #include "third_party/blink/renderer/core/dom/flat_tree_traversal.h"
  #include "third_party/blink/renderer/core/dom/shadow_root.h"
  #include "third_party/blink/renderer/core/dom/slot_assignment.h"
-@@ -56,9 +57,19 @@ HTMLDetailsElement::~HTMLDetailsElement() = default;
+@@ -56,15 +57,29 @@ HTMLDetailsElement::~HTMLDetailsElement() = default;
  
  void HTMLDetailsElement::DispatchPendingEvent(
      const AttributeModificationReason reason) {
@@ -31,7 +31,27 @@ index 388774079dfbbd9f3b9cf4fdb8e1150b71f55920..03adce103cf856bdeef735aa10100148
    if (reason == AttributeModificationReason::kByParser)
      GetDocument().SetToggleDuringParsing(false);
  }
-@@ -148,6 +159,7 @@ void HTMLDetailsElement::ManuallyAssignSlots() {
+ 
+ LayoutObject* HTMLDetailsElement::CreateLayoutObject(
+     const ComputedStyle& style) {
++  if (RuntimeEnabledFeatures::DetailsStylingEnabled()) {
++    return HTMLElement::CreateLayoutObject(style);
++  }
++
+   return LayoutObject::CreateBlockFlowOrListItem(this, style);
+ }
+ 
+@@ -90,6 +105,9 @@ void HTMLDetailsElement::DidAddUserAgentShadowRoot(ShadowRoot& root) {
+ 
+   content_slot_ = MakeGarbageCollected<HTMLSlotElement>(GetDocument());
+   content_slot_->SetIdAttribute(shadow_element_names::kIdDetailsContent);
++  if (RuntimeEnabledFeatures::DetailsStylingEnabled()) {
++    content_slot_->SetShadowPseudoId(shadow_element_names::kIdDetailsContent);
++  }
+   content_slot_->SetInlineStyleProperty(CSSPropertyID::kContentVisibility,
+                                         CSSValueID::kHidden);
+   content_slot_->EnsureDisplayLockContext().SetIsDetailsSlotElement(true);
+@@ -148,6 +166,7 @@ void HTMLDetailsElement::ManuallyAssignSlots() {
  }
  
  void HTMLDetailsElement::Trace(Visitor* visitor) const {
@@ -39,7 +59,7 @@ index 388774079dfbbd9f3b9cf4fdb8e1150b71f55920..03adce103cf856bdeef735aa10100148
    visitor->Trace(summary_slot_);
    visitor->Trace(content_slot_);
    HTMLElement::Trace(visitor);
-@@ -155,6 +167,13 @@ void HTMLDetailsElement::Trace(Visitor* visitor) const {
+@@ -155,6 +174,13 @@ void HTMLDetailsElement::Trace(Visitor* visitor) const {
  
  void HTMLDetailsElement::ParseAttribute(
      const AttributeModificationParams& params) {
@@ -53,7 +73,7 @@ index 388774079dfbbd9f3b9cf4fdb8e1150b71f55920..03adce103cf856bdeef735aa10100148
    if (params.name == html_names::kOpenAttr) {
      bool old_value = is_open_;
      is_open_ = !params.new_value.IsNull();
-@@ -162,7 +181,17 @@ void HTMLDetailsElement::ParseAttribute(
+@@ -162,7 +188,17 @@ void HTMLDetailsElement::ParseAttribute(
        return;
  
      // Dispatch toggle event asynchronously.
@@ -72,9 +92,14 @@ index 388774079dfbbd9f3b9cf4fdb8e1150b71f55920..03adce103cf856bdeef735aa10100148
          *GetDocument().GetTaskRunner(TaskType::kDOMManipulation), FROM_HERE,
          WTF::BindOnce(&HTMLDetailsElement::DispatchPendingEvent,
                        WrapPersistent(this), params.reason));
-@@ -175,21 +204,29 @@ void HTMLDetailsElement::ParseAttribute(
+@@ -173,29 +209,41 @@ void HTMLDetailsElement::ParseAttribute(
+ 
+     if (is_open_) {
        content->RemoveInlineStyleProperty(CSSPropertyID::kContentVisibility);
-       content->RemoveInlineStyleProperty(CSSPropertyID::kDisplay);
+-      content->RemoveInlineStyleProperty(CSSPropertyID::kDisplay);
++      if (!RuntimeEnabledFeatures::DetailsStylingEnabled()) {
++        content->RemoveInlineStyleProperty(CSSPropertyID::kDisplay);
++      }
  
 +      // https://html.spec.whatwg.org/multipage/interactive-elements.html#ensure-details-exclusivity-by-closing-other-elements-if-needed
 +      //
@@ -105,7 +130,17 @@ index 388774079dfbbd9f3b9cf4fdb8e1150b71f55920..03adce103cf856bdeef735aa10100148
            other_details->setAttribute(html_names::kOpenAttr, g_null_atom);
          }
        }
-@@ -205,6 +242,57 @@ void HTMLDetailsElement::ParseAttribute(
+     } else {
+-      content->SetInlineStyleProperty(CSSPropertyID::kDisplay,
+-                                      CSSValueID::kBlock);
++      if (!RuntimeEnabledFeatures::DetailsStylingEnabled()) {
++        content->SetInlineStyleProperty(CSSPropertyID::kDisplay,
++                                        CSSValueID::kBlock);
++      }
+       content->SetInlineStyleProperty(CSSPropertyID::kContentVisibility,
+                                       CSSValueID::kHidden);
+       content->EnsureDisplayLockContext().SetIsDetailsSlotElement(true);
+@@ -205,6 +253,57 @@ void HTMLDetailsElement::ParseAttribute(
    }
  }
  
@@ -163,7 +198,7 @@ index 388774079dfbbd9f3b9cf4fdb8e1150b71f55920..03adce103cf856bdeef735aa10100148
  void HTMLDetailsElement::ToggleOpen() {
    setAttribute(html_names::kOpenAttr, is_open_ ? g_null_atom : g_empty_atom);
  }
-@@ -214,11 +302,10 @@ HTMLDetailsElement::OtherElementsInNameGroup() {
+@@ -214,11 +313,10 @@ HTMLDetailsElement::OtherElementsInNameGroup() {
    CHECK(RuntimeEnabledFeatures::AccordionPatternEnabled());
    HeapVector<Member<HTMLDetailsElement>> result;
    const AtomicString& name = GetName();

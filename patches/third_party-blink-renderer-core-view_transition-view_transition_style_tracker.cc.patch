@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/view_transition/view_transition_style_tracker.cc b/third_party/blink/renderer/core/view_transition/view_transition_style_tracker.cc
-index 1f12a1e22ba066e99b725f7862ee62c4027c3dfe..282f905fba1a2fc02aba78c152db3f0529ea1d00 100644
+index 1f12a1e22ba066e99b725f7862ee62c4027c3dfe..1afd44333469d2e02477feb1f0312771000004ca 100644
 --- a/third_party/blink/renderer/core/view_transition/view_transition_style_tracker.cc
 +++ b/third_party/blink/renderer/core/view_transition/view_transition_style_tracker.cc
 @@ -689,6 +689,9 @@ bool ViewTransitionStyleTracker::Capture() {
@@ -22,6 +22,15 @@ index 1f12a1e22ba066e99b725f7862ee62c4027c3dfe..282f905fba1a2fc02aba78c152db3f05
      // Verify that the element_index assigned in Capture is less than next_index
      // here, just as a sanity check.
      DCHECK_LT(element_data->element_index, next_index);
+@@ -1236,7 +1242,7 @@ bool ViewTransitionStyleTracker::RunPostPrePaintSteps() {
+                                         : kPseudoIdViewTransitionOld;
+     DCHECK(document_->documentElement());
+     if (auto* pseudo_element =
+-            document_->documentElement()->GetNestedPseudoElement(
++            document_->documentElement()->GetStyledPseudoElement(
+                 live_content_element, entry.key)) {
+       // A pseudo element of type |tansition*content| must be created using
+       // ViewTransitionContentElement.
 @@ -1434,6 +1440,13 @@ bool ViewTransitionStyleTracker::IsRootTransitioning() const {
    return false;
  }

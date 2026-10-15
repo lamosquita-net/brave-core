@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/element_rule_collector.cc b/third_party/blink/renderer/core/css/element_rule_collector.cc
-index b345b1685f369aeee519023e0b6ccbc258fa7142..b5946cb1ab4c3080172870d8c123be9d7a05ef71 100644
+index b345b1685f369aeee519023e0b6ccbc258fa7142..66eb8232e6c19cf09dccb7d101374436a2f8c35f 100644
 --- a/third_party/blink/renderer/core/css/element_rule_collector.cc
 +++ b/third_party/blink/renderer/core/css/element_rule_collector.cc
 @@ -39,6 +39,7 @@
@@ -38,7 +38,21 @@ index b345b1685f369aeee519023e0b6ccbc258fa7142..b5946cb1ab4c3080172870d8c123be9d
            } else {
              style_container_candidate = &context_.GetElement();
            }
-@@ -932,6 +936,12 @@ static CSSRule* FindStyleRule(CSSRuleCollection* css_rules,
+@@ -670,10 +674,11 @@ base::span<const Attribute> GetAttributes(const Element& element,
+ 
+ DISABLE_CFI_PERF
+ void ElementRuleCollector::CollectMatchingRules(
+-    const MatchRequest& match_request) {
++    const MatchRequest& match_request,
++    PartNames* part_names) {
+   DCHECK(!match_request.IsEmpty());
+ 
+-  SelectorChecker checker(nullptr, pseudo_style_request_, mode_,
++  SelectorChecker checker(part_names, pseudo_style_request_, mode_,
+                           matching_ua_rules_);
+ 
+   Element& element = context_.GetElement();
+@@ -932,6 +937,12 @@ static CSSRule* FindStyleRule(CSSRuleCollection* css_rules,
                     FindStyleRule(css_rule->cssRules(), style_rule);
                 result) {
        return result;

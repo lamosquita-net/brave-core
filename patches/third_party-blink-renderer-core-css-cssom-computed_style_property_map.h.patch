@@ -1,0 +1,26 @@
+diff --git a/third_party/blink/renderer/core/css/cssom/computed_style_property_map.h b/third_party/blink/renderer/core/css/cssom/computed_style_property_map.h
+index fa7f08783d270100ffe121c9ee7a8ce418f759ef..ef7d6659f7a453f785a46a8d83204a4da14093f0 100644
+--- a/third_party/blink/renderer/core/css/cssom/computed_style_property_map.h
++++ b/third_party/blink/renderer/core/css/cssom/computed_style_property_map.h
+@@ -28,8 +28,11 @@ class CORE_EXPORT ComputedStylePropertyMap
+  public:
+   explicit ComputedStylePropertyMap(Element* element,
+                                     const String& pseudo_element = String())
+-      : pseudo_id_(
+-            CSSSelectorParser::ParsePseudoElement(pseudo_element, element)),
++      : pseudo_id_(CSSSelectorParser::ParsePseudoElement(
++            pseudo_element,
++            element,
++            pseudo_argument_,
++            CSSSelectorParser::PseudoElementParseMode::kStandard)),
+         element_(element) {}
+   ComputedStylePropertyMap(const ComputedStylePropertyMap&) = delete;
+   ComputedStylePropertyMap& operator=(const ComputedStylePropertyMap&) = delete;
+@@ -59,6 +62,7 @@ class CORE_EXPORT ComputedStylePropertyMap
+   // See
+   // https://github.com/w3c/css-houdini-drafts/issues/350#issuecomment-294690156
+   PseudoId pseudo_id_;
++  AtomicString pseudo_argument_;
+   Member<Element> element_;
+ 
+   Element* StyledElement() const;

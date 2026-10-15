@@ -1,7 +1,22 @@
 diff --git a/third_party/blink/renderer/core/css/style_engine.cc b/third_party/blink/renderer/core/css/style_engine.cc
-index 9bc636b7736b80c9c3d562bd921ef789de070047..d981e9606ffb412b9c34460ef40342cf455a0da7 100644
+index 9bc636b7736b80c9c3d562bd921ef789de070047..adfbbd2af54345a662349dafe25a38a4cba4881a 100644
 --- a/third_party/blink/renderer/core/css/style_engine.cc
 +++ b/third_party/blink/renderer/core/css/style_engine.cc
+@@ -2831,12 +2831,12 @@ void StyleEngine::CollectMatchingUserRules(
+   for (const ActiveStyleSheet& style_sheet : active_user_style_sheets_) {
+     match_request.AddRuleset(style_sheet.second);
+     if (match_request.IsFull()) {
+-      collector.CollectMatchingRules(match_request);
++      collector.CollectMatchingRules(match_request, /*part_names*/ nullptr);
+       match_request.ClearAfterMatching();
+     }
+   }
+   if (!match_request.IsEmpty()) {
+-    collector.CollectMatchingRules(match_request);
++    collector.CollectMatchingRules(match_request, /*part_names*/ nullptr);
+   }
+ }
+ 
 @@ -3051,7 +3051,8 @@ void StyleEngine::UpdateStyleForNonEligibleContainer(Element& container) {
        DCHECK(cq_data->SkippedStyleRecalc());
        break;

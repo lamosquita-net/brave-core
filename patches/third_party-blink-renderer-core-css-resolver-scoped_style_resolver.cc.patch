@@ -1,0 +1,27 @@
+diff --git a/third_party/blink/renderer/core/css/resolver/scoped_style_resolver.cc b/third_party/blink/renderer/core/css/resolver/scoped_style_resolver.cc
+index abb55e65aeddbabac5e24ddd4433652edfcd3113..099258bbb422670c841808434c4242f07162dee6 100644
+--- a/third_party/blink/renderer/core/css/resolver/scoped_style_resolver.cc
++++ b/third_party/blink/renderer/core/css/resolver/scoped_style_resolver.cc
+@@ -260,15 +260,17 @@ void ScopedStyleResolver::ForAllStylesheets(const Func& func) {
+ }
+ 
+ void ScopedStyleResolver::CollectMatchingElementScopeRules(
+-    ElementRuleCollector& collector) {
++    ElementRuleCollector& collector,
++    PartNames* part_names) {
+   if (super_rule_set_) {
+     MatchRequest match_request{&scope_->RootNode()};
+     match_request.AddRuleset(super_rule_set_);
+-    collector.CollectMatchingRules(match_request);
++    collector.CollectMatchingRules(match_request, part_names);
+   } else {
+-    ForAllStylesheets([&collector](const MatchRequest& match_request) {
+-      collector.CollectMatchingRules(match_request);
+-    });
++    ForAllStylesheets(
++        [&collector, part_names](const MatchRequest& match_request) {
++          collector.CollectMatchingRules(match_request, part_names);
++        });
+   }
+ }
+ 

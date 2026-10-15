@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/inspector/inspector_style_resolver.cc b/third_party/blink/renderer/core/inspector/inspector_style_resolver.cc
-index 6e59ef07e86a7bbbb42a13182888eafdf32e8684..e1bbe5c01aaf9a4e926a63f63af7e0e5cc192363 100644
+index 6e59ef07e86a7bbbb42a13182888eafdf32e8684..2c7a2c6cf24eafa7c3446354ac9af4d31cdb0b86 100644
 --- a/third_party/blink/renderer/core/inspector/inspector_style_resolver.cc
 +++ b/third_party/blink/renderer/core/inspector/inspector_style_resolver.cc
 @@ -46,10 +46,14 @@ InspectorStyleResolver::InspectorStyleResolver(
@@ -20,3 +20,12 @@ index 6e59ef07e86a7bbbb42a13182888eafdf32e8684..e1bbe5c01aaf9a4e926a63f63af7e0e5
  
    const bool has_active_view_transition =
        element_->IsDocumentElement() &&
+@@ -131,7 +135,7 @@ void InspectorStyleResolver::AddPseudoElementRules(
+   // If the pseudo-element doesn't exist, exclude UA rules to avoid cluttering
+   // all elements.
+   unsigned rules_to_include =
+-      element_->GetNestedPseudoElement(pseudo_id, view_transition_name)
++      element_->GetStyledPseudoElement(pseudo_id, view_transition_name)
+           ? StyleResolver::kAllCSSRules
+           : StyleResolver::kAllButUACSSRules;
+   RuleIndexList* matched_rules = style_resolver.PseudoCSSRulesForElement(

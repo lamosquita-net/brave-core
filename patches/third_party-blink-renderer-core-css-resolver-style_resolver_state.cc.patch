@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_resolver_state.cc b/third_party/blink/renderer/core/css/resolver/style_resolver_state.cc
-index 4f705332cca6fc4605a3d0ea91813df84f0d9566..1fff8883d6d0f4a97dff553070ff022badea78f9 100644
+index 4f705332cca6fc4605a3d0ea91813df84f0d9566..76247df0655715287f23d39f42c9e671262ad316 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_resolver_state.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_resolver_state.cc
 @@ -24,6 +24,7 @@
@@ -10,6 +10,15 @@ index 4f705332cca6fc4605a3d0ea91813df84f0d9566..1fff8883d6d0f4a97dff553070ff022b
  #include "third_party/blink/renderer/core/css/css_light_dark_value_pair.h"
  #include "third_party/blink/renderer/core/css/css_property_value_set.h"
  #include "third_party/blink/renderer/core/dom/node.h"
+@@ -42,7 +43,7 @@ Element* ComputeStyledElement(const StyleRequest& style_request,
+     styled_element = &element;
+   }
+   if (style_request.IsPseudoStyleRequest()) {
+-    styled_element = styled_element->GetNestedPseudoElement(
++    styled_element = styled_element->GetStyledPseudoElement(
+         style_request.pseudo_id, style_request.pseudo_argument);
+   }
+   return styled_element;
 @@ -70,9 +71,11 @@ StyleResolverState::StyleResolverState(
        element_type_(style_request.IsPseudoStyleRequest()
                          ? ElementType::kPseudoElement

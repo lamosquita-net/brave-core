@@ -1,0 +1,22 @@
+diff --git a/third_party/blink/renderer/core/css/resolver/match_result.cc b/third_party/blink/renderer/core/css/resolver/match_result.cc
+index 23ca7b82edcaf3f5cf0cc6bdfa7bb429c189781f..dc24fe79c59f3993d6addcf88aef68c8e855e50e 100644
+--- a/third_party/blink/renderer/core/css/resolver/match_result.cc
++++ b/third_party/blink/renderer/core/css/resolver/match_result.cc
+@@ -82,12 +82,16 @@ void MatchResult::FinishAddingPresentationalHints() {
+ 
+ void MatchResult::BeginAddingAuthorRulesForTreeScope(
+     const TreeScope& tree_scope) {
++  // FlyWeb (as Chromium f4c890d7e6f, M118): the tree order is the index of
++  // the tree scope, so a scope can begin without finishing the previous one
++  // (CSSCascadeCorrectScope matches the element scope and then each outer
++  // scope).
++  current_tree_order_ = ClampTo<uint16_t>(tree_scopes_.size());
+   tree_scopes_.push_back(&tree_scope);
+ }
+ 
+ void MatchResult::FinishAddingAuthorRulesForTreeScope() {
+   DCHECK_EQ(current_origin_, CascadeOrigin::kAuthor);
+-  current_tree_order_ = base::ClampAdd(current_tree_order_, 1);
+ }
+ 
+ void MatchResult::Reset() {
