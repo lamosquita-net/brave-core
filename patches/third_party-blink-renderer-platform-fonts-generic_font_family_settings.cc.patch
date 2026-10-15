@@ -1,0 +1,22 @@
+diff --git a/third_party/blink/renderer/platform/fonts/generic_font_family_settings.cc b/third_party/blink/renderer/platform/fonts/generic_font_family_settings.cc
+index e6ca2b53386005567df0a04377caf0c537ade125..16f6ebc0925b0fbf56f5d7d4d6a88209acb8cfad 100644
+--- a/third_party/blink/renderer/platform/fonts/generic_font_family_settings.cc
++++ b/third_party/blink/renderer/platform/fonts/generic_font_family_settings.cc
+@@ -105,7 +105,16 @@ bool GenericFontFamilySettings::UpdateStandard(const AtomicString& family,
+ }
+ 
+ const AtomicString& GenericFontFamilySettings::Fixed(UScriptCode script) const {
+-  return GenericFontFamilyForScript(fixed_font_family_map_, script);
++  const AtomicString& fixed_font =
++      GenericFontFamilyForScript(fixed_font_family_map_, script);
++#if BUILDFLAG(IS_MAC)
++  DEFINE_THREAD_SAFE_STATIC_LOCAL(AtomicString, kOsaka, ("Osaka"));
++  DEFINE_THREAD_SAFE_STATIC_LOCAL(AtomicString, kOsakaMono, ("Osaka-Mono"));
++  if (fixed_font == kOsaka) {
++    return kOsakaMono;
++  }
++#endif
++  return fixed_font;
+ }
+ 
+ bool GenericFontFamilySettings::UpdateFixed(const AtomicString& family,
