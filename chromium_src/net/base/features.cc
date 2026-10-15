@@ -26,11 +26,15 @@ OVERRIDE_FEATURE_DEFAULT_STATES({{
     // Brave ephemeral storage. For reference:
     // https://github.com/brave/brave-browser/issues/26165
     {kSupportPartitionedBlobUrl, base::FEATURE_DISABLED_BY_DEFAULT},
-    // FlyWeb (F4.8): TLS ClientHello of the declared Chrome (124-130): hybrid
-    // X25519Kyber768 key share and ECH (GREASE when the site has no config).
+    // FlyWeb (F4.8): TLS ClientHello of the declared Chrome: hybrid
+    // post-quantum key share (X25519MLKEM768 from level 131, kUseMLKEM below;
+    // X25519Kyber768 for 124-130) and ECH (GREASE when the site has no config).
     {kEncryptedClientHello, base::FEATURE_ENABLED_BY_DEFAULT},
     {kPostQuantumKyber, base::FEATURE_ENABLED_BY_DEFAULT},
 }});
+
+// FlyWeb (FS.17, level 131): Chrome 131 enabled it by default (4beeb73c814).
+BASE_FEATURE(kUseMLKEM, "UseMLKEM", base::FEATURE_ENABLED_BY_DEFAULT);
 
 BASE_FEATURE(kBraveEphemeralStorage,
              "EphemeralStorage",
