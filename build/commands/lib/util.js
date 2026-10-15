@@ -58,6 +58,9 @@ async function applyPatches() {
     path.join('third_party', 'libvpx', 'source', 'libvpx'),
     // FlyWeb level 126: fxjs adapted to the V8 12.6 accessor API.
     path.join('third_party', 'pdfium'),
+    // FlyWeb level 131 (FS.17): ML-KEM and X25519MLKEM768 backported from
+    // upstream BoringSSL.
+    path.join('third_party', 'boringssl', 'src'),
   ]
   const flywebPatchStatus = []
   for (const repo of flywebRepos) {

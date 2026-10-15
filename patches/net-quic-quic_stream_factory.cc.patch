@@ -1,0 +1,20 @@
+diff --git a/net/quic/quic_stream_factory.cc b/net/quic/quic_stream_factory.cc
+index 17039c10074aeeea07bc6fa01aa1771e74b7aa64..fdaa8dac98ce6a9ddc6d38a4850d28dbea5580bf 100644
+--- a/net/quic/quic_stream_factory.cc
++++ b/net/quic/quic_stream_factory.cc
+@@ -217,9 +217,12 @@ class QuicStreamFactory::QuicCryptoClientConfigOwner {
+                             base::Unretained(this)));
+     if (quic_stream_factory_->ssl_config_service_->GetSSLContextConfig()
+             .PostQuantumKeyAgreementEnabled()) {
+-      config_.set_preferred_groups({SSL_GROUP_X25519_KYBER768_DRAFT00,
+-                                    SSL_GROUP_X25519, SSL_GROUP_SECP256R1,
+-                                    SSL_GROUP_SECP384R1});
++      uint16_t postquantum_group =
++          base::FeatureList::IsEnabled(features::kUseMLKEM)
++              ? SSL_GROUP_X25519_MLKEM768
++              : SSL_GROUP_X25519_KYBER768_DRAFT00;
++      config_.set_preferred_groups({postquantum_group, SSL_GROUP_X25519,
++                                    SSL_GROUP_SECP256R1, SSL_GROUP_SECP384R1});
+     }
+   }
+ 
