@@ -1,0 +1,16 @@
+diff --git a/content/browser/loader/cross_origin_read_blocking_checker.cc b/content/browser/loader/cross_origin_read_blocking_checker.cc
+index 9a6990d51babbdccef8d9ad2486f617df18eef10..c6fbcd29c90568e27378b0712eb745c6a08329d0 100644
+--- a/content/browser/loader/cross_origin_read_blocking_checker.cc
++++ b/content/browser/loader/cross_origin_read_blocking_checker.cc
+@@ -103,8 +103,9 @@ CrossOriginReadBlockingChecker::CrossOriginReadBlockingChecker(
+   DCHECK(!callback_.is_null());
+ 
+   corb_analyzer_ = network::corb::ResponseAnalyzer::Create(corb_state);
+-  auto decision = corb_analyzer_->Init(request.url, request.request_initiator,
+-                                       request.mode, response);
++  auto decision =
++      corb_analyzer_->Init(request.url, request.request_initiator, request.mode,
++                           request.destination, response);
+   switch (decision) {
+     case network::corb::ResponseAnalyzer::Decision::kBlock:
+       OnBlocked();

@@ -1,0 +1,21 @@
+diff --git a/services/network/public/cpp/corb/corb_impl.h b/services/network/public/cpp/corb/corb_impl.h
+index c5d1998ca19395fd1f892a3c4b6289160018f1f4..be338b2ef0b1e003cb535d0141ee3fb278f02ce6 100644
+--- a/services/network/public/cpp/corb/corb_impl.h
++++ b/services/network/public/cpp/corb/corb_impl.h
+@@ -110,10 +110,12 @@ class COMPONENT_EXPORT(NETWORK_CPP) CrossOriginReadBlocking {
+ 
+     // Implementation of the `corb::ResponseAnalyzer` abstract interface.
+     ~CorbResponseAnalyzer() override;
+-    Decision Init(const GURL& request_url,
+-                  const absl::optional<url::Origin>& request_initiator,
+-                  mojom::RequestMode request_mode,
+-                  const network::mojom::URLResponseHead& response) override;
++    Decision Init(
++        const GURL& request_url,
++        const absl::optional<url::Origin>& request_initiator,
++        mojom::RequestMode request_mode,
++        mojom::RequestDestination /*request_destination_from_renderer*/,
++        const network::mojom::URLResponseHead& response) override;
+     Decision Sniff(base::StringPiece data) override;
+     Decision HandleEndOfSniffableResponseBody() override;
+     bool ShouldReportBlockedResponse() const override;

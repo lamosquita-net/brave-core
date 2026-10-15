@@ -1,0 +1,17 @@
+diff --git a/services/network/web_bundle/web_bundle_url_loader_factory.cc b/services/network/web_bundle/web_bundle_url_loader_factory.cc
+index 0cc80a0323b3d0903b8228428f4b838f4ff6911b..4bdfe4998dea51359eb18ecaaba92e4dc2f77dab 100644
+--- a/services/network/web_bundle/web_bundle_url_loader_factory.cc
++++ b/services/network/web_bundle/web_bundle_url_loader_factory.cc
+@@ -908,9 +908,9 @@ void WebBundleURLLoaderFactory::SendResponseToLoader(
+   }
+ 
+   auto corb_analyzer = corb::ResponseAnalyzer::Create(corb_state_);
+-  auto decision =
+-      corb_analyzer->Init(loader->url(), loader->request_initiator(),
+-                          loader->request_mode(), *response_head);
++  auto decision = corb_analyzer->Init(
++      loader->url(), loader->request_initiator(), loader->request_mode(),
++      loader->request_destination(), *response_head);
+   switch (decision) {
+     case network::corb::ResponseAnalyzer::Decision::kBlock:
+       loader->BlockResponseForCorb(std::move(response_head));
