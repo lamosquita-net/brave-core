@@ -1,0 +1,32 @@
+diff --git a/third_party/blink/renderer/core/dom/text_link_colors.cc b/third_party/blink/renderer/core/dom/text_link_colors.cc
+index 9f22b298b866b812341c48ad8631de8dc5848826..375ffea0102df563aa5b860b2c394179bc270134 100644
+--- a/third_party/blink/renderer/core/dom/text_link_colors.cc
++++ b/third_party/blink/renderer/core/dom/text_link_colors.cc
+@@ -33,6 +33,8 @@
+ #include "third_party/blink/renderer/core/css/css_color_mix_value.h"
+ #include "third_party/blink/renderer/core/css/css_identifier_value.h"
+ #include "third_party/blink/renderer/core/css/css_light_dark_value_pair.h"
++#include "third_party/blink/renderer/core/css/css_relative_color_value.h"
++#include "third_party/blink/renderer/core/css/properties/css_parsing_utils.h"
+ #include "third_party/blink/renderer/core/css/style_color.h"
+ #include "third_party/blink/renderer/core/layout/layout_theme.h"
+ #include "third_party/blink/renderer/platform/graphics/color.h"
+@@ -155,6 +157,18 @@ Color TextLinkColors::ColorFromCSSValue(const CSSValue& value,
+     }
+   }
+ 
++  // FlyWeb (Chromium 131): a relative color based on currentcolor or another
++  // color only known now.
++  if (auto* relative_value =
++          DynamicTo<cssvalue::CSSRelativeColorValue>(value)) {
++    Color origin =
++        ColorFromCSSValue(relative_value->OriginColor(), current_color,
++                          color_scheme, for_visited_link);
++    return css_parsing_utils::ResolveRelativeColor(
++               relative_value->FunctionId(), relative_value->Channels(), origin)
++        .value_or(Color());
++  }
++
+   if (auto* pair = DynamicTo<CSSLightDarkValuePair>(value)) {
+     const CSSValue& color_value =
+         color_scheme == mojom::blink::ColorScheme::kLight ? pair->First()

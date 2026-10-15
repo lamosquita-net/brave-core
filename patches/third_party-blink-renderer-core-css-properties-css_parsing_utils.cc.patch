@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc b/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
-index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..cec391526167cbb2c2933c18b322b4a70d35a896 100644
+index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..7f45167e1f8cd123378b6285f9573b6b6b7d8c2e 100644
 --- a/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
 +++ b/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
 @@ -4,7 +4,9 @@
@@ -12,7 +12,23 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..cec391526167cbb2c2933c18b322b4a7
  #include <memory>
  #include <utility>
  
-@@ -804,10 +806,14 @@ CSSLightDarkValuePair* ConsumeInternalLightDark(Func consume_value,
+@@ -15,6 +17,7 @@
+ #include "third_party/blink/renderer/core/css/css_bracketed_value_list.h"
+ #include "third_party/blink/renderer/core/css/css_color.h"
+ #include "third_party/blink/renderer/core/css/css_color_mix_value.h"
++#include "third_party/blink/renderer/core/css/css_relative_color_value.h"
+ #include "third_party/blink/renderer/core/css/css_content_distribution_value.h"
+ #include "third_party/blink/renderer/core/css/css_crossfade_value.h"
+ #include "third_party/blink/renderer/core/css/css_custom_ident_value.h"
+@@ -59,6 +62,7 @@
+ #include "third_party/blink/renderer/core/css/css_variable_data.h"
+ #include "third_party/blink/renderer/core/css/css_view_value.h"
+ #include "third_party/blink/renderer/core/css/parser/css_parser_context.h"
++#include "third_party/blink/renderer/core/css/parser/css_tokenizer.h"
+ #include "third_party/blink/renderer/core/css/parser/css_parser_fast_paths.h"
+ #include "third_party/blink/renderer/core/css/parser/css_parser_idioms.h"
+ #include "third_party/blink/renderer/core/css/parser/css_parser_local_context.h"
+@@ -804,10 +808,14 @@ CSSLightDarkValuePair* ConsumeInternalLightDark(Func consume_value,
                                                  CSSParserTokenRange& range,
                                                  const CSSParserContext& context,
                                                  Args&&... args) {
@@ -29,7 +45,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..cec391526167cbb2c2933c18b322b4a7
      return nullptr;
    }
    CSSParserTokenRange range_copy = range;
-@@ -1153,6 +1159,12 @@ CSSPrimitiveValue* ConsumeLength(CSSParserTokenRange& range,
+@@ -1153,6 +1161,12 @@ CSSPrimitiveValue* ConsumeLength(CSSParserTokenRange& range,
        case CSSPrimitiveValue::UnitType::kRics:
        case CSSPrimitiveValue::UnitType::kRlhs:
          break;
@@ -42,7 +58,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..cec391526167cbb2c2933c18b322b4a7
        case CSSPrimitiveValue::UnitType::kViewportInlineSize:
        case CSSPrimitiveValue::UnitType::kViewportBlockSize:
        case CSSPrimitiveValue::UnitType::kSmallViewportWidth:
-@@ -1632,6 +1644,12 @@ cssvalue::CSSURIValue* ConsumeUrl(CSSParserTokenRange& range,
+@@ -1632,6 +1646,12 @@ cssvalue::CSSURIValue* ConsumeUrl(CSSParserTokenRange& range,
  
  static int ClampRGBComponent(const CSSPrimitiveValue& value) {
    double result = value.GetDoubleValue();
@@ -55,7 +71,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..cec391526167cbb2c2933c18b322b4a7
    if (value.IsPercentage()) {
      // 2.55 cannot be precisely represented as a double
      result = (result / 100.0) * 255.0;
-@@ -1659,19 +1677,16 @@ static bool ParseRGBParameters(CSSParserTokenRange& range,
+@@ -1659,19 +1679,16 @@ static bool ParseRGBParameters(CSSParserTokenRange& range,
        return false;
      }
  
@@ -79,7 +95,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..cec391526167cbb2c2933c18b322b4a7
          requires_bare_numbers = true;
        }
      }
-@@ -1686,6 +1701,10 @@ static bool ParseRGBParameters(CSSParserTokenRange& range,
+@@ -1686,6 +1703,10 @@ static bool ParseRGBParameters(CSSParserTokenRange& range,
      }
    }
  
@@ -90,7 +106,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..cec391526167cbb2c2933c18b322b4a7
    bool comma_consumed = ConsumeCommaIncludingWhitespace(args);
    bool slash_consumed = ConsumeSlashIncludingWhitespace(args);
    if ((comma_consumed && !requires_commas) ||
-@@ -1710,6 +1729,10 @@ static bool ParseRGBParameters(CSSParserTokenRange& range,
+@@ -1710,6 +1731,10 @@ static bool ParseRGBParameters(CSSParserTokenRange& range,
      }
      // W3 standard stipulates a 2.55 alpha value multiplication factor.
      absl::optional<int> alpha_component;
@@ -101,7 +117,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..cec391526167cbb2c2933c18b322b4a7
      if (alpha) {
        alpha_component = static_cast<int>(
            lround(ClampTo<double>(alpha.value(), 0.0, 1.0) * 255.0));
-@@ -1759,10 +1782,17 @@ static bool ParseHSLParameters(CSSParserTokenRange& range,
+@@ -1759,10 +1784,17 @@ static bool ParseHSLParameters(CSSParserTokenRange& range,
        return false;
      }
      value = ConsumePercent(args, context, CSSPrimitiveValue::ValueRange::kAll);
@@ -119,7 +135,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..cec391526167cbb2c2933c18b322b4a7
      } else {
        if (!ConsumeIdent<CSSValueID::kNone>(args)) {
          return false;
-@@ -1861,10 +1891,14 @@ static bool ParseHWBParameters(CSSParserTokenRange& range,
+@@ -1861,10 +1893,14 @@ static bool ParseHWBParameters(CSSParserTokenRange& range,
        continue;
      }
      value = ConsumePercent(args, context, CSSPrimitiveValue::ValueRange::kAll);
@@ -136,7 +152,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..cec391526167cbb2c2933c18b322b4a7
      percentage = ClampTo<float>(double_value, 0.0f, 100.0f) /
                   100.0f;  // Needs to be a value between 0 and 1.0.
    }
-@@ -2276,10 +2310,396 @@ static bool ParseHexColor(CSSParserTokenRange& range,
+@@ -2276,6 +2312,459 @@ static bool ParseHexColor(CSSParserTokenRange& range,
    return true;
  }
  
@@ -285,23 +301,13 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..cec391526167cbb2c2933c18b322b4a7
 +
 +}  // namespace
 +
-+static bool ParseRelativeColor(CSSParserTokenRange& range,
-+                               const CSSParserContext& context,
-+                               Color& result) {
-+  CSSValueID function_id = range.Peek().FunctionId();
-+  CSSParserTokenRange args = ConsumeFunction(range);
-+  if (!ConsumeIdent<CSSValueID::kFrom>(args)) {
-+    return false;
-+  }
-+  CSSValue* origin_value = ConsumeColor(args, context);
-+  if (!origin_value) {
-+    return false;
-+  }
-+  absl::optional<Color> origin = TryResolveColorAtParseTime(*origin_value);
-+  if (!origin) {
-+    return false;
-+  }
-+
++// The arguments of a relative color function after the origin color, e.g.
++// "r g b / alpha" or, for color(), "srgb r g b", evaluated against `origin`.
++static bool ParseRelativeColorChannels(CSSParserTokenRange& args,
++                                       CSSValueID function_id,
++                                       const CSSParserContext& context,
++                                       const Color& origin,
++                                       Color& result) {
 +  Color::ColorSpace space;
 +  switch (function_id) {
 +    case CSSValueID::kRgb:
@@ -364,7 +370,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..cec391526167cbb2c2933c18b322b4a7
 +  const RelativeColorChannels channels = RelativeColorChannelsFor(space);
 +
 +  // The origin color's channels, in the units of the color function.
-+  Color origin_color = *origin;
++  Color origin_color = origin;
 +  origin_color.ConvertToColorSpace(space);
 +  std::array<double, 3> origin_channels = {
 +      origin_color.Param0(), origin_color.Param1(), origin_color.Param2()};
@@ -514,26 +520,110 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..cec391526167cbb2c2933c18b322b4a7
 +  return true;
 +}
 +
++// Relative colors (Chromium 125): the first argument is "from". An absolute
++// origin color is resolved at parse time. Since Chromium 131
++// (CSSRelativeColorSupportsCurrentcolor: 46cf2dd8259, bc80986ece2,
++// 0a5f7688162), any other origin (currentcolor, system colors, light-dark(),
++// color-mix() or relative colors based on those) keeps the function as a
++// CSSRelativeColorValue, resolved at used-value time with
++// ResolveRelativeColor(). The origin is parsed only once, so nesting stays
++// linear.
++static bool IsRelativeColorFunction(const CSSParserTokenRange& range) {
++  if (!RuntimeEnabledFeatures::CSSRelativeColorEnabled() ||
++      range.Peek().GetType() != kFunctionToken) {
++    return false;
++  }
++  CSSParserTokenRange peek_range = range;
++  return ConsumeFunction(peek_range).Peek().Id() == CSSValueID::kFrom;
++}
++
++static CSSValue* ConsumeRelativeColor(CSSParserTokenRange& range,
++                                      const CSSParserContext& context) {
++  CSSParserTokenRange color_range = range;
++  CSSValueID function_id = color_range.Peek().FunctionId();
++  CSSParserTokenRange args = ConsumeFunction(color_range);
++  if (!ConsumeIdent<CSSValueID::kFrom>(args)) {
++    return nullptr;
++  }
++  const CSSValue* origin_value = ConsumeColor(args, context);
++  if (!origin_value) {
++    return nullptr;
++  }
++  Color result;
++  if (absl::optional<Color> origin =
++          TryResolveColorAtParseTime(*origin_value)) {
++    if (!ParseRelativeColorChannels(args, function_id, context, *origin,
++                                    result)) {
++      return nullptr;
++    }
++    range = color_range;
++    return cssvalue::CSSColor::Create(result);
++  }
++  if (!RuntimeEnabledFeatures::CSSRelativeColorSupportsCurrentcolorEnabled()) {
++    return nullptr;
++  }
++  // Validate the channels with any origin; the values come later.
++  CSSParserTokenRange channels = args;
++  if (!ParseRelativeColorChannels(args, function_id, context,
++                                  Color::kTransparent, result)) {
++    return nullptr;
++  }
++  range = color_range;
++  // Serialize the channels as in Chromium (one space between components,
++  // " / " before the alpha); calc() keeps its own text.
++  StringBuilder text;
++  channels.ConsumeWhitespace();
++  while (!channels.AtEnd()) {
++    if (channels.Peek().GetType() == kDelimiterToken &&
++        channels.Peek().Delimiter() == '/') {
++      channels.ConsumeIncludingWhitespace();
++      text.Append(" / ");
++      continue;
++    }
++    const CSSParserToken* start = channels.begin();
++    channels.ConsumeComponentValue();
++    if (!text.empty() && text[text.length() - 1] != ' ') {
++      text.Append(' ');
++    }
++    text.Append(channels.MakeSubRange(start, channels.begin()).Serialize());
++    channels.ConsumeWhitespace();
++  }
++  return MakeGarbageCollected<cssvalue::CSSRelativeColorValue>(
++      *origin_value, function_id, text.ReleaseString());
++}
++
++absl::optional<Color> ResolveRelativeColor(CSSValueID function_id,
++                                           const String& channels,
++                                           const Color& origin) {
++  CSSTokenizer tokenizer(channels);
++  const auto tokens = tokenizer.TokenizeToEOF();
++  CSSParserTokenRange range(tokens);
++  range.ConsumeWhitespace();
++  Color result;
++  if (!ParseRelativeColorChannels(
++          range, function_id,
++          *StrictCSSParserContext(SecureContextMode::kInsecureContext), origin,
++          result)) {
++    return absl::nullopt;
++  }
++  return result;
++}
++
  static bool ParseFunctionalSyntaxColor(CSSParserTokenRange& range,
                                         const CSSParserContext& context,
                                         Color& result) {
-   CSSParserTokenRange color_range = range;
-+  // Relative colors (Chromium 125): the first argument is "from".
-+  if (RuntimeEnabledFeatures::CSSRelativeColorEnabled()) {
-+    CSSParserTokenRange peek_range = range;
-+    if (peek_range.Peek().GetType() == kFunctionToken &&
-+        ConsumeFunction(peek_range).Peek().Id() == CSSValueID::kFrom) {
-+      if (!ParseRelativeColor(color_range, context, result)) {
-+        return false;
-+      }
-+      range = color_range;
-+      return true;
-+    }
+@@ -2474,6 +2963,10 @@ CSSValue* ConsumeColor(CSSParserTokenRange& range,
+     return color;
+   }
+ 
++  if (IsRelativeColorFunction(range)) {
++    return ConsumeRelativeColor(range, context);
 +  }
-   switch (range.Peek().FunctionId()) {
-     case CSSValueID::kRgb:
-     case CSSValueID::kRgba:
-@@ -3646,6 +4066,10 @@ CSSValue* ConsumeImage(
++
+   Color color = Color::kTransparent;
+   if (!ParseHexColor(range, color, accept_quirky_colors) &&
+       !ParseFunctionalSyntaxColor(range, context, color)) {
+@@ -3646,6 +4139,10 @@ CSSValue* ConsumeImage(
          IsGeneratedImage(id)) {
        return ConsumeGeneratedImage(range, context);
      }
@@ -544,7 +634,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..cec391526167cbb2c2933c18b322b4a7
      return ConsumeInternalLightDark(ConsumeImageOrNone, range, context);
    }
    return nullptr;
-@@ -3670,6 +4094,14 @@ CSSIdentifierValue* ConsumeCoordBox(CSSParserTokenRange& range) {
+@@ -3670,6 +4167,14 @@ CSSIdentifierValue* ConsumeCoordBox(CSSParserTokenRange& range) {
                        CSSValueID::kStrokeBox, CSSValueID::kViewBox>(range);
  }
  
@@ -559,7 +649,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..cec391526167cbb2c2933c18b322b4a7
  void AddProperty(CSSPropertyID resolved_property,
                   CSSPropertyID current_shorthand,
                   const CSSValue& value,
-@@ -4553,10 +4985,20 @@ CSSValue* ConsumeBackgroundBox(CSSParserTokenRange& range) {
+@@ -4553,10 +5058,20 @@ CSSValue* ConsumeBackgroundBox(CSSParserTokenRange& range) {
                        CSSValueID::kContentBox>(range);
  }
  
@@ -581,7 +671,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..cec391526167cbb2c2933c18b322b4a7
  CSSPrimitiveValue* ConsumeLengthOrPercentCountNegative(
      CSSParserTokenRange& range,
      const CSSParserContext& context,
-@@ -4617,14 +5059,14 @@ static void SetAllowsNegativePercentageReference(CSSValue* value) {
+@@ -4617,14 +5132,14 @@ static void SetAllowsNegativePercentageReference(CSSValue* value) {
  bool ConsumeBackgroundPosition(CSSParserTokenRange& range,
                                 const CSSParserContext& context,
                                 UnitlessQuirk unitless,
@@ -599,7 +689,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..cec391526167cbb2c2933c18b322b4a7
        return false;
      }
      // TODO(crbug.com/825895): So far, 'background-position' is the only
-@@ -4665,16 +5107,31 @@ CSSValue* ParseBackgroundBox(CSSParserTokenRange& range,
+@@ -4665,16 +5180,31 @@ CSSValue* ParseBackgroundBox(CSSParserTokenRange& range,
    return ConsumeCommaSeparatedList(ConsumeBackgroundBox, range);
  }
  
@@ -635,7 +725,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..cec391526167cbb2c2933c18b322b4a7
  namespace {
  
  CSSValue* ConsumeBackgroundComponent(CSSPropertyID resolved_property,
-@@ -4688,6 +5145,7 @@ CSSValue* ConsumeBackgroundComponent(CSSPropertyID resolved_property,
+@@ -4688,6 +5218,7 @@ CSSValue* ConsumeBackgroundComponent(CSSPropertyID resolved_property,
      case CSSPropertyID::kBackgroundOrigin:
        return ConsumeBackgroundBox(range);
      case CSSPropertyID::kBackgroundImage:
@@ -643,7 +733,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..cec391526167cbb2c2933c18b322b4a7
      case CSSPropertyID::kWebkitMaskImage:
        return ConsumeImageOrNone(range, context);
      case CSSPropertyID::kBackgroundPositionX:
-@@ -4703,19 +5161,38 @@ CSSValue* ConsumeBackgroundComponent(CSSPropertyID resolved_property,
+@@ -4703,19 +5234,38 @@ CSSValue* ConsumeBackgroundComponent(CSSPropertyID resolved_property,
                                     WebFeature::kNegativeBackgroundSize,
                                     ParsingStyle::kNotLegacy);
      case CSSPropertyID::kWebkitMaskSize:
@@ -684,7 +774,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..cec391526167cbb2c2933c18b322b4a7
  }
  
  }  // namespace
-@@ -4735,10 +5212,12 @@ bool ParseBackgroundOrMask(bool important,
+@@ -4735,10 +5285,12 @@ bool ParseBackgroundOrMask(bool important,
                             HeapVector<CSSPropertyValue, 64>& properties) {
    CSSPropertyID shorthand_id = local_context.CurrentShorthand();
    DCHECK(shorthand_id == CSSPropertyID::kBackground ||
@@ -700,7 +790,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..cec391526167cbb2c2933c18b322b4a7
  
    const unsigned longhand_count = shorthand.length();
    CSSValue* longhands[10] = {nullptr};
-@@ -4759,11 +5238,8 @@ bool ParseBackgroundOrMask(bool important,
+@@ -4759,11 +5311,8 @@ bool ParseBackgroundOrMask(bool important,
          CSSValue* value = nullptr;
          CSSValue* value_y = nullptr;
          const CSSProperty& property = *shorthand.properties()[i];
@@ -714,7 +804,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..cec391526167cbb2c2933c18b322b4a7
            if (!ConsumePosition(range, context, UnitlessQuirk::kForbid,
                                 WebFeature::kThreeValuedPositionBackground,
                                 value, value_y)) {
-@@ -4773,7 +5249,8 @@ bool ParseBackgroundOrMask(bool important,
+@@ -4773,7 +5322,8 @@ bool ParseBackgroundOrMask(bool important,
              bg_position_parsed_in_current_layer = true;
            }
          } else if (property.IDEquals(CSSPropertyID::kBackgroundSize) ||
@@ -724,7 +814,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..cec391526167cbb2c2933c18b322b4a7
            if (!ConsumeSlashIncludingWhitespace(range)) {
              continue;
            }
-@@ -4787,9 +5264,7 @@ bool ParseBackgroundOrMask(bool important,
+@@ -4787,9 +5337,7 @@ bool ParseBackgroundOrMask(bool important,
              return false;
            }
          } else if (property.IDEquals(CSSPropertyID::kBackgroundPositionY) ||
@@ -735,7 +825,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..cec391526167cbb2c2933c18b322b4a7
            continue;
          } else {
            value =
-@@ -4797,6 +5272,7 @@ bool ParseBackgroundOrMask(bool important,
+@@ -4797,6 +5345,7 @@ bool ParseBackgroundOrMask(bool important,
          }
          if (value) {
            if (property.IDEquals(CSSPropertyID::kBackgroundOrigin) ||
@@ -743,7 +833,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..cec391526167cbb2c2933c18b322b4a7
                property.IDEquals(CSSPropertyID::kWebkitMaskOrigin)) {
              origin_value = value;
            }
-@@ -4817,6 +5293,7 @@ bool ParseBackgroundOrMask(bool important,
+@@ -4817,6 +5366,7 @@ bool ParseBackgroundOrMask(bool important,
      // TODO(timloh): This will make invalid longhands, see crbug.com/386459
      for (unsigned i = 0; i < longhand_count; ++i) {
        const CSSProperty& property = *shorthand.properties()[i];
@@ -751,7 +841,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..cec391526167cbb2c2933c18b322b4a7
        if (property.IDEquals(CSSPropertyID::kBackgroundColor) &&
            !range.AtEnd()) {
          if (parsed_longhand[i]) {
-@@ -4824,13 +5301,16 @@ bool ParseBackgroundOrMask(bool important,
+@@ -4824,13 +5374,16 @@ bool ParseBackgroundOrMask(bool important,
          }
          continue;
        }
@@ -774,7 +864,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..cec391526167cbb2c2933c18b322b4a7
          AddBackgroundValue(longhands[i], CSSInitialValue::Create());
        }
      }
-@@ -4853,51 +5333,33 @@ bool ParseBackgroundOrMask(bool important,
+@@ -4853,51 +5406,33 @@ bool ParseBackgroundOrMask(bool important,
    return true;
  }
  
@@ -847,7 +937,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..cec391526167cbb2c2933c18b322b4a7
  }
  
  CSSValue* ConsumeWebkitBorderImage(CSSParserTokenRange& range,
-@@ -7356,6 +7818,29 @@ bool IsValidPropertyList(const CSSValueList& value_list) {
+@@ -7356,6 +7891,29 @@ bool IsValidPropertyList(const CSSValueList& value_list) {
    return true;
  }
  
@@ -877,7 +967,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..cec391526167cbb2c2933c18b322b4a7
  CSSValue* ConsumeBorderColorSide(CSSParserTokenRange& range,
                                   const CSSParserContext& context,
                                   const CSSParserLocalContext& local_context) {
-@@ -7580,10 +8065,15 @@ CSSValue* ConsumeFontSizeAdjust(CSSParserTokenRange& range,
+@@ -7580,10 +8138,15 @@ CSSValue* ConsumeFontSizeAdjust(CSSParserTokenRange& range,
  
    CSSIdentifierValue* font_metric =
        ConsumeIdent<CSSValueID::kExHeight, CSSValueID::kCapHeight,

@@ -1,8 +1,17 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc b/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
-index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..11419a4c608bf6c708800a84797f8d7bcfe5314e 100644
+index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..da0f8c037f7af7674dc06607bf78235a9b8c68a5 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
-@@ -71,6 +71,7 @@
+@@ -37,6 +37,8 @@
+ #include "third_party/blink/renderer/core/css/css_axis_value.h"
+ #include "third_party/blink/renderer/core/css/css_color.h"
+ #include "third_party/blink/renderer/core/css/css_color_mix_value.h"
++#include "third_party/blink/renderer/core/css/css_relative_color_value.h"
++#include "third_party/blink/renderer/core/css/properties/css_parsing_utils.h"
+ #include "third_party/blink/renderer/core/css/css_content_distribution_value.h"
+ #include "third_party/blink/renderer/core/css/css_custom_ident_value.h"
+ #include "third_party/blink/renderer/core/css/css_font_family_value.h"
+@@ -71,6 +73,7 @@
  #include "third_party/blink/renderer/core/style/anchor_specifier_value.h"
  #include "third_party/blink/renderer/core/style/computed_style_constants.h"
  #include "third_party/blink/renderer/core/style/coord_box_offset_path_operation.h"
@@ -10,7 +19,7 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..11419a4c608bf6c708800a84797f8d7b
  #include "third_party/blink/renderer/core/style/offset_path_operation.h"
  #include "third_party/blink/renderer/core/style/reference_clip_path_operation.h"
  #include "third_party/blink/renderer/core/style/reference_offset_path_operation.h"
-@@ -185,8 +186,23 @@ LengthBox StyleBuilderConverter::ConvertClip(StyleResolverState& state,
+@@ -185,8 +188,23 @@ LengthBox StyleBuilderConverter::ConvertClip(StyleResolverState& state,
  scoped_refptr<ClipPathOperation> StyleBuilderConverter::ConvertClipPath(
      StyleResolverState& state,
      const CSSValue& value) {
@@ -36,7 +45,7 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..11419a4c608bf6c708800a84797f8d7b
    }
  
    if (const auto* url_value = DynamicTo<cssvalue::CSSURIValue>(value)) {
-@@ -700,6 +716,7 @@ FontDescription::Size StyleBuilderConverter::ConvertFontSize(
+@@ -700,6 +718,7 @@ FontDescription::Size StyleBuilderConverter::ConvertFontSize(
  }
  
  FontSizeAdjust StyleBuilderConverterBase::ConvertFontSizeAdjust(
@@ -44,7 +53,7 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..11419a4c608bf6c708800a84797f8d7b
      const CSSValue& value) {
    auto* identifier_value = DynamicTo<CSSIdentifierValue>(value);
    if (identifier_value && identifier_value->GetValueID() == CSSValueID::kNone) {
-@@ -710,6 +727,12 @@ FontSizeAdjust StyleBuilderConverterBase::ConvertFontSizeAdjust(
+@@ -710,6 +729,12 @@ FontSizeAdjust StyleBuilderConverterBase::ConvertFontSizeAdjust(
      return FontBuilder::InitialSizeAdjust();
    }
  
@@ -57,7 +66,7 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..11419a4c608bf6c708800a84797f8d7b
    if (value.IsPrimitiveValue()) {
      const auto& primitive_value = To<CSSPrimitiveValue>(value);
      DCHECK(primitive_value.IsNumber());
-@@ -718,15 +741,25 @@ FontSizeAdjust StyleBuilderConverterBase::ConvertFontSizeAdjust(
+@@ -718,15 +743,25 @@ FontSizeAdjust StyleBuilderConverterBase::ConvertFontSizeAdjust(
  
    DCHECK(value.IsValuePair());
    const auto& pair = To<CSSValuePair>(value);
@@ -88,7 +97,7 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..11419a4c608bf6c708800a84797f8d7b
  }
  
  FontSelectionValue StyleBuilderConverterBase::ConvertFontStretch(
-@@ -2147,6 +2180,22 @@ scoped_refptr<SVGDashArray> StyleBuilderConverter::ConvertStrokeDasharray(
+@@ -2147,6 +2182,22 @@ scoped_refptr<SVGDashArray> StyleBuilderConverter::ConvertStrokeDasharray(
    return array;
  }
  
@@ -111,7 +120,31 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..11419a4c608bf6c708800a84797f8d7b
  AtomicString StyleBuilderConverter::ConvertViewTransitionName(
      StyleResolverState& state,
      const CSSValue& value) {
-@@ -2812,16 +2861,16 @@ RubyPosition StyleBuilderConverter::ConvertRubyPosition(
+@@ -2177,6 +2228,23 @@ StyleColor StyleBuilderConverter::ConvertStyleColor(StyleResolverState& state,
+     }
+   }
+ 
++  // FlyWeb (Chromium 131): relative colors whose origin was not known at
++  // parse time.
++  if (auto* relative_value =
++          DynamicTo<cssvalue::CSSRelativeColorValue>(value)) {
++    const StyleColor origin = StyleBuilderConverter::ConvertStyleColor(
++        state, relative_value->OriginColor(), for_visited_link);
++    if (origin.IsCurrentColor() || origin.IsUnresolvedColorMixFunction()) {
++      return StyleColor(
++          StyleColor::UnresolvedColorMix(relative_value, origin));
++    }
++    // System colors and light-dark() are known at computed-value time.
++    return StyleColor(css_parsing_utils::ResolveRelativeColor(
++                          relative_value->FunctionId(),
++                          relative_value->Channels(), origin.GetColor())
++                          .value_or(Color::kTransparent));
++  }
++
+   if (auto* color_mix_value = DynamicTo<cssvalue::CSSColorMixValue>(value)) {
+     const StyleColor c1 = StyleBuilderConverter::ConvertStyleColor(
+         state, color_mix_value->Color1(), for_visited_link);
+@@ -2812,16 +2880,16 @@ RubyPosition StyleBuilderConverter::ConvertRubyPosition(
      const CSSValue& value) {
    if (const auto* identifier_value = DynamicTo<CSSIdentifierValue>(value)) {
      CSSValueID value_id = identifier_value->GetValueID();

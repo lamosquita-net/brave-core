@@ -1,0 +1,70 @@
+diff --git a/third_party/blink/renderer/core/css/css_relative_color_value.h b/third_party/blink/renderer/core/css/css_relative_color_value.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..efc5459bbaabd55a35c5f1d35c99055442590d88
+--- /dev/null
++++ b/third_party/blink/renderer/core/css/css_relative_color_value.h
+@@ -0,0 +1,64 @@
++// Copyright 2024 The Chromium Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef THIRD_PARTY_BLINK_RENDERER_CORE_CSS_CSS_RELATIVE_COLOR_VALUE_H_
++#define THIRD_PARTY_BLINK_RENDERER_CORE_CSS_CSS_RELATIVE_COLOR_VALUE_H_
++
++#include "third_party/blink/renderer/core/core_export.h"
++#include "third_party/blink/renderer/core/css/css_value.h"
++#include "third_party/blink/renderer/core/css_value_keywords.h"
++#include "third_party/blink/renderer/platform/wtf/casting.h"
++#include "third_party/blink/renderer/platform/wtf/text/wtf_string.h"
++
++namespace blink {
++namespace cssvalue {
++
++// FlyWeb (Chromium 131, CSSRelativeColorSupportsCurrentcolor; upstream's class
++// of the same name comes from 46cf2dd8259): a relative color whose origin
++// color (currentcolor, a system color, light-dark(), or a color-mix() or
++// relative color based on those) cannot be resolved at parse time. FlyWeb's
++// relative colors (level 125) are parsed by css_parsing_utils, not by
++// upstream's ColorFunctionParser, so the channels are kept as their
++// (validated) text and evaluated with css_parsing_utils::ResolveRelativeColor()
++// once the origin is known (StyleColor::UnresolvedColorMix).
++class CORE_EXPORT CSSRelativeColorValue : public CSSValue {
++ public:
++  CSSRelativeColorValue(const CSSValue& origin_color,
++                        CSSValueID function_id,
++                        const String& channels)
++      : CSSValue(kRelativeColorClass),
++        origin_color_(origin_color),
++        function_id_(function_id),
++        channels_(channels) {}
++
++  String CustomCSSText() const;
++
++  void TraceAfterDispatch(blink::Visitor* visitor) const;
++
++  bool Equals(const CSSRelativeColorValue& other) const;
++
++  const CSSValue& OriginColor() const { return *origin_color_; }
++  CSSValueID FunctionId() const { return function_id_; }
++  // The arguments after the origin color, e.g. "r g b / alpha", or for
++  // color(), "srgb r g b".
++  const String& Channels() const { return channels_; }
++
++ private:
++  Member<const CSSValue> origin_color_;
++  const CSSValueID function_id_;
++  const String channels_;
++};
++
++}  // namespace cssvalue
++
++template <>
++struct DowncastTraits<cssvalue::CSSRelativeColorValue> {
++  static bool AllowFrom(const CSSValue& value) {
++    return value.IsRelativeColorValue();
++  }
++};
++
++}  // namespace blink
++
++#endif  // THIRD_PARTY_BLINK_RENDERER_CORE_CSS_CSS_RELATIVE_COLOR_VALUE_H_

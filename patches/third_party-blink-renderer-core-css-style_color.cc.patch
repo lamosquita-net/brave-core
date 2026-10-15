@@ -1,0 +1,70 @@
+diff --git a/third_party/blink/renderer/core/css/style_color.cc b/third_party/blink/renderer/core/css/style_color.cc
+index 9cebdf68f0571ea27e836e95221064c2c69addca..7742cdce92fd78e1175371ceb1016bd10299df8f 100644
+--- a/third_party/blink/renderer/core/css/style_color.cc
++++ b/third_party/blink/renderer/core/css/style_color.cc
+@@ -5,6 +5,7 @@
+ #include "third_party/blink/renderer/core/css/style_color.h"
+ #include <memory>
+ 
++#include "third_party/blink/renderer/core/css/properties/css_parsing_utils.h"
+ #include "third_party/blink/renderer/core/css_value_keywords.h"
+ #include "third_party/blink/renderer/core/layout/layout_theme.h"
+ 
+@@ -40,6 +41,23 @@ StyleColor::UnresolvedColorMix::UnresolvedColorMix(
+       in->Percentage1(), in->Percentage2(), percentage_, alpha_multiplier_);
+ }
+ 
++StyleColor::UnresolvedColorMix::UnresolvedColorMix(
++    const cssvalue::CSSRelativeColorValue* in,
++    const StyleColor& origin)
++    : color1_(origin),
++      relative_function_(in->FunctionId()),
++      relative_channels_(in->Channels()) {
++  if (origin.IsUnresolvedColorMixFunction()) {
++    color1_type_ = UnderlyingColorType::kColorMix;
++  } else if (origin.IsCurrentColor()) {
++    color1_type_ = UnderlyingColorType::kCurrentColor;
++  } else {
++    color1_type_ = UnderlyingColorType::kColor;
++  }
++  // color2_ is unused: keep it an absolute color.
++  color2_type_ = UnderlyingColorType::kColor;
++}
++
+ StyleColor::UnresolvedColorMix::UnresolvedColorMix(
+     const UnresolvedColorMix& other)
+     : color_interpolation_space_(other.color_interpolation_space_),
+@@ -47,7 +65,9 @@ StyleColor::UnresolvedColorMix::UnresolvedColorMix(
+       percentage_(other.percentage_),
+       alpha_multiplier_(other.alpha_multiplier_),
+       color1_type_(other.color1_type_),
+-      color2_type_(other.color2_type_) {
++      color2_type_(other.color2_type_),
++      relative_function_(other.relative_function_),
++      relative_channels_(other.relative_channels_) {
+   if (color1_type_ == UnderlyingColorType::kColorMix) {
+     new (&color1_.unresolved_color_mix) std::unique_ptr<UnresolvedColorMix>(
+         new UnresolvedColorMix(*other.color1_.unresolved_color_mix));
+@@ -72,6 +92,8 @@ StyleColor::UnresolvedColorMix& StyleColor::UnresolvedColorMix::operator=(
+   hue_interpolation_method_ = other.hue_interpolation_method_;
+   percentage_ = other.percentage_;
+   alpha_multiplier_ = other.alpha_multiplier_;
++  relative_function_ = other.relative_function_;
++  relative_channels_ = other.relative_channels_;
+ 
+   if (other.color1_type_ == UnderlyingColorType::kColorMix) {
+     if (color1_type_ == UnderlyingColorType::kColorMix) {
+@@ -117,6 +139,13 @@ Color StyleColor::UnresolvedColorMix::Resolve(
+     c1 = color1_.unresolved_color_mix->Resolve(current_color);
+   }
+ 
++  if (relative_function_ != CSSValueID::kInvalid) {
++    // The channels were validated at parse time.
++    return css_parsing_utils::ResolveRelativeColor(relative_function_,
++                                                   relative_channels_, c1)
++        .value_or(Color::kTransparent);
++  }
++
+   Color c2 = current_color;
+   if (color2_type_ ==
+       StyleColor::UnresolvedColorMix::UnderlyingColorType::kColor) {

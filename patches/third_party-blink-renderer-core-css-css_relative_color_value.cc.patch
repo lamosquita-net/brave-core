@@ -1,0 +1,47 @@
+diff --git a/third_party/blink/renderer/core/css/css_relative_color_value.cc b/third_party/blink/renderer/core/css/css_relative_color_value.cc
+new file mode 100644
+index 0000000000000000000000000000000000000000..b8e13ea8984702b57fceb9e4ff73740ef1a8c094
+--- /dev/null
++++ b/third_party/blink/renderer/core/css/css_relative_color_value.cc
+@@ -0,0 +1,41 @@
++// Copyright 2024 The Chromium Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "third_party/blink/renderer/core/css/css_relative_color_value.h"
++
++#include "third_party/blink/renderer/platform/wtf/text/string_builder.h"
++
++namespace blink::cssvalue {
++
++String CSSRelativeColorValue::CustomCSSText() const {
++  // https://drafts.csswg.org/css-color-5/#serial-relative-color
++  // rgba() and hsla() serialize as rgb() and hsl().
++  CSSValueID name = function_id_;
++  if (name == CSSValueID::kRgba) {
++    name = CSSValueID::kRgb;
++  } else if (name == CSSValueID::kHsla) {
++    name = CSSValueID::kHsl;
++  }
++  StringBuilder result;
++  result.Append(getValueName(name));
++  result.Append("(from ");
++  result.Append(origin_color_->CssText());
++  result.Append(" ");
++  result.Append(channels_);
++  result.Append(")");
++  return result.ReleaseString();
++}
++
++void CSSRelativeColorValue::TraceAfterDispatch(blink::Visitor* visitor) const {
++  visitor->Trace(origin_color_);
++  CSSValue::TraceAfterDispatch(visitor);
++}
++
++bool CSSRelativeColorValue::Equals(const CSSRelativeColorValue& other) const {
++  return function_id_ == other.function_id_ &&
++         *origin_color_ == *other.origin_color_ &&
++         channels_ == other.channels_;
++}
++
++}  // namespace blink::cssvalue

@@ -1,0 +1,35 @@
+diff --git a/third_party/blink/renderer/core/css/style_color.h b/third_party/blink/renderer/core/css/style_color.h
+index 4dabfbfb91752b7ca57a2172affadfb839279307..92715cc77e63f39d2e4b186eaef46bacf6bf3f7d 100644
+--- a/third_party/blink/renderer/core/css/style_color.h
++++ b/third_party/blink/renderer/core/css/style_color.h
+@@ -36,6 +36,7 @@
+ #include "third_party/blink/public/mojom/frame/color_scheme.mojom-blink-forward.h"
+ #include "third_party/blink/renderer/core/core_export.h"
+ #include "third_party/blink/renderer/core/css/css_color_mix_value.h"
++#include "third_party/blink/renderer/core/css/css_relative_color_value.h"
+ #include "third_party/blink/renderer/core/css_value_keywords.h"
+ #include "third_party/blink/renderer/platform/graphics/color.h"
+ #include "third_party/blink/renderer/platform/wtf/allocator/allocator.h"
+@@ -74,6 +75,12 @@ class CORE_EXPORT StyleColor {
+     UnresolvedColorMix(const cssvalue::CSSColorMixValue* in,
+                        const StyleColor& c1,
+                        const StyleColor& c2);
++    // FlyWeb (Chromium 131, CSSRelativeColorSupportsCurrentcolor): a relative
++    // color whose origin is not known until used-value time. The origin is
++    // kept as color1_; the channels are evaluated by
++    // css_parsing_utils::ResolveRelativeColor().
++    UnresolvedColorMix(const cssvalue::CSSRelativeColorValue* in,
++                       const StyleColor& origin);
+     UnresolvedColorMix();
+     UnresolvedColorMix(const UnresolvedColorMix& other);
+     UnresolvedColorMix& operator=(const UnresolvedColorMix& other);
+@@ -89,6 +96,9 @@ class CORE_EXPORT StyleColor {
+     double alpha_multiplier_ = 1.0;
+     UnderlyingColorType color1_type_ = UnderlyingColorType::kColor;
+     UnderlyingColorType color2_type_ = UnderlyingColorType::kColor;
++    // kInvalid for color-mix(); the color function otherwise.
++    CSSValueID relative_function_ = CSSValueID::kInvalid;
++    String relative_channels_;
+   };
+ 
+   StyleColor() = default;

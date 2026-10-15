@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/css/css_value.cc b/third_party/blink/renderer/core/css/css_value.cc
-index a1c1806dc6dc12811e1cba148f2bb0930a06b100..72a1644fc102cf51601cec136939575ce6d180dc 100644
+index a1c1806dc6dc12811e1cba148f2bb0930a06b100..6707214bdb830602bc44fcba301a43bec93cbe3f 100644
 --- a/third_party/blink/renderer/core/css/css_value.cc
 +++ b/third_party/blink/renderer/core/css/css_value.cc
-@@ -74,6 +74,7 @@
+@@ -33,6 +33,7 @@
+ #include "third_party/blink/renderer/core/css/css_bracketed_value_list.h"
+ #include "third_party/blink/renderer/core/css/css_color.h"
+ #include "third_party/blink/renderer/core/css/css_color_mix_value.h"
++#include "third_party/blink/renderer/core/css/css_relative_color_value.h"
+ #include "third_party/blink/renderer/core/css/css_content_distribution_value.h"
+ #include "third_party/blink/renderer/core/css/css_counter_value.h"
+ #include "third_party/blink/renderer/core/css/css_crossfade_value.h"
+@@ -74,6 +75,7 @@
  #include "third_party/blink/renderer/core/css/css_ratio_value.h"
  #include "third_party/blink/renderer/core/css/css_ray_value.h"
  #include "third_party/blink/renderer/core/css/css_reflect_value.h"
@@ -10,7 +18,16 @@ index a1c1806dc6dc12811e1cba148f2bb0930a06b100..72a1644fc102cf51601cec136939575c
  #include "third_party/blink/renderer/core/css/css_revert_layer_value.h"
  #include "third_party/blink/renderer/core/css/css_revert_value.h"
  #include "third_party/blink/renderer/core/css/css_scroll_value.h"
-@@ -326,6 +327,8 @@ bool CSSValue::operator==(const CSSValue& other) const {
+@@ -200,6 +202,8 @@ bool CSSValue::operator==(const CSSValue& other) const {
+         return CompareCSSValues<cssvalue::CSSColor>(*this, other);
+       case kColorMixClass:
+         return CompareCSSValues<cssvalue::CSSColorMixValue>(*this, other);
++      case kRelativeColorClass:
++        return CompareCSSValues<cssvalue::CSSRelativeColorValue>(*this, other);
+       case kCounterClass:
+         return CompareCSSValues<cssvalue::CSSCounterValue>(*this, other);
+       case kCursorImageClass:
+@@ -326,6 +330,8 @@ bool CSSValue::operator==(const CSSValue& other) const {
          return CompareCSSValues<cssvalue::CSSRatioValue>(*this, other);
        case kPaletteMixClass:
          return CompareCSSValues<cssvalue::CSSPaletteMixValue>(*this, other);
@@ -19,7 +36,16 @@ index a1c1806dc6dc12811e1cba148f2bb0930a06b100..72a1644fc102cf51601cec136939575c
      }
      NOTREACHED();
      return false;
-@@ -474,6 +477,8 @@ String CSSValue::CssText() const {
+@@ -355,6 +361,8 @@ String CSSValue::CssText() const {
+       return To<cssvalue::CSSColor>(this)->CustomCSSText();
+     case kColorMixClass:
+       return To<cssvalue::CSSColorMixValue>(this)->CustomCSSText();
++    case kRelativeColorClass:
++      return To<cssvalue::CSSRelativeColorValue>(this)->CustomCSSText();
+     case kCounterClass:
+       return To<cssvalue::CSSCounterValue>(this)->CustomCSSText();
+     case kCursorImageClass:
+@@ -474,6 +482,8 @@ String CSSValue::CssText() const {
        return To<cssvalue::CSSRatioValue>(this)->CustomCSSText();
      case kPaletteMixClass:
        return To<cssvalue::CSSPaletteMixValue>(this)->CustomCSSText();
@@ -28,7 +54,17 @@ index a1c1806dc6dc12811e1cba148f2bb0930a06b100..72a1644fc102cf51601cec136939575c
    }
    NOTREACHED();
    return String();
-@@ -716,6 +721,9 @@ void CSSValue::Trace(Visitor* visitor) const {
+@@ -531,6 +541,9 @@ void CSSValue::Trace(Visitor* visitor) const {
+     case kColorMixClass:
+       To<cssvalue::CSSColorMixValue>(this)->TraceAfterDispatch(visitor);
+       return;
++    case kRelativeColorClass:
++      To<cssvalue::CSSRelativeColorValue>(this)->TraceAfterDispatch(visitor);
++      return;
+     case kCounterClass:
+       To<cssvalue::CSSCounterValue>(this)->TraceAfterDispatch(visitor);
+       return;
+@@ -716,6 +729,9 @@ void CSSValue::Trace(Visitor* visitor) const {
      case kPaletteMixClass:
        To<cssvalue::CSSPaletteMixValue>(this)->TraceAfterDispatch(visitor);
        return;
@@ -38,3 +74,12 @@ index a1c1806dc6dc12811e1cba148f2bb0930a06b100..72a1644fc102cf51601cec136939575c
    }
    NOTREACHED();
  }
+@@ -733,6 +749,8 @@ String CSSValue::ClassTypeToString() const {
+       return "ColorClass";
+     case kColorMixClass:
+       return "ColorMixClass";
++    case kRelativeColorClass:
++      return "RelativeColorClass";
+     case kCounterClass:
+       return "CounterClass";
+     case kQuadClass:
