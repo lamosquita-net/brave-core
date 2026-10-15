@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/html_element.cc b/third_party/blink/renderer/core/html/html_element.cc
-index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..8ba132228f0f9d9fdbea98ca62e93b4a2213b689 100644
+index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..37aefe5f815c2bfe6a9e97874e3bba6263de3c90 100644
 --- a/third_party/blink/renderer/core/html/html_element.cc
 +++ b/third_party/blink/renderer/core/html/html_element.cc
 @@ -29,6 +29,8 @@
@@ -72,7 +72,18 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..8ba132228f0f9d9fdbea98ca62e93b4a
        {html_names::kAriaRowspanAttr, WebFeature::kARIARowSpanAttribute,
         kNoEvent, nullptr},
        {html_names::kAriaSelectedAttr, WebFeature::kARIASelectedAttribute,
-@@ -1423,26 +1430,59 @@ bool HTMLElement::togglePopover(ExceptionState& exception_state) {
+@@ -1317,7 +1324,9 @@ bool HTMLElement::IsPopoverReady(PopoverTriggerAction action,
+   CHECK(RuntimeEnabledFeatures::HTMLPopoverAttributeEnabled(
+       GetDocument().GetExecutionContext()));
+   CHECK_NE(action, PopoverTriggerAction::kNone);
+-  CHECK_NE(action, PopoverTriggerAction::kToggle);
++  // FlyWeb: kToggle is allowed, as in Chromium 117 (63e395a18a0):
++  // togglePopover() with a `force` that matches the state only checks for
++  // exceptions (no popover attribute, disconnected).
+ 
+   auto maybe_throw_exception = [&exception_state, &include_event_handler_text](
+                                    DOMExceptionCode code, const char* msg) {
+@@ -1423,26 +1432,59 @@ bool HTMLElement::togglePopover(ExceptionState& exception_state) {
    return false;
  }
  
@@ -141,7 +152,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..8ba132228f0f9d9fdbea98ca62e93b4a
  void HTMLElement::ShowPopoverInternal(Element* invoker,
                                        ExceptionState* exception_state) {
    CHECK(RuntimeEnabledFeatures::HTMLPopoverAttributeEnabled(
-@@ -1876,7 +1916,7 @@ void HTMLElement::SetPopoverFocusOnShow() {
+@@ -1876,7 +1918,7 @@ void HTMLElement::SetPopoverFocusOnShow() {
                                                  DocumentUpdateReason::kPopover);
  
    if (auto* dialog = DynamicTo<HTMLDialogElement>(this)) {
@@ -150,7 +161,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..8ba132228f0f9d9fdbea98ca62e93b4a
        dialog->SetFocusForDialog();
      } else {
        HTMLDialogElement::SetFocusForDialogLegacy(dialog);
-@@ -2419,24 +2459,32 @@ HTMLFormElement* HTMLElement::FindFormAncestor() const {
+@@ -2419,24 +2461,32 @@ HTMLFormElement* HTMLElement::FindFormAncestor() const {
    return Traversal<HTMLFormElement>::FirstAncestor(*this);
  }
  
@@ -195,7 +206,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..8ba132228f0f9d9fdbea98ca62e93b4a
      }
    }
    if (change.IsChildInsertion()) {
-@@ -2449,81 +2497,23 @@ bool HTMLElement::HasDirectionAuto() const {
+@@ -2449,81 +2499,23 @@ bool HTMLElement::HasDirectionAuto() const {
    // <bdi> defaults to dir="auto"
    // https://html.spec.whatwg.org/C/#the-bdi-element
    const AtomicString& direction = FastGetAttribute(html_names::kDirAttr);
@@ -286,7 +297,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..8ba132228f0f9d9fdbea98ca62e93b4a
    DCHECK(SelfOrAncestorHasDirAutoAttribute());
    bool is_deferred;
    TextDirection text_direction =
-@@ -2552,10 +2542,22 @@ void HTMLElement::AdjustDirectionalityIfNeededAfterChildAttributeChanged(
+@@ -2552,10 +2544,22 @@ void HTMLElement::AdjustDirectionalityIfNeededAfterChildAttributeChanged(
  }
  
  bool HTMLElement::CalculateAndAdjustAutoDirectionality(Node* stay_within) {
@@ -312,7 +323,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..8ba132228f0f9d9fdbea98ca62e93b4a
    if (CachedDirectionality() != text_direction && !is_deferred) {
      UpdateDirectionalityAndDescendant(text_direction);
  
-@@ -2571,58 +2573,12 @@ bool HTMLElement::CalculateAndAdjustAutoDirectionality(Node* stay_within) {
+@@ -2571,58 +2575,12 @@ bool HTMLElement::CalculateAndAdjustAutoDirectionality(Node* stay_within) {
    return false;
  }
  
@@ -374,7 +385,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..8ba132228f0f9d9fdbea98ca62e93b4a
    if (SelfOrAncestorHasDirAutoAttribute()) {
      for (auto* element_to_adjust = this; element_to_adjust;
           element_to_adjust = DynamicTo<HTMLElement>(
-@@ -2638,8 +2594,37 @@ void HTMLElement::AdjustDirectionalityIfNeededAfterShadowRootChanged() {
+@@ -2638,8 +2596,37 @@ void HTMLElement::AdjustDirectionalityIfNeededAfterShadowRootChanged() {
    }
  }
  
@@ -412,7 +423,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..8ba132228f0f9d9fdbea98ca62e93b4a
    HeapHashSet<Member<HTMLElement>> directionality_set;
    // Transfer a candidate directionality set to |directionality_set| to avoid
    // the tree walk to the duplicated parent node for the directionality.
-@@ -3034,53 +3019,8 @@ Element* HTMLElement::unclosedOffsetParent() {
+@@ -3034,53 +3021,8 @@ Element* HTMLElement::unclosedOffsetParent() {
    return layout_object->OffsetParent(this);
  }
  
@@ -467,7 +478,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..8ba132228f0f9d9fdbea98ca62e93b4a
    Node* node = FlatTreeTraversal::FirstChild(*this);
    while (node) {
      if (IsA<HTMLElement>(node)) {
-@@ -3108,26 +3048,38 @@ void HTMLElement::UpdateDescendantDirectionality(TextDirection direction) {
+@@ -3108,26 +3050,38 @@ void HTMLElement::UpdateDescendantDirectionality(TextDirection direction) {
  void HTMLElement::OnDirAttrChanged(const AttributeModificationParams& params) {
    // If an ancestor has dir=auto, and this node has the first character,
    // changes to dir attribute may affect the ancestor.
@@ -516,7 +527,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..8ba132228f0f9d9fdbea98ca62e93b4a
    } else if (!is_old_auto && is_new_auto) {
      SetSelfOrAncestorHasDirAutoAttribute();
      UpdateDescendantHasDirAutoAttribute(true /* has_dir_auto */);
-@@ -3293,27 +3245,23 @@ bool HTMLElement::IsLabelable() const {
+@@ -3293,27 +3247,23 @@ bool HTMLElement::IsLabelable() const {
    return IsFormAssociatedCustomElement();
  }
  

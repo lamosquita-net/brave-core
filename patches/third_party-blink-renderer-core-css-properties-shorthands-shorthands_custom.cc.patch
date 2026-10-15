@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/properties/shorthands/shorthands_custom.cc b/third_party/blink/renderer/core/css/properties/shorthands/shorthands_custom.cc
-index 420cb4301e98f574101ceb2750a4f60d09619430..8b63ad95f13dd5e222f4ae9afc7d3b2c061ef1b1 100644
+index 420cb4301e98f574101ceb2750a4f60d09619430..905f8dfdbeab15fe4f0fd744856f51ba370612b7 100644
 --- a/third_party/blink/renderer/core/css/properties/shorthands/shorthands_custom.cc
 +++ b/third_party/blink/renderer/core/css/properties/shorthands/shorthands_custom.cc
 @@ -27,6 +27,7 @@
@@ -298,18 +298,31 @@ index 420cb4301e98f574101ceb2750a4f60d09619430..8b63ad95f13dd5e222f4ae9afc7d3b2c
  }
  
  bool TextEmphasis::ParseShorthand(
-@@ -3878,8 +3875,8 @@ bool AlternativeWhiteSpace::ParseShorthand(
+@@ -3872,14 +3869,20 @@ bool AlternativeWhiteSpace::ParseShorthand(
+       const EWhiteSpace whitespace =
+           CssValueIDToPlatformEnum<EWhiteSpace>(value->GetValueID());
+       DCHECK(IsValidWhiteSpace(whitespace));
++      // FlyWeb (level 130): the shorthand is kAlternativeWhiteSpace, the ID
++      // that getMatchingShorthandsForLonghand() lists. With text-wrap-mode in
++      // both this shorthand and text-wrap, kWhiteSpace is not in its list and
++      // indexOfShorthandForLonghand() hits NOTREACHED (the result, index 0,
++      // was the right one). The multi-value path below already uses it.
+       AddProperty(
+-          CSSPropertyID::kWhiteSpaceCollapse, CSSPropertyID::kWhiteSpace,
++          CSSPropertyID::kWhiteSpaceCollapse,
++          CSSPropertyID::kAlternativeWhiteSpace,
+           *CSSIdentifierValue::Create(ToWhiteSpaceCollapse(whitespace)),
            important, css_parsing_utils::IsImplicitProperty::kNotImplicit,
            properties);
        AddProperty(
 -          CSSPropertyID::kTextWrap, CSSPropertyID::kWhiteSpace,
 -          *CSSIdentifierValue::Create(ToTextWrap(whitespace)), important,
-+          CSSPropertyID::kTextWrapMode, CSSPropertyID::kWhiteSpace,
++          CSSPropertyID::kTextWrapMode, CSSPropertyID::kAlternativeWhiteSpace,
 +          *CSSIdentifierValue::Create(ToTextWrapMode(whitespace)), important,
            css_parsing_utils::IsImplicitProperty::kNotImplicit, properties);
        return true;
      }
-@@ -3909,8 +3906,8 @@ const CSSValue* AlternativeWhiteSpace::CSSValueFromComputedStyleInternal(
+@@ -3909,8 +3912,8 @@ const CSSValue* AlternativeWhiteSpace::CSSValueFromComputedStyleInternal(
    if (collapse != ComputedStyleInitialValues::InitialWhiteSpaceCollapse()) {
      list->Append(*CSSIdentifierValue::Create(collapse));
    }
