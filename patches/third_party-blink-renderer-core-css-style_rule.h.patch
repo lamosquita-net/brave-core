@@ -1,0 +1,30 @@
+diff --git a/third_party/blink/renderer/core/css/style_rule.h b/third_party/blink/renderer/core/css/style_rule.h
+index 6710c8d7e29cd46ab9da703a0c5860dfa750dc2d..f06d147d43a5d1fb920601dd8a5faaac6afba393 100644
+--- a/third_party/blink/renderer/core/css/style_rule.h
++++ b/third_party/blink/renderer/core/css/style_rule.h
+@@ -68,6 +68,7 @@ class CORE_EXPORT StyleRuleBase : public GarbageCollected<StyleRuleBase> {
+     kPositionFallback,
+     kTry,
+     kStartingStyle,
++    kNestedDeclarations,
+   };
+ 
+   // Name of a cascade layer as given by an @layer rule, split at '.' into a
+@@ -104,6 +105,9 @@ class CORE_EXPORT StyleRuleBase : public GarbageCollected<StyleRuleBase> {
+   bool IsPositionFallbackRule() const { return GetType() == kPositionFallback; }
+   bool IsTryRule() const { return GetType() == kTry; }
+   bool IsStartingStyleRule() const { return GetType() == kStartingStyle; }
++  bool IsNestedDeclarationsRule() const {
++    return GetType() == kNestedDeclarations;
++  }
+   bool IsConditionRule() const {
+     return GetType() == kContainer || GetType() == kMedia ||
+            GetType() == kSupports || GetType() == kStartingStyle;
+@@ -266,6 +270,7 @@ class CORE_EXPORT StyleRule : public StyleRuleBase {
+   const HeapVector<Member<StyleRuleBase>>* ChildRules() const {
+     return child_rules_.Get();
+   }
++  HeapVector<Member<StyleRuleBase>>* ChildRules() { return child_rules_.Get(); }
+   void EnsureChildRules() {
+     // Allocate the child rule vector only when we need it,
+     // since most rules won't have children (almost by definition).

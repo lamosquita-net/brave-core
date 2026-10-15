@@ -1,0 +1,26 @@
+diff --git a/third_party/blink/renderer/core/css/style_sheet_contents.cc b/third_party/blink/renderer/core/css/style_sheet_contents.cc
+index 4a193760ff34972d52f5086a8f1da551cf6ff4f5..6bdc461d838069d067e1c006a3d2f1c9a7a4a0b0 100644
+--- a/third_party/blink/renderer/core/css/style_sheet_contents.cc
++++ b/third_party/blink/renderer/core/css/style_sheet_contents.cc
+@@ -275,6 +275,13 @@ static wtf_size_t ReplaceRuleIfExistsInternal(
+           std::numeric_limits<wtf_size_t>::max()) {
+         return 0;  // Dummy non-failure value.
+       }
++    } else if (auto* style_rule = DynamicTo<StyleRule>(rule);
++               style_rule && style_rule->ChildRules()) {
++      if (ReplaceRuleIfExistsInternal(old_rule, new_rule,
++                                      *style_rule->ChildRules()) !=
++          std::numeric_limits<wtf_size_t>::max()) {
++        return 0;  // Dummy non-failure value.
++      }
+     }
+   }
+ 
+@@ -639,6 +646,7 @@ static bool ChildRulesHaveFailedOrCanceledSubresources(
+       case StyleRuleBase::kNamespace:
+         NOTREACHED();
+         break;
++      case StyleRuleBase::kNestedDeclarations:
+       case StyleRuleBase::kPage:
+       case StyleRuleBase::kProperty:
+       case StyleRuleBase::kKeyframes:

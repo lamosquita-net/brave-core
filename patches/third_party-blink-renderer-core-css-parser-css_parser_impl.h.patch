@@ -1,8 +1,30 @@
 diff --git a/third_party/blink/renderer/core/css/parser/css_parser_impl.h b/third_party/blink/renderer/core/css/parser/css_parser_impl.h
-index c4ca914fffc56b86e4d6fe69c86a680f5468f74c..e028a86d722be5b3f7dcb341b2e0d3f3756df55d 100644
+index c4ca914fffc56b86e4d6fe69c86a680f5468f74c..500864c154a0a61f9cf649d994c02a6dd872567c 100644
 --- a/third_party/blink/renderer/core/css/parser/css_parser_impl.h
 +++ b/third_party/blink/renderer/core/css/parser/css_parser_impl.h
-@@ -159,11 +159,19 @@ class CORE_EXPORT CSSParserImpl {
+@@ -43,6 +43,7 @@ class StyleRuleKeyframe;
+ class StyleRuleKeyframes;
+ class StyleRuleMedia;
+ class StyleRuleNamespace;
++class StyleRuleNestedDeclarations;
+ class StyleRulePage;
+ class StyleRulePositionFallback;
+ class StyleRuleProperty;
+@@ -122,6 +123,13 @@ class CORE_EXPORT CSSParserImpl {
+   static bool ParseDeclarationList(MutableCSSPropertyValueSet*,
+                                    const String&,
+                                    const CSSParserContext*);
++  // This is used for parsing CSSNestedDeclarations from ParseRuleForInsert
++  // (CSSGroupingRule/CSSStyleRule.insertRule).
++  static StyleRuleBase* ParseNestedDeclarationsRule(
++      const CSSParserContext*,
++      CSSNestingType,
++      StyleRule* parent_rule_for_nesting,
++      const String&);
+   static StyleRuleBase* ParseRule(const String&,
+                                   const CSSParserContext*,
+                                   CSSNestingType,
+@@ -159,11 +167,19 @@ class CORE_EXPORT CSSParserImpl {
        wtf_size_t offset,
        const CSSParserContext*);
  
@@ -26,9 +48,11 @@ index c4ca914fffc56b86e4d6fe69c86a680f5468f74c..e028a86d722be5b3f7dcb341b2e0d3f3
  
    static bool RemoveImportantAnnotationIfPresent(CSSTokenizedValue&);
  
-@@ -250,6 +258,13 @@ class CORE_EXPORT CSSParserImpl {
+@@ -249,7 +265,15 @@ class CORE_EXPORT CSSParserImpl {
+       StyleRule::RuleType,
        CSSNestingType,
        StyleRule* parent_rule_for_nesting,
++      wtf_size_t nested_declarations_start_index,
        HeapVector<Member<StyleRuleBase>, 4>* child_rules);
 +
 +  void ConsumeRuleListOrNestedDeclarationList(
@@ -40,7 +64,7 @@ index c4ca914fffc56b86e4d6fe69c86a680f5468f74c..e028a86d722be5b3f7dcb341b2e0d3f3
    // If id is absl::nullopt, we're parsing a qualified style rule;
    // otherwise, we're parsing an at-rule.
    StyleRuleBase* ConsumeNestedRule(absl::optional<CSSAtRuleID> id,
-@@ -268,6 +283,11 @@ class CORE_EXPORT CSSParserImpl {
+@@ -268,6 +292,11 @@ class CORE_EXPORT CSSParserImpl {
                              bool important,
                              bool is_animation_tainted);
  
@@ -52,3 +76,35 @@ index c4ca914fffc56b86e4d6fe69c86a680f5468f74c..e028a86d722be5b3f7dcb341b2e0d3f3
    static std::unique_ptr<Vector<KeyframeOffset>> ConsumeKeyframeKeyList(
        const CSSParserContext*,
        CSSParserTokenRange);
+@@ -287,6 +316,31 @@ class CORE_EXPORT CSSParserImpl {
+   // https://github.com/w3c/csswg-drafts/issues/7850).
+   StyleRule* CreateImplicitNestedRule(StyleRule* parent_rule_for_nesting);
+ 
++  // Creates a rule (StyleRuleNestedDeclarations) to hold the declarations
++  // in the range [start_index, end_index) of parsed_properties_.
++  // The inner rule matches what the parent rule (`selector_list`) matches.
++  //
++  // CSSNestedDeclarations rules are emitted for "bare" declarations that
++  // appear after (or between) child rules of a style rule, and for the
++  // declarations directly within nested group rules (e.g. @media), so that
++  // they apply in source order.
++  // https://drafts.csswg.org/css-nesting-1/#nested-declarations-rule
++  StyleRuleNestedDeclarations* CreateNestedDeclarationsRule(
++      CSSNestingType,
++      const CSSSelector* selector_list,
++      wtf_size_t start_index,
++      wtf_size_t end_index);
++
++  // Creates a StyleRuleNestedDeclarations for the declarations in
++  // parsed_properties_ from `start_index` to the end, if any, appends it to
++  // `child_rules`, and removes those declarations from parsed_properties_.
++  // Does nothing if `start_index` is kNotFound.
++  void EmitNestedDeclarationsRuleIfNeeded(
++      CSSNestingType,
++      StyleRule* parent_rule_for_nesting,
++      wtf_size_t start_index,
++      HeapVector<Member<StyleRuleBase>, 4>& child_rules);
++
+   // FIXME: Can we build CSSPropertyValueSets directly?
+   HeapVector<CSSPropertyValue, 64> parsed_properties_;
+ 

@@ -1,8 +1,32 @@
 diff --git a/third_party/blink/renderer/core/inspector/inspector_style_sheet.cc b/third_party/blink/renderer/core/inspector/inspector_style_sheet.cc
-index 77ac1d9d0239232c29b706d580a4e897736e8b65..492b865f02dd426ff11b0797612a3a8f9ca251d7 100644
+index 77ac1d9d0239232c29b706d580a4e897736e8b65..40e7b07d33d40469d10177db73abc50aeb2273c0 100644
 --- a/third_party/blink/renderer/core/inspector/inspector_style_sheet.cc
 +++ b/third_party/blink/renderer/core/inspector/inspector_style_sheet.cc
-@@ -207,6 +207,20 @@ class StyleSheetHandler final : public CSSParserObserver {
+@@ -36,6 +36,7 @@
+ #include "third_party/blink/renderer/core/css/css_keyframes_rule.h"
+ #include "third_party/blink/renderer/core/css/css_layer_block_rule.h"
+ #include "third_party/blink/renderer/core/css/css_media_rule.h"
++#include "third_party/blink/renderer/core/css/css_nested_declarations_rule.h"
+ #include "third_party/blink/renderer/core/css/css_position_fallback_rule.h"
+ #include "third_party/blink/renderer/core/css/css_property_names.h"
+ #include "third_party/blink/renderer/core/css/css_property_value_set.h"
+@@ -68,6 +69,7 @@
+ #include "third_party/blink/renderer/core/svg/svg_style_element.h"
+ #include "third_party/blink/renderer/platform/bindings/exception_state.h"
+ #include "third_party/blink/renderer/platform/heap/garbage_collected.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+ #include "third_party/blink/renderer/platform/wtf/allocator/allocator.h"
+ #include "third_party/blink/renderer/platform/wtf/text/string_builder.h"
+ #include "third_party/blink/renderer/platform/wtf/text/text_position.h"
+@@ -193,6 +195,7 @@ class StyleSheetHandler final : public CSSParserObserver {
+                        bool is_parsed) override;
+   void ObserveComment(unsigned start_offset, unsigned end_offset) override;
+   void ObserveErroneousAtRule(unsigned start_offset, CSSAtRuleID id) override;
++  void ObserveNestedDeclarations(unsigned insert_rule_index) override;
+ 
+   void AddNewRuleToSourceTree(CSSRuleSourceData*);
+   CSSRuleSourceData* PopRuleData();
+@@ -207,6 +210,20 @@ class StyleSheetHandler final : public CSSParserObserver {
    CSSRuleSourceData* current_rule_data_;
    absl::optional<IssueReportingContext> issueReportingContext_;
    std::unique_ptr<LineEndings> line_endings_;
@@ -23,7 +47,29 @@ index 77ac1d9d0239232c29b706d580a4e897736e8b65..492b865f02dd426ff11b0797612a3a8f
  };
  
  void StyleSheetHandler::StartRuleHeader(StyleRule::RuleType type,
-@@ -259,6 +273,22 @@ void StyleSheetHandler::StartRuleBody(unsigned offset) {
+@@ -215,6 +232,21 @@ void StyleSheetHandler::StartRuleHeader(StyleRule::RuleType type,
+   if (current_rule_data_)
+     current_rule_data_stack_.pop_back();
+ 
++  if (RuntimeEnabledFeatures::CSSNestedDeclarationsEnabled() &&
++      !current_rule_data_stack_.empty() &&
++      current_rule_data_stack_.back()->type == StyleRule::RuleType::kStyle &&
++      current_rule_data_stack_.back()->rule_body_range.end == 0) {
++    unsigned end_of_last_declaration =
++        current_rule_data_stack_.back()->property_data.empty()
++            ? current_rule_data_stack_.back()->rule_body_range.start
++            : current_rule_data_stack_.back()->property_data.back().range.end;
++    // This is the first nested rule in this nesting context. We cut off the
++    // rule body here to not include inner rules in the outer rules body text.
++    // Following bare declarations are captured by CSSNestedDeclarations.
++    current_rule_data_stack_.back()->rule_body_range.end =
++        end_of_last_declaration;
++  }
++
+   CSSRuleSourceData* data = MakeGarbageCollected<CSSRuleSourceData>(type);
+   data->rule_header_range.start = offset;
+   current_rule_data_ = data;
+@@ -259,6 +291,22 @@ void StyleSheetHandler::StartRuleBody(unsigned offset) {
    if (parsed_text_[offset] == '{')
      ++offset;  // Skip the rule body opening brace.
    current_rule_data_stack_.back()->rule_body_range.start = offset;
@@ -46,20 +92,74 @@ index 77ac1d9d0239232c29b706d580a4e897736e8b65..492b865f02dd426ff11b0797612a3a8f
  }
  
  void StyleSheetHandler::EndRuleBody(unsigned offset) {
-@@ -291,6 +321,12 @@ void StyleSheetHandler::ObserveProperty(unsigned start_offset,
+@@ -268,7 +316,22 @@ void StyleSheetHandler::EndRuleBody(unsigned offset) {
+     current_rule_data_stack_.pop_back();
+   }
+   DCHECK(!current_rule_data_stack_.empty());
+-  current_rule_data_stack_.back()->rule_body_range.end = offset;
++  // See comment about non-empty property_data for rules with
++  // HasProperties()==false in ObserveProperty.
++  if (!current_rule_data_stack_.back()->HasProperties()) {
++    // It's possible for nested grouping rules to still hold some
++    // CSSPropertySourceData objects if only commented-out or invalid
++    // declarations were observed. There will be no ObserveNestedDeclarations
++    // call in that case.
++    current_rule_data_stack_.back()->property_data.clear();
++  }
++
++  // We ignore this event if we've already seen the start of a child rule,
++  // see StyleSheetHandler::StartRuleHeader.
++  if (!RuntimeEnabledFeatures::CSSNestedDeclarationsEnabled() ||
++      current_rule_data_stack_.back()->rule_body_range.end == 0) {
++    current_rule_data_stack_.back()->rule_body_range.end = offset;
++  }
+   AddNewRuleToSourceTree(PopRuleData());
+ }
+ 
+@@ -291,9 +354,40 @@ void StyleSheetHandler::ObserveProperty(unsigned start_offset,
                                          unsigned end_offset,
                                          bool is_important,
                                          bool is_parsed) {
+-  if (current_rule_data_stack_.empty() ||
+-      !current_rule_data_stack_.back()->HasProperties())
 +  // Pop off data for a previous invalid rule.
 +  if (current_rule_data_) {
 +    current_rule_data_ = nullptr;
 +    current_rule_data_stack_.pop_back();
 +  }
 +
-   if (current_rule_data_stack_.empty() ||
-       !current_rule_data_stack_.back()->HasProperties())
++  if (current_rule_data_stack_.empty()) {
      return;
-@@ -317,10 +353,22 @@ void StyleSheetHandler::ObserveProperty(unsigned start_offset,
++  }
++  if (!current_rule_data_stack_.back()->HasProperties()) {
++    if (!RuntimeEnabledFeatures::CSSNestedDeclarationsEnabled()) {
++      // We normally don't allow rules with HasProperties()==false to hold
++      // properties directly.
++      return;
++    }
++    // However, with CSSNestedDeclarations enabled, we *can* see ObserveProperty
++    // calls for nested group rules, e.g. @media.
++    //
++    // Example:
++    //
++    //  div {
++    //    @media (width > 100px) {
++    //      width: 100px;
++    //      height: 100px;
++    //    }
++    //  }
++    //
++    // Here, the declarations appear directly within @media, and they are
++    // reported as such through the CSSParserObserver. We therefore allow
++    // properties (CSSPropertySourceData objects) to exist temporarily
++    // on rules with HasProperties()==false, with the expectation that
++    // an ObserveNestedDeclarations call will come later and erase those
++    // properties again.
++  }
+ 
+   DCHECK_LE(end_offset, parsed_text_.length());
+   if (end_offset < parsed_text_.length() &&
+@@ -317,16 +411,33 @@ void StyleSheetHandler::ObserveProperty(unsigned start_offset,
    current_rule_data_stack_.back()->property_data.push_back(
        CSSPropertySourceData(name, value, is_important, false, is_parsed,
                              SourceRange(start_offset, end_offset)));
@@ -82,3 +182,134 @@ index 77ac1d9d0239232c29b706d580a4e897736e8b65..492b865f02dd426ff11b0797612a3a8f
    DCHECK_LE(end_offset, parsed_text_.length());
  
    if (current_rule_data_stack_.empty() ||
+-      !current_rule_data_stack_.back()->rule_header_range.end ||
+-      !current_rule_data_stack_.back()->HasProperties())
++      !current_rule_data_stack_.back()->rule_header_range.end) {
++    return;
++  }
++  if (!current_rule_data_stack_.back()->HasProperties() &&
++      !RuntimeEnabledFeatures::CSSNestedDeclarationsEnabled()) {
++    // See comment for similar check in ObserveProperty.
+     return;
++  }
+ 
+   // The lexer is not inside a property AND it is scanning a declaration-aware
+   // rule body.
+@@ -395,6 +506,62 @@ void StyleSheetHandler::ObserveErroneousAtRule(unsigned start_offset,
+   }
+ }
+ 
++// FlyWeb (level 130): CSSNestedDeclarations, as in Chromium 130 (3ae71aa0358).
++void StyleSheetHandler::ObserveNestedDeclarations(unsigned insert_rule_index) {
++  CHECK(!current_rule_data_stack_.empty());
++  CSSRuleSourceData* rule = current_rule_data_stack_.back().Get();
++  Vector<CSSPropertySourceData>& property_data = rule->property_data;
++  HeapVector<Member<CSSRuleSourceData>>& child_rules = rule->child_rules;
++
++  CHECK_LE(insert_rule_index, child_rules.size());
++
++  // We're going to insert a CSSRuleSourceData for the nested declarations
++  // rule at `insert_rule_index`. The rule that ends up immediately before
++  // that CSSRuleSourceData is the "preceding rule".
++  CSSRuleSourceData* preceding_rule =
++      (insert_rule_index > 0) ? child_rules[insert_rule_index - 1].Get()
++                              : nullptr;
++
++  // Traverse backwards until we see a declaration at the preceding rule,
++  // or earlier.
++  wtf_size_t first = property_data.size();
++  while (first > 0) {
++    const CSSPropertySourceData& prev = property_data[first - 1];
++    if (preceding_rule &&
++        (prev.range.start <= preceding_rule->rule_body_range.end)) {
++      break;
++    }
++    --first;
++  }
++
++  // Move the CSSPropertySourceData objects between preceding and following
++  // rules into a new CSSRuleSourceData object for the nested declarations.
++  // They should only exist in one place.
++  Vector<CSSPropertySourceData> nested_property_data;
++  for (wtf_size_t i = first; i < property_data.size(); ++i) {
++    nested_property_data.push_back(property_data[i]);
++  }
++  property_data.Shrink(first);
++
++  CHECK(!nested_property_data.empty());
++
++  // Note that the nested declarations rule has no prelude (i.e. no selector
++  // list), and no curly brackets surrounding its body. Therefore, the header
++  // range is empty, and exists at the same offset as the body-start.
++  auto* nested_declarations_rule =
++      MakeGarbageCollected<CSSRuleSourceData>(StyleRule::kStyle);
++  nested_declarations_rule->rule_header_range.start =
++      nested_property_data.front().range.start;
++  nested_declarations_rule->rule_header_range.end =
++      nested_property_data.front().range.start;
++  nested_declarations_rule->rule_body_range.start =
++      nested_property_data.front().range.start;
++  nested_declarations_rule->rule_body_range.end =
++      nested_property_data.back().range.end;
++  nested_declarations_rule->property_data = std::move(nested_property_data);
++  child_rules.insert(insert_rule_index, nested_declarations_rule);
++}
++
+ bool VerifyRuleText(Document* document, const String& rule_text) {
+   DEFINE_STATIC_LOCAL(String, bogus_property_name, ("-webkit-boguz-propertee"));
+   auto* style_sheet = MakeGarbageCollected<StyleSheetContents>(
+@@ -434,6 +601,25 @@ bool VerifyStyleText(Document* document, const String& text) {
+   return VerifyRuleText(document, "div {" + text + "}");
+ }
+ 
++bool VerifyNestedDeclarations(Document* document, const String& rule_text) {
++  auto* style_sheet = MakeGarbageCollected<StyleSheetContents>(
++      ParserContextForDocument(document));
++  CSSRuleSourceDataList* source_data =
++      MakeGarbageCollected<CSSRuleSourceDataList>();
++  String text = ".a { .b {} " + rule_text + " }";
++  StyleSheetHandler handler(text, document, source_data);
++  CSSParser::ParseSheetForInspector(ParserContextForDocument(document),
++                                    style_sheet, text, handler);
++
++  unsigned rule_count = source_data->size();
++  if (rule_count != 1 || source_data->at(0)->type != StyleRule::kStyle) {
++    return false;
++  }
++  const CSSRuleSourceData& property_data = *source_data->front();
++
++  return property_data.child_rules.size() == 2;
++}
++
+ bool VerifyKeyframeKeyText(Document* document, const String& key_text) {
+   auto* style_sheet = MakeGarbageCollected<StyleSheetContents>(
+       ParserContextForDocument(document));
+@@ -744,6 +930,10 @@ void CollectFlatRules(RuleList rule_list, CSSRuleVector* result) {
+         result->push_back(rule);
+         CollectFlatRules(AsCSSRuleList(rule), result);
+         break;
++      case CSSRule::kNestedDeclarationsRule:
++        result->push_back(
++            To<CSSNestedDeclarationsRule>(*rule).InnerCSSStyleRule());
++        break;
+       default:
+         break;
+     }
+@@ -1244,6 +1434,17 @@ CSSRule* InspectorStyleSheet::SetStyleText(const SourceRange& range,
+     return nullptr;
+   }
+ 
++  if (source_data->type == StyleRule::RuleType::kStyle &&
++      source_data->rule_header_range.length() == 0u &&
++      !VerifyNestedDeclarations(page_style_sheet_->OwnerDocument(), text)) {
++    exception_state.ThrowDOMException(
++        DOMExceptionCode::kSyntaxError,
++        "Style text would cause rule to disappear");
++    // TODO(crbug.com/361116768): This should work, but we're not yet
++    // equipped to handle rules that disappear.
++    return nullptr;
++  }
++
+   CSSRule* rule = RuleForSourceData(source_data);
+   if (!rule || !rule->parentStyleSheet() ||
+       (!IsA<CSSStyleRule>(rule) && !IsA<CSSKeyframeRule>(rule) &&

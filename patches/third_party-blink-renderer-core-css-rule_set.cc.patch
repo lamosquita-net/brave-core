@@ -1,8 +1,28 @@
 diff --git a/third_party/blink/renderer/core/css/rule_set.cc b/third_party/blink/renderer/core/css/rule_set.cc
-index 0f10a1f3aa6471fcae9e14cc5b59121cc3477a33..d277dee9d47301e9c39520299aaf444114c41236 100644
+index 0f10a1f3aa6471fcae9e14cc5b59121cc3477a33..48842fafb696b0f90c603151bc0005601136faad 100644
 --- a/third_party/blink/renderer/core/css/rule_set.cc
 +++ b/third_party/blink/renderer/core/css/rule_set.cc
-@@ -736,6 +736,9 @@ void RuleSet::AddRulesFromSheet(StyleSheetContents* sheet,
+@@ -43,6 +43,7 @@
+ #include "third_party/blink/renderer/core/css/selector_checker.h"
+ #include "third_party/blink/renderer/core/css/selector_filter.h"
+ #include "third_party/blink/renderer/core/css/style_rule_import.h"
++#include "third_party/blink/renderer/core/css/style_rule_nested_declarations.h"
+ #include "third_party/blink/renderer/core/css/style_sheet_contents.h"
+ #include "third_party/blink/renderer/core/html/shadow/shadow_element_names.h"
+ #include "third_party/blink/renderer/core/html/track/text_track_cue.h"
+@@ -703,6 +704,11 @@ void RuleSet::AddChildRules(const HeapVector<Member<StyleRuleBase>>& rules,
+       AddChildRules(starting_style_rule->ChildRules(), medium,
+                     add_rule_flags | kRuleIsStartingStyle, container_query,
+                     cascade_layer, style_scope);
++    } else if (auto* nested_declarations =
++                   DynamicTo<StyleRuleNestedDeclarations>(rule)) {
++      AddStyleRule(nested_declarations->InnerStyleRule(), medium,
++                   add_rule_flags, container_query, cascade_layer,
++                   style_scope);
+     }
+   }
+ }
+@@ -736,6 +742,9 @@ void RuleSet::AddRulesFromSheet(StyleSheetContents* sheet,
        sheet->ImportRules();
    for (unsigned i = 0; i < import_rules.size(); ++i) {
      StyleRuleImport* import_rule = import_rules[i].Get();

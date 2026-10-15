@@ -1,0 +1,21 @@
+diff --git a/third_party/blink/renderer/core/css/css_selector_list.cc b/third_party/blink/renderer/core/css/css_selector_list.cc
+index 1aeebb40c1b98aa5c8bcc4ae7fd46353cdd815f3..2e80146090437d416280118f5bcf6d5e4d8c4f3d 100644
+--- a/third_party/blink/renderer/core/css/css_selector_list.cc
++++ b/third_party/blink/renderer/core/css/css_selector_list.cc
+@@ -58,6 +58,16 @@ CSSSelectorList* CSSSelectorList::Copy() const {
+   return list;
+ }
+ 
++HeapVector<CSSSelector> CSSSelectorList::Copy(
++    const CSSSelector* selector_list) {
++  HeapVector<CSSSelector> selectors;
++  for (const CSSSelector* selector = selector_list; selector;
++       selector = selector->IsLastInSelectorList() ? nullptr : (selector + 1)) {
++    selectors.push_back(*selector);
++  }
++  return selectors;
++}
++
+ void CSSSelectorList::AdoptSelectorVector(
+     base::span<CSSSelector> selector_vector,
+     CSSSelector* selector_array) {

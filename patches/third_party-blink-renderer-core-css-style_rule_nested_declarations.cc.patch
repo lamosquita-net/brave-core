@@ -1,0 +1,26 @@
+diff --git a/third_party/blink/renderer/core/css/style_rule_nested_declarations.cc b/third_party/blink/renderer/core/css/style_rule_nested_declarations.cc
+new file mode 100644
+index 0000000000000000000000000000000000000000..10e4d4527fbe85c6031537a08f5632752b7e3cd1
+--- /dev/null
++++ b/third_party/blink/renderer/core/css/style_rule_nested_declarations.cc
+@@ -0,0 +1,20 @@
++// Copyright 2024 The Chromium Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "third_party/blink/renderer/core/css/style_rule_nested_declarations.h"
++
++#include "third_party/blink/renderer/core/css/css_property_value_set.h"
++#include "third_party/blink/renderer/core/css/css_selector_list.h"
++
++namespace blink {
++
++void StyleRuleNestedDeclarations::ReplaceSelectorList(
++    const CSSSelector* selector_list) {
++  HeapVector<CSSSelector> selectors = CSSSelectorList::Copy(selector_list);
++  style_rule_ = StyleRule::Create(
++      base::span<CSSSelector>{selectors.begin(), selectors.size()},
++      style_rule_->Properties().ImmutableCopyIfNeeded());
++}
++
++}  // namespace blink

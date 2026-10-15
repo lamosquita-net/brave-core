@@ -1,0 +1,22 @@
+diff --git a/third_party/blink/renderer/core/css/css_selector_list.h b/third_party/blink/renderer/core/css/css_selector_list.h
+index 93661a4f9bb57f776ef722e450cb7e0c85f23108..e0c730095e5f7ffaee103c8e44d1cf047ecec901 100644
+--- a/third_party/blink/renderer/core/css/css_selector_list.h
++++ b/third_party/blink/renderer/core/css/css_selector_list.h
+@@ -29,6 +29,7 @@
+ #include "base/types/pass_key.h"
+ #include "third_party/blink/renderer/core/core_export.h"
+ #include "third_party/blink/renderer/core/css/css_selector.h"
++#include "third_party/blink/renderer/platform/heap/collection_support/heap_vector.h"
+ #include "third_party/blink/renderer/platform/heap/garbage_collected.h"
+ 
+ namespace blink {
+@@ -85,6 +86,9 @@ class CORE_EXPORT CSSSelectorList : public GarbageCollected<CSSSelectorList> {
+                                   CSSSelector* selector_array);
+ 
+   CSSSelectorList* Copy() const;
++  // Copies the selectors of a flattened selector list (up to and including
++  // the one marked IsLastInSelectorList) into a vector.
++  static HeapVector<CSSSelector> Copy(const CSSSelector* selector_list);
+ 
+   bool IsValid() const {
+     return first_selector_[0].Match() != CSSSelector::kInvalidList;
