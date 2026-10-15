@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/css_selector.cc b/third_party/blink/renderer/core/css/css_selector.cc
-index afc7a7561a68eb74e9a9a69e4ccd77cd3ca96bc2..dc7ccd87f862dec9dc09c22f1415bd853482f4d4 100644
+index afc7a7561a68eb74e9a9a69e4ccd77cd3ca96bc2..6a5d4cd872df2f1d88b33f696f05dd98749e80af 100644
 --- a/third_party/blink/renderer/core/css/css_selector.cc
 +++ b/third_party/blink/renderer/core/css/css_selector.cc
 @@ -139,6 +139,10 @@ inline unsigned CSSSelector::SpecificityForOneSelector() const {
@@ -250,7 +250,15 @@ index afc7a7561a68eb74e9a9a69e4ccd77cd3ca96bc2..dc7ccd87f862dec9dc09c22f1415bd85
        case kPseudoHost:
        case kPseudoHostContext:
        case kPseudoAny:
-@@ -1060,13 +1130,29 @@ bool CSSSelector::SerializeSimpleSelector(StringBuilder& builder) const {
+@@ -1035,7 +1105,6 @@ bool CSSSelector::SerializeSimpleSelector(StringBuilder& builder) const {
+       case kPseudoWhere:
+         break;
+       case kPseudoParent:
+-        DCHECK(!is_implicitly_added_);
+         builder.Append('&');
+         break;
+       case kPseudoRelativeAnchor:
+@@ -1060,13 +1129,29 @@ bool CSSSelector::SerializeSimpleSelector(StringBuilder& builder) const {
          builder.Append(')');
          break;
        }
@@ -282,6 +290,22 @@ index afc7a7561a68eb74e9a9a69e4ccd77cd3ca96bc2..dc7ccd87f862dec9dc09c22f1415bd85
          builder.Append(')');
          break;
        }
+@@ -1169,11 +1254,12 @@ String CSSSelector::SelectorText() const {
+       next_compound = next_compound->NextSimpleSelector();
+     }
+ 
+-    // If we are combining with an implicit & or :scope, it is as if we
++    // If we are combining with an implicit :scope, it is as if we
+     // used a relative combinator.
++    // FlyWeb (level 130): an implicit & is serialized, as Chromium 124
++    // (eaf72aae1cf): `.a { .b {} }` gives `& .b`.
+     if (!next_compound || (next_compound->Match() == kPseudoClass &&
+-                           (next_compound->GetPseudoType() == kPseudoParent ||
+-                            next_compound->GetPseudoType() == kPseudoScope) &&
++                           next_compound->GetPseudoType() == kPseudoScope &&
+                            next_compound->is_implicitly_added_)) {
+       relation = ConvertRelationToRelative(relation);
+     }
 @@ -1401,16 +1487,30 @@ bool CSSSelector::IsTreeAbidingPseudoElement() const {
           (GetPseudoType() == kPseudoBefore || GetPseudoType() == kPseudoAfter ||
            GetPseudoType() == kPseudoMarker ||

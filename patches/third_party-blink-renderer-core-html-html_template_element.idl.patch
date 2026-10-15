@@ -1,8 +1,27 @@
 diff --git a/third_party/blink/renderer/core/html/html_template_element.idl b/third_party/blink/renderer/core/html/html_template_element.idl
-index 8f5ca1474c7182d1c80bca161d907aa00b26bbd5..405db3426de139aa90968181405324fdef65cf50 100644
+index 8f5ca1474c7182d1c80bca161d907aa00b26bbd5..63fd5b171bea069d761cc0dbd995b2a03c0f7d2b 100644
 --- a/third_party/blink/renderer/core/html/html_template_element.idl
 +++ b/third_party/blink/renderer/core/html/html_template_element.idl
-@@ -52,5 +52,8 @@
+@@ -35,22 +35,13 @@
+ ] interface HTMLTemplateElement : HTMLElement {
+     readonly attribute DocumentFragment content;
+ 
+-    // This is the shipped version of declarative shadow DOM - using the
+-    // 'shadowRoot' IDL attribute. However, discussions on the HTML spec PR
+-    // (https://github.com/whatwg/html/pull/5465) has changed this behavior.
+-    // This IDL will remain during the period during which we deprecate it.
+-    // This 'shadowRoot' attribute shadows Element.prototype.shadowRoot
+-    // without changing any behavior. The existence of this attribute
+-    // indicates support of Declarative Shadow DOM, so that this works:
+-    //   function supportsDeclarativeShadowDOM() {
+-    //     return HTMLTemplateElement.prototype.hasOwnProperty("shadowRoot");
+-    //   }
+-    // See https://github.com/mfreed7/declarative-shadow-dom/blob/master/README.md#feature-detection-and-polyfilling
+-    // for more detail.
+-    // TODO(crbug.com/1396384) Eventually remove this.
+-    [ImplementedAs=OpenShadowRoot] readonly attribute ShadowRoot? shadowRoot;
++    // FlyWeb (level 130): the old declarative shadow DOM `shadowRoot`
++    // attribute is gone, as Chromium 125 (398d899d13b).
  
      // This is the "new" declarative Shadow DOM IDL attribute, which reflects
      // the 'shadowrootmode' content attribute.
