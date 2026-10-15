@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/element_style_resources.cc b/third_party/blink/renderer/core/css/resolver/element_style_resources.cc
-index d018339055f2a02686043a1761beaf5212b6765a..13752b4602c5e55111844de72bc76e34fb3d70eb 100644
+index d018339055f2a02686043a1761beaf5212b6765a..c215920588592627ec2e23b10162817cbb8ba01a 100644
 --- a/third_party/blink/renderer/core/css/resolver/element_style_resources.cc
 +++ b/third_party/blink/renderer/core/css/resolver/element_style_resources.cc
 @@ -42,12 +42,15 @@
@@ -35,10 +35,17 @@ index d018339055f2a02686043a1761beaf5212b6765a..13752b4602c5e55111844de72bc76e34
    return property == CSSPropertyID::kBackdropFilter ||
           property == CSSPropertyID::kFilter;
  }
-@@ -280,6 +293,35 @@ static void LoadResourcesForFilter(
-   }
- }
- 
+@@ -275,8 +288,38 @@ static void LoadResourcesForFilter(
+       continue;
+     }
+     if (SVGResource* resource = reference_operation->Resource()) {
+-      resource->Load(document);
++      // Filters only load same-origin resources, as Chromium 131.
++      resource->Load(document, kCrossOriginAttributeNotSet);
++    }
++  }
++}
++
 +static SVGResource* GetSVGResourceOrNull(StyleSVGResource* style_resource) {
 +  return style_resource ? style_resource->Resource() : nullptr;
 +}
@@ -51,7 +58,7 @@ index d018339055f2a02686043a1761beaf5212b6765a..13752b4602c5e55111844de72bc76e34
 +      auto* reference_clip =
 +          DynamicTo<ReferenceClipPathOperation>(builder.MutableClipPath());
 +      return reference_clip ? reference_clip->Resource() : nullptr;
-+    }
+     }
 +    case CSSPropertyID::kFill:
 +      return GetSVGResourceOrNull(builder.FillPaint().Resource());
 +    case CSSPropertyID::kMarkerEnd:
@@ -65,13 +72,10 @@ index d018339055f2a02686043a1761beaf5212b6765a..13752b4602c5e55111844de72bc76e34
 +    default:
 +      NOTREACHED();
 +      return nullptr;
-+  }
-+}
-+
- void ElementStyleResources::LoadPendingSVGResources(
-     ComputedStyleBuilder& builder) {
-   Document& document = element_.GetDocument();
-@@ -292,6 +334,16 @@ void ElementStyleResources::LoadPendingSVGResources(
+   }
+ }
+ 
+@@ -292,6 +335,16 @@ void ElementStyleResources::LoadPendingSVGResources(
        case CSSPropertyID::kFilter:
          LoadResourcesForFilter(builder.MutableFilter().Operations(), document);
          break;
@@ -88,7 +92,7 @@ index d018339055f2a02686043a1761beaf5212b6765a..13752b4602c5e55111844de72bc76e34
        default:
          NOTREACHED();
      }
-@@ -305,6 +357,25 @@ static CSSValue* PendingCssValue(StyleImage* style_image) {
+@@ -305,6 +358,25 @@ static CSSValue* PendingCssValue(StyleImage* style_image) {
    return nullptr;
  }
  
@@ -114,7 +118,7 @@ index d018339055f2a02686043a1761beaf5212b6765a..13752b4602c5e55111844de72bc76e34
  void ElementStyleResources::LoadPendingImages(ComputedStyleBuilder& builder) {
    // We must loop over the properties and then look at the style to see if
    // a pending image exists, and only load that image. For example:
-@@ -401,13 +472,21 @@ void ElementStyleResources::LoadPendingImages(ComputedStyleBuilder& builder) {
+@@ -401,13 +473,21 @@ void ElementStyleResources::LoadPendingImages(ComputedStyleBuilder& builder) {
          }
          break;
        }

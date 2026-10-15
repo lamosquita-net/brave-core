@@ -1,0 +1,32 @@
+diff --git a/third_party/blink/renderer/core/svg/svg_resource.h b/third_party/blink/renderer/core/svg/svg_resource.h
+index ce312b391aa4038e7f154dced390471e74ded9f7..112ec6526dd985ab2ba446fca50a51b63b869630 100644
+--- a/third_party/blink/renderer/core/svg/svg_resource.h
++++ b/third_party/blink/renderer/core/svg/svg_resource.h
+@@ -7,6 +7,7 @@
+ 
+ #include "third_party/blink/renderer/platform/heap/collection_support/heap_hash_map.h"
+ #include "third_party/blink/renderer/platform/heap/garbage_collected.h"
++#include "third_party/blink/renderer/platform/loader/fetch/cross_origin_attribute_value.h"
+ #include "third_party/blink/renderer/platform/loader/fetch/resource_client.h"
+ #include "third_party/blink/renderer/platform/weborigin/kurl.h"
+ #include "third_party/blink/renderer/platform/wtf/text/atomic_string.h"
+@@ -65,7 +66,9 @@ class SVGResource : public GarbageCollected<SVGResource> {
+   SVGResource& operator=(const SVGResource&) = delete;
+   virtual ~SVGResource();
+ 
+-  virtual void Load(Document&) {}
++  // FlyWeb (level 131): the request mode, as Chromium 131: same-origin, or
++  // CORS with the given crossorigin value.
++  virtual void Load(Document&, CrossOriginAttributeValue) {}
+   virtual void LoadWithoutCSP(Document&) {}
+ 
+   Element* Target() const { return target_; }
+@@ -133,7 +136,7 @@ class ExternalSVGResource final : public SVGResource, public ResourceClient {
+  public:
+   explicit ExternalSVGResource(const KURL&);
+ 
+-  void Load(Document&) override;
++  void Load(Document&, CrossOriginAttributeValue) override;
+   void LoadWithoutCSP(Document&) override;
+ 
+   void Trace(Visitor*) const override;

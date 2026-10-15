@@ -1,0 +1,37 @@
+diff --git a/third_party/blink/renderer/core/svg/svg_resource_document_content.cc b/third_party/blink/renderer/core/svg/svg_resource_document_content.cc
+index 7889578fb0f8e58991f25e00a4a1cdb30f10f67c..7c75db4ad58da0979342aaade6b6f8ff28ebaf23 100644
+--- a/third_party/blink/renderer/core/svg/svg_resource_document_content.cc
++++ b/third_party/blink/renderer/core/svg/svg_resource_document_content.cc
+@@ -107,6 +107,19 @@ Document* CreateDocument(const TextResource* resource,
+   return document;
+ }
+ 
++bool AllowedRequestMode(const ResourceRequest& request) {
++  // Same-origin
++  if (request.GetMode() == network::mojom::blink::RequestMode::kSameOrigin) {
++    return true;
++  }
++  // CORS with same-origin credentials mode ("CORS anonymous").
++  if (request.GetMode() == network::mojom::blink::RequestMode::kCors) {
++    return request.GetCredentialsMode() ==
++           network::mojom::CredentialsMode::kSameOrigin;
++  }
++  return false;
++}
++
+ }  // namespace
+ 
+ Document* SVGResourceDocumentContent::GetDocument() {
+@@ -142,8 +155,10 @@ SVGResourceDocumentContent* SVGResourceDocumentContent::Fetch(
+     FetchParameters& params,
+     Document& document,
+     ResourceClient* client) {
+-  params.MutableResourceRequest().SetMode(
+-      network::mojom::blink::RequestMode::kSameOrigin);
++  // FlyWeb (level 131): as Chromium 131, callers set the request and
++  // credentials mode to something suitably restrictive; this avoids
++  // accidental creation of overly privileged (no-cors) requests.
++  CHECK(AllowedRequestMode(params.GetResourceRequest()));
+   DCHECK_EQ(params.GetResourceRequest().GetRequestContext(),
+             mojom::blink::RequestContextType::UNSPECIFIED);
+   params.SetRequestContext(mojom::blink::RequestContextType::IMAGE);

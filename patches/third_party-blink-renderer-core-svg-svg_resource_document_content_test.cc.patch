@@ -1,0 +1,13 @@
+diff --git a/third_party/blink/renderer/core/svg/svg_resource_document_content_test.cc b/third_party/blink/renderer/core/svg/svg_resource_document_content_test.cc
+index 97bdcb51bf8522c4ef33b635832ce410afff957c..33f2e4c8a2170989dd4ddf86961cd9415cc64917 100644
+--- a/third_party/blink/renderer/core/svg/svg_resource_document_content_test.cc
++++ b/third_party/blink/renderer/core/svg/svg_resource_document_content_test.cc
+@@ -28,6 +28,8 @@ TEST_F(SVGResourceDocumentContentTest, GetDocumentBeforeLoadComplete) {
+   ResourceLoaderOptions options(execution_context->GetCurrentWorld());
+   options.initiator_info.name = fetch_initiator_type_names::kCSS;
+   FetchParameters params(ResourceRequest(kSVGUrl), options);
++  params.MutableResourceRequest().SetMode(
++      network::mojom::blink::RequestMode::kSameOrigin);
+   auto* entry =
+       SVGResourceDocumentContent::Fetch(params, GetDocument(), nullptr);
+ 

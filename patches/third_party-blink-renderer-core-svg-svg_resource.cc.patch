@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/svg/svg_resource.cc b/third_party/blink/renderer/core/svg/svg_resource.cc
-index 55fa51bd9283532ebc31e219b60bd08b7087e2a6..581e8e84ec4189643814c02ba5c687fdd6e45f39 100644
+index 55fa51bd9283532ebc31e219b60bd08b7087e2a6..a9c2a1a946914e1d7e5d2e4fb983833d350f31b8 100644
 --- a/third_party/blink/renderer/core/svg/svg_resource.cc
 +++ b/third_party/blink/renderer/core/svg/svg_resource.cc
-@@ -40,7 +40,7 @@ void SVGResource::AddClient(SVGResourceClient& client) {
+@@ -5,6 +5,7 @@
+ #include "third_party/blink/renderer/core/svg/svg_resource.h"
+ 
+ #include "services/network/public/mojom/content_security_policy.mojom-blink.h"
++#include "services/network/public/mojom/fetch_api.mojom-blink.h"
+ #include "third_party/blink/renderer/core/dom/document.h"
+ #include "third_party/blink/renderer/core/dom/element.h"
+ #include "third_party/blink/renderer/core/dom/id_target_observer.h"
+@@ -40,7 +41,7 @@ void SVGResource::AddClient(SVGResourceClient& client) {
  
  void SVGResource::RemoveClient(SVGResourceClient& client) {
    auto it = clients_.find(&client);
@@ -11,3 +19,38 @@ index 55fa51bd9283532ebc31e219b60bd08b7087e2a6..581e8e84ec4189643814c02ba5c687fd
    it->value.count--;
    if (it->value.count)
      return;
+@@ -174,7 +175,8 @@ void LocalSVGResource::Trace(Visitor* visitor) const {
+ 
+ ExternalSVGResource::ExternalSVGResource(const KURL& url) : url_(url) {}
+ 
+-void ExternalSVGResource::Load(Document& document) {
++void ExternalSVGResource::Load(Document& document,
++                               CrossOriginAttributeValue cross_origin) {
+   if (document_content_)
+     return;
+   // Loading SVG resources should not trigger script, see
+@@ -185,6 +187,15 @@ void ExternalSVGResource::Load(Document& document) {
+   ResourceLoaderOptions options(execution_context->GetCurrentWorld());
+   options.initiator_info.name = fetch_initiator_type_names::kCSS;
+   FetchParameters params(ResourceRequest(url_), options);
++  // FlyWeb (level 131): as Chromium 131, same-origin unless a crossorigin
++  // value asks for CORS (SvgExternalResources uses anonymous).
++  if (cross_origin == kCrossOriginAttributeNotSet) {
++    params.MutableResourceRequest().SetMode(
++        network::mojom::blink::RequestMode::kSameOrigin);
++  } else {
++    params.SetCrossOriginAccessControl(execution_context->GetSecurityOrigin(),
++                                       cross_origin);
++  }
+   document_content_ = SVGResourceDocumentContent::Fetch(params, document, this);
+   target_ = ResolveTarget();
+ }
+@@ -202,6 +213,8 @@ void ExternalSVGResource::LoadWithoutCSP(Document& document) {
+   FetchParameters params(ResourceRequest(url_), options);
+   params.SetContentSecurityCheck(
+       network::mojom::blink::CSPDisposition::DO_NOT_CHECK);
++  params.MutableResourceRequest().SetMode(
++      network::mojom::blink::RequestMode::kSameOrigin);
+   document_content_ = SVGResourceDocumentContent::Fetch(params, document, this);
+   target_ = ResolveTarget();
+ }
