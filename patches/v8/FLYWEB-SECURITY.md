@@ -70,4 +70,17 @@ padding), `decommit_pooled_pages`; `wasm_deopt` and `wasm_inlining_call_indirect
 
 ## 6. Tests (cloud `d8`, Linux x64, V8 only; `FlyWeb/scripts/v8-d8.sh`)
 
-Pending.
+`d8` 13.1.201.22 with these 62 patches (and, for the `d8` only, without Brave's two `//brave` hooks), release with
+DCHECKs, clang of Chromium 116, libstdc++.
+
+- Build: with MOTOR-11's 63 patches V8 13.1 did not compile (`wasm_to_js_generic_wrapper` in the
+  `wasm-objects.cc` patch, §1); after dropping it, it builds.
+- Options by default (`--print-flag-values`): `--no-maglev`, `--no-maglev-untagged-phis`,
+  `--turboshaft-instruction-selection`, `--no-turboshaft-wasm`, `--wasm-generic-wrapper`, `--wasm-inlining`,
+  `--no-wasm-deopt`, `--regexp-simd`.
+- FlyWeb's regression tests (`FlyWeb/tools/v8-pruebas/`): **8/8**.
+- **mjsunit 7279/7280** (default variant). The 1 is `maglev/extras-cped` (asserts Maglev code), as in 1.13 and 1.14.
+  The test changes of f6961c40 (lower `kMaxArguments`) were applied first, now including
+  `turboshaft/maglev-frontend/regress-359266991` (test-only).
+- `mjsunit/wasm/*` with `--stress-wasm-code-gc --wasm-code-gc` (v8 924c1a79 in its new place): **394/394**.
+- Not covered by the `d8`: Intl (no ICU) and Chromium 116's libc++. **Not compiled in FlyWeb**: LOCAL builds it.
