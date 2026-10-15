@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style_extra_fields.json5 b/third_party/blink/renderer/core/style/computed_style_extra_fields.json5
-index 5d611726e760c578349055b26a448c0ff09c86b1..579b2eedc8158e488a0513f839d8f6516fea7f5f 100644
+index 5d611726e760c578349055b26a448c0ff09c86b1..b3fc9a9ceb46e78ba593e98d179a28716dcea792 100644
 --- a/third_party/blink/renderer/core/style/computed_style_extra_fields.json5
 +++ b/third_party/blink/renderer/core/style/computed_style_extra_fields.json5
 @@ -45,8 +45,9 @@
@@ -26,7 +26,26 @@ index 5d611726e760c578349055b26a448c0ff09c86b1..579b2eedc8158e488a0513f839d8f651
        ],
        default_value: "inline",
      },
-@@ -951,6 +953,12 @@
+@@ -503,6 +505,18 @@
+       default_value: "FillLayer(EFillLayerType::kMask, true)",
+       computed_style_custom_functions: ["getter", "setter"],
+     },
++    {
++      // See style_ua_shadow_host_data.h. FlyWeb (Chromium 131): only <meter>
++      // uses it (02492b88a85's <img> fallback rework is not ported).
++      name: "UAShadowHostData",
++      inherited: true,
++      field_group: "*",
++      field_template: "pointer",
++      type_name: "StyleUAShadowHostData",
++      include_paths: ["third_party/blink/renderer/core/style/style_ua_shadow_host_data.h"],
++      default_value: "nullptr",
++      wrapper_pointer_name: "std::unique_ptr",
++    },
+     {
+       name: "CounterDirectives",
+       field_template: "external",
+@@ -951,6 +965,12 @@
        default_value: "false",
        custom_compare: true,
      },

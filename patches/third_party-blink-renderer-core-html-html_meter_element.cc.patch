@@ -1,0 +1,67 @@
+diff --git a/third_party/blink/renderer/core/html/html_meter_element.cc b/third_party/blink/renderer/core/html/html_meter_element.cc
+index ed2eee3379a991c7309b3d8be2502c4817ac579a..cea05cc032baf4399259c809085d8c941ab6a5d0 100644
+--- a/third_party/blink/renderer/core/html/html_meter_element.cc
++++ b/third_party/blink/renderer/core/html/html_meter_element.cc
+@@ -30,16 +30,22 @@
+ #include "third_party/blink/renderer/core/html/shadow/shadow_element_names.h"
+ #include "third_party/blink/renderer/core/html_names.h"
+ #include "third_party/blink/renderer/core/style/computed_style.h"
++#include "third_party/blink/renderer/core/style/style_ua_shadow_host_data.h"
+ #include "third_party/blink/renderer/platform/bindings/exception_state.h"
+ #include "third_party/blink/renderer/platform/heap/garbage_collected.h"
+ #include "third_party/blink/renderer/platform/instrumentation/use_counter.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+ #include "ui/base/ui_base_features.h"
++#include "ui/gfx/geometry/size_f.h"
+ 
+ namespace blink {
+ 
+ HTMLMeterElement::HTMLMeterElement(Document& document)
+     : HTMLElement(html_names::kMeterTag, document) {
+   UseCounter::Count(document, WebFeature::kMeterElement);
++  // FlyWeb (Chromium 131): AdjustStyle() passes the host appearance to the
++  // UA shadow tree (StyleUAShadowHostData).
++  SetHasCustomStyleCallbacks();
+   EnsureUserAgentShadowRoot();
+ }
+ 
+@@ -189,10 +195,12 @@ void HTMLMeterElement::DidAddUserAgentShadowRoot(ShadowRoot& root) {
+ 
+   inner->AppendChild(bar);
+ 
+-  auto* fallback = MakeGarbageCollected<MeterShadowElement>(GetDocument());
+-  fallback->AppendChild(MakeGarbageCollected<HTMLSlotElement>(GetDocument()));
+-  fallback->SetShadowPseudoId(AtomicString("-internal-fallback"));
+-  root.AppendChild(fallback);
++  if (!RuntimeEnabledFeatures::MeterAppearanceNoneFallbackStyleEnabled()) {
++    auto* fallback = MakeGarbageCollected<MeterShadowElement>(GetDocument());
++    fallback->AppendChild(MakeGarbageCollected<HTMLSlotElement>(GetDocument()));
++    fallback->SetShadowPseudoId(AtomicString("-internal-fallback"));
++    root.AppendChild(fallback);
++  }
+ }
+ 
+ void HTMLMeterElement::UpdateValueAppearance(double percentage) {
+@@ -231,6 +239,22 @@ bool HTMLMeterElement::CanContainRangeEndPoint() const {
+   return GetComputedStyle() && !GetComputedStyle()->HasEffectiveAppearance();
+ }
+ 
++void HTMLMeterElement::AdjustStyle(ComputedStyleBuilder& builder) {
++  // Descendants of the <meter> UA shadow host use
++  // a -internal-shadow-host-has-appearance selector which depends on
++  // the computed value of the host's 'appearance'.
++  // This information is propagated via StyleUAShadowHostData to ensure
++  // invalidation of those descendants when the appearance changes.
++
++  builder.SetUAShadowHostData(std::make_unique<StyleUAShadowHostData>(
++      /* width */ Length(),
++      /* height */ Length(),
++      StyleAspectRatio(EAspectRatioType::kAuto, gfx::SizeF()),
++      /* alt_text */ g_null_atom,
++      /* alt_attr */ g_null_atom,
++      /* src_attr */ g_null_atom, builder.HasEffectiveAppearance()));
++}
++
+ void HTMLMeterElement::Trace(Visitor* visitor) const {
+   visitor->Trace(value_);
+   HTMLElement::Trace(visitor);
