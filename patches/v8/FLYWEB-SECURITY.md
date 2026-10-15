@@ -1,111 +1,68 @@
-# FlyWeb: V8 13.0.245.25 (Chrome 130, no LTS) and its security backports
+# FlyWeb: V8 13.1.201.22 (Chrome 131, no LTS) and its security backports
 
-Since engine level 118 each level carries the V8 of Chrome N (FM.5). This branch uses V8 **13.0.245.25** (3551594a,
-`FlyWeb/v8-revision`: the head of the 13.0 branch, merges up to 06-01-2025; the V8 of Chromium 130.0.6723.192 DEPS),
-on top of MOTOR-10's `nube/motor-130` a7b5f3f4 (V8 step: patches rebased, gin option B, fast_float).
-SEGURIDAD-PORTES-3, 15-10-2026 (task FS.14), for **FlyWeb 1.14**.
+Since engine level 118 each level carries the V8 of Chrome N (FM.5). This branch uses V8 **13.1.201.22** (9c09e787,
+`FlyWeb/v8-revision`: the head of the 13.1 branch and the V8 of Chromium 131.0.6778.265), on top of MOTOR-11's
+`nube/motor-131` 9b19e7dafc (V8 step: patches rebased with v8re.sh, two Blink API adaptations).
+SEGURIDAD-PORTES-3, 15-10-2026 (task FS.18), for **FlyWeb 1.15**.
 
-**Rule (COORDINACIÓN): 1.14 does not ship with fewer V8 fixes than 1.13** (`seg/v8-12.9` 2ffa1017, epoch 13).
-Everything below was compared on a clean 13.0.245.25 (`git apply`, `-R`, by hand).
+**Rule (COORDINACIÓN): 1.15 does not ship with fewer V8 fixes than 1.14** (`seg/v8-13.0` d6b66b7994, epoch 15).
+Everything below was compared on a clean 13.1.201.22 (`git apply`, `-R`, by hand).
 
-## 1. FlyWeb 1.13's patches (`seg/v8-12.9`), carried over
+## 1. FlyWeb 1.14's patches (`seg/v8-13.0`), carried over
 
-All 71 accounted for (MOTOR-10's rebase in a7b5f3f4, reviewed here):
+All 68 accounted for (MOTOR-11's rebase, reviewed here):
 
-- **61 apply** on a clean 13.0.245.25.
-- **10 dropped as already in 13.0**: `wasm-compiler.cc`, `maglev-phi-representation-selector.cc`, `map-inl.h`,
-  `map.h`, `runtime-wasm.cc`, `liftoff-assembler-{arm,x64}-inl.h`, `wasm-js.cc` (the whole diff reverses cleanly);
-  `builtins-object-gen.cc` (357d0dd4, crbug 383647255: 13.0 has the identical properties-or-hash check) and
-  `wasm/wrappers.cc` (`kNoExtern`/`kNoExn` already in the slow path; only the `wasm::` qualifier differs) were
-  checked by hand.
-- **4 conflicts resolved by MOTOR-10**, checked: `ic.cc` (bc67262 is in 13.0, at lines 3280 and 3557; 279d28029
-  kept), `js-to-wasm.tq` and `js-call-reducer.cc` (the a7c018806 parts are in 13.0; 34587b687's `check`s and
-  d3577087 + 9209292e kept), `builtins-wasm-gen.cc` (moved builtin, same body).
-- a7c018806, 153d4e84e, bc67262 and 357d0dd4 are ancestors of 13.0.245.25. 94e495e1d (`wasm-objects.cc`),
-  34587b687 (`js-to-wasm.tq`), fc26d62d0 (instruction-selection phase) and 279d28029 (`ic.cc`) are carried.
+- **63 apply** on a clean 13.1.201.22.
+- **3 dropped as already in 13.1** (the whole diff reverses cleanly): `ast/scopes.h`, `heap/incremental-marking.cc`,
+  `parsing/parser-base.h`.
+- **2 moved**: `wasm/module-compiler.cc` and `wasm/module-instantiate.cc` only carried 1.14's adaptation of v8
+  924c1a79 (crbug 391907159). 13.1 compiles import wrappers in `WasmImportWrapperCache::CompileWasmImportCallWrapper`,
+  as 13.2 does, so the check now sits where upstream's 924c1a79 puts it; the other `MaybeGet()` + `AddWrapper()`
+  callers (C API, `wasm-objects.cc`, `runtime-wasm.cc`) get `nullptr` for a dying wrapper and compile a new one, also
+  as upstream. Checked: `wasm-code-manager.h` and `wasm-engine.h` reverse cleanly; `wasm-engine.cc` is upstream's
+  except the size checks (`WasmEngine` 800 − 40 = 760, `IsolateInfo` 168 as in 13.1). Still not ported: the `SBXCHECK`
+  in `WasmDispatchTable::SetForImport`, which in 13.1 takes a `WasmCodePointer`.
+- **Resolved by MOTOR-11, checked:** `loop-unrolling-reducer.h` is now upstream's 2e96808d as in 13.2 (all its added
+  lines present).
 
-## 2. Fixes after 13.0.245.25
+## 2. Fixes after 13.1.201.22
 
-13.0.245.25 is the head of its branch. The 72 merges of 13.1.201.22 and 13.2.152.56 (M132 LTS, the last tag), one
-by one against 13.0 **with FlyWeb's patches applied**: 26 already in, 11 apply, 35 conflict.
+13.1.201.22 is the head of its branch (all 13.1 merges included). The merges of 13.2.152.56 (M132 LTS, the last tag),
+one by one against 13.1 **with FlyWeb's patches applied**: 20 already in, the rest:
 
-**New in this branch:**
+- **Already in FlyWeb, adapted** (only tracing, test-runtime functions or `DCHECK`s of the upstream diff are
+  missing): 8834c16a, ca504d09, 2e96808d, 42421010, 20c1b8e9, 5cf18d03, 80600881, 91343bb4 (crbug 390743124),
+  924c1a79 (crbug 391907159).
+- **Canonical types** (92ed656a, aad03217, 66e97ace, 3fdedec4): 13.1 introduced the relative-index canonicalization
+  these fix, and its own branch already carries the same fixes (7615ae1b, 77b73180, a4a402d3, 0e98fadd are ancestors
+  of 13.1.201.22).
+- **Big WeakMaps** (60092919 reverts b63f8324, main #96798): 13.1 branched at main #96554, before the reland; its
+  `FindKeyIndex` has no `Coefficient`. Not applicable.
+- **Not applicable with FlyWeb's options:** Maglev (off): 45d40ca2, 97e828af, e5a3e62a, 8131c09b, be40691f, b6f6f8eb,
+  d52cf43e, 42889d58. Turboshaft-Wasm (off by default in 13.1): b6d3d1e9, 52f0e1b2, d0e4805f, 72d0b3a6. JSPI central
+  stack (d6e86387, 86e6857f), `wasm_tier_mask_for_testing` (2603ba09), ARM64 (385d92ca, 53176fd5), LoongArch/MIPS
+  (65a1429d).
 
-- **v8 924c1a79** (crbug 391907159, M132-LTS): replace the `dead_code_` set with an `is_dying` bit, and never hand
-  out a dying wrapper from the import wrapper cache. 13.0's wrapper cache is process-wide (12.9's was per module, so
-  1.13 is not affected): a wrapper that became potentially dead could be revived from the cache and, once in
-  `dead_code_`, be freed when its count dropped again without a stack scan (use after free). 13.0 has no
-  `CompileWasmImportCallWrapper`; the check is in `MaybeGet()`, the fallback compile in `module-instantiate.cc` and
-  `CompileImportWrapperForTest`. Not ported: the `SBXCHECK` in `WasmDispatchTable::SetForImport`, which in 13.0
-  takes a call target, not a `WasmCode*`.
-- **v8 91343bb4** (crbug 390743124, M132-LTS): TurboFan escape analysis must not elide objects holding a
-  `TrustedHeapConstant` (`AllocationBuilder` stores them since 12.9; mixed with ordinary `HeapConstant`s in a Phi
-  they were mis-tagged by decompression elimination: memory corruption). **Also missing in 1.13** (12.9 has the
-  same `allocation-builder.h`; 12.8 does not): reported to COORDINACIÓN on 15-10.
+## 3. Embedder API between 13.0 and 13.1 (MOTOR-11)
 
-**Already in FlyWeb, adapted** (only tracing, test-runtime functions or `DCHECK`s of the upstream diff are
-missing): 8834c16a, ca504d09, 2e96808d, 42421010, 20c1b8e9, 5cf18d03, 80600881.
-
-**Not applicable** with FlyWeb's options and 13.0's code:
-
-- Maglev (off): 14bbcf10/d52cf43e, a4912252/9fed86ea, 45d40ca2, 97e828af, e5a3e62a, 8131c09b, be40691f, b6f6f8eb,
-  42889d58.
-- Turboshaft-Wasm (off by default in 13.0): WasmGCTypeAnalyzer 576543f8/52f0e1b2, `array.fill`/`array.new`
-  b6d3d1e9, `call_indirect` inlining d0e4805f/72d0b3a6, `wasm_deopt` 39db300e.
-- Canonical types (7615ae1b/92ed656a, 77b73180/aad03217, a4a402d3/66e97ace, 0e98fadd/3fdedec4): 13.0 still
-  compares whole `TypeDefinition`s with `is_relative_supertype`, as 12.9.
-- Not in 13.0: the global ATOM regexp cache (33a0366d), big WeakMaps (60092919 reverts them).
-- 53ad46b4: 13.0 already bails out when the implicit argument is not a `WasmTrustedInstanceData`
-  (`js-call-reducer.cc:3841`).
-- Central-stack switching for JSPI (d6e86387, 86e6857f), `wasm_tier_mask_for_testing` (2603ba09), ARM64/BTI,
-  big-endian, LoongArch/MIPS, gcc, `d8` (97f474b2).
-
-## 3. Embedder API between 12.9 and 13.0
-
-`git diff 12.9.202.28 13.0.245.25 -- include/` (+409/−204):
-
-- `v8::Platform::GetForegroundTaskRunner(Isolate*, TaskPriority)` is now the pure virtual; MOTOR-10 overrides it
-  in gin and returns the same task runner for every priority (option B of FM.20, never `nullptr`). Checked.
-  `cppgc::Platform` gains a priority overload with a default; no subclass in the 116.
-- No change to external-pointer or sandbox tags, `Internals` constants, fast API callbacks or
-  `ExceptionPropagationCallback`. `TracedReference`, `MemorySpan` and `WrappedIterator`: types and C++20
-  operators only.
-- `AllowCodeGenerationFromStringsCallback` removed (unused by the 116), `Isolate::ReportExternalAllocationLimitReached`
-  renamed (not called by Blink), `Module::InstantiateModule` gains an optional source-phase callback,
-  `PageAllocator::SealPages` (virtual, default `false`).
+`include/` +186/−41. `Isolate::kImportAssertionDeprecatedSyntax` becomes `kOBSOLETE_…` (case removed from Blink's
+use counter); `ModuleRequest::GetImportAssertions()` is deprecated and Blink's `module_record.cc` now calls
+`GetImportAttributes()`, as Chromium 131 (the deprecated one only forwarded). No change to sandbox tags, `Internals`
+constants, fast API callbacks or the platform; gin untouched. The inspector protocol changes `Debugger.DebugSymbols`
+(Wasm debugging in the 116's DevTools only).
 
 ## 4. Options
 
-Unchanged from 1.13: `maglev` and `maglev_untagged_phis` off (to decide at level 132), `turboshaft_wasm` off (as
-upstream in 13.0), `turboshaft_instruction_selection` and `wasm_to_js_generic_wrapper` on.
-
-New defaults in 13.0 that touch code generation, all upstream's, none turns on a new optimizing tier:
-
-- `regexp_simd` = true: SIMD in irregexp's `SkipUntilBitInTable`, only with SSSE3; AVX encodings only if the CPU has
-  AVX (the MacPro5,1 has SSSE3/SSE4.2 and no AVX). To be checked on the 5,1 by LOCAL.
-- `turboshaft_csa` = true: builtins are generated with Turboshaft at build time (mksnapshot), not at run time.
-- `turbo_inline_js_wasm_calls` stays true; `turboshaft_wasm_in_js_inlining` is experimental (off).
+Unchanged from 1.14: `maglev` and `maglev_untagged_phis` off (to decide at level 132), `turboshaft_wasm` off (as
+upstream in 13.1), `turboshaft_instruction_selection` on. `wasm_to_js_generic_wrapper` is gone in 13.1 (the generic
+wrapper is always used, as FlyWeb already had it). Renamed, same value: `experimental_wasm_inlining` → `wasm_inlining`
+(on, as in 1.13 and 1.14). New defaults from upstream, none a new tier: `intel_jcc_erratum_mitigation` (code
+padding), `decommit_pooled_pages`; `wasm_deopt` and `wasm_inlining_call_indirect` stay off.
 
 ## 5. Cache epoch
 
-`kFlyWebCacheEpoch` **15** (13 is `seg/v8-12.9`; 14 was reserved and never shipped).
+`kFlyWebCacheEpoch` **16** (15 is `seg/v8-13.0`).
 
 ## 6. Tests (cloud `d8`, Linux x64, V8 only; `FlyWeb/scripts/v8-d8.sh`)
 
-`d8` 13.0.245.25 with these 68 patches (and, for the `d8` only, without Brave's two `//brave` hooks), release with
-DCHECKs, clang of Chromium 116, libstdc++.
-
-- Options by default (`--print-flag-values`): `--no-maglev`, `--no-maglev-untagged-phis`,
-  `--turboshaft-instruction-selection`, `--wasm-to-js-generic-wrapper`, `--no-turboshaft-wasm`, `--regexp-simd`.
-- FlyWeb's regression tests (`FlyWeb/tools/v8-pruebas/`): **8/8** (`regress-543557673` run by hand with
-  `--sandbox-testing`: passes; the `munmap` check at exit is the container's, as in 1.13).
-- **mjsunit 7241/7242** (default variant). The 1 is `maglev/extras-cped` (asserts Maglev code), as in 1.13. Three
-  more failed until the test changes of f6961c40 (lower `kMaxArguments`, carried since 1.8) were applied to
-  `regress-11491`, `regress-crbug-724153` and `regress-v8-6716`, as Google did in the same commit (test-only).
-- v8 924c1a79 has no upstream regression test (cctest only); `mjsunit/wasm/*` with `--stress-wasm-code-gc
-  --wasm-code-gc`: **390/390**. v8 91343bb4 has no regression test upstream either; covered by mjsunit's compiler
-  and escape-analysis tests above. No proof-of-concept was written for either.
-- `regexp_simd`: `FlyWeb/tools/regexp-130.html` (softmac) gives the same results as a plain-JS matcher with
-  `--regexp-simd` and `--no-regexp-simd`; `--trace-regexp-assembler` shows `[qz]` and `[a-f][0-9][x-z]` take the
-  SIMD skip (`advance_by=1`). For the MacPro5,1 (no AVX): Titín, with the 1.14 Release.
-- Not covered by the `d8`: Intl (no ICU) and Chromium 116's libc++. **Not compiled in FlyWeb**: LOCAL builds it.
+Pending.
