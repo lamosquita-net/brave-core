@@ -1,0 +1,25 @@
+diff --git a/third_party/blink/renderer/core/frame/visual_viewport.cc b/third_party/blink/renderer/core/frame/visual_viewport.cc
+index 9ae5c74f68b815b91993305996b33e829916d185..769d7ac7f03e5d0501facc81419fd24d9bddf3b4 100644
+--- a/third_party/blink/renderer/core/frame/visual_viewport.cc
++++ b/third_party/blink/renderer/core/frame/visual_viewport.cc
+@@ -783,11 +783,15 @@ PhysicalRect VisualViewport::ScrollIntoView(
+ 
+   if (new_scroll_offset != GetScrollOffset()) {
+     if (params->is_for_scroll_sequence) {
+-      DCHECK(params->type == mojom::blink::ScrollType::kProgrammatic ||
+-             params->type == mojom::blink::ScrollType::kUser);
+-      CHECK(GetSmoothScrollSequencer());
+-      GetSmoothScrollSequencer()->QueueAnimation(this, new_scroll_offset,
+-                                                 params->behavior);
++      if (RuntimeEnabledFeatures::MultiSmoothScrollIntoViewEnabled()) {
++        SetScrollOffset(new_scroll_offset, params->type, params->behavior);
++      } else {
++        DCHECK(params->type == mojom::blink::ScrollType::kProgrammatic ||
++               params->type == mojom::blink::ScrollType::kUser);
++        CHECK(GetSmoothScrollSequencer());
++        GetSmoothScrollSequencer()->QueueAnimation(this, new_scroll_offset,
++                                                   params->behavior);
++      }
+     } else {
+       SetScrollOffset(new_scroll_offset, params->type, params->behavior,
+                       ScrollCallback());

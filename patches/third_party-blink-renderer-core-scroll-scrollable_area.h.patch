@@ -1,0 +1,45 @@
+diff --git a/third_party/blink/renderer/core/scroll/scrollable_area.h b/third_party/blink/renderer/core/scroll/scrollable_area.h
+index 5aec9c4f5285c2e0efcce120b98c744b5e998832..20ca2d17b619bdb6625684904b8d4a683b9820bd 100644
+--- a/third_party/blink/renderer/core/scroll/scrollable_area.h
++++ b/third_party/blink/renderer/core/scroll/scrollable_area.h
+@@ -624,11 +624,30 @@ class CORE_EXPORT ScrollableArea : public GarbageCollectedMixin {
+ 
+   void SetScrollbarsHiddenIfOverlayInternal(bool);
+ 
+-  void ProgrammaticScrollHelper(const ScrollOffset&,
++  // Returns false if the scroll was a no-op (FlyWeb: the bool return value
++  // comes from Chromium 621af243570, for MultiSmoothScrollIntoView).
++  bool ProgrammaticScrollHelper(const ScrollOffset&,
+                                 mojom::blink::ScrollBehavior,
+                                 bool is_sequenced_scroll,
+                                 gfx::Vector2d animation_adjustment,
+                                 ScrollCallback on_finish);
++  bool ShouldFilterIncomingScroll(mojom::blink::ScrollType incoming_type) {
++    auto old_type = active_smooth_scroll_type_;
++
++    // Allow the incoming scroll to co-exist if its scroll type is
++    // kClamping, or kAnchoring.
++    if (incoming_type == mojom::blink::ScrollType::kClamping ||
++        incoming_type == mojom::blink::ScrollType::kAnchoring) {
++      return false;
++    }
++    // If the current smooth scroll is UserScroll, but the incoming scroll is
++    // not, filter the incoming scroll. See crbug.com/913009 for more details.
++    if (old_type == mojom::blink::ScrollType::kUser &&
++        incoming_type != mojom::blink::ScrollType::kUser) {
++      return true;
++    }
++    return false;
++  }
+   void UserScrollHelper(const ScrollOffset&, mojom::blink::ScrollBehavior);
+ 
+   void FadeOverlayScrollbarsTimerFired(TimerBase*);
+@@ -685,6 +704,8 @@ class CORE_EXPORT ScrollableArea : public GarbageCollectedMixin {
+   unsigned mouse_over_scrollbar_ : 1;
+   unsigned has_been_disposed_ : 1;
+ 
++  absl::optional<mojom::blink::ScrollType> active_smooth_scroll_type_;
++
+   scoped_refptr<base::SingleThreadTaskRunner> compositor_task_runner_;
+ };
+ 

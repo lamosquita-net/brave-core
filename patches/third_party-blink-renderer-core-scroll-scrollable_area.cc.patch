@@ -1,0 +1,110 @@
+diff --git a/third_party/blink/renderer/core/scroll/scrollable_area.cc b/third_party/blink/renderer/core/scroll/scrollable_area.cc
+index 10d5bbfc367fd8d65d671426d7d45060d31540f6..113437091f0f03f203da7019fa4b1e48d6fffeb1 100644
+--- a/third_party/blink/renderer/core/scroll/scrollable_area.cc
++++ b/third_party/blink/renderer/core/scroll/scrollable_area.cc
+@@ -60,6 +60,7 @@
+ #include "third_party/blink/renderer/platform/graphics/color.h"
+ #include "third_party/blink/renderer/platform/graphics/compositing/paint_artifact_compositor.h"
+ #include "third_party/blink/renderer/platform/instrumentation/tracing/trace_event.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+ #include "third_party/blink/renderer/platform/scheduler/public/thread_scheduler.h"
+ #include "third_party/blink/renderer/platform/timer.h"
+ #include "ui/gfx/geometry/vector2d_conversions.h"
+@@ -304,12 +305,19 @@ void ScrollableArea::SetScrollOffset(const ScrollOffset& offset,
+       },
+       WrapWeakPersistent(this)));
+ 
++  bool filter_scroll = false;
+   if (SmoothScrollSequencer* sequencer = GetSmoothScrollSequencer()) {
+-    if (sequencer->FilterNewScrollOrAbortCurrent(scroll_type)) {
+-      std::move(run_scroll_complete_callbacks)
+-          .Run(ScrollCompletionMode::kFinished);
+-      return;
+-    }
++    DCHECK(!RuntimeEnabledFeatures::MultiSmoothScrollIntoViewEnabled());
++    filter_scroll = sequencer->FilterNewScrollOrAbortCurrent(scroll_type);
++  } else if (active_smooth_scroll_type_.has_value()) {
++    DCHECK(RuntimeEnabledFeatures::MultiSmoothScrollIntoViewEnabled());
++    filter_scroll = ShouldFilterIncomingScroll(scroll_type);
++  }
++
++  if (filter_scroll) {
++    std::move(run_scroll_complete_callbacks)
++        .Run(ScrollCompletionMode::kFinished);
++    return;
+   }
+ 
+   ScrollOffset previous_offset = GetScrollOffset();
+@@ -366,10 +374,15 @@ void ScrollableArea::SetScrollOffset(const ScrollOffset& offset,
+       GetScrollAnimator().AdjustAnimation(animation_adjustment);
+       break;
+     case mojom::blink::ScrollType::kProgrammatic:
+-      ProgrammaticScrollHelper(clamped_offset, behavior,
+-                               /* is_sequenced_scroll */ false,
+-                               animation_adjustment,
+-                               std::move(run_scroll_complete_callbacks));
++      if (ProgrammaticScrollHelper(clamped_offset, behavior,
++                                   /* is_sequenced_scroll */ false,
++                                   animation_adjustment,
++                                   std::move(run_scroll_complete_callbacks))) {
++        if (RuntimeEnabledFeatures::MultiSmoothScrollIntoViewEnabled() &&
++            behavior == mojom::blink::ScrollBehavior::kSmooth) {
++          active_smooth_scroll_type_ = scroll_type;
++        }
++      }
+       return;
+     case mojom::blink::ScrollType::kSequenced:
+       ProgrammaticScrollHelper(clamped_offset, behavior,
+@@ -378,6 +391,16 @@ void ScrollableArea::SetScrollOffset(const ScrollOffset& offset,
+                                std::move(run_scroll_complete_callbacks));
+       return;
+     case mojom::blink::ScrollType::kUser:
++      if (RuntimeEnabledFeatures::MultiSmoothScrollIntoViewEnabled() &&
++          behavior == mojom::blink::ScrollBehavior::kSmooth) {
++        if (ProgrammaticScrollHelper(
++                clamped_offset, behavior,
++                /* is_sequenced_scroll */ false, animation_adjustment,
++                std::move(run_scroll_complete_callbacks))) {
++          active_smooth_scroll_type_ = scroll_type;
++        }
++        return;
++      }
+       UserScrollHelper(clamped_offset, behavior);
+       break;
+     default:
+@@ -466,7 +489,7 @@ void ScrollableArea::ScrollBy(const ScrollOffset& delta,
+   SetScrollOffset(GetScrollOffset() + delta, type, behavior);
+ }
+ 
+-void ScrollableArea::ProgrammaticScrollHelper(
++bool ScrollableArea::ProgrammaticScrollHelper(
+     const ScrollOffset& offset,
+     mojom::blink::ScrollBehavior scroll_behavior,
+     bool is_sequenced_scroll,
+@@ -486,7 +509,7 @@ void ScrollableArea::ProgrammaticScrollHelper(
+     CancelProgrammaticScrollAnimation();
+     if (on_finish)
+       std::move(on_finish).Run(ScrollCompletionMode::kZeroDelta);
+-    return;
++    return false;
+   }
+ 
+   ScrollCallback callback = std::move(on_finish);
+@@ -516,6 +539,7 @@ void ScrollableArea::ProgrammaticScrollHelper(
+     if (callback)
+       std::move(callback).Run(ScrollCompletionMode::kFinished);
+   }
++  return true;
+ }
+ 
+ void ScrollableArea::UserScrollHelper(
+@@ -1088,6 +1112,9 @@ CompositorElementId ScrollableArea::GetScrollbarElementId(
+ }
+ 
+ void ScrollableArea::OnScrollFinished(bool enqueue_scrollend) {
++  if (enqueue_scrollend) {
++    active_smooth_scroll_type_.reset();
++  }
+   if (GetLayoutBox()) {
+     if (RuntimeEnabledFeatures::ScrollEndEventsEnabled()) {
+       if (enqueue_scrollend) {

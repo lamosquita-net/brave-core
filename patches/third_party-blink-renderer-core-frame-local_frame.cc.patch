@@ -1,0 +1,16 @@
+diff --git a/third_party/blink/renderer/core/frame/local_frame.cc b/third_party/blink/renderer/core/frame/local_frame.cc
+index 51ac02abf2f2e61538b26fcbbaa437567310c164..aea5bc8498861bf08e42aaf3f9b589a4504c7456 100644
+--- a/third_party/blink/renderer/core/frame/local_frame.cc
++++ b/third_party/blink/renderer/core/frame/local_frame.cc
+@@ -2413,6 +2413,11 @@ void LocalFrame::AnimateSnapFling(base::TimeTicks monotonic_time) {
+ }
+ 
+ SmoothScrollSequencer* LocalFrame::CreateNewSmoothScrollSequence() {
++  if (RuntimeEnabledFeatures::MultiSmoothScrollIntoViewEnabled()) {
++    // If MultiSmoothScrollIntoView is enabled, we run smooth scrolls in
++    // parallel, not in sequence.
++    return nullptr;
++  }
+   if (!IsLocalRoot()) {
+     return LocalFrameRoot().CreateNewSmoothScrollSequence();
+   }
