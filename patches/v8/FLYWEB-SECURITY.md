@@ -92,4 +92,20 @@ New defaults in 13.0 that touch code generation, all upstream's, none turns on a
 
 ## 6. Tests (cloud `d8`, Linux x64, V8 only; `FlyWeb/scripts/v8-d8.sh`)
 
-Pending.
+`d8` 13.0.245.25 with these 68 patches (and, for the `d8` only, without Brave's two `//brave` hooks), release with
+DCHECKs, clang of Chromium 116, libstdc++.
+
+- Options by default (`--print-flag-values`): `--no-maglev`, `--no-maglev-untagged-phis`,
+  `--turboshaft-instruction-selection`, `--wasm-to-js-generic-wrapper`, `--no-turboshaft-wasm`, `--regexp-simd`.
+- FlyWeb's regression tests (`FlyWeb/tools/v8-pruebas/`): **8/8** (`regress-543557673` run by hand with
+  `--sandbox-testing`: passes; the `munmap` check at exit is the container's, as in 1.13).
+- **mjsunit 7241/7242** (default variant). The 1 is `maglev/extras-cped` (asserts Maglev code), as in 1.13. Three
+  more failed until the test changes of f6961c40 (lower `kMaxArguments`, carried since 1.8) were applied to
+  `regress-11491`, `regress-crbug-724153` and `regress-v8-6716`, as Google did in the same commit (test-only).
+- v8 924c1a79 has no upstream regression test (cctest only); `mjsunit/wasm/*` with `--stress-wasm-code-gc
+  --wasm-code-gc`: **390/390**. v8 91343bb4 has no regression test upstream either; covered by mjsunit's compiler
+  and escape-analysis tests above. No proof-of-concept was written for either.
+- `regexp_simd`: `FlyWeb/tools/regexp-130.html` (softmac) gives the same results as a plain-JS matcher with
+  `--regexp-simd` and `--no-regexp-simd`; `--trace-regexp-assembler` shows `[qz]` and `[a-f][0-9][x-z]` take the
+  SIMD skip (`advance_by=1`). For the MacPro5,1 (no AVX): Titín, with the 1.14 Release.
+- Not covered by the `d8`: Intl (no ICU) and Chromium 116's libc++. **Not compiled in FlyWeb**: LOCAL builds it.
