@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/html_element.cc b/third_party/blink/renderer/core/html/html_element.cc
-index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..e3e8199f380b2b64baca9c0c1c44a7cdf53e0fe7 100644
+index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..8ba132228f0f9d9fdbea98ca62e93b4a2213b689 100644
 --- a/third_party/blink/renderer/core/html/html_element.cc
 +++ b/third_party/blink/renderer/core/html/html_element.cc
 @@ -29,6 +29,8 @@
@@ -141,6 +141,15 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..e3e8199f380b2b64baca9c0c1c44a7cd
  void HTMLElement::ShowPopoverInternal(Element* invoker,
                                        ExceptionState* exception_state) {
    CHECK(RuntimeEnabledFeatures::HTMLPopoverAttributeEnabled(
+@@ -1876,7 +1916,7 @@ void HTMLElement::SetPopoverFocusOnShow() {
+                                                 DocumentUpdateReason::kPopover);
+ 
+   if (auto* dialog = DynamicTo<HTMLDialogElement>(this)) {
+-    if (RuntimeEnabledFeatures::DialogNewFocusBehaviorEnabled()) {
++    if (RuntimeEnabledFeatures::PopoverDialogNewFocusBehaviorEnabled()) {
+       dialog->SetFocusForDialog();
+     } else {
+       HTMLDialogElement::SetFocusForDialogLegacy(dialog);
 @@ -2419,24 +2459,32 @@ HTMLFormElement* HTMLElement::FindFormAncestor() const {
    return Traversal<HTMLFormElement>::FirstAncestor(*this);
  }
