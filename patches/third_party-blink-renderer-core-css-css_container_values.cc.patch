@@ -1,8 +1,27 @@
 diff --git a/third_party/blink/renderer/core/css/css_container_values.cc b/third_party/blink/renderer/core/css/css_container_values.cc
-index f995ccc576bd2e2a32278c3395e4806685ea5d44..9197c26d4a5ee784d3044dec1acbac78d820ba8a 100644
+index f995ccc576bd2e2a32278c3395e4806685ea5d44..d80680a4437724e6af32c716835053f3d121ff47 100644
 --- a/third_party/blink/renderer/core/css/css_container_values.cc
 +++ b/third_party/blink/renderer/core/css/css_container_values.cc
-@@ -77,6 +77,14 @@ float CSSContainerValues::RootLineHeight(float zoom) const {
+@@ -4,6 +4,7 @@
+ 
+ #include "third_party/blink/renderer/core/css/css_container_values.h"
+ 
++#include "third_party/blink/renderer/core/css/container_query_evaluator.h"
+ #include "third_party/blink/renderer/core/dom/document.h"
+ #include "third_party/blink/renderer/core/dom/element.h"
+ #include "third_party/blink/renderer/core/dom/node_computed_style.h"
+@@ -29,7 +30,9 @@ CSSContainerValues::CSSContainerValues(Document& document,
+       line_height_size_(CSSToLengthConversionData::LineHeightSize(
+           container.ComputedStyleRef().GetFontSizeStyle(),
+           document.documentElement()->GetComputedStyle())),
+-      container_sizes_(container.ParentOrShadowHostElement()) {}
++      container_sizes_(
++          ContainerQueryEvaluator::ParentContainerCandidateElement(container)) {
++}
+ 
+ void CSSContainerValues::Trace(Visitor* visitor) const {
+   visitor->Trace(element_);
+@@ -77,6 +80,14 @@ float CSSContainerValues::RootLineHeight(float zoom) const {
    return line_height_size_.Rlh(zoom);
  }
  

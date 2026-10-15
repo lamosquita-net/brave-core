@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/element_rule_collector.cc b/third_party/blink/renderer/core/css/element_rule_collector.cc
-index b345b1685f369aeee519023e0b6ccbc258fa7142..5d565e754d7a3f3519a6b9979f9cc0e246dd3171 100644
+index b345b1685f369aeee519023e0b6ccbc258fa7142..b5946cb1ab4c3080172870d8c123be9d7a05ef71 100644
 --- a/third_party/blink/renderer/core/css/element_rule_collector.cc
 +++ b/third_party/blink/renderer/core/css/element_rule_collector.cc
 @@ -39,6 +39,7 @@
@@ -28,7 +28,17 @@ index b345b1685f369aeee519023e0b6ccbc258fa7142..5d565e754d7a3f3519a6b9979f9cc0e2
        continue;
      }
      if (can_use_fast_reject_ &&
-@@ -932,6 +935,12 @@ static CSSRule* FindStyleRule(CSSRuleCollection* css_rules,
+@@ -554,7 +557,8 @@ void ElementRuleCollector::CollectMatchingRulesForListInternal(
+         if (!style_container_candidate) {
+           if (pseudo_style_request_.pseudo_id == kPseudoIdNone) {
+             style_container_candidate =
+-                context_.GetElement().ParentOrShadowHostElement();
++                ContainerQueryEvaluator::ParentContainerCandidateElement(
++                    context_.GetElement());
+           } else {
+             style_container_candidate = &context_.GetElement();
+           }
+@@ -932,6 +936,12 @@ static CSSRule* FindStyleRule(CSSRuleCollection* css_rules,
                     FindStyleRule(css_rule->cssRules(), style_rule);
                 result) {
        return result;

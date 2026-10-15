@@ -1,8 +1,18 @@
 diff --git a/third_party/blink/renderer/core/css/css_to_length_conversion_data.cc b/third_party/blink/renderer/core/css/css_to_length_conversion_data.cc
-index 50946fa0e858aeb3d095b1b20bc9f68431b37cf3..43325884d775e6f2a6b46dcc2b3392de48411ca4 100644
+index 50946fa0e858aeb3d095b1b20bc9f68431b37cf3..c04111969afdf92c69a4f98eb179ef334e0eb1a5 100644
 --- a/third_party/blink/renderer/core/css/css_to_length_conversion_data.cc
 +++ b/third_party/blink/renderer/core/css/css_to_length_conversion_data.cc
-@@ -165,7 +165,7 @@ float CSSToLengthConversionData::FontSizes::Ic(float zoom) const {
+@@ -58,7 +58,8 @@ absl::optional<double> FindSizeForContainerAxis(PhysicalAxes requested_axis,
+            context_element, selector, tree_scope);
+        container;
+        container = ContainerQueryEvaluator::FindContainer(
+-           container->ParentOrShadowHostElement(), selector, tree_scope)) {
++           ContainerQueryEvaluator::ParentContainerCandidateElement(*container),
++           selector, tree_scope)) {
+     ContainerQueryEvaluator& evaluator =
+         container->EnsureContainerQueryEvaluator();
+     evaluator.SetReferencedByUnit();
+@@ -165,7 +166,7 @@ float CSSToLengthConversionData::FontSizes::Ic(float zoom) const {
    const SimpleFontData* font_data = font_->PrimaryFont();
    absl::optional<float> full_width;
    if (font_data) {
@@ -11,7 +21,7 @@ index 50946fa0e858aeb3d095b1b20bc9f68431b37cf3..43325884d775e6f2a6b46dcc2b3392de
    }
    if (!full_width.has_value()) {
      return Em(zoom);
-@@ -180,7 +180,7 @@ float CSSToLengthConversionData::FontSizes::Ric(float zoom) const {
+@@ -180,7 +181,7 @@ float CSSToLengthConversionData::FontSizes::Ric(float zoom) const {
    const SimpleFontData* font_data = root_font_->PrimaryFont();
    absl::optional<float> full_width;
    if (font_data) {
@@ -20,7 +30,7 @@ index 50946fa0e858aeb3d095b1b20bc9f68431b37cf3..43325884d775e6f2a6b46dcc2b3392de
    }
    if (!full_width.has_value()) {
      return Rem(zoom);
-@@ -190,6 +190,28 @@ float CSSToLengthConversionData::FontSizes::Ric(float zoom) const {
+@@ -190,6 +191,28 @@ float CSSToLengthConversionData::FontSizes::Ric(float zoom) const {
    return full_width.value() / root_font_zoom_ * zoom;
  }
  
@@ -49,7 +59,7 @@ index 50946fa0e858aeb3d095b1b20bc9f68431b37cf3..43325884d775e6f2a6b46dcc2b3392de
  CSSToLengthConversionData::LineHeightSize::LineHeightSize(
      const FontSizeStyle& style,
      const ComputedStyle* root_style)
-@@ -382,6 +404,29 @@ float CSSToLengthConversionData::RootLineHeight(float zoom) const {
+@@ -382,6 +405,29 @@ float CSSToLengthConversionData::RootLineHeight(float zoom) const {
    return line_height_size_.Rlh(zoom);
  }
  

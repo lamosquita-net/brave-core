@@ -1,0 +1,28 @@
+diff --git a/third_party/blink/renderer/core/css/container_query_evaluator.h b/third_party/blink/renderer/core/css/container_query_evaluator.h
+index 01099de2f9185d054a129ee5a0d11367f937971a..3fcacf0c380bc009469ba71181126b1123f823ff 100644
+--- a/third_party/blink/renderer/core/css/container_query_evaluator.h
++++ b/third_party/blink/renderer/core/css/container_query_evaluator.h
+@@ -31,8 +31,8 @@ class CORE_EXPORT ContainerQueryEvaluator final
+  public:
+   explicit ContainerQueryEvaluator(Element& container);
+ 
+-  // Look for a container query container in the shadow-including inclusive
+-  // ancestor chain of 'starting_element'.
++  // Look for a container query container in the flat tree inclusive ancestor
++  // chain of 'starting_element'.
+   static Element* FindContainer(Element* starting_element,
+                                 const ContainerSelector&,
+                                 const TreeScope* selector_tree_scope);
+@@ -42,6 +42,12 @@ class CORE_EXPORT ContainerQueryEvaluator final
+                          ContainerSelectorCache&,
+                          MatchResult&);
+ 
++  // Get the parent container candidate for container queries. Either the flat
++  // tree parent or the shadow-including parent based on a runtime flag due to a
++  // spec change.
++  // To be removed when the CSSFlatTreeContainer flag is removed.
++  static Element* ParentContainerCandidateElement(Element& element);
++
+   // Width/Height are used by container relative units (qi, qb, etc).
+   //
+   // A return value of absl::nullopt normally means that the relevant axis

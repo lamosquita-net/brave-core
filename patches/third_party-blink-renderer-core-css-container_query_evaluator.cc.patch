@@ -1,0 +1,37 @@
+diff --git a/third_party/blink/renderer/core/css/container_query_evaluator.cc b/third_party/blink/renderer/core/css/container_query_evaluator.cc
+index f435cda2790d859f0b5c6fba1f7d2dfa5a364391..9114bb5d8b1af842e35fae929e743ba01573c376 100644
+--- a/third_party/blink/renderer/core/css/container_query_evaluator.cc
++++ b/third_party/blink/renderer/core/css/container_query_evaluator.cc
+@@ -9,6 +9,7 @@
+ #include "third_party/blink/renderer/core/css/resolver/match_result.h"
+ #include "third_party/blink/renderer/core/css/style_recalc_context.h"
+ #include "third_party/blink/renderer/core/dom/document.h"
++#include "third_party/blink/renderer/core/dom/flat_tree_traversal.h"
+ #include "third_party/blink/renderer/core/dom/node_computed_style.h"
+ #include "third_party/blink/renderer/core/style/computed_style.h"
+ 
+@@ -108,6 +109,15 @@ ContainerQueryEvaluator::ContainerQueryEvaluator(Element& container) {
+       MakeGarbageCollected<MediaQueryEvaluator>(query_values);
+ }
+ 
++// static
++Element* ContainerQueryEvaluator::ParentContainerCandidateElement(
++    Element& element) {
++  if (RuntimeEnabledFeatures::CSSFlatTreeContainerEnabled()) {
++    return FlatTreeTraversal::ParentElement(element);
++  }
++  return element.ParentOrShadowHostElement();
++}
++
+ // static
+ Element* ContainerQueryEvaluator::FindContainer(
+     Element* starting_element,
+@@ -115,7 +125,7 @@ Element* ContainerQueryEvaluator::FindContainer(
+     const TreeScope* selector_tree_scope) {
+   // TODO(crbug.com/1213888): Cache results.
+   for (Element* element = starting_element; element;
+-       element = element->ParentOrShadowHostElement()) {
++       element = ParentContainerCandidateElement(*element)) {
+     if (const ComputedStyle* style = element->GetComputedStyle()) {
+       if (style->StyleType() == kPseudoIdNone) {
+         if (Matches(*style, container_selector, selector_tree_scope)) {

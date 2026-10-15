@@ -1,0 +1,27 @@
+diff --git a/third_party/blink/renderer/core/css/resolver/style_resolver_state.cc b/third_party/blink/renderer/core/css/resolver/style_resolver_state.cc
+index 4f705332cca6fc4605a3d0ea91813df84f0d9566..1fff8883d6d0f4a97dff553070ff022badea78f9 100644
+--- a/third_party/blink/renderer/core/css/resolver/style_resolver_state.cc
++++ b/third_party/blink/renderer/core/css/resolver/style_resolver_state.cc
+@@ -24,6 +24,7 @@
+ 
+ #include "third_party/blink/public/mojom/use_counter/metrics/web_feature.mojom-blink.h"
+ #include "third_party/blink/renderer/core/animation/css/css_animations.h"
++#include "third_party/blink/renderer/core/css/container_query_evaluator.h"
+ #include "third_party/blink/renderer/core/css/css_light_dark_value_pair.h"
+ #include "third_party/blink/renderer/core/css/css_property_value_set.h"
+ #include "third_party/blink/renderer/core/dom/node.h"
+@@ -70,9 +71,11 @@ StyleResolverState::StyleResolverState(
+       element_type_(style_request.IsPseudoStyleRequest()
+                         ? ElementType::kPseudoElement
+                         : ElementType::kElement),
+-      container_unit_context_(style_recalc_context
+-                                  ? style_recalc_context->container
+-                                  : element.ParentOrShadowHostElement()),
++      container_unit_context_(
++          style_recalc_context
++              ? style_recalc_context->container
++              : ContainerQueryEvaluator::ParentContainerCandidateElement(
++                    element)),
+       originating_element_style_(style_request.originating_element_style),
+       is_for_highlight_(IsHighlightPseudoElement(style_request.pseudo_id)),
+       uses_highlight_pseudo_inheritance_(

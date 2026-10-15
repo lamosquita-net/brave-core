@@ -1,0 +1,24 @@
+diff --git a/third_party/blink/renderer/core/css/style_recalc_change.cc b/third_party/blink/renderer/core/css/style_recalc_change.cc
+index 58abdadb3e94a3cdb5bf7385f94782174ca531f0..1430be3946ed24f089e7ccc51362bed9e1688be9 100644
+--- a/third_party/blink/renderer/core/css/style_recalc_change.cc
++++ b/third_party/blink/renderer/core/css/style_recalc_change.cc
+@@ -141,17 +141,14 @@ StyleRecalcChange::Flags StyleRecalcChange::FlagsForChildren(
+     return 0;
+   }
+ 
+-  // TODO(crbug.com/1302630): This is not correct for shadow hosts. Style recalc
+-  // traversal happens in flat tree order while query containers are found among
+-  // shadow-including ancestors. A slotted shadow host child queries its shadow
+-  // host for style() queries without a container name.
+   Flags result = flags_ & ~kRecalcStyleContainerChildren;
+ 
+   // Note that kSuppressRecalc is used on the root container for the
+   // interleaved style recalc.
+   if ((result & (kRecalcSizeContainerFlags | kSuppressRecalc)) ==
+       kRecalcSizeContainer) {
+-    if (IsShadowHost(element)) {
++    if (!RuntimeEnabledFeatures::CSSFlatTreeContainerEnabled() &&
++        IsShadowHost(element)) {
+       // Since the nearest container is found in shadow-including ancestors and
+       // not in flat tree ancestors, and style recalc traversal happens in flat
+       // tree order, we need to invalidate inside flat tree descendant
