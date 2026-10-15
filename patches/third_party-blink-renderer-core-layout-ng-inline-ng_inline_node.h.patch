@@ -1,0 +1,35 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_node.h b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_node.h
+index 4cb509a945e98e0a6c04a171601e1c81ff3a7b02..821dd06d8f2505a4ab5245146bcfe45b216f6edd 100644
+--- a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_node.h
++++ b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_node.h
+@@ -11,6 +11,7 @@
+ #include "third_party/blink/renderer/core/layout/ng/inline/ng_inline_node_data.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_layout_input_node.h"
+ #include "third_party/blink/renderer/core/layout/ng/svg/ng_svg_character_data.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+ #include "third_party/blink/renderer/platform/wtf/casting.h"
+ #include "third_party/blink/renderer/platform/wtf/text/wtf_string.h"
+ 
+@@ -199,11 +200,19 @@ class CORE_EXPORT NGInlineNode : public NGLayoutInputNode {
+ };
+ 
+ inline bool NGInlineNode::IsStickyImagesQuirkForContentSize() const {
++  // See https://quirks.spec.whatwg.org/#the-table-cell-width-calculation-quirk
++  // FlyWeb (level 130): StricterCellWidthContentSizeQuirk (d192ad18b88).
+   if (UNLIKELY(GetDocument().InQuirksMode())) {
+     const ComputedStyle& style = Style();
+-    if (UNLIKELY(style.Display() == EDisplay::kTableCell &&
+-                 !style.LogicalWidth().IsSpecified()))
+-      return true;
++    if (UNLIKELY(style.Display() == EDisplay::kTableCell)) {
++      if (style.LogicalWidth().IsAuto()) {
++        return true;
++      }
++      if (!RuntimeEnabledFeatures::StricterCellWidthContentSizeQuirkEnabled() &&
++          !style.LogicalWidth().IsSpecified()) {
++        return true;
++      }
++    }
+   }
+   return false;
+ }
