@@ -1,8 +1,12 @@
 diff --git a/third_party/blink/renderer/modules/peerconnection/rtc_data_channel.cc b/third_party/blink/renderer/modules/peerconnection/rtc_data_channel.cc
-index edf7e09c72ee4e9dce34eee332cd13777eda993f..e3026862063c0649ff5132b4a1c974c76d557592 100644
+index edf7e09c72ee4e9dce34eee332cd13777eda993f..596a5ce383f26c0e4fc78aafb14941c77467421c 100644
 --- a/third_party/blink/renderer/modules/peerconnection/rtc_data_channel.cc
 +++ b/third_party/blink/renderer/modules/peerconnection/rtc_data_channel.cc
-@@ -36,9 +36,14 @@
+@@ -33,12 +33,18 @@
+ #include "base/metrics/histogram_macros.h"
+ #include "base/numerics/safe_conversions.h"
+ #include "base/task/single_thread_task_runner.h"
++#include "components/webrtc/thread_wrapper.h"
  #include "third_party/blink/public/platform/task_type.h"
  #include "third_party/blink/renderer/core/events/message_event.h"
  #include "third_party/blink/renderer/core/execution_context/execution_context.h"
@@ -17,16 +21,17 @@ index edf7e09c72ee4e9dce34eee332cd13777eda993f..e3026862063c0649ff5132b4a1c974c7
  #include "third_party/blink/renderer/core/typed_arrays/dom_array_buffer.h"
  #include "third_party/blink/renderer/core/typed_arrays/dom_array_buffer_view.h"
  #include "third_party/blink/renderer/modules/peerconnection/adapters/web_rtc_cross_thread_copier.h"
-@@ -46,6 +51,8 @@
+@@ -46,6 +52,9 @@
  #include "third_party/blink/renderer/modules/peerconnection/rtc_peer_connection.h"
  #include "third_party/blink/renderer/modules/peerconnection/rtc_peer_connection_handler.h"
  #include "third_party/blink/renderer/platform/bindings/exception_state.h"
 +#include "third_party/blink/renderer/platform/blob/blob_data.h"
 +#include "third_party/blink/renderer/platform/heap/garbage_collected.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
  #include "third_party/blink/renderer/platform/scheduler/public/post_cross_thread_task.h"
  #include "third_party/blink/renderer/platform/scheduler/public/scheduling_policy.h"
  #include "third_party/blink/renderer/platform/wtf/cross_thread_copier_base.h"
-@@ -191,11 +198,6 @@ static void ThrowNotOpenException(ExceptionState* exception_state) {
+@@ -191,11 +200,6 @@ static void ThrowNotOpenException(ExceptionState* exception_state) {
                                       "RTCDataChannel.readyState is not 'open'");
  }
  
@@ -38,7 +43,78 @@ index edf7e09c72ee4e9dce34eee332cd13777eda993f..e3026862063c0649ff5132b4a1c974c7
  static void ThrowSendBufferFullException(ExceptionState* exception_state) {
    exception_state->ThrowDOMException(DOMExceptionCode::kOperationError,
                                       "RTCDataChannel send queue is full");
-@@ -403,7 +405,7 @@ String RTCDataChannel::binaryType() const {
+@@ -273,6 +277,12 @@ void RTCDataChannel::Observer::OnMessageImpl(webrtc::DataBuffer buffer) {
+     blink_channel_->OnMessage(std::move(buffer));
+ }
+ 
++// static
++void RTCDataChannel::EnsureThreadWrappersForWorkerThread() {
++  webrtc::ThreadWrapper::EnsureForCurrentMessageLoop();
++  webrtc::ThreadWrapper::current()->set_send_allowed(true);
++}
++
+ RTCDataChannel::RTCDataChannel(
+     ExecutionContext* context,
+     rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel,
+@@ -286,25 +296,50 @@ RTCDataChannel::RTCDataChannel(
+           context->GetTaskRunner(TaskType::kNetworking),
+           this,
+           std::move(data_channel))),
+-      signaling_thread_(peer_connection_handler->signaling_thread()) {
+-  DCHECK(peer_connection_handler);
++      signaling_thread_(peer_connection_handler
++                            ? peer_connection_handler->signaling_thread()
++                            : nullptr) {
++  if (RuntimeEnabledFeatures::TransferableRTCDataChannelEnabled()) {
++    // Delay connecting to the observer to give a chance for this RTCDataChannel
++    // to be transferred. See:
++    // https://w3c.github.io/webrtc-extensions/#rtcdatachannel-transferable
++    context->GetTaskRunner(TaskType::kNetworking)
++        ->PostTask(FROM_HERE, WTF::BindOnce(&RTCDataChannel::RegisterObserver,
++                                            WrapWeakPersistent(this)));
++  } else {
++    RegisterObserver();
++  }
++
++  IncrementCounters(*channel().get());
++}
++
++RTCDataChannel::~RTCDataChannel() = default;
++
++void RTCDataChannel::RegisterObserver() {
++  DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
++  is_transferable_ = false;
++
++  // Do not connect if `this` was transferred, as it should be going away soon.
++  if (was_transferred_) {
++    return;
++  }
++
++  // The context might have been destroyed already if registration was delayed.
++  if (stopped_) {
++    return;
++  }
+ 
+   // Register observer and get state update to make up for state change updates
+   // that might have been missed between creating the webrtc::DataChannel object
+   // on the signaling thread and RTCDataChannel construction posted on the main
+   // thread. Done in a single synchronous call to the signaling thread to ensure
+   // channel state consistency.
+-  // TODO(tommi): Check if this^ is still possible.
+   channel()->RegisterObserver(observer_.get());
+   if (channel()->state() != state_) {
+     observer_->OnStateChange();
+   }
+-
+-  IncrementCounters(*channel().get());
+ }
+ 
+-RTCDataChannel::~RTCDataChannel() = default;
+-
+ String RTCDataChannel::label() const {
+   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
+   return String::FromUTF8(channel()->label());
+@@ -403,7 +438,7 @@ String RTCDataChannel::binaryType() const {
  void RTCDataChannel::setBinaryType(const String& binary_type,
                                     ExceptionState& exception_state) {
    if (binary_type == "blob")
@@ -47,7 +123,7 @@ index edf7e09c72ee4e9dce34eee332cd13777eda993f..e3026862063c0649ff5132b4a1c974c7
    else if (binary_type == "arraybuffer")
      binary_type_ = kBinaryTypeArrayBuffer;
    else
-@@ -411,7 +413,7 @@ void RTCDataChannel::setBinaryType(const String& binary_type,
+@@ -411,7 +446,7 @@ void RTCDataChannel::setBinaryType(const String& binary_type,
                                        "Unknown binary type : " + binary_type);
  }
  
@@ -56,13 +132,44 @@ index edf7e09c72ee4e9dce34eee332cd13777eda993f..e3026862063c0649ff5132b4a1c974c7
                                          ExceptionState& exception_state) {
    // Send algorithm: https://w3c.github.io/webrtc-pc/#datachannel-send
  
-@@ -478,8 +480,25 @@ void RTCDataChannel::send(NotShared<DOMArrayBufferView> data,
+@@ -431,6 +466,8 @@ bool RTCDataChannel::ValidateSendLength(size_t length,
+ 
+ void RTCDataChannel::send(const String& data, ExceptionState& exception_state) {
+   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
++  is_transferable_ = false;
++
+   if (state_ != webrtc::DataChannelInterface::kOpen) {
+     ThrowNotOpenException(&exception_state);
+     return;
+@@ -448,6 +485,9 @@ void RTCDataChannel::send(const String& data, ExceptionState& exception_state) {
+ 
+ void RTCDataChannel::send(DOMArrayBuffer* data,
+                           ExceptionState& exception_state) {
++  DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
++  is_transferable_ = false;
++
+   if (state_ != webrtc::DataChannelInterface::kOpen) {
+     ThrowNotOpenException(&exception_state);
+     return;
+@@ -464,6 +504,9 @@ void RTCDataChannel::send(DOMArrayBuffer* data,
+ 
+ void RTCDataChannel::send(NotShared<DOMArrayBufferView> data,
+                           ExceptionState& exception_state) {
++  DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
++  is_transferable_ = false;
++
+   if (state_ != webrtc::DataChannelInterface::kOpen) {
+     ThrowNotOpenException(&exception_state);
+     return;
+@@ -478,8 +521,27 @@ void RTCDataChannel::send(NotShared<DOMArrayBufferView> data,
  }
  
  void RTCDataChannel::send(Blob* data, ExceptionState& exception_state) {
 -  // FIXME: implement
 -  ThrowNoBlobSupportException(&exception_state);
 +  DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
++  is_transferable_ = false;
++
 +  // f12d06e864d (M129 merge): only an open channel queues a Blob.
 +  if (state_ != webrtc::DataChannelInterface::kOpen) {
 +    ThrowNotOpenException(&exception_state);
@@ -84,7 +191,7 @@ index edf7e09c72ee4e9dce34eee332cd13777eda993f..e3026862063c0649ff5132b4a1c974c7
  }
  
  void RTCDataChannel::close() {
-@@ -490,8 +509,16 @@ void RTCDataChannel::close() {
+@@ -490,8 +552,41 @@ void RTCDataChannel::close() {
    }
    closed_from_owner_ = true;
    OnStateChange(webrtc::DataChannelInterface::kClosing);
@@ -100,10 +207,35 @@ index edf7e09c72ee4e9dce34eee332cd13777eda993f..e3026862063c0649ff5132b4a1c974c7
 +      pending_messages_.push_back(message);
 +    }
 +  }
++}
++
++bool RTCDataChannel::IsTransferable() {
++  DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
++  return RuntimeEnabledFeatures::TransferableRTCDataChannelEnabled() &&
++         is_transferable_;
++}
++
++rtc::scoped_refptr<webrtc::DataChannelInterface>
++RTCDataChannel::TransferUnderlyingChannel() {
++  DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
++
++  if (!IsTransferable()) {
++    return nullptr;
++  }
++
++  // Only allow a single transfer.
++  was_transferred_ = true;
++  is_transferable_ = false;
++
++  // Bypass OnStateChange() to avoid emitting an event.
++  state_ = webrtc::DataChannelInterface::kClosed;
++  feature_handle_for_scheduler_.reset();
++
++  return channel();
  }
  
  const AtomicString& RTCDataChannel::InterfaceName() const {
-@@ -549,6 +576,7 @@ bool RTCDataChannel::HasPendingActivity() const {
+@@ -549,6 +644,7 @@ bool RTCDataChannel::HasPendingActivity() const {
  }
  
  void RTCDataChannel::Trace(Visitor* visitor) const {
@@ -111,7 +243,7 @@ index edf7e09c72ee4e9dce34eee332cd13777eda993f..e3026862063c0649ff5132b4a1c974c7
    visitor->Trace(scheduled_events_);
    visitor->Trace(scheduled_event_timer_);
    EventTargetWithInlineData::Trace(visitor);
-@@ -601,6 +629,12 @@ void RTCDataChannel::OnStateChange(
+@@ -601,6 +697,12 @@ void RTCDataChannel::OnStateChange(
        if (!error.ok()) {
          LOG(ERROR) << "DataChannel error: \"" << error.message() << "\""
                     << ", code: " << error.sctp_cause_code().value_or(-1);
@@ -124,7 +256,7 @@ index edf7e09c72ee4e9dce34eee332cd13777eda993f..e3026862063c0649ff5132b4a1c974c7
          IncrementErrorCounter(error);
          DispatchEvent(*MakeGarbageCollected<RTCErrorEvent>(
              event_type_names::kError, error));
-@@ -631,7 +665,12 @@ void RTCDataChannel::OnMessage(webrtc::DataBuffer buffer) {
+@@ -631,7 +733,12 @@ void RTCDataChannel::OnMessage(webrtc::DataBuffer buffer) {
  
    if (buffer.binary) {
      if (binary_type_ == kBinaryTypeBlob) {
@@ -138,7 +270,27 @@ index edf7e09c72ee4e9dce34eee332cd13777eda993f..e3026862063c0649ff5132b4a1c974c7
        return;
      }
      if (binary_type_ == kBinaryTypeArrayBuffer) {
-@@ -691,10 +730,19 @@ void RTCDataChannel::SendRawData(const char* data, size_t length) {
+@@ -659,8 +766,13 @@ void RTCDataChannel::Dispose() {
+   if (stopped_)
+     return;
+ 
+-  // Clear the weak persistent reference to this on-heap object.
+-  observer_->Unregister();
++  // If `this` was transferred, RegisterObserver() never registered
++  // `observer_`, and the underlying channel now belongs to another
++  // RTCDataChannel.
++  if (!was_transferred_) {
++    // Clear the weak persistent reference to this on-heap object.
++    observer_->Unregister();
++  }
+ }
+ 
+ void RTCDataChannel::ScheduleDispatchEvent(Event* event) {
+@@ -688,13 +800,24 @@ RTCDataChannel::channel() const {
+ 
+ void RTCDataChannel::SendRawData(const char* data, size_t length) {
+   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
++  CHECK(!was_transferred_);
    rtc::CopyOnWriteBuffer buffer(data, length);
    webrtc::DataBuffer data_buffer(buffer, true);
    RecordMessageSent(*channel().get(), data_buffer.size());
@@ -156,10 +308,11 @@ index edf7e09c72ee4e9dce34eee332cd13777eda993f..e3026862063c0649ff5132b4a1c974c7
  
  void RTCDataChannel::SendDataBuffer(webrtc::DataBuffer data_buffer) {
 +  DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
++  CHECK(!was_transferred_);
    // SCTP data channels queue the packet on failure and always return true, so
    // Send can be called asynchronously for them.
    channel()->SendAsync(std::move(data_buffer), [](webrtc::RTCError error) {
-@@ -734,4 +782,102 @@ void RTCDataChannel::CreateFeatureHandleForScheduler() {
+@@ -734,4 +857,102 @@ void RTCDataChannel::CreateFeatureHandleForScheduler() {
            {SchedulingPolicy::DisableAggressiveThrottling()});
  }
  

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/modules/peerconnection/rtc_data_channel.h b/third_party/blink/renderer/modules/peerconnection/rtc_data_channel.h
-index 5998c4c23feefdeb9080bb57e60b4c120a200fdc..ed48128397b5139d21eb21bcdeb36728f5c590ea 100644
+index 5998c4c23feefdeb9080bb57e60b4c120a200fdc..305c38a219884586c2a64824e86f9f2a1dd73014 100644
 --- a/third_party/blink/renderer/modules/peerconnection/rtc_data_channel.h
 +++ b/third_party/blink/renderer/modules/peerconnection/rtc_data_channel.h
 @@ -26,16 +26,24 @@
@@ -27,7 +27,36 @@ index 5998c4c23feefdeb9080bb57e60b4c120a200fdc..ed48128397b5139d21eb21bcdeb36728
  #include "third_party/webrtc/api/peer_connection_interface.h"
  
  namespace blink {
-@@ -111,6 +119,8 @@ class MODULES_EXPORT RTCDataChannel final
+@@ -54,9 +62,17 @@ class MODULES_EXPORT RTCDataChannel final
+   USING_PRE_FINALIZER(RTCDataChannel, Dispose);
+ 
+  public:
++  // Wraps the current thread with a webrtc::ThreadWrapper, if it isn't already
++  // wrapped. This is necessary when calling some of channel()'s methods.
++  // This only has an effect the first time it is called from a new
++  // DedicatedWorker thread, after deserializing an RTCDataChannel.
++  static void EnsureThreadWrappersForWorkerThread();
++
++  // FlyWeb (level 130): `peer_connection_handler` is null for a channel
++  // transferred to a DedicatedWorker (the handler lives on the main thread).
+   RTCDataChannel(ExecutionContext*,
+                  rtc::scoped_refptr<webrtc::DataChannelInterface> channel,
+-                 RTCPeerConnectionHandler* peer_connection_handler);
++                 RTCPeerConnectionHandler* peer_connection_handler = nullptr);
+   ~RTCDataChannel() override;
+ 
+   String label() const;
+@@ -92,6 +108,9 @@ class MODULES_EXPORT RTCDataChannel final
+ 
+   void close();
+ 
++  bool IsTransferable();
++  rtc::scoped_refptr<webrtc::DataChannelInterface> TransferUnderlyingChannel();
++
+   DEFINE_ATTRIBUTE_EVENT_LISTENER(open, kOpen)
+   DEFINE_ATTRIBUTE_EVENT_LISTENER(bufferedamountlow, kBufferedamountlow)
+   DEFINE_ATTRIBUTE_EVENT_LISTENER(error, kError)
+@@ -111,6 +130,8 @@ class MODULES_EXPORT RTCDataChannel final
  
    void Trace(Visitor*) const override;
  
@@ -36,7 +65,16 @@ index 5998c4c23feefdeb9080bb57e60b4c120a200fdc..ed48128397b5139d21eb21bcdeb36728
   private:
    friend class Observer;
    // Implementation of webrtc::DataChannelObserver that receives events on
-@@ -164,7 +174,7 @@ class MODULES_EXPORT RTCDataChannel final
+@@ -154,6 +175,8 @@ class MODULES_EXPORT RTCDataChannel final
+     const rtc::scoped_refptr<webrtc::DataChannelInterface> webrtc_channel_;
+   };
+ 
++  void RegisterObserver();
++
+   void OnStateChange(webrtc::DataChannelInterface::DataState state);
+   void OnBufferedAmountChange(unsigned previous_amount);
+   void OnMessage(webrtc::DataBuffer buffer);
+@@ -164,7 +187,7 @@ class MODULES_EXPORT RTCDataChannel final
    void ScheduledEventTimerFired(TimerBase*);
  
    const rtc::scoped_refptr<webrtc::DataChannelInterface>& channel() const;
@@ -45,7 +83,7 @@ index 5998c4c23feefdeb9080bb57e60b4c120a200fdc..ed48128397b5139d21eb21bcdeb36728
    void SendRawData(const char* data, size_t length);
    void SendDataBuffer(webrtc::DataBuffer data_buffer);
  
-@@ -195,6 +205,67 @@ class MODULES_EXPORT RTCDataChannel final
+@@ -195,10 +218,74 @@ class MODULES_EXPORT RTCDataChannel final
    // of querying the channel (which requires thread hop). This is a cached
    // value to optimize a const getter, and therefore `mutable`.
    mutable absl::optional<uint16_t> id_;
@@ -113,3 +151,10 @@ index 5998c4c23feefdeb9080bb57e60b4c120a200fdc..ed48128397b5139d21eb21bcdeb36728
    unsigned buffered_amount_low_threshold_ = 0u;
    unsigned buffered_amount_ = 0u;
    bool stopped_ = false;
+   bool closed_from_owner_ = false;
++
++  bool was_transferred_ = false;
++  bool is_transferable_ = true;
+   // Keep the `observer_` reference const to make it clear that we don't want
+   // to free the underlying channel (or callback observer) until the
+   // `RTCDataChannel` instance goes away. This allows properties to be queried
