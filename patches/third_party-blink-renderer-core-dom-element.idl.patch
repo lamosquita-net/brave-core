@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/element.idl b/third_party/blink/renderer/core/dom/element.idl
-index 7b0edf82d70b4cbcf8a337321d1a05b66ff531f5..2f475b458f2f6aea5452e221db54c8b26919a5dd 100644
+index 7b0edf82d70b4cbcf8a337321d1a05b66ff531f5..6d45da300d29572c2a9e9a9989a675793f015cca 100644
 --- a/third_party/blink/renderer/core/dom/element.idl
 +++ b/third_party/blink/renderer/core/dom/element.idl
 @@ -28,6 +28,9 @@ callback ScrollStateCallback = void (ScrollState scrollState);
@@ -12,7 +12,7 @@ index 7b0edf82d70b4cbcf8a337321d1a05b66ff531f5..2f475b458f2f6aea5452e221db54c8b2
  };
  
  // https://dom.spec.whatwg.org/#interface-element
-@@ -103,9 +106,13 @@ dictionary CheckVisibilityOptions {
+@@ -103,9 +106,14 @@ dictionary CheckVisibilityOptions {
      [CEReactions, RuntimeCallStatsCounter=ElementInnerHTML, RaisesException=Setter] attribute [LegacyNullToEmptyString, StringContext=TrustedHTML] DOMString innerHTML;
      [CEReactions, RaisesException=Setter] attribute [LegacyNullToEmptyString, StringContext=TrustedHTML] DOMString outerHTML;
      [CEReactions, RaisesException] void insertAdjacentHTML(DOMString position, HTMLString text);
@@ -20,13 +20,15 @@ index 7b0edf82d70b4cbcf8a337321d1a05b66ff531f5..2f475b458f2f6aea5452e221db54c8b2
 +    [RuntimeEnabled=HTMLUnsafeMethods,RaisesException,MeasureAs=SetHTMLUnsafe,CEReactions] void setHTMLUnsafe(HTMLString html);
  
      // Declarative Shadow DOM getInnerHTML() function.
-     [Affects=Nothing, MeasureAs=ElementGetInnerHTML] HTMLString getInnerHTML(optional GetInnerHTMLOptions options = {});
+-    [Affects=Nothing, MeasureAs=ElementGetInnerHTML] HTMLString getInnerHTML(optional GetInnerHTMLOptions options = {});
++    // FlyWeb (level 130): off, as Chrome 129-130 (field trial) and 131 (code).
++    [Affects=Nothing, MeasureAs=ElementGetInnerHTML, RuntimeEnabled=ElementGetInnerHTML] HTMLString getInnerHTML(optional GetInnerHTMLOptions options = {});
 +    // Declarative Shadow DOM getHTML() function (Chromium 125).
 +    [Affects=Nothing, RuntimeEnabled=ElementGetHTML] HTMLString getHTML(optional GetHTMLOptions options = {});
  
      // Pointer Lock
      // https://w3c.github.io/pointerlock/#extensions-to-the-element-interface
-@@ -137,6 +144,8 @@ dictionary CheckVisibilityOptions {
+@@ -137,6 +145,8 @@ dictionary CheckVisibilityOptions {
      readonly attribute long clientLeft;
      readonly attribute long clientWidth;
      readonly attribute long clientHeight;

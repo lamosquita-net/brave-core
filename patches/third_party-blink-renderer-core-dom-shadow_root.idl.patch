@@ -1,8 +1,8 @@
 diff --git a/third_party/blink/renderer/core/dom/shadow_root.idl b/third_party/blink/renderer/core/dom/shadow_root.idl
-index c07f58479455acd7571fa8415cefcfe907e134cd..e22da3cc266065700733caf59aa9bc765162039d 100644
+index c07f58479455acd7571fa8415cefcfe907e134cd..7778ee76d1a1726f92e6e22460faa795cffbe008 100644
 --- a/third_party/blink/renderer/core/dom/shadow_root.idl
 +++ b/third_party/blink/renderer/core/dom/shadow_root.idl
-@@ -37,11 +37,22 @@ interface ShadowRoot : DocumentFragment {
+@@ -37,11 +37,23 @@ interface ShadowRoot : DocumentFragment {
      readonly attribute boolean delegatesFocus;
      readonly attribute SlotAssignmentMode slotAssignment;
  
@@ -14,7 +14,9 @@ index c07f58479455acd7571fa8415cefcfe907e134cd..e22da3cc266065700733caf59aa9bc76
      readonly attribute CustomElementRegistry? registry;
  
      // Declarative Shadow DOM getInnerHTML() function.
-     [Affects=Nothing, MeasureAs=ElementGetInnerHTML] HTMLString getInnerHTML(optional GetInnerHTMLOptions options = {});
+-    [Affects=Nothing, MeasureAs=ElementGetInnerHTML] HTMLString getInnerHTML(optional GetInnerHTMLOptions options = {});
++    // FlyWeb (level 130): off, as Chrome 129-130 (field trial) and 131 (code).
++    [Affects=Nothing, MeasureAs=ElementGetInnerHTML, RuntimeEnabled=ElementGetInnerHTML] HTMLString getInnerHTML(optional GetInnerHTMLOptions options = {});
 +    // Declarative Shadow DOM getHTML() function (Chromium 125).
 +    [Affects=Nothing, RuntimeEnabled=ElementGetHTML] HTMLString getHTML(optional GetHTMLOptions options = {});
 +    // The serializable attribute controls whether the shadow root will be
