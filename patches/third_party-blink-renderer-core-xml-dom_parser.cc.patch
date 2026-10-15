@@ -1,0 +1,23 @@
+diff --git a/third_party/blink/renderer/core/xml/dom_parser.cc b/third_party/blink/renderer/core/xml/dom_parser.cc
+index 70267469b98a15d0add0c3841e47ee38f15d657f..41d94059d70733313a4268d6a714769b29677cc8 100644
+--- a/third_party/blink/renderer/core/xml/dom_parser.cc
++++ b/third_party/blink/renderer/core/xml/dom_parser.cc
+@@ -23,6 +23,7 @@
+ #include "third_party/blink/renderer/core/dom/document.h"
+ #include "third_party/blink/renderer/core/dom/document_init.h"
+ #include "third_party/blink/renderer/core/frame/local_dom_window.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+ #include "third_party/blink/renderer/platform/weborigin/security_origin.h"
+ #include "third_party/blink/renderer/platform/wtf/text/wtf_string.h"
+ 
+@@ -37,7 +38,10 @@ Document* DOMParser::parseFromString(const String& str,
+                       .WithExecutionContext(window_)
+                       .WithAgent(*window_->GetAgent())
+                       .CreateDocument();
++  // FlyWeb (level 130): includeShadowRoots is ignored, as in Chromium since
++  // 128 (20695562040; the option is gone in 130, 3ba7cc61c0e).
+   bool include_shadow_roots =
++      RuntimeEnabledFeatures::DOMParserIncludeShadowRootsEnabled() &&
+       options->hasIncludeShadowRoots() && options->includeShadowRoots();
+   doc->setAllowDeclarativeShadowRoots(include_shadow_roots);
+   doc->CountUse(mojom::blink::WebFeature::kParseFromString);

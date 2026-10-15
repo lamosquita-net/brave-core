@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/parser/html_tree_builder.cc b/third_party/blink/renderer/core/html/parser/html_tree_builder.cc
-index b4b07c1302b3496ffa516d0a1f99a5b5e7a9236a..c6796b4401ca24b38c05b18b27bc93b59295d502 100644
+index b4b07c1302b3496ffa516d0a1f99a5b5e7a9236a..9e6503fd24d43ab3ce4c756538562cd4d2dfe4f8 100644
 --- a/third_party/blink/renderer/core/html/parser/html_tree_builder.cc
 +++ b/third_party/blink/renderer/core/html/parser/html_tree_builder.cc
 @@ -706,6 +706,7 @@ void HTMLTreeBuilder::ProcessStartTagForInBody(AtomicHTMLToken* token) {
@@ -10,7 +10,20 @@ index b4b07c1302b3496ffa516d0a1f99a5b5e7a9236a..c6796b4401ca24b38c05b18b27bc93b5
      case HTMLTag::kSection:
      case HTMLTag::kSummary:
      case HTMLTag::kUl:
-@@ -1991,6 +1992,7 @@ void HTMLTreeBuilder::ProcessEndTagForInBody(AtomicHTMLToken* token) {
+@@ -999,6 +1000,12 @@ DeclarativeShadowRootType DeclarativeShadowRootTypeFromToken(
+     if (!type_attribute_non_streaming) {
+       return DeclarativeShadowRootType::kNone;
+     }
++    // FlyWeb (level 130): the old `shadowroot` attribute is ignored, as in
++    // Chromium since 121 (561042837d7, removed in 5f4c1fc06a1).
++    if (!RuntimeEnabledFeatures::
++            DeprecatedNonStreamingDeclarativeShadowDOMEnabled()) {
++      return DeclarativeShadowRootType::kNone;
++    }
+     shadow_mode = type_attribute_non_streaming->Value();
+   }
+ 
+@@ -1991,6 +1998,7 @@ void HTMLTreeBuilder::ProcessEndTagForInBody(AtomicHTMLToken* token) {
      case HTMLTag::kNav:
      case HTMLTag::kOl:
      case HTMLTag::kPre:
