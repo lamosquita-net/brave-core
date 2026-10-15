@@ -1,8 +1,21 @@
 diff --git a/src/wasm/wasm-import-wrapper-cache.cc b/src/wasm/wasm-import-wrapper-cache.cc
-index 92b6470ce094a0c8b026ea4208a59c25384da3d4..6a4d633700bb3d792996b0b6a3967ab86fcf84be 100644
+index 768e27f6c759af0020e5b034d5b16c0be4536d32..d83eaae8b62eb9b10db6b5aa7e39e237f61858c5 100644
 --- a/src/wasm/wasm-import-wrapper-cache.cc
 +++ b/src/wasm/wasm-import-wrapper-cache.cc
-@@ -179,6 +179,9 @@ WasmCode* WasmImportWrapperCache::MaybeGet(ImportCallKind kind,
+@@ -150,7 +150,11 @@ WasmCode* WasmImportWrapperCache::CompileWasmImportCallWrapper(
+     // Now that we have the lock (in the form of the cache_scope), check
+     // again whether another thread has just created the wrapper.
+     wasm_code = cache_scope[key];
+-    if (wasm_code) return wasm_code;
++    // FlyWeb: v8 924c1a79 (crbug 391907159). Replace a dying wrapper.
++    if (wasm_code) {
++      WasmCodeRefScope::AddRef(wasm_code);
++      if (!wasm_code->is_dying()) return wasm_code;
++    }
+ 
+     wasm_code = cache_scope.AddWrapper(key, std::move(result),
+                                        WasmCode::Kind::kWasmToJsWrapper);
+@@ -216,6 +220,9 @@ WasmCode* WasmImportWrapperCache::MaybeGet(ImportCallKind kind,
        entry_map_.find({kind, canonical_type_index, expected_arity, suspend});
    if (it == entry_map_.end()) return nullptr;
    WasmCodeRefScope::AddRef(it->second);
@@ -12,7 +25,7 @@ index 92b6470ce094a0c8b026ea4208a59c25384da3d4..6a4d633700bb3d792996b0b6a3967ab8
    return it->second;
  }
  
-@@ -193,6 +196,9 @@ WasmCode* WasmImportWrapperCache::Lookup(Address pc) const {
+@@ -230,6 +237,9 @@ WasmCode* WasmImportWrapperCache::Lookup(Address pc) const {
    DCHECK_EQ(candidate->instruction_start(), iter->first);
    if (!candidate->contains(pc)) return nullptr;
    WasmCodeRefScope::AddRef(candidate);

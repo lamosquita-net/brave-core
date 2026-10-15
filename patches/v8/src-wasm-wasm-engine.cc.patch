@@ -1,8 +1,8 @@
 diff --git a/src/wasm/wasm-engine.cc b/src/wasm/wasm-engine.cc
-index 54ac5a1a4927d858577b9a4d984dd554999107a4..42e04a5f6ea81ddf5adb17901e2097c85b887f9a 100644
+index bf73b11069800cbe28b0ea8a432fc9e1ffc29e83..ae69b167f6ae6408294920c6509dd383d98a0782 100644
 --- a/src/wasm/wasm-engine.cc
 +++ b/src/wasm/wasm-engine.cc
-@@ -1700,7 +1700,6 @@ void WasmEngine::FreeNativeModule(NativeModule* native_module) {
+@@ -1688,7 +1688,6 @@ void WasmEngine::FreeNativeModule(NativeModule* native_module) {
    }
    // If any code objects are currently tracked as dead or near-dead, remove
    // references belonging to the NativeModule that's being deleted.
@@ -10,7 +10,7 @@ index 54ac5a1a4927d858577b9a4d984dd554999107a4..42e04a5f6ea81ddf5adb17901e2097c8
    std::erase_if(potentially_dead_code_, part_of_native_module);
  
    native_module_cache_.Erase(native_module);
-@@ -1783,9 +1782,13 @@ void WasmEngine::ReportLiveCodeFromStackForGC(Isolate* isolate) {
+@@ -1773,9 +1772,13 @@ void WasmEngine::ReportLiveCodeFromStackForGC(Isolate* isolate) {
  
  bool WasmEngine::AddPotentiallyDeadCode(WasmCode* code) {
    base::MutexGuard guard(&mutex_);
@@ -26,7 +26,7 @@ index 54ac5a1a4927d858577b9a4d984dd554999107a4..42e04a5f6ea81ddf5adb17901e2097c8
    new_potentially_dead_code_size_ += code->instructions().size();
    if (v8_flags.wasm_code_gc) {
      // Trigger a GC if 64kB plus 10% of committed code are potentially dead.
-@@ -1831,19 +1834,17 @@ void WasmEngine::FreeDeadCodeLocked(const DeadCodeMap& dead_code,
+@@ -1821,19 +1824,17 @@ void WasmEngine::FreeDeadCodeLocked(const DeadCodeMap& dead_code,
      const std::vector<WasmCode*>& code_vec = dead_code_entry.second;
      TRACE_CODE_GC("Freeing %zu code object%s of module %p.\n", code_vec.size(),
                    code_vec.size() == 1 ? "" : "s", native_module);
@@ -52,7 +52,7 @@ index 54ac5a1a4927d858577b9a4d984dd554999107a4..42e04a5f6ea81ddf5adb17901e2097c8
      GetWasmImportWrapperCache()->Free(dead_wrappers);
    }
  }
-@@ -1933,16 +1934,15 @@ void WasmEngine::PotentiallyFinishCurrentGC() {
+@@ -1923,16 +1924,15 @@ void WasmEngine::PotentiallyFinishCurrentGC() {
    if (!current_gc_info_->outstanding_isolates.empty()) return;
  
    // All remaining code in {current_gc_info->dead_code} is really dead.
@@ -72,16 +72,16 @@ index 54ac5a1a4927d858577b9a4d984dd554999107a4..42e04a5f6ea81ddf5adb17901e2097c8
      if (code->DecRefOnDeadCode()) {
        NativeModule* native_module = code->native_module();
        if (native_module) {
-@@ -1966,7 +1966,7 @@ void WasmEngine::PotentiallyFinishCurrentGC() {
+@@ -1956,7 +1956,7 @@ void WasmEngine::PotentiallyFinishCurrentGC() {
  }
  
  size_t WasmEngine::EstimateCurrentMemoryConsumption() const {
 -  UPDATE_WHEN_CLASS_CHANGES(WasmEngine, 800);
 +  UPDATE_WHEN_CLASS_CHANGES(WasmEngine, 760);
-   UPDATE_WHEN_CLASS_CHANGES(IsolateInfo, 184);
+   UPDATE_WHEN_CLASS_CHANGES(IsolateInfo, 168);
    UPDATE_WHEN_CLASS_CHANGES(NativeModuleInfo, 56);
    UPDATE_WHEN_CLASS_CHANGES(CurrentGCInfo, 96);
-@@ -1977,7 +1977,6 @@ size_t WasmEngine::EstimateCurrentMemoryConsumption() const {
+@@ -1967,7 +1967,6 @@ size_t WasmEngine::EstimateCurrentMemoryConsumption() const {
      result += ContentSize(async_compile_jobs_);
      result += async_compile_jobs_.size() * sizeof(AsyncCompileJob);
      result += ContentSize(potentially_dead_code_);

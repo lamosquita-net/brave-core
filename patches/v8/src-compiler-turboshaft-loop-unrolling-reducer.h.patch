@@ -1,42 +1,59 @@
 diff --git a/src/compiler/turboshaft/loop-unrolling-reducer.h b/src/compiler/turboshaft/loop-unrolling-reducer.h
-index 4cc168267649a49c9b3d974baa5d7bf3614b3abf..7f4cfa02c37acfadd4f9667d7043863f4fb8f615 100644
+index 6d86c0412e62fecd31d5e1d76359277e99f20a1b..5dcdcdb330bd1fb1d332e65657cb393911fd483f 100644
 --- a/src/compiler/turboshaft/loop-unrolling-reducer.h
 +++ b/src/compiler/turboshaft/loop-unrolling-reducer.h
-@@ -196,6 +196,18 @@ class V8_EXPORT_PRIVATE LoopUnrollingAnalyzer {
+@@ -191,14 +191,32 @@ class V8_EXPORT_PRIVATE LoopUnrollingAnalyzer {
+ 
+   bool ShouldPartiallyUnrollLoop(const Block* loop_header) const {
+     DCHECK(loop_header->IsLoop());
+-    auto info = loop_finder_.GetLoopInfo(loop_header);
++    LoopFinder::LoopInfo info = loop_finder_.GetLoopInfo(loop_header);
+     return !info.has_inner_loops &&
             info.op_count < kMaxLoopSizeForPartialUnrolling;
    }
  
-+  // FlyWeb: v8 2e96808 (crbug 383661627). The returned unroll count is the
-+  // total number of copies of the loop body in the resulting graph. Don't
-+  // unroll if the function is already huge (pathological runtimes and memory
-+  // usage, e.g. in register allocation); an unroll count of one still runs the
-+  // phase, which produces loops in a compact block order.
-+  size_t GetPartialUnrollCount(const Block* loop_header) const {
++  // FlyWeb: v8 2e96808 (crbug 383661627), as upstream.
++  // The returned unroll count is the total number of copies of the loop body
++  // in the resulting graph, i.e., an unroll count of N means N-1 copies of the
++  // body which were partially unrolled, and 1 for the original/remaining body.
+   size_t GetPartialUnrollCount(const Block* loop_header) const {
+-    auto info = loop_finder_.GetLoopInfo(loop_header);
++    // Don't unroll if the function is already huge.
++    // Otherwise we have run into pathological runtimes or large memory usage,
++    // e.g., in register allocation in the past, see https://crbug.com/383661627
++    // for an example / reproducer.
++    // Even though we return an unroll count of one (i.e., don't unroll at all
++    // really), running this phase can speed up subsequent optimizations,
++    // probably because it produces loops in a "compact"/good block order for
++    // analyses, namely <loop header>, <loop body>, <loop exit>, <rest of code>.
++    // In principle, we should fix complexity problems in analyses, make sure
++    // loops are already produced in this order, and not rely on the "unrolling"
++    // here for the order alone, but this is a longer standing issue.
 +    if (input_graph_->op_id_count() > kMaxFunctionSizeForPartialUnrolling) {
 +      return 1;
 +    }
-+    return kPartialUnrollingCount;
-+  }
-+
-   bool ShouldRemoveLoop(const Block* loop_header) const {
-     auto iter_count = GetIterationCount(loop_header);
-     return iter_count.IsExact() && iter_count.exact_count() == 0;
-@@ -223,6 +235,9 @@ class V8_EXPORT_PRIVATE LoopUnrollingAnalyzer {
+     if (is_wasm_) {
++      LoopFinder::LoopInfo info = loop_finder_.GetLoopInfo(loop_header);
+       return std::min(
+           LoopUnrollingAnalyzer::kMaxPartialUnrollingCount,
+           LoopUnrollingAnalyzer::kWasmMaxUnrolledLoopSize / info.op_count);
+@@ -233,6 +251,12 @@ class V8_EXPORT_PRIVATE LoopUnrollingAnalyzer {
    // trade-off. In particular, having the number of iterations to unroll be a
    // function of the loop's size and a MaxLoopSize could make sense.
    static constexpr size_t kMaxLoopSizeForFullUnrolling = 150;
-+  // FlyWeb: v8 2e96808. Large enough that JavaScript probably never hits it,
-+  // lower than the operation count of some huge Wasm functions (1.7M).
++  // FlyWeb: v8 2e96808.
++  // This function size limit is quite arbitrary. It is large enough that we
++  // probably never hit it in JavaScript and it is lower than the operation
++  // count we have seen in some huge Wasm functions in the past, e.g., function
++  // #21937 of https://crbug.com/383661627 (1.7M operations, 2.7MB wire bytes).
 +  static constexpr size_t kMaxFunctionSizeForPartialUnrolling = 1'000'000;
    static constexpr size_t kJSMaxLoopSizeForPartialUnrolling = 50;
    static constexpr size_t kWasmMaxLoopSizeForPartialUnrolling = 80;
-   static constexpr size_t kMaxLoopIterationsForFullUnrolling = 4;
-@@ -502,7 +517,8 @@ void LoopUnrollingReducer<Next>::PartiallyUnrollLoop(const Block* header) {
-   auto loop_body = analyzer_.GetLoopBody(header);
+   static constexpr size_t kWasmMaxUnrolledLoopSize = 240;
+@@ -514,6 +538,7 @@ void LoopUnrollingReducer<Next>::PartiallyUnrollLoop(const Block* header) {
    current_loop_header_ = header;
  
--  int unroll_count = LoopUnrollingAnalyzer::kPartialUnrollingCount;
-+  int unroll_count = static_cast<int>(analyzer_.GetPartialUnrollCount(header));
+   size_t unroll_count = analyzer_.GetPartialUnrollCount(header);
 +  DCHECK_GT(unroll_count, 0);
  
    ScopedModification<bool> set_true(__ turn_loop_without_backedge_into_merge(),

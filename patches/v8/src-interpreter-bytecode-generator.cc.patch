@@ -1,5 +1,5 @@
 diff --git a/src/interpreter/bytecode-generator.cc b/src/interpreter/bytecode-generator.cc
-index c0f7bca3472c857d88fdd29b51d9dd412cfbce12..a333459ee8f470f7cb52ab4de92defc557d34e25 100644
+index 07f44c40d7c59f9c46afd3905d549ab6f559ed8f..fb2b483efe1bfa9317d95441229597ec08dbfe59 100644
 --- a/src/interpreter/bytecode-generator.cc
 +++ b/src/interpreter/bytecode-generator.cc
 @@ -1206,7 +1206,8 @@ class V8_NODISCARD BytecodeGenerator::OptionalChainNullLabelScope final {
@@ -22,7 +22,7 @@ index c0f7bca3472c857d88fdd29b51d9dd412cfbce12..a333459ee8f470f7cb52ab4de92defc5
  };
  
  // LoopScope delimits the scope of {loop}, from its header to its final jump.
-@@ -2458,6 +2462,9 @@ void BytecodeGenerator::VisitSwitchStatement(SwitchStatement* stmt) {
+@@ -2525,6 +2529,9 @@ void BytecodeGenerator::VisitSwitchStatement(SwitchStatement* stmt) {
    // Are we still using any if-else bytecodes to evaluate the switch?
    bool use_jumps = n_comp_cases != 0;
  
@@ -32,7 +32,7 @@ index c0f7bca3472c857d88fdd29b51d9dd412cfbce12..a333459ee8f470f7cb52ab4de92defc5
    SwitchBuilder switch_builder(builder(), block_coverage_builder_, stmt,
                                 n_comp_cases, jump_table);
    ControlScopeForBreakable scope(this, stmt, &switch_builder);
-@@ -2515,6 +2522,10 @@ void BytecodeGenerator::VisitSwitchStatement(SwitchStatement* stmt) {
+@@ -2582,6 +2589,10 @@ void BytecodeGenerator::VisitSwitchStatement(SwitchStatement* stmt) {
                                           info.covered_cases);
  
      if (use_jumps) {
@@ -43,7 +43,7 @@ index c0f7bca3472c857d88fdd29b51d9dd412cfbce12..a333459ee8f470f7cb52ab4de92defc5
        builder()->LoadAccumulatorWithRegister(r1);
      }
    }
-@@ -2535,16 +2546,14 @@ void BytecodeGenerator::VisitSwitchStatement(SwitchStatement* stmt) {
+@@ -2602,16 +2613,14 @@ void BytecodeGenerator::VisitSwitchStatement(SwitchStatement* stmt) {
        // The comparisons linearly dominate, so no need to open a new elision
        // scope for each one.
        std::optional<HoleCheckElisionScope> elider;
@@ -63,7 +63,7 @@ index c0f7bca3472c857d88fdd29b51d9dd412cfbce12..a333459ee8f470f7cb52ab4de92defc5
  
            // Perform label comparison as if via '===' with tag.
            VisitForAccumulatorValue(clause->label());
-@@ -2555,7 +2564,9 @@ void BytecodeGenerator::VisitSwitchStatement(SwitchStatement* stmt) {
+@@ -2622,7 +2631,9 @@ void BytecodeGenerator::VisitSwitchStatement(SwitchStatement* stmt) {
  #endif
            switch_builder.JumpToCaseIfTrue(ToBooleanMode::kAlreadyBoolean,
                                            case_compare_ctr++);
@@ -74,7 +74,7 @@ index c0f7bca3472c857d88fdd29b51d9dd412cfbce12..a333459ee8f470f7cb52ab4de92defc5
          }
        }
      }
-@@ -6331,9 +6342,6 @@ template <typename ExpressionFunc>
+@@ -6401,9 +6412,6 @@ template <typename ExpressionFunc>
  void BytecodeGenerator::BuildOptionalChain(ExpressionFunc expression_func) {
    BytecodeLabel done;
    OptionalChainNullLabelScope label_scope(this);
