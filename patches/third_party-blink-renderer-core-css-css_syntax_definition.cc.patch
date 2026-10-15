@@ -1,8 +1,26 @@
 diff --git a/third_party/blink/renderer/core/css/css_syntax_definition.cc b/third_party/blink/renderer/core/css/css_syntax_definition.cc
-index 2a2d5945f39947d2013047381b3b560a2076beb0..33fe320c10ba503f35d9b657a3e150c0d6960730 100644
+index 2a2d5945f39947d2013047381b3b560a2076beb0..bfe805bdda917a7cdc595694ca6dbbc89e31e694 100644
 --- a/third_party/blink/renderer/core/css/css_syntax_definition.cc
 +++ b/third_party/blink/renderer/core/css/css_syntax_definition.cc
-@@ -119,8 +119,8 @@ const CSSValue* CSSSyntaxDefinition::Parse(CSSTokenizedValue value,
+@@ -14,6 +14,7 @@
+ #include "third_party/blink/renderer/core/css/parser/css_variable_parser.h"
+ #include "third_party/blink/renderer/core/css/properties/css_parsing_utils.h"
+ #include "third_party/blink/renderer/core/html/parser/html_parser_idioms.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+ 
+ namespace blink {
+ namespace {
+@@ -74,6 +75,9 @@ const CSSValue* ConsumeSingleType(const CSSSyntaxComponent& syntax,
+       return css_parsing_utils::ConsumeTransformList(range, context);
+     case CSSSyntaxType::kCustomIdent:
+       return css_parsing_utils::ConsumeCustomIdent(range, context);
++    case CSSSyntaxType::kString:
++      DCHECK(RuntimeEnabledFeatures::CSSAtPropertyStringSyntaxEnabled());
++      return css_parsing_utils::ConsumeString(range);
+     default:
+       NOTREACHED();
+       return nullptr;
+@@ -119,8 +123,8 @@ const CSSValue* CSSSyntaxDefinition::Parse(CSSTokenizedValue value,
                                             const CSSParserContext& context,
                                             bool is_animation_tainted) const {
    if (IsUniversal()) {

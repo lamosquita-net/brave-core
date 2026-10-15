@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style.h b/third_party/blink/renderer/core/style/computed_style.h
-index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..7569889269698a6ce36443f55af9c8740d3f1869 100644
+index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..88bc2a9aa994c7a10f23aec697d4a9a38f4e95a2 100644
 --- a/third_party/blink/renderer/core/style/computed_style.h
 +++ b/third_party/blink/renderer/core/style/computed_style.h
 @@ -44,7 +44,7 @@
@@ -172,7 +172,15 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..7569889269698a6ce36443f55af9c874
             IsDisplayReplacedType(display);
    }
  
-@@ -3570,7 +3607,7 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+@@ -3060,6 +3097,7 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+     SetHasClipPath(clip_path.get());
+     SetClipPathInternal(std::move(clip_path));
+   }
++  ClipPathOperation* MutableClipPath() { return ClipPathInternal().get(); }
+ 
+   // color
+   blink::Color GetCurrentColor() const {
+@@ -3570,7 +3608,7 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
    EWhiteSpace WhiteSpace() const { return style_->WhiteSpace(); }
    void SetWhiteSpace(EWhiteSpace whitespace) {
      SetWhiteSpaceCollapse(ToWhiteSpaceCollapse(whitespace));

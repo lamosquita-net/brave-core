@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/html_plugin_element.h b/third_party/blink/renderer/core/html/html_plugin_element.h
-index 77c70e1af6cc691ab862b8133b4d0fe6a1813c9e..5451bedb0a3cddd57e93422219df1295ba47a143 100644
+index 77c70e1af6cc691ab862b8133b4d0fe6a1813c9e..e4e6e64e02ce658fc689ea111fcc3edf589bac52 100644
 --- a/third_party/blink/renderer/core/html/html_plugin_element.h
 +++ b/third_party/blink/renderer/core/html/html_plugin_element.h
 @@ -35,6 +35,7 @@ namespace blink {
@@ -40,10 +40,23 @@ index 77c70e1af6cc691ab862b8133b4d0fe6a1813c9e..5451bedb0a3cddd57e93422219df1295
   protected:
    HTMLPlugInElement(const QualifiedName& tag_name,
                      Document&,
-@@ -179,6 +172,19 @@ class CORE_EXPORT HTMLPlugInElement
-   void DisconnectContentFrame() override;
-   void IntrinsicSizingInfoChanged() final;
+@@ -116,6 +109,9 @@ class CORE_EXPORT HTMLPlugInElement
+       const QualifiedName&,
+       const AtomicString&,
+       MutableCSSPropertyValueSet*) override;
++  // HTMLFrameOwnerElement overrides:
++  void DisconnectContentFrame() override;
++  void IntrinsicSizingInfoChanged() final;
  
+   virtual bool HasFallbackContent() const;
+   // Create or update the LayoutEmbeddedContent and return it, triggering layout
+@@ -175,9 +171,18 @@ class CORE_EXPORT HTMLPlugInElement
+   bool HasCustomFocusLogic() const override;
+   bool IsPluginElement() const final;
+ 
+-  // HTMLFrameOwnerElement overrides:
+-  void DisconnectContentFrame() override;
+-  void IntrinsicSizingInfoChanged() final;
 +  // TODO(dcheng): Consider removing this, since HTMLEmbedElementLegacyCall
 +  // and HTMLObjectElementLegacyCall usage is extremely low.
 +  v8::Local<v8::Object> PluginWrapper();
@@ -56,7 +69,6 @@ index 77c70e1af6cc691ab862b8133b4d0fe6a1813c9e..5451bedb0a3cddd57e93422219df1295
 +  // by calling LayoutEmbeddedContentForJSBindings. Possibly the
 +  // PluginEmbeddedContentView code can be inlined into PluginWrapper.
 +  WebPluginContainerImpl* PluginEmbeddedContentView() const;
-+
+ 
    // Return any existing LayoutEmbeddedContent without triggering relayout, or 0
    // if it doesn't yet exist.
-   virtual LayoutEmbeddedContent* ExistingLayoutEmbeddedContent() const = 0;

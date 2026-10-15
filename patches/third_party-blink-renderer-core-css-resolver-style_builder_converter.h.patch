@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_builder_converter.h b/third_party/blink/renderer/core/css/resolver/style_builder_converter.h
-index 07090144d0700e9f63045939c9fa5f3b2ad090b7..a4f01d78ad0753861d4ff28dcf10bfb2122e1eff 100644
+index 07090144d0700e9f63045939c9fa5f3b2ad090b7..b28534d4b39b847ea1f077f5550c5fd495011008 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_builder_converter.h
 +++ b/third_party/blink/renderer/core/css/resolver/style_builder_converter.h
 @@ -100,7 +100,8 @@ class StyleBuilderConverterBase {
@@ -12,7 +12,27 @@ index 07090144d0700e9f63045939c9fa5f3b2ad090b7..a4f01d78ad0753861d4ff28dcf10bfb2
    static scoped_refptr<FontPalette> ConvertFontPalette(const CSSValue&);
    static scoped_refptr<FontPalette> ConvertPaletteMix(const CSSValue&);
  };
-@@ -350,6 +351,8 @@ class StyleBuilderConverter {
+@@ -119,7 +120,8 @@ class StyleBuilderConverter {
+                                                           const CSSValue&);
+   static scoped_refptr<StyleSVGResource> ConvertElementReference(
+       StyleResolverState&,
+-      const CSSValue&);
++      const CSSValue&,
++      CSSPropertyID = CSSPropertyID::kInvalid);
+   static FilterOperations ConvertFilterOperations(StyleResolverState&,
+                                                   const CSSValue&,
+                                                   CSSPropertyID);
+@@ -254,7 +256,8 @@ class StyleBuilderConverter {
+                                               bool for_visited_link = false);
+   static SVGPaint ConvertSVGPaint(StyleResolverState&,
+                                   const CSSValue&,
+-                                  bool for_visited_link);
++                                  bool for_visited_link,
++                                  CSSPropertyID = CSSPropertyID::kInvalid);
+   static TextDecorationThickness ConvertTextDecorationThickness(
+       StyleResolverState&,
+       const CSSValue&);
+@@ -350,6 +353,8 @@ class StyleBuilderConverter {
  
    static AtomicString ConvertViewTransitionName(StyleResolverState&,
                                                  const CSSValue&);

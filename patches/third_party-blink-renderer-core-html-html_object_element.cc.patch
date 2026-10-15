@@ -1,0 +1,18 @@
+diff --git a/third_party/blink/renderer/core/html/html_object_element.cc b/third_party/blink/renderer/core/html/html_object_element.cc
+index 6a3f460c4a0c09a8d0ceac9fe17225c5560ba2cd..ba33defd90f879acfc2675a8787f66eb67ef5f55 100644
+--- a/third_party/blink/renderer/core/html/html_object_element.cc
++++ b/third_party/blink/renderer/core/html/html_object_element.cc
+@@ -321,7 +321,12 @@ void HTMLObjectElement::RenderFallbackContent(
+     }
+   }
+ 
+-  // TODO(dcheng): Detach the content frame here.
++  // To discard the nested browsing context, detach the content frame.
++  if (RuntimeEnabledFeatures::
++          HTMLObjectElementFallbackDetachContentFrameEnabled()) {
++    DisconnectContentFrame();
++  }
++
+   UseCounter::Count(GetDocument(), WebFeature::kHTMLObjectElementFallback);
+   use_fallback_content_ = true;
+   ReattachFallbackContent();

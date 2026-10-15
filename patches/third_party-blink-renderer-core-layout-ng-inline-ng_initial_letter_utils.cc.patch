@@ -1,0 +1,25 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_initial_letter_utils.cc b/third_party/blink/renderer/core/layout/ng/inline/ng_initial_letter_utils.cc
+index 729e4168ed566c84bb491573fc1b5d0c0c7a1c6d..df04a945f196f60fbf89a9ad3e16b759140b2334 100644
+--- a/third_party/blink/renderer/core/layout/ng/inline/ng_initial_letter_utils.cc
++++ b/third_party/blink/renderer/core/layout/ng/inline/ng_initial_letter_utils.cc
+@@ -11,6 +11,7 @@
+ #include "third_party/blink/renderer/core/layout/ng/inline/ng_logical_line_item.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_fragment.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_physical_box_fragment.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+ #include "third_party/blink/renderer/platform/text/writing_direction_mode.h"
+ 
+ namespace blink {
+@@ -34,8 +35,10 @@ LayoutUnit ComputeInitialLetterBoxBlockOffset(
+   // English font.
+   const LayoutUnit line_height = paragraph_style.ComputedLineHeightAsFixed();
+ 
+-  const int size = std::ceil(block_size / line_height.ToFloat());
+-
++  const int size =
++      std::ceil(RuntimeEnabledFeatures::InitialLetterRaiseBySpecifiedEnabled()
++                    ? initial_letter.Size()
++                    : block_size / line_height.ToFloat());
+   const int sink = initial_letter.IsRaise() || initial_letter.IsIntegerSink()
+                        ? initial_letter.Sink()
+                        : size;

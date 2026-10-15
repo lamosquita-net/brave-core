@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_line_breaker.h b/third_party/blink/renderer/core/layout/ng/inline/ng_line_breaker.h
-index be47a676d33890436858d55bae489e23a029f8ab..8d39ff50142c32be7335ba7a57b2fb99c536b7b2 100644
+index be47a676d33890436858d55bae489e23a029f8ab..ed5018616e1df50880ac662fab77ca93e59b95e0 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_line_breaker.h
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_line_breaker.h
 @@ -29,6 +29,8 @@ class NGLineBreakCandidateContext;
@@ -103,7 +103,7 @@ index be47a676d33890436858d55bae489e23a029f8ab..8d39ff50142c32be7335ba7a57b2fb99
    void UpdateAvailableWidth();
  
    // True if the current line is hyphenated.
-@@ -275,10 +317,19 @@ class CORE_EXPORT NGLineBreaker {
+@@ -275,10 +317,20 @@ class CORE_EXPORT NGLineBreaker {
    // |WhitespaceState| of the current end. When a line is broken, this indicates
    // the state of trailing whitespaces.
    WhitespaceState trailing_whitespace_;
@@ -114,6 +114,7 @@ index be47a676d33890436858d55bae489e23a029f8ab..8d39ff50142c32be7335ba7a57b2fb99
    // The current position from inline_start. Unlike NGInlineLayoutAlgorithm
    // that computes position in visual order, this position in logical order.
    LayoutUnit position_;
++  LayoutUnit applied_text_indent_;
 +
 +  // Offset of this (sub-)line's start from the tab-stop origin, i.e. the start
 +  // content edge of the nearest block container ancestor. Non-zero only for
@@ -123,7 +124,7 @@ index be47a676d33890436858d55bae489e23a029f8ab..8d39ff50142c32be7335ba7a57b2fb99
    LayoutUnit available_width_;
    NGLineLayoutOpportunity line_opportunity_;
  
-@@ -304,6 +355,9 @@ class CORE_EXPORT NGLineBreaker {
+@@ -304,6 +356,9 @@ class CORE_EXPORT NGLineBreaker {
    // True when current box allows line wrapping.
    bool auto_wrap_ = false;
  
@@ -133,7 +134,7 @@ index be47a676d33890436858d55bae489e23a029f8ab..8d39ff50142c32be7335ba7a57b2fb99
    // True when current box has 'word-break/word-wrap: break-word'.
    bool break_anywhere_if_overflow_ = false;
  
-@@ -340,7 +394,11 @@ class CORE_EXPORT NGLineBreaker {
+@@ -340,7 +395,11 @@ class CORE_EXPORT NGLineBreaker {
    bool has_considered_creating_break_token_ = false;
  #endif
  
@@ -146,7 +147,7 @@ index be47a676d33890436858d55bae489e23a029f8ab..8d39ff50142c32be7335ba7a57b2fb99
  
    // The text content of this node. This is same as |items_data_.text_content|
    // except when sticky images quirk is needed. See
-@@ -350,6 +408,9 @@ class CORE_EXPORT NGLineBreaker {
+@@ -350,6 +409,9 @@ class CORE_EXPORT NGLineBreaker {
    const NGConstraintSpace& constraint_space_;
    NGExclusionSpace* exclusion_space_;
    const NGInlineBreakToken* break_token_;
@@ -156,7 +157,7 @@ index be47a676d33890436858d55bae489e23a029f8ab..8d39ff50142c32be7335ba7a57b2fb99
    const NGColumnSpannerPath* column_spanner_path_;
    scoped_refptr<const ComputedStyle> current_style_;
  
-@@ -405,6 +466,9 @@ class CORE_EXPORT NGLineBreaker {
+@@ -405,6 +467,9 @@ class CORE_EXPORT NGLineBreaker {
  
    // This has a valid object if is_svg_text_.
    std::unique_ptr<ResolvedTextLayoutAttributesIterator> svg_resolved_iterator_;
