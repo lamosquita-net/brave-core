@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc b/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc
-index 3e784902ddee52b0a6754e762a3c911bb41876fc..bf3761eb3457317daa6739c13767783fdce6d3d2 100644
+index 3e784902ddee52b0a6754e762a3c911bb41876fc..9c30cd5185c0223da256470ff520b8cb52b21710 100644
 --- a/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc
 +++ b/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc
 @@ -60,7 +60,9 @@
@@ -739,7 +739,28 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..bf3761eb3457317daa6739c13767783f
  const CSSValue* WebkitTapHighlightColor::ParseSingleValue(
      CSSParserTokenRange& range,
      const CSSParserContext& context,
-@@ -10557,27 +10919,5 @@ const CSSValue* InternalEmptyLineHeight::ParseSingleValue(
+@@ -10193,11 +10555,18 @@ const CSSValue* WhiteSpaceCollapse::CSSValueFromComputedStyleInternal(
+   return CSSIdentifierValue::Create(style.GetWhiteSpaceCollapse());
+ }
+ 
+-const CSSValue* TextWrap::CSSValueFromComputedStyleInternal(
++const CSSValue* TextWrapMode::CSSValueFromComputedStyleInternal(
++    const ComputedStyle& style,
++    const LayoutObject*,
++    bool allow_visited_style) const {
++  return CSSIdentifierValue::Create(style.GetTextWrapMode());
++}
++
++const CSSValue* TextWrapStyle::CSSValueFromComputedStyleInternal(
+     const ComputedStyle& style,
+     const LayoutObject*,
+     bool allow_visited_style) const {
+-  return CSSIdentifierValue::Create(style.GetTextWrap());
++  return CSSIdentifierValue::Create(style.GetTextWrapStyle());
+ }
+ 
+ const CSSValue* Widows::ParseSingleValue(CSSParserTokenRange& range,
+@@ -10557,27 +10926,5 @@ const CSSValue* InternalEmptyLineHeight::ParseSingleValue(
                                           CSSValueID::kNone>(range);
  }
  

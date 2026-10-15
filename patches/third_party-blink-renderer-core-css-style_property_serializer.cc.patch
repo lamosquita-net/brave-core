@@ -1,16 +1,36 @@
 diff --git a/third_party/blink/renderer/core/css/style_property_serializer.cc b/third_party/blink/renderer/core/css/style_property_serializer.cc
-index f32faf3a9bbfdeda831980efd36919c571227e0f..3df98577319a781e5274ce901b484fae49d43fc3 100644
+index f32faf3a9bbfdeda831980efd36919c571227e0f..e025ff82b611ff544bbd83df5e5a8b24e3f71e42 100644
 --- a/third_party/blink/renderer/core/css/style_property_serializer.cc
 +++ b/third_party/blink/renderer/core/css/style_property_serializer.cc
-@@ -399,6 +399,7 @@ static bool AllowInitialInShorthand(CSSPropertyID property_id) {
+@@ -67,9 +67,14 @@ inline WhiteSpaceCollapse ToWhiteSpaceCollapse(const CSSValue* value) {
+       value, ComputedStyleInitialValues::InitialWhiteSpaceCollapse());
+ }
+ 
+-inline TextWrap ToTextWrap(const CSSValue* value) {
+-  return ConvertIdentifierTo<TextWrap>(
+-      value, ComputedStyleInitialValues::InitialTextWrap());
++inline TextWrapMode ToTextWrapMode(const CSSValue* value) {
++  return ConvertIdentifierTo<TextWrapMode>(
++      value, ComputedStyleInitialValues::InitialTextWrapMode());
++}
++
++inline TextWrapStyle ToTextWrapStyle(const CSSValue* value) {
++  return ConvertIdentifierTo<TextWrapStyle>(
++      value, ComputedStyleInitialValues::InitialTextWrapStyle());
+ }
+ 
+ }  // namespace
+@@ -398,7 +403,9 @@ static bool AllowInitialInShorthand(CSSPropertyID property_id) {
+     case CSSPropertyID::kListStyle:
      case CSSPropertyID::kTextDecoration:
      case CSSPropertyID::kTextEmphasis:
++    case CSSPropertyID::kTextWrap:
      case CSSPropertyID::kWebkitMask:
 +    case CSSPropertyID::kAlternativeMask:
      case CSSPropertyID::kWebkitTextStroke:
      case CSSPropertyID::kAlternativeWhiteSpace:
        return true;
-@@ -504,8 +505,6 @@ String StylePropertySerializer::SerializeShorthand(
+@@ -504,8 +511,6 @@ String StylePropertySerializer::SerializeShorthand(
        return Get2Values(borderSpacingShorthand());
      case CSSPropertyID::kBackgroundPosition:
        return GetLayeredShorthandValue(backgroundPositionShorthand());
@@ -19,7 +39,7 @@ index f32faf3a9bbfdeda831980efd36919c571227e0f..3df98577319a781e5274ce901b484fae
      case CSSPropertyID::kBackground:
        return GetLayeredShorthandValue(backgroundShorthand());
      case CSSPropertyID::kBorder:
-@@ -623,12 +622,14 @@ String StylePropertySerializer::SerializeShorthand(
+@@ -623,12 +628,14 @@ String StylePropertySerializer::SerializeShorthand(
        return GetLayeredShorthandValue(transitionShorthand());
      case CSSPropertyID::kListStyle:
        return GetShorthandValue(listStyleShorthand());
@@ -36,7 +56,16 @@ index f32faf3a9bbfdeda831980efd36919c571227e0f..3df98577319a781e5274ce901b484fae
      case CSSPropertyID::kTextEmphasis:
        return GetShorthandValue(textEmphasisShorthand());
      case CSSPropertyID::kWebkitTextStroke:
-@@ -1506,6 +1507,48 @@ String StylePropertySerializer::Get4Values(
+@@ -684,6 +691,8 @@ String StylePropertySerializer::SerializeShorthand(
+       return ViewTimelineValue();
+     case CSSPropertyID::kAlternativeWhiteSpace:
+       return WhiteSpaceValue();
++    case CSSPropertyID::kTextWrap:
++      return TextWrapValue();
+     case CSSPropertyID::kGridColumnGap:
+     case CSSPropertyID::kGridGap:
+     case CSSPropertyID::kGridRowGap:
+@@ -1506,6 +1515,48 @@ String StylePropertySerializer::Get4Values(
    return result.ReleaseString();
  }
  
@@ -85,7 +114,7 @@ index f32faf3a9bbfdeda831980efd36919c571227e0f..3df98577319a781e5274ce901b484fae
  String StylePropertySerializer::GetLayeredShorthandValue(
      const StylePropertyShorthand& shorthand) const {
    const unsigned size = shorthand.length();
-@@ -1530,11 +1573,9 @@ String StylePropertySerializer::GetLayeredShorthandValue(
+@@ -1530,11 +1581,9 @@ String StylePropertySerializer::GetLayeredShorthandValue(
    // Now stitch the properties together.
    for (wtf_size_t layer = 0; layer < num_layers; layer++) {
      StringBuilder layer_result;
@@ -100,7 +129,7 @@ index f32faf3a9bbfdeda831980efd36919c571227e0f..3df98577319a781e5274ce901b484fae
  
      for (unsigned property_index = 0; property_index < size; property_index++) {
        const CSSValue* value = nullptr;
-@@ -1561,45 +1602,7 @@ String StylePropertySerializer::GetLayeredShorthandValue(
+@@ -1561,45 +1610,7 @@ String StylePropertySerializer::GetLayeredShorthandValue(
          continue;
        }
  
@@ -147,7 +176,7 @@ index f32faf3a9bbfdeda831980efd36919c571227e0f..3df98577319a781e5274ce901b484fae
  
        // The shorthand can not represent the following properties if they have
        // non-initial values. This is because they are always reset to their
-@@ -1616,7 +1619,7 @@ String StylePropertySerializer::GetLayeredShorthandValue(
+@@ -1616,7 +1627,7 @@ String StylePropertySerializer::GetLayeredShorthandValue(
            DCHECK(RuntimeEnabledFeatures::ScrollTimelineEnabled());
            return g_empty_string;
          }
@@ -156,7 +185,7 @@ index f32faf3a9bbfdeda831980efd36919c571227e0f..3df98577319a781e5274ce901b484fae
        }
        if (property->IDEquals(CSSPropertyID::kAnimationDelayEnd)) {
          if (CSSToStyleMap::MapAnimationDelayEnd(*value) !=
-@@ -1624,7 +1627,7 @@ String StylePropertySerializer::GetLayeredShorthandValue(
+@@ -1624,7 +1635,7 @@ String StylePropertySerializer::GetLayeredShorthandValue(
              layer > 0) {
            return g_empty_string;
          }
@@ -165,7 +194,7 @@ index f32faf3a9bbfdeda831980efd36919c571227e0f..3df98577319a781e5274ce901b484fae
        }
        if (property->IDEquals(CSSPropertyID::kAnimationRangeStart)) {
          auto* ident = DynamicTo<CSSIdentifierValue>(value);
-@@ -1633,7 +1636,7 @@ String StylePropertySerializer::GetLayeredShorthandValue(
+@@ -1633,7 +1644,7 @@ String StylePropertySerializer::GetLayeredShorthandValue(
            DCHECK(RuntimeEnabledFeatures::ScrollTimelineEnabled());
            return g_empty_string;
          }
@@ -174,7 +203,7 @@ index f32faf3a9bbfdeda831980efd36919c571227e0f..3df98577319a781e5274ce901b484fae
        }
        if (property->IDEquals(CSSPropertyID::kAnimationRangeEnd)) {
          auto* ident = DynamicTo<CSSIdentifierValue>(value);
-@@ -1642,13 +1645,60 @@ String StylePropertySerializer::GetLayeredShorthandValue(
+@@ -1642,13 +1653,60 @@ String StylePropertySerializer::GetLayeredShorthandValue(
            DCHECK(RuntimeEnabledFeatures::ScrollTimelineEnabled());
            return g_empty_string;
          }
@@ -239,7 +268,7 @@ index f32faf3a9bbfdeda831980efd36919c571227e0f..3df98577319a781e5274ce901b484fae
              layer_result.Append(" / ");
            } else {
              layer_result.Append(" 0% 0% / ");
-@@ -1659,30 +1709,24 @@ String StylePropertySerializer::GetLayeredShorthandValue(
+@@ -1659,30 +1717,24 @@ String StylePropertySerializer::GetLayeredShorthandValue(
            layer_result.Append(' ');
          }
  
@@ -278,7 +307,7 @@ index f32faf3a9bbfdeda831980efd36919c571227e0f..3df98577319a781e5274ce901b484fae
      if (!layer_result.empty()) {
        if (!result.empty()) {
          result.Append(", ");
-@@ -2132,79 +2176,6 @@ String StylePropertySerializer::BorderRadiusValue() const {
+@@ -2132,79 +2184,6 @@ String StylePropertySerializer::BorderRadiusValue() const {
    return builder.ReleaseString();
  }
  
@@ -358,3 +387,66 @@ index f32faf3a9bbfdeda831980efd36919c571227e0f..3df98577319a781e5274ce901b484fae
  String StylePropertySerializer::PageBreakPropertyValue(
      const StylePropertyShorthand& shorthand) const {
    const CSSValue* value =
+@@ -2270,13 +2249,43 @@ bool StylePropertySerializer::IsValidToggleShorthand(
+   return true;
+ }
+ 
++String StylePropertySerializer::TextWrapValue() const {
++  const CSSValue* mode_value =
++      property_set_.GetPropertyCSSValue(GetCSSPropertyTextWrapMode());
++  const CSSValue* style_value =
++      property_set_.GetPropertyCSSValue(GetCSSPropertyTextWrapStyle());
++  if (!mode_value || !style_value) {
++    // If any longhands are missing, don't serialize as a shorthand.
++    return g_empty_string;
++  }
++
++  // If `text-wrap-style` is initial, return `text-wrap-mode`.
++  const TextWrapMode mode = ToTextWrapMode(mode_value);
++  const TextWrapStyle style = ToTextWrapStyle(style_value);
++  if (style == ComputedStyleInitialValues::InitialTextWrapStyle()) {
++    return getValueName(PlatformEnumToCSSValueID(mode));
++  }
++
++  // Otherwise, if `text-wrap-mode` is initial, return `text-wrap-style`.
++  if (mode == ComputedStyleInitialValues::InitialTextWrapMode()) {
++    return getValueName(PlatformEnumToCSSValueID(style));
++  }
++
++  // If neither is initial, return a list.
++  StringBuilder result;
++  result.Append(getValueName(PlatformEnumToCSSValueID(mode)));
++  result.Append(kSpaceCharacter);
++  result.Append(getValueName(PlatformEnumToCSSValueID(style)));
++  return result.ToString();
++}
++
+ String StylePropertySerializer::WhiteSpaceValue() const {
+   DCHECK(RuntimeEnabledFeatures::CSSWhiteSpaceShorthandEnabled());
+ 
+   const CSSValue* collapse_value =
+       property_set_.GetPropertyCSSValue(GetCSSPropertyWhiteSpaceCollapse());
+   const CSSValue* wrap_value =
+-      property_set_.GetPropertyCSSValue(GetCSSPropertyTextWrap());
++      property_set_.GetPropertyCSSValue(GetCSSPropertyTextWrapMode());
+   if (!collapse_value || !wrap_value) {
+     // If any longhands are missing, don't serialize as a shorthand.
+     return g_empty_string;
+@@ -2284,7 +2293,7 @@ String StylePropertySerializer::WhiteSpaceValue() const {
+ 
+   // Check if longhands are one of pre-defined keywords of `white-space`.
+   const WhiteSpaceCollapse collapse = ToWhiteSpaceCollapse(collapse_value);
+-  const TextWrap wrap = ToTextWrap(wrap_value);
++  const TextWrapMode wrap = ToTextWrapMode(wrap_value);
+   const EWhiteSpace whitespace = ToWhiteSpace(collapse, wrap);
+   if (IsValidWhiteSpace(whitespace)) {
+     return getValueName(PlatformEnumToCSSValueID(whitespace));
+@@ -2295,7 +2304,7 @@ String StylePropertySerializer::WhiteSpaceValue() const {
+   if (collapse != ComputedStyleInitialValues::InitialWhiteSpaceCollapse()) {
+     result.Append(getValueName(PlatformEnumToCSSValueID(collapse)));
+   }
+-  if (wrap != ComputedStyleInitialValues::InitialTextWrap()) {
++  if (wrap != ComputedStyleInitialValues::InitialTextWrapMode()) {
+     if (!result.empty()) {
+       result.Append(kSpaceCharacter);
+     }

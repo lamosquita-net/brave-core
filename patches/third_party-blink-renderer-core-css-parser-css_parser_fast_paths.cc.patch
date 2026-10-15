@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/parser/css_parser_fast_paths.cc b/third_party/blink/renderer/core/css/parser/css_parser_fast_paths.cc
-index ba8ea7b8cf8d725e4bb39adc0625855e574bcbfd..5b67a0ed772fb981c12623e8164b1171eb50d3b0 100644
+index ba8ea7b8cf8d725e4bb39adc0625855e574bcbfd..881a15386c96b9717bc85077444291160b6bdc7e 100644
 --- a/third_party/blink/renderer/core/css/parser/css_parser_fast_paths.cc
 +++ b/third_party/blink/renderer/core/css/parser/css_parser_fast_paths.cc
 @@ -1142,10 +1142,6 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
@@ -43,9 +43,29 @@ index ba8ea7b8cf8d725e4bb39adc0625855e574bcbfd..5b67a0ed772fb981c12623e8164b1171
      case CSSPropertyID::kWebkitRubyPosition:
        return value_id == CSSValueID::kBefore || value_id == CSSValueID::kAfter;
      case CSSPropertyID::kRubyPosition:
-@@ -1544,6 +1549,13 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
+@@ -1529,21 +1534,20 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
+     case CSSPropertyID::kWebkitTextSecurity:
+       return value_id == CSSValueID::kDisc || value_id == CSSValueID::kCircle ||
+              value_id == CSSValueID::kSquare || value_id == CSSValueID::kNone;
+-    case CSSPropertyID::kTextWrap:
+-      DCHECK(RuntimeEnabledFeatures::CSSTextWrapEnabled());
+-      if (!RuntimeEnabledFeatures::CSSWhiteSpaceShorthandEnabled()) {
+-        return value_id == CSSValueID::kWrap ||
+-               value_id == CSSValueID::kBalance;
+-      }
+-      if (!RuntimeEnabledFeatures::CSSTextWrapPrettyEnabled()) {
+-        return value_id == CSSValueID::kWrap ||
+-               value_id == CSSValueID::kNowrap ||
+-               value_id == CSSValueID::kBalance;
+-      }
+-      return value_id == CSSValueID::kWrap || value_id == CSSValueID::kNowrap ||
++    case CSSPropertyID::kTextWrapMode:
++      return value_id == CSSValueID::kWrap || value_id == CSSValueID::kNowrap;
++    case CSSPropertyID::kTextWrapStyle:
++      return value_id == CSSValueID::kAuto ||
               value_id == CSSValueID::kBalance ||
-              value_id == CSSValueID::kPretty;
+-             value_id == CSSValueID::kPretty;
++             value_id == CSSValueID::kPretty || value_id == CSSValueID::kStable;
      case CSSPropertyID::kTransformBox:
 +      if (RuntimeEnabledFeatures::CSSTransformBoxAdditionalKeywordsEnabled()) {
 +        return value_id == CSSValueID::kContentBox ||
@@ -57,7 +77,7 @@ index ba8ea7b8cf8d725e4bb39adc0625855e574bcbfd..5b67a0ed772fb981c12623e8164b1171
        return value_id == CSSValueID::kFillBox ||
               value_id == CSSValueID::kViewBox;
      case CSSPropertyID::kTransformStyle:
-@@ -1623,8 +1635,6 @@ CSSBitset CSSParserFastPaths::handled_by_keyword_fast_paths_properties_{{
+@@ -1623,8 +1627,6 @@ CSSBitset CSSParserFastPaths::handled_by_keyword_fast_paths_properties_{{
      CSSPropertyID::kAppearance,
      CSSPropertyID::kMixBlendMode,
      CSSPropertyID::kIsolation,
@@ -66,7 +86,7 @@ index ba8ea7b8cf8d725e4bb39adc0625855e574bcbfd..5b67a0ed772fb981c12623e8164b1171
      CSSPropertyID::kBaselineSource,
      CSSPropertyID::kBorderBottomStyle,
      CSSPropertyID::kBorderCollapse,
-@@ -1644,9 +1654,12 @@ CSSBitset CSSParserFastPaths::handled_by_keyword_fast_paths_properties_{{
+@@ -1644,9 +1646,12 @@ CSSBitset CSSParserFastPaths::handled_by_keyword_fast_paths_properties_{{
      CSSPropertyID::kEmptyCells,
      CSSPropertyID::kFillRule,
      CSSPropertyID::kFloat,
@@ -79,7 +99,7 @@ index ba8ea7b8cf8d725e4bb39adc0625855e574bcbfd..5b67a0ed772fb981c12623e8164b1171
      CSSPropertyID::kListStylePosition,
      CSSPropertyID::kMaskType,
      CSSPropertyID::kMathShift,
-@@ -1671,6 +1684,7 @@ CSSBitset CSSParserFastPaths::handled_by_keyword_fast_paths_properties_{{
+@@ -1671,6 +1676,7 @@ CSSBitset CSSParserFastPaths::handled_by_keyword_fast_paths_properties_{{
      CSSPropertyID::kOverscrollBehaviorBlock,
      CSSPropertyID::kOverscrollBehaviorX,
      CSSPropertyID::kOverscrollBehaviorY,
@@ -87,3 +107,13 @@ index ba8ea7b8cf8d725e4bb39adc0625855e574bcbfd..5b67a0ed772fb981c12623e8164b1171
      CSSPropertyID::kRubyPosition,
      CSSPropertyID::kShapeRendering,
      CSSPropertyID::kSpeak,
+@@ -1720,7 +1726,8 @@ CSSBitset CSSParserFastPaths::handled_by_keyword_fast_paths_properties_{{
+     CSSPropertyID::kWebkitRubyPosition,
+     CSSPropertyID::kWebkitTextCombine,
+     CSSPropertyID::kWebkitTextSecurity,
+-    CSSPropertyID::kTextWrap,
++    CSSPropertyID::kTextWrapMode,
++    CSSPropertyID::kTextWrapStyle,
+     CSSPropertyID::kTransformBox,
+     CSSPropertyID::kTransformStyle,
+     CSSPropertyID::kWebkitUserDrag,

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/css_properties.json5 b/third_party/blink/renderer/core/css/css_properties.json5
-index 871edc0924403a04bf16f4d5602f421d3882473c..5a25b8e314fd268c7edf38f803dc34ffd37fe245 100644
+index 871edc0924403a04bf16f4d5602f421d3882473c..d4ba6445a8a36551959846b027e3a52e486179d2 100644
 --- a/third_party/blink/renderer/core/css/css_properties.json5
 +++ b/third_party/blink/renderer/core/css/css_properties.json5
 @@ -991,6 +991,19 @@
@@ -278,15 +278,15 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..5a25b8e314fd268c7edf38f803dc34ff
        },
 -      computable: false,
 +      runtime_flag: "CSSMaskingInterop",
-     },
-     {
--      name: "-webkit-mask-repeat-y",
++    },
++    {
 +      name: "-webkit-alternative-mask-repeat",
 +      alternative_of: "-webkit-mask-repeat",
 +      alias_for: "mask-repeat",
 +      runtime_flag: "CSSMaskingInterop",
-+    },
-+    {
+     },
+     {
+-      name: "-webkit-mask-repeat-y",
 +      name: "-webkit-mask-repeat",
 +      property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
        style_builder_template: "mask_layer",
@@ -354,7 +354,67 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..5a25b8e314fd268c7edf38f803dc34ff
      },
      {
        name: "-webkit-tap-highlight-color",
-@@ -6863,7 +7003,7 @@
+@@ -6080,7 +6220,7 @@
+       inherited: true,
+       // This property is "keyword" but use "primitive" to use `EWhiteSpace` defined manually.
+       field_template: "primitive",
+-      // The values are stored in `white-space-collapse` and `text-wrap` by
++      // The values are stored in `white-space-collapse` and `text-wrap-mode` by
+       // `computed_style_custom_functions` even when `CSSWhiteSpaceShorthand`
+       // is off, but give 1 bit to it because `field_size` can't be zero.
+       field_size: 1,
+@@ -6098,7 +6238,7 @@
+       name: "-alternative-white-space",
+       alternative_of: "white-space",
+       longhands: [
+-        "white-space-collapse", "text-wrap"
++        "white-space-collapse", "text-wrap-mode"
+       ],
+       property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
+       runtime_flag: "CSSWhiteSpaceShorthand",
+@@ -6120,18 +6260,34 @@
+     },
+     {
+       name: "text-wrap",
++      longhands: [
++        "text-wrap-mode", "text-wrap-style"
++      ],
++      property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
++    },
++    {
++      name: "text-wrap-mode",
+       property_methods: ["CSSValueFromComputedStyleInternal"],
+       inherited: true,
+-      field_template: "primitive",
+-      field_size: 2,  // Ensure this is in sync with `kTextWrapBits`.
+-      keywords: ["wrap", "nowrap", "balance", "pretty"],
+-      type_name: "TextWrap",
+-      default_value: "TextWrap::kWrap",
+-      include_paths: ["third_party/blink/renderer/core/css/white_space.h"],
++      field_template: "keyword",
++      type_name: "TextWrapMode",
++      keywords: ["wrap", "nowrap"],
++      default_value: "wrap",
++      typedom_types: ["Keyword"],
++      valid_for_cue: true,
++      valid_for_marker: true,
++    },
++    {
++      name: "text-wrap-style",
++      property_methods: ["CSSValueFromComputedStyleInternal"],
++      inherited: true,
++      field_template: "keyword",
++      type_name: "TextWrapStyle",
++      keywords: ["auto", "balance", "pretty", "stable"],
++      default_value: "auto",
+       typedom_types: ["Keyword"],
+       valid_for_cue: true,
+       valid_for_marker: true,
+-      runtime_flag: "CSSTextWrap",
+     },
+     {
+       name: "widows",
+@@ -6863,7 +7019,7 @@
        name: "background",
        longhands: [
          "background-image", "background-position-x", "background-position-y",
@@ -363,7 +423,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..5a25b8e314fd268c7edf38f803dc34ff
          "background-attachment", "background-origin", "background-clip",
          "background-color"
        ],
-@@ -6877,12 +7017,6 @@
+@@ -6877,12 +7033,6 @@
        computable: true,
        supports_incremental_style: true,
      },
@@ -376,7 +436,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..5a25b8e314fd268c7edf38f803dc34ff
      {
        name: "border",
        longhands: [
-@@ -7387,7 +7521,8 @@
+@@ -7387,7 +7537,8 @@
        name: "transition",
        longhands: [
          "transition-property", "transition-duration",
@@ -386,7 +446,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..5a25b8e314fd268c7edf38f803dc34ff
        ],
        property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
      },
-@@ -7440,15 +7575,35 @@
+@@ -7440,15 +7591,35 @@
        longhands: ["column-width", "column-count"],
        property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
      },
@@ -424,7 +484,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..5a25b8e314fd268c7edf38f803dc34ff
      {
        name: "-webkit-mask-box-image",
        longhands: [
-@@ -7460,14 +7615,22 @@
+@@ -7460,14 +7631,22 @@
        computable: true,
      },
      {

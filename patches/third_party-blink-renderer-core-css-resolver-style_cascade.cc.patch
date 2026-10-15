@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_cascade.cc b/third_party/blink/renderer/core/css/resolver/style_cascade.cc
-index bedb7ec7720796c722b00ec96cf9a00d41f32e10..24b7fb3a08903cabf5efdf53d158d8349a7935b0 100644
+index bedb7ec7720796c722b00ec96cf9a00d41f32e10..c6581e4ebcda0237130127e0931508a9b421cdbc 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_cascade.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_cascade.cc
 @@ -198,6 +198,12 @@ void StyleCascade::Apply(CascadeFilter filter) {
@@ -15,3 +15,12 @@ index bedb7ec7720796c722b00ec96cf9a00d41f32e10..24b7fb3a08903cabf5efdf53d158d834
    if (map_.NativeBitset().Has(CSSPropertyID::kWebkitMaskImage)) {
      // -webkit-mask-image needs to be applied before -webkit-mask-composite,
      // otherwise -webkit-mask-composite has no effect.
+@@ -548,7 +554,7 @@ void StyleCascade::ApplyWideOverlapping(CascadeResolver& resolver) {
+       if (const CascadePriority* priority =
+               map_.Find(white_space.GetCSSPropertyName())) {
+         LookupAndApply(white_space, resolver);
+-        maybe_skip(GetCSSPropertyTextWrap(), *priority);
++        maybe_skip(GetCSSPropertyTextWrapMode(), *priority);
+       }
+     }
+   }

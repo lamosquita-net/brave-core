@@ -1,0 +1,22 @@
+diff --git a/third_party/blink/renderer/core/editing/editing_style.cc b/third_party/blink/renderer/core/editing/editing_style.cc
+index e041b06113e536d774728d6f4926df5d829459aa..1f74ae91edc691a1597752ff7b893d9b8d58c8d5 100644
+--- a/third_party/blink/renderer/core/editing/editing_style.cc
++++ b/third_party/blink/renderer/core/editing/editing_style.cc
+@@ -119,7 +119,7 @@ static const Vector<const CSSProperty*>& AllEditingProperties(
+     // the runtime switch.
+     if (RuntimeEnabledFeatures::CSSWhiteSpaceShorthandEnabled()) {
+       properties.push_back(&GetCSSPropertyWhiteSpaceCollapse());
+-      properties.push_back(&GetCSSPropertyTextWrap());
++      properties.push_back(&GetCSSPropertyTextWrapMode());
+     } else {
+       properties.push_back(&GetCSSPropertyWhiteSpace());
+     }
+@@ -1034,7 +1034,7 @@ bool EditingStyle::ConflictsWithInlineStyleOfElement(
+     const bool is_whitespace_property =
+         RuntimeEnabledFeatures::CSSWhiteSpaceShorthandEnabled()
+             ? property_id == CSSPropertyID::kWhiteSpaceCollapse ||
+-                  property_id == CSSPropertyID::kTextWrap
++                  property_id == CSSPropertyID::kTextWrapMode
+             : property_id == CSSPropertyID::kWhiteSpace;
+     if (is_whitespace_property && IsTabHTMLSpanElement(element)) {
+       continue;

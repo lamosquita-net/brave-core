@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/properties/shorthands/shorthands_custom.cc b/third_party/blink/renderer/core/css/properties/shorthands/shorthands_custom.cc
-index 420cb4301e98f574101ceb2750a4f60d09619430..274df696b4e70c13c9433b9270a1c26d25238cd5 100644
+index 420cb4301e98f574101ceb2750a4f60d09619430..8b63ad95f13dd5e222f4ae9afc7d3b2c061ef1b1 100644
 --- a/third_party/blink/renderer/core/css/properties/shorthands/shorthands_custom.cc
 +++ b/third_party/blink/renderer/core/css/properties/shorthands/shorthands_custom.cc
 @@ -27,6 +27,7 @@
@@ -119,7 +119,43 @@ index 420cb4301e98f574101ceb2750a4f60d09619430..274df696b4e70c13c9433b9270a1c26d
  bool BorderBlockColor::ParseShorthand(
      bool important,
      CSSParserTokenRange& range,
-@@ -3442,6 +3413,12 @@ CSSValue* ConsumeTransitionValue(CSSPropertyID property,
+@@ -3425,6 +3396,35 @@ const CSSValue* TextDecoration::CSSValueFromComputedStyleInternal(
+   return list;
+ }
+ 
++bool TextWrap::ParseShorthand(
++    bool important,
++    CSSParserTokenRange& range,
++    const CSSParserContext& context,
++    const CSSParserLocalContext&,
++    HeapVector<CSSPropertyValue, 64>& properties) const {
++  return css_parsing_utils::ConsumeShorthandGreedilyViaLonghands(
++      textWrapShorthand(), important, context, range, properties);
++}
++
++const CSSValue* TextWrap::CSSValueFromComputedStyleInternal(
++    const ComputedStyle& style,
++    const LayoutObject* layout_object,
++    bool allow_visited_style) const {
++  const TextWrapMode mode = style.GetTextWrapMode();
++  const TextWrapStyle wrap_style = style.GetTextWrapStyle();
++  if (wrap_style == ComputedStyleInitialValues::InitialTextWrapStyle()) {
++    return CSSIdentifierValue::Create(mode);
++  }
++  if (mode == ComputedStyleInitialValues::InitialTextWrapMode()) {
++    return CSSIdentifierValue::Create(wrap_style);
++  }
++
++  CSSValueList* list = CSSValueList::CreateSpaceSeparated();
++  list->Append(*CSSIdentifierValue::Create(mode));
++  list->Append(*CSSIdentifierValue::Create(wrap_style));
++  return list;
++}
++
+ namespace {
+ 
+ CSSValue* ConsumeTransitionValue(CSSPropertyID property,
+@@ -3442,6 +3442,12 @@ CSSValue* ConsumeTransitionValue(CSSPropertyID property,
        return css_parsing_utils::ConsumeTransitionProperty(range, context);
      case CSSPropertyID::kTransitionTimingFunction:
        return css_parsing_utils::ConsumeAnimationTimingFunction(range, context);
@@ -132,7 +168,7 @@ index 420cb4301e98f574101ceb2750a4f60d09619430..274df696b4e70c13c9433b9270a1c26d
      default:
        NOTREACHED();
        return nullptr;
-@@ -3508,6 +3485,11 @@ const CSSValue* Transition::CSSValueFromComputedStyleInternal(
+@@ -3508,6 +3514,11 @@ const CSSValue* Transition::CSSValueFromComputedStyleInternal(
                                       i)));
        list->Append(*ComputedStyleUtils::ValueForAnimationDelayStart(
            CSSTimingData::GetRepeated(transition_data->DelayStartList(), i)));
@@ -144,7 +180,7 @@ index 420cb4301e98f574101ceb2750a4f60d09619430..274df696b4e70c13c9433b9270a1c26d
        transitions_list->Append(*list);
      }
      return transitions_list;
-@@ -3687,39 +3669,45 @@ bool WebkitMask::ParseShorthand(
+@@ -3687,39 +3698,45 @@ bool WebkitMask::ParseShorthand(
      const CSSParserContext& context,
      const CSSParserLocalContext& local_context,
      HeapVector<CSSPropertyValue, 64>& properties) const {
@@ -210,7 +246,7 @@ index 420cb4301e98f574101ceb2750a4f60d09619430..274df696b4e70c13c9433b9270a1c26d
      const ComputedStyle& style,
      const LayoutObject*,
      bool allow_visited_style) const {
-@@ -3727,43 +3715,23 @@ const CSSValue* WebkitMaskPosition::CSSValueFromComputedStyleInternal(
+@@ -3727,43 +3744,23 @@ const CSSValue* WebkitMaskPosition::CSSValueFromComputedStyleInternal(
        *this, style, &style.MaskLayers());
  }
  
@@ -262,3 +298,25 @@ index 420cb4301e98f574101ceb2750a4f60d09619430..274df696b4e70c13c9433b9270a1c26d
  }
  
  bool TextEmphasis::ParseShorthand(
+@@ -3878,8 +3875,8 @@ bool AlternativeWhiteSpace::ParseShorthand(
+           important, css_parsing_utils::IsImplicitProperty::kNotImplicit,
+           properties);
+       AddProperty(
+-          CSSPropertyID::kTextWrap, CSSPropertyID::kWhiteSpace,
+-          *CSSIdentifierValue::Create(ToTextWrap(whitespace)), important,
++          CSSPropertyID::kTextWrapMode, CSSPropertyID::kWhiteSpace,
++          *CSSIdentifierValue::Create(ToTextWrapMode(whitespace)), important,
+           css_parsing_utils::IsImplicitProperty::kNotImplicit, properties);
+       return true;
+     }
+@@ -3909,8 +3906,8 @@ const CSSValue* AlternativeWhiteSpace::CSSValueFromComputedStyleInternal(
+   if (collapse != ComputedStyleInitialValues::InitialWhiteSpaceCollapse()) {
+     list->Append(*CSSIdentifierValue::Create(collapse));
+   }
+-  const TextWrap wrap = style.GetTextWrap();
+-  if (wrap != ComputedStyleInitialValues::InitialTextWrap()) {
++  const TextWrapMode wrap = style.GetTextWrapMode();
++  if (wrap != ComputedStyleInitialValues::InitialTextWrapMode()) {
+     list->Append(*CSSIdentifierValue::Create(wrap));
+   }
+   // When all longhands are initial values, it should be `normal`, covered by

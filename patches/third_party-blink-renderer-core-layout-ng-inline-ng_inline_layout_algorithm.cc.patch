@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_layout_algorithm.cc b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_layout_algorithm.cc
-index 77ea1583e3b6d1a7d3775556204ba5e317d4d9eb..03961fd1353a5dbfdd4a16ea139e1679e7536c5b 100644
+index 77ea1583e3b6d1a7d3775556204ba5e317d4d9eb..0ee86c6fb0e0debe75081070ba402b47d2c11e99 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_layout_algorithm.cc
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_layout_algorithm.cc
 @@ -11,18 +11,20 @@
@@ -34,7 +34,32 @@ index 77ea1583e3b6d1a7d3775556204ba5e317d4d9eb..03961fd1353a5dbfdd4a16ea139e1679
  
  namespace blink {
  
-@@ -146,7 +145,7 @@ class NGLineBreakStrategy {
+@@ -62,8 +61,8 @@ class NGLineBreakStrategy {
+                       const NGInlineBreakToken* break_token,
+                       const NGColumnSpannerPath* column_spanner_path) {
+     if (!column_spanner_path) {
+-      const TextWrap text_wrap = block_style.GetTextWrap();
+-      if (UNLIKELY(text_wrap == TextWrap::kBalance)) {
++      const TextWrapStyle text_wrap = block_style.GetTextWrapStyle();
++      if (UNLIKELY(text_wrap == TextWrapStyle::kBalance)) {
+         score_line_break_context_ = context->ScoreLineBreakContext();
+         initiate_balancing_ = !break_token;
+         if (initiate_balancing_) {
+@@ -71,10 +70,12 @@ class NGLineBreakStrategy {
+                  score_line_break_context_->IsActive());
+           use_score_line_break_ = score_line_break_context_;
+         }
+-      } else if (UNLIKELY(text_wrap == TextWrap::kPretty)) {
++      } else if (UNLIKELY(text_wrap == TextWrapStyle::kPretty)) {
+         score_line_break_context_ = context->ScoreLineBreakContext();
+         use_score_line_break_ =
+             score_line_break_context_ && score_line_break_context_->IsActive();
++      } else {
++        DCHECK(ShouldWrapLineGreedy(text_wrap));
+       }
+     }
+ #if EXPENSIVE_DCHECKS_ARE_ON()
+@@ -146,7 +147,7 @@ class NGLineBreakStrategy {
      DCHECK(!opportunities.back().HasShapeExclusions());
  
      // Try `NGScoreLineBreaker` first if it's applicable.
@@ -43,7 +68,7 @@ index 77ea1583e3b6d1a7d3775556204ba5e317d4d9eb..03961fd1353a5dbfdd4a16ea139e1679
        DCHECK(RuntimeEnabledFeatures::CSSTextWrapBalanceByScoreEnabled());
        DCHECK(score_line_break_context_->LineBreakPoints().empty());
        DCHECK_EQ(score_line_break_context_->LineBreakPointsIndex(), 0u);
-@@ -206,6 +205,18 @@ class NGLineBreakStrategy {
+@@ -206,6 +207,18 @@ class NGLineBreakStrategy {
    NGScoreLineBreakContext* score_line_break_context_ = nullptr;
  };
  
@@ -62,7 +87,7 @@ index 77ea1583e3b6d1a7d3775556204ba5e317d4d9eb..03961fd1353a5dbfdd4a16ea139e1679
  }  // namespace
  
  NGInlineLayoutAlgorithm::NGInlineLayoutAlgorithm(
-@@ -233,46 +244,6 @@ NGInlineLayoutAlgorithm::NGInlineLayoutAlgorithm(
+@@ -233,46 +246,6 @@ NGInlineLayoutAlgorithm::NGInlineLayoutAlgorithm(
  // header.
  NGInlineLayoutAlgorithm::~NGInlineLayoutAlgorithm() = default;
  
@@ -109,7 +134,7 @@ index 77ea1583e3b6d1a7d3775556204ba5e317d4d9eb..03961fd1353a5dbfdd4a16ea139e1679
  // Prepare NGInlineLayoutStateStack for a new line.
  void NGInlineLayoutAlgorithm::PrepareBoxStates(
      const NGLineInfo& line_info,
-@@ -304,7 +275,9 @@ void NGInlineLayoutAlgorithm::PrepareBoxStates(
+@@ -304,7 +277,9 @@ void NGInlineLayoutAlgorithm::PrepareBoxStates(
  
    // If not, rebuild the box states for the break token.
    box_states_ = context_->ResetBoxStates();
@@ -120,7 +145,7 @@ index 77ea1583e3b6d1a7d3775556204ba5e317d4d9eb..03961fd1353a5dbfdd4a16ea139e1679
  }
  
  static LayoutUnit AdjustLineOffsetForHanging(NGLineInfo* line_info,
-@@ -329,34 +302,15 @@ static LayoutUnit AdjustLineOffsetForHanging(NGLineInfo* line_info,
+@@ -329,34 +304,15 @@ static LayoutUnit AdjustLineOffsetForHanging(NGLineInfo* line_info,
    return -hang_width;
  }
  
@@ -161,7 +186,7 @@ index 77ea1583e3b6d1a7d3775556204ba5e317d4d9eb..03961fd1353a5dbfdd4a16ea139e1679
    NGLogicalLineItems& line_box = context_->AcquireTempLogicalLineItems();
    rebuilt.OnBeginPlaceItems(Node(), line_info.LineStyle(), baseline_type_,
                              quirks_mode_, &line_box);
-@@ -369,165 +323,19 @@ void NGInlineLayoutAlgorithm::CheckBoxStates(
+@@ -369,165 +325,19 @@ void NGInlineLayoutAlgorithm::CheckBoxStates(
  void NGInlineLayoutAlgorithm::CreateLine(
      const NGLineLayoutOpportunity& opportunity,
      NGLineInfo* line_info,
@@ -334,7 +359,7 @@ index 77ea1583e3b6d1a7d3775556204ba5e317d4d9eb..03961fd1353a5dbfdd4a16ea139e1679
    const LayoutUnit hang_width = line_info->HangWidth();
    const LayoutUnit position =
        AdjustLineOffsetForHanging(line_info, line_offset_for_text_align);
-@@ -579,12 +387,14 @@ void NGInlineLayoutAlgorithm::CreateLine(
+@@ -579,12 +389,14 @@ void NGInlineLayoutAlgorithm::CreateLine(
      container_builder_.SetBfcLineOffset(bfc_line_offset);
    }
  
@@ -352,7 +377,7 @@ index 77ea1583e3b6d1a7d3775556204ba5e317d4d9eb..03961fd1353a5dbfdd4a16ea139e1679
               box_states_->LineBoxState().metrics.IsEmpty()) {
      box_states_->LineBoxState().metrics = FontHeight();
    }
-@@ -592,11 +402,22 @@ void NGInlineLayoutAlgorithm::CreateLine(
+@@ -592,11 +404,22 @@ void NGInlineLayoutAlgorithm::CreateLine(
    const FontHeight& line_box_metrics = box_states_->LineBoxState().metrics;
  
    if (UNLIKELY(Node().HasRuby() && !line_info->IsEmptyLine())) {
@@ -378,7 +403,7 @@ index 77ea1583e3b6d1a7d3775556204ba5e317d4d9eb..03961fd1353a5dbfdd4a16ea139e1679
      DCHECK(!line_info->IsEmptyLine());
      // `container_builder_.BfcLineOffset()` holds left edge of current line
      // after applying `text-align` and `text-indent`.
-@@ -613,7 +434,7 @@ void NGInlineLayoutAlgorithm::CreateLine(
+@@ -613,7 +436,7 @@ void NGInlineLayoutAlgorithm::CreateLine(
      // https://wpt.live/css/css-inline/initial-letter/initial-letter-block-position-margins-vlr.html
      const NGExclusion* exclusion = PostPlaceInitialLetterBox(
          line_box_metrics,
@@ -387,7 +412,7 @@ index 77ea1583e3b6d1a7d3775556204ba5e317d4d9eb..03961fd1353a5dbfdd4a16ea139e1679
                     line_info->LineStyle().IsFlippedLinesWritingMode()),
          line_box,
          NGBfcOffset(container_builder_.BfcLineOffset(),
-@@ -625,7 +446,7 @@ void NGInlineLayoutAlgorithm::CreateLine(
+@@ -625,7 +448,7 @@ void NGInlineLayoutAlgorithm::CreateLine(
    // Place out-of-flow positioned objects.
    // This adjusts the NGLogicalLineItem::offset member to contain
    // the static position of the OOF positioned children relative to the linebox.
@@ -396,7 +421,7 @@ index 77ea1583e3b6d1a7d3775556204ba5e317d4d9eb..03961fd1353a5dbfdd4a16ea139e1679
      DCHECK(!line_info->IsBlockInInline());
      PlaceOutOfFlowObjects(*line_info, line_box_metrics, line_box);
    }
-@@ -635,7 +456,7 @@ void NGInlineLayoutAlgorithm::CreateLine(
+@@ -635,7 +458,7 @@ void NGInlineLayoutAlgorithm::CreateLine(
    // contain the position of the float relative to the linebox.
    // Additionally it will perform layout on any unpositioned floats which
    // needed the line height to correctly determine their final position.
@@ -405,7 +430,7 @@ index 77ea1583e3b6d1a7d3775556204ba5e317d4d9eb..03961fd1353a5dbfdd4a16ea139e1679
      DCHECK(!line_info->IsBlockInInline());
      // Test[1] has a float to be pushed down to next line.
      // [1]
-@@ -648,21 +469,25 @@ void NGInlineLayoutAlgorithm::CreateLine(
+@@ -648,21 +471,25 @@ void NGInlineLayoutAlgorithm::CreateLine(
    // Apply any relative positioned offsets to *items* which have relative
    // positioning, (atomic-inlines, and floats). This will only move the
    // individual item.
@@ -438,7 +463,7 @@ index 77ea1583e3b6d1a7d3775556204ba5e317d4d9eb..03961fd1353a5dbfdd4a16ea139e1679
  
    // Update item index of the box states in the context.
    context_->SetItemIndex(line_info->ItemsData().items,
-@@ -703,128 +528,19 @@ void NGInlineLayoutAlgorithm::CreateLine(
+@@ -703,128 +530,19 @@ void NGInlineLayoutAlgorithm::CreateLine(
          AdjustInitialLetterInTextPosition(line_box_metrics, line_box);
      if (!adjusted_metrics.IsEmpty()) {
        container_builder_.SetMetrics(adjusted_metrics);
@@ -569,7 +594,7 @@ index 77ea1583e3b6d1a7d3775556204ba5e317d4d9eb..03961fd1353a5dbfdd4a16ea139e1679
      NGInlineItemResult* item_result,
      NGLogicalLineItems* line_box) {
    DCHECK_EQ(item.Type(), NGInlineItem::kBlockInInline);
-@@ -865,28 +581,6 @@ void NGInlineLayoutAlgorithm::PlaceBlockInInline(
+@@ -865,28 +583,6 @@ void NGInlineLayoutAlgorithm::PlaceBlockInInline(
                       /* children_count */ 0, item.BidiLevel());
  }
  
@@ -598,7 +623,7 @@ index 77ea1583e3b6d1a7d3775556204ba5e317d4d9eb..03961fd1353a5dbfdd4a16ea139e1679
  // Place all out-of-flow objects in |line_box_|.
  void NGInlineLayoutAlgorithm::PlaceOutOfFlowObjects(
      const NGLineInfo& line_info,
-@@ -1060,162 +754,6 @@ void NGInlineLayoutAlgorithm::PlaceFloatingObjects(
+@@ -1060,162 +756,6 @@ void NGInlineLayoutAlgorithm::PlaceFloatingObjects(
    }
  }
  
@@ -761,7 +786,7 @@ index 77ea1583e3b6d1a7d3775556204ba5e317d4d9eb..03961fd1353a5dbfdd4a16ea139e1679
  // Apply the 'text-align' property to |line_info|. Returns the amount to move
  // the line in the inline direction.
  LayoutUnit NGInlineLayoutAlgorithm::ApplyTextAlign(NGLineInfo* line_info) {
-@@ -1227,7 +765,16 @@ LayoutUnit NGInlineLayoutAlgorithm::ApplyTextAlign(NGLineInfo* line_info) {
+@@ -1227,7 +767,16 @@ LayoutUnit NGInlineLayoutAlgorithm::ApplyTextAlign(NGLineInfo* line_info) {
  
    ETextAlign text_align = line_info->TextAlign();
    if (text_align == ETextAlign::kJustify) {
@@ -779,7 +804,7 @@ index 77ea1583e3b6d1a7d3775556204ba5e317d4d9eb..03961fd1353a5dbfdd4a16ea139e1679
      if (offset)
        return *offset;
  
-@@ -1241,9 +788,11 @@ LayoutUnit NGInlineLayoutAlgorithm::ApplyTextAlign(NGLineInfo* line_info) {
+@@ -1241,9 +790,11 @@ LayoutUnit NGInlineLayoutAlgorithm::ApplyTextAlign(NGLineInfo* line_info) {
  LayoutUnit NGInlineLayoutAlgorithm::SetAnnotationOverflow(
      const NGLineInfo& line_info,
      const NGLogicalLineItems& line_box,
@@ -794,7 +819,7 @@ index 77ea1583e3b6d1a7d3775556204ba5e317d4d9eb..03961fd1353a5dbfdd4a16ea139e1679
    LayoutUnit annotation_overflow_block_start;
    LayoutUnit annotation_overflow_block_end;
    LayoutUnit annotation_space_block_start;
-@@ -1403,13 +952,15 @@ const NGLayoutResult* NGInlineLayoutAlgorithm::Layout() {
+@@ -1403,13 +954,15 @@ const NGLayoutResult* NGInlineLayoutAlgorithm::Layout() {
  
    NGFragmentItemsBuilder* const items_builder = context_->ItemsBuilder();
    DCHECK(items_builder);
@@ -812,7 +837,7 @@ index 77ea1583e3b6d1a7d3775556204ba5e317d4d9eb..03961fd1353a5dbfdd4a16ea139e1679
    LayoutUnit line_block_size;
    LayoutUnit block_delta;
    const auto* opportunities_it = opportunities.begin();
-@@ -1421,6 +972,7 @@ const NGLayoutResult* NGInlineLayoutAlgorithm::Layout() {
+@@ -1421,6 +974,7 @@ const NGLayoutResult* NGInlineLayoutAlgorithm::Layout() {
      if (opportunities_it + 1 == opportunities.end()) {
        // We shouldn't have any shapes affecting the last opportunity.
        DCHECK(!opportunity.HasShapeExclusions());
@@ -820,7 +845,7 @@ index 77ea1583e3b6d1a7d3775556204ba5e317d4d9eb..03961fd1353a5dbfdd4a16ea139e1679
        DCHECK_EQ(line_block_size, LayoutUnit());
        DCHECK_EQ(block_delta, LayoutUnit());
  
-@@ -1481,7 +1033,7 @@ const NGLayoutResult* NGInlineLayoutAlgorithm::Layout() {
+@@ -1481,7 +1035,7 @@ const NGLayoutResult* NGInlineLayoutAlgorithm::Layout() {
      if (block_in_inline_result) {
        if (UNLIKELY(block_in_inline_result->Status() !=
                     NGLayoutResult::kSuccess)) {
@@ -829,7 +854,7 @@ index 77ea1583e3b6d1a7d3775556204ba5e317d4d9eb..03961fd1353a5dbfdd4a16ea139e1679
          return block_in_inline_result;
        }
  
-@@ -1509,7 +1061,7 @@ const NGLayoutResult* NGInlineLayoutAlgorithm::Layout() {
+@@ -1509,7 +1063,7 @@ const NGLayoutResult* NGInlineLayoutAlgorithm::Layout() {
        // Abort if something before needs to know the correct BFC block-offset.
        if (container_builder_.AdjoiningObjectTypes() &&
            bfc_block_offset != ConstraintSpace().ExpectedBfcBlockOffset()) {
@@ -838,7 +863,7 @@ index 77ea1583e3b6d1a7d3775556204ba5e317d4d9eb..03961fd1353a5dbfdd4a16ea139e1679
          return container_builder_.Abort(
              NGLayoutResult::kBfcBlockOffsetResolved);
        }
-@@ -1530,6 +1082,7 @@ const NGLayoutResult* NGInlineLayoutAlgorithm::Layout() {
+@@ -1530,6 +1084,7 @@ const NGLayoutResult* NGInlineLayoutAlgorithm::Layout() {
            block_delta < opportunity.rect.BlockSize() &&
            !opportunity.IsBlockDeltaBelowShapes(block_delta)) {
          block_delta += LayoutUnit(1);
@@ -846,7 +871,7 @@ index 77ea1583e3b6d1a7d3775556204ba5e317d4d9eb..03961fd1353a5dbfdd4a16ea139e1679
          line_block_size = LayoutUnit();
          continue;
        }
-@@ -1537,6 +1090,7 @@ const NGLayoutResult* NGInlineLayoutAlgorithm::Layout() {
+@@ -1537,6 +1092,7 @@ const NGLayoutResult* NGInlineLayoutAlgorithm::Layout() {
        // to test, proceed to the next layout opportunity.
        if (opportunities_it + 1 != opportunities.end()) {
          block_delta = LayoutUnit();
@@ -854,7 +879,7 @@ index 77ea1583e3b6d1a7d3775556204ba5e317d4d9eb..03961fd1353a5dbfdd4a16ea139e1679
          line_block_size = LayoutUnit();
          ++opportunities_it;
          continue;
-@@ -1548,7 +1102,7 @@ const NGLayoutResult* NGInlineLayoutAlgorithm::Layout() {
+@@ -1548,7 +1104,7 @@ const NGLayoutResult* NGInlineLayoutAlgorithm::Layout() {
  
      PrepareBoxStates(line_info, break_token);
  
@@ -863,7 +888,7 @@ index 77ea1583e3b6d1a7d3775556204ba5e317d4d9eb..03961fd1353a5dbfdd4a16ea139e1679
      is_line_created = true;
      is_end_paragraph = line_info.IsEndParagraph();
  
-@@ -1603,12 +1157,21 @@ const NGLayoutResult* NGInlineLayoutAlgorithm::Layout() {
+@@ -1603,12 +1159,21 @@ const NGLayoutResult* NGInlineLayoutAlgorithm::Layout() {
      // this logic.
      if (UNLIKELY(opportunity.HasShapeExclusions() &&
                   !line_info.IsEmptyLine())) {
@@ -891,7 +916,7 @@ index 77ea1583e3b6d1a7d3775556204ba5e317d4d9eb..03961fd1353a5dbfdd4a16ea139e1679
          line_block_size = total_block_size;
          continue;
        }
-@@ -1617,6 +1180,7 @@ const NGLayoutResult* NGInlineLayoutAlgorithm::Layout() {
+@@ -1617,6 +1182,7 @@ const NGLayoutResult* NGInlineLayoutAlgorithm::Layout() {
      // Check if the line will fit in the current opportunity.
      if (total_block_size + block_delta > opportunity.rect.BlockSize()) {
        block_delta = LayoutUnit();
@@ -899,7 +924,7 @@ index 77ea1583e3b6d1a7d3775556204ba5e317d4d9eb..03961fd1353a5dbfdd4a16ea139e1679
        line_block_size = LayoutUnit();
        ++opportunities_it;
        continue;
-@@ -1675,10 +1239,10 @@ const NGLayoutResult* NGInlineLayoutAlgorithm::Layout() {
+@@ -1675,10 +1241,10 @@ const NGLayoutResult* NGInlineLayoutAlgorithm::Layout() {
    container_builder_.SetLinesUntilClamp(lines_until_clamp_);
  
    DCHECK(items_builder);
@@ -913,7 +938,7 @@ index 77ea1583e3b6d1a7d3775556204ba5e317d4d9eb..03961fd1353a5dbfdd4a16ea139e1679
    line_break_strategy.DidCreateLine(is_end_paragraph);
    return layout_result;
  }
-@@ -1753,72 +1317,4 @@ NGPositionedFloat NGInlineLayoutAlgorithm::PositionFloat(
+@@ -1753,72 +1319,4 @@ NGPositionedFloat NGInlineLayoutAlgorithm::PositionFloat(
    return ::blink::PositionFloat(&unpositioned_float, exclusion_space);
  }
  
