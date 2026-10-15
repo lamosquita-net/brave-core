@@ -1208,6 +1208,11 @@ bool BraveContentBrowserClient::OverrideWebPreferencesAfterNavigation(
 void BraveContentBrowserClient::OverrideWebkitPrefs(WebContents* web_contents,
                                                     WebPreferences* web_prefs) {
   ChromeContentBrowserClient::OverrideWebkitPrefs(web_contents, web_prefs);
+  // FlyWeb (level 130): no WebSQL on desktop, as Chromium 130
+  // (chrome_content_browser_client.cc, crbug.com/333756088). Otherwise
+  // WebViewImpl::ApplyWebPreferences() turns the Database runtime feature
+  // back on from this preference and window.openDatabase is exposed.
+  web_prefs->databases_enabled = false;
   PreventDarkModeFingerprinting(web_contents, web_prefs);
   // This will stop NavigatorPlugins from returning fixed plugins data and will
   // allow us to return our farbled data
