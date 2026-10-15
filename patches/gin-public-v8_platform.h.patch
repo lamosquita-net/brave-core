@@ -1,12 +1,20 @@
 diff --git a/gin/public/v8_platform.h b/gin/public/v8_platform.h
-index 565f531328041edaac847d02881cce6e1e4f7d54..5ac1c85fe6fdacb71b8af469dad4c64ae5a701af 100644
+index 565f531328041edaac847d02881cce6e1e4f7d54..883119b2b1ff9ac3daf4504649b09283b3c15a08 100644
 --- a/gin/public/v8_platform.h
 +++ b/gin/public/v8_platform.h
-@@ -36,7 +36,6 @@ class GIN_EXPORT V8Platform : public v8::Platform {
+@@ -36,11 +36,13 @@ class GIN_EXPORT V8Platform : public v8::Platform {
    ThreadIsolatedAllocator* GetThreadIsolatedAllocator() override;
  #endif
    void OnCriticalMemoryPressure() override;
 -  v8::ZoneBackingAllocator* GetZoneBackingAllocator() override;
  #endif
  
++  // FlyWeb (V8 13.0): the two-argument overload is the pure virtual one; the
++  // one-argument overload is no longer virtual.
    std::shared_ptr<v8::TaskRunner> GetForegroundTaskRunner(
+-      v8::Isolate*) override;
++      v8::Isolate* isolate,
++      v8::TaskPriority priority) override;
+   int NumberOfWorkerThreads() override;
+   void PostTaskOnWorkerThreadImpl(v8::TaskPriority priority,
+                                   std::unique_ptr<v8::Task> task,

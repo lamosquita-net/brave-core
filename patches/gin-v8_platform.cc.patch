@@ -1,5 +1,5 @@
 diff --git a/gin/v8_platform.cc b/gin/v8_platform.cc
-index a0bc00a3d1397934276517c19e0a76098b7099f5..b3e09a75805b755b55e816422b275cf0cab690ae 100644
+index a0bc00a3d1397934276517c19e0a76098b7099f5..06229824585cba2dc22ce055ea91e1f238772400 100644
 --- a/gin/v8_platform.cc
 +++ b/gin/v8_platform.cc
 @@ -12,7 +12,6 @@
@@ -30,7 +30,7 @@ index a0bc00a3d1397934276517c19e0a76098b7099f5..b3e09a75805b755b55e816422b275cf0
  class JobDelegateImpl : public v8::JobDelegate {
   public:
    explicit JobDelegateImpl(base::JobDelegate* delegate) : delegate_(delegate) {}
-@@ -345,16 +340,6 @@ void V8Platform::OnCriticalMemoryPressure() {
+@@ -345,20 +340,15 @@ void V8Platform::OnCriticalMemoryPressure() {
    partition_alloc::ReleaseReservation();
  #endif
  }
@@ -47,7 +47,17 @@ index a0bc00a3d1397934276517c19e0a76098b7099f5..b3e09a75805b755b55e816422b275cf0
  #endif  // BUILDFLAG(USE_PARTITION_ALLOC)
  
  std::shared_ptr<v8::TaskRunner> V8Platform::GetForegroundTaskRunner(
-@@ -381,7 +366,7 @@ void V8Platform::PostTaskOnWorkerThreadImpl(
+-    v8::Isolate* isolate) {
++    v8::Isolate* isolate,
++    v8::TaskPriority priority) {
++  // FlyWeb (V8 13.0, option B of FM.20): the same task runner for all three
++  // priorities, as up to FlyWeb 1.13. Never nullptr: V8 13.0 asks for
++  // kUserVisible (incremental-marking-job.cc) and the cppgc adapter passes the
++  // priority through.
+   PerIsolateData* data = PerIsolateData::From(isolate);
+   return data->task_runner();
+ }
+@@ -381,7 +371,7 @@ void V8Platform::PostTaskOnWorkerThreadImpl(
      v8::TaskPriority priority,
      std::unique_ptr<v8::Task> task,
      const v8::SourceLocation& location) {
@@ -56,7 +66,7 @@ index a0bc00a3d1397934276517c19e0a76098b7099f5..b3e09a75805b755b55e816422b275cf0
                               {ToBaseTaskPriority(priority)},
                               base::BindOnce(&v8::Task::Run, std::move(task)));
  }
-@@ -392,7 +377,7 @@ void V8Platform::PostDelayedTaskOnWorkerThreadImpl(
+@@ -392,7 +382,7 @@ void V8Platform::PostDelayedTaskOnWorkerThreadImpl(
      double delay_in_seconds,
      const v8::SourceLocation& location) {
    base::ThreadPool::PostDelayedTask(
@@ -65,7 +75,7 @@ index a0bc00a3d1397934276517c19e0a76098b7099f5..b3e09a75805b755b55e816422b275cf0
        base::BindOnce(&v8::Task::Run, std::move(task)),
        base::Seconds(delay_in_seconds));
  }
-@@ -405,7 +390,7 @@ std::unique_ptr<v8::JobHandle> V8Platform::CreateJobImpl(
+@@ -405,7 +395,7 @@ std::unique_ptr<v8::JobHandle> V8Platform::CreateJobImpl(
    // |max_concurrency_callback| uses an unretained pointer.
    auto* job_task_ptr = job_task.get();
    auto handle =

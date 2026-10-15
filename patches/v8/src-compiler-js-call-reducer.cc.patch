@@ -1,24 +1,8 @@
 diff --git a/src/compiler/js-call-reducer.cc b/src/compiler/js-call-reducer.cc
-index 9d199f8d4a9d43bb52522bd70502582c056d1dce..5ddfbe15700e4ce866a1b6c1bd8322e5d8e483a3 100644
+index cc9ec63ce09cbd09e8484b9ab075545e351de7eb..5d562f529d08e9c1bb29eb480f1148e50b4a310e 100644
 --- a/src/compiler/js-call-reducer.cc
 +++ b/src/compiler/js-call-reducer.cc
-@@ -3792,14 +3792,13 @@ bool CanInlineJSToWasmCall(const wasm::FunctionSig* wasm_signature) {
-     return false;
-   }
- 
--  wasm::ValueType externRefNonNull = wasm::kWasmExternRef.AsNonNull();
-   for (auto type : wasm_signature->all()) {
- #if defined(V8_TARGET_ARCH_32_BIT)
-     if (type == wasm::kWasmI64) return false;
- #endif
-     if (type != wasm::kWasmI32 && type != wasm::kWasmI64 &&
-         type != wasm::kWasmF32 && type != wasm::kWasmF64 &&
--        type != wasm::kWasmExternRef && type != externRefNonNull) {
-+        type != wasm::kWasmExternRef) {
-       return false;
-     }
-   }
-@@ -4671,6 +4670,10 @@ Reduction JSCallReducer::ReduceJSCall(Node* node) {
+@@ -4651,6 +4651,10 @@ Reduction JSCallReducer::ReduceJSCall(Node* node) {
        // succeed.
        FixedArrayRef bound_arguments = function.bound_arguments(broker());
        const int bound_arguments_length = bound_arguments.length();
@@ -29,7 +13,7 @@ index 9d199f8d4a9d43bb52522bd70502582c056d1dce..5ddfbe15700e4ce866a1b6c1bd8322e5
        static constexpr int kInlineSize = 16;  // Arbitrary.
        base::SmallVector<Node*, kInlineSize> args;
        for (int i = 0; i < bound_arguments_length; ++i) {
-@@ -5242,6 +5245,18 @@ TNode<Object> JSCallReducerAssembler::ReduceJSCallWithArrayLikeOrSpreadOfEmpty(
+@@ -5223,6 +5227,18 @@ TNode<Object> JSCallReducerAssembler::ReduceJSCallWithArrayLikeOrSpreadOfEmpty(
    DCHECK_EQ(static_cast<Node*>(arguments_list)->opcode(),
              IrOpcode::kJSCreateEmptyLiteralArray);
  
