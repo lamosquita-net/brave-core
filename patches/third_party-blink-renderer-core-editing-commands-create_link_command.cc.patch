@@ -1,0 +1,29 @@
+diff --git a/third_party/blink/renderer/core/editing/commands/create_link_command.cc b/third_party/blink/renderer/core/editing/commands/create_link_command.cc
+index 5651e5e83e41cf40024a05884dabaace8f985b4d..933cfe734acd4d381109919a8d07b923a21879c1 100644
+--- a/third_party/blink/renderer/core/editing/commands/create_link_command.cc
++++ b/third_party/blink/renderer/core/editing/commands/create_link_command.cc
+@@ -30,6 +30,7 @@
+ #include "third_party/blink/renderer/core/editing/visible_selection.h"
+ #include "third_party/blink/renderer/core/html/html_anchor_element.h"
+ #include "third_party/blink/renderer/platform/heap/garbage_collected.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+ 
+ namespace blink {
+ 
+@@ -66,4 +67,16 @@ void CreateLinkCommand::DoApply(EditingState* editing_state) {
+   }
+ }
+ 
++InputEvent::InputType CreateLinkCommand::GetInputType() const {
++  return RuntimeEnabledFeatures::InputTypeSupportInsertLinkEnabled()
++             ? InputEvent::InputType::kInsertLink
++             : InputEvent::InputType::kNone;
++}
++
++String CreateLinkCommand::TextDataForInputEvent() const {
++  return RuntimeEnabledFeatures::InputTypeSupportInsertLinkEnabled()
++             ? url_
++             : g_null_atom;
++}
++
+ }  // namespace blink

@@ -1,0 +1,42 @@
+diff --git a/third_party/blink/renderer/core/input/pointer_event_manager.cc b/third_party/blink/renderer/core/input/pointer_event_manager.cc
+index b2d6b55ee158ffa6a9ce26142d3101a4e8acec01..51260d72946eaacdb3b8de7aa51aa36a8e0cef17 100644
+--- a/third_party/blink/renderer/core/input/pointer_event_manager.cc
++++ b/third_party/blink/renderer/core/input/pointer_event_manager.cc
+@@ -1166,20 +1166,33 @@ void PointerEventManager::ProcessPendingPointerCapture(
+     if (!pointer_capture_target->isConnected()) {
+       target = pointer_capture_target->ownerDocument();
+     }
++    pointer_capture_target_.erase(pointer_id);
+     DispatchPointerEvent(
+         target, pointer_event_factory_.CreatePointerCaptureEvent(
+                     pointer_event, event_type_names::kLostpointercapture));
+   }
+ 
+-  if (pending_pointer_capture_target) {
++  if (pending_pointer_capture_target &&
++      (!RuntimeEnabledFeatures::
++           PointerCaptureLostOnRemovalDuringCaptureEnabled() ||
++       pending_pointer_capture_target->isConnected())) {
+     SetElementUnderPointer(pointer_event, pending_pointer_capture_target);
+     DispatchPointerEvent(
+         pending_pointer_capture_target,
+         pointer_event_factory_.CreatePointerCaptureEvent(
+             pointer_event, event_type_names::kGotpointercapture));
+-    pointer_capture_target_.Set(pointer_id, pending_pointer_capture_target);
+-  } else {
+-    pointer_capture_target_.erase(pointer_id);
++    if (!RuntimeEnabledFeatures::
++            PointerCaptureLostOnRemovalDuringCaptureEnabled() ||
++        pending_pointer_capture_target->isConnected()) {
++      pointer_capture_target_.Set(pointer_id, pending_pointer_capture_target);
++    } else {
++      // As a result of dispatching gotpointercapture the capture node was
++      // removed.
++      DispatchPointerEvent(
++          pending_pointer_capture_target->ownerDocument(),
++          pointer_event_factory_.CreatePointerCaptureEvent(
++              pointer_event, event_type_names::kLostpointercapture));
++    }
+   }
+ }
+ 

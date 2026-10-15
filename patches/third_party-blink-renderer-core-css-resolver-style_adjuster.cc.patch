@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_adjuster.cc b/third_party/blink/renderer/core/css/resolver/style_adjuster.cc
-index 1beefec6e5711effd887fce2cbf842672a4fb41a..9ea1be0c442a8ed8b61082e57158ebfd5dbab22b 100644
+index 1beefec6e5711effd887fce2cbf842672a4fb41a..9ab135b311b034448ee81acff244bbabaaa018b8 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_adjuster.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_adjuster.cc
 @@ -62,6 +62,7 @@
@@ -211,3 +211,16 @@ index 1beefec6e5711effd887fce2cbf842672a4fb41a..9ea1be0c442a8ed8b61082e57158ebfd
    if (builder.Display() == EDisplay::kBlock) {
      return;
    }
+@@ -1077,6 +1184,12 @@ void StyleAdjuster::AdjustComputedStyle(StyleResolverState& state,
+                      *element)) {
+     builder.SetElementIsViewTransitionParticipant();
+   }
++
++  if (RuntimeEnabledFeatures::
++          CSSContentVisibilityImpliesContainIntrinsicSizeAutoEnabled() &&
++      builder.ContentVisibility() == EContentVisibility::kAuto) {
++    builder.SetContainIntrinsicSizeAuto();
++  }
+ }
+ 
+ }  // namespace blink

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/editing/commands/editor_command.cc b/third_party/blink/renderer/core/editing/commands/editor_command.cc
-index 8ec9907260b3c61f60a0c41e09141e77ac0fac7e..37f845166a400d070c5103f2cd6fa79bb8dfb077 100644
+index 8ec9907260b3c61f60a0c41e09141e77ac0fac7e..0bc308c65d642f5ad388c014bdce6e0969be3a22 100644
 --- a/third_party/blink/renderer/core/editing/commands/editor_command.cc
 +++ b/third_party/blink/renderer/core/editing/commands/editor_command.cc
 @@ -27,6 +27,8 @@
@@ -28,7 +28,18 @@ index 8ec9907260b3c61f60a0c41e09141e77ac0fac7e..37f845166a400d070c5103f2cd6fa79b
  namespace blink {
  
  namespace {
-@@ -1965,10 +1966,28 @@ bool EditorCommand::Execute(const String& parameter,
+@@ -146,6 +147,10 @@ InputEvent::InputType InputTypeFromCommandType(EditingCommandType command_type,
+       return InputType::kInsertOrderedList;
+     case CommandType::kInsertUnorderedList:
+       return InputType::kInsertUnorderedList;
++    case CommandType::kCreateLink:
++      return RuntimeEnabledFeatures::InputTypeSupportInsertLinkEnabled()
++                 ? InputType::kInsertLink
++                 : InputType::kNone;
+ 
+     // Deletion.
+     case CommandType::kDelete:
+@@ -1965,10 +1970,28 @@ bool EditorCommand::Execute(const String& parameter,
      InputEvent::InputType input_type =
          InputTypeFromCommandType(command_->command_type, *frame_);
      if (input_type != InputEvent::InputType::kNone) {

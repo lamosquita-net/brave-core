@@ -1,0 +1,31 @@
+diff --git a/third_party/blink/renderer/bindings/core/v8/module_request.cc b/third_party/blink/renderer/bindings/core/v8/module_request.cc
+index f896e75bddbf2cabc8b387be82f085f7a62213eb..ab1ba962c3506b4f7d178fcb55506ca9e2320333 100644
+--- a/third_party/blink/renderer/bindings/core/v8/module_request.cc
++++ b/third_party/blink/renderer/bindings/core/v8/module_request.cc
+@@ -3,6 +3,7 @@
+ // found in the LICENSE file.
+ 
+ #include "third_party/blink/renderer/bindings/core/v8/module_request.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+ 
+ namespace blink {
+ 
+@@ -16,4 +17,18 @@ String ModuleRequest::GetModuleTypeString() const {
+   return String();
+ }
+ 
++bool ModuleRequest::HasInvalidImportAttributeKey(String* invalid_key) const {
++  if (!RuntimeEnabledFeatures::ImportAttributesDisallowUnknownKeysEnabled()) {
++    return false;
++  }
++
++  for (const ImportAssertion& attr : import_assertions) {
++    if (attr.key != "type") {
++      *invalid_key = attr.key;
++      return true;
++    }
++  }
++  return false;
++}
++
+ }  // namespace blink

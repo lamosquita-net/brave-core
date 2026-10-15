@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/input/mouse_event_manager.cc b/third_party/blink/renderer/core/input/mouse_event_manager.cc
-index 37bb43fee23916418058c59e0df07009d24f14c4..6a1137278d069bee4d709811aaab1e19dce0d4c0 100644
+index 37bb43fee23916418058c59e0df07009d24f14c4..2a898509c96b01fc05a0ba90ce8b1391c182e1cc 100644
 --- a/third_party/blink/renderer/core/input/mouse_event_manager.cc
 +++ b/third_party/blink/renderer/core/input/mouse_event_manager.cc
-@@ -527,7 +527,9 @@ WebInputEventResult MouseEventManager::HandleMouseFocus(
+@@ -5,6 +5,7 @@
+ #include "third_party/blink/renderer/core/input/mouse_event_manager.h"
+ 
+ #include "build/build_config.h"
++#include "third_party/blink/public/platform/web_input_event_result.h"
+ #include "third_party/blink/renderer/bindings/core/v8/v8_drag_event_init.h"
+ #include "third_party/blink/renderer/bindings/core/v8/v8_pointer_event_init.h"
+ #include "third_party/blink/renderer/core/clipboard/data_object.h"
+@@ -527,7 +528,9 @@ WebInputEventResult MouseEventManager::HandleMouseFocus(
    }
  
    for (; element; element = element->ParentOrShadowHostElement()) {
@@ -13,3 +21,45 @@ index 37bb43fee23916418058c59e0df07009d24f14c4..6a1137278d069bee4d709811aaab1e19
        return WebInputEventResult::kNotHandled;
      if (element->IsMouseFocusable() || element->DelegatesFocus())
        break;
+@@ -803,8 +806,12 @@ WebInputEventResult MouseEventManager::HandleMouseDraggedEvent(
+   should_handle_drag = !is_pen;
+ #endif
+ 
+-  if (should_handle_drag && HandleDrag(event, DragInitiator::kMouse))
+-    return WebInputEventResult::kHandledSystem;
++  if (should_handle_drag && HandleDrag(event, DragInitiator::kMouse)) {
++    // `HandleDrag()` returns true for both kHandledApplication and
++    // kHandledSystem.  We are returning kHandledApplication here to make the
++    // UseCounter in the caller work.
++    return WebInputEventResult::kHandledApplication;
++  }
+ 
+   Node* target_node = event.InnerNode();
+   if (!target_node)
+@@ -828,8 +835,11 @@ WebInputEventResult MouseEventManager::HandleMouseDraggedEvent(
+ 
+   mouse_down_may_start_drag_ = false;
+ 
+-  frame_->GetEventHandler().GetSelectionController().HandleMouseDraggedEvent(
+-      event, mouse_down_pos_, last_known_mouse_position_in_root_frame_);
++  WebInputEventResult selection_controller_drag_result =
++      frame_->GetEventHandler()
++          .GetSelectionController()
++          .HandleMouseDraggedEvent(event, mouse_down_pos_,
++                                   last_known_mouse_position_in_root_frame_);
+ 
+   // The call into HandleMouseDraggedEvent may have caused a re-layout,
+   // so get the LayoutObject again.
+@@ -853,9 +863,11 @@ WebInputEventResult MouseEventManager::HandleMouseDraggedEvent(
+     }
+   }
+ 
+-  return WebInputEventResult::kHandledSystem;
++  return selection_controller_drag_result;
+ }
+ 
++// TODO(mustaq@chromium.org): The return value here is questionable.  Why even a
++// failing `TryStartDrag()` below returns a `true` here?
+ bool MouseEventManager::HandleDrag(const MouseEventWithHitTestResults& event,
+                                    DragInitiator initiator) {
+   DCHECK(event.Event().GetType() == WebInputEvent::Type::kMouseMove);

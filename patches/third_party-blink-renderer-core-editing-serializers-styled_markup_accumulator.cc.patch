@@ -1,0 +1,19 @@
+diff --git a/third_party/blink/renderer/core/editing/serializers/styled_markup_accumulator.cc b/third_party/blink/renderer/core/editing/serializers/styled_markup_accumulator.cc
+index 0640eb2f20d6739474e6ca3bff0328df7e7711e9..45945a576aa8a9db7e629c226778ff69b3f20986 100644
+--- a/third_party/blink/renderer/core/editing/serializers/styled_markup_accumulator.cc
++++ b/third_party/blink/renderer/core/editing/serializers/styled_markup_accumulator.cc
+@@ -227,8 +227,13 @@ String StyledMarkupAccumulator::RenderedText(Text& text_node) {
+     start_offset = start_.Offset();
+   if (end_.GetText() == text_node)
+     end_offset = end_.Offset();
++
+   return PlainText(EphemeralRange(Position(&text_node, start_offset),
+-                                  Position(&text_node, end_offset)));
++                                  Position(&text_node, end_offset)),
++                   TextIteratorBehavior::Builder()
++                       .SetIgnoresCSSTextTransforms(
++                           options_.IgnoresCSSTextTransformsForRenderedText())
++                       .Build());
+ }
+ 
+ String StyledMarkupAccumulator::StringValueForRange(const Text& node) {

@@ -1,0 +1,18 @@
+diff --git a/third_party/blink/renderer/core/accessibility/blink_ax_event_intent.cc b/third_party/blink/renderer/core/accessibility/blink_ax_event_intent.cc
+index 0593d411ebe834582a490e51d8acd730afd6e71a..1d697cc6f458216104c1c93a268e0f094acfb2fa 100644
+--- a/third_party/blink/renderer/core/accessibility/blink_ax_event_intent.cc
++++ b/third_party/blink/renderer/core/accessibility/blink_ax_event_intent.cc
+@@ -73,6 +73,13 @@ BlinkAXEventIntent BlinkAXEventIntent::FromEditCommand(
+       input_event_type =
+           ax::mojom::blink::InputEventType::kInsertCompositionText;
+       break;
++    case InputEvent::InputType::kInsertLink:
++      // FlyWeb: without the ax::mojom kInsertLink of Chromium 125 (it would
++      // need ui/accessibility and the automation extension API), the
++      // accessibility intent of a createLink is an insertion of text.
++      command = ax::mojom::blink::Command::kInsert;
++      input_event_type = ax::mojom::blink::InputEventType::kInsertText;
++      break;
+ 
+     // Deletion.
+     case InputEvent::InputType::kDeleteWordBackward:

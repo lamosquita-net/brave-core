@@ -1,0 +1,33 @@
+diff --git a/third_party/blink/renderer/core/svg/svg_animate_motion_element.cc b/third_party/blink/renderer/core/svg/svg_animate_motion_element.cc
+index bca6fa3d1b3091e3e4112f6a2503359336dbb4bd..b7c113894cc41bf910b04a7f9e387e4e3a05959a 100644
+--- a/third_party/blink/renderer/core/svg/svg_animate_motion_element.cc
++++ b/third_party/blink/renderer/core/svg/svg_animate_motion_element.cc
+@@ -41,8 +41,12 @@ namespace {
+ bool TargetCanHaveMotionTransform(const SVGElement& target) {
+   // We don't have a special attribute name to verify the animation type. Check
+   // the element name instead.
+-  if (!IsA<SVGGraphicsElement>(target))
++  if (IsA<SVGClipPathElement>(target)) {
++    return true;
++  }
++  if (!IsA<SVGGraphicsElement>(target)) {
+     return false;
++  }
+   // Spec: SVG 1.1 section 19.2.15
+   // FIXME: svgTag is missing. Needs to be checked, if transforming <svg> could
+   // cause problems.
+@@ -52,11 +56,11 @@ bool TargetCanHaveMotionTransform(const SVGElement& target) {
+          IsA<SVGRectElement>(target) || IsA<SVGCircleElement>(target) ||
+          IsA<SVGEllipseElement>(target) || IsA<SVGLineElement>(target) ||
+          IsA<SVGPolylineElement>(target) || IsA<SVGPolygonElement>(target) ||
+-         IsA<SVGTextElement>(target) || IsA<SVGClipPathElement>(target) ||
+-         IsA<SVGMaskElement>(target) || IsA<SVGAElement>(target) ||
++         IsA<SVGTextElement>(target) || IsA<SVGAElement>(target) ||
+          IsA<SVGForeignObjectElement>(target);
+ }
+-}
++
++}  // namespace
+ 
+ SVGAnimateMotionElement::SVGAnimateMotionElement(Document& document)
+     : SVGAnimationElement(svg_names::kAnimateMotionTag, document) {
