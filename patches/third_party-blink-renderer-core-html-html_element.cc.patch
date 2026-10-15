@@ -1,8 +1,17 @@
 diff --git a/third_party/blink/renderer/core/html/html_element.cc b/third_party/blink/renderer/core/html/html_element.cc
-index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..0c514a29980a735b54cfb6b14616b7d6c73384aa 100644
+index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..e3e8199f380b2b64baca9c0c1c44a7cdf53e0fe7 100644
 --- a/third_party/blink/renderer/core/html/html_element.cc
 +++ b/third_party/blink/renderer/core/html/html_element.cc
-@@ -78,7 +78,9 @@
+@@ -29,6 +29,8 @@
+ #include "third_party/blink/public/common/features.h"
+ #include "third_party/blink/renderer/bindings/core/v8/js_event_handler_for_content_attribute.h"
+ #include "third_party/blink/renderer/bindings/core/v8/v8_binding_for_core.h"
++#include "third_party/blink/renderer/bindings/core/v8/v8_toggle_popover_options.h"
++#include "third_party/blink/renderer/bindings/core/v8/v8_union_boolean_togglepopoveroptions.h"
+ #include "third_party/blink/renderer/bindings/core/v8/v8_union_stringlegacynulltoemptystring_trustedscript.h"
+ #include "third_party/blink/renderer/core/accessibility/ax_object_cache.h"
+ #include "third_party/blink/renderer/core/css/css_color.h"
+@@ -78,7 +80,9 @@
  #include "third_party/blink/renderer/core/html/forms/html_form_control_element.h"
  #include "third_party/blink/renderer/core/html/forms/html_form_element.h"
  #include "third_party/blink/renderer/core/html/forms/html_input_element.h"
@@ -12,7 +21,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..0c514a29980a735b54cfb6b14616b7d6
  #include "third_party/blink/renderer/core/html/html_br_element.h"
  #include "third_party/blink/renderer/core/html/html_dialog_element.h"
  #include "third_party/blink/renderer/core/html/html_dimension.h"
-@@ -87,7 +89,6 @@
+@@ -87,7 +91,6 @@
  #include "third_party/blink/renderer/core/html/html_slot_element.h"
  #include "third_party/blink/renderer/core/html/html_template_element.h"
  #include "third_party/blink/renderer/core/html/parser/html_parser_idioms.h"
@@ -20,7 +29,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..0c514a29980a735b54cfb6b14616b7d6
  #include "third_party/blink/renderer/core/html_names.h"
  #include "third_party/blink/renderer/core/input_type_names.h"
  #include "third_party/blink/renderer/core/inspector/console_message.h"
-@@ -109,7 +110,6 @@
+@@ -109,7 +112,6 @@
  #include "third_party/blink/renderer/platform/instrumentation/use_counter.h"
  #include "third_party/blink/renderer/platform/runtime_enabled_features.h"
  #include "third_party/blink/renderer/platform/scheduler/public/post_cancellable_task.h"
@@ -28,7 +37,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..0c514a29980a735b54cfb6b14616b7d6
  #include "third_party/blink/renderer/platform/wtf/std_lib_extras.h"
  
  namespace blink {
-@@ -167,6 +167,7 @@ const WebFeature kNoWebFeature = static_cast<WebFeature>(0);
+@@ -167,6 +169,7 @@ const WebFeature kNoWebFeature = static_cast<WebFeature>(0);
  
  HTMLElement* GetParentForDirectionality(const HTMLElement& element,
                                          bool& needs_slot_assignment_recalc) {
@@ -36,7 +45,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..0c514a29980a735b54cfb6b14616b7d6
    if (element.IsPseudoElement())
      return DynamicTo<HTMLElement>(element.ParentOrShadowHostNode());
  
-@@ -310,7 +311,7 @@ bool HTMLElement::IsPresentationAttribute(const QualifiedName& name) const {
+@@ -310,7 +313,7 @@ bool HTMLElement::IsPresentationAttribute(const QualifiedName& name) const {
    return Element::IsPresentationAttribute(name);
  }
  
@@ -45,7 +54,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..0c514a29980a735b54cfb6b14616b7d6
    return EqualIgnoringASCIICase(value, "auto") ||
           EqualIgnoringASCIICase(value, "ltr") ||
           EqualIgnoringASCIICase(value, "rtl");
-@@ -653,6 +654,8 @@ AttributeTriggers* HTMLElement::TriggersForAttributeName(
+@@ -653,6 +656,8 @@ AttributeTriggers* HTMLElement::TriggersForAttributeName(
         kNoEvent, nullptr},
        {html_names::kAriaColindexAttr, WebFeature::kARIAColIndexAttribute,
         kNoEvent, nullptr},
@@ -54,7 +63,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..0c514a29980a735b54cfb6b14616b7d6
        {html_names::kAriaColspanAttr, WebFeature::kARIAColSpanAttribute,
         kNoEvent, nullptr},
        {html_names::kAriaControlsAttr, WebFeature::kARIAControlsAttribute,
-@@ -723,6 +726,8 @@ AttributeTriggers* HTMLElement::TriggersForAttributeName(
+@@ -723,6 +728,8 @@ AttributeTriggers* HTMLElement::TriggersForAttributeName(
         kNoEvent, nullptr},
        {html_names::kAriaRowindexAttr, WebFeature::kARIARowIndexAttribute,
         kNoEvent, nullptr},
@@ -63,7 +72,76 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..0c514a29980a735b54cfb6b14616b7d6
        {html_names::kAriaRowspanAttr, WebFeature::kARIARowSpanAttribute,
         kNoEvent, nullptr},
        {html_names::kAriaSelectedAttr, WebFeature::kARIASelectedAttribute,
-@@ -2419,24 +2424,32 @@ HTMLFormElement* HTMLElement::FindFormAncestor() const {
+@@ -1423,26 +1430,59 @@ bool HTMLElement::togglePopover(ExceptionState& exception_state) {
+   return false;
+ }
+ 
+-bool HTMLElement::togglePopover(bool force, ExceptionState& exception_state) {
++// The `force` parameter to `togglePopover()` is specified here:
++// https://html.spec.whatwg.org/multipage/popover.html#dom-togglepopover
++// and is roughly:
++//  - If `force` is provided, and true, then ensure the popover is *shown*.
++//    So if the popover is already showing, do nothing.
++//  - If `force` is provided, and false, then ensure the popover is *hidden*.
++//    So if the popover is already hidden, do nothing.
++//  - If `force` is not provided, just toggle the popover's current state.
++// FlyWeb (level 130): `force` can also come in a TogglePopoverOptions, as in
++// Chromium 130 (8010721fc51); `invoker` is ignored there, as upstream does
++// without PopoverAnchorRelationships.
++bool HTMLElement::togglePopover(
++    V8UnionBooleanOrTogglePopoverOptions* options_or_force,
++    ExceptionState& exception_state) {
+   CHECK(RuntimeEnabledFeatures::HTMLPopoverAttributeEnabled(
+       GetDocument().GetExecutionContext()));
+-  if (!force && popoverOpen()) {
++  bool popover_was_open = popoverOpen();
++  bool force = !popover_was_open;
++  if (options_or_force && options_or_force->IsBoolean()) {
++    force = options_or_force->GetAsBoolean();
++  } else if (options_or_force && options_or_force->IsTogglePopoverOptions()) {
++    TogglePopoverOptions* options =
++        options_or_force->GetAsTogglePopoverOptions();
++    if (options->hasForce()) {
++      force = options->force();
++    }
++  }
++  if (!force && popover_was_open) {
+     hidePopover(exception_state);
+-  } else if (force && !popoverOpen()) {
++  } else if (force && !popover_was_open) {
+     ShowPopoverInternal(/*invoker*/ nullptr, &exception_state);
++  } else {
++    // We had `force`, and the state already lined up. Just make sure to still
++    // throw exceptions in other cases, e.g. disconnected element or no popover
++    // attribute.
++    IsPopoverReady(PopoverTriggerAction::kToggle, &exception_state,
++                   /*include_event_handler_text=*/false,
++                   /*document=*/nullptr);
+   }
+-
+-  if (GetPopoverData()) {
+-    return GetPopoverData()->visibilityState() ==
+-           PopoverVisibilityState::kShowing;
+-  }
+-  return false;
++  return GetPopoverData() && GetPopoverData()->visibilityState() ==
++                                 PopoverVisibilityState::kShowing;
+ }
+ 
+ void HTMLElement::showPopover(ExceptionState& exception_state) {
+   ShowPopoverInternal(/*invoker*/ nullptr, &exception_state);
+ }
+ 
++void HTMLElement::showPopover(ShowPopoverOptions* options,
++                              ExceptionState& exception_state) {
++  // FlyWeb (level 130): `invoker` is ignored, see togglePopover().
++  ShowPopoverInternal(/*invoker*/ nullptr, &exception_state);
++}
++
+ void HTMLElement::ShowPopoverInternal(Element* invoker,
+                                       ExceptionState* exception_state) {
+   CHECK(RuntimeEnabledFeatures::HTMLPopoverAttributeEnabled(
+@@ -2419,24 +2459,32 @@ HTMLFormElement* HTMLElement::FindFormAncestor() const {
    return Traversal<HTMLFormElement>::FirstAncestor(*this);
  }
  
@@ -108,7 +186,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..0c514a29980a735b54cfb6b14616b7d6
      }
    }
    if (change.IsChildInsertion()) {
-@@ -2449,81 +2462,23 @@ bool HTMLElement::HasDirectionAuto() const {
+@@ -2449,81 +2497,23 @@ bool HTMLElement::HasDirectionAuto() const {
    // <bdi> defaults to dir="auto"
    // https://html.spec.whatwg.org/C/#the-bdi-element
    const AtomicString& direction = FastGetAttribute(html_names::kDirAttr);
@@ -199,7 +277,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..0c514a29980a735b54cfb6b14616b7d6
    DCHECK(SelfOrAncestorHasDirAutoAttribute());
    bool is_deferred;
    TextDirection text_direction =
-@@ -2552,10 +2507,22 @@ void HTMLElement::AdjustDirectionalityIfNeededAfterChildAttributeChanged(
+@@ -2552,10 +2542,22 @@ void HTMLElement::AdjustDirectionalityIfNeededAfterChildAttributeChanged(
  }
  
  bool HTMLElement::CalculateAndAdjustAutoDirectionality(Node* stay_within) {
@@ -225,7 +303,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..0c514a29980a735b54cfb6b14616b7d6
    if (CachedDirectionality() != text_direction && !is_deferred) {
      UpdateDirectionalityAndDescendant(text_direction);
  
-@@ -2571,58 +2538,12 @@ bool HTMLElement::CalculateAndAdjustAutoDirectionality(Node* stay_within) {
+@@ -2571,58 +2573,12 @@ bool HTMLElement::CalculateAndAdjustAutoDirectionality(Node* stay_within) {
    return false;
  }
  
@@ -287,7 +365,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..0c514a29980a735b54cfb6b14616b7d6
    if (SelfOrAncestorHasDirAutoAttribute()) {
      for (auto* element_to_adjust = this; element_to_adjust;
           element_to_adjust = DynamicTo<HTMLElement>(
-@@ -2638,8 +2559,37 @@ void HTMLElement::AdjustDirectionalityIfNeededAfterShadowRootChanged() {
+@@ -2638,8 +2594,37 @@ void HTMLElement::AdjustDirectionalityIfNeededAfterShadowRootChanged() {
    }
  }
  
@@ -325,7 +403,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..0c514a29980a735b54cfb6b14616b7d6
    HeapHashSet<Member<HTMLElement>> directionality_set;
    // Transfer a candidate directionality set to |directionality_set| to avoid
    // the tree walk to the duplicated parent node for the directionality.
-@@ -3034,53 +2984,8 @@ Element* HTMLElement::unclosedOffsetParent() {
+@@ -3034,53 +3019,8 @@ Element* HTMLElement::unclosedOffsetParent() {
    return layout_object->OffsetParent(this);
  }
  
@@ -380,7 +458,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..0c514a29980a735b54cfb6b14616b7d6
    Node* node = FlatTreeTraversal::FirstChild(*this);
    while (node) {
      if (IsA<HTMLElement>(node)) {
-@@ -3108,26 +3013,38 @@ void HTMLElement::UpdateDescendantDirectionality(TextDirection direction) {
+@@ -3108,26 +3048,38 @@ void HTMLElement::UpdateDescendantDirectionality(TextDirection direction) {
  void HTMLElement::OnDirAttrChanged(const AttributeModificationParams& params) {
    // If an ancestor has dir=auto, and this node has the first character,
    // changes to dir attribute may affect the ancestor.
@@ -429,7 +507,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..0c514a29980a735b54cfb6b14616b7d6
    } else if (!is_old_auto && is_new_auto) {
      SetSelfOrAncestorHasDirAutoAttribute();
      UpdateDescendantHasDirAutoAttribute(true /* has_dir_auto */);
-@@ -3293,27 +3210,23 @@ bool HTMLElement::IsLabelable() const {
+@@ -3293,27 +3245,23 @@ bool HTMLElement::IsLabelable() const {
    return IsFormAssociatedCustomElement();
  }
  

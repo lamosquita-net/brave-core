@@ -1,16 +1,19 @@
 diff --git a/third_party/blink/renderer/core/html/html_element.h b/third_party/blink/renderer/core/html/html_element.h
-index 1160747542fa4d2f2111ea8803443db31d5841b0..de8117b365ca4c1c018c0f3cee1793d88217ef25 100644
+index 1160747542fa4d2f2111ea8803443db31d5841b0..06eb9822c07e5aacb42ef7b9d711e43d489559b3 100644
 --- a/third_party/blink/renderer/core/html/html_element.h
 +++ b/third_party/blink/renderer/core/html/html_element.h
-@@ -45,6 +45,7 @@ class FormAssociated;
+@@ -45,7 +45,10 @@ class FormAssociated;
  class HTMLFormElement;
  class HTMLSelectMenuElement;
  class KeyboardEvent;
 +class TextControlElement;
  class V8UnionStringLegacyNullToEmptyStringOrTrustedScript;
++class V8UnionBooleanOrTogglePopoverOptions;
++class ShowPopoverOptions;
  
  enum TranslateAttributeMode {
-@@ -158,6 +159,17 @@ class CORE_EXPORT HTMLElement : public Element {
+   kTranslateAttributeYes,
+@@ -158,6 +161,17 @@ class CORE_EXPORT HTMLElement : public Element {
  
    bool HasDirectionAuto() const;
  
@@ -28,7 +31,7 @@ index 1160747542fa4d2f2111ea8803443db31d5841b0..de8117b365ca4c1c018c0f3cee1793d8
    virtual bool IsHTMLBodyElement() const { return false; }
    // TODO(crbug.com/1123606): Remove this virtual method once the fenced frame
    // origin trial is over.
-@@ -171,6 +183,7 @@ class CORE_EXPORT HTMLElement : public Element {
+@@ -171,6 +185,7 @@ class CORE_EXPORT HTMLElement : public Element {
    virtual bool IsLabelable() const;
    // |labels| IDL attribute implementation for IsLabelable()==true elements.
    LabelsNodeList* labels();
@@ -36,7 +39,7 @@ index 1160747542fa4d2f2111ea8803443db31d5841b0..de8117b365ca4c1c018c0f3cee1793d8
  
    // https://html.spec.whatwg.org/C/#interactive-content
    virtual bool IsInteractiveContent() const;
-@@ -211,11 +224,12 @@ class CORE_EXPORT HTMLElement : public Element {
+@@ -211,11 +226,12 @@ class CORE_EXPORT HTMLElement : public Element {
  
    static void AdjustCandidateDirectionalityForSlot(
        HeapHashSet<Member<Node>> candidate_set);
@@ -52,7 +55,20 @@ index 1160747542fa4d2f2111ea8803443db31d5841b0..de8117b365ca4c1c018c0f3cee1793d8
  
    V8UnionBooleanOrStringOrUnrestrictedDouble* hidden() const;
    void setHidden(const V8UnionBooleanOrStringOrUnrestrictedDouble*);
-@@ -326,7 +340,6 @@ class CORE_EXPORT HTMLElement : public Element {
+@@ -243,8 +259,11 @@ class CORE_EXPORT HTMLElement : public Element {
+                       bool include_event_handler_text,
+                       Document* expected_document) const;
+   bool togglePopover(ExceptionState& exception_state);
+-  bool togglePopover(bool force, ExceptionState& exception_state);
++  bool togglePopover(V8UnionBooleanOrTogglePopoverOptions* options_or_force,
++                     ExceptionState& exception_state);
+   void showPopover(ExceptionState& exception_state);
++  void showPopover(ShowPopoverOptions* options,
++                   ExceptionState& exception_state);
+   void hidePopover(ExceptionState& exception_state);
+   // |exception_state| can be nullptr when exceptions can't be thrown, such as
+   // when the browser hides a popover during light dismiss or shows a popover in
+@@ -326,7 +345,6 @@ class CORE_EXPORT HTMLElement : public Element {
    unsigned ParseBorderWidthAttribute(const AtomicString&) const;
  
    void ChildrenChanged(const ChildrenChange&) override;
@@ -60,7 +76,7 @@ index 1160747542fa4d2f2111ea8803443db31d5841b0..de8117b365ca4c1c018c0f3cee1793d8
  
    InsertionNotificationRequest InsertedInto(ContainerNode&) override;
    void RemovedFrom(ContainerNode& insertion_point) override;
-@@ -349,13 +362,6 @@ class CORE_EXPORT HTMLElement : public Element {
+@@ -349,13 +367,6 @@ class CORE_EXPORT HTMLElement : public Element {
    DocumentFragment* TextToFragment(const String&, ExceptionState&);
  
    void AdjustDirectionalityIfNeededAfterChildAttributeChanged(Element* child);
