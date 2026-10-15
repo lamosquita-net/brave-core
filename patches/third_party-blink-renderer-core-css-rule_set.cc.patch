@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/rule_set.cc b/third_party/blink/renderer/core/css/rule_set.cc
-index 0f10a1f3aa6471fcae9e14cc5b59121cc3477a33..48842fafb696b0f90c603151bc0005601136faad 100644
+index 0f10a1f3aa6471fcae9e14cc5b59121cc3477a33..7c7fc7dd225dc095c641663b87c4c7e67e4aced2 100644
 --- a/third_party/blink/renderer/core/css/rule_set.cc
 +++ b/third_party/blink/renderer/core/css/rule_set.cc
 @@ -43,6 +43,7 @@
@@ -10,7 +10,51 @@ index 0f10a1f3aa6471fcae9e14cc5b59121cc3477a33..48842fafb696b0f90c603151bc000560
  #include "third_party/blink/renderer/core/css/style_sheet_contents.h"
  #include "third_party/blink/renderer/core/html/shadow/shadow_element_names.h"
  #include "third_party/blink/renderer/core/html/track/text_track_cue.h"
-@@ -703,6 +704,11 @@ void RuleSet::AddChildRules(const HeapVector<Member<StyleRuleBase>>& rules,
+@@ -382,6 +383,19 @@ void RuleSet::FindBestRuleSetAndAdd(CSSSelector& component,
+     return;
+   }
+ 
++  // Any selector with or following ::part() must go in the part bucket,
++  // because we look in that bucket in higher scopes to find rules that need
++  // to match inside the shadow tree.
++  if (!part_name.empty() || (it && it->FollowsPart())) {
++    // NOTE: Cannot mark as covered by bucketing because the part buckets are
++    // shared between the part itself and pseudo-elements inside of them.
++    // (Though we do check at least some of the relevant conditions *before*
++    // we check whether the selector is covered by bucketing, so it might be
++    // doable if we want.)
++    AddToRuleSet(part_pseudo_rules_, rule_data);
++    return;
++  }
++
+   if (!custom_pseudo_element_name.empty()) {
+     // Custom pseudos come before ids and classes in the order of
+     // NextSimpleSelector(), and have a relation of ShadowPseudo between them.
+@@ -395,12 +409,6 @@ void RuleSet::FindBestRuleSetAndAdd(CSSSelector& component,
+     return;
+   }
+ 
+-  if (!part_name.empty()) {
+-    AddToRuleSet(part_pseudo_rules_, rule_data);
+-    // TODO: Mark as covered by bucketing?
+-    return;
+-  }
+-
+   switch (pseudo_type) {
+     case CSSSelector::kPseudoCue:
+       AddToRuleSet(cue_pseudo_rules_, rule_data);
+@@ -448,9 +456,7 @@ void RuleSet::FindBestRuleSetAndAdd(CSSSelector& component,
+       return;
+     case CSSSelector::kPseudoPlaceholder:
+     case CSSSelector::kPseudoFileSelectorButton:
+-      if (it->FollowsPart()) {
+-        AddToRuleSet(part_pseudo_rules_, rule_data);
+-      } else if (it->FollowsSlotted()) {
++      if (it->FollowsSlotted()) {
+         AddToRuleSet(slotted_pseudo_element_rules_, rule_data);
+       } else {
+         const auto& name = pseudo_type == CSSSelector::kPseudoFileSelectorButton
+@@ -703,6 +709,11 @@ void RuleSet::AddChildRules(const HeapVector<Member<StyleRuleBase>>& rules,
        AddChildRules(starting_style_rule->ChildRules(), medium,
                      add_rule_flags | kRuleIsStartingStyle, container_query,
                      cascade_layer, style_scope);
@@ -22,7 +66,7 @@ index 0f10a1f3aa6471fcae9e14cc5b59121cc3477a33..48842fafb696b0f90c603151bc000560
      }
    }
  }
-@@ -736,6 +742,9 @@ void RuleSet::AddRulesFromSheet(StyleSheetContents* sheet,
+@@ -736,6 +747,9 @@ void RuleSet::AddRulesFromSheet(StyleSheetContents* sheet,
        sheet->ImportRules();
    for (unsigned i = 0; i < import_rules.size(); ++i) {
      StyleRuleImport* import_rule = import_rules[i].Get();

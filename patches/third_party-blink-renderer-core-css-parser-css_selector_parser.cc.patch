@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/parser/css_selector_parser.cc b/third_party/blink/renderer/core/css/parser/css_selector_parser.cc
-index 5bdb7220e0a0dddbbf5bf86f6fc6f789bdd722f7..40ceb0228d1680bd334e831bf459dec958aba9e1 100644
+index 5bdb7220e0a0dddbbf5bf86f6fc6f789bdd722f7..01d709e05108e97a4eeede002b6c4b67d5625e3b 100644
 --- a/third_party/blink/renderer/core/css/parser/css_selector_parser.cc
 +++ b/third_party/blink/renderer/core/css/parser/css_selector_parser.cc
 @@ -14,8 +14,10 @@
@@ -53,7 +53,26 @@ index 5bdb7220e0a0dddbbf5bf86f6fc6f789bdd722f7..40ceb0228d1680bd334e831bf459dec9
      case CSSSelector::kPseudoWebKitCustomElement:
      case CSSSelector::kPseudoBlinkInternalElement:
      case CSSSelector::kPseudoFileSelectorButton:
-@@ -1648,7 +1672,10 @@ bool CSSSelectorParser::ConsumePseudo(CSSParserTokenRange& range) {
+@@ -1144,12 +1168,17 @@ bool IsSimpleSelectorValidAfterPseudoElement(
+     case CSSSelector::kPseudoIs:
+     case CSSSelector::kPseudoWhere:
+     case CSSSelector::kPseudoNot:
+-    case CSSSelector::kPseudoHas:
+       // These pseudo-classes are themselves always valid.
+       // CSSSelectorParser::restricting_pseudo_element_ ensures that invalid
+       // nested selectors will be dropped if they are invalid according to
+       // this function.
+       return true;
++    case CSSSelector::kPseudoHas:
++      // FlyWeb (level 130): CSSPartAllowsMoreSelectorsAfter (93d7245624c).
++      if (!RuntimeEnabledFeatures::CSSPartAllowsMoreSelectorsAfterEnabled()) {
++        return true;
++      }
++      [[fallthrough]];
+     default:
+       break;
+   }
+@@ -1648,7 +1677,10 @@ bool CSSSelectorParser::ConsumePseudo(CSSParserTokenRange& range) {
        output_.push_back(std::move(selector));
        return true;
      }
@@ -65,7 +84,7 @@ index 5bdb7220e0a0dddbbf5bf86f6fc6f789bdd722f7..40ceb0228d1680bd334e831bf459dec9
        const CSSParserToken& ident = block.ConsumeIncludingWhitespace();
        if (ident.GetType() != kIdentToken || !block.AtEnd()) {
          return false;
-@@ -1670,28 +1697,83 @@ bool CSSSelectorParser::ConsumePseudo(CSSParserTokenRange& range) {
+@@ -1670,28 +1702,83 @@ bool CSSSelectorParser::ConsumePseudo(CSSParserTokenRange& range) {
        output_.push_back(std::move(selector));
        return true;
      }
