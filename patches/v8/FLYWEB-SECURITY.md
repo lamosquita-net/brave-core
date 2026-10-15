@@ -12,7 +12,7 @@ Everything below was compared on a clean 13.1.201.22 (`git apply`, `-R`, by hand
 
 All 68 accounted for (MOTOR-11's rebase, reviewed here):
 
-- **63 apply** on a clean 13.1.201.22.
+- **62 apply** on a clean 13.1.201.22 (63 in MOTOR-11's step; one dropped below).
 - **3 dropped as already in 13.1** (the whole diff reverses cleanly): `ast/scopes.h`, `heap/incremental-marking.cc`,
   `parsing/parser-base.h`.
 - **2 moved**: `wasm/module-compiler.cc` and `wasm/module-instantiate.cc` only carried 1.14's adaptation of v8
@@ -22,6 +22,11 @@ All 68 accounted for (MOTOR-11's rebase, reviewed here):
   as upstream. Checked: `wasm-code-manager.h` and `wasm-engine.h` reverse cleanly; `wasm-engine.cc` is upstream's
   except the size checks (`WasmEngine` 800 − 40 = 760, `IsolateInfo` 168 as in 13.1). Still not ported: the `SBXCHECK`
   in `WasmDispatchTable::SetForImport`, which in 13.1 takes a `WasmCodePointer`.
+- **Dropped here (FS.18): `wasm/wasm-objects.cc`.** It only carried 94e495e1d (crbug 366323508: in
+  `GetOrCreateFuncRef`, set up the Wasm-to-JS generic wrapper under `wasm_to_js_generic_wrapper`, not the JS-to-Wasm
+  flag). 13.1 removed `wasm_to_js_generic_wrapper` and made `wasm_generic_wrapper` the single switch for both
+  directions (upstream's own replacements in `wasm-objects.cc` and `module-instantiate.cc`), so the 13.1 line is
+  already right; with the patch, V8 13.1 does not compile.
 - **Resolved by MOTOR-11, checked:** `loop-unrolling-reducer.h` is now upstream's 2e96808d as in 13.2 (all its added
   lines present).
 
