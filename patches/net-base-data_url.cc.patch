@@ -1,0 +1,38 @@
+diff --git a/net/base/data_url.cc b/net/base/data_url.cc
+index 032e1289840c6edc4db2b4e31f69f1071757a281..77c06fe56ef9a485fac0cbc6b5eb458b5981b943 100644
+--- a/net/base/data_url.cc
++++ b/net/base/data_url.cc
+@@ -15,6 +15,7 @@
+ #include "base/strings/string_piece.h"
+ #include "base/strings/string_split.h"
+ #include "base/strings/string_util.h"
++#include "net/base/features.h"
+ #include "net/base/mime_util.h"
+ #include "net/http/http_response_headers.h"
+ #include "net/http/http_util.h"
+@@ -147,13 +148,19 @@ bool DataURL::Parse(const GURL& url,
+           return false;
+       }
+     } else {
+-      // Strip whitespace for non-text MIME types.
++      // `temp`'s storage needs to be outside feature check since `raw_body` is
++      // a string_view.
+       std::string temp;
+-      if (!(mime_type_value.compare(0, 5, "text/") == 0 ||
+-            mime_type_value.find("xml") != std::string::npos)) {
+-        temp = std::string(raw_body);
+-        base::EraseIf(temp, base::IsAsciiWhitespace<char>);
+-        raw_body = temp;
++      // Strip whitespace for non-text MIME types. FlyWeb (level 130): only
++      // when the KeepWhitespaceForDataUrls kill switch is off, as Chromium 130
++      // (34b6c2b36e8; without its enterprise policy).
++      if (!base::FeatureList::IsEnabled(features::kKeepWhitespaceForDataUrls)) {
++        if (!(mime_type_value.compare(0, 5, "text/") == 0 ||
++              mime_type_value.find("xml") != std::string::npos)) {
++          temp = std::string(raw_body);
++          base::EraseIf(temp, base::IsAsciiWhitespace<char>);
++          raw_body = temp;
++        }
+       }
+ 
+       *data = base::UnescapeBinaryURLComponent(raw_body);
