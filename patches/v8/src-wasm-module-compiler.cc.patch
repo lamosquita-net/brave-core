@@ -1,0 +1,17 @@
+diff --git a/src/wasm/module-compiler.cc b/src/wasm/module-compiler.cc
+index 43f1215ea5a394f93d837603de50859eef78ce3f..494235b01ca0ab2120e999a6e85c4304d48a8025 100644
+--- a/src/wasm/module-compiler.cc
++++ b/src/wasm/module-compiler.cc
+@@ -4652,7 +4652,11 @@ WasmCode* CompileImportWrapperForTest(NativeModule* native_module,
+         GetWasmImportWrapperCache());
+     WasmImportWrapperCache::CacheKey key(kind, canonical_type_index,
+                                          expected_arity, suspend);
+-    if (V8_UNLIKELY(cache_scope[key] != nullptr)) return cache_scope[key];
++    // FlyWeb: v8 924c1a79 (crbug 391907159). Replace a dying wrapper.
++    if (WasmCode* cached = cache_scope[key]) {
++      WasmCodeRefScope::AddRef(cached);
++      if (!cached->is_dying()) return cached;
++    }
+     code = cache_scope.AddWrapper(key, std::move(result),
+                                   WasmCode::Kind::kWasmToJsWrapper);
+   }
