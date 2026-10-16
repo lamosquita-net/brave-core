@@ -1,0 +1,40 @@
+diff --git a/third_party/blink/renderer/core/css/property_registration.cc b/third_party/blink/renderer/core/css/property_registration.cc
+index c0e9de93730292135fee2b067c9f11897e7379ea..c20c691e0cc26cf097251a0a31ced814cee929e8 100644
+--- a/third_party/blink/renderer/core/css/property_registration.cc
++++ b/third_party/blink/renderer/core/css/property_registration.cc
+@@ -173,6 +173,35 @@ PropertyRegistration* PropertyRegistration::MaybeCreateForDeclaredProperty(
+                                                     initial);
+ }
+ 
++bool PropertyRegistration::IsValidDeclaredPropertyRule(
++    StyleRuleProperty& rule,
++    const CSSParserContext& parser_context) {
++  const CSSValue* syntax_value = rule.GetSyntax();
++  if (!syntax_value) {
++    return false;
++  }
++  absl::optional<CSSSyntaxDefinition> syntax = ConvertSyntax(*syntax_value);
++  if (!syntax) {
++    return false;
++  }
++  if (!rule.Inherits()) {
++    return false;
++  }
++  scoped_refptr<CSSVariableData> initial_variable_data =
++      ConvertInitialVariableData(rule.GetInitialValue());
++  if (!initial_variable_data) {
++    return syntax->IsUniversal();
++  }
++  const bool is_animation_tainted = false;
++  CSSTokenizer tokenizer(initial_variable_data->OriginalText());
++  Vector<CSSParserToken, 32> tokens = tokenizer.TokenizeToEOF();
++  CSSParserTokenRange range(tokens);
++  const CSSValue* initial = syntax->Parse(
++      CSSTokenizedValue{range, initial_variable_data->OriginalText()},
++      parser_context, is_animation_tainted);
++  return initial && ComputationallyIndependent(*initial);
++}
++
+ void PropertyRegistration::registerProperty(
+     ExecutionContext* execution_context,
+     const PropertyDefinition* property_definition,

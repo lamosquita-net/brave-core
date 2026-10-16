@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_theme.cc b/third_party/blink/renderer/core/layout/layout_theme.cc
-index 06fb69c7401baea56daccc25947de427fcf34bf1..77fcb38df48af55b68f9abf6ad4e4bb5c82de75d 100644
+index 06fb69c7401baea56daccc25947de427fcf34bf1..292c5a8ce568fe2c81b0de9e176f170f29487ffe 100644
 --- a/third_party/blink/renderer/core/layout/layout_theme.cc
 +++ b/third_party/blink/renderer/core/layout/layout_theme.cc
 @@ -21,6 +21,7 @@
@@ -75,7 +75,42 @@ index 06fb69c7401baea56daccc25947de427fcf34bf1..77fcb38df48af55b68f9abf6ad4e4bb5
    } else {
      builder.SetTouchAction(TouchAction::kPanY);
      builder.SetWritingMode(WritingMode::kHorizontalTb);
-@@ -703,7 +721,13 @@ Color LayoutTheme::DefaultSystemColor(
+@@ -668,14 +686,21 @@ Color LayoutTheme::DefaultSystemColor(
+     // The following system color was deprecated to default to GrayText.
+     case CSSValueID::kInactivecaptiontext:
+       return Color::FromRGBA32(0xFF808080);
++    // FlyWeb: Highlight reacts to the color scheme: the platform selection
++    // color blended with white, as Chromium 131 does from the color provider
++    // (SystemHighlightFromColorProvider; 06659ab19aa, 0efc238437e). LinkText
++    // and VisitedText react to it as Chromium 125+ (c296c714cc7).
+     case CSSValueID::kHighlight:
+-      return Color::FromRGBA32(0xFFB5D5FF);
++      return PlatformActiveSelectionBackgroundColor(color_scheme)
++          .BlendWithWhite();
+     case CSSValueID::kHighlighttext:
+       return color_scheme == mojom::blink::ColorScheme::kDark
+                  ? Color::FromRGBA32(0xFFFFFFFF)
+                  : Color::FromRGBA32(0xFF000000);
+     case CSSValueID::kLinktext:
+-      return Color::FromRGBA32(0xFF0000EE);
++      return color_scheme == mojom::blink::ColorScheme::kDark
++                 ? Color::FromRGBA32(0xFF9E9EFF)
++                 : Color::FromRGBA32(0xFF0000EE);
+     case CSSValueID::kMark:
+       return Color::FromRGBA32(0xFFFFFF00);
+     case CSSValueID::kMarktext:
+@@ -685,7 +710,9 @@ Color LayoutTheme::DefaultSystemColor(
+                  ? Color::FromRGBA32(0xFFFFFFFF)
+                  : Color::FromRGBA32(0xFF000000);
+     case CSSValueID::kVisitedtext:
+-      return Color::FromRGBA32(0xFF551A8B);
++      return color_scheme == mojom::blink::ColorScheme::kDark
++                 ? Color::FromRGBA32(0xFFD0ADF0)
++                 : Color::FromRGBA32(0xFF551A8B);
+     case CSSValueID::kSelecteditem:
+     case CSSValueID::kInternalActiveListBoxSelection:
+       return ActiveListBoxSelectionBackgroundColor(color_scheme);
+@@ -703,7 +730,13 @@ Color LayoutTheme::DefaultSystemColor(
      default:
        break;
    }

@@ -1,11 +1,16 @@
 diff --git a/third_party/blink/renderer/core/css/parser/css_parser_observer.h b/third_party/blink/renderer/core/css/parser/css_parser_observer.h
-index d895e1f9a584851df7c76a4df8671353e169698a..4872c83c61b286a643f069f09510f5aefac0c837 100644
+index d895e1f9a584851df7c76a4df8671353e169698a..94c5baf49f0cee72f2e7cb90780ccd492cdf51cc 100644
 --- a/third_party/blink/renderer/core/css/parser/css_parser_observer.h
 +++ b/third_party/blink/renderer/core/css/parser/css_parser_observer.h
-@@ -45,6 +45,56 @@ class CSSParserObserver {
+@@ -45,6 +45,61 @@ class CSSParserObserver {
    virtual void ObserveComment(unsigned start_offset, unsigned end_offset) = 0;
    virtual void ObserveErroneousAtRule(unsigned start_offset,
                                        CSSAtRuleID id) = 0;
++  // FlyWeb: an @property rule already reported through Start/EndRuleBody is
++  // dropped because it lacks valid required descriptors (Chromium 120,
++  // 3187c64ee45, which reports it through ObserveErroneousAtRule with the
++  // invalid descriptors instead).
++  virtual void ObserveDroppedPropertyRule() {}
 +
 +  // The parser inserts CSSNestedDeclarations rules which wrap blocks of bare
 +  // declarations that appear in a nesting context. For example:

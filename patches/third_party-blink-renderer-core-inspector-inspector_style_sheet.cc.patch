@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/inspector/inspector_style_sheet.cc b/third_party/blink/renderer/core/inspector/inspector_style_sheet.cc
-index 77ac1d9d0239232c29b706d580a4e897736e8b65..f43ff807b1123a61d5057fb5fa80029c6d480244 100644
+index 77ac1d9d0239232c29b706d580a4e897736e8b65..76aa19aaf71dd513b56c306d267f08dd65d7d384 100644
 --- a/third_party/blink/renderer/core/inspector/inspector_style_sheet.cc
 +++ b/third_party/blink/renderer/core/inspector/inspector_style_sheet.cc
 @@ -36,6 +36,7 @@
@@ -18,15 +18,19 @@ index 77ac1d9d0239232c29b706d580a4e897736e8b65..f43ff807b1123a61d5057fb5fa80029c
  #include "third_party/blink/renderer/platform/wtf/allocator/allocator.h"
  #include "third_party/blink/renderer/platform/wtf/text/string_builder.h"
  #include "third_party/blink/renderer/platform/wtf/text/text_position.h"
-@@ -193,6 +195,7 @@ class StyleSheetHandler final : public CSSParserObserver {
+@@ -193,8 +195,11 @@ class StyleSheetHandler final : public CSSParserObserver {
                         bool is_parsed) override;
    void ObserveComment(unsigned start_offset, unsigned end_offset) override;
    void ObserveErroneousAtRule(unsigned start_offset, CSSAtRuleID id) override;
++  void ObserveDroppedPropertyRule() override;
 +  void ObserveNestedDeclarations(unsigned insert_rule_index) override;
  
    void AddNewRuleToSourceTree(CSSRuleSourceData*);
++  void RemoveLastRuleFromSourceTree();
    CSSRuleSourceData* PopRuleData();
-@@ -207,6 +210,20 @@ class StyleSheetHandler final : public CSSParserObserver {
+   template <typename CharacterType>
+   inline void SetRuleHeaderEnd(const CharacterType*, unsigned);
+@@ -207,6 +212,20 @@ class StyleSheetHandler final : public CSSParserObserver {
    CSSRuleSourceData* current_rule_data_;
    absl::optional<IssueReportingContext> issueReportingContext_;
    std::unique_ptr<LineEndings> line_endings_;
@@ -47,7 +51,7 @@ index 77ac1d9d0239232c29b706d580a4e897736e8b65..f43ff807b1123a61d5057fb5fa80029c
  };
  
  void StyleSheetHandler::StartRuleHeader(StyleRule::RuleType type,
-@@ -215,6 +232,21 @@ void StyleSheetHandler::StartRuleHeader(StyleRule::RuleType type,
+@@ -215,6 +234,21 @@ void StyleSheetHandler::StartRuleHeader(StyleRule::RuleType type,
    if (current_rule_data_)
      current_rule_data_stack_.pop_back();
  
@@ -69,7 +73,7 @@ index 77ac1d9d0239232c29b706d580a4e897736e8b65..f43ff807b1123a61d5057fb5fa80029c
    CSSRuleSourceData* data = MakeGarbageCollected<CSSRuleSourceData>(type);
    data->rule_header_range.start = offset;
    current_rule_data_ = data;
-@@ -259,6 +291,22 @@ void StyleSheetHandler::StartRuleBody(unsigned offset) {
+@@ -259,6 +293,22 @@ void StyleSheetHandler::StartRuleBody(unsigned offset) {
    if (parsed_text_[offset] == '{')
      ++offset;  // Skip the rule body opening brace.
    current_rule_data_stack_.back()->rule_body_range.start = offset;
@@ -92,7 +96,7 @@ index 77ac1d9d0239232c29b706d580a4e897736e8b65..f43ff807b1123a61d5057fb5fa80029c
  }
  
  void StyleSheetHandler::EndRuleBody(unsigned offset) {
-@@ -268,7 +316,22 @@ void StyleSheetHandler::EndRuleBody(unsigned offset) {
+@@ -268,7 +318,22 @@ void StyleSheetHandler::EndRuleBody(unsigned offset) {
      current_rule_data_stack_.pop_back();
    }
    DCHECK(!current_rule_data_stack_.empty());
@@ -116,7 +120,28 @@ index 77ac1d9d0239232c29b706d580a4e897736e8b65..f43ff807b1123a61d5057fb5fa80029c
    AddNewRuleToSourceTree(PopRuleData());
  }
  
-@@ -291,9 +354,40 @@ void StyleSheetHandler::ObserveProperty(unsigned start_offset,
+@@ -279,6 +344,20 @@ void StyleSheetHandler::AddNewRuleToSourceTree(CSSRuleSourceData* rule) {
+     current_rule_data_stack_.back()->child_rules.push_back(rule);
+ }
+ 
++// FlyWeb: from Chromium 120 (3187c64ee45).
++void StyleSheetHandler::RemoveLastRuleFromSourceTree() {
++  if (current_rule_data_stack_.empty()) {
++    result_->pop_back();
++  } else {
++    current_rule_data_stack_.back()->child_rules.pop_back();
++  }
++}
++
++void StyleSheetHandler::ObserveDroppedPropertyRule() {
++  // The rule has already been committed and must be removed.
++  RemoveLastRuleFromSourceTree();
++}
++
+ CSSRuleSourceData* StyleSheetHandler::PopRuleData() {
+   DCHECK(!current_rule_data_stack_.empty());
+   current_rule_data_ = nullptr;
+@@ -291,9 +370,40 @@ void StyleSheetHandler::ObserveProperty(unsigned start_offset,
                                          unsigned end_offset,
                                          bool is_important,
                                          bool is_parsed) {
@@ -159,7 +184,7 @@ index 77ac1d9d0239232c29b706d580a4e897736e8b65..f43ff807b1123a61d5057fb5fa80029c
  
    DCHECK_LE(end_offset, parsed_text_.length());
    if (end_offset < parsed_text_.length() &&
-@@ -317,16 +411,33 @@ void StyleSheetHandler::ObserveProperty(unsigned start_offset,
+@@ -317,16 +427,33 @@ void StyleSheetHandler::ObserveProperty(unsigned start_offset,
    current_rule_data_stack_.back()->property_data.push_back(
        CSSPropertySourceData(name, value, is_important, false, is_parsed,
                              SourceRange(start_offset, end_offset)));
@@ -195,7 +220,7 @@ index 77ac1d9d0239232c29b706d580a4e897736e8b65..f43ff807b1123a61d5057fb5fa80029c
  
    // The lexer is not inside a property AND it is scanning a declaration-aware
    // rule body.
-@@ -395,6 +506,69 @@ void StyleSheetHandler::ObserveErroneousAtRule(unsigned start_offset,
+@@ -395,6 +522,69 @@ void StyleSheetHandler::ObserveErroneousAtRule(unsigned start_offset,
    }
  }
  
@@ -265,7 +290,7 @@ index 77ac1d9d0239232c29b706d580a4e897736e8b65..f43ff807b1123a61d5057fb5fa80029c
  bool VerifyRuleText(Document* document, const String& rule_text) {
    DEFINE_STATIC_LOCAL(String, bogus_property_name, ("-webkit-boguz-propertee"));
    auto* style_sheet = MakeGarbageCollected<StyleSheetContents>(
-@@ -434,6 +608,25 @@ bool VerifyStyleText(Document* document, const String& text) {
+@@ -434,6 +624,25 @@ bool VerifyStyleText(Document* document, const String& text) {
    return VerifyRuleText(document, "div {" + text + "}");
  }
  
@@ -291,7 +316,7 @@ index 77ac1d9d0239232c29b706d580a4e897736e8b65..f43ff807b1123a61d5057fb5fa80029c
  bool VerifyKeyframeKeyText(Document* document, const String& key_text) {
    auto* style_sheet = MakeGarbageCollected<StyleSheetContents>(
        ParserContextForDocument(document));
-@@ -744,6 +937,10 @@ void CollectFlatRules(RuleList rule_list, CSSRuleVector* result) {
+@@ -744,6 +953,10 @@ void CollectFlatRules(RuleList rule_list, CSSRuleVector* result) {
          result->push_back(rule);
          CollectFlatRules(AsCSSRuleList(rule), result);
          break;
@@ -302,7 +327,7 @@ index 77ac1d9d0239232c29b706d580a4e897736e8b65..f43ff807b1123a61d5057fb5fa80029c
        default:
          break;
      }
-@@ -1244,6 +1441,17 @@ CSSRule* InspectorStyleSheet::SetStyleText(const SourceRange& range,
+@@ -1244,6 +1457,17 @@ CSSRule* InspectorStyleSheet::SetStyleText(const SourceRange& range,
      return nullptr;
    }
  

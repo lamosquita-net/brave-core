@@ -1,0 +1,25 @@
+diff --git a/third_party/blink/renderer/core/css/property_registration.h b/third_party/blink/renderer/core/css/property_registration.h
+index 47d5045abf279cd63bacb9527e043792c543bf9a..e4515d0efb93e0a0206ef924d762b9ccf4e4ba8b 100644
+--- a/third_party/blink/renderer/core/css/property_registration.h
++++ b/third_party/blink/renderer/core/css/property_registration.h
+@@ -17,6 +17,7 @@ namespace blink {
+ 
+ class ExceptionState;
+ class ExecutionContext;
++class CSSParserContext;
+ class PropertyDefinition;
+ class PropertyRegistry;
+ class StyleRuleProperty;
+@@ -31,6 +32,12 @@ class CORE_EXPORT PropertyRegistration final
+       const AtomicString& name,
+       StyleRuleProperty&);
+ 
++  // FlyWeb: Chromium 120 (3187c64ee45) drops @property rules at parse time
++  // unless 'syntax', 'inherits' and (for non-universal syntaxes) a valid,
++  // computationally independent 'initial-value' are present.
++  static bool IsValidDeclaredPropertyRule(StyleRuleProperty&,
++                                          const CSSParserContext&);
++
+   static void registerProperty(ExecutionContext*,
+                                const PropertyDefinition*,
+                                ExceptionState&);

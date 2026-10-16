@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/css_syntax_definition.cc b/third_party/blink/renderer/core/css/css_syntax_definition.cc
-index 2a2d5945f39947d2013047381b3b560a2076beb0..014c14c0b9a67d2634dde8dd4040de489101b54b 100644
+index 2a2d5945f39947d2013047381b3b560a2076beb0..50b22aaea7c33eb376112747eefca7ff2628227e 100644
 --- a/third_party/blink/renderer/core/css/css_syntax_definition.cc
 +++ b/third_party/blink/renderer/core/css/css_syntax_definition.cc
 @@ -6,6 +6,7 @@
@@ -28,7 +28,18 @@ index 2a2d5945f39947d2013047381b3b560a2076beb0..014c14c0b9a67d2634dde8dd4040de48
      default:
        NOTREACHED();
        return nullptr;
-@@ -119,8 +124,8 @@ const CSSValue* CSSSyntaxDefinition::Parse(CSSTokenizedValue value,
+@@ -104,7 +109,9 @@ const CSSValue* ConsumeSyntaxComponent(const CSSSyntaxComponent& syntax,
+       }
+       list->Append(*value);
+     } while (css_parsing_utils::ConsumeCommaIncludingWhitespace(range));
+-    return list->length() ? list : nullptr;
++    // FlyWeb: the whole value must be consumed (as Chromium 131), so that
++    // "yellow blue" is not a valid <color>#.
++    return list->length() && range.AtEnd() ? list : nullptr;
+   }
+   const CSSValue* result = ConsumeSingleType(syntax, range, context);
+   if (!range.AtEnd()) {
+@@ -119,8 +126,8 @@ const CSSValue* CSSSyntaxDefinition::Parse(CSSTokenizedValue value,
                                             const CSSParserContext& context,
                                             bool is_animation_tainted) const {
    if (IsUniversal()) {
