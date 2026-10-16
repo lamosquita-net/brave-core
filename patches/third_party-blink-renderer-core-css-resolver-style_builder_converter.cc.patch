@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc b/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
-index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..8fcadc0107d6ab0610e605878a7114fcadc5cf92 100644
+index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..20c986d5bf7d2029872cf50924c072c6996ad5e7 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
 @@ -37,6 +37,8 @@
@@ -11,7 +11,15 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..8fcadc0107d6ab0610e605878a7114fc
  #include "third_party/blink/renderer/core/css/css_content_distribution_value.h"
  #include "third_party/blink/renderer/core/css/css_custom_ident_value.h"
  #include "third_party/blink/renderer/core/css/css_font_family_value.h"
-@@ -71,6 +73,7 @@
+@@ -46,6 +48,7 @@
+ #include "third_party/blink/renderer/core/css/css_grid_auto_repeat_value.h"
+ #include "third_party/blink/renderer/core/css/css_grid_integer_repeat_value.h"
+ #include "third_party/blink/renderer/core/css/css_identifier_value.h"
++#include "third_party/blink/renderer/core/css/css_light_dark_value_pair.h"
+ #include "third_party/blink/renderer/core/css/css_math_expression_node.h"
+ #include "third_party/blink/renderer/core/css/css_math_function_value.h"
+ #include "third_party/blink/renderer/core/css/css_numeric_literal_value.h"
+@@ -71,6 +74,7 @@
  #include "third_party/blink/renderer/core/style/anchor_specifier_value.h"
  #include "third_party/blink/renderer/core/style/computed_style_constants.h"
  #include "third_party/blink/renderer/core/style/coord_box_offset_path_operation.h"
@@ -19,7 +27,7 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..8fcadc0107d6ab0610e605878a7114fc
  #include "third_party/blink/renderer/core/style/offset_path_operation.h"
  #include "third_party/blink/renderer/core/style/reference_clip_path_operation.h"
  #include "third_party/blink/renderer/core/style/reference_offset_path_operation.h"
-@@ -159,7 +162,8 @@ scoped_refptr<StyleReflection> StyleBuilderConverter::ConvertBoxReflect(
+@@ -159,7 +163,8 @@ scoped_refptr<StyleReflection> StyleBuilderConverter::ConvertBoxReflect(
  
  scoped_refptr<StyleSVGResource> StyleBuilderConverter::ConvertElementReference(
      StyleResolverState& state,
@@ -29,7 +37,7 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..8fcadc0107d6ab0610e605878a7114fc
    if (auto* identifier_value = DynamicTo<CSSIdentifierValue>(value)) {
      DCHECK_EQ(identifier_value->GetValueID(), CSSValueID::kNone);
      return nullptr;
-@@ -167,8 +171,8 @@ scoped_refptr<StyleSVGResource> StyleBuilderConverter::ConvertElementReference(
+@@ -167,8 +172,8 @@ scoped_refptr<StyleSVGResource> StyleBuilderConverter::ConvertElementReference(
  
    const auto& url_value = To<cssvalue::CSSURIValue>(value);
    SVGResource* resource =
@@ -40,7 +48,7 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..8fcadc0107d6ab0610e605878a7114fc
    return StyleSVGResource::Create(resource, url_value.ValueForSerialization());
  }
  
-@@ -185,8 +189,23 @@ LengthBox StyleBuilderConverter::ConvertClip(StyleResolverState& state,
+@@ -185,8 +190,23 @@ LengthBox StyleBuilderConverter::ConvertClip(StyleResolverState& state,
  scoped_refptr<ClipPathOperation> StyleBuilderConverter::ConvertClipPath(
      StyleResolverState& state,
      const CSSValue& value) {
@@ -66,7 +74,7 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..8fcadc0107d6ab0610e605878a7114fc
    }
  
    if (const auto* url_value = DynamicTo<cssvalue::CSSURIValue>(value)) {
-@@ -700,6 +719,7 @@ FontDescription::Size StyleBuilderConverter::ConvertFontSize(
+@@ -700,6 +720,7 @@ FontDescription::Size StyleBuilderConverter::ConvertFontSize(
  }
  
  FontSizeAdjust StyleBuilderConverterBase::ConvertFontSizeAdjust(
@@ -74,7 +82,7 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..8fcadc0107d6ab0610e605878a7114fc
      const CSSValue& value) {
    auto* identifier_value = DynamicTo<CSSIdentifierValue>(value);
    if (identifier_value && identifier_value->GetValueID() == CSSValueID::kNone) {
-@@ -710,6 +730,12 @@ FontSizeAdjust StyleBuilderConverterBase::ConvertFontSizeAdjust(
+@@ -710,6 +731,12 @@ FontSizeAdjust StyleBuilderConverterBase::ConvertFontSizeAdjust(
      return FontBuilder::InitialSizeAdjust();
    }
  
@@ -87,7 +95,7 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..8fcadc0107d6ab0610e605878a7114fc
    if (value.IsPrimitiveValue()) {
      const auto& primitive_value = To<CSSPrimitiveValue>(value);
      DCHECK(primitive_value.IsNumber());
-@@ -718,15 +744,25 @@ FontSizeAdjust StyleBuilderConverterBase::ConvertFontSizeAdjust(
+@@ -718,15 +745,25 @@ FontSizeAdjust StyleBuilderConverterBase::ConvertFontSizeAdjust(
  
    DCHECK(value.IsValuePair());
    const auto& pair = To<CSSValuePair>(value);
@@ -118,7 +126,7 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..8fcadc0107d6ab0610e605878a7114fc
  }
  
  FontSelectionValue StyleBuilderConverterBase::ConvertFontStretch(
-@@ -2147,6 +2183,22 @@ scoped_refptr<SVGDashArray> StyleBuilderConverter::ConvertStrokeDasharray(
+@@ -2147,6 +2184,22 @@ scoped_refptr<SVGDashArray> StyleBuilderConverter::ConvertStrokeDasharray(
    return array;
  }
  
@@ -141,7 +149,26 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..8fcadc0107d6ab0610e605878a7114fc
  AtomicString StyleBuilderConverter::ConvertViewTransitionName(
      StyleResolverState& state,
      const CSSValue& value) {
-@@ -2177,6 +2229,23 @@ StyleColor StyleBuilderConverter::ConvertStyleColor(StyleResolverState& state,
+@@ -2162,6 +2215,18 @@ AtomicString StyleBuilderConverter::ConvertViewTransitionName(
+ StyleColor StyleBuilderConverter::ConvertStyleColor(StyleResolverState& state,
+                                                     const CSSValue& value,
+                                                     bool for_visited_link) {
++  // FlyWeb: resolve light-dark() here, also inside color-mix() and relative
++  // colors, as Chromium 131 (ResolveColorValue). Otherwise TextLinkColors
++  // resolves a currentcolor inside it to transparent.
++  if (auto* light_dark_pair = DynamicTo<CSSLightDarkValuePair>(value)) {
++    return ConvertStyleColor(state,
++                             state.StyleBuilder().UsedColorScheme() ==
++                                     mojom::blink::ColorScheme::kLight
++                                 ? light_dark_pair->First()
++                                 : light_dark_pair->Second(),
++                             for_visited_link);
++  }
++
+   auto* identifier_value = DynamicTo<CSSIdentifierValue>(value);
+   if (identifier_value) {
+     CSSValueID value_id = identifier_value->GetValueID();
+@@ -2177,6 +2242,23 @@ StyleColor StyleBuilderConverter::ConvertStyleColor(StyleResolverState& state,
      }
    }
  
@@ -165,7 +192,7 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..8fcadc0107d6ab0610e605878a7114fc
    if (auto* color_mix_value = DynamicTo<cssvalue::CSSColorMixValue>(value)) {
      const StyleColor c1 = StyleBuilderConverter::ConvertStyleColor(
          state, color_mix_value->Color1(), for_visited_link);
-@@ -2227,18 +2296,19 @@ StyleAutoColor StyleBuilderConverter::ConvertStyleAutoColor(
+@@ -2227,18 +2309,19 @@ StyleAutoColor StyleBuilderConverter::ConvertStyleAutoColor(
  
  SVGPaint StyleBuilderConverter::ConvertSVGPaint(StyleResolverState& state,
                                                  const CSSValue& value,
@@ -188,7 +215,7 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..8fcadc0107d6ab0610e605878a7114fc
    } else {
      auto* local_identifier_value = DynamicTo<CSSIdentifierValue>(local_value);
      if (local_identifier_value &&
-@@ -2812,16 +2882,16 @@ RubyPosition StyleBuilderConverter::ConvertRubyPosition(
+@@ -2812,16 +2895,16 @@ RubyPosition StyleBuilderConverter::ConvertRubyPosition(
      const CSSValue& value) {
    if (const auto* identifier_value = DynamicTo<CSSIdentifierValue>(value)) {
      CSSValueID value_id = identifier_value->GetValueID();
