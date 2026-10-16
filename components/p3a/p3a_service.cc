@@ -20,6 +20,7 @@
 #include "base/timer/wall_clock_timer.h"
 #include "base/trace_event/trace_event.h"
 #include "brave/components/brave_stats/browser/brave_stats_updater_util.h"
+#include "brave/components/p3a/buildflags.h"
 #include "brave/components/p3a/message_manager.h"
 #include "brave/components/p3a/metric_names.h"
 #include "brave/components/p3a/p2a_protocols.h"
@@ -87,7 +88,10 @@ P3AService::~P3AService() = default;
 
 void P3AService::RegisterPrefs(PrefRegistrySimple* registry, bool first_run) {
   MessageManager::RegisterPrefs(registry);
-  registry->RegisterBooleanPref(kP3AEnabled, true);
+  // FlyWeb builds without P3A (brave_p3a_enabled=false: no service, nothing is
+  // sent). Default the pref to the build flag so that a new profile does not
+  // show the P3A infobar or a switched-on P3A setting.
+  registry->RegisterBooleanPref(kP3AEnabled, BUILDFLAG(BRAVE_P3A_ENABLED));
 
   // New users are shown the P3A notice via the welcome page.
   registry->RegisterBooleanPref(kP3ANoticeAcknowledged, first_run);

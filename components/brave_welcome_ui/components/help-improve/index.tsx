@@ -35,18 +35,11 @@ function InputCheckbox (props: InputCheckboxProps) {
 
 function HelpImprove () {
   const [isMetricsReportingEnabled, setMetricsReportingEnabled] = React.useState(true)
-  const [isP3AEnabled, setP3AEnabled] = React.useState(true)
-
-  const handleP3AChange = () => {
-    setP3AEnabled(!isP3AEnabled)
-  }
-
   const handleMetricsReportingChange = () => {
     setMetricsReportingEnabled(!isMetricsReportingEnabled)
   }
 
   const handleFinish = () => {
-    WelcomeBrowserProxyImpl.getInstance().setP3AEnabled(isP3AEnabled)
     WelcomeBrowserProxyImpl.getInstance().setMetricsReportingEnabled(isMetricsReportingEnabled)
     WelcomeBrowserProxyImpl.getInstance().recordP3A({ currentScreen: ViewType.HelpImprove, isFinished: true, isSkipped: false })
     window.open('chrome://newtab', '_self')
@@ -59,7 +52,6 @@ function HelpImprove () {
   const changeSettingsNote = splitStringForTag(getLocale('braveWelcomeChangeSettingsNote'))
   const readPrivacyPolicy = splitStringForTag(getLocale('braveWelcomePrivacyPolicyNote'))
   const diagnosticReportsLabel = splitStringForTag(getLocale('braveWelcomeSendReportsLabel'))
-  const braveProductUsageDataLabel = splitStringForTag(getLocale('braveWelcomeSendInsightsLabel'))
 
   return (
     <S.MainBox>
@@ -81,17 +73,7 @@ function HelpImprove () {
             </a>
             {diagnosticReportsLabel.afterTag}
           </InputCheckbox>
-          <InputCheckbox
-            id="p3a"
-            onChange={handleP3AChange}
-            isChecked={isP3AEnabled}
-          >
-            {braveProductUsageDataLabel.beforeTag}
-            <a href="https://support.brave.com/hc/en-us/articles/9140465918093-What-is-P3A-in-Brave-" target="_blank">
-              {braveProductUsageDataLabel.duringTag}
-            </a>
-            {braveProductUsageDataLabel.afterTag}
-          </InputCheckbox>
+          {/* FlyWeb: no P3A checkbox; FlyWeb builds without P3A. */}
         </div>
       </S.Grid>
       <S.ActionBox>
