@@ -9,6 +9,7 @@
 #include <memory>
 #include <vector>
 
+#include "base/callback_list.h"
 #include "base/scoped_observation.h"
 #include "chrome/browser/profiles/profile_observer.h"
 #include "chrome/browser/ui/browser_list_observer.h"
@@ -104,6 +105,11 @@ class SharedPinnedTabService : public KeyedService,
   void SynchronizeMovedPinnedTab(int from, int to);
   void SynchronizeNewBrowser(Browser* browser);
 
+  // FlyWeb: windows created while a session or a closed window is restored.
+  bool IsRestoredBrowserModel(TabStripModel* tab_strip_model) const;
+  void OnSessionRestored(Profile* profile, int num_tabs_restored);
+  void SynchronizeRestoredBrowser(Browser* browser);
+
   void MoveSharedWebContentsToActiveBrowser(int index);
   void MoveSharedWebContentsToBrowser(Browser* browser,
                                       int index,
@@ -117,6 +123,9 @@ class SharedPinnedTabService : public KeyedService,
   raw_ptr<Profile> profile_;
 
   base::flat_set<Browser*> browsers_;
+  // FlyWeb: windows created while restoring, kept out of |browsers_| until
+  // they are synchronized (SynchronizeRestoredBrowser()).
+  base::flat_set<Browser*> restored_browsers_;
   raw_ptr<Browser> last_active_browser_ = nullptr;
 
   base::flat_set<Browser*> closing_browsers_;
@@ -132,6 +141,8 @@ class SharedPinnedTabService : public KeyedService,
   bool profile_will_be_destroyed_ = false;
 
   base::ScopedObservation<Profile, ProfileObserver> profile_observation_{this};
+
+  base::CallbackListSubscription session_restored_subscription_;
 
   base::ScopedObservation<BrowserList, BrowserListObserver>
       browser_list_observation_{this};
