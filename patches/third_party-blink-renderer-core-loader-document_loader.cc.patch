@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/loader/document_loader.cc b/third_party/blink/renderer/core/loader/document_loader.cc
-index 0062a38167824bbfd8a0eb1307d9e00aac620a4c..30a94186039a6176150a6ea74cc95055562aa8c0 100644
+index 0062a38167824bbfd8a0eb1307d9e00aac620a4c..102a3c11ac244741b23a7cc02cfa52843f0c65e9 100644
 --- a/third_party/blink/renderer/core/loader/document_loader.cc
 +++ b/third_party/blink/renderer/core/loader/document_loader.cc
 @@ -310,6 +310,7 @@ struct SameSizeAsDocumentLoader
@@ -26,7 +26,68 @@ index 0062a38167824bbfd8a0eb1307d9e00aac620a4c..30a94186039a6176150a6ea74cc95055
  }
  
  uint64_t DocumentLoader::MainResourceIdentifier() const {
-@@ -2601,11 +2604,12 @@ void DocumentLoader::CommitNavigation() {
+@@ -2034,6 +2037,27 @@ scoped_refptr<SecurityOrigin> DocumentLoader::CalculateOrigin(
+     // breaks aliasing...
+     origin = owner_document->domWindow()->GetMutableSecurityOrigin();
+     origin_calculation_debug_info_ = AtomicString("use_owner_document_origin");
++  } else if (url_.IsAboutSrcdocURL()) {
++    // If there's no owner_document and this is a srcdoc load, then get the
++    // origin from the remote parent. A srcdoc navigation with no owner_document
++    // can only happen if the iframe is sandboxed and isolated sandboxed frames
++    // is enabled In that case, copy the origin from the remote parent
++    // here—though this origin will only be used to derive the actual opaque
++    // origin later.
++    // TODO(https://crbug.com/328279696): this block can be removed once the
++    // about:srcdoc navigation blocking finishes rolling out, as then the
++    // initiator can never be cross-origin to the parent.
++    origin_calculation_debug_info_ =
++        AtomicString("about_srcdoc_with_remote_parent");
++    // Verify this is a sandboxed srcdoc frame.
++    CHECK((policy_container_->GetPolicies().sandbox_flags &
++           network::mojom::blink::WebSandboxFlags::kOrigin) !=
++          network::mojom::blink::WebSandboxFlags::kNone);
++    origin = frame_->Tree()
++                 .Parent()
++                 ->GetSecurityContext()
++                 ->GetSecurityOrigin()
++                 ->IsolatedCopy();
+   } else {
+     origin_calculation_debug_info_ = AtomicString("use_url_with_precursor");
+     // Otherwise, create an origin that propagates precursor information
+@@ -2060,13 +2084,30 @@ scoped_refptr<SecurityOrigin> DocumentLoader::CalculateOrigin(
+     //
+     // Note: Sandboxed about:srcdoc iframe without "allow-same-origin" aren't
+     // allowed to load user's file, even if its parent can.
+-    if (owner_document) {
++    if (url_.IsAboutSrcdocURL()) {
++      // We should only have a sandboxed, srcdoc frame without an owner document
++      // if isolated-sandboxed-iframes is enabled. Only cases that would
++      // normally inherit the origin need to be handled here, and a sandboxed
++      // about:blank document won't be moved out of process. Also, data: urls
++      // don't get secure contexts, so needn't be considered here.
++      CHECK(owner_document ||
++            base::FeatureList::IsEnabled(features::kIsolateSandboxedIframes));
++
++      bool is_potentially_trustworthy =
++          origin->GetOriginOrPrecursorOriginIfOpaque()
++              ->IsPotentiallyTrustworthy();
++      if (is_potentially_trustworthy) {
++        sandbox_origin->SetOpaqueOriginIsPotentiallyTrustworthy(true);
++        origin_calculation_debug_info_ =
++            origin_calculation_debug_info_ + "_potentially_trustworthy";
++      }
++    } else if (owner_document) {
+       if (origin->IsPotentiallyTrustworthy()) {
+         sandbox_origin->SetOpaqueOriginIsPotentiallyTrustworthy(true);
+         origin_calculation_debug_info_ =
+             origin_calculation_debug_info_ + "_potentially_trustworthy";
+       }
+-      if (origin->CanLoadLocalResources() && !loading_srcdoc_) {
++      if (origin->CanLoadLocalResources()) {
+         sandbox_origin->GrantLoadLocalResources();
+         origin_calculation_debug_info_ =
+             origin_calculation_debug_info_ + "_load_local";
+@@ -2601,11 +2642,12 @@ void DocumentLoader::CommitNavigation() {
      frame_->DomWindow()->navigation()->InitializeForNewWindow(
          *history_item_, load_type_, commit_reason_,
          previous_window->navigation(), navigation_api_back_entries_,
