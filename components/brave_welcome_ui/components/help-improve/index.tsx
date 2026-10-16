@@ -34,7 +34,9 @@ function InputCheckbox (props: InputCheckboxProps) {
 }
 
 function HelpImprove () {
-  const [isMetricsReportingEnabled, setMetricsReportingEnabled] = React.useState(true)
+  // FlyWeb: off by default. FlyWeb sends nothing either way (no UMA upload,
+  // crash reports stay on disk), so the box only records the user's consent.
+  const [isMetricsReportingEnabled, setMetricsReportingEnabled] = React.useState(false)
   const handleMetricsReportingChange = () => {
     setMetricsReportingEnabled(!isMetricsReportingEnabled)
   }
