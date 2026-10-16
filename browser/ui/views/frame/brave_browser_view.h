@@ -90,6 +90,9 @@ class BraveBrowserView : public BrowserView,
 
   bool IsSidebarVisible() const;
 
+  // BraveBrowserWindow:
+  bool IsInTabDragging() const override;
+
   VerticalTabStripWidgetDelegateView*
   vertical_tab_strip_widget_delegate_view() {
     return vertical_tab_strip_widget_delegate_view_;

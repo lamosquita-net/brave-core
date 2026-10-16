@@ -46,6 +46,7 @@
 #include "chrome/browser/ui/browser_commands.h"
 #include "chrome/browser/ui/color/chrome_color_id.h"
 #include "chrome/browser/ui/frame/window_frame_util.h"
+#include "chrome/browser/ui/views/frame/browser_frame.h"
 #include "chrome/browser/ui/views/frame/contents_layout_manager.h"
 #include "chrome/browser/ui/views/frame/tab_strip_region_view.h"
 #include "chrome/browser/ui/views/side_panel/side_panel_coordinator.h"
@@ -674,6 +675,10 @@ TabSearchBubbleHost* BraveBrowserView::GetTabSearchBubbleHost() {
   return vertical_tab_strip_widget_delegate_view_
       ->vertical_tab_strip_region_view()
       ->GetTabSearchBubbleHost();
+}
+
+bool BraveBrowserView::IsInTabDragging() const {
+  return frame()->tab_drag_kind() == TabDragKind::kAllTabs;
 }
 
 bool BraveBrowserView::IsSidebarVisible() const {

@@ -14,6 +14,7 @@
 #include "brave/browser/profiles/profile_util.h"
 #include "brave/browser/themes/brave_theme_service.h"
 #include "brave/browser/ui/color/brave_color_id.h"
+#include "brave/browser/ui/tabs/features.h"
 #include "brave/browser/ui/views/brave_actions/brave_actions_container.h"
 #include "brave/browser/ui/views/location_bar/brave_news_location_view.h"
 #include "brave/browser/ui/views/playlist/playlist_action_icon_view.h"
@@ -324,6 +325,19 @@ void BraveLocationBarView::ChildVisibilityChanged(views::View* child) {
 int BraveLocationBarView::GetBorderRadius() const {
   return ChromeLayoutProvider::Get()->GetCornerRadiusMetric(
       views::Emphasis::kHigh, size());
+}
+
+void BraveLocationBarView::FocusLocation(bool is_user_initiated) {
+  // FlyWeb: from later Brave (b0541dd7aba).
+  if (base::FeatureList::IsEnabled(tabs::features::kBraveSharedPinnedTabs)) {
+    // When updating dummy contents, this could be called even when the widget
+    // is inactive. We shouldn't focus the omnibox in that case.
+    if (auto* widget = GetWidget(); !widget || !widget->IsActive()) {
+      return;
+    }
+  }
+
+  LocationBarView::FocusLocation(is_user_initiated);
 }
 
 SkPath BraveLocationBarView::GetFocusRingHighlightPath() const {

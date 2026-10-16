@@ -38,3 +38,7 @@ bool BraveBrowserWindow::HasSelectedURL() const {
 void BraveBrowserWindow::CleanAndCopySelectedURL() {}
 
 #endif
+
+bool BraveBrowserWindow::IsInTabDragging() const {
+  return false;
+}

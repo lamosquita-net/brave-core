@@ -64,6 +64,7 @@ class BraveLocationBarView : public LocationBarView {
   void ChildVisibilityChanged(views::View* child) override;
 
   int GetBorderRadius() const override;
+  void FocusLocation(bool is_user_initiated) override;
 
   SkPath GetFocusRingHighlightPath() const;
   ContentSettingImageView* GetContentSettingsImageViewForTesting(size_t idx);

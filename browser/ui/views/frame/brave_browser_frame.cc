@@ -7,6 +7,9 @@
 
 #include "brave/browser/profiles/profile_util.h"
 #include "brave/browser/themes/brave_private_window_theme_supplier.h"
+#include "brave/browser/ui/tabs/features.h"
+#include "brave/browser/ui/tabs/shared_pinned_tab_service.h"
+#include "brave/browser/ui/tabs/shared_pinned_tab_service_factory.h"
 #include "brave/browser/ui/views/frame/brave_browser_root_view.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/themes/theme_service.h"
@@ -56,4 +59,25 @@ BraveBrowserFrame::GetCustomTheme() const {
 views::internal::RootView* BraveBrowserFrame::CreateRootView() {
   root_view_ = new BraveBrowserRootView(browser_view_, this);
   return root_view_;
+}
+
+void BraveBrowserFrame::SetTabDragKind(TabDragKind kind) {
+  // FlyWeb: from later Brave (a172cff31b1). A window created by dragging all
+  // of its tabs is synchronized with the shared pinned tabs when the drag ends.
+  const bool should_sync_shared_pinned_tab =
+      base::FeatureList::IsEnabled(tabs::features::kBraveSharedPinnedTabs) &&
+      tab_drag_kind() == TabDragKind::kAllTabs && kind == TabDragKind::kNone;
+
+  BrowserFrame::SetTabDragKind(kind);
+
+  if (!should_sync_shared_pinned_tab) {
+    return;
+  }
+
+  // FlyWeb: no service when the user turned the feature off (F7.8).
+  if (auto* shared_pinned_tab_service =
+          SharedPinnedTabServiceFactory::GetForProfile(
+              view_->browser()->profile())) {
+    shared_pinned_tab_service->TabDraggingEnded(view_->browser());
+  }
 }

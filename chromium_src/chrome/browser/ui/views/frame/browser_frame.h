@@ -11,8 +11,11 @@
   friend class BraveBrowserFrame; \
   void SelectNativeTheme
 
+#define SetTabDragKind virtual SetTabDragKind
+
 #include "src/chrome/browser/ui/views/frame/browser_frame.h"  // IWYU pragma: export
 
+#undef SetTabDragKind
 #undef SelectNativeTheme
 
 #endif  // BRAVE_CHROMIUM_SRC_CHROME_BROWSER_UI_VIEWS_FRAME_BROWSER_FRAME_H_

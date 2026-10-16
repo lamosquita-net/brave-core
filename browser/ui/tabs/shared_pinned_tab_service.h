@@ -60,6 +60,8 @@ class SharedPinnedTabService : public KeyedService,
       const std::vector<std::unique_ptr<TabStripModel::DetachedWebContents>>&
           web_contents);
 
+  void TabDraggingEnded(Browser* browser);
+
   // KeyedService:
   void Shutdown() override;
 
@@ -103,10 +105,14 @@ class SharedPinnedTabService : public KeyedService,
   void SynchronizeNewBrowser(Browser* browser);
 
   void MoveSharedWebContentsToActiveBrowser(int index);
-  void MoveSharedWebContentsToBrowser(Browser* browser, int index);
+  void MoveSharedWebContentsToBrowser(Browser* browser,
+                                      int index,
+                                      bool is_last_closing_browser = false);
 
   std::unique_ptr<content::WebContents> CreateDummyWebContents(
       content::WebContents* shared_contents);
+
+  bool IsBrowserInTabDragging(Browser* browser) const;
 
   raw_ptr<Profile> profile_;
 
@@ -116,6 +122,7 @@ class SharedPinnedTabService : public KeyedService,
   base::flat_set<Browser*> closing_browsers_;
   base::flat_set<std::unique_ptr<content::WebContents>>
       cached_shared_contentses_from_closing_browser_;
+  base::flat_set<Browser*> in_tab_dragging_browsers_;
 
   // This data is ordered in the actual pinned tab order.
   std::vector<PinnedTabData> pinned_tab_data_;
