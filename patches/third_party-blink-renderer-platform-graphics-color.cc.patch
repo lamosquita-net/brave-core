@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/graphics/color.cc b/third_party/blink/renderer/platform/graphics/color.cc
-index c902471e567f347a02203203ef46153befb8d3c8..e27cd7842994e55ae95625830a4cdc118db30d13 100644
+index c902471e567f347a02203203ef46153befb8d3c8..9beae5b1e19be8867b014be975029c544294e21f 100644
 --- a/third_party/blink/renderer/platform/graphics/color.cc
 +++ b/third_party/blink/renderer/platform/graphics/color.cc
 @@ -51,6 +51,10 @@ const Color Color::kTransparent = Color(0x00000000);
@@ -13,7 +13,29 @@ index c902471e567f347a02203203ef46153befb8d3c8..e27cd7842994e55ae95625830a4cdc11
  const RGBA32 kDarkenedWhite = 0xFFABABAB;
  
  const int kCStartAlpha = 153;     // 60%
-@@ -557,8 +561,9 @@ void Color::ConvertToColorSpace(Color::ColorSpace destination_color_space) {
+@@ -161,6 +165,21 @@ Color::Color(int r, int g, int b, int a) {
+ }
+ 
+ // static
++// static
++Color Color::FromRGBALegacyFloat(absl::optional<float> r,
++                                 absl::optional<float> g,
++                                 absl::optional<float> b,
++                                 absl::optional<int> a) {
++  Color result = FromRGBALegacy(0, 0, 0, a);
++  result.param0_ = ClampTo<float>(r.value_or(0.f), 0.f, 255.f) / 255.f;
++  result.param1_ = ClampTo<float>(g.value_or(0.f), 0.f, 255.f) / 255.f;
++  result.param2_ = ClampTo<float>(b.value_or(0.f), 0.f, 255.f) / 255.f;
++  result.param0_is_none_ = !r;
++  result.param1_is_none_ = !g;
++  result.param2_is_none_ = !b;
++  return result;
++}
++
+ Color Color::FromRGBALegacy(absl::optional<int> r,
+                             absl::optional<int> g,
+                             absl::optional<int> b,
+@@ -557,8 +576,9 @@ void Color::ConvertToColorSpace(Color::ColorSpace destination_color_space) {
        param2_ = AngleToUnitCircleDegrees(param2_);
        color_space_ = ColorSpace::kLch;
  
@@ -25,7 +47,7 @@ index c902471e567f347a02203203ef46153befb8d3c8..e27cd7842994e55ae95625830a4cdc11
          param2_is_none_ = true;
        }
  
-@@ -568,27 +573,26 @@ void Color::ConvertToColorSpace(Color::ColorSpace destination_color_space) {
+@@ -568,27 +588,26 @@ void Color::ConvertToColorSpace(Color::ColorSpace destination_color_space) {
        if (color_space_ == ColorSpace::kOklab) {
          std::tie(param0_, param1_, param2_) =
              gfx::LabToLch(param0_, param1_, param2_);
@@ -70,7 +92,7 @@ index c902471e567f347a02203203ef46153befb8d3c8..e27cd7842994e55ae95625830a4cdc11
          param2_is_none_ = true;
        }
  
-@@ -611,8 +615,9 @@ void Color::ConvertToColorSpace(Color::ColorSpace destination_color_space) {
+@@ -611,8 +630,9 @@ void Color::ConvertToColorSpace(Color::ColorSpace destination_color_space) {
            gfx::SRGBToHSL(sRGB_color.fR, sRGB_color.fG, sRGB_color.fB);
        color_space_ = ColorSpace::kHSL;
  
@@ -82,7 +104,7 @@ index c902471e567f347a02203203ef46153befb8d3c8..e27cd7842994e55ae95625830a4cdc11
          param0_is_none_ = true;
        }
  
-@@ -624,20 +629,40 @@ void Color::ConvertToColorSpace(Color::ColorSpace destination_color_space) {
+@@ -624,20 +644,40 @@ void Color::ConvertToColorSpace(Color::ColorSpace destination_color_space) {
            gfx::SRGBToHWB(sRGB_color.fR, sRGB_color.fG, sRGB_color.fB);
        color_space_ = ColorSpace::kHWB;
  

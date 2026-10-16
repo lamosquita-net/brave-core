@@ -1,0 +1,17 @@
+diff --git a/third_party/blink/renderer/platform/graphics/color.h b/third_party/blink/renderer/platform/graphics/color.h
+index 22f292190864a8ab62820b19f373dc12bf567423..6bb7b47779329bb9020ef53caf0fb05fccb3b6f6 100644
+--- a/third_party/blink/renderer/platform/graphics/color.h
++++ b/third_party/blink/renderer/platform/graphics/color.h
+@@ -179,6 +179,12 @@ class PLATFORM_EXPORT Color {
+                               absl::optional<int> g,
+                               absl::optional<int> b,
+                               absl::optional<int> alpha);
++  // FlyWeb: as Chromium 120+ (c285855d6e9, 5deed17c9f1), rgb() keeps
++  // non-integer channels ([0, 255]) instead of rounding them at parse time.
++  static Color FromRGBALegacyFloat(absl::optional<float> r,
++                                   absl::optional<float> g,
++                                   absl::optional<float> b,
++                                   absl::optional<int> a);
+ 
+   // Create a color using the rgba() syntax, with float arguments. All
+   // parameters will be clamped to the [0, 1] interval.
