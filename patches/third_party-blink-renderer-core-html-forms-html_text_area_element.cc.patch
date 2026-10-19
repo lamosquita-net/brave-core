@@ -1,7 +1,23 @@
 diff --git a/third_party/blink/renderer/core/html/forms/html_text_area_element.cc b/third_party/blink/renderer/core/html/forms/html_text_area_element.cc
-index 942dc2a6745bb997ec7d6a490b433ad2e4cec982..8f5b02852461cd675c184e9878104f4fac9d726c 100644
+index 942dc2a6745bb997ec7d6a490b433ad2e4cec982..99f0d1b92d6850de4fa567c74f19f021821d4093 100644
 --- a/third_party/blink/renderer/core/html/forms/html_text_area_element.cc
 +++ b/third_party/blink/renderer/core/html/forms/html_text_area_element.cc
+@@ -58,6 +58,7 @@
+ #include "third_party/blink/renderer/platform/bindings/exception_state.h"
+ #include "third_party/blink/renderer/platform/heap/garbage_collected.h"
+ #include "third_party/blink/renderer/platform/instrumentation/use_counter.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+ #include "third_party/blink/renderer/platform/text/platform_locale.h"
+ #include "third_party/blink/renderer/platform/wtf/std_lib_extras.h"
+ #include "third_party/blink/renderer/platform/wtf/text/string_builder.h"
+@@ -161,7 +162,6 @@ int HTMLTextAreaElement::scrollHeight() {
+ 
+ void HTMLTextAreaElement::ChildrenChanged(const ChildrenChange& change) {
+   HTMLElement::ChildrenChanged(change);
+-  SetLastChangeWasNotUserEdit();
+   if (is_dirty_)
+     SetInnerEditorValue(Value());
+   else
 @@ -194,7 +194,7 @@ void HTMLTextAreaElement::CollectStyleForPresentationAttribute(
          // Longhands of `white-space: pre-wrap`.
          AddPropertyToPresentationAttributeStyle(
