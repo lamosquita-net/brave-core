@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/element.cc b/third_party/blink/renderer/core/dom/element.cc
-index 603363d44dba6a56412a2408af11a821e39bde00..f45f047fef6924081805d6561c3b4c631907317f 100644
+index 603363d44dba6a56412a2408af11a821e39bde00..75cd674c942ac6f7a9923cf57826b4c4001944c2 100644
 --- a/third_party/blink/renderer/core/dom/element.cc
 +++ b/third_party/blink/renderer/core/dom/element.cc
 @@ -43,6 +43,7 @@
@@ -969,7 +969,40 @@ index 603363d44dba6a56412a2408af11a821e39bde00..f45f047fef6924081805d6561c3b4c63
      return element->GetLayoutObject();
    }
    return nullptr;
-@@ -8317,7 +8937,7 @@ void Element::RebuildTransitionPseudoLayoutTree(
+@@ -6950,7 +7570,7 @@ KURL Element::HrefURL() const {
+   // doesn't <link> implement URLUtils?
+   if (IsA<HTMLAnchorElement>(*this) || IsA<HTMLAreaElement>(*this) ||
+       IsA<HTMLLinkElement>(*this)) {
+-    return GetURLAttribute(html_names::kHrefAttr);
++    return GetURLAttributeAsKURL(html_names::kHrefAttr);
+   }
+   if (auto* svg_a = DynamicTo<SVGAElement>(*this)) {
+     return svg_a->LegacyHrefURL(GetDocument());
+@@ -6958,7 +7578,7 @@ KURL Element::HrefURL() const {
+   return KURL();
+ }
+ 
+-KURL Element::GetURLAttribute(const QualifiedName& name) const {
++String Element::GetURLAttribute(const QualifiedName& name) const {
+ #if DCHECK_IS_ON()
+   if (HasElementData()) {
+     if (const Attribute* attribute = Attributes().Find(name)) {
+@@ -6966,6 +7586,14 @@ KURL Element::GetURLAttribute(const QualifiedName& name) const {
+     }
+   }
+ #endif
++  KURL url = GetDocument().CompleteURL(
++      StripLeadingAndTrailingHTMLSpaces(getAttribute(name)));
++  return url.IsValid()
++             ? url
++             : StripLeadingAndTrailingHTMLSpaces(getAttribute(name));
++}
++
++KURL Element::GetURLAttributeAsKURL(const QualifiedName& name) const {
+   return GetDocument().CompleteURL(
+       StripLeadingAndTrailingHTMLSpaces(getAttribute(name)));
+ }
+@@ -8317,7 +8945,7 @@ void Element::RebuildTransitionPseudoLayoutTree(
                                                 rebuild_pseudo_tree);
  }
  
@@ -978,7 +1011,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..f45f047fef6924081805d6561c3b4c63
    return RuntimeEnabledFeatures::InertAttributeEnabled() &&
           FastHasAttribute(html_names::kInertAttr) && IsHTMLElement();
  }
-@@ -8377,9 +8997,34 @@ FocusgroupFlags Element::GetFocusgroupFlags() const {
+@@ -8377,9 +9005,34 @@ FocusgroupFlags Element::GetFocusgroupFlags() const {
  }
  
  bool Element::checkVisibility(CheckVisibilityOptions* options) const {
@@ -1015,7 +1048,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..f45f047fef6924081805d6561c3b4c63
    DisplayLockUtilities::ScopedForcedUpdate force_locks(
        this, DisplayLockContext::ForcedPhase::kStyleAndLayoutTree,
        /*include_self=*/false, /*only_cv_auto=*/true,
-@@ -8396,7 +9041,9 @@ bool Element::checkVisibility(CheckVisibilityOptions* options) const {
+@@ -8396,7 +9049,9 @@ bool Element::checkVisibility(CheckVisibilityOptions* options) const {
    }
  
    DCHECK(options);
@@ -1026,7 +1059,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..f45f047fef6924081805d6561c3b4c63
        style->Visibility() != EVisibility::kVisible) {
      return false;
    }
-@@ -8415,7 +9062,9 @@ bool Element::checkVisibility(CheckVisibilityOptions* options) const {
+@@ -8415,7 +9070,9 @@ bool Element::checkVisibility(CheckVisibilityOptions* options) const {
      }
  
      // Check for opacity:0
@@ -1037,7 +1070,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..f45f047fef6924081805d6561c3b4c63
        if (style = ancestor.GetComputedStyle(); style) {
          if (style->Opacity() == 0.f) {
            return false;
-@@ -8850,4 +9499,10 @@ Element* Element::ImplicitAnchorElement() {
+@@ -8850,4 +9507,10 @@ Element* Element::ImplicitAnchorElement() {
    return nullptr;
  }
  

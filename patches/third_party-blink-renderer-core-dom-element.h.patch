@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/element.h b/third_party/blink/renderer/core/dom/element.h
-index 640e53d474d0e132bf72388ac410015f66b55f48..8891e9271b24f9c8ec100a319d6eb09fa6eb05f2 100644
+index 640e53d474d0e132bf72388ac410015f66b55f48..f5b0e2a9deb3e2e4d4502449ab8f131acf18a93f 100644
 --- a/third_party/blink/renderer/core/dom/element.h
 +++ b/third_party/blink/renderer/core/dom/element.h
 @@ -93,6 +93,7 @@ class ElementIntersectionObserverData;
@@ -40,7 +40,17 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..8891e9271b24f9c8ec100a319d6eb09f
  
    // Returns the shadow root attached to this element if it is a shadow host.
    ShadowRoot* GetShadowRoot() const;
-@@ -838,8 +846,15 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -743,7 +751,8 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+   virtual bool IsLiveLink() const { return false; }
+   KURL HrefURL() const;
+ 
+-  KURL GetURLAttribute(const QualifiedName&) const;
++  String GetURLAttribute(const QualifiedName&) const;
++  KURL GetURLAttributeAsKURL(const QualifiedName&) const;
+ 
+   KURL GetNonEmptyURLAttribute(const QualifiedName&) const;
+ 
+@@ -838,8 +847,15 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    void setInnerHTML(const String&, ExceptionState& = ASSERT_NO_EXCEPTION);
    void setInnerHTMLWithDeclarativeShadowDOMForTesting(const String& html);
    String getInnerHTML(const GetInnerHTMLOptions* options) const;
@@ -56,7 +66,7 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..8891e9271b24f9c8ec100a319d6eb09f
    void setPointerCapture(PointerId poinetr_id, ExceptionState&);
    void releasePointerCapture(PointerId pointer_id, ExceptionState&);
  
-@@ -876,6 +891,8 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -876,6 +892,8 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    // usage of this ID is limited to pseudo elements generated for a
    // ViewTransition. See
    // third_party/blink/renderer/core/view_transition/README.md
@@ -65,7 +75,7 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..8891e9271b24f9c8ec100a319d6eb09f
    PseudoElement* GetPseudoElement(
        PseudoId,
        const AtomicString& view_transition_name = g_null_atom) const;
-@@ -1155,11 +1172,18 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1155,11 +1173,18 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    absl::optional<LayoutUnit> LastRememberedInlineSize() const;
    absl::optional<LayoutUnit> LastRememberedBlockSize() const;
  
@@ -89,7 +99,7 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..8891e9271b24f9c8ec100a319d6eb09f
        PseudoId pseudo_id,
        const AtomicString& view_transition_name) const;
  
-@@ -1170,7 +1194,7 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1170,7 +1195,7 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
  
    // Returns true if the element has the 'inert' attribute, forcing itself and
    // all its subtree to be inert.
@@ -98,7 +108,7 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..8891e9271b24f9c8ec100a319d6eb09f
  
    FocusgroupFlags GetFocusgroupFlags() const;
  
-@@ -1204,6 +1228,16 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1204,6 +1229,16 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    // https://drafts.csswg.org/css-anchor-1/#implicit-anchor-element
    Element* ImplicitAnchorElement();
  
@@ -115,7 +125,7 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..8891e9271b24f9c8ec100a319d6eb09f
   protected:
    bool HasElementData() const { return element_data_; }
    const ElementData* GetElementData() const { return element_data_.Get(); }
-@@ -1300,6 +1334,13 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1300,6 +1335,13 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    // changes.
    void LangAttributeChanged();
  
@@ -129,7 +139,7 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..8891e9271b24f9c8ec100a319d6eb09f
   private:
    friend class AXObject;
    struct AffectedByPseudoStateChange;
-@@ -1324,7 +1365,7 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1324,7 +1366,7 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
        delete;  // This will catch anyone doing an unnecessary check.
  
    bool CanAttachShadowRoot() const;
@@ -138,7 +148,7 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..8891e9271b24f9c8ec100a319d6eb09f
  
    void StyleAttributeChanged(const AtomicString& new_style_string,
                               AttributeModificationReason);
-@@ -1420,6 +1461,8 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1420,6 +1462,8 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
      DetachPseudoElement(kPseudoIdFirstLetter, performing_reattach);
    }
  
