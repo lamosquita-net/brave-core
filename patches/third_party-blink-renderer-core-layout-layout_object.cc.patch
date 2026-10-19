@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_object.cc b/third_party/blink/renderer/core/layout/layout_object.cc
-index 98f0936193142d342d2083f61151ce24e10ad7a9..71cabd840cffffdd296c0c72464889f41b83c44f 100644
+index 98f0936193142d342d2083f61151ce24e10ad7a9..0d1550e4cc60e5685d365b3a480435396509fa2b 100644
 --- a/third_party/blink/renderer/core/layout/layout_object.cc
 +++ b/third_party/blink/renderer/core/layout/layout_object.cc
 @@ -82,6 +82,7 @@
@@ -182,7 +182,18 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..71cabd840cffffdd296c0c72464889f4
    return property_container;
  }
  
-@@ -4480,6 +4536,12 @@ gfx::RectF LayoutObject::StrokeBoundingBox() const {
+@@ -3374,9 +3430,7 @@ void LayoutObject::MapAncestorToLocal(const LayoutBoxModelObject* ancestor,
+     PhysicalOffset visual_point = transform_state.MappedPoint();
+     transform_state.Move(
+         visual_point -
+-        PhysicalOffsetToBeNoop(
+-            To<LayoutFlowThread>(this)->VisualPointToFlowThreadPoint(
+-                visual_point.ToLayoutPoint())));
++        To<LayoutFlowThread>(this)->VisualPointToFlowThreadPoint(visual_point));
+   }
+ 
+   if (skip_info.AncestorSkipped()) {
+@@ -4480,6 +4534,12 @@ gfx::RectF LayoutObject::StrokeBoundingBox() const {
    return gfx::RectF();
  }
  
@@ -195,7 +206,7 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..71cabd840cffffdd296c0c72464889f4
  gfx::RectF LayoutObject::VisualRectInLocalSVGCoordinates() const {
    NOT_DESTROYED();
    NOTREACHED();
-@@ -4990,6 +5052,19 @@ void LayoutObject::SetSVGDescendantMayHaveTransformRelatedAnimation() {
+@@ -4990,6 +5050,19 @@ void LayoutObject::SetSVGDescendantMayHaveTransformRelatedAnimation() {
    }
  }
  
