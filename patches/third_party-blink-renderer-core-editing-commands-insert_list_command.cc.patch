@@ -1,0 +1,18 @@
+diff --git a/third_party/blink/renderer/core/editing/commands/insert_list_command.cc b/third_party/blink/renderer/core/editing/commands/insert_list_command.cc
+index f408fb16f9d5355c44b5799c0bf51aef29a9f51e..a57ca975d4150648778a9e61ec2a188a6d8afb8d 100644
+--- a/third_party/blink/renderer/core/editing/commands/insert_list_command.cc
++++ b/third_party/blink/renderer/core/editing/commands/insert_list_command.cc
+@@ -732,11 +732,11 @@ void InsertListCommand::MoveParagraphOverPositionIntoEmptyListItem(
+   // enclosing block node so we can get the "outer" block node without crossing
+   // block boundaries as that function only breaks when the loop hits the
+   // editable boundary or the parent element has an inline style(as we pass
+-  // |IsInline| to it).
++  // |IsInlineElement| to it).
+   Node* const constraining_ancestor =
+       EnclosingBlock(start.DeepEquivalent().AnchorNode());
+   Node* const outer_block = HighestEnclosingNodeOfType(
+-      start.DeepEquivalent(), &IsInline, kCannotCrossEditingBoundary,
++      start.DeepEquivalent(), &IsInlineElement, kCannotCrossEditingBoundary,
+       constraining_ancestor);
+   MoveParagraphWithClones(
+       start, end, list_item_element,

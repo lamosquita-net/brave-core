@@ -1,8 +1,14 @@
 diff --git a/third_party/blink/renderer/core/editing/commands/editing_commands_utilities.cc b/third_party/blink/renderer/core/editing/commands/editing_commands_utilities.cc
-index e58f3750002b014c011edce4049dadd7972ebf7c..6ca70be965db0f63292bd1c33bf63aa2f8afffec 100644
+index e58f3750002b014c011edce4049dadd7972ebf7c..339777e31a1be25e40cc071aad8bf48123a7b1ab 100644
 --- a/third_party/blink/renderer/core/editing/commands/editing_commands_utilities.cc
 +++ b/third_party/blink/renderer/core/editing/commands/editing_commands_utilities.cc
-@@ -102,7 +102,9 @@ bool IsInline(const Node* node) {
+@@ -97,12 +97,29 @@ bool IsNodeRendered(const Node& node) {
+   return layout_object->Style()->Visibility() == EVisibility::kVisible;
+ }
+ 
+-bool IsInline(const Node* node) {
++bool IsInlineElement(const Node* node) {
+   if (!node)
      return false;
  
    const ComputedStyle* style = node->GetComputedStyle();
@@ -10,6 +16,21 @@ index e58f3750002b014c011edce4049dadd7972ebf7c..6ca70be965db0f63292bd1c33bf63aa2
 +  // Should we apply IsDisplayInlineType()?
 +  return style && (style->Display() == EDisplay::kInline ||
 +                   style->Display() == EDisplay::kRuby);
++}
++
++bool IsInlineNode(const Node* node) {
++  if (!node) {
++    return false;
++  }
++
++  if (IsInlineElement(node)) {
++    return true;
++  }
++
++  if (LayoutObject* layout_object = node->GetLayoutObject()) {
++    return layout_object->IsInline();
++  }
++  return false;
  }
  
  // FIXME: This method should not need to call

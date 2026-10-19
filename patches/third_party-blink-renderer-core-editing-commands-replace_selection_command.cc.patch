@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/editing/commands/replace_selection_command.cc b/third_party/blink/renderer/core/editing/commands/replace_selection_command.cc
-index 44afa276cbde6df6e54be2a77f28ee200791b429..70c04226a20f657b5aa400c2414eaaf493094647 100644
+index 44afa276cbde6df6e54be2a77f28ee200791b429..27b457d0e776f4a5e479c77824629c349b4321f5 100644
 --- a/third_party/blink/renderer/core/editing/commands/replace_selection_command.cc
 +++ b/third_party/blink/renderer/core/editing/commands/replace_selection_command.cc
 @@ -68,6 +68,7 @@
@@ -28,6 +28,15 @@ index 44afa276cbde6df6e54be2a77f28ee200791b429..70c04226a20f657b5aa400c2414eaaf4
  static bool HasMatchingQuoteLevel(VisiblePosition end_of_existing_content,
                                    VisiblePosition end_of_inserted_content) {
    Position existing = end_of_existing_content.DeepEquivalent();
+@@ -915,7 +927,7 @@ static void HandleStyleSpansBeforeInsertion(ReplacementFragment& fragment,
+   // |node| can be an inline element like <br> under <li>
+   // e.g.) editing/execCommand/switch-list-type.html
+   //       editing/deleting/backspace-merge-into-block.html
+-  if (IsInline(node)) {
++  if (IsInlineElement(node)) {
+     node = EnclosingBlock(insertion_pos.AnchorNode());
+     if (!node)
+       return;
 @@ -1225,6 +1237,11 @@ void ReplaceSelectionCommand::DoApply(EditingState* editing_state) {
      return;
  

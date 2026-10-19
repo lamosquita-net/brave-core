@@ -1,0 +1,16 @@
+diff --git a/third_party/blink/renderer/core/editing/commands/split_element_command.cc b/third_party/blink/renderer/core/editing/commands/split_element_command.cc
+index c951ad7c5c10300ced2c3d1ac59ff05a654bbae1..1b4d9db61f6ff172382f0cd4965db55cc287c11d 100644
+--- a/third_party/blink/renderer/core/editing/commands/split_element_command.cc
++++ b/third_party/blink/renderer/core/editing/commands/split_element_command.cc
+@@ -55,6 +55,11 @@ void SplitElementCommand::ExecuteApply() {
+   ContainerNode* parent = element2_->parentNode();
+   if (!parent || !IsEditable(*parent))
+     return;
++  if (RuntimeEnabledFeatures::NonEmptyBlockquotesOnOutdentingEnabled()) {
++    if (children.size() == 0) {
++      return;
++    }
++  }
+   parent->InsertBefore(element1_.Get(), element2_.Get(), exception_state);
+   if (exception_state.HadException())
+     return;
