@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/parser/html_tree_builder.cc b/third_party/blink/renderer/core/html/parser/html_tree_builder.cc
-index b4b07c1302b3496ffa516d0a1f99a5b5e7a9236a..9e6503fd24d43ab3ce4c756538562cd4d2dfe4f8 100644
+index b4b07c1302b3496ffa516d0a1f99a5b5e7a9236a..6e43b38d207342ba85138c67c130e5974191c421 100644
 --- a/third_party/blink/renderer/core/html/parser/html_tree_builder.cc
 +++ b/third_party/blink/renderer/core/html/parser/html_tree_builder.cc
 @@ -706,6 +706,7 @@ void HTMLTreeBuilder::ProcessStartTagForInBody(AtomicHTMLToken* token) {
@@ -23,7 +23,26 @@ index b4b07c1302b3496ffa516d0a1f99a5b5e7a9236a..9e6503fd24d43ab3ce4c756538562cd4
      shadow_mode = type_attribute_non_streaming->Value();
    }
  
-@@ -1991,6 +1998,7 @@ void HTMLTreeBuilder::ProcessEndTagForInBody(AtomicHTMLToken* token) {
+@@ -1523,6 +1530,18 @@ void HTMLTreeBuilder::ProcessStartTag(AtomicHTMLToken* token) {
+           }
+           tree_.InsertHTMLElement(token);
+           return;
++        case HTMLTag::kHr:
++          if (tree_.CurrentStackItem()->MatchesHTMLTag(HTMLTag::kOption)) {
++            AtomicHTMLToken end_option(HTMLToken::kEndTag, HTMLTag::kOption);
++            ProcessEndTag(&end_option);
++          }
++          if (tree_.CurrentStackItem()->MatchesHTMLTag(HTMLTag::kOptgroup)) {
++            AtomicHTMLToken end_optgroup(HTMLToken::kEndTag,
++                                         HTMLTag::kOptgroup);
++            ProcessEndTag(&end_optgroup);
++          }
++          tree_.InsertSelfClosingHTMLElementDestroyingToken(token);
++          return;
+         case HTMLTag::kSelect: {
+           ParseError(token);
+           AtomicHTMLToken end_select(HTMLToken::kEndTag, HTMLTag::kSelect);
+@@ -1991,6 +2010,7 @@ void HTMLTreeBuilder::ProcessEndTagForInBody(AtomicHTMLToken* token) {
      case HTMLTag::kNav:
      case HTMLTag::kOl:
      case HTMLTag::kPre:
