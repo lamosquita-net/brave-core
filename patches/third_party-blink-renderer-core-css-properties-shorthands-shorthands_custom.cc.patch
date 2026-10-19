@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/properties/shorthands/shorthands_custom.cc b/third_party/blink/renderer/core/css/properties/shorthands/shorthands_custom.cc
-index 420cb4301e98f574101ceb2750a4f60d09619430..1b142a3da0806aab74c78c6f90beda9e5dee4b44 100644
+index 420cb4301e98f574101ceb2750a4f60d09619430..7345778e8f1fb88906c37ffea402d598f20d20d7 100644
 --- a/third_party/blink/renderer/core/css/properties/shorthands/shorthands_custom.cc
 +++ b/third_party/blink/renderer/core/css/properties/shorthands/shorthands_custom.cc
 @@ -27,6 +27,7 @@
@@ -314,19 +314,90 @@ index 420cb4301e98f574101ceb2750a4f60d09619430..1b142a3da0806aab74c78c6f90beda9e
      default:
        NOTREACHED();
        return nullptr;
-@@ -3508,6 +3571,11 @@ const CSSValue* Transition::CSSValueFromComputedStyleInternal(
-                                      i)));
-       list->Append(*ComputedStyleUtils::ValueForAnimationDelayStart(
-           CSSTimingData::GetRepeated(transition_data->DelayStartList(), i)));
+@@ -3497,17 +3560,58 @@ const CSSValue* Transition::CSSValueFromComputedStyleInternal(
+     CSSValueList* transitions_list = CSSValueList::CreateCommaSeparated();
+     for (wtf_size_t i = 0; i < transition_data->PropertyList().size(); ++i) {
+       CSSValueList* list = CSSValueList::CreateSpaceSeparated();
+-      list->Append(*ComputedStyleUtils::CreateTransitionPropertyValue(
+-          transition_data->PropertyList()[i]));
+-      list->Append(*CSSNumericLiteralValue::Create(
++
++      CSSTransitionData::TransitionProperty property =
++          transition_data->PropertyList()[i];
++      if (!(property == CSSTransitionData::InitialProperty())) {
++        list->Append(
++            *ComputedStyleUtils::CreateTransitionPropertyValue(property));
++      }
++
++      // If we have a transition-delay but no transition-duration set, we must
++      // serialize the transition-duration because they're both <time> values
++      // and transition-duration comes first.
++      Timing::Delay delay =
++          CSSTimingData::GetRepeated(transition_data->DelayStartList(), i);
++      const double duration =
+           CSSTimingData::GetRepeated(transition_data->DurationList(), i)
+-              .value(),
+-          CSSPrimitiveValue::UnitType::kSeconds));
+-      list->Append(*ComputedStyleUtils::ValueForAnimationTimingFunction(
+-          CSSTimingData::GetRepeated(transition_data->TimingFunctionList(),
+-                                     i)));
+-      list->Append(*ComputedStyleUtils::ValueForAnimationDelayStart(
+-          CSSTimingData::GetRepeated(transition_data->DelayStartList(), i)));
++              .value();
++      bool shows_delay = delay != CSSTimingData::InitialDelayStart();
++      bool shows_duration =
++          shows_delay ||
++          duration != CSSTransitionData::InitialDuration().value();
++
++      if (shows_duration) {
++        list->Append(*CSSNumericLiteralValue::Create(
++            duration, CSSPrimitiveValue::UnitType::kSeconds));
++      }
++
++      CSSValue* timing_function =
++          ComputedStyleUtils::ValueForAnimationTimingFunction(
++              CSSTimingData::GetRepeated(transition_data->TimingFunctionList(),
++                                         i));
++      CSSIdentifierValue* timing_function_value_id =
++          DynamicTo<CSSIdentifierValue>(timing_function);
++      if (!timing_function_value_id ||
++          timing_function_value_id->GetValueID() != CSSValueID::kEase) {
++        list->Append(*timing_function);
++      }
++
++      if (shows_delay) {
++        list->Append(*ComputedStyleUtils::ValueForAnimationDelayStart(delay));
++      }
++
 +      if (CSSTimingData::GetRepeated(transition_data->BehaviorList(), i) !=
 +          CSSTransitionData::InitialBehavior()) {
 +        list->Append(*ComputedStyleUtils::CreateTransitionBehaviorValue(
 +            transition_data->BehaviorList()[i]));
 +      }
++
++      if (!list->length()) {
++        list->Append(*ComputedStyleUtils::CreateTransitionPropertyValue(
++            CSSTransitionData::InitialProperty()));
++      }
++
        transitions_list->Append(*list);
      }
      return transitions_list;
-@@ -3545,7 +3613,9 @@ const CSSValue* ViewTimeline::CSSValueFromComputedStyleInternal(
+@@ -3516,13 +3620,6 @@ const CSSValue* Transition::CSSValueFromComputedStyleInternal(
+   CSSValueList* list = CSSValueList::CreateSpaceSeparated();
+   // transition-property default value.
+   list->Append(*CSSIdentifierValue::Create(CSSValueID::kAll));
+-  list->Append(*CSSNumericLiteralValue::Create(
+-      CSSTransitionData::InitialDuration().value(),
+-      CSSPrimitiveValue::UnitType::kSeconds));
+-  list->Append(*ComputedStyleUtils::ValueForAnimationTimingFunction(
+-      CSSTransitionData::InitialTimingFunction()));
+-  list->Append(*ComputedStyleUtils::ValueForAnimationDelayStart(
+-      CSSTransitionData::InitialDelayStart()));
+   return list;
+ }
+ 
+@@ -3545,7 +3642,9 @@ const CSSValue* ViewTimeline::CSSValueFromComputedStyleInternal(
        style.ViewTimelineName() ? style.ViewTimelineName()->GetNames()
                                 : HeapVector<Member<const ScopedCSSName>>{};
    const Vector<TimelineAxis>& axis_vector = style.ViewTimelineAxis();
@@ -337,7 +408,7 @@ index 420cb4301e98f574101ceb2750a4f60d09619430..1b142a3da0806aab74c78c6f90beda9e
  }
  
  bool WebkitColumnBreakAfter::ParseShorthand(
-@@ -3687,39 +3757,45 @@ bool WebkitMask::ParseShorthand(
+@@ -3687,39 +3786,45 @@ bool WebkitMask::ParseShorthand(
      const CSSParserContext& context,
      const CSSParserLocalContext& local_context,
      HeapVector<CSSPropertyValue, 64>& properties) const {
@@ -403,7 +474,7 @@ index 420cb4301e98f574101ceb2750a4f60d09619430..1b142a3da0806aab74c78c6f90beda9e
      const ComputedStyle& style,
      const LayoutObject*,
      bool allow_visited_style) const {
-@@ -3727,43 +3803,23 @@ const CSSValue* WebkitMaskPosition::CSSValueFromComputedStyleInternal(
+@@ -3727,43 +3832,23 @@ const CSSValue* WebkitMaskPosition::CSSValueFromComputedStyleInternal(
        *this, style, &style.MaskLayers());
  }
  
@@ -455,7 +526,7 @@ index 420cb4301e98f574101ceb2750a4f60d09619430..1b142a3da0806aab74c78c6f90beda9e
  }
  
  bool TextEmphasis::ParseShorthand(
-@@ -3872,14 +3928,20 @@ bool AlternativeWhiteSpace::ParseShorthand(
+@@ -3872,14 +3957,20 @@ bool AlternativeWhiteSpace::ParseShorthand(
        const EWhiteSpace whitespace =
            CssValueIDToPlatformEnum<EWhiteSpace>(value->GetValueID());
        DCHECK(IsValidWhiteSpace(whitespace));
@@ -479,7 +550,7 @@ index 420cb4301e98f574101ceb2750a4f60d09619430..1b142a3da0806aab74c78c6f90beda9e
            css_parsing_utils::IsImplicitProperty::kNotImplicit, properties);
        return true;
      }
-@@ -3909,8 +3971,8 @@ const CSSValue* AlternativeWhiteSpace::CSSValueFromComputedStyleInternal(
+@@ -3909,8 +4000,8 @@ const CSSValue* AlternativeWhiteSpace::CSSValueFromComputedStyleInternal(
    if (collapse != ComputedStyleInitialValues::InitialWhiteSpaceCollapse()) {
      list->Append(*CSSIdentifierValue::Create(collapse));
    }
