@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/runtime_enabled_features.json5 b/third_party/blink/renderer/platform/runtime_enabled_features.json5
-index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f07eb3a3b3ecd1437770c841e7f840e09f1b8dca 100644
+index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..13baee257ca86e463b583c451e56ed4fc0d57a40 100644
 --- a/third_party/blink/renderer/platform/runtime_enabled_features.json5
 +++ b/third_party/blink/renderer/platform/runtime_enabled_features.json5
 @@ -276,8 +276,10 @@
@@ -829,14 +829,11 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f07eb3a3b3ecd1437770c841e7f840e0
      {
        name: "IncomingCallNotifications",
      },
-@@ -2039,10 +2386,34 @@
+@@ -2038,12 +2385,36 @@
+       name: "InertDisplayTransition",
        status: "experimental",
      },
-     {
--      // If a painting bug no longer reproduces with this feature enabled, then
--      // the bug is caused by incorrect cull rects.
--      name: "InfiniteCullRect",
--      base_feature: "none",
++    {
 +      name: "InertElementNonEditable",
 +      status: "stable",
 +    },
@@ -844,12 +841,12 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f07eb3a3b3ecd1437770c841e7f840e0
 +      name: "InertElementNonSearchable",
 +      status: "stable",
 +    },
-+    {
-+      // If a painting bug no longer reproduces with this feature enabled, then
-+      // the bug is caused by incorrect cull rects.
-+      name: "InfiniteCullRect",
-+      base_feature: "none",
-+    },
+     {
+       // If a painting bug no longer reproduces with this feature enabled, then
+       // the bug is caused by incorrect cull rects.
+       name: "InfiniteCullRect",
+       base_feature: "none",
+     },
 +    {
 +      name: "InheritUserModifyWithoutContenteditable",
 +      status: "stable",
@@ -865,13 +862,23 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f07eb3a3b3ecd1437770c841e7f840e0
 +    {
 +      name: "InlineCursorMultiColFix",
 +      status: "stable",
-     },
++    },
      {
        // If enabled, setting innerHTML will use a special fast-path parser.
-@@ -2062,6 +2433,19 @@
-       status: {"Android": "test", "default": "stable"},
-       base_feature: "none",
+       name: "InnerHTMLParserFastpath",
+@@ -2057,10 +2428,23 @@
+       status: "experimental",
      },
+     {
+-      name: "InputMultipleFieldsUI",
+-      // No plan to support complex UI for date/time INPUT types on Android.
+-      status: {"Android": "test", "default": "stable"},
+-      base_feature: "none",
++      name: "InputMultipleFieldsUI",
++      // No plan to support complex UI for date/time INPUT types on Android.
++      status: {"Android": "test", "default": "stable"},
++      base_feature: "none",
++    },
 +    {
 +      // FlyWeb: aa36610ec66 (Chromium 125; engine level 131).
 +      name: "InputTypeSupportInsertLink",
@@ -884,10 +891,9 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f07eb3a3b3ecd1437770c841e7f840e0
 +    {
 +      name: "InsertLineBreakIfPhrasingContent",
 +      status: "stable",
-+    },
+     },
      {
        name: "InstalledApp",
-       public: true,
 @@ -2075,11 +2459,25 @@
      {
        "name": "IntersectionOptimization",
@@ -1043,16 +1049,16 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f07eb3a3b3ecd1437770c841e7f840e0
      {
 -      name: "MutationEvents",
 +      name: "MoveEndingSelectionToListChild",
-       status: "stable",
-     },
++      status: "stable",
++    },
 +    {
 +      name: "MoveToParagraphStartOrEndSkipsNonEditable",
 +      status: "stable",
 +    },
 +    {
 +      name: "MultiSmoothScrollIntoView",
-+      status: "stable",
-+    },
+       status: "stable",
+     },
 +    {
 +      name: "MutationEvents",
 +      // FlyWeb: off, as Chrome 127+ (field trial) and Chromium 130 in code
@@ -1627,11 +1633,27 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f07eb3a3b3ecd1437770c841e7f840e0
      {
        name: "WebSocketStream",
        status: "experimental",
-@@ -4167,6 +4859,16 @@
-       name: "WindowPlacementFullscreenOnScreensChange",
-       status: "experimental",
+@@ -4156,16 +4848,26 @@
+     {
+       name: "WindowDefaultStatus",
      },
+-    // Allows use of `window-management` as an alias for `window-placement`
++    // Allows sites to request fullscreen when the set of screens change.
 +    {
++      name: "WindowPlacementFullscreenOnScreensChange",
++      status: "experimental",
++    },
++    // Allows use of `window-placement` as an alias for `window-management`
+     // permission. See crbug.com/1328581
+     {
+-      name: "WindowManagementPermissionAlias",
++      name: "WindowPlacementPermissionAlias",
+       status: "stable",
+     },
+-    // Allows sites to request fullscreen when the set of screens change.
+     {
+-      name: "WindowPlacementFullscreenOnScreensChange",
+-      status: "experimental",
 +      name: "XMLParserMergeAdjacentCDataSections",
 +      status: "stable",
 +    },
@@ -1640,7 +1662,6 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f07eb3a3b3ecd1437770c841e7f840e0
 +      // https://drafts.csswg.org/css-shapes-1/#basic-shape-computed-values
 +      name: "XYWHAndRectComputedValue",
 +      status: "stable",
-+    },
+     },
      {
        // If enabled, the `getDisplayMedia()` family of APIs will ask for NV12
-       // frames, which should trigger a zero-copy path in the tab capture code.
