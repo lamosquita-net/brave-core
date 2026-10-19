@@ -1,0 +1,23 @@
+diff --git a/third_party/blink/renderer/platform/graphics/compositor_filter_operations.cc b/third_party/blink/renderer/platform/graphics/compositor_filter_operations.cc
+index 8c0dcbe6601f05e33b06bc05325794f7cb97b9da..550f2baa32b59e278ced94a078b019ec33fa986a 100644
+--- a/third_party/blink/renderer/platform/graphics/compositor_filter_operations.cc
++++ b/third_party/blink/renderer/platform/graphics/compositor_filter_operations.cc
+@@ -5,6 +5,7 @@
+ #include "third_party/blink/renderer/platform/graphics/compositor_filter_operations.h"
+ 
+ #include "third_party/blink/renderer/platform/graphics/color.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+ #include "ui/gfx/geometry/rect.h"
+ #include "ui/gfx/geometry/rect_conversions.h"
+ 
+@@ -109,8 +110,8 @@ bool CompositorFilterOperations::IsEmpty() const {
+ 
+ gfx::RectF CompositorFilterOperations::MapRect(
+     const gfx::RectF& input_rect) const {
+-  return gfx::RectF(filter_operations_.MapRect(gfx::ToEnclosingRect(input_rect),
+-                                               SkMatrix::I()));
++  return gfx::RectF(
++      filter_operations_.MapRect(gfx::ToEnclosingRect(input_rect)));
+ }
+ 
+ bool CompositorFilterOperations::HasFilterThatMovesPixels() const {

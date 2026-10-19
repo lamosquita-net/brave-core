@@ -1,0 +1,33 @@
+diff --git a/cc/paint/filter_operations.cc b/cc/paint/filter_operations.cc
+index d1204052f58efc1b7185f8269d9f13734c213e85..c57894d84f98a3667b1832192aa06c78dd44a62c 100644
+--- a/cc/paint/filter_operations.cc
++++ b/cc/paint/filter_operations.cc
+@@ -59,20 +59,20 @@ bool FilterOperations::IsEmpty() const {
+ }
+ 
+ gfx::Rect FilterOperations::MapRect(const gfx::Rect& rect,
+-                                    const SkMatrix& matrix) const {
+-  auto accumulate_rect = [matrix](const gfx::Rect& rect,
+-                                  const FilterOperation& op) {
+-    return op.MapRect(rect, matrix);
++                                    const std::optional<SkMatrix>& ctm) const {
++  auto accumulate_rect = [&ctm](const gfx::Rect& rect,
++                                const FilterOperation& op) {
++    return op.MapRect(rect, ctm);
+   };
+   return std::accumulate(operations_.begin(), operations_.end(), rect,
+                          accumulate_rect);
+ }
+ 
+ gfx::Rect FilterOperations::MapRectReverse(const gfx::Rect& rect,
+-                                           const SkMatrix& matrix) const {
+-  auto accumulate_rect = [&matrix](const gfx::Rect& rect,
+-                                   const FilterOperation& op) {
+-    return op.MapRectReverse(rect, matrix);
++                                           const SkMatrix& ctm) const {
++  auto accumulate_rect = [&ctm](const gfx::Rect& rect,
++                                const FilterOperation& op) {
++    return op.MapRectReverse(rect, ctm);
+   };
+   return std::accumulate(operations_.rbegin(), operations_.rend(), rect,
+                          accumulate_rect);
