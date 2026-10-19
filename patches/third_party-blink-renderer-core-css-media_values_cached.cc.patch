@@ -1,8 +1,17 @@
 diff --git a/third_party/blink/renderer/core/css/media_values_cached.cc b/third_party/blink/renderer/core/css/media_values_cached.cc
-index 86907c5e020bd0f3312b9336cbcfffa17ef33f05..41d7f273740c6b25f118a6ca43826182a43b9574 100644
+index 86907c5e020bd0f3312b9336cbcfffa17ef33f05..4dd5729d77396dbbf1885018e62af7f3b06fba65 100644
 --- a/third_party/blink/renderer/core/css/media_values_cached.cc
 +++ b/third_party/blink/renderer/core/css/media_values_cached.cc
-@@ -81,6 +81,7 @@ MediaValuesCached::MediaValuesCachedData::MediaValuesCachedData(
+@@ -74,6 +74,8 @@ MediaValuesCached::MediaValuesCachedData::MediaValuesCachedData(
+     preferred_contrast = MediaValues::CalculatePreferredContrast(frame);
+     prefers_reduced_motion = MediaValues::CalculatePrefersReducedMotion(frame);
+     prefers_reduced_data = MediaValues::CalculatePrefersReducedData(frame);
++    prefers_reduced_transparency =
++        MediaValues::CalculatePrefersReducedTransparency(frame);
+     forced_colors = MediaValues::CalculateForcedColors(frame);
+     navigation_controls = MediaValues::CalculateNavigationControls(frame);
+     horizontal_viewport_segments =
+@@ -81,6 +83,7 @@ MediaValuesCached::MediaValuesCachedData::MediaValuesCachedData(
      vertical_viewport_segments =
          MediaValues::CalculateVerticalViewportSegments(frame);
      device_posture = MediaValues::CalculateDevicePosture(frame);
@@ -10,7 +19,7 @@ index 86907c5e020bd0f3312b9336cbcfffa17ef33f05..41d7f273740c6b25f118a6ca43826182
    }
  }
  
-@@ -150,6 +151,18 @@ float MediaValuesCached::RootLineHeight(float zoom) const {
+@@ -150,6 +153,18 @@ float MediaValuesCached::RootLineHeight(float zoom) const {
    return data_.line_height;
  }
  
@@ -29,7 +38,18 @@ index 86907c5e020bd0f3312b9336cbcfffa17ef33f05..41d7f273740c6b25f118a6ca43826182
  double MediaValuesCached::ViewportWidth() const {
    return data_.viewport_width;
  }
-@@ -308,4 +321,8 @@ device::mojom::blink::DevicePostureType MediaValuesCached::GetDevicePosture()
+@@ -287,6 +302,10 @@ bool MediaValuesCached::PrefersReducedData() const {
+   return data_.prefers_reduced_data;
+ }
+ 
++bool MediaValuesCached::PrefersReducedTransparency() const {
++  return data_.prefers_reduced_transparency;
++}
++
+ ForcedColors MediaValuesCached::GetForcedColors() const {
+   return data_.forced_colors;
+ }
+@@ -308,4 +327,8 @@ device::mojom::blink::DevicePostureType MediaValuesCached::GetDevicePosture()
    return data_.device_posture;
  }
  

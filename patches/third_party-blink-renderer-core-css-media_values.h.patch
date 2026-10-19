@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/media_values.h b/third_party/blink/renderer/core/css/media_values.h
-index daa9cebd939ecccf6065bc0f20f0ec177a139996..fdc113c0c2aa011e4c610448544659cafbbef9d9 100644
+index daa9cebd939ecccf6065bc0f20f0ec177a139996..e023e7b03b8c088407326947bb9b28c9049b5478 100644
 --- a/third_party/blink/renderer/core/css/media_values.h
 +++ b/third_party/blink/renderer/core/css/media_values.h
 @@ -30,6 +30,7 @@ enum class CSSValueID;
@@ -10,7 +10,15 @@ index daa9cebd939ecccf6065bc0f20f0ec177a139996..fdc113c0c2aa011e4c610448544659ca
  
  mojom::blink::PreferredColorScheme CSSValueIDToPreferredColorScheme(
      CSSValueID id);
-@@ -113,6 +114,8 @@ class CORE_EXPORT MediaValues : public GarbageCollected<MediaValues>,
+@@ -86,6 +87,7 @@ class CORE_EXPORT MediaValues : public GarbageCollected<MediaValues>,
+   virtual mojom::blink::PreferredContrast GetPreferredContrast() const = 0;
+   virtual bool PrefersReducedMotion() const = 0;
+   virtual bool PrefersReducedData() const = 0;
++  virtual bool PrefersReducedTransparency() const = 0;
+   virtual ForcedColors GetForcedColors() const = 0;
+   virtual NavigationControls GetNavigationControls() const = 0;
+   virtual int GetHorizontalViewportSegments() const = 0;
+@@ -113,6 +115,8 @@ class CORE_EXPORT MediaValues : public GarbageCollected<MediaValues>,
    // when computing the computed value of a style() container query.
    virtual Element* ContainerElement() const { return nullptr; }
  
@@ -19,7 +27,7 @@ index daa9cebd939ecccf6065bc0f20f0ec177a139996..fdc113c0c2aa011e4c610448544659ca
   protected:
    static double CalculateViewportWidth(LocalFrame*);
    static double CalculateViewportHeight(LocalFrame*);
-@@ -126,6 +129,7 @@ class CORE_EXPORT MediaValues : public GarbageCollected<MediaValues>,
+@@ -126,6 +130,7 @@ class CORE_EXPORT MediaValues : public GarbageCollected<MediaValues>,
    static float CalculateExSize(LocalFrame*);
    static float CalculateChSize(LocalFrame*);
    static float CalculateIcSize(LocalFrame*);
@@ -27,7 +35,14 @@ index daa9cebd939ecccf6065bc0f20f0ec177a139996..fdc113c0c2aa011e4c610448544659ca
    static float CalculateLineHeight(LocalFrame*);
    static int CalculateDeviceWidth(LocalFrame*);
    static int CalculateDeviceHeight(LocalFrame*);
-@@ -156,6 +160,7 @@ class CORE_EXPORT MediaValues : public GarbageCollected<MediaValues>,
+@@ -150,12 +155,14 @@ class CORE_EXPORT MediaValues : public GarbageCollected<MediaValues>,
+       LocalFrame*);
+   static bool CalculatePrefersReducedMotion(LocalFrame*);
+   static bool CalculatePrefersReducedData(LocalFrame*);
++  static bool CalculatePrefersReducedTransparency(LocalFrame*);
+   static ForcedColors CalculateForcedColors(LocalFrame*);
+   static NavigationControls CalculateNavigationControls(LocalFrame*);
+   static int CalculateHorizontalViewportSegments(LocalFrame*);
    static int CalculateVerticalViewportSegments(LocalFrame*);
    static device::mojom::blink::DevicePostureType CalculateDevicePosture(
        LocalFrame*);

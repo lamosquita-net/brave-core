@@ -1,5 +1,5 @@
 diff --git a/ui/native_theme/native_theme.h b/ui/native_theme/native_theme.h
-index 5ee7cd7952f7b956c32e793e251d5b0cb457026a..289e2797ea3b19fcae47ef34c484147e0fec7b05 100644
+index 5ee7cd7952f7b956c32e793e251d5b0cb457026a..e5a0bb03cc94ede4a32cab29e4294ec0bd3f3829 100644
 --- a/ui/native_theme/native_theme.h
 +++ b/ui/native_theme/native_theme.h
 @@ -192,9 +192,16 @@ class NATIVE_THEME_EXPORT NativeTheme {
@@ -50,4 +50,32 @@ index 5ee7cd7952f7b956c32e793e251d5b0cb457026a..289e2797ea3b19fcae47ef34c484147e
 +        : thumb_color(absl::nullopt), track_color(absl::nullopt) {}
    };
  #endif
+ 
+@@ -469,6 +488,9 @@ class NATIVE_THEME_EXPORT NativeTheme {
+   // Returns the OS-level user preferred contrast.
+   virtual PreferredContrast GetPreferredContrast() const;
+ 
++  // Returns the OS-level user preferred transparency.
++  virtual bool GetPrefersReducedTransparency() const;
++
+   // Returns the system's caption style.
+   virtual absl::optional<CaptionStyle> GetSystemCaptionStyle() const;
+ 
+@@ -490,6 +512,9 @@ class NATIVE_THEME_EXPORT NativeTheme {
+   void set_preferred_color_scheme(PreferredColorScheme preferred_color_scheme) {
+     preferred_color_scheme_ = preferred_color_scheme;
+   }
++  void set_prefers_reduced_transparency(bool prefers_reduced_transparency) {
++    prefers_reduced_transparency_ = prefers_reduced_transparency;
++  }
+   void SetPreferredContrast(PreferredContrast preferred_contrast);
+   void set_system_colors(const std::map<SystemThemeColor, SkColor>& colors);
+   ui::SystemTheme system_theme() const { return system_theme_; }
+@@ -604,6 +629,7 @@ class NATIVE_THEME_EXPORT NativeTheme {
+   const ui::SystemTheme system_theme_;
+   bool forced_colors_ = false;
+   PageColors page_colors_ = PageColors::kOff;
++  bool prefers_reduced_transparency_ = false;
+   PreferredColorScheme preferred_color_scheme_ = PreferredColorScheme::kLight;
+   PreferredContrast preferred_contrast_ = PreferredContrast::kNoPreference;
  

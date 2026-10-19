@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/media_values.cc b/third_party/blink/renderer/core/css/media_values.cc
-index 4c09f249217609a2095ea62d77c4e4f6d4d741e5..ac530eaeb2fa4814f32743f6c8d56faec4e321f5 100644
+index 4c09f249217609a2095ea62d77c4e4f6d4d741e5..caf44df4203e58dfc70ef9c53e7cbe57cfb7b75a 100644
 --- a/third_party/blink/renderer/core/css/media_values.cc
 +++ b/third_party/blink/renderer/core/css/media_values.cc
 @@ -4,6 +4,7 @@
@@ -39,7 +39,25 @@ index 4c09f249217609a2095ea62d77c4e4f6d4d741e5..ac530eaeb2fa4814f32743f6c8d56fae
  float MediaValues::CalculateLineHeight(LocalFrame* frame) {
    DCHECK(frame);
    DCHECK(frame->GetDocument());
-@@ -432,6 +444,17 @@ device::mojom::blink::DevicePostureType MediaValues::CalculateDevicePosture(
+@@ -378,6 +390,17 @@ bool MediaValues::CalculatePrefersReducedData(LocalFrame* frame) {
+   return override_value.value_or(GetNetworkStateNotifier().SaveDataEnabled());
+ }
+ 
++bool MediaValues::CalculatePrefersReducedTransparency(LocalFrame* frame) {
++  DCHECK(frame);
++  DCHECK(frame->GetSettings());
++  const MediaFeatureOverrides* overrides =
++      frame->GetPage()->GetMediaFeatureOverrides();
++  absl::optional<bool> override_value =
++      overrides ? overrides->GetPrefersReducedTransparency() : absl::nullopt;
++  return override_value.value_or(
++      frame->GetSettings()->GetPrefersReducedTransparency());
++}
++
+ ForcedColors MediaValues::CalculateForcedColors(LocalFrame* frame) {
+   DCHECK(frame);
+   DCHECK(frame->GetSettings());
+@@ -432,6 +455,17 @@ device::mojom::blink::DevicePostureType MediaValues::CalculateDevicePosture(
    return frame->GetDevicePosture();
  }
  

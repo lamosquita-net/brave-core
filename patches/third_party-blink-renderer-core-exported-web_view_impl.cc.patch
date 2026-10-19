@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/exported/web_view_impl.cc b/third_party/blink/renderer/core/exported/web_view_impl.cc
-index 3fd94156edd9868f0d46746227ae40da604bbc2c..c1733e025617d403aee1e9d4f227aa17588f78da 100644
+index 3fd94156edd9868f0d46746227ae40da604bbc2c..97129aaf0340d0a177d7d2452b5b7c349e5e995c 100644
 --- a/third_party/blink/renderer/core/exported/web_view_impl.cc
 +++ b/third_party/blink/renderer/core/exported/web_view_impl.cc
-@@ -2390,9 +2390,22 @@ void WebViewImpl::SetPageLifecycleStateInternal(
+@@ -1576,6 +1576,7 @@ void WebView::ApplyWebPreferences(const web_pref::WebPreferences& prefs,
+       prefs.should_clear_document_background);
+   settings->SetEnableScrollAnimator(prefs.enable_scroll_animator);
+   settings->SetPrefersReducedMotion(prefs.prefers_reduced_motion);
++  settings->SetPrefersReducedTransparency(prefs.prefers_reduced_transparency);
+ 
+   RuntimeEnabledFeatures::SetTouchEventFeatureDetectionEnabled(
+       prefs.touch_event_feature_detection_enabled);
+@@ -2390,9 +2391,22 @@ void WebViewImpl::SetPageLifecycleStateInternal(
                              !old_state->is_in_back_forward_cache;
    bool restoring_from_bfcache = !new_state->is_in_back_forward_cache &&
                                  old_state->is_in_back_forward_cache;
@@ -27,7 +35,7 @@ index 3fd94156edd9868f0d46746227ae40da604bbc2c..c1733e025617d403aee1e9d4f227aa17
    bool showing_page =
        (new_state->visibility == mojom::blink::PageVisibilityState::kVisible) &&
        (old_state->visibility != mojom::blink::PageVisibilityState::kVisible);
-@@ -3852,8 +3865,16 @@ void WebViewImpl::SetVisibilityState(
+@@ -3852,8 +3866,16 @@ void WebViewImpl::SetVisibilityState(
      bool is_initial_state) {
    DCHECK(GetPage());
    GetPage()->SetVisibilityState(visibility_state, is_initial_state);

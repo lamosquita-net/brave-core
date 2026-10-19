@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/media_query_evaluator.cc b/third_party/blink/renderer/core/css/media_query_evaluator.cc
-index 8ae9a06fda3a0b4b4e9dd12c8d39fedb97ea77f7..f6539dcddb597d9ccd3c38edb094599311a90507 100644
+index 8ae9a06fda3a0b4b4e9dd12c8d39fedb97ea77f7..4921930304bb0e6d57b8568f77cdcced940ef66e 100644
 --- a/third_party/blink/renderer/core/css/media_query_evaluator.cc
 +++ b/third_party/blink/renderer/core/css/media_query_evaluator.cc
 @@ -32,6 +32,7 @@
@@ -10,7 +10,35 @@ index 8ae9a06fda3a0b4b4e9dd12c8d39fedb97ea77f7..f6539dcddb597d9ccd3c38edb0945993
  #include "third_party/blink/public/common/privacy_budget/identifiability_metric_builder.h"
  #include "third_party/blink/public/common/privacy_budget/identifiability_study_settings.h"
  #include "third_party/blink/public/common/privacy_budget/identifiable_surface.h"
-@@ -1468,6 +1469,34 @@ static bool StuckMediaFeatureEval(const MediaQueryExpValue& value,
+@@ -1072,6 +1073,27 @@ static bool PrefersReducedDataMediaFeatureEval(
+          media_values.PrefersReducedData();
+ }
+ 
++static bool PrefersReducedTransparencyMediaFeatureEval(
++    const MediaQueryExpValue& value,
++    MediaQueryOperator,
++    const MediaValues& media_values) {
++  MaybeRecordMediaFeatureValue(
++      media_values,
++      IdentifiableSurface::MediaFeatureName::kPrefersReducedTransparency,
++      media_values.PrefersReducedTransparency());
++
++  if (!value.IsValid()) {
++    return media_values.PrefersReducedTransparency();
++  }
++
++  if (!value.IsId()) {
++    return false;
++  }
++
++  return (value.Id() == CSSValueID::kNoPreference) ^
++         media_values.PrefersReducedTransparency();
++}
++
+ static bool AnyPointerMediaFeatureEval(const MediaQueryExpValue& value,
+                                        MediaQueryOperator,
+                                        const MediaValues& media_values) {
+@@ -1468,6 +1490,34 @@ static bool StuckMediaFeatureEval(const MediaQueryExpValue& value,
    }
  }
  
