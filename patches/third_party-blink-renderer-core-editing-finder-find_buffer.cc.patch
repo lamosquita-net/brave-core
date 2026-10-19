@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/editing/finder/find_buffer.cc b/third_party/blink/renderer/core/editing/finder/find_buffer.cc
-index 69b4bc36db702c51c2336163be20a635401a4276..9b1e8300ad0fb334cbb50ba487cc0facaf356cff 100644
+index 69b4bc36db702c51c2336163be20a635401a4276..6274b174d248adc941f7c6ff7d6e7eac00f5a770 100644
 --- a/third_party/blink/renderer/core/editing/finder/find_buffer.cc
 +++ b/third_party/blink/renderer/core/editing/finder/find_buffer.cc
 @@ -21,6 +21,7 @@
@@ -10,7 +10,18 @@ index 69b4bc36db702c51c2336163be20a635401a4276..9b1e8300ad0fb334cbb50ba487cc0fac
  #include "third_party/blink/renderer/platform/text/unicode_utilities.h"
  #include "third_party/blink/renderer/platform/wtf/text/character_names.h"
  #include "third_party/blink/renderer/platform/wtf/text/unicode.h"
-@@ -100,7 +101,9 @@ Node* GetVisibleTextNode(Node& start_node) {
+@@ -38,7 +39,9 @@ bool ShouldIgnoreContents(const Node& node) {
+   const auto* element = DynamicTo<HTMLElement>(node);
+   if (!element)
+     return false;
+-  return (!element->ShouldSerializeEndTag() &&
++  return (RuntimeEnabledFeatures::InertElementNonSearchableEnabled() &&
++          element->IsInertRoot()) ||
++         (!element->ShouldSerializeEndTag() &&
+           !IsA<HTMLInputElement>(*element)) ||
+          (IsA<TextControlElement>(*element) &&
+           !To<TextControlElement>(*element).SuggestedValue().empty()) ||
+@@ -100,7 +103,9 @@ Node* GetVisibleTextNode(Node& start_node) {
        continue;
      }
      if (style && style->Visibility() == EVisibility::kVisible &&
@@ -21,7 +32,7 @@ index 69b4bc36db702c51c2336163be20a635401a4276..9b1e8300ad0fb334cbb50ba487cc0fac
        return node;
      }
      // This element is hidden, but node might be visible,
-@@ -302,11 +305,17 @@ Node* FindBuffer::BackwardVisibleTextNode(Node& start_node) {
+@@ -302,11 +307,17 @@ Node* FindBuffer::BackwardVisibleTextNode(Node& start_node) {
  FindBuffer::Results FindBuffer::FindMatches(const WebString& search_text,
                                              const blink::FindOptions options) {
    // We should return empty result if it's impossible to get a match (buffer is
