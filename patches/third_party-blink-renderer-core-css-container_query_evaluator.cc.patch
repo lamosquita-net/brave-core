@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/container_query_evaluator.cc b/third_party/blink/renderer/core/css/container_query_evaluator.cc
-index f435cda2790d859f0b5c6fba1f7d2dfa5a364391..9114bb5d8b1af842e35fae929e743ba01573c376 100644
+index f435cda2790d859f0b5c6fba1f7d2dfa5a364391..756ccc24c1657683b39c3192d006dae01b2b339f 100644
 --- a/third_party/blink/renderer/core/css/container_query_evaluator.cc
 +++ b/third_party/blink/renderer/core/css/container_query_evaluator.cc
 @@ -9,6 +9,7 @@
@@ -10,7 +10,15 @@ index f435cda2790d859f0b5c6fba1f7d2dfa5a364391..9114bb5d8b1af842e35fae929e743ba0
  #include "third_party/blink/renderer/core/dom/node_computed_style.h"
  #include "third_party/blink/renderer/core/style/computed_style.h"
  
-@@ -108,6 +109,15 @@ ContainerQueryEvaluator::ContainerQueryEvaluator(Element& container) {
+@@ -69,6 +70,7 @@ bool NameMatches(const ComputedStyle& style,
+ 
+ bool TypeMatches(const ComputedStyle& style,
+                  const ContainerSelector& container_selector) {
++  DCHECK(!container_selector.HasUnknownFeature());
+   unsigned type = container_selector.Type(style.GetWritingMode());
+   return !type || ((style.ContainerType() & type) == type);
+ }
+@@ -108,6 +110,15 @@ ContainerQueryEvaluator::ContainerQueryEvaluator(Element& container) {
        MakeGarbageCollected<MediaQueryEvaluator>(query_values);
  }
  
@@ -26,7 +34,7 @@ index f435cda2790d859f0b5c6fba1f7d2dfa5a364391..9114bb5d8b1af842e35fae929e743ba0
  // static
  Element* ContainerQueryEvaluator::FindContainer(
      Element* starting_element,
-@@ -115,7 +125,7 @@ Element* ContainerQueryEvaluator::FindContainer(
+@@ -115,7 +126,7 @@ Element* ContainerQueryEvaluator::FindContainer(
      const TreeScope* selector_tree_scope) {
    // TODO(crbug.com/1213888): Cache results.
    for (Element* element = starting_element; element;
@@ -35,3 +43,13 @@ index f435cda2790d859f0b5c6fba1f7d2dfa5a364391..9114bb5d8b1af842e35fae929e743ba0
      if (const ComputedStyle* style = element->GetComputedStyle()) {
        if (style->StyleType() == kPseudoIdNone) {
          if (Matches(*style, container_selector, selector_tree_scope)) {
+@@ -135,6 +146,9 @@ bool ContainerQueryEvaluator::EvalAndAdd(
+     ContainerSelectorCache& container_selector_cache,
+     MatchResult& match_result) {
+   const ContainerSelector& selector = query.Selector();
++  if (selector.HasUnknownFeature()) {
++    return false;
++  }
+   bool selects_size = selector.SelectsSizeContainers();
+   bool selects_style = selector.SelectsStyleContainers();
+   bool selects_sticky = selector.SelectsStickyContainers();
