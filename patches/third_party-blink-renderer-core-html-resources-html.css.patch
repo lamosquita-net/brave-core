@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/resources/html.css b/third_party/blink/renderer/core/html/resources/html.css
-index b7077b29c8c494080a291d96067a16ca5198b366..db3926b247589904981c84bd743422dee78b1869 100644
+index b7077b29c8c494080a291d96067a16ca5198b366..66988ad2a69ad44e79aa6881ee872d2d76519f42 100644
 --- a/third_party/blink/renderer/core/html/resources/html.css
 +++ b/third_party/blink/renderer/core/html/resources/html.css
 @@ -54,7 +54,7 @@ div {
@@ -37,7 +37,27 @@ index b7077b29c8c494080a291d96067a16ca5198b366..db3926b247589904981c84bd743422de
  }
  
  input::-webkit-inner-spin-button {
-@@ -866,9 +866,10 @@ input[type="color" i][list]::-webkit-color-swatch {
+@@ -620,7 +620,6 @@ input[type="hidden" i], input[type="image" i], input[type="file" i] {
+ input[type="file" i] {
+     align-items: baseline;
+     color: inherit;
+-    overflow: hidden !important;
+     text-align: start !important;
+     text-overflow: ellipsis;
+     white-space: pre;
+@@ -790,6 +789,11 @@ option:-internal-spatial-navigation-focus {
+     outline-offset: -1px;
+ }
+ 
++input:not([type="image" i], [type="range" i], [type="checkbox" i], [type="radio" i]) {
++  overflow: clip !important;
++  overflow-clip-margin: 0px !important;
++}
++
+ /* https://html.spec.whatwg.org/multipage/rendering.html#hidden-elements */
+ /* TODO(crbug.com/1231263): <area> should be display:none. */
+ area {
+@@ -866,9 +870,10 @@ input[type="color" i][list]::-webkit-color-swatch {
  
  input::-webkit-calendar-picker-indicator {
      display: inline-block;
@@ -51,7 +71,7 @@ index b7077b29c8c494080a291d96067a16ca5198b366..db3926b247589904981c84bd743422de
      -webkit-user-modify: read-only !important;
      opacity: 0;
      cursor: default;
-@@ -930,8 +931,8 @@ select:disabled {
+@@ -930,8 +935,8 @@ select:disabled {
  select:-internal-list-box {
      appearance: auto;
      align-items: flex-start;
@@ -62,7 +82,7 @@ index b7077b29c8c494080a291d96067a16ca5198b366..db3926b247589904981c84bd743422de
      vertical-align: text-bottom;
      white-space: nowrap;
      border-radius: 2px;
-@@ -1015,69 +1016,80 @@ output {
+@@ -1015,69 +1020,80 @@ output {
  
  /* meter */
  
@@ -188,7 +208,7 @@ index b7077b29c8c494080a291d96067a16ca5198b366..db3926b247589904981c84bd743422de
  }
  
  /* progress */
-@@ -1225,8 +1237,8 @@ input[type="week" i]::-webkit-calendar-picker-indicator {
+@@ -1225,8 +1241,8 @@ input[type="week" i]::-webkit-calendar-picker-indicator {
    background-origin: content-box;
    background-repeat: no-repeat;
    background-size: contain;
@@ -199,7 +219,7 @@ index b7077b29c8c494080a291d96067a16ca5198b366..db3926b247589904981c84bd743422de
    opacity: 1;
    outline: none;
    padding: 2px;
-@@ -1245,15 +1257,14 @@ input[type="time" i]::-webkit-calendar-picker-indicator {
+@@ -1245,15 +1261,14 @@ input[type="time" i]::-webkit-calendar-picker-indicator {
    background-origin: content-box;
    background-repeat: no-repeat;
    background-size: contain;
@@ -219,7 +239,7 @@ index b7077b29c8c494080a291d96067a16ca5198b366..db3926b247589904981c84bd743422de
  }
  
  input[type="time" i]::-webkit-calendar-picker-indicator:focus-visible {
-@@ -1315,13 +1326,17 @@ ruby, rt {
+@@ -1315,13 +1330,17 @@ ruby, rt {
      text-indent: 0; /* blocks used for ruby rendering should not trigger this */
  }
  
