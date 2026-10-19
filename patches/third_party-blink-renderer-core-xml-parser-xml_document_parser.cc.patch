@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/xml/parser/xml_document_parser.cc b/third_party/blink/renderer/core/xml/parser/xml_document_parser.cc
-index 8f4e34d1118e540d75a6e22d0cc9acd48dd98109..25083afb63c6e9fc2c66f5a1a045fd3c464bcba8 100644
+index 8f4e34d1118e540d75a6e22d0cc9acd48dd98109..a8c9ebab3d2e7e85ecc244e57cb53b2a8bdb1f15 100644
 --- a/third_party/blink/renderer/core/xml/parser/xml_document_parser.cc
 +++ b/third_party/blink/renderer/core/xml/parser/xml_document_parser.cc
 @@ -48,12 +48,16 @@
@@ -19,7 +19,48 @@ index 8f4e34d1118e540d75a6e22d0cc9acd48dd98109..25083afb63c6e9fc2c66f5a1a045fd3c
  #include "third_party/blink/renderer/core/html/parser/html_entity_parser.h"
  #include "third_party/blink/renderer/core/html/parser/text_resource_decoder.h"
  #include "third_party/blink/renderer/core/html_names.h"
-@@ -1023,6 +1027,24 @@ void XMLDocumentParser::StartElementNs(const AtomicString& local_name,
+@@ -468,7 +472,8 @@ bool XMLDocumentParser::ParseDocumentFragment(
+     const String& chunk,
+     DocumentFragment* fragment,
+     Element* context_element,
+-    ParserContentPolicy parser_content_policy) {
++    ParserContentPolicy parser_content_policy,
++    ExceptionState* exception_state) {
+   if (!chunk.length())
+     return true;
+ 
+@@ -484,7 +489,11 @@ bool XMLDocumentParser::ParseDocumentFragment(
+ 
+   auto* parser = MakeGarbageCollected<XMLDocumentParser>(
+       fragment, context_element, parser_content_policy);
++  parser->exception_copy_ = ExceptionCopy();
+   bool well_formed = parser->AppendFragmentSource(chunk);
++  if (exception_state && parser->exception_copy_->HadException()) {
++    parser->exception_copy_->ApplyTo(*exception_state);
++  }
+ 
+   // Do not call finish(). Current finish() and doEnd() implementations touch
+   // the main Document/loader and can cause crashes in the fragment case.
+@@ -943,10 +952,15 @@ static inline void HandleElementAttributes(
+       } else {
+         const HashMap<AtomicString, AtomicString>::const_iterator it =
+             initial_prefix_to_namespace_map.find(attr_prefix);
+-        if (it != initial_prefix_to_namespace_map.end())
++        if (it != initial_prefix_to_namespace_map.end()) {
+           attr_uri = it->value;
+-        else
+-          attr_uri = AtomicString();
++        } else {
++          exception_state.ThrowDOMException(DOMExceptionCode::kNamespaceError,
++                                            "Namespace prefix " + attr_prefix +
++                                                " for attribute " + attr_value +
++                                                " is not declared.");
++          return;
++        }
+       }
+     }
+     AtomicString attr_q_name =
+@@ -1023,6 +1037,24 @@ void XMLDocumentParser::StartElementNs(const AtomicString& local_name,
    QualifiedName q_name(prefix, local_name, adjusted_uri);
    if (!prefix.empty() && adjusted_uri.empty())
      q_name = QualifiedName(g_null_atom, prefix + ":" + local_name, g_null_atom);
@@ -44,7 +85,17 @@ index 8f4e34d1118e540d75a6e22d0cc9acd48dd98109..25083afb63c6e9fc2c66f5a1a045fd3c
    Element* new_element = current_node_->GetDocument().CreateElement(
        q_name,
        parsing_fragment_ ? CreateElementFlags::ByFragmentParser(document_)
-@@ -1241,10 +1263,20 @@ void XMLDocumentParser::CdataBlock(const String& text) {
+@@ -1040,6 +1072,9 @@ void XMLDocumentParser::StartElementNs(const AtomicString& local_name,
+ 
+   SetAttributes(new_element, prefixed_attributes, GetParserContentPolicy());
+   if (exception_state.HadException()) {
++    if (exception_copy_) {
++      exception_copy_->CopyFrom(exception_state);
++    }
+     StopParsing();
+     return;
+   }
+@@ -1241,10 +1276,20 @@ void XMLDocumentParser::CdataBlock(const String& text) {
    // If the most recent child is already a CDATA node *AND* this is the first
    // parse event emitted from the current input chunk, we append this text to
    // the existing node. Otherwise we append a new CDATA node.
@@ -66,3 +117,27 @@ index 8f4e34d1118e540d75a6e22d0cc9acd48dd98109..25083afb63c6e9fc2c66f5a1a045fd3c
      cdata_tail->ParserAppendData(text);
    } else {
      current_node_->ParserAppendChild(
+@@ -1440,6 +1485,7 @@ static xmlEntityPtr GetXHTMLEntity(const xmlChar* name) {
+     g_shared_xhtml_entity_result[2] = '3';
+     g_shared_xhtml_entity_result[3] = '8';
+     g_shared_xhtml_entity_result[4] = ';';
++    g_shared_xhtml_entity_result[5] = 0;
+     entity_length_in_utf8 = 5;
+   } else if (number_of_code_units == 1 && utf16_decoded_entity[0] == '<') {
+     g_shared_xhtml_entity_result[0] = '&';
+@@ -1447,6 +1493,7 @@ static xmlEntityPtr GetXHTMLEntity(const xmlChar* name) {
+     g_shared_xhtml_entity_result[2] = '6';
+     g_shared_xhtml_entity_result[3] = '0';
+     g_shared_xhtml_entity_result[4] = ';';
++    g_shared_xhtml_entity_result[5] = 0;
+     entity_length_in_utf8 = 5;
+   } else if (number_of_code_units == 2 && utf16_decoded_entity[0] == '<' &&
+              utf16_decoded_entity[1] == 0x20D2) {
+@@ -1458,6 +1505,7 @@ static xmlEntityPtr GetXHTMLEntity(const xmlChar* name) {
+     g_shared_xhtml_entity_result[5] = 0xE2;
+     g_shared_xhtml_entity_result[6] = 0x83;
+     g_shared_xhtml_entity_result[7] = 0x92;
++    g_shared_xhtml_entity_result[8] = 0;
+     entity_length_in_utf8 = 8;
+   } else {
+     DCHECK_LE(number_of_code_units, 4u);
