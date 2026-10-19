@@ -1,8 +1,50 @@
 diff --git a/third_party/blink/renderer/core/input/event_handler.cc b/third_party/blink/renderer/core/input/event_handler.cc
-index c23c136a219db9ec3565bc0ef84f41886c1754af..ee1473db1af23b61d8c03f61e05fa0cee6b978b8 100644
+index c23c136a219db9ec3565bc0ef84f41886c1754af..3fe1ef25a591879da6c258cc975d34e08fa015ad 100644
 --- a/third_party/blink/renderer/core/input/event_handler.cc
 +++ b/third_party/blink/renderer/core/input/event_handler.cc
-@@ -1106,20 +1106,33 @@ WebInputEventResult EventHandler::HandleMouseMoveOrLeaveEvent(
+@@ -773,15 +773,7 @@ WebInputEventResult EventHandler::HandleMousePressEvent(
+   LocalFrame* subframe = event_handling_util::GetTargetSubframe(mev);
+   if (subframe) {
+     WebInputEventResult result = PassMousePressEventToSubframe(mev, subframe);
+-    // Start capturing future events for this frame.  We only do this if we
+-    // didn't clear the m_mousePressed flag, which may happen if an AppKit
+-    // EmbeddedContentView entered a modal event loop.  The capturing should be
+-    // done only when the result indicates it has been handled. See
+-    // crbug.com/269917
+-    mouse_event_manager_->SetCapturesDragging(
+-        subframe->GetEventHandler().mouse_event_manager_->CapturesDragging());
+-    if (mouse_event_manager_->MousePressed() &&
+-        mouse_event_manager_->CapturesDragging()) {
++    if (mouse_event_manager_->MousePressed()) {
+       capturing_mouse_events_element_ = mev.InnerElement();
+       capturing_subframe_element_ = mev.InnerElement();
+     }
+@@ -863,13 +855,10 @@ WebInputEventResult EventHandler::HandleMousePressEvent(
+   }
+ 
+   if (event_result == WebInputEventResult::kNotHandled || mev.GetScrollbar()) {
+-    mouse_event_manager_->SetCapturesDragging(true);
+     // Outermost main frames don't implicitly capture mouse input on MouseDown,
+     // all subframes do (regardless of whether local or remote or fenced).
+     if (frame_->IsAttached() && !frame_->IsOutermostMainFrame())
+       CaptureMouseEventsToWidget(true);
+-  } else {
+-    mouse_event_manager_->SetCapturesDragging(false);
+   }
+ 
+   if (PassMousePressEventToScrollbar(mev))
+@@ -1050,8 +1039,8 @@ WebInputEventResult EventHandler::HandleMouseMoveOrLeaveEvent(
+   bool is_portal =
+       mev.InnerElement() && IsA<HTMLPortalElement>(*mev.InnerElement());
+   bool is_remote_frame = false;
+-  LocalFrame* current_subframe = event_handling_util::GetTargetSubframe(
+-      mev, capturing_mouse_events_element_, &is_remote_frame);
++  LocalFrame* current_subframe =
++      event_handling_util::GetTargetSubframe(mev, &is_remote_frame);
+ 
+   // We want mouseouts to happen first, from the inside out.  First send a
+   // move event to the last subframe so that it will fire mouseouts.
+@@ -1106,20 +1095,33 @@ WebInputEventResult EventHandler::HandleMouseMoveOrLeaveEvent(
  
    last_mouse_move_event_subframe_ = current_subframe;
  
@@ -42,3 +84,13 @@ index c23c136a219db9ec3565bc0ef84f41886c1754af..ee1473db1af23b61d8c03f61e05fa0ce
  }
  
  WebInputEventResult EventHandler::HandleMouseReleaseEvent(
+@@ -1181,8 +1183,7 @@ WebInputEventResult EventHandler::HandleMouseReleaseEvent(
+   HitTestRequest::HitTestRequestType hit_type = HitTestRequest::kRelease;
+   HitTestRequest request(hit_type);
+   MouseEventWithHitTestResults mev = GetMouseEventTarget(request, mouse_event);
+-  LocalFrame* subframe = event_handling_util::GetTargetSubframe(
+-      mev, capturing_mouse_events_element_.Get());
++  LocalFrame* subframe = event_handling_util::GetTargetSubframe(mev);
+   capturing_mouse_events_element_ = nullptr;
+   if (subframe)
+     return PassMouseReleaseEventToSubframe(mev, subframe);

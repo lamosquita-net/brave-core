@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/input/mouse_event_manager.cc b/third_party/blink/renderer/core/input/mouse_event_manager.cc
-index 37bb43fee23916418058c59e0df07009d24f14c4..2a898509c96b01fc05a0ba90ce8b1391c182e1cc 100644
+index 37bb43fee23916418058c59e0df07009d24f14c4..2ac9e3ffc5c751efb70dc241d65b3559253af616 100644
 --- a/third_party/blink/renderer/core/input/mouse_event_manager.cc
 +++ b/third_party/blink/renderer/core/input/mouse_event_manager.cc
 @@ -5,6 +5,7 @@
@@ -10,7 +10,15 @@ index 37bb43fee23916418058c59e0df07009d24f14c4..2a898509c96b01fc05a0ba90ce8b1391
  #include "third_party/blink/renderer/bindings/core/v8/v8_drag_event_init.h"
  #include "third_party/blink/renderer/bindings/core/v8/v8_pointer_event_init.h"
  #include "third_party/blink/renderer/core/clipboard/data_object.h"
-@@ -527,7 +528,9 @@ WebInputEventResult MouseEventManager::HandleMouseFocus(
+@@ -135,7 +136,6 @@ void MouseEventManager::Clear() {
+   mouse_press_node_ = nullptr;
+   mouse_down_may_start_autoscroll_ = false;
+   mouse_down_may_start_drag_ = false;
+-  captures_dragging_ = false;
+   is_mouse_position_unknown_ = true;
+   last_known_mouse_position_in_root_frame_ = PhysicalOffset();
+   last_known_mouse_position_ = gfx::PointF();
+@@ -527,7 +527,9 @@ WebInputEventResult MouseEventManager::HandleMouseFocus(
    }
  
    for (; element; element = element->ParentOrShadowHostElement()) {
@@ -21,7 +29,15 @@ index 37bb43fee23916418058c59e0df07009d24f14c4..2a898509c96b01fc05a0ba90ce8b1391
        return WebInputEventResult::kNotHandled;
      if (element->IsMouseFocusable() || element->DelegatesFocus())
        break;
-@@ -803,8 +806,12 @@ WebInputEventResult MouseEventManager::HandleMouseDraggedEvent(
+@@ -602,7 +604,6 @@ void MouseEventManager::HandleMouseReleaseEventUpdateStates() {
+ void MouseEventManager::HandleMousePressEventUpdateStates(
+     const WebMouseEvent& mouse_event) {
+   mouse_pressed_ = true;
+-  captures_dragging_ = true;
+   SetLastKnownMousePosition(mouse_event);
+   mouse_down_may_start_drag_ = false;
+   mouse_down_may_start_autoscroll_ = false;
+@@ -803,8 +804,12 @@ WebInputEventResult MouseEventManager::HandleMouseDraggedEvent(
    should_handle_drag = !is_pen;
  #endif
  
@@ -36,7 +52,7 @@ index 37bb43fee23916418058c59e0df07009d24f14c4..2a898509c96b01fc05a0ba90ce8b1391
  
    Node* target_node = event.InnerNode();
    if (!target_node)
-@@ -828,8 +835,11 @@ WebInputEventResult MouseEventManager::HandleMouseDraggedEvent(
+@@ -828,8 +833,11 @@ WebInputEventResult MouseEventManager::HandleMouseDraggedEvent(
  
    mouse_down_may_start_drag_ = false;
  
@@ -50,7 +66,7 @@ index 37bb43fee23916418058c59e0df07009d24f14c4..2a898509c96b01fc05a0ba90ce8b1391
  
    // The call into HandleMouseDraggedEvent may have caused a re-layout,
    // so get the LayoutObject again.
-@@ -853,9 +863,11 @@ WebInputEventResult MouseEventManager::HandleMouseDraggedEvent(
+@@ -853,9 +861,11 @@ WebInputEventResult MouseEventManager::HandleMouseDraggedEvent(
      }
    }
  
@@ -63,3 +79,26 @@ index 37bb43fee23916418058c59e0df07009d24f14c4..2a898509c96b01fc05a0ba90ce8b1391
  bool MouseEventManager::HandleDrag(const MouseEventWithHitTestResults& event,
                                     DragInitiator initiator) {
    DCHECK(event.Event().GetType() == WebInputEvent::Type::kMouseMove);
+@@ -1135,7 +1145,6 @@ void MouseEventManager::ClearDragHeuristicState() {
+   // Used to prevent mouseMoveEvent from initiating a drag before
+   // the mouse is pressed again.
+   mouse_pressed_ = false;
+-  captures_dragging_ = false;
+   mouse_down_may_start_drag_ = false;
+   mouse_down_may_start_autoscroll_ = false;
+ }
+@@ -1162,14 +1171,6 @@ void MouseEventManager::ReleaseMousePress() {
+   mouse_pressed_ = false;
+ }
+ 
+-bool MouseEventManager::CapturesDragging() const {
+-  return captures_dragging_;
+-}
+-
+-void MouseEventManager::SetCapturesDragging(bool captures_dragging) {
+-  captures_dragging_ = captures_dragging;
+-}
+-
+ Node* MouseEventManager::MousePressNode() {
+   return mouse_press_node_;
+ }
