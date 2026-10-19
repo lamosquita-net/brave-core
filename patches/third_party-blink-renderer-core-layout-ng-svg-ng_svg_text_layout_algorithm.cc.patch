@@ -1,0 +1,15 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/svg/ng_svg_text_layout_algorithm.cc b/third_party/blink/renderer/core/layout/ng/svg/ng_svg_text_layout_algorithm.cc
+index 5937e50559d7842ef0422097c3d91e5039d61b64..ad6e550d36f067c92e25aeee6f24a6f4ef6ad5f5 100644
+--- a/third_party/blink/renderer/core/layout/ng/svg/ng_svg_text_layout_algorithm.cc
++++ b/third_party/blink/renderer/core/layout/ng/svg/ng_svg_text_layout_algorithm.cc
+@@ -127,6 +127,10 @@ void NGSvgTextLayoutAlgorithm::SetFlags(
+ 
+   bool found_first_character = false;
+   for (wtf_size_t i : sorted_item_indexes) {
++    // Zero-length item is not addressable.
++    if (items[i]->TextLength() == 0) {
++      continue;
++    }
+     SvgPerCharacterInfo info;
+     info.item_index = i;
+     // 2.3. If the character at index i corresponds to a typographic
