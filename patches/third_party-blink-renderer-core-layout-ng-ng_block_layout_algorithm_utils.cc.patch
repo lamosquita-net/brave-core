@@ -1,8 +1,8 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/ng_block_layout_algorithm_utils.cc b/third_party/blink/renderer/core/layout/ng/ng_block_layout_algorithm_utils.cc
-index e17b275b7129fa8441bb2d1b49bcb64b4986a8d5..fab4c18848d34a3f2ec0966976569a78949f032e 100644
+index e17b275b7129fa8441bb2d1b49bcb64b4986a8d5..30f1b9533fb8705f970485c947ca20ed3ea2a8da 100644
 --- a/third_party/blink/renderer/core/layout/ng/ng_block_layout_algorithm_utils.cc
 +++ b/third_party/blink/renderer/core/layout/ng/ng_block_layout_algorithm_utils.cc
-@@ -5,10 +5,106 @@
+@@ -5,10 +5,110 @@
  #include "third_party/blink/renderer/core/layout/ng/ng_block_layout_algorithm_utils.h"
  
  #include "third_party/blink/renderer/core/layout/ng/exclusions/ng_exclusion_space.h"
@@ -47,8 +47,12 @@ index e17b275b7129fa8441bb2d1b49bcb64b4986a8d5..fab4c18848d34a3f2ec0966976569a78
 +  }
 +
 +  // https://drafts.csswg.org/css-align/#typedef-overflow-position
-+  // The "smart" default value (OverflowAlignment::kDefault) is not implemented.
-+  // We handle it as kUnsafe.
++  // UAs that have not implemented the "smart" default behavior must behave as
++  // safe for align-content on block containers
++  if (RuntimeEnabledFeatures::AlignContentForScrollableBlocksEnabled() &&
++      overflow == OverflowAlignment::kDefault) {
++    overflow = OverflowAlignment::kSafe;
++  }
 +  const bool is_safe = overflow == OverflowAlignment::kSafe;
 +  switch (position) {
 +    case ContentPosition::kCenter:
@@ -109,7 +113,7 @@ index e17b275b7129fa8441bb2d1b49bcb64b4986a8d5..fab4c18848d34a3f2ec0966976569a78
  LayoutUnit CalculateOutOfFlowStaticInlineLevelOffset(
      const ComputedStyle& container_style,
      const NGBfcOffset& origin_bfc_offset,
-@@ -49,4 +145,62 @@ LayoutUnit CalculateOutOfFlowStaticInlineLevelOffset(
+@@ -49,4 +149,62 @@ LayoutUnit CalculateOutOfFlowStaticInlineLevelOffset(
    return inline_offset;
  }
  
