@@ -1,0 +1,23 @@
+diff --git a/third_party/blink/renderer/core/editing/commands/format_block_command.cc b/third_party/blink/renderer/core/editing/commands/format_block_command.cc
+index 69c340329052813b12e91fba23a3a731516a6f1b..5e7ee88e4a19489c08a790b02b7780fdc5ea15be 100644
+--- a/third_party/blink/renderer/core/editing/commands/format_block_command.cc
++++ b/third_party/blink/renderer/core/editing/commands/format_block_command.cc
+@@ -70,11 +70,13 @@ void FormatBlockCommand::FormatSelection(
+   did_apply_ = true;
+ }
+ 
+-void FormatBlockCommand::FormatRange(const Position& start,
+-                                     const Position& end,
+-                                     const Position& end_of_selection,
+-                                     HTMLElement*& block_element,
+-                                     EditingState* editing_state) {
++void FormatBlockCommand::FormatRange(
++    const Position& start,
++    const Position& end,
++    const Position& end_of_selection,
++    HTMLElement*& block_element,
++    VisiblePosition& out_end_of_next_of_paragraph_to_move,
++    EditingState* editing_state) {
+   Element* ref_element = EnclosingBlockFlowElement(CreateVisiblePosition(end));
+   Element* root = RootEditableElementOf(start);
+   // Root is null for elements with contenteditable=false.

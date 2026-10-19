@@ -1,8 +1,49 @@
 diff --git a/third_party/blink/renderer/core/editing/commands/indent_outdent_command.cc b/third_party/blink/renderer/core/editing/commands/indent_outdent_command.cc
-index ab303d01ace9764538dcf8ee1d83471b8fd56aae..eb5af89921e6927901b37ff6b298917f1cc87295 100644
+index ab303d01ace9764538dcf8ee1d83471b8fd56aae..683adc08226613ddc8e07266d56118953009cb2d 100644
 --- a/third_party/blink/renderer/core/editing/commands/indent_outdent_command.cc
 +++ b/third_party/blink/renderer/core/editing/commands/indent_outdent_command.cc
-@@ -180,7 +180,7 @@ void IndentOutdentCommand::IndentIntoBlockquote(const Position& start,
+@@ -40,6 +40,7 @@
+ #include "third_party/blink/renderer/core/html_names.h"
+ #include "third_party/blink/renderer/core/layout/layout_object.h"
+ #include "third_party/blink/renderer/platform/heap/garbage_collected.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+ 
+ namespace blink {
+ 
+@@ -66,9 +67,11 @@ IndentOutdentCommand::IndentOutdentCommand(Document& document,
+           AtomicString("margin: 0 0 0 40px; border: none; padding: 0px;")),
+       type_of_action_(type_of_action) {}
+ 
+-bool IndentOutdentCommand::TryIndentingAsListItem(const Position& start,
+-                                                  const Position& end,
+-                                                  EditingState* editing_state) {
++bool IndentOutdentCommand::TryIndentingAsListItem(
++    const Position& start,
++    const Position& end,
++    VisiblePosition& out_end_of_next_of_paragraph_to_move,
++    EditingState* editing_state) {
+   // If our selection is not inside a list, bail out.
+   Node* last_node_in_selected_paragraph = start.AnchorNode();
+   HTMLElement* list_element = EnclosingList(last_node_in_selected_paragraph);
+@@ -124,6 +127,17 @@ bool IndentOutdentCommand::TryIndentingAsListItem(const Position& start,
+     return false;
+   }
+ 
++  if (RuntimeEnabledFeatures::
++          AdjustEndOfNextParagraphIfMovedParagraphIsUpdatedEnabled()) {
++    // If `end_of_paragraph_to_move` is adjusted above since
++    // `should_keep_selected_list` is false, before move the paragraphs below,
++    // update the end of the next of the paragraph to move.
++    if (!should_keep_selected_list) {
++      out_end_of_next_of_paragraph_to_move =
++          EndOfParagraph(NextPositionOf(end_of_paragraph_to_move));
++    }
++  }
++
+   MoveParagraphWithClones(start_of_paragraph_to_move, end_of_paragraph_to_move,
+                           new_list, selected_list_item, editing_state);
+   if (editing_state->IsAborted())
+@@ -180,7 +194,7 @@ void IndentOutdentCommand::IndentIntoBlockquote(const Position& start,
    // are then split it into its own block so it doesn't copy multiple
    // paragraphs.
    Node* highest_inline_node = HighestEnclosingNodeOfType(
@@ -11,7 +52,7 @@ index ab303d01ace9764538dcf8ee1d83471b8fd56aae..eb5af89921e6927901b37ff6b298917f
    if (highest_inline_node) {
      Position next_position = MostForwardCaretPosition(
          NextPositionOf(CreateVisiblePosition(end)).DeepEquivalent());
-@@ -208,11 +208,11 @@ void IndentOutdentCommand::IndentIntoBlockquote(const Position& start,
+@@ -208,11 +222,11 @@ void IndentOutdentCommand::IndentIntoBlockquote(const Position& start,
        Node* split_point = HighestEnclosingNodeOfType(
            next_position, IsEnclosingBlock, kCannotCrossEditingBoundary,
            highest_inline_node);
@@ -28,7 +69,7 @@ index ab303d01ace9764538dcf8ee1d83471b8fd56aae..eb5af89921e6927901b37ff6b298917f
        split_point = split_point ? split_point : next_position.AnchorNode();
        // Split the element to separate the paragraphs.
        SplitElement(DynamicTo<Element>(highest_inline_node), split_point);
-@@ -226,12 +226,20 @@ void IndentOutdentCommand::IndentIntoBlockquote(const Position& start,
+@@ -226,12 +240,20 @@ void IndentOutdentCommand::IndentIntoBlockquote(const Position& start,
      // paragraph up to that point.
      target_blockquote = CreateBlockElement();
      if (outer_block == start.ComputeContainerNode()) {
@@ -54,7 +95,7 @@ index ab303d01ace9764538dcf8ee1d83471b8fd56aae..eb5af89921e6927901b37ff6b298917f
      } else
        InsertNodeBefore(target_blockquote, outer_block, editing_state);
      if (editing_state->IsAborted())
-@@ -385,9 +393,22 @@ void IndentOutdentCommand::OutdentParagraph(EditingState* editing_state) {
+@@ -385,9 +407,22 @@ void IndentOutdentCommand::OutdentParagraph(EditingState* editing_state) {
              enclosing_element, split_ancestor);
        }
      } else {
@@ -78,7 +119,7 @@ index ab303d01ace9764538dcf8ee1d83471b8fd56aae..eb5af89921e6927901b37ff6b298917f
            kCannotCrossEditingBoundary, enclosing_block_flow);
        SplitElement(
            enclosing_element,
-@@ -485,6 +506,13 @@ void IndentOutdentCommand::OutdentRegion(
+@@ -485,6 +520,13 @@ void IndentOutdentCommand::OutdentRegion(
      GetDocument().UpdateStyleAndLayout(DocumentUpdateReason::kEditing);
      if (end_of_next_paragraph.IsNotNull() &&
          !end_of_next_paragraph.IsConnected()) {
@@ -92,7 +133,7 @@ index ab303d01ace9764538dcf8ee1d83471b8fd56aae..eb5af89921e6927901b37ff6b298917f
        end_of_current_paragraph =
            CreateVisiblePosition(EndingVisibleSelection().End());
        end_of_next_paragraph =
-@@ -495,6 +523,17 @@ void IndentOutdentCommand::OutdentRegion(
+@@ -495,6 +537,17 @@ void IndentOutdentCommand::OutdentRegion(
    }
  }
  
@@ -110,3 +151,26 @@ index ab303d01ace9764538dcf8ee1d83471b8fd56aae..eb5af89921e6927901b37ff6b298917f
  void IndentOutdentCommand::FormatSelection(
      const VisiblePosition& start_of_selection,
      const VisiblePosition& end_of_selection,
+@@ -506,13 +559,15 @@ void IndentOutdentCommand::FormatSelection(
+     OutdentRegion(start_of_selection, end_of_selection, editing_state);
+ }
+ 
+-void IndentOutdentCommand::FormatRange(const Position& start,
+-                                       const Position& end,
+-                                       const Position&,
+-                                       HTMLElement*& blockquote_for_next_indent,
+-                                       EditingState* editing_state) {
+-  bool indenting_as_list_item_result =
+-      TryIndentingAsListItem(start, end, editing_state);
++void IndentOutdentCommand::FormatRange(
++    const Position& start,
++    const Position& end,
++    const Position&,
++    HTMLElement*& blockquote_for_next_indent,
++    VisiblePosition& out_end_of_next_of_paragraph_to_move,
++    EditingState* editing_state) {
++  bool indenting_as_list_item_result = TryIndentingAsListItem(
++      start, end, out_end_of_next_of_paragraph_to_move, editing_state);
+   if (editing_state->IsAborted())
+     return;
+   if (indenting_as_list_item_result)
