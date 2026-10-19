@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/forms/input_type.h b/third_party/blink/renderer/core/html/forms/input_type.h
-index 53d5c900ce6d4bfd14e713d6e80584b10e584f32..6210441199dc6ebf35a589aed2d5ef6bd3e3bc60 100644
+index 53d5c900ce6d4bfd14e713d6e80584b10e584f32..14209881224a8b1cd56c81cdcfc21e4fd41ba1a7 100644
 --- a/third_party/blink/renderer/core/html/forms/input_type.h
 +++ b/third_party/blink/renderer/core/html/forms/input_type.h
 @@ -111,6 +111,7 @@ class CORE_EXPORT InputType : public GarbageCollected<InputType> {
@@ -10,3 +10,13 @@ index 53d5c900ce6d4bfd14e713d6e80584b10e584f32..6210441199dc6ebf35a589aed2d5ef6b
  
    bool IsButtonInputType() const { return type_ == Type::kButton; }
    bool IsColorInputType() const { return type_ == Type::kColor; }
+@@ -342,7 +343,8 @@ class CORE_EXPORT InputType : public GarbageCollected<InputType> {
+  private:
+   // Helper for stepUp()/stepDown(). Adds step value * count to the current
+   // value.
+-  void ApplyStep(const Decimal&,
++  void ApplyStep(const Decimal& current,
++                 const bool current_was_invalid,
+                  double count,
+                  AnyStepHandling,
+                  TextFieldEventBehavior,
