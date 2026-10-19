@@ -1,0 +1,19 @@
+diff --git a/third_party/blink/renderer/core/animation/css/css_animation.cc b/third_party/blink/renderer/core/animation/css/css_animation.cc
+index e3a59ac9c7ec77b0b7c233c177cf3f3aa84d5a73..4f79afbed6eb12e4829d596830a4e66b020ccfac 100644
+--- a/third_party/blink/renderer/core/animation/css/css_animation.cc
++++ b/third_party/blink/renderer/core/animation/css/css_animation.cc
+@@ -24,6 +24,14 @@ CSSAnimation::CSSAnimation(ExecutionContext* execution_context,
+   owning_element_ = To<KeyframeEffect>(effect())->EffectTarget();
+ }
+ 
++bool CSSAnimation::IsEventDispatchAllowed() const {
++  // If there is no owning element, CSS animation events are not dispatched:
++  // https://drafts.csswg.org/css-animations-2/#event-dispatch
++  return (!RuntimeEnabledFeatures::UnownedAnimationsSkipCSSEventsEnabled() ||
++          OwningElement()) &&
++         Animation::IsEventDispatchAllowed();
++}
++
+ String CSSAnimation::playState() const {
+   FlushStyles();
+   return Animation::playState();

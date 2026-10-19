@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/runtime_enabled_features.json5 b/third_party/blink/renderer/platform/runtime_enabled_features.json5
-index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..369cd521927cf7560364394ee4f3cd69ffffd421 100644
+index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..fd2c197e34c55019816e5ae9dfabfb1b459307b6 100644
 --- a/third_party/blink/renderer/platform/runtime_enabled_features.json5
 +++ b/third_party/blink/renderer/platform/runtime_enabled_features.json5
 @@ -276,8 +276,10 @@
@@ -929,16 +929,16 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..369cd521927cf7560364394ee4f3cd69
      {
 -      name: "MutationEvents",
 +      name: "MoveEndingSelectionToListChild",
-       status: "stable",
-     },
++      status: "stable",
++    },
 +    {
 +      name: "MoveToParagraphStartOrEndSkipsNonEditable",
 +      status: "stable",
 +    },
 +    {
 +      name: "MultiSmoothScrollIntoView",
-+      status: "stable",
-+    },
+       status: "stable",
+     },
 +    {
 +      name: "MutationEvents",
 +      // FlyWeb: off, as Chrome 127+ (field trial) and Chromium 130 in code
@@ -1312,7 +1312,20 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..369cd521927cf7560364394ee4f3cd69
      {
        name: "TranslateService",
        base_feature: "none",
-@@ -3638,11 +4198,28 @@
+@@ -3630,6 +4190,12 @@
+       name: "UnexposedTaskIds",
+       base_feature: "none",
+     },
++    {
++      // Skip CSS animation events on unowned CSS animations:
++      // https://drafts.csswg.org/css-animations-2/#event-dispatch
++      name: "UnownedAnimationsSkipCSSEvents",
++      status: "stable",
++    },
+     // This is a reverse OT used for a phased deprecation, on desktop
+     // https://crbug.com/1071424
+     {
+@@ -3638,11 +4204,28 @@
        origin_trial_feature_name: "UnrestrictedSharedArrayBuffer",
        origin_trial_os: ["win", "mac", "linux", "fuchsia", "chromeos"],
      },
@@ -1341,7 +1354,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..369cd521927cf7560364394ee4f3cd69
      {
        // Makes the global root scrollbars follow the preferred color scheme
        // by default. Please see more details: crbug.com/1423087.
-@@ -3657,11 +4234,29 @@
+@@ -3657,11 +4240,29 @@
        name: "UserAgentClientHint",
        status: "stable",
      },
@@ -1371,7 +1384,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..369cd521927cf7560364394ee4f3cd69
      {
        // Whether a video element should automatically play fullscreen unless
        // 'playsinline' is set.
-@@ -3723,6 +4318,10 @@
+@@ -3723,6 +4324,10 @@
        // See https://drafts.csswg.org/css-view-transitions-1/.
        name: "ViewTransitionOnNavigation",
      },
@@ -1382,7 +1395,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..369cd521927cf7560364394ee4f3cd69
      {
        name: "VisibilityCollapseColumn",
        base_feature: "none",
-@@ -3732,6 +4331,10 @@
+@@ -3732,6 +4337,10 @@
        status: "stable",
        base_feature: "none",
      },
@@ -1393,7 +1406,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..369cd521927cf7560364394ee4f3cd69
      {
        // The "WakeLock" feature was originally implied_by "ScreenWakeLock" and
        // "SystemWakeLock". The former was removed after being promoted to
-@@ -3854,7 +4457,7 @@
+@@ -3854,7 +4463,7 @@
      // https://w3c.github.io/webauthn/#sctn-parseRequestOptionsFromJSON
      {
        name: "WebAuthenticationJSONSerialization",
@@ -1402,7 +1415,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..369cd521927cf7560364394ee4f3cd69
      },
      {
        name: "WebAuthenticationLargeBlobExtension",
-@@ -3960,6 +4563,11 @@
+@@ -3960,6 +4569,11 @@
        // process access to WebGPU to the renderer process.
        status: "stable",
      },
@@ -1414,7 +1427,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..369cd521927cf7560364394ee4f3cd69
      {
        // WebGPU developer features are deliberately not enabled by experimental
        // web platform features.
-@@ -4031,6 +4639,10 @@
+@@ -4031,6 +4645,10 @@
        status: "test",
        base_feature: "none",
      },
@@ -1425,7 +1438,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..369cd521927cf7560364394ee4f3cd69
      {
        name: "WebSocketStream",
        status: "experimental",
-@@ -4167,6 +4779,16 @@
+@@ -4167,6 +4785,16 @@
        name: "WindowPlacementFullscreenOnScreensChange",
        status: "experimental",
      },
