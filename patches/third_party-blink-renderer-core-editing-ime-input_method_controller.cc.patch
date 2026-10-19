@@ -1,0 +1,29 @@
+diff --git a/third_party/blink/renderer/core/editing/ime/input_method_controller.cc b/third_party/blink/renderer/core/editing/ime/input_method_controller.cc
+index ed871753accb4f20e671fe6a5bfba1c5b5eaa07d..a87ae94d404600f6424aee142ebcaf831f354e4f 100644
+--- a/third_party/blink/renderer/core/editing/ime/input_method_controller.cc
++++ b/third_party/blink/renderer/core/editing/ime/input_method_controller.cc
+@@ -449,6 +449,12 @@ void InputMethodController::InsertTextDuringCompositionWithEvents(
+   if (!target)
+     return;
+ 
++  DispatchCompositionUpdateEvent(frame, text);
++  // 'compositionupdate' event handler may destroy document.
++  if (!IsAvailable()) {
++    return;
++  }
++
+   DispatchBeforeInputFromComposition(
+       target, InputEvent::InputType::kInsertCompositionText, text);
+ 
+@@ -456,11 +462,6 @@ void InputMethodController::InsertTextDuringCompositionWithEvents(
+   if (!IsAvailable())
+     return;
+ 
+-  DispatchCompositionUpdateEvent(frame, text);
+-  // 'compositionupdate' event handler may destroy document.
+-  if (!IsAvailable())
+-    return;
+-
+   // TODO(editing-dev): The use of UpdateStyleAndLayout
+   // needs to be audited. see http://crbug.com/590369 for more details.
+   frame.GetDocument()->UpdateStyleAndLayout(DocumentUpdateReason::kInput);
