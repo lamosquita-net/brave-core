@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/element.cc b/third_party/blink/renderer/core/dom/element.cc
-index 603363d44dba6a56412a2408af11a821e39bde00..75cd674c942ac6f7a9923cf57826b4c4001944c2 100644
+index 603363d44dba6a56412a2408af11a821e39bde00..3e4305fd68468deb4d05ceb4bd5dc3f25c2ab92b 100644
 --- a/third_party/blink/renderer/core/dom/element.cc
 +++ b/third_party/blink/renderer/core/dom/element.cc
 @@ -43,6 +43,7 @@
@@ -909,22 +909,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..75cd674c942ac6f7a9923cf57826b4c4
            attribute = attributes.Find(html_names::kLangAttr);
            if (attribute) {
              value = attribute->Value();
-@@ -6409,7 +7001,13 @@ AtomicString Element::ComputeInheritedLanguage() const {
-       value = document->ContentLanguage();
-     }
- 
--    n = n->ParentOrShadowHostNode();
-+    const HTMLSlotElement* slot =
-+        ToHTMLSlotElementIfSupportsAssignmentOrNull(n);
-+    if (slot && RuntimeEnabledFeatures::HTMLLangNewInheritanceEnabled()) {
-+      n = &n->ContainingShadowRoot()->host();
-+    } else {
-+      n = n->ParentOrShadowHostNode();
-+    }
-   } while (n && value.IsNull());
- 
-   return value;
-@@ -6693,11 +7291,32 @@ PseudoElement* Element::GetPseudoElement(
+@@ -6693,11 +7285,32 @@ PseudoElement* Element::GetPseudoElement(
                         : nullptr;
  }
  
@@ -959,7 +944,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..75cd674c942ac6f7a9923cf57826b4c4
    }
  
    // The transition pseudos can currently only exist on the document element.
-@@ -6730,7 +7349,8 @@ PseudoElement* Element::GetNestedPseudoElement(
+@@ -6730,7 +7343,8 @@ PseudoElement* Element::GetNestedPseudoElement(
  }
  
  LayoutObject* Element::PseudoElementLayoutObject(PseudoId pseudo_id) const {
@@ -969,7 +954,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..75cd674c942ac6f7a9923cf57826b4c4
      return element->GetLayoutObject();
    }
    return nullptr;
-@@ -6950,7 +7570,7 @@ KURL Element::HrefURL() const {
+@@ -6950,7 +7564,7 @@ KURL Element::HrefURL() const {
    // doesn't <link> implement URLUtils?
    if (IsA<HTMLAnchorElement>(*this) || IsA<HTMLAreaElement>(*this) ||
        IsA<HTMLLinkElement>(*this)) {
@@ -978,7 +963,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..75cd674c942ac6f7a9923cf57826b4c4
    }
    if (auto* svg_a = DynamicTo<SVGAElement>(*this)) {
      return svg_a->LegacyHrefURL(GetDocument());
-@@ -6958,7 +7578,7 @@ KURL Element::HrefURL() const {
+@@ -6958,7 +7572,7 @@ KURL Element::HrefURL() const {
    return KURL();
  }
  
@@ -987,7 +972,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..75cd674c942ac6f7a9923cf57826b4c4
  #if DCHECK_IS_ON()
    if (HasElementData()) {
      if (const Attribute* attribute = Attributes().Find(name)) {
-@@ -6966,6 +7586,14 @@ KURL Element::GetURLAttribute(const QualifiedName& name) const {
+@@ -6966,6 +7580,14 @@ KURL Element::GetURLAttribute(const QualifiedName& name) const {
      }
    }
  #endif
@@ -1002,7 +987,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..75cd674c942ac6f7a9923cf57826b4c4
    return GetDocument().CompleteURL(
        StripLeadingAndTrailingHTMLSpaces(getAttribute(name)));
  }
-@@ -8317,7 +8945,7 @@ void Element::RebuildTransitionPseudoLayoutTree(
+@@ -8317,7 +8939,7 @@ void Element::RebuildTransitionPseudoLayoutTree(
                                                 rebuild_pseudo_tree);
  }
  
@@ -1011,7 +996,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..75cd674c942ac6f7a9923cf57826b4c4
    return RuntimeEnabledFeatures::InertAttributeEnabled() &&
           FastHasAttribute(html_names::kInertAttr) && IsHTMLElement();
  }
-@@ -8377,9 +9005,34 @@ FocusgroupFlags Element::GetFocusgroupFlags() const {
+@@ -8377,9 +8999,34 @@ FocusgroupFlags Element::GetFocusgroupFlags() const {
  }
  
  bool Element::checkVisibility(CheckVisibilityOptions* options) const {
@@ -1048,7 +1033,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..75cd674c942ac6f7a9923cf57826b4c4
    DisplayLockUtilities::ScopedForcedUpdate force_locks(
        this, DisplayLockContext::ForcedPhase::kStyleAndLayoutTree,
        /*include_self=*/false, /*only_cv_auto=*/true,
-@@ -8396,7 +9049,9 @@ bool Element::checkVisibility(CheckVisibilityOptions* options) const {
+@@ -8396,7 +9043,9 @@ bool Element::checkVisibility(CheckVisibilityOptions* options) const {
    }
  
    DCHECK(options);
@@ -1059,7 +1044,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..75cd674c942ac6f7a9923cf57826b4c4
        style->Visibility() != EVisibility::kVisible) {
      return false;
    }
-@@ -8415,7 +9070,9 @@ bool Element::checkVisibility(CheckVisibilityOptions* options) const {
+@@ -8415,7 +9064,9 @@ bool Element::checkVisibility(CheckVisibilityOptions* options) const {
      }
  
      // Check for opacity:0
@@ -1070,7 +1055,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..75cd674c942ac6f7a9923cf57826b4c4
        if (style = ancestor.GetComputedStyle(); style) {
          if (style->Opacity() == 0.f) {
            return false;
-@@ -8850,4 +9507,10 @@ Element* Element::ImplicitAnchorElement() {
+@@ -8850,4 +9501,10 @@ Element* Element::ImplicitAnchorElement() {
    return nullptr;
  }
  
