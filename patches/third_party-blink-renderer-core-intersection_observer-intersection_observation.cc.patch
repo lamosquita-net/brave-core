@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/intersection_observer/intersection_observation.cc b/third_party/blink/renderer/core/intersection_observer/intersection_observation.cc
-index 170301508e14973eee49c7916f3787f5a5f267a3..fdd62875eb54ad7b9605f27a6dd352d0c52d1842 100644
+index 170301508e14973eee49c7916f3787f5a5f267a3..fab1f24ad24db3694405cdaf742da2f1aca6624a 100644
 --- a/third_party/blink/renderer/core/intersection_observer/intersection_observation.cc
 +++ b/third_party/blink/renderer/core/intersection_observer/intersection_observation.cc
 @@ -49,10 +49,10 @@ int64_t IntersectionObservation::ComputeIntersection(
@@ -36,3 +36,15 @@ index 170301508e14973eee49c7916f3787f5a5f267a3..fdd62875eb54ad7b9605f27a6dd352d0
                                  cached_rects_ ? &cached_rects_copy : nullptr);
    return geometry.CanUseCachedRectsForTesting();
  }
+@@ -205,6 +206,11 @@ unsigned IntersectionObservation::GetIntersectionGeometryFlags(
+     geometry_flags |= IntersectionGeometry::kShouldTrackFractionOfRoot;
+   if (Observer()->UseOverflowClipEdge())
+     geometry_flags |= IntersectionGeometry::kUseOverflowClipEdge;
++  if (Observer()->IsInternal()) {
++    // TODO(wangxianzhu): Let internal clients decide whether to respect
++    // filters.
++    geometry_flags |= IntersectionGeometry::kRespectFilters;
++  }
+   return geometry_flags;
+ }
+ 

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_object.cc b/third_party/blink/renderer/core/layout/layout_object.cc
-index 98f0936193142d342d2083f61151ce24e10ad7a9..d6d00e6eda8d01d962cb5ffab96949ef31424356 100644
+index 98f0936193142d342d2083f61151ce24e10ad7a9..71cabd840cffffdd296c0c72464889f41b83c44f 100644
 --- a/third_party/blink/renderer/core/layout/layout_object.cc
 +++ b/third_party/blink/renderer/core/layout/layout_object.cc
 @@ -82,6 +82,7 @@
@@ -139,7 +139,18 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..d6d00e6eda8d01d962cb5ffab96949ef
    if (!property_container)
      return false;
  
-@@ -2215,7 +2262,8 @@ bool LayoutObject::MapToVisualRectInAncestorSpaceInternal(
+@@ -2153,9 +2200,7 @@ bool LayoutObject::MapToVisualRectInAncestorSpaceInternalFastPath(
+     FloatClipRect clip_rect((gfx::RectF(rect)));
+     intersects = GeometryMapper::LocalToAncestorVisualRect(
+         container_properties, ancestor->FirstFragment().ContentsProperties(),
+-        clip_rect, kIgnoreOverlayScrollbarSize,
+-        (visual_rect_flags & kEdgeInclusive) ? kInclusiveIntersect
+-                                             : kNonInclusiveIntersect);
++        clip_rect, kIgnoreOverlayScrollbarSize, visual_rect_flags);
+     rect = PhysicalRect::EnclosingRect(clip_rect.Rect());
+   }
+   rect.offset -= ancestor->FirstFragment().PaintOffset();
+@@ -2215,7 +2260,8 @@ bool LayoutObject::MapToVisualRectInAncestorSpaceInternal(
  
  const LayoutObject* LayoutObject::GetPropertyContainer(
      AncestorSkipInfo* skip_info,
@@ -149,7 +160,7 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..d6d00e6eda8d01d962cb5ffab96949ef
    NOT_DESTROYED();
    const LayoutObject* property_container = this;
    while (!property_container->FirstFragment().HasLocalBorderBoxProperties()) {
-@@ -2227,11 +2275,21 @@ const LayoutObject* LayoutObject::GetPropertyContainer(
+@@ -2227,11 +2273,21 @@ const LayoutObject* LayoutObject::GetPropertyContainer(
    if (container_properties) {
      if (property_container == this) {
        *container_properties = FirstFragment().LocalBorderBoxProperties();
@@ -171,7 +182,7 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..d6d00e6eda8d01d962cb5ffab96949ef
    return property_container;
  }
  
-@@ -4480,6 +4538,12 @@ gfx::RectF LayoutObject::StrokeBoundingBox() const {
+@@ -4480,6 +4536,12 @@ gfx::RectF LayoutObject::StrokeBoundingBox() const {
    return gfx::RectF();
  }
  
@@ -184,7 +195,7 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..d6d00e6eda8d01d962cb5ffab96949ef
  gfx::RectF LayoutObject::VisualRectInLocalSVGCoordinates() const {
    NOT_DESTROYED();
    NOTREACHED();
-@@ -4990,6 +5054,19 @@ void LayoutObject::SetSVGDescendantMayHaveTransformRelatedAnimation() {
+@@ -4990,6 +5052,19 @@ void LayoutObject::SetSVGDescendantMayHaveTransformRelatedAnimation() {
    }
  }
  

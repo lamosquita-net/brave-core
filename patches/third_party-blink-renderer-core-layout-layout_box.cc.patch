@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_box.cc b/third_party/blink/renderer/core/layout/layout_box.cc
-index c2f1775ffaed54914a1cdd313a207364ba7d887d..aad4adfa4caa7c65edaab74ba59c0154ce6fa1c3 100644
+index c2f1775ffaed54914a1cdd313a207364ba7d887d..f42d927fc894b28cd10ee55012f77907e32b6b89 100644
 --- a/third_party/blink/renderer/core/layout/layout_box.cc
 +++ b/third_party/blink/renderer/core/layout/layout_box.cc
 @@ -310,24 +310,27 @@ LayoutUnit ListBoxDefaultItemHeight(const LayoutBox& box) {
@@ -153,3 +153,28 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..aad4adfa4caa7c65edaab74ba59c0154
              image->KnownToBeOpaque(GetDocument(), StyleRef())) {
            layer_known_opaque = true;
          }
+@@ -3201,11 +3213,14 @@ bool LayoutBox::MapToVisualRectInAncestorSpaceInternal(
+     TransformState& transform_state,
+     VisualRectFlags visual_rect_flags) const {
+   NOT_DESTROYED();
+-  InflateVisualRectForFilter(transform_state);
+ 
+   if (ancestor == this)
+     return true;
+ 
++  if (!(visual_rect_flags & kIgnoreFilters)) {
++    InflateVisualRectForFilter(transform_state);
++  }
++
+   AncestorSkipInfo skip_info(ancestor, true);
+   LayoutObject* container = Container(&skip_info);
+   if (!container)
+@@ -3224,7 +3239,7 @@ bool LayoutBox::MapToVisualRectInAncestorSpaceInternal(
+     container_offset += AnchorScrollTranslationOffset();
+   }
+ 
+-  if (skip_info.FilterSkipped()) {
++  if (skip_info.FilterSkipped() && !(visual_rect_flags & kIgnoreFilters)) {
+     InflateVisualRectForFilterUnderContainer(transform_state, *container,
+                                              ancestor);
+   }

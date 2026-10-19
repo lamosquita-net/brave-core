@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_object.h b/third_party/blink/renderer/core/layout/layout_object.h
-index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..53639a5952ba135edf1e25a6235f3865ac86218a 100644
+index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..351a1953e2f372075482a9ba8eb7d6339bce2c56 100644
 --- a/third_party/blink/renderer/core/layout/layout_object.h
 +++ b/third_party/blink/renderer/core/layout/layout_object.h
 @@ -40,6 +40,7 @@
@@ -10,15 +10,32 @@ index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..53639a5952ba135edf1e25a6235f3865
  #include "third_party/blink/renderer/core/html_names.h"
  #include "third_party/blink/renderer/core/inspector/inspector_trace_events.h"
  #include "third_party/blink/renderer/core/layout/geometry/physical_rect.h"
-@@ -98,6 +99,7 @@ enum VisualRectFlags {
-   // When mapping to absolute coordinates and the main frame is remote, don't
-   // apply the main frame root scroller's overflow clip.
-   kDontApplyMainFrameOverflowClip = 1 << 2,
-+  kIgnoreLocalClipPath = 1 << 3,
- };
+@@ -66,6 +67,7 @@
+ #include "third_party/blink/renderer/platform/graphics/paint/display_item_client.h"
+ #include "third_party/blink/renderer/platform/graphics/paint_invalidation_reason.h"
+ #include "third_party/blink/renderer/platform/graphics/subtree_paint_property_update_reason.h"
++#include "third_party/blink/renderer/platform/graphics/visual_rect_flags.h"
+ #include "third_party/blink/renderer/platform/wtf/allocator/allocator.h"
+ #include "ui/gfx/geometry/quad_f.h"
+ #include "ui/gfx/geometry/transform.h"
+@@ -90,16 +92,6 @@ class StyleRequest;
+ struct PaintInfo;
+ struct PaintInvalidatorContext;
  
+-enum VisualRectFlags {
+-  kDefaultVisualRectFlags = 0,
+-  kEdgeInclusive = 1 << 0,
+-  // Use the GeometryMapper fast-path, if possible.
+-  kUseGeometryMapper = 1 << 1,
+-  // When mapping to absolute coordinates and the main frame is remote, don't
+-  // apply the main frame root scroller's overflow clip.
+-  kDontApplyMainFrameOverflowClip = 1 << 2,
+-};
+-
  enum CursorDirective { kSetCursorBasedOnStyle, kSetCursor, kDoNotSetCursor };
-@@ -810,6 +812,9 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+ 
+ enum MarkingBehavior {
+@@ -810,6 +802,9 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
  #endif
  
    void AddAbsoluteRectForLayer(gfx::Rect& result);
@@ -28,7 +45,7 @@ index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..53639a5952ba135edf1e25a6235f3865
    bool RequiresAnonymousTableWrappers(const LayoutObject*) const;
  
   public:
-@@ -1008,6 +1013,12 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+@@ -1008,6 +1003,12 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
      NOT_DESTROYED();
      return IsOfType(kLayoutObjectRubyText);
    }
@@ -41,7 +58,7 @@ index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..53639a5952ba135edf1e25a6235f3865
    bool IsTable() const {
      NOT_DESTROYED();
      return IsOfType(kLayoutObjectTable);
-@@ -1343,10 +1354,16 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+@@ -1343,10 +1344,16 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
    // coordinate space is the viewport space.
    virtual gfx::RectF VisualRectInLocalSVGCoordinates() const;
  
@@ -59,7 +76,7 @@ index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..53639a5952ba135edf1e25a6235f3865
  
    // This returns the transform applying to the local SVG coordinate space,
    // which combines the CSS transform properties and animation motion transform.
-@@ -2709,7 +2726,8 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+@@ -2709,7 +2716,8 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
    // from the coordinate system of the property container.
    const LayoutObject* GetPropertyContainer(
        AncestorSkipInfo*,
@@ -69,7 +86,7 @@ index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..53639a5952ba135edf1e25a6235f3865
  
    // Do a rect-based hit test with this object as the stop node.
    HitTestResult HitTestForOcclusion(const PhysicalRect&) const;
-@@ -3515,6 +3533,17 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+@@ -3515,6 +3523,17 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
    }
    void SetSVGDescendantMayHaveTransformRelatedAnimation();
  
@@ -87,7 +104,7 @@ index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..53639a5952ba135edf1e25a6235f3865
    bool ShouldSkipNextLayoutShiftTracking() const {
      NOT_DESTROYED();
      return bitfields_.ShouldSkipNextLayoutShiftTracking();
-@@ -4300,6 +4329,11 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+@@ -4300,6 +4319,11 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
      ADD_BOOLEAN_BITFIELD(svg_descendant_may_have_transform_related_animation_,
                           SVGDescendantMayHaveTransformRelatedAnimation);
  
