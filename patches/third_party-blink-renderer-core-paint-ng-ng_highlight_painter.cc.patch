@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/paint/ng/ng_highlight_painter.cc b/third_party/blink/renderer/core/paint/ng/ng_highlight_painter.cc
-index cc671bb5ea413ec5a1c054dff13d1cf5b6111d5e..1d76b192480fb87fb13a74cc4983944636762776 100644
+index cc671bb5ea413ec5a1c054dff13d1cf5b6111d5e..9da7d2820bb75eb766374ffe0941dfa80d66c0f0 100644
 --- a/third_party/blink/renderer/core/paint/ng/ng_highlight_painter.cc
 +++ b/third_party/blink/renderer/core/paint/ng/ng_highlight_painter.cc
-@@ -101,9 +101,13 @@ Color SelectionBackgroundColor(const Document& document,
+@@ -18,6 +18,7 @@
+ #include "third_party/blink/renderer/core/highlight/highlight_registry.h"
+ #include "third_party/blink/renderer/core/highlight/highlight_style_utils.h"
+ #include "third_party/blink/renderer/core/layout/layout_object.h"
++#include "third_party/blink/renderer/core/layout/layout_text_fragment.h"
+ #include "third_party/blink/renderer/core/layout/ng/inline/ng_inline_cursor.h"
+ #include "third_party/blink/renderer/core/layout/svg/layout_svg_inline_text.h"
+ #include "third_party/blink/renderer/core/paint/document_marker_painter.h"
+@@ -101,9 +102,13 @@ Color SelectionBackgroundColor(const Document& document,
      return Color();
    }
  
@@ -19,7 +27,7 @@ index cc671bb5ea413ec5a1c054dff13d1cf5b6111d5e..1d76b192480fb87fb13a74cc49839446
      if (node) {
        UseCounter::Count(node->GetDocument(),
                          WebFeature::kSelectionBackgroundColorInversion);
-@@ -204,8 +208,8 @@ bool HasNonTrivialSpellingGrammarStyles(const NGFragmentItem& fragment_item,
+@@ -204,8 +209,8 @@ bool HasNonTrivialSpellingGrammarStyles(const NGFragmentItem& fragment_item,
  
      // If the ‘text-decoration-line’ is not ‘spelling-error’ or ‘grammar-error’,
      // depending on the pseudo. ‘text-decoration-color’ can vary without hurting
@@ -30,7 +38,46 @@ index cc671bb5ea413ec5a1c054dff13d1cf5b6111d5e..1d76b192480fb87fb13a74cc49839446
      if (pseudo_style->TextDecorationsInEffect() !=
          (pseudo == kPseudoIdSpellingError
               ? TextDecorationLine::kSpellingError
-@@ -578,6 +582,7 @@ void NGHighlightPainter::Paint(Phase phase) {
+@@ -411,6 +416,18 @@ void NGHighlightPainter::SelectionPaintState::
+   }
+ }
+ 
++// GetNode() for first-letter fragment returns null because it is anonymous.
++// Use AssociatedTextNode() of LayoutTextFragment to get the associated node.
++static Node* AssociatedNode(const LayoutObject* layout_object) {
++  if (RuntimeEnabledFeatures::PaintHighlightsForFirstLetterEnabled()) {
++    if (auto* layout_text_fragment =
++            DynamicTo<LayoutTextFragment>(layout_object)) {
++      return layout_text_fragment->AssociatedTextNode();
++    }
++  }
++  return layout_object->GetNode();
++}
++
+ NGHighlightPainter::NGHighlightPainter(
+     const NGTextFragmentPaintInfo& fragment_paint_info,
+     NGTextPainter& text_painter,
+@@ -435,7 +452,7 @@ NGHighlightPainter::NGHighlightPainter(
+       originating_text_style_(text_style),
+       selection_(selection),
+       layout_object_(fragment_item_.GetLayoutObject()),
+-      node_(layout_object_->GetNode()),
++      node_(AssociatedNode(layout_object_)),
+       foreground_auto_dark_mode_(
+           PaintAutoDarkMode(originating_style_,
+                             DarkModeFilter::ElementRole::kForeground)),
+@@ -513,8 +530,8 @@ void NGHighlightPainter::Paint(Phase phase) {
+   if (skip_backgrounds_ && phase == kBackground)
+     return;
+ 
+-  DCHECK(fragment_item_.GetNode());
+-  const auto& text_node = To<Text>(*fragment_item_.GetNode());
++  CHECK(node_);
++  const auto& text_node = To<Text>(*node_);
+   const StringView text = cursor_.CurrentText();
+ 
+   for (const DocumentMarker* marker : markers_) {
+@@ -578,6 +595,7 @@ void NGHighlightPainter::Paint(Phase phase) {
            text_style.current_color = platform_matched_color;
            text_style.stroke_width = originating_style_.TextStrokeWidth();
            text_style.color_scheme = originating_style_.UsedColorScheme();
@@ -38,7 +85,16 @@ index cc671bb5ea413ec5a1c054dff13d1cf5b6111d5e..1d76b192480fb87fb13a74cc49839446
          }
          text_painter_.Paint(
              fragment_paint_info_.Slice(paint_start_offset, paint_end_offset),
-@@ -643,6 +648,7 @@ void NGHighlightPainter::Paint(Phase phase) {
+@@ -607,7 +625,7 @@ void NGHighlightPainter::Paint(Phase phase) {
+               gfx::RectF(MarkerRectForForeground(
+                   fragment_item_, text, paint_start_offset, paint_end_offset)),
+               LayoutUnit(font_data->GetFontMetrics().Height()),
+-              fragment_item_.GetNode()->GetDocument().InDarkMode());
++              node_->GetDocument().InDarkMode());
+         }
+       } break;
+ 
+@@ -643,6 +661,7 @@ void NGHighlightPainter::Paint(Phase phase) {
          text_style.stroke_width = originating_style_.TextStrokeWidth();
          text_style.color_scheme = originating_style_.UsedColorScheme();
          text_style.shadow = nullptr;
@@ -46,3 +102,25 @@ index cc671bb5ea413ec5a1c054dff13d1cf5b6111d5e..1d76b192480fb87fb13a74cc49839446
  
          const TextPaintStyle final_text_style =
              HighlightStyleUtils::HighlightPaintingStyle(
+@@ -737,8 +756,8 @@ NGHighlightPainter::Case NGHighlightPainter::ComputePaintCase() const {
+ 
+ void NGHighlightPainter::FastPaintSpellingGrammarDecorations() {
+   DCHECK_EQ(paint_case_, kFastSpellingGrammar);
+-  DCHECK(fragment_item_.GetNode());
+-  const auto& text_node = To<Text>(*fragment_item_.GetNode());
++  CHECK(node_);
++  const auto& text_node = To<Text>(*node_);
+   const StringView text = cursor_.CurrentText();
+ 
+   // ::spelling-error overlay is drawn on top of ::grammar-error overlay.
+@@ -772,8 +791,9 @@ void NGHighlightPainter::PaintOneSpellingGrammarDecoration(
+     const StringView& text,
+     unsigned paint_start_offset,
+     unsigned paint_end_offset) {
+-  if (fragment_item_.GetNode()->GetDocument().Printing())
++  if (node_->GetDocument().Printing()) {
+     return;
++  }
+ 
+   // If the new ::spelling-error and ::grammar-error pseudos are not enabled,
+   // use the old marker-based decorations for now.
