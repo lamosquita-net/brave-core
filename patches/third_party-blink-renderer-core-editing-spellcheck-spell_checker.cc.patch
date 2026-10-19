@@ -1,0 +1,16 @@
+diff --git a/third_party/blink/renderer/core/editing/spellcheck/spell_checker.cc b/third_party/blink/renderer/core/editing/spellcheck/spell_checker.cc
+index b681479cfb83709f35bc2add383678b94608815e..8d973c4e051273e935583963e3627081789b690f 100644
+--- a/third_party/blink/renderer/core/editing/spellcheck/spell_checker.cc
++++ b/third_party/blink/renderer/core/editing/spellcheck/spell_checker.cc
+@@ -494,8 +494,9 @@ void SpellChecker::ReplaceMisspelledRange(const String& text) {
+ 
+   if (cancel)
+     return;
+-  GetFrame().GetEditor().ReplaceSelectionWithText(
+-      text, false, false, InputEvent::InputType::kInsertReplacementText);
++
++  GetFrame().GetEditor().InsertTextWithoutSendingTextEvent(
++      text, false, nullptr, InputEvent::InputType::kInsertReplacementText);
+ }
+ 
+ void SpellChecker::RespondToChangedSelection() {

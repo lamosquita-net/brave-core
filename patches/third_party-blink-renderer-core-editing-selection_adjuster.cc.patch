@@ -1,0 +1,35 @@
+diff --git a/third_party/blink/renderer/core/editing/selection_adjuster.cc b/third_party/blink/renderer/core/editing/selection_adjuster.cc
+index 155970bb49dd50723fe4209d78ec47b558ab9217..d254464c52d66c7b72863bc1ae3d567002f95617 100644
+--- a/third_party/blink/renderer/core/editing/selection_adjuster.cc
++++ b/third_party/blink/renderer/core/editing/selection_adjuster.cc
+@@ -769,9 +769,27 @@ class SelectionTypeAdjuster final {
+     // to do this operation, since all selection changes that result in a
+     // RANGE come through here before anyone uses it.
+     // TODO(editing-dev): Consider this canonicalization is really needed.
+-    const EphemeralRangeTemplate<Strategy> minimal_range(
+-        MostForwardCaretPosition(range.StartPosition()),
+-        MostBackwardCaretPosition(range.EndPosition()));
++    PositionTemplate<Strategy> forward_start_position =
++        MostForwardCaretPosition(range.StartPosition());
++    PositionTemplate<Strategy> backward_end_position =
++        MostBackwardCaretPosition(range.EndPosition());
++    // When the start and end of `range` have different editability, and the
++    // return value of `CanonicalPositionOf` is null, `VisiblePosition` of
++    // `selection` will be a caret. For example, `EndPosition().AnchorNode()` is
++    // non-editable and its previous sibling node which is the
++    // `StartPosition().AnchorNode()` is editable. In this case, we shouldn't
++    // forward/backward the start/end position of `range`.
++    // See http://crbug.com/1371268 for more details.
++    if (IsEditablePosition(backward_end_position) &&
++        CanonicalPositionOf(forward_start_position).IsNull()) {
++      forward_start_position = range.StartPosition();
++    }
++    if (IsEditablePosition(forward_start_position) &&
++        CanonicalPositionOf(backward_end_position).IsNull()) {
++      backward_end_position = range.EndPosition();
++    }
++    const EphemeralRangeTemplate<Strategy> minimal_range(forward_start_position,
++                                                         backward_end_position);
+     if (minimal_range.IsCollapsed() || selection.IsBaseFirst()) {
+       return typename SelectionTemplate<Strategy>::Builder()
+           .SetAsForwardSelection(minimal_range)

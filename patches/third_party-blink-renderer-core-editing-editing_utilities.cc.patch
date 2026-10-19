@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/editing/editing_utilities.cc b/third_party/blink/renderer/core/editing/editing_utilities.cc
-index 59b53d62ed9a97152a01977c45e6a20722d4837b..53b34def1f69e3a91411347072a947a615902a67 100644
+index 59b53d62ed9a97152a01977c45e6a20722d4837b..e4086a4868753a4a0a54e3e5c39a792a59aeb5d6 100644
 --- a/third_party/blink/renderer/core/editing/editing_utilities.cc
 +++ b/third_party/blink/renderer/core/editing/editing_utilities.cc
 @@ -36,6 +36,7 @@
@@ -39,7 +39,41 @@ index 59b53d62ed9a97152a01977c45e6a20722d4837b..53b34def1f69e3a91411347072a947a6
  
      if (auto* element = DynamicTo<Element>(&ancestor)) {
        if (element->editContext())
-@@ -1258,6 +1274,30 @@ PositionWithAffinity AdjustForEditingBoundary(const Position& position) {
+@@ -508,16 +524,27 @@ PositionTemplate<Strategy> FirstEditablePositionAfterPositionInRootAlgorithm(
+       !editable_position.AnchorNode()->IsDescendantOf(&highest_root))
+     return PositionTemplate<Strategy>();
+ 
+-  // If |editablePosition| has the non-editable child skipped, get the next
+-  // sibling position. If not, we can't get the next paragraph in
+-  // InsertListCommand::doApply's while loop. See http://crbug.com/571420
+-  if (non_editable_node &&
+-      non_editable_node->IsDescendantOf(editable_position.AnchorNode())) {
++  // If `non_editable_node` is the last child of
++  // `editable_position.AnchorNode()`, obtain the next sibling position.
++  // - If we do not obtain the next sibling position, we will be unable to
++  //   access the next paragraph within the `InsertListCommand::DoApply` while
++  //   loop. See http://crbug.com/571420 for more details.
++  // - If `non_editable_node` is not the last child, we will bypass the next
++  //   editable sibling position. See http://crbug.com/1334557 for more details.
++  bool need_obtain_next =
++      non_editable_node && editable_position.AnchorNode() &&
++      non_editable_node == editable_position.AnchorNode()->lastChild();
++  if (need_obtain_next) {
+     // Make sure not to move out of |highest_root|
+     const PositionTemplate<Strategy> boundary =
+         PositionTemplate<Strategy>::LastPositionInNode(highest_root);
++    // `NextVisuallyDistinctCandidate` is similar to `NextCandidate`, but
++    // it skips the next visually equivalent of `editable_position`.
++    // `editable_position` is already "visually distinct" relative to
++    // `position`, so use `NextCandidate` here.
++    // See http://crbug.com/1406207 for more details.
+     const PositionTemplate<Strategy> next_candidate =
+-        NextVisuallyDistinctCandidate(editable_position);
++        NextCandidate(editable_position);
+     editable_position = next_candidate.IsNotNull()
+                             ? std::min(boundary, next_candidate)
+                             : boundary;
+@@ -1258,6 +1285,30 @@ PositionWithAffinity AdjustForEditingBoundary(const Position& position) {
    return AdjustForEditingBoundary(PositionWithAffinity(position));
  }
  
@@ -70,7 +104,7 @@ index 59b53d62ed9a97152a01977c45e6a20722d4837b..53b34def1f69e3a91411347072a947a6
  Position ComputePositionForNodeRemoval(const Position& position,
                                         const Node& node) {
    if (position.IsNull())
-@@ -1447,10 +1487,11 @@ bool IsRenderedAsNonInlineTableImageOrHR(const Node* node) {
+@@ -1447,10 +1498,11 @@ bool IsRenderedAsNonInlineTableImageOrHR(const Node* node) {
    if (!node)
      return false;
    LayoutObject* layout_object = node->GetLayoutObject();
