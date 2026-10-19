@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/text.cc b/third_party/blink/renderer/core/dom/text.cc
-index e907f6bb3f8163e646217517c3d853443378c425..c95d13bf8b2218191adb71347d5047c40a7e1d60 100644
+index e907f6bb3f8163e646217517c3d853443378c425..281d3ee63f479889415a1289f361abdaebff0cb0 100644
 --- a/third_party/blink/renderer/core/dom/text.cc
 +++ b/third_party/blink/renderer/core/dom/text.cc
 @@ -41,6 +41,7 @@
@@ -50,3 +50,26 @@ index e907f6bb3f8163e646217517c3d853443378c425..c95d13bf8b2218191adb71347d5047c4
  
    return new_text;
  }
+@@ -459,11 +475,19 @@ static bool ShouldUpdateLayoutByReattaching(const Text& text_node,
+   // editing with the combination of -webkit-text-security in author styles on
+   // other elements in combination with ::first-letter.
+   // See crbug.com/1240988
+-  if (text_layout_object->IsSecure())
++  if (text_layout_object->IsSecure()) {
+     return false;
++  }
++  FirstLetterPseudoElement::Punctuation punctuation1 =
++      FirstLetterPseudoElement::Punctuation::kNotSeen;
++  FirstLetterPseudoElement::Punctuation punctuation2 =
++      FirstLetterPseudoElement::Punctuation::kNotSeen;
++  bool preserve_breaks = ShouldPreserveBreaks(
++      text_layout_object->StyleRef().GetWhiteSpaceCollapse());
+   if (!FirstLetterPseudoElement::FirstLetterLength(
+-          text_layout_object->GetText()) &&
+-      FirstLetterPseudoElement::FirstLetterLength(text_node.data())) {
++          text_layout_object->GetText(), preserve_breaks, punctuation1) &&
++      FirstLetterPseudoElement::FirstLetterLength(
++          text_node.data(), preserve_breaks, punctuation2)) {
+     // We did not previously apply ::first-letter styles to this |text_node|,
+     // and if there was no first formatted letter, but now is, we may need to
+     // reattach.
