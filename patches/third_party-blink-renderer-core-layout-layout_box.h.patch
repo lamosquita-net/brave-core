@@ -1,8 +1,26 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_box.h b/third_party/blink/renderer/core/layout/layout_box.h
-index 7e5f4df2b86bd8a409742261caa8a13368c75fc2..54c9063b88a72f5388290af5dfaf26a9fd14e473 100644
+index 7e5f4df2b86bd8a409742261caa8a13368c75fc2..29cba089bc1395c86009c212d049ce720e6bf811 100644
 --- a/third_party/blink/renderer/core/layout/layout_box.h
 +++ b/third_party/blink/renderer/core/layout/layout_box.h
-@@ -1687,6 +1687,8 @@ class CORE_EXPORT LayoutBox : public LayoutBoxModelObject {
+@@ -1219,11 +1219,17 @@ class CORE_EXPORT LayoutBox : public LayoutBoxModelObject {
+ 
+   bool HasScrollableOverflowX() const {
+     NOT_DESTROYED();
++    if (RuntimeEnabledFeatures::LayoutNewOverflowLogicEnabled()) {
++      return ScrollsOverflowX() && ScrollWidth() != ClientWidth();
++    }
+     return ScrollsOverflowX() &&
+            PixelSnappedScrollWidth() != PixelSnappedClientWidth();
+   }
+   bool HasScrollableOverflowY() const {
+     NOT_DESTROYED();
++    if (RuntimeEnabledFeatures::LayoutNewOverflowLogicEnabled()) {
++      return ScrollsOverflowY() && ScrollHeight() != ClientHeight();
++    }
+     return ScrollsOverflowY() &&
+            PixelSnappedScrollHeight() != PixelSnappedClientHeight();
+   }
+@@ -1687,6 +1693,8 @@ class CORE_EXPORT LayoutBox : public LayoutBoxModelObject {
    const Vector<PhysicalScrollRange>* PositionFallbackNonOverflowingRanges()
        const;
  
