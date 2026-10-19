@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_box.cc b/third_party/blink/renderer/core/layout/layout_box.cc
-index c2f1775ffaed54914a1cdd313a207364ba7d887d..f42d927fc894b28cd10ee55012f77907e32b6b89 100644
+index c2f1775ffaed54914a1cdd313a207364ba7d887d..72ce04dd52ed04b57647e99265bd80385f18b499 100644
 --- a/third_party/blink/renderer/core/layout/layout_box.cc
 +++ b/third_party/blink/renderer/core/layout/layout_box.cc
 @@ -310,24 +310,27 @@ LayoutUnit ListBoxDefaultItemHeight(const LayoutBox& box) {
@@ -178,3 +178,23 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..f42d927fc894b28cd10ee55012f77907
      InflateVisualRectForFilterUnderContainer(transform_state, *container,
                                               ancestor);
    }
+@@ -6056,4 +6071,19 @@ LayoutBox::PositionFallbackNonOverflowingRanges() const {
+   return layout_results.front()->PositionFallbackNonOverflowingRanges();
+ }
+ 
++const NGBoxStrut& LayoutBox::OutOfFlowInsetsForGetComputedStyle() const {
++  const auto& layout_results = GetLayoutResults();
++  // We should call this function only after the node is laid out.
++  CHECK(layout_results.size());
++  // We only need to check the first fragment, because when the box is
++  // fragmented, insets are duplicated on all fragments.
++#if EXPENSIVE_DCHECKS_ARE_ON()
++  for (wtf_size_t i = 1; i < layout_results.size(); ++i) {
++    DCHECK_EQ(layout_results[i]->OutOfFlowInsetsForGetComputedStyle(),
++              layout_results[i - 1]->OutOfFlowInsetsForGetComputedStyle());
++  }
++#endif
++  return GetLayoutResults().front()->OutOfFlowInsetsForGetComputedStyle();
++}
++
+ }  // namespace blink
