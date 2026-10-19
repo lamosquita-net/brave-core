@@ -1,0 +1,17 @@
+diff --git a/third_party/blink/renderer/core/html/html_anchor_element.cc b/third_party/blink/renderer/core/html/html_anchor_element.cc
+index 78272bb63318e130e199dcec1a86ab9481078db7..2ab0a87bf3ee284623239698768201c007daa998 100644
+--- a/third_party/blink/renderer/core/html/html_anchor_element.cc
++++ b/third_party/blink/renderer/core/html/html_anchor_element.cc
+@@ -349,7 +349,11 @@ void HTMLAnchorElement::SetHref(const AtomicString& value) {
+ }
+ 
+ KURL HTMLAnchorElement::Url() const {
+-  return Href();
++  KURL href = Href();
++  if (!href.IsValid()) {
++    return KURL();
++  }
++  return href;
+ }
+ 
+ void HTMLAnchorElement::SetURL(const KURL& url) {
