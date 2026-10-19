@@ -1,0 +1,17 @@
+diff --git a/third_party/blink/renderer/core/paint/paint_property_tree_builder.h b/third_party/blink/renderer/core/paint/paint_property_tree_builder.h
+index 1884fd6a3165274adc89938ccedd6edc1263e97e..21e377a666e9a8789e632e9887e609976d834156 100644
+--- a/third_party/blink/renderer/core/paint/paint_property_tree_builder.h
++++ b/third_party/blink/renderer/core/paint/paint_property_tree_builder.h
+@@ -156,6 +156,12 @@ struct PaintPropertyTreeBuilderFragmentContext {
+   // be updated whenever |transform| is; flattening only needs to happen
+   // to immediate children.
+   bool should_flatten_inherited_transform = false;
++
++  // Whether newly created child Transform nodes can inherit
++  // backface-visibility from the parent. Some situations (e.g. having 3d
++  // transform operations) of the child can override this flag.
++  bool can_inherit_backface_visibility = false;
++
+   // Rendering context for 3D sorting. See
+   // TransformPaintPropertyNode::renderingContextId.
+   unsigned rendering_context_id = 0;

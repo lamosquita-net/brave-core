@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/paint/paint_property_tree_builder.cc b/third_party/blink/renderer/core/paint/paint_property_tree_builder.cc
-index 1ae35d66274ad329cc340ade0e14d24fcb56c28b..50ce5b3bfab08db51ecb19f8a180f98dfe455b75 100644
+index 1ae35d66274ad329cc340ade0e14d24fcb56c28b..964734edeb01ba4fcb9c2ef7d8011aef9f931cfa 100644
 --- a/third_party/blink/renderer/core/paint/paint_property_tree_builder.cc
 +++ b/third_party/blink/renderer/core/paint/paint_property_tree_builder.cc
 @@ -65,6 +65,7 @@
@@ -128,7 +128,32 @@ index 1ae35d66274ad329cc340ade0e14d24fcb56c28b..50ce5b3bfab08db51ecb19f8a180f98d
  
          // TODO(trchen): transform-style should only be respected if a
          // PaintLayer is created. If a node with transform-style: preserve-3d
-@@ -1267,11 +1275,11 @@ void FragmentPaintPropertyTreeBuilder::UpdateIndividualTransform(
+@@ -1224,6 +1232,24 @@ void FragmentPaintPropertyTreeBuilder::UpdateIndividualTransform(
+         if (object_.HasHiddenBackface()) {
+           state.backface_visibility =
+               TransformPaintPropertyNode::BackfaceVisibility::kHidden;
++        } else if (RuntimeEnabledFeatures::
++                       BackfaceVisibilityNewInheritanceEnabled()) {
++          if (!context_.can_inherit_backface_visibility ||
++              style.Has3DTransformOperation()) {
++            // We want to set backface-visibility back to visible, if the
++            // parent doesn't allow this element to inherit backface visibility
++            // (e.g. if the parent preserves 3d), or this element has a
++            // syntactically-3D transform in *any* of the transform properties
++            // (not just 'transform'). This means that backface-visibility on
++            // an ancestor element no longer affects this element.
++            state.backface_visibility =
++                TransformPaintPropertyNode::BackfaceVisibility::kVisible;
++          } else {
++            // Otherwise we want to inherit backface-visibility.
++            DCHECK_EQ(
++                state.backface_visibility,
++                TransformPaintPropertyNode::BackfaceVisibility::kInherited);
++          }
+         } else if (state.direct_compositing_reasons !=
+                    CompositingReason::kNone) {
+           // The above condition fixes a CompositeAfterPaint regression
+@@ -1267,11 +1293,11 @@ void FragmentPaintPropertyTreeBuilder::UpdateIndividualTransform(
  void FragmentPaintPropertyTreeBuilder::UpdateTranslate() {
    UpdateIndividualTransform(
        &NeedsTranslate,
@@ -142,7 +167,7 @@ index 1ae35d66274ad329cc340ade0e14d24fcb56c28b..50ce5b3bfab08db51ecb19f8a180f98d
        },
        CompositingReason::kDirectReasonsForTranslateProperty,
        CompositorElementIdNamespace::kTranslateTransform,
-@@ -1284,11 +1292,11 @@ void FragmentPaintPropertyTreeBuilder::UpdateTranslate() {
+@@ -1284,11 +1310,11 @@ void FragmentPaintPropertyTreeBuilder::UpdateTranslate() {
  void FragmentPaintPropertyTreeBuilder::UpdateRotate() {
    UpdateIndividualTransform(
        &NeedsRotate,
@@ -156,7 +181,7 @@ index 1ae35d66274ad329cc340ade0e14d24fcb56c28b..50ce5b3bfab08db51ecb19f8a180f98d
        },
        CompositingReason::kDirectReasonsForRotateProperty,
        CompositorElementIdNamespace::kRotateTransform,
-@@ -1300,11 +1308,11 @@ void FragmentPaintPropertyTreeBuilder::UpdateRotate() {
+@@ -1300,11 +1326,11 @@ void FragmentPaintPropertyTreeBuilder::UpdateRotate() {
  void FragmentPaintPropertyTreeBuilder::UpdateScale() {
    UpdateIndividualTransform(
        &NeedsScale,
@@ -170,7 +195,7 @@ index 1ae35d66274ad329cc340ade0e14d24fcb56c28b..50ce5b3bfab08db51ecb19f8a180f98d
        },
        CompositingReason::kDirectReasonsForScaleProperty,
        CompositorElementIdNamespace::kScaleTransform,
-@@ -1316,11 +1324,12 @@ void FragmentPaintPropertyTreeBuilder::UpdateScale() {
+@@ -1316,11 +1342,12 @@ void FragmentPaintPropertyTreeBuilder::UpdateScale() {
  void FragmentPaintPropertyTreeBuilder::UpdateOffset() {
    UpdateIndividualTransform(
        &NeedsOffset,
@@ -185,7 +210,7 @@ index 1ae35d66274ad329cc340ade0e14d24fcb56c28b..50ce5b3bfab08db51ecb19f8a180f98d
              ComputedStyle::kExcludeTransformOrigin,
              ComputedStyle::kIncludeMotionPath,
              ComputedStyle::kExcludeIndependentTransformProperties);
-@@ -1337,11 +1346,12 @@ void FragmentPaintPropertyTreeBuilder::UpdateOffset() {
+@@ -1337,11 +1364,12 @@ void FragmentPaintPropertyTreeBuilder::UpdateOffset() {
  void FragmentPaintPropertyTreeBuilder::UpdateTransform() {
    UpdateIndividualTransform(
        &NeedsTransform,
@@ -200,7 +225,34 @@ index 1ae35d66274ad329cc340ade0e14d24fcb56c28b..50ce5b3bfab08db51ecb19f8a180f98d
              ComputedStyle::kExcludeTransformOrigin,
              ComputedStyle::kExcludeMotionPath,
              ComputedStyle::kExcludeIndependentTransformProperties);
-@@ -3255,6 +3265,10 @@ void PaintPropertyTreeBuilder::UpdatePaintingLayer() {
+@@ -2586,7 +2614,12 @@ void FragmentPaintPropertyTreeBuilder::UpdateScrollAndScrollTranslation() {
+       // scrolling contents.
+       if (object_.HasTransform() && object_.StyleRef().BackfaceVisibility() ==
+                                         EBackfaceVisibility::kHidden) {
+-        state.flags.delegates_to_parent_for_backface = true;
++        if (RuntimeEnabledFeatures::BackfaceVisibilityNewInheritanceEnabled()) {
++          CHECK_EQ(state.backface_visibility,
++                   TransformPaintPropertyNode::BackfaceVisibility::kInherited);
++        } else {
++          state.flags.delegates_to_parent_for_backface = true;
++        }
+       }
+ 
+       auto effective_change_type = properties_->UpdateScrollTranslation(
+@@ -3048,6 +3081,12 @@ void FragmentPaintPropertyTreeBuilder::UpdateForChildren() {
+   }
+ #endif
+ 
++  // Child transform nodes should not inherit backface visibility if the parent
++  // transform node preserves 3d. This is before UpdatePerspective() because
++  // perspective itself doesn't affect backface visibility inheritance.
++  context_.can_inherit_backface_visibility =
++      context_.should_flatten_inherited_transform;
++
+   if (properties_) {
+     UpdateInnerBorderRadiusClip();
+     UpdateOverflowClip();
+@@ -3255,6 +3294,10 @@ void PaintPropertyTreeBuilder::UpdatePaintingLayer() {
    if (object_.HasLayer() &&
        To<LayoutBoxModelObject>(object_).HasSelfPaintingLayer()) {
      context_.painting_layer = To<LayoutBoxModelObject>(object_).Layer();
@@ -211,7 +263,7 @@ index 1ae35d66274ad329cc340ade0e14d24fcb56c28b..50ce5b3bfab08db51ecb19f8a180f98d
    } else if (!IsInNGFragmentTraversal() &&
               (object_.IsColumnSpanAll() ||
                object_.IsFloatingWithNonContainingBlockParent())) {
-@@ -3483,17 +3497,18 @@ void PaintPropertyTreeBuilder::DirectlyUpdateTransformMatrix(
+@@ -3483,17 +3526,18 @@ void PaintPropertyTreeBuilder::DirectlyUpdateTransformMatrix(
    DCHECK(CanDoDeferredTransformNodeUpdate(object));
  
    auto& box = To<LayoutBox>(object);

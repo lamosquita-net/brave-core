@@ -1,0 +1,26 @@
+diff --git a/cc/trees/draw_properties_unittest.cc b/cc/trees/draw_properties_unittest.cc
+index 9d3902302c3cb18a894f2156d94e23f02c19ad8e..22edeeb7480aeb7de1ba475d09dfbbc12973cc2d 100644
+--- a/cc/trees/draw_properties_unittest.cc
++++ b/cc/trees/draw_properties_unittest.cc
+@@ -3648,15 +3648,12 @@ TEST_F(BackfaceVisibilityInteropTest, BackfaceInvisibleTransform) {
+ 
+   UpdateActiveTreeDrawProperties();
+ 
+-  EXPECT_TRUE(draw_property_utils::IsLayerBackFaceVisible(
+-      back_facing, back_facing->transform_tree_index(),
+-      host_impl()->active_tree()->property_trees()));
+-  EXPECT_TRUE(draw_property_utils::IsLayerBackFaceVisible(
+-      back_facing, back_facing_double_sided->transform_tree_index(),
+-      host_impl()->active_tree()->property_trees()));
+-  EXPECT_FALSE(draw_property_utils::IsLayerBackFaceVisible(
+-      front_facing, front_facing->transform_tree_index(),
+-      host_impl()->active_tree()->property_trees()));
++  EXPECT_TRUE(draw_property_utils::IsLayerBackFaceVisibleForTesting(
++      back_facing, host_impl()->active_tree()->property_trees()));
++  EXPECT_TRUE(draw_property_utils::IsLayerBackFaceVisibleForTesting(
++      back_facing_double_sided, host_impl()->active_tree()->property_trees()));
++  EXPECT_FALSE(draw_property_utils::IsLayerBackFaceVisibleForTesting(
++      front_facing, host_impl()->active_tree()->property_trees()));
+ 
+   EXPECT_TRUE(back_facing->raster_even_if_not_drawn());
+   EXPECT_TRUE(
