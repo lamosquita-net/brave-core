@@ -1,0 +1,40 @@
+diff --git a/third_party/blink/renderer/core/html/html_base_element.cc b/third_party/blink/renderer/core/html/html_base_element.cc
+index 3a49acbe6566d7eab02aa819c2b66250324aa9f2..14e1e20567459f2e0fab63316d05c9a1d7920939 100644
+--- a/third_party/blink/renderer/core/html/html_base_element.cc
++++ b/third_party/blink/renderer/core/html/html_base_element.cc
+@@ -61,7 +61,7 @@ bool HTMLBaseElement::IsURLAttribute(const Attribute& attribute) const {
+          HTMLElement::IsURLAttribute(attribute);
+ }
+ 
+-KURL HTMLBaseElement::href() const {
++String HTMLBaseElement::href() const {
+   // This does not use the GetURLAttribute function because that will resolve
+   // relative to the document's base URL; base elements like this one can be
+   // used to set that base URL. Thus we need to resolve relative to the
+@@ -72,15 +72,18 @@ KURL HTMLBaseElement::href() const {
+   if (attribute_value.IsNull())
+     return GetDocument().Url();
+ 
+-  KURL url = GetDocument().Encoding().IsValid()
+-                 ? KURL(GetDocument().FallbackBaseURL(),
+-                        StripLeadingAndTrailingHTMLSpaces(attribute_value))
+-                 : KURL(GetDocument().FallbackBaseURL(),
+-                        StripLeadingAndTrailingHTMLSpaces(attribute_value),
+-                        GetDocument().Encoding());
++  auto stripped_attribute_value =
++      StripLeadingAndTrailingHTMLSpaces(attribute_value);
+ 
+-  if (!url.IsValid())
+-    return KURL();
++  KURL url =
++      GetDocument().Encoding().IsValid()
++          ? KURL(GetDocument().FallbackBaseURL(), stripped_attribute_value)
++          : KURL(GetDocument().FallbackBaseURL(), stripped_attribute_value,
++                 GetDocument().Encoding());
++
++  if (!url.IsValid()) {
++    return stripped_attribute_value;
++  }
+ 
+   return url;
+ }
