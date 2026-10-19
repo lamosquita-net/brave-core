@@ -1,0 +1,26 @@
+diff --git a/third_party/blink/renderer/core/xml/xpath_functions.cc b/third_party/blink/renderer/core/xml/xpath_functions.cc
+index 4ae6ec3626395b6e3711a78d2785f1a258857eab..5f3366c63f798d44e90a972e062ea51121d85283 100644
+--- a/third_party/blink/renderer/core/xml/xpath_functions.cc
++++ b/third_party/blink/renderer/core/xml/xpath_functions.cc
+@@ -641,18 +641,9 @@ Value FunLang::Evaluate(EvaluationContext& context) const {
+     return false;
+ 
+   String lang_value = language_attribute->Value();
+-  while (true) {
+-    if (DeprecatedEqualIgnoringCase(lang_value, lang))
+-      return true;
+-
+-    // Remove suffixes one by one.
+-    wtf_size_t index = lang_value.ReverseFind('-');
+-    if (index == kNotFound)
+-      break;
+-    lang_value = lang_value.Left(index);
+-  }
+-
+-  return false;
++  return lang_value.StartsWithIgnoringASCIICase(lang) &&
++         (lang.length() == lang_value.length() ||
++          lang_value[lang.length()] == '-');
+ }
+ 
+ Value FunFalse::Evaluate(EvaluationContext&) const {
