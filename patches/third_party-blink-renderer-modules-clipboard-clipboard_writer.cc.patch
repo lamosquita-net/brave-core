@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/modules/clipboard/clipboard_writer.cc b/third_party/blink/renderer/modules/clipboard/clipboard_writer.cc
-index 1e5c40daddb27096bf8c33ea99a4df4dcd0520ad..3d5b1a2a7ec9cc03f1b2c199149d9f56fd546f46 100644
+index 1e5c40daddb27096bf8c33ea99a4df4dcd0520ad..607edd09b9869398dc20fa049cda27e3f4062334 100644
 --- a/third_party/blink/renderer/modules/clipboard/clipboard_writer.cc
 +++ b/third_party/blink/renderer/modules/clipboard/clipboard_writer.cc
 @@ -7,6 +7,7 @@
@@ -57,3 +57,33 @@ index 1e5c40daddb27096bf8c33ea99a4df4dcd0520ad..3d5b1a2a7ec9cc03f1b2c199149d9f56
    }
  
    void Write(const String& serialized_html, const KURL& url) {
+@@ -209,21 +204,18 @@ class ClipboardSvgWriter final : public ClipboardWriter {
+         String::FromUTF8(reinterpret_cast<const LChar*>(svg_data->Data()),
+                          svg_data->ByteLength());
+ 
+-    // Sanitizing on the main thread because SVG/XML DOM nodes can only be used
+-    // on the main thread.
+-    KURL url;
+-    unsigned fragment_start = 0;
+-    unsigned fragment_end = svg_string.length();
+-
+     LocalFrame* local_frame = promise_->GetLocalFrame();
+     if (!local_frame) {
+       return;
+     }
+-    Document* document = local_frame->GetDocument();
+-    String sanitized_svg = CreateSanitizedMarkupWithContext(
+-        *document, svg_string, fragment_start, fragment_end, url, kIncludeNode,
+-        kResolveAllURLs);
+-    Write(sanitized_svg);
++
++    // FlyWeb: well-formed SVG write from Chrome 124 (a6e5e4692f1): the SVG is
++    // parsed as XML and serialized back; reading it still sanitizes it.
++    DOMParser* dom_parser = DOMParser::Create(promise_->GetScriptState());
++    ParseFromStringOptions* options = ParseFromStringOptions::Create();
++    const Document* doc =
++        dom_parser->parseFromString(svg_string, "image/svg+xml", options);
++    Write(CreateMarkup(doc, kIncludeNode, kResolveAllURLs));
+   }
+ 
+   void Write(const String& svg_html) {
