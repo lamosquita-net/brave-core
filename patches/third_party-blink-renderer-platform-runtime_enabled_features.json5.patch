@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/runtime_enabled_features.json5 b/third_party/blink/renderer/platform/runtime_enabled_features.json5
-index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..93b51b4b99bd6f8f8753501f1ca4978ff3a445f0 100644
+index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..2e27184258910e4b2a70caca46724f15a71002b6 100644
 --- a/third_party/blink/renderer/platform/runtime_enabled_features.json5
 +++ b/third_party/blink/renderer/platform/runtime_enabled_features.json5
 @@ -276,8 +276,10 @@
@@ -890,12 +890,12 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..93b51b4b99bd6f8f8753501f1ca4978f
      {
 -      name: "MutationEvents",
 +      name: "MoveToParagraphStartOrEndSkipsNonEditable",
-       status: "stable",
-     },
-+    {
-+      name: "MultiSmoothScrollIntoView",
 +      status: "stable",
 +    },
++    {
++      name: "MultiSmoothScrollIntoView",
+       status: "stable",
+     },
 +    {
 +      name: "MutationEvents",
 +      // FlyWeb: off, as Chrome 127+ (field trial) and Chromium 130 in code
@@ -956,7 +956,18 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..93b51b4b99bd6f8f8753501f1ca4978f
      {
        name: "Portals",
        // Portals must be enabled by blink::features::kPortals as we require the
-@@ -2809,7 +3209,8 @@
+@@ -2786,6 +3186,10 @@
+       public: true,
+       copied_from_base_feature_if: "overridden",
+     },
++    {
++      name: "PositionOutsideTabSpanCheckSiblingNode",
++      status: "stable",
++    },
+     {
+       name: "PreciseMemoryInfo",
+       base_feature: "none",
+@@ -2809,7 +3213,8 @@
      // See https://crbug.com/346236 for current status.
      {
        name: "PrefixedVideoFullscreen",
@@ -966,7 +977,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..93b51b4b99bd6f8f8753501f1ca4978f
        base_feature: "none",
      },
      {
-@@ -2831,6 +3232,10 @@
+@@ -2831,6 +3236,10 @@
      },
      // The RTE feature encompasses multiple APIs, including: Attribution
      // Reporting, FLEDGE, Topics and Fenced Frames.
@@ -977,7 +988,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..93b51b4b99bd6f8f8753501f1ca4978f
      {
        name: "PrivacySandboxAdsAPIs",
        base_feature: "none",
-@@ -2867,6 +3272,10 @@
+@@ -2867,6 +3276,10 @@
        status: "test",
        base_feature: "none",
      },
@@ -988,7 +999,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..93b51b4b99bd6f8f8753501f1ca4978f
      {
        name: "PushMessaging",
        public: true,
-@@ -2888,6 +3297,10 @@
+@@ -2888,6 +3301,10 @@
        status: "experimental",
        base_feature: "none",
      },
@@ -999,7 +1010,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..93b51b4b99bd6f8f8753501f1ca4978f
      {
        name: "ReadableStreamTeeCloneForBranch2",
        status: "stable",
-@@ -2938,6 +3351,10 @@
+@@ -2938,6 +3355,10 @@
        status: {"Android": "stable", "default": ""},
        base_feature: "none",
      },
@@ -1010,7 +1021,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..93b51b4b99bd6f8f8753501f1ca4978f
      {
        // crbug.com/1432839
        name: "RemoveConvertToLayerCoords",
-@@ -2945,12 +3362,12 @@
+@@ -2945,12 +3366,12 @@
      },
      {
        name: "RemoveDanglingMarkupInTarget",
@@ -1025,7 +1036,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..93b51b4b99bd6f8f8753501f1ca4978f
      },
      {
        name: "RemoveLegacySizeComputation",
-@@ -2988,6 +3405,10 @@
+@@ -2988,6 +3409,10 @@
        name: "RenderPriorityAttribute",
        base_feature: "none",
      },
@@ -1036,7 +1047,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..93b51b4b99bd6f8f8753501f1ca4978f
      {
        name: "ResourceHintsLeastRestrictiveCSP",
        status: "stable",
-@@ -3019,6 +3440,10 @@
+@@ -3019,6 +3444,10 @@
        status: "experimental",
        base_feature: "none",
      },
@@ -1047,7 +1058,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..93b51b4b99bd6f8f8753501f1ca4978f
      {
        name: "RtcAudioJitterBufferMaxPackets",
        origin_trial_feature_name: "RtcAudioJitterBufferMaxPackets",
-@@ -3044,6 +3469,10 @@
+@@ -3044,6 +3473,10 @@
      // Legacy callback-based getStats() has limited availability unless this
      // Deprecation Trial is enabled.
      // TODO(https://crbug.com/822696): Remove when origin trial ends.
@@ -1058,7 +1069,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..93b51b4b99bd6f8f8753501f1ca4978f
      {
        name: "RTCLegacyCallbackBasedGetStats",
        origin_trial_feature_name: "RTCLegacyCallbackBasedGetStats",
-@@ -3070,6 +3499,27 @@
+@@ -3070,6 +3503,27 @@
        name: "RTCSvcScalabilityMode",
        status: "stable",
      },
@@ -1086,7 +1097,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..93b51b4b99bd6f8f8753501f1ca4978f
      {
        name: "SanitizerAPI",
        status: "experimental",
-@@ -3109,18 +3559,23 @@
+@@ -3109,18 +3563,23 @@
        status: "stable",
        base_feature: "none",
      },
@@ -1113,7 +1124,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..93b51b4b99bd6f8f8753501f1ca4978f
      },
      {
        name: "ScrollCustomization",
-@@ -3182,6 +3637,14 @@
+@@ -3182,6 +3641,14 @@
        status: "stable",
        base_feature: "none",
      },
@@ -1128,7 +1139,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..93b51b4b99bd6f8f8753501f1ca4978f
      {
        name: "SendBeaconThrowForBlobWithNonSimpleType",
        public: true,
-@@ -3231,6 +3694,10 @@
+@@ -3231,6 +3698,10 @@
        origin_trial_feature_name: "ServiceWorkerStaticRouter",
        public: true,
      },
@@ -1139,7 +1150,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..93b51b4b99bd6f8f8753501f1ca4978f
      {
        name: "SharedArrayBuffer",
        base_feature: "none",
-@@ -3266,6 +3733,13 @@
+@@ -3266,6 +3737,13 @@
        status: {"Android": "", "default": "stable"},
        base_feature: "none",
      },
@@ -1153,7 +1164,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..93b51b4b99bd6f8f8753501f1ca4978f
      {
        name: "SignatureBasedIntegrity",
        origin_trial_feature_name: "SignatureBasedIntegrity",
-@@ -3440,6 +3914,10 @@
+@@ -3440,6 +3918,10 @@
        name: "StreamingDeclarativeShadowDOM",
        status: "stable",
      },
@@ -1164,7 +1175,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..93b51b4b99bd6f8f8753501f1ca4978f
      {
        name: "StrictMimeTypesForWorkers",
        status: "experimental",
-@@ -3449,10 +3927,31 @@
+@@ -3449,10 +3931,31 @@
        name: "StylusHandwriting",
        base_feature: "none",
      },
@@ -1196,7 +1207,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..93b51b4b99bd6f8f8753501f1ca4978f
      {
        name: "SvgRasterOptimizations",
        status: "experimental",
-@@ -3467,6 +3966,13 @@
+@@ -3467,6 +3970,13 @@
        status: "experimental",
        base_feature: "none",
      },
@@ -1210,7 +1221,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..93b51b4b99bd6f8f8753501f1ca4978f
      // For unit tests.
      {
        name: "TestFeature",
-@@ -3496,6 +4002,10 @@
+@@ -3496,6 +4006,10 @@
        status: "experimental",
        base_feature: "none",
      },
@@ -1221,7 +1232,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..93b51b4b99bd6f8f8753501f1ca4978f
      {
        name: "TextFragmentAPI",
        status: "experimental",
-@@ -3513,6 +4023,10 @@
+@@ -3513,6 +4027,10 @@
        status: {"Android": "stable"},
        base_feature: "none",
      },
@@ -1232,7 +1243,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..93b51b4b99bd6f8f8753501f1ca4978f
      {
        name: "ThirdPartyCookiesUserBypass",
        status: "experimental",
-@@ -3595,6 +4109,10 @@
+@@ -3595,6 +4113,10 @@
        base_feature: "none",
      },
      // This is conditionally set if the platform supports translation.
@@ -1243,7 +1254,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..93b51b4b99bd6f8f8753501f1ca4978f
      {
        name: "TranslateService",
        base_feature: "none",
-@@ -3638,11 +4156,28 @@
+@@ -3638,11 +4160,28 @@
        origin_trial_feature_name: "UnrestrictedSharedArrayBuffer",
        origin_trial_os: ["win", "mac", "linux", "fuchsia", "chromeos"],
      },
@@ -1272,7 +1283,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..93b51b4b99bd6f8f8753501f1ca4978f
      {
        // Makes the global root scrollbars follow the preferred color scheme
        // by default. Please see more details: crbug.com/1423087.
-@@ -3657,11 +4192,29 @@
+@@ -3657,11 +4196,29 @@
        name: "UserAgentClientHint",
        status: "stable",
      },
@@ -1302,7 +1313,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..93b51b4b99bd6f8f8753501f1ca4978f
      {
        // Whether a video element should automatically play fullscreen unless
        // 'playsinline' is set.
-@@ -3723,6 +4276,10 @@
+@@ -3723,6 +4280,10 @@
        // See https://drafts.csswg.org/css-view-transitions-1/.
        name: "ViewTransitionOnNavigation",
      },
@@ -1313,7 +1324,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..93b51b4b99bd6f8f8753501f1ca4978f
      {
        name: "VisibilityCollapseColumn",
        base_feature: "none",
-@@ -3732,6 +4289,10 @@
+@@ -3732,6 +4293,10 @@
        status: "stable",
        base_feature: "none",
      },
@@ -1324,7 +1335,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..93b51b4b99bd6f8f8753501f1ca4978f
      {
        // The "WakeLock" feature was originally implied_by "ScreenWakeLock" and
        // "SystemWakeLock". The former was removed after being promoted to
-@@ -3854,7 +4415,7 @@
+@@ -3854,7 +4419,7 @@
      // https://w3c.github.io/webauthn/#sctn-parseRequestOptionsFromJSON
      {
        name: "WebAuthenticationJSONSerialization",
@@ -1333,7 +1344,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..93b51b4b99bd6f8f8753501f1ca4978f
      },
      {
        name: "WebAuthenticationLargeBlobExtension",
-@@ -3960,6 +4521,11 @@
+@@ -3960,6 +4525,11 @@
        // process access to WebGPU to the renderer process.
        status: "stable",
      },
@@ -1345,7 +1356,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..93b51b4b99bd6f8f8753501f1ca4978f
      {
        // WebGPU developer features are deliberately not enabled by experimental
        // web platform features.
-@@ -4031,6 +4597,10 @@
+@@ -4031,6 +4601,10 @@
        status: "test",
        base_feature: "none",
      },
@@ -1356,7 +1367,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..93b51b4b99bd6f8f8753501f1ca4978f
      {
        name: "WebSocketStream",
        status: "experimental",
-@@ -4167,6 +4737,12 @@
+@@ -4167,6 +4741,12 @@
        name: "WindowPlacementFullscreenOnScreensChange",
        status: "experimental",
      },

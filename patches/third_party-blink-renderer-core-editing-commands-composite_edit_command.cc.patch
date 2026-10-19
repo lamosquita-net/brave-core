@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/editing/commands/composite_edit_command.cc b/third_party/blink/renderer/core/editing/commands/composite_edit_command.cc
-index 0dd9b284b6b2f9e9c3b9364d23e76cc631603096..77f490754a2af2df9eec207da0db5addf00285c1 100644
+index 0dd9b284b6b2f9e9c3b9364d23e76cc631603096..b5073423cceda0cf236c5eeee87e372910452ae6 100644
 --- a/third_party/blink/renderer/core/editing/commands/composite_edit_command.cc
 +++ b/third_party/blink/renderer/core/editing/commands/composite_edit_command.cc
 @@ -125,6 +125,7 @@ bool CompositeEditCommand::Apply() {
@@ -10,3 +10,44 @@ index 0dd9b284b6b2f9e9c3b9364d23e76cc631603096..77f490754a2af2df9eec207da0db5add
        case InputEvent::InputType::kDeleteWordBackward:
        case InputEvent::InputType::kDeleteWordForward:
        case InputEvent::InputType::kDeleteSoftLineBackward:
+@@ -602,8 +603,10 @@ Position CompositeEditCommand::ReplaceSelectedTextInNode(const String& text) {
+ }
+ 
+ Position CompositeEditCommand::PositionOutsideTabSpan(const Position& pos) {
+-  if (!IsTabHTMLSpanElementTextNode(pos.AnchorNode()))
++  Node* anchor_node = pos.AnchorNode();
++  if (!IsTabHTMLSpanElementTextNode(anchor_node)) {
+     return pos;
++  }
+ 
+   switch (pos.AnchorType()) {
+     case PositionAnchorType::kAfterChildren:
+@@ -612,9 +615,9 @@ Position CompositeEditCommand::PositionOutsideTabSpan(const Position& pos) {
+     case PositionAnchorType::kOffsetInAnchor:
+       break;
+     case PositionAnchorType::kBeforeAnchor:
+-      return Position::InParentBeforeNode(*pos.AnchorNode());
++      return Position::InParentBeforeNode(*anchor_node);
+     case PositionAnchorType::kAfterAnchor:
+-      return Position::InParentAfterNode(*pos.AnchorNode());
++      return Position::InParentAfterNode(*anchor_node);
+   }
+ 
+   HTMLSpanElement* tab_span = TabSpanElement(pos.ComputeContainerNode());
+@@ -627,8 +630,14 @@ Position CompositeEditCommand::PositionOutsideTabSpan(const Position& pos) {
+   if (pos.OffsetInContainerNode() <= CaretMinOffset(pos.ComputeContainerNode()))
+     return Position::InParentBeforeNode(*tab_span);
+ 
+-  if (pos.OffsetInContainerNode() >= CaretMaxOffset(pos.ComputeContainerNode()))
+-    return Position::InParentAfterNode(*tab_span);
++  if (pos.OffsetInContainerNode() >=
++      CaretMaxOffset(pos.ComputeContainerNode())) {
++    return anchor_node->HasNextSibling() &&
++                   RuntimeEnabledFeatures::
++                       PositionOutsideTabSpanCheckSiblingNodeEnabled()
++               ? Position::InParentAfterNode(*anchor_node)
++               : Position::InParentAfterNode(*tab_span);
++  }
+ 
+   SplitTextNodeContainingElement(To<Text>(pos.ComputeContainerNode()),
+                                  pos.OffsetInContainerNode());
