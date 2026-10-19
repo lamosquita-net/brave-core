@@ -1,5 +1,5 @@
 diff --git a/cc/paint/filter_operation.cc b/cc/paint/filter_operation.cc
-index 1fe59c87fae01174d672e6af46b75f3808a0f747..f7ef704e5fc9f83e7af9546808a7b1c1a7129ca3 100644
+index 1fe59c87fae01174d672e6af46b75f3808a0f747..6fa14ba0f44dd61a5c6b436ef0bca573617ea8cc 100644
 --- a/cc/paint/filter_operation.cc
 +++ b/cc/paint/filter_operation.cc
 @@ -2,15 +2,16 @@
@@ -96,7 +96,7 @@ index 1fe59c87fae01174d672e6af46b75f3808a0f747..f7ef704e5fc9f83e7af9546808a7b1c1
  gfx::Rect FilterOperation::MapRect(const gfx::Rect& rect,
 -                                   const SkMatrix& matrix) const {
 -  return MapRectInternal(*this, rect, matrix,
-+                                   const std::optional<SkMatrix>& ctm) const {
++                                   const absl::optional<SkMatrix>& ctm) const {
 +  return MapRectInternal(*this, rect, base::OptionalToPtr(ctm),
                           SkImageFilter::kForward_MapDirection);
  }
