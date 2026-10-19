@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/modules/clipboard/clipboard_item.cc b/third_party/blink/renderer/modules/clipboard/clipboard_item.cc
-index 723ad56e3e307de90209dedef6642ca9ca11a1ea..9cd3c8f3d7dae19d096e88d78e50a333d5201400 100644
+index 723ad56e3e307de90209dedef6642ca9ca11a1ea..0b95943c5197c11853bd6cc9bef5ec1387afba71 100644
 --- a/third_party/blink/renderer/modules/clipboard/clipboard_item.cc
 +++ b/third_party/blink/renderer/modules/clipboard/clipboard_item.cc
 @@ -7,6 +7,7 @@
@@ -10,7 +10,15 @@ index 723ad56e3e307de90209dedef6642ca9ca11a1ea..9cd3c8f3d7dae19d096e88d78e50a333
  #include "third_party/blink/renderer/core/dom/dom_exception.h"
  #include "third_party/blink/renderer/modules/clipboard/clipboard.h"
  #include "third_party/blink/renderer/platform/bindings/script_state.h"
-@@ -84,6 +85,15 @@ ScriptPromise ClipboardItem::getType(ScriptState* script_state,
+@@ -32,7 +33,6 @@ ClipboardItem* ClipboardItem::Create(
+ 
+ ClipboardItem::ClipboardItem(
+     const HeapVector<std::pair<String, ScriptPromise>>& items) {
+-  DCHECK(items.size());
+   for (const auto& item : items) {
+     String web_custom_format = Clipboard::ParseWebCustomFormat(item.first);
+     if (!web_custom_format.empty()) {
+@@ -84,6 +84,15 @@ ScriptPromise ClipboardItem::getType(ScriptState* script_state,
    return ScriptPromise();
  }
  

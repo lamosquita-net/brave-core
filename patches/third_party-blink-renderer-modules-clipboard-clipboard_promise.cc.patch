@@ -1,0 +1,17 @@
+diff --git a/third_party/blink/renderer/modules/clipboard/clipboard_promise.cc b/third_party/blink/renderer/modules/clipboard/clipboard_promise.cc
+index c49189a2210d69165f9cafcdbd1532a9e707781c..3647c74d56e21ce4298de63f9c9af2b409a64d97 100644
+--- a/third_party/blink/renderer/modules/clipboard/clipboard_promise.cc
++++ b/third_party/blink/renderer/modules/clipboard/clipboard_promise.cc
+@@ -362,12 +362,6 @@ void ClipboardPromise::ResolveRead() {
+   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+   DCHECK(GetExecutionContext());
+ 
+-  if (!clipboard_item_data_.size()) {
+-    script_promise_resolver_->Reject(MakeGarbageCollected<DOMException>(
+-        DOMExceptionCode::kDataError, "No valid data on clipboard."));
+-    return;
+-  }
+-
+   ScriptState::Scope scope(script_state_);
+   HeapVector<std::pair<String, ScriptPromise>> items;
+   items.ReserveInitialCapacity(clipboard_item_data_.size());
