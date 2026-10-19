@@ -1,0 +1,59 @@
+diff --git a/third_party/blink/renderer/modules/clipboard/clipboard_writer.cc b/third_party/blink/renderer/modules/clipboard/clipboard_writer.cc
+index 1e5c40daddb27096bf8c33ea99a4df4dcd0520ad..3d5b1a2a7ec9cc03f1b2c199149d9f56fd546f46 100644
+--- a/third_party/blink/renderer/modules/clipboard/clipboard_writer.cc
++++ b/third_party/blink/renderer/modules/clipboard/clipboard_writer.cc
+@@ -7,6 +7,7 @@
+ #include "base/task/single_thread_task_runner.h"
+ #include "third_party/blink/public/common/features.h"
+ #include "third_party/blink/public/mojom/clipboard/clipboard.mojom-blink.h"
++#include "third_party/blink/renderer/bindings/core/v8/v8_parse_from_string_options.h"
+ #include "third_party/blink/renderer/core/clipboard/clipboard_mime_types.h"
+ #include "third_party/blink/renderer/core/clipboard/system_clipboard.h"
+ #include "third_party/blink/renderer/core/dom/document_fragment.h"
+@@ -17,6 +18,7 @@
+ #include "third_party/blink/renderer/core/frame/web_feature.h"
+ #include "third_party/blink/renderer/core/imagebitmap/image_bitmap.h"
+ #include "third_party/blink/renderer/core/typed_arrays/array_buffer/array_buffer_contents.h"
++#include "third_party/blink/renderer/core/xml/dom_parser.h"
+ #include "third_party/blink/renderer/modules/clipboard/clipboard.h"
+ #include "third_party/blink/renderer/platform/heap/cross_thread_handle.h"
+ #include "third_party/blink/renderer/platform/image-decoders/image_decoder.h"
+@@ -161,27 +163,20 @@ class ClipboardHtmlWriter final : public ClipboardWriter {
+     if (!local_frame || !execution_context) {
+       return;
+     }
+-    execution_context->CountUse(
+-        RuntimeEnabledFeatures::ClipboardUnsanitizedContentEnabled()
+-            ? WebFeature::kHtmlClipboardApiUnsanitizedWrite
+-            : WebFeature::kHtmlClipboardApiWrite);
+-
+     String html_string =
+         String::FromUTF8(reinterpret_cast<const LChar*>(html_data->Data()),
+                          html_data->ByteLength());
+-    KURL url;
+-    if (RuntimeEnabledFeatures::ClipboardUnsanitizedContentEnabled()) {
+-      Write(html_string, url);
+-      return;
+-    }
+-    // Sanitizing on the main thread because HTML DOM nodes can only be used on
+-    // the main thread.
+-    Document* document = local_frame->GetDocument();
+-    String sanitized_html = CreateSanitizedMarkupWithContext(
+-        *document, html_string, /*fragment_start=*/0,
+-        /*fragment_end=*/html_string.length(), url, kIncludeNode,
+-        kResolveAllURLs);
+-    Write(sanitized_html, url);
++    // FlyWeb: well-formed HTML write from Chrome 122 (fe01bb93447, flag removed
++    // in 4e8ac4a29f0): the HTML is parsed into a document and serialized back,
++    // with absolute URLs; pasting still sanitizes it.
++    const KURL& url = local_frame->GetDocument()->Url();
++    DOMParser* dom_parser = DOMParser::Create(promise_->GetScriptState());
++    ParseFromStringOptions* options = ParseFromStringOptions::Create();
++    const Document* doc =
++        dom_parser->parseFromString(html_string, "text/html", options);
++    DCHECK(doc);
++    String serialized_html = CreateMarkup(doc, kIncludeNode, kResolveAllURLs);
++    Write(serialized_html, url);
+   }
+ 
+   void Write(const String& serialized_html, const KURL& url) {
