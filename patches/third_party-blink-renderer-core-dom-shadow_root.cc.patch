@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/shadow_root.cc b/third_party/blink/renderer/core/dom/shadow_root.cc
-index b195e78714b4cdefc1ef8706ff7885ae49556634..83cb690407a43c6cd7ffcf008427bcd32395e62c 100644
+index b195e78714b4cdefc1ef8706ff7885ae49556634..72cb2fa6273906caeaadb54e4ebd0b5be67e53ab 100644
 --- a/third_party/blink/renderer/core/dom/shadow_root.cc
 +++ b/third_party/blink/renderer/core/dom/shadow_root.cc
 @@ -27,6 +27,7 @@
@@ -10,7 +10,15 @@ index b195e78714b4cdefc1ef8706ff7885ae49556634..83cb690407a43c6cd7ffcf008427bcd3
  #include "third_party/blink/renderer/bindings/core/v8/v8_get_inner_html_options.h"
  #include "third_party/blink/renderer/bindings/core/v8/v8_observable_array_css_style_sheet.h"
  #include "third_party/blink/renderer/core/css/resolver/style_resolver.h"
-@@ -73,6 +74,8 @@ ShadowRoot::ShadowRoot(Document& document, ShadowRootType type)
+@@ -41,6 +42,7 @@
+ #include "third_party/blink/renderer/core/dom/whitespace_attacher.h"
+ #include "third_party/blink/renderer/core/editing/serializers/serialization.h"
+ #include "third_party/blink/renderer/core/html/custom/custom_element_registry.h"
++#include "third_party/blink/renderer/core/html/forms/text_control_element.h"
+ #include "third_party/blink/renderer/core/html/html_slot_element.h"
+ #include "third_party/blink/renderer/core/trustedtypes/trusted_types_util.h"
+ #include "third_party/blink/renderer/platform/bindings/exception_state.h"
+@@ -73,6 +75,8 @@ ShadowRoot::ShadowRoot(Document& document, ShadowRootType type)
        slot_assignment_mode_(static_cast<unsigned>(SlotAssignmentMode::kNamed)),
        needs_dir_auto_attribute_update_(false),
        has_focusgroup_attribute_on_descendant_(false),
@@ -19,7 +27,7 @@ index b195e78714b4cdefc1ef8706ff7885ae49556634..83cb690407a43c6cd7ffcf008427bcd3
        unused_(0) {}
  
  ShadowRoot::~ShadowRoot() = default;
-@@ -147,10 +150,24 @@ String ShadowRoot::getInnerHTML(const GetInnerHTMLOptions* options) const {
+@@ -147,10 +151,24 @@ String ShadowRoot::getInnerHTML(const GetInnerHTMLOptions* options) const {
        include_closed_roots);
  }
  
@@ -45,7 +53,7 @@ index b195e78714b4cdefc1ef8706ff7885ae49556634..83cb690407a43c6cd7ffcf008427bcd3
            /*include_shadow_roots=*/false, exception_state)) {
      ReplaceChildrenWithFragment(this, fragment, exception_state);
      if (auto* element = DynamicTo<HTMLElement>(host()))
-@@ -158,6 +175,18 @@ void ShadowRoot::setInnerHTML(const String& html,
+@@ -158,6 +176,18 @@ void ShadowRoot::setInnerHTML(const String& html,
    }
  }
  
@@ -64,7 +72,7 @@ index b195e78714b4cdefc1ef8706ff7885ae49556634..83cb690407a43c6cd7ffcf008427bcd3
  void ShadowRoot::RebuildLayoutTree(WhitespaceAttacher& whitespace_attacher) {
    DCHECK(!NeedsReattachLayoutTree());
    DCHECK(!ChildNeedsReattachLayoutTree());
-@@ -244,6 +273,16 @@ void ShadowRoot::ChildrenChanged(const ChildrenChange& change) {
+@@ -244,6 +274,16 @@ void ShadowRoot::ChildrenChanged(const ChildrenChange& change) {
          To<Element>(change.sibling_changed), change.sibling_before_change,
          change.sibling_after_change);
    }
