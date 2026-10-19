@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/style_property_serializer.cc b/third_party/blink/renderer/core/css/style_property_serializer.cc
-index f32faf3a9bbfdeda831980efd36919c571227e0f..e025ff82b611ff544bbd83df5e5a8b24e3f71e42 100644
+index f32faf3a9bbfdeda831980efd36919c571227e0f..c1a510ebe73b2c265e85c90381da87e389e22b7c 100644
 --- a/third_party/blink/renderer/core/css/style_property_serializer.cc
 +++ b/third_party/blink/renderer/core/css/style_property_serializer.cc
 @@ -67,9 +67,14 @@ inline WhiteSpaceCollapse ToWhiteSpaceCollapse(const CSSValue* value) {
@@ -65,7 +65,103 @@ index f32faf3a9bbfdeda831980efd36919c571227e0f..e025ff82b611ff544bbd83df5e5a8b24
      case CSSPropertyID::kGridColumnGap:
      case CSSPropertyID::kGridGap:
      case CSSPropertyID::kGridRowGap:
-@@ -1506,6 +1515,48 @@ String StylePropertySerializer::Get4Values(
+@@ -837,14 +846,28 @@ String StylePropertySerializer::ContainerValue() const {
+ 
+ namespace {
+ 
++bool IsIdentifier(const CSSValue& value, CSSValueID ident) {
++  const auto* ident_value = DynamicTo<CSSIdentifierValue>(value);
++  return ident_value && ident_value->GetValueID() == ident;
++}
++
++bool IsIdentifierPair(const CSSValue& value, CSSValueID ident) {
++  const auto* pair_value = DynamicTo<CSSValuePair>(value);
++  return pair_value && IsIdentifier(pair_value->First(), ident) &&
++         IsIdentifier(pair_value->Second(), ident);
++}
++
+ CSSValue* TimelineValueItem(wtf_size_t index,
+                             const CSSValueList& name_list,
+-                            const CSSValueList& axis_list) {
++                            const CSSValueList& axis_list,
++                            const CSSValueList* inset_list) {
+   DCHECK_LT(index, name_list.length());
+   DCHECK_LT(index, axis_list.length());
++  DCHECK(!inset_list || index < inset_list->length());
+ 
+   const CSSValue& name = name_list.Item(index);
+   const CSSValue& axis = axis_list.Item(index);
++  const CSSValue* inset = inset_list ? &inset_list->Item(index) : nullptr;
+ 
+   CSSValueList* list = CSSValueList::CreateSpaceSeparated();
+ 
+@@ -853,10 +876,12 @@ CSSValue* TimelineValueItem(wtf_size_t index,
+   // (It would set view-timeline-name to inline).
+   list->Append(name);
+ 
+-  if (const auto* ident_value = DynamicTo<CSSIdentifierValue>(axis);
+-      !ident_value || ident_value->GetValueID() != CSSValueID::kBlock) {
++  if (!IsIdentifier(axis, CSSValueID::kBlock)) {
+     list->Append(axis);
+   }
++  if (inset && !IsIdentifierPair(*inset, CSSValueID::kAuto)) {
++    list->Append(*inset);
++  }
+ 
+   return list;
+ }
+@@ -865,12 +890,18 @@ CSSValue* TimelineValueItem(wtf_size_t index,
+ 
+ String StylePropertySerializer::TimelineValue(
+     const StylePropertyShorthand& shorthand) const {
+-  CHECK_EQ(shorthand.length(), 2u);
++  CHECK_GE(shorthand.length(), 2u);
++  CHECK_LE(shorthand.length(), 3u);
+ 
+   const CSSValueList& name_list = To<CSSValueList>(
+       *property_set_.GetPropertyCSSValue(*shorthand.properties()[0]));
+   const CSSValueList& axis_list = To<CSSValueList>(
+       *property_set_.GetPropertyCSSValue(*shorthand.properties()[1]));
++  const CSSValueList* inset_list =
++      shorthand.length() == 3u
++          ? To<CSSValueList>(
++                property_set_.GetPropertyCSSValue(*shorthand.properties()[2]))
++          : nullptr;
+ 
+   // The scroll/view-timeline shorthand can not expand to longhands of two
+   // different lengths, so we can also not contract two different-longhands
+@@ -878,11 +909,14 @@ String StylePropertySerializer::TimelineValue(
+   if (name_list.length() != axis_list.length()) {
+     return "";
+   }
++  if (inset_list && name_list.length() != inset_list->length()) {
++    return "";
++  }
+ 
+   CSSValueList* list = CSSValueList::CreateCommaSeparated();
+ 
+   for (wtf_size_t i = 0; i < name_list.length(); ++i) {
+-    list->Append(*TimelineValueItem(i, name_list, axis_list));
++    list->Append(*TimelineValueItem(i, name_list, axis_list, inset_list));
+   }
+ 
+   return list->CssText();
+@@ -898,11 +932,13 @@ String StylePropertySerializer::ScrollTimelineValue() const {
+ }
+ 
+ String StylePropertySerializer::ViewTimelineValue() const {
+-  CHECK_EQ(viewTimelineShorthand().length(), 2u);
++  CHECK_EQ(viewTimelineShorthand().length(), 3u);
+   CHECK_EQ(viewTimelineShorthand().properties()[0],
+            &GetCSSPropertyViewTimelineName());
+   CHECK_EQ(viewTimelineShorthand().properties()[1],
+            &GetCSSPropertyViewTimelineAxis());
++  CHECK_EQ(viewTimelineShorthand().properties()[2],
++           &GetCSSPropertyViewTimelineInset());
+   return TimelineValue(viewTimelineShorthand());
+ }
+ 
+@@ -1506,6 +1542,48 @@ String StylePropertySerializer::Get4Values(
    return result.ReleaseString();
  }
  
@@ -114,7 +210,7 @@ index f32faf3a9bbfdeda831980efd36919c571227e0f..e025ff82b611ff544bbd83df5e5a8b24
  String StylePropertySerializer::GetLayeredShorthandValue(
      const StylePropertyShorthand& shorthand) const {
    const unsigned size = shorthand.length();
-@@ -1530,11 +1581,9 @@ String StylePropertySerializer::GetLayeredShorthandValue(
+@@ -1530,11 +1608,9 @@ String StylePropertySerializer::GetLayeredShorthandValue(
    // Now stitch the properties together.
    for (wtf_size_t layer = 0; layer < num_layers; layer++) {
      StringBuilder layer_result;
@@ -129,7 +225,7 @@ index f32faf3a9bbfdeda831980efd36919c571227e0f..e025ff82b611ff544bbd83df5e5a8b24
  
      for (unsigned property_index = 0; property_index < size; property_index++) {
        const CSSValue* value = nullptr;
-@@ -1561,45 +1610,7 @@ String StylePropertySerializer::GetLayeredShorthandValue(
+@@ -1561,45 +1637,7 @@ String StylePropertySerializer::GetLayeredShorthandValue(
          continue;
        }
  
@@ -176,7 +272,7 @@ index f32faf3a9bbfdeda831980efd36919c571227e0f..e025ff82b611ff544bbd83df5e5a8b24
  
        // The shorthand can not represent the following properties if they have
        // non-initial values. This is because they are always reset to their
-@@ -1616,7 +1627,7 @@ String StylePropertySerializer::GetLayeredShorthandValue(
+@@ -1616,7 +1654,7 @@ String StylePropertySerializer::GetLayeredShorthandValue(
            DCHECK(RuntimeEnabledFeatures::ScrollTimelineEnabled());
            return g_empty_string;
          }
@@ -185,7 +281,7 @@ index f32faf3a9bbfdeda831980efd36919c571227e0f..e025ff82b611ff544bbd83df5e5a8b24
        }
        if (property->IDEquals(CSSPropertyID::kAnimationDelayEnd)) {
          if (CSSToStyleMap::MapAnimationDelayEnd(*value) !=
-@@ -1624,7 +1635,7 @@ String StylePropertySerializer::GetLayeredShorthandValue(
+@@ -1624,7 +1662,7 @@ String StylePropertySerializer::GetLayeredShorthandValue(
              layer > 0) {
            return g_empty_string;
          }
@@ -194,7 +290,7 @@ index f32faf3a9bbfdeda831980efd36919c571227e0f..e025ff82b611ff544bbd83df5e5a8b24
        }
        if (property->IDEquals(CSSPropertyID::kAnimationRangeStart)) {
          auto* ident = DynamicTo<CSSIdentifierValue>(value);
-@@ -1633,7 +1644,7 @@ String StylePropertySerializer::GetLayeredShorthandValue(
+@@ -1633,7 +1671,7 @@ String StylePropertySerializer::GetLayeredShorthandValue(
            DCHECK(RuntimeEnabledFeatures::ScrollTimelineEnabled());
            return g_empty_string;
          }
@@ -203,7 +299,7 @@ index f32faf3a9bbfdeda831980efd36919c571227e0f..e025ff82b611ff544bbd83df5e5a8b24
        }
        if (property->IDEquals(CSSPropertyID::kAnimationRangeEnd)) {
          auto* ident = DynamicTo<CSSIdentifierValue>(value);
-@@ -1642,13 +1653,60 @@ String StylePropertySerializer::GetLayeredShorthandValue(
+@@ -1642,13 +1680,60 @@ String StylePropertySerializer::GetLayeredShorthandValue(
            DCHECK(RuntimeEnabledFeatures::ScrollTimelineEnabled());
            return g_empty_string;
          }
@@ -268,7 +364,7 @@ index f32faf3a9bbfdeda831980efd36919c571227e0f..e025ff82b611ff544bbd83df5e5a8b24
              layer_result.Append(" / ");
            } else {
              layer_result.Append(" 0% 0% / ");
-@@ -1659,30 +1717,24 @@ String StylePropertySerializer::GetLayeredShorthandValue(
+@@ -1659,30 +1744,24 @@ String StylePropertySerializer::GetLayeredShorthandValue(
            layer_result.Append(' ');
          }
  
@@ -307,7 +403,7 @@ index f32faf3a9bbfdeda831980efd36919c571227e0f..e025ff82b611ff544bbd83df5e5a8b24
      if (!layer_result.empty()) {
        if (!result.empty()) {
          result.Append(", ");
-@@ -2132,79 +2184,6 @@ String StylePropertySerializer::BorderRadiusValue() const {
+@@ -2132,79 +2211,6 @@ String StylePropertySerializer::BorderRadiusValue() const {
    return builder.ReleaseString();
  }
  
@@ -387,7 +483,7 @@ index f32faf3a9bbfdeda831980efd36919c571227e0f..e025ff82b611ff544bbd83df5e5a8b24
  String StylePropertySerializer::PageBreakPropertyValue(
      const StylePropertyShorthand& shorthand) const {
    const CSSValue* value =
-@@ -2270,13 +2249,43 @@ bool StylePropertySerializer::IsValidToggleShorthand(
+@@ -2270,13 +2276,43 @@ bool StylePropertySerializer::IsValidToggleShorthand(
    return true;
  }
  
@@ -432,7 +528,7 @@ index f32faf3a9bbfdeda831980efd36919c571227e0f..e025ff82b611ff544bbd83df5e5a8b24
    if (!collapse_value || !wrap_value) {
      // If any longhands are missing, don't serialize as a shorthand.
      return g_empty_string;
-@@ -2284,7 +2293,7 @@ String StylePropertySerializer::WhiteSpaceValue() const {
+@@ -2284,7 +2320,7 @@ String StylePropertySerializer::WhiteSpaceValue() const {
  
    // Check if longhands are one of pre-defined keywords of `white-space`.
    const WhiteSpaceCollapse collapse = ToWhiteSpaceCollapse(collapse_value);
@@ -441,7 +537,7 @@ index f32faf3a9bbfdeda831980efd36919c571227e0f..e025ff82b611ff544bbd83df5e5a8b24
    const EWhiteSpace whitespace = ToWhiteSpace(collapse, wrap);
    if (IsValidWhiteSpace(whitespace)) {
      return getValueName(PlatformEnumToCSSValueID(whitespace));
-@@ -2295,7 +2304,7 @@ String StylePropertySerializer::WhiteSpaceValue() const {
+@@ -2295,7 +2331,7 @@ String StylePropertySerializer::WhiteSpaceValue() const {
    if (collapse != ComputedStyleInitialValues::InitialWhiteSpaceCollapse()) {
      result.Append(getValueName(PlatformEnumToCSSValueID(collapse)));
    }

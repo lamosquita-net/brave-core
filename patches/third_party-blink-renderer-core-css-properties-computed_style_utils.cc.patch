@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/properties/computed_style_utils.cc b/third_party/blink/renderer/core/css/properties/computed_style_utils.cc
-index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..fcb97c117bcd0b1eafbdc60ed192b2f550acaca0 100644
+index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..2bb68acd5468691b95cc5cffcbe9737104f0c377 100644
 --- a/third_party/blink/renderer/core/css/properties/computed_style_utils.cc
 +++ b/third_party/blink/renderer/core/css/properties/computed_style_utils.cc
 @@ -299,6 +299,7 @@ const CSSValueList* ComputedStyleUtils::CreatePositionListForLayer(
@@ -272,7 +272,39 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..fcb97c117bcd0b1eafbdc60ed192b2f5
    PopulateGridTrackListForNonGrid(list, collector, ng_track_list, style);
    return list;
  }
-@@ -2917,6 +3028,18 @@ CSSValue* ComputedStyleUtils::CreateTransitionPropertyValue(
+@@ -2560,14 +2671,30 @@ CSSValue* ComputedStyleUtils::ValueForAnimationTimelineList(
+       &ValueForAnimationTimeline);
+ }
+ 
++CSSValue* ComputedStyleUtils::ValueForTimelineInset(
++    const TimelineInset& inset,
++    const ComputedStyle& style) {
++  return MakeGarbageCollected<CSSValuePair>(
++      ComputedStyleUtils::ZoomAdjustedPixelValueForLength(inset.GetStart(),
++                                                          style),
++      ComputedStyleUtils::ZoomAdjustedPixelValueForLength(inset.GetEnd(),
++                                                          style),
++      CSSValuePair::kDropIdenticalValues);
++}
++
+ CSSValue* ComputedStyleUtils::SingleValueForTimelineShorthand(
+     const ScopedCSSName* name,
+-    TimelineAxis axis) {
++    TimelineAxis axis,
++    absl::optional<TimelineInset> inset,
++    const ComputedStyle& style) {
+   CSSValueList* list = CSSValueList::CreateSpaceSeparated();
+   list->Append(*ValueForCustomIdentOrNone(name));
+   if (axis != TimelineAxis::kBlock) {
+     list->Append(*CSSIdentifierValue::Create(axis));
+   }
++  if (inset.value_or(TimelineInset()) != TimelineInset()) {
++    list->Append(*ValueForTimelineInset(inset.value(), style));
++  }
+   return list;
+ }
+ 
+@@ -2917,6 +3044,18 @@ CSSValue* ComputedStyleUtils::CreateTransitionPropertyValue(
            .GetPropertyNameAtomicString());
  }
  
@@ -291,7 +323,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..fcb97c117bcd0b1eafbdc60ed192b2f5
  CSSValue* ComputedStyleUtils::ValueForTransitionProperty(
      const CSSTransitionData* transition_data) {
    CSSValueList* list = CSSValueList::CreateCommaSeparated();
-@@ -2931,6 +3054,19 @@ CSSValue* ComputedStyleUtils::ValueForTransitionProperty(
+@@ -2931,6 +3070,19 @@ CSSValue* ComputedStyleUtils::ValueForTransitionProperty(
    return list;
  }
  
@@ -311,7 +343,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..fcb97c117bcd0b1eafbdc60ed192b2f5
  CSSValueID ValueForQuoteType(const QuoteType quote_type) {
    switch (quote_type) {
      case QuoteType::kNoOpen:
-@@ -2985,7 +3121,8 @@ CSSValue* ComputedStyleUtils::ValueForContentData(const ComputedStyle& style,
+@@ -2985,7 +3137,8 @@ CSSValue* ComputedStyleUtils::ValueForContentData(const ComputedStyle& style,
        list->Append(*CSSIdentifierValue::Create(ValueForQuoteType(quote_type)));
      } else if (content_data->IsAltText()) {
        alt_text = MakeGarbageCollected<CSSStringValue>(
