@@ -1,8 +1,17 @@
 diff --git a/third_party/blink/renderer/core/paint/theme_painter_default.cc b/third_party/blink/renderer/core/paint/theme_painter_default.cc
-index 194372d96ab611785867cdeaf410337cdcb72e50..02a5ba22fb09ec8bc3d564712d9634dcc737cba1 100644
+index 194372d96ab611785867cdeaf410337cdcb72e50..fc97b417e8f634fbc924a60e47a1eccfb41dfb41 100644
 --- a/third_party/blink/renderer/core/paint/theme_painter_default.cc
 +++ b/third_party/blink/renderer/core/paint/theme_painter_default.cc
-@@ -83,7 +83,8 @@ class DirectionFlippingScope {
+@@ -35,6 +35,8 @@
+ #include "third_party/blink/renderer/core/layout/layout_object.h"
+ #include "third_party/blink/renderer/core/layout/layout_progress.h"
+ #include "third_party/blink/renderer/core/layout/layout_theme_default.h"
++#include "third_party/blink/renderer/core/page/chrome_client.h"
++#include "third_party/blink/renderer/core/page/page.h"
+ #include "third_party/blink/renderer/core/paint/paint_auto_dark_mode.h"
+ #include "third_party/blink/renderer/core/paint/paint_info.h"
+ #include "third_party/blink/renderer/platform/graphics/color.h"
+@@ -83,7 +85,8 @@ class DirectionFlippingScope {
    ~DirectionFlippingScope();
  
   private:
@@ -12,7 +21,7 @@ index 194372d96ab611785867cdeaf410337cdcb72e50..02a5ba22fb09ec8bc3d564712d9634dc
    const PaintInfo& paint_info_;
  };
  
-@@ -91,18 +92,30 @@ DirectionFlippingScope::DirectionFlippingScope(
+@@ -91,18 +94,30 @@ DirectionFlippingScope::DirectionFlippingScope(
      const LayoutObject& layout_object,
      const PaintInfo& paint_info,
      const gfx::Rect& rect)
@@ -50,7 +59,110 @@ index 194372d96ab611785867cdeaf410337cdcb72e50..02a5ba22fb09ec8bc3d564712d9634dc
    paint_info_.context.Restore();
  }
  
-@@ -345,23 +358,58 @@ void ThemePainterDefault::SetupMenuListArrow(
+@@ -173,15 +188,22 @@ gfx::Rect ConvertToPaintingRect(const LayoutObject& input_layout_object,
+   return ToPixelSnappedRect(part_rect);
+ }
+ 
+-absl::optional<SkColor> GetAccentColor(const ComputedStyle& style) {
++absl::optional<SkColor> GetAccentColor(const ComputedStyle& style,
++                                       const Document& document) {
+   absl::optional<Color> css_accent_color = style.AccentColorResolved();
+   if (css_accent_color)
+     return css_accent_color->Rgb();
+ 
+-  mojom::blink::ColorScheme color_scheme = style.UsedColorScheme();
+-  LayoutTheme& layout_theme = LayoutTheme::GetTheme();
+-  if (layout_theme.IsAccentColorCustomized(color_scheme)) {
+-    return layout_theme.GetSystemAccentColor(color_scheme).Rgb();
++  // We should not allow the system accent color to be rendered in image
++  // contexts because it could be read back by the page and used for
++  // fingerprinting. FlyWeb: also when the document has no page.
++  const Page* page = document.GetPage();
++  if (page && !page->GetChromeClient().IsSVGImageChromeClient()) {
++    mojom::blink::ColorScheme color_scheme = style.UsedColorScheme();
++    LayoutTheme& layout_theme = LayoutTheme::GetTheme();
++    if (layout_theme.IsAccentColorCustomized(color_scheme)) {
++      return layout_theme.GetSystemAccentColor(color_scheme).Rgb();
++    }
+   }
+ 
+   return absl::nullopt;
+@@ -193,7 +215,7 @@ ThemePainterDefault::ThemePainterDefault(LayoutThemeDefault& theme)
+     : ThemePainter(), theme_(theme) {}
+ 
+ bool ThemePainterDefault::PaintCheckbox(const Element& element,
+-                                        const Document&,
++                                        const Document& document,
+                                         const ComputedStyle& style,
+                                         const PaintInfo& paint_info,
+                                         const gfx::Rect& rect) {
+@@ -211,12 +233,12 @@ bool ThemePainterDefault::PaintCheckbox(const Element& element,
+   WebThemeEngineHelper::GetNativeThemeEngine()->Paint(
+       paint_info.context.Canvas(), WebThemeEngine::kPartCheckbox,
+       GetWebThemeState(element), unzoomed_rect, &extra_params,
+-      style.UsedColorScheme(), GetAccentColor(style));
++      style.UsedColorScheme(), GetAccentColor(style, document));
+   return false;
+ }
+ 
+ bool ThemePainterDefault::PaintRadio(const Element& element,
+-                                     const Document&,
++                                     const Document& document,
+                                      const ComputedStyle& style,
+                                      const PaintInfo& paint_info,
+                                      const gfx::Rect& rect) {
+@@ -233,12 +255,12 @@ bool ThemePainterDefault::PaintRadio(const Element& element,
+   WebThemeEngineHelper::GetNativeThemeEngine()->Paint(
+       paint_info.context.Canvas(), WebThemeEngine::kPartRadio,
+       GetWebThemeState(element), unzoomed_rect, &extra_params,
+-      style.UsedColorScheme(), GetAccentColor(style));
++      style.UsedColorScheme(), GetAccentColor(style, document));
+   return false;
+ }
+ 
+ bool ThemePainterDefault::PaintButton(const Element& element,
+-                                      const Document&,
++                                      const Document& document,
+                                       const ComputedStyle& style,
+                                       const PaintInfo& paint_info,
+                                       const gfx::Rect& rect) {
+@@ -250,7 +272,7 @@ bool ThemePainterDefault::PaintButton(const Element& element,
+   WebThemeEngineHelper::GetNativeThemeEngine()->Paint(
+       paint_info.context.Canvas(), WebThemeEngine::kPartButton,
+       GetWebThemeState(element), rect, &extra_params, style.UsedColorScheme(),
+-      GetAccentColor(style));
++      GetAccentColor(style, document));
+   return false;
+ }
+ 
+@@ -282,7 +304,7 @@ bool ThemePainterDefault::PaintTextField(const Element& element,
+   WebThemeEngineHelper::GetNativeThemeEngine()->Paint(
+       paint_info.context.Canvas(), WebThemeEngine::kPartTextField,
+       GetWebThemeState(element), rect, &extra_params, style.UsedColorScheme(),
+-      GetAccentColor(style));
++      GetAccentColor(style, element.GetDocument()));
+   return false;
+ }
+ 
+@@ -317,7 +339,7 @@ bool ThemePainterDefault::PaintMenuList(const Element& element,
+   WebThemeEngineHelper::GetNativeThemeEngine()->Paint(
+       paint_info.context.Canvas(), WebThemeEngine::kPartMenuList,
+       GetWebThemeState(element), rect, &extra_params, style.UsedColorScheme(),
+-      GetAccentColor(style));
++      GetAccentColor(style, document));
+   return false;
+ }
+ 
+@@ -336,7 +358,7 @@ bool ThemePainterDefault::PaintMenuListButton(const Element& element,
+   WebThemeEngineHelper::GetNativeThemeEngine()->Paint(
+       paint_info.context.Canvas(), WebThemeEngine::kPartMenuList,
+       GetWebThemeState(element), rect, &extra_params, style.UsedColorScheme(),
+-      GetAccentColor(style));
++      GetAccentColor(style, document));
+   return false;
+ }
+ 
+@@ -345,23 +367,58 @@ void ThemePainterDefault::SetupMenuListArrow(
      const ComputedStyle& style,
      const gfx::Rect& rect,
      WebThemeEngine::ExtraParams& extra_params) {
@@ -126,7 +238,7 @@ index 194372d96ab611785867cdeaf410337cdcb72e50..02a5ba22fb09ec8bc3d564712d9634dc
    // TODO: (https://crbug.com/1227305)This color still does not support forced
    // dark mode
    extra_params.menu_list.arrow_color =
-@@ -374,13 +422,15 @@ bool ThemePainterDefault::PaintSliderTrack(const Element& element,
+@@ -374,13 +431,15 @@ bool ThemePainterDefault::PaintSliderTrack(const Element& element,
                                             const gfx::Rect& rect,
                                             const ComputedStyle& style) {
    WebThemeEngine::ExtraParams extra_params;
@@ -149,7 +261,7 @@ index 194372d96ab611785867cdeaf410337cdcb72e50..02a5ba22fb09ec8bc3d564712d9634dc
    extra_params.slider.in_drag = false;
  
    PaintSliderTicks(layout_object, paint_info, rect);
-@@ -388,12 +438,18 @@ bool ThemePainterDefault::PaintSliderTrack(const Element& element,
+@@ -388,12 +447,18 @@ bool ThemePainterDefault::PaintSliderTrack(const Element& element,
    extra_params.slider.zoom = style.EffectiveZoom();
    extra_params.slider.thumb_x = 0;
    extra_params.slider.thumb_y = 0;
@@ -173,7 +285,26 @@ index 194372d96ab611785867cdeaf410337cdcb72e50..02a5ba22fb09ec8bc3d564712d9634dc
    if (auto* input = DynamicTo<HTMLInputElement>(element)) {
      Element* thumb_element = input->UserAgentShadowRoot()
                                   ? input->UserAgentShadowRoot()->getElementById(
-@@ -469,6 +525,10 @@ bool ThemePainterDefault::PaintInnerSpinButton(const Element& element,
+@@ -415,7 +480,7 @@ bool ThemePainterDefault::PaintSliderTrack(const Element& element,
+   WebThemeEngineHelper::GetNativeThemeEngine()->Paint(
+       paint_info.context.Canvas(), WebThemeEngine::kPartSliderTrack,
+       GetWebThemeState(element), rect, &extra_params, style.UsedColorScheme(),
+-      GetAccentColor(style));
++      GetAccentColor(style, element.GetDocument()));
+   return false;
+ }
+ 
+@@ -442,7 +507,8 @@ bool ThemePainterDefault::PaintSliderThumb(const Element& element,
+   DCHECK(slider_element);  // PaintSliderThumb should always be passed a
+                            // SliderThumbElement
+   absl::optional<SkColor> accent_color =
+-      GetAccentColor(*slider_element->HostInput()->EnsureComputedStyle());
++      GetAccentColor(*slider_element->HostInput()->EnsureComputedStyle(),
++                     element.GetDocument());
+ 
+   WebThemeEngineHelper::GetNativeThemeEngine()->Paint(
+       paint_info.context.Canvas(), WebThemeEngine::kPartSliderThumb,
+@@ -469,11 +535,15 @@ bool ThemePainterDefault::PaintInnerSpinButton(const Element& element,
  
    extra_params.inner_spin.spin_up = spin_up;
    extra_params.inner_spin.read_only = read_only;
@@ -184,7 +315,22 @@ index 194372d96ab611785867cdeaf410337cdcb72e50..02a5ba22fb09ec8bc3d564712d9634dc
  
    WebThemeEngineHelper::GetNativeThemeEngine()->Paint(
        paint_info.context.Canvas(), WebThemeEngine::kPartInnerSpinButton,
-@@ -539,14 +599,22 @@ bool ThemePainterDefault::PaintSearchFieldCancelButton(
+       GetWebThemeState(element), rect, &extra_params, style.UsedColorScheme(),
+-      GetAccentColor(style));
++      GetAccentColor(style, element.GetDocument()));
+   return false;
+ }
+ 
+@@ -502,7 +572,7 @@ bool ThemePainterDefault::PaintProgressBar(const Element& element,
+   WebThemeEngineHelper::GetNativeThemeEngine()->Paint(
+       paint_info.context.Canvas(), WebThemeEngine::kPartProgressBar,
+       GetWebThemeState(element), rect, &extra_params, style.UsedColorScheme(),
+-      GetAccentColor(style));
++      GetAccentColor(style, element.GetDocument()));
+   return false;
+ }
+ 
+@@ -539,14 +609,22 @@ bool ThemePainterDefault::PaintSearchFieldCancelButton(
        std::min(input_content_box.size.width,
                 std::min(input_content_box.size.height, LayoutUnit(r.height())));
    // Calculate cancel button's coordinates relative to the input element.
