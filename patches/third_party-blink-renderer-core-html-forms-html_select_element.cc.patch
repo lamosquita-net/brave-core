@@ -1,0 +1,56 @@
+diff --git a/third_party/blink/renderer/core/html/forms/html_select_element.cc b/third_party/blink/renderer/core/html/forms/html_select_element.cc
+index c880d2332175dc5a2670f540408745fa66687013..0bc713f31ab9b954d75bcd6f901f57d9d661401e 100644
+--- a/third_party/blink/renderer/core/html/forms/html_select_element.cc
++++ b/third_party/blink/renderer/core/html/forms/html_select_element.cc
+@@ -38,6 +38,7 @@
+ #include "third_party/blink/renderer/core/accessibility/ax_object_cache.h"
+ #include "third_party/blink/renderer/core/css/style_change_reason.h"
+ #include "third_party/blink/renderer/core/css/style_engine.h"
++#include "third_party/blink/renderer/core/display_lock/display_lock_utilities.h"
+ #include "third_party/blink/renderer/core/dom/attribute.h"
+ #include "third_party/blink/renderer/core/dom/element_traversal.h"
+ #include "third_party/blink/renderer/core/dom/events/scoped_event_queue.h"
+@@ -1446,4 +1447,43 @@ const ComputedStyle* HTMLSelectElement::OptionStyle() const {
+   return select_type_->OptionStyle();
+ }
+ 
++// Show the option list for this select element.
++// https://html.spec.whatwg.org/multipage/input.html#dom-select-showpicker
++void HTMLSelectElement::showPicker(ExceptionState& exception_state) {
++  Document& document = GetDocument();
++  LocalFrame* frame = document.GetFrame();
++  // In cross-origin iframes it should throw a "SecurityError" DOMException
++  if (frame) {
++    if (!frame->IsSameOrigin()) {
++      exception_state.ThrowSecurityError(
++          "showPicker() called from cross-origin iframe.");
++      return;
++    }
++  }
++
++  if (IsDisabledFormControl()) {
++    exception_state.ThrowDOMException(DOMExceptionCode::kInvalidStateError,
++                                      "showPicker() cannot "
++                                      "be used on immutable controls.");
++    return;
++  }
++
++  if (!LocalFrame::HasTransientUserActivation(frame)) {
++    exception_state.ThrowDOMException(DOMExceptionCode::kNotAllowedError,
++                                      "showPicker() requires a user gesture.");
++    return;
++  }
++
++  document.UpdateStyleAndLayout(DocumentUpdateReason::kJavaScript);
++  if (DisplayLockUtilities::LockedAncestorPreventingPaint(*this) ||
++      !GetLayoutBox()) {
++    exception_state.ThrowDOMException(
++        DOMExceptionCode::kNotSupportedError,
++        "showPicker() requires the select is rendered.");
++    return;
++  }
++
++  select_type_->ShowPicker();
++}
++
+ }  // namespace blink

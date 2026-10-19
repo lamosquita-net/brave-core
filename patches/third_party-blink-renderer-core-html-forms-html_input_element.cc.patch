@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/forms/html_input_element.cc b/third_party/blink/renderer/core/html/forms/html_input_element.cc
-index d408b73d03898c039b5450de0e766770c7c0ae61..212a6da2b0fe4c06fa66f54b00376c5b53d593ae 100644
+index d408b73d03898c039b5450de0e766770c7c0ae61..8323079aef8d3084000a4fb6691df5923608e10c 100644
 --- a/third_party/blink/renderer/core/html/forms/html_input_element.cc
 +++ b/third_party/blink/renderer/core/html/forms/html_input_element.cc
 @@ -467,9 +467,19 @@ void HTMLInputElement::UpdateType() {
@@ -45,7 +45,23 @@ index d408b73d03898c039b5450de0e766770c7c0ae61..212a6da2b0fe4c06fa66f54b00376c5b
  bool HTMLInputElement::HasBeenPasswordField() const {
    return has_been_password_field_;
  }
-@@ -2301,6 +2320,9 @@ void HTMLInputElement::showPicker(ExceptionState& exception_state) {
+@@ -2277,13 +2296,9 @@ void HTMLInputElement::showPicker(ExceptionState& exception_state) {
+   // https://github.com/whatwg/html/issues/6909#issuecomment-917138991
+   if (type() != input_type_names::kFile && type() != input_type_names::kColor &&
+       frame) {
+-    const SecurityOrigin* security_origin =
+-        frame->GetSecurityContext()->GetSecurityOrigin();
+-    const SecurityOrigin* top_security_origin =
+-        frame->Tree().Top().GetSecurityContext()->GetSecurityOrigin();
+-    if (!security_origin->IsSameOriginWith(top_security_origin)) {
++    if (!frame->IsSameOrigin()) {
+       exception_state.ThrowSecurityError(
+-          "HTMLInputElement::showPicker() called from cross-origin iframe.");
++          "showPicker() called from cross-origin iframe.");
+       return;
+     }
+   }
+@@ -2301,6 +2316,9 @@ void HTMLInputElement::showPicker(ExceptionState& exception_state) {
          "HTMLInputElement::showPicker() requires a user gesture.");
      return;
    }

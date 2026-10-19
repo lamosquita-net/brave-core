@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/frame/local_frame.cc b/third_party/blink/renderer/core/frame/local_frame.cc
-index 51ac02abf2f2e61538b26fcbbaa437567310c164..aea5bc8498861bf08e42aaf3f9b589a4504c7456 100644
+index 51ac02abf2f2e61538b26fcbbaa437567310c164..8970234b2f7039641de2eb8cb130f91da594536c 100644
 --- a/third_party/blink/renderer/core/frame/local_frame.cc
 +++ b/third_party/blink/renderer/core/frame/local_frame.cc
 @@ -2413,6 +2413,11 @@ void LocalFrame::AnimateSnapFling(base::TimeTicks monotonic_time) {
@@ -14,3 +14,17 @@ index 51ac02abf2f2e61538b26fcbbaa437567310c164..aea5bc8498861bf08e42aaf3f9b589a4
    if (!IsLocalRoot()) {
      return LocalFrameRoot().CreateNewSmoothScrollSequence();
    }
+@@ -3617,4 +3622,13 @@ void LocalFrame::SetResourceCacheRemote(
+   GetDocument()->Fetcher()->SetResourceCache(std::move(remote));
+ }
+ 
++bool LocalFrame::IsSameOrigin() {
++  const SecurityOrigin* security_origin =
++      GetSecurityContext()->GetSecurityOrigin();
++  const SecurityOrigin* top_security_origin =
++      Tree().Top().GetSecurityContext()->GetSecurityOrigin();
++
++  return security_origin->IsSameOriginWith(top_security_origin);
++}
++
+ }  // namespace blink

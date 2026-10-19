@@ -1,8 +1,36 @@
 diff --git a/third_party/blink/renderer/core/html/forms/select_type.cc b/third_party/blink/renderer/core/html/forms/select_type.cc
-index c7de99c7f44a81107da594b98ad5ce77cee705bf..21e969a4392cb3af1966dddeada86cee0e46a573 100644
+index c7de99c7f44a81107da594b98ad5ce77cee705bf..01414686086a19753a491487a0cf84c1e89aa01e 100644
 --- a/third_party/blink/renderer/core/html/forms/select_type.cc
 +++ b/third_party/blink/renderer/core/html/forms/select_type.cc
-@@ -830,21 +830,31 @@ bool ListBoxSelectType::DefaultEventHandler(const Event& event) {
+@@ -106,6 +106,7 @@ class MenuListSelectType final : public SelectType {
+   bool PopupIsVisible() const override;
+   PopupMenu* PopupForTesting() const override;
+   AXObject* PopupRootAXObject() const override;
++  void ShowPicker() override;
+ 
+   void DidMutateSubtree();
+ 
+@@ -392,6 +393,19 @@ AXObject* MenuListSelectType::PopupRootAXObject() const {
+   return popup_ ? popup_->PopupRootAXObject() : nullptr;
+ }
+ 
++void MenuListSelectType::ShowPicker() {
++  // We need to make the layout tree up-to-date to have GetLayoutObject() give
++  // the correct result below. An author event handler may have set display to
++  // some element to none which will cause a layout tree detach.
++  select_->GetDocument().UpdateStyleAndLayoutTree();
++  // Save the selection so it can be compared to the new selection
++  // when we call onChange during selectOption, which gets called
++  // from selectOptionByPopup, which gets called after the user
++  // makes a selection from the menu.
++  SaveLastSelection();
++  ShowPopup(PopupMenu::kOther);
++}
++
+ void MenuListSelectType::DidSelectOption(
+     HTMLOptionElement* element,
+     HTMLSelectElement::SelectOptionFlags flags,
+@@ -830,21 +844,31 @@ bool ListBoxSelectType::DefaultEventHandler(const Event& event) {
  
      bool handled = false;
      HTMLOptionElement* end_option = nullptr;
@@ -38,7 +66,7 @@ index c7de99c7f44a81107da594b98ad5ce77cee705bf..21e969a4392cb3af1966dddeada86cee
            end_option = PreviousSelectableOption(start_option);
          } else {
            end_option =
-@@ -853,10 +863,10 @@ bool ListBoxSelectType::DefaultEventHandler(const Event& event) {
+@@ -853,10 +877,10 @@ bool ListBoxSelectType::DefaultEventHandler(const Event& event) {
        }
      } else {
        // Set the end index based on the current end index.
@@ -51,3 +79,12 @@ index c7de99c7f44a81107da594b98ad5ce77cee705bf..21e969a4392cb3af1966dddeada86cee
          end_option = PreviousSelectableOption(active_selection_end_);
          handled = true;
        } else if (key == "PageDown") {
+@@ -1376,6 +1400,8 @@ Element& SelectType::InnerElement() const {
+   return *select_;
+ }
+ 
++void SelectType::ShowPicker() {}
++
+ void SelectType::ShowPopup(PopupMenu::ShowEventType) {
+   NOTREACHED();
+ }
