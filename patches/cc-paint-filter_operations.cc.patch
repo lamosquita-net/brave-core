@@ -1,5 +1,5 @@
 diff --git a/cc/paint/filter_operations.cc b/cc/paint/filter_operations.cc
-index d1204052f58efc1b7185f8269d9f13734c213e85..c57894d84f98a3667b1832192aa06c78dd44a62c 100644
+index d1204052f58efc1b7185f8269d9f13734c213e85..10a415328d0797dee6a8e41529cc282299739288 100644
 --- a/cc/paint/filter_operations.cc
 +++ b/cc/paint/filter_operations.cc
 @@ -59,20 +59,20 @@ bool FilterOperations::IsEmpty() const {
@@ -10,7 +10,7 @@ index d1204052f58efc1b7185f8269d9f13734c213e85..c57894d84f98a3667b1832192aa06c78
 -  auto accumulate_rect = [matrix](const gfx::Rect& rect,
 -                                  const FilterOperation& op) {
 -    return op.MapRect(rect, matrix);
-+                                    const std::optional<SkMatrix>& ctm) const {
++                                    const absl::optional<SkMatrix>& ctm) const {
 +  auto accumulate_rect = [&ctm](const gfx::Rect& rect,
 +                                const FilterOperation& op) {
 +    return op.MapRect(rect, ctm);

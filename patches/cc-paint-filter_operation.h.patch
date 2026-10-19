@@ -1,15 +1,15 @@
 diff --git a/cc/paint/filter_operation.h b/cc/paint/filter_operation.h
-index 48f4608aa368ed9e429de6be25d937cd9074067c..f7e1213e7448bd84ebf1c77942d608394e34b117 100644
+index 48f4608aa368ed9e429de6be25d937cd9074067c..bfd07c1a24eeb0d0dce92c7fae630933be35cc65 100644
 --- a/cc/paint/filter_operation.h
 +++ b/cc/paint/filter_operation.h
-@@ -7,6 +7,7 @@
- 
- #include <array>
- #include <memory>
-+#include <optional>
- #include <utility>
- #include <vector>
- 
+@@ -14,6 +14,7 @@
+ #include "base/containers/span.h"
+ #include "cc/paint/paint_export.h"
+ #include "cc/paint/paint_filter.h"
++#include "third_party/abseil-cpp/absl/types/optional.h"
+ #include "third_party/skia/include/core/SkColor.h"
+ #include "third_party/skia/include/core/SkScalar.h"
+ #include "third_party/skia/include/core/SkTileMode.h"
 @@ -241,12 +242,13 @@ class CC_PAINT_EXPORT FilterOperation {
    void AsValueInto(base::trace_event::TracedValue* value) const;
  
@@ -18,7 +18,7 @@ index 48f4608aa368ed9e429de6be25d937cd9074067c..f7e1213e7448bd84ebf1c77942d60839
 -  gfx::Rect MapRect(const gfx::Rect& rect, const SkMatrix& matrix) const;
 +  // by pixels in the source rect. See PaintFilter::MapRect() about `ctm`.
 +  gfx::Rect MapRect(const gfx::Rect& rect,
-+                    const std::optional<SkMatrix>& ctm = std::nullopt) const;
++                    const absl::optional<SkMatrix>& ctm = absl::nullopt) const;
  
    // Maps "backward" to determine which pixels in the source affect the pixels
 -  // in the destination rect.
