@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc b/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
-index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..fe9a4e966d5bb0c7a677393b2959681b41b86b4a 100644
+index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..fc4b5ab2d6bceac38c1c5698ff25fcdbdf88be23 100644
 --- a/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
 +++ b/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
 @@ -4,7 +4,9 @@
@@ -1060,7 +1060,22 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..fe9a4e966d5bb0c7a677393b2959681b
  }
  
  CSSValue* ConsumeWebkitBorderImage(CSSParserTokenRange& range,
-@@ -7356,6 +7929,29 @@ bool IsValidPropertyList(const CSSValueList& value_list) {
+@@ -6530,7 +7103,13 @@ cssvalue::CSSPathValue* ConsumeBasicShapePath(CSSParserTokenRange& args) {
+   }
+ 
+   auto byte_stream = ConsumePathStringArg(args);
+-  if (!byte_stream || !args.AtEnd()) {
++  // https://drafts.csswg.org/css-shapes-1/#funcdef-basic-shape-path
++  // A path data string that does not conform to the to the grammar
++  // and parsing rules of SVG 1.1, or that does conform but defines
++  // an empty path, is invalid and causes the entire path() to be invalid.
++  if (!byte_stream || !args.AtEnd() ||
++      (RuntimeEnabledFeatures::ClipPathRejectEmptyPathsEnabled() &&
++       byte_stream->IsEmpty())) {
+     return nullptr;
+   }
+ 
+@@ -7356,6 +7935,29 @@ bool IsValidPropertyList(const CSSValueList& value_list) {
    return true;
  }
  
@@ -1090,7 +1105,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..fe9a4e966d5bb0c7a677393b2959681b
  CSSValue* ConsumeBorderColorSide(CSSParserTokenRange& range,
                                   const CSSParserContext& context,
                                   const CSSParserLocalContext& local_context) {
-@@ -7580,10 +8176,15 @@ CSSValue* ConsumeFontSizeAdjust(CSSParserTokenRange& range,
+@@ -7580,10 +8182,15 @@ CSSValue* ConsumeFontSizeAdjust(CSSParserTokenRange& range,
  
    CSSIdentifierValue* font_metric =
        ConsumeIdent<CSSValueID::kExHeight, CSSValueID::kCapHeight,
