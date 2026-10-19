@@ -1,0 +1,18 @@
+diff --git a/third_party/blink/renderer/core/events/pointer_event_factory.h b/third_party/blink/renderer/core/events/pointer_event_factory.h
+index 6b8855b0873c5d53b6928189057695e14d3c1f81..ee8e8832803b8ef3a376b3e7c798d16f49e04af4 100644
+--- a/third_party/blink/renderer/core/events/pointer_event_factory.h
++++ b/third_party/blink/renderer/core/events/pointer_event_factory.h
+@@ -189,7 +189,12 @@ class CORE_EXPORT PointerEventFactory {
+ 
+   // This map contains every received device id from browser since page load.
+   BrowserDeviceIdToBlinkDeviceIdMap device_id_browser_to_blink_mapping_;
+-  int32_t current_device_id_ = -1;
++  // Tracks the increasing device id's for dispatched PointerEvents. This value
++  // is used for `persistentDeviceId`. It is only incremented when an incoming
++  // pointer event has a new device id.
++  int32_t current_device_id_ = 1;
++  // Tracks the assigned device id for the mouse pointer.
++  int32_t device_id_for_mouse_ = 0;
+ };
+ 
+ }  // namespace blink

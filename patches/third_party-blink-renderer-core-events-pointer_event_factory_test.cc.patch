@@ -1,0 +1,38 @@
+diff --git a/third_party/blink/renderer/core/events/pointer_event_factory_test.cc b/third_party/blink/renderer/core/events/pointer_event_factory_test.cc
+index 76860115b7edf80ae37a26d4deae413aa1a35e27..16a11198857276bd512ad254e9a985ed0d526771 100644
+--- a/third_party/blink/renderer/core/events/pointer_event_factory_test.cc
++++ b/third_party/blink/renderer/core/events/pointer_event_factory_test.cc
+@@ -690,7 +690,7 @@ class PointerEventFactoryDeviceIdTest : public SimTest {
+         PointerEventFactory::PointerTypeNameForWebPointPointerType(
+             pointer_type);
+     EXPECT_EQ(expected_pointer_type, pointer_event->pointerType());
+-    return pointer_event->deviceId();
++    return pointer_event->persistentDeviceId();
+   }
+ 
+   PointerEventFactory pointer_event_factory_;
+@@ -751,7 +751,7 @@ TEST_F(PointerEventFactoryDeviceIdTest, DeviceIdForMousePointerType) {
+       /* Device id */ kBrowserDeviceId0);
+   // Id is the same for the same pen.
+   ASSERT_EQ(blink_device_id_1, blink_device_id_2);
+-  ASSERT_GT(blink_device_id_1, 1);
++  ASSERT_EQ(blink_device_id_1, 1);
+ 
+   int32_t blink_device_id_3 = CreatePointerEventAndGetDeviceId(
+       WebPointerProperties::PointerType::kPen, /* Raw pointer id */ 2,
+@@ -769,13 +769,13 @@ TEST_F(PointerEventFactoryDeviceIdTest, DeviceIdForMousePointerType) {
+   int32_t blink_device_id_5 = CreatePointerEventAndGetDeviceId(
+       WebPointerProperties::PointerType::kEraser, /* Raw pointer id */ 2,
+       /* Device id */ -1);
+-  ASSERT_EQ(-1, blink_device_id_5);
++  ASSERT_EQ(0, blink_device_id_5);
+ 
+   // Mouse (device id of the web pointer event does not matter).
+   int32_t blink_device_id_6 = CreatePointerEventAndGetDeviceId(
+       WebPointerProperties::PointerType::kMouse, /* Raw pointer id */ 2,
+       /* Device id */ -1);
+-  ASSERT_EQ(1, blink_device_id_6);
++  ASSERT_EQ(3, blink_device_id_6);
+   pointer_event_factory_.Clear();
+ }
+ 

@@ -1,7 +1,16 @@
 diff --git a/third_party/blink/renderer/core/input/pointer_event_manager.cc b/third_party/blink/renderer/core/input/pointer_event_manager.cc
-index b2d6b55ee158ffa6a9ce26142d3101a4e8acec01..51260d72946eaacdb3b8de7aa51aa36a8e0cef17 100644
+index b2d6b55ee158ffa6a9ce26142d3101a4e8acec01..425876f3f871c3b58592586f6e1403927bdd5c1c 100644
 --- a/third_party/blink/renderer/core/input/pointer_event_manager.cc
 +++ b/third_party/blink/renderer/core/input/pointer_event_manager.cc
+@@ -696,7 +696,7 @@ WebInputEventResult PointerEventManager::HandlePointerEvent(
+           pointer_event_target.target_element,
+           pointer_event_factory_.CreatePointerCancelEvent(
+               core_pointer_event->pointerId(), event.TimeStamp(),
+-              core_pointer_event->deviceId()),
++              core_pointer_event->persistentDeviceId()),
+           event.hovering);
+     }
+ 
 @@ -1166,20 +1166,33 @@ void PointerEventManager::ProcessPendingPointerCapture(
      if (!pointer_capture_target->isConnected()) {
        target = pointer_capture_target->ownerDocument();

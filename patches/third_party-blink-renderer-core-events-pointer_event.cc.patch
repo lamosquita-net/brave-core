@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/events/pointer_event.cc b/third_party/blink/renderer/core/events/pointer_event.cc
-index 66d194da087954a70fde401ef947d220d6d3a29e..46066390ba8b73c41a2d0951c8f84d2516c84d4f 100644
+index 66d194da087954a70fde401ef947d220d6d3a29e..47a1751458defcd7dfee16d2b44d66491c627954 100644
 --- a/third_party/blink/renderer/core/events/pointer_event.cc
 +++ b/third_party/blink/renderer/core/events/pointer_event.cc
 @@ -11,6 +11,7 @@
@@ -10,7 +10,28 @@ index 66d194da087954a70fde401ef947d220d6d3a29e..46066390ba8b73c41a2d0951c8f84d25
  #include "third_party/blink/renderer/platform/instrumentation/use_counter.h"
  #include "third_party/blink/renderer/platform/wtf/math_extras.h"
  
-@@ -138,8 +139,10 @@ double PointerEvent::offsetY() const {
+@@ -38,7 +39,8 @@ PointerEvent::PointerEvent(const AtomicString& type,
+       twist_(0),
+       is_primary_(false),
+       coalesced_events_targets_dirty_(false),
+-      predicted_events_targets_dirty_(false) {
++      predicted_events_targets_dirty_(false),
++      persistent_device_id_(0) {
+   if (initializer->hasPointerId())
+     pointer_id_ = initializer->pointerId();
+   if (initializer->hasWidth())
+@@ -89,8 +91,8 @@ PointerEvent::PointerEvent(const AtomicString& type,
+         PointerEventUtil::TransformToAzimuthInValidRange(azimuth_angle_),
+         PointerEventUtil::TransformToAltitudeInValidRange(altitude_angle_));
+   }
+-  if (initializer->hasDeviceId()) {
+-    device_id_ = initializer->deviceId();
++  if (initializer->hasPersistentDeviceId()) {
++    persistent_device_id_ = initializer->persistentDeviceId();
+   }
+ }
+ 
+@@ -138,8 +140,10 @@ double PointerEvent::offsetY() const {
  }
  
  void PointerEvent::ReceivedTarget() {
@@ -23,7 +44,7 @@ index 66d194da087954a70fde401ef947d220d6d3a29e..46066390ba8b73c41a2d0951c8f84d25
    MouseEvent::ReceivedTarget();
  }
  
-@@ -153,6 +156,7 @@ Node* PointerEvent::fromElement() const {
+@@ -153,6 +157,7 @@ Node* PointerEvent::fromElement() const {
  
  HeapVector<Member<PointerEvent>> PointerEvent::getCoalescedEvents() {
    if (coalesced_events_targets_dirty_) {
@@ -31,7 +52,7 @@ index 66d194da087954a70fde401ef947d220d6d3a29e..46066390ba8b73c41a2d0951c8f84d25
      for (auto coalesced_event : coalesced_events_)
        coalesced_event->SetTarget(target());
      coalesced_events_targets_dirty_ = false;
-@@ -162,6 +166,7 @@ HeapVector<Member<PointerEvent>> PointerEvent::getCoalescedEvents() {
+@@ -162,6 +167,7 @@ HeapVector<Member<PointerEvent>> PointerEvent::getCoalescedEvents() {
  
  HeapVector<Member<PointerEvent>> PointerEvent::getPredictedEvents() {
    if (predicted_events_targets_dirty_) {
@@ -39,7 +60,7 @@ index 66d194da087954a70fde401ef947d220d6d3a29e..46066390ba8b73c41a2d0951c8f84d25
      for (auto predicted_event : predicted_events_)
        predicted_event->SetTarget(target());
      predicted_events_targets_dirty_ = false;
-@@ -187,6 +192,20 @@ DispatchEventResult PointerEvent::DispatchEvent(EventDispatcher& dispatcher) {
+@@ -187,6 +193,20 @@ DispatchEventResult PointerEvent::DispatchEvent(EventDispatcher& dispatcher) {
    if (type().empty())
      return DispatchEventResult::kNotCanceled;  // Shouldn't happen.
  
