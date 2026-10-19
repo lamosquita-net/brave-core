@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_resolver.cc b/third_party/blink/renderer/core/css/resolver/style_resolver.cc
-index 93961854002a6b49631aa73a2fe6bc798520a480..3f05200425b37352bf9f04874922e266cdb9a0b1 100644
+index 93961854002a6b49631aa73a2fe6bc798520a480..a84fc5dda4feb65c7cff24b794dcbc8e354cf7b5 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_resolver.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_resolver.cc
 @@ -31,6 +31,7 @@
@@ -435,7 +435,24 @@ index 93961854002a6b49631aa73a2fe6bc798520a480..3f05200425b37352bf9f04874922e266
  }
  
  void StyleResolver::ApplyInheritance(Element& element,
-@@ -1855,7 +2067,7 @@ void StyleResolver::CollectPseudoRulesForElement(
+@@ -1136,9 +1348,13 @@ void StyleResolver::ApplyInheritance(Element& element,
+     // be propagated from shadow host to distributed node.
+     if (!style_request.IsPseudoStyleRequest() && element.AssignedSlot()) {
+       if (Element* parent = element.parentElement()) {
+-        if (const ComputedStyle* shadow_host_style =
+-                parent->GetComputedStyle()) {
+-          state.StyleBuilder().SetUserModify(shadow_host_style->UserModify());
++        if (!RuntimeEnabledFeatures::
++                InheritUserModifyWithoutContenteditableEnabled() ||
++            !element.FastHasAttribute(html_names::kContenteditableAttr)) {
++          if (const ComputedStyle* shadow_host_style =
++                  parent->GetComputedStyle()) {
++            state.StyleBuilder().SetUserModify(shadow_host_style->UserModify());
++          }
+         }
+       }
+     }
+@@ -1855,7 +2071,7 @@ void StyleResolver::CollectPseudoRulesForElement(
    collector.FinishAddingPresentationalHints();
  
    if (rules_to_include & kAuthorCSSRules) {
@@ -444,7 +461,7 @@ index 93961854002a6b49631aa73a2fe6bc798520a480..3f05200425b37352bf9f04874922e266
    }
  }
  
-@@ -2406,7 +2618,7 @@ StyleRuleList* StyleResolver::CollectMatchingRulesFromUnconnectedRuleSet(
+@@ -2406,7 +2622,7 @@ StyleRuleList* StyleResolver::CollectMatchingRulesFromUnconnectedRuleSet(
    collector.SetMatchingRulesFromNoStyleSheet(true);
    collector.SetMode(SelectorChecker::kCollectingStyleRules);
    MatchRequest match_request(rule_set, scope);
@@ -453,7 +470,7 @@ index 93961854002a6b49631aa73a2fe6bc798520a480..3f05200425b37352bf9f04874922e266
    collector.SortAndTransferMatchedRules(/*is_vtt_embedded_style=*/false,
                                          tracker_);
    collector.SetMatchingRulesFromNoStyleSheet(false);
-@@ -2731,6 +2943,19 @@ void StyleResolver::PropagateStyleToViewport() {
+@@ -2731,6 +2947,19 @@ void StyleResolver::PropagateStyleToViewport() {
      PROPAGATE_VALUE(overflow_anchor, OverflowAnchor, SetOverflowAnchor);
    }
  
@@ -473,7 +490,7 @@ index 93961854002a6b49631aa73a2fe6bc798520a480..3f05200425b37352bf9f04874922e266
    // Misc
    {
      PROPAGATE_FROM(document_element_style, EffectiveTouchAction,
-@@ -2743,6 +2968,10 @@ void StyleResolver::PropagateStyleToViewport() {
+@@ -2743,6 +2972,10 @@ void StyleResolver::PropagateStyleToViewport() {
                     SetColorSchemeForced, false);
      PROPAGATE_FROM(document_element_style, ScrollbarGutter, SetScrollbarGutter,
                     kScrollbarGutterAuto);
