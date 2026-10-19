@@ -1,0 +1,36 @@
+diff --git a/third_party/blink/renderer/core/paint/ng/ng_text_painter.h b/third_party/blink/renderer/core/paint/ng/ng_text_painter.h
+index 5fe4cb65304d2e47aadc7f06bb7815436120f675..2f9a72e017d9d6298bc20bc6ce496be0c9229f60 100644
+--- a/third_party/blink/renderer/core/paint/ng/ng_text_painter.h
++++ b/third_party/blink/renderer/core/paint/ng/ng_text_painter.h
+@@ -18,6 +18,7 @@ class LayoutObject;
+ class LayoutSVGInlineText;
+ class NGFragmentItem;
+ struct NGTextFragmentPaintInfo;
++struct SvgContextPaints;
+ 
+ // Text painter for LayoutNG, logic shared between legacy layout and LayoutNG
+ // is implemented in the TextPainterBase base class.
+@@ -64,6 +65,7 @@ class CORE_EXPORT NGTextPainter : public NGTextPainterBase {
+   };
+ 
+   NGTextPainter(GraphicsContext& context,
++                const SvgContextPaints* svg_context_paints,
+                 const Font& font,
+                 const gfx::Rect& visual_rect,
+                 const PhysicalOffset& text_origin,
+@@ -76,6 +78,7 @@ class CORE_EXPORT NGTextPainter : public NGTextPainterBase {
+                           text_frame_rect,
+                           inline_context,
+                           horizontal),
++        svg_context_paints_(svg_context_paints),
+         visual_rect_(visual_rect) {
+     DCHECK(inline_context_);
+   }
+@@ -154,6 +157,7 @@ class CORE_EXPORT NGTextPainter : public NGTextPainterBase {
+                                           const PaintInfo& paint_info,
+                                           const TextPaintStyle& text_style);
+ 
++  const SvgContextPaints* svg_context_paints_;
+   const gfx::Rect visual_rect_;
+   absl::optional<SvgTextPaintState> svg_text_paint_state_;
+ };

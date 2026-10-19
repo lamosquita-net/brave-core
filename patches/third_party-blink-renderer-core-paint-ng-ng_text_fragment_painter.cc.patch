@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/paint/ng/ng_text_fragment_painter.cc b/third_party/blink/renderer/core/paint/ng/ng_text_fragment_painter.cc
-index b716f8277f7ec10a2001919396d877f9104e4c24..3698602fac8d6700280762285c57b98d1daa34bd 100644
+index b716f8277f7ec10a2001919396d877f9104e4c24..a13bc40baf3f68d3cd86b34a700ec7019296086b 100644
 --- a/third_party/blink/renderer/core/paint/ng/ng_text_fragment_painter.cc
 +++ b/third_party/blink/renderer/core/paint/ng/ng_text_fragment_painter.cc
 @@ -41,6 +41,7 @@
@@ -52,7 +52,19 @@ index b716f8277f7ec10a2001919396d877f9104e4c24..3698602fac8d6700280762285c57b98d
            ? LineLogicalSide::kOver
            : LineLogicalSide::kUnder;
    return ruby_logical_side != style.GetTextEmphasisLineLogicalSide();
-@@ -502,7 +514,7 @@ void NGTextFragmentPainter::Paint(const PaintInfo& paint_info,
+@@ -428,8 +440,9 @@ void NGTextFragmentPainter::Paint(const PaintInfo& paint_info,
+           ? text_combine->AdjustTextTopForPaint(physical_box.offset.top)
+           : physical_box.offset.top + ascent);
+ 
+-  NGTextPainter text_painter(context, font, visual_rect, text_origin,
+-                             physical_box, inline_context_, is_horizontal);
++  NGTextPainter text_painter(context, paint_info.GetSvgContextPaints(), font,
++                             visual_rect, text_origin, physical_box,
++                             inline_context_, is_horizontal);
+   NGTextDecorationPainter decoration_painter(text_painter, text_item,
+                                              paint_info, style, text_style,
+                                              rotated_box, selection);
+@@ -502,7 +515,7 @@ void NGTextFragmentPainter::Paint(const PaintInfo& paint_info,
    // 2. Now paint the foreground, including text and decorations.
    // TODO(dazabani@igalia.com): suppress text proper where one or more highlight
    // overlays are active, but paint shadows in full <https://crbug.com/1147859>

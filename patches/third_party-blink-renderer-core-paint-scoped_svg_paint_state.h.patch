@@ -1,0 +1,46 @@
+diff --git a/third_party/blink/renderer/core/paint/scoped_svg_paint_state.h b/third_party/blink/renderer/core/paint/scoped_svg_paint_state.h
+index 1152044626ec187534e33b91085b441e45b73a0e..fd6deb57e0eac9ac52795b6d747c55cf7af3df9c 100644
+--- a/third_party/blink/renderer/core/paint/scoped_svg_paint_state.h
++++ b/third_party/blink/renderer/core/paint/scoped_svg_paint_state.h
+@@ -26,6 +26,7 @@
+ #define THIRD_PARTY_BLINK_RENDERER_CORE_PAINT_SCOPED_SVG_PAINT_STATE_H_
+ 
+ #include "base/dcheck_is_on.h"
++#include "base/types/optional_util.h"
+ #include "third_party/abseil-cpp/absl/types/optional.h"
+ #include "third_party/blink/renderer/core/paint/object_paint_properties.h"
+ #include "third_party/blink/renderer/core/paint/paint_info.h"
+@@ -44,7 +45,8 @@ class ScopedSVGTransformState {
+ 
+  public:
+   ScopedSVGTransformState(const PaintInfo& paint_info,
+-                          const LayoutObject& object) {
++                          const LayoutObject& object)
++      : content_paint_info_(paint_info) {
+     DCHECK(object.IsSVGChild());
+ 
+     const auto* fragment = paint_info.FragmentToPaint(object);
+@@ -60,11 +62,23 @@ class ScopedSVGTransformState {
+       transform_property_scope_.emplace(
+           paint_info.context.GetPaintController(), *transform_node, object,
+           DisplayItem::PaintPhaseToSVGTransformType(paint_info.phase));
++      if (auto* context_paints = paint_info.GetSvgContextPaints()) {
++        transformed_context_paints_.emplace(
++            context_paints->fill, context_paints->stroke,
++            context_paints->transform *
++                AffineTransform::FromTransform(transform_node->Matrix()));
++        content_paint_info_.SetSvgContextPaints(
++            base::OptionalToPtr(transformed_context_paints_));
++      }
+     }
+   }
+ 
++  PaintInfo& ContentPaintInfo() { return content_paint_info_; }
++
+  private:
++  absl::optional<SvgContextPaints> transformed_context_paints_;
+   absl::optional<ScopedPaintChunkProperties> transform_property_scope_;
++  PaintInfo content_paint_info_;
+ };
+ 
+ class ScopedSVGPaintState {

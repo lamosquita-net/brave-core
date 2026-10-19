@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/layout/svg/layout_svg_transformable_container.cc b/third_party/blink/renderer/core/layout/svg/layout_svg_transformable_container.cc
-index 5941ac262c460112202639ac59afd0e9d19bcef5..81a1c73b3d3960191229887d441600ba78cbe418 100644
+index 5941ac262c460112202639ac59afd0e9d19bcef5..397918fc9f604cff0f326a10641312397c5e71f9 100644
 --- a/third_party/blink/renderer/core/layout/svg/layout_svg_transformable_container.cc
 +++ b/third_party/blink/renderer/core/layout/svg/layout_svg_transformable_container.cc
-@@ -31,9 +31,7 @@ namespace blink {
+@@ -21,6 +21,7 @@
+ 
+ #include "third_party/blink/renderer/core/layout/svg/layout_svg_transformable_container.h"
+ 
++#include "third_party/blink/renderer/core/layout/svg/svg_resources.h"
+ #include "third_party/blink/renderer/core/layout/svg/transform_helper.h"
+ #include "third_party/blink/renderer/core/svg/svg_g_element.h"
+ #include "third_party/blink/renderer/core/svg/svg_graphics_element.h"
+@@ -31,9 +32,7 @@ namespace blink {
  
  LayoutSVGTransformableContainer::LayoutSVGTransformableContainer(
      SVGGraphicsElement* node)
@@ -13,7 +21,7 @@ index 5941ac262c460112202639ac59afd0e9d19bcef5..81a1c73b3d3960191229887d441600ba
  
  static bool HasValidPredecessor(const Node* node) {
    DCHECK(node);
-@@ -72,48 +70,26 @@ bool LayoutSVGTransformableContainer::IsChildAllowed(
+@@ -72,48 +71,26 @@ bool LayoutSVGTransformableContainer::IsChildAllowed(
    return LayoutSVGContainer::IsChildAllowed(child, style);
  }
  
@@ -46,13 +54,13 @@ index 5941ac262c460112202639ac59afd0e9d19bcef5..81a1c73b3d3960191229887d441600ba
 -    if (translation != additional_translation_)
 -      SetNeedsTransformUpdate();
 -    additional_translation_ = translation;
--  }
--
+   }
+ 
 -  if (!needs_transform_update_ && transform_uses_reference_box_) {
 -    if (CheckForImplicitTransformChange(bounds_changed))
 -      SetNeedsTransformUpdate();
-   }
- 
+-  }
+-
 -  if (!needs_transform_update_)
 -    return SVGTransformChange::kNone;
 -
@@ -67,7 +75,7 @@ index 5941ac262c460112202639ac59afd0e9d19bcef5..81a1c73b3d3960191229887d441600ba
    return change_detector.ComputeChange(local_transform_);
  }
  
-@@ -123,9 +99,18 @@ void LayoutSVGTransformableContainer::StyleDidChange(
+@@ -123,9 +100,35 @@ void LayoutSVGTransformableContainer::StyleDidChange(
    NOT_DESTROYED();
    LayoutSVGContainer::StyleDidChange(diff, old_style);
  
@@ -81,11 +89,28 @@ index 5941ac262c460112202639ac59afd0e9d19bcef5..81a1c73b3d3960191229887d441600ba
 +    if (old_style->X() != style.X() || old_style->Y() != style.Y()) {
 +      SetNeedsTransformUpdate();
 +    }
++    // Any descendant could use context-fill or context-stroke, so we must
++    // repaint the whole subtree.
++    if (old_style->FillPaint() != style.FillPaint() ||
++        old_style->StrokePaint() != style.StrokePaint()) {
++      SetSubtreeShouldDoFullPaintInvalidation(
++          PaintInvalidationReason::kSVGResource);
++    }
++  }
++
++  // To support context-fill and context-stroke
++  if (IsA<SVGUseElement>(element)) {
++    SVGResources::UpdatePaints(*this, old_style, StyleRef());
 +  }
 +
 +  TransformHelper::UpdateOffsetPath(element, old_style);
 +  SetTransformUsesReferenceBox(
 +      TransformHelper::UpdateReferenceBoxDependency(*this));
++}
++
++void LayoutSVGTransformableContainer::WillBeDestroyed() {
++  SVGResources::ClearPaints(*this, Style());
++  LayoutSVGContainer::WillBeDestroyed();
  }
  
  }  // namespace blink

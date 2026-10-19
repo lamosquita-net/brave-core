@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style.h b/third_party/blink/renderer/core/style/computed_style.h
-index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..4c23fdce4d43a3c053420717390cd286ebf153d3 100644
+index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..60e5ec54d91a52c700a6613c3197c46558227234 100644
 --- a/third_party/blink/renderer/core/style/computed_style.h
 +++ b/third_party/blink/renderer/core/style/computed_style.h
 @@ -44,7 +44,7 @@
@@ -143,7 +143,22 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..4c23fdce4d43a3c053420717390cd286
    bool ShouldBreakSpaces() const {
      return blink::ShouldBreakSpaces(GetWhiteSpaceCollapse());
    }
-@@ -2552,6 +2583,11 @@ class ComputedStyle : public ComputedStyleBase,
+@@ -2434,6 +2465,14 @@ class ComputedStyle : public ComputedStyleBase,
+       const Longhand& color_property,
+       bool* is_current_color = nullptr) const;
+ 
++  // Used to resolve 'context-fill' and 'context-stroke' paints
++  CORE_EXPORT blink::Color VisitedDependentContextFill(
++      const SVGPaint& context_paint,
++      const ComputedStyle& context_style) const;
++  CORE_EXPORT blink::Color VisitedDependentContextStroke(
++      const SVGPaint& context_paint,
++      const ComputedStyle& context_style) const;
++
+   // A faster version of VisitedDependentColor() that specializes on the
+   // concrete property class; for the common case of not being inside a link,
+   // can inline the question in function directly. However, it uses more code
+@@ -2552,6 +2591,11 @@ class ComputedStyle : public ComputedStyleBase,
              OverflowClipMargin()->GetMargin() != LayoutUnit());
    }
  
@@ -155,7 +170,7 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..4c23fdce4d43a3c053420717390cd286
   private:
    bool IsInlineSizeContainer() const {
      return ContainerType() & kContainerTypeInlineSize;
-@@ -2573,6 +2609,7 @@ class ComputedStyle : public ComputedStyleBase,
+@@ -2573,6 +2617,7 @@ class ComputedStyle : public ComputedStyleBase,
      return display == EDisplay::kBlock || display == EDisplay::kListItem ||
             display == EDisplay::kInlineBlock ||
             display == EDisplay::kFlowRoot ||
@@ -163,7 +178,7 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..4c23fdce4d43a3c053420717390cd286
             display == EDisplay::kInlineFlowRootListItem ||
             display == EDisplay::kTableCell ||
             display == EDisplay::kTableCaption;
-@@ -2611,7 +2648,7 @@ class ComputedStyle : public ComputedStyleBase,
+@@ -2611,7 +2656,7 @@ class ComputedStyle : public ComputedStyleBase,
  
    static bool IsDisplayInlineType(EDisplay display) {
      return display == EDisplay::kInline ||
@@ -172,7 +187,18 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..4c23fdce4d43a3c053420717390cd286
             IsDisplayReplacedType(display);
    }
  
-@@ -3060,6 +3097,7 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+@@ -2713,6 +2758,10 @@ class ComputedStyle : public ComputedStyleBase,
+   blink::Color GetInternalForcedVisitedCurrentColor(
+       bool* is_current_color = nullptr) const;
+ 
++  blink::Color VisitedDependentContextPaint(
++      const SVGPaint& context_paint,
++      const SVGPaint& context_visited_paint) const;
++
+   // Helper for resolving a StyleColor which may contain currentColor or a
+   // system color keyword. This is intended for cases where a given property
+   // consists of a StyleColor plus additional information. For <color>
+@@ -3060,6 +3109,7 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
      SetHasClipPath(clip_path.get());
      SetClipPathInternal(std::move(clip_path));
    }
@@ -180,7 +206,7 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..4c23fdce4d43a3c053420717390cd286
  
    // color
    blink::Color GetCurrentColor() const {
-@@ -3570,7 +3608,7 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+@@ -3570,7 +3620,7 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
    EWhiteSpace WhiteSpace() const { return style_->WhiteSpace(); }
    void SetWhiteSpace(EWhiteSpace whitespace) {
      SetWhiteSpaceCollapse(ToWhiteSpaceCollapse(whitespace));
@@ -189,7 +215,7 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..4c23fdce4d43a3c053420717390cd286
    }
  
    // WritingMode
-@@ -3587,6 +3625,17 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+@@ -3587,6 +3637,17 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
                           static_cast<unsigned>(ViewportUnitFlag::kDynamic));
    }
  

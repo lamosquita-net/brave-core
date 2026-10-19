@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/svg/layout_ng_svg_text.cc b/third_party/blink/renderer/core/layout/ng/svg/layout_ng_svg_text.cc
-index 5c69ac273afee86508b307c82d9442ca597c67b6..a97602f2a0603e5e4c656dbcdbf49ea5d296771a 100644
+index 5c69ac273afee86508b307c82d9442ca597c67b6..082d40f220dcc0e6ea389c44d36cb18989457b44 100644
 --- a/third_party/blink/renderer/core/layout/ng/svg/layout_ng_svg_text.cc
 +++ b/third_party/blink/renderer/core/layout/ng/svg/layout_ng_svg_text.cc
 @@ -16,7 +16,9 @@
@@ -29,6 +29,24 @@ index 5c69ac273afee86508b307c82d9442ca597c67b6..a97602f2a0603e5e4c656dbcdbf49ea5
  }
  
  void LayoutNGSVGText::WillBeDestroyed() {
+@@ -176,7 +188,8 @@ void LayoutNGSVGText::Paint(const PaintInfo& paint_info) const {
+     return;
+   }
+ 
+-  PaintInfo block_info(paint_info);
++  ScopedSVGTransformState transform_state(paint_info, *this);
++  PaintInfo& block_info = transform_state.ContentPaintInfo();
+   if (const auto* properties = FirstFragment().PaintProperties()) {
+     // TODO(https://crbug.com/1278452): Also consider Translate, Rotate,
+     // Scale, and Offset, probably via a single transform operation to
+@@ -184,7 +197,6 @@ void LayoutNGSVGText::Paint(const PaintInfo& paint_info) const {
+     if (const auto* transform = properties->Transform())
+       block_info.TransformCullRect(*transform);
+   }
+-  ScopedSVGTransformState transform_state(block_info, *this);
+ 
+   if (block_info.phase == PaintPhase::kForeground) {
+     SVGModelObjectPainter::RecordHitTestData(*this, block_info);
 @@ -217,11 +229,7 @@ void LayoutNGSVGText::UpdateLayout() {
      // should be fine. We update the transform again after computing
      // the bounding box below, and after that we clear the

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc b/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
-index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..fc4b5ab2d6bceac38c1c5698ff25fcdbdf88be23 100644
+index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..923edbc9bbfbad5da3e4777dc966786661907932 100644
 --- a/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
 +++ b/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
 @@ -4,7 +4,9 @@
@@ -1105,7 +1105,23 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..fc4b5ab2d6bceac38c1c5698ff25fcdb
  CSSValue* ConsumeBorderColorSide(CSSParserTokenRange& range,
                                   const CSSParserContext& context,
                                   const CSSParserLocalContext& local_context) {
-@@ -7580,10 +8182,15 @@ CSSValue* ConsumeFontSizeAdjust(CSSParserTokenRange& range,
+@@ -7482,8 +8084,13 @@ CSSValue* ConsumeContainerType(CSSParserTokenRange& range) {
+ 
+ CSSValue* ConsumeSVGPaint(CSSParserTokenRange& range,
+                           const CSSParserContext& context) {
+-  if (range.Peek().Id() == CSSValueID::kNone) {
+-    return ConsumeIdent(range);
++  switch (range.Peek().Id()) {
++    case CSSValueID::kNone:
++    case CSSValueID::kContextFill:
++    case CSSValueID::kContextStroke:
++      return ConsumeIdent(range);
++    default:
++      break;
+   }
+   cssvalue::CSSURIValue* url = ConsumeUrl(range, context);
+   if (url) {
+@@ -7580,10 +8187,15 @@ CSSValue* ConsumeFontSizeAdjust(CSSParserTokenRange& range,
  
    CSSIdentifierValue* font_metric =
        ConsumeIdent<CSSValueID::kExHeight, CSSValueID::kCapHeight,

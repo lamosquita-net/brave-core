@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc b/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
-index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..20c986d5bf7d2029872cf50924c072c6996ad5e7 100644
+index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..25ba1ae9f1c1811c25abd427d49d998612537c62 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
 @@ -37,6 +37,8 @@
@@ -192,7 +192,7 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..20c986d5bf7d2029872cf50924c072c6
    if (auto* color_mix_value = DynamicTo<cssvalue::CSSColorMixValue>(value)) {
      const StyleColor c1 = StyleBuilderConverter::ConvertStyleColor(
          state, color_mix_value->Color1(), for_visited_link);
-@@ -2227,18 +2309,19 @@ StyleAutoColor StyleBuilderConverter::ConvertStyleAutoColor(
+@@ -2227,25 +2309,52 @@ StyleAutoColor StyleBuilderConverter::ConvertStyleAutoColor(
  
  SVGPaint StyleBuilderConverter::ConvertSVGPaint(StyleResolverState& state,
                                                  const CSSValue& value,
@@ -214,8 +214,46 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..20c986d5bf7d2029872cf50924c072c6
 +    paint.resource = ConvertElementReference(state, *local_value, property_id);
    } else {
      auto* local_identifier_value = DynamicTo<CSSIdentifierValue>(local_value);
-     if (local_identifier_value &&
-@@ -2812,16 +2895,16 @@ RubyPosition StyleBuilderConverter::ConvertRubyPosition(
+-    if (local_identifier_value &&
+-        local_identifier_value->GetValueID() == CSSValueID::kNone) {
+-      paint.type =
+-          !paint.resource ? SVGPaintType::kNone : SVGPaintType::kUriNone;
+-    } else {
++    if (local_identifier_value) {
++      switch (local_identifier_value->GetValueID()) {
++        case CSSValueID::kNone:
++          paint.type =
++              !paint.resource ? SVGPaintType::kNone : SVGPaintType::kUriNone;
++          break;
++        case CSSValueID::kContextFill:
++          // context-fill cannot be use as a uri fallback
++          DCHECK(!paint.resource);
++          if (RuntimeEnabledFeatures::SvgContextPaintEnabled()) {
++            paint.type = SVGPaintType::kContextFill;
++          } else {
++            local_identifier_value = nullptr;
++          }
++          break;
++        case CSSValueID::kContextStroke:
++          // context-stroke cannot be use as a uri fallback
++          DCHECK(!paint.resource);
++          if (RuntimeEnabledFeatures::SvgContextPaintEnabled()) {
++            paint.type = SVGPaintType::kContextStroke;
++          } else {
++            local_identifier_value = nullptr;
++          }
++          break;
++        default:
++          // For all other keywords, try to parse as a color.
++          local_identifier_value = nullptr;
++          break;
++      }
++    }
++    if (!local_identifier_value) {
+       // TODO(fs): Pass along |for_visited_link|.
+       paint.color = ConvertStyleColor(state, *local_value);
+       paint.type =
+@@ -2812,16 +2921,16 @@ RubyPosition StyleBuilderConverter::ConvertRubyPosition(
      const CSSValue& value) {
    if (const auto* identifier_value = DynamicTo<CSSIdentifierValue>(value)) {
      CSSValueID value_id = identifier_value->GetValueID();

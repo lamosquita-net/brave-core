@@ -1,0 +1,16 @@
+diff --git a/third_party/blink/renderer/core/layout/svg/layout_svg_resource_pattern.cc b/third_party/blink/renderer/core/layout/svg/layout_svg_resource_pattern.cc
+index 0575080ce7a8c2ab636d570b86f9fba08c68187f..7201b858fcec3a53ce447f3a54212bcb02172c4b 100644
+--- a/third_party/blink/renderer/core/layout/svg/layout_svg_resource_pattern.cc
++++ b/third_party/blink/renderer/core/layout/svg/layout_svg_resource_pattern.cc
+@@ -224,8 +224,9 @@ PaintRecord LayoutSVGResourcePattern::AsPaintRecord(
+ 
+   auto* builder = MakeGarbageCollected<PaintRecordBuilder>();
+   for (LayoutObject* child = pattern_layout_object->FirstChild(); child;
+-       child = child->NextSibling())
+-    SVGObjectPainter(*child).PaintResourceSubtree(builder->Context());
++       child = child->NextSibling()) {
++    SVGObjectPainter(*child, nullptr).PaintResourceSubtree(builder->Context());
++  }
+   canvas->save();
+   canvas->concat(AffineTransformToSkM44(tile_transform));
+   builder->EndRecording(*canvas);

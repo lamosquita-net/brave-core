@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/properties/computed_style_utils.cc b/third_party/blink/renderer/core/css/properties/computed_style_utils.cc
-index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..f8f428031465b6a129c75cb4697a8ad73cf2eae1 100644
+index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..0514c252410ef3099b823c3896d4660e3b19901a 100644
 --- a/third_party/blink/renderer/core/css/properties/computed_style_utils.cc
 +++ b/third_party/blink/renderer/core/css/properties/computed_style_utils.cc
 @@ -52,7 +52,6 @@
@@ -450,3 +450,14 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..f8f428031465b6a129c75cb4697a8ad7
      } else {
        NOTREACHED();
      }
+@@ -3180,6 +3348,10 @@ CSSValue* ComputedStyleUtils::ValueForSVGPaint(const SVGPaint& paint,
+     }
+     case SVGPaintType::kUri:
+       return MakeGarbageCollected<cssvalue::CSSURIValue>(paint.GetUrl());
++    case SVGPaintType::kContextFill:
++      return CSSIdentifierValue::Create(CSSValueID::kContextFill);
++    case SVGPaintType::kContextStroke:
++      return CSSIdentifierValue::Create(CSSValueID::kContextStroke);
+   }
+ }
+ 
