@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/parser/html_tree_builder.cc b/third_party/blink/renderer/core/html/parser/html_tree_builder.cc
-index b4b07c1302b3496ffa516d0a1f99a5b5e7a9236a..6e43b38d207342ba85138c67c130e5974191c421 100644
+index b4b07c1302b3496ffa516d0a1f99a5b5e7a9236a..c06fd95f3caba770f8a07ff52bf6a5c63c00e76d 100644
 --- a/third_party/blink/renderer/core/html/parser/html_tree_builder.cc
 +++ b/third_party/blink/renderer/core/html/parser/html_tree_builder.cc
 @@ -706,6 +706,7 @@ void HTMLTreeBuilder::ProcessStartTagForInBody(AtomicHTMLToken* token) {
@@ -10,7 +10,17 @@ index b4b07c1302b3496ffa516d0a1f99a5b5e7a9236a..6e43b38d207342ba85138c67c130e597
      case HTMLTag::kSection:
      case HTMLTag::kSummary:
      case HTMLTag::kUl:
-@@ -999,6 +1000,12 @@ DeclarativeShadowRootType DeclarativeShadowRootTypeFromToken(
+@@ -961,6 +962,9 @@ void HTMLTreeBuilder::ProcessStartTagForInBody(AtomicHTMLToken* token) {
+         tree_.InsertForeignElement(token, svg_names::kNamespaceURI);
+       } else {
+         tree_.ReconstructTheActiveFormattingElements();
++        // Flush before creating custom elements. NOTE: Flush() can cause any
++        // queued tasks to execute, possibly re-entering the parser.
++        tree_.Flush();
+         tree_.InsertHTMLElement(token);
+       }
+       break;
+@@ -999,6 +1003,12 @@ DeclarativeShadowRootType DeclarativeShadowRootTypeFromToken(
      if (!type_attribute_non_streaming) {
        return DeclarativeShadowRootType::kNone;
      }
@@ -23,7 +33,7 @@ index b4b07c1302b3496ffa516d0a1f99a5b5e7a9236a..6e43b38d207342ba85138c67c130e597
      shadow_mode = type_attribute_non_streaming->Value();
    }
  
-@@ -1523,6 +1530,18 @@ void HTMLTreeBuilder::ProcessStartTag(AtomicHTMLToken* token) {
+@@ -1523,6 +1533,18 @@ void HTMLTreeBuilder::ProcessStartTag(AtomicHTMLToken* token) {
            }
            tree_.InsertHTMLElement(token);
            return;
@@ -42,7 +52,7 @@ index b4b07c1302b3496ffa516d0a1f99a5b5e7a9236a..6e43b38d207342ba85138c67c130e597
          case HTMLTag::kSelect: {
            ParseError(token);
            AtomicHTMLToken end_select(HTMLToken::kEndTag, HTMLTag::kSelect);
-@@ -1991,6 +2010,7 @@ void HTMLTreeBuilder::ProcessEndTagForInBody(AtomicHTMLToken* token) {
+@@ -1991,6 +2013,7 @@ void HTMLTreeBuilder::ProcessEndTagForInBody(AtomicHTMLToken* token) {
      case HTMLTag::kNav:
      case HTMLTag::kOl:
      case HTMLTag::kPre:
