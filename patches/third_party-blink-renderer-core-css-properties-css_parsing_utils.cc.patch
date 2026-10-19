@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc b/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
-index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..5070d208cf5574194c518b35e5162107198adf4b 100644
+index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..7a1491878326f8a3403b2f521b3411fbeab0ebbc 100644
 --- a/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
 +++ b/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
 @@ -4,7 +4,9 @@
@@ -756,11 +756,16 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..5070d208cf5574194c518b35e5162107
  void AddProperty(CSSPropertyID resolved_property,
                   CSSPropertyID current_shorthand,
                   const CSSValue& value,
-@@ -4553,10 +5087,20 @@ CSSValue* ConsumeBackgroundBox(CSSParserTokenRange& range) {
+@@ -4553,10 +5087,25 @@ CSSValue* ConsumeBackgroundBox(CSSParserTokenRange& range) {
                        CSSValueID::kContentBox>(range);
  }
  
 -CSSValue* ConsumeBackgroundComposite(CSSParserTokenRange& range) {
++CSSValue* ConsumeBackgroundBoxOrText(CSSParserTokenRange& range) {
++  return ConsumeIdent<CSSValueID::kBorderBox, CSSValueID::kPaddingBox,
++                      CSSValueID::kContentBox, CSSValueID::kText>(range);
++}
++
 +CSSValue* ConsumeMaskComposite(CSSParserTokenRange& range) {
 +  return ConsumeIdent<CSSValueID::kAdd, CSSValueID::kSubtract,
 +                      CSSValueID::kIntersect, CSSValueID::kExclude>(range);
@@ -778,7 +783,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..5070d208cf5574194c518b35e5162107
  CSSPrimitiveValue* ConsumeLengthOrPercentCountNegative(
      CSSParserTokenRange& range,
      const CSSParserContext& context,
-@@ -4617,14 +5161,14 @@ static void SetAllowsNegativePercentageReference(CSSValue* value) {
+@@ -4617,14 +5166,14 @@ static void SetAllowsNegativePercentageReference(CSSValue* value) {
  bool ConsumeBackgroundPosition(CSSParserTokenRange& range,
                                 const CSSParserContext& context,
                                 UnitlessQuirk unitless,
@@ -796,7 +801,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..5070d208cf5574194c518b35e5162107
        return false;
      }
      // TODO(crbug.com/825895): So far, 'background-position' is the only
-@@ -4665,16 +5209,31 @@ CSSValue* ParseBackgroundBox(CSSParserTokenRange& range,
+@@ -4665,16 +5214,31 @@ CSSValue* ParseBackgroundBox(CSSParserTokenRange& range,
    return ConsumeCommaSeparatedList(ConsumeBackgroundBox, range);
  }
  
@@ -832,7 +837,18 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..5070d208cf5574194c518b35e5162107
  namespace {
  
  CSSValue* ConsumeBackgroundComponent(CSSPropertyID resolved_property,
-@@ -4688,6 +5247,7 @@ CSSValue* ConsumeBackgroundComponent(CSSPropertyID resolved_property,
+@@ -4682,12 +5246,17 @@ CSSValue* ConsumeBackgroundComponent(CSSPropertyID resolved_property,
+                                      const CSSParserContext& context) {
+   switch (resolved_property) {
+     case CSSPropertyID::kBackgroundClip:
+-      return ConsumeBackgroundBox(range);
++      if (RuntimeEnabledFeatures::CSSBackgroundClipUnprefixEnabled()) {
++        return ConsumeBackgroundBoxOrText(range);
++      } else {
++        return ConsumeBackgroundBox(range);
++      }
+     case CSSPropertyID::kBackgroundAttachment:
+       return ConsumeBackgroundAttachment(range);
      case CSSPropertyID::kBackgroundOrigin:
        return ConsumeBackgroundBox(range);
      case CSSPropertyID::kBackgroundImage:
@@ -840,7 +856,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..5070d208cf5574194c518b35e5162107
      case CSSPropertyID::kWebkitMaskImage:
        return ConsumeImageOrNone(range, context);
      case CSSPropertyID::kBackgroundPositionX:
-@@ -4703,19 +5263,38 @@ CSSValue* ConsumeBackgroundComponent(CSSPropertyID resolved_property,
+@@ -4703,19 +5272,38 @@ CSSValue* ConsumeBackgroundComponent(CSSPropertyID resolved_property,
                                     WebFeature::kNegativeBackgroundSize,
                                     ParsingStyle::kNotLegacy);
      case CSSPropertyID::kWebkitMaskSize:
@@ -881,7 +897,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..5070d208cf5574194c518b35e5162107
  }
  
  }  // namespace
-@@ -4735,10 +5314,12 @@ bool ParseBackgroundOrMask(bool important,
+@@ -4735,10 +5323,12 @@ bool ParseBackgroundOrMask(bool important,
                             HeapVector<CSSPropertyValue, 64>& properties) {
    CSSPropertyID shorthand_id = local_context.CurrentShorthand();
    DCHECK(shorthand_id == CSSPropertyID::kBackground ||
@@ -897,7 +913,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..5070d208cf5574194c518b35e5162107
  
    const unsigned longhand_count = shorthand.length();
    CSSValue* longhands[10] = {nullptr};
-@@ -4759,11 +5340,8 @@ bool ParseBackgroundOrMask(bool important,
+@@ -4759,11 +5349,8 @@ bool ParseBackgroundOrMask(bool important,
          CSSValue* value = nullptr;
          CSSValue* value_y = nullptr;
          const CSSProperty& property = *shorthand.properties()[i];
@@ -911,7 +927,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..5070d208cf5574194c518b35e5162107
            if (!ConsumePosition(range, context, UnitlessQuirk::kForbid,
                                 WebFeature::kThreeValuedPositionBackground,
                                 value, value_y)) {
-@@ -4773,7 +5351,8 @@ bool ParseBackgroundOrMask(bool important,
+@@ -4773,7 +5360,8 @@ bool ParseBackgroundOrMask(bool important,
              bg_position_parsed_in_current_layer = true;
            }
          } else if (property.IDEquals(CSSPropertyID::kBackgroundSize) ||
@@ -921,7 +937,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..5070d208cf5574194c518b35e5162107
            if (!ConsumeSlashIncludingWhitespace(range)) {
              continue;
            }
-@@ -4787,9 +5366,7 @@ bool ParseBackgroundOrMask(bool important,
+@@ -4787,9 +5375,7 @@ bool ParseBackgroundOrMask(bool important,
              return false;
            }
          } else if (property.IDEquals(CSSPropertyID::kBackgroundPositionY) ||
@@ -932,7 +948,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..5070d208cf5574194c518b35e5162107
            continue;
          } else {
            value =
-@@ -4797,6 +5374,7 @@ bool ParseBackgroundOrMask(bool important,
+@@ -4797,6 +5383,7 @@ bool ParseBackgroundOrMask(bool important,
          }
          if (value) {
            if (property.IDEquals(CSSPropertyID::kBackgroundOrigin) ||
@@ -940,7 +956,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..5070d208cf5574194c518b35e5162107
                property.IDEquals(CSSPropertyID::kWebkitMaskOrigin)) {
              origin_value = value;
            }
-@@ -4817,6 +5395,7 @@ bool ParseBackgroundOrMask(bool important,
+@@ -4817,6 +5404,7 @@ bool ParseBackgroundOrMask(bool important,
      // TODO(timloh): This will make invalid longhands, see crbug.com/386459
      for (unsigned i = 0; i < longhand_count; ++i) {
        const CSSProperty& property = *shorthand.properties()[i];
@@ -948,7 +964,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..5070d208cf5574194c518b35e5162107
        if (property.IDEquals(CSSPropertyID::kBackgroundColor) &&
            !range.AtEnd()) {
          if (parsed_longhand[i]) {
-@@ -4824,13 +5403,16 @@ bool ParseBackgroundOrMask(bool important,
+@@ -4824,13 +5412,16 @@ bool ParseBackgroundOrMask(bool important,
          }
          continue;
        }
@@ -971,7 +987,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..5070d208cf5574194c518b35e5162107
          AddBackgroundValue(longhands[i], CSSInitialValue::Create());
        }
      }
-@@ -4853,51 +5435,33 @@ bool ParseBackgroundOrMask(bool important,
+@@ -4853,51 +5444,33 @@ bool ParseBackgroundOrMask(bool important,
    return true;
  }
  
@@ -1044,7 +1060,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..5070d208cf5574194c518b35e5162107
  }
  
  CSSValue* ConsumeWebkitBorderImage(CSSParserTokenRange& range,
-@@ -7356,6 +7920,29 @@ bool IsValidPropertyList(const CSSValueList& value_list) {
+@@ -7356,6 +7929,29 @@ bool IsValidPropertyList(const CSSValueList& value_list) {
    return true;
  }
  
@@ -1074,7 +1090,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..5070d208cf5574194c518b35e5162107
  CSSValue* ConsumeBorderColorSide(CSSParserTokenRange& range,
                                   const CSSParserContext& context,
                                   const CSSParserLocalContext& local_context) {
-@@ -7580,10 +8167,15 @@ CSSValue* ConsumeFontSizeAdjust(CSSParserTokenRange& range,
+@@ -7580,10 +8176,15 @@ CSSValue* ConsumeFontSizeAdjust(CSSParserTokenRange& range,
  
    CSSIdentifierValue* font_metric =
        ConsumeIdent<CSSValueID::kExHeight, CSSValueID::kCapHeight,
