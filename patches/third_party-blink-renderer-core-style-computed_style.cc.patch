@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style.cc b/third_party/blink/renderer/core/style/computed_style.cc
-index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..1829ce469b67bc00f70781ef06f979a709a73b05 100644
+index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..7ed3c6ba685268f71f48d72df01cefcafe6a1b76 100644
 --- a/third_party/blink/renderer/core/style/computed_style.cc
 +++ b/third_party/blink/renderer/core/style/computed_style.cc
 @@ -23,6 +23,9 @@
@@ -48,7 +48,7 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..1829ce469b67bc00f70781ef06f979a7
                   apply_independent_transform_properties);
  }
  
-@@ -2341,6 +2346,42 @@ Color ComputedStyle::VisitedDependentColor(const Longhand& color_property,
+@@ -2341,6 +2346,48 @@ Color ComputedStyle::VisitedDependentColor(const Longhand& color_property,
                                 visited_color.Param2(), unvisited_color.Alpha());
  }
  
@@ -81,17 +81,23 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..1829ce469b67bc00f70781ef06f979a7
 +  if (!context_visited_paint.HasColor()) {
 +    return unvisited_color;
 +  }
-+  if (ShouldForceColor(context_visited_paint.GetColor())) {
-+    return GetInternalForcedVisitedCurrentColor(nullptr);
-+  }
-+  return context_visited_paint.GetColor().Resolve(
-+      GetInternalVisitedCurrentColor(), UsedColorScheme(), nullptr);
++  blink::Color visited_color =
++      ShouldForceColor(context_visited_paint.GetColor())
++          ? GetInternalForcedVisitedCurrentColor(nullptr)
++          : context_visited_paint.GetColor().Resolve(
++                GetInternalVisitedCurrentColor(), UsedColorScheme(), nullptr);
++  // Take the alpha from the unvisited color and only the RGB values from the
++  // visited color, as VisitedDependentColor() does, so that the alpha of a
++  // :visited style cannot reveal the history.
++  return Color::FromColorSpace(visited_color.GetColorSpace(),
++                               visited_color.Param0(), visited_color.Param1(),
++                               visited_color.Param2(), unvisited_color.Alpha());
 +}
 +
  blink::Color ComputedStyle::ResolvedColor(const StyleColor& color,
                                            bool* is_current_color) const {
    bool visited_link = (InsideLink() == EInsideLink::kInsideVisitedLink);
-@@ -2534,43 +2575,24 @@ absl::optional<blink::Color> ComputedStyle::AccentColorResolved() const {
+@@ -2534,43 +2581,24 @@ absl::optional<blink::Color> ComputedStyle::AccentColorResolved() const {
    return auto_color.Resolve(GetCurrentColor(), UsedColorScheme());
  }
  
@@ -150,7 +156,7 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..1829ce469b67bc00f70781ef06f979a7
  }
  
  bool ComputedStyle::ShouldApplyAnyContainment(const Element& element,
-@@ -2656,6 +2678,21 @@ bool ComputedStyle::IsRenderedInTopLayer(const Element& element) const {
+@@ -2656,6 +2684,21 @@ bool ComputedStyle::IsRenderedInTopLayer(const Element& element) const {
           StyleType() == kPseudoIdBackdrop;
  }
  
