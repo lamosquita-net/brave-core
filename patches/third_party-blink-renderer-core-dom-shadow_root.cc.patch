@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/shadow_root.cc b/third_party/blink/renderer/core/dom/shadow_root.cc
-index b195e78714b4cdefc1ef8706ff7885ae49556634..3d92f21684376a9bb935b24fc395ca35ffd954b8 100644
+index b195e78714b4cdefc1ef8706ff7885ae49556634..83cb690407a43c6cd7ffcf008427bcd32395e62c 100644
 --- a/third_party/blink/renderer/core/dom/shadow_root.cc
 +++ b/third_party/blink/renderer/core/dom/shadow_root.cc
 @@ -27,6 +27,7 @@
@@ -64,3 +64,20 @@ index b195e78714b4cdefc1ef8706ff7885ae49556634..3d92f21684376a9bb935b24fc395ca35
  void ShadowRoot::RebuildLayoutTree(WhitespaceAttacher& whitespace_attacher) {
    DCHECK(!NeedsReattachLayoutTree());
    DCHECK(!ChildNeedsReattachLayoutTree());
+@@ -244,6 +273,16 @@ void ShadowRoot::ChildrenChanged(const ChildrenChange& change) {
+         To<Element>(change.sibling_changed), change.sibling_before_change,
+         change.sibling_after_change);
+   }
++
++  // In the case of input types like button where the child element is not
++  // in a container, we need to explicit adjust directionality.
++  if (RuntimeEnabledFeatures::CSSPseudoDirEnabled()) {
++    if (TextControlElement* text_element =
++            HTMLElement::ElementIfAutoDirectionalityFormAssociatedOrNull(
++                &host())) {
++      text_element->AdjustDirectionalityIfNeededAfterChildrenChanged(change);
++    }
++  }
+ }
+ 
+ void ShadowRoot::SetRegistry(CustomElementRegistry* registry) {

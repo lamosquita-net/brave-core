@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/html_element.cc b/third_party/blink/renderer/core/html/html_element.cc
-index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..f81e15f71a84025b33210c16969796613558e1bd 100644
+index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..9ec87043237de33c9362a8375c61bc51f5b92995 100644
 --- a/third_party/blink/renderer/core/html/html_element.cc
 +++ b/third_party/blink/renderer/core/html/html_element.cc
 @@ -29,6 +29,8 @@
@@ -203,7 +203,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..f81e15f71a84025b33210c1696979661
      }
    }
    if (change.IsChildInsertion()) {
-@@ -2449,81 +2496,23 @@ bool HTMLElement::HasDirectionAuto() const {
+@@ -2449,81 +2496,24 @@ bool HTMLElement::HasDirectionAuto() const {
    // <bdi> defaults to dir="auto"
    // https://html.spec.whatwg.org/C/#the-bdi-element
    const AtomicString& direction = FastGetAttribute(html_names::kDirAttr);
@@ -277,11 +277,12 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..f81e15f71a84025b33210c1696979661
 -    }
 -
 -    node = Traversal::Next(*node, stay_within);
-+const TextControlElement* HTMLElement::ElementIfAutoDirShouldUseValueOrNull(
++const TextControlElement*
++HTMLElement::ElementIfAutoDirectionalityFormAssociatedOrNull(
 +    const Element* element) {
 +  const TextControlElement* text_element =
 +      DynamicTo<TextControlElement>(element);
-+  if (text_element && text_element->ShouldAutoDirUseValue()) {
++  if (text_element && text_element->IsAutoDirectionalityFormAssociated()) {
 +    return text_element;
    }
 -  return absl::nullopt;
@@ -294,7 +295,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..f81e15f71a84025b33210c1696979661
    DCHECK(SelfOrAncestorHasDirAutoAttribute());
    bool is_deferred;
    TextDirection text_direction =
-@@ -2552,10 +2541,22 @@ void HTMLElement::AdjustDirectionalityIfNeededAfterChildAttributeChanged(
+@@ -2552,10 +2542,22 @@ void HTMLElement::AdjustDirectionalityIfNeededAfterChildAttributeChanged(
  }
  
  bool HTMLElement::CalculateAndAdjustAutoDirectionality(Node* stay_within) {
@@ -320,7 +321,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..f81e15f71a84025b33210c1696979661
    if (CachedDirectionality() != text_direction && !is_deferred) {
      UpdateDirectionalityAndDescendant(text_direction);
  
-@@ -2571,58 +2572,12 @@ bool HTMLElement::CalculateAndAdjustAutoDirectionality(Node* stay_within) {
+@@ -2571,58 +2573,12 @@ bool HTMLElement::CalculateAndAdjustAutoDirectionality(Node* stay_within) {
    return false;
  }
  
@@ -382,7 +383,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..f81e15f71a84025b33210c1696979661
    if (SelfOrAncestorHasDirAutoAttribute()) {
      for (auto* element_to_adjust = this; element_to_adjust;
           element_to_adjust = DynamicTo<HTMLElement>(
-@@ -2638,8 +2593,37 @@ void HTMLElement::AdjustDirectionalityIfNeededAfterShadowRootChanged() {
+@@ -2638,8 +2594,37 @@ void HTMLElement::AdjustDirectionalityIfNeededAfterShadowRootChanged() {
    }
  }
  
@@ -420,7 +421,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..f81e15f71a84025b33210c1696979661
    HeapHashSet<Member<HTMLElement>> directionality_set;
    // Transfer a candidate directionality set to |directionality_set| to avoid
    // the tree walk to the duplicated parent node for the directionality.
-@@ -3034,53 +3018,8 @@ Element* HTMLElement::unclosedOffsetParent() {
+@@ -3034,53 +3019,8 @@ Element* HTMLElement::unclosedOffsetParent() {
    return layout_object->OffsetParent(this);
  }
  
@@ -475,7 +476,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..f81e15f71a84025b33210c1696979661
    Node* node = FlatTreeTraversal::FirstChild(*this);
    while (node) {
      if (IsA<HTMLElement>(node)) {
-@@ -3108,26 +3047,38 @@ void HTMLElement::UpdateDescendantDirectionality(TextDirection direction) {
+@@ -3108,26 +3048,38 @@ void HTMLElement::UpdateDescendantDirectionality(TextDirection direction) {
  void HTMLElement::OnDirAttrChanged(const AttributeModificationParams& params) {
    // If an ancestor has dir=auto, and this node has the first character,
    // changes to dir attribute may affect the ancestor.
@@ -524,7 +525,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..f81e15f71a84025b33210c1696979661
    } else if (!is_old_auto && is_new_auto) {
      SetSelfOrAncestorHasDirAutoAttribute();
      UpdateDescendantHasDirAutoAttribute(true /* has_dir_auto */);
-@@ -3293,27 +3244,23 @@ bool HTMLElement::IsLabelable() const {
+@@ -3293,27 +3245,23 @@ bool HTMLElement::IsLabelable() const {
    return IsFormAssociatedCustomElement();
  }
  

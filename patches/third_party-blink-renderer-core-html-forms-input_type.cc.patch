@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/forms/input_type.cc b/third_party/blink/renderer/core/html/forms/input_type.cc
-index 3c8125ea9f7ea1816e37f75b10bb152dd7cc6722..4591913c533f21c43723a7d2377fd78678056055 100644
+index 3c8125ea9f7ea1816e37f75b10bb152dd7cc6722..799bcca6f347c2a642f4f3f6c236032ae2edf773 100644
 --- a/third_party/blink/renderer/core/html/forms/input_type.cc
 +++ b/third_party/blink/renderer/core/html/forms/input_type.cc
 @@ -37,6 +37,7 @@
@@ -14,14 +14,33 @@ index 3c8125ea9f7ea1816e37f75b10bb152dd7cc6722..4591913c533f21c43723a7d2377fd786
    return false;
  }
  
-+bool InputType::ShouldAutoDirUseValue() const {
++bool InputType::IsAutoDirectionalityFormAssociated() const {
 +  return false;
 +}
 +
  template <typename T>
  bool ValidateInputType(const T& input_type, const String& value) {
    if (!input_type.CanSetStringValue()) {
-@@ -1046,6 +1051,14 @@ void InputType::ApplyStep(const Decimal& current,
+@@ -219,7 +224,17 @@ bool InputType::IsFormDataAppendable() const {
+ }
+ 
+ void InputType::AppendToFormData(FormData& form_data) const {
+-  form_data.AppendFromElement(GetElement().GetName(), GetElement().Value());
++  if (!IsSubmitInputType()) {
++    form_data.AppendFromElement(GetElement().GetName(), GetElement().Value());
++  }
++  if (IsAutoDirectionalityFormAssociated()) {
++    const AtomicString& dirname_attr_value =
++        GetElement().FastGetAttribute(html_names::kDirnameAttr);
++    if (!dirname_attr_value.IsNull()) {
++      form_data.AppendFromElement(dirname_attr_value,
++                                  GetElement().DirectionForFormData());
++    }
++  }
+ }
+ 
+ String InputType::ResultForDialogSubmit() const {
+@@ -1046,6 +1061,14 @@ void InputType::ApplyStep(const Decimal& current,
    // a number to a string, as defined for the input element's type attribute's
    // current state, on value.
    // 12. Set the value of the element to value as string.

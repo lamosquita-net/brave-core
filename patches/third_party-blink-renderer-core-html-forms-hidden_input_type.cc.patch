@@ -1,0 +1,32 @@
+diff --git a/third_party/blink/renderer/core/html/forms/hidden_input_type.cc b/third_party/blink/renderer/core/html/forms/hidden_input_type.cc
+index 66aa93bae6a3ef5b4dd0be2b6728b4175cdb0d55..b2d2228349ec909a7166496e76aa44702ab1fa13 100644
+--- a/third_party/blink/renderer/core/html/forms/hidden_input_type.cc
++++ b/third_party/blink/renderer/core/html/forms/hidden_input_type.cc
+@@ -32,6 +32,7 @@
+ #include "third_party/blink/renderer/core/html/forms/hidden_input_type.h"
+ 
+ #include "third_party/blink/renderer/core/dom/document.h"
++#include "third_party/blink/renderer/core/dom/element.h"
+ #include "third_party/blink/renderer/core/dom/events/simulated_click_options.h"
+ #include "third_party/blink/renderer/core/frame/web_feature.h"
+ #include "third_party/blink/renderer/core/html/forms/form_controller.h"
+@@ -104,4 +105,19 @@ bool HiddenInputType::ShouldRespectHeightAndWidthAttributes() {
+   return true;
+ }
+ 
++bool HiddenInputType::IsAutoDirectionalityFormAssociated() const {
++  return true;
++}
++
++void HiddenInputType::ValueAttributeChanged() {
++  UpdateView();
++  // Hidden input need to adjust directionality explicitly since it has no
++  // descendant to propagate dir from.
++  if (RuntimeEnabledFeatures::CSSPseudoDirEnabled() &&
++      GetElement().HasDirectionAuto()) {
++    GetElement().UpdateAncestorWithDirAuto(
++        Element::UpdateAncestorTraversal::IncludeSelf);
++  }
++}
++
+ }  // namespace blink

@@ -1,8 +1,8 @@
 diff --git a/third_party/blink/renderer/core/html/forms/html_input_element.cc b/third_party/blink/renderer/core/html/forms/html_input_element.cc
-index d408b73d03898c039b5450de0e766770c7c0ae61..31cb3457a8235b5c4fd48782a3daa93dd8a0b427 100644
+index d408b73d03898c039b5450de0e766770c7c0ae61..212a6da2b0fe4c06fa66f54b00376c5b53d593ae 100644
 --- a/third_party/blink/renderer/core/html/forms/html_input_element.cc
 +++ b/third_party/blink/renderer/core/html/forms/html_input_element.cc
-@@ -467,9 +467,18 @@ void HTMLInputElement::UpdateType() {
+@@ -467,9 +467,19 @@ void HTMLInputElement::UpdateType() {
    const bool previously_selectable = input_type_->SupportsSelectionAPI();
  
    input_type_view_->WillBeDestroyed();
@@ -13,7 +13,8 @@ index d408b73d03898c039b5450de0e766770c7c0ae61..31cb3457a8235b5c4fd48782a3daa93d
 +  const AtomicString& dir = FastGetAttribute(html_names::kDirAttr);
 +  if ((!dir && (old_type->IsTelephoneInputType() || IsTelephone())) ||
 +      (EqualIgnoringASCIICase(dir, "auto") &&
-+       (old_type->ShouldAutoDirUseValue() || ShouldAutoDirUseValue()))) {
++       (old_type->IsAutoDirectionalityFormAssociated() ||
++        IsAutoDirectionalityFormAssociated()))) {
 +    const AtomicString& value_dir = AtomicString(DirectionForFormData());
 +    UpdateDirectionalityAfterInputTypeChange(dir, value_dir);
 +  }
@@ -21,7 +22,7 @@ index d408b73d03898c039b5450de0e766770c7c0ae61..31cb3457a8235b5c4fd48782a3daa93d
    input_type_view_->CreateShadowSubtreeIfNeeded();
  
    UpdateWillValidateCache();
-@@ -914,6 +923,7 @@ void HTMLInputElement::ParseAttribute(
+@@ -914,6 +924,7 @@ void HTMLInputElement::ParseAttribute(
  void HTMLInputElement::ParserDidSetAttributes() {
    DCHECK(parsing_in_progress_);
    InitializeTypeInParsing();
@@ -29,7 +30,7 @@ index d408b73d03898c039b5450de0e766770c7c0ae61..31cb3457a8235b5c4fd48782a3daa93d
  }
  
  void HTMLInputElement::FinishParsingChildren() {
-@@ -1004,6 +1014,14 @@ bool HTMLInputElement::IsTextField() const {
+@@ -1004,6 +1015,14 @@ bool HTMLInputElement::IsTextField() const {
    return input_type_->IsTextField();
  }
  
@@ -37,14 +38,14 @@ index d408b73d03898c039b5450de0e766770c7c0ae61..31cb3457a8235b5c4fd48782a3daa93d
 +  return input_type_->IsTelephoneInputType();
 +}
 +
-+bool HTMLInputElement::ShouldAutoDirUseValue() const {
-+  return input_type_->ShouldAutoDirUseValue();
++bool HTMLInputElement::IsAutoDirectionalityFormAssociated() const {
++  return input_type_->IsAutoDirectionalityFormAssociated();
 +}
 +
  bool HTMLInputElement::HasBeenPasswordField() const {
    return has_been_password_field_;
  }
-@@ -2301,6 +2319,9 @@ void HTMLInputElement::showPicker(ExceptionState& exception_state) {
+@@ -2301,6 +2320,9 @@ void HTMLInputElement::showPicker(ExceptionState& exception_state) {
          "HTMLInputElement::showPicker() requires a user gesture.");
      return;
    }
