@@ -1,0 +1,25 @@
+diff --git a/content/browser/webauth/webauth_request_security_checker.cc b/content/browser/webauth/webauth_request_security_checker.cc
+index 31062cfc2c64a09b5717d091582d57ee9dd898b2..24786dfba4a2b64c3cc8fbb62a10102e755965da 100644
+--- a/content/browser/webauth/webauth_request_security_checker.cc
++++ b/content/browser/webauth/webauth_request_security_checker.cc
+@@ -57,14 +57,14 @@ WebAuthRequestSecurityChecker::ValidateAncestorOrigins(
+ 
+   *is_cross_origin = !IsSameOriginWithAncestors(origin);
+ 
+-  // MakeCredential requests do not have an associated permissions policy, but
+-  // are prohibited in cross-origin subframes.
+-  if (!*is_cross_origin && type == RequestType::kMakeCredential) {
+-    return blink::mojom::AuthenticatorStatus::SUCCESS;
+-  }
+-
+   // Requests in cross-origin iframes are permitted if enabled via permissions
+   // policy and for SPC requests.
++  if (type == RequestType::kMakeCredential &&
++      render_frame_host_->IsFeatureEnabled(
++          blink::mojom::PermissionsPolicyFeature::
++              kPublicKeyCredentialsCreate)) {
++    return blink::mojom::AuthenticatorStatus::SUCCESS;
++  }
+   if (type == RequestType::kGetAssertion &&
+       render_frame_host_->IsFeatureEnabled(
+           blink::mojom::PermissionsPolicyFeature::kPublicKeyCredentialsGet)) {
