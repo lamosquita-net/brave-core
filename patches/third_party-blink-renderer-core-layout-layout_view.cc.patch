@@ -1,0 +1,32 @@
+diff --git a/third_party/blink/renderer/core/layout/layout_view.cc b/third_party/blink/renderer/core/layout/layout_view.cc
+index d9421ce135bffdc0275fd1103445f73a9f931a49..780cab19d6afc30448c74a3361c7c2694294667b 100644
+--- a/third_party/blink/renderer/core/layout/layout_view.cc
++++ b/third_party/blink/renderer/core/layout/layout_view.cc
+@@ -51,6 +51,7 @@
+ #include "third_party/blink/renderer/core/layout/ng/ng_block_node.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_constraint_space_builder.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_layout_result.h"
++#include "third_party/blink/renderer/core/layout/ng/svg/layout_ng_svg_text.h"
+ #include "third_party/blink/renderer/core/layout/svg/layout_svg_root.h"
+ #include "third_party/blink/renderer/core/layout/view_fragmentation_context.h"
+ #include "third_party/blink/renderer/core/page/chrome_client.h"
+@@ -139,6 +140,19 @@ void LayoutView::Trace(Visitor* visitor) const {
+ bool LayoutView::HitTest(const HitTestLocation& location,
+                          HitTestResult& result) {
+   NOT_DESTROYED();
++  if (has_svg_text_descendants_) {
++    // This is necessary because SVG <text> might have obsolete geometry after
++    // scale-only changes.  See crbug.com/1296089#c16
++    auto it = svg_text_descendants_->find(this);
++    if (it != svg_text_descendants_->end()) {
++      for (LayoutBox* box : *it->value) {
++        auto* svg_text = To<LayoutNGSVGText>(box);
++        if (svg_text->NeedsTextMetricsUpdate()) {
++          svg_text->SetNeedsLayout(layout_invalidation_reason::kStyleChange);
++        }
++      }
++    }
++  }
+   // We have to recursively update layout/style here because otherwise, when the
+   // hit test recurses into a child document, it could trigger a layout on the
+   // parent document, which can destroy PaintLayer that are higher up in the
