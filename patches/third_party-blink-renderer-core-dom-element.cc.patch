@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/element.cc b/third_party/blink/renderer/core/dom/element.cc
-index 603363d44dba6a56412a2408af11a821e39bde00..4b73427e50b3440953565e0c9bd520bcdf16ead7 100644
+index 603363d44dba6a56412a2408af11a821e39bde00..f45f047fef6924081805d6561c3b4c631907317f 100644
 --- a/third_party/blink/renderer/core/dom/element.cc
 +++ b/third_party/blink/renderer/core/dom/element.cc
 @@ -43,6 +43,7 @@
@@ -900,7 +900,31 @@ index 603363d44dba6a56412a2408af11a821e39bde00..4b73427e50b3440953565e0c9bd520bc
      return element->EnsureComputedStyle();
    }
  
-@@ -6693,11 +7285,32 @@ PseudoElement* Element::GetPseudoElement(
+@@ -6397,7 +6989,7 @@ AtomicString Element::ComputeInheritedLanguage() const {
+         if (const Attribute* attribute =
+                 attributes.Find(xml_names::kLangAttr)) {
+           value = attribute->Value();
+-        } else {
++        } else if (n->IsHTMLElement() || n->IsSVGElement()) {
+           attribute = attributes.Find(html_names::kLangAttr);
+           if (attribute) {
+             value = attribute->Value();
+@@ -6409,7 +7001,13 @@ AtomicString Element::ComputeInheritedLanguage() const {
+       value = document->ContentLanguage();
+     }
+ 
+-    n = n->ParentOrShadowHostNode();
++    const HTMLSlotElement* slot =
++        ToHTMLSlotElementIfSupportsAssignmentOrNull(n);
++    if (slot && RuntimeEnabledFeatures::HTMLLangNewInheritanceEnabled()) {
++      n = &n->ContainingShadowRoot()->host();
++    } else {
++      n = n->ParentOrShadowHostNode();
++    }
+   } while (n && value.IsNull());
+ 
+   return value;
+@@ -6693,11 +7291,32 @@ PseudoElement* Element::GetPseudoElement(
                         : nullptr;
  }
  
@@ -935,7 +959,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..4b73427e50b3440953565e0c9bd520bc
    }
  
    // The transition pseudos can currently only exist on the document element.
-@@ -6730,7 +7343,8 @@ PseudoElement* Element::GetNestedPseudoElement(
+@@ -6730,7 +7349,8 @@ PseudoElement* Element::GetNestedPseudoElement(
  }
  
  LayoutObject* Element::PseudoElementLayoutObject(PseudoId pseudo_id) const {
@@ -945,7 +969,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..4b73427e50b3440953565e0c9bd520bc
      return element->GetLayoutObject();
    }
    return nullptr;
-@@ -8317,7 +8931,7 @@ void Element::RebuildTransitionPseudoLayoutTree(
+@@ -8317,7 +8937,7 @@ void Element::RebuildTransitionPseudoLayoutTree(
                                                 rebuild_pseudo_tree);
  }
  
@@ -954,7 +978,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..4b73427e50b3440953565e0c9bd520bc
    return RuntimeEnabledFeatures::InertAttributeEnabled() &&
           FastHasAttribute(html_names::kInertAttr) && IsHTMLElement();
  }
-@@ -8377,9 +8991,34 @@ FocusgroupFlags Element::GetFocusgroupFlags() const {
+@@ -8377,9 +8997,34 @@ FocusgroupFlags Element::GetFocusgroupFlags() const {
  }
  
  bool Element::checkVisibility(CheckVisibilityOptions* options) const {
@@ -991,7 +1015,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..4b73427e50b3440953565e0c9bd520bc
    DisplayLockUtilities::ScopedForcedUpdate force_locks(
        this, DisplayLockContext::ForcedPhase::kStyleAndLayoutTree,
        /*include_self=*/false, /*only_cv_auto=*/true,
-@@ -8396,7 +9035,9 @@ bool Element::checkVisibility(CheckVisibilityOptions* options) const {
+@@ -8396,7 +9041,9 @@ bool Element::checkVisibility(CheckVisibilityOptions* options) const {
    }
  
    DCHECK(options);
@@ -1002,7 +1026,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..4b73427e50b3440953565e0c9bd520bc
        style->Visibility() != EVisibility::kVisible) {
      return false;
    }
-@@ -8415,7 +9056,9 @@ bool Element::checkVisibility(CheckVisibilityOptions* options) const {
+@@ -8415,7 +9062,9 @@ bool Element::checkVisibility(CheckVisibilityOptions* options) const {
      }
  
      // Check for opacity:0
@@ -1013,7 +1037,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..4b73427e50b3440953565e0c9bd520bc
        if (style = ancestor.GetComputedStyle(); style) {
          if (style->Opacity() == 0.f) {
            return false;
-@@ -8850,4 +9493,10 @@ Element* Element::ImplicitAnchorElement() {
+@@ -8850,4 +9499,10 @@ Element* Element::ImplicitAnchorElement() {
    return nullptr;
  }
  
