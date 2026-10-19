@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.h b/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.h
-index 6b241a91e27ab7c4b3045b8d7f7e6d4a3ed85f18..214bc1db7c1ae1de4e03ebc40f4a098039f863b9 100644
+index 6b241a91e27ab7c4b3045b8d7f7e6d4a3ed85f18..113448b78fc085821c3c69ad56e734f7202d2f4f 100644
 --- a/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.h
 +++ b/third_party/blink/renderer/core/layout/ng/inline/ng_line_info.h
 @@ -28,9 +28,10 @@ struct NGInlineItemsData;
@@ -34,7 +34,28 @@ index 6b241a91e27ab7c4b3045b8d7f7e6d4a3ed85f18..214bc1db7c1ae1de4e03ebc40f4a0980
    const NGBlockBreakToken* BlockInInlineBreakToken() const {
      if (!block_in_inline_layout_result_)
        return nullptr;
-@@ -150,6 +157,9 @@ class CORE_EXPORT NGLineInfo {
+@@ -116,15 +123,17 @@ class CORE_EXPORT NGLineInfo {
+   NGBfcOffset BfcOffset() const { return bfc_offset_; }
+   LayoutUnit AvailableWidth() const { return available_width_; }
+ 
+-  // The width of this line. Includes trailing spaces if they were preserved.
++  // The width of this line, including the hanging width from trailing spaces.
+   // Negative width created by negative 'text-indent' is clamped to zero.
+   LayoutUnit Width() const { return width_.ClampNegativeToZero(); }
+-  // Same as |Width()| but returns negative value as is. Preserved trailing
+-  // spaces may or may not be included, depends on |ShouldHangTrailingSpaces()|.
++  // Same as |Width()| but returns negatives value as is. The hanging width
++  // (e.g. from preserved trailing spaces) may or may not be included, depends
++  // on |ShouldHangTrailingSpaces()|.
+   LayoutUnit WidthForAlignment() const {
+     return width_ - HangWidthForAlignment();
+   }
+   // Width that hangs over the end of the line; e.g., preserved trailing spaces.
++  // See https://drafts.csswg.org/css-text/#hanging.
+   LayoutUnit HangWidth() const { return hang_width_; }
+   // Same as |HangWidth()| but it may be 0 depending on
+   // |ShouldHangTrailingSpaces()|.
+@@ -150,6 +159,9 @@ class CORE_EXPORT NGLineInfo {
    bool HasOverflow() const { return has_overflow_; }
    void SetHasOverflow(bool value = true) { has_overflow_ = value; }
  
@@ -44,7 +65,7 @@ index 6b241a91e27ab7c4b3045b8d7f7e6d4a3ed85f18..214bc1db7c1ae1de4e03ebc40f4a0980
    void SetBfcOffset(const NGBfcOffset& bfc_offset) { bfc_offset_ = bfc_offset; }
    void SetWidth(LayoutUnit available_width, LayoutUnit width) {
      available_width_ = available_width;
-@@ -160,13 +170,26 @@ class CORE_EXPORT NGLineInfo {
+@@ -160,13 +172,26 @@ class CORE_EXPORT NGLineInfo {
    const NGInlineItemTextIndex& Start() const { return start_; }
    unsigned StartOffset() const { return start_.text_offset; }
    void SetStart(const NGInlineItemTextIndex& index) { start_ = index; }
@@ -72,7 +93,7 @@ index 6b241a91e27ab7c4b3045b8d7f7e6d4a3ed85f18..214bc1db7c1ae1de4e03ebc40f4a0980
    // End text offset for `text-align: justify`. This excludes preserved trailing
    // spaces. Available only when |TextAlign()| is |kJustify|.
    unsigned EndOffsetForJustify() const {
-@@ -177,6 +200,8 @@ class CORE_EXPORT NGLineInfo {
+@@ -177,6 +202,8 @@ class CORE_EXPORT NGLineInfo {
    unsigned EndItemIndex() const { return end_item_index_; }
    void SetEndItemIndex(unsigned index) { end_item_index_ = index; }
  
@@ -81,7 +102,7 @@ index 6b241a91e27ab7c4b3045b8d7f7e6d4a3ed85f18..214bc1db7c1ae1de4e03ebc40f4a0980
    // The base direction of this line for the bidi algorithm.
    TextDirection BaseDirection() const { return base_direction_; }
    void SetBaseDirection(TextDirection direction) {
-@@ -195,10 +220,19 @@ class CORE_EXPORT NGLineInfo {
+@@ -195,10 +222,19 @@ class CORE_EXPORT NGLineInfo {
      block_in_inline_layout_result_ = std::move(layout_result);
    }
  
@@ -105,7 +126,7 @@ index 6b241a91e27ab7c4b3045b8d7f7e6d4a3ed85f18..214bc1db7c1ae1de4e03ebc40f4a0980
  
    // Returns annotation block start adjustment base on annotation and initial
    // letter.
-@@ -242,17 +276,18 @@ class CORE_EXPORT NGLineInfo {
+@@ -242,17 +278,18 @@ class CORE_EXPORT NGLineInfo {
    // The width of preserved trailing spaces.
    LayoutUnit ComputeTrailingSpaceWidth(
        unsigned* end_offset_out = nullptr) const;
@@ -127,7 +148,7 @@ index 6b241a91e27ab7c4b3045b8d7f7e6d4a3ed85f18..214bc1db7c1ae1de4e03ebc40f4a0980
  
    LayoutUnit available_width_;
    LayoutUnit width_;
-@@ -284,9 +319,13 @@ class CORE_EXPORT NGLineInfo {
+@@ -284,9 +321,13 @@ class CORE_EXPORT NGLineInfo {
    // Even if text combine item causes line break, this variable is not reset.
    // This variable is used to add spacing before/after text combine items if
    // "text-align: justify".
@@ -142,7 +163,7 @@ index 6b241a91e27ab7c4b3045b8d7f7e6d4a3ed85f18..214bc1db7c1ae1de4e03ebc40f4a0980
    bool allow_hang_for_alignment_ = false;
  
    // When adding fields, pelase ensure `Reset()` is in sync.
-@@ -296,4 +335,6 @@ std::ostream& operator<<(std::ostream& ostream, const NGLineInfo& line_info);
+@@ -296,4 +337,6 @@ std::ostream& operator<<(std::ostream& ostream, const NGLineInfo& line_info);
  
  }  // namespace blink
  

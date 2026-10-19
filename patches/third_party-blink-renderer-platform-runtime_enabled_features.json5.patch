@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/runtime_enabled_features.json5 b/third_party/blink/renderer/platform/runtime_enabled_features.json5
-index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a310f2d37 100644
+index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..7a5bcfca90c2c3403a4c33c204a4882d25f37076 100644
 --- a/third_party/blink/renderer/platform/runtime_enabled_features.json5
 +++ b/third_party/blink/renderer/platform/runtime_enabled_features.json5
 @@ -276,8 +276,10 @@
@@ -657,10 +657,19 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "HandwritingRecognition",
        status: {
-@@ -1942,6 +2200,11 @@
+@@ -1942,6 +2200,20 @@
        },
        base_feature: "none",
      },
++    {
++      // Updates the hanging behavior of preserved whitespace at the end of a
++      // line to not depend on text-align. This flag is to be used as a
++      // killswitch in case of any issues.
++      // https://github.com/w3c/csswg-drafts/issues/3440
++      // crbug.com/1363901
++      name: "HangingWhitespaceDoesNotDependOnAlignment",
++      status: "stable",
++    },
 +    {
 +      name: "HasUAVisualTransition",
 +      status: "stable",
@@ -669,7 +678,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      // HighlightAPI's custom highlights use HighlightInheritance's behavior even
      // if the HighlightInheritance feature is not enabled.
      {
-@@ -1971,6 +2234,23 @@
+@@ -1971,6 +2243,23 @@
        status: "stable",
        base_feature: "none",
      },
@@ -693,7 +702,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        // A flag, just for local testing to make the
        // HTML parser yield more often and take longer to resume.
-@@ -1996,11 +2276,20 @@
+@@ -1996,11 +2285,20 @@
        name: "HTMLPopoverHint",
        status: "experimental",
      },
@@ -714,7 +723,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "IDBBatchGetAll",
        status:"experimental",
-@@ -2019,6 +2308,14 @@
+@@ -2019,6 +2317,14 @@
        origin_trial_allows_third_party: true,
        public: true,
      },
@@ -729,7 +738,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "ImplicitRootScroller",
        public: true,
-@@ -2026,6 +2323,15 @@
+@@ -2026,6 +2332,15 @@
        status: {"Android": "stable"},
        base_feature: "none",
      },
@@ -745,7 +754,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "IncomingCallNotifications",
      },
-@@ -2038,12 +2344,32 @@
+@@ -2038,12 +2353,32 @@
        name: "InertDisplayTransition",
        status: "experimental",
      },
@@ -778,7 +787,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        // If enabled, setting innerHTML will use a special fast-path parser.
        name: "InnerHTMLParserFastpath",
-@@ -2062,6 +2388,19 @@
+@@ -2062,6 +2397,19 @@
        status: {"Android": "test", "default": "stable"},
        base_feature: "none",
      },
@@ -798,7 +807,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "InstalledApp",
        public: true,
-@@ -2075,11 +2414,25 @@
+@@ -2075,11 +2423,25 @@
      {
        "name": "IntersectionOptimization",
      },
@@ -824,7 +833,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "KeyboardAccessibleTooltip",
        status: "experimental",
-@@ -2087,13 +2440,22 @@
+@@ -2087,13 +2449,22 @@
      },
      {
        name: "KeyboardFocusableScrollers",
@@ -848,7 +857,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "LayoutDisableWebkitBoxSafeAlignment",
        status: "stable",
-@@ -2137,7 +2499,8 @@
+@@ -2137,7 +2508,8 @@
      },
      {
        name: "LayoutNGSubgrid",
@@ -858,7 +867,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
        base_feature: "none",
      },
      {
-@@ -2152,6 +2515,17 @@
+@@ -2152,6 +2524,17 @@
        public: true,
        // This is enabled by features::kLazyInitializeMediaControls.
      },
@@ -876,7 +885,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "LCPAnimatedImagesWebExposed",
        status: "test",
-@@ -2168,6 +2542,10 @@
+@@ -2168,6 +2551,10 @@
        // Enabled by features::kLegacyWindowsDWriteFontFallback;
        base_feature: "none",
      },
@@ -887,7 +896,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        // A feature to load <input type=image> images even if there is no layout object.
        // This aligns with <img> behavior, but for safety can be disabled with this
-@@ -2337,6 +2715,18 @@
+@@ -2337,6 +2724,18 @@
      },
      // This is enabled by default on Windows only. The only part that's
      // "experimental" is the support on other platforms.
@@ -906,7 +915,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "MiddleClickAutoscroll",
        status: "test",
-@@ -2346,6 +2736,10 @@
+@@ -2346,6 +2745,10 @@
        name: "MobileLayoutTheme",
        base_feature: "none",
      },
@@ -917,7 +926,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "MojoJS",
        status: "test",
-@@ -2358,12 +2752,32 @@
+@@ -2358,12 +2761,32 @@
        status: "test",
        base_feature: "none",
      },
@@ -951,7 +960,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "NavigateEventCancelableTraversals",
        status: "stable",
-@@ -2372,6 +2786,10 @@
+@@ -2372,6 +2795,10 @@
        name: "NavigateEventCommitBehavior",
        status: "experimental",
      },
@@ -962,7 +971,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "NavigationId",
        status: "experimental",
-@@ -2409,11 +2827,23 @@
+@@ -2409,11 +2836,23 @@
      },
      // Makes enter/leave Mouse and Pointer Events non-composed as per
      // corresponding specifications.
@@ -986,7 +995,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        // Kill switch for crbug.com/1427047 fix.
        // TODO(xiaochengh): Remove in M117.
-@@ -2759,6 +3189,10 @@
+@@ -2759,6 +3198,10 @@
        base_feature: "none",
        origin_trial_feature_name: "PNaCl",
      },
@@ -997,7 +1006,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "PointerEventDeviceId",
        status: "test",
-@@ -2766,10 +3200,18 @@
+@@ -2766,10 +3209,18 @@
      // PopoverDialogDontThrow makes popover and dialog elements stop throwing
      // exceptions when calling their show and hide methods when they are
      // already in their requested state. See https://github.com/whatwg/html/pull/9142
@@ -1016,7 +1025,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "Portals",
        // Portals must be enabled by blink::features::kPortals as we require the
-@@ -2786,6 +3228,10 @@
+@@ -2786,6 +3237,10 @@
        public: true,
        copied_from_base_feature_if: "overridden",
      },
@@ -1027,7 +1036,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "PreciseMemoryInfo",
        base_feature: "none",
-@@ -2809,7 +3255,8 @@
+@@ -2809,7 +3264,8 @@
      // See https://crbug.com/346236 for current status.
      {
        name: "PrefixedVideoFullscreen",
@@ -1037,7 +1046,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
        base_feature: "none",
      },
      {
-@@ -2831,6 +3278,10 @@
+@@ -2831,6 +3287,10 @@
      },
      // The RTE feature encompasses multiple APIs, including: Attribution
      // Reporting, FLEDGE, Topics and Fenced Frames.
@@ -1048,7 +1057,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "PrivacySandboxAdsAPIs",
        base_feature: "none",
-@@ -2867,6 +3318,10 @@
+@@ -2867,6 +3327,10 @@
        status: "test",
        base_feature: "none",
      },
@@ -1059,7 +1068,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "PushMessaging",
        public: true,
-@@ -2888,6 +3343,10 @@
+@@ -2888,6 +3352,10 @@
        status: "experimental",
        base_feature: "none",
      },
@@ -1070,7 +1079,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "ReadableStreamTeeCloneForBranch2",
        status: "stable",
-@@ -2938,6 +3397,10 @@
+@@ -2938,6 +3406,10 @@
        status: {"Android": "stable", "default": ""},
        base_feature: "none",
      },
@@ -1081,7 +1090,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        // crbug.com/1432839
        name: "RemoveConvertToLayerCoords",
-@@ -2945,12 +3408,12 @@
+@@ -2945,12 +3417,12 @@
      },
      {
        name: "RemoveDanglingMarkupInTarget",
@@ -1096,7 +1105,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      },
      {
        name: "RemoveLegacySizeComputation",
-@@ -2962,6 +3425,10 @@
+@@ -2962,6 +3434,10 @@
        status: "stable",
        base_feature: "none",
      },
@@ -1107,7 +1116,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        // Non-standard appearance values should be removed. This feature removes
        // inner-spin-button, media-slider, media-sliderthumb, media-volume-slider
-@@ -2988,6 +3455,10 @@
+@@ -2988,6 +3464,10 @@
        name: "RenderPriorityAttribute",
        base_feature: "none",
      },
@@ -1118,7 +1127,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "ResourceHintsLeastRestrictiveCSP",
        status: "stable",
-@@ -3019,6 +3490,10 @@
+@@ -3019,6 +3499,10 @@
        status: "experimental",
        base_feature: "none",
      },
@@ -1129,7 +1138,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "RtcAudioJitterBufferMaxPackets",
        origin_trial_feature_name: "RtcAudioJitterBufferMaxPackets",
-@@ -3044,6 +3519,10 @@
+@@ -3044,6 +3528,10 @@
      // Legacy callback-based getStats() has limited availability unless this
      // Deprecation Trial is enabled.
      // TODO(https://crbug.com/822696): Remove when origin trial ends.
@@ -1140,7 +1149,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "RTCLegacyCallbackBasedGetStats",
        origin_trial_feature_name: "RTCLegacyCallbackBasedGetStats",
-@@ -3070,6 +3549,27 @@
+@@ -3070,6 +3558,27 @@
        name: "RTCSvcScalabilityMode",
        status: "stable",
      },
@@ -1168,7 +1177,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "SanitizerAPI",
        status: "experimental",
-@@ -3109,18 +3609,23 @@
+@@ -3109,18 +3618,23 @@
        status: "stable",
        base_feature: "none",
      },
@@ -1195,7 +1204,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      },
      {
        name: "ScrollCustomization",
-@@ -3182,6 +3687,14 @@
+@@ -3182,6 +3696,14 @@
        status: "stable",
        base_feature: "none",
      },
@@ -1210,7 +1219,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "SendBeaconThrowForBlobWithNonSimpleType",
        public: true,
-@@ -3231,6 +3744,10 @@
+@@ -3231,6 +3753,10 @@
        origin_trial_feature_name: "ServiceWorkerStaticRouter",
        public: true,
      },
@@ -1221,7 +1230,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "SharedArrayBuffer",
        base_feature: "none",
-@@ -3266,6 +3783,13 @@
+@@ -3266,6 +3792,13 @@
        status: {"Android": "", "default": "stable"},
        base_feature: "none",
      },
@@ -1235,7 +1244,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "SignatureBasedIntegrity",
        origin_trial_feature_name: "SignatureBasedIntegrity",
-@@ -3440,6 +3964,10 @@
+@@ -3440,6 +3973,10 @@
        name: "StreamingDeclarativeShadowDOM",
        status: "stable",
      },
@@ -1246,7 +1255,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "StrictMimeTypesForWorkers",
        status: "experimental",
-@@ -3449,10 +3977,31 @@
+@@ -3449,10 +3986,31 @@
        name: "StylusHandwriting",
        base_feature: "none",
      },
@@ -1278,7 +1287,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "SvgRasterOptimizations",
        status: "experimental",
-@@ -3467,6 +4016,13 @@
+@@ -3467,6 +4025,13 @@
        status: "experimental",
        base_feature: "none",
      },
@@ -1292,7 +1301,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      // For unit tests.
      {
        name: "TestFeature",
-@@ -3496,6 +4052,10 @@
+@@ -3496,6 +4061,10 @@
        status: "experimental",
        base_feature: "none",
      },
@@ -1303,7 +1312,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "TextFragmentAPI",
        status: "experimental",
-@@ -3513,6 +4073,10 @@
+@@ -3513,6 +4082,10 @@
        status: {"Android": "stable"},
        base_feature: "none",
      },
@@ -1314,7 +1323,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "ThirdPartyCookiesUserBypass",
        status: "experimental",
-@@ -3595,6 +4159,10 @@
+@@ -3595,6 +4168,10 @@
        base_feature: "none",
      },
      // This is conditionally set if the platform supports translation.
@@ -1325,7 +1334,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "TranslateService",
        base_feature: "none",
-@@ -3630,6 +4198,12 @@
+@@ -3630,6 +4207,12 @@
        name: "UnexposedTaskIds",
        base_feature: "none",
      },
@@ -1338,7 +1347,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      // This is a reverse OT used for a phased deprecation, on desktop
      // https://crbug.com/1071424
      {
-@@ -3638,11 +4212,28 @@
+@@ -3638,11 +4221,28 @@
        origin_trial_feature_name: "UnrestrictedSharedArrayBuffer",
        origin_trial_os: ["win", "mac", "linux", "fuchsia", "chromeos"],
      },
@@ -1367,7 +1376,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        // Makes the global root scrollbars follow the preferred color scheme
        // by default. Please see more details: crbug.com/1423087.
-@@ -3657,11 +4248,29 @@
+@@ -3657,11 +4257,29 @@
        name: "UserAgentClientHint",
        status: "stable",
      },
@@ -1397,7 +1406,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        // Whether a video element should automatically play fullscreen unless
        // 'playsinline' is set.
-@@ -3723,6 +4332,10 @@
+@@ -3723,6 +4341,10 @@
        // See https://drafts.csswg.org/css-view-transitions-1/.
        name: "ViewTransitionOnNavigation",
      },
@@ -1408,7 +1417,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "VisibilityCollapseColumn",
        base_feature: "none",
-@@ -3732,6 +4345,10 @@
+@@ -3732,6 +4354,10 @@
        status: "stable",
        base_feature: "none",
      },
@@ -1419,7 +1428,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        // The "WakeLock" feature was originally implied_by "ScreenWakeLock" and
        // "SystemWakeLock". The former was removed after being promoted to
-@@ -3854,7 +4471,7 @@
+@@ -3854,7 +4480,7 @@
      // https://w3c.github.io/webauthn/#sctn-parseRequestOptionsFromJSON
      {
        name: "WebAuthenticationJSONSerialization",
@@ -1428,7 +1437,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      },
      {
        name: "WebAuthenticationLargeBlobExtension",
-@@ -3960,6 +4577,11 @@
+@@ -3960,6 +4586,11 @@
        // process access to WebGPU to the renderer process.
        status: "stable",
      },
@@ -1440,7 +1449,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        // WebGPU developer features are deliberately not enabled by experimental
        // web platform features.
-@@ -3993,6 +4615,11 @@
+@@ -3993,6 +4624,11 @@
        status: "test",
        base_feature: "none",
      },
@@ -1452,7 +1461,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      // Legacy ::-webkit-scrollbar* pseudo element styling. Enabled for stable
      // but configurable via WebPreferences.
      {
-@@ -4031,6 +4658,10 @@
+@@ -4031,6 +4667,10 @@
        status: "test",
        base_feature: "none",
      },
@@ -1463,7 +1472,7 @@ index e77f3afb2cc9e94b35d7456daa7f7e7554d56bd8..f32639a5ba4516dcc381881b4478fe6a
      {
        name: "WebSocketStream",
        status: "experimental",
-@@ -4167,6 +4798,16 @@
+@@ -4167,6 +4807,16 @@
        name: "WindowPlacementFullscreenOnScreensChange",
        status: "experimental",
      },
