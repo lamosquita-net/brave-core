@@ -1,0 +1,28 @@
+diff --git a/third_party/blink/renderer/core/html/parser/html_construction_site.h b/third_party/blink/renderer/core/html/parser/html_construction_site.h
+index aad8d2589d7c5c913217dc8c0b86bd77cf7743b1..8eb44d6d31a77cb35075c342468b638529a476f3 100644
+--- a/third_party/blink/renderer/core/html/parser/html_construction_site.h
++++ b/third_party/blink/renderer/core/html/parser/html_construction_site.h
+@@ -212,6 +212,11 @@ class HTMLConstructionSite final {
+     return parser_content_policy_;
+   }
+ 
++  static CustomElementDefinition* LookUpCustomElementDefinition(
++      Document&,
++      const QualifiedName&,
++      const AtomicString& is);
++
+   class RedirectToFosterParentGuard {
+     STACK_ALLOCATED();
+ 
+@@ -259,11 +264,6 @@ class HTMLConstructionSite final {
+   void ExecuteTask(HTMLConstructionSiteTask&);
+   void QueueTask(const HTMLConstructionSiteTask&, bool flush_pending_text);
+ 
+-  CustomElementDefinition* LookUpCustomElementDefinition(
+-      Document&,
+-      const QualifiedName&,
+-      const AtomicString& is);
+-
+   void SetAttributes(Element* element, AtomicHTMLToken* token);
+ 
+   Member<HTMLParserReentryPermit> reentry_permit_;

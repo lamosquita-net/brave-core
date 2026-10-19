@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/parser/html_construction_site.cc b/third_party/blink/renderer/core/html/parser/html_construction_site.cc
-index fe92f7fc26dfab633625b8403103c855f35877af..185012b06f027813c1b426c4dc1e4af0eb7a052b 100644
+index fe92f7fc26dfab633625b8403103c855f35877af..f4a6eb2dc3d485c98cf5eb21421f3bd35e24fb50 100644
 --- a/third_party/blink/renderer/core/html/parser/html_construction_site.cc
 +++ b/third_party/blink/renderer/core/html/parser/html_construction_site.cc
 @@ -822,10 +822,11 @@ void HTMLConstructionSite::InsertHTMLTemplateElement(
@@ -18,3 +18,20 @@ index fe92f7fc26dfab633625b8403103c855f35877af..185012b06f027813c1b426c4dc1e4af0
      DCHECK(RuntimeEnabledFeatures::StreamingDeclarativeShadowDOMEnabled());
      // Attach the shadow root now
      auto focus_delegation = template_stack_item->GetAttributeItem(
+@@ -1021,6 +1022,7 @@ Document& HTMLConstructionSite::OwnerDocumentForCurrentNode() {
+ 
+ // "look up a custom element definition" for a token
+ // https://html.spec.whatwg.org/C/#look-up-a-custom-element-definition
++// static
+ CustomElementDefinition* HTMLConstructionSite::LookUpCustomElementDefinition(
+     Document& document,
+     const QualifiedName& tag_name,
+@@ -1075,6 +1077,8 @@ Element* HTMLConstructionSite::CreateElement(
+ 
+   Element* element;
+ 
++  // This check and the steps inside are duplicated in
++  // XMLDocumentParser::StartElementNs.
+   if (will_execute_script) {
+     // "6.1 Increment the document's throw-on-dynamic-insertion counter."
+     ThrowOnDynamicMarkupInsertionCountIncrementer
