@@ -1,9 +1,9 @@
 diff --git a/third_party/blink/renderer/core/style/style_anchor_scope.h b/third_party/blink/renderer/core/style/style_anchor_scope.h
 new file mode 100644
-index 0000000000000000000000000000000000000000..e0488ea738deb6b21358d1747bcc5a42f5f7ee74
+index 0000000000000000000000000000000000000000..df487aa63528555fd6ac0d2f291af9886a9aeda3
 --- /dev/null
 +++ b/third_party/blink/renderer/core/style/style_anchor_scope.h
-@@ -0,0 +1,61 @@
+@@ -0,0 +1,63 @@
 +// Copyright 2024 The Chromium Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -53,11 +53,13 @@ index 0000000000000000000000000000000000000000..e0488ea738deb6b21358d1747bcc5a42
 +
 + private:
 +  Type type_ = Type::kNone;
-+  // FlyWeb (FM.28): Persistent, not Member: in 116 ComputedStyle is
++  // FlyWeb (FM.28): Persistent handles, not Member: in 116 ComputedStyle is
 +  // ref-counted, not traced (like the other GC fields of ComputedStyle, see
-+  // wrapper_pointer_name "Persistent" in css_properties.json5).
++  // wrapper_pointer_name "Persistent" in css_properties.json5). The tree scope
++  // is weak, as in ScopedCSSName, to break the cycle
++  // Document -> ComputedStyle -> StyleAnchorScope -> TreeScope(Document).
 +  // For Type::kAll.
-+  Persistent<const TreeScope> all_tree_scope_;
++  WeakPersistent<const TreeScope> all_tree_scope_;
 +  // For Type::kNames.
 +  Persistent<const ScopedCSSNameList> names_;
 +};
