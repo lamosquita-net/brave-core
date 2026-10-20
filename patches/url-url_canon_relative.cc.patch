@@ -1,0 +1,89 @@
+diff --git a/url/url_canon_relative.cc b/url/url_canon_relative.cc
+index d8ea528a25a08788cac88724c940337186ba3dc7..77b938b731cf5e04f0ae669c903dd7377d00d5d3 100644
+--- a/url/url_canon_relative.cc
++++ b/url/url_canon_relative.cc
+@@ -4,6 +4,8 @@
+ 
+ // Canonicalizer functions for working with and resolving relative URLs.
+ 
++#include <string.h>
++
+ #include <algorithm>
+ #include <ostream>
+ 
+@@ -327,7 +329,14 @@ bool DoResolveRelativePath(const char* base_url,
+   // possible escaped characters.
+   output->ReserveSizeIfNeeded(base_parsed.path.begin +
+                               std::max({path.end(), query.end(), ref.end()}));
+-  output->Append(base_url, base_parsed.path.begin);
++  if (base_parsed.path.is_valid()) {
++    output->Append(base_url, base_parsed.path.begin);
++  } else {
++    // FlyWeb: a non-special URL may have no path (e.g. "git://host", see
++    // DoResolveRelativeURL()). Copy the base up to where its path would start.
++    output->Append(base_url,
++                   base_parsed.CountCharactersBefore(Parsed::PATH, false));
++  }
+ 
+   if (path.is_nonempty()) {
+     // The path is replaced or modified.
+@@ -362,8 +371,14 @@ bool DoResolveRelativePath(const char* base_url,
+       // original path with the file part stripped, and append the new path.
+       // The canonicalizer will take care of resolving ".." and "."
+       size_t path_begin = output->length();
+-      CopyToLastSlash(base_url, base_path_begin, base_parsed.path.end(),
+-                      output);
++      if (base_parsed.path.is_empty()) {
++        // FlyWeb: as in Chromium 130+, resolving "path" against "git://host"
++        // gives "git://host/path", not "git://hostpath".
++        output->push_back('/');
++      } else {
++        CopyToLastSlash(base_url, base_path_begin, base_parsed.path.end(),
++                        output);
++      }
+       success &= CanonicalizePartialPathInternal(relative_url, path, path_begin,
+                                                  output);
+       out_parsed->path = MakeRange(path_begin, output->length());
+@@ -475,6 +490,20 @@ bool DoResolveAbsoluteFile(const CHAR* relative_url,
+                              query_converter, output, out_parsed);
+ }
+ 
++// FlyWeb: true if |host| is non-empty and has none of the code points that the
++// URL Standard forbids in an opaque host (controls, space, "#/:<>?@[\]^|",
++// non-ASCII), so that it is serialized as is. See DoResolveRelativeURL().
++bool IsPlainOpaqueHost(const char* spec, const Component& host) {
++  if (!host.is_nonempty())
++    return false;
++  for (int i = host.begin; i < host.end(); i++) {
++    const unsigned char c = static_cast<unsigned char>(spec[i]);
++    if (c <= 0x20 || c >= 0x7F || strchr("#/:<>?@[\\]^|", c))
++      return false;
++  }
++  return true;
++}
++
+ // TODO(brettw) treat two slashes as root like Mozilla for FTP?
+ template<typename CHAR>
+ bool DoResolveRelativeURL(const char* base_url,
+@@ -498,7 +527,20 @@ bool DoResolveRelativeURL(const char* base_url,
+   // paths (even the default path of "/" is OK).
+   //
+   // We allow hosts with no length so we can handle file URLs, for example.
+-  if (base_parsed.path.is_empty()) {
++  //
++  // FlyWeb: a non-special URL with a host may have an empty path ("sc://host",
++  // "git://host?q"). Chromium 130+ resolves against it with
++  // StandardCompliantNonSpecialSchemeURLParsing ("x" gives "sc://host/x", "?x"
++  // gives "sc://host?x"); do the same for that case only.
++  // Only for a plain host (no user, password or port), so that the base's
++  // authority is already what Chromium 130+ would serialize.
++  const bool base_is_non_special_without_path =
++      base_parsed.path.is_empty() && !base_is_file &&
++      !base_parsed.username.is_valid() && !base_parsed.password.is_valid() &&
++      !base_parsed.port.is_valid() &&
++      IsPlainOpaqueHost(base_url, base_parsed.host) &&
++      !IsStandard(base_url, base_parsed.scheme);
++  if (base_parsed.path.is_empty() && !base_is_non_special_without_path) {
+     // On error, return the input (resolving a relative URL on a non-relative
+     // base = the base).
+     int base_len = base_parsed.Length();
