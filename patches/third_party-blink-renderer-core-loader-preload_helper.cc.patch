@@ -1,7 +1,16 @@
 diff --git a/third_party/blink/renderer/core/loader/preload_helper.cc b/third_party/blink/renderer/core/loader/preload_helper.cc
-index d1e0e2b3778a604b4cfe472cf4d40cdeab61fad6..e4e1c806c61d9cae0fe69d6c49ebceddd5937b85 100644
+index d1e0e2b3778a604b4cfe472cf4d40cdeab61fad6..9932c52f5e37b91adda5b071c139be328f469e2c 100644
 --- a/third_party/blink/renderer/core/loader/preload_helper.cc
 +++ b/third_party/blink/renderer/core/loader/preload_helper.cc
+@@ -161,7 +161,7 @@ KURL GetBestFitImageURL(const Document& document,
+                         const String& image_sizes) {
+   float source_size = SizesAttributeParser(media_values, image_sizes,
+                                            document.GetExecutionContext())
+-                          .length();
++                          .Size();
+   ImageCandidate candidate = BestFitSourceForImageAttributes(
+       media_values->DevicePixelRatio(), source_size, href, image_srcset);
+   return base_url.IsNull() ? document.CompleteURL(candidate.ToString())
 @@ -218,6 +218,22 @@ bool IsResourceLoadAllowed(PreloadHelper::LoadLinksFromHeaderMode mode,
    }
  }

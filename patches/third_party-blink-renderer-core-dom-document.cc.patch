@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/document.cc b/third_party/blink/renderer/core/dom/document.cc
-index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..3a84d34d23c2c1f903e1a11fe559f2b1ffd5cffe 100644
+index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..6cb46cbcdc264e5e25d8d003408b77f308dfde14 100644
 --- a/third_party/blink/renderer/core/dom/document.cc
 +++ b/third_party/blink/renderer/core/dom/document.cc
 @@ -79,6 +79,7 @@
@@ -26,7 +26,15 @@ index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..3a84d34d23c2c1f903e1a11fe559f2b1
  #include "third_party/blink/renderer/core/execution_context/window_agent.h"
  #include "third_party/blink/renderer/core/fragment_directive/fragment_directive.h"
  #include "third_party/blink/renderer/core/fragment_directive/text_fragment_handler.h"
-@@ -377,6 +380,8 @@ namespace blink {
+@@ -227,6 +230,7 @@
+ #include "third_party/blink/renderer/core/html/html_frame_owner_element.h"
+ #include "third_party/blink/renderer/core/html/html_head_element.h"
+ #include "third_party/blink/renderer/core/html/html_html_element.h"
++#include "third_party/blink/renderer/core/html/html_image_element.h"
+ #include "third_party/blink/renderer/core/html/html_link_element.h"
+ #include "third_party/blink/renderer/core/html/html_meta_element.h"
+ #include "third_party/blink/renderer/core/html/html_object_element.h"
+@@ -377,6 +381,8 @@ namespace blink {
  
  namespace {
  
@@ -35,7 +43,7 @@ index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..3a84d34d23c2c1f903e1a11fe559f2b1
  // This enum must match the numbering for RequestStorageResult in
  // histograms/enums.xml. Do not reorder or remove items, only add new items
  // at the end.
-@@ -927,18 +932,29 @@ Document::~Document() {
+@@ -927,18 +933,29 @@ Document::~Document() {
  
  Range* Document::CreateRangeAdjustedToTreeScope(const TreeScope& tree_scope,
                                                  const Position& position) {
@@ -70,7 +78,7 @@ index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..3a84d34d23c2c1f903e1a11fe559f2b1
  }
  
  SelectorQueryCache& Document::GetSelectorQueryCache() {
-@@ -1355,7 +1371,9 @@ Node* Document::importNode(Node* imported_node,
+@@ -1355,7 +1372,9 @@ Node* Document::importNode(Node* imported_node,
    // if deep is true, and the clone shadows flag set if this is a
    // DocumentFragment whose host is an HTML template element.
    auto* fragment = DynamicTo<DocumentFragment>(imported_node);
@@ -81,7 +89,7 @@ index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..3a84d34d23c2c1f903e1a11fe559f2b1
    return imported_node->Clone(
        *this, deep ? (clone_shadows_flag ? CloneChildrenFlag::kCloneWithShadows
                                          : CloneChildrenFlag::kClone)
-@@ -1562,7 +1580,7 @@ String Document::SuggestedMIMEType() const {
+@@ -1562,7 +1581,7 @@ String Document::SuggestedMIMEType() const {
    if (xmlStandalone())
      return "text/xml";
    if (IsA<HTMLDocument>(this))
@@ -90,7 +98,7 @@ index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..3a84d34d23c2c1f903e1a11fe559f2b1
  
    if (DocumentLoader* document_loader = Loader())
      return document_loader->MimeType();
-@@ -1601,6 +1619,39 @@ Range* Document::caretRangeFromPoint(int x, int y) {
+@@ -1601,6 +1620,39 @@ Range* Document::caretRangeFromPoint(int x, int y) {
    return CreateRangeAdjustedToTreeScope(*this, range_compliant_position);
  }
  
@@ -130,7 +138,7 @@ index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..3a84d34d23c2c1f903e1a11fe559f2b1
  Element* Document::scrollingElement() {
    if (RuntimeEnabledFeatures::ScrollTopLeftInteropEnabled() && InQuirksMode())
      UpdateStyleAndLayoutTree();
-@@ -4476,14 +4527,9 @@ KURL Document::FallbackBaseURL() const {
+@@ -4476,14 +4528,9 @@ KURL Document::FallbackBaseURL() const {
      }
    }
  
@@ -147,7 +155,7 @@ index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..3a84d34d23c2c1f903e1a11fe559f2b1
      if (!fallback_base_url_.IsEmpty() &&
          blink::features::IsNewBaseUrlInheritanceBehaviorEnabled()) {
        // Note: if we get here, it's not worth worrying if
-@@ -4569,13 +4615,25 @@ void Document::ProcessBaseElement() {
+@@ -4569,13 +4616,25 @@ void Document::ProcessBaseElement() {
      }
    }
  
@@ -180,7 +188,50 @@ index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..3a84d34d23c2c1f903e1a11fe559f2b1
    }
  
    AtomicString old_base_target = base_target_;
-@@ -5690,6 +5748,19 @@ void Document::EnqueueAnimationFrameTask(base::OnceClosure task) {
+@@ -4935,6 +4994,42 @@ void Document::UnobserveForIntrinsicSize(Element* element) {
+     intrinsic_size_observer_->unobserve(element);
+ }
+ 
++class LazyLoadedAutoSizedImgResizeObserverDelegate final
++    : public ResizeObserver::Delegate {
++  void OnResize(const HeapVector<Member<ResizeObserverEntry>>& entries) final {
++    for (const auto& entry : entries) {
++      DCHECK(entry->contentRect());
++      if (auto* img = DynamicTo<HTMLImageElement>(entry->target())) {
++        img->OnResize();
++      }
++    }
++  }
++
++  ResizeObserver::DeliveryTime Delivery() const final {
++    return ResizeObserver::DeliveryTime::kBeforeOthers;
++  }
++};
++
++ResizeObserver& Document::GetLazyLoadedAutoSizedImgObserver() {
++  if (!lazy_loaded_auto_sized_img_observer_) {
++    lazy_loaded_auto_sized_img_observer_ = ResizeObserver::Create(
++        domWindow(),
++        MakeGarbageCollected<LazyLoadedAutoSizedImgResizeObserverDelegate>());
++  }
++
++  return *lazy_loaded_auto_sized_img_observer_;
++}
++
++void Document::ObserveForLazyLoadedAutoSizedImg(HTMLImageElement* img) {
++  GetLazyLoadedAutoSizedImgObserver().observe(img);
++}
++
++void Document::UnobserveForLazyLoadedAutoSizedImg(HTMLImageElement* img) {
++  if (lazy_loaded_auto_sized_img_observer_) {
++    lazy_loaded_auto_sized_img_observer_->unobserve(img);
++  }
++}
++
+ Document* Document::CloneDocumentWithoutChildren() const {
+   DocumentInit init =
+       DocumentInit::Create()
+@@ -5690,6 +5785,19 @@ void Document::EnqueueAnimationFrameTask(base::OnceClosure task) {
    scripted_animation_controller_->EnqueueTask(std::move(task));
  }
  
@@ -200,7 +251,7 @@ index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..3a84d34d23c2c1f903e1a11fe559f2b1
  void Document::EnqueueAnimationFrameEvent(Event* event) {
    scripted_animation_controller_->EnqueueEvent(event);
  }
-@@ -5752,6 +5823,13 @@ void Document::EnqueueVisualViewportScrollEvent() {
+@@ -5752,6 +5860,13 @@ void Document::EnqueueVisualViewportScrollEvent() {
    scripted_animation_controller_->EnqueuePerFrameEvent(event);
  }
  
@@ -214,7 +265,15 @@ index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..3a84d34d23c2c1f903e1a11fe559f2b1
  void Document::EnqueueVisualViewportResizeEvent() {
    VisualViewportResizeEvent* event =
        MakeGarbageCollected<VisualViewportResizeEvent>();
-@@ -9296,6 +9374,21 @@ Resource* Document::GetPendingLinkPreloadForTesting(const KURL& url) {
+@@ -8906,6 +9021,7 @@ void Document::Trace(Visitor* visitor) const {
+   visitor->Trace(meta_theme_color_elements_);
+   visitor->Trace(unassociated_listed_elements_);
+   visitor->Trace(intrinsic_size_observer_);
++  visitor->Trace(lazy_loaded_auto_sized_img_observer_);
+   visitor->Trace(anchor_element_interaction_tracker_);
+   visitor->Trace(focused_element_change_observers_);
+   visitor->Trace(pending_link_header_preloads_);
+@@ -9296,6 +9412,21 @@ Resource* Document::GetPendingLinkPreloadForTesting(const KURL& url) {
    return nullptr;
  }
  

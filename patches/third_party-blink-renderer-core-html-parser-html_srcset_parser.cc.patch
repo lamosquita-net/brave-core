@@ -1,0 +1,19 @@
+diff --git a/third_party/blink/renderer/core/html/parser/html_srcset_parser.cc b/third_party/blink/renderer/core/html/parser/html_srcset_parser.cc
+index 1767d68d92f6664a2701abc19662d7346dc81702..05a51f69a45a051f533db57ebf18a49e7295fab5 100644
+--- a/third_party/blink/renderer/core/html/parser/html_srcset_parser.cc
++++ b/third_party/blink/renderer/core/html/parser/html_srcset_parser.cc
+@@ -412,10 +412,11 @@ static unsigned AvoidDownloadIfHigherDensityResourceIsInCache(
+   for (unsigned i = image_candidates.size() - 1; i > winner; --i) {
+     KURL url = document->CompleteURL(
+         StripLeadingAndTrailingHTMLSpaces(image_candidates[i]->Url()));
+-    if (MemoryCache::Get()->ResourceForURL(
+-            url, document->Fetcher()->GetCacheIdentifier(url)) ||
+-        url.ProtocolIsData())
++    auto* resource = MemoryCache::Get()->ResourceForURL(
++        url, document->Fetcher()->GetCacheIdentifier(url));
++    if ((resource && resource->IsLoaded()) || url.ProtocolIsData()) {
+       return i;
++    }
+   }
+   return winner;
+ }
