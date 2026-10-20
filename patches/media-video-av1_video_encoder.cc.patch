@@ -1,0 +1,25 @@
+diff --git a/media/video/av1_video_encoder.cc b/media/video/av1_video_encoder.cc
+index 4777a647b009dcb9c04ec92f9f1470a53c8627dc..4f0e2220588c2e17893c91ad85650ef075ca453e 100644
+--- a/media/video/av1_video_encoder.cc
++++ b/media/video/av1_video_encoder.cc
+@@ -255,6 +255,10 @@ void Av1VideoEncoder::Initialize(VideoCodecProfile profile,
+   if (config_.rc_end_usage == AOM_CBR)
+     CALL_AOM_CONTROL(AV1E_SET_AQ_MODE, 3);
+ 
++  if (options.content_hint == ContentHint::Screen) {
++    CALL_AOM_CONTROL(AV1E_SET_TUNE_CONTENT, AOM_CONTENT_SCREEN);
++  }
++
+   CALL_AOM_CONTROL(AV1E_SET_TILE_COLUMNS,
+                    static_cast<int>(std::log2(config_.g_threads)));
+ 
+@@ -264,8 +268,7 @@ void Av1VideoEncoder::Initialize(VideoCodecProfile profile,
+   // two sides of realtime range for our 'realtime' and 'quality' modes
+   // because we don't want encoding speed to drop into single digit fps
+   // even in quality mode.
+-  const int cpu_speed =
+-      (options.latency_mode == VideoEncoder::LatencyMode::Realtime) ? 9 : 7;
++  const int cpu_speed = (options.latency_mode == LatencyMode::Realtime) ? 9 : 7;
+   CALL_AOM_CONTROL(AOME_SET_CPUUSED, cpu_speed);
+ #undef CALL_AOM_CONTROL
+ 

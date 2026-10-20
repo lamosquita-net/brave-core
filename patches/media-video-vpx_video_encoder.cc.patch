@@ -1,0 +1,16 @@
+diff --git a/media/video/vpx_video_encoder.cc b/media/video/vpx_video_encoder.cc
+index f5fec72a59a8e00c080da668f60b7e1aef99d459..1e91a21e750b098fcf47a0348db49f2afbca5043 100644
+--- a/media/video/vpx_video_encoder.cc
++++ b/media/video/vpx_video_encoder.cc
+@@ -381,6 +381,11 @@ void VpxVideoEncoder::Initialize(VideoCodecProfile profile,
+     if (codec_config_.rc_end_usage == VPX_CBR) {
+       vpx_codec_control(codec.get(), VP9E_SET_AQ_MODE, 3);
+     }
++
++    if (options.content_hint == ContentHint::Screen) {
++      vpx_codec_control(codec.get(), VP9E_SET_TUNE_CONTENT,
++                        VP9E_CONTENT_SCREEN);
++    }
+   }
+ 
+   options_ = options;

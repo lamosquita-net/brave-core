@@ -1,0 +1,35 @@
+diff --git a/third_party/blink/renderer/modules/webcodecs/fuzzer_utils.cc b/third_party/blink/renderer/modules/webcodecs/fuzzer_utils.cc
+index a48dfcc8bf79a0000e29d97512e42c5969082b66..c4d98f98304a9fb80375a2a46f3a9813d3492026 100644
+--- a/third_party/blink/renderer/modules/webcodecs/fuzzer_utils.cc
++++ b/third_party/blink/renderer/modules/webcodecs/fuzzer_utils.cc
+@@ -127,6 +127,10 @@ VideoEncoderConfig* MakeVideoEncoderConfig(
+     config->setLatencyMode(ToLatencyMode(proto.latency_mode()));
+   }
+ 
++  if (proto.has_content_hint()) {
++    config->setContentHint(ToContentHint(proto.content_hint()));
++  }
++
+   // Bitrate is truly optional, so don't just take the proto default value.
+   if (proto.has_bitrate())
+     config->setBitrate(proto.bitrate());
+@@ -198,6 +202,19 @@ String ToLatencyMode(wc_fuzzer::ConfigureVideoEncoder_LatencyMode mode) {
+   }
+ }
+ 
++String ToContentHint(wc_fuzzer::ConfigureVideoEncoder_ContentHint hint) {
++  switch (hint) {
++    case wc_fuzzer::ConfigureVideoEncoder_ContentHint_NONE:
++      return "";
++    case wc_fuzzer::ConfigureVideoEncoder_ContentHint_TEXT:
++      return "text";
++    case wc_fuzzer::ConfigureVideoEncoder_ContentHint_MOTION:
++      return "motion";
++    case wc_fuzzer::ConfigureVideoEncoder_ContentHint_DETAIL:
++      return "detail";
++  }
++}
++
+ String ToAlphaOption(wc_fuzzer::ConfigureVideoEncoder_AlphaOption option) {
+   switch (option) {
+     case wc_fuzzer::ConfigureVideoEncoder_AlphaOption_KEEP:

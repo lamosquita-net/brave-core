@@ -1,0 +1,30 @@
+diff --git a/third_party/blink/renderer/modules/webcodecs/video_encoder.cc b/third_party/blink/renderer/modules/webcodecs/video_encoder.cc
+index d152d64d6c57f6311520c665b0bb99a7273a5544..b73c33217e55a3ab15c7b19e4fa5ed5fd64ab391 100644
+--- a/third_party/blink/renderer/modules/webcodecs/video_encoder.cc
++++ b/third_party/blink/renderer/modules/webcodecs/video_encoder.cc
+@@ -261,6 +261,14 @@ VideoEncoderTraits::ParsedConfig* ParseConfigStatic(
+           ? media::VideoEncoder::LatencyMode::Quality
+           : media::VideoEncoder::LatencyMode::Realtime;
+ 
++  if (config->hasContentHint()) {
++    if (config->contentHint() == "detail" || config->contentHint() == "text") {
++      result->options.content_hint = media::VideoEncoder::ContentHint::Screen;
++    } else if (config->contentHint() == "motion") {
++      result->options.content_hint = media::VideoEncoder::ContentHint::Camera;
++    }
++  }
++
+   if (config->hasBitrate()) {
+     uint32_t bps = base::saturated_cast<uint32_t>(config->bitrate());
+     if (bps == 0) {
+@@ -485,6 +493,10 @@ VideoEncoderConfig* CopyConfig(
+   if (config.hasLatencyMode())
+     result->setLatencyMode(config.latencyMode());
+ 
++  if (config.hasContentHint()) {
++    result->setContentHint(config.contentHint());
++  }
++
+   if (parsed_config.codec == media::VideoCodec::kH264) {
+     if (config.hasAvc() && config.avc()->hasFormat()) {
+       auto* avc = AvcEncoderConfig::Create();
