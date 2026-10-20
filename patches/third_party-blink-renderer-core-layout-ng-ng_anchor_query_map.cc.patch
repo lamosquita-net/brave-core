@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/ng_anchor_query_map.cc b/third_party/blink/renderer/core/layout/ng/ng_anchor_query_map.cc
-index 225d8db0cfa012df72a22e5e888ca40f08a15715..c5898e436a2a56da20a298937c331cfa2774bc2b 100644
+index 225d8db0cfa012df72a22e5e888ca40f08a15715..41cc3e13ca65021badd6c9ed0ee69f0caef6332e 100644
 --- a/third_party/blink/renderer/core/layout/ng/ng_anchor_query_map.cc
 +++ b/third_party/blink/renderer/core/layout/ng/ng_anchor_query_map.cc
 @@ -324,10 +324,13 @@ struct NGStitchedAnchorQueries {
@@ -20,3 +20,34 @@ index 225d8db0cfa012df72a22e5e888ca40f08a15715..c5898e436a2a56da20a298937c331cfa
        }
        if (fragment.IsImplicitAnchor()) {
          query.AddAnchorReference(
+@@ -359,18 +362,6 @@ struct NGStitchedAnchorQueries {
+ 
+ }  // namespace
+ 
+-NGLogicalAnchorQueryMap::NGLogicalAnchorQueryMap(
+-    const LayoutBox& root_box,
+-    const NGLogicalLinkVector& children,
+-    const NGFragmentItemsBuilder::ItemWithOffsetList* items,
+-    const WritingModeConverter& converter)
+-    : root_box_(root_box),
+-      converter_(converter),
+-      writing_direction_(converter.GetWritingDirection()) {
+-  DCHECK(&root_box);
+-  SetChildren(children, items);
+-}
+-
+ NGLogicalAnchorQueryMap::NGLogicalAnchorQueryMap(
+     const LayoutBox& root_box,
+     const NGLogicalLinkVector& children,
+@@ -381,10 +372,8 @@ NGLogicalAnchorQueryMap::NGLogicalAnchorQueryMap(
+ }
+ 
+ void NGLogicalAnchorQueryMap::SetChildren(
+-    const NGLogicalLinkVector& children,
+-    const NGFragmentItemsBuilder::ItemWithOffsetList* items) {
++    const NGLogicalLinkVector& children) {
+   children_ = &children;
+-  items_ = items;
+ 
+   // Invalidate the cache when children may have changed.
+   computed_for_ = nullptr;

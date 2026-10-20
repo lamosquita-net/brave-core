@@ -1,16 +1,19 @@
 diff --git a/third_party/blink/renderer/core/css/properties/computed_style_utils.cc b/third_party/blink/renderer/core/css/properties/computed_style_utils.cc
-index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..22771db71daf1c54ed1cb4194f1c3dee3dc3e76a 100644
+index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..3d3cab08142702372002b1e62c8b429337e6e225 100644
 --- a/third_party/blink/renderer/core/css/properties/computed_style_utils.cc
 +++ b/third_party/blink/renderer/core/css/properties/computed_style_utils.cc
-@@ -52,7 +52,6 @@
+@@ -52,9 +52,9 @@
  #include "third_party/blink/renderer/core/layout/layout_block.h"
  #include "third_party/blink/renderer/core/layout/layout_box.h"
  #include "third_party/blink/renderer/core/layout/ng/grid/layout_ng_grid.h"
 -#include "third_party/blink/renderer/core/layout/ng/ng_anchor_query.h"
  #include "third_party/blink/renderer/core/layout/svg/transform_helper.h"
  #include "third_party/blink/renderer/core/style/computed_style_constants.h"
++#include "third_party/blink/renderer/core/style/inset_area.h"
  #include "third_party/blink/renderer/core/style/style_intrinsic_length.h"
-@@ -299,6 +298,7 @@ const CSSValueList* ComputedStyleUtils::CreatePositionListForLayer(
+ #include "third_party/blink/renderer/core/style/style_svg_resource.h"
+ #include "third_party/blink/renderer/core/style_property_shorthand.h"
+@@ -299,6 +299,7 @@ const CSSValueList* ComputedStyleUtils::CreatePositionListForLayer(
    CSSValueList* position_list = CSSValueList::CreateSpaceSeparated();
    if (layer.IsBackgroundXOriginSet()) {
      DCHECK(property.IDEquals(CSSPropertyID::kBackgroundPosition) ||
@@ -18,7 +21,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..22771db71daf1c54ed1cb4194f1c3dee
             property.IDEquals(CSSPropertyID::kWebkitMaskPosition));
      position_list->Append(
          *CSSIdentifierValue::Create(layer.BackgroundXOrigin()));
-@@ -307,6 +307,7 @@ const CSSValueList* ComputedStyleUtils::CreatePositionListForLayer(
+@@ -307,6 +308,7 @@ const CSSValueList* ComputedStyleUtils::CreatePositionListForLayer(
        *ZoomAdjustedPixelValueForLength(layer.PositionX(), style));
    if (layer.IsBackgroundYOriginSet()) {
      DCHECK(property.IDEquals(CSSPropertyID::kBackgroundPosition) ||
@@ -26,7 +29,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..22771db71daf1c54ed1cb4194f1c3dee
             property.IDEquals(CSSPropertyID::kWebkitMaskPosition));
      position_list->Append(
          *CSSIdentifierValue::Create(layer.BackgroundYOrigin()));
-@@ -316,26 +317,30 @@ const CSSValueList* ComputedStyleUtils::CreatePositionListForLayer(
+@@ -316,26 +318,30 @@ const CSSValueList* ComputedStyleUtils::CreatePositionListForLayer(
    return position_list;
  }
  
@@ -75,7 +78,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..22771db71daf1c54ed1cb4194f1c3dee
    return list;
  }
  
-@@ -359,8 +364,7 @@ const CSSValueList* ComputedStyleUtils::ValuesForBackgroundShorthand(
+@@ -359,8 +365,7 @@ const CSSValueList* ComputedStyleUtils::ValuesForBackgroundShorthand(
                               ? *curr_layer->GetImage()->ComputedCSSValue(
                                     style, allow_visited_style)
                               : *CSSIdentifierValue::Create(CSSValueID::kNone));
@@ -85,7 +88,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..22771db71daf1c54ed1cb4194f1c3dee
      before_slash->Append(*CSSIdentifierValue::Create(curr_layer->Attachment()));
      before_slash->Append(*CreatePositionListForLayer(
          GetCSSPropertyBackgroundPosition(), *curr_layer, style));
-@@ -375,14 +379,108 @@ const CSSValueList* ComputedStyleUtils::ValuesForBackgroundShorthand(
+@@ -375,14 +380,108 @@ const CSSValueList* ComputedStyleUtils::ValuesForBackgroundShorthand(
    return result;
  }
  
@@ -201,35 +204,39 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..22771db71daf1c54ed1cb4194f1c3dee
  }
  
  const CSSValue* ComputedStyleUtils::BackgroundPositionOrWebkitMaskPosition(
-@@ -644,27 +742,22 @@ CSSValue* ComputedStyleUtils::ValueForPositionOffset(
+@@ -644,27 +743,22 @@ CSSValue* ComputedStyleUtils::ValueForPositionOffset(
      const LayoutObject* layout_object) {
    std::pair<const Length*, const Length*> positions;
    bool is_horizontal_property;
 -  bool is_right_or_bottom;
    switch (property.PropertyID()) {
      case CSSPropertyID::kLeft:
-       positions = std::make_pair(&style.UsedLeft(), &style.UsedRight());
+-      positions = std::make_pair(&style.UsedLeft(), &style.UsedRight());
++      positions = std::make_pair(&style.Left(), &style.Right());
        is_horizontal_property = true;
 -      is_right_or_bottom = false;
        break;
      case CSSPropertyID::kRight:
-       positions = std::make_pair(&style.UsedRight(), &style.UsedLeft());
+-      positions = std::make_pair(&style.UsedRight(), &style.UsedLeft());
++      positions = std::make_pair(&style.Right(), &style.Left());
        is_horizontal_property = true;
 -      is_right_or_bottom = true;
        break;
      case CSSPropertyID::kTop:
-       positions = std::make_pair(&style.UsedTop(), &style.UsedBottom());
+-      positions = std::make_pair(&style.UsedTop(), &style.UsedBottom());
++      positions = std::make_pair(&style.Top(), &style.Bottom());
        is_horizontal_property = false;
 -      is_right_or_bottom = false;
        break;
      case CSSPropertyID::kBottom:
-       positions = std::make_pair(&style.UsedBottom(), &style.UsedTop());
+-      positions = std::make_pair(&style.UsedBottom(), &style.UsedTop());
++      positions = std::make_pair(&style.Bottom(), &style.Top());
        is_horizontal_property = false;
 -      is_right_or_bottom = true;
        break;
      default:
        NOTREACHED();
-@@ -674,8 +767,40 @@ CSSValue* ComputedStyleUtils::ValueForPositionOffset(
+@@ -674,8 +768,40 @@ CSSValue* ComputedStyleUtils::ValueForPositionOffset(
  
    const Length& offset = *positions.first;
    const Length& opposite = *positions.second;
@@ -237,7 +244,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..22771db71daf1c54ed1cb4194f1c3dee
    const auto* box = DynamicTo<LayoutBox>(layout_object);
 +
 +  // In this case, the used value is the computed value, so we resolve directly.
-+  if (offset.IsFixed() && (!box || !box->UsesPositionFallbackStyle())) {
++  if (offset.IsFixed()) {
 +    return ZoomAdjustedPixelValueForLength(offset, style);
 +  }
 +
@@ -271,7 +278,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..22771db71daf1c54ed1cb4194f1c3dee
    if (offset.IsPercentOrCalc() && box && layout_object->IsPositioned()) {
      LayoutUnit containing_block_size;
      if (layout_object->IsStickyPositioned()) {
-@@ -694,18 +819,8 @@ CSSValue* ComputedStyleUtils::ValueForPositionOffset(
+@@ -694,18 +820,8 @@ CSSValue* ComputedStyleUtils::ValueForPositionOffset(
                : box->ContainingBlockLogicalHeightForGetComputedStyle();
      }
  
@@ -292,7 +299,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..22771db71daf1c54ed1cb4194f1c3dee
    }
  
    if (offset.IsAuto() && layout_object) {
-@@ -742,6 +857,8 @@ CSSValue* ComputedStyleUtils::ValueForPositionOffset(
+@@ -742,6 +858,8 @@ CSSValue* ComputedStyleUtils::ValueForPositionOffset(
      }
  
      if (layout_object->IsOutOfFlowPositioned() && layout_object->IsBox()) {
@@ -301,7 +308,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..22771db71daf1c54ed1cb4194f1c3dee
        // For fixed and absolute positioned elements, the top, left, bottom, and
        // right are defined relative to the corresponding sides of the containing
        // block.
-@@ -781,6 +898,8 @@ CSSValue* ComputedStyleUtils::ValueForPositionOffset(
+@@ -781,6 +899,8 @@ CSSValue* ComputedStyleUtils::ValueForPositionOffset(
      return CSSIdentifierValue::Create(CSSValueID::kAuto);
    }
  
@@ -310,7 +317,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..22771db71daf1c54ed1cb4194f1c3dee
    return ZoomAdjustedPixelValueForLength(offset, style);
  }
  
-@@ -949,23 +1068,24 @@ CSSPrimitiveValue* ComputedStyleUtils::ValueForFontSize(
+@@ -949,23 +1069,24 @@ CSSPrimitiveValue* ComputedStyleUtils::ValueForFontSize(
  
  CSSValue* ComputedStyleUtils::ValueForFontSizeAdjust(
      const ComputedStyle& style) {
@@ -343,7 +350,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..22771db71daf1c54ed1cb4194f1c3dee
  }
  
  CSSPrimitiveValue* ComputedStyleUtils::ValueForFontStretch(
-@@ -1984,16 +2104,27 @@ CSSValue* ComputedStyleUtils::ValueForGridTrackList(
+@@ -1984,16 +2105,27 @@ CSSValue* ComputedStyleUtils::ValueForGridTrackList(
      is_track_list_empty = positions.size() == 1;
    }
  
@@ -378,7 +385,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..22771db71daf1c54ed1cb4194f1c3dee
      return CSSIdentifierValue::Create(CSSValueID::kNone);
    }
  
-@@ -2046,8 +2177,8 @@ CSSValue* ComputedStyleUtils::ValueForGridTrackList(
+@@ -2046,8 +2178,8 @@ CSSValue* ComputedStyleUtils::ValueForGridTrackList(
    // Otherwise, the resolved value is the computed value, preserving repeat().
    OrderedNamedLinesCollector collector(
        computed_grid_track_list.ordered_named_grid_lines,
@@ -389,7 +396,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..22771db71daf1c54ed1cb4194f1c3dee
    PopulateGridTrackListForNonGrid(list, collector, ng_track_list, style);
    return list;
  }
-@@ -2560,14 +2691,30 @@ CSSValue* ComputedStyleUtils::ValueForAnimationTimelineList(
+@@ -2560,14 +2692,30 @@ CSSValue* ComputedStyleUtils::ValueForAnimationTimelineList(
        &ValueForAnimationTimeline);
  }
  
@@ -421,7 +428,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..22771db71daf1c54ed1cb4194f1c3dee
    return list;
  }
  
-@@ -2917,6 +3064,18 @@ CSSValue* ComputedStyleUtils::CreateTransitionPropertyValue(
+@@ -2917,6 +3065,18 @@ CSSValue* ComputedStyleUtils::CreateTransitionPropertyValue(
            .GetPropertyNameAtomicString());
  }
  
@@ -440,7 +447,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..22771db71daf1c54ed1cb4194f1c3dee
  CSSValue* ComputedStyleUtils::ValueForTransitionProperty(
      const CSSTransitionData* transition_data) {
    CSSValueList* list = CSSValueList::CreateCommaSeparated();
-@@ -2931,6 +3090,19 @@ CSSValue* ComputedStyleUtils::ValueForTransitionProperty(
+@@ -2931,6 +3091,19 @@ CSSValue* ComputedStyleUtils::ValueForTransitionProperty(
    return list;
  }
  
@@ -460,7 +467,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..22771db71daf1c54ed1cb4194f1c3dee
  CSSValueID ValueForQuoteType(const QuoteType quote_type) {
    switch (quote_type) {
      case QuoteType::kNoOpen:
-@@ -2985,7 +3157,8 @@ CSSValue* ComputedStyleUtils::ValueForContentData(const ComputedStyle& style,
+@@ -2985,7 +3158,8 @@ CSSValue* ComputedStyleUtils::ValueForContentData(const ComputedStyle& style,
        list->Append(*CSSIdentifierValue::Create(ValueForQuoteType(quote_type)));
      } else if (content_data->IsAltText()) {
        alt_text = MakeGarbageCollected<CSSStringValue>(
@@ -470,7 +477,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..22771db71daf1c54ed1cb4194f1c3dee
      } else {
        NOTREACHED();
      }
-@@ -3180,6 +3353,10 @@ CSSValue* ComputedStyleUtils::ValueForSVGPaint(const SVGPaint& paint,
+@@ -3180,6 +3354,10 @@ CSSValue* ComputedStyleUtils::ValueForSVGPaint(const SVGPaint& paint,
      }
      case SVGPaintType::kUri:
        return MakeGarbageCollected<cssvalue::CSSURIValue>(paint.GetUrl());
@@ -481,3 +488,130 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..22771db71daf1c54ed1cb4194f1c3dee
    }
  }
  
+@@ -3858,6 +4036,126 @@ CSSValue* ComputedStyleUtils::ValueForScrollStart(const ComputedStyle& style,
+   return CSSIdentifierValue::Create(data.value_type);
+ }
+ 
++namespace {
++
++CSSIdentifierValue* InsetAreaSpanToCSSIdentifierValue(
++    InsetAreaRegion span_start,
++    InsetAreaRegion span_end) {
++  if (span_start == span_end) {
++    return CSSIdentifierValue::Create(span_start);
++  }
++  CHECK(span_start == InsetAreaRegion::kCenter ||
++        span_end == InsetAreaRegion::kCenter);
++  InsetAreaRegion span_towards =
++      span_start == InsetAreaRegion::kCenter ? span_end : span_start;
++  CSSValueID value_id = CSSValueID::kSpanAll;
++  switch (span_towards) {
++    case InsetAreaRegion::kLeft:
++      value_id = CSSValueID::kSpanLeft;
++      break;
++    case InsetAreaRegion::kRight:
++      value_id = CSSValueID::kSpanRight;
++      break;
++    case InsetAreaRegion::kXStart:
++      value_id = CSSValueID::kSpanXStart;
++      break;
++    case InsetAreaRegion::kXEnd:
++      value_id = CSSValueID::kSpanXEnd;
++      break;
++    case InsetAreaRegion::kXSelfStart:
++      value_id = CSSValueID::kSpanXSelfStart;
++      break;
++    case InsetAreaRegion::kXSelfEnd:
++      value_id = CSSValueID::kSpanXSelfEnd;
++      break;
++    case InsetAreaRegion::kTop:
++      value_id = CSSValueID::kSpanTop;
++      break;
++    case InsetAreaRegion::kBottom:
++      value_id = CSSValueID::kSpanBottom;
++      break;
++    case InsetAreaRegion::kYStart:
++      value_id = CSSValueID::kSpanYStart;
++      break;
++    case InsetAreaRegion::kYEnd:
++      value_id = CSSValueID::kSpanYEnd;
++      break;
++    case InsetAreaRegion::kYSelfStart:
++      value_id = CSSValueID::kSpanYSelfStart;
++      break;
++    case InsetAreaRegion::kYSelfEnd:
++      value_id = CSSValueID::kSpanYSelfEnd;
++      break;
++    case InsetAreaRegion::kBlockStart:
++      value_id = CSSValueID::kSpanBlockStart;
++      break;
++    case InsetAreaRegion::kBlockEnd:
++      value_id = CSSValueID::kSpanBlockEnd;
++      break;
++    case InsetAreaRegion::kSelfBlockStart:
++      value_id = CSSValueID::kSpanSelfBlockStart;
++      break;
++    case InsetAreaRegion::kSelfBlockEnd:
++      value_id = CSSValueID::kSpanSelfBlockEnd;
++      break;
++    case InsetAreaRegion::kInlineStart:
++      value_id = CSSValueID::kSpanInlineStart;
++      break;
++    case InsetAreaRegion::kInlineEnd:
++      value_id = CSSValueID::kSpanInlineEnd;
++      break;
++    case InsetAreaRegion::kSelfInlineStart:
++      value_id = CSSValueID::kSpanSelfInlineStart;
++      break;
++    case InsetAreaRegion::kSelfInlineEnd:
++      value_id = CSSValueID::kSpanSelfInlineEnd;
++      break;
++    case InsetAreaRegion::kStart:
++      value_id = CSSValueID::kSpanStart;
++      break;
++    case InsetAreaRegion::kEnd:
++      value_id = CSSValueID::kSpanEnd;
++      break;
++    case InsetAreaRegion::kSelfStart:
++      value_id = CSSValueID::kSpanSelfStart;
++      break;
++    case InsetAreaRegion::kSelfEnd:
++      value_id = CSSValueID::kSpanSelfEnd;
++      break;
++    case InsetAreaRegion::kNone:
++    case InsetAreaRegion::kAll:
++    case InsetAreaRegion::kCenter:
++      // Should have been handled above
++      NOTREACHED();
++      break;
++  }
++  return CSSIdentifierValue::Create(value_id);
++}
++
++}  // namespace
++
++CSSValue* ComputedStyleUtils::ValueForInsetArea(const blink::InsetArea& area) {
++  if (area.FirstStart() == InsetAreaRegion::kNone) {
++    return CSSIdentifierValue::Create(CSSValueID::kNone);
++  }
++  CSSIdentifierValue* first_value =
++      InsetAreaSpanToCSSIdentifierValue(area.FirstStart(), area.FirstEnd());
++  CSSIdentifierValue* second_value =
++      InsetAreaSpanToCSSIdentifierValue(area.SecondStart(), area.SecondEnd());
++
++  CSSValueID second_default = CSSValueID::kSpanAll;
++  CSSValueID first_value_id = first_value->GetValueID();
++
++  if (css_parsing_utils::IsRepeatedInsetAreaValue(first_value_id)) {
++    second_default = first_value_id;
++  }
++  if (second_value->GetValueID() == second_default) {
++    return first_value;
++  }
++  return MakeGarbageCollected<CSSValuePair>(first_value, second_value,
++                                            CSSValuePair::kDropIdenticalValues);
++}
++
+ std::unique_ptr<CrossThreadStyleValue>
+ ComputedStyleUtils::CrossThreadStyleValueFromCSSStyleValue(
+     CSSStyleValue* style_value) {

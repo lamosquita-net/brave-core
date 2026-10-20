@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/css/container_selector.h b/third_party/blink/renderer/core/css/container_selector.h
-index 7be1e8efd6012f183148c81c2d6598d373f501f5..108b9067db12673fd4ce8df3c127e78c864984af 100644
+index 7be1e8efd6012f183148c81c2d6598d373f501f5..7a6328beb3c00938a79129208e9aa391591aacbb 100644
 --- a/third_party/blink/renderer/core/css/container_selector.h
 +++ b/third_party/blink/renderer/core/css/container_selector.h
-@@ -65,6 +65,7 @@ class CORE_EXPORT ContainerSelector {
+@@ -59,22 +59,24 @@ class CORE_EXPORT ContainerSelector {
+   unsigned Type(WritingMode) const;
+ 
+   bool SelectsSizeContainers() const {
+-    return physical_axes_ != kPhysicalAxisNone ||
+-           logical_axes_ != kLogicalAxisNone;
++    return physical_axes_ != kPhysicalAxesNone ||
++           logical_axes_ != kLogicalAxesNone;
+   }
  
    bool SelectsStyleContainers() const { return has_style_query_; }
    bool SelectsStickyContainers() const { return has_sticky_query_; }
@@ -10,8 +18,13 @@ index 7be1e8efd6012f183148c81c2d6598d373f501f5..108b9067db12673fd4ce8df3c127e78c
  
    PhysicalAxes GetPhysicalAxes() const { return physical_axes_; }
    LogicalAxes GetLogicalAxes() const { return logical_axes_; }
-@@ -75,6 +76,7 @@ class CORE_EXPORT ContainerSelector {
-   LogicalAxes logical_axes_{kLogicalAxisNone};
+ 
+  private:
+   AtomicString name_;
+-  PhysicalAxes physical_axes_{kPhysicalAxisNone};
+-  LogicalAxes logical_axes_{kLogicalAxisNone};
++  PhysicalAxes physical_axes_{kPhysicalAxesNone};
++  LogicalAxes logical_axes_{kLogicalAxesNone};
    bool has_style_query_{false};
    bool has_sticky_query_{false};
 +  bool has_unknown_feature_{false};

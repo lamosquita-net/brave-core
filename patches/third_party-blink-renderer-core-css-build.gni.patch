@@ -1,8 +1,27 @@
 diff --git a/third_party/blink/renderer/core/css/build.gni b/third_party/blink/renderer/core/css/build.gni
-index 9ef46279d933030422c8733a790cba4bddc063b0..4e64c66da8fc9dc78d43ab7679cae1b90f0ed4e7 100644
+index 9ef46279d933030422c8733a790cba4bddc063b0..f3cc5d2abb78e5c7567197dee0441ebffdae80fd 100644
 --- a/third_party/blink/renderer/core/css/build.gni
 +++ b/third_party/blink/renderer/core/css/build.gni
-@@ -81,6 +81,8 @@ blink_core_sources_css = [
+@@ -22,6 +22,9 @@ blink_core_sources_css = [
+   "abstract_property_set_css_style_declaration.h",
+   "active_style_sheets.cc",
+   "active_style_sheets.h",
++  "anchor_evaluator.h",
++  "anchor_query.cc",
++  "anchor_query.h",
+   "background_color_paint_image_generator.cc",
+   "background_color_paint_image_generator.h",
+   "basic_shape_functions.cc",
+@@ -30,8 +33,6 @@ blink_core_sources_css = [
+   "binary_data_font_face_source.h",
+   "box_shadow_paint_image_generator.cc",
+   "box_shadow_paint_image_generator.h",
+-  "calculation_expression_anchor_query_node.cc",
+-  "calculation_expression_anchor_query_node.h",
+   "cascade_layer.cc",
+   "cascade_layer.h",
+   "cascade_layer_map.cc",
+@@ -81,6 +82,8 @@ blink_core_sources_css = [
    "css_color.h",
    "css_color_mix_value.h",
    "css_color_mix_value.cc",
@@ -11,7 +30,16 @@ index 9ef46279d933030422c8733a790cba4bddc063b0..4e64c66da8fc9dc78d43ab7679cae1b9
    "css_computed_style_declaration.cc",
    "css_computed_style_declaration.h",
    "css_condition_rule.cc",
-@@ -200,6 +202,8 @@ blink_core_sources_css = [
+@@ -108,6 +111,8 @@ blink_core_sources_css = [
+   "css_cyclic_variable_value.h",
+   "css_default_style_sheets.cc",
+   "css_default_style_sheets.h",
++  "css_flip_revert_value.cc",
++  "css_flip_revert_value.h",
+   "css_font_face.cc",
+   "css_font_face.h",
+   "css_font_face_rule.cc",
+@@ -200,6 +205,8 @@ blink_core_sources_css = [
    "css_media_rule.h",
    "css_namespace_rule.cc",
    "css_namespace_rule.h",
@@ -20,7 +48,20 @@ index 9ef46279d933030422c8733a790cba4bddc063b0..4e64c66da8fc9dc78d43ab7679cae1b9
    "css_numeric_literal_value.cc",
    "css_numeric_literal_value.h",
    "css_origin_clean.h",
-@@ -243,6 +247,8 @@ blink_core_sources_css = [
+@@ -217,8 +224,10 @@ blink_core_sources_css = [
+   "css_pending_substitution_value.h",
+   "css_pending_system_font_value.cc",
+   "css_pending_system_font_value.h",
+-  "css_position_fallback_rule.cc",
+-  "css_position_fallback_rule.h",
++  "css_position_try_descriptors.cc",
++  "css_position_try_descriptors.h",
++  "css_position_try_rule.cc",
++  "css_position_try_rule.h",
+   "css_primitive_value.cc",
+   "css_primitive_value.h",
+   "css_primitive_value_mappings.h",
+@@ -243,6 +252,8 @@ blink_core_sources_css = [
    "css_reflect_value.cc",
    "css_reflect_value.h",
    "css_reflection_direction.h",
@@ -29,7 +70,16 @@ index 9ef46279d933030422c8733a790cba4bddc063b0..4e64c66da8fc9dc78d43ab7679cae1b9
    "css_resolution_units.h",
    "css_resource_fetch_restriction.h",
    "css_revert_layer_value.cc",
-@@ -312,6 +318,8 @@ blink_core_sources_css = [
+@@ -287,8 +298,6 @@ blink_core_sources_css = [
+   "css_timing_function_value.h",
+   "css_to_length_conversion_data.cc",
+   "css_to_length_conversion_data.h",
+-  "css_try_rule.cc",
+-  "css_try_rule.h",
+   "css_unicode_range_value.cc",
+   "css_unicode_range_value.h",
+   "css_unset_value.cc",
+@@ -312,6 +321,8 @@ blink_core_sources_css = [
    "css_variable_reference_value.h",
    "css_view_value.cc",
    "css_view_value.h",
@@ -38,16 +88,16 @@ index 9ef46279d933030422c8733a790cba4bddc063b0..4e64c66da8fc9dc78d43ab7679cae1b9
    "cssom/computed_style_property_map.cc",
    "cssom/computed_style_property_map.h",
    "cssom/cross_thread_color_value.cc",
-@@ -553,6 +561,8 @@ blink_core_sources_css = [
-   "part_names.h",
-   "pending_sheet_type.cc",
-   "pending_sheet_type.h",
-+  "position_fallback_data.cc",
-+  "position_fallback_data.h",
-   "post_style_update_scope.cc",
-   "post_style_update_scope.h",
-   "properties/computed_style_utils.cc",
-@@ -688,6 +698,8 @@ blink_core_sources_css = [
+@@ -491,6 +502,8 @@ blink_core_sources_css = [
+   "native_paint_image_generator.h",
+   "offscreen_font_selector.cc",
+   "offscreen_font_selector.h",
++  "out_of_flow_data.cc",
++  "out_of_flow_data.h",
+   "page_rule_collector.cc",
+   "page_rule_collector.h",
+   "parser/at_rule_counter_style_descriptor_parser.cc",
+@@ -688,6 +701,8 @@ blink_core_sources_css = [
    "style_rule_keyframe.cc",
    "style_rule_keyframe.h",
    "style_rule_namespace.h",
@@ -56,3 +106,30 @@ index 9ef46279d933030422c8733a790cba4bddc063b0..4e64c66da8fc9dc78d43ab7679cae1b9
    "style_scope.cc",
    "style_scope.h",
    "style_scope_frame.cc",
+@@ -706,6 +721,9 @@ blink_core_sources_css = [
+   "style_traversal_root.h",
+   "tree_scope_style_sheet_collection.cc",
+   "tree_scope_style_sheet_collection.h",
++  "try_tactic_transform.h",
++  "try_value_flips.cc",
++  "try_value_flips.h",
+   "ua_counter_style_map.cc",
+   "vision_deficiency.cc",
+   "vision_deficiency.h",
+@@ -728,6 +746,7 @@ blink_core_tests_css = [
+   "counter_style_test.cc",
+   "css_computed_style_declaration_test.cc",
+   "css_container_values_test.cc",
++  "css_flip_revert_value_test.cc",
+   "css_font_face_source_test.cc",
+   "css_font_family_webkit_prefix_test.cc",
+   "css_gradient_value_test.cc",
+@@ -841,6 +860,8 @@ blink_core_tests_css = [
+   "style_scope_test.cc",
+   "style_sheet_contents_test.cc",
+   "style_traversal_root_test.cc",
++  "try_tactic_transform_test.cc",
++  "try_value_flips_test.cc",
+   "threaded/css_parser_threaded_test.cc",
+   "threaded/css_to_length_conversion_data_threaded_test.cc",
+   "threaded/filter_operation_resolver_threaded_test.cc",

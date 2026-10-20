@@ -1,16 +1,18 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/match_result.cc b/third_party/blink/renderer/core/css/resolver/match_result.cc
-index 23ca7b82edcaf3f5cf0cc6bdfa7bb429c189781f..73943668c37e5a6c1199a324c41c3402f8698218 100644
+index 23ca7b82edcaf3f5cf0cc6bdfa7bb429c189781f..e2a128e6bf079440d4bcb568378ca81f38b8e4b8 100644
 --- a/third_party/blink/renderer/core/css/resolver/match_result.cc
 +++ b/third_party/blink/renderer/core/css/resolver/match_result.cc
-@@ -61,6 +61,7 @@ void MatchResult::AddMatchedProperties(
+@@ -61,7 +61,9 @@ void MatchResult::AddMatchedProperties(
    new_properties.types_.layer_order =
        ClampTo<uint16_t>(options.GetLayerOrder());
    new_properties.types_.is_inline_style = options.IsInlineStyle();
-+  new_properties.types_.is_fallback_style = options.IsFallbackStyle();
++  new_properties.types_.is_try_style = options.IsTryStyle();
    new_properties.types_.origin = current_origin_;
++  new_properties.types_.is_try_tactics_style = options.IsTryTacticsStyle();
    new_properties.types_.tree_order = current_tree_order_;
  }
-@@ -82,12 +83,16 @@ void MatchResult::FinishAddingPresentationalHints() {
+ 
+@@ -82,12 +84,16 @@ void MatchResult::FinishAddingPresentationalHints() {
  
  void MatchResult::BeginAddingAuthorRulesForTreeScope(
      const TreeScope& tree_scope) {

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/container_query_evaluator.cc b/third_party/blink/renderer/core/css/container_query_evaluator.cc
-index f435cda2790d859f0b5c6fba1f7d2dfa5a364391..756ccc24c1657683b39c3192d006dae01b2b339f 100644
+index f435cda2790d859f0b5c6fba1f7d2dfa5a364391..e682555c1e7ad2729883fdb5cdcdf00e81062742 100644
 --- a/third_party/blink/renderer/core/css/container_query_evaluator.cc
 +++ b/third_party/blink/renderer/core/css/container_query_evaluator.cc
 @@ -9,6 +9,7 @@
@@ -10,6 +10,22 @@ index f435cda2790d859f0b5c6fba1f7d2dfa5a364391..756ccc24c1657683b39c3192d006dae0
  #include "third_party/blink/renderer/core/dom/node_computed_style.h"
  #include "third_party/blink/renderer/core/style/computed_style.h"
  
+@@ -23,12 +24,12 @@ namespace {
+ // provided to ContainerChanged, since there are multiple sources of
+ // applied containment (e.g. the 'contain' property itself).
+ PhysicalAxes ContainerTypeAxes(const ComputedStyle& style) {
+-  LogicalAxes axes = kLogicalAxisNone;
++  LogicalAxes axes = kLogicalAxesNone;
+   if (style.ContainerType() & kContainerTypeInlineSize) {
+-    axes |= kLogicalAxisInline;
++    axes |= kLogicalAxesInline;
+   }
+   if (style.ContainerType() & kContainerTypeBlockSize) {
+-    axes |= kLogicalAxisBlock;
++    axes |= kLogicalAxesBlock;
+   }
+   return ToPhysicalAxes(axes, style.GetWritingMode());
+ }
 @@ -69,6 +70,7 @@ bool NameMatches(const ComputedStyle& style,
  
  bool TypeMatches(const ComputedStyle& style,
@@ -53,3 +69,21 @@ index f435cda2790d859f0b5c6fba1f7d2dfa5a364391..756ccc24c1657683b39c3192d006dae0
    bool selects_size = selector.SelectsSizeContainers();
    bool selects_style = selector.SelectsStyleContainers();
    bool selects_sticky = selector.SelectsStickyContainers();
+@@ -341,13 +355,13 @@ void ContainerQueryEvaluator::UpdateContainerSize(PhysicalSize size,
+   PhysicalAxes supported_axes =
+       ContainerTypeAxes(container->ComputedStyleRef()) & contained_axes;
+ 
+-  if ((supported_axes & PhysicalAxes(kPhysicalAxisHorizontal)) !=
+-      PhysicalAxes(kPhysicalAxisNone)) {
++  if ((supported_axes & PhysicalAxes(kPhysicalAxesHorizontal)) !=
++      PhysicalAxes(kPhysicalAxesNone)) {
+     width = size.width.ToDouble();
+   }
+ 
+-  if ((supported_axes & PhysicalAxes(kPhysicalAxisVertical)) !=
+-      PhysicalAxes(kPhysicalAxisNone)) {
++  if ((supported_axes & PhysicalAxes(kPhysicalAxesVertical)) !=
++      PhysicalAxes(kPhysicalAxesNone)) {
+     height = size.height.ToDouble();
+   }
+ 

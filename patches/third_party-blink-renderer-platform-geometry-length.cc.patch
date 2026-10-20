@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/geometry/length.cc b/third_party/blink/renderer/platform/geometry/length.cc
-index 3f83cf96be0d18ac3c6f9cc441319fa3850ce971..92fa279c77d485b614868e434b950e5136ae210d 100644
+index 3f83cf96be0d18ac3c6f9cc441319fa3850ce971..5c1dffe3a9fdfd2449615c697f559ec81f747561 100644
 --- a/third_party/blink/renderer/platform/geometry/length.cc
 +++ b/third_party/blink/renderer/platform/geometry/length.cc
 @@ -37,11 +37,13 @@ namespace blink {
@@ -44,3 +44,31 @@ index 3f83cf96be0d18ac3c6f9cc441319fa3850ce971..92fa279c77d485b614868e434b950e51
  Length Length::Zoom(double factor) const {
    switch (GetType()) {
      case kFixed:
+@@ -189,10 +212,9 @@ void Length::DecrementCalculatedRef() const {
+ }
+ 
+ float Length::NonNanCalculatedValue(
+-    float max_value,
+-    const AnchorEvaluator* anchor_evaluator) const {
++    float max_value) const {
+   DCHECK(IsCalculated());
+-  float result = GetCalculationValue().Evaluate(max_value, anchor_evaluator);
++  float result = GetCalculationValue().Evaluate(max_value);
+   if (std::isnan(result))
+     return 0;
+   return result;
+@@ -204,14 +226,6 @@ bool Length::IsCalculatedEqual(const Length& o) const {
+           GetCalculationValue() == o.GetCalculationValue());
+ }
+ 
+-bool Length::HasAnchorQueries() const {
+-  return IsCalculated() && GetCalculationValue().HasAnchorQueries();
+-}
+-
+-bool Length::HasAutoAnchorPositioning() const {
+-  return IsCalculated() && GetCalculationValue().HasAutoAnchorPositioning();
+-}
+-
+ String Length::ToString() const {
+   StringBuilder builder;
+   builder.Append("Length(");

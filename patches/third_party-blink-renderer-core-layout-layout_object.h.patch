@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_object.h b/third_party/blink/renderer/core/layout/layout_object.h
-index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..351a1953e2f372075482a9ba8eb7d6339bce2c56 100644
+index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..078c60b6d6fe30acda088798fa4cfcc36719698a 100644
 --- a/third_party/blink/renderer/core/layout/layout_object.h
 +++ b/third_party/blink/renderer/core/layout/layout_object.h
 @@ -40,6 +40,7 @@
@@ -76,7 +76,36 @@ index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..351a1953e2f372075482a9ba8eb7d633
  
    // This returns the transform applying to the local SVG coordinate space,
    // which combines the CSS transform properties and animation motion transform.
-@@ -2709,7 +2716,8 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+@@ -2024,12 +2031,12 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+ 
+   void InvalidateIntersectionObserverCachedRects();
+ 
+-  // Mark elements with a principal box and a computed position-fallback
+-  // different from 'none' for layout when @position-fallback rules are removed
+-  // or added. mark_style_dirty is true if the element should be marked dirty as
++  // Mark elements with a principal box and a computed position-try-options
++  // different from 'none' for layout when @position-try rules are removed or
++  // added. mark_style_dirty is true if the element should be marked dirty as
+   // well. mark_style_dirty is typically set to false if we are inside a subtree
+   // which is already marked for subtree recalc.
+-  void InvalidateSubtreePositionFallback(bool mark_style_dirty);
++  void InvalidateSubtreePositionTry(bool mark_style_dirty);
+ 
+  private:
+   enum PositionedState {
+@@ -2391,7 +2398,10 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+ 
+   const LayoutBlock* InclusiveContainingBlock() const;
+ 
+-  const LayoutBox* ContainingScrollContainer() const;
++  const LayoutBox* ContainingScrollContainer(
++      bool ignore_layout_view_for_fixed_pos = false) const;
++  const PaintLayer* ContainingScrollContainerLayer(
++      bool ignore_layout_view_for_fixed_pos = false) const;
+ 
+   bool CanContainAbsolutePositionObjects() const {
+     NOT_DESTROYED();
+@@ -2709,7 +2719,8 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
    // from the coordinate system of the property container.
    const LayoutObject* GetPropertyContainer(
        AncestorSkipInfo*,
@@ -86,7 +115,7 @@ index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..351a1953e2f372075482a9ba8eb7d633
  
    // Do a rect-based hit test with this object as the stop node.
    HitTestResult HitTestForOcclusion(const PhysicalRect&) const;
-@@ -3515,6 +3523,17 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+@@ -3515,6 +3526,17 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
    }
    void SetSVGDescendantMayHaveTransformRelatedAnimation();
  
@@ -104,7 +133,7 @@ index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..351a1953e2f372075482a9ba8eb7d633
    bool ShouldSkipNextLayoutShiftTracking() const {
      NOT_DESTROYED();
      return bitfields_.ShouldSkipNextLayoutShiftTracking();
-@@ -4300,6 +4319,11 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+@@ -4300,6 +4322,11 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
      ADD_BOOLEAN_BITFIELD(svg_descendant_may_have_transform_related_animation_,
                           SVGDescendantMayHaveTransformRelatedAnimation);
  

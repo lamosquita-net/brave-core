@@ -1,7 +1,28 @@
 diff --git a/third_party/blink/renderer/core/css/container_selector.cc b/third_party/blink/renderer/core/css/container_selector.cc
-index f7fd12a33be323acedd2affd5dd9e67c60ce14ce..e088717d84ac75d6e7bd46769b7394adbb1bfa47 100644
+index f7fd12a33be323acedd2affd5dd9e67c60ce14ce..dfa2f3e109590d98c9a0a41774c4912e3bba8b6e 100644
 --- a/third_party/blink/renderer/core/css/container_selector.cc
 +++ b/third_party/blink/renderer/core/css/container_selector.cc
+@@ -15,16 +15,16 @@ ContainerSelector::ContainerSelector(AtomicString name,
+   MediaQueryExpNode::FeatureFlags feature_flags = query.CollectFeatureFlags();
+ 
+   if (feature_flags & MediaQueryExpNode::kFeatureInlineSize) {
+-    logical_axes_ |= kLogicalAxisInline;
++    logical_axes_ |= kLogicalAxesInline;
+   }
+   if (feature_flags & MediaQueryExpNode::kFeatureBlockSize) {
+-    logical_axes_ |= kLogicalAxisBlock;
++    logical_axes_ |= kLogicalAxesBlock;
+   }
+   if (feature_flags & MediaQueryExpNode::kFeatureWidth) {
+-    physical_axes_ |= kPhysicalAxisHorizontal;
++    physical_axes_ |= kPhysicalAxesHorizontal;
+   }
+   if (feature_flags & MediaQueryExpNode::kFeatureHeight) {
+-    physical_axes_ |= kPhysicalAxisVertical;
++    physical_axes_ |= kPhysicalAxesVertical;
+   }
+   if (feature_flags & MediaQueryExpNode::kFeatureStyle) {
+     has_style_query_ = true;
 @@ -32,6 +32,9 @@ ContainerSelector::ContainerSelector(AtomicString name,
    if (feature_flags & MediaQueryExpNode::kFeatureState) {
      has_sticky_query_ = true;
@@ -12,3 +33,16 @@ index f7fd12a33be323acedd2affd5dd9e67c60ce14ce..e088717d84ac75d6e7bd46769b7394ad
  }
  
  unsigned ContainerSelector::GetHash() const {
+@@ -49,10 +52,10 @@ unsigned ContainerSelector::Type(WritingMode writing_mode) const {
+   LogicalAxes axes =
+       logical_axes_ | ToLogicalAxes(physical_axes_, writing_mode);
+ 
+-  if ((axes & kLogicalAxisInline).value()) {
++  if ((axes & kLogicalAxesInline).value()) {
+     type |= kContainerTypeInlineSize;
+   }
+-  if ((axes & kLogicalAxisBlock).value()) {
++  if ((axes & kLogicalAxesBlock).value()) {
+     type |= kContainerTypeBlockSize;
+   }
+   if (has_sticky_query_) {

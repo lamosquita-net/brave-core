@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/paint/paint_layer.cc b/third_party/blink/renderer/core/paint/paint_layer.cc
-index 36810e9fa0cbbe6f4e6a6ac5b5a9541cd809f6da..b7cbc357f8ae2a128d8dd105f7f36587bfe97598 100644
+index 36810e9fa0cbbe6f4e6a6ac5b5a9541cd809f6da..83e657e202b65273f0036c0d3f9c07d612ff42be 100644
 --- a/third_party/blink/renderer/core/paint/paint_layer.cc
 +++ b/third_party/blink/renderer/core/paint/paint_layer.cc
 @@ -60,7 +60,7 @@
@@ -46,7 +46,50 @@ index 36810e9fa0cbbe6f4e6a6ac5b5a9541cd809f6da..b7cbc357f8ae2a128d8dd105f7f36587
          ComputedStyle::kIncludeTransformOperations,
          ComputedStyle::kIncludeTransformOrigin,
          ComputedStyle::kIncludeMotionPath,
-@@ -1954,14 +1954,31 @@ PaintLayer* PaintLayer::HitTestChildren(
+@@ -413,6 +413,7 @@ void PaintLayer::UpdateDescendantDependentFlags() {
+     has_non_contained_absolute_position_descendant_ = false;
+     has_stacked_descendant_in_current_stacking_context_ = false;
+     has_self_painting_layer_descendant_ = false;
++    descendant_needs_check_position_visibility_ = false;
+ 
+     bool can_contain_abs =
+         GetLayoutObject().CanContainAbsolutePositionObjects();
+@@ -466,6 +467,15 @@ void PaintLayer::UpdateDescendantDependentFlags() {
+           child->IsSelfPaintingLayer();
+     }
+ 
++    // See SetInvisibleForPositionVisibility() for explanation for
++    // descendant_needs_check_position_visibility_.
++    if (InvisibleForPositionVisibility() &&
++        !GetLayoutObject().IsStackingContext() &&
++        has_self_painting_layer_descendant_) {
++      AncestorStackingContext()->descendant_needs_check_position_visibility_ =
++          true;
++    }
++
+     UpdateStackingNode();
+ 
+     if (old_has_non_isolated_descendant_with_blend_mode !=
+@@ -1379,6 +1389,18 @@ PaintLayer* PaintLayer::HitTestLayer(
+     return nullptr;
+   }
+ 
++  absl::optional<CheckAncestorPositionVisibilityScope>
++      check_position_visibility_scope;
++  if (RuntimeEnabledFeatures::CSSPositionVisibilityEnabled()) {
++    if (InvisibleForPositionVisibility() ||
++        HasAncestorInvisibleForPositionVisibility()) {
++      return nullptr;
++    }
++    if (GetLayoutObject().IsStackingContext()) {
++      check_position_visibility_scope.emplace(*this);
++    }
++  }
++
+   // TODO(vmpstr): We need to add a simple document flag which says whether
+   // there is an ongoing transition, since this may be too heavy of a check for
+   // each hit test.
+@@ -1954,14 +1976,31 @@ PaintLayer* PaintLayer::HitTestChildren(
    return result_layer;
  }
  
@@ -81,7 +124,7 @@ index 36810e9fa0cbbe6f4e6a6ac5b5a9541cd809f6da..b7cbc357f8ae2a128d8dd105f7f36587
      if (GetLayoutObject().GetDocument().Lifecycle().GetState() ==
          DocumentLifecycle::kInPrePaint) {
        GetLayoutObject()
-@@ -1970,8 +1987,23 @@ void PaintLayer::UpdateFilterReferenceBox() {
+@@ -1970,8 +2009,23 @@ void PaintLayer::UpdateFilterReferenceBox() {
      } else {
        GetLayoutObject().SetNeedsPaintPropertyUpdate();
      }
@@ -106,7 +149,7 @@ index 36810e9fa0cbbe6f4e6a6ac5b5a9541cd809f6da..b7cbc357f8ae2a128d8dd105f7f36587
  }
  
  gfx::RectF PaintLayer::FilterReferenceBox() const {
-@@ -2011,38 +2043,8 @@ bool PaintLayer::HitTestClippedOutByClipPath(
+@@ -2011,38 +2065,8 @@ bool PaintLayer::HitTestClippedOutByClipPath(
      ConvertToLayerCoords(&root_layer, origin);
    }
  
@@ -147,7 +190,7 @@ index 36810e9fa0cbbe6f4e6a6ac5b5a9541cd809f6da..b7cbc357f8ae2a128d8dd105f7f36587
  }
  
  PhysicalRect PaintLayer::LocalBoundingBox() const {
-@@ -2129,6 +2131,13 @@ bool PaintLayer::KnownToClipSubtreeToPaddingBox() const {
+@@ -2129,6 +2153,13 @@ bool PaintLayer::KnownToClipSubtreeToPaddingBox() const {
    return false;
  }
  
@@ -161,7 +204,7 @@ index 36810e9fa0cbbe6f4e6a6ac5b5a9541cd809f6da..b7cbc357f8ae2a128d8dd105f7f36587
  bool PaintLayer::SupportsSubsequenceCaching() const {
    if (const LayoutBox* box = GetLayoutBox()) {
      // TODO(crbug.com/1253797): Revisit this when implementing correct paint
-@@ -2408,7 +2417,8 @@ void PaintLayer::UpdateCompositorFilterOperationsForFilter(
+@@ -2408,7 +2439,8 @@ void PaintLayer::UpdateCompositorFilterOperationsForFilter(
      return;
  
    operations =
@@ -171,7 +214,7 @@ index 36810e9fa0cbbe6f4e6a6ac5b5a9541cd809f6da..b7cbc357f8ae2a128d8dd105f7f36587
    filter_on_effect_node_dirty_ = false;
  }
  
-@@ -2447,7 +2457,8 @@ void PaintLayer::UpdateCompositorFilterOperationsForBackdropFilter(
+@@ -2447,7 +2479,8 @@ void PaintLayer::UpdateCompositorFilterOperationsForBackdropFilter(
    filter_operations.Operations().AppendVector(style.Filter().Operations());
    // Use kClamp tile mode to avoid pixel moving filters bringing in black
    // transparent pixels from the viewport edge.
@@ -181,3 +224,70 @@ index 36810e9fa0cbbe6f4e6a6ac5b5a9541cd809f6da..b7cbc357f8ae2a128d8dd105f7f36587
                                     SkTileMode::kClamp)
                     .BuildFilterOperations(filter_operations);
    // Note that |operations| may be empty here, if the |filter_operations| list
+@@ -2597,6 +2630,57 @@ void PaintLayer::SetPreviousPaintResult(PaintResult result) {
+   DCHECK(previous_paint_result_ == static_cast<unsigned>(result));
+ }
+ 
++void PaintLayer::SetInvisibleForPositionVisibility(
++    LayerPositionVisibility visibility,
++    bool invisible) {
++  if (!RuntimeEnabledFeatures::CSSPositionVisibilityEnabled()) {
++    return;
++  }
++  bool already_invisible = InvisibleForPositionVisibility();
++  if (invisible) {
++    invisible_for_position_visibility_ |= static_cast<int>(visibility);
++    // This will fail if subtree_invisible_for_position_visibility_ doesn't
++    // have enough bits.
++    CHECK(InvisibleForPositionVisibility());
++  } else {
++    invisible_for_position_visibility_ &= ~static_cast<int>(visibility);
++  }
++  if (InvisibleForPositionVisibility() != already_invisible) {
++    SetNeedsRepaint();
++    // If this layer is not a stacking context, during paint, self-painting
++    // descendants need to check their ancestor chain to know if they need to
++    // hide due to the position visibility hidden flag on this layer.
++    if (!already_invisible && !GetLayoutObject().IsStackingContext() &&
++        // If needs_descendant_dependent_flags_update_ is set, we can't call
++        // HasSelfPaintingLayerDescendants() now, but will update
++        // descendants_need_check_position_visibility_hidden_ during
++        // UpdateDescendantDependentFlags().
++        !needs_descendant_dependent_flags_update_ &&
++        HasSelfPaintingLayerDescendant()) {
++      // This flag is cleared during UpdateDescendantDependentFlags() only, so
++      // it may have false-positives which affects performance only in rare
++      // cases.
++      AncestorStackingContext()->descendant_needs_check_position_visibility_ =
++          true;
++    }
++  }
++}
++
++bool PaintLayer::HasAncestorInvisibleForPositionVisibility() const {
++  CHECK(RuntimeEnabledFeatures::CSSPositionVisibilityEnabled());
++  if (!CheckAncestorPositionVisibilityScope::ShouldCheck()) {
++    return false;
++  }
++  for (auto* layer = Parent();
++       layer && !layer->GetLayoutObject().IsStackingContext();
++       layer = layer->Parent()) {
++    if (layer->InvisibleForPositionVisibility()) {
++      return true;
++    }
++  }
++  return false;
++}
++
+ void PaintLayer::Trace(Visitor* visitor) const {
+   visitor->Trace(layout_object_);
+   visitor->Trace(parent_);
+@@ -2610,6 +2694,8 @@ void PaintLayer::Trace(Visitor* visitor) const {
+   DisplayItemClient::Trace(visitor);
+ }
+ 
++bool CheckAncestorPositionVisibilityScope::should_check_ = false;
++
+ }  // namespace blink
+ 
+ #if DCHECK_IS_ON()

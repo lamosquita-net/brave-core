@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/parser/css_parser_fast_paths.cc b/third_party/blink/renderer/core/css/parser/css_parser_fast_paths.cc
-index ba8ea7b8cf8d725e4bb39adc0625855e574bcbfd..4c77599f236c861c7ed92055be04b18e5fb5d695 100644
+index ba8ea7b8cf8d725e4bb39adc0625855e574bcbfd..7d24cf81b54c62a025e233137721c51e6ee31829 100644
 --- a/third_party/blink/renderer/core/css/parser/css_parser_fast_paths.cc
 +++ b/third_party/blink/renderer/core/css/parser/css_parser_fast_paths.cc
 @@ -4,6 +4,8 @@
@@ -44,7 +44,20 @@ index ba8ea7b8cf8d725e4bb39adc0625855e574bcbfd..4c77599f236c861c7ed92055be04b18e
      case CSSPropertyID::kOverflowBlock:
      case CSSPropertyID::kOverflowInline:
      case CSSPropertyID::kOverflowX:
-@@ -1294,7 +1300,9 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
+@@ -1287,6 +1293,12 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
+              value_id == CSSValueID::kRelative ||
+              value_id == CSSValueID::kAbsolute ||
+              value_id == CSSValueID::kFixed || value_id == CSSValueID::kSticky;
++    case CSSPropertyID::kPositionTryOrder:
++      return value_id == CSSValueID::kNormal ||
++             value_id == CSSValueID::kMostWidth ||
++             value_id == CSSValueID::kMostHeight ||
++             value_id == CSSValueID::kMostBlockSize ||
++             value_id == CSSValueID::kMostInlineSize;
+     case CSSPropertyID::kResize:
+       return value_id == CSSValueID::kNone || value_id == CSSValueID::kBoth ||
+              value_id == CSSValueID::kHorizontal ||
+@@ -1294,7 +1306,9 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
               (RuntimeEnabledFeatures::CSSLogicalEnabled() &&
                (value_id == CSSValueID::kBlock ||
                 value_id == CSSValueID::kInline)) ||
@@ -55,7 +68,7 @@ index ba8ea7b8cf8d725e4bb39adc0625855e574bcbfd..4c77599f236c861c7ed92055be04b18e
      case CSSPropertyID::kScrollBehavior:
        return value_id == CSSValueID::kAuto || value_id == CSSValueID::kSmooth;
      case CSSPropertyID::kShapeRendering:
-@@ -1384,12 +1392,23 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
+@@ -1384,12 +1398,23 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
                value_id <= CSSValueID::kNoDrag) ||
               value_id == CSSValueID::kNone;
      case CSSPropertyID::kAppearance:
@@ -85,7 +98,7 @@ index ba8ea7b8cf8d725e4bb39adc0625855e574bcbfd..4c77599f236c861c7ed92055be04b18e
               value_id == CSSValueID::kNone || value_id == CSSValueID::kAuto;
      case CSSPropertyID::kBackfaceVisibility:
        return value_id == CSSValueID::kVisible ||
-@@ -1469,6 +1488,8 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
+@@ -1469,6 +1494,8 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
      case CSSPropertyID::kFlexWrap:
        return value_id == CSSValueID::kNowrap || value_id == CSSValueID::kWrap ||
               value_id == CSSValueID::kWrapReverse;
@@ -94,7 +107,7 @@ index ba8ea7b8cf8d725e4bb39adc0625855e574bcbfd..4c77599f236c861c7ed92055be04b18e
      case CSSPropertyID::kHyphens:
  #if BUILDFLAG(USE_MINIKIN_HYPHENATION) || BUILDFLAG(IS_APPLE)
        return value_id == CSSValueID::kAuto || value_id == CSSValueID::kNone ||
-@@ -1519,6 +1540,11 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
+@@ -1519,6 +1546,11 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
      case CSSPropertyID::kWebkitRtlOrdering:
        return value_id == CSSValueID::kLogical ||
               value_id == CSSValueID::kVisual;
@@ -106,7 +119,7 @@ index ba8ea7b8cf8d725e4bb39adc0625855e574bcbfd..4c77599f236c861c7ed92055be04b18e
      case CSSPropertyID::kWebkitRubyPosition:
        return value_id == CSSValueID::kBefore || value_id == CSSValueID::kAfter;
      case CSSPropertyID::kRubyPosition:
-@@ -1529,21 +1555,20 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
+@@ -1529,21 +1561,20 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
      case CSSPropertyID::kWebkitTextSecurity:
        return value_id == CSSValueID::kDisc || value_id == CSSValueID::kCircle ||
               value_id == CSSValueID::kSquare || value_id == CSSValueID::kNone;
@@ -140,7 +153,7 @@ index ba8ea7b8cf8d725e4bb39adc0625855e574bcbfd..4c77599f236c861c7ed92055be04b18e
        return value_id == CSSValueID::kFillBox ||
               value_id == CSSValueID::kViewBox;
      case CSSPropertyID::kTransformStyle:
-@@ -1623,8 +1648,6 @@ CSSBitset CSSParserFastPaths::handled_by_keyword_fast_paths_properties_{{
+@@ -1623,8 +1654,6 @@ CSSBitset CSSParserFastPaths::handled_by_keyword_fast_paths_properties_{{
      CSSPropertyID::kAppearance,
      CSSPropertyID::kMixBlendMode,
      CSSPropertyID::kIsolation,
@@ -149,7 +162,7 @@ index ba8ea7b8cf8d725e4bb39adc0625855e574bcbfd..4c77599f236c861c7ed92055be04b18e
      CSSPropertyID::kBaselineSource,
      CSSPropertyID::kBorderBottomStyle,
      CSSPropertyID::kBorderCollapse,
-@@ -1644,9 +1667,12 @@ CSSBitset CSSParserFastPaths::handled_by_keyword_fast_paths_properties_{{
+@@ -1644,9 +1673,12 @@ CSSBitset CSSParserFastPaths::handled_by_keyword_fast_paths_properties_{{
      CSSPropertyID::kEmptyCells,
      CSSPropertyID::kFillRule,
      CSSPropertyID::kFloat,
@@ -162,7 +175,14 @@ index ba8ea7b8cf8d725e4bb39adc0625855e574bcbfd..4c77599f236c861c7ed92055be04b18e
      CSSPropertyID::kListStylePosition,
      CSSPropertyID::kMaskType,
      CSSPropertyID::kMathShift,
-@@ -1671,6 +1697,7 @@ CSSBitset CSSParserFastPaths::handled_by_keyword_fast_paths_properties_{{
+@@ -1665,12 +1697,14 @@ CSSBitset CSSParserFastPaths::handled_by_keyword_fast_paths_properties_{{
+     CSSPropertyID::kPageOrientation,
+     CSSPropertyID::kPointerEvents,
+     CSSPropertyID::kPosition,
++    CSSPropertyID::kPositionTryOrder,
+     CSSPropertyID::kResize,
+     CSSPropertyID::kScrollBehavior,
+     CSSPropertyID::kOverscrollBehaviorInline,
      CSSPropertyID::kOverscrollBehaviorBlock,
      CSSPropertyID::kOverscrollBehaviorX,
      CSSPropertyID::kOverscrollBehaviorY,
@@ -170,7 +190,7 @@ index ba8ea7b8cf8d725e4bb39adc0625855e574bcbfd..4c77599f236c861c7ed92055be04b18e
      CSSPropertyID::kRubyPosition,
      CSSPropertyID::kShapeRendering,
      CSSPropertyID::kSpeak,
-@@ -1720,7 +1747,8 @@ CSSBitset CSSParserFastPaths::handled_by_keyword_fast_paths_properties_{{
+@@ -1720,7 +1754,8 @@ CSSBitset CSSParserFastPaths::handled_by_keyword_fast_paths_properties_{{
      CSSPropertyID::kWebkitRubyPosition,
      CSSPropertyID::kWebkitTextCombine,
      CSSPropertyID::kWebkitTextSecurity,

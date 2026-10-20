@@ -1,0 +1,37 @@
+diff --git a/third_party/blink/renderer/platform/geometry/length_functions.h b/third_party/blink/renderer/platform/geometry/length_functions.h
+index 7e92b9bfad112f9d7d9e169693108cd097589aae..88f566b9118750e645be88f6613a539b2c4c87d4 100644
+--- a/third_party/blink/renderer/platform/geometry/length_functions.h
++++ b/third_party/blink/renderer/platform/geometry/length_functions.h
+@@ -44,27 +44,23 @@ struct LengthPoint;
+ PLATFORM_EXPORT int IntValueForLength(const Length&, int maximum_value);
+ PLATFORM_EXPORT float FloatValueForLength(
+     const Length&,
+-    float maximum_value,
+-    const Length::AnchorEvaluator* anchor_evaluator = nullptr);
++    float maximum_value);
+ PLATFORM_EXPORT LayoutUnit
+ MinimumValueForLengthInternal(const Length&,
+-                              LayoutUnit maximum_value,
+-                              const Length::AnchorEvaluator*);
++                              LayoutUnit maximum_value);
+ 
+ inline LayoutUnit MinimumValueForLength(
+     const Length& length,
+-    LayoutUnit maximum_value,
+-    const Length::AnchorEvaluator* anchor_evaluator = nullptr) {
++    LayoutUnit maximum_value) {
+   if (LIKELY(length.IsFixed()))
+     return LayoutUnit(length.Value());
+ 
+-  return MinimumValueForLengthInternal(length, maximum_value, anchor_evaluator);
++  return MinimumValueForLengthInternal(length, maximum_value);
+ }
+ 
+ PLATFORM_EXPORT LayoutUnit
+ ValueForLength(const Length&,
+-               LayoutUnit maximum_value,
+-               const Length::AnchorEvaluator* anchor_evaluator = nullptr);
++               LayoutUnit maximum_value);
+ PLATFORM_EXPORT gfx::SizeF SizeForLengthSize(const LengthSize&,
+                                              const gfx::SizeF& box_size);
+ PLATFORM_EXPORT gfx::PointF PointForLengthPoint(const LengthPoint&,

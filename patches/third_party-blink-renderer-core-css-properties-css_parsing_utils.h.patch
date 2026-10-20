@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/properties/css_parsing_utils.h b/third_party/blink/renderer/core/css/properties/css_parsing_utils.h
-index b277bbc73b93707676e9490e0cd5518220bf0292..0973782db7a0297cdf356637abbfba32400bddda 100644
+index b277bbc73b93707676e9490e0cd5518220bf0292..3a1c127de23d6bd22006de5e5c63def3f732c755 100644
 --- a/third_party/blink/renderer/core/css/properties/css_parsing_utils.h
 +++ b/third_party/blink/renderer/core/css/properties/css_parsing_utils.h
 @@ -13,6 +13,7 @@
@@ -103,3 +103,30 @@ index b277bbc73b93707676e9490e0cd5518220bf0292..0973782db7a0297cdf356637abbfba32
  
  CSSValue* ConsumeBorderColorSide(CSSParserTokenRange&,
                                   const CSSParserContext&,
+@@ -562,6 +580,14 @@ CSSValue* ConsumeFontSizeAdjust(CSSParserTokenRange&, const CSSParserContext&);
+ bool ShouldLowerCaseCounterStyleNameOnParse(const AtomicString&,
+                                             const CSSParserContext&);
+ 
++// https://drafts.csswg.org/css-anchor-position-1/#typedef-inset-area
++const CSSValue* ConsumeInsetArea(CSSParserTokenRange&);
++
++// inset-area can take one or two keywords. If the second is omitted, either the
++// first is repeated, or the second is span-all. This method returns true if the
++// omitted value should be the first one repeated.
++bool IsRepeatedInsetAreaValue(CSSValueID value_id);
++
+ // Template implementations are at the bottom of the file for readability.
+ 
+ template <typename... emptyBaseCase>
+@@ -661,6 +687,11 @@ bool ConsumeIfDelimiter(T& range_or_stream, UChar c) {
+   return true;
+ }
+ 
++CORE_EXPORT CSSValue* ConsumeSinglePositionTryOption(CSSParserTokenRange&,
++                                                     const CSSParserContext&);
++CSSValue* ConsumePositionTryOptions(CSSParserTokenRange&,
++                                    const CSSParserContext&);
++
+ }  // namespace css_parsing_utils
+ }  // namespace blink
+ 

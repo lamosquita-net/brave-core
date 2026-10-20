@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/ng_fragment_builder.cc b/third_party/blink/renderer/core/layout/ng/ng_fragment_builder.cc
-index c74c19d17221dc339adf7292ec6cbe01a31ba206..49b220ed9712e76b0bbc4589fa193aab7ad07ef4 100644
+index c74c19d17221dc339adf7292ec6cbe01a31ba206..9622d0284684de6fbb63c396f33aa3c79a4ef860 100644
 --- a/third_party/blink/renderer/core/layout/ng/ng_fragment_builder.cc
 +++ b/third_party/blink/renderer/core/layout/ng/ng_fragment_builder.cc
 @@ -117,8 +117,9 @@ void NGFragmentBuilder::PropagateChildAnchors(
@@ -14,3 +14,109 @@ index c74c19d17221dc339adf7292ec6cbe01a31ba206..49b220ed9712e76b0bbc4589fa193aab
      }
      if (child.IsImplicitAnchor()) {
        EnsureAnchorQuery().Set(child.GetLayoutObject(), *child.GetLayoutObject(),
+@@ -192,13 +193,13 @@ void NGFragmentBuilder::PropagateFromFragment(
+     const auto& child_style = child.Style();
+     if (child.IsCSSBox() && child_style.GetPosition() == EPosition::kRelative) {
+       if (IsHorizontalWritingMode(Style().GetWritingMode())) {
+-        if (child_style.UsedTop().IsPercentOrCalc() ||
+-            child_style.UsedBottom().IsPercentOrCalc()) {
++        if (child_style.Top().IsPercentOrCalc() ||
++            child_style.Bottom().IsPercentOrCalc()) {
+           has_descendant_that_depends_on_percentage_block_size_ = true;
+         }
+       } else {
+-        if (child_style.UsedLeft().IsPercentOrCalc() ||
+-            child_style.UsedRight().IsPercentOrCalc()) {
++        if (child_style.Left().IsPercentOrCalc() ||
++            child_style.Right().IsPercentOrCalc()) {
+           has_descendant_that_depends_on_percentage_block_size_ = true;
+         }
+       }
+@@ -308,16 +309,12 @@ void NGFragmentBuilder::AddOutOfFlowChildCandidate(
+     NGLogicalStaticPosition::InlineEdge inline_edge,
+     NGLogicalStaticPosition::BlockEdge block_edge) {
+   DCHECK(child);
++  oof_candidates_may_have_anchor_queries_ |= child.MayHaveAnchorQuery();
+   oof_positioned_candidates_.emplace_back(
+       child, NGLogicalStaticPosition{child_offset, inline_edge, block_edge},
+       NGInlineContainer<LogicalOffset>());
+ }
+ 
+-void NGFragmentBuilder::AddOutOfFlowChildCandidate(
+-    const NGLogicalOutOfFlowPositionedNode& candidate) {
+-  oof_positioned_candidates_.emplace_back(candidate);
+-}
+-
+ void NGFragmentBuilder::AddOutOfFlowInlineChildCandidate(
+     NGBlockNode child,
+     const LogicalOffset& child_offset,
+@@ -336,6 +333,8 @@ void NGFragmentBuilder::AddOutOfFlowInlineChildCandidate(
+ 
+ void NGFragmentBuilder::AddOutOfFlowFragmentainerDescendant(
+     const NGLogicalOOFNodeForFragmentation& descendant) {
++  oof_fragmentainer_descendants_may_have_anchor_queries_ |=
++      descendant.box->MayHaveAnchorQuery();
+   oof_positioned_fragmentainer_descendants_.push_back(descendant);
+ }
+ 
+@@ -354,9 +353,19 @@ void NGFragmentBuilder::AddOutOfFlowDescendant(
+ void NGFragmentBuilder::SwapOutOfFlowPositionedCandidates(
+     HeapVector<NGLogicalOutOfFlowPositionedNode>* candidates) {
+   DCHECK(candidates->empty());
++  if (oof_candidates_may_have_anchor_queries_) {
++    std::sort(oof_positioned_candidates_.begin(),
++              oof_positioned_candidates_.end(),
++              [](const NGLogicalOutOfFlowPositionedNode& a,
++                 const NGLogicalOutOfFlowPositionedNode& b) {
++                return a.box->IsBeforeInPreOrder(*b.box);
++              });
++    oof_candidates_may_have_anchor_queries_ = false;
++  }
+   std::swap(oof_positioned_candidates_, *candidates);
+ }
+ 
++  oof_candidates_may_have_anchor_queries_ = false;
+ void NGFragmentBuilder::AddMulticolWithPendingOOFs(
+     const NGBlockNode& multicol,
+     NGMulticolWithPendingOOFs<LogicalOffset>* multicol_info) {
+@@ -376,6 +385,17 @@ void NGFragmentBuilder::SwapMulticolsWithPendingOOFs(
+ void NGFragmentBuilder::SwapOutOfFlowFragmentainerDescendants(
+     HeapVector<NGLogicalOOFNodeForFragmentation>* descendants) {
+   DCHECK(descendants->empty());
++  // If we have anchors *somewhere* in below the OOFs we need to ensure they
++  // are in pre-order so we perform layout in the correct order.
++  if (oof_fragmentainer_descendants_may_have_anchor_queries_) {
++    std::sort(oof_positioned_fragmentainer_descendants_.begin(),
++              oof_positioned_fragmentainer_descendants_.end(),
++              [](const NGLogicalOOFNodeForFragmentation& a,
++                 const NGLogicalOOFNodeForFragmentation& b) {
++                return a.box->IsBeforeInPreOrder(*b.box);
++              });
++    oof_fragmentainer_descendants_may_have_anchor_queries_ = false;
++  }
+   std::swap(oof_positioned_fragmentainer_descendants_, *descendants);
+ }
+ 
+@@ -398,9 +418,12 @@ void NGFragmentBuilder::TransferOutOfFlowCandidates(
+            multicol->fixedpos_inline_container});
+       continue;
+     }
+-    destination_builder->AddOutOfFlowChildCandidate(candidate);
++    destination_builder->oof_positioned_candidates_.emplace_back(candidate);
+   }
+-  oof_positioned_candidates_.clear();
++  destination_builder->oof_candidates_may_have_anchor_queries_ |=
++      oof_candidates_may_have_anchor_queries_;
++
++  ClearOutOfFlowPositionedCandidates();
+ }
+ 
+ void NGFragmentBuilder::MoveOutOfFlowDescendantCandidatesToDescendants() {
+@@ -520,6 +543,7 @@ void NGFragmentBuilder::PropagateOOFPositionedInfo(
+     // |oof_positioned_candidates_| should not have duplicated entries.
+     DCHECK(!base::Contains(oof_positioned_candidates_, node,
+                            &NGLogicalOutOfFlowPositionedNode::Node));
++    oof_candidates_may_have_anchor_queries_ |= node.MayHaveAnchorQuery();
+     oof_positioned_candidates_.emplace_back(node, static_position,
+                                             new_inline_container);
+   }

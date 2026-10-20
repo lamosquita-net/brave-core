@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/element.h b/third_party/blink/renderer/core/dom/element.h
-index 640e53d474d0e132bf72388ac410015f66b55f48..1b8e3b5cc8c18d0719747e2a5fb1ebac6e79cf0f 100644
+index 640e53d474d0e132bf72388ac410015f66b55f48..d4478a2a849851d36dc189f137951a9850442dfa 100644
 --- a/third_party/blink/renderer/core/dom/element.h
 +++ b/third_party/blink/renderer/core/dom/element.h
 @@ -67,7 +67,7 @@ namespace blink {
@@ -19,14 +19,23 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..1b8e3b5cc8c18d0719747e2a5fb1ebac
  class GetInnerHTMLOptions;
  class HTMLTemplateElement;
  class Image;
-@@ -102,6 +103,7 @@ class MutableCSSPropertyValueSet;
+@@ -100,6 +101,7 @@ class InputDeviceCapabilities;
+ class Locale;
+ class MutableCSSPropertyValueSet;
  class NamedNodeMap;
++class OutOfFlowData;
  class PointerLockOptions;
  class PopoverData;
-+class PositionFallbackData;
  class PseudoElement;
- class ResizeObservation;
- class ResizeObserver;
+@@ -224,7 +226,7 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+   // This is only exposed as an implementation detail to AXRelationCache, which
+   // computes aria-owns differently for element reflection.
+   bool HasExplicitlySetAttrAssociatedElements(const QualifiedName& name);
+-  Element* GetElementAttribute(const QualifiedName& name);
++  Element* GetElementAttribute(const QualifiedName& name) const;
+   void SetElementAttribute(const QualifiedName&, Element*);
+   HeapVector<Member<Element>>* GetElementArrayAttribute(
+       const QualifiedName& name);
 @@ -356,6 +358,7 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    int ClientTopNoLayout() const;
    int clientWidth();
@@ -92,17 +101,30 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..1b8e3b5cc8c18d0719747e2a5fb1ebac
    PseudoElement* GetPseudoElement(
        PseudoId,
        const AtomicString& view_transition_name = g_null_atom) const;
-@@ -1097,6 +1116,9 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -909,12 +928,6 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+       const StyleRecalcContext&,
+       const StyleRequest&);
+ 
+-  // Returns the ComputedStyle after applying the declarations in the @try block
+-  // at the given index. Returns nullptr if the current element doesn't use
+-  // position fallback, or if the index is out of bound.
+-  // The style is computed on demand and cached on the ComputedStyle of |this|.
+-  const ComputedStyle* StyleForPositionFallback(unsigned index);
+-
+   virtual bool CanGeneratePseudoElement(PseudoId) const;
+ 
+   virtual bool MatchesDefaultPseudoClass() const { return false; }
+@@ -1097,6 +1110,9 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    ContainerQueryEvaluator& EnsureContainerQueryEvaluator();
    bool SkippedContainerStyleRecalc() const;
  
-+  PositionFallbackData& EnsurePositionFallbackData();
-+  PositionFallbackData* GetPositionFallbackData() const;
++  OutOfFlowData& EnsureOutOfFlowData();
++  OutOfFlowData* GetOutOfFlowData() const;
 +
    // See PostStyleUpdateScope::PseudoData::AddPendingBackdrop
    void ApplyPendingBackdropPseudoElementUpdate();
  
-@@ -1155,11 +1177,18 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1155,11 +1171,18 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    absl::optional<LayoutUnit> LastRememberedInlineSize() const;
    absl::optional<LayoutUnit> LastRememberedBlockSize() const;
  
@@ -126,7 +148,7 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..1b8e3b5cc8c18d0719747e2a5fb1ebac
        PseudoId pseudo_id,
        const AtomicString& view_transition_name) const;
  
-@@ -1170,7 +1199,7 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1170,7 +1193,7 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
  
    // Returns true if the element has the 'inert' attribute, forcing itself and
    // all its subtree to be inert.
@@ -135,23 +157,39 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..1b8e3b5cc8c18d0719747e2a5fb1ebac
  
    FocusgroupFlags GetFocusgroupFlags() const;
  
-@@ -1189,9 +1218,9 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1189,20 +1212,38 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    PopoverData* EnsurePopoverData();
    PopoverData* GetPopoverData() const;
  
 -  AnchorScrollData& EnsureAnchorScrollData();
 -  void RemoveAnchorScrollData();
 -  AnchorScrollData* GetAnchorScrollData() const;
++  // Retrieves the element pointed to by this element's 'anchor' content
++  // attribute, if that element exists.
++  // TODO(crbug.com/40059176) If the HTMLAnchorAttribute feature is disabled,
++  // this will return nullptr;
++  Element* anchorElement() const;
++  void setAnchorElement(Element*);
++
 +  AnchorPositionScrollData& EnsureAnchorPositionScrollData();
 +  void RemoveAnchorPositionScrollData();
 +  AnchorPositionScrollData* GetAnchorPositionScrollData() const;
  
    // Returns true if any element is implicitly anchored to this element.
    bool HasImplicitlyAnchoredElement() const;
-@@ -1204,6 +1233,16 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
-   // https://drafts.csswg.org/css-anchor-1/#implicit-anchor-element
-   Element* ImplicitAnchorElement();
+   void DecrementImplicitlyAnchoredElementCount();
+   void IncrementImplicitlyAnchoredElementCount();
  
+-  AnchorElementObserver& EnsureAnchorElementObserver();
+-  AnchorElementObserver* GetAnchorElementObserver() const;
++  bool HasAnchorElementObserverForTesting() const {
++    return GetAnchorElementObserver();
++  }
+ 
+   // https://drafts.csswg.org/css-anchor-1/#implicit-anchor-element
+-  Element* ImplicitAnchorElement();
++  Element* ImplicitAnchorElement() const;
++
 +  void UpdateDirectionalityAndDescendant(TextDirection direction);
 +  void UpdateDescendantHasDirAutoAttribute(bool has_dir_auto);
 +  enum class UpdateAncestorTraversal {
@@ -161,11 +199,10 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..1b8e3b5cc8c18d0719747e2a5fb1ebac
 +  void UpdateAncestorWithDirAuto(UpdateAncestorTraversal traversal);
 +  void AdjustDirectionalityIfNeededAfterChildrenChanged(
 +      const ChildrenChange& change);
-+
+ 
   protected:
    bool HasElementData() const { return element_data_; }
-   const ElementData* GetElementData() const { return element_data_.Get(); }
-@@ -1300,6 +1339,13 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1300,6 +1341,13 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    // changes.
    void LangAttributeChanged();
  
@@ -179,7 +216,7 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..1b8e3b5cc8c18d0719747e2a5fb1ebac
   private:
    friend class AXObject;
    struct AffectedByPseudoStateChange;
-@@ -1324,7 +1370,7 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1324,7 +1372,7 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
        delete;  // This will catch anyone doing an unnecessary check.
  
    bool CanAttachShadowRoot() const;
@@ -188,7 +225,17 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..1b8e3b5cc8c18d0719747e2a5fb1ebac
  
    void StyleAttributeChanged(const AtomicString& new_style_string,
                               AttributeModificationReason);
-@@ -1355,7 +1401,8 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1334,6 +1382,9 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+   void InlineStyleChanged();
+   void SetInlineStyleFromString(const AtomicString&);
+ 
++  AnchorElementObserver& EnsureAnchorElementObserver();
++  AnchorElementObserver* GetAnchorElementObserver() const;
++
+   // If the only inherited changes in the parent element are independent,
+   // these changes can be directly propagated to this element (the child).
+   // If these conditions are met, propagates the changes to the current style
+@@ -1355,7 +1406,8 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    // reach this element during the subsequent layout to continue doing
    // interleaved style and layout.
    bool SkipStyleRecalcForContainer(const ComputedStyle& style,
@@ -198,7 +245,7 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..1b8e3b5cc8c18d0719747e2a5fb1ebac
  
    void MarkNonSlottedHostChildrenForStyleRecalc();
  
-@@ -1371,7 +1418,6 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1371,7 +1423,6 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
        const StyleRecalcChange,
        const StyleRecalcContext&,
        const AtomicString& view_transition_name = g_null_atom);
@@ -206,7 +253,7 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..1b8e3b5cc8c18d0719747e2a5fb1ebac
    enum class StyleUpdatePhase {
      kRecalc,
      kRebuildLayoutTree,
-@@ -1420,6 +1466,8 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1420,6 +1471,8 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
      DetachPseudoElement(kPseudoIdFirstLetter, performing_reattach);
    }
  

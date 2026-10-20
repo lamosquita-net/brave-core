@@ -1,12 +1,12 @@
 diff --git a/third_party/blink/renderer/core/dom/element_rare_data_vector.cc b/third_party/blink/renderer/core/dom/element_rare_data_vector.cc
-index f52ffb407ad38c362d44d8a9a47819cdb27afb4c..acc5f0db3747bf78e877a72a0f872dca62a56812 100644
+index f52ffb407ad38c362d44d8a9a47819cdb27afb4c..355f9cc9e2d03d1c017f9f8c34fcd6df164a1127 100644
 --- a/third_party/blink/renderer/core/dom/element_rare_data_vector.cc
 +++ b/third_party/blink/renderer/core/dom/element_rare_data_vector.cc
 @@ -9,6 +9,7 @@
  #include "third_party/blink/renderer/core/css/container_query_data.h"
  #include "third_party/blink/renderer/core/css/cssom/inline_style_property_map.h"
  #include "third_party/blink/renderer/core/css/inline_css_style_declaration.h"
-+#include "third_party/blink/renderer/core/css/position_fallback_data.h"
++#include "third_party/blink/renderer/core/css/out_of_flow_data.h"
  #include "third_party/blink/renderer/core/display_lock/display_lock_context.h"
  #include "third_party/blink/renderer/core/dom/attr.h"
  #include "third_party/blink/renderer/core/dom/css_toggle_map.h"
@@ -19,49 +19,51 @@ index f52ffb407ad38c362d44d8a9a47819cdb27afb4c..acc5f0db3747bf78e877a72a0f872dca
  #include "third_party/blink/renderer/core/resize_observer/resize_observation.h"
  #include "third_party/blink/renderer/core/resize_observer/resize_observer.h"
  #include "third_party/blink/renderer/platform/heap/collection_support/heap_hash_map.h"
-@@ -303,6 +304,15 @@ void ElementRareDataVector::ClearContainerQueryData() {
+@@ -303,6 +304,14 @@ void ElementRareDataVector::ClearContainerQueryData() {
    SetField(FieldId::kContainerQueryData, nullptr);
  }
  
-+PositionFallbackData& ElementRareDataVector::EnsurePositionFallbackData() {
-+  return EnsureField<PositionFallbackData>(FieldId::kPositionFallbackData);
++OutOfFlowData& ElementRareDataVector::EnsureOutOfFlowData() {
++  return EnsureField<OutOfFlowData>(FieldId::kOutOfFlowData);
 +}
 +
-+PositionFallbackData* ElementRareDataVector::GetPositionFallbackData() const {
-+  return static_cast<PositionFallbackData*>(
-+      GetField(FieldId::kPositionFallbackData));
++OutOfFlowData* ElementRareDataVector::GetOutOfFlowData() const {
++  return static_cast<OutOfFlowData*>(GetField(FieldId::kOutOfFlowData));
 +}
 +
  const RegionCaptureCropId* ElementRareDataVector::GetRegionCaptureCropId()
      const {
    auto* value = GetWrappedField<std::unique_ptr<RegionCaptureCropId>>(
-@@ -375,18 +385,20 @@ CSSToggleMap& ElementRareDataVector::EnsureToggleMap(Element* owner_element) {
+@@ -375,18 +384,20 @@ CSSToggleMap& ElementRareDataVector::EnsureToggleMap(Element* owner_element) {
    return EnsureField<CSSToggleMap>(FieldId::kToggleMap, owner_element);
  }
  
 -AnchorScrollData* ElementRareDataVector::GetAnchorScrollData() const {
 -  return static_cast<AnchorScrollData*>(GetField(FieldId::kAnchorScrollData));
-+AnchorPositionScrollData* ElementRareDataVector::GetAnchorPositionScrollData()
-+    const {
-+  return static_cast<AnchorPositionScrollData*>(
-+      GetField(FieldId::kAnchorPositionScrollData));
- }
+-}
 -void ElementRareDataVector::RemoveAnchorScrollData() {
 -  SetField(FieldId::kAnchorScrollData, nullptr);
-+void ElementRareDataVector::RemoveAnchorPositionScrollData() {
-+  SetField(FieldId::kAnchorPositionScrollData, nullptr);
- }
+-}
 -AnchorScrollData& ElementRareDataVector::EnsureAnchorScrollData(
-+AnchorPositionScrollData& ElementRareDataVector::EnsureAnchorPositionScrollData(
-     Element* owner_element) {
+-    Element* owner_element) {
 -  DCHECK(!GetAnchorScrollData() ||
 -         GetAnchorScrollData()->OwnerElement() == owner_element);
 -  return EnsureField<AnchorScrollData>(FieldId::kAnchorScrollData,
 -                                       owner_element);
++AnchorPositionScrollData* ElementRareDataVector::GetAnchorPositionScrollData()
++    const {
++  return static_cast<AnchorPositionScrollData*>(
++      GetField(FieldId::kAnchorPositionScrollData));
++}
++void ElementRareDataVector::RemoveAnchorPositionScrollData() {
++  SetField(FieldId::kAnchorPositionScrollData, nullptr);
++}
++AnchorPositionScrollData& ElementRareDataVector::EnsureAnchorPositionScrollData(
++    Element* anchored_element) {
 +  DCHECK(!GetAnchorPositionScrollData() ||
-+         GetAnchorPositionScrollData()->OwnerElement() == owner_element);
++         GetAnchorPositionScrollData()->AnchoredElement() == anchored_element);
 +  return EnsureField<AnchorPositionScrollData>(
-+      FieldId::kAnchorPositionScrollData, owner_element);
++      FieldId::kAnchorPositionScrollData, anchored_element);
  }
  
  AnchorElementObserver& ElementRareDataVector::EnsureAnchorElementObserver(

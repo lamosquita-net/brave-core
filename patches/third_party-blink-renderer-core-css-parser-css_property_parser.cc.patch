@@ -1,0 +1,29 @@
+diff --git a/third_party/blink/renderer/core/css/parser/css_property_parser.cc b/third_party/blink/renderer/core/css/parser/css_property_parser.cc
+index 0eefb6557a95b05b925758811c321b34f037f540..0d0f0f9233f0edc80d271ccbe3962cc6950080ae 100644
+--- a/third_party/blink/renderer/core/css/parser/css_property_parser.cc
++++ b/third_party/blink/renderer/core/css/parser/css_property_parser.cc
+@@ -53,8 +53,8 @@ bool IsPropertyAllowedInRule(const CSSProperty& property,
+       return true;
+     case StyleRule::kKeyframe:
+       return property.IsValidForKeyframe();
+-    case StyleRule::kTry:
+-      return property.IsValidForPositionFallback();
++    case StyleRule::kPositionTry:
++      return property.IsValidForPositionTry();
+     default:
+       NOTREACHED();
+       return false;
+@@ -407,13 +407,6 @@ bool CSSPropertyParser::ConsumeCSSWideKeyword(CSSPropertyID unresolved_property,
+     return false;
+   }
+ 
+-  if (value->IsRevertValue() || value->IsRevertLayerValue()) {
+-    // Declarations in @try are not cascaded and cannot be reverted.
+-    if (rule_type == StyleRule::kTry) {
+-      return false;
+-    }
+-  }
+-
+   CSSPropertyID property = ResolveCSSPropertyID(unresolved_property);
+   const StylePropertyShorthand& shorthand = shorthandForProperty(property);
+   if (!shorthand.length()) {

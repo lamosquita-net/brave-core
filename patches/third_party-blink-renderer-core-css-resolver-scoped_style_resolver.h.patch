@@ -1,8 +1,18 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/scoped_style_resolver.h b/third_party/blink/renderer/core/css/resolver/scoped_style_resolver.h
-index cc63f35a729b9607cd8362aaf8371b601e1748a6..ab27078041e5c88622746e7a3cb90c46df0973f4 100644
+index cc63f35a729b9607cd8362aaf8371b601e1748a6..7410f7bd6b551948787ae82be546651ba0958359 100644
 --- a/third_party/blink/renderer/core/css/resolver/scoped_style_resolver.h
 +++ b/third_party/blink/renderer/core/css/resolver/scoped_style_resolver.h
-@@ -83,7 +83,8 @@ class CORE_EXPORT ScopedStyleResolver final
+@@ -67,8 +67,7 @@ class CORE_EXPORT ScopedStyleResolver final
+   CounterStyleMap* GetCounterStyleMap() { return counter_style_map_; }
+   static void CounterStyleRulesChanged(TreeScope& scope);
+ 
+-  StyleRulePositionFallback* PositionFallbackForName(
+-      const AtomicString& fallback_name);
++  StyleRulePositionTry* PositionTryForName(const AtomicString& try_name);
+ 
+   const FontFeatureValuesStorage* FontFeatureValuesForFamily(
+       AtomicString font_family);
+@@ -83,7 +82,8 @@ class CORE_EXPORT ScopedStyleResolver final
    }
  
    void AppendActiveStyleSheets(unsigned index, const ActiveStyleSheetVector&);
@@ -12,3 +22,25 @@ index cc63f35a729b9607cd8362aaf8371b601e1748a6..ab27078041e5c88622746e7a3cb90c46
    void CollectMatchingShadowHostRules(ElementRuleCollector&);
    void CollectMatchingSlottedRules(ElementRuleCollector&);
    void CollectMatchingPartPseudoRules(ElementRuleCollector&,
+@@ -120,7 +120,7 @@ class CORE_EXPORT ScopedStyleResolver final
+   bool KeyframeStyleShouldOverride(
+       const StyleRuleKeyframes* new_rule,
+       const StyleRuleKeyframes* existing_rule) const;
+-  void AddPositionFallbackRules(const RuleSet&);
++  void AddPositionTryRules(const RuleSet&);
+ 
+   CounterStyleMap& EnsureCounterStyleMap();
+ 
+@@ -133,9 +133,9 @@ class CORE_EXPORT ScopedStyleResolver final
+       HeapHashMap<AtomicString, Member<StyleRuleKeyframes>>;
+   KeyframesRuleMap keyframes_rule_map_;
+ 
+-  using PositionFallbackRuleMap =
+-      HeapHashMap<AtomicString, Member<StyleRulePositionFallback>>;
+-  PositionFallbackRuleMap position_fallback_rule_map_;
++  using PositionTryRuleMap =
++      HeapHashMap<AtomicString, Member<StyleRulePositionTry>>;
++  PositionTryRuleMap position_try_rule_map_;
+ 
+   // Multiple entries are created pointing to the same
+   // StyleRuleFontFeatureValues for each mentioned family name in the

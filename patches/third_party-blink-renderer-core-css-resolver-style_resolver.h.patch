@@ -1,14 +1,47 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_resolver.h b/third_party/blink/renderer/core/css/resolver/style_resolver.h
-index f367f050245b8856fb0386f8bfd8854024231ed2..c30921cb2e2b10f534673bffdf9f72bbb3102054 100644
+index f367f050245b8856fb0386f8bfd8854024231ed2..8e23d3419deac0b3856e30e496217546bb2ff961 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_resolver.h
 +++ b/third_party/blink/renderer/core/css/resolver/style_resolver.h
-@@ -268,8 +268,8 @@ class CORE_EXPORT StyleResolver final : public GarbageCollected<StyleResolver> {
+@@ -29,7 +29,7 @@
+ #include "third_party/blink/renderer/core/animation/property_handle.h"
+ #include "third_party/blink/renderer/core/core_export.h"
+ #include "third_party/blink/renderer/core/css/color_scheme_flags.h"
+-#include "third_party/blink/renderer/core/css/css_position_fallback_rule.h"
++#include "third_party/blink/renderer/core/css/css_position_try_rule.h"
+ #include "third_party/blink/renderer/core/css/element_rule_collector.h"
+ #include "third_party/blink/renderer/core/css/resolver/matched_properties_cache.h"
+ #include "third_party/blink/renderer/core/css/resolver/style_builder.h"
+@@ -216,12 +216,9 @@ class CORE_EXPORT StyleResolver final : public GarbageCollected<StyleResolver> {
+       Element& element,
+       const ComputedStyle& base_style,
+       ActiveInterpolationsMap& transition_interpolations);
+-  StyleRulePositionFallback* ResolvePositionFallbackRule(
+-      const TreeScope* tree_scope,
+-      AtomicString position_fallback_name);
+-  scoped_refptr<const ComputedStyle> ResolvePositionFallbackStyle(
+-      Element&,
+-      unsigned index);
++
++  StyleRulePositionTry* ResolvePositionTryRule(const TreeScope* tree_scope,
++                                               AtomicString position_try_name);
+ 
+   // Check if the BODY or HTML element's display or containment stops
+   // propagation of BODY style to HTML and viewport.
+@@ -268,8 +265,8 @@ class CORE_EXPORT StyleResolver final : public GarbageCollected<StyleResolver> {
                              ElementRuleCollector&,
                              bool for_shadow_pseudo = false);
    void MatchPseudoPartRulesForUAHost(const Element&, ElementRuleCollector&);
-+  void MatchTryRules(const Element&, ElementRuleCollector&);
++  void MatchPositionTryRules(ElementRuleCollector&);
    void MatchAuthorRules(const Element&,
 -                        ScopedStyleResolver*,
                          ElementRuleCollector&);
    void MatchAllRules(StyleResolverState&,
                       ElementRuleCollector&,
+@@ -319,6 +316,7 @@ class CORE_EXPORT StyleResolver final : public GarbageCollected<StyleResolver> {
+                                         StyleCascade& cascade);
+ 
+   bool ApplyAnimatedStyle(StyleResolverState&, StyleCascade&);
++  void ApplyAnchorData(StyleResolverState&);
+ 
+   void ApplyCallbackSelectors(StyleResolverState&);
+   void ApplyDocumentRulesSelectors(StyleResolverState&, ContainerNode* scope);

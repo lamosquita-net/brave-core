@@ -1,16 +1,29 @@
 diff --git a/third_party/blink/renderer/core/css/css_math_expression_node.cc b/third_party/blink/renderer/core/css/css_math_expression_node.cc
-index 00af81fe62eb0d2471a491d4821388fc3f38b92a..3c206a0f90e04e036385106b696c6cc4f13419ea 100644
+index 00af81fe62eb0d2471a491d4821388fc3f38b92a..0658d8ff0b09165738790ce6681117c6baf67c48 100644
 --- a/third_party/blink/renderer/core/css/css_math_expression_node.cc
 +++ b/third_party/blink/renderer/core/css/css_math_expression_node.cc
-@@ -46,6 +46,7 @@
+@@ -34,8 +34,8 @@
+ #include <numeric>
+ 
+ #include "base/memory/values_equivalent.h"
+-#include "third_party/blink/renderer/core/css/calculation_expression_anchor_query_node.h"
+ #include "third_party/blink/renderer/core/css/css_custom_ident_value.h"
++#include "third_party/blink/renderer/core/css/css_math_function_value.h"
+ #include "third_party/blink/renderer/core/css/css_math_operator.h"
+ #include "third_party/blink/renderer/core/css/css_numeric_literal_value.h"
+ #include "third_party/blink/renderer/core/css/css_primitive_value.h"
+@@ -44,8 +44,10 @@
+ #include "third_party/blink/renderer/core/css/parser/css_parser_context.h"
+ #include "third_party/blink/renderer/core/css/properties/css_parsing_utils.h"
  #include "third_party/blink/renderer/core/css/resolver/style_resolver.h"
++#include "third_party/blink/renderer/core/css/try_tactic_transform.h"
  #include "third_party/blink/renderer/core/css_value_keywords.h"
  #include "third_party/blink/renderer/core/frame/web_feature.h"
 +#include "third_party/blink/renderer/core/style/anchor_specifier_value.h"
  #include "third_party/blink/renderer/platform/geometry/calculation_expression_node.h"
  #include "third_party/blink/renderer/platform/geometry/math_functions.h"
  #include "third_party/blink/renderer/platform/runtime_enabled_features.h"
-@@ -85,6 +86,10 @@ static CalculationResultCategory UnitCategory(
+@@ -85,6 +87,10 @@ static CalculationResultCategory UnitCategory(
      case CSSPrimitiveValue::UnitType::kIcs:
      case CSSPrimitiveValue::UnitType::kLhs:
        return kCalcLength;
@@ -21,7 +34,7 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..3c206a0f90e04e036385106b696c6cc4
      case CSSPrimitiveValue::UnitType::kViewportInlineSize:
      case CSSPrimitiveValue::UnitType::kViewportBlockSize:
      case CSSPrimitiveValue::UnitType::kSmallViewportWidth:
-@@ -152,6 +157,8 @@ static bool HasDoubleValue(CSSPrimitiveValue::UnitType type) {
+@@ -152,6 +158,8 @@ static bool HasDoubleValue(CSSPrimitiveValue::UnitType type) {
      case CSSPrimitiveValue::UnitType::kChs:
      case CSSPrimitiveValue::UnitType::kIcs:
      case CSSPrimitiveValue::UnitType::kLhs:
@@ -30,7 +43,455 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..3c206a0f90e04e036385106b696c6cc4
      case CSSPrimitiveValue::UnitType::kRlhs:
      case CSSPrimitiveValue::UnitType::kRems:
      case CSSPrimitiveValue::UnitType::kRexs:
-@@ -1887,9 +1894,11 @@ class CSSMathExpressionNodeParser {
+@@ -215,12 +223,12 @@ absl::optional<PixelsAndPercent> EvaluateValueIfNaNorInfinity(
+     bool allows_negative_percentage_reference) {
+   // |anchor_evaluator| is not needed because this function is just for handling
+   // inf and NaN.
+-  float evaluated_value = value->Evaluate(1, /* anchor_evaluator */ nullptr);
++  float evaluated_value = value->Evaluate(1);
+   if (!std::isfinite(evaluated_value)) {
+     return CreateClampedSamePixelsAndPercent(evaluated_value);
+   }
+   if (allows_negative_percentage_reference) {
+-    evaluated_value = value->Evaluate(-1, /* anchor_evaluator */ nullptr);
++    evaluated_value = value->Evaluate(-1);
+     if (!std::isfinite(evaluated_value)) {
+       return CreateClampedSamePixelsAndPercent(evaluated_value);
+     }
+@@ -269,6 +277,7 @@ CSSMathExpressionNumericLiteral::CSSMathExpressionNumericLiteral(
+           UnitCategory(value->GetType()),
+           CanTypeBeSimplifiedWithConversionData(value->GetType()),
+           false /* has_comparisons*/,
++          false /* has_anchor_functions*/,
+           false /* needs_tree_scope_population*/),
+       value_(value) {
+   if (!value_->IsNumber() && CanEagerlySimplify(Category())) {
+@@ -972,6 +981,7 @@ CSSMathExpressionOperation::CSSMathExpressionOperation(
+           category,
+           can_be_resolved_with_conversion_data,
+           left_side->HasComparisons() || right_side->HasComparisons(),
++          left_side->HasAnchorFunctions() || right_side->HasAnchorFunctions(),
+           !left_side->IsScopedValue() || !right_side->IsScopedValue()),
+       operands_({left_side, right_side}),
+       operator_(op) {}
+@@ -986,6 +996,16 @@ static bool AnyOperandHasComparisons(
+   return false;
+ }
+ 
++static bool AnyOperandHasAnchorFunctions(
++    CSSMathExpressionOperation::Operands& operands) {
++  for (const CSSMathExpressionNode* operand : operands) {
++    if (operand->HasAnchorFunctions()) {
++      return true;
++    }
++  }
++  return false;
++}
++
+ static bool AnyOperandNeedsTreeScopePopulation(
+     CSSMathExpressionOperation::Operands& operands) {
+   for (const CSSMathExpressionNode* operand : operands) {
+@@ -1005,6 +1025,7 @@ CSSMathExpressionOperation::CSSMathExpressionOperation(
+           category,
+           can_be_resolved_with_conversion_data,
+           IsComparison(op) || AnyOperandHasComparisons(operands),
++          AnyOperandHasAnchorFunctions(operands),
+           AnyOperandNeedsTreeScopePopulation(operands)),
+       operands_(std::move(operands)),
+       operator_(op) {}
+@@ -1016,6 +1037,7 @@ CSSMathExpressionOperation::CSSMathExpressionOperation(
+     : CSSMathExpressionNode(category,
+                             can_be_resolved_with_conversion_data,
+                             IsComparison(op),
++                            false /*has_anchor_functions*/,
+                             false),
+       operator_(op) {}
+ 
+@@ -1589,6 +1611,32 @@ const CSSMathExpressionNode& CSSMathExpressionOperation::PopulateWithTreeScope(
+       std::move(populated_operands), operator_);
+ }
+ 
++const CSSMathExpressionNode* CSSMathExpressionOperation::TransformAnchors(
++    LogicalAxis logical_axis,
++    const TryTacticTransform& transform,
++    const WritingDirectionMode& writing_direction) const {
++  Operands transformed_operands;
++  for (const CSSMathExpressionNode* op : operands_) {
++    transformed_operands.push_back(
++        op->TransformAnchors(logical_axis, transform, writing_direction));
++  }
++  if (transformed_operands != operands_) {
++    return MakeGarbageCollected<CSSMathExpressionOperation>(
++        Category(), std::move(transformed_operands), operator_);
++  }
++  return this;
++}
++
++bool CSSMathExpressionOperation::HasInvalidAnchorFunctions(
++    const CSSLengthResolver& length_resolver) const {
++  for (const CSSMathExpressionNode* op : operands_) {
++    if (op->HasInvalidAnchorFunctions(length_resolver)) {
++      return true;
++    }
++  }
++  return false;
++}
++
+ #if DCHECK_IS_ON()
+ bool CSSMathExpressionOperation::InvolvesPercentageComparisons() const {
+   if (IsMinOrMax() && Category() == kCalcPercent && operands_.size() > 1u) {
+@@ -1607,15 +1655,37 @@ bool CSSMathExpressionOperation::InvolvesPercentageComparisons() const {
+ 
+ // ------ Start of CSSMathExpressionAnchorQuery member functions ------
+ 
++namespace {
++
++CalculationResultCategory AnchorQueryCategory(
++    const CSSPrimitiveValue* fallback) {
++  // Note that the main (non-fallback) result of an anchor query is always
++  // a kCalcLength, so the only thing that can make our overall result anything
++  // else is the fallback.
++  if (!fallback || fallback->IsLength()) {
++    return kCalcLength;
++  }
++  // This can happen for e.g. anchor(--a top, 10%). In this case, we can't
++  // tell if we're going to return a <length> or a <percentage> without actually
++  // evaluating the query.
++  //
++  // TODO(crbug.com/326088870): Evaluate anchor queries when understanding
++  // the CalculationResultCategory for an expression.
++  return kCalcPercentLength;
++}
++
++}  // namespace
++
+ CSSMathExpressionAnchorQuery::CSSMathExpressionAnchorQuery(
+     CSSAnchorQueryType type,
+     const CSSValue* anchor_specifier,
+     const CSSValue& value,
+     const CSSPrimitiveValue* fallback)
+     : CSSMathExpressionNode(
+-          kCalcPercentLength,
++          AnchorQueryCategory(fallback),
+           false,
+           false /* has_comparisons */,
++          true /* has_anchor_functions */,
+           (anchor_specifier && !anchor_specifier->IsScopedValue()) ||
+               (fallback && !fallback->IsScopedValue())),
+       type_(type),
+@@ -1623,6 +1693,34 @@ CSSMathExpressionAnchorQuery::CSSMathExpressionAnchorQuery(
+       value_(value),
+       fallback_(fallback) {}
+ 
++double CSSMathExpressionAnchorQuery::DoubleValue() const {
++  NOTREACHED();
++  return 0;
++}
++
++double CSSMathExpressionAnchorQuery::ComputeLengthPx(
++    const CSSLengthResolver& length_resolver) const {
++  return ComputeDouble(length_resolver);
++}
++
++double CSSMathExpressionAnchorQuery::ComputeDouble(
++    const CSSLengthResolver& length_resolver) const {
++  CHECK_EQ(kCalcLength, Category());
++  // Note: The category may also be kCalcPercentLength (see
++  // AnchorQueryCategory), in which case we'll reach ToCalculationExpression
++  // instead.
++
++  AnchorQuery query = ToQuery(length_resolver);
++
++  if (absl::optional<LayoutUnit> px = EvaluateQuery(query, length_resolver)) {
++    return px.value();
++  }
++
++  // We should have checked HasInvalidAnchorFunctions() before entering here.
++  CHECK(fallback_);
++  return fallback_->ComputeLength<double>(length_resolver);
++}
++
+ String CSSMathExpressionAnchorQuery::CustomCSSText() const {
+   StringBuilder result;
+   result.Append(IsAnchor() ? "anchor(" : "anchor-size(");
+@@ -1656,10 +1754,6 @@ namespace {
+ 
+ CSSAnchorValue CSSValueIDToAnchorValueEnum(CSSValueID value) {
+   switch (value) {
+-    case CSSValueID::kAuto:
+-      return CSSAnchorValue::kAuto;
+-    case CSSValueID::kAutoSame:
+-      return CSSAnchorValue::kAutoSame;
+     case CSSValueID::kTop:
+       return CSSAnchorValue::kTop;
+     case CSSValueID::kLeft:
+@@ -1709,6 +1803,36 @@ CSSAnchorSizeValue CSSValueIDToAnchorSizeValueEnum(CSSValueID value) {
+ scoped_refptr<const CalculationExpressionNode>
+ CSSMathExpressionAnchorQuery::ToCalculationExpression(
+     const CSSLengthResolver& length_resolver) const {
++  AnchorQuery query = ToQuery(length_resolver);
++
++  Length result;
++
++  if (absl::optional<LayoutUnit> px = EvaluateQuery(query, length_resolver)) {
++    result = Length::Fixed(px.value());
++  } else {
++    // We should have checked HasInvalidAnchorFunctions() before entering here.
++    CHECK(fallback_);
++    result = fallback_->ConvertToLength(length_resolver);
++  }
++
++  return result.AsCalculationValue()->GetOrCreateExpression();
++}
++
++absl::optional<LayoutUnit> CSSMathExpressionAnchorQuery::EvaluateQuery(
++    const AnchorQuery& query,
++    const CSSLengthResolver& length_resolver) const {
++  length_resolver.ReferenceAnchor();
++  if (AnchorEvaluator* anchor_evaluator =
++          length_resolver.GetAnchorEvaluator()) {
++    return anchor_evaluator->Evaluate(query,
++                                      length_resolver.GetPositionAnchor(),
++                                      length_resolver.GetInsetAreaOffsets());
++  }
++  return absl::nullopt;
++}
++
++AnchorQuery CSSMathExpressionAnchorQuery::ToQuery(
++    const CSSLengthResolver& length_resolver) const {
+   DCHECK(IsScopedValue());
+   AnchorSpecifierValue* anchor_specifier = AnchorSpecifierValue::Default();
+   if (const auto* implicit =
+@@ -1717,31 +1841,27 @@ CSSMathExpressionAnchorQuery::ToCalculationExpression(
+     anchor_specifier = AnchorSpecifierValue::Implicit();
+   } else if (const auto* custom_ident =
+                  DynamicTo<CSSCustomIdentValue>(anchor_specifier_.Get())) {
++    length_resolver.ReferenceTreeScope();
+     anchor_specifier = MakeGarbageCollected<AnchorSpecifierValue>(
+         *MakeGarbageCollected<ScopedCSSName>(custom_ident->Value(),
+                                              custom_ident->GetTreeScope()));
+   }
+-  Length fallback = fallback_ ? fallback_->ConvertToLength(length_resolver)
+-                              : Length::Fixed(0);
+-
+   if (type_ == CSSAnchorQueryType::kAnchor) {
+     if (const CSSPrimitiveValue* percentage =
+             DynamicTo<CSSPrimitiveValue>(*value_)) {
+       DCHECK(percentage->IsPercentage());
+-      return CalculationExpressionAnchorQueryNode::CreateAnchorPercentage(
+-          *anchor_specifier, percentage->GetFloatValue(), fallback);
++      return AnchorQuery(type_, anchor_specifier, percentage->GetFloatValue(),
++                         CSSAnchorValue::kPercentage);
+     }
+     const CSSIdentifierValue& side = To<CSSIdentifierValue>(*value_);
+-    return CalculationExpressionAnchorQueryNode::CreateAnchor(
+-        *anchor_specifier, CSSValueIDToAnchorValueEnum(side.GetValueID()),
+-        fallback);
++    return AnchorQuery(type_, anchor_specifier, /* percentage */ 0,
++                       CSSValueIDToAnchorValueEnum(side.GetValueID()));
+   }
+ 
+   DCHECK_EQ(type_, CSSAnchorQueryType::kAnchorSize);
+   const CSSIdentifierValue& size = To<CSSIdentifierValue>(*value_);
+-  return CalculationExpressionAnchorQueryNode::CreateAnchorSize(
+-      *anchor_specifier, CSSValueIDToAnchorSizeValueEnum(size.GetValueID()),
+-      fallback);
++  return AnchorQuery(type_, anchor_specifier, /* percentage */ 0,
++                     CSSValueIDToAnchorSizeValueEnum(size.GetValueID()));
+ }
+ 
+ const CSSMathExpressionNode&
+@@ -1757,6 +1877,174 @@ CSSMathExpressionAnchorQuery::PopulateWithTreeScope(
+           : nullptr);
+ }
+ 
++namespace {
++
++bool FlipLogical(LogicalAxis logical_axis,
++                 const TryTacticTransform& transform) {
++  return (logical_axis == LogicalAxis::kInline) ? transform.FlippedInline()
++                                                : transform.FlippedBlock();
++}
++
++CSSValueID TransformAnchorCSSValueID(
++    CSSValueID from,
++    LogicalAxis logical_axis,
++    const TryTacticTransform& transform,
++    const WritingDirectionMode& writing_direction) {
++  // The value transformation happens on logical insets, so we need to first
++  // translate physical to logical, then carry out the transform, and then
++  // convert *back* to physical.
++  PhysicalToLogical logical_insets(writing_direction, CSSValueID::kTop,
++                                   CSSValueID::kRight, CSSValueID::kBottom,
++                                   CSSValueID::kLeft);
++
++  LogicalToPhysical<CSSValueID> insets = transform.Transform(
++      TryTacticTransform::LogicalSides<CSSValueID>{
++          .inline_start = logical_insets.InlineStart(),
++          .inline_end = logical_insets.InlineEnd(),
++          .block_start = logical_insets.BlockStart(),
++          .block_end = logical_insets.BlockEnd()},
++      writing_direction);
++
++  bool flip_logical = FlipLogical(logical_axis, transform);
++
++  switch (from) {
++    // anchor()
++    case CSSValueID::kTop:
++      return insets.Top();
++    case CSSValueID::kLeft:
++      return insets.Left();
++    case CSSValueID::kRight:
++      return insets.Right();
++    case CSSValueID::kBottom:
++      return insets.Bottom();
++    case CSSValueID::kStart:
++      return flip_logical ? CSSValueID::kEnd : from;
++    case CSSValueID::kEnd:
++      return flip_logical ? CSSValueID::kStart : from;
++    case CSSValueID::kSelfStart:
++      return flip_logical ? CSSValueID::kSelfEnd : from;
++    case CSSValueID::kSelfEnd:
++      return flip_logical ? CSSValueID::kSelfStart : from;
++    case CSSValueID::kCenter:
++      return from;
++    // anchor-size()
++    case CSSValueID::kWidth:
++      return transform.FlippedStart() ? CSSValueID::kHeight : from;
++    case CSSValueID::kHeight:
++      return transform.FlippedStart() ? CSSValueID::kWidth : from;
++    case CSSValueID::kBlock:
++      return transform.FlippedStart() ? CSSValueID::kInline : from;
++    case CSSValueID::kInline:
++      return transform.FlippedStart() ? CSSValueID::kBlock : from;
++    case CSSValueID::kSelfBlock:
++      return transform.FlippedStart() ? CSSValueID::kSelfInline : from;
++    case CSSValueID::kSelfInline:
++      return transform.FlippedStart() ? CSSValueID::kSelfBlock : from;
++    default:
++      NOTREACHED();
++      return from;
++  }
++}
++
++float TransformAnchorPercentage(float from,
++                                LogicalAxis logical_axis,
++                                const TryTacticTransform& transform) {
++  return FlipLogical(logical_axis, transform) ? (100.0f - from) : from;
++}
++
++}  // namespace
++
++const CSSMathExpressionNode* CSSMathExpressionAnchorQuery::TransformAnchors(
++    LogicalAxis logical_axis,
++    const TryTacticTransform& transform,
++    const WritingDirectionMode& writing_direction) const {
++  const CSSValue* transformed_value = value_;
++  if (const auto* side = DynamicTo<CSSIdentifierValue>(value_.Get())) {
++    CSSValueID from = side->GetValueID();
++    CSSValueID to = TransformAnchorCSSValueID(from, logical_axis, transform,
++                                              writing_direction);
++    if (from != to) {
++      transformed_value = CSSIdentifierValue::Create(to);
++    }
++  } else if (const auto* percentage =
++                 DynamicTo<CSSPrimitiveValue>(value_.Get())) {
++    DCHECK(percentage->IsPercentage());
++    float from = percentage->GetFloatValue();
++    float to = TransformAnchorPercentage(from, logical_axis, transform);
++    if (from != to) {
++      transformed_value = CSSNumericLiteralValue::Create(
++          to, CSSPrimitiveValue::UnitType::kPercentage);
++    }
++  }
++
++  // The fallback can contain anchors.
++  const CSSPrimitiveValue* transformed_fallback = fallback_.Get();
++  if (const auto* math_function =
++          DynamicTo<CSSMathFunctionValue>(fallback_.Get())) {
++    transformed_fallback = math_function->TransformAnchors(
++        logical_axis, transform, writing_direction);
++  }
++
++  if (transformed_value != value_ || transformed_fallback != fallback_) {
++    // Either the value or the fallback was transformed.
++    return MakeGarbageCollected<CSSMathExpressionAnchorQuery>(
++        type_, anchor_specifier_, *transformed_value, transformed_fallback);
++  }
++
++  // No transformation.
++  return this;
++}
++
++bool CSSMathExpressionAnchorQuery::HasInvalidAnchorFunctions(
++    const CSSLengthResolver& length_resolver) const {
++  AnchorQuery query = ToQuery(length_resolver);
++  absl::optional<LayoutUnit> px = EvaluateQuery(query, length_resolver);
++
++  if (px.has_value()) {
++    return false;
++  }
++
++  // We need to take the fallback. However, if there is no fallback,
++  // then we are invalid at computed-value time [1].
++  // [1] // https://drafts.csswg.org/css-anchor-position-1/#anchor-valid
++
++  if (fallback_) {
++    if (auto* math_fallback =
++            DynamicTo<CSSMathFunctionValue>(fallback_.Get())) {
++      // The fallback itself may also contain invalid anchor*() functions.
++      return math_fallback->HasInvalidAnchorFunctions(length_resolver);
++    }
++    return false;
++  }
++
++  return true;
++}
++
++bool CSSMathExpressionAnchorQuery::HasInvalidAnchorFunctions(
++    const CSSLengthResolver& length_resolver) const {
++  AnchorQuery query = ToQuery(length_resolver);
++  absl::optional<LayoutUnit> px = EvaluateQuery(query, length_resolver);
++
++  if (px.has_value()) {
++    return false;
++  }
++
++  // We need to take the fallback. However, if there is no fallback,
++  // then we are invalid at computed-value time [1].
++  // [1] // https://drafts.csswg.org/css-anchor-position-1/#anchor-valid
++
++  if (fallback_) {
++    if (auto* math_fallback =
++            DynamicTo<CSSMathFunctionValue>(fallback_.Get())) {
++      // The fallback itself may also contain invalid anchor*() functions.
++      return math_fallback->HasInvalidAnchorFunctions(length_resolver);
++    }
++    return false;
++  }
++
++  return true;
++}
++
+ void CSSMathExpressionAnchorQuery::Trace(Visitor* visitor) const {
+   visitor->Trace(anchor_specifier_);
+   visitor->Trace(value_);
+@@ -1849,10 +2137,10 @@ class CSSMathExpressionNodeParser {
+     switch (anchor_query_type) {
+       case CSSAnchorQueryType::kAnchor:
+         value = css_parsing_utils::ConsumeIdent<
+-            CSSValueID::kAuto, CSSValueID::kAutoSame, CSSValueID::kTop,
+-            CSSValueID::kLeft, CSSValueID::kRight, CSSValueID::kBottom,
+-            CSSValueID::kStart, CSSValueID::kEnd, CSSValueID::kSelfStart,
+-            CSSValueID::kSelfEnd, CSSValueID::kCenter>(tokens);
++            CSSValueID::kTop, CSSValueID::kLeft, CSSValueID::kRight,
++            CSSValueID::kBottom, CSSValueID::kStart, CSSValueID::kEnd,
++            CSSValueID::kSelfStart, CSSValueID::kSelfEnd, CSSValueID::kCenter>(
++            tokens);
+         if (!value) {
+           value = css_parsing_utils::ConsumePercent(
+               tokens, context_, CSSPrimitiveValue::ValueRange::kAll);
+@@ -1887,9 +2175,11 @@ class CSSMathExpressionNodeParser {
          anchor_query_type, anchor_specifier, *value, fallback);
    }
  
@@ -45,7 +506,7 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..3c206a0f90e04e036385106b696c6cc4
      if (!IsSupportedMathFunction(function_id)) {
        return nullptr;
      }
-@@ -1971,6 +1980,14 @@ class CSSMathExpressionNodeParser {
+@@ -1971,6 +2261,14 @@ class CSSMathExpressionNodeParser {
      }
  
      HeapVector<Member<const CSSMathExpressionNode>> nodes;
@@ -60,7 +521,7 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..3c206a0f90e04e036385106b696c6cc4
  
      while (!tokens.AtEnd() && nodes.size() < max_argument_count) {
        if (nodes.size()) {
-@@ -1980,7 +1997,8 @@ class CSSMathExpressionNodeParser {
+@@ -1980,7 +2278,8 @@ class CSSMathExpressionNodeParser {
        }
  
        tokens.ConsumeWhitespace();
@@ -70,7 +531,7 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..3c206a0f90e04e036385106b696c6cc4
        if (!node) {
          return nullptr;
        }
-@@ -2032,17 +2050,18 @@ class CSSMathExpressionNodeParser {
+@@ -2032,17 +2331,18 @@ class CSSMathExpressionNodeParser {
          DCHECK_LE(nodes.size(), 3u);
          CSSMathOperator op;
          if (function_id == CSSValueID::kRound) {
@@ -99,7 +560,7 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..3c206a0f90e04e036385106b696c6cc4
              return nullptr;
            }
          } else if (function_id == CSSValueID::kMod) {
-@@ -2050,14 +2069,6 @@ class CSSMathExpressionNodeParser {
+@@ -2050,14 +2350,6 @@ class CSSMathExpressionNodeParser {
          } else {
            op = CSSMathOperator::kRem;
          }
@@ -114,7 +575,7 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..3c206a0f90e04e036385106b696c6cc4
          return CSSMathExpressionOperation::CreateSteppedValueFunction(
              std::move(nodes), op);
        }
-@@ -2077,7 +2088,9 @@ class CSSMathExpressionNodeParser {
+@@ -2077,7 +2369,9 @@ class CSSMathExpressionNodeParser {
    }
  
   private:
@@ -125,7 +586,7 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..3c206a0f90e04e036385106b696c6cc4
      CSSParserToken token = tokens.ConsumeIncludingWhitespace();
      if (token.Id() == CSSValueID::kInfinity) {
        return CSSMathExpressionNumericLiteral::Create(
-@@ -2102,33 +2115,17 @@ class CSSMathExpressionNodeParser {
+@@ -2102,33 +2396,17 @@ class CSSMathExpressionNodeParser {
        return CSSMathExpressionNumericLiteral::Create(
            M_E, CSSPrimitiveValue::UnitType::kNumber);
      }
@@ -167,7 +628,7 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..3c206a0f90e04e036385106b696c6cc4
        return nullptr;
      }
  
-@@ -2141,8 +2138,34 @@ class CSSMathExpressionNodeParser {
+@@ -2141,8 +2419,34 @@ class CSSMathExpressionNodeParser {
          CSSNumericLiteralValue::Create(token.NumericValue(), type));
    }
  
@@ -204,7 +665,7 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..3c206a0f90e04e036385106b696c6cc4
      if (tokens.AtEnd()) {
        return nullptr;
      }
-@@ -2152,7 +2175,8 @@ class CSSMathExpressionNodeParser {
+@@ -2152,7 +2456,8 @@ class CSSMathExpressionNodeParser {
        CSSParserTokenRange inner_range = tokens.ConsumeBlock();
        tokens.ConsumeWhitespace();
        inner_range.ConsumeWhitespace();
@@ -214,7 +675,7 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..3c206a0f90e04e036385106b696c6cc4
        if (!result || !inner_range.AtEnd()) {
          return nullptr;
        }
-@@ -2165,20 +2189,23 @@ class CSSMathExpressionNodeParser {
+@@ -2165,20 +2470,23 @@ class CSSMathExpressionNodeParser {
        CSSParserTokenRange inner_range = tokens.ConsumeBlock();
        tokens.ConsumeWhitespace();
        inner_range.ConsumeWhitespace();
@@ -241,7 +702,7 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..3c206a0f90e04e036385106b696c6cc4
      if (!result) {
        return nullptr;
      }
-@@ -2191,7 +2218,8 @@ class CSSMathExpressionNodeParser {
+@@ -2191,7 +2499,8 @@ class CSSMathExpressionNodeParser {
        }
        tokens.ConsumeIncludingWhitespace();
  
@@ -251,7 +712,7 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..3c206a0f90e04e036385106b696c6cc4
        if (!rhs) {
          return nullptr;
        }
-@@ -2209,13 +2237,14 @@ class CSSMathExpressionNodeParser {
+@@ -2209,13 +2518,14 @@ class CSSMathExpressionNodeParser {
  
    CSSMathExpressionNode* ParseAdditiveValueExpression(
        CSSParserTokenRange& tokens,
@@ -268,7 +729,7 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..3c206a0f90e04e036385106b696c6cc4
      if (!result) {
        return nullptr;
      }
-@@ -2235,8 +2264,8 @@ class CSSMathExpressionNodeParser {
+@@ -2235,8 +2545,8 @@ class CSSMathExpressionNodeParser {
        }
        tokens.ConsumeIncludingWhitespace();
  
@@ -279,7 +740,7 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..3c206a0f90e04e036385106b696c6cc4
        if (!rhs) {
          return nullptr;
        }
-@@ -2252,12 +2281,15 @@ class CSSMathExpressionNodeParser {
+@@ -2252,12 +2562,15 @@ class CSSMathExpressionNodeParser {
      return result;
    }
  
@@ -298,7 +759,96 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..3c206a0f90e04e036385106b696c6cc4
    }
  
    const CSSParserContext& context_;
-@@ -2508,11 +2540,12 @@ CSSMathExpressionNode* CSSMathExpressionNode::ParseMathFunction(
+@@ -2322,60 +2635,6 @@ CSSMathExpressionNode* CSSMathExpressionNode::Create(PixelsAndPercent value) {
+       op);
+ }
+ 
+-namespace {
+-
+-CSSValue* AnchorQueryValueToCSSValue(
+-    const CalculationExpressionAnchorQueryNode& anchor_query) {
+-  if (anchor_query.Type() == CSSAnchorQueryType::kAnchor) {
+-    switch (anchor_query.AnchorSide()) {
+-      case CSSAnchorValue::kAuto:
+-        return CSSIdentifierValue::Create(CSSValueID::kAuto);
+-      case CSSAnchorValue::kAutoSame:
+-        return CSSIdentifierValue::Create(CSSValueID::kAutoSame);
+-      case CSSAnchorValue::kTop:
+-        return CSSIdentifierValue::Create(CSSValueID::kTop);
+-      case CSSAnchorValue::kLeft:
+-        return CSSIdentifierValue::Create(CSSValueID::kLeft);
+-      case CSSAnchorValue::kRight:
+-        return CSSIdentifierValue::Create(CSSValueID::kRight);
+-      case CSSAnchorValue::kBottom:
+-        return CSSIdentifierValue::Create(CSSValueID::kBottom);
+-      case CSSAnchorValue::kStart:
+-        return CSSIdentifierValue::Create(CSSValueID::kStart);
+-      case CSSAnchorValue::kEnd:
+-        return CSSIdentifierValue::Create(CSSValueID::kEnd);
+-      case CSSAnchorValue::kSelfStart:
+-        return CSSIdentifierValue::Create(CSSValueID::kSelfStart);
+-      case CSSAnchorValue::kSelfEnd:
+-        return CSSIdentifierValue::Create(CSSValueID::kSelfEnd);
+-      case CSSAnchorValue::kCenter:
+-        return CSSIdentifierValue::Create(CSSValueID::kCenter);
+-      case CSSAnchorValue::kPercentage:
+-        return CSSNumericLiteralValue::Create(
+-            anchor_query.AnchorSidePercentage(),
+-            CSSPrimitiveValue::UnitType::kPercentage);
+-    }
+-  }
+-
+-  DCHECK_EQ(anchor_query.Type(), CSSAnchorQueryType::kAnchorSize);
+-  switch (anchor_query.AnchorSize()) {
+-    case CSSAnchorSizeValue::kWidth:
+-      return CSSIdentifierValue::Create(CSSValueID::kWidth);
+-    case CSSAnchorSizeValue::kHeight:
+-      return CSSIdentifierValue::Create(CSSValueID::kHeight);
+-    case CSSAnchorSizeValue::kBlock:
+-      return CSSIdentifierValue::Create(CSSValueID::kBlock);
+-    case CSSAnchorSizeValue::kInline:
+-      return CSSIdentifierValue::Create(CSSValueID::kInline);
+-    case CSSAnchorSizeValue::kSelfBlock:
+-      return CSSIdentifierValue::Create(CSSValueID::kSelfBlock);
+-    case CSSAnchorSizeValue::kSelfInline:
+-      return CSSIdentifierValue::Create(CSSValueID::kSelfInline);
+-  }
+-}
+-
+-}  // namespace
+-
+ // static
+ CSSMathExpressionNode* CSSMathExpressionNode::Create(
+     const CalculationExpressionNode& node) {
+@@ -2385,27 +2644,6 @@ CSSMathExpressionNode* CSSMathExpressionNode::Create(
+     return Create(pixels_and_percent.GetPixelsAndPercent());
+   }
+ 
+-  if (node.IsAnchorQuery()) {
+-    const auto& anchor_query = To<CalculationExpressionAnchorQueryNode>(node);
+-    CSSAnchorQueryType type = anchor_query.Type() == CSSAnchorQueryType::kAnchor
+-                                  ? CSSAnchorQueryType::kAnchor
+-                                  : CSSAnchorQueryType::kAnchorSize;
+-    const CSSValue* anchor_specifier = nullptr;
+-    if (anchor_query.AnchorSpecifier().IsImplicit()) {
+-      anchor_specifier = CSSIdentifierValue::Create(CSSValueID::kImplicit);
+-    } else if (anchor_query.AnchorSpecifier().IsNamed()) {
+-      const ScopedCSSName& name = anchor_query.AnchorSpecifier().GetName();
+-      anchor_specifier = To<CSSCustomIdentValue>(
+-          &MakeGarbageCollected<CSSCustomIdentValue>(name.GetName())
+-               ->EnsureScopedValue(name.GetTreeScope()));
+-    }
+-    CSSValue* value = AnchorQueryValueToCSSValue(anchor_query);
+-    CSSPrimitiveValue* fallback = CSSPrimitiveValue::CreateFromLength(
+-        anchor_query.GetFallback(), /* zoom */ 1);
+-    return MakeGarbageCollected<CSSMathExpressionAnchorQuery>(
+-        type, anchor_specifier, *value, fallback);
+-  }
+-
+   DCHECK(node.IsOperation());
+ 
+   const auto& operation = To<CalculationExpressionOperationNode>(node);
+@@ -2508,11 +2746,12 @@ CSSMathExpressionNode* CSSMathExpressionNode::ParseMathFunction(
      CSSParserTokenRange tokens,
      const CSSParserContext& context,
      const bool is_percentage_allowed,

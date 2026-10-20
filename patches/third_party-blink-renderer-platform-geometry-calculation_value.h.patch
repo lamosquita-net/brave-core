@@ -1,8 +1,27 @@
 diff --git a/third_party/blink/renderer/platform/geometry/calculation_value.h b/third_party/blink/renderer/platform/geometry/calculation_value.h
-index f1e809b6dd81a61a1c68691e8bfc6c1e8424a672..565ef459ded2f866beb427afd97708442e4a2388 100644
+index f1e809b6dd81a61a1c68691e8bfc6c1e8424a672..0922647be89fb41e0912502ce8b3e4702b0786eb 100644
 --- a/third_party/blink/renderer/platform/geometry/calculation_value.h
 +++ b/third_party/blink/renderer/platform/geometry/calculation_value.h
-@@ -92,6 +92,7 @@ class PLATFORM_EXPORT CalculationValue : public RefCounted<CalculationValue> {
+@@ -59,8 +59,7 @@ class PLATFORM_EXPORT CalculationValue : public RefCounted<CalculationValue> {
+ 
+   ~CalculationValue();
+ 
+-  float Evaluate(float max_value,
+-                 const Length::AnchorEvaluator* = nullptr) const;
++  float Evaluate(float max_value) const;
+   bool operator==(const CalculationValue& o) const;
+   bool IsExpression() const { return is_expression_; }
+   bool IsNonNegative() const { return is_non_negative_; }
+@@ -68,8 +67,6 @@ class PLATFORM_EXPORT CalculationValue : public RefCounted<CalculationValue> {
+     return is_non_negative_ ? Length::ValueRange::kNonNegative
+                             : Length::ValueRange::kAll;
+   }
+-  bool HasAnchorQueries() const;
+-  bool HasAutoAnchorPositioning() const;
+ 
+   float Pixels() const {
+     DCHECK(!IsExpression());
+@@ -92,6 +89,7 @@ class PLATFORM_EXPORT CalculationValue : public RefCounted<CalculationValue> {
                                                double progress,
                                                Length::ValueRange) const;
    scoped_refptr<const CalculationValue> SubtractFromOneHundredPercent() const;

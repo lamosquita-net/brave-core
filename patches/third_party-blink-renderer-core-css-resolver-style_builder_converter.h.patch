@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_builder_converter.h b/third_party/blink/renderer/core/css/resolver/style_builder_converter.h
-index 07090144d0700e9f63045939c9fa5f3b2ad090b7..a61a99832c19ed48afb67ce0329d7f9ac48e37ff 100644
+index 07090144d0700e9f63045939c9fa5f3b2ad090b7..0e4c3446a7156bf46040535bbcdae673e8e0f170 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_builder_converter.h
 +++ b/third_party/blink/renderer/core/css/resolver/style_builder_converter.h
 @@ -63,7 +63,6 @@
@@ -30,7 +30,7 @@ index 07090144d0700e9f63045939c9fa5f3b2ad090b7..a61a99832c19ed48afb67ce0329d7f9a
    static FilterOperations ConvertFilterOperations(StyleResolverState&,
                                                    const CSSValue&,
                                                    CSSPropertyID);
-@@ -214,12 +215,14 @@ class StyleBuilderConverter {
+@@ -214,12 +215,16 @@ class StyleBuilderConverter {
                              const CSSValue&);  // clamps to [0,1]
    static ScopedCSSName* ConvertNoneOrCustomIdent(StyleResolverState&,
                                                   const CSSValue&);
@@ -38,16 +38,20 @@ index 07090144d0700e9f63045939c9fa5f3b2ad090b7..a61a99832c19ed48afb67ce0329d7f9a
 +                                                   const CSSValue&);
    static ScopedCSSName* ConvertCustomIdent(StyleResolverState&,
                                             const CSSValue&);
-   static ScopedCSSName* ConvertAnchorDefault(StyleResolverState&,
-                                              const CSSValue&);
+-  static ScopedCSSName* ConvertAnchorDefault(StyleResolverState&,
+-                                             const CSSValue&);
 -  static AnchorSpecifierValue* ConvertAnchorScroll(StyleResolverState&,
 -                                                   const CSSValue&);
++  static ScopedCSSName* ConvertPositionAnchor(StyleResolverState&,
++                                              const CSSValue&);
++  static PositionVisibility ConvertPositionVisibility(StyleResolverState& state,
++                                                      const CSSValue& value);
 +  static ScopedCSSNameList* ConvertAnchorName(StyleResolverState&,
 +                                              const CSSValue&);
    static StyleInitialLetter ConvertInitialLetter(StyleResolverState&,
                                                   const CSSValue&);
    static StyleOffsetRotation ConvertOffsetRotate(StyleResolverState&,
-@@ -254,7 +257,8 @@ class StyleBuilderConverter {
+@@ -254,7 +259,8 @@ class StyleBuilderConverter {
                                                bool for_visited_link = false);
    static SVGPaint ConvertSVGPaint(StyleResolverState&,
                                    const CSSValue&,
@@ -57,7 +61,7 @@ index 07090144d0700e9f63045939c9fa5f3b2ad090b7..a61a99832c19ed48afb67ce0329d7f9a
    static TextDecorationThickness ConvertTextDecorationThickness(
        StyleResolverState&,
        const CSSValue&);
-@@ -350,6 +354,8 @@ class StyleBuilderConverter {
+@@ -350,6 +356,8 @@ class StyleBuilderConverter {
  
    static AtomicString ConvertViewTransitionName(StyleResolverState&,
                                                  const CSSValue&);
@@ -66,7 +70,7 @@ index 07090144d0700e9f63045939c9fa5f3b2ad090b7..a61a99832c19ed48afb67ce0329d7f9a
  
    // Take a list value for a specified color-scheme, extract flags for known
    // color-schemes and the 'only' modifier, and push the list items into a
-@@ -387,6 +393,8 @@ class StyleBuilderConverter {
+@@ -387,6 +395,8 @@ class StyleBuilderConverter {
                                                      const CSSValue&);
    static ScopedCSSNameList* ConvertTimelineScope(StyleResolverState&,
                                                   const CSSValue&);

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/css_value.h b/third_party/blink/renderer/core/css/css_value.h
-index ae4527ce78bd2238489b9e7af95d1cac489528e9..61d177d8ecce7c914866a340764a33f458248a97 100644
+index ae4527ce78bd2238489b9e7af95d1cac489528e9..e47b145d36206685fb25b0b2a40364918098669f 100644
 --- a/third_party/blink/renderer/core/css/css_value.h
 +++ b/third_party/blink/renderer/core/css/css_value.h
 @@ -81,6 +81,9 @@ class CORE_EXPORT CSSValue : public GarbageCollected<CSSValue> {
@@ -12,7 +12,15 @@ index ae4527ce78bd2238489b9e7af95d1cac489528e9..61d177d8ecce7c914866a340764a33f4
    bool IsCounterValue() const { return class_type_ == kCounterClass; }
    bool IsCursorImageValue() const { return class_type_ == kCursorImageClass; }
    bool IsCrossfadeValue() const { return class_type_ == kCrossfadeClass; }
-@@ -197,6 +200,8 @@ class CORE_EXPORT CSSValue : public GarbageCollected<CSSValue> {
+@@ -181,6 +184,7 @@ class CORE_EXPORT CSSValue : public GarbageCollected<CSSValue> {
+   bool IsCyclicVariableValue() const {
+     return class_type_ == kCyclicVariableValueClass;
+   }
++  bool IsFlipRevertValue() const { return class_type_ == kFlipRevertClass; }
+   bool IsAlternateValue() const { return class_type_ == kAlternateClass; }
+   bool IsAxisValue() const { return class_type_ == kAxisClass; }
+   bool IsShorthandWrapperValue() const {
+@@ -197,6 +201,8 @@ class CORE_EXPORT CSSValue : public GarbageCollected<CSSValue> {
    bool IsViewValue() const { return class_type_ == kViewClass; }
    bool IsRatioValue() const { return class_type_ == kRatioClass; }
  
@@ -21,7 +29,7 @@ index ae4527ce78bd2238489b9e7af95d1cac489528e9..61d177d8ecce7c914866a340764a33f4
    bool HasFailedOrCanceledSubresources() const;
    bool MayContainUrl() const;
    void ReResolveUrl(const Document&) const;
-@@ -228,6 +233,7 @@ class CORE_EXPORT CSSValue : public GarbageCollected<CSSValue> {
+@@ -228,6 +234,7 @@ class CORE_EXPORT CSSValue : public GarbageCollected<CSSValue> {
      kIdentifierClass,
      kColorClass,
      kColorMixClass,
@@ -29,7 +37,15 @@ index ae4527ce78bd2238489b9e7af95d1cac489528e9..61d177d8ecce7c914866a340764a33f4
      kCounterClass,
      kQuadClass,
      kCustomIdentClass,
-@@ -302,6 +308,8 @@ class CORE_EXPORT CSSValue : public GarbageCollected<CSSValue> {
+@@ -292,6 +299,7 @@ class CORE_EXPORT CSSValue : public GarbageCollected<CSSValue> {
+     kPendingSystemFontValueClass,
+     kInvalidVariableValueClass,
+     kCyclicVariableValueClass,
++    kFlipRevertClass,
+     kLayoutFunctionClass,
+ 
+     kCSSContentDistributionClass,
+@@ -302,6 +310,8 @@ class CORE_EXPORT CSSValue : public GarbageCollected<CSSValue> {
      kImageSetOptionClass,
      kImageSetTypeClass,
  

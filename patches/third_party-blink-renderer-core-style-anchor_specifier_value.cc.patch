@@ -1,0 +1,26 @@
+diff --git a/third_party/blink/renderer/core/style/anchor_specifier_value.cc b/third_party/blink/renderer/core/style/anchor_specifier_value.cc
+index ce811c1fe36467e2296bc14861cf6ee45eb49beb..8e10a68f9831da516fdd73e5147cf243a71075d4 100644
+--- a/third_party/blink/renderer/core/style/anchor_specifier_value.cc
++++ b/third_party/blink/renderer/core/style/anchor_specifier_value.cc
+@@ -6,6 +6,7 @@
+ 
+ #include "third_party/blink/renderer/core/style/scoped_css_name.h"
+ #include "third_party/blink/renderer/platform/heap/persistent.h"
++#include "third_party/blink/renderer/platform/wtf/hash_functions.h"
+ 
+ namespace blink {
+ 
+@@ -40,6 +41,13 @@ bool AnchorSpecifierValue::operator==(const AnchorSpecifierValue& other) const {
+   return type_ == other.type_ && base::ValuesEquivalent(name_, other.name_);
+ }
+ 
++unsigned AnchorSpecifierValue::GetHash() const {
++  unsigned hash = 0;
++  WTF::AddIntToHash(hash, WTF::HashInt(type_));
++  WTF::AddIntToHash(hash, name_ ? name_->GetHash() : 0);
++  return hash;
++}
++
+ void AnchorSpecifierValue::Trace(Visitor* visitor) const {
+   visitor->Trace(name_);
+ }

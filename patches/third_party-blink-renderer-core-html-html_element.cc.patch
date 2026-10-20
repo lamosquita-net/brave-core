@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/html_element.cc b/third_party/blink/renderer/core/html/html_element.cc
-index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..d6c238ca6e1afcf97a2a20f6f2e7fbde0c05ae7d 100644
+index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..898f438ec66b72312b238db2555c06a799c6b9f7 100644
 --- a/third_party/blink/renderer/core/html/html_element.cc
 +++ b/third_party/blink/renderer/core/html/html_element.cc
 @@ -29,6 +29,8 @@
@@ -72,7 +72,19 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..d6c238ca6e1afcf97a2a20f6f2e7fbde
        {html_names::kAriaRowspanAttr, WebFeature::kARIARowSpanAttribute,
         kNoEvent, nullptr},
        {html_names::kAriaSelectedAttr, WebFeature::kARIASelectedAttribute,
-@@ -1317,7 +1324,9 @@ bool HTMLElement::IsPopoverReady(PopoverTriggerAction action,
+@@ -791,11 +798,6 @@ void HTMLElement::AttributeChanged(const AttributeModificationParams& params) {
+     EnsureElementInternals().ReadonlyAttributeChanged();
+     return;
+   }
+-  if (params.name == html_names::kAnchorAttr &&
+-      RuntimeEnabledFeatures::CSSAnchorPositioningEnabled()) {
+-    EnsureAnchorElementObserver().Notify();
+-    return;
+-  }
+ 
+   if (params.reason != AttributeModificationReason::kDirectly)
+     return;
+@@ -1317,7 +1319,9 @@ bool HTMLElement::IsPopoverReady(PopoverTriggerAction action,
    CHECK(RuntimeEnabledFeatures::HTMLPopoverAttributeEnabled(
        GetDocument().GetExecutionContext()));
    CHECK_NE(action, PopoverTriggerAction::kNone);
@@ -83,7 +95,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..d6c238ca6e1afcf97a2a20f6f2e7fbde
  
    auto maybe_throw_exception = [&exception_state, &include_event_handler_text](
                                     DOMExceptionCode code, const char* msg) {
-@@ -1423,26 +1432,56 @@ bool HTMLElement::togglePopover(ExceptionState& exception_state) {
+@@ -1423,26 +1427,56 @@ bool HTMLElement::togglePopover(ExceptionState& exception_state) {
    return false;
  }
  
@@ -149,7 +161,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..d6c238ca6e1afcf97a2a20f6f2e7fbde
  void HTMLElement::ShowPopoverInternal(Element* invoker,
                                        ExceptionState* exception_state) {
    CHECK(RuntimeEnabledFeatures::HTMLPopoverAttributeEnabled(
-@@ -1876,7 +1915,7 @@ void HTMLElement::SetPopoverFocusOnShow() {
+@@ -1876,7 +1910,7 @@ void HTMLElement::SetPopoverFocusOnShow() {
                                                  DocumentUpdateReason::kPopover);
  
    if (auto* dialog = DynamicTo<HTMLDialogElement>(this)) {
@@ -158,7 +170,29 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..d6c238ca6e1afcf97a2a20f6f2e7fbde
        dialog->SetFocusForDialog();
      } else {
        HTMLDialogElement::SetFocusForDialogLegacy(dialog);
-@@ -2419,24 +2458,32 @@ HTMLFormElement* HTMLElement::FindFormAncestor() const {
+@@ -2151,21 +2185,6 @@ void HTMLElement::InvokePopover(Element* invoker) {
+   ShowPopoverInternal(invoker, /*exception_state=*/nullptr);
+ }
+ 
+-Element* HTMLElement::anchorElement() {
+-  // TODO(crbug.com/1425215): Fix GetElementAttribute() for out-of-tree-scope
+-  // elements, so that we can remove the hack below.
+-  if (!IsInTreeScope()) {
+-    return nullptr;
+-  }
+-  Element* element = GetElementAttribute(html_names::kAnchorAttr);
+-  return element;
+-}
+-
+-void HTMLElement::setAnchorElement(Element* new_element) {
+-  SetElementAttribute(html_names::kAnchorAttr, new_element);
+-  EnsureAnchorElementObserver().Notify();
+-}
+-
+ // Must be called on an Element that is a popover. Returns true if |node| is a
+ // descendant of this popover. This includes the case where |node| is contained
+ // within another popover, and the container popover is a descendant of this
+@@ -2419,24 +2438,32 @@ HTMLFormElement* HTMLElement::FindFormAncestor() const {
    return Traversal<HTMLFormElement>::FirstAncestor(*this);
  }
  
@@ -203,7 +237,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..d6c238ca6e1afcf97a2a20f6f2e7fbde
      }
    }
    if (change.IsChildInsertion()) {
-@@ -2449,81 +2496,24 @@ bool HTMLElement::HasDirectionAuto() const {
+@@ -2449,81 +2476,24 @@ bool HTMLElement::HasDirectionAuto() const {
    // <bdi> defaults to dir="auto"
    // https://html.spec.whatwg.org/C/#the-bdi-element
    const AtomicString& direction = FastGetAttribute(html_names::kDirAttr);
@@ -295,7 +329,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..d6c238ca6e1afcf97a2a20f6f2e7fbde
    DCHECK(SelfOrAncestorHasDirAutoAttribute());
    bool is_deferred;
    TextDirection text_direction =
-@@ -2552,10 +2542,23 @@ void HTMLElement::AdjustDirectionalityIfNeededAfterChildAttributeChanged(
+@@ -2552,10 +2522,23 @@ void HTMLElement::AdjustDirectionalityIfNeededAfterChildAttributeChanged(
  }
  
  bool HTMLElement::CalculateAndAdjustAutoDirectionality(Node* stay_within) {
@@ -322,7 +356,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..d6c238ca6e1afcf97a2a20f6f2e7fbde
    if (CachedDirectionality() != text_direction && !is_deferred) {
      UpdateDirectionalityAndDescendant(text_direction);
  
-@@ -2571,58 +2574,12 @@ bool HTMLElement::CalculateAndAdjustAutoDirectionality(Node* stay_within) {
+@@ -2571,58 +2554,12 @@ bool HTMLElement::CalculateAndAdjustAutoDirectionality(Node* stay_within) {
    return false;
  }
  
@@ -357,8 +391,8 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..d6c238ca6e1afcf97a2a20f6f2e7fbde
 -      }
 -    }
 -    stay_within = change.sibling_changed;
-   }
- 
+-  }
+-
 -  UpdateDescendantHasDirAutoAttribute(true /* has_dir_auto */);
 -
 -  for (Element* element_to_adjust = this; element_to_adjust;
@@ -376,15 +410,15 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..d6c238ca6e1afcf97a2a20f6f2e7fbde
 -        element_to_adjust->PseudoStateChanged(CSSSelector::kPseudoDir);
 -      return;
 -    }
--  }
+   }
 -}
--
+ 
 -void HTMLElement::AdjustDirectionalityIfNeededAfterShadowRootChanged() {
 -  DCHECK(IsShadowHost(this));
    if (SelfOrAncestorHasDirAutoAttribute()) {
      for (auto* element_to_adjust = this; element_to_adjust;
           element_to_adjust = DynamicTo<HTMLElement>(
-@@ -2638,8 +2595,37 @@ void HTMLElement::AdjustDirectionalityIfNeededAfterShadowRootChanged() {
+@@ -2638,8 +2575,37 @@ void HTMLElement::AdjustDirectionalityIfNeededAfterShadowRootChanged() {
    }
  }
  
@@ -422,7 +456,29 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..d6c238ca6e1afcf97a2a20f6f2e7fbde
    HeapHashSet<Member<HTMLElement>> directionality_set;
    // Transfer a candidate directionality set to |directionality_set| to avoid
    // the tree walk to the duplicated parent node for the directionality.
-@@ -3034,53 +3020,8 @@ Element* HTMLElement::unclosedOffsetParent() {
+@@ -2691,10 +2657,6 @@ Node::InsertionNotificationRequest HTMLElement::InsertedInto(
+   if (IsFormAssociatedCustomElement())
+     EnsureElementInternals().InsertedInto(insertion_point);
+ 
+-  if (AnchorElementObserver* observer = GetAnchorElementObserver()) {
+-    observer->Notify();
+-  }
+-
+   return kInsertionDone;
+ }
+ 
+@@ -2714,10 +2676,6 @@ void HTMLElement::RemovedFrom(ContainerNode& insertion_point) {
+   Element::RemovedFrom(insertion_point);
+   if (IsFormAssociatedCustomElement())
+     EnsureElementInternals().RemovedFrom(insertion_point);
+-
+-  if (AnchorElementObserver* observer = GetAnchorElementObserver()) {
+-    observer->Notify();
+-  }
+ }
+ 
+ void HTMLElement::DidMoveToNewDocument(Document& old_document) {
+@@ -3034,53 +2992,8 @@ Element* HTMLElement::unclosedOffsetParent() {
    return layout_object->OffsetParent(this);
  }
  
@@ -477,7 +533,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..d6c238ca6e1afcf97a2a20f6f2e7fbde
    Node* node = FlatTreeTraversal::FirstChild(*this);
    while (node) {
      if (IsA<HTMLElement>(node)) {
-@@ -3108,26 +3049,38 @@ void HTMLElement::UpdateDescendantDirectionality(TextDirection direction) {
+@@ -3108,26 +3021,38 @@ void HTMLElement::UpdateDescendantDirectionality(TextDirection direction) {
  void HTMLElement::OnDirAttrChanged(const AttributeModificationParams& params) {
    // If an ancestor has dir=auto, and this node has the first character,
    // changes to dir attribute may affect the ancestor.
@@ -526,7 +582,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..d6c238ca6e1afcf97a2a20f6f2e7fbde
    } else if (!is_old_auto && is_new_auto) {
      SetSelfOrAncestorHasDirAutoAttribute();
      UpdateDescendantHasDirAutoAttribute(true /* has_dir_auto */);
-@@ -3293,25 +3246,43 @@ bool HTMLElement::IsLabelable() const {
+@@ -3293,25 +3218,43 @@ bool HTMLElement::IsLabelable() const {
    return IsFormAssociatedCustomElement();
  }
  

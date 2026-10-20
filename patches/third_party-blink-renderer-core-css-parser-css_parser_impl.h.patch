@@ -1,16 +1,30 @@
 diff --git a/third_party/blink/renderer/core/css/parser/css_parser_impl.h b/third_party/blink/renderer/core/css/parser/css_parser_impl.h
-index c4ca914fffc56b86e4d6fe69c86a680f5468f74c..500864c154a0a61f9cf649d994c02a6dd872567c 100644
+index c4ca914fffc56b86e4d6fe69c86a680f5468f74c..dc477be7d804e92fc5648c825acdef89057f3607 100644
 --- a/third_party/blink/renderer/core/css/parser/css_parser_impl.h
 +++ b/third_party/blink/renderer/core/css/parser/css_parser_impl.h
-@@ -43,6 +43,7 @@ class StyleRuleKeyframe;
+@@ -43,11 +43,11 @@ class StyleRuleKeyframe;
  class StyleRuleKeyframes;
  class StyleRuleMedia;
  class StyleRuleNamespace;
 +class StyleRuleNestedDeclarations;
  class StyleRulePage;
- class StyleRulePositionFallback;
+-class StyleRulePositionFallback;
++class StyleRulePositionTry;
  class StyleRuleProperty;
-@@ -122,6 +123,13 @@ class CORE_EXPORT CSSParserImpl {
+ class StyleRuleSupports;
+-class StyleRuleTry;
+ class StyleSheetContents;
+ class Element;
+ 
+@@ -78,7 +78,6 @@ class CORE_EXPORT CSSParserImpl {
+     kRegularRules,
+     kKeyframeRules,
+     kFontFeatureRules,
+-    kTryRules,
+     // For parsing at-rules inside declaration lists.
+     kNoRules,
+     // https://drafts.csswg.org/css-nesting/#nested-group-rules
+@@ -122,6 +121,13 @@ class CORE_EXPORT CSSParserImpl {
    static bool ParseDeclarationList(MutableCSSPropertyValueSet*,
                                     const String&,
                                     const CSSParserContext*);
@@ -24,7 +38,7 @@ index c4ca914fffc56b86e4d6fe69c86a680f5468f74c..500864c154a0a61f9cf649d994c02a6d
    static StyleRuleBase* ParseRule(const String&,
                                    const CSSParserContext*,
                                    CSSNestingType,
-@@ -159,11 +167,19 @@ class CORE_EXPORT CSSParserImpl {
+@@ -159,11 +165,19 @@ class CORE_EXPORT CSSParserImpl {
        wtf_size_t offset,
        const CSSParserContext*);
  
@@ -48,7 +62,25 @@ index c4ca914fffc56b86e4d6fe69c86a680f5468f74c..500864c154a0a61f9cf649d994c02a6d
  
    static bool RemoveImportantAnnotationIfPresent(CSSTokenizedValue&);
  
-@@ -249,7 +265,15 @@ class CORE_EXPORT CSSParserImpl {
+@@ -173,7 +187,6 @@ class CORE_EXPORT CSSParserImpl {
+     kRegularRuleList,
+     kKeyframesRuleList,
+     kFontFeatureRuleList,
+-    kPositionFallbackRuleList,
+   };
+ 
+   // Returns whether the first encountered rule was valid
+@@ -232,8 +245,7 @@ class CORE_EXPORT CSSParserImpl {
+   StyleRuleBase* ConsumeLayerRule(CSSParserTokenStream&,
+                                   CSSNestingType,
+                                   StyleRule* parent_rule_for_nesting);
+-  StyleRulePositionFallback* ConsumePositionFallbackRule(CSSParserTokenStream&);
+-  StyleRuleTry* ConsumeTryRule(CSSParserTokenStream&);
++  StyleRulePositionTry* ConsumePositionTryRule(CSSParserTokenStream&);
+ 
+   StyleRuleKeyframe* ConsumeKeyframeStyleRule(CSSParserTokenRange prelude,
+                                               const RangeOffset& prelude_offset,
+@@ -249,7 +261,15 @@ class CORE_EXPORT CSSParserImpl {
        StyleRule::RuleType,
        CSSNestingType,
        StyleRule* parent_rule_for_nesting,
@@ -64,7 +96,7 @@ index c4ca914fffc56b86e4d6fe69c86a680f5468f74c..500864c154a0a61f9cf649d994c02a6d
    // If id is absl::nullopt, we're parsing a qualified style rule;
    // otherwise, we're parsing an at-rule.
    StyleRuleBase* ConsumeNestedRule(absl::optional<CSSAtRuleID> id,
-@@ -268,6 +292,11 @@ class CORE_EXPORT CSSParserImpl {
+@@ -268,6 +288,11 @@ class CORE_EXPORT CSSParserImpl {
                              bool important,
                              bool is_animation_tainted);
  
@@ -76,7 +108,7 @@ index c4ca914fffc56b86e4d6fe69c86a680f5468f74c..500864c154a0a61f9cf649d994c02a6d
    static std::unique_ptr<Vector<KeyframeOffset>> ConsumeKeyframeKeyList(
        const CSSParserContext*,
        CSSParserTokenRange);
-@@ -287,6 +316,31 @@ class CORE_EXPORT CSSParserImpl {
+@@ -287,6 +312,31 @@ class CORE_EXPORT CSSParserImpl {
    // https://github.com/w3c/csswg-drafts/issues/7850).
    StyleRule* CreateImplicitNestedRule(StyleRule* parent_rule_for_nesting);
  

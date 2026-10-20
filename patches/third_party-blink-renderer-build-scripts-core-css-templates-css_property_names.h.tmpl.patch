@@ -1,13 +1,21 @@
 diff --git a/third_party/blink/renderer/build/scripts/core/css/templates/css_property_names.h.tmpl b/third_party/blink/renderer/build/scripts/core/css/templates/css_property_names.h.tmpl
-index a0359685244a053ed4fd080aded6147ac13a0da7..199b76b29539d9a8565bc077d69b1e625e6f1b87 100644
+index a0359685244a053ed4fd080aded6147ac13a0da7..6d0d22fd3eecfecf5e260bcf6534663ce4bd8cc7 100644
 --- a/third_party/blink/renderer/build/scripts/core/css/templates/css_property_names.h.tmpl
 +++ b/third_party/blink/renderer/build/scripts/core/css/templates/css_property_names.h.tmpl
-@@ -70,7 +70,7 @@ static_assert(CSSPropertyID::kColor == kFirstHighPriorityCSSProperty,
+@@ -65,12 +65,13 @@ static_assert((static_cast<size_t>(1) << kCSSPropertyIDBitLength) >
+                   static_cast<size_t>(kLastUnresolvedCSSProperty),
+               "kCSSPropertyIDBitLength has enough bits");
+ 
+-static_assert(CSSPropertyID::kColor == kFirstHighPriorityCSSProperty,
+-              "CSSPropertyID::kColor is the first high-priority property");
++// FlyWeb (FM.28): position has priority 2 (e8d0f24b70b), so it comes first.
++static_assert(CSSPropertyID::kPosition == kFirstHighPriorityCSSProperty,
++              "CSSPropertyID::kPosition is the first high-priority property");
  static_assert(CSSPropertyID::kZoom == kLastHighPriorityCSSProperty,
                "CSSPropertyID::kZoom is the last high-priority property");
  static_assert((static_cast<int>(kLastHighPriorityCSSProperty) -
 -               static_cast<int>(kFirstHighPriorityCSSProperty)) == 31,
-+               static_cast<int>(kFirstHighPriorityCSSProperty)) == 32,
++               static_cast<int>(kFirstHighPriorityCSSProperty)) == 34,
                "There should a low number of high-priority properties");
  
  inline int GetCSSPropertyIDIndex(CSSPropertyID id) {

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style.cc b/third_party/blink/renderer/core/style/computed_style.cc
-index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..80b516a076e158ee0402689543f451e3de5c4313 100644
+index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..419e1cb8d6d9b11c065baa8adde111bad1b0c60f 100644
 --- a/third_party/blink/renderer/core/style/computed_style.cc
 +++ b/third_party/blink/renderer/core/style/computed_style.cc
 @@ -23,6 +23,9 @@
@@ -233,7 +233,18 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..80b516a076e158ee0402689543f451e3
  }
  
  bool ComputedStyle::ShouldApplyAnyContainment(const Element& element,
-@@ -2656,6 +2680,21 @@ bool ComputedStyle::IsRenderedInTopLayer(const Element& element) const {
+@@ -2609,7 +2633,9 @@ bool ComputedStyle::CanMatchSizeContainerQueries(const Element& element) const {
+ 
+ bool ComputedStyle::IsInterleavingRoot(const ComputedStyle* style) {
+   const ComputedStyle* unensured = ComputedStyle::NullifyEnsured(style);
+-  return unensured && unensured->IsContainerForSizeContainerQueries();
++  return unensured && (unensured->IsContainerForSizeContainerQueries() ||
++                       unensured->GetPositionTryOptions() ||
++                       unensured->HasAnchorFunctions());
+ }
+ 
+ bool ComputedStyle::CalculateIsStackingContextWithoutContainment() const {
+@@ -2656,6 +2682,21 @@ bool ComputedStyle::IsRenderedInTopLayer(const Element& element) const {
           StyleType() == kPseudoIdBackdrop;
  }
  

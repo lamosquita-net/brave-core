@@ -1,8 +1,22 @@
 diff --git a/third_party/blink/renderer/core/css/properties/computed_style_utils.h b/third_party/blink/renderer/core/css/properties/computed_style_utils.h
-index 8e2c3fa4ff6b5d6475eecab4364d6e0de3350305..5154f4dab23e3a8c533ae78d8c0516570405b3ab 100644
+index 8e2c3fa4ff6b5d6475eecab4364d6e0de3350305..4883f3967bb7615becd48efa982c385cf9d23378 100644
 --- a/third_party/blink/renderer/core/css/properties/computed_style_utils.h
 +++ b/third_party/blink/renderer/core/css/properties/computed_style_utils.h
-@@ -72,13 +72,18 @@ class CORE_EXPORT ComputedStyleUtils {
+@@ -22,11 +22,12 @@
+ 
+ namespace blink {
+ 
++class ComputedStyle;
+ class CSSNumericLiteralValue;
+ class CSSStyleValue;
+ class CSSValue;
+-class ComputedStyle;
+ class FontFamily;
++class InsetArea;
+ class StyleColor;
+ class StyleIntrinsicLength;
+ class StylePropertyShorthand;
+@@ -72,13 +73,18 @@ class CORE_EXPORT ComputedStyleUtils {
    static const CSSValueList* CreatePositionListForLayer(const CSSProperty&,
                                                          const FillLayer&,
                                                          const ComputedStyle&);
@@ -24,7 +38,7 @@ index 8e2c3fa4ff6b5d6475eecab4364d6e0de3350305..5154f4dab23e3a8c533ae78d8c051657
    static const CSSValue* BackgroundPositionOrWebkitMaskPosition(
        const CSSProperty&,
        const ComputedStyle&,
-@@ -188,8 +193,13 @@ class CORE_EXPORT ComputedStyleUtils {
+@@ -188,8 +194,13 @@ class CORE_EXPORT ComputedStyleUtils {
    static CSSValue* ValueForAnimationTimingFunctionList(const CSSTimingData*);
    static CSSValue* ValueForAnimationTimelineList(const CSSAnimationData*);
  
@@ -40,7 +54,7 @@ index 8e2c3fa4ff6b5d6475eecab4364d6e0de3350305..5154f4dab23e3a8c533ae78d8c051657
    static CSSValueList* ValuesForBorderRadiusCorner(const LengthSize&,
                                                     const ComputedStyle&);
    static CSSValue* ValueForBorderRadiusCorner(const LengthSize&,
-@@ -233,7 +243,10 @@ class CORE_EXPORT ComputedStyleUtils {
+@@ -233,7 +244,10 @@ class CORE_EXPORT ComputedStyleUtils {
    static CSSValue* ResolvedTransform(const LayoutObject*, const ComputedStyle&);
    static CSSValue* CreateTransitionPropertyValue(
        const CSSTransitionData::TransitionProperty&);
@@ -50,4 +64,12 @@ index 8e2c3fa4ff6b5d6475eecab4364d6e0de3350305..5154f4dab23e3a8c533ae78d8c051657
 +  static CSSValue* ValueForTransitionBehavior(const CSSTransitionData*);
    static CSSValue* ValueForContentData(const ComputedStyle&,
                                         bool allow_visited_style);
+ 
+@@ -315,6 +329,7 @@ class CORE_EXPORT ComputedStyleUtils {
+                                            const StyleIntrinsicLength&);
+   static CSSValue* ValueForScrollStart(const ComputedStyle&,
+                                        const ScrollStartData&);
++  static CSSValue* ValueForInsetArea(const blink::InsetArea&);
+   static std::unique_ptr<CrossThreadStyleValue>
+   CrossThreadStyleValueFromCSSStyleValue(CSSStyleValue* style_value);
  

@@ -1,7 +1,45 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_custom_scrollbar_part.cc b/third_party/blink/renderer/core/layout/layout_custom_scrollbar_part.cc
-index 87d369ebb589f559d828b5322e56f85a661e8171..17e65218e5a9bbe2d27c3fe6e1298f3e1af90019 100644
+index 87d369ebb589f559d828b5322e56f85a661e8171..3558bd7137bd237a8f90cb53088b129f087da85d 100644
 --- a/third_party/blink/renderer/core/layout/layout_custom_scrollbar_part.cc
 +++ b/third_party/blink/renderer/core/layout/layout_custom_scrollbar_part.cc
+@@ -120,14 +120,14 @@ int LayoutCustomScrollbarPart::ComputeWidth(int container_width) const {
+   if (StyleRef().Display() == EDisplay::kNone)
+     return 0;
+ 
+-  int width = ComputeSize(kMainOrPreferredSize, StyleRef().UsedWidth(),
++  int width = ComputeSize(kMainOrPreferredSize, StyleRef().Width(),
+                           container_width);
+   int min_width =
+-      ComputeSize(kMinSize, StyleRef().UsedMinWidth(), container_width);
++      ComputeSize(kMinSize, StyleRef().MinWidth(), container_width);
+   int max_width =
+-      StyleRef().UsedMaxWidth().IsNone()
++      StyleRef().MaxWidth().IsNone()
+           ? width
+-          : ComputeSize(kMaxSize, StyleRef().UsedMaxWidth(), container_width);
++          : ComputeSize(kMaxSize, StyleRef().MaxWidth(), container_width);
+   return std::max(min_width, std::min(max_width, width));
+ }
+ 
+@@ -136,14 +136,14 @@ int LayoutCustomScrollbarPart::ComputeHeight(int container_height) const {
+   if (StyleRef().Display() == EDisplay::kNone)
+     return 0;
+ 
+-  int height = ComputeSize(kMainOrPreferredSize, StyleRef().UsedHeight(),
++  int height = ComputeSize(kMainOrPreferredSize, StyleRef().Height(),
+                            container_height);
+   int min_height =
+-      ComputeSize(kMinSize, StyleRef().UsedMinHeight(), container_height);
++      ComputeSize(kMinSize, StyleRef().MinHeight(), container_height);
+   int max_height =
+-      StyleRef().UsedMaxHeight().IsNone()
++      StyleRef().MaxHeight().IsNone()
+           ? height
+-          : ComputeSize(kMaxSize, StyleRef().UsedMaxHeight(), container_height);
++          : ComputeSize(kMaxSize, StyleRef().MaxHeight(), container_height);
+   return std::max(min_height, std::min(max_height, height));
+ }
+ 
 @@ -192,29 +192,33 @@ static LayoutUnit ComputeMargin(const Length& style_margin) {
  
  LayoutUnit LayoutCustomScrollbarPart::MarginTop() const {

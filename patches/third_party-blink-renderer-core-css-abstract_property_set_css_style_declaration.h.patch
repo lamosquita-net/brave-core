@@ -1,0 +1,43 @@
+diff --git a/third_party/blink/renderer/core/css/abstract_property_set_css_style_declaration.h b/third_party/blink/renderer/core/css/abstract_property_set_css_style_declaration.h
+index ca102775a71dff3141593507b7e8f0dd11ff6900..be7ab955b7187433fb2651cc17f10c4ca83f7701 100644
+--- a/third_party/blink/renderer/core/css/abstract_property_set_css_style_declaration.h
++++ b/third_party/blink/renderer/core/css/abstract_property_set_css_style_declaration.h
+@@ -46,8 +46,20 @@ class CORE_EXPORT AbstractPropertySetCSSStyleDeclaration
+   explicit AbstractPropertySetCSSStyleDeclaration(ExecutionContext* context)
+       : CSSStyleDeclaration(context) {}
+ 
++  // Some subclasses only allow a subset of the properties, for example
++  // CSSPositionTryDescriptors only allows inset and sizing properties.
++  virtual bool IsPropertyValid(CSSPropertyID) const = 0;
++
+   void Trace(Visitor*) const override;
+ 
++  String GetPropertyValueInternal(CSSPropertyID) final;
++  void SetPropertyInternal(CSSPropertyID,
++                           const String& custom_property_name,
++                           StringView value,
++                           bool important,
++                           SecureContextMode,
++                           ExceptionState&) final;
++
+  private:
+   CSSRule* parentRule() const override { return nullptr; }
+   unsigned length() const final;
+@@ -71,17 +83,10 @@ class CORE_EXPORT AbstractPropertySetCSSStyleDeclaration
+   const CSSValue* GetPropertyCSSValueInternal(CSSPropertyID) final;
+   const CSSValue* GetPropertyCSSValueInternal(
+       const AtomicString& custom_property_name) final;
+-  String GetPropertyValueInternal(CSSPropertyID) final;
+   String GetPropertyValueWithHint(const String& property_name,
+                                   unsigned index) final;
+   String GetPropertyPriorityWithHint(const String& property_name,
+                                      unsigned index) final;
+-  void SetPropertyInternal(CSSPropertyID,
+-                           const String& custom_property_name,
+-                           StringView value,
+-                           bool important,
+-                           SecureContextMode,
+-                           ExceptionState&) final;
+ 
+   bool CssPropertyMatches(CSSPropertyID, const CSSValue&) const final;
+ 

@@ -1,15 +1,58 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_resolver_state.h b/third_party/blink/renderer/core/css/resolver/style_resolver_state.h
-index bfbac7185a5b4d16261d9129854e181a670f468d..bd1ce2b70b57523f081a521b8544b877cd37e06f 100644
+index bfbac7185a5b4d16261d9129854e181a670f468d..517e1683edd1fd78461014aa2187495f6924dde2 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_resolver_state.h
 +++ b/third_party/blink/renderer/core/css/resolver/style_resolver_state.h
-@@ -225,8 +225,8 @@ class CORE_EXPORT StyleResolverState {
+@@ -40,6 +40,7 @@
+ 
+ namespace blink {
+ 
++class AnchorEvaluator;
+ class ComputedStyle;
+ class FontDescription;
+ class PseudoElement;
+@@ -171,6 +172,8 @@ class CORE_EXPORT StyleResolverState {
+   void SetEffectiveZoom(float);
+   void SetWritingMode(WritingMode);
+   void SetTextOrientation(ETextOrientation);
++  void SetPositionAnchor(ScopedCSSName*);
++  void SetInsetAreaOffsets(const absl::optional<InsetAreaOffsets>&);
+ 
+   CSSParserMode GetParserMode() const;
+ 
+@@ -225,12 +228,8 @@ class CORE_EXPORT StyleResolverState {
  
    void UpdateLengthConversionData();
  
 -  void SetIsResolvingPositionFallbackStyle() {
 -    is_resolving_position_fallback_style_ = true;
-+  void SetIsResolvingPositionFallbackStyle(bool is_resolving = true) {
-+    is_resolving_position_fallback_style_ = is_resolving;
-   }
-   bool IsResolvingPositionFallbackStyle() const {
-     return is_resolving_position_fallback_style_;
+-  }
+-  bool IsResolvingPositionFallbackStyle() const {
+-    return is_resolving_position_fallback_style_;
+-  }
++  void SetHasTreeScopedReference() { has_tree_scoped_reference_ = true; }
++  bool HasTreeScopedReference() const { return has_tree_scoped_reference_; }
+ 
+  private:
+   CSSToLengthConversionData UnzoomedLengthConversionData(const FontSizeStyle&);
+@@ -270,6 +269,9 @@ class CORE_EXPORT StyleResolverState {
+   ElementType element_type_;
+   Element* container_unit_context_;
+ 
++  // See StyleRecalcContext::anchor_evaluator_.
++  AnchorEvaluator* anchor_evaluator_ = nullptr;
++
+   scoped_refptr<const ComputedStyle> originating_element_style_;
+   // True if we are resolving styles for a highlight pseudo-element.
+   const bool is_for_highlight_;
+@@ -300,9 +302,8 @@ class CORE_EXPORT StyleResolverState {
+   // flag.
+   bool rejected_legacy_overlapping_ = false;
+ 
+-  // True if we are currently resolving a position fallback style by applying
+-  // rules in a `@try` block.
+-  bool is_resolving_position_fallback_style_ = false;
++  // True if the resolved ComputedStyle depends on tree-scoped references.
++  bool has_tree_scoped_reference_ = false;
+ };
+ 
+ }  // namespace blink

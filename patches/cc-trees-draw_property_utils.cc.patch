@@ -1,5 +1,5 @@
 diff --git a/cc/trees/draw_property_utils.cc b/cc/trees/draw_property_utils.cc
-index f7e6cb495c58975350251ace7dc226d1d5050143..8e71f1fffaab8274d31a1f2ac06f18d6ec9ea7d5 100644
+index f7e6cb495c58975350251ace7dc226d1d5050143..48558fdaab8c88f81acef4f69b7c58722c6b6843 100644
 --- a/cc/trees/draw_property_utils.cc
 +++ b/cc/trees/draw_property_utils.cc
 @@ -379,61 +379,43 @@ void SetHasContributingLayerThatEscapesClip(int lca_clip_id,
@@ -178,7 +178,8 @@ index f7e6cb495c58975350251ace7dc226d1d5050143..8e71f1fffaab8274d31a1f2ac06f18d6
  
 -bool CC_EXPORT IsLayerBackFaceVisible(LayerImpl* layer,
 -                                      int transform_tree_index,
--                                      const PropertyTrees* property_trees) {
++bool IsLayerBackFaceVisibleForTesting(const LayerImpl* layer,  // IN-TEST
+                                       const PropertyTrees* property_trees) {
 -  if (layer->layer_tree_impl()->settings().enable_backface_visibility_interop) {
 -    return IsTransformToRootOf3DRenderingContextBackFaceVisible(
 -        layer, transform_tree_index, property_trees);
@@ -190,8 +191,7 @@ index f7e6cb495c58975350251ace7dc226d1d5050143..8e71f1fffaab8274d31a1f2ac06f18d6
 -
 -bool CC_EXPORT IsLayerBackFaceVisible(Layer* layer,
 -                                      int transform_tree_index,
-+bool IsLayerBackFaceVisibleForTesting(const LayerImpl* layer,  // IN-TEST
-                                       const PropertyTrees* property_trees) {
+-                                      const PropertyTrees* property_trees) {
 -  if (layer->layer_tree_host()
 -          ->GetSettings()
 -          .enable_backface_visibility_interop) {
@@ -205,3 +205,26 @@ index f7e6cb495c58975350251ace7dc226d1d5050143..8e71f1fffaab8274d31a1f2ac06f18d6
  }
  
  void ConcatInverseSurfaceContentsScale(const EffectNode* effect_node,
+@@ -1413,21 +1375,7 @@ void FindLayersThatNeedUpdates(LayerTreeImpl* layer_tree_impl,
+ 
+ void ComputeTransforms(TransformTree* transform_tree,
+                        const ViewportPropertyIds& viewport_property_ids) {
+-  if (!transform_tree->needs_update()) {
+-#if DCHECK_IS_ON()
+-    // If the transform tree does not need an update, no TransformNode should
+-    // need a local transform update.
+-    for (int i = kContentsRootPropertyNodeId;
+-         i < static_cast<int>(transform_tree->size()); ++i) {
+-      DCHECK(!transform_tree->Node(i)->needs_local_transform_update);
+-    }
+-#endif
+-    return;
+-  }
+-  for (int i = kContentsRootPropertyNodeId;
+-       i < static_cast<int>(transform_tree->size()); ++i)
+-    transform_tree->UpdateTransforms(i, &viewport_property_ids);
+-  transform_tree->set_needs_update(false);
++  transform_tree->UpdateAllTransforms(viewport_property_ids);
+ }
+ 
+ void ComputeEffects(EffectTree* effect_tree) {

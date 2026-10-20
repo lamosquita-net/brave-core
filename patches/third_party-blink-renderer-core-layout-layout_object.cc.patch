@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_object.cc b/third_party/blink/renderer/core/layout/layout_object.cc
-index 98f0936193142d342d2083f61151ce24e10ad7a9..9b430d84533b2194eb2620029bfe2f39e147387b 100644
+index 98f0936193142d342d2083f61151ce24e10ad7a9..8963cc9d93d6ecdabc8e159e970175064c861cfd 100644
 --- a/third_party/blink/renderer/core/layout/layout_object.cc
 +++ b/third_party/blink/renderer/core/layout/layout_object.cc
 @@ -82,6 +82,7 @@
@@ -94,6 +94,15 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..9b430d84533b2194eb2620029bfe2f39
      return false;
  
    if (const auto* layout_box = DynamicTo<LayoutBox>(object)) {
+@@ -1342,7 +1378,7 @@ static inline bool ObjectIsRelayoutBoundary(const LayoutObject* object) {
+   // height will allow the object to grow and shrink based on the content
+   // inside. The same goes for for logical width, if this objects is inside a
+   // shrink-to-fit container, for instance.
+-  if (!style->UsedWidth().IsFixed() || !style->UsedHeight().IsFixed()) {
++  if (!style->Width().IsFixed() || !style->Height().IsFixed()) {
+     return false;
+   }
+ 
 @@ -1528,7 +1564,11 @@ void LayoutObject::MarkParentForSpannerOrOutOfFlowPositionedChange() {
    //
    // Note that this isn't necessary if we're dealing with a column spanner here,
@@ -143,7 +152,49 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..9b430d84533b2194eb2620029bfe2f39
      // Don't invalidate the outermost object of an unrooted subtree. That object
      // will be invalidated when the subtree is added to the document.
      LayoutObject* container = IntrinsicContainer(o);
-@@ -2138,8 +2189,8 @@ bool LayoutObject::MapToVisualRectInAncestorSpaceInternalFastPath(
+@@ -1682,15 +1733,34 @@ const LayoutBlock* LayoutObject::InclusiveContainingBlock() const {
+   return layout_block ? layout_block : ContainingBlock();
+ }
+ 
+-const LayoutBox* LayoutObject::ContainingScrollContainer() const {
++const PaintLayer* LayoutObject::ContainingScrollContainerLayer(
++    bool ignore_layout_view_for_fixed_pos) const {
+   NOT_DESTROYED();
+-  if (auto* layer = EnclosingLayer()) {
+-    if (auto* box = layer->GetLayoutBox()) {
+-      if (box != this && box->IsScrollContainer())
+-        return box;
++  const PaintLayer* layer = EnclosingLayer();
++  if (!layer) {
++    return nullptr;
++  }
++  if (auto* box = layer->GetLayoutBox()) {
++    if (box != this && box->IsScrollContainer()) {
++      return layer;
++    }
++  }
++  bool is_fixed_to_view = false;
++  if (auto* scroll_container_layer =
++          layer->ContainingScrollContainerLayer(&is_fixed_to_view)) {
++    if (!is_fixed_to_view || !ignore_layout_view_for_fixed_pos) {
++      return scroll_container_layer;
+     }
+-    if (auto* scroll_container_layer = layer->ContainingScrollContainerLayer())
+-      return scroll_container_layer->GetLayoutBox();
++  }
++  return nullptr;
++}
++
++const LayoutBox* LayoutObject::ContainingScrollContainer(
++    bool ignore_layout_view_for_fixed_pos) const {
++  NOT_DESTROYED();
++  if (const PaintLayer* scroll_container_layer =
++          ContainingScrollContainerLayer(ignore_layout_view_for_fixed_pos)) {
++    return scroll_container_layer->GetLayoutBox();
+   }
+   return nullptr;
+ }
+@@ -2138,8 +2208,8 @@ bool LayoutObject::MapToVisualRectInAncestorSpaceInternalFastPath(
  
    AncestorSkipInfo skip_info(ancestor);
    PropertyTreeState container_properties = PropertyTreeState::Uninitialized();
@@ -154,7 +205,7 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..9b430d84533b2194eb2620029bfe2f39
    if (!property_container)
      return false;
  
-@@ -2153,9 +2204,7 @@ bool LayoutObject::MapToVisualRectInAncestorSpaceInternalFastPath(
+@@ -2153,9 +2223,7 @@ bool LayoutObject::MapToVisualRectInAncestorSpaceInternalFastPath(
      FloatClipRect clip_rect((gfx::RectF(rect)));
      intersects = GeometryMapper::LocalToAncestorVisualRect(
          container_properties, ancestor->FirstFragment().ContentsProperties(),
@@ -165,7 +216,7 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..9b430d84533b2194eb2620029bfe2f39
      rect = PhysicalRect::EnclosingRect(clip_rect.Rect());
    }
    rect.offset -= ancestor->FirstFragment().PaintOffset();
-@@ -2215,7 +2264,8 @@ bool LayoutObject::MapToVisualRectInAncestorSpaceInternal(
+@@ -2215,7 +2283,8 @@ bool LayoutObject::MapToVisualRectInAncestorSpaceInternal(
  
  const LayoutObject* LayoutObject::GetPropertyContainer(
      AncestorSkipInfo* skip_info,
@@ -175,7 +226,7 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..9b430d84533b2194eb2620029bfe2f39
    NOT_DESTROYED();
    const LayoutObject* property_container = this;
    while (!property_container->FirstFragment().HasLocalBorderBoxProperties()) {
-@@ -2227,11 +2277,21 @@ const LayoutObject* LayoutObject::GetPropertyContainer(
+@@ -2227,11 +2296,21 @@ const LayoutObject* LayoutObject::GetPropertyContainer(
    if (container_properties) {
      if (property_container == this) {
        *container_properties = FirstFragment().LocalBorderBoxProperties();
@@ -197,7 +248,17 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..9b430d84533b2194eb2620029bfe2f39
    return property_container;
  }
  
-@@ -3374,9 +3434,7 @@ void LayoutObject::MapAncestorToLocal(const LayoutBoxModelObject* ancestor,
+@@ -2642,7 +2721,8 @@ void LayoutObject::SetStyle(scoped_refptr<const ComputedStyle> style,
+     if (updated_diff.NeedsFullLayout()) {
+       SetNeedsLayoutAndIntrinsicWidthsRecalc(
+           layout_invalidation_reason::kStyleChange);
+-    } else if (updated_diff.NeedsPositionedMovementLayout()) {
++    } else if (updated_diff.NeedsPositionedMovementLayout() ||
++               StyleRef().HasAnchorFunctionsWithoutEvaluator()) {
+       SetNeedsPositionedMovementLayout();
+     }
+   }
+@@ -3374,9 +3454,7 @@ void LayoutObject::MapAncestorToLocal(const LayoutBoxModelObject* ancestor,
      PhysicalOffset visual_point = transform_state.MappedPoint();
      transform_state.Move(
          visual_point -
@@ -208,7 +269,7 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..9b430d84533b2194eb2620029bfe2f39
    }
  
    if (skip_info.AncestorSkipped()) {
-@@ -4480,6 +4538,12 @@ gfx::RectF LayoutObject::StrokeBoundingBox() const {
+@@ -4480,6 +4558,12 @@ gfx::RectF LayoutObject::StrokeBoundingBox() const {
    return gfx::RectF();
  }
  
@@ -221,10 +282,11 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..9b430d84533b2194eb2620029bfe2f39
  gfx::RectF LayoutObject::VisualRectInLocalSVGCoordinates() const {
    NOT_DESTROYED();
    NOTREACHED();
-@@ -4990,6 +5054,19 @@ void LayoutObject::SetSVGDescendantMayHaveTransformRelatedAnimation() {
+@@ -4990,10 +5074,23 @@ void LayoutObject::SetSVGDescendantMayHaveTransformRelatedAnimation() {
    }
  }
  
+-void LayoutObject::InvalidateSubtreePositionFallback(bool mark_style_dirty) {
 +void LayoutObject::SetSVGSelfOrDescendantHasViewportDependency() {
 +  NOT_DESTROYED();
 +  auto* object = this;
@@ -238,6 +300,20 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..9b430d84533b2194eb2620029bfe2f39
 +  } while (object && !object->IsSVGRoot());
 +}
 +
- void LayoutObject::InvalidateSubtreePositionFallback(bool mark_style_dirty) {
++void LayoutObject::InvalidateSubtreePositionTry(bool mark_style_dirty) {
    NOT_DESTROYED();
+ 
+-  bool invalidate = StyleRef().PositionFallback() != nullptr;
++  bool invalidate = StyleRef().GetPositionTryOptions() != nullptr;
+   if (invalidate) {
+     // Invalidate layout as @position-fallback styles are applied during layout.
+     SetNeedsLayout(layout_invalidation_reason::kStyleChange);
+@@ -5017,7 +5114,7 @@ void LayoutObject::InvalidateSubtreePositionFallback(bool mark_style_dirty) {
+ 
+   for (LayoutObject* child = SlowFirstChild(); child;
+        child = child->NextSibling()) {
+-    child->InvalidateSubtreePositionFallback(mark_style_dirty);
++    child->InvalidateSubtreePositionTry(mark_style_dirty);
+   }
+ }
  

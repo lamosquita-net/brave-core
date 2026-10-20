@@ -1,45 +1,127 @@
 diff --git a/third_party/blink/renderer/core/css/style_engine.h b/third_party/blink/renderer/core/css/style_engine.h
-index 4d2ac3e7cff73b9df2dd8925aff1e73571c8f235..f9fac2347dd3cc2c5ee32426fea88921336d436f 100644
+index 4d2ac3e7cff73b9df2dd8925aff1e73571c8f235..4ffb86cb71b8f4c3e4a5fa191ada819ef6adcb59 100644
 --- a/third_party/blink/renderer/core/css/style_engine.h
 +++ b/third_party/blink/renderer/core/css/style_engine.h
-@@ -589,6 +589,11 @@ class CORE_EXPORT StyleEngine final : public GarbageCollected<StyleEngine>,
+@@ -52,10 +52,12 @@
+ #include "third_party/blink/renderer/core/css/style_image_cache.h"
+ #include "third_party/blink/renderer/core/css/style_invalidation_root.h"
+ #include "third_party/blink/renderer/core/css/style_recalc_root.h"
++#include "third_party/blink/renderer/core/css/try_value_flips.h"
+ #include "third_party/blink/renderer/core/css/vision_deficiency.h"
+ #include "third_party/blink/renderer/core/dom/document.h"
+ #include "third_party/blink/renderer/core/dom/element.h"
+ #include "third_party/blink/renderer/core/layout/geometry/axis.h"
++#include "third_party/blink/renderer/core/style/position_try_options.h"
+ #include "third_party/blink/renderer/platform/bindings/name_client.h"
+ #include "third_party/blink/renderer/platform/fonts/font_selector_client.h"
+ #include "third_party/blink/renderer/platform/graphics/color.h"
+@@ -73,6 +75,7 @@ class TextPosition;
+ 
+ namespace blink {
+ 
++class AnchorEvaluator;
+ class ComputedStyleBuilder;
+ class CounterStyle;
+ class CounterStyleMap;
+@@ -542,13 +545,12 @@ class CORE_EXPORT StyleEngine final : public GarbageCollected<StyleEngine>,
+   void MarkCounterStylesNeedUpdate();
+   void UpdateCounterStyles();
+ 
+-  // Set a flag to invalidate elements using position-fallback on next lifecycle
+-  // update when @position-fallback rules are added or removed.
+-  void MarkPositionFallbackStylesDirty();
++  // Set a flag to invalidate elements using position-try-options on next
++  // lifecycle update when @position-try rules are added or removed.
++  void MarkPositionTryStylesDirty();
+ 
+-  // Mark elements affected by @position-fallback rules for style and layout
+-  // update.
+-  void InvalidatePositionFallbackStyles();
++  // Mark elements affected by @position-try rules for style and layout update.
++  void InvalidatePositionTryStyles();
+ 
+   StyleRuleKeyframes* KeyframeStylesForAnimation(
+       const AtomicString& animation_name);
+@@ -589,6 +591,16 @@ class CORE_EXPORT StyleEngine final : public GarbageCollected<StyleEngine>,
    // recalcs when we found out the container is eligible for size containment
    // after all.
    void UpdateStyleForNonEligibleContainer(Element& container);
 +  // Updates the style of `element`, and descendants if needed.
-+  // The provided `try_set` represents the declaration block from a @try rule.
-+  void UpdateStyleForPositionFallback(Element& element,
-+                                      const CSSPropertyValueSet* try_set);
-+  StyleRulePositionFallback* GetPositionFallbackRule(const ScopedCSSName&);
++  // The provided `try_set` represents the declaration block from
++  // a @position-try rule. The specified TryTacticList will cause
++  // CSSFlipRevertValues to appear in the try-tactics layer (see
++  // OutOfFlowData::try_tactics_set_).
++  void UpdateStyleForOutOfFlow(Element& element,
++                               const CSSPropertyValueSet* try_set,
++                               const TryTacticList&,
++                               AnchorEvaluator*);
++  StyleRulePositionTry* GetPositionTryRule(const ScopedCSSName&);
    void RecalcStyle();
  
    void ClearEnsuredDescendantStyles(Element& element);
-@@ -598,6 +603,9 @@ class CORE_EXPORT StyleEngine final : public GarbageCollected<StyleEngine>,
+@@ -598,12 +610,20 @@ class CORE_EXPORT StyleEngine final : public GarbageCollected<StyleEngine>,
    bool InContainerQueryStyleRecalc() const {
      return in_container_query_style_recalc_;
    }
-+  bool InPositionFallbackStyleRecalc() const {
-+    return in_position_fallback_style_recalc_;
+-  // If we are in a container query style recalc, return the container element,
+-  // otherwise return nullptr.
+-  Element* GetContainerForContainerStyleRecalc() const {
+-    // The To<Element>() should not fail because the style_recalc_root_ is set
+-    // to the container element when doing a container query style recalc.
+-    if (InContainerQueryStyleRecalc()) {
++  bool InPositionTryStyleRecalc() const {
++    return in_position_try_style_recalc_;
 +  }
-   // If we are in a container query style recalc, return the container element,
-   // otherwise return nullptr.
-   Element* GetContainerForContainerStyleRecalc() const {
-@@ -805,6 +813,10 @@ class CORE_EXPORT StyleEngine final : public GarbageCollected<StyleEngine>,
++  // Get the root element of an interleaving recalc, if any. This function will
++  // return nullptr if the interleaving root is a PseudoElement, because such
++  // elements can't be recalc roots.
++  //
++  // See StyleEngine::UpdateStyleAndLayoutTreeForContainer.
++  // See StyleEngine::UpdateStyleForOutOfFlow.
++  Element* GetInterleavingRecalcRoot() const {
++    if (InContainerQueryStyleRecalc() || InPositionTryStyleRecalc()) {
++      // During interleaved style recalc, the recalc root is either set
++      // to the interleaving root (always an Element), or nullptr (if it's
++      // a PseudoElement).
+       return To<Element>(style_recalc_root_.GetRootNode());
+     }
+     return nullptr;
+@@ -805,6 +825,10 @@ class CORE_EXPORT StyleEngine final : public GarbageCollected<StyleEngine>,
  
    void RecalcStyle(StyleRecalcChange, const StyleRecalcContext&);
    void RecalcStyleForContainer(Element& container, StyleRecalcChange change);
-+  void RecalcPositionFallbackStyleForPseudoElement(
++  void RecalcPositionTryStyleForPseudoElement(
 +      PseudoElement& pseudo_element,
 +      const StyleRecalcChange,
 +      const StyleRecalcContext&);
  
    void RecalcTransitionPseudoStyle();
  
-@@ -891,6 +903,7 @@ class CORE_EXPORT StyleEngine final : public GarbageCollected<StyleEngine>,
+@@ -891,6 +915,7 @@ class CORE_EXPORT StyleEngine final : public GarbageCollected<StyleEngine>,
    int64_t skipped_container_recalc_{0};
    bool in_layout_tree_rebuild_{false};
    bool in_container_query_style_recalc_{false};
-+  bool in_position_fallback_style_recalc_{false};
++  bool in_position_try_style_recalc_{false};
    bool in_dom_removal_{false};
    bool in_detach_scope_{false};
    bool in_apply_animation_update_{false};
+@@ -898,7 +923,7 @@ class CORE_EXPORT StyleEngine final : public GarbageCollected<StyleEngine>,
+   bool viewport_style_dirty_{false};
+   bool fonts_need_update_{false};
+   bool counter_styles_need_update_{false};
+-  bool position_fallback_styles_dirty_{false};
++  bool position_try_styles_dirty_{false};
+ 
+   // Set to true if we allow marking style dirty from style recalc. Ideally, we
+   // should get rid of this, but we keep track of where we allow it with
+@@ -1034,6 +1059,10 @@ class CORE_EXPORT StyleEngine final : public GarbageCollected<StyleEngine>,
+   // Cached because it can be expensive to compute anew for each element.
+   // You must call UpdateViewportSize() once before resolving style.
+   CSSToLengthConversionData::ViewportSize viewport_size_;
++
++  // Stores various "flip sets" used to implement <try-tactic> from
++  // CSS Anchor Positioning.
++  TryValueFlips try_value_flips_;
+ };
+ 
+ void PossiblyScheduleNthPseudoInvalidations(Node& node);

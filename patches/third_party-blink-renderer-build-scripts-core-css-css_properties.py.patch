@@ -1,8 +1,32 @@
 diff --git a/third_party/blink/renderer/build/scripts/core/css/css_properties.py b/third_party/blink/renderer/build/scripts/core/css/css_properties.py
-index e6d9b7e13aae79bc2ef280bcebe5e118f4b559c3..b05ec9610325c97ca469315811686addb3fa3c23 100644
+index e6d9b7e13aae79bc2ef280bcebe5e118f4b559c3..c0036a9c59f1779b77b8ec49145989a45926e726 100644
 --- a/third_party/blink/renderer/build/scripts/core/css/css_properties.py
 +++ b/third_party/blink/renderer/build/scripts/core/css/css_properties.py
-@@ -400,6 +400,7 @@ class CSSProperties(object):
+@@ -312,12 +312,11 @@ class CSSProperties(object):
+         # the resulting order is deterministic.
+         # Sort properties by priority, then alphabetically.
+         for property_ in self._longhands + self._shorthands:
+-            priority_numbers = {'High': 0, 'Low': 1}
+-            priority = priority_numbers[property_.priority]
+             name_without_leading_dash = property_.name.original
+             if name_without_leading_dash.startswith('-'):
+                 name_without_leading_dash = name_without_leading_dash[1:]
+-            property_.sorting_key = (priority, name_without_leading_dash)
++            property_.sorting_key = (-property_.priority,
++                                     name_without_leading_dash)
+ 
+         sorting_keys = {}
+         for property_ in self._longhands + self._shorthands:
+@@ -340,7 +339,7 @@ class CSSProperties(object):
+                 ('property with ID {} appears more than once in the '
+                  'properties list'.format(property_.property_id))
+             self._properties_by_id[property_.property_id] = property_
+-            if property_.priority == 'High':
++            if property_.priority > 0:
+                 self._last_high_priority_property = property_
+ 
+         self._alias_offset = self._last_used_enum_value
+@@ -400,6 +399,7 @@ class CSSProperties(object):
              updated_alias.alternative = alias.alternative
              updated_alias.aliased_property = aliased_property.name.to_upper_camel_case(
              )
@@ -10,7 +34,7 @@ index e6d9b7e13aae79bc2ef280bcebe5e118f4b559c3..b05ec9610325c97ca469315811686add
              updated_alias.property_id = id_for_css_property_alias(alias.name)
              updated_alias.enum_key = enum_key_for_css_property_alias(
                  alias.name)
-@@ -410,17 +411,23 @@ class CSSProperties(object):
+@@ -410,17 +410,23 @@ class CSSProperties(object):
                  'Shorthand' if aliased_property.longhands else 'Longhand'
              self._aliases[i] = updated_alias
  
@@ -44,7 +68,17 @@ index e6d9b7e13aae79bc2ef280bcebe5e118f4b559c3..b05ec9610325c97ca469315811686add
  
      def set_derived_attributes(self, property_):
          """Set new attributes on 'property_', based on existing attribute values
-@@ -567,7 +574,12 @@ class CSSProperties(object):
+@@ -506,6 +512,9 @@ class CSSProperties(object):
+         else:
+             set_if_none(property_, 'converter', 'CSSIdentifierValue')
+ 
++        if property_.anchor_mode:
++            property_.anchor_mode = NameStyleConverter(property_.anchor_mode)
++
+         if not property_.longhands:
+             property_.superclass = 'Longhand'
+             property_.namespace_group = 'Longhand'
+@@ -567,7 +576,12 @@ class CSSProperties(object):
  
      @property
      def computable(self):
@@ -58,7 +92,7 @@ index e6d9b7e13aae79bc2ef280bcebe5e118f4b559c3..b05ec9610325c97ca469315811686add
          is_not_prefixed = lambda p: not is_prefixed(p)
  
          prefixed = filter(is_prefixed, self._properties_including_aliases)
-@@ -590,10 +602,8 @@ class CSSProperties(object):
+@@ -590,10 +604,8 @@ class CSSProperties(object):
          prefixed = filter(is_computable, prefixed)
          unprefixed = filter(is_computable, unprefixed)
  

@@ -1,18 +1,25 @@
 diff --git a/third_party/blink/renderer/core/css/style_rule.h b/third_party/blink/renderer/core/css/style_rule.h
-index 6710c8d7e29cd46ab9da703a0c5860dfa750dc2d..f3b4b38b440a9c0d50c585ded07ca10937c0bb93 100644
+index 6710c8d7e29cd46ab9da703a0c5860dfa750dc2d..d438edeadbe55f5bda4bf2658f42043b7dcec28b 100644
 --- a/third_party/blink/renderer/core/css/style_rule.h
 +++ b/third_party/blink/renderer/core/css/style_rule.h
-@@ -68,6 +68,7 @@ class CORE_EXPORT StyleRuleBase : public GarbageCollected<StyleRuleBase> {
-     kPositionFallback,
-     kTry,
+@@ -65,9 +65,9 @@ class CORE_EXPORT StyleRuleBase : public GarbageCollected<StyleRuleBase> {
+     kCounterStyle,
+     kScope,
+     kSupports,
+-    kPositionFallback,
+-    kTry,
      kStartingStyle,
 +    kNestedDeclarations,
++    kPositionTry,
    };
  
    // Name of a cascade layer as given by an @layer rule, split at '.' into a
-@@ -104,6 +105,9 @@ class CORE_EXPORT StyleRuleBase : public GarbageCollected<StyleRuleBase> {
-   bool IsPositionFallbackRule() const { return GetType() == kPositionFallback; }
-   bool IsTryRule() const { return GetType() == kTry; }
+@@ -101,13 +101,15 @@ class CORE_EXPORT StyleRuleBase : public GarbageCollected<StyleRuleBase> {
+   bool IsScopeRule() const { return GetType() == kScope; }
+   bool IsSupportsRule() const { return GetType() == kSupports; }
+   bool IsImportRule() const { return GetType() == kImport; }
+-  bool IsPositionFallbackRule() const { return GetType() == kPositionFallback; }
+-  bool IsTryRule() const { return GetType() == kTry; }
    bool IsStartingStyleRule() const { return GetType() == kStartingStyle; }
 +  bool IsNestedDeclarationsRule() const {
 +    return GetType() == kNestedDeclarations;
@@ -20,7 +27,12 @@ index 6710c8d7e29cd46ab9da703a0c5860dfa750dc2d..f3b4b38b440a9c0d50c585ded07ca109
    bool IsConditionRule() const {
      return GetType() == kContainer || GetType() == kMedia ||
             GetType() == kSupports || GetType() == kStartingStyle;
-@@ -266,6 +270,7 @@ class CORE_EXPORT StyleRule : public StyleRuleBase {
+   }
++  bool IsPositionTryRule() const { return GetType() == kPositionTry; }
+ 
+   StyleRuleBase* Copy() const;
+ 
+@@ -266,6 +268,7 @@ class CORE_EXPORT StyleRule : public StyleRuleBase {
    const HeapVector<Member<StyleRuleBase>>* ChildRules() const {
      return child_rules_.Get();
    }
@@ -28,12 +40,3 @@ index 6710c8d7e29cd46ab9da703a0c5860dfa750dc2d..f3b4b38b440a9c0d50c585ded07ca109
    void EnsureChildRules() {
      // Allocate the child rule vector only when we need it,
      // since most rules won't have children (almost by definition).
-@@ -605,7 +610,7 @@ struct DowncastTraits<StyleRuleGroup> {
-   static bool AllowFrom(const StyleRuleBase& rule) {
-     return rule.IsMediaRule() || rule.IsSupportsRule() ||
-            rule.IsContainerRule() || rule.IsLayerBlockRule() ||
--           rule.IsScopeRule();
-+           rule.IsScopeRule() || rule.IsPositionFallbackRule();
-   }
- };
- 

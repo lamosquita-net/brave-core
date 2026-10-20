@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_box.h b/third_party/blink/renderer/core/layout/layout_box.h
-index 7e5f4df2b86bd8a409742261caa8a13368c75fc2..8123d259a4ccb5a88d4c263ff515da93c1dcfdb0 100644
+index 7e5f4df2b86bd8a409742261caa8a13368c75fc2..1b3a8d566d0bf841e431431497358428195cc02f 100644
 --- a/third_party/blink/renderer/core/layout/layout_box.h
 +++ b/third_party/blink/renderer/core/layout/layout_box.h
-@@ -58,8 +58,8 @@ enum class NGLayoutCacheStatus;
+@@ -48,6 +48,7 @@ class CustomLayoutChild;
+ class LayoutBlockFlow;
+ class LayoutMultiColumnSpannerPlaceholder;
+ class NGBoxFragmentBuilder;
++class AnchorPositionScrollData;
+ class NGBlockBreakToken;
+ class NGColumnSpannerPath;
+ class NGConstraintSpace;
+@@ -58,8 +59,8 @@ enum class NGLayoutCacheStatus;
  struct BoxLayoutExtraInput;
  struct NGFragmentGeometry;
  struct NGPhysicalBoxStrut;
@@ -12,7 +20,16 @@ index 7e5f4df2b86bd8a409742261caa8a13368c75fc2..8123d259a4ccb5a88d4c263ff515da93
  
  enum SizeType { kMainOrPreferredSize, kMinSize, kMaxSize };
  enum AvailableLogicalHeightType {
-@@ -1219,11 +1219,17 @@ class CORE_EXPORT LayoutBox : public LayoutBoxModelObject {
+@@ -487,7 +488,7 @@ class CORE_EXPORT LayoutBox : public LayoutBoxModelObject {
+     const ComputedStyle& style = StyleRef();
+     if (style.AspectRatio().IsAuto() || !IsOutOfFlowPositioned())
+       return false;
+-    if (style.UsedWidth().IsAuto() && style.UsedHeight().IsAuto() &&
++    if (style.Width().IsAuto() && style.Height().IsAuto() &&
+         !style.LogicalTop().IsAuto() && !style.LogicalBottom().IsAuto() &&
+         (style.LogicalLeft().IsAuto() || style.LogicalRight().IsAuto())) {
+       return true;
+@@ -1219,11 +1220,17 @@ class CORE_EXPORT LayoutBox : public LayoutBoxModelObject {
  
    bool HasScrollableOverflowX() const {
      NOT_DESTROYED();
@@ -30,12 +47,13 @@ index 7e5f4df2b86bd8a409742261caa8a13368c75fc2..8123d259a4ccb5a88d4c263ff515da93
      return ScrollsOverflowY() &&
             PixelSnappedScrollHeight() != PixelSnappedClientHeight();
    }
-@@ -1665,8 +1671,10 @@ class CORE_EXPORT LayoutBox : public LayoutBoxModelObject {
+@@ -1665,8 +1672,11 @@ class CORE_EXPORT LayoutBox : public LayoutBoxModelObject {
    // See StickyPositionScrollingConstraints::constraining_rect.
    PhysicalRect ComputeStickyConstrainingRect() const;
  
 -  bool HasAnchorScrollTranslation() const;
 -  PhysicalOffset AnchorScrollTranslationOffset() const;
++  AnchorPositionScrollData* GetAnchorPositionScrollData() const;
 +  bool NeedsAnchorPositionScrollAdjustment() const;
 +  PhysicalOffset AnchorPositionScrollTranslationOffset() const;
 +
@@ -43,18 +61,15 @@ index 7e5f4df2b86bd8a409742261caa8a13368c75fc2..8123d259a4ccb5a88d4c263ff515da93
  
    bool HasScrollbarGutters(ScrollbarOrientation orientation) const;
  
-@@ -1682,10 +1690,17 @@ class CORE_EXPORT LayoutBox : public LayoutBoxModelObject {
+@@ -1682,10 +1692,12 @@ class CORE_EXPORT LayoutBox : public LayoutBoxModelObject {
    // https://drafts.csswg.org/css-anchor-position-1/#ref-for-valdef-anchor-implicit
    const LayoutObject* AcceptableImplicitAnchor() const;
  
-+  bool UsesPositionFallbackStyle() const;
-+
-   // Returns position fallback results for anchor positioned element.
-   absl::optional<wtf_size_t> PositionFallbackIndex() const;
+-  // Returns position fallback results for anchor positioned element.
+-  absl::optional<wtf_size_t> PositionFallbackIndex() const;
 -  const Vector<PhysicalScrollRange>* PositionFallbackNonOverflowingRanges()
 -      const;
-+  const Vector<NonOverflowingScrollRange>*
-+  PositionFallbackNonOverflowingRanges() const;
++  const Vector<NonOverflowingScrollRange>* NonOverflowingScrollRanges() const;
 +
 +  const NGBoxStrut& OutOfFlowInsetsForGetComputedStyle() const;
 +

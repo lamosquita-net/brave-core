@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/flexible_box_algorithm.cc b/third_party/blink/renderer/core/layout/flexible_box_algorithm.cc
-index 4b3e6c782176ef50cb3a4823574b16cd185a4178..b3ce51f6b55fd432e70e7bb3fcb98b26868a3621 100644
+index 4b3e6c782176ef50cb3a4823574b16cd185a4178..c287aeeb64f51fa95be5945a7fe24fef5ef48e2b 100644
 --- a/third_party/blink/renderer/core/layout/flexible_box_algorithm.cc
 +++ b/third_party/blink/renderer/core/layout/flexible_box_algorithm.cc
 @@ -307,6 +307,7 @@ LayoutUnit FlexItem::AlignmentOffset(LayoutUnit available_free_space,
@@ -10,3 +10,14 @@ index 4b3e6c782176ef50cb3a4823574b16cd185a4178..b3ce51f6b55fd432e70e7bb3fcb98b26
        NOTREACHED();
        break;
      case ItemPosition::kSelfStart:
+@@ -766,8 +767,8 @@ FlexLayoutAlgorithm::ContentAlignmentNormalBehavior() {
+ bool FlexLayoutAlgorithm::ShouldApplyMinSizeAutoForChild(
+     const LayoutBox& child) const {
+   // css-flexbox section 4.5
+-  const Length& min = IsHorizontalFlow() ? child.StyleRef().UsedMinWidth()
+-                                         : child.StyleRef().UsedMinHeight();
++  const Length& min = IsHorizontalFlow() ? child.StyleRef().MinWidth()
++                                         : child.StyleRef().MinHeight();
+   bool main_axis_is_childs_block_axis =
+       IsHorizontalFlow() != child.StyleRef().IsHorizontalWritingMode();
+   bool intrinsic_in_childs_block_axis =

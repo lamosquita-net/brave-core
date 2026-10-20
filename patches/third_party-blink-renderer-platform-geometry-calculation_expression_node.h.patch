@@ -1,0 +1,73 @@
+diff --git a/third_party/blink/renderer/platform/geometry/calculation_expression_node.h b/third_party/blink/renderer/platform/geometry/calculation_expression_node.h
+index 0fe35523059cdcabc0d59e2f93130c20b4a048a3..258ce9bde09edacc71c82f432e49cd276e492751 100644
+--- a/third_party/blink/renderer/platform/geometry/calculation_expression_node.h
++++ b/third_party/blink/renderer/platform/geometry/calculation_expression_node.h
+@@ -37,8 +37,7 @@ enum class CalculationOperator {
+ class PLATFORM_EXPORT CalculationExpressionNode
+     : public RefCounted<CalculationExpressionNode> {
+  public:
+-  virtual float Evaluate(float max_value,
+-                         const Length::AnchorEvaluator*) const = 0;
++  virtual float Evaluate(float max_value) const = 0;
+   bool operator==(const CalculationExpressionNode& other) const {
+     return Equals(other);
+   }
+@@ -46,13 +45,10 @@ class PLATFORM_EXPORT CalculationExpressionNode
+     return !operator==(other);
+   }
+ 
+-  bool HasAnchorQueries() const { return has_anchor_queries_; }
+-  bool HasAutoAnchorPositioning() const { return has_auto_anchor_positioning_; }
+ 
+   virtual bool IsNumber() const { return false; }
+   virtual bool IsPixelsAndPercent() const { return false; }
+   virtual bool IsOperation() const { return false; }
+-  virtual bool IsAnchorQuery() const { return false; }
+ 
+   virtual scoped_refptr<const CalculationExpressionNode> Zoom(
+       double factor) const = 0;
+@@ -71,8 +67,6 @@ class PLATFORM_EXPORT CalculationExpressionNode
+  protected:
+   virtual bool Equals(const CalculationExpressionNode& other) const = 0;
+ 
+-  bool has_anchor_queries_ = false;
+-  bool has_auto_anchor_positioning_ = false;
+ };
+ 
+ class PLATFORM_EXPORT CalculationExpressionNumberNode final
+@@ -87,7 +81,7 @@ class PLATFORM_EXPORT CalculationExpressionNumberNode final
+   float Value() const { return value_; }
+ 
+   // Implement |CalculationExpressionNode|:
+-  float Evaluate(float max_value, const Length::AnchorEvaluator*) const final;
++  float Evaluate(float max_value) const final;
+   bool Equals(const CalculationExpressionNode& other) const final;
+   scoped_refptr<const CalculationExpressionNode> Zoom(
+       double factor) const final;
+@@ -124,7 +118,7 @@ class PLATFORM_EXPORT CalculationExpressionPixelsAndPercentNode final
+   PixelsAndPercent GetPixelsAndPercent() const { return value_; }
+ 
+   // Implement |CalculationExpressionNode|:
+-  float Evaluate(float max_value, const Length::AnchorEvaluator*) const final;
++  float Evaluate(float max_value) const final;
+   bool Equals(const CalculationExpressionNode& other) const final;
+   scoped_refptr<const CalculationExpressionNode> Zoom(
+       double factor) const final;
+@@ -162,7 +156,7 @@ class PLATFORM_EXPORT CalculationExpressionOperationNode final
+   CalculationOperator GetOperator() const { return operator_; }
+ 
+   // Implement |CalculationExpressionNode|:
+-  float Evaluate(float max_value, const Length::AnchorEvaluator*) const final;
++  float Evaluate(float max_value) const final;
+   bool Equals(const CalculationExpressionNode& other) const final;
+   scoped_refptr<const CalculationExpressionNode> Zoom(
+       double factor) const final;
+@@ -174,8 +168,6 @@ class PLATFORM_EXPORT CalculationExpressionOperationNode final
+ #endif
+ 
+  private:
+-  bool ComputeHasAnchorQueries() const;
+-  bool ComputeHasAutoAnchorPositioning() const;
+ 
+   Children children_;
+   CalculationOperator operator_;

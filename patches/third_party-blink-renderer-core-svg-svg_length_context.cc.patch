@@ -1,8 +1,25 @@
 diff --git a/third_party/blink/renderer/core/svg/svg_length_context.cc b/third_party/blink/renderer/core/svg/svg_length_context.cc
-index 44c8e568bd4515141d2af1489373b0a7c6acc5ea..650b1241edeb339519ea5cc7c7bc8d78a8c412a9 100644
+index 44c8e568bd4515141d2af1489373b0a7c6acc5ea..629a5a9bd58d123549d20dc7843c82ccfcb2d6e5 100644
 --- a/third_party/blink/renderer/core/svg/svg_length_context.cc
 +++ b/third_party/blink/renderer/core/svg/svg_length_context.cc
-@@ -122,7 +122,9 @@ gfx::RectF SVGLengthContext::ResolveRectangle(const SVGElement* context,
+@@ -92,7 +92,7 @@ float ObjectBoundingBoxUnitToUserUnits(const Length& length,
+   if (length.IsPercent()) {
+     std::swap(unit_dimension, ref_dimension);
+   }
+-  return FloatValueForLength(length, unit_dimension, nullptr) * ref_dimension;
++  return FloatValueForLength(length, unit_dimension) * ref_dimension;
+ }
+ 
+ }  // namespace
+@@ -106,6 +106,7 @@ SVGLengthConversionData::SVGLengthConversionData(const Element& context,
+                                     context.GetDocument().GetLayoutView()),
+                                 CSSToLengthConversionData::ContainerSizes(
+                                     context.ParentOrShadowHostElement()),
++                                CSSToLengthConversionData::AnchorData(),
+                                 1.0f,
+                                 ignored_flags_) {}
+ 
+@@ -122,7 +123,9 @@ gfx::RectF SVGLengthContext::ResolveRectangle(const SVGElement* context,
                                                const SVGLength& x,
                                                const SVGLength& y,
                                                const SVGLength& width,
@@ -13,7 +30,7 @@ index 44c8e568bd4515141d2af1489373b0a7c6acc5ea..650b1241edeb339519ea5cc7c7bc8d78
    DCHECK_NE(SVGUnitTypes::kSvgUnitTypeUnknown, type);
    const ComputedStyle* style = ComputedStyleForLengthResolving(context);
    if (!style) {
-@@ -155,7 +157,9 @@ gfx::RectF SVGLengthContext::ResolveRectangle(const SVGElement* context,
+@@ -155,7 +158,9 @@ gfx::RectF SVGLengthContext::ResolveRectangle(const SVGElement* context,
      gfx::SizeF viewport_size_for_resolve;
      if (size.Width().IsPercentOrCalc() || size.Height().IsPercentOrCalc() ||
          point.X().IsPercentOrCalc() || point.Y().IsPercentOrCalc()) {

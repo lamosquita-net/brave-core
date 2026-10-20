@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/element.idl b/third_party/blink/renderer/core/dom/element.idl
-index 7b0edf82d70b4cbcf8a337321d1a05b66ff531f5..6d45da300d29572c2a9e9a9989a675793f015cca 100644
+index 7b0edf82d70b4cbcf8a337321d1a05b66ff531f5..ecbcef8906de847d7260e426e6d0589f024a9d91 100644
 --- a/third_party/blink/renderer/core/dom/element.idl
 +++ b/third_party/blink/renderer/core/dom/element.idl
 @@ -28,6 +28,9 @@ callback ScrollStateCallback = void (ScrollState scrollState);
@@ -28,12 +28,15 @@ index 7b0edf82d70b4cbcf8a337321d1a05b66ff531f5..6d45da300d29572c2a9e9a9989a67579
  
      // Pointer Lock
      // https://w3c.github.io/pointerlock/#extensions-to-the-element-interface
-@@ -137,6 +145,8 @@ dictionary CheckVisibilityOptions {
+@@ -137,6 +145,11 @@ dictionary CheckVisibilityOptions {
      readonly attribute long clientLeft;
      readonly attribute long clientWidth;
      readonly attribute long clientHeight;
 +    // https://drafts.csswg.org/cssom-view/#dom-element-currentcsszoom
 +    readonly attribute double currentCSSZoom;
++
++    // Used by both Anchor Positioning and Popover
++    [CEReactions,RuntimeEnabled=HTMLAnchorAttribute] attribute Element? anchorElement;
  
      // Non-standard API
      [MeasureAs=ElementScrollIntoViewIfNeeded] void scrollIntoViewIfNeeded(optional boolean centerIfNeeded);

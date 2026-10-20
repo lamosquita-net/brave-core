@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/ng_block_node.cc b/third_party/blink/renderer/core/layout/ng/ng_block_node.cc
-index 368a745eda9491456cdb14281e1d2eddf15f942d..852882a28d76764378af7de4e235086300a37f0a 100644
+index 368a745eda9491456cdb14281e1d2eddf15f942d..c3883d1c9787d4b9b1a1b5975bdc4f3d114d59e1 100644
 --- a/third_party/blink/renderer/core/layout/ng/ng_block_node.cc
 +++ b/third_party/blink/renderer/core/layout/ng/ng_block_node.cc
 @@ -79,6 +79,7 @@
@@ -32,27 +32,61 @@ index 368a745eda9491456cdb14281e1d2eddf15f942d..852882a28d76764378af7de4e2350863
      if (type == input_type_names::kRange)
        return inline_size;
    }
-@@ -755,13 +760,15 @@ const NGLayoutResult* NGBlockNode::CachedLayoutResultForOutOfFlowPositioned(
-   //
-   // TODO(layout-dev): We might be able to determine what the previous
-   // static-position was based on |NGLayoutResult::OutOfFlowPositionedOffset|.
-+  // TODO(crbug.com/1477314): This unnecessarily defeats caching when inset-area
-+  // is applied.
-   bool depends_on_static_position =
--      (Style().UsedLeft().IsAuto() && Style().UsedRight().IsAuto()) ||
--      (Style().UsedTop().IsAuto() && Style().UsedBottom().IsAuto());
-+      Style().HasAutoLeftAndRightIgnoringInsetArea() ||
-+      Style().HasAutoTopAndBottomIgnoringInsetArea();
- 
--  if (depends_on_static_position)
-+  if (depends_on_static_position) {
-     return nullptr;
--
-+  }
-   return cached_layout_result;
+@@ -718,53 +723,6 @@ void NGBlockNode::FinishRepeatableRoot() const {
+   }
  }
  
-@@ -1719,8 +1726,9 @@ absl::optional<gfx::Transform> NGBlockNode::GetTransformForChildFragment(
+-const NGLayoutResult* NGBlockNode::CachedLayoutResultForOutOfFlowPositioned(
+-    LogicalSize container_content_size) const {
+-  DCHECK(IsOutOfFlowPositioned());
+-
+-  if (box_->NeedsLayout())
+-    return nullptr;
+-
+-  // If there are multiple fragments, we wouldn't know which one to use, since
+-  // no break token is passed.
+-  if (box_->PhysicalFragmentCount() > 1)
+-    return nullptr;
+-
+-  const NGLayoutResult* cached_layout_result =
+-      box_->GetSingleCachedLayoutResult();
+-  if (!cached_layout_result)
+-    return nullptr;
+-
+-  // The containing-block may have borders/scrollbars which might change
+-  // between passes affecting the final position.
+-  if (!cached_layout_result->CanUseOutOfFlowPositionedFirstTierCache())
+-    return nullptr;
+-
+-  // TODO(layout-dev): There are potentially more cases where we can reuse this
+-  // layout result.
+-  // E.g. when we have a fixed-length top position constraint (top: 5px), we
+-  // are in the correct writing mode (htb-ltr), and we have a fixed width.
+-  const NGConstraintSpace& space =
+-      cached_layout_result->GetConstraintSpaceForCaching();
+-  if (space.PercentageResolutionSize() != container_content_size)
+-    return nullptr;
+-
+-  // We currently don't keep the static-position around to determine if it is
+-  // the same as the previous layout pass. As such, only reuse the result when
+-  // we know it doesn't depend on the static-position.
+-  //
+-  // TODO(layout-dev): We might be able to determine what the previous
+-  // static-position was based on |NGLayoutResult::OutOfFlowPositionedOffset|.
+-  bool depends_on_static_position =
+-      (Style().UsedLeft().IsAuto() && Style().UsedRight().IsAuto()) ||
+-      (Style().UsedTop().IsAuto() && Style().UsedBottom().IsAuto());
+-
+-  if (depends_on_static_position)
+-    return nullptr;
+-
+-  return cached_layout_result;
+-}
+-
+ void NGBlockNode::PrepareForLayout() const {
+   auto* block = DynamicTo<LayoutBlock>(box_.Get());
+   if (block && block->IsScrollContainer()) {
+@@ -1719,8 +1677,9 @@ absl::optional<gfx::Transform> NGBlockNode::GetTransformForChildFragment(
      // us. Calculate it now.
      fragment_transform.emplace();
      fragment_transform->MakeIdentity();

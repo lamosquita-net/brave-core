@@ -1,0 +1,25 @@
+diff --git a/third_party/blink/renderer/build/scripts/core/css/properties/templates/style_builder_functions.tmpl b/third_party/blink/renderer/build/scripts/core/css/properties/templates/style_builder_functions.tmpl
+index 2b1442f0128c7a7746b64ee21e11226c29120e1d..327931fba47903cafdbb3d218a045c2af5fdc978 100644
+--- a/third_party/blink/renderer/build/scripts/core/css/properties/templates/style_builder_functions.tmpl
++++ b/third_party/blink/renderer/build/scripts/core/css/properties/templates/style_builder_functions.tmpl
+@@ -27,6 +27,11 @@ void {{class_name}}::ApplyInherit(StyleResolverState& state) const {
+   {% if property.style_builder_declare %}
+     {% if property.style_builder_generate_value %}
+ void {{class_name}}::ApplyValue(StyleResolverState& state, const CSSValue& value, ValueMode) const {
++{% if property.anchor_mode %}
++  AnchorScope anchor_scope(
++      AnchorScope::Mode::{{property.anchor_mode.to_enum_value()}},
++      state.CssToLengthConversionData().GetAnchorEvaluator());
++{% endif %}
+ {{(caller(property) ~ '}')}}
+     {% endif %}
+   {% endif %}
+@@ -34,7 +39,7 @@ void {{class_name}}::ApplyValue(StyleResolverState& state, const CSSValue& value
+ 
+ {% macro style_access(property) %}
+ state.StyleBuilder().
+-{% endmacro %}
++{%- endmacro %}
+ 
+ {% macro set_value(property) %}
+   {%- if property.font %}

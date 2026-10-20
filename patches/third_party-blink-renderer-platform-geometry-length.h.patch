@@ -1,8 +1,14 @@
 diff --git a/third_party/blink/renderer/platform/geometry/length.h b/third_party/blink/renderer/platform/geometry/length.h
-index 632ed79e31f2513328f8bcd0fa5dd2de9c6cc4e6..0b83c84028616e8568f51a76d9bdd7e8ae5d7dd8 100644
+index 632ed79e31f2513328f8bcd0fa5dd2de9c6cc4e6..3aaf8eeb6dcb74431ef89343b20c0adec01cfc27 100644
 --- a/third_party/blink/renderer/platform/geometry/length.h
 +++ b/third_party/blink/renderer/platform/geometry/length.h
-@@ -50,6 +50,7 @@ class Length;
+@@ -44,12 +44,12 @@ struct PixelsAndPercent {
+   float percent;
+ };
+ 
+-class CalculationExpressionNode;
+ class CalculationValue;
+ class Length;
  
  PLATFORM_EXPORT extern const Length& g_auto_length;
  PLATFORM_EXPORT extern const Length& g_none_length;
@@ -10,7 +16,7 @@ index 632ed79e31f2513328f8bcd0fa5dd2de9c6cc4e6..0b83c84028616e8568f51a76d9bdd7e8
  
  class PLATFORM_EXPORT Length {
    DISALLOW_NEW();
-@@ -145,6 +146,7 @@ class PLATFORM_EXPORT Length {
+@@ -145,6 +145,7 @@ class PLATFORM_EXPORT Length {
      return Length(number, kFixed);
    }
    static Length Fixed() { return Length(kFixed); }
@@ -18,7 +24,30 @@ index 632ed79e31f2513328f8bcd0fa5dd2de9c6cc4e6..0b83c84028616e8568f51a76d9bdd7e8
    static const Length& Auto() { return g_auto_length; }
    static Length FillAvailable() { return Length(kFillAvailable); }
    static Length MinContent() { return Length(kMinContent); }
-@@ -318,6 +320,8 @@ class PLATFORM_EXPORT Length {
+@@ -274,8 +275,6 @@ class PLATFORM_EXPORT Length {
+   bool IsExtendToZoom() const { return GetType() == kExtendToZoom; }
+   bool IsDeviceWidth() const { return GetType() == kDeviceWidth; }
+   bool IsDeviceHeight() const { return GetType() == kDeviceHeight; }
+-  bool HasAnchorQueries() const;
+-  bool HasAutoAnchorPositioning() const;
+ 
+   Length Blend(const Length& from, double progress, ValueRange range) const {
+     DCHECK(IsSpecified());
+@@ -305,19 +304,12 @@ class PLATFORM_EXPORT Length {
+     return value_;
+   }
+ 
+-  class PLATFORM_EXPORT AnchorEvaluator {
+-   public:
+-    // Evaluates an anchor() or anchor-size() function given by the
+-    // CalculationExpressionNode. Returns |nullopt| if the query is invalid
+-    // (e.g., no targets or wrong axis.)
+-    virtual absl::optional<LayoutUnit> Evaluate(
+-        const CalculationExpressionNode&) const = 0;
+-  };
+-  float NonNanCalculatedValue(float max_value,
+-                              const AnchorEvaluator* = nullptr) const;
++  float NonNanCalculatedValue(float max_value) const;
  
    Length SubtractFromOneHundredPercent() const;
  

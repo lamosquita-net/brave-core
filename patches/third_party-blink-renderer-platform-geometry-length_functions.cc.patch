@@ -1,0 +1,58 @@
+diff --git a/third_party/blink/renderer/platform/geometry/length_functions.cc b/third_party/blink/renderer/platform/geometry/length_functions.cc
+index 734cfad2a6205cd7b9e0d522590116c3a23b70bd..76ea61a690fc93d82a9b153d3623104206e3db20 100644
+--- a/third_party/blink/renderer/platform/geometry/length_functions.cc
++++ b/third_party/blink/renderer/platform/geometry/length_functions.cc
+@@ -36,8 +36,7 @@ int IntValueForLength(const Length& length, int maximum_value) {
+ }
+ 
+ float FloatValueForLength(const Length& length,
+-                          float maximum_value,
+-                          const Length::AnchorEvaluator* anchor_evaluator) {
++                          float maximum_value) {
+   switch (length.GetType()) {
+     case Length::kFixed:
+       return length.GetFloatValue();
+@@ -47,7 +46,7 @@ float FloatValueForLength(const Length& length,
+     case Length::kAuto:
+       return static_cast<float>(maximum_value);
+     case Length::kCalculated:
+-      return length.NonNanCalculatedValue(maximum_value, anchor_evaluator);
++      return length.NonNanCalculatedValue(maximum_value);
+     case Length::kMinContent:
+     case Length::kMaxContent:
+     case Length::kMinIntrinsic:
+@@ -66,8 +65,7 @@ float FloatValueForLength(const Length& length,
+ 
+ LayoutUnit MinimumValueForLengthInternal(
+     const Length& length,
+-    LayoutUnit maximum_value,
+-    const Length::AnchorEvaluator* anchor_evaluator) {
++    LayoutUnit maximum_value) {
+   switch (length.GetType()) {
+     case Length::kPercent:
+       // Don't remove the extra cast to float. It is needed for rounding on
+@@ -76,7 +74,7 @@ LayoutUnit MinimumValueForLengthInternal(
+           static_cast<float>(maximum_value * length.Percent() / 100.0f));
+     case Length::kCalculated:
+       return LayoutUnit(
+-          length.NonNanCalculatedValue(maximum_value, anchor_evaluator));
++          length.NonNanCalculatedValue(maximum_value));
+     case Length::kFillAvailable:
+     case Length::kAuto:
+       return LayoutUnit();
+@@ -98,13 +96,12 @@ LayoutUnit MinimumValueForLengthInternal(
+ }
+ 
+ LayoutUnit ValueForLength(const Length& length,
+-                          LayoutUnit maximum_value,
+-                          const Length::AnchorEvaluator* anchor_evaluator) {
++                          LayoutUnit maximum_value) {
+   switch (length.GetType()) {
+     case Length::kFixed:
+     case Length::kPercent:
+     case Length::kCalculated:
+-      return MinimumValueForLength(length, maximum_value, anchor_evaluator);
++      return MinimumValueForLength(length, maximum_value);
+     case Length::kFillAvailable:
+     case Length::kAuto:
+       return maximum_value;

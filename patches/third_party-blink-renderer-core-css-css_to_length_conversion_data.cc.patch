@@ -1,8 +1,27 @@
 diff --git a/third_party/blink/renderer/core/css/css_to_length_conversion_data.cc b/third_party/blink/renderer/core/css/css_to_length_conversion_data.cc
-index 50946fa0e858aeb3d095b1b20bc9f68431b37cf3..c04111969afdf92c69a4f98eb179ef334e0eb1a5 100644
+index 50946fa0e858aeb3d095b1b20bc9f68431b37cf3..6ecc63da60ccb224ad69eb10e1175d013c1b46ad 100644
 --- a/third_party/blink/renderer/core/css/css_to_length_conversion_data.cc
 +++ b/third_party/blink/renderer/core/css/css_to_length_conversion_data.cc
-@@ -58,7 +58,8 @@ absl::optional<double> FindSizeForContainerAxis(PhysicalAxes requested_axis,
+@@ -30,6 +30,7 @@
+ 
+ #include "third_party/blink/renderer/core/css/css_to_length_conversion_data.h"
+ 
++#include "third_party/blink/renderer/core/css/anchor_evaluator.h"
+ #include "third_party/blink/renderer/core/css/container_query.h"
+ #include "third_party/blink/renderer/core/css/container_query_evaluator.h"
+ #include "third_party/blink/renderer/core/css/css_resolution_units.h"
+@@ -47,8 +48,8 @@ namespace {
+ 
+ absl::optional<double> FindSizeForContainerAxis(PhysicalAxes requested_axis,
+                                                 Element* context_element) {
+-  DCHECK(requested_axis == kPhysicalAxisHorizontal ||
+-         requested_axis == kPhysicalAxisVertical);
++  DCHECK(requested_axis == kPhysicalAxesHorizontal ||
++         requested_axis == kPhysicalAxesVertical);
+ 
+   ContainerSelector selector(requested_axis);
+   const TreeScope* tree_scope =
+@@ -58,11 +59,12 @@ absl::optional<double> FindSizeForContainerAxis(PhysicalAxes requested_axis,
             context_element, selector, tree_scope);
         container;
         container = ContainerQueryEvaluator::FindContainer(
@@ -12,7 +31,12 @@ index 50946fa0e858aeb3d095b1b20bc9f68431b37cf3..c04111969afdf92c69a4f98eb179ef33
      ContainerQueryEvaluator& evaluator =
          container->EnsureContainerQueryEvaluator();
      evaluator.SetReferencedByUnit();
-@@ -165,7 +166,7 @@ float CSSToLengthConversionData::FontSizes::Ic(float zoom) const {
+-    absl::optional<double> size = requested_axis == kPhysicalAxisHorizontal
++    absl::optional<double> size = requested_axis == kPhysicalAxesHorizontal
+                                       ? evaluator.Width()
+                                       : evaluator.Height();
+     if (!size.has_value()) {
+@@ -165,7 +167,7 @@ float CSSToLengthConversionData::FontSizes::Ic(float zoom) const {
    const SimpleFontData* font_data = font_->PrimaryFont();
    absl::optional<float> full_width;
    if (font_data) {
@@ -21,7 +45,7 @@ index 50946fa0e858aeb3d095b1b20bc9f68431b37cf3..c04111969afdf92c69a4f98eb179ef33
    }
    if (!full_width.has_value()) {
      return Em(zoom);
-@@ -180,7 +181,7 @@ float CSSToLengthConversionData::FontSizes::Ric(float zoom) const {
+@@ -180,7 +182,7 @@ float CSSToLengthConversionData::FontSizes::Ric(float zoom) const {
    const SimpleFontData* font_data = root_font_->PrimaryFont();
    absl::optional<float> full_width;
    if (font_data) {
@@ -30,7 +54,7 @@ index 50946fa0e858aeb3d095b1b20bc9f68431b37cf3..c04111969afdf92c69a4f98eb179ef33
    }
    if (!full_width.has_value()) {
      return Rem(zoom);
-@@ -190,6 +191,28 @@ float CSSToLengthConversionData::FontSizes::Ric(float zoom) const {
+@@ -190,6 +192,28 @@ float CSSToLengthConversionData::FontSizes::Ric(float zoom) const {
    return full_width.value() / root_font_zoom_ * zoom;
  }
  
@@ -59,7 +83,53 @@ index 50946fa0e858aeb3d095b1b20bc9f68431b37cf3..c04111969afdf92c69a4f98eb179ef33
  CSSToLengthConversionData::LineHeightSize::LineHeightSize(
      const FontSizeStyle& style,
      const ComputedStyle* root_style)
-@@ -382,6 +405,29 @@ float CSSToLengthConversionData::RootLineHeight(float zoom) const {
+@@ -265,13 +289,13 @@ bool CSSToLengthConversionData::ContainerSizes::SizesEqual(
+ 
+ absl::optional<double> CSSToLengthConversionData::ContainerSizes::Width()
+     const {
+-  CacheSizeIfNeeded(PhysicalAxes(kPhysicalAxisHorizontal), cached_width_);
++  CacheSizeIfNeeded(PhysicalAxes(kPhysicalAxesHorizontal), cached_width_);
+   return cached_width_;
+ }
+ 
+ absl::optional<double> CSSToLengthConversionData::ContainerSizes::Height()
+     const {
+-  CacheSizeIfNeeded(PhysicalAxes(kPhysicalAxisVertical), cached_height_);
++  CacheSizeIfNeeded(PhysicalAxes(kPhysicalAxesVertical), cached_height_);
+   return cached_height_;
+ }
+ 
+@@ -285,12 +309,21 @@ void CSSToLengthConversionData::ContainerSizes::CacheSizeIfNeeded(
+   cache = FindSizeForContainerAxis(requested_axis, context_element_);
+ }
+ 
++CSSToLengthConversionData::AnchorData::AnchorData(
++    AnchorEvaluator* evaluator,
++    const ScopedCSSName* position_anchor,
++    const absl::optional<InsetAreaOffsets>& inset_area_offsets)
++    : evaluator_(evaluator),
++      position_anchor_(position_anchor),
++      inset_area_offsets_(inset_area_offsets) {}
++
+ CSSToLengthConversionData::CSSToLengthConversionData(
+     WritingMode writing_mode,
+     const FontSizes& font_sizes,
+     const LineHeightSize& line_height_size,
+     const ViewportSize& viewport_size,
+     const ContainerSizes& container_sizes,
++    const AnchorData& anchor_data,
+     float zoom,
+     Flags& flags)
+     : CSSLengthResolver(
+@@ -300,6 +333,7 @@ CSSToLengthConversionData::CSSToLengthConversionData(
+       line_height_size_(line_height_size),
+       viewport_size_(viewport_size),
+       container_sizes_(container_sizes),
++      anchor_data_(anchor_data),
+       flags_(&flags) {}
+ 
+ float CSSToLengthConversionData::EmFontSize(float zoom) const {
+@@ -382,6 +416,29 @@ float CSSToLengthConversionData::RootLineHeight(float zoom) const {
    return line_height_size_.Rlh(zoom);
  }
  
@@ -89,3 +159,16 @@ index 50946fa0e858aeb3d095b1b20bc9f68431b37cf3..c04111969afdf92c69a4f98eb179ef33
  double CSSToLengthConversionData::ViewportWidth() const {
    SetFlag(Flag::kStaticViewport);
    return viewport_size_.LargeWidth();
+@@ -442,4 +499,12 @@ CSSToLengthConversionData::PreCachedContainerSizesCopy() const {
+   return container_sizes_.PreCachedCopy();
+ }
+ 
++void CSSToLengthConversionData::ReferenceTreeScope() const {
++  SetFlag(Flag::kTreeScopedReference);
++}
++
++void CSSToLengthConversionData::ReferenceAnchor() const {
++  SetFlag(Flag::kAnchorRelative);
++}
++
+ }  // namespace blink

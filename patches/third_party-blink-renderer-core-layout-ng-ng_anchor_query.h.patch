@@ -1,14 +1,61 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/ng_anchor_query.h b/third_party/blink/renderer/core/layout/ng/ng_anchor_query.h
-index bfd086b8ffce49d4f378503d4578e55ace9ce554..9027d07b143d97646fcf04df9be1386378cc9997 100644
+index bfd086b8ffce49d4f378503d4578e55ace9ce554..e6d4baed0232c7ce4c31ee43611781023854432c 100644
 --- a/third_party/blink/renderer/core/layout/ng/ng_anchor_query.h
 +++ b/third_party/blink/renderer/core/layout/ng/ng_anchor_query.h
-@@ -27,6 +27,7 @@ class LayoutObject;
+@@ -5,16 +5,16 @@
+ #ifndef THIRD_PARTY_BLINK_RENDERER_CORE_LAYOUT_NG_NG_ANCHOR_QUERY_H_
+ #define THIRD_PARTY_BLINK_RENDERER_CORE_LAYOUT_NG_NG_ANCHOR_QUERY_H_
+ 
+-#include "third_party/blink/renderer/core/core_export.h"
+-
+ #include "third_party/abseil-cpp/absl/types/optional.h"
++
+ #include "third_party/abseil-cpp/absl/types/variant.h"
+ #include "third_party/blink/renderer/core/core_export.h"
++#include "third_party/blink/renderer/core/css/anchor_evaluator.h"
+ #include "third_party/blink/renderer/core/css/css_anchor_query_enums.h"
++#include "third_party/blink/renderer/core/layout/geometry/physical_offset.h"
+ #include "third_party/blink/renderer/core/layout/geometry/physical_rect.h"
+ #include "third_party/blink/renderer/core/layout/geometry/writing_mode_converter.h"
+ #include "third_party/blink/renderer/core/style/scoped_css_name.h"
+-#include "third_party/blink/renderer/platform/geometry/length.h"
+ #include "third_party/blink/renderer/platform/heap/collection_support/heap_hash_map.h"
+ #include "third_party/blink/renderer/platform/heap/collection_support/heap_hash_set.h"
+ #include "third_party/blink/renderer/platform/wtf/text/atomic_string.h"
+@@ -26,6 +26,7 @@ class AnchorSpecifierValue;
+ class LayoutObject;
  class NGLogicalAnchorQuery;
  class NGLogicalAnchorQueryMap;
- struct NGLogicalAnchorReference;
 +class PaintLayer;
+ struct NGLogicalAnchorReference;
  
  using NGAnchorKey = absl::variant<const ScopedCSSName*, const LayoutObject*>;
+@@ -52,7 +53,7 @@ class NGAnchorQueryBase : public GarbageCollectedMixin {
+       return AnchorReference(named_anchors_, *name);
+     }
+     return AnchorReference(implicit_anchors_,
+-                           absl::get<const LayoutObject*>(key));
++                              absl::get<const LayoutObject*>(key));
+   }
+ 
+   struct AddResult {
+@@ -130,7 +131,7 @@ class NGAnchorQueryBase : public GarbageCollectedMixin {
+ 
+   template <typename AnchorMapType, typename KeyType>
+   static const NGAnchorReference* AnchorReference(const AnchorMapType& anchors,
+-                                                  const KeyType& key) {
++                                                   const KeyType& key) {
+     auto it = anchors.find(key);
+     return it != anchors.end() ? it->value : nullptr;
+   }
+@@ -150,7 +151,7 @@ class NGAnchorQueryBase : public GarbageCollectedMixin {
+ struct CORE_EXPORT NGPhysicalAnchorReference
+     : public GarbageCollected<NGPhysicalAnchorReference> {
+   NGPhysicalAnchorReference(const NGLogicalAnchorReference& logical_reference,
+-                            const WritingModeConverter& converter);
++                          const WritingModeConverter& converter);
+ 
+   void Trace(Visitor* visitor) const;
  
 @@ -169,11 +170,6 @@ class CORE_EXPORT NGPhysicalAnchorQuery
   public:
@@ -22,7 +69,23 @@ index bfd086b8ffce49d4f378503d4578e55ace9ce554..9027d07b143d97646fcf04df9be13863
    const NGPhysicalAnchorReference* AnchorReference(
        const LayoutObject& query_object,
        const NGAnchorKey&) const;
-@@ -257,12 +253,6 @@ class CORE_EXPORT NGAnchorEvaluatorImpl : public Length::AnchorEvaluator {
+@@ -187,8 +183,8 @@ class CORE_EXPORT NGPhysicalAnchorQuery
+ struct CORE_EXPORT NGLogicalAnchorReference
+     : public GarbageCollected<NGLogicalAnchorReference> {
+   NGLogicalAnchorReference(const LayoutObject& layout_object,
+-                           const LogicalRect& rect,
+-                           bool is_out_of_flow)
++                         const LogicalRect& rect,
++                         bool is_out_of_flow)
+       : rect(rect),
+         layout_object(&layout_object),
+         is_out_of_flow(is_out_of_flow) {}
+@@ -253,105 +249,175 @@ class CORE_EXPORT NGLogicalAnchorQuery
+                           WritingMode self_writing_mode) const;
+ };
+ 
+-class CORE_EXPORT NGAnchorEvaluatorImpl : public Length::AnchorEvaluator {
++class CORE_EXPORT NGAnchorEvaluatorImpl : public AnchorEvaluator {
    STACK_ALLOCATED();
  
   public:
@@ -35,10 +98,72 @@ index bfd086b8ffce49d4f378503d4578e55ace9ce554..9027d07b143d97646fcf04df9be13863
    // An empty evaluator that always return `nullopt`. This instance can still
    // compute `HasAnchorFunctions()`.
    NGAnchorEvaluatorImpl() = default;
-@@ -310,6 +300,16 @@ class CORE_EXPORT NGAnchorEvaluatorImpl : public Length::AnchorEvaluator {
-   // `anchor-size()` functions.
-   bool HasAnchorFunctions() const { return has_anchor_functions_; }
  
+   NGAnchorEvaluatorImpl(const LayoutObject& query_object,
+-                        const NGLogicalAnchorQuery& anchor_query,
+-                        const ScopedCSSName* default_anchor_specifier,
+-                        const LayoutObject* implicit_anchor,
+-                        const WritingModeConverter& container_converter,
+-                        WritingDirectionMode self_writing_direction,
+-                        const PhysicalOffset& offset_to_padding_box)
++                      const NGLogicalAnchorQuery& anchor_query,
++                      const LayoutObject* implicit_anchor,
++                      const WritingModeConverter& container_converter,
++                      WritingDirectionMode self_writing_direction,
++                      const PhysicalOffset& offset_to_padding_box,
++                      const PhysicalSize& available_size)
+       : query_object_(&query_object),
+         anchor_query_(&anchor_query),
+-        default_anchor_specifier_(default_anchor_specifier),
+         implicit_anchor_(implicit_anchor),
+         container_converter_(container_converter),
+         self_writing_direction_(self_writing_direction),
+-        offset_to_padding_box_(offset_to_padding_box) {
++        containing_block_rect_(offset_to_padding_box, available_size) {
+     DCHECK(anchor_query_);
+   }
+ 
+   // This constructor takes |NGLogicalAnchorQueryMap| and |containing_block|
+   // instead of |NGLogicalAnchorQuery|.
+   NGAnchorEvaluatorImpl(const LayoutObject& query_object,
+-                        const NGLogicalAnchorQueryMap& anchor_queries,
+-                        const ScopedCSSName* default_anchor_specifier,
+-                        const LayoutObject* implicit_anchor,
+-                        const LayoutObject& containing_block,
+-                        const WritingModeConverter& container_converter,
+-                        WritingDirectionMode self_writing_direction,
+-                        const PhysicalOffset& offset_to_padding_box)
++                      const NGLogicalAnchorQueryMap& anchor_queries,
++                      const LayoutObject* implicit_anchor,
++                      const LayoutObject& containing_block,
++                      const WritingModeConverter& container_converter,
++                      WritingDirectionMode self_writing_direction,
++                      const PhysicalOffset& offset_to_padding_box,
++                      const PhysicalSize& available_size)
+       : query_object_(&query_object),
+         anchor_queries_(&anchor_queries),
+-        default_anchor_specifier_(default_anchor_specifier),
+         implicit_anchor_(implicit_anchor),
+         containing_block_(&containing_block),
+         container_converter_(container_converter),
+         self_writing_direction_(self_writing_direction),
+-        offset_to_padding_box_(offset_to_padding_box) {
++        containing_block_rect_(offset_to_padding_box, available_size) {
+     DCHECK(anchor_queries_);
+     DCHECK(containing_block_);
+   }
+ 
+-  // Returns true if this evaluator was invoked for `anchor()` or
+-  // `anchor-size()` functions.
+-  bool HasAnchorFunctions() const { return has_anchor_functions_; }
+-
+-  // This must be set before evaluating `anchor()` function.
+-  void SetAxis(bool is_y_axis,
+-               bool is_right_or_bottom,
+-               LayoutUnit available_size) {
+-    available_size_ = available_size;
+-    is_y_axis_ = is_y_axis;
+-    is_right_or_bottom_ = is_right_or_bottom;
 +  // Returns true if any anchor reference in the axis is in the same scroll
 +  // container as the default anchor, in which case we need scroll adjustment in
 +  // the axis after layout.
@@ -47,55 +172,130 @@ index bfd086b8ffce49d4f378503d4578e55ace9ce554..9027d07b143d97646fcf04df9be13863
 +  }
 +  bool NeedsScrollAdjustmentInY() const {
 +    return needs_scroll_adjustment_in_y_;
-+  }
-+
-   // This must be set before evaluating `anchor()` function.
-   void SetAxis(bool is_y_axis,
-                bool is_right_or_bottom,
-@@ -324,10 +324,17 @@ class CORE_EXPORT NGAnchorEvaluatorImpl : public Length::AnchorEvaluator {
-   absl::optional<LayoutUnit> Evaluate(
-       const CalculationExpressionNode&) const override;
+   }
  
-+  // Finds the rect of the element referenced by the `position-fallback-bounds`
-+  // property, or nullopt if there's no such element.
-+  absl::optional<LogicalRect> GetAdditionalFallbackBoundsRect() const;
+   // Evaluates the given anchor query. Returns nullopt if the query invalid
+   // (e.g., no target or wrong axis).
+   absl::optional<LayoutUnit> Evaluate(
+-      const CalculationExpressionNode&) const override;
++      const class AnchorQuery&,
++      const ScopedCSSName* position_anchor,
++      const absl::optional<InsetAreaOffsets>&) override;
 +
-+  bool HasDefaultAnchor() const { return DefaultAnchor() != nullptr; }
++  absl::optional<InsetAreaOffsets> ComputeInsetAreaOffsetsForLayout(
++      const ScopedCSSName* position_anchor,
++      InsetArea inset_area) override;
 +
++  absl::optional<PhysicalOffset> ComputeAnchorCenterOffsets(
++      const ComputedStyleBuilder&) override;
+ 
   private:
    const NGLogicalAnchorQuery* AnchorQuery() const;
    const NGLogicalAnchorReference* ResolveAnchorReference(
-       const AnchorSpecifierValue& anchor_specifier) const;
-+  bool ShouldUseScrollAdjustmentFor(const LayoutObject* anchor) const;
+-      const AnchorSpecifierValue& anchor_specifier) const;
++      const AnchorSpecifierValue& anchor_specifier,
++      const ScopedCSSName* position_anchor) const;
++  bool ShouldUseScrollAdjustmentFor(const LayoutObject* anchor,
++                                    const ScopedCSSName* position_anchor) const;
  
    absl::optional<LayoutUnit> EvaluateAnchor(
        const AnchorSpecifierValue& anchor_specifier,
-@@ -337,6 +344,9 @@ class CORE_EXPORT NGAnchorEvaluatorImpl : public Length::AnchorEvaluator {
+       CSSAnchorValue anchor_value,
+-      float percentage) const;
++      float percentage,
++      const ScopedCSSName* position_anchor,
++      const absl::optional<InsetAreaOffsets>&) const;
+   absl::optional<LayoutUnit> EvaluateAnchorSize(
        const AnchorSpecifierValue& anchor_specifier,
-       CSSAnchorSizeValue anchor_size_value) const;
- 
-+  const LayoutObject* DefaultAnchor() const;
-+  const PaintLayer* DefaultAnchorScrollContainerLayer() const;
+-      CSSAnchorSizeValue anchor_size_value) const;
++      CSSAnchorSizeValue anchor_size_value,
++      const ScopedCSSName* position_anchor) const;
 +
++  const LayoutObject* DefaultAnchor(const ScopedCSSName* position_anchor) const;
++  const PaintLayer* DefaultAnchorScrollContainerLayer(
++      const ScopedCSSName* position_anchor) const;
++
++  bool AllowAnchor() const;
++  bool AllowAnchorSize() const;
++  bool IsYAxis() const;
++  bool IsRightOrBottom() const;
++
++  LayoutUnit AvailableSizeAlongAxis(
++      const PhysicalRect& inset_area_modified_containing_block_rect) const {
++    return IsYAxis() ? inset_area_modified_containing_block_rect.Height()
++                     : inset_area_modified_containing_block_rect.Width();
++  }
++
++  // Returns the containing block, further constrained by the inset-area.
++  // Not to be confused with the inset-modified containing block.
++  PhysicalRect InsetAreaModifiedContainingBlock(
++      const absl::optional<InsetAreaOffsets>&) const;
+ 
    const LayoutObject* query_object_ = nullptr;
    mutable const NGLogicalAnchorQuery* anchor_query_ = nullptr;
    const NGLogicalAnchorQueryMap* anchor_queries_ = nullptr;
-@@ -347,11 +357,20 @@ class CORE_EXPORT NGAnchorEvaluatorImpl : public Length::AnchorEvaluator {
+-  const ScopedCSSName* default_anchor_specifier_ = nullptr;
+   const LayoutObject* implicit_anchor_ = nullptr;
+   const LayoutObject* containing_block_ = nullptr;
+   const WritingModeConverter container_converter_{
        {WritingMode::kHorizontalTb, TextDirection::kLtr}};
    WritingDirectionMode self_writing_direction_{WritingMode::kHorizontalTb,
                                                 TextDirection::kLtr};
+-  PhysicalOffset offset_to_padding_box_;
+-  LayoutUnit available_size_;
+-  bool is_y_axis_ = false;
+-  bool is_right_or_bottom_ = false;
+-  mutable bool has_anchor_functions_ = false;
 +
-   PhysicalOffset offset_to_padding_box_;
-   LayoutUnit available_size_;
++  // Either width or height will be used, depending on IsYAxis().
++  PhysicalRect containing_block_rect_;
 +
-+  // These fields will be populated during `anchor()` evaluation if needed.
-+  mutable absl::optional<const LayoutObject*> default_anchor_;
-+  mutable absl::optional<const PaintLayer*>
-+      default_anchor_scroll_container_layer_;
++  // A single-value cache. If a call to Get has the same key as the last call,
++  // then the cached result it returned. Otherwise, the value is created using
++  // CreationFunc, then returned.
++  template <typename KeyType, typename ValueType>
++  class CachedValue {
++    STACK_ALLOCATED();
 +
-   bool is_y_axis_ = false;
-   bool is_right_or_bottom_ = false;
-   mutable bool has_anchor_functions_ = false;
++    template <typename T>
++    static bool Equals(const T* a, const T* b) {
++      return base::ValuesEquivalent(a, b);
++    }
++
++    template <typename T>
++    static bool Equals(const T& a, const T& b) {
++      return a == b;
++    }
++
++   public:
++    template <typename CreationFunc>
++    ValueType Get(KeyType key, CreationFunc create) {
++      if (value_.has_value() && Equals(key_, key)) {
++        DCHECK_EQ(value_.value(), create());
++        return value_.value();
++      }
++      key_ = key;
++      value_ = create();
++      return value_.value();
++    }
++
++   private:
++    KeyType key_{};
++    absl::optional<ValueType> value_;
++  };
++
++  // Caches most recent result of InsetAreaModifiedContainingBlock.
++  mutable CachedValue<absl::optional<InsetAreaOffsets>, PhysicalRect>
++      cached_inset_area_modified_containing_block_;
++
++  // Caches most recent result of DefaultAnchor.
++  mutable CachedValue<const ScopedCSSName*, const LayoutObject*>
++      cached_default_anchor_;
++
++  // Caches most recent result of DefaultAnchorScrollContainerLayer.
++  mutable CachedValue<const ScopedCSSName*, const PaintLayer*>
++      cached_default_anchor_scroll_container_layer_;
++
 +  mutable bool needs_scroll_adjustment_in_x_ = false;
 +  mutable bool needs_scroll_adjustment_in_y_ = false;
  };

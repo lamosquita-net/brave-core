@@ -1,8 +1,46 @@
 diff --git a/third_party/blink/public/devtools_protocol/browser_protocol.pdl b/third_party/blink/public/devtools_protocol/browser_protocol.pdl
-index 447fe0c29cc2716bf06f6efb6fff934cd6485a3d..2cfa86af16ac3be04d57b80ee241ad289b4dccb1 100644
+index 447fe0c29cc2716bf06f6efb6fff934cd6485a3d..385d456ed671a8aefe2e3ff7c4c1eb94cbca55a8 100644
 --- a/third_party/blink/public/devtools_protocol/browser_protocol.pdl
 +++ b/third_party/blink/public/devtools_protocol/browser_protocol.pdl
-@@ -2358,6 +2358,9 @@ domain DOM
+@@ -1797,12 +1797,25 @@ experimental domain CSS
+       CSSStyle style
+ 
+   # CSS position-fallback rule representation.
+-  type CSSPositionFallbackRule extends object
++  deprecated type CSSPositionFallbackRule extends object
+     properties
+       Value name
+       # List of keyframes.
+       array of CSSTryRule tryRules
+ 
++  # CSS @position-try rule representation.
++  type CSSPositionTryRule extends object
++    properties
++      # The prelude dashed-ident name
++      Value name
++      # The css style sheet identifier (absent for user agent stylesheet and user-specified
++      # stylesheet rules) this rule came from.
++      optional StyleSheetId styleSheetId
++      # Parent stylesheet's origin.
++      StyleSheetOrigin origin
++      # Associated style declaration.
++      CSSStyle style
++
+   # CSS keyframes rule representation.
+   type CSSKeyframesRule extends object
+     properties
+@@ -1937,7 +1950,9 @@ experimental domain CSS
+       # A list of CSS keyframed animations matching this node.
+       optional array of CSSKeyframesRule cssKeyframesRules
+       # A list of CSS position fallbacks matching this node.
+-      optional array of CSSPositionFallbackRule cssPositionFallbackRules
++      deprecated optional array of CSSPositionFallbackRule cssPositionFallbackRules
++      # A list of CSS @position-try rules matching this node, based on the position-try-options property.
++      optional array of CSSPositionTryRule cssPositionTryRules
+       # Id of the first parent element that does not have display: contents.
+       experimental optional DOM.NodeId parentLayoutNodeId
+ 
+@@ -2358,6 +2373,9 @@ domain DOM
        view-transition-image-pair
        view-transition-old
        view-transition-new
@@ -12,7 +50,7 @@ index 447fe0c29cc2716bf06f6efb6fff934cd6485a3d..2cfa86af16ac3be04d57b80ee241ad28
  
    # Shadow root type.
    type ShadowRootType extends string
-@@ -7360,6 +7363,7 @@ domain Page
+@@ -7360,6 +7378,7 @@ domain Page
        private-aggregation
        private-state-token-issuance
        private-state-token-redemption

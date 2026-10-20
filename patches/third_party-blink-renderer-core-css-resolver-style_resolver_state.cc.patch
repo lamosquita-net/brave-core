@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_resolver_state.cc b/third_party/blink/renderer/core/css/resolver/style_resolver_state.cc
-index 4f705332cca6fc4605a3d0ea91813df84f0d9566..d5f58cad209735667381c31acd08dfc06a6b5dc3 100644
+index 4f705332cca6fc4605a3d0ea91813df84f0d9566..3a03be658ad466ad1c127d6a3561361d7707d53c 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_resolver_state.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_resolver_state.cc
 @@ -24,6 +24,7 @@
@@ -19,7 +19,7 @@ index 4f705332cca6fc4605a3d0ea91813df84f0d9566..d5f58cad209735667381c31acd08dfc0
          style_request.pseudo_id, style_request.pseudo_argument);
    }
    return styled_element;
-@@ -70,14 +71,18 @@ StyleResolverState::StyleResolverState(
+@@ -70,9 +71,14 @@ StyleResolverState::StyleResolverState(
        element_type_(style_request.IsPseudoStyleRequest()
                          ? ElementType::kPseudoElement
                          : ElementType::kElement),
@@ -31,14 +31,62 @@ index 4f705332cca6fc4605a3d0ea91813df84f0d9566..d5f58cad209735667381c31acd08dfc0
 +              ? style_recalc_context->container
 +              : ContainerQueryEvaluator::ParentContainerCandidateElement(
 +                    element)),
++      anchor_evaluator_(style_recalc_context
++                            ? style_recalc_context->anchor_evaluator
++                            : nullptr),
        originating_element_style_(style_request.originating_element_style),
        is_for_highlight_(IsHighlightPseudoElement(style_request.pseudo_id)),
        uses_highlight_pseudo_inheritance_(
-           ::blink::UsesHighlightPseudoInheritance(style_request.pseudo_id)),
--      can_trigger_animations_(style_request.can_trigger_animations) {
-+      can_trigger_animations_(style_request.can_trigger_animations),
-+      is_resolving_position_fallback_style_(
-+          style_recalc_context && style_recalc_context->is_position_fallback) {
-   DCHECK(!!parent_style_ == !!layout_parent_style_);
+@@ -122,6 +128,9 @@ void StyleResolverState::UpdateLengthConversionData() {
+       *style_builder_, ParentStyle(), RootElementStyle(),
+       GetDocument().GetStyleEngine().GetViewportSize(),
+       CSSToLengthConversionData::ContainerSizes(container_unit_context_),
++      CSSToLengthConversionData::AnchorData(anchor_evaluator_,
++                                            StyleBuilder().PositionAnchor(),
++                                            StyleBuilder().InsetAreaOffsets()),
+       StyleBuilder().EffectiveZoom(), length_conversion_flags_);
+   element_style_resources_.UpdateLengthConversionData(
+       &css_to_length_conversion_data_);
+@@ -140,10 +149,12 @@ CSSToLengthConversionData StyleResolverState::UnzoomedLengthConversionData(
+       GetDocument().GetLayoutView());
+   CSSToLengthConversionData::ContainerSizes container_sizes(
+       container_unit_context_);
+-
++  CSSToLengthConversionData::AnchorData anchor_data(
++      anchor_evaluator_, StyleBuilder().PositionAnchor(),
++      StyleBuilder().InsetAreaOffsets());
+   return CSSToLengthConversionData(
+       StyleBuilder().GetWritingMode(), font_sizes, line_height_size,
+-      viewport_size, container_sizes, 1, length_conversion_flags_);
++      viewport_size, container_sizes, anchor_data, 1, length_conversion_flags_);
+ }
  
-   if (UsesHighlightPseudoInheritance()) {
+ CSSToLengthConversionData StyleResolverState::FontSizeConversionData() {
+@@ -226,6 +237,27 @@ void StyleResolverState::SetTextOrientation(ETextOrientation text_orientation) {
+   }
+ }
+ 
++void StyleResolverState::SetPositionAnchor(ScopedCSSName* position_anchor) {
++  if (StyleBuilder().PositionAnchor() != position_anchor) {
++    StyleBuilder().SetPositionAnchor(position_anchor);
++    css_to_length_conversion_data_.SetAnchorData(
++        CSSToLengthConversionData::AnchorData(
++            anchor_evaluator_, position_anchor,
++            StyleBuilder().InsetAreaOffsets()));
++  }
++}
++
++void StyleResolverState::SetInsetAreaOffsets(
++    const absl::optional<InsetAreaOffsets>& inset_area_offsets) {
++  if (StyleBuilder().InsetAreaOffsets() != inset_area_offsets) {
++    StyleBuilder().SetInsetAreaOffsets(inset_area_offsets);
++    css_to_length_conversion_data_.SetAnchorData(
++        CSSToLengthConversionData::AnchorData(anchor_evaluator_,
++                                              StyleBuilder().PositionAnchor(),
++                                              inset_area_offsets));
++  }
++}
++
+ CSSParserMode StyleResolverState::GetParserMode() const {
+   return GetDocument().InQuirksMode() ? kHTMLQuirksMode : kHTMLStandardMode;
+ }

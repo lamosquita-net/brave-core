@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/svg/layout_ng_svg_foreign_object.cc b/third_party/blink/renderer/core/layout/ng/svg/layout_ng_svg_foreign_object.cc
-index 2e51470f629554cedfe56762f762f5ac5a85a622..81e5ac173156ecc94b096c563681885acf350191 100644
+index 2e51470f629554cedfe56762f762f5ac5a85a622..0c5f350bd67575650f6f020986ba200456fbdd8c 100644
 --- a/third_party/blink/renderer/core/layout/ng/svg/layout_ng_svg_foreign_object.cc
 +++ b/third_party/blink/renderer/core/layout/ng/svg/layout_ng_svg_foreign_object.cc
 @@ -50,6 +50,11 @@ gfx::RectF LayoutNGSVGForeignObject::ObjectBoundingBox() const {
@@ -25,4 +25,13 @@ index 2e51470f629554cedfe56762f762f5ac5a85a622..81e5ac173156ecc94b096c563681885a
 +  UpdateTransformBeforeLayout();
  
    LayoutRect old_frame_rect = FrameRect();
+ 
+@@ -114,7 +116,7 @@ void LayoutNGSVGForeignObject::UpdateLayout() {
+   gfx::Vector2dF origin =
+       length_context.ResolveLengthPair(style.X(), style.Y(), style);
+   gfx::Vector2dF size = length_context.ResolveLengthPair(
+-      style.UsedWidth(), style.UsedHeight(), style);
++      style.Width(), style.Height(), style);
+   // SetRect() will clamp negative width/height to zero.
+   viewport_.SetRect(origin.x(), origin.y(), size.x(), size.y());
  

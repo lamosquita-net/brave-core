@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style.h b/third_party/blink/renderer/core/style/computed_style.h
-index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..318a90c7fea9a2e26bb63de8b2cc06785bfa7acd 100644
+index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..97ec8fd21e630330d503aafe88f3d15df2ccb359 100644
 --- a/third_party/blink/renderer/core/style/computed_style.h
 +++ b/third_party/blink/renderer/core/style/computed_style.h
 @@ -44,7 +44,7 @@
@@ -27,7 +27,20 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..318a90c7fea9a2e26bb63de8b2cc0678
    StyleSelfAlignmentData ResolvedJustifySelf(
        ItemPosition normal_value_behaviour,
        const ComputedStyle* parent_style = nullptr) const;
-@@ -513,11 +509,6 @@ class ComputedStyle : public ComputedStyleBase,
+@@ -503,9 +499,9 @@ class ComputedStyle : public ComputedStyleBase,
+    * class, and be kept to a minimum.
+    */
+ 
+-  // anchor-default
+-  bool AnchorDefaultDataEquivalent(const ComputedStyle& o) const {
+-    return base::ValuesEquivalent(AnchorDefault(), o.AnchorDefault());
++  // position-anchor
++  bool PositionAnchorDataEquivalent(const ComputedStyle& o) const {
++    return base::ValuesEquivalent(PositionAnchor(), o.PositionAnchor());
+   }
+ 
+   // anchor-name
+@@ -513,15 +509,21 @@ class ComputedStyle : public ComputedStyleBase,
      return base::ValuesEquivalent(AnchorName(), o.AnchorName());
    }
  
@@ -39,7 +52,33 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..318a90c7fea9a2e26bb63de8b2cc0678
    const FilterOperations& BackdropFilter() const {
      DCHECK(BackdropFilterInternal().Get());
      return BackdropFilterInternal()->operations_;
-@@ -733,11 +724,16 @@ class ComputedStyle : public ComputedStyleBase,
+   }
++  // Regular (non-interleaved) style resolutions happen without an
++  // AnchorEvaluator, which means any anchor*() function will use
++  // the fallback. Since anchor*() functions resolve computed-value time,
++  // we can't distinguish e.g. left:10px and left:anchor(--a right,10px) during
++  // ComputedStyle diffing if the anchor() was evaluated with a null-
++  // AnchorEvaluator, yet we need to invalidate layout in this situation
++  // to enter interleaved style recalc with the *real* AnchorEvaluator.
++  bool HasAnchorFunctionsWithoutEvaluator() const {
++    return HasAnchorFunctions() && !HasAnchorEvaluator();
++  }
++
+   // For containing blocks, use |HasNonInitialBackdropFilter()| which includes
+   // will-change: backdrop-filter.
+   static bool HasBackdropFilter(const StyleFilterData* backdrop_filter) {
+@@ -566,9 +568,7 @@ class ComputedStyle : public ComputedStyleBase,
+ 
+   // Returns true if the Element should stick to the viewport bottom as the URL
+   // bar hides.
+-  bool IsFixedToBottom() const {
+-    return !UsedBottom().IsAuto() && UsedTop().IsAuto();
+-  }
++  bool IsFixedToBottom() const { return !Bottom().IsAuto() && Top().IsAuto(); }
+ 
+   // Border properties.
+   // border-image-slice
+@@ -733,11 +733,16 @@ class ComputedStyle : public ComputedStyleBase,
      return ScrollbarGutter() & kScrollbarGutterBothEdges;
    }
  
@@ -59,7 +98,7 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..318a90c7fea9a2e26bb63de8b2cc0678
    }
  
    // shape-outside (aka -webkit-shape-outside)
-@@ -918,9 +914,6 @@ class ComputedStyle : public ComputedStyleBase,
+@@ -918,9 +923,6 @@ class ComputedStyle : public ComputedStyleBase,
      return MarkerStartResource() || MarkerMidResource() || MarkerEndResource();
    }
  
@@ -69,7 +108,7 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..318a90c7fea9a2e26bb63de8b2cc0678
    // stroke helpers
    bool HasStroke() const { return !StrokePaint().IsNone(); }
    bool HasVisibleStroke() const {
-@@ -937,6 +930,11 @@ class ComputedStyle : public ComputedStyleBase,
+@@ -937,6 +939,11 @@ class ComputedStyle : public ComputedStyleBase,
    // An empty optional means the accent-color is 'auto'
    absl::optional<blink::Color> AccentColorResolved() const;
  
@@ -81,36 +120,144 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..318a90c7fea9a2e26bb63de8b2cc0678
    // Comparison operators
    // FIXME: Replace callers of operator== wth a named method instead, e.g.
    // inheritedEquals().
-@@ -1668,25 +1666,19 @@ class ComputedStyle : public ComputedStyleBase,
+@@ -1175,71 +1182,23 @@ class ComputedStyle : public ComputedStyleBase,
+   CORE_EXPORT LayoutUnit ComputedLineHeightAsFixed() const;
+   LayoutUnit ComputedLineHeightAsFixed(const Font& font) const;
+ 
+-  const Length& AdjustLengthForAnchorQueries(
+-      const Length& original_value,
+-      const Length& fallback_value) const {
+-    if (LIKELY(!original_value.HasAnchorQueries())) {
+-      return original_value;
+-    }
+-    return HasOutOfFlowPosition() ? original_value : fallback_value;
+-  }
+-
+-  // Inset utility functions.
+-  const Length& UsedLeft() const {
+-    return AdjustLengthForAnchorQueries(Left(), Length::Auto());
+-  }
+-  const Length& UsedRight() const {
+-    return AdjustLengthForAnchorQueries(Right(), Length::Auto());
+-  }
+-  const Length& UsedTop() const {
+-    return AdjustLengthForAnchorQueries(Top(), Length::Auto());
+-  }
+-  const Length& UsedBottom() const {
+-    return AdjustLengthForAnchorQueries(Bottom(), Length::Auto());
+-  }
+-  bool HasAutoAnchorPositioning() const {
+-    return UsedLeft().HasAutoAnchorPositioning() ||
+-           UsedRight().HasAutoAnchorPositioning() ||
+-           UsedTop().HasAutoAnchorPositioning() ||
+-           UsedBottom().HasAutoAnchorPositioning();
+-  }
+-
+-  // Width/height utility functions.
+-  const Length& UsedWidth() const {
+-    return AdjustLengthForAnchorQueries(Width(), Length::Auto());
+-  }
+-  const Length& UsedHeight() const {
+-    return AdjustLengthForAnchorQueries(Height(), Length::Auto());
+-  }
+-  const Length& UsedMinWidth() const {
+-    return AdjustLengthForAnchorQueries(MinWidth(), Length::Auto());
+-  }
+-  const Length& UsedMinHeight() const {
+-    return AdjustLengthForAnchorQueries(MinHeight(), Length::Auto());
+-  }
+-  const Length& UsedMaxWidth() const {
+-    return AdjustLengthForAnchorQueries(MaxWidth(), Length::None());
+-  }
+-  const Length& UsedMaxHeight() const {
+-    return AdjustLengthForAnchorQueries(MaxHeight(), Length::None());
+-  }
+   const Length& LogicalWidth() const {
+-    return IsHorizontalWritingMode() ? UsedWidth() : UsedHeight();
++    return IsHorizontalWritingMode() ? Width() : Height();
+   }
+   const Length& LogicalHeight() const {
+-    return IsHorizontalWritingMode() ? UsedHeight() : UsedWidth();
++    return IsHorizontalWritingMode() ? Height() : Width();
+   }
+   const Length& LogicalMaxWidth() const {
+-    return IsHorizontalWritingMode() ? UsedMaxWidth() : UsedMaxHeight();
++    return IsHorizontalWritingMode() ? MaxWidth() : MaxHeight();
+   }
+   const Length& LogicalMaxHeight() const {
+-    return IsHorizontalWritingMode() ? UsedMaxHeight() : UsedMaxWidth();
++    return IsHorizontalWritingMode() ? MaxHeight() : MaxWidth();
+   }
+   const Length& LogicalMinWidth() const {
+-    return IsHorizontalWritingMode() ? UsedMinWidth() : UsedMinHeight();
++    return IsHorizontalWritingMode() ? MinWidth() : MinHeight();
+   }
+   const Length& LogicalMinHeight() const {
+-    return IsHorizontalWritingMode() ? UsedMinHeight() : UsedMinWidth();
++    return IsHorizontalWritingMode() ? MinHeight() : MinWidth();
+   }
+ 
+   // Margin utility functions.
+@@ -1606,8 +1565,8 @@ class ComputedStyle : public ComputedStyleBase,
+   }
+   bool HasStickyConstrainedPosition() const {
+     return GetPosition() == EPosition::kSticky &&
+-           (!UsedTop().IsAuto() || !UsedLeft().IsAuto() ||
+-            !UsedRight().IsAuto() || !UsedBottom().IsAuto());
++           (!Top().IsAuto() || !Left().IsAuto() || !Right().IsAuto() ||
++            !Bottom().IsAuto());
+   }
+   static EPosition GetPosition(EDisplay display, EPosition position_internal) {
+     // Applied sticky position is static for table columns and column groups.
+@@ -1668,24 +1627,36 @@ class ComputedStyle : public ComputedStyleBase,
    const Length& LogicalBottom() const {
      return PhysicalBoundsToLogical().After();
    }
 -  bool OffsetEqual(const ComputedStyle& other) const {
+-    return UsedLeft() == other.UsedLeft() && UsedRight() == other.UsedRight() &&
+-           UsedTop() == other.UsedTop() && UsedBottom() == other.UsedBottom();
 +  bool InsetsEqual(const ComputedStyle& other) const {
-     return UsedLeft() == other.UsedLeft() && UsedRight() == other.UsedRight() &&
-            UsedTop() == other.UsedTop() && UsedBottom() == other.UsedBottom();
++    return Left() == other.Left() && Right() == other.Right() &&
++           Top() == other.Top() && Bottom() == other.Bottom();
    }
  
    // Whether or not a positioned element requires normal flow x/y to be computed
    // to determine its position.
 -  bool HasAutoLeftAndRight() const {
+-    return UsedLeft().IsAuto() && UsedRight().IsAuto();
 +  bool HasAutoLeftAndRightIgnoringInsetArea() const {
-     return UsedLeft().IsAuto() && UsedRight().IsAuto();
++    return Left().IsAuto() && Right().IsAuto();
++  }
++  bool HasAutoTopAndBottomIgnoringInsetArea() const {
++    return Top().IsAuto() && Bottom().IsAuto();
++  }
++
++  // Whether an inset is considered 'auto' for anchor-positioning position
++  // fallback calculation purposes.
++  // https://drafts.csswg.org/css-anchor-position-1/#determine-the-position-fallback-styles
++  bool IsTopInsetNonAuto() const {
++    return !Top().IsAuto() || (InsetAreaOffsets() && InsetAreaOffsets()->top);
    }
 -  bool HasAutoTopAndBottom() const {
-+  bool HasAutoTopAndBottomIgnoringInsetArea() const {
-     return UsedTop().IsAuto() && UsedBottom().IsAuto();
+-    return UsedTop().IsAuto() && UsedBottom().IsAuto();
++  bool IsRightInsetNonAuto() const {
++    return !Right().IsAuto() ||
++           (InsetAreaOffsets() && InsetAreaOffsets()->right);
    }
 -  bool HasStaticInlinePosition(bool horizontal) const {
 -    return horizontal ? HasAutoLeftAndRight() : HasAutoTopAndBottom();
--  }
++  bool IsBottomInsetNonAuto() const {
++    return !Bottom().IsAuto() ||
++           (InsetAreaOffsets() && InsetAreaOffsets()->bottom);
+   }
 -  bool HasStaticBlockPosition(bool horizontal) const {
 -    return horizontal ? HasAutoTopAndBottom() : HasAutoLeftAndRight();
--  }
++  bool IsLeftInsetNonAuto() const {
++    return !Left().IsAuto() || (InsetAreaOffsets() && InsetAreaOffsets()->left);
+   }
  
    // Content utility functions.
-   bool ContentDataEquivalent(const ComputedStyle& other) const {
-@@ -1714,12 +1706,16 @@ class ComputedStyle : public ComputedStyleBase,
+@@ -1714,12 +1685,16 @@ class ComputedStyle : public ComputedStyleBase,
  
      if (container_type & kContainerTypeInlineSize) {
        effective |= kContainsStyle;
@@ -129,7 +276,7 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..318a90c7fea9a2e26bb63de8b2cc0678
        effective |= kContainsBlockSize;
      }
      if (!IsContentVisibilityVisible(content_visibility, toggle_visibility)) {
-@@ -1837,6 +1833,21 @@ class ComputedStyle : public ComputedStyleBase,
+@@ -1837,6 +1812,21 @@ class ComputedStyle : public ComputedStyleBase,
             (Display() == EDisplay::kContents && IsInBlockifyingDisplay());
    }
  
@@ -151,7 +298,7 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..318a90c7fea9a2e26bb63de8b2cc0678
    // Return true if an element with this computed style requires LayoutNG
    // (i.e. has no legacy layout implementation).
    bool DisplayTypeRequiresLayoutNG() const {
-@@ -2161,14 +2172,14 @@ class ComputedStyle : public ComputedStyleBase,
+@@ -2161,14 +2151,14 @@ class ComputedStyle : public ComputedStyleBase,
    };
    void ApplyTransform(gfx::Transform&,
                        const LayoutBox* box,
@@ -168,7 +315,7 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..318a90c7fea9a2e26bb63de8b2cc0678
                        ApplyTransformOperations,
                        ApplyTransformOrigin,
                        ApplyMotionPath,
-@@ -2325,7 +2336,7 @@ class ComputedStyle : public ComputedStyleBase,
+@@ -2325,7 +2315,7 @@ class ComputedStyle : public ComputedStyleBase,
    // `white-space` property may become a shorthand in future.
    // https://drafts.csswg.org/css-text-4/#white-space-property
    static bool DeprecatedAutoWrap(EWhiteSpace ws) {
@@ -177,7 +324,7 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..318a90c7fea9a2e26bb63de8b2cc0678
    }
    static bool DeprecatedPreserveNewline(EWhiteSpace ws) {
      return blink::ShouldPreserveBreaks(ToWhiteSpaceCollapse(ws));
-@@ -2337,7 +2348,7 @@ class ComputedStyle : public ComputedStyleBase,
+@@ -2337,7 +2327,7 @@ class ComputedStyle : public ComputedStyleBase,
    // This function may return values not defined as the enum values. See
    // `EWhiteSpace`. Prefer using semantic functions below.
    EWhiteSpace WhiteSpace() const {
@@ -186,7 +333,7 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..318a90c7fea9a2e26bb63de8b2cc0678
    }
  
    // Semantic functions for the `white-space` property and its longhands.
-@@ -2364,7 +2375,12 @@ class ComputedStyle : public ComputedStyleBase,
+@@ -2364,7 +2354,12 @@ class ComputedStyle : public ComputedStyleBase,
      return false;
    }
  
@@ -200,7 +347,7 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..318a90c7fea9a2e26bb63de8b2cc0678
    bool ShouldBreakSpaces() const {
      return blink::ShouldBreakSpaces(GetWhiteSpaceCollapse());
    }
-@@ -2434,6 +2450,14 @@ class ComputedStyle : public ComputedStyleBase,
+@@ -2434,6 +2429,14 @@ class ComputedStyle : public ComputedStyleBase,
        const Longhand& color_property,
        bool* is_current_color = nullptr) const;
  
@@ -215,7 +362,7 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..318a90c7fea9a2e26bb63de8b2cc0678
    // A faster version of VisitedDependentColor() that specializes on the
    // concrete property class; for the common case of not being inside a link,
    // can inline the question in function directly. However, it uses more code
-@@ -2552,6 +2576,11 @@ class ComputedStyle : public ComputedStyleBase,
+@@ -2552,6 +2555,16 @@ class ComputedStyle : public ComputedStyleBase,
              OverflowClipMargin()->GetMargin() != LayoutUnit());
    }
  
@@ -224,10 +371,15 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..318a90c7fea9a2e26bb63de8b2cc0678
 +  // autofilled.
 +  bool ApplyControlFixedSize(const Node* node) const;
 +
++  bool HasPositionVisibility(PositionVisibility visibility) const {
++    return (static_cast<int>(GetPositionVisibility()) &
++            static_cast<int>(visibility)) == static_cast<int>(visibility);
++  }
++
   private:
    bool IsInlineSizeContainer() const {
      return ContainerType() & kContainerTypeInlineSize;
-@@ -2573,6 +2602,7 @@ class ComputedStyle : public ComputedStyleBase,
+@@ -2573,6 +2586,7 @@ class ComputedStyle : public ComputedStyleBase,
      return display == EDisplay::kBlock || display == EDisplay::kListItem ||
             display == EDisplay::kInlineBlock ||
             display == EDisplay::kFlowRoot ||
@@ -235,7 +387,7 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..318a90c7fea9a2e26bb63de8b2cc0678
             display == EDisplay::kInlineFlowRootListItem ||
             display == EDisplay::kTableCell ||
             display == EDisplay::kTableCaption;
-@@ -2611,7 +2641,7 @@ class ComputedStyle : public ComputedStyleBase,
+@@ -2611,7 +2625,7 @@ class ComputedStyle : public ComputedStyleBase,
  
    static bool IsDisplayInlineType(EDisplay display) {
      return display == EDisplay::kInline ||
@@ -244,7 +396,7 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..318a90c7fea9a2e26bb63de8b2cc0678
             IsDisplayReplacedType(display);
    }
  
-@@ -2713,6 +2743,10 @@ class ComputedStyle : public ComputedStyleBase,
+@@ -2713,6 +2727,10 @@ class ComputedStyle : public ComputedStyleBase,
    blink::Color GetInternalForcedVisitedCurrentColor(
        bool* is_current_color = nullptr) const;
  
@@ -255,7 +407,19 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..318a90c7fea9a2e26bb63de8b2cc0678
    // Helper for resolving a StyleColor which may contain currentColor or a
    // system color keyword. This is intended for cases where a given property
    // consists of a StyleColor plus additional information. For <color>
-@@ -3060,6 +3094,7 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+@@ -2756,9 +2774,8 @@ class ComputedStyle : public ComputedStyleBase,
+   }
+ 
+   PhysicalToLogical<const Length&> PhysicalBoundsToLogical() const {
+-    return PhysicalToLogical<const Length&>(GetWritingDirection(), UsedTop(),
+-                                            UsedRight(), UsedBottom(),
+-                                            UsedLeft());
++    return PhysicalToLogical<const Length&>(GetWritingDirection(), Top(),
++                                            Right(), Bottom(), Left());
+   }
+ 
+   static Difference ComputeDifferenceIgnoringInheritedFirstLineStyle(
+@@ -3060,6 +3077,7 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
      SetHasClipPath(clip_path.get());
      SetClipPathInternal(std::move(clip_path));
    }
@@ -263,7 +427,28 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..318a90c7fea9a2e26bb63de8b2cc0678
  
    // color
    blink::Color GetCurrentColor() const {
-@@ -3570,7 +3605,7 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+@@ -3226,20 +3244,6 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+            ComputedStyleInitialValues::InitialLineHeight();
+   }
+ 
+-  // Sizing properties
+-  const Length& UsedWidth() const {
+-    if (LIKELY(!Width().HasAnchorQueries())) {
+-      return Width();
+-    }
+-    return HasOutOfFlowPosition() ? Width() : Length::Auto();
+-  }
+-  const Length& UsedHeight() const {
+-    if (LIKELY(!Height().HasAnchorQueries())) {
+-      return Height();
+-    }
+-    return HasOutOfFlowPosition() ? Height() : Length::Auto();
+-  }
+-
+   // margin-*
+   void SetMarginTop(const Length& v) {
+     if (MarginTop() != v) {
+@@ -3570,7 +3574,7 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
    EWhiteSpace WhiteSpace() const { return style_->WhiteSpace(); }
    void SetWhiteSpace(EWhiteSpace whitespace) {
      SetWhiteSpaceCollapse(ToWhiteSpaceCollapse(whitespace));
@@ -272,7 +457,7 @@ index 914c4e1cbf0292d6311739a896eaac9dd8ca2e0b..318a90c7fea9a2e26bb63de8b2cc0678
    }
  
    // WritingMode
-@@ -3587,6 +3622,17 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+@@ -3587,6 +3591,17 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
                           static_cast<unsigned>(ViewportUnitFlag::kDynamic));
    }
  

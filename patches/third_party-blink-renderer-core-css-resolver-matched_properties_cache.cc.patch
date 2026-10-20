@@ -1,15 +1,64 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/matched_properties_cache.cc b/third_party/blink/renderer/core/css/resolver/matched_properties_cache.cc
-index 15ac503b307689ad1de5c8dc601cd4a71b809385..a70a951e52f8e20a1790b5a49cb3bc6143b77208 100644
+index 15ac503b307689ad1de5c8dc601cd4a71b809385..055acdbd194b4d782673b5cc983113481ac6bd43 100644
 --- a/third_party/blink/renderer/core/css/resolver/matched_properties_cache.cc
 +++ b/third_party/blink/renderer/core/css/resolver/matched_properties_cache.cc
-@@ -176,6 +176,10 @@ bool CachedMatchedProperties::operator==(
+@@ -41,14 +41,8 @@ namespace blink {
+ 
+ static unsigned ComputeMatchedPropertiesHash(const MatchResult& result) {
+   const MatchedPropertiesVector& properties = result.GetMatchedProperties();
+-  unsigned hash = StringHasher::HashMemory(
++  return StringHasher::HashMemory(
+       properties.data(), sizeof(MatchedProperties) * properties.size());
+-  auto& tree_scopes = result.GetTreeScopes();
+-  WTF::AddIntToHash(hash,
+-                    StringHasher::HashMemory(
+-                        tree_scopes.data(),
+-                        sizeof(Member<const TreeScope>) * tree_scopes.size()));
+-  return hash;
+ }
+ 
+ void CachedMatchedProperties::Set(
+@@ -176,6 +170,10 @@ bool CachedMatchedProperties::operator==(
          matched_properties_types[i].is_inline_style) {
        return false;
      }
-+    if (properties[i].types_.is_fallback_style !=
-+        matched_properties_types[i].is_fallback_style) {
++    if (properties[i].types_.is_try_style !=
++        matched_properties_types[i].is_try_style) {
 +      return false;
 +    }
    }
    return true;
  }
+@@ -244,6 +242,11 @@ bool MatchedPropertiesCache::IsStyleCacheable(
+   if (builder.HasContainerRelativeUnits()) {
+     return false;
+   }
++  if (builder.HasAnchorFunctions()) {
++    // The result of anchor() and anchor-size() functions can depend on
++    // the 'anchor' attribute on the element.
++    return false;
++  }
+   // Avoiding cache for ::highlight styles, and the originating styles they are
+   // associated with, because the style depends on the highlight names involved
+   // and they're not cached.
+@@ -268,6 +271,20 @@ bool MatchedPropertiesCache::IsCacheable(const StyleResolverState& state) {
+     return false;
+   }
+ 
++  // Matched properties can be equal for style resolves from elements in
++  // different TreeScopes if StyleSheetContents is shared between stylesheets in
++  // different trees. In those cases ScopedCSSNames need to be constructed with
++  // the correct TreeScope and cannot be cached.
++  //
++  // We used to include TreeScope pointer hashes in the MPC key, but that
++  // didn't allow for MPC cache hits across instances of the same web component.
++  // That also caused an ever-growing cache because the TreeScopes were not
++  // handled in RemoveCachedMatchedPropertiesWithDeadEntries().
++  // See: https://crbug,com/1473836
++  if (state.HasTreeScopedReference()) {
++    return false;
++  }
++
+   // Do not cache computed styles for shadow root children which have a
+   // different UserModify value than its shadow host.
+   //

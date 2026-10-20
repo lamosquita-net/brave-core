@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/css_primitive_value_mappings.h b/third_party/blink/renderer/core/css/css_primitive_value_mappings.h
-index d8614b4af5e314e224d5e76e3841851a8f1a17c9..fe888e46bf897c13b5217df9deed10cee5f24edd 100644
+index d8614b4af5e314e224d5e76e3841851a8f1a17c9..2add241be4fbc619053ecbe2da001a39ab4d5188 100644
 --- a/third_party/blink/renderer/core/css/css_primitive_value_mappings.h
 +++ b/third_party/blink/renderer/core/css/css_primitive_value_mappings.h
 @@ -44,11 +44,11 @@
@@ -324,7 +324,7 @@ index d8614b4af5e314e224d5e76e3841851a8f1a17c9..fe888e46bf897c13b5217df9deed10ce
  template <>
  inline TextUnderlinePosition CSSIdentifierValue::ConvertTo() const {
    switch (GetValueID()) {
-@@ -1969,6 +2105,117 @@ inline EScrollStartTarget CSSIdentifierValue::ConvertTo() const {
+@@ -1969,6 +2105,190 @@ inline EScrollStartTarget CSSIdentifierValue::ConvertTo() const {
    };
  }
  
@@ -336,7 +336,7 @@ index d8614b4af5e314e224d5e76e3841851a8f1a17c9..fe888e46bf897c13b5217df9deed10ce
 +      value_id_ = CSSValueID::kNone;
 +      break;
 +    case InsetAreaRegion::kAll:
-+      value_id_ = CSSValueID::kAll;
++      value_id_ = CSSValueID::kSpanAll;
 +      break;
 +    case InsetAreaRegion::kCenter:
 +      value_id_ = CSSValueID::kCenter;
@@ -352,6 +352,30 @@ index d8614b4af5e314e224d5e76e3841851a8f1a17c9..fe888e46bf897c13b5217df9deed10ce
 +      break;
 +    case InsetAreaRegion::kSelfEnd:
 +      value_id_ = CSSValueID::kSelfEnd;
++      break;
++    case InsetAreaRegion::kInlineStart:
++      value_id_ = CSSValueID::kInlineStart;
++      break;
++    case InsetAreaRegion::kInlineEnd:
++      value_id_ = CSSValueID::kInlineEnd;
++      break;
++    case InsetAreaRegion::kSelfInlineStart:
++      value_id_ = CSSValueID::kSelfInlineStart;
++      break;
++    case InsetAreaRegion::kSelfInlineEnd:
++      value_id_ = CSSValueID::kSelfInlineEnd;
++      break;
++    case InsetAreaRegion::kBlockStart:
++      value_id_ = CSSValueID::kBlockStart;
++      break;
++    case InsetAreaRegion::kBlockEnd:
++      value_id_ = CSSValueID::kBlockEnd;
++      break;
++    case InsetAreaRegion::kSelfBlockStart:
++      value_id_ = CSSValueID::kSelfBlockStart;
++      break;
++    case InsetAreaRegion::kSelfBlockEnd:
++      value_id_ = CSSValueID::kSelfBlockEnd;
 +      break;
 +    case InsetAreaRegion::kTop:
 +      value_id_ = CSSValueID::kTop;
@@ -397,7 +421,7 @@ index d8614b4af5e314e224d5e76e3841851a8f1a17c9..fe888e46bf897c13b5217df9deed10ce
 +  switch (GetValueID()) {
 +    case CSSValueID::kNone:
 +      return InsetAreaRegion::kNone;
-+    case CSSValueID::kAll:
++    case CSSValueID::kSpanAll:
 +      return InsetAreaRegion::kAll;
 +    case CSSValueID::kCenter:
 +      return InsetAreaRegion::kCenter;
@@ -409,6 +433,22 @@ index d8614b4af5e314e224d5e76e3841851a8f1a17c9..fe888e46bf897c13b5217df9deed10ce
 +      return InsetAreaRegion::kSelfStart;
 +    case CSSValueID::kSelfEnd:
 +      return InsetAreaRegion::kSelfEnd;
++    case CSSValueID::kInlineStart:
++      return InsetAreaRegion::kInlineStart;
++    case CSSValueID::kInlineEnd:
++      return InsetAreaRegion::kInlineEnd;
++    case CSSValueID::kSelfInlineStart:
++      return InsetAreaRegion::kSelfInlineStart;
++    case CSSValueID::kSelfInlineEnd:
++      return InsetAreaRegion::kSelfInlineEnd;
++    case CSSValueID::kBlockStart:
++      return InsetAreaRegion::kBlockStart;
++    case CSSValueID::kBlockEnd:
++      return InsetAreaRegion::kBlockEnd;
++    case CSSValueID::kSelfBlockStart:
++      return InsetAreaRegion::kSelfBlockStart;
++    case CSSValueID::kSelfBlockEnd:
++      return InsetAreaRegion::kSelfBlockEnd;
 +    case CSSValueID::kTop:
 +      return InsetAreaRegion::kTop;
 +    case CSSValueID::kBottom:
@@ -437,6 +477,39 @@ index d8614b4af5e314e224d5e76e3841851a8f1a17c9..fe888e46bf897c13b5217df9deed10ce
 +      NOTREACHED();
 +      return InsetAreaRegion::kNone;
 +  };
++}
++
++template <>
++inline CSSIdentifierValue::CSSIdentifierValue(PositionVisibility visibility)
++    : CSSValue(kIdentifierClass) {
++  switch (visibility) {
++    case PositionVisibility::kAlways:
++      value_id_ = CSSValueID::kAlways;
++      break;
++    // TODO(crbug.com/332933527): Support kAnchorsValid.
++    case PositionVisibility::kAnchorsVisible:
++      value_id_ = CSSValueID::kAnchorsVisible;
++      break;
++    case PositionVisibility::kNoOverflow:
++      value_id_ = CSSValueID::kNoOverflow;
++      break;
++  }
++}
++
++template <>
++inline PositionVisibility CSSIdentifierValue::ConvertTo() const {
++  switch (GetValueID()) {
++    case CSSValueID::kAlways:
++      return PositionVisibility::kAlways;
++    // TODO(crbug.com/332933527): Support kAnchorsValid.
++    case CSSValueID::kAnchorsVisible:
++      return PositionVisibility::kAnchorsVisible;
++    case CSSValueID::kNoOverflow:
++      return PositionVisibility::kNoOverflow;
++    default:
++      NOTREACHED();
++      return PositionVisibility::kAlways;
++  }
 +}
 +
  }  // namespace blink

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style_extra_fields.json5 b/third_party/blink/renderer/core/style/computed_style_extra_fields.json5
-index 5d611726e760c578349055b26a448c0ff09c86b1..b3fc9a9ceb46e78ba593e98d179a28716dcea792 100644
+index 5d611726e760c578349055b26a448c0ff09c86b1..022132848bb524eaa7389dde4e9dcf7271e272b1 100644
 --- a/third_party/blink/renderer/core/style/computed_style_extra_fields.json5
 +++ b/third_party/blink/renderer/core/style/computed_style_extra_fields.json5
 @@ -45,8 +45,9 @@
@@ -58,3 +58,45 @@ index 5d611726e760c578349055b26a448c0ff09c86b1..b3fc9a9ceb46e78ba593e98d179a2871
      {
        name: "IsFlexOrGridOrCustomItem",
        field_template: "monotonic_flag",
+@@ -1206,19 +1226,35 @@
+       default_value: "false",
+     },
+     {
+-      // https://drafts.csswg.org/css-anchor-position-1/#fallback-automatic
+-      name: "HasAutoAnchorPositioningInXAxisFromTryBlock",
++      name: "HasAnchorFunctions",
+       field_template: "monotonic_flag",
+-      field_group: "*",
++      field_group: "surround",
+       default_value: "false",
+       custom_compare: true,
+     },
+     {
+-      // https://drafts.csswg.org/css-anchor-position-1/#fallback-automatic
+-      name: "HasAutoAnchorPositioningInYAxisFromTryBlock",
++      // See ComputedStyle::HasAnchorFunctionsWithoutEvaluator.
++      name: "HasAnchorEvaluator",
+       field_template: "monotonic_flag",
+-      field_group: "*",
++      field_group: "surround",
+       default_value: "false",
++    },
++    {
++      name: "InsetAreaOffsets",
++      field_template: "external",
++      field_group: "*",
++      include_paths: ["third_party/blink/renderer/core/style/inset_area.h"],
++      default_value: "absl::nullopt",
++      type_name: "absl::optional<blink::InsetAreaOffsets>",
++      custom_compare: true,
++    },
++    {
++      name: "AnchorCenterOffset",
++      field_template: "external",
++      field_group: "*",
++      include_paths: ["third_party/blink/renderer/core/layout/geometry/physical_offset.h"],
++      default_value: "absl::nullopt",
++      type_name: "absl::optional<PhysicalOffset>",
+       custom_compare: true,
+     },
+   ],

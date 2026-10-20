@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/svg/layout_svg_image.cc b/third_party/blink/renderer/core/layout/svg/layout_svg_image.cc
-index ef487d41153cdc0b4b0d253bf1f6e7f26feaa435..2115b91261edda4955dc0823d17b8d407d0147c7 100644
+index ef487d41153cdc0b4b0d253bf1f6e7f26feaa435..fd0a40008d3e98aace07fcd3e39f83d189df6e19 100644
 --- a/third_party/blink/renderer/core/layout/svg/layout_svg_image.cc
 +++ b/third_party/blink/renderer/core/layout/svg/layout_svg_image.cc
 @@ -36,6 +36,7 @@
@@ -18,6 +18,20 @@ index ef487d41153cdc0b4b0d253bf1f6e7f26feaa435..2115b91261edda4955dc0823d17b8d40
 +      TransformHelper::UpdateReferenceBoxDependency(*this);
    LayoutSVGModelObject::StyleDidChange(diff, old_style);
  }
+ 
+@@ -100,10 +101,10 @@ gfx::SizeF LayoutSVGImage::CalculateObjectSize() const {
+ 
+   gfx::Vector2dF style_size =
+       SVGLengthContext(GetElement())
+-          .ResolveLengthPair(StyleRef().UsedWidth(), StyleRef().UsedHeight(),
++          .ResolveLengthPair(StyleRef().Width(), StyleRef().Height(),
+                              StyleRef());
+-  bool width_is_auto = style_size.x() < 0 || StyleRef().UsedWidth().IsAuto();
+-  bool height_is_auto = style_size.y() < 0 || StyleRef().UsedHeight().IsAuto();
++  bool width_is_auto = style_size.x() < 0 || StyleRef().Width().IsAuto();
++  bool height_is_auto = style_size.y() < 0 || StyleRef().Height().IsAuto();
+   if (!width_is_auto && !height_is_auto)
+     return gfx::SizeF(style_size.x(), style_size.y());
  
 @@ -182,7 +183,8 @@ void LayoutSVGImage::UpdateLayout() {
  

@@ -1,8 +1,21 @@
 diff --git a/third_party/blink/renderer/platform/geometry/calculation_value.cc b/third_party/blink/renderer/platform/geometry/calculation_value.cc
-index 6b84f1567510b45ef55e54193784bf67b1923520..1dd1bd63dc06614a71594c05f73a5efc406a60e4 100644
+index 6b84f1567510b45ef55e54193784bf67b1923520..79dd7c078dde81a43a5c49cc812020cebbca2b07 100644
 --- a/third_party/blink/renderer/platform/geometry/calculation_value.cc
 +++ b/third_party/blink/renderer/platform/geometry/calculation_value.cc
-@@ -116,6 +116,15 @@ CalculationValue::SubtractFromOneHundredPercent() const {
+@@ -45,10 +45,9 @@ CalculationValue::~CalculationValue() {
+ }
+ 
+ float CalculationValue::Evaluate(
+-    float max_value,
+-    const Length::AnchorEvaluator* anchor_evaluator) const {
++    float max_value) const {
+   float value = ClampTo<float>(
+-      is_expression_ ? data_.expression->Evaluate(max_value, anchor_evaluator)
++      is_expression_ ? data_.expression->Evaluate(max_value)
+                      : Pixels() + Percent() / 100 * max_value);
+   return (IsNonNegative() && value < 0) ? 0 : value;
+ }
+@@ -116,6 +115,15 @@ CalculationValue::SubtractFromOneHundredPercent() const {
                            Length::ValueRange::kAll);
  }
  
@@ -18,3 +31,16 @@ index 6b84f1567510b45ef55e54193784bf67b1923520..1dd1bd63dc06614a71594c05f73a5efc
  scoped_refptr<const CalculationValue> CalculationValue::Zoom(
      double factor) const {
    if (!IsExpression()) {
+@@ -125,12 +133,4 @@ scoped_refptr<const CalculationValue> CalculationValue::Zoom(
+   return CreateSimplified(data_.expression->Zoom(factor), GetValueRange());
+ }
+ 
+-bool CalculationValue::HasAnchorQueries() const {
+-  return IsExpression() && data_.expression->HasAnchorQueries();
+-}
+-
+-bool CalculationValue::HasAutoAnchorPositioning() const {
+-  return IsExpression() && data_.expression->HasAutoAnchorPositioning();
+-}
+-
+ }  // namespace blink

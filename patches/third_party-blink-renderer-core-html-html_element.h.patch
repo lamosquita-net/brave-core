@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/html_element.h b/third_party/blink/renderer/core/html/html_element.h
-index 1160747542fa4d2f2111ea8803443db31d5841b0..037b4270f7028170fe3e2eeb8218bacb880bf6f1 100644
+index 1160747542fa4d2f2111ea8803443db31d5841b0..a0bb5f109bdb7069c5e0508274d0530d95ce1c97 100644
 --- a/third_party/blink/renderer/core/html/html_element.h
 +++ b/third_party/blink/renderer/core/html/html_element.h
 @@ -45,7 +45,10 @@ class FormAssociated;
@@ -69,7 +69,18 @@ index 1160747542fa4d2f2111ea8803443db31d5841b0..037b4270f7028170fe3e2eeb8218bacb
    void hidePopover(ExceptionState& exception_state);
    // |exception_state| can be nullptr when exceptions can't be thrown, such as
    // when the browser hides a popover during light dismiss or shows a popover in
-@@ -283,6 +303,13 @@ class CORE_EXPORT HTMLElement : public Element {
+@@ -256,10 +276,6 @@ class CORE_EXPORT HTMLElement : public Element {
+   void PopoverHideFinishIfNeeded(bool immediate);
+   static const HTMLElement* FindTopmostPopoverAncestor(HTMLElement&);
+ 
+-  // Retrieves the element pointed to by this element's 'anchor' content
+-  // attribute, if that element exists.
+-  Element* anchorElement();
+-  void setAnchorElement(Element*);
+   static void HandlePopoverLightDismiss(const Event& event, const Node& node);
+   void InvokePopover(Element* invoker);
+   void SetPopoverFocusOnShow();
+@@ -283,6 +299,13 @@ class CORE_EXPORT HTMLElement : public Element {
        mojom::blink::FocusType,
        InputDeviceCapabilities* source_capabilities) override;
  
@@ -83,7 +94,7 @@ index 1160747542fa4d2f2111ea8803443db31d5841b0..037b4270f7028170fe3e2eeb8218bacb
   protected:
    enum AllowPercentage { kDontAllowPercentageValues, kAllowPercentageValues };
    enum AllowZero { kDontAllowZeroValues, kAllowZeroValues };
-@@ -326,7 +353,6 @@ class CORE_EXPORT HTMLElement : public Element {
+@@ -326,7 +349,6 @@ class CORE_EXPORT HTMLElement : public Element {
    unsigned ParseBorderWidthAttribute(const AtomicString&) const;
  
    void ChildrenChanged(const ChildrenChange&) override;
@@ -91,7 +102,7 @@ index 1160747542fa4d2f2111ea8803443db31d5841b0..037b4270f7028170fe3e2eeb8218bacb
  
    InsertionNotificationRequest InsertedInto(ContainerNode&) override;
    void RemovedFrom(ContainerNode& insertion_point) override;
-@@ -349,13 +375,6 @@ class CORE_EXPORT HTMLElement : public Element {
+@@ -349,13 +371,6 @@ class CORE_EXPORT HTMLElement : public Element {
    DocumentFragment* TextToFragment(const String&, ExceptionState&);
  
    void AdjustDirectionalityIfNeededAfterChildAttributeChanged(Element* child);

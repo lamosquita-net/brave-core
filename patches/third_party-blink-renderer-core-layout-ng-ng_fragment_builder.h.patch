@@ -1,0 +1,35 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/ng_fragment_builder.h b/third_party/blink/renderer/core/layout/ng/ng_fragment_builder.h
+index 71b36a65b3772739a738481b925601a756971569..6bd0587e56862864ffd50ee9989745bad4905ba4 100644
+--- a/third_party/blink/renderer/core/layout/ng/ng_fragment_builder.h
++++ b/third_party/blink/renderer/core/layout/ng/ng_fragment_builder.h
+@@ -205,9 +205,6 @@ class CORE_EXPORT NGFragmentBuilder {
+                                   NGLogicalStaticPosition::BlockEdge =
+                                       NGLogicalStaticPosition::kBlockStart);
+ 
+-  void AddOutOfFlowChildCandidate(
+-      const NGLogicalOutOfFlowPositionedNode& candidate);
+-
+   // This should only be used for inline-level OOF-positioned nodes.
+   // |inline_container_direction| is the current text direction for determining
+   // the correct static-position.
+@@ -271,11 +268,6 @@ class CORE_EXPORT NGFragmentBuilder {
+     return !multicols_with_pending_oofs_.empty();
+   }
+ 
+-  HeapVector<NGLogicalOutOfFlowPositionedNode>*
+-  MutableOutOfFlowPositionedCandidates() {
+-    return &oof_positioned_candidates_;
+-  }
+-
+   // This method should only be used within the inline layout algorithm. It is
+   // used to convert all OOF-positioned candidates to descendants.
+   //
+@@ -575,6 +567,8 @@ class CORE_EXPORT NGFragmentBuilder {
+   bool has_out_of_flow_in_fragmentainer_subtree_ = false;
+   bool disable_oof_descendants_propagation_ = false;
+ 
++  bool oof_candidates_may_have_anchor_queries_ = false;
++  bool oof_fragmentainer_descendants_may_have_anchor_queries_ = false;
+ #if DCHECK_IS_ON()
+   bool is_may_have_descendant_above_block_start_explicitly_set_ = false;
+ #endif

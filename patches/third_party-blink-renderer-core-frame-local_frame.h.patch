@@ -1,8 +1,8 @@
 diff --git a/third_party/blink/renderer/core/frame/local_frame.h b/third_party/blink/renderer/core/frame/local_frame.h
-index bc24bbc46d829946da255a74947dc3e5d4685dd3..08040ee395101065de3b2e712eb0c6dc11211c84 100644
+index bc24bbc46d829946da255a74947dc3e5d4685dd3..139c22360538a47da01574125564b17f27de14ca 100644
 --- a/third_party/blink/renderer/core/frame/local_frame.h
 +++ b/third_party/blink/renderer/core/frame/local_frame.h
-@@ -881,7 +881,7 @@ class CORE_EXPORT LocalFrame final
+@@ -881,9 +881,14 @@ class CORE_EXPORT LocalFrame final
  
    void ScheduleNextServiceForScrollSnapshotClients();
  
@@ -10,8 +10,15 @@ index bc24bbc46d829946da255a74947dc3e5d4685dd3..08040ee395101065de3b2e712eb0c6dc
 +  void CollectAnchorPositionScrollerIds(
        Vector<cc::ElementId>* scroll_container_ids) const;
  
++  void CheckPositionAnchorsForCssVisibilityChanges();
++  // This is called after all other position-visibility conditions have been
++  // checked.
++  void CheckPositionAnchorsForChainedVisibilityChanges();
++
    using BlockingDetailsList = Vector<mojom::blink::BlockingDetailsPtr>;
-@@ -896,6 +896,8 @@ class CORE_EXPORT LocalFrame final
+   static BlockingDetailsList ConvertFeatureAndLocationToMojomStruct(
+       const BFCacheBlockingFeatureAndLocations&,
+@@ -896,6 +901,8 @@ class CORE_EXPORT LocalFrame final
    // Sets a ResourceCache hosted by another frame in a different renderer.
    void SetResourceCacheRemote(mojo::PendingRemote<mojom::blink::ResourceCache>);
  

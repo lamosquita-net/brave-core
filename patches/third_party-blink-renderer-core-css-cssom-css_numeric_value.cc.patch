@@ -1,0 +1,18 @@
+diff --git a/third_party/blink/renderer/core/css/cssom/css_numeric_value.cc b/third_party/blink/renderer/core/css/cssom/css_numeric_value.cc
+index a0fb227ac33a5ebe432bba58d962e0b2d651c4cd..011dbcb47eb62d5dd62dce531f505d0c62c016c6 100644
+--- a/third_party/blink/renderer/core/css/cssom/css_numeric_value.cc
++++ b/third_party/blink/renderer/core/css/cssom/css_numeric_value.cc
+@@ -333,8 +333,11 @@ CSSNumericValue* CSSNumericValue::parse(
+ // static
+ CSSNumericValue* CSSNumericValue::FromCSSValue(const CSSPrimitiveValue& value) {
+   if (value.IsCalculated()) {
+-    return CalcToNumericValue(
+-        *To<CSSMathFunctionValue>(value).ExpressionNode());
++    const auto& math_function = To<CSSMathFunctionValue>(value);
++    if (math_function.HasAnchorFunctions()) {
++      return nullptr;
++    }
++    return CalcToNumericValue(*math_function.ExpressionNode());
+   }
+   return CSSUnitValue::FromCSSValue(To<CSSNumericLiteralValue>(value));
+ }

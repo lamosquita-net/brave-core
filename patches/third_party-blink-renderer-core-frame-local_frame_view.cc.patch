@@ -1,8 +1,50 @@
 diff --git a/third_party/blink/renderer/core/frame/local_frame_view.cc b/third_party/blink/renderer/core/frame/local_frame_view.cc
-index 5ddb3dc2d6c7748ee9468f2142af1b40ad85e2f8..eaf9f18ca646b318910e830ec5b0675e1c6b4a9f 100644
+index 5ddb3dc2d6c7748ee9468f2142af1b40ad85e2f8..0aa6131deb6d007ea91b160fd0fc6ea4bccf86ab 100644
 --- a/third_party/blink/renderer/core/frame/local_frame_view.cc
 +++ b/third_party/blink/renderer/core/frame/local_frame_view.cc
-@@ -3010,12 +3010,12 @@ void LocalFrameView::PushPaintArtifactToCompositor(bool repainted) {
+@@ -1268,8 +1268,8 @@ void LocalFrameView::MarkFixedPositionObjectsForLayout(bool width_changed,
+   for (const auto& layout_object : *fixed_position_objects_) {
+     const ComputedStyle& style = layout_object->StyleRef();
+     if (width_changed) {
+-      if (style.UsedWidth().IsFixed() &&
+-          (style.UsedLeft().IsAuto() || style.UsedRight().IsAuto())) {
++      if (style.Width().IsFixed() &&
++          (style.Left().IsAuto() || style.Right().IsAuto())) {
+         layout_object->SetNeedsPositionedMovementLayout();
+       } else {
+         layout_object->SetNeedsLayoutAndFullPaintInvalidation(
+@@ -1277,8 +1277,8 @@ void LocalFrameView::MarkFixedPositionObjectsForLayout(bool width_changed,
+       }
+     }
+     if (height_changed) {
+-      if (style.UsedHeight().IsFixed() &&
+-          (style.UsedTop().IsAuto() || style.UsedBottom().IsAuto())) {
++      if (style.Height().IsFixed() &&
++          (style.Top().IsAuto() || style.Bottom().IsAuto())) {
+         layout_object->SetNeedsPositionedMovementLayout();
+       } else {
+         layout_object->SetNeedsLayoutAndFullPaintInvalidation(
+@@ -2376,6 +2376,11 @@ void LocalFrameView::UpdateLifecyclePhasesInternal(
+       break;
+   }
+ 
++  // This must be after all other updates for position-visibility.
++  ForAllNonThrottledLocalFrameViews([](LocalFrameView& frame_view) {
++    frame_view.frame_->CheckPositionAnchorsForChainedVisibilityChanges();
++  });
++
+   // Once we exit the ResizeObserver / IntersectionObserver loop above, we need
+   // to clear the resize observer limits so that next time we run this, we can
+   // deliver more observations.
+@@ -2622,6 +2627,7 @@ bool LocalFrameView::RunPrePaintLifecyclePhase(
+     frame_->GetPage()->GetValidationMessageClient().UpdatePrePaint();
+     ForAllNonThrottledLocalFrameViews([](LocalFrameView& view) {
+       view.frame_->UpdateFrameColorOverlayPrePaint();
++      view.frame_->CheckPositionAnchorsForCssVisibilityChanges();
+     });
+     if (auto* web_local_frame_impl = WebLocalFrameImpl::FromFrame(frame_))
+       web_local_frame_impl->UpdateDevToolsOverlaysPrePaint();
+@@ -3010,12 +3016,12 @@ void LocalFrameView::PushPaintArtifactToCompositor(bool repainted) {
          });
    }
  
@@ -20,7 +62,7 @@ index 5ddb3dc2d6c7748ee9468f2142af1b40ad85e2f8..eaf9f18ca646b318910e830ec5b0675e
    }
  
    WTF::Vector<std::unique_ptr<ViewTransitionRequest>> view_transition_requests;
-@@ -3023,7 +3023,7 @@ void LocalFrameView::PushPaintArtifactToCompositor(bool repainted) {
+@@ -3023,7 +3029,7 @@ void LocalFrameView::PushPaintArtifactToCompositor(bool repainted) {
  
    paint_artifact_compositor_->Update(
        paint_controller_->GetPaintArtifactShared(), viewport_properties,
@@ -29,7 +71,7 @@ index 5ddb3dc2d6c7748ee9468f2142af1b40ad85e2f8..eaf9f18ca646b318910e830ec5b0675e
        std::move(view_transition_requests));
  
    CreatePaintTimelineEvents();
-@@ -4737,8 +4737,8 @@ void LocalFrameView::GetUserScrollTranslationNodes(
+@@ -4737,8 +4743,8 @@ void LocalFrameView::GetUserScrollTranslationNodes(
    }
  }
  
@@ -40,7 +82,7 @@ index 5ddb3dc2d6c7748ee9468f2142af1b40ad85e2f8..eaf9f18ca646b318910e830ec5b0675e
    const auto* scrollable_areas = UserScrollableAreas();
    if (!scrollable_areas) {
      return;
-@@ -4751,7 +4751,7 @@ void LocalFrameView::GetAnchorScrollContainerNodes(
+@@ -4751,7 +4757,7 @@ void LocalFrameView::GetAnchorScrollContainerNodes(
    // see crbug.com/1378021) and is not performance-sensitive, we choose to just
    // use vector and binary search.
    Vector<cc::ElementId> scroll_container_ids;
@@ -49,7 +91,7 @@ index 5ddb3dc2d6c7748ee9468f2142af1b40ad85e2f8..eaf9f18ca646b318910e830ec5b0675e
    std::sort(scroll_container_ids.begin(), scroll_container_ids.end());
    scroll_container_ids.erase(
        std::unique(scroll_container_ids.begin(), scroll_container_ids.end()),
-@@ -4770,7 +4770,7 @@ void LocalFrameView::GetAnchorScrollContainerNodes(
+@@ -4770,7 +4776,7 @@ void LocalFrameView::GetAnchorScrollContainerNodes(
                std::lower_bound(scroll_container_ids.begin(),
                                 scroll_container_ids.end(), element_id);
            iter != scroll_container_ids.end() && *iter == element_id) {

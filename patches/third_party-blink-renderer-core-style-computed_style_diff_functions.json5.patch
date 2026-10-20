@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style_diff_functions.json5 b/third_party/blink/renderer/core/style/computed_style_diff_functions.json5
-index 81f6144f9f45a069a64faa5d19ba6c650668f9c7..1be14664cd18122d8b2b83f11ae8c105915c1766 100644
+index 81f6144f9f45a069a64faa5d19ba6c650668f9c7..9c2c314bfee1d41efb03cc063e0d3aadf8f482ba 100644
 --- a/third_party/blink/renderer/core/style/computed_style_diff_functions.json5
 +++ b/third_party/blink/renderer/core/style/computed_style_diff_functions.json5
 @@ -56,7 +56,7 @@
@@ -31,10 +31,21 @@ index 81f6144f9f45a069a64faa5d19ba6c650668f9c7..1be14664cd18122d8b2b83f11ae8c105
                  "stroke-width", "stroke-miterlimit", "stroke-linecap", "stroke-linejoin",
                  "marker-end", "marker-mid", "marker-start", "scrollbar-width", "object-view-box",
 -                "position-fallback"],
-+                "position-fallback", "position-fallback-bounds"],
++                "position-try-options", "position-try-order", "position-visibility", "inset-area"],
          methods_to_diff: [
            {
              method: "BorderLeftWidth()",
+@@ -193,8 +193,8 @@
+                                  "opacity"]
+           },
+           {
+-            predicate: "a.AnchorDefaultDataEquivalent(b)",
+-            field_dependencies: ["anchor-default"]
++            predicate: "a.PositionAnchorDataEquivalent(b)",
++            field_dependencies: ["position-anchor"]
+           },
+         ]
+     },
 @@ -240,11 +240,12 @@
                  "max-height", "VerticalAlignLength", "box-sizing", "align-content",
                  "align-items", "align-self", "justify-content", "justify-items",

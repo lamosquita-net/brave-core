@@ -1,0 +1,138 @@
+diff --git a/third_party/blink/renderer/platform/geometry/calculation_expression_node.cc b/third_party/blink/renderer/platform/geometry/calculation_expression_node.cc
+index 64cda49a89244e65e76f5595c2cb9b7720c299e1..6e45befacf3731ce77ce26fa6b8cb915c9625b79 100644
+--- a/third_party/blink/renderer/platform/geometry/calculation_expression_node.cc
++++ b/third_party/blink/renderer/platform/geometry/calculation_expression_node.cc
+@@ -18,8 +18,7 @@ namespace blink {
+ // ------ CalculationExpressionNumberNode ------
+ 
+ float CalculationExpressionNumberNode::Evaluate(
+-    float max_value,
+-    const Length::AnchorEvaluator*) const {
++    float max_value) const {
+   return value_;
+ }
+ 
+@@ -46,8 +45,7 @@ CalculationExpressionNumberNode::ResolvedResultType() const {
+ // ------ CalculationExpressionPixelsAndPercentNode ------
+ 
+ float CalculationExpressionPixelsAndPercentNode::Evaluate(
+-    float max_value,
+-    const Length::AnchorEvaluator*) const {
++    float max_value) const {
+   return value_.pixels + value_.percent / 100 * max_value;
+ }
+ 
+@@ -235,24 +233,6 @@ CalculationExpressionOperationNode::CreateSimplified(Children&& children,
+   }
+ }
+ 
+-bool CalculationExpressionOperationNode::ComputeHasAnchorQueries() const {
+-  for (const auto& child : children_) {
+-    if (child->HasAnchorQueries())
+-      return true;
+-  }
+-  return false;
+-}
+-
+-bool CalculationExpressionOperationNode::ComputeHasAutoAnchorPositioning()
+-    const {
+-  for (const auto& child : children_) {
+-    if (child->HasAutoAnchorPositioning()) {
+-      return true;
+-    }
+-  }
+-  return false;
+-}
+-
+ CalculationExpressionOperationNode::CalculationExpressionOperationNode(
+     Children&& children,
+     CalculationOperator op)
+@@ -261,55 +241,52 @@ CalculationExpressionOperationNode::CalculationExpressionOperationNode(
+   result_type_ = ResolvedResultType();
+   DCHECK_NE(result_type_, ResultType::kInvalid);
+ #endif
+-  has_anchor_queries_ = ComputeHasAnchorQueries();
+-  has_auto_anchor_positioning_ = ComputeHasAutoAnchorPositioning();
+ }
+ 
+ float CalculationExpressionOperationNode::Evaluate(
+-    float max_value,
+-    const Length::AnchorEvaluator* anchor_evaluator) const {
++    float max_value) const {
+   switch (operator_) {
+     case CalculationOperator::kAdd: {
+       DCHECK_EQ(children_.size(), 2u);
+-      float left = children_[0]->Evaluate(max_value, anchor_evaluator);
+-      float right = children_[1]->Evaluate(max_value, anchor_evaluator);
++      float left = children_[0]->Evaluate(max_value);
++      float right = children_[1]->Evaluate(max_value);
+       return left + right;
+     }
+     case CalculationOperator::kSubtract: {
+       DCHECK_EQ(children_.size(), 2u);
+-      float left = children_[0]->Evaluate(max_value, anchor_evaluator);
+-      float right = children_[1]->Evaluate(max_value, anchor_evaluator);
++      float left = children_[0]->Evaluate(max_value);
++      float right = children_[1]->Evaluate(max_value);
+       return left - right;
+     }
+     case CalculationOperator::kMultiply: {
+       DCHECK_EQ(children_.size(), 2u);
+-      float left = children_[0]->Evaluate(max_value, anchor_evaluator);
+-      float right = children_[1]->Evaluate(max_value, anchor_evaluator);
++      float left = children_[0]->Evaluate(max_value);
++      float right = children_[1]->Evaluate(max_value);
+       return left * right;
+     }
+     case CalculationOperator::kMin: {
+       DCHECK(!children_.empty());
+-      float minimum = children_[0]->Evaluate(max_value, anchor_evaluator);
++      float minimum = children_[0]->Evaluate(max_value);
+       for (auto& child : children_) {
+         minimum =
+-            std::min(minimum, child->Evaluate(max_value, anchor_evaluator));
++            std::min(minimum, child->Evaluate(max_value));
+       }
+       return minimum;
+     }
+     case CalculationOperator::kMax: {
+       DCHECK(!children_.empty());
+-      float maximum = children_[0]->Evaluate(max_value, anchor_evaluator);
++      float maximum = children_[0]->Evaluate(max_value);
+       for (auto& child : children_) {
+         maximum =
+-            std::max(maximum, child->Evaluate(max_value, anchor_evaluator));
++            std::max(maximum, child->Evaluate(max_value));
+       }
+       return maximum;
+     }
+     case CalculationOperator::kClamp: {
+       DCHECK(!children_.empty());
+-      float min = children_[0]->Evaluate(max_value, anchor_evaluator);
+-      float val = children_[1]->Evaluate(max_value, anchor_evaluator);
+-      float max = children_[2]->Evaluate(max_value, anchor_evaluator);
++      float min = children_[0]->Evaluate(max_value);
++      float val = children_[1]->Evaluate(max_value);
++      float max = children_[2]->Evaluate(max_value);
+       // clamp(MIN, VAL, MAX) is identical to max(MIN, min(VAL, MAX))
+       return std::max(min, std::min(val, max));
+     }
+@@ -320,15 +297,15 @@ float CalculationExpressionOperationNode::Evaluate(
+     case CalculationOperator::kMod:
+     case CalculationOperator::kRem: {
+       DCHECK_EQ(children_.size(), 2u);
+-      float a = children_[0]->Evaluate(max_value, anchor_evaluator);
+-      float b = children_[1]->Evaluate(max_value, anchor_evaluator);
++      float a = children_[0]->Evaluate(max_value);
++      float b = children_[1]->Evaluate(max_value);
+       return EvaluateSteppedValueFunction(operator_, a, b);
+     }
+     case CalculationOperator::kHypot: {
+       DCHECK_GE(children_.size(), 1u);
+       float value = 0;
+       for (scoped_refptr<const CalculationExpressionNode> operand : children_) {
+-        float a = operand->Evaluate(max_value, anchor_evaluator);
++        float a = operand->Evaluate(max_value);
+         value = std::hypot(value, a);
+       }
+       return value;

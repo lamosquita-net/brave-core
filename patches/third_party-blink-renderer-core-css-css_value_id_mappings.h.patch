@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/css_value_id_mappings.h b/third_party/blink/renderer/core/css/css_value_id_mappings.h
-index 96a5291d6585d34200394fca36a8928651168d32..94e6d123d7ef2ee882fbb82ec3f624f3c8598c94 100644
+index 96a5291d6585d34200394fca36a8928651168d32..b9965562665c6d6a323eea01f5f5c5a9fe183cf1 100644
 --- a/third_party/blink/renderer/core/css/css_value_id_mappings.h
 +++ b/third_party/blink/renderer/core/css/css_value_id_mappings.h
 @@ -242,6 +242,12 @@ inline EDisplay CssValueIDToPlatformEnum(CSSValueID v) {
@@ -42,13 +42,13 @@ index 96a5291d6585d34200394fca36a8928651168d32..94e6d123d7ef2ee882fbb82ec3f624f3
    NOTREACHED();
    return CSSValueID::kNone;
  }
-@@ -447,47 +452,6 @@ inline CSSValueID PlatformEnumToCSSValueID(WhiteSpaceCollapse v) {
-   return CSSValueID::kNone;
+@@ -448,44 +453,33 @@ inline CSSValueID PlatformEnumToCSSValueID(WhiteSpaceCollapse v) {
  }
  
--template <>
+ template <>
 -inline TextWrap CssValueIDToPlatformEnum(CSSValueID v) {
--  switch (v) {
++inline TryTactic CssValueIDToPlatformEnum(CSSValueID v) {
+   switch (v) {
 -    case CSSValueID::kWrap:
 -      return TextWrap::kWrap;
 -    case CSSValueID::kNowrap:
@@ -59,15 +59,23 @@ index 96a5291d6585d34200394fca36a8928651168d32..94e6d123d7ef2ee882fbb82ec3f624f3
 -    case CSSValueID::kPretty:
 -      DCHECK(RuntimeEnabledFeatures::CSSTextWrapPrettyEnabled());
 -      return TextWrap::kPretty;
--    default:
--      NOTREACHED();
++    case CSSValueID::kFlipBlock:
++      return TryTactic::kFlipBlock;
++    case CSSValueID::kFlipInline:
++      return TryTactic::kFlipInline;
++    case CSSValueID::kFlipStart:
++      return TryTactic::kFlipStart;
+     default:
+       NOTREACHED();
 -      return TextWrap::kWrap;
--  }
--}
--
--template <>
++      return TryTactic::kNone;
+   }
+ }
+ 
+ template <>
 -inline CSSValueID PlatformEnumToCSSValueID(TextWrap v) {
--  switch (v) {
++inline CSSValueID PlatformEnumToCSSValueID(TryTactic v) {
+   switch (v) {
 -    case TextWrap::kWrap:
 -      return CSSValueID::kWrap;
 -    case TextWrap::kNoWrap:
@@ -82,11 +90,18 @@ index 96a5291d6585d34200394fca36a8928651168d32..94e6d123d7ef2ee882fbb82ec3f624f3
 -    case TextWrap::kPretty:
 -      DCHECK(RuntimeEnabledFeatures::CSSTextWrapPrettyEnabled());
 -      return CSSValueID::kPretty;
--  }
++    case TryTactic::kNone:
++      NOTREACHED();
++      return CSSValueID::kNone;
++    case TryTactic::kFlipBlock:
++      return CSSValueID::kFlipBlock;
++    case TryTactic::kFlipInline:
++      return CSSValueID::kFlipInline;
++    case TryTactic::kFlipStart:
++      return CSSValueID::kFlipStart;
+   }
 -  NOTREACHED();
 -  return CSSValueID::kNone;
--}
--
- }  // namespace blink
+ }
  
- #endif  // THIRD_PARTY_BLINK_RENDERER_CORE_CSS_CSS_VALUE_ID_MAPPINGS_H_
+ }  // namespace blink

@@ -1,15 +1,58 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_cascade.h b/third_party/blink/renderer/core/css/resolver/style_cascade.h
-index ce5fb7aec926412fa460c77b1a7506024ecae915..9975fa99a18bf6992c07cd168c4e63d4c424189b 100644
+index ce5fb7aec926412fa460c77b1a7506024ecae915..6dbfe1165d075f160baf24bd7e2919a9581cd882 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_cascade.h
 +++ b/third_party/blink/renderer/core/css/resolver/style_cascade.h
-@@ -404,6 +404,17 @@ class CORE_EXPORT StyleCascade {
+@@ -33,6 +33,7 @@ namespace blink {
+ class CascadeInterpolations;
+ class CascadeResolver;
+ class CSSCustomPropertyDeclaration;
++class CSSMathFunctionValue;
+ class CSSParserContext;
+ class CSSParserTokenStream;
+ class CSSProperty;
+@@ -46,6 +47,7 @@ class StyleResolverState;
+ namespace cssvalue {
+ 
+ class CSSPendingSubstitutionValue;
++class CSSFlipRevertValue;
+ 
+ }  // namespace cssvalue
+ 
+@@ -66,6 +68,7 @@ class CORE_EXPORT StyleCascade {
+   STACK_ALLOCATED();
+ 
+   using CSSPendingSubstitutionValue = cssvalue::CSSPendingSubstitutionValue;
++  using CSSFlipRevertValue = cssvalue::CSSFlipRevertValue;
+ 
+  public:
+   StyleCascade(StyleResolverState& state) : state_(state) {}
+@@ -344,10 +347,17 @@ class CORE_EXPORT StyleCascade {
+                                 CascadeOrigin&,
+                                 CascadeResolver&);
+   const CSSValue* ResolveRevertLayer(const CSSProperty&,
+-                                     const CSSValue&,
+                                      CascadePriority,
+                                      CascadeOrigin&,
+                                      CascadeResolver&);
++  const CSSValue* ResolveFlipRevert(const CSSProperty&,
++                                    const CSSFlipRevertValue&,
++                                    CascadePriority,
++                                    CascadeOrigin&,
++                                    CascadeResolver&);
++  const CSSValue* ResolveMathFunction(const CSSProperty&,
++                                      const CSSMathFunctionValue&,
++                                      CascadePriority);
+ 
+   scoped_refptr<CSSVariableData> ResolveVariableData(CSSVariableData*,
+                                                      CascadeResolver&);
+@@ -404,6 +414,17 @@ class CORE_EXPORT StyleCascade {
    // disable the matched property cache in some cases.
    void MarkHasVariableReference(const CSSProperty&);
  
-+  // Declarations originating from @try rules are treated as revert-layer
-+  // if we're not out-of-flow positioned. Since such declarations exist
-+  // in a separate layer, this has the effect of @try-originating rules
-+  // applying *conditionally* based on the positioning.
++  // Declarations originating from @position-try rules are treated as
++  // revert-layer if we're not out-of-flow positioned. Since such declarations
++  // exist in a separate layer, this has the effect of @position-try-originating
++  // rules applying *conditionally* based on the positioning.
 +  //
 +  // This behavior is needed because we speculatively add the the try set
 +  // to the cascade, and rely on out-of-flow layout to correct us later.

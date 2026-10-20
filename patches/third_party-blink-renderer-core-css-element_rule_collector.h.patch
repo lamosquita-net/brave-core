@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/element_rule_collector.h b/third_party/blink/renderer/core/css/element_rule_collector.h
-index 3f3465848560a84952ab004ceebfb92e37deefec..9463c8895286026c7e922586af0d8f61b03b2fb2 100644
+index 3f3465848560a84952ab004ceebfb92e37deefec..8d32723e58145574929188219389c7ec3ae52509 100644
 --- a/third_party/blink/renderer/core/css/element_rule_collector.h
 +++ b/third_party/blink/renderer/core/css/element_rule_collector.h
 @@ -153,7 +153,7 @@ class CORE_EXPORT ElementRuleCollector {
@@ -11,15 +11,16 @@ index 3f3465848560a84952ab004ceebfb92e37deefec..9463c8895286026c7e922586af0d8f61
    void CollectMatchingShadowHostRules(const MatchRequest&);
    void CollectMatchingSlottedRules(const MatchRequest&);
    void CollectMatchingPartPseudoRules(const MatchRequest&,
-@@ -170,6 +170,7 @@ class CORE_EXPORT ElementRuleCollector {
+@@ -170,6 +170,8 @@ class CORE_EXPORT ElementRuleCollector {
    void FinishAddingPresentationalHints() {
      result_.FinishAddingPresentationalHints();
    }
-+  void AddTryStyleProperties(const CSSPropertyValueSet*);
++  void AddTryStyleProperties();
++  void AddTryTacticsStyleProperties();
    void BeginAddingAuthorRulesForTreeScope(const TreeScope& tree_scope) {
      current_matching_tree_scope_ = &tree_scope;
      result_.BeginAddingAuthorRulesForTreeScope(tree_scope);
-@@ -182,6 +183,9 @@ class CORE_EXPORT ElementRuleCollector {
+@@ -182,6 +184,9 @@ class CORE_EXPORT ElementRuleCollector {
    // Return the pseudo id if the style request is for rules associated with a
    // pseudo element, or kPseudoNone if not.
    PseudoId GetPseudoId() const { return pseudo_style_request_.pseudo_id; }
@@ -29,7 +30,7 @@ index 3f3465848560a84952ab004ceebfb92e37deefec..9463c8895286026c7e922586af0d8f61
  
    void AddMatchedRulesToTracker(StyleRuleUsageTracker*) const;
  
-@@ -224,6 +228,8 @@ class CORE_EXPORT ElementRuleCollector {
+@@ -224,6 +229,8 @@ class CORE_EXPORT ElementRuleCollector {
    };
  
   private:

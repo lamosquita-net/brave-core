@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/graphics/compositing/paint_artifact_compositor.h b/third_party/blink/renderer/platform/graphics/compositing/paint_artifact_compositor.h
-index 8683b3919eb199bf9a39aa07ec3d71eda7c42b97..41b6a01015bb0a2fa9a49c091878d0845c149288 100644
+index 8683b3919eb199bf9a39aa07ec3d71eda7c42b97..3de6ec1033b4e81dedf168b2b812e43a7d27e20a 100644
 --- a/third_party/blink/renderer/platform/graphics/compositing/paint_artifact_compositor.h
 +++ b/third_party/blink/renderer/platform/graphics/compositing/paint_artifact_compositor.h
 @@ -135,16 +135,16 @@ class PLATFORM_EXPORT PaintArtifactCompositor final
@@ -23,3 +23,12 @@ index 8683b3919eb199bf9a39aa07ec3d71eda7c42b97..41b6a01015bb0a2fa9a49c091878d084
        Vector<std::unique_ptr<cc::ViewTransitionRequest>> requests);
  
    // Fast-path update where the painting of existing composited layers changed,
+@@ -170,6 +170,8 @@ class PLATFORM_EXPORT PaintArtifactCompositor final
+   bool DirectlyUpdateScrollOffsetTransform(const TransformPaintPropertyNode&);
+   bool DirectlyUpdateTransform(const TransformPaintPropertyNode&);
+   bool DirectlyUpdatePageScaleTransform(const TransformPaintPropertyNode&);
++  bool DirectlyUpdateAnchorPositionScrollTranslation(
++      const TransformPaintPropertyNode&);
+ 
+   // Directly sets cc::ScrollTree::current_scroll_offset. This doesn't affect
+   // cc::TransformNode::scroll_offset (which will be synched with blink

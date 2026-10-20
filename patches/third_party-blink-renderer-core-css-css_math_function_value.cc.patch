@@ -1,0 +1,22 @@
+diff --git a/third_party/blink/renderer/core/css/css_math_function_value.cc b/third_party/blink/renderer/core/css/css_math_function_value.cc
+index 55d051fe3975cd7eec72b3f166369ebb77c848c3..4b6c82865522da03d2d9a00a29c02a182451f5d0 100644
+--- a/third_party/blink/renderer/core/css/css_math_function_value.cc
++++ b/third_party/blink/renderer/core/css/css_math_function_value.cc
+@@ -180,4 +180,17 @@ const CSSValue& CSSMathFunctionValue::PopulateWithTreeScope(
+       value_range_in_target_context_);
+ }
+ 
++const CSSMathFunctionValue* CSSMathFunctionValue::TransformAnchors(
++    LogicalAxis logical_axis,
++    const TryTacticTransform& transform,
++    const WritingDirectionMode& writing_direction) const {
++  const CSSMathExpressionNode* transformed =
++      expression_->TransformAnchors(logical_axis, transform, writing_direction);
++  if (transformed != expression_) {
++    return MakeGarbageCollected<CSSMathFunctionValue>(
++        transformed, value_range_in_target_context_);
++  }
++  return this;
++}
++
+ }  // namespace blink

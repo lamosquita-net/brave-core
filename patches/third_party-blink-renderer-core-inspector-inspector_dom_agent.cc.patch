@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/inspector/inspector_dom_agent.cc b/third_party/blink/renderer/core/inspector/inspector_dom_agent.cc
-index 966c4a25340eca9ca94b6d83c2fe6c20142b9800..4ba3ab1dd41b4db8e59ae02a9c2e03ac51b5603a 100644
+index 966c4a25340eca9ca94b6d83c2fe6c20142b9800..6c604fc42c90c0fff47259ce04b55bfbb9bca64c 100644
 --- a/third_party/blink/renderer/core/inspector/inspector_dom_agent.cc
 +++ b/third_party/blink/renderer/core/inspector/inspector_dom_agent.cc
 @@ -229,6 +229,12 @@ protocol::DOM::PseudoType InspectorDOMAgent::ProtocolPseudoElementType(
@@ -23,3 +23,46 @@ index 966c4a25340eca9ca94b6d83c2fe6c20142b9800..4ba3ab1dd41b4db8e59ae02a9c2e03ac
        CHECK(false);
        return "";
    }
+@@ -1651,33 +1658,33 @@ protocol::Response InspectorDOMAgent::getContainerForNode(
+   if (!response.IsSuccess())
+     return response;
+ 
+-  PhysicalAxes physical = kPhysicalAxisNone;
++  PhysicalAxes physical = kPhysicalAxesNone;
+   // TODO(crbug.com/1378237): Need to keep the broken behavior of querying the
+   // inline-axis by default to avoid even worse behavior before devtools-
+-  // frontend catches up. Change value here to kLogicalAxisNone.
+-  LogicalAxes logical = kLogicalAxisInline;
++  // frontend catches up. Change value here to kLogicalAxesNone.
++  LogicalAxes logical = kLogicalAxesInline;
+ 
+   if (physical_axes.isJust()) {
+     if (physical_axes.fromJust() ==
+         protocol::DOM::PhysicalAxesEnum::Horizontal) {
+-      physical = kPhysicalAxisHorizontal;
++      physical = kPhysicalAxesHorizontal;
+     } else if (physical_axes.fromJust() ==
+                protocol::DOM::PhysicalAxesEnum::Vertical) {
+-      physical = kPhysicalAxisVertical;
++      physical = kPhysicalAxesVertical;
+     } else if (physical_axes.fromJust() ==
+                protocol::DOM::PhysicalAxesEnum::Both) {
+-      physical = kPhysicalAxisBoth;
++      physical = kPhysicalAxesBoth;
+     }
+   }
+   if (logical_axes.isJust()) {
+     if (logical_axes.fromJust() == protocol::DOM::LogicalAxesEnum::Inline) {
+-      logical = kLogicalAxisInline;
++      logical = kLogicalAxesInline;
+     } else if (logical_axes.fromJust() ==
+                protocol::DOM::LogicalAxesEnum::Block) {
+-      logical = kLogicalAxisBlock;
++      logical = kLogicalAxesBlock;
+     } else if (logical_axes.fromJust() ==
+                protocol::DOM::LogicalAxesEnum::Both) {
+-      logical = kLogicalAxisBoth;
++      logical = kLogicalAxesBoth;
+     }
+   }
+ 

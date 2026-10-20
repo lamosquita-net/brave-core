@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/intersection_observer/intersection_observer.cc b/third_party/blink/renderer/core/intersection_observer/intersection_observer.cc
-index a9b32c80294e4acef5ceae501ea5d8aaa3054b07..ec408a38af3fbd9d6eebb04820eed32d90065bb4 100644
+index a9b32c80294e4acef5ceae501ea5d8aaa3054b07..23a60196a366f68fd1a57d9d822e9459628b0e1c 100644
 --- a/third_party/blink/renderer/core/intersection_observer/intersection_observer.cc
 +++ b/third_party/blink/renderer/core/intersection_observer/intersection_observer.cc
 @@ -92,9 +92,10 @@ class IntersectionObserverDelegateImpl final
@@ -153,7 +153,7 @@ index a9b32c80294e4acef5ceae501ea5d8aaa3054b07..ec408a38af3fbd9d6eebb04820eed32d
  }
  
  IntersectionObserver* IntersectionObserver::Create(
-@@ -264,8 +340,9 @@ IntersectionObserver* IntersectionObserver::Create(
+@@ -264,15 +340,36 @@ IntersectionObserver* IntersectionObserver::Create(
            document->GetExecutionContext(), std::move(callback), ukm_metric_id,
            behavior, needs_initial_observation_with_detached_target);
    return MakeGarbageCollected<IntersectionObserver>(
@@ -165,7 +165,26 @@ index a9b32c80294e4acef5ceae501ea5d8aaa3054b07..ec408a38af3fbd9d6eebb04820eed32d
        use_overflow_clip_edge);
  }
  
-@@ -273,6 +350,7 @@ IntersectionObserver::IntersectionObserver(
++IntersectionObserver* IntersectionObserver::CreateWithRoot(
++    Node* root,
++    const Vector<float>& thresholds,
++    Document* document,
++    EventCallback callback,
++    LocalFrameUkmAggregator::MetricId ukm_metric_id,
++    DeliveryBehavior behavior) {
++  IntersectionObserverDelegateImpl* intersection_observer_delegate =
++      MakeGarbageCollected<IntersectionObserverDelegateImpl>(
++          document->GetExecutionContext(), std::move(callback), ukm_metric_id,
++          behavior, /* needs_initial_observation_with_detached_target */ true);
++  return MakeGarbageCollected<IntersectionObserver>(
++      *intersection_observer_delegate, root, /* margin */ Vector<Length>(),
++      /* scroll_margin */ Vector<Length>(), thresholds, kFractionOfTarget,
++      /* delay */ 0, /* track_visibility */ false,
++      /* always_report_root_bounds */ false, kApplyMarginToRoot,
++      /* use_overflow_clip_edge */ false);
++}
++
+ IntersectionObserver::IntersectionObserver(
      IntersectionObserverDelegate& delegate,
      Node* root,
      const Vector<Length>& margin,
@@ -173,7 +192,7 @@ index a9b32c80294e4acef5ceae501ea5d8aaa3054b07..ec408a38af3fbd9d6eebb04820eed32d
      const Vector<float>& thresholds,
      ThresholdInterpretation semantics,
      DOMHighResTimeStamp delay,
-@@ -286,38 +364,20 @@ IntersectionObserver::IntersectionObserver(
+@@ -286,38 +383,20 @@ IntersectionObserver::IntersectionObserver(
        root_(root),
        thresholds_(thresholds),
        delay_(delay),
@@ -219,7 +238,7 @@ index a9b32c80294e4acef5ceae501ea5d8aaa3054b07..ec408a38af3fbd9d6eebb04820eed32d
    if (root) {
      if (root->IsDocumentNode()) {
        To<Document>(root)
-@@ -433,30 +493,12 @@ HeapVector<Member<IntersectionObserverEntry>> IntersectionObserver::takeRecords(
+@@ -433,30 +512,12 @@ HeapVector<Member<IntersectionObserverEntry>> IntersectionObserver::takeRecords(
    return entries;
  }
  

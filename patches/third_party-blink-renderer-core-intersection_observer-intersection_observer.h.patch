@@ -1,13 +1,24 @@
 diff --git a/third_party/blink/renderer/core/intersection_observer/intersection_observer.h b/third_party/blink/renderer/core/intersection_observer/intersection_observer.h
-index 0ad7393e451652a2d1a7ee087ad345fa4e9fbad5..41fc46b37def5c14e27f3e4621c160a40ee316ea 100644
+index 0ad7393e451652a2d1a7ee087ad345fa4e9fbad5..72c294d0a55e2372bafc15cbec8d6c22dcfee658 100644
 --- a/third_party/blink/renderer/core/intersection_observer/intersection_observer.h
 +++ b/third_party/blink/renderer/core/intersection_observer/intersection_observer.h
-@@ -121,9 +121,10 @@ class CORE_EXPORT IntersectionObserver final
+@@ -121,9 +121,21 @@ class CORE_EXPORT IntersectionObserver final
        bool needs_initial_observation_with_detached_target = true,
        ExceptionState& = ASSERT_NO_EXCEPTION);
  
 -  explicit IntersectionObserver(IntersectionObserverDelegate&,
 -                                Node*,
++  // FlyWeb (FM.28): internal observer with an explicit root, like upstream's
++  // IntersectionObserver::Params::root (197a401b4c0). Used by
++  // AnchorPositionVisibilityObserver.
++  static IntersectionObserver* CreateWithRoot(
++      Node* root,
++      const Vector<float>& thresholds,
++      Document* document,
++      EventCallback callback,
++      LocalFrameUkmAggregator::MetricId ukm_metric_id,
++      DeliveryBehavior behavior);
++
 +  explicit IntersectionObserver(IntersectionObserverDelegate& delegate,
 +                                Node* root,
                                  const Vector<Length>& margin,
@@ -15,7 +26,7 @@ index 0ad7393e451652a2d1a7ee087ad345fa4e9fbad5..41fc46b37def5c14e27f3e4621c160a4
                                  const Vector<float>& thresholds,
                                  ThresholdInterpretation semantics,
                                  DOMHighResTimeStamp delay,
-@@ -142,6 +143,7 @@ class CORE_EXPORT IntersectionObserver final
+@@ -142,6 +154,7 @@ class CORE_EXPORT IntersectionObserver final
    // API attributes.
    Node* root() const { return root_.Get(); }
    String rootMargin() const;
@@ -23,7 +34,7 @@ index 0ad7393e451652a2d1a7ee087ad345fa4e9fbad5..41fc46b37def5c14e27f3e4621c160a4
    const Vector<float>& thresholds() const { return thresholds_; }
    DOMHighResTimeStamp delay() const { return delay_; }
    bool trackVisibility() const { return track_visibility_; }
-@@ -169,6 +171,8 @@ class CORE_EXPORT IntersectionObserver final
+@@ -169,6 +182,8 @@ class CORE_EXPORT IntersectionObserver final
      return margin_target_ == kApplyMarginToTarget ? margin_ : Vector<Length>();
    }
  
@@ -32,7 +43,7 @@ index 0ad7393e451652a2d1a7ee087ad345fa4e9fbad5..41fc46b37def5c14e27f3e4621c160a4
    // Returns the number of IntersectionObservations that recomputed geometry.
    int64_t ComputeIntersections(unsigned flags,
                                 absl::optional<base::TimeTicks>& monotonic_time);
-@@ -216,6 +220,7 @@ class CORE_EXPORT IntersectionObserver final
+@@ -216,6 +231,7 @@ class CORE_EXPORT IntersectionObserver final
    Vector<float> thresholds_;
    DOMHighResTimeStamp delay_;
    Vector<Length> margin_;

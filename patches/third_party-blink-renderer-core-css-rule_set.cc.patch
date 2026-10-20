@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/rule_set.cc b/third_party/blink/renderer/core/css/rule_set.cc
-index 0f10a1f3aa6471fcae9e14cc5b59121cc3477a33..3f7c7d9762d9b3849fddb4c817e3fd403797f0b6 100644
+index 0f10a1f3aa6471fcae9e14cc5b59121cc3477a33..26521e250f48a01ec6b695e7ce46f9a7198f87c7 100644
 --- a/third_party/blink/renderer/core/css/rule_set.cc
 +++ b/third_party/blink/renderer/core/css/rule_set.cc
 @@ -43,8 +43,10 @@
@@ -113,6 +113,33 @@ index 0f10a1f3aa6471fcae9e14cc5b59121cc3477a33..3f7c7d9762d9b3849fddb4c817e3fd40
      case CSSSelector::kPseudoHost:
      case CSSSelector::kPseudoHostContext:
        AddToRuleSet(shadow_host_rules_, rule_data);
+@@ -616,9 +658,9 @@ void RuleSet::AddFontFeatureValuesRule(StyleRuleFontFeatureValues* rule) {
+   font_feature_values_rules_.push_back(rule);
+ }
+ 
+-void RuleSet::AddPositionFallbackRule(StyleRulePositionFallback* rule) {
++void RuleSet::AddPositionTryRule(StyleRulePositionTry* rule) {
+   need_compaction_ = true;
+-  position_fallback_rules_.push_back(rule);
++  position_try_rules_.push_back(rule);
+ }
+ 
+ void RuleSet::AddChildRules(const HeapVector<Member<StyleRuleBase>>& rules,
+@@ -663,10 +705,10 @@ void RuleSet::AddChildRules(const HeapVector<Member<StyleRuleBase>>& rules,
+                    DynamicTo<StyleRuleCounterStyle>(rule)) {
+       counter_style_rule->SetCascadeLayer(cascade_layer);
+       AddCounterStyleRule(counter_style_rule);
+-    } else if (auto* position_fallback_rule =
+-                   DynamicTo<StyleRulePositionFallback>(rule)) {
+-      position_fallback_rule->SetCascadeLayer(cascade_layer);
+-      AddPositionFallbackRule(position_fallback_rule);
++    } else if (auto* position_try_rule =
++                   DynamicTo<StyleRulePositionTry>(rule)) {
++      position_try_rule->SetCascadeLayer(cascade_layer);
++      AddPositionTryRule(position_try_rule);
+     } else if (auto* supports_rule = DynamicTo<StyleRuleSupports>(rule)) {
+       if (supports_rule->ConditionIsSupported()) {
+         AddChildRules(supports_rule->ChildRules(), medium, add_rule_flags,
 @@ -703,6 +745,11 @@ void RuleSet::AddChildRules(const HeapVector<Member<StyleRuleBase>>& rules,
        AddChildRules(starting_style_rule->ChildRules(), medium,
                      add_rule_flags | kRuleIsStartingStyle, container_query,
@@ -135,3 +162,21 @@ index 0f10a1f3aa6471fcae9e14cc5b59121cc3477a33..3f7c7d9762d9b3849fddb4c817e3fd40
      if (!MatchMediaForAddRules(medium, import_rule->MediaQueries())) {
        continue;
      }
+@@ -1159,7 +1209,7 @@ void RuleSet::CompactRules() {
+   keyframes_rules_.shrink_to_fit();
+   property_rules_.shrink_to_fit();
+   counter_style_rules_.shrink_to_fit();
+-  position_fallback_rules_.shrink_to_fit();
++  position_try_rules_.shrink_to_fit();
+   layer_intervals_.shrink_to_fit();
+ 
+ #if EXPENSIVE_DCHECKS_ARE_ON()
+@@ -1275,7 +1325,7 @@ void RuleSet::Trace(Visitor* visitor) const {
+   visitor->Trace(keyframes_rules_);
+   visitor->Trace(property_rules_);
+   visitor->Trace(counter_style_rules_);
+-  visitor->Trace(position_fallback_rules_);
++  visitor->Trace(position_try_rules_);
+   visitor->Trace(root_element_rules_);
+   visitor->Trace(media_query_set_results_);
+   visitor->Trace(implicit_outer_layer_);

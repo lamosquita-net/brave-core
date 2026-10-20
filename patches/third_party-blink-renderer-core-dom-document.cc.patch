@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/document.cc b/third_party/blink/renderer/core/dom/document.cc
-index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..9b011ebaad420ae5fe0434bf841ad701d3022c03 100644
+index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..f64b8c7fdcea30368adfce7c5aa8d538071653cd 100644
 --- a/third_party/blink/renderer/core/dom/document.cc
 +++ b/third_party/blink/renderer/core/dom/document.cc
 @@ -79,6 +79,7 @@
@@ -43,6 +43,24 @@ index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..9b011ebaad420ae5fe0434bf841ad701
  // This enum must match the numbering for RequestStorageResult in
  // histograms/enums.xml. Do not reorder or remove items, only add new items
  // at the end.
+@@ -673,7 +679,7 @@ void Document::MarkUnassociatedListedElementsDirty() {
+ }
+ 
+ ExplicitlySetAttrElementsMap* Document::GetExplicitlySetAttrElementsMap(
+-    Element* element) {
++    const Element* element) {
+   DCHECK(element);
+   DCHECK(element->GetDocument() == this);
+   auto add_result =
+@@ -686,7 +692,7 @@ ExplicitlySetAttrElementsMap* Document::GetExplicitlySetAttrElementsMap(
+ }
+ 
+ void Document::MoveElementExplicitlySetAttrElementsMapToNewDocument(
+-    Element* element,
++    const Element* element,
+     Document& new_document) {
+   DCHECK(element);
+   auto it = element_explicitly_set_attr_elements_map_.find(element);
 @@ -927,18 +933,29 @@ Document::~Document() {
  
  Range* Document::CreateRangeAdjustedToTreeScope(const TreeScope& tree_scope,
@@ -138,6 +156,15 @@ index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..9b011ebaad420ae5fe0434bf841ad701
  Element* Document::scrollingElement() {
    if (RuntimeEnabledFeatures::ScrollTopLeftInteropEnabled() && InQuirksMode())
      UpdateStyleAndLayoutTree();
+@@ -2258,7 +2310,7 @@ void Document::UpdateStyleAndLayoutTreeForThisDocument() {
+ 
+   style_engine.UpdateActiveStyle();
+   style_engine.UpdateCounterStyles();
+-  style_engine.InvalidatePositionFallbackStyles();
++  style_engine.InvalidatePositionTryStyles();
+   style_engine.InvalidateViewportUnitStylesIfNeeded();
+   InvalidateStyleAndLayoutForFontUpdates();
+   UpdateStyleInvalidationIfNeeded();
 @@ -4476,14 +4528,9 @@ KURL Document::FallbackBaseURL() const {
      }
    }
@@ -277,7 +304,7 @@ index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..9b011ebaad420ae5fe0434bf841ad701
  bool Document::InStyleRecalc() const {
    return lifecycle_.GetState() == DocumentLifecycle::kInStyleRecalc ||
           style_engine_->InContainerQueryStyleRecalc() ||
-+         style_engine_->InPositionFallbackStyleRecalc() ||
++         style_engine_->InPositionTryStyleRecalc() ||
           style_engine_->InEnsureComputedStyle();
  }
  
