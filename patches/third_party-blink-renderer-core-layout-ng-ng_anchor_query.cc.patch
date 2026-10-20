@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/ng_anchor_query.cc b/third_party/blink/renderer/core/layout/ng/ng_anchor_query.cc
-index f1af6cafb34db067f1881b09f8e07dace41756b9..10b45132ae96bb30d0eeda8376f1a9de9779c6ea 100644
+index f1af6cafb34db067f1881b09f8e07dace41756b9..25412bec4ca18b7483d51649187c0fda61849815 100644
 --- a/third_party/blink/renderer/core/layout/ng/ng_anchor_query.cc
 +++ b/third_party/blink/renderer/core/layout/ng/ng_anchor_query.cc
 @@ -9,7 +9,6 @@
@@ -71,3 +71,109 @@ index f1af6cafb34db067f1881b09f8e07dace41756b9..10b45132ae96bb30d0eeda8376f1a9de
  const NGPhysicalAnchorReference* NGPhysicalAnchorQuery::AnchorReference(
      const LayoutObject& query_object,
      const NGAnchorKey& key) const {
+@@ -454,6 +399,51 @@ const NGLogicalAnchorReference* NGAnchorEvaluatorImpl::ResolveAnchorReference(
+   return anchor_query->AnchorReference(*query_object_, implicit_anchor_);
+ }
+ 
++const LayoutObject* NGAnchorEvaluatorImpl::DefaultAnchor() const {
++  if (!default_anchor_.has_value()) {
++    const NGLogicalAnchorReference* reference =
++        ResolveAnchorReference(*AnchorSpecifierValue::Default());
++    default_anchor_ = reference ? reference->layout_object : nullptr;
++  } else {
++#if DCHECK_IS_ON()
++    const NGLogicalAnchorReference* reference =
++        ResolveAnchorReference(*AnchorSpecifierValue::Default());
++    DCHECK_EQ(*default_anchor_, reference ? reference->layout_object : nullptr);
++#endif
++  }
++  return *default_anchor_;
++}
++
++const PaintLayer* NGAnchorEvaluatorImpl::DefaultAnchorScrollContainerLayer()
++    const {
++  if (!default_anchor_scroll_container_layer_.has_value()) {
++    // We won't reach here without a default anchor.
++    default_anchor_scroll_container_layer_ =
++        DefaultAnchor()->ContainingScrollContainerLayer(
++            true /*ignore_layout_view_for_fixed_pos*/);
++  } else {
++#if DCHECK_IS_ON()
++    DCHECK_EQ(*default_anchor_scroll_container_layer_,
++              DefaultAnchor()->ContainingScrollContainerLayer(
++                  true /*ignore_layout_view_for_fixed_pos*/));
++#endif
++  }
++  return *default_anchor_scroll_container_layer_;
++}
++
++bool NGAnchorEvaluatorImpl::ShouldUseScrollAdjustmentFor(
++    const LayoutObject* anchor) const {
++  if (!DefaultAnchor()) {
++    return false;
++  }
++  if (anchor == DefaultAnchor()) {
++    return true;
++  }
++  return anchor->ContainingScrollContainerLayer(
++             true /*ignore_layout_view_for_fixed_pos*/) ==
++         DefaultAnchorScrollContainerLayer();
++}
++
+ absl::optional<LayoutUnit> NGAnchorEvaluatorImpl::EvaluateAnchor(
+     const AnchorSpecifierValue& anchor_specifier,
+     CSSAnchorValue anchor_value,
+@@ -466,10 +456,19 @@ absl::optional<LayoutUnit> NGAnchorEvaluatorImpl::EvaluateAnchor(
+   }
+ 
+   DCHECK(AnchorQuery());
+-  return AnchorQuery()->EvaluateAnchor(
+-      *anchor_reference, anchor_value, percentage, available_size_,
+-      container_converter_, self_writing_direction_, offset_to_padding_box_,
+-      is_y_axis_, is_right_or_bottom_);
++  if (absl::optional<LayoutUnit> result = AnchorQuery()->EvaluateAnchor(
++          *anchor_reference, anchor_value, percentage, available_size_,
++          container_converter_, self_writing_direction_, offset_to_padding_box_,
++          is_y_axis_, is_right_or_bottom_)) {
++    bool& needs_scroll_adjustment = is_y_axis_ ? needs_scroll_adjustment_in_y_
++                                               : needs_scroll_adjustment_in_x_;
++    if (!needs_scroll_adjustment &&
++        ShouldUseScrollAdjustmentFor(anchor_reference->layout_object)) {
++      needs_scroll_adjustment = true;
++    }
++    return result;
++  }
++  return absl::nullopt;
+ }
+ 
+ absl::optional<LayoutUnit> NGAnchorEvaluatorImpl::EvaluateAnchorSize(
+@@ -488,6 +487,29 @@ absl::optional<LayoutUnit> NGAnchorEvaluatorImpl::EvaluateAnchorSize(
+                                      self_writing_direction_.GetWritingMode());
+ }
+ 
++absl::optional<LogicalRect>
++NGAnchorEvaluatorImpl::GetAdditionalFallbackBoundsRect() const {
++  if (!query_object_) {
++    return absl::nullopt;
++  }
++  const ScopedCSSName* position_fallback_bounds =
++      query_object_->StyleRef().PositionFallbackBounds();
++  if (!position_fallback_bounds || !AnchorQuery()) {
++    return absl::nullopt;
++  }
++  const NGLogicalAnchorReference* reference =
++      AnchorQuery()->AnchorReference(*query_object_, position_fallback_bounds);
++  if (!reference) {
++    return absl::nullopt;
++  }
++  // `reference->rect` is in container's writing direction. Convert it to self
++  // writing direction, but the offset is still relative to container.
++  WritingModeConverter self_converter(self_writing_direction_,
++                                      container_converter_.OuterSize());
++  return self_converter.ToLogical(
++      container_converter_.ToPhysical(reference->rect));
++}
++
+ void NGLogicalAnchorReference::Trace(Visitor* visitor) const {
+   visitor->Trace(layout_object);
+   visitor->Trace(next);

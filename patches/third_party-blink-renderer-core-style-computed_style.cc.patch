@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style.cc b/third_party/blink/renderer/core/style/computed_style.cc
-index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..7ed3c6ba685268f71f48d72df01cefcafe6a1b76 100644
+index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..80b516a076e158ee0402689543f451e3de5c4313 100644
 --- a/third_party/blink/renderer/core/style/computed_style.cc
 +++ b/third_party/blink/renderer/core/style/computed_style.cc
 @@ -23,6 +23,9 @@
@@ -22,7 +22,84 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..7ed3c6ba685268f71f48d72df01cefca
      return Difference::kDescendantAffecting;
    }
    // TODO(crbug.com/1213888): Only recalc affected descendants.
-@@ -1206,6 +1210,7 @@ static bool HasPropertyThatCreatesStackingContext(
+@@ -464,40 +468,33 @@ ComputedStyle::ComputeDifferenceIgnoringInheritedFirstLineStyle(
+ 
+ StyleSelfAlignmentData ResolvedSelfAlignment(
+     const StyleSelfAlignmentData& value,
+-    ItemPosition normal_value_behavior) {
++    ItemPosition normal_value_behavior,
++    bool has_out_of_flow_position) {
+   if (value.GetPosition() == ItemPosition::kLegacy ||
+       value.GetPosition() == ItemPosition::kNormal ||
+       value.GetPosition() == ItemPosition::kAuto) {
+     return {normal_value_behavior, OverflowAlignment::kDefault};
+   }
++  if (!has_out_of_flow_position &&
++      value.GetPosition() == ItemPosition::kAnchorCenter) {
++    return {ItemPosition::kCenter, value.Overflow(), value.PositionType()};
++  }
+   return value;
+ }
+ 
+-StyleSelfAlignmentData ComputedStyle::ResolvedAlignItems(
+-    ItemPosition normal_value_behaviour) const {
+-  // We will return the behaviour of 'normal' value if needed, which is specific
+-  // of each layout model.
+-  return ResolvedSelfAlignment(AlignItems(), normal_value_behaviour);
+-}
+-
+ StyleSelfAlignmentData ComputedStyle::ResolvedAlignSelf(
+     ItemPosition normal_value_behaviour,
+     const ComputedStyle* parent_style) const {
+   // We will return the behaviour of 'normal' value if needed, which is specific
+   // of each layout model.
+   if (!parent_style || AlignSelf().GetPosition() != ItemPosition::kAuto) {
+-    return ResolvedSelfAlignment(AlignSelf(), normal_value_behaviour);
++    return ResolvedSelfAlignment(AlignSelf(), normal_value_behaviour,
++                                 HasOutOfFlowPosition());
+   }
+ 
+   // The 'auto' keyword computes to the parent's align-items computed value.
+-  return parent_style->ResolvedAlignItems(normal_value_behaviour);
+-}
+-
+-StyleSelfAlignmentData ComputedStyle::ResolvedJustifyItems(
+-    ItemPosition normal_value_behaviour) const {
+-  // We will return the behaviour of 'normal' value if needed, which is specific
+-  // of each layout model.
+-  return ResolvedSelfAlignment(JustifyItems(), normal_value_behaviour);
++  return ResolvedSelfAlignment(parent_style->AlignItems(),
++                               normal_value_behaviour, HasOutOfFlowPosition());
+ }
+ 
+ StyleSelfAlignmentData ComputedStyle::ResolvedJustifySelf(
+@@ -506,11 +503,13 @@ StyleSelfAlignmentData ComputedStyle::ResolvedJustifySelf(
+   // We will return the behaviour of 'normal' value if needed, which is specific
+   // of each layout model.
+   if (!parent_style || JustifySelf().GetPosition() != ItemPosition::kAuto) {
+-    return ResolvedSelfAlignment(JustifySelf(), normal_value_behaviour);
++    return ResolvedSelfAlignment(JustifySelf(), normal_value_behaviour,
++                                 HasOutOfFlowPosition());
+   }
+ 
+   // The auto keyword computes to the parent's justify-items computed value.
+-  return parent_style->ResolvedJustifyItems(normal_value_behaviour);
++  return ResolvedSelfAlignment(parent_style->JustifyItems(),
++                               normal_value_behaviour, HasOutOfFlowPosition());
+ }
+ 
+ StyleContentAlignmentData ResolvedContentAlignment(
+@@ -751,7 +750,8 @@ StyleDifference ComputedStyle::VisualInvalidationDiff(
+   }
+ 
+   if (!diff.NeedsFullLayout() && GetPosition() != EPosition::kStatic &&
+-      !OffsetEqual(other)) {
++      (!OffsetEqual(other) ||
++       (HasOutOfFlowPosition() && GetInsetArea() != other.GetInsetArea()))) {
+     // Optimize for the case where a positioned layer is moving but not changing
+     // size.
+     if (DependenceOnContentHeightHasChanged(*this, other)) {
+@@ -1206,6 +1206,7 @@ static bool HasPropertyThatCreatesStackingContext(
        case CSSPropertyID::kOffsetPath:
        case CSSPropertyID::kOffsetPosition:
        case CSSPropertyID::kWebkitMask:
@@ -30,7 +107,7 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..7ed3c6ba685268f71f48d72df01cefca
        case CSSPropertyID::kWebkitMaskBoxImage:
        case CSSPropertyID::kClipPath:
        case CSSPropertyID::kWebkitBoxReflect:
-@@ -1344,14 +1349,14 @@ void ComputedStyle::LoadDeferredImages(Document& document) const {
+@@ -1344,14 +1345,14 @@ void ComputedStyle::LoadDeferredImages(Document& document) const {
  void ComputedStyle::ApplyTransform(
      gfx::Transform& result,
      const LayoutBox* box,
@@ -48,7 +125,7 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..7ed3c6ba685268f71f48d72df01cefca
                   apply_independent_transform_properties);
  }
  
-@@ -2341,6 +2346,48 @@ Color ComputedStyle::VisitedDependentColor(const Longhand& color_property,
+@@ -2341,6 +2342,48 @@ Color ComputedStyle::VisitedDependentColor(const Longhand& color_property,
                                 visited_color.Param2(), unvisited_color.Alpha());
  }
  
@@ -97,7 +174,7 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..7ed3c6ba685268f71f48d72df01cefca
  blink::Color ComputedStyle::ResolvedColor(const StyleColor& color,
                                            bool* is_current_color) const {
    bool visited_link = (InsideLink() == EInsideLink::kInsideVisitedLink);
-@@ -2534,43 +2581,24 @@ absl::optional<blink::Color> ComputedStyle::AccentColorResolved() const {
+@@ -2534,43 +2577,24 @@ absl::optional<blink::Color> ComputedStyle::AccentColorResolved() const {
    return auto_color.Resolve(GetCurrentColor(), UsedColorScheme());
  }
  
@@ -156,7 +233,7 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..7ed3c6ba685268f71f48d72df01cefca
  }
  
  bool ComputedStyle::ShouldApplyAnyContainment(const Element& element,
-@@ -2656,6 +2684,21 @@ bool ComputedStyle::IsRenderedInTopLayer(const Element& element) const {
+@@ -2656,6 +2680,21 @@ bool ComputedStyle::IsRenderedInTopLayer(const Element& element) const {
           StyleType() == kPseudoIdBackdrop;
  }
  

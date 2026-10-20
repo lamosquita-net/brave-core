@@ -1,7 +1,16 @@
 diff --git a/third_party/blink/renderer/core/frame/local_frame.cc b/third_party/blink/renderer/core/frame/local_frame.cc
-index 51ac02abf2f2e61538b26fcbbaa437567310c164..8970234b2f7039641de2eb8cb130f91da594536c 100644
+index 51ac02abf2f2e61538b26fcbbaa437567310c164..0df4a218de3489013b6c7978ec6c97a5e4e0caf6 100644
 --- a/third_party/blink/renderer/core/frame/local_frame.cc
 +++ b/third_party/blink/renderer/core/frame/local_frame.cc
+@@ -155,7 +155,7 @@
+ #include "third_party/blink/renderer/core/inspector/inspector_task_runner.h"
+ #include "third_party/blink/renderer/core/inspector/inspector_trace_events.h"
+ #include "third_party/blink/renderer/core/intersection_observer/intersection_observer_controller.h"
+-#include "third_party/blink/renderer/core/layout/anchor_scroll_data.h"
++#include "third_party/blink/renderer/core/layout/anchor_position_scroll_data.h"
+ #include "third_party/blink/renderer/core/layout/hit_test_result.h"
+ #include "third_party/blink/renderer/core/layout/layout_view.h"
+ #include "third_party/blink/renderer/core/layout/text_autosizer.h"
 @@ -2413,6 +2413,11 @@ void LocalFrame::AnimateSnapFling(base::TimeTicks monotonic_time) {
  }
  
@@ -14,6 +23,21 @@ index 51ac02abf2f2e61538b26fcbbaa437567310c164..8970234b2f7039641de2eb8cb130f91d
    if (!IsLocalRoot()) {
      return LocalFrameRoot().CreateNewSmoothScrollSequence();
    }
+@@ -3590,11 +3595,11 @@ void LocalFrame::ScheduleNextServiceForScrollSnapshotClients() {
+   }
+ }
+ 
+-void LocalFrame::CollectAnchorScrollContainerIds(
++void LocalFrame::CollectAnchorPositionScrollerIds(
+     Vector<cc::ElementId>* ids) const {
+   for (const auto& client : scroll_snapshot_clients_) {
+-    if (const AnchorScrollData* data =
+-            DynamicTo<AnchorScrollData>(client.Get());
++    if (const AnchorPositionScrollData* data =
++            DynamicTo<AnchorPositionScrollData>(client.Get());
+         data && data->IsActive()) {
+       ids->AppendVector(data->ScrollContainerIds());
+     }
 @@ -3617,4 +3622,13 @@ void LocalFrame::SetResourceCacheRemote(
    GetDocument()->Fetcher()->SetResourceCache(std::move(remote));
  }

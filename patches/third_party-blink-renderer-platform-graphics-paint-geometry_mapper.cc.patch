@@ -1,7 +1,30 @@
 diff --git a/third_party/blink/renderer/platform/graphics/paint/geometry_mapper.cc b/third_party/blink/renderer/platform/graphics/paint/geometry_mapper.cc
-index eec2c2ad0a0c9b6dd8905ccc4a76c6b12711ca2f..6ee3440cd0505f6daf4bdab6447fc87469eff295 100644
+index eec2c2ad0a0c9b6dd8905ccc4a76c6b12711ca2f..ac133c639a291e63a13579ddfc85249dd5d70997 100644
 --- a/third_party/blink/renderer/platform/graphics/paint/geometry_mapper.cc
 +++ b/third_party/blink/renderer/platform/graphics/paint/geometry_mapper.cc
+@@ -102,9 +102,9 @@ gfx::Transform GeometryMapper::SourceToDestinationProjectionInternal(
+     return gfx::Transform();
+ 
+   if (source.Parent() && &destination == &source.Parent()->Unalias()) {
+-    extra_result.has_sticky_or_anchor_scroll =
++    extra_result.has_sticky_or_anchor_position =
+         source.RequiresCompositingForStickyPosition() ||
+-        source.RequiresCompositingForAnchorScroll();
++        source.RequiresCompositingForAnchorPosition();
+     if (source.IsIdentityOr2dTranslation() && source.Origin().IsOrigin()) {
+       // The result will be translate(origin)*matrix*translate(-origin) which
+       // equals to matrix if the origin is zero or if the matrix is just
+@@ -123,8 +123,8 @@ gfx::Transform GeometryMapper::SourceToDestinationProjectionInternal(
+   const auto& source_cache = source.GetTransformCache();
+   const auto& destination_cache = destination.GetTransformCache();
+ 
+-  extra_result.has_sticky_or_anchor_scroll |=
+-      source_cache.has_sticky_or_anchor_scroll();
++  extra_result.has_sticky_or_anchor_position |=
++      source_cache.has_sticky_or_anchor_position();
+ 
+   // Case 1a (fast path of case 1b): check if source and destination are under
+   // the same 2d translation root.
 @@ -202,10 +202,9 @@ bool GeometryMapper::LocalToAncestorVisualRect(
      const PropertyTreeState& ancestor_state,
      FloatClipRect& mapping_rect,
@@ -40,6 +63,21 @@ index eec2c2ad0a0c9b6dd8905ccc4a76c6b12711ca2f..6ee3440cd0505f6daf4bdab6447fc874
    }
  
    ExtraProjectionResult extra_result;
+@@ -258,10 +258,10 @@ bool GeometryMapper::LocalToAncestorVisualRectInternal(
+ 
+   if (for_compositing_overlap == ForCompositingOverlap::kYes &&
+       (extra_result.has_animation ||
+-       extra_result.has_sticky_or_anchor_scroll)) {
+-    // Assume during the animation, the sticky translation or the anchor-scroll
+-    // translation can map |rect_to_map| to anywhere during animation or
+-    // composited scroll. Ancestor clips will still apply.
++       extra_result.has_sticky_or_anchor_position)) {
++    // Assume during the animation, the sticky translation or the anchor
++    // position scroll translation can map |rect_to_map| to anywhere during
++    // animation or composited scroll. Ancestor clips will still apply.
+     // TODO(crbug.com/1026653): Use animation bounds instead of infinite rect.
+     // TODO(crbug.com/1117658): Use sticky bounds instead of infinite rect.
+     rect_to_map = InfiniteLooseFloatClipRect();
 @@ -272,11 +272,12 @@ bool GeometryMapper::LocalToAncestorVisualRectInternal(
    FloatClipRect clip_rect =
        LocalToAncestorClipRectInternal<for_compositing_overlap>(
@@ -117,6 +155,15 @@ index eec2c2ad0a0c9b6dd8905ccc4a76c6b12711ca2f..6ee3440cd0505f6daf4bdab6447fc874
      if (for_compositing_overlap == ForCompositingOverlap::kYes && cached_clip &&
          (cached_clip->has_transform_animation ||
           cached_clip->has_sticky_transform)) {
+@@ -433,7 +433,7 @@ FloatClipRect GeometryMapper::LocalToAncestorClipRectInternal(
+ 
+     if (for_compositing_overlap == ForCompositingOverlap::kYes &&
+         (extra_result.has_animation ||
+-         extra_result.has_sticky_or_anchor_scroll)) {
++         extra_result.has_sticky_or_anchor_position)) {
+       continue;
+     }
+ 
 @@ -441,7 +441,7 @@ FloatClipRect GeometryMapper::LocalToAncestorClipRectInternal(
      // from clip and transform properties, and propagate them to |clip|.
      FloatClipRect mapped_rect(GetClipRect(*node, clip_behavior));
@@ -126,7 +173,13 @@ index eec2c2ad0a0c9b6dd8905ccc4a76c6b12711ca2f..6ee3440cd0505f6daf4bdab6447fc874
        clip.InclusiveIntersect(mapped_rect);
      } else {
        clip.Intersect(mapped_rect);
-@@ -454,7 +454,7 @@ FloatClipRect GeometryMapper::LocalToAncestorClipRectInternal(
+@@ -449,12 +449,12 @@ FloatClipRect GeometryMapper::LocalToAncestorClipRectInternal(
+       node->GetClipCache().SetCachedClip(
+           GeometryMapperClipCache::ClipCacheEntry{
+               clip_and_transform, clip, extra_result.has_animation,
+-              extra_result.has_sticky_or_anchor_scroll});
++              extra_result.has_sticky_or_anchor_position});
+     }
    }
    // Clips that are inclusive intersected or expanded for animation are not
    // cached at present.

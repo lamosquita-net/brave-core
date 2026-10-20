@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/paint/compositing/compositing_reason_finder.cc b/third_party/blink/renderer/core/paint/compositing/compositing_reason_finder.cc
-index e457804c87cc6b72bf6c41013f8d0b2a08b20089..41e3b595fb157de83a578a590a39da54b8674995 100644
+index e457804c87cc6b72bf6c41013f8d0b2a08b20089..c6620a86d383cf39e93621c568789af497b115d2 100644
 --- a/third_party/blink/renderer/core/paint/compositing/compositing_reason_finder.cc
 +++ b/third_party/blink/renderer/core/paint/compositing/compositing_reason_finder.cc
 @@ -21,6 +21,7 @@
@@ -21,3 +21,29 @@ index e457804c87cc6b72bf6c41013f8d0b2a08b20089..41e3b595fb157de83a578a590a39da54
                           ComputedStyle::kIncludeTransformOperations,
                           ComputedStyle::kExcludeTransformOrigin,
                           ComputedStyle::kExcludeMotionPath,
+@@ -223,8 +225,11 @@ CompositingReasons CompositingReasonsForViewportScrollEffect(
+   if (RuntimeEnabledFeatures::FixedElementsDontOverscrollEnabled() &&
+       frame->GetPage()->GetVisualViewport().GetOverscrollType() ==
+           OverscrollType::kTransform) {
+-    reasons |=
+-        CompositingReason::kFixedPosition | CompositingReason::kUndoOverscroll;
++    reasons |= CompositingReason::kFixedPosition;
++    if (!To<LayoutBox>(layout_object)
++             .AnchorPositionScrollAdjustmentAfectedByViewportScrolling()) {
++      reasons |= CompositingReason::kUndoOverscroll;
++    }
+   }
+ 
+   if (layout_object.StyleRef().IsFixedToBottom()) {
+@@ -252,8 +257,9 @@ CompositingReasons CompositingReasonsForScrollDependentPosition(
+         reasons |= CompositingReason::kFixedPosition;
+     }
+ 
+-    if (box->HasAnchorScrollTranslation())
+-      reasons |= CompositingReason::kAnchorScroll;
++    if (box->NeedsAnchorPositionScrollAdjustment()) {
++      reasons |= CompositingReason::kAnchorPosition;
++    }
+   }
+ 
+   // Don't promote sticky position elements that cannot move with scrolls.

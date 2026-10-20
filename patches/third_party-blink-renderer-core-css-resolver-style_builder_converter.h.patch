@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_builder_converter.h b/third_party/blink/renderer/core/css/resolver/style_builder_converter.h
-index 07090144d0700e9f63045939c9fa5f3b2ad090b7..b28534d4b39b847ea1f077f5550c5fd495011008 100644
+index 07090144d0700e9f63045939c9fa5f3b2ad090b7..a61a99832c19ed48afb67ce0329d7f9ac48e37ff 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_builder_converter.h
 +++ b/third_party/blink/renderer/core/css/resolver/style_builder_converter.h
-@@ -100,7 +100,8 @@ class StyleBuilderConverterBase {
+@@ -63,7 +63,6 @@
+ 
+ namespace blink {
+ 
+-class AnchorSpecifierValue;
+ class ClipPathOperation;
+ class CSSToLengthConversionData;
+ class Font;
+@@ -100,7 +99,8 @@ class StyleBuilderConverterBase {
        const CSSToLengthConversionData&,
        FontDescription::Size parent_size,
        const Document*);
@@ -12,7 +20,7 @@ index 07090144d0700e9f63045939c9fa5f3b2ad090b7..b28534d4b39b847ea1f077f5550c5fd4
    static scoped_refptr<FontPalette> ConvertFontPalette(const CSSValue&);
    static scoped_refptr<FontPalette> ConvertPaletteMix(const CSSValue&);
  };
-@@ -119,7 +120,8 @@ class StyleBuilderConverter {
+@@ -119,7 +119,8 @@ class StyleBuilderConverter {
                                                            const CSSValue&);
    static scoped_refptr<StyleSVGResource> ConvertElementReference(
        StyleResolverState&,
@@ -22,7 +30,24 @@ index 07090144d0700e9f63045939c9fa5f3b2ad090b7..b28534d4b39b847ea1f077f5550c5fd4
    static FilterOperations ConvertFilterOperations(StyleResolverState&,
                                                    const CSSValue&,
                                                    CSSPropertyID);
-@@ -254,7 +256,8 @@ class StyleBuilderConverter {
+@@ -214,12 +215,14 @@ class StyleBuilderConverter {
+                             const CSSValue&);  // clamps to [0,1]
+   static ScopedCSSName* ConvertNoneOrCustomIdent(StyleResolverState&,
+                                                  const CSSValue&);
++  static ScopedCSSName* ConvertNormalOrCustomIdent(StyleResolverState&,
++                                                   const CSSValue&);
+   static ScopedCSSName* ConvertCustomIdent(StyleResolverState&,
+                                            const CSSValue&);
+   static ScopedCSSName* ConvertAnchorDefault(StyleResolverState&,
+                                              const CSSValue&);
+-  static AnchorSpecifierValue* ConvertAnchorScroll(StyleResolverState&,
+-                                                   const CSSValue&);
++  static ScopedCSSNameList* ConvertAnchorName(StyleResolverState&,
++                                              const CSSValue&);
+   static StyleInitialLetter ConvertInitialLetter(StyleResolverState&,
+                                                  const CSSValue&);
+   static StyleOffsetRotation ConvertOffsetRotate(StyleResolverState&,
+@@ -254,7 +257,8 @@ class StyleBuilderConverter {
                                                bool for_visited_link = false);
    static SVGPaint ConvertSVGPaint(StyleResolverState&,
                                    const CSSValue&,
@@ -32,7 +57,7 @@ index 07090144d0700e9f63045939c9fa5f3b2ad090b7..b28534d4b39b847ea1f077f5550c5fd4
    static TextDecorationThickness ConvertTextDecorationThickness(
        StyleResolverState&,
        const CSSValue&);
-@@ -350,6 +353,8 @@ class StyleBuilderConverter {
+@@ -350,6 +354,8 @@ class StyleBuilderConverter {
  
    static AtomicString ConvertViewTransitionName(StyleResolverState&,
                                                  const CSSValue&);
@@ -41,3 +66,12 @@ index 07090144d0700e9f63045939c9fa5f3b2ad090b7..b28534d4b39b847ea1f077f5550c5fd4
  
    // Take a list value for a specified color-scheme, extract flags for known
    // color-schemes and the 'only' modifier, and push the list items into a
+@@ -387,6 +393,8 @@ class StyleBuilderConverter {
+                                                     const CSSValue&);
+   static ScopedCSSNameList* ConvertTimelineScope(StyleResolverState&,
+                                                  const CSSValue&);
++
++  static InsetArea ConvertInsetArea(StyleResolverState&, const CSSValue&);
+ };
+ 
+ template <typename T>

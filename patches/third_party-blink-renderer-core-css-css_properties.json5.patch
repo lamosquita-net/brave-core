@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/css_properties.json5 b/third_party/blink/renderer/core/css/css_properties.json5
-index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78711788ab 100644
+index 871edc0924403a04bf16f4d5602f421d3882473c..9174a016a0d0dfe091e2ae5f6de1714e808e6bc5 100644
 --- a/third_party/blink/renderer/core/css/css_properties.json5
 +++ b/third_party/blink/renderer/core/css/css_properties.json5
 @@ -991,6 +991,19 @@
@@ -48,7 +48,36 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78
      {
        name: "-webkit-locale",
        property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
-@@ -1715,7 +1738,7 @@
+@@ -1615,26 +1638,12 @@
+       name: "anchor-name",
+       property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal" ],
+       include_paths: ["third_party/blink/renderer/core/style/scoped_css_name.h"],
+-      type_name: "ScopedCSSName",
++      type_name: "ScopedCSSNameList",
+       wrapper_pointer_name: "Persistent",
+       default_value: "nullptr",
+       field_group: "*",
+       field_template: "external",
+-      converter: "ConvertNoneOrCustomIdent",
+-      keywords: ["none"],
+-      typedom_types: ["Keyword"],
+-      runtime_flag: "CSSAnchorPositioning",
+-    },
+-    {
+-      name: "anchor-scroll",
+-      property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal" ],
+-      include_paths: ["third_party/blink/renderer/core/style/anchor_specifier_value.h"],
+-      type_name: "AnchorSpecifierValue",
+-      wrapper_pointer_name: "Persistent",
+-      default_value: "AnchorSpecifierValue::Default()",
+-      field_group: "*",
+-      field_template: "external",
+-      converter: "ConvertAnchorScroll",
++      converter: "ConvertAnchorName",
+       keywords: ["none"],
+       typedom_types: ["Keyword"],
+       runtime_flag: "CSSAnchorPositioning",
+@@ -1715,7 +1724,7 @@
      {
        name: "background-clip",
        property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
@@ -57,7 +86,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78
        typedom_types: ["Keyword"],
        separator: " ",
        style_builder_template: "background_layer",
-@@ -1821,29 +1844,15 @@
+@@ -1821,29 +1830,15 @@
        supports_incremental_style: true,
      },
      {
@@ -90,7 +119,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78
        supports_incremental_style: true,
      },
      {
-@@ -2446,7 +2455,7 @@
+@@ -2446,7 +2441,7 @@
        type_name: "ClipPathOperation",
        computed_style_custom_functions: ["getter", "setter"],
        converter: "ConvertClipPath",
@@ -99,7 +128,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78
        typedom_types: ["Keyword"],
      },
      {
-@@ -2694,7 +2703,7 @@
+@@ -2694,7 +2689,7 @@
          "table-row", "table-column-group", "table-column", "table-cell",
          "table-caption", "-webkit-box", "-webkit-inline-box", "flex",
          "inline-flex", "grid", "inline-grid", "contents", "flow-root", "none",
@@ -108,7 +137,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78
        ],
        typedom_types: ["Keyword"],
        style_builder_custom_functions: ["initial", "inherit", "value"],
-@@ -2740,6 +2749,7 @@
+@@ -2740,6 +2735,7 @@
        style_builder_template_args: {
          initial_color: "ComputedStyleInitialValues::InitialFillPaint",
        },
@@ -116,7 +145,39 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78
        valid_for_highlight_legacy: true,
        valid_for_highlight: true,
      },
-@@ -3353,7 +3363,7 @@
+@@ -3279,6 +3275,7 @@
+       keywords: ["auto"],
+       typedom_types: ["Keyword", "Length", "Percentage"],
+       valid_for_first_letter: true,
++      valid_for_position_fallback: true,
+       logical_property_group: {
+         name: "margin",
+         resolver: "bottom",
+@@ -3298,6 +3295,7 @@
+       keywords: ["auto"],
+       typedom_types: ["Keyword", "Length", "Percentage"],
+       valid_for_first_letter: true,
++      valid_for_position_fallback: true,
+       logical_property_group: {
+         name: "margin",
+         resolver: "left",
+@@ -3317,6 +3315,7 @@
+       keywords: ["auto"],
+       typedom_types: ["Keyword", "Length", "Percentage"],
+       valid_for_first_letter: true,
++      valid_for_position_fallback: true,
+       logical_property_group: {
+         name: "margin",
+         resolver: "right",
+@@ -3336,6 +3335,7 @@
+       keywords: ["auto"],
+       typedom_types: ["Keyword", "Length", "Percentage"],
+       valid_for_first_letter: true,
++      valid_for_position_fallback: true,
+       logical_property_group: {
+         name: "margin",
+         resolver: "top",
+@@ -3353,7 +3353,7 @@
        wrapper_pointer_name: "scoped_refptr",
        default_value: "nullptr",
        name_for_methods: "MarkerEndResource",
@@ -125,7 +186,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78
        keywords: ["none"],
        typedom_types: ["Keyword"],
      },
-@@ -3368,7 +3378,7 @@
+@@ -3368,7 +3368,7 @@
        wrapper_pointer_name: "scoped_refptr",
        default_value: "nullptr",
        name_for_methods: "MarkerMidResource",
@@ -134,7 +195,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78
        keywords: ["none"],
        typedom_types: ["Keyword"],
      },
-@@ -3383,7 +3393,7 @@
+@@ -3383,7 +3383,7 @@
        wrapper_pointer_name: "scoped_refptr",
        default_value: "nullptr",
        name_for_methods: "MarkerStartResource",
@@ -143,7 +204,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78
        keywords: ["none"],
        typedom_types: ["Keyword"],
      },
-@@ -3759,6 +3769,13 @@
+@@ -3759,6 +3759,13 @@
        },
        runtime_flag: "CSSLogicalOverflow",
      },
@@ -157,7 +218,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78
      {
        name: "overflow-block",
        logical_property_group: {
-@@ -3767,6 +3784,13 @@
+@@ -3767,6 +3774,13 @@
        },
        runtime_flag: "CSSLogicalOverflow",
      },
@@ -171,7 +232,39 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78
      {
        name: "overflow-clip-margin",
        property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
-@@ -4139,7 +4163,7 @@
+@@ -4030,6 +4044,10 @@
+       style_builder_custom_functions: ["inherit"],
+       // See comment on display.
+       supports_incremental_style: false,
++      // @try-styling rely on this being high-priority, so that declarations
++      // from @try blocks can be applied conditionally based on whether or not
++      // we're out-of-flow positioned.
++      priority: "High",
+     },
+     {
+       name: "position-fallback",
+@@ -4045,6 +4063,20 @@
+       typedom_types: ["Keyword"],
+       runtime_flag: "CSSAnchorPositioning",
+     },
++    {
++      name: "position-fallback-bounds",
++      property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal" ],
++      include_paths: ["third_party/blink/renderer/core/style/scoped_css_name.h"],
++      type_name: "ScopedCSSName",
++      wrapper_pointer_name: "Persistent",
++      default_value: "nullptr",
++      field_group: "*",
++      field_template: "external",
++      converter: "ConvertNormalOrCustomIdent",
++      keywords: ["normal"],
++      typedom_types: ["Keyword"],
++      runtime_flag: "CSSAnchorPositioning",
++    },
+     {
+       name: "quotes",
+       property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
+@@ -4139,7 +4171,7 @@
        supports_incremental_style: true,
      },
      {
@@ -180,7 +273,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78
        name: "scrollbar-color",
        property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
        inherited: true,
-@@ -4703,6 +4727,7 @@
+@@ -4703,6 +4735,7 @@
        style_builder_template_args: {
          initial_color: "ComputedStyleInitialValues::InitialStrokePaint",
        },
@@ -188,7 +281,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78
        valid_for_highlight_legacy: true,
        valid_for_highlight: true,
      },
-@@ -5228,7 +5253,7 @@
+@@ -5228,7 +5261,7 @@
        name: "transform-box",
        property_methods: ["CSSValueFromComputedStyleInternal"],
        field_template: "keyword",
@@ -197,7 +290,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78
        default_value: "view-box",
        typedom_types: ["Keyword"],
        computable: false,
-@@ -5376,6 +5401,19 @@
+@@ -5376,6 +5409,19 @@
        separator: ",",
        runtime_flag: "ScrollTimeline",
      },
@@ -217,7 +310,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78
      {
        name: "view-transition-name",
        field_group: "*",
-@@ -5510,11 +5548,10 @@
+@@ -5510,11 +5556,10 @@
      {
        name: "-webkit-box-direction",
        property_methods: ["CSSValueFromComputedStyleInternal"],
@@ -230,7 +323,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78
      },
      {
        name: "-webkit-box-flex",
-@@ -5666,17 +5703,6 @@
+@@ -5666,17 +5711,6 @@
        keywords: ["auto"],
        typedom_types: ["Keyword", "Length"],
      },
@@ -248,7 +341,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78
      {
        name: "hyphenate-character",
        property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
-@@ -5761,6 +5787,30 @@
+@@ -5761,6 +5795,30 @@
          modifier_type: "Width",
        },
      },
@@ -279,7 +372,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78
      {
        name: "-webkit-mask-clip",
        property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
-@@ -5769,14 +5819,45 @@
+@@ -5769,14 +5827,45 @@
          fill_type: "Clip",
        },
      },
@@ -326,7 +419,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78
      {
        name: "-webkit-mask-image",
        property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
-@@ -5787,6 +5868,21 @@
+@@ -5787,6 +5876,21 @@
          fill_type_getter: "GetImage"
        },
      },
@@ -348,7 +441,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78
      {
        name: "-webkit-mask-origin",
        property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
-@@ -5816,20 +5912,43 @@
+@@ -5816,20 +5920,43 @@
        computable: false,
      },
      {
@@ -362,15 +455,15 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78
        },
 -      computable: false,
 +      runtime_flag: "CSSMaskingInterop",
-     },
-     {
--      name: "-webkit-mask-repeat-y",
++    },
++    {
 +      name: "-webkit-alternative-mask-repeat",
 +      alternative_of: "-webkit-mask-repeat",
 +      alias_for: "mask-repeat",
 +      runtime_flag: "CSSMaskingInterop",
-+    },
-+    {
+     },
+     {
+-      name: "-webkit-mask-repeat-y",
 +      name: "-webkit-mask-repeat",
 +      property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
        style_builder_template: "mask_layer",
@@ -398,7 +491,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78
      },
      {
        name: "-webkit-mask-size",
-@@ -5884,24 +6003,35 @@
+@@ -5884,24 +6011,35 @@
        type_name: "EOrder",
      },
      {
@@ -438,7 +531,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78
      },
      {
        name: "-webkit-tap-highlight-color",
-@@ -6080,7 +6210,7 @@
+@@ -6080,7 +6218,7 @@
        inherited: true,
        // This property is "keyword" but use "primitive" to use `EWhiteSpace` defined manually.
        field_template: "primitive",
@@ -447,7 +540,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78
        // `computed_style_custom_functions` even when `CSSWhiteSpaceShorthand`
        // is off, but give 1 bit to it because `field_size` can't be zero.
        field_size: 1,
-@@ -6098,7 +6228,7 @@
+@@ -6098,7 +6236,7 @@
        name: "-alternative-white-space",
        alternative_of: "white-space",
        longhands: [
@@ -456,7 +549,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78
        ],
        property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
        runtime_flag: "CSSWhiteSpaceShorthand",
-@@ -6120,18 +6250,34 @@
+@@ -6120,18 +6258,34 @@
      },
      {
        name: "text-wrap",
@@ -498,7 +591,63 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78
      },
      {
        name: "widows",
-@@ -6863,7 +7009,7 @@
+@@ -6304,6 +6458,7 @@
+       typedom_types: ["Length", "Percentage"],
+       keywords: ["auto"],
+       valid_for_first_letter: true,
++      valid_for_position_fallback: true,
+     },
+     {
+       name: "margin-inline-end",
+@@ -6316,6 +6471,7 @@
+       typedom_types: ["Length", "Percentage"],
+       keywords: ["auto"],
+       valid_for_first_letter: true,
++      valid_for_position_fallback: true,
+     },
+     {
+       name: "margin-block-start",
+@@ -6328,6 +6484,7 @@
+       typedom_types: ["Length", "Percentage"],
+       keywords: ["auto"],
+       valid_for_first_letter: true,
++      valid_for_position_fallback: true,
+     },
+     {
+       name: "margin-block-end",
+@@ -6340,6 +6497,7 @@
+       typedom_types: ["Length", "Percentage"],
+       keywords: ["auto"],
+       valid_for_first_letter: true,
++      valid_for_position_fallback: true,
+     },
+     {
+       name: "padding-inline-start",
+@@ -6807,6 +6965,23 @@
+       is_descriptor: true,
+       is_property: false,
+     },
++    {
++      name: "inset-area",
++      property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
++      field_group: "*",
++      field_template: "external",
++      include_paths: ["third_party/blink/renderer/core/style/inset_area.h"],
++      converter: "ConvertInsetArea",
++      default_value: "InsetArea()",
++      type_name: "InsetArea",
++      keywords: [
++        "none", "top", "bottom", "center", "left", "right", "x-start", "x-end",
++        "y-start", "y-end", "start", "end", "self-start", "self-end", "all"
++      ],
++      typedom_types: ["Keyword"],
++      valid_for_position_fallback: true,
++      runtime_flag: "CSSAnchorPositioning",
++    },
+ 
+     // Shorthands
+     {
+@@ -6863,7 +7038,7 @@
        name: "background",
        longhands: [
          "background-image", "background-position-x", "background-position-y",
@@ -507,7 +656,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78
          "background-attachment", "background-origin", "background-clip",
          "background-color"
        ],
-@@ -6877,12 +7023,6 @@
+@@ -6877,12 +7052,6 @@
        computable: true,
        supports_incremental_style: true,
      },
@@ -520,7 +669,29 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78
      {
        name: "border",
        longhands: [
-@@ -7387,13 +7527,14 @@
+@@ -7247,16 +7416,21 @@
+       longhands: ["margin-top", "margin-right", "margin-bottom", "margin-left"],
+       property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
+       layout_dependent: true,
++      valid_for_position_fallback: true,
+     },
+     {
+       name: "margin-block",
+       longhands: ["margin-block-start", "margin-block-end"],
+       property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
++      layout_dependent: true,
++      valid_for_position_fallback: true,
+     },
+     {
+       name: "margin-inline",
+       longhands: ["margin-inline-start", "margin-inline-end"],
+       property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
++      layout_dependent: true,
++      valid_for_position_fallback: true,
+     },
+     {
+       name: "marker",
+@@ -7387,13 +7561,14 @@
        name: "transition",
        longhands: [
          "transition-property", "transition-duration",
@@ -537,7 +708,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78
        property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
        runtime_flag: "ScrollTimeline",
      },
-@@ -7440,15 +7581,35 @@
+@@ -7440,15 +7615,35 @@
        longhands: ["column-width", "column-count"],
        property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
      },
@@ -575,7 +746,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78
      {
        name: "-webkit-mask-box-image",
        longhands: [
-@@ -7460,14 +7621,22 @@
+@@ -7460,14 +7655,22 @@
        computable: true,
      },
      {
@@ -601,7 +772,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..3ffb6ff432a7556456be05c1da1fcc78
        property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
        computable: true,
      },
-@@ -8015,8 +8184,6 @@
+@@ -8015,8 +8218,6 @@
        name: "-webkit-backface-visibility",
        alias_for: "backface-visibility",
      },

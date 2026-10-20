@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/forms/menu_list_inner_element.cc b/third_party/blink/renderer/core/html/forms/menu_list_inner_element.cc
-index 6aab4c7abef37f755354f8810c3bb5774da9c264..f83259a0e6cad1c8ddc561956a512d69127f1e5d 100644
+index 6aab4c7abef37f755354f8810c3bb5774da9c264..4fa86d03590751a2c0bbaa893ba0ee54cbbdd23a 100644
 --- a/third_party/blink/renderer/core/html/forms/menu_list_inner_element.cc
 +++ b/third_party/blink/renderer/core/html/forms/menu_list_inner_element.cc
 @@ -29,7 +29,9 @@ MenuListInnerElement::CustomStyleForLayoutObject(
@@ -13,7 +13,16 @@ index 6aab4c7abef37f755354f8810c3bb5774da9c264..f83259a0e6cad1c8ddc561956a512d69
    style_builder.SetOverflowX(EOverflow::kHidden);
    style_builder.SetOverflowY(EOverflow::kHidden);
    style_builder.SetShouldIgnoreOverflowPropertyForInlineBlockBaseline();
-@@ -59,24 +61,30 @@ MenuListInnerElement::CustomStyleForLayoutObject(
+@@ -52,31 +54,38 @@ MenuListInnerElement::CustomStyleForLayoutObject(
+   // when the content overflows, treat it the same as align-items: flex-start.
+   // But we only do that for the cases where html.css would otherwise use
+   // center.
+-  if (parent_style.AlignItems().GetPosition() == ItemPosition::kCenter) {
++  if (parent_style.AlignItems().GetPosition() == ItemPosition::kCenter ||
++      parent_style.AlignItems().GetPosition() == ItemPosition::kAnchorCenter) {
+     style_builder.SetMarginTop(Length());
+     style_builder.SetMarginBottom(Length());
+     style_builder.SetAlignSelf(StyleSelfAlignmentData(
          ItemPosition::kStart, OverflowAlignment::kDefault));
    }
  

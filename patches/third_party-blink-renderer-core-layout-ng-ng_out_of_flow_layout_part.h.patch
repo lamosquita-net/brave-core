@@ -1,7 +1,22 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/ng_out_of_flow_layout_part.h b/third_party/blink/renderer/core/layout/ng/ng_out_of_flow_layout_part.h
-index 3dab77bc2f4fee24217aefc8aefaea53fa6999c3..5a4c5be87276374461903587fa413c78971b2031 100644
+index 3dab77bc2f4fee24217aefc8aefaea53fa6999c3..7055c4961f344e78bb02f81bbf19d5f69d1cec27 100644
 --- a/third_party/blink/renderer/core/layout/ng/ng_out_of_flow_layout_part.h
 +++ b/third_party/blink/renderer/core/layout/ng/ng_out_of_flow_layout_part.h
+@@ -9,13 +9,13 @@
+ #include "third_party/blink/renderer/core/core_export.h"
+ #include "third_party/blink/renderer/core/layout/geometry/logical_rect.h"
+ #include "third_party/blink/renderer/core/layout/geometry/physical_offset.h"
+-#include "third_party/blink/renderer/core/layout/geometry/scroll_offset_range.h"
+ #include "third_party/blink/renderer/core/layout/ng/geometry/ng_static_position.h"
+ #include "third_party/blink/renderer/core/layout/ng/inline/inline_containing_block_utils.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_absolute_utils.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_block_node.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_box_fragment_builder.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_constraint_space.h"
++#include "third_party/blink/renderer/core/layout/ng/non_overflowing_scroll_range.h"
+ #include "third_party/blink/renderer/core/style/computed_style_base_constants.h"
+ #include "third_party/blink/renderer/platform/heap/collection_support/heap_hash_map.h"
+ #include "third_party/blink/renderer/platform/heap/collection_support/heap_hash_set.h"
 @@ -212,6 +212,9 @@ class CORE_EXPORT NGOutOfFlowLayoutPart {
      DISALLOW_NEW();
  
@@ -12,3 +27,49 @@ index 3dab77bc2f4fee24217aefc8aefaea53fa6999c3..5a4c5be87276374461903587fa413c78
      LogicalOffset offset;
      // If |has_cached_layout_result| is true, this will hold the cached layout
      // result that should be returned. Otherwise, this will hold the initial
+@@ -223,6 +226,15 @@ class CORE_EXPORT NGOutOfFlowLayoutPart {
+     absl::optional<LayoutUnit> block_estimate;
+     NGLogicalOutOfFlowDimensions node_dimensions;
+ 
++    // The offset from the OOF to the top of the fragmentation context root.
++    // This should only be used when laying out a fragmentainer descendant.
++    LogicalOffset original_offset;
++
++    // These fields are set only if this |OffsetInfo| is calculated from a
++    // position fallback style, either from a @try rule or auto-generated.
++    absl::optional<wtf_size_t> fallback_index;
++    Vector<NonOverflowingScrollRange> non_overflowing_ranges;
++
+     bool inline_size_depends_on_min_max_sizes = false;
+ 
+     // If true, a cached layout result was found. See the comment for
+@@ -231,14 +243,13 @@ class CORE_EXPORT NGOutOfFlowLayoutPart {
+ 
+     bool disable_first_tier_cache = false;
+ 
+-    // The offset from the OOF to the top of the fragmentation context root.
+-    // This should only be used when laying out a fragmentainer descendant.
+-    LogicalOffset original_offset;
++    bool uses_fallback_style = false;
+ 
+-    // These two fields are set only if this |OffsetInfo| is calculated from a
+-    // @try rule of a @position-fallback rule.
+-    absl::optional<wtf_size_t> fallback_index;
+-    Vector<PhysicalScrollRange> non_overflowing_ranges;
++    // True if this element is anchor-positioned, and any anchor reference in
++    // the axis is in the same scroll container as the default anchor, in which
++    // case we need scroll adjustment in the axis after layout.
++    bool needs_scroll_adjustment_in_x = false;
++    bool needs_scroll_adjustment_in_y = false;
+ 
+     void Trace(Visitor* visitor) const;
+   };
+@@ -332,7 +343,7 @@ class CORE_EXPORT NGOutOfFlowLayoutPart {
+       const LayoutObject* implicit_anchor,
+       bool try_fit_available_space,
+       bool is_first_run,
+-      PhysicalScrollRange* out_scroll_range);
++      NonOverflowingScrollRange* out_scroll_range);
+ 
+   const NGLayoutResult* Layout(
+       const NodeToLayout& oof_node_to_layout,

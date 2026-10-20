@@ -1,0 +1,22 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/ng_anchor_query_map.cc b/third_party/blink/renderer/core/layout/ng/ng_anchor_query_map.cc
+index 225d8db0cfa012df72a22e5e888ca40f08a15715..c5898e436a2a56da20a298937c331cfa2774bc2b 100644
+--- a/third_party/blink/renderer/core/layout/ng/ng_anchor_query_map.cc
++++ b/third_party/blink/renderer/core/layout/ng/ng_anchor_query_map.cc
+@@ -324,10 +324,13 @@ struct NGStitchedAnchorQueries {
+       NGStitchedAnchorQuery& query =
+           EnsureStitchedAnchorQuery(*containing_block);
+       if (fragment.Style().AnchorName()) {
+-        query.AddAnchorReference(
+-            fragment.Style().AnchorName(), *fragment.GetLayoutObject(),
+-            {offset_from_fragmentainer, fragment.Size()}, fragmentainer,
+-            NGStitchedAnchorQuery::Conflict::kOverwriteIfAfter);
++        for (const ScopedCSSName* name :
++             fragment.Style().AnchorName()->GetNames()) {
++          query.AddAnchorReference(
++              name, *fragment.GetLayoutObject(),
++              {offset_from_fragmentainer, fragment.Size()}, fragmentainer,
++              NGStitchedAnchorQuery::Conflict::kOverwriteIfAfter);
++        }
+       }
+       if (fragment.IsImplicitAnchor()) {
+         query.AddAnchorReference(

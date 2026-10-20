@@ -1,8 +1,17 @@
 diff --git a/third_party/blink/renderer/core/css/css_grouping_rule.cc b/third_party/blink/renderer/core/css/css_grouping_rule.cc
-index a7dcc9dd92f03d8ce65a85b48b9fe5239175ab8a..095802dadd4afaa9dc8b2a2d1a9dbc8d48464a09 100644
+index a7dcc9dd92f03d8ce65a85b48b9fe5239175ab8a..b47478df6df5040d5b5804ae9a9e88ccd59f5da1 100644
 --- a/third_party/blink/renderer/core/css/css_grouping_rule.cc
 +++ b/third_party/blink/renderer/core/css/css_grouping_rule.cc
-@@ -37,6 +37,7 @@
+@@ -30,13 +30,16 @@
+ 
+ #include "third_party/blink/renderer/core/css/css_grouping_rule.h"
+ 
++#include "third_party/blink/renderer/core/css/css_position_fallback_rule.h"
+ #include "third_party/blink/renderer/core/css/css_rule_list.h"
+ #include "third_party/blink/renderer/core/css/css_style_rule.h"
+ #include "third_party/blink/renderer/core/css/css_style_sheet.h"
++#include "third_party/blink/renderer/core/css/css_try_rule.h"
+ #include "third_party/blink/renderer/core/css/parser/css_parser.h"
  #include "third_party/blink/renderer/core/execution_context/execution_context.h"
  #include "third_party/blink/renderer/platform/bindings/exception_state.h"
  #include "third_party/blink/renderer/platform/heap/garbage_collected.h"
@@ -10,10 +19,46 @@ index a7dcc9dd92f03d8ce65a85b48b9fe5239175ab8a..095802dadd4afaa9dc8b2a2d1a9dbc8d
  #include "third_party/blink/renderer/platform/wtf/text/string_builder.h"
  
  namespace blink {
-@@ -77,6 +78,15 @@ StyleRuleBase* ParseRuleForInsert(const ExecutionContext* execution_context,
-   StyleRuleBase* new_rule = CSSParser::ParseRule(
-       context, style_sheet ? style_sheet->Contents() : nullptr, nesting_type,
-       parent_rule_for_nesting, rule_string);
+@@ -69,14 +72,43 @@ StyleRuleBase* ParseRuleForInsert(const ExecutionContext* execution_context,
+   auto* context = MakeGarbageCollected<CSSParserContext>(
+       parent_rule.ParserContext(execution_context->GetSecureContextMode()),
+       style_sheet);
+-  StyleRule* parent_rule_for_nesting =
+-      FindClosestParentStyleRuleOrNull(&parent_rule);
+-  CSSNestingType nesting_type = parent_rule_for_nesting
+-                                    ? CSSNestingType::kNesting
+-                                    : CSSNestingType::kNone;
+-  StyleRuleBase* new_rule = CSSParser::ParseRule(
+-      context, style_sheet ? style_sheet->Contents() : nullptr, nesting_type,
+-      parent_rule_for_nesting, rule_string);
++  StyleRuleBase* new_rule = nullptr;
++  StyleRule* parent_rule_for_nesting = nullptr;
++  CSSNestingType nesting_type = CSSNestingType::kNone;
++  if (IsA<CSSPositionFallbackRule>(parent_rule)) {
++    new_rule = CSSParser::ParseTryRule(context, rule_string);
++    if (!new_rule) {
++      // Try reparse `new_rule` as other rules to decide if we should throw a
++      // SyntaxError (`new_rule` doesn't parse) or HierarchyRequestError
++      // (`new_rule` can parse but isn't a @try rule).
++      if (CSSParser::ParseRule(
++              context, style_sheet ? style_sheet->Contents() : nullptr,
++              CSSNestingType::kNone, /*parent_rule_for_nesting=*/nullptr,
++              rule_string)) {
++        exception_state.ThrowDOMException(
++            DOMExceptionCode::kHierarchyRequestError,
++            "only '@try' rules can be inserted into '@position-fallback' "
++            "rule.");
++        return nullptr;
++      }
++    }
++  } else {
++    parent_rule_for_nesting = FindClosestParentStyleRuleOrNull(&parent_rule);
++    nesting_type = parent_rule_for_nesting ? CSSNestingType::kNesting
++                                           : CSSNestingType::kNone;
++    new_rule = CSSParser::ParseRule(
++        context, style_sheet ? style_sheet->Contents() : nullptr, nesting_type,
++        parent_rule_for_nesting, rule_string);
++  }
 +
 +  if (!new_rule && parent_rule_for_nesting &&
 +      RuntimeEnabledFeatures::CSSNestedDeclarationsEnabled()) {
@@ -26,7 +71,7 @@ index a7dcc9dd92f03d8ce65a85b48b9fe5239175ab8a..095802dadd4afaa9dc8b2a2d1a9dbc8d
    if (!new_rule) {
      exception_state.ThrowDOMException(
          DOMExceptionCode::kSyntaxError,
-@@ -101,7 +111,8 @@ StyleRuleBase* ParseRuleForInsert(const ExecutionContext* execution_context,
+@@ -101,7 +133,8 @@ StyleRuleBase* ParseRuleForInsert(const ExecutionContext* execution_context,
      return nullptr;
    }
  
@@ -36,7 +81,7 @@ index a7dcc9dd92f03d8ce65a85b48b9fe5239175ab8a..095802dadd4afaa9dc8b2a2d1a9dbc8d
      for (const CSSRule* current = &parent_rule; current != nullptr;
           current = current->parentRule()) {
        if (IsA<CSSStyleRule>(current)) {
-@@ -109,8 +120,8 @@ StyleRuleBase* ParseRuleForInsert(const ExecutionContext* execution_context,
+@@ -109,8 +142,8 @@ StyleRuleBase* ParseRuleForInsert(const ExecutionContext* execution_context,
          // so inserting this rule is not allowed.
          exception_state.ThrowDOMException(
              DOMExceptionCode::kHierarchyRequestError,
@@ -47,7 +92,7 @@ index a7dcc9dd92f03d8ce65a85b48b9fe5239175ab8a..095802dadd4afaa9dc8b2a2d1a9dbc8d
          return nullptr;
        }
      }
-@@ -172,107 +183,33 @@ void CSSGroupingRule::deleteRule(unsigned index,
+@@ -172,107 +205,33 @@ void CSSGroupingRule::deleteRule(unsigned index,
    child_rule_cssom_wrappers_.EraseAt(index);
  }
  
@@ -121,10 +166,7 @@ index a7dcc9dd92f03d8ce65a85b48b9fe5239175ab8a..095802dadd4afaa9dc8b2a2d1a9dbc8d
 -
 -      // 4.3.2. Append decls to s.
 -      result.Append(decls);
-+  // 3. A single SPACE (U+0020), followed by the string "{", i.e., LEFT CURLY
-+  //    BRACKET (U+007B), followed by a newline.
-+  result.Append(" {\n");
- 
+-
 -      // 4.3.3. Append " }" to s (i.e. a single SPACE (U+0020) followed by RIGHT
 -      // CURLY BRACKET (U+007D)).
 -      result.Append(" }");
@@ -138,7 +180,10 @@ index a7dcc9dd92f03d8ce65a85b48b9fe5239175ab8a..095802dadd4afaa9dc8b2a2d1a9dbc8d
 -    // 4.4.2. For each rule in rules: [done above]
 -    //   4.4.2.1. Append a newline followed by two spaces to s.
 -    //   4.4.2.2. Append rule to s.
--
++  // 3. A single SPACE (U+0020), followed by the string "{", i.e., LEFT CURLY
++  //    BRACKET (U+007B), followed by a newline.
++  result.Append(" {\n");
+ 
 -    result.Append("\n  ");
 -    result.Append(decls);
 -

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/document.cc b/third_party/blink/renderer/core/dom/document.cc
-index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..6cb46cbcdc264e5e25d8d003408b77f308dfde14 100644
+index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..9b011ebaad420ae5fe0434bf841ad701d3022c03 100644
 --- a/third_party/blink/renderer/core/dom/document.cc
 +++ b/third_party/blink/renderer/core/dom/document.cc
 @@ -79,6 +79,7 @@
@@ -273,7 +273,15 @@ index 5e47f5d8e6e59058d0f74f0e4a836e218d9926ff..6cb46cbcdc264e5e25d8d003408b77f3
    visitor->Trace(anchor_element_interaction_tracker_);
    visitor->Trace(focused_element_change_observers_);
    visitor->Trace(pending_link_header_preloads_);
-@@ -9296,6 +9412,21 @@ Resource* Document::GetPendingLinkPreloadForTesting(const KURL& url) {
+@@ -9211,6 +9327,7 @@ void Document::RunPostPrerenderingActivationSteps() {
+ bool Document::InStyleRecalc() const {
+   return lifecycle_.GetState() == DocumentLifecycle::kInStyleRecalc ||
+          style_engine_->InContainerQueryStyleRecalc() ||
++         style_engine_->InPositionFallbackStyleRecalc() ||
+          style_engine_->InEnsureComputedStyle();
+ }
+ 
+@@ -9296,6 +9413,21 @@ Resource* Document::GetPendingLinkPreloadForTesting(const KURL& url) {
    return nullptr;
  }
  

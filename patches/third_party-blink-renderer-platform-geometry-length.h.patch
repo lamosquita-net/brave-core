@@ -1,8 +1,24 @@
 diff --git a/third_party/blink/renderer/platform/geometry/length.h b/third_party/blink/renderer/platform/geometry/length.h
-index 632ed79e31f2513328f8bcd0fa5dd2de9c6cc4e6..55c85be3d98c4d745fa29c8c8c5383677229ae07 100644
+index 632ed79e31f2513328f8bcd0fa5dd2de9c6cc4e6..0b83c84028616e8568f51a76d9bdd7e8ae5d7dd8 100644
 --- a/third_party/blink/renderer/platform/geometry/length.h
 +++ b/third_party/blink/renderer/platform/geometry/length.h
-@@ -318,6 +318,8 @@ class PLATFORM_EXPORT Length {
+@@ -50,6 +50,7 @@ class Length;
+ 
+ PLATFORM_EXPORT extern const Length& g_auto_length;
+ PLATFORM_EXPORT extern const Length& g_none_length;
++PLATFORM_EXPORT extern const Length& g_fixed_zero_length;
+ 
+ class PLATFORM_EXPORT Length {
+   DISALLOW_NEW();
+@@ -145,6 +146,7 @@ class PLATFORM_EXPORT Length {
+     return Length(number, kFixed);
+   }
+   static Length Fixed() { return Length(kFixed); }
++  static const Length& FixedZero() { return g_fixed_zero_length; }
+   static const Length& Auto() { return g_auto_length; }
+   static Length FillAvailable() { return Length(kFillAvailable); }
+   static Length MinContent() { return Length(kMinContent); }
+@@ -318,6 +320,8 @@ class PLATFORM_EXPORT Length {
  
    Length SubtractFromOneHundredPercent() const;
  

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_cascade.cc b/third_party/blink/renderer/core/css/resolver/style_cascade.cc
-index bedb7ec7720796c722b00ec96cf9a00d41f32e10..c6581e4ebcda0237130127e0931508a9b421cdbc 100644
+index bedb7ec7720796c722b00ec96cf9a00d41f32e10..f316a21ffed7497ded7ead636e1bddefdeeff303 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_cascade.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_cascade.cc
 @@ -198,6 +198,12 @@ void StyleCascade::Apply(CascadeFilter filter) {
@@ -15,7 +15,17 @@ index bedb7ec7720796c722b00ec96cf9a00d41f32e10..c6581e4ebcda0237130127e0931508a9
    if (map_.NativeBitset().Has(CSSPropertyID::kWebkitMaskImage)) {
      // -webkit-mask-image needs to be applied before -webkit-mask-composite,
      // otherwise -webkit-mask-composite has no effect.
-@@ -548,7 +554,7 @@ void StyleCascade::ApplyWideOverlapping(CascadeResolver& resolver) {
+@@ -395,7 +401,8 @@ void StyleCascade::AnalyzeInterpolations() {
+       auto name = active_interpolation.key.GetCSSPropertyName();
+       uint32_t position = EncodeInterpolationPosition(
+           name.Id(), i, active_interpolation.key.IsPresentationAttribute());
+-      CascadePriority priority(entries[i].origin, false, 0, false, 0, position);
++      CascadePriority priority(entries[i].origin, false, 0, false, false, 0,
++                               position);
+ 
+       CSSPropertyRef ref(name, GetDocument());
+       DCHECK(ref.IsValid());
+@@ -548,7 +555,7 @@ void StyleCascade::ApplyWideOverlapping(CascadeResolver& resolver) {
        if (const CascadePriority* priority =
                map_.Find(white_space.GetCSSPropertyName())) {
          LookupAndApply(white_space, resolver);
@@ -24,3 +34,33 @@ index bedb7ec7720796c722b00ec96cf9a00d41f32e10..c6581e4ebcda0237130127e0931508a9
        }
      }
    }
+@@ -613,7 +620,7 @@ void StyleCascade::ApplyInterpolationMap(const ActiveInterpolationsMap& map,
+     auto name = entry.key.GetCSSPropertyName();
+     uint32_t position = EncodeInterpolationPosition(
+         name.Id(), index, entry.key.IsPresentationAttribute());
+-    CascadePriority priority(origin, false, 0, false, 0, position);
++    CascadePriority priority(origin, false, 0, false, false, 0, position);
+     priority = CascadePriority(priority, resolver.generation_);
+ 
+     CSSPropertyRef ref(name, GetDocument());
+@@ -889,7 +896,7 @@ const CSSValue* StyleCascade::Resolve(const CSSProperty& property,
+   if (result->IsRevertValue()) {
+     return ResolveRevert(property, *result, origin, resolver);
+   }
+-  if (result->IsRevertLayerValue()) {
++  if (result->IsRevertLayerValue() || TreatAsRevertLayer(priority)) {
+     return ResolveRevertLayer(property, *result, priority, origin, resolver);
+   }
+ 
+@@ -1369,6 +1376,11 @@ void StyleCascade::MarkHasVariableReference(const CSSProperty& property) {
+   state_.StyleBuilder().SetHasVariableReference();
+ }
+ 
++bool StyleCascade::TreatAsRevertLayer(CascadePriority priority) const {
++  return priority.IsFallbackStyle() && !ComputedStyle::HasOutOfFlowPosition(
++                                           state_.StyleBuilder().GetPosition());
++}
++
+ const Document& StyleCascade::GetDocument() const {
+   return state_.GetDocument();
+ }

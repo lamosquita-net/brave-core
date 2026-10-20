@@ -1,7 +1,16 @@
 diff --git a/third_party/blink/renderer/core/dom/element.h b/third_party/blink/renderer/core/dom/element.h
-index 640e53d474d0e132bf72388ac410015f66b55f48..f5b0e2a9deb3e2e4d4502449ab8f131acf18a93f 100644
+index 640e53d474d0e132bf72388ac410015f66b55f48..1b8e3b5cc8c18d0719747e2a5fb1ebac6e79cf0f 100644
 --- a/third_party/blink/renderer/core/dom/element.h
 +++ b/third_party/blink/renderer/core/dom/element.h
+@@ -67,7 +67,7 @@ namespace blink {
+ 
+ class AccessibleNode;
+ class AnchorElementObserver;
+-class AnchorScrollData;
++class AnchorPositionScrollData;
+ class AriaNotificationOptions;
+ class Attr;
+ class Attribute;
 @@ -93,6 +93,7 @@ class ElementIntersectionObserverData;
  class ElementRareDataVector;
  class ExceptionState;
@@ -10,7 +19,15 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..f5b0e2a9deb3e2e4d4502449ab8f131a
  class GetInnerHTMLOptions;
  class HTMLTemplateElement;
  class Image;
-@@ -356,6 +357,7 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -102,6 +103,7 @@ class MutableCSSPropertyValueSet;
+ class NamedNodeMap;
+ class PointerLockOptions;
+ class PopoverData;
++class PositionFallbackData;
+ class PseudoElement;
+ class ResizeObservation;
+ class ResizeObserver;
+@@ -356,6 +358,7 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    int ClientTopNoLayout() const;
    int clientWidth();
    int clientHeight();
@@ -18,7 +35,7 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..f5b0e2a9deb3e2e4d4502449ab8f131a
    double scrollLeft();
    double scrollTop();
    void setScrollLeft(double);
-@@ -638,6 +640,10 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -638,6 +641,10 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    void HandleSubtreeModifications();
    void PseudoStateChanged(CSSSelector::PseudoType);
    void PseudoStateChangedForTesting(CSSSelector::PseudoType);
@@ -29,7 +46,7 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..f5b0e2a9deb3e2e4d4502449ab8f131a
    void SetAnimationStyleChange(bool);
    void SetNeedsAnimationStyleRecalc();
  
-@@ -674,7 +680,9 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -674,7 +681,9 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
        ShadowRootType,
        FocusDelegation focus_delegation = FocusDelegation::kNone,
        SlotAssignmentMode slot_assignment_mode = SlotAssignmentMode::kNamed,
@@ -40,7 +57,7 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..f5b0e2a9deb3e2e4d4502449ab8f131a
  
    // Returns the shadow root attached to this element if it is a shadow host.
    ShadowRoot* GetShadowRoot() const;
-@@ -743,7 +751,8 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -743,7 +752,8 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    virtual bool IsLiveLink() const { return false; }
    KURL HrefURL() const;
  
@@ -50,7 +67,7 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..f5b0e2a9deb3e2e4d4502449ab8f131a
  
    KURL GetNonEmptyURLAttribute(const QualifiedName&) const;
  
-@@ -838,8 +847,15 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -838,8 +848,15 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    void setInnerHTML(const String&, ExceptionState& = ASSERT_NO_EXCEPTION);
    void setInnerHTMLWithDeclarativeShadowDOMForTesting(const String& html);
    String getInnerHTML(const GetInnerHTMLOptions* options) const;
@@ -66,7 +83,7 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..f5b0e2a9deb3e2e4d4502449ab8f131a
    void setPointerCapture(PointerId poinetr_id, ExceptionState&);
    void releasePointerCapture(PointerId pointer_id, ExceptionState&);
  
-@@ -876,6 +892,8 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -876,6 +893,8 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    // usage of this ID is limited to pseudo elements generated for a
    // ViewTransition. See
    // third_party/blink/renderer/core/view_transition/README.md
@@ -75,7 +92,17 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..f5b0e2a9deb3e2e4d4502449ab8f131a
    PseudoElement* GetPseudoElement(
        PseudoId,
        const AtomicString& view_transition_name = g_null_atom) const;
-@@ -1155,11 +1173,18 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1097,6 +1116,9 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+   ContainerQueryEvaluator& EnsureContainerQueryEvaluator();
+   bool SkippedContainerStyleRecalc() const;
+ 
++  PositionFallbackData& EnsurePositionFallbackData();
++  PositionFallbackData* GetPositionFallbackData() const;
++
+   // See PostStyleUpdateScope::PseudoData::AddPendingBackdrop
+   void ApplyPendingBackdropPseudoElementUpdate();
+ 
+@@ -1155,11 +1177,18 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    absl::optional<LayoutUnit> LastRememberedInlineSize() const;
    absl::optional<LayoutUnit> LastRememberedBlockSize() const;
  
@@ -99,7 +126,7 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..f5b0e2a9deb3e2e4d4502449ab8f131a
        PseudoId pseudo_id,
        const AtomicString& view_transition_name) const;
  
-@@ -1170,7 +1195,7 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1170,7 +1199,7 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
  
    // Returns true if the element has the 'inert' attribute, forcing itself and
    // all its subtree to be inert.
@@ -108,7 +135,20 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..f5b0e2a9deb3e2e4d4502449ab8f131a
  
    FocusgroupFlags GetFocusgroupFlags() const;
  
-@@ -1204,6 +1229,16 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1189,9 +1218,9 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+   PopoverData* EnsurePopoverData();
+   PopoverData* GetPopoverData() const;
+ 
+-  AnchorScrollData& EnsureAnchorScrollData();
+-  void RemoveAnchorScrollData();
+-  AnchorScrollData* GetAnchorScrollData() const;
++  AnchorPositionScrollData& EnsureAnchorPositionScrollData();
++  void RemoveAnchorPositionScrollData();
++  AnchorPositionScrollData* GetAnchorPositionScrollData() const;
+ 
+   // Returns true if any element is implicitly anchored to this element.
+   bool HasImplicitlyAnchoredElement() const;
+@@ -1204,6 +1233,16 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    // https://drafts.csswg.org/css-anchor-1/#implicit-anchor-element
    Element* ImplicitAnchorElement();
  
@@ -125,7 +165,7 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..f5b0e2a9deb3e2e4d4502449ab8f131a
   protected:
    bool HasElementData() const { return element_data_; }
    const ElementData* GetElementData() const { return element_data_.Get(); }
-@@ -1300,6 +1335,13 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1300,6 +1339,13 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    // changes.
    void LangAttributeChanged();
  
@@ -139,7 +179,7 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..f5b0e2a9deb3e2e4d4502449ab8f131a
   private:
    friend class AXObject;
    struct AffectedByPseudoStateChange;
-@@ -1324,7 +1366,7 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1324,7 +1370,7 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
        delete;  // This will catch anyone doing an unnecessary check.
  
    bool CanAttachShadowRoot() const;
@@ -148,7 +188,25 @@ index 640e53d474d0e132bf72388ac410015f66b55f48..f5b0e2a9deb3e2e4d4502449ab8f131a
  
    void StyleAttributeChanged(const AtomicString& new_style_string,
                               AttributeModificationReason);
-@@ -1420,6 +1462,8 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1355,7 +1401,8 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+   // reach this element during the subsequent layout to continue doing
+   // interleaved style and layout.
+   bool SkipStyleRecalcForContainer(const ComputedStyle& style,
+-                                   const StyleRecalcChange& child_change);
++                                   const StyleRecalcChange& child_change,
++                                   const StyleRecalcContext&);
+ 
+   void MarkNonSlottedHostChildrenForStyleRecalc();
+ 
+@@ -1371,7 +1418,6 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+       const StyleRecalcChange,
+       const StyleRecalcContext&,
+       const AtomicString& view_transition_name = g_null_atom);
+-
+   enum class StyleUpdatePhase {
+     kRecalc,
+     kRebuildLayoutTree,
+@@ -1420,6 +1466,8 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
      DetachPseudoElement(kPseudoIdFirstLetter, performing_reattach);
    }
  

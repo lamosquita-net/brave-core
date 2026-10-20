@@ -1,8 +1,22 @@
 diff --git a/third_party/blink/renderer/platform/geometry/length.cc b/third_party/blink/renderer/platform/geometry/length.cc
-index 3f83cf96be0d18ac3c6f9cc441319fa3850ce971..a5400b28402a61df752914f6eccca7d2542441ca 100644
+index 3f83cf96be0d18ac3c6f9cc441319fa3850ce971..92fa279c77d485b614868e434b950e5136ae210d 100644
 --- a/third_party/blink/renderer/platform/geometry/length.cc
 +++ b/third_party/blink/renderer/platform/geometry/length.cc
-@@ -162,6 +162,27 @@ Length Length::SubtractFromOneHundredPercent() const {
+@@ -37,11 +37,13 @@ namespace blink {
+ 
+ PLATFORM_EXPORT DEFINE_GLOBAL(Length, g_auto_length);
+ PLATFORM_EXPORT DEFINE_GLOBAL(Length, g_none_length);
++PLATFORM_EXPORT DEFINE_GLOBAL(Length, g_fixed_zero_length);
+ 
+ // static
+ void Length::Initialize() {
+   new (WTF::NotNullTag::kNotNull, (void*)&g_auto_length) Length(kAuto);
+   new (WTF::NotNullTag::kNotNull, (void*)&g_none_length) Length(kNone);
++  new (WTF::NotNullTag::kNotNull, (void*)&g_fixed_zero_length) Length(kFixed);
+ }
+ 
+ class CalculationValueHandleMap {
+@@ -162,6 +164,27 @@ Length Length::SubtractFromOneHundredPercent() const {
    return Length::Fixed(result->Pixels());
  }
  

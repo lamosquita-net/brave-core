@@ -1,7 +1,16 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_box.cc b/third_party/blink/renderer/core/layout/layout_box.cc
-index c2f1775ffaed54914a1cdd313a207364ba7d887d..5683e8dc45bf12e00246925ea6da2bf1beaa95c6 100644
+index c2f1775ffaed54914a1cdd313a207364ba7d887d..160183ceceeb9748b4581f5c4a01ce6844d9ae00 100644
 --- a/third_party/blink/renderer/core/layout/layout_box.cc
 +++ b/third_party/blink/renderer/core/layout/layout_box.cc
+@@ -58,7 +58,7 @@
+ #include "third_party/blink/renderer/core/html/shadow/shadow_element_utils.h"
+ #include "third_party/blink/renderer/core/input/event_handler.h"
+ #include "third_party/blink/renderer/core/input_type_names.h"
+-#include "third_party/blink/renderer/core/layout/anchor_scroll_data.h"
++#include "third_party/blink/renderer/core/layout/anchor_position_scroll_data.h"
+ #include "third_party/blink/renderer/core/layout/box_layout_extra_input.h"
+ #include "third_party/blink/renderer/core/layout/custom_scrollbar.h"
+ #include "third_party/blink/renderer/core/layout/geometry/physical_rect.h"
 @@ -310,24 +310,27 @@ LayoutUnit ListBoxDefaultItemHeight(const LayoutBox& box) {
  // TODO(crbug.com/1040826): This function is written in LayoutObject API
  // so that this works in both of the legacy layout and LayoutNG. We
@@ -61,7 +70,23 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..5683e8dc45bf12e00246925ea6da2bf1
      }
  
      // When a layout hint happens and an object's position style changes, we
-@@ -1039,6 +1042,7 @@ LayoutUnit LayoutBox::ClientHeightFrom(LayoutUnit height) const {
+@@ -752,15 +755,6 @@ void LayoutBox::StyleDidChange(StyleDifference diff,
+   if (IsCustomItem())
+     GetCustomLayoutChild()->styleMap()->UpdateStyle(GetDocument(), StyleRef());
+ 
+-  if (diff.NeedsNormalPaintInvalidation()) {
+-    if (const AnchorSpecifierValue* old_anchor_scroll =
+-            old_style ? old_style->AnchorScroll() : nullptr;
+-        !base::ValuesEquivalent(StyleRef().AnchorScroll().Get(),
+-                                old_anchor_scroll)) {
+-      SetNeedsPaintPropertyUpdate();
+-    }
+-  }
+-
+   // Non-atomic inlines should be LayoutInline or LayoutText, not LayoutBox.
+   DCHECK(!IsInline() || IsAtomicInlineLevel());
+ }
+@@ -1039,6 +1033,7 @@ LayoutUnit LayoutBox::ClientHeightFrom(LayoutUnit height) const {
  
  int LayoutBox::PixelSnappedClientWidth() const {
    NOT_DESTROYED();
@@ -69,7 +94,7 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..5683e8dc45bf12e00246925ea6da2bf1
    LayoutUnit left = RuntimeEnabledFeatures::LayoutNGNoLocationEnabled()
                          ? PhysicalLocation().left
                          : Location().X();
-@@ -1048,6 +1052,7 @@ int LayoutBox::PixelSnappedClientWidth() const {
+@@ -1048,6 +1043,7 @@ int LayoutBox::PixelSnappedClientWidth() const {
  DISABLE_CFI_PERF
  int LayoutBox::PixelSnappedClientHeight() const {
    NOT_DESTROYED();
@@ -77,7 +102,7 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..5683e8dc45bf12e00246925ea6da2bf1
    LayoutUnit top = RuntimeEnabledFeatures::LayoutNGNoLocationEnabled()
                         ? PhysicalLocation().top
                         : Location().Y();
-@@ -1134,6 +1139,7 @@ LayoutUnit LayoutBox::ScrollHeight() const {
+@@ -1134,6 +1130,7 @@ LayoutUnit LayoutBox::ScrollHeight() const {
  
  int LayoutBox::PixelSnappedScrollWidth() const {
    NOT_DESTROYED();
@@ -85,7 +110,7 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..5683e8dc45bf12e00246925ea6da2bf1
    LayoutUnit left = RuntimeEnabledFeatures::LayoutNGNoLocationEnabled()
                          ? PhysicalLocation().left
                          : Location().X();
-@@ -1142,6 +1148,7 @@ int LayoutBox::PixelSnappedScrollWidth() const {
+@@ -1142,6 +1139,7 @@ int LayoutBox::PixelSnappedScrollWidth() const {
  
  int LayoutBox::PixelSnappedScrollHeight() const {
    NOT_DESTROYED();
@@ -93,7 +118,7 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..5683e8dc45bf12e00246925ea6da2bf1
    LayoutUnit top = RuntimeEnabledFeatures::LayoutNGNoLocationEnabled()
                         ? PhysicalLocation().top
                         : Location().Y();
-@@ -1324,17 +1331,21 @@ LayoutUnit LayoutBox::DefaultIntrinsicContentInlineSize() const {
+@@ -1324,17 +1322,21 @@ LayoutUnit LayoutBox::DefaultIntrinsicContentInlineSize() const {
      return kIndefiniteSize;
    const Element& element = *To<Element>(GetNode());
  
@@ -118,7 +143,7 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..5683e8dc45bf12e00246925ea6da2bf1
      if (type == input_type_names::kRange)
        return SliderIntrinsicInlineSize(*this);
      auto effective_appearance = StyleRef().EffectiveAppearance();
-@@ -1349,8 +1360,9 @@ LayoutUnit LayoutBox::DefaultIntrinsicContentInlineSize() const {
+@@ -1349,8 +1351,9 @@ LayoutUnit LayoutBox::DefaultIntrinsicContentInlineSize() const {
      return kIndefiniteSize;
    }
    const auto* textarea = DynamicTo<HTMLTextAreaElement>(element);
@@ -129,7 +154,7 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..5683e8dc45bf12e00246925ea6da2bf1
    if (IsSliderContainer(element))
      return SliderIntrinsicInlineSize(*this);
  
-@@ -1363,10 +1375,23 @@ LayoutUnit LayoutBox::DefaultIntrinsicContentBlockSize() const {
+@@ -1363,10 +1366,23 @@ LayoutUnit LayoutBox::DefaultIntrinsicContentBlockSize() const {
    // get here.
    DCHECK(!HasOverrideIntrinsicContentLogicalHeight());
  
@@ -154,7 +179,7 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..5683e8dc45bf12e00246925ea6da2bf1
             ComputeLogicalScrollbars().BlockSum();
    }
    if (IsTextField()) {
-@@ -1377,15 +1402,6 @@ LayoutUnit LayoutBox::DefaultIntrinsicContentBlockSize() const {
+@@ -1377,15 +1393,6 @@ LayoutUnit LayoutBox::DefaultIntrinsicContentBlockSize() const {
                                        *this);
    }
  
@@ -170,7 +195,7 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..5683e8dc45bf12e00246925ea6da2bf1
    return kIndefiniteSize;
  }
  
-@@ -1532,10 +1548,10 @@ PhysicalRect LayoutBox::PhysicalBackgroundRect(
+@@ -1532,10 +1539,10 @@ PhysicalRect LayoutBox::PhysicalBackgroundRect(
        bool layer_known_opaque = false;
        // Check if the image is opaque and fills the clip.
        if (const StyleImage* image = cur->GetImage()) {
@@ -185,7 +210,19 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..5683e8dc45bf12e00246925ea6da2bf1
              image->KnownToBeOpaque(GetDocument(), StyleRef())) {
            layer_known_opaque = true;
          }
-@@ -3201,11 +3217,14 @@ bool LayoutBox::MapToVisualRectInAncestorSpaceInternal(
+@@ -2803,8 +2810,9 @@ PhysicalOffset LayoutBox::OffsetFromContainerInternal(
+   if (o->IsScrollContainer())
+     offset += OffsetFromScrollableContainer(o, ignore_scroll_offset);
+ 
+-  if (HasAnchorScrollTranslation())
+-    offset += AnchorScrollTranslationOffset();
++  if (NeedsAnchorPositionScrollAdjustment()) {
++    offset += AnchorPositionScrollTranslationOffset();
++  }
+ 
+   return offset;
+ }
+@@ -3201,11 +3209,14 @@ bool LayoutBox::MapToVisualRectInAncestorSpaceInternal(
      TransformState& transform_state,
      VisualRectFlags visual_rect_flags) const {
    NOT_DESTROYED();
@@ -201,8 +238,14 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..5683e8dc45bf12e00246925ea6da2bf1
    AncestorSkipInfo skip_info(ancestor, true);
    LayoutObject* container = Container(&skip_info);
    if (!container)
-@@ -3224,7 +3243,7 @@ bool LayoutBox::MapToVisualRectInAncestorSpaceInternal(
-     container_offset += AnchorScrollTranslationOffset();
+@@ -3220,11 +3231,11 @@ bool LayoutBox::MapToVisualRectInAncestorSpaceInternal(
+ 
+   if (IsStickyPositioned()) {
+     container_offset += StickyPositionOffset();
+-  } else if (UNLIKELY(HasAnchorScrollTranslation())) {
+-    container_offset += AnchorScrollTranslationOffset();
++  } else if (UNLIKELY(NeedsAnchorPositionScrollAdjustment())) {
++    container_offset += AnchorPositionScrollTranslationOffset();
    }
  
 -  if (skip_info.FilterSkipped()) {
@@ -210,7 +253,97 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..5683e8dc45bf12e00246925ea6da2bf1
      InflateVisualRectForFilterUnderContainer(transform_state, *container,
                                               ancestor);
    }
-@@ -6056,4 +6075,19 @@ LayoutBox::PositionFallbackNonOverflowingRanges() const {
+@@ -5926,18 +5937,32 @@ PhysicalRect LayoutBox::ComputeStickyConstrainingRect() const {
+   return constraining_rect;
+ }
+ 
+-bool LayoutBox::HasAnchorScrollTranslation() const {
++bool LayoutBox::NeedsAnchorPositionScrollAdjustment() const {
++  if (Element* element = DynamicTo<Element>(GetNode())) {
++    return element->GetAnchorPositionScrollData() &&
++           element->GetAnchorPositionScrollData()->NeedsScrollAdjustment();
++  }
++  return false;
++}
++
++bool LayoutBox::AnchorPositionScrollAdjustmentAfectedByViewportScrolling()
++    const {
+   if (Element* element = DynamicTo<Element>(GetNode())) {
+-    return element->GetAnchorScrollData() &&
+-           element->GetAnchorScrollData()->HasTranslation();
++    if (AnchorPositionScrollData* data =
++            element->GetAnchorPositionScrollData()) {
++      return data->NeedsScrollAdjustment() &&
++             data->IsAffectedByViewportScrolling();
++    }
+   }
+   return false;
+ }
+ 
+-PhysicalOffset LayoutBox::AnchorScrollTranslationOffset() const {
++PhysicalOffset LayoutBox::AnchorPositionScrollTranslationOffset() const {
+   if (Element* element = DynamicTo<Element>(GetNode())) {
+-    if (AnchorScrollData* data = element->GetAnchorScrollData())
++    if (AnchorPositionScrollData* data =
++            element->GetAnchorPositionScrollData()) {
+       return data->TranslationAsPhysicalOffset();
++    }
+   }
+   return PhysicalOffset();
+ }
+@@ -5957,9 +5982,8 @@ void ForEachAnchorQueryOnContainer(const LayoutBox& box, Function func) {
+     return;
+   }
+ 
+-  // Now the container is a relatively positioned inline.
++  // Now the container is an inline box that's also an abspos containing block.
+   CHECK(container->IsLayoutInline());
+-  CHECK(container->IsRelPositioned());
+   const LayoutInline* inline_container = To<LayoutInline>(container);
+   if (!inline_container->HasInlineFragments()) {
+     return;
+@@ -5976,6 +6000,20 @@ void ForEachAnchorQueryOnContainer(const LayoutBox& box, Function func) {
+   }
+ }
+ 
++#if EXPENSIVE_DCHECKS_ARE_ON()
++template <typename Function>
++void AssertSameDataOnLayoutResults(
++    const LayoutBox::NGLayoutResultList& layout_results,
++    Function func) {
++  // When an out-of-flow box is fragmented, the position fallback results on all
++  // fragments should be the same.
++  for (wtf_size_t i = 1; i < layout_results.size(); ++i) {
++    DCHECK(func(layout_results[i]) == func(layout_results[i - 1]));
++  }
++}
++
++#endif
++
+ }  // namespace
+ 
+ const LayoutObject* LayoutBox::FindTargetAnchor(
+@@ -6030,15 +6068,14 @@ absl::optional<wtf_size_t> LayoutBox::PositionFallbackIndex() const {
+   // We only need to check the first fragment, because when the box is
+   // fragmented, position fallback results are duplicated on all fragments.
+ #if EXPENSIVE_DCHECKS_ARE_ON()
+-  for (wtf_size_t i = 1; i < layout_results.size(); ++i) {
+-    DCHECK(layout_results[i]->PositionFallbackIndex() ==
+-           layout_results[i - 1]->PositionFallbackIndex());
+-  }
++  AssertSameDataOnLayoutResults(layout_results, [](const auto& result) {
++    return result->PositionFallbackIndex();
++  });
+ #endif
+   return layout_results.front()->PositionFallbackIndex();
+ }
+ 
+-const Vector<PhysicalScrollRange>*
++const Vector<NonOverflowingScrollRange>*
+ LayoutBox::PositionFallbackNonOverflowingRanges() const {
+   const auto& layout_results = GetLayoutResults();
+   if (layout_results.empty()) {
+@@ -6056,4 +6093,59 @@ LayoutBox::PositionFallbackNonOverflowingRanges() const {
    return layout_results.front()->PositionFallbackNonOverflowingRanges();
  }
  
@@ -221,12 +354,52 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..5683e8dc45bf12e00246925ea6da2bf1
 +  // We only need to check the first fragment, because when the box is
 +  // fragmented, insets are duplicated on all fragments.
 +#if EXPENSIVE_DCHECKS_ARE_ON()
-+  for (wtf_size_t i = 1; i < layout_results.size(); ++i) {
-+    DCHECK_EQ(layout_results[i]->OutOfFlowInsetsForGetComputedStyle(),
-+              layout_results[i - 1]->OutOfFlowInsetsForGetComputedStyle());
-+  }
++  AssertSameDataOnLayoutResults(layout_results, [](const auto& result) {
++    return result->OutOfFlowInsetsForGetComputedStyle();
++  });
 +#endif
 +  return GetLayoutResults().front()->OutOfFlowInsetsForGetComputedStyle();
++}
++
++bool LayoutBox::NeedsAnchorPositionScrollAdjustmentInX() const {
++  const auto& layout_results = GetLayoutResults();
++  if (layout_results.empty()) {
++    return false;
++  }
++  // We only need to check the first fragment, because when the box is
++  // fragmented, position fallback results are duplicated on all fragments.
++#if EXPENSIVE_DCHECKS_ARE_ON()
++  AssertSameDataOnLayoutResults(layout_results, [](const auto& result) {
++    return result->NeedsAnchorPositionScrollAdjustmentInX();
++  });
++#endif
++  return layout_results.front()->NeedsAnchorPositionScrollAdjustmentInX();
++}
++
++bool LayoutBox::NeedsAnchorPositionScrollAdjustmentInY() const {
++  const auto& layout_results = GetLayoutResults();
++  if (layout_results.empty()) {
++    return false;
++  }
++  // We only need to check the first fragment, because when the box is
++  // fragmented, position fallback results are duplicated on all fragments.
++#if EXPENSIVE_DCHECKS_ARE_ON()
++  AssertSameDataOnLayoutResults(layout_results, [](const auto& result) {
++    return result->NeedsAnchorPositionScrollAdjustmentInY();
++  });
++#endif
++  return layout_results.front()->NeedsAnchorPositionScrollAdjustmentInY();
++}
++
++bool LayoutBox::UsesPositionFallbackStyle() const {
++  if (!IsOutOfFlowPositioned()) {
++    return false;
++  }
++  if (StyleRef().PositionFallback()) {
++    return true;
++  }
++  // TODO(crbug.com/1475321): Return true for the new auto fallback syntax.
++  return false;
 +}
 +
  }  // namespace blink

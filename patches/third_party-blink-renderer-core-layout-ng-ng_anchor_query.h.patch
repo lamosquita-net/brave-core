@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/ng_anchor_query.h b/third_party/blink/renderer/core/layout/ng/ng_anchor_query.h
-index bfd086b8ffce49d4f378503d4578e55ace9ce554..b91ca64fc006879b42b8be64f08d09c6c0624a76 100644
+index bfd086b8ffce49d4f378503d4578e55ace9ce554..9027d07b143d97646fcf04df9be1386378cc9997 100644
 --- a/third_party/blink/renderer/core/layout/ng/ng_anchor_query.h
 +++ b/third_party/blink/renderer/core/layout/ng/ng_anchor_query.h
-@@ -169,11 +169,6 @@ class CORE_EXPORT NGPhysicalAnchorQuery
+@@ -27,6 +27,7 @@ class LayoutObject;
+ class NGLogicalAnchorQuery;
+ class NGLogicalAnchorQueryMap;
+ struct NGLogicalAnchorReference;
++class PaintLayer;
+ 
+ using NGAnchorKey = absl::variant<const ScopedCSSName*, const LayoutObject*>;
+ 
+@@ -169,11 +170,6 @@ class CORE_EXPORT NGPhysicalAnchorQuery
   public:
    using Base = NGAnchorQueryBase<NGPhysicalAnchorReference>;
  
@@ -14,7 +22,7 @@ index bfd086b8ffce49d4f378503d4578e55ace9ce554..b91ca64fc006879b42b8be64f08d09c6
    const NGPhysicalAnchorReference* AnchorReference(
        const LayoutObject& query_object,
        const NGAnchorKey&) const;
-@@ -257,12 +252,6 @@ class CORE_EXPORT NGAnchorEvaluatorImpl : public Length::AnchorEvaluator {
+@@ -257,12 +253,6 @@ class CORE_EXPORT NGAnchorEvaluatorImpl : public Length::AnchorEvaluator {
    STACK_ALLOCATED();
  
   public:
@@ -27,3 +35,69 @@ index bfd086b8ffce49d4f378503d4578e55ace9ce554..b91ca64fc006879b42b8be64f08d09c6
    // An empty evaluator that always return `nullopt`. This instance can still
    // compute `HasAnchorFunctions()`.
    NGAnchorEvaluatorImpl() = default;
+@@ -310,6 +300,16 @@ class CORE_EXPORT NGAnchorEvaluatorImpl : public Length::AnchorEvaluator {
+   // `anchor-size()` functions.
+   bool HasAnchorFunctions() const { return has_anchor_functions_; }
+ 
++  // Returns true if any anchor reference in the axis is in the same scroll
++  // container as the default anchor, in which case we need scroll adjustment in
++  // the axis after layout.
++  bool NeedsScrollAdjustmentInX() const {
++    return needs_scroll_adjustment_in_x_;
++  }
++  bool NeedsScrollAdjustmentInY() const {
++    return needs_scroll_adjustment_in_y_;
++  }
++
+   // This must be set before evaluating `anchor()` function.
+   void SetAxis(bool is_y_axis,
+                bool is_right_or_bottom,
+@@ -324,10 +324,17 @@ class CORE_EXPORT NGAnchorEvaluatorImpl : public Length::AnchorEvaluator {
+   absl::optional<LayoutUnit> Evaluate(
+       const CalculationExpressionNode&) const override;
+ 
++  // Finds the rect of the element referenced by the `position-fallback-bounds`
++  // property, or nullopt if there's no such element.
++  absl::optional<LogicalRect> GetAdditionalFallbackBoundsRect() const;
++
++  bool HasDefaultAnchor() const { return DefaultAnchor() != nullptr; }
++
+  private:
+   const NGLogicalAnchorQuery* AnchorQuery() const;
+   const NGLogicalAnchorReference* ResolveAnchorReference(
+       const AnchorSpecifierValue& anchor_specifier) const;
++  bool ShouldUseScrollAdjustmentFor(const LayoutObject* anchor) const;
+ 
+   absl::optional<LayoutUnit> EvaluateAnchor(
+       const AnchorSpecifierValue& anchor_specifier,
+@@ -337,6 +344,9 @@ class CORE_EXPORT NGAnchorEvaluatorImpl : public Length::AnchorEvaluator {
+       const AnchorSpecifierValue& anchor_specifier,
+       CSSAnchorSizeValue anchor_size_value) const;
+ 
++  const LayoutObject* DefaultAnchor() const;
++  const PaintLayer* DefaultAnchorScrollContainerLayer() const;
++
+   const LayoutObject* query_object_ = nullptr;
+   mutable const NGLogicalAnchorQuery* anchor_query_ = nullptr;
+   const NGLogicalAnchorQueryMap* anchor_queries_ = nullptr;
+@@ -347,11 +357,20 @@ class CORE_EXPORT NGAnchorEvaluatorImpl : public Length::AnchorEvaluator {
+       {WritingMode::kHorizontalTb, TextDirection::kLtr}};
+   WritingDirectionMode self_writing_direction_{WritingMode::kHorizontalTb,
+                                                TextDirection::kLtr};
++
+   PhysicalOffset offset_to_padding_box_;
+   LayoutUnit available_size_;
++
++  // These fields will be populated during `anchor()` evaluation if needed.
++  mutable absl::optional<const LayoutObject*> default_anchor_;
++  mutable absl::optional<const PaintLayer*>
++      default_anchor_scroll_container_layer_;
++
+   bool is_y_axis_ = false;
+   bool is_right_or_bottom_ = false;
+   mutable bool has_anchor_functions_ = false;
++  mutable bool needs_scroll_adjustment_in_x_ = false;
++  mutable bool needs_scroll_adjustment_in_y_ = false;
+ };
+ 
+ }  // namespace blink

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/ng_block_node.cc b/third_party/blink/renderer/core/layout/ng/ng_block_node.cc
-index 368a745eda9491456cdb14281e1d2eddf15f942d..015da3958005092707cab1ba31b06e39a8012c89 100644
+index 368a745eda9491456cdb14281e1d2eddf15f942d..852882a28d76764378af7de4e235086300a37f0a 100644
 --- a/third_party/blink/renderer/core/layout/ng/ng_block_node.cc
 +++ b/third_party/blink/renderer/core/layout/ng/ng_block_node.cc
 @@ -79,6 +79,7 @@
@@ -32,7 +32,27 @@ index 368a745eda9491456cdb14281e1d2eddf15f942d..015da3958005092707cab1ba31b06e39
      if (type == input_type_names::kRange)
        return inline_size;
    }
-@@ -1719,8 +1724,9 @@ absl::optional<gfx::Transform> NGBlockNode::GetTransformForChildFragment(
+@@ -755,13 +760,15 @@ const NGLayoutResult* NGBlockNode::CachedLayoutResultForOutOfFlowPositioned(
+   //
+   // TODO(layout-dev): We might be able to determine what the previous
+   // static-position was based on |NGLayoutResult::OutOfFlowPositionedOffset|.
++  // TODO(crbug.com/1477314): This unnecessarily defeats caching when inset-area
++  // is applied.
+   bool depends_on_static_position =
+-      (Style().UsedLeft().IsAuto() && Style().UsedRight().IsAuto()) ||
+-      (Style().UsedTop().IsAuto() && Style().UsedBottom().IsAuto());
++      Style().HasAutoLeftAndRightIgnoringInsetArea() ||
++      Style().HasAutoTopAndBottomIgnoringInsetArea();
+ 
+-  if (depends_on_static_position)
++  if (depends_on_static_position) {
+     return nullptr;
+-
++  }
+   return cached_layout_result;
+ }
+ 
+@@ -1719,8 +1726,9 @@ absl::optional<gfx::Transform> NGBlockNode::GetTransformForChildFragment(
      // us. Calculate it now.
      fragment_transform.emplace();
      fragment_transform->MakeIdentity();

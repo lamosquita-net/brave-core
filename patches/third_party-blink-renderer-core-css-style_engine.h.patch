@@ -1,0 +1,45 @@
+diff --git a/third_party/blink/renderer/core/css/style_engine.h b/third_party/blink/renderer/core/css/style_engine.h
+index 4d2ac3e7cff73b9df2dd8925aff1e73571c8f235..f9fac2347dd3cc2c5ee32426fea88921336d436f 100644
+--- a/third_party/blink/renderer/core/css/style_engine.h
++++ b/third_party/blink/renderer/core/css/style_engine.h
+@@ -589,6 +589,11 @@ class CORE_EXPORT StyleEngine final : public GarbageCollected<StyleEngine>,
+   // recalcs when we found out the container is eligible for size containment
+   // after all.
+   void UpdateStyleForNonEligibleContainer(Element& container);
++  // Updates the style of `element`, and descendants if needed.
++  // The provided `try_set` represents the declaration block from a @try rule.
++  void UpdateStyleForPositionFallback(Element& element,
++                                      const CSSPropertyValueSet* try_set);
++  StyleRulePositionFallback* GetPositionFallbackRule(const ScopedCSSName&);
+   void RecalcStyle();
+ 
+   void ClearEnsuredDescendantStyles(Element& element);
+@@ -598,6 +603,9 @@ class CORE_EXPORT StyleEngine final : public GarbageCollected<StyleEngine>,
+   bool InContainerQueryStyleRecalc() const {
+     return in_container_query_style_recalc_;
+   }
++  bool InPositionFallbackStyleRecalc() const {
++    return in_position_fallback_style_recalc_;
++  }
+   // If we are in a container query style recalc, return the container element,
+   // otherwise return nullptr.
+   Element* GetContainerForContainerStyleRecalc() const {
+@@ -805,6 +813,10 @@ class CORE_EXPORT StyleEngine final : public GarbageCollected<StyleEngine>,
+ 
+   void RecalcStyle(StyleRecalcChange, const StyleRecalcContext&);
+   void RecalcStyleForContainer(Element& container, StyleRecalcChange change);
++  void RecalcPositionFallbackStyleForPseudoElement(
++      PseudoElement& pseudo_element,
++      const StyleRecalcChange,
++      const StyleRecalcContext&);
+ 
+   void RecalcTransitionPseudoStyle();
+ 
+@@ -891,6 +903,7 @@ class CORE_EXPORT StyleEngine final : public GarbageCollected<StyleEngine>,
+   int64_t skipped_container_recalc_{0};
+   bool in_layout_tree_rebuild_{false};
+   bool in_container_query_style_recalc_{false};
++  bool in_position_fallback_style_recalc_{false};
+   bool in_dom_removal_{false};
+   bool in_detach_scope_{false};
+   bool in_apply_animation_update_{false};

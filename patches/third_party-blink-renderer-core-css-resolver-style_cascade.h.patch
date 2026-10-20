@@ -1,0 +1,22 @@
+diff --git a/third_party/blink/renderer/core/css/resolver/style_cascade.h b/third_party/blink/renderer/core/css/resolver/style_cascade.h
+index ce5fb7aec926412fa460c77b1a7506024ecae915..9975fa99a18bf6992c07cd168c4e63d4c424189b 100644
+--- a/third_party/blink/renderer/core/css/resolver/style_cascade.h
++++ b/third_party/blink/renderer/core/css/resolver/style_cascade.h
+@@ -404,6 +404,17 @@ class CORE_EXPORT StyleCascade {
+   // disable the matched property cache in some cases.
+   void MarkHasVariableReference(const CSSProperty&);
+ 
++  // Declarations originating from @try rules are treated as revert-layer
++  // if we're not out-of-flow positioned. Since such declarations exist
++  // in a separate layer, this has the effect of @try-originating rules
++  // applying *conditionally* based on the positioning.
++  //
++  // This behavior is needed because we speculatively add the the try set
++  // to the cascade, and rely on out-of-flow layout to correct us later.
++  // However, if we *stop* being out-of-flow positioned, that correction
++  // never happens.
++  bool TreatAsRevertLayer(CascadePriority) const;
++
+   const Document& GetDocument() const;
+   const CSSProperty& ResolveSurrogate(const CSSProperty& surrogate);
+ 

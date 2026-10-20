@@ -1,0 +1,30 @@
+diff --git a/third_party/blink/renderer/core/paint/paint_property_tree_update_tests.cc b/third_party/blink/renderer/core/paint/paint_property_tree_update_tests.cc
+index 2db0f2215b3d572d9f193b716982339b8a0e5cb2..84187c44055cab79e97736a0e7a5c15c39aab62c 100644
+--- a/third_party/blink/renderer/core/paint/paint_property_tree_update_tests.cc
++++ b/third_party/blink/renderer/core/paint/paint_property_tree_update_tests.cc
+@@ -2125,7 +2125,7 @@ TEST_P(PaintPropertyTreeUpdateTest, AnchorPositioningScrollUpdate) {
+     <div id="anchor" style="
+         anchor-name: --a; width: 100px; height: 100px"></div>
+     <div id="target" style="
+-        position: fixed; anchor-scroll: --a;
++        position: fixed; anchor-default: --a;
+         width: 100px; height: 100px; bottom: anchor(--a top)"></div>
+   )HTML");
+ 
+@@ -2134,13 +2134,13 @@ TEST_P(PaintPropertyTreeUpdateTest, AnchorPositioningScrollUpdate) {
+ 
+   GetFrame().DomWindow()->scrollBy(0, 300);
+ 
+-  // anchor-scroll update requires animation frame.
++  // Snapshotted scroll offset update requires animation frame.
+   SimulateFrame();
+   UpdateAllLifecyclePhasesExceptPaint();
+ 
+-  // The anchor-scroll translation should be updated on main thread.
++  // The anchor positioning translation should be updated on main thread.
+   EXPECT_EQ(PaintPropertiesForElement("target")
+-                ->AnchorScrollTranslation()
++                ->AnchorPositionScrollTranslation()
+                 ->Get2dTranslation(),
+             gfx::Vector2dF(0, -300));
+ 

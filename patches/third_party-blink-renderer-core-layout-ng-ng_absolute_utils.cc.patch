@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/ng_absolute_utils.cc b/third_party/blink/renderer/core/layout/ng/ng_absolute_utils.cc
-index 4398d013109e9c18cb370c9cee71892726f35e74..05de69e14dbf2d502d980f6723a64e77cb5c93ee 100644
+index 4398d013109e9c18cb370c9cee71892726f35e74..b64ad8d973c1b6165494dbce1b71485ffacfa397 100644
 --- a/third_party/blink/renderer/core/layout/ng/ng_absolute_utils.cc
 +++ b/third_party/blink/renderer/core/layout/ng/ng_absolute_utils.cc
 @@ -14,11 +14,91 @@
@@ -135,14 +135,38 @@ index 4398d013109e9c18cb370c9cee71892726f35e74..05de69e14dbf2d502d980f6723a64e77
        }
      }
    }
-@@ -246,17 +343,33 @@ void ComputeInsets(const LayoutUnit margin_percentage_resolution_size,
+@@ -246,17 +343,58 @@ void ComputeInsets(const LayoutUnit margin_percentage_resolution_size,
    *margin_end_out = *margin_end;
  }
  
 -bool CanComputeBlockSizeWithoutLayout(const NGBlockNode& node) {
++bool IsInsetAutoForAxis(const Length& side1,
++                        const Length& side2,
++                        const ComputedStyle& style,
++                        const WritingDirectionMode& container_writing_direction,
++                        const NGAnchorEvaluatorImpl* anchor_evaluator) {
++  if (!side1.IsAuto() && !side2.IsAuto()) {
++    return false;
++  }
++  // The 'inset-area' property causes the used value of 'auto' to resolve to
++  // a non-'auto' value when different from 'none', the spans are orthogonal,
++  // and there is a valid default anchor.
++  // https://drafts.csswg.org/css-anchor-position-1/#resolving-spans
++  if (style.GetInsetArea().IsNone()) {
++    return true;
++  }
++  if (!anchor_evaluator->HasDefaultAnchor()) {
++    return true;
++  }
++  return style.GetInsetArea()
++      .ToPhysical(container_writing_direction, style.GetWritingDirection())
++      .IsNone();
++}
++
 +bool CanComputeBlockSizeWithoutLayout(
 +    const NGBlockNode& node,
-+    WritingDirectionMode container_writing_direction) {
++    WritingDirectionMode container_writing_direction,
++    const NGAnchorEvaluatorImpl* anchor_evaluator) {
    if (node.IsTable())
      return false;
    if (node.IsReplaced())
@@ -162,7 +186,8 @@ index 4398d013109e9c18cb370c9cee71892726f35e74..05de69e14dbf2d502d980f6723a64e77
 +    return true;
 +  }
 +  // Any 'auto' inset will trigger shrink-to-fit sizing.
-+  if (style.LogicalTop().IsAuto() || style.LogicalBottom().IsAuto()) {
++  if (IsInsetAutoForAxis(style.LogicalTop(), style.LogicalBottom(), style,
++                         container_writing_direction, anchor_evaluator)) {
 +    return false;
 +  }
 +  // FlyWeb: so does any alignment other than normal/stretch.
@@ -175,25 +200,108 @@ index 4398d013109e9c18cb370c9cee71892726f35e74..05de69e14dbf2d502d980f6723a64e77
  }
  
  }  // namespace
-@@ -356,7 +469,7 @@ bool ComputeOutOfFlowInlineDimensions(
+@@ -264,14 +402,22 @@ bool CanComputeBlockSizeWithoutLayout(const NGBlockNode& node) {
+ NGLogicalOutOfFlowInsets ComputeOutOfFlowInsets(
+     const ComputedStyle& style,
+     const LogicalSize& available_logical_size,
++    const WritingDirectionMode& container_writing_direction,
++    const WritingDirectionMode& self_writing_direction,
+     NGAnchorEvaluatorImpl* anchor_evaluator) {
++  InsetArea inset_area;
++  if (!style.GetInsetArea().IsNone() && anchor_evaluator->HasDefaultAnchor()) {
++    inset_area = style.GetInsetArea().ToPhysical(container_writing_direction,
++                                                 self_writing_direction);
++  }
+   // Compute in physical, because anchors may be in different `writing-mode` or
+   // `direction`.
+-  const WritingDirectionMode writing_direction = style.GetWritingDirection();
+   const PhysicalSize available_size = ToPhysicalSize(
+-      available_logical_size, writing_direction.GetWritingMode());
++      available_logical_size, self_writing_direction.GetWritingMode());
++  const Length& left_length =
++      style.UsedLeft().IsAuto() ? inset_area.UsedLeft() : style.UsedLeft();
+   absl::optional<LayoutUnit> left;
+-  if (const Length& left_length = style.UsedLeft(); !left_length.IsAuto()) {
++  if (!left_length.IsAuto()) {
+     anchor_evaluator->SetAxis(/* is_y_axis */ false,
+                               /* is_right_or_bottom */ false,
+                               available_size.width);
+@@ -279,7 +425,9 @@ NGLogicalOutOfFlowInsets ComputeOutOfFlowInsets(
+                                  anchor_evaluator);
+   }
+   absl::optional<LayoutUnit> right;
+-  if (const Length& right_length = style.UsedRight(); !right_length.IsAuto()) {
++  const Length& right_length =
++      style.UsedRight().IsAuto() ? inset_area.UsedRight() : style.UsedRight();
++  if (!right_length.IsAuto()) {
+     anchor_evaluator->SetAxis(/* is_y_axis */ false,
+                               /* is_right_or_bottom */ true,
+                               available_size.width);
+@@ -288,7 +436,9 @@ NGLogicalOutOfFlowInsets ComputeOutOfFlowInsets(
+   }
+ 
+   absl::optional<LayoutUnit> top;
+-  if (const Length& top_length = style.UsedTop(); !top_length.IsAuto()) {
++  const Length& top_length =
++      style.UsedTop().IsAuto() ? inset_area.UsedTop() : style.UsedTop();
++  if (!top_length.IsAuto()) {
+     anchor_evaluator->SetAxis(/* is_y_axis */ true,
+                               /* is_right_or_bottom */ false,
+                               available_size.height);
+@@ -296,8 +446,10 @@ NGLogicalOutOfFlowInsets ComputeOutOfFlowInsets(
+                                 anchor_evaluator);
+   }
+   absl::optional<LayoutUnit> bottom;
+-  if (const Length& bottom_length = style.UsedBottom();
+-      !bottom_length.IsAuto()) {
++  const Length& bottom_length = style.UsedBottom().IsAuto()
++                                    ? inset_area.UsedBottom()
++                                    : style.UsedBottom();
++  if (!bottom_length.IsAuto()) {
+     anchor_evaluator->SetAxis(/* is_y_axis */ true,
+                               /* is_right_or_bottom */ true,
+                               available_size.height);
+@@ -306,8 +458,8 @@ NGLogicalOutOfFlowInsets ComputeOutOfFlowInsets(
+   }
+ 
+   // Convert the physical insets to logical.
+-  PhysicalToLogical<absl::optional<LayoutUnit>&> insets(writing_direction, top,
+-                                                        right, bottom, left);
++  PhysicalToLogical<absl::optional<LayoutUnit>&> insets(
++      self_writing_direction, top, right, bottom, left);
+   return {insets.InlineStart(), insets.InlineEnd(), insets.BlockStart(),
+           insets.BlockEnd()};
+ }
+@@ -349,14 +501,15 @@ bool ComputeOutOfFlowInlineDimensions(
+     LogicalSize computed_available_size,
+     const absl::optional<LogicalSize>& replaced_size,
+     const WritingDirectionMode container_writing_direction,
+-    const Length::AnchorEvaluator* anchor_evaluator,
++    const NGAnchorEvaluatorImpl* anchor_evaluator,
+     NGLogicalOutOfFlowDimensions* dimensions) {
+   DCHECK(dimensions);
+   bool depends_on_min_max_sizes = false;
  
    const bool is_table = node.IsTable();
    const bool can_compute_block_size_without_layout =
 -      CanComputeBlockSizeWithoutLayout(node);
-+      CanComputeBlockSizeWithoutLayout(node, container_writing_direction);
++      CanComputeBlockSizeWithoutLayout(node, container_writing_direction,
++                                       anchor_evaluator);
  
    if (is_table) {
      computed_available_size.inline_size = std::min(
-@@ -404,17 +517,40 @@ bool ComputeOutOfFlowInlineDimensions(
+@@ -404,17 +557,42 @@ bool ComputeOutOfFlowInlineDimensions(
      Length main_inline_length = style.LogicalWidth();
      Length min_inline_length = style.LogicalMinWidth();
  
 -    const bool stretch_inline_size =
 -        !style.LogicalLeft().IsAuto() && !style.LogicalRight().IsAuto();
 +    const bool has_auto_inline_inset =
-+        style.LogicalLeft().IsAuto() || style.LogicalRight().IsAuto();
++        IsInsetAutoForAxis(style.LogicalLeft(), style.LogicalRight(), style,
++                           container_writing_direction, anchor_evaluator);
 +    const bool has_auto_block_inset =
-+        style.LogicalTop().IsAuto() || style.LogicalBottom().IsAuto();
++        IsInsetAutoForAxis(style.LogicalTop(), style.LogicalBottom(), style,
++                           container_writing_direction, anchor_evaluator);
 +    const ItemPosition alignment_position =
 +        OofAlignmentForAxis(style, container_writing_direction,
 +                            /* is_inline_axis */ true)
@@ -230,7 +338,7 @@ index 4398d013109e9c18cb370c9cee71892726f35e74..05de69e14dbf2d502d980f6723a64e77
          // We'd like to apply the aspect-ratio.
          // The aspect-ratio applies from the block-axis if we can compute our
          // block-size without invoking layout, and either:
-@@ -455,13 +591,23 @@ bool ComputeOutOfFlowInlineDimensions(
+@@ -455,13 +633,23 @@ bool ComputeOutOfFlowInlineDimensions(
                          IsTopDominant(writing_direction);
    }
  
@@ -255,7 +363,16 @@ index 4398d013109e9c18cb370c9cee71892726f35e74..05de69e14dbf2d502d980f6723a64e77
        &dimensions->inset.inline_start, &dimensions->inset.inline_end,
        &dimensions->margins.inline_start, &dimensions->margins.inline_end);
  
-@@ -534,14 +680,25 @@ const NGLayoutResult* ComputeOutOfFlowBlockDimensions(
+@@ -478,7 +666,7 @@ const NGLayoutResult* ComputeOutOfFlowBlockDimensions(
+     LogicalSize computed_available_size,
+     const absl::optional<LogicalSize>& replaced_size,
+     const WritingDirectionMode container_writing_direction,
+-    const Length::AnchorEvaluator* anchor_evaluator,
++    const NGAnchorEvaluatorImpl* anchor_evaluator,
+     NGLogicalOutOfFlowDimensions* dimensions) {
+   DCHECK(dimensions);
+ 
+@@ -534,14 +722,26 @@ const NGLayoutResult* ComputeOutOfFlowBlockDimensions(
    } else {
      Length main_block_length = style.LogicalHeight();
  
@@ -265,7 +382,8 @@ index 4398d013109e9c18cb370c9cee71892726f35e74..05de69e14dbf2d502d980f6723a64e77
 +                            /* is_inline_axis */ false)
 +            .GetPosition();
 +    const bool has_auto_block_inset =
-+        style.LogicalTop().IsAuto() || style.LogicalBottom().IsAuto();
++        IsInsetAutoForAxis(style.LogicalTop(), style.LogicalBottom(), style,
++                           container_writing_direction, anchor_evaluator);
 +    const bool is_explicit_stretch =
 +        !has_auto_block_inset && alignment_position == ItemPosition::kStretch;
      const bool stretch_block_size =
@@ -284,7 +402,7 @@ index 4398d013109e9c18cb370c9cee71892726f35e74..05de69e14dbf2d502d980f6723a64e77
        } else if (!style.AspectRatio().IsAuto() &&
                   dimensions->size.inline_size != kIndefiniteSize) {
          main_block_length = Length::FitContent();
-@@ -583,13 +740,23 @@ const NGLayoutResult* ComputeOutOfFlowBlockDimensions(
+@@ -583,13 +783,23 @@ const NGLayoutResult* ComputeOutOfFlowBlockDimensions(
                          IsLeftDominant(writing_direction);
    }
  

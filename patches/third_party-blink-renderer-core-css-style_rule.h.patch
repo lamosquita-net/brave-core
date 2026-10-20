@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/style_rule.h b/third_party/blink/renderer/core/css/style_rule.h
-index 6710c8d7e29cd46ab9da703a0c5860dfa750dc2d..f06d147d43a5d1fb920601dd8a5faaac6afba393 100644
+index 6710c8d7e29cd46ab9da703a0c5860dfa750dc2d..f3b4b38b440a9c0d50c585ded07ca10937c0bb93 100644
 --- a/third_party/blink/renderer/core/css/style_rule.h
 +++ b/third_party/blink/renderer/core/css/style_rule.h
 @@ -68,6 +68,7 @@ class CORE_EXPORT StyleRuleBase : public GarbageCollected<StyleRuleBase> {
@@ -28,3 +28,12 @@ index 6710c8d7e29cd46ab9da703a0c5860dfa750dc2d..f06d147d43a5d1fb920601dd8a5faaac
    void EnsureChildRules() {
      // Allocate the child rule vector only when we need it,
      // since most rules won't have children (almost by definition).
+@@ -605,7 +610,7 @@ struct DowncastTraits<StyleRuleGroup> {
+   static bool AllowFrom(const StyleRuleBase& rule) {
+     return rule.IsMediaRule() || rule.IsSupportsRule() ||
+            rule.IsContainerRule() || rule.IsLayerBlockRule() ||
+-           rule.IsScopeRule();
++           rule.IsScopeRule() || rule.IsPositionFallbackRule();
+   }
+ };
+ 

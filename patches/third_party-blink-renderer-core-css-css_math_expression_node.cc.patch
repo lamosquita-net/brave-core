@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/css/css_math_expression_node.cc b/third_party/blink/renderer/core/css/css_math_expression_node.cc
-index 00af81fe62eb0d2471a491d4821388fc3f38b92a..440f92004d57fe6eb21c67134dfa4c9417aeee54 100644
+index 00af81fe62eb0d2471a491d4821388fc3f38b92a..3c206a0f90e04e036385106b696c6cc4f13419ea 100644
 --- a/third_party/blink/renderer/core/css/css_math_expression_node.cc
 +++ b/third_party/blink/renderer/core/css/css_math_expression_node.cc
-@@ -85,6 +85,10 @@ static CalculationResultCategory UnitCategory(
+@@ -46,6 +46,7 @@
+ #include "third_party/blink/renderer/core/css/resolver/style_resolver.h"
+ #include "third_party/blink/renderer/core/css_value_keywords.h"
+ #include "third_party/blink/renderer/core/frame/web_feature.h"
++#include "third_party/blink/renderer/core/style/anchor_specifier_value.h"
+ #include "third_party/blink/renderer/platform/geometry/calculation_expression_node.h"
+ #include "third_party/blink/renderer/platform/geometry/math_functions.h"
+ #include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+@@ -85,6 +86,10 @@ static CalculationResultCategory UnitCategory(
      case CSSPrimitiveValue::UnitType::kIcs:
      case CSSPrimitiveValue::UnitType::kLhs:
        return kCalcLength;
@@ -13,7 +21,7 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..440f92004d57fe6eb21c67134dfa4c94
      case CSSPrimitiveValue::UnitType::kViewportInlineSize:
      case CSSPrimitiveValue::UnitType::kViewportBlockSize:
      case CSSPrimitiveValue::UnitType::kSmallViewportWidth:
-@@ -152,6 +156,8 @@ static bool HasDoubleValue(CSSPrimitiveValue::UnitType type) {
+@@ -152,6 +157,8 @@ static bool HasDoubleValue(CSSPrimitiveValue::UnitType type) {
      case CSSPrimitiveValue::UnitType::kChs:
      case CSSPrimitiveValue::UnitType::kIcs:
      case CSSPrimitiveValue::UnitType::kLhs:
@@ -22,7 +30,7 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..440f92004d57fe6eb21c67134dfa4c94
      case CSSPrimitiveValue::UnitType::kRlhs:
      case CSSPrimitiveValue::UnitType::kRems:
      case CSSPrimitiveValue::UnitType::kRexs:
-@@ -1887,9 +1893,11 @@ class CSSMathExpressionNodeParser {
+@@ -1887,9 +1894,11 @@ class CSSMathExpressionNodeParser {
          anchor_query_type, anchor_specifier, *value, fallback);
    }
  
@@ -37,7 +45,7 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..440f92004d57fe6eb21c67134dfa4c94
      if (!IsSupportedMathFunction(function_id)) {
        return nullptr;
      }
-@@ -1971,6 +1979,14 @@ class CSSMathExpressionNodeParser {
+@@ -1971,6 +1980,14 @@ class CSSMathExpressionNodeParser {
      }
  
      HeapVector<Member<const CSSMathExpressionNode>> nodes;
@@ -52,7 +60,7 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..440f92004d57fe6eb21c67134dfa4c94
  
      while (!tokens.AtEnd() && nodes.size() < max_argument_count) {
        if (nodes.size()) {
-@@ -1980,7 +1996,8 @@ class CSSMathExpressionNodeParser {
+@@ -1980,7 +1997,8 @@ class CSSMathExpressionNodeParser {
        }
  
        tokens.ConsumeWhitespace();
@@ -62,7 +70,7 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..440f92004d57fe6eb21c67134dfa4c94
        if (!node) {
          return nullptr;
        }
-@@ -2032,17 +2049,18 @@ class CSSMathExpressionNodeParser {
+@@ -2032,17 +2050,18 @@ class CSSMathExpressionNodeParser {
          DCHECK_LE(nodes.size(), 3u);
          CSSMathOperator op;
          if (function_id == CSSValueID::kRound) {
@@ -91,7 +99,7 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..440f92004d57fe6eb21c67134dfa4c94
              return nullptr;
            }
          } else if (function_id == CSSValueID::kMod) {
-@@ -2050,14 +2068,6 @@ class CSSMathExpressionNodeParser {
+@@ -2050,14 +2069,6 @@ class CSSMathExpressionNodeParser {
          } else {
            op = CSSMathOperator::kRem;
          }
@@ -106,7 +114,7 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..440f92004d57fe6eb21c67134dfa4c94
          return CSSMathExpressionOperation::CreateSteppedValueFunction(
              std::move(nodes), op);
        }
-@@ -2077,7 +2087,9 @@ class CSSMathExpressionNodeParser {
+@@ -2077,7 +2088,9 @@ class CSSMathExpressionNodeParser {
    }
  
   private:
@@ -117,7 +125,7 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..440f92004d57fe6eb21c67134dfa4c94
      CSSParserToken token = tokens.ConsumeIncludingWhitespace();
      if (token.Id() == CSSValueID::kInfinity) {
        return CSSMathExpressionNumericLiteral::Create(
-@@ -2102,33 +2114,17 @@ class CSSMathExpressionNodeParser {
+@@ -2102,33 +2115,17 @@ class CSSMathExpressionNodeParser {
        return CSSMathExpressionNumericLiteral::Create(
            M_E, CSSPrimitiveValue::UnitType::kNumber);
      }
@@ -159,7 +167,7 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..440f92004d57fe6eb21c67134dfa4c94
        return nullptr;
      }
  
-@@ -2141,8 +2137,34 @@ class CSSMathExpressionNodeParser {
+@@ -2141,8 +2138,34 @@ class CSSMathExpressionNodeParser {
          CSSNumericLiteralValue::Create(token.NumericValue(), type));
    }
  
@@ -196,7 +204,7 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..440f92004d57fe6eb21c67134dfa4c94
      if (tokens.AtEnd()) {
        return nullptr;
      }
-@@ -2152,7 +2174,8 @@ class CSSMathExpressionNodeParser {
+@@ -2152,7 +2175,8 @@ class CSSMathExpressionNodeParser {
        CSSParserTokenRange inner_range = tokens.ConsumeBlock();
        tokens.ConsumeWhitespace();
        inner_range.ConsumeWhitespace();
@@ -206,7 +214,7 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..440f92004d57fe6eb21c67134dfa4c94
        if (!result || !inner_range.AtEnd()) {
          return nullptr;
        }
-@@ -2165,20 +2188,23 @@ class CSSMathExpressionNodeParser {
+@@ -2165,20 +2189,23 @@ class CSSMathExpressionNodeParser {
        CSSParserTokenRange inner_range = tokens.ConsumeBlock();
        tokens.ConsumeWhitespace();
        inner_range.ConsumeWhitespace();
@@ -233,7 +241,7 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..440f92004d57fe6eb21c67134dfa4c94
      if (!result) {
        return nullptr;
      }
-@@ -2191,7 +2217,8 @@ class CSSMathExpressionNodeParser {
+@@ -2191,7 +2218,8 @@ class CSSMathExpressionNodeParser {
        }
        tokens.ConsumeIncludingWhitespace();
  
@@ -243,7 +251,7 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..440f92004d57fe6eb21c67134dfa4c94
        if (!rhs) {
          return nullptr;
        }
-@@ -2209,13 +2236,14 @@ class CSSMathExpressionNodeParser {
+@@ -2209,13 +2237,14 @@ class CSSMathExpressionNodeParser {
  
    CSSMathExpressionNode* ParseAdditiveValueExpression(
        CSSParserTokenRange& tokens,
@@ -260,7 +268,7 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..440f92004d57fe6eb21c67134dfa4c94
      if (!result) {
        return nullptr;
      }
-@@ -2235,8 +2263,8 @@ class CSSMathExpressionNodeParser {
+@@ -2235,8 +2264,8 @@ class CSSMathExpressionNodeParser {
        }
        tokens.ConsumeIncludingWhitespace();
  
@@ -271,7 +279,7 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..440f92004d57fe6eb21c67134dfa4c94
        if (!rhs) {
          return nullptr;
        }
-@@ -2252,12 +2280,15 @@ class CSSMathExpressionNodeParser {
+@@ -2252,12 +2281,15 @@ class CSSMathExpressionNodeParser {
      return result;
    }
  
@@ -290,7 +298,7 @@ index 00af81fe62eb0d2471a491d4821388fc3f38b92a..440f92004d57fe6eb21c67134dfa4c94
    }
  
    const CSSParserContext& context_;
-@@ -2508,11 +2539,12 @@ CSSMathExpressionNode* CSSMathExpressionNode::ParseMathFunction(
+@@ -2508,11 +2540,12 @@ CSSMathExpressionNode* CSSMathExpressionNode::ParseMathFunction(
      CSSParserTokenRange tokens,
      const CSSParserContext& context,
      const bool is_percentage_allowed,

@@ -1,0 +1,31 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/ng_absolute_utils.h b/third_party/blink/renderer/core/layout/ng/ng_absolute_utils.h
+index bcd355c5712bb6ab78c9299d8e62f66e2ef08b5a..9f1fcf8d284e935f46e241d7b8925ee2608512e3 100644
+--- a/third_party/blink/renderer/core/layout/ng/ng_absolute_utils.h
++++ b/third_party/blink/renderer/core/layout/ng/ng_absolute_utils.h
+@@ -50,6 +50,8 @@ struct CORE_EXPORT NGLogicalOutOfFlowInsets {
+ CORE_EXPORT NGLogicalOutOfFlowInsets
+ ComputeOutOfFlowInsets(const ComputedStyle& style,
+                        const LogicalSize& available_size,
++                       const WritingDirectionMode& container_writing_direction,
++                       const WritingDirectionMode& self_writing_direction,
+                        NGAnchorEvaluatorImpl* anchor_evaluator);
+ 
+ // Computes the inset-modified containing block without the final step of
+@@ -90,7 +92,7 @@ CORE_EXPORT bool ComputeOutOfFlowInlineDimensions(
+     LogicalSize computed_available_size,
+     const absl::optional<LogicalSize>& replaced_size,
+     const WritingDirectionMode container_writing_direction,
+-    const Length::AnchorEvaluator* anchor_evaluator,
++    const NGAnchorEvaluatorImpl* anchor_evaluator,
+     NGLogicalOutOfFlowDimensions* dimensions);
+ 
+ // If layout was performed to determine the position, this will be returned
+@@ -105,7 +107,7 @@ CORE_EXPORT const NGLayoutResult* ComputeOutOfFlowBlockDimensions(
+     LogicalSize computed_available_size,
+     const absl::optional<LogicalSize>& replaced_size,
+     const WritingDirectionMode container_writing_direction,
+-    const Length::AnchorEvaluator* anchor_evaluator,
++    const NGAnchorEvaluatorImpl* anchor_evaluator,
+     NGLogicalOutOfFlowDimensions* dimensions);
+ 
+ CORE_EXPORT void AdjustOffsetForSplitInline(

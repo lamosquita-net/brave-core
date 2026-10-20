@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_resolver.cc b/third_party/blink/renderer/core/css/resolver/style_resolver.cc
-index 93961854002a6b49631aa73a2fe6bc798520a480..a84fc5dda4feb65c7cff24b794dcbc8e354cf7b5 100644
+index 93961854002a6b49631aa73a2fe6bc798520a480..52be4d230b6b3b0ea826366148433a7a48621d80 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_resolver.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_resolver.cc
 @@ -31,6 +31,7 @@
@@ -10,7 +10,15 @@ index 93961854002a6b49631aa73a2fe6bc798520a480..a84fc5dda4feb65c7cff24b794dcbc8e
  #include "third_party/blink/public/mojom/use_counter/metrics/web_feature.mojom-blink.h"
  #include "third_party/blink/renderer/core/animation/css/compositor_keyframe_value_factory.h"
  #include "third_party/blink/renderer/core/animation/css/css_animations.h"
-@@ -92,6 +93,7 @@
+@@ -59,6 +60,7 @@
+ #include "third_party/blink/renderer/core/css/font_face.h"
+ #include "third_party/blink/renderer/core/css/page_rule_collector.h"
+ #include "third_party/blink/renderer/core/css/part_names.h"
++#include "third_party/blink/renderer/core/css/position_fallback_data.h"
+ #include "third_party/blink/renderer/core/css/post_style_update_scope.h"
+ #include "third_party/blink/renderer/core/css/properties/computed_style_utils.h"
+ #include "third_party/blink/renderer/core/css/properties/css_property.h"
+@@ -92,6 +94,7 @@
  #include "third_party/blink/renderer/core/html/html_slot_element.h"
  #include "third_party/blink/renderer/core/html/shadow/shadow_element_names.h"
  #include "third_party/blink/renderer/core/html/track/text_track.h"
@@ -18,7 +26,38 @@ index 93961854002a6b49631aa73a2fe6bc798520a480..a84fc5dda4feb65c7cff24b794dcbc8e
  #include "third_party/blink/renderer/core/html/track/vtt/vtt_cue.h"
  #include "third_party/blink/renderer/core/html/track/vtt/vtt_element.h"
  #include "third_party/blink/renderer/core/html_names.h"
-@@ -256,6 +258,11 @@ String ComputeBaseComputedStyleDiff(const ComputedStyle* base_computed_style,
+@@ -141,13 +144,24 @@ scoped_refptr<const ComputedStyle> BuildInitialStyleForImg(
+ bool ShouldStoreOldStyle(const StyleRecalcContext& style_recalc_context,
+                          StyleResolverState& state) {
+   // Storing the old style is only relevant if we risk computing the style
+-  // more than once for the same element. This is only possible if we are
+-  // currently inside a container.
++  // more than once for the same element. This can happen if we are currently
++  // inside a size query container, or doing multiple style resolutions for
++  // @position-fallback.
+   //
+-  // If we are not inside a container, we can fall back to the default
+-  // behavior (in CSSAnimations) of using the current style on Element
+-  // as the old style.
+-  return style_recalc_context.container && state.CanAffectAnimations();
++  // If we are not inside a size query container or an element with
++  // position-fallback, we can fall back to the default behavior (in
++  // CSSAnimations) of using the current style on Element as the old style.
++  //
++  // TODO(futhark): We also need to check whether we are a descendant of an
++  // element with position-fallback to cover the case where the descendant
++  // explicitly inherits insets or other valid @try properties from the
++  // element with position-fallback.
++  return (style_recalc_context.container ||
++          style_recalc_context.is_position_fallback ||
++          (RuntimeEnabledFeatures::
++               CSSAnchorPositioningCascadeFallbackEnabled() &&
++           state.StyleBuilder().PositionFallback())) &&
++         state.CanAffectAnimations();
+ }
+ 
+ bool ShouldSetPendingUpdate(StyleResolverState& state, Element& element) {
+@@ -256,6 +270,11 @@ String ComputeBaseComputedStyleDiff(const ComputedStyle* base_computed_style,
            *base_computed_style, computed_style)) {
      exclusions.insert(DebugField::background_);
    }
@@ -30,7 +69,7 @@ index 93961854002a6b49631aa73a2fe6bc798520a480..a84fc5dda4feb65c7cff24b794dcbc8e
    if (!CSSPropertyEquality::PropertiesEqual(
            PropertyHandle(CSSProperty::Get(CSSPropertyID::kWebkitMaskImage)),
            *base_computed_style, computed_style)) {
-@@ -488,38 +495,50 @@ void StyleResolver::SetRuleUsageTracker(StyleRuleUsageTracker* tracker) {
+@@ -488,38 +507,50 @@ void StyleResolver::SetRuleUsageTracker(StyleRuleUsageTracker* tracker) {
  }
  
  static inline ScopedStyleResolver* ScopedResolverFor(const Element& element) {
@@ -104,7 +143,7 @@ index 93961854002a6b49631aa73a2fe6bc798520a480..a84fc5dda4feb65c7cff24b794dcbc8e
  }
  
  // Matches :host and :host-context rules if the element is a shadow host.
-@@ -639,9 +658,11 @@ static void MatchVTTRules(const Element& element,
+@@ -639,9 +670,11 @@ static void MatchVTTRules(const Element& element,
        StyleEngine& style_engine = element.GetDocument().GetStyleEngine();
        RuleSet* rule_set = style_engine.RuleSetForSheet(*style);
        if (rule_set) {
@@ -119,7 +158,7 @@ index 93961854002a6b49631aa73a2fe6bc798520a480..a84fc5dda4feb65c7cff24b794dcbc8e
          style_sheet_index++;
        }
      }
-@@ -650,24 +671,34 @@ static void MatchVTTRules(const Element& element,
+@@ -650,24 +683,34 @@ static void MatchVTTRules(const Element& element,
    }
  }
  
@@ -144,9 +183,8 @@ index 93961854002a6b49631aa73a2fe6bc798520a480..a84fc5dda4feb65c7cff24b794dcbc8e
 +  DOMTokenList* part = element.GetPart();
 +  if (!part || !part->length() || !element.IsInShadowTree()) {
 +    return;
-   }
- 
--  MatchVTTRules(element, collector, tracker);
++  }
++
 +  PartNames current_names(part->TokenSet());
 +
 +  // Consider ::part rules in this element’s tree scope, which only match if
@@ -161,16 +199,17 @@ index 93961854002a6b49631aa73a2fe6bc798520a480..a84fc5dda4feb65c7cff24b794dcbc8e
 +    ElementRuleCollector::PartRulesScope scope(collector,
 +                                               const_cast<Element&>(*host));
 +    resolver->CollectMatchingPartPseudoRules(collector, current_names, false);
-+  }
+   }
 +}
-+
+ 
+-  MatchVTTRules(element, collector, tracker);
 +static void MatchStyleAttribute(const Element& element,
 +                                ElementRuleCollector& collector,
 +                                StyleRuleUsageTracker* tracker) {
    if (element.IsStyledElement() && element.InlineStyle() &&
        collector.GetPseudoId() == kPseudoIdNone) {
      // Do not add styles depending on style attributes to the
-@@ -684,29 +715,202 @@ static void MatchElementScopeRules(const Element& element,
+@@ -684,29 +727,202 @@ static void MatchElementScopeRules(const Element& element,
                                          is_inline_style_cacheable,
                                          true /* is_inline_style */);
    }
@@ -380,8 +419,32 @@ index 93961854002a6b49631aa73a2fe6bc798520a480..a84fc5dda4feb65c7cff24b794dcbc8e
    if (!for_shadow_pseudo) {
      MatchPseudoPartRulesForUAHost(part_matching_element, collector);
    }
-@@ -763,12 +967,17 @@ void StyleResolver::MatchPseudoPartRules(const Element& part_matching_element,
+@@ -761,14 +977,42 @@ void StyleResolver::MatchPseudoPartRules(const Element& part_matching_element,
+   }
+ }
  
++// Declarations within @try rules match when ResolveStyle is invoked
++// with that rule explicitly specified to match
++// (see StyleRecalcContext.position_fallback/index).
++void StyleResolver::MatchTryRules(const Element& element,
++                                  ElementRuleCollector& collector) {
++  // If StyleEngine::UpdateStyleForPositionFallback was called with
++  // a PseudoElement, the CSSPropertyValueSet we need is stored on the
++  // PositionFallbackData of that pseudo element. However, when resolving
++  // the style of that pseudo element, `element` is the _originating element_,
++  // not the pseudo element itself.
++  PseudoId pseudo_id = collector.GetPseudoId();
++  const Element* try_element =
++      pseudo_id == kPseudoIdNone
++          ? &element
++          : element.GetPseudoElement(pseudo_id, collector.GetPseudoArgument());
++  if (try_element) {
++    if (PositionFallbackData* data = try_element->GetPositionFallbackData()) {
++      collector.AddTryStyleProperties(data->GetTryPropertyValueSet());
++    }
++  }
++}
++
  void StyleResolver::MatchAuthorRules(
      const Element& element,
 -    ScopedStyleResolver* element_scope_resolver,
@@ -396,12 +459,13 @@ index 93961854002a6b49631aa73a2fe6bc798520a480..a84fc5dda4feb65c7cff24b794dcbc8e
 +  } else {
 +    MatchPseudoPartRules(element, collector);
 +  }
++  MatchTryRules(element, collector);
 +  MatchVTTRules(element, collector, tracker_);
 +  collector.FinishAddingAuthorRulesForTreeScope();
  }
  
  void StyleResolver::MatchUserRules(ElementRuleCollector& collector) {
-@@ -869,7 +1078,7 @@ void StyleResolver::MatchUARules(const Element& element,
+@@ -869,7 +1113,7 @@ void StyleResolver::MatchUARules(const Element& element,
  void StyleResolver::MatchRuleSets(ElementRuleCollector& collector,
                                    const MatchRequest& match_request) {
    collector.ClearMatchedRules();
@@ -410,7 +474,7 @@ index 93961854002a6b49631aa73a2fe6bc798520a480..a84fc5dda4feb65c7cff24b794dcbc8e
    collector.SortAndTransferMatchedRules(/*is_vtt_embedded_style=*/false,
                                          tracker_);
  }
-@@ -921,8 +1130,7 @@ void StyleResolver::MatchAllRules(StyleResolverState& state,
+@@ -921,8 +1165,7 @@ void StyleResolver::MatchAllRules(StyleResolverState& state,
    // mapped from HTML.
    MatchPresentationalHints(state, collector);
  
@@ -420,7 +484,7 @@ index 93961854002a6b49631aa73a2fe6bc798520a480..a84fc5dda4feb65c7cff24b794dcbc8e
  
    if (element.IsStyledElement() && !state.IsForPseudoElement()) {
      collector.BeginAddingAuthorRulesForTreeScope(element.GetTreeScope());
-@@ -1100,8 +1308,12 @@ scoped_refptr<const ComputedStyle> StyleResolver::ResolveStyle(
+@@ -1100,8 +1343,12 @@ scoped_refptr<const ComputedStyle> StyleResolver::ResolveStyle(
  
  static bool AllowsInheritance(const StyleRequest& style_request,
                                const ComputedStyle* parent_style) {
@@ -435,7 +499,7 @@ index 93961854002a6b49631aa73a2fe6bc798520a480..a84fc5dda4feb65c7cff24b794dcbc8e
  }
  
  void StyleResolver::ApplyInheritance(Element& element,
-@@ -1136,9 +1348,13 @@ void StyleResolver::ApplyInheritance(Element& element,
+@@ -1136,9 +1383,13 @@ void StyleResolver::ApplyInheritance(Element& element,
      // be propagated from shadow host to distributed node.
      if (!style_request.IsPseudoStyleRequest() && element.AssignedSlot()) {
        if (Element* parent = element.parentElement()) {
@@ -452,7 +516,7 @@ index 93961854002a6b49631aa73a2fe6bc798520a480..a84fc5dda4feb65c7cff24b794dcbc8e
          }
        }
      }
-@@ -1855,7 +2071,7 @@ void StyleResolver::CollectPseudoRulesForElement(
+@@ -1855,7 +2106,7 @@ void StyleResolver::CollectPseudoRulesForElement(
    collector.FinishAddingPresentationalHints();
  
    if (rules_to_include & kAuthorCSSRules) {
@@ -461,7 +525,19 @@ index 93961854002a6b49631aa73a2fe6bc798520a480..a84fc5dda4feb65c7cff24b794dcbc8e
    }
  }
  
-@@ -2406,7 +2622,7 @@ StyleRuleList* StyleResolver::CollectMatchingRulesFromUnconnectedRuleSet(
+@@ -2208,6 +2459,11 @@ bool StyleResolver::CanReuseBaseComputedStyle(const StyleResolverState& state) {
+     return false;
+   }
+ 
++  if (RuntimeEnabledFeatures::CSSAnchorPositioningCascadeFallbackEnabled() &&
++      base_data->GetBaseComputedStyle()->PositionFallback()) {
++    return false;
++  }
++
+   return true;
+ }
+ 
+@@ -2406,7 +2662,7 @@ StyleRuleList* StyleResolver::CollectMatchingRulesFromUnconnectedRuleSet(
    collector.SetMatchingRulesFromNoStyleSheet(true);
    collector.SetMode(SelectorChecker::kCollectingStyleRules);
    MatchRequest match_request(rule_set, scope);
@@ -470,7 +546,7 @@ index 93961854002a6b49631aa73a2fe6bc798520a480..a84fc5dda4feb65c7cff24b794dcbc8e
    collector.SortAndTransferMatchedRules(/*is_vtt_embedded_style=*/false,
                                          tracker_);
    collector.SetMatchingRulesFromNoStyleSheet(false);
-@@ -2731,6 +2947,19 @@ void StyleResolver::PropagateStyleToViewport() {
+@@ -2731,6 +2987,19 @@ void StyleResolver::PropagateStyleToViewport() {
      PROPAGATE_VALUE(overflow_anchor, OverflowAnchor, SetOverflowAnchor);
    }
  
@@ -490,7 +566,7 @@ index 93961854002a6b49631aa73a2fe6bc798520a480..a84fc5dda4feb65c7cff24b794dcbc8e
    // Misc
    {
      PROPAGATE_FROM(document_element_style, EffectiveTouchAction,
-@@ -2743,6 +2972,10 @@ void StyleResolver::PropagateStyleToViewport() {
+@@ -2743,6 +3012,10 @@ void StyleResolver::PropagateStyleToViewport() {
                     SetColorSchemeForced, false);
      PROPAGATE_FROM(document_element_style, ScrollbarGutter, SetScrollbarGutter,
                     kScrollbarGutterAuto);
@@ -501,3 +577,31 @@ index 93961854002a6b49631aa73a2fe6bc798520a480..a84fc5dda4feb65c7cff24b794dcbc8e
      PROPAGATE_FROM(document_element_style, ForcedColorAdjust,
                     SetForcedColorAdjust, EForcedColorAdjust::kAuto);
    }
+@@ -2952,11 +3225,12 @@ scoped_refptr<const ComputedStyle> StyleResolver::ResolvePositionFallbackStyle(
+       ResolvePositionFallbackRule(tree_scope, position_fallback->GetName());
+ 
+   if (!position_fallback_rule ||
+-      index >= position_fallback_rule->TryRules().size()) {
++      index >= position_fallback_rule->ChildRules().size()) {
+     return nullptr;
+   }
+ 
+-  StyleRuleTry* try_rule = position_fallback_rule->TryRules()[index];
++  StyleRuleTry* try_rule =
++      To<StyleRuleTry>(position_fallback_rule->ChildRules()[index].Get());
+   StyleResolverState state(GetDocument(), element);
+   state.SetStyle(base_style);
+   state.SetIsResolvingPositionFallbackStyle();
+@@ -2967,7 +3241,11 @@ scoped_refptr<const ComputedStyle> StyleResolver::ResolvePositionFallbackStyle(
+   cascade.MutableMatchResult().FinishAddingUserRules();
+   cascade.MutableMatchResult().FinishAddingPresentationalHints();
+   cascade.MutableMatchResult().BeginAddingAuthorRulesForTreeScope(*tree_scope);
+-  cascade.MutableMatchResult().AddMatchedProperties(&properties);
++  cascade.MutableMatchResult().AddMatchedProperties(
++      &properties, AddMatchedPropertiesOptions::Builder()
++                       .SetValidPropertyFilter(
++                           ValidPropertyFilter::kPositionFallback)
++                       .Build());
+   cascade.MutableMatchResult().FinishAddingAuthorRulesForTreeScope();
+   cascade.Apply();
+ 

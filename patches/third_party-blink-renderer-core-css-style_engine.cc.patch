@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/css/style_engine.cc b/third_party/blink/renderer/core/css/style_engine.cc
-index 9bc636b7736b80c9c3d562bd921ef789de070047..adfbbd2af54345a662349dafe25a38a4cba4881a 100644
+index 9bc636b7736b80c9c3d562bd921ef789de070047..18bb96bf20708600781ed6a6eddb3b8e449dc502 100644
 --- a/third_party/blink/renderer/core/css/style_engine.cc
 +++ b/third_party/blink/renderer/core/css/style_engine.cc
-@@ -2831,12 +2831,12 @@ void StyleEngine::CollectMatchingUserRules(
+@@ -52,6 +52,7 @@
+ #include "third_party/blink/renderer/core/css/invalidation/invalidation_set.h"
+ #include "third_party/blink/renderer/core/css/media_feature_overrides.h"
+ #include "third_party/blink/renderer/core/css/media_values.h"
++#include "third_party/blink/renderer/core/css/position_fallback_data.h"
+ #include "third_party/blink/renderer/core/css/property_registration.h"
+ #include "third_party/blink/renderer/core/css/property_registry.h"
+ #include "third_party/blink/renderer/core/css/resolver/scoped_style_resolver.h"
+@@ -2831,12 +2832,12 @@ void StyleEngine::CollectMatchingUserRules(
    for (const ActiveStyleSheet& style_sheet : active_user_style_sheets_) {
      match_request.AddRuleset(style_sheet.second);
      if (match_request.IsFull()) {
@@ -17,7 +25,7 @@ index 9bc636b7736b80c9c3d562bd921ef789de070047..adfbbd2af54345a662349dafe25a38a4
    }
  }
  
-@@ -3051,7 +3051,8 @@ void StyleEngine::UpdateStyleForNonEligibleContainer(Element& container) {
+@@ -3051,7 +3052,8 @@ void StyleEngine::UpdateStyleForNonEligibleContainer(Element& container) {
        DCHECK(cq_data->SkippedStyleRecalc());
        break;
      case ContainerQueryEvaluator::Change::kNearestContainer:
@@ -27,7 +35,7 @@ index 9bc636b7736b80c9c3d562bd921ef789de070047..adfbbd2af54345a662349dafe25a38a4
          change = change.ForceRecalcSizeContainer();
          break;
        }
-@@ -3112,7 +3113,8 @@ void StyleEngine::UpdateStyleAndLayoutTreeForContainer(
+@@ -3112,7 +3114,8 @@ void StyleEngine::UpdateStyleAndLayoutTreeForContainer(
        }
        break;
      case ContainerQueryEvaluator::Change::kNearestContainer:
@@ -37,3 +45,81 @@ index 9bc636b7736b80c9c3d562bd921ef789de070047..adfbbd2af54345a662349dafe25a38a4
          change = change.ForceRecalcSizeContainer();
          break;
        }
+@@ -3187,6 +3190,58 @@ void StyleEngine::UpdateStyleAndLayoutTreeForContainer(
+       container.GetLayoutObject());
+ }
+ 
++void StyleEngine::UpdateStyleForPositionFallback(
++    Element& element,
++    const CSSPropertyValueSet* try_set) {
++  // Note that we enter this function for any OOF element, not just those that
++  // use position-fallback. Therefore, it's important to return immediately
++  // without doing any work when `try_set` and `existing_try_set` both are
++  // nullptr.
++
++  PositionFallbackData* position_fallback_data =
++      element.GetPositionFallbackData();
++  const CSSPropertyValueSet* existing_try_set =
++      position_fallback_data ? position_fallback_data->GetTryPropertyValueSet()
++                             : nullptr;
++  if (existing_try_set == try_set) {
++    // No need to update style, the try set is the one we already used.
++    return;
++  }
++
++  // The last seen `try_set` is persisted on Element, such that subsequent
++  // regular style recalcs can continue to include this set.
++  element.EnsurePositionFallbackData().SetTryPropertyValueSet(try_set);
++
++  base::AutoReset<bool> pf_recalc(&in_position_fallback_style_recalc_, true);
++
++  UpdateViewportSize();
++
++  StyleRecalcContext style_recalc_context =
++      StyleRecalcContext::FromAncestors(element);
++  style_recalc_context.is_position_fallback = true;
++
++  StyleRecalcChange change = StyleRecalcChange().ForceRecalcChildren();
++
++  if (auto* pseudo_element = DynamicTo<PseudoElement>(element)) {
++    RecalcPositionFallbackStyleForPseudoElement(*pseudo_element, change,
++                                                style_recalc_context);
++  } else {
++    element.SetChildNeedsStyleRecalc();
++    style_recalc_root_.Update(nullptr, &element);
++    RecalcStyle(change, style_recalc_context);
++  }
++}
++
++StyleRulePositionFallback* StyleEngine::GetPositionFallbackRule(
++    const ScopedCSSName& scoped_name) {
++  const TreeScope* tree_scope = scoped_name.GetTreeScope();
++  if (!tree_scope) {
++    tree_scope = &GetDocument();
++  }
++  return GetStyleResolver().ResolvePositionFallbackRule(tree_scope,
++                                                        scoped_name.GetName());
++}
++
+ void StyleEngine::RecalcStyle(StyleRecalcChange change,
+                               const StyleRecalcContext& style_recalc_context) {
+   DCHECK(GetDocument().documentElement());
+@@ -3212,6 +3267,18 @@ void StyleEngine::RecalcStyle(StyleRecalcChange change,
+   }
+ }
+ 
++void StyleEngine::RecalcPositionFallbackStyleForPseudoElement(
++    PseudoElement& pseudo_element,
++    const StyleRecalcChange style_recalc_change,
++    const StyleRecalcContext& style_recalc_context) {
++  ScriptForbiddenScope forbid_script;
++  SkipStyleRecalcScope skip_scope(*this);
++  CheckPseudoHasCacheScope check_pseudo_has_cache_scope(&GetDocument());
++  SelectorFilterRootScope filter_scope(
++      FlatTreeTraversal::ParentElement(*pseudo_element.OriginatingElement()));
++  pseudo_element.RecalcStyle(style_recalc_change, style_recalc_context);
++}
++
+ void StyleEngine::RecalcTransitionPseudoStyle() {
+   // TODO(khushalsagar) : This forces a style recalc and layout tree rebuild
+   // for the pseudo element tree each time we do a style recalc phase. See if

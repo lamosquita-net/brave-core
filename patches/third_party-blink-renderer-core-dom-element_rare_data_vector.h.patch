@@ -1,0 +1,53 @@
+diff --git a/third_party/blink/renderer/core/dom/element_rare_data_vector.h b/third_party/blink/renderer/core/dom/element_rare_data_vector.h
+index 736758013c98e1aa61ceeef6a849fa989e8e84e6..19870d2143956f18c4c8bc6ece6d7ddfb9121b5f 100644
+--- a/third_party/blink/renderer/core/dom/element_rare_data_vector.h
++++ b/third_party/blink/renderer/core/dom/element_rare_data_vector.h
+@@ -39,6 +39,7 @@ class ResizeObservation;
+ class CustomElementDefinition;
+ class PopoverData;
+ class CSSToggleMap;
++class PositionFallbackData;
+ class HTMLElement;
+ 
+ enum class ElementFlags;
+@@ -89,13 +90,15 @@ class CORE_EXPORT ElementRareDataVector final : public NodeRareData {
+     kNonce = 22,
+     kIsValue = 23,
+     kSavedLayerScrollOffset = 24,
+-    kAnchorScrollData = 25,
++    kAnchorPositionScrollData = 25,
+     kAnchorElementObserver = 26,
+     kImplicitlyAnchoredElementCount = 27,
+     kLastRememberedBlockSize = 28,
+     kLastRememberedInlineSize = 29,
++    // FlyWeb: kRestrictionTargetId and kStyleScopeData are not in the 116.
++    kPositionFallbackData = 30,
+ 
+-    kNumFields = 30,
++    kNumFields = 31,
+   };
+ 
+   ElementRareDataField* GetField(FieldId field_id) const;
+@@ -250,6 +253,9 @@ class CORE_EXPORT ElementRareDataVector final : public NodeRareData {
+   ContainerQueryData* GetContainerQueryData() const;
+   void ClearContainerQueryData();
+ 
++  PositionFallbackData& EnsurePositionFallbackData();
++  PositionFallbackData* GetPositionFallbackData() const;
++
+   // Returns the crop-ID if one was set, or nullptr otherwise.
+   const RegionCaptureCropId* GetRegionCaptureCropId() const;
+   // Sets a crop-ID on the item. Must be called at most once. Cannot be used
+@@ -298,9 +304,9 @@ class CORE_EXPORT ElementRareDataVector final : public NodeRareData {
+     ClearElementFlag(ElementFlags::kTabIndexWasSetExplicitly);
+   }
+ 
+-  AnchorScrollData* GetAnchorScrollData() const;
+-  void RemoveAnchorScrollData();
+-  AnchorScrollData& EnsureAnchorScrollData(Element*);
++  AnchorPositionScrollData* GetAnchorPositionScrollData() const;
++  void RemoveAnchorPositionScrollData();
++  AnchorPositionScrollData& EnsureAnchorPositionScrollData(Element*);
+ 
+   AnchorElementObserver& EnsureAnchorElementObserver(HTMLElement*);
+   AnchorElementObserver* GetAnchorElementObserver() const;

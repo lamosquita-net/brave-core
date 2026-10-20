@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/element_rule_collector.cc b/third_party/blink/renderer/core/css/element_rule_collector.cc
-index b345b1685f369aeee519023e0b6ccbc258fa7142..66eb8232e6c19cf09dccb7d101374436a2f8c35f 100644
+index b345b1685f369aeee519023e0b6ccbc258fa7142..47d3d4a73b95dd68ae770ea273d9224f5998da34 100644
 --- a/third_party/blink/renderer/core/css/element_rule_collector.cc
 +++ b/third_party/blink/renderer/core/css/element_rule_collector.cc
 @@ -39,6 +39,7 @@
@@ -18,7 +18,30 @@ index b345b1685f369aeee519023e0b6ccbc258fa7142..66eb8232e6c19cf09dccb7d101374436
  #include "third_party/blink/renderer/core/dom/layout_tree_builder_traversal.h"
  #include "third_party/blink/renderer/core/dom/node_computed_style.h"
  #include "third_party/blink/renderer/core/dom/shadow_root.h"
-@@ -472,7 +474,8 @@ void ElementRuleCollector::CollectMatchingRulesForListInternal(
+@@ -398,6 +400,22 @@ void ElementRuleCollector::AddElementStyleProperties(
+   }
+ }
+ 
++void ElementRuleCollector::AddTryStyleProperties(
++    const CSSPropertyValueSet* property_set) {
++  if (!property_set) {
++    return;
++  }
++  auto link_match_type = static_cast<unsigned>(CSSSelector::kMatchAll);
++  result_.AddMatchedProperties(
++      property_set,
++      AddMatchedPropertiesOptions::Builder()
++          .SetLinkMatchType(AdjustLinkMatchType(inside_link_, link_match_type))
++          .SetValidPropertyFilter(ValidPropertyFilter::kPositionFallback)
++          .SetIsFallbackStyle(true)
++          .Build());
++  result_.SetIsCacheable(false);
++}
++
+ static bool RulesApplicableInCurrentTreeScope(
+     const Element* element,
+     const ContainerNode* scoping_node) {
+@@ -472,7 +490,8 @@ void ElementRuleCollector::CollectMatchingRulesForListInternal(
        selector_statistics_collector.EndCollectionForCurrentRule();
        selector_statistics_collector.BeginCollectionForRule(&rule_data);
      }
@@ -28,7 +51,7 @@ index b345b1685f369aeee519023e0b6ccbc258fa7142..66eb8232e6c19cf09dccb7d101374436
        continue;
      }
      if (can_use_fast_reject_ &&
-@@ -554,7 +557,8 @@ void ElementRuleCollector::CollectMatchingRulesForListInternal(
+@@ -554,7 +573,8 @@ void ElementRuleCollector::CollectMatchingRulesForListInternal(
          if (!style_container_candidate) {
            if (pseudo_style_request_.pseudo_id == kPseudoIdNone) {
              style_container_candidate =
@@ -38,7 +61,7 @@ index b345b1685f369aeee519023e0b6ccbc258fa7142..66eb8232e6c19cf09dccb7d101374436
            } else {
              style_container_candidate = &context_.GetElement();
            }
-@@ -670,10 +674,11 @@ base::span<const Attribute> GetAttributes(const Element& element,
+@@ -670,10 +690,11 @@ base::span<const Attribute> GetAttributes(const Element& element,
  
  DISABLE_CFI_PERF
  void ElementRuleCollector::CollectMatchingRules(
@@ -52,7 +75,7 @@ index b345b1685f369aeee519023e0b6ccbc258fa7142..66eb8232e6c19cf09dccb7d101374436
                            matching_ua_rules_);
  
    Element& element = context_.GetElement();
-@@ -932,6 +937,12 @@ static CSSRule* FindStyleRule(CSSRuleCollection* css_rules,
+@@ -932,6 +953,12 @@ static CSSRule* FindStyleRule(CSSRuleCollection* css_rules,
                     FindStyleRule(css_rule->cssRules(), style_rule);
                 result) {
        return result;

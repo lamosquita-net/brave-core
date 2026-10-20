@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_resolver_state.cc b/third_party/blink/renderer/core/css/resolver/style_resolver_state.cc
-index 4f705332cca6fc4605a3d0ea91813df84f0d9566..76247df0655715287f23d39f42c9e671262ad316 100644
+index 4f705332cca6fc4605a3d0ea91813df84f0d9566..d5f58cad209735667381c31acd08dfc06a6b5dc3 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_resolver_state.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_resolver_state.cc
 @@ -24,6 +24,7 @@
@@ -19,7 +19,7 @@ index 4f705332cca6fc4605a3d0ea91813df84f0d9566..76247df0655715287f23d39f42c9e671
          style_request.pseudo_id, style_request.pseudo_argument);
    }
    return styled_element;
-@@ -70,9 +71,11 @@ StyleResolverState::StyleResolverState(
+@@ -70,14 +71,18 @@ StyleResolverState::StyleResolverState(
        element_type_(style_request.IsPseudoStyleRequest()
                          ? ElementType::kPseudoElement
                          : ElementType::kElement),
@@ -34,3 +34,11 @@ index 4f705332cca6fc4605a3d0ea91813df84f0d9566..76247df0655715287f23d39f42c9e671
        originating_element_style_(style_request.originating_element_style),
        is_for_highlight_(IsHighlightPseudoElement(style_request.pseudo_id)),
        uses_highlight_pseudo_inheritance_(
+           ::blink::UsesHighlightPseudoInheritance(style_request.pseudo_id)),
+-      can_trigger_animations_(style_request.can_trigger_animations) {
++      can_trigger_animations_(style_request.can_trigger_animations),
++      is_resolving_position_fallback_style_(
++          style_recalc_context && style_recalc_context->is_position_fallback) {
+   DCHECK(!!parent_style_ == !!layout_parent_style_);
+ 
+   if (UsesHighlightPseudoInheritance()) {

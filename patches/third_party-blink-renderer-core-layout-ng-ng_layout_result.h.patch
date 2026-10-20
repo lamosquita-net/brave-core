@@ -1,7 +1,23 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/ng_layout_result.h b/third_party/blink/renderer/core/layout/ng/ng_layout_result.h
-index 9bf60a857a4a085c4b2d934801c11fae05621704..ed3b7b5c1e6662bcad32d45451ff84e065286d90 100644
+index 9bf60a857a4a085c4b2d934801c11fae05621704..0de415ea5ab87cad2b5aed5400bfd2d9c4793d7f 100644
 --- a/third_party/blink/renderer/core/layout/ng/ng_layout_result.h
 +++ b/third_party/blink/renderer/core/layout/ng/ng_layout_result.h
+@@ -10,7 +10,6 @@
+ #include "third_party/abseil-cpp/absl/types/optional.h"
+ #include "third_party/blink/renderer/bindings/core/v8/serialization/serialized_script_value.h"
+ #include "third_party/blink/renderer/core/core_export.h"
+-#include "third_party/blink/renderer/core/layout/geometry/scroll_offset_range.h"
+ #include "third_party/blink/renderer/core/layout/ng/exclusions/ng_exclusion_space.h"
+ #include "third_party/blink/renderer/core/layout/ng/flex/ng_flex_data.h"
+ #include "third_party/blink/renderer/core/layout/ng/geometry/ng_bfc_offset.h"
+@@ -23,6 +22,7 @@
+ #include "third_party/blink/renderer/core/layout/ng/ng_fragment.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_link.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_physical_fragment.h"
++#include "third_party/blink/renderer/core/layout/ng/non_overflowing_scroll_range.h"
+ #include "third_party/blink/renderer/core/style/computed_style_constants.h"
+ #include "third_party/blink/renderer/platform/wtf/bit_field.h"
+ #include "third_party/blink/renderer/platform/wtf/text/atomic_string.h"
 @@ -153,8 +153,20 @@ class CORE_EXPORT NGLayoutResult final
    }
  
@@ -25,7 +41,31 @@ index 9bf60a857a4a085c4b2d934801c11fae05621704..ed3b7b5c1e6662bcad32d45451ff84e0
    }
  
    // Returns if we can use the first-tier OOF-positioned cache.
-@@ -212,7 +224,7 @@ class CORE_EXPORT NGLayoutResult final
+@@ -166,12 +178,21 @@ class CORE_EXPORT NGLayoutResult final
+   absl::optional<wtf_size_t> PositionFallbackIndex() const {
+     return rare_data_ ? rare_data_->PositionFallbackIndex() : absl::nullopt;
+   }
+-  const Vector<PhysicalScrollRange>* PositionFallbackNonOverflowingRanges()
+-      const {
++  const Vector<NonOverflowingScrollRange>*
++  PositionFallbackNonOverflowingRanges() const {
+     return rare_data_ ? rare_data_->PositionFallbackNonOverflowingRanges()
+                       : nullptr;
+   }
+ 
++  bool NeedsAnchorPositionScrollAdjustmentInX() const {
++    return rare_data_ &&
++           rare_data_->needs_anchor_position_scroll_adjustment_in_x();
++  }
++  bool NeedsAnchorPositionScrollAdjustmentInY() const {
++    return rare_data_ &&
++           rare_data_->needs_anchor_position_scroll_adjustment_in_y();
++  }
++
+   // Get the path to the column spanner (if any) that interrupted column layout.
+   const NGColumnSpannerPath* ColumnSpannerPath() const {
+     if (rare_data_) {
+@@ -212,7 +233,7 @@ class CORE_EXPORT NGLayoutResult final
    EStatus Status() const { return static_cast<EStatus>(bitfields_.status); }
  
    LayoutUnit BfcLineOffset() const {
@@ -34,7 +74,7 @@ index 9bf60a857a4a085c4b2d934801c11fae05621704..ed3b7b5c1e6662bcad32d45451ff84e0
        DCHECK(physical_fragment_->IsOutOfFlowPositioned());
        return LayoutUnit();
      }
-@@ -221,7 +233,7 @@ class CORE_EXPORT NGLayoutResult final
+@@ -221,7 +242,7 @@ class CORE_EXPORT NGLayoutResult final
    }
  
    const absl::optional<LayoutUnit> BfcBlockOffset() const {
@@ -43,7 +83,7 @@ index 9bf60a857a4a085c4b2d934801c11fae05621704..ed3b7b5c1e6662bcad32d45451ff84e0
        DCHECK(physical_fragment_->IsOutOfFlowPositioned());
        return LayoutUnit();
      }
-@@ -467,8 +479,8 @@ class CORE_EXPORT NGLayoutResult final
+@@ -467,8 +488,8 @@ class CORE_EXPORT NGLayoutResult final
     protected:
      friend class NGOutOfFlowLayoutPart;
  
@@ -54,7 +94,7 @@ index 9bf60a857a4a085c4b2d934801c11fae05621704..ed3b7b5c1e6662bcad32d45451ff84e0
          bool can_use_out_of_flow_positioned_first_tier_cache) {
        // OOF-positioned nodes *must* always have an initial BFC-offset.
        DCHECK(layout_result_->physical_fragment_->IsOutOfFlowPositioned());
-@@ -479,8 +491,23 @@ class CORE_EXPORT NGLayoutResult final
+@@ -479,13 +500,41 @@ class CORE_EXPORT NGLayoutResult final
        layout_result_->bitfields_
            .can_use_out_of_flow_positioned_first_tier_cache =
            can_use_out_of_flow_positioned_first_tier_cache;
@@ -77,22 +117,46 @@ index 9bf60a857a4a085c4b2d934801c11fae05621704..ed3b7b5c1e6662bcad32d45451ff84e0
 +                        .StartOffset()) {
 +        layout_result_->EnsureRareData()->SetOutOfFlowPositionedOffset(offset);
 +      }
++    }
++
++    void SetNeedsScrollAdjustment(bool needs_scroll_adjustment_in_x,
++                                  bool needs_scroll_adjustment_in_y) {
++      if (!needs_scroll_adjustment_in_x && !needs_scroll_adjustment_in_y) {
++        return;
++      }
++      layout_result_->EnsureRareData()
++          ->set_needs_anchor_position_scroll_adjustment_in_x(
++              needs_scroll_adjustment_in_x);
++      layout_result_->EnsureRareData()
++          ->set_needs_anchor_position_scroll_adjustment_in_y(
++              needs_scroll_adjustment_in_y);
      }
  
      void SetPositionFallbackResult(
-@@ -580,8 +607,10 @@ class CORE_EXPORT NGLayoutResult final
+-        wtf_size_t fallback_index,
+-        const Vector<PhysicalScrollRange>& non_overflowing_ranges) {
++        absl::optional<wtf_size_t> fallback_index,
++        const Vector<NonOverflowingScrollRange>& non_overflowing_ranges) {
+       layout_result_->EnsureRareData()->SetPositionFallbackResult(
+           fallback_index, non_overflowing_ranges);
+     }
+@@ -580,8 +629,14 @@ class CORE_EXPORT NGLayoutResult final
      using LineBoxBfcBlockOffsetIsSetFlag = BitField::DefineFirstValue<bool, 1>;
      using PositionFallbackResultIsSetFlag =
          LineBoxBfcBlockOffsetIsSetFlag::DefineNextValue<bool, 1>;
 +    using OutOfFlowPositionedOffsetIsSetFlag =
 +        PositionFallbackResultIsSetFlag::DefineNextValue<bool, 1>;
++    using NeedsAnchorPositionScrollAdjustmentInXFlag =
++        OutOfFlowPositionedOffsetIsSetFlag::DefineNextValue<bool, 1>;
++    using NeedsAnchorPositionScrollAdjustmentInYFlag =
++        NeedsAnchorPositionScrollAdjustmentInXFlag::DefineNextValue<bool, 1>;
      using DataUnionTypeValue =
 -        PositionFallbackResultIsSetFlag::DefineNextValue<uint8_t, 3>;
-+        OutOfFlowPositionedOffsetIsSetFlag::DefineNextValue<uint8_t, 3>;
++        NeedsAnchorPositionScrollAdjustmentInYFlag::DefineNextValue<uint8_t, 3>;
  
      struct BlockData {
        GC_PLUGIN_IGNORE("crbug.com/1146383")
-@@ -638,6 +667,14 @@ class CORE_EXPORT NGLayoutResult final
+@@ -638,6 +693,30 @@ class CORE_EXPORT NGLayoutResult final
        return bit_field.set<PositionFallbackResultIsSetFlag>(flag);
      }
  
@@ -104,10 +168,26 @@ index 9bf60a857a4a085c4b2d934801c11fae05621704..ed3b7b5c1e6662bcad32d45451ff84e0
 +      return bit_field.set<OutOfFlowPositionedOffsetIsSetFlag>(flag);
 +    }
 +
++    bool needs_anchor_position_scroll_adjustment_in_x() const {
++      return bit_field.get<NeedsAnchorPositionScrollAdjustmentInXFlag>();
++    }
++
++    void set_needs_anchor_position_scroll_adjustment_in_x(bool flag) {
++      return bit_field.set<NeedsAnchorPositionScrollAdjustmentInXFlag>(flag);
++    }
++
++    bool needs_anchor_position_scroll_adjustment_in_y() const {
++      return bit_field.get<NeedsAnchorPositionScrollAdjustmentInYFlag>();
++    }
++
++    void set_needs_anchor_position_scroll_adjustment_in_y(bool flag) {
++      return bit_field.set<NeedsAnchorPositionScrollAdjustmentInYFlag>(flag);
++    }
++
      DataUnionType data_union_type() const {
        return static_cast<DataUnionType>(
            bit_field.get_concurrently<DataUnionTypeValue>());
-@@ -701,6 +738,7 @@ class CORE_EXPORT NGLayoutResult final
+@@ -701,6 +780,7 @@ class CORE_EXPORT NGLayoutResult final
      }
  
      RareData() : bit_field(DataUnionTypeValue::encode(kNone)) {}
@@ -115,7 +195,7 @@ index 9bf60a857a4a085c4b2d934801c11fae05621704..ed3b7b5c1e6662bcad32d45451ff84e0
      RareData(const RareData& rare_data)
          : early_break(rare_data.early_break),
            end_margin_strut(rare_data.end_margin_strut),
-@@ -717,6 +755,7 @@ class CORE_EXPORT NGLayoutResult final
+@@ -717,6 +797,7 @@ class CORE_EXPORT NGLayoutResult final
            position_fallback_index(rare_data.position_fallback_index),
            position_fallback_non_overflowing_ranges(
                rare_data.position_fallback_non_overflowing_ranges),
@@ -123,7 +203,31 @@ index 9bf60a857a4a085c4b2d934801c11fae05621704..ed3b7b5c1e6662bcad32d45451ff84e0
            bit_field(rare_data.bit_field) {
        switch (data_union_type()) {
          case kNone:
-@@ -802,6 +841,15 @@ class CORE_EXPORT NGLayoutResult final
+@@ -782,26 +863,32 @@ class CORE_EXPORT NGLayoutResult final
+     }
+ 
+     void SetPositionFallbackResult(
+-        wtf_size_t fallback_index,
+-        const Vector<PhysicalScrollRange>& non_overflowing_ranges) {
++        absl::optional<wtf_size_t> fallback_index,
++        const Vector<NonOverflowingScrollRange>& non_overflowing_ranges) {
+       position_fallback_index = fallback_index;
+       position_fallback_non_overflowing_ranges = non_overflowing_ranges;
+       set_position_fallback_result_is_set(true);
+     }
+     absl::optional<wtf_size_t> PositionFallbackIndex() const {
+-      if (!position_fallback_result_is_set()) {
+-        return absl::nullopt;
+-      }
+       return position_fallback_index;
+     }
+-    const Vector<PhysicalScrollRange>* PositionFallbackNonOverflowingRanges()
+-        const {
++    const Vector<NonOverflowingScrollRange>*
++    PositionFallbackNonOverflowingRanges() const {
+       if (!position_fallback_result_is_set()) {
+         return nullptr;
+       }
        return &position_fallback_non_overflowing_ranges;
      }
  
@@ -139,17 +243,23 @@ index 9bf60a857a4a085c4b2d934801c11fae05621704..ed3b7b5c1e6662bcad32d45451ff84e0
      void Trace(Visitor* visitor) const;
  
      Member<const NGEarlyBreak> early_break;
-@@ -835,6 +883,9 @@ class CORE_EXPORT NGLayoutResult final
-     wtf_size_t position_fallback_index;
-     Vector<PhysicalScrollRange> position_fallback_non_overflowing_ranges;
+@@ -831,9 +918,13 @@ class CORE_EXPORT NGLayoutResult final
+     // Only valid if line_box_bfc_block_offset_is_set
+     LayoutUnit line_box_bfc_block_offset;
  
++    absl::optional<wtf_size_t> position_fallback_index;
++
+     // Only valid if position_fallback_result_is_set
+-    wtf_size_t position_fallback_index;
+-    Vector<PhysicalScrollRange> position_fallback_non_overflowing_ranges;
++    Vector<NonOverflowingScrollRange> position_fallback_non_overflowing_ranges;
++
 +    // Only valid if oof_positioned_offset_is_set
 +    LogicalOffset oof_positioned_offset;
-+
+ 
      BitField bit_field;
  
-     union {
-@@ -870,7 +921,7 @@ class CORE_EXPORT NGLayoutResult final
+@@ -870,7 +961,7 @@ class CORE_EXPORT NGLayoutResult final
                bool has_descendant_that_depends_on_percentage_block_size,
                bool subtree_modified_margin_strut)
          : has_rare_data_exclusion_space(false),
@@ -158,7 +268,7 @@ index 9bf60a857a4a085c4b2d934801c11fae05621704..ed3b7b5c1e6662bcad32d45451ff84e0
            can_use_out_of_flow_positioned_first_tier_cache(false),
            is_bfc_block_offset_nullopt(false),
            has_forced_break(false),
-@@ -892,7 +943,7 @@ class CORE_EXPORT NGLayoutResult final
+@@ -892,7 +983,7 @@ class CORE_EXPORT NGLayoutResult final
            has_orthogonal_fallback_size_descendant(false) {}
  
      unsigned has_rare_data_exclusion_space : 1;
@@ -167,7 +277,7 @@ index 9bf60a857a4a085c4b2d934801c11fae05621704..ed3b7b5c1e6662bcad32d45451ff84e0
      unsigned can_use_out_of_flow_positioned_first_tier_cache : 1;
      unsigned is_bfc_block_offset_nullopt : 1;
  
-@@ -926,19 +977,16 @@ class CORE_EXPORT NGLayoutResult final
+@@ -926,19 +1017,16 @@ class CORE_EXPORT NGLayoutResult final
  
    // |rare_data_| cannot be stored in the union because it is difficult to have
    // a const bitfield for it and it cannot be traced.

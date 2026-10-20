@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/properties/computed_style_utils.cc b/third_party/blink/renderer/core/css/properties/computed_style_utils.cc
-index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..0514c252410ef3099b823c3896d4660e3b19901a 100644
+index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..22771db71daf1c54ed1cb4194f1c3dee3dc3e76a 100644
 --- a/third_party/blink/renderer/core/css/properties/computed_style_utils.cc
 +++ b/third_party/blink/renderer/core/css/properties/computed_style_utils.cc
 @@ -52,7 +52,6 @@
@@ -201,39 +201,8 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..0514c252410ef3099b823c3896d4660e
  }
  
  const CSSValue* ComputedStyleUtils::BackgroundPositionOrWebkitMaskPosition(
-@@ -642,29 +740,53 @@ CSSValue* ComputedStyleUtils::ValueForPositionOffset(
-     const ComputedStyle& style,
-     const CSSProperty& property,
+@@ -644,27 +742,22 @@ CSSValue* ComputedStyleUtils::ValueForPositionOffset(
      const LayoutObject* layout_object) {
-+  if (RuntimeEnabledFeatures::GetComputedStyleOutOfFlowInsetsFixEnabled() &&
-+      layout_object && layout_object->IsOutOfFlowPositioned()) {
-+    CHECK(layout_object->IsBox());
-+    // LayoutBox::OutOfFlowInsetsForGetComputedStyle() are relative to the
-+    // container's writing direction. Convert it to physical.
-+    const LayoutBox* box = To<LayoutBox>(layout_object);
-+    const NGPhysicalBoxStrut& insets =
-+        box->OutOfFlowInsetsForGetComputedStyle().ConvertToPhysical(
-+            box->ContainingBlock()->StyleRef().GetWritingDirection());
-+    LayoutUnit offset;
-+    switch (property.PropertyID()) {
-+      case CSSPropertyID::kLeft:
-+        offset = insets.left;
-+        break;
-+      case CSSPropertyID::kTop:
-+        offset = insets.top;
-+        break;
-+      case CSSPropertyID::kRight:
-+        offset = insets.right;
-+        break;
-+      case CSSPropertyID::kBottom:
-+        offset = insets.bottom;
-+        break;
-+      default:
-+        NOTREACHED();
-+    }
-+    return ZoomAdjustedPixelValue(offset, style);
-+  }
-+
    std::pair<const Length*, const Length*> positions;
    bool is_horizontal_property;
 -  bool is_right_or_bottom;
@@ -260,7 +229,49 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..0514c252410ef3099b823c3896d4660e
        break;
      default:
        NOTREACHED();
-@@ -694,18 +816,8 @@ CSSValue* ComputedStyleUtils::ValueForPositionOffset(
+@@ -674,8 +767,40 @@ CSSValue* ComputedStyleUtils::ValueForPositionOffset(
+ 
+   const Length& offset = *positions.first;
+   const Length& opposite = *positions.second;
+-
+   const auto* box = DynamicTo<LayoutBox>(layout_object);
++
++  // In this case, the used value is the computed value, so we resolve directly.
++  if (offset.IsFixed() && (!box || !box->UsesPositionFallbackStyle())) {
++    return ZoomAdjustedPixelValueForLength(offset, style);
++  }
++
++  if (RuntimeEnabledFeatures::GetComputedStyleOutOfFlowInsetsFixEnabled() &&
++      box && box->IsOutOfFlowPositioned()) {
++    // LayoutBox::OutOfFlowInsetsForGetComputedStyle() are relative to the
++    // container's writing direction. Convert it to physical.
++    const NGPhysicalBoxStrut& insets =
++        box->OutOfFlowInsetsForGetComputedStyle().ConvertToPhysical(
++            box->ContainingBlock()->StyleRef().GetWritingDirection());
++    LayoutUnit inset;
++    switch (property.PropertyID()) {
++      case CSSPropertyID::kLeft:
++        inset = insets.left;
++        break;
++      case CSSPropertyID::kTop:
++        inset = insets.top;
++        break;
++      case CSSPropertyID::kRight:
++        inset = insets.right;
++        break;
++      case CSSPropertyID::kBottom:
++        inset = insets.bottom;
++        break;
++      default:
++        NOTREACHED();
++    }
++    return ZoomAdjustedPixelValue(inset, style);
++  }
++
+   if (offset.IsPercentOrCalc() && box && layout_object->IsPositioned()) {
+     LayoutUnit containing_block_size;
+     if (layout_object->IsStickyPositioned()) {
+@@ -694,18 +819,8 @@ CSSValue* ComputedStyleUtils::ValueForPositionOffset(
                : box->ContainingBlockLogicalHeightForGetComputedStyle();
      }
  
@@ -281,7 +292,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..0514c252410ef3099b823c3896d4660e
    }
  
    if (offset.IsAuto() && layout_object) {
-@@ -742,6 +854,8 @@ CSSValue* ComputedStyleUtils::ValueForPositionOffset(
+@@ -742,6 +857,8 @@ CSSValue* ComputedStyleUtils::ValueForPositionOffset(
      }
  
      if (layout_object->IsOutOfFlowPositioned() && layout_object->IsBox()) {
@@ -290,7 +301,16 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..0514c252410ef3099b823c3896d4660e
        // For fixed and absolute positioned elements, the top, left, bottom, and
        // right are defined relative to the corresponding sides of the containing
        // block.
-@@ -949,23 +1063,24 @@ CSSPrimitiveValue* ComputedStyleUtils::ValueForFontSize(
+@@ -781,6 +898,8 @@ CSSValue* ComputedStyleUtils::ValueForPositionOffset(
+     return CSSIdentifierValue::Create(CSSValueID::kAuto);
+   }
+ 
++  // Fixed lengths must have been handled by previous branches.
++  CHECK(!offset.IsFixed());
+   return ZoomAdjustedPixelValueForLength(offset, style);
+ }
+ 
+@@ -949,23 +1068,24 @@ CSSPrimitiveValue* ComputedStyleUtils::ValueForFontSize(
  
  CSSValue* ComputedStyleUtils::ValueForFontSizeAdjust(
      const ComputedStyle& style) {
@@ -323,7 +343,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..0514c252410ef3099b823c3896d4660e
  }
  
  CSSPrimitiveValue* ComputedStyleUtils::ValueForFontStretch(
-@@ -1984,16 +2099,27 @@ CSSValue* ComputedStyleUtils::ValueForGridTrackList(
+@@ -1984,16 +2104,27 @@ CSSValue* ComputedStyleUtils::ValueForGridTrackList(
      is_track_list_empty = positions.size() == 1;
    }
  
@@ -358,7 +378,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..0514c252410ef3099b823c3896d4660e
      return CSSIdentifierValue::Create(CSSValueID::kNone);
    }
  
-@@ -2046,8 +2172,8 @@ CSSValue* ComputedStyleUtils::ValueForGridTrackList(
+@@ -2046,8 +2177,8 @@ CSSValue* ComputedStyleUtils::ValueForGridTrackList(
    // Otherwise, the resolved value is the computed value, preserving repeat().
    OrderedNamedLinesCollector collector(
        computed_grid_track_list.ordered_named_grid_lines,
@@ -369,7 +389,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..0514c252410ef3099b823c3896d4660e
    PopulateGridTrackListForNonGrid(list, collector, ng_track_list, style);
    return list;
  }
-@@ -2560,14 +2686,30 @@ CSSValue* ComputedStyleUtils::ValueForAnimationTimelineList(
+@@ -2560,14 +2691,30 @@ CSSValue* ComputedStyleUtils::ValueForAnimationTimelineList(
        &ValueForAnimationTimeline);
  }
  
@@ -401,7 +421,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..0514c252410ef3099b823c3896d4660e
    return list;
  }
  
-@@ -2917,6 +3059,18 @@ CSSValue* ComputedStyleUtils::CreateTransitionPropertyValue(
+@@ -2917,6 +3064,18 @@ CSSValue* ComputedStyleUtils::CreateTransitionPropertyValue(
            .GetPropertyNameAtomicString());
  }
  
@@ -420,7 +440,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..0514c252410ef3099b823c3896d4660e
  CSSValue* ComputedStyleUtils::ValueForTransitionProperty(
      const CSSTransitionData* transition_data) {
    CSSValueList* list = CSSValueList::CreateCommaSeparated();
-@@ -2931,6 +3085,19 @@ CSSValue* ComputedStyleUtils::ValueForTransitionProperty(
+@@ -2931,6 +3090,19 @@ CSSValue* ComputedStyleUtils::ValueForTransitionProperty(
    return list;
  }
  
@@ -440,7 +460,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..0514c252410ef3099b823c3896d4660e
  CSSValueID ValueForQuoteType(const QuoteType quote_type) {
    switch (quote_type) {
      case QuoteType::kNoOpen:
-@@ -2985,7 +3152,8 @@ CSSValue* ComputedStyleUtils::ValueForContentData(const ComputedStyle& style,
+@@ -2985,7 +3157,8 @@ CSSValue* ComputedStyleUtils::ValueForContentData(const ComputedStyle& style,
        list->Append(*CSSIdentifierValue::Create(ValueForQuoteType(quote_type)));
      } else if (content_data->IsAltText()) {
        alt_text = MakeGarbageCollected<CSSStringValue>(
@@ -450,7 +470,7 @@ index 71ed755e000c1c86b71b0fab44228c56f5e49c2b..0514c252410ef3099b823c3896d4660e
      } else {
        NOTREACHED();
      }
-@@ -3180,6 +3348,10 @@ CSSValue* ComputedStyleUtils::ValueForSVGPaint(const SVGPaint& paint,
+@@ -3180,6 +3353,10 @@ CSSValue* ComputedStyleUtils::ValueForSVGPaint(const SVGPaint& paint,
      }
      case SVGPaintType::kUri:
        return MakeGarbageCollected<cssvalue::CSSURIValue>(paint.GetUrl());
