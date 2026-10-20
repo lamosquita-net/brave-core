@@ -1,0 +1,33 @@
+diff --git a/content/browser/renderer_host/render_widget_host_impl.cc b/content/browser/renderer_host/render_widget_host_impl.cc
+index 95d27f99acc0e59c8660054eea9e2b221af0e0f3..4b0de92d0a34d7784716407603cc58982576f34f 100644
+--- a/content/browser/renderer_host/render_widget_host_impl.cc
++++ b/content/browser/renderer_host/render_widget_host_impl.cc
+@@ -757,9 +757,15 @@ void RenderWidgetHostImpl::RendererWidgetCreated(bool for_frame_widget) {
+ }
+ 
+ void RenderWidgetHostImpl::Init() {
+-  DCHECK(renderer_widget_created_);
+-  DCHECK(waiting_for_init_);
++  // Note that this may be called after a renderer crash. In this case, we can
++  // just exit early, as there is nothing else to do.  Note that
++  // `waiting_for_init_` should've already been reset to false in that case.
++  if (!renderer_widget_created_) {
++    DCHECK(!waiting_for_init_);
++    return;
++  }
+ 
++  DCHECK(waiting_for_init_);
+   waiting_for_init_ = false;
+ 
+   // These two methods avoid running while we are `waiting_for_init_`, so we
+@@ -2271,6 +2277,10 @@ void RenderWidgetHostImpl::RendererExited() {
+ 
+   blink_widget_.reset();
+ 
++  // No need to perform a deferred show after the renderer crashes, and this
++  // wouldn't work anyway as it requires a valid `blink_widget_`.
++  pending_show_params_.reset();
++
+   // After the renderer crashes, the view is destroyed and so the
+   // RenderWidgetHost cannot track its visibility anymore. We assume such
+   // RenderWidgetHost to be invisible for the sake of internal accounting - be

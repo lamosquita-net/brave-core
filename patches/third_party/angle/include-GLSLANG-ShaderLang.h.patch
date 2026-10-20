@@ -1,0 +1,18 @@
+diff --git a/include/GLSLANG/ShaderLang.h b/include/GLSLANG/ShaderLang.h
+index af7af0fed58501becd5f21a51f2897c45a99a1e7..09724fbfc325a3b710f7b6de48a3f9c7858cfb7c 100644
+--- a/include/GLSLANG/ShaderLang.h
++++ b/include/GLSLANG/ShaderLang.h
+@@ -430,6 +430,13 @@ struct ShCompileOptions
+     // Use fragment shaders to compute and set coverage mask based on the alpha value
+     uint64_t emulateAlphaToCoverage : 1;
+ 
++    // Reject shaders with obvious undefined behavior:
++    //
++    // - Shader contains easy-to-detect infinite loops
++    //
++    // FlyWeb: from ANGLE 67d8d8c88 (crbug 350528343, CVE-2024-7532).
++    uint64_t rejectWebglShadersWithUndefinedBehavior : 1;
++
+     ShCompileOptionsMetal metal;
+     ShPixelLocalStorageOptions pls;
+ };
