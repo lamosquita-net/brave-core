@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/cascade_priority.h b/third_party/blink/renderer/core/css/resolver/cascade_priority.h
-index c15ca1d13332b9357eb37d04ef30c2a599afcf1e..201e82521d950b9cc1f70b2125725ab3883a5c7a 100644
+index c15ca1d13332b9357eb37d04ef30c2a599afcf1e..02ee237140520809e8c0471854912a5017e461c8 100644
 --- a/third_party/blink/renderer/core/css/resolver/cascade_priority.h
 +++ b/third_party/blink/renderer/core/css/resolver/cascade_priority.h
 @@ -63,7 +63,9 @@ class CORE_EXPORT CascadePriority {
@@ -42,7 +42,7 @@ index c15ca1d13332b9357eb37d04ef30c2a599afcf1e..201e82521d950b9cc1f70b2125725ab3
  
    // For an explanation of 'tree_order', see css-scoping:
    // https://drafts.csswg.org/css-scoping/#shadow-cascading
-@@ -90,12 +106,17 @@ class CORE_EXPORT CascadePriority {
+@@ -90,15 +106,37 @@ class CORE_EXPORT CascadePriority {
                    bool important,
                    uint16_t tree_order,
                    bool is_inline_style,
@@ -61,7 +61,27 @@ index c15ca1d13332b9357eb37d04ef30c2a599afcf1e..201e82521d950b9cc1f70b2125725ab3
              EncodeTreeOrder(tree_order, important) |
                  EncodeOriginImportance(origin, important)
                      << kOriginImportanceOffset) {}
-@@ -120,6 +141,9 @@ class CORE_EXPORT CascadePriority {
++  // FlyWeb (FM.28): the 116 signature, without the try style bits, still used
++  // by the 116 tests (cascade_priority_test, cascade_map_test,
++  // style_cascade_test).
++  CascadePriority(CascadeOrigin origin,
++                  bool important,
++                  uint16_t tree_order,
++                  bool is_inline_style,
++                  uint16_t layer_order,
++                  uint32_t position)
++      : CascadePriority(origin,
++                        important,
++                        tree_order,
++                        is_inline_style,
++                        /* is_try_style */ false,
++                        /* is_try_tactics_style */ false,
++                        layer_order,
++                        position) {}
+   // See StyleCascade.generation_.
+   CascadePriority(CascadePriority o, uint8_t generation)
+       : CascadePriority((o.low_bits_ & ~kGenerationMask) | generation,
+@@ -120,6 +158,9 @@ class CORE_EXPORT CascadePriority {
    uint8_t GetGeneration() const { return low_bits_ & kGenerationMask; }
    bool IsInlineStyle() const { return (low_bits_ >> kIsInlineStyleOffset) & 1; }
  
@@ -71,7 +91,7 @@ index c15ca1d13332b9357eb37d04ef30c2a599afcf1e..201e82521d950b9cc1f70b2125725ab3
    // Returns a value that compares like CascadePriority, except that it
    // ignores the importance and all sorting criteria below layer order,
    // which allows us to compare if two CascadePriorities belong
-@@ -173,6 +197,8 @@ class CORE_EXPORT CascadePriority {
+@@ -173,6 +214,8 @@ class CORE_EXPORT CascadePriority {
    //  Bit  4-35: position
    //  Bit 36-51: layer_order (encoded)
    //  Bit    52: is_inline_style

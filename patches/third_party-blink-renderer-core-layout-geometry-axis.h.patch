@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/geometry/axis.h b/third_party/blink/renderer/core/layout/geometry/axis.h
-index d119919b7ead50244800cbfbf934490b1358ae78..3589f49ce6680d019c3bfb6fe0f3b73b97628389 100644
+index d119919b7ead50244800cbfbf934490b1358ae78..1e97336d4805b27d60b289ce33efde911815a96b 100644
 --- a/third_party/blink/renderer/core/layout/geometry/axis.h
 +++ b/third_party/blink/renderer/core/layout/geometry/axis.h
 @@ -10,6 +10,9 @@
@@ -12,7 +12,7 @@ index d119919b7ead50244800cbfbf934490b1358ae78..3589f49ce6680d019c3bfb6fe0f3b73b
  using PhysicalAxes = base::StrongAlias<class PhysicalAxesTag, uint8_t>;
  using LogicalAxes = base::StrongAlias<class LogicalAxesTag, uint8_t>;
  
-@@ -49,25 +52,38 @@ inline constexpr PhysicalAxes operator&=(PhysicalAxes& a, PhysicalAxes b) {
+@@ -49,25 +52,49 @@ inline constexpr PhysicalAxes operator&=(PhysicalAxes& a, PhysicalAxes b) {
    return a;
  }
  
@@ -62,6 +62,17 @@ index d119919b7ead50244800cbfbf934490b1358ae78..3589f49ce6680d019c3bfb6fe0f3b73b
 +static_assert(kLogicalAxesInline.value() == kPhysicalAxesHorizontal.value());
 +static_assert(kLogicalAxesBlock.value() == kPhysicalAxesVertical.value());
 +static_assert(kLogicalAxesBoth.value() == kPhysicalAxesBoth.value());
++
++// FlyWeb (FM.28): the 116 names, from before upstream c5a577742be, still used
++// by the 116 tests (axis_test, container query and style engine tests).
++inline constexpr LogicalAxes kLogicalAxisNone = kLogicalAxesNone;
++inline constexpr LogicalAxes kLogicalAxisInline = kLogicalAxesInline;
++inline constexpr LogicalAxes kLogicalAxisBlock = kLogicalAxesBlock;
++inline constexpr LogicalAxes kLogicalAxisBoth = kLogicalAxesBoth;
++inline constexpr PhysicalAxes kPhysicalAxisNone = kPhysicalAxesNone;
++inline constexpr PhysicalAxes kPhysicalAxisHorizontal = kPhysicalAxesHorizontal;
++inline constexpr PhysicalAxes kPhysicalAxisVertical = kPhysicalAxesVertical;
++inline constexpr PhysicalAxes kPhysicalAxisBoth = kPhysicalAxesBoth;
  
  template <typename FromType, typename ToType>
  inline ToType ConvertAxes(FromType from, WritingMode mode) {
