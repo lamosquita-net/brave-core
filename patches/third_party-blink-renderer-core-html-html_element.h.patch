@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/html_element.h b/third_party/blink/renderer/core/html/html_element.h
-index 1160747542fa4d2f2111ea8803443db31d5841b0..f74ef38edadb60ebd828395eed868e29d1113b79 100644
+index 1160747542fa4d2f2111ea8803443db31d5841b0..037b4270f7028170fe3e2eeb8218bacb880bf6f1 100644
 --- a/third_party/blink/renderer/core/html/html_element.h
 +++ b/third_party/blink/renderer/core/html/html_element.h
 @@ -45,7 +45,10 @@ class FormAssociated;
@@ -69,7 +69,21 @@ index 1160747542fa4d2f2111ea8803443db31d5841b0..f74ef38edadb60ebd828395eed868e29
    void hidePopover(ExceptionState& exception_state);
    // |exception_state| can be nullptr when exceptions can't be thrown, such as
    // when the browser hides a popover during light dismiss or shows a popover in
-@@ -326,7 +346,6 @@ class CORE_EXPORT HTMLElement : public Element {
+@@ -283,6 +303,13 @@ class CORE_EXPORT HTMLElement : public Element {
+       mojom::blink::FocusType,
+       InputDeviceCapabilities* source_capabilities) override;
+ 
++  // This allows developers to enable or disable browser-provided writing
++  // suggestions. If the attribute is not explicitly set on an element, it
++  // inherits its value from ancestor elements; otherwise, it defaults to
++  // "true". Spec: https://github.com/whatwg/html/pull/10018.
++  AtomicString writingSuggestions() const;
++  void setWritingSuggestions(const AtomicString& value);
++
+  protected:
+   enum AllowPercentage { kDontAllowPercentageValues, kAllowPercentageValues };
+   enum AllowZero { kDontAllowZeroValues, kAllowZeroValues };
+@@ -326,7 +353,6 @@ class CORE_EXPORT HTMLElement : public Element {
    unsigned ParseBorderWidthAttribute(const AtomicString&) const;
  
    void ChildrenChanged(const ChildrenChange&) override;
@@ -77,7 +91,7 @@ index 1160747542fa4d2f2111ea8803443db31d5841b0..f74ef38edadb60ebd828395eed868e29
  
    InsertionNotificationRequest InsertedInto(ContainerNode&) override;
    void RemovedFrom(ContainerNode& insertion_point) override;
-@@ -349,13 +368,6 @@ class CORE_EXPORT HTMLElement : public Element {
+@@ -349,13 +375,6 @@ class CORE_EXPORT HTMLElement : public Element {
    DocumentFragment* TextToFragment(const String&, ExceptionState&);
  
    void AdjustDirectionalityIfNeededAfterChildAttributeChanged(Element* child);

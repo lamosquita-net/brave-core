@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/html_element.cc b/third_party/blink/renderer/core/html/html_element.cc
-index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..65369be785d8cd050431ab23b72326e9e55857d0 100644
+index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..d6c238ca6e1afcf97a2a20f6f2e7fbde0c05ae7d 100644
 --- a/third_party/blink/renderer/core/html/html_element.cc
 +++ b/third_party/blink/renderer/core/html/html_element.cc
 @@ -29,6 +29,8 @@
@@ -357,8 +357,8 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..65369be785d8cd050431ab23b72326e9
 -      }
 -    }
 -    stay_within = change.sibling_changed;
--  }
--
+   }
+ 
 -  UpdateDescendantHasDirAutoAttribute(true /* has_dir_auto */);
 -
 -  for (Element* element_to_adjust = this; element_to_adjust;
@@ -376,9 +376,9 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..65369be785d8cd050431ab23b72326e9
 -        element_to_adjust->PseudoStateChanged(CSSSelector::kPseudoDir);
 -      return;
 -    }
-   }
+-  }
 -}
- 
+-
 -void HTMLElement::AdjustDirectionalityIfNeededAfterShadowRootChanged() {
 -  DCHECK(IsShadowHost(this));
    if (SelfOrAncestorHasDirAutoAttribute()) {
@@ -526,7 +526,7 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..65369be785d8cd050431ab23b72326e9
    } else if (!is_old_auto && is_new_auto) {
      SetSelfOrAncestorHasDirAutoAttribute();
      UpdateDescendantHasDirAutoAttribute(true /* has_dir_auto */);
-@@ -3293,27 +3246,23 @@ bool HTMLElement::IsLabelable() const {
+@@ -3293,25 +3246,43 @@ bool HTMLElement::IsLabelable() const {
    return IsFormAssociatedCustomElement();
  }
  
@@ -559,9 +559,26 @@ index 4c03f8c3a80e5d75a2d4b3dada4818e48a324eca..65369be785d8cd050431ab23b72326e9
 -      SetNeedsInheritDirectionalityFromParent();
 -    else if (parent)
 -      SetCachedDirectionality(parent->CachedDirectionality());
--  }
--}
--
- }  // namespace blink
++AtomicString HTMLElement::writingSuggestions() const {
++  for (const Element* element = this; element;
++       element = element->ParentOrShadowHostElement()) {
++    const AtomicString& value =
++        element->FastGetAttribute(html_names::kWritingsuggestionsAttr);
++    if (value == g_null_atom) {
++      continue;
++    } else if (EqualIgnoringASCIICase(value, keywords::kFalse)) {
++      return keywords::kFalse;
++    } else {
++      // The invalid value default is 'true'.
++      return keywords::kTrue;
++    }
+   }
++  // Default is 'true'.
++  return keywords::kTrue;
++}
++
++void HTMLElement::setWritingSuggestions(const AtomicString& value) {
++  setAttribute(html_names::kWritingsuggestionsAttr, value);
+ }
  
- #ifndef NDEBUG
+ }  // namespace blink
