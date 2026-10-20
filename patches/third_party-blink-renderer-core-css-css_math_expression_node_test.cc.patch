@@ -1,0 +1,50 @@
+diff --git a/third_party/blink/renderer/core/css/css_math_expression_node_test.cc b/third_party/blink/renderer/core/css/css_math_expression_node_test.cc
+index d2f12e2baa5cb1ee171818d9382db56fe17b13bd..55cb6fef350f48d29da8f2cd10fb0593b75392c5 100644
+--- a/third_party/blink/renderer/core/css/css_math_expression_node_test.cc
++++ b/third_party/blink/renderer/core/css/css_math_expression_node_test.cc
+@@ -101,7 +101,8 @@ TEST(CSSCalculationValue, AccumulatePixelsAndPercent) {
+   CSSToLengthConversionData conversion_data(
+       *style, style.get(), style.get(),
+       CSSToLengthConversionData::ViewportSize(nullptr),
+-      CSSToLengthConversionData::ContainerSizes(), style->EffectiveZoom(),
++      CSSToLengthConversionData::ContainerSizes(),
++      CSSToLengthConversionData::AnchorData(), style->EffectiveZoom(),
+       ignored_flags);
+ 
+   TestAccumulatePixelsAndPercent(
+@@ -371,7 +372,7 @@ TEST(CSSMathExpressionNode, TestSteppedValueFunctions) {
+     CSSToLengthConversionData resolver{};
+     scoped_refptr<const CalculationExpressionNode> node =
+         res->ToCalculationExpression(resolver);
+-    EXPECT_EQ(node->Evaluate(FLT_MAX, nullptr), test_case.output);
++    EXPECT_EQ(node->Evaluate(FLT_MAX), test_case.output);
+     EXPECT_TRUE(res->CanBeResolvedWithConversionData());
+   }
+ }
+@@ -396,7 +397,7 @@ TEST(CSSMathExpressionNode, TestSteppedValueFunctionsToCalculationExpression) {
+     CSSToLengthConversionData resolver{};
+     scoped_refptr<const CalculationExpressionNode> node =
+         operation->ToCalculationExpression(resolver);
+-    EXPECT_EQ(node->Evaluate(FLT_MAX, nullptr), test_case.output);
++    EXPECT_EQ(node->Evaluate(FLT_MAX), test_case.output);
+     const CSSMathExpressionNode* css_node =
+         CSSMathExpressionOperation::Create(*node);
+     EXPECT_NE(css_node, nullptr);
+@@ -445,7 +446,7 @@ TEST(CSSMathExpressionNode, TestExponentialFunctions) {
+     CSSToLengthConversionData resolver;
+     scoped_refptr<const CalculationExpressionNode> node =
+         res->ToCalculationExpression(resolver);
+-    EXPECT_EQ(node->Evaluate(FLT_MAX, nullptr), test_case.output);
++    EXPECT_EQ(node->Evaluate(FLT_MAX), test_case.output);
+     EXPECT_TRUE(res->CanBeResolvedWithConversionData());
+   }
+ }
+@@ -491,7 +492,7 @@ TEST(CSSMathExpressionNode, TestExponentialFunctionsToCalculationExpression) {
+     CSSToLengthConversionData resolver{};
+     scoped_refptr<const CalculationExpressionNode> node =
+         operation->ToCalculationExpression(resolver);
+-    EXPECT_EQ(node->Evaluate(FLT_MAX, nullptr), test_case.output);
++    EXPECT_EQ(node->Evaluate(FLT_MAX), test_case.output);
+     const CSSMathExpressionNode* css_node =
+         CSSMathExpressionOperation::Create(*node);
+     EXPECT_NE(css_node, nullptr);

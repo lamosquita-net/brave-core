@@ -1,0 +1,39 @@
+diff --git a/third_party/blink/renderer/core/css/parser/css_parser_impl_test.cc b/third_party/blink/renderer/core/css/parser/css_parser_impl_test.cc
+index 2226e2e4f25897c2a231f3e9c9e2e3c07202d3e8..bffc7de2368fb1e8872ec5236f6734d6fc80b30b 100644
+--- a/third_party/blink/renderer/core/css/parser/css_parser_impl_test.cc
++++ b/third_party/blink/renderer/core/css/parser/css_parser_impl_test.cc
+@@ -916,34 +916,4 @@ TEST(CSSParserImplTest, FontFeatureValuesOffsets) {
+   EXPECT_EQ(test_css_parser_observer.rule_body_end_, 53u);
+ }
+ 
+-TEST(CSSParserImplTest, PositionFallbackRuleMaxLength) {
+-  ScopedCSSAnchorPositioningForTest enabled(true);
+-
+-  String sheet_text = R"CSS(
+-    @position-fallback --pf {
+-      @try {}
+-      @try {}
+-      @try {}
+-      @try {}
+-      @try {}
+-      @try {}
+-    }
+-  )CSS";
+-  auto* context = MakeGarbageCollected<CSSParserContext>(
+-      kHTMLStandardMode, SecureContextMode::kInsecureContext);
+-  auto* style_sheet = MakeGarbageCollected<StyleSheetContents>(context);
+-  TestCSSParserObserver test_css_parser_observer;
+-  CSSParserImpl::ParseStyleSheetForInspector(sheet_text, context, style_sheet,
+-                                             test_css_parser_observer);
+-  EXPECT_EQ(style_sheet->ChildRules().size(), 1u);
+-
+-  const StyleRulePositionFallback* rule =
+-      DynamicTo<StyleRulePositionFallback>(style_sheet->ChildRules()[0].Get());
+-  EXPECT_TRUE(rule);
+-
+-  // We allow only 5 @try rules at maximum. See kPositionFallbackRuleMaxLength
+-  // in css_parser_impl.cc.
+-  EXPECT_EQ(5u, rule->TryRules().size());
+-}
+-
+ }  // namespace blink

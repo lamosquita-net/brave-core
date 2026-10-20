@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/ng_absolute_utils_test.cc b/third_party/blink/renderer/core/layout/ng/ng_absolute_utils_test.cc
-index ea34cba07b2c14aa3511c42f4c3aeeb61ce62a98..36905719b9da11640a6ee8ff6ee60485d7dbb874 100644
+index ea34cba07b2c14aa3511c42f4c3aeeb61ce62a98..c4348e6eb536046b01bc5df4de9a62052439ac06 100644
 --- a/third_party/blink/renderer/core/layout/ng/ng_absolute_utils_test.cc
 +++ b/third_party/blink/renderer/core/layout/ng/ng_absolute_utils_test.cc
 @@ -4,24 +4,36 @@
@@ -87,10 +87,6 @@ index ea34cba07b2c14aa3511c42f4c3aeeb61ce62a98..36905719b9da11640a6ee8ff6ee60485
 -    LogicalSize computed_available_size =
 -        ComputeOutOfFlowAvailableRect(node, space, insets, static_position)
 -            .size;
--    blink::ComputeOutOfFlowInlineDimensions(
--        node, node.Style(), space, insets, border_padding, static_position,
--        computed_available_size, absl::nullopt, container_writing_direction,
--        /* anchor_evaluator */ nullptr, dimensions);
 +        PhysicalOffset(),
 +        /* available_size */
 +        PhysicalSize());
@@ -104,7 +100,10 @@ index ea34cba07b2c14aa3511c42f4c3aeeb61ce62a98..36905719b9da11640a6ee8ff6ee60485
 +            node, space.AvailableSize(), LogicalAlignment(), insets,
 +            static_position, container_writing_direction,
 +            node.Style().GetWritingDirection());
-+    ComputeOutOfFlowInlineDimensions(
+     blink::ComputeOutOfFlowInlineDimensions(
+-        node, node.Style(), space, insets, border_padding, static_position,
+-        computed_available_size, absl::nullopt, container_writing_direction,
+-        /* anchor_evaluator */ nullptr, dimensions);
 +        node, node.Style(), space, imcb, LogicalAnchorCenterPosition(),
 +        LogicalAlignment(), border_padding, absl::nullopt, NGBoxStrut(),
 +        container_writing_direction, dimensions);
@@ -141,10 +140,6 @@ index ea34cba07b2c14aa3511c42f4c3aeeb61ce62a98..36905719b9da11640a6ee8ff6ee60485
 -    LogicalSize computed_available_size =
 -        ComputeOutOfFlowAvailableRect(node, space, insets, static_position)
 -            .size;
--    blink::ComputeOutOfFlowBlockDimensions(
--        node, node.Style(), space, insets, border_padding, static_position,
--        computed_available_size, absl::nullopt, container_writing_direction,
--        /* anchor_evaluator */ nullptr, dimensions);
 +        PhysicalOffset(),
 +        /* available_size */
 +        PhysicalSize());
@@ -158,10 +153,13 @@ index ea34cba07b2c14aa3511c42f4c3aeeb61ce62a98..36905719b9da11640a6ee8ff6ee60485
 +            node, space.AvailableSize(), LogicalAlignment(), insets,
 +            static_position, container_writing_direction,
 +            node.Style().GetWritingDirection());
-+    ComputeOutOfFlowBlockDimensions(node, node.Style(), space, imcb,
-+                              LogicalAnchorCenterPosition(), LogicalAlignment(),
-+                              border_padding, absl::nullopt, NGBoxStrut(),
-+                              container_writing_direction, dimensions);
+     blink::ComputeOutOfFlowBlockDimensions(
+-        node, node.Style(), space, insets, border_padding, static_position,
+-        computed_available_size, absl::nullopt, container_writing_direction,
+-        /* anchor_evaluator */ nullptr, dimensions);
++        node, node.Style(), space, imcb, LogicalAnchorCenterPosition(),
++        LogicalAlignment(), border_padding, absl::nullopt, NGBoxStrut(),
++        container_writing_direction, dimensions);
 +    GetDocument().Lifecycle().AdvanceTo(DocumentLifecycle::kAfterPerformLayout);
 +    GetDocument().Lifecycle().AdvanceTo(DocumentLifecycle::kLayoutClean);
    }

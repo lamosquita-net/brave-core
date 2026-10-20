@@ -1,0 +1,54 @@
+diff --git a/third_party/blink/renderer/core/css/threaded/css_to_length_conversion_data_threaded_test.cc b/third_party/blink/renderer/core/css/threaded/css_to_length_conversion_data_threaded_test.cc
+index 156fc5228324b21e0e7390aa9b37d33637498f85..ac6252b37b3a1d524d92703008c718d9e10761c9 100644
+--- a/third_party/blink/renderer/core/css/threaded/css_to_length_conversion_data_threaded_test.cc
++++ b/third_party/blink/renderer/core/css/threaded/css_to_length_conversion_data_threaded_test.cc
+@@ -25,7 +25,8 @@ TSAN_TEST(CSSToLengthConversionDataThreadedTest, Construction) {
+     CSSToLengthConversionData::Flags ignored_flags = 0;
+     CSSToLengthConversionData conversion_data(
+         WritingMode::kHorizontalTb, font_sizes, line_height_size, viewport_size,
+-        container_sizes, 1, ignored_flags);
++        container_sizes, CSSToLengthConversionData::AnchorData(), 1,
++        ignored_flags);
+   });
+ }
+ 
+@@ -40,7 +41,8 @@ TSAN_TEST(CSSToLengthConversionDataThreadedTest, ConversionEm) {
+     CSSToLengthConversionData::Flags ignored_flags = 0;
+     CSSToLengthConversionData conversion_data(
+         WritingMode::kHorizontalTb, font_sizes, line_height_size, viewport_size,
+-        container_sizes, 1, ignored_flags);
++        container_sizes, CSSToLengthConversionData::AnchorData(), 1,
++        ignored_flags);
+ 
+     CSSPrimitiveValue& value = *CSSNumericLiteralValue::Create(
+         3.14, CSSPrimitiveValue::UnitType::kEms);
+@@ -61,7 +63,8 @@ TSAN_TEST(CSSToLengthConversionDataThreadedTest, ConversionPixel) {
+     CSSToLengthConversionData::Flags ignored_flags = 0;
+     CSSToLengthConversionData conversion_data(
+         WritingMode::kHorizontalTb, font_sizes, line_height_size, viewport_size,
+-        container_sizes, 1, ignored_flags);
++        container_sizes, CSSToLengthConversionData::AnchorData(), 1,
++        ignored_flags);
+ 
+     CSSPrimitiveValue& value = *CSSNumericLiteralValue::Create(
+         44, CSSPrimitiveValue::UnitType::kPixels);
+@@ -82,7 +85,8 @@ TSAN_TEST(CSSToLengthConversionDataThreadedTest, ConversionViewport) {
+     CSSToLengthConversionData::Flags ignored_flags = 0;
+     CSSToLengthConversionData conversion_data(
+         WritingMode::kHorizontalTb, font_sizes, line_height_size, viewport_size,
+-        container_sizes, 1, ignored_flags);
++        container_sizes, CSSToLengthConversionData::AnchorData(), 1,
++        ignored_flags);
+ 
+     CSSPrimitiveValue& value = *CSSNumericLiteralValue::Create(
+         1, CSSPrimitiveValue::UnitType::kViewportWidth);
+@@ -103,7 +107,8 @@ TSAN_TEST(CSSToLengthConversionDataThreadedTest, ConversionRem) {
+     CSSToLengthConversionData::Flags ignored_flags = 0;
+     CSSToLengthConversionData conversion_data(
+         WritingMode::kHorizontalTb, font_sizes, line_height_size, viewport_size,
+-        container_sizes, 1, ignored_flags);
++        container_sizes, CSSToLengthConversionData::AnchorData(), 1,
++        ignored_flags);
+ 
+     CSSPrimitiveValue& value =
+         *CSSNumericLiteralValue::Create(1, CSSPrimitiveValue::UnitType::kRems);

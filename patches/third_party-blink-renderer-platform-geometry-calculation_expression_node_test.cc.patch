@@ -1,0 +1,66 @@
+diff --git a/third_party/blink/renderer/platform/geometry/calculation_expression_node_test.cc b/third_party/blink/renderer/platform/geometry/calculation_expression_node_test.cc
+index 6904b2b5c794026d7cf786ac2b1d0a0b6f7a0ab4..464624d3849b90547ab4a8c29de1cdd397e1a338 100644
+--- a/third_party/blink/renderer/platform/geometry/calculation_expression_node_test.cc
++++ b/third_party/blink/renderer/platform/geometry/calculation_expression_node_test.cc
+@@ -35,8 +35,8 @@ TEST(CalculationExpressionOperationNodeTest, Comparison) {
+   scoped_refptr<CalculationExpressionOperationNode> operation3 =
+       BuildOperationNode({17.f, 13.f}, CalculationOperator::kMax);
+ 
+-  EXPECT_EQ(operation1->Evaluate(FLT_MAX, nullptr),
+-            operation2->Evaluate(FLT_MAX, nullptr));
++  EXPECT_EQ(operation1->Evaluate(FLT_MAX),
++            operation2->Evaluate(FLT_MAX));
+   EXPECT_EQ(*operation2, *operation3);
+ }
+ 
+@@ -59,38 +59,38 @@ TEST(CalculationExpressionOperationNodeTest, SteppedValueFunctions) {
+       base::MakeRefCounted<CalculationExpressionOperationNode>(
+           std::move(operands_rem_two_mods), CalculationOperator::kRem);
+ 
+-  EXPECT_EQ(operation_nearest_1_1->Evaluate(FLT_MAX, nullptr), 1.f);
+-  EXPECT_EQ(operation_mod_1_1->Evaluate(FLT_MAX, nullptr), 0.f);
+-  EXPECT_EQ(operation_rem_1_1->Evaluate(FLT_MAX, nullptr), 0.f);
+-  EXPECT_EQ(operation_rem_two_mods->Evaluate(FLT_MAX, nullptr), 1.f);
++  EXPECT_EQ(operation_nearest_1_1->Evaluate(FLT_MAX), 1.f);
++  EXPECT_EQ(operation_mod_1_1->Evaluate(FLT_MAX), 0.f);
++  EXPECT_EQ(operation_rem_1_1->Evaluate(FLT_MAX), 0.f);
++  EXPECT_EQ(operation_rem_two_mods->Evaluate(FLT_MAX), 1.f);
+ }
+ 
+ TEST(CalculationExpressionOperationNodeTest, ExponentialFunctions) {
+   EXPECT_EQ(BuildOperationNode({3.f, 4.f}, CalculationOperator::kHypot)
+-                ->Evaluate(FLT_MAX, nullptr),
++                ->Evaluate(FLT_MAX),
+             5.f);
+   EXPECT_EQ(BuildOperationNode({3e37f, 4e37f}, CalculationOperator::kHypot)
+-                ->Evaluate(FLT_MAX, nullptr),
++                ->Evaluate(FLT_MAX),
+             5e37f);
+   EXPECT_EQ(BuildOperationNode({8e-46f, 15e-46f}, CalculationOperator::kHypot)
+-                ->Evaluate(FLT_MAX, nullptr),
++                ->Evaluate(FLT_MAX),
+             17e-46f);
+   EXPECT_EQ(
+       BuildOperationNode({6e37f, 6e37f, 17e37}, CalculationOperator::kHypot)
+-          ->Evaluate(FLT_MAX, nullptr),
++          ->Evaluate(FLT_MAX),
+       19e37f);
+   EXPECT_EQ(BuildOperationNode({-3.f, 4.f}, CalculationOperator::kHypot)
+-                ->Evaluate(FLT_MAX, nullptr),
++                ->Evaluate(FLT_MAX),
+             5.f);
+   EXPECT_EQ(BuildOperationNode({-3.f, -4.f}, CalculationOperator::kHypot)
+-                ->Evaluate(FLT_MAX, nullptr),
++                ->Evaluate(FLT_MAX),
+             5.f);
+   EXPECT_EQ(BuildOperationNode({-0.f, +0.f}, CalculationOperator::kHypot)
+-                ->Evaluate(FLT_MAX, nullptr),
++                ->Evaluate(FLT_MAX),
+             +0.f);
+   EXPECT_EQ(
+       BuildOperationNode({6e37f, -6e37f, -17e37}, CalculationOperator::kHypot)
+-          ->Evaluate(FLT_MAX, nullptr),
++          ->Evaluate(FLT_MAX),
+       19e37f);
+ }
+ 
