@@ -1,0 +1,14 @@
+diff --git a/src/libANGLE/renderer/vulkan/ContextVk.cpp b/src/libANGLE/renderer/vulkan/ContextVk.cpp
+index 978b12026a37c233e0e13580ffd606b193f7252c..477cb99cbeb4b9d7baa3ba4684bc5bef0d4cd0e5 100644
+--- a/src/libANGLE/renderer/vulkan/ContextVk.cpp
++++ b/src/libANGLE/renderer/vulkan/ContextVk.cpp
+@@ -2639,8 +2639,7 @@ angle::Result ContextVk::handleDirtyGraphicsVertexBuffers(DirtyBits::Iterator *d
+         vertexArrayVk->getCurrentArrayBuffers();
+ 
+     // Mark all active vertex buffers as accessed.
+-    const gl::AttributesMask attribsMask = executable->getActiveAttribLocationsMask();
+-    for (size_t attribIndex : attribsMask)
++    for (uint32_t attribIndex = 0; attribIndex < maxAttrib; ++attribIndex)
+     {
+         vk::BufferHelper *arrayBuffer = arrayBufferResources[attribIndex];
+         if (arrayBuffer)

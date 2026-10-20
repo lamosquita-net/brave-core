@@ -1,0 +1,18 @@
+diff --git a/components/guest_view/browser/guest_view_base.cc b/components/guest_view/browser/guest_view_base.cc
+index 00af5cb777a4e804cf073500f592cf2387953484..3e403a014c66a0f9967433498a6c4197602b92f9 100644
+--- a/components/guest_view/browser/guest_view_base.cc
++++ b/components/guest_view/browser/guest_view_base.cc
+@@ -648,13 +648,6 @@ void GuestViewBase::UpdateTargetURL(WebContents* source, const GURL& url) {
+       embedder_web_contents(), url);
+ }
+ 
+-bool GuestViewBase::ShouldResumeRequestsForCreatedWindow() {
+-  // Delay so that the embedder page has a chance to call APIs such as
+-  // webRequest in time to be applied to the initial navigation in the new guest
+-  // contents. We resume during WillAttach.
+-  return false;
+-}
+-
+ content::RenderWidgetHost* GuestViewBase::GetOwnerRenderWidgetHost() {
+   // We assume guests live inside an owner RenderFrame but the RenderFrame may
+   // not be cross-process. In case a type of guest should be allowed to be

@@ -1,0 +1,13 @@
+diff --git a/src/compiler/translator/OutputSPIRV.cpp b/src/compiler/translator/OutputSPIRV.cpp
+index e51b5d61dd82c7b2efa7490d836d6bc8b022aaea..fef3f5afb2bd8caf76ae8c50db97669ec844a81a 100644
+--- a/src/compiler/translator/OutputSPIRV.cpp
++++ b/src/compiler/translator/OutputSPIRV.cpp
+@@ -1335,6 +1335,8 @@ spirv::IdRef OutputSPIRVTraverser::createComplexConstant(const TType &type,
+ 
+     if (type.isMatrix() && !type.isArray())
+     {
++        ASSERT(parameters.size() == type.getRows() * type.getCols());
++
+         // Matrices are constructed from their columns.
+         spirv::IdRefList columnIds;
+ 

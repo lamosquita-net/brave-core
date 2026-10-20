@@ -1,0 +1,50 @@
+diff --git a/src/compiler/translator/Compiler.cpp b/src/compiler/translator/Compiler.cpp
+index 383feeb477d2445d5e599b39e125fe455169da08..d0c9b89954d819620aea1fbd4c825b5be4d62dc7 100644
+--- a/src/compiler/translator/Compiler.cpp
++++ b/src/compiler/translator/Compiler.cpp
+@@ -41,6 +41,7 @@
+ #include "compiler/translator/tree_ops/InitializeVariables.h"
+ #include "compiler/translator/tree_ops/MonomorphizeUnsupportedFunctions.h"
+ #include "compiler/translator/tree_ops/PruneEmptyCases.h"
++#include "compiler/translator/tree_ops/PruneInfiniteLoops.h"
+ #include "compiler/translator/tree_ops/PruneNoOps.h"
+ #include "compiler/translator/tree_ops/RemoveArrayLengthMethod.h"
+ #include "compiler/translator/tree_ops/RemoveDynamicIndexing.h"
+@@ -1017,6 +1018,25 @@ bool TCompiler::checkAndSimplifyAST(TIntermBlock *root,
+     {
+         return false;
+     }
++
++    if (IsWebGLBasedSpec(mShaderSpec))
++    {
++        // Remove infinite loops, they are not supposed to exist in shaders.
++        bool anyInfiniteLoops = false;
++        if (!PruneInfiniteLoops(this, root, &mSymbolTable, &anyInfiniteLoops))
++        {
++            return false;
++        }
++
++        // If requested, reject shaders with infinite loops.  If not requested, the same loops are
++        // removed from the shader as a fallback.
++        if (anyInfiniteLoops && mCompileOptions.rejectWebglShadersWithUndefinedBehavior)
++        {
++            mDiagnostics.globalError("Infinite loop detected in the shader");
++            return false;
++        }
++    }
++
+     mValidateASTOptions.validateMultiDeclarations = true;
+ 
+     if (!SplitSequenceOperator(this, root, IntermNodePatternMatcher::kArrayLengthMethod,
+@@ -1029,6 +1049,11 @@ bool TCompiler::checkAndSimplifyAST(TIntermBlock *root,
+     {
+         return false;
+     }
++    // Fold the expressions again, because |RemoveArrayLengthMethod| can introduce new constants.
++    if (!FoldExpressions(this, root, &mDiagnostics))
++    {
++        return false;
++    }
+ 
+     if (!RemoveUnreferencedVariables(this, root, &mSymbolTable))
+     {

@@ -1,0 +1,14 @@
+diff --git a/src/libANGLE/Shader.cpp b/src/libANGLE/Shader.cpp
+index 083951a41c0e176e1a372f199654ca9db1aae083..64b15535c10bd4b10c7261329bb59de5ca68cb75 100644
+--- a/src/libANGLE/Shader.cpp
++++ b/src/libANGLE/Shader.cpp
+@@ -410,6 +410,9 @@ void Shader::compile(const Context *context)
+         options.limitExpressionComplexity  = true;
+         options.enforcePackingRestrictions = true;
+         options.initSharedVariables        = true;
++        // FlyWeb: ANGLE 67d8d8c88 (crbug 350528343, CVE-2024-7532) puts this behind the
++        // rejectWebglShadersWithUndefinedBehavior frontend feature, enabled by default.
++        options.rejectWebglShadersWithUndefinedBehavior = true;
+     }
+     else
+     {

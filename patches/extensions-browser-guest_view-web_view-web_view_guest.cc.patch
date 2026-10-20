@@ -1,0 +1,18 @@
+diff --git a/extensions/browser/guest_view/web_view/web_view_guest.cc b/extensions/browser/guest_view/web_view/web_view_guest.cc
+index 6141315194025c2fee1fc5b5d8e74c9945110835..1ea8f442c955ca264c51740d3190e8105424ad1c 100644
+--- a/extensions/browser/guest_view/web_view/web_view_guest.cc
++++ b/extensions/browser/guest_view/web_view/web_view_guest.cc
+@@ -1366,6 +1366,13 @@ bool WebViewGuest::LoadDataWithBaseURL(const GURL& data_url,
+   return true;
+ }
+ 
++bool WebViewGuest::ShouldResumeRequestsForCreatedWindow() {
++  // Delay so that the embedder page has a chance to call APIs such as
++  // webRequest in time to be applied to the initial navigation in the new guest
++  // contents. We resume during WillAttach.
++  return false;
++}
++
+ void WebViewGuest::AddNewContents(
+     WebContents* source,
+     std::unique_ptr<WebContents> new_contents,
