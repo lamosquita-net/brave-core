@@ -1,8 +1,27 @@
 diff --git a/third_party/blink/renderer/core/css/parser/css_parser_impl_test.cc b/third_party/blink/renderer/core/css/parser/css_parser_impl_test.cc
-index 2226e2e4f25897c2a231f3e9c9e2e3c07202d3e8..bffc7de2368fb1e8872ec5236f6734d6fc80b30b 100644
+index 2226e2e4f25897c2a231f3e9c9e2e3c07202d3e8..f737513146852c32d7f2c623e3913e2a16ff7e30 100644
 --- a/third_party/blink/renderer/core/css/parser/css_parser_impl_test.cc
 +++ b/third_party/blink/renderer/core/css/parser/css_parser_impl_test.cc
-@@ -916,34 +916,4 @@ TEST(CSSParserImplTest, FontFeatureValuesOffsets) {
+@@ -41,6 +41,8 @@ class TestCSSParserObserver : public CSSParserObserver {
+                        bool is_parsed) override {}
+   void ObserveComment(unsigned start_offset, unsigned end_offset) override {}
+   void ObserveErroneousAtRule(unsigned start_offset, CSSAtRuleID id) override {}
++  // FlyWeb: pure virtual since CSSNestedDeclarations (level 130).
++  void ObserveNestedDeclarations(unsigned insert_rule_index) override {}
+ 
+   StyleRule::RuleType rule_type_ = StyleRule::RuleType::kStyle;
+   unsigned rule_header_start_ = 0;
+@@ -478,7 +480,8 @@ TEST(CSSParserImplTest, RemoveImportantAnnotationIfPresent) {
+   for (auto current_case : test_cases) {
+     CSSTokenizer tokenizer(current_case.input);
+     CSSParserTokenStream stream(tokenizer);
+-    CSSTokenizedValue tokenized_value = CSSParserImpl::ConsumeValue(stream);
++    CSSTokenizedValue tokenized_value =
++        CSSParserImpl::ConsumeUnrestrictedPropertyValue(stream);
+     SCOPED_TRACE(current_case.input);
+     bool is_important =
+         CSSParserImpl::RemoveImportantAnnotationIfPresent(tokenized_value);
+@@ -916,34 +919,4 @@ TEST(CSSParserImplTest, FontFeatureValuesOffsets) {
    EXPECT_EQ(test_css_parser_observer.rule_body_end_, 53u);
  }
  

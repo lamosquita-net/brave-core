@@ -1,0 +1,41 @@
+diff --git a/third_party/blink/renderer/core/css/element_rule_collector_test.cc b/third_party/blink/renderer/core/css/element_rule_collector_test.cc
+index 3b6887560aa38a2a559fd88284220337576814eb..a7c7f4341be89b0581e7b81e41e3eaadc69fc6fc 100644
+--- a/third_party/blink/renderer/core/css/element_rule_collector_test.cc
++++ b/third_party/blink/renderer/core/css/element_rule_collector_test.cc
+@@ -71,7 +71,7 @@ class ElementRuleCollectorTest : public PageTestBase {
+ 
+     MatchRequest request(rule_set, scope);
+ 
+-    collector.CollectMatchingRules(request);
++    collector.CollectMatchingRules(request, /*part_names*/ nullptr);
+     collector.SortAndTransferMatchedRules(/*is_vtt_embedded_style=*/false,
+                                           /*tracker=*/nullptr);
+ 
+@@ -100,7 +100,7 @@ class ElementRuleCollectorTest : public PageTestBase {
+ 
+     MatchRequest request(rule_set, {});
+ 
+-    collector.CollectMatchingRules(request);
++    collector.CollectMatchingRules(request, /*part_names*/ nullptr);
+     return Vector<MatchedRule>{collector.MatchedRulesForTest()};
+   }
+ 
+@@ -116,7 +116,7 @@ class ElementRuleCollectorTest : public PageTestBase {
+     MatchRequest request(rule_set, {}, sheet);
+ 
+     collector.SetMode(SelectorChecker::kCollectingCSSRules);
+-    collector.CollectMatchingRules(request);
++    collector.CollectMatchingRules(request, /*part_names*/ nullptr);
+     collector.SortAndTransferMatchedRules(/*is_vtt_embedded_style=*/false,
+                                           /*tracker=*/nullptr);
+ 
+@@ -338,7 +338,8 @@ TEST_F(ElementRuleCollectorTest, MatchesNonUniversalHighlights) {
+     ElementRuleCollector collector(context, StyleRecalcContext(),
+                                    SelectorFilter(), result,
+                                    EInsideLink::kNotInsideLink);
+-    collector.CollectMatchingRules(MatchRequest{&sheet->GetRuleSet(), nullptr});
++    collector.CollectMatchingRules(MatchRequest{&sheet->GetRuleSet(), nullptr},
++                                   /*part_names*/ nullptr);
+ 
+     // Pretty-print the arguments for debugging.
+     StringBuilder args{};

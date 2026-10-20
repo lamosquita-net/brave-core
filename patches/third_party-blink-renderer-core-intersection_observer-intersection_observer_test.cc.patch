@@ -1,0 +1,52 @@
+diff --git a/third_party/blink/renderer/core/intersection_observer/intersection_observer_test.cc b/third_party/blink/renderer/core/intersection_observer/intersection_observer_test.cc
+index 58637cc0342b6735b8a6ea25ee88ba7b65e09e0b..4371315bcb183a3398923ac0db4fa9a55b1a95c1 100644
+--- a/third_party/blink/renderer/core/intersection_observer/intersection_observer_test.cc
++++ b/third_party/blink/renderer/core/intersection_observer/intersection_observer_test.cc
+@@ -200,6 +200,7 @@ TEST_P(IntersectionObserverTest, ReportsFractionOfTargetOrRoot) {
+   IntersectionObserver* target_observer =
+       MakeGarbageCollected<IntersectionObserver>(
+           *target_observer_delegate, nullptr, Vector<Length>(),
++          /* scroll_margin */ Vector<Length>(),
+           Vector<float>{kExpectedFractionOfTarget / 2},
+           IntersectionObserver::kFractionOfTarget, 0, false, false,
+           IntersectionObserver::kApplyMarginToRoot,
+@@ -213,6 +214,7 @@ TEST_P(IntersectionObserverTest, ReportsFractionOfTargetOrRoot) {
+   IntersectionObserver* root_observer =
+       MakeGarbageCollected<IntersectionObserver>(
+           *root_observer_delegate, nullptr, Vector<Length>(),
++          /* scroll_margin */ Vector<Length>(),
+           Vector<float>{kExpectedFractionOfRoot / 2},
+           IntersectionObserver::kFractionOfRoot, 0, false, false,
+           IntersectionObserver::kApplyMarginToRoot,
+@@ -271,6 +273,7 @@ TEST_P(IntersectionObserverTest, TargetRectIsEmptyAfterMapping) {
+   IntersectionObserver* target_observer =
+       MakeGarbageCollected<IntersectionObserver>(
+           *target_observer_delegate, nullptr, Vector<Length>(),
++          /* scroll_margin */ Vector<Length>(),
+           Vector<float>{std::numeric_limits<float>::min()},
+           IntersectionObserver::kFractionOfTarget, 0, false, false,
+           IntersectionObserver::kApplyMarginToRoot,
+@@ -1659,6 +1662,7 @@ TEST_P(IntersectionObserverTest, ApplyMarginToTarget) {
+   IntersectionObserver* root_margin_observer =
+       MakeGarbageCollected<IntersectionObserver>(
+           *root_margin_delegate, nullptr, Vector<Length>{Length::Fixed(10)},
++          /* scroll_margin */ Vector<Length>(),
+           Vector<float>{std::numeric_limits<float>::min()},
+           IntersectionObserver::kFractionOfTarget, 0, false, false,
+           IntersectionObserver::kApplyMarginToRoot,
+@@ -1674,6 +1678,7 @@ TEST_P(IntersectionObserverTest, ApplyMarginToTarget) {
+   IntersectionObserver* target_margin_observer =
+       MakeGarbageCollected<IntersectionObserver>(
+           *target_margin_delegate, nullptr, Vector<Length>{Length::Fixed(10)},
++          /* scroll_margin */ Vector<Length>(),
+           Vector<float>{std::numeric_limits<float>::min()},
+           IntersectionObserver::kFractionOfTarget, 0, false, false,
+           IntersectionObserver::kApplyMarginToTarget,
+@@ -1729,6 +1734,7 @@ TEST_P(IntersectionObserverTest, TargetMarginPercentResolvesAgainstRoot) {
+   IntersectionObserver* target_margin_observer =
+       MakeGarbageCollected<IntersectionObserver>(
+           *target_margin_delegate, nullptr, Vector<Length>{Length::Percent(10)},
++          /* scroll_margin */ Vector<Length>(),
+           Vector<float>{std::numeric_limits<float>::min()},
+           IntersectionObserver::kFractionOfTarget, 0, false, false,
+           IntersectionObserver::kApplyMarginToTarget,

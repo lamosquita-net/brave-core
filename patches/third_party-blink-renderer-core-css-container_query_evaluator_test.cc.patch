@@ -1,0 +1,14 @@
+diff --git a/third_party/blink/renderer/core/css/container_query_evaluator_test.cc b/third_party/blink/renderer/core/css/container_query_evaluator_test.cc
+index 9fd98d49b8b75902ddfcdd1a732fabf06508ee53..6b08be91e7e266884d396161c7d3371ba2877516 100644
+--- a/third_party/blink/renderer/core/css/container_query_evaluator_test.cc
++++ b/third_party/blink/renderer/core/css/container_query_evaluator_test.cc
+@@ -81,7 +81,8 @@ class ContainerQueryEvaluatorTest : public PageTestBase {
+             String custom_property_value) {
+     CSSTokenizer tokenizer(custom_property_value);
+     CSSParserTokenStream stream(tokenizer);
+-    CSSTokenizedValue tokenized_value = CSSParserImpl::ConsumeValue(stream);
++    CSSTokenizedValue tokenized_value =
++        CSSParserImpl::ConsumeUnrestrictedPropertyValue(stream);
+     const CSSParserContext* context =
+         StrictCSSParserContext(SecureContextMode::kSecureContext);
+     CSSCustomPropertyDeclaration* value =

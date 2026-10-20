@@ -1,0 +1,85 @@
+diff --git a/third_party/blink/renderer/core/timing/time_clamper_test.cc b/third_party/blink/renderer/core/timing/time_clamper_test.cc
+index 4be8cbbe995d537b1cd5f66f1a095b5537d119e6..0d8bb9284e40dd7fff2741233b6a76740341e271 100644
+--- a/third_party/blink/renderer/core/timing/time_clamper_test.cc
++++ b/third_party/blink/renderer/core/timing/time_clamper_test.cc
+@@ -10,9 +10,13 @@
+ 
+ namespace blink {
+ namespace {
+-const int64_t kIntervalInMicroseconds =
+-    TimeClamper::kFineResolutionMicroseconds;
++// FlyWeb: Brave's chromium_src turns the constant into
++// TimeClamper::FineResolutionMicroseconds() (kBraveRoundTimeStamps), so read it
++// at run time instead of during static initialization.
++int64_t IntervalInMicroseconds() {
++  return TimeClamper::FineResolutionMicroseconds();
+ }
++}  // namespace
+ 
+ TEST(TimeClamperTest, TimeStampsAreNonNegative) {
+   TimeClamper clamper;
+@@ -22,7 +26,7 @@ TEST(TimeClamperTest, TimeStampsAreNonNegative) {
+   EXPECT_GE(
+       clamper
+           .ClampTimeResolution(
+-              base::Microseconds(TimeClamper::kFineResolutionMicroseconds),
++              base::Microseconds(TimeClamper::FineResolutionMicroseconds()),
+               true)
+           .InMicroseconds(),
+       0.f);
+@@ -33,7 +37,7 @@ TEST(TimeClamperTest, TimeStampsIncreaseByFixedAmount) {
+   int64_t prev =
+       clamper.ClampTimeResolution(base::TimeDelta(), true).InMicroseconds();
+   for (int64_t time_microseconds = 0;
+-       time_microseconds < kIntervalInMicroseconds * 100;
++       time_microseconds < IntervalInMicroseconds() * 100;
+        time_microseconds += 1) {
+     int64_t clamped_time =
+         clamper.ClampTimeResolution(base::Microseconds(time_microseconds), true)
+@@ -41,7 +45,7 @@ TEST(TimeClamperTest, TimeStampsIncreaseByFixedAmount) {
+     int64_t delta = clamped_time - prev;
+     ASSERT_GE(delta, 0);
+     if (delta >= 1) {
+-      ASSERT_EQ(delta, kIntervalInMicroseconds);
++      ASSERT_EQ(delta, IntervalInMicroseconds());
+       prev = clamped_time;
+     }
+   }
+@@ -50,7 +54,7 @@ TEST(TimeClamperTest, TimeStampsIncreaseByFixedAmount) {
+ TEST(TimeClamperTest, ClampingIsDeterministic) {
+   TimeClamper clamper;
+   for (int64_t time_microseconds = 0;
+-       time_microseconds < kIntervalInMicroseconds * 100;
++       time_microseconds < IntervalInMicroseconds() * 100;
+        time_microseconds += 1) {
+     int64_t t1 =
+         clamper.ClampTimeResolution(base::Microseconds(time_microseconds), true)
+@@ -64,8 +68,8 @@ TEST(TimeClamperTest, ClampingIsDeterministic) {
+ 
+ TEST(TimeClamperTest, ClampingNegativeNumbersIsConsistent) {
+   TimeClamper clamper;
+-  for (int64_t time_microseconds = -kIntervalInMicroseconds * 100;
+-       time_microseconds < kIntervalInMicroseconds * 100;
++  for (int64_t time_microseconds = -IntervalInMicroseconds() * 100;
++       time_microseconds < IntervalInMicroseconds() * 100;
+        time_microseconds += 1) {
+     int64_t t1 =
+         clamper.ClampTimeResolution(base::Microseconds(time_microseconds), true)
+@@ -80,7 +84,7 @@ TEST(TimeClamperTest, ClampingNegativeNumbersIsConsistent) {
+ TEST(TimeClamperTest, ClampingIsPerInstance) {
+   TimeClamper clamper1;
+   TimeClamper clamper2;
+-  int64_t time_microseconds = kIntervalInMicroseconds / 2;
++  int64_t time_microseconds = IntervalInMicroseconds() / 2;
+   while (true) {
+     if (std::abs(clamper1
+                      .ClampTimeResolution(base::Microseconds(time_microseconds),
+@@ -92,7 +96,7 @@ TEST(TimeClamperTest, ClampingIsPerInstance) {
+                      .InMicroseconds()) >= 1) {
+       break;
+     }
+-    time_microseconds += kIntervalInMicroseconds;
++    time_microseconds += IntervalInMicroseconds();
+   }
+ }
+ 

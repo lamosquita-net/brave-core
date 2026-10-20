@@ -1,0 +1,30 @@
+diff --git a/third_party/blink/renderer/core/dom/first_letter_pseudo_element_test.cc b/third_party/blink/renderer/core/dom/first_letter_pseudo_element_test.cc
+index 5c7f01cd281fd7e292c432f3cff481e3ea417300..b9de30f619b29bf2c656db54c2b10aeca65030ec 100644
+--- a/third_party/blink/renderer/core/dom/first_letter_pseudo_element_test.cc
++++ b/third_party/blink/renderer/core/dom/first_letter_pseudo_element_test.cc
+@@ -15,7 +15,11 @@ class FirstLetterPseudoElementTest : public PageTestBase {};
+ 
+ TEST_F(FirstLetterPseudoElementTest, DoesNotBreakEmoji) {
+   const UChar emoji[] = {0xD83D, 0xDE31, 0};
+-  EXPECT_EQ(2u, FirstLetterPseudoElement::FirstLetterLength(emoji));
++  const bool preserve_breaks = false;
++  FirstLetterPseudoElement::Punctuation punctuation =
++      FirstLetterPseudoElement::Punctuation::kNotSeen;
++  EXPECT_EQ(2u, FirstLetterPseudoElement::FirstLetterLength(
++                    emoji, preserve_breaks, punctuation));
+ }
+ 
+ // http://crbug.com/1187834
+@@ -119,7 +123,11 @@ TEST_F(FirstLetterPseudoElementTest, InitialLetter) {
+ TEST_F(FirstLetterPseudoElementTest, UnicodePairBreaking) {
+   const UChar test_string[] = {0xD800, 0xDD00, 'A', 0xD800, 0xDD00,
+                                0xD800, 0xDD00, 'B', 0};
+-  EXPECT_EQ(7u, FirstLetterPseudoElement::FirstLetterLength(test_string));
++  const bool preserve_breaks = false;
++  FirstLetterPseudoElement::Punctuation punctuation =
++      FirstLetterPseudoElement::Punctuation::kNotSeen;
++  EXPECT_EQ(7u, FirstLetterPseudoElement::FirstLetterLength(
++                    test_string, preserve_breaks, punctuation));
+ }
+ 
+ }  // namespace blink

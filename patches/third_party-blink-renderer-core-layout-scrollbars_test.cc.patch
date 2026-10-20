@@ -1,0 +1,29 @@
+diff --git a/third_party/blink/renderer/core/layout/scrollbars_test.cc b/third_party/blink/renderer/core/layout/scrollbars_test.cc
+index 86ab6b66452d4acbaf37f17a4ed6abdb6945a929..8250eb7de21121fb5582c846febb40938ee70908 100644
+--- a/third_party/blink/renderer/core/layout/scrollbars_test.cc
++++ b/third_party/blink/renderer/core/layout/scrollbars_test.cc
+@@ -2858,16 +2858,20 @@ TEST_P(ScrollbarsTest, CustomScrollbarHypotheticalThickness) {
+   auto* target1 = GetDocument().getElementById("target1");
+   auto* scrollable_area1 = target1->GetLayoutBox()->GetScrollableArea();
+   EXPECT_EQ(33, CustomScrollbar::HypotheticalScrollbarThickness(
+-                    scrollable_area1, kHorizontalScrollbar, target1));
++                    scrollable_area1, kHorizontalScrollbar,
++                    target1->GetLayoutBox()));
+   EXPECT_EQ(22, CustomScrollbar::HypotheticalScrollbarThickness(
+-                    scrollable_area1, kVerticalScrollbar, target1));
++                    scrollable_area1, kVerticalScrollbar,
++                    target1->GetLayoutBox()));
+ 
+   auto* target2 = GetDocument().getElementById("target2");
+   auto* scrollable_area2 = target2->GetLayoutBox()->GetScrollableArea();
+   EXPECT_EQ(13, CustomScrollbar::HypotheticalScrollbarThickness(
+-                    scrollable_area2, kHorizontalScrollbar, target2));
++                    scrollable_area2, kHorizontalScrollbar,
++                    target2->GetLayoutBox()));
+   EXPECT_EQ(21, CustomScrollbar::HypotheticalScrollbarThickness(
+-                    scrollable_area2, kVerticalScrollbar, target2));
++                    scrollable_area2, kVerticalScrollbar,
++                    target2->GetLayoutBox()));
+ }
+ 
+ // For infinite scrolling page (load more content when scroll to bottom), user
