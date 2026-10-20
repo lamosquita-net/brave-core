@@ -1,0 +1,17 @@
+diff --git a/third_party/blink/renderer/modules/webcodecs/video_frame_copy_to_options.idl b/third_party/blink/renderer/modules/webcodecs/video_frame_copy_to_options.idl
+index 19e5022baf20631634c115add671435b335368ca..91deb2b0c85859c2ad1b79ab9943f38c2e879beb 100644
+--- a/third_party/blink/renderer/modules/webcodecs/video_frame_copy_to_options.idl
++++ b/third_party/blink/renderer/modules/webcodecs/video_frame_copy_to_options.idl
+@@ -13,4 +13,12 @@ dictionary VideoFrameCopyToOptions {
+   // of each plane to be specified. If unspecified, the planes will be tightly
+   // packed. It is invalid to specify planes that overlap.
+   sequence<PlaneLayout> layout;
++
++  // The format to convert VideoFrame's pixel data to.
++  // `layout` must agree with `format` in number of planes.
++  [RuntimeEnabled=WebCodecsCopyToRGB]
++  VideoPixelFormat format;
++
++  [RuntimeEnabled=WebCodecsCopyToRGB]
++  PredefinedColorSpace colorSpace; //  "srgb" or "display-p3"
+ };

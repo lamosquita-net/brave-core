@@ -1,0 +1,17 @@
+diff --git a/third_party/blink/renderer/modules/webcodecs/video_frame.h b/third_party/blink/renderer/modules/webcodecs/video_frame.h
+index 83c5d2fd35e8aef15abda4b393e3d8142cb71645..5b03f7baeb4e33b6a0e28ff004bcac88c3c3b21e 100644
+--- a/third_party/blink/renderer/modules/webcodecs/video_frame.h
++++ b/third_party/blink/renderer/modules/webcodecs/video_frame.h
+@@ -133,6 +133,12 @@ class MODULES_EXPORT VideoFrame final : public ScriptWrappable,
+   bool IsAccelerated() const override;
+ 
+   void ResetExternalMemory();
++  void ConvertAndCopyToRGB(scoped_refptr<media::VideoFrame> frame,
++                           const gfx::Rect& src_rect,
++                           const VideoFrameLayout& dest_layout,
++                           base::span<uint8_t> buffer,
++                           PredefinedColorSpace target_color_space);
++
+   ScriptPromiseResolver* CopyToAsync(ScriptState* script_state,
+                                      scoped_refptr<media::VideoFrame> frame,
+                                      gfx::Rect src_rect,
