@@ -1,0 +1,17 @@
+diff --git a/content/browser/renderer_host/media/media_stream_dispatcher_host.cc b/content/browser/renderer_host/media/media_stream_dispatcher_host.cc
+index d0190c6d55bd277186d1515fef4d9c708c9744e8..817a82583e5a5b2dfda94d34460a3769f2363616 100644
+--- a/content/browser/renderer_host/media/media_stream_dispatcher_host.cc
++++ b/content/browser/renderer_host/media/media_stream_dispatcher_host.cc
+@@ -797,6 +797,12 @@ MediaStreamDispatcherHost::ValidateControlsForGenerateStreams(
+     if (controls.disable_local_echo) {
+       return bad_message::MSDH_DISABLE_LOCAL_ECHO_BUT_AUDIO_NOT_REQUESTED;
+     }
++
++    if (controls.exclude_monitor_type_surfaces &&
++        controls.preferred_display_surface ==
++            blink::mojom::PreferredDisplaySurface::MONITOR) {
++      return bad_message::MSDH_EXCLUDE_MONITORS_BUT_PREFERRED_MONITOR_REQUESTED;
++    }
+   }
+ 
+   return absl::nullopt;

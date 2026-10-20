@@ -1,0 +1,17 @@
+diff --git a/chrome/browser/media/webrtc/display_media_access_handler.cc b/chrome/browser/media/webrtc/display_media_access_handler.cc
+index 215034ecc41f63c06e1b47a0ca379d67e7f83b8d..5620f13162a6293c9aff643ae5b827166bad6a82 100644
+--- a/chrome/browser/media/webrtc/display_media_access_handler.cc
++++ b/chrome/browser/media/webrtc/display_media_access_handler.cc
+@@ -314,8 +314,10 @@ void DisplayMediaAccessHandler::ProcessQueuedPickerRequest(
+   DCHECK(web_contents);
+ 
+   std::vector<DesktopMediaList::Type> media_types{
+-      DesktopMediaList::Type::kWebContents, DesktopMediaList::Type::kWindow,
+-      DesktopMediaList::Type::kScreen};
++      DesktopMediaList::Type::kWebContents, DesktopMediaList::Type::kWindow};
++  if (!pending_request.request.exclude_monitor_type_surfaces) {
++    media_types.push_back(DesktopMediaList::Type::kScreen);
++  }
+   if (pending_request.request.video_type ==
+       blink::mojom::MediaStreamType::DISPLAY_VIDEO_CAPTURE_THIS_TAB) {
+     media_types.insert(media_types.begin(),
