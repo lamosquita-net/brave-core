@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/css_properties.json5 b/third_party/blink/renderer/core/css/css_properties.json5
-index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01a337c51f 100644
+index 871edc0924403a04bf16f4d5602f421d3882473c..c8017e9c84ef1cf4822b5dea0a1823d09c5ff308 100644
 --- a/third_party/blink/renderer/core/css/css_properties.json5
 +++ b/third_party/blink/renderer/core/css/css_properties.json5
 @@ -273,6 +273,27 @@
@@ -761,7 +761,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      {
        name: "overflow-clip-margin",
        property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
-@@ -4030,20 +4059,72 @@
+@@ -4030,20 +4059,66 @@
        style_builder_custom_functions: ["inherit"],
        // See comment on display.
        supports_incremental_style: false,
@@ -807,12 +807,6 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
 +      runtime_flag: "CSSPositionTryFallbacks",
 +    },
 +    {
-+      name: "position-try-options",
-+      property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
-+      surrogate_for: "position-try-fallbacks",
-+      runtime_flag: "CSSPositionTryOptions",
-+    },
-+    {
 +      name: "position-try-order",
 +      property_methods: ["CSSValueFromComputedStyleInternal", "InitialValue"],
 +      field_group: "*",
@@ -838,7 +832,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      },
      {
        name: "quotes",
-@@ -4094,14 +4175,14 @@
+@@ -4094,14 +4169,14 @@
        keywords: ["auto"],
        default_value: "Length()",
        typedom_types: ["Keyword", "Length", "Percentage"],
@@ -856,7 +850,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      },
      {
        name: "r",
-@@ -4139,7 +4220,7 @@
+@@ -4139,7 +4214,7 @@
        supports_incremental_style: true,
      },
      {
@@ -865,7 +859,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
        name: "scrollbar-color",
        property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
        inherited: true,
-@@ -4703,6 +4784,7 @@
+@@ -4703,6 +4778,7 @@
        style_builder_template_args: {
          initial_color: "ComputedStyleInitialValues::InitialStrokePaint",
        },
@@ -873,7 +867,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
        valid_for_highlight_legacy: true,
        valid_for_highlight: true,
      },
-@@ -5176,14 +5258,14 @@
+@@ -5176,14 +5252,14 @@
        keywords: ["auto"],
        default_value: "Length()",
        typedom_types: ["Keyword", "Length", "Percentage"],
@@ -891,7 +885,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      },
      {
        name: "overlay",
-@@ -5228,7 +5310,7 @@
+@@ -5228,7 +5304,7 @@
        name: "transform-box",
        property_methods: ["CSSValueFromComputedStyleInternal"],
        field_template: "keyword",
@@ -900,7 +894,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
        default_value: "view-box",
        typedom_types: ["Keyword"],
        computable: false,
-@@ -5376,6 +5458,19 @@
+@@ -5376,6 +5452,19 @@
        separator: ",",
        runtime_flag: "ScrollTimeline",
      },
@@ -920,7 +914,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      {
        name: "view-transition-name",
        field_group: "*",
-@@ -5510,11 +5605,10 @@
+@@ -5510,11 +5599,10 @@
      {
        name: "-webkit-box-direction",
        property_methods: ["CSSValueFromComputedStyleInternal"],
@@ -933,7 +927,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      },
      {
        name: "-webkit-box-flex",
-@@ -5666,17 +5760,6 @@
+@@ -5666,17 +5754,6 @@
        keywords: ["auto"],
        typedom_types: ["Keyword", "Length"],
      },
@@ -951,7 +945,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      {
        name: "hyphenate-character",
        property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
-@@ -5761,6 +5844,30 @@
+@@ -5761,6 +5838,30 @@
          modifier_type: "Width",
        },
      },
@@ -982,7 +976,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      {
        name: "-webkit-mask-clip",
        property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
-@@ -5769,13 +5876,44 @@
+@@ -5769,14 +5870,45 @@
          fill_type: "Clip",
        },
      },
@@ -1008,8 +1002,8 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
        style_builder_template_args: {
 -        fill_type: "Composite",
 +        fill_type: "CompositingOperator",
-+      },
-+    },
+       },
+     },
 +    {
 +      name: "mask-image",
 +      property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
@@ -1017,7 +1011,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
 +      style_builder_template_args: {
 +        fill_type: "Image",
 +        fill_type_getter: "GetImage"
-       },
++      },
 +      runtime_flag: "CSSMaskingInterop",
 +    },
 +    {
@@ -1025,10 +1019,11 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
 +      alternative_of: "-webkit-mask-image",
 +      alias_for: "mask-image",
 +      runtime_flag: "CSSMaskingInterop",
-     },
++    },
      {
        name: "-webkit-mask-image",
-@@ -5787,6 +5925,21 @@
+       property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
+@@ -5787,6 +5919,21 @@
          fill_type_getter: "GetImage"
        },
      },
@@ -1050,27 +1045,12 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      {
        name: "-webkit-mask-origin",
        property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
-@@ -5816,20 +5969,43 @@
+@@ -5816,20 +5963,43 @@
        computable: false,
      },
      {
 -      name: "-webkit-mask-repeat-x",
 +      name: "mask-repeat",
-+      property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
-+      style_builder_template: "mask_layer",
-+      style_builder_template_args: {
-+        fill_type: "Repeat",
-+      },
-+      runtime_flag: "CSSMaskingInterop",
-+    },
-+    {
-+      name: "-webkit-alternative-mask-repeat",
-+      alternative_of: "-webkit-mask-repeat",
-+      alias_for: "mask-repeat",
-+      runtime_flag: "CSSMaskingInterop",
-+    },
-+    {
-+      name: "-webkit-mask-repeat",
 +      property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
        style_builder_template: "mask_layer",
        style_builder_template_args: {
@@ -1078,18 +1058,33 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
 +        fill_type: "Repeat",
        },
 -      computable: false,
++      runtime_flag: "CSSMaskingInterop",
++    },
++    {
++      name: "-webkit-alternative-mask-repeat",
++      alternative_of: "-webkit-mask-repeat",
++      alias_for: "mask-repeat",
++      runtime_flag: "CSSMaskingInterop",
      },
      {
 -      name: "-webkit-mask-repeat-y",
-+      name: "mask-size",
++      name: "-webkit-mask-repeat",
 +      property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
-+      interpolable: true,
        style_builder_template: "mask_layer",
        style_builder_template_args: {
 -        fill_type: "RepeatY",
-+        fill_type: "Size",
++        fill_type: "Repeat",
        },
 -      computable: false,
++    },
++    {
++      name: "mask-size",
++      property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
++      interpolable: true,
++      style_builder_template: "mask_layer",
++      style_builder_template_args: {
++        fill_type: "Size",
++      },
 +      runtime_flag: "CSSMaskingInterop",
 +    },
 +    {
@@ -1100,7 +1095,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      },
      {
        name: "-webkit-mask-size",
-@@ -5884,24 +6060,35 @@
+@@ -5884,24 +6054,35 @@
        type_name: "EOrder",
      },
      {
@@ -1140,7 +1135,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      },
      {
        name: "-webkit-tap-highlight-color",
-@@ -6080,7 +6267,7 @@
+@@ -6080,7 +6261,7 @@
        inherited: true,
        // This property is "keyword" but use "primitive" to use `EWhiteSpace` defined manually.
        field_template: "primitive",
@@ -1149,7 +1144,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
        // `computed_style_custom_functions` even when `CSSWhiteSpaceShorthand`
        // is off, but give 1 bit to it because `field_size` can't be zero.
        field_size: 1,
-@@ -6098,7 +6285,7 @@
+@@ -6098,7 +6279,7 @@
        name: "-alternative-white-space",
        alternative_of: "white-space",
        longhands: [
@@ -1158,7 +1153,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
        ],
        property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
        runtime_flag: "CSSWhiteSpaceShorthand",
-@@ -6120,18 +6307,34 @@
+@@ -6120,18 +6301,34 @@
      },
      {
        name: "text-wrap",
@@ -1200,7 +1195,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      },
      {
        name: "widows",
-@@ -6155,15 +6358,15 @@
+@@ -6155,15 +6352,15 @@
        keywords: ["auto", "fit-content", "min-content", "max-content"],
        default_value: "Length()",
        typedom_types: ["Keyword", "Length", "Percentage"],
@@ -1218,7 +1213,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      },
      {
        name: "will-change",
-@@ -6237,7 +6440,7 @@
+@@ -6237,7 +6434,7 @@
        },
        keywords: ["auto"],
        typedom_types: ["Keyword", "Length", "Percentage"],
@@ -1227,7 +1222,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      },
      {
        name: "block-size",
-@@ -6249,7 +6452,7 @@
+@@ -6249,7 +6446,7 @@
        },
        keywords: ["auto"],
        typedom_types: ["Keyword", "Length", "Percentage"],
@@ -1236,7 +1231,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      },
      {
        name: "min-inline-size",
-@@ -6259,7 +6462,7 @@
+@@ -6259,7 +6456,7 @@
          resolver: "inline",
        },
        typedom_types: ["Length", "Percentage"],
@@ -1245,7 +1240,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      },
      {
        name: "min-block-size",
-@@ -6269,7 +6472,7 @@
+@@ -6269,7 +6466,7 @@
          resolver: "block",
        },
        typedom_types: ["Length", "Percentage"],
@@ -1254,7 +1249,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      },
      {
        name: "max-inline-size",
-@@ -6280,7 +6483,7 @@
+@@ -6280,7 +6477,7 @@
        },
        keywords: ["none"],
        typedom_types: ["Keyword", "Length", "Percentage"],
@@ -1263,7 +1258,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      },
      {
        name: "max-block-size",
-@@ -6291,7 +6494,7 @@
+@@ -6291,7 +6488,7 @@
        },
        keywords: ["none"],
        typedom_types: ["Keyword", "Length", "Percentage"],
@@ -1272,7 +1267,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      },
      {
        name: "margin-inline-start",
-@@ -6304,6 +6507,7 @@
+@@ -6304,6 +6501,7 @@
        typedom_types: ["Length", "Percentage"],
        keywords: ["auto"],
        valid_for_first_letter: true,
@@ -1280,7 +1275,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      },
      {
        name: "margin-inline-end",
-@@ -6316,6 +6520,7 @@
+@@ -6316,6 +6514,7 @@
        typedom_types: ["Length", "Percentage"],
        keywords: ["auto"],
        valid_for_first_letter: true,
@@ -1288,7 +1283,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      },
      {
        name: "margin-block-start",
-@@ -6328,6 +6533,7 @@
+@@ -6328,6 +6527,7 @@
        typedom_types: ["Length", "Percentage"],
        keywords: ["auto"],
        valid_for_first_letter: true,
@@ -1296,7 +1291,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      },
      {
        name: "margin-block-end",
-@@ -6340,6 +6546,7 @@
+@@ -6340,6 +6540,7 @@
        typedom_types: ["Length", "Percentage"],
        keywords: ["auto"],
        valid_for_first_letter: true,
@@ -1304,7 +1299,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      },
      {
        name: "padding-inline-start",
-@@ -6493,7 +6700,7 @@
+@@ -6493,7 +6694,7 @@
          resolver: "inline-start",
        },
        typedom_types: ["Length", "Percentage"],
@@ -1313,7 +1308,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      },
      {
        name: "inset-inline-end",
-@@ -6503,7 +6710,7 @@
+@@ -6503,7 +6704,7 @@
          resolver: "inline-end",
        },
        typedom_types: ["Length", "Percentage"],
@@ -1322,7 +1317,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      },
      {
        name: "inset-block-start",
-@@ -6513,7 +6720,7 @@
+@@ -6513,7 +6714,7 @@
          resolver: "block-start",
        },
        typedom_types: ["Length", "Percentage"],
@@ -1331,7 +1326,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      },
      {
        name: "inset-block-end",
-@@ -6523,7 +6730,7 @@
+@@ -6523,7 +6724,7 @@
          resolver: "block-end",
        },
        typedom_types: ["Length", "Percentage"],
@@ -1340,7 +1335,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      },
      {
        name: "border-start-start-radius",
-@@ -6807,7 +7014,40 @@
+@@ -6807,7 +7008,40 @@
        is_descriptor: true,
        is_property: false,
      },
@@ -1382,7 +1377,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      // Shorthands
      {
        name: "animation",
-@@ -6863,7 +7103,7 @@
+@@ -6863,7 +7097,7 @@
        name: "background",
        longhands: [
          "background-image", "background-position-x", "background-position-y",
@@ -1391,7 +1386,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
          "background-attachment", "background-origin", "background-clip",
          "background-color"
        ],
-@@ -6877,12 +7117,6 @@
+@@ -6877,12 +7111,6 @@
        computable: true,
        supports_incremental_style: true,
      },
@@ -1404,7 +1399,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      {
        name: "border",
        longhands: [
-@@ -7172,6 +7406,7 @@
+@@ -7172,6 +7400,7 @@
        name: "place-self",
        longhands: ["align-self", "justify-self"],
        property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
@@ -1412,7 +1407,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      },
      {
        name: "grid-area",
-@@ -7223,19 +7458,19 @@
+@@ -7223,19 +7452,19 @@
        name: "inset",
        longhands: ["top", "right", "bottom", "left"],
        property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
@@ -1435,7 +1430,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      },
      {
        name: "list-style",
-@@ -7247,16 +7482,21 @@
+@@ -7247,16 +7476,21 @@
        longhands: ["margin-top", "margin-right", "margin-bottom", "margin-left"],
        property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
        layout_dependent: true,
@@ -1457,28 +1452,19 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      },
      {
        name: "marker",
-@@ -7320,6 +7560,20 @@
+@@ -7320,6 +7554,11 @@
        longhands: ["break-inside"],
        property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
      },
 +    {
 +      name: "position-try",
-+      longhands: ["position-try-order", "position-try-options"],
-+      property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
-+    },
-+    {
-+      // Variant of the "position-try" shorthand which has the new
-+      // position-try-fallbacks instead of position-try-options.
-+      name: "-alternative-position-try",
-+      alternative_of: "position-try",
 +      longhands: ["position-try-order", "position-try-fallbacks"],
 +      property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
-+      runtime_flag: "CSSPositionTryFallbacks",
 +    },
      {
        name: "scroll-margin",
        longhands: ["scroll-margin-top", "scroll-margin-right", "scroll-margin-bottom", "scroll-margin-left"],
-@@ -7387,13 +7641,14 @@
+@@ -7387,13 +7626,14 @@
        name: "transition",
        longhands: [
          "transition-property", "transition-duration",
@@ -1495,7 +1481,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
        property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
        runtime_flag: "ScrollTimeline",
      },
-@@ -7440,15 +7695,35 @@
+@@ -7440,15 +7680,35 @@
        longhands: ["column-width", "column-count"],
        property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
      },
@@ -1533,7 +1519,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
      {
        name: "-webkit-mask-box-image",
        longhands: [
-@@ -7460,14 +7735,22 @@
+@@ -7460,14 +7720,22 @@
        computable: true,
      },
      {
@@ -1559,7 +1545,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
        property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
        computable: true,
      },
-@@ -7495,7 +7778,7 @@
+@@ -7495,7 +7763,7 @@
        type_name: "StyleColor",
        computed_style_protected_functions: ["getter"],
        style_builder_custom_functions: ["initial", "inherit", "value"],
@@ -1568,7 +1554,7 @@ index 871edc0924403a04bf16f4d5602f421d3882473c..4873d42cbb3d6156070c28770a01fd01
        valid_for_first_letter: true,
        valid_for_first_line: true,
        valid_for_cue: true,
-@@ -8015,8 +8298,6 @@
+@@ -8015,8 +8283,6 @@
        name: "-webkit-backface-visibility",
        alias_for: "backface-visibility",
      },

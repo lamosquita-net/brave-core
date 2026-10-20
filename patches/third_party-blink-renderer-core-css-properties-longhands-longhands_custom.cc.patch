@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc b/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc
-index 3e784902ddee52b0a6754e762a3c911bb41876fc..375e46fdfb7ca0e880542d6497ded4958e006986 100644
+index 3e784902ddee52b0a6754e762a3c911bb41876fc..7d3a0ae21fccfdc7ef46b421b0da5ae8dde9daf6 100644
 --- a/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc
 +++ b/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc
 @@ -26,6 +26,7 @@
@@ -109,13 +109,14 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..375e46fdfb7ca0e880542d6497ded495
 +  CSSValueList* list = CSSValueList::CreateSpaceSeparated();
 +  if (anchors_visible) {
 +    list->Append(*anchors_visible);
-+  }
+   }
+-  return MakeGarbageCollected<CSSCustomIdentValue>(*style.AnchorDefault());
 +  if (no_overflow) {
 +    list->Append(*no_overflow);
 +  }
 +  return list;
-+}
-+
+ }
+ 
 +const CSSValue* PositionVisibility::CSSValueFromComputedStyleInternal(
 +    const ComputedStyle& style,
 +    const LayoutObject*,
@@ -129,15 +130,14 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..375e46fdfb7ca0e880542d6497ded495
 +  if (EnumHasFlags(position_visibility,
 +                          blink::PositionVisibility::kAnchorsVisible)) {
 +    list->Append(*CSSIdentifierValue::Create(CSSValueID::kAnchorsVisible));
-   }
--  return MakeGarbageCollected<CSSCustomIdentValue>(*style.AnchorDefault());
++  }
 +  if (EnumHasFlags(position_visibility,
 +                   blink::PositionVisibility::kNoOverflow)) {
 +    list->Append(*CSSIdentifierValue::Create(CSSValueID::kNoOverflow));
 +  }
 +  return list;
- }
- 
++}
++
 +// anchor-name: none | <dashed-ident>#
  const CSSValue* AnchorName::ParseSingleValue(
      CSSParserTokenRange& range,
@@ -967,7 +967,7 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..375e46fdfb7ca0e880542d6497ded495
    }
    return list;
  }
-@@ -6526,40 +6874,95 @@ const CSSValue* Position::CSSValueFromComputedStyleInternal(
+@@ -6526,40 +6874,80 @@ const CSSValue* Position::CSSValueFromComputedStyleInternal(
    return CSSIdentifierValue::Create(style.PositionInternal());
  }
  
@@ -1054,25 +1054,10 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..375e46fdfb7ca0e880542d6497ded495
 +      MakeGarbageCollected<blink::PositionTryFallbacks>(fallbacks));
 +}
 +
-+const CSSValue* PositionTryOptions::ParseSingleValue(
-+    CSSParserTokenRange& range,
-+    const CSSParserContext& context,
-+    const CSSParserLocalContext&) const {
-+  return css_parsing_utils::ConsumePositionTryFallbacks(range, context);
- }
--const CSSValue* PositionFallback::CSSValueFromComputedStyleInternal(
-+
-+const CSSValue* PositionTryOptions::CSSValueFromComputedStyleInternal(
-+    const ComputedStyle& style,
-+    const LayoutObject* layout_object,
-+    bool allow_visited_style) const {
-+  return GetCSSPropertyPositionTryFallbacks().CSSValueFromComputedStyleInternal(
-+      style, layout_object, allow_visited_style);
-+}
-+
 +const CSSValue* PositionTryOrder::InitialValue() const {
 +  return CSSIdentifierValue::Create(CSSValueID::kNormal);
-+}
+ }
+-const CSSValue* PositionFallback::CSSValueFromComputedStyleInternal(
 +
 +const CSSValue* PositionTryOrder::CSSValueFromComputedStyleInternal(
      const ComputedStyle& style,
@@ -1086,7 +1071,7 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..375e46fdfb7ca0e880542d6497ded495
  }
  
  const CSSValue* Quotes::ParseSingleValue(CSSParserTokenRange& range,
-@@ -6631,12 +7034,15 @@ void Resize::ApplyValue(StyleResolverState& state,
+@@ -6631,12 +7019,15 @@ void Resize::ApplyValue(StyleResolverState& state,
    const CSSIdentifierValue& identifier_value = To<CSSIdentifierValue>(value);
  
    EResize r = EResize::kNone;
@@ -1104,7 +1089,7 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..375e46fdfb7ca0e880542d6497ded495
    } else {
      r = identifier_value.ConvertTo<EResize>();
    }
-@@ -6665,17 +7071,6 @@ const CSSValue* Right::CSSValueFromComputedStyleInternal(
+@@ -6665,17 +7056,6 @@ const CSSValue* Right::CSSValueFromComputedStyleInternal(
                                                      layout_object);
  }
  
@@ -1122,7 +1107,7 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..375e46fdfb7ca0e880542d6497ded495
  const CSSValue* Rotate::ParseSingleValue(CSSParserTokenRange& range,
                                           const CSSParserContext& context,
                                           const CSSParserLocalContext&) const {
-@@ -7735,6 +8130,13 @@ const blink::Color Stroke::ColorIncludingFallback(
+@@ -7735,6 +8115,13 @@ const blink::Color Stroke::ColorIncludingFallback(
                                is_current_color);
  }
  
@@ -1136,7 +1121,7 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..375e46fdfb7ca0e880542d6497ded495
  const CSSValue* StrokeDasharray::ParseSingleValue(
      CSSParserTokenRange& range,
      const CSSParserContext& context,
-@@ -8306,17 +8708,6 @@ const CSSValue* Top::CSSValueFromComputedStyleInternal(
+@@ -8306,17 +8693,6 @@ const CSSValue* Top::CSSValueFromComputedStyleInternal(
                                                      layout_object);
  }
  
@@ -1154,7 +1139,7 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..375e46fdfb7ca0e880542d6497ded495
  namespace {
  
  static bool ConsumePan(CSSParserTokenRange& range,
-@@ -8550,6 +8941,36 @@ const CSSValue* TransitionProperty::InitialValue() const {
+@@ -8550,6 +8926,36 @@ const CSSValue* TransitionProperty::InitialValue() const {
    return CSSIdentifierValue::Create(CSSValueID::kAll);
  }
  
@@ -1191,7 +1176,7 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..375e46fdfb7ca0e880542d6497ded495
  const CSSValue* TransitionTimingFunction::ParseSingleValue(
      CSSParserTokenRange& range,
      const CSSParserContext& context,
-@@ -8784,12 +9205,7 @@ const CSSValue* ViewTimelineInset::CSSValueFromComputedStyleInternal(
+@@ -8784,12 +9190,7 @@ const CSSValue* ViewTimelineInset::CSSValueFromComputedStyleInternal(
    }
    CSSValueList* list = CSSValueList::CreateCommaSeparated();
    for (const TimelineInset& inset : vector) {
@@ -1205,7 +1190,7 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..375e46fdfb7ca0e880542d6497ded495
    }
    return list;
  }
-@@ -9083,26 +9499,6 @@ const CSSValue* WebkitFontSmoothing::CSSValueFromComputedStyleInternal(
+@@ -9083,26 +9484,6 @@ const CSSValue* WebkitFontSmoothing::CSSValueFromComputedStyleInternal(
    return CSSIdentifierValue::Create(style.GetFontDescription().FontSmoothing());
  }
  
@@ -1232,7 +1217,7 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..375e46fdfb7ca0e880542d6497ded495
  const CSSValue* HyphenateCharacter::ParseSingleValue(
      CSSParserTokenRange& range,
      const CSSParserContext&,
-@@ -9265,6 +9661,34 @@ const CSSValue* WebkitMaskBoxImageWidth::CSSValueFromComputedStyleInternal(
+@@ -9265,6 +9646,34 @@ const CSSValue* WebkitMaskBoxImageWidth::CSSValueFromComputedStyleInternal(
        style.MaskBoxImage().BorderSlices(), style);
  }
  
@@ -1267,7 +1252,7 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..375e46fdfb7ca0e880542d6497ded495
  const CSSValue* WebkitMaskClip::ParseSingleValue(
      CSSParserTokenRange& range,
      const CSSParserContext&,
-@@ -9287,12 +9711,38 @@ const CSSValue* WebkitMaskClip::CSSValueFromComputedStyleInternal(
+@@ -9287,12 +9696,38 @@ const CSSValue* WebkitMaskClip::CSSValueFromComputedStyleInternal(
    return list;
  }
  
@@ -1307,7 +1292,7 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..375e46fdfb7ca0e880542d6497ded495
  }
  
  const CSSValue* WebkitMaskComposite::CSSValueFromComputedStyleInternal(
-@@ -9302,7 +9752,8 @@ const CSSValue* WebkitMaskComposite::CSSValueFromComputedStyleInternal(
+@@ -9302,7 +9737,8 @@ const CSSValue* WebkitMaskComposite::CSSValueFromComputedStyleInternal(
    CSSValueList* list = CSSValueList::CreateCommaSeparated();
    const FillLayer* curr_layer = &style.MaskLayers();
    for (; curr_layer; curr_layer = curr_layer->Next()) {
@@ -1317,7 +1302,7 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..375e46fdfb7ca0e880542d6497ded495
    }
    return list;
  }
-@@ -9324,6 +9775,65 @@ const CSSValue* WebkitMaskImage::CSSValueFromComputedStyleInternal(
+@@ -9324,6 +9760,65 @@ const CSSValue* WebkitMaskImage::CSSValueFromComputedStyleInternal(
        style, allow_visited_style, fill_layer);
  }
  
@@ -1383,7 +1368,7 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..375e46fdfb7ca0e880542d6497ded495
  const CSSValue* WebkitMaskOrigin::ParseSingleValue(
      CSSParserTokenRange& range,
      const CSSParserContext&,
-@@ -9388,8 +9898,9 @@ const CSSValue* WebkitMaskSize::ParseSingleValue(
+@@ -9388,8 +9883,9 @@ const CSSValue* WebkitMaskSize::ParseSingleValue(
      CSSParserTokenRange& range,
      const CSSParserContext& context,
      const CSSParserLocalContext& local_context) const {
@@ -1395,7 +1380,7 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..375e46fdfb7ca0e880542d6497ded495
  }
  
  const CSSValue* WebkitMaskSize::CSSValueFromComputedStyleInternal(
-@@ -9400,6 +9911,51 @@ const CSSValue* WebkitMaskSize::CSSValueFromComputedStyleInternal(
+@@ -9400,6 +9896,51 @@ const CSSValue* WebkitMaskSize::CSSValueFromComputedStyleInternal(
    return ComputedStyleUtils::BackgroundImageOrWebkitMaskSize(style, fill_layer);
  }
  
@@ -1447,7 +1432,7 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..375e46fdfb7ca0e880542d6497ded495
  const CSSValue* WebkitPerspectiveOriginX::ParseSingleValue(
      CSSParserTokenRange& range,
      const CSSParserContext& context,
-@@ -9444,27 +10000,34 @@ const CSSValue* WebkitRtlOrdering::CSSValueFromComputedStyleInternal(
+@@ -9444,27 +9985,34 @@ const CSSValue* WebkitRtlOrdering::CSSValueFromComputedStyleInternal(
                                          : CSSValueID::kLogical);
  }
  
@@ -1489,7 +1474,7 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..375e46fdfb7ca0e880542d6497ded495
  const CSSValue* WebkitTapHighlightColor::ParseSingleValue(
      CSSParserTokenRange& range,
      const CSSParserContext& context,
-@@ -10193,11 +10756,18 @@ const CSSValue* WhiteSpaceCollapse::CSSValueFromComputedStyleInternal(
+@@ -10193,11 +10741,18 @@ const CSSValue* WhiteSpaceCollapse::CSSValueFromComputedStyleInternal(
    return CSSIdentifierValue::Create(style.GetWhiteSpaceCollapse());
  }
  
@@ -1510,7 +1495,7 @@ index 3e784902ddee52b0a6754e762a3c911bb41876fc..375e46fdfb7ca0e880542d6497ded495
  }
  
  const CSSValue* Widows::ParseSingleValue(CSSParserTokenRange& range,
-@@ -10557,27 +11127,5 @@ const CSSValue* InternalEmptyLineHeight::ParseSingleValue(
+@@ -10557,27 +11112,5 @@ const CSSValue* InternalEmptyLineHeight::ParseSingleValue(
                                           CSSValueID::kNone>(range);
  }
  
