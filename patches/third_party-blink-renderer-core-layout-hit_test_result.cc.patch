@@ -1,0 +1,17 @@
+diff --git a/third_party/blink/renderer/core/layout/hit_test_result.cc b/third_party/blink/renderer/core/layout/hit_test_result.cc
+index 191aef5c014b32154713efa8fafdfaf9d153d642..e45f9a0485b12e1478ec33011a6743da39d59689 100644
+--- a/third_party/blink/renderer/core/layout/hit_test_result.cc
++++ b/third_party/blink/renderer/core/layout/hit_test_result.cc
+@@ -263,9 +263,9 @@ CompositorElementId HitTestResult::GetScrollableContainer() const {
+   // browser control movement and overscroll glow.
+   while (cur_box) {
+     if (cur_box->IsGlobalRootScroller() ||
+-        cur_box->NeedsScrollNode(CompositingReason::kNone)) {
+-      return CompositorElementIdFromUniqueObjectId(
+-          cur_box->UniqueId(), CompositorElementIdNamespace::kScroll);
++        (cur_box->IsScrollContainer() &&
++         cur_box->GetScrollableArea()->ScrollsOverflow())) {
++      return cur_box->GetScrollableArea()->GetScrollElementId();
+     }
+ 
+     if (IsA<LayoutView>(cur_box))

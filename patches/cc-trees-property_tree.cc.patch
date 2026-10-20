@@ -1,5 +1,5 @@
 diff --git a/cc/trees/property_tree.cc b/cc/trees/property_tree.cc
-index 5007b751eb1bc8cea83d94b8e4f4130019fadd0e..ea258b369acfa3fc5390b997e36126758c0477a3 100644
+index 5007b751eb1bc8cea83d94b8e4f4130019fadd0e..e22a2ba9310c128262a7cafec5360d8db248238f 100644
 --- a/cc/trees/property_tree.cc
 +++ b/cc/trees/property_tree.cc
 @@ -40,21 +40,13 @@ void AnimationUpdateOnMissingPropertyNodeUMALog(bool missing_property_node) {
@@ -113,7 +113,7 @@ index 5007b751eb1bc8cea83d94b8e4f4130019fadd0e..ea258b369acfa3fc5390b997e3612675
    DCHECK(!node->needs_local_transform_update);
  }
  
-@@ -473,46 +511,81 @@ gfx::Vector2dF TransformTree::StickyPositionOffset(TransformNode* node) {
+@@ -473,46 +511,85 @@ gfx::Vector2dF TransformTree::StickyPositionOffset(TransformNode* node) {
    return gfx::ToRoundedVector2d(sticky_offset);
  }
  
@@ -152,7 +152,13 @@ index 5007b751eb1bc8cea83d94b8e4f4130019fadd0e..ea258b369acfa3fc5390b997e3612675
 +gfx::Vector2dF TransformTree::AnchorPositionOffset(
 +    TransformNode* node,
 +    int max_updated_node_id,
-+    UpdateTransformsData* update_data) {
++    UpdateTransformsData* update_data,
++    base::flat_set<int>& visited) {
++  if (visited.contains(node->id)) {
++    return gfx::Vector2dF();
++  }
++  visited.insert(node->id);
++
 +  const AnchorPositionScrollData* data = GetAnchorPositionScrollData(node->id);
    if (!data)
      return gfx::Vector2dF();
@@ -176,9 +182,9 @@ index 5007b751eb1bc8cea83d94b8e4f4130019fadd0e..ea258b369acfa3fc5390b997e3612675
 +                container_id)) {
 +      container_transform_id = scroll_node->transform_id;
 +      const TransformNode* transform_node = Node(container_transform_id);
-+      if (!transform_node) {
-+        return data->default_adjustment;
-+      }
++      // We don't ever expect that an anchor node or any of its scrolling
++      // containers should have an invalid transform_id.
++      DCHECK(container_transform_id != kInvalidPropertyNodeId);
 +      accumulated_offset += transform_node->scroll_offset.OffsetFromOrigin();
 +      // TODO(crbug.com/325613705): Should we consider snap_amount here?
 +    } else if (TransformNode* container_transform =
@@ -192,9 +198,7 @@ index 5007b751eb1bc8cea83d94b8e4f4130019fadd0e..ea258b369acfa3fc5390b997e3612675
 +      // because AnchorPositionOffset() is the opposite of
 +      // blink::AnchorPositionScrollData::AccmulatedOffset().
 +      accumulated_offset -= AnchorPositionOffset(
-+          container_transform, max_updated_node_id, update_data);
-+    } else {
-+      return data->default_adjustment;
++          container_transform, max_updated_node_id, update_data, visited);
      }
 -    const TransformNode* transform_node = Node(scroll_node->transform_id);
 -    // We don't ever expect that an anchor node or any of its scrolling
@@ -221,7 +225,7 @@ index 5007b751eb1bc8cea83d94b8e4f4130019fadd0e..ea258b369acfa3fc5390b997e3612675
  }
  
  void TransformTree::UndoOverscroll(
-@@ -558,7 +631,8 @@ void TransformTree::UndoOverscroll(
+@@ -558,7 +635,8 @@ void TransformTree::UndoOverscroll(
  
  void TransformTree::UpdateLocalTransform(
      TransformNode* node,
@@ -231,14 +235,16 @@ index 5007b751eb1bc8cea83d94b8e4f4130019fadd0e..ea258b369acfa3fc5390b997e3612675
    gfx::Transform transform;
    transform.Translate3d(node->post_translation.x() + node->origin.x(),
                          node->post_translation.y() + node->origin.y(),
-@@ -574,8 +648,8 @@ void TransformTree::UpdateLocalTransform(
+@@ -574,8 +652,10 @@ void TransformTree::UpdateLocalTransform(
    transform.Translate(position_adjustment -
                        node->scroll_offset.OffsetFromOrigin());
    transform.Translate(StickyPositionOffset(node));
 -  if (node->anchor_scroll_containers_data_id >= 0) {
 -    transform.Translate(AnchorScrollOffset(node));
 +  if (node->anchor_position_scroll_data_id >= 0) {
-+    transform.Translate(AnchorPositionOffset(node, node->id - 1, update_data));
++    base::flat_set<int> visited;
++    transform.Translate(
++        AnchorPositionOffset(node, node->id - 1, update_data, visited));
      // Make sure the damage rect is tracked.
      node->transform_changed = true;
    }

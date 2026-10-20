@@ -1,23 +1,26 @@
 diff --git a/third_party/blink/renderer/core/inspector/inspector_css_agent.h b/third_party/blink/renderer/core/inspector/inspector_css_agent.h
-index 8f6221b6e4f8cbd30a8ceeeaf350e3f66271af84..977e2b120ae3f021f68c5131b1e9c3c5b6fb1fbf 100644
+index 8f6221b6e4f8cbd30a8ceeeaf350e3f66271af84..2bc73437b69683efc5e4a9a25b0c031435a9e334 100644
 --- a/third_party/blink/renderer/core/inspector/inspector_css_agent.h
 +++ b/third_party/blink/renderer/core/inspector/inspector_css_agent.h
-@@ -162,6 +162,7 @@ class CORE_EXPORT InspectorCSSAgent final
+@@ -161,7 +161,8 @@ class CORE_EXPORT InspectorCSSAgent final
+       protocol::Maybe<
            protocol::Array<protocol::CSS::InheritedPseudoElementMatches>>*,
        protocol::Maybe<protocol::Array<protocol::CSS::CSSKeyframesRule>>*,
-       protocol::Maybe<protocol::Array<protocol::CSS::CSSPositionFallbackRule>>*,
+-      protocol::Maybe<protocol::Array<protocol::CSS::CSSPositionFallbackRule>>*,
 +      protocol::Maybe<protocol::Array<protocol::CSS::CSSPositionTryRule>>*,
++      protocol::Maybe<int>*,
        protocol::Maybe<int>*) override;
    protocol::Response getInlineStylesForNode(
        int node_id,
-@@ -323,8 +324,8 @@ class CORE_EXPORT InspectorCSSAgent final
+@@ -323,8 +324,9 @@ class CORE_EXPORT InspectorCSSAgent final
        std::unique_ptr<protocol::Array<protocol::CSS::StyleDeclarationEdit>>,
        HeapVector<Member<StyleSheetAction>>* actions);
  
 -  std::unique_ptr<protocol::Array<protocol::CSS::CSSPositionFallbackRule>>
 -  PositionFallbackRulesForNode(Element* element);
 +  std::unique_ptr<protocol::Array<protocol::CSS::CSSPositionTryRule>>
-+  PositionTryRulesForElement(Element* element);
++  PositionTryRulesForElement(Element* element,
++                             absl::optional<size_t> active_position_try_index);
  
    // If the |animating_element| is a pseudo element, then |element| is a
    // reference to its originating DOM element.

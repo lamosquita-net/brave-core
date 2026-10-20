@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/inspector/inspector_css_agent.cc b/third_party/blink/renderer/core/inspector/inspector_css_agent.cc
-index 941da53b5bfdd8a5d0b0e349b4b4f468ba5948bc..a71137295ce19bbb9ccc6321bccdf7486af4620b 100644
+index 941da53b5bfdd8a5d0b0e349b4b4f468ba5948bc..d72ea441e1a17306a5a032fb344909cc25900fca 100644
 --- a/third_party/blink/renderer/core/inspector/inspector_css_agent.cc
 +++ b/third_party/blink/renderer/core/inspector/inspector_css_agent.cc
 @@ -44,7 +44,6 @@
@@ -10,7 +10,7 @@ index 941da53b5bfdd8a5d0b0e349b4b4f468ba5948bc..a71137295ce19bbb9ccc6321bccdf748
  #include "third_party/blink/renderer/core/css/css_property_name.h"
  #include "third_party/blink/renderer/core/css/css_property_names.h"
  #include "third_party/blink/renderer/core/css/css_property_value_set.h"
-@@ -54,7 +53,6 @@
+@@ -54,13 +53,13 @@
  #include "third_party/blink/renderer/core/css/css_style_rule.h"
  #include "third_party/blink/renderer/core/css/css_style_sheet.h"
  #include "third_party/blink/renderer/core/css/css_supports_rule.h"
@@ -18,7 +18,14 @@ index 941da53b5bfdd8a5d0b0e349b4b4f468ba5948bc..a71137295ce19bbb9ccc6321bccdf748
  #include "third_party/blink/renderer/core/css/css_variable_data.h"
  #include "third_party/blink/renderer/core/css/font_face.h"
  #include "third_party/blink/renderer/core/css/font_size_functions.h"
-@@ -427,8 +425,8 @@ class InspectorCSSAgent::ModifyRuleAction final
+ #include "third_party/blink/renderer/core/css/media_list.h"
+ #include "third_party/blink/renderer/core/css/media_query.h"
+ #include "third_party/blink/renderer/core/css/media_values.h"
++#include "third_party/blink/renderer/core/css/out_of_flow_data.h"
+ #include "third_party/blink/renderer/core/css/parser/css_parser.h"
+ #include "third_party/blink/renderer/core/css/parser/css_parser_context.h"
+ #include "third_party/blink/renderer/core/css/properties/computed_style_utils.h"
+@@ -427,8 +426,8 @@ class InspectorCSSAgent::ModifyRuleAction final
        return style_sheet_->BuildObjectForStyle(style_rule->style());
      if (auto* keyframe_rule = DynamicTo<CSSKeyframeRule>(rule))
        return style_sheet_->BuildObjectForStyle(keyframe_rule->style());
@@ -29,25 +36,51 @@ index 941da53b5bfdd8a5d0b0e349b4b4f468ba5948bc..a71137295ce19bbb9ccc6321bccdf748
      }
      return nullptr;
    }
-@@ -992,6 +990,8 @@ protocol::Response InspectorCSSAgent::getMatchedStylesForNode(
+@@ -990,9 +989,10 @@ protocol::Response InspectorCSSAgent::getMatchedStylesForNode(
+         inherited_pseudo_id_matches,
+     Maybe<protocol::Array<protocol::CSS::CSSKeyframesRule>>*
          css_keyframes_rules,
-     Maybe<protocol::Array<protocol::CSS::CSSPositionFallbackRule>>*
-         css_position_fallback_rules,
+-    Maybe<protocol::Array<protocol::CSS::CSSPositionFallbackRule>>*
+-        css_position_fallback_rules,
+-    Maybe<int>* parentLayoutNodeId) {
 +    Maybe<protocol::Array<protocol::CSS::CSSPositionTryRule>>*
 +        css_position_try_rules,
-     Maybe<int>* parentLayoutNodeId) {
++    Maybe<int>* active_position_fallback_index,
++    Maybe<int>* parent_layout_node_id) {
    protocol::Response response = AssertEnabled();
    if (!response.IsSuccess())
-@@ -1108,7 +1108,7 @@ protocol::Response InspectorCSSAgent::getMatchedStylesForNode(
+     return response;
+@@ -1108,12 +1108,24 @@ protocol::Response InspectorCSSAgent::getMatchedStylesForNode(
    }
  
    *css_keyframes_rules = AnimationsForNode(element, animating_element);
 -  *css_position_fallback_rules = PositionFallbackRulesForNode(element);
-+  *css_position_try_rules = PositionTryRulesForElement(element);
++  // Get the index of the active position try fallback index.
++  absl::optional<size_t> successful_position_fallback_index;
++  if (OutOfFlowData* out_of_flow_data = element->GetOutOfFlowData()) {
++    successful_position_fallback_index =
++        out_of_flow_data->GetNewSuccessfulPositionFallbackIndex();
++    if (successful_position_fallback_index.has_value()) {
++      *active_position_fallback_index =
++          static_cast<int>(successful_position_fallback_index.value());
++    }
++  }
++  *css_position_try_rules =
++      PositionTryRulesForElement(element, successful_position_fallback_index);
  
-   auto* parentLayoutNode = LayoutTreeBuilderTraversal::LayoutParent(*element);
-   if (parentLayoutNode) {
-@@ -1142,102 +1142,83 @@ static CSSKeyframesRule* FindKeyframesRule(CSSRuleCollection* css_rules,
+-  auto* parentLayoutNode = LayoutTreeBuilderTraversal::LayoutParent(*element);
+-  if (parentLayoutNode) {
+-    if (int boundNodeId = dom_agent_->BoundNodeId(parentLayoutNode))
+-      *parentLayoutNodeId = boundNodeId;
++  auto* parent_layout_node = LayoutTreeBuilderTraversal::LayoutParent(*element);
++  if (parent_layout_node) {
++    if (int bound_node_id = dom_agent_->BoundNodeId(parent_layout_node)) {
++      *parent_layout_node_id = bound_node_id;
++    }
+   }
+ 
+   return protocol::Response::Success();
+@@ -1142,102 +1154,90 @@ static CSSKeyframesRule* FindKeyframesRule(CSSRuleCollection* css_rules,
  }
  
  template <class CSSRuleCollection>
@@ -91,7 +124,9 @@ index 941da53b5bfdd8a5d0b0e349b4b4f468ba5948bc..a71137295ce19bbb9ccc6321bccdf748
 -  auto css_position_fallback_rules = std::make_unique<
 -      protocol::Array<protocol::CSS::CSSPositionFallbackRule>>();
 +std::unique_ptr<protocol::Array<protocol::CSS::CSSPositionTryRule>>
-+InspectorCSSAgent::PositionTryRulesForElement(Element* element) {
++InspectorCSSAgent::PositionTryRulesForElement(
++    Element* element,
++    absl::optional<size_t> active_position_try_index) {
    Document& document = element->GetDocument();
 -  DCHECK(!document.NeedsLayoutTreeUpdateForNode(*element));
 +  CHECK(!document.NeedsLayoutTreeUpdateForNode(*element));
@@ -110,9 +145,9 @@ index 941da53b5bfdd8a5d0b0e349b4b4f468ba5948bc..a71137295ce19bbb9ccc6321bccdf748
 -  const TreeScope* tree_scope = position_fallback->GetTreeScope();
 -  if (!tree_scope) {
 -    tree_scope = &document;
-+  const PositionTryOptions* position_try_options =
-+      style->GetPositionTryOptions();
-+  if (!position_try_options) {
++  const PositionTryFallbacks* position_try_fallbacks_ =
++      style->GetPositionTryFallbacks();
++  if (!position_try_fallbacks_) {
 +    return nullptr;
    }
  
@@ -131,8 +166,11 @@ index 941da53b5bfdd8a5d0b0e349b4b4f468ba5948bc..a71137295ce19bbb9ccc6321bccdf748
 -        FindPositionFallbackRule(style_sheet, position_fallback_rule);
 -    if (css_position_fallback_rule) {
 -      break;
-+  for (const PositionTryOption& option : position_try_options->GetOptions()) {
-+    if (const ScopedCSSName* scoped_name = option.GetPositionTryName()) {
++  const HeapVector<PositionTryFallback>& fallbacks =
++      position_try_fallbacks_->GetFallbacks();
++  for (wtf_size_t i = 0; i < fallbacks.size(); ++i) {
++    const PositionTryFallback& fallback = fallbacks[i];
++    if (const ScopedCSSName* scoped_name = fallback.GetPositionTryName()) {
 +      const TreeScope* tree_scope = scoped_name->GetTreeScope();
 +      if (!tree_scope) {
 +        tree_scope = &document;
@@ -150,6 +188,8 @@ index 941da53b5bfdd8a5d0b0e349b4b4f468ba5948bc..a71137295ce19bbb9ccc6321bccdf748
 +          document_to_css_style_sheets_.end()) {
 +        continue;
 +      }
++      bool is_active = active_position_try_index.has_value() &&
++                       active_position_try_index.value() == i;
 +      for (CSSStyleSheet* style_sheet :
 +           *css_style_sheets_for_document_it->value) {
 +        if (CSSPositionTryRule* css_position_try_rule =
@@ -158,7 +198,7 @@ index 941da53b5bfdd8a5d0b0e349b4b4f468ba5948bc..a71137295ce19bbb9ccc6321bccdf748
 +              BindStyleSheet(css_position_try_rule->parentStyleSheet());
 +          css_position_try_rules->emplace_back(
 +              inspector_style_sheet->BuildObjectForPositionTryRule(
-+                  css_position_try_rule));
++                  css_position_try_rule, is_active));
 +          break;
 +        }
 +      }
@@ -202,7 +242,7 @@ index 941da53b5bfdd8a5d0b0e349b4b4f468ba5948bc..a71137295ce19bbb9ccc6321bccdf748
  }
  
  std::unique_ptr<protocol::Array<protocol::CSS::CSSKeyframesRule>>
-@@ -2183,27 +2164,29 @@ InspectorCSSAgent::BuildContainerQueryObject(CSSContainerRule* rule) {
+@@ -2183,27 +2183,29 @@ InspectorCSSAgent::BuildContainerQueryObject(CSSContainerRule* rule) {
      container_query_object->setName(rule->Name());
  
    PhysicalAxes physical = rule->Selector().GetPhysicalAxes();

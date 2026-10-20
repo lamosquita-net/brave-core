@@ -1,9 +1,9 @@
 diff --git a/third_party/blink/renderer/core/layout/anchor_position_visibility_observer.cc b/third_party/blink/renderer/core/layout/anchor_position_visibility_observer.cc
 new file mode 100644
-index 0000000000000000000000000000000000000000..f0546fbb94aac0432bfc63fef4b495f301eccee3
+index 0000000000000000000000000000000000000000..610fb4008231f32cd70a4ca31e5555727e8887f4
 --- /dev/null
 +++ b/third_party/blink/renderer/core/layout/anchor_position_visibility_observer.cc
-@@ -0,0 +1,152 @@
+@@ -0,0 +1,153 @@
 +// Copyright 2024 The Chromium Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -22,12 +22,10 @@ index 0000000000000000000000000000000000000000..f0546fbb94aac0432bfc63fef4b495f3
 +
 +AnchorPositionVisibilityObserver::AnchorPositionVisibilityObserver(
 +    Element& anchored_element)
-+    : anchored_element_(anchored_element) {
-+  CHECK(RuntimeEnabledFeatures::CSSPositionVisibilityEnabled());
-+}
++    : anchored_element_(anchored_element) {}
 +
 +void AnchorPositionVisibilityObserver::MonitorAnchor(const Element* anchor) {
-+  if (anchor_element_) {
++  if (observer_) {
 +    observer_->disconnect();
 +    observer_ = nullptr;
 +  }
@@ -54,6 +52,9 @@ index 0000000000000000000000000000000000000000..f0546fbb94aac0432bfc63fef4b495f3
 +    // TODO(pdr): Refactor intersection observer to take const objects.
 +    observer_->observe(const_cast<Element*>(anchor_element_.Get()));
 +  } else {
++    // If there is no anchor, reset kAnchorsCssVisible so a previously
++    // invisible anchor no longer hides the anchored element.
++    SetLayerInvisible(LayerPositionVisibility::kAnchorsCssVisible, false);
 +    SetLayerInvisible(LayerPositionVisibility::kAnchorsIntersectionVisible,
 +                      false);
 +    SetLayerInvisible(LayerPositionVisibility::kChainedAnchorsVisible, false);

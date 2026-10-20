@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/properties/shorthands/shorthands_custom.cc b/third_party/blink/renderer/core/css/properties/shorthands/shorthands_custom.cc
-index 420cb4301e98f574101ceb2750a4f60d09619430..229b9ff584d4a6cbe426293eff9f72a240893e2d 100644
+index 420cb4301e98f574101ceb2750a4f60d09619430..ae1aa94b8358a2bb1dd3b3fe0a2082be22f78105 100644
 --- a/third_party/blink/renderer/core/css/properties/shorthands/shorthands_custom.cc
 +++ b/third_party/blink/renderer/core/css/properties/shorthands/shorthands_custom.cc
 @@ -27,6 +27,7 @@
@@ -143,16 +143,20 @@ index 420cb4301e98f574101ceb2750a4f60d09619430..229b9ff584d4a6cbe426293eff9f72a2
  const CSSValue* MarginInline::CSSValueFromComputedStyleInternal(
      const ComputedStyle& style,
      const LayoutObject* layout_object,
-@@ -3083,6 +3064,47 @@ const CSSValue* PlaceSelf::CSSValueFromComputedStyleInternal(
+@@ -3083,6 +3064,84 @@ const CSSValue* PlaceSelf::CSSValueFromComputedStyleInternal(
        placeSelfShorthand(), style, layout_object, allow_visited_style);
  }
  
-+bool PositionTry::ParseShorthand(
-+    bool important,
-+    CSSParserTokenRange& range,
-+    const CSSParserContext& context,
-+    const CSSParserLocalContext& local_context,
-+    HeapVector<CSSPropertyValue, 64>& properties) const {
++namespace {
++
++bool ParsePositionTryShorthand(const StylePropertyShorthand& shorthand,
++                               bool important,
++                               CSSParserTokenRange& range,
++                               const CSSParserContext& context,
++                               const CSSParserLocalContext& local_context,
++                               HeapVector<CSSPropertyValue, 64>& properties) {
++  CHECK_EQ(shorthand.length(), 2u);
++  CHECK_EQ(shorthand.properties()[0], &GetCSSPropertyPositionTryOrder());
 +  const CSSValue* order = css_parsing_utils::ParseLonghand(
 +      CSSPropertyID::kPositionTryOrder, CSSPropertyID::kPositionTry, context,
 +      range);
@@ -163,16 +167,27 @@ index 420cb4301e98f574101ceb2750a4f60d09619430..229b9ff584d4a6cbe426293eff9f72a2
 +              *order, important,
 +              css_parsing_utils::IsImplicitProperty::kNotImplicit, properties);
 +
-+  if (const CSSValue* options = css_parsing_utils::ParseLonghand(
-+          CSSPropertyID::kPositionTryOptions, CSSPropertyID::kPositionTry,
-+          context, range)) {
++  CSSPropertyID fallbacks_id = shorthand.properties()[1]->PropertyID();
++  if (const CSSValue* fallbacks = css_parsing_utils::ParseLonghand(
++          fallbacks_id, CSSPropertyID::kPositionTry, context, range)) {
 +    css_parsing_utils::AddProperty(
-+        CSSPropertyID::kPositionTryOptions, CSSPropertyID::kPositionTry,
-+        *options, important,
++        fallbacks_id, CSSPropertyID::kPositionTry, *fallbacks, important,
 +        css_parsing_utils::IsImplicitProperty::kNotImplicit, properties);
 +    return range.AtEnd();
 +  }
 +  return false;
++}
++
++}  // namespace
++
++bool PositionTry::ParseShorthand(
++    bool important,
++    CSSParserTokenRange& range,
++    const CSSParserContext& context,
++    const CSSParserLocalContext& local_context,
++    HeapVector<CSSPropertyValue, 64>& properties) const {
++  return ParsePositionTryShorthand(positionTryShorthand(), important, range,
++                                   context, local_context, properties);
 +}
 +
 +const CSSValue* PositionTry::CSSValueFromComputedStyleInternal(
@@ -184,14 +199,36 @@ index 420cb4301e98f574101ceb2750a4f60d09619430..229b9ff584d4a6cbe426293eff9f72a2
 +      order != ComputedStyleInitialValues::InitialPositionTryOrder()) {
 +    list->Append(*CSSIdentifierValue::Create(order));
 +  }
-+  list->Append(*CSSIdentifierValue::Create(style.PositionTryOrder()));
++  if (const PositionTryFallbacks* fallbacks = style.GetPositionTryFallbacks()) {
++    list->Append(*ComputedStyleUtils::ValueForPositionTryFallbacks(*fallbacks));
++  } else {
++    list->Append(*CSSIdentifierValue::Create(CSSValueID::kNone));
++  }
 +  return list;
++}
++
++bool AlternativePositionTry::ParseShorthand(
++    bool important,
++    CSSParserTokenRange& range,
++    const CSSParserContext& context,
++    const CSSParserLocalContext& local_context,
++    HeapVector<CSSPropertyValue, 64>& properties) const {
++  return ParsePositionTryShorthand(alternativePositionTryShorthand(), important,
++                                   range, context, local_context, properties);
++}
++
++const CSSValue* AlternativePositionTry::CSSValueFromComputedStyleInternal(
++    const ComputedStyle& style,
++    const LayoutObject* layout_object,
++    bool allow_visited_style) const {
++  return GetCSSPropertyPositionTry().CSSValueFromComputedStyleInternal(
++      style, layout_object, allow_visited_style);
 +}
 +
  bool ScrollMarginBlock::ParseShorthand(
      bool important,
      CSSParserTokenRange& range,
-@@ -3194,13 +3216,21 @@ const CSSValue* ScrollPaddingInline::CSSValueFromComputedStyleInternal(
+@@ -3194,13 +3253,21 @@ const CSSValue* ScrollPaddingInline::CSSValueFromComputedStyleInternal(
  
  namespace {
  
@@ -216,7 +253,7 @@ index 420cb4301e98f574101ceb2750a4f60d09619430..229b9ff584d4a6cbe426293eff9f72a2
    using css_parsing_utils::ConsumeSingleTimelineName;
  
    CSSValue* name = ConsumeSingleTimelineName(range, context);
-@@ -3209,13 +3239,39 @@ bool ConsumeTimelineItemInto(CSSParserTokenRange& range,
+@@ -3209,13 +3276,39 @@ bool ConsumeTimelineItemInto(CSSParserTokenRange& range,
      return false;
    }
  
@@ -257,7 +294,7 @@ index 420cb4301e98f574101ceb2750a4f60d09619430..229b9ff584d4a6cbe426293eff9f72a2
  
    return true;
  }
-@@ -3233,42 +3289,64 @@ bool ParseTimelineShorthand(CSSPropertyID shorthand_id,
+@@ -3233,42 +3326,64 @@ bool ParseTimelineShorthand(CSSPropertyID shorthand_id,
  
    CSSValueList* name_list = CSSValueList::CreateCommaSeparated();
    CSSValueList* axis_list = CSSValueList::CreateCommaSeparated();
@@ -327,7 +364,7 @@ index 420cb4301e98f574101ceb2750a4f60d09619430..229b9ff584d4a6cbe426293eff9f72a2
    }
  
    return list;
-@@ -3377,7 +3455,8 @@ const CSSValue* ScrollTimeline::CSSValueFromComputedStyleInternal(
+@@ -3377,7 +3492,8 @@ const CSSValue* ScrollTimeline::CSSValueFromComputedStyleInternal(
        style.ScrollTimelineName() ? style.ScrollTimelineName()->GetNames()
                                   : HeapVector<Member<const ScopedCSSName>>{};
    const Vector<TimelineAxis>& axis_vector = style.ScrollTimelineAxis();
@@ -337,7 +374,7 @@ index 420cb4301e98f574101ceb2750a4f60d09619430..229b9ff584d4a6cbe426293eff9f72a2
  }
  
  bool TextDecoration::ParseShorthand(
-@@ -3425,6 +3504,35 @@ const CSSValue* TextDecoration::CSSValueFromComputedStyleInternal(
+@@ -3425,6 +3541,35 @@ const CSSValue* TextDecoration::CSSValueFromComputedStyleInternal(
    return list;
  }
  
@@ -373,7 +410,7 @@ index 420cb4301e98f574101ceb2750a4f60d09619430..229b9ff584d4a6cbe426293eff9f72a2
  namespace {
  
  CSSValue* ConsumeTransitionValue(CSSPropertyID property,
-@@ -3442,6 +3550,12 @@ CSSValue* ConsumeTransitionValue(CSSPropertyID property,
+@@ -3442,6 +3587,12 @@ CSSValue* ConsumeTransitionValue(CSSPropertyID property,
        return css_parsing_utils::ConsumeTransitionProperty(range, context);
      case CSSPropertyID::kTransitionTimingFunction:
        return css_parsing_utils::ConsumeAnimationTimingFunction(range, context);
@@ -386,7 +423,7 @@ index 420cb4301e98f574101ceb2750a4f60d09619430..229b9ff584d4a6cbe426293eff9f72a2
      default:
        NOTREACHED();
        return nullptr;
-@@ -3497,17 +3611,58 @@ const CSSValue* Transition::CSSValueFromComputedStyleInternal(
+@@ -3497,17 +3648,58 @@ const CSSValue* Transition::CSSValueFromComputedStyleInternal(
      CSSValueList* transitions_list = CSSValueList::CreateCommaSeparated();
      for (wtf_size_t i = 0; i < transition_data->PropertyList().size(); ++i) {
        CSSValueList* list = CSSValueList::CreateSpaceSeparated();
@@ -455,7 +492,7 @@ index 420cb4301e98f574101ceb2750a4f60d09619430..229b9ff584d4a6cbe426293eff9f72a2
        transitions_list->Append(*list);
      }
      return transitions_list;
-@@ -3516,13 +3671,6 @@ const CSSValue* Transition::CSSValueFromComputedStyleInternal(
+@@ -3516,13 +3708,6 @@ const CSSValue* Transition::CSSValueFromComputedStyleInternal(
    CSSValueList* list = CSSValueList::CreateSpaceSeparated();
    // transition-property default value.
    list->Append(*CSSIdentifierValue::Create(CSSValueID::kAll));
@@ -469,7 +506,7 @@ index 420cb4301e98f574101ceb2750a4f60d09619430..229b9ff584d4a6cbe426293eff9f72a2
    return list;
  }
  
-@@ -3545,7 +3693,9 @@ const CSSValue* ViewTimeline::CSSValueFromComputedStyleInternal(
+@@ -3545,7 +3730,9 @@ const CSSValue* ViewTimeline::CSSValueFromComputedStyleInternal(
        style.ViewTimelineName() ? style.ViewTimelineName()->GetNames()
                                 : HeapVector<Member<const ScopedCSSName>>{};
    const Vector<TimelineAxis>& axis_vector = style.ViewTimelineAxis();
@@ -480,7 +517,7 @@ index 420cb4301e98f574101ceb2750a4f60d09619430..229b9ff584d4a6cbe426293eff9f72a2
  }
  
  bool WebkitColumnBreakAfter::ParseShorthand(
-@@ -3687,39 +3837,45 @@ bool WebkitMask::ParseShorthand(
+@@ -3687,39 +3874,45 @@ bool WebkitMask::ParseShorthand(
      const CSSParserContext& context,
      const CSSParserLocalContext& local_context,
      HeapVector<CSSPropertyValue, 64>& properties) const {
@@ -546,7 +583,7 @@ index 420cb4301e98f574101ceb2750a4f60d09619430..229b9ff584d4a6cbe426293eff9f72a2
      const ComputedStyle& style,
      const LayoutObject*,
      bool allow_visited_style) const {
-@@ -3727,43 +3883,23 @@ const CSSValue* WebkitMaskPosition::CSSValueFromComputedStyleInternal(
+@@ -3727,43 +3920,23 @@ const CSSValue* WebkitMaskPosition::CSSValueFromComputedStyleInternal(
        *this, style, &style.MaskLayers());
  }
  
@@ -598,7 +635,7 @@ index 420cb4301e98f574101ceb2750a4f60d09619430..229b9ff584d4a6cbe426293eff9f72a2
  }
  
  bool TextEmphasis::ParseShorthand(
-@@ -3872,14 +4008,20 @@ bool AlternativeWhiteSpace::ParseShorthand(
+@@ -3872,14 +4045,20 @@ bool AlternativeWhiteSpace::ParseShorthand(
        const EWhiteSpace whitespace =
            CssValueIDToPlatformEnum<EWhiteSpace>(value->GetValueID());
        DCHECK(IsValidWhiteSpace(whitespace));
@@ -622,7 +659,7 @@ index 420cb4301e98f574101ceb2750a4f60d09619430..229b9ff584d4a6cbe426293eff9f72a2
            css_parsing_utils::IsImplicitProperty::kNotImplicit, properties);
        return true;
      }
-@@ -3909,8 +4051,8 @@ const CSSValue* AlternativeWhiteSpace::CSSValueFromComputedStyleInternal(
+@@ -3909,8 +4088,8 @@ const CSSValue* AlternativeWhiteSpace::CSSValueFromComputedStyleInternal(
    if (collapse != ComputedStyleInitialValues::InitialWhiteSpaceCollapse()) {
      list->Append(*CSSIdentifierValue::Create(collapse));
    }

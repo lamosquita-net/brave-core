@@ -1,8 +1,26 @@
 diff --git a/third_party/blink/renderer/core/frame/local_frame_view.h b/third_party/blink/renderer/core/frame/local_frame_view.h
-index e200191ac847ae2e077f095610fce21b50a8801f..2964f5c84956d3c724e1fa6d11d0e5effa901c63 100644
+index e200191ac847ae2e077f095610fce21b50a8801f..21cd216d52af207e64826a1f2653aabc6f06e60a 100644
 --- a/third_party/blink/renderer/core/frame/local_frame_view.h
 +++ b/third_party/blink/renderer/core/frame/local_frame_view.h
-@@ -998,8 +998,8 @@ class CORE_EXPORT LocalFrameView final
+@@ -145,6 +145,9 @@ class CORE_EXPORT LocalFrameView final
+     // These are called when the lifecycle updates start/finish.
+     virtual void WillStartLifecycleUpdate(const LocalFrameView&) {}
+     virtual void DidFinishLifecycleUpdate(const LocalFrameView&) {}
++
++    // Called after the layout lifecycle phase.
++    virtual void DidFinishLayout() {}
+   };
+ 
+   explicit LocalFrameView(LocalFrame&);
+@@ -965,6 +968,7 @@ class CORE_EXPORT LocalFrameView final
+ 
+   bool RunCSSToggleSteps();
+ 
++  bool UpdateLastSuccessfulPositionFallbacks();
+   bool NotifyResizeObservers();
+   bool RunResizeObserverSteps(DocumentLifecycle::LifecycleState target_state);
+   void ClearResizeObserverLimit();
+@@ -998,8 +1002,8 @@ class CORE_EXPORT LocalFrameView final
    void GetUserScrollTranslationNodes(
        Vector<const TransformPaintPropertyNode*>& scroll_translation_nodes);
  

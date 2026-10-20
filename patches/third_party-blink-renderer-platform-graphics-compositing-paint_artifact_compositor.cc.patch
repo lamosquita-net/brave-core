@@ -1,8 +1,18 @@
 diff --git a/third_party/blink/renderer/platform/graphics/compositing/paint_artifact_compositor.cc b/third_party/blink/renderer/platform/graphics/compositing/paint_artifact_compositor.cc
-index 3d527f87408059cf91bc7472e06e51d702c0bdb0..5ebfb051d320210a09be37a0a06b5ab55a909550 100644
+index 3d527f87408059cf91bc7472e06e51d702c0bdb0..43e35dfa7fc82674683af90a96d40e7f198c4fcb 100644
 --- a/third_party/blink/renderer/platform/graphics/compositing/paint_artifact_compositor.cc
 +++ b/third_party/blink/renderer/platform/graphics/compositing/paint_artifact_compositor.cc
-@@ -787,15 +787,14 @@ void PaintArtifactCompositor::Update(
+@@ -209,8 +209,7 @@ bool PaintArtifactCompositor::ComputeNeedsCompositedScrolling(
+     return true;
+   }
+   // Don't automatically composite non-user-scrollable scrollers.
+-  if (!scroll_translation.ScrollNode()->UserScrollableHorizontal() &&
+-      !scroll_translation.ScrollNode()->UserScrollableVertical()) {
++  if (!scroll_translation.ScrollNode()->UserScrollable()) {
+     return false;
+   }
+   auto preference =
+@@ -787,15 +786,14 @@ void PaintArtifactCompositor::Update(
      scoped_refptr<const PaintArtifact> artifact,
      const ViewportProperties& viewport_properties,
      const Vector<const TransformPaintPropertyNode*>& scroll_translation_nodes,
@@ -20,7 +30,7 @@ index 3d527f87408059cf91bc7472e06e51d702c0bdb0..5ebfb051d320210a09be37a0a06b5ab5
    DCHECK(root_layer_);
  
    TRACE_EVENT0("blink", "PaintArtifactCompositor::Update");
-@@ -834,6 +833,32 @@ void PaintArtifactCompositor::Update(
+@@ -834,6 +832,32 @@ void PaintArtifactCompositor::Update(
    for (auto& entry : synthesized_clip_cache_)
      entry.in_use = false;
  
@@ -53,7 +63,7 @@ index 3d527f87408059cf91bc7472e06e51d702c0bdb0..5ebfb051d320210a09be37a0a06b5ab5
    host->property_trees()
        ->effect_tree_mutable()
        .ClearTransitionPseudoElementEffectNodes();
-@@ -895,29 +920,6 @@ void PaintArtifactCompositor::Update(
+@@ -895,29 +919,6 @@ void PaintArtifactCompositor::Update(
      }
    }
  
@@ -83,20 +93,3 @@ index 3d527f87408059cf91bc7472e06e51d702c0bdb0..5ebfb051d320210a09be37a0a06b5ab5
    root_layer_->layer_tree_host()->RegisterSelection(layer_selection);
  
    property_tree_manager.Finalize();
-@@ -1076,6 +1078,16 @@ bool PaintArtifactCompositor::DirectlyUpdatePageScaleTransform(
-   return false;
- }
- 
-+bool PaintArtifactCompositor::DirectlyUpdateAnchorPositionScrollTranslation(
-+    const TransformPaintPropertyNode& transform) {
-+  CHECK(transform.RequiresCompositingForAnchorPosition());
-+  if (CanDirectlyUpdateProperties()) {
-+    return PropertyTreeManager::DirectlyUpdateAnchorPositionScrollTranslation(
-+        *root_layer_->layer_tree_host(), transform);
-+  }
-+  return false;
-+}
-+
- bool PaintArtifactCompositor::DirectlySetScrollOffset(
-     CompositorElementId element_id,
-     const gfx::PointF& scroll_offset) {

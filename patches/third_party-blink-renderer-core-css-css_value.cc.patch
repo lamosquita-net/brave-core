@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/css_value.cc b/third_party/blink/renderer/core/css/css_value.cc
-index a1c1806dc6dc12811e1cba148f2bb0930a06b100..b26ac2f640acd323eb26a1b8c37a85ba35a97290 100644
+index a1c1806dc6dc12811e1cba148f2bb0930a06b100..0468fbb3dc6ba89bcaa7db62045a3f78e63f66b9 100644
 --- a/third_party/blink/renderer/core/css/css_value.cc
 +++ b/third_party/blink/renderer/core/css/css_value.cc
 @@ -33,6 +33,7 @@
@@ -18,15 +18,18 @@ index a1c1806dc6dc12811e1cba148f2bb0930a06b100..b26ac2f640acd323eb26a1b8c37a85ba
  #include "third_party/blink/renderer/core/css/css_font_face_src_value.h"
  #include "third_party/blink/renderer/core/css/css_font_family_value.h"
  #include "third_party/blink/renderer/core/css/css_font_feature_value.h"
-@@ -74,6 +76,7 @@
+@@ -74,8 +76,10 @@
  #include "third_party/blink/renderer/core/css/css_ratio_value.h"
  #include "third_party/blink/renderer/core/css/css_ray_value.h"
  #include "third_party/blink/renderer/core/css/css_reflect_value.h"
 +#include "third_party/blink/renderer/core/css/css_repeat_style_value.h"
  #include "third_party/blink/renderer/core/css/css_revert_layer_value.h"
  #include "third_party/blink/renderer/core/css/css_revert_value.h"
++#include "third_party/blink/renderer/core/css/css_scoped_keyword_value.h"
  #include "third_party/blink/renderer/core/css/css_scroll_value.h"
-@@ -200,6 +203,8 @@ bool CSSValue::operator==(const CSSValue& other) const {
+ #include "third_party/blink/renderer/core/css/css_shadow_value.h"
+ #include "third_party/blink/renderer/core/css/css_string_value.h"
+@@ -200,6 +204,8 @@ bool CSSValue::operator==(const CSSValue& other) const {
          return CompareCSSValues<cssvalue::CSSColor>(*this, other);
        case kColorMixClass:
          return CompareCSSValues<cssvalue::CSSColorMixValue>(*this, other);
@@ -35,7 +38,16 @@ index a1c1806dc6dc12811e1cba148f2bb0930a06b100..b26ac2f640acd323eb26a1b8c37a85ba
        case kCounterClass:
          return CompareCSSValues<cssvalue::CSSCounterValue>(*this, other);
        case kCursorImageClass:
-@@ -316,6 +321,8 @@ bool CSSValue::operator==(const CSSValue& other) const {
+@@ -264,6 +270,8 @@ bool CSSValue::operator==(const CSSValue& other) const {
+         return CompareCSSValues<cssvalue::CSSRayValue>(*this, other);
+       case kIdentifierClass:
+         return CompareCSSValues<CSSIdentifierValue>(*this, other);
++      case kScopedKeywordClass:
++        return CompareCSSValues<cssvalue::CSSScopedKeywordValue>(*this, other);
+       case kKeyframeShorthandClass:
+         return CompareCSSValues<CSSKeyframeShorthandValue>(*this, other);
+       case kInitialColorValueClass:
+@@ -316,6 +324,8 @@ bool CSSValue::operator==(const CSSValue& other) const {
          return CompareCSSValues<CSSInvalidVariableValue>(*this, other);
        case kCyclicVariableValueClass:
          return CompareCSSValues<CSSCyclicVariableValue>(*this, other);
@@ -44,7 +56,7 @@ index a1c1806dc6dc12811e1cba148f2bb0930a06b100..b26ac2f640acd323eb26a1b8c37a85ba
        case kLightDarkValuePairClass:
          return CompareCSSValues<CSSLightDarkValuePair>(*this, other);
        case kScrollClass:
-@@ -326,6 +333,8 @@ bool CSSValue::operator==(const CSSValue& other) const {
+@@ -326,6 +336,8 @@ bool CSSValue::operator==(const CSSValue& other) const {
          return CompareCSSValues<cssvalue::CSSRatioValue>(*this, other);
        case kPaletteMixClass:
          return CompareCSSValues<cssvalue::CSSPaletteMixValue>(*this, other);
@@ -53,7 +65,7 @@ index a1c1806dc6dc12811e1cba148f2bb0930a06b100..b26ac2f640acd323eb26a1b8c37a85ba
      }
      NOTREACHED();
      return false;
-@@ -355,6 +364,8 @@ String CSSValue::CssText() const {
+@@ -355,6 +367,8 @@ String CSSValue::CssText() const {
        return To<cssvalue::CSSColor>(this)->CustomCSSText();
      case kColorMixClass:
        return To<cssvalue::CSSColorMixValue>(this)->CustomCSSText();
@@ -62,7 +74,16 @@ index a1c1806dc6dc12811e1cba148f2bb0930a06b100..b26ac2f640acd323eb26a1b8c37a85ba
      case kCounterClass:
        return To<cssvalue::CSSCounterValue>(this)->CustomCSSText();
      case kCursorImageClass:
-@@ -464,6 +475,8 @@ String CSSValue::CssText() const {
+@@ -417,6 +431,8 @@ String CSSValue::CssText() const {
+       return To<cssvalue::CSSRayValue>(this)->CustomCSSText();
+     case kIdentifierClass:
+       return To<CSSIdentifierValue>(this)->CustomCSSText();
++    case kScopedKeywordClass:
++      return To<cssvalue::CSSScopedKeywordValue>(this)->CustomCSSText();
+     case kKeyframeShorthandClass:
+       return To<CSSKeyframeShorthandValue>(this)->CustomCSSText();
+     case kInitialColorValueClass:
+@@ -464,6 +480,8 @@ String CSSValue::CssText() const {
        return To<CSSInvalidVariableValue>(this)->CustomCSSText();
      case kCyclicVariableValueClass:
        return To<CSSCyclicVariableValue>(this)->CustomCSSText();
@@ -71,7 +92,7 @@ index a1c1806dc6dc12811e1cba148f2bb0930a06b100..b26ac2f640acd323eb26a1b8c37a85ba
      case kLightDarkValuePairClass:
        return To<CSSLightDarkValuePair>(this)->CustomCSSText();
      case kScrollClass:
-@@ -474,6 +487,8 @@ String CSSValue::CssText() const {
+@@ -474,6 +492,8 @@ String CSSValue::CssText() const {
        return To<cssvalue::CSSRatioValue>(this)->CustomCSSText();
      case kPaletteMixClass:
        return To<cssvalue::CSSPaletteMixValue>(this)->CustomCSSText();
@@ -80,7 +101,17 @@ index a1c1806dc6dc12811e1cba148f2bb0930a06b100..b26ac2f640acd323eb26a1b8c37a85ba
    }
    NOTREACHED();
    return String();
-@@ -531,6 +546,9 @@ void CSSValue::Trace(Visitor* visitor) const {
+@@ -482,6 +502,9 @@ String CSSValue::CssText() const {
+ const CSSValue& CSSValue::PopulateWithTreeScope(
+     const TreeScope* tree_scope) const {
+   switch (GetClassType()) {
++    case kScopedKeywordClass:
++      return To<cssvalue::CSSScopedKeywordValue>(this)->PopulateWithTreeScope(
++          tree_scope);
+     case kCounterClass:
+       return To<cssvalue::CSSCounterValue>(this)->PopulateWithTreeScope(
+           tree_scope);
+@@ -531,6 +554,9 @@ void CSSValue::Trace(Visitor* visitor) const {
      case kColorMixClass:
        To<cssvalue::CSSColorMixValue>(this)->TraceAfterDispatch(visitor);
        return;
@@ -90,7 +121,17 @@ index a1c1806dc6dc12811e1cba148f2bb0930a06b100..b26ac2f640acd323eb26a1b8c37a85ba
      case kCounterClass:
        To<cssvalue::CSSCounterValue>(this)->TraceAfterDispatch(visitor);
        return;
-@@ -701,6 +719,9 @@ void CSSValue::Trace(Visitor* visitor) const {
+@@ -626,6 +652,9 @@ void CSSValue::Trace(Visitor* visitor) const {
+     case kIdentifierClass:
+       To<CSSIdentifierValue>(this)->TraceAfterDispatch(visitor);
+       return;
++    case kScopedKeywordClass:
++      To<cssvalue::CSSScopedKeywordValue>(this)->TraceAfterDispatch(visitor);
++      return;
+     case kKeyframeShorthandClass:
+       To<CSSKeyframeShorthandValue>(this)->TraceAfterDispatch(visitor);
+       return;
+@@ -701,6 +730,9 @@ void CSSValue::Trace(Visitor* visitor) const {
      case kCyclicVariableValueClass:
        To<CSSCyclicVariableValue>(this)->TraceAfterDispatch(visitor);
        return;
@@ -100,7 +141,7 @@ index a1c1806dc6dc12811e1cba148f2bb0930a06b100..b26ac2f640acd323eb26a1b8c37a85ba
      case kLightDarkValuePairClass:
        To<CSSLightDarkValuePair>(this)->TraceAfterDispatch(visitor);
        return;
-@@ -716,6 +737,9 @@ void CSSValue::Trace(Visitor* visitor) const {
+@@ -716,6 +748,9 @@ void CSSValue::Trace(Visitor* visitor) const {
      case kPaletteMixClass:
        To<cssvalue::CSSPaletteMixValue>(this)->TraceAfterDispatch(visitor);
        return;
@@ -110,7 +151,13 @@ index a1c1806dc6dc12811e1cba148f2bb0930a06b100..b26ac2f640acd323eb26a1b8c37a85ba
    }
    NOTREACHED();
  }
-@@ -733,6 +757,8 @@ String CSSValue::ClassTypeToString() const {
+@@ -729,10 +764,14 @@ String CSSValue::ClassTypeToString() const {
+       return "MathFunctionClass";
+     case kIdentifierClass:
+       return "IdentifierClass";
++    case kScopedKeywordClass:
++      return "ScopedKeywordClass";
+     case kColorClass:
        return "ColorClass";
      case kColorMixClass:
        return "ColorMixClass";
@@ -119,7 +166,7 @@ index a1c1806dc6dc12811e1cba148f2bb0930a06b100..b26ac2f640acd323eb26a1b8c37a85ba
      case kCounterClass:
        return "CounterClass";
      case kQuadClass:
-@@ -833,6 +859,8 @@ String CSSValue::ClassTypeToString() const {
+@@ -833,6 +872,8 @@ String CSSValue::ClassTypeToString() const {
        return "InvalidVariableValueClass";
      case kCyclicVariableValueClass:
        return "CyclicVariableValueClass";

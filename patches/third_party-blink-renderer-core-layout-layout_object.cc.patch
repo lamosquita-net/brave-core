@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_object.cc b/third_party/blink/renderer/core/layout/layout_object.cc
-index 98f0936193142d342d2083f61151ce24e10ad7a9..8963cc9d93d6ecdabc8e159e970175064c861cfd 100644
+index 98f0936193142d342d2083f61151ce24e10ad7a9..e80f56db6cabcb49087f4ff49c2aa3af78eb6fc9 100644
 --- a/third_party/blink/renderer/core/layout/layout_object.cc
 +++ b/third_party/blink/renderer/core/layout/layout_object.cc
 @@ -82,6 +82,7 @@
@@ -83,14 +83,14 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..8963cc9d93d6ecdabc8e159e97017506
  
    // OOF-positioned objects which rely on their static-position for placement
    // cannot be relayout boundaries (their final position would be incorrect).
-+  // TODO(crbug.com/1477314): Ignoring inset-area means we may not allow using
-+  // the object as a relayout boundary even if inset-area causes the object to
-+  // not rely on static position.
++  // TODO(crbug.com/40280256): Ignoring position-area means we may not allow
++  // using the object as a relayout boundary even if position-area causes the
++  // object to not rely on static position.
    const ComputedStyle* style = object->Style();
    if (object->IsOutOfFlowPositioned() &&
 -      (style->HasAutoLeftAndRight() || style->HasAutoTopAndBottom()))
-+      (style->HasAutoLeftAndRightIgnoringInsetArea() ||
-+       style->HasAutoTopAndBottomIgnoringInsetArea()))
++      (style->HasAutoLeftAndRightIgnoringPositionArea() ||
++       style->HasAutoTopAndBottomIgnoringPositionArea()))
      return false;
  
    if (const auto* layout_box = DynamicTo<LayoutBox>(object)) {
@@ -248,7 +248,24 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..8963cc9d93d6ecdabc8e159e97017506
    return property_container;
  }
  
-@@ -2642,7 +2721,8 @@ void LayoutObject::SetStyle(scoped_refptr<const ComputedStyle> style,
+@@ -2533,7 +2612,16 @@ void LayoutObject::SetStyle(scoped_refptr<const ComputedStyle> style,
+     return;
+ 
+   if (apply_changes == ApplyStyleChanges::kNo) {
++    // FlyWeb (FM.28): ComputedStyle is ref-counted in 116; keep the old style
++    // alive until the image observers are updated.
++    scoped_refptr<const ComputedStyle> old_style = std::move(style_);
+     SetStyleInternal(std::move(style));
++    // Ideally we shouldn't have to do this, but new CSSImageGeneratorValues are
++    // generated on recalc for custom properties, which means we need to call
++    // UpdateImageObservers to keep CSSImageGeneratorValue::clients_ up-to-date.
++    if (!IsText()) {
++      UpdateImageObservers(old_style.get(), style_.get());
++    }
+     return;
+   }
+ 
+@@ -2642,7 +2730,8 @@ void LayoutObject::SetStyle(scoped_refptr<const ComputedStyle> style,
      if (updated_diff.NeedsFullLayout()) {
        SetNeedsLayoutAndIntrinsicWidthsRecalc(
            layout_invalidation_reason::kStyleChange);
@@ -258,7 +275,20 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..8963cc9d93d6ecdabc8e159e97017506
        SetNeedsPositionedMovementLayout();
      }
    }
-@@ -3374,9 +3454,7 @@ void LayoutObject::MapAncestorToLocal(const LayoutBoxModelObject* ancestor,
+@@ -3011,6 +3100,12 @@ void LayoutObject::StyleDidChange(StyleDifference diff,
+     if (old_style->HasOutOfFlowPosition() != style_->HasOutOfFlowPosition()) {
+       SetScrollAnchorDisablingStyleChangedOnAncestor();
+       MarkParentForSpannerOrOutOfFlowPositionedChange();
++      if (old_style->HasOutOfFlowPosition()) {
++        if (auto* box = DynamicTo<LayoutBox>(this)) {
++          box->NotifyContainingDisplayLocksForAnchorPositioning(
++              box->DisplayLocksAffectedByAnchors(), nullptr);
++        }
++      }
+     } else if (old_style->GetColumnSpan() != style_->GetColumnSpan()) {
+       MarkParentForSpannerOrOutOfFlowPositionedChange();
+     }
+@@ -3374,9 +3469,7 @@ void LayoutObject::MapAncestorToLocal(const LayoutBoxModelObject* ancestor,
      PhysicalOffset visual_point = transform_state.MappedPoint();
      transform_state.Move(
          visual_point -
@@ -269,7 +299,7 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..8963cc9d93d6ecdabc8e159e97017506
    }
  
    if (skip_info.AncestorSkipped()) {
-@@ -4480,6 +4558,12 @@ gfx::RectF LayoutObject::StrokeBoundingBox() const {
+@@ -4480,6 +4573,12 @@ gfx::RectF LayoutObject::StrokeBoundingBox() const {
    return gfx::RectF();
  }
  
@@ -282,7 +312,7 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..8963cc9d93d6ecdabc8e159e97017506
  gfx::RectF LayoutObject::VisualRectInLocalSVGCoordinates() const {
    NOT_DESTROYED();
    NOTREACHED();
-@@ -4990,10 +5074,23 @@ void LayoutObject::SetSVGDescendantMayHaveTransformRelatedAnimation() {
+@@ -4990,10 +5089,23 @@ void LayoutObject::SetSVGDescendantMayHaveTransformRelatedAnimation() {
    }
  }
  
@@ -304,11 +334,11 @@ index 98f0936193142d342d2083f61151ce24e10ad7a9..8963cc9d93d6ecdabc8e159e97017506
    NOT_DESTROYED();
  
 -  bool invalidate = StyleRef().PositionFallback() != nullptr;
-+  bool invalidate = StyleRef().GetPositionTryOptions() != nullptr;
++  bool invalidate = StyleRef().GetPositionTryFallbacks() != nullptr;
    if (invalidate) {
      // Invalidate layout as @position-fallback styles are applied during layout.
      SetNeedsLayout(layout_invalidation_reason::kStyleChange);
-@@ -5017,7 +5114,7 @@ void LayoutObject::InvalidateSubtreePositionFallback(bool mark_style_dirty) {
+@@ -5017,7 +5129,7 @@ void LayoutObject::InvalidateSubtreePositionFallback(bool mark_style_dirty) {
  
    for (LayoutObject* child = SlowFirstChild(); child;
         child = child->NextSibling()) {

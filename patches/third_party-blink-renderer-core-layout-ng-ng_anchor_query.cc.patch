@@ -1,13 +1,15 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/ng_anchor_query.cc b/third_party/blink/renderer/core/layout/ng/ng_anchor_query.cc
-index f1af6cafb34db067f1881b09f8e07dace41756b9..0a7921b5ee32aad482b4ebdf8f09a12d8fdeb44b 100644
+index f1af6cafb34db067f1881b09f8e07dace41756b9..2b768d8be67b00c6589587e406b855ae6786eadf 100644
 --- a/third_party/blink/renderer/core/layout/ng/ng_anchor_query.cc
 +++ b/third_party/blink/renderer/core/layout/ng/ng_anchor_query.cc
-@@ -4,13 +4,13 @@
+@@ -4,13 +4,15 @@
  
  #include "third_party/blink/renderer/core/layout/ng/ng_anchor_query.h"
  
 -#include "third_party/blink/renderer/core/css/calculation_expression_anchor_query_node.h"
 +#include "third_party/blink/renderer/core/css/anchor_query.h"
++#include "third_party/blink/renderer/core/dom/layout_tree_builder_traversal.h"
++#include "third_party/blink/renderer/core/dom/node_computed_style.h"
 +#include "third_party/blink/renderer/core/layout/ng/ng_anchor_query_map.h"
  #include "third_party/blink/renderer/core/layout/geometry/writing_mode_converter.h"
  #include "third_party/blink/renderer/core/layout/ng/inline/ng_inline_cursor.h"
@@ -15,11 +17,11 @@ index f1af6cafb34db067f1881b09f8e07dace41756b9..0a7921b5ee32aad482b4ebdf8f09a12d
  #include "third_party/blink/renderer/core/layout/ng/ng_logical_link.h"
 -#include "third_party/blink/renderer/core/layout/ng/ng_physical_box_fragment.h"
  #include "third_party/blink/renderer/core/style/anchor_specifier_value.h"
-+#include "third_party/blink/renderer/core/style/inset_area.h"
++#include "third_party/blink/renderer/core/style/position_area.h"
  
  namespace blink {
  
-@@ -34,8 +34,7 @@ CSSAnchorValue PhysicalAnchorValueFromLogicalOrAuto(
+@@ -34,8 +36,7 @@ CSSAnchorValue PhysicalAnchorValueFromLogicalOrAuto(
      CSSAnchorValue anchor_value,
      WritingDirectionMode writing_direction,
      WritingDirectionMode self_writing_direction,
@@ -29,7 +31,7 @@ index f1af6cafb34db067f1881b09f8e07dace41756b9..0a7921b5ee32aad482b4ebdf8f09a12d
    switch (anchor_value) {
      case CSSAnchorValue::kSelfStart:
        writing_direction = self_writing_direction;
-@@ -52,17 +51,6 @@ CSSAnchorValue PhysicalAnchorValueFromLogicalOrAuto(
+@@ -52,16 +53,32 @@ CSSAnchorValue PhysicalAnchorValueFromLogicalOrAuto(
            CSSAnchorValue::kRight, CSSAnchorValue::kLeft,
            CSSAnchorValue::kBottom, CSSAnchorValue::kTop, writing_direction,
            is_y_axis);
@@ -37,17 +39,72 @@ index f1af6cafb34db067f1881b09f8e07dace41756b9..0a7921b5ee32aad482b4ebdf8f09a12d
 -    case CSSAnchorValue::kAutoSame: {
 -      bool use_right_or_bottom =
 -          is_right_or_bottom == (anchor_value == CSSAnchorValue::kAutoSame);
--      if (is_y_axis) {
++    default:
++      return anchor_value;
++  }
++}
++
++// https://drafts.csswg.org/css-anchor-position-1/#valdef-anchor-inside
++// https://drafts.csswg.org/css-anchor-position-1/#valdef-anchor-outside
++CSSAnchorValue PhysicalAnchorValueFromInsideOutside(CSSAnchorValue anchor_value,
++                                                    bool is_y_axis,
++                                                    bool is_right_or_bottom) {
++  switch (anchor_value) {
++    case CSSAnchorValue::kInside: {
+       if (is_y_axis) {
 -        return use_right_or_bottom ? CSSAnchorValue::kBottom
 -                                   : CSSAnchorValue::kTop;
--      }
++        return is_right_or_bottom ? CSSAnchorValue::kBottom
++                                  : CSSAnchorValue::kTop;
+       }
 -      return use_right_or_bottom ? CSSAnchorValue::kRight
 -                                 : CSSAnchorValue::kLeft;
--    }
++      return is_right_or_bottom ? CSSAnchorValue::kRight
++                                : CSSAnchorValue::kLeft;
++    }
++    case CSSAnchorValue::kOutside: {
++      if (is_y_axis) {
++        return is_right_or_bottom ? CSSAnchorValue::kTop
++                                  : CSSAnchorValue::kBottom;
++      }
++      return is_right_or_bottom ? CSSAnchorValue::kLeft
++                                : CSSAnchorValue::kRight;
+     }
      default:
        return anchor_value;
+@@ -75,6 +92,7 @@ NGPhysicalAnchorReference::NGPhysicalAnchorReference(
+     const WritingModeConverter& converter)
+     : rect(converter.ToPhysical(logical_reference.rect)),
+       layout_object(logical_reference.layout_object),
++      display_locks(logical_reference.display_locks),
+       is_out_of_flow(logical_reference.is_out_of_flow) {}
+ 
+ void NGLogicalAnchorReference::InsertInReverseTreeOrderInto(
+@@ -83,22 +101,11 @@ void NGLogicalAnchorReference::InsertInReverseTreeOrderInto(
+     NGLogicalAnchorReference* const head = *head_ptr;
+     DCHECK(!head || head->layout_object);
+     if (!head || head->layout_object->IsBeforeInPreOrder(*layout_object)) {
+-      // An in-flow reference has higher precedence than any other reference
+-      // before it in tree order, in which case there's no need to keep the
+-      // other references.
+-      if (is_out_of_flow) {
+-        next = head;
+-      }
++      next = head;
+       *head_ptr = this;
+       break;
+     }
+ 
+-    // Skip adding if there is already an in-flow reference that is after in
+-    // the tree order, which always has higher precedence than |this|.
+-    if (!head->is_out_of_flow) {
+-      break;
+-    }
+-
+     head_ptr = &head->next;
    }
-@@ -110,64 +98,11 @@ const NGLogicalAnchorQuery& NGLogicalAnchorQuery::Empty() {
+ }
+@@ -110,64 +117,11 @@ const NGLogicalAnchorQuery& NGLogicalAnchorQuery::Empty() {
    return *empty;
  }
  
@@ -114,7 +171,7 @@ index f1af6cafb34db067f1881b09f8e07dace41756b9..0a7921b5ee32aad482b4ebdf8f09a12d
      for (const NGPhysicalAnchorReference* result = reference; result;
           result = result->next) {
        if (!result->is_out_of_flow ||
-@@ -184,7 +119,7 @@ const LayoutObject* NGPhysicalAnchorQuery::AnchorLayoutObject(
+@@ -184,19 +138,78 @@ const LayoutObject* NGPhysicalAnchorQuery::AnchorLayoutObject(
      const NGAnchorKey& key) const {
    if (const NGPhysicalAnchorReference* reference =
            AnchorReference(query_object, key)) {
@@ -123,18 +180,80 @@ index f1af6cafb34db067f1881b09f8e07dace41756b9..0a7921b5ee32aad482b4ebdf8f09a12d
    }
    return nullptr;
  }
-@@ -195,8 +130,8 @@ const NGLogicalAnchorReference* NGLogicalAnchorQuery::AnchorReference(
+ 
++namespace {
++
++bool IsScopedByElement(const ScopedCSSName* lookup_name,
++                       const Element& element) {
++  const ComputedStyle* style = element.GetComputedStyle();
++  if (!style) {
++    // TODO(crbug.com/384523570): We should not be here without a style,
++    // but apparently that can happen [1]. This is likely related to poking
++    // into a dirty layout tree during scroll snapshotting,
++    // since ValidateSnapshot() is on the stack [1].
++    //
++    // [1] crbug.com/393395576
++    return false;
++  }
++  const StyleAnchorScope& anchor_scope = style->AnchorScope();
++  if (anchor_scope.IsNone()) {
++    return false;
++  }
++  if (anchor_scope.IsAll()) {
++    return anchor_scope.AllTreeScope() == lookup_name->GetTreeScope();
++  }
++  const ScopedCSSNameList* scoped_names = anchor_scope.Names();
++  CHECK(scoped_names);
++  for (const Member<const ScopedCSSName>& scoped_name :
++       scoped_names->GetNames()) {
++    if (*scoped_name == *lookup_name) {
++      return true;
++    }
++  }
++  return false;
++}
++
++// https://drafts.csswg.org/css-anchor-position-1/#anchor-scope
++bool InSameAnchorScope(const NGAnchorKey& key,
++                       const LayoutObject& query_object,
++                       const LayoutObject& anchor_object) {
++  const ScopedCSSName* const* name = absl::get_if<const ScopedCSSName*>(&key);
++  if (!name) {
++    // This is an implicit anchor reference, which is unaffected
++    // by anchor-scope.
++    return true;
++  }
++  auto anchor_scope_ancestor =
++      [name](const LayoutObject& layout_object) -> const Element* {
++    for (const Element* element = To<Element>(layout_object.GetNode()); element;
++         element = LayoutTreeBuilderTraversal::ParentElement(*element)) {
++      if (IsScopedByElement(*name, *element)) {
++        return element;
++      }
++    }
++    return nullptr;
++  };
++  return anchor_scope_ancestor(query_object) ==
++         anchor_scope_ancestor(anchor_object);
++}
++
++}  // namespace
++
+ const NGLogicalAnchorReference* NGLogicalAnchorQuery::AnchorReference(
+     const LayoutObject& query_object,
+     const NGAnchorKey& key) const {
    if (const NGLogicalAnchorReference* reference = Base::AnchorReference(key)) {
      for (const NGLogicalAnchorReference* result = reference; result;
           result = result->next) {
 -      if (!result->is_out_of_flow ||
 -          result->layout_object->IsBeforeInPreOrder(query_object)) {
 +      if ((!result->is_out_of_flow ||
-+           result->layout_object->IsBeforeInPreOrder(query_object))) {
++           result->layout_object->IsBeforeInPreOrder(query_object)) &&
++          InSameAnchorScope(key, query_object, *result->layout_object)) {
          return result;
        }
      }
-@@ -205,15 +140,15 @@ const NGLogicalAnchorReference* NGLogicalAnchorQuery::AnchorReference(
+@@ -205,15 +218,22 @@ const NGLogicalAnchorReference* NGLogicalAnchorQuery::AnchorReference(
  }
  
  void NGLogicalAnchorQuery::Set(const NGAnchorKey& key,
@@ -143,9 +262,17 @@ index f1af6cafb34db067f1881b09f8e07dace41756b9..0a7921b5ee32aad482b4ebdf8f09a12d
 -                               SetOptions options) {
 +                             const LayoutObject& layout_object,
 +                             const LogicalRect& rect,
-+                             SetOptions options) {
++                             SetOptions options,
++                             Element* element_for_display_lock) {
++  HeapHashSet<Member<Element>>* display_locks = nullptr;
++  if (element_for_display_lock) {
++    display_locks = MakeGarbageCollected<HeapHashSet<Member<Element>>>();
++    display_locks->insert(element_for_display_lock);
++  }
    Set(key, MakeGarbageCollected<NGLogicalAnchorReference>(
-                layout_object, rect, options == SetOptions::kOutOfFlow));
+-               layout_object, rect, options == SetOptions::kOutOfFlow));
++               layout_object, rect, options == SetOptions::kOutOfFlow,
++               display_locks));
  }
  
  void NGLogicalAnchorQuery::Set(const NGAnchorKey& key,
@@ -154,7 +281,7 @@ index f1af6cafb34db067f1881b09f8e07dace41756b9..0a7921b5ee32aad482b4ebdf8f09a12d
    DCHECK(reference);
    DCHECK(!reference->next);
    const auto result = Base::insert(key, reference);
-@@ -221,8 +156,7 @@ void NGLogicalAnchorQuery::Set(const NGAnchorKey& key,
+@@ -221,8 +241,7 @@ void NGLogicalAnchorQuery::Set(const NGAnchorKey& key,
      return;
  
    // If this is a fragment of the existing |LayoutObject|, unite the rect.
@@ -164,7 +291,7 @@ index f1af6cafb34db067f1881b09f8e07dace41756b9..0a7921b5ee32aad482b4ebdf8f09a12d
    NGLogicalAnchorReference* const existing_head = *existing_head_ptr;
    DCHECK(existing_head);
    const LayoutObject* new_object = reference->layout_object;
-@@ -249,9 +183,8 @@ void NGPhysicalAnchorQuery::SetFromLogical(
+@@ -249,9 +268,8 @@ void NGPhysicalAnchorQuery::SetFromLogical(
    // references is not supported.
    DCHECK(IsEmpty());
    for (const auto entry : logical_query) {
@@ -176,16 +303,70 @@ index f1af6cafb34db067f1881b09f8e07dace41756b9..0a7921b5ee32aad482b4ebdf8f09a12d
      NGPhysicalAnchorReference* tail = head;
      for (NGLogicalAnchorReference* runner = entry.value->next; runner;
           runner = runner->next) {
-@@ -294,7 +227,7 @@ absl::optional<LayoutUnit> NGLogicalAnchorQuery::EvaluateAnchor(
+@@ -268,16 +286,34 @@ void NGLogicalAnchorQuery::SetFromPhysical(
+     const NGPhysicalAnchorQuery& physical_query,
+     const WritingModeConverter& converter,
+     const LogicalOffset& additional_offset,
+-    SetOptions options) {
++    SetOptions options,
++    Element* element_for_display_lock) {
+   for (auto entry : physical_query) {
+-    // For each key, only the last one in the tree order, in or out of flow, is
+-    // needed to be propagated, because whether it's in flow is re-computed for
+-    // each containing block.
+-    LogicalRect rect = converter.ToLogical(entry.value->rect);
+-    rect.offset += additional_offset;
+-    Set(entry.key, MakeGarbageCollected<NGLogicalAnchorReference>(
+-                       *entry.value->layout_object, rect,
+-                       options == SetOptions::kOutOfFlow));
++    // For each key, only the last reference in tree order is reachable
++    // under normal circumstances. However, the presence of anchor-scope
++    // can make it necessary to skip past any number of references to reach
++    // an earlier one. Therefore, all references must be propagated.
++    //
++    // See also InSameAnchorScope.
++    for (NGPhysicalAnchorReference* reference = entry.value; reference;
++         reference = reference->next) {
++      LogicalRect rect = converter.ToLogical(reference->rect);
++      rect.offset += additional_offset;
++
++      HeapHashSet<Member<Element>>* display_locks = nullptr;
++      if (reference->display_locks || element_for_display_lock) {
++        display_locks = MakeGarbageCollected<HeapHashSet<Member<Element>>>();
++      }
++      if (reference->display_locks) {
++        *display_locks = *reference->display_locks;
++      }
++      if (element_for_display_lock) {
++        display_locks->insert(element_for_display_lock);
++      }
++      Set(entry.key, MakeGarbageCollected<NGLogicalAnchorReference>(
++                         *reference->layout_object, rect,
++                         options == SetOptions::kOutOfFlow, display_locks));
++    }
+   }
+ }
+ 
+@@ -294,7 +330,9 @@ absl::optional<LayoutUnit> NGLogicalAnchorQuery::EvaluateAnchor(
    const PhysicalRect anchor = container_converter.ToPhysical(reference.rect);
    anchor_value = PhysicalAnchorValueFromLogicalOrAuto(
        anchor_value, container_converter.GetWritingDirection(),
 -      self_writing_direction, is_y_axis, is_right_or_bottom);
 +      self_writing_direction, is_y_axis);
++  anchor_value = PhysicalAnchorValueFromInsideOutside(anchor_value, is_y_axis,
++                                                      is_right_or_bottom);
    LayoutUnit value;
    switch (anchor_value) {
      case CSSAnchorValue::kCenter: {
-@@ -357,8 +290,6 @@ absl::optional<LayoutUnit> NGLogicalAnchorQuery::EvaluateAnchor(
+@@ -353,12 +391,14 @@ absl::optional<LayoutUnit> NGLogicalAnchorQuery::EvaluateAnchor(
+       value += LayoutUnit::FromFloatRound(size * percentage / 100);
+       break;
+     }
++    case CSSAnchorValue::kInside:
++    case CSSAnchorValue::kOutside:
++      // Should have been handled by `PhysicalAnchorValueFromInsideOutside`.
++      [[fallthrough]];
+     case CSSAnchorValue::kStart:
      case CSSAnchorValue::kEnd:
      case CSSAnchorValue::kSelfStart:
      case CSSAnchorValue::kSelfEnd:
@@ -194,7 +375,16 @@ index f1af6cafb34db067f1881b09f8e07dace41756b9..0a7921b5ee32aad482b4ebdf8f09a12d
        // These logical values should have been converted to corresponding
        // physical values in `PhysicalAnchorValueFromLogicalOrAuto`.
        NOTREACHED();
-@@ -419,24 +350,25 @@ const NGLogicalAnchorQuery* NGAnchorEvaluatorImpl::AnchorQuery() const {
+@@ -401,6 +441,8 @@ LayoutUnit NGLogicalAnchorQuery::EvaluateSize(
+                      IsHorizontalWritingMode(self_writing_mode)
+                  ? anchor.block_size
+                  : anchor.inline_size;
++    case CSSAnchorSizeValue::kImplicit:
++      break;
+   }
+   NOTREACHED();
+   return LayoutUnit();
+@@ -419,24 +461,25 @@ const NGLogicalAnchorQuery* NGAnchorEvaluatorImpl::AnchorQuery() const {
  }
  
  absl::optional<LayoutUnit> NGAnchorEvaluatorImpl::Evaluate(
@@ -203,14 +393,14 @@ index f1af6cafb34db067f1881b09f8e07dace41756b9..0a7921b5ee32aad482b4ebdf8f09a12d
 -  const auto& anchor_query = To<CalculationExpressionAnchorQueryNode>(node);
 +    const class AnchorQuery& anchor_query,
 +    const ScopedCSSName* position_anchor,
-+    const absl::optional<InsetAreaOffsets>& inset_area_offsets) {
++    const absl::optional<PositionAreaOffsets>& position_area_offsets) {
    switch (anchor_query.Type()) {
      case CSSAnchorQueryType::kAnchor:
        return EvaluateAnchor(anchor_query.AnchorSpecifier(),
                              anchor_query.AnchorSide(),
 -                            anchor_query.AnchorSidePercentageOrZero());
 +                            anchor_query.AnchorSidePercentageOrZero(),
-+                            position_anchor, inset_area_offsets);
++                            position_anchor, position_area_offsets);
      case CSSAnchorQueryType::kAnchorSize:
        return EvaluateAnchorSize(anchor_query.AnchorSpecifier(),
 -                                anchor_query.AnchorSize());
@@ -228,7 +418,7 @@ index f1af6cafb34db067f1881b09f8e07dace41756b9..0a7921b5ee32aad482b4ebdf8f09a12d
      return nullptr;
    }
    const NGLogicalAnchorQuery* anchor_query = AnchorQuery();
-@@ -447,37 +379,129 @@ const NGLogicalAnchorReference* NGAnchorEvaluatorImpl::ResolveAnchorReference(
+@@ -447,55 +490,318 @@ const NGLogicalAnchorReference* NGAnchorEvaluatorImpl::ResolveAnchorReference(
      return anchor_query->AnchorReference(*query_object_,
                                           &anchor_specifier.GetName());
    }
@@ -268,14 +458,16 @@ index f1af6cafb34db067f1881b09f8e07dace41756b9..0a7921b5ee32aad482b4ebdf8f09a12d
 +    case Mode::kBottom:
 +      return true;
 +    case Mode::kNone:
-+    case Mode::kSize:
++    case Mode::kWidth:
++    case Mode::kHeight:
 +      return false;
 +  }
 +}
 +
 +bool NGAnchorEvaluatorImpl::AllowAnchorSize() const {
 +  switch (GetMode()) {
-+    case Mode::kSize:
++    case Mode::kWidth:
++    case Mode::kHeight:
 +      return true;
 +    case Mode::kNone:
 +    case Mode::kLeft:
@@ -315,7 +507,7 @@ index f1af6cafb34db067f1881b09f8e07dace41756b9..0a7921b5ee32aad482b4ebdf8f09a12d
 -  has_anchor_functions_ = true;
 +    float percentage,
 +    const ScopedCSSName* position_anchor,
-+    const absl::optional<InsetAreaOffsets>& inset_area_offsets) const {
++    const absl::optional<PositionAreaOffsets>& position_area_offsets) const {
 +  if (!AllowAnchor()) {
 +    return absl::nullopt;
 +  }
@@ -327,8 +519,14 @@ index f1af6cafb34db067f1881b09f8e07dace41756b9..0a7921b5ee32aad482b4ebdf8f09a12d
      return absl::nullopt;
    }
  
-+  PhysicalRect inset_area_modified_containing_block_rect =
-+      InsetAreaModifiedContainingBlock(inset_area_offsets);
++  if (anchor_reference->display_locks) {
++    for (auto& display_lock : *anchor_reference->display_locks) {
++      display_locks_affected_by_anchors_->insert(display_lock);
++    }
++  }
++
++  PhysicalRect position_area_modified_containing_block_rect =
++      PositionAreaModifiedContainingBlock(position_area_offsets);
 +
 +  const bool is_y_axis = IsYAxis();
 +
@@ -339,9 +537,9 @@ index f1af6cafb34db067f1881b09f8e07dace41756b9..0a7921b5ee32aad482b4ebdf8f09a12d
 -      is_y_axis_, is_right_or_bottom_);
 +  if (absl::optional<LayoutUnit> result = AnchorQuery()->EvaluateAnchor(
 +          *anchor_reference, anchor_value, percentage,
-+          AvailableSizeAlongAxis(inset_area_modified_containing_block_rect),
++          AvailableSizeAlongAxis(position_area_modified_containing_block_rect),
 +          container_converter_, self_writing_direction_,
-+          inset_area_modified_containing_block_rect.offset, is_y_axis,
++          position_area_modified_containing_block_rect.offset, is_y_axis,
 +          IsRightOrBottom())) {
 +    bool& needs_scroll_adjustment = is_y_axis ? needs_scroll_adjustment_in_y_
 +                                              : needs_scroll_adjustment_in_x_;
@@ -365,13 +563,29 @@ index f1af6cafb34db067f1881b09f8e07dace41756b9..0a7921b5ee32aad482b4ebdf8f09a12d
 +    return absl::nullopt;
 +  }
 +
++  if (anchor_size_value == CSSAnchorSizeValue::kImplicit) {
++    if (GetMode() == Mode::kWidth) {
++      anchor_size_value = CSSAnchorSizeValue::kWidth;
++    } else {
++      anchor_size_value = CSSAnchorSizeValue::kHeight;
++    }
++  }
    const NGLogicalAnchorReference* anchor_reference =
 -      ResolveAnchorReference(anchor_specifier);
 +      ResolveAnchorReference(anchor_specifier, position_anchor);
    if (!anchor_reference) {
      return absl::nullopt;
    }
-@@ -488,6 +512,148 @@ absl::optional<LayoutUnit> NGAnchorEvaluatorImpl::EvaluateAnchorSize(
+ 
++  if (anchor_reference->display_locks) {
++    for (auto& display_lock : *anchor_reference->display_locks) {
++      display_locks_affected_by_anchors_->insert(display_lock);
++    }
++  }
++
+   DCHECK(AnchorQuery());
+   return AnchorQuery()->EvaluateSize(*anchor_reference, anchor_size_value,
+                                      container_converter_.GetWritingMode(),
                                       self_writing_direction_.GetWritingMode());
  }
  
@@ -390,15 +604,17 @@ index f1af6cafb34db067f1881b09f8e07dace41756b9..0a7921b5ee32aad482b4ebdf8f09a12d
 +  absl::optional<LayoutUnit> left;
 +  {
 +    AnchorScope anchor_scope(AnchorScope::Mode::kTop, this);
-+    top = EvaluateAnchor(*AnchorSpecifierValue::Default(),
-+                         CSSAnchorValue::kCenter, dummy_percentage,
-+                         builder.PositionAnchor(), builder.InsetAreaOffsets());
++    top =
++        EvaluateAnchor(*AnchorSpecifierValue::Default(),
++                       CSSAnchorValue::kCenter, dummy_percentage,
++                       builder.PositionAnchor(), builder.PositionAreaOffsets());
 +  }
 +  {
 +    AnchorScope anchor_scope(AnchorScope::Mode::kLeft, this);
-+    left = EvaluateAnchor(*AnchorSpecifierValue::Default(),
-+                          CSSAnchorValue::kCenter, dummy_percentage,
-+                          builder.PositionAnchor(), builder.InsetAreaOffsets());
++    left =
++        EvaluateAnchor(*AnchorSpecifierValue::Default(),
++                       CSSAnchorValue::kCenter, dummy_percentage,
++                       builder.PositionAnchor(), builder.PositionAreaOffsets());
 +  }
 +  CHECK(top.has_value() == left.has_value());
 +  if (top.has_value()) {
@@ -407,16 +623,16 @@ index f1af6cafb34db067f1881b09f8e07dace41756b9..0a7921b5ee32aad482b4ebdf8f09a12d
 +  return absl::nullopt;
 +}
 +
-+absl::optional<InsetAreaOffsets>
-+NGAnchorEvaluatorImpl::ComputeInsetAreaOffsetsForLayout(
++absl::optional<PositionAreaOffsets>
++NGAnchorEvaluatorImpl::ComputePositionAreaOffsetsForLayout(
 +    const ScopedCSSName* position_anchor,
-+    InsetArea inset_area) {
-+  CHECK(!inset_area.IsNone());
++    PositionArea position_area) {
++  CHECK(!position_area.IsNone());
 +
 +  if (!DefaultAnchor(position_anchor)) {
 +    return absl::nullopt;
 +  }
-+  InsetArea physical_inset_area = inset_area.ToPhysical(
++  PositionArea physical_position_area = position_area.ToPhysical(
 +      container_converter_.GetWritingDirection(), self_writing_direction_);
 +
 +  absl::optional<LayoutUnit> top;
@@ -424,99 +640,113 @@ index f1af6cafb34db067f1881b09f8e07dace41756b9..0a7921b5ee32aad482b4ebdf8f09a12d
 +  absl::optional<LayoutUnit> left;
 +  absl::optional<LayoutUnit> right;
 +
-+  // The InsetArea::Used*() methods returns either an anchor() function or
++  // The PositionArea::Used*() methods returns either an anchor() function or
 +  // nullopt (representing a 0px length), using top/left/right/bottom, to adjust
 +  // the containing block to align with either of the physical edges of the
 +  // default anchor.
 +  //
 +  // Note that the inset adjustment is already set to zero above, so there's
 +  // nothing to do here for nullopt values.
-+  if (absl::optional<blink::AnchorQuery> query = physical_inset_area.UsedTop()) {
++  if (absl::optional<blink::AnchorQuery> query =
++          physical_position_area.UsedTop()) {
 +    AnchorScope anchor_scope(AnchorScope::Mode::kTop, this);
 +    top = Evaluate(query.value(), position_anchor,
-+                   /* inset_area_offsets */ absl::nullopt);
++                   /* position_area_offsets */ absl::nullopt);
 +  }
 +  if (absl::optional<blink::AnchorQuery> query =
-+          physical_inset_area.UsedBottom()) {
++          physical_position_area.UsedBottom()) {
 +    AnchorScope anchor_scope(AnchorScope::Mode::kBottom, this);
 +    bottom = Evaluate(query.value(), position_anchor,
-+                      /* inset_area_offsets */ absl::nullopt);
++                      /* position_area_offsets */ absl::nullopt);
 +  }
 +  if (absl::optional<blink::AnchorQuery> query =
-+          physical_inset_area.UsedLeft()) {
++          physical_position_area.UsedLeft()) {
 +    AnchorScope anchor_scope(AnchorScope::Mode::kLeft, this);
 +    left = Evaluate(query.value(), position_anchor,
-+                    /* inset_area_offsets */ absl::nullopt);
++                    /* position_area_offsets */ absl::nullopt);
 +  }
 +  if (absl::optional<blink::AnchorQuery> query =
-+          physical_inset_area.UsedRight()) {
++          physical_position_area.UsedRight()) {
 +    AnchorScope anchor_scope(AnchorScope::Mode::kRight, this);
 +    right = Evaluate(query.value(), position_anchor,
-+                     /* inset_area_offsets */ absl::nullopt);
++                     /* position_area_offsets */ absl::nullopt);
 +  }
-+  return InsetAreaOffsets(top, bottom, left, right);
++  return PositionAreaOffsets(top, bottom, left, right);
 +}
 +
-+PhysicalRect NGAnchorEvaluatorImpl::InsetAreaModifiedContainingBlock(
-+    const absl::optional<InsetAreaOffsets>& inset_area_offsets) const {
-+  return cached_inset_area_modified_containing_block_.Get(
-+      inset_area_offsets, [&]() {
-+        if (!inset_area_offsets.has_value()) {
++PhysicalRect NGAnchorEvaluatorImpl::PositionAreaModifiedContainingBlock(
++    const absl::optional<PositionAreaOffsets>& position_area_offsets) const {
++  return cached_position_area_modified_containing_block_.Get(
++      position_area_offsets, [&]() {
++        if (!position_area_offsets.has_value()) {
 +          return containing_block_rect_;
 +        }
 +
-+        PhysicalRect inset_area_modified_containing_block_rect =
++        PhysicalRect position_area_modified_containing_block_rect =
 +            containing_block_rect_;
 +
-+        LayoutUnit top = inset_area_offsets->top.value_or(LayoutUnit());
-+        LayoutUnit bottom = inset_area_offsets->bottom.value_or(LayoutUnit());
-+        LayoutUnit left = inset_area_offsets->left.value_or(LayoutUnit());
-+        LayoutUnit right = inset_area_offsets->right.value_or(LayoutUnit());
++        LayoutUnit top = position_area_offsets->top.value_or(LayoutUnit());
++        LayoutUnit bottom =
++            position_area_offsets->bottom.value_or(LayoutUnit());
++        LayoutUnit left = position_area_offsets->left.value_or(LayoutUnit());
++        LayoutUnit right = position_area_offsets->right.value_or(LayoutUnit());
 +
 +        // Reduce the container size and adjust the offset based on the
-+        // inset-area.
-+        inset_area_modified_containing_block_rect.ContractEdges(top, right,
-+                                                                bottom, left);
++        // position-area.
++        position_area_modified_containing_block_rect.ContractEdges(
++            top, right, bottom, left);
 +
 +        // For 'center' values (aligned with start and end anchor sides), the
 +        // containing block is aligned and sized with the anchor, regardless of
 +        // whether it's inside the original containing block or not. Otherwise,
 +        // ContractEdges above might have created a negative size if the
-+        // inset-area is aligned with an anchor side outside the containing
++        // position-area is aligned with an anchor side outside the containing
 +        // block.
-+        if (inset_area_modified_containing_block_rect.size.width <
++        if (position_area_modified_containing_block_rect.size.width <
 +            LayoutUnit()) {
 +          DCHECK(left == LayoutUnit() || right == LayoutUnit())
 +              << "If aligned to both anchor edges, the size should never be "
 +                 "negative.";
 +          // Collapse the inline size to 0 and align with the single anchor edge
-+          // defined by the inset-area.
++          // defined by the position-area.
 +          if (left == LayoutUnit()) {
 +            DCHECK(right != LayoutUnit());
-+            inset_area_modified_containing_block_rect.offset.left +=
-+                inset_area_modified_containing_block_rect.size.width;
++            position_area_modified_containing_block_rect.offset.left +=
++                position_area_modified_containing_block_rect.size.width;
 +          }
-+          inset_area_modified_containing_block_rect.size.width = LayoutUnit();
++          position_area_modified_containing_block_rect.size.width =
++              LayoutUnit();
 +        }
-+        if (inset_area_modified_containing_block_rect.size.height <
++        if (position_area_modified_containing_block_rect.size.height <
 +            LayoutUnit()) {
 +          DCHECK(top == LayoutUnit() || bottom == LayoutUnit())
 +              << "If aligned to both anchor edges, the size should never be "
 +                 "negative.";
 +          // Collapse the block size to 0 and align with the single anchor edge
-+          // defined by the inset-area.
++          // defined by the position-area.
 +          if (top == LayoutUnit()) {
 +            DCHECK(bottom != LayoutUnit());
-+            inset_area_modified_containing_block_rect.offset.top +=
-+                inset_area_modified_containing_block_rect.size.height;
++            position_area_modified_containing_block_rect.offset.top +=
++                position_area_modified_containing_block_rect.size.height;
 +          }
-+          inset_area_modified_containing_block_rect.size.height = LayoutUnit();
++          position_area_modified_containing_block_rect.size.height =
++              LayoutUnit();
 +        }
 +
-+        return inset_area_modified_containing_block_rect;
++        return position_area_modified_containing_block_rect;
 +      });
 +}
 +
  void NGLogicalAnchorReference::Trace(Visitor* visitor) const {
    visitor->Trace(layout_object);
    visitor->Trace(next);
++  visitor->Trace(display_locks);
+ }
+ 
+ void NGPhysicalAnchorReference::Trace(Visitor* visitor) const {
+   visitor->Trace(layout_object);
+   visitor->Trace(next);
++  visitor->Trace(display_locks);
+ }
+ 
+ }  // namespace blink

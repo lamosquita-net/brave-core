@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/inspector/inspector_dom_agent.cc b/third_party/blink/renderer/core/inspector/inspector_dom_agent.cc
-index 966c4a25340eca9ca94b6d83c2fe6c20142b9800..6c604fc42c90c0fff47259ce04b55bfbb9bca64c 100644
+index 966c4a25340eca9ca94b6d83c2fe6c20142b9800..3f29ecdcfa2cf15113593ea76969c683dcad9418 100644
 --- a/third_party/blink/renderer/core/inspector/inspector_dom_agent.cc
 +++ b/third_party/blink/renderer/core/inspector/inspector_dom_agent.cc
 @@ -229,6 +229,12 @@ protocol::DOM::PseudoType InspectorDOMAgent::ProtocolPseudoElementType(
@@ -66,3 +66,51 @@ index 966c4a25340eca9ca94b6d83c2fe6c20142b9800..6c604fc42c90c0fff47259ce04b55bfb
      }
    }
  
+@@ -1714,6 +1721,47 @@ protocol::Response InspectorDOMAgent::getQueryingDescendantsForContainer(
+   return protocol::Response::Success();
+ }
+ 
++protocol::Response InspectorDOMAgent::getAnchorElement(
++    int node_id,
++    protocol::Maybe<String> anchor_specifier,
++    int* anchor_element_id) {
++  *anchor_element_id = 0;
++  Node* node = nullptr;
++  protocol::Response response = AssertNode(node_id, node);
++  if (!response.IsSuccess()) {
++    return response;
++  }
++
++  const LayoutObject* querying_object = node->GetLayoutObject();
++  if (!querying_object) {
++    return protocol::Response::ServerError(
++        "No layout object for node, perhaps orphan or hidden node");
++  }
++
++  const auto* box = DynamicTo<LayoutBox>(querying_object);
++  if (!box || !box->Container()) {
++    return protocol::Response::ServerError(
++        "The box or the container of the box does not exist");
++  }
++
++  const LayoutObject* target_object;
++  if (anchor_specifier.has_value()) {
++    target_object = box->FindTargetAnchor(*MakeGarbageCollected<ScopedCSSName>(
++        AtomicString(anchor_specifier.value()),
++        &querying_object->GetDocument()));
++  } else {
++    target_object = box->AcceptableImplicitAnchor();
++  }
++
++  if (target_object) {
++    Element* element = DynamicTo<Element>(target_object->GetNode());
++    if (element) {
++      *anchor_element_id = PushNodePathToFrontend(element);
++    }
++  }
++  return protocol::Response::Success();
++}
++
+ // static
+ const HeapVector<Member<Element>>
+ InspectorDOMAgent::GetContainerQueryingDescendants(Element* container) {

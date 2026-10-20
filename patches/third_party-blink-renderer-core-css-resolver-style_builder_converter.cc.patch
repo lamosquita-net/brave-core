@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc b/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
-index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..14d8a70daf06cf9f554f21c3a84b571940fa6b18 100644
+index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..66efcb83a64f49c3ed5cdd3872b45754119808ff 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
 @@ -37,6 +37,8 @@
@@ -19,7 +19,12 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..14d8a70daf06cf9f554f21c3a84b5719
  #include "third_party/blink/renderer/core/css/css_math_expression_node.h"
  #include "third_party/blink/renderer/core/css/css_math_function_value.h"
  #include "third_party/blink/renderer/core/css/css_numeric_literal_value.h"
-@@ -61,6 +64,7 @@
+@@ -57,10 +60,12 @@
+ #include "third_party/blink/renderer/core/css/css_quad_value.h"
+ #include "third_party/blink/renderer/core/css/css_ratio_value.h"
+ #include "third_party/blink/renderer/core/css/css_reflect_value.h"
++#include "third_party/blink/renderer/core/css/css_scoped_keyword_value.h"
+ #include "third_party/blink/renderer/core/css/css_shadow_value.h"
  #include "third_party/blink/renderer/core/css/css_uri_value.h"
  #include "third_party/blink/renderer/core/css/css_value_list.h"
  #include "third_party/blink/renderer/core/css/parser/css_tokenizer.h"
@@ -27,7 +32,7 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..14d8a70daf06cf9f554f21c3a84b5719
  #include "third_party/blink/renderer/core/css/resolver/filter_operation_resolver.h"
  #include "third_party/blink/renderer/core/css/resolver/transform_builder.h"
  #include "third_party/blink/renderer/core/css/style_color.h"
-@@ -68,9 +72,9 @@
+@@ -68,9 +73,9 @@
  #include "third_party/blink/renderer/core/css_value_keywords.h"
  #include "third_party/blink/renderer/core/frame/local_frame.h"
  #include "third_party/blink/renderer/core/frame/web_feature.h"
@@ -38,7 +43,7 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..14d8a70daf06cf9f554f21c3a84b5719
  #include "third_party/blink/renderer/core/style/offset_path_operation.h"
  #include "third_party/blink/renderer/core/style/reference_clip_path_operation.h"
  #include "third_party/blink/renderer/core/style/reference_offset_path_operation.h"
-@@ -159,7 +163,8 @@ scoped_refptr<StyleReflection> StyleBuilderConverter::ConvertBoxReflect(
+@@ -159,7 +164,8 @@ scoped_refptr<StyleReflection> StyleBuilderConverter::ConvertBoxReflect(
  
  scoped_refptr<StyleSVGResource> StyleBuilderConverter::ConvertElementReference(
      StyleResolverState& state,
@@ -48,7 +53,7 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..14d8a70daf06cf9f554f21c3a84b5719
    if (auto* identifier_value = DynamicTo<CSSIdentifierValue>(value)) {
      DCHECK_EQ(identifier_value->GetValueID(), CSSValueID::kNone);
      return nullptr;
-@@ -167,8 +172,8 @@ scoped_refptr<StyleSVGResource> StyleBuilderConverter::ConvertElementReference(
+@@ -167,8 +173,8 @@ scoped_refptr<StyleSVGResource> StyleBuilderConverter::ConvertElementReference(
  
    const auto& url_value = To<cssvalue::CSSURIValue>(value);
    SVGResource* resource =
@@ -59,7 +64,7 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..14d8a70daf06cf9f554f21c3a84b5719
    return StyleSVGResource::Create(resource, url_value.ValueForSerialization());
  }
  
-@@ -185,8 +190,23 @@ LengthBox StyleBuilderConverter::ConvertClip(StyleResolverState& state,
+@@ -185,8 +191,23 @@ LengthBox StyleBuilderConverter::ConvertClip(StyleResolverState& state,
  scoped_refptr<ClipPathOperation> StyleBuilderConverter::ConvertClipPath(
      StyleResolverState& state,
      const CSSValue& value) {
@@ -85,7 +90,7 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..14d8a70daf06cf9f554f21c3a84b5719
    }
  
    if (const auto* url_value = DynamicTo<cssvalue::CSSURIValue>(value)) {
-@@ -700,6 +720,7 @@ FontDescription::Size StyleBuilderConverter::ConvertFontSize(
+@@ -700,6 +721,7 @@ FontDescription::Size StyleBuilderConverter::ConvertFontSize(
  }
  
  FontSizeAdjust StyleBuilderConverterBase::ConvertFontSizeAdjust(
@@ -93,7 +98,7 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..14d8a70daf06cf9f554f21c3a84b5719
      const CSSValue& value) {
    auto* identifier_value = DynamicTo<CSSIdentifierValue>(value);
    if (identifier_value && identifier_value->GetValueID() == CSSValueID::kNone) {
-@@ -710,6 +731,12 @@ FontSizeAdjust StyleBuilderConverterBase::ConvertFontSizeAdjust(
+@@ -710,6 +732,12 @@ FontSizeAdjust StyleBuilderConverterBase::ConvertFontSizeAdjust(
      return FontBuilder::InitialSizeAdjust();
    }
  
@@ -106,7 +111,7 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..14d8a70daf06cf9f554f21c3a84b5719
    if (value.IsPrimitiveValue()) {
      const auto& primitive_value = To<CSSPrimitiveValue>(value);
      DCHECK(primitive_value.IsNumber());
-@@ -718,15 +745,25 @@ FontSizeAdjust StyleBuilderConverterBase::ConvertFontSizeAdjust(
+@@ -718,15 +746,25 @@ FontSizeAdjust StyleBuilderConverterBase::ConvertFontSizeAdjust(
  
    DCHECK(value.IsValuePair());
    const auto& pair = To<CSSValuePair>(value);
@@ -137,7 +142,7 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..14d8a70daf06cf9f554f21c3a84b5719
  }
  
  FontSelectionValue StyleBuilderConverterBase::ConvertFontStretch(
-@@ -1790,15 +1827,27 @@ ScopedCSSName* StyleBuilderConverter::ConvertNoneOrCustomIdent(
+@@ -1790,20 +1828,32 @@ ScopedCSSName* StyleBuilderConverter::ConvertNoneOrCustomIdent(
    return ConvertCustomIdent(state, value);
  }
  
@@ -167,7 +172,13 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..14d8a70daf06cf9f554f21c3a84b5719
      StyleResolverState& state,
      const CSSValue& value) {
    DCHECK(value.IsScopedValue());
-@@ -1811,27 +1860,38 @@ ScopedCSSName* StyleBuilderConverter::ConvertAnchorDefault(
+   if (const auto* identifier_value = DynamicTo<CSSIdentifierValue>(value)) {
+-    DCHECK_EQ(identifier_value->GetValueID(), CSSValueID::kImplicit);
++    DCHECK_EQ(identifier_value->GetValueID(), CSSValueID::kAuto);
+     return nullptr;
+   }
+   const CSSCustomIdentValue& custom_ident = To<CSSCustomIdentValue>(value);
+@@ -1811,27 +1861,64 @@ ScopedCSSName* StyleBuilderConverter::ConvertAnchorDefault(
                                               custom_ident.GetTreeScope());
  }
  
@@ -219,10 +230,36 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..14d8a70daf06cf9f554f21c3a84b5719
 +    names.push_back(ConvertCustomIdent(state, *item));
 +  }
 +  return MakeGarbageCollected<ScopedCSSNameList>(std::move(names));
++}
++
++StyleAnchorScope StyleBuilderConverter::ConvertAnchorScope(
++    StyleResolverState& state,
++    const CSSValue& value) {
++  CHECK(value.IsScopedValue());
++  if (const auto* scoped_keyword_value =
++          DynamicTo<cssvalue::CSSScopedKeywordValue>(value)) {
++    CHECK_EQ(scoped_keyword_value->GetValueID(), CSSValueID::kAll);
++    state.SetHasTreeScopedReference();
++    return StyleAnchorScope(StyleAnchorScope::Type::kAll,
++                            scoped_keyword_value->GetTreeScope(),
++                            /* names */ nullptr);
++  }
++  if (const auto* identifier_value = DynamicTo<CSSIdentifierValue>(value)) {
++    CHECK_EQ(identifier_value->GetValueID(), CSSValueID::kNone);
++    return StyleAnchorScope();
++  }
++  CHECK(value.IsBaseValueList());
++  HeapVector<Member<const ScopedCSSName>> names;
++  for (const Member<const CSSValue>& item : To<CSSValueList>(value)) {
++    names.push_back(ConvertCustomIdent(state, *item));
++  }
++  return StyleAnchorScope(
++      StyleAnchorScope::Type::kNames, /* all_tree_scope */ nullptr,
++      /* names */ MakeGarbageCollected<ScopedCSSNameList>(std::move(names)));
  }
  
  StyleInitialLetter StyleBuilderConverter::ConvertInitialLetter(
-@@ -2147,6 +2207,22 @@ scoped_refptr<SVGDashArray> StyleBuilderConverter::ConvertStrokeDasharray(
+@@ -2147,6 +2234,22 @@ scoped_refptr<SVGDashArray> StyleBuilderConverter::ConvertStrokeDasharray(
    return array;
  }
  
@@ -245,7 +282,7 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..14d8a70daf06cf9f554f21c3a84b5719
  AtomicString StyleBuilderConverter::ConvertViewTransitionName(
      StyleResolverState& state,
      const CSSValue& value) {
-@@ -2162,6 +2238,18 @@ AtomicString StyleBuilderConverter::ConvertViewTransitionName(
+@@ -2162,6 +2265,18 @@ AtomicString StyleBuilderConverter::ConvertViewTransitionName(
  StyleColor StyleBuilderConverter::ConvertStyleColor(StyleResolverState& state,
                                                      const CSSValue& value,
                                                      bool for_visited_link) {
@@ -264,7 +301,7 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..14d8a70daf06cf9f554f21c3a84b5719
    auto* identifier_value = DynamicTo<CSSIdentifierValue>(value);
    if (identifier_value) {
      CSSValueID value_id = identifier_value->GetValueID();
-@@ -2177,6 +2265,23 @@ StyleColor StyleBuilderConverter::ConvertStyleColor(StyleResolverState& state,
+@@ -2177,6 +2292,23 @@ StyleColor StyleBuilderConverter::ConvertStyleColor(StyleResolverState& state,
      }
    }
  
@@ -288,7 +325,7 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..14d8a70daf06cf9f554f21c3a84b5719
    if (auto* color_mix_value = DynamicTo<cssvalue::CSSColorMixValue>(value)) {
      const StyleColor c1 = StyleBuilderConverter::ConvertStyleColor(
          state, color_mix_value->Color1(), for_visited_link);
-@@ -2227,25 +2332,52 @@ StyleAutoColor StyleBuilderConverter::ConvertStyleAutoColor(
+@@ -2227,25 +2359,52 @@ StyleAutoColor StyleBuilderConverter::ConvertStyleAutoColor(
  
  SVGPaint StyleBuilderConverter::ConvertSVGPaint(StyleResolverState& state,
                                                  const CSSValue& value,
@@ -349,7 +386,7 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..14d8a70daf06cf9f554f21c3a84b5719
        // TODO(fs): Pass along |for_visited_link|.
        paint.color = ConvertStyleColor(state, *local_value);
        paint.type =
-@@ -2693,11 +2825,12 @@ const CSSValue& StyleBuilderConverter::ConvertRegisteredPropertyInitialValue(
+@@ -2693,11 +2852,12 @@ const CSSValue& StyleBuilderConverter::ConvertRegisteredPropertyInitialValue(
    CSSToLengthConversionData::ViewportSize viewport_size(
        document.GetLayoutView());
    CSSToLengthConversionData::ContainerSizes container_sizes;
@@ -366,7 +403,7 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..14d8a70daf06cf9f554f21c3a84b5719
  
    const CSSParserContext* parser_context =
        document.ElementSheet().Contents()->ParserContext();
-@@ -2812,16 +2945,16 @@ RubyPosition StyleBuilderConverter::ConvertRubyPosition(
+@@ -2812,16 +2972,16 @@ RubyPosition StyleBuilderConverter::ConvertRubyPosition(
      const CSSValue& value) {
    if (const auto* identifier_value = DynamicTo<CSSIdentifierValue>(value)) {
      CSSValueID value_id = identifier_value->GetValueID();
@@ -388,190 +425,191 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..14d8a70daf06cf9f554f21c3a84b5719
  }
  
  absl::optional<StyleScrollbarColor>
-@@ -3268,4 +3401,217 @@ ScopedCSSNameList* StyleBuilderConverter::ConvertTimelineScope(
+@@ -3268,4 +3428,218 @@ ScopedCSSNameList* StyleBuilderConverter::ConvertTimelineScope(
    return MakeGarbageCollected<ScopedCSSNameList>(std::move(names));
  }
  
-+InsetArea StyleBuilderConverter::ConvertInsetArea(StyleResolverState& state,
-+                                                  const CSSValue& value) {
-+  auto extract_inset_area_span =
-+      [](CSSValueID value) -> std::pair<InsetAreaRegion, InsetAreaRegion> {
-+    InsetAreaRegion start = InsetAreaRegion::kNone;
-+    InsetAreaRegion end = InsetAreaRegion::kNone;
++PositionArea StyleBuilderConverter::ConvertPositionArea(
++    StyleResolverState& state,
++    const CSSValue& value) {
++  auto extract_position_area_span = [](CSSValueID value)
++      -> std::pair<PositionAreaRegion, PositionAreaRegion> {
++    PositionAreaRegion start = PositionAreaRegion::kNone;
++    PositionAreaRegion end = PositionAreaRegion::kNone;
 +    switch (value) {
 +      case CSSValueID::kSpanAll:
-+        start = end = InsetAreaRegion::kAll;
++        start = end = PositionAreaRegion::kAll;
 +        break;
 +      case CSSValueID::kCenter:
-+        start = end = InsetAreaRegion::kCenter;
++        start = end = PositionAreaRegion::kCenter;
 +        break;
 +      case CSSValueID::kLeft:
-+        start = end = InsetAreaRegion::kLeft;
++        start = end = PositionAreaRegion::kLeft;
 +        break;
 +      case CSSValueID::kRight:
-+        start = end = InsetAreaRegion::kRight;
++        start = end = PositionAreaRegion::kRight;
 +        break;
 +      case CSSValueID::kSpanLeft:
-+        start = InsetAreaRegion::kLeft;
-+        end = InsetAreaRegion::kCenter;
++        start = PositionAreaRegion::kLeft;
++        end = PositionAreaRegion::kCenter;
 +        break;
 +      case CSSValueID::kSpanRight:
-+        start = InsetAreaRegion::kCenter;
-+        end = InsetAreaRegion::kRight;
++        start = PositionAreaRegion::kCenter;
++        end = PositionAreaRegion::kRight;
 +        break;
 +      case CSSValueID::kXStart:
-+        start = end = InsetAreaRegion::kXStart;
++        start = end = PositionAreaRegion::kXStart;
 +        break;
 +      case CSSValueID::kXEnd:
-+        start = end = InsetAreaRegion::kXEnd;
++        start = end = PositionAreaRegion::kXEnd;
 +        break;
 +      case CSSValueID::kSpanXStart:
-+        start = InsetAreaRegion::kXStart;
-+        end = InsetAreaRegion::kCenter;
++        start = PositionAreaRegion::kXStart;
++        end = PositionAreaRegion::kCenter;
 +        break;
 +      case CSSValueID::kSpanXEnd:
-+        start = InsetAreaRegion::kCenter;
-+        end = InsetAreaRegion::kXEnd;
++        start = PositionAreaRegion::kCenter;
++        end = PositionAreaRegion::kXEnd;
 +        break;
 +      case CSSValueID::kXSelfStart:
-+        start = end = InsetAreaRegion::kXSelfStart;
++        start = end = PositionAreaRegion::kXSelfStart;
 +        break;
 +      case CSSValueID::kXSelfEnd:
-+        start = end = InsetAreaRegion::kXSelfEnd;
++        start = end = PositionAreaRegion::kXSelfEnd;
 +        break;
 +      case CSSValueID::kSpanXSelfStart:
-+        start = InsetAreaRegion::kXSelfStart;
-+        end = InsetAreaRegion::kCenter;
++        start = PositionAreaRegion::kXSelfStart;
++        end = PositionAreaRegion::kCenter;
 +        break;
 +      case CSSValueID::kSpanXSelfEnd:
-+        start = InsetAreaRegion::kCenter;
-+        end = InsetAreaRegion::kXSelfEnd;
++        start = PositionAreaRegion::kCenter;
++        end = PositionAreaRegion::kXSelfEnd;
 +        break;
 +      case CSSValueID::kTop:
-+        start = end = InsetAreaRegion::kTop;
++        start = end = PositionAreaRegion::kTop;
 +        break;
 +      case CSSValueID::kBottom:
-+        start = end = InsetAreaRegion::kBottom;
++        start = end = PositionAreaRegion::kBottom;
 +        break;
 +      case CSSValueID::kSpanTop:
-+        start = InsetAreaRegion::kTop;
-+        end = InsetAreaRegion::kCenter;
++        start = PositionAreaRegion::kTop;
++        end = PositionAreaRegion::kCenter;
 +        break;
 +      case CSSValueID::kSpanBottom:
-+        start = InsetAreaRegion::kCenter;
-+        end = InsetAreaRegion::kBottom;
++        start = PositionAreaRegion::kCenter;
++        end = PositionAreaRegion::kBottom;
 +        break;
 +      case CSSValueID::kYStart:
-+        start = end = InsetAreaRegion::kYStart;
++        start = end = PositionAreaRegion::kYStart;
 +        break;
 +      case CSSValueID::kYEnd:
-+        start = end = InsetAreaRegion::kYEnd;
++        start = end = PositionAreaRegion::kYEnd;
 +        break;
 +      case CSSValueID::kSpanYStart:
-+        start = InsetAreaRegion::kYStart;
-+        end = InsetAreaRegion::kCenter;
++        start = PositionAreaRegion::kYStart;
++        end = PositionAreaRegion::kCenter;
 +        break;
 +      case CSSValueID::kSpanYEnd:
-+        start = InsetAreaRegion::kCenter;
-+        end = InsetAreaRegion::kYEnd;
++        start = PositionAreaRegion::kCenter;
++        end = PositionAreaRegion::kYEnd;
 +        break;
 +      case CSSValueID::kYSelfStart:
-+        start = end = InsetAreaRegion::kYSelfStart;
++        start = end = PositionAreaRegion::kYSelfStart;
 +        break;
 +      case CSSValueID::kYSelfEnd:
-+        start = end = InsetAreaRegion::kYSelfEnd;
++        start = end = PositionAreaRegion::kYSelfEnd;
 +        break;
 +      case CSSValueID::kSpanYSelfStart:
-+        start = InsetAreaRegion::kYSelfStart;
-+        end = InsetAreaRegion::kCenter;
++        start = PositionAreaRegion::kYSelfStart;
++        end = PositionAreaRegion::kCenter;
 +        break;
 +      case CSSValueID::kSpanYSelfEnd:
-+        start = InsetAreaRegion::kCenter;
-+        end = InsetAreaRegion::kYSelfEnd;
++        start = PositionAreaRegion::kCenter;
++        end = PositionAreaRegion::kYSelfEnd;
 +        break;
 +      case CSSValueID::kBlockStart:
-+        start = end = InsetAreaRegion::kBlockStart;
++        start = end = PositionAreaRegion::kBlockStart;
 +        break;
 +      case CSSValueID::kBlockEnd:
-+        start = end = InsetAreaRegion::kBlockEnd;
++        start = end = PositionAreaRegion::kBlockEnd;
 +        break;
 +      case CSSValueID::kSpanBlockStart:
-+        start = InsetAreaRegion::kBlockStart;
-+        end = InsetAreaRegion::kCenter;
++        start = PositionAreaRegion::kBlockStart;
++        end = PositionAreaRegion::kCenter;
 +        break;
 +      case CSSValueID::kSpanBlockEnd:
-+        start = InsetAreaRegion::kCenter;
-+        end = InsetAreaRegion::kBlockEnd;
++        start = PositionAreaRegion::kCenter;
++        end = PositionAreaRegion::kBlockEnd;
 +        break;
 +      case CSSValueID::kSelfBlockStart:
-+        start = end = InsetAreaRegion::kSelfBlockStart;
++        start = end = PositionAreaRegion::kSelfBlockStart;
 +        break;
 +      case CSSValueID::kSelfBlockEnd:
-+        start = end = InsetAreaRegion::kSelfBlockEnd;
++        start = end = PositionAreaRegion::kSelfBlockEnd;
 +        break;
 +      case CSSValueID::kSpanSelfBlockStart:
-+        start = InsetAreaRegion::kSelfBlockStart;
-+        end = InsetAreaRegion::kCenter;
++        start = PositionAreaRegion::kSelfBlockStart;
++        end = PositionAreaRegion::kCenter;
 +        break;
 +      case CSSValueID::kSpanSelfBlockEnd:
-+        start = InsetAreaRegion::kCenter;
-+        end = InsetAreaRegion::kSelfBlockEnd;
++        start = PositionAreaRegion::kCenter;
++        end = PositionAreaRegion::kSelfBlockEnd;
 +        break;
 +      case CSSValueID::kInlineStart:
-+        start = end = InsetAreaRegion::kInlineStart;
++        start = end = PositionAreaRegion::kInlineStart;
 +        break;
 +      case CSSValueID::kInlineEnd:
-+        start = end = InsetAreaRegion::kInlineEnd;
++        start = end = PositionAreaRegion::kInlineEnd;
 +        break;
 +      case CSSValueID::kSpanInlineStart:
-+        start = InsetAreaRegion::kInlineStart;
-+        end = InsetAreaRegion::kCenter;
++        start = PositionAreaRegion::kInlineStart;
++        end = PositionAreaRegion::kCenter;
 +        break;
 +      case CSSValueID::kSpanInlineEnd:
-+        start = InsetAreaRegion::kCenter;
-+        end = InsetAreaRegion::kInlineEnd;
++        start = PositionAreaRegion::kCenter;
++        end = PositionAreaRegion::kInlineEnd;
 +        break;
 +      case CSSValueID::kSelfInlineStart:
-+        start = end = InsetAreaRegion::kSelfInlineStart;
++        start = end = PositionAreaRegion::kSelfInlineStart;
 +        break;
 +      case CSSValueID::kSelfInlineEnd:
-+        start = end = InsetAreaRegion::kSelfInlineEnd;
++        start = end = PositionAreaRegion::kSelfInlineEnd;
 +        break;
 +      case CSSValueID::kSpanSelfInlineStart:
-+        start = InsetAreaRegion::kSelfInlineStart;
-+        end = InsetAreaRegion::kCenter;
++        start = PositionAreaRegion::kSelfInlineStart;
++        end = PositionAreaRegion::kCenter;
 +        break;
 +      case CSSValueID::kSpanSelfInlineEnd:
-+        start = InsetAreaRegion::kCenter;
-+        end = InsetAreaRegion::kSelfInlineEnd;
++        start = PositionAreaRegion::kCenter;
++        end = PositionAreaRegion::kSelfInlineEnd;
 +        break;
 +      case CSSValueID::kStart:
-+        start = end = InsetAreaRegion::kStart;
++        start = end = PositionAreaRegion::kStart;
 +        break;
 +      case CSSValueID::kEnd:
-+        start = end = InsetAreaRegion::kEnd;
++        start = end = PositionAreaRegion::kEnd;
 +        break;
 +      case CSSValueID::kSpanStart:
-+        start = InsetAreaRegion::kStart;
-+        end = InsetAreaRegion::kCenter;
++        start = PositionAreaRegion::kStart;
++        end = PositionAreaRegion::kCenter;
 +        break;
 +      case CSSValueID::kSpanEnd:
-+        start = InsetAreaRegion::kCenter;
-+        end = InsetAreaRegion::kEnd;
++        start = PositionAreaRegion::kCenter;
++        end = PositionAreaRegion::kEnd;
 +        break;
 +      case CSSValueID::kSelfStart:
-+        start = end = InsetAreaRegion::kSelfStart;
++        start = end = PositionAreaRegion::kSelfStart;
 +        break;
 +      case CSSValueID::kSelfEnd:
-+        start = end = InsetAreaRegion::kSelfEnd;
++        start = end = PositionAreaRegion::kSelfEnd;
 +        break;
 +      case CSSValueID::kSpanSelfStart:
-+        start = InsetAreaRegion::kSelfStart;
-+        end = InsetAreaRegion::kCenter;
++        start = PositionAreaRegion::kSelfStart;
++        end = PositionAreaRegion::kCenter;
 +        break;
 +      case CSSValueID::kSpanSelfEnd:
-+        start = InsetAreaRegion::kCenter;
-+        end = InsetAreaRegion::kSelfEnd;
++        start = PositionAreaRegion::kCenter;
++        end = PositionAreaRegion::kSelfEnd;
 +        break;
 +      default:
 +        NOTREACHED();
@@ -583,26 +621,26 @@ index c6f40ce44fa2f1470c44cfc8f4db41a493e85c72..14d8a70daf06cf9f554f21c3a84b5719
 +  if (const auto* first_value = DynamicTo<CSSIdentifierValue>(value)) {
 +    CSSValueID first_keyword = first_value->GetValueID();
 +    if (first_keyword == CSSValueID::kNone) {
-+      return InsetArea();
++      return PositionArea();
 +    }
-+    InsetAreaRegion span[2];
-+    std::tie(span[0], span[1]) = extract_inset_area_span(first_keyword);
-+    if (css_parsing_utils::IsRepeatedInsetAreaValue(first_keyword)) {
-+      return InsetArea(span[0], span[1], span[0], span[1]);
++    PositionAreaRegion span[2];
++    std::tie(span[0], span[1]) = extract_position_area_span(first_keyword);
++    if (css_parsing_utils::IsRepeatedPositionAreaValue(first_keyword)) {
++      return PositionArea(span[0], span[1], span[0], span[1]);
 +    } else {
-+      return InsetArea(span[0], span[1], InsetAreaRegion::kAll,
-+                       InsetAreaRegion::kAll);
++      return PositionArea(span[0], span[1], PositionAreaRegion::kAll,
++                          PositionAreaRegion::kAll);
 +    }
 +  }
 +
-+  InsetAreaRegion span[4];
++  PositionAreaRegion span[4];
 +  const CSSValuePair& value_pair = To<CSSValuePair>(value);
-+  std::tie(span[0], span[1]) = extract_inset_area_span(
++  std::tie(span[0], span[1]) = extract_position_area_span(
 +      To<CSSIdentifierValue>(value_pair.First()).GetValueID());
-+  std::tie(span[2], span[3]) = extract_inset_area_span(
++  std::tie(span[2], span[3]) = extract_position_area_span(
 +      To<CSSIdentifierValue>(value_pair.Second()).GetValueID());
 +
-+  return InsetArea(span[0], span[1], span[2], span[3]);
++  return PositionArea(span[0], span[1], span[2], span[3]);
 +}
 +
  }  // namespace blink

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/animation/compositor_animations.cc b/third_party/blink/renderer/core/animation/compositor_animations.cc
-index 53bcaf4a36bb51a5ae1ab391aef68d162b9c2d45..dc0cf426cf015ccc6ca6c6fdc1f992c24e2d1a11 100644
+index 53bcaf4a36bb51a5ae1ab391aef68d162b9c2d45..9c9f0c29692e89df3f595956c9d67fb0faef81d8 100644
 --- a/third_party/blink/renderer/core/animation/compositor_animations.cc
 +++ b/third_party/blink/renderer/core/animation/compositor_animations.cc
 @@ -861,7 +861,7 @@ void AddKeyframeToCurve(cc::KeyframedFilterAnimationCurve& curve,
@@ -11,3 +11,16 @@ index 53bcaf4a36bb51a5ae1ab391aef68d162b9c2d45..dc0cf426cf015ccc6ca6c6fdc1f992c2
    CompositorFilterOperations operations = builder.BuildFilterOperations(
        To<CompositorKeyframeFilterOperations>(value)->Operations());
    std::unique_ptr<cc::FilterKeyframe> filter_keyframe =
+@@ -1146,6 +1146,12 @@ bool CompositorAnimations::CheckUsesCompositedScrolling(Node* target) {
+     if (!properties || !properties->Scroll()) {
+       return false;
+     }
++    // FlyWeb (FM.28, upstream ab59a973033): a scroll node created for a
++    // scrolled overflow:hidden box is not user-scrollable.
++    if (RuntimeEnabledFeatures::ScrollNodeForOverflowHiddenEnabled() &&
++        !properties->Scroll()->UserScrollable()) {
++      return false;
++    }
+     const auto* paint_artifact_compositor =
+         layout_box_model_object->GetFrameView()->GetPaintArtifactCompositor();
+     return paint_artifact_compositor &&

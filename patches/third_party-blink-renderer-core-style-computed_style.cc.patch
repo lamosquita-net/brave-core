@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style.cc b/third_party/blink/renderer/core/style/computed_style.cc
-index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..419e1cb8d6d9b11c065baa8adde111bad1b0c60f 100644
+index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..249d43c949b730c55b9aa6d7aacd4eae6cd5d6e7 100644
 --- a/third_party/blink/renderer/core/style/computed_style.cc
 +++ b/third_party/blink/renderer/core/style/computed_style.cc
 @@ -23,6 +23,9 @@
@@ -12,7 +12,42 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..419e1cb8d6d9b11c065baa8adde111ba
  #include <algorithm>
  #include <memory>
  #include <utility>
-@@ -413,7 +416,8 @@ ComputedStyle::ComputeDifferenceIgnoringInheritedFirstLineStyle(
+@@ -186,34 +189,6 @@ Vector<AtomicString>& ComputedStyle::EnsureVariableNamesCache() const {
+   return *cached_data_->variable_names_;
+ }
+ 
+-const ComputedStyle* ComputedStyle::AddCachedPositionFallbackStyle(
+-    scoped_refptr<const ComputedStyle> style,
+-    unsigned index) const {
+-  EnsurePositionFallbackStyleCache(index + 1)[index] = std::move(style);
+-  return (*cached_data_->position_fallback_styles_)[index].get();
+-}
+-
+-const ComputedStyle* ComputedStyle::GetCachedPositionFallbackStyle(
+-    unsigned index) const {
+-  if (!cached_data_ || !cached_data_->position_fallback_styles_ ||
+-      index >= cached_data_->position_fallback_styles_->size()) {
+-    return nullptr;
+-  }
+-  return (*cached_data_->position_fallback_styles_)[index].get();
+-}
+-
+-PositionFallbackStyleCache& ComputedStyle::EnsurePositionFallbackStyleCache(
+-    unsigned ensure_size) const {
+-  if (!cached_data_ || !cached_data_->position_fallback_styles_) {
+-    EnsureCachedData().position_fallback_styles_ =
+-        std::make_unique<PositionFallbackStyleCache>();
+-  }
+-  if (cached_data_->position_fallback_styles_->size() < ensure_size) {
+-    cached_data_->position_fallback_styles_->resize(ensure_size);
+-  }
+-  return *cached_data_->position_fallback_styles_;
+-}
+-
+ ALWAYS_INLINE ComputedStyle::ComputedStyle()
+     : ComputedStyleBase(), RefCounted<ComputedStyle>() {}
+ 
+@@ -413,7 +388,8 @@ ComputedStyle::ComputeDifferenceIgnoringInheritedFirstLineStyle(
      return Difference::kDescendantAffecting;
    }
    if (old_style.Display() != new_style.Display() &&
@@ -22,22 +57,23 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..419e1cb8d6d9b11c065baa8adde111ba
      return Difference::kDescendantAffecting;
    }
    // TODO(crbug.com/1213888): Only recalc affected descendants.
-@@ -464,40 +468,33 @@ ComputedStyle::ComputeDifferenceIgnoringInheritedFirstLineStyle(
+@@ -464,53 +440,48 @@ ComputedStyle::ComputeDifferenceIgnoringInheritedFirstLineStyle(
  
  StyleSelfAlignmentData ResolvedSelfAlignment(
      const StyleSelfAlignmentData& value,
 -    ItemPosition normal_value_behavior) {
-+    ItemPosition normal_value_behavior,
++    const StyleSelfAlignmentData& normal_value_behavior,
 +    bool has_out_of_flow_position) {
    if (value.GetPosition() == ItemPosition::kLegacy ||
        value.GetPosition() == ItemPosition::kNormal ||
        value.GetPosition() == ItemPosition::kAuto) {
-     return {normal_value_behavior, OverflowAlignment::kDefault};
-   }
+-    return {normal_value_behavior, OverflowAlignment::kDefault};
++    return normal_value_behavior;
++  }
 +  if (!has_out_of_flow_position &&
 +      value.GetPosition() == ItemPosition::kAnchorCenter) {
 +    return {ItemPosition::kCenter, value.Overflow(), value.PositionType()};
-+  }
+   }
    return value;
  }
  
@@ -49,13 +85,14 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..419e1cb8d6d9b11c065baa8adde111ba
 -}
 -
  StyleSelfAlignmentData ComputedStyle::ResolvedAlignSelf(
-     ItemPosition normal_value_behaviour,
+-    ItemPosition normal_value_behaviour,
++    const StyleSelfAlignmentData& normal_value_behavior,
      const ComputedStyle* parent_style) const {
    // We will return the behaviour of 'normal' value if needed, which is specific
    // of each layout model.
    if (!parent_style || AlignSelf().GetPosition() != ItemPosition::kAuto) {
 -    return ResolvedSelfAlignment(AlignSelf(), normal_value_behaviour);
-+    return ResolvedSelfAlignment(AlignSelf(), normal_value_behaviour,
++    return ResolvedSelfAlignment(AlignSelf(), normal_value_behavior,
 +                                 HasOutOfFlowPosition());
    }
  
@@ -69,27 +106,29 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..419e1cb8d6d9b11c065baa8adde111ba
 -  // of each layout model.
 -  return ResolvedSelfAlignment(JustifyItems(), normal_value_behaviour);
 +  return ResolvedSelfAlignment(parent_style->AlignItems(),
-+                               normal_value_behaviour, HasOutOfFlowPosition());
++                               normal_value_behavior, HasOutOfFlowPosition());
  }
  
  StyleSelfAlignmentData ComputedStyle::ResolvedJustifySelf(
-@@ -506,11 +503,13 @@ StyleSelfAlignmentData ComputedStyle::ResolvedJustifySelf(
+-    ItemPosition normal_value_behaviour,
++    const StyleSelfAlignmentData& normal_value_behavior,
+     const ComputedStyle* parent_style) const {
    // We will return the behaviour of 'normal' value if needed, which is specific
    // of each layout model.
    if (!parent_style || JustifySelf().GetPosition() != ItemPosition::kAuto) {
 -    return ResolvedSelfAlignment(JustifySelf(), normal_value_behaviour);
-+    return ResolvedSelfAlignment(JustifySelf(), normal_value_behaviour,
++    return ResolvedSelfAlignment(JustifySelf(), normal_value_behavior,
 +                                 HasOutOfFlowPosition());
    }
  
    // The auto keyword computes to the parent's justify-items computed value.
 -  return parent_style->ResolvedJustifyItems(normal_value_behaviour);
 +  return ResolvedSelfAlignment(parent_style->JustifyItems(),
-+                               normal_value_behaviour, HasOutOfFlowPosition());
++                               normal_value_behavior, HasOutOfFlowPosition());
  }
  
  StyleContentAlignmentData ResolvedContentAlignment(
-@@ -751,7 +750,8 @@ StyleDifference ComputedStyle::VisualInvalidationDiff(
+@@ -751,7 +722,8 @@ StyleDifference ComputedStyle::VisualInvalidationDiff(
    }
  
    if (!diff.NeedsFullLayout() && GetPosition() != EPosition::kStatic &&
@@ -99,7 +138,7 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..419e1cb8d6d9b11c065baa8adde111ba
      // Optimize for the case where a positioned layer is moving but not changing
      // size.
      if (DependenceOnContentHeightHasChanged(*this, other)) {
-@@ -1206,6 +1206,7 @@ static bool HasPropertyThatCreatesStackingContext(
+@@ -1206,6 +1178,7 @@ static bool HasPropertyThatCreatesStackingContext(
        case CSSPropertyID::kOffsetPath:
        case CSSPropertyID::kOffsetPosition:
        case CSSPropertyID::kWebkitMask:
@@ -107,7 +146,7 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..419e1cb8d6d9b11c065baa8adde111ba
        case CSSPropertyID::kWebkitMaskBoxImage:
        case CSSPropertyID::kClipPath:
        case CSSPropertyID::kWebkitBoxReflect:
-@@ -1344,14 +1345,14 @@ void ComputedStyle::LoadDeferredImages(Document& document) const {
+@@ -1344,14 +1317,14 @@ void ComputedStyle::LoadDeferredImages(Document& document) const {
  void ComputedStyle::ApplyTransform(
      gfx::Transform& result,
      const LayoutBox* box,
@@ -125,7 +164,7 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..419e1cb8d6d9b11c065baa8adde111ba
                   apply_independent_transform_properties);
  }
  
-@@ -2341,6 +2342,48 @@ Color ComputedStyle::VisitedDependentColor(const Longhand& color_property,
+@@ -2341,6 +2314,48 @@ Color ComputedStyle::VisitedDependentColor(const Longhand& color_property,
                                 visited_color.Param2(), unvisited_color.Alpha());
  }
  
@@ -174,7 +213,7 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..419e1cb8d6d9b11c065baa8adde111ba
  blink::Color ComputedStyle::ResolvedColor(const StyleColor& color,
                                            bool* is_current_color) const {
    bool visited_link = (InsideLink() == EInsideLink::kInsideVisitedLink);
-@@ -2534,43 +2577,24 @@ absl::optional<blink::Color> ComputedStyle::AccentColorResolved() const {
+@@ -2534,43 +2549,24 @@ absl::optional<blink::Color> ComputedStyle::AccentColorResolved() const {
    return auto_color.Resolve(GetCurrentColor(), UsedColorScheme());
  }
  
@@ -233,18 +272,18 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..419e1cb8d6d9b11c065baa8adde111ba
  }
  
  bool ComputedStyle::ShouldApplyAnyContainment(const Element& element,
-@@ -2609,7 +2633,9 @@ bool ComputedStyle::CanMatchSizeContainerQueries(const Element& element) const {
+@@ -2609,7 +2605,9 @@ bool ComputedStyle::CanMatchSizeContainerQueries(const Element& element) const {
  
  bool ComputedStyle::IsInterleavingRoot(const ComputedStyle* style) {
    const ComputedStyle* unensured = ComputedStyle::NullifyEnsured(style);
 -  return unensured && unensured->IsContainerForSizeContainerQueries();
 +  return unensured && (unensured->IsContainerForSizeContainerQueries() ||
-+                       unensured->GetPositionTryOptions() ||
++                       unensured->GetPositionTryFallbacks() ||
 +                       unensured->HasAnchorFunctions());
  }
  
  bool ComputedStyle::CalculateIsStackingContextWithoutContainment() const {
-@@ -2656,6 +2682,21 @@ bool ComputedStyle::IsRenderedInTopLayer(const Element& element) const {
+@@ -2656,6 +2654,21 @@ bool ComputedStyle::IsRenderedInTopLayer(const Element& element) const {
           StyleType() == kPseudoIdBackdrop;
  }
  

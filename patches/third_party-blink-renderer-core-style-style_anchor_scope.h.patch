@@ -1,0 +1,67 @@
+diff --git a/third_party/blink/renderer/core/style/style_anchor_scope.h b/third_party/blink/renderer/core/style/style_anchor_scope.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..e0488ea738deb6b21358d1747bcc5a42f5f7ee74
+--- /dev/null
++++ b/third_party/blink/renderer/core/style/style_anchor_scope.h
+@@ -0,0 +1,61 @@
++// Copyright 2024 The Chromium Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef THIRD_PARTY_BLINK_RENDERER_CORE_STYLE_STYLE_ANCHOR_SCOPE_H_
++#define THIRD_PARTY_BLINK_RENDERER_CORE_STYLE_STYLE_ANCHOR_SCOPE_H_
++
++#include "base/memory/values_equivalent.h"
++#include "third_party/blink/renderer/core/core_export.h"
++#include "third_party/blink/renderer/core/style/scoped_css_name.h"
++#include "third_party/blink/renderer/platform/heap/persistent.h"
++#include "third_party/blink/renderer/platform/wtf/allocator/allocator.h"
++
++namespace blink {
++
++class TreeScope;
++
++// Represents the computed value of 'anchor-scope'.
++// https://drafts.csswg.org/css-anchor-position/#anchor-scope
++class CORE_EXPORT StyleAnchorScope {
++  DISALLOW_NEW();
++
++ public:
++  enum class Type { kNone, kAll, kNames };
++
++  // FlyWeb (FM.28): out of line (style_anchor_scope.cc), where TreeScope is a
++  // complete type, because the members are Persistent (see below).
++  StyleAnchorScope();
++  StyleAnchorScope(Type type,
++                   const TreeScope* all_tree_scope,
++                   const ScopedCSSNameList* names);
++  StyleAnchorScope(const StyleAnchorScope&);
++  StyleAnchorScope& operator=(const StyleAnchorScope&);
++  ~StyleAnchorScope();
++
++  bool operator==(const StyleAnchorScope& o) const {
++    return type_ == o.type_ &&
++           all_tree_scope_.Get() == o.all_tree_scope_.Get() &&
++           base::ValuesEquivalent(names_.Get(), o.names_.Get());
++  }
++  bool operator!=(const StyleAnchorScope& o) const { return !operator==(o); }
++
++  bool IsNone() const { return type_ == Type::kNone; }
++  bool IsAll() const { return type_ == Type::kAll; }
++  const TreeScope* AllTreeScope() const { return all_tree_scope_.Get(); }
++  const ScopedCSSNameList* Names() const { return names_.Get(); }
++
++ private:
++  Type type_ = Type::kNone;
++  // FlyWeb (FM.28): Persistent, not Member: in 116 ComputedStyle is
++  // ref-counted, not traced (like the other GC fields of ComputedStyle, see
++  // wrapper_pointer_name "Persistent" in css_properties.json5).
++  // For Type::kAll.
++  Persistent<const TreeScope> all_tree_scope_;
++  // For Type::kNames.
++  Persistent<const ScopedCSSNameList> names_;
++};
++
++}  // namespace blink
++
++#endif  // THIRD_PARTY_BLINK_RENDERER_CORE_STYLE_STYLE_ANCHOR_SCOPE_H_

@@ -1,9 +1,9 @@
 diff --git a/third_party/blink/renderer/core/css/css_position_try_descriptors.h b/third_party/blink/renderer/core/css/css_position_try_descriptors.h
 new file mode 100644
-index 0000000000000000000000000000000000000000..c340a59deaf068212e70afd7df6db9fb1e95706d
+index 0000000000000000000000000000000000000000..c89a6c29b1061816b99b5435c26268fce1644d9b
 --- /dev/null
 +++ b/third_party/blink/renderer/core/css/css_position_try_descriptors.h
-@@ -0,0 +1,285 @@
+@@ -0,0 +1,296 @@
 +// Copyright 2024 The Chromium Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -12,6 +12,7 @@ index 0000000000000000000000000000000000000000..c340a59deaf068212e70afd7df6db9fb
 +#define THIRD_PARTY_BLINK_RENDERER_CORE_CSS_CSS_POSITION_TRY_DESCRIPTORS_H_
 +
 +#include "third_party/blink/renderer/core/css/style_rule_css_style_declaration.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
 +
 +namespace blink {
 +
@@ -63,6 +64,8 @@ index 0000000000000000000000000000000000000000..c340a59deaf068212e70afd7df6db9fb
 +  String alignSelf() { return Get(CSSPropertyID::kAlignSelf); }
 +  String justifySelf() { return Get(CSSPropertyID::kJustifySelf); }
 +  String positionAnchor() { return Get(CSSPropertyID::kPositionAnchor); }
++  String positionArea() { return Get(CSSPropertyID::kPositionArea); }
++  // TODO(crbug.com/352360007): this can be removed when inset-area is removed.
 +  String insetArea() { return Get(CSSPropertyID::kInsetArea); }
 +
 +  void setMargin(const ExecutionContext* execution_context,
@@ -270,9 +273,17 @@ index 0000000000000000000000000000000000000000..c340a59deaf068212e70afd7df6db9fb
 +    Set(execution_context, CSSPropertyID::kPositionAnchor, value,
 +        exception_state);
 +  }
++  void setPositionArea(const ExecutionContext* execution_context,
++                       const String& value,
++                       ExceptionState& exception_state) {
++    Set(execution_context, CSSPropertyID::kPositionArea, value,
++        exception_state);
++  }
++  // TODO(crbug.com/352360007): this can be removed when inset-area is removed.
 +  void setInsetArea(const ExecutionContext* execution_context,
 +                    const String& value,
 +                    ExceptionState& exception_state) {
++    DCHECK(RuntimeEnabledFeatures::CSSInsetAreaPropertyEnabled());
 +    Set(execution_context, CSSPropertyID::kInsetArea, value, exception_state);
 +  }
 +

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/node.cc b/third_party/blink/renderer/core/dom/node.cc
-index 9788cd4895f9418df8c38a03468d3e199a3a15b2..8dc5bc1e5d9bd5746a13e525ccd7a436f01aec45 100644
+index 9788cd4895f9418df8c38a03468d3e199a3a15b2..556a5d296a2c9de2bec82db403a5f57b788a84ce 100644
 --- a/third_party/blink/renderer/core/dom/node.cc
 +++ b/third_party/blink/renderer/core/dom/node.cc
 @@ -992,7 +992,9 @@ Node* Node::cloneNode(bool deep, ExceptionState& exception_state) const {
@@ -13,7 +13,23 @@ index 9788cd4895f9418df8c38a03468d3e199a3a15b2..8dc5bc1e5d9bd5746a13e525ccd7a436
    return Clone(GetDocument(),
                 deep ? (clone_shadows_flag ? CloneChildrenFlag::kCloneWithShadows
                                            : CloneChildrenFlag::kClone)
-@@ -2896,8 +2898,9 @@ DispatchEventResult Node::DispatchEventInternal(Event& event) {
+@@ -1591,8 +1593,14 @@ void Node::AttachLayoutTree(AttachContext& context) {
+ }
+ 
+ void Node::DetachLayoutTree(bool performing_reattach) {
++  // Re-attachment is not generally allowed from PositionTryStyleRecalc, but
++  // computing style for display:none pseudo elements will insert a pseudo
++  // element, compute the style, and remove it again, which includes a
++  // DetachLayoutTree().
+   DCHECK(GetDocument().Lifecycle().StateAllowsDetach() ||
+-         GetDocument().GetStyleEngine().InContainerQueryStyleRecalc());
++         GetDocument().GetStyleEngine().InContainerQueryStyleRecalc() ||
++         (GetDocument().GetStyleEngine().InPositionTryStyleRecalc() &&
++          IsPseudoElement() && !GetLayoutObject()));
+   DCHECK(!performing_reattach ||
+          GetDocument().GetStyleEngine().InRebuildLayoutTree());
+   DocumentLifecycle::DetachScope will_detach(GetDocument().Lifecycle());
+@@ -2896,8 +2904,9 @@ DispatchEventResult Node::DispatchEventInternal(Event& event) {
  }
  
  void Node::DispatchSubtreeModifiedEvent() {
@@ -24,7 +40,7 @@ index 9788cd4895f9418df8c38a03468d3e199a3a15b2..8dc5bc1e5d9bd5746a13e525ccd7a436
  
  #if DCHECK_IS_ON()
    DCHECK(!EventDispatchForbiddenScope::IsEventDispatchForbidden());
-@@ -3334,6 +3337,11 @@ void Node::FlatTreeParentChanged() {
+@@ -3334,6 +3343,11 @@ void Node::FlatTreeParentChanged() {
  }
  
  void Node::AddCandidateDirectionalityForSlot() {
@@ -36,7 +52,7 @@ index 9788cd4895f9418df8c38a03468d3e199a3a15b2..8dc5bc1e5d9bd5746a13e525ccd7a436
    ShadowRoot* root = ShadowRootOfParent();
    if (!root || !root->HasSlotAssignment()) {
      // We should add this node as a candidate that needs to recalculate its
-@@ -3393,6 +3401,50 @@ HashSet<Member<TreeScope>> Node::GetAncestorTreeScopes() const {
+@@ -3393,6 +3407,50 @@ HashSet<Member<TreeScope>> Node::GetAncestorTreeScopes() const {
    return ancestor_tree_scopes;
  }
  

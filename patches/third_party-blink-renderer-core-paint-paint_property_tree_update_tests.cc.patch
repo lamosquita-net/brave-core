@@ -1,8 +1,15 @@
 diff --git a/third_party/blink/renderer/core/paint/paint_property_tree_update_tests.cc b/third_party/blink/renderer/core/paint/paint_property_tree_update_tests.cc
-index 2db0f2215b3d572d9f193b716982339b8a0e5cb2..2a0eb54af9b320540e30794589e8db37f91c9557 100644
+index 2db0f2215b3d572d9f193b716982339b8a0e5cb2..78cbf9113f6c47aeb06e3ed6c7f8247c052d22d5 100644
 --- a/third_party/blink/renderer/core/paint/paint_property_tree_update_tests.cc
 +++ b/third_party/blink/renderer/core/paint/paint_property_tree_update_tests.cc
-@@ -2125,7 +2125,7 @@ TEST_P(PaintPropertyTreeUpdateTest, AnchorPositioningScrollUpdate) {
+@@ -2118,14 +2118,12 @@ TEST_P(PaintPropertyTreeUpdateTest, UpdatesInLockedDisplayHandledCorrectly) {
+ }
+ 
+ TEST_P(PaintPropertyTreeUpdateTest, AnchorPositioningScrollUpdate) {
+-  ScopedCSSAnchorPositioningForTest enabled(true);
+-
+   SetBodyInnerHTML(R"HTML(
+     <div id="spacer" style="height: 1000px"></div>
      <div id="anchor" style="
          anchor-name: --a; width: 100px; height: 100px"></div>
      <div id="target" style="
@@ -11,7 +18,7 @@ index 2db0f2215b3d572d9f193b716982339b8a0e5cb2..2a0eb54af9b320540e30794589e8db37
          width: 100px; height: 100px; bottom: anchor(--a top)"></div>
    )HTML");
  
-@@ -2134,18 +2134,27 @@ TEST_P(PaintPropertyTreeUpdateTest, AnchorPositioningScrollUpdate) {
+@@ -2134,13 +2132,13 @@ TEST_P(PaintPropertyTreeUpdateTest, AnchorPositioningScrollUpdate) {
  
    GetFrame().DomWindow()->scrollBy(0, 300);
  
@@ -21,27 +28,10 @@ index 2db0f2215b3d572d9f193b716982339b8a0e5cb2..2a0eb54af9b320540e30794589e8db37
    UpdateAllLifecyclePhasesExceptPaint();
  
 -  // The anchor-scroll translation should be updated on main thread.
--  EXPECT_EQ(PaintPropertiesForElement("target")
--                ->AnchorScrollTranslation()
--                ->Get2dTranslation(),
--            gfx::Vector2dF(0, -300));
 +  // The anchor positioning translation should be updated on main thread.
-+  auto* transform =
-+      PaintPropertiesForElement("target")->AnchorPositionScrollTranslation();
-+  EXPECT_EQ(transform->Get2dTranslation(), gfx::Vector2dF(0, -300));
+   EXPECT_EQ(PaintPropertiesForElement("target")
+-                ->AnchorScrollTranslation()
++                ->AnchorPositionScrollTranslation()
+                 ->Get2dTranslation(),
+             gfx::Vector2dF(0, -300));
  
-   // Anchor positioning scroll update should not require main thread commits.
-   EXPECT_FALSE(GetFrame().View()->GetPaintArtifactCompositor()->NeedsUpdate());
-+
-+  auto& cc_transform_tree =
-+      GetChromeClient().layer_tree_host()->property_trees()->transform_tree();
-+  auto* cc_transform = cc_transform_tree.FindNodeFromElementId(
-+      transform->GetCompositorElementId());
-+  ASSERT_TRUE(cc_transform);
-+  EXPECT_TRUE(cc_transform->local.IsIdentity());
-+  EXPECT_EQ(cc_transform_tree.GetAnchorPositionScrollData(cc_transform->id)
-+                ->default_adjustment,
-+            gfx::Vector2dF(0, -300));
- }
- 
- }  // namespace blink

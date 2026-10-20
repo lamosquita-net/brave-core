@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/ng_out_of_flow_layout_part.h b/third_party/blink/renderer/core/layout/ng/ng_out_of_flow_layout_part.h
-index 3dab77bc2f4fee24217aefc8aefaea53fa6999c3..a34035bf0f4e16a8674b06f4bff1eccd689f9e7e 100644
+index 3dab77bc2f4fee24217aefc8aefaea53fa6999c3..926a89adf49600ed534bd3e7e3df2153c4145f7e 100644
 --- a/third_party/blink/renderer/core/layout/ng/ng_out_of_flow_layout_part.h
 +++ b/third_party/blink/renderer/core/layout/ng/ng_out_of_flow_layout_part.h
 @@ -9,13 +9,13 @@
@@ -17,7 +17,16 @@ index 3dab77bc2f4fee24217aefc8aefaea53fa6999c3..a34035bf0f4e16a8674b06f4bff1eccd
  #include "third_party/blink/renderer/core/style/computed_style_base_constants.h"
  #include "third_party/blink/renderer/platform/heap/collection_support/heap_hash_map.h"
  #include "third_party/blink/renderer/platform/heap/collection_support/heap_hash_set.h"
-@@ -166,39 +166,30 @@ class CORE_EXPORT NGOutOfFlowLayoutPart {
+@@ -129,6 +129,8 @@ class CORE_EXPORT NGOutOfFlowLayoutPart {
+     // The writing direction of the container.
+     WritingDirectionMode writing_direction = {WritingMode::kHorizontalTb,
+                                               TextDirection::kLtr};
++    // If the container is scrollable.
++    bool is_scroll_container;
+     // Size and offset of the container.
+     LogicalRect rect;
+     // The relative positioned offset to be applied after fragmentation is
+@@ -166,39 +168,30 @@ class CORE_EXPORT NGOutOfFlowLayoutPart {
  
     public:
      NGBlockNode node;
@@ -60,7 +69,7 @@ index 3dab77bc2f4fee24217aefc8aefaea53fa6999c3..a34035bf0f4e16a8674b06f4bff1eccd
            requires_content_before_breaking(requires_content_before_breaking) {}
  
      void Trace(Visitor* visitor) const;
-@@ -212,33 +203,48 @@ class CORE_EXPORT NGOutOfFlowLayoutPart {
+@@ -212,33 +205,50 @@ class CORE_EXPORT NGOutOfFlowLayoutPart {
      DISALLOW_NEW();
  
     public:
@@ -103,13 +112,13 @@ index 3dab77bc2f4fee24217aefc8aefaea53fa6999c3..a34035bf0f4e16a8674b06f4bff1eccd
 -    absl::optional<wtf_size_t> fallback_index;
 -    Vector<PhysicalScrollRange> non_overflowing_ranges;
 +    // This field is set only if this |OffsetInfo| is calculated from a
-+    // position-try-options style, either from a @position-try rule or a tactic,
-+    // or the anchored element has position-visibility: no-overflow.
-+    Vector<NonOverflowingScrollRange> non_overflowing_scroll_ranges;
++    // position-try-fallbacks style, either from a @position-try rule or a
++    // tactic, or the anchored element has position-visibility: no-overflow.
++    HeapVector<NonOverflowingScrollRange> non_overflowing_scroll_ranges;
 +
 +    // This field is set when we're calculating |OffsetInfo| with
 +    // try_fit_available_space=true, e.g. when we have a non-empty
-+    // position-try-options. We have to retain the IMCB to implement
++    // position-try-fallbacks. We have to retain the IMCB to implement
 +    // position-try-order, which decides which of the various candidates styles
 +    // we should select based on the biggest IMCB size (in some axis).
 +    absl::optional<InsetModifiedContainingBlock> imcb_for_position_order;
@@ -124,10 +133,12 @@ index 3dab77bc2f4fee24217aefc8aefaea53fa6999c3..a34035bf0f4e16a8674b06f4bff1eccd
 +
 +    // True if the element overflows the inset-modified containing block.
 +    bool overflows_containing_block = false;
++
++    HeapHashSet<Member<Element>>* display_locks_affected_by_anchors;
  
      void Trace(Visitor* visitor) const;
    };
-@@ -309,6 +315,15 @@ class CORE_EXPORT NGOutOfFlowLayoutPart {
+@@ -309,6 +319,15 @@ class CORE_EXPORT NGOutOfFlowLayoutPart {
        bool outer_context_has_fixedpos_container = false,
        HeapVector<MulticolChildInfo>* multicol_children = nullptr);
  
@@ -136,14 +147,14 @@ index 3dab77bc2f4fee24217aefc8aefaea53fa6999c3..a34035bf0f4e16a8674b06f4bff1eccd
 +      const NGBlockNode& candidate,
 +      const NGLogicalAnchorQueryMap* anchor_queries) const;
 +
-+  ContainingBlockInfo ApplyInsetAreaOffsets(
-+      const InsetAreaOffsets& offsets,
++  ContainingBlockInfo ApplyPositionAreaOffsets(
++      const PositionAreaOffsets& offsets,
 +      const ContainingBlockInfo& container_info) const;
 +
    NodeInfo SetupNodeInfo(const NGLogicalOutOfFlowPositionedNode& oof_node);
  
    const NGLayoutResult* LayoutOOFNode(
-@@ -320,7 +335,6 @@ class CORE_EXPORT NGOutOfFlowLayoutPart {
+@@ -320,7 +339,6 @@ class CORE_EXPORT NGOutOfFlowLayoutPart {
    // changing this to a more accurate name.
    OffsetInfo CalculateOffset(
        const NodeInfo& node_info,
@@ -151,13 +162,13 @@ index 3dab77bc2f4fee24217aefc8aefaea53fa6999c3..a34035bf0f4e16a8674b06f4bff1eccd
        const NGLogicalAnchorQueryMap* anchor_queries = nullptr);
    // Calculates offsets with the given ComputedStyle. Returns nullopt if
    // |try_fit_available_space| is true and the layout result does not fit the
-@@ -328,11 +342,9 @@ class CORE_EXPORT NGOutOfFlowLayoutPart {
+@@ -328,11 +346,9 @@ class CORE_EXPORT NGOutOfFlowLayoutPart {
    absl::optional<OffsetInfo> TryCalculateOffset(
        const NodeInfo& node_info,
        const ComputedStyle& style,
 -      const NGLogicalAnchorQueryMap* anchor_queries,
 -      const LayoutObject* implicit_anchor,
-+      NGAnchorEvaluatorImpl*,
++      NGAnchorEvaluatorImpl&,
        bool try_fit_available_space,
 -      bool is_first_run,
 -      PhysicalScrollRange* out_scroll_range);
@@ -165,7 +176,7 @@ index 3dab77bc2f4fee24217aefc8aefaea53fa6999c3..a34035bf0f4e16a8674b06f4bff1eccd
  
    const NGLayoutResult* Layout(
        const NodeToLayout& oof_node_to_layout,
-@@ -437,7 +449,6 @@ class CORE_EXPORT NGOutOfFlowLayoutPart {
+@@ -437,7 +453,6 @@ class CORE_EXPORT NGOutOfFlowLayoutPart {
    LayoutUnit fragmentainer_consumed_block_size_;
    bool is_absolute_container_ = false;
    bool is_fixed_container_ = false;

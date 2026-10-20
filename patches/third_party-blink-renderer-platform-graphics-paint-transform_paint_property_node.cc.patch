@@ -1,8 +1,8 @@
 diff --git a/third_party/blink/renderer/platform/graphics/paint/transform_paint_property_node.cc b/third_party/blink/renderer/platform/graphics/paint/transform_paint_property_node.cc
-index 896e3ebf9da840c8da6dde85051ad76ec789cb89..5c8838d263b4d0c054997bca1ef5124f079e4e3b 100644
+index 896e3ebf9da840c8da6dde85051ad76ec789cb89..2b7175789b45eddd7b799ba5ccca025ea5b00dc4 100644
 --- a/third_party/blink/renderer/platform/graphics/paint/transform_paint_property_node.cc
 +++ b/third_party/blink/renderer/platform/graphics/paint/transform_paint_property_node.cc
-@@ -45,11 +45,15 @@ TransformPaintPropertyNode::State::ComputeTransformChange(
+@@ -45,9 +45,9 @@ TransformPaintPropertyNode::State::ComputeTransformChange(
    }
  
    if ((direct_compositing_reasons & CompositingReason::kStickyPosition) ||
@@ -10,18 +10,12 @@ index 896e3ebf9da840c8da6dde85051ad76ec789cb89..5c8838d263b4d0c054997bca1ef5124f
 -    // The compositor handles sticky offset changes and anchor-scroll offset
 -    // changes automatically.
 +      (direct_compositing_reasons & CompositingReason::kAnchorPosition)) {
++    // The compositor handles sticky offset changes and anchor position
++    // translation offset changes automatically.
      DCHECK(transform_and_origin.matrix.Preserves2dAxisAlignment());
      DCHECK(other.matrix.Preserves2dAxisAlignment());
-+    // We need to update the default adjustment for anchor position translation
-+    // offset changes.
-+    if (direct_compositing_reasons & CompositingReason::kAnchorPosition) {
-+      return PaintPropertyChangeType::kChangedOnlySimpleValues;
-+    }
-+    // The compositor handles sticky offset changes automatically.
      return PaintPropertyChangeType::kChangedOnlyCompositedValues;
-   }
- 
-@@ -94,8 +98,8 @@ PaintPropertyChangeType TransformPaintPropertyNode::State::ComputeChange(
+@@ -94,8 +94,8 @@ PaintPropertyChangeType TransformPaintPropertyNode::State::ComputeChange(
        scroll != other.scroll ||
        scroll_translation_for_fixed != other.scroll_translation_for_fixed ||
        !base::ValuesEquivalent(sticky_constraint, other.sticky_constraint) ||

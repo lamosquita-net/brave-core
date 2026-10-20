@@ -1,0 +1,15 @@
+diff --git a/third_party/blink/renderer/platform/graphics/paint/cull_rect.cc b/third_party/blink/renderer/platform/graphics/paint/cull_rect.cc
+index 1b5b735be347c4906b9dfde134f0f036059765b7..a400638f4df5d009c3698e5250bea275f6dd985b 100644
+--- a/third_party/blink/renderer/platform/graphics/paint/cull_rect.cc
++++ b/third_party/blink/renderer/platform/graphics/paint/cull_rect.cc
+@@ -103,6 +103,10 @@ bool CullRect::ApplyScrollTranslation(
+     // Don't expand for non-composited scrolling.
+     return false;
+   }
++  if (RuntimeEnabledFeatures::ScrollNodeForOverflowHiddenEnabled() &&
++      !scroll->UserScrollable()) {
++    return {false, false};
++  }
+ 
+   // We create scroll node for the root scroller even it's not scrollable.
+   // Don't expand in the case.

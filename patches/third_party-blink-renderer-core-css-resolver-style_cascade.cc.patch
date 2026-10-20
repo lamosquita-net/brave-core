@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_cascade.cc b/third_party/blink/renderer/core/css/resolver/style_cascade.cc
-index bedb7ec7720796c722b00ec96cf9a00d41f32e10..ab2e407665cf5ec9583fa4f786c050e508675983 100644
+index bedb7ec7720796c722b00ec96cf9a00d41f32e10..5a7c7421c47ea53bc4f0213deb680396fb2499ea 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_cascade.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_cascade.cc
 @@ -12,8 +12,10 @@
@@ -136,7 +136,7 @@ index bedb7ec7720796c722b00ec96cf9a00d41f32e10..ab2e407665cf5ec9583fa4f786c050e5
                                                   CascadePriority priority,
                                                   CascadeOrigin& origin,
                                                   CascadeResolver& resolver) {
-@@ -1121,6 +1155,76 @@ const CSSValue* StyleCascade::ResolveRevertLayer(const CSSProperty& property,
+@@ -1121,6 +1155,54 @@ const CSSValue* StyleCascade::ResolveRevertLayer(const CSSProperty& property,
                   origin, resolver);
  }
  
@@ -169,35 +169,13 @@ index bedb7ec7720796c722b00ec96cf9a00d41f32e10..ab2e407665cf5ec9583fa4f786c050e5
 +    return &math_value;
 +  }
 +
-+  auto anchor_mode = [](const CSSProperty& property) {
-+    switch (property.PropertyID()) {
-+      case CSSPropertyID::kTop:
-+        return AnchorEvaluator::Mode::kTop;
-+      case CSSPropertyID::kRight:
-+        return AnchorEvaluator::Mode::kRight;
-+      case CSSPropertyID::kBottom:
-+        return AnchorEvaluator::Mode::kBottom;
-+      case CSSPropertyID::kLeft:
-+        return AnchorEvaluator::Mode::kLeft;
-+      case CSSPropertyID::kWidth:
-+      case CSSPropertyID::kHeight:
-+      case CSSPropertyID::kMinWidth:
-+      case CSSPropertyID::kMinHeight:
-+      case CSSPropertyID::kMaxWidth:
-+      case CSSPropertyID::kMaxHeight:
-+        return AnchorEvaluator::Mode::kSize;
-+      default:
-+        return AnchorEvaluator::Mode::kNone;
-+    }
-+  };
-+
 +  const CSSLengthResolver& length_resolver = state_.CssToLengthConversionData();
 +
 +  // Calling HasInvalidAnchorFunctions evaluates the anchor*() functions
 +  // inside the CSSMathFunctionValue. Evaluating anchor*() requires that we
 +  // have the correct AnchorEvaluator::Mode, so we need to set that just like
 +  // we do for during e.g. Left::ApplyValue, Right::ApplyValue, etc.
-+  AnchorScope anchor_scope(anchor_mode(property),
++  AnchorScope anchor_scope(property.PropertyID(),
 +                           length_resolver.GetAnchorEvaluator());
 +  // HasInvalidAnchorFunctions actually evaluates any anchor*() queries
 +  // within the CSSMathFunctionValue, and this requires the TreeScope to
@@ -213,7 +191,7 @@ index bedb7ec7720796c722b00ec96cf9a00d41f32e10..ab2e407665cf5ec9583fa4f786c050e5
  scoped_refptr<CSSVariableData> StyleCascade::ResolveVariableData(
      CSSVariableData* data,
      CascadeResolver& resolver) {
-@@ -1369,6 +1473,11 @@ void StyleCascade::MarkHasVariableReference(const CSSProperty& property) {
+@@ -1369,6 +1451,11 @@ void StyleCascade::MarkHasVariableReference(const CSSProperty& property) {
    state_.StyleBuilder().SetHasVariableReference();
  }
  

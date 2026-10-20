@@ -1,8 +1,22 @@
 diff --git a/third_party/blink/renderer/modules/media_controls/elements/media_control_popup_menu_element.cc b/third_party/blink/renderer/modules/media_controls/elements/media_control_popup_menu_element.cc
-index cfd682864382c376524f30a98c807d5073b3e53b..c17ddbb51ffeb7611624e0c713228c3bf1963b5f 100644
+index cfd682864382c376524f30a98c807d5073b3e53b..fde93dad22382f57dd26025f3708fc1e2720c2fd 100644
 --- a/third_party/blink/renderer/modules/media_controls/elements/media_control_popup_menu_element.cc
 +++ b/third_party/blink/renderer/modules/media_controls/elements/media_control_popup_menu_element.cc
-@@ -204,7 +204,6 @@ MediaControlPopupMenuElement::MediaControlPopupMenuElement(
+@@ -124,9 +124,10 @@ void MediaControlPopupMenuElement::SetIsWanted(bool wanted) {
+ 
+   if (wanted) {
+     ShowPopoverInternal(/*invoker*/ nullptr, /*exception_state*/ nullptr);
+-    if (!RuntimeEnabledFeatures::CSSAnchorPositioningEnabled()) {
+-      SetPosition();
+-    }
++    // TODO(crbug.com/341741271): Remove this once anchor positioning, the
++    // anchor attribute, and the `anchor-scope` CSS property are stable enough
++    // to depend on for positioning here.
++    SetPosition();
+ 
+     SelectFirstItem();
+ 
+@@ -204,14 +205,14 @@ MediaControlPopupMenuElement::MediaControlPopupMenuElement(
      MediaControlsImpl& media_controls)
      : MediaControlDivElement(media_controls) {
    setAttribute(html_names::kPopoverAttr, keywords::kAuto);
@@ -10,3 +24,12 @@ index cfd682864382c376524f30a98c807d5073b3e53b..c17ddbb51ffeb7611624e0c713228c3b
    SetIsWanted(false);
  }
  
+ // TODO(crbug.com/1309178): This entire function and the one callsite can be
+ // removed once anchor positioning is enabled by default.
++// TODO(crbug.com/341741271): Ensure all required APIs are stable, including
++// the anchor attribute and the `anchor-scope` CSS property.
+ void MediaControlPopupMenuElement::SetPosition() {
+-  DCHECK(!RuntimeEnabledFeatures::CSSAnchorPositioningEnabled());
+   // The popup is positioned slightly on the inside of the bottom right
+   // corner.
+   static constexpr int kPopupMenuMarginPx = 4;

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/post_style_update_scope.h b/third_party/blink/renderer/core/css/post_style_update_scope.h
-index 424679cea7c74869cadf2d42949885c577cdb257..1eafdd79122101d02ec183d30d6a3faa6492d260 100644
+index 424679cea7c74869cadf2d42949885c577cdb257..9664eab300a5b6ada9d407973e4d9437ed24f741 100644
 --- a/third_party/blink/renderer/core/css/post_style_update_scope.h
 +++ b/third_party/blink/renderer/core/css/post_style_update_scope.h
 @@ -63,6 +63,7 @@ class CORE_EXPORT PostStyleUpdateScope {
@@ -10,3 +10,14 @@ index 424679cea7c74869cadf2d42949885c577cdb257..1eafdd79122101d02ec183d30d6a3faa
  
      HeapHashSet<Member<Element>> elements_with_pending_updates_;
      HeapHashMap<Member<const Element>, scoped_refptr<const ComputedStyle>>
+@@ -92,6 +93,10 @@ class CORE_EXPORT PostStyleUpdateScope {
+   static AnimationData* CurrentAnimationData();
+   static PseudoData* CurrentPseudoData();
+ 
++  static bool InPendingPseudoUpdate() {
++    return current_ && !current_->GetPseudoData();
++  }
++
+   // If there is a CurrentAnimationData() and old-style was previously stored
+   // using StoreOldStyleIfNeeded, this function returns that ComputedStyle.
+   // Otherwise returns the current ComputedStyle on the Element.

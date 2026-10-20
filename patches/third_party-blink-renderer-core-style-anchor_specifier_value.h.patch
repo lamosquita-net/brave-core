@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/style/anchor_specifier_value.h b/third_party/blink/renderer/core/style/anchor_specifier_value.h
-index a7638f2f344f3de5db802c5737a21f337bbd26b2..7c9fffed43d39b787b0a2561a80ed658e8ff320d 100644
+index a7638f2f344f3de5db802c5737a21f337bbd26b2..16f8c64a9152da27c248186ab8ff95e828e19d0b 100644
 --- a/third_party/blink/renderer/core/style/anchor_specifier_value.h
 +++ b/third_party/blink/renderer/core/style/anchor_specifier_value.h
 @@ -6,6 +6,7 @@
@@ -10,9 +10,12 @@ index a7638f2f344f3de5db802c5737a21f337bbd26b2..7c9fffed43d39b787b0a2561a80ed658
  #include "third_party/blink/renderer/platform/heap/garbage_collected.h"
  #include "third_party/blink/renderer/platform/heap/member.h"
  
-@@ -15,7 +16,8 @@ class ScopedCSSName;
+@@ -13,28 +14,26 @@ namespace blink {
  
- // Represents an anchor specifier: default | implicit | <dashed-ident>
+ class ScopedCSSName;
+ 
+-// Represents an anchor specifier: default | implicit | <dashed-ident>
++// Represents an anchor specifier: default | auto | <dashed-ident>
  // https://drafts4.csswg.org/css-anchor-1/#target-anchor-element
 -class AnchorSpecifierValue : public GarbageCollected<AnchorSpecifierValue> {
 +class CORE_EXPORT AnchorSpecifierValue
@@ -20,7 +23,27 @@ index a7638f2f344f3de5db802c5737a21f337bbd26b2..7c9fffed43d39b787b0a2561a80ed658
   public:
    enum class Type {
      kDefault,
-@@ -47,6 +49,8 @@ class AnchorSpecifierValue : public GarbageCollected<AnchorSpecifierValue> {
+-    kImplicit,
+     kNamed,
+   };
+ 
+   // Creates a named value.
+   explicit AnchorSpecifierValue(const ScopedCSSName&);
+ 
+-  // Gets or creates the default/implicit keyword values.
++  // Gets or creates the default keyword value.
+   static AnchorSpecifierValue* Default();
+-  static AnchorSpecifierValue* Implicit();
+ 
+   // For creating the keyword values only.
+   explicit AnchorSpecifierValue(base::PassKey<AnchorSpecifierValue>, Type type);
+ 
+   bool IsDefault() const { return type_ == Type::kDefault; }
+-  bool IsImplicit() const { return type_ == Type::kImplicit; }
+   bool IsNamed() const { return type_ == Type::kNamed; }
+   const ScopedCSSName& GetName() const {
+     DCHECK(IsNamed());
+@@ -47,6 +46,8 @@ class AnchorSpecifierValue : public GarbageCollected<AnchorSpecifierValue> {
      return !operator==(other);
    }
  

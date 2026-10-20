@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_box.h b/third_party/blink/renderer/core/layout/layout_box.h
-index 7e5f4df2b86bd8a409742261caa8a13368c75fc2..1b3a8d566d0bf841e431431497358428195cc02f 100644
+index 7e5f4df2b86bd8a409742261caa8a13368c75fc2..fccf17a5b2c80d143550646dea18b96bac2012ff 100644
 --- a/third_party/blink/renderer/core/layout/layout_box.h
 +++ b/third_party/blink/renderer/core/layout/layout_box.h
 @@ -48,6 +48,7 @@ class CustomLayoutChild;
@@ -20,7 +20,19 @@ index 7e5f4df2b86bd8a409742261caa8a13368c75fc2..1b3a8d566d0bf841e431431497358428
  
  enum SizeType { kMainOrPreferredSize, kMinSize, kMaxSize };
  enum AvailableLogicalHeightType {
-@@ -487,7 +488,7 @@ class CORE_EXPORT LayoutBox : public LayoutBoxModelObject {
+@@ -230,11 +231,6 @@ class CORE_EXPORT LayoutBox : public LayoutBoxModelObject {
+     return false;
+   }
+ 
+-  // Returns whether this object needs a scroll paint property tree node. These
+-  // are a requirement for composited scrolling but are also created for
+-  // non-composited scrollers.
+-  bool NeedsScrollNode(CompositingReasons direct_compositing_reasons) const;
+-
+   // Use this with caution! No type checking is done!
+   LayoutBox* FirstChildBox() const;
+   LayoutBox* FirstInFlowChildBox() const;
+@@ -487,7 +483,7 @@ class CORE_EXPORT LayoutBox : public LayoutBoxModelObject {
      const ComputedStyle& style = StyleRef();
      if (style.AspectRatio().IsAuto() || !IsOutOfFlowPositioned())
        return false;
@@ -29,7 +41,7 @@ index 7e5f4df2b86bd8a409742261caa8a13368c75fc2..1b3a8d566d0bf841e431431497358428
          !style.LogicalTop().IsAuto() && !style.LogicalBottom().IsAuto() &&
          (style.LogicalLeft().IsAuto() || style.LogicalRight().IsAuto())) {
        return true;
-@@ -1219,11 +1220,17 @@ class CORE_EXPORT LayoutBox : public LayoutBoxModelObject {
+@@ -1219,11 +1215,17 @@ class CORE_EXPORT LayoutBox : public LayoutBoxModelObject {
  
    bool HasScrollableOverflowX() const {
      NOT_DESTROYED();
@@ -47,7 +59,7 @@ index 7e5f4df2b86bd8a409742261caa8a13368c75fc2..1b3a8d566d0bf841e431431497358428
      return ScrollsOverflowY() &&
             PixelSnappedScrollHeight() != PixelSnappedClientHeight();
    }
-@@ -1665,8 +1672,11 @@ class CORE_EXPORT LayoutBox : public LayoutBoxModelObject {
+@@ -1665,8 +1667,11 @@ class CORE_EXPORT LayoutBox : public LayoutBoxModelObject {
    // See StickyPositionScrollingConstraints::constraining_rect.
    PhysicalRect ComputeStickyConstrainingRect() const;
  
@@ -61,18 +73,24 @@ index 7e5f4df2b86bd8a409742261caa8a13368c75fc2..1b3a8d566d0bf841e431431497358428
  
    bool HasScrollbarGutters(ScrollbarOrientation orientation) const;
  
-@@ -1682,10 +1692,12 @@ class CORE_EXPORT LayoutBox : public LayoutBoxModelObject {
+@@ -1682,10 +1687,19 @@ class CORE_EXPORT LayoutBox : public LayoutBoxModelObject {
    // https://drafts.csswg.org/css-anchor-position-1/#ref-for-valdef-anchor-implicit
    const LayoutObject* AcceptableImplicitAnchor() const;
  
 -  // Returns position fallback results for anchor positioned element.
 -  absl::optional<wtf_size_t> PositionFallbackIndex() const;
 -  const Vector<PhysicalScrollRange>* PositionFallbackNonOverflowingRanges()
--      const;
-+  const Vector<NonOverflowingScrollRange>* NonOverflowingScrollRanges() const;
++  const HeapVector<NonOverflowingScrollRange>* NonOverflowingScrollRanges()
++      const;
 +
 +  const NGBoxStrut& OutOfFlowInsetsForGetComputedStyle() const;
 +
++  const HeapHashSet<Member<Element>>* DisplayLocksAffectedByAnchors() const;
++  void NotifyContainingDisplayLocksForAnchorPositioning(
++      const HeapHashSet<Member<Element>>*
++          past_display_locks_affected_by_anchors,
++      const HeapHashSet<Member<Element>>* display_locks_affected_by_anchors)
+       const;
 +  bool NeedsAnchorPositionScrollAdjustmentInX() const;
 +  bool NeedsAnchorPositionScrollAdjustmentInY() const;
  

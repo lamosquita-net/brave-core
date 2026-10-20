@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/inspector/inspector_style_sheet.cc b/third_party/blink/renderer/core/inspector/inspector_style_sheet.cc
-index 77ac1d9d0239232c29b706d580a4e897736e8b65..a2d880d5f18407182512179da9c7149885edcaba 100644
+index 77ac1d9d0239232c29b706d580a4e897736e8b65..1345c22a7e943ca33700ac1910d8250772d46400 100644
 --- a/third_party/blink/renderer/core/inspector/inspector_style_sheet.cc
 +++ b/third_party/blink/renderer/core/inspector/inspector_style_sheet.cc
 @@ -36,7 +36,7 @@
@@ -411,7 +411,7 @@ index 77ac1d9d0239232c29b706d580a4e897736e8b65..a2d880d5f18407182512179da9c71498
    } else {
      style = To<CSSKeyframeRule>(rule)->style();
    }
-@@ -1995,12 +2211,19 @@ InspectorStyleSheet::BuildObjectForRuleUsage(CSSRule* rule, bool was_used) {
+@@ -1995,12 +2211,21 @@ InspectorStyleSheet::BuildObjectForRuleUsage(CSSRule* rule, bool was_used) {
    return result;
  }
  
@@ -421,7 +421,8 @@ index 77ac1d9d0239232c29b706d580a4e897736e8b65..a2d880d5f18407182512179da9c71498
 -      protocol::CSS::CSSTryRule::create()
 +std::unique_ptr<protocol::CSS::CSSPositionTryRule>
 +InspectorStyleSheet::BuildObjectForPositionTryRule(
-+    CSSPositionTryRule* position_try_rule) {
++    CSSPositionTryRule* position_try_rule,
++    bool active) {
 +  std::unique_ptr<protocol::CSS::Value> name =
 +      protocol::CSS::Value::create().setText(position_try_rule->name()).build();
 +  if (CSSRuleSourceData* source_data = SourceDataForRule(position_try_rule)) {
@@ -433,6 +434,7 @@ index 77ac1d9d0239232c29b706d580a4e897736e8b65..a2d880d5f18407182512179da9c71498
            .setOrigin(origin_)
 -          .setStyle(BuildObjectForStyle(try_rule->style()))
 +          .setStyle(BuildObjectForStyle(position_try_rule->style()))
++          .setActive(active)
            .build();
    if (CanBind(origin_) && !Id().empty()) {
      result->setStyleSheetId(Id());

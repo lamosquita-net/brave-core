@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc b/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
-index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f413fefdb 100644
+index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..02c053924af06f8ee5e74a92dff1cd93438876c0 100644
 --- a/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
 +++ b/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
 @@ -4,7 +4,9 @@
@@ -20,7 +20,15 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
  #include "third_party/blink/renderer/core/css/css_content_distribution_value.h"
  #include "third_party/blink/renderer/core/css/css_crossfade_value.h"
  #include "third_party/blink/renderer/core/css/css_custom_ident_value.h"
-@@ -59,6 +62,7 @@
+@@ -47,6 +50,7 @@
+ #include "third_party/blink/renderer/core/css/css_ray_value.h"
+ #include "third_party/blink/renderer/core/css/css_revert_layer_value.h"
+ #include "third_party/blink/renderer/core/css/css_revert_value.h"
++#include "third_party/blink/renderer/core/css/css_scoped_keyword_value.h"
+ #include "third_party/blink/renderer/core/css/css_scroll_value.h"
+ #include "third_party/blink/renderer/core/css/css_shadow_value.h"
+ #include "third_party/blink/renderer/core/css/css_string_value.h"
+@@ -59,6 +63,7 @@
  #include "third_party/blink/renderer/core/css/css_variable_data.h"
  #include "third_party/blink/renderer/core/css/css_view_value.h"
  #include "third_party/blink/renderer/core/css/parser/css_parser_context.h"
@@ -28,7 +36,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
  #include "third_party/blink/renderer/core/css/parser/css_parser_fast_paths.h"
  #include "third_party/blink/renderer/core/css/parser/css_parser_idioms.h"
  #include "third_party/blink/renderer/core/css/parser/css_parser_local_context.h"
-@@ -74,6 +78,8 @@
+@@ -74,6 +79,8 @@
  #include "third_party/blink/renderer/core/dom/document.h"
  #include "third_party/blink/renderer/core/frame/web_feature.h"
  #include "third_party/blink/renderer/core/inspector/console_message.h"
@@ -37,7 +45,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
  #include "third_party/blink/renderer/core/style_property_shorthand.h"
  #include "third_party/blink/renderer/core/svg/svg_parsing_error.h"
  #include "third_party/blink/renderer/core/svg/svg_path_utilities.h"
-@@ -804,10 +810,14 @@ CSSLightDarkValuePair* ConsumeInternalLightDark(Func consume_value,
+@@ -804,10 +811,14 @@ CSSLightDarkValuePair* ConsumeInternalLightDark(Func consume_value,
                                                  CSSParserTokenRange& range,
                                                  const CSSParserContext& context,
                                                  Args&&... args) {
@@ -54,7 +62,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
      return nullptr;
    }
    CSSParserTokenRange range_copy = range;
-@@ -1153,6 +1163,12 @@ CSSPrimitiveValue* ConsumeLength(CSSParserTokenRange& range,
+@@ -1153,6 +1164,12 @@ CSSPrimitiveValue* ConsumeLength(CSSParserTokenRange& range,
        case CSSPrimitiveValue::UnitType::kRics:
        case CSSPrimitiveValue::UnitType::kRlhs:
          break;
@@ -67,7 +75,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
        case CSSPrimitiveValue::UnitType::kViewportInlineSize:
        case CSSPrimitiveValue::UnitType::kViewportBlockSize:
        case CSSPrimitiveValue::UnitType::kSmallViewportWidth:
-@@ -1477,7 +1493,10 @@ CSSPrimitiveValue* ConsumeResolution(CSSParserTokenRange& range,
+@@ -1477,7 +1494,10 @@ CSSPrimitiveValue* ConsumeResolution(CSSParserTokenRange& range,
    if (const CSSParserToken& token = range.Peek();
        token.GetType() == kDimensionToken) {
      CSSPrimitiveValue::UnitType unit = token.GetUnitType();
@@ -79,7 +87,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
        return nullptr;
      }
  
-@@ -1486,7 +1505,7 @@ CSSPrimitiveValue* ConsumeResolution(CSSParserTokenRange& range,
+@@ -1486,7 +1506,7 @@ CSSPrimitiveValue* ConsumeResolution(CSSParserTokenRange& range,
    }
  
    MathFunctionParser math_parser(range, context,
@@ -88,7 +96,23 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
    const CSSMathFunctionValue* math_value = math_parser.Value();
    if (math_value && math_value->IsResolution()) {
      return math_parser.ConsumeValue();
-@@ -1630,13 +1649,21 @@ cssvalue::CSSURIValue* ConsumeUrl(CSSParserTokenRange& range,
+@@ -1561,6 +1581,15 @@ CSSCustomIdentValue* ConsumeDashedIdent(CSSParserTokenRange& range,
+   return ConsumeCustomIdent(range, context);
+ }
+ 
++cssvalue::CSSScopedKeywordValue* ConsumeScopedKeywordValue(
++    CSSParserTokenRange& range) {
++  if (range.Peek().GetType() != kIdentToken) {
++    return nullptr;
++  }
++  return MakeGarbageCollected<cssvalue::CSSScopedKeywordValue>(
++      range.ConsumeIncludingWhitespace().Id());
++}
++
+ CSSStringValue* ConsumeString(CSSParserTokenRange& range) {
+   if (range.Peek().GetType() != kStringToken) {
+     return nullptr;
+@@ -1630,13 +1659,21 @@ cssvalue::CSSURIValue* ConsumeUrl(CSSParserTokenRange& range,
        url_string, context.CompleteURL(url_string));
  }
  
@@ -112,7 +136,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
  }
  
  static bool ParseRGBParameters(CSSParserTokenRange& range,
-@@ -1646,12 +1673,12 @@ static bool ParseRGBParameters(CSSParserTokenRange& range,
+@@ -1646,12 +1683,12 @@ static bool ParseRGBParameters(CSSParserTokenRange& range,
           range.Peek().FunctionId() == CSSValueID::kRgba);
    CSSParserTokenRange args = ConsumeFunction(range);
    CSSPrimitiveValue* value;
@@ -127,7 +151,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
      // Commas have to be consistent
      if (ConsumeCommaIncludingWhitespace(args)) {
        requires_commas = true;
-@@ -1659,19 +1686,16 @@ static bool ParseRGBParameters(CSSParserTokenRange& range,
+@@ -1659,19 +1696,16 @@ static bool ParseRGBParameters(CSSParserTokenRange& range,
        return false;
      }
  
@@ -151,7 +175,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
          requires_bare_numbers = true;
        }
      }
-@@ -1686,6 +1710,10 @@ static bool ParseRGBParameters(CSSParserTokenRange& range,
+@@ -1686,6 +1720,10 @@ static bool ParseRGBParameters(CSSParserTokenRange& range,
      }
    }
  
@@ -162,7 +186,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
    bool comma_consumed = ConsumeCommaIncludingWhitespace(args);
    bool slash_consumed = ConsumeSlashIncludingWhitespace(args);
    if ((comma_consumed && !requires_commas) ||
-@@ -1710,15 +1738,19 @@ static bool ParseRGBParameters(CSSParserTokenRange& range,
+@@ -1710,15 +1748,19 @@ static bool ParseRGBParameters(CSSParserTokenRange& range,
      }
      // W3 standard stipulates a 2.55 alpha value multiplication factor.
      absl::optional<int> alpha_component;
@@ -186,7 +210,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
    }
  
    if (has_none && requires_commas) {
-@@ -1759,10 +1791,17 @@ static bool ParseHSLParameters(CSSParserTokenRange& range,
+@@ -1759,10 +1801,17 @@ static bool ParseHSLParameters(CSSParserTokenRange& range,
        return false;
      }
      value = ConsumePercent(args, context, CSSPrimitiveValue::ValueRange::kAll);
@@ -204,7 +228,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
      } else {
        if (!ConsumeIdent<CSSValueID::kNone>(args)) {
          return false;
-@@ -1861,10 +1900,14 @@ static bool ParseHWBParameters(CSSParserTokenRange& range,
+@@ -1861,10 +1910,14 @@ static bool ParseHWBParameters(CSSParserTokenRange& range,
        continue;
      }
      value = ConsumePercent(args, context, CSSPrimitiveValue::ValueRange::kAll);
@@ -221,7 +245,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
      percentage = ClampTo<float>(double_value, 0.0f, 100.0f) /
                   100.0f;  // Needs to be a value between 0 and 1.0.
    }
-@@ -2276,6 +2319,459 @@ static bool ParseHexColor(CSSParserTokenRange& range,
+@@ -2276,6 +2329,459 @@ static bool ParseHexColor(CSSParserTokenRange& range,
    return true;
  }
  
@@ -681,7 +705,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
  static bool ParseFunctionalSyntaxColor(CSSParserTokenRange& range,
                                         const CSSParserContext& context,
                                         Color& result) {
-@@ -2442,6 +2938,28 @@ CSSValue* ConsumeColorContrast(CSSParserTokenRange& range,
+@@ -2442,6 +2948,28 @@ CSSValue* ConsumeColorContrast(CSSParserTokenRange& range,
        ResolveColor(colors_to_compare_against[highest_contrast_index]));
  }
  
@@ -710,7 +734,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
  CSSValue* ConsumeColor(CSSParserTokenRange& range,
                         const CSSParserContext& context,
                         bool accept_quirky_colors,
-@@ -2458,7 +2976,7 @@ CSSValue* ConsumeColor(CSSParserTokenRange& range,
+@@ -2458,7 +2986,7 @@ CSSValue* ConsumeColor(CSSParserTokenRange& range,
  
    CSSValueID id = range.Peek().Id();
    if ((id == CSSValueID::kAccentcolor || id == CSSValueID::kAccentcolortext) &&
@@ -719,7 +743,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
      return nullptr;
    }
    if (StyleColor::IsColorKeyword(id)) {
-@@ -2474,6 +2992,10 @@ CSSValue* ConsumeColor(CSSParserTokenRange& range,
+@@ -2474,6 +3002,10 @@ CSSValue* ConsumeColor(CSSParserTokenRange& range,
      return color;
    }
  
@@ -730,7 +754,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
    Color color = Color::kTransparent;
    if (!ParseHexColor(range, color, accept_quirky_colors) &&
        !ParseFunctionalSyntaxColor(range, context, color)) {
-@@ -3646,6 +4168,10 @@ CSSValue* ConsumeImage(
+@@ -3646,6 +4178,10 @@ CSSValue* ConsumeImage(
          IsGeneratedImage(id)) {
        return ConsumeGeneratedImage(range, context);
      }
@@ -741,7 +765,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
      return ConsumeInternalLightDark(ConsumeImageOrNone, range, context);
    }
    return nullptr;
-@@ -3670,6 +4196,14 @@ CSSIdentifierValue* ConsumeCoordBox(CSSParserTokenRange& range) {
+@@ -3670,6 +4206,14 @@ CSSIdentifierValue* ConsumeCoordBox(CSSParserTokenRange& range) {
                        CSSValueID::kStrokeBox, CSSValueID::kViewBox>(range);
  }
  
@@ -756,24 +780,17 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
  void AddProperty(CSSPropertyID resolved_property,
                   CSSPropertyID current_shorthand,
                   const CSSValue& value,
-@@ -4034,9 +4568,13 @@ bool IsBaselineKeyword(CSSValueID id) {
- }
- 
+@@ -4036,7 +4580,8 @@ bool IsBaselineKeyword(CSSValueID id) {
  bool IsSelfPositionKeyword(CSSValueID id) {
--  return IdentMatches<CSSValueID::kStart, CSSValueID::kEnd, CSSValueID::kCenter,
--                      CSSValueID::kSelfStart, CSSValueID::kSelfEnd,
+   return IdentMatches<CSSValueID::kStart, CSSValueID::kEnd, CSSValueID::kCenter,
+                       CSSValueID::kSelfStart, CSSValueID::kSelfEnd,
 -                      CSSValueID::kFlexStart, CSSValueID::kFlexEnd>(id);
-+  if (IdentMatches<CSSValueID::kStart, CSSValueID::kEnd, CSSValueID::kCenter,
-+                   CSSValueID::kSelfStart, CSSValueID::kSelfEnd,
-+                   CSSValueID::kFlexStart, CSSValueID::kFlexEnd>(id)) {
-+    return true;
-+  }
-+  return RuntimeEnabledFeatures::CSSAnchorPositioningEnabled() &&
-+         id == CSSValueID::kAnchorCenter;
++                      CSSValueID::kFlexStart, CSSValueID::kFlexEnd,
++                      CSSValueID::kAnchorCenter>(id);
  }
  
  bool IsSelfPositionOrLeftOrRightKeyword(CSSValueID id) {
-@@ -4553,10 +5091,25 @@ CSSValue* ConsumeBackgroundBox(CSSParserTokenRange& range) {
+@@ -4553,10 +5098,25 @@ CSSValue* ConsumeBackgroundBox(CSSParserTokenRange& range) {
                        CSSValueID::kContentBox>(range);
  }
  
@@ -800,7 +817,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
  CSSPrimitiveValue* ConsumeLengthOrPercentCountNegative(
      CSSParserTokenRange& range,
      const CSSParserContext& context,
-@@ -4617,14 +5170,14 @@ static void SetAllowsNegativePercentageReference(CSSValue* value) {
+@@ -4617,14 +5177,14 @@ static void SetAllowsNegativePercentageReference(CSSValue* value) {
  bool ConsumeBackgroundPosition(CSSParserTokenRange& range,
                                 const CSSParserContext& context,
                                 UnitlessQuirk unitless,
@@ -818,7 +835,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
        return false;
      }
      // TODO(crbug.com/825895): So far, 'background-position' is the only
-@@ -4665,16 +5218,31 @@ CSSValue* ParseBackgroundBox(CSSParserTokenRange& range,
+@@ -4665,16 +5225,31 @@ CSSValue* ParseBackgroundBox(CSSParserTokenRange& range,
    return ConsumeCommaSeparatedList(ConsumeBackgroundBox, range);
  }
  
@@ -854,7 +871,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
  namespace {
  
  CSSValue* ConsumeBackgroundComponent(CSSPropertyID resolved_property,
-@@ -4682,12 +5250,17 @@ CSSValue* ConsumeBackgroundComponent(CSSPropertyID resolved_property,
+@@ -4682,12 +5257,17 @@ CSSValue* ConsumeBackgroundComponent(CSSPropertyID resolved_property,
                                       const CSSParserContext& context) {
    switch (resolved_property) {
      case CSSPropertyID::kBackgroundClip:
@@ -873,7 +890,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
      case CSSPropertyID::kWebkitMaskImage:
        return ConsumeImageOrNone(range, context);
      case CSSPropertyID::kBackgroundPositionX:
-@@ -4703,19 +5276,38 @@ CSSValue* ConsumeBackgroundComponent(CSSPropertyID resolved_property,
+@@ -4703,19 +5283,38 @@ CSSValue* ConsumeBackgroundComponent(CSSPropertyID resolved_property,
                                     WebFeature::kNegativeBackgroundSize,
                                     ParsingStyle::kNotLegacy);
      case CSSPropertyID::kWebkitMaskSize:
@@ -914,7 +931,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
  }
  
  }  // namespace
-@@ -4735,10 +5327,12 @@ bool ParseBackgroundOrMask(bool important,
+@@ -4735,10 +5334,12 @@ bool ParseBackgroundOrMask(bool important,
                             HeapVector<CSSPropertyValue, 64>& properties) {
    CSSPropertyID shorthand_id = local_context.CurrentShorthand();
    DCHECK(shorthand_id == CSSPropertyID::kBackground ||
@@ -930,7 +947,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
  
    const unsigned longhand_count = shorthand.length();
    CSSValue* longhands[10] = {nullptr};
-@@ -4759,11 +5353,8 @@ bool ParseBackgroundOrMask(bool important,
+@@ -4759,11 +5360,8 @@ bool ParseBackgroundOrMask(bool important,
          CSSValue* value = nullptr;
          CSSValue* value_y = nullptr;
          const CSSProperty& property = *shorthand.properties()[i];
@@ -944,7 +961,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
            if (!ConsumePosition(range, context, UnitlessQuirk::kForbid,
                                 WebFeature::kThreeValuedPositionBackground,
                                 value, value_y)) {
-@@ -4773,7 +5364,8 @@ bool ParseBackgroundOrMask(bool important,
+@@ -4773,7 +5371,8 @@ bool ParseBackgroundOrMask(bool important,
              bg_position_parsed_in_current_layer = true;
            }
          } else if (property.IDEquals(CSSPropertyID::kBackgroundSize) ||
@@ -954,7 +971,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
            if (!ConsumeSlashIncludingWhitespace(range)) {
              continue;
            }
-@@ -4787,9 +5379,7 @@ bool ParseBackgroundOrMask(bool important,
+@@ -4787,9 +5386,7 @@ bool ParseBackgroundOrMask(bool important,
              return false;
            }
          } else if (property.IDEquals(CSSPropertyID::kBackgroundPositionY) ||
@@ -965,7 +982,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
            continue;
          } else {
            value =
-@@ -4797,6 +5387,7 @@ bool ParseBackgroundOrMask(bool important,
+@@ -4797,6 +5394,7 @@ bool ParseBackgroundOrMask(bool important,
          }
          if (value) {
            if (property.IDEquals(CSSPropertyID::kBackgroundOrigin) ||
@@ -973,7 +990,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
                property.IDEquals(CSSPropertyID::kWebkitMaskOrigin)) {
              origin_value = value;
            }
-@@ -4817,6 +5408,7 @@ bool ParseBackgroundOrMask(bool important,
+@@ -4817,6 +5415,7 @@ bool ParseBackgroundOrMask(bool important,
      // TODO(timloh): This will make invalid longhands, see crbug.com/386459
      for (unsigned i = 0; i < longhand_count; ++i) {
        const CSSProperty& property = *shorthand.properties()[i];
@@ -981,7 +998,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
        if (property.IDEquals(CSSPropertyID::kBackgroundColor) &&
            !range.AtEnd()) {
          if (parsed_longhand[i]) {
-@@ -4824,13 +5416,16 @@ bool ParseBackgroundOrMask(bool important,
+@@ -4824,13 +5423,16 @@ bool ParseBackgroundOrMask(bool important,
          }
          continue;
        }
@@ -1004,7 +1021,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
          AddBackgroundValue(longhands[i], CSSInitialValue::Create());
        }
      }
-@@ -4853,51 +5448,33 @@ bool ParseBackgroundOrMask(bool important,
+@@ -4853,51 +5455,33 @@ bool ParseBackgroundOrMask(bool important,
    return true;
  }
  
@@ -1077,7 +1094,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
  }
  
  CSSValue* ConsumeWebkitBorderImage(CSSParserTokenRange& range,
-@@ -6530,7 +7107,13 @@ cssvalue::CSSPathValue* ConsumeBasicShapePath(CSSParserTokenRange& args) {
+@@ -6530,7 +7114,13 @@ cssvalue::CSSPathValue* ConsumeBasicShapePath(CSSParserTokenRange& args) {
    }
  
    auto byte_stream = ConsumePathStringArg(args);
@@ -1092,7 +1109,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
      return nullptr;
    }
  
-@@ -7356,6 +7939,29 @@ bool IsValidPropertyList(const CSSValueList& value_list) {
+@@ -7356,6 +7946,29 @@ bool IsValidPropertyList(const CSSValueList& value_list) {
    return true;
  }
  
@@ -1122,7 +1139,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
  CSSValue* ConsumeBorderColorSide(CSSParserTokenRange& range,
                                   const CSSParserContext& context,
                                   const CSSParserLocalContext& local_context) {
-@@ -7482,8 +8088,13 @@ CSSValue* ConsumeContainerType(CSSParserTokenRange& range) {
+@@ -7482,8 +8095,13 @@ CSSValue* ConsumeContainerType(CSSParserTokenRange& range) {
  
  CSSValue* ConsumeSVGPaint(CSSParserTokenRange& range,
                            const CSSParserContext& context) {
@@ -1138,7 +1155,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
    }
    cssvalue::CSSURIValue* url = ConsumeUrl(range, context);
    if (url) {
-@@ -7580,10 +8191,15 @@ CSSValue* ConsumeFontSizeAdjust(CSSParserTokenRange& range,
+@@ -7580,10 +8198,15 @@ CSSValue* ConsumeFontSizeAdjust(CSSParserTokenRange& range,
  
    CSSIdentifierValue* font_metric =
        ConsumeIdent<CSSValueID::kExHeight, CSSValueID::kCapHeight,
@@ -1156,7 +1173,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
    if (!value || !font_metric ||
        font_metric->GetValueID() == CSSValueID::kExHeight) {
      return value;
-@@ -7593,5 +8209,343 @@ CSSValue* ConsumeFontSizeAdjust(CSSParserTokenRange& range,
+@@ -7593,5 +8216,350 @@ CSSValue* ConsumeFontSizeAdjust(CSSParserTokenRange& range,
                                              CSSValuePair::kKeepIdenticalValues);
  }
  
@@ -1210,9 +1227,9 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
 +      continue;
 +    }
 +    if (context.Mode() == kUASheetMode && !dashed_ident) {
-+      CSSCustomIdentValue* value = ConsumeCustomIdent(range, context);
-+      if (value && value->Value().StartsWith("-internal-")) {
-+        dashed_ident = value;
++      if (range.Peek().GetType() == kIdentToken &&
++          range.Peek().Value().ToString().StartsWith("-internal-")) {
++        dashed_ident = ConsumeCustomIdent(range, context);
 +        continue;
 +      }
 +    }
@@ -1238,47 +1255,53 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
 +  return list;
 +}
 +
-+// inset-area( <inset-area> )
-+CSSValue* ConsumeInsetAreaFunction(CSSParserTokenRange& range) {
-+  if (range.Peek().FunctionId() != CSSValueID::kInsetArea) {
++// position-area( <position-area> )
++CSSValue* ConsumePositionAreaFunction(CSSParserTokenRange& range) {
++  CHECK(!RuntimeEnabledFeatures::CSSPositionAreaValueEnabled());
++
++  if (range.Peek().FunctionId() != CSSValueID::kPositionArea) {
 +    return nullptr;
 +  }
 +  CSSParserTokenRange arg = ConsumeFunction(range);
-+  const CSSValue* inset_area = ConsumeInsetArea(arg);
-+  if (!inset_area) {
++  const CSSValue* position_area = ConsumePositionArea(arg);
++  if (!position_area) {
 +    return nullptr;
 +  }
 +  auto* function =
-+      MakeGarbageCollected<CSSFunctionValue>(CSSValueID::kInsetArea);
-+  function->Append(*inset_area);
++      MakeGarbageCollected<CSSFunctionValue>(CSSValueID::kPositionArea);
++  function->Append(*position_area);
 +  return function;
 +}
 +
 +}  // namespace
 +
-+CSSValue* ConsumeSinglePositionTryOption(CSSParserTokenRange& range,
++CSSValue* ConsumeSinglePositionTryFallback(CSSParserTokenRange& range,
 +                                         const CSSParserContext& context) {
 +  // // <dashed-ident> || <try-tactic>
 +  if (CSSValue* value = ConsumeDashedIdentOrTactic(range, context)) {
 +    return value;
 +  }
-+  // inset-area( <inset-area> )
-+  return ConsumeInsetAreaFunction(range);
++  if (RuntimeEnabledFeatures::CSSPositionAreaValueEnabled()) {
++    // <position-area>
++    return ConsumePositionArea(range);
++  }
++  // position-area( <position-area> )
++  return ConsumePositionAreaFunction(range);
 +}
 +
-+CSSValue* ConsumePositionTryOptions(CSSParserTokenRange& range,
++CSSValue* ConsumePositionTryFallbacks(CSSParserTokenRange& range,
 +                                    const CSSParserContext& context) {
 +  // none | [ [<dashed-ident> || <try-tactic>] | inset-area( <inset-area> ) ]#
 +  if (range.Peek().Id() == CSSValueID::kNone) {
 +    return ConsumeIdent(range);
 +  }
-+  return ConsumeCommaSeparatedList(ConsumeSinglePositionTryOption, range,
++  return ConsumeCommaSeparatedList(ConsumeSinglePositionTryFallback, range,
 +                                   context);
 +}
 +
 +namespace {
 +
-+struct InsetAreaKeyword {
++struct PositionAreaKeyword {
 +  STACK_ALLOCATED();
 +
 + public:
@@ -1311,8 +1334,8 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
 +    kSelfStartEnd,
 +  };
 +
-+  static bool IsCompatiblePair(const InsetAreaKeyword& first,
-+                               const InsetAreaKeyword& second) {
++  static bool IsCompatiblePair(const PositionAreaKeyword& first,
++                               const PositionAreaKeyword& second) {
 +    if (first.type == kGeneral || second.type == kGeneral) {
 +      return true;
 +    }
@@ -1328,13 +1351,13 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
 +            (first.type == kStartEnd || first.type == kSelfStartEnd));
 +  }
 +
-+  const CSSIdentifierValue* value;
++  CSSIdentifierValue* value;
 +  Type type;
 +};
 +
-+absl::optional<InsetAreaKeyword> ConsumeInsetAreaKeyword(
++absl::optional<PositionAreaKeyword> ConsumePositionAreaKeyword(
 +    CSSParserTokenRange& range) {
-+  InsetAreaKeyword::Type type = InsetAreaKeyword::kGeneral;
++  PositionAreaKeyword::Type type = PositionAreaKeyword::kGeneral;
 +  switch (range.Peek().Id()) {
 +    case CSSValueID::kSpanAll:
 +    case CSSValueID::kCenter:
@@ -1352,7 +1375,7 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
 +    case CSSValueID::kXSelfEnd:
 +    case CSSValueID::kSpanXSelfStart:
 +    case CSSValueID::kSpanXSelfEnd:
-+      type = InsetAreaKeyword::kHorizontal;
++      type = PositionAreaKeyword::kHorizontal;
 +      break;
 +    case CSSValueID::kTop:
 +    case CSSValueID::kBottom:
@@ -1366,53 +1389,53 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
 +    case CSSValueID::kYSelfEnd:
 +    case CSSValueID::kSpanYSelfStart:
 +    case CSSValueID::kSpanYSelfEnd:
-+      type = InsetAreaKeyword::kVertical;
++      type = PositionAreaKeyword::kVertical;
 +      break;
 +    case CSSValueID::kBlockStart:
 +    case CSSValueID::kBlockEnd:
 +    case CSSValueID::kSpanBlockStart:
 +    case CSSValueID::kSpanBlockEnd:
-+      type = InsetAreaKeyword::kBlock;
++      type = PositionAreaKeyword::kBlock;
 +      break;
 +    case CSSValueID::kInlineStart:
 +    case CSSValueID::kInlineEnd:
 +    case CSSValueID::kSpanInlineStart:
 +    case CSSValueID::kSpanInlineEnd:
-+      type = InsetAreaKeyword::kInline;
++      type = PositionAreaKeyword::kInline;
 +      break;
 +    case CSSValueID::kSelfBlockStart:
 +    case CSSValueID::kSelfBlockEnd:
 +    case CSSValueID::kSpanSelfBlockStart:
 +    case CSSValueID::kSpanSelfBlockEnd:
-+      type = InsetAreaKeyword::kSelfBlock;
++      type = PositionAreaKeyword::kSelfBlock;
 +      break;
 +    case CSSValueID::kSelfInlineStart:
 +    case CSSValueID::kSelfInlineEnd:
 +    case CSSValueID::kSpanSelfInlineStart:
 +    case CSSValueID::kSpanSelfInlineEnd:
-+      type = InsetAreaKeyword::kSelfInline;
++      type = PositionAreaKeyword::kSelfInline;
 +      break;
 +    case CSSValueID::kStart:
 +    case CSSValueID::kEnd:
 +    case CSSValueID::kSpanStart:
 +    case CSSValueID::kSpanEnd:
-+      type = InsetAreaKeyword::kStartEnd;
++      type = PositionAreaKeyword::kStartEnd;
 +      break;
 +    case CSSValueID::kSelfStart:
 +    case CSSValueID::kSelfEnd:
 +    case CSSValueID::kSpanSelfStart:
 +    case CSSValueID::kSpanSelfEnd:
-+      type = InsetAreaKeyword::kSelfStartEnd;
++      type = PositionAreaKeyword::kSelfStartEnd;
 +      break;
 +    default:
 +      return absl::nullopt;
 +  }
-+  return InsetAreaKeyword(css_parsing_utils::ConsumeIdent(range), type);
++  return PositionAreaKeyword(css_parsing_utils::ConsumeIdent(range), type);
 +}
 +
 +}  // namespace
 +
-+// <inset-area> = [
++// <position-area> = [
 +//                  [ left | center | right | span-left | span-right |
 +//                    x-start | x-end | span-x-start | span-x-end |
 +//                    x-self-start | x-self-end | span-x-self-start |
@@ -1440,46 +1463,47 @@ index ac245d68d4a972ad3a34e32bc5f22524d2bc8085..a2bbe1e4b7673e85d4cb7f5c6b230a2f
 +//                  [ self-start | center | self-end | span-self-start |
 +//                    span-self-end | span-all ]{1,2}
 +//                ]
-+const CSSValue* ConsumeInsetArea(CSSParserTokenRange& range) {
-+  absl::optional<InsetAreaKeyword> first = ConsumeInsetAreaKeyword(range);
++CSSValue* ConsumePositionArea(CSSParserTokenRange& range) {
++  absl::optional<PositionAreaKeyword> first = ConsumePositionAreaKeyword(range);
 +  if (!first.has_value()) {
 +    return nullptr;
 +  }
-+  absl::optional<InsetAreaKeyword> second = ConsumeInsetAreaKeyword(range);
++  absl::optional<PositionAreaKeyword> second = ConsumePositionAreaKeyword(range);
 +  if (!second.has_value()) {
 +    return first.value().value;
 +  }
-+  if (first.value().type == InsetAreaKeyword::kVertical ||
-+      first.value().type == InsetAreaKeyword::kInline ||
-+      first.value().type == InsetAreaKeyword::kSelfInline ||
-+      second.value().type == InsetAreaKeyword::kHorizontal ||
-+      second.value().type == InsetAreaKeyword::kBlock ||
-+      second.value().type == InsetAreaKeyword::kSelfBlock) {
++  if (first.value().type == PositionAreaKeyword::kVertical ||
++      first.value().type == PositionAreaKeyword::kInline ||
++      first.value().type == PositionAreaKeyword::kSelfInline ||
++      second.value().type == PositionAreaKeyword::kHorizontal ||
++      second.value().type == PositionAreaKeyword::kBlock ||
++      second.value().type == PositionAreaKeyword::kSelfBlock) {
 +    // Use grammar order.
 +    std::swap(first, second);
 +  }
-+  if (!InsetAreaKeyword::IsCompatiblePair(first.value(), second.value())) {
++  if (!PositionAreaKeyword::IsCompatiblePair(first.value(), second.value())) {
 +    return nullptr;
 +  }
-+  const CSSIdentifierValue* first_value = first.value().value;
-+  const CSSIdentifierValue* second_value = second.value().value;
++  CSSIdentifierValue* first_value = first.value().value;
++  CSSIdentifierValue* second_value = second.value().value;
 +  if (first_value->GetValueID() == second_value->GetValueID()) {
 +    return first_value;
 +  }
 +  if (first_value->GetValueID() == CSSValueID::kSpanAll &&
-+      !css_parsing_utils::IsRepeatedInsetAreaValue(
++      !css_parsing_utils::IsRepeatedPositionAreaValue(
 +          second_value->GetValueID())) {
 +    return second_value;
 +  }
 +  if (second_value->GetValueID() == CSSValueID::kSpanAll &&
-+      !css_parsing_utils::IsRepeatedInsetAreaValue(first_value->GetValueID())) {
++      !css_parsing_utils::IsRepeatedPositionAreaValue(
++          first_value->GetValueID())) {
 +    return first_value;
 +  }
 +  return MakeGarbageCollected<CSSValuePair>(first_value, second_value,
 +                                            CSSValuePair::kDropIdenticalValues);
 +}
 +
-+bool IsRepeatedInsetAreaValue(CSSValueID value_id) {
++bool IsRepeatedPositionAreaValue(CSSValueID value_id) {
 +  switch (value_id) {
 +    case CSSValueID::kCenter:
 +    case CSSValueID::kStart:

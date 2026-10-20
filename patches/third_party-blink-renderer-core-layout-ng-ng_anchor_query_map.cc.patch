@@ -1,7 +1,16 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/ng_anchor_query_map.cc b/third_party/blink/renderer/core/layout/ng/ng_anchor_query_map.cc
-index 225d8db0cfa012df72a22e5e888ca40f08a15715..41cc3e13ca65021badd6c9ed0ee69f0caef6332e 100644
+index 225d8db0cfa012df72a22e5e888ca40f08a15715..ca88e974cef20cd39be62c7aeff85b41a619b133 100644
 --- a/third_party/blink/renderer/core/layout/ng/ng_anchor_query_map.cc
 +++ b/third_party/blink/renderer/core/layout/ng/ng_anchor_query_map.cc
+@@ -48,7 +48,7 @@ struct NGStitchedAnchorReference
+   NGLogicalAnchorReference* StitchedAnchorReference() const {
+     DCHECK(layout_object);
+     return MakeGarbageCollected<NGLogicalAnchorReference>(
+-        *layout_object, StitchedRect(), /* is_out_of_flow */ false);
++        *layout_object, StitchedRect(), /* is_out_of_flow */ false, nullptr);
+   }
+ 
+   void Unite(const LogicalRect& other_rect,
 @@ -324,10 +324,13 @@ struct NGStitchedAnchorQueries {
        NGStitchedAnchorQuery& query =
            EnsureStitchedAnchorQuery(*containing_block);

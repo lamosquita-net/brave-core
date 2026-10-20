@@ -1,18 +1,16 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/grid/ng_grid_item.cc b/third_party/blink/renderer/core/layout/ng/grid/ng_grid_item.cc
-index f87687be958af2457ebbbafe7f8ee73448941030..9a2319d371272149c4f7f555754ea58b611ce225 100644
+index f87687be958af2457ebbbafe7f8ee73448941030..238276ecef8ee99b46f8f5899c9b12d754cf5934 100644
 --- a/third_party/blink/renderer/core/layout/ng/grid/ng_grid_item.cc
 +++ b/third_party/blink/renderer/core/layout/ng/grid/ng_grid_item.cc
-@@ -114,6 +114,9 @@ AxisEdge AxisEdgeFromItemPosition(bool is_inline_axis,
-     case ItemPosition::kAuto:
-       NOTREACHED();
-       return AxisEdge::kStart;
+@@ -83,6 +83,7 @@ AxisEdge AxisEdgeFromItemPosition(bool is_inline_axis,
+       return item_position == ItemPosition::kSelfStart ? logical.BlockStart()
+                                                        : logical.BlockEnd();
+     }
 +    case ItemPosition::kAnchorCenter:
-+      NOTREACHED();
-+      return AxisEdge::kCenter;
-   }
- }
- 
-@@ -297,6 +300,8 @@ void GridItemData::ComputeSetIndices(
+     case ItemPosition::kCenter:
+       return AxisEdge::kCenter;
+     case ItemPosition::kFlexStart:
+@@ -297,6 +298,8 @@ void GridItemData::ComputeSetIndices(
    DCHECK(!IsOutOfFlow());
  
    const auto track_direction = track_collection.Direction();
@@ -21,7 +19,7 @@ index f87687be958af2457ebbbafe7f8ee73448941030..9a2319d371272149c4f7f555754ea58b
    auto& range_indices = RangeIndices(track_direction);
  
  #if DCHECK_IS_ON()
-@@ -407,6 +412,13 @@ void GridItemData::ComputeOutOfFlowItemPlacement(
+@@ -407,6 +410,13 @@ void GridItemData::ComputeOutOfFlowItemPlacement(
    }
  }
  

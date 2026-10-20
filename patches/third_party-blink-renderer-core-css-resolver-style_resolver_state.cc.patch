@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_resolver_state.cc b/third_party/blink/renderer/core/css/resolver/style_resolver_state.cc
-index 4f705332cca6fc4605a3d0ea91813df84f0d9566..3a03be658ad466ad1c127d6a3561361d7707d53c 100644
+index 4f705332cca6fc4605a3d0ea91813df84f0d9566..8e73db477c633f0990444437b57f8beb9603fb80 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_resolver_state.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_resolver_state.cc
 @@ -24,6 +24,7 @@
@@ -41,9 +41,9 @@ index 4f705332cca6fc4605a3d0ea91813df84f0d9566..3a03be658ad466ad1c127d6a3561361d
        *style_builder_, ParentStyle(), RootElementStyle(),
        GetDocument().GetStyleEngine().GetViewportSize(),
        CSSToLengthConversionData::ContainerSizes(container_unit_context_),
-+      CSSToLengthConversionData::AnchorData(anchor_evaluator_,
-+                                            StyleBuilder().PositionAnchor(),
-+                                            StyleBuilder().InsetAreaOffsets()),
++      CSSToLengthConversionData::AnchorData(
++          anchor_evaluator_, StyleBuilder().PositionAnchor(),
++          StyleBuilder().PositionAreaOffsets()),
        StyleBuilder().EffectiveZoom(), length_conversion_flags_);
    element_style_resources_.UpdateLengthConversionData(
        &css_to_length_conversion_data_);
@@ -54,7 +54,7 @@ index 4f705332cca6fc4605a3d0ea91813df84f0d9566..3a03be658ad466ad1c127d6a3561361d
 -
 +  CSSToLengthConversionData::AnchorData anchor_data(
 +      anchor_evaluator_, StyleBuilder().PositionAnchor(),
-+      StyleBuilder().InsetAreaOffsets());
++      StyleBuilder().PositionAreaOffsets());
    return CSSToLengthConversionData(
        StyleBuilder().GetWritingMode(), font_sizes, line_height_size,
 -      viewport_size, container_sizes, 1, length_conversion_flags_);
@@ -72,18 +72,18 @@ index 4f705332cca6fc4605a3d0ea91813df84f0d9566..3a03be658ad466ad1c127d6a3561361d
 +    css_to_length_conversion_data_.SetAnchorData(
 +        CSSToLengthConversionData::AnchorData(
 +            anchor_evaluator_, position_anchor,
-+            StyleBuilder().InsetAreaOffsets()));
++            StyleBuilder().PositionAreaOffsets()));
 +  }
 +}
 +
-+void StyleResolverState::SetInsetAreaOffsets(
-+    const absl::optional<InsetAreaOffsets>& inset_area_offsets) {
-+  if (StyleBuilder().InsetAreaOffsets() != inset_area_offsets) {
-+    StyleBuilder().SetInsetAreaOffsets(inset_area_offsets);
++void StyleResolverState::SetPositionAreaOffsets(
++    const absl::optional<PositionAreaOffsets>& position_area_offsets) {
++  if (StyleBuilder().PositionAreaOffsets() != position_area_offsets) {
++    StyleBuilder().SetPositionAreaOffsets(position_area_offsets);
 +    css_to_length_conversion_data_.SetAnchorData(
 +        CSSToLengthConversionData::AnchorData(anchor_evaluator_,
 +                                              StyleBuilder().PositionAnchor(),
-+                                              inset_area_offsets));
++                                              position_area_offsets));
 +  }
 +}
 +

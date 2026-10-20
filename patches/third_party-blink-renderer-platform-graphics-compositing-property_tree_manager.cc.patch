@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/graphics/compositing/property_tree_manager.cc b/third_party/blink/renderer/platform/graphics/compositing/property_tree_manager.cc
-index 400b1cb44e044270e7e58b9a51f99593f1831069..69707338216d1009d163ae5d3398f9f5d6e19d8c 100644
+index 400b1cb44e044270e7e58b9a51f99593f1831069..ed5f1d6a0da35ea6d448c02b34576003fddbea23 100644
 --- a/third_party/blink/renderer/platform/graphics/compositing/property_tree_manager.cc
 +++ b/third_party/blink/renderer/platform/graphics/compositing/property_tree_manager.cc
 @@ -62,7 +62,7 @@ static void UpdateCcTransformLocalMatrix(
@@ -11,33 +11,7 @@ index 400b1cb44e044270e7e58b9a51f99593f1831069..69707338216d1009d163ae5d3398f9f5
      // The sticky offset on the blink transform node is pre-computed and stored
      // to the local matrix. Cc applies sticky offset dynamically on top of the
      // local matrix. We should not set the local matrix on cc node if it is a
-@@ -205,6 +205,25 @@ bool PropertyTreeManager::DirectlyUpdatePageScaleTransform(
-   return true;
- }
- 
-+bool PropertyTreeManager::DirectlyUpdateAnchorPositionScrollTranslation(
-+    cc::LayerTreeHost& host,
-+    const TransformPaintPropertyNode& transform) {
-+  host.WaitForProtectedSequenceCompletion();
-+
-+  auto& transform_tree = host.property_trees()->transform_tree_mutable();
-+  auto* cc_transform = transform_tree.Node(
-+      transform.CcNodeId(host.property_trees()->sequence_number()));
-+  if (!cc_transform) {
-+    return false;
-+  }
-+
-+  transform_tree.EnsureAnchorPositionScrollData(cc_transform->id)
-+      .default_adjustment = transform.Get2dTranslation();
-+  // The change of the translation must be a result of other transform changes,
-+  // so we can rely on the other changes to set the changed flags.
-+  return true;
-+}
-+
- void PropertyTreeManager::DirectlySetScrollOffset(
-     cc::LayerTreeHost& host,
-     CompositorElementId element_id,
-@@ -485,11 +504,10 @@ int PropertyTreeManager::EnsureCompositorTransformNode(
+@@ -485,11 +485,8 @@ int PropertyTreeManager::EnsureCompositorTransformNode(
      }
    }
  
@@ -47,13 +21,11 @@ index 400b1cb44e044270e7e58b9a51f99593f1831069..69707338216d1009d163ae5d3398f9f5
 -        transform_tree_.EnsureAnchorScrollContainersData(id);
 -    compositor_data = *anchor_scroll_data;
 +  if (const auto* data = transform_node.GetAnchorPositionScrollData()) {
-+    auto& cc_data = transform_tree_.EnsureAnchorPositionScrollData(id);
-+    cc_data = *data;
-+    cc_data.default_adjustment = transform_node.Get2dTranslation();
++    transform_tree_.EnsureAnchorPositionScrollData(id) = *data;
    }
  
    auto compositor_element_id = transform_node.GetCompositorElementId();
-@@ -503,8 +521,6 @@ int PropertyTreeManager::EnsureCompositorTransformNode(
+@@ -503,8 +500,6 @@ int PropertyTreeManager::EnsureCompositorTransformNode(
    // If this transform is a scroll offset translation, create the associated
    // compositor scroll property node and adjust the compositor transform node's
    // scroll offset.

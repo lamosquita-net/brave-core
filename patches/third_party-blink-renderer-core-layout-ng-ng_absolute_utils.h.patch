@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/ng_absolute_utils.h b/third_party/blink/renderer/core/layout/ng/ng_absolute_utils.h
-index bcd355c5712bb6ab78c9299d8e62f66e2ef08b5a..e3e93e2235385a6cf7044e438629b654132cb1ae 100644
+index bcd355c5712bb6ab78c9299d8e62f66e2ef08b5a..dc81d10ae68c88ceb318b7f6e42c54f983860cd9 100644
 --- a/third_party/blink/renderer/core/layout/ng/ng_absolute_utils.h
 +++ b/third_party/blink/renderer/core/layout/ng/ng_absolute_utils.h
 @@ -15,8 +15,8 @@
@@ -12,7 +12,7 @@ index bcd355c5712bb6ab78c9299d8e62f66e2ef08b5a..e3e93e2235385a6cf7044e438629b654
  class NGConstraintSpace;
  class NGLayoutResult;
  struct NGLogicalStaticPosition;
-@@ -47,24 +47,108 @@ struct CORE_EXPORT NGLogicalOutOfFlowInsets {
+@@ -47,24 +47,114 @@ struct CORE_EXPORT NGLogicalOutOfFlowInsets {
    absl::optional<LayoutUnit> block_end;
  };
  
@@ -28,6 +28,7 @@ index bcd355c5712bb6ab78c9299d8e62f66e2ef08b5a..e3e93e2235385a6cf7044e438629b654
 +
 +LogicalAlignment ComputeAlignment(
 +    const ComputedStyle& style,
++    bool is_containing_block_scrollable,
 +    WritingDirectionMode container_writing_direction,
 +    WritingDirectionMode self_writing_direction);
 +
@@ -76,11 +77,17 @@ index bcd355c5712bb6ab78c9299d8e62f66e2ef08b5a..e3e93e2235385a6cf7044e438629b654
 +  // If safe alignment is specified (e.g. "align-self: safe end") and the
 +  // object overflows its containing block it'll become start aligned instead.
 +  // This field indicates the "start" edge of the containing block.
-+  absl::optional<InsetBias> safe_inline_inset_bias;
-+  absl::optional<InsetBias> safe_block_inset_bias;
++  absl::optional<InsetBias> inline_safe_inset_bias;
++  absl::optional<InsetBias> block_safe_inset_bias;
  
 -// Computes the inset-modified containing block without the final step of
 -// clamping negative sizes to zero.
++  // If non-normal alignment is specified (e.g. "align-self: center") we'll
++  // adjust the position so that it doesn't overflow the containing block.
++  // This field indicates the "start" edge of the containing block.
++  absl::optional<InsetBias> inline_default_inset_bias;
++  absl::optional<InsetBias> block_default_inset_bias;
++
 +  LayoutUnit InlineEndOffset() const {
 +    return available_size.inline_size - inline_end;
 +  }
@@ -115,7 +122,6 @@ index bcd355c5712bb6ab78c9299d8e62f66e2ef08b5a..e3e93e2235385a6cf7044e438629b654
 +    const LogicalAlignment&,
 +    const NGLogicalOutOfFlowInsets&,
 +    const NGLogicalStaticPosition&,
-+    const LogicalAnchorCenterPosition&,
 +    WritingDirectionMode container_writing_direction,
 +    WritingDirectionMode self_writing_direction);
 +
@@ -134,7 +140,7 @@ index bcd355c5712bb6ab78c9299d8e62f66e2ef08b5a..e3e93e2235385a6cf7044e438629b654
  
  // The following routines implement the absolute size resolution algorithm.
  // https://www.w3.org/TR/css-position-3/#abs-non-replaced-width
-@@ -74,9 +158,8 @@ ComputeOutOfFlowAvailableRect(const NGBlockNode&,
+@@ -74,9 +164,8 @@ ComputeOutOfFlowAvailableRect(const NGBlockNode&,
  // 1. The inline-dimensions with |ComputeOutOfFlowInlineDimensions|.
  // 2. The block-dimensions with |ComputeOutOfFlowBlockDimensions|.
  //
@@ -146,12 +152,13 @@ index bcd355c5712bb6ab78c9299d8e62f66e2ef08b5a..e3e93e2235385a6cf7044e438629b654
  
  // |replaced_size| should be set if and only if element is replaced element.
  // Will return true if |NGBlockNode::ComputeMinMaxSizes| was called.
-@@ -84,13 +167,11 @@ CORE_EXPORT bool ComputeOutOfFlowInlineDimensions(
+@@ -84,13 +173,13 @@ CORE_EXPORT bool ComputeOutOfFlowInlineDimensions(
      const NGBlockNode&,
      const ComputedStyle& style,
      const NGConstraintSpace&,
 -    const NGLogicalOutOfFlowInsets&,
 +    const InsetModifiedContainingBlock&,
++    const LogicalAnchorCenterPosition&,
 +    const LogicalAlignment&,
      const NGBoxStrut& border_padding,
 -    const NGLogicalStaticPosition&,
@@ -159,16 +166,18 @@ index bcd355c5712bb6ab78c9299d8e62f66e2ef08b5a..e3e93e2235385a6cf7044e438629b654
      const absl::optional<LogicalSize>& replaced_size,
 -    const WritingDirectionMode container_writing_direction,
 -    const Length::AnchorEvaluator* anchor_evaluator,
++    const NGBoxStrut& container_insets,
 +    WritingDirectionMode container_writing_direction,
      NGLogicalOutOfFlowDimensions* dimensions);
  
  // If layout was performed to determine the position, this will be returned
-@@ -99,13 +180,11 @@ CORE_EXPORT const NGLayoutResult* ComputeOutOfFlowBlockDimensions(
+@@ -99,13 +188,13 @@ CORE_EXPORT const NGLayoutResult* ComputeOutOfFlowBlockDimensions(
      const NGBlockNode&,
      const ComputedStyle& style,
      const NGConstraintSpace&,
 -    const NGLogicalOutOfFlowInsets&,
 +    const InsetModifiedContainingBlock&,
++    const LogicalAnchorCenterPosition&,
 +    const LogicalAlignment&,
      const NGBoxStrut& border_padding,
 -    const NGLogicalStaticPosition&,
@@ -176,6 +185,7 @@ index bcd355c5712bb6ab78c9299d8e62f66e2ef08b5a..e3e93e2235385a6cf7044e438629b654
      const absl::optional<LogicalSize>& replaced_size,
 -    const WritingDirectionMode container_writing_direction,
 -    const Length::AnchorEvaluator* anchor_evaluator,
++    const NGBoxStrut& container_insets,
 +    WritingDirectionMode container_writing_direction,
      NGLogicalOutOfFlowDimensions* dimensions);
  

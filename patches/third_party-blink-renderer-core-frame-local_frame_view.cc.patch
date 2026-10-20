@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/frame/local_frame_view.cc b/third_party/blink/renderer/core/frame/local_frame_view.cc
-index 5ddb3dc2d6c7748ee9468f2142af1b40ad85e2f8..0aa6131deb6d007ea91b160fd0fc6ea4bccf86ab 100644
+index 5ddb3dc2d6c7748ee9468f2142af1b40ad85e2f8..5fe63ef06a00866dd1b1e047d55bf92e90b015b8 100644
 --- a/third_party/blink/renderer/core/frame/local_frame_view.cc
 +++ b/third_party/blink/renderer/core/frame/local_frame_view.cc
-@@ -1268,8 +1268,8 @@ void LocalFrameView::MarkFixedPositionObjectsForLayout(bool width_changed,
+@@ -154,6 +154,7 @@
+ #include "third_party/blink/renderer/core/scroll/scroll_animator_base.h"
+ #include "third_party/blink/renderer/core/scroll/smooth_scroll_sequencer.h"
+ #include "third_party/blink/renderer/core/style/computed_style.h"
++#include "third_party/blink/renderer/core/style/position_try_fallbacks.h"
+ #include "third_party/blink/renderer/core/svg/svg_document_extensions.h"
+ #include "third_party/blink/renderer/core/svg/svg_svg_element.h"
+ #include "third_party/blink/renderer/core/view_transition/view_transition.h"
+@@ -1268,8 +1269,8 @@ void LocalFrameView::MarkFixedPositionObjectsForLayout(bool width_changed,
    for (const auto& layout_object : *fixed_position_objects_) {
      const ComputedStyle& style = layout_object->StyleRef();
      if (width_changed) {
@@ -13,7 +21,7 @@ index 5ddb3dc2d6c7748ee9468f2142af1b40ad85e2f8..0aa6131deb6d007ea91b160fd0fc6ea4
          layout_object->SetNeedsPositionedMovementLayout();
        } else {
          layout_object->SetNeedsLayoutAndFullPaintInvalidation(
-@@ -1277,8 +1277,8 @@ void LocalFrameView::MarkFixedPositionObjectsForLayout(bool width_changed,
+@@ -1277,8 +1278,8 @@ void LocalFrameView::MarkFixedPositionObjectsForLayout(bool width_changed,
        }
      }
      if (height_changed) {
@@ -24,7 +32,7 @@ index 5ddb3dc2d6c7748ee9468f2142af1b40ad85e2f8..0aa6131deb6d007ea91b160fd0fc6ea4
          layout_object->SetNeedsPositionedMovementLayout();
        } else {
          layout_object->SetNeedsLayoutAndFullPaintInvalidation(
-@@ -2376,6 +2376,11 @@ void LocalFrameView::UpdateLifecyclePhasesInternal(
+@@ -2376,6 +2377,11 @@ void LocalFrameView::UpdateLifecyclePhasesInternal(
        break;
    }
  
@@ -36,7 +44,32 @@ index 5ddb3dc2d6c7748ee9468f2142af1b40ad85e2f8..0aa6131deb6d007ea91b160fd0fc6ea4
    // Once we exit the ResizeObserver / IntersectionObserver loop above, we need
    // to clear the resize observer limits so that next time we run this, we can
    // deliver more observations.
-@@ -2622,6 +2627,7 @@ bool LocalFrameView::RunPrePaintLifecyclePhase(
+@@ -2471,7 +2477,9 @@ bool LocalFrameView::RunResizeObserverSteps(
+   }
+   disconnected_elements_with_remembered_size_.clear();
+ 
+-  bool re_run_lifecycles = false;
++  // https://drafts.csswg.org/css-anchor-position-1/#last-successful-position-option
++  bool re_run_lifecycles = UpdateLastSuccessfulPositionFallbacks();
++
+   ForAllNonThrottledLocalFrameViews(
+       [&re_run_lifecycles](LocalFrameView& frame_view) {
+         bool result = frame_view.NotifyResizeObservers();
+@@ -2528,6 +2536,13 @@ bool LocalFrameView::RunStyleAndLayoutLifecyclePhases(
+     });
+   }
+ 
++  ForAllNonThrottledLocalFrameViews([](LocalFrameView& frame_view) {
++    auto lifecycle_observers = frame_view.lifecycle_observers_;
++    for (auto& observer : lifecycle_observers) {
++      observer->DidFinishLayout();
++    }
++  });
++
+   return Lifecycle().GetState() >= DocumentLifecycle::kLayoutClean;
+ }
+ 
+@@ -2622,6 +2637,7 @@ bool LocalFrameView::RunPrePaintLifecyclePhase(
      frame_->GetPage()->GetValidationMessageClient().UpdatePrePaint();
      ForAllNonThrottledLocalFrameViews([](LocalFrameView& view) {
        view.frame_->UpdateFrameColorOverlayPrePaint();
@@ -44,7 +77,7 @@ index 5ddb3dc2d6c7748ee9468f2142af1b40ad85e2f8..0aa6131deb6d007ea91b160fd0fc6ea4
      });
      if (auto* web_local_frame_impl = WebLocalFrameImpl::FromFrame(frame_))
        web_local_frame_impl->UpdateDevToolsOverlaysPrePaint();
-@@ -3010,12 +3016,12 @@ void LocalFrameView::PushPaintArtifactToCompositor(bool repainted) {
+@@ -3010,12 +3026,12 @@ void LocalFrameView::PushPaintArtifactToCompositor(bool repainted) {
          });
    }
  
@@ -62,7 +95,7 @@ index 5ddb3dc2d6c7748ee9468f2142af1b40ad85e2f8..0aa6131deb6d007ea91b160fd0fc6ea4
    }
  
    WTF::Vector<std::unique_ptr<ViewTransitionRequest>> view_transition_requests;
-@@ -3023,7 +3029,7 @@ void LocalFrameView::PushPaintArtifactToCompositor(bool repainted) {
+@@ -3023,7 +3039,7 @@ void LocalFrameView::PushPaintArtifactToCompositor(bool repainted) {
  
    paint_artifact_compositor_->Update(
        paint_controller_->GetPaintArtifactShared(), viewport_properties,
@@ -71,7 +104,7 @@ index 5ddb3dc2d6c7748ee9468f2142af1b40ad85e2f8..0aa6131deb6d007ea91b160fd0fc6ea4
        std::move(view_transition_requests));
  
    CreatePaintTimelineEvents();
-@@ -4737,8 +4743,8 @@ void LocalFrameView::GetUserScrollTranslationNodes(
+@@ -4737,8 +4753,8 @@ void LocalFrameView::GetUserScrollTranslationNodes(
    }
  }
  
@@ -82,7 +115,7 @@ index 5ddb3dc2d6c7748ee9468f2142af1b40ad85e2f8..0aa6131deb6d007ea91b160fd0fc6ea4
    const auto* scrollable_areas = UserScrollableAreas();
    if (!scrollable_areas) {
      return;
-@@ -4751,7 +4757,7 @@ void LocalFrameView::GetAnchorScrollContainerNodes(
+@@ -4751,7 +4767,7 @@ void LocalFrameView::GetAnchorScrollContainerNodes(
    // see crbug.com/1378021) and is not performance-sensitive, we choose to just
    // use vector and binary search.
    Vector<cc::ElementId> scroll_container_ids;
@@ -91,7 +124,7 @@ index 5ddb3dc2d6c7748ee9468f2142af1b40ad85e2f8..0aa6131deb6d007ea91b160fd0fc6ea4
    std::sort(scroll_container_ids.begin(), scroll_container_ids.end());
    scroll_container_ids.erase(
        std::unique(scroll_container_ids.begin(), scroll_container_ids.end()),
-@@ -4770,7 +4776,7 @@ void LocalFrameView::GetAnchorScrollContainerNodes(
+@@ -4770,7 +4786,7 @@ void LocalFrameView::GetAnchorScrollContainerNodes(
                std::lower_bound(scroll_container_ids.begin(),
                                 scroll_container_ids.end(), element_id);
            iter != scroll_container_ids.end() && *iter == element_id) {
@@ -100,3 +133,15 @@ index 5ddb3dc2d6c7748ee9468f2142af1b40ad85e2f8..0aa6131deb6d007ea91b160fd0fc6ea4
              paint_properties->ScrollTranslation());
        }
      }
+@@ -5012,4 +5028,11 @@ void LocalFrameView::NotifyElementWithRememberedSizeDisconnected(
+   disconnected_elements_with_remembered_size_.insert(element);
+ }
+ 
++bool LocalFrameView::UpdateLastSuccessfulPositionFallbacks() {
++  return GetFrame()
++      .GetDocument()
++      ->GetStyleEngine()
++      .UpdateLastSuccessfulPositionFallbacks();
++}
++
+ }  // namespace blink

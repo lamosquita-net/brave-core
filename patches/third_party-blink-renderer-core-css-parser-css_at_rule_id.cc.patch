@@ -1,20 +1,22 @@
 diff --git a/third_party/blink/renderer/core/css/parser/css_at_rule_id.cc b/third_party/blink/renderer/core/css/parser/css_at_rule_id.cc
-index f7bec808a3af9ce26069586f2b3820e16678bdd1..8caf9c707de3e88764d3493d814db80b985033f6 100644
+index f7bec808a3af9ce26069586f2b3820e16678bdd1..eb44f4d8586acd2936a013780538ff48ab6e1d34 100644
 --- a/third_party/blink/renderer/core/css/parser/css_at_rule_id.cc
 +++ b/third_party/blink/renderer/core/css/parser/css_at_rule_id.cc
-@@ -61,9 +61,9 @@ CSSAtRuleID CssAtRuleID(StringView name) {
+@@ -61,11 +61,8 @@ CSSAtRuleID CssAtRuleID(StringView name) {
    if (EqualIgnoringASCIICase(name, "page")) {
      return CSSAtRuleID::kCSSAtRulePage;
    }
 -  if (EqualIgnoringASCIICase(name, "position-fallback")) {
-+  if (EqualIgnoringASCIICase(name, "position-try")) {
-     if (RuntimeEnabledFeatures::CSSAnchorPositioningEnabled()) {
+-    if (RuntimeEnabledFeatures::CSSAnchorPositioningEnabled()) {
 -      return CSSAtRuleID::kCSSAtRulePositionFallback;
-+      return CSSAtRuleID::kCSSAtRulePositionTry;
-     }
-     return CSSAtRuleID::kCSSAtRuleInvalid;
+-    }
+-    return CSSAtRuleID::kCSSAtRuleInvalid;
++  if (EqualIgnoringASCIICase(name, "position-try")) {
++    return CSSAtRuleID::kCSSAtRulePositionTry;
    }
-@@ -85,12 +85,6 @@ CSSAtRuleID CssAtRuleID(StringView name) {
+   if (EqualIgnoringASCIICase(name, "property")) {
+     return CSSAtRuleID::kCSSAtRuleProperty;
+@@ -85,12 +82,6 @@ CSSAtRuleID CssAtRuleID(StringView name) {
    if (EqualIgnoringASCIICase(name, "supports")) {
      return CSSAtRuleID::kCSSAtRuleSupports;
    }
@@ -27,7 +29,7 @@ index f7bec808a3af9ce26069586f2b3820e16678bdd1..8caf9c707de3e88764d3493d814db80b
    if (EqualIgnoringASCIICase(name, "starting-style")) {
      if (RuntimeEnabledFeatures::CSSInitialPseudoEnabled()) {
        return CSSAtRuleID::kCSSAtRuleStartingStyle;
-@@ -151,8 +145,7 @@ absl::optional<WebFeature> AtRuleFeature(CSSAtRuleID rule_id) {
+@@ -151,8 +142,7 @@ absl::optional<WebFeature> AtRuleFeature(CSSAtRuleID rule_id) {
        return WebFeature::kCSSAtRuleSwash;
      case CSSAtRuleID::kCSSAtRuleSupports:
        return WebFeature::kCSSAtRuleSupports;

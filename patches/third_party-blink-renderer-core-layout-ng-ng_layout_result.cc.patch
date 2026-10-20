@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/ng_layout_result.cc b/third_party/blink/renderer/core/layout/ng/ng_layout_result.cc
-index 5df94e6b9ba4fb9fdb24c0247011d1fdd4799dcd..43b863042ab16dcf7530c91d7cee5cfc6fa1bc35 100644
+index 5df94e6b9ba4fb9fdb24c0247011d1fdd4799dcd..4ab48375b53f836dad5730aa50008cc7f2541ef7 100644
 --- a/third_party/blink/renderer/core/layout/ng/ng_layout_result.cc
 +++ b/third_party/blink/renderer/core/layout/ng/ng_layout_result.cc
-@@ -27,7 +27,7 @@ struct SameSizeAsNGLayoutResult
+@@ -7,6 +7,7 @@
+ #include <memory>
+ #include <utility>
+ 
++#include "third_party/blink/renderer/core/dom/flat_tree_traversal.h"
+ #include "third_party/blink/renderer/core/layout/ng/exclusions/ng_exclusion_space.h"
+ #include "third_party/blink/renderer/core/layout/ng/inline/ng_line_box_fragment_builder.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_box_fragment_builder.h"
+@@ -27,7 +28,7 @@ struct SameSizeAsNGLayoutResult
    Member<void*> rare_data_;
    union {
      NGBfcOffset bfc_offset;
@@ -11,7 +19,7 @@ index 5df94e6b9ba4fb9fdb24c0247011d1fdd4799dcd..43b863042ab16dcf7530c91d7cee5cfc
    };
    LayoutUnit intrinsic_block_size;
    unsigned bitfields[1];
-@@ -167,7 +167,7 @@ NGLayoutResult::NGLayoutResult(const NGLayoutResult& other,
+@@ -167,7 +168,7 @@ NGLayoutResult::NGLayoutResult(const NGLayoutResult& other,
                       : nullptr),
        intrinsic_block_size_(other.intrinsic_block_size_),
        bitfields_(other.bitfields_) {
@@ -20,7 +28,7 @@ index 5df94e6b9ba4fb9fdb24c0247011d1fdd4799dcd..43b863042ab16dcf7530c91d7cee5cfc
      bfc_offset_.line_offset = bfc_line_offset;
      bfc_offset_.block_offset = bfc_block_offset.value_or(LayoutUnit());
      bitfields_.is_bfc_block_offset_nullopt = !bfc_block_offset.has_value();
-@@ -175,7 +175,7 @@ NGLayoutResult::NGLayoutResult(const NGLayoutResult& other,
+@@ -175,7 +176,7 @@ NGLayoutResult::NGLayoutResult(const NGLayoutResult& other,
      DCHECK(physical_fragment_->IsOutOfFlowPositioned());
      DCHECK_EQ(bfc_line_offset, LayoutUnit());
      DCHECK(bfc_block_offset && bfc_block_offset.value() == LayoutUnit());
@@ -29,7 +37,7 @@ index 5df94e6b9ba4fb9fdb24c0247011d1fdd4799dcd..43b863042ab16dcf7530c91d7cee5cfc
    }
  
    NGExclusionSpace new_exclusion_space = MergeExclusionSpaces(
-@@ -202,11 +202,12 @@ NGLayoutResult::NGLayoutResult(const NGLayoutResult& other,
+@@ -202,11 +203,12 @@ NGLayoutResult::NGLayoutResult(const NGLayoutResult& other,
                       : nullptr),
        intrinsic_block_size_(other.intrinsic_block_size_),
        bitfields_(other.bitfields_) {
@@ -44,3 +52,31 @@ index 5df94e6b9ba4fb9fdb24c0247011d1fdd4799dcd..43b863042ab16dcf7530c91d7cee5cfc
    }
  
    DCHECK_EQ(physical_fragment_->Size(), other.physical_fragment_->Size());
+@@ -301,6 +303,14 @@ NGLayoutResult::RareData* NGLayoutResult::EnsureRareData() {
+   return rare_data_;
+ }
+ 
++void NGLayoutResult::MutableForOutOfFlow::SetDisplayLocksAffectedByAnchors(
++    HeapHashSet<Member<Element>>* display_locks) {
++  if (layout_result_->rare_data_ || display_locks) {
++    layout_result_->EnsureRareData()->display_locks_affected_by_anchors =
++        display_locks;
++  }
++}
++
+ #if DCHECK_IS_ON()
+ void NGLayoutResult::CheckSameForSimplifiedLayout(
+     const NGLayoutResult& other,
+@@ -362,10 +372,12 @@ void NGLayoutResult::Trace(Visitor* visitor) const {
+ 
+ void NGLayoutResult::RareData::Trace(Visitor* visitor) const {
+   visitor->Trace(early_break);
++  visitor->Trace(non_overflowing_scroll_ranges);
+   // This will not cause TOCTOU issue because data_union_type is set in the
+   // constructor and never changed.
+   if (const BlockData* data = GetBlockData())
+     visitor->Trace(data->column_spanner_path);
++  visitor->Trace(display_locks_affected_by_anchors);
+ }
+ 
+ }  // namespace blink

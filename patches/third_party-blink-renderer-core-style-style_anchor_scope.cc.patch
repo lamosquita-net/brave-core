@@ -1,0 +1,33 @@
+diff --git a/third_party/blink/renderer/core/style/style_anchor_scope.cc b/third_party/blink/renderer/core/style/style_anchor_scope.cc
+new file mode 100644
+index 0000000000000000000000000000000000000000..2513a58f4f9c54ff0176fd1ab5798aec3d40b57c
+--- /dev/null
++++ b/third_party/blink/renderer/core/style/style_anchor_scope.cc
+@@ -0,0 +1,27 @@
++// Copyright 2024 The Chromium Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "third_party/blink/renderer/core/style/style_anchor_scope.h"
++
++#include "third_party/blink/renderer/core/dom/tree_scope.h"
++
++namespace blink {
++
++// FlyWeb (FM.28): see the header; upstream has these inline with Member
++// fields.
++StyleAnchorScope::StyleAnchorScope() = default;
++
++StyleAnchorScope::StyleAnchorScope(Type type,
++                                   const TreeScope* all_tree_scope,
++                                   const ScopedCSSNameList* names)
++    : type_(type), all_tree_scope_(all_tree_scope), names_(names) {}
++
++StyleAnchorScope::StyleAnchorScope(const StyleAnchorScope&) = default;
++
++StyleAnchorScope& StyleAnchorScope::operator=(const StyleAnchorScope&) =
++    default;
++
++StyleAnchorScope::~StyleAnchorScope() = default;
++
++}  // namespace blink
