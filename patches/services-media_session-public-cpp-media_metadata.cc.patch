@@ -1,0 +1,31 @@
+diff --git a/services/media_session/public/cpp/media_metadata.cc b/services/media_session/public/cpp/media_metadata.cc
+index 35dd8eaa3aefcd38859f4a88a2eb2be3a1fab119..470edc87e99193069c050b80687227339762e370 100644
+--- a/services/media_session/public/cpp/media_metadata.cc
++++ b/services/media_session/public/cpp/media_metadata.cc
+@@ -4,6 +4,7 @@
+ 
+ #include "services/media_session/public/cpp/media_metadata.h"
+ 
++#include "services/media_session/public/cpp/chapter_information.h"
+ #include "services/media_session/public/cpp/media_image.h"
+ 
+ namespace media_session {
+@@ -16,7 +17,8 @@ MediaMetadata::MediaMetadata(const MediaMetadata& other) = default;
+ 
+ bool MediaMetadata::operator==(const MediaMetadata& other) const {
+   return title == other.title && artist == other.artist &&
+-         album == other.album && source_title == other.source_title;
++         album == other.album && source_title == other.source_title &&
++         chapters == other.chapters;
+ }
+ 
+ bool MediaMetadata::operator!=(const MediaMetadata& other) const {
+@@ -25,7 +27,7 @@ bool MediaMetadata::operator!=(const MediaMetadata& other) const {
+ 
+ bool MediaMetadata::IsEmpty() const {
+   return title.empty() && artist.empty() && album.empty() &&
+-         source_title.empty();
++         source_title.empty() && chapters.empty();
+ }
+ 
+ }  // namespace media_session

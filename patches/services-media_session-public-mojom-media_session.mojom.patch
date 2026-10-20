@@ -1,0 +1,30 @@
+diff --git a/services/media_session/public/mojom/media_session.mojom b/services/media_session/public/mojom/media_session.mojom
+index ec57ac27bc9b172289ec0ff02ee44febb01178b7..ff23b87d6890e4403a8384f6057b037b4078302d 100644
+--- a/services/media_session/public/mojom/media_session.mojom
++++ b/services/media_session/public/mojom/media_session.mojom
+@@ -75,6 +75,15 @@ struct MediaImage {
+   array<gfx.mojom.Size> sizes;
+ };
+ 
++// Chapter info in MediaMetadata
++// Spec: https://wicg.github.io/mediasession/
++[Stable]
++struct ChapterInformation {
++  mojo_base.mojom.String16 title;
++  mojo_base.mojom.TimeDelta startTime;
++  array<MediaImage> artwork;
++};
++
+ // MediaMetadata
+ [Stable]
+ struct MediaMetadata {
+@@ -87,6 +96,9 @@ struct MediaMetadata {
+   // session. This could be the name of the app or the name of the site playing
+   // media.
+   mojo_base.mojom.String16 source_title;
++
++  // Also defined in the spec: https://wicg.github.io/mediasession/
++  [MinVersion=21] array<ChapterInformation>? chapters;
+ };
+ 
+ // The color type of the bitmap.
