@@ -1,0 +1,249 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/ng_absolute_utils_test.cc b/third_party/blink/renderer/core/layout/ng/ng_absolute_utils_test.cc
+index ea34cba07b2c14aa3511c42f4c3aeeb61ce62a98..36905719b9da11640a6ee8ff6ee60485d7dbb874 100644
+--- a/third_party/blink/renderer/core/layout/ng/ng_absolute_utils_test.cc
++++ b/third_party/blink/renderer/core/layout/ng/ng_absolute_utils_test.cc
+@@ -4,24 +4,36 @@
+ 
+ #include "third_party/blink/renderer/core/layout/ng/ng_absolute_utils.h"
+ 
+-#include "third_party/blink/renderer/core/layout/ng/geometry/ng_static_position.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_block_node.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_constraint_space_builder.h"
++#include "third_party/blink/renderer/core/layout/ng/geometry/ng_static_position.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_layout_result.h"
+ #include "third_party/blink/renderer/core/layout/ng/ng_length_utils.h"
+ #include "third_party/blink/renderer/core/style/computed_style.h"
+ #include "third_party/blink/renderer/core/testing/core_unit_test_helper.h"
++#include "third_party/blink/renderer/platform/heap/garbage_collected.h"
+ 
+ namespace blink {
+ namespace {
+ 
+ class NGAbsoluteUtilsTest : public RenderingTest {
++ public:
++  NGAbsoluteUtilsTest()
++      : ltr_space_(CreateConstraintSpace(
++            {WritingMode::kHorizontalTb, TextDirection::kLtr})),
++        rtl_space_(CreateConstraintSpace(
++            {WritingMode::kHorizontalTb, TextDirection::kRtl})),
++        vlr_space_(CreateConstraintSpace(
++            {WritingMode::kVerticalLr, TextDirection::kLtr})),
++        vrl_space_(CreateConstraintSpace(
++            {WritingMode::kVerticalRl, TextDirection::kLtr})) {}
++
+  protected:
+   NGConstraintSpace CreateConstraintSpace(
+       WritingDirectionMode writing_direction) {
+     NGConstraintSpaceBuilder builder(WritingMode::kHorizontalTb,
+-                                     writing_direction,
+-                                     /* is_new_fc */ true);
++                                   writing_direction,
++                                   /* is_new_fc */ true);
+     builder.SetAvailableSize({LayoutUnit(200), LayoutUnit(300)});
+     return builder.ToConstraintSpace();
+   }
+@@ -46,15 +58,7 @@ class NGAbsoluteUtilsTest : public RenderingTest {
+     )HTML");
+     RunDocumentLifecycle();
+ 
+-    element_ = GetDocument().getElementById("target");
+-    ltr_space_ = CreateConstraintSpace(
+-        {WritingMode::kHorizontalTb, TextDirection::kLtr});
+-    rtl_space_ = CreateConstraintSpace(
+-        {WritingMode::kHorizontalTb, TextDirection::kRtl});
+-    vlr_space_ =
+-        CreateConstraintSpace({WritingMode::kVerticalLr, TextDirection::kLtr});
+-    vrl_space_ =
+-        CreateConstraintSpace({WritingMode::kVerticalRl, TextDirection::kLtr});
++    element_ = GetElementById("target");
+   }
+ 
+   void SetHorizontalStyle(const String& left,
+@@ -99,28 +103,40 @@ class NGAbsoluteUtilsTest : public RenderingTest {
+       const NGLogicalStaticPosition& static_position,
+       const WritingDirectionMode container_writing_direction,
+       NGLogicalOutOfFlowDimensions* dimensions) {
++    GetDocument().Lifecycle().AdvanceTo(DocumentLifecycle::kInStyleRecalc);
++    GetDocument().Lifecycle().AdvanceTo(DocumentLifecycle::kStyleClean);
++    GetDocument().Lifecycle().AdvanceTo(DocumentLifecycle::kInPerformLayout);
+     WritingModeConverter container_converter(
+         container_writing_direction,
+         ToPhysicalSize(space.AvailableSize(),
+                        container_writing_direction.GetWritingMode()));
+-    NGLogicalAnchorQuery anchor_query;
++    NGLogicalAnchorQuery* anchor_query =
++        MakeGarbageCollected<NGLogicalAnchorQuery>();
+     NGAnchorEvaluatorImpl anchor_evaluator(
+-        *node.GetLayoutBox(), anchor_query,
+-        /* default_anchor_specifier */ nullptr,
++        *node.GetLayoutBox(), *anchor_query,
+         /* implicit_anchor */ nullptr, container_converter,
+         /* self_writing_direction */
+         {WritingMode::kHorizontalTb, TextDirection::kLtr},
+         /* offset_to_padding_box */
+-        PhysicalOffset());
+-    const NGLogicalOutOfFlowInsets insets = ComputeOutOfFlowInsets(
+-        node.Style(), space.AvailableSize(), &anchor_evaluator);
+-    LogicalSize computed_available_size =
+-        ComputeOutOfFlowAvailableRect(node, space, insets, static_position)
+-            .size;
+-    blink::ComputeOutOfFlowInlineDimensions(
+-        node, node.Style(), space, insets, border_padding, static_position,
+-        computed_available_size, absl::nullopt, container_writing_direction,
+-        /* anchor_evaluator */ nullptr, dimensions);
++        PhysicalOffset(),
++        /* available_size */
++        PhysicalSize());
++    WritingDirectionMode self_writing_direction =
++        node.Style().GetWritingDirection();
++    const NGLogicalOutOfFlowInsets insets =
++        ComputeOutOfFlowInsets(node.Style(), space.AvailableSize(),
++                               LogicalAlignment(), self_writing_direction);
++    const InsetModifiedContainingBlock imcb =
++        ComputeInsetModifiedContainingBlock(
++            node, space.AvailableSize(), LogicalAlignment(), insets,
++            static_position, container_writing_direction,
++            node.Style().GetWritingDirection());
++    ComputeOutOfFlowInlineDimensions(
++        node, node.Style(), space, imcb, LogicalAnchorCenterPosition(),
++        LogicalAlignment(), border_padding, absl::nullopt, NGBoxStrut(),
++        container_writing_direction, dimensions);
++    GetDocument().Lifecycle().AdvanceTo(DocumentLifecycle::kAfterPerformLayout);
++    GetDocument().Lifecycle().AdvanceTo(DocumentLifecycle::kLayoutClean);
+   }
+ 
+   void ComputeOutOfFlowBlockDimensions(
+@@ -130,28 +146,40 @@ class NGAbsoluteUtilsTest : public RenderingTest {
+       const NGLogicalStaticPosition& static_position,
+       const WritingDirectionMode container_writing_direction,
+       NGLogicalOutOfFlowDimensions* dimensions) {
++    GetDocument().Lifecycle().AdvanceTo(DocumentLifecycle::kInStyleRecalc);
++    GetDocument().Lifecycle().AdvanceTo(DocumentLifecycle::kStyleClean);
++    GetDocument().Lifecycle().AdvanceTo(DocumentLifecycle::kInPerformLayout);
+     WritingModeConverter container_converter(
+         container_writing_direction,
+         ToPhysicalSize(space.AvailableSize(),
+                        container_writing_direction.GetWritingMode()));
+-    NGLogicalAnchorQuery anchor_query;
++    NGLogicalAnchorQuery* anchor_query =
++        MakeGarbageCollected<NGLogicalAnchorQuery>();
+     NGAnchorEvaluatorImpl anchor_evaluator(
+-        *node.GetLayoutBox(), anchor_query,
+-        /* default_anchor_specifier */ nullptr,
++        *node.GetLayoutBox(), *anchor_query,
+         /* implicit_anchor */ nullptr, container_converter,
+         /* self_writing_direction */
+         {WritingMode::kHorizontalTb, TextDirection::kLtr},
+         /* offset_to_padding_box */
+-        PhysicalOffset());
+-    const NGLogicalOutOfFlowInsets insets = ComputeOutOfFlowInsets(
+-        node.Style(), space.AvailableSize(), &anchor_evaluator);
+-    LogicalSize computed_available_size =
+-        ComputeOutOfFlowAvailableRect(node, space, insets, static_position)
+-            .size;
+-    blink::ComputeOutOfFlowBlockDimensions(
+-        node, node.Style(), space, insets, border_padding, static_position,
+-        computed_available_size, absl::nullopt, container_writing_direction,
+-        /* anchor_evaluator */ nullptr, dimensions);
++        PhysicalOffset(),
++        /* available_size */
++        PhysicalSize());
++    WritingDirectionMode self_writing_direction =
++        node.Style().GetWritingDirection();
++    const NGLogicalOutOfFlowInsets insets =
++        ComputeOutOfFlowInsets(node.Style(), space.AvailableSize(),
++                               LogicalAlignment(), self_writing_direction);
++    const InsetModifiedContainingBlock imcb =
++        ComputeInsetModifiedContainingBlock(
++            node, space.AvailableSize(), LogicalAlignment(), insets,
++            static_position, container_writing_direction,
++            node.Style().GetWritingDirection());
++    ComputeOutOfFlowBlockDimensions(node, node.Style(), space, imcb,
++                              LogicalAnchorCenterPosition(), LogicalAlignment(),
++                              border_padding, absl::nullopt, NGBoxStrut(),
++                              container_writing_direction, dimensions);
++    GetDocument().Lifecycle().AdvanceTo(DocumentLifecycle::kAfterPerformLayout);
++    GetDocument().Lifecycle().AdvanceTo(DocumentLifecycle::kLayoutClean);
+   }
+ 
+   Persistent<Element> element_;
+@@ -168,18 +196,17 @@ TEST_F(NGAbsoluteUtilsTest, Horizontal) {
+                                    "60px 4px");
+ 
+   NGBoxStrut ltr_border_padding = ComputeBorders(ltr_space_, node) +
+-                                  ComputePadding(ltr_space_, node.Style());
++                                ComputePadding(ltr_space_, node.Style());
+   NGBoxStrut rtl_border_padding = ComputeBorders(rtl_space_, node) +
+-                                  ComputePadding(rtl_space_, node.Style());
++                                ComputePadding(rtl_space_, node.Style());
+   NGBoxStrut vlr_border_padding = ComputeBorders(vlr_space_, node) +
+-                                  ComputePadding(vlr_space_, node.Style());
++                                ComputePadding(vlr_space_, node.Style());
+   NGBoxStrut vrl_border_padding = ComputeBorders(vrl_space_, node) +
+-                                  ComputePadding(vrl_space_, node.Style());
++                                ComputePadding(vrl_space_, node.Style());
+ 
+-  NGLogicalStaticPosition static_position = {
+-      {LayoutUnit(), LayoutUnit()},
+-      NGLogicalStaticPosition::kInlineStart,
+-      NGLogicalStaticPosition::kBlockStart};
++  NGLogicalStaticPosition static_position = {{LayoutUnit(), LayoutUnit()},
++                                           NGLogicalStaticPosition::kInlineStart,
++                                           NGLogicalStaticPosition::kBlockStart};
+   // Same as regular static position, but with the inline-end edge.
+   NGLogicalStaticPosition static_position_inline_end = {
+       {LayoutUnit(), LayoutUnit()},
+@@ -330,16 +357,15 @@ TEST_F(NGAbsoluteUtilsTest, Vertical) {
+   NGBlockNode node(element_->GetLayoutBox());
+ 
+   NGBoxStrut ltr_border_padding = ComputeBorders(ltr_space_, node) +
+-                                  ComputePadding(ltr_space_, node.Style());
++                                ComputePadding(ltr_space_, node.Style());
+   NGBoxStrut vlr_border_padding = ComputeBorders(vlr_space_, node) +
+-                                  ComputePadding(vlr_space_, node.Style());
++                                ComputePadding(vlr_space_, node.Style());
+   NGBoxStrut vrl_border_padding = ComputeBorders(vrl_space_, node) +
+-                                  ComputePadding(vrl_space_, node.Style());
++                                ComputePadding(vrl_space_, node.Style());
+ 
+-  NGLogicalStaticPosition static_position = {
+-      {LayoutUnit(), LayoutUnit()},
+-      NGLogicalStaticPosition::kInlineStart,
+-      NGLogicalStaticPosition::kBlockStart};
++  NGLogicalStaticPosition static_position = {{LayoutUnit(), LayoutUnit()},
++                                           NGLogicalStaticPosition::kInlineStart,
++                                           NGLogicalStaticPosition::kBlockStart};
+   NGLogicalStaticPosition static_position_block_end = {
+       {LayoutUnit(), LayoutUnit()},
+       NGLogicalStaticPosition::kInlineStart,
+@@ -443,10 +469,9 @@ TEST_F(NGAbsoluteUtilsTest, Vertical) {
+ 
+ TEST_F(NGAbsoluteUtilsTest, CenterStaticPosition) {
+   NGBlockNode node(element_->GetLayoutBox());
+-  NGLogicalStaticPosition static_position = {
+-      {LayoutUnit(150), LayoutUnit(200)},
+-      NGLogicalStaticPosition::kInlineCenter,
+-      NGLogicalStaticPosition::kBlockCenter};
++  NGLogicalStaticPosition static_position = {{LayoutUnit(150), LayoutUnit(200)},
++                                           NGLogicalStaticPosition::kInlineCenter,
++                                           NGLogicalStaticPosition::kBlockCenter};
+ 
+   SetHorizontalStyle("auto", "auto", "auto", "auto", "auto");
+   SetVerticalStyle("auto", "auto", "auto", "auto", "auto");
+@@ -486,12 +511,11 @@ TEST_F(NGAbsoluteUtilsTest, MinMax) {
+   NGBlockNode node(element_->GetLayoutBox());
+ 
+   NGBoxStrut ltr_border_padding = ComputeBorders(ltr_space_, node) +
+-                                  ComputePadding(ltr_space_, node.Style());
++                                ComputePadding(ltr_space_, node.Style());
+ 
+-  NGLogicalStaticPosition static_position = {
+-      {LayoutUnit(), LayoutUnit()},
+-      NGLogicalStaticPosition::kInlineStart,
+-      NGLogicalStaticPosition::kBlockStart};
++  NGLogicalStaticPosition static_position = {{LayoutUnit(), LayoutUnit()},
++                                           NGLogicalStaticPosition::kInlineStart,
++                                           NGLogicalStaticPosition::kBlockStart};
+ 
+   NGLogicalOutOfFlowDimensions dimensions;
+ 
