@@ -1,8 +1,39 @@
 diff --git a/third_party/blink/renderer/modules/webcodecs/video_encoder.cc b/third_party/blink/renderer/modules/webcodecs/video_encoder.cc
-index d152d64d6c57f6311520c665b0bb99a7273a5544..b73c33217e55a3ab15c7b19e4fa5ed5fd64ab391 100644
+index d152d64d6c57f6311520c665b0bb99a7273a5544..0f63226058701be0d4740323c257b3608a51dbc5 100644
 --- a/third_party/blink/renderer/modules/webcodecs/video_encoder.cc
 +++ b/third_party/blink/renderer/modules/webcodecs/video_encoder.cc
-@@ -261,6 +261,14 @@ VideoEncoderTraits::ParsedConfig* ParseConfigStatic(
+@@ -113,6 +113,30 @@ namespace {
+ 
+ constexpr const char kCategory[] = "media";
+ 
++// TODO(crbug.com/40215121): This is very similar to the method in
++// video_frame.cc. It should probably be a function in video_types.cc.
++media::VideoPixelFormat ToOpaqueMediaPixelFormat(media::VideoPixelFormat fmt) {
++  switch (fmt) {
++    case media::PIXEL_FORMAT_I420A:
++      return media::PIXEL_FORMAT_I420;
++    case media::PIXEL_FORMAT_YUV420AP10:
++      return media::PIXEL_FORMAT_YUV420P10;
++    case media::PIXEL_FORMAT_I422A:
++      return media::PIXEL_FORMAT_I422;
++    case media::PIXEL_FORMAT_YUV422AP10:
++      return media::PIXEL_FORMAT_YUV422P10;
++    case media::PIXEL_FORMAT_I444A:
++      return media::PIXEL_FORMAT_I444;
++    case media::PIXEL_FORMAT_YUV444AP10:
++      return media::PIXEL_FORMAT_YUV444P10;
++    case media::PIXEL_FORMAT_NV12A:
++      return media::PIXEL_FORMAT_NV12;
++    default:
++      NOTIMPLEMENTED() << "Missing support for making " << fmt << " opaque.";
++      return fmt;
++  }
++}
++
+ int ComputeMaxActiveEncodes(
+     absl::optional<int> frame_delay = absl::nullopt,
+     absl::optional<int> input_capacity = absl::nullopt) {
+@@ -261,6 +285,14 @@ VideoEncoderTraits::ParsedConfig* ParseConfigStatic(
            ? media::VideoEncoder::LatencyMode::Quality
            : media::VideoEncoder::LatencyMode::Realtime;
  
@@ -17,7 +48,7 @@ index d152d64d6c57f6311520c665b0bb99a7273a5544..b73c33217e55a3ab15c7b19e4fa5ed5f
    if (config->hasBitrate()) {
      uint32_t bps = base::saturated_cast<uint32_t>(config->bitrate());
      if (bps == 0) {
-@@ -485,6 +493,10 @@ VideoEncoderConfig* CopyConfig(
+@@ -485,6 +517,10 @@ VideoEncoderConfig* CopyConfig(
    if (config.hasLatencyMode())
      result->setLatencyMode(config.latencyMode());
  
@@ -28,3 +59,34 @@ index d152d64d6c57f6311520c665b0bb99a7273a5544..b73c33217e55a3ab15c7b19e4fa5ed5f
    if (parsed_config.codec == media::VideoCodec::kH264) {
      if (config.hasAvc() && config.avc()->hasFormat()) {
        auto* avc = AvcEncoderConfig::Create();
+@@ -916,10 +952,13 @@ void VideoEncoder::ProcessEncode(Request* request) {
+         FrameMetadata{*frame->metadata().frame_duration};
+   }
+ 
++  bool mappable = frame->IsMappable() || frame->HasGpuMemoryBuffer();
++
+   // Currently underlying encoders can't handle frame backed by textures,
+   // so let's readback pixel data to CPU memory.
+   // TODO(crbug.com/1229845): We shouldn't be reading back frames here.
+-  if (frame->HasTextures() && !frame->HasGpuMemoryBuffer()) {
++  if (!mappable) {
++    DCHECK(frame->HasTextures());
+     auto readback_done_callback = WTF::BindOnce(
+         &VideoEncoder::OnReadbackDone, WrapWeakPersistent(this),
+         WrapPersistent(request), frame, std::move(encode_done_callback));
+@@ -941,9 +980,12 @@ void VideoEncoder::ProcessEncode(Request* request) {
+   // Currently underlying encoders can't handle alpha channel, so let's
+   // wrap a frame with an alpha channel into a frame without it.
+   // For example such frames can come from 2D canvas context with alpha = true.
+-  if (frame->storage_type() == media::VideoFrame::STORAGE_OWNED_MEMORY &&
+-      frame->format() == media::PIXEL_FORMAT_I420A) {
+-    frame = media::WrapAsI420VideoFrame(std::move(frame));
++  DCHECK(mappable);
++  if (media::IsYuvPlanar(frame->format()) &&
++      !media::IsOpaque(frame->format())) {
++    frame = media::VideoFrame::WrapVideoFrame(
++        frame, ToOpaqueMediaPixelFormat(frame->format()), frame->visible_rect(),
++        frame->natural_size());
+   }
+ 
+   --requested_encodes_;
