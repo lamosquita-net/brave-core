@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/css_to_length_conversion_data.h b/third_party/blink/renderer/core/css/css_to_length_conversion_data.h
-index 5840e04a6b60e1bbf283234cd7bb5eedb2ca0e18..ebebfd9d0c26588a6898a25593c66a6b5f62fe9a 100644
+index 5840e04a6b60e1bbf283234cd7bb5eedb2ca0e18..54fe21b9651c5c190f8771ee3c4c8200f37a6d1e 100644
 --- a/third_party/blink/renderer/core/css/css_to_length_conversion_data.h
 +++ b/third_party/blink/renderer/core/css/css_to_length_conversion_data.h
 @@ -37,12 +37,14 @@
@@ -26,7 +26,7 @@ index 5840e04a6b60e1bbf283234cd7bb5eedb2ca0e18..ebebfd9d0c26588a6898a25593c66a6b
  
     private:
      float em_ = 0;
-@@ -201,11 +205,35 @@ class CORE_EXPORT CSSToLengthConversionData : public CSSLengthResolver {
+@@ -201,12 +205,37 @@ class CORE_EXPORT CSSToLengthConversionData : public CSSLengthResolver {
      void CacheSizeIfNeeded(PhysicalAxes, absl::optional<double>& cache) const;
  
      Member<Element> context_element_;
@@ -36,6 +36,7 @@ index 5840e04a6b60e1bbf283234cd7bb5eedb2ca0e18..ebebfd9d0c26588a6898a25593c66a6b
      mutable absl::optional<double> cached_height_;
    };
  
+-  using Flags = uint8_t;
 +  // Used to evaluate anchor() and anchor-size() functions.
 +  //
 +  // https://drafts.csswg.org/css-anchor-position-1/#anchor-pos
@@ -60,10 +61,12 @@ index 5840e04a6b60e1bbf283234cd7bb5eedb2ca0e18..ebebfd9d0c26588a6898a25593c66a6b
 +    absl::optional<PositionAreaOffsets> position_area_offsets_;
 +  };
 +
-   using Flags = uint8_t;
++  // FlyWeb (FM.28): uint16_t as upstream, for kAnchorRelative (1u << 9).
++  using Flags = uint16_t;
  
    // Flags represent the units seen in a conversion. They are used for targeted
-@@ -216,7 +244,7 @@ class CORE_EXPORT CSSToLengthConversionData : public CSSLengthResolver {
+   // invalidation, e.g. when root font-size changes, only elements dependent on
+@@ -216,7 +245,7 @@ class CORE_EXPORT CSSToLengthConversionData : public CSSLengthResolver {
      kEm = 1u << 0,
      // rem
      kRootFontRelative = 1u << 1,
@@ -72,7 +75,7 @@ index 5840e04a6b60e1bbf283234cd7bb5eedb2ca0e18..ebebfd9d0c26588a6898a25593c66a6b
      kGlyphRelative = 1u << 2,
      // rex, rch, ric have both kRootFontRelative and kGlyphRelative
      // lh
-@@ -227,6 +255,12 @@ class CORE_EXPORT CSSToLengthConversionData : public CSSLengthResolver {
+@@ -227,6 +256,12 @@ class CORE_EXPORT CSSToLengthConversionData : public CSSLengthResolver {
      kDynamicViewport = 1u << 5,
      // cq*
      kContainerRelative = 1u << 6,
@@ -85,7 +88,7 @@ index 5840e04a6b60e1bbf283234cd7bb5eedb2ca0e18..ebebfd9d0c26588a6898a25593c66a6b
    };
  
    CSSToLengthConversionData() : CSSLengthResolver(1 /* zoom */) {}
-@@ -235,6 +269,7 @@ class CORE_EXPORT CSSToLengthConversionData : public CSSLengthResolver {
+@@ -235,6 +270,7 @@ class CORE_EXPORT CSSToLengthConversionData : public CSSLengthResolver {
                              const LineHeightSize&,
                              const ViewportSize&,
                              const ContainerSizes&,
@@ -93,7 +96,7 @@ index 5840e04a6b60e1bbf283234cd7bb5eedb2ca0e18..ebebfd9d0c26588a6898a25593c66a6b
                              float zoom,
                              Flags&);
    template <typename ComputedStyleOrBuilder>
-@@ -243,6 +278,7 @@ class CORE_EXPORT CSSToLengthConversionData : public CSSLengthResolver {
+@@ -243,6 +279,7 @@ class CORE_EXPORT CSSToLengthConversionData : public CSSLengthResolver {
                              const ComputedStyle* root_style,
                              const ViewportSize& viewport_size,
                              const ContainerSizes& container_sizes,
@@ -101,7 +104,7 @@ index 5840e04a6b60e1bbf283234cd7bb5eedb2ca0e18..ebebfd9d0c26588a6898a25593c66a6b
                              float zoom,
                              Flags& flags)
        : CSSToLengthConversionData(
-@@ -253,6 +289,7 @@ class CORE_EXPORT CSSToLengthConversionData : public CSSLengthResolver {
+@@ -253,6 +290,7 @@ class CORE_EXPORT CSSToLengthConversionData : public CSSLengthResolver {
                             root_style),
              viewport_size,
              container_sizes,
@@ -109,7 +112,7 @@ index 5840e04a6b60e1bbf283234cd7bb5eedb2ca0e18..ebebfd9d0c26588a6898a25593c66a6b
              zoom,
              flags) {}
  
-@@ -266,6 +303,8 @@ class CORE_EXPORT CSSToLengthConversionData : public CSSLengthResolver {
+@@ -266,6 +304,8 @@ class CORE_EXPORT CSSToLengthConversionData : public CSSLengthResolver {
    float RicFontSize(float zoom) const override;
    float LineHeight(float zoom) const override;
    float RootLineHeight(float zoom) const override;
@@ -118,7 +121,7 @@ index 5840e04a6b60e1bbf283234cd7bb5eedb2ca0e18..ebebfd9d0c26588a6898a25593c66a6b
    double ViewportWidth() const override;
    double ViewportHeight() const override;
    double SmallViewportWidth() const override;
-@@ -277,11 +316,27 @@ class CORE_EXPORT CSSToLengthConversionData : public CSSLengthResolver {
+@@ -277,11 +317,27 @@ class CORE_EXPORT CSSToLengthConversionData : public CSSLengthResolver {
    double ContainerWidth() const override;
    double ContainerHeight() const override;
    WritingMode GetWritingMode() const override;
@@ -146,7 +149,7 @@ index 5840e04a6b60e1bbf283234cd7bb5eedb2ca0e18..ebebfd9d0c26588a6898a25593c66a6b
  
    // See ContainerSizes::PreCachedCopy.
    //
-@@ -291,9 +346,9 @@ class CORE_EXPORT CSSToLengthConversionData : public CSSLengthResolver {
+@@ -291,9 +347,9 @@ class CORE_EXPORT CSSToLengthConversionData : public CSSLengthResolver {
  
    CSSToLengthConversionData CopyWithAdjustedZoom(float new_zoom) const {
      DCHECK(flags_);
@@ -159,7 +162,7 @@ index 5840e04a6b60e1bbf283234cd7bb5eedb2ca0e18..ebebfd9d0c26588a6898a25593c66a6b
    }
    CSSToLengthConversionData Unzoomed() const {
      return CopyWithAdjustedZoom(1.0f);
-@@ -311,6 +366,7 @@ class CORE_EXPORT CSSToLengthConversionData : public CSSLengthResolver {
+@@ -311,6 +367,7 @@ class CORE_EXPORT CSSToLengthConversionData : public CSSLengthResolver {
    LineHeightSize line_height_size_;
    ViewportSize viewport_size_;
    ContainerSizes container_sizes_;
