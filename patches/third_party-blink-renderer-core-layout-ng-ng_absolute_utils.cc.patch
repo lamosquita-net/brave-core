@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/ng_absolute_utils.cc b/third_party/blink/renderer/core/layout/ng/ng_absolute_utils.cc
-index 4398d013109e9c18cb370c9cee71892726f35e74..1c405f87771c1012106dfe171e25e2733b267ec2 100644
+index 4398d013109e9c18cb370c9cee71892726f35e74..005e3772486e259a09da824dfb25b6e50a9dd76c 100644
 --- a/third_party/blink/renderer/core/layout/ng/ng_absolute_utils.cc
 +++ b/third_party/blink/renderer/core/layout/ng/ng_absolute_utils.cc
 @@ -5,12 +5,13 @@
@@ -37,7 +37,7 @@ index 4398d013109e9c18cb370c9cee71892726f35e74..1c405f87771c1012106dfe171e25e273
 -bool IsTopDominant(const WritingDirectionMode writing_direction) {
 -  return writing_direction.IsHorizontal() || writing_direction.IsLtr();
 +StyleSelfAlignmentData AlignSelf(const ComputedStyle& style,
-+                                 ItemPosition normal_behavior) {
++                                 const StyleSelfAlignmentData& normal_behavior) {
 +  return RuntimeEnabledFeatures::LayoutAlignForPositionedEnabled()
 +             ? style.ResolvedAlignSelf(normal_behavior)
 +             : StyleSelfAlignmentData(ItemPosition::kNormal,
@@ -48,7 +48,7 @@ index 4398d013109e9c18cb370c9cee71892726f35e74..1c405f87771c1012106dfe171e25e273
 -// |NGLogicalStaticPosition::BlockEdge|.
 -enum StaticPositionEdge { kStart, kCenter, kEnd };
 +StyleSelfAlignmentData JustifySelf(const ComputedStyle& style,
-+                                   ItemPosition normal_behavior) {
++                                   const StyleSelfAlignmentData& normal_behavior) {
 +  return RuntimeEnabledFeatures::LayoutAlignForPositionedEnabled()
 +             ? style.ResolvedJustifySelf(normal_behavior)
 +             : StyleSelfAlignmentData(ItemPosition::kNormal,
@@ -973,8 +973,8 @@ index 4398d013109e9c18cb370c9cee71892726f35e74..1c405f87771c1012106dfe171e25e273
 +
 +  const bool applied_auto_margins = ComputeMargins(
 +                 space.PercentageResolutionInlineSizeForParentWritingMode(),
-+                 imcb.InlineSize(), style.MarginInlineStart(),
-+                 style.MarginInlineEnd(), inline_size,
++                 imcb.InlineSize(), style.MarginStart(),
++                 style.MarginEnd(), inline_size,
 +                 imcb.has_auto_inline_inset, is_margin_start_dominant,
 +                 is_block_direction, &dimensions->margins.inline_start,
 +                 &dimensions->margins.inline_end);
@@ -1082,7 +1082,7 @@ index 4398d013109e9c18cb370c9cee71892726f35e74..1c405f87771c1012106dfe171e25e273
  
 -    return NGFragment(style.GetWritingDirection(), result->PhysicalFragment())
 +    return NGFragment(style.GetWritingDirection(),
-+                           result->GetPhysicalFragment())
++                           result->PhysicalFragment())
          .BlockSize();
    };
  
@@ -1153,8 +1153,8 @@ index 4398d013109e9c18cb370c9cee71892726f35e74..1c405f87771c1012106dfe171e25e273
 +
 +  const bool applied_auto_margins = ComputeMargins(
 +                 space.PercentageResolutionInlineSizeForParentWritingMode(),
-+                 imcb.BlockSize(), style.MarginBlockStart(),
-+                 style.MarginBlockEnd(), block_size, imcb.has_auto_block_inset,
++                 imcb.BlockSize(), style.MarginBefore(),
++                 style.MarginAfter(), block_size, imcb.has_auto_block_inset,
 +                 is_margin_start_dominant, is_block_direction,
 +                 &dimensions->margins.block_start,
 +                 &dimensions->margins.block_end);

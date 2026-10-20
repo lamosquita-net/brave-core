@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/ng_fragment_builder.h b/third_party/blink/renderer/core/layout/ng/ng_fragment_builder.h
-index 71b36a65b3772739a738481b925601a756971569..6bd0587e56862864ffd50ee9989745bad4905ba4 100644
+index 71b36a65b3772739a738481b925601a756971569..8803959a62da58475ac401b7f9f57bd05bb87630 100644
 --- a/third_party/blink/renderer/core/layout/ng/ng_fragment_builder.h
 +++ b/third_party/blink/renderer/core/layout/ng/ng_fragment_builder.h
 @@ -205,9 +205,6 @@ class CORE_EXPORT NGFragmentBuilder {
@@ -12,7 +12,16 @@ index 71b36a65b3772739a738481b925601a756971569..6bd0587e56862864ffd50ee9989745ba
    // This should only be used for inline-level OOF-positioned nodes.
    // |inline_container_direction| is the current text direction for determining
    // the correct static-position.
-@@ -271,11 +268,6 @@ class CORE_EXPORT NGFragmentBuilder {
+@@ -227,6 +224,8 @@ class CORE_EXPORT NGFragmentBuilder {
+   void SwapOutOfFlowPositionedCandidates(
+       HeapVector<NGLogicalOutOfFlowPositionedNode>* candidates);
+ 
++  void ClearOutOfFlowPositionedCandidates();
++
+   // Out-of-flow positioned elements inside a nested fragmentation context
+   // are laid out once they've reached the outermost fragmentation context.
+   // However, once at the outer context, they will get laid out inside the
+@@ -271,11 +270,6 @@ class CORE_EXPORT NGFragmentBuilder {
      return !multicols_with_pending_oofs_.empty();
    }
  
@@ -24,7 +33,7 @@ index 71b36a65b3772739a738481b925601a756971569..6bd0587e56862864ffd50ee9989745ba
    // This method should only be used within the inline layout algorithm. It is
    // used to convert all OOF-positioned candidates to descendants.
    //
-@@ -575,6 +567,8 @@ class CORE_EXPORT NGFragmentBuilder {
+@@ -575,6 +569,8 @@ class CORE_EXPORT NGFragmentBuilder {
    bool has_out_of_flow_in_fragmentainer_subtree_ = false;
    bool disable_oof_descendants_propagation_ = false;
  

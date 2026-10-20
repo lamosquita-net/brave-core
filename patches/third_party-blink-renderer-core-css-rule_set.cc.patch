@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/rule_set.cc b/third_party/blink/renderer/core/css/rule_set.cc
-index 0f10a1f3aa6471fcae9e14cc5b59121cc3477a33..26521e250f48a01ec6b695e7ce46f9a7198f87c7 100644
+index 0f10a1f3aa6471fcae9e14cc5b59121cc3477a33..fb512a7a90543cb073d347bbb1da749bb2cb15aa 100644
 --- a/third_party/blink/renderer/core/css/rule_set.cc
 +++ b/third_party/blink/renderer/core/css/rule_set.cc
 @@ -43,8 +43,10 @@
@@ -162,6 +162,15 @@ index 0f10a1f3aa6471fcae9e14cc5b59121cc3477a33..26521e250f48a01ec6b695e7ce46f9a7
      if (!MatchMediaForAddRules(medium, import_rule->MediaQueries())) {
        continue;
      }
+@@ -817,7 +867,7 @@ void RuleSet::Merge(const RuleSet& other, LayerMap& layer_mapping) {
+     keyframes_rules_.AppendVector(other.keyframes_rules_);
+     property_rules_.AppendVector(other.property_rules_);
+     counter_style_rules_.AppendVector(other.counter_style_rules_);
+-    position_fallback_rules_.AppendVector(other.position_fallback_rules_);
++    position_try_rules_.AppendVector(other.position_try_rules_);
+     media_query_set_results_.AppendVector(other.media_query_set_results_);
+     has_bucket_for_style_attr_ |= other.has_bucket_for_style_attr_;
+     rule_count_ += other.rule_count_;
 @@ -1159,7 +1209,7 @@ void RuleSet::CompactRules() {
    keyframes_rules_.shrink_to_fit();
    property_rules_.shrink_to_fit();

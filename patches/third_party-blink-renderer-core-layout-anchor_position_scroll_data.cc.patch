@@ -1,9 +1,9 @@
 diff --git a/third_party/blink/renderer/core/layout/anchor_position_scroll_data.cc b/third_party/blink/renderer/core/layout/anchor_position_scroll_data.cc
 new file mode 100644
-index 0000000000000000000000000000000000000000..2b465ea2aaa49b012709862c60efac17e2fde523
+index 0000000000000000000000000000000000000000..70f2880e98779ced44e39313e87d4f948390aedf
 --- /dev/null
 +++ b/third_party/blink/renderer/core/layout/anchor_position_scroll_data.cc
-@@ -0,0 +1,318 @@
+@@ -0,0 +1,307 @@
 +// Copyright 2022 The Chromium Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -27,17 +27,6 @@ index 0000000000000000000000000000000000000000..2b465ea2aaa49b012709862c60efac17
 +  const ComputedStyle& style = box.StyleRef();
 +  return style.PositionAnchor() ? box.FindTargetAnchor(*style.PositionAnchor())
 +                                : box.AcceptableImplicitAnchor();
-+}
-+
-+const PaintLayer* ContainingScrollContainerLayer(const PaintLayer& layer) {
-+  // Normally, `scroller_layer` is the result. There's only one special case
-+  // where `layer` is fixed-positioned and `scroller_layer` is the LayoutView,
-+  // then `layer` doesn't actually scroll with `scroller_layer`, and null
-+  // should be returned.
-+  bool is_fixed_to_view = false;
-+  const PaintLayer* scroller_layer =
-+      layer.ContainingScrollContainerLayer(&is_fixed_to_view);
-+  return is_fixed_to_view ? nullptr : scroller_layer;
 +}
 +
 +const HeapVector<NonOverflowingScrollRange>* GetNonOverflowingScrollRanges(

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style.cc b/third_party/blink/renderer/core/style/computed_style.cc
-index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..249d43c949b730c55b9aa6d7aacd4eae6cd5d6e7 100644
+index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..2e65ad6eaca9bc0b1d02a32b717a8fe90deff5d3 100644
 --- a/third_party/blink/renderer/core/style/computed_style.cc
 +++ b/third_party/blink/renderer/core/style/computed_style.cc
 @@ -23,6 +23,9 @@
@@ -128,17 +128,18 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..249d43c949b730c55b9aa6d7aacd4eae
  }
  
  StyleContentAlignmentData ResolvedContentAlignment(
-@@ -751,7 +722,8 @@ StyleDifference ComputedStyle::VisualInvalidationDiff(
+@@ -751,7 +722,9 @@ StyleDifference ComputedStyle::VisualInvalidationDiff(
    }
  
    if (!diff.NeedsFullLayout() && GetPosition() != EPosition::kStatic &&
 -      !OffsetEqual(other)) {
-+      (!OffsetEqual(other) ||
-+       (HasOutOfFlowPosition() && GetInsetArea() != other.GetInsetArea()))) {
++      (!InsetsEqual(other) ||
++       (HasOutOfFlowPosition() &&
++        GetPositionArea() != other.GetPositionArea()))) {
      // Optimize for the case where a positioned layer is moving but not changing
      // size.
      if (DependenceOnContentHeightHasChanged(*this, other)) {
-@@ -1206,6 +1178,7 @@ static bool HasPropertyThatCreatesStackingContext(
+@@ -1206,6 +1179,7 @@ static bool HasPropertyThatCreatesStackingContext(
        case CSSPropertyID::kOffsetPath:
        case CSSPropertyID::kOffsetPosition:
        case CSSPropertyID::kWebkitMask:
@@ -146,7 +147,7 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..249d43c949b730c55b9aa6d7aacd4eae
        case CSSPropertyID::kWebkitMaskBoxImage:
        case CSSPropertyID::kClipPath:
        case CSSPropertyID::kWebkitBoxReflect:
-@@ -1344,14 +1317,14 @@ void ComputedStyle::LoadDeferredImages(Document& document) const {
+@@ -1344,14 +1318,14 @@ void ComputedStyle::LoadDeferredImages(Document& document) const {
  void ComputedStyle::ApplyTransform(
      gfx::Transform& result,
      const LayoutBox* box,
@@ -164,7 +165,7 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..249d43c949b730c55b9aa6d7aacd4eae
                   apply_independent_transform_properties);
  }
  
-@@ -2341,6 +2314,48 @@ Color ComputedStyle::VisitedDependentColor(const Longhand& color_property,
+@@ -2341,6 +2315,48 @@ Color ComputedStyle::VisitedDependentColor(const Longhand& color_property,
                                 visited_color.Param2(), unvisited_color.Alpha());
  }
  
@@ -213,7 +214,7 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..249d43c949b730c55b9aa6d7aacd4eae
  blink::Color ComputedStyle::ResolvedColor(const StyleColor& color,
                                            bool* is_current_color) const {
    bool visited_link = (InsideLink() == EInsideLink::kInsideVisitedLink);
-@@ -2534,43 +2549,24 @@ absl::optional<blink::Color> ComputedStyle::AccentColorResolved() const {
+@@ -2534,43 +2550,24 @@ absl::optional<blink::Color> ComputedStyle::AccentColorResolved() const {
    return auto_color.Resolve(GetCurrentColor(), UsedColorScheme());
  }
  
@@ -272,7 +273,7 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..249d43c949b730c55b9aa6d7aacd4eae
  }
  
  bool ComputedStyle::ShouldApplyAnyContainment(const Element& element,
-@@ -2609,7 +2605,9 @@ bool ComputedStyle::CanMatchSizeContainerQueries(const Element& element) const {
+@@ -2609,7 +2606,9 @@ bool ComputedStyle::CanMatchSizeContainerQueries(const Element& element) const {
  
  bool ComputedStyle::IsInterleavingRoot(const ComputedStyle* style) {
    const ComputedStyle* unensured = ComputedStyle::NullifyEnsured(style);
@@ -283,7 +284,7 @@ index f9cd2e4c2b4344e28ec07e08d40fef23fe366026..249d43c949b730c55b9aa6d7aacd4eae
  }
  
  bool ComputedStyle::CalculateIsStackingContextWithoutContainment() const {
-@@ -2656,6 +2654,21 @@ bool ComputedStyle::IsRenderedInTopLayer(const Element& element) const {
+@@ -2656,6 +2655,21 @@ bool ComputedStyle::IsRenderedInTopLayer(const Element& element) const {
           StyleType() == kPseudoIdBackdrop;
  }
  

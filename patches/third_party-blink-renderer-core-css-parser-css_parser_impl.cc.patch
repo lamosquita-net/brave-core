@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/parser/css_parser_impl.cc b/third_party/blink/renderer/core/css/parser/css_parser_impl.cc
-index dce47422991fca1baf39e6868edec36fa9318658..c83fb5abf5e7e80dbdb3e201aec978c0a19d153e 100644
+index dce47422991fca1baf39e6868edec36fa9318658..fc00caf67a920ee49c3a26a89003d15ef6ea7cf5 100644
 --- a/third_party/blink/renderer/core/css/parser/css_parser_impl.cc
 +++ b/third_party/blink/renderer/core/css/parser/css_parser_impl.cc
 @@ -15,11 +15,10 @@
@@ -587,7 +587,7 @@ index dce47422991fca1baf39e6868edec36fa9318658..c83fb5abf5e7e80dbdb3e201aec978c0
      CSSParserTokenStream& stream) {
    wtf_size_t prelude_offset_start = stream.LookAheadOffset();
    CSSParserTokenRange prelude = ConsumeAtRulePrelude(stream);
-@@ -1820,58 +1873,17 @@ StyleRulePositionFallback* CSSParserImpl::ConsumePositionFallbackRule(
+@@ -1820,58 +1873,18 @@ StyleRulePositionFallback* CSSParserImpl::ConsumePositionFallbackRule(
    }
  
    if (observer_) {
@@ -642,6 +642,7 @@ index dce47422991fca1baf39e6868edec36fa9318658..c83fb5abf5e7e80dbdb3e201aec978c0
 -  ConsumeDeclarationList(stream, StyleRule::kTry, CSSNestingType::kNone,
 +  ConsumeDeclarationList(stream, StyleRule::kPositionTry, CSSNestingType::kNone,
                           /*parent_rule_for_nesting=*/nullptr,
++                         /*nested_declarations_start_index=*/kNotFound,
                           /*child_rules=*/nullptr);
 -  return MakeGarbageCollected<StyleRuleTry>(
 -      CreateCSSPropertyValueSet(parsed_properties_, context_->Mode()));
@@ -652,7 +653,7 @@ index dce47422991fca1baf39e6868edec36fa9318658..c83fb5abf5e7e80dbdb3e201aec978c0
  }
  
  StyleRuleKeyframe* CSSParserImpl::ConsumeKeyframeStyleRule(
-@@ -1887,12 +1899,18 @@ StyleRuleKeyframe* CSSParserImpl::ConsumeKeyframeStyleRule(
+@@ -1887,12 +1900,18 @@ StyleRuleKeyframe* CSSParserImpl::ConsumeKeyframeStyleRule(
    if (observer_) {
      observer_->StartRuleHeader(StyleRule::kKeyframe, prelude_offset.start);
      observer_->EndRuleHeader(prelude_offset.end);
@@ -671,7 +672,7 @@ index dce47422991fca1baf39e6868edec36fa9318658..c83fb5abf5e7e80dbdb3e201aec978c0
    return MakeGarbageCollected<StyleRuleKeyframe>(
        std::move(key_list),
        CreateCSSPropertyValueSet(parsed_properties_, kCSSKeyframeRuleMode));
-@@ -1950,6 +1968,19 @@ StyleRule* CSSParserImpl::ConsumeStyleRule(CSSParserTokenStream& stream,
+@@ -1950,6 +1969,19 @@ StyleRule* CSSParserImpl::ConsumeStyleRule(CSSParserTokenStream& stream,
      observer_->StartRuleHeader(StyleRule::kStyle, stream.LookAheadOffset());
    }
  
@@ -691,7 +692,7 @@ index dce47422991fca1baf39e6868edec36fa9318658..c83fb5abf5e7e80dbdb3e201aec978c0
    // Parse the prelude of the style rule
    base::span<CSSSelector> selector_vector = CSSSelectorParser::ConsumeSelector(
        stream, context_, nesting_type, parent_rule_for_nesting, style_sheet_,
-@@ -1986,6 +2017,9 @@ StyleRule* CSSParserImpl::ConsumeStyleRule(CSSParserTokenStream& stream,
+@@ -1986,6 +2018,9 @@ StyleRule* CSSParserImpl::ConsumeStyleRule(CSSParserTokenStream& stream,
      // Parse error, invalid selector list.
      return nullptr;
    }
@@ -701,7 +702,7 @@ index dce47422991fca1baf39e6868edec36fa9318658..c83fb5abf5e7e80dbdb3e201aec978c0
  
    // TODO(csharrison): How should we lazily parse css that needs the observer?
    if (!observer_ && lazy_state_) {
-@@ -2022,8 +2056,16 @@ StyleRule* CSSParserImpl::ConsumeStyleRuleContents(
+@@ -2022,8 +2057,16 @@ StyleRule* CSSParserImpl::ConsumeStyleRuleContents(
      CSSParserTokenStream& stream) {
    StyleRule* style_rule = StyleRule::Create(selector_vector);
    HeapVector<Member<StyleRuleBase>, 4> child_rules;
@@ -719,7 +720,7 @@ index dce47422991fca1baf39e6868edec36fa9318658..c83fb5abf5e7e80dbdb3e201aec978c0
    for (StyleRuleBase* child_rule : child_rules) {
      style_rule->AddChildRule(child_rule);
    }
-@@ -2051,31 +2093,32 @@ StyleRule* CSSParserImpl::ConsumeStyleRuleContents(
+@@ -2051,31 +2094,32 @@ StyleRule* CSSParserImpl::ConsumeStyleRuleContents(
  // AbortsNestedSelectorParsing(), which uses parent_rule_for_nesting to check
  // whether semicolons should abort parsing (the prelude of) qualified rules;
  // if semicolons always aborted such parsing, we wouldn't need this distinction.
@@ -765,7 +766,7 @@ index dce47422991fca1baf39e6868edec36fa9318658..c83fb5abf5e7e80dbdb3e201aec978c0
        while (true) {
          wtf_size_t start_offset = stream.Offset();
          if (!stream.ConsumeCommentOrNothing()) {
-@@ -2102,6 +2145,10 @@ void CSSParserImpl::ConsumeDeclarationList(
+@@ -2102,6 +2146,10 @@ void CSSParserImpl::ConsumeDeclarationList(
            StyleRuleBase* child = ConsumeNestedRule(id, stream, nesting_type,
                                                     parent_rule_for_nesting);
            if (child && child_rules) {
@@ -776,7 +777,7 @@ index dce47422991fca1baf39e6868edec36fa9318658..c83fb5abf5e7e80dbdb3e201aec978c0
              child_rules->push_back(child);
            }
            break;
-@@ -2124,11 +2171,18 @@ void CSSParserImpl::ConsumeDeclarationList(
+@@ -2124,11 +2172,18 @@ void CSSParserImpl::ConsumeDeclarationList(
              DCHECK_EQ(stream.UncheckedPeek().GetType(), kSemicolonToken);
              stream.UncheckedConsume();  // kSemicolonToken
            }
@@ -798,7 +799,7 @@ index dce47422991fca1baf39e6868edec36fa9318658..c83fb5abf5e7e80dbdb3e201aec978c0
            stream.ConsumeUntilPeekedTypeIs<kSemicolonToken>();
            if (!stream.AtEnd()) {
              stream.UncheckedConsume();  // kSemicolonToken
-@@ -2146,6 +2200,10 @@ void CSSParserImpl::ConsumeDeclarationList(
+@@ -2146,6 +2201,10 @@ void CSSParserImpl::ConsumeDeclarationList(
                absl::nullopt, stream, nesting_type, parent_rule_for_nesting);
            if (child) {
              if (child_rules) {
@@ -809,7 +810,7 @@ index dce47422991fca1baf39e6868edec36fa9318658..c83fb5abf5e7e80dbdb3e201aec978c0
                child_rules->push_back(child);
              }
              break;
-@@ -2171,8 +2229,78 @@ void CSSParserImpl::ConsumeDeclarationList(
+@@ -2171,8 +2230,78 @@ void CSSParserImpl::ConsumeDeclarationList(
      }
    }
  
@@ -890,7 +891,7 @@ index dce47422991fca1baf39e6868edec36fa9318658..c83fb5abf5e7e80dbdb3e201aec978c0
    }
  }
  
-@@ -2204,6 +2332,20 @@ StyleRuleBase* CSSParserImpl::ConsumeNestedRule(
+@@ -2204,6 +2333,20 @@ StyleRuleBase* CSSParserImpl::ConsumeNestedRule(
    return child;
  }
  
@@ -911,7 +912,7 @@ index dce47422991fca1baf39e6868edec36fa9318658..c83fb5abf5e7e80dbdb3e201aec978c0
  bool CSSParserImpl::ConsumeDeclaration(CSSParserTokenStream& stream,
                                         StyleRule::RuleType rule_type) {
    const wtf_size_t decl_offset_start = stream.Offset();
-@@ -2215,52 +2357,82 @@ bool CSSParserImpl::ConsumeDeclaration(CSSParserTokenStream& stream,
+@@ -2215,52 +2358,82 @@ bool CSSParserImpl::ConsumeDeclaration(CSSParserTokenStream& stream,
    }
  
    stream.UncheckedConsume();  // kColonToken
@@ -1029,7 +1030,7 @@ index dce47422991fca1baf39e6868edec36fa9318658..c83fb5abf5e7e80dbdb3e201aec978c0
      // The end offset is the offset of the terminating token, which is peeked
      // but not yet consumed.
      observer_->ObserveProperty(decl_offset_start, stream.LookAheadOffset(),
-@@ -2295,19 +2467,51 @@ void CSSParserImpl::ConsumeDeclarationValue(
+@@ -2295,19 +2468,51 @@ void CSSParserImpl::ConsumeDeclarationValue(
                                  context_, parsed_properties_, rule_type);
  }
  

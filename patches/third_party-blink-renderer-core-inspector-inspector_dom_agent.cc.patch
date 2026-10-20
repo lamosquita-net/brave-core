@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/inspector/inspector_dom_agent.cc b/third_party/blink/renderer/core/inspector/inspector_dom_agent.cc
-index 966c4a25340eca9ca94b6d83c2fe6c20142b9800..3f29ecdcfa2cf15113593ea76969c683dcad9418 100644
+index 966c4a25340eca9ca94b6d83c2fe6c20142b9800..b48895b5bf3e993576f115f4d23c378cb1b2d10c 100644
 --- a/third_party/blink/renderer/core/inspector/inspector_dom_agent.cc
 +++ b/third_party/blink/renderer/core/inspector/inspector_dom_agent.cc
 @@ -229,6 +229,12 @@ protocol::DOM::PseudoType InspectorDOMAgent::ProtocolPseudoElementType(
@@ -94,9 +94,9 @@ index 966c4a25340eca9ca94b6d83c2fe6c20142b9800..3f29ecdcfa2cf15113593ea76969c683
 +  }
 +
 +  const LayoutObject* target_object;
-+  if (anchor_specifier.has_value()) {
++  if (anchor_specifier.isJust()) {
 +    target_object = box->FindTargetAnchor(*MakeGarbageCollected<ScopedCSSName>(
-+        AtomicString(anchor_specifier.value()),
++        AtomicString(anchor_specifier.fromJust()),
 +        &querying_object->GetDocument()));
 +  } else {
 +    target_object = box->AcceptableImplicitAnchor();

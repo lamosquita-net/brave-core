@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/frame/local_frame.cc b/third_party/blink/renderer/core/frame/local_frame.cc
-index 51ac02abf2f2e61538b26fcbbaa437567310c164..6db863a5a426b58fd61a27abe6e15ae86c3f28f8 100644
+index 51ac02abf2f2e61538b26fcbbaa437567310c164..36025c983f49e2f4c33572431da3d5c943c097fb 100644
 --- a/third_party/blink/renderer/core/frame/local_frame.cc
 +++ b/third_party/blink/renderer/core/frame/local_frame.cc
 @@ -155,7 +155,8 @@
@@ -24,7 +24,7 @@ index 51ac02abf2f2e61538b26fcbbaa437567310c164..6db863a5a426b58fd61a27abe6e15ae8
    if (!IsLocalRoot()) {
      return LocalFrameRoot().CreateNewSmoothScrollSequence();
    }
-@@ -3590,11 +3596,27 @@ void LocalFrame::ScheduleNextServiceForScrollSnapshotClients() {
+@@ -3590,13 +3596,29 @@ void LocalFrame::ScheduleNextServiceForScrollSnapshotClients() {
    }
  }
  
@@ -53,8 +53,11 @@ index 51ac02abf2f2e61538b26fcbbaa437567310c164..6db863a5a426b58fd61a27abe6e15ae8
 +    if (const AnchorPositionScrollData* data =
 +            DynamicTo<AnchorPositionScrollData>(client.Get());
          data && data->IsActive()) {
-       ids->AppendVector(data->ScrollContainerIds());
+-      ids->AppendVector(data->ScrollContainerIds());
++      ids->AppendVector(data->AdjustmentContainerIds());
      }
+   }
+ }
 @@ -3617,4 +3639,13 @@ void LocalFrame::SetResourceCacheRemote(
    GetDocument()->Fetcher()->SetResourceCache(std::move(remote));
  }

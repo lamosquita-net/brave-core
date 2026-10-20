@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/animation/css_interpolation_type.cc b/third_party/blink/renderer/core/animation/css_interpolation_type.cc
-index d0593db7aa95a63c28efcfc38c924b8548631951..55081bf4165d5235718e63457af6cf0324e316fc 100644
+index d0593db7aa95a63c28efcfc38c924b8548631951..499ac689deef2b9417ba6c0d822fe8e936bdf83c 100644
 --- a/third_party/blink/renderer/core/animation/css_interpolation_type.cc
 +++ b/third_party/blink/renderer/core/animation/css_interpolation_type.cc
 @@ -11,6 +11,7 @@
@@ -10,7 +10,7 @@ index d0593db7aa95a63c28efcfc38c924b8548631951..55081bf4165d5235718e63457af6cf03
  #include "third_party/blink/renderer/core/css/computed_style_css_value_mapping.h"
  #include "third_party/blink/renderer/core/css/css_custom_property_declaration.h"
  #include "third_party/blink/renderer/core/css/css_inherited_value.h"
-@@ -31,6 +32,42 @@
+@@ -31,6 +32,38 @@
  
  namespace blink {
  
@@ -30,12 +30,6 @@ index d0593db7aa95a63c28efcfc38c924b8548631951..55081bf4165d5235718e63457af6cf03
 +        unresolved_value_(unresolved_value),
 +        resolved_value_(resolved_value) {}
 +
-+  void Trace(Visitor* visitor) const final {
-+    CSSInterpolationType::ConversionChecker::Trace(visitor);
-+    visitor->Trace(unresolved_value_);
-+    visitor->Trace(resolved_value_);
-+  }
-+
 + private:
 +  bool IsValid(const InterpolationEnvironment& environment,
 +               const InterpolationValue&) const final {
@@ -46,14 +40,16 @@ index d0593db7aa95a63c28efcfc38c924b8548631951..55081bf4165d5235718e63457af6cf03
 +  }
 +
 +  PropertyHandle property_;
-+  Member<const CSSValue> unresolved_value_;
-+  Member<const CSSValue> resolved_value_;
++  // FlyWeb (FM.28): ConversionChecker is not garbage collected in 116 (like
++  // ResolvedVariableChecker below).
++  Persistent<const CSSValue> unresolved_value_;
++  Persistent<const CSSValue> resolved_value_;
 +};
 +
  class ResolvedVariableChecker : public CSSInterpolationType::ConversionChecker {
   public:
    ResolvedVariableChecker(CSSPropertyID property,
-@@ -190,6 +227,17 @@ InterpolationValue CSSInterpolationType::MaybeConvertSingleInternal(
+@@ -190,6 +223,17 @@ InterpolationValue CSSInterpolationType::MaybeConvertSingleInternal(
          CssProperty().PropertyID(), value, resolved_value));
      value = resolved_value;
    }
@@ -64,14 +60,14 @@ index d0593db7aa95a63c28efcfc38c924b8548631951..55081bf4165d5235718e63457af6cf03
 +    const CSSValue* resolved_value =
 +        css_environment.Resolve(GetProperty(), value);
 +    DCHECK(resolved_value);
-+    conversion_checkers.push_back(MakeGarbageCollected<ResolvedValueChecker>(
++    conversion_checkers.push_back(std::make_unique<ResolvedValueChecker>(
 +        GetProperty(), /* unresolved_value */ value, resolved_value));
 +    value = resolved_value;
 +  }
  
    if (value->IsRevertValue()) {
      value = css_environment.Resolve(GetProperty(), value);
-@@ -323,6 +371,14 @@ void CSSInterpolationType::Apply(
+@@ -323,6 +367,14 @@ void CSSInterpolationType::Apply(
      ApplyCustomPropertyValue(interpolable_value, non_interpolable_value, state);
      return;
    }
