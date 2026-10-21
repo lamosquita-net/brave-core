@@ -1,8 +1,65 @@
 diff --git a/third_party/blink/renderer/platform/runtime_enabled_features.json5 b/third_party/blink/renderer/platform/runtime_enabled_features.json5
-index 75e44e6b7cdd95c1e39b3759939ec1146232f255..0b9972712eafc14fe2cae444b0ef2a168afb1c6d 100644
+index 75e44e6b7cdd95c1e39b3759939ec1146232f255..d21f1608eba2ca6c7e07f8e5c13bba21a947ea41 100644
 --- a/third_party/blink/renderer/platform/runtime_enabled_features.json5
 +++ b/third_party/blink/renderer/platform/runtime_enabled_features.json5
-@@ -1804,6 +1804,7 @@
+@@ -480,6 +480,13 @@
+         "default": "test",
+       },
+     },
++    {
++      // When the <base> element href attribute scheme is "data" or "javascript",
++      // set element's frozen base URL to document's fallback base URL.
++      // This feature was shipped in M129, so this flag can be removed in M131.
++      name: "BaseElementUrlUseFallback",
++      status: "stable",
++    },
+     {
+       // There are two different code changes guarded by this feature. Both
+       // are about triggering a beforeunload cancel dialog and need adoption
+@@ -585,6 +592,10 @@
+       status: "experimental",
+       base_feature: "none",
+     },
++    {
++      name: "CallExitNodeWithoutLayoutObject",
++      status: "stable",
++    },
+     {
+       name: "Canvas2dCanvasFilter",
+       status: "experimental",
+@@ -692,7 +703,7 @@
+       // to do that for the target according to the new spec:
+       // https://w3c.github.io/selection-api/#scheduling-selectionhange-event
+       name: "CoalesceSelectionchangeEvent",
+-      status: "experimental",
++      status: "stable",
+     },
+     {
+       name: "CoepReflection",
+@@ -763,6 +774,10 @@
+       name: "ContactsManagerExtraProperties",
+       status:  {"Android": "stable", "default": "test"},
+     },
++    {
++      name: "ContainerTypeNoLayoutContainment",
++      status: "stable",
++    },
+     {
+       name: "ContentIndex",
+       status:  {"Android": "stable", "default": "experimental"},
+@@ -922,6 +937,11 @@
+       name: "CSSDisplayModePictureInPicture",
+       status: "stable",
+     },
++    {
++      // crbug.com/353228153
++      name: "CssDisplaySerialziationFix",
++      status: "stable",
++    },
+     {
+       name: "CSSDynamicRangeLimit",
+       status: "experimental",
+@@ -1804,6 +1824,7 @@
        // In-development features for the File System Access API.
        name: "FileSystemAccessAPIExperimental",
        status: "experimental",
@@ -10,7 +67,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..0b9972712eafc14fe2cae444b0ef2a16
      },
      {
        // The FileSystemHandle.getCloudIdentifiers() method (see
-@@ -1819,6 +1820,7 @@
+@@ -1819,6 +1840,7 @@
        // Non-OPFS File System Access API.
        name: "FileSystemAccessLocal",
        status: {"Android": "test", "default": "stable"},
@@ -18,7 +75,31 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..0b9972712eafc14fe2cae444b0ef2a16
      },
      {
        name: "FileSystemAccessLockingScheme",
-@@ -2648,6 +2650,7 @@
+@@ -2102,6 +2124,10 @@
+       name: "HandleDeletionWithNonEditableContentAtBlockBoundary",
+       status: "stable",
+     },
++    {
++      name: "HandleSelectionChangeOnDeletingEmptyElement",
++      status: "stable",
++    },
+     {
+       name: "HandwritingRecognition",
+       status: {
+@@ -2358,6 +2384,12 @@
+       status: "experimental",
+       origin_trial_feature_name: "JavaScriptCompileHintsMagic",
+     },
++    {
++      // Fix to crbug.com/40934455.
++      // Should be removed a bit after M129 reaches stable.
++      name: "KeepActiveIfLabelActive",
++      status: "stable",
++    },
+     {
+       // Allows :target to match elements even after they are removed and
+       // reattached to the document. Enabled in M128, should be safe to remove
+@@ -2648,6 +2680,7 @@
      {
        name: "MiddleClickAutoscroll",
        status: "test",
@@ -26,7 +107,45 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..0b9972712eafc14fe2cae444b0ef2a16
      },
      {
        name: "MobileLayoutTheme",
-@@ -3679,6 +3682,7 @@
+@@ -2687,6 +2720,10 @@
+       name: "MoveEndingSelectionToListChild",
+       status: "stable",
+     },
++    {
++      name: "MoveToParagraphStartOrEndSkipsNonEditable",
++      status: "stable",
++    },
+     {
+       name: "MultiSelectDeselectWhenOnlyOption",
+       status: "test",
+@@ -2787,6 +2824,13 @@
+       name: "NonEmptyBlockquotesOnOutdenting",
+       status: "stable",
+     },
++    {
++      // Input event data for textarea should not be null for certain
++      // inputTypes.
++      // https://issues.chromium.org/issues/40737336
++      name: "NonNullInputEventDataForTextArea",
++      status: "stable"
++    },
+     {
+       // TODO(crbug.com/924486): This feature enables the deprecated values
+       // inner-spin-button, push-button, searchfield-cancel-button,
+@@ -3206,6 +3250,12 @@
+       name:"PrettyPrintJSONDocument",
+       status: "stable",
+     },
++    {
++      // When enabled, prevents undo to be applied if the enclosing block
++      // is not editable
++      name: "PreventUndoIfNotEditable",
++      status: "stable"
++    },
+     {
+       // Controls whether filtering IDs can be specified for Private Aggregation
+       // contributions. If disabled, any IDs will be ignored.
+@@ -3679,6 +3729,7 @@
      {
        name: "Serial",
        status: {"Android": "", "default": "stable"},
@@ -34,3 +153,31 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..0b9972712eafc14fe2cae444b0ef2a16
      },
      {
        name: "SerializeViewTransitionStateInSPA",
+@@ -4264,6 +4315,11 @@
+       base_feature: "none",
+       public: true,
+     },
++    {
++      // crbug.com/356190942
++      name: "VerticalInputRangeKeyOperationFix",
++      status: "stable",
++    },
+     {
+       // Whether a video element should automatically play fullscreen unless
+       // 'playsinline' is set.
+@@ -4435,12 +4491,14 @@
+       name: "WebAuthAuthenticatorAttachment",
+       status: "test",
+     },
++    // Methods for deserializing WebAuthn requests from JSON/serializing
++    // responses into JSON.
+     // https://w3c.github.io/webauthn/#dom-publickeycredential-tojson
+     // https://w3c.github.io/webauthn/#sctn-parseCreationOptionsFromJSON
+     // https://w3c.github.io/webauthn/#sctn-parseRequestOptionsFromJSON
+     {
+       name: "WebAuthenticationJSONSerialization",
+-      status: "experimental",
++      status: "stable",
+     },
+     {
+       name: "WebAuthenticationLargeBlobExtension",

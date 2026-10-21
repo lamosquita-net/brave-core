@@ -1,0 +1,23 @@
+diff --git a/third_party/blink/renderer/core/style/computed_style.h b/third_party/blink/renderer/core/style/computed_style.h
+index d4d2a1ca1e5a4f492aecaa534714267bf640d520..8810dec3795d0476d5cfd5c56464a918cbe669bd 100644
+--- a/third_party/blink/renderer/core/style/computed_style.h
++++ b/third_party/blink/renderer/core/style/computed_style.h
+@@ -1459,12 +1459,16 @@ class ComputedStyle final : public ComputedStyleBase {
+ 
+     if (container_type & kContainerTypeInlineSize) {
+       effective |= kContainsStyle;
+-      effective |= kContainsLayout;
++      if (!RuntimeEnabledFeatures::ContainerTypeNoLayoutContainmentEnabled()) {
++        effective |= kContainsLayout;
++      }
+       effective |= kContainsInlineSize;
+     }
+     if (container_type & kContainerTypeBlockSize) {
+       effective |= kContainsStyle;
+-      effective |= kContainsLayout;
++      if (!RuntimeEnabledFeatures::ContainerTypeNoLayoutContainmentEnabled()) {
++        effective |= kContainsLayout;
++      }
+       effective |= kContainsBlockSize;
+     }
+     if (!IsContentVisibilityVisible(content_visibility)) {

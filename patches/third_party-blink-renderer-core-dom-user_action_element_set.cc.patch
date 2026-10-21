@@ -1,0 +1,22 @@
+diff --git a/third_party/blink/renderer/core/dom/user_action_element_set.cc b/third_party/blink/renderer/core/dom/user_action_element_set.cc
+index e8e58588085142a9613f891011ce22d824e8d3c7..f2582417533a87e28cb5f95f42bb748173150006 100644
+--- a/third_party/blink/renderer/core/dom/user_action_element_set.cc
++++ b/third_party/blink/renderer/core/dom/user_action_element_set.cc
+@@ -44,6 +44,17 @@ bool UserActionElementSet::HasFlags(const Node* node, unsigned flags) const {
+   return HasFlags(To<Element>(node), flags);
+ }
+ 
++HeapVector<Member<Element>> UserActionElementSet::GetAllWithFlags(
++    const unsigned flags) const {
++  HeapVector<Member<Element>> found_elements;
++  for (const auto& pair : elements_) {
++    if (pair.value & flags) {
++      found_elements.push_back(pair.key);
++    }
++  }
++  return found_elements;
++}
++
+ void UserActionElementSet::SetFlags(Node* node, unsigned flags) {
+   auto* this_element = DynamicTo<Element>(node);
+   if (!this_element)

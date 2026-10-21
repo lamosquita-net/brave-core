@@ -1,0 +1,19 @@
+diff --git a/third_party/blink/renderer/core/html/forms/html_button_element.cc b/third_party/blink/renderer/core/html/forms/html_button_element.cc
+index dada119db0fc925c6595808558bb21ea8e44b67a..0f0823e6ad4eaf09db647f5cebb7cb5254eee765 100644
+--- a/third_party/blink/renderer/core/html/forms/html_button_element.cc
++++ b/third_party/blink/renderer/core/html/forms/html_button_element.cc
+@@ -277,7 +277,13 @@ void HTMLButtonElement::DispatchBlurEvent(
+     Element* new_focused_element,
+     mojom::blink::FocusType type,
+     InputDeviceCapabilities* source_capabilities) {
+-  SetActive(false);
++  // The button might be the control element of a label
++  // that is in :active state. In that case the control should
++  // remain :active to avoid crbug.com/40934455.
++  if (!RuntimeEnabledFeatures::KeepActiveIfLabelActiveEnabled() ||
++      !HasActiveLabel()) {
++    SetActive(false);
++  }
+   HTMLFormControlElement::DispatchBlurEvent(new_focused_element, type,
+                                             source_capabilities);
+ }

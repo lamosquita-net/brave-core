@@ -1,0 +1,31 @@
+diff --git a/third_party/blink/renderer/core/dom/user_action_element_set.h b/third_party/blink/renderer/core/dom/user_action_element_set.h
+index 81760d7e0211ee38cc1e3583f22a2ccbafc81c71..89a1b46c6e2dd0fb16493e518160d4bcd7d43ebd 100644
+--- a/third_party/blink/renderer/core/dom/user_action_element_set.h
++++ b/third_party/blink/renderer/core/dom/user_action_element_set.h
+@@ -28,6 +28,7 @@
+ #define THIRD_PARTY_BLINK_RENDERER_CORE_DOM_USER_ACTION_ELEMENT_SET_H_
+ 
+ #include "third_party/blink/renderer/platform/heap/collection_support/heap_hash_map.h"
++#include "third_party/blink/renderer/platform/heap/collection_support/heap_vector.h"
+ #include "third_party/blink/renderer/platform/heap/garbage_collected.h"
+ 
+ namespace blink {
+@@ -49,6 +50,10 @@ class UserActionElementSet final {
+   }
+   bool IsDragged(const Node* node) { return HasFlags(node, kIsDraggedFlag); }
+   bool IsHovered(const Node* node) { return HasFlags(node, kIsHoveredFlag); }
++  HeapVector<Member<Element>> ActiveElements() const {
++    return GetAllWithFlags(kIsActiveFlag);
++  }
++
+   void SetFocused(Node* node, bool enable) {
+     SetFlags(node, enable, kIsFocusedFlag);
+   }
+@@ -90,6 +95,7 @@ class UserActionElementSet final {
+   void SetFlags(Node*, unsigned);
+   void ClearFlags(Node*, unsigned);
+   bool HasFlags(const Node*, unsigned flags) const;
++  HeapVector<Member<Element>> GetAllWithFlags(const unsigned flags) const;
+ 
+   void SetFlags(Element*, unsigned);
+   void ClearFlags(Element*, unsigned);

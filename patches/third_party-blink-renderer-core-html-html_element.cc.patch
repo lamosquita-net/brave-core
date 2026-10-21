@@ -1,0 +1,30 @@
+diff --git a/third_party/blink/renderer/core/html/html_element.cc b/third_party/blink/renderer/core/html/html_element.cc
+index 59ba47318a79b8bde236add57f1207ca00bd0242..c82bdb17ada92197650a4dbf0f9d16859fb71729 100644
+--- a/third_party/blink/renderer/core/html/html_element.cc
++++ b/third_party/blink/renderer/core/html/html_element.cc
+@@ -88,6 +88,7 @@
+ #include "third_party/blink/renderer/core/html/forms/html_form_control_element.h"
+ #include "third_party/blink/renderer/core/html/forms/html_form_element.h"
+ #include "third_party/blink/renderer/core/html/forms/html_input_element.h"
++#include "third_party/blink/renderer/core/html/forms/html_label_element.h"
+ #include "third_party/blink/renderer/core/html/forms/html_listbox_element.h"
+ #include "third_party/blink/renderer/core/html/forms/labels_node_list.h"
+ #include "third_party/blink/renderer/core/html/forms/text_control_element.h"
+@@ -3250,6 +3251,17 @@ bool HTMLElement::IsLabelable() const {
+   return IsFormAssociatedCustomElement();
+ }
+ 
++bool HTMLElement::HasActiveLabel() const {
++  for (const Element* active_element :
++       GetDocument().UserActionElements().ActiveElements()) {
++    const HTMLLabelElement* label = DynamicTo<HTMLLabelElement>(active_element);
++    if (label && label->control() == this) {
++      return true;
++    }
++  }
++  return false;
++}
++
+ void HTMLElement::FinishParsingChildren() {
+   Element::FinishParsingChildren();
+   if (IsFormAssociatedCustomElement())
