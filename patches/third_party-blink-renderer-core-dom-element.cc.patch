@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/element.cc b/third_party/blink/renderer/core/dom/element.cc
-index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e03dc63bb4 100644
+index 603363d44dba6a56412a2408af11a821e39bde00..82be2981a7b23eda116464a453e718f9e4f4f78f 100644
 --- a/third_party/blink/renderer/core/dom/element.cc
 +++ b/third_party/blink/renderer/core/dom/element.cc
 @@ -43,6 +43,7 @@
@@ -301,7 +301,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
          return;
        }
      }
-@@ -3809,6 +3902,17 @@ StyleRecalcChange Element::RecalcOwnStyle(
+@@ -3809,6 +3902,21 @@ StyleRecalcChange Element::RecalcOwnStyle(
              ? LayoutObject::ApplyStyleChanges::kNo
              : LayoutObject::ApplyStyleChanges::kYes;
  
@@ -316,10 +316,14 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
 +          .MarkLastSuccessfulPositionFallbackDirtyForElement(*this);
 +    }
 +
++    // FlyWeb (FM.28): ComputedStyle is ref-counted in 116 and the move below
++    // empties new_style, so read what is needed from it first.
++    const bool has_anchor_functions_without_evaluator =
++        new_style->HasAnchorFunctionsWithoutEvaluator();
      scoped_refptr<const ComputedStyle> layout_style(std::move(new_style));
      if (auto* pseudo_element = DynamicTo<PseudoElement>(this)) {
        if (layout_style->Display() == EDisplay::kContents) {
-@@ -3831,6 +3935,17 @@ StyleRecalcChange Element::RecalcOwnStyle(
+@@ -3831,6 +3939,17 @@ StyleRecalcChange Element::RecalcOwnStyle(
          apply_changes = LayoutObject::ApplyStyleChanges::kYes;
        }
      }
@@ -328,7 +332,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
 +      // we're already in the middle of laying out the objects
 +      // we would mark for layout.
 +      apply_changes = LayoutObject::ApplyStyleChanges::kNo;
-+    } else if (new_style->HasAnchorFunctionsWithoutEvaluator()) {
++    } else if (has_anchor_functions_without_evaluator) {
 +      // For regular (non-interleaved) recalcs that depend on anchor*()
 +      // functions, we need to invalidate layout even without a diff,
 +      // see ComputedStyle::HasAnchorFunctionsWithoutEvaluator.
@@ -337,7 +341,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
      layout_object->SetStyle(layout_style.get(), apply_changes);
    }
    return child_change;
-@@ -4048,6 +4163,446 @@ void Element::NotifyIfMatchedDocumentRulesSelectorsChanged(
+@@ -4048,6 +4167,446 @@ void Element::NotifyIfMatchedDocumentRulesSelectorsChanged(
    }
  }
  
@@ -784,7 +788,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
  ShadowRoot& Element::CreateAndAttachShadowRoot(ShadowRootType type) {
  #if DCHECK_IS_ON()
    NestingLevelIncrementer slot_assignment_recalc_forbidden_scope(
-@@ -4184,6 +4739,29 @@ void Element::PseudoStateChanged(CSSSelector::PseudoType pseudo) {
+@@ -4184,6 +4743,29 @@ void Element::PseudoStateChanged(CSSSelector::PseudoType pseudo) {
    PseudoStateChanged(pseudo, AffectedByPseudoStateChange(pseudo, *this));
  }
  
@@ -814,7 +818,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
  void Element::PseudoStateChangedForTesting(CSSSelector::PseudoType pseudo) {
    PseudoStateChanged(pseudo, AffectedByPseudoStateChange());
  }
-@@ -4380,7 +4958,7 @@ bool Element::CanAttachShadowRoot() const {
+@@ -4380,7 +4962,7 @@ bool Element::CanAttachShadowRoot() const {
           tag_name == html_names::kSelectmenuTag;
  }
  
@@ -823,7 +827,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
    // https://dom.spec.whatwg.org/#concept-attach-a-shadow-root
    // 1. If shadow host’s namespace is not the HTML namespace, then throw a
    // "NotSupportedError" DOMException.
-@@ -4413,9 +4991,19 @@ const char* Element::ErrorMessageForAttachShadow() const {
+@@ -4413,9 +4995,19 @@ const char* Element::ErrorMessageForAttachShadow() const {
      }
    }
  
@@ -844,7 +848,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
      return "Shadow root cannot be created on a host "
             "which already hosts a shadow tree.";
    }
-@@ -4445,14 +5033,34 @@ ShadowRoot* Element::attachShadow(const ShadowRootInit* shadow_root_init_dict,
+@@ -4445,14 +5037,34 @@ ShadowRoot* Element::attachShadow(const ShadowRootInit* shadow_root_init_dict,
    CustomElementRegistry* registry = shadow_root_init_dict->hasRegistry()
                                          ? shadow_root_init_dict->registry()
                                          : nullptr;
@@ -882,7 +886,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
  
    // Ensure that the returned shadow root is not marked as declarative so that
    // attachShadow() calls after the first one do not succeed for a shadow host
-@@ -4473,7 +5081,8 @@ bool Element::AttachStreamingDeclarativeShadowRoot(
+@@ -4473,7 +5085,8 @@ bool Element::AttachStreamingDeclarativeShadowRoot(
    // host element, mode equal to declarative shadow mode, and delegates focus
    // equal to declarative shadow delegates focus. If an exception was thrown by
    // attach a shadow root, catch it, and ignore the exception.
@@ -892,7 +896,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
      template_element.SetDeclarativeShadowRootType(
          DeclarativeShadowRootType::kNone);
      GetDocument().AddConsoleMessage(MakeGarbageCollected<ConsoleMessage>(
-@@ -4482,8 +5091,17 @@ bool Element::AttachStreamingDeclarativeShadowRoot(
+@@ -4482,8 +5095,17 @@ bool Element::AttachStreamingDeclarativeShadowRoot(
      return false;
    }
  
@@ -912,7 +916,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
    // 13.1. Set declarative shadow host element's shadow host's "is declarative
    // shadow root" property to true.
    shadow_root.SetIsDeclarativeShadowRoot(true);
-@@ -4511,7 +5129,8 @@ bool Element::AttachDeprecatedNonStreamingDeclarativeShadowRoot(
+@@ -4511,7 +5133,8 @@ bool Element::AttachDeprecatedNonStreamingDeclarativeShadowRoot(
    // host element, mode equal to declarative shadow mode, and delegates focus
    // equal to declarative shadow delegates focus. If an exception was thrown by
    // attach a shadow root, catch it, and ignore the exception.
@@ -922,7 +926,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
      template_element.SetDeclarativeShadowRootType(
          DeclarativeShadowRootType::kNone);
      GetDocument().AddConsoleMessage(MakeGarbageCollected<ConsoleMessage>(
-@@ -4520,8 +5139,17 @@ bool Element::AttachDeprecatedNonStreamingDeclarativeShadowRoot(
+@@ -4520,8 +5143,17 @@ bool Element::AttachDeprecatedNonStreamingDeclarativeShadowRoot(
      return false;
    }
  
@@ -942,7 +946,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
    // 13.1. Set declarative shadow host element's shadow host's "is declarative
    // shadow root" property to true.
    shadow_root.SetIsDeclarativeShadowRoot(true);
-@@ -4550,7 +5178,9 @@ ShadowRoot& Element::AttachShadowRootInternal(
+@@ -4550,7 +5182,9 @@ ShadowRoot& Element::AttachShadowRootInternal(
      ShadowRootType type,
      FocusDelegation focus_delegation,
      SlotAssignmentMode slot_assignment_mode,
@@ -953,7 +957,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
    // SVG <use> is a special case for using this API to create a closed shadow
    // root.
    DCHECK(CanAttachShadowRoot() || IsA<SVGUseElement>(*this));
-@@ -4579,6 +5209,8 @@ ShadowRoot& Element::AttachShadowRootInternal(
+@@ -4579,6 +5213,8 @@ ShadowRoot& Element::AttachShadowRootInternal(
    shadow_root.SetIsDeclarativeShadowRoot(false);
  
    shadow_root.SetRegistry(registry);
@@ -962,7 +966,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
  
    // 7. If this’s custom element state is "precustomized" or "custom", then set
    // shadow’s available to element internals to true.
-@@ -4709,6 +5341,10 @@ void Element::ChildrenChanged(const ChildrenChange& change) {
+@@ -4709,6 +5345,10 @@ void Element::ChildrenChanged(const ChildrenChange& change) {
      }
    }
  
@@ -973,7 +977,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
    if (ShadowRoot* shadow_root = GetShadowRoot()) {
      shadow_root->SetNeedsAssignmentRecalc();
    }
-@@ -5042,7 +5678,7 @@ Element* Element::GetFocusableArea(bool in_descendant_traversal) const {
+@@ -5042,7 +5682,7 @@ Element* Element::GetFocusableArea(bool in_descendant_traversal) const {
    }
  
    DCHECK(GetShadowRoot());
@@ -982,7 +986,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
      return GetFocusDelegate(/*autofocus_only=*/false, in_descendant_traversal);
    } else {
      return FocusController::FindFocusableElementInShadowHost(*this);
-@@ -5391,7 +6027,15 @@ bool Element::IsBaseElementFocusable() const {
+@@ -5391,7 +6031,15 @@ bool Element::IsBaseElementFocusable() const {
  }
  
  bool Element::IsFocusable() const {
@@ -999,7 +1003,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
  }
  
  bool Element::IsFocusableStyleAfterUpdate() const {
-@@ -5436,11 +6080,23 @@ bool Element::HasNoFocusableChildren() const {
+@@ -5436,11 +6084,23 @@ bool Element::HasNoFocusableChildren() const {
  }
  
  bool Element::IsKeyboardFocusable() const {
@@ -1028,7 +1032,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
  }
  
  bool Element::IsMouseFocusable() const {
-@@ -5720,7 +6376,7 @@ void Element::SetInnerHTMLInternal(const String& html,
+@@ -5720,7 +6380,7 @@ void Element::SetInnerHTMLInternal(const String& html,
      setTextContent(html);
    } else {
      if (DocumentFragment* fragment = CreateFragmentForInnerOuterHTML(
@@ -1037,7 +1041,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
              include_shadow_roots, exception_state)) {
        ContainerNode* container = this;
        if (auto* template_element = DynamicTo<HTMLTemplateElement>(*this)) {
-@@ -5760,6 +6416,20 @@ String Element::getInnerHTML(const GetInnerHTMLOptions* options) const {
+@@ -5760,6 +6420,20 @@ String Element::getInnerHTML(const GetInnerHTMLOptions* options) const {
        include_closed_roots);
  }
  
@@ -1058,7 +1062,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
  void Element::setOuterHTML(const String& html,
                             ExceptionState& exception_state) {
    Node* p = parentNode();
-@@ -5783,7 +6453,7 @@ void Element::setOuterHTML(const String& html,
+@@ -5783,7 +6457,7 @@ void Element::setOuterHTML(const String& html,
    Node* next = nextSibling();
  
    DocumentFragment* fragment = CreateFragmentForInnerOuterHTML(
@@ -1067,7 +1071,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
        /*include_shadow_roots=*/false, exception_state);
    if (exception_state.HadException()) {
      return;
-@@ -5926,6 +6596,14 @@ ContainerQueryEvaluator& Element::EnsureContainerQueryEvaluator() {
+@@ -5926,6 +6600,14 @@ ContainerQueryEvaluator& Element::EnsureContainerQueryEvaluator() {
    return *evaluator;
  }
  
@@ -1082,7 +1086,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
  bool Element::SkippedContainerStyleRecalc() const {
    if (const ContainerQueryData* cq_data = GetContainerQueryData()) {
      return cq_data->SkippedStyleRecalc();
-@@ -5994,7 +6672,7 @@ void Element::insertAdjacentHTML(const String& where,
+@@ -5994,7 +6676,7 @@ void Element::insertAdjacentHTML(const String& where,
  
    // Step 3 of http://domparsing.spec.whatwg.org/#insertadjacenthtml()
    DocumentFragment* fragment = CreateFragmentForInnerOuterHTML(
@@ -1091,7 +1095,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
        /*include_shadow_roots=*/false, exception_state);
    if (!fragment) {
      return;
-@@ -6109,10 +6787,18 @@ const AtomicString& Element::ShadowPseudoId() const {
+@@ -6109,10 +6791,18 @@ const AtomicString& Element::ShadowPseudoId() const {
  }
  
  void Element::SetShadowPseudoId(const AtomicString& id) {
@@ -1114,7 +1118,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
    setAttribute(html_names::kPseudoAttr, id);
  }
  
-@@ -6165,8 +6851,8 @@ const ComputedStyle* Element::EnsureComputedStyle(
+@@ -6165,8 +6855,8 @@ const ComputedStyle* Element::EnsureComputedStyle(
    StyleEngine::InEnsureComputedStyleScope ensure_scope(
        GetDocument().GetStyleEngine());
  
@@ -1125,7 +1129,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
      return element->EnsureComputedStyle();
    }
  
-@@ -6397,7 +7083,7 @@ AtomicString Element::ComputeInheritedLanguage() const {
+@@ -6397,7 +7087,7 @@ AtomicString Element::ComputeInheritedLanguage() const {
          if (const Attribute* attribute =
                  attributes.Find(xml_names::kLangAttr)) {
            value = attribute->Value();
@@ -1134,7 +1138,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
            attribute = attributes.Find(html_names::kLangAttr);
            if (attribute) {
              value = attribute->Value();
-@@ -6445,8 +7131,7 @@ void Element::UpdateBackdropPseudoElement(
+@@ -6445,8 +7135,7 @@ void Element::UpdateBackdropPseudoElement(
      return;
    }
  
@@ -1144,7 +1148,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
      UpdatePseudoElement(PseudoId::kPseudoIdBackdrop, change,
                          style_recalc_context);
      return;
-@@ -6693,11 +7378,32 @@ PseudoElement* Element::GetPseudoElement(
+@@ -6693,11 +7382,32 @@ PseudoElement* Element::GetPseudoElement(
                         : nullptr;
  }
  
@@ -1179,7 +1183,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
    }
  
    // The transition pseudos can currently only exist on the document element.
-@@ -6730,7 +7436,8 @@ PseudoElement* Element::GetNestedPseudoElement(
+@@ -6730,7 +7440,8 @@ PseudoElement* Element::GetNestedPseudoElement(
  }
  
  LayoutObject* Element::PseudoElementLayoutObject(PseudoId pseudo_id) const {
@@ -1189,7 +1193,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
      return element->GetLayoutObject();
    }
    return nullptr;
-@@ -6950,7 +7657,7 @@ KURL Element::HrefURL() const {
+@@ -6950,7 +7661,7 @@ KURL Element::HrefURL() const {
    // doesn't <link> implement URLUtils?
    if (IsA<HTMLAnchorElement>(*this) || IsA<HTMLAreaElement>(*this) ||
        IsA<HTMLLinkElement>(*this)) {
@@ -1198,7 +1202,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
    }
    if (auto* svg_a = DynamicTo<SVGAElement>(*this)) {
      return svg_a->LegacyHrefURL(GetDocument());
-@@ -6958,7 +7665,7 @@ KURL Element::HrefURL() const {
+@@ -6958,7 +7669,7 @@ KURL Element::HrefURL() const {
    return KURL();
  }
  
@@ -1207,7 +1211,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
  #if DCHECK_IS_ON()
    if (HasElementData()) {
      if (const Attribute* attribute = Attributes().Find(name)) {
-@@ -6966,6 +7673,14 @@ KURL Element::GetURLAttribute(const QualifiedName& name) const {
+@@ -6966,6 +7677,14 @@ KURL Element::GetURLAttribute(const QualifiedName& name) const {
      }
    }
  #endif
@@ -1222,7 +1226,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
    return GetDocument().CompleteURL(
        StripLeadingAndTrailingHTMLSpaces(getAttribute(name)));
  }
-@@ -8317,7 +9032,7 @@ void Element::RebuildTransitionPseudoLayoutTree(
+@@ -8317,7 +9036,7 @@ void Element::RebuildTransitionPseudoLayoutTree(
                                                 rebuild_pseudo_tree);
  }
  
@@ -1231,7 +1235,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
    return RuntimeEnabledFeatures::InertAttributeEnabled() &&
           FastHasAttribute(html_names::kInertAttr) && IsHTMLElement();
  }
-@@ -8377,9 +9092,34 @@ FocusgroupFlags Element::GetFocusgroupFlags() const {
+@@ -8377,9 +9096,34 @@ FocusgroupFlags Element::GetFocusgroupFlags() const {
  }
  
  bool Element::checkVisibility(CheckVisibilityOptions* options) const {
@@ -1268,7 +1272,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
    DisplayLockUtilities::ScopedForcedUpdate force_locks(
        this, DisplayLockContext::ForcedPhase::kStyleAndLayoutTree,
        /*include_self=*/false, /*only_cv_auto=*/true,
-@@ -8396,7 +9136,9 @@ bool Element::checkVisibility(CheckVisibilityOptions* options) const {
+@@ -8396,7 +9140,9 @@ bool Element::checkVisibility(CheckVisibilityOptions* options) const {
    }
  
    DCHECK(options);
@@ -1279,7 +1283,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
        style->Visibility() != EVisibility::kVisible) {
      return false;
    }
-@@ -8415,7 +9157,9 @@ bool Element::checkVisibility(CheckVisibilityOptions* options) const {
+@@ -8415,7 +9161,9 @@ bool Element::checkVisibility(CheckVisibilityOptions* options) const {
      }
  
      // Check for opacity:0
@@ -1290,7 +1294,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
        if (style = ancestor.GetComputedStyle(); style) {
          if (style->Opacity() == 0.f) {
            return false;
-@@ -8754,30 +9498,6 @@ bool Element::IsReplacedElementRespectingCSSOverflow() const {
+@@ -8754,30 +9502,6 @@ bool Element::IsReplacedElementRespectingCSSOverflow() const {
           IsA<HTMLFrameOwnerElement>(this);
  }
  
@@ -1321,7 +1325,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
  CSSToggleMap* Element::GetToggleMap() {
    return HasRareData() ? GetElementRareData()->GetToggleMap() : nullptr;
  }
-@@ -8786,22 +9506,22 @@ CSSToggleMap& Element::EnsureToggleMap() {
+@@ -8786,22 +9510,22 @@ CSSToggleMap& Element::EnsureToggleMap() {
    return EnsureElementRareData().EnsureToggleMap(this);
  }
  
@@ -1351,7 +1355,7 @@ index 603363d44dba6a56412a2408af11a821e39bde00..86314410c2150c8b0211fa71c2fcc0e0
    if (!HasImplicitlyAnchoredElement() && GetLayoutObject()) {
      // Invalidate layout to populate itself into NGPhysical/LogicalAnchorQuery.
      GetLayoutObject()->SetNeedsLayoutAndFullPaintInvalidation(
-@@ -8824,30 +9544,37 @@ AnchorElementObserver* Element::GetAnchorElementObserver() const {
+@@ -8824,30 +9548,37 @@ AnchorElementObserver* Element::GetAnchorElementObserver() const {
  }
  
  AnchorElementObserver& Element::EnsureAnchorElementObserver() {

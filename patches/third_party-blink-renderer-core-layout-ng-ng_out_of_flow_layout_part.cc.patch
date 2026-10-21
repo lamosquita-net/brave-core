@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/ng_out_of_flow_layout_part.cc b/third_party/blink/renderer/core/layout/ng/ng_out_of_flow_layout_part.cc
-index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6bf4f39af 100644
+index c1606ff35a174461c8b4a34c65591b8765cb6f4a..b26225d82590e474794e29f27bc5ed6eb93789fd 100644
 --- a/third_party/blink/renderer/core/layout/ng/ng_out_of_flow_layout_part.cc
 +++ b/third_party/blink/renderer/core/layout/ng/ng_out_of_flow_layout_part.cc
 @@ -6,7 +6,18 @@
@@ -105,7 +105,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
    }
    if (*out_scroll_min && *out_scroll_max &&
        out_scroll_min->value() > out_scroll_max->value()) {
-@@ -105,175 +96,345 @@ bool CalculateNonOverflowingRangeInOneAxis(
+@@ -105,175 +96,348 @@ bool CalculateNonOverflowingRangeInOneAxis(
    return true;
  }
  
@@ -450,7 +450,10 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
    // The current candidate style if no auto anchor fallback is triggered.
    // Otherwise, the base style for generating auto anchor fallbacks.
 -  const ComputedStyle* style_;
-+  const ComputedStyle* style_ = nullptr;
++  // FlyWeb (FM.28): upstream keeps a raw pointer because ComputedStyle is
++  // garbage collected; in 116 it is ref-counted, so hold a reference while
++  // the element's style is replaced for each try.
++  scoped_refptr<const ComputedStyle> style_;
  
 -  // If the current style is created from an `@try` rule, index of the rule;
 -  // Otherwise nullopt.
@@ -577,7 +580,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
  }  // namespace
  
  // static
-@@ -313,8 +474,7 @@ NGOutOfFlowLayoutPart::NGOutOfFlowLayoutPart(
+@@ -313,8 +477,7 @@ NGOutOfFlowLayoutPart::NGOutOfFlowLayoutPart(
        has_block_fragmentation_(
            InvolvedInBlockFragmentation(*container_builder)) {
    // TODO(almaher): Should we early return here in the case of block
@@ -587,7 +590,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
    if (!container_builder->HasOutOfFlowPositionedCandidates() &&
        !container_builder->HasOutOfFlowFragmentainerDescendants() &&
        !container_builder->HasMulticolsWithPendingOOFs() &&
-@@ -326,12 +486,14 @@ NGOutOfFlowLayoutPart::NGOutOfFlowLayoutPart(
+@@ -326,12 +489,14 @@ NGOutOfFlowLayoutPart::NGOutOfFlowLayoutPart(
    // items to be placed in grid areas, which is complex to maintain a cache for.
    const NGBoxStrut border_scrollbar =
        container_builder->Borders() + container_builder->Scrollbar();
@@ -604,7 +607,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
    if (container_builder_->HasBlockSize()) {
      default_containing_block_info_for_absolute_.rect.size =
          ShrinkLogicalSize(container_builder_->Size(), border_scrollbar);
-@@ -383,9 +545,6 @@ void NGOutOfFlowLayoutPart::HandleFragmentation(
+@@ -383,9 +548,6 @@ void NGOutOfFlowLayoutPart::HandleFragmentation(
         has_block_fragmentation_))
      return;
  
@@ -614,7 +617,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
    if (container_builder_->Node().IsPaginatedRoot()) {
      // Column balancing only affects multicols.
      DCHECK(!column_balancing_info);
-@@ -451,6 +610,58 @@ void NGOutOfFlowLayoutPart::HandleFragmentation(
+@@ -451,6 +613,58 @@ void NGOutOfFlowLayoutPart::HandleFragmentation(
    }
  }
  
@@ -673,7 +676,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
  // Retrieve the stored ContainingBlockInfo needed for placing positioned nodes.
  // When fragmenting, the ContainingBlockInfo is not stored ahead of time and
  // must be generated on demand. The reason being that during fragmentation, we
-@@ -484,8 +695,8 @@ NGOutOfFlowLayoutPart::GetContainingBlockInfo(
+@@ -484,8 +698,8 @@ NGOutOfFlowLayoutPart::GetContainingBlockInfo(
      GridItemData grid_item(candidate.Node(), grid_style,
                             grid_style.GetFontBaseline());
  
@@ -684,7 +687,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
                  containing_grid.CachedPlacementData(), layout_data, grid_style,
                  borders, size, &grid_item)};
    };
-@@ -540,7 +751,8 @@ NGOutOfFlowLayoutPart::GetContainingBlockInfo(
+@@ -540,7 +754,8 @@ NGOutOfFlowLayoutPart::GetContainingBlockInfo(
        container_offset += fragmentainer_descendant.containing_block.Offset();
  
        ContainingBlockInfo containing_block_info{
@@ -694,7 +697,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
            fragmentainer_descendant.containing_block.RelativeOffset(),
            fragmentainer_descendant.containing_block.Offset()};
  
-@@ -817,6 +1029,7 @@ void NGOutOfFlowLayoutPart::AddInlineContainingBlockInfo(
+@@ -817,6 +1032,7 @@ void NGOutOfFlowLayoutPart::AddInlineContainingBlockInfo(
          block_info.key.Get(),
          ContainingBlockInfo{
              inline_writing_direction,
@@ -702,7 +705,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
              LogicalRect(container_offset, inline_cb_size),
              total_relative_offset,
              containing_block_offset - block_info.value->relative_offset});
-@@ -825,10 +1038,6 @@ void NGOutOfFlowLayoutPart::AddInlineContainingBlockInfo(
+@@ -825,10 +1041,6 @@ void NGOutOfFlowLayoutPart::AddInlineContainingBlockInfo(
  
  void NGOutOfFlowLayoutPart::LayoutCandidates(
      HeapVector<NGLogicalOutOfFlowPositionedNode>* candidates) {
@@ -713,7 +716,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
    while (candidates->size() > 0) {
      if (!has_block_fragmentation_ ||
          container_builder_->IsInitialColumnBalancingPass())
-@@ -857,26 +1066,8 @@ void NGOutOfFlowLayoutPart::LayoutCandidates(
+@@ -857,26 +1069,8 @@ void NGOutOfFlowLayoutPart::LayoutCandidates(
            }
          }
  
@@ -741,7 +744,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
          const NGLayoutResult* result = LayoutOOFNode(node_to_layout);
          container_builder_->AddResult(
              *result, result->OutOfFlowPositionedOffset(),
-@@ -886,11 +1077,6 @@ void NGOutOfFlowLayoutPart::LayoutCandidates(
+@@ -886,11 +1080,6 @@ void NGOutOfFlowLayoutPart::LayoutCandidates(
            container_builder_->PropagateTallestUnbreakableBlockSize(
                result->TallestUnbreakableBlockSize());
          }
@@ -753,7 +756,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
        } else {
          container_builder_->AddOutOfFlowDescendant(candidate);
        }
-@@ -1126,7 +1312,6 @@ void NGOutOfFlowLayoutPart::LayoutOOFsInMulticol(
+@@ -1126,7 +1315,6 @@ void NGOutOfFlowLayoutPart::LayoutOOFsInMulticol(
    // Layout the OOF positioned elements inside the inner multicol.
    NGOutOfFlowLayoutPart inner_part(multicol, limited_multicol_constraint_space,
                                     &limited_multicol_container_builder);
@@ -761,7 +764,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
    inner_part.outer_container_builder_ =
        outer_container_builder_ ? outer_container_builder_ : container_builder_;
    inner_part.LayoutFragmentainerDescendants(
-@@ -1252,14 +1437,11 @@ void NGOutOfFlowLayoutPart::LayoutFragmentainerDescendants(
+@@ -1252,14 +1440,11 @@ void NGOutOfFlowLayoutPart::LayoutFragmentainerDescendants(
        builder_for_anchor_query->Children(),
        builder_for_anchor_query->GetWritingDirection());
  
@@ -781,7 +784,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
  
    HeapVector<HeapVector<NodeToLayout>> descendants_to_layout;
    ClearCollectionScope<HeapVector<HeapVector<NodeToLayout>>>
-@@ -1350,8 +1532,7 @@ void NGOutOfFlowLayoutPart::LayoutFragmentainerDescendants(
+@@ -1350,8 +1535,7 @@ void NGOutOfFlowLayoutPart::LayoutFragmentainerDescendants(
  
          NodeInfo node_info = SetupNodeInfo(descendant);
          NodeToLayout node_to_layout = {
@@ -791,7 +794,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
          node_to_layout.containing_block_fragment =
              descendant.containing_block.Fragment();
          node_to_layout.offset_info.original_offset =
-@@ -1498,6 +1679,51 @@ void NGOutOfFlowLayoutPart::LayoutFragmentainerDescendants(
+@@ -1498,6 +1682,51 @@ void NGOutOfFlowLayoutPart::LayoutFragmentainerDescendants(
    }
  }
  
@@ -843,7 +846,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
  NGOutOfFlowLayoutPart::NodeInfo NGOutOfFlowLayoutPart::SetupNodeInfo(
      const NGLogicalOutOfFlowPositionedNode& oof_node) {
    NGBlockNode node = oof_node.Node();
-@@ -1529,52 +1755,14 @@ NGOutOfFlowLayoutPart::NodeInfo NGOutOfFlowLayoutPart::SetupNodeInfo(
+@@ -1529,52 +1758,14 @@ NGOutOfFlowLayoutPart::NodeInfo NGOutOfFlowLayoutPart::SetupNodeInfo(
    }
  #endif
  
@@ -900,7 +903,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
    }
  
    NGContainingBlock<LogicalOffset> containing_block;
-@@ -1590,24 +1778,24 @@ NGOutOfFlowLayoutPart::NodeInfo NGOutOfFlowLayoutPart::SetupNodeInfo(
+@@ -1590,24 +1781,24 @@ NGOutOfFlowLayoutPart::NodeInfo NGOutOfFlowLayoutPart::SetupNodeInfo(
    }
  
    return NodeInfo(
@@ -932,7 +935,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
  
    NGBoxStrut scrollbars_before =
        ComputeScrollbarsForNonAnonymous(node_info.node);
-@@ -1673,7 +1861,7 @@ const NGLayoutResult* NGOutOfFlowLayoutPart::LayoutOOFNode(
+@@ -1673,7 +1864,7 @@ const NGLayoutResult* NGOutOfFlowLayoutPart::LayoutOOFNode(
          // token, causing major confusion everywhere.
          //
          // [1] https://drafts.csswg.org/css-break/#varying-size-boxes
@@ -941,7 +944,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
        }
  
        layout_result = Layout(oof_node_to_layout, fragmentainer_constraint_space,
-@@ -1685,60 +1873,217 @@ const NGLayoutResult* NGOutOfFlowLayoutPart::LayoutOOFNode(
+@@ -1685,60 +1876,217 @@ const NGLayoutResult* NGOutOfFlowLayoutPart::LayoutOOFNode(
      } while (scrollbars_after != scrollbars_before);
    }
  
@@ -1198,7 +1201,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
    return *offset_info;
  }
  
-@@ -1746,111 +2091,173 @@ absl::optional<NGOutOfFlowLayoutPart::OffsetInfo>
+@@ -1746,111 +2094,173 @@ absl::optional<NGOutOfFlowLayoutPart::OffsetInfo>
  NGOutOfFlowLayoutPart::TryCalculateOffset(
      const NodeInfo& node_info,
      const ComputedStyle& candidate_style,
@@ -1451,7 +1454,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
        return absl::nullopt;
      }
    }
-@@ -1859,10 +2266,9 @@ NGOutOfFlowLayoutPart::TryCalculateOffset(
+@@ -1859,10 +2269,9 @@ NGOutOfFlowLayoutPart::TryCalculateOffset(
    // our min/max sizes, only run if needed.
    if (node_dimensions.size.block_size == kIndefiniteSize) {
      offset_info.initial_layout_result = ComputeOutOfFlowBlockDimensions(
@@ -1465,7 +1468,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
    }
  
    // Calculate the block scroll offset range where the block dimension fits.
-@@ -1870,19 +2276,21 @@ NGOutOfFlowLayoutPart::TryCalculateOffset(
+@@ -1870,19 +2279,21 @@ NGOutOfFlowLayoutPart::TryCalculateOffset(
    absl::optional<LayoutUnit> block_scroll_max;
    if (try_fit_available_space) {
      if (!CalculateNonOverflowingRangeInOneAxis(
@@ -1494,7 +1497,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
  
    // Calculate the offsets.
    const NGBoxStrut inset =
-@@ -1891,11 +2299,28 @@ NGOutOfFlowLayoutPart::TryCalculateOffset(
+@@ -1891,11 +2302,28 @@ NGOutOfFlowLayoutPart::TryCalculateOffset(
  
    // |inset| is relative to the container's padding-box. Convert this to being
    // relative to the default container's border-box.
@@ -1524,7 +1527,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
    if (!container_builder_->IsBlockFragmentationContextRoot()) {
      // OOFs contained by an inline that's been split into continuations are
      // special, as their offset is relative to a fragment that's not the same as
-@@ -1908,12 +2333,24 @@ NGOutOfFlowLayoutPart::TryCalculateOffset(
+@@ -1908,12 +2336,24 @@ NGOutOfFlowLayoutPart::TryCalculateOffset(
    }
  
    if (try_fit_available_space) {
@@ -1550,7 +1553,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
    return offset_info;
  }
  
-@@ -1957,14 +2394,25 @@ const NGLayoutResult* NGOutOfFlowLayoutPart::Layout(
+@@ -1957,14 +2397,25 @@ const NGLayoutResult* NGOutOfFlowLayoutPart::Layout(
              node_info.node.Style().GetWritingDirection()));
    }
  
@@ -1582,7 +1585,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
  
    return layout_result;
  }
-@@ -2004,13 +2452,10 @@ const NGLayoutResult* NGOutOfFlowLayoutPart::GenerateFragment(
+@@ -2004,13 +2455,10 @@ const NGLayoutResult* NGOutOfFlowLayoutPart::GenerateFragment(
    const NGBlockNode& node = node_info.node;
    const auto& style = node.Style();
    const LayoutUnit block_offset = offset_info.offset.block_offset;
@@ -1597,7 +1600,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
    LogicalSize logical_size(inline_size, block_size);
    // Convert from logical size in the writing mode of the child to the logical
    // size in the writing mode of the container. That's what the constraint space
-@@ -2025,8 +2470,7 @@ const NGLayoutResult* NGOutOfFlowLayoutPart::GenerateFragment(
+@@ -2025,8 +2473,7 @@ const NGLayoutResult* NGOutOfFlowLayoutPart::GenerateFragment(
                                     style.GetWritingDirection(),
                                     /* is_new_fc */ true);
    builder.SetAvailableSize(available_size);
@@ -1607,7 +1610,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
    builder.SetIsFixedInlineSize(true);
  
    // In some cases we will need the fragment size in order to calculate the
-@@ -2194,7 +2638,7 @@ void NGOutOfFlowLayoutPart::AddOOFToFragmentainer(
+@@ -2194,7 +2641,7 @@ void NGOutOfFlowLayoutPart::AddOOFToFragmentainer(
    // Apply the relative positioned offset now that fragmentation is complete.
    LogicalOffset oof_offset = result->OutOfFlowPositionedOffset();
    LogicalOffset relative_offset =
@@ -1616,7 +1619,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
    LogicalOffset adjusted_offset = oof_offset + relative_offset;
  
    // In the case where an OOF descendant of |descendant| has its containing
-@@ -2205,7 +2649,7 @@ void NGOutOfFlowLayoutPart::AddOOFToFragmentainer(
+@@ -2205,7 +2652,7 @@ void NGOutOfFlowLayoutPart::AddOOFToFragmentainer(
    LogicalOffset offset_adjustment = fragmentainer_offset;
  
    result->GetMutableForOutOfFlow().SetOutOfFlowPositionedOffset(
@@ -1625,7 +1628,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
  
    LogicalOffset additional_fixedpos_offset;
    if (descendant.node_info.fixedpos_containing_block.Fragment()) {
-@@ -2322,7 +2766,7 @@ void NGOutOfFlowLayoutPart::AddOOFToFragmentainer(
+@@ -2322,7 +2769,7 @@ void NGOutOfFlowLayoutPart::AddOOFToFragmentainer(
  
      LogicalOffset legacy_offset =
          descendant.offset_info.original_offset -
@@ -1634,7 +1637,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
      descendant.node_info.node.CopyChildFragmentPosition(
          physical_fragment,
          legacy_offset.ConvertToPhysical(
-@@ -2681,6 +3125,7 @@ void NGOutOfFlowLayoutPart::NodeInfo::Trace(Visitor* visitor) const {
+@@ -2681,6 +3128,7 @@ void NGOutOfFlowLayoutPart::NodeInfo::Trace(Visitor* visitor) const {
  
  void NGOutOfFlowLayoutPart::OffsetInfo::Trace(Visitor* visitor) const {
    visitor->Trace(initial_layout_result);
@@ -1642,7 +1645,7 @@ index c1606ff35a174461c8b4a34c65591b8765cb6f4a..0b1882a264b59ffd5089e9e2b82cb4c6
  }
  
  void NGOutOfFlowLayoutPart::NodeToLayout::Trace(Visitor* visitor) const {
-@@ -2691,3 +3136,5 @@ void NGOutOfFlowLayoutPart::NodeToLayout::Trace(Visitor* visitor) const {
+@@ -2691,3 +3139,5 @@ void NGOutOfFlowLayoutPart::NodeToLayout::Trace(Visitor* visitor) const {
  }
  
  }  // namespace blink
