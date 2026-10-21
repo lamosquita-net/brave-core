@@ -1,0 +1,40 @@
+diff --git a/third_party/blink/renderer/core/layout/block_layout_algorithm.cc b/third_party/blink/renderer/core/layout/block_layout_algorithm.cc
+index 444730e6db58accd0f41796c4c9f102e75f148e3..b84d0c7666b0a8afdf01048fa28d2d22c0b6e715 100644
+--- a/third_party/blink/renderer/core/layout/block_layout_algorithm.cc
++++ b/third_party/blink/renderer/core/layout/block_layout_algorithm.cc
+@@ -543,19 +543,21 @@ BlockLayoutAlgorithm::HandleNonsuccessfulLayoutResult(
+ 
+ const LayoutResult* BlockLayoutAlgorithm::LayoutInlineChild(
+     const InlineNode& node) {
+-  const TextWrap wrap = node.Style().GetTextWrap();
+-  if (UNLIKELY(wrap == TextWrap::kPretty)) {
++  const TextWrapStyle wrap = node.Style().GetTextWrapStyle();
++  if (UNLIKELY(wrap == TextWrapStyle::kPretty)) {
+     UseCounter::Count(node.GetDocument(), WebFeature::kTextWrapPretty);
+     if (!node.IsScoreLineBreakDisabled()) {
+       return LayoutWithOptimalInlineChildLayoutContext<kMaxLinesForOptimal>(
+           node);
+     }
+-  } else if (UNLIKELY(wrap == TextWrap::kBalance)) {
++  } else if (UNLIKELY(wrap == TextWrapStyle::kBalance)) {
+     UseCounter::Count(node.GetDocument(), WebFeature::kTextWrapBalance);
+     if (!node.IsScoreLineBreakDisabled()) {
+       return LayoutWithOptimalInlineChildLayoutContext<kMaxLinesForBalance>(
+           node);
+     }
++  } else {
++    DCHECK(ShouldWrapLineGreedy(wrap));
+   }
+   return LayoutWithSimpleInlineChildLayoutContext(node);
+ }
+@@ -1345,7 +1347,9 @@ bool BlockLayoutAlgorithm::TryReuseFragmentsFromCache(
+   DCHECK(previous_result_);
+ 
+   // No lines are reusable if this block uses `NGParagraphLineBreaker`.
+-  if (Style().GetTextWrap() == TextWrap::kBalance) {
++  // TODO(kojii): This should include other non-stable values; i.e.
++  // `if (!Style().ShouldWrapLineGreedy()) {`.
++  if (Style().GetTextWrapStyle() == TextWrapStyle::kBalance) {
+     return false;
+   }
+ 

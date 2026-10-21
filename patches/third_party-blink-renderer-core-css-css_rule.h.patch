@@ -1,0 +1,36 @@
+diff --git a/third_party/blink/renderer/core/css/css_rule.h b/third_party/blink/renderer/core/css/css_rule.h
+index c7f474e16a5f711d81cd1685de78836b8b024a87..473e5e2f4c630fffeb1b7044cefc86082294667b 100644
+--- a/third_party/blink/renderer/core/css/css_rule.h
++++ b/third_party/blink/renderer/core/css/css_rule.h
+@@ -71,16 +71,18 @@ class CORE_EXPORT CSSRule : public ScriptWrappable {
+     // [1] https://wiki.csswg.org/spec/cssom-constants
+ 
+     // Values for internal use, not web-exposed:
+-    kPropertyRule,
+     kContainerRule,
++    kFontFeatureRule,
++    kFontPaletteValuesRule,
+     kLayerBlockRule,
+     kLayerStatementRule,
+-    kFontPaletteValuesRule,
++    kNestedDeclarationsRule,
++    kPositionTryRule,
++    kPropertyRule,
+     kScopeRule,
+-    kFontFeatureRule,
+     kStartingStyleRule,
+     kViewTransitionRule,
+-    kPositionTryRule,
++    // Lexicographical order above.
+   };
+ 
+   virtual Type GetType() const = 0;
+@@ -117,8 +119,6 @@ class CORE_EXPORT CSSRule : public ScriptWrappable {
+   // The CSSOM spec states that "setting the cssText attribute must do nothing."
+   void setCSSText(const String&) {}
+ 
+-  virtual void UseCountForSignalAffected() {}
+-
+  protected:
+   explicit CSSRule(CSSStyleSheet* parent);
+ 

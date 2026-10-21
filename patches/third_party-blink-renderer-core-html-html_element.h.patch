@@ -1,8 +1,17 @@
 diff --git a/third_party/blink/renderer/core/html/html_element.h b/third_party/blink/renderer/core/html/html_element.h
-index 6c647294ae105590d222e8603f0893507264a1b0..f4b8e9deaa8f1411878288277ed0011e741f9fd0 100644
+index 6c647294ae105590d222e8603f0893507264a1b0..70edd3fba864e454633a7cf20fec5825d175d289 100644
 --- a/third_party/blink/renderer/core/html/html_element.h
 +++ b/third_party/blink/renderer/core/html/html_element.h
-@@ -190,6 +190,7 @@ class CORE_EXPORT HTMLElement : public Element {
+@@ -48,6 +48,8 @@ class HTMLSelectListElement;
+ class KeyboardEvent;
+ class TextControlElement;
+ class V8UnionStringLegacyNullToEmptyStringOrTrustedScript;
++class V8UnionBooleanOrTogglePopoverOptions;
++class ShowPopoverOptions;
+ 
+ enum TranslateAttributeMode {
+   kTranslateAttributeYes,
+@@ -190,6 +192,7 @@ class CORE_EXPORT HTMLElement : public Element {
    virtual bool IsLabelable() const;
    // |labels| IDL attribute implementation for IsLabelable()==true elements.
    LabelsNodeList* labels();
@@ -10,3 +19,16 @@ index 6c647294ae105590d222e8603f0893507264a1b0..f4b8e9deaa8f1411878288277ed0011e
  
    // https://html.spec.whatwg.org/C/#interactive-content
    virtual bool IsInteractiveContent() const;
+@@ -259,8 +262,11 @@ class CORE_EXPORT HTMLElement : public Element {
+                       bool include_event_handler_text,
+                       Document* expected_document) const;
+   bool togglePopover(ExceptionState& exception_state);
+-  bool togglePopover(bool force, ExceptionState& exception_state);
++  bool togglePopover(V8UnionBooleanOrTogglePopoverOptions* options_or_force,
++                     ExceptionState& exception_state);
+   void showPopover(ExceptionState& exception_state);
++  void showPopover(ShowPopoverOptions* options,
++                   ExceptionState& exception_state);
+   void hidePopover(ExceptionState& exception_state);
+   // |exception_state| can be nullptr when exceptions can't be thrown, such as
+   // when the browser hides a popover during light dismiss or shows a popover in

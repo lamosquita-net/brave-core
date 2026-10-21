@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc b/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc
-index ea7a7084f13befb93ab67c985ea8de7b926aae4a..c23ddbc035fbc82de22645f7cb871397b4c5cb9e 100644
+index ea7a7084f13befb93ab67c985ea8de7b926aae4a..c7038533cc59e3e032a2f298fcf02796c6032c1e 100644
 --- a/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc
 +++ b/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc
 @@ -3140,7 +3140,11 @@ std::optional<DisplayValidationResult> ValidateDisplayKeywords(
@@ -62,3 +62,26 @@ index ea7a7084f13befb93ab67c985ea8de7b926aae4a..c23ddbc035fbc82de22645f7cb871397
        return value;
      } else {
        return nullptr;
+@@ -10836,12 +10858,20 @@ const CSSValue* WhiteSpaceCollapse::CSSValueFromComputedStyleInternal(
+   return CSSIdentifierValue::Create(style.GetWhiteSpaceCollapse());
+ }
+ 
+-const CSSValue* TextWrap::CSSValueFromComputedStyleInternal(
++const CSSValue* TextWrapMode::CSSValueFromComputedStyleInternal(
++    const ComputedStyle& style,
++    const LayoutObject*,
++    bool allow_visited_style,
++    CSSValuePhase value_phase) const {
++  return CSSIdentifierValue::Create(style.GetTextWrapMode());
++}
++
++const CSSValue* TextWrapStyle::CSSValueFromComputedStyleInternal(
+     const ComputedStyle& style,
+     const LayoutObject*,
+     bool allow_visited_style,
+     CSSValuePhase value_phase) const {
+-  return CSSIdentifierValue::Create(style.GetTextWrap());
++  return CSSIdentifierValue::Create(style.GetTextWrapStyle());
+ }
+ 
+ const CSSValue* Widows::ParseSingleValue(CSSParserTokenStream& stream,

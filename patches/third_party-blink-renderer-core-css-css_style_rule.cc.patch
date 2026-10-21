@@ -1,0 +1,34 @@
+diff --git a/third_party/blink/renderer/core/css/css_style_rule.cc b/third_party/blink/renderer/core/css/css_style_rule.cc
+index 025993684435a833e209f40fd910afc29801edbd..cd17218ab362619c3451ea40dd5e1e66a987c3cf 100644
+--- a/third_party/blink/renderer/core/css/css_style_rule.cc
++++ b/third_party/blink/renderer/core/css/css_style_rule.cc
+@@ -32,7 +32,6 @@
+ #include "third_party/blink/renderer/core/css/style_rule_css_style_declaration.h"
+ #include "third_party/blink/renderer/core/css/style_sheet_contents.h"
+ #include "third_party/blink/renderer/core/execution_context/execution_context.h"
+-#include "third_party/blink/renderer/core/frame/web_feature.h"
+ #include "third_party/blink/renderer/platform/heap/garbage_collected.h"
+ #include "third_party/blink/renderer/platform/wtf/text/string_builder.h"
+ 
+@@ -256,7 +255,6 @@ unsigned CSSStyleRule::insertRule(const ExecutionContext* execution_context,
+     CSSStyleSheet::RuleMutationScope mutation_scope(this);
+     style_rule_->WrapperInsertRule(index, new_rule);
+     child_rule_cssom_wrappers_.insert(index, Member<CSSRule>(nullptr));
+-    UseCountForSignalAffected();
+     return index;
+   }
+ }
+@@ -282,13 +280,6 @@ void CSSStyleRule::deleteRule(unsigned index, ExceptionState& exception_state) {
+     child_rule_cssom_wrappers_[index]->SetParentRule(nullptr);
+   }
+   child_rule_cssom_wrappers_.EraseAt(index);
+-  UseCountForSignalAffected();
+-}
+-
+-void CSSStyleRule::UseCountForSignalAffected() {
+-  if (style_rule_->HasSignalingChildRule()) {
+-    CountUse(WebFeature::kCSSRuleWithSignalingChildModified);
+-  }
+ }
+ 
+ }  // namespace blink

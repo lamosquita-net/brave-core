@@ -1,0 +1,20 @@
+diff --git a/third_party/blink/renderer/core/css/css_selector_list.h b/third_party/blink/renderer/core/css/css_selector_list.h
+index 2fce7c0372dd704199a1088dc14a05fc8c1684eb..8bb2695286aa05ea490d8b68cd1ca5f4a9539060 100644
+--- a/third_party/blink/renderer/core/css/css_selector_list.h
++++ b/third_party/blink/renderer/core/css/css_selector_list.h
+@@ -34,6 +34,7 @@
+ #include "base/types/pass_key.h"
+ #include "third_party/blink/renderer/core/core_export.h"
+ #include "third_party/blink/renderer/core/css/css_selector.h"
++#include "third_party/blink/renderer/platform/heap/collection_support/heap_vector.h"
+ #include "third_party/blink/renderer/platform/heap/garbage_collected.h"
+ 
+ namespace blink {
+@@ -90,6 +91,7 @@ class CORE_EXPORT CSSSelectorList : public GarbageCollected<CSSSelectorList> {
+                                   CSSSelector* selector_array);
+ 
+   CSSSelectorList* Copy() const;
++  static HeapVector<CSSSelector> Copy(const CSSSelector* selector_list);
+ 
+   bool IsValid() const {
+     return first_selector_[0].Match() != CSSSelector::kInvalidList;

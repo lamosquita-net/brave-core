@@ -1,8 +1,33 @@
 diff --git a/third_party/blink/renderer/core/layout/inline/inline_layout_algorithm.cc b/third_party/blink/renderer/core/layout/inline/inline_layout_algorithm.cc
-index e97034566f3f43b26ad5a9a4ad03bd96de1df435..1e392578287749067cebbdecd2a65c2e2750161e 100644
+index e97034566f3f43b26ad5a9a4ad03bd96de1df435..3f8823b5640481d0ca0b64c1cfdc0110766db1fa 100644
 --- a/third_party/blink/renderer/core/layout/inline/inline_layout_algorithm.cc
 +++ b/third_party/blink/renderer/core/layout/inline/inline_layout_algorithm.cc
-@@ -1102,6 +1102,7 @@ const LayoutResult* InlineLayoutAlgorithm::Layout() {
+@@ -68,8 +68,8 @@ class LineBreakStrategy {
+                     const InlineBreakToken* break_token,
+                     const ColumnSpannerPath* column_spanner_path) {
+     if (!column_spanner_path) {
+-      const TextWrap text_wrap = block_style.GetTextWrap();
+-      if (UNLIKELY(text_wrap == TextWrap::kBalance)) {
++      const TextWrapStyle text_wrap = block_style.GetTextWrapStyle();
++      if (UNLIKELY(text_wrap == TextWrapStyle::kBalance)) {
+         score_line_break_context_ = context->GetScoreLineBreakContext();
+         initiate_balancing_ = !break_token;
+         if (initiate_balancing_) {
+@@ -77,10 +77,12 @@ class LineBreakStrategy {
+                  score_line_break_context_->IsActive());
+           use_score_line_break_ = score_line_break_context_;
+         }
+-      } else if (UNLIKELY(text_wrap == TextWrap::kPretty)) {
++      } else if (UNLIKELY(text_wrap == TextWrapStyle::kPretty)) {
+         score_line_break_context_ = context->GetScoreLineBreakContext();
+         use_score_line_break_ =
+             score_line_break_context_ && score_line_break_context_->IsActive();
++      } else {
++        DCHECK(ShouldWrapLineGreedy(text_wrap));
+       }
+     }
+ #if EXPENSIVE_DCHECKS_ARE_ON()
+@@ -1102,6 +1104,7 @@ const LayoutResult* InlineLayoutAlgorithm::Layout() {
                                          column_spanner_path_);
    bool is_line_created = false;
    bool is_end_paragraph = false;
@@ -10,7 +35,7 @@ index e97034566f3f43b26ad5a9a4ad03bd96de1df435..1e392578287749067cebbdecd2a65c2e
    LayoutUnit line_block_size;
    LayoutUnit block_delta;
    const auto* opportunities_it = opportunities.begin();
-@@ -1113,6 +1114,7 @@ const LayoutResult* InlineLayoutAlgorithm::Layout() {
+@@ -1113,6 +1116,7 @@ const LayoutResult* InlineLayoutAlgorithm::Layout() {
      if (opportunities_it + 1 == opportunities.end()) {
        // We shouldn't have any shapes affecting the last opportunity.
        DCHECK(!opportunity.HasShapeExclusions());
@@ -18,7 +43,7 @@ index e97034566f3f43b26ad5a9a4ad03bd96de1df435..1e392578287749067cebbdecd2a65c2e
        DCHECK_EQ(line_block_size, LayoutUnit());
        DCHECK_EQ(block_delta, LayoutUnit());
  
-@@ -1221,6 +1223,7 @@ const LayoutResult* InlineLayoutAlgorithm::Layout() {
+@@ -1221,6 +1225,7 @@ const LayoutResult* InlineLayoutAlgorithm::Layout() {
            block_delta < opportunity.rect.BlockSize() &&
            !opportunity.IsBlockDeltaBelowShapes(block_delta)) {
          block_delta += LayoutUnit(1);
@@ -26,7 +51,7 @@ index e97034566f3f43b26ad5a9a4ad03bd96de1df435..1e392578287749067cebbdecd2a65c2e
          line_block_size = LayoutUnit();
          continue;
        }
-@@ -1228,6 +1231,7 @@ const LayoutResult* InlineLayoutAlgorithm::Layout() {
+@@ -1228,6 +1233,7 @@ const LayoutResult* InlineLayoutAlgorithm::Layout() {
        // to test, proceed to the next layout opportunity.
        if (opportunities_it + 1 != opportunities.end()) {
          block_delta = LayoutUnit();
@@ -34,7 +59,7 @@ index e97034566f3f43b26ad5a9a4ad03bd96de1df435..1e392578287749067cebbdecd2a65c2e
          line_block_size = LayoutUnit();
          ++opportunities_it;
          continue;
-@@ -1294,12 +1298,21 @@ const LayoutResult* InlineLayoutAlgorithm::Layout() {
+@@ -1294,12 +1300,21 @@ const LayoutResult* InlineLayoutAlgorithm::Layout() {
      // this logic.
      if (UNLIKELY(opportunity.HasShapeExclusions() &&
                   !line_info.IsEmptyLine())) {
@@ -62,7 +87,7 @@ index e97034566f3f43b26ad5a9a4ad03bd96de1df435..1e392578287749067cebbdecd2a65c2e
          line_block_size = total_block_size;
          continue;
        }
-@@ -1308,6 +1321,7 @@ const LayoutResult* InlineLayoutAlgorithm::Layout() {
+@@ -1308,6 +1323,7 @@ const LayoutResult* InlineLayoutAlgorithm::Layout() {
      // Check if the line will fit in the current opportunity.
      if (total_block_size + block_delta > opportunity.rect.BlockSize()) {
        block_delta = LayoutUnit();

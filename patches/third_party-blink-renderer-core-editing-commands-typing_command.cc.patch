@@ -1,8 +1,63 @@
 diff --git a/third_party/blink/renderer/core/editing/commands/typing_command.cc b/third_party/blink/renderer/core/editing/commands/typing_command.cc
-index bc1d20e1b2421eb3191ae8ddc57e347e415e6e80..ff7628710dfba3ffcb69948db75fdd20613d2336 100644
+index bc1d20e1b2421eb3191ae8ddc57e347e415e6e80..5d711ff87f32cd7157a8361185620b93e9a2cf63 100644
 --- a/third_party/blink/renderer/core/editing/commands/typing_command.cc
 +++ b/third_party/blink/renderer/core/editing/commands/typing_command.cc
-@@ -791,6 +791,22 @@ bool TypingCommand::MakeEditableRootEmpty(EditingState* editing_state) {
+@@ -220,6 +220,10 @@ void TypingCommand::DeleteSelection(Document& document, Options options) {
+           LastTypingCommandIfStillOpenForTyping(frame)) {
+     UpdateSelectionIfDifferentFromCurrentSelection(last_typing_command, frame);
+ 
++    if (RuntimeEnabledFeatures::
++            ResetInputTypeToNoneBeforeCharacterInputEnabled()) {
++      last_typing_command->input_type_ = InputEvent::InputType::kNone;
++    }
+     // InputMethodController uses this function to delete composition
+     // selection.  It won't be aborted.
+     last_typing_command->DeleteSelection(options & kSmartDelete,
+@@ -265,6 +269,10 @@ void TypingCommand::DeleteKeyPressed(Document& document,
+         UpdateSelectionIfDifferentFromCurrentSelection(last_typing_command,
+                                                        frame);
+         EditingState editing_state;
++        if (RuntimeEnabledFeatures::
++                ResetInputTypeToNoneBeforeCharacterInputEnabled()) {
++          last_typing_command->input_type_ = InputEvent::InputType::kNone;
++        }
+         last_typing_command->DeleteKeyPressed(granularity, options & kKillRing,
+                                               &editing_state);
+         return;
+@@ -488,6 +496,10 @@ bool TypingCommand::InsertLineBreak(Document& document) {
+           LastTypingCommandIfStillOpenForTyping(document.GetFrame())) {
+     EditingState editing_state;
+     EventQueueScope event_queue_scope;
++    if (RuntimeEnabledFeatures::
++            ResetInputTypeToNoneBeforeCharacterInputEnabled()) {
++      last_typing_command->input_type_ = InputEvent::InputType::kNone;
++    }
+     last_typing_command->InsertLineBreak(&editing_state);
+     return !editing_state.IsAborted();
+   }
+@@ -502,6 +514,10 @@ bool TypingCommand::InsertParagraphSeparatorInQuotedContent(
+           LastTypingCommandIfStillOpenForTyping(document.GetFrame())) {
+     EditingState editing_state;
+     EventQueueScope event_queue_scope;
++    if (RuntimeEnabledFeatures::
++            ResetInputTypeToNoneBeforeCharacterInputEnabled()) {
++      last_typing_command->input_type_ = InputEvent::InputType::kNone;
++    }
+     last_typing_command->InsertParagraphSeparatorInQuotedContent(
+         &editing_state);
+     return !editing_state.IsAborted();
+@@ -517,6 +533,10 @@ bool TypingCommand::InsertParagraphSeparator(Document& document) {
+           LastTypingCommandIfStillOpenForTyping(document.GetFrame())) {
+     EditingState editing_state;
+     EventQueueScope event_queue_scope;
++    if (RuntimeEnabledFeatures::
++            ResetInputTypeToNoneBeforeCharacterInputEnabled()) {
++      last_typing_command->input_type_ = InputEvent::InputType::kNone;
++    }
+     last_typing_command->InsertParagraphSeparator(&editing_state);
+     return !editing_state.IsAborted();
+   }
+@@ -791,6 +811,22 @@ bool TypingCommand::MakeEditableRootEmpty(EditingState* editing_state) {
      }
    }
  
@@ -25,7 +80,7 @@ index bc1d20e1b2421eb3191ae8ddc57e347e415e6e80..ff7628710dfba3ffcb69948db75fdd20
    RemoveAllChildrenIfPossible(root, editing_state);
    if (editing_state->IsAborted() || root->firstChild())
      return false;
-@@ -798,11 +814,18 @@ bool TypingCommand::MakeEditableRootEmpty(EditingState* editing_state) {
+@@ -798,11 +834,18 @@ bool TypingCommand::MakeEditableRootEmpty(EditingState* editing_state) {
    AddBlockPlaceholderIfNeeded(root, editing_state);
    if (editing_state->IsAborted())
      return false;

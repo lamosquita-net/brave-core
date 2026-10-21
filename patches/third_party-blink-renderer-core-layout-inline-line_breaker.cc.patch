@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/inline/line_breaker.cc b/third_party/blink/renderer/core/layout/inline/line_breaker.cc
-index 32fdcd1f620473fe802f2a6d5636ef2032eb61b9..e64daecf5fbed44042a89d9bea8c01317b56fa4d 100644
+index 32fdcd1f620473fe802f2a6d5636ef2032eb61b9..8b9136c5509535f312f93940f97c1bb3b0e3582e 100644
 --- a/third_party/blink/renderer/core/layout/inline/line_breaker.cc
 +++ b/third_party/blink/renderer/core/layout/inline/line_breaker.cc
 @@ -1030,11 +1030,12 @@ void LineBreaker::BreakLine(LineInfo* line_info) {
@@ -148,7 +148,7 @@ index 32fdcd1f620473fe802f2a6d5636ef2032eb61b9..e64daecf5fbed44042a89d9bea8c0131
  
    bool annotation_is_broken = false;
    for (wtf_size_t i = 0; i < number_of_annotations; ++i) {
-@@ -3411,6 +3428,11 @@ bool LineBreaker::IsMonolithicRuby(
+@@ -3411,12 +3428,15 @@ bool LineBreaker::IsMonolithicRuby(
      return true;
    }
  
@@ -160,7 +160,14 @@ index 32fdcd1f620473fe802f2a6d5636ef2032eb61b9..e64daecf5fbed44042a89d9bea8c0131
    // We don't break rubies in text-wrap:balance and text-wrap:pretty
    // because the sum of broken ruby inline-size can be different from the
    // inline-size of a non-broken ruby.
-@@ -3465,6 +3487,11 @@ LineInfo LineBreaker::CreateSubLineInfo(
+-  TextWrap container_wrap = node_.Style().GetTextWrap();
+-  if (container_wrap != TextWrap::kWrap &&
+-      container_wrap != TextWrap::kNoWrap) {
++  if (!node_.Style().ShouldWrapLineGreedy()) {
+     return true;
+   }
+ 
+@@ -3465,6 +3485,11 @@ LineInfo LineBreaker::CreateSubLineInfo(
    sub_line_breaker.disallow_auto_wrap_ = disallow_auto_wrap;
    sub_line_breaker.SetInputRange(start, end_item_index,
                                   initial_whitespace_state, this);
@@ -172,7 +179,7 @@ index 32fdcd1f620473fe802f2a6d5636ef2032eb61b9..e64daecf5fbed44042a89d9bea8c0131
    // OverrideAvailableWidth() prevents HandleFloat() from updating
    // available_width_.
    sub_line_breaker.OverrideAvailableWidth(limit);
-@@ -4111,8 +4138,13 @@ void LineBreaker::HandleOverflow(LineInfo* line_info) {
+@@ -4111,8 +4136,13 @@ void LineBreaker::HandleOverflow(LineInfo* line_info) {
  
    // Restore the hyphenation states to before the loop if needed.
    DCHECK(!HasHyphen());

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style.h b/third_party/blink/renderer/core/style/computed_style.h
-index d4d2a1ca1e5a4f492aecaa534714267bf640d520..8810dec3795d0476d5cfd5c56464a918cbe669bd 100644
+index d4d2a1ca1e5a4f492aecaa534714267bf640d520..7faccbc63483ba1cbd0720b851f27cdc7ab65d3b 100644
 --- a/third_party/blink/renderer/core/style/computed_style.h
 +++ b/third_party/blink/renderer/core/style/computed_style.h
 @@ -1459,12 +1459,16 @@ class ComputedStyle final : public ComputedStyleBase {
@@ -21,3 +21,40 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..8810dec3795d0476d5cfd5c56464a918
        effective |= kContainsBlockSize;
      }
      if (!IsContentVisibilityVisible(content_visibility)) {
+@@ -2083,7 +2087,7 @@ class ComputedStyle final : public ComputedStyleBase {
+   // This function may return values not defined as the enum values. See
+   // `EWhiteSpace`. Prefer using semantic functions below.
+   EWhiteSpace WhiteSpace() const {
+-    return ToWhiteSpace(GetWhiteSpaceCollapse(), GetTextWrap());
++    return ToWhiteSpace(GetWhiteSpaceCollapse(), GetTextWrapMode());
+   }
+ 
+   // Semantic functions for the `white-space` property and its longhands.
+@@ -2110,7 +2114,12 @@ class ComputedStyle final : public ComputedStyleBase {
+     return false;
+   }
+ 
+-  bool ShouldWrapLine() const { return blink::ShouldWrapLine(GetTextWrap()); }
++  bool ShouldWrapLine() const {
++    return blink::ShouldWrapLine(GetTextWrapMode());
++  }
++  bool ShouldWrapLineGreedy() const {
++    return blink::ShouldWrapLineGreedy(GetTextWrapStyle());
++  }
+   bool ShouldBreakSpaces() const {
+     return blink::ShouldBreakSpaces(GetWhiteSpaceCollapse());
+   }
+@@ -3258,11 +3267,11 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+   }
+ 
+   EWhiteSpace WhiteSpace() const {
+-    return ToWhiteSpace(GetWhiteSpaceCollapse(), GetTextWrap());
++    return ToWhiteSpace(GetWhiteSpaceCollapse(), GetTextWrapMode());
+   }
+   void SetWhiteSpace(EWhiteSpace whitespace) {
+     SetWhiteSpaceCollapse(ToWhiteSpaceCollapse(whitespace));
+-    SetTextWrap(ToTextWrap(whitespace));
++    SetTextWrapMode(ToTextWrapMode(whitespace));
+   }
+ 
+   // WritingMode

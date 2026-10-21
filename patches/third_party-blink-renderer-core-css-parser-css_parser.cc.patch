@@ -1,0 +1,20 @@
+diff --git a/third_party/blink/renderer/core/css/parser/css_parser.cc b/third_party/blink/renderer/core/css/parser/css_parser.cc
+index b2e7dd543da5205a5f0eb6b1f38e09d2acb79367..597ab4b4cd4481c325c769a5e125f93b390c9554 100644
+--- a/third_party/blink/renderer/core/css/parser/css_parser.cc
++++ b/third_party/blink/renderer/core/css/parser/css_parser.cc
+@@ -35,6 +35,15 @@ bool CSSParser::ParseDeclarationList(const CSSParserContext* context,
+                                              context);
+ }
+ 
++StyleRuleBase* CSSParser::ParseNestedDeclarationsRule(
++    const CSSParserContext* context,
++    CSSNestingType nesting_type,
++    StyleRule* parent_rule_for_nesting,
++    StringView text) {
++  return CSSParserImpl::ParseNestedDeclarationsRule(
++      context, nesting_type, parent_rule_for_nesting, text);
++}
++
+ void CSSParser::ParseDeclarationListForInspector(
+     const CSSParserContext* context,
+     const String& declaration,
