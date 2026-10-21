@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_object.h b/third_party/blink/renderer/core/layout/layout_object.h
-index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..12825885f4f6bbcc76cf23afb2405c671295ceaa 100644
+index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..5f8effaf0ec8b20f644bcf8c149edc34913a57ee 100644
 --- a/third_party/blink/renderer/core/layout/layout_object.h
 +++ b/third_party/blink/renderer/core/layout/layout_object.h
 @@ -40,6 +40,7 @@
@@ -35,7 +35,23 @@ index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..12825885f4f6bbcc76cf23afb2405c67
  enum CursorDirective { kSetCursorBasedOnStyle, kSetCursor, kDoNotSetCursor };
  
  enum MarkingBehavior {
-@@ -810,6 +802,9 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+@@ -764,10 +756,11 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+     if (IsViewTransitionRoot()) {
+       return true;
+     }
+-    if (Element* element = DynamicTo<Element>(GetNode())) {
+-      return StyleRef().IsRenderedInTopLayer(*element);
+-    }
+-    return false;
++    // FlyWeb (FS.22, upstream 0e454ce616, crbug 543070692): base this on the
++    // box tree position, not on the element flag and style, which can be out
++    // of sync while container queries attach/detach top-layer elements during
++    // layout (OOF candidates skip top-layer boxes since 1624b1441b9).
++    return !IsDocumentElement() && Parent()->IsLayoutView();
+   }
+ 
+   void NotifyPriorityScrollAnchorStatusChanged();
+@@ -810,6 +803,9 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
  #endif
  
    void AddAbsoluteRectForLayer(gfx::Rect& result);
@@ -45,7 +61,7 @@ index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..12825885f4f6bbcc76cf23afb2405c67
    bool RequiresAnonymousTableWrappers(const LayoutObject*) const;
  
   public:
-@@ -1008,6 +1003,12 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+@@ -1008,6 +1004,12 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
      NOT_DESTROYED();
      return IsOfType(kLayoutObjectRubyText);
    }
@@ -58,7 +74,7 @@ index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..12825885f4f6bbcc76cf23afb2405c67
    bool IsTable() const {
      NOT_DESTROYED();
      return IsOfType(kLayoutObjectTable);
-@@ -1343,10 +1344,16 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+@@ -1343,10 +1345,16 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
    // coordinate space is the viewport space.
    virtual gfx::RectF VisualRectInLocalSVGCoordinates() const;
  
@@ -76,7 +92,7 @@ index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..12825885f4f6bbcc76cf23afb2405c67
  
    // This returns the transform applying to the local SVG coordinate space,
    // which combines the CSS transform properties and animation motion transform.
-@@ -2024,12 +2031,12 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+@@ -2024,12 +2032,12 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
  
    void InvalidateIntersectionObserverCachedRects();
  
@@ -93,7 +109,7 @@ index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..12825885f4f6bbcc76cf23afb2405c67
  
   private:
    enum PositionedState {
-@@ -2391,7 +2398,10 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+@@ -2391,7 +2399,10 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
  
    const LayoutBlock* InclusiveContainingBlock() const;
  
@@ -105,7 +121,7 @@ index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..12825885f4f6bbcc76cf23afb2405c67
  
    bool CanContainAbsolutePositionObjects() const {
      NOT_DESTROYED();
-@@ -2709,7 +2719,8 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+@@ -2709,7 +2720,8 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
    // from the coordinate system of the property container.
    const LayoutObject* GetPropertyContainer(
        AncestorSkipInfo*,
@@ -115,7 +131,7 @@ index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..12825885f4f6bbcc76cf23afb2405c67
  
    // Do a rect-based hit test with this object as the stop node.
    HitTestResult HitTestForOcclusion(const PhysicalRect&) const;
-@@ -3515,6 +3526,17 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+@@ -3515,6 +3527,17 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
    }
    void SetSVGDescendantMayHaveTransformRelatedAnimation();
  
@@ -133,7 +149,7 @@ index 53d0adc48f52e6c9ba2f4286bf85ca7dc2a0f6c6..12825885f4f6bbcc76cf23afb2405c67
    bool ShouldSkipNextLayoutShiftTracking() const {
      NOT_DESTROYED();
      return bitfields_.ShouldSkipNextLayoutShiftTracking();
-@@ -4300,6 +4322,11 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+@@ -4300,6 +4323,11 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
      ADD_BOOLEAN_BITFIELD(svg_descendant_may_have_transform_related_animation_,
                           SVGDescendantMayHaveTransformRelatedAnimation);
  
