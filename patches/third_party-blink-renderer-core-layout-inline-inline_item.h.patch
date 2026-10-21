@@ -1,0 +1,14 @@
+diff --git a/third_party/blink/renderer/core/layout/inline/inline_item.h b/third_party/blink/renderer/core/layout/inline/inline_item.h
+index a3a2bb2a4dee1e6e0b3b278603f0151b3b9d3283..65dd3b8713386c0f1631242a429ba48406691bcf 100644
+--- a/third_party/blink/renderer/core/layout/inline/inline_item.h
++++ b/third_party/blink/renderer/core/layout/inline/inline_item.h
+@@ -75,6 +75,9 @@ class CORE_EXPORT InlineItem {
+              unsigned adjusted_start,
+              unsigned adjusted_end,
+              const ShapeResult*);
++  // Copying must initialize `layout_object_` atomically too, to allow for
++  // concurrently marking InlineItem (Chromium 9df6f20935b).
++  InlineItem(const InlineItem&);
+ 
+   InlineItemType Type() const { return type_; }
+   const char* InlineItemTypeToString(InlineItemType val) const;

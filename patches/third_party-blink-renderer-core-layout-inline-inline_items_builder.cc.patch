@@ -1,0 +1,23 @@
+diff --git a/third_party/blink/renderer/core/layout/inline/inline_items_builder.cc b/third_party/blink/renderer/core/layout/inline/inline_items_builder.cc
+index 0fa19b53aa4588aa248a414cf27eeb646396aaea..537c23c1fea0029ad2d363dc8eac73bc47b59a1e 100644
+--- a/third_party/blink/renderer/core/layout/inline/inline_items_builder.cc
++++ b/third_party/blink/renderer/core/layout/inline/inline_items_builder.cc
+@@ -513,7 +513,8 @@ bool InlineItemsBuilderTemplate<MappingBuilder>::AppendTextReusing(
+       // The following should be true, but some unit tests fail.
+       // DCHECK_EQ(item->Type(), InlineItem::kControl);
+     }
+-    InlineItem adjusted_item(item, start, end, adjusted_shape_result);
++    InlineItem& adjusted_item =
++        items_->emplace_back(item, start, end, adjusted_shape_result);
+ 
+ #if DCHECK_IS_ON()
+     DCHECK_EQ(start, adjusted_item.StartOffset());
+@@ -524,8 +525,6 @@ bool InlineItemsBuilderTemplate<MappingBuilder>::AppendTextReusing(
+     }
+     DCHECK_EQ(item.IsEmptyItem(), adjusted_item.IsEmptyItem());
+ #endif
+-
+-    items_->push_back(adjusted_item);
+     DidAppendTextReusing(adjusted_item);
+   }
+   return true;

@@ -1,0 +1,18 @@
+diff --git a/third_party/blink/renderer/core/layout/inline/justification_utils.cc b/third_party/blink/renderer/core/layout/inline/justification_utils.cc
+index 5b06304ede4b973cc85bc154569c6cc598bdad7f..6a4a0cbc2c5fc59946c52b1ae08c3c02728ba04a 100644
+--- a/third_party/blink/renderer/core/layout/inline/justification_utils.cc
++++ b/third_party/blink/renderer/core/layout/inline/justification_utils.cc
+@@ -60,10 +60,11 @@ String BuildJustificationText(const String& text_content,
+           const LineInfo& base_line = item_result.ruby_column->base_line;
+           const InlineItemResults& base_results = base_line.Results();
+           if (!base_results.empty()) {
++            const unsigned base_end =
++                std::min(base_results.back().EndOffset(), end_offset);
+             line_text_builder.Append(BuildJustificationText(
+                 text_content, base_results, base_results.front().StartOffset(),
+-                base_line.EndOffsetForJustify(),
+-                base_line.MayHaveTextCombineOrRubyItem()));
++                base_end, base_line.MayHaveTextCombineOrRubyItem()));
+           }
+         } else {
+           line_text_builder.Append(kObjectReplacementCharacter);
