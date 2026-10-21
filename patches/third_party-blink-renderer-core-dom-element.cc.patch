@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/element.cc b/third_party/blink/renderer/core/dom/element.cc
-index afa9718ce5b9dd841e33d89610d524df1db4e2c9..3805195ddf779181014b28c72eaaae836506ec42 100644
+index afa9718ce5b9dd841e33d89610d524df1db4e2c9..430a84d37665c475b49b3d19eb85a6e28ce29284 100644
 --- a/third_party/blink/renderer/core/dom/element.cc
 +++ b/third_party/blink/renderer/core/dom/element.cc
 @@ -178,6 +178,7 @@
@@ -50,7 +50,18 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..3805195ddf779181014b28c72eaaae83
      return element->EnsureComputedStyle();
    }
  
-@@ -7984,11 +7983,32 @@ PseudoElement* Element::GetPseudoElement(
+@@ -7951,7 +7950,9 @@ PseudoElement* Element::CreatePseudoElementIfNeeded(
+     return nullptr;
+   }
+ 
+-  if (pseudo_id == kPseudoIdBackdrop) {
++  // FlyWeb: 01c7c1b09a (crbug 410437529), only while the originating element
++  // is (still) in the top layer.
++  if (pseudo_id == kPseudoIdBackdrop && IsInTopLayer()) {
+     GetDocument().AddToTopLayer(pseudo_element, this);
+   }
+ 
+@@ -7984,11 +7985,32 @@ PseudoElement* Element::GetPseudoElement(
    return nullptr;
  }
  
@@ -85,7 +96,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..3805195ddf779181014b28c72eaaae83
    }
  
    // The transition pseudos can currently only exist on the document element.
-@@ -8021,7 +8041,8 @@ PseudoElement* Element::GetNestedPseudoElement(
+@@ -8021,7 +8043,8 @@ PseudoElement* Element::GetNestedPseudoElement(
  }
  
  LayoutObject* Element::PseudoElementLayoutObject(PseudoId pseudo_id) const {
@@ -95,7 +106,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..3805195ddf779181014b28c72eaaae83
      return element->GetLayoutObject();
    }
    return nullptr;
-@@ -10146,7 +10167,6 @@ AnchorPositionScrollData* Element::GetAnchorPositionScrollData() const {
+@@ -10146,7 +10169,6 @@ AnchorPositionScrollData* Element::GetAnchorPositionScrollData() const {
  }
  
  void Element::IncrementImplicitlyAnchoredElementCount() {
@@ -103,7 +114,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..3805195ddf779181014b28c72eaaae83
    if (!HasImplicitlyAnchoredElement() && GetLayoutObject()) {
      // Invalidate layout to populate itself into Physical/LogicalAnchorQuery.
      GetLayoutObject()->SetNeedsLayoutAndFullPaintInvalidation(
-@@ -10175,15 +10195,11 @@ AnchorElementObserver* Element::GetAnchorElementObserver() const {
+@@ -10175,15 +10197,11 @@ AnchorElementObserver* Element::GetAnchorElementObserver() const {
  
  AnchorElementObserver& Element::EnsureAnchorElementObserver() {
    DCHECK(IsHTMLElement());
