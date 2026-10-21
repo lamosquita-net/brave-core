@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_resolver_test.cc b/third_party/blink/renderer/core/css/resolver/style_resolver_test.cc
-index 407e4bb3a538bdafd190446bdfeb70fbfebc937f..50cc2ef13db38bc5e465c4d67849cec457236ce8 100644
+index 407e4bb3a538bdafd190446bdfeb70fbfebc937f..cb3ba3f9ca25686afef9a843b9b6ee57d4f2ae89 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_resolver_test.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_resolver_test.cc
 @@ -11,7 +11,6 @@
@@ -10,6 +10,24 @@ index 407e4bb3a538bdafd190446bdfeb70fbfebc937f..50cc2ef13db38bc5e465c4d67849cec4
  #include "third_party/blink/renderer/core/css/cascade_layer_map.h"
  #include "third_party/blink/renderer/core/css/css_image_set_value.h"
  #include "third_party/blink/renderer/core/css/css_image_value.h"
+@@ -979,7 +978,7 @@ TEST_F(StyleResolverTest, EnsureComputedStyleOutsideFlatTree) {
+       .documentElement()
+       ->setInnerHTMLWithDeclarativeShadowDOMForTesting(R"HTML(
+     <div id=host>
+-      <template shadowroot=open>
++      <template shadowrootmode=open>
+       </template>
+       <div id=a>
+         <div id=b>
+@@ -1727,7 +1726,7 @@ TEST_F(StyleResolverTest, CascadeLayersInDifferentTreeScopes) {
+       }
+     </style>
+     <div id=host>
+-      <template shadowroot=open>
++      <template shadowrootmode=open>
+         <style>
+           @layer bar {
+             :host { font-size: 16px; }
 @@ -2728,306 +2727,6 @@ TEST_F(StyleResolverTest, LegacyOverlapBorderImageWidth_Last_Style) {
           "border-width";
  }
@@ -317,6 +335,15 @@ index 407e4bb3a538bdafd190446bdfeb70fbfebc937f..50cc2ef13db38bc5e465c4d67849cec4
  TEST_F(StyleResolverTest,
         PseudoElementWithAnimationAndOriginatingElementStyleChange) {
    SetBodyInnerHTML(R"HTML(
+@@ -3117,7 +2816,7 @@ TEST_F(StyleResolverTest, ScopedAnchorName) {
+     <div id="outer-anchor" style="anchor-name: --outer"></div>
+     <style>#host::part(anchor) { anchor-name: --part; }</style>
+     <div id="host">
+-      <template shadowroot=open>
++      <template shadowrootmode=open>
+         <style>:host { anchor-name: --host; }</style>
+         <div id="part" part="anchor"></div>
+         <div id="inner-anchor" style="anchor-name: --inner"></div>
 @@ -3134,26 +2833,26 @@ TEST_F(StyleResolverTest, ScopedAnchorName) {
    Element* inner_anchor = shadow->getElementById("inner-anchor");
  
@@ -344,8 +371,9 @@ index 407e4bb3a538bdafd190446bdfeb70fbfebc937f..50cc2ef13db38bc5e465c4d67849cec4
 +    <div id="outer-anchor" style="position-anchor: --outer"></div>
 +    <style>#host::part(anchor) { position-anchor: --part; }</style>
      <div id="host">
-       <template shadowroot=open>
+-      <template shadowroot=open>
 -        <style>:host { anchor-scroll: --host; }</style>
++      <template shadowrootmode=open>
 +        <style>:host { position-anchor: --host; }</style>
          <div id="part" part="anchor"></div>
 -        <div id="inner-anchor" style="anchor-scroll: --inner"></div>
@@ -424,14 +452,14 @@ index 407e4bb3a538bdafd190446bdfeb70fbfebc937f..50cc2ef13db38bc5e465c4d67849cec4
 -    </div>
 +    <div id=div></div>
 +  )HTML");
-+
+ 
 +  UpdateAllLifecyclePhasesForTest();
 +
 +  auto* div = GetDocument().getElementById(AtomicString("div"));
 +  ASSERT_TRUE(div);
 +  EXPECT_TRUE(div->ComputedStyleRef().HasAnchorFunctions());
 +}
- 
++
 +TEST_F(StyleResolverTest, HasAnchorFunctionImplicit) {
 +  GetDocument().documentElement()->setInnerHTML(R"HTML(
      <style>
@@ -522,12 +550,12 @@ index 407e4bb3a538bdafd190446bdfeb70fbfebc937f..50cc2ef13db38bc5e465c4d67849cec4
 +  )HTML");
 +
 +  UpdateAllLifecyclePhasesForTest();
-+
+ 
 +  auto* div = GetDocument().getElementById(AtomicString("div"));
 +  ASSERT_TRUE(div);
 +  EXPECT_TRUE(div->ComputedStyleRef().HasAnchorFunctions());
 +}
- 
++
 +TEST_F(StyleResolverTest, HasAnchorSizeFunctionImplicit) {
 +  GetDocument().documentElement()->setInnerHTML(R"HTML(
      <style>
