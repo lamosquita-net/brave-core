@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/runtime_enabled_features.json5 b/third_party/blink/renderer/platform/runtime_enabled_features.json5
-index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7339591c6 100644
+index 75e44e6b7cdd95c1e39b3759939ec1146232f255..3bd4b0ed319a6d7e06079380d4988d354585ac9c 100644
 --- a/third_party/blink/renderer/platform/runtime_enabled_features.json5
 +++ b/third_party/blink/renderer/platform/runtime_enabled_features.json5
 @@ -480,6 +480,13 @@
@@ -59,8 +59,27 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
      {
        name: "ContentIndex",
        status:  {"Android": "stable", "default": "experimental"},
-@@ -838,6 +858,12 @@
-       depends_on: ["CSSAnchorPositioning"],
+@@ -824,20 +844,23 @@
+       // https://drafts.csswg.org/css-values-4/#attr-notation
+       name: "CSSAdvancedAttrFunction",
+     },
+-    {
+-      // Allows positioning a positioned element relative to another one.
+-      // https://drafts.csswg.org/css-anchor-1/
+-      name: "CSSAnchorPositioning",
+-      implied_by: ["HTMLSelectListElement"],
+-      status: "stable",
+-    },
+     {
+       // Support for the anchor-scope property.
+       // https://drafts.csswg.org/css-anchor-position-1/#anchor-scope
+       name: "CSSAnchorScope",
+-      depends_on: ["CSSAnchorPositioning"],
++      status: "stable",
++    },
++    {
++      // Support anchor-size() values in inset and margin properties.
++      name: "CSSAnchorSizeInsetsMargins",
        status: "experimental",
      },
 +    {
@@ -72,7 +91,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
      {
        // Whether <image> values are allowed as counter style <symbol>
        name: "CSSAtRuleCounterStyleImageSymbols",
-@@ -896,6 +922,12 @@
+@@ -896,6 +919,12 @@
        name: "CSSCrossFade",
        status: "experimental",
      },
@@ -85,7 +104,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
      {
        // This flag controls whether the deprecated :--foo syntax is enabled. It
        // is being replaced by :state(foo), which is controlled by the
-@@ -922,6 +954,11 @@
+@@ -922,6 +951,11 @@
        name: "CSSDisplayModePictureInPicture",
        status: "stable",
      },
@@ -97,7 +116,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
      {
        name: "CSSDynamicRangeLimit",
        status: "experimental",
-@@ -940,7 +977,7 @@
+@@ -940,7 +974,7 @@
        // Spec change to search for container query and container units up the
        // flat tree instead of the shadow-including ancestors.
        name: "CSSFlatTreeContainer",
@@ -106,7 +125,23 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
      },
      {
        name: "CSSFontSizeAdjust",
-@@ -993,6 +1030,10 @@
+@@ -958,10 +992,11 @@
+       status: "stable",
+     },
+     {
+-      // For the position-try-fallbacks property, replaces the inset-area()
+-      // syntax with just <'inset-area'>.
+-      name: "CSSInsetAreaValue",
+-      status: "experimental",
++      // The `inset-area` CSS property has been renamed to `position-area`. This
++      // feature (CSSInsetAreaProperty) enables the old `inset-area` property.
++      // This was deprecated in M129, and disabled by default in M131. Assuming
++      // no issues, this flag can be removed in M133.
++      name: "CSSInsetAreaProperty",
+     },
+     {
+       // https://chromestatus.com/feature/6289894144212992
+@@ -993,6 +1028,10 @@
      {
        name: "CSSMixins",
      },
@@ -117,7 +152,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
      {
        name: "CSSPaintAPIArguments",
        status: "experimental",
-@@ -1002,6 +1043,10 @@
+@@ -1002,6 +1041,14 @@
        // See crbug.com/1485525.
        name: "CSSParserIgnoreCharsetForURLs",
      },
@@ -125,10 +160,44 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
 +      name: "CSSPartAllowsMoreSelectorsAfter",
 +      status: "stable",
 +    },
++    {
++      name: "CSSPositionAreaValue",
++      status: "stable",
++    },
      {
        name: "CSSPositionStickyStaticScrollPosition",
        status: "test",
-@@ -1073,6 +1118,11 @@
+@@ -1010,7 +1057,6 @@
+       // position-try-options has been renamed to position-try-fallbacks.
+       // This feature was shipped in M128, so this flag can be removed in M130.
+       name: "CSSPositionTryFallbacks",
+-      depends_on: ["CSSAnchorPositioning"],
+       status: "stable",
+     },
+     {
+@@ -1020,21 +1066,6 @@
+       // This feature was disabled in M128, so this flag (and the code to
+       // implement `position-try-options`) can be removed in M130.
+       name: "CSSPositionTryOptions",
+-      depends_on: ["CSSAnchorPositioning"],
+-    },
+-    {
+-      // Support the position-try-order property.
+-      // https://drafts.csswg.org/css-anchor-position-1/#position-try-order-property
+-      name: "CSSPositionTryOrder",
+-      implied_by: ["CSSAnchorPositioning"],
+-    },
+-    {
+-      // Support the position-visibility property for anchor positioning.
+-      // https://drafts.csswg.org/css-anchor-position-1/#position-visibility
+-      // TODO(crbug.com/332933527): Support anchors-valid and no-overflow. For
+-      // now, this only supports always and anchors-visible.
+-      name: "CSSPositionVisibility",
+-      implied_by: ["CSSAnchorPositioning"],
+     },
+     // https://drafts.csswg.org/css-values-5/#progress
+     // progress(), media-progress(), container-progress()
+@@ -1073,6 +1104,11 @@
        name: "CSSRelativeColor",
        status: "stable",
      },
@@ -140,7 +209,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
      {
        // Non-standard 'auto' keyword for the CSS resize property. Used for
        // selectively enable resize corner for textarea via UA stylesheet, but
-@@ -1238,8 +1288,9 @@
+@@ -1238,8 +1274,9 @@
        status: "test",
      },
      {
@@ -151,7 +220,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
      },
      {
        name: "DeviceAttributes",
-@@ -1804,6 +1855,7 @@
+@@ -1804,6 +1841,7 @@
        // In-development features for the File System Access API.
        name: "FileSystemAccessAPIExperimental",
        status: "experimental",
@@ -159,7 +228,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
      },
      {
        // The FileSystemHandle.getCloudIdentifiers() method (see
-@@ -1819,6 +1871,7 @@
+@@ -1819,6 +1857,7 @@
        // Non-OPFS File System Access API.
        name: "FileSystemAccessLocal",
        status: {"Android": "test", "default": "stable"},
@@ -167,7 +236,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
      },
      {
        name: "FileSystemAccessLockingScheme",
-@@ -1847,6 +1900,17 @@
+@@ -1847,6 +1886,17 @@
        name: "FindTextInReadonlyTextInput",
        status: "experimental",
      },
@@ -185,7 +254,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
      {
        name: "Fledge",
        status: "stable",
-@@ -2102,6 +2166,10 @@
+@@ -2102,6 +2152,10 @@
        name: "HandleDeletionWithNonEditableContentAtBlockBoundary",
        status: "stable",
      },
@@ -196,7 +265,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
      {
        name: "HandwritingRecognition",
        status: {
-@@ -2147,6 +2215,14 @@
+@@ -2147,6 +2201,14 @@
        name: "HTMLAnchorAttribute",
        status: "experimental",
      },
@@ -211,7 +280,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
      // Adds support for the experimental `interesttarget`
      // attributes, as specified in the open-ui "Interest Invokers" explainer.
      // https://open-ui.org/components/interest-invokers.explainer/
-@@ -2171,6 +2247,15 @@
+@@ -2171,6 +2233,15 @@
        name: "HTMLMenuElementIsListOwner",
        status: "stable",
      },
@@ -227,7 +296,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
      {
        // A flag, just for local testing to make the
        // HTML parser yield more often and take longer to resume.
-@@ -2271,6 +2356,11 @@
+@@ -2271,6 +2342,11 @@
        name: "InheritUserModifyWithoutContenteditable",
        status: "stable",
      },
@@ -239,7 +308,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
      {
        name: "InlineBlockInSameLine",
        status: "stable",
-@@ -2358,6 +2448,12 @@
+@@ -2358,6 +2434,12 @@
        status: "experimental",
        origin_trial_feature_name: "JavaScriptCompileHintsMagic",
      },
@@ -252,7 +321,19 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
      {
        // Allows :target to match elements even after they are removed and
        // reattached to the document. Enabled in M128, should be safe to remove
-@@ -2473,6 +2569,11 @@
+@@ -2407,11 +2489,6 @@
+       name: "LangAttributeAwareFormControlUI",
+       settable_from_internals: true,
+     },
+-    {
+-      name: "LastSuccessfulPositionOption",
+-      depends_on: ["CSSAnchorPositioning"],
+-      status: "stable",
+-    },
+     {
+       name: "LayoutFlexNewRowAlgorithmV3",
+       status: "test",
+@@ -2473,6 +2550,11 @@
        status: "experimental",
        base_feature: "none",
      },
@@ -264,7 +345,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
      {
        name: "LockedMode",
        status: "test",
-@@ -2643,11 +2744,24 @@
+@@ -2643,11 +2725,24 @@
        name: "MetaRefreshNoFractional",
        status: "stable",
      },
@@ -289,7 +370,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
      },
      {
        name: "MobileLayoutTheme",
-@@ -2687,19 +2801,23 @@
+@@ -2687,19 +2782,23 @@
        name: "MoveEndingSelectionToListChild",
        status: "stable",
      },
@@ -315,7 +396,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
        origin_trial_feature_name: "MutationEvents",
        origin_trial_type: "deprecation",
        origin_trial_allows_insecure: true,
-@@ -2787,6 +2905,13 @@
+@@ -2787,6 +2886,13 @@
        name: "NonEmptyBlockquotesOnOutdenting",
        status: "stable",
      },
@@ -329,7 +410,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
      {
        // TODO(crbug.com/924486): This feature enables the deprecated values
        // inner-spin-button, push-button, searchfield-cancel-button,
-@@ -3136,6 +3261,14 @@
+@@ -3136,6 +3242,14 @@
        name: "PointerEventDeviceId",
        status: "stable",
      },
@@ -344,7 +425,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
      {
        name: "PositionOutsideTabSpanCheckSiblingNode",
        status: "stable",
-@@ -3206,6 +3339,12 @@
+@@ -3206,6 +3320,12 @@
        name:"PrettyPrintJSONDocument",
        status: "stable",
      },
@@ -357,7 +438,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
      {
        // Controls whether filtering IDs can be specified for Private Aggregation
        // contributions. If disabled, any IDs will be ignored.
-@@ -3245,6 +3384,12 @@
+@@ -3245,6 +3365,12 @@
        origin_trial_allows_third_party: true,
        public: true,
      },
@@ -370,7 +451,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
      {
        // Always allow trust token issuance (so long as the base::Feature
        // is enabled). Used for testing; circumvents a runtime check that,
-@@ -3370,6 +3515,11 @@
+@@ -3370,6 +3496,11 @@
          "Linux": "stable",
          "default": "experimental"},
      },
@@ -382,7 +463,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
      {
        name: "RemoveDanglingMarkupInTarget",
        status: "stable",
-@@ -3422,6 +3572,10 @@
+@@ -3422,6 +3553,10 @@
          "default": "",
        }
      },
@@ -393,7 +474,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
      {
        name: "ResourceTimingContentType",
        status: "experimental",
-@@ -3441,6 +3595,12 @@
+@@ -3441,6 +3576,12 @@
        name: "RewindFloats",
        status: "stable",
      },
@@ -406,7 +487,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
      {
        name: "RtcAudioJitterBufferMaxPackets",
        origin_trial_feature_name: "RtcAudioJitterBufferMaxPackets",
-@@ -3679,6 +3839,7 @@
+@@ -3679,6 +3820,7 @@
      {
        name: "Serial",
        status: {"Android": "", "default": "stable"},
@@ -414,7 +495,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
      },
      {
        name: "SerializeViewTransitionStateInSPA",
-@@ -3907,6 +4068,10 @@
+@@ -3907,6 +4049,10 @@
        name: "StorageBucketsLocks",
        status: "experimental",
      },
@@ -425,7 +506,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
      {
        name: "StrictMimeTypesForWorkers",
        status: "experimental",
-@@ -3935,6 +4100,12 @@
+@@ -3935,6 +4081,12 @@
        name: "SvgCrossOriginAttribute",
        status: "stable",
      },
@@ -438,7 +519,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
      {
        name: "SvgFilterUserSpaceViewportForNonSvg",
        status: "stable",
-@@ -4143,6 +4314,10 @@
+@@ -4143,6 +4295,10 @@
        status: "experimental",
        base_feature: "none",
      },
@@ -449,7 +530,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
      // This is conditionally set if the platform supports translation.
      {
        name: "TranslateService",
-@@ -4255,6 +4430,13 @@
+@@ -4255,6 +4411,13 @@
        base_feature: "none",
        public: true,
      },
@@ -463,7 +544,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
      {
        name: "UseUndoStepElementDispatchBeforeInput",
        status: "stable",
-@@ -4264,6 +4446,11 @@
+@@ -4264,6 +4427,11 @@
        base_feature: "none",
        public: true,
      },
@@ -475,7 +556,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f9e1837b63a03281bceca060d4bbe5d7
      {
        // Whether a video element should automatically play fullscreen unless
        // 'playsinline' is set.
-@@ -4435,12 +4622,14 @@
+@@ -4435,12 +4603,14 @@
        name: "WebAuthAuthenticatorAttachment",
        status: "test",
      },

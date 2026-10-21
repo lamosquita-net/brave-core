@@ -1,7 +1,62 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style.cc b/third_party/blink/renderer/core/style/computed_style.cc
-index bc061ec223ea93f74982b9ab4a2119f548caf978..e3a41bb08fb0256364500db1feda84f7a806a77c 100644
+index bc061ec223ea93f74982b9ab4a2119f548caf978..8fbf6b6a6de9de2ad6d4518af0699c75b73359a9 100644
 --- a/third_party/blink/renderer/core/style/computed_style.cc
 +++ b/third_party/blink/renderer/core/style/computed_style.cc
+@@ -481,12 +481,12 @@ ComputedStyle::ComputeDifferenceIgnoringInheritedFirstLineStyle(
+ 
+ StyleSelfAlignmentData ResolvedSelfAlignment(
+     const StyleSelfAlignmentData& value,
+-    ItemPosition normal_value_behavior,
++    const StyleSelfAlignmentData& normal_value_behavior,
+     bool has_out_of_flow_position) {
+   if (value.GetPosition() == ItemPosition::kLegacy ||
+       value.GetPosition() == ItemPosition::kNormal ||
+       value.GetPosition() == ItemPosition::kAuto) {
+-    return {normal_value_behavior, OverflowAlignment::kDefault};
++    return normal_value_behavior;
+   }
+   if (!has_out_of_flow_position &&
+       value.GetPosition() == ItemPosition::kAnchorCenter) {
+@@ -496,33 +496,33 @@ StyleSelfAlignmentData ResolvedSelfAlignment(
+ }
+ 
+ StyleSelfAlignmentData ComputedStyle::ResolvedAlignSelf(
+-    ItemPosition normal_value_behaviour,
++    const StyleSelfAlignmentData& normal_value_behavior,
+     const ComputedStyle* parent_style) const {
+   // We will return the behaviour of 'normal' value if needed, which is specific
+   // of each layout model.
+   if (!parent_style || AlignSelf().GetPosition() != ItemPosition::kAuto) {
+-    return ResolvedSelfAlignment(AlignSelf(), normal_value_behaviour,
++    return ResolvedSelfAlignment(AlignSelf(), normal_value_behavior,
+                                  HasOutOfFlowPosition());
+   }
+ 
+   // The 'auto' keyword computes to the parent's align-items computed value.
+   return ResolvedSelfAlignment(parent_style->AlignItems(),
+-                               normal_value_behaviour, HasOutOfFlowPosition());
++                               normal_value_behavior, HasOutOfFlowPosition());
+ }
+ 
+ StyleSelfAlignmentData ComputedStyle::ResolvedJustifySelf(
+-    ItemPosition normal_value_behaviour,
++    const StyleSelfAlignmentData& normal_value_behavior,
+     const ComputedStyle* parent_style) const {
+   // We will return the behaviour of 'normal' value if needed, which is specific
+   // of each layout model.
+   if (!parent_style || JustifySelf().GetPosition() != ItemPosition::kAuto) {
+-    return ResolvedSelfAlignment(JustifySelf(), normal_value_behaviour,
++    return ResolvedSelfAlignment(JustifySelf(), normal_value_behavior,
+                                  HasOutOfFlowPosition());
+   }
+ 
+   // The auto keyword computes to the parent's justify-items computed value.
+   return ResolvedSelfAlignment(parent_style->JustifyItems(),
+-                               normal_value_behaviour, HasOutOfFlowPosition());
++                               normal_value_behavior, HasOutOfFlowPosition());
+ }
+ 
+ StyleContentAlignmentData ResolvedContentAlignment(
 @@ -1136,11 +1136,14 @@ bool ComputedStyle::DiffNeedsNormalPaintInvalidation(
    }
  

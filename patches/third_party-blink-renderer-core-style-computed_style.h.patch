@@ -1,8 +1,61 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style.h b/third_party/blink/renderer/core/style/computed_style.h
-index d4d2a1ca1e5a4f492aecaa534714267bf640d520..40ee102ec3c975de844f32c24af9df4cd5821845 100644
+index d4d2a1ca1e5a4f492aecaa534714267bf640d520..223684e1c0b6e515c7a59bfb76232ffdec5407bc 100644
 --- a/third_party/blink/renderer/core/style/computed_style.h
 +++ b/third_party/blink/renderer/core/style/computed_style.h
-@@ -1459,12 +1459,16 @@ class ComputedStyle final : public ComputedStyleBase {
+@@ -403,12 +403,12 @@ class ComputedStyle final : public ComputedStyleBase {
+   ContentDistributionType ResolvedAlignContentDistribution(
+       const StyleContentAlignmentData& normal_value_behavior) const;
+   StyleSelfAlignmentData ResolvedAlignSelf(
+-      ItemPosition normal_value_behaviour,
++      const StyleSelfAlignmentData& normal_value_behavior,
+       const ComputedStyle* parent_style = nullptr) const;
+   StyleContentAlignmentData ResolvedAlignContent(
+       const StyleContentAlignmentData& normal_behaviour) const;
+   StyleSelfAlignmentData ResolvedJustifySelf(
+-      ItemPosition normal_value_behaviour,
++      const StyleSelfAlignmentData& normal_value_behavior,
+       const ComputedStyle* parent_style = nullptr) const;
+   StyleContentAlignmentData ResolvedJustifyContent(
+       const StyleContentAlignmentData& normal_behaviour) const;
+@@ -1409,10 +1409,10 @@ class ComputedStyle final : public ComputedStyleBase {
+ 
+   // Whether or not a positioned element requires normal flow x/y to be computed
+   // to determine its position.
+-  bool HasAutoLeftAndRightIgnoringInsetArea() const {
++  bool HasAutoLeftAndRightIgnoringPositionArea() const {
+     return Left().IsAuto() && Right().IsAuto();
+   }
+-  bool HasAutoTopAndBottomIgnoringInsetArea() const {
++  bool HasAutoTopAndBottomIgnoringPositionArea() const {
+     return Top().IsAuto() && Bottom().IsAuto();
+   }
+ 
+@@ -1420,18 +1420,20 @@ class ComputedStyle final : public ComputedStyleBase {
+   // fallback calculation purposes.
+   // https://drafts.csswg.org/css-anchor-position-1/#determine-the-position-fallback-styles
+   bool IsTopInsetNonAuto() const {
+-    return !Top().IsAuto() || (InsetAreaOffsets() && InsetAreaOffsets()->top);
++    return !Top().IsAuto() ||
++           (PositionAreaOffsets() && PositionAreaOffsets()->top);
+   }
+   bool IsRightInsetNonAuto() const {
+     return !Right().IsAuto() ||
+-           (InsetAreaOffsets() && InsetAreaOffsets()->right);
++           (PositionAreaOffsets() && PositionAreaOffsets()->right);
+   }
+   bool IsBottomInsetNonAuto() const {
+     return !Bottom().IsAuto() ||
+-           (InsetAreaOffsets() && InsetAreaOffsets()->bottom);
++           (PositionAreaOffsets() && PositionAreaOffsets()->bottom);
+   }
+   bool IsLeftInsetNonAuto() const {
+-    return !Left().IsAuto() || (InsetAreaOffsets() && InsetAreaOffsets()->left);
++    return !Left().IsAuto() ||
++           (PositionAreaOffsets() && PositionAreaOffsets()->left);
+   }
+ 
+   // Content utility functions.
+@@ -1459,12 +1461,16 @@ class ComputedStyle final : public ComputedStyleBase {
  
      if (container_type & kContainerTypeInlineSize) {
        effective |= kContainsStyle;
@@ -21,7 +74,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..40ee102ec3c975de844f32c24af9df4c
        effective |= kContainsBlockSize;
      }
      if (!IsContentVisibilityVisible(content_visibility)) {
-@@ -2083,7 +2087,7 @@ class ComputedStyle final : public ComputedStyleBase {
+@@ -2083,7 +2089,7 @@ class ComputedStyle final : public ComputedStyleBase {
    // This function may return values not defined as the enum values. See
    // `EWhiteSpace`. Prefer using semantic functions below.
    EWhiteSpace WhiteSpace() const {
@@ -30,7 +83,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..40ee102ec3c975de844f32c24af9df4c
    }
  
    // Semantic functions for the `white-space` property and its longhands.
-@@ -2110,7 +2114,12 @@ class ComputedStyle final : public ComputedStyleBase {
+@@ -2110,7 +2116,12 @@ class ComputedStyle final : public ComputedStyleBase {
      return false;
    }
  
@@ -44,7 +97,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..40ee102ec3c975de844f32c24af9df4c
    bool ShouldBreakSpaces() const {
      return blink::ShouldBreakSpaces(GetWhiteSpaceCollapse());
    }
-@@ -2756,11 +2765,12 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+@@ -2756,11 +2767,12 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
      SetClipInternal(ComputedStyleInitialValues::InitialClip());
    }
  
@@ -58,7 +111,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..40ee102ec3c975de844f32c24af9df4c
  
    // color
    blink::Color GetCurrentColor() const {
-@@ -3258,11 +3268,11 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+@@ -3258,11 +3270,11 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
    }
  
    EWhiteSpace WhiteSpace() const {

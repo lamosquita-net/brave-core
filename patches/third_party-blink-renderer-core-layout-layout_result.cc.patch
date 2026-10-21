@@ -1,0 +1,26 @@
+diff --git a/third_party/blink/renderer/core/layout/layout_result.cc b/third_party/blink/renderer/core/layout/layout_result.cc
+index 9995feb56c9dbe9546b9a1f031c7d85db94d4695..a359e22dc29942dd5327f58817319e534e52ce32 100644
+--- a/third_party/blink/renderer/core/layout/layout_result.cc
++++ b/third_party/blink/renderer/core/layout/layout_result.cc
+@@ -329,6 +329,13 @@ void LayoutResult::CopyMutableOutOfFlowData(const LayoutResult& other) const {
+       other.OutOfFlowPositionedOffset());
+ }
+ 
++void LayoutResult::MutableForOutOfFlow::SetAccessibilityAnchor(
++    Element* anchor) {
++  if (layout_result_->rare_data_ || anchor) {
++    layout_result_->EnsureRareData()->accessibility_anchor = anchor;
++  }
++}
++
+ void LayoutResult::MutableForOutOfFlow::SetDisplayLocksAffectedByAnchors(
+     HeapHashSet<Member<Element>>* display_locks) {
+   if (layout_result_->rare_data_ || display_locks) {
+@@ -403,6 +410,7 @@ void LayoutResult::RareData::Trace(Visitor* visitor) const {
+   // constructor and never changed.
+   if (const BlockData* data = GetBlockData())
+     visitor->Trace(data->column_spanner_path);
++  visitor->Trace(accessibility_anchor);
+   visitor->Trace(display_locks_affected_by_anchors);
+ }
+ 

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_resolver.cc b/third_party/blink/renderer/core/css/resolver/style_resolver.cc
-index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..ad493b93d3968f68d4969dc661ce9952a989be1e 100644
+index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..536fe33bff46d819d49491fd3fefb4227721e2c9 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_resolver.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_resolver.cc
 @@ -30,7 +30,10 @@
@@ -13,7 +13,29 @@ index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..ad493b93d3968f68d4969dc661ce9952
  #include "third_party/blink/public/mojom/use_counter/metrics/web_feature.mojom-blink.h"
  #include "third_party/blink/public/web/web_print_page_description.h"
  #include "third_party/blink/public/web/web_print_params.h"
-@@ -511,7 +514,9 @@ void StyleResolver::SetRuleUsageTracker(StyleRuleUsageTracker* tracker) {
+@@ -137,6 +140,11 @@ bool ShouldStoreOldStyle(const StyleRecalcContext& style_recalc_context,
+   // inside a size query container, or doing multiple style resolutions for
+   // position-try-fallbacks.
+   //
++  // For anchored elements that generate pseudo elements, we also need to store
++  // the old style for animating pseudo elements because style recalc for the
++  // originating anchored elements will always update its pseudo elements,
++  // causing the pseudo element styling to also have multiple passes.
++  //
+   // If we are not inside a size query container or an element with
+   // position-try-fallbacks, we can fall back to the default behavior (in
+   // CSSAnimations) of using the current style on Element as the old style.
+@@ -149,6 +157,9 @@ bool ShouldStoreOldStyle(const StyleRecalcContext& style_recalc_context,
+   return (style_recalc_context.container ||
+           state.StyleBuilder().HasAnchorFunctions() ||
+           state.StyleBuilder().PositionAnchor() ||
++          (state.IsForPseudoElement() &&
++           (state.ParentStyle()->HasAnchorFunctions() ||
++            state.ParentStyle()->PositionAnchor())) ||
+           state.StyleBuilder().GetPositionTryFallbacks() != nullptr) &&
+          state.CanAffectAnimations();
+ }
+@@ -511,7 +522,9 @@ void StyleResolver::SetRuleUsageTracker(StyleRuleUsageTracker* tracker) {
    tracker_ = tracker;
  }
  
@@ -24,7 +46,7 @@ index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..ad493b93d3968f68d4969dc661ce9952
    TreeScope* tree_scope = &element.GetTreeScope();
    if (ScopedStyleResolver* resolver = tree_scope->GetScopedStyleResolver()) {
      DCHECK(!element.IsVTTElement());
-@@ -521,20 +526,24 @@ static inline ScopedStyleResolver* ScopedResolverFor(const Element& element) {
+@@ -521,20 +534,24 @@ static inline ScopedStyleResolver* ScopedResolverFor(const Element& element) {
    return nullptr;
  }
  
@@ -53,7 +75,7 @@ index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..ad493b93d3968f68d4969dc661ce9952
    }
    // Going forward, for shadow pseudo IDs that we standardize as
    // pseudo-elements, we expect styles specified by the author using the
-@@ -543,25 +552,23 @@ static inline ScopedStyleResolver* ParentScopedResolverFor(
+@@ -543,25 +560,23 @@ static inline ScopedStyleResolver* ParentScopedResolverFor(
    // number of existing uses with :-webkit-* and :-internal-* pseudo
    // elements that do not override the style attribute, we do not apply
    // this (developer-expected) behavior to those existing
@@ -86,7 +108,7 @@ index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..ad493b93d3968f68d4969dc661ce9952
    ShadowRoot* shadow_root = element.GetShadowRoot();
    ScopedStyleResolver* resolver =
        shadow_root ? shadow_root->GetScopedStyleResolver() : nullptr;
-@@ -575,12 +582,12 @@ static void MatchHostRules(const Element& element,
+@@ -575,12 +590,12 @@ static void MatchHostRules(const Element& element,
        CascadeOrigin::kAuthor, /*is_vtt_embedded_style=*/false, tracker);
  }
  
@@ -105,7 +127,7 @@ index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..ad493b93d3968f68d4969dc661ce9952
    if (element.ShadowPseudoId() !=
        shadow_element_names::kPseudoInputPlaceholder) {
      return;
-@@ -615,9 +622,9 @@ static void MatchSlottedRulesForUAHost(const Element& element,
+@@ -615,9 +630,9 @@ static void MatchSlottedRulesForUAHost(const Element& element,
  // scope. If that slot is itself slotted it will match rules in the slot's
  // slot's scope and so on. The result is that it considers a chain of scopes
  // descending from the element's own scope.
@@ -118,7 +140,7 @@ index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..ad493b93d3968f68d4969dc661ce9952
    MatchSlottedRulesForUAHost(element, collector, tracker);
    HeapVector<std::pair<Member<HTMLSlotElement>, Member<ScopedStyleResolver>>>
        resolvers;
-@@ -645,7 +652,7 @@ static void MatchSlottedRules(const Element& element,
+@@ -645,7 +660,7 @@ static void MatchSlottedRules(const Element& element,
    }
  }
  
@@ -127,7 +149,7 @@ index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..ad493b93d3968f68d4969dc661ce9952
    if (auto* vtt_element = DynamicTo<VTTElement>(element)) {
      return vtt_element->GetTrack();
    }
-@@ -655,9 +662,9 @@ const static TextTrack* GetTextTrackFromElement(const Element& element) {
+@@ -655,9 +670,9 @@ const static TextTrack* GetTextTrackFromElement(const Element& element) {
    return nullptr;
  }
  
@@ -140,7 +162,7 @@ index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..ad493b93d3968f68d4969dc661ce9952
    const TextTrack* text_track = GetTextTrackFromElement(element);
    if (!text_track) {
      return;
-@@ -671,9 +678,11 @@ static void MatchVTTRules(const Element& element,
+@@ -671,9 +686,11 @@ static void MatchVTTRules(const Element& element,
        StyleEngine& style_engine = element.GetDocument().GetStyleEngine();
        RuleSet* rule_set = style_engine.RuleSetForSheet(*style);
        if (rule_set) {
@@ -155,7 +177,7 @@ index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..ad493b93d3968f68d4969dc661ce9952
          style_sheet_index++;
        }
      }
-@@ -682,54 +691,34 @@ static void MatchVTTRules(const Element& element,
+@@ -682,54 +699,34 @@ static void MatchVTTRules(const Element& element,
    }
  }
  
@@ -233,7 +255,7 @@ index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..ad493b93d3968f68d4969dc661ce9952
    if (element.IsStyledElement() && element.InlineStyle() &&
        collector.GetPseudoId() == kPseudoIdNone) {
      // Do not add styles depending on style attributes to the
-@@ -746,38 +735,209 @@ static void MatchElementScopeRules(const Element& element,
+@@ -746,38 +743,209 @@ static void MatchElementScopeRules(const Element& element,
          element.InlineStyle(), CascadeOrigin::kAuthor,
          is_inline_style_cacheable, true /* is_inline_style */);
    }
@@ -296,8 +318,8 @@ index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..ad493b93d3968f68d4969dc661ce9952
 +      CHECK(!style_attribute_cascaded_in_parent_scope);
 +    }
 +  }
- }
- 
++}
++
 +void MatchOuterScopeRules(const Element& matching_element,
 +                          ElementRuleCollector& collector,
 +                          StyleRuleUsageTracker* tracker) {
@@ -420,8 +442,8 @@ index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..ad493b93d3968f68d4969dc661ce9952
 +      }
 +    }
 +  }
-+}
-+
+ }
+ 
 +}  // namespace
 +
  void StyleResolver::MatchPseudoPartRulesForUAHost(
@@ -455,7 +477,7 @@ index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..ad493b93d3968f68d4969dc661ce9952
    if (!for_shadow_pseudo) {
      MatchPseudoPartRulesForUAHost(part_matching_element, collector);
    }
-@@ -841,7 +1001,12 @@ void StyleResolver::MatchAuthorRules(const Element& element,
+@@ -841,7 +1009,12 @@ void StyleResolver::MatchAuthorRules(const Element& element,
    MatchHostRules(element, collector, tracker_);
    MatchSlottedRules(element, collector, tracker_);
    MatchElementScopeRules(element, collector, tracker_);
@@ -469,7 +491,7 @@ index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..ad493b93d3968f68d4969dc661ce9952
    MatchPositionTryRules(collector);
  }
  
-@@ -938,7 +1103,7 @@ void StyleResolver::MatchUARules(const Element& element,
+@@ -938,7 +1111,7 @@ void StyleResolver::MatchUARules(const Element& element,
  
    if (!match_request.IsEmpty()) {
      collector.ClearMatchedRules();
@@ -478,7 +500,7 @@ index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..ad493b93d3968f68d4969dc661ce9952
      collector.SortAndTransferMatchedRules(
          CascadeOrigin::kUserAgent, /*is_vtt_embedded_style=*/false, tracker_);
    }
-@@ -953,7 +1118,8 @@ void StyleResolver::MatchUARules(const Element& element,
+@@ -953,7 +1126,8 @@ void StyleResolver::MatchUARules(const Element& element,
      // should override UA styles regardless of specificity.
      MatchRequest media_controls_request(rule_set);
      collector.ClearMatchedRules();
@@ -488,7 +510,7 @@ index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..ad493b93d3968f68d4969dc661ce9952
      collector.SortAndTransferMatchedRules(
          CascadeOrigin::kUserAgent, /*is_vtt_embedded_style=*/false, tracker_);
    }
-@@ -2780,7 +2946,7 @@ StyleRuleList* StyleResolver::CollectMatchingRulesFromUnconnectedRuleSet(
+@@ -2780,7 +2954,7 @@ StyleRuleList* StyleResolver::CollectMatchingRulesFromUnconnectedRuleSet(
    collector.SetMatchingRulesFromNoStyleSheet(true);
    collector.SetMode(SelectorChecker::kCollectingStyleRules);
    MatchRequest match_request(rule_set, scope);

@@ -1,0 +1,37 @@
+diff --git a/third_party/blink/renderer/core/layout/layout_result.h b/third_party/blink/renderer/core/layout/layout_result.h
+index bb1ccd410ce9a7e35d73f4a598444dd0757e02d1..d3c4626f8fc00134a659a1a50f9736256eaf2dca 100644
+--- a/third_party/blink/renderer/core/layout/layout_result.h
++++ b/third_party/blink/renderer/core/layout/layout_result.h
+@@ -489,6 +489,15 @@ class CORE_EXPORT LayoutResult final : public GarbageCollected<LayoutResult> {
+   // Returns the space which generated this object for caching purposes.
+   const ConstraintSpace& GetConstraintSpaceForCaching() const { return space_; }
+ 
++  // Returns the most recent anchor evaluated (if there is only one anchor).
++  // This value is cleared before a position fallback is applied.
++  Element* AccessibilityAnchor() const {
++    if (!rare_data_) {
++      return nullptr;
++    }
++    return rare_data_->accessibility_anchor;
++  }
++
+   const HeapHashSet<Member<Element>>* DisplayLocksAffectedByAnchors() const {
+     if (!rare_data_) {
+       return nullptr;
+@@ -551,6 +560,8 @@ class CORE_EXPORT LayoutResult final : public GarbageCollected<LayoutResult> {
+       }
+     }
+ 
++    void SetAccessibilityAnchor(Element* anchor);
++
+     void SetDisplayLocksAffectedByAnchors(
+         HeapHashSet<Member<Element>>* display_locks);
+ 
+@@ -995,6 +1006,7 @@ class CORE_EXPORT LayoutResult final : public GarbageCollected<LayoutResult> {
+     LayoutUnit annotation_overflow;
+     LayoutUnit block_end_annotation_space;
+     int lines_until_clamp = 0;
++    Member<Element> accessibility_anchor;
+     Member<HeapHashSet<Member<Element>>> display_locks_affected_by_anchors;
+ 
+    private:

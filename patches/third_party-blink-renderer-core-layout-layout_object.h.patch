@@ -1,0 +1,20 @@
+diff --git a/third_party/blink/renderer/core/layout/layout_object.h b/third_party/blink/renderer/core/layout/layout_object.h
+index 1c63197847997fbc9691cd3a3eb841c71f76481c..2c51c7e32115fc3f73a882a753c922b7dccc642a 100644
+--- a/third_party/blink/renderer/core/layout/layout_object.h
++++ b/third_party/blink/renderer/core/layout/layout_object.h
+@@ -743,10 +743,11 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+     if (IsViewTransitionRoot()) {
+       return true;
+     }
+-    if (Element* element = DynamicTo<Element>(GetNode())) {
+-      return StyleRef().IsRenderedInTopLayer(*element);
+-    }
+-    return false;
++    // FlyWeb (FS.22, upstream 0e454ce616, crbug 543070692): base this on the
++    // box tree position, not on the element flag and style, which can be out
++    // of sync while container queries attach/detach top-layer elements during
++    // layout (OOF candidates skip top-layer boxes since 1624b1441b9).
++    return !IsDocumentElement() && Parent()->IsLayoutView();
+   }
+ 
+   void NotifyPriorityScrollAnchorStatusChanged();

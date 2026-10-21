@@ -1,0 +1,37 @@
+diff --git a/third_party/blink/renderer/modules/accessibility/ax_object_cache_impl.h b/third_party/blink/renderer/modules/accessibility/ax_object_cache_impl.h
+index 70b168935ce6d9933243f78a1e3f8898a559279e..b6e3ba438fced3f44d08fbae6caebdd83f39200c 100644
+--- a/third_party/blink/renderer/modules/accessibility/ax_object_cache_impl.h
++++ b/third_party/blink/renderer/modules/accessibility/ax_object_cache_impl.h
+@@ -250,6 +250,10 @@ class MODULES_EXPORT AXObjectCacheImpl
+   void StyleChanged(const LayoutObject*,
+                     bool visibility_or_inertness_changed) override;
+ 
++  // Called when the anchor(s) of |positioned_obj| change.
++  void CSSAnchorChanged(const LayoutObject* positioned_obj) override;
++  void CSSAnchorChangedWithCleanLayout(Node* positioned_node);
++
+   // Called by a node when text or a text equivalent (e.g. alt) attribute is
+   // changed.
+   void TextChanged(const LayoutObject*) override;
+@@ -374,6 +378,13 @@ class MODULES_EXPORT AXObjectCacheImpl
+   // its parent, it will be set as the new parent.
+   AXObject* Get(const LayoutObject*, AXObject* parent_for_repair = nullptr);
+ 
++  // Return the object that has been anchored (with css anchor positioning)
++  // to the input object.
++  AXObject* GetPositionedObjectForAnchor(const AXObject*);
++
++  // Return the input object's anchor.
++  AXObject* GetAnchorForPositionedObject(const AXObject*);
++
+   // Return true if the object is still part of the tree, meaning that ancestors
+   // exist or can be repaired all the way to the root.
+   bool IsStillInTree(AXObject*);
+@@ -677,6 +688,7 @@ class MODULES_EXPORT AXObjectCacheImpl
+     kAriaOwnsChanged,
+     kAriaPressedChanged,
+     kAriaSelectedChanged,
++    kCSSAnchorChanged,
+     kDelayEventFromPostNotification,
+     kDidShowMenuListPopup,
+     kEditableTextContentChanged,

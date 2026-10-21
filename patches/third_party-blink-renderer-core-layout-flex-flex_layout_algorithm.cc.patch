@@ -1,0 +1,22 @@
+diff --git a/third_party/blink/renderer/core/layout/flex/flex_layout_algorithm.cc b/third_party/blink/renderer/core/layout/flex/flex_layout_algorithm.cc
+index 9187b256f9e526777ec0b44e2f07f00a22d32971..9544bfb147f165ad650825823069a7af4cb3cb0b 100644
+--- a/third_party/blink/renderer/core/layout/flex/flex_layout_algorithm.cc
++++ b/third_party/blink/renderer/core/layout/flex/flex_layout_algorithm.cc
+@@ -286,12 +286,14 @@ void FlexLayoutAlgorithm::HandleOutOfFlowPositionedItems(
+       if (is_column_) {
+         const ItemPosition normalized_alignment =
+             FlexibleBoxAlgorithm::AlignmentForChild(style, child_style);
+-        const ItemPosition default_justify_self_behavior =
+-            child.IsReplaced() ? ItemPosition::kStart : ItemPosition::kStretch;
+         const ItemPosition normalized_justify =
+             FlexibleBoxAlgorithm::TranslateItemPosition(
+                 style, child_style,
+-                child_style.ResolvedJustifySelf(default_justify_self_behavior)
++                child_style
++                    .ResolvedJustifySelf({child.IsReplaced()
++                                              ? ItemPosition::kStart
++                                              : ItemPosition::kStretch,
++                                          OverflowAlignment::kDefault})
+                     .GetPosition());
+ 
+         const bool are_cross_axis_insets_auto =

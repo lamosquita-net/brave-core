@@ -1,0 +1,34 @@
+diff --git a/third_party/blink/renderer/modules/accessibility/ax_relation_cache.h b/third_party/blink/renderer/modules/accessibility/ax_relation_cache.h
+index 8d7fbce280196e4d15da6eadb7c560da1adf4478..1d45f1d9e5e4117cbc0decef3860f509ac082da4 100644
+--- a/third_party/blink/renderer/modules/accessibility/ax_relation_cache.h
++++ b/third_party/blink/renderer/modules/accessibility/ax_relation_cache.h
+@@ -70,6 +70,18 @@ class AXRelationCache {
+ 
+   void UpdateRelatedActiveDescendant(Node* node);
+ 
++  // Update the related maps with the css anchor that |positioned_node| is
++  // anchored to. If there are multiple anchors, we assume the anchors are used
++  // for layout purposes and do not update the map. One anchor is mapped to one
++  // positioned element to reduce noise for AT.
++  void UpdateCSSAnchorFor(Node* positioned_node);
++
++  // Return the positioned object anchored to |anchor|.
++  AXObject* GetPositionedObjectForAnchor(const AXObject* anchor);
++
++  // Return the anchor for |positioned_obj|.
++  AXObject* GetAnchorForPositionedObject(const AXObject* positioned_obj);
++
+   // Remove given AXID from cache.
+   void RemoveAXID(AXID);
+ 
+@@ -217,6 +229,10 @@ class AXRelationCache {
+   // Map from the AXID of a child to the AXID of the parent that owns it.
+   HashMap<AXID, AXID> aria_owned_child_to_owner_mapping_;
+ 
++  // Maps for AXID of CSS anchors and AXID of the related positioned item.
++  HashMap<AXID, AXID> anchor_to_positioned_obj_mapping_;
++  HashMap<AXID, AXID> positioned_obj_to_anchor_mapping_;
++
+   // Reverse relation maps from an ID (the ID attribute of a DOM element) to the
+   // set of elements that at some time pointed to that ID via aria-owns,
+   // aria-labelledby or aria-desribedby. This is *unvalidated*, it includes

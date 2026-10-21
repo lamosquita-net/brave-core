@@ -1,8 +1,28 @@
 diff --git a/third_party/blink/renderer/core/css/css_property_equality.cc b/third_party/blink/renderer/core/css/css_property_equality.cc
-index 211eb5ca4ec32ef2fb0fa798583e16f0847ca335..fa32c7360d3aa0882818ba2df94631c51a5ed092 100644
+index 211eb5ca4ec32ef2fb0fa798583e16f0847ca335..cb2f0e131a43ec0c20147d9410c731b827c6ba41 100644
 --- a/third_party/blink/renderer/core/css/css_property_equality.cc
 +++ b/third_party/blink/renderer/core/css/css_property_equality.cc
-@@ -733,8 +733,10 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
+@@ -174,7 +174,7 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
+     case CSSPropertyID::kAnchorName:
+       return base::ValuesEquivalent(a.AnchorName(), b.AnchorName());
+     case CSSPropertyID::kAnchorScope:
+-      return base::ValuesEquivalent(a.AnchorScope(), b.AnchorScope());
++      return a.AnchorScope() == b.AnchorScope();
+     case CSSPropertyID::kAppearance:
+       return a.Appearance() == b.Appearance();
+     case CSSPropertyID::kAppRegion:
+@@ -467,8 +467,9 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
+       return a.ImageRendering() == b.ImageRendering();
+     case CSSPropertyID::kInitialLetter:
+       return a.InitialLetter() == b.InitialLetter();
++    case CSSPropertyID::kPositionArea:
+     case CSSPropertyID::kInsetArea:
+-      return a.GetInsetArea() == b.GetInsetArea();
++      return a.GetPositionArea() == b.GetPositionArea();
+     case CSSPropertyID::kInterpolateSize:
+       return a.InterpolateSize() == b.InterpolateSize();
+     case CSSPropertyID::kIsolation:
+@@ -733,8 +734,10 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
        return a.TextUnderlineOffset() == b.TextUnderlineOffset();
      case CSSPropertyID::kTextUnderlinePosition:
        return a.GetTextUnderlinePosition() == b.GetTextUnderlinePosition();
@@ -15,7 +35,7 @@ index 211eb5ca4ec32ef2fb0fa798583e16f0847ca335..fa32c7360d3aa0882818ba2df94631c5
      case CSSPropertyID::kTop:
        return a.Top() == b.Top();
      case CSSPropertyID::kOverlay:
-@@ -1248,6 +1250,7 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
+@@ -1248,6 +1251,7 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
      case CSSPropertyID::kTextDecoration:
      case CSSPropertyID::kTextEmphasis:
      case CSSPropertyID::kTextSpacing:

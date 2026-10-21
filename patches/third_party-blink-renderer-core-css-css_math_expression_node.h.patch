@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/css_math_expression_node.h b/third_party/blink/renderer/core/css/css_math_expression_node.h
-index ab5160e9d6e72dbeff44b39b42cf4003dbb8e396..d73f8e05061b4723ca7c45d2fc0e6fb765e90a06 100644
+index ab5160e9d6e72dbeff44b39b42cf4003dbb8e396..296a56baffcb62a54c322597f1794dbef8a60a23 100644
 --- a/third_party/blink/renderer/core/css/css_math_expression_node.h
 +++ b/third_party/blink/renderer/core/css/css_math_expression_node.h
 @@ -453,7 +453,7 @@ struct DowncastTraits<CSSMathExpressionIdentifierLiteral> {
@@ -11,3 +11,18 @@ index ab5160e9d6e72dbeff44b39b42cf4003dbb8e396..d73f8e05061b4723ca7c45d2fc0e6fb7
  
    static CSSMathExpressionKeywordLiteral* Create(CSSValueID keyword,
                                                   Context context) {
+@@ -855,12 +855,12 @@ class CORE_EXPORT CSSMathExpressionAnchorQuery final
+  public:
+   CSSMathExpressionAnchorQuery(CSSAnchorQueryType type,
+                                const CSSValue* anchor_specifier,
+-                               const CSSValue& value,
++                               const CSSValue* value,
+                                const CSSPrimitiveValue* fallback);
+ 
+   CSSMathExpressionNode* Copy() const final {
+     return MakeGarbageCollected<CSSMathExpressionAnchorQuery>(
+-        type_, anchor_specifier_, *value_, fallback_);
++        type_, anchor_specifier_, value_, fallback_);
+   }
+ 
+   bool IsAnchor() const { return type_ == CSSAnchorQueryType::kAnchor; }

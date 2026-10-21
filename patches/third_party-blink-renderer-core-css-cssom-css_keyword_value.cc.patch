@@ -1,0 +1,24 @@
+diff --git a/third_party/blink/renderer/core/css/cssom/css_keyword_value.cc b/third_party/blink/renderer/core/css/cssom/css_keyword_value.cc
+index 66d3cc5d5042bc7c1a701a08a0c9fa27c6030924..dd9b5e1d9e9ba03d257cd3d6ab95f6afe21a4fd9 100644
+--- a/third_party/blink/renderer/core/css/cssom/css_keyword_value.cc
++++ b/third_party/blink/renderer/core/css/cssom/css_keyword_value.cc
+@@ -9,6 +9,7 @@
+ #include "third_party/blink/renderer/core/css/css_inherited_value.h"
+ #include "third_party/blink/renderer/core/css/css_initial_value.h"
+ #include "third_party/blink/renderer/core/css/css_revert_value.h"
++#include "third_party/blink/renderer/core/css/css_scoped_keyword_value.h"
+ #include "third_party/blink/renderer/core/css/css_unset_value.h"
+ #include "third_party/blink/renderer/core/css/parser/css_property_parser.h"
+ #include "third_party/blink/renderer/platform/bindings/exception_state.h"
+@@ -59,6 +60,11 @@ CSSKeywordValue* CSSKeywordValue::FromCSSValue(const CSSValue& value) {
+     }
+     return MakeGarbageCollected<CSSKeywordValue>(ident_value->Value());
+   }
++  if (auto* scoped_keyword_value =
++          DynamicTo<cssvalue::CSSScopedKeywordValue>(value)) {
++    return MakeGarbageCollected<CSSKeywordValue>(
++        getValueName(scoped_keyword_value->GetValueID()));
++  }
+   NOTREACHED_IN_MIGRATION();
+   return nullptr;
+ }

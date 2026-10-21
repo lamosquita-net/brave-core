@@ -1,0 +1,25 @@
+diff --git a/third_party/blink/renderer/core/paint/paint_layer_painter.cc b/third_party/blink/renderer/core/paint/paint_layer_painter.cc
+index 68b64fa53698a515e02e4640bec963289f65dc77..1ad5a5c78357149163db34832a7bec4ee740636e 100644
+--- a/third_party/blink/renderer/core/paint/paint_layer_painter.cc
++++ b/third_party/blink/renderer/core/paint/paint_layer_painter.cc
+@@ -133,14 +133,12 @@ PaintResult PaintLayerPainter::Paint(GraphicsContext& context,
+ 
+   std::optional<CheckAncestorPositionVisibilityScope>
+       check_position_visibility_scope;
+-  if (RuntimeEnabledFeatures::CSSPositionVisibilityEnabled()) {
+-    if (paint_layer_.InvisibleForPositionVisibility() ||
+-        paint_layer_.HasAncestorInvisibleForPositionVisibility()) {
+-      return kFullyPainted;
+-    }
+-    if (paint_layer_.GetLayoutObject().IsStackingContext()) {
+-      check_position_visibility_scope.emplace(paint_layer_);
+-    }
++  if (paint_layer_.InvisibleForPositionVisibility() ||
++      paint_layer_.HasAncestorInvisibleForPositionVisibility()) {
++    return kFullyPainted;
++  }
++  if (paint_layer_.GetLayoutObject().IsStackingContext()) {
++    check_position_visibility_scope.emplace(paint_layer_);
+   }
+ 
+   // A paint layer should always have LocalBorderBoxProperties when it's ready

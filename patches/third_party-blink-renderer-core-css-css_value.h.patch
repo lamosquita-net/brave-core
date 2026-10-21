@@ -1,8 +1,18 @@
 diff --git a/third_party/blink/renderer/core/css/css_value.h b/third_party/blink/renderer/core/css/css_value.h
-index 93e14b94396134e3c3420f822606eebc1a05ae88..1237891fc7c5e2df2dc7d1bc2619540f7d66fe70 100644
+index 93e14b94396134e3c3420f822606eebc1a05ae88..1e197b4ea08a63a4c9022b961ba20f5c10e614b4 100644
 --- a/third_party/blink/renderer/core/css/css_value.h
 +++ b/third_party/blink/renderer/core/css/css_value.h
-@@ -211,6 +211,10 @@ class CORE_EXPORT CSSValue : public GarbageCollected<CSSValue> {
+@@ -52,6 +52,9 @@ class CORE_EXPORT CSSValue : public GarbageCollected<CSSValue> {
+     return IsNumericLiteralValue() || IsMathFunctionValue();
+   }
+   bool IsIdentifierValue() const { return class_type_ == kIdentifierClass; }
++  bool IsScopedKeywordValue() const {
++    return class_type_ == kScopedKeywordClass;
++  }
+   bool IsValuePair() const { return class_type_ == kValuePairClass; }
+   bool IsValueList() const { return class_type_ >= kValueListClass; }
+ 
+@@ -211,6 +214,10 @@ class CORE_EXPORT CSSValue : public GarbageCollected<CSSValue> {
  
    bool IsRepeatStyleValue() const { return class_type_ == kRepeatStyleClass; }
  
@@ -13,7 +23,15 @@ index 93e14b94396134e3c3420f822606eebc1a05ae88..1237891fc7c5e2df2dc7d1bc2619540f
    bool HasFailedOrCanceledSubresources() const;
    bool MayContainUrl() const;
    void ReResolveUrl(const Document&) const;
-@@ -256,6 +260,7 @@ class CORE_EXPORT CSSValue : public GarbageCollected<CSSValue> {
+@@ -243,6 +250,7 @@ class CORE_EXPORT CSSValue : public GarbageCollected<CSSValue> {
+     kNumericLiteralClass,
+     kMathFunctionClass,
+     kIdentifierClass,
++    kScopedKeywordClass,
+     kColorClass,
+     kColorMixClass,
+     kCounterClass,
+@@ -256,6 +264,7 @@ class CORE_EXPORT CSSValue : public GarbageCollected<CSSValue> {
      kScrollClass,
      kViewClass,
      kRatioClass,

@@ -1,0 +1,19 @@
+diff --git a/third_party/blink/renderer/core/layout/layout_box.cc b/third_party/blink/renderer/core/layout/layout_box.cc
+index d2ea5eabc04227ec1ace4430604ceaeea097c4e5..adf64e1e40dcd1ee71fcb7744007ad264e967d9b 100644
+--- a/third_party/blink/renderer/core/layout/layout_box.cc
++++ b/third_party/blink/renderer/core/layout/layout_box.cc
+@@ -4332,6 +4332,14 @@ const BoxStrut& LayoutBox::OutOfFlowInsetsForGetComputedStyle() const {
+   return GetLayoutResults().front()->OutOfFlowInsetsForGetComputedStyle();
+ }
+ 
++Element* LayoutBox::AccessibilityAnchor() const {
++  const auto& layout_results = GetLayoutResults();
++  if (layout_results.empty()) {
++    return nullptr;
++  }
++  return layout_results.front()->AccessibilityAnchor();
++}
++
+ const HeapHashSet<Member<Element>>* LayoutBox::DisplayLocksAffectedByAnchors()
+     const {
+   const auto& layout_results = GetLayoutResults();
