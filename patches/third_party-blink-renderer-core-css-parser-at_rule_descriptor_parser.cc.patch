@@ -1,8 +1,22 @@
 diff --git a/third_party/blink/renderer/core/css/parser/at_rule_descriptor_parser.cc b/third_party/blink/renderer/core/css/parser/at_rule_descriptor_parser.cc
-index c4a238e70899c3e606acb9e5d6ec64bb95b9ceca..d609cbb6e07d096910e35017c2bb345603f6a2c2 100644
+index c4a238e70899c3e606acb9e5d6ec64bb95b9ceca..cabcb4612c6b5916bed3f6f07019d1424cd134a1 100644
 --- a/third_party/blink/renderer/core/css/parser/at_rule_descriptor_parser.cc
 +++ b/third_party/blink/renderer/core/css/parser/at_rule_descriptor_parser.cc
-@@ -296,6 +296,7 @@ CSSValue* ConsumeDescriptor(StyleRule::RuleType rule_type,
+@@ -272,8 +272,11 @@ CSSValue* ConsumeDescriptor(StyleRule::RuleType rule_type,
+   switch (rule_type) {
+     case StyleRule::kFontFace:
+       return Parser::ParseFontFaceDescriptor(id, tokenized_value, context);
+-    case StyleRule::kFontPaletteValues:
+-      return Parser::ParseAtFontPaletteValuesDescriptor(id, range, context);
++    case StyleRule::kFontPaletteValues: {
++      CSSTokenizer tokenizer(tokenized_value.text);
++      CSSParserTokenStream stream(tokenizer);
++      return Parser::ParseAtFontPaletteValuesDescriptor(id, stream, context);
++    }
+     case StyleRule::kProperty:
+       return Parser::ParseAtPropertyDescriptor(id, tokenized_value, context);
+     case StyleRule::kCounterStyle: {
+@@ -296,6 +299,7 @@ CSSValue* ConsumeDescriptor(StyleRule::RuleType rule_type,
      case StyleRule::kFontFeature:
      case StyleRule::kLayerBlock:
      case StyleRule::kLayerStatement:

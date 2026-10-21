@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style.h b/third_party/blink/renderer/core/style/computed_style.h
-index d4d2a1ca1e5a4f492aecaa534714267bf640d520..7faccbc63483ba1cbd0720b851f27cdc7ab65d3b 100644
+index d4d2a1ca1e5a4f492aecaa534714267bf640d520..40ee102ec3c975de844f32c24af9df4cd5821845 100644
 --- a/third_party/blink/renderer/core/style/computed_style.h
 +++ b/third_party/blink/renderer/core/style/computed_style.h
 @@ -1459,12 +1459,16 @@ class ComputedStyle final : public ComputedStyleBase {
@@ -44,7 +44,21 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..7faccbc63483ba1cbd0720b851f27cdc
    bool ShouldBreakSpaces() const {
      return blink::ShouldBreakSpaces(GetWhiteSpaceCollapse());
    }
-@@ -3258,11 +3267,11 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+@@ -2756,11 +2765,12 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+     SetClipInternal(ComputedStyleInitialValues::InitialClip());
+   }
+ 
+-  // clip-patch
++  // clip-path
+   void SetClipPath(ClipPathOperation* clip_path) {
+     SetHasClipPath(clip_path);
+     SetClipPathInternal(clip_path);
+   }
++  ClipPathOperation* MutableClipPath() { return ClipPathInternal().Get(); }
+ 
+   // color
+   blink::Color GetCurrentColor() const {
+@@ -3258,11 +3268,11 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
    }
  
    EWhiteSpace WhiteSpace() const {

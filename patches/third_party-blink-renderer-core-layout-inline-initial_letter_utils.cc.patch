@@ -1,0 +1,17 @@
+diff --git a/third_party/blink/renderer/core/layout/inline/initial_letter_utils.cc b/third_party/blink/renderer/core/layout/inline/initial_letter_utils.cc
+index 9c00229c8e11b5690d55fb85f8d710f4f089ef21..682bc23c86c650f5bc9625cc694d476bc85f1ec5 100644
+--- a/third_party/blink/renderer/core/layout/inline/initial_letter_utils.cc
++++ b/third_party/blink/renderer/core/layout/inline/initial_letter_utils.cc
+@@ -35,8 +35,10 @@ LayoutUnit ComputeInitialLetterBoxBlockOffset(
+   // English font.
+   const LayoutUnit line_height = paragraph_style.ComputedLineHeightAsFixed();
+ 
+-  const int size = std::ceil(block_size / line_height.ToFloat());
+-
++  const int size =
++      std::ceil(RuntimeEnabledFeatures::InitialLetterRaiseBySpecifiedEnabled()
++                    ? initial_letter.Size()
++                    : block_size / line_height.ToFloat());
+   const int sink = initial_letter.IsRaise() || initial_letter.IsIntegerSink()
+                        ? initial_letter.Sink()
+                        : size;

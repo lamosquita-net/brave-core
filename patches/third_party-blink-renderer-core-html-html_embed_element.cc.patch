@@ -1,0 +1,18 @@
+diff --git a/third_party/blink/renderer/core/html/html_embed_element.cc b/third_party/blink/renderer/core/html/html_embed_element.cc
+index bdb60aceb1fcdcfefdf5d8da260d1015951a6d64..d4162e9b1cc4d0e31e98da2ef8c0cbacf090efd4 100644
+--- a/third_party/blink/renderer/core/html/html_embed_element.cc
++++ b/third_party/blink/renderer/core/html/html_embed_element.cc
+@@ -175,8 +175,12 @@ void HTMLEmbedElement::UpdatePluginInternal() {
+ }
+ 
+ bool HTMLEmbedElement::LayoutObjectIsNeeded(const DisplayStyle& style) const {
+-  if (IsImageType())
++  // In the current specification, there is no requirement for `ImageType` to
++  // enforce layout.
++  if (!RuntimeEnabledFeatures::HTMLEmbedElementNotForceLayoutEnabled() &&
++      IsImageType()) {
+     return HTMLPlugInElement::LayoutObjectIsNeeded(style);
++  }
+ 
+   // https://html.spec.whatwg.org/C/#the-embed-element
+   // While any of the following conditions are occurring, any plugin

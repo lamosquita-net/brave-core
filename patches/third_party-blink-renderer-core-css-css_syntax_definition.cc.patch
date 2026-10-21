@@ -1,0 +1,23 @@
+diff --git a/third_party/blink/renderer/core/css/css_syntax_definition.cc b/third_party/blink/renderer/core/css/css_syntax_definition.cc
+index 71e5fe8fab9e1484a5b53ec97c652eabc42d6830..2411b94bec5d187c9773e5b792710a7f644da2b0 100644
+--- a/third_party/blink/renderer/core/css/css_syntax_definition.cc
++++ b/third_party/blink/renderer/core/css/css_syntax_definition.cc
+@@ -5,6 +5,8 @@
+ #include "third_party/blink/renderer/core/css/css_syntax_definition.h"
+ 
+ #include <utility>
++
++#include "third_party/blink/renderer/core/css/css_string_value.h"
+ #include "third_party/blink/renderer/core/css/css_syntax_component.h"
+ #include "third_party/blink/renderer/core/css/css_unparsed_declaration_value.h"
+ #include "third_party/blink/renderer/core/css/css_uri_value.h"
+@@ -73,6 +75,9 @@ const CSSValue* ConsumeSingleType(const CSSSyntaxComponent& syntax,
+       return css_parsing_utils::ConsumeTransformList(stream, context);
+     case CSSSyntaxType::kCustomIdent:
+       return css_parsing_utils::ConsumeCustomIdent(stream, context);
++    case CSSSyntaxType::kString:
++      DCHECK(RuntimeEnabledFeatures::CSSAtPropertyStringSyntaxEnabled());
++      return css_parsing_utils::ConsumeString(stream);
+     default:
+       NOTREACHED_IN_MIGRATION();
+       return nullptr;

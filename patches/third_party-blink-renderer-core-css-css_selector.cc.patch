@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/css_selector.cc b/third_party/blink/renderer/core/css/css_selector.cc
-index ae55bd16418f586bb754fa9a9b12b31d2b091fb0..39227c0a61ec920d65b3c091cccc87aea7dca533 100644
+index ae55bd16418f586bb754fa9a9b12b31d2b091fb0..688c68b52cc92befe12706d3d986ad5799b5f84f 100644
 --- a/third_party/blink/renderer/core/css/css_selector.cc
 +++ b/third_party/blink/renderer/core/css/css_selector.cc
 @@ -96,8 +96,6 @@ CSSSelector::CSSSelector(MatchType match_type,
@@ -20,7 +20,92 @@ index ae55bd16418f586bb754fa9a9b12b31d2b091fb0..39227c0a61ec920d65b3c091cccc87ae
            AttributeMatchField::encode(static_cast<unsigned>(case_sensitivity)) |
            IsCaseSensitiveAttributeField::encode(
                HTMLDocument::IsCaseSensitiveAttribute(attribute))),
-@@ -1009,6 +1005,12 @@ void CSSSelector::SetTrue() {
+@@ -357,6 +353,20 @@ PseudoId CSSSelector::GetPseudoId(PseudoType type) {
+       return kPseudoIdSpellingError;
+     case kPseudoGrammarError:
+       return kPseudoIdGrammarError;
++    case kPseudoPlaceholder:
++      return kPseudoIdPlaceholder;
++    case kPseudoFileSelectorButton:
++      return kPseudoIdFileSelectorButton;
++    case kPseudoDetailsContent:
++      return kPseudoIdDetailsContent;
++    case kPseudoSelectFallbackButton:
++      return kPseudoIdSelectFallbackButton;
++    case kPseudoSelectFallbackButtonIcon:
++      return kPseudoIdSelectFallbackButtonIcon;
++    case kPseudoSelectFallbackButtonText:
++      return kPseudoIdSelectFallbackButtonText;
++    case kPseudoSelectFallbackDatalist:
++      return kPseudoIdSelectFallbackDatalist;
+     case kPseudoViewTransition:
+       return kPseudoIdViewTransition;
+     case kPseudoViewTransitionGroup:
+@@ -384,7 +394,6 @@ PseudoId CSSSelector::GetPseudoId(PseudoType type) {
+     case kPseudoDecrement:
+     case kPseudoDefault:
+     case kPseudoDefined:
+-    case kPseudoDetailsContent:
+     case kPseudoDialogInTopLayer:
+     case kPseudoDir:
+     case kPseudoDisabled:
+@@ -393,7 +402,6 @@ PseudoId CSSSelector::GetPseudoId(PseudoType type) {
+     case kPseudoEmpty:
+     case kPseudoEnabled:
+     case kPseudoEnd:
+-    case kPseudoFileSelectorButton:
+     case kPseudoFirstChild:
+     case kPseudoFirstOfType:
+     case kPseudoFirstPage:
+@@ -410,7 +418,7 @@ PseudoId CSSSelector::GetPseudoId(PseudoType type) {
+     case kPseudoHorizontal:
+     case kPseudoHost:
+     case kPseudoHostContext:
+-    case kPseudoHostHasAppearance:
++    case kPseudoHostHasNonAutoAppearance:
+     case kPseudoHover:
+     case kPseudoInRange:
+     case kPseudoIncrement:
+@@ -443,7 +451,6 @@ PseudoId CSSSelector::GetPseudoId(PseudoType type) {
+     case kPseudoPaused:
+     case kPseudoPermissionGranted:
+     case kPseudoPictureInPicture:
+-    case kPseudoPlaceholder:
+     case kPseudoPlaceholderShown:
+     case kPseudoPlaying:
+     case kPseudoPopoverInTopLayer:
+@@ -455,10 +462,6 @@ PseudoId CSSSelector::GetPseudoId(PseudoType type) {
+     case kPseudoRightPage:
+     case kPseudoRoot:
+     case kPseudoScope:
+-    case kPseudoSelectFallbackButton:
+-    case kPseudoSelectFallbackButtonIcon:
+-    case kPseudoSelectFallbackButtonText:
+-    case kPseudoSelectFallbackDatalist:
+     case kPseudoSelectorFragmentAnchor:
+     case kPseudoSingleButton:
+     case kPseudoSlotted:
+@@ -521,8 +524,8 @@ constexpr static NameToPseudoStruct kPseudoTypeWithoutArgumentsMap[] = {
+     {"-internal-relative-anchor", CSSSelector::kPseudoRelativeAnchor},
+     {"-internal-selector-fragment-anchor",
+      CSSSelector::kPseudoSelectorFragmentAnchor},
+-    {"-internal-shadow-host-has-appearance",
+-     CSSSelector::kPseudoHostHasAppearance},
++    {"-internal-shadow-host-has-non-auto-appearance",
++     CSSSelector::kPseudoHostHasNonAutoAppearance},
+     {"-internal-spatial-navigation-focus",
+      CSSSelector::kPseudoSpatialNavigationFocus},
+     {"-internal-video-persistent", CSSSelector::kPseudoVideoPersistent},
+@@ -862,7 +865,7 @@ void CSSSelector::UpdatePseudoType(const AtomicString& value,
+       }
+       break;
+     case kPseudoHasDatalist:
+-    case kPseudoHostHasAppearance:
++    case kPseudoHostHasNonAutoAppearance:
+     case kPseudoIsHtml:
+     case kPseudoListBox:
+     case kPseudoMultiSelectFocus:
+@@ -1009,6 +1012,12 @@ void CSSSelector::SetTrue() {
    bits_.set<IsImplicitlyAddedField>(true);
  }
  
@@ -33,7 +118,38 @@ index ae55bd16418f586bb754fa9a9b12b31d2b091fb0..39227c0a61ec920d65b3c091cccc87ae
  static void SerializeIdentifierOrAny(const AtomicString& identifier,
                                       const AtomicString& any,
                                       StringBuilder& builder) {
-@@ -1509,14 +1511,13 @@ bool CSSSelector::IsAllowedAfterPart() const {
+@@ -1408,7 +1417,7 @@ static bool ValidateSubSelector(const CSSSelector* selector) {
+     case CSSSelector::kPseudoHasDatalist:
+     case CSSSelector::kPseudoIsHtml:
+     case CSSSelector::kPseudoListBox:
+-    case CSSSelector::kPseudoHostHasAppearance:
++    case CSSSelector::kPseudoHostHasNonAutoAppearance:
+       // TODO(https://crbug.com/1346456): Many pseudos should probably be
+       // added to this list.  The default: case below should also be removed
+       // so that those adding new pseudos know they need to choose one path or
+@@ -1501,7 +1510,20 @@ bool CSSSelector::IsTreeAbidingPseudoElement() const {
+           GetPseudoType() == kPseudoSelectFallbackButton ||
+           GetPseudoType() == kPseudoSelectFallbackButtonIcon ||
+           GetPseudoType() == kPseudoSelectFallbackButtonText ||
+-          GetPseudoType() == kPseudoSelectFallbackDatalist);
++          IsPartLikePseudoElement(GetPseudoType()));
++}
++
++// FlyWeb (level 131): ca1fb13815a; the 128's ::select-fallback-datalist takes
++// the place of Chromium 131's ::picker(select).
++/* static */ bool CSSSelector::IsPartLikePseudoElement(
++    CSSSelector::PseudoType pseudo) {
++  return pseudo == kPseudoDetailsContent ||
++         pseudo == kPseudoSelectFallbackDatalist;
++}
++
++bool CSSSelector::IsPartLikePseudoElement() const {
++  return Match() == CSSSelector::kPseudoElement &&
++         IsPartLikePseudoElement(GetPseudoType());
+ }
+ 
+ bool CSSSelector::IsAllowedAfterPart() const {
+@@ -1509,14 +1531,13 @@ bool CSSSelector::IsAllowedAfterPart() const {
        Match() != CSSSelector::kPseudoClass) {
      return false;
    }
@@ -52,7 +168,7 @@ index ae55bd16418f586bb754fa9a9b12b31d2b091fb0..39227c0a61ec920d65b3c091cccc87ae
      case kPseudoPlaceholder:
      case kPseudoFileSelectorButton:
      case kPseudoFirstLine:
-@@ -1531,9 +1532,180 @@ bool CSSSelector::IsAllowedAfterPart() const {
+@@ -1531,9 +1552,180 @@ bool CSSSelector::IsAllowedAfterPart() const {
      case kPseudoHighlight:
      case kPseudoSpellingError:
      case kPseudoGrammarError:
@@ -234,12 +350,24 @@ index ae55bd16418f586bb754fa9a9b12b31d2b091fb0..39227c0a61ec920d65b3c091cccc87ae
        return false;
    }
  }
-@@ -1574,6 +1746,8 @@ static bool ForAnyInComplexSelector(const Functor& functor,
+@@ -1589,6 +1781,20 @@ bool CSSSelector::FollowsSlotted() const {
+   return previous->GetPseudoType() == kPseudoSlotted;
  }
  
- bool CSSSelector::FollowsPart() const {
-+  // TODO(dbaron): When we support part-like pseudo-elements, this will need
-+  // to loop rather than just check one selector.
-   const CSSSelector* previous = NextSimpleSelector();
-   if (!previous) {
-     return false;
++bool CSSSelector::CrossesTreeScopes() const {
++  for (const CSSSelector* s = this; s; s = s->NextSimpleSelector()) {
++    switch (s->Relation()) {
++      case kShadowPart:
++      case kUAShadow:
++      case kShadowSlot:
++        return true;
++      default:
++        break;
++    }
++  }
++  return false;
++}
++
+ String CSSSelector::FormatPseudoTypeForDebugging(PseudoType type) {
+   for (const auto& s : kPseudoTypeWithoutArgumentsMap) {
+     if (s.type == type) {

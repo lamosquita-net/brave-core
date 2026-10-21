@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/parser/css_parser_impl.cc b/third_party/blink/renderer/core/css/parser/css_parser_impl.cc
-index 054b57fb4844a020bd16a3700c3cf3d79bb1c3f2..744817d16a92115b69eba6722394e7ab8b711337 100644
+index 054b57fb4844a020bd16a3700c3cf3d79bb1c3f2..9eba305c9705e0a83a9fd0c5b688ab86ec69020c 100644
 --- a/third_party/blink/renderer/core/css/parser/css_parser_impl.cc
 +++ b/third_party/blink/renderer/core/css/parser/css_parser_impl.cc
 @@ -48,6 +48,7 @@
@@ -440,7 +440,17 @@ index 054b57fb4844a020bd16a3700c3cf3d79bb1c3f2..744817d16a92115b69eba6722394e7ab
    return MakeGarbageCollected<StyleRulePositionTry>(
        AtomicString(name),
        CreateCSSPropertyValueSet(parsed_properties_, kCSSPositionTryRuleMode,
-@@ -2341,12 +2487,18 @@ StyleRuleKeyframe* CSSParserImpl::ConsumeKeyframeStyleRule(
+@@ -2109,6 +2255,9 @@ static std::optional<StyleRuleFunction::Type> ParseFunctionType(
+       case CSSSyntaxType::kTransformList:
+       case CSSSyntaxType::kCustomIdent:
+         break;
++      case CSSSyntaxType::kString:
++        DCHECK(RuntimeEnabledFeatures::CSSAtPropertyStringSyntaxEnabled());
++        break;
+     }
+   }
+ 
+@@ -2341,12 +2490,18 @@ StyleRuleKeyframe* CSSParserImpl::ConsumeKeyframeStyleRule(
    if (observer_) {
      observer_->StartRuleHeader(StyleRule::kKeyframe, prelude_offset.start);
      observer_->EndRuleHeader(prelude_offset.end);
@@ -459,7 +469,7 @@ index 054b57fb4844a020bd16a3700c3cf3d79bb1c3f2..744817d16a92115b69eba6722394e7ab
    return MakeGarbageCollected<StyleRuleKeyframe>(
        std::move(key_list),
        CreateCSSPropertyValueSet(parsed_properties_, kCSSKeyframeRuleMode,
-@@ -2531,8 +2683,16 @@ StyleRule* CSSParserImpl::ConsumeStyleRuleContents(
+@@ -2531,8 +2686,16 @@ StyleRule* CSSParserImpl::ConsumeStyleRuleContents(
      CSSParserTokenStream& stream) {
    StyleRule* style_rule = StyleRule::Create(selector_vector);
    HeapVector<Member<StyleRuleBase>, 4> child_rules;
@@ -477,7 +487,7 @@ index 054b57fb4844a020bd16a3700c3cf3d79bb1c3f2..744817d16a92115b69eba6722394e7ab
    for (StyleRuleBase* child_rule : child_rules) {
      style_rule->AddChildRule(child_rule);
    }
-@@ -2560,38 +2720,29 @@ StyleRule* CSSParserImpl::ConsumeStyleRuleContents(
+@@ -2560,38 +2723,29 @@ StyleRule* CSSParserImpl::ConsumeStyleRuleContents(
  // AbortsNestedSelectorParsing(), which uses parent_rule_for_nesting to check
  // whether semicolons should abort parsing (the prelude of) qualified rules;
  // if semicolons always aborted such parsing, we wouldn't need this distinction.
@@ -527,7 +537,7 @@ index 054b57fb4844a020bd16a3700c3cf3d79bb1c3f2..744817d16a92115b69eba6722394e7ab
        while (true) {
          wtf_size_t start_offset = stream.Offset();
          if (!stream.ConsumeCommentOrNothing()) {
-@@ -2617,10 +2768,10 @@ void CSSParserImpl::ConsumeDeclarationList(
+@@ -2617,10 +2771,10 @@ void CSSParserImpl::ConsumeDeclarationList(
          StyleRuleBase* child = ConsumeNestedRule(
              id, rule_type, stream, nesting_type, parent_rule_for_nesting);
          if (child && child_rules) {
@@ -542,7 +552,7 @@ index 054b57fb4844a020bd16a3700c3cf3d79bb1c3f2..744817d16a92115b69eba6722394e7ab
            child_rules->push_back(child);
          }
          break;
-@@ -2637,19 +2788,12 @@ void CSSParserImpl::ConsumeDeclarationList(
+@@ -2637,19 +2791,12 @@ void CSSParserImpl::ConsumeDeclarationList(
              DCHECK_EQ(stream.UncheckedPeek().GetType(), kSemicolonToken);
              stream.UncheckedConsume();  // kSemicolonToken
            }
@@ -563,7 +573,7 @@ index 054b57fb4844a020bd16a3700c3cf3d79bb1c3f2..744817d16a92115b69eba6722394e7ab
            break;
          }
          // Retry as nested rule.
-@@ -2663,10 +2807,10 @@ void CSSParserImpl::ConsumeDeclarationList(
+@@ -2663,10 +2810,10 @@ void CSSParserImpl::ConsumeDeclarationList(
                                  parent_rule_for_nesting);
            if (child) {
              if (child_rules) {
@@ -578,7 +588,7 @@ index 054b57fb4844a020bd16a3700c3cf3d79bb1c3f2..744817d16a92115b69eba6722394e7ab
                child_rules->push_back(child);
              }
              break;
-@@ -2692,55 +2836,17 @@ void CSSParserImpl::ConsumeDeclarationList(
+@@ -2692,55 +2839,17 @@ void CSSParserImpl::ConsumeDeclarationList(
      }
    }
  
@@ -590,9 +600,17 @@ index 054b57fb4844a020bd16a3700c3cf3d79bb1c3f2..744817d16a92115b69eba6722394e7ab
 -
 -  if (use_observer) {
 -    observer_->EndRuleBody(stream.LookAheadOffset());
--  }
--}
--
++  // We need a final call to EmitNestedDeclarationsRuleIfNeeded in case there
++  // are trailing bare declarations. If no child rule has been observed,
++  // nested_declarations_start_index is still kNotFound (UINT_MAX),
++  // which causes EmitNestedDeclarationsRuleIfNeeded to have no effect.
++  if (child_rules) {
++    EmitNestedDeclarationsRuleIfNeeded(nesting_type, parent_rule_for_nesting,
++                                       nested_declarations_start_index,
++                                       *child_rules);
+   }
+ }
+ 
 -namespace {
 -
 -// This function returns true if the specificities of the complex selectors
@@ -625,24 +643,16 @@ index 054b57fb4844a020bd16a3700c3cf3d79bb1c3f2..744817d16a92115b69eba6722394e7ab
 -    // No need to signal kNestedGroupRuleSpecificity if the specificity will
 -    // be the same anyway.
 -    return CSSSelector::Signal::kNone;
-+  // We need a final call to EmitNestedDeclarationsRuleIfNeeded in case there
-+  // are trailing bare declarations. If no child rule has been observed,
-+  // nested_declarations_start_index is still kNotFound (UINT_MAX),
-+  // which causes EmitNestedDeclarationsRuleIfNeeded to have no effect.
-+  if (child_rules) {
-+    EmitNestedDeclarationsRuleIfNeeded(nesting_type, parent_rule_for_nesting,
-+                                       nested_declarations_start_index,
-+                                       *child_rules);
-   }
+-  }
 -  return CSSSelector::Signal::kNestedGroupRuleSpecificity;
- }
- 
+-}
+-
 -}  // namespace
 -
  // Consumes a list of style rules and stores the result in `child_rules`,
  // or (if `is_nested_group_rule` is true) consumes the interior of a nested
  // group rule [1]. Nested group rules allow a list of declarations to appear
-@@ -2768,55 +2874,32 @@ void CSSParserImpl::ConsumeRuleListOrNestedDeclarationList(
+@@ -2768,55 +2877,32 @@ void CSSParserImpl::ConsumeRuleListOrNestedDeclarationList(
      // Note that nested group rules may also contain *rules* within its body.
      // This is handled by `ConsumeDeclarationList`, see comment near that
      // function.

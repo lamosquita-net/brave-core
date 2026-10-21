@@ -1,0 +1,15 @@
+diff --git a/third_party/blink/renderer/core/animation/css_interpolation_types_map.cc b/third_party/blink/renderer/core/animation/css_interpolation_types_map.cc
+index 013338d35e618a18e9e2df4217a96904c9b8ca7e..3649f1f50672b8394bb765c5f8f4dbe12b89e0ae 100644
+--- a/third_party/blink/renderer/core/animation/css_interpolation_types_map.cc
++++ b/third_party/blink/renderer/core/animation/css_interpolation_types_map.cc
+@@ -509,6 +509,10 @@ CreateInterpolationTypeForCSSSyntax(const CSSSyntaxComponent syntax,
+     case CSSSyntaxType::kUrl:
+       // Smooth interpolation not supported for these types.
+       return nullptr;
++    case CSSSyntaxType::kString:
++      // Smooth interpolation not supported for <string> type.
++      DCHECK(RuntimeEnabledFeatures::CSSAtPropertyStringSyntaxEnabled());
++      return nullptr;
+     default:
+       NOTREACHED_IN_MIGRATION();
+       return nullptr;

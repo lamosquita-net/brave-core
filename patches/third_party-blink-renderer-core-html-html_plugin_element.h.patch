@@ -1,0 +1,25 @@
+diff --git a/third_party/blink/renderer/core/html/html_plugin_element.h b/third_party/blink/renderer/core/html/html_plugin_element.h
+index 8a825d5482e05a322b77757a26feee661767e799..4bcf354eaa7c778049895beea4cd4b2bea6ddbb6 100644
+--- a/third_party/blink/renderer/core/html/html_plugin_element.h
++++ b/third_party/blink/renderer/core/html/html_plugin_element.h
+@@ -109,6 +109,9 @@ class CORE_EXPORT HTMLPlugInElement
+       const QualifiedName&,
+       const AtomicString&,
+       MutableCSSPropertyValueSet*) override;
++  // HTMLFrameOwnerElement overrides:
++  void DisconnectContentFrame() override;
++  void IntrinsicSizingInfoChanged() final;
+ 
+   virtual bool HasFallbackContent() const;
+   // Create or update the LayoutEmbeddedContent and return it, triggering layout
+@@ -170,10 +173,6 @@ class CORE_EXPORT HTMLPlugInElement
+   bool HasCustomFocusLogic() const override;
+   bool IsPluginElement() const final;
+ 
+-  // HTMLFrameOwnerElement overrides:
+-  void DisconnectContentFrame() override;
+-  void IntrinsicSizingInfoChanged() final;
+-
+   // TODO(dcheng): Consider removing this, since HTMLEmbedElementLegacyCall
+   // and HTMLObjectElementLegacyCall usage is extremely low.
+   v8::Local<v8::Object> PluginWrapper();

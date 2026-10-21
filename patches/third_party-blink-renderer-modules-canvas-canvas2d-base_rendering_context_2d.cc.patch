@@ -1,8 +1,29 @@
 diff --git a/third_party/blink/renderer/modules/canvas/canvas2d/base_rendering_context_2d.cc b/third_party/blink/renderer/modules/canvas/canvas2d/base_rendering_context_2d.cc
-index 0608026f6e8507107bd64d609813df02d01fbbc6..015cab9b0f61423e3279410483d3ba4e58241082 100644
+index 0608026f6e8507107bd64d609813df02d01fbbc6..2acc2b985e082a59131d9dfa482fa799bfbf76fc 100644
 --- a/third_party/blink/renderer/modules/canvas/canvas2d/base_rendering_context_2d.cc
 +++ b/third_party/blink/renderer/modules/canvas/canvas2d/base_rendering_context_2d.cc
-@@ -2660,6 +2660,7 @@ ImageData* BaseRenderingContext2D::getImageData(
+@@ -69,6 +69,7 @@
+ #include "third_party/blink/renderer/core/css/parser/css_parser_context.h"
+ #include "third_party/blink/renderer/core/css/parser/css_parser_mode.h"
+ #include "third_party/blink/renderer/core/css/properties/computed_style_utils.h"
++#include "third_party/blink/renderer/core/css/css_to_length_conversion_data.h"
+ #include "third_party/blink/renderer/core/css/resolver/style_builder_converter.h"
+ #include "third_party/blink/renderer/core/css/style_color.h"
+ #include "third_party/blink/renderer/core/dom/document.h"
+@@ -936,8 +937,10 @@ ColorParseResult BaseRenderingContext2D::ParseColorOrCurrentColor(
+     const TextLinkColors& text_link_colors =
+         window ? window->document()->GetTextLinkColors()
+                : kDefaultTextLinkColors;
+-    const StyleColor style_color = ResolveColorValue(
+-        *color_mix_value, text_link_colors, color_scheme_, GetColorProvider());
++    // TODO(40946458): Don't use default length resolver here!
++    const StyleColor style_color =
++        ResolveColorValue(CSSToLengthConversionData(), *color_mix_value,
++                          text_link_colors, color_scheme_, GetColorProvider());
+     color = style_color.Resolve(GetCurrentColor(), color_scheme_);
+     return ColorParseResult::kColor;
+   }
+@@ -2660,6 +2663,7 @@ ImageData* BaseRenderingContext2D::getImageData(
  perfetto::EventContext GetEventContext();
  
  ImageData* BaseRenderingContext2D::getImageDataInternal(
@@ -10,7 +31,7 @@ index 0608026f6e8507107bd64d609813df02d01fbbc6..015cab9b0f61423e3279410483d3ba4e
      int sx,
      int sy,
      int sw,
-@@ -2833,6 +2834,7 @@ ImageData* BaseRenderingContext2D::getImageDataInternal(
+@@ -2833,6 +2837,7 @@ ImageData* BaseRenderingContext2D::getImageDataInternal(
        DCHECK(!bounds.intersect(SkIRect::MakeXYWH(sx, sy, sw, sh)));
      }
    }
@@ -18,7 +39,7 @@ index 0608026f6e8507107bd64d609813df02d01fbbc6..015cab9b0f61423e3279410483d3ba4e
  
    return image_data;
  }
-@@ -3503,6 +3505,7 @@ TextMetrics* BaseRenderingContext2D::measureText(const String& text) {
+@@ -3503,6 +3508,7 @@ TextMetrics* BaseRenderingContext2D::measureText(const String& text) {
        return MakeGarbageCollected<TextMetrics>();
      }
  

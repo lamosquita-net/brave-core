@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/element_rule_collector.cc b/third_party/blink/renderer/core/css/element_rule_collector.cc
-index b4404f56a78f48d341a8010cbe10d5890216619d..7798af71fc9d93f24396b6519160c16ede1638de 100644
+index b4404f56a78f48d341a8010cbe10d5890216619d..c87edec4174438fb7e9dff956b2cfef82edeb2af 100644
 --- a/third_party/blink/renderer/core/css/element_rule_collector.cc
 +++ b/third_party/blink/renderer/core/css/element_rule_collector.cc
 @@ -45,6 +45,7 @@
@@ -18,7 +18,42 @@ index b4404f56a78f48d341a8010cbe10d5890216619d..7798af71fc9d93f24396b6519160c16e
  #include "third_party/blink/renderer/core/dom/layout_tree_builder_traversal.h"
  #include "third_party/blink/renderer/core/dom/node_computed_style.h"
  #include "third_party/blink/renderer/core/dom/shadow_root.h"
-@@ -1089,6 +1091,12 @@ static CSSRule* FindStyleRule(CSSRuleCollection* css_rules,
+@@ -717,15 +719,17 @@ base::span<const Attribute> GetAttributes(const Element& element,
+ }  // namespace
+ 
+ void ElementRuleCollector::CollectMatchingRules(
+-    const MatchRequest& match_request) {
+-  CollectMatchingRulesInternal</*stop_at_first_match=*/false>(match_request);
++    const MatchRequest& match_request,
++    PartNames* part_names) {
++  CollectMatchingRulesInternal</*stop_at_first_match=*/false>(match_request,
++                                                              part_names);
+ }
+ 
+ DISABLE_CFI_PERF
+ bool ElementRuleCollector::CheckIfAnyRuleMatches(
+     const MatchRequest& match_request) {
+   return CollectMatchingRulesInternal</*stop_at_first_match=*/true>(
+-      match_request);
++      match_request, /*part_names*/ nullptr);
+ }
+ 
+ bool ElementRuleCollector::CanRejectScope(const StyleScope& style_scope) {
+@@ -739,10 +743,11 @@ bool ElementRuleCollector::CanRejectScope(const StyleScope& style_scope) {
+ 
+ template <bool stop_at_first_match>
+ DISABLE_CFI_PERF bool ElementRuleCollector::CollectMatchingRulesInternal(
+-    const MatchRequest& match_request) {
++    const MatchRequest& match_request,
++    PartNames* part_names) {
+   DCHECK(!match_request.IsEmpty());
+ 
+-  SelectorChecker checker(nullptr, pseudo_style_request_, mode_,
++  SelectorChecker checker(part_names, pseudo_style_request_, mode_,
+                           matching_ua_rules_);
+ 
+   ContextWithStyleScopeFrame context(&context_.GetElement(), match_request,
+@@ -1089,6 +1094,12 @@ static CSSRule* FindStyleRule(CSSRuleCollection* css_rules,
                     FindStyleRule(css_rule->cssRules(), style_rule);
                 result) {
        return result;
@@ -31,7 +66,7 @@ index b4404f56a78f48d341a8010cbe10d5890216619d..7798af71fc9d93f24396b6519160c16e
      }
    }
    return nullptr;
-@@ -1169,10 +1177,8 @@ void ElementRuleCollector::SortAndTransferMatchedRules(
+@@ -1169,10 +1180,8 @@ void ElementRuleCollector::SortAndTransferMatchedRules(
               AdjustLinkMatchType(inside_link_, rule_data->LinkMatchType()),
           .valid_property_filter =
               rule_data->GetValidPropertyFilter(matching_ua_rules_),

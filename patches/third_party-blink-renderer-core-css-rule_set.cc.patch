@@ -1,28 +1,79 @@
 diff --git a/third_party/blink/renderer/core/css/rule_set.cc b/third_party/blink/renderer/core/css/rule_set.cc
-index e0b5b546aef1f239d3a2dc13b2194289dd842fb5..cdb72311957e2da78342c6edd9f8b7f567f4dc88 100644
+index e0b5b546aef1f239d3a2dc13b2194289dd842fb5..a389f4a747ed784b16adb101338a25e55202369d 100644
 --- a/third_party/blink/renderer/core/css/rule_set.cc
 +++ b/third_party/blink/renderer/core/css/rule_set.cc
-@@ -51,6 +51,7 @@
+@@ -51,8 +51,10 @@
  #include "third_party/blink/renderer/core/css/selector_checker.h"
  #include "third_party/blink/renderer/core/css/selector_filter.h"
  #include "third_party/blink/renderer/core/css/style_rule_import.h"
 +#include "third_party/blink/renderer/core/css/style_rule_nested_declarations.h"
  #include "third_party/blink/renderer/core/css/style_sheet_contents.h"
  #include "third_party/blink/renderer/core/html/shadow/shadow_element_names.h"
++#include "third_party/blink/renderer/core/html/shadow/shadow_element_utils.h"
  #include "third_party/blink/renderer/core/html/track/text_track_cue.h"
-@@ -475,6 +476,19 @@ void RuleSet::FindBestRuleSetAndAdd(CSSSelector& component,
+ #include "third_party/blink/renderer/core/html_names.h"
+ #include "third_party/blink/renderer/core/inspector/invalidation_set_to_selector_map.h"
+@@ -296,6 +298,7 @@ static void ExtractSelectorValues(const CSSSelector* selector,
+         case CSSSelector::kPseudoAnyLink:
+         case CSSSelector::kPseudoFocusVisible:
+         case CSSSelector::kPseudoPlaceholder:
++        case CSSSelector::kPseudoDetailsContent:
+         case CSSSelector::kPseudoFileSelectorButton:
+         case CSSSelector::kPseudoHost:
+         case CSSSelector::kPseudoHostContext:
+@@ -310,7 +313,6 @@ static void ExtractSelectorValues(const CSSSelector* selector,
+           break;
+         case CSSSelector::kPseudoWebKitCustomElement:
+         case CSSSelector::kPseudoBlinkInternalElement:
+-        case CSSSelector::kPseudoDetailsContent:
+           custom_pseudo_element_name = selector->Value();
+           break;
+         case CSSSelector::kPseudoPart:
+@@ -475,6 +477,51 @@ void RuleSet::FindBestRuleSetAndAdd(CSSSelector& component,
      return;
    }
  
++  auto get_ua_shadow_pseudo = [&]() -> const AtomicString& {
++    if (pseudo_type != CSSSelector::kPseudoUnknown) {
++      return shadow_element_utils::StringForUAShadowPseudoId(
++          CSSSelector::GetPseudoId(pseudo_type));
++    }
++    return g_null_atom;
++  };
++
++  AtomicString ua_shadow_pseudo = get_ua_shadow_pseudo();
++
++  if (RuntimeEnabledFeatures::CSSCascadeCorrectScopeEnabled()) {
++    // Any selector with or following ::part() or a UA shadow pseudo-element
++    // must go in the bucket for the *innermost* such pseudo-element.
++
++    // TODO(dbaron): Should this eventually check kShadowSlot as well?
++    if (part_name.empty() && ua_shadow_pseudo == g_null_atom && it &&
++        (it->Relation() == CSSSelector::RelationType::kUAShadow ||
++         it->Relation() == CSSSelector::RelationType::kShadowPart)) {
++      const CSSSelector* previous = it->NextSimpleSelector();
++      if (previous->Match() == CSSSelector::kPseudoElement) {
++        ExtractSelectorValues(previous, id, class_name, attr_name, attr_value,
++                              is_exact_attr, custom_pseudo_element_name,
++                              tag_name, part_name, pseudo_type);
++        ua_shadow_pseudo = get_ua_shadow_pseudo();
++      }
++    }
++  }
++
 +  // Any selector with or following ::part() must go in the part bucket,
 +  // because we look in that bucket in higher scopes to find rules that need
 +  // to match inside the shadow tree.
-+  if (!part_name.empty() || (it && it->FollowsPart())) {
++  if (!part_name.empty() ||
++      (it && it->FollowsPart() &&
++       !RuntimeEnabledFeatures::CSSCascadeCorrectScopeEnabled())) {
 +    // NOTE: Cannot mark as covered by bucketing because the part buckets are
 +    // shared between the part itself and pseudo-elements inside of them.
 +    // (Though we do check at least some of the relevant conditions *before*
 +    // we check whether the selector is covered by bucketing, so it might be
 +    // doable if we want.)
++    // TODO(https://crbug.com/40280846): When the CSSCascadeCorrectScope flag
++    // is removed (and enabled), we can revisit this.
 +    AddToRuleSet(part_pseudo_rules_, rule_data);
 +    return;
 +  }
@@ -30,31 +81,72 @@ index e0b5b546aef1f239d3a2dc13b2194289dd842fb5..cdb72311957e2da78342c6edd9f8b7f5
    if (!custom_pseudo_element_name.empty()) {
      // Custom pseudos come before ids and classes in the order of
      // NextSimpleSelector(), and have a relation of ShadowPseudo between them.
-@@ -488,12 +502,6 @@ void RuleSet::FindBestRuleSetAndAdd(CSSSelector& component,
+@@ -488,9 +535,16 @@ void RuleSet::FindBestRuleSetAndAdd(CSSSelector& component,
      return;
    }
  
 -  if (!part_name.empty()) {
 -    AddToRuleSet(part_pseudo_rules_, rule_data);
 -    // TODO: Mark as covered by bucketing?
--    return;
--  }
--
-   switch (pseudo_type) {
-     case CSSSelector::kPseudoCue:
-       AddToRuleSet(cue_pseudo_rules_, rule_data);
-@@ -542,9 +550,7 @@ void RuleSet::FindBestRuleSetAndAdd(CSSSelector& component,
-     case CSSSelector::kPseudoSelectFallbackButtonIcon:
-     case CSSSelector::kPseudoSelectFallbackButtonText:
-     case CSSSelector::kPseudoSelectFallbackDatalist:
++  if (ua_shadow_pseudo != g_null_atom) {
++    // TODO(dbaron): This needs further work to support multiple
++    // pseudo-elements after ::slotted().  This likely requires reorganization
++    // of how MatchSlottedRules interacts with MatchOuterScopeRules.
++    if (it->FollowsSlotted()) {
++      AddToRuleSet(slotted_pseudo_element_rules_, rule_data);
++    } else {
++      AddToRuleSet(ua_shadow_pseudo, ua_shadow_pseudo_element_rules_,
++                   rule_data);
++    }
+     return;
+   }
+ 
+@@ -536,44 +590,6 @@ void RuleSet::FindBestRuleSetAndAdd(CSSSelector& component,
+       }
+       AddToRuleSet(focus_visible_pseudo_class_rules_, rule_data);
+       return;
+-    case CSSSelector::kPseudoPlaceholder:
+-    case CSSSelector::kPseudoFileSelectorButton:
+-    case CSSSelector::kPseudoSelectFallbackButton:
+-    case CSSSelector::kPseudoSelectFallbackButtonIcon:
+-    case CSSSelector::kPseudoSelectFallbackButtonText:
+-    case CSSSelector::kPseudoSelectFallbackDatalist:
 -      if (it->FollowsPart()) {
 -        AddToRuleSet(part_pseudo_rules_, rule_data);
 -      } else if (it->FollowsSlotted()) {
-+      if (it->FollowsSlotted()) {
-         AddToRuleSet(slotted_pseudo_element_rules_, rule_data);
-       } else {
-         AtomicString name;
-@@ -780,8 +786,8 @@ void RuleSet::AddChildRules(StyleRule* parent_rule,
+-        AddToRuleSet(slotted_pseudo_element_rules_, rule_data);
+-      } else {
+-        AtomicString name;
+-        switch (pseudo_type) {
+-          case CSSSelector::kPseudoPlaceholder:
+-            name = shadow_element_names::kPseudoInputPlaceholder;
+-            break;
+-          case CSSSelector::kPseudoFileSelectorButton:
+-            name = shadow_element_names::kPseudoFileUploadButton;
+-            break;
+-          case CSSSelector::kPseudoSelectFallbackButton:
+-            name = shadow_element_names::kSelectFallbackButton;
+-            break;
+-          case CSSSelector::kPseudoSelectFallbackButtonIcon:
+-            name = shadow_element_names::kSelectFallbackButtonIcon;
+-            break;
+-          case CSSSelector::kPseudoSelectFallbackButtonText:
+-            name = shadow_element_names::kSelectFallbackButtonText;
+-            break;
+-          case CSSSelector::kPseudoSelectFallbackDatalist:
+-            name = shadow_element_names::kSelectFallbackDatalist;
+-            break;
+-          default:
+-            NOTREACHED_IN_MIGRATION();
+-            break;
+-        }
+-        AddToRuleSet(name, ua_shadow_pseudo_element_rules_, rule_data);
+-      }
+-      return;
+     case CSSSelector::kPseudoHost:
+     case CSSSelector::kPseudoHostContext:
+       AddToRuleSet(shadow_host_rules_, rule_data);
+@@ -780,8 +796,8 @@ void RuleSet::AddChildRules(StyleRule* parent_rule,
        AddPageRule(page_rule);
      } else if (auto* media_rule = DynamicTo<StyleRuleMedia>(rule)) {
        if (MatchMediaForAddRules(medium, media_rule->MediaQueries())) {
@@ -65,7 +157,7 @@ index e0b5b546aef1f239d3a2dc13b2194289dd842fb5..cdb72311957e2da78342c6edd9f8b7f5
                        style_scope, within_mixin);
        }
      } else if (auto* font_face_rule = DynamicTo<StyleRuleFontFace>(rule)) {
-@@ -819,8 +825,8 @@ void RuleSet::AddChildRules(StyleRule* parent_rule,
+@@ -819,8 +835,8 @@ void RuleSet::AddChildRules(StyleRule* parent_rule,
        AddFunctionRule(function_rule);
      } else if (auto* supports_rule = DynamicTo<StyleRuleSupports>(rule)) {
        if (supports_rule->ConditionIsSupported()) {
@@ -76,7 +168,7 @@ index e0b5b546aef1f239d3a2dc13b2194289dd842fb5..cdb72311957e2da78342c6edd9f8b7f5
                        style_scope, within_mixin);
        }
      } else if (auto* container_rule = DynamicTo<StyleRuleContainer>(rule)) {
-@@ -830,15 +836,15 @@ void RuleSet::AddChildRules(StyleRule* parent_rule,
+@@ -830,15 +846,15 @@ void RuleSet::AddChildRules(StyleRule* parent_rule,
          inner_container_query =
              inner_container_query->CopyWithParent(container_query);
        }
@@ -98,7 +190,7 @@ index e0b5b546aef1f239d3a2dc13b2194289dd842fb5..cdb72311957e2da78342c6edd9f8b7f5
      } else if (auto* layer_statement_rule =
                     DynamicTo<StyleRuleLayerStatement>(rule)) {
        for (const auto& layer_name : layer_statement_rule->GetNames()) {
-@@ -849,13 +855,12 @@ void RuleSet::AddChildRules(StyleRule* parent_rule,
+@@ -849,13 +865,12 @@ void RuleSet::AddChildRules(StyleRule* parent_rule,
        if (style_scope) {
          inner_style_scope = inner_style_scope->CopyWithParent(style_scope);
        }
@@ -115,7 +207,7 @@ index e0b5b546aef1f239d3a2dc13b2194289dd842fb5..cdb72311957e2da78342c6edd9f8b7f5
                      add_rule_flags | kRuleIsStartingStyle, container_query,
                      cascade_layer, style_scope, within_mixin);
      } else if (auto* mixin_rule = DynamicTo<StyleRuleMixin>(rule)) {
-@@ -869,11 +874,15 @@ void RuleSet::AddChildRules(StyleRule* parent_rule,
+@@ -869,11 +884,15 @@ void RuleSet::AddChildRules(StyleRule* parent_rule,
        // won't really work if we cross-reference mixins from other sheets.
        auto it = mixins_.find(apply_mixin_rule->GetName());
        if (it != mixins_.end() && it->value->FakeParentRule().ChildRules()) {
@@ -133,7 +225,7 @@ index e0b5b546aef1f239d3a2dc13b2194289dd842fb5..cdb72311957e2da78342c6edd9f8b7f5
      }
    }
  }
-@@ -1066,9 +1075,8 @@ void RuleSet::AddStyleRule(StyleRule* style_rule,
+@@ -1066,9 +1085,8 @@ void RuleSet::AddStyleRule(StyleRule* style_rule,
  
    // Nested rules are taken to be added immediately after their parent rule.
    if (style_rule->ChildRules() != nullptr) {

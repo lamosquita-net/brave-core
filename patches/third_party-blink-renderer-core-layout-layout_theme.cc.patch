@@ -1,0 +1,15 @@
+diff --git a/third_party/blink/renderer/core/layout/layout_theme.cc b/third_party/blink/renderer/core/layout/layout_theme.cc
+index 345be4429cf1eccec44be6cf3a5f7411242b5282..ab8fabafc34059d312ec9dc4c6bfacb3d8d02abf 100644
+--- a/third_party/blink/renderer/core/layout/layout_theme.cc
++++ b/third_party/blink/renderer/core/layout/layout_theme.cc
+@@ -416,6 +416,10 @@ bool LayoutTheme::IsControlStyled(ControlPart part,
+     case kProgressBarPart:
+       return builder.HasAuthorBackground() || builder.HasAuthorBorder();
+ 
++    case kMeterPart:
++      return RuntimeEnabledFeatures::MeterDevolveAppearanceEnabled() &&
++             (builder.HasAuthorBackground() || builder.HasAuthorBorder());
++
+     case kMenulistPart:
+     case kSearchFieldPart:
+     case kTextAreaPart:

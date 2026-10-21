@@ -1,0 +1,15 @@
+diff --git a/third_party/blink/renderer/core/css/css_syntax_string_parser.cc b/third_party/blink/renderer/core/css/css_syntax_string_parser.cc
+index db8172a3042964c3006cab2c737ec1028c8eae0c..0b4c81c03373f69c8ce8b68b3bd2a373a687c06f 100644
+--- a/third_party/blink/renderer/core/css/css_syntax_string_parser.cc
++++ b/third_party/blink/renderer/core/css/css_syntax_string_parser.cc
+@@ -59,6 +59,10 @@ std::optional<CSSSyntaxType> ParseSyntaxType(StringView type) {
+   if (type == "custom-ident") {
+     return CSSSyntaxType::kCustomIdent;
+   }
++  if (RuntimeEnabledFeatures::CSSAtPropertyStringSyntaxEnabled() &&
++      type == "string") {
++    return CSSSyntaxType::kString;
++  }
+   return std::nullopt;
+ }
+ 

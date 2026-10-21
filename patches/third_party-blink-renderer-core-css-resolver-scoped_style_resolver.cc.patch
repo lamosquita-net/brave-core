@@ -1,0 +1,21 @@
+diff --git a/third_party/blink/renderer/core/css/resolver/scoped_style_resolver.cc b/third_party/blink/renderer/core/css/resolver/scoped_style_resolver.cc
+index 994b94eca233eac7b87a60615376d5b16aa7753f..7da7a97a0888deaf1a10935d3de260ee7c22d872 100644
+--- a/third_party/blink/renderer/core/css/resolver/scoped_style_resolver.cc
++++ b/third_party/blink/renderer/core/css/resolver/scoped_style_resolver.cc
+@@ -286,10 +286,12 @@ void ScopedStyleResolver::ForAllStylesheets(ElementRuleCollector& collector,
+ }
+ 
+ void ScopedStyleResolver::CollectMatchingElementScopeRules(
+-    ElementRuleCollector& collector) {
+-  ForAllStylesheets(collector, [&collector](const MatchRequest& match_request) {
+-    collector.CollectMatchingRules(match_request);
+-  });
++    ElementRuleCollector& collector,
++    PartNames* part_names) {
++  ForAllStylesheets(
++      collector, [&collector, part_names](const MatchRequest& match_request) {
++        collector.CollectMatchingRules(match_request, part_names);
++      });
+ }
+ 
+ void ScopedStyleResolver::CollectMatchingShadowHostRules(

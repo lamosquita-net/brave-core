@@ -1,7 +1,16 @@
 diff --git a/third_party/blink/renderer/core/css/css_selector.h b/third_party/blink/renderer/core/css/css_selector.h
-index ab3eb7bfefbfee8448b3d41be7b82407a063ecbf..bbbcf266826ef3cf2fe9d7d9c8bd8791e7fa2b36 100644
+index ab3eb7bfefbfee8448b3d41be7b82407a063ecbf..e8f6baf1724371abeb0b7dd4ce9891c39ab6708d 100644
 --- a/third_party/blink/renderer/core/css/css_selector.h
 +++ b/third_party/blink/renderer/core/css/css_selector.h
+@@ -362,7 +362,7 @@ class CORE_EXPORT CSSSelector {
+     kPseudoHighlight,
+     kPseudoHost,
+     kPseudoHostContext,
+-    kPseudoHostHasAppearance,
++    kPseudoHostHasNonAutoAppearance,
+     kPseudoIsHtml,
+     kPseudoListBox,
+     kPseudoMultiSelectFocus,
 @@ -424,6 +424,8 @@ class CORE_EXPORT CSSSelector {
    //
    // Note that :true is always implicit (see IsImplicit).
@@ -11,7 +20,31 @@ index ab3eb7bfefbfee8448b3d41be7b82407a063ecbf..bbbcf266826ef3cf2fe9d7d9c8bd8791
    void UpdatePseudoPage(const AtomicString&, const Document*);
    static PseudoType NameToPseudoType(const AtomicString&,
                                       bool has_arguments,
-@@ -594,64 +596,6 @@ class CORE_EXPORT CSSSelector {
+@@ -579,13 +581,21 @@ class CORE_EXPORT CSSSelector {
+ 
+   bool MatchesPseudoElement() const;
+   bool IsTreeAbidingPseudoElement() const;
++  bool IsPartLikePseudoElement() const;
++  static bool IsPartLikePseudoElement(CSSSelector::PseudoType pseudo);
+   bool IsAllowedAfterPart() const;
+ 
+-  // Returns true if the immediately preceeding simple selector is ::part.
++  // Returns true if the immediately preceding simple selector is ::part.
++  // TODO(https://crbug.com/40280846): Remove this when removing the
++  // CSSCascadeCorrectScope flag.
+   bool FollowsPart() const;
+-  // Returns true if the immediately preceeding simple selector is ::slotted.
++  // Returns true if the immediately preceding simple selector is ::slotted.
+   bool FollowsSlotted() const;
+ 
++  // Returns true if any preceding selectors have combinators that cross tree
++  // scopes.
++  bool CrossesTreeScopes() const;
++
+   // True if the selector was added implicitly. This can happen for e.g.
+   // nested rules that would otherwise lack the scoping selector (:scope).
+   bool IsImplicit() const { return bits_.get<IsImplicitlyAddedField>(); }
+@@ -594,64 +604,6 @@ class CORE_EXPORT CSSSelector {
    // position like :first-of-type and :nth-child().
    bool IsChildIndexedSelector() const;
  
@@ -76,7 +109,7 @@ index ab3eb7bfefbfee8448b3d41be7b82407a063ecbf..bbbcf266826ef3cf2fe9d7d9c8bd8791
    void Trace(Visitor* visitor) const;
  
    static String FormatPseudoTypeForDebugging(PseudoType);
-@@ -695,10 +639,9 @@ class CORE_EXPORT CSSSelector {
+@@ -695,10 +647,9 @@ class CORE_EXPORT CSSSelector {
    // RuleData (by calling MarkAsCoveredByBucketing()).
    using IsCoveredByBucketingField =
        IsImplicitlyAddedField::DefineNextValue<bool, 1>;
@@ -89,7 +122,7 @@ index ab3eb7bfefbfee8448b3d41be7b82407a063ecbf..bbbcf266826ef3cf2fe9d7d9c8bd8791
    using IsCaseSensitiveAttributeField =
        AttributeMatchField::DefineNextValue<bool, 1>;
    // 4 free bits here.
-@@ -863,8 +806,7 @@ inline CSSSelector::CSSSelector()
+@@ -863,8 +814,7 @@ inline CSSSelector::CSSSelector()
              HasRareDataField::encode(false) | IsForPageField::encode(false) |
              IsImplicitlyAddedField::encode(false) |
              IsCoveredByBucketingField::encode(false) |
@@ -99,7 +132,7 @@ index ab3eb7bfefbfee8448b3d41be7b82407a063ecbf..bbbcf266826ef3cf2fe9d7d9c8bd8791
              IsCaseSensitiveAttributeField::encode(false)),
        data_(DataUnion::kConstructEmptyValue) {}
  
-@@ -877,8 +819,7 @@ inline CSSSelector::CSSSelector(const QualifiedName& tag_q_name,
+@@ -877,8 +827,7 @@ inline CSSSelector::CSSSelector(const QualifiedName& tag_q_name,
              HasRareDataField::encode(false) | IsForPageField::encode(false) |
              IsImplicitlyAddedField::encode(tag_is_implicit) |
              IsCoveredByBucketingField::encode(false) |
@@ -109,7 +142,7 @@ index ab3eb7bfefbfee8448b3d41be7b82407a063ecbf..bbbcf266826ef3cf2fe9d7d9c8bd8791
              IsCaseSensitiveAttributeField::encode(false)),
        data_(tag_q_name) {}
  
-@@ -891,8 +832,7 @@ inline CSSSelector::CSSSelector(const StyleRule* parent_rule, bool is_implicit)
+@@ -891,8 +840,7 @@ inline CSSSelector::CSSSelector(const StyleRule* parent_rule, bool is_implicit)
              HasRareDataField::encode(false) | IsForPageField::encode(false) |
              IsImplicitlyAddedField::encode(is_implicit) |
              IsCoveredByBucketingField::encode(false) |
@@ -119,7 +152,7 @@ index ab3eb7bfefbfee8448b3d41be7b82407a063ecbf..bbbcf266826ef3cf2fe9d7d9c8bd8791
              IsCaseSensitiveAttributeField::encode(false)),
        data_(parent_rule) {}
  
-@@ -908,8 +848,7 @@ inline CSSSelector::CSSSelector(const AtomicString& pseudo_name,
+@@ -908,8 +856,7 @@ inline CSSSelector::CSSSelector(const AtomicString& pseudo_name,
              HasRareDataField::encode(false) | IsForPageField::encode(false) |
              IsImplicitlyAddedField::encode(is_implicit) |
              IsCoveredByBucketingField::encode(false) |
