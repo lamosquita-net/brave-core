@@ -1,0 +1,15 @@
+diff --git a/third_party/blink/renderer/core/layout/depth_ordered_layout_object_list.cc b/third_party/blink/renderer/core/layout/depth_ordered_layout_object_list.cc
+index dc3ec680980cce62b85c06a8309645c14fefb41d..3b6dc0d3c88355e4edc65899c1c5da058daa6bac 100644
+--- a/third_party/blink/renderer/core/layout/depth_ordered_layout_object_list.cc
++++ b/third_party/blink/renderer/core/layout/depth_ordered_layout_object_list.cc
+@@ -94,6 +94,10 @@ unsigned LayoutObjectWithDepth::DetermineDepth(LayoutObject* object) {
+   return depth;
+ }
+ 
++bool DepthOrderedLayoutObjectList::Contains(LayoutObject& object) const {
++  return Unordered().Contains(&object);
++}
++
+ const HeapHashSet<Member<LayoutObject>>&
+ DepthOrderedLayoutObjectList::Unordered() const {
+   return data_->objects();

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/frame/local_frame_view.cc b/third_party/blink/renderer/core/frame/local_frame_view.cc
-index 5ddb3dc2d6c7748ee9468f2142af1b40ad85e2f8..5fe63ef06a00866dd1b1e047d55bf92e90b015b8 100644
+index 5ddb3dc2d6c7748ee9468f2142af1b40ad85e2f8..a52c32d7fd26a15983c9423c96fb730ec0ec1f62 100644
 --- a/third_party/blink/renderer/core/frame/local_frame_view.cc
 +++ b/third_party/blink/renderer/core/frame/local_frame_view.cc
 @@ -154,6 +154,7 @@
@@ -10,7 +10,29 @@ index 5ddb3dc2d6c7748ee9468f2142af1b40ad85e2f8..5fe63ef06a00866dd1b1e047d55bf92e
  #include "third_party/blink/renderer/core/svg/svg_document_extensions.h"
  #include "third_party/blink/renderer/core/svg/svg_svg_element.h"
  #include "third_party/blink/renderer/core/view_transition/view_transition.h"
-@@ -1268,8 +1269,8 @@ void LocalFrameView::MarkFixedPositionObjectsForLayout(bool width_changed,
+@@ -780,9 +781,19 @@ void LocalFrameView::PerformLayout() {
+           ++add_result.stored_value->value;
+         }
+       }
+-      for (auto& root : layout_subtree_root_list_.Ordered()) {
+-        bool should_rebuild_fragments = false;
++      // FlyWeb (FS.22, upstream c215f8e6f0, crbug 491994185): iterate on a
++      // copy. Interleaved style recalc (container queries) can destroy a root
++      // and call ClearLayoutSubtreeRoot(), which clears the ordered vector
++      // that Ordered() returns by reference.
++      HeapVector<LayoutObjectWithDepth> ordered_roots =
++          layout_subtree_root_list_.Ordered();
++      for (LayoutObjectWithDepth& root : ordered_roots) {
+         LayoutObject& root_layout_object = *root;
++        if (!layout_subtree_root_list_.Contains(root_layout_object)) {
++          // A previous iteration removed the entry from the list.
++          continue;
++        }
++        bool should_rebuild_fragments = false;
+         LayoutBox* container_box = root->ContainingNGBox();
+         if (container_box) {
+           auto it = fragment_tree_spines.find(container_box);
+@@ -1268,8 +1279,8 @@ void LocalFrameView::MarkFixedPositionObjectsForLayout(bool width_changed,
    for (const auto& layout_object : *fixed_position_objects_) {
      const ComputedStyle& style = layout_object->StyleRef();
      if (width_changed) {
@@ -21,7 +43,7 @@ index 5ddb3dc2d6c7748ee9468f2142af1b40ad85e2f8..5fe63ef06a00866dd1b1e047d55bf92e
          layout_object->SetNeedsPositionedMovementLayout();
        } else {
          layout_object->SetNeedsLayoutAndFullPaintInvalidation(
-@@ -1277,8 +1278,8 @@ void LocalFrameView::MarkFixedPositionObjectsForLayout(bool width_changed,
+@@ -1277,8 +1288,8 @@ void LocalFrameView::MarkFixedPositionObjectsForLayout(bool width_changed,
        }
      }
      if (height_changed) {
@@ -32,7 +54,7 @@ index 5ddb3dc2d6c7748ee9468f2142af1b40ad85e2f8..5fe63ef06a00866dd1b1e047d55bf92e
          layout_object->SetNeedsPositionedMovementLayout();
        } else {
          layout_object->SetNeedsLayoutAndFullPaintInvalidation(
-@@ -2376,6 +2377,11 @@ void LocalFrameView::UpdateLifecyclePhasesInternal(
+@@ -2376,6 +2387,11 @@ void LocalFrameView::UpdateLifecyclePhasesInternal(
        break;
    }
  
@@ -44,7 +66,7 @@ index 5ddb3dc2d6c7748ee9468f2142af1b40ad85e2f8..5fe63ef06a00866dd1b1e047d55bf92e
    // Once we exit the ResizeObserver / IntersectionObserver loop above, we need
    // to clear the resize observer limits so that next time we run this, we can
    // deliver more observations.
-@@ -2471,7 +2477,9 @@ bool LocalFrameView::RunResizeObserverSteps(
+@@ -2471,7 +2487,9 @@ bool LocalFrameView::RunResizeObserverSteps(
    }
    disconnected_elements_with_remembered_size_.clear();
  
@@ -55,7 +77,7 @@ index 5ddb3dc2d6c7748ee9468f2142af1b40ad85e2f8..5fe63ef06a00866dd1b1e047d55bf92e
    ForAllNonThrottledLocalFrameViews(
        [&re_run_lifecycles](LocalFrameView& frame_view) {
          bool result = frame_view.NotifyResizeObservers();
-@@ -2528,6 +2536,13 @@ bool LocalFrameView::RunStyleAndLayoutLifecyclePhases(
+@@ -2528,6 +2546,13 @@ bool LocalFrameView::RunStyleAndLayoutLifecyclePhases(
      });
    }
  
@@ -69,7 +91,7 @@ index 5ddb3dc2d6c7748ee9468f2142af1b40ad85e2f8..5fe63ef06a00866dd1b1e047d55bf92e
    return Lifecycle().GetState() >= DocumentLifecycle::kLayoutClean;
  }
  
-@@ -2622,6 +2637,7 @@ bool LocalFrameView::RunPrePaintLifecyclePhase(
+@@ -2622,6 +2647,7 @@ bool LocalFrameView::RunPrePaintLifecyclePhase(
      frame_->GetPage()->GetValidationMessageClient().UpdatePrePaint();
      ForAllNonThrottledLocalFrameViews([](LocalFrameView& view) {
        view.frame_->UpdateFrameColorOverlayPrePaint();
@@ -77,7 +99,7 @@ index 5ddb3dc2d6c7748ee9468f2142af1b40ad85e2f8..5fe63ef06a00866dd1b1e047d55bf92e
      });
      if (auto* web_local_frame_impl = WebLocalFrameImpl::FromFrame(frame_))
        web_local_frame_impl->UpdateDevToolsOverlaysPrePaint();
-@@ -3010,12 +3026,12 @@ void LocalFrameView::PushPaintArtifactToCompositor(bool repainted) {
+@@ -3010,12 +3036,12 @@ void LocalFrameView::PushPaintArtifactToCompositor(bool repainted) {
          });
    }
  
@@ -95,7 +117,7 @@ index 5ddb3dc2d6c7748ee9468f2142af1b40ad85e2f8..5fe63ef06a00866dd1b1e047d55bf92e
    }
  
    WTF::Vector<std::unique_ptr<ViewTransitionRequest>> view_transition_requests;
-@@ -3023,7 +3039,7 @@ void LocalFrameView::PushPaintArtifactToCompositor(bool repainted) {
+@@ -3023,7 +3049,7 @@ void LocalFrameView::PushPaintArtifactToCompositor(bool repainted) {
  
    paint_artifact_compositor_->Update(
        paint_controller_->GetPaintArtifactShared(), viewport_properties,
@@ -104,7 +126,7 @@ index 5ddb3dc2d6c7748ee9468f2142af1b40ad85e2f8..5fe63ef06a00866dd1b1e047d55bf92e
        std::move(view_transition_requests));
  
    CreatePaintTimelineEvents();
-@@ -4737,8 +4753,8 @@ void LocalFrameView::GetUserScrollTranslationNodes(
+@@ -4737,8 +4763,8 @@ void LocalFrameView::GetUserScrollTranslationNodes(
    }
  }
  
@@ -115,7 +137,7 @@ index 5ddb3dc2d6c7748ee9468f2142af1b40ad85e2f8..5fe63ef06a00866dd1b1e047d55bf92e
    const auto* scrollable_areas = UserScrollableAreas();
    if (!scrollable_areas) {
      return;
-@@ -4751,7 +4767,7 @@ void LocalFrameView::GetAnchorScrollContainerNodes(
+@@ -4751,7 +4777,7 @@ void LocalFrameView::GetAnchorScrollContainerNodes(
    // see crbug.com/1378021) and is not performance-sensitive, we choose to just
    // use vector and binary search.
    Vector<cc::ElementId> scroll_container_ids;
@@ -124,7 +146,7 @@ index 5ddb3dc2d6c7748ee9468f2142af1b40ad85e2f8..5fe63ef06a00866dd1b1e047d55bf92e
    std::sort(scroll_container_ids.begin(), scroll_container_ids.end());
    scroll_container_ids.erase(
        std::unique(scroll_container_ids.begin(), scroll_container_ids.end()),
-@@ -4770,7 +4786,7 @@ void LocalFrameView::GetAnchorScrollContainerNodes(
+@@ -4770,7 +4796,7 @@ void LocalFrameView::GetAnchorScrollContainerNodes(
                std::lower_bound(scroll_container_ids.begin(),
                                 scroll_container_ids.end(), element_id);
            iter != scroll_container_ids.end() && *iter == element_id) {
@@ -133,7 +155,7 @@ index 5ddb3dc2d6c7748ee9468f2142af1b40ad85e2f8..5fe63ef06a00866dd1b1e047d55bf92e
              paint_properties->ScrollTranslation());
        }
      }
-@@ -5012,4 +5028,11 @@ void LocalFrameView::NotifyElementWithRememberedSizeDisconnected(
+@@ -5012,4 +5038,11 @@ void LocalFrameView::NotifyElementWithRememberedSizeDisconnected(
    disconnected_elements_with_remembered_size_.insert(element);
  }
  
