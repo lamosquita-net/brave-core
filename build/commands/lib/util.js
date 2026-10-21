@@ -68,6 +68,9 @@ async function applyPatches() {
     path.join('third_party', 'angle'),
     path.join('third_party', 'skia'),
     path.join('third_party', 'libvpx', 'source', 'libvpx'),
+    // FlyWeb level 131 (FS.17): ML-KEM and X25519MLKEM768 backported from
+    // upstream BoringSSL.
+    path.join('third_party', 'boringssl', 'src'),
   ]
   const flywebPatchStatus = []
   for (const repo of flywebRepos) {

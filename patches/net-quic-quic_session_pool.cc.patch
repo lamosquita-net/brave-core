@@ -1,0 +1,20 @@
+diff --git a/net/quic/quic_session_pool.cc b/net/quic/quic_session_pool.cc
+index 23aa9c90f2e5aaad04ee1907d1047e775c9ec636..de01da5d1dfd9a1d90092cb23599aeb013949da2 100644
+--- a/net/quic/quic_session_pool.cc
++++ b/net/quic/quic_session_pool.cc
+@@ -393,9 +393,12 @@ QuicSessionPool::QuicCryptoClientConfigOwner::QuicCryptoClientConfigOwner(
+                           base::Unretained(this)));
+   if (quic_session_pool_->ssl_config_service_->GetSSLContextConfig()
+           .PostQuantumKeyAgreementEnabled()) {
+-    config_.set_preferred_groups({SSL_GROUP_X25519_KYBER768_DRAFT00,
+-                                  SSL_GROUP_X25519, SSL_GROUP_SECP256R1,
+-                                  SSL_GROUP_SECP384R1});
++    uint16_t postquantum_group =
++        base::FeatureList::IsEnabled(features::kUseMLKEM)
++            ? SSL_GROUP_X25519_MLKEM768
++            : SSL_GROUP_X25519_KYBER768_DRAFT00;
++    config_.set_preferred_groups({postquantum_group, SSL_GROUP_X25519,
++                                  SSL_GROUP_SECP256R1, SSL_GROUP_SECP384R1});
+   }
+ }
+ QuicSessionPool::QuicCryptoClientConfigOwner::~QuicCryptoClientConfigOwner() {

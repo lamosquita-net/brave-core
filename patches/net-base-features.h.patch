@@ -1,8 +1,29 @@
 diff --git a/net/base/features.h b/net/base/features.h
-index 8d4fb2164e23013c7c1656743f77c5f355f71aac..9bd9bce8b37a3b85434225a148b1028828cebe68 100644
+index 8d4fb2164e23013c7c1656743f77c5f355f71aac..4dbfcc176bc82de9246e7c173be1c7928c554777 100644
 --- a/net/base/features.h
 +++ b/net/base/features.h
-@@ -562,6 +562,9 @@ NET_EXPORT BASE_DECLARE_FEATURE(kReportingApiEnableEnterpriseCookieIssues);
+@@ -175,9 +175,19 @@ NET_EXPORT BASE_DECLARE_FEATURE(kPartitionConnectionsByNetworkIsolationKey);
+ // servers.
+ NET_EXPORT BASE_DECLARE_FEATURE(kTLS13KeyUpdate);
+ 
+-// Enables Kyber-based post-quantum key-agreements in TLS 1.3 connections.
++// Enables post-quantum key-agreements in TLS 1.3 connections. kUseMLKEM
++// controls whether ML-KEM or Kyber (its predecessor) is used. The flag is named
++// after Kyber because it was originally introduced for Kyber.
+ NET_EXPORT BASE_DECLARE_FEATURE(kPostQuantumKyber);
+ 
++// Causes TLS 1.3 connections to use the ML-KEM standard instead of the Kyber
++// draft standard for post-quantum key-agreement. Post-quantum key-agreement
++// must be enabled (e.g. via kPostQuantumKyber) for this to have an effect.
++//
++// TODO(crbug.com/40910498): Remove this flag sometime after M131 has reached
++// stable without issues.
++NET_EXPORT BASE_DECLARE_FEATURE(kUseMLKEM);
++
+ // Changes the timeout after which unused sockets idle sockets are cleaned up.
+ NET_EXPORT BASE_DECLARE_FEATURE(kNetUnusedIdleSocketTimeout);
+ 
+@@ -562,6 +572,9 @@ NET_EXPORT BASE_DECLARE_FEATURE(kReportingApiEnableEnterpriseCookieIssues);
  // Optimize parsing data: URLs.
  NET_EXPORT BASE_DECLARE_FEATURE(kOptimizeParsingDataUrls);
  
