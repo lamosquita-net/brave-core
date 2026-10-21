@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/ng_layout_result.cc b/third_party/blink/renderer/core/layout/ng/ng_layout_result.cc
-index 5df94e6b9ba4fb9fdb24c0247011d1fdd4799dcd..4ab48375b53f836dad5730aa50008cc7f2541ef7 100644
+index 5df94e6b9ba4fb9fdb24c0247011d1fdd4799dcd..81a70e5fab5d1bebea66cc4ab670fa4c107b8a47 100644
 --- a/third_party/blink/renderer/core/layout/ng/ng_layout_result.cc
 +++ b/third_party/blink/renderer/core/layout/ng/ng_layout_result.cc
 @@ -7,6 +7,7 @@
@@ -52,10 +52,21 @@ index 5df94e6b9ba4fb9fdb24c0247011d1fdd4799dcd..4ab48375b53f836dad5730aa50008cc7
    }
  
    DCHECK_EQ(physical_fragment_->Size(), other.physical_fragment_->Size());
-@@ -301,6 +303,14 @@ NGLayoutResult::RareData* NGLayoutResult::EnsureRareData() {
+@@ -301,6 +303,25 @@ NGLayoutResult::RareData* NGLayoutResult::EnsureRareData() {
    return rare_data_;
  }
  
++void NGLayoutResult::CopyMutableOutOfFlowData(
++    const NGLayoutResult& other) const {
++  if (bitfields_.has_oof_insets_for_get_computed_style) {
++    return;
++  }
++  GetMutableForOutOfFlow().SetOutOfFlowInsetsForGetComputedStyle(
++      other.OutOfFlowInsetsForGetComputedStyle());
++  GetMutableForOutOfFlow().SetOutOfFlowPositionedOffset(
++      other.OutOfFlowPositionedOffset());
++}
++
 +void NGLayoutResult::MutableForOutOfFlow::SetDisplayLocksAffectedByAnchors(
 +    HeapHashSet<Member<Element>>* display_locks) {
 +  if (layout_result_->rare_data_ || display_locks) {
@@ -67,7 +78,7 @@ index 5df94e6b9ba4fb9fdb24c0247011d1fdd4799dcd..4ab48375b53f836dad5730aa50008cc7
  #if DCHECK_IS_ON()
  void NGLayoutResult::CheckSameForSimplifiedLayout(
      const NGLayoutResult& other,
-@@ -362,10 +372,12 @@ void NGLayoutResult::Trace(Visitor* visitor) const {
+@@ -362,10 +383,12 @@ void NGLayoutResult::Trace(Visitor* visitor) const {
  
  void NGLayoutResult::RareData::Trace(Visitor* visitor) const {
    visitor->Trace(early_break);

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_box.cc b/third_party/blink/renderer/core/layout/layout_box.cc
-index c2f1775ffaed54914a1cdd313a207364ba7d887d..cd2f22a74b9394430a3b455a6fac44a74c90bb52 100644
+index c2f1775ffaed54914a1cdd313a207364ba7d887d..b56934a92556e31fb1b53b07115b6774f620d14f 100644
 --- a/third_party/blink/renderer/core/layout/layout_box.cc
 +++ b/third_party/blink/renderer/core/layout/layout_box.cc
 @@ -58,7 +58,7 @@
@@ -113,7 +113,21 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..cd2f22a74b9394430a3b455a6fac44a7
    // Non-atomic inlines should be LayoutInline or LayoutText, not LayoutBox.
    DCHECK(!IsInline() || IsAtomicInlineLevel());
  }
-@@ -1039,6 +1040,7 @@ LayoutUnit LayoutBox::ClientHeightFrom(LayoutUnit height) const {
+@@ -958,6 +959,13 @@ void LayoutBox::LayoutSubtreeRoot() {
+   const NGLayoutResult* result = NGBlockNode(this).Layout(space);
+   GetDocument().GetFrame()->GetInputMethodController().DidLayoutSubtree(*this);
+ 
++  // FlyWeb (upstream 12bfef324f99, crbug.com/1458561): a subtree layout of an
++  // out-of-flow node doesn't go through the NGOutOfFlowLayoutPart, so keep the
++  // out-of-flow fields that getComputedStyle() reads (it CHECKs them).
++  if (IsOutOfFlowPositioned()) {
++    result->CopyMutableOutOfFlowData(*previous_result);
++  }
++
+   // Even if we are a layout root, our baseline may have shifted. In this
+   // (rare) case, mark our containing-block for layout.
+   //
+@@ -1039,6 +1047,7 @@ LayoutUnit LayoutBox::ClientHeightFrom(LayoutUnit height) const {
  
  int LayoutBox::PixelSnappedClientWidth() const {
    NOT_DESTROYED();
@@ -121,7 +135,7 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..cd2f22a74b9394430a3b455a6fac44a7
    LayoutUnit left = RuntimeEnabledFeatures::LayoutNGNoLocationEnabled()
                          ? PhysicalLocation().left
                          : Location().X();
-@@ -1048,6 +1050,7 @@ int LayoutBox::PixelSnappedClientWidth() const {
+@@ -1048,6 +1057,7 @@ int LayoutBox::PixelSnappedClientWidth() const {
  DISABLE_CFI_PERF
  int LayoutBox::PixelSnappedClientHeight() const {
    NOT_DESTROYED();
@@ -129,7 +143,7 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..cd2f22a74b9394430a3b455a6fac44a7
    LayoutUnit top = RuntimeEnabledFeatures::LayoutNGNoLocationEnabled()
                         ? PhysicalLocation().top
                         : Location().Y();
-@@ -1134,6 +1137,7 @@ LayoutUnit LayoutBox::ScrollHeight() const {
+@@ -1134,6 +1144,7 @@ LayoutUnit LayoutBox::ScrollHeight() const {
  
  int LayoutBox::PixelSnappedScrollWidth() const {
    NOT_DESTROYED();
@@ -137,7 +151,7 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..cd2f22a74b9394430a3b455a6fac44a7
    LayoutUnit left = RuntimeEnabledFeatures::LayoutNGNoLocationEnabled()
                          ? PhysicalLocation().left
                          : Location().X();
-@@ -1142,6 +1146,7 @@ int LayoutBox::PixelSnappedScrollWidth() const {
+@@ -1142,6 +1153,7 @@ int LayoutBox::PixelSnappedScrollWidth() const {
  
  int LayoutBox::PixelSnappedScrollHeight() const {
    NOT_DESTROYED();
@@ -145,7 +159,7 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..cd2f22a74b9394430a3b455a6fac44a7
    LayoutUnit top = RuntimeEnabledFeatures::LayoutNGNoLocationEnabled()
                         ? PhysicalLocation().top
                         : Location().Y();
-@@ -1324,17 +1329,21 @@ LayoutUnit LayoutBox::DefaultIntrinsicContentInlineSize() const {
+@@ -1324,17 +1336,21 @@ LayoutUnit LayoutBox::DefaultIntrinsicContentInlineSize() const {
      return kIndefiniteSize;
    const Element& element = *To<Element>(GetNode());
  
@@ -170,7 +184,7 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..cd2f22a74b9394430a3b455a6fac44a7
      if (type == input_type_names::kRange)
        return SliderIntrinsicInlineSize(*this);
      auto effective_appearance = StyleRef().EffectiveAppearance();
-@@ -1349,8 +1358,9 @@ LayoutUnit LayoutBox::DefaultIntrinsicContentInlineSize() const {
+@@ -1349,8 +1365,9 @@ LayoutUnit LayoutBox::DefaultIntrinsicContentInlineSize() const {
      return kIndefiniteSize;
    }
    const auto* textarea = DynamicTo<HTMLTextAreaElement>(element);
@@ -181,7 +195,7 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..cd2f22a74b9394430a3b455a6fac44a7
    if (IsSliderContainer(element))
      return SliderIntrinsicInlineSize(*this);
  
-@@ -1363,10 +1373,23 @@ LayoutUnit LayoutBox::DefaultIntrinsicContentBlockSize() const {
+@@ -1363,10 +1380,23 @@ LayoutUnit LayoutBox::DefaultIntrinsicContentBlockSize() const {
    // get here.
    DCHECK(!HasOverrideIntrinsicContentLogicalHeight());
  
@@ -206,7 +220,7 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..cd2f22a74b9394430a3b455a6fac44a7
             ComputeLogicalScrollbars().BlockSum();
    }
    if (IsTextField()) {
-@@ -1377,15 +1400,6 @@ LayoutUnit LayoutBox::DefaultIntrinsicContentBlockSize() const {
+@@ -1377,15 +1407,6 @@ LayoutUnit LayoutBox::DefaultIntrinsicContentBlockSize() const {
                                        *this);
    }
  
@@ -222,7 +236,7 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..cd2f22a74b9394430a3b455a6fac44a7
    return kIndefiniteSize;
  }
  
-@@ -1532,10 +1546,10 @@ PhysicalRect LayoutBox::PhysicalBackgroundRect(
+@@ -1532,10 +1553,10 @@ PhysicalRect LayoutBox::PhysicalBackgroundRect(
        bool layer_known_opaque = false;
        // Check if the image is opaque and fills the clip.
        if (const StyleImage* image = cur->GetImage()) {
@@ -237,7 +251,7 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..cd2f22a74b9394430a3b455a6fac44a7
              image->KnownToBeOpaque(GetDocument(), StyleRef())) {
            layer_known_opaque = true;
          }
-@@ -2803,8 +2817,9 @@ PhysicalOffset LayoutBox::OffsetFromContainerInternal(
+@@ -2803,8 +2824,9 @@ PhysicalOffset LayoutBox::OffsetFromContainerInternal(
    if (o->IsScrollContainer())
      offset += OffsetFromScrollableContainer(o, ignore_scroll_offset);
  
@@ -249,7 +263,7 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..cd2f22a74b9394430a3b455a6fac44a7
  
    return offset;
  }
-@@ -3201,11 +3216,14 @@ bool LayoutBox::MapToVisualRectInAncestorSpaceInternal(
+@@ -3201,11 +3223,14 @@ bool LayoutBox::MapToVisualRectInAncestorSpaceInternal(
      TransformState& transform_state,
      VisualRectFlags visual_rect_flags) const {
    NOT_DESTROYED();
@@ -265,7 +279,7 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..cd2f22a74b9394430a3b455a6fac44a7
    AncestorSkipInfo skip_info(ancestor, true);
    LayoutObject* container = Container(&skip_info);
    if (!container)
-@@ -3220,11 +3238,11 @@ bool LayoutBox::MapToVisualRectInAncestorSpaceInternal(
+@@ -3220,11 +3245,11 @@ bool LayoutBox::MapToVisualRectInAncestorSpaceInternal(
  
    if (IsStickyPositioned()) {
      container_offset += StickyPositionOffset();
@@ -280,7 +294,7 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..cd2f22a74b9394430a3b455a6fac44a7
      InflateVisualRectForFilterUnderContainer(transform_state, *container,
                                               ancestor);
    }
-@@ -3351,7 +3369,7 @@ void LayoutBox::ComputeMarginsForDirection(MarginDirection flow_direction,
+@@ -3351,7 +3376,7 @@ void LayoutBox::ComputeMarginsForDirection(MarginDirection flow_direction,
    // width of the containing block, then any 'auto' values for 'margin-left' or
    // 'margin-right' are, for the following rules, treated as zero.
    LayoutUnit margin_box_width =
@@ -289,7 +303,7 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..cd2f22a74b9394430a3b455a6fac44a7
                           ? margin_start_width + margin_end_width
                           : LayoutUnit());
  
-@@ -3965,8 +3983,8 @@ LayoutUnit LayoutBox::AvailableLogicalHeightUsing(
+@@ -3965,8 +3990,8 @@ LayoutUnit LayoutBox::AvailableLogicalHeightUsing(
    // https://bugs.webkit.org/show_bug.cgi?id=46500
    auto* curr_layout_block = DynamicTo<LayoutBlock>(this);
    if (curr_layout_block && IsOutOfFlowPositioned() &&
@@ -300,7 +314,7 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..cd2f22a74b9394430a3b455a6fac44a7
      LayoutBlock* block = const_cast<LayoutBlock*>(curr_layout_block);
      LogicalExtentComputedValues computed_values;
      block->ComputeLogicalHeight(block->LogicalHeight(), LayoutUnit(),
-@@ -5706,18 +5724,6 @@ TextDirection LayoutBox::ResolvedDirection() const {
+@@ -5706,18 +5731,6 @@ TextDirection LayoutBox::ResolvedDirection() const {
    return StyleRef().Direction();
  }
  
@@ -319,7 +333,7 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..cd2f22a74b9394430a3b455a6fac44a7
  void LayoutBox::OverrideTickmarks(Vector<gfx::Rect> tickmarks) {
    NOT_DESTROYED();
    GetScrollableArea()->SetTickmarksOverride(std::move(tickmarks));
-@@ -5926,18 +5932,32 @@ PhysicalRect LayoutBox::ComputeStickyConstrainingRect() const {
+@@ -5926,18 +5939,32 @@ PhysicalRect LayoutBox::ComputeStickyConstrainingRect() const {
    return constraining_rect;
  }
  
@@ -359,7 +373,7 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..cd2f22a74b9394430a3b455a6fac44a7
    }
    return PhysicalOffset();
  }
-@@ -5957,9 +5977,8 @@ void ForEachAnchorQueryOnContainer(const LayoutBox& box, Function func) {
+@@ -5957,9 +5984,8 @@ void ForEachAnchorQueryOnContainer(const LayoutBox& box, Function func) {
      return;
    }
  
@@ -370,7 +384,7 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..cd2f22a74b9394430a3b455a6fac44a7
    const LayoutInline* inline_container = To<LayoutInline>(container);
    if (!inline_container->HasInlineFragments()) {
      return;
-@@ -5976,6 +5995,20 @@ void ForEachAnchorQueryOnContainer(const LayoutBox& box, Function func) {
+@@ -5976,6 +6002,20 @@ void ForEachAnchorQueryOnContainer(const LayoutBox& box, Function func) {
    }
  }
  
@@ -391,7 +405,7 @@ index c2f1775ffaed54914a1cdd313a207364ba7d887d..cd2f22a74b9394430a3b455a6fac44a7
  }  // namespace
  
  const LayoutObject* LayoutBox::FindTargetAnchor(
-@@ -6022,38 +6055,94 @@ const LayoutObject* LayoutBox::AcceptableImplicitAnchor() const {
+@@ -6022,38 +6062,94 @@ const LayoutObject* LayoutBox::AcceptableImplicitAnchor() const {
    return is_acceptable_anchor ? anchor_layout_object : nullptr;
  }
  

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/ng_layout_result.h b/third_party/blink/renderer/core/layout/ng/ng_layout_result.h
-index 9bf60a857a4a085c4b2d934801c11fae05621704..8ebdb174bb70798e70a79ad94f0b876d55439c9a 100644
+index 9bf60a857a4a085c4b2d934801c11fae05621704..02b5b3d6d3e8fa2b6e495d08caef5b21f6421e8a 100644
 --- a/third_party/blink/renderer/core/layout/ng/ng_layout_result.h
 +++ b/third_party/blink/renderer/core/layout/ng/ng_layout_result.h
 @@ -10,7 +10,6 @@
@@ -18,9 +18,14 @@ index 9bf60a857a4a085c4b2d934801c11fae05621704..8ebdb174bb70798e70a79ad94f0b876d
  #include "third_party/blink/renderer/core/style/computed_style_constants.h"
  #include "third_party/blink/renderer/platform/wtf/bit_field.h"
  #include "third_party/blink/renderer/platform/wtf/text/atomic_string.h"
-@@ -153,25 +153,37 @@ class CORE_EXPORT NGLayoutResult final
+@@ -152,26 +152,42 @@ class CORE_EXPORT NGLayoutResult final
+     return rare_data_ ? rare_data_->block_end_annotation_space : LayoutUnit();
    }
  
++  // Called after subtree layout to make sure the fields for out-of-flow
++  // positioned nodes are set (FlyWeb, upstream 12bfef324f99).
++  void CopyMutableOutOfFlowData(const NGLayoutResult& previous_result) const;
++
    LogicalOffset OutOfFlowPositionedOffset() const {
 -    DCHECK(bitfields_.has_oof_positioned_offset);
 -    return oof_positioned_offset_;
@@ -68,7 +73,7 @@ index 9bf60a857a4a085c4b2d934801c11fae05621704..8ebdb174bb70798e70a79ad94f0b876d
    // Get the path to the column spanner (if any) that interrupted column layout.
    const NGColumnSpannerPath* ColumnSpannerPath() const {
      if (rare_data_) {
-@@ -212,7 +224,7 @@ class CORE_EXPORT NGLayoutResult final
+@@ -212,7 +228,7 @@ class CORE_EXPORT NGLayoutResult final
    EStatus Status() const { return static_cast<EStatus>(bitfields_.status); }
  
    LayoutUnit BfcLineOffset() const {
@@ -77,7 +82,7 @@ index 9bf60a857a4a085c4b2d934801c11fae05621704..8ebdb174bb70798e70a79ad94f0b876d
        DCHECK(physical_fragment_->IsOutOfFlowPositioned());
        return LayoutUnit();
      }
-@@ -221,7 +233,7 @@ class CORE_EXPORT NGLayoutResult final
+@@ -221,7 +237,7 @@ class CORE_EXPORT NGLayoutResult final
    }
  
    const absl::optional<LayoutUnit> BfcBlockOffset() const {
@@ -86,7 +91,7 @@ index 9bf60a857a4a085c4b2d934801c11fae05621704..8ebdb174bb70798e70a79ad94f0b876d
        DCHECK(physical_fragment_->IsOutOfFlowPositioned());
        return LayoutUnit();
      }
-@@ -459,6 +471,13 @@ class CORE_EXPORT NGLayoutResult final
+@@ -459,6 +475,13 @@ class CORE_EXPORT NGLayoutResult final
      return space_;
    }
  
@@ -100,7 +105,7 @@ index 9bf60a857a4a085c4b2d934801c11fae05621704..8ebdb174bb70798e70a79ad94f0b876d
    // This exposes a mutable part of the layout result just for the
    // |NGOutOfFlowLayoutPart|.
    class MutableForOutOfFlow final {
-@@ -467,29 +486,56 @@ class CORE_EXPORT NGLayoutResult final
+@@ -467,29 +490,56 @@ class CORE_EXPORT NGLayoutResult final
     protected:
      friend class NGOutOfFlowLayoutPart;
  
@@ -170,7 +175,7 @@ index 9bf60a857a4a085c4b2d934801c11fae05621704..8ebdb174bb70798e70a79ad94f0b876d
     private:
      friend class NGLayoutResult;
      MutableForOutOfFlow(const NGLayoutResult* layout_result)
-@@ -578,10 +624,14 @@ class CORE_EXPORT NGLayoutResult final
+@@ -578,10 +628,14 @@ class CORE_EXPORT NGLayoutResult final
  
      using BitField = WTF::ConcurrentlyReadBitField<uint8_t>;
      using LineBoxBfcBlockOffsetIsSetFlag = BitField::DefineFirstValue<bool, 1>;
@@ -187,7 +192,7 @@ index 9bf60a857a4a085c4b2d934801c11fae05621704..8ebdb174bb70798e70a79ad94f0b876d
  
      struct BlockData {
        GC_PLUGIN_IGNORE("crbug.com/1146383")
-@@ -630,12 +680,28 @@ class CORE_EXPORT NGLayoutResult final
+@@ -630,12 +684,28 @@ class CORE_EXPORT NGLayoutResult final
        return bit_field.set<LineBoxBfcBlockOffsetIsSetFlag>(flag);
      }
  
@@ -199,10 +204,8 @@ index 9bf60a857a4a085c4b2d934801c11fae05621704..8ebdb174bb70798e70a79ad94f0b876d
 +
 +    void set_oof_positioned_offset_is_set(bool flag) {
 +      return bit_field.set<OutOfFlowPositionedOffsetIsSetFlag>(flag);
-     }
- 
--    void set_position_fallback_result_is_set(bool flag) {
--      return bit_field.set<PositionFallbackResultIsSetFlag>(flag);
++    }
++
 +    bool needs_anchor_position_scroll_adjustment_in_x() const {
 +      return bit_field.get<NeedsAnchorPositionScrollAdjustmentInXFlag>();
 +    }
@@ -213,14 +216,16 @@ index 9bf60a857a4a085c4b2d934801c11fae05621704..8ebdb174bb70798e70a79ad94f0b876d
 +
 +    bool needs_anchor_position_scroll_adjustment_in_y() const {
 +      return bit_field.get<NeedsAnchorPositionScrollAdjustmentInYFlag>();
-+    }
-+
+     }
+ 
+-    void set_position_fallback_result_is_set(bool flag) {
+-      return bit_field.set<PositionFallbackResultIsSetFlag>(flag);
 +    void set_needs_anchor_position_scroll_adjustment_in_y(bool flag) {
 +      return bit_field.set<NeedsAnchorPositionScrollAdjustmentInYFlag>(flag);
      }
  
      DataUnionType data_union_type() const {
-@@ -701,6 +767,7 @@ class CORE_EXPORT NGLayoutResult final
+@@ -701,6 +771,7 @@ class CORE_EXPORT NGLayoutResult final
      }
  
      RareData() : bit_field(DataUnionTypeValue::encode(kNone)) {}
@@ -228,7 +233,7 @@ index 9bf60a857a4a085c4b2d934801c11fae05621704..8ebdb174bb70798e70a79ad94f0b876d
      RareData(const RareData& rare_data)
          : early_break(rare_data.early_break),
            end_margin_strut(rare_data.end_margin_strut),
-@@ -714,9 +781,9 @@ class CORE_EXPORT NGLayoutResult final
+@@ -714,9 +785,9 @@ class CORE_EXPORT NGLayoutResult final
            block_end_annotation_space(rare_data.block_end_annotation_space),
            lines_until_clamp(rare_data.lines_until_clamp),
            line_box_bfc_block_offset(rare_data.line_box_bfc_block_offset),
@@ -241,7 +246,7 @@ index 9bf60a857a4a085c4b2d934801c11fae05621704..8ebdb174bb70798e70a79ad94f0b876d
            bit_field(rare_data.bit_field) {
        switch (data_union_type()) {
          case kNone:
-@@ -781,25 +848,25 @@ class CORE_EXPORT NGLayoutResult final
+@@ -781,25 +852,25 @@ class CORE_EXPORT NGLayoutResult final
        return line_box_bfc_block_offset;
      }
  
@@ -282,7 +287,7 @@ index 9bf60a857a4a085c4b2d934801c11fae05621704..8ebdb174bb70798e70a79ad94f0b876d
      }
  
      void Trace(Visitor* visitor) const;
-@@ -826,14 +893,16 @@ class CORE_EXPORT NGLayoutResult final
+@@ -826,14 +897,16 @@ class CORE_EXPORT NGLayoutResult final
      LayoutUnit annotation_overflow;
      LayoutUnit block_end_annotation_space;
      int lines_until_clamp = 0;
@@ -302,7 +307,7 @@ index 9bf60a857a4a085c4b2d934801c11fae05621704..8ebdb174bb70798e70a79ad94f0b876d
  
      BitField bit_field;
  
-@@ -870,8 +939,7 @@ class CORE_EXPORT NGLayoutResult final
+@@ -870,8 +943,7 @@ class CORE_EXPORT NGLayoutResult final
                bool has_descendant_that_depends_on_percentage_block_size,
                bool subtree_modified_margin_strut)
          : has_rare_data_exclusion_space(false),
@@ -312,7 +317,7 @@ index 9bf60a857a4a085c4b2d934801c11fae05621704..8ebdb174bb70798e70a79ad94f0b876d
            is_bfc_block_offset_nullopt(false),
            has_forced_break(false),
            break_appeal(kBreakAppealPerfect),
-@@ -892,8 +960,7 @@ class CORE_EXPORT NGLayoutResult final
+@@ -892,8 +964,7 @@ class CORE_EXPORT NGLayoutResult final
            has_orthogonal_fallback_size_descendant(false) {}
  
      unsigned has_rare_data_exclusion_space : 1;
@@ -322,7 +327,7 @@ index 9bf60a857a4a085c4b2d934801c11fae05621704..8ebdb174bb70798e70a79ad94f0b876d
      unsigned is_bfc_block_offset_nullopt : 1;
  
      unsigned has_forced_break : 1;
-@@ -926,19 +993,16 @@ class CORE_EXPORT NGLayoutResult final
+@@ -926,19 +997,16 @@ class CORE_EXPORT NGLayoutResult final
  
    // |rare_data_| cannot be stored in the union because it is difficult to have
    // a const bitfield for it and it cannot be traced.
