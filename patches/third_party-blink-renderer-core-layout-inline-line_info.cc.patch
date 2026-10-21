@@ -1,0 +1,35 @@
+diff --git a/third_party/blink/renderer/core/layout/inline/line_info.cc b/third_party/blink/renderer/core/layout/inline/line_info.cc
+index f6884f50a49f6b6b6bc093498741e8a7016ba1d8..a3f9e755d738cb52cfe916b7eb6a7e6775f7e244 100644
+--- a/third_party/blink/renderer/core/layout/inline/line_info.cc
++++ b/third_party/blink/renderer/core/layout/inline/line_info.cc
+@@ -114,14 +114,25 @@ void LineInfo::SetLineStyle(const InlineNode& node,
+ }
+ 
+ ETextAlign LineInfo::GetTextAlign(bool is_last_line) const {
+-  // See LayoutRubyBase::TextAlignmentForLine().
+   if (is_ruby_base_)
+     return ETextAlign::kJustify;
+ 
+-  // See LayoutRubyText::TextAlignmentForLine().
+-  if (is_ruby_text_ && LineStyle().GetTextAlign() ==
+-                           ComputedStyleInitialValues::InitialTextAlign())
+-    return ETextAlign::kJustify;
++  if (is_ruby_text_) {
++    ETextAlign text_align = LineStyle().GetTextAlign();
++    if (!RuntimeEnabledFeatures::RubyLineBreakableEnabled()) {
++      if (text_align == ComputedStyleInitialValues::InitialTextAlign()) {
++        return ETextAlign::kJustify;
++      }
++    } else {
++      ERubyAlign ruby_align = LineStyle().RubyAlign();
++      if ((ruby_align == ERubyAlign::kSpaceAround &&
++           (text_align == ComputedStyleInitialValues::InitialTextAlign() ||
++            text_align == ETextAlign::kJustify)) ||
++          ruby_align == ERubyAlign::kSpaceBetween) {
++        return ETextAlign::kJustify;
++      }
++    }
++  }
+ 
+   return LineStyle().GetTextAlign(is_last_line);
+ }

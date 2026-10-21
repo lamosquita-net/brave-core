@@ -1,0 +1,19 @@
+diff --git a/third_party/blink/renderer/core/layout/inline/inline_cursor.cc b/third_party/blink/renderer/core/layout/inline/inline_cursor.cc
+index 41f4df1f28a0066df69b6bf7b0805e9c9dbba143..8e5b3606caecc67897a987b596bf508a258123fe 100644
+--- a/third_party/blink/renderer/core/layout/inline/inline_cursor.cc
++++ b/third_party/blink/renderer/core/layout/inline/inline_cursor.cc
+@@ -1577,8 +1577,13 @@ const LayoutObject* InlineCursor::CulledInlineTraversal::Find(
+       return child;
+ 
+     if (child->IsBox()) {
+-      if (!child->IsFloatingOrOutOfFlowPositioned())
++      if (!child->IsFloatingOrOutOfFlowPositioned() &&
++          // Some objects are out of the IFC although they look like in-flow
++          // (`!IsFloatingOrOutOfFlowPositioned()`), such as ruby annotations or
++          // after block-in-inline splits.
++          child->IsInLayoutNGInlineFormattingContext()) {
+         return child;
++      }
+       child = child->NextInPreOrderAfterChildren(layout_inline_);
+       continue;
+     }
