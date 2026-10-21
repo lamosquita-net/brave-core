@@ -1,0 +1,13 @@
+diff --git a/src/compiler/js-inlining.cc b/src/compiler/js-inlining.cc
+index e62c6f8af882ea6e322f9ea718493696dcf5511e..7e47b22ce23df89f9023f4b104c67a041b882f79 100644
+--- a/src/compiler/js-inlining.cc
++++ b/src/compiler/js-inlining.cc
+@@ -250,6 +250,8 @@ FrameState JSInliner::CreateArtificialFrameState(
+     Node* context, Node* callee) {
+   const int parameter_count_with_receiver =
+       parameter_count + JSCallOrConstructNode::kReceiverOrNewTargetInputCount;
++  // FlyWeb: v8 d3577087 (crbug 385155406).
++  CHECK_LE(parameter_count_with_receiver, kMaxUInt16);
+   const FrameStateFunctionInfo* state_info =
+       common()->CreateFrameStateFunctionInfo(frame_state_type,
+                                              parameter_count_with_receiver, 0,

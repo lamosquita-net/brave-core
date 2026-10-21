@@ -1,0 +1,31 @@
+diff --git a/src/execution/messages.cc b/src/execution/messages.cc
+index b71cd78a29874028bd57648d23dafa7b07138aee..c68f733dabc672e0cab05a0f66c96df019538f37 100644
+--- a/src/execution/messages.cc
++++ b/src/execution/messages.cc
+@@ -1136,6 +1136,13 @@ MaybeHandle<Object> ErrorUtils::GetFormattedStack(
+     Isolate* isolate, Handle<JSObject> maybe_error_object) {
+   TRACE_EVENT0(TRACE_DISABLED_BY_DEFAULT("v8.stack_trace"), __func__);
+ 
++  if (IsAccessCheckNeeded(*maybe_error_object) &&
++      !isolate->MayAccess(isolate->native_context(), maybe_error_object)) {
++    RETURN_ON_EXCEPTION(isolate,
++                        isolate->ReportFailedAccessCheck(maybe_error_object));
++    UNREACHABLE();
++  }
++
+   ErrorUtils::StackPropertyLookupResult lookup =
+       ErrorUtils::GetErrorStackProperty(isolate, maybe_error_object);
+ 
+@@ -1179,6 +1186,12 @@ MaybeHandle<Object> ErrorUtils::GetFormattedStack(
+ void ErrorUtils::SetFormattedStack(Isolate* isolate,
+                                    Handle<JSObject> maybe_error_object,
+                                    Handle<Object> formatted_stack) {
++  if (IsAccessCheckNeeded(*maybe_error_object) &&
++      !isolate->MayAccess(isolate->native_context(), maybe_error_object)) {
++    USE(isolate->ReportFailedAccessCheck(maybe_error_object));
++    return;
++  }
++
+   ErrorUtils::StackPropertyLookupResult lookup =
+       ErrorUtils::GetErrorStackProperty(isolate, maybe_error_object);
+ 

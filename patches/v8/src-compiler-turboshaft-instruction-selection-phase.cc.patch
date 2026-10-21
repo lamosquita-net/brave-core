@@ -1,0 +1,22 @@
+diff --git a/src/compiler/turboshaft/instruction-selection-phase.cc b/src/compiler/turboshaft/instruction-selection-phase.cc
+index 9bbc209870aefd55125eecb02663c532b2c98869..43e3c6064ed64ee4841e22d26792f7a73236c7c2 100644
+--- a/src/compiler/turboshaft/instruction-selection-phase.cc
++++ b/src/compiler/turboshaft/instruction-selection-phase.cc
+@@ -17,6 +17,7 @@
+ #include "src/compiler/turboshaft/phase.h"
+ #include "src/compiler/turboshaft/sidetable.h"
+ #include "src/diagnostics/code-tracer.h"
++#include "src/utils/sparse-bit-vector.h"
+ 
+ namespace v8::internal::compiler::turboshaft {
+ 
+@@ -215,8 +216,7 @@ void TurboshaftSpecialRPONumberer::ComputeLoopInfo(
+     size_t loop_num = loop_number(header);
+     DCHECK_NULL(loops_[loop_num].header);
+     loops_[loop_num].header = header;
+-    loops_[loop_num].members =
+-        zone()->New<BitVector>(graph_->block_count(), zone());
++    loops_[loop_num].members = zone()->New<SparseBitVector>(zone());
+ 
+     if (backedge != header) {
+       // As long as the header doesn't have a backedge to itself,

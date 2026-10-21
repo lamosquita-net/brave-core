@@ -1,0 +1,16 @@
+diff --git a/src/ic/ic.cc b/src/ic/ic.cc
+index 87c66e3a2cc4c490599b51bb44c57a167fd55792..98350c66c10e34fb7eb64aa6f5144307b49d85be 100644
+--- a/src/ic/ic.cc
++++ b/src/ic/ic.cc
+@@ -1881,6 +1881,11 @@ MaybeHandle<Object> StoreIC::Store(Handle<Object> object, Handle<Name> name,
+       if (!can_store.FromJust()) {
+         return isolate()->factory()->undefined_value();
+       }
++      // Restart the lookup iterator updated by CheckPrivateNameStore() for
++      // UpdateCaches() to handle access checks.
++      if (use_ic && IsAccessCheckNeeded(*object)) {
++        it.Restart();
++      }
+     }
+ 
+     // IC handling of private fields/symbols stores on JSProxy is not

@@ -1,0 +1,18 @@
+diff --git a/src/ic/accessor-assembler.cc b/src/ic/accessor-assembler.cc
+index 9a5fd344c163fddb6ff633baa2ddf2deeebee4af..5d562a50aadd438064ec2d3144168adc8eaae3f9 100644
+--- a/src/ic/accessor-assembler.cc
++++ b/src/ic/accessor-assembler.cc
+@@ -1537,7 +1537,12 @@ void AccessorAssembler::HandleStoreICHandlerCase(
+ 
+     BIND(&store_global);
+     {
+-      if (p->IsDefineKeyedOwn()) {
++      if (p->IsDefineNamedOwn()) {
++        // The global proxy has its attributes set in the global object,
++        // which can't be handled by StoreGlobalIC_PropertyCellCase when
++        // defining public fields. Handle it in runtime.
++        GotoIf(IsJSGlobalProxy(CAST(p->receiver())), &if_slow);
++      } else if (p->IsDefineKeyedOwn()) {
+         Label proceed_defining(this);
+         // StoreGlobalIC_PropertyCellCase doesn't support definition
+         // of private fields, so handle them in runtime.

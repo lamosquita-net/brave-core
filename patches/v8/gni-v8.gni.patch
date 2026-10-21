@@ -1,0 +1,16 @@
+diff --git a/gni/v8.gni b/gni/v8.gni
+index e27e7e9488e7170b858ccc04e14007b80145ea04..31a287952047f8ac88f8aa4c691221436e36d828 100644
+--- a/gni/v8.gni
++++ b/gni/v8.gni
+@@ -193,7 +193,10 @@ if (v8_enable_backtrace == "") {
+ 
+ # Chromium is configured to use the perfetto client library, v8 should also
+ # use perfetto for tracing.
+-if (build_with_chromium) {
++# FlyWeb: V8 12.6 dropped use_perfetto_client_library (a4a0cb9ebe9) because
++# Chromium 126 always uses it; Chromium 116 only does on Linux, and its
++# Perfetto lacks the chrome/v8 protos, so keep the 12.5 condition.
++if (build_with_chromium && use_perfetto_client_library) {
+   v8_use_perfetto = true
+ }
+ 

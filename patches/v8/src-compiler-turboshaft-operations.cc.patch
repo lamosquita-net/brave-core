@@ -1,0 +1,12 @@
+diff --git a/src/compiler/turboshaft/operations.cc b/src/compiler/turboshaft/operations.cc
+index df3afcb126c8e2fe357f99ecdc1ed344e09d0fa9..960173abe6f209d8349c5cfc4edfc482d34d2564 100644
+--- a/src/compiler/turboshaft/operations.cc
++++ b/src/compiler/turboshaft/operations.cc
+@@ -2008,6 +2008,7 @@ bool Operation::IsOnlyUserOf(const Operation& value, const Graph& graph) const {
+   DCHECK_GE(std::count(inputs().begin(), inputs().end(), graph.Index(value)),
+             1);
+   if (value.saturated_use_count.IsOne()) return true;
++  if (value.saturated_use_count.IsSaturated()) return false;
+   return std::count(inputs().begin(), inputs().end(), graph.Index(value)) ==
+          value.saturated_use_count.Get();
+ }

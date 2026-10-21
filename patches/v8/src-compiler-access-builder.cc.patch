@@ -1,0 +1,33 @@
+diff --git a/src/compiler/access-builder.cc b/src/compiler/access-builder.cc
+index de151a32bc3eb33624b43bcd6e25e4033506d9ab..4b6d434e39cc0e1d7208f02d09049d5a527f94c2 100644
+--- a/src/compiler/access-builder.cc
++++ b/src/compiler/access-builder.cc
+@@ -4,6 +4,7 @@
+ 
+ #include "src/compiler/access-builder.h"
+ 
++#include "src/codegen/machine-type.h"
+ #include "src/compiler/type-cache.h"
+ #include "src/handles/handles-inl.h"
+ #include "src/objects/arguments.h"
+@@ -1084,6 +1085,20 @@ FieldAccess AccessBuilder::ForPropertyArraySlot(int index) {
+   return access;
+ }
+ 
++// static
++FieldAccess AccessBuilder::ForPropertyArraySlot(int index,
++                                                Representation representation) {
++  int offset = PropertyArray::OffsetOfElementAt(index);
++  MachineType machine_type =
++      representation.IsHeapObject() || representation.IsDouble()
++          ? MachineType::TaggedPointer()
++          : MachineType::AnyTagged();
++  FieldAccess access = {
++      kTaggedBase, offset,       Handle<Name>(),    OptionalMapRef(),
++      Type::Any(), machine_type, kFullWriteBarrier, "PropertyArraySlot"};
++  return access;
++}
++
+ // static
+ FieldAccess AccessBuilder::ForWeakFixedArraySlot(int index) {
+   int offset = WeakFixedArray::OffsetOfElementAt(index);

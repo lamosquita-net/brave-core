@@ -1,0 +1,23 @@
+diff --git a/third_party/blink/renderer/platform/scheduler/public/thread_scheduler.h b/third_party/blink/renderer/platform/scheduler/public/thread_scheduler.h
+index 5f4ce0829b3621c532a865cbe95a403ddaff32e8..c04e970ebed9e648bb52a746d1c5f8b7d7d9f329 100644
+--- a/third_party/blink/renderer/platform/scheduler/public/thread_scheduler.h
++++ b/third_party/blink/renderer/platform/scheduler/public/thread_scheduler.h
+@@ -68,10 +68,16 @@ class PLATFORM_EXPORT ThreadScheduler {
+   // Returns a task runner for kV8 tasks. Can be called from any thread.
+   virtual scoped_refptr<base::SingleThreadTaskRunner> V8TaskRunner() = 0;
+ 
+-  // Returns a task runner for kV8LowPriority tasks. Can be called from any
++  // Returns a task runner for V8 user visible tasks. Can be called from any
+   // thread.
+   virtual scoped_refptr<base::SingleThreadTaskRunner>
+-  V8LowPriorityTaskRunner() {
++  V8UserVisibleTaskRunner() {
++    return nullptr;
++  }
++
++  // Returns a task runner for V8 best effort tasks. Can be called from any
++  // thread.
++  virtual scoped_refptr<base::SingleThreadTaskRunner> V8BestEffortTaskRunner() {
+     return nullptr;
+   }
+ 

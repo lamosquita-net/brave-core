@@ -1,0 +1,52 @@
+diff --git a/third_party/blink/renderer/platform/scheduler/main_thread/main_thread_scheduler_impl.cc b/third_party/blink/renderer/platform/scheduler/main_thread/main_thread_scheduler_impl.cc
+index 290bfd86eca092b3869246e083fa6d4e84e7244a..95c56bb83da4add35561bfc3b1079b92b69b76cc 100644
+--- a/third_party/blink/renderer/platform/scheduler/main_thread/main_thread_scheduler_impl.cc
++++ b/third_party/blink/renderer/platform/scheduler/main_thread/main_thread_scheduler_impl.cc
+@@ -298,11 +298,16 @@ MainThreadSchedulerImpl::MainThreadSchedulerImpl(
+ 
+   v8_task_queue_ = NewTaskQueue(MainThreadTaskQueue::QueueCreationParams(
+       MainThreadTaskQueue::QueueType::kV8));
+-  v8_low_priority_task_queue_ = NewTaskQueue(
++  v8_user_visible_task_queue_ = NewTaskQueue(
+       MainThreadTaskQueue::QueueCreationParams(
+-          MainThreadTaskQueue::QueueType::kV8LowPriority)
++          MainThreadTaskQueue::QueueType::kV8UserVisible)
+           .SetPrioritisationType(
+               MainThreadTaskQueue::QueueTraits::PrioritisationType::kLow));
++  v8_best_effort_task_queue_ = NewTaskQueue(
++      MainThreadTaskQueue::QueueCreationParams(
++          MainThreadTaskQueue::QueueType::kV8BestEffort)
++          .SetPrioritisationType(
++              MainThreadTaskQueue::QueueTraits::PrioritisationType::kBestEffort));
+   non_waking_task_queue_ =
+       NewTaskQueue(MainThreadTaskQueue::QueueCreationParams(
+                        MainThreadTaskQueue::QueueType::kNonWaking)
+@@ -310,8 +315,10 @@ MainThreadSchedulerImpl::MainThreadSchedulerImpl(
+ 
+   v8_task_runner_ =
+       v8_task_queue_->CreateTaskRunner(TaskType::kMainThreadTaskQueueV8);
+-  v8_low_priority_task_runner_ = v8_low_priority_task_queue_->CreateTaskRunner(
+-      TaskType::kMainThreadTaskQueueV8LowPriority);
++  v8_user_visible_task_runner_ = v8_user_visible_task_queue_->CreateTaskRunner(
++      TaskType::kMainThreadTaskQueueV8UserVisible);
++  v8_best_effort_task_runner_ = v8_best_effort_task_queue_->CreateTaskRunner(
++      TaskType::kMainThreadTaskQueueV8BestEffort);
+   control_task_runner_ = helper_.ControlMainThreadTaskQueue()->CreateTaskRunner(
+       TaskType::kMainThreadTaskQueueControl);
+   non_waking_task_runner_ = non_waking_task_queue_->CreateTaskRunner(
+@@ -2033,8 +2040,13 @@ MainThreadSchedulerImpl::V8TaskRunner() {
+ }
+ 
+ scoped_refptr<base::SingleThreadTaskRunner>
+-MainThreadSchedulerImpl::V8LowPriorityTaskRunner() {
+-  return v8_low_priority_task_runner_;
++MainThreadSchedulerImpl::V8UserVisibleTaskRunner() {
++  return v8_user_visible_task_runner_;
++}
++
++scoped_refptr<base::SingleThreadTaskRunner>
++MainThreadSchedulerImpl::V8BestEffortTaskRunner() {
++  return v8_best_effort_task_runner_;
+ }
+ 
+ scoped_refptr<base::SingleThreadTaskRunner>

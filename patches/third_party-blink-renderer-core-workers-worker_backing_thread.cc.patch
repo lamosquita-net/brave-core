@@ -1,0 +1,14 @@
+diff --git a/third_party/blink/renderer/core/workers/worker_backing_thread.cc b/third_party/blink/renderer/core/workers/worker_backing_thread.cc
+index dfadbe193756be8780b65ca331242f9bf33cfdee..e4f19e1d3b51418542dedda0cedc311d40fe6518 100644
+--- a/third_party/blink/renderer/core/workers/worker_backing_thread.cc
++++ b/third_party/blink/renderer/core/workers/worker_backing_thread.cc
+@@ -123,7 +123,8 @@ void WorkerBackingThread::InitializeOnBackingThread(
+   DCHECK(!isolate_);
+   ThreadScheduler* scheduler = BackingThread().Scheduler();
+   isolate_ = V8PerIsolateData::Initialize(
+-      scheduler->V8TaskRunner(), scheduler->V8LowPriorityTaskRunner(),
++      scheduler->V8TaskRunner(), scheduler->V8UserVisibleTaskRunner(),
++      scheduler->V8BestEffortTaskRunner(),
+       V8PerIsolateData::V8ContextSnapshotMode::kDontUseSnapshot, nullptr,
+       nullptr);
+   scheduler->SetV8Isolate(isolate_);
