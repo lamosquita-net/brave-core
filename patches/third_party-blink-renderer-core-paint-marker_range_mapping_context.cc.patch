@@ -1,0 +1,17 @@
+diff --git a/third_party/blink/renderer/core/paint/marker_range_mapping_context.cc b/third_party/blink/renderer/core/paint/marker_range_mapping_context.cc
+index 2c5516b3759c8c32b22b49e59663aeab614491a7..dae81c586122afdda2dfdcaa25fa62d2cad34727 100644
+--- a/third_party/blink/renderer/core/paint/marker_range_mapping_context.cc
++++ b/third_party/blink/renderer/core/paint/marker_range_mapping_context.cc
+@@ -22,7 +22,11 @@ MarkerRangeMappingContext::DOMToTextContentOffsetMapper::GetMappingUnits(
+   const OffsetMapping* const offset_mapping =
+       OffsetMapping::GetFor(layout_object);
+   DCHECK(offset_mapping);
+-  return offset_mapping->GetMappingUnitsForLayoutObject(*layout_object);
++  if (RuntimeEnabledFeatures::PaintHighlightsForFirstLetterEnabled()) {
++    return offset_mapping->GetMappingUnitsForNode(*layout_object->GetNode());
++  } else {
++    return offset_mapping->GetMappingUnitsForLayoutObject(*layout_object);
++  }
+ }
+ 
+ unsigned
