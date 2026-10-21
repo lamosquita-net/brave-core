@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/bindings/core/v8/dom_wrapper_world_test.cc b/third_party/blink/renderer/bindings/core/v8/dom_wrapper_world_test.cc
-index f1a9dd2addbb7eb7ed926557e9f2a8521ab964e3..ab2b043a758dc526dcafb8bdeb69bc18e40184ea 100644
+index f1a9dd2addbb7eb7ed926557e9f2a8521ab964e3..120b3eb44a5118a3a29216d12039dc49d3542d8f 100644
 --- a/third_party/blink/renderer/bindings/core/v8/dom_wrapper_world_test.cc
 +++ b/third_party/blink/renderer/bindings/core/v8/dom_wrapper_world_test.cc
 @@ -38,9 +38,11 @@ void WorkerThreadFunc(
@@ -16,7 +16,7 @@ index f1a9dd2addbb7eb7ed926557e9f2a8521ab964e3..ab2b043a758dc526dcafb8bdeb69bc18
    Vector<scoped_refptr<DOMWrapperWorld>> worlds;
    DOMWrapperWorld::AllWorldsInCurrentThread(worlds);
    EXPECT_EQ(worlds.size(), initial_worlds.size() + 2);
-@@ -94,11 +96,14 @@ TEST(DOMWrapperWorldTest, Basic) {
+@@ -94,14 +96,17 @@ TEST(DOMWrapperWorldTest, Basic) {
  
    // Worker worlds
    auto worker_world1 =
@@ -29,8 +29,14 @@ index f1a9dd2addbb7eb7ed926557e9f2a8521ab964e3..ab2b043a758dc526dcafb8bdeb69bc18
 +                              DOMWrapperWorld::WorldType::kWorkerOrWorklet);
    auto worker_world3 =
 -      DOMWrapperWorld::Create(isolate, DOMWrapperWorld::WorldType::kWorker);
+-  EXPECT_TRUE(worker_world1->IsWorkerWorld());
+-  EXPECT_TRUE(worker_world2->IsWorkerWorld());
+-  EXPECT_TRUE(worker_world3->IsWorkerWorld());
 +      DOMWrapperWorld::Create(isolate,
 +                              DOMWrapperWorld::WorldType::kWorkerOrWorklet);
-   EXPECT_TRUE(worker_world1->IsWorkerWorld());
-   EXPECT_TRUE(worker_world2->IsWorkerWorld());
-   EXPECT_TRUE(worker_world3->IsWorkerWorld());
++  EXPECT_TRUE(worker_world1->IsWorkerOrWorkletWorld());
++  EXPECT_TRUE(worker_world2->IsWorkerOrWorkletWorld());
++  EXPECT_TRUE(worker_world3->IsWorkerOrWorkletWorld());
+   HashSet<int32_t> worker_world_ids;
+   EXPECT_TRUE(
+       worker_world_ids.insert(worker_world1->GetWorldId()).is_new_entry);
