@@ -1,0 +1,27 @@
+diff --git a/third_party/blink/renderer/core/style/computed_style.cc b/third_party/blink/renderer/core/style/computed_style.cc
+index bc061ec223ea93f74982b9ab4a2119f548caf978..6950dc13a754e3ca69ecfcbc9b58294661ee1e24 100644
+--- a/third_party/blink/renderer/core/style/computed_style.cc
++++ b/third_party/blink/renderer/core/style/computed_style.cc
+@@ -2543,11 +2543,17 @@ blink::Color ComputedStyle::VisitedDependentContextPaint(
+   if (!context_visited_paint.HasColor()) {
+     return unvisited_color;
+   }
+-  if (ShouldForceColor(context_visited_paint.GetColor())) {
+-    return GetInternalForcedVisitedCurrentColor(nullptr);
+-  }
+-  return context_visited_paint.GetColor().Resolve(
+-      GetInternalVisitedCurrentColor(), UsedColorScheme(), nullptr);
++  blink::Color visited_color =
++      ShouldForceColor(context_visited_paint.GetColor())
++          ? GetInternalForcedVisitedCurrentColor(nullptr)
++          : context_visited_paint.GetColor().Resolve(
++                GetInternalVisitedCurrentColor(), UsedColorScheme(), nullptr);
++  // Take the alpha from the unvisited color and only the RGB values from the
++  // visited color, as VisitedDependentColor() does, so that the alpha of a
++  // :visited style cannot reveal the history.
++  return Color::FromColorSpace(visited_color.GetColorSpace(),
++                               visited_color.Param0(), visited_color.Param1(),
++                               visited_color.Param2(), unvisited_color.Alpha());
+ }
+ 
+ blink::Color ComputedStyle::ResolvedColor(const StyleColor& color,
