@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/document.cc b/third_party/blink/renderer/core/dom/document.cc
-index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..f537e125ff8789b117d39dd771a309708196fd2a 100644
+index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..28f1e3c1d3adfbe8694904204984be3a2d74ded6 100644
 --- a/third_party/blink/renderer/core/dom/document.cc
 +++ b/third_party/blink/renderer/core/dom/document.cc
 @@ -4767,13 +4767,25 @@ void Document::ProcessBaseElement() {
@@ -35,3 +35,18 @@ index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..f537e125ff8789b117d39dd771a30970
    }
  
    AtomicString old_base_target = base_target_;
+@@ -7989,11 +8001,11 @@ void Document::AddToTopLayer(Element* element, const Element* before) {
+     }
+   }
+ 
+-  DCHECK(!IsScheduledForTopLayerRemoval(element));
+-  DCHECK(!before || top_layer_elements_.Contains(before));
++  CHECK(!IsScheduledForTopLayerRemoval(element));
++  CHECK(!before || top_layer_elements_.Contains(before));
+ 
+   if (before) {
+-    DCHECK(element->IsBackdropPseudoElement())
++    CHECK(element->IsBackdropPseudoElement())
+         << "If this invariant changes, we might need to revisit Container "
+            "Queries for top layer elements.";
+     wtf_size_t before_position = top_layer_elements_.Find(before);

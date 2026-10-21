@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/anchor_position_visibility_observer.cc b/third_party/blink/renderer/core/layout/anchor_position_visibility_observer.cc
-index d855157e9cfd4022676d00b4af706db2e7f68b4c..fd2ad6fc5dce55b4ba5d9f697ce48621fc92c3f8 100644
+index d855157e9cfd4022676d00b4af706db2e7f68b4c..7782da915ecd43420d14df5d20b18f788a3e3e8b 100644
 --- a/third_party/blink/renderer/core/layout/anchor_position_visibility_observer.cc
 +++ b/third_party/blink/renderer/core/layout/anchor_position_visibility_observer.cc
 @@ -16,9 +16,7 @@ namespace blink {
@@ -13,3 +13,13 @@ index d855157e9cfd4022676d00b4af706db2e7f68b4c..fd2ad6fc5dce55b4ba5d9f697ce48621
  
  void AnchorPositionVisibilityObserver::MonitorAnchor(const Element* anchor) {
    if (anchor_element_) {
+@@ -53,6 +51,9 @@ void AnchorPositionVisibilityObserver::MonitorAnchor(const Element* anchor) {
+     SetLayerInvisible(LayerPositionVisibility::kAnchorsIntersectionVisible,
+                       false);
+     SetLayerInvisible(LayerPositionVisibility::kChainedAnchorsVisible, false);
++    // If there is no anchor, reset kAnchorsCssVisible so a previously
++    // invisible anchor no longer hides the anchored element (05730fe4c1c).
++    SetLayerInvisible(LayerPositionVisibility::kAnchorsCssVisible, false);
+   }
+ }
+ 

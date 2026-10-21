@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/style_engine.cc b/third_party/blink/renderer/core/css/style_engine.cc
-index c2ce887b549a64a91c51778148791c277096cc21..fe3bc803668b630ea9953c910784c4598e0f5696 100644
+index c2ce887b549a64a91c51778148791c277096cc21..6d75a3f2f46400a17e733fe7ce72772c884c06fa 100644
 --- a/third_party/blink/renderer/core/css/style_engine.cc
 +++ b/third_party/blink/renderer/core/css/style_engine.cc
 @@ -702,13 +702,11 @@ void StyleEngine::UpdateCounterStyles() {
@@ -36,6 +36,23 @@ index c2ce887b549a64a91c51778148791c277096cc21..fe3bc803668b630ea9953c910784c459
    }
  }
  
+@@ -4434,11 +4432,11 @@ bool InvalidatePositionTryNames(Element* root,
+     if (auto* element = DynamicTo<Element>(current)) {
+       if (OutOfFlowData* data = element->GetOutOfFlowData()) {
+         if (data->InvalidatePositionTryNames(try_names)) {
+-          LayoutObject* layout_object = element->GetLayoutObject();
+-          CHECK(layout_object);
+-          layout_object->SetNeedsLayoutAndFullPaintInvalidation(
+-              layout_invalidation_reason::kAnchorPositioning);
+-          invalidated = true;
++          if (LayoutObject* layout_object = element->GetLayoutObject()) {
++            layout_object->SetNeedsLayoutAndFullPaintInvalidation(
++                layout_invalidation_reason::kAnchorPositioning);
++            invalidated = true;
++          }
+         }
+       }
+       if (ComputedStyle::NullifyEnsured(element->GetComputedStyle()) ==
 @@ -4456,11 +4454,6 @@ bool InvalidatePositionTryNames(Element* root,
  }  // namespace
  
