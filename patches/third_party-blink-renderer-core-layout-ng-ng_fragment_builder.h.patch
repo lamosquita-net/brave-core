@@ -1,18 +1,38 @@
 diff --git a/third_party/blink/renderer/core/layout/ng/ng_fragment_builder.h b/third_party/blink/renderer/core/layout/ng/ng_fragment_builder.h
-index 71b36a65b3772739a738481b925601a756971569..8803959a62da58475ac401b7f9f57bd05bb87630 100644
+index 71b36a65b3772739a738481b925601a756971569..dfde4316b09ec083244418cd2255f841f648d704 100644
 --- a/third_party/blink/renderer/core/layout/ng/ng_fragment_builder.h
 +++ b/third_party/blink/renderer/core/layout/ng/ng_fragment_builder.h
-@@ -205,9 +205,6 @@ class CORE_EXPORT NGFragmentBuilder {
-                                   NGLogicalStaticPosition::BlockEdge =
-                                       NGLogicalStaticPosition::kBlockStart);
+@@ -66,6 +66,9 @@ class CORE_EXPORT NGFragmentBuilder {
+   }
+   TextDirection Direction() const { return writing_direction_.Direction(); }
  
++  // Return true if this is a builder for the root fragment.
++  bool IsRoot() const;
++
+   // Store the previous break token, if one exists.
+   void SetPreviousBreakToken(const NGBlockBreakToken* break_token) {
+     previous_break_token_ = break_token;
+@@ -198,15 +201,15 @@ class CORE_EXPORT NGFragmentBuilder {
+   // NGOutOfFlowLayoutPart(container_style, builder).Run();
+   //
+   // See layout part for builder interaction.
++  // Top-layer nodes are skipped unless |allow_top_layer_nodes|: the
++  // NGOutOfFlowLayoutPart of the root adds them last (upstream 1624b1441b9).
+   void AddOutOfFlowChildCandidate(NGBlockNode,
+                                   const LogicalOffset& child_offset,
+                                   NGLogicalStaticPosition::InlineEdge =
+                                       NGLogicalStaticPosition::kInlineStart,
+                                   NGLogicalStaticPosition::BlockEdge =
+-                                      NGLogicalStaticPosition::kBlockStart);
+-
 -  void AddOutOfFlowChildCandidate(
 -      const NGLogicalOutOfFlowPositionedNode& candidate);
--
++                                      NGLogicalStaticPosition::kBlockStart,
++                                  bool allow_top_layer_nodes = false);
+ 
    // This should only be used for inline-level OOF-positioned nodes.
    // |inline_container_direction| is the current text direction for determining
-   // the correct static-position.
-@@ -227,6 +224,8 @@ class CORE_EXPORT NGFragmentBuilder {
+@@ -227,6 +230,8 @@ class CORE_EXPORT NGFragmentBuilder {
    void SwapOutOfFlowPositionedCandidates(
        HeapVector<NGLogicalOutOfFlowPositionedNode>* candidates);
  
@@ -21,7 +41,7 @@ index 71b36a65b3772739a738481b925601a756971569..8803959a62da58475ac401b7f9f57bd0
    // Out-of-flow positioned elements inside a nested fragmentation context
    // are laid out once they've reached the outermost fragmentation context.
    // However, once at the outer context, they will get laid out inside the
-@@ -271,11 +270,6 @@ class CORE_EXPORT NGFragmentBuilder {
+@@ -271,11 +276,6 @@ class CORE_EXPORT NGFragmentBuilder {
      return !multicols_with_pending_oofs_.empty();
    }
  
@@ -33,7 +53,7 @@ index 71b36a65b3772739a738481b925601a756971569..8803959a62da58475ac401b7f9f57bd0
    // This method should only be used within the inline layout algorithm. It is
    // used to convert all OOF-positioned candidates to descendants.
    //
-@@ -575,6 +569,8 @@ class CORE_EXPORT NGFragmentBuilder {
+@@ -575,6 +575,8 @@ class CORE_EXPORT NGFragmentBuilder {
    bool has_out_of_flow_in_fragmentainer_subtree_ = false;
    bool disable_oof_descendants_propagation_ = false;
  

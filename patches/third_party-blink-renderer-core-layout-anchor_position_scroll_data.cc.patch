@@ -1,9 +1,9 @@
 diff --git a/third_party/blink/renderer/core/layout/anchor_position_scroll_data.cc b/third_party/blink/renderer/core/layout/anchor_position_scroll_data.cc
 new file mode 100644
-index 0000000000000000000000000000000000000000..70f2880e98779ced44e39313e87d4f948390aedf
+index 0000000000000000000000000000000000000000..f715cfefeb490577082891b93c5fbf6fd7894999
 --- /dev/null
 +++ b/third_party/blink/renderer/core/layout/anchor_position_scroll_data.cc
-@@ -0,0 +1,307 @@
+@@ -0,0 +1,309 @@
 +// Copyright 2022 The Chromium Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -106,8 +106,10 @@ index 0000000000000000000000000000000000000000..70f2880e98779ced44e39313e87d4f94
 +      if (container != anchor && container != bounding_container &&
 +          (!RuntimeEnabledFeatures::ScrollNodeForOverflowHiddenEnabled() ||
 +           // No need to adjust if the scroll container can't scroll anything.
-+           To<LayoutBox>(container)->HasScrollableOverflowX() ||
-+           To<LayoutBox>(container)->HasScrollableOverflowY())) {
++           // FlyWeb: upstream HasScrollableOverflow() is the 116
++           // HasLayoutOverflow() (renamed later). HasScrollableOverflowX/Y()
++           // also require overflow:auto/scroll and skipped overflow:hidden.
++           To<LayoutBox>(container)->HasLayoutOverflow())) {
 +        result.adjustment_container_ids.push_back(
 +            scrollable_area->GetScrollElementId());
 +        result.accumulated_adjustment += scrollable_area->GetScrollOffset();

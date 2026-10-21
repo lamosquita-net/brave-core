@@ -1,5 +1,5 @@
 diff --git a/cc/trees/property_tree.cc b/cc/trees/property_tree.cc
-index 5007b751eb1bc8cea83d94b8e4f4130019fadd0e..e22a2ba9310c128262a7cafec5360d8db248238f 100644
+index 5007b751eb1bc8cea83d94b8e4f4130019fadd0e..6c5e7c851205cda1963aecf755d8e6cf65081d5a 100644
 --- a/cc/trees/property_tree.cc
 +++ b/cc/trees/property_tree.cc
 @@ -40,21 +40,13 @@ void AnimationUpdateOnMissingPropertyNodeUMALog(bool missing_property_node) {
@@ -199,6 +199,12 @@ index 5007b751eb1bc8cea83d94b8e4f4130019fadd0e..e22a2ba9310c128262a7cafec5360d8d
 +      // blink::AnchorPositionScrollData::AccmulatedOffset().
 +      accumulated_offset -= AnchorPositionOffset(
 +          container_transform, max_updated_node_id, update_data, visited);
++    }
++    if (container_transform_id > max_updated_node_id) {
++      // The adjustment depends on a later transform node that may contain
++      // stale data. See UpdateAllTransforms() and UpdateTransforms() for how
++      // stale forward dependencies are handled.
++      update_data->stale_forward_dependencies.insert(container_transform_id);
      }
 -    const TransformNode* transform_node = Node(scroll_node->transform_id);
 -    // We don't ever expect that an anchor node or any of its scrolling
@@ -206,18 +212,12 @@ index 5007b751eb1bc8cea83d94b8e4f4130019fadd0e..e22a2ba9310c128262a7cafec5360d8d
 -    DCHECK(scroll_node->transform_id != kInvalidPropertyNodeId);
 -    accumulated_scroll_offset +=
 -        transform_node->scroll_offset.OffsetFromOrigin();
-+    if (container_transform_id > max_updated_node_id) {
-+      // The adjustment depends on a later transform node that may contain
-+      // stale data. See UpdateAllTransforms() and UpdateTransforms() for how
-+      // stale forward dependencies are handled.
-+      update_data->stale_forward_dependencies.insert(container_transform_id);
-+    }
-+  }
+   }
+-  return data->accumulated_scroll_origin - accumulated_scroll_offset;
 +  gfx::Vector2dF result = data->accumulated_scroll_origin - accumulated_offset;
 +  if (!data->needs_scroll_adjustment_in_x) {
 +    result.set_x(0);
-   }
--  return data->accumulated_scroll_origin - accumulated_scroll_offset;
++  }
 +  if (!data->needs_scroll_adjustment_in_y) {
 +    result.set_y(0);
 +  }
@@ -248,3 +248,18 @@ index 5007b751eb1bc8cea83d94b8e4f4130019fadd0e..e22a2ba9310c128262a7cafec5360d8d
      // Make sure the damage rect is tracked.
      node->transform_changed = true;
    }
+@@ -1847,8 +1927,12 @@ bool ScrollTree::SetScrollOffset(ElementId id,
+   }
+ 
+   if (property_trees()->is_active()) {
+-    DCHECK(GetSyncedScrollOffset(id));
+-    return GetSyncedScrollOffset(id)->SetCurrent(scroll_offset);
++    // FlyWeb (FM.28, upstream 14c9714ba83e): tolerate a missing synced scroll
++    // offset, as for the scroll nodes of overflow:hidden scrollers
++    // (ScrollNodeForOverflowHidden).
++    if (auto* synced_scroll_offset = GetSyncedScrollOffset(id)) {
++      return synced_scroll_offset->SetCurrent(scroll_offset);
++    }
+   }
+ 
+   return false;
