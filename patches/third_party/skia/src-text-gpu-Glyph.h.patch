@@ -1,0 +1,32 @@
+diff --git a/src/text/gpu/Glyph.h b/src/text/gpu/Glyph.h
+index 2c6f828ca6f9941b1dc8d73d428370b11d1d52bd..54e571b4a46fd7a531805cca476e199ee1bf2c6b 100644
+--- a/src/text/gpu/Glyph.h
++++ b/src/text/gpu/Glyph.h
+@@ -34,9 +34,26 @@ public:
+         SkUNREACHABLE;
+     }
+ 
+-    Glyph(SkPackedGlyphID packedGlyphID) : fPackedID(packedGlyphID) {}
++    // A glyph lives in the atlas of one mask format. The same SkPackedGlyphID can be drawn by
++    // sub runs of different formats, so the format is part of the key (crbug 491421267).
++    struct Key {
++        Key(SkPackedGlyphID id, skgpu::MaskFormat format) : fPackedID(id), fMaskFormat(format) {}
++
++        SkPackedGlyphID fPackedID;
++        skgpu::MaskFormat fMaskFormat;
++
++        bool operator==(const Key& that) const {
++            return fPackedID == that.fPackedID && fMaskFormat == that.fMaskFormat;
++        }
++        uint32_t hash() const { return fPackedID.hash(); }
++    };
++
++    Glyph(SkPackedGlyphID packedGlyphID, skgpu::MaskFormat maskFormat)
++            : fPackedID(packedGlyphID), fMaskFormat(maskFormat), fKey(packedGlyphID, maskFormat) {}
+ 
+     const SkPackedGlyphID       fPackedID;
++    const skgpu::MaskFormat     fMaskFormat;
++    const Key                   fKey;
+     skgpu::AtlasLocator         fAtlasLocator;
+ };
+ 
