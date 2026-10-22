@@ -473,7 +473,8 @@ export const IconButtonSideText = styled('label') <IconButtonSideTextProps>`
   align-items: center;
   padding-right: ${p => p.textDirection === 'ltr' && spacing.s};
   padding-left: ${p => p.textDirection === 'rtl' && spacing.s};
-  color: white;
+  /* FlyWeb: the container's ink (black on our light backgrounds), not white. */
+  color: inherit;
   cursor: pointer;
   user-select: none;
   width: max-content;

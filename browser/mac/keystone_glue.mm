@@ -231,19 +231,11 @@ NSString* const kVersionKey = @"KSVersion";
 }
 
 + (KeystoneGlue*)defaultKeystoneGlue {
-  static bool sTriedCreatingDefaultKeystoneGlue = false;
-  static KeystoneGlue* sDefaultKeystoneGlue = nil;  // leaked
-
-  if (!sTriedCreatingDefaultKeystoneGlue) {
-    sTriedCreatingDefaultKeystoneGlue = true;
-
-    sDefaultKeystoneGlue = [[KeystoneGlue alloc] init];
-    [sDefaultKeystoneGlue loadParameters];
-    if (![sDefaultKeystoneGlue loadKeystoneRegistration]) {
-      sDefaultKeystoneGlue = nil;
-    }
-  }
-  return sDefaultKeystoneGlue;
+  // FlyWeb: updates only come through Sparkle from our own appcast (softmac
+  // FlyWeb/servidor/actualizaciones). Brave's Keystone registration must never
+  // activate, even if a KSUpdateURL and KeystoneRegistration.framework turned
+  // up in the bundle, so there is no default glue: every caller handles nil.
+  return nil;
 }
 
 - (instancetype)init {

@@ -21,8 +21,8 @@
 #include "brave/browser/update_util.h"
 #include "brave/common/brave_channel_info.h"
 #include "brave/components/constants/brave_switches.h"
+#include "brave/components/version_info/version_info.h"
 #include "chrome/common/channel_info.h"
-#include "chrome/common/chrome_constants.h"
 
 #if !defined(__has_feature) || !__has_feature(objc_arc)
 #error "This file requires ARC support."
@@ -34,9 +34,9 @@ std::string GetUpdateChannel() {
   std::string channel_name = brave::GetChannelName();
   if (channel_name == "release")
     channel_name = "stable";
-  return base::SysInfo::OperatingSystemArchitecture() == "x86_64"
-             ? channel_name
-             : channel_name + "-arm64";
+  // FlyWeb is x86_64 only (it runs under Rosetta on Apple silicon), so there
+  // is no "-arm64" feed.
+  return channel_name;
 }
 
 NSString* GetVersionFromAppcastItem(id item) {
@@ -297,7 +297,11 @@ std::string GetDescriptionFromAppcastItem(id item) {
     // then don't even bother comparing versions.
     status = kAutoupdateInstalled;
   } else {
-    NSString* currentVersion = base::SysUTF8ToNSString(chrome::kChromeVersion);
+    // FlyWeb: CFBundleShortVersionString on disk is FlyWeb's version (2.0.0),
+    // so compare with ours; chrome::kChromeVersion never changes between
+    // FlyWeb releases and an update applied by Sparkle went unnoticed.
+    NSString* currentVersion =
+        base::SysUTF8ToNSString(version_info::GetFlyWebVersion());
     if (!version) {
       // If the version on disk could not be determined, assume that
       // whatever's running is current.
@@ -447,8 +451,10 @@ std::string GetDescriptionFromAppcastItem(id item) {
         command->GetSwitchValueASCII(switches::kUpdateFeedURL));
   }
 
-  return [NSString stringWithFormat:@"https://updates.bravesoftware.com/"
-                                    @"sparkle/Brave-Browser/%s/appcast.xml",
+  // FlyWeb: our own appcast, signed with our EdDSA key on bak (softmac
+  // FlyWeb/servidor/actualizaciones). Never Brave's.
+  return [NSString stringWithFormat:@"https://updates.flyweb.lamosquita.net/"
+                                    @"%s/appcast.xml",
                                     GetUpdateChannel().c_str()];
 }
 @end
