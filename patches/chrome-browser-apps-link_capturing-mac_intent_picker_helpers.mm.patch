@@ -1,0 +1,22 @@
+diff --git a/chrome/browser/apps/link_capturing/mac_intent_picker_helpers.mm b/chrome/browser/apps/link_capturing/mac_intent_picker_helpers.mm
+index 4b3fa101820912f6682db0d4a5ff4a4c986b4d16..de89612db576100198b6371da8b7ac52a0eeadb6 100644
+--- a/chrome/browser/apps/link_capturing/mac_intent_picker_helpers.mm
++++ b/chrome/browser/apps/link_capturing/mac_intent_picker_helpers.mm
+@@ -88,10 +88,14 @@ std::optional<IntentPickerAppInfo> FindMacAppForUrl(const GURL& url) {
+     return std::nullopt;
+   }
+ 
+-  SFUniversalLink* link = [[SFUniversalLink alloc] initWithWebpageURL:nsurl];
++  // FlyWeb (LOCAL-8): SFUniversalLink is macOS 10.15+; no universal links on
++  // 10.14.
++  if (@available(macOS 10.15, *)) {
++    SFUniversalLink* link = [[SFUniversalLink alloc] initWithWebpageURL:nsurl];
+ 
+-  if (link) {
+-    return AppInfoForAppUrl(link.applicationURL);
++    if (link) {
++      return AppInfoForAppUrl(link.applicationURL);
++    }
+   }
+ 
+   return std::nullopt;

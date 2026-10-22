@@ -1,0 +1,22 @@
+diff --git a/src/dawn/common/AlignedAlloc.cpp b/src/dawn/common/AlignedAlloc.cpp
+index 364cc200..f7f76bd6 100644
+--- a/src/dawn/common/AlignedAlloc.cpp
++++ b/src/dawn/common/AlignedAlloc.cpp
+@@ -48,6 +48,17 @@ void* AlignedAlloc(size_t size, size_t alignment) {
+     // instead.
+     return memalign(alignment, size);
+ 
++#elif DAWN_PLATFORM_IS(MACOS)
++    // FlyWeb (LOCAL-7, 21-10): aligned_alloc es de macOS 10.15; en 10.14, posix_memalign
++    // (también se libera con free()).
++    if (__builtin_available(macOS 10.15, *)) {
++        return aligned_alloc(alignment, size);
++    }
++    void* ptr = nullptr;
++    // posix_memalign exige un múltiplo de sizeof(void*).
++    size_t memalignAlignment = alignment < sizeof(void*) ? sizeof(void*) : alignment;
++    return posix_memalign(&ptr, memalignAlignment, size) == 0 ? ptr : nullptr;
++
+ #else
+     return aligned_alloc(alignment, size);
+ 

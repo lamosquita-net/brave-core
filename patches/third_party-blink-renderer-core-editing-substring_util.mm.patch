@@ -1,0 +1,20 @@
+diff --git a/third_party/blink/renderer/core/editing/substring_util.mm b/third_party/blink/renderer/core/editing/substring_util.mm
+index 187d669991c10278f169584763f871c901f79076..38192d065c9b63cdc59bddffb79e3cf6734b3315 100644
+--- a/third_party/blink/renderer/core/editing/substring_util.mm
++++ b/third_party/blink/renderer/core/editing/substring_util.mm
+@@ -119,7 +119,14 @@ NSAttributedString* AttributedSubstringFromRange(LocalFrame* frame,
+ 
+     NSFont* font = nil;
+     if (original_font) {
+-      font = [original_font fontWithSize:desired_size];
++      // FlyWeb (LOCAL-8): -[NSFont fontWithSize:] is macOS 10.15+
++      // (unrecognized selector on 10.14, dictionary look-up). As in 116.
++      if (@available(macOS 10.15, *)) {
++        font = [original_font fontWithSize:desired_size];
++      } else {
++        font = [NSFontManager.sharedFontManager convertFont:original_font
++                                                     toSize:desired_size];
++      }
+     }
+ 
+     // If the platform font can't be loaded, or the size is incorrect comparing

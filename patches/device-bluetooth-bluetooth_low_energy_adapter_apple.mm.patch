@@ -1,0 +1,36 @@
+diff --git a/device/bluetooth/bluetooth_low_energy_adapter_apple.mm b/device/bluetooth/bluetooth_low_energy_adapter_apple.mm
+index 9953997b3b1b3c802cdbcc4b9a444afd1e845c17..f96156f2dc1d26fdf028a8aa1627c9fe45d60574 100644
+--- a/device/bluetooth/bluetooth_low_energy_adapter_apple.mm
++++ b/device/bluetooth/bluetooth_low_energy_adapter_apple.mm
+@@ -120,15 +120,23 @@ bool BluetoothLowEnergyAdapterApple::IsPresent() const {
+ 
+ BluetoothAdapter::PermissionStatus
+ BluetoothLowEnergyAdapterApple::GetOsPermissionStatus() const {
+-  switch (CBCentralManager.authorization) {
+-    case CBManagerAuthorizationNotDetermined:
+-      return PermissionStatus::kUndetermined;
+-    case CBManagerAuthorizationRestricted:
+-    case CBManagerAuthorizationDenied:
+-      return PermissionStatus::kDenied;
+-    case CBManagerAuthorizationAllowedAlways:
+-      return PermissionStatus::kAllowed;
++  // FlyWeb (LOCAL-8): CBCentralManager.authorization is macOS 10.15+; on 10.14
++  // it throws and kills the browser (WebAuthn on accounts.google.com). As in 116.
++  if (@available(macOS 10.15, *)) {
++    switch (CBCentralManager.authorization) {
++      case CBManagerAuthorizationNotDetermined:
++        return PermissionStatus::kUndetermined;
++      case CBManagerAuthorizationRestricted:
++      case CBManagerAuthorizationDenied:
++        return PermissionStatus::kDenied;
++      case CBManagerAuthorizationAllowedAlways:
++        return PermissionStatus::kAllowed;
++    }
+   }
++
++  // There are no Core Bluetooth permissions before macOS 10.15 so assume we
++  // always have permission.
++  return PermissionStatus::kAllowed;
+ }
+ 
+ void BluetoothLowEnergyAdapterApple::RequestSystemPermission(

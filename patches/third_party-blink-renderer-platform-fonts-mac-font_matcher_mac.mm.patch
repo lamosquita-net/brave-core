@@ -1,0 +1,13 @@
+diff --git a/third_party/blink/renderer/platform/fonts/mac/font_matcher_mac.mm b/third_party/blink/renderer/platform/fonts/mac/font_matcher_mac.mm
+index f8d0d59d4bba46a917f9db9349243e17a7518ac9..e829c675e83f0ea7d4d5273689dca2f408935b4f 100644
+--- a/third_party/blink/renderer/platform/fonts/mac/font_matcher_mac.mm
++++ b/third_party/blink/renderer/platform/fonts/mac/font_matcher_mac.mm
+@@ -65,7 +65,7 @@ using base::apple::ScopedCFTypeRef;
+ // We don't need localized variation axis name, so we can use
+ // `CTFontCopyVariationAxesInternal()` instead.
+ // Request for public API: FB13788219.
+-extern "C" CFArrayRef CTFontCopyVariationAxesInternal(CTFontRef);
++extern "C" CFArrayRef CTFontCopyVariationAxesInternal(CTFontRef) __attribute__((weak_import));  // FlyWeb (LOCAL-6, 21-10): solo se usa en macOS 13+
+ 
+ namespace blink {
+ 

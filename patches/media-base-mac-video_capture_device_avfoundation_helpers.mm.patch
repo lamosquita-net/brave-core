@@ -1,0 +1,20 @@
+diff --git a/media/base/mac/video_capture_device_avfoundation_helpers.mm b/media/base/mac/video_capture_device_avfoundation_helpers.mm
+index 441579b0aa4ea925e20c0523877df8bb51c0738a..6091fa2339a69d209506963300f9183bd4cd7648 100644
+--- a/media/base/mac/video_capture_device_avfoundation_helpers.mm
++++ b/media/base/mac/video_capture_device_avfoundation_helpers.mm
+@@ -16,6 +16,15 @@ BASE_FEATURE(kUseAVCaptureDeviceTypeExternal,
+ #endif  // BUILDFLAG(IS_MAC)
+ 
+ NSArray<AVCaptureDevice*>* GetVideoCaptureDevices() {
++#if BUILDFLAG(IS_MAC)
++  // FlyWeb (LOCAL-8): the device types and AVCaptureDeviceDiscoverySession are
++  // macOS 10.15+ (null weak constants in an array literal abort on 10.14). As in
++  // 116, 10.14 uses +[AVCaptureDevice devices].
++  if (@available(macOS 10.15, *)) {
++  } else {
++    return [AVCaptureDevice devices];
++  }
++#endif  // BUILDFLAG(IS_MAC)
+   // Camera device types available on all apple platforms.
+   NSArray* captureDeviceTypes = @[ AVCaptureDeviceTypeBuiltInWideAngleCamera ];
+ 

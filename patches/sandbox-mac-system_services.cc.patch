@@ -1,0 +1,24 @@
+diff --git a/sandbox/mac/system_services.cc b/sandbox/mac/system_services.cc
+index eb81a70e4d5d5cd3e6ae9b45f8cd1c795ea76c51..ac9d3e1d54c03cf65bc0ab10ac2adcd4db599ceb 100644
+--- a/sandbox/mac/system_services.cc
++++ b/sandbox/mac/system_services.cc
+@@ -17,7 +17,7 @@ void _LSSetApplicationLaunchServicesServerConnectionStatus(
+ 
+ // See
+ // https://github.com/WebKit/WebKit/blob/24aaedc770d192d03a07ba4a71727274aaa8fc07/Source/WebKit/WebProcess/cocoa/WebProcessCocoa.mm#L840
+-void _CSCheckFixDisable();
++void _CSCheckFixDisable() __attribute__((weak_import));  // FlyWeb (LOCAL-6, 21-10): no existe en 10.14
+ }  // extern "C"
+ 
+ namespace sandbox {
+@@ -39,7 +39,9 @@ void DisableLaunchServices() {
+ }
+ 
+ void DisableCoreServicesCheckFix() {
+-  _CSCheckFixDisable();
++  if (_CSCheckFixDisable) {  // FlyWeb (LOCAL-6, 21-10): débil en 10.14
++    _CSCheckFixDisable();
++  }
+ }
+ 
+ }  // namespace sandbox

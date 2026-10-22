@@ -1,0 +1,21 @@
+diff --git a/chrome/browser/device_reauth/mac/authenticator_mac.mm b/chrome/browser/device_reauth/mac/authenticator_mac.mm
+index 443f753c2bea10cd534a90058d59b105d01a57da..28587ba384eed35619347dec93d44b7c0e0eed11 100644
+--- a/chrome/browser/device_reauth/mac/authenticator_mac.mm
++++ b/chrome/browser/device_reauth/mac/authenticator_mac.mm
+@@ -15,8 +15,15 @@ AuthenticatorMac::~AuthenticatorMac() = default;
+ 
+ bool AuthenticatorMac::CheckIfBiometricsAvailable() {
+   LAContext* context = [[LAContext alloc] init];
++  // FlyWeb (LOCAL-8): ...WithBiometricsOrWatch is macOS 10.15+; on 10.14
++  // canEvaluatePolicy throws "Unknown policy: '4'" (chrome://settings). As in 116.
++  if (@available(macOS 10.15, *)) {
++    return [context
++        canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometricsOrWatch
++                    error:nil];
++  }
+   return [context
+-      canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometricsOrWatch
++      canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics
+                   error:nil];
+ }
+ 

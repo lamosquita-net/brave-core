@@ -66,6 +66,8 @@ async function applyPatches() {
   // way as the upstream ones.
   const flywebRepos = [
     path.join('third_party', 'angle'),
+    // FlyWeb 2.0 (base 128): Metal back end on macOS 10.14 (LOCAL-7).
+    path.join('third_party', 'dawn'),
     path.join('third_party', 'skia'),
     path.join('third_party', 'libvpx', 'source', 'libvpx'),
     // FlyWeb level 131 (FS.17): ML-KEM and X25519MLKEM768 backported from
