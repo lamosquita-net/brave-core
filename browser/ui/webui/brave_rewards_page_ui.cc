@@ -467,8 +467,8 @@ void RewardsDOMHandler::Init() {
     rewards_service_->OnRewardsPageShown();
   }
 
-  // Configure a pref change registrar to update brave://rewards when settings
-  // are changed via brave://settings
+  // Configure a pref change registrar to update flyweb://rewards when settings
+  // are changed via flyweb://settings
   InitPrefChangeRegistrar();
 }
 

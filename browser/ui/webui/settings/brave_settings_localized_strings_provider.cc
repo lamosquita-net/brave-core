@@ -48,30 +48,28 @@ namespace settings {
 namespace {
 
 const char16_t kWebRTCLearnMoreURL[] =
-    u"https://support.brave.com/hc/en-us/articles/"
-    u"360017989132-How-do-I-change-my-Privacy-Settings-#webrtc";
+    u"https://flyweb.lamosquita.net/ayuda/#privacidad";
+// FlyWeb: how FlyWeb is built and the exact source of this copy are in our
+// repositories, not Brave's (MPL-2.0 obligation for the modified files).
 const char16_t kBraveBuildInstructionsUrl[] =
-    u"https://github.com/brave/brave-browser/wiki";
+    u"https://github.com/lamosquita-net/softmac/tree/main/FlyWeb";
 const char16_t kBraveLicenseUrl[] = u"https://mozilla.org/MPL/2.0/";
-const char16_t kBraveReleaseTagPrefix[] =
-    u"https://github.com/brave/brave-browser/releases/tag/v";
+const char16_t kFlyWebSourceTreePrefix[] =
+    u"https://github.com/lamosquita-net/brave-core/tree/";
 const char16_t kGoogleLoginLearnMoreURL[] =
-    u"https://github.com/brave/brave-browser/wiki/"
-    u"Allow-Google-login---Third-Parties-and-Extensions";
+    u"https://flyweb.lamosquita.net/ayuda/#privacidad";
 const char16_t kUnstoppableDomainsLearnMoreURL[] =
-    u"https://github.com/brave/brave-browser/wiki/"
-    u"Resolve-Methods-for-Unstoppable-Domains";
+    u"https://flyweb.lamosquita.net/ayuda/";
 const char16_t kEnsOffchainLookupLearnMoreURL[] =
-    u"https://github.com/brave/brave-browser/wiki/ENS-offchain-lookup";
+    u"https://flyweb.lamosquita.net/ayuda/";
 const char16_t kBraveSyncGuideUrl[] =
-    u"https://support.brave.com/hc/en-us/articles/360047642371-Sync-FAQ";
+    u"https://flyweb.lamosquita.net/ayuda/sincronizar";
 const char16_t kDeAmpLearnMoreUrl[] =
-    u"https://support.brave.com/hc/en-us/articles/8611298579981";
+    u"https://flyweb.lamosquita.net/ayuda/#privacidad";
 const char16_t kDebounceLearnMoreUrl[] =
-    u"https://brave.com/privacy-updates/11-debouncing/";
+    u"https://flyweb.lamosquita.net/ayuda/#privacidad";
 const char16_t kEnableNftDiscoveryLearnMoreUrl[] =
-    u"https://github.com/brave/brave-browser/wiki/"
-    u"NFT-Discovery";
+    u"https://flyweb.lamosquita.net/ayuda/";
 
 void BraveAddCommonStrings(content::WebUIDataSource* html_source,
                            Profile* profile) {
@@ -789,9 +787,10 @@ void BraveAddAboutStrings(content::WebUIDataSource* html_source,
   std::u16string license = l10n_util::GetStringFUTF16(
       IDS_BRAVE_VERSION_UI_LICENSE, kBraveLicenseUrl,
       chrome::kChromeUICreditsURL16, kBraveBuildInstructionsUrl,
-      kBraveReleaseTagPrefix +
-          base::UTF8ToUTF16(
-              version_info::GetBraveVersionWithoutChromiumMajorVersion()));
+      // brave-core commit this copy was built from (build.sh passes it), or
+      // the flyweb branch for builds without it.
+      kFlyWebSourceTreePrefix +
+          base::UTF8ToUTF16(version_info::GetFlyWebSourceCommit()));
   html_source->AddString("aboutProductLicense", license);
 }
 
@@ -812,7 +811,7 @@ void BraveAddLocalizedStrings(content::WebUIDataSource* html_source,
   BravePrivacyHandler::AddLoadTimeData(html_source, profile);
   BraveAddSyncStrings(html_source);
 
-  // Load time data for brave://settings/extensions
+  // Load time data for flyweb://settings/extensions
   html_source->AddBoolean(
       "signInAllowedOnNextStartupInitialValue",
       profile->GetPrefs()->GetBoolean(prefs::kSigninAllowedOnNextStartup));

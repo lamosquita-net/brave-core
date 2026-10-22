@@ -88,7 +88,7 @@ export const WalletSettingsMenu = (props: Props) => {
     const route =
       selectedNetwork.coin === BraveWallet.CoinType.ETH ? 'ethereum' : 'solana'
 
-    chrome.tabs.create({ url: `brave://settings/content/${route}` }, () => {
+    chrome.tabs.create({ url: `flyweb://settings/content/${route}` }, () => {
       if (chrome.runtime.lastError) {
         console.error('tabs.create failed: ' + chrome.runtime.lastError.message)
       }

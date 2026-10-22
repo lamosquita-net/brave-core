@@ -162,7 +162,5 @@ export const ActionBox = styled.div`
   grid-gap: 10px;
   margin-bottom: 40px;
 
-  button {
-    color: white;
-  }
+  /* FlyWeb: buttons keep their own colours on the light card. */
 `

@@ -19,20 +19,6 @@
 
 namespace brave_wallet {
 
-namespace {
-
-bool IsDisabledByPolicy(PrefService* prefs) {
-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
-  DCHECK(prefs);
-  return prefs->IsManagedPreference(prefs::kDisabledByPolicy) &&
-         prefs->GetBoolean(prefs::kDisabledByPolicy);
-#else
-  return false;
-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
-}
-
-}  // namespace
-
 bool IsNativeWalletEnabled() {
   return base::FeatureList::IsEnabled(features::kNativeBraveWalletFeature);
 }
@@ -69,7 +55,10 @@ bool IsTransactionSimulationsEnabled() {
 }
 
 bool IsAllowed(PrefService* prefs) {
-  return !IsDisabledByPolicy(prefs);
+  // FlyWeb: Brave Wallet is always off (no wallet UI, no window.ethereum /
+  // window.solana providers, no Bitcoin or Zcash), with or without the
+  // BraveWalletDisabled policy.
+  return false;
 }
 
 bool IsFilecoinKeyringId(mojom::KeyringId keyring_id) {

@@ -44,31 +44,36 @@ inline constexpr char kMobileNotificationsListUuid[] =
 inline constexpr char kExperimentalListUuid[] =
     "564C3B75-8731-404C-AD7C-5683258BA0B0";
 
+// FlyWeb: own components, signed on bak (softmac FlyWeb/servidor/componentes);
+// Brave's update server needs Brave's private service key. The resources
+// component of the 2.0 has its own ID and key ("recursos-20" in
+// claves-publicas.json): adblock-rust 0.8's resources.json does not work in
+// 1.x's 0.7.9, so 1.x keeps the old ID (brave-sync-shields.md 3.4).
 inline constexpr char kAdBlockResourceComponentName[] =
-    "Brave Ad Block Resources Library";
+    "FlyWeb Shields: resources";
 inline constexpr char kAdBlockResourceComponentId[] =
-    "mfddibmblmbccpadfndgakiopmmhebop";
+    "nilendadbigifkognoeoodppkjkgmppg";
 inline constexpr char kAdBlockResourceComponentBase64PublicKey[] =
-    "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA7Qk6xtml8Siq8RD6cCbd"
-    "JpArt0kMci82W/KYw3KR96y67MZAsKJa8rOV2WC1BIpW539Qgl5b5lMS04cjw+sS"
-    "B7f2ZKM1WOqKNij24nvEKVubunP32u8tbjtzQk9VYNcM2MZMs330eqk7iuBRTvRV"
-    "iSMSeE3ymqp03HFpUGsdtjEBh1A5lroCg41eVnMn1I4GKPvuhT/Qc9Yem5gzXT/3"
-    "n7H6vOGQ2dVBHz44mhgwtiDcsduh+Det6lCE2TgHOhHPdCewklgcoiNXP4zfXxfp"
-    "Py1jbwb4w5KUnHSRelhfDnt+jI3jgHsD4IXdVNE5H5ZAnmcOJttbkRiT8kOVS0rJ"
-    "XwIDAQAB";
+    "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAw2IP9JoOjG9V8kRRJ4gJ"
+    "GkJHJcyrJYu+1RPH3/ZbPh7eGP+4O1pFMy6/z2TubZFtD/K89lX00Hj6kaIQRfcI"
+    "Rns5jS9kyS6alIfHLe4Q7ZljXvCB3sOYik741aUk4DADHXhvMCmSmf5wRriN/Bp0"
+    "stoeCVIWfXSYtOZDZoZeRk+gIhdjL2IR1ArGV4k3GrDMQBhw6AjBhhnDdgkAoCcJ"
+    "3dhWbNyPY37gJUpz8L1/TY1v7wTnQLCklg9cRoa+MXjlD/FrzC2X0ueX7Uj4VWCR"
+    "kuns4YdznxxkypBbFrC/BG+LEoixvI6Bc3wmww9sPpKOww1yU6+XmzxLKTa0MWYt"
+    "fwIDAQAB";
 
 inline constexpr char kAdBlockFilterListCatalogComponentName[] =
-    "Brave Ad Block List Catalog";
+    "FlyWeb Shields: list catalog";
 inline constexpr char kAdBlockFilterListCatalogComponentId[] =
-    "gkboaolpopklhgplhaaiboijnklogmbc";
+    "aafcdjdpmachpbehepncfijpeojclgfc";
 inline constexpr char kAdBlockFilterListCatalogComponentBase64PublicKey[] =
-    "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsAnb1lw5UA1Ww4JIVE8P"
-    "jKNlPogAdFoie+Aczk6ppQ4OrHANxz6oAk1xFuT2W3uhGOc3b/1ydIUMqOIdRFvM"
-    "dEDUvKVeFyNAVXNSouFF7EBLEzcZfFtqoxeIbwEplVISUm+WUbsdVB9MInY3a4O3"
-    "kNNuUijY7bmHzAqWMTrBfenw0Lqv38OfREXCiNq/+Jm/gt7FhyBd2oviXWEGp6as"
-    "UwNavFnj8gQDGVvCf+dse8HRMJn00QH0MOypsZSWFZRmF08ybOu/jTiUo/TuIaHL"
-    "1H8y9SR970LqsUMozu3ioSHtFh/IVgq7Nqy4TljaKsTE+3AdtjiOyHpW9ZaOkA7j"
-    "2QIDAQAB";
+    "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0yDcmadLHX3cwtnyqR7b"
+    "XYyOI9LhUiT+0hp1HbmW/87aHaCGMY9Ng13kTfiI1lgkAwO30eythOCUV8ocmqq7"
+    "HU7qmQZNvq5vMG5Vzg6sp6IADS7FqKHat02aKrw6ZtkhH5aysLkuTP1DFOOYs1Ex"
+    "XA0wuAewHcpsfxMWqOcN+nLvD6PWiNRfb9pUq+8u0gb2GUdqH8gPE+3J128tPvo6"
+    "YMUnYtA0ydEWYG8VZkZJKdfSSTC2dl7eFhWkHiHDB5uJJH6pW0q50ihbeXVtA+eo"
+    "gaab1Q6bjqdtHbkXnLm2Bssgqy/K3Mfb0GTzuOmt6DAW1rpwc1UJYkLYZAdL9t94"
+    "lwIDAQAB";
 
 inline constexpr char kCookieListEnabledHistogram[] =
     "Brave.Shields.CookieListEnabled";

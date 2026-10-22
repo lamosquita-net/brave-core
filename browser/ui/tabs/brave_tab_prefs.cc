@@ -27,7 +27,8 @@ void RegisterBraveProfilePrefs(PrefRegistrySimple* registry) {
   registry->RegisterBooleanPref(kVerticalTabsOnRight, false);
   registry->RegisterBooleanPref(kVerticalTabsShowScrollbar, false);
 
-  registry->RegisterBooleanPref(kSharedPinnedTab, false);
+  // FlyWeb: pinned tabs are shared across windows by default (F7.8).
+  registry->RegisterBooleanPref(kSharedPinnedTab, true);
 }
 
 void MigrateBraveProfilePrefs(PrefService* prefs) {

@@ -6,13 +6,16 @@
 import * as leo from '@brave/leo/tokens/css/variables'
 import styled, { css } from 'styled-components'
 
+import { familia } from '../flyweb/estilos'
+
 export const TileTitle = styled('p')<{}>`
   margin: 0;
   font: ${leo.font.small.semibold};
+  font-family: ${familia};
   text-shadow: ${leo.effect.elevation['02']};
   max-width: 100%;
   height: 17px;
-  color: var(--override-readability-color, white);
+  color: var(--flyweb-texto);
   padding: 0 2px;
   overflow: hidden;
   white-space: nowrap;

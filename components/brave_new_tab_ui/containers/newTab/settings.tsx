@@ -103,7 +103,9 @@ const tabTranslationKeys: TabMap<string> = {
 
 const featureFlagSearchWidget = loadTimeData.getBoolean('featureFlagSearchWidget')
 export default function Settings(props: Props) {
+  // FlyWeb: no Brave News tab (no Brave News at all).
   const allowedTabTypes = React.useMemo(() => tabTypes.filter(t =>
+    t !== TabType.BraveNews &&
     (props.allowBackgroundCustomization || t !== TabType.BackgroundImage) &&
     (featureFlagSearchWidget || t !== TabType.Search)), [props.allowBackgroundCustomization])
   const [activeTab, setActiveTab] = React.useState(props.allowBackgroundCustomization

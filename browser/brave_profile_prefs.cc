@@ -58,6 +58,8 @@
 #include "chrome/common/pref_names.h"
 #include "components/content_settings/core/common/pref_names.h"
 #include "components/embedder_support/pref_names.h"
+// FlyWeb: kOfferTranslateEnabled is used on every platform (step 39), not only Android.
+#include "components/translate/core/browser/translate_pref_names.h"
 #include "components/gcm_driver/gcm_buildflags.h"
 #include "components/password_manager/core/common/password_manager_pref_names.h"
 #include "components/policy/core/common/policy_pref_names.h"
@@ -316,6 +318,11 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
   // Show download prompt by default
   registry->SetDefaultPrefValue(prefs::kPromptForDownload, base::Value(true));
 
+  // FlyWeb: page translation is off by default (Settings > Languages turns it
+  // on). When on, it goes straight to Google, which receives the page text.
+  registry->SetDefaultPrefValue(translate::prefs::kOfferTranslateEnabled,
+                                base::Value(false));
+
   // Not using chrome's web service for resolving navigation errors
   registry->SetDefaultPrefValue(embedder_support::kAlternateErrorPagesEnabled,
                                 base::Value(false));
@@ -369,7 +376,8 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
   registry->RegisterStringPref(kNewTabPageClockFormat, "");
   registry->RegisterBooleanPref(kNewTabPageShowStats, true);
   registry->RegisterBooleanPref(kNewTabPageShowRewards, true);
-  registry->RegisterBooleanPref(kNewTabPageShowBraveTalk, true);
+  // FlyWeb: Brave Talk card hidden on the new tab page by default.
+  registry->RegisterBooleanPref(kNewTabPageShowBraveTalk, false);
   registry->RegisterBooleanPref(kNewTabPageHideAllWidgets, false);
 
 // Private New Tab Page

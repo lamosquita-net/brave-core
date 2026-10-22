@@ -17,6 +17,7 @@
 #include "brave/browser/ui/webui/settings/brave_import_bulk_data_handler.h"
 #include "brave/browser/ui/webui/settings/brave_search_engines_handler.h"
 #include "brave/browser/ui/webui/welcome_page/welcome_dom_handler.h"
+#include "brave/common/brave_channel_info.h"
 #include "brave/components/brave_welcome/common/features.h"
 #include "brave/components/brave_welcome/resources/grit/brave_welcome_generated_map.h"
 #include "brave/components/constants/pref_names.h"
@@ -82,18 +83,6 @@ constexpr webui::LocalizedString kLocalizedStrings[] = {
     {"braveWelcomeHelpWDPAccept", IDS_BRAVE_WELCOME_HELP_WDP_ACCEPT},
     {"braveWelcomeHelpWDPReject", IDS_BRAVE_WELCOME_HELP_WDP_REJECT}};
 
-void OpenJapanWelcomePage(Profile* profile) {
-  DCHECK(profile);
-  Browser* browser = chrome::FindBrowserWithProfile(profile);
-  if (browser) {
-    content::OpenURLParams open_params(
-        GURL("https://brave.com/ja/desktop-ntp-tutorial"), content::Referrer(),
-        WindowOpenDisposition::NEW_BACKGROUND_TAB,
-        ui::PAGE_TRANSITION_AUTO_TOPLEVEL, false);
-    browser->OpenURL(open_params, /*navigation_handle_callback=*/{});
-  }
-}
-
 // Converts Chromium country ID to 2 digit country string
 // For more info see src/components/country_codes/country_codes.h
 std::string CountryIDToCountryString(int country_id) {
@@ -136,17 +125,8 @@ BraveWelcomeUI::BraveWelcomeUI(content::WebUI* web_ui, const std::string& name)
   web_ui->AddMessageHandler(
       std::make_unique<settings::BraveSearchEnginesHandler>(profile));
 
-  // Open additional page in Japanese region
+  // FlyWeb: no extra brave.com tutorial tab for the Japanese region.
   int country_id = country_codes::GetCountryIDFromPrefs(profile->GetPrefs());
-  const bool is_jpn =
-      country_id == country_codes::CountryStringToCountryID("JP");
-  if (!profile->GetPrefs()->GetBoolean(prefs::kHasSeenWelcomePage)) {
-    if (is_jpn) {
-      base::SingleThreadTaskRunner::GetCurrentDefault()->PostDelayedTask(
-          FROM_HERE, base::BindOnce(&OpenJapanWelcomePage, profile),
-          base::Seconds(3));
-    }
-  }
 
   for (const auto& str : kLocalizedStrings) {
     std::u16string l10n_str =
@@ -156,6 +136,10 @@ BraveWelcomeUI::BraveWelcomeUI(content::WebUI* web_ui, const std::string& name)
 
   // Variables considered when determining which onboarding cards to show
   source->AddString("countryString", CountryIDToCountryString(country_id));
+  // FlyWeb: the buttons take the colour of this channel's app icon: purple for
+  // the development builds (not official, icon O1), orange for the rest (M1).
+  source->AddBoolean("flywebDesarrollo",
+                     brave::GetChannelName() == "developer");
   source->AddBoolean(
       "showRewardsCard",
       base::FeatureList::IsEnabled(brave_welcome::features::kShowRewardsCard));

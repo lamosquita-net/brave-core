@@ -5,8 +5,11 @@
 
 #include "components/captive_portal/core/captive_portal_detector.h"
 
-#define kDefaultURL                                           \
-  kDefaultURL[] = "http://detectportal.brave-http-only.com/"; \
+// FlyWeb: detection is off (captive_portal_service.cc). If anything still
+// called the detector, it would get a host that never resolves instead of
+// Brave's detectportal.brave-http-only.com or Google's.
+#define kDefaultURL                                     \
+  kDefaultURL[] = "http://detectportal.flyweb.invalid/"; \
   const char kEmpty
 #include "src/components/captive_portal/core/captive_portal_detector.cc"
 #undef kDefaultURL

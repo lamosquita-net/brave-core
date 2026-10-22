@@ -8,7 +8,7 @@
 
 namespace commands::features {
 
-// This feature enables a page a brave://commands which lists all available
+// This feature enables a page a flyweb://commands which lists all available
 // commands in Brave, and the shortcut for executing them. In future, this will
 // allow configuring the shortcuts for various commands.
 BASE_FEATURE(kBraveCommands, "BraveCommands", base::FEATURE_ENABLED_BY_DEFAULT);

@@ -58,6 +58,9 @@ export default function Button (props: ButtonProps) {
         }
       )}
       disabled={props.isDisabled}
+      // FlyWeb: lets a page restyle its primary buttons (class names are
+      // hashed in release builds).
+      data-primary={props.isPrimary ? '' : undefined}
       aria-label={props.ariaLabel}
       onClick={props.onClick}
     >

@@ -262,7 +262,7 @@ RegisterPolymerTemplateModifications({
       loadTimeData.getString('braveWeb3'),
       '/web3',
       'product-brave-wallet',
-      'wallet',
+      'braveWeb3',
     )
     privacyEl.insertAdjacentElement('afterend', web3El)
 

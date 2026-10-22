@@ -256,6 +256,9 @@ def AddBraveCredits(root, prune_paths, special_cases, prune_dirs,
         os.path.join('brave', 'components', 'filecoin'),
         os.path.join('brave', 'android', 'java', 'org', 'chromium', 'chrome',
                      'browser', 'util'),
+        # FlyWeb: D-DIN typeface of the new tab page and first run.
+        os.path.join('brave', 'components', 'flyweb_ntp', 'resources',
+                     'fuentes'),
     ]
 
     # Add all Android libraries since they're not directly contained

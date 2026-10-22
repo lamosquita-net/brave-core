@@ -8,6 +8,7 @@ import styled, { createGlobalStyle, css } from 'styled-components'
 import { requestAnimationFrameThrottle } from '../../../../common/throttle'
 import { defaultState } from '../../../storage/new_tab_storage'
 import { font, spacing } from '@brave/leo/tokens/css/variables'
+import { familia } from '../flyweb/estilos'
 
 const breakpointLargeBlocks = '980px'
 const breakpointEveryBlock = '870px'
@@ -24,6 +25,8 @@ interface HasImageProps {
   imageHasLoaded: boolean
   imageSrc?: string
   colorForBackground?: string
+  // FlyWeb: our backgrounds are shown as they are, without the dark veil.
+  sinVelo?: boolean
 }
 
 type AppProps = {
@@ -322,12 +325,17 @@ function getBackground(p: HasImageProps) {
   if (p.hasImage && p.imageSrc) {
     // Note: We force percent encoding for ( and ) because Chromium seems to be
     // ignoring the fact that the URL is quoted for these.
+    const url = `url("${p.imageSrc.replaceAll('(', '%28').replaceAll(')', '%29')}")`
+    // FlyWeb: our backgrounds are shown as they are, without the dark veil.
+    if (p.sinVelo) {
+      return url
+    }
     return `linear-gradient(
       rgba(0, 0, 0, 0.8),
       rgba(0, 0, 0, 0) 35%,
       rgba(0, 0, 0, 0) 80%,
       rgba(0, 0, 0, 0.6) 100%
-    ), url("${p.imageSrc.replaceAll('(', '%28').replaceAll(')', '%29')}")`
+    ), ${url}`
   }
 
   return ''
@@ -410,7 +418,8 @@ export const PhotoName = styled('div') <{}>`
   -webkit-font-smoothing: antialiased;
   box-sizing: border-box;
   font: ${font.small.regular};
-  color: white;
+  font-family: ${familia};
+  color: var(--flyweb-pie);
   white-space: nowrap;
 `
 
@@ -437,9 +446,9 @@ export const IconButton = styled('button') <IconButtonProps>`
   outline: none;
   margin: ${p => p.isClickMenu ? '7' : '0 12'}px;
   cursor: pointer;
-  color: var(--override-readability-color, #ffffff);
+  color: var(--flyweb-tinta);
   background-color: transparent;
-  opacity: 0.7;
+  opacity: 0.85;
   transition: opacity 0.15s ease, filter 0.15s ease;
   &:hover {
     opacity: 0.95;
@@ -497,7 +506,9 @@ interface IconButtonContainerProps {
 
 export const IconButtonContainer = styled('div') <IconButtonContainerProps>`
   font: ${font.small.semibold};
-  color: var(--override-readability-color-rgb, 255, 255, 255);
+  font-family: ${familia};
+  font-weight: 700;
+  color: var(--flyweb-tinta);
   margin-right: ${p => p.textDirection === 'ltr' && '8px'};
   margin-left: ${p => p.textDirection === 'rtl' && '8px'};
 

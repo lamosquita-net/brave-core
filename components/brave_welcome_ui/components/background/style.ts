@@ -5,8 +5,7 @@
 
 import styled from 'styled-components'
 
-import hillBgUrl from '../../assets/hill.webp'
-import pyramidBgUrl from '../../assets/pyramid.webp'
+import { boton, familia } from '../flyweb/estilo'
 
 export const Box = styled.div`
   .content-box {
@@ -18,6 +17,38 @@ export const Box = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  /* FlyWeb: every step's root sets white text in Brave's heading font; on our
+     light photograph and card the text is black D-DIN (prototype). */
+  .content-box > * {
+    color: #000 !important;
+    font-family: ${familia} !important;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* FlyWeb: buttons in the project's colours instead of Brave's blue. The
+     primary background, its hover and the focus ring come from these
+     variables (web-components/button); the other buttons and "Skip" in black,
+     like the card's text. */
+  .content-box {
+    --interactive5: ${boton.fondo};
+    --interactive4: ${boton.encima};
+    --interactive6: ${boton.encima};
+    --focus-border: ${boton.fondo};
+  }
+  .content-box button {
+    color: #000;
+    font-family: ${familia};
+  }
+  /* The step titles are h1: Brave's text_defaults_md.css (WebUI) sets Poppins
+     on every heading, so they do not inherit our typeface. */
+  .content-box h1, .content-box h2, .content-box h3,
+  .content-box h4, .content-box h5, .content-box h6 {
+    font-family: ${familia} !important;
+  }
+  .content-box button[data-primary] {
+    color: ${boton.texto};
   }
 
   .background-img {
@@ -33,86 +64,4 @@ export const Box = styled.div`
       opacity: 1;
     }
   }
-
-  .hills-container {
-    position: fixed;
-    width: 100vw;
-    height: 100%;
-    z-index: 2;
-    opacity: 0;
-  }
-
-  .stars-container {
-    position: fixed;
-    width: 100vw;
-    height: 100%;
-    z-index: 50;
-    opacity: 0;
-
-    svg {
-      width: 100%;
-      height: auto;
-      position: absolute;
-      transform-origin: center;
-    }
-
-    .stars01 {
-      bottom: 0;
-      transform: scale(1.14);
-      filter: blur(3px);
-    }
-
-    .stars02 {
-      top: 10%;
-    }
-
-    .stars03 {
-      top: 15%;
-    }
-
-    .stars04 {
-      top: 30%;
-      transform: scale(0.8);
-      opacity: 0;
-    }
-  }
-
-  .hills-base {
-    width: 100%;
-    height: 100%;
-    background: url(${hillBgUrl}) no-repeat;
-    background-size: contain;
-    background-position-y: bottom;
-    position: absolute;
-    top: 0;
-
-    &.hills01 {
-      z-index: 4;
-      transform-origin: bottom;
-      background-position-x: -320px;
-      transform: scale(1.5);
-    }
-
-    &.hills02 {
-      z-index: 3;
-      transform-origin: bottom right;
-    }
-
-    &.hills03 {
-      z-index: 2;
-      transform-origin: bottom right;
-    }
-  }
-
-  .pyramid {
-    width: 100%;
-    height: 100%;
-    background: url(${pyramidBgUrl}) no-repeat;
-    background-size: 20%;
-    background-position: bottom right;
-    position: absolute;
-    top: 0;
-    z-index: 1;
-    transform: translateX(20%);
-   }
 `

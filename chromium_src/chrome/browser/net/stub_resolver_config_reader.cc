@@ -132,7 +132,21 @@ SecureDnsConfig::ManagementMode MaybeOverrideForcedManagementMode(
                              is_managed),                                      \
       ADDITIONAL_DNS_TYPES_ENABLED)
 #endif  // BUILDFLAG(IS_WIN) && BUILDFLAG(ENABLE_BRAVE_VPN)
+// FlyWeb: secure DNS starts off, so lookups go to the system's DNS only. In
+// automatic mode (Chromium's default) a known resolver in the system settings
+// (8.8.8.8, 1.1.1.1) made it switch to that provider's DoH endpoint and probe
+// it (dns.google, chrome.cloudflare-dns.com). The setting stays in Privacy and
+// security. FlyWeb 1.15 did it with the DnsOverHttps feature, which Chromium
+// 128 no longer reads: here only the pref default changes (the one call to
+// ModeToString() in this file).
+namespace {
+constexpr net::SecureDnsMode FlyWebDefaultSecureDnsMode(net::SecureDnsMode) {
+  return net::SecureDnsMode::kOff;
+}
+}  // namespace
+#define ModeToString(MODE) ModeToString(FlyWebDefaultSecureDnsMode(MODE))
 #include "src/chrome/browser/net/stub_resolver_config_reader.cc"
+#undef ModeToString
 #if BUILDFLAG(IS_WIN) && BUILDFLAG(ENABLE_BRAVE_VPN)
 #undef ConfigureStubHostResolver
 #undef SecureDnsConfig

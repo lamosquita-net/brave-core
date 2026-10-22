@@ -193,7 +193,7 @@ namespace {
 
 constexpr char kPageGraphVersion[] = "0.7.2";
 constexpr char kPageGraphUrl[] =
-    "https://github.com/brave/brave-browser/wiki/PageGraph";
+    "https://flyweb.lamosquita.net/ayuda/";
 
 FrameId GetFrameId(blink::LocalFrame& frame) {
   return blink::DOMNodeIds::IdForNode(frame.GetDocument());

@@ -818,7 +818,6 @@ test("brave_browser_tests") {
     "//brave/components/content_settings/renderer/brave_content_settings_agent_impl_autoplay_browsertest.cc",
     "//brave/components/content_settings/renderer/brave_content_settings_agent_impl_browsertest.cc",
     "//brave/components/webcompat/webcompat_exceptions_browsertest.cc",
-    "//brave/third_party/blink/renderer/modules/brave/navigator_browsertest.cc",
     "//chrome/browser/extensions/browsertest_util.cc",
     "//chrome/browser/extensions/browsertest_util.h",
     "//chrome/browser/extensions/extension_browsertest.cc",
@@ -869,7 +868,6 @@ test("brave_browser_tests") {
     "//brave/browser/ui/webui:browser_tests",
     "//brave/browser/web_discovery:browser_tests",
     "//brave/common",
-    "//brave/components/ai_chat/core/browser",
     "//brave/components/brave_ads/browser",
     "//brave/components/brave_ads/core",
     "//brave/components/brave_component_updater/browser",
@@ -1185,7 +1183,12 @@ test("brave_browser_tests") {
   }
 
   if (enable_ai_chat) {
-    deps += [ "//brave/browser/ai_chat:browser_tests" ]
+    # FlyWeb: also guarded (ai_chat/core/browser asserts enable_ai_chat, and
+    # FlyWeb builds with enable_ai_chat=false).
+    deps += [
+      "//brave/browser/ai_chat:browser_tests",
+      "//brave/components/ai_chat/core/browser",
+    ]
   }
 
   if (is_android) {

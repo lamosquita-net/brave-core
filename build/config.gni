@@ -23,6 +23,15 @@ declare_args() {
   sparkle_eddsa_private_key = ""
   sparkle_eddsa_public_key = ""
 
+  # FlyWeb: build number of our own releases (1.0 = 0). Appended to
+  # CFBundleVersion (169.168 -> 169.168.N), which Sparkle compares: every
+  # FlyWeb update must raise it while the Brave base stays at 1.69.168.
+  flyweb_build_number = 0
+
+  # FlyWeb: brave-core commit this build comes from (build.sh passes it). The
+  # About page links to its source tree, as the MPL-2.0 asks for.
+  flyweb_source_commit = ""
+
   brave_product_name = "brave"
   brave_exe = ""
   brave_version_major = ""
@@ -71,6 +80,14 @@ if (should_generate_symbols && is_mac) {
 }
 
 brave_version = "$brave_version_major.$brave_version_minor.$brave_version_build"
+
+# FlyWeb: version shown to the user (Info.plist CFBundleShortVersionString,
+# About, flyweb://version, appcast --visible). The minor follows the engine
+# level: 1.0 = Chromium 116, 1.1 = level 117, 1.2 = level 118...; fixes on the
+# same level are 1.1.1, 1.1.2... 2.0.0 is the Chromium 128 base (engine level
+# 131). Every release also raises flyweb_build_number (CFBundleVersion, what
+# Sparkle compares).
+flyweb_version = "2.0.0"
 
 # FlyWeb: engine level, the Chrome version whose web platform features are all
 # in this build (softmac FlyWeb/docs/motor.md). It is the major version
@@ -163,7 +180,7 @@ if (is_win) {
     brave_product_dir_name_suffix = "-Development"
   }
   brave_product_dir_name =
-      "BraveSoftware/Brave-Browser$brave_product_dir_name_suffix"
+      "LaMosquita/FlyWeb$brave_product_dir_name_suffix"
 
   if (base_sparkle_update_url == "") {
     base_sparkle_update_url =

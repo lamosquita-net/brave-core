@@ -31,9 +31,9 @@ inline constexpr char kBraveUIAdblockURL[] = "chrome://adblock/";
 inline constexpr char kBraveUIWebcompatReporterURL[] = "chrome://webcompat/";
 inline constexpr char kBraveUIWalletURL[] = "chrome://wallet/";
 inline constexpr char kBraveUIWalletOnboardingURL[] =
-    "brave://wallet/crypto/onboarding";
+    "flyweb://wallet/crypto/onboarding";
 inline constexpr char kBraveUIWalletAccountCreationURL[] =
-    "brave://wallet/crypto/accounts/add-account/create/";
+    "flyweb://wallet/crypto/accounts/add-account/create/";
 inline constexpr char kBraveUIWalletPanelURL[] =
     "chrome://wallet-panel.top-chrome/";
 inline constexpr char kWalletPanelHost[] = "wallet-panel.top-chrome";
@@ -42,8 +42,8 @@ inline constexpr char kVPNPanelURL[] =
 inline constexpr char kVPNPanelHost[] = "vpn-panel.top-chrome";
 inline constexpr char kBraveUIWalletPageURL[] = "chrome://wallet/";
 inline constexpr char kWalletPageHost[] = "wallet";
-inline constexpr char kExtensionSettingsURL[] = "brave://settings/extensions";
-inline constexpr char kWalletSettingsURL[] = "brave://settings/wallet";
+inline constexpr char kExtensionSettingsURL[] = "flyweb://settings/extensions";
+inline constexpr char kWalletSettingsURL[] = "flyweb://settings/wallet";
 inline constexpr char kBraveSyncPath[] = "braveSync";
 inline constexpr char kBraveSyncSetupPath[] = "braveSync/setup";
 inline constexpr char kTorInternalsHost[] = "tor-internals";
@@ -66,7 +66,7 @@ inline constexpr char kShieldsPanelHost[] = "brave-shields.top-chrome";
 inline constexpr char kCookieListOptInHost[] = "cookie-list-opt-in.top-chrome";
 inline constexpr char kCookieListOptInURL[] =
     "chrome://cookie-list-opt-in.top-chrome";
-inline constexpr char kFederatedInternalsURL[] = "brave://federated-internals";
+inline constexpr char kFederatedInternalsURL[] = "flyweb://federated-internals";
 inline constexpr char kFederatedInternalsHost[] = "federated-internals";
 inline constexpr char kContentFiltersPath[] = "shields/filters";
 inline constexpr char kPlaylistHost[] = "playlist";

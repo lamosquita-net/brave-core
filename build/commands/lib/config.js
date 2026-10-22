@@ -150,9 +150,12 @@ const Config = function () {
   this.targetEnvironment = getEnvConfig(['target_environment'])
   this.gypTargetArch = 'x64'
   this.targetAndroidBase = 'classic'
-  this.braveServicesProductionDomain = getEnvConfig(['brave_services_production_domain']) || ''
-  this.braveServicesStagingDomain = getEnvConfig(['brave_services_staging_domain']) || ''
-  this.braveServicesDevDomain = getEnvConfig(['brave_services_dev_domain']) || ''
+  // FlyWeb: inert by default (defence in depth). Only Leo, Brave News and P3A,
+  // all off in FlyWeb, build their hosts from these (brave_domains); none of
+  // FlyWeb's own services (components, sync, Safe Browsing proxy, updates) does.
+  this.braveServicesProductionDomain = getEnvConfig(['brave_services_production_domain']) || 'flyweb.invalid'
+  this.braveServicesStagingDomain = getEnvConfig(['brave_services_staging_domain']) || 'flyweb.invalid'
+  this.braveServicesDevDomain = getEnvConfig(['brave_services_dev_domain']) || 'flyweb.invalid'
   this.braveServicesKey = getEnvConfig(['brave_services_key']) || ''
   this.braveGoogleApiKey = getEnvConfig(['brave_google_api_key']) || 'AIzaSyAREPLACEWITHYOUROWNGOOGLEAPIKEY2Q'
   this.googleApiEndpoint = getEnvConfig(['brave_google_api_endpoint']) || 'https://www.googleapis.com/geolocation/v1/geolocate?key='

@@ -1,0 +1,16 @@
+diff --git a/chrome/browser/extensions/chrome_extensions_browser_client.cc b/chrome/browser/extensions/chrome_extensions_browser_client.cc
+index d8d780d91592e76cfa7beb63e9f56c8fb0af56a4..f440f92a151a9dda86685c686a649d94fd94e697 100644
+--- a/chrome/browser/extensions/chrome_extensions_browser_client.cc
++++ b/chrome/browser/extensions/chrome_extensions_browser_client.cc
+@@ -584,7 +584,10 @@ bool ChromeExtensionsBrowserClient::IsBackgroundUpdateAllowed() {
+ 
+ bool ChromeExtensionsBrowserClient::IsMinBrowserVersionSupported(
+     const std::string& min_version) {
+-  const base::Version& browser_version = version_info::GetVersion();
++  // FlyWeb: same version as minimum_chrome_version_checker.cc (the declared
++  // one), so that updates of installed extensions are not refused.
++  const base::Version browser_version(
++      version_info::constants::kFlyWebEngineFullVersion);
+   base::Version browser_min_version(min_version);
+   return !browser_version.IsValid() || !browser_min_version.IsValid() ||
+          browser_min_version.CompareTo(browser_version) <= 0;

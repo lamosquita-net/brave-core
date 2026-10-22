@@ -32,7 +32,7 @@ const actions = bindActionCreators(rewardsActions, store.dispatch.bind(store))
 setIconBasePath('chrome://resources/brave-icons')
 
 function initialize () {
-  // For `brave://rewards/reconnect`, automatically trigger reconnection on page
+  // For `flyweb://rewards/reconnect`, automatically trigger reconnection on page
   // load and send the user immediately to the external wallet login page. Do
   // not show any additional UI while redirecting.
   if (window.location.pathname === '/reconnect') {

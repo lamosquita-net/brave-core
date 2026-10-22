@@ -174,7 +174,8 @@ void AttachTabHelpers(content::WebContents* web_contents) {
   tor::OnionLocationTabHelper::CreateForWebContents(web_contents);
 #endif
 
-  BraveNewsTabHelper::MaybeCreateForWebContents(web_contents);
+  // FlyWeb: no BraveNewsTabHelper (no Brave News; it looked up the page's
+  // feeds and Brave's publisher list on every tab).
 
 #if defined(TOOLKIT_VIEWS)
   OnboardingTabHelper::MaybeCreateForWebContents(web_contents);
