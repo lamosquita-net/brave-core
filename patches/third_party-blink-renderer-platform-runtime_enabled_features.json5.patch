@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/runtime_enabled_features.json5 b/third_party/blink/renderer/platform/runtime_enabled_features.json5
-index 75e44e6b7cdd95c1e39b3759939ec1146232f255..c5a389906e67002460383b2b2d3e75ef981720bd 100644
+index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe9306336ade707 100644
 --- a/third_party/blink/renderer/platform/runtime_enabled_features.json5
 +++ b/third_party/blink/renderer/platform/runtime_enabled_features.json5
 @@ -480,6 +480,13 @@
@@ -209,7 +209,20 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..c5a389906e67002460383b2b2d3e75ef
      {
        // Non-standard 'auto' keyword for the CSS resize property. Used for
        // selectively enable resize corner for textarea via UA stylesheet, but
-@@ -1238,8 +1274,9 @@
+@@ -1225,6 +1261,12 @@
+       origin_trial_allows_third_party: true,
+       origin_trial_allows_insecure: true,
+     },
++    {
++      // FlyWeb (level 131): as Chromium 131 (df09f66a3a), where the
++      // deprecated GPUAdapter.requestAdapterInfo() is gone (no status).
++      // See https://crbug.com/335383516
++      name: "DeprecatedRequestAdapterInfo",
++    },
+     {
+       name: "DesktopCaptureDisableLocalEchoControl",
+       status: "experimental",
+@@ -1238,8 +1280,9 @@
        status: "test",
      },
      {
@@ -220,7 +233,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..c5a389906e67002460383b2b2d3e75ef
      },
      {
        name: "DeviceAttributes",
-@@ -1551,8 +1588,9 @@
+@@ -1551,8 +1594,9 @@
        // This is the "old" version of getInnerHTML() used for declarative shadow
        // DOM, and this version is deprecated. The replacement is called
        // `getHTML()` and it shipped in M125.
@@ -231,7 +244,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..c5a389906e67002460383b2b2d3e75ef
      },
      {
        name: "EnforceAnonymityExposure",
-@@ -1804,6 +1842,7 @@
+@@ -1804,6 +1848,7 @@
        // In-development features for the File System Access API.
        name: "FileSystemAccessAPIExperimental",
        status: "experimental",
@@ -239,7 +252,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..c5a389906e67002460383b2b2d3e75ef
      },
      {
        // The FileSystemHandle.getCloudIdentifiers() method (see
-@@ -1819,6 +1858,7 @@
+@@ -1819,6 +1864,7 @@
        // Non-OPFS File System Access API.
        name: "FileSystemAccessLocal",
        status: {"Android": "test", "default": "stable"},
@@ -247,7 +260,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..c5a389906e67002460383b2b2d3e75ef
      },
      {
        name: "FileSystemAccessLockingScheme",
-@@ -1847,6 +1887,17 @@
+@@ -1847,6 +1893,17 @@
        name: "FindTextInReadonlyTextInput",
        status: "experimental",
      },
@@ -265,7 +278,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..c5a389906e67002460383b2b2d3e75ef
      {
        name: "Fledge",
        status: "stable",
-@@ -2102,6 +2153,10 @@
+@@ -2102,6 +2159,10 @@
        name: "HandleDeletionWithNonEditableContentAtBlockBoundary",
        status: "stable",
      },
@@ -276,7 +289,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..c5a389906e67002460383b2b2d3e75ef
      {
        name: "HandwritingRecognition",
        status: {
-@@ -2147,6 +2202,14 @@
+@@ -2147,6 +2208,14 @@
        name: "HTMLAnchorAttribute",
        status: "experimental",
      },
@@ -291,7 +304,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..c5a389906e67002460383b2b2d3e75ef
      // Adds support for the experimental `interesttarget`
      // attributes, as specified in the open-ui "Interest Invokers" explainer.
      // https://open-ui.org/components/interest-invokers.explainer/
-@@ -2171,6 +2234,15 @@
+@@ -2171,6 +2240,15 @@
        name: "HTMLMenuElementIsListOwner",
        status: "stable",
      },
@@ -307,7 +320,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..c5a389906e67002460383b2b2d3e75ef
      {
        // A flag, just for local testing to make the
        // HTML parser yield more often and take longer to resume.
-@@ -2271,6 +2343,11 @@
+@@ -2271,6 +2349,11 @@
        name: "InheritUserModifyWithoutContenteditable",
        status: "stable",
      },
@@ -319,7 +332,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..c5a389906e67002460383b2b2d3e75ef
      {
        name: "InlineBlockInSameLine",
        status: "stable",
-@@ -2358,6 +2435,12 @@
+@@ -2358,6 +2441,12 @@
        status: "experimental",
        origin_trial_feature_name: "JavaScriptCompileHintsMagic",
      },
@@ -332,7 +345,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..c5a389906e67002460383b2b2d3e75ef
      {
        // Allows :target to match elements even after they are removed and
        // reattached to the document. Enabled in M128, should be safe to remove
-@@ -2407,11 +2490,6 @@
+@@ -2407,11 +2496,6 @@
        name: "LangAttributeAwareFormControlUI",
        settable_from_internals: true,
      },
@@ -344,7 +357,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..c5a389906e67002460383b2b2d3e75ef
      {
        name: "LayoutFlexNewRowAlgorithmV3",
        status: "test",
-@@ -2473,6 +2551,11 @@
+@@ -2473,6 +2557,11 @@
        status: "experimental",
        base_feature: "none",
      },
@@ -356,7 +369,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..c5a389906e67002460383b2b2d3e75ef
      {
        name: "LockedMode",
        status: "test",
-@@ -2643,11 +2726,24 @@
+@@ -2643,11 +2732,24 @@
        name: "MetaRefreshNoFractional",
        status: "stable",
      },
@@ -381,7 +394,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..c5a389906e67002460383b2b2d3e75ef
      },
      {
        name: "MobileLayoutTheme",
-@@ -2687,19 +2783,23 @@
+@@ -2687,19 +2789,23 @@
        name: "MoveEndingSelectionToListChild",
        status: "stable",
      },
@@ -407,7 +420,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..c5a389906e67002460383b2b2d3e75ef
        origin_trial_feature_name: "MutationEvents",
        origin_trial_type: "deprecation",
        origin_trial_allows_insecure: true,
-@@ -2787,6 +2887,13 @@
+@@ -2787,6 +2893,13 @@
        name: "NonEmptyBlockquotesOnOutdenting",
        status: "stable",
      },
@@ -421,7 +434,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..c5a389906e67002460383b2b2d3e75ef
      {
        // TODO(crbug.com/924486): This feature enables the deprecated values
        // inner-spin-button, push-button, searchfield-cancel-button,
-@@ -3016,6 +3123,10 @@
+@@ -3016,6 +3129,10 @@
        name: "PageSwapEvent",
        status: "stable",
      },
@@ -432,7 +445,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..c5a389906e67002460383b2b2d3e75ef
      {
        name: "PaintHoldingForIframes",
        status: "stable",
-@@ -3136,6 +3247,14 @@
+@@ -3136,6 +3253,14 @@
        name: "PointerEventDeviceId",
        status: "stable",
      },
@@ -447,7 +460,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..c5a389906e67002460383b2b2d3e75ef
      {
        name: "PositionOutsideTabSpanCheckSiblingNode",
        status: "stable",
-@@ -3206,6 +3325,12 @@
+@@ -3206,6 +3331,12 @@
        name:"PrettyPrintJSONDocument",
        status: "stable",
      },
@@ -460,7 +473,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..c5a389906e67002460383b2b2d3e75ef
      {
        // Controls whether filtering IDs can be specified for Private Aggregation
        // contributions. If disabled, any IDs will be ignored.
-@@ -3245,6 +3370,12 @@
+@@ -3245,6 +3376,12 @@
        origin_trial_allows_third_party: true,
        public: true,
      },
@@ -473,7 +486,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..c5a389906e67002460383b2b2d3e75ef
      {
        // Always allow trust token issuance (so long as the base::Feature
        // is enabled). Used for testing; circumvents a runtime check that,
-@@ -3370,6 +3501,11 @@
+@@ -3370,6 +3507,11 @@
          "Linux": "stable",
          "default": "experimental"},
      },
@@ -485,7 +498,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..c5a389906e67002460383b2b2d3e75ef
      {
        name: "RemoveDanglingMarkupInTarget",
        status: "stable",
-@@ -3422,6 +3558,10 @@
+@@ -3422,6 +3564,10 @@
          "default": "",
        }
      },
@@ -496,7 +509,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..c5a389906e67002460383b2b2d3e75ef
      {
        name: "ResourceTimingContentType",
        status: "experimental",
-@@ -3441,6 +3581,12 @@
+@@ -3441,6 +3587,12 @@
        name: "RewindFloats",
        status: "stable",
      },
@@ -509,7 +522,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..c5a389906e67002460383b2b2d3e75ef
      {
        name: "RtcAudioJitterBufferMaxPackets",
        origin_trial_feature_name: "RtcAudioJitterBufferMaxPackets",
-@@ -3679,6 +3825,7 @@
+@@ -3679,6 +3831,7 @@
      {
        name: "Serial",
        status: {"Android": "", "default": "stable"},
@@ -517,7 +530,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..c5a389906e67002460383b2b2d3e75ef
      },
      {
        name: "SerializeViewTransitionStateInSPA",
-@@ -3907,6 +4054,10 @@
+@@ -3907,6 +4060,10 @@
        name: "StorageBucketsLocks",
        status: "experimental",
      },
@@ -528,7 +541,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..c5a389906e67002460383b2b2d3e75ef
      {
        name: "StrictMimeTypesForWorkers",
        status: "experimental",
-@@ -3935,6 +4086,12 @@
+@@ -3935,6 +4092,12 @@
        name: "SvgCrossOriginAttribute",
        status: "stable",
      },
@@ -541,7 +554,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..c5a389906e67002460383b2b2d3e75ef
      {
        name: "SvgFilterUserSpaceViewportForNonSvg",
        status: "stable",
-@@ -4143,6 +4300,10 @@
+@@ -4143,6 +4306,10 @@
        status: "experimental",
        base_feature: "none",
      },
@@ -552,7 +565,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..c5a389906e67002460383b2b2d3e75ef
      // This is conditionally set if the platform supports translation.
      {
        name: "TranslateService",
-@@ -4255,6 +4416,13 @@
+@@ -4255,6 +4422,13 @@
        base_feature: "none",
        public: true,
      },
@@ -566,7 +579,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..c5a389906e67002460383b2b2d3e75ef
      {
        name: "UseUndoStepElementDispatchBeforeInput",
        status: "stable",
-@@ -4264,6 +4432,11 @@
+@@ -4264,6 +4438,11 @@
        base_feature: "none",
        public: true,
      },
@@ -578,7 +591,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..c5a389906e67002460383b2b2d3e75ef
      {
        // Whether a video element should automatically play fullscreen unless
        // 'playsinline' is set.
-@@ -4435,12 +4608,14 @@
+@@ -4435,12 +4614,14 @@
        name: "WebAuthAuthenticatorAttachment",
        status: "test",
      },
