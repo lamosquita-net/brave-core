@@ -46,20 +46,21 @@ inline constexpr char kExperimentalListUuid[] =
 
 // FlyWeb: own components, signed on bak (softmac FlyWeb/servidor/componentes);
 // Brave's update server needs Brave's private service key. The resources
-// component keeps 1.x's ID for now: brave-sync-shields.md 3.4 asks for a new
-// ID and key for the 2.0 (adblock 0.8 resources.json), pending on bak.
+// component of the 2.0 has its own ID and key ("recursos-20" in
+// claves-publicas.json): adblock-rust 0.8's resources.json does not work in
+// 1.x's 0.7.9, so 1.x keeps the old ID (brave-sync-shields.md 3.4).
 inline constexpr char kAdBlockResourceComponentName[] =
     "FlyWeb Shields: resources";
 inline constexpr char kAdBlockResourceComponentId[] =
-    "cociljnememddffhfnpcgamaljohlion";
+    "nilendadbigifkognoeoodppkjkgmppg";
 inline constexpr char kAdBlockResourceComponentBase64PublicKey[] =
-    "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoavVS9RkFr7CvEvtBVPV"
-    "UyWpZz6gd9an6lE38qCIfASITT81ZnSo5buYm4u1yJadsLJFtr4t2Th4uGdYD5uX"
-    "PpawXi/bo6iNVxlVzKstWzAWNpAadjwAJ3prtmWWVG/2CM75o1Cu2G8WHsWBOkZa"
-    "CZ9g/TH2ruwGTC99z2NJB0cYzetlqMkg1RYb6U257pcGvnCzB9FGUvOICPkUiV6p"
-    "7FGwmy3K9bFdHvXAYFhyEGg9jGaZ7hbd9TZlL+6wv9rFtcfTUOBlgI+qUjXqpYnN"
-    "eiQyW1tMSFQ2Ao4/y6PjdptrW/2pWJG6kNWsOivPVyYOpOJLgUcLooLCSoX9rkxU"
-    "yQIDAQAB";
+    "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAw2IP9JoOjG9V8kRRJ4gJ"
+    "GkJHJcyrJYu+1RPH3/ZbPh7eGP+4O1pFMy6/z2TubZFtD/K89lX00Hj6kaIQRfcI"
+    "Rns5jS9kyS6alIfHLe4Q7ZljXvCB3sOYik741aUk4DADHXhvMCmSmf5wRriN/Bp0"
+    "stoeCVIWfXSYtOZDZoZeRk+gIhdjL2IR1ArGV4k3GrDMQBhw6AjBhhnDdgkAoCcJ"
+    "3dhWbNyPY37gJUpz8L1/TY1v7wTnQLCklg9cRoa+MXjlD/FrzC2X0ueX7Uj4VWCR"
+    "kuns4YdznxxkypBbFrC/BG+LEoixvI6Bc3wmww9sPpKOww1yU6+XmzxLKTa0MWYt"
+    "fwIDAQAB";
 
 inline constexpr char kAdBlockFilterListCatalogComponentName[] =
     "FlyWeb Shields: list catalog";
