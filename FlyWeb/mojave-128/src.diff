@@ -1,0 +1,682 @@
+diff --git a/base/mac/launch_application.mm b/base/mac/launch_application.mm
+index a81e3f09a4d50..00c282c83178f 100644
+--- a/base/mac/launch_application.mm
++++ b/base/mac/launch_application.mm
+@@ -65,7 +65,7 @@ NSArray* CommandLineArgsToArgsArray(const CommandLineArgs& command_line_args) {
+ 
+ NSWorkspaceOpenConfiguration* GetOpenConfiguration(
+     LaunchApplicationOptions options,
+-    const CommandLineArgs& command_line_args) {
++    const CommandLineArgs& command_line_args) API_AVAILABLE(macos(10.15)) {
+   NSWorkspaceOpenConfiguration* config =
+       [NSWorkspaceOpenConfiguration configuration];
+ 
+@@ -78,14 +78,40 @@ NSWorkspaceOpenConfiguration* GetOpenConfiguration(
+   if (options.hidden_in_background) {
+     config.addsToRecentItems = NO;
+     config.hides = YES;
+-    config._additionalLSOpenOptions = @{
+-      apple::CFToNSPtrCast(_kLSOpenOptionBackgroundLaunchKey) : @YES,
+-    };
++    // FlyWeb (LOCAL-6, 21-10): la clave es débil y nula en 10.14; un nil como
++    // clave de NSDictionary aborta.
++    if (&_kLSOpenOptionBackgroundLaunchKey && _kLSOpenOptionBackgroundLaunchKey) {
++      config._additionalLSOpenOptions = @{
++        apple::CFToNSPtrCast(_kLSOpenOptionBackgroundLaunchKey) : @YES,
++      };
++    }
+   }
+ 
+   return config;
+ }
+ 
++// FlyWeb (LOCAL-8): NSWorkspaceOpenConfiguration and its NSWorkspace methods
++// are macOS 10.15+ (unrecognized selector on 10.14). As in 116.
++NSWorkspaceLaunchOptions GetLaunchOptions(LaunchApplicationOptions options) {
++  NSWorkspaceLaunchOptions launch_options = NSWorkspaceLaunchDefault;
++
++  if (!options.activate) {
++    launch_options |= NSWorkspaceLaunchWithoutActivation;
++  }
++  if (options.create_new_instance) {
++    launch_options |= NSWorkspaceLaunchNewInstance;
++  }
++  if (options.prompt_user_if_needed) {
++    launch_options |= NSWorkspaceLaunchWithErrorPresentation;
++  }
++  if (options.hidden_in_background) {
++    launch_options |= NSWorkspaceLaunchAndHide |
++                      NSWorkspaceLaunchWithoutAddingToRecents;
++  }
++
++  return launch_options;
++}
++
+ // Sometimes macOS 11 and 12 report an error launching even though the launch
+ // succeeded anyway. This helper returns true for the error codes we have
+ // observed where scanning the list of running applications appears to be a
+@@ -174,25 +200,53 @@ void LaunchApplication(const base::FilePath& app_bundle_path,
+     }
+   }
+ 
+-  void (^action_block)(NSRunningApplication*, NSError*) =
+-      ^void(NSRunningApplication* app, NSError* error) {
+-        dispatch_async(dispatch_get_main_queue(), ^{
+-          std::move(callback_block_access).Run(app, error);
+-        });
+-      };
++  if (@available(macOS 10.15, *)) {
++    void (^action_block)(NSRunningApplication*, NSError*) =
++        ^void(NSRunningApplication* app, NSError* error) {
++          dispatch_async(dispatch_get_main_queue(), ^{
++            std::move(callback_block_access).Run(app, error);
++          });
++        };
++
++    NSWorkspaceOpenConfiguration* configuration =
++        GetOpenConfiguration(options, command_line_args);
++
++    if (ns_urls) {
++      [NSWorkspace.sharedWorkspace openURLs:ns_urls
++                       withApplicationAtURL:bundle_url
++                              configuration:configuration
++                          completionHandler:action_block];
++    } else {
++      [NSWorkspace.sharedWorkspace openApplicationAtURL:bundle_url
++                                          configuration:configuration
++                                      completionHandler:action_block];
++    }
++  } else {
++    NSDictionary* configuration = @{
++      NSWorkspaceLaunchConfigurationArguments :
++          CommandLineArgsToArgsArray(command_line_args),
++    };
+ 
+-  NSWorkspaceOpenConfiguration* configuration =
+-      GetOpenConfiguration(options, command_line_args);
++    NSWorkspaceLaunchOptions launch_options = GetLaunchOptions(options);
++
++    NSError* error = nil;
++    NSRunningApplication* app;
++    if (ns_urls) {
++      app = [NSWorkspace.sharedWorkspace openURLs:ns_urls
++                             withApplicationAtURL:bundle_url
++                                          options:launch_options
++                                    configuration:configuration
++                                            error:&error];
++    } else {
++      app = [NSWorkspace.sharedWorkspace launchApplicationAtURL:bundle_url
++                                                        options:launch_options
++                                                  configuration:configuration
++                                                          error:&error];
++    }
+ 
+-  if (ns_urls) {
+-    [NSWorkspace.sharedWorkspace openURLs:ns_urls
+-                     withApplicationAtURL:bundle_url
+-                            configuration:configuration
+-                        completionHandler:action_block];
+-  } else {
+-    [NSWorkspace.sharedWorkspace openApplicationAtURL:bundle_url
+-                                        configuration:configuration
+-                                    completionHandler:action_block];
++    dispatch_async(dispatch_get_main_queue(), ^{
++      std::move(callback_block_access).Run(app, error);
++    });
+   }
+ }
+ 
+diff --git a/base/mac/launch_services_spi.h b/base/mac/launch_services_spi.h
+index 4ce7a57bb4f24..902eb743fca0e 100644
+--- a/base/mac/launch_services_spi.h
++++ b/base/mac/launch_services_spi.h
+@@ -18,7 +18,7 @@
+ 
+ extern "C" {
+ 
+-extern const CFStringRef _kLSOpenOptionBackgroundLaunchKey;
++extern const CFStringRef _kLSOpenOptionBackgroundLaunchKey __attribute__((weak_import));  // FlyWeb (LOCAL-6, 21-10): no existe en 10.14
+ 
+ }  // extern "C"
+ 
+diff --git a/base/process/launch_mac.cc b/base/process/launch_mac.cc
+index d1b09cb1a7500..666315249ae3e 100644
+--- a/base/process/launch_mac.cc
++++ b/base/process/launch_mac.cc
+@@ -86,6 +86,9 @@ class PosixSpawnFileActions {
+   }
+ 
+ #if BUILDFLAG(IS_MAC)
++  // FlyWeb (LOCAL-8): posix_spawn_file_actions_addchdir_np is macOS 10.15+ (a
++  // null weak symbol on 10.14). As in 116, 10.14 uses the per-thread cwd.
++  __attribute__((availability(macos, introduced = 10.15)))
+   void Chdir(const char* path) {
+     DPSXCHECK(posix_spawn_file_actions_addchdir_np(&file_actions_, path));
+   }
+@@ -97,7 +100,6 @@ class PosixSpawnFileActions {
+   posix_spawn_file_actions_t file_actions_;
+ };
+ 
+-#if !BUILDFLAG(IS_MAC)
+ int ChangeCurrentThreadDirectory(const char* path) {
+   return pthread_chdir_np(path);
+ }
+@@ -107,7 +109,6 @@ int ChangeCurrentThreadDirectory(const char* path) {
+ int ResetCurrentThreadDirectory() {
+   return pthread_fchdir_np(-1);
+ }
+-#endif
+ 
+ struct GetAppOutputOptions {
+   // Whether to pipe stderr to stdout in |output|.
+@@ -261,17 +262,20 @@ Process LaunchProcess(const std::vector<std::string>& argv,
+   if (!options.current_directory.empty()) {
+     const char* chdir_str = options.current_directory.value().c_str();
+ #if BUILDFLAG(IS_MAC)
+-    file_actions.Chdir(chdir_str);
+-#else
+-    // If the chdir posix_spawn_file_actions extension is not available,
+-    // change the thread-specific working directory. The new process will
+-    // inherit it during posix_spawnp().
+-    int rv = ChangeCurrentThreadDirectory(chdir_str);
+-    if (rv != 0) {
+-      DPLOG(ERROR) << "pthread_chdir_np";
+-      return Process();
+-    }
++    if (__builtin_available(macOS 10.15, *)) {
++      file_actions.Chdir(chdir_str);
++    } else
+ #endif
++    {
++      // If the chdir posix_spawn_file_actions extension is not available,
++      // change the thread-specific working directory. The new process will
++      // inherit it during posix_spawnp().
++      int rv = ChangeCurrentThreadDirectory(chdir_str);
++      if (rv != 0) {
++        DPLOG(ERROR) << "pthread_chdir_np";
++        return Process();
++      }
++    }
+   }
+ 
+   int rv;
+@@ -318,12 +322,18 @@ Process LaunchProcess(const std::vector<std::string>& argv,
+ #endif
+   }
+ 
+-#if !BUILDFLAG(IS_MAC)
+   // Restore the thread's working directory if it was changed.
+   if (!options.current_directory.empty()) {
+-    ResetCurrentThreadDirectory();
+-  }
++#if BUILDFLAG(IS_MAC)
++    if (__builtin_available(macOS 10.15, *)) {
++      // Nothing to do because no global state was changed, but
++      // __builtin_available is special and cannot be negated.
++    } else
+ #endif
++    {
++      ResetCurrentThreadDirectory();
++    }
++  }
+ 
+   if (rv != 0) {
+     DLOG(ERROR) << "posix_spawnp(" << executable_path << "): -" << rv << " "
+diff --git a/chrome/browser/apps/link_capturing/mac_intent_picker_helpers.mm b/chrome/browser/apps/link_capturing/mac_intent_picker_helpers.mm
+index 4b3fa10182091..de89612db5761 100644
+--- a/chrome/browser/apps/link_capturing/mac_intent_picker_helpers.mm
++++ b/chrome/browser/apps/link_capturing/mac_intent_picker_helpers.mm
+@@ -88,10 +88,14 @@ std::optional<IntentPickerAppInfo> FindMacAppForUrl(const GURL& url) {
+     return std::nullopt;
+   }
+ 
+-  SFUniversalLink* link = [[SFUniversalLink alloc] initWithWebpageURL:nsurl];
++  // FlyWeb (LOCAL-8): SFUniversalLink is macOS 10.15+; no universal links on
++  // 10.14.
++  if (@available(macOS 10.15, *)) {
++    SFUniversalLink* link = [[SFUniversalLink alloc] initWithWebpageURL:nsurl];
+ 
+-  if (link) {
+-    return AppInfoForAppUrl(link.applicationURL);
++    if (link) {
++      return AppInfoForAppUrl(link.applicationURL);
++    }
+   }
+ 
+   return std::nullopt;
+diff --git a/chrome/browser/device_reauth/mac/authenticator_mac.mm b/chrome/browser/device_reauth/mac/authenticator_mac.mm
+index 443f753c2bea1..28587ba384eed 100644
+--- a/chrome/browser/device_reauth/mac/authenticator_mac.mm
++++ b/chrome/browser/device_reauth/mac/authenticator_mac.mm
+@@ -15,8 +15,15 @@ AuthenticatorMac::~AuthenticatorMac() = default;
+ 
+ bool AuthenticatorMac::CheckIfBiometricsAvailable() {
+   LAContext* context = [[LAContext alloc] init];
++  // FlyWeb (LOCAL-8): ...WithBiometricsOrWatch is macOS 10.15+; on 10.14
++  // canEvaluatePolicy throws "Unknown policy: '4'" (chrome://settings). As in 116.
++  if (@available(macOS 10.15, *)) {
++    return [context
++        canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometricsOrWatch
++                    error:nil];
++  }
+   return [context
+-      canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometricsOrWatch
++      canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics
+                   error:nil];
+ }
+ 
+diff --git a/chrome/browser/enterprise/connectors/device_trust/key_management/core/mac/secure_enclave_client_impl.mm b/chrome/browser/enterprise/connectors/device_trust/key_management/core/mac/secure_enclave_client_impl.mm
+index 5cca3780cf56c..aa4db92415f9d 100644
+--- a/chrome/browser/enterprise/connectors/device_trust/key_management/core/mac/secure_enclave_client_impl.mm
++++ b/chrome/browser/enterprise/connectors/device_trust/key_management/core/mac/secure_enclave_client_impl.mm
+@@ -74,15 +74,20 @@ NSDictionary* CreateAttributesForKey() {
+ // Creates the query used for querying the keychain for the secure key
+ // reference.
+ NSDictionary* CreateQueryForKey(SecureEnclaveClient::KeyType type) {
+-  return @{
++  NSMutableDictionary* query = [NSMutableDictionary dictionaryWithDictionary:@{
+     CFToNSPtrCast(kSecClass) : CFToNSPtrCast(kSecClassKey),
+     CFToNSPtrCast(kSecAttrKeyType) :
+         CFToNSPtrCast(kSecAttrKeyTypeECSECPrimeRandom),
+     CFToNSPtrCast(kSecAttrLabel) :
+         base::SysUTF8ToNSString(SecureEnclaveClient::GetLabelFromKeyType(type)),
+     CFToNSPtrCast(kSecReturnRef) : @YES,
+-    CFToNSPtrCast(kSecUseDataProtectionKeychain) : @YES,
+-  };
++  }];
++  // FlyWeb (LOCAL-8): kSecUseDataProtectionKeychain is macOS 10.15+ (null weak
++  // constant on 10.14; a nil key aborts). As in 116.
++  if (@available(macOS 10.15, *)) {
++    query[CFToNSPtrCast(kSecUseDataProtectionKeychain)] = @YES;
++  }
++  return query;
+ }
+ 
+ // Converts an external representation of an EC public key from ANSI X9.63
+diff --git a/chrome/browser/platform_util_mac.mm b/chrome/browser/platform_util_mac.mm
+index 89668e2ee8c2f..597f407a88649 100644
+--- a/chrome/browser/platform_util_mac.mm
++++ b/chrome/browser/platform_util_mac.mm
+@@ -57,10 +57,22 @@ void OpenFileOnMainThread(const base::FilePath& full_path) {
+   if (!url)
+     return;
+ 
+-  [[NSWorkspace sharedWorkspace]
+-                openURL:url
+-          configuration:[NSWorkspaceOpenConfiguration configuration]
+-      completionHandler:nil];
++  // FlyWeb (LOCAL-8): -openURL:configuration:completionHandler: is macOS
++  // 10.15+ (unrecognized selector on 10.14, e.g. opening a download). As in 116.
++  if (@available(macOS 10.15, *)) {
++    [[NSWorkspace sharedWorkspace]
++                  openURL:url
++            configuration:[NSWorkspaceOpenConfiguration configuration]
++        completionHandler:nil];
++  } else {
++    const NSWorkspaceLaunchOptions launch_options =
++        NSWorkspaceLaunchAsync | NSWorkspaceLaunchWithErrorPresentation;
++    [[NSWorkspace sharedWorkspace] openURLs:@[ url ]
++                    withAppBundleIdentifier:nil
++                                    options:launch_options
++             additionalEventParamDescriptor:nil
++                          launchIdentifiers:nil];
++  }
+ }
+ 
+ namespace internal {
+diff --git a/chrome/browser/ui/views/eye_dropper/eye_dropper_view_mac.mm b/chrome/browser/ui/views/eye_dropper/eye_dropper_view_mac.mm
+index 358cc0072b60d..b8dca714936cf 100644
+--- a/chrome/browser/ui/views/eye_dropper/eye_dropper_view_mac.mm
++++ b/chrome/browser/ui/views/eye_dropper/eye_dropper_view_mac.mm
+@@ -18,20 +18,25 @@ EyeDropperViewMac::EyeDropperViewMac(content::EyeDropperListener* listener)
+   if (!listener_) {
+     return;
+   }
+-  color_sampler_ = [[NSColorSampler alloc] init];
+-  // Used to ensure that EyeDropperViewMac is still alive when the handler is
+-  // called.
+-  base::WeakPtr<EyeDropperViewMac> weak_this = weak_ptr_factory_.GetWeakPtr();
+-  [color_sampler_ showSamplerWithSelectionHandler:^(NSColor* selectedColor) {
+-    if (!weak_this) {
+-      return;
+-    }
+-    if (!selectedColor) {
+-      listener_->ColorSelectionCanceled();
+-    } else {
+-      listener_->ColorSelected(skia::NSSystemColorToSkColor(selectedColor));
+-    }
+-  }];
++  // FlyWeb (LOCAL-8): NSColorSampler is macOS 10.15+; ShowEyeDropper() does not
++  // create this view on 10.14 (the 116 generic fallback is gone in 128).
++  if (@available(macOS 10.15, *)) {
++    color_sampler_ = [[NSColorSampler alloc] init];
++    // Used to ensure that EyeDropperViewMac is still alive when the handler is
++    // called.
++    base::WeakPtr<EyeDropperViewMac> weak_this =
++        weak_ptr_factory_.GetWeakPtr();
++    [color_sampler_ showSamplerWithSelectionHandler:^(NSColor* selectedColor) {
++      if (!weak_this) {
++        return;
++      }
++      if (!selectedColor) {
++        listener_->ColorSelectionCanceled();
++      } else {
++        listener_->ColorSelected(skia::NSSystemColorToSkColor(selectedColor));
++      }
++    }];
++  }
+ }
+ 
+ EyeDropperViewMac::~EyeDropperViewMac() = default;
+@@ -43,5 +48,8 @@ std::unique_ptr<content::EyeDropper> ShowEyeDropper(
+     return nullptr;
+   }
+ 
+-  return std::make_unique<EyeDropperViewMac>(listener);
++  if (@available(macOS 10.15, *)) {
++    return std::make_unique<EyeDropperViewMac>(listener);
++  }
++  return nullptr;
+ }
+diff --git a/components/metal_util/hdr_copier_layer.mm b/components/metal_util/hdr_copier_layer.mm
+index 91d96d00502ee..ba24b7839fe33 100644
+--- a/components/metal_util/hdr_copier_layer.mm
++++ b/components/metal_util/hdr_copier_layer.mm
+@@ -245,7 +245,8 @@ id<MTLRenderPipelineState> CreateRenderPipelineState(id<MTLDevice> device) {
+     return;
+   }
+ 
+-  if (@available(iOS 16.0, *)) {
++  // FlyWeb (LOCAL-7, 21-10): CAEDRMetadata y setEDRMetadata: son de macOS 10.15.
++  if (@available(macOS 10.15, iOS 16.0, *)) {
+     // Set metadata for tone mapping.
+     if (_colorSpace != colorSpace || _hdrMetadata != hdrMetadata) {
+       CAEDRMetadata* edrMetadata = nil;
+@@ -279,9 +280,12 @@ id<MTLRenderPipelineState> CreateRenderPipelineState(id<MTLDevice> device) {
+   if (device) {
+     self.device = device;
+   } else {
+-    id<MTLDevice> preferredDevice = self.preferredDevice;
+-    if (preferredDevice) {
+-      self.device = preferredDevice;
++    // FlyWeb (LOCAL-7, 21-10): preferredDevice es de macOS 10.15.
++    if (@available(macOS 10.15, *)) {
++      id<MTLDevice> preferredDevice = self.preferredDevice;
++      if (preferredDevice) {
++        self.device = preferredDevice;
++      }
+     }
+     device = self.device;
+   }
+@@ -416,6 +420,13 @@ void UpdateHDRCopierLayer(CALayer* layer,
+ bool ShouldUseHDRCopier(IOSurfaceRef buffer,
+                         const gfx::HDRMetadata& hdr_metadata,
+                         const gfx::ColorSpace& color_space) {
++  // FlyWeb (LOCAL-7, 21-10): la capa HDR usa API de macOS 10.15 (CAEDRMetadata,
++  // preferredDevice); en 10.14 no se usa, como en la 116.
++  if (@available(macOS 10.15, *)) {
++  } else {
++    return false;
++  }
++
+   // Only some transfer functions are supported.
+   if (!GetTransferFunctionIndex(color_space)) {
+     return false;
+diff --git a/crypto/unexportable_key_mac.mm b/crypto/unexportable_key_mac.mm
+index fef1b873cc790..fedea9fd6f49b 100644
+--- a/crypto/unexportable_key_mac.mm
++++ b/crypto/unexportable_key_mac.mm
+@@ -345,6 +345,13 @@ bool UnexportableKeyProviderMac::DeleteSigningKeySlowly(
+ 
+ std::unique_ptr<UnexportableKeyProviderMac> GetUnexportableKeyProviderMac(
+     UnexportableKeyProvider::Config config) {
++  // FlyWeb (LOCAL-8): kSecUseDataProtectionKeychain is macOS 10.15+ (a null
++  // weak constant on 10.14, and a nil dictionary key aborts). No unexportable
++  // keys on 10.14.
++  if (@available(macOS 10.15, *)) {
++  } else {
++    return nullptr;
++  }
+   if (!base::FeatureList::IsEnabled(crypto::kEnableMacUnexportableKeys)) {
+     return nullptr;
+   }
+diff --git a/device/bluetooth/bluetooth_low_energy_adapter_apple.mm b/device/bluetooth/bluetooth_low_energy_adapter_apple.mm
+index 9953997b3b1b3..f96156f2dc1d2 100644
+--- a/device/bluetooth/bluetooth_low_energy_adapter_apple.mm
++++ b/device/bluetooth/bluetooth_low_energy_adapter_apple.mm
+@@ -120,15 +120,23 @@ bool BluetoothLowEnergyAdapterApple::IsPresent() const {
+ 
+ BluetoothAdapter::PermissionStatus
+ BluetoothLowEnergyAdapterApple::GetOsPermissionStatus() const {
+-  switch (CBCentralManager.authorization) {
+-    case CBManagerAuthorizationNotDetermined:
+-      return PermissionStatus::kUndetermined;
+-    case CBManagerAuthorizationRestricted:
+-    case CBManagerAuthorizationDenied:
+-      return PermissionStatus::kDenied;
+-    case CBManagerAuthorizationAllowedAlways:
+-      return PermissionStatus::kAllowed;
++  // FlyWeb (LOCAL-8): CBCentralManager.authorization is macOS 10.15+; on 10.14
++  // it throws and kills the browser (WebAuthn on accounts.google.com). As in 116.
++  if (@available(macOS 10.15, *)) {
++    switch (CBCentralManager.authorization) {
++      case CBManagerAuthorizationNotDetermined:
++        return PermissionStatus::kUndetermined;
++      case CBManagerAuthorizationRestricted:
++      case CBManagerAuthorizationDenied:
++        return PermissionStatus::kDenied;
++      case CBManagerAuthorizationAllowedAlways:
++        return PermissionStatus::kAllowed;
++    }
+   }
++
++  // There are no Core Bluetooth permissions before macOS 10.15 so assume we
++  // always have permission.
++  return PermissionStatus::kAllowed;
+ }
+ 
+ void BluetoothLowEnergyAdapterApple::RequestSystemPermission(
+diff --git a/device/gamepad/game_controller_data_fetcher_mac.mm b/device/gamepad/game_controller_data_fetcher_mac.mm
+index b2ad408aa9c87..5737c8933d45d 100644
+--- a/device/gamepad/game_controller_data_fetcher_mac.mm
++++ b/device/gamepad/game_controller_data_fetcher_mac.mm
+@@ -37,14 +37,18 @@ bool IsSupported(GCController* controller) {
+   // applications to detect the new devices. These gamepads are already
+   // supported in Chrome through other data fetchers and must be blocked here to
+   // avoid double-enumeration.
+-  NSString* product_category = controller.productCategory;
+-  if ([product_category isEqualToString:@"HID"] ||
+-      [product_category isEqualToString:@"Xbox One"] ||
+-      [product_category isEqualToString:@"DualShock 4"] ||
+-      [product_category isEqualToString:@"DualSense"] ||
+-      [product_category isEqualToString:@"Switch Pro Controller"] ||
+-      [product_category isEqualToString:@"Nintendo Switch JoyCon (L/R)"]) {
+-    return false;
++  // FlyWeb (LOCAL-8): productCategory is macOS 10.15+ (unrecognized selector
++  // on 10.14 when a gamepad connects). As in 116.
++  if (@available(macOS 10.15, *)) {
++    NSString* product_category = controller.productCategory;
++    if ([product_category isEqualToString:@"HID"] ||
++        [product_category isEqualToString:@"Xbox One"] ||
++        [product_category isEqualToString:@"DualShock 4"] ||
++        [product_category isEqualToString:@"DualSense"] ||
++        [product_category isEqualToString:@"Switch Pro Controller"] ||
++        [product_category isEqualToString:@"Nintendo Switch JoyCon (L/R)"]) {
++      return false;
++    }
+   }
+ 
+   return true;
+diff --git a/media/base/mac/video_capture_device_avfoundation_helpers.mm b/media/base/mac/video_capture_device_avfoundation_helpers.mm
+index 441579b0aa4ea..6091fa2339a69 100644
+--- a/media/base/mac/video_capture_device_avfoundation_helpers.mm
++++ b/media/base/mac/video_capture_device_avfoundation_helpers.mm
+@@ -16,6 +16,15 @@ BASE_FEATURE(kUseAVCaptureDeviceTypeExternal,
+ #endif  // BUILDFLAG(IS_MAC)
+ 
+ NSArray<AVCaptureDevice*>* GetVideoCaptureDevices() {
++#if BUILDFLAG(IS_MAC)
++  // FlyWeb (LOCAL-8): the device types and AVCaptureDeviceDiscoverySession are
++  // macOS 10.15+ (null weak constants in an array literal abort on 10.14). As in
++  // 116, 10.14 uses +[AVCaptureDevice devices].
++  if (@available(macOS 10.15, *)) {
++  } else {
++    return [AVCaptureDevice devices];
++  }
++#endif  // BUILDFLAG(IS_MAC)
+   // Camera device types available on all apple platforms.
+   NSArray* captureDeviceTypes = @[ AVCaptureDeviceTypeBuiltInWideAngleCamera ];
+ 
+diff --git a/media/capture/video/apple/video_capture_device_avfoundation.mm b/media/capture/video/apple/video_capture_device_avfoundation.mm
+index 70b6bc8993045..63f957360d60c 100644
+--- a/media/capture/video/apple/video_capture_device_avfoundation.mm
++++ b/media/capture/video/apple/video_capture_device_avfoundation.mm
+@@ -622,6 +622,19 @@ AVCaptureDeviceFormat* FindBestCaptureFormat(
+   // https://crbug.com/1116241. This procedure is purposefully delayed by 3
+   // seconds because the camera needs to ramp up after re-configuring itself in
+   // order for 3A to stabilize or else the photo is dark/black.
++  // FlyWeb (LOCAL-8): AVCapturePhotoOutput is macOS 10.15+ (nil on 10.14); the
++  // 116 AVCaptureStillImageOutput path is gone in 128, so no photos on 10.14.
++  if (@available(macOS 10.15, *)) {
++  } else {
++    {
++      base::AutoLock lock(_lock);
++      if (_frameReceiver) {
++        _frameReceiver->OnPhotoError();
++      }
++    }
++    [self takePhotoResolved];
++    return;
++  }
+   {
+     // `_lock` is needed since `_photoOutput` may be read from non-main thread.
+     base::AutoLock lock(_lock);
+diff --git a/sandbox/mac/system_services.cc b/sandbox/mac/system_services.cc
+index eb81a70e4d5d5..ac9d3e1d54c03 100644
+--- a/sandbox/mac/system_services.cc
++++ b/sandbox/mac/system_services.cc
+@@ -17,7 +17,7 @@ void _LSSetApplicationLaunchServicesServerConnectionStatus(
+ 
+ // See
+ // https://github.com/WebKit/WebKit/blob/24aaedc770d192d03a07ba4a71727274aaa8fc07/Source/WebKit/WebProcess/cocoa/WebProcessCocoa.mm#L840
+-void _CSCheckFixDisable();
++void _CSCheckFixDisable() __attribute__((weak_import));  // FlyWeb (LOCAL-6, 21-10): no existe en 10.14
+ }  // extern "C"
+ 
+ namespace sandbox {
+@@ -39,7 +39,9 @@ void DisableLaunchServices() {
+ }
+ 
+ void DisableCoreServicesCheckFix() {
+-  _CSCheckFixDisable();
++  if (_CSCheckFixDisable) {  // FlyWeb (LOCAL-6, 21-10): débil en 10.14
++    _CSCheckFixDisable();
++  }
+ }
+ 
+ }  // namespace sandbox
+diff --git a/services/device/public/cpp/geolocation/system_geolocation_source_apple.mm b/services/device/public/cpp/geolocation/system_geolocation_source_apple.mm
+index 4e16c1d782d01..4c12cdaf3d5ef 100644
+--- a/services/device/public/cpp/geolocation/system_geolocation_source_apple.mm
++++ b/services/device/public/cpp/geolocation/system_geolocation_source_apple.mm
+@@ -114,7 +114,12 @@ void SystemGeolocationSourceApple::OpenSystemPermissionSetting() {
+ }
+ 
+ void SystemGeolocationSourceApple::RequestPermission() {
+-  [location_manager_ requestWhenInUseAuthorization];
++  // FlyWeb (LOCAL-8): -requestWhenInUseAuthorization is macOS 10.15+
++  // (unrecognized selector on 10.14 when a site asks for the location). On
++  // 10.14 the system asks by itself when location updates start, as in 116.
++  if (@available(macOS 10.15, *)) {
++    [location_manager_ requestWhenInUseAuthorization];
++  }
+ }
+ 
+ void SystemGeolocationSourceApple::AddPositionUpdateObserver(
+diff --git a/third_party/blink/renderer/core/editing/substring_util.mm b/third_party/blink/renderer/core/editing/substring_util.mm
+index 187d669991c10..38192d065c9b6 100644
+--- a/third_party/blink/renderer/core/editing/substring_util.mm
++++ b/third_party/blink/renderer/core/editing/substring_util.mm
+@@ -119,7 +119,14 @@ NSAttributedString* AttributedSubstringFromRange(LocalFrame* frame,
+ 
+     NSFont* font = nil;
+     if (original_font) {
+-      font = [original_font fontWithSize:desired_size];
++      // FlyWeb (LOCAL-8): -[NSFont fontWithSize:] is macOS 10.15+
++      // (unrecognized selector on 10.14, dictionary look-up). As in 116.
++      if (@available(macOS 10.15, *)) {
++        font = [original_font fontWithSize:desired_size];
++      } else {
++        font = [NSFontManager.sharedFontManager convertFont:original_font
++                                                     toSize:desired_size];
++      }
+     }
+ 
+     // If the platform font can't be loaded, or the size is incorrect comparing
+diff --git a/third_party/blink/renderer/platform/fonts/mac/font_matcher_mac.mm b/third_party/blink/renderer/platform/fonts/mac/font_matcher_mac.mm
+index f8d0d59d4bba4..e829c675e83f0 100644
+--- a/third_party/blink/renderer/platform/fonts/mac/font_matcher_mac.mm
++++ b/third_party/blink/renderer/platform/fonts/mac/font_matcher_mac.mm
+@@ -65,7 +65,7 @@ using base::apple::ScopedCFTypeRef;
+ // We don't need localized variation axis name, so we can use
+ // `CTFontCopyVariationAxesInternal()` instead.
+ // Request for public API: FB13788219.
+-extern "C" CFArrayRef CTFontCopyVariationAxesInternal(CTFontRef);
++extern "C" CFArrayRef CTFontCopyVariationAxesInternal(CTFontRef) __attribute__((weak_import));  // FlyWeb (LOCAL-6, 21-10): solo se usa en macOS 13+
+ 
+ namespace blink {
+ 
+diff --git a/ui/display/mac/screen_mac.mm b/ui/display/mac/screen_mac.mm
+index cd08cb3b7c95a..acf0136756c10 100644
+--- a/ui/display/mac/screen_mac.mm
++++ b/ui/display/mac/screen_mac.mm
+@@ -105,8 +105,12 @@ DisplayMac BuildDisplayForScreen(NSScreen* screen) {
+   // Examine the presence of HDR.
+   bool enable_hdr = false;
+   float hdr_max_lum_relative = 1.f;
+-  const float max_potential_edr_value =
+-      screen.maximumPotentialExtendedDynamicRangeColorComponentValue;
++  // FlyWeb (LOCAL-6, 21-10): la propiedad es de macOS 10.15; en 10.14, sin HDR.
++  float max_potential_edr_value = 1.f;
++  if (@available(macOS 10.15, *)) {
++    max_potential_edr_value =
++        screen.maximumPotentialExtendedDynamicRangeColorComponentValue;
++  }
+   const float max_edr_value =
+       screen.maximumExtendedDynamicRangeColorComponentValue;
+   if (max_potential_edr_value > 1.f) {
+@@ -200,7 +204,9 @@ DisplayMac BuildDisplayForScreen(NSScreen* screen) {
+     SetInternalDisplayIds({display_id});
+   }
+ 
+-  display.set_label(base::SysNSStringToUTF8(screen.localizedName));
++  if (@available(macOS 10.15, *)) {  // FlyWeb (LOCAL-6, 21-10): 10.15+
++    display.set_label(base::SysNSStringToUTF8(screen.localizedName));
++  }
+ 
+   return DisplayMac{display, screen};
+ }
+diff --git a/ui/gfx/mac/color_space_util.mm b/ui/gfx/mac/color_space_util.mm
+index 94774455e493d..f92d83fd030a0 100644
+--- a/ui/gfx/mac/color_space_util.mm
++++ b/ui/gfx/mac/color_space_util.mm
+@@ -144,10 +144,15 @@ const std::vector<CVImageTransferFn>& GetSupportedImageTransferFn() {
+             {kCVImageBufferTransferFunction_Linear,
+              kCMFormatDescriptionTransferFunction_Linear,
+              gfx::ColorSpace::TransferID::LINEAR});
+-        supported_transfer_funcs.push_back(
+-            {kCVImageBufferTransferFunction_sRGB,
+-             kCMFormatDescriptionTransferFunction_sRGB,
+-             gfx::ColorSpace::TransferID::SRGB});
++        // FlyWeb (LOCAL-7, 21-10): kCMFormatDescriptionTransferFunction_sRGB
++        // es de macOS 10.15 (nula en 10.14: SEGV en el proceso GPU al crear
++        // IOSurfaces); se repone el @available que tenía la 116.
++        if (@available(macOS 10.15, *)) {
++          supported_transfer_funcs.push_back(
++              {kCVImageBufferTransferFunction_sRGB,
++               kCMFormatDescriptionTransferFunction_sRGB,
++               gfx::ColorSpace::TransferID::SRGB});
++        }
+ 
+         return supported_transfer_funcs;
+       }());

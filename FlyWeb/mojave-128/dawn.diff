@@ -1,0 +1,100 @@
+diff --git a/src/dawn/common/AlignedAlloc.cpp b/src/dawn/common/AlignedAlloc.cpp
+index 364cc200..f7f76bd6 100644
+--- a/src/dawn/common/AlignedAlloc.cpp
++++ b/src/dawn/common/AlignedAlloc.cpp
+@@ -48,6 +48,17 @@ void* AlignedAlloc(size_t size, size_t alignment) {
+     // instead.
+     return memalign(alignment, size);
+ 
++#elif DAWN_PLATFORM_IS(MACOS)
++    // FlyWeb (LOCAL-7, 21-10): aligned_alloc es de macOS 10.15; en 10.14, posix_memalign
++    // (también se libera con free()).
++    if (__builtin_available(macOS 10.15, *)) {
++        return aligned_alloc(alignment, size);
++    }
++    void* ptr = nullptr;
++    // posix_memalign exige un múltiplo de sizeof(void*).
++    size_t memalignAlignment = alignment < sizeof(void*) ? sizeof(void*) : alignment;
++    return posix_memalign(&ptr, memalignAlignment, size) == 0 ? ptr : nullptr;
++
+ #else
+     return aligned_alloc(alignment, size);
+ 
+diff --git a/src/dawn/native/metal/PhysicalDeviceMTL.mm b/src/dawn/native/metal/PhysicalDeviceMTL.mm
+index dfe472bd..cb91146d 100644
+--- a/src/dawn/native/metal/PhysicalDeviceMTL.mm
++++ b/src/dawn/native/metal/PhysicalDeviceMTL.mm
+@@ -285,6 +285,17 @@ ResultOrError<MTLGPUFamily> GetMTLGPUFamily(id<MTLDevice> device) {
+         return MTLGPUFamily::Mac1;
+     }
+ 
++#if DAWN_PLATFORM_IS(MACOS)
++    // FlyWeb (LOCAL-7, 21-10): supportsFamily: es de macOS 10.15; en 10.14, los MTLFeatureSet
++    // (como hacía Dawn antes de dejar 10.14).
++    if ([device supportsFeatureSet:MTLFeatureSet_macOS_GPUFamily2_v1]) {
++        return MTLGPUFamily::Mac2;
++    }
++    if ([device supportsFeatureSet:MTLFeatureSet_macOS_GPUFamily1_v1]) {
++        return MTLGPUFamily::Mac1;
++    }
++#endif
++
+ #if DAWN_PLATFORM_IS(IOS) && \
+     (!defined(__IPHONE_16_0) || __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_16_0)
+     if (@available(iOS 10.11, *)) {
+@@ -331,7 +342,12 @@ PhysicalDevice::PhysicalDevice(InstanceBase* instance,
+     mAdapterType = wgpu::AdapterType::IntegratedGPU;
+     const char* systemName = "iOS ";
+ #elif DAWN_PLATFORM_IS(MACOS)
+-    if ([*mDevice hasUnifiedMemory]) {
++    // FlyWeb (LOCAL-6, 21-10): hasUnifiedMemory es de macOS 10.15; en 10.14, isLowPower.
++    bool unifiedMemory = [*mDevice isLowPower];
++    if (@available(macOS 10.15, *)) {
++        unifiedMemory = [*mDevice hasUnifiedMemory];
++    }
++    if (unifiedMemory) {
+         mAdapterType = wgpu::AdapterType::IntegratedGPU;
+     } else {
+         mAdapterType = wgpu::AdapterType::DiscreteGPU;
+@@ -407,7 +423,13 @@ void PhysicalDevice::SetupBackendDeviceToggles(dawn::platform::Platform* platfor
+     {
+         bool haveStoreAndMSAAResolve = false;
+ #if DAWN_PLATFORM_IS(MACOS)
+-        haveStoreAndMSAAResolve = [*mDevice supportsFamily:MTLGPUFamilyCommon2];
++        // FlyWeb (LOCAL-7, 21-10): supportsFamily: es de macOS 10.15; en 10.14, MTLFeatureSet.
++        if (@available(macOS 10.15, *)) {
++            haveStoreAndMSAAResolve = [*mDevice supportsFamily:MTLGPUFamilyCommon2];
++        } else {
++            haveStoreAndMSAAResolve =
++                [*mDevice supportsFeatureSet:MTLFeatureSet_macOS_GPUFamily1_v2];
++        }
+ #elif DAWN_PLATFORM_IS(IOS)
+ #if !defined(__IPHONE_16_0) || __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_16_0
+         haveStoreAndMSAAResolve = [*mDevice supportsFeatureSet:MTLFeatureSet_iOS_GPUFamily3_v2];
+@@ -561,7 +583,12 @@ void PhysicalDevice::InitializeSupportedFeaturesImpl() {
+         EnableFeature(Feature::Float32Filterable);
+     }
+ #elif DAWN_PLATFORM_IS(MACOS)
+-    if ([*mDevice supportsFamily:MTLGPUFamilyMac2]) {
++    // FlyWeb (LOCAL-7, 21-10): supportsFamily: es de macOS 10.15; en 10.14, MTLFeatureSet.
++    if (@available(macOS 10.15, *)) {
++        if ([*mDevice supportsFamily:MTLGPUFamilyMac2]) {
++            EnableFeature(Feature::Float32Filterable);
++        }
++    } else if ([*mDevice supportsFeatureSet:MTLFeatureSet_macOS_GPUFamily2_v1]) {
+         EnableFeature(Feature::Float32Filterable);
+     }
+ #endif
+@@ -941,7 +968,11 @@ FeatureValidationResult PhysicalDevice::ValidateFeatureSupportedWithTogglesImpl(
+ 
+ void PhysicalDevice::PopulateBackendProperties(UnpackedPtr<AdapterProperties>& properties) const {
+     if (auto* memoryHeapProperties = properties.Get<AdapterPropertiesMemoryHeaps>()) {
+-        if ([*mDevice hasUnifiedMemory]) {
++        bool unifiedMemory = false;  // FlyWeb (LOCAL-6, 21-10): 10.15+
++        if (@available(macOS 10.15, iOS 13.0, *)) {
++            unifiedMemory = [*mDevice hasUnifiedMemory];
++        }
++        if (unifiedMemory) {
+             auto* heapInfo = new MemoryHeapInfo[1];
+             memoryHeapProperties->heapCount = 1;
+             memoryHeapProperties->heapInfo = heapInfo;
