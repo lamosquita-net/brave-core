@@ -1,0 +1,17 @@
+diff --git a/chrome/common/extensions/manifest_handlers/minimum_chrome_version_checker.cc b/chrome/common/extensions/manifest_handlers/minimum_chrome_version_checker.cc
+index 0693007a98fe1574b8117b64071f715ae83fa3af..7869f204e521463fd7db2cf57ab7fb091449dcdb 100644
+--- a/chrome/common/extensions/manifest_handlers/minimum_chrome_version_checker.cc
++++ b/chrome/common/extensions/manifest_handlers/minimum_chrome_version_checker.cc
+@@ -40,7 +40,11 @@ bool MinimumChromeVersionChecker::Parse(Extension* extension,
+     return false;
+   }
+ 
+-  const base::Version& current_version = version_info::GetVersion();
++  // FlyWeb: compare with the Chrome version FlyWeb declares (the Web Store
++  // serves FlyWeb the extensions for that version), not with the real 128.
++  // softmac FlyWeb/docs/extensiones.md, option A.
++  const base::Version current_version(
++      version_info::constants::kFlyWebEngineFullVersion);
+   if (!current_version.IsValid()) {
+     NOTREACHED_IN_MIGRATION();
+     return false;

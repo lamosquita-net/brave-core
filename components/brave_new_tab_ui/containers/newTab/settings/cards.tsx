@@ -19,7 +19,6 @@ import {
   ToggleCardsSwitch,
   ToggleCardsText
 } from '../../../components/default'
-import braveTalkBanner from './assets/brave-talk.png'
 import rewardsBanner from './assets/braverewards.png'
 import Toggle from '@brave/leo/react/toggle'
 import Button from '@brave/leo/react/button'
@@ -58,20 +57,9 @@ const ToggleButton = ({ on, toggleFunc, float }: { on: boolean, toggleFunc: any,
   </StyledButton>
 }
 
-function CardSettings({ toggleShowBraveTalk, showBraveTalk, braveTalkSupported, toggleShowRewards, showRewards, braveRewardsSupported, toggleCards, cardsHidden }: Props) {
+function CardSettings({ toggleShowRewards, showRewards, braveRewardsSupported, toggleCards, cardsHidden }: Props) {
+  // FlyWeb: no Brave Talk card (Talk is out).
   return <StyledWidgetSettings>
-    {braveTalkSupported && <FeaturedSettingsWidget>
-      <StyledBannerImage src={braveTalkBanner} />
-      <StyledSettingsInfo>
-        <StyledSettingsTitle>
-          {getLocale('braveTalkWidgetTitle')}
-        </StyledSettingsTitle>
-        <StyledSettingsCopy>
-          {getLocale('braveTalkWidgetWelcomeTitle')}
-        </StyledSettingsCopy>
-      </StyledSettingsInfo>
-      <ToggleButton on={showBraveTalk} toggleFunc={toggleShowBraveTalk} float />
-    </FeaturedSettingsWidget>}
     {braveRewardsSupported && <SettingsWidget>
       <StyledBannerImage src={rewardsBanner} />
       <StyledSettingsInfo>

@@ -577,6 +577,31 @@ std::vector<const PrepopulatedEngine*> GetEnginesFromEngineIDs(
   return engines;
 }
 
+// FlyWeb: DuckDuckGo (the regional variant offered in this country) is the
+// default instead of Brave Search. Where no DuckDuckGo variant is offered
+// (e.g. KR), keep the regional default unless it is Brave Search.
+BravePrepopulatedEngineID FlyWebDefaultSearchEngine(
+    int country_id,
+    BravePrepopulatedEngineID default_id) {
+  base::span<const BravePrepopulatedEngineID> brave_engine_ids =
+      kBraveEnginesDefault;
+  const auto it_country = kDefaultEnginesByCountryIdMap.find(country_id);
+  if (it_country != kDefaultEnginesByCountryIdMap.end()) {
+    brave_engine_ids = it_country->second;
+  }
+  for (BravePrepopulatedEngineID id : brave_engine_ids) {
+    if (id == PREPOPULATED_ENGINE_ID_DUCKDUCKGO ||
+        id == PREPOPULATED_ENGINE_ID_DUCKDUCKGO_DE ||
+        id == PREPOPULATED_ENGINE_ID_DUCKDUCKGO_AU_NZ_IE) {
+      return id;
+    }
+  }
+  if (default_id == PREPOPULATED_ENGINE_ID_BRAVE) {
+    return PREPOPULATED_ENGINE_ID_GOOGLE;
+  }
+  return default_id;
+}
+
 void UpdateTemplateURLDataKeyword(
     const std::unique_ptr<TemplateURLData>& t_urld) {
   DCHECK(t_urld.get());
@@ -704,8 +729,8 @@ std::unique_ptr<TemplateURLData> GetPrepopulatedFallbackSearch(
                        ? search_engine_choice_service->GetCountryId()
                        : country_codes::GetCountryIDFromPrefs(prefs);
 
-  BravePrepopulatedEngineID default_id =
-      GetDefaultSearchEngine(country_id, version);
+  BravePrepopulatedEngineID default_id = FlyWebDefaultSearchEngine(
+      country_id, GetDefaultSearchEngine(country_id, version));
 
   std::unique_ptr<TemplateURLData> brave_engine;
   for (auto& engine : prepopulated_engines) {

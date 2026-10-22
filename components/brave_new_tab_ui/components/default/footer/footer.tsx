@@ -16,6 +16,7 @@ import {
   PhotoName
 } from '..'
 import * as S from '../page'
+import { credito } from '../flyweb/recursos'
 
 // Helpers
 import { getLocale } from '../../../../common/locale'
@@ -41,6 +42,8 @@ export default class FooterInfo extends React.PureComponent<Props, {}> {
         { showPhotoInfo && backgroundImageInfo?.type === 'brave' &&
           <S.GridItemCredits>
             <PhotoName>
+              {/* FlyWeb: our photographs carry their own credit. */}
+              {backgroundImageInfo.flyweb ? credito : <>
               {`${getLocale('photoBy')} `}
               { backgroundImageInfo.link
                   ? <Link href={backgroundImageInfo.link} rel='noreferrer noopener' target='_blank'>
@@ -48,6 +51,7 @@ export default class FooterInfo extends React.PureComponent<Props, {}> {
                     </Link>
                   : <Label> {backgroundImageInfo.author} </Label>
               }
+              </>}
             </PhotoName>
           </S.GridItemCredits>
         }
@@ -55,7 +59,8 @@ export default class FooterInfo extends React.PureComponent<Props, {}> {
           <Navigation>
             <IconButtonContainer textDirection={textDirection}>
               <IconButtonSideText textDirection={textDirection}>
-                <IconButton onClick={onClickSettings}>
+                {/* FlyWeb: accessible name (screen readers read an empty button). */}
+                <IconButton onClick={onClickSettings} aria-label={getLocale('customize')}>
                   <Icon name='tune' />
                 </IconButton>
                 {getLocale('customize')}

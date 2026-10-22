@@ -60,6 +60,12 @@ export const newTabReducer: Reducer<NewTab.State | undefined> = (state: NewTab.S
           }
         }
 
+        // FlyWeb: a Brave background (from the "NTP Background Images"
+        // component) becomes one of ours.
+        if (backgroundWallpaper?.type === 'brave') {
+          backgroundWallpaper = backgroundAPI.randomBackgroundImage()
+        }
+
         state = {
           ...state,
           backgroundWallpaper,
@@ -141,15 +147,8 @@ export const newTabReducer: Reducer<NewTab.State | undefined> = (state: NewTab.S
         }
       }
 
-      if (!state.backgroundWallpaper && background?.brave) {
-        state.backgroundWallpaper = {
-          type: 'brave',
-          author: background.brave.author,
-          link: background.brave.link.url,
-          wallpaperImageUrl: background.brave.imageUrl.url,
-          random: false
-        }
-      }
+      // FlyWeb: Brave's backgrounds (background?.brave) are replaced by ours,
+      // picked at random below.
 
       if (!state.backgroundWallpaper) {
         state.backgroundWallpaper = backgroundAPI.randomBackgroundImage()

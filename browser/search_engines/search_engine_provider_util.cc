@@ -29,9 +29,10 @@ void SetBraveAsDefaultPrivateSearchProvider(Profile* profile) {
   search_engines::SearchEngineChoiceService* search_engine_choice_service =
       search_engines::SearchEngineChoiceServiceFactory::GetForProfile(profile);
 
-  auto data = TemplateURLPrepopulateData::GetPrepopulatedEngine(
-      prefs, search_engine_choice_service,
-      TemplateURLPrepopulateData::PREPOPULATED_ENGINE_ID_BRAVE);
+  // FlyWeb: private windows use the same prepopulated default as normal ones
+  // (DuckDuckGo, see template_url_prepopulate_data.cc) instead of Brave Search.
+  auto data = TemplateURLPrepopulateData::GetPrepopulatedFallbackSearch(
+      prefs, search_engine_choice_service);
   DCHECK(data);
   prefs->SetString(prefs::kSyncedDefaultPrivateSearchProviderGUID,
                    data->sync_guid);
