@@ -1,0 +1,14 @@
+diff --git a/third_party/blink/renderer/core/loader/base_fetch_context_test.cc b/third_party/blink/renderer/core/loader/base_fetch_context_test.cc
+index 2e926e3efde6bebe442f6071a5bdfeae1c20460f..84d31c566c5a84143f50ebd15013de642a5489bc 100644
+--- a/third_party/blink/renderer/core/loader/base_fetch_context_test.cc
++++ b/third_party/blink/renderer/core/loader/base_fetch_context_test.cc
+@@ -68,7 +68,8 @@ class MockBaseFetchContext final : public BaseFetchContext {
+       const override {
+     return SecurityOrigin::CreateUniqueOpaque();
+   }
+-  bool AllowScript() const override { return false; }
++  // FlyWeb: Brave's chromium_src gives AllowScript() a KURL argument.
++  bool AllowScript(const KURL&) const override { return false; }
+   SubresourceFilter* GetSubresourceFilter() const override { return nullptr; }
+   bool ShouldBlockRequestByInspector(const KURL&) const override {
+     return false;

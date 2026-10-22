@@ -1,0 +1,17 @@
+diff --git a/third_party/blink/renderer/core/editing/commands/apply_style_command_test.cc b/third_party/blink/renderer/core/editing/commands/apply_style_command_test.cc
+index 1077b8ddb7c6d9c168c2a6d26ea8a2545c97521f..ecd6dd370e68d09181f52f786626eda64878f2b8 100644
+--- a/third_party/blink/renderer/core/editing/commands/apply_style_command_test.cc
++++ b/third_party/blink/renderer/core/editing/commands/apply_style_command_test.cc
+@@ -157,8 +157,10 @@ TEST_F(ApplyStyleCommandTest, JustifyCenterWithNonEditable) {
+       ApplyStyleCommand::kForceBlockProperties)
+       ->Apply();
+ 
+-  EXPECT_EQ("<div style=\"text-align: center;\">|<br>x</div>",
+-            GetSelectionTextFromBody());
++  EXPECT_EQ(
++      "<div style=\"text-align: center;\">|x</div><div "
++      "contenteditable=\"false\"></div>",
++      GetSelectionTextFromBody());
+ }
+ 
+ // This is a regression test for https://crbug.com/1199902

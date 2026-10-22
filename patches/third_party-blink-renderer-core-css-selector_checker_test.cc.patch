@@ -1,0 +1,14 @@
+diff --git a/third_party/blink/renderer/core/css/selector_checker_test.cc b/third_party/blink/renderer/core/css/selector_checker_test.cc
+index 5face9134533cc77b85f1dcde3dba5a7316797cd..a9370c34c859b26d987b7e19c010727c312bb36e 100644
+--- a/third_party/blink/renderer/core/css/selector_checker_test.cc
++++ b/third_party/blink/renderer/core/css/selector_checker_test.cc
+@@ -168,7 +168,8 @@ TEST_P(ScopeProximityTest, All) {
+   while (IsA<StyleRuleScope>(rule)) {
+     auto& scope_rule = To<StyleRuleScope>(*rule);
+     scope = scope_rule.GetStyleScope().CopyWithParent(scope);
+-    const StyleRuleBase::ChildRuleVector& child_rules = scope_rule.ChildRules();
++    const HeapVector<Member<StyleRuleBase>>& child_rules =
++        scope_rule.ChildRules();
+     ASSERT_EQ(1u, child_rules.size());
+     rule = child_rules[0].Get();
+   }

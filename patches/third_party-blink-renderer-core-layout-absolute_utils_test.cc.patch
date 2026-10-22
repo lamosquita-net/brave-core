@@ -1,0 +1,37 @@
+diff --git a/third_party/blink/renderer/core/layout/absolute_utils_test.cc b/third_party/blink/renderer/core/layout/absolute_utils_test.cc
+index f37f6dbc199610a6c1fd9625a343513702844283..ab1a871f3c5cd64d865cd8327c6216ddc71c6dd5 100644
+--- a/third_party/blink/renderer/core/layout/absolute_utils_test.cc
++++ b/third_party/blink/renderer/core/layout/absolute_utils_test.cc
+@@ -127,11 +127,12 @@ class AbsoluteUtilsTest : public RenderingTest {
+     const InsetModifiedContainingBlock imcb =
+         ComputeInsetModifiedContainingBlock(
+             node, space.AvailableSize(), LogicalAlignment(), insets,
+-            static_position, LogicalAnchorCenterPosition(),
+-            container_writing_direction, node.Style().GetWritingDirection());
+-    ComputeOofInlineDimensions(node, node.Style(), space, imcb,
+-                               LogicalAlignment(), border_padding, std::nullopt,
+-                               container_writing_direction, dimensions);
++            static_position, container_writing_direction,
++            node.Style().GetWritingDirection());
++    ComputeOofInlineDimensions(
++        node, node.Style(), space, imcb, LogicalAnchorCenterPosition(),
++        LogicalAlignment(), border_padding, std::nullopt, BoxStrut(),
++        container_writing_direction, dimensions);
+     GetDocument().Lifecycle().AdvanceTo(DocumentLifecycle::kAfterPerformLayout);
+     GetDocument().Lifecycle().AdvanceTo(DocumentLifecycle::kLayoutClean);
+   }
+@@ -168,10 +169,11 @@ class AbsoluteUtilsTest : public RenderingTest {
+     const InsetModifiedContainingBlock imcb =
+         ComputeInsetModifiedContainingBlock(
+             node, space.AvailableSize(), LogicalAlignment(), insets,
+-            static_position, LogicalAnchorCenterPosition(),
+-            container_writing_direction, node.Style().GetWritingDirection());
++            static_position, container_writing_direction,
++            node.Style().GetWritingDirection());
+     ComputeOofBlockDimensions(node, node.Style(), space, imcb,
+-                              LogicalAlignment(), border_padding, std::nullopt,
++                              LogicalAnchorCenterPosition(), LogicalAlignment(),
++                              border_padding, std::nullopt, BoxStrut(),
+                               container_writing_direction, dimensions);
+     GetDocument().Lifecycle().AdvanceTo(DocumentLifecycle::kAfterPerformLayout);
+     GetDocument().Lifecycle().AdvanceTo(DocumentLifecycle::kLayoutClean);

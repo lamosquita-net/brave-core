@@ -1,0 +1,16 @@
+diff --git a/third_party/blink/renderer/core/css/try_value_flips_test.cc b/third_party/blink/renderer/core/css/try_value_flips_test.cc
+index 666ed04d04fecf07d0995c9aa966a5ec760307be..be5b3952f00d5c5cbc85af7f7941660df1549dd5 100644
+--- a/third_party/blink/renderer/core/css/try_value_flips_test.cc
++++ b/third_party/blink/renderer/core/css/try_value_flips_test.cc
+@@ -70,7 +70,10 @@ class TryValueFlipsTest : public PageTestBase {
+     add_if_flipped(CSSPropertyID::kMarginInlineEnd, flips.margin_inline_end);
+     add(CSSPropertyID::kAlignSelf, flips.align_self);
+     add(CSSPropertyID::kJustifySelf, flips.justify_self);
+-    add(CSSPropertyID::kInsetArea, CSSPropertyID::kInsetArea);
++    add(CSSPropertyID::kPositionArea, CSSPropertyID::kPositionArea);
++    if (RuntimeEnabledFeatures::CSSInsetAreaPropertyEnabled()) {
++      add(CSSPropertyID::kInsetArea, CSSPropertyID::kInsetArea);
++    }
+     add_if_flipped(CSSPropertyID::kBlockSize, flips.block_size);
+     add_if_flipped(CSSPropertyID::kInlineSize, flips.inline_size);
+     add_if_flipped(CSSPropertyID::kMinBlockSize, flips.min_block_size);
