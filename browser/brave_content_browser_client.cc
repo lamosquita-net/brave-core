@@ -26,6 +26,7 @@
 #include "brave/browser/brave_wallet/brave_wallet_service_factory.h"
 #include "brave/browser/debounce/debounce_service_factory.h"
 #include "brave/browser/ephemeral_storage/ephemeral_storage_service_factory.h"
+#include "brave/browser/flyweb/declared_version.h"
 #include "brave/browser/ephemeral_storage/ephemeral_storage_tab_helper.h"
 #include "brave/browser/ethereum_remote_client/buildflags/buildflags.h"
 #include "brave/browser/net/brave_proxying_url_loader_factory.h"
@@ -1317,6 +1318,26 @@ void BraveContentBrowserClient::OverrideWebkitPrefs(WebContents* web_contents,
 #endif
 }
 
+std::string BraveContentBrowserClient::GetUserAgent() {
+  const std::string user_agent = ChromeContentBrowserClient::GetUserAgent();
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          embedder_support::kUserAgent)) {
+    return user_agent;
+  }
+  return flyweb::DeclareUserAgent(user_agent);
+}
+
+std::string BraveContentBrowserClient::GetUserAgentBasedOnPolicy(
+    content::BrowserContext* context) {
+  const std::string user_agent =
+      ChromeContentBrowserClient::GetUserAgentBasedOnPolicy(context);
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          embedder_support::kUserAgent)) {
+    return user_agent;
+  }
+  return flyweb::DeclareUserAgent(user_agent);
+}
+
 blink::UserAgentMetadata BraveContentBrowserClient::GetUserAgentMetadata() {
   blink::UserAgentMetadata metadata =
       ChromeContentBrowserClient::GetUserAgentMetadata();
@@ -1326,18 +1347,12 @@ blink::UserAgentMetadata BraveContentBrowserClient::GetUserAgentMetadata() {
   if (command_line->HasSwitch(embedder_support::kUserAgent)) {
     return metadata;
   }
-  DCHECK_EQ(3UL, metadata.brand_version_list.size());
-  DCHECK_EQ(3UL, metadata.brand_full_version_list.size());
-  // Zero out the last 3 version components in full version list versions.
-  for (auto& brand_version : metadata.brand_full_version_list) {
-    base::Version version(brand_version.version);
-    brand_version.version =
-        base::StrCat({base::NumberToString(version.components()[0]), ".0.0.0"});
-  }
-  // Zero out the last 3 version components in full version.
-  base::Version version(metadata.full_version);
-  metadata.full_version =
-      base::StrCat({base::NumberToString(version.components()[0]), ".0.0.0"});
+  // FlyWeb: embedder_support::GetUserAgentMetadata() already declares the
+  // engine level and a real full version of it (chromium_src override, F4.8),
+  // for the request headers too; no zeroed "131.0.0.0" full versions, which
+  // no Chrome 131 sends. Two brands, without "Brave".
+  DCHECK_EQ(2UL, metadata.brand_version_list.size());
+  DCHECK_EQ(2UL, metadata.brand_full_version_list.size());
   return metadata;
 }
 

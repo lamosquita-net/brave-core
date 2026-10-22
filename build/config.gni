@@ -72,6 +72,26 @@ if (should_generate_symbols && is_mac) {
 
 brave_version = "$brave_version_major.$brave_version_minor.$brave_version_build"
 
+# FlyWeb: engine level, the Chrome version whose web platform features are all
+# in this build (softmac FlyWeb/docs/motor.md). It is the major version
+# declared to websites, to every site (no per-site exceptions). Raised only
+# when the whole level is in and tested.
+flyweb_engine_level = 131
+
+# FlyWeb: full Chrome version declared in the client hints (uaFullVersion,
+# fullVersionList): a real Chrome release of flyweb_engine_level for Mac, so
+# the hints a site asks for with Accept-CH match the declared major. Raised
+# together with flyweb_engine_level.
+flyweb_engine_full_version = "131.0.6778.265"
+
+# FlyWeb: lowest macOS the declared Chrome runs on. The platformVersion client
+# hint is the real macOS version, raised to this one when it is older (Chrome
+# 127 on Mojave does not exist). Changes with the level: 127-128 "10.15.7",
+# 129-138 "11.7.10", 139+ "12.7.6" (check Chrome's published requirements).
+# Decided by the HUMANO (12-10, F4.8) for privacy: 10.14.6 is a rare value that
+# identifies the user; 10.15.7 is what the frozen User-Agent already says.
+flyweb_min_macos_version = "11.7.10"
+
 if (brave_exe == "") {
   brave_exe = brave_product_name
 }
