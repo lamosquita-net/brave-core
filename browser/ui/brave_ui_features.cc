@@ -7,7 +7,10 @@
 
 namespace features {
 
+// FlyWeb: off, as in FlyWeb 1.15 (no search box on the NTP). Brave's widget
+// shows its lion and searches with Brave Search by default, not with the
+// browser's default engine.
 BASE_FEATURE(kBraveNtpSearchWidget,
              "BraveNtpSearchWidget",
-             base::FEATURE_ENABLED_BY_DEFAULT);
+             base::FEATURE_DISABLED_BY_DEFAULT);
 }

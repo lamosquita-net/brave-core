@@ -483,8 +483,10 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
   // Enabled by default after fixing
   // https://github.com/brave/brave-browser/issues/18017
   // kEnableMediaRouterOnRestart is used to remember the user's choice.
-  registry->SetDefaultPrefValue(prefs::kEnableMediaRouter, base::Value(true));
-  registry->RegisterBooleanPref(kEnableMediaRouterOnRestart, true);
+  // FlyWeb: off by default. When on, Media Router probes the local network
+  // (DIAL/SSDP to port 8008) while idle; users can turn it on in Settings.
+  registry->SetDefaultPrefValue(prefs::kEnableMediaRouter, base::Value(false));
+  registry->RegisterBooleanPref(kEnableMediaRouterOnRestart, false);
 
   BraveFarblingService::RegisterProfilePrefs(registry);
 

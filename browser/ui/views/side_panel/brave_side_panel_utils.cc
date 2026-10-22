@@ -18,9 +18,11 @@
 #include "brave/components/ai_chat/core/browser/utils.h"
 #endif
 
+#if BUILDFLAG(ENABLE_AI_CHAT)
 using SidePanelWebUIViewT_AIChatUI = SidePanelWebUIViewT<AIChatUI>;
 BEGIN_TEMPLATE_METADATA(SidePanelWebUIViewT_AIChatUI, SidePanelWebUIViewT)
 END_METADATA
+#endif
 
 namespace {
 

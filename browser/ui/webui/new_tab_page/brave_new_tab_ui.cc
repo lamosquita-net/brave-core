@@ -6,6 +6,7 @@
 #include "brave/browser/ui/webui/new_tab_page/brave_new_tab_ui.h"
 
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "base/check.h"
@@ -54,13 +55,16 @@ BraveNewTabUI::BraveNewTabUI(content::WebUI* web_ui, const std::string& name)
       navigation_entry ? navigation_entry->IsRestored() : false;
 
   Profile* profile = Profile::FromWebUI(web_ui);
-  web_ui->OverrideTitle(
-      brave_l10n::GetLocalizedResourceUTF16String(IDS_NEW_TAB_TITLE));
+  const std::u16string new_tab_title =
+      brave_l10n::GetLocalizedResourceUTF16String(IDS_NEW_TAB_TITLE);
+  web_ui->OverrideTitle(new_tab_title);
 
   if (brave::ShouldNewTabShowBlankpage(profile)) {
     content::WebUIDataSource* source =
         content::WebUIDataSource::CreateAndAdd(profile, name);
     source->SetDefaultResource(IDR_BRAVE_BLANK_NEW_TAB_HTML);
+    // FlyWeb: the page's <title> is translated too ($i18n{newTabTitle}).
+    source->AddString("newTabTitle", new_tab_title);
     AddBackgroundColorToSource(source, web_contents);
     return;
   }
@@ -71,6 +75,7 @@ BraveNewTabUI::BraveNewTabUI(content::WebUI* web_ui, const std::string& name)
       IDR_BRAVE_NEW_TAB_HTML);
 
   AddBackgroundColorToSource(source, web_contents);
+  source->AddString("newTabTitle", new_tab_title);
 
   source->AddBoolean("featureCustomBackgroundEnabled",
                      !profile->GetPrefs()->IsManagedPreference(

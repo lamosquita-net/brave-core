@@ -208,7 +208,10 @@ const Config = function () {
   this.rewardsGrantDevEndpoint = getEnvConfig(['rewards_grant_dev_endpoint']) || ''
   this.rewardsGrantStagingEndpoint = getEnvConfig(['rewards_grant_staging_endpoint']) || ''
   this.rewardsGrantProdEndpoint = getEnvConfig(['rewards_grant_prod_endpoint']) || ''
-  this.ignorePatchVersionNumber = !this.isBraveReleaseBuild() && getEnvConfig(['ignore_patch_version_number'], !this.isCI)
+  // FlyWeb: off by default (Brave turns it on for local non-release builds,
+  // which shows 1.69.0 in flyweb://version and swaps build.sh's LASTCHANGE for
+  // a dummy one). Still available through the env config.
+  this.ignorePatchVersionNumber = !this.isBraveReleaseBuild() && getEnvConfig(['ignore_patch_version_number'], false)
   this.braveVersion = getBraveVersion(this.ignorePatchVersionNumber)
   this.braveIOSMarketingPatchVersion = getEnvConfig(['brave_ios_marketing_version_patch']) || ''
   this.androidOverrideVersionName = this.braveVersion
