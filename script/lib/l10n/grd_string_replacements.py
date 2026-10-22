@@ -5,6 +5,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import re
 
 # Strings we want to replace but that we also replace automatically
 # for XTB files
@@ -79,3 +80,105 @@ main_text_only_replacements = [
     ('Copyright \xa9', 'Copyright'),
     ('Copyright', 'Copyright \xa9'),
 ]
+
+
+# FlyWeb: the browser is called FlyWeb. Brave's own services keep their name
+# (they are Brave's, and FlyWeb disables most of them), as do legal notices.
+# Applied after all the replacements above, so Chromium strings end up as
+# Chrome -> Brave -> FlyWeb. Idempotent.
+flyweb_replacements = [
+    # "Brave Sync" is rebranded too: FlyWeb syncs with its own server
+    # (sync.flyweb.lamosquita.net).
+    (r'\bBrave\b(?!\s+(?:Wallet|Rewards|News|VPN|Vpn|Search|Talk|Ads|Software'
+     r'|Authors|Today|Leo)\b)', r'FlyWeb'),
+    # FlyWeb's internal pages are flyweb://, never brave:// (kBraveUIScheme).
+    (r'\bbrave://', r'flyweb://'),
+    # Nor chrome:// in the Chromium strings Brave copies into brave-core: the
+    # pages answer to flyweb:// too, and the address bar shows flyweb://.
+    (r'\bchrome://', r'flyweb://'),
+]
+
+# Messages that name the company are legal notices ("Brave is a registered
+# trademark of Brave Software", disclaimers): they keep "Brave" in every
+# language. The only exception is the company line of the about pages, which
+# names who ships FlyWeb.
+FLYWEB_LEGAL_MARKER = 'Brave Software'
+FLYWEB_COMPANY = ('Brave Software Inc', 'lamosquita')
+
+# The about pages' copyright line credits lamosquita next to The Brave
+# Authors. Translations cannot be edited word by word (the order changes per
+# language and the previous pass turned "Brave Authors" into "FlyWeb
+# Authors"), so they are rewritten from a template: Spanish by hand, English
+# for the rest.
+_FLYWEB_COPYRIGHT_RE = re.compile(
+    r'(\s*Copyright \xa9 (?:<ph[^>]*>.*?</ph>|<ph[^>]*/>) )'
+    r'(?:lamosquita and )?(The Brave Authors\. All rights reserved\.\s*)$', re.S)
+_FLYWEB_COPYRIGHT_PH_RE = re.compile(r'<ph name="[^"]+" ?/>')
+FLYWEB_COPYRIGHT = {
+    'es': 'Copyright \xa9 {ph} lamosquita y los creadores de Brave. '
+          'Todos los derechos reservados.',
+    '': 'Copyright \xa9 {ph} lamosquita and The Brave Authors. '
+        'All rights reserved.',
+}
+
+_FLYWEB_MESSAGE_RE = re.compile(r'(<(message|translation)\b[^>]*>)(.*?)(</\2>)',
+                                re.S)
+
+
+def _flyweb_plain(text):
+    for (pattern, to) in flyweb_replacements:
+        text = re.sub(pattern, to, text)
+    return text
+
+
+def flyweb_message_kind(text):
+    """'company', 'copyright', 'legal' or None, from a message's English
+    text."""
+    if text.strip() == FLYWEB_COMPANY[0]:
+        return 'company'
+    if _FLYWEB_COPYRIGHT_RE.match(text):
+        return 'copyright'
+    if FLYWEB_LEGAL_MARKER in text:
+        return 'legal'
+    return None
+
+
+def flyweb_rebrand_as(kind, text, lang=None):
+    """Rebrands a message of the given kind: its English text (lang None) or
+    its translation into lang."""
+    if kind == 'copyright':
+        if lang is None:
+            return _FLYWEB_COPYRIGHT_RE.sub(r'\1lamosquita and \2', text)
+        ph = _FLYWEB_COPYRIGHT_PH_RE.search(text)
+        if not ph:
+            return text
+        template = FLYWEB_COPYRIGHT.get(lang.split('-')[0], FLYWEB_COPYRIGHT[''])
+        return template.format(ph=ph.group(0))
+    if kind == 'company':
+        # Whole text, whitespace kept: translations say e.g. "Brave Authors".
+        stripped = text.strip()
+        return (text.replace(stripped, FLYWEB_COMPANY[1])
+                if stripped else FLYWEB_COMPANY[1])
+    if kind == 'legal':
+        return text
+    return _flyweb_plain(text)
+
+
+def _flyweb_message(text):
+    return flyweb_rebrand_as(flyweb_message_kind(text), text)
+
+
+def flyweb_rebrand(text):
+    """Applies flyweb_replacements to an English message text, or to a whole
+    .grd/.grdp file message by message. Idempotent. Translations (.xtb) must
+    follow their English message: see flyweb_rebrand_as()."""
+    if not _FLYWEB_MESSAGE_RE.search(text):
+        return _flyweb_message(text)
+    out, pos = [], 0
+    for m in _FLYWEB_MESSAGE_RE.finditer(text):
+        out.append(_flyweb_plain(text[pos:m.start()]))
+        out.append(_flyweb_plain(m.group(1)) + _flyweb_message(m.group(3)) +
+                   m.group(4))
+        pos = m.end()
+    out.append(_flyweb_plain(text[pos:]))
+    return ''.join(out)

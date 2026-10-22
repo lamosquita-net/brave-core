@@ -204,7 +204,7 @@ void SidebarControlView::OnButtonPressed(views::View* view) {
   if (view == sidebar_settings_view_) {
     ShowSingletonTabOverwritingNTP(
         browser_,
-        GURL("brave://settings?search=" +
+        GURL("flyweb://settings?search=" +
              l10n_util::GetStringUTF8(
                  IDS_SETTINGS_APPEARNCE_SETTINGS_SIDEBAR_PART_TITLE)));
   }

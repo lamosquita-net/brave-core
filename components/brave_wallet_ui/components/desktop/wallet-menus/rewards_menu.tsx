@@ -25,7 +25,7 @@ import {
 const onClickRewardsSettings = () => {
   chrome.tabs.create(
     {
-      url: 'brave://rewards'
+      url: 'flyweb://rewards'
     },
     () => {
       if (chrome.runtime.lastError) {

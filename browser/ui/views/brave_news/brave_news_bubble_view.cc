@@ -147,7 +147,7 @@ BraveNewsBubbleView::~BraveNewsBubbleView() = default;
 void BraveNewsBubbleView::OpenManageFeeds() {
   auto* browser = chrome::FindBrowserWithTab(contents_);
   browser->OpenURL(
-      {GURL("brave://newtab/?openSettings=BraveNews"), content::Referrer(),
+      {GURL("flyweb://newtab/?openSettings=BraveNews"), content::Referrer(),
        WindowOpenDisposition::NEW_FOREGROUND_TAB, ui::PAGE_TRANSITION_LINK,
        false},
       /*navigation_handle_callback=*/{});

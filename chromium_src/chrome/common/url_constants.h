@@ -18,24 +18,24 @@ namespace chrome {
 
 // "Learn more" URL linked in the dialog to cast using a code.
 inline constexpr char kAccessCodeCastLearnMoreURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/";
 
 // "Learn more" URL for accessibility image labels, linked from the permissions
 // dialog shown when a user enables the feature.
 inline constexpr char kAccessibilityLabelsLearnMoreURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/";
 
 // "Learn more" URL for Ad Privacy.
-inline constexpr char kAdPrivacyLearnMoreURL[] = "https://support.brave.com/";
+inline constexpr char kAdPrivacyLearnMoreURL[] =
+    "https://flyweb.lamosquita.net/ayuda/#privacidad";
 
 // "Learn more" URL for when profile settings are automatically reset.
 inline constexpr char kAutomaticSettingsResetLearnMoreURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360017903152-How-do-I-reset-Brave-settings-to-default-";
+    "https://flyweb.lamosquita.net/ayuda/#restablecer";
 
 // "Learn more" URL for Advanced Protection download warnings.
 inline constexpr char kAdvancedProtectionDownloadLearnMoreURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/#descargas";
 
 // "Chrome Settings" URL for the appearance page.
 inline constexpr char kBrowserSettingsSearchEngineURL[] =
@@ -43,51 +43,53 @@ inline constexpr char kBrowserSettingsSearchEngineURL[] =
 
 // "Learn more" URL for Battery Saver Mode.
 inline constexpr char kBatterySaverModeLearnMoreUrl[] =
-    "https://support.brave.com/hc/en-us/articles/13380606172557";
+    "https://flyweb.lamosquita.net/ayuda/#rendimiento";
 
 // The URL for providing help when the Bluetooth adapter is off.
 inline constexpr char kBluetoothAdapterOffHelpURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/";
 
 // "Learn more" URL shown in the dialog to enable cloud services for Cast.
 inline constexpr char kCastCloudServicesHelpURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/";
 
 // The URL for the help center article to show when no Cast destination has been
 // found.
 inline constexpr char kCastNoDestinationFoundURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/";
 
 // The URL for the WebHID API help center article.
 inline constexpr char kChooserHidOverviewUrl[] =
-    "https://github.com/brave/brave-browser/wiki/Web-API-Permissions";
+    "https://flyweb.lamosquita.net/ayuda/#permisos";
 
 // The URL for the Web Serial API help center article.
 inline constexpr char kChooserSerialOverviewUrl[] =
-    "https://github.com/brave/brave-browser/wiki/Web-API-Permissions";
+    "https://flyweb.lamosquita.net/ayuda/#permisos";
 
 // The URL for the WebUsb help center article.
 inline constexpr char kChooserUsbOverviewURL[] =
-    "https://github.com/brave/brave-browser/wiki/Web-API-Permissions";
+    "https://flyweb.lamosquita.net/ayuda/#permisos";
 
 // Link to the forum for Chrome Beta.
 inline constexpr char kChromeBetaForumURL[] =
-    "https://community.brave.com/c/beta-builds";
+    "https://flyweb.lamosquita.net/ayuda/";
 
 // The URL for the help center article to fix Chrome update problems.
 inline constexpr char16_t kChromeFixUpdateProblems[] =
-    u"https://support.brave.com/";
+    u"https://flyweb.lamosquita.net/ayuda/#actualizaciones";
 
 // General help links for Chrome, opened using various actions.
 inline constexpr char kChromeHelpViaKeyboardURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/";
 
-inline constexpr char kChromeHelpViaMenuURL[] = "https://support.brave.com/";
+inline constexpr char kChromeHelpViaMenuURL[] =
+    "https://flyweb.lamosquita.net/ayuda/";
 
-inline constexpr char kChromeHelpViaWebUIURL[] = "https://support.brave.com/";
+inline constexpr char kChromeHelpViaWebUIURL[] =
+    "https://flyweb.lamosquita.net/ayuda/";
 
 inline constexpr char kFirstPartySetsLearnMoreURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/#permisos";
 
 // The isolated-app: scheme is used for Isolated Web Apps. A public explainer
 // can be found here: https://github.com/reillyeon/isolated-web-apps
@@ -99,7 +101,8 @@ inline constexpr char16_t kIsolatedAppSchemeUtf16[] = u"isolated-app";
 inline constexpr char kChromeNativeScheme[] = "chrome-native";
 
 // The URL of safe section in Chrome page.
-inline constexpr char16_t kChromeSafePageURL[] = u"https://support.brave.com/";
+inline constexpr char16_t kChromeSafePageURL[] =
+    u"https://flyweb.lamosquita.net/ayuda/#seguridad";
 
 // Pages under chrome-search.
 inline constexpr char kChromeSearchLocalNtpHost[] = "local-ntp";
@@ -144,59 +147,49 @@ inline constexpr char kChromeUIUntrustedNewTabPageUrl[] =
     "chrome-untrusted://new-tab-page/";
 
 // The URL for the Chromium project used in the About dialog.
-inline constexpr char16_t kChromiumProjectURL[] =
-    u"https://github.com/brave/brave-browser/";
+inline constexpr char16_t kChromiumProjectURL[] = u"https://www.chromium.org/";
 
 inline constexpr char16_t kContentSettingsExceptionsLearnMoreURL[] =
-    u"https://support.brave.com/hc/en-us/articles/"
-    u"360018205431-How-do-I-change-site-permissions-";
+    u"https://flyweb.lamosquita.net/ayuda/#permisos";
 
 // "Learn more" URL for cookies.
 inline constexpr char kCookiesSettingsHelpCenterURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360018205431-How-do-I-change-site-permissions-";
+    "https://flyweb.lamosquita.net/ayuda/#permisos";
 
 // "Learn more" URL for "Aw snap" page when showing "Reload" button.
 inline constexpr char kCrashReasonURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360018192251-How-do-I-fix-page-crashes-and-other-page-loading-errors-";
+    "https://flyweb.lamosquita.net/ayuda/#fallos";
 
 // "Learn more" URL for "Aw snap" page when showing "Send feedback" button.
 inline constexpr char kCrashReasonFeedbackDisplayedURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360018192251-How-do-I-fix-page-crashes-and-other-page-loading-errors-";
+    "https://flyweb.lamosquita.net/ayuda/#fallos";
 
 // "Learn more" URL for the inactive tabs appearance setting.
 inline constexpr char16_t kDiscardRingTreatmentLearnMoreUrl[] =
-    u"https://support.brave.com/";
+    u"https://flyweb.lamosquita.net/ayuda/#rendimiento";
 
 // "Learn more" URL for the "Do not track" setting in the privacy section.
 inline constexpr char16_t kDoNotTrackLearnMoreURL[] =
-    u"https://support.brave.com/hc/en-us/articles/"
-    u"360017905612-How-do-I-turn-Do-Not-Track-on-or-off-";
+    u"https://flyweb.lamosquita.net/ayuda/#privacidad";
 
 // The URL for the "Learn more" page for interrupted downloads.
 inline constexpr char kDownloadInterruptedLearnMoreURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360018192491-How-do-I-fix-file-download-errors-";
+    "https://flyweb.lamosquita.net/ayuda/#descargas";
 
 // The URL for the "Learn more" page for download scanning.
 inline constexpr char kDownloadScanningLearnMoreURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360018192491-How-do-I-fix-file-download-errors-";
+    "https://flyweb.lamosquita.net/ayuda/#descargas";
 
 // The URL for the "Learn more" page for blocked downloads.
 // Note: This is the same as the above URL. This is done to decouple the URLs,
 // in case the support page is split apart into separate pages in the future.
 inline constexpr char kDownloadBlockedLearnMoreURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360018192491-How-do-I-fix-file-download-errors-";
+    "https://flyweb.lamosquita.net/ayuda/#descargas";
 
 // "Learn more" URL for the Settings API, NTP bubble and other settings bubbles
 // showing which extension is controlling them.
 inline constexpr char kExtensionControlledSettingLearnMoreURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360018185651-How-do-I-stop-extensions-from-changing-my-settings-";
+    "https://flyweb.lamosquita.net/ayuda/#extensiones";
 
 // URL used to indicate that an extension resource load request was invalid.
 inline constexpr char kExtensionInvalidRequestURL[] =
@@ -204,10 +197,11 @@ inline constexpr char kExtensionInvalidRequestURL[] =
 
 // Link for creating family group with Google Families.
 inline constexpr char16_t kFamilyGroupCreateURL[] =
-    u"https://support.brave.com/";
+    u"https://flyweb.lamosquita.net/ayuda/";
 
 // Link for viewing family group with Google Families.
-inline constexpr char16_t kFamilyGroupViewURL[] = u"https://support.brave.com/";
+inline constexpr char16_t kFamilyGroupViewURL[] =
+    u"https://flyweb.lamosquita.net/ayuda/";
 
 // Url to a blogpost about Flash deprecation.
 inline constexpr char kFlashDeprecationLearnMoreURL[] =
@@ -215,42 +209,45 @@ inline constexpr char kFlashDeprecationLearnMoreURL[] =
 
 // URL of the 'Activity controls' section of the privacy settings page.
 inline constexpr char kGoogleAccountActivityControlsURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/#privacidad";
 
 // URL of the 'Activity controls' section of the privacy settings page, with
 // privacy guide parameters and a link for users to manage data.
 inline constexpr char kGoogleAccountActivityControlsURLInPrivacyGuide[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/#privacidad";
 
 // URL of the 'Linked services' section of the privacy settings page.
 inline constexpr char kGoogleAccountLinkedServicesURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/";
 
 // URL of the Google Account.
-inline constexpr char kGoogleAccountURL[] = "https://support.brave.com/";
+inline constexpr char kGoogleAccountURL[] =
+    "https://flyweb.lamosquita.net/ayuda/";
 
 // URL of the Google Account chooser.
-inline constexpr char kGoogleAccountChooserURL[] = "https://support.brave.com/";
+inline constexpr char kGoogleAccountChooserURL[] =
+    "https://flyweb.lamosquita.net/ayuda/";
 
 // URL of the Google Account page showing the known user devices.
 inline constexpr char kGoogleAccountDeviceActivityURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/";
 
 // URL of the Google Password Manager.
-inline constexpr char kGooglePasswordManagerURL[] = "https://support.brave.com";
+inline constexpr char kGooglePasswordManagerURL[] =
+    "https://flyweb.lamosquita.net/ayuda/#contrasenas";
 
 // The URL for the "Learn more" link for the High Efficiency Mode.
 inline constexpr char kMemorySaverModeLearnMoreUrl[] =
-    "https://support.brave.com/hc/en-us/articles/13383683902733";
+    "https://flyweb.lamosquita.net/ayuda/#rendimiento";
 
 // The URL in the help text for the High Efficiency Mode tab discarding
 // exceptions add dialog.
 inline constexpr char16_t kMemorySaverModeTabDiscardingHelpUrl[] =
-    u"https://support.brave.com/";
+    u"https://flyweb.lamosquita.net/ayuda/#rendimiento";
 
 // The URL to the help center article of Incognito mode.
 inline constexpr char16_t kIncognitoHelpCenterURL[] =
-    u"https://support.brave.com";
+    u"https://flyweb.lamosquita.net/ayuda/#privacidad";
 
 // The URL for the Help Center page about IP Protection.
 inline constexpr char kIpProtectionHelpCenterURL[] =
@@ -259,155 +256,156 @@ inline constexpr char kIpProtectionHelpCenterURL[] =
 // The URL for the "Learn more" page for the usage/crash reporting option in the
 // first run dialog.
 inline constexpr char kLearnMoreReportingURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360017905872-How-do-I-enable-or-disable-automatic-crash-reporting-";
+    "https://flyweb.lamosquita.net/ayuda/#privacidad";
 
 // The URL for the Help Center page about managing third-party cookies.
-inline constexpr char kManage3pcHelpCenterURL[] = "https://support.brave.com/";
+inline constexpr char kManage3pcHelpCenterURL[] =
+    "https://flyweb.lamosquita.net/ayuda/#privacidad";
 
 // The URL for the tab group sync help center page.
-inline constexpr char kTabGroupsLearnMoreURL[] = "https://support.brave.com/";
+inline constexpr char kTabGroupsLearnMoreURL[] =
+    "https://flyweb.lamosquita.net/ayuda/";
 
 // The URL for the Learn More page about policies and enterprise enrollment.
 inline constexpr char16_t kManagedUiLearnMoreUrl[] =
-    u"https://support.brave.com/";
+    u"https://flyweb.lamosquita.net/ayuda/";
 
 // The URL for the "Learn more" page for insecure download blocking.
 inline constexpr char kInsecureDownloadBlockingLearnMoreUrl[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/#descargas";
 
 // "myactivity.google.com" URL for the history checkbox in ClearBrowsingData.
 inline constexpr char16_t kMyActivityUrlInClearBrowsingData[] =
-    u"https://support.brave.com/";
+    u"https://flyweb.lamosquita.net/ayuda/#privacidad";
 
 // Help URL for the Omnibox setting.
 inline constexpr char16_t kOmniboxLearnMoreURL[] =
-    u"https://support.brave.com/hc/en-us/articles/"
-    u"360017479752-How-do-I-set-my-default-search-engine-";
+    u"https://flyweb.lamosquita.net/ayuda/#buscador";
 
 // "What do these mean?" URL for the Page Info bubble.
 inline constexpr char kPageInfoHelpCenterURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360018185871-How-do-I-check-if-a-site-s-connection-is-secure-";
+    "https://flyweb.lamosquita.net/ayuda/#seguridad";
 
 // Help URL for the bulk password check.
 inline constexpr char kPasswordCheckLearnMoreURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/#contrasenas";
 
 // Help URL for password generation.
 inline constexpr char kPasswordGenerationLearnMoreURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/#contrasenas";
 
 inline constexpr char16_t kPasswordManagerLearnMoreURL[] =
-    u"https://support.brave.com/hc/en-us/articles/"
-    u"360018185951-How-do-I-use-the-built-in-password-manager-";
+    u"https://flyweb.lamosquita.net/ayuda/#contrasenas";
 
 // Help URL for passwords import.
 inline constexpr char kPasswordManagerImportLearnMoreURL[] =
-    "https://support.brave.com";
+    "https://flyweb.lamosquita.net/ayuda/#contrasenas";
 
 // Help URL for password sharing.
 inline constexpr char kPasswordSharingLearnMoreURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/#contrasenas";
 
 // Help URL for troubleshooting password sharing.
 inline constexpr char kPasswordSharingTroubleshootURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/#contrasenas";
 
 // Help URL for the Payment methods page of the Google Pay site.
-inline constexpr char16_t kPaymentMethodsURL[] = u"https://support.brave.com";
+inline constexpr char16_t kPaymentMethodsURL[] =
+    u"https://flyweb.lamosquita.net/ayuda/#autorrelleno";
 
 // Help URL for the newer GPay Web site instead of the legacy Payments Center.
 inline constexpr char16_t kPaymentMethodsURLForGPayWeb[] =
-    u"https://support.brave.com";
+    u"https://flyweb.lamosquita.net/ayuda/#autorrelleno";
 
 // The URL for the "Fill out forms automatically" support page.
 inline constexpr char kAddressesAndPaymentMethodsLearnMoreURL[] =
-    "https://support.brave.com";
+    "https://flyweb.lamosquita.net/ayuda/#autorrelleno";
 
 // "Learn more" URL for the performance intervention notification setting.
 inline constexpr char16_t kPerformanceInterventionLearnMoreUrl[] =
-    u"https://support.brave.com";
+    u"https://flyweb.lamosquita.net/ayuda/#rendimiento";
 
 // "Learn more" URL for the preloading section in Performance settings.
-inline constexpr char kPreloadingLearnMoreUrl[] = "https://support.brave.com";
+inline constexpr char kPreloadingLearnMoreUrl[] =
+    "https://flyweb.lamosquita.net/ayuda/#privacidad";
 
 // "Learn more" URL for the Privacy section under Options.
 inline constexpr char kPrivacyLearnMoreURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360017989132-How-do-I-change-my-Privacy-Settings-";
+    "https://flyweb.lamosquita.net/ayuda/#privacidad";
 
 // The URL for the Learn More link of the non-CWS bubble.
 inline constexpr char kRemoveNonCWSExtensionURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360017914832-Why-am-I-seeing-the-message-extensions-disabled-by-Brave-";
+    "https://flyweb.lamosquita.net/ayuda/#extensiones";
 
 // "Learn more" URL for resetting profile preferences.
 inline constexpr char kResetProfileSettingsLearnMoreURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360017903152-How-do-I-reset-Brave-settings-to-default-";
+    "https://flyweb.lamosquita.net/ayuda/#restablecer";
 
 // "Learn more" URL for Safebrowsing
 inline constexpr char kSafeBrowsingHelpCenterURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "15222663599629-Safe-Browsing-in-Brave";
+    "https://flyweb.lamosquita.net/ayuda/#seguridad";
 
 // Updated "Info icon" URL for Safebrowsing
 inline constexpr char kSafeBrowsingHelpCenterUpdatedURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/#seguridad";
 
 // "Learn more" URL for Enhanced Protection
 inline constexpr char16_t kSafeBrowsingInChromeHelpCenterURL[] =
-    u"https://support.brave.com/";
+    u"https://flyweb.lamosquita.net/ayuda/#seguridad";
 
 // The URL of Safe Browsing p-tour.
 inline constexpr char16_t kSafeBrowsingUseInChromeURL[] =
-    u"https://support.brave.com/";
+    u"https://flyweb.lamosquita.net/ayuda/#seguridad";
 
 // "Learn more" URL for Safety Check page.
 inline constexpr char16_t kSafetyHubHelpCenterURL[] =
-    u"https://support.brave.com/";
+    u"https://flyweb.lamosquita.net/ayuda/#seguridad";
 
 // "Learn more" URL for safety tip bubble.
 inline constexpr char kSafetyTipHelpCenterURL[] =
-    "https://support.brave.com/hc/en-us/articles/17550072876045-Lookalike-URLs";
+    "https://flyweb.lamosquita.net/ayuda/#seguridad";
 
 // Google search history URL that leads users of the CBD dialog to their search
 // history in their Google account.
 inline constexpr char16_t kSearchHistoryUrlInClearBrowsingData[] =
-    u"https://support.brave.com/";
+    u"https://flyweb.lamosquita.net/ayuda/#privacidad";
 
 // The URL for the "See more security tips" with advices how to create a strong
 // password.
-inline constexpr char kSeeMoreSecurityTipsURL[] = "https://support.brave.com/";
+inline constexpr char kSeeMoreSecurityTipsURL[] =
+    "https://flyweb.lamosquita.net/ayuda/#seguridad";
 
 // Help URL for the settings page's search feature.
 inline constexpr char16_t kSettingsSearchHelpURL[] =
-    u"https://support.brave.com/";
+    u"https://flyweb.lamosquita.net/ayuda/#buscador";
 
 // The URL for the Learn More page about Sync and Google services.
 inline constexpr char kSyncAndGoogleServicesLearnMoreURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/sincronizar";
 
 // The URL for the "Learn more" page on sync encryption.
 inline constexpr char16_t kSyncEncryptionHelpURL[] =
-    u"https://support.brave.com/";
+    u"https://flyweb.lamosquita.net/ayuda/sincronizar";
 
 // The URL for the "Learn more" link when there is a sync error.
-inline constexpr char kSyncErrorsHelpURL[] = "https://support.brave.com/";
+inline constexpr char kSyncErrorsHelpURL[] =
+    "https://flyweb.lamosquita.net/ayuda/sincronizar";
 
-inline constexpr char kSyncGoogleDashboardURL[] = "https://support.brave.com/";
+inline constexpr char kSyncGoogleDashboardURL[] =
+    "https://flyweb.lamosquita.net/ayuda/sincronizar";
 
 // The URL for the "Learn more" page for sync setup on the personal stuff page.
-inline constexpr char16_t kSyncLearnMoreURL[] = u"https://support.brave.com/";
+inline constexpr char16_t kSyncLearnMoreURL[] =
+    u"https://flyweb.lamosquita.net/ayuda/sincronizar";
 
 // The URL for the "Learn more" page for Help me Write.
-inline constexpr char kComposeLearnMorePageURL[] = "https://support.brave.com/";
+inline constexpr char kComposeLearnMorePageURL[] =
+    "https://flyweb.lamosquita.net/ayuda/";
 
 // The URL for the "Learn more" links for pages related to History search.
 // TODO(crbug.com/328300718): Update help article URL.
 inline constexpr char kHistorySearchLearnMorePageURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/";
 
 // The URL for the Settings page to enable history search.
 inline constexpr char16_t kHistorySearchSettingURL[] =
@@ -416,37 +414,36 @@ inline constexpr char16_t kHistorySearchSettingURL[] =
 // The URL for the "Learn more" link in the enterprise disclaimer for managed
 // profile in the Signin Intercept bubble.
 inline constexpr char kSigninInterceptManagedDisclaimerLearnMoreURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/";
 
 #if !BUILDFLAG(IS_ANDROID)
 // The URL for the trusted vault sync passphrase opt in.
 inline constexpr char kSyncTrustedVaultOptInURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/sincronizar";
 #endif
 
 // The URL for the "Learn more" link for the trusted vault sync passphrase.
 inline constexpr char kSyncTrustedVaultLearnMoreURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/sincronizar";
 
 // The URL for the Help Center page about Tracking Protection settings.
 inline constexpr char16_t kTrackingProtectionHelpCenterURL[] =
-    u"https://support.brave.com/";
+    u"https://flyweb.lamosquita.net/ayuda/#privacidad";
 
 // The URL for the Help Center page about User Bypass.
 inline constexpr char16_t kUserBypassHelpCenterURL[] =
-    u"https://support.brave.com/";
+    u"https://flyweb.lamosquita.net/ayuda/#privacidad";
 
 inline constexpr char kUpgradeHelpCenterBaseURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360025390311-How-do-I-download-and-install-Brave-";
+    "https://flyweb.lamosquita.net/ayuda/#actualizaciones";
 
 // Help center URL for who the account administrator is.
 inline constexpr char16_t kWhoIsMyAdministratorHelpURL[] =
-    u"https://support.brave.com/";
+    u"https://flyweb.lamosquita.net/ayuda/";
 
 // The URL for the "Learn more" link about CWS Enhanced Safe Browsing.
 inline constexpr char16_t kCwsEnhancedSafeBrowsingLearnMoreURL[] =
-    u"https://support.brave.com/";
+    u"https://flyweb.lamosquita.net/ayuda/#seguridad";
 
 #if BUILDFLAG(IS_ANDROID)
 // "Learn more" URL for the enhanced playback notification dialog.
@@ -458,32 +455,31 @@ inline constexpr char kEnhancedPlaybackNotificationLearnMoreURL[] =
 #if BUILDFLAG(IS_MAC)
 // "Learn more" URL for the enterprise sign-in confirmation dialog.
 inline constexpr char kChromeEnterpriseSignInLearnMoreURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/";
 
 // The URL for the "learn more" link on the macOS version obsolescence infobar.
 inline constexpr char kMacOsObsoleteURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "18347246446733-Changes-to-macOS-desktop-browser-requirements";
+    "https://flyweb.lamosquita.net/ayuda/#actualizaciones";
 #endif
 
 #if BUILDFLAG(IS_WIN)
 // The URL for the Windows XP/Vista deprecation help center article.
 inline constexpr char kWindowsXPVistaDeprecationURL[] =
-    "https://support.brave.com/";
+    "https://flyweb.lamosquita.net/ayuda/";
 
 // The URL for the Windows 7/8.1 deprecation help center article.
 inline constexpr char kWindows78DeprecationURL[] =
-    "https://support.brave.com/hc/en-us/articles/11197967945613";
+    "https://flyweb.lamosquita.net/ayuda/";
 #endif  // BUILDFLAG(IS_WIN)
 
 // "Learn more" URL for the one click signin infobar.
-inline constexpr char kChromeSyncLearnMoreURL[] = "https://support.brave.com/";
+inline constexpr char kChromeSyncLearnMoreURL[] =
+    "https://flyweb.lamosquita.net/ayuda/sincronizar";
 
 #if BUILDFLAG(ENABLE_PLUGINS)
 // The URL for the "Learn more" page for the outdated plugin infobar.
 inline constexpr char kOutdatedPluginLearnMoreURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360018163151-How-do-I-manage-Flash-audio-video-";
+    "https://flyweb.lamosquita.net/ayuda/";
 #endif
 
 #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)

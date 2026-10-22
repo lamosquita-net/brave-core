@@ -237,7 +237,7 @@ void ShowPlaylistSettings(content::WebContents* contents) {
   auto* browser_view = FindBrowserViewFromWebContents(contents);
   CHECK(browser_view);
   ShowSingletonTab(browser_view->browser(),
-                   GURL("brave://settings/braveContent#playlist-section"));
+                   GURL("flyweb://settings/braveContent#playlist-section"));
 }
 
 void ClosePanel(content::WebContents* contents) {

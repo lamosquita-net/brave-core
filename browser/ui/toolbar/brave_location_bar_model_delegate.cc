@@ -38,20 +38,20 @@ void BraveLocationBarModelDelegate::FormattedStringFromURL(
     std::u16string* new_formatted_url) {
   if (url.SchemeIs("chrome")) {
     base::ReplaceFirstSubstringAfterOffset(new_formatted_url, 0, u"chrome://",
-                                           u"brave://");
+                                           u"flyweb://");
   }
 
 #if BUILDFLAG(ETHEREUM_REMOTE_CLIENT_ENABLED)
   if (url.SchemeIs(kChromeExtensionScheme) &&
       url.host() == kEthereumRemoteClientExtensionId) {
     base::ReplaceFirstSubstringAfterOffset(
-        new_formatted_url, 0, kEthereumRemoteClientBaseUrl, u"brave://wallet");
+        new_formatted_url, 0, kEthereumRemoteClientBaseUrl, u"flyweb://wallet");
     base::ReplaceFirstSubstringAfterOffset(new_formatted_url, 0,
                                            kEthereumRemoteClientPhishingUrl,
-                                           u"brave://wallet");
+                                           u"flyweb://wallet");
     base::ReplaceFirstSubstringAfterOffset(new_formatted_url, 0,
                                            kEthereumRemoteClientEnsRedirectUrl,
-                                           u"brave://wallet");
+                                           u"flyweb://wallet");
   }
 #endif
 }
