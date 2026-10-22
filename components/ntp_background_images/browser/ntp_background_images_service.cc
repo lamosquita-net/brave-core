@@ -111,43 +111,11 @@ NTPBackgroundImagesService::NTPBackgroundImagesService(
 NTPBackgroundImagesService::~NTPBackgroundImagesService() = default;
 
 void NTPBackgroundImagesService::Init() {
-  pref_change_registrar_.Init(local_pref_);
-
-  // Flag override for testing or demo purposes
-  base::FilePath forced_local_path(
-      base::CommandLine::ForCurrentProcess()->GetSwitchValueNative(
-          switches::kNTPSponsoredImagesDataPathForTesting));
-  if (!forced_local_path.empty()) {
-    test_data_used_ = true;
-    DVLOG(2) << __func__ << ": NTP SI test data will be loaded"
-             << " from local path at: " << forced_local_path.LossyDisplayName();
-    OnSponsoredComponentReady(false, forced_local_path);
-  } else {
-    RegisterBackgroundImagesComponent();
-    RegisterSponsoredImagesComponent();
-
-    pref_change_registrar_.Add(
-        brave_l10n::prefs::kCountryCode,
-        base::BindRepeating(
-            &NTPBackgroundImagesService::OnCountryCodePrefChanged,
-            base::Unretained(this)));
-  }
-
-  if (base::FeatureList::IsEnabled(features::kBraveNTPSuperReferralWallpaper)) {
-    // Flag override for testing or demo purposes
-    base::FilePath forced_local_path_super_referral(
-        base::CommandLine::ForCurrentProcess()->GetSwitchValueNative(
-            switches::kNTPSuperReferralDataPathForTesting));
-    if (!forced_local_path_super_referral.empty()) {
-      test_data_used_ = true;
-      DVLOG(2) << __func__ << ": NTP SR test data will be loaded"
-               << " from local path at: "
-               << forced_local_path_super_referral.LossyDisplayName();
-      OnSponsoredComponentReady(false, forced_local_path_super_referral);
-    } else {
-      CheckSuperReferralComponent();
-    }
-  }
+  // FlyWeb: no component at all. Sponsored images (NTP ads) and super referral
+  // wallpapers are never registered, and Brave's photo wallpapers neither:
+  // FlyWeb's new tab page ships its own backgrounds (brave_new_tab_ui
+  // components/default/flyweb). GetBackgroundImagesData() and
+  // GetBrandedImagesData() have nothing to return.
 }
 
 void NTPBackgroundImagesService::CheckNTPSIComponentUpdateIfNeeded() {
@@ -458,31 +426,7 @@ NTPBackgroundImagesData* NTPBackgroundImagesService::GetBackgroundImagesData()
 
 NTPSponsoredImagesData* NTPBackgroundImagesService::GetBrandedImagesData(
     bool super_referral) const {
-  const bool is_sr_enabled =
-      base::FeatureList::IsEnabled(features::kBraveNTPSuperReferralWallpaper);
-  if (is_sr_enabled) {
-    if (super_referral) {
-      if (sr_images_data_ && sr_images_data_->IsValid())
-        return sr_images_data_.get();
-      return nullptr;
-    }
-
-    // Don't give SI data until we can confirm this is not SR.
-    // W/o this check, NTP could show SI images before getting SR data at first
-    // run.
-    if (local_pref_
-            ->FindPreference(prefs::kNewTabPageCachedSuperReferralComponentInfo)
-            ->IsDefaultValue()) {
-      return nullptr;
-    }
-  } else {
-    if (super_referral)
-      return nullptr;
-  }
-
-  if (si_images_data_ && si_images_data_->IsValid())
-    return si_images_data_.get();
-
+  // FlyWeb: no sponsored images nor super referral wallpapers (see Init()).
   return nullptr;
 }
 

@@ -16,16 +16,9 @@ OVERRIDE_FEATURE_DEFAULT_STATES({{
     {kTFLiteLanguageDetectionEnabled, base::FEATURE_DISABLED_BY_DEFAULT},
 }});
 
-// Redirect native translate requests to the translate.brave.com (expect the
-// script request).
+// FlyWeb: Google's own origin (Chromium's), never translate.brave.com.
 GURL GetTranslateSecurityOrigin() {
-  std::string security_origin(kBraveTranslateOrigin);
-  base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
-  if (command_line->HasSwitch(switches::kTranslateSecurityOrigin)) {
-    security_origin =
-        command_line->GetSwitchValueASCII(switches::kTranslateSecurityOrigin);
-  }
-  return GURL(security_origin);
+  return GetTranslateSecurityOrigin_Chromium();
 }
 
 }  // namespace translate

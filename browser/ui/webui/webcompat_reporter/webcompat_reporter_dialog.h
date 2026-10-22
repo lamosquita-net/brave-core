@@ -18,8 +18,15 @@ enum class UISource {
   kMaxValue = kAppMenu,
 };
 
+// FlyWeb: opens flyweb.lamosquita.net's "report a problem" page.
 void OpenReporterDialog(content::WebContents* initiator, UISource source);
 
+// Brave's reporter dialog (sends to webcompat_report_api_endpoint). Unused.
+void OpenBraveReporterDialog(content::WebContents* initiator, UISource source);
+
 }  // namespace webcompat_reporter
+
+// Brave's reporter dialog (sends to webcompat_report_api_endpoint). Unused.
+void OpenBraveWebcompatReporterDialog(content::WebContents* initiator);
 
 #endif  // BRAVE_BROWSER_UI_WEBUI_WEBCOMPAT_REPORTER_WEBCOMPAT_REPORTER_DIALOG_H_

@@ -15,9 +15,10 @@ namespace brave_news {
 namespace prefs {
 
 void RegisterProfilePrefs(PrefRegistrySimple* registry) {
-  registry->RegisterBooleanPref(kShouldShowToolbarButton, true);
-  registry->RegisterBooleanPref(kNewTabPageShowToday,
-                                IsUserInDefaultEnabledLocale());
+  // FlyWeb: Brave News (feeds fetched from Brave's servers) is off by default:
+  // no card on the new tab page and no toolbar button.
+  registry->RegisterBooleanPref(kShouldShowToolbarButton, false);
+  registry->RegisterBooleanPref(kNewTabPageShowToday, false);
   registry->RegisterBooleanPref(kBraveNewsOptedIn, false);
   registry->RegisterDictionaryPref(kBraveNewsSources);
   registry->RegisterDictionaryPref(kBraveNewsChannels);

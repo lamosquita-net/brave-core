@@ -73,7 +73,8 @@ export class SettingsBraveSyncSetupElement extends SettingsBraveSyncSetupElement
     const syncCode = await this.syncBrowserProxy_.getSyncCode()
     this.isGettingSyncCode_ = false
     this.syncCode = syncCode;
-    this.syncCodeDialogType = 'choose'
+    // FlyWeb: straight to the code words (no phone/tablet option).
+    this.syncCodeDialogType = 'words'
   }
 
   handleJoinSyncChain_() {

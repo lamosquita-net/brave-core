@@ -170,7 +170,11 @@ void BraveMainDelegate::AppendCommandLineOptions() {
                                     brave_sync_service_url.c_str());
   }
 
-  variations::AppendBraveCommandLineOptions(*command_line);
+  // FlyWeb: no variations seed fetch. In a non Google-branded build
+  // VariationsService::IsFetchingEnabled() is false unless
+  // --variations-server-url is passed, so Brave's switches (pointing at
+  // BRAVE_VARIATIONS_SERVER_URL, an inert URL in FlyWeb) are not appended.
+  // Without this, the browser requested that URL at startup (F1.6 audit).
 }
 
 std::optional<int> BraveMainDelegate::BasicStartupComplete() {
