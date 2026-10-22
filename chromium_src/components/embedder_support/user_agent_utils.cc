@@ -27,6 +27,14 @@
 // not Brave's zeroed "major.0.0.0", which no Chrome sends.
 #define BRAVE_BRAND_VERSION_OVERRIDE_FOR_FULL_BRAND_VERSION_TYPE full_version
 
+// The one-argument overload of the original calls the two-argument one, which
+// the define renames too: declare the renamed one before it is used.
+namespace embedder_support {
+blink::UserAgentMetadata GetUserAgentMetadata_ChromiumImpl(
+    const PrefService* pref_service,
+    bool only_low_entropy_ch);
+}  // namespace embedder_support
+
 #define GetUserAgentMetadata GetUserAgentMetadata_ChromiumImpl
 #include "src/components/embedder_support/user_agent_utils.cc"
 #undef GetUserAgentMetadata
