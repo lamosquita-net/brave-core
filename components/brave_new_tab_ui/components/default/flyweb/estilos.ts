@@ -34,16 +34,17 @@ export function cargarFuentes () {
   }
 }
 
-export function EstiloFlyWeb ({ colores }: { colores?: NewTab.FlyWebColores }) {
+export function EstiloFlyWeb ({ colores, fotoPropia }: { colores?: NewTab.FlyWebColores, fotoPropia?: boolean }) {
   React.useEffect(cargarFuentes, [])
   React.useEffect(() => {
     const s = document.documentElement.style
     s.setProperty('--flyweb-texto', colores ? colores.texto : 'var(--override-readability-color, #fff)')
     s.setProperty('--flyweb-pie', colores ? colores.pie : 'var(--override-readability-color, rgba(255, 255, 255, 0.6))')
     s.setProperty('--flyweb-tinta', colores ? '#000' : 'var(--override-readability-color, #fff)')
-    // Halo behind the Shields stats, opposite to their text: white text on a
-    // light photo was unreadable (FM.39, item 9).
-    s.setProperty('--flyweb-sombra', colores?.texto === '#000' ? 'rgba(255, 255, 255, 0.75)' : 'rgba(0, 0, 0, 0.75)')
-  }, [colores?.texto, colores?.pie])
+    // Shields stats: on our backgrounds, exactly as in the 1.15 (no shadow);
+    // on the user's own photo, a subtle dark shadow under the white text;
+    // on a plain colour, none (Brave may make the text black there).
+    s.setProperty('--flyweb-sombra', fotoPropia ? '0 1px 3px rgba(0, 0, 0, 0.5)' : 'none')
+  }, [colores?.texto, colores?.pie, fotoPropia])
   return null
 }

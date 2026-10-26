@@ -628,7 +628,7 @@ class NewTabPage extends React.Component<Props, State> {
         sinVelo={!!coloresFlyWeb}
         data-show-news-prompt={((this.state.backgroundHasLoaded || colorForBackground) && this.state.isPromptingBraveNews && !defaultState.featureFlagBraveNewsFeedV2Enabled) ? true : undefined}>
         <OverrideReadabilityColor override={ this.shouldOverrideReadabilityColor(this.props.newTabData) } />
-        <EstiloFlyWeb colores={coloresFlyWeb} />
+        <EstiloFlyWeb colores={coloresFlyWeb} fotoPropia={hasImage && !coloresFlyWeb} />
         <Mosca />
         <BraveNewsContextProvider>
         <Page.Page
