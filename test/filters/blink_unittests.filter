@@ -1,0 +1,30 @@
+##
+## FlyWeb: upstream blink_unittests whose expectations predate an intended
+## change (Brave privacy feature, V8 13.1, or a port from Chrome 129-131).
+## Triage: FM.39 item 3 (MOTOR-18, 26-10-2026). None is a browser bug.
+##
+
+# kBraveRoundTimeStamps rounds to 1 ms; the uniformity test still assumes
+# Chromium's 5/100 µs resolution.
+-TimeClamperTest.ClampingIsUniform
+
+# Brave's video.requestVideoFrameCallback timestamps are coarsened to 1 ms.
+-VideoFrameCallbackRequesterImplTest.VerifyParameters_WindowRaf
+
+# kPrefetchPrivacyChanges (Brave) sends prefetches with no referrer.
+-LinkLoaderTest.Prefetch
+
+# V8 13.1 removed import assertions (`assert {}`); upstream rewrote the test
+# for import attributes.
+-ModuleRecordTest.moduleRequestsWithImportAssertions
+
+# MeterAppearanceNoneFallbackStyle (ported) no longer creates the fallback
+# element; upstream deleted this test.
+-MeterShadowElementTest.LayoutObjectIsNotNeeded
+
+# Brave's screenX/Y farbling returns integers (113 instead of 113.8).
+-PointerEventManagerTest.PointerEventMovements
+
+# Matches Chrome 131 behaviour: an empty main-frame load creates no script
+# context; upstream added a <script> to the test.
+-RendererResourceCoordinatorImplTest.IframeNotifications
