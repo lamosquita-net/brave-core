@@ -19,6 +19,9 @@ export const StyledStatsItemContainer = styled('ul')<{}>`
   color: inherit;
   font-size: inherit;
   font-family: inherit;
+  /* FlyWeb: readable on light and dark photos (--flyweb-sombra, estilos.ts). */
+  text-shadow: 0 0 2px var(--flyweb-sombra, rgba(0, 0, 0, 0.75)),
+               0 1px 8px var(--flyweb-sombra, rgba(0, 0, 0, 0.75));
 `
 
 export const StyledStatsItem = styled('li')<{}>`
