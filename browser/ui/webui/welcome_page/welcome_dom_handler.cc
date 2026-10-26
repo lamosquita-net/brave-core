@@ -169,8 +169,8 @@ void WelcomeDOMHandler::HandleSetMetricsReportingEnabled(
 
 void WelcomeDOMHandler::HandleEnableWebDiscovery(
     const base::Value::List& args) {
-  DCHECK(profile_);
-  profile_->GetPrefs()->SetBoolean(kWebDiscoveryEnabled, true);
+  // FlyWeb: the Web Discovery Project sends search data to Brave; it can
+  // never be turned on (the welcome step that called this is gone).
 }
 
 void WelcomeDOMHandler::SetLocalStateBooleanEnabled(

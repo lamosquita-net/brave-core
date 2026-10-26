@@ -79,12 +79,9 @@ if (!chrome.extension.inIncognitoContext) {
     }
   }
 
-  chrome.settingsPrivate.onPrefsChanged.addListener((prefs: chrome.settingsPrivate.PrefObject[]) => {
-    const pref = prefs.find(p => p.key === WEB_DISCOVERY_PREF_KEY)
-    toggleWebDiscovery(pref)
-  })
-
-  chrome.settingsPrivate.getPref(WEB_DISCOVERY_PREF_KEY, (pref: chrome.settingsPrivate.PrefObject) => {
-    toggleWebDiscovery(pref)
-  })
+  // FlyWeb: the Web Discovery Project sends search data to Brave. It never
+  // starts, whatever brave.web_discovery_enabled says (a profile from an
+  // older FlyWeb or a policy could still have it on).
+  void WEB_DISCOVERY_PREF_KEY
+  void toggleWebDiscovery
 }

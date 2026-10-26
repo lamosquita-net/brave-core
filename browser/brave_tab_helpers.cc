@@ -160,9 +160,8 @@ void AttachTabHelpers(content::WebContents* web_contents) {
       web_contents);
   psst::PsstTabHelper::MaybeCreateForWebContents(
       web_contents, ISOLATED_WORLD_ID_BRAVE_INTERNAL);
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-  WebDiscoveryTabHelper::MaybeCreateForWebContents(web_contents);
-#endif
+  // FlyWeb: no WebDiscoveryTabHelper, so no infobar offering the Web
+  // Discovery Project (it sends search data to Brave) on Brave Search.
 
 #if BUILDFLAG(ENABLE_SPEEDREADER)
   speedreader::SpeedreaderTabHelper::MaybeCreateForWebContents(web_contents);

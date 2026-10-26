@@ -83,16 +83,18 @@ export function useViewTypeTransition(currentViewType: ViewType | undefined) : V
 
   const states = React.useMemo(() => {
     return {
+      // FlyWeb: no Web Discovery Project step (it sends search data to Brave):
+      // every step that led to it goes to HelpImprove, which ends the first run.
       [ViewType.DefaultBrowser]: {  // The initial state view
         forward: !browserProfiles || browserProfiles.length === 0 ?
             ViewType.ImportSelectTheme : ViewType.ImportSelectBrowser
       },
       [ViewType.ImportSelectTheme]: {
-        forward: ViewType.HelpWDP
+        forward: ViewType.HelpImprove
       },
       [ViewType.ImportSelectBrowser]: {
         forward: currentSelectedBrowserProfiles && currentSelectedBrowserProfiles.length > 1 ? ViewType.ImportSelectProfile : ViewType.ImportInProgress,
-        skip: ViewType.HelpWDP,
+        skip: ViewType.HelpImprove,
       },
       [ViewType.ImportSelectProfile]: {
         forward: ViewType.ImportInProgress,
@@ -103,12 +105,12 @@ export function useViewTypeTransition(currentViewType: ViewType | undefined) : V
         fail: ViewType.ImportFailed,
       },
       [ViewType.ImportSucceeded]: {
-        forward: ViewType.HelpWDP
+        forward: ViewType.HelpImprove
       },
       [ViewType.ImportFailed]: {
-        forward: ViewType.HelpWDP
+        forward: ViewType.HelpImprove
       },
-      [ViewType.HelpWDP]: {
+      [ViewType.HelpWDP]: {  // unreachable; kept so every ViewType has a state
         forward: ViewType.HelpImprove
       },
       [ViewType.HelpImprove]: {
