@@ -48,6 +48,13 @@ one by one against 13.1 **with FlyWeb's patches applied**: 20 already in, the re
   stack (d6e86387, 86e6857f), `wasm_tier_mask_for_testing` (2603ba09), ARM64 (385d92ca, 53176fd5), LoongArch/MIPS
   (65a1429d).
 
+**CVE-2026-11645** (exploited, KEV 09-06-2026; crbug 506689381; Chrome 149.0.7827.103): v8 3c869652b0 (main #107009,
+May 2026, after 13.2's LTS). `TryFastAddDataProperty` (object model, not the JIT: `--jitless` does not mitigate it)
+migrated the object to whatever `Map::PrepareForDataProperty` returned, also a normalized dictionary map, and then
+wrote to a field index that no longer exists (OOB read/write). 13.1.201.22 has the function exactly as before the fix
+(the 116-era triage said "not applicable" because 11.6–12.1 lacked it). Ported as is in `objects/js-objects.cc`
+(SEGURIDAD-PORTES-6, FS.24, 26-10-2026; FlyWeb 2.0.1). Epoch 16 → 17.
+
 ## 3. Embedder API between 13.0 and 13.1 (MOTOR-11)
 
 `include/` +186/−41. `Isolate::kImportAssertionDeprecatedSyntax` becomes `kOBSOLETE_…` (case removed from Blink's
@@ -66,7 +73,7 @@ padding), `decommit_pooled_pages`; `wasm_deopt` and `wasm_inlining_call_indirect
 
 ## 5. Cache epoch
 
-`kFlyWebCacheEpoch` **16** (15 is `seg/v8-13.0`).
+`kFlyWebCacheEpoch` **17** (2.0.1, CVE-2026-11645; 16 was 1.15 and 2.0.0, 15 is `seg/v8-13.0`).
 
 ## 6. Tests (cloud `d8`, Linux x64, V8 only; `FlyWeb/scripts/v8-d8.sh`)
 
