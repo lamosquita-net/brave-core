@@ -1,0 +1,22 @@
+diff --git a/third_party/blink/renderer/core/imagebitmap/image_bitmap.cc b/third_party/blink/renderer/core/imagebitmap/image_bitmap.cc
+index 3804f7bff4cde202c33d5bf86889b9fb35f11360..aadfc5070bccfb116cec0eb8fbda417d8a0ce039 100644
+--- a/third_party/blink/renderer/core/imagebitmap/image_bitmap.cc
++++ b/third_party/blink/renderer/core/imagebitmap/image_bitmap.cc
+@@ -922,14 +922,13 @@ void ImageBitmap::UpdateImageBitmapMemoryUsage() {
+         std::numeric_limits<int32_t>::max());
+   }
+ 
+-  v8::Isolate::GetCurrent()->AdjustAmountOfExternalAllocatedMemory(
+-      new_memory_usage - memory_usage_);
++  external_memory_accounter_.Update(v8::Isolate::GetCurrent(),
++                                    new_memory_usage - memory_usage_);
+   memory_usage_ = new_memory_usage;
+ }
+ 
+ ImageBitmap::~ImageBitmap() {
+-  v8::Isolate::GetCurrent()->AdjustAmountOfExternalAllocatedMemory(
+-      -memory_usage_);
++  external_memory_accounter_.Decrease(v8::Isolate::GetCurrent(), memory_usage_);
+ }
+ 
+ void ImageBitmap::ResolvePromiseOnOriginalThread(

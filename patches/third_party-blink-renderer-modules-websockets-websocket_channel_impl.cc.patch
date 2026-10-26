@@ -1,0 +1,33 @@
+diff --git a/third_party/blink/renderer/modules/websockets/websocket_channel_impl.cc b/third_party/blink/renderer/modules/websockets/websocket_channel_impl.cc
+index 4da9f69469dc57788a252757602ea5f18451c502..a297e578b871c28481ac42206e5111818c299084 100644
+--- a/third_party/blink/renderer/modules/websockets/websocket_channel_impl.cc
++++ b/third_party/blink/renderer/modules/websockets/websocket_channel_impl.cc
+@@ -105,9 +105,16 @@ enum WebSocketOpCode {
+ 
+ }  // namespace
+ 
++WebSocketChannelImpl::MessageDataDeleter::MessageDataDeleter(
++    v8::Isolate* isolate,
++    size_t size)
++    : isolate_(isolate), size_(size) {
++  external_memory_accounter_.Increase(isolate, size);
++}
++
+ void WebSocketChannelImpl::MessageDataDeleter::operator()(char* p) const {
+   DCHECK(isolate_) << "Cannot call deleter when default constructor was used";
+-  isolate_->AdjustAmountOfExternalAllocatedMemory(-static_cast<int64_t>(size_));
++  external_memory_accounter_.Decrease(isolate_.get(), size_);
+   WTF::Partitions::FastFree(p);
+ }
+ 
+@@ -115,10 +122,6 @@ void WebSocketChannelImpl::MessageDataDeleter::operator()(char* p) const {
+ WebSocketChannelImpl::MessageData WebSocketChannelImpl::CreateMessageData(
+     v8::Isolate* isolate,
+     size_t message_size) {
+-  // The conversion to int64_t here can overflow in principle, but V8 has
+-  // checks for that.
+-  isolate->AdjustAmountOfExternalAllocatedMemory(
+-      static_cast<int64_t>(message_size));
+   return MessageData(
+       static_cast<char*>(WTF::Partitions::FastMalloc(
+           message_size, "blink::WebSockChannelImpl::MessageData")),

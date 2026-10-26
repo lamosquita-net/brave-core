@@ -1,0 +1,28 @@
+diff --git a/third_party/blink/renderer/modules/webgpu/dawn_object.cc b/third_party/blink/renderer/modules/webgpu/dawn_object.cc
+index 0ac13773b545750410057e115df3f861801b1a3c..0879b77a94d55f9235911d02e4e08e53f481b8e4 100644
+--- a/third_party/blink/renderer/modules/webgpu/dawn_object.cc
++++ b/third_party/blink/renderer/modules/webgpu/dawn_object.cc
+@@ -10,23 +10,6 @@
+ 
+ namespace blink {
+ 
+-// ExternalMemoryTracker
+-
+-ExternalMemoryTracker::~ExternalMemoryTracker() {
+-  SetCurrentSize(0);
+-}
+-
+-void ExternalMemoryTracker::SetCurrentSize(size_t newSizeUnchecked) {
+-  base::CheckedNumeric<int64_t> newSize = newSizeUnchecked;
+-  base::CheckedNumeric<int64_t> deltaChecked = newSize - size_;
+-
+-  int64_t delta = deltaChecked.ValueOrDie();
+-  if (delta != 0) {
+-    v8::Isolate::GetCurrent()->AdjustAmountOfExternalAllocatedMemory(delta);
+-    size_ = newSize.ValueOrDie();
+-  }
+-}
+-
+ // DawnObjectBase
+ 
+ DawnObjectBase::DawnObjectBase(

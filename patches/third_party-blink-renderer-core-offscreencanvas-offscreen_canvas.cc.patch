@@ -1,0 +1,24 @@
+diff --git a/third_party/blink/renderer/core/offscreencanvas/offscreen_canvas.cc b/third_party/blink/renderer/core/offscreencanvas/offscreen_canvas.cc
+index 8d8a3f7b2384cf51a6c6a81cbfd0f9623985c4dc..a9216c1a11408a1e496e60f515c8175def650b30 100644
+--- a/third_party/blink/renderer/core/offscreencanvas/offscreen_canvas.cc
++++ b/third_party/blink/renderer/core/offscreencanvas/offscreen_canvas.cc
+@@ -92,8 +92,7 @@ OffscreenCanvas* OffscreenCanvas::Create(ScriptState* script_state,
+ }
+ 
+ OffscreenCanvas::~OffscreenCanvas() {
+-  v8::Isolate::GetCurrent()->AdjustAmountOfExternalAllocatedMemory(
+-      -memory_usage_);
++  external_memory_accounter_.Decrease(v8::Isolate::GetCurrent(), memory_usage_);
+ }
+ 
+ void OffscreenCanvas::Commit(scoped_refptr<CanvasResource>&& canvas_resource,
+@@ -726,8 +725,7 @@ void OffscreenCanvas::UpdateMemoryUsage() {
+     // AdjustAmountOfExternalAllocatedMemory is safe, hence the
+     // 'diposing_' condition in the DCHECK below.
+     DCHECK(ThreadState::Current()->IsAllocationAllowed() || disposing_);
+-    v8::Isolate::GetCurrent()->AdjustAmountOfExternalAllocatedMemory(
+-        delta_bytes);
++    external_memory_accounter_.Update(v8::Isolate::GetCurrent(), delta_bytes);
+     memory_usage_ = new_memory_usage;
+   }
+ }

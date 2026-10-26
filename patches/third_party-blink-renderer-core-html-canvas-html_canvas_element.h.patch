@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/html/canvas/html_canvas_element.h b/third_party/blink/renderer/core/html/canvas/html_canvas_element.h
-index 8de96d2bbb188089e345eb3d57c525ac711f916d..4f46dba9312d2f9f064fefe7bd1befd02c5f1f8c 100644
+index 8de96d2bbb188089e345eb3d57c525ac711f916d..9e33276282549ca8216fa3941005b53111ef01a3 100644
 --- a/third_party/blink/renderer/core/html/canvas/html_canvas_element.h
 +++ b/third_party/blink/renderer/core/html/canvas/html_canvas_element.h
-@@ -316,6 +316,7 @@ class CORE_EXPORT HTMLCanvasElement final
+@@ -42,6 +42,7 @@
+ #include "third_party/blink/renderer/core/html/html_element.h"
+ #include "third_party/blink/renderer/core/imagebitmap/image_bitmap_source.h"
+ #include "third_party/blink/renderer/core/page/page_visibility_observer.h"
++#include "third_party/blink/renderer/platform/bindings/v8_external_memory_accounter.h"
+ #include "third_party/blink/renderer/platform/graphics/canvas_resource_host.h"
+ #include "third_party/blink/renderer/platform/graphics/graphics_types.h"
+ #include "third_party/blink/renderer/platform/graphics/graphics_types_3d.h"
+@@ -316,6 +317,7 @@ class CORE_EXPORT HTMLCanvasElement final
  
    bool ShouldDisableAccelerationBecauseOfReadback() const;
  
@@ -10,3 +18,12 @@ index 8de96d2bbb188089e345eb3d57c525ac711f916d..4f46dba9312d2f9f064fefe7bd1befd0
   protected:
    void DidMoveToNewDocument(Document& old_document) override;
    void DidRecalcStyle(const StyleRecalcChange change) override;
+@@ -421,6 +423,8 @@ class CORE_EXPORT HTMLCanvasElement final
+   mutable intptr_t externally_allocated_memory_;
+ 
+   scoped_refptr<StaticBitmapImage> transparent_image_;
++
++  NO_UNIQUE_ADDRESS V8ExternalMemoryAccounterBase external_memory_accounter_;
+ };
+ 
+ }  // namespace blink

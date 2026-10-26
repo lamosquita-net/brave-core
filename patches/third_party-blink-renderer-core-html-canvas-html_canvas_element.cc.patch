@@ -1,8 +1,21 @@
 diff --git a/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc b/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc
-index 63c943727517aff4d0264a993dc30fc0e2bed7c9..a1983922b98c91a9067372e4fe9514751b6264a2 100644
+index 63c943727517aff4d0264a993dc30fc0e2bed7c9..b36da9df500d9d2491a319b593eded7e50b789e9 100644
 --- a/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc
 +++ b/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc
-@@ -1140,6 +1140,7 @@ String HTMLCanvasElement::ToDataURLInternal(
+@@ -242,8 +242,10 @@ HTMLCanvasElement::HTMLCanvasElement(Document& document)
+ }
+ 
+ HTMLCanvasElement::~HTMLCanvasElement() {
+-  v8::Isolate::GetCurrent()->AdjustAmountOfExternalAllocatedMemory(
+-      -externally_allocated_memory_);
++  if (externally_allocated_memory_ > 0) {
++    external_memory_accounter_.Decrease(v8::Isolate::GetCurrent(),
++                                        externally_allocated_memory_);
++  }
+ }
+ 
+ void HTMLCanvasElement::Dispose() {
+@@ -1140,6 +1142,7 @@ String HTMLCanvasElement::ToDataURLInternal(
      if (!data_buffer)
        return String("data:,");
  
@@ -10,3 +23,13 @@ index 63c943727517aff4d0264a993dc30fc0e2bed7c9..a1983922b98c91a9067372e4fe951475
      String data_url = data_buffer->ToDataURL(encoding_mime_type, quality);
      base::TimeDelta elapsed_time = base::TimeTicks::Now() - start_time;
      float sqrt_pixels =
+@@ -1806,8 +1809,7 @@ void HTMLCanvasElement::UpdateMemoryUsage() {
+     // AdjustAmountOfExternalAllocatedMemory is safe, hence the
+     // 'diposing_' condition in the DCHECK below.
+     DCHECK(ThreadState::Current()->IsAllocationAllowed() || disposing_);
+-    v8::Isolate::GetCurrent()->AdjustAmountOfExternalAllocatedMemory(
+-        delta_bytes);
++    external_memory_accounter_.Update(v8::Isolate::GetCurrent(), delta_bytes);
+     externally_allocated_memory_ = externally_allocated_memory;
+   }
+ }

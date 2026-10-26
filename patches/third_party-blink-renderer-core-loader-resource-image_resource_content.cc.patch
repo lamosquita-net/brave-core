@@ -1,0 +1,15 @@
+diff --git a/third_party/blink/renderer/core/loader/resource/image_resource_content.cc b/third_party/blink/renderer/core/loader/resource/image_resource_content.cc
+index a4652e1978d1405f324f324e42eccc1c85270a60..936aed640cdefe1bebbe290b5c5bd97d3e50af64 100644
+--- a/third_party/blink/renderer/core/loader/resource/image_resource_content.cc
++++ b/third_party/blink/renderer/core/loader/resource/image_resource_content.cc
+@@ -341,10 +341,6 @@ scoped_refptr<Image> ImageResourceContent::CreateImage(bool is_multipart) {
+ void ImageResourceContent::ClearImage() {
+   if (!image_)
+     return;
+-  int64_t length = image_->HasData() ? image_->DataSize() : 0;
+-  if (allocated_external_memory_) {
+-    v8::Isolate::GetCurrent()->AdjustAmountOfExternalAllocatedMemory(-length);
+-  }
+ 
+   // If our Image has an observer, it's always us so we need to clear the back
+   // pointer before dropping our reference.

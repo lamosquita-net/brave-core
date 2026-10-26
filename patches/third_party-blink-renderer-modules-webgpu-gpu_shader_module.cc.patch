@@ -1,0 +1,25 @@
+diff --git a/third_party/blink/renderer/modules/webgpu/gpu_shader_module.cc b/third_party/blink/renderer/modules/webgpu/gpu_shader_module.cc
+index 3a650d7c5ee1954359d7f6b87b0c219978ee9299..41f2f2e86c106c9f75b4d309e24bc06130da3fb0 100644
+--- a/third_party/blink/renderer/modules/webgpu/gpu_shader_module.cc
++++ b/third_party/blink/renderer/modules/webgpu/gpu_shader_module.cc
+@@ -106,7 +106,8 @@ GPUShaderModule* GPUShaderModule::Create(
+   //
+   // TODO(crbug.com/dawn/2367): Get a real memory estimate from Tint.
+   base::ClampedNumeric<int32_t> input_code_size = wgsl_code.size();
+-  shader->tint_memory_estimate_.SetCurrentSize(input_code_size * 100);
++  shader->tint_memory_estimate_.Set(v8::Isolate::GetCurrent(),
++                                    input_code_size * 100);
+ 
+   return shader;
+ }
+@@ -160,6 +161,10 @@ void GPUShaderModule::OnCompilationInfoCallback(
+   resolver->Resolve(result);
+ }
+ 
++GPUShaderModule::~GPUShaderModule() {
++  tint_memory_estimate_.Clear(v8::Isolate::GetCurrent());
++}
++
+ ScriptPromise<GPUCompilationInfo> GPUShaderModule::getCompilationInfo(
+     ScriptState* script_state) {
+   auto* resolver =

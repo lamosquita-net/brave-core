@@ -1,0 +1,24 @@
+diff --git a/third_party/blink/renderer/platform/fonts/simple_font_data.cc b/third_party/blink/renderer/platform/fonts/simple_font_data.cc
+index 6309d31b5637e421c4fb0cbdb5f228a00a220888..53ddbe585fc45834b020ab66e3b791cfe8614a4e 100644
+--- a/third_party/blink/renderer/platform/fonts/simple_font_data.cc
++++ b/third_party/blink/renderer/platform/fonts/simple_font_data.cc
+@@ -100,8 +100,7 @@ SimpleFontData::SimpleFontData(const FontPlatformData* platform_data,
+   // that we are informing GC about external allocated memory using
+   // style_metrics_size as the font memory consumption.
+   if (v8::Isolate* isolate = v8::Isolate::TryGetCurrent()) {
+-    isolate->AdjustAmountOfExternalAllocatedMemory(
+-        kFontObjectsMemoryConsumption);
++    external_memory_accounter_.Increase(isolate, kFontObjectsMemoryConsumption);
+   }
+   PlatformInit(subpixel_ascent_descent, metrics_override);
+   PlatformGlyphInit();
+@@ -109,8 +108,7 @@ SimpleFontData::SimpleFontData(const FontPlatformData* platform_data,
+ 
+ SimpleFontData::~SimpleFontData() {
+   if (v8::Isolate* isolate = v8::Isolate::TryGetCurrent()) {
+-    isolate->AdjustAmountOfExternalAllocatedMemory(
+-        -kFontObjectsMemoryConsumption);
++    external_memory_accounter_.Decrease(isolate, kFontObjectsMemoryConsumption);
+   }
+ }
+ 

@@ -1,0 +1,14 @@
+diff --git a/third_party/blink/renderer/core/xmlhttprequest/xml_http_request.cc b/third_party/blink/renderer/core/xmlhttprequest/xml_http_request.cc
+index 9fceba9e6ed8dd414096ad6cfa447042fdd51d32..11c0b8078f9217a7b514b8277c37476d0f3a6e40 100644
+--- a/third_party/blink/renderer/core/xmlhttprequest/xml_http_request.cc
++++ b/third_party/blink/renderer/core/xmlhttprequest/xml_http_request.cc
+@@ -2104,8 +2104,7 @@ void XMLHttpRequest::ReportMemoryUsageToV8() {
+   response_text_last_reported_size_ = response_text_size;
+ 
+   if (diff) {
+-    GetExecutionContext()->GetIsolate()->AdjustAmountOfExternalAllocatedMemory(
+-        diff);
++    external_memory_accounter_.Update(v8::Isolate::GetCurrent(), diff);
+   }
+ }
+ 
