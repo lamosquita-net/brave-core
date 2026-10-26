@@ -13,7 +13,9 @@ namespace TemplateURLPrepopulateData {
 
 // IMPORTANT! Make sure to bump this value if you make changes to the
 // engines below or add/remove engines.
-const int kBraveCurrentDataVersion = 28;
+// FlyWeb: 29 drops DuckDuckGo's t= (it identified the browser as Brave), so
+// stored profiles pick up the new search URLs.
+const int kBraveCurrentDataVersion = 29;
 // DO NOT CHANGE THIS ONE. Used for backfilling kBraveDefaultSearchVersion.
 const int kBraveFirstTrackedDataVersion = 6;
 
@@ -94,7 +96,7 @@ const PrepopulatedEngine duckduckgo = MakeBravePrepopulatedEngine(
     u"DuckDuckGo",
     u":d",
     "https://duckduckgo.com/favicon.ico",
-    "https://duckduckgo.com/?q={searchTerms}&t=brave",
+    "https://duckduckgo.com/?q={searchTerms}",
     "UTF-8",
     "https://ac.duckduckgo.com/ac/?q={searchTerms}&type=list",
     SEARCH_ENGINE_DUCKDUCKGO,
@@ -104,7 +106,7 @@ const PrepopulatedEngine duckduckgo_de =
     ModifyEngineParams(duckduckgo,
                        nullptr,
                        nullptr,
-                       "https://duckduckgo.com/?q={searchTerms}&t=bravened",
+                       "https://duckduckgo.com/?q={searchTerms}",
                        nullptr,
                        nullptr,
                        PREPOPULATED_ENGINE_ID_DUCKDUCKGO_DE);
@@ -113,7 +115,7 @@ const PrepopulatedEngine duckduckgo_au_nz_ie =
     ModifyEngineParams(duckduckgo,
                        nullptr,
                        nullptr,
-                       "https://duckduckgo.com/?q={searchTerms}&t=braveed",
+                       "https://duckduckgo.com/?q={searchTerms}",
                        nullptr,
                        nullptr,
                        PREPOPULATED_ENGINE_ID_DUCKDUCKGO_AU_NZ_IE);
@@ -123,7 +125,7 @@ const PrepopulatedEngine duckduckgo_lite = MakeBravePrepopulatedEngine(
     u"DuckDuckGo Lite",
     u":dl",
     "https://duckduckgo.com/favicon.ico",
-    "https://duckduckgo.com/lite/?q={searchTerms}&t=brave",
+    "https://duckduckgo.com/lite/?q={searchTerms}",
     "UTF-8",
     "https://ac.duckduckgo.com/ac/?q={searchTerms}&type=list",
     SEARCH_ENGINE_DUCKDUCKGO,
