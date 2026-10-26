@@ -432,7 +432,11 @@ Config.prototype.buildArgs = function () {
     use_remoteexec: this.useRemoteExec,
     use_libfuzzer: this.use_libfuzzer,
     enable_updater: this.isOfficialBuild(),
-    enable_update_notifications: this.isOfficialBuild(),
+    // FlyWeb: off. Updates come from Sparkle, not Keystone/Omaha. Chromium 116
+    // skipped UpgradeDetector on macOS without Keystone; 128 dropped that guard,
+    // so a Release flagged itself as an outdated install (build date = the
+    // Chromium 128 commit, > 8 weeks) and showed "Can't update FlyWeb".
+    enable_update_notifications: false,
     brave_services_production_domain: this.braveServicesProductionDomain,
     brave_services_staging_domain: this.braveServicesStagingDomain,
     brave_services_dev_domain: this.braveServicesDevDomain,
