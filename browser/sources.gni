@@ -301,12 +301,15 @@ if (enable_request_otr) {
   brave_chrome_browser_deps += [ "//brave/components/request_otr/common" ]
 }
 
+# FlyWeb: brave_content_browser_client.cc reaches settings_helper.mojom.h
+# through brave_settings_ui.h even with enable_ai_chat=false.
+brave_chrome_browser_deps += [ "//brave/components/ai_chat/core/common/mojom" ]
+
 if (enable_ai_chat) {
   brave_chrome_browser_deps += [
     "//brave/components/ai_chat/content/browser",
     "//brave/components/ai_chat/core/browser",
     "//brave/components/ai_chat/core/common",
-    "//brave/components/ai_chat/core/common/mojom",
   ]
 
   brave_chrome_browser_sources += brave_browser_ai_chat_sources
