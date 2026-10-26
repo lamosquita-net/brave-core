@@ -276,8 +276,26 @@ module.exports = class GitPatcher {
     await fs.writeFile(patchInfoPath, JSON.stringify(patchInfo), { encoding: encodingPatchInfo })
   }
 
-  resetRepoFiles (filePaths) {
-    return util.runGitAsync(this.repoPath, ['checkout', ...filePaths])
+  async resetRepoFiles (filePaths) {
+    // FlyWeb: a patch can create a file that Chromium doesn't have (e.g.
+    // v8_external_memory_accounter.h). `git checkout` with that path fails
+    // as a whole ("pathspec did not match") and resets nothing, so modified
+    // patches then collide with their old version. Reset the tracked files
+    // and delete the ones a patch created, so that it creates them again.
+    if (!filePaths.length) {
+      return
+    }
+    const tracked = new Set((await util.runGitAsync(this.repoPath,
+        ['--literal-pathspecs', 'ls-files', '-z', '--', ...filePaths]))
+      .split('\0').filter(s => s))
+    for (const filePath of filePaths.filter(p => !tracked.has(p))) {
+      await fs.remove(path.join(this.repoPath, filePath))
+    }
+    const trackedPaths = filePaths.filter(p => tracked.has(p))
+    if (trackedPaths.length) {
+      return util.runGitAsync(this.repoPath,
+        ['--literal-pathspecs', 'checkout', '--', ...trackedPaths])
+    }
   }
 
   async handleObsoletePatchInfos (patchInfosObsolete) {
