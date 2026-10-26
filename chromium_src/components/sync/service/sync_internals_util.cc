@@ -23,7 +23,7 @@ base::Value::Dict ConstructAboutInformation(
   auto about_info = ConstructAboutInformation_ChromiumImpl(
       include_sensitive_data, service, channel);
 
-  Section section_brave_sync("Brave Sync", /*is_sensitive=*/false);
+  Section section_brave_sync("FlyWeb Sync", /*is_sensitive=*/false);
 
   Stat<bool>* is_passphrase_set =
       section_brave_sync.AddBoolStat("Passphrase is set");
