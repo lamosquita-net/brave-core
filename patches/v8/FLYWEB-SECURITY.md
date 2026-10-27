@@ -71,7 +71,16 @@ half of CVE-2025-13223 (4cf93118) is not needed in 13.2 (it feeds Turbolev). Tur
 
 `kFlyWebCacheEpoch` **19** (17 = 2.0.1–2.0.2 on 13.1, 18 = 2.0.3 with `seg/v8-13.1-lle`).
 
-## 5. Tests
+## 5. Tests (cloud `d8`, Linux x64, V8 only; `FlyWeb/scripts/v8-d8.sh`)
 
-Pending: cloud `d8` 13.2.152.56 with these patches (mjsunit, `mjsunit/wasm`, `compiler`). Not compiled in FlyWeb:
-LOCAL builds it.
+`d8` 13.2.152.56 with these 32 patches (without Brave's two `//brave` hooks), release with DCHECKs, clang of Chromium
+116, libstdc++ (SEGURIDAD-PORTES-9, 27-10-2026).
+
+- Build: the first try failed (`InvalidateAtMapOffset()` private; upstream has it public, fixed); then it builds.
+- Options (`--print-flag-values`): `--no-maglev`, `--no-maglev-untagged-phis`, `--turboshaft-wasm`,
+  `--turboshaft-wasm-load-elimination`, `--turboshaft-load-elimination`, `--turboshaft-instruction-selection`,
+  `--wasm-generic-wrapper`, `--regexp-simd`.
+- FlyWeb's regression tests (`FlyWeb/tools/v8-pruebas/`): **9/9**.
+- **mjsunit 7336/7337** (default variant, includes `mjsunit/wasm`). The 1 is `maglev/extras-cped` (asserts Maglev code),
+  as in 1.13–1.15.
+- Not covered by the `d8`: Intl (no ICU) and Chromium's libc++. **Not compiled in FlyWeb**: LOCAL builds it.
