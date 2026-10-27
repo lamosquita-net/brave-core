@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_object.h b/third_party/blink/renderer/core/layout/layout_object.h
-index 1c63197847997fbc9691cd3a3eb841c71f76481c..7669d4165efe6b1c1e6d7dfc1480fb771cc91f7d 100644
+index 1c63197847997fbc9691cd3a3eb841c71f76481c..2c51c7e32115fc3f73a882a753c922b7dccc642a 100644
 --- a/third_party/blink/renderer/core/layout/layout_object.h
 +++ b/third_party/blink/renderer/core/layout/layout_object.h
 @@ -743,10 +743,11 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
@@ -18,15 +18,3 @@ index 1c63197847997fbc9691cd3a3eb841c71f76481c..7669d4165efe6b1c1e6d7dfc1480fb77
    }
  
    void NotifyPriorityScrollAnchorStatusChanged();
-@@ -1416,6 +1417,11 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
-     NOT_DESTROYED();
-     return bitfields_.HorizontalWritingMode();
-   }
-+  bool IsHorizontalTypographicMode() const {
-+    NOT_DESTROYED();
-+    return IsHorizontalWritingMode() ||
-+           StyleRef().IsHorizontalTypographicMode();
-+  }
-   bool HasFlippedBlocksWritingMode() const {
-     NOT_DESTROYED();
-     return StyleRef().IsFlippedBlocksWritingMode();

@@ -1,24 +1,8 @@
 diff --git a/third_party/blink/renderer/core/layout/inline/inline_cursor.cc b/third_party/blink/renderer/core/layout/inline/inline_cursor.cc
-index 41f4df1f28a0066df69b6bf7b0805e9c9dbba143..b46f76996fdfcd7b2f7dd7656d6eda6dd049dde2 100644
+index 41f4df1f28a0066df69b6bf7b0805e9c9dbba143..8e5b3606caecc67897a987b596bf508a258123fe 100644
 --- a/third_party/blink/renderer/core/layout/inline/inline_cursor.cc
 +++ b/third_party/blink/renderer/core/layout/inline/inline_cursor.cc
-@@ -552,12 +552,14 @@ PhysicalRect InlineCursor::CurrentRectInBlockFlow() const {
-   // consumed in previous fragments.
-   auto writing_direction = ContainerFragment().Style().GetWritingDirection();
-   switch (writing_direction.GetWritingMode()) {
--    default:
-+    case WritingMode::kHorizontalTb:
-       rect.offset.top += previously_consumed_block_size_;
-       break;
-+    case WritingMode::kSidewaysLr:
-     case WritingMode::kVerticalLr:
-       rect.offset.left += previously_consumed_block_size_;
-       break;
-+    case WritingMode::kSidewaysRl:
-     case WritingMode::kVerticalRl: {
-       // For vertical-rl writing-mode it's a bit more complicated. We need to
-       // convert to logical coordinates in the containing box fragment, in order
-@@ -1577,8 +1579,13 @@ const LayoutObject* InlineCursor::CulledInlineTraversal::Find(
+@@ -1577,8 +1577,13 @@ const LayoutObject* InlineCursor::CulledInlineTraversal::Find(
        return child;
  
      if (child->IsBox()) {

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style.cc b/third_party/blink/renderer/core/style/computed_style.cc
-index bc061ec223ea93f74982b9ab4a2119f548caf978..69b39afab099d3111f0a9270697f2856486f6de8 100644
+index bc061ec223ea93f74982b9ab4a2119f548caf978..afdb916315c1deadbeb4bf090db72f5e0461460d 100644
 --- a/third_party/blink/renderer/core/style/computed_style.cc
 +++ b/third_party/blink/renderer/core/style/computed_style.cc
 @@ -481,12 +481,12 @@ ComputedStyle::ComputeDifferenceIgnoringInheritedFirstLineStyle(
@@ -99,16 +99,3 @@ index bc061ec223ea93f74982b9ab4a2119f548caf978..69b39afab099d3111f0a9270697f2856
  }
  
  blink::Color ComputedStyle::ResolvedColor(const StyleColor& color,
-@@ -2572,7 +2581,11 @@ TextEmphasisMark ComputedStyle::GetTextEmphasisMark() const {
-     return mark;
-   }
- 
--  if (IsHorizontalWritingMode()) {
-+  // https://drafts.csswg.org/css-text-decor/#propdef-text-emphasis-style
-+  // If only `filled` or `open` is specified, the shape keyword computes to
-+  // `circle` in horizontal typographic modes and `sesame` in vertical
-+  // typographic modes.
-+  if (IsHorizontalTypographicMode()) {
-     return TextEmphasisMark::kDot;
-   }
- 
