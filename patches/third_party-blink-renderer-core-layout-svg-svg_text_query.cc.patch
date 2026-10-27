@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/layout/svg/svg_text_query.cc b/third_party/blink/renderer/core/layout/svg/svg_text_query.cc
-index 731b1f0b985327a4c4a6c3a87fe6a0218e434ace..bf7c34fb08141926bc429a9f8f5b7afd7e907665 100644
+index 731b1f0b985327a4c4a6c3a87fe6a0218e434ace..fffe3356ab6484555888b81db4afb2514560ab38 100644
 --- a/third_party/blink/renderer/core/layout/svg/svg_text_query.cc
 +++ b/third_party/blink/renderer/core/layout/svg/svg_text_query.cc
-@@ -163,15 +163,24 @@ gfx::PointF StartOrEndPosition(const LayoutObject& query_root,
+@@ -6,6 +6,7 @@
+ 
+ #include <unicode/utf16.h>
+ 
++#include "third_party/blink/renderer/core/layout/geometry/writing_mode_converter.h"
+ #include "third_party/blink/renderer/core/layout/inline/fragment_item.h"
+ #include "third_party/blink/renderer/core/layout/inline/inline_cursor.h"
+ #include "third_party/blink/renderer/core/layout/layout_box.h"
+@@ -163,15 +164,24 @@ gfx::PointF StartOrEndPosition(const LayoutObject& query_root,
    const float ascent =
        font ? font->GetFontMetrics().FixedAscent(item->Style().GetFontBaseline())
             : 0.0f;
@@ -35,3 +43,22 @@ index 731b1f0b985327a4c4a6c3a87fe6a0218e434ace..bf7c34fb08141926bc429a9f8f5b7afd
    }
    if (item->HasSvgTransformForPaint()) {
      point = item->BuildSvgTransformForPaint().MapPoint(point);
+@@ -320,12 +330,14 @@ int SvgTextQuery::CharacterNumberAtPosition(const gfx::PointF& position) const {
+       hit_item->OffsetInContainerFragment();
+   // FragmentItem::TextOffsetForPoint() is not suitable here because it
+   // returns an offset for the nearest glyph edge.
++  LayoutUnit inline_offset =
++      WritingModeConverter({hit_item->GetWritingMode(), TextDirection::kLtr},
++                           hit_item->Size())
++          .ToLogical(transformed_point, {})
++          .inline_offset;
+   unsigned offset_in_item =
+       hit_item->TextShapeResult()->CreateShapeResult()->OffsetForPosition(
+-          hit_item->ScaleInlineOffset(hit_item->IsHorizontal()
+-                                          ? transformed_point.left
+-                                          : transformed_point.top),
+-          BreakGlyphsOption(true));
++          hit_item->ScaleInlineOffset(inline_offset), BreakGlyphsOption(true));
+   return addressable_code_unit_count + offset_in_item;
+ }
+ 
