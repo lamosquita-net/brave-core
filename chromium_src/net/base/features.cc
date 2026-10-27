@@ -12,6 +12,9 @@ namespace net {
 namespace features {
 
 OVERRIDE_FEATURE_DEFAULT_STATES({{
+    // FlyWeb: on by default since Chrome 130 (no dictionaries over MITM roots).
+    {kCompressionDictionaryTransportRequireKnownRootCert,
+     base::FEATURE_ENABLED_BY_DEFAULT},
     {kEnableWebTransportDraft07, base::FEATURE_DISABLED_BY_DEFAULT},
     // Enable NIK-partitioning by default.
     {kPartitionConnectionsByNetworkIsolationKey,
