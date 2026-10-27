@@ -1,8 +1,43 @@
 diff --git a/services/device/public/cpp/geolocation/system_geolocation_source_apple.mm b/services/device/public/cpp/geolocation/system_geolocation_source_apple.mm
-index 4e16c1d782d01d9569b8d7944abc73a1d7551677..4c12cdaf3d5ef0063850ab3febd0c345e9a12818 100644
+index 4e16c1d782d01d9569b8d7944abc73a1d7551677..70d05bd01d0a63494f5a987d68706caf7e54643a 100644
 --- a/services/device/public/cpp/geolocation/system_geolocation_source_apple.mm
 +++ b/services/device/public/cpp/geolocation/system_geolocation_source_apple.mm
-@@ -114,7 +114,12 @@ void SystemGeolocationSourceApple::OpenSystemPermissionSetting() {
+@@ -63,7 +63,16 @@ void SystemGeolocationSourceApple::RegisterPermissionUpdateCallback(
+ }
+ 
+ void SystemGeolocationSourceApple::PermissionUpdated() {
+-  permission_update_callback_.Run(GetSystemPermission());
++  const LocationSystemPermissionStatus status = GetSystemPermission();
++  // FlyWeb (FM.42 b4): the 10.14 request below is answered.
++  if (requesting_permission_ &&
++      status != LocationSystemPermissionStatus::kNotDetermined) {
++    requesting_permission_ = false;
++    if (!watching_position_) {
++      [location_manager_ stopUpdatingLocation];
++    }
++  }
++  permission_update_callback_.Run(status);
+ }
+ 
+ void SystemGeolocationSourceApple::PositionUpdated(
+@@ -85,10 +94,16 @@ void SystemGeolocationSourceApple::StartWatchingPosition(bool high_accuracy) {
+     // Using kCLLocationAccuracyHundredMeters for consistency with Android.
+     location_manager_.desiredAccuracy = kCLLocationAccuracyHundredMeters;
+   }
++  watching_position_ = true;
+   [location_manager_ startUpdatingLocation];
+ }
+ 
+ void SystemGeolocationSourceApple::StopWatchingPosition() {
++  watching_position_ = false;
++  if (requesting_permission_) {
++    // FlyWeb (FM.42 b4): keep the 10.14 permission request alive.
++    return;
++  }
+   [location_manager_ stopUpdatingLocation];
+ }
+ 
+@@ -114,7 +129,19 @@ void SystemGeolocationSourceApple::OpenSystemPermissionSetting() {
  }
  
  void SystemGeolocationSourceApple::RequestPermission() {
@@ -12,6 +47,13 @@ index 4e16c1d782d01d9569b8d7944abc73a1d7551677..4c12cdaf3d5ef0063850ab3febd0c345
 +  // 10.14 the system asks by itself when location updates start, as in 116.
 +  if (@available(macOS 10.15, *)) {
 +    [location_manager_ requestWhenInUseAuthorization];
++  } else if (GetSystemPermission() ==
++             LocationSystemPermissionStatus::kNotDetermined) {
++    // FlyWeb (FM.42 b4): start the updates so that 10.14 shows its dialog;
++    // otherwise SystemPermissionSettings waits forever for an answer.
++    // PermissionUpdated() stops them once the user decides.
++    requesting_permission_ = true;
++    [location_manager_ startUpdatingLocation];
 +  }
  }
  

@@ -1,0 +1,15 @@
+diff --git a/services/device/public/cpp/geolocation/system_geolocation_source_apple.h b/services/device/public/cpp/geolocation/system_geolocation_source_apple.h
+index df337c1d92aa222ea7bb581461f5982673a9bb1f..c1ffe166e480b54fd72b2c9e8b0dd0fee1d68cbb 100644
+--- a/services/device/public/cpp/geolocation/system_geolocation_source_apple.h
++++ b/services/device/public/cpp/geolocation/system_geolocation_source_apple.h
+@@ -51,6 +51,10 @@ class COMPONENT_EXPORT(GEOLOCATION) SystemGeolocationSourceApple
+   SEQUENCE_CHECKER(sequence_checker_);
+   PermissionUpdateCallback permission_update_callback_;
+   scoped_refptr<PositionObserverList> position_observers_;
++  // FlyWeb (FM.42 b4): on 10.14 the permission is asked by starting location
++  // updates; these keep them running until the user answers.
++  bool watching_position_ = false;
++  bool requesting_permission_ = false;
+   base::WeakPtrFactory<SystemGeolocationSourceApple> weak_ptr_factory_{this};
+ };
+ 
