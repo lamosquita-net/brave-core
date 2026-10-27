@@ -5,11 +5,20 @@
 
 // FlyWeb: the fly that flies over the new tab page. Port of the prototype
 // (softmac FlyWeb/docs/prototipo-ntp/newtab.html), reviewed with the human on
-// the MacPro6,1. A requestAnimationFrame loop that only changes `transform`.
+// the MacPro6,1.
+//
+// The flight runs on the compositor (softmac FM.43): each leg, a flight
+// between two perches or a stay on one, is worked out once with the formulas
+// of the requestAnimationFrame loop of 1.15, sampled at its 60 Hz, and handed
+// over as a Web Animation of `transform`; the wings beat with an `opacity`
+// animation of their own layer. The main thread only wakes up between legs.
+// Paused while the page is hidden; with "reduce motion" the fly stays still
+// on a perch (softmac FlyWeb/docs/disenos.md §3).
 //
 // No `will-change` on the fly: on the 6,1 (FirePro D500, Mojave) with the
-// display in scaled mode its own compositing layer draws a flickering line
-// across the whole screen (softmac docs/TAREAS.md F5.3).
+// display in scaled mode its own compositing layer drew a flickering line
+// across the whole screen in 1.x (softmac docs/TAREAS.md F5.3). The animations
+// give it a layer too; if the line comes back, the 1.15 loop is in git.
 
 import * as React from 'react'
 import styled from 'styled-components'
@@ -17,8 +26,22 @@ import styled from 'styled-components'
 import moscaSvg from './moscaSvg'
 import svgEnReact from './svgEnReact'
 
-// Built once: React elements, not an HTML string (Trusted Types, see svgEnReact.tsx).
-const dibujo = svgEnReact(moscaSvg)
+// The drawing in three layers, in its own order: what is under the wings, the
+// wings (class "ala") and what is over them. Built once: React elements, not
+// an HTML string (Trusted Types, see svgEnReact.tsx).
+const capas = (() => {
+  const [, apertura, trazos, cierre] = /^(<svg[^>]*>(?:<style>[^<]*<\/style>)?)([\s\S]*)(<\/svg>)$/.exec(moscaSvg)!
+  const lista = trazos.match(/<path[^>]*\/>/g) ?? []
+  const esAla = (t: string) => / ala"/.test(t)
+  const primera = lista.findIndex(esAla)
+  const ultima = lista.length - 1 - [...lista].reverse().findIndex(esAla)
+  const svg = (partes: string[]) => svgEnReact(apertura + partes.join('') + cierre)
+  return {
+    debajo: svg(lista.slice(0, primera)),
+    alas: svg(lista.slice(primera, ultima + 1)),
+    encima: svg(lista.slice(ultima + 1))
+  }
+})()
 
 // What to touch to tune the flight.
 const AJUSTES = {
@@ -29,8 +52,7 @@ const AJUSTES = {
   posado: [2.5, 7], // seconds on each perch (random between both)
   saltarse: 0.2, // probability of flying past a perch
   giroPosado: [35, 150], // on landing it turns this many degrees, either side
-  rumbo: -53, // where the drawing faces (0 = right; head up and right)
-  calma: { velocidad: 0.35, amplitud: 0.3 } // with "reduce motion"
+  rumbo: -53 // where the drawing faces (0 = right; head up and right)
 }
 
 // Closed route through these points (0..1 of the window). A lying, uneven
@@ -54,6 +76,11 @@ const RUTA = [
 
 const TAMANO = 76
 
+// Seconds between two samples of a leg: the frame rate the 1.15 loop ran at.
+const PASO = 1 / 60
+// Opacity of the wings layer at the low point of a beat: .12 over their .4.
+const ALETEO = 0.3
+
 const Contenedor = styled('div')`
   position: fixed;
   left: 0;
@@ -64,20 +91,15 @@ const Contenedor = styled('div')`
   pointer-events: none;
   z-index: 3;
 
-  svg {
+  svg, .alas {
+    position: absolute;
+    left: 0;
+    top: 0;
     width: 100%;
     height: 100%;
+  }
+  svg {
     overflow: visible;
-  }
-  .ala {
-    transition: opacity .25s;
-  }
-  &.vuela .ala {
-    animation: flyweb-aleteo .09s steps(2, jump-none) infinite alternate;
-  }
-  @keyframes flyweb-aleteo {
-    from { opacity: .4; }
-    to { opacity: .12; }
   }
 `
 
@@ -93,13 +115,8 @@ function punto (p0: Punto, p1: Punto, p2: Punto, p3: Punto, t: number): Punto {
   return { x: c(p0.x, p1.x, p2.x, p3.x), y: c(p0.y, p1.y, p2.y, p3.y) }
 }
 
-// The flight state lives outside React: it changes every frame and only
-// drives the element's transform.
-function volarSobre (mosca: HTMLDivElement): () => void {
-  const reducir = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  const CALMA = reducir ? AJUSTES.calma.velocidad : 1
-  const AMPLIA = reducir ? AJUSTES.calma.amplitud : 1
-
+// The flight state lives outside React and only drives the animations.
+function volarSobre (mosca: HTMLDivElement, alas: HTMLDivElement, quieta: boolean): () => void {
   let tabla: Muestra[] = []
   let largo = 0
   let posaderos: number[] = []
@@ -145,136 +162,241 @@ function volarSobre (mosca: HTMLDivElement): () => void {
     return { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f }
   }
 
-  let enderezaDesde = -9
-  let giroIni = 0
-  let giroFin = 0
-  let girandoDesde = 0
-  let d = 0
-  let destino = 0
-  let desde = 0
-  let inicioTramo = 0
-  let duracion = 1
-  let posadoHasta = 0
-  let volando = false
-  let angulo = 0
+  // Everything a leg starts from, so that a resize can work it out again.
+  const e = {
+    enderezaDesde: -9,
+    giroIni: 0,
+    giroFin: 0,
+    girandoDesde: 0,
+    d: 0,
+    destino: 0,
+    desde: 0,
+    inicioTramo: 0,
+    duracion: 1,
+    posadoHasta: 0,
+    volando: false,
+    angulo: 0,
+    giroPrevio: null as number | null
+  }
 
   function siguientePosadero (): number {
     // The next perch ahead; sometimes it skips it and goes to the following.
     const orden = posaderos
-      .map(p => { const x = p - (d % largo); return x <= 1 ? x + largo : x })
+      .map(p => { const x = p - (e.d % largo); return x <= 1 ? x + largo : x })
       .sort((a, b) => a - b)
     let salto = orden[0]
     if (orden.length > 1 && Math.random() < AJUSTES.saltarse) salto = orden[1]
     return salto
   }
 
+  let aleteo: Animation | null = null
+
   function despegar (ahora: number) {
     const tramo = siguientePosadero()
     const escala = innerWidth / 1280
-    const vel = AJUSTES.velocidad * escala * CALMA * (1 + (Math.random() * 2 - 1) * AJUSTES.variacion)
-    angulo += giroFin
-    giroFin = 0
-    enderezaDesde = ahora
-    desde = d
-    destino = d + tramo
-    inicioTramo = ahora
-    duracion = tramo / vel
-    volando = true
-    mosca.classList.add('vuela')
+    const vel = AJUSTES.velocidad * escala * (1 + (Math.random() * 2 - 1) * AJUSTES.variacion)
+    e.angulo += e.giroFin
+    e.giroFin = 0
+    e.enderezaDesde = ahora
+    e.desde = e.d
+    e.destino = e.d + tramo
+    e.inicioTramo = ahora
+    e.duracion = tramo / vel
+    e.volando = true
+    aleteo = alas.animate([{ opacity: 1 }, { opacity: ALETEO }], {
+      duration: 90,
+      easing: 'steps(2, jump-none)',
+      iterations: Infinity,
+      direction: 'alternate'
+    })
   }
 
   function posar (ahora: number) {
-    volando = false
-    d = destino
+    e.volando = false
+    e.d = e.destino
     const g = AJUSTES.giroPosado
     const lado = Math.random() < 0.5 ? -1 : 1
-    giroIni = 0
-    giroFin = lado * (g[0] + Math.random() * (g[1] - g[0])) * AMPLIA
-    girandoDesde = ahora
+    e.giroIni = 0
+    e.giroFin = lado * (g[0] + Math.random() * (g[1] - g[0]))
+    e.girandoDesde = ahora
     const r = AJUSTES.posado
-    posadoHasta = ahora + (r[0] + Math.random() * (r[1] - r[0])) / CALMA
-    mosca.classList.remove('vuela')
+    e.posadoHasta = ahora + r[0] + Math.random() * (r[1] - r[0])
+    if (aleteo) {
+      // The wings settle in .25 s from wherever the beat left them.
+      const ahoraAlas = Number(getComputedStyle(alas).opacity)
+      aleteo.cancel()
+      aleteo = null
+      if (ahoraAlas < 1) alas.animate([{ opacity: ahoraAlas }, { opacity: 1 }], { duration: 250, easing: 'ease' })
+    }
   }
 
-  let arranque: number | null = null
-  let previa = 0
-  let peticion = 0
-
-  function volar (marca: number) {
-    if (arranque === null) {
-      arranque = previa = marca
-      d = posaderos[Math.floor(Math.random() * posaderos.length)]
-      destino = d
-      posar(0)
-      posadoHasta = 1.5
+  // Pose at time t while flying (it also turns the fly towards its course).
+  function enVuelo (t: number): Punto & { giro: number } {
+    const f = Math.min(1, (t - e.inicioTramo) / e.duracion)
+    const s = f * f * (3 - 2 * f) // smooth start and stop
+    e.d = e.desde + (e.destino - e.desde) * s
+    const p = en(e.d)
+    const q = en(e.d + 30)
+    const sube = Math.sin(f * Math.PI) * Math.sin(t * 2.1) * AJUSTES.ondulacion
+    const rumboVuelo = Math.atan2(q.y - p.y, q.x - p.x) * 180 / Math.PI
+    const fe = Math.min(1, (t - e.enderezaDesde) / 0.4) // straightens in 0.4 s on take-off
+    const dif = ((rumboVuelo - e.angulo + 540) % 360) - 180 // the short way round
+    e.angulo = fe < 1 ? e.angulo + dif * fe : rumboVuelo
+    return {
+      x: p.x + Math.sin(t * 23) * AJUSTES.temblor,
+      y: p.y + sube + Math.cos(t * 19) * AJUSTES.temblor,
+      giro: e.angulo - AJUSTES.rumbo
     }
-    const hueco = marca - previa
-    if (hueco > 800) arranque += hueco - 16 // hidden tab: no jumps
-    previa = marca
-    const t = (marca - arranque) / 1000
+  }
 
-    let x: number
-    let y: number
-    let giro: number
-    if (volando) {
-      const f = Math.min(1, (t - inicioTramo) / duracion)
-      const s = f * f * (3 - 2 * f) // smooth start and stop
-      d = desde + (destino - desde) * s
-      const p = en(d)
-      const q = en(d + 30)
-      const sube = Math.sin(f * Math.PI) * Math.sin(t * 2.1) * AJUSTES.ondulacion * AMPLIA
-      x = p.x + Math.sin(t * 23) * AJUSTES.temblor * AMPLIA
-      y = p.y + sube + Math.cos(t * 19) * AJUSTES.temblor * AMPLIA
-      const rumboVuelo = Math.atan2(q.y - p.y, q.x - p.x) * 180 / Math.PI
-      const fe = Math.min(1, (t - enderezaDesde) / 0.4) // straightens in 0.4 s on take-off
-      const dif = ((rumboVuelo - angulo + 540) % 360) - 180 // the short way round
-      angulo = fe < 1 ? angulo + dif * fe : rumboVuelo
-      giro = angulo - AJUSTES.rumbo
-      if (f >= 1) posar(t)
-    } else {
-      // Perched: turns in 0.6 s, slowing down, then sways a little.
-      const p2 = en(d)
-      x = p2.x
-      y = p2.y
-      const fg = Math.min(1, (t - girandoDesde) / 0.6)
-      const eg = 1 - Math.pow(1 - fg, 3)
-      giro = angulo - AJUSTES.rumbo + giroIni + (giroFin - giroIni) * eg +
-        Math.sin(t * 1.3) * 6 * AMPLIA + (Math.sin(t * 7) > 0.97 ? 4 : 0)
-      if (t > posadoHasta) despegar(t)
+  // Pose at time t while perched: turns in 0.6 s, slowing down, then sways a little.
+  function posada (t: number): Punto & { giro: number } {
+    const fg = Math.min(1, (t - e.girandoDesde) / 0.6)
+    const eg = 1 - Math.pow(1 - fg, 3)
+    return {
+      ...en(e.d),
+      giro: e.angulo - AJUSTES.rumbo + e.giroIni + (e.giroFin - e.giroIni) * eg +
+        Math.sin(t * 1.3) * 6 + (Math.sin(t * 7) > 0.97 ? 4 : 0)
     }
-    const medio = TAMANO / 2
-    mosca.style.transform = `translate(${x - medio}px, ${y - medio}px) rotate(${giro}deg)`
-    peticion = requestAnimationFrame(volar)
+  }
+
+  const medio = TAMANO / 2
+  function transformar (p: Punto & { giro: number }): string {
+    // Keyframes are interpolated: the angle must not jump a whole turn.
+    let giro = p.giro
+    if (e.giroPrevio !== null) giro -= 360 * Math.round((giro - e.giroPrevio) / 360)
+    e.giroPrevio = giro
+    return `translate(${p.x - medio}px, ${p.y - medio}px) rotate(${giro}deg)`
+  }
+
+  // Keyframes of the current leg, from t0 to its end.
+  function marcos (t0: number): Keyframe[] {
+    const duracion = e.volando ? e.duracion : e.posadoHasta - t0
+    const n = Math.max(2, Math.ceil(duracion / PASO) + 1)
+    const lista: Keyframe[] = []
+    for (let i = 0; i < n; i++) {
+      const t = t0 + duracion * i / (n - 1)
+      lista.push({ transform: transformar(e.volando ? enVuelo(t) : posada(t)) })
+    }
+    return lista
+  }
+
+  let vuelo: Animation | null = null
+  let inicio = { ...e }
+  let t0 = 0
+
+  function seguir (desde: number) {
+    inicio = { ...e }
+    t0 = desde
+    const duracion = e.volando ? e.duracion : e.posadoHasta - desde
+    const anterior = vuelo
+    const actual = mosca.animate(marcos(desde), { duration: duracion * 1000, fill: 'forwards' })
+    anterior?.cancel()
+    if (document.hidden) {
+      actual.pause()
+      aleteo?.pause()
+    }
+    actual.onfinish = () => {
+      const fin = desde + duracion
+      if (e.volando) posar(fin)
+      else despegar(fin)
+      seguir(fin)
+    }
+    vuelo = actual
+  }
+
+  // Still on a perch, with "reduce motion".
+  let sitio = 0
+  let giroQuieta = 0
+  function colocarQuieta () {
+    const p = en(posaderos[sitio])
+    mosca.style.transform = `translate(${p.x - medio}px, ${p.y - medio}px) rotate(${giroQuieta}deg)`
   }
 
   let espera = 0
   const alCambiarTamano = () => {
     clearTimeout(espera)
-    espera = window.setTimeout(medir, 150)
+    espera = window.setTimeout(() => {
+      const antes = largo
+      medir()
+      if (quieta) {
+        colocarQuieta()
+        return
+      }
+      if (!vuelo) return
+      // Same leg and timing over the new route: distances scale with it.
+      const k = largo / antes
+      inicio = { ...inicio, d: inicio.d * k, desde: inicio.desde * k, destino: inicio.destino * k }
+      Object.assign(e, inicio)
+      ;(vuelo.effect as KeyframeEffect).setKeyframes(marcos(t0))
+    }, 150)
   }
+
+  // Hidden tab or window: nothing runs (the compositor stops drawing too).
+  const alCambiarVisibilidad = () => {
+    for (const a of [vuelo, aleteo]) {
+      if (!a) continue
+      if (document.hidden && a.playState === 'running') a.pause()
+      else if (!document.hidden && a.playState === 'paused') a.play()
+    }
+  }
+
   addEventListener('resize', alCambiarTamano)
   medir()
-  peticion = requestAnimationFrame(volar)
+  if (quieta) {
+    const g = AJUSTES.giroPosado
+    sitio = Math.floor(Math.random() * posaderos.length)
+    giroQuieta = -AJUSTES.rumbo + (Math.random() < 0.5 ? -1 : 1) * (g[0] + Math.random() * (g[1] - g[0]))
+    colocarQuieta()
+  } else {
+    document.addEventListener('visibilitychange', alCambiarVisibilidad)
+    e.d = posaderos[Math.floor(Math.random() * posaderos.length)]
+    e.destino = e.d
+    posar(0)
+    e.posadoHasta = 1.5
+    seguir(0)
+  }
 
   return () => {
-    cancelAnimationFrame(peticion)
+    if (vuelo) {
+      vuelo.onfinish = null
+      vuelo.cancel()
+    }
+    aleteo?.cancel()
     clearTimeout(espera)
     removeEventListener('resize', alCambiarTamano)
+    document.removeEventListener('visibilitychange', alCambiarVisibilidad)
+    mosca.style.transform = ''
   }
 }
 
 export default function Mosca () {
   const ref = React.useRef<HTMLDivElement>(null)
+  const refAlas = React.useRef<HTMLDivElement>(null)
   React.useEffect(() => {
-    if (!ref.current) return
-    return volarSobre(ref.current)
+    const mosca = ref.current
+    const alas = refAlas.current
+    if (!mosca || !alas) return
+    const reducir = window.matchMedia('(prefers-reduced-motion: reduce)')
+    let parar = volarSobre(mosca, alas, reducir.matches)
+    const alCambiar = () => {
+      parar()
+      parar = volarSobre(mosca, alas, reducir.matches)
+    }
+    reducir.addEventListener('change', alCambiar)
+    return () => {
+      reducir.removeEventListener('change', alCambiar)
+      parar()
+    }
   }, [])
   return (
     <Contenedor
       ref={ref}
       aria-hidden='true'
     >
-      {dibujo}
+      {capas.debajo}
+      <div className='alas' ref={refAlas}>{capas.alas}</div>
+      {capas.encima}
     </Contenedor>
   )
 }
