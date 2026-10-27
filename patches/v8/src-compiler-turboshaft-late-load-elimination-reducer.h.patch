@@ -1,18 +1,25 @@
 diff --git a/src/compiler/turboshaft/late-load-elimination-reducer.h b/src/compiler/turboshaft/late-load-elimination-reducer.h
-index f5b9a8da010e99bd5f536251eae5f3d41294b08b..924938003d50b85a23cc0a7179b05477f37cd11d 100644
+index f5b9a8da010e99bd5f536251eae5f3d41294b08b..9cc2ed4d6993c9c1cb7ae13c5c47848186264ed7 100644
 --- a/src/compiler/turboshaft/late-load-elimination-reducer.h
 +++ b/src/compiler/turboshaft/late-load-elimination-reducer.h
-@@ -527,8 +527,14 @@ class MemoryContentTable
-     SetNoNotify(key, value);
+@@ -417,6 +417,11 @@ class MemoryContentTable
+     }
    }
  
--  void InvalidateAtOffset(int32_t offset, OpIndex base) {
--    MapMaskAndOr base_maps = object_maps_.Get(base);
 +  // FlyWeb: v8 0652ef4b (crbug 436623746).
 +  void InvalidateAtMapOffset() {
 +    InvalidateAtOffset(HeapObject::kMapOffset, OptionalOpIndex::Nullopt());
 +  }
 +
+   OpIndex Find(const LoadOp& load) {
+     OpIndex base = ResolveBase(load.base());
+     OptionalOpIndex index = load.index();
+@@ -527,8 +532,9 @@ class MemoryContentTable
+     SetNoNotify(key, value);
+   }
+ 
+-  void InvalidateAtOffset(int32_t offset, OpIndex base) {
+-    MapMaskAndOr base_maps = object_maps_.Get(base);
 +  void InvalidateAtOffset(int32_t offset, OptionalOpIndex base) {
 +    MapMaskAndOr base_maps{};
 +    if (base.has_value()) base_maps = object_maps_.Get(base.value());
