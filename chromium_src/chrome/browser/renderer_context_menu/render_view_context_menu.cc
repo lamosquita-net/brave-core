@@ -18,6 +18,7 @@
 #include "brave/components/ai_rewriter/common/buildflags/buildflags.h"
 #include "brave/components/tor/buildflags/buildflags.h"
 #include "brave/grit/brave_theme_resources.h"
+#include "build/build_config.h"
 #include "chrome/browser/autocomplete/chrome_autocomplete_provider_client.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser_list.h"
@@ -32,6 +33,10 @@
 #include "ui/gfx/image/image_skia.h"
 #include "ui/gfx/paint_vector_icon.h"
 #include "url/origin.h"
+
+#if BUILDFLAG(IS_MAC)
+#include "base/mac/mac_util.h"
+#endif
 
 #if BUILDFLAG(ENABLE_TOR)
 #include "brave/browser/tor/tor_profile_manager.h"
@@ -661,8 +666,15 @@ void BraveRenderViewContextMenu::InitMenu() {
                                          IDS_CONTENT_CONTEXT_FORCE_PASTE);
   }
 #if BUILDFLAG(ENABLE_TEXT_RECOGNITION)
-  const bool media_image = content_type_->SupportsGroup(
+  bool media_image = content_type_->SupportsGroup(
       ContextMenuContentType::ITEM_GROUP_MEDIA_IMAGE);
+#if BUILDFLAG(IS_MAC)
+  // FlyWeb (FM.42 b1): Vision recognizes text only on macOS 10.15+; on 10.14
+  // the item would copy nothing, so it is not shown.
+  if (base::mac::MacOSVersion() < 10'15'00) {
+    media_image = false;
+  }
+#endif
   if (media_image) {
     index =
         menu_model_.GetIndexOfCommandId(IDC_CONTENT_CONTEXT_COPYIMAGELOCATION);

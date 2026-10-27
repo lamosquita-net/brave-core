@@ -76,6 +76,10 @@ std::pair<bool, std::vector<std::string>> GetTextFromImage(
     if (error) {
       LOG(ERROR) << base::SysNSStringToUTF8([error localizedDescription]);
     }
+  } else {
+    // FlyWeb (FM.42 b1): no text recognition in Vision before 10.15; report
+    // it as unsupported instead of an empty result.
+    return {false, result};
   }
 
   return {true, result};

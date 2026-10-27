@@ -1,5 +1,5 @@
 diff --git a/crypto/unexportable_key_metrics.cc b/crypto/unexportable_key_metrics.cc
-index c7a37d4a2f159a61c06e2be00f8908beb3de1b83..772a825f4d3025d127212d916eb01a0e816a92e8 100644
+index c7a37d4a2f159a61c06e2be00f8908beb3de1b83..8ce1d10367289f8c9979a5633ac13d2e3c62104d 100644
 --- a/crypto/unexportable_key_metrics.cc
 +++ b/crypto/unexportable_key_metrics.cc
 @@ -30,6 +30,7 @@ enum class KeyType {
@@ -26,3 +26,15 @@ index c7a37d4a2f159a61c06e2be00f8908beb3de1b83..772a825f4d3025d127212d916eb01a0e
          supported_algo = internal::TPMSupport::kECDSA;
          break;
        case SignatureVerifier::SignatureAlgorithm::RSA_PKCS1_SHA256:
+@@ -300,8 +303,10 @@ void MeasureTpmOperationsInternalForTesting() {
+ }  // namespace internal
+ 
+ void MaybeMeasureTpmOperations(UnexportableKeyProvider::Config config) {
++  // FlyWeb (FM.42 d2): disabled; it created, used and deleted a Secure
++  // Enclave key on every launch on Macs with T2.
+   static BASE_FEATURE(kTpmLatencyMetrics, "TpmLatencyMetrics",
+-                      base::FEATURE_ENABLED_BY_DEFAULT);
++                      base::FEATURE_DISABLED_BY_DEFAULT);
+   if (base::FeatureList::IsEnabled(kTpmLatencyMetrics)) {
+     base::ThreadPool::PostTask(
+         FROM_HERE,

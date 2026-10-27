@@ -1,5 +1,5 @@
 diff --git a/chrome/browser/enterprise/connectors/device_trust/key_management/core/mac/secure_enclave_client_impl.mm b/chrome/browser/enterprise/connectors/device_trust/key_management/core/mac/secure_enclave_client_impl.mm
-index 5cca3780cf56ce2fb9eae863c7f9f49a18261243..aa4db92415f9d004f20dae06500ff90b00c6b161 100644
+index 5cca3780cf56ce2fb9eae863c7f9f49a18261243..b1fd2df00ab45a3112ccbb50b4efc44ad50c53c0 100644
 --- a/chrome/browser/enterprise/connectors/device_trust/key_management/core/mac/secure_enclave_client_impl.mm
 +++ b/chrome/browser/enterprise/connectors/device_trust/key_management/core/mac/secure_enclave_client_impl.mm
 @@ -74,15 +74,20 @@ NSDictionary* CreateAttributesForKey() {
@@ -26,3 +26,25 @@ index 5cca3780cf56ce2fb9eae863c7f9f49a18261243..aa4db92415f9d004f20dae06500ff90b
  }
  
  // Converts an external representation of an EC public key from ANSI X9.63
+@@ -134,6 +139,11 @@ SecureEnclaveClientImpl::~SecureEnclaveClientImpl() = default;
+ 
+ base::apple::ScopedCFTypeRef<SecKeyRef>
+ SecureEnclaveClientImpl::CreatePermanentKey() {
++  // FlyWeb (FM.42 d8): no Secure Enclave on any Mac (27-10-2026), so
++  // no device trust key. Existing keys can still be read and deleted.
++  if (!VerifySecureEnclaveSupported()) {
++    return base::apple::ScopedCFTypeRef<SecKeyRef>();
++  }
+   NSDictionary* attributes = CreateAttributesForKey();
+   if (!attributes)
+     return base::apple::ScopedCFTypeRef<SecKeyRef>();
+@@ -273,7 +283,8 @@ bool SecureEnclaveClientImpl::SignDataWithKey(SecKeyRef key,
+ }
+ 
+ bool SecureEnclaveClientImpl::VerifySecureEnclaveSupported() {
+-  return helper_->IsSecureEnclaveSupported();
++  // FlyWeb (FM.42 d8): never the Secure Enclave.
++  return false;
+ }
+ 
+ }  // namespace enterprise_connectors

@@ -1,18 +1,25 @@
 diff --git a/crypto/unexportable_key_mac.mm b/crypto/unexportable_key_mac.mm
-index fef1b873cc7909ed77437783c617f2bc1687f975..fedea9fd6f49b6895fcc7cfe9a10d634b85f5ae0 100644
+index fef1b873cc7909ed77437783c617f2bc1687f975..533bc7251252acceb6140ade2df0f226ada1cfb3 100644
 --- a/crypto/unexportable_key_mac.mm
 +++ b/crypto/unexportable_key_mac.mm
-@@ -345,6 +345,13 @@ bool UnexportableKeyProviderMac::DeleteSigningKeySlowly(
+@@ -345,6 +345,12 @@ bool UnexportableKeyProviderMac::DeleteSigningKeySlowly(
  
  std::unique_ptr<UnexportableKeyProviderMac> GetUnexportableKeyProviderMac(
      UnexportableKeyProvider::Config config) {
-+  // FlyWeb (LOCAL-8): kSecUseDataProtectionKeychain is macOS 10.15+ (a null
-+  // weak constant on 10.14, and a nil dictionary key aborts). No unexportable
-+  // keys on 10.14.
-+  if (@available(macOS 10.15, *)) {
-+  } else {
-+    return nullptr;
-+  }
++  // FlyWeb (FM.42 d1): no Secure Enclave on any Mac (27-10-2026), so
++  // no unexportable keys: callers fall back as on a Mac without T2. This also
++  // keeps kSecUseDataProtectionKeychain (macOS 10.15+, a null weak constant on
++  // 10.14) out of reach (LOCAL-8). Upstream body kept below for merges.
++  return nullptr;
++#if 0
    if (!base::FeatureList::IsEnabled(crypto::kEnableMacUnexportableKeys)) {
      return nullptr;
    }
+@@ -364,6 +370,7 @@ std::unique_ptr<UnexportableKeyProviderMac> GetUnexportableKeyProviderMac(
+   }
+ #endif  // !BUILDFLAG(IS_IOS)
+   return std::make_unique<UnexportableKeyProviderMac>(std::move(config));
++#endif  // 0
+ }
+ 
+ }  // namespace crypto
