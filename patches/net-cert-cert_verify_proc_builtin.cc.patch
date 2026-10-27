@@ -1,5 +1,5 @@
 diff --git a/net/cert/cert_verify_proc_builtin.cc b/net/cert/cert_verify_proc_builtin.cc
-index 155a5b70b5dfb8e2a99de3ff564227e1e33504f1..8f13310aa5eb4fbc35c6160b3354ccf9d9b12e22 100644
+index 155a5b70b5dfb8e2a99de3ff564227e1e33504f1..39ce9367fb350a277d8d6902ce0b35430f3d6086 100644
 --- a/net/cert/cert_verify_proc_builtin.cc
 +++ b/net/cert/cert_verify_proc_builtin.cc
 @@ -14,6 +14,8 @@
@@ -11,7 +11,7 @@ index 155a5b70b5dfb8e2a99de3ff564227e1e33504f1..8f13310aa5eb4fbc35c6160b3354ccf9
  #include "base/values.h"
  #include "crypto/sha2.h"
  #include "net/base/features.h"
-@@ -473,14 +475,42 @@ class PathBuilderDelegateImpl : public bssl::SimplePathBuilderDelegate {
+@@ -473,14 +475,44 @@ class PathBuilderDelegateImpl : public bssl::SimplePathBuilderDelegate {
        }
      }
  
@@ -39,11 +39,13 @@ index 155a5b70b5dfb8e2a99de3ff564227e1e33504f1..8f13310aa5eb4fbc35c6160b3354ccf9
 +      }
 +    }
 +
-+    // FlyWeb: version constraints are checked against the declared engine
-+    // version (flyweb_engine_full_version), not the 128 base, so that Chrome
-+    // Root Store distrusts up to that Chrome level apply.
-+    static const base::NoDestructor<base::Version> kCrsVersion(
-+        FLYWEB_ENGINE_FULL_VERSION);
++    // FlyWeb: Chrome Root Store version constraints are checked against this
++    // fixed version, not the 128 base nor the declared engine level, so that
++    // CA distrusts up to Chrome 139 apply (Titin, 27-10-2026). Review it every
++    // time it is raised: a constraint set gated on a version up to this one
++    // may use constraint fields newer than this code understands (as
++    // permitted_dns_names was for 128), and ignoring a field widens the set.
++    static const base::NoDestructor<base::Version> kCrsVersion("139.0.0.0");
      if (constraint.min_version.has_value() &&
 -        version_info::GetVersion() < constraint.min_version.value()) {
 +        *kCrsVersion < constraint.min_version.value()) {
