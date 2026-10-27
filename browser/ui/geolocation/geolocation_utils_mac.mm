@@ -21,15 +21,20 @@ bool GetSystemLocationSettingEnabled() {
     return false;
   }
 
+  CLAuthorizationStatus status;
   if (@available(macOS 11.0, *)) {
     CLLocationManager* manager = [[CLLocationManager alloc] init];
-    if ([manager authorizationStatus] ==
-        kCLAuthorizationStatusAuthorizedAlways) {
-      return true;
-    }
+    status = [manager authorizationStatus];
+  } else {
+    // FlyWeb (FM.42 b5): on 10.14/10.15 the class method (10.7, deprecated in
+    // 11) gives the same app authorization status.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    status = [CLLocationManager authorizationStatus];
+#pragma clang diagnostic pop
   }
 
-  return false;
+  return status == kCLAuthorizationStatusAuthorizedAlways;
 }
 
 }  // namespace
@@ -39,11 +44,8 @@ void IsSystemLocationSettingEnabled(base::OnceCallback<void(bool)> callback) {
 }
 
 bool CanGiveDetailedGeolocationRequestInfo() {
-  if (@available(macOS 11.0, *)) {
-    return true;
-  }
-
-  return false;
+  // FlyWeb (FM.42 b5): the system status is known on every supported macOS.
+  return true;
 }
 
 }  // namespace geolocation
