@@ -1,0 +1,14 @@
+diff --git a/components/color/color_mixers.cc b/components/color/color_mixers.cc
+index c578a60ffbe6b2b371f3e95ab0adbf4bd082dc01..3d733d50b843e38782fa1faae0f09dcda3996dc9 100644
+--- a/components/color/color_mixers.cc
++++ b/components/color/color_mixers.cc
+@@ -11,7 +11,8 @@ namespace color {
+ 
+ void AddComponentsColorMixers(ui::ColorProvider* provider,
+                               const ui::ColorProviderKey& key) {
+-#if defined(USE_AURA)
++// FlyWeb (FM.42 b2): the generic eye dropper is also used on macOS 10.14.
++#if defined(USE_AURA) || BUILDFLAG(IS_MAC)
+   eye_dropper::AddColorMixer(provider, key);
+ #endif
+ }
