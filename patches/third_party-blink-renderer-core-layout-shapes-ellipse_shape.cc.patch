@@ -1,17 +1,8 @@
 diff --git a/third_party/blink/renderer/core/layout/shapes/ellipse_shape.cc b/third_party/blink/renderer/core/layout/shapes/ellipse_shape.cc
-index 89ba9938063b90f99fa590f5f6065d491644ebef..f38537a63e8ad14c318efe12d8889a941a61b4cc 100644
+index 89ba9938063b90f99fa590f5f6065d491644ebef..f6b5defb2932c1d3d1ef518a7089bad161bba6d4 100644
 --- a/third_party/blink/renderer/core/layout/shapes/ellipse_shape.cc
 +++ b/third_party/blink/renderer/core/layout/shapes/ellipse_shape.cc
-@@ -29,6 +29,8 @@
- 
- #include "third_party/blink/renderer/core/layout/shapes/ellipse_shape.h"
- 
-+#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
-+
- namespace blink {
- 
- static inline float EllipseXIntercept(float y, float rx, float ry) {
-@@ -36,10 +38,21 @@ static inline float EllipseXIntercept(float y, float rx, float ry) {
+@@ -36,10 +36,20 @@ static inline float EllipseXIntercept(float y, float rx, float ry) {
    return rx * sqrt(1 - (y * y) / (ry * ry));
  }
  
@@ -21,8 +12,7 @@ index 89ba9938063b90f99fa590f5f6065d491644ebef..f38537a63e8ad14c318efe12d8889a94
 +    const {
    float margin_radius_x = radius_x_ + ShapeMargin();
    float margin_radius_y = radius_y_ + ShapeMargin();
-+  if (!RuntimeEnabledFeatures::ShapeOutsideWritingModeFixEnabled() ||
-+      IsHorizontalWritingMode(writing_mode_)) {
++  if (IsHorizontalWritingMode(writing_mode_)) {
 +    return {margin_radius_x, margin_radius_y};
 +  }
 +  return {margin_radius_y, margin_radius_x};
@@ -35,7 +25,7 @@ index 89ba9938063b90f99fa590f5f6065d491644ebef..f38537a63e8ad14c318efe12d8889a94
    return LogicalRect(LayoutUnit(center_.x() - margin_radius_x),
                       LayoutUnit(center_.y() - margin_radius_y),
                       LayoutUnit(margin_radius_x * 2),
-@@ -48,8 +61,8 @@ LogicalRect EllipseShape::ShapeMarginLogicalBoundingBox() const {
+@@ -48,8 +58,8 @@ LogicalRect EllipseShape::ShapeMarginLogicalBoundingBox() const {
  
  LineSegment EllipseShape::GetExcludedInterval(LayoutUnit logical_top,
                                                LayoutUnit logical_height) const {
