@@ -14,7 +14,10 @@
 #include "brave/browser/ui/tabs/brave_tab_prefs.h"
 #include "brave/browser/ui/tabs/features.h"
 #include "brave/browser/ui/tabs/shared_pinned_tab_dummy_view.h"
+#include "chrome/browser/lifetime/browser_shutdown.h"
 #include "chrome/browser/profiles/profile.h"
+#include "chrome/browser/sessions/session_restore.h"
+#include "chrome/browser/sessions/tab_restore_service_factory.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_finder.h"
 #include "chrome/browser/ui/browser_list.h"
@@ -22,6 +25,7 @@
 #include "chrome/browser/ui/browser_window.h"
 #include "chrome/browser/ui/tabs/tab_enums.h"
 #include "chrome/browser/ui/tabs/tab_model.h"
+#include "components/sessions/core/tab_restore_service.h"
 #include "content/public/browser/navigation_entry.h"
 #include "content/public/browser/navigation_handle.h"
 #include "content/public/browser/web_contents_observer.h"
@@ -207,6 +211,11 @@ SharedPinnedTabService::SharedPinnedTabService(Profile* profile)
   if (*shared_pinned_tab_enabled_) {
     browser_list_observation_.Observe(BrowserList::GetInstance());
   }
+
+  // FlyWeb: see SynchronizeRestoredBrowser().
+  session_restored_subscription_ =
+      SessionRestore::RegisterOnSessionRestoredCallback(base::BindRepeating(
+          &SharedPinnedTabService::OnSessionRestored, base::Unretained(this)));
 }
 
 SharedPinnedTabService::~SharedPinnedTabService() = default;
@@ -279,6 +288,8 @@ void SharedPinnedTabService::Shutdown() {
   browsers_.clear();
   last_active_browser_ = nullptr;
   closing_browsers_.clear();
+  restored_browsers_.clear();
+  session_restored_subscription_ = {};
   pinned_tab_data_.clear();
   change_source_model_ = nullptr;
   profile_observation_.Reset();
@@ -298,6 +309,19 @@ void SharedPinnedTabService::OnBrowserAdded(Browser* browser) {
   DVLOG(2) << __FUNCTION__ << " " << browser->tab_strip_model()->count();
 
   browser->tab_strip_model()->AddObserver(this);
+
+  // FlyWeb: a window restored from the last session or from closed windows
+  // gets its tabs before it can be synchronized. It joins the other windows
+  // when the session restore is done or when it is activated, whichever comes
+  // first (SynchronizeRestoredBrowser()).
+  auto* tab_restore_service =
+      TabRestoreServiceFactory::GetForProfileIfExisting(profile_);
+  if (SessionRestore::IsRestoring(profile_) ||
+      (tab_restore_service && tab_restore_service->IsRestoring())) {
+    restored_browsers_.insert(browser);
+    return;
+  }
+
   browsers_.insert(browser);
 }
 
@@ -309,10 +333,18 @@ void SharedPinnedTabService::OnBrowserSetLastActive(Browser* browser) {
     return;
   }
 
+  // FlyWeb: a restored window that joins now has just been synchronized.
+  bool restored_browser_synchronized = false;
+  if (base::Contains(restored_browsers_, browser)) {
+    SynchronizeRestoredBrowser(browser);
+    restored_browser_synchronized = true;
+  }
+
   if (!base::Contains(browsers_, browser)) {
     // Browser could be different profile or not a type we're
     // looking for. Let |OnBrowserAdded| decide which to look for.
-    DCHECK(!browser->is_type_normal() || profile_ != browser->profile())
+    DCHECK(!browser->is_type_normal() || profile_ != browser->profile() ||
+           base::Contains(closing_browsers_, browser))
         << "We expect a Browser to be created before set active";
     return;
   }
@@ -321,7 +353,9 @@ void SharedPinnedTabService::OnBrowserSetLastActive(Browser* browser) {
   DVLOG(2) << __FUNCTION__ << " " << model->count();
   DCHECK_LT(0, model->count()) << "We're assuming that browser has tabs";
 
-  SynchronizeNewBrowser(browser);
+  if (!restored_browser_synchronized) {
+    SynchronizeNewBrowser(browser);
+  }
 
   if (last_active_browser_ != browser) {
     last_active_browser_ = browser;
@@ -343,6 +377,18 @@ void SharedPinnedTabService::OnBrowserClosing(Browser* browser) {
   }
 
   if (browsers_.empty()) {
+    // FlyWeb: when the app quits, the session was saved before the windows
+    // started closing and PinnedTabCodec wrote the pinned tabs on
+    // chrome::OnClosingAllBrowsers(). Moving the cached contents into this
+    // window inserts tabs into it, which makes PinnedTabService write again
+    // when the window is removed, with no window left: `pinned_tabs` became []
+    // and the pinned tabs were lost with two or more windows. The 1.15 didn't
+    // move them on quit either. The cached contents outlive this window's
+    // dummies and are destroyed in OnBrowserRemoved().
+    if (browser_shutdown::IsTryingToQuit()) {
+      return;
+    }
+
     if (cached_shared_contentses_from_closing_browser_.size()) {
       // This was the last browser and there's a dangling contentses. We should
       // attach them to this |browser| so that they could be cleaned up.
@@ -375,6 +421,7 @@ void SharedPinnedTabService::OnBrowserClosing(Browser* browser) {
 void SharedPinnedTabService::OnBrowserRemoved(Browser* browser) {
   DVLOG(2) << __FUNCTION__;
   closing_browsers_.erase(browser);
+  restored_browsers_.erase(browser);
 
   // On Mac, even after the last browser is closed, the app could be still alive
   // on background. We should clean up the data in this case.
@@ -385,6 +432,12 @@ void SharedPinnedTabService::OnBrowserRemoved(Browser* browser) {
   if (browsers_.empty()) {
     pinned_tab_data_.clear();
   }
+
+  // FlyWeb: contents cached on quit (see OnBrowserClosing()), once no window
+  // can hold their dummies.
+  if (browsers_.empty() && closing_browsers_.empty()) {
+    cached_shared_contentses_from_closing_browser_.clear();
+  }
 }
 
 void SharedPinnedTabService::OnTabStripModelChanged(
@@ -392,6 +445,10 @@ void SharedPinnedTabService::OnTabStripModelChanged(
     const TabStripModelChange& change,
     const TabStripSelectionChange& selection) {
   if (change_source_model_) {
+    return;
+  }
+
+  if (IsRestoredBrowserModel(tab_strip_model)) {
     return;
   }
 
@@ -414,6 +471,10 @@ void SharedPinnedTabService::TabPinnedStateChanged(
     content::WebContents* contents,
     int index) {
   if (change_source_model_) {
+    return;
+  }
+
+  if (IsRestoredBrowserModel(tab_strip_model)) {
     return;
   }
 
@@ -914,6 +975,9 @@ void SharedPinnedTabService::OnSharedPinnedTabDisabled() {
   for (auto* browser : browsers_) {
     browser->tab_strip_model()->RemoveObserver(this);
   }
+  for (auto* browser : restored_browsers_) {
+    browser->tab_strip_model()->RemoveObserver(this);
+  }
   browser_list_observation_.Reset();
 
   // Remove all dummy contents
@@ -931,7 +995,115 @@ void SharedPinnedTabService::OnSharedPinnedTabDisabled() {
   browsers_.clear();
   last_active_browser_ = nullptr;
   closing_browsers_.clear();
+  restored_browsers_.clear();
   pinned_tab_data_.clear();
+}
+
+bool SharedPinnedTabService::IsRestoredBrowserModel(
+    TabStripModel* tab_strip_model) const {
+  return base::Contains(restored_browsers_, tab_strip_model,
+                        &Browser::tab_strip_model);
+}
+
+void SharedPinnedTabService::OnSessionRestored(Profile* profile,
+                                               int num_tabs_restored) {
+  if (profile != profile_ || change_source_model_) {
+    return;
+  }
+
+  // In window order: the first restored window sets the order of the shared
+  // pinned tabs it brings.
+  for (Browser* browser : *BrowserList::GetInstance()) {
+    if (base::Contains(restored_browsers_, browser)) {
+      SynchronizeRestoredBrowser(browser);
+    }
+  }
+
+  if (last_active_browser_) {
+    OnActiveTabChanged(last_active_browser_->tab_strip_model());
+  }
+}
+
+// FlyWeb (from the 1.15, MOTOR-11/FM.25): the session keeps each shared pinned
+// tab once, in the window that held its shared contents at exit (dummies have
+// no navigation to save), so a restored window brings only some of the pinned
+// tabs. Upstream matches them by position and URL while they are inserted
+// (OnTabAdded()): one mismatch adds them and the following ones as new pinned
+// tabs, and SynchronizeNewBrowser() appends them again, so a pinned tab ends
+// up duplicated. Here the restored window first gets dummies for the pinned
+// tabs shared so far, and its own pinned tabs are then shared after them.
+void SharedPinnedTabService::SynchronizeRestoredBrowser(Browser* browser) {
+  DCHECK(base::Contains(restored_browsers_, browser));
+  restored_browsers_.erase(browser);
+  browsers_.insert(browser);
+
+  auto* model = browser->tab_strip_model();
+  LOCK_REENTRANCE(model);
+
+  std::vector<content::WebContents*> own_pinned_tabs;
+  for (int i = 0; i < model->IndexOfFirstNonPinnedTab(); i++) {
+    own_pinned_tabs.push_back(model->GetWebContentsAt(i));
+  }
+  std::vector<bool> used(own_pinned_tabs.size(), false);
+
+  for (size_t i = 0; i < pinned_tab_data_.size(); i++) {
+    content::WebContents* shared_contents = pinned_tab_data_[i].shared_contents;
+    const int index = static_cast<int>(i);
+
+    // A copy of a shared pinned tab (same URL, e.g. a restored tab that the
+    // session saved twice) is replaced by its dummy instead of being shared
+    // twice.
+    int copy = -1;
+    for (size_t j = 0; j < own_pinned_tabs.size(); j++) {
+      if (!used[j] && !IsSharedContents(own_pinned_tabs[j]) &&
+          own_pinned_tabs[j]->GetLastCommittedURL() ==
+              shared_contents->GetLastCommittedURL()) {
+        copy = static_cast<int>(j);
+        break;
+      }
+    }
+
+    if (copy < 0) {
+      model->InsertWebContentsAt(index, CreateDummyWebContents(shared_contents),
+                                 ADD_PINNED | ADD_FORCE_INDEX);
+      continue;
+    }
+
+    used[copy] = true;
+    const int copy_index = model->GetIndexOfWebContents(own_pinned_tabs[copy]);
+    // The copy is destroyed when this goes out of scope.
+    std::unique_ptr<content::WebContents> copy_contents =
+        model->DiscardWebContentsAt(copy_index,
+                                    CreateDummyWebContents(shared_contents));
+    if (copy_index != index) {
+      model->MoveWebContentsAt(copy_index, index,
+                               /* select_after_move= */ false);
+    }
+  }
+
+  // The window's other pinned tabs are new shared pinned tabs, appended in
+  // their order to every window.
+  for (size_t j = 0; j < own_pinned_tabs.size(); j++) {
+    if (used[j]) {
+      continue;
+    }
+
+    content::WebContents* contents = own_pinned_tabs[j];
+    DCHECK(!IsSharedContents(contents) && !IsDummyContents(contents));
+    const int index = static_cast<int>(pinned_tab_data_.size());
+    const int current_index = model->GetIndexOfWebContents(contents);
+    if (current_index != index) {
+      model->MoveWebContentsAt(current_index, index,
+                               /* select_after_move= */ false);
+    }
+
+    SharedContentsData::CreateForWebContents(contents);
+    pinned_tab_data_.push_back(
+        {.renderer_data = TabRendererData::FromTabInModel(model, index),
+         .shared_contents = contents,
+         .contents_owner_model = model});
+    SynchronizeNewPinnedTab(index);
+  }
 }
 
 std::unique_ptr<content::WebContents>

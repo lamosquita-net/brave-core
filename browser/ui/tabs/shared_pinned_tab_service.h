@@ -9,6 +9,7 @@
 #include <memory>
 #include <vector>
 
+#include "base/callback_list.h"
 #include "base/scoped_observation.h"
 #include "chrome/browser/profiles/profile_observer.h"
 #include "chrome/browser/ui/browser_list_observer.h"
@@ -110,6 +111,11 @@ class SharedPinnedTabService : public KeyedService,
                                       int index,
                                       bool is_last_closing_browser = false);
 
+  // FlyWeb: windows created while a session or a closed window is restored.
+  bool IsRestoredBrowserModel(TabStripModel* tab_strip_model) const;
+  void OnSessionRestored(Profile* profile, int num_tabs_restored);
+  void SynchronizeRestoredBrowser(Browser* browser);
+
   void OnSharedPinnedTabPrefChanged();
   void OnSharedPinnedTabEnabled();
   void OnSharedPinnedTabDisabled();
@@ -125,6 +131,9 @@ class SharedPinnedTabService : public KeyedService,
   raw_ptr<Browser> last_active_browser_ = nullptr;
 
   base::flat_set<Browser*> closing_browsers_;
+  // FlyWeb: windows created while restoring, kept out of |browsers_| until
+  // they are synchronized (SynchronizeRestoredBrowser()).
+  base::flat_set<Browser*> restored_browsers_;
   base::flat_set<std::unique_ptr<content::WebContents>>
       cached_shared_contentses_from_closing_browser_;
   base::flat_set<Browser*> in_tab_dragging_browsers_;
@@ -142,6 +151,8 @@ class SharedPinnedTabService : public KeyedService,
       browser_list_observation_{this};
 
   BooleanPrefMember shared_pinned_tab_enabled_;
+
+  base::CallbackListSubscription session_restored_subscription_;
 
   base::WeakPtrFactory<SharedPinnedTabService> weak_ptr_factory_{this};
 };
