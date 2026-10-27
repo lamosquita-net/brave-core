@@ -1,8 +1,8 @@
 diff --git a/src/builtins/js-to-wasm.tq b/src/builtins/js-to-wasm.tq
-index c984ed09b9beea76409cd4d48f8ef2c8a52f2324..ed6d5f1f94b328e112206a7fb5a4a92e18b9769f 100644
+index 7d968fc00a68ac3a4f3e78107d73fbedae1d9614..54cb6e797635b2a814c648f193b6965f508c01e1 100644
 --- a/src/builtins/js-to-wasm.tq
 +++ b/src/builtins/js-to-wasm.tq
-@@ -446,7 +446,7 @@ macro JSToWasmObject(
+@@ -447,7 +447,7 @@ macro JSToWasmObject(
        if (kind == ValueKind::kRef) {
          ThrowTypeError(MessageTemplate::kWasmTrapJSTypeError);
        } else {
@@ -11,7 +11,7 @@ index c984ed09b9beea76409cd4d48f8ef2c8a52f2324..ed6d5f1f94b328e112206a7fb5a4a92e
          return kWasmNull;
        }
      }
-@@ -549,7 +549,7 @@ macro JSToWasmWrapperHelper(
+@@ -551,7 +551,7 @@ macro JSToWasmWrapperHelper(
          allocator.AllocFP64();
        } else {
          const retKind = retType & kValueTypeKindBitsMask;
@@ -20,7 +20,7 @@ index c984ed09b9beea76409cd4d48f8ef2c8a52f2324..ed6d5f1f94b328e112206a7fb5a4a92e
          // Reference return values will be processed later.
          hasRefReturns = true;
        }
-@@ -663,7 +663,7 @@ macro JSToWasmWrapperHelper(
+@@ -665,7 +665,7 @@ macro JSToWasmWrapperHelper(
        }
      } else {
        const paramKind = paramType & kValueTypeKindBitsMask;
@@ -29,7 +29,7 @@ index c984ed09b9beea76409cd4d48f8ef2c8a52f2324..ed6d5f1f94b328e112206a7fb5a4a92e
        // The byte array where we store converted parameters is not GC-safe.
        // Therefore we can only copy references into this array once no GC can
        // happen anymore. Any conversion of a primitive type can execute
-@@ -797,7 +797,7 @@ macro WasmToJSObject(context: NativeContext, value: Object, retType: int32):
+@@ -813,7 +813,7 @@ macro WasmToJSObject(context: NativeContext, value: Object, retType: int32):
      // already been created.
      return runtime::WasmGenericWasmToJSObject(context, value);
    } else {
@@ -38,7 +38,7 @@ index c984ed09b9beea76409cd4d48f8ef2c8a52f2324..ed6d5f1f94b328e112206a7fb5a4a92e
      if (heapType == HeapType::kExtern || heapType == HeapType::kNoExtern ||
          heapType == HeapType::kExn || heapType == HeapType::kNoExn) {
        return UnsafeCast<JSAny>(value);
-@@ -872,6 +872,8 @@ builtin JSToWasmHandleReturns(
+@@ -888,6 +888,8 @@ builtin JSToWasmHandleReturns(
          return I32PairToBigInt(lowWord, highWord);
        }
      } else {
@@ -47,7 +47,7 @@ index c984ed09b9beea76409cd4d48f8ef2c8a52f2324..ed6d5f1f94b328e112206a7fb5a4a92e
        const ptr = %RawDownCast<RawPtr<uintptr>>(
            wrapperBuffer + kWrapperBufferGPReturnRegister1);
        const rawRef = *GetRefAt<uintptr>(ptr, 0);
-@@ -987,6 +989,8 @@ builtin JSToWasmHandleReturns(
+@@ -1003,6 +1005,8 @@ builtin JSToWasmHandleReturns(
        const val = *RefCast<float64>(slot);
        fixedArray.objects[k] = Convert<Number>(val);
      } else {
