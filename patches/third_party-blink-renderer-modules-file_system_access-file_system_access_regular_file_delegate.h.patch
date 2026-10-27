@@ -1,0 +1,50 @@
+diff --git a/third_party/blink/renderer/modules/file_system_access/file_system_access_regular_file_delegate.h b/third_party/blink/renderer/modules/file_system_access/file_system_access_regular_file_delegate.h
+index cb4f18ddf85ecff482b465f9e66699c85cef2170..c91016de846eabcfa5c0aea09b657c28cb4e6cf9 100644
+--- a/third_party/blink/renderer/modules/file_system_access/file_system_access_regular_file_delegate.h
++++ b/third_party/blink/renderer/modules/file_system_access/file_system_access_regular_file_delegate.h
+@@ -9,6 +9,7 @@
+ #include "base/files/file_error_or.h"
+ #include "base/task/sequenced_task_runner.h"
+ #include "base/types/pass_key.h"
++#include "build/build_config.h"
+ #include "mojo/public/cpp/bindings/pending_remote.h"
+ #include "third_party/blink/public/mojom/file_system_access/file_system_access_file_modification_host.mojom-blink.h"
+ #include "third_party/blink/renderer/core/execution_context/execution_context.h"
+@@ -16,6 +17,11 @@
+ #include "third_party/blink/renderer/modules/file_system_access/file_system_access_file_delegate.h"
+ #include "third_party/blink/renderer/platform/heap/garbage_collected.h"
+ 
++#if BUILDFLAG(IS_MAC)
++#include "third_party/blink/public/mojom/file/file_utilities.mojom-blink.h"
++#include "third_party/blink/renderer/platform/mojo/heap_mojo_remote.h"
++#endif  // BUILDFLAG(IS_MAC)
++
+ namespace blink {
+ 
+ // Non-incognito implementation of the FileSystemAccessFileDelegate. This class
+@@ -41,6 +47,10 @@ class FileSystemAccessRegularFileDelegate final
+   void Trace(Visitor* visitor) const override {
+     FileSystemAccessFileDelegate::Trace(visitor);
+     visitor->Trace(capacity_tracker_);
++#if BUILDFLAG(IS_MAC)
++    visitor->Trace(context_);
++    visitor->Trace(file_utilities_host_);
++#endif  // BUILDFLAG(IS_MAC)
+   }
+ 
+   base::FileErrorOr<int> Read(int64_t offset,
+@@ -54,6 +64,14 @@ class FileSystemAccessRegularFileDelegate final
+   bool IsValid() const override { return backing_file_.IsValid(); }
+ 
+  private:
++#if BUILDFLAG(IS_MAC)
++  // FlyWeb (FM.42 c3, from 116): we need the FileUtilitiesHost only on Mac,
++  // where base::File::SetLength runs in the browser process on 10.14, see
++  // crbug.com/1084565. `context_` creates it lazily.
++  Member<ExecutionContext> context_;
++  HeapMojoRemote<mojom::blink::FileUtilitiesHost> file_utilities_host_;
++#endif  // BUILDFLAG(IS_MAC)
++
+   // The file on disk backing the parent FileSystemFileHandle.
+   base::File backing_file_;
+ 

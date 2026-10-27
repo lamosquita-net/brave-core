@@ -1,0 +1,17 @@
+diff --git a/content/browser/renderer_host/file_utilities_host_impl.h b/content/browser/renderer_host/file_utilities_host_impl.h
+index 325e81b5cdc868ffed79d65804040a10ebfd370b..80e100c68d5622d69f7e0594c3871196b5a260d4 100644
+--- a/content/browser/renderer_host/file_utilities_host_impl.h
++++ b/content/browser/renderer_host/file_utilities_host_impl.h
+@@ -24,6 +24,12 @@ class FileUtilitiesHostImpl : public blink::mojom::FileUtilitiesHost {
+   // blink::mojom::FileUtilitiesHost implementation.
+   void GetFileInfo(const base::FilePath& path,
+                    GetFileInfoCallback callback) override;
++#if BUILDFLAG(IS_MAC)
++  // FlyWeb (FM.42 c3): OPFS truncate() for renderers on macOS 10.14.
++  void SetLength(base::File file,
++                 const int64_t length,
++                 SetLengthCallback callback) override;
++#endif  // BUILDFLAG(IS_MAC)
+ 
+   const int process_id_;
+ };
