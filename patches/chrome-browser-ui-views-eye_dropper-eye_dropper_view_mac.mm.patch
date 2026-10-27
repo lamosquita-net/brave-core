@@ -1,19 +1,8 @@
 diff --git a/chrome/browser/ui/views/eye_dropper/eye_dropper_view_mac.mm b/chrome/browser/ui/views/eye_dropper/eye_dropper_view_mac.mm
-index 358cc0072b60d61c8a02c31f89a5413d67ba686a..2a57980fbe09814581188d426295b257d618c682 100644
+index 358cc0072b60d61c8a02c31f89a5413d67ba686a..b8dca714936cf768a7756e92d1b81844609dbdcd 100644
 --- a/chrome/browser/ui/views/eye_dropper/eye_dropper_view_mac.mm
 +++ b/chrome/browser/ui/views/eye_dropper/eye_dropper_view_mac.mm
-@@ -9,7 +9,10 @@
- 
- #include <memory>
- 
-+#include "components/eye_dropper/eye_dropper_view.h"
- #include "content/public/browser/render_frame_host.h"
-+#include "content/public/browser/render_widget_host_view.h"
-+#include "content/public/browser/web_contents.h"
- #include "skia/ext/skia_utils_mac.h"
- #include "ui/base/ui_base_features.h"
- 
-@@ -18,20 +21,25 @@ EyeDropperViewMac::EyeDropperViewMac(content::EyeDropperListener* listener)
+@@ -18,20 +18,25 @@ EyeDropperViewMac::EyeDropperViewMac(content::EyeDropperListener* listener)
    if (!listener_) {
      return;
    }
@@ -32,7 +21,7 @@ index 358cc0072b60d61c8a02c31f89a5413d67ba686a..2a57980fbe09814581188d426295b257
 -    }
 -  }];
 +  // FlyWeb (LOCAL-8): NSColorSampler is macOS 10.15+; ShowEyeDropper() does not
-+  // create this view on 10.14 (FM.42 b2: it uses eye_dropper::EyeDropperView).
++  // create this view on 10.14 (the 116 generic fallback is gone in 128).
 +  if (@available(macOS 10.15, *)) {
 +    color_sampler_ = [[NSColorSampler alloc] init];
 +    // Used to ensure that EyeDropperViewMac is still alive when the handler is
@@ -53,7 +42,7 @@ index 358cc0072b60d61c8a02c31f89a5413d67ba686a..2a57980fbe09814581188d426295b257
  }
  
  EyeDropperViewMac::~EyeDropperViewMac() = default;
-@@ -43,5 +51,15 @@ std::unique_ptr<content::EyeDropper> ShowEyeDropper(
+@@ -43,5 +48,8 @@ std::unique_ptr<content::EyeDropper> ShowEyeDropper(
      return nullptr;
    }
  
@@ -61,12 +50,5 @@ index 358cc0072b60d61c8a02c31f89a5413d67ba686a..2a57980fbe09814581188d426295b257
 +  if (@available(macOS 10.15, *)) {
 +    return std::make_unique<EyeDropperViewMac>(listener);
 +  }
-+  // FlyWeb (FM.42 b2): on 10.14, the generic eye dropper (screen capture and
-+  // magnifier), as in 116.
-+  if (!frame->GetView() || !frame->GetView()->HasFocus()) {
-+    return nullptr;
-+  }
-+  auto* web_contents = content::WebContents::FromRenderFrameHost(frame);
-+  return std::make_unique<eye_dropper::EyeDropperView>(
-+      web_contents->GetNativeView(), web_contents->GetNativeView(), listener);
++  return nullptr;
  }
