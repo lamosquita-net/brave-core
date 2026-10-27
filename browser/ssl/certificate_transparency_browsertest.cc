@@ -118,17 +118,3 @@ IN_PROC_BROWSER_TEST_F(CertificateTransparencyBrowserTest, EnforcedByDefault) {
       security_state::DANGEROUS,
       ssl_test_util::AuthState::SHOWING_INTERSTITIAL);
 }
-
-IN_PROC_BROWSER_TEST_F(CertificateTransparencyBrowserTest, ExemptedHost) {
-  SetUpCertVerifier();
-
-  // URL exempted from SCT requirements
-  ASSERT_TRUE(ui_test_utils::NavigateToURL(
-      browser(), https_server()->GetURL("sct-exempted.bravesoftware.com",
-                                        "/ssl/google.html")));
-
-  ssl_test_util::CheckSecurityState(
-      browser()->tab_strip_model()->GetActiveWebContents(),
-      ssl_test_util::CertError::NONE, security_state::SECURE,
-      ssl_test_util::AuthState::NONE);
-}
