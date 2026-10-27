@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/runtime_enabled_features.json5 b/third_party/blink/renderer/platform/runtime_enabled_features.json5
-index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b424beca1 100644
+index 75e44e6b7cdd95c1e39b3759939ec1146232f255..cfb05a8c9566ffdcf4dcdacb69e13a577e289632 100644
 --- a/third_party/blink/renderer/platform/runtime_enabled_features.json5
 +++ b/third_party/blink/renderer/platform/runtime_enabled_features.json5
 @@ -480,6 +480,13 @@
@@ -233,7 +233,21 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b
      },
      {
        name: "DeviceAttributes",
-@@ -1298,6 +1341,12 @@
+@@ -1267,6 +1310,13 @@
+       name: "DialogCloseWhenOpenRemoved",
+       status: "experimental",
+     },
++    {
++      // This feature makes the dialog element fire beforetoggle and toggle
++      // events every time it is closed or opened.
++      // https://bugs.chromium.org/p/chromium/issues/detail?id=1521813
++      name: "DialogElementToggleEvents",
++      status: "stable",
++    },
+     {
+       name: "DialogNewFocusBehavior",
+       status: "experimental",
+@@ -1298,6 +1348,12 @@
          "default": "test"
        },
      },
@@ -246,7 +260,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b
      {
        name: "DirectSockets",
        public: true,
-@@ -1551,8 +1600,9 @@
+@@ -1551,8 +1607,9 @@
        // This is the "old" version of getInnerHTML() used for declarative shadow
        // DOM, and this version is deprecated. The replacement is called
        // `getHTML()` and it shipped in M125.
@@ -257,7 +271,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b
      },
      {
        name: "EnforceAnonymityExposure",
-@@ -1804,6 +1854,7 @@
+@@ -1804,6 +1861,7 @@
        // In-development features for the File System Access API.
        name: "FileSystemAccessAPIExperimental",
        status: "experimental",
@@ -265,7 +279,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b
      },
      {
        // The FileSystemHandle.getCloudIdentifiers() method (see
-@@ -1819,6 +1870,7 @@
+@@ -1819,6 +1877,7 @@
        // Non-OPFS File System Access API.
        name: "FileSystemAccessLocal",
        status: {"Android": "test", "default": "stable"},
@@ -273,7 +287,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b
      },
      {
        name: "FileSystemAccessLockingScheme",
-@@ -1847,6 +1899,17 @@
+@@ -1847,6 +1906,17 @@
        name: "FindTextInReadonlyTextInput",
        status: "experimental",
      },
@@ -291,7 +305,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b
      {
        name: "Fledge",
        status: "stable",
-@@ -2102,6 +2165,10 @@
+@@ -2102,6 +2172,10 @@
        name: "HandleDeletionWithNonEditableContentAtBlockBoundary",
        status: "stable",
      },
@@ -302,7 +316,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b
      {
        name: "HandwritingRecognition",
        status: {
-@@ -2147,6 +2214,14 @@
+@@ -2147,6 +2221,14 @@
        name: "HTMLAnchorAttribute",
        status: "experimental",
      },
@@ -317,7 +331,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b
      // Adds support for the experimental `interesttarget`
      // attributes, as specified in the open-ui "Interest Invokers" explainer.
      // https://open-ui.org/components/interest-invokers.explainer/
-@@ -2171,6 +2246,15 @@
+@@ -2171,6 +2253,15 @@
        name: "HTMLMenuElementIsListOwner",
        status: "stable",
      },
@@ -333,7 +347,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b
      {
        // A flag, just for local testing to make the
        // HTML parser yield more often and take longer to resume.
-@@ -2271,6 +2355,11 @@
+@@ -2271,6 +2362,11 @@
        name: "InheritUserModifyWithoutContenteditable",
        status: "stable",
      },
@@ -345,7 +359,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b
      {
        name: "InlineBlockInSameLine",
        status: "stable",
-@@ -2358,6 +2447,12 @@
+@@ -2358,6 +2454,12 @@
        status: "experimental",
        origin_trial_feature_name: "JavaScriptCompileHintsMagic",
      },
@@ -358,7 +372,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b
      {
        // Allows :target to match elements even after they are removed and
        // reattached to the document. Enabled in M128, should be safe to remove
-@@ -2407,11 +2502,6 @@
+@@ -2407,11 +2509,6 @@
        name: "LangAttributeAwareFormControlUI",
        settable_from_internals: true,
      },
@@ -370,7 +384,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b
      {
        name: "LayoutFlexNewRowAlgorithmV3",
        status: "test",
-@@ -2473,6 +2563,11 @@
+@@ -2473,6 +2570,11 @@
        status: "experimental",
        base_feature: "none",
      },
@@ -382,7 +396,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b
      {
        name: "LockedMode",
        status: "test",
-@@ -2643,11 +2738,24 @@
+@@ -2643,11 +2745,24 @@
        name: "MetaRefreshNoFractional",
        status: "stable",
      },
@@ -407,7 +421,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b
      },
      {
        name: "MobileLayoutTheme",
-@@ -2687,19 +2795,23 @@
+@@ -2687,19 +2802,23 @@
        name: "MoveEndingSelectionToListChild",
        status: "stable",
      },
@@ -433,7 +447,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b
        origin_trial_feature_name: "MutationEvents",
        origin_trial_type: "deprecation",
        origin_trial_allows_insecure: true,
-@@ -2787,6 +2899,13 @@
+@@ -2787,6 +2906,13 @@
        name: "NonEmptyBlockquotesOnOutdenting",
        status: "stable",
      },
@@ -447,7 +461,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b
      {
        // TODO(crbug.com/924486): This feature enables the deprecated values
        // inner-spin-button, push-button, searchfield-cancel-button,
-@@ -3016,6 +3135,10 @@
+@@ -3016,6 +3142,10 @@
        name: "PageSwapEvent",
        status: "stable",
      },
@@ -458,7 +472,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b
      {
        name: "PaintHoldingForIframes",
        status: "stable",
-@@ -3136,6 +3259,14 @@
+@@ -3136,6 +3266,14 @@
        name: "PointerEventDeviceId",
        status: "stable",
      },
@@ -473,7 +487,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b
      {
        name: "PositionOutsideTabSpanCheckSiblingNode",
        status: "stable",
-@@ -3206,6 +3337,12 @@
+@@ -3206,6 +3344,12 @@
        name:"PrettyPrintJSONDocument",
        status: "stable",
      },
@@ -486,7 +500,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b
      {
        // Controls whether filtering IDs can be specified for Private Aggregation
        // contributions. If disabled, any IDs will be ignored.
-@@ -3245,6 +3382,12 @@
+@@ -3245,6 +3389,12 @@
        origin_trial_allows_third_party: true,
        public: true,
      },
@@ -499,7 +513,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b
      {
        // Always allow trust token issuance (so long as the base::Feature
        // is enabled). Used for testing; circumvents a runtime check that,
-@@ -3370,6 +3513,11 @@
+@@ -3370,6 +3520,11 @@
          "Linux": "stable",
          "default": "experimental"},
      },
@@ -511,7 +525,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b
      {
        name: "RemoveDanglingMarkupInTarget",
        status: "stable",
-@@ -3422,6 +3570,10 @@
+@@ -3422,6 +3577,10 @@
          "default": "",
        }
      },
@@ -522,7 +536,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b
      {
        name: "ResourceTimingContentType",
        status: "experimental",
-@@ -3441,6 +3593,12 @@
+@@ -3441,6 +3600,12 @@
        name: "RewindFloats",
        status: "stable",
      },
@@ -535,7 +549,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b
      {
        name: "RtcAudioJitterBufferMaxPackets",
        origin_trial_feature_name: "RtcAudioJitterBufferMaxPackets",
-@@ -3571,6 +3729,13 @@
+@@ -3571,6 +3736,13 @@
        name: "ScrollEndEvents",
        status: "stable",
      },
@@ -549,7 +563,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b
      // Killswitch. Remove after M126 or M127 stable.
      {
        name: "ScrollNodeForOverflowHidden",
-@@ -3679,6 +3844,7 @@
+@@ -3679,6 +3851,7 @@
      {
        name: "Serial",
        status: {"Android": "", "default": "stable"},
@@ -557,7 +571,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b
      },
      {
        name: "SerializeViewTransitionStateInSPA",
-@@ -3907,6 +4073,10 @@
+@@ -3907,6 +4080,10 @@
        name: "StorageBucketsLocks",
        status: "experimental",
      },
@@ -568,7 +582,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b
      {
        name: "StrictMimeTypesForWorkers",
        status: "experimental",
-@@ -3935,6 +4105,12 @@
+@@ -3935,6 +4112,12 @@
        name: "SvgCrossOriginAttribute",
        status: "stable",
      },
@@ -581,7 +595,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b
      {
        name: "SvgFilterUserSpaceViewportForNonSvg",
        status: "stable",
-@@ -4051,6 +4227,10 @@
+@@ -4051,6 +4234,10 @@
        name: "TextFragmentTapOpensContextMenu",
        status: {"Android": "stable"},
      },
@@ -592,7 +606,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b
      {
        name: "TextMetricsBaselines",
        status: "stable",
-@@ -4143,6 +4323,10 @@
+@@ -4143,6 +4330,10 @@
        status: "experimental",
        base_feature: "none",
      },
@@ -603,7 +617,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b
      // This is conditionally set if the platform supports translation.
      {
        name: "TranslateService",
-@@ -4255,6 +4439,13 @@
+@@ -4255,6 +4446,13 @@
        base_feature: "none",
        public: true,
      },
@@ -617,7 +631,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b
      {
        name: "UseUndoStepElementDispatchBeforeInput",
        status: "stable",
-@@ -4264,6 +4455,11 @@
+@@ -4264,6 +4462,11 @@
        base_feature: "none",
        public: true,
      },
@@ -629,7 +643,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..89aaaef52fca8c9d33e2601a99d6c55b
      {
        // Whether a video element should automatically play fullscreen unless
        // 'playsinline' is set.
-@@ -4435,12 +4631,14 @@
+@@ -4435,12 +4638,14 @@
        name: "WebAuthAuthenticatorAttachment",
        status: "test",
      },
