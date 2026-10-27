@@ -1,0 +1,33 @@
+diff --git a/third_party/blink/renderer/core/layout/layout_text_combine.h b/third_party/blink/renderer/core/layout/layout_text_combine.h
+index 18ecb5f31dbe2c809d40f616c4555e55f82c2f2d..55a8df4bc6adbda23cc0dfc76a76812e06ab55b7 100644
+--- a/third_party/blink/renderer/core/layout/layout_text_combine.h
++++ b/third_party/blink/renderer/core/layout/layout_text_combine.h
+@@ -105,6 +105,11 @@ class CORE_EXPORT LayoutTextCombine final : public LayoutBlockFlow {
+   // Returns true if |layout_object| is a child of |LayoutTextCombine|.
+   static bool ShouldBeParentOf(const LayoutObject& layout_object);
+ 
++  // Returns true if `mode` is a supported writing-mode.
++  // FlyWeb: upstream 475cb03ab90 (crbug 461332428) without its flag: with
++  // sideways-*, the writing mode is vertical but the typography horizontal.
++  static bool IsSupportedMode(WritingMode mode);
++
+  private:
+   bool IsLayoutTextCombine() const final {
+     NOT_DESTROYED();
+@@ -136,10 +141,15 @@ class CORE_EXPORT LayoutTextCombine final : public LayoutBlockFlow {
+   bool has_compressed_font_ = false;
+ };
+ 
++// static
++inline bool LayoutTextCombine::IsSupportedMode(WritingMode mode) {
++  return !blink::IsHorizontalTypographicMode(mode);
++}
++
+ // static
+ inline bool LayoutTextCombine::ShouldBeParentOf(
+     const LayoutObject& layout_object) {
+-  if (LIKELY(layout_object.IsHorizontalWritingMode()) ||
++  if (LIKELY(!IsSupportedMode(layout_object.StyleRef().GetWritingMode())) ||
+       !layout_object.IsText() || layout_object.IsSVGInlineText()) {
+     return false;
+   }
