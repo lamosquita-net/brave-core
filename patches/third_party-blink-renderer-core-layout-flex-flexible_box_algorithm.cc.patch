@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/flex/flexible_box_algorithm.cc b/third_party/blink/renderer/core/layout/flex/flexible_box_algorithm.cc
-index ff25c2fe85c9650ef5ce925c4298d4def2cd7aa5..427ed231fa95f041ebfe1b4c79993212f273d6c7 100644
+index ff25c2fe85c9650ef5ce925c4298d4def2cd7aa5..1257f89f79f2c86d5e176c4b60e3fc6dd62f4fde 100644
 --- a/third_party/blink/renderer/core/layout/flex/flexible_box_algorithm.cc
 +++ b/third_party/blink/renderer/core/layout/flex/flexible_box_algorithm.cc
 @@ -117,25 +117,33 @@ bool FlexItem::MainAxisIsInlineAxis() const {
@@ -149,3 +149,36 @@ index ff25c2fe85c9650ef5ce925c4298d4def2cd7aa5..427ed231fa95f041ebfe1b4c79993212
          << "justify-self is the only way that we can get a left or right "
             "ItemPosition";
      DCHECK(IsColumnFlow(flexbox_style))
+@@ -1106,14 +1122,19 @@ LayoutUnit FlexibleBoxAlgorithm::InitialContentPositionOffset(
+     const StyleContentAlignmentData& data,
+     unsigned number_of_items,
+     bool is_reversed) {
+-  // Safe-alignment with negative free-space does nothing.
+-  if (available_free_space <= LayoutUnit() &&
+-      (style.IsDeprecatedWebkitBox() ||
+-       data.Overflow() == OverflowAlignment::kSafe)) {
++  // -webkit-box with negative free-space does nothing.
++  if (available_free_space <= LayoutUnit() && style.IsDeprecatedWebkitBox()) {
+     return LayoutUnit();
+   }
+ 
+   ContentPosition position = data.GetPosition();
++  // FlyWeb (2.1.1, from upstream 6c616ac76fb and 8543c83fc67): safe alignment
++  // with negative free-space falls back to 'start', so the content overflows
++  // past the end edge even with a reversed direction or wrap-reverse.
++  if (available_free_space <= LayoutUnit() &&
++      data.Overflow() == OverflowAlignment::kSafe) {
++    position = ContentPosition::kStart;
++  }
+   DCHECK_NE(position, ContentPosition::kLeft)
+       << "ResolvedJustifyContent was supposed to translate this to kStart/End";
+   DCHECK_NE(position, ContentPosition::kRight)
+@@ -1123,7 +1144,7 @@ LayoutUnit FlexibleBoxAlgorithm::InitialContentPositionOffset(
+       (position == ContentPosition::kStart && is_reversed)) {
+     return available_free_space;
+   }
+-  if (data.GetPosition() == ContentPosition::kCenter)
++  if (position == ContentPosition::kCenter)
+     return available_free_space / 2;
+   if (data.Distribution() == ContentDistributionType::kSpaceAround) {
+     if (available_free_space > 0 && number_of_items)
