@@ -1,0 +1,22 @@
+diff --git a/src/interpreter/bytecode-array-builder.cc b/src/interpreter/bytecode-array-builder.cc
+index 5ebb227816fe84a21508af40acfacd3ce27fc3e8..83cfe22bd1d67a6e9a9d1d6a8b3d43eaaffdee34 100644
+--- a/src/interpreter/bytecode-array-builder.cc
++++ b/src/interpreter/bytecode-array-builder.cc
+@@ -975,6 +975,17 @@ BytecodeArrayBuilder& BytecodeArrayBuilder::DefineNamedOwnProperty(
+   return *this;
+ }
+ 
++BytecodeArrayBuilder& BytecodeArrayBuilder::DefineNamedOwnPropertyInLiteral(
++    Register object, const AstRawString* name, int feedback_slot) {
++  size_t name_index = GetConstantPoolEntry(name);
++  // Ensure that the store operation is in sync with the IC slot kind.
++  DCHECK_EQ(
++      FeedbackSlotKind::kDefineNamedOwn,
++      feedback_vector_spec()->GetKind(FeedbackVector::ToSlot(feedback_slot)));
++  OutputDefineNamedOwnPropertyInLiteral(object, name_index, feedback_slot);
++  return *this;
++}
++
+ BytecodeArrayBuilder& BytecodeArrayBuilder::SetKeyedProperty(
+     Register object, Register key, int feedback_slot,
+     LanguageMode language_mode) {

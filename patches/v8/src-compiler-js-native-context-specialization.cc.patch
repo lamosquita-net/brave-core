@@ -1,5 +1,5 @@
 diff --git a/src/compiler/js-native-context-specialization.cc b/src/compiler/js-native-context-specialization.cc
-index a2ec59b48181a4b5b8ccfffda3dce8af571b8f8c..74f086f1dd392a6863eb2775536659f5459af224 100644
+index a2ec59b48181a4b5b8ccfffda3dce8af571b8f8c..63c79715ae18828bd4be3e5fba1fb2599d27a740 100644
 --- a/src/compiler/js-native-context-specialization.cc
 +++ b/src/compiler/js-native-context-specialization.cc
 @@ -37,6 +37,7 @@
@@ -10,7 +10,30 @@ index a2ec59b48181a4b5b8ccfffda3dce8af571b8f8c..74f086f1dd392a6863eb2775536659f5
  #include "src/objects/string.h"
  
  namespace v8 {
-@@ -4058,25 +4059,67 @@ Node* JSNativeContextSpecialization::BuildExtendPropertiesBackingStore(
+@@ -2118,9 +2119,9 @@ Reduction JSNativeContextSpecialization::ReduceJSDefineNamedOwnProperty(
+   JSDefineNamedOwnPropertyNode n(node);
+   DefineNamedOwnPropertyParameters const& p = n.Parameters();
+   if (!p.feedback().IsValid()) return NoChange();
+-  return ReducePropertyAccess(node, nullptr, p.name(), n.value(),
+-                              FeedbackSource(p.feedback()),
+-                              AccessMode::kStoreInLiteral);
++  return ReducePropertyAccess(
++      node, nullptr, p.name(), n.value(), FeedbackSource(p.feedback()),
++      p.in_literal() ? AccessMode::kStoreInLiteral : AccessMode::kDefine);
+ }
+ 
+ Reduction JSNativeContextSpecialization::ReduceElementAccessOnString(
+@@ -3091,7 +3092,8 @@ JSNativeContextSpecialization::BuildPropertyStore(
+               AccessBuilder::ForJSObjectPropertiesOrHashKnownPointer()),
+           storage, effect, control);
+     }
+-    if (access_info.IsFastDataConstant() && access_mode == AccessMode::kStore &&
++    if (access_info.IsFastDataConstant() &&
++        access_mode != AccessMode::kStoreInLiteral &&
+         !access_info.HasTransitionMap()) {
+       Node* deoptimize = graph()->NewNode(
+           simplified()->CheckIf(DeoptimizeReason::kStoreToConstant),
+@@ -4058,25 +4060,67 @@ Node* JSNativeContextSpecialization::BuildExtendPropertiesBackingStore(
    // for intermediate states of chains of property additions. That makes
    // it unclear what the best approach is here.
    DCHECK_EQ(map.UnusedPropertyFields(), 0);
@@ -84,7 +107,7 @@ index a2ec59b48181a4b5b8ccfffda3dce8af571b8f8c..74f086f1dd392a6863eb2775536659f5
    }
  
    // Compute new length and hash.
-@@ -4114,7 +4157,8 @@ Node* JSNativeContextSpecialization::BuildExtendPropertiesBackingStore(
+@@ -4114,7 +4158,8 @@ Node* JSNativeContextSpecialization::BuildExtendPropertiesBackingStore(
    a.Store(AccessBuilder::ForMap(), jsgraph()->PropertyArrayMapConstant());
    a.Store(AccessBuilder::ForPropertyArrayLengthAndHash(), new_length_and_hash);
    for (int i = 0; i < new_length; ++i) {

@@ -48,10 +48,16 @@ The M132-LTS branch took fixes until 10-2025 and skipped some; the merges to bra
 - Already in 13.2 or in these patches: b3c01ac1 (CVE-2024-4947), CVE-2025-5419/6554/10585, ef1b6876 (`IsOnlyUserOf`),
   CVE-2026-11645 and CVE-2026-87491 (FlyWeb's own ports). Not applicable: CVE-2026-85046 (13.2 does not inline
   `Array.prototype.sort`).
-- **Not ported yet (FS.29):** 22e588df (crbug 567088929, 10-2026, constness in `DefineNamedOwnProperty`): changes
-  bytecodes, interpreter, baseline and TurboFan.
+- **Constness in `DefineNamedOwnProperty`** (FS.29, SEGURIDAD-PORTES-10): main 6937df3c (crbug 567088929, 10-2026;
+  22e588df is its merge). New bytecode `DefineNamedOwnPropertyInLiteral` for the initializing stores of object
+  literals; `DefineNamedOwnProperty` (spread literals, class fields) now deopts on a const field in TurboFan
+  (`AccessMode::kDefine` instead of `kStoreInLiteral`) and in Maglev (adapted to 13.2's void visitors and
+  `ReduceResult::Fail()`), so a redefinition can no longer keep a stale constant. Its 4 mjsunit tests come along
+  (3 run with `--maglev`; `assertMaglevved` → `assertTrue(isMaglevved())`, which 13.2's `mjsunit.js` has). Not ported: the cctest goldens (13.2's format differs) and the follow-up c58171d6
+  (performance only: spread literals back to the literal bytecode). Changes the bytecode list: cache epoch 20.
 
-**32 patches** (61 − 36 + 7).
+**48 patches** (32 + 12 new for sources + 4 tests; the `js-native-context-specialization.cc` and `version.h` patches
+already existed and were regenerated).
 
 ## 3. Options (rule 19)
 
@@ -69,7 +75,7 @@ half of CVE-2025-13223 (4cf93118) is not needed in 13.2 (it feeds Turbolev). Tur
 
 ## 4. Cache epoch
 
-`kFlyWebCacheEpoch` **19** (17 = 2.0.1–2.0.2 on 13.1, 18 = 2.0.3 with `seg/v8-13.1-lle`).
+`kFlyWebCacheEpoch` **20** (17 = 2.0.1–2.0.2 on 13.1, 18 = 2.0.3 with `seg/v8-13.1-lle`, 19 = level 132, 20 = FS.29).
 
 ## 5. Tests (cloud `d8`, Linux x64, V8 only; `FlyWeb/scripts/v8-d8.sh`)
 
@@ -84,3 +90,6 @@ half of CVE-2025-13223 (4cf93118) is not needed in 13.2 (it feeds Turbolev). Tur
 - **mjsunit 7336/7337** (default variant, includes `mjsunit/wasm`). The 1 is `maglev/extras-cped` (asserts Maglev code),
   as in 1.13–1.15.
 - Not covered by the `d8`: Intl (no ICU) and Chromium's libc++. **Not compiled in FlyWeb**: LOCAL builds it.
+
+**FS.29 (SEGURIDAD-PORTES-10, 27-10-2026), same `d8` with the 48 patches:** builds; FlyWeb's regression tests 9/9;
+the 4 new tests 4/4; **mjsunit 7340/7341** (the 1 is `maglev/extras-cped`, as before).

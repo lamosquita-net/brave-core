@@ -1,0 +1,22 @@
+diff --git a/src/interpreter/interpreter-generator.cc b/src/interpreter/interpreter-generator.cc
+index 2b8e1162d78ed550e655b340d7e28e631575c42b..6ac28e4cd127ba1174b1afa00bcda6d393c81b41 100644
+--- a/src/interpreter/interpreter-generator.cc
++++ b/src/interpreter/interpreter-generator.cc
+@@ -738,6 +738,17 @@ IGNITION_HANDLER(DefineNamedOwnProperty, InterpreterSetNamedPropertyAssembler) {
+   SetNamedProperty(Builtin::kDefineNamedOwnIC, NamedPropertyType::kOwn);
+ }
+ 
++// DefineNamedOwnPropertyInLiteral <object> <name_index> <slot>
++//
++// Same as DefineNamedOwnProperty, but only used for the initializing store of
++// a property of an object literal created from a boilerplate, where the
++// property still holds the uninitialized value. Optimizing compilers rely on
++// this.
++IGNITION_HANDLER(DefineNamedOwnPropertyInLiteral,
++                 InterpreterSetNamedPropertyAssembler) {
++  SetNamedProperty(Builtin::kDefineNamedOwnIC, NamedPropertyType::kOwn);
++}
++
+ // SetKeyedProperty <object> <key> <slot>
+ //
+ // Calls the KeyedStoreIC at FeedbackVector slot <slot> for <object> and
