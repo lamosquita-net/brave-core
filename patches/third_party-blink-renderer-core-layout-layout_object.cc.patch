@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_object.cc b/third_party/blink/renderer/core/layout/layout_object.cc
-index 81ae68736127bf3885e16810b5d34da6bc377070..376a89bdf31ed21b5bffb11d11c69c5e37ffc61b 100644
+index 81ae68736127bf3885e16810b5d34da6bc377070..95fa5842b94af8c6c9b8112b343abfe4407af776 100644
 --- a/third_party/blink/renderer/core/layout/layout_object.cc
 +++ b/third_party/blink/renderer/core/layout/layout_object.cc
 @@ -1357,13 +1357,13 @@ static inline bool ObjectIsRelayoutBoundary(const LayoutObject* object) {
@@ -34,3 +34,26 @@ index 81ae68736127bf3885e16810b5d34da6bc377070..376a89bdf31ed21b5bffb11d11c69c5e
  
    const LayoutBlock* containing_block = ContainingBlock();
    while (object != containing_block) {
+@@ -2544,13 +2548,19 @@ const ComputedStyle& LayoutObject::SlowEffectiveStyle(
+       if (IsInline() && IsAtomicInlineLevel())
+         return StyleRef();
+       return FirstLineStyleRef();
+-    case StyleVariant::kEllipsis:
++    case StyleVariant::kStandardEllipsis:
+       // The ellipsis is styled according to the line style.
+       // https://www.w3.org/TR/css-overflow-3/#ellipsing-details
+-      // Use first-line style if exists since most cases it is the first line.
+       DCHECK(IsInline());
+-      if (LayoutObject* block = ContainingBlock())
++      if (const LayoutObject* block = ContainingBlock()) {
++        return block->StyleRef();
++      }
++      return StyleRef();
++    case StyleVariant::kFirstLineEllipsis:
++      DCHECK(IsInline());
++      if (const LayoutObject* block = ContainingBlock()) {
+         return block->FirstLineStyleRef();
++      }
+       return FirstLineStyleRef();
+   }
+   NOTREACHED_IN_MIGRATION();
