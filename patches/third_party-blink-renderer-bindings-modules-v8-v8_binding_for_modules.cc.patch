@@ -1,0 +1,24 @@
+diff --git a/third_party/blink/renderer/bindings/modules/v8/v8_binding_for_modules.cc b/third_party/blink/renderer/bindings/modules/v8/v8_binding_for_modules.cc
+index a6556d95c1ae6d5980b0ef0ba43357be39dd315e..d60648cd8deb16908335c8ac463bc4cc307640a4 100644
+--- a/third_party/blink/renderer/bindings/modules/v8/v8_binding_for_modules.cc
++++ b/third_party/blink/renderer/bindings/modules/v8/v8_binding_for_modules.cc
+@@ -97,7 +97,8 @@ static std::unique_ptr<IDBKey> CreateIDBKeyFromSimpleValue(
+     if (exception_state.HadException())
+       return IDBKey::CreateInvalid();
+     if (buffer->IsDetached()) {
+-      exception_state.ThrowTypeError("The ArrayBuffer is detached.");
++      exception_state.ThrowDOMException(DOMExceptionCode::kDataError,
++                                        "The ArrayBuffer is detached.");
+       return IDBKey::CreateInvalid();
+     }
+     const char* start = static_cast<const char*>(buffer->Data());
+@@ -115,7 +116,8 @@ static std::unique_ptr<IDBKey> CreateIDBKeyFromSimpleValue(
+     if (exception_state.HadException())
+       return IDBKey::CreateInvalid();
+     if (view->buffer()->IsDetached()) {
+-      exception_state.ThrowTypeError("The viewed ArrayBuffer is detached.");
++      exception_state.ThrowDOMException(DOMExceptionCode::kDataError,
++                                        "The viewed ArrayBuffer is detached.");
+       return IDBKey::CreateInvalid();
+     }
+     const char* start = static_cast<const char*>(view->BaseAddress());
