@@ -1,5 +1,5 @@
 diff --git a/src/compiler/js-native-context-specialization.cc b/src/compiler/js-native-context-specialization.cc
-index e0a1e8346ed700f95eae1234d7d1362a2a6d7576..e47c6749cac0410efe50293f5c2b17645d17731a 100644
+index a2ec59b48181a4b5b8ccfffda3dce8af571b8f8c..74f086f1dd392a6863eb2775536659f5459af224 100644
 --- a/src/compiler/js-native-context-specialization.cc
 +++ b/src/compiler/js-native-context-specialization.cc
 @@ -37,6 +37,7 @@
@@ -10,7 +10,7 @@ index e0a1e8346ed700f95eae1234d7d1362a2a6d7576..e47c6749cac0410efe50293f5c2b1764
  #include "src/objects/string.h"
  
  namespace v8 {
-@@ -4013,25 +4014,67 @@ Node* JSNativeContextSpecialization::BuildExtendPropertiesBackingStore(
+@@ -4058,25 +4059,67 @@ Node* JSNativeContextSpecialization::BuildExtendPropertiesBackingStore(
    // for intermediate states of chains of property additions. That makes
    // it unclear what the best approach is here.
    DCHECK_EQ(map.UnusedPropertyFields(), 0);
@@ -84,7 +84,7 @@ index e0a1e8346ed700f95eae1234d7d1362a2a6d7576..e47c6749cac0410efe50293f5c2b1764
    }
  
    // Compute new length and hash.
-@@ -4069,7 +4112,8 @@ Node* JSNativeContextSpecialization::BuildExtendPropertiesBackingStore(
+@@ -4114,7 +4157,8 @@ Node* JSNativeContextSpecialization::BuildExtendPropertiesBackingStore(
    a.Store(AccessBuilder::ForMap(), jsgraph()->PropertyArrayMapConstant());
    a.Store(AccessBuilder::ForPropertyArrayLengthAndHash(), new_length_and_hash);
    for (int i = 0; i < new_length; ++i) {
