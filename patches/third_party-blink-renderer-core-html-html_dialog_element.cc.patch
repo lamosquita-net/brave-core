@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/html_dialog_element.cc b/third_party/blink/renderer/core/html/html_dialog_element.cc
-index 8c5398ae2353e8bc7664fcc3c960521f15197942..924f01a99a1827dd0c974a620dc12b8c5adc5df9 100644
+index 8c5398ae2353e8bc7664fcc3c960521f15197942..d41624e8562a005069e2705aa31bfd0ffbbc5e0f 100644
 --- a/third_party/blink/renderer/core/html/html_dialog_element.cc
 +++ b/third_party/blink/renderer/core/html/html_dialog_element.cc
 @@ -153,6 +153,10 @@ void HTMLDialogElement::close(const String& return_value,
@@ -23,17 +23,23 @@ index 8c5398ae2353e8bc7664fcc3c960521f15197942..924f01a99a1827dd0c974a620dc12b8c
    SetBooleanAttribute(html_names::kOpenAttr, true);
  
    // The layout must be updated here because setFocusForDialog calls
-@@ -347,6 +354,9 @@ void HTMLDialogElement::showModal(ExceptionState& exception_state) {
+@@ -347,6 +354,15 @@ void HTMLDialogElement::showModal(ExceptionState& exception_state) {
          "The dialog is already open as a Popover, and therefore cannot be "
          "opened as a modal dialog.");
    }
++  if (!GetDocument().IsActive() &&
++      RuntimeEnabledFeatures::TopLayerInactiveDocumentExceptionsEnabled()) {
++    return exception_state.ThrowDOMException(
++        DOMExceptionCode::kInvalidStateError,
++        "Invalid for dialogs within documents that are not fully active.");
++  }
 +  if (!DispatchToggleEvents(/*opening=*/true, /*asModal=*/true)) {
 +    return;
 +  }
  
    Document& document = GetDocument();
    HTMLDialogElement* old_modal_dialog = document.ActiveModalDialog();
-@@ -465,9 +475,56 @@ void HTMLDialogElement::SetFocusForDialog() {
+@@ -465,9 +481,56 @@ void HTMLDialogElement::SetFocusForDialog() {
    doc.TopDocument().FinalizeAutofocus();
  }
  

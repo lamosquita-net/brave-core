@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/style_engine.cc b/third_party/blink/renderer/core/css/style_engine.cc
-index c2ce887b549a64a91c51778148791c277096cc21..6d75a3f2f46400a17e733fe7ce72772c884c06fa 100644
+index c2ce887b549a64a91c51778148791c277096cc21..6d945cda01ae78f286e9c57215b0415f81499a61 100644
 --- a/third_party/blink/renderer/core/css/style_engine.cc
 +++ b/third_party/blink/renderer/core/css/style_engine.cc
 @@ -702,13 +702,11 @@ void StyleEngine::UpdateCounterStyles() {
@@ -21,6 +21,22 @@ index c2ce887b549a64a91c51778148791c277096cc21..6d75a3f2f46400a17e733fe7ce72772c
        }
      }
    }
+@@ -814,13 +812,13 @@ void StyleEngine::UpdateCounters(const Element& element,
+   // Manually update list item ordinals here.
+   if (LayoutObject* layout_object = element.GetLayoutObject()) {
+     if (auto* ng_list_item = DynamicTo<LayoutListItem>(layout_object)) {
+-      if (!ng_list_item->Ordinal().ExplicitValue().has_value()) {
++      if (!ng_list_item->Ordinal().UseExplicitValue()) {
+         ng_list_item->Ordinal().MarkDirty();
+         ng_list_item->OrdinalValueChanged();
+       }
+     } else if (auto* inline_list_item =
+                    DynamicTo<LayoutInlineListItem>(layout_object)) {
+-      if (!inline_list_item->Ordinal().ExplicitValue().has_value()) {
++      if (!inline_list_item->Ordinal().UseExplicitValue()) {
+         inline_list_item->Ordinal().MarkDirty();
+         inline_list_item->OrdinalValueChanged();
+       }
 @@ -3100,12 +3098,12 @@ void StyleEngine::CollectMatchingUserRules(
    for (const ActiveStyleSheet& style_sheet : active_user_style_sheets_) {
      match_request.AddRuleset(style_sheet.second);

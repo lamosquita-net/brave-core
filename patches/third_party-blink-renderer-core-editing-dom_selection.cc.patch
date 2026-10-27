@@ -1,0 +1,35 @@
+diff --git a/third_party/blink/renderer/core/editing/dom_selection.cc b/third_party/blink/renderer/core/editing/dom_selection.cc
+index 79087763835bd80a5f4eaecd216e9855dc21795a..1e0cd37534d086f930c57baa4eff7de0e5c020a2 100644
+--- a/third_party/blink/renderer/core/editing/dom_selection.cc
++++ b/third_party/blink/renderer/core/editing/dom_selection.cc
+@@ -48,6 +48,7 @@
+ #include "third_party/blink/renderer/platform/bindings/exception_state.h"
+ #include "third_party/blink/renderer/platform/heap/garbage_collected.h"
+ #include "third_party/blink/renderer/platform/instrumentation/use_counter.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+ #include "third_party/blink/renderer/platform/wtf/text/wtf_string.h"
+ 
+ namespace blink {
+@@ -163,13 +164,15 @@ unsigned DOMSelection::extentOffset() const {
+ bool DOMSelection::isCollapsed() const {
+   if (!IsAvailable())
+     return true;
+-  Node* node = Selection()
+-                   .ComputeVisibleSelectionInDOMTreeDeprecated()
+-                   .Anchor()
+-                   .AnchorNode();
+-  if (node && node->IsInShadowTree() &&
+-      DomWindow()->document()->AncestorInThisScope(node)) {
+-    return true;
++  if (!RuntimeEnabledFeatures::SelectionIsCollapsedShadowDOMSupportEnabled()) {
++    Node* node = Selection()
++                     .ComputeVisibleSelectionInDOMTreeDeprecated()
++                     .Anchor()
++                     .AnchorNode();
++    if (node && node->IsInShadowTree() &&
++        DomWindow()->document()->AncestorInThisScope(node)) {
++      return true;
++    }
+   }
+ 
+   TemporaryRange temp_range(this, PrimaryRangeOrNull());
