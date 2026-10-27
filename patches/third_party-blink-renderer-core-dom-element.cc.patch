@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/element.cc b/third_party/blink/renderer/core/dom/element.cc
-index afa9718ce5b9dd841e33d89610d524df1db4e2c9..5145d99197690c4c168316da9be56189e8f213b7 100644
+index afa9718ce5b9dd841e33d89610d524df1db4e2c9..865ced08be9acba6c21a37eb922a4a38b6ea53bc 100644
 --- a/third_party/blink/renderer/core/dom/element.cc
 +++ b/third_party/blink/renderer/core/dom/element.cc
 @@ -178,6 +178,7 @@
@@ -97,7 +97,27 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..5145d99197690c4c168316da9be56189
             element_animations->CssAnimations().PendingUpdate().IsEmpty());
      element_animations->CssAnimations().ClearPendingUpdate();
    }
-@@ -4598,6 +4592,27 @@ std::optional<TextDirection> Element::ResolveAutoDirectionality(
+@@ -4499,6 +4493,19 @@ void Element::UpdateDirectionalityAndDescendant(TextDirection direction) {
+           }
+         }
+       }
++
++      // The directionality of a shadow host also affects the effect of
++      // its slots on the auto directionality of an ancestor.
++      if (shadow_root->HasSlotAssignment()) {
++        for (HTMLSlotElement* slot : shadow_root->GetSlotAssignment().Slots()) {
++          Element* slot_parent = slot->parentElement();
++          if (slot_parent && slot_parent->SelfOrAncestorHasDirAutoAttribute() &&
++              slot_parent->CachedDirectionality() != direction) {
++            slot_parent->UpdateAncestorWithDirAuto(
++                UpdateAncestorTraversal::IncludeSelf);
++          }
++        }
++      }
+     }
+     element = ElementTraversal::Next(*element, this);
+   } while (element);
+@@ -4598,6 +4605,27 @@ std::optional<TextDirection> Element::ResolveAutoDirectionality(
      return BidiParagraph::BaseDirectionForStringOrLtr(text_element->Value());
    }
  
@@ -125,7 +145,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..5145d99197690c4c168316da9be56189
    if (const HTMLSlotElement* slot_this =
            ToHTMLSlotElementIfSupportsAssignmentOrNull(this)) {
      auto& assigned_nodes = slot_this->AssignedNodes();
-@@ -4613,10 +4628,13 @@ std::optional<TextDirection> Element::ResolveAutoDirectionality(
+@@ -4613,10 +4641,13 @@ std::optional<TextDirection> Element::ResolveAutoDirectionality(
            }
          } else if (Element* slotted_element =
                         DynamicTo<Element>(slotted_node)) {
@@ -143,7 +163,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..5145d99197690c4c168316da9be56189
            }
          }
        }
-@@ -4626,22 +4644,8 @@ std::optional<TextDirection> Element::ResolveAutoDirectionality(
+@@ -4626,22 +4657,8 @@ std::optional<TextDirection> Element::ResolveAutoDirectionality(
  
    Node* node = NodeTraversal::FirstChild(*this);
    while (node) {
@@ -168,7 +188,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..5145d99197690c4c168316da9be56189
          node = NodeTraversal::NextSkippingChildren(*node, this);
          continue;
        }
-@@ -6406,7 +6410,7 @@ void Element::UpdateSelectionOnFocus(
+@@ -6406,7 +6423,7 @@ void Element::UpdateSelectionOnFocus(
    } else if (GetLayoutObject() &&
               !GetLayoutObject()->IsLayoutEmbeddedContent()) {
      if (!options->preventScroll()) {
@@ -177,7 +197,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..5145d99197690c4c168316da9be56189
  
        // It's common to have menus and list controls that have items slightly
        // overflowing horizontally but the control isn't horizontally
-@@ -7441,8 +7445,8 @@ const ComputedStyle* Element::EnsureComputedStyle(
+@@ -7441,8 +7458,8 @@ const ComputedStyle* Element::EnsureComputedStyle(
    StyleEngine::InEnsureComputedStyleScope ensure_scope(
        GetDocument().GetStyleEngine());
  
@@ -188,7 +208,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..5145d99197690c4c168316da9be56189
      return element->EnsureComputedStyle();
    }
  
-@@ -7951,7 +7955,9 @@ PseudoElement* Element::CreatePseudoElementIfNeeded(
+@@ -7951,7 +7968,9 @@ PseudoElement* Element::CreatePseudoElementIfNeeded(
      return nullptr;
    }
  
@@ -199,7 +219,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..5145d99197690c4c168316da9be56189
      GetDocument().AddToTopLayer(pseudo_element, this);
    }
  
-@@ -7984,11 +7990,32 @@ PseudoElement* Element::GetPseudoElement(
+@@ -7984,11 +8003,32 @@ PseudoElement* Element::GetPseudoElement(
    return nullptr;
  }
  
@@ -234,7 +254,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..5145d99197690c4c168316da9be56189
    }
  
    // The transition pseudos can currently only exist on the document element.
-@@ -8021,7 +8048,8 @@ PseudoElement* Element::GetNestedPseudoElement(
+@@ -8021,7 +8061,8 @@ PseudoElement* Element::GetNestedPseudoElement(
  }
  
  LayoutObject* Element::PseudoElementLayoutObject(PseudoId pseudo_id) const {
@@ -244,7 +264,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..5145d99197690c4c168316da9be56189
      return element->GetLayoutObject();
    }
    return nullptr;
-@@ -10146,7 +10174,6 @@ AnchorPositionScrollData* Element::GetAnchorPositionScrollData() const {
+@@ -10146,7 +10187,6 @@ AnchorPositionScrollData* Element::GetAnchorPositionScrollData() const {
  }
  
  void Element::IncrementImplicitlyAnchoredElementCount() {
@@ -252,7 +272,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..5145d99197690c4c168316da9be56189
    if (!HasImplicitlyAnchoredElement() && GetLayoutObject()) {
      // Invalidate layout to populate itself into Physical/LogicalAnchorQuery.
      GetLayoutObject()->SetNeedsLayoutAndFullPaintInvalidation(
-@@ -10175,15 +10202,11 @@ AnchorElementObserver* Element::GetAnchorElementObserver() const {
+@@ -10175,15 +10215,11 @@ AnchorElementObserver* Element::GetAnchorElementObserver() const {
  
  AnchorElementObserver& Element::EnsureAnchorElementObserver() {
    DCHECK(IsHTMLElement());
