@@ -1,0 +1,27 @@
+diff --git a/third_party/blink/renderer/core/animation/scroll_timeline_util.cc b/third_party/blink/renderer/core/animation/scroll_timeline_util.cc
+index 74dfb2c80d65c498d96bfa855e60135cf19770b1..ede2ed32701a7533c8f2a28900020f01a7a82efc 100644
+--- a/third_party/blink/renderer/core/animation/scroll_timeline_util.cc
++++ b/third_party/blink/renderer/core/animation/scroll_timeline_util.cc
+@@ -62,6 +62,22 @@ CompositorScrollTimeline::ScrollDirection ConvertOrientation(
+     return CompositorScrollTimeline::ScrollDown;
+   }
+ 
++  if (RuntimeEnabledFeatures::SidewaysWritingModesEnabled()) {
++    PhysicalToLogical<CompositorScrollTimeline::ScrollDirection> converter(
++        style ? style->GetWritingDirection()
++              : WritingDirectionMode(WritingMode::kHorizontalTb,
++                                     TextDirection::kLtr),
++        CompositorScrollTimeline::ScrollUp,
++        CompositorScrollTimeline::ScrollRight,
++        CompositorScrollTimeline::ScrollDown,
++        CompositorScrollTimeline::ScrollLeft);
++    if (axis == ScrollAxis::kBlock) {
++      return converter.BlockEnd();
++    }
++    DCHECK_EQ(axis, ScrollAxis::kInline);
++    return converter.InlineEnd();
++  }
++
+   // Harder cases; first work out which axis is which, and then for each check
+   // which edge we start at.
+ 
