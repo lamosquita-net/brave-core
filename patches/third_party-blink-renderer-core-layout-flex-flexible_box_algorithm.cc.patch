@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/flex/flexible_box_algorithm.cc b/third_party/blink/renderer/core/layout/flex/flexible_box_algorithm.cc
-index ff25c2fe85c9650ef5ce925c4298d4def2cd7aa5..c13f7d16ab0b553ea3232420e2e5eebd53cfe917 100644
+index ff25c2fe85c9650ef5ce925c4298d4def2cd7aa5..427ed231fa95f041ebfe1b4c79993212f273d6c7 100644
 --- a/third_party/blink/renderer/core/layout/flex/flexible_box_algorithm.cc
 +++ b/third_party/blink/renderer/core/layout/flex/flexible_box_algorithm.cc
 @@ -117,25 +117,33 @@ bool FlexItem::MainAxisIsInlineAxis() const {
@@ -56,6 +56,17 @@ index ff25c2fe85c9650ef5ce925c4298d4def2cd7aa5..c13f7d16ab0b553ea3232420e2e5eebd
      case PhysicalDirection::kDown:
        return physical_margins_.bottom;
      case PhysicalDirection::kUp:
+@@ -543,8 +551,8 @@ void FlexLine::ComputeLineItemsPosition(LayoutUnit main_axis_start_offset,
+     main_axis_offset += available_free_space;
+   }
+ 
+-  LayoutUnit max_major_descent;
+-  LayoutUnit max_minor_descent;
++  LayoutUnit max_major_descent = LayoutUnit::Min();
++  LayoutUnit max_minor_descent = LayoutUnit::Min();
+ 
+   LayoutUnit max_child_cross_axis_extent;
+   for (wtf_size_t i = 0; i < line_items_.size(); ++i) {
 @@ -752,15 +760,6 @@ bool FlexibleBoxAlgorithm::IsHorizontalFlow(const ComputedStyle& style) {
    return style.ResolvedIsColumnFlexDirection();
  }
