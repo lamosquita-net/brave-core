@@ -1,0 +1,20 @@
+diff --git a/third_party/blink/renderer/core/html/html_html_element.cc b/third_party/blink/renderer/core/html/html_html_element.cc
+index a4af7b98d5dbb1458b7d8c8b12b50a48544cd286..9f3380ce15b682fd25d993e7e0e9d7f4c2ecfd75 100644
+--- a/third_party/blink/renderer/core/html/html_html_element.cc
++++ b/third_party/blink/renderer/core/html/html_html_element.cc
+@@ -159,6 +159,15 @@ void HTMLHtmlElement::PropagateWritingModeAndDirectionFromBody() {
+   // style keeps original style instead.
+   // See wm-propagation-body-computed-root.html
+   layout_object->SetStyle(new_style);
++
++  // TODO(crbug.com/371033184): We should propagate `writing-mode` and
++  // `direction` to ComputedStyles of pseudo elements of `this`.
++  // * We can't use Element::RecalcStyle() because it refers to the
++  //   ComputedStyle stored in this element, not `layout_object`.
++  // * We should not copy `writing-mode` and `direction` values of `new_style`
++  //   if `writing-mode` or `direction` is specified explicitly for a pseudo
++  //   element.
++  // See css/css-writing-modes/wm-propagation-body-{042,047,049,054}.html.
+ }
+ 
+ }  // namespace blink

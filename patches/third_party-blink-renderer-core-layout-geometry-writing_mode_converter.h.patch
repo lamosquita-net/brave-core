@@ -1,0 +1,55 @@
+diff --git a/third_party/blink/renderer/core/layout/geometry/writing_mode_converter.h b/third_party/blink/renderer/core/layout/geometry/writing_mode_converter.h
+index 7170521d6798b16bb7ad9733b5badf7d114e0dc4..95f153c115b2a72dc4bf89268c9a228a53fe617e 100644
+--- a/third_party/blink/renderer/core/layout/geometry/writing_mode_converter.h
++++ b/third_party/blink/renderer/core/layout/geometry/writing_mode_converter.h
+@@ -71,6 +71,11 @@ class CORE_EXPORT WritingModeConverter {
+   LogicalRect ToLogical(const PhysicalRect& rect) const;
+   PhysicalRect ToPhysical(const LogicalRect& rect) const;
+ 
++  // gfx variants
++  gfx::PointF ToLogical(const gfx::PointF& offset) const;
++  gfx::SizeF ToLogical(const gfx::SizeF& size) const;
++  gfx::RectF ToLogical(const gfx::RectF& rect) const;
++
+  private:
+   LogicalOffset SlowToLogical(const PhysicalOffset& offset,
+                               const PhysicalSize& inner_size) const;
+@@ -80,6 +85,10 @@ class CORE_EXPORT WritingModeConverter {
+   LogicalRect SlowToLogical(const PhysicalRect& rect) const;
+   PhysicalRect SlowToPhysical(const LogicalRect& rect) const;
+ 
++  gfx::PointF SlowToLogical(const gfx::PointF& offset,
++                            const gfx::SizeF& inner_size) const;
++  gfx::RectF SlowToLogical(const gfx::RectF& rect) const;
++
+   WritingDirectionMode writing_direction_;
+   PhysicalSize outer_size_;
+ };
+@@ -126,6 +135,27 @@ inline PhysicalRect WritingModeConverter::ToPhysical(
+   return SlowToPhysical(rect);
+ }
+ 
++inline gfx::PointF WritingModeConverter::ToLogical(
++    const gfx::PointF& offset) const {
++  if (writing_direction_.IsHorizontalLtr()) {
++    return offset;
++  }
++  return SlowToLogical(offset, {});
++}
++
++inline gfx::SizeF WritingModeConverter::ToLogical(
++    const gfx::SizeF& size) const {
++  return writing_direction_.IsHorizontal() ? size : gfx::TransposeSize(size);
++}
++
++inline gfx::RectF WritingModeConverter::ToLogical(
++    const gfx::RectF& rect) const {
++  if (writing_direction_.IsHorizontalLtr()) {
++    return rect;
++  }
++  return SlowToLogical(rect);
++}
++
+ }  // namespace blink
+ 
+ #endif  // THIRD_PARTY_BLINK_RENDERER_CORE_LAYOUT_GEOMETRY_WRITING_MODE_CONVERTER_H_

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_cascade.cc b/third_party/blink/renderer/core/css/resolver/style_cascade.cc
-index bdb4709b5da753411687e8bcfe2d5cf183382cfd..55ee2add26a4b3d980b85fcc9bcc54a64e92c0cb 100644
+index bdb4709b5da753411687e8bcfe2d5cf183382cfd..64436afcd5b5214e252f0bf6e91c26043de7f03c 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_cascade.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_cascade.cc
 @@ -270,18 +270,6 @@ void StyleCascade::AddInterpolations(const ActiveInterpolationsMap* map,
@@ -30,7 +30,12 @@ index bdb4709b5da753411687e8bcfe2d5cf183382cfd..55ee2add26a4b3d980b85fcc9bcc54a6
  }
  
  const CSSValue* StyleCascade::Resolve(const CSSPropertyName& name,
-@@ -480,22 +466,6 @@ void StyleCascade::AnalyzeMatchResult() {
+@@ -476,26 +462,11 @@ void StyleCascade::AnalyzeIfNeeded() {
+ 
+ void StyleCascade::AnalyzeMatchResult() {
+   AddExplicitDefaults();
++  writing_direction_ = state_.StyleBuilder().GetWritingDirection();
+ 
    int index = 0;
    for (const MatchedProperties& properties :
         match_result_.GetMatchedProperties()) {
@@ -53,7 +58,7 @@ index bdb4709b5da753411687e8bcfe2d5cf183382cfd..55ee2add26a4b3d980b85fcc9bcc54a6
      ExpandCascade(
          properties, GetDocument(), index++,
          [this](CascadePriority cascade_priority,
-@@ -608,7 +578,6 @@ void StyleCascade::Reanalyze() {
+@@ -608,7 +579,6 @@ void StyleCascade::Reanalyze() {
    map_.Reset();
    generation_ = 0;
    depends_on_cascade_affecting_property_ = false;
@@ -61,6 +66,25 @@ index bdb4709b5da753411687e8bcfe2d5cf183382cfd..55ee2add26a4b3d980b85fcc9bcc54a6
  
    needs_match_result_analyze_ = true;
    needs_interpolations_analyze_ = true;
+@@ -1351,7 +1321,7 @@ const CSSValue* StyleCascade::ResolveFlipRevert(const CSSProperty& property,
+   // Note: the value is transformed *from* the property we're reverting *to*.
+   const CSSValue* flipped = TryValueFlips::FlipValue(
+       /* from_property */ to_property.PropertyID(), unflipped,
+-      value.Transform(), state_.StyleBuilder().GetWritingDirection());
++      value.Transform(), writing_direction_);
+   return Resolve(property, *flipped, priority, origin, resolver);
+ }
+ 
+@@ -1884,8 +1854,7 @@ const CSSProperty& StyleCascade::ResolveSurrogate(const CSSProperty& property) {
+   // currently a flag to distinguish such surrogates from e.g. css-logical
+   // properties.
+   depends_on_cascade_affecting_property_ = true;
+-  const CSSProperty* original =
+-      property.SurrogateFor(state_.StyleBuilder().GetWritingDirection());
++  const CSSProperty* original = property.SurrogateFor(writing_direction_);
+   DCHECK(original);
+   return *original;
+ }
 @@ -1900,75 +1869,4 @@ void StyleCascade::MaybeUseCountRevert(const CSSValue& value) {
    }
  }

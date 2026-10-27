@@ -1,8 +1,26 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_object.cc b/third_party/blink/renderer/core/layout/layout_object.cc
-index 81ae68736127bf3885e16810b5d34da6bc377070..376a89bdf31ed21b5bffb11d11c69c5e37ffc61b 100644
+index 81ae68736127bf3885e16810b5d34da6bc377070..f596fc30e6d7e63aa669981dffad22395fc6a5c5 100644
 --- a/third_party/blink/renderer/core/layout/layout_object.cc
 +++ b/third_party/blink/renderer/core/layout/layout_object.cc
-@@ -1357,13 +1357,13 @@ static inline bool ObjectIsRelayoutBoundary(const LayoutObject* object) {
+@@ -702,14 +702,15 @@ void LayoutObject::AddChild(LayoutObject* new_child,
+       children->InsertChildNode(this, table, before_child);
+     }
+     table->AddChild(new_child);
+-  } else if (LIKELY(new_child->IsHorizontalWritingMode()) ||
++  } else if (LIKELY(!LayoutTextCombine::IsSupportedMode(
++                 new_child->StyleRef().GetWritingMode())) ||
+              !new_child->IsText()) {
+     children->InsertChildNode(this, new_child, before_child);
+   } else if (IsA<LayoutTextCombine>(*this)) {
+     DCHECK(LayoutTextCombine::ShouldBeParentOf(*new_child)) << new_child;
+     new_child->SetStyle(Style());
+     children->InsertChildNode(this, new_child, before_child);
+-  } else if (!IsHorizontalTypographicMode(StyleRef().GetWritingMode()) &&
++  } else if (!IsHorizontalTypographicMode() &&
+              LayoutTextCombine::ShouldBeParentOf(*new_child)) {
+     if (before_child) {
+       if (IsA<LayoutTextCombine>(before_child)) {
+@@ -1357,13 +1358,13 @@ static inline bool ObjectIsRelayoutBoundary(const LayoutObject* object) {
  
    // OOF-positioned objects which rely on their static-position for placement
    // cannot be relayout boundaries (their final position would be incorrect).
@@ -21,7 +39,7 @@ index 81ae68736127bf3885e16810b5d34da6bc377070..376a89bdf31ed21b5bffb11d11c69c5e
      return false;
    }
  
-@@ -1648,7 +1648,11 @@ void LayoutObject::MarkParentForSpannerOrOutOfFlowPositionedChange() {
+@@ -1648,7 +1649,11 @@ void LayoutObject::MarkParentForSpannerOrOutOfFlowPositionedChange() {
    //
    // Note that this isn't necessary if we're dealing with a column spanner here,
    // but in order to keep things simple, we'll make no difference.
@@ -34,3 +52,26 @@ index 81ae68736127bf3885e16810b5d34da6bc377070..376a89bdf31ed21b5bffb11d11c69c5e
  
    const LayoutBlock* containing_block = ContainingBlock();
    while (object != containing_block) {
+@@ -2544,13 +2549,19 @@ const ComputedStyle& LayoutObject::SlowEffectiveStyle(
+       if (IsInline() && IsAtomicInlineLevel())
+         return StyleRef();
+       return FirstLineStyleRef();
+-    case StyleVariant::kEllipsis:
++    case StyleVariant::kStandardEllipsis:
+       // The ellipsis is styled according to the line style.
+       // https://www.w3.org/TR/css-overflow-3/#ellipsing-details
+-      // Use first-line style if exists since most cases it is the first line.
+       DCHECK(IsInline());
+-      if (LayoutObject* block = ContainingBlock())
++      if (const LayoutObject* block = ContainingBlock()) {
++        return block->StyleRef();
++      }
++      return StyleRef();
++    case StyleVariant::kFirstLineEllipsis:
++      DCHECK(IsInline());
++      if (const LayoutObject* block = ContainingBlock()) {
+         return block->FirstLineStyleRef();
++      }
+       return FirstLineStyleRef();
+   }
+   NOTREACHED_IN_MIGRATION();

@@ -1,8 +1,30 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style.cc b/third_party/blink/renderer/core/style/computed_style.cc
-index bc061ec223ea93f74982b9ab4a2119f548caf978..afdb916315c1deadbeb4bf090db72f5e0461460d 100644
+index bc061ec223ea93f74982b9ab4a2119f548caf978..dd8f9987a888a0857150c83324802e8d2cc1dd6b 100644
 --- a/third_party/blink/renderer/core/style/computed_style.cc
 +++ b/third_party/blink/renderer/core/style/computed_style.cc
-@@ -481,12 +481,12 @@ ComputedStyle::ComputeDifferenceIgnoringInheritedFirstLineStyle(
+@@ -57,6 +57,7 @@
+ #include "third_party/blink/renderer/core/layout/custom/layout_worklet.h"
+ #include "third_party/blink/renderer/core/layout/layout_block.h"
+ #include "third_party/blink/renderer/core/layout/layout_box.h"
++#include "third_party/blink/renderer/core/layout/layout_text_combine.h"
+ #include "third_party/blink/renderer/core/layout/layout_theme.h"
+ #include "third_party/blink/renderer/core/layout/map_coordinates_flags.h"
+ #include "third_party/blink/renderer/core/layout/text_autosizer.h"
+@@ -366,9 +367,10 @@ bool ComputedStyle::NeedsReattachLayoutTree(const Element& element,
+     return true;
+   }
+ 
+-  // We use LayoutTextCombine only for vertical writing mode.
+-  if (new_style->HasTextCombine() && old_style->IsHorizontalWritingMode() !=
+-                                         new_style->IsHorizontalWritingMode()) {
++  // We use LayoutTextCombine only for vertical typographic mode.
++  if (new_style->HasTextCombine() &&
++      LayoutTextCombine::IsSupportedMode(old_style->GetWritingMode()) !=
++          LayoutTextCombine::IsSupportedMode(new_style->GetWritingMode())) {
+     DCHECK_EQ(old_style->HasTextCombine(), new_style->HasTextCombine());
+     return true;
+   }
+@@ -481,12 +483,12 @@ ComputedStyle::ComputeDifferenceIgnoringInheritedFirstLineStyle(
  
  StyleSelfAlignmentData ResolvedSelfAlignment(
      const StyleSelfAlignmentData& value,
@@ -17,7 +39,7 @@ index bc061ec223ea93f74982b9ab4a2119f548caf978..afdb916315c1deadbeb4bf090db72f5e
    }
    if (!has_out_of_flow_position &&
        value.GetPosition() == ItemPosition::kAnchorCenter) {
-@@ -496,33 +496,33 @@ StyleSelfAlignmentData ResolvedSelfAlignment(
+@@ -496,33 +498,33 @@ StyleSelfAlignmentData ResolvedSelfAlignment(
  }
  
  StyleSelfAlignmentData ComputedStyle::ResolvedAlignSelf(
@@ -57,7 +79,7 @@ index bc061ec223ea93f74982b9ab4a2119f548caf978..afdb916315c1deadbeb4bf090db72f5e
  }
  
  StyleContentAlignmentData ResolvedContentAlignment(
-@@ -1136,11 +1136,14 @@ bool ComputedStyle::DiffNeedsNormalPaintInvalidation(
+@@ -1136,11 +1138,14 @@ bool ComputedStyle::DiffNeedsNormalPaintInvalidation(
    }
  
    if (field_diff & kBackgroundCurrentColor) {
@@ -76,7 +98,7 @@ index bc061ec223ea93f74982b9ab4a2119f548caf978..afdb916315c1deadbeb4bf090db72f5e
          (GetCurrentColor() != other.GetCurrentColor() ||
           GetInternalVisitedCurrentColor() !=
               other.GetInternalVisitedCurrentColor())) {
-@@ -2543,11 +2546,17 @@ blink::Color ComputedStyle::VisitedDependentContextPaint(
+@@ -2543,11 +2548,17 @@ blink::Color ComputedStyle::VisitedDependentContextPaint(
    if (!context_visited_paint.HasColor()) {
      return unvisited_color;
    }
@@ -99,3 +121,16 @@ index bc061ec223ea93f74982b9ab4a2119f548caf978..afdb916315c1deadbeb4bf090db72f5e
  }
  
  blink::Color ComputedStyle::ResolvedColor(const StyleColor& color,
+@@ -2572,7 +2583,11 @@ TextEmphasisMark ComputedStyle::GetTextEmphasisMark() const {
+     return mark;
+   }
+ 
+-  if (IsHorizontalWritingMode()) {
++  // https://drafts.csswg.org/css-text-decor/#propdef-text-emphasis-style
++  // If only `filled` or `open` is specified, the shape keyword computes to
++  // `circle` in horizontal typographic modes and `sesame` in vertical
++  // typographic modes.
++  if (IsHorizontalTypographicMode()) {
+     return TextEmphasisMark::kDot;
+   }
+ 

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/runtime_enabled_features.json5 b/third_party/blink/renderer/platform/runtime_enabled_features.json5
-index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe9306336ade707 100644
+index 75e44e6b7cdd95c1e39b3759939ec1146232f255..e5e403bed9f2c85e85b64915a6bd31aa842c75ea 100644
 --- a/third_party/blink/renderer/platform/runtime_enabled_features.json5
 +++ b/third_party/blink/renderer/platform/runtime_enabled_features.json5
 @@ -480,6 +480,13 @@
@@ -16,10 +16,16 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      {
        // There are two different code changes guarded by this feature. Both
        // are about triggering a beforeunload cancel dialog and need adoption
-@@ -585,6 +592,10 @@
+@@ -585,6 +592,16 @@
        status: "experimental",
        base_feature: "none",
      },
++    {
++      // Increase disabled color on calendar picker's month-popup-button to 0.9.
++      // Enabled by default on M132. Remove flag on or after M135.
++      name: "CalendarPickerMonthPopupButtonDisabledColor",
++      status: "stable",
++    },
 +    {
 +      name: "CallExitNodeWithoutLayoutObject",
 +      status: "stable",
@@ -27,7 +33,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      {
        name: "Canvas2dCanvasFilter",
        status: "experimental",
-@@ -666,6 +677,11 @@
+@@ -666,6 +683,11 @@
        name: "CCTNewRFMPushBehavior",
        base_feature_status: "enabled",
      },
@@ -39,7 +45,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      {
        name: "CheckVisibilityExtraProperties",
        status: "stable",
-@@ -692,7 +708,7 @@
+@@ -692,7 +714,7 @@
        // to do that for the target according to the new spec:
        // https://w3c.github.io/selection-api/#scheduling-selectionhange-event
        name: "CoalesceSelectionchangeEvent",
@@ -48,7 +54,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      },
      {
        name: "CoepReflection",
-@@ -763,6 +779,10 @@
+@@ -763,6 +785,10 @@
        name: "ContactsManagerExtraProperties",
        status:  {"Android": "stable", "default": "test"},
      },
@@ -59,7 +65,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      {
        name: "ContentIndex",
        status:  {"Android": "stable", "default": "experimental"},
-@@ -824,20 +844,23 @@
+@@ -824,19 +850,22 @@
        // https://drafts.csswg.org/css-values-4/#attr-notation
        name: "CSSAdvancedAttrFunction",
      },
@@ -75,23 +81,23 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
        // https://drafts.csswg.org/css-anchor-position-1/#anchor-scope
        name: "CSSAnchorScope",
 -      depends_on: ["CSSAnchorPositioning"],
+-      status: "experimental",
 +      status: "stable",
 +    },
 +    {
 +      // Support anchor-size() values in inset and margin properties.
 +      name: "CSSAnchorSizeInsetsMargins",
-       status: "experimental",
-     },
++      status: "stable",
++    },
 +    {
 +      // Support for <string> syntax in @property
 +      // https://drafts.css-houdini.org/css-properties-values-api-1/#syntax-strings
 +      name: "CSSAtPropertyStringSyntax",
 +      status: "stable",
-+    },
+     },
      {
        // Whether <image> values are allowed as counter style <symbol>
-       name: "CSSAtRuleCounterStyleImageSymbols",
-@@ -896,6 +919,12 @@
+@@ -896,6 +925,12 @@
        name: "CSSCrossFade",
        status: "experimental",
      },
@@ -104,7 +110,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      {
        // This flag controls whether the deprecated :--foo syntax is enabled. It
        // is being replaced by :state(foo), which is controlled by the
-@@ -922,6 +951,11 @@
+@@ -922,6 +957,11 @@
        name: "CSSDisplayModePictureInPicture",
        status: "stable",
      },
@@ -116,7 +122,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      {
        name: "CSSDynamicRangeLimit",
        status: "experimental",
-@@ -940,7 +974,7 @@
+@@ -940,7 +980,7 @@
        // Spec change to search for container query and container units up the
        // flat tree instead of the shadow-including ancestors.
        name: "CSSFlatTreeContainer",
@@ -125,7 +131,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      },
      {
        name: "CSSFontSizeAdjust",
-@@ -958,10 +992,11 @@
+@@ -958,10 +998,11 @@
        status: "stable",
      },
      {
@@ -141,7 +147,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      },
      {
        // https://chromestatus.com/feature/6289894144212992
-@@ -993,6 +1028,10 @@
+@@ -993,6 +1034,10 @@
      {
        name: "CSSMixins",
      },
@@ -152,7 +158,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      {
        name: "CSSPaintAPIArguments",
        status: "experimental",
-@@ -1002,6 +1041,14 @@
+@@ -1002,6 +1047,14 @@
        // See crbug.com/1485525.
        name: "CSSParserIgnoreCharsetForURLs",
      },
@@ -167,7 +173,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      {
        name: "CSSPositionStickyStaticScrollPosition",
        status: "test",
-@@ -1010,7 +1057,6 @@
+@@ -1010,7 +1063,6 @@
        // position-try-options has been renamed to position-try-fallbacks.
        // This feature was shipped in M128, so this flag can be removed in M130.
        name: "CSSPositionTryFallbacks",
@@ -175,7 +181,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
        status: "stable",
      },
      {
-@@ -1020,21 +1066,6 @@
+@@ -1020,21 +1072,6 @@
        // This feature was disabled in M128, so this flag (and the code to
        // implement `position-try-options`) can be removed in M130.
        name: "CSSPositionTryOptions",
@@ -197,7 +203,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      },
      // https://drafts.csswg.org/css-values-5/#progress
      // progress(), media-progress(), container-progress()
-@@ -1073,6 +1104,11 @@
+@@ -1073,6 +1110,11 @@
        name: "CSSRelativeColor",
        status: "stable",
      },
@@ -209,7 +215,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      {
        // Non-standard 'auto' keyword for the CSS resize property. Used for
        // selectively enable resize corner for textarea via UA stylesheet, but
-@@ -1225,6 +1261,12 @@
+@@ -1225,6 +1267,12 @@
        origin_trial_allows_third_party: true,
        origin_trial_allows_insecure: true,
      },
@@ -222,7 +228,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      {
        name: "DesktopCaptureDisableLocalEchoControl",
        status: "experimental",
-@@ -1238,8 +1280,9 @@
+@@ -1238,8 +1286,9 @@
        status: "test",
      },
      {
@@ -233,7 +239,34 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      },
      {
        name: "DeviceAttributes",
-@@ -1551,8 +1594,9 @@
+@@ -1267,6 +1316,13 @@
+       name: "DialogCloseWhenOpenRemoved",
+       status: "experimental",
+     },
++    {
++      // This feature makes the dialog element fire beforetoggle and toggle
++      // events every time it is closed or opened.
++      // https://bugs.chromium.org/p/chromium/issues/detail?id=1521813
++      name: "DialogElementToggleEvents",
++      status: "stable",
++    },
+     {
+       name: "DialogNewFocusBehavior",
+       status: "experimental",
+@@ -1298,6 +1354,12 @@
+         "default": "test"
+       },
+     },
++    {
++      // Shipping in M130.  Flag should be removed after M130 has been
++      // shipping to stable for a few weeks.
++      name: "DirAutoFixSlotExclusions",
++      status: "stable",
++    },
+     {
+       name: "DirectSockets",
+       public: true,
+@@ -1551,8 +1613,9 @@
        // This is the "old" version of getInnerHTML() used for declarative shadow
        // DOM, and this version is deprecated. The replacement is called
        // `getHTML()` and it shipped in M125.
@@ -244,7 +277,20 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      },
      {
        name: "EnforceAnonymityExposure",
-@@ -1804,6 +1848,7 @@
+@@ -1756,6 +1819,12 @@
+       base_feature: "none",
+       public: true,
+     },
++    {
++      // Add Request.bytes() and Response.bytes()
++      // https://chromestatus.com/feature/5239268180754432
++      name: "FetchBodyBytes",
++      status: "stable",
++    },
+     {
+       // The Blink runtime-enabled feature name for the API's IDL.
+       name: "FetchLaterAPI",
+@@ -1804,6 +1873,7 @@
        // In-development features for the File System Access API.
        name: "FileSystemAccessAPIExperimental",
        status: "experimental",
@@ -252,7 +298,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      },
      {
        // The FileSystemHandle.getCloudIdentifiers() method (see
-@@ -1819,6 +1864,7 @@
+@@ -1819,6 +1889,7 @@
        // Non-OPFS File System Access API.
        name: "FileSystemAccessLocal",
        status: {"Android": "test", "default": "stable"},
@@ -260,7 +306,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      },
      {
        name: "FileSystemAccessLockingScheme",
-@@ -1847,6 +1893,17 @@
+@@ -1847,6 +1918,17 @@
        name: "FindTextInReadonlyTextInput",
        status: "experimental",
      },
@@ -278,7 +324,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      {
        name: "Fledge",
        status: "stable",
-@@ -2102,6 +2159,10 @@
+@@ -2102,6 +2184,10 @@
        name: "HandleDeletionWithNonEditableContentAtBlockBoundary",
        status: "stable",
      },
@@ -289,7 +335,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      {
        name: "HandwritingRecognition",
        status: {
-@@ -2147,6 +2208,14 @@
+@@ -2147,6 +2233,14 @@
        name: "HTMLAnchorAttribute",
        status: "experimental",
      },
@@ -304,7 +350,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      // Adds support for the experimental `interesttarget`
      // attributes, as specified in the open-ui "Interest Invokers" explainer.
      // https://open-ui.org/components/interest-invokers.explainer/
-@@ -2171,6 +2240,15 @@
+@@ -2171,6 +2265,15 @@
        name: "HTMLMenuElementIsListOwner",
        status: "stable",
      },
@@ -320,7 +366,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      {
        // A flag, just for local testing to make the
        // HTML parser yield more often and take longer to resume.
-@@ -2271,6 +2349,11 @@
+@@ -2271,6 +2374,11 @@
        name: "InheritUserModifyWithoutContenteditable",
        status: "stable",
      },
@@ -332,7 +378,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      {
        name: "InlineBlockInSameLine",
        status: "stable",
-@@ -2358,6 +2441,12 @@
+@@ -2358,6 +2466,12 @@
        status: "experimental",
        origin_trial_feature_name: "JavaScriptCompileHintsMagic",
      },
@@ -345,7 +391,16 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      {
        // Allows :target to match elements even after they are removed and
        // reattached to the document. Enabled in M128, should be safe to remove
-@@ -2407,11 +2496,6 @@
+@@ -2374,7 +2488,7 @@
+       // TODO(crbug.com/40113891): This feature allows scrollers to be
+       // keyboard focusable by default.
+       name: "KeyboardFocusableScrollers",
+-      status: "experimental",
++      status: "stable",
+       public: true,
+     },
+     {
+@@ -2407,11 +2521,6 @@
        name: "LangAttributeAwareFormControlUI",
        settable_from_internals: true,
      },
@@ -357,7 +412,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      {
        name: "LayoutFlexNewRowAlgorithmV3",
        status: "test",
-@@ -2473,6 +2557,11 @@
+@@ -2473,6 +2582,15 @@
        status: "experimental",
        base_feature: "none",
      },
@@ -366,10 +421,14 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
 +      name: "LineBoxBelowLeadingFloats",
 +      status: "stable",
 +    },
++    {
++      name: "ListItemWithCounterSetNotSetExplicitValue",
++      status: "stable",
++    },
      {
        name: "LockedMode",
        status: "test",
-@@ -2643,11 +2732,24 @@
+@@ -2643,11 +2761,24 @@
        name: "MetaRefreshNoFractional",
        status: "stable",
      },
@@ -394,7 +453,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      },
      {
        name: "MobileLayoutTheme",
-@@ -2687,19 +2789,23 @@
+@@ -2687,19 +2818,23 @@
        name: "MoveEndingSelectionToListChild",
        status: "stable",
      },
@@ -420,7 +479,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
        origin_trial_feature_name: "MutationEvents",
        origin_trial_type: "deprecation",
        origin_trial_allows_insecure: true,
-@@ -2787,6 +2893,13 @@
+@@ -2787,6 +2922,13 @@
        name: "NonEmptyBlockquotesOnOutdenting",
        status: "stable",
      },
@@ -434,7 +493,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      {
        // TODO(crbug.com/924486): This feature enables the deprecated values
        // inner-spin-button, push-button, searchfield-cancel-button,
-@@ -3016,6 +3129,10 @@
+@@ -3016,6 +3158,10 @@
        name: "PageSwapEvent",
        status: "stable",
      },
@@ -445,7 +504,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      {
        name: "PaintHoldingForIframes",
        status: "stable",
-@@ -3136,6 +3253,14 @@
+@@ -3136,6 +3282,14 @@
        name: "PointerEventDeviceId",
        status: "stable",
      },
@@ -460,7 +519,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      {
        name: "PositionOutsideTabSpanCheckSiblingNode",
        status: "stable",
-@@ -3206,6 +3331,12 @@
+@@ -3206,6 +3360,12 @@
        name:"PrettyPrintJSONDocument",
        status: "stable",
      },
@@ -473,7 +532,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      {
        // Controls whether filtering IDs can be specified for Private Aggregation
        // contributions. If disabled, any IDs will be ignored.
-@@ -3245,6 +3376,12 @@
+@@ -3245,6 +3405,12 @@
        origin_trial_allows_third_party: true,
        public: true,
      },
@@ -486,7 +545,20 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      {
        // Always allow trust token issuance (so long as the base::Feature
        // is enabled). Used for testing; circumvents a runtime check that,
-@@ -3370,6 +3507,11 @@
+@@ -3283,6 +3449,12 @@
+       implied_by: ["ProtectedOriginTrialsSampleAPI"],
+       is_protected_feature: "true",
+     },
++    {
++      name: "PushMessageDataBytes",
++      depends_on: ["PushMessaging"],
++      status: "stable",
++      base_feature: "none",
++    },
+     {
+       name: "PushMessaging",
+       public: true,
+@@ -3370,6 +3542,11 @@
          "Linux": "stable",
          "default": "experimental"},
      },
@@ -498,7 +570,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      {
        name: "RemoveDanglingMarkupInTarget",
        status: "stable",
-@@ -3422,6 +3564,10 @@
+@@ -3422,6 +3599,10 @@
          "default": "",
        }
      },
@@ -509,7 +581,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      {
        name: "ResourceTimingContentType",
        status: "experimental",
-@@ -3441,6 +3587,12 @@
+@@ -3441,6 +3622,12 @@
        name: "RewindFloats",
        status: "stable",
      },
@@ -522,7 +594,48 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      {
        name: "RtcAudioJitterBufferMaxPackets",
        origin_trial_feature_name: "RtcAudioJitterBufferMaxPackets",
-@@ -3679,6 +3831,7 @@
+@@ -3540,6 +3727,11 @@
+       origin_trial_allows_third_party: true,
+       status: "experimental",
+     },
++    {
++      // See crbug.com/41321247 and crbug.com/376370642
++      name: "ScheduleSelectionChangeOnBackspace",
++      status: {"Android": "", "default": "stable"},
++    },
+     {
+       // https://wicg.github.io/webcomponents/proposals/Scoped-Custom-Element-Registries
+       name: "ScopedCustomElementRegistry",
+@@ -3571,6 +3763,13 @@
+       name: "ScrollEndEvents",
+       status: "stable",
+     },
++    // TODO(355460994): Remove after M129.
++    // scroll into root frame didn't take scrollbar and borders into account,
++    // while this is fixed, to avoid any web compat issues we have this killswitch.
++    {
++      name: "ScrollIntoViewRootFrameViewportBugFix",
++      status: "stable",
++    },
+     // Killswitch. Remove after M126 or M127 stable.
+     {
+       name: "ScrollNodeForOverflowHidden",
+@@ -3636,6 +3835,14 @@
+       name: "SelectionAcrossShadowDOM",
+       status: "experimental",
+     },
++    {
++      // selection.isCollapsed should return false if anchor and focus nodes
++      // are different, including in shadow tree.
++      // https://crbug.com/40400558
++      // This feature was shipped in M131, so this flag can be removed in M133.
++      name: "SelectionIsCollapsedShadowDOMSupport",
++      status: "stable",
++    },
+     {
+       // Maintain author-defined ::selection highlight colors, even if they
+       // match the text color.
+@@ -3679,6 +3886,7 @@
      {
        name: "Serial",
        status: {"Android": "", "default": "stable"},
@@ -530,7 +643,16 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      },
      {
        name: "SerializeViewTransitionStateInSPA",
-@@ -3907,6 +4060,10 @@
+@@ -3764,7 +3972,7 @@
+     {
+       // crbug.com/40501131
+       name: "SidewaysWritingModes",
+-      status: "test",
++      status: "stable",
+     },
+     {
+       name: "SignatureBasedIntegrity",
+@@ -3907,6 +4115,10 @@
        name: "StorageBucketsLocks",
        status: "experimental",
      },
@@ -541,7 +663,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      {
        name: "StrictMimeTypesForWorkers",
        status: "experimental",
-@@ -3935,6 +4092,12 @@
+@@ -3935,6 +4147,12 @@
        name: "SvgCrossOriginAttribute",
        status: "stable",
      },
@@ -554,7 +676,43 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      {
        name: "SvgFilterUserSpaceViewportForNonSvg",
        status: "stable",
-@@ -4143,6 +4306,10 @@
+@@ -4051,10 +4269,21 @@
+       name: "TextFragmentTapOpensContextMenu",
+       status: {"Android": "stable"},
+     },
++    {
++      name: "TextInputNotAlwaysDirAuto",
++      status: "stable",
++    },
+     {
+       name: "TextMetricsBaselines",
+       status: "stable",
+     },
++    {
++      // Ensures correct segment boundary for floating elements
++      // so that the selection does not get expanded for them.
++      // See https://crbug.com/40711666.
++      name: "TextSegmentBoundaryForElementWithFloatStyle",
++      status: "stable",
++    },
+     {
+       // New implementation of text-size-adjust that applies during style rather
+       // than via the text autosizer. This also includes changes such as
+@@ -4094,6 +4323,13 @@
+       public: true,
+       status: "stable",
+     },
++    // This is a killswitch for the behavior where popover.showPopover() and
++    // dialog.showModal() throw DOM exceptions if the document isn't active.
++    // This landed in M132, and can be removed in M134.
++    {
++      name: "TopLayerInactiveDocumentExceptions",
++      status: "stable",
++    },
+     {
+       name: "TopLevelTpcd",
+       origin_trial_feature_name: "TopLevelTpcd",
+@@ -4143,6 +4379,10 @@
        status: "experimental",
        base_feature: "none",
      },
@@ -565,7 +723,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      // This is conditionally set if the platform supports translation.
      {
        name: "TranslateService",
-@@ -4255,6 +4422,13 @@
+@@ -4255,6 +4495,13 @@
        base_feature: "none",
        public: true,
      },
@@ -579,7 +737,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      {
        name: "UseUndoStepElementDispatchBeforeInput",
        status: "stable",
-@@ -4264,6 +4438,11 @@
+@@ -4264,6 +4511,11 @@
        base_feature: "none",
        public: true,
      },
@@ -591,7 +749,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6a6008eb397951b0a22c4456abe93063
      {
        // Whether a video element should automatically play fullscreen unless
        // 'playsinline' is set.
-@@ -4435,12 +4614,14 @@
+@@ -4435,12 +4687,14 @@
        name: "WebAuthAuthenticatorAttachment",
        status: "test",
      },

@@ -1,0 +1,98 @@
+diff --git a/third_party/blink/renderer/core/html/html_dialog_element.cc b/third_party/blink/renderer/core/html/html_dialog_element.cc
+index 8c5398ae2353e8bc7664fcc3c960521f15197942..d41624e8562a005069e2705aa31bfd0ffbbc5e0f 100644
+--- a/third_party/blink/renderer/core/html/html_dialog_element.cc
++++ b/third_party/blink/renderer/core/html/html_dialog_element.cc
+@@ -153,6 +153,10 @@ void HTMLDialogElement::close(const String& return_value,
+   Document& document = GetDocument();
+   HTMLDialogElement* old_modal_dialog = document.ActiveModalDialog();
+ 
++  DispatchToggleEvents(/*opening=*/false);
++  if (!ignore_open_attribute && !FastHasAttribute(html_names::kOpenAttr)) {
++    return;
++  }
+   SetBooleanAttribute(html_names::kOpenAttr, false);
+   bool was_modal = is_modal_;
+   SetIsModal(false);
+@@ -269,6 +273,9 @@ void HTMLDialogElement::show(ExceptionState& exception_state) {
+     return;
+   }
+ 
++  if (!DispatchToggleEvents(/*opening=*/true)) {
++    return;
++  }
+   SetBooleanAttribute(html_names::kOpenAttr, true);
+ 
+   // The layout must be updated here because setFocusForDialog calls
+@@ -347,6 +354,15 @@ void HTMLDialogElement::showModal(ExceptionState& exception_state) {
+         "The dialog is already open as a Popover, and therefore cannot be "
+         "opened as a modal dialog.");
+   }
++  if (!GetDocument().IsActive() &&
++      RuntimeEnabledFeatures::TopLayerInactiveDocumentExceptionsEnabled()) {
++    return exception_state.ThrowDOMException(
++        DOMExceptionCode::kInvalidStateError,
++        "Invalid for dialogs within documents that are not fully active.");
++  }
++  if (!DispatchToggleEvents(/*opening=*/true, /*asModal=*/true)) {
++    return;
++  }
+ 
+   Document& document = GetDocument();
+   HTMLDialogElement* old_modal_dialog = document.ActiveModalDialog();
+@@ -465,9 +481,56 @@ void HTMLDialogElement::SetFocusForDialog() {
+   doc.TopDocument().FinalizeAutofocus();
+ }
+ 
++// Returns false if beforetoggle was canceled, otherwise true. Queues a toggle
++// event if beforetoggle was not canceled.
++bool HTMLDialogElement::DispatchToggleEvents(bool opening, bool asModal) {
++  if (!RuntimeEnabledFeatures::DialogElementToggleEventsEnabled()) {
++    return true;
++  }
++
++  String old_state = opening ? "closed" : "open";
++  String new_state = opening ? "open" : "closed";
++
++  if (DispatchEvent(*ToggleEvent::Create(
++          event_type_names::kBeforetoggle,
++          opening ? Event::Cancelable::kYes : Event::Cancelable::kNo, old_state,
++          new_state)) != DispatchEventResult::kNotCanceled) {
++    return false;
++  }
++  if (opening) {
++    if (FastHasAttribute(html_names::kOpenAttr)) {
++      return false;
++    }
++    if (asModal &&
++        (!isConnected() || (HasPopoverAttribute() && popoverOpen()))) {
++      return false;
++    }
++  }
++
++  if (pending_toggle_event_) {
++    old_state = pending_toggle_event_->oldState();
++  }
++  pending_toggle_event_ = ToggleEvent::Create(
++      event_type_names::kToggle, Event::Cancelable::kNo, old_state, new_state);
++  pending_toggle_event_task_ = PostCancellableTask(
++      *GetDocument().GetTaskRunner(TaskType::kDOMManipulation), FROM_HERE,
++      WTF::BindOnce(&HTMLDialogElement::DispatchPendingToggleEvent,
++                    WrapPersistent(this)));
++  return true;
++}
++
++void HTMLDialogElement::DispatchPendingToggleEvent() {
++  if (!pending_toggle_event_) {
++    return;
++  }
++  DispatchEvent(*pending_toggle_event_);
++  pending_toggle_event_ = nullptr;
++}
++
+ void HTMLDialogElement::Trace(Visitor* visitor) const {
+   visitor->Trace(previously_focused_element_);
+   visitor->Trace(close_watcher_);
++  visitor->Trace(pending_toggle_event_);
+   HTMLElement::Trace(visitor);
+ }
+ 

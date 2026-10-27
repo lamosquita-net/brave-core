@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/inspector/inspector_dom_agent.cc b/third_party/blink/renderer/core/inspector/inspector_dom_agent.cc
-index 767a6419685ca6657ada88a4af572c20eb98df02..d6914bdcc90978e6d8b43099a847773ca213b30c 100644
+index 767a6419685ca6657ada88a4af572c20eb98df02..dfa32e63f6b8e925a356546f132356fe5437b607 100644
 --- a/third_party/blink/renderer/core/inspector/inspector_dom_agent.cc
 +++ b/third_party/blink/renderer/core/inspector/inspector_dom_agent.cc
 @@ -236,6 +236,20 @@ protocol::DOM::PseudoType InspectorDOMAgent::ProtocolPseudoElementType(
@@ -32,3 +32,12 @@ index 767a6419685ca6657ada88a4af572c20eb98df02..d6914bdcc90978e6d8b43099a847773c
    if (!box || !box->Container()) {
      return protocol::Response::ServerError(
          "The box or the container of the box does not exist");
+@@ -2705,7 +2719,7 @@ protocol::Response InspectorDOMAgent::scrollIntoViewIfNeeded(
+   }
+   scroll_into_view_util::ScrollRectToVisible(
+       *layout_object, rect_to_scroll,
+-      ScrollAlignment::CreateScrollIntoViewParams(
++      scroll_into_view_util::CreateScrollIntoViewParams(
+           ScrollAlignment::CenterIfNeeded(), ScrollAlignment::CenterIfNeeded(),
+           mojom::blink::ScrollType::kProgrammatic,
+           true /* make_visible_in_visual_viewport */,

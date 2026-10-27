@@ -1,0 +1,21 @@
+diff --git a/third_party/blink/renderer/core/html/forms/date_time_chooser_impl.cc b/third_party/blink/renderer/core/html/forms/date_time_chooser_impl.cc
+index 0905ae69297e29a36adda9bbaab6bc06c144e76c..349e0439e62822ebdf41ef020dbe56acc08d37d0 100644
+--- a/third_party/blink/renderer/core/html/forms/date_time_chooser_impl.cc
++++ b/third_party/blink/renderer/core/html/forms/date_time_chooser_impl.cc
+@@ -140,6 +140,16 @@ void DateTimeChooserImpl::WriteDocument(SegmentedBuffer& data) {
+ 
+   data.Append(ChooserResourceLoader::GetPickerCommonStyleSheet());
+   data.Append(ChooserResourceLoader::GetSuggestionPickerStyleSheet());
++
++  const String& disabled_color_style =
++      RuntimeEnabledFeatures::
++              CalendarPickerMonthPopupButtonDisabledColorEnabled()
++          ? ":root { --month-popup-button-disabled-color: rgba(16, 16, 16, "
++            "0.9) }"
++          : ":root { --month-popup-button-disabled-color: rgba(16, 16, 16, "
++            "0.3) }";
++  AddString(disabled_color_style, data);
++
+   data.Append(ChooserResourceLoader::GetCalendarPickerStyleSheet());
+   if (parameters_->type == InputType::Type::kTime ||
+       parameters_->type == InputType::Type::kDateTimeLocal) {

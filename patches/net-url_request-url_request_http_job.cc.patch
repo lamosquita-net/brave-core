@@ -1,0 +1,17 @@
+diff --git a/net/url_request/url_request_http_job.cc b/net/url_request/url_request_http_job.cc
+index 240630765767e673d2e13fa0d95881a9353d0f69..9bb3a0377f37dc654f4d63d788bb58df69974138 100644
+--- a/net/url_request/url_request_http_job.cc
++++ b/net/url_request/url_request_http_job.cc
+@@ -1192,6 +1192,12 @@ void URLRequestHttpJob::ProcessStrictTransportSecurityHeader() {
+   if (request_info_.url.HostIsIPAddress())
+     return;
+ 
++  // Don't accept HSTS headers for localhost. (crbug.com/41251622)
++  if (net::IsLocalHostname(request_info_.url.host()) &&
++      base::FeatureList::IsEnabled(features::kIgnoreHSTSForLocalhost)) {
++    return;
++  }
++
+   // http://tools.ietf.org/html/draft-ietf-websec-strict-transport-sec:
+   //
+   //   If a UA receives more than one STS header field in a HTTP response

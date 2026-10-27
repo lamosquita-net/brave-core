@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/forms/html_text_area_element.cc b/third_party/blink/renderer/core/html/forms/html_text_area_element.cc
-index 369e1d3556cb5ff2238d3812bbef8b744c94feaf..a711bef0f13dce9a07257b1c4b6103a42b809e65 100644
+index 369e1d3556cb5ff2238d3812bbef8b744c94feaf..1e8b09ce7550d018a21d2d1eb6618ecb158d24e4 100644
 --- a/third_party/blink/renderer/core/html/forms/html_text_area_element.cc
 +++ b/third_party/blink/renderer/core/html/forms/html_text_area_element.cc
 @@ -201,16 +201,16 @@ void HTMLTextAreaElement::CollectStyleForPresentationAttribute(
@@ -23,3 +23,24 @@ index 369e1d3556cb5ff2238d3812bbef8b744c94feaf..a711bef0f13dce9a07257b1c4b6103a4
        AddPropertyToPresentationAttributeStyle(
            style, CSSPropertyID::kOverflowWrap, CSSValueID::kNormal);
      }
+@@ -377,13 +377,16 @@ void HTMLTextAreaElement::SubtreeHasChanged() {
+   SetAutofillState(WebAutofillState::kNotFilled);
+   UpdatePlaceholderVisibility();
+ 
++  if (HasDirectionAuto() ||
++      !RuntimeEnabledFeatures::TextInputNotAlwaysDirAutoEnabled()) {
++    // When typing in a textarea, childrenChanged is not called, so we need to
++    // force the directionality check.
++    CalculateAndAdjustAutoDirectionality();
++  }
++
+   if (!IsFocused())
+     return;
+ 
+-  // When typing in a textarea, childrenChanged is not called, so we need to
+-  // force the directionality check.
+-  CalculateAndAdjustAutoDirectionality();
+-
+   DCHECK(GetDocument().IsActive());
+   if (InnerEditorValue().empty()) {
+     GetDocument().GetPage()->GetChromeClient().DidClearValueInTextField(*this);

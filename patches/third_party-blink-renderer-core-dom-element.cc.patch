@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/element.cc b/third_party/blink/renderer/core/dom/element.cc
-index afa9718ce5b9dd841e33d89610d524df1db4e2c9..430a84d37665c475b49b3d19eb85a6e28ce29284 100644
+index afa9718ce5b9dd841e33d89610d524df1db4e2c9..5145d99197690c4c168316da9be56189e8f213b7 100644
 --- a/third_party/blink/renderer/core/dom/element.cc
 +++ b/third_party/blink/renderer/core/dom/element.cc
 @@ -178,6 +178,7 @@
@@ -10,7 +10,38 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..430a84d37665c475b49b3d19eb85a6e2
  #include "third_party/blink/renderer/core/html_element_type_helpers.h"
  #include "third_party/blink/renderer/core/html_names.h"
  #include "third_party/blink/renderer/core/input/event_handler.h"
-@@ -1259,9 +1260,7 @@ Element* Element::anchorElement() const {
+@@ -360,11 +361,9 @@ bool HasLeftwardDirection(const Element& element) {
+     return false;
+   }
+ 
+-  WritingMode writing_mode = style->GetWritingMode();
+-  bool is_rtl = !style->IsLeftToRightDirection();
+-  return (writing_mode == WritingMode::kHorizontalTb && is_rtl) ||
+-         writing_mode == WritingMode::kVerticalRl ||
+-         writing_mode == WritingMode::kSidewaysRl;
++  const auto writing_direction = style->GetWritingDirection();
++  return writing_direction.InlineEnd() == PhysicalDirection::kLeft ||
++         writing_direction.BlockEnd() == PhysicalDirection::kLeft;
+ }
+ 
+ bool HasUpwardDirection(const Element& element) {
+@@ -373,12 +372,9 @@ bool HasUpwardDirection(const Element& element) {
+     return false;
+   }
+ 
+-  WritingMode writing_mode = style->GetWritingMode();
+-  bool is_rtl = !style->IsLeftToRightDirection();
+-  return (is_rtl && (writing_mode == WritingMode::kVerticalRl ||
+-                     writing_mode == WritingMode::kVerticalLr ||
+-                     writing_mode == WritingMode::kSidewaysRl)) ||
+-         (!is_rtl && writing_mode == WritingMode::kSidewaysLr);
++  const auto writing_direction = style->GetWritingDirection();
++  return writing_direction.InlineEnd() == PhysicalDirection::kUp ||
++         writing_direction.BlockEnd() == PhysicalDirection::kUp;
+ }
+ 
+ // TODO(meredithl): Automatically generate this method once the IDL compiler has
+@@ -1259,9 +1255,7 @@ Element* Element::anchorElement() const {
  void Element::setAnchorElement(Element* new_element) {
    CHECK(RuntimeEnabledFeatures::HTMLAnchorAttributeEnabled());
    SetElementAttribute(html_names::kAnchorAttr, new_element);
@@ -21,7 +52,34 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..430a84d37665c475b49b3d19eb85a6e2
  }
  
  inline void Element::SynchronizeAttribute(const QualifiedName& name) const {
-@@ -2773,8 +2772,7 @@ void Element::AttributeChanged(const AttributeModificationParams& params) {
+@@ -1415,8 +1409,8 @@ void Element::scrollIntoViewWithOptions(const ScrollIntoViewOptions* options) {
+   }
+ 
+   mojom::blink::ScrollIntoViewParamsPtr params =
+-      ScrollAlignment::CreateScrollIntoViewParams(*options,
+-                                                  *GetComputedStyle());
++      scroll_into_view_util::CreateScrollIntoViewParams(*options,
++                                                        *GetComputedStyle());
+ 
+   ScrollIntoViewNoVisualUpdate(std::move(params));
+ }
+@@ -1451,13 +1445,13 @@ void Element::scrollIntoViewIfNeeded(bool center_if_needed) {
+   if (center_if_needed) {
+     scroll_into_view_util::ScrollRectToVisible(
+         *GetLayoutObject(), bounds,
+-        ScrollAlignment::CreateScrollIntoViewParams(
++        scroll_into_view_util::CreateScrollIntoViewParams(
+             ScrollAlignment::CenterIfNeeded(),
+             ScrollAlignment::CenterIfNeeded()));
+   } else {
+     scroll_into_view_util::ScrollRectToVisible(
+         *GetLayoutObject(), bounds,
+-        ScrollAlignment::CreateScrollIntoViewParams(
++        scroll_into_view_util::CreateScrollIntoViewParams(
+             ScrollAlignment::ToEdgeIfNeeded(),
+             ScrollAlignment::ToEdgeIfNeeded()));
+   }
+@@ -2773,8 +2767,7 @@ void Element::AttributeChanged(const AttributeModificationParams& params) {
        }
      }
    } else if (params.name == html_names::kAnchorAttr) {
@@ -31,7 +89,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..430a84d37665c475b49b3d19eb85a6e2
        EnsureAnchorElementObserver().Notify();
        return;
      }
-@@ -3459,6 +3457,7 @@ const ComputedStyle* Element::StyleForLayoutObject(
+@@ -3459,6 +3452,7 @@ const ComputedStyle* Element::StyleForLayoutObject(
      // change as the result.
      DCHECK(GetDocument().GetStyleEngine().InContainerQueryStyleRecalc() ||
             GetDocument().GetStyleEngine().InPositionTryStyleRecalc() ||
@@ -39,7 +97,87 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..430a84d37665c475b49b3d19eb85a6e2
             element_animations->CssAnimations().PendingUpdate().IsEmpty());
      element_animations->CssAnimations().ClearPendingUpdate();
    }
-@@ -7441,8 +7440,8 @@ const ComputedStyle* Element::EnsureComputedStyle(
+@@ -4598,6 +4592,27 @@ std::optional<TextDirection> Element::ResolveAutoDirectionality(
+     return BidiParagraph::BaseDirectionForStringOrLtr(text_element->Value());
+   }
+ 
++  auto include_in_traversal = [](Element* element) -> bool {
++    // Skip bdi, script, style and text form controls.
++    if (element->HasTagName(html_names::kBdiTag) ||
++        IsA<HTMLScriptElement>(*element) || IsA<HTMLStyleElement>(*element) ||
++        element->IsTextControl() ||
++        element->ShadowPseudoId() ==
++            shadow_element_names::kPseudoInputPlaceholder) {
++      return false;
++    }
++
++    // Skip elements with valid dir attribute
++    if (element->IsHTMLElement()) {
++      AtomicString dir_attribute_value =
++          element->FastGetAttribute(html_names::kDirAttr);
++      if (HTMLElement::IsValidDirAttribute(dir_attribute_value)) {
++        return false;
++      }
++    }
++    return true;
++  };
++
+   if (const HTMLSlotElement* slot_this =
+           ToHTMLSlotElementIfSupportsAssignmentOrNull(this)) {
+     auto& assigned_nodes = slot_this->AssignedNodes();
+@@ -4613,10 +4628,13 @@ std::optional<TextDirection> Element::ResolveAutoDirectionality(
+           }
+         } else if (Element* slotted_element =
+                        DynamicTo<Element>(slotted_node)) {
+-          std::optional<TextDirection> slotted_child_result =
+-              slotted_element->ResolveAutoDirectionality(is_deferred);
+-          if (slotted_child_result) {
+-            return slotted_child_result;
++          if (include_in_traversal(slotted_element) ||
++              !RuntimeEnabledFeatures::DirAutoFixSlotExclusionsEnabled()) {
++            std::optional<TextDirection> slotted_child_result =
++                slotted_element->ResolveAutoDirectionality(is_deferred);
++            if (slotted_child_result) {
++              return slotted_child_result;
++            }
+           }
+         }
+       }
+@@ -4626,22 +4644,8 @@ std::optional<TextDirection> Element::ResolveAutoDirectionality(
+ 
+   Node* node = NodeTraversal::FirstChild(*this);
+   while (node) {
+-    // Skip bdi, script, style and text form controls.
+-    auto* element = DynamicTo<Element>(node);
+-    if (EqualIgnoringASCIICase(node->nodeName(), "bdi") ||
+-        IsA<HTMLScriptElement>(*node) || IsA<HTMLStyleElement>(*node) ||
+-        (element && element->IsTextControl()) ||
+-        (element && element->ShadowPseudoId() ==
+-                        shadow_element_names::kPseudoInputPlaceholder)) {
+-      node = NodeTraversal::NextSkippingChildren(*node, this);
+-      continue;
+-    }
+-
+-    // Skip elements with valid dir attribute
+-    if (element && element->IsHTMLElement()) {
+-      AtomicString dir_attribute_value =
+-          element->FastGetAttribute(html_names::kDirAttr);
+-      if (HTMLElement::IsValidDirAttribute(dir_attribute_value)) {
++    if (auto* element = DynamicTo<Element>(node)) {
++      if (!include_in_traversal(element)) {
+         node = NodeTraversal::NextSkippingChildren(*node, this);
+         continue;
+       }
+@@ -6406,7 +6410,7 @@ void Element::UpdateSelectionOnFocus(
+   } else if (GetLayoutObject() &&
+              !GetLayoutObject()->IsLayoutEmbeddedContent()) {
+     if (!options->preventScroll()) {
+-      auto params = ScrollAlignment::CreateScrollIntoViewParams();
++      auto params = scroll_into_view_util::CreateScrollIntoViewParams();
+ 
+       // It's common to have menus and list controls that have items slightly
+       // overflowing horizontally but the control isn't horizontally
+@@ -7441,8 +7445,8 @@ const ComputedStyle* Element::EnsureComputedStyle(
    StyleEngine::InEnsureComputedStyleScope ensure_scope(
        GetDocument().GetStyleEngine());
  
@@ -50,7 +188,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..430a84d37665c475b49b3d19eb85a6e2
      return element->EnsureComputedStyle();
    }
  
-@@ -7951,7 +7950,9 @@ PseudoElement* Element::CreatePseudoElementIfNeeded(
+@@ -7951,7 +7955,9 @@ PseudoElement* Element::CreatePseudoElementIfNeeded(
      return nullptr;
    }
  
@@ -61,7 +199,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..430a84d37665c475b49b3d19eb85a6e2
      GetDocument().AddToTopLayer(pseudo_element, this);
    }
  
-@@ -7984,11 +7985,32 @@ PseudoElement* Element::GetPseudoElement(
+@@ -7984,11 +7990,32 @@ PseudoElement* Element::GetPseudoElement(
    return nullptr;
  }
  
@@ -96,7 +234,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..430a84d37665c475b49b3d19eb85a6e2
    }
  
    // The transition pseudos can currently only exist on the document element.
-@@ -8021,7 +8043,8 @@ PseudoElement* Element::GetNestedPseudoElement(
+@@ -8021,7 +8048,8 @@ PseudoElement* Element::GetNestedPseudoElement(
  }
  
  LayoutObject* Element::PseudoElementLayoutObject(PseudoId pseudo_id) const {
@@ -106,7 +244,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..430a84d37665c475b49b3d19eb85a6e2
      return element->GetLayoutObject();
    }
    return nullptr;
-@@ -10146,7 +10169,6 @@ AnchorPositionScrollData* Element::GetAnchorPositionScrollData() const {
+@@ -10146,7 +10174,6 @@ AnchorPositionScrollData* Element::GetAnchorPositionScrollData() const {
  }
  
  void Element::IncrementImplicitlyAnchoredElementCount() {
@@ -114,7 +252,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..430a84d37665c475b49b3d19eb85a6e2
    if (!HasImplicitlyAnchoredElement() && GetLayoutObject()) {
      // Invalidate layout to populate itself into Physical/LogicalAnchorQuery.
      GetLayoutObject()->SetNeedsLayoutAndFullPaintInvalidation(
-@@ -10175,15 +10197,11 @@ AnchorElementObserver* Element::GetAnchorElementObserver() const {
+@@ -10175,15 +10202,11 @@ AnchorElementObserver* Element::GetAnchorElementObserver() const {
  
  AnchorElementObserver& Element::EnsureAnchorElementObserver() {
    DCHECK(IsHTMLElement());
