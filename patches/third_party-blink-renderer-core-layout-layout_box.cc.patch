@@ -1,7 +1,16 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_box.cc b/third_party/blink/renderer/core/layout/layout_box.cc
-index d2ea5eabc04227ec1ace4430604ceaeea097c4e5..adf64e1e40dcd1ee71fcb7744007ad264e967d9b 100644
+index d2ea5eabc04227ec1ace4430604ceaeea097c4e5..7128a2a87ffa407836a1c4662094944f74c44abf 100644
 --- a/third_party/blink/renderer/core/layout/layout_box.cc
 +++ b/third_party/blink/renderer/core/layout/layout_box.cc
+@@ -1516,7 +1516,7 @@ void LayoutBox::Autoscroll(const PhysicalOffset& position_in_root_frame) {
+   PhysicalOffset absolute_position =
+       frame_view->ConvertFromRootFrame(position_in_root_frame);
+   mojom::blink::ScrollIntoViewParamsPtr params =
+-      ScrollAlignment::CreateScrollIntoViewParams(
++      scroll_into_view_util::CreateScrollIntoViewParams(
+           ScrollAlignment::ToEdgeIfNeeded(), ScrollAlignment::ToEdgeIfNeeded(),
+           mojom::blink::ScrollType::kUser);
+   scroll_into_view_util::ScrollRectToVisible(
 @@ -4332,6 +4332,14 @@ const BoxStrut& LayoutBox::OutOfFlowInsetsForGetComputedStyle() const {
    return GetLayoutResults().front()->OutOfFlowInsetsForGetComputedStyle();
  }

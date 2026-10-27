@@ -1,8 +1,19 @@
 diff --git a/third_party/blink/renderer/core/layout/geometry/physical_rect.h b/third_party/blink/renderer/core/layout/geometry/physical_rect.h
-index 25c4e94e223486f6f0214f5aab4c28e42dd04ac7..debf222cb0a56b838efac20d890eb3908671abbc 100644
+index 25c4e94e223486f6f0214f5aab4c28e42dd04ac7..cb75218ac5a5c691ea5dbf8f5f1b697b3f1f89b9 100644
 --- a/third_party/blink/renderer/core/layout/geometry/physical_rect.h
 +++ b/third_party/blink/renderer/core/layout/geometry/physical_rect.h
-@@ -179,10 +179,6 @@ struct CORE_EXPORT PhysicalRect {
+@@ -82,6 +82,10 @@ struct CORE_EXPORT PhysicalRect {
+     return {offset + other, size};
+   }
+ 
++  PhysicalRect operator-(const PhysicalOffset& other) const {
++    return {offset - other, size};
++  }
++
+   // Returns the distance to |target| in horizontal and vertical directions.
+   // Each distance is zero if |this| contains |target| in that direction.
+   PhysicalSize DistanceAsSize(PhysicalOffset target) const;
+@@ -179,10 +183,6 @@ struct CORE_EXPORT PhysicalRect {
    // logical/physical distinctions.
    constexpr explicit PhysicalRect(const DeprecatedLayoutRect& r)
        : offset(r.X(), r.Y()), size(r.Width(), r.Height()) {}

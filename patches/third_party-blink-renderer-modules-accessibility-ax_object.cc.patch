@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/modules/accessibility/ax_object.cc b/third_party/blink/renderer/modules/accessibility/ax_object.cc
-index 297d11909a91baf85c65a27a371b41509580c562..e783bdd907b978d27890e76c347ef23f2a53e82a 100644
+index 297d11909a91baf85c65a27a371b41509580c562..e427fee68c210c238fc647857416c3b36f050e82 100644
 --- a/third_party/blink/renderer/modules/accessibility/ax_object.cc
 +++ b/third_party/blink/renderer/modules/accessibility/ax_object.cc
 @@ -558,6 +558,18 @@ void AddIntListAttributeFromOffsetVector(
@@ -109,3 +109,30 @@ index 297d11909a91baf85c65a27a371b41509580c562..e783bdd907b978d27890e76c347ef23f
  // Try to get an aria-controls for an <input role="combobox">, because it
  // helps identify focusable options in the listbox using activedescendant
  // detection, even though the focus is on the textbox and not on the listbox
+@@ -7328,7 +7398,7 @@ bool AXObject::OnNativeScrollToMakeVisibleAction() const {
+   PhysicalRect target_rect(layout_object->AbsoluteBoundingBoxRect());
+   scroll_into_view_util::ScrollRectToVisible(
+       *layout_object, target_rect,
+-      ScrollAlignment::CreateScrollIntoViewParams(
++      scroll_into_view_util::CreateScrollIntoViewParams(
+           ScrollAlignment::CenterIfNeeded(), ScrollAlignment::CenterIfNeeded(),
+           mojom::blink::ScrollType::kProgrammatic, false,
+           mojom::blink::ScrollBehavior::kAuto));
+@@ -7349,7 +7419,7 @@ bool AXObject::OnNativeScrollToMakeVisibleWithSubFocusAction(
+       layout_object->LocalToAbsoluteRect(PhysicalRect(rect));
+   scroll_into_view_util::ScrollRectToVisible(
+       *layout_object, target_rect,
+-      ScrollAlignment::CreateScrollIntoViewParams(
++      scroll_into_view_util::CreateScrollIntoViewParams(
+           horizontal_scroll_alignment, vertical_scroll_alignment,
+           mojom::blink::ScrollType::kProgrammatic,
+           false /* make_visible_in_visual_viewport */,
+@@ -7369,7 +7439,7 @@ bool AXObject::OnNativeScrollToGlobalPointAction(
+   target_rect.Move(-PhysicalOffset(global_point));
+   scroll_into_view_util::ScrollRectToVisible(
+       *layout_object, target_rect,
+-      ScrollAlignment::CreateScrollIntoViewParams(
++      scroll_into_view_util::CreateScrollIntoViewParams(
+           ScrollAlignment::LeftAlways(), ScrollAlignment::TopAlways(),
+           mojom::blink::ScrollType::kProgrammatic, false,
+           mojom::blink::ScrollBehavior::kAuto));

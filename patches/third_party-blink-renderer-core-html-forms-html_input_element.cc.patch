@@ -1,7 +1,16 @@
 diff --git a/third_party/blink/renderer/core/html/forms/html_input_element.cc b/third_party/blink/renderer/core/html/forms/html_input_element.cc
-index ac38820c42cbab7ceb772f3a40eefc452836314f..42bf1022892770bc224a544970adf87aab4bc84b 100644
+index ac38820c42cbab7ceb772f3a40eefc452836314f..d11fdb6c1eb50835f6dd19a9e841462b1276c655 100644
 --- a/third_party/blink/renderer/core/html/forms/html_input_element.cc
 +++ b/third_party/blink/renderer/core/html/forms/html_input_element.cc
+@@ -346,7 +346,7 @@ void HTMLInputElement::UpdateSelectionOnFocus(
+       if (GetLayoutObject()) {
+         scroll_into_view_util::ScrollRectToVisible(
+             *GetLayoutObject(), BoundingBoxForScrollIntoView(),
+-            ScrollAlignment::CreateScrollIntoViewParams());
++            scroll_into_view_util::CreateScrollIntoViewParams());
+       }
+       if (GetDocument().GetFrame())
+         GetDocument().GetFrame()->Selection().RevealSelection();
 @@ -630,9 +630,13 @@ void HTMLInputElement::UpdateType(const AtomicString& type_attribute_value) {
  
  void HTMLInputElement::SubtreeHasChanged() {

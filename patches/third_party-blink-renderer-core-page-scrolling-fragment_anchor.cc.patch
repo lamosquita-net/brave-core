@@ -1,0 +1,21 @@
+diff --git a/third_party/blink/renderer/core/page/scrolling/fragment_anchor.cc b/third_party/blink/renderer/core/page/scrolling/fragment_anchor.cc
+index 21341a58f7ce1a3fa20dab8e49773eb6ba6ffd2a..b0ab4a7b1fa8400b5f281673d45e3e8e03b8bdd9 100644
+--- a/third_party/blink/renderer/core/page/scrolling/fragment_anchor.cc
++++ b/third_party/blink/renderer/core/page/scrolling/fragment_anchor.cc
+@@ -16,6 +16,7 @@
+ #include "third_party/blink/renderer/core/html/html_document.h"
+ #include "third_party/blink/renderer/core/page/scrolling/element_fragment_anchor.h"
+ #include "third_party/blink/renderer/core/scroll/scroll_alignment.h"
++#include "third_party/blink/renderer/core/scroll/scroll_into_view_util.h"
+ #include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+ 
+ namespace blink {
+@@ -51,7 +52,7 @@ void FragmentAnchor::ScrollElementIntoViewWithOptions(
+   if (element_to_scroll->GetLayoutObject()) {
+     DCHECK(element_to_scroll->GetComputedStyle());
+     mojom::blink::ScrollIntoViewParamsPtr params =
+-        ScrollAlignment::CreateScrollIntoViewParams(
++        scroll_into_view_util::CreateScrollIntoViewParams(
+             *options, *element_to_scroll->GetComputedStyle());
+     params->cross_origin_boundaries = false;
+     element_to_scroll->ScrollIntoViewNoVisualUpdate(std::move(params));
