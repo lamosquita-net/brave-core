@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/element.cc b/third_party/blink/renderer/core/dom/element.cc
-index afa9718ce5b9dd841e33d89610d524df1db4e2c9..430a84d37665c475b49b3d19eb85a6e28ce29284 100644
+index afa9718ce5b9dd841e33d89610d524df1db4e2c9..4b278f5809c199714c4e19f7e05f53685e7bd01c 100644
 --- a/third_party/blink/renderer/core/dom/element.cc
 +++ b/third_party/blink/renderer/core/dom/element.cc
 @@ -178,6 +178,7 @@
@@ -39,7 +39,78 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..430a84d37665c475b49b3d19eb85a6e2
             element_animations->CssAnimations().PendingUpdate().IsEmpty());
      element_animations->CssAnimations().ClearPendingUpdate();
    }
-@@ -7441,8 +7440,8 @@ const ComputedStyle* Element::EnsureComputedStyle(
+@@ -4598,6 +4597,27 @@ std::optional<TextDirection> Element::ResolveAutoDirectionality(
+     return BidiParagraph::BaseDirectionForStringOrLtr(text_element->Value());
+   }
+ 
++  auto include_in_traversal = [](Element* element) -> bool {
++    // Skip bdi, script, style and text form controls.
++    if (element->HasTagName(html_names::kBdiTag) ||
++        IsA<HTMLScriptElement>(*element) || IsA<HTMLStyleElement>(*element) ||
++        element->IsTextControl() ||
++        element->ShadowPseudoId() ==
++            shadow_element_names::kPseudoInputPlaceholder) {
++      return false;
++    }
++
++    // Skip elements with valid dir attribute
++    if (element->IsHTMLElement()) {
++      AtomicString dir_attribute_value =
++          element->FastGetAttribute(html_names::kDirAttr);
++      if (HTMLElement::IsValidDirAttribute(dir_attribute_value)) {
++        return false;
++      }
++    }
++    return true;
++  };
++
+   if (const HTMLSlotElement* slot_this =
+           ToHTMLSlotElementIfSupportsAssignmentOrNull(this)) {
+     auto& assigned_nodes = slot_this->AssignedNodes();
+@@ -4613,10 +4633,13 @@ std::optional<TextDirection> Element::ResolveAutoDirectionality(
+           }
+         } else if (Element* slotted_element =
+                        DynamicTo<Element>(slotted_node)) {
+-          std::optional<TextDirection> slotted_child_result =
+-              slotted_element->ResolveAutoDirectionality(is_deferred);
+-          if (slotted_child_result) {
+-            return slotted_child_result;
++          if (include_in_traversal(slotted_element) ||
++              !RuntimeEnabledFeatures::DirAutoFixSlotExclusionsEnabled()) {
++            std::optional<TextDirection> slotted_child_result =
++                slotted_element->ResolveAutoDirectionality(is_deferred);
++            if (slotted_child_result) {
++              return slotted_child_result;
++            }
+           }
+         }
+       }
+@@ -4626,22 +4649,8 @@ std::optional<TextDirection> Element::ResolveAutoDirectionality(
+ 
+   Node* node = NodeTraversal::FirstChild(*this);
+   while (node) {
+-    // Skip bdi, script, style and text form controls.
+-    auto* element = DynamicTo<Element>(node);
+-    if (EqualIgnoringASCIICase(node->nodeName(), "bdi") ||
+-        IsA<HTMLScriptElement>(*node) || IsA<HTMLStyleElement>(*node) ||
+-        (element && element->IsTextControl()) ||
+-        (element && element->ShadowPseudoId() ==
+-                        shadow_element_names::kPseudoInputPlaceholder)) {
+-      node = NodeTraversal::NextSkippingChildren(*node, this);
+-      continue;
+-    }
+-
+-    // Skip elements with valid dir attribute
+-    if (element && element->IsHTMLElement()) {
+-      AtomicString dir_attribute_value =
+-          element->FastGetAttribute(html_names::kDirAttr);
+-      if (HTMLElement::IsValidDirAttribute(dir_attribute_value)) {
++    if (auto* element = DynamicTo<Element>(node)) {
++      if (!include_in_traversal(element)) {
+         node = NodeTraversal::NextSkippingChildren(*node, this);
+         continue;
+       }
+@@ -7441,8 +7450,8 @@ const ComputedStyle* Element::EnsureComputedStyle(
    StyleEngine::InEnsureComputedStyleScope ensure_scope(
        GetDocument().GetStyleEngine());
  
@@ -50,7 +121,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..430a84d37665c475b49b3d19eb85a6e2
      return element->EnsureComputedStyle();
    }
  
-@@ -7951,7 +7950,9 @@ PseudoElement* Element::CreatePseudoElementIfNeeded(
+@@ -7951,7 +7960,9 @@ PseudoElement* Element::CreatePseudoElementIfNeeded(
      return nullptr;
    }
  
@@ -61,7 +132,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..430a84d37665c475b49b3d19eb85a6e2
      GetDocument().AddToTopLayer(pseudo_element, this);
    }
  
-@@ -7984,11 +7985,32 @@ PseudoElement* Element::GetPseudoElement(
+@@ -7984,11 +7995,32 @@ PseudoElement* Element::GetPseudoElement(
    return nullptr;
  }
  
@@ -96,7 +167,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..430a84d37665c475b49b3d19eb85a6e2
    }
  
    // The transition pseudos can currently only exist on the document element.
-@@ -8021,7 +8043,8 @@ PseudoElement* Element::GetNestedPseudoElement(
+@@ -8021,7 +8053,8 @@ PseudoElement* Element::GetNestedPseudoElement(
  }
  
  LayoutObject* Element::PseudoElementLayoutObject(PseudoId pseudo_id) const {
@@ -106,7 +177,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..430a84d37665c475b49b3d19eb85a6e2
      return element->GetLayoutObject();
    }
    return nullptr;
-@@ -10146,7 +10169,6 @@ AnchorPositionScrollData* Element::GetAnchorPositionScrollData() const {
+@@ -10146,7 +10179,6 @@ AnchorPositionScrollData* Element::GetAnchorPositionScrollData() const {
  }
  
  void Element::IncrementImplicitlyAnchoredElementCount() {
@@ -114,7 +185,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..430a84d37665c475b49b3d19eb85a6e2
    if (!HasImplicitlyAnchoredElement() && GetLayoutObject()) {
      // Invalidate layout to populate itself into Physical/LogicalAnchorQuery.
      GetLayoutObject()->SetNeedsLayoutAndFullPaintInvalidation(
-@@ -10175,15 +10197,11 @@ AnchorElementObserver* Element::GetAnchorElementObserver() const {
+@@ -10175,15 +10207,11 @@ AnchorElementObserver* Element::GetAnchorElementObserver() const {
  
  AnchorElementObserver& Element::EnsureAnchorElementObserver() {
    DCHECK(IsHTMLElement());

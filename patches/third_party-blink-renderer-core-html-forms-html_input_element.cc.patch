@@ -1,0 +1,21 @@
+diff --git a/third_party/blink/renderer/core/html/forms/html_input_element.cc b/third_party/blink/renderer/core/html/forms/html_input_element.cc
+index ac38820c42cbab7ceb772f3a40eefc452836314f..42bf1022892770bc224a544970adf87aab4bc84b 100644
+--- a/third_party/blink/renderer/core/html/forms/html_input_element.cc
++++ b/third_party/blink/renderer/core/html/forms/html_input_element.cc
+@@ -630,9 +630,13 @@ void HTMLInputElement::UpdateType(const AtomicString& type_attribute_value) {
+ 
+ void HTMLInputElement::SubtreeHasChanged() {
+   input_type_view_->SubtreeHasChanged();
+-  // When typing in an input field, childrenChanged is not called, so we need to
+-  // force the directionality check.
+-  CalculateAndAdjustAutoDirectionality();
++
++  if (HasDirectionAuto() ||
++      !RuntimeEnabledFeatures::TextInputNotAlwaysDirAutoEnabled()) {
++    // When typing in an input field, childrenChanged is not called, so we
++    // need to force the directionality check.
++    CalculateAndAdjustAutoDirectionality();
++  }
+ }
+ 
+ FormControlType HTMLInputElement::FormControlType() const {
