@@ -1,8 +1,30 @@
 diff --git a/third_party/blink/renderer/platform/scheduler/main_thread/main_thread_scheduler_impl.cc b/third_party/blink/renderer/platform/scheduler/main_thread/main_thread_scheduler_impl.cc
-index 290bfd86eca092b3869246e083fa6d4e84e7244a..95c56bb83da4add35561bfc3b1079b92b69b76cc 100644
+index 290bfd86eca092b3869246e083fa6d4e84e7244a..ad9e1e10d66d5ca6c9d643d1e00572a52fcb7f64 100644
 --- a/third_party/blink/renderer/platform/scheduler/main_thread/main_thread_scheduler_impl.cc
 +++ b/third_party/blink/renderer/platform/scheduler/main_thread/main_thread_scheduler_impl.cc
-@@ -298,11 +298,16 @@ MainThreadSchedulerImpl::MainThreadSchedulerImpl(
+@@ -93,21 +93,6 @@ constexpr base::TimeDelta kDefaultPrioritizeCompositingAfterDelay =
+ constexpr base::TimeDelta kRenderBlockingStarvationThreshold =
+     base::Milliseconds(500);
+ 
+-v8::RAILMode RAILModeToV8RAILMode(RAILMode rail_mode) {
+-  switch (rail_mode) {
+-    case RAILMode::kResponse:
+-      return v8::RAILMode::PERFORMANCE_RESPONSE;
+-    case RAILMode::kAnimation:
+-      return v8::RAILMode::PERFORMANCE_ANIMATION;
+-    case RAILMode::kIdle:
+-      return v8::RAILMode::PERFORMANCE_IDLE;
+-    case RAILMode::kLoad:
+-      return v8::RAILMode::PERFORMANCE_LOAD;
+-    default:
+-      NOTREACHED_IN_MIGRATION();
+-  }
+-}
+-
+ void AddRAILModeToProto(perfetto::protos::pbzero::TrackEvent* event,
+                         RAILMode mode) {
+   perfetto::protos::pbzero::ChromeRAILMode proto_mode;
+@@ -298,11 +283,16 @@ MainThreadSchedulerImpl::MainThreadSchedulerImpl(
  
    v8_task_queue_ = NewTaskQueue(MainThreadTaskQueue::QueueCreationParams(
        MainThreadTaskQueue::QueueType::kV8));
@@ -21,7 +43,7 @@ index 290bfd86eca092b3869246e083fa6d4e84e7244a..95c56bb83da4add35561bfc3b1079b92
    non_waking_task_queue_ =
        NewTaskQueue(MainThreadTaskQueue::QueueCreationParams(
                         MainThreadTaskQueue::QueueType::kNonWaking)
-@@ -310,8 +315,10 @@ MainThreadSchedulerImpl::MainThreadSchedulerImpl(
+@@ -310,8 +300,10 @@ MainThreadSchedulerImpl::MainThreadSchedulerImpl(
  
    v8_task_runner_ =
        v8_task_queue_->CreateTaskRunner(TaskType::kMainThreadTaskQueueV8);
@@ -34,7 +56,25 @@ index 290bfd86eca092b3869246e083fa6d4e84e7244a..95c56bb83da4add35561bfc3b1079b92
    control_task_runner_ = helper_.ControlMainThreadTaskQueue()->CreateTaskRunner(
        TaskType::kMainThreadTaskQueueControl);
    non_waking_task_runner_ = non_waking_task_queue_->CreateTaskRunner(
-@@ -2033,8 +2040,13 @@ MainThreadSchedulerImpl::V8TaskRunner() {
+@@ -1510,7 +1502,7 @@ void MainThreadSchedulerImpl::UpdatePolicyLocked(UpdateType update_type) {
+   main_thread_only().rail_mode_for_tracing = new_policy.rail_mode;
+   if (new_policy.rail_mode != main_thread_only().current_policy.rail_mode) {
+     if (isolate()) {
+-      isolate()->SetRAILMode(RAILModeToV8RAILMode(new_policy.rail_mode));
++      isolate()->SetIsLoading(new_policy.rail_mode == RAILMode::kLoad);
+     }
+     for (auto& observer : main_thread_only().rail_mode_observers) {
+       observer.OnRAILModeChanged(new_policy.rail_mode);
+@@ -1927,7 +1919,7 @@ void MainThreadSchedulerImpl::DidCommitProvisionalLoad(
+       new_rail_mode = main_thread_only().current_policy.rail_mode;
+     }
+     if (old_rail_mode == new_rail_mode && isolate())
+-      isolate()->UpdateLoadStartTime();
++      isolate()->SetIsLoading(true);
+   }
+ }
+ 
+@@ -2033,8 +2025,13 @@ MainThreadSchedulerImpl::V8TaskRunner() {
  }
  
  scoped_refptr<base::SingleThreadTaskRunner>

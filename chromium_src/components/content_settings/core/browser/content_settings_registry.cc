@@ -324,7 +324,8 @@ void ContentSettingsRegistry::BraveInit() {
   // FlyWeb: V8 JIT is allowed by default since FlyWeb 1.6 (HUMAN, 07-10-2026):
   // without it, heavy web apps (the WordPress editor) are too slow, and
   // jitless only neutralizes 4 of the 25 exploited bugs triaged for FlyWeb.
-  // Maglev stays off and exploited V8 bugs are backported by SEGURIDAD.
+  // Maglev is on since level 132 (regla 19) and exploited V8 bugs are
+  // backported by SEGURIDAD.
   // Sites can still be blocked per site (JavaScriptJitBlockedForSites policy
   // or site settings), and DefaultJavaScriptJitSetting = 2 turns JIT off
   // everywhere again without a rebuild.
