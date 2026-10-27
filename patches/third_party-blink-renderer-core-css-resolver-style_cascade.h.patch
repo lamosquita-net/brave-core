@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_cascade.h b/third_party/blink/renderer/core/css/resolver/style_cascade.h
-index 70c1f2d42681719cd3632b4c4bf4857869048f97..dcd036eb03fafe4628cc7d5fc58ee0aebdd7bd5d 100644
+index 70c1f2d42681719cd3632b4c4bf4857869048f97..dd004567793ec53f4c9c42b5a9d453b44201996b 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_cascade.h
 +++ b/third_party/blink/renderer/core/css/resolver/style_cascade.h
-@@ -70,7 +70,6 @@ class CORE_EXPORT StyleCascade {
+@@ -25,6 +25,7 @@
+ #include "third_party/blink/renderer/core/frame/web_feature_forward.h"
+ #include "third_party/blink/renderer/platform/heap/collection_support/heap_hash_map.h"
+ #include "third_party/blink/renderer/platform/heap/member.h"
++#include "third_party/blink/renderer/platform/text/writing_direction_mode.h"
+ #include "third_party/blink/renderer/platform/wtf/allocator/allocator.h"
+ #include "third_party/blink/renderer/platform/wtf/text/text_encoding.h"
+ #include "third_party/blink/renderer/platform/wtf/vector.h"
+@@ -70,7 +71,6 @@ class CORE_EXPORT StyleCascade {
  
    using CSSPendingSubstitutionValue = cssvalue::CSSPendingSubstitutionValue;
    using CSSFlipRevertValue = cssvalue::CSSFlipRevertValue;
@@ -10,7 +18,7 @@ index 70c1f2d42681719cd3632b4c4bf4857869048f97..dcd036eb03fafe4628cc7d5fc58ee0ae
  
   public:
    StyleCascade(StyleResolverState& state) : state_(state) {}
-@@ -505,21 +504,6 @@ class CORE_EXPORT StyleCascade {
+@@ -505,21 +505,6 @@ class CORE_EXPORT StyleCascade {
    void MaybeUseCountRevert(const CSSValue&);
    void MaybeUseCountSummaryDisplayBlock();
  
@@ -32,8 +40,22 @@ index 70c1f2d42681719cd3632b4c4bf4857869048f97..dcd036eb03fafe4628cc7d5fc58ee0ae
    StyleResolverState& state_;
    MatchResult match_result_;
    CascadeInterpolations interpolations_;
-@@ -571,26 +555,6 @@ class CORE_EXPORT StyleCascade {
+@@ -569,28 +554,20 @@ class CORE_EXPORT StyleCascade {
+   // computed value of the property affects how e.g. margin-inline-start
+   // (and other css-logical properties) cascade.
    bool depends_on_cascade_affecting_property_ = false;
++  // The writing-mode and direction that was used during cascade expansion,
++  // i.e. during the previous call to AnalyzeMatchResult.
++  //
++  // We should be able to grab this directly from the StyleBuilder whenever
++  // we need it, but since StyleAdjuster can "quietly" change the writing-mode
++  // and direction between Apply calls, we need to store this separately
++  // to ensure that there is no mismatch between various calls to Apply.
++  //
++  // TODO(crbug.com/40527196): Don't modify writing-mode/direction during
++  // style adjustment.
++  WritingDirectionMode writing_direction_{WritingMode::kHorizontalTb,
++                                          TextDirection::kLtr};
    // See comment in StyleCascade::AddExplicitDefaults (.cc file).
    bool effective_zoom_changed_ = false;
 -  // If true, invisible rules will be added to the cascade, setting

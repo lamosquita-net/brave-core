@@ -1,0 +1,17 @@
+diff --git a/third_party/blink/renderer/core/html/forms/slider_thumb_element.cc b/third_party/blink/renderer/core/html/forms/slider_thumb_element.cc
+index 00025a95fd4fb1a5c57e56c60a3f064f593ac06a..1d6214e460de86ba3d8e9e513376522ed698d153 100644
+--- a/third_party/blink/renderer/core/html/forms/slider_thumb_element.cc
++++ b/third_party/blink/renderer/core/html/forms/slider_thumb_element.cc
+@@ -424,7 +424,11 @@ bool SliderContainerElement::CanSlide() {
+       }
+     }
+   }
+-  bool is_horizontal = GetComputedStyle()->IsHorizontalWritingMode();
++  const ComputedStyle* container_style = GetComputedStyle();
++  if (!container_style) {
++    return false;
++  }
++  bool is_horizontal = container_style->IsHorizontalWritingMode();
+   if ((sliding_direction_ == Direction::kVertical && is_horizontal) ||
+       (sliding_direction_ == Direction::kHorizontal && !is_horizontal)) {
+     return false;
