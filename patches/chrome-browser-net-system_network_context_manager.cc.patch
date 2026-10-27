@@ -1,8 +1,35 @@
 diff --git a/chrome/browser/net/system_network_context_manager.cc b/chrome/browser/net/system_network_context_manager.cc
-index e9569c4d7176e315fd9431f8f2187e715acf490e..67c15b074a3e8b7bfcdc31efa18285788d6c115b 100644
+index e9569c4d7176e315fd9431f8f2187e715acf490e..833fde05bcc0b7d9497b6e66eb689dae03755f7c 100644
 --- a/chrome/browser/net/system_network_context_manager.cc
 +++ b/chrome/browser/net/system_network_context_manager.cc
-@@ -400,7 +400,7 @@ class SystemNetworkContextManager::URLLoaderFactoryForSystem
+@@ -296,6 +296,18 @@ NetworkSandboxState IsNetworkSandboxEnabledInternal() {
+              : NetworkSandboxState::kDisabledByPlatform;
+ }
+ 
++network::mojom::CTLogInfo::LogType GetCTLogType(
++    certificate_transparency::LogType log_type) {
++  switch (log_type) {
++    case certificate_transparency::LogType::kUnspecified:
++      return network::mojom::CTLogInfo::LogType::kUnspecified;
++    case certificate_transparency::LogType::kRFC6962:
++      return network::mojom::CTLogInfo::LogType::kRFC6962;
++    case certificate_transparency::LogType::kStaticCTAPI:
++      return network::mojom::CTLogInfo::LogType::kStaticCTAPI;
++  }
++}
++
+ std::vector<network::mojom::CTLogInfoPtr> GetStaticCtLogListMojo() {
+   std::vector<std::pair<std::string, base::Time>> disqualified_logs =
+       certificate_transparency::GetDisqualifiedLogs();
+@@ -305,6 +317,7 @@ std::vector<network::mojom::CTLogInfoPtr> GetStaticCtLogListMojo() {
+     log_info->public_key = std::string(ct_log.log_key, ct_log.log_key_length);
+     log_info->id = crypto::SHA256HashString(log_info->public_key);
+     log_info->name = ct_log.log_name;
++    log_info->log_type = GetCTLogType(ct_log.log_type);
+     log_info->current_operator = ct_log.current_operator;
+ 
+     auto it = std::lower_bound(
+@@ -400,7 +413,7 @@ class SystemNetworkContextManager::URLLoaderFactoryForSystem
      if (!manager_)
        return;
      manager_->GetURLLoaderFactory()->CreateLoaderAndStart(
