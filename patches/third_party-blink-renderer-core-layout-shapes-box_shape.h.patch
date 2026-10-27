@@ -1,0 +1,27 @@
+diff --git a/third_party/blink/renderer/core/layout/shapes/box_shape.h b/third_party/blink/renderer/core/layout/shapes/box_shape.h
+index 65e61837b15a9d28ba10cecfab05fd7d7311cd7b..9c488c253972cbc2c9837810f5fef53485e428e2 100644
+--- a/third_party/blink/renderer/core/layout/shapes/box_shape.h
++++ b/third_party/blink/renderer/core/layout/shapes/box_shape.h
+@@ -35,8 +35,11 @@
+ 
+ namespace blink {
+ 
++class WritingModeConverter;
++
+ class BoxShape final : public Shape {
+  public:
++  // `bounds` is a logical rounded rectangle.
+   BoxShape(const FloatRoundedRect& bounds) : Shape(), bounds_(bounds) {}
+ 
+   LogicalRect ShapeMarginLogicalBoundingBox() const override;
+@@ -45,6 +48,10 @@ class BoxShape final : public Shape {
+                                   LayoutUnit logical_height) const override;
+   void BuildDisplayPaths(DisplayPaths&) const override;
+ 
++  [[nodiscard]] static FloatRoundedRect ToLogical(
++      const FloatRoundedRect& rect,
++      const WritingModeConverter& converter);
++
+  private:
+   FloatRoundedRect ShapeMarginBounds() const;
+ 
