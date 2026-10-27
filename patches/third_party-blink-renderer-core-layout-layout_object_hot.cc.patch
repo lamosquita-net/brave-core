@@ -1,0 +1,20 @@
+diff --git a/third_party/blink/renderer/core/layout/layout_object_hot.cc b/third_party/blink/renderer/core/layout/layout_object_hot.cc
+index babc8b14cfdfbc58eff42adaf6ef8a5547734ba3..6be6c33250e0613a19beb12add25b0d5a6c0e79a 100644
+--- a/third_party/blink/renderer/core/layout/layout_object_hot.cc
++++ b/third_party/blink/renderer/core/layout/layout_object_hot.cc
+@@ -153,12 +153,14 @@ void LayoutObject::PropagateStyleToAnonymousChildren() {
+             StyleRef(), child->StyleRef().Display());
+ 
+     if (UNLIKELY(IsA<LayoutTextCombine>(child))) {
+-      if (blink::IsHorizontalWritingMode(new_style_builder.GetWritingMode())) {
++      if (!LayoutTextCombine::IsSupportedMode(
++              new_style_builder.GetWritingMode())) {
+         // |LayoutTextCombine| will be removed when recalculating style for
+         // <br> or <wbr>.
+         // See StyleToHorizontalWritingModeWithWordBreak
+         DCHECK(child->SlowFirstChild()->IsBR() ||
+                To<LayoutText>(child->SlowFirstChild())->IsWordBreak() ||
++               !child->SlowFirstChild()->GetNode() ||
+                child->SlowFirstChild()->GetNode()->NeedsReattachLayoutTree());
+       } else {
+         // "text-combine-width-after-style-change.html" reaches here.

@@ -1,8 +1,17 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_object.cc b/third_party/blink/renderer/core/layout/layout_object.cc
-index 81ae68736127bf3885e16810b5d34da6bc377070..a3c50d0d0da003348a53bee63cce73c9ae6ea79b 100644
+index 81ae68736127bf3885e16810b5d34da6bc377070..f596fc30e6d7e63aa669981dffad22395fc6a5c5 100644
 --- a/third_party/blink/renderer/core/layout/layout_object.cc
 +++ b/third_party/blink/renderer/core/layout/layout_object.cc
-@@ -709,7 +709,7 @@ void LayoutObject::AddChild(LayoutObject* new_child,
+@@ -702,14 +702,15 @@ void LayoutObject::AddChild(LayoutObject* new_child,
+       children->InsertChildNode(this, table, before_child);
+     }
+     table->AddChild(new_child);
+-  } else if (LIKELY(new_child->IsHorizontalWritingMode()) ||
++  } else if (LIKELY(!LayoutTextCombine::IsSupportedMode(
++                 new_child->StyleRef().GetWritingMode())) ||
+              !new_child->IsText()) {
+     children->InsertChildNode(this, new_child, before_child);
+   } else if (IsA<LayoutTextCombine>(*this)) {
      DCHECK(LayoutTextCombine::ShouldBeParentOf(*new_child)) << new_child;
      new_child->SetStyle(Style());
      children->InsertChildNode(this, new_child, before_child);
@@ -11,7 +20,7 @@ index 81ae68736127bf3885e16810b5d34da6bc377070..a3c50d0d0da003348a53bee63cce73c9
               LayoutTextCombine::ShouldBeParentOf(*new_child)) {
      if (before_child) {
        if (IsA<LayoutTextCombine>(before_child)) {
-@@ -1357,13 +1357,13 @@ static inline bool ObjectIsRelayoutBoundary(const LayoutObject* object) {
+@@ -1357,13 +1358,13 @@ static inline bool ObjectIsRelayoutBoundary(const LayoutObject* object) {
  
    // OOF-positioned objects which rely on their static-position for placement
    // cannot be relayout boundaries (their final position would be incorrect).
@@ -30,7 +39,7 @@ index 81ae68736127bf3885e16810b5d34da6bc377070..a3c50d0d0da003348a53bee63cce73c9
      return false;
    }
  
-@@ -1648,7 +1648,11 @@ void LayoutObject::MarkParentForSpannerOrOutOfFlowPositionedChange() {
+@@ -1648,7 +1649,11 @@ void LayoutObject::MarkParentForSpannerOrOutOfFlowPositionedChange() {
    //
    // Note that this isn't necessary if we're dealing with a column spanner here,
    // but in order to keep things simple, we'll make no difference.
@@ -43,7 +52,7 @@ index 81ae68736127bf3885e16810b5d34da6bc377070..a3c50d0d0da003348a53bee63cce73c9
  
    const LayoutBlock* containing_block = ContainingBlock();
    while (object != containing_block) {
-@@ -2544,13 +2548,19 @@ const ComputedStyle& LayoutObject::SlowEffectiveStyle(
+@@ -2544,13 +2549,19 @@ const ComputedStyle& LayoutObject::SlowEffectiveStyle(
        if (IsInline() && IsAtomicInlineLevel())
          return StyleRef();
        return FirstLineStyleRef();
