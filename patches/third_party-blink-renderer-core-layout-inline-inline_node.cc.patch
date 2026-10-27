@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/inline/inline_node.cc b/third_party/blink/renderer/core/layout/inline/inline_node.cc
-index a849f3808e91b562bc2ec5694f81c936ddddf078..b7fe8452141b8292a5016919f56f9746cf31213b 100644
+index a849f3808e91b562bc2ec5694f81c936ddddf078..bbaaf35c8ccf70d0b9159a8f1b4d6cbcdd1ba7fd 100644
 --- a/third_party/blink/renderer/core/layout/inline/inline_node.cc
 +++ b/third_party/blink/renderer/core/layout/inline/inline_node.cc
 @@ -192,8 +192,8 @@ class ReusingTextShaper final {
@@ -39,3 +39,23 @@ index a849f3808e91b562bc2ec5694f81c936ddddf078..b7fe8452141b8292a5016919f56f9746
        if (shape_result->IsAppliedSpacing())
          continue;
        shape_results.push_back(shape_result);
+@@ -1169,7 +1173,7 @@ void InlineNode::SegmentScriptRuns(InlineNodeData* data,
+         data->segments = nullptr;
+         return;
+       }
+-    } else if (GetLayoutBlockFlow()->IsHorizontalWritingMode()) {
++    } else if (IsHorizontalTypographicMode()) {
+       // We can reuse InlineNodeData::segments only in horizontal writing modes
+       // because we might update it by SegmentFontOrientation() in vertical
+       // writing modes.
+@@ -1215,8 +1219,9 @@ void InlineNode::SegmentScriptRuns(InlineNodeData* data,
+ void InlineNode::SegmentFontOrientation(InlineNodeData* data) const {
+   // Segment by orientation, only if vertical writing mode and items with
+   // 'text-orientation: mixed'.
+-  if (GetLayoutBlockFlow()->IsHorizontalWritingMode())
++  if (IsHorizontalTypographicMode()) {
+     return;
++  }
+ 
+   HeapVector<InlineItem>& items = data->items;
+   if (items.empty())

@@ -1,7 +1,16 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_object.cc b/third_party/blink/renderer/core/layout/layout_object.cc
-index 81ae68736127bf3885e16810b5d34da6bc377070..95fa5842b94af8c6c9b8112b343abfe4407af776 100644
+index 81ae68736127bf3885e16810b5d34da6bc377070..a3c50d0d0da003348a53bee63cce73c9ae6ea79b 100644
 --- a/third_party/blink/renderer/core/layout/layout_object.cc
 +++ b/third_party/blink/renderer/core/layout/layout_object.cc
+@@ -709,7 +709,7 @@ void LayoutObject::AddChild(LayoutObject* new_child,
+     DCHECK(LayoutTextCombine::ShouldBeParentOf(*new_child)) << new_child;
+     new_child->SetStyle(Style());
+     children->InsertChildNode(this, new_child, before_child);
+-  } else if (!IsHorizontalTypographicMode(StyleRef().GetWritingMode()) &&
++  } else if (!IsHorizontalTypographicMode() &&
+              LayoutTextCombine::ShouldBeParentOf(*new_child)) {
+     if (before_child) {
+       if (IsA<LayoutTextCombine>(before_child)) {
 @@ -1357,13 +1357,13 @@ static inline bool ObjectIsRelayoutBoundary(const LayoutObject* object) {
  
    // OOF-positioned objects which rely on their static-position for placement

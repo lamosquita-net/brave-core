@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/paint/paint_layer_scrollable_area.cc b/third_party/blink/renderer/core/paint/paint_layer_scrollable_area.cc
-index 36c88cbc723f10319605754148ab89e7ce7476fb..d20df839299c248a9b98636d52e2742a3953ed5c 100644
+index 36c88cbc723f10319605754148ab89e7ce7476fb..63aa8c28528153fcfbf4f3e5130f0f96f026ada9 100644
 --- a/third_party/blink/renderer/core/paint/paint_layer_scrollable_area.cc
 +++ b/third_party/blink/renderer/core/paint/paint_layer_scrollable_area.cc
 @@ -108,6 +108,7 @@
@@ -10,7 +10,18 @@ index 36c88cbc723f10319605754148ab89e7ce7476fb..d20df839299c248a9b98636d52e2742a
  #include "third_party/blink/renderer/core/scroll/scrollable_area.h"
  #include "third_party/blink/renderer/core/scroll/scrollbar_theme.h"
  #include "third_party/blink/renderer/core/scroll/smooth_scroll_sequencer.h"
-@@ -2386,6 +2387,19 @@ void PaintLayerScrollableArea::Resize(const gfx::Point& pos,
+@@ -237,9 +238,7 @@ void PaintLayerScrollableArea::ApplyPendingHistoryRestoreScrollOffset() {
+   // TODO(pnoland): attempt to restore the anchor in more places than this.
+   // Anchor-based restore should allow for earlier restoration.
+   bool did_restore = RestoreScrollAnchor(
+-      {pending_view_state_->scroll_anchor_data_.selector_,
+-       LayoutPoint(pending_view_state_->scroll_anchor_data_.offset_),
+-       pending_view_state_->scroll_anchor_data_.simhash_});
++      {pending_view_state_->scroll_anchor_data_, *this});
+   if (!did_restore) {
+     SetScrollOffset(pending_view_state_->scroll_offset_,
+                     mojom::blink::ScrollType::kProgrammatic,
+@@ -2386,6 +2385,19 @@ void PaintLayerScrollableArea::Resize(const gfx::Point& pos,
    // keep the point under the cursor in view.
  }
  
@@ -30,7 +41,7 @@ index 36c88cbc723f10319605754148ab89e7ce7476fb..d20df839299c248a9b98636d52e2742a
  PhysicalRect PaintLayerScrollableArea::ScrollIntoView(
      const PhysicalRect& absolute_rect,
      const PhysicalBoxStrut& scroll_margin,
-@@ -2400,22 +2414,9 @@ PhysicalRect PaintLayerScrollableArea::ScrollIntoView(
+@@ -2400,22 +2412,9 @@ PhysicalRect PaintLayerScrollableArea::ScrollIntoView(
  
    PhysicalRect local_expose_rect =
        GetLayoutBox()->AbsoluteToLocalRect(absolute_rect, flag);
@@ -56,7 +67,7 @@ index 36c88cbc723f10319605754148ab89e7ce7476fb..d20df839299c248a9b98636d52e2742a
    ScrollOffset new_scroll_offset(
        ClampScrollOffset(gfx::ToRoundedVector2d(target_offset)));
  
-@@ -2449,7 +2450,6 @@ PhysicalRect PaintLayerScrollableArea::ScrollIntoView(
+@@ -2449,7 +2448,6 @@ PhysicalRect PaintLayerScrollableArea::ScrollIntoView(
      SetScrollOffset(new_scroll_offset, params->type,
                      mojom::blink::ScrollBehavior::kInstant);
    }
@@ -64,7 +75,7 @@ index 36c88cbc723f10319605754148ab89e7ce7476fb..d20df839299c248a9b98636d52e2742a
    ScrollOffset scroll_offset_difference = new_scroll_offset - old_scroll_offset;
    // The container hasn't performed the scroll yet if it's for scroll sequence.
    // To calculate the result from the scroll, we move the |local_expose_rect| to
-@@ -2458,8 +2458,8 @@ PhysicalRect PaintLayerScrollableArea::ScrollIntoView(
+@@ -2458,8 +2456,8 @@ PhysicalRect PaintLayerScrollableArea::ScrollIntoView(
        -PhysicalOffset::FromVector2dFRound(scroll_offset_difference));
  
    // Represent the rects in the container's border-box coordinate.
