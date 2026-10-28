@@ -1,16 +1,7 @@
 diff --git a/third_party/blink/renderer/platform/runtime_enabled_features.json5 b/third_party/blink/renderer/platform/runtime_enabled_features.json5
-index 75e44e6b7cdd95c1e39b3759939ec1146232f255..a78f329aae30f647aa610b6abe91924b3c7c70f9 100644
+index 75e44e6b7cdd95c1e39b3759939ec1146232f255..cffa643901636bab73e38db31bbda4cdd6a472e6 100644
 --- a/third_party/blink/renderer/platform/runtime_enabled_features.json5
 +++ b/third_party/blink/renderer/platform/runtime_enabled_features.json5
-@@ -326,7 +326,7 @@
-     },
-     {
-       name: "AnimationProgressAPI",
--      status: "test",
-+      status: "stable",
-     },
-     {
-       name: "AnimationWorklet",
 @@ -480,6 +480,13 @@
          "default": "test",
        },
@@ -661,7 +652,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..a78f329aae30f647aa610b6abe91924b
      // Killswitch. Remove after M126 or M127 stable.
      {
        name: "ScrollNodeForOverflowHidden",
-@@ -3636,6 +3841,14 @@
+@@ -3636,6 +3841,22 @@
        name: "SelectionAcrossShadowDOM",
        status: "experimental",
      },
@@ -673,10 +664,18 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..a78f329aae30f647aa610b6abe91924b
 +      name: "SelectionIsCollapsedShadowDOMSupport",
 +      status: "stable",
 +    },
++    {
++      // Update HandleMousePressEvent to continue handling event, even after a
++      // focus slided from shadow host with delegatesFocus.
++      // See https://crbug.com/40622041
++      // This feature was shipped in M133, so this flag can be removed in M135.
++      name: "SelectionOnShadowDOMWithDelegatesFocus",
++      status: "stable",
++    },
      {
        // Maintain author-defined ::selection highlight colors, even if they
        // match the text color.
-@@ -3679,6 +3892,7 @@
+@@ -3679,6 +3900,7 @@
      {
        name: "Serial",
        status: {"Android": "", "default": "stable"},
@@ -684,7 +683,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..a78f329aae30f647aa610b6abe91924b
      },
      {
        name: "SerializeViewTransitionStateInSPA",
-@@ -3764,7 +3978,7 @@
+@@ -3764,7 +3986,7 @@
      {
        // crbug.com/40501131
        name: "SidewaysWritingModes",
@@ -693,7 +692,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..a78f329aae30f647aa610b6abe91924b
      },
      {
        name: "SignatureBasedIntegrity",
-@@ -3907,6 +4121,10 @@
+@@ -3907,6 +4129,10 @@
        name: "StorageBucketsLocks",
        status: "experimental",
      },
@@ -704,7 +703,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..a78f329aae30f647aa610b6abe91924b
      {
        name: "StrictMimeTypesForWorkers",
        status: "experimental",
-@@ -3935,6 +4153,12 @@
+@@ -3935,6 +4161,12 @@
        name: "SvgCrossOriginAttribute",
        status: "stable",
      },
@@ -717,7 +716,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..a78f329aae30f647aa610b6abe91924b
      {
        name: "SvgFilterUserSpaceViewportForNonSvg",
        status: "stable",
-@@ -4051,10 +4275,21 @@
+@@ -4051,10 +4283,21 @@
        name: "TextFragmentTapOpensContextMenu",
        status: {"Android": "stable"},
      },
@@ -739,7 +738,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..a78f329aae30f647aa610b6abe91924b
      {
        // New implementation of text-size-adjust that applies during style rather
        // than via the text autosizer. This also includes changes such as
-@@ -4094,6 +4329,13 @@
+@@ -4094,6 +4337,13 @@
        public: true,
        status: "stable",
      },
@@ -753,7 +752,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..a78f329aae30f647aa610b6abe91924b
      {
        name: "TopLevelTpcd",
        origin_trial_feature_name: "TopLevelTpcd",
-@@ -4143,6 +4385,10 @@
+@@ -4143,6 +4393,10 @@
        status: "experimental",
        base_feature: "none",
      },
@@ -764,7 +763,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..a78f329aae30f647aa610b6abe91924b
      // This is conditionally set if the platform supports translation.
      {
        name: "TranslateService",
-@@ -4255,6 +4501,13 @@
+@@ -4255,6 +4509,13 @@
        base_feature: "none",
        public: true,
      },
@@ -778,7 +777,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..a78f329aae30f647aa610b6abe91924b
      {
        name: "UseUndoStepElementDispatchBeforeInput",
        status: "stable",
-@@ -4264,6 +4517,11 @@
+@@ -4264,6 +4525,11 @@
        base_feature: "none",
        public: true,
      },
@@ -790,7 +789,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..a78f329aae30f647aa610b6abe91924b
      {
        // Whether a video element should automatically play fullscreen unless
        // 'playsinline' is set.
-@@ -4420,8 +4678,7 @@
+@@ -4420,8 +4686,7 @@
      {
        name: "WebAssemblyJSStringBuiltins",
        origin_trial_feature_name: "WebAssemblyJSStringBuiltins",
@@ -800,7 +799,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..a78f329aae30f647aa610b6abe91924b
      },
      // WebAuth is disabled on Android versions prior to N (7.0) due to lack of
      // supporting APIs, see runtime_features.cc.
-@@ -4435,12 +4692,14 @@
+@@ -4435,12 +4700,14 @@
        name: "WebAuthAuthenticatorAttachment",
        status: "test",
      },
@@ -816,7 +815,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..a78f329aae30f647aa610b6abe91924b
      },
      {
        name: "WebAuthenticationLargeBlobExtension",
-@@ -4506,6 +4765,10 @@
+@@ -4506,6 +4773,10 @@
      },
      {
        name: "WebCryptoCurve25519",

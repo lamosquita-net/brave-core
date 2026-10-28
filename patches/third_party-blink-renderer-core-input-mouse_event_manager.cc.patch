@@ -1,0 +1,16 @@
+diff --git a/third_party/blink/renderer/core/input/mouse_event_manager.cc b/third_party/blink/renderer/core/input/mouse_event_manager.cc
+index 9573b1da5de91486fdff8b95d47a47c9c943b372..978f8b93558819e5ccfceaee879e5dec86784eba 100644
+--- a/third_party/blink/renderer/core/input/mouse_event_manager.cc
++++ b/third_party/blink/renderer/core/input/mouse_event_manager.cc
+@@ -560,7 +560,10 @@ WebInputEventResult MouseEventManager::HandleMouseFocus(
+   // default behavior).
+   if (element && !element->IsFocusable() &&
+       SlideFocusOnShadowHostIfNecessary(*element)) {
+-    return WebInputEventResult::kHandledSystem;
++    return RuntimeEnabledFeatures::
++                   SelectionOnShadowDOMWithDelegatesFocusEnabled()
++               ? WebInputEventResult::kNotHandled
++               : WebInputEventResult::kHandledSystem;
+   }
+ 
+   // We call setFocusedElement even with !element in order to blur
