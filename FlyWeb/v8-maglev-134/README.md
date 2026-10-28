@@ -44,5 +44,13 @@ and the 4 untagged-phi fixes (e91f547823, a54bf5cd45, 473f721634, c1e78b455e).
 ## Tests
 
 On a clean 13.3 `d8` with `--maglev`, the upstream regression tests of 495751197, 523884658, 536945254 and 547819997
-fail (two of them crash); 413419840, 447658917, 550360762, 559932543 and 574660146 pass. Results with this series on
-13.4: row FS.34 of `docs/TAREAS.md` in softmac.
+fail (two of them crash); 413419840, 447658917, 550360762, 559932543 and 574660146 pass.
+
+With this series, cloud `d8` (Linux x64, `dcheck_always_on`, no Intl), 28-10-2026:
+- **13.4.114.21:** the 9 regression tests pass with `--maglev` (574660146 with its own `--no-maglev`); mjsunit
+  **7556/7560** and, with `--extra-flags=--maglev`, `mjsunit/maglev/*` + `mjsunit/compiler/*` **1255/1258**. The failures
+  are FlyWeb's own regression tests of fixes that live in `patches/v8`, not in a clean 13.4 (regress-420636529 and
+  regress-430344952 are two of the 13.2-LTS-only fixes, flyweb-groupby-oom and regress-crbug-506689381): expected
+  until the series sits on the level 134 `patches/v8`.
+- **13.3.415.23** (same fixes on MOTOR-27's level 133 `patches/v8`): mjsunit 7464/7465 (the usual
+  `maglev/extras-cped`, which asserts Maglev code) and 1213/1213 with `--maglev`.
