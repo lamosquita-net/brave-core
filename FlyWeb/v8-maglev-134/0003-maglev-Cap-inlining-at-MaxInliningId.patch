@@ -1,0 +1,44 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Wed, 28 Oct 2026 09:19:20 +0000
+Subject: [PATCH 03/20] [maglev] Cap inlining at MaxInliningId
+
+Port of v8 f22ca7b61a (M138 99209d9542; crbug 430572435). In 13.3 the check goes in ShouldInlineCall. FlyWeb Maglev debt for level 134.
+
+(cherry picked from commit 535d86c3777be92f677b710be1c1d098fc342eca)
+(cherry picked from commit ca482c00d8249535f60e8e6107468a16dbf2ed0f)
+---
+ src/codegen/source-position.h      | 2 ++
+ src/maglev/maglev-graph-builder.cc | 6 ++++++
+ 2 files changed, 8 insertions(+)
+
+diff --git a/src/codegen/source-position.h b/src/codegen/source-position.h
+index 27938ad6..3e7a65d6 100644
+--- a/src/codegen/source-position.h
++++ b/src/codegen/source-position.h
+@@ -116,6 +116,8 @@ class SourcePosition final {
+     value_ = InliningIdField::update(value_, inlining_id + 1);
+   }
+ 
++  static constexpr int MaxInliningId() { return InliningIdField::kMax; }
++
+   static const int kNotInlined = -1;
+   static_assert(kNoSourcePosition == -1);
+ 
+diff --git a/src/maglev/maglev-graph-builder.cc b/src/maglev/maglev-graph-builder.cc
+index e77b43f4..f0ec3134 100644
+--- a/src/maglev/maglev-graph-builder.cc
++++ b/src/maglev/maglev-graph-builder.cc
+@@ -7933,6 +7933,12 @@ ReduceResult MaglevGraphBuilder::BuildInlined(ValueNode* context,
+ bool MaglevGraphBuilder::ShouldInlineCall(
+     compiler::SharedFunctionInfoRef shared,
+     compiler::OptionalFeedbackVectorRef feedback_vector, float call_frequency) {
++  if (static_cast<int>(graph()->inlined_functions().size()) >=
++      SourcePosition::MaxInliningId()) {
++    compilation_unit_->info()->set_could_not_inline_all_candidates();
++    TRACE_CANNOT_INLINE("maximum inlining ids");
++    return false;
++  }
+   if (graph()->total_inlined_bytecode_size() >
+       v8_flags.max_maglev_inlined_bytecode_size_cumulative) {
+     compilation_unit_->info()->set_could_not_inline_all_candidates();

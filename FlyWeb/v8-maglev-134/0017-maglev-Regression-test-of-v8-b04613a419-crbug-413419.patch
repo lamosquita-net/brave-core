@@ -1,0 +1,36 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Wed, 28 Oct 2026 10:51:54 +0000
+Subject: [PATCH 17/20] [maglev] Regression test of v8 b04613a419 (crbug
+ 413419840)
+
+13.4's NodeType lattice combines by OR and has no empty type, so the fix (IsEmptyNodeType) has nothing to apply to; its test passes on 13.3 and is kept to check 13.4.
+---
+ test/mjsunit/maglev/regress-413419840.js | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+ create mode 100644 test/mjsunit/maglev/regress-413419840.js
+
+diff --git a/test/mjsunit/maglev/regress-413419840.js b/test/mjsunit/maglev/regress-413419840.js
+new file mode 100644
+index 00000000..a6b1dfd3
+--- /dev/null
++++ b/test/mjsunit/maglev/regress-413419840.js
+@@ -0,0 +1,18 @@
++// Copyright 2025 the V8 project authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++// Flags: --maglev --no-lazy-feedback-allocation --allow-natives-syntax
++
++%PrepareFunctionForOptimization(%GetFunctionForCurrentFrame());
++
++for (let v1 = 0; v1 < 5; v1++) {
++  function f2() {
++    return f2;
++  }
++  const v3 = f2.constructor;
++  const v4 = new v3();
++  v4.b = v3;
++  f2.constructor = 2327;
++  const v5 = %OptimizeOsr();
++}

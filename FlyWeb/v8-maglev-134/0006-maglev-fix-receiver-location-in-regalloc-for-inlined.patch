@@ -1,0 +1,154 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Wed, 28 Oct 2026 09:21:36 +0000
+Subject: [PATCH 06/20] [maglev] fix receiver location in regalloc for inlined
+ functions
+
+Port of v8 10f09c4018 (M142 96975bd638; crbug 447658917), with its mjsunit test. FlyWeb Maglev debt for level 134.
+
+(cherry picked from commit de29b119a74c4db17cee410df198985336a74ec8)
+(cherry picked from commit 33bed90ef868be8fd331865757f92718dd138437)
+---
+ src/maglev/maglev-basic-block.h              |  1 +
+ src/maglev/maglev-interpreter-frame-state.cc |  3 +-
+ src/maglev/maglev-interpreter-frame-state.h  |  3 ++
+ src/maglev/maglev-regalloc.cc                | 10 ++--
+ test/mjsunit/maglev/regress-447658917.js     | 55 ++++++++++++++++++++
+ 5 files changed, 66 insertions(+), 6 deletions(-)
+ create mode 100644 test/mjsunit/maglev/regress-447658917.js
+
+diff --git a/src/maglev/maglev-basic-block.h b/src/maglev/maglev-basic-block.h
+index d7c647f5..c6662be8 100644
+--- a/src/maglev/maglev-basic-block.h
++++ b/src/maglev/maglev-basic-block.h
+@@ -196,6 +196,7 @@ class BasicBlock {
+   bool is_exception_handler_block() const {
+     return has_state() && state_->is_exception_handler();
+   }
++  bool is_inline() const { return has_state() && state_->is_inline(); }
+ 
+   Snapshot snapshot() const {
+     DCHECK(snapshot_.has_value());
+diff --git a/src/maglev/maglev-interpreter-frame-state.cc b/src/maglev/maglev-interpreter-frame-state.cc
+index 2c9d8d44..64946da7 100644
+--- a/src/maglev/maglev-interpreter-frame-state.cc
++++ b/src/maglev/maglev-interpreter-frame-state.cc
+@@ -473,7 +473,8 @@ MergePointInterpreterFrameState::MergePointInterpreterFrameState(
+     : merge_offset_(merge_offset),
+       predecessor_count_(predecessor_count),
+       predecessors_so_far_(predecessors_so_far),
+-      bitfield_(kBasicBlockTypeBits::encode(type)),
++      bitfield_(kBasicBlockTypeBits::encode(type) |
++                kIsInline::encode(info.is_inline())),
+       predecessors_(predecessors),
+       frame_state_(info, liveness),
+       per_predecessor_alternatives_(
+diff --git a/src/maglev/maglev-interpreter-frame-state.h b/src/maglev/maglev-interpreter-frame-state.h
+index 894368e9..a0bd890a 100644
+--- a/src/maglev/maglev-interpreter-frame-state.h
++++ b/src/maglev/maglev-interpreter-frame-state.h
+@@ -939,6 +939,8 @@ class MergePointInterpreterFrameState {
+            basic_block_type() == BasicBlockType::kUnusedExceptionHandlerStart;
+   }
+ 
++  bool is_inline() const { return kIsInline::decode(bitfield_); }
++
+   bool is_unmerged_loop() const {
+     // If this is a loop and not all predecessors are set, then the loop isn't
+     // merged yet.
+@@ -990,6 +992,7 @@ class MergePointInterpreterFrameState {
+   using kBasicBlockTypeBits = base::BitField<BasicBlockType, 0, 2>;
+   using kIsResumableLoopBit = kBasicBlockTypeBits::Next<bool, 1>;
+   using kIsLoopWithPeeledIterationBit = kIsResumableLoopBit::Next<bool, 1>;
++  using kIsInline = kIsLoopWithPeeledIterationBit::Next<bool, 1>;
+ 
+   // For each non-Phi value in the frame state, store its alternative
+   // representations to avoid re-converting on Phi creation.
+diff --git a/src/maglev/maglev-regalloc.cc b/src/maglev/maglev-regalloc.cc
+index 4d926bb8..fb3b3f17 100644
+--- a/src/maglev/maglev-regalloc.cc
++++ b/src/maglev/maglev-regalloc.cc
+@@ -478,17 +478,17 @@ void StraightForwardRegisterAllocator::AllocateRegisters() {
+               }
+             }
+           } else if (phi->owner().is_parameter() &&
+-                     phi->owner().is_receiver()) {
++                     phi->owner().is_receiver() && !block->is_inline()) {
+             // The receiver is a special case for a fairly silly reason:
+             // OptimizedJSFrame::Summarize requires the receiver (and the
+             // function) to be in a stack slot, since its value must be
+             // available even though we're not deoptimizing (and thus register
+             // states are not available).
+             //
+-            // TODO(leszeks):
+-            // For inlined functions / nested graph generation, this a) doesn't
+-            // work (there's no receiver stack slot); and b) isn't necessary
+-            // (Summarize only looks at noninlined functions).
++            // Note that this is skipped for inlined functions / nested graph
++            // generation, since this a) wouldn't work (there's no receiver
++            // stack slot); and b) isn't necessary (Summarize only looks at
++            // noninlined functions).
+             phi->Spill(compiler::AllocatedOperand(
+                 compiler::AllocatedOperand::STACK_SLOT,
+                 MachineRepresentation::kTagged,
+diff --git a/test/mjsunit/maglev/regress-447658917.js b/test/mjsunit/maglev/regress-447658917.js
+new file mode 100644
+index 00000000..41fb30e2
+--- /dev/null
++++ b/test/mjsunit/maglev/regress-447658917.js
+@@ -0,0 +1,55 @@
++// Copyright 2025 the V8 project authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++// Flags: --allow-natives-syntax
++
++(function () {
++  const handler = {
++    get: function () {
++      return __dummy;
++    }
++  };
++  __dummy = new Proxy(function () {
++  }, handler);
++  Object.freeze(__dummy);
++})();
++
++function __wrapTC() {
++  return __dummy;
++}
++
++
++let caught = 0;
++
++class C1 {
++  constructor(x) {
++    return x;
++  }
++}
++class C2 extends C1 {
++  field = (() => {})();
++  constructor(x) {
++    try {
++      super(x);
++    } catch (e) {
++    }
++  }
++}
++function foo() {
++  let x = __wrapTC();
++  new C2(x);
++  try {
++    this.test();
++  } catch (e) {
++    return 42;
++  }
++}
++
++%PrepareFunctionForOptimization(foo);
++%PrepareFunctionForOptimization(C2);
++assertEquals(42, foo());
++assertEquals(42, foo());
++
++%OptimizeMaglevOnNextCall(foo);
++assertEquals(42, foo());

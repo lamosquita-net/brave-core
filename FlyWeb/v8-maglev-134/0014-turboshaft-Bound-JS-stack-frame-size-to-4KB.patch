@@ -1,0 +1,239 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Wed, 28 Oct 2026 10:50:56 +0000
+Subject: [PATCH 14/20] [turboshaft] Bound JS stack frame size to 4KB
+
+Port of v8 ea2f03dfff (M156 18321f161f; crbug 574660146), with its mjsunit test: optimized JS frames over 4 KB abort with kFunctionTooBig instead of growing the stack past a guard page before the entry stack check. 13.3 has two register allocation paths (Turboshaft's in pipelines.h and TurboFan's PipelineImpl), so both get the check and now report failure to their callers. Not a Maglev change: it applies to the current TurboFan too.
+
+(cherry picked from commit b5e7c1782ef0d5306e78d82fb719249c43a64a23)
+(cherry picked from commit 62e4890d73b6e85569f2fec07a3deaa6cf3f5775)
+---
+ src/compiler/pipeline.cc                     | 31 ++++++++++++---
+ src/compiler/turboshaft/pipelines.cc         |  6 ++-
+ src/compiler/turboshaft/pipelines.h          | 28 +++++++++++--
+ test/mjsunit/turboshaft/regress-574660146.js | 41 ++++++++++++++++++++
+ 4 files changed, 94 insertions(+), 12 deletions(-)
+ create mode 100644 test/mjsunit/turboshaft/regress-574660146.js
+
+diff --git a/src/compiler/pipeline.cc b/src/compiler/pipeline.cc
+index 7adde146..72bd468a 100644
+--- a/src/compiler/pipeline.cc
++++ b/src/compiler/pipeline.cc
+@@ -202,8 +202,9 @@ class PipelineImpl final {
+ 
+   void VerifyGeneratedCodeIsIdempotent();
+   void RunPrintAndVerify(const char* phase, bool untyped = false);
+-  void AllocateRegisters(const RegisterConfiguration* config,
+-                         CallDescriptor* call_descriptor, bool run_verifier);
++  [[nodiscard]] bool AllocateRegisters(const RegisterConfiguration* config,
++                                       CallDescriptor* call_descriptor,
++                                       bool run_verifier);
+ 
+   TFPipelineData* data() const { return data_; }
+   OptimizedCompilationInfo* info() const;
+@@ -505,7 +506,10 @@ TurbofanPipelineStatistics* CreatePipelineStatistics(
+   // We can release the graph now.
+   turboshaft_data->ClearGraphComponent();
+ 
+-  turboshaft_pipeline.AllocateRegisters(linkage->GetIncomingDescriptor());
++  if (!turboshaft_pipeline.AllocateRegisters(
++          linkage->GetIncomingDescriptor())) {
++    return false;
++  }
+   turboshaft_pipeline.AssembleCode(linkage);
+   return true;
+ }
+@@ -3553,7 +3557,7 @@ void Pipeline::AllocateRegistersForTesting(const RegisterConfiguration* config,
+ 
+   // TODO(nicohartmann): Should migrate this to turboshaft::Pipeline eventually.
+   PipelineImpl pipeline(&data);
+-  pipeline.AllocateRegisters(config, nullptr, run_verifier);
++  CHECK(pipeline.AllocateRegisters(config, nullptr, run_verifier));
+ }
+ 
+ void PipelineImpl::ComputeScheduledGraph() {
+@@ -3590,7 +3594,7 @@ bool PipelineImpl::AllocateRegisters(CallDescriptor* call_descriptor,
+         RegisterConfiguration::RestrictGeneralRegisters(registers));
+     config = restricted_config.get();
+   }
+-  AllocateRegisters(config, call_descriptor, run_verifier);
++  if (!AllocateRegisters(config, call_descriptor, run_verifier)) return false;
+ 
+   // Verify the instruction sequence has the same hash in two stages.
+   VerifyGeneratedCodeIsIdempotent();
+@@ -3752,7 +3756,7 @@ void TraceSequence(OptimizedCompilationInfo* info, TFPipelineData* data,
+ 
+ }  // namespace
+ 
+-void PipelineImpl::AllocateRegisters(const RegisterConfiguration* config,
++bool PipelineImpl::AllocateRegisters(const RegisterConfiguration* config,
+                                      CallDescriptor* call_descriptor,
+                                      bool run_verifier) {
+   TFPipelineData* data = this->data_;
+@@ -3805,6 +3809,20 @@ void PipelineImpl::AllocateRegisters(const RegisterConfiguration* config,
+ 
+   Run<DecideSpillingModePhase>();
+   Run<AssignSpillSlotsPhase>();
++
++  // The prologue grows the frame with a single stack pointer decrement,
++  // before the function entry stack check runs. A frame no larger than the
++  // smallest OS page cannot step over a guard page, so bail out rather than
++  // emit an unchecked stack pointer jump of arbitrary size (FlyWeb: port of
++  // v8 ea2f03dfff, crbug 574660146).
++  constexpr int kMaxStackSlots = 4 * KB / kSystemPointerSize;
++  if (info()->IsOptimizing() &&
++      data->frame()->GetTotalFrameSlotCount() > kMaxStackSlots) {
++    info()->AbortOptimization(BailoutReason::kFunctionTooBig);
++    data->DeleteRegisterAllocationZone();
++    return false;
++  }
++
+   Run<CommitAssignmentPhase>();
+ 
+   // TODO(chromium:725559): remove this check once
+@@ -3838,6 +3856,7 @@ void PipelineImpl::AllocateRegisters(const RegisterConfiguration* config,
+   }
+ 
+   data->DeleteRegisterAllocationZone();
++  return true;
+ }
+ 
+ OptimizedCompilationInfo* PipelineImpl::info() const { return data_->info(); }
+diff --git a/src/compiler/turboshaft/pipelines.cc b/src/compiler/turboshaft/pipelines.cc
+index 6317640f..fb48949f 100644
+--- a/src/compiler/turboshaft/pipelines.cc
++++ b/src/compiler/turboshaft/pipelines.cc
+@@ -29,7 +29,7 @@ void SimplificationAndNormalizationPhase::Run(PipelineData* data,
+   // Perform instruction selection and register allocation.
+   PrepareForInstructionSelection(profile);
+   CHECK(SelectInstructions(linkage));
+-  CHECK(AllocateRegisters(linkage->GetIncomingDescriptor()));
++  if (!AllocateRegisters(linkage->GetIncomingDescriptor())) return false;
+   AssembleCode(linkage);
+ 
+   if (v8_flags.turbo_profiling) {
+@@ -46,7 +46,9 @@ void SimplificationAndNormalizationPhase::Run(PipelineData* data,
+     if (!SelectInstructions(linkage)) {
+       return false;
+     }
+-    AllocateRegisters(linkage->GetIncomingDescriptor());
++    if (!AllocateRegisters(linkage->GetIncomingDescriptor())) {
++      return false;
++    }
+     // Generate the final machine code.
+     AssembleCode(linkage);
+   }
+diff --git a/src/compiler/turboshaft/pipelines.h b/src/compiler/turboshaft/pipelines.h
+index fbf1f39e..e526582e 100644
+--- a/src/compiler/turboshaft/pipelines.h
++++ b/src/compiler/turboshaft/pipelines.h
+@@ -355,7 +355,9 @@ class Pipeline {
+           RegisterConfiguration::RestrictGeneralRegisters(registers));
+       config = restricted_config.get();
+     }
+-    AllocateRegisters(config, call_descriptor, run_verifier);
++    if (!AllocateRegisters(config, call_descriptor, run_verifier)) {
++      return false;
++    }
+ 
+     // Verify the instruction sequence has the same hash in two stages.
+     VerifyGeneratedCodeIsIdempotent();
+@@ -403,8 +405,9 @@ class Pipeline {
+     }
+   }
+ 
+-  void AllocateRegisters(const RegisterConfiguration* config,
+-                         CallDescriptor* call_descriptor, bool run_verifier) {
++  [[nodiscard]] bool AllocateRegisters(const RegisterConfiguration* config,
++                                       CallDescriptor* call_descriptor,
++                                       bool run_verifier) {
+     // Don't track usage for this zone in compiler stats.
+     std::unique_ptr<Zone> verifier_zone;
+     RegisterAllocatorVerifier* verifier = nullptr;
+@@ -456,6 +459,20 @@ class Pipeline {
+ 
+     Run<DecideSpillingModePhase>();
+     Run<AssignSpillSlotsPhase>();
++
++    // The prologue grows the frame with a single stack pointer decrement,
++    // before the function entry stack check runs. A frame no larger than the
++    // smallest OS page cannot step over a guard page, so bail out rather than
++    // emit an unchecked stack pointer jump of arbitrary size (FlyWeb: port of
++    // v8 ea2f03dfff, crbug 574660146).
++    constexpr int kMaxStackSlots = 4 * KB / kSystemPointerSize;
++    if (data_->info()->IsOptimizing() &&
++        data_->frame()->GetTotalFrameSlotCount() > kMaxStackSlots) {
++      data_->info()->AbortOptimization(BailoutReason::kFunctionTooBig);
++      data()->ClearRegisterComponent();
++      return false;
++    }
++
+     Run<CommitAssignmentPhase>();
+ 
+     // TODO(chromium:725559): remove this check once
+@@ -489,6 +506,7 @@ class Pipeline {
+     }
+ 
+     data()->ClearRegisterComponent();
++    return true;
+   }
+ 
+   void AssembleCode(Linkage* linkage) {
+@@ -518,7 +536,9 @@ class Pipeline {
+     if (!SelectInstructions(&linkage)) {
+       return MaybeHandle<Code>();
+     }
+-    AllocateRegisters(linkage.GetIncomingDescriptor());
++    if (!AllocateRegisters(linkage.GetIncomingDescriptor())) {
++      return MaybeHandle<Code>();
++    }
+     AssembleCode(&linkage);
+     return FinalizeCode();
+   }
+diff --git a/test/mjsunit/turboshaft/regress-574660146.js b/test/mjsunit/turboshaft/regress-574660146.js
+new file mode 100644
+index 00000000..bc82a268
+--- /dev/null
++++ b/test/mjsunit/turboshaft/regress-574660146.js
+@@ -0,0 +1,41 @@
++// Copyright 2026 the V8 project authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++// Flags: --allow-natives-syntax --turbofan --no-maglev
++
++function cb() {
++  return arguments.length;
++}
++%NeverOptimizeFunction(cb);
++
++// Passing `kArgCount` distinct expressions to a non-inlined call keeps all of
++// them live simultaneously at the call site, requiring > 1024 stack slots
++// (> 4KB on both 32-bit and 64-bit targets) while keeping the bytecode small
++// enough to be compiled.
++const kArgCount = 1100;
++const args = Array.from({length: kArgCount}, (_, k) => `p ^ ${k + 1}`);
++
++function buildWideFrame(osr) {
++  return Function('x', 'cb', 'p', `
++    let result = 0;
++    for (let i = 0; i < 10; ++i) {
++      ${osr ? 'if (i === 5) %OptimizeOsr();' : ''}
++      if (x < 0) return cb(${args});
++      result = (x + i) | 0;
++    }
++    return result;
++  `);
++}
++
++const wide = buildWideFrame(false);
++%PrepareFunctionForOptimization(wide);
++assertEquals(kArgCount, wide(-1, cb, 1));
++assertEquals(10, wide(1, cb, 1));
++%OptimizeFunctionOnNextCall(wide);
++assertEquals(10, wide(1, cb, 1));
++
++const wideOsr = buildWideFrame(true);
++%PrepareFunctionForOptimization(wideOsr);
++assertEquals(kArgCount, wideOsr(-1, cb, 1));
++assertEquals(10, wideOsr(1, cb, 1));

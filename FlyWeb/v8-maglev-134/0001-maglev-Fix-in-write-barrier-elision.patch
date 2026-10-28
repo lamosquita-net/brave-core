@@ -1,0 +1,26 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Olivier=20Fl=C3=BCckiger?= <olivf@chromium.org>
+Date: Tue, 11 Mar 2025 14:31:13 +0100
+Subject: [PATCH 01/20] [maglev] Fix in write barrier elision
+
+Port of v8 9315baa436 (M135 a0f977f182; crbug 400944465). FlyWeb Maglev debt for level 134.
+
+(cherry picked from commit 44106e84d09f535a6ca7937113ba8d1f11a32b7a)
+(cherry picked from commit 16ad5206a6110b5c4696957cb1ddd2be07a8ca38)
+---
+ src/maglev/maglev-graph-builder.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/maglev/maglev-graph-builder.cc b/src/maglev/maglev-graph-builder.cc
+index 1535afca..e77b43f4 100644
+--- a/src/maglev/maglev-graph-builder.cc
++++ b/src/maglev/maglev-graph-builder.cc
+@@ -4960,7 +4960,7 @@ bool MaglevGraphBuilder::CanElideWriteBarrier(ValueNode* object,
+   // No need for a write barrier if both object and value are part of the same
+   // folded young allocation.
+   AllocationBlock* allocation = GetAllocation(object);
+-  if (allocation != nullptr &&
++  if (allocation != nullptr && current_allocation_block_ == allocation &&
+       allocation->allocation_type() == AllocationType::kYoung &&
+       allocation == GetAllocation(value)) {
+     return true;

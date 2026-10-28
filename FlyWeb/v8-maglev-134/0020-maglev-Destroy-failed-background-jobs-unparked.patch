@@ -1,0 +1,26 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Wed, 28 Oct 2026 11:22:05 +0000
+Subject: [PATCH 20/20] [maglev] Destroy failed background jobs unparked
+
+13.4's dispatcher dropped a job whose ExecuteJob failed while the local heap was parked (it unregisters strong roots); the compile-time bail-outs of this series can fail in the background (concurrent OSR). Upstream destroys it in an UnparkedScope.
+---
+ src/maglev/maglev-concurrent-dispatcher.cc | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/maglev/maglev-concurrent-dispatcher.cc b/src/maglev/maglev-concurrent-dispatcher.cc
+index f5c6051d..e8873bd5 100644
+--- a/src/maglev/maglev-concurrent-dispatcher.cc
++++ b/src/maglev/maglev-concurrent-dispatcher.cc
+@@ -289,6 +289,11 @@ class MaglevConcurrentDispatcher::JobTask final : public v8::JobTask {
+         if (status == CompilationJob::SUCCEEDED) {
+           outgoing_queue()->Enqueue(std::move(job));
+           isolate()->stack_guard()->RequestInstallMaglevCode();
++        } else {
++          // FlyWeb: as upstream (v8 d6a92ca485's tree): a failed job owns
++          // persistent handles and strong roots, so it is destroyed unparked.
++          UnparkedScope unparked_scope(&local_isolate);
++          job.reset();
+         }
+       } else if (destruction_queue()->Dequeue(&job)) {
+         // Maglev jobs aren't cheap to destruct, so destroy them here in the

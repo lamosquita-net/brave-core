@@ -1,0 +1,53 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Wed, 28 Oct 2026 09:20:02 +0000
+Subject: [PATCH 04/20] [maglev] Abort compilation if input node is too big
+
+Port of v8 618d1a0290 (M140 645f3356d3; crbug 444048019). 13.3 cannot abort graph building (24ae3662bf is not ported), so MaglevCompiler::Compile bails out before it when parameters + registers + GeneratorStore's fixed inputs exceed Node::kMaxInputs. FlyWeb Maglev debt for level 134.
+
+(cherry picked from commit fcffcfc2366ff8b2a71f410da5981d121cd0b270)
+(cherry picked from commit 8bc92adfcfabe5cdbf7cf8b0f3f6fd8c743ac0f1)
+---
+ src/maglev/maglev-compiler.cc | 12 ++++++++++++
+ src/maglev/maglev-ir.h        |  3 ++-
+ 2 files changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/src/maglev/maglev-compiler.cc b/src/maglev/maglev-compiler.cc
+index b28e5fab..38e29607 100644
+--- a/src/maglev/maglev-compiler.cc
++++ b/src/maglev/maglev-compiler.cc
+@@ -97,6 +97,18 @@ bool MaglevCompiler::Compile(LocalIsolate* local_isolate,
+       }
+     }
+ 
++    // FlyWeb: port of v8 618d1a0290 (crbug 444048019). 13.3's graph builder
++    // cannot abort, so bail out before building when a SuspendGenerator could
++    // need more inputs than a node can hold (generators are never inlined).
++    {
++      MaglevCompilationUnit* unit = compilation_info->toplevel_compilation_unit();
++      if (unit->parameter_count() + unit->register_count() +
++              GeneratorStore::kFixedInputCount >
++          Node::kMaxInputs) {
++        return false;
++      }
++    }
++
+     MaglevGraphBuilder graph_builder(
+         local_isolate, compilation_info->toplevel_compilation_unit(), graph);
+ 
+diff --git a/src/maglev/maglev-ir.h b/src/maglev/maglev-ir.h
+index c43fa4da..22f61262 100644
+--- a/src/maglev/maglev-ir.h
++++ b/src/maglev/maglev-ir.h
+@@ -1794,9 +1794,10 @@ class NodeBase : public ZoneObject {
+   template <class T, int size>
+   using NextBitField = ReservedField::Next<T, size>;
+ 
++ public:
++  // FlyWeb: public, as upstream made it with v8 24ae3662bf.
+   static constexpr int kMaxInputs = InputCountField::kMax;
+ 
+- public:
+   template <class T>
+   static constexpr Opcode opcode_of = detail::opcode_of_helper<T>::value;
+ 

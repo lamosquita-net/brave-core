@@ -1,0 +1,72 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Wed, 28 Oct 2026 10:52:40 +0000
+Subject: [PATCH 18/20] [maglev] Add a flag for allocation folding
+
+Port of v8 f7bf2ff1fa (M135 beff10e3f6; crbug 400944465): maglev_allocation_folding 1 by default closes the allocation block after each inlined allocation, disabling 13.4's folding across allocation sites (2, with --maglev-future), as upstream did with 9315baa436. FlyWeb Maglev debt for level 134.
+---
+ src/flags/flag-definitions.h       |  2 ++
+ src/maglev/maglev-graph-builder.cc | 14 +++++++++++++-
+ src/maglev/maglev-graph-builder.h  |  2 ++
+ 3 files changed, 17 insertions(+), 1 deletion(-)
+
+diff --git a/src/flags/flag-definitions.h b/src/flags/flag-definitions.h
+index 2fa08475..339c91be 100644
+--- a/src/flags/flag-definitions.h
++++ b/src/flags/flag-definitions.h
+@@ -1345,6 +1345,8 @@ DEFINE_NEG_VALUE_IMPLICATION(use_osr, maglev_osr, false)
+ DEFINE_NEG_VALUE_IMPLICATION(turbofan, osr_from_maglev, false)
+ DEFINE_BOOL(concurrent_osr, true, "enable concurrent OSR")
+ 
++DEFINE_INT(maglev_allocation_folding, 1, "maglev allocation folding level")
++DEFINE_WEAK_VALUE_IMPLICATION(maglev_future, maglev_allocation_folding, 2)
+ DEFINE_BOOL(maglev_escape_analysis, true,
+             "avoid inlined allocation of objects that cannot escape")
+ DEFINE_BOOL(trace_maglev_escape_analysis, false, "trace maglev escape analysis")
+diff --git a/src/maglev/maglev-graph-builder.cc b/src/maglev/maglev-graph-builder.cc
+index 8fc14cd3..8d0221a8 100644
+--- a/src/maglev/maglev-graph-builder.cc
++++ b/src/maglev/maglev-graph-builder.cc
+@@ -12398,7 +12398,7 @@ VirtualObject* MaglevGraphBuilder::CreateJSStringIterator(compiler::MapRef map,
+ InlinedAllocation* MaglevGraphBuilder::ExtendOrReallocateCurrentAllocationBlock(
+     AllocationType allocation_type, VirtualObject* vobject) {
+   DCHECK_LE(vobject->size(), kMaxRegularHeapObjectSize);
+-  if (!current_allocation_block_ ||
++  if (!current_allocation_block_ || v8_flags.maglev_allocation_folding == 0 ||
+       current_allocation_block_->allocation_type() != allocation_type ||
+       !v8_flags.inline_new ||
+       compilation_unit()->info()->for_turboshaft_frontend()) {
+@@ -12487,8 +12487,20 @@ ValueNode* MaglevGraphBuilder::BuildInlinedAllocationForDoubleFixedArray(
+   return allocation;
+ }
+ 
++// FlyWeb: port of v8 f7bf2ff1fa (crbug 400944465): folding level 1 (the
++// default, as upstream) closes the allocation block after each inlined
++// allocation; level 2 is 13.4's folding across allocation sites.
+ ValueNode* MaglevGraphBuilder::BuildInlinedAllocation(
+     VirtualObject* vobject, AllocationType allocation_type) {
++  ValueNode* allocation = BuildInlinedAllocationImpl(vobject, allocation_type);
++  if (v8_flags.maglev_allocation_folding < 2) {
++    ClearCurrentAllocationBlock();
++  }
++  return allocation;
++}
++
++ValueNode* MaglevGraphBuilder::BuildInlinedAllocationImpl(
++    VirtualObject* vobject, AllocationType allocation_type) {
+   current_interpreter_frame_.add_object(vobject);
+   if (vobject->type() == VirtualObject::kHeapNumber) {
+     return BuildInlinedAllocationForHeapNumber(vobject, allocation_type);
+diff --git a/src/maglev/maglev-graph-builder.h b/src/maglev/maglev-graph-builder.h
+index 277494bb..c2694415 100644
+--- a/src/maglev/maglev-graph-builder.h
++++ b/src/maglev/maglev-graph-builder.h
+@@ -2478,6 +2478,8 @@ class MaglevGraphBuilder {
+       VirtualObject* object, AllocationType allocation);
+   ValueNode* BuildInlinedAllocation(VirtualObject* object,
+                                     AllocationType allocation);
++  ValueNode* BuildInlinedAllocationImpl(VirtualObject* object,
++                                        AllocationType allocation);
+   ValueNode* BuildInlinedArgumentsElements(int start_index, int length);
+   ValueNode* BuildInlinedUnmappedArgumentsElements(int mapped_count);
+ 

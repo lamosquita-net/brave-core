@@ -1,0 +1,89 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Wed, 28 Oct 2026 09:26:35 +0000
+Subject: [PATCH 13/20] [maglev] Materialize a fresh HeapNumber per
+ deoptimization
+
+Port of v8 7d5eb1df2a (M150 a7c1a46375; crbug 547819997), with its mjsunit test. 13.3 stores an elided HeapNumber as one shared deopt literal; it now goes as a captured object (map + value) with its own object id, so the deoptimizer boxes it anew each time. FlyWeb Maglev debt for level 134.
+
+(cherry picked from commit 01105d174ad37625be6914a551edd1eaec5d594f)
+(cherry picked from commit e653b8672b0750b0debb7ef3eeb2b8938cecce22)
+---
+ src/maglev/maglev-code-generator.cc      | 11 ++++++-
+ test/mjsunit/maglev/regress-547819997.js | 38 ++++++++++++++++++++++++
+ 2 files changed, 48 insertions(+), 1 deletion(-)
+ create mode 100644 test/mjsunit/maglev/regress-547819997.js
+
+diff --git a/src/maglev/maglev-code-generator.cc b/src/maglev/maglev-code-generator.cc
+index 847a278c..46339cc2 100644
+--- a/src/maglev/maglev-code-generator.cc
++++ b/src/maglev/maglev-code-generator.cc
+@@ -1568,6 +1568,15 @@ class MaglevFrameTranslationBuilder {
+                           const InputLocation*& input_location,
+                           const VirtualObject::List& virtual_objects) {
+     if (object->type() == VirtualObject::kHeapNumber) {
++      // FlyWeb: port of v8 7d5eb1df2a (crbug 547819997). HeapNumbers may be
++      // mutable object fields; each materialization must create a fresh box,
++      // so they are captured objects that are never deduplicated (the
++      // deoptimizer numbers them like any other captured object), not a
++      // shared literal.
++      object_ids_.push_back(kNotDuplicated);
++      translation_array_builder_->BeginCapturedObject(2);
++      translation_array_builder_->StoreLiteral(
++          GetDeoptLiteral(*local_isolate_->factory()->heap_number_map()));
+       return BuildHeapNumber(object->number());
+     }
+     int dup_id =
+@@ -1746,7 +1755,7 @@ class MaglevFrameTranslationBuilder {
+   ZoneVector<IndirectHandle<TrustedObject>>* protected_deopt_literals_vector_;
+   ZoneVector<IndirectHandle<Object>>* deopt_literals_vector_;
+ 
+-  static const int kNotDuplicated = -1;
++  static constexpr int kNotDuplicated = -1;
+   std::vector<intptr_t> object_ids_;
+ };
+ 
+diff --git a/test/mjsunit/maglev/regress-547819997.js b/test/mjsunit/maglev/regress-547819997.js
+new file mode 100644
+index 00000000..43a8e395
+--- /dev/null
++++ b/test/mjsunit/maglev/regress-547819997.js
+@@ -0,0 +1,38 @@
++// Copyright 2026 the V8 project authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++// Flags: --allow-natives-syntax --maglev
++
++const boxes = [];
++
++// Never called during warm-up, so this call site has no feedback and Maglev
++// emits an unconditional deopt for it. The literal below is therefore only
++// used by deopt frames and gets elided by escape analysis.
++function sink(o) {
++  boxes.push(o);
++}
++
++function foo(depth, take) {
++  const o = {x: 1.5};
++  if (depth > 0) foo(depth - 1, take);
++  if (take) sink(o);
++}
++
++%PrepareFunctionForOptimization(foo);
++foo(3, false);
++foo(3, false);
++%OptimizeMaglevOnNextCall(foo);
++foo(3, false);
++
++// Deopts the innermost activation eagerly and the outer ones lazily, so every
++// activation materializes its own object.
++foo(3, true);
++
++assertEquals(4, boxes.length);
++for (let i = 0; i < boxes.length; i++) {
++  boxes[i].x = i;
++}
++for (let i = 0; i < boxes.length; i++) {
++  assertEquals(i, boxes[i].x);
++}

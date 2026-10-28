@@ -1,0 +1,72 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Marja=20H=C3=B6ltt=C3=A4?= <marja@chromium.org>
+Date: Thu, 13 Mar 2025 14:31:31 +0100
+Subject: [PATCH 16/20] [maglev] Typed array length: fix interaction with super
+
+Port of v8 dd4c05cef2 (M135 0aaafa850b; crbug 402646504), as is. FlyWeb Maglev debt for level 134.
+---
+ src/maglev/maglev-graph-builder.cc       | 12 ++++++++--
+ test/mjsunit/maglev/regress-402646504.js | 30 ++++++++++++++++++++++++
+ 2 files changed, 40 insertions(+), 2 deletions(-)
+ create mode 100644 test/mjsunit/maglev/regress-402646504.js
+
+diff --git a/src/maglev/maglev-graph-builder.cc b/src/maglev/maglev-graph-builder.cc
+index 01310770..8fc14cd3 100644
+--- a/src/maglev/maglev-graph-builder.cc
++++ b/src/maglev/maglev-graph-builder.cc
+@@ -5694,9 +5694,17 @@ MaybeReduceResult MaglevGraphBuilder::TryBuildPropertyLoad(
+       return AddNewNode<StringLength>({string});
+     }
+     case compiler::PropertyAccessInfo::kTypedArrayLength: {
+-      DCHECK_EQ(receiver, lookup_start_object);
+       CHECK(!IsRabGsabTypedArrayElementsKind(access_info.elements_kind()));
+-      return BuildLoadTypedArrayLength(receiver, access_info.elements_kind());
++      if (receiver != lookup_start_object) {
++        // We're accessing the TypedArray length via a prototype (a TypedArray
++        // object in the prototype chain, objects below it not having a "length"
++        // property, reading via super.length). That will throw a TypeError.
++        // This should never occur in any realistic code, so we can deopt here
++        // instead of implementing special handling for it.
++        return EmitUnconditionalDeopt(DeoptimizeReason::kWrongMap);
++      }
++      return BuildLoadTypedArrayLength(lookup_start_object,
++                                       access_info.elements_kind());
+     }
+   }
+ }
+diff --git a/test/mjsunit/maglev/regress-402646504.js b/test/mjsunit/maglev/regress-402646504.js
+new file mode 100644
+index 00000000..a70e845e
+--- /dev/null
++++ b/test/mjsunit/maglev/regress-402646504.js
+@@ -0,0 +1,30 @@
++// Copyright 2025 the V8 project authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++// Flags: --allow-natives-syntax --maglev --no-always-turbofan
++
++const obj = {
++  func(optimize) {
++      const arrowFunc = () => {
++        return super.length;
++      };
++      %PrepareFunctionForOptimization(arrowFunc);
++      if (optimize) {
++        %OptimizeMaglevOnNextCall(arrowFunc);
++      }
++      return arrowFunc();
++  }
++};
++
++// Make super.length polymorphic:
++// Case 1:
++assertEquals(undefined, obj.func(false));
++
++// Case 2:
++const u8Arr = new Uint8Array(20);
++obj.__proto__ = u8Arr;
++assertThrows(() => { obj.func(false); }, TypeError);
++
++// Optimize for Maglev.
++assertThrows(() => { obj.func(true); }, TypeError);

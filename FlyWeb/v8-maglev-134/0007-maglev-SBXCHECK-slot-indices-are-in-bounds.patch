@@ -1,0 +1,37 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Wed, 28 Oct 2026 09:21:51 +0000
+Subject: [PATCH 07/20] [maglev] SBXCHECK slot indices are in bounds
+
+Port of v8 15a7214174 (M142 ec40416449; crbug 447693720): 13.3 already checks get/set by offset; this adds get_by_index/set_by_index. FlyWeb Maglev debt for level 134.
+
+(cherry picked from commit 78ca8512638dae3e51fdf3369b37575f2383a4ef)
+(cherry picked from commit 8ea07f921f1c828bcba06f7d02518f0f13da3d6b)
+---
+ src/maglev/maglev-ir.h | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/src/maglev/maglev-ir.h b/src/maglev/maglev-ir.h
+index 22f61262..e1b9fba6 100644
+--- a/src/maglev/maglev-ir.h
++++ b/src/maglev/maglev-ir.h
+@@ -5470,6 +5470,7 @@ class VirtualObject : public FixedInputValueNodeT<0, VirtualObject> {
+ 
+   ValueNode* get_by_index(uint32_t i) const {
+     DCHECK_EQ(type_, kDefault);
++    SBXCHECK_LT(i, slot_count());
+     return slots_.data[i];
+   }
+ 
+@@ -5478,6 +5479,11 @@ class VirtualObject : public FixedInputValueNodeT<0, VirtualObject> {
+     // Values set here can leak to the interpreter. Conversions should be stored
+     // in known_node_aspects/NodeInfo.
+     DCHECK(!value->properties().is_conversion());
++    // TODO(jgruber): Indices are commonly passed in from places that read
++    // potentially attacker-corrupted heap objects. Either we catch all such
++    // usages with CHECKs, or we add one here. Honestly I like neither option
++    // that much, but doing so in this chokepoint is safer.
++    SBXCHECK_LT(i, slot_count());
+     slots_.data[i] = value;
+   }
+ 

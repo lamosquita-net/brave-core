@@ -1,0 +1,100 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Wed, 28 Oct 2026 09:15:14 +0000
+Subject: [PATCH 02/20] [maglev] Fix left over register allocations from
+ regalloc
+
+Port of v8 7ef5ae531a (M138 ddc4473ba6; crbug 457351015). 13.3 has no regalloc_info(): the DEBUG check uses ValueNode::has_register(). FlyWeb Maglev debt for level 134.
+
+(cherry picked from commit aaacf97344b5e566048f594a8234582c47ac1832)
+(cherry picked from commit 2716188804bc45b5dc71982ff69330c323106f3b)
+---
+ src/maglev/maglev-code-generator.cc |  6 ++++++
+ src/maglev/maglev-regalloc.cc       | 16 +++++++++++++---
+ src/maglev/maglev-regalloc.h        |  7 ++++++-
+ 3 files changed, 25 insertions(+), 4 deletions(-)
+
+diff --git a/src/maglev/maglev-code-generator.cc b/src/maglev/maglev-code-generator.cc
+index ca6c4920..70051c57 100644
+--- a/src/maglev/maglev-code-generator.cc
++++ b/src/maglev/maglev-code-generator.cc
+@@ -792,6 +792,12 @@ class MaglevCodeGeneratingNodeProcessor {
+ 
+   template <typename NodeT>
+   ProcessResult Process(NodeT* node, const ProcessingState& state) {
++#ifdef DEBUG
++    if constexpr (std::is_base_of_v<ValueNode, NodeT>) {
++      // Regalloc must clear its temp allocations.
++      DCHECK(!node->has_register());
++    }
++#endif
+     if (v8_flags.code_comments) {
+       std::stringstream ss;
+       ss << "--   " << graph_labeller()->NodeId(node) << ": "
+diff --git a/src/maglev/maglev-regalloc.cc b/src/maglev/maglev-regalloc.cc
+index 3d4b1f74..4d926bb8 100644
+--- a/src/maglev/maglev-regalloc.cc
++++ b/src/maglev/maglev-regalloc.cc
+@@ -591,6 +591,9 @@ void StraightForwardRegisterAllocator::AllocateRegisters() {
+     }
+     AllocateControlNode(block->control_node(), block);
+   }
++
++  // Clean up remaining register allocations at the end
++  ClearRegisters();
+ }
+ 
+ void StraightForwardRegisterAllocator::FreeRegistersUsedBy(ValueNode* node) {
+@@ -1559,8 +1562,8 @@ void StraightForwardRegisterAllocator::SpillRegisters() {
+   double_registers_.ForEachUsedRegister(spill);
+ }
+ 
+-template <typename RegisterT>
+-void StraightForwardRegisterAllocator::SpillAndClearRegisters(
++template <typename RegisterT, bool spill>
++void StraightForwardRegisterAllocator::ClearRegisters(
+     RegisterFrameState<RegisterT>& registers) {
+   while (registers.used() != registers.empty()) {
+     RegisterT reg = registers.used().first();
+@@ -1569,7 +1572,9 @@ void StraightForwardRegisterAllocator::SpillAndClearRegisters(
+       printing_visitor_->os() << "  clearing registers with "
+                               << PrintNodeLabel(graph_labeller(), node) << "\n";
+     }
+-    Spill(node);
++    if (spill) {
++      Spill(node);
++    }
+     registers.FreeRegistersUsedBy(node);
+     DCHECK(!registers.used().has(reg));
+   }
+@@ -1580,6 +1585,11 @@ void StraightForwardRegisterAllocator::SpillAndClearRegisters() {
+   SpillAndClearRegisters(double_registers_);
+ }
+ 
++void StraightForwardRegisterAllocator::ClearRegisters() {
++  ClearRegisters(general_registers_);
++  ClearRegisters(double_registers_);
++}
++
+ void StraightForwardRegisterAllocator::SaveRegisterSnapshot(NodeBase* node) {
+   RegisterSnapshot snapshot;
+   general_registers_.ForEachUsedRegister([&](Register reg, ValueNode* node) {
+diff --git a/src/maglev/maglev-regalloc.h b/src/maglev/maglev-regalloc.h
+index 11734b05..568f14dc 100644
+--- a/src/maglev/maglev-regalloc.h
++++ b/src/maglev/maglev-regalloc.h
+@@ -210,8 +210,13 @@ class StraightForwardRegisterAllocator {
+   void Spill(ValueNode* node);
+   void SpillRegisters();
+ 
++  template <typename RegisterT, bool spill = false>
++  void ClearRegisters(RegisterFrameState<RegisterT>& registers);
+   template <typename RegisterT>
+-  void SpillAndClearRegisters(RegisterFrameState<RegisterT>& registers);
++  void SpillAndClearRegisters(RegisterFrameState<RegisterT>& registers) {
++    ClearRegisters<RegisterT, true>(registers);
++  }
++  void ClearRegisters();
+   void SpillAndClearRegisters();
+ 
+   void SaveRegisterSnapshot(NodeBase* node);

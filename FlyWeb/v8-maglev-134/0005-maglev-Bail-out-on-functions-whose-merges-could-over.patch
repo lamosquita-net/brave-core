@@ -1,0 +1,46 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Wed, 28 Oct 2026 09:20:57 +0000
+Subject: [PATCH 05/20] [maglev] Bail out on functions whose merges could
+ overflow a node's inputs
+
+Equivalent of v8 24ae3662bf (M140 07ad1d3ae2; crbug 441668149) without its abort machinery: Maglev does not compile bytecode of kMaxInputs / 2 bytes or more, which bounds every merge's predecessor count. FlyWeb Maglev debt for level 134.
+
+(cherry picked from commit a2fb7342fcfe7793f4a71aab87ca08093b2261bd)
+(cherry picked from commit 37fbbeb2c3e8f8d89e6722ef308939480c75b8aa)
+---
+ src/maglev/maglev-compiler.cc | 18 +++++++++++++-----
+ 1 file changed, 13 insertions(+), 5 deletions(-)
+
+diff --git a/src/maglev/maglev-compiler.cc b/src/maglev/maglev-compiler.cc
+index 38e29607..3d6c5b13 100644
+--- a/src/maglev/maglev-compiler.cc
++++ b/src/maglev/maglev-compiler.cc
+@@ -97,14 +97,22 @@ bool MaglevCompiler::Compile(LocalIsolate* local_isolate,
+       }
+     }
+ 
+-    // FlyWeb: port of v8 618d1a0290 (crbug 444048019). 13.3's graph builder
+-    // cannot abort, so bail out before building when a SuspendGenerator could
+-    // need more inputs than a node can hold (generators are never inlined).
++    // FlyWeb: 13.3's graph builder cannot abort (v8 24ae3662bf is not
++    // ported), so bail out before building when a node could need more inputs
++    // than it can hold:
++    // - a SuspendGenerator with too many registers (v8 618d1a0290, crbug
++    //   444048019; generators are never inlined);
++    // - a merge with too many predecessors (v8 24ae3662bf, crbug 441668149):
++    //   each predecessor (a jump, a fallthrough or a throwing bytecode) is a
++    //   bytecode of at least one byte and peeling counts one at most twice, so
++    //   a bytecode shorter than kMaxInputs / 2 cannot get there (TurboFan stops
++    //   at 60 KB anyway). Inlined functions are far below that.
+     {
+       MaglevCompilationUnit* unit = compilation_info->toplevel_compilation_unit();
+       if (unit->parameter_count() + unit->register_count() +
+-              GeneratorStore::kFixedInputCount >
+-          Node::kMaxInputs) {
++                  GeneratorStore::kFixedInputCount >
++              Node::kMaxInputs ||
++          unit->bytecode().length() >= Node::kMaxInputs / 2) {
+         return false;
+       }
+     }
