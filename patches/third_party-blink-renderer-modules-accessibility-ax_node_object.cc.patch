@@ -1,0 +1,17 @@
+diff --git a/third_party/blink/renderer/modules/accessibility/ax_node_object.cc b/third_party/blink/renderer/modules/accessibility/ax_node_object.cc
+index 59a5d41a3a64676d939e32fe48c15552df5dc00a..e4879f9bf62b0a9fbd64d545325f27207da34025 100644
+--- a/third_party/blink/renderer/modules/accessibility/ax_node_object.cc
++++ b/third_party/blink/renderer/modules/accessibility/ax_node_object.cc
+@@ -2986,7 +2986,11 @@ AccessibilityExpanded AXNodeObject::IsExpanded() const {
+   // it is showing.
+   if (auto* form_control = DynamicTo<HTMLFormControlElement>(element)) {
+     if (auto popover = form_control->popoverTargetElement().popover) {
+-      return popover->popoverOpen() ? kExpandedExpanded : kExpandedCollapsed;
++      if (!form_control->IsDescendantOrShadowDescendantOf(popover)) {
++        // Only expose expanded/collapsed if the trigger button isn't contained
++        // within the popover itself. E.g. a close button within the popover.
++        return popover->popoverOpen() ? kExpandedExpanded : kExpandedCollapsed;
++      }
+     }
+   }
+ 

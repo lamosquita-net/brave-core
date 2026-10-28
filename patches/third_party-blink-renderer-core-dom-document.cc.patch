@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/document.cc b/third_party/blink/renderer/core/dom/document.cc
-index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..cec5c1ff93818e1008dbc4e4e44a58d3e0a0c77d 100644
+index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..4788400a3d5fd1bdf7dcf9238f77722da89a107d 100644
 --- a/third_party/blink/renderer/core/dom/document.cc
 +++ b/third_party/blink/renderer/core/dom/document.cc
 @@ -4767,13 +4767,25 @@ void Document::ProcessBaseElement() {
@@ -67,8 +67,17 @@ index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..cec5c1ff93818e1008dbc4e4e44a58d3
  }
  
  void Document::ScheduleForTopLayerRemoval(Element* element,
-@@ -8065,6 +8087,16 @@ void Document::RemoveFromTopLayerImmediately(Element* element) {
+@@ -8063,8 +8085,25 @@ void Document::RemoveFromTopLayerImmediately(Element* element) {
+   }
+   element->SetIsInTopLayer(false);
    display_lock_document_state_->ElementRemovedFromTopLayer(element);
++  if (RuntimeEnabledFeatures::PopoverAnchorRelationshipsEnabled()) {
++    if (auto* html_element = DynamicTo<HTMLElement>(element)) {
++      if (html_element->HasPopoverAttribute()) {
++        html_element->SetImplicitAnchor(nullptr);
++      }
++    }
++  }
  
    probe::TopLayerElementsChanged(this);
 +

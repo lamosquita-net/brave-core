@@ -1,0 +1,33 @@
+diff --git a/third_party/blink/renderer/core/dom/popover_data.h b/third_party/blink/renderer/core/dom/popover_data.h
+index 3ef0d5a36dbab6b695c9dc8d9dc8c8342ad410a2..80dafcd1a8ac78ffcc5069c3c5a9c2b49572549b 100644
+--- a/third_party/blink/renderer/core/dom/popover_data.h
++++ b/third_party/blink/renderer/core/dom/popover_data.h
+@@ -119,6 +119,9 @@ class PopoverData final : public GarbageCollected<PopoverData>,
+     owner_select_list_element_ = element;
+   }
+ 
++  Element* implicitAnchor() const { return implicit_anchor_.Get(); }
++  void setImplicitAnchor(Element* element) { implicit_anchor_ = element; }
++
+   CloseWatcher* closeWatcher() { return close_watcher_.Get(); }
+   void setCloseWatcher(CloseWatcher* close_watcher) {
+     close_watcher_ = close_watcher;
+@@ -129,6 +132,7 @@ class PopoverData final : public GarbageCollected<PopoverData>,
+     visitor->Trace(previously_focused_element_);
+     visitor->Trace(hover_show_tasks_);
+     visitor->Trace(owner_select_list_element_);
++    visitor->Trace(implicit_anchor_);
+     visitor->Trace(close_watcher_);
+     ElementRareDataField::Trace(visitor);
+   }
+@@ -156,6 +160,10 @@ class PopoverData final : public GarbageCollected<PopoverData>,
+ 
+   WeakMember<HTMLSelectListElement> owner_select_list_element_;
+ 
++  // Used to set up an anchor relationship separately from CSS `anchor`
++  // references.
++  WeakMember<Element> implicit_anchor_;
++
+   Member<CloseWatcher> close_watcher_;
+ };
+ 

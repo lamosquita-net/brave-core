@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/runtime_enabled_features.json5 b/third_party/blink/renderer/platform/runtime_enabled_features.json5
-index 75e44e6b7cdd95c1e39b3759939ec1146232f255..b796a153739b539f88dd0d609dda595ce7e1f8f6 100644
+index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f40fb8778f5d1693938e9fac995e07696f9271b1 100644
 --- a/third_party/blink/renderer/platform/runtime_enabled_features.json5
 +++ b/third_party/blink/renderer/platform/runtime_enabled_features.json5
 @@ -480,6 +480,13 @@
@@ -400,6 +400,15 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..b796a153739b539f88dd0d609dda595c
      {
        // A flag, just for local testing to make the
        // HTML parser yield more often and take longer to resume.
+@@ -2187,7 +2294,7 @@
+     {
+       // TODO(crbug.com/1416284): Enables popover=hint functionality.
+       name: "HTMLPopoverHint",
+-      status: "experimental",
++      status: "stable",
+     },
+     {
+       name: "HTMLSearchElement",
 @@ -2271,6 +2378,11 @@
        name: "InheritUserModifyWithoutContenteditable",
        status: "stable",
@@ -538,12 +547,27 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..b796a153739b539f88dd0d609dda595c
      {
        name: "PaintHoldingForIframes",
        status: "stable",
-@@ -3136,6 +3286,14 @@
+@@ -3136,6 +3286,29 @@
        name: "PointerEventDeviceId",
        status: "stable",
      },
 +    {
 +      name: "PointerEventTargetsInEventLists",
++      status: "stable",
++    },
++    // TODO(crbug.com/364669918) This enables these two new functionalities:
++    // 1. add an imperative way to set invoker relationships between popovers.
++    // 2. invoker relationships create implicit anchor element references.
++    // This was shipped in M133, and this flag can be removed in M135.
++    {
++      name: "PopoverAnchorRelationships",
++      status: "stable",
++    },
++    // TODO(crbug.com/379241451): This controls the behavior when a popover is
++    // nested inside an invoker button. This was shipped in M133, and this flag
++    // can be removed in M135.
++    {
++      name: "PopoverButtonNestingBehavior",
 +      status: "stable",
 +    },
 +    {
@@ -553,7 +577,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..b796a153739b539f88dd0d609dda595c
      {
        name: "PositionOutsideTabSpanCheckSiblingNode",
        status: "stable",
-@@ -3206,6 +3364,12 @@
+@@ -3206,6 +3379,12 @@
        name:"PrettyPrintJSONDocument",
        status: "stable",
      },
@@ -566,7 +590,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..b796a153739b539f88dd0d609dda595c
      {
        // Controls whether filtering IDs can be specified for Private Aggregation
        // contributions. If disabled, any IDs will be ignored.
-@@ -3245,6 +3409,12 @@
+@@ -3245,6 +3424,12 @@
        origin_trial_allows_third_party: true,
        public: true,
      },
@@ -579,7 +603,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..b796a153739b539f88dd0d609dda595c
      {
        // Always allow trust token issuance (so long as the base::Feature
        // is enabled). Used for testing; circumvents a runtime check that,
-@@ -3283,6 +3453,12 @@
+@@ -3283,6 +3468,12 @@
        implied_by: ["ProtectedOriginTrialsSampleAPI"],
        is_protected_feature: "true",
      },
@@ -592,7 +616,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..b796a153739b539f88dd0d609dda595c
      {
        name: "PushMessaging",
        public: true,
-@@ -3370,6 +3546,11 @@
+@@ -3370,6 +3561,11 @@
          "Linux": "stable",
          "default": "experimental"},
      },
@@ -604,7 +628,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..b796a153739b539f88dd0d609dda595c
      {
        name: "RemoveDanglingMarkupInTarget",
        status: "stable",
-@@ -3422,10 +3603,18 @@
+@@ -3422,10 +3618,18 @@
          "default": "",
        }
      },
@@ -623,7 +647,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..b796a153739b539f88dd0d609dda595c
      {
        name: "ResourceTimingUseCORSForBodySizes",
        status: "test",
-@@ -3441,6 +3630,12 @@
+@@ -3441,6 +3645,12 @@
        name: "RewindFloats",
        status: "stable",
      },
@@ -636,7 +660,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..b796a153739b539f88dd0d609dda595c
      {
        name: "RtcAudioJitterBufferMaxPackets",
        origin_trial_feature_name: "RtcAudioJitterBufferMaxPackets",
-@@ -3536,9 +3731,12 @@
+@@ -3536,9 +3746,12 @@
      },
      {
        name: "SchedulerYield",
@@ -652,7 +676,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..b796a153739b539f88dd0d609dda595c
      },
      {
        // https://wicg.github.io/webcomponents/proposals/Scoped-Custom-Element-Registries
-@@ -3571,6 +3769,13 @@
+@@ -3571,6 +3784,13 @@
        name: "ScrollEndEvents",
        status: "stable",
      },
@@ -666,7 +690,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..b796a153739b539f88dd0d609dda595c
      // Killswitch. Remove after M126 or M127 stable.
      {
        name: "ScrollNodeForOverflowHidden",
-@@ -3636,6 +3841,22 @@
+@@ -3636,6 +3856,22 @@
        name: "SelectionAcrossShadowDOM",
        status: "experimental",
      },
@@ -689,7 +713,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..b796a153739b539f88dd0d609dda595c
      {
        // Maintain author-defined ::selection highlight colors, even if they
        // match the text color.
-@@ -3679,6 +3900,7 @@
+@@ -3679,6 +3915,7 @@
      {
        name: "Serial",
        status: {"Android": "", "default": "stable"},
@@ -697,7 +721,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..b796a153739b539f88dd0d609dda595c
      },
      {
        name: "SerializeViewTransitionStateInSPA",
-@@ -3764,7 +3986,7 @@
+@@ -3764,7 +4001,7 @@
      {
        // crbug.com/40501131
        name: "SidewaysWritingModes",
@@ -706,7 +730,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..b796a153739b539f88dd0d609dda595c
      },
      {
        name: "SignatureBasedIntegrity",
-@@ -3907,6 +4129,10 @@
+@@ -3907,6 +4144,10 @@
        name: "StorageBucketsLocks",
        status: "experimental",
      },
@@ -717,7 +741,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..b796a153739b539f88dd0d609dda595c
      {
        name: "StrictMimeTypesForWorkers",
        status: "experimental",
-@@ -3918,10 +4144,10 @@
+@@ -3918,10 +4159,10 @@
        name: "StylableSelect",
        status: "experimental",
        // :open is used in the UA stylesheet for StylableSelect, so this feature
@@ -730,7 +754,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..b796a153739b539f88dd0d609dda595c
      },
      {
        name: "StylusHandwriting",
-@@ -3935,6 +4161,12 @@
+@@ -3935,6 +4176,12 @@
        name: "SvgCrossOriginAttribute",
        status: "stable",
      },
@@ -743,7 +767,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..b796a153739b539f88dd0d609dda595c
      {
        name: "SvgFilterUserSpaceViewportForNonSvg",
        status: "stable",
-@@ -4051,10 +4283,21 @@
+@@ -4051,10 +4298,21 @@
        name: "TextFragmentTapOpensContextMenu",
        status: {"Android": "stable"},
      },
@@ -765,7 +789,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..b796a153739b539f88dd0d609dda595c
      {
        // New implementation of text-size-adjust that applies during style rather
        // than via the text autosizer. This also includes changes such as
-@@ -4094,6 +4337,13 @@
+@@ -4094,6 +4352,13 @@
        public: true,
        status: "stable",
      },
@@ -779,7 +803,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..b796a153739b539f88dd0d609dda595c
      {
        name: "TopLevelTpcd",
        origin_trial_feature_name: "TopLevelTpcd",
-@@ -4143,6 +4393,10 @@
+@@ -4143,6 +4408,10 @@
        status: "experimental",
        base_feature: "none",
      },
@@ -790,7 +814,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..b796a153739b539f88dd0d609dda595c
      // This is conditionally set if the platform supports translation.
      {
        name: "TranslateService",
-@@ -4255,6 +4509,13 @@
+@@ -4255,6 +4524,13 @@
        base_feature: "none",
        public: true,
      },
@@ -804,7 +828,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..b796a153739b539f88dd0d609dda595c
      {
        name: "UseUndoStepElementDispatchBeforeInput",
        status: "stable",
-@@ -4264,6 +4525,11 @@
+@@ -4264,6 +4540,11 @@
        base_feature: "none",
        public: true,
      },
@@ -816,7 +840,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..b796a153739b539f88dd0d609dda595c
      {
        // Whether a video element should automatically play fullscreen unless
        // 'playsinline' is set.
-@@ -4420,8 +4686,7 @@
+@@ -4420,8 +4701,7 @@
      {
        name: "WebAssemblyJSStringBuiltins",
        origin_trial_feature_name: "WebAssemblyJSStringBuiltins",
@@ -826,7 +850,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..b796a153739b539f88dd0d609dda595c
      },
      // WebAuth is disabled on Android versions prior to N (7.0) due to lack of
      // supporting APIs, see runtime_features.cc.
-@@ -4435,12 +4700,14 @@
+@@ -4435,12 +4715,14 @@
        name: "WebAuthAuthenticatorAttachment",
        status: "test",
      },
@@ -842,7 +866,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..b796a153739b539f88dd0d609dda595c
      },
      {
        name: "WebAuthenticationLargeBlobExtension",
-@@ -4506,6 +4773,10 @@
+@@ -4506,6 +4788,10 @@
      },
      {
        name: "WebCryptoCurve25519",

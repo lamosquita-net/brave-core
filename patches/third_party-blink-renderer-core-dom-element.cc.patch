@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/element.cc b/third_party/blink/renderer/core/dom/element.cc
-index afa9718ce5b9dd841e33d89610d524df1db4e2c9..865ced08be9acba6c21a37eb922a4a38b6ea53bc 100644
+index afa9718ce5b9dd841e33d89610d524df1db4e2c9..939c692172e49a097e58adf9a29d46c31d27c01e 100644
 --- a/third_party/blink/renderer/core/dom/element.cc
 +++ b/third_party/blink/renderer/core/dom/element.cc
 @@ -178,6 +178,7 @@
@@ -272,7 +272,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..865ced08be9acba6c21a37eb922a4a38
    if (!HasImplicitlyAnchoredElement() && GetLayoutObject()) {
      // Invalidate layout to populate itself into Physical/LogicalAnchorQuery.
      GetLayoutObject()->SetNeedsLayoutAndFullPaintInvalidation(
-@@ -10175,15 +10215,11 @@ AnchorElementObserver* Element::GetAnchorElementObserver() const {
+@@ -10175,20 +10215,19 @@ AnchorElementObserver* Element::GetAnchorElementObserver() const {
  
  AnchorElementObserver& Element::EnsureAnchorElementObserver() {
    DCHECK(IsHTMLElement());
@@ -288,3 +288,11 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..865ced08be9acba6c21a37eb922a4a38
    if (const HTMLElement* html_element = DynamicTo<HTMLElement>(this)) {
      if (Element* anchor = html_element->anchorElement()) {
        DCHECK(RuntimeEnabledFeatures::HTMLAnchorAttributeEnabled());
+       return anchor;
+     }
++    if (Element* implicit_anchor = html_element->implicitAnchor()) {
++      return implicit_anchor;
++    }
+     if (Element* select_list = html_element->popoverOwnerSelectListElement()) {
+       return select_list;
+     }

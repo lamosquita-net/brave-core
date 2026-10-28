@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/modules/accessibility/ax_object.cc b/third_party/blink/renderer/modules/accessibility/ax_object.cc
-index 297d11909a91baf85c65a27a371b41509580c562..e427fee68c210c238fc647857416c3b36f050e82 100644
+index 297d11909a91baf85c65a27a371b41509580c562..9c3c4ff0e3989e37df60b279bd1b075b6ee43787 100644
 --- a/third_party/blink/renderer/modules/accessibility/ax_object.cc
 +++ b/third_party/blink/renderer/modules/accessibility/ax_object.cc
 @@ -558,6 +558,18 @@ void AddIntListAttributeFromOffsetVector(
@@ -48,22 +48,33 @@ index 297d11909a91baf85c65a27a371b41509580c562..e427fee68c210c238fc647857416c3b3
        TruncateAndAddStringAttribute(
            node_data,
            ax::mojom::blink::StringAttribute::kAriaCellColumnIndexText,
-@@ -2440,6 +2463,14 @@ void AXObject::SerializeComputedDetailsRelation(
-     node_data->AddIntListAttribute(
-         ax::mojom::blink::IntListAttribute::kDetailsIds,
-         {static_cast<int32_t>(popover->AXObjectID())});
-+    return;
+@@ -2437,9 +2460,24 @@ void AXObject::SerializeComputedDetailsRelation(
+   // Add aria-details for a popover invoker.
+   // TODO(https://crbug.com/1426607) Support this for non-plain hint popovers.
+   if (AXObject* popover = GetTargetPopoverForInvoker()) {
++    if (!GetElement()->IsDescendantOrShadowDescendantOf(
++            popover->GetElement())) {
++      // Only expose a details relationship if the trigger button isn't
++      // contained within the popover itself (shadow-including). E.g. a close
++      // button within the popover should not get a details relationship back
++      // to the containing popover.
++      node_data->AddIntListAttribute(
++          ax::mojom::blink::IntListAttribute::kDetailsIds,
++          {static_cast<int32_t>(popover->AXObjectID())});
++      return;
++    }
 +  }
 +
 +  // Add aria-details for the element anchored to this object.
 +  if (AXObject* positioned_obj = GetPositionedObjectForAnchor(node_data)) {
-+    node_data->AddIntListAttribute(
-+        ax::mojom::blink::IntListAttribute::kDetailsIds,
+     node_data->AddIntListAttribute(
+         ax::mojom::blink::IntListAttribute::kDetailsIds,
+-        {static_cast<int32_t>(popover->AXObjectID())});
 +        {static_cast<int32_t>(positioned_obj->AXObjectID())});
    }
  }
  
-@@ -2474,6 +2505,45 @@ AXObject* AXObject::GetTargetPopoverForInvoker() const {
+@@ -2474,6 +2512,45 @@ AXObject* AXObject::GetTargetPopoverForInvoker() const {
    return AXObjectCache().Get(target_popover);
  }
  
@@ -109,7 +120,7 @@ index 297d11909a91baf85c65a27a371b41509580c562..e427fee68c210c238fc647857416c3b3
  // Try to get an aria-controls for an <input role="combobox">, because it
  // helps identify focusable options in the listbox using activedescendant
  // detection, even though the focus is on the textbox and not on the listbox
-@@ -7328,7 +7398,7 @@ bool AXObject::OnNativeScrollToMakeVisibleAction() const {
+@@ -7328,7 +7405,7 @@ bool AXObject::OnNativeScrollToMakeVisibleAction() const {
    PhysicalRect target_rect(layout_object->AbsoluteBoundingBoxRect());
    scroll_into_view_util::ScrollRectToVisible(
        *layout_object, target_rect,
@@ -118,7 +129,7 @@ index 297d11909a91baf85c65a27a371b41509580c562..e427fee68c210c238fc647857416c3b3
            ScrollAlignment::CenterIfNeeded(), ScrollAlignment::CenterIfNeeded(),
            mojom::blink::ScrollType::kProgrammatic, false,
            mojom::blink::ScrollBehavior::kAuto));
-@@ -7349,7 +7419,7 @@ bool AXObject::OnNativeScrollToMakeVisibleWithSubFocusAction(
+@@ -7349,7 +7426,7 @@ bool AXObject::OnNativeScrollToMakeVisibleWithSubFocusAction(
        layout_object->LocalToAbsoluteRect(PhysicalRect(rect));
    scroll_into_view_util::ScrollRectToVisible(
        *layout_object, target_rect,
@@ -127,7 +138,7 @@ index 297d11909a91baf85c65a27a371b41509580c562..e427fee68c210c238fc647857416c3b3
            horizontal_scroll_alignment, vertical_scroll_alignment,
            mojom::blink::ScrollType::kProgrammatic,
            false /* make_visible_in_visual_viewport */,
-@@ -7369,7 +7439,7 @@ bool AXObject::OnNativeScrollToGlobalPointAction(
+@@ -7369,7 +7446,7 @@ bool AXObject::OnNativeScrollToGlobalPointAction(
    target_rect.Move(-PhysicalOffset(global_point));
    scroll_into_view_util::ScrollRectToVisible(
        *layout_object, target_rect,
