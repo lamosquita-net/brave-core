@@ -1,8 +1,28 @@
 diff --git a/src/interpreter/bytecode-generator.cc b/src/interpreter/bytecode-generator.cc
-index ff81b0e8bfaa1d67c164aac86731e0f5dc0220c4..6cc4784c10256fe4c2d61cabef8aabc536f869af 100644
+index f44c172d0a51825bd10758775eca12386204064b..bfd94802187169702a9febc74bb212b2b81e210b 100644
 --- a/src/interpreter/bytecode-generator.cc
 +++ b/src/interpreter/bytecode-generator.cc
-@@ -4003,8 +4003,13 @@ void BytecodeGenerator::VisitObjectLiteral(ObjectLiteral* expr) {
+@@ -1206,7 +1206,8 @@ class V8_NODISCARD BytecodeGenerator::OptionalChainNullLabelScope final {
+  public:
+   explicit OptionalChainNullLabelScope(BytecodeGenerator* bytecode_generator)
+       : bytecode_generator_(bytecode_generator),
+-        labels_(bytecode_generator->zone()) {
++        labels_(bytecode_generator->zone()),
++        hole_check_scope_(bytecode_generator) {
+     prev_ = bytecode_generator_->optional_chaining_null_labels_;
+     bytecode_generator_->optional_chaining_null_labels_ = &labels_;
+   }
+@@ -1221,6 +1222,9 @@ class V8_NODISCARD BytecodeGenerator::OptionalChainNullLabelScope final {
+   BytecodeGenerator* bytecode_generator_;
+   BytecodeLabels labels_;
+   BytecodeLabels* prev_;
++  // Use the same scope for the entire optional chain, as links earlier in the
++  // chain dominate later links, linearly.
++  HoleCheckElisionScope hole_check_scope_;
+ };
+ 
+ // LoopScope delimits the scope of {loop}, from its header to its final jump.
+@@ -4009,8 +4013,13 @@ void BytecodeGenerator::VisitObjectLiteral(ObjectLiteral* expr) {
            VisitForAccumulatorValue(property->value());
            if (key->IsStringLiteral()) {
              FeedbackSlot slot = feedback_spec()->AddDefineNamedOwnICSlot();
@@ -18,3 +38,13 @@ index ff81b0e8bfaa1d67c164aac86731e0f5dc0220c4..6cc4784c10256fe4c2d61cabef8aabc5
            } else {
              FeedbackSlot slot = feedback_spec()->AddDefineKeyedOwnICSlot();
              builder()->DefineKeyedOwnProperty(
+@@ -6423,9 +6432,6 @@ template <typename ExpressionFunc>
+ void BytecodeGenerator::BuildOptionalChain(ExpressionFunc expression_func) {
+   BytecodeLabel done;
+   OptionalChainNullLabelScope label_scope(this);
+-  // Use the same scope for the entire optional chain, as links earlier in the
+-  // chain dominate later links, linearly.
+-  HoleCheckElisionScope elider(this);
+   expression_func();
+   builder()->Jump(&done);
+   label_scope.labels()->Bind(builder());

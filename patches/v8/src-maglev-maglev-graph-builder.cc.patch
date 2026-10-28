@@ -1,8 +1,8 @@
 diff --git a/src/maglev/maglev-graph-builder.cc b/src/maglev/maglev-graph-builder.cc
-index f0ea889c4ce81846ac4f44cb0f50cb65749f0fe8..e9e92458cbbe15e9957e36a165bba81e4ec713ef 100644
+index c9ac4d5fea0cf0fe7d9944be3fe7df7dfa385f42..6a20a86d6bb8ceb4b6faaeb5af5b20e3db290724 100644
 --- a/src/maglev/maglev-graph-builder.cc
 +++ b/src/maglev/maglev-graph-builder.cc
-@@ -5329,7 +5329,7 @@ ReduceResult MaglevGraphBuilder::TryBuildStoreField(
+@@ -5470,7 +5470,7 @@ ReduceResult MaglevGraphBuilder::TryBuildStoreField(
        broker()->dependencies()->DependOnNoSlackTrackingChange(*original_map);
      }
    } else if (access_info.IsFastDataConstant() &&
@@ -11,7 +11,7 @@ index f0ea889c4ce81846ac4f44cb0f50cb65749f0fe8..e9e92458cbbe15e9957e36a165bba81e
      return EmitUnconditionalDeopt(DeoptimizeReason::kStoreToConstant);
    }
  
-@@ -5582,9 +5582,9 @@ ReduceResult MaglevGraphBuilder::TryBuildNamedAccess(
+@@ -5724,9 +5724,9 @@ ReduceResult MaglevGraphBuilder::TryBuildNamedAccess(
                 GetTaggedValue(GetAccumulator())},
                feedback_source);
          case compiler::AccessMode::kDefine:
@@ -22,7 +22,7 @@ index f0ea889c4ce81846ac4f44cb0f50cb65749f0fe8..e9e92458cbbe15e9957e36a165bba81e
            UNREACHABLE();
        }
      }
-@@ -7139,6 +7139,15 @@ void MaglevGraphBuilder::VisitSetNamedProperty() {
+@@ -7311,6 +7311,15 @@ void MaglevGraphBuilder::VisitSetNamedProperty() {
  
  void MaglevGraphBuilder::VisitDefineNamedOwnProperty() {
    // DefineNamedOwnProperty <object> <name_index> <slot>
@@ -38,7 +38,7 @@ index f0ea889c4ce81846ac4f44cb0f50cb65749f0fe8..e9e92458cbbe15e9957e36a165bba81e
    ValueNode* object = LoadRegister(0);
    compiler::NameRef name = GetRefOperand<Name>(1);
    FeedbackSlot slot = GetSlotOperand(2);
-@@ -7163,7 +7172,9 @@ void MaglevGraphBuilder::VisitDefineNamedOwnProperty() {
+@@ -7335,7 +7344,9 @@ void MaglevGraphBuilder::VisitDefineNamedOwnProperty() {
      case compiler::ProcessedFeedback::kNamedAccess:
        RETURN_VOID_IF_DONE(TryBuildNamedAccess(
            object, object, processed_feedback.AsNamedAccess(), feedback_source,
@@ -49,3 +49,18 @@ index f0ea889c4ce81846ac4f44cb0f50cb65749f0fe8..e9e92458cbbe15e9957e36a165bba81e
        break;
  
      default:
+@@ -12404,7 +12415,13 @@ ValueNode* MaglevGraphBuilder::BuildInlinedAllocation(
+           CreateHeapNumber(node->Cast<Float64Constant>()->value()),
+           allocation_type);
+     } else {
+-      node = GetTaggedValue(node);
++      ValueNode* new_node = GetTaggedValue(node);
++      if (new_node != node && new_node->properties().can_allocate()) {
++        // TODO(olivf): Remove this and instead always clear when we
++        // emit an allocating instruction.
++        ClearCurrentAllocationBlock();
++      }
++      node = new_node;
+     }
+     values[i] = node;
+   }

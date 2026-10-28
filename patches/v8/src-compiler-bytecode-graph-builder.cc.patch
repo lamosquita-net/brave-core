@@ -1,8 +1,8 @@
 diff --git a/src/compiler/bytecode-graph-builder.cc b/src/compiler/bytecode-graph-builder.cc
-index cf46ae8ebb273561357eb9d92efdb36b7548d7aa..b6c6f7fa7565b9bbe09e6ae9794316cb2d25891b 100644
+index ee44656195b8d66f0842b92a82e1a966d4de623e..744f73ad4f84e49448357208c0cdfa46ff537fd2 100644
 --- a/src/compiler/bytecode-graph-builder.cc
 +++ b/src/compiler/bytecode-graph-builder.cc
-@@ -232,6 +232,8 @@ class BytecodeGraphBuilder {
+@@ -233,6 +233,8 @@ class BytecodeGraphBuilder {
      kSet,
      // Define value to the receiver without checking the prototype chain.
      kDefineOwn,
@@ -11,7 +11,7 @@ index cf46ae8ebb273561357eb9d92efdb36b7548d7aa..b6c6f7fa7565b9bbe09e6ae9794316cb
    };
    void BuildNamedStore(NamedStoreMode store_mode);
    void BuildLdaLookupSlot(TypeofMode typeof_mode);
-@@ -2141,7 +2143,12 @@ void BytecodeGraphBuilder::BuildNamedStore(NamedStoreMode store_mode) {
+@@ -2171,7 +2173,12 @@ void BytecodeGraphBuilder::BuildNamedStore(NamedStoreMode store_mode) {
      DCHECK_EQ(FeedbackSlotKind::kDefineNamedOwn,
                broker()->GetFeedbackSlotKind(feedback));
  
@@ -25,7 +25,7 @@ index cf46ae8ebb273561357eb9d92efdb36b7548d7aa..b6c6f7fa7565b9bbe09e6ae9794316cb
    } else {
      DCHECK_EQ(NamedStoreMode::kSet, store_mode);
      LanguageMode language_mode =
-@@ -2172,6 +2179,10 @@ void BytecodeGraphBuilder::VisitDefineNamedOwnProperty() {
+@@ -2202,6 +2209,10 @@ void BytecodeGraphBuilder::VisitDefineNamedOwnProperty() {
    BuildNamedStore(NamedStoreMode::kDefineOwn);
  }
  

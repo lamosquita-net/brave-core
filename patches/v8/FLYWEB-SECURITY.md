@@ -1,3 +1,35 @@
+# FlyWeb: V8 13.3.415.23 (Chrome 133) with the M132-LTS backports it lacks
+
+Engine level 133 (FM.49, MOTOR-27, 28-10-2026) uses V8 **13.3.415.23** (93c6f108, head of branch-heads/13.3, the V8 of
+133.0.6943.141). Branch 13.3 froze on 22-01-2025, while 13.2.152.56 (M132-LTS, level 132) has merges up to 01-10-2025:
+`git rev-list 93c6f108..5eabe0e1` leaves **12 security fixes that 13.3 lacks**, carried here as patches:
+
+| v8 commit | crbug | Files | How |
+|---|---|---|---|
+| 3bdf541ae | 443765373 | `codegen/handler-table.cc` | as is |
+| 19301b95f | 445380761 | arm64 instruction selector | as is |
+| 725b6a21c | 427600180 | `bigint/fromstring.cc` | as is |
+| 385d92ca6 | 425583995 | arm64 macro assembler | as is |
+| 42421010c | 430344952 | `parsing/preparser.cc` | as is |
+| f39628536 | 427663123 | `interpreter/bytecode-generator.cc` | as is (with FlyWeb's patch) |
+| 5a7e02c2e | 412149700 | 10 Intl `js-*.cc` | as is |
+| 80600881c | 420636529 | `store-store-elimination-reducer-inl.h` | as is |
+| 2b2a58c26 | 420637585 | `compiler/representation-change.cc` | as is |
+| 45d40ca20 | 398065918 | `maglev/maglev-graph-builder.cc` | as is (Maglev stays off until level 134) |
+| 20c1b8e9b | 420697404 | `objects/js-regexp.cc` | by hand: 13.3 checks `IsOneByteRepresentation()` |
+| 5cf18d038 | 417169470 | Late Load Elimination, `snapshot-table-opindex.h`, `store-store-elimination-phase.cc` | by hand: 13.3 already has the trace flag; only the map wipe on map stores |
+
+The 48 patches of level 132 were moved with a three-way merge (`FlyWeb/tools/port/v8re.sh`); by hand
+`late-load-elimination-reducer.cc` (FlyWeb's cabe17f3/153cde95/0652ef4b hunks on 13.3's `ProcessCall` with traces),
+`messages.cc` (access checks; `DirectHandle` context), `store-store-elimination-reducer-inl.h` (after 80600881c) and
+`js-to-wasm.tq` (one `check()` is already in 13.3). All 76 patches checked with `git apply --check` on a clean 93c6f108.
+Cache epoch 21. Not compiled yet. Review: SEGURIDAD-PORTES, row FS.33 (rule 17).
+
+V8 13.3 ships `Atomics.pause` and Wasm Memory64 by default, as Chrome 133; `turboshaft_wasm` and `flush_liftoff_code`
+are gone as flags (gin's `kWebAssemblyLiftoffCodeFlushing` only passes the flag when overridden, so it is left as is).
+
+---
+
 # FlyWeb: V8 13.2.152.56 (Chrome 132, M132-LTS) and its security backports
 
 Since engine level 118 each level carries the V8 of Chrome N (FM.5). Level 132 uses V8 **13.2.152.56** (5eabe0e1,

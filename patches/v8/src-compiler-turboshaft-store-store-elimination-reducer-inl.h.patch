@@ -1,5 +1,5 @@
 diff --git a/src/compiler/turboshaft/store-store-elimination-reducer-inl.h b/src/compiler/turboshaft/store-store-elimination-reducer-inl.h
-index e058a41f23e29bbe4f5098608b340ccfef50bf98..c20e96159c0ddbcaae858bc0401f1d35c4b2ec97 100644
+index 45654a022fbaa67634d68d7d6e9dab7a5a50cb28..c20e96159c0ddbcaae858bc0401f1d35c4b2ec97 100644
 --- a/src/compiler/turboshaft/store-store-elimination-reducer-inl.h
 +++ b/src/compiler/turboshaft/store-store-elimination-reducer-inl.h
 @@ -203,6 +203,16 @@ class MaybeRedundantStoresTable
@@ -40,10 +40,18 @@ index e058a41f23e29bbe4f5098608b340ccfef50bf98..c20e96159c0ddbcaae858bc0401f1d35
            processed = back_edge->index().id() + 1;
          }
        }
-@@ -330,6 +346,10 @@ class RedundantStoreAnalysis {
-           // For now we consider only stores of fixed offsets of objects on the
-           // heap.
-           if (is_on_heap_store && is_fixed_offset_store) {
+@@ -325,10 +341,15 @@ class RedundantStoreAnalysis {
+           // TODO(nicohartmann@): Use the new effect flags to distinguish heap
+           // access once available.
+           const bool is_on_heap_store = store.kind.tagged_base;
+-          const bool is_field_store = !store.index().valid();
++          const bool is_fixed_offset_store = !store.index().valid();
+           const uint8_t size = store.stored_rep.SizeInBytes();
+-          // For now we consider only stores of fields of objects on the heap.
+-          if (is_on_heap_store && is_field_store) {
++          // For now we consider only stores of fixed offsets of objects on the
++          // heap.
++          if (is_on_heap_store && is_fixed_offset_store) {
 +            // FlyWeb: v8 67c8f3a9. When revisiting a loop, a previous visit
 +            // may have marked this store eliminable; drop that decision and
 +            // re-add it below only if it still holds.
@@ -51,3 +59,24 @@ index e058a41f23e29bbe4f5098608b340ccfef50bf98..c20e96159c0ddbcaae858bc0401f1d35
              bool is_eliminable_store = false;
              switch (table_.GetObservability(store.base(), store.offset, size)) {
                case StoreObservability::kUnobservable:
+@@ -415,11 +436,16 @@ class RedundantStoreAnalysis {
+           // TODO(nicohartmann@): Use the new effect flags to distinguish heap
+           // access once available.
+           const bool is_on_heap_load = load.kind.tagged_base;
+-          const bool is_field_load = !load.index().valid();
++          const bool is_fixed_offset_load = !load.index().valid();
+           // For now we consider only loads of fields of objects on the heap.
+-          if (is_on_heap_load && is_field_load) {
+-            table_.MarkPotentiallyAliasingStoresAsObservable(load.base(),
+-                                                             load.offset);
++          if (is_on_heap_load) {
++            if (is_fixed_offset_load) {
++              table_.MarkPotentiallyAliasingStoresAsObservable(load.base(),
++                                                               load.offset);
++            } else {
++              // A dynamically indexed load might alias any fixed offset.
++              table_.MarkAllStoresAsObservable();
++            }
+           }
+           break;
+         }

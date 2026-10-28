@@ -1,9 +1,9 @@
 diff --git a/src/execution/messages.cc b/src/execution/messages.cc
-index bcd06b5eab2c54e3393ba33e1c9c9a7cea326d74..c23df65df2b4dc0fe40f5daa15c6609180a6c80f 100644
+index 1a24021d5c277a728b6bc98c6fbcdf09e29c71c1..fdc7b0086420461c2ed4e520b5b7bbd5449d5f07 100644
 --- a/src/execution/messages.cc
 +++ b/src/execution/messages.cc
-@@ -1133,6 +1133,13 @@ MaybeHandle<Object> ErrorUtils::GetFormattedStack(
-     Isolate* isolate, Handle<JSObject> maybe_error_object) {
+@@ -1146,6 +1146,13 @@ MaybeHandle<Object> ErrorUtils::GetFormattedStack(
+     Isolate* isolate, DirectHandle<JSObject> maybe_error_object) {
    TRACE_EVENT0(TRACE_DISABLED_BY_DEFAULT("v8.stack_trace"), __func__);
  
 +  if (IsAccessCheckNeeded(*maybe_error_object) &&
@@ -16,10 +16,10 @@ index bcd06b5eab2c54e3393ba33e1c9c9a7cea326d74..c23df65df2b4dc0fe40f5daa15c66091
    ErrorUtils::StackPropertyLookupResult lookup =
        ErrorUtils::GetErrorStackProperty(isolate, maybe_error_object);
  
-@@ -1176,6 +1183,12 @@ MaybeHandle<Object> ErrorUtils::GetFormattedStack(
+@@ -1190,6 +1197,12 @@ MaybeHandle<Object> ErrorUtils::GetFormattedStack(
  void ErrorUtils::SetFormattedStack(Isolate* isolate,
-                                    Handle<JSObject> maybe_error_object,
-                                    Handle<Object> formatted_stack) {
+                                    DirectHandle<JSObject> maybe_error_object,
+                                    DirectHandle<Object> formatted_stack) {
 +  if (IsAccessCheckNeeded(*maybe_error_object) &&
 +      !isolate->MayAccess(isolate->native_context(), maybe_error_object)) {
 +    USE(isolate->ReportFailedAccessCheck(maybe_error_object));
