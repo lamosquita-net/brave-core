@@ -1,8 +1,34 @@
 diff --git a/third_party/blink/renderer/bindings/scripts/bind_gen/interface.py b/third_party/blink/renderer/bindings/scripts/bind_gen/interface.py
-index 431d108f1822a86b1201363018ca70bccbda1acb..d1743734b6ff57dd434b273db517056c48206ca6 100644
+index 431d108f1822a86b1201363018ca70bccbda1acb..0cf985662365b93fd6fdf3c92869c9bee5ca774f 100644
 --- a/third_party/blink/renderer/bindings/scripts/bind_gen/interface.py
 +++ b/third_party/blink/renderer/bindings/scripts/bind_gen/interface.py
-@@ -7516,3 +7516,4 @@ def generate_interfaces(task_queue):
+@@ -2498,9 +2498,8 @@ def make_no_alloc_direct_call_callback_def(cg_context, function_name,
+ 
+     def v8_type_and_symbol_node(argument, v8_arg_name, blink_arg_name):
+         unwrapped_idl_type = argument.idl_type.unwrap()
+-        if unwrapped_idl_type.is_interface or unwrapped_idl_type.is_sequence:
+-            return ("v8::Local<v8::Value>" if unwrapped_idl_type.is_interface
+-                    else "v8::Local<v8::Array>",
++        if "PassAsSpan" in argument.idl_type.effective_annotations:
++            return ("v8::Local<v8::Value>",
+                     make_v8_to_blink_value(
+                         blink_arg_name,
+                         "${{{}}}".format(v8_arg_name),
+@@ -2508,10 +2507,9 @@ def make_no_alloc_direct_call_callback_def(cg_context, function_name,
+                         argument=argument,
+                         error_exit_return_statement="return;",
+                         cg_context=cg_context))
+-        elif unwrapped_idl_type.is_typed_array_type:
+-            assert "AllowShared" in argument.idl_type.effective_annotations
+-            assert "PassAsSpan" in argument.idl_type.effective_annotations
+-            return ("v8::Local<v8::Value>",
++        if unwrapped_idl_type.is_interface or unwrapped_idl_type.is_sequence:
++            return ("v8::Local<v8::Value>" if unwrapped_idl_type.is_interface
++                    else "v8::Local<v8::Array>",
+                     make_v8_to_blink_value(
+                         blink_arg_name,
+                         "${{{}}}".format(v8_arg_name),
+@@ -7516,3 +7514,4 @@ def generate_interfaces(task_queue):
                           "InitIDLInterfacesForTesting",
                           "init_idl_interfaces_for_testing",
                           for_testing=True)

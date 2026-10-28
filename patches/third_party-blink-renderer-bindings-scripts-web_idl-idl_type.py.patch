@@ -1,0 +1,19 @@
+diff --git a/third_party/blink/renderer/bindings/scripts/web_idl/idl_type.py b/third_party/blink/renderer/bindings/scripts/web_idl/idl_type.py
+index dedc2606c7f075b1898165fa904ca64a1098a567..2ef89f1bb22daffc3e4b5dce3ad17c6496f1a67e 100644
+--- a/third_party/blink/renderer/bindings/scripts/web_idl/idl_type.py
++++ b/third_party/blink/renderer/bindings/scripts/web_idl/idl_type.py
+@@ -1336,6 +1336,14 @@ class UnionType(IdlType):
+         assert self._union_definition_object is None
+         self._union_definition_object = union_definition_object
+ 
++    @property
++    def is_phantom(self):
++        """Returns True if a class for union should not be generated,
++        as would be the case if enum only exists at the IDL level and
++        is not passed down to implementation. This can happen when all
++        enum variants are coerced to a single type."""
++        return "PassAsSpan" in self.effective_annotations
++
+ 
+ class NullableType(IdlType):
+     """https://webidl.spec.whatwg.org/#idl-nullable-type"""
