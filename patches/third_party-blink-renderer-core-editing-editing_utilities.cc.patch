@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/editing/editing_utilities.cc b/third_party/blink/renderer/core/editing/editing_utilities.cc
-index df6e4b78dbde104302974d6627752c3a45658067..3a2fffe4a2748fbc1c1ff2ecfd3b8eddee68423e 100644
+index df6e4b78dbde104302974d6627752c3a45658067..c5bb42aff789af32617620a55f0782fee1f0e97e 100644
 --- a/third_party/blink/renderer/core/editing/editing_utilities.cc
 +++ b/third_party/blink/renderer/core/editing/editing_utilities.cc
 @@ -41,6 +41,7 @@
@@ -10,7 +10,35 @@ index df6e4b78dbde104302974d6627752c3a45658067..3a2fffe4a2748fbc1c1ff2ecfd3b8edd
  #include "third_party/blink/renderer/core/editing/editing_strategy.h"
  #include "third_party/blink/renderer/core/editing/editor.h"
  #include "third_party/blink/renderer/core/editing/ephemeral_range.h"
-@@ -1294,6 +1295,30 @@ PositionWithAffinity AdjustForEditingBoundary(const Position& position) {
+@@ -76,8 +77,12 @@
+ #include "third_party/blink/renderer/core/html/html_olist_element.h"
+ #include "third_party/blink/renderer/core/html/html_paragraph_element.h"
+ #include "third_party/blink/renderer/core/html/html_span_element.h"
++#include "third_party/blink/renderer/core/html/html_table_caption_element.h"
+ #include "third_party/blink/renderer/core/html/html_table_cell_element.h"
++#include "third_party/blink/renderer/core/html/html_table_col_element.h"
+ #include "third_party/blink/renderer/core/html/html_table_element.h"
++#include "third_party/blink/renderer/core/html/html_table_row_element.h"
++#include "third_party/blink/renderer/core/html/html_table_section_element.h"
+ #include "third_party/blink/renderer/core/html/html_ulist_element.h"
+ #include "third_party/blink/renderer/core/html/image_document.h"
+ #include "third_party/blink/renderer/core/html/parser/html_parser_idioms.h"
+@@ -1139,6 +1144,14 @@ bool IsTableCell(const Node* node) {
+   return r ? r->IsTableCell() : IsA<HTMLTableCellElement>(*node);
+ }
+ 
++// FlyWeb: from Chromium 133's editing_utilities.cc (0e9fde0dd1 uses it).
++bool IsTablePartElement(const Node* n) {
++  return n &&
++         (IsA<HTMLTableCellElement>(*n) || IsA<HTMLTableCaptionElement>(*n) ||
++          IsA<HTMLTableColElement>(*n) || IsA<HTMLTableSectionElement>(*n) ||
++          IsA<HTMLTableRowElement>(*n));
++}
++
+ HTMLElement* CreateDefaultParagraphElement(Document& document) {
+   switch (document.GetFrame()->GetEditor().DefaultParagraphSeparator()) {
+     case EditorParagraphSeparator::kIsDiv:
+@@ -1294,6 +1307,30 @@ PositionWithAffinity AdjustForEditingBoundary(const Position& position) {
    return AdjustForEditingBoundary(PositionWithAffinity(position));
  }
  

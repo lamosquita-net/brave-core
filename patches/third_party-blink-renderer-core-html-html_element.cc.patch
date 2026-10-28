@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/html_element.cc b/third_party/blink/renderer/core/html/html_element.cc
-index 59ba47318a79b8bde236add57f1207ca00bd0242..661cd6c59b642e089973863d676bc2017029e9f8 100644
+index 59ba47318a79b8bde236add57f1207ca00bd0242..12087c9018b10e54408ee290768aa9b9003f7621 100644
 --- a/third_party/blink/renderer/core/html/html_element.cc
 +++ b/third_party/blink/renderer/core/html/html_element.cc
 @@ -35,6 +35,9 @@
@@ -173,7 +173,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..661cd6c59b642e089973863d676bc201
                                              const Node& target_node) {
    CHECK(event.isTrusted());
    auto& document = target_node.GetDocument();
-@@ -2189,36 +2232,33 @@ void HTMLElement::HandlePopoverLightDismiss(const Event& event,
+@@ -2189,51 +2232,33 @@ void HTMLElement::HandlePopoverLightDismiss(const Event& event,
      return;
    }
  
@@ -212,6 +212,21 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..661cd6c59b642e089973863d676bc201
 -            ancestor_popover, document, HidePopoverFocusBehavior::kNone,
 -            HidePopoverTransitionBehavior::kFireEventsAndWaitForTransitions);
 -      }
+-    }
+-  } else if (event_type == event_type_names::kKeydown) {
+-    // TODO(http://crbug.com/1171318): Remove this keydown branch once
+-    // CloseWatcher has been fully enabled. CloseWatcher will handle escape key
+-    // presses instead of this.
+-    DCHECK(!RuntimeEnabledFeatures::CloseWatcherEnabled());
+-    const KeyboardEvent* key_event = DynamicTo<KeyboardEvent>(event);
+-    if (key_event && key_event->key() == keywords::kEscape) {
+-      CHECK(!event.GetEventPath().IsEmpty());
+-      CHECK_EQ(Event::PhaseType::kNone, event.eventPhase());
+-      // Escape key just pops the topmost popover=auto/hint off the stack.
+-      document.TopmostPopoverOrHint()->HidePopoverInternal(
+-          HidePopoverFocusBehavior::kFocusPreviousElement,
+-          HidePopoverTransitionBehavior::kFireEventsAndWaitForTransitions,
+-          /*exception_state=*/nullptr);
 +  if (event_type == event_type_names::kPointerdown) {
 +    document.SetPopoverPointerdownTarget(
 +        FindTopmostRelatedPopover(target_node));
@@ -234,9 +249,9 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..661cd6c59b642e089973863d676bc201
 +          ancestor_popover, document, HidePopoverFocusBehavior::kNone,
 +          HidePopoverTransitionBehavior::kFireEventsAndWaitForTransitions);
      }
-   } else if (event_type == event_type_names::kKeydown) {
-     // TODO(http://crbug.com/1171318): Remove this keydown branch once
-@@ -2362,6 +2402,23 @@ HTMLSelectListElement* HTMLElement::popoverOwnerSelectListElement() const {
+   }
+ }
+@@ -2362,6 +2387,23 @@ HTMLSelectListElement* HTMLElement::popoverOwnerSelectListElement() const {
                            : nullptr;
  }
  
@@ -260,7 +275,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..661cd6c59b642e089973863d676bc201
  bool HTMLElement::DispatchFocusEvent(
      Element* old_focused_element,
      mojom::blink::FocusType type,
-@@ -3250,6 +3307,17 @@ bool HTMLElement::IsLabelable() const {
+@@ -3250,6 +3292,17 @@ bool HTMLElement::IsLabelable() const {
    return IsFormAssociatedCustomElement();
  }
  
