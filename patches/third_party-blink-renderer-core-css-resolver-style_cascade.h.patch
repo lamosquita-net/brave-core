@@ -1,8 +1,20 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_cascade.h b/third_party/blink/renderer/core/css/resolver/style_cascade.h
-index 70c1f2d42681719cd3632b4c4bf4857869048f97..0cc4cc00f74b848a6eb7900c1321c8419b174e21 100644
+index 70c1f2d42681719cd3632b4c4bf4857869048f97..5bb5d57ed5506cb8d58650a60701b3a4a371c987 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_cascade.h
 +++ b/third_party/blink/renderer/core/css/resolver/style_cascade.h
-@@ -25,6 +25,7 @@
+@@ -5,9 +5,10 @@
+ #ifndef THIRD_PARTY_BLINK_RENDERER_CORE_CSS_RESOLVER_STYLE_CASCADE_H_
+ #define THIRD_PARTY_BLINK_RENDERER_CORE_CSS_RESOLVER_STYLE_CASCADE_H_
+ 
++#include <utility>
++
+ #include "third_party/blink/renderer/core/animation/interpolation.h"
+ #include "third_party/blink/renderer/core/core_export.h"
+-#include "third_party/blink/renderer/core/css/css_attr_type.h"
+ #include "third_party/blink/renderer/core/css/css_property_name.h"
+ #include "third_party/blink/renderer/core/css/css_property_value.h"
+ #include "third_party/blink/renderer/core/css/parser/css_parser_token.h"
+@@ -25,6 +26,7 @@
  #include "third_party/blink/renderer/core/frame/web_feature_forward.h"
  #include "third_party/blink/renderer/platform/heap/collection_support/heap_hash_map.h"
  #include "third_party/blink/renderer/platform/heap/member.h"
@@ -10,7 +22,7 @@ index 70c1f2d42681719cd3632b4c4bf4857869048f97..0cc4cc00f74b848a6eb7900c1321c841
  #include "third_party/blink/renderer/platform/wtf/allocator/allocator.h"
  #include "third_party/blink/renderer/platform/wtf/text/text_encoding.h"
  #include "third_party/blink/renderer/platform/wtf/vector.h"
-@@ -70,7 +71,6 @@ class CORE_EXPORT StyleCascade {
+@@ -70,7 +72,6 @@ class CORE_EXPORT StyleCascade {
  
    using CSSPendingSubstitutionValue = cssvalue::CSSPendingSubstitutionValue;
    using CSSFlipRevertValue = cssvalue::CSSFlipRevertValue;
@@ -18,7 +30,7 @@ index 70c1f2d42681719cd3632b4c4bf4857869048f97..0cc4cc00f74b848a6eb7900c1321c841
  
   public:
    StyleCascade(StyleResolverState& state) : state_(state) {}
-@@ -255,9 +255,10 @@ class CORE_EXPORT StyleCascade {
+@@ -255,9 +256,10 @@ class CORE_EXPORT StyleCascade {
    // The TokenSequence class acts as a builder for CSSVariableData.
    //
    // However, actually building a CSSVariableData is optional; you can also
@@ -32,7 +44,7 @@ index 70c1f2d42681719cd3632b4c4bf4857869048f97..0cc4cc00f74b848a6eb7900c1321c841
    class TokenSequence {
      STACK_ALLOCATED();
  
-@@ -266,50 +267,38 @@ class CORE_EXPORT StyleCascade {
+@@ -266,50 +268,52 @@ class CORE_EXPORT StyleCascade {
      // Initialize a TokenSequence from a CSSVariableData, preparing the
      // TokenSequence for var() resolution.
      //
@@ -46,15 +58,26 @@ index 70c1f2d42681719cd3632b4c4bf4857869048f97..0cc4cc00f74b848a6eb7900c1321c841
 -    }
      String OriginalText() { return original_text_.ToString(); }
  
++    bool Append(StringView str,
++                bool is_attr_tainted,
++                wtf_size_t byte_limit = std::numeric_limits<wtf_size_t>::max());
      bool Append(CSSVariableData* data,
 -                CSSTokenizer* parent_tokenizer,
++                bool is_attr_tainted,
                  wtf_size_t byte_limit = std::numeric_limits<wtf_size_t>::max());
-     void Append(const CSSParserToken&, StringView string);
+-    void Append(const CSSParserToken&, StringView string);
++    bool Append(const CSSValue* data,
++                bool is_attr_tainted,
++                wtf_size_t byte_limit = std::numeric_limits<wtf_size_t>::max());
++    void Append(const CSSParserToken&, bool is_attr_tainted, StringView string);
  
 -    // NOTE: Strips surrounding whitespace (the other are assumed to
 -    // already have done that).
+-    bool AppendFallback(const TokenSequence&, wtf_size_t byte_limit);
 +    // NOTE: Strips trailing whitespace.
-     bool AppendFallback(const TokenSequence&, wtf_size_t byte_limit);
++    bool AppendFallback(const TokenSequence&,
++                        bool is_attr_tainted,
++                        wtf_size_t byte_limit);
  
 -    // Remove all token comment from tokens_ (does not affect original_text_).
 -    // This is required if you're actually sending the token range
@@ -70,7 +93,11 @@ index 70c1f2d42681719cd3632b4c4bf4857869048f97..0cc4cc00f74b848a6eb7900c1321c841
 -    // requires building what is effectively two separate variants (or a large
 -    // template machinery) of TokenSequence and everything calling it.
 -    void StripCommentTokens();
--
++    const Vector<std::pair<wtf_size_t, wtf_size_t>>* GetAttrTaintedRanges()
++        const {
++      return &attr_taint_ranges_;
++    }
+ 
      CSSVariableData* BuildVariableData();
  
     private:
@@ -100,7 +127,16 @@ index 70c1f2d42681719cd3632b4c4bf4857869048f97..0cc4cc00f74b848a6eb7900c1321c841
  
      // The full text of the value we are constructing. We try to maintain
      // the strings exactly as specified through variable substitution,
-@@ -405,38 +394,32 @@ class CORE_EXPORT StyleCascade {
+@@ -322,6 +326,8 @@ class CORE_EXPORT StyleCascade {
+     bool has_font_units_ = false;
+     bool has_root_font_units_ = false;
+     bool has_line_height_units_ = false;
++    // Attr tainted intervals [start, end).
++    Vector<std::pair<wtf_size_t, wtf_size_t>> attr_taint_ranges_;
+   };
+ 
+   // Resolving Values
+@@ -405,43 +411,30 @@ class CORE_EXPORT StyleCascade {
    // cycle was detected.
    //
    // [1] https://drafts.csswg.org/css-variables/#invalid-at-computed-value-time
@@ -136,12 +172,15 @@ index 70c1f2d42681719cd3632b4c4bf4857869048f97..0cc4cc00f74b848a6eb7900c1321c841
                         const CSSParserContext&,
                         TokenSequence&);
  
-+  void AppendTaintToken(TokenSequence& out);
-+
-   // Check if <declaration-value> type is equal to <attr-type>.
-   bool ValidateAttrFallback(TokenSequence& sequence,
-                             CSSAttrType attr_type,
-@@ -449,7 +432,6 @@ class CORE_EXPORT StyleCascade {
+-  // Check if <declaration-value> type is equal to <attr-type>.
+-  bool ValidateAttrFallback(TokenSequence& sequence,
+-                            CSSAttrType attr_type,
+-                            const CSSParserContext& context);
+-
+   // NOTE: The FunctionContext object must be the _caller's_ function context,
+   // not the one the function itself sets up. This is because it is used to
+   // resolve arguments given to this function. See comment within the
+@@ -449,7 +442,6 @@ class CORE_EXPORT StyleCascade {
    bool ResolveFunctionInto(StringView function_name,
                             CSSParserTokenStream& stream,
                             CascadeResolver& resolver,
@@ -149,7 +188,16 @@ index 70c1f2d42681719cd3632b4c4bf4857869048f97..0cc4cc00f74b848a6eb7900c1321c841
                             const CSSParserContext& context,
                             const FunctionContext& function_context,
                             TokenSequence& out);
-@@ -505,21 +487,6 @@ class CORE_EXPORT StyleCascade {
+@@ -478,7 +470,7 @@ class CORE_EXPORT StyleCascade {
+   // the declaration is "invalid at computed-value time".'
+   //
+   // https://drafts.css-houdini.org/css-properties-values-api-1/#fallbacks-in-var-references
+-  bool ValidateFallback(const CustomProperty&, CSSTokenizedValue) const;
++  bool ValidateFallback(const CustomProperty&, StringView) const;
+   // Marks the CustomProperty as referenced by something. Needed to avoid
+   // animating these custom properties on the compositor.
+   void MarkIsReferenced(const CSSProperty& referencer,
+@@ -505,21 +497,6 @@ class CORE_EXPORT StyleCascade {
    void MaybeUseCountRevert(const CSSValue&);
    void MaybeUseCountSummaryDisplayBlock();
  
@@ -171,7 +219,7 @@ index 70c1f2d42681719cd3632b4c4bf4857869048f97..0cc4cc00f74b848a6eb7900c1321c841
    StyleResolverState& state_;
    MatchResult match_result_;
    CascadeInterpolations interpolations_;
-@@ -569,28 +536,20 @@ class CORE_EXPORT StyleCascade {
+@@ -569,28 +546,20 @@ class CORE_EXPORT StyleCascade {
    // computed value of the property affects how e.g. margin-inline-start
    // (and other css-logical properties) cascade.
    bool depends_on_cascade_affecting_property_ = false;

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/parser/at_rule_descriptor_parser.cc b/third_party/blink/renderer/core/css/parser/at_rule_descriptor_parser.cc
-index c4a238e70899c3e606acb9e5d6ec64bb95b9ceca..cf41ea67d921c218f13e61e4db195904ff5fd19c 100644
+index c4a238e70899c3e606acb9e5d6ec64bb95b9ceca..75dcee337e0b861ce2d303ef5931d4e76fa390c6 100644
 --- a/third_party/blink/renderer/core/css/parser/at_rule_descriptor_parser.cc
 +++ b/third_party/blink/renderer/core/css/parser/at_rule_descriptor_parser.cc
 @@ -23,10 +23,10 @@ namespace blink {
@@ -494,3 +494,12 @@ index c4a238e70899c3e606acb9e5d6ec64bb95b9ceca..cf41ea67d921c218f13e61e4db195904
  }
  
  CSSValue* AtRuleDescriptorParser::ParseAtPropertyDescriptor(
+@@ -455,7 +447,7 @@ CSSValue* AtRuleDescriptorParser::ParseAtPropertyDescriptor(
+     case AtRuleDescriptorID::InitialValue: {
+       // Note that we must retain leading whitespace here.
+       return CSSVariableParser::ParseDeclarationValue(
+-          tokenized_value, false /* is_animation_tainted */, context);
++          tokenized_value.text, false /* is_animation_tainted */, context);
+     }
+     case AtRuleDescriptorID::Inherits:
+       range.ConsumeWhitespace();

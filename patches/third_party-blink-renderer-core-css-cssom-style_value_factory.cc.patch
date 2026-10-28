@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/cssom/style_value_factory.cc b/third_party/blink/renderer/core/css/cssom/style_value_factory.cc
-index abae42367ee739ef02f181585970f24222aa4235..ac09694126065814f9137f8e75c8ffb120613a36 100644
+index abae42367ee739ef02f181585970f24222aa4235..c59a17318cf421199c7fbb4ae2b2d6036a76072d 100644
 --- a/third_party/blink/renderer/core/css/cssom/style_value_factory.cc
 +++ b/third_party/blink/renderer/core/css/cssom/style_value_factory.cc
 @@ -10,6 +10,7 @@
@@ -20,3 +20,12 @@ index abae42367ee739ef02f181585970f24222aa4235..ac09694126065814f9137f8e75c8ffb1
      return CSSKeywordValue::FromCSSValue(value);
    }
    if (auto* primitive_value = DynamicTo<CSSPrimitiveValue>(value)) {
+@@ -336,7 +338,7 @@ CSSStyleValueVector StyleValueFactory::FromString(
+ 
+   if ((property_id == CSSPropertyID::kVariable && !tokens.empty()) ||
+       CSSVariableParser::ContainsValidVariableReferences(
+-          range, parser_context->GetExecutionContext())) {
++          css_text, parser_context->GetExecutionContext())) {
+     const auto* variable_data = CSSVariableData::Create(
+         {range, StringView(css_text)}, false /* is_animation_tainted */,
+         false /* needs variable resolution */);

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/element.cc b/third_party/blink/renderer/core/dom/element.cc
-index afa9718ce5b9dd841e33d89610d524df1db4e2c9..6f20193b5fb2cf13c1bdfe8de783d597c7d137a9 100644
+index afa9718ce5b9dd841e33d89610d524df1db4e2c9..b1f65677637edadb3601453b44d5ad5563f01f93 100644
 --- a/third_party/blink/renderer/core/dom/element.cc
 +++ b/third_party/blink/renderer/core/dom/element.cc
 @@ -178,6 +178,7 @@
@@ -208,7 +208,37 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..6f20193b5fb2cf13c1bdfe8de783d597
      return element->EnsureComputedStyle();
    }
  
-@@ -7951,7 +7968,9 @@ PseudoElement* Element::CreatePseudoElementIfNeeded(
+@@ -7911,6 +7928,17 @@ PseudoElement* Element::UpdatePseudoElement(
+           !PseudoElementLayoutObjectIsNeeded(
+               pseudo_id, element->GetComputedStyle(), this)) {
+         generate_pseudo = false;
++        // If the content property is relying on attr() we should add the
++        // originating element's ComputedStyle to the pseudo element style
++        // cache, so that when attribute value changes it will force style
++        // invalidation.
++        if (element->GetComputedStyle() &&
++            element->GetComputedStyle()->HasAttrFunction() &&
++            !GetComputedStyle()->GetCachedPseudoElementStyle(pseudo_id,
++                                                             g_null_atom)) {
++          GetComputedStyle()->AddCachedPseudoElementStyle(
++              element->GetComputedStyle(), pseudo_id, g_null_atom);
++        }
+       }
+     }
+     if (!generate_pseudo) {
+@@ -7948,10 +7976,21 @@ PseudoElement* Element::CreatePseudoElementIfNeeded(
+   if (!PseudoElementLayoutObjectIsNeeded(pseudo_id, pseudo_style, this)) {
+     GetElementRareData()->SetPseudoElement(pseudo_id, nullptr,
+                                            view_transition_name);
++    // If the content property is relying on attr() we should add the
++    // originating element's ComputedStyle to the pseudo element style cache, so
++    // that when attribute value changes it will force style invalidation.
++    if (pseudo_style && pseudo_style->HasAttrFunction() &&
++        !GetComputedStyle()->GetCachedPseudoElementStyle(pseudo_id,
++                                                         g_null_atom)) {
++      GetComputedStyle()->AddCachedPseudoElementStyle(pseudo_style, pseudo_id,
++                                                      g_null_atom);
++    }
      return nullptr;
    }
  
@@ -219,7 +249,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..6f20193b5fb2cf13c1bdfe8de783d597
      GetDocument().AddToTopLayer(pseudo_element, this);
    }
  
-@@ -7984,11 +8003,32 @@ PseudoElement* Element::GetPseudoElement(
+@@ -7984,11 +8023,32 @@ PseudoElement* Element::GetPseudoElement(
    return nullptr;
  }
  
@@ -254,7 +284,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..6f20193b5fb2cf13c1bdfe8de783d597
    }
  
    // The transition pseudos can currently only exist on the document element.
-@@ -8021,18 +8061,44 @@ PseudoElement* Element::GetNestedPseudoElement(
+@@ -8021,18 +8081,44 @@ PseudoElement* Element::GetNestedPseudoElement(
  }
  
  LayoutObject* Element::PseudoElementLayoutObject(PseudoId pseudo_id) const {
@@ -301,7 +331,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..6f20193b5fb2cf13c1bdfe8de783d597
      return true;
    }
  
-@@ -8044,10 +8110,6 @@ bool Element::PseudoElementStylesDependOnFontMetrics() const {
+@@ -8044,10 +8130,6 @@ bool Element::PseudoElementStylesDependOnFontMetrics() const {
      return false;
    }
  
@@ -312,7 +342,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..6f20193b5fb2cf13c1bdfe8de783d597
    // Note that |HasAnyPseudoElementStyles()| counts public pseudo elements only.
    // ::-webkit-scrollbar-*  are internal, and hence are not counted. So we must
    // perform this check after checking scrollbar pseudo element styles.
-@@ -8056,7 +8118,7 @@ bool Element::PseudoElementStylesDependOnFontMetrics() const {
+@@ -8056,7 +8138,7 @@ bool Element::PseudoElementStylesDependOnFontMetrics() const {
    }
  
    for (PseudoElement* pseudo_element : rare_data->GetPseudoElements()) {
@@ -321,7 +351,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..6f20193b5fb2cf13c1bdfe8de783d597
        return true;
      }
    }
-@@ -10146,7 +10208,6 @@ AnchorPositionScrollData* Element::GetAnchorPositionScrollData() const {
+@@ -10146,7 +10228,6 @@ AnchorPositionScrollData* Element::GetAnchorPositionScrollData() const {
  }
  
  void Element::IncrementImplicitlyAnchoredElementCount() {
@@ -329,7 +359,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..6f20193b5fb2cf13c1bdfe8de783d597
    if (!HasImplicitlyAnchoredElement() && GetLayoutObject()) {
      // Invalidate layout to populate itself into Physical/LogicalAnchorQuery.
      GetLayoutObject()->SetNeedsLayoutAndFullPaintInvalidation(
-@@ -10175,20 +10236,19 @@ AnchorElementObserver* Element::GetAnchorElementObserver() const {
+@@ -10175,20 +10256,19 @@ AnchorElementObserver* Element::GetAnchorElementObserver() const {
  
  AnchorElementObserver& Element::EnsureAnchorElementObserver() {
    DCHECK(IsHTMLElement());

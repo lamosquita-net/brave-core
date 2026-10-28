@@ -1,8 +1,26 @@
 diff --git a/third_party/blink/renderer/core/css/parser/css_parser_token_stream.h b/third_party/blink/renderer/core/css/parser/css_parser_token_stream.h
-index a86f0f7d27335886c27e13901b79671628ad6199..e476a33de8e3c43420628e32c8751164d7b72b83 100644
+index a86f0f7d27335886c27e13901b79671628ad6199..0a3484344c86f21fcf3ba2ce94d8e17b6e9c18f5 100644
 --- a/third_party/blink/renderer/core/css/parser/css_parser_token_stream.h
 +++ b/third_party/blink/renderer/core/css/parser/css_parser_token_stream.h
-@@ -99,6 +99,32 @@ class CORE_EXPORT CSSParserTokenStream {
+@@ -5,12 +5,17 @@
+ #ifndef THIRD_PARTY_BLINK_RENDERER_CORE_CSS_PARSER_CSS_PARSER_TOKEN_STREAM_H_
+ #define THIRD_PARTY_BLINK_RENDERER_CORE_CSS_PARSER_CSS_PARSER_TOKEN_STREAM_H_
+ 
++#include <algorithm>
++#include <utility>
++
+ #include "base/auto_reset.h"
+ #include "base/check_op.h"
+ #include "third_party/blink/renderer/core/core_export.h"
+ #include "third_party/blink/renderer/core/css/parser/css_parser_token_range.h"
+ #include "third_party/blink/renderer/core/css/parser/css_tokenizer.h"
+ #include "third_party/blink/renderer/platform/wtf/allocator/allocator.h"
++#include "third_party/blink/renderer/platform/wtf/vector.h"
++#include "third_party/blink/renderer/platform/wtf/wtf_size_t.h"
+ 
+ namespace blink {
+ 
+@@ -99,6 +104,32 @@ class CORE_EXPORT CSSParserTokenStream {
      base::AutoReset<uint64_t> auto_reset_;
    };
  
@@ -35,7 +53,41 @@ index a86f0f7d27335886c27e13901b79671628ad6199..e476a33de8e3c43420628e32c8751164
    // We found that this value works well empirically by printing out the
    // maximum buffer size for a few top alexa websites. It should be slightly
    // above the expected number of tokens in the prelude of an at rule and
-@@ -641,6 +667,15 @@ class CORE_EXPORT CSSParserTokenStream {
+@@ -109,11 +140,33 @@ class CORE_EXPORT CSSParserTokenStream {
+ 
+   explicit CSSParserTokenStream(CSSTokenizer& tokenizer)
+       : tokenizer_(tokenizer), next_(kEOFToken) {}
++  // FlyWeb: upstream takes the text (96a736734d); the 128 stream reads from
++  // a CSSTokenizer.
++  CSSParserTokenStream(
++      CSSTokenizer& tokenizer,
++      const Vector<std::pair<wtf_size_t, wtf_size_t>>* attr_taint_ranges)
++      : tokenizer_(tokenizer),
++        next_(kEOFToken),
++        attr_taint_ranges_(attr_taint_ranges) {}
+ 
+   CSSParserTokenStream(CSSParserTokenStream&&) = default;
+   CSSParserTokenStream(const CSSParserTokenStream&) = delete;
+   CSSParserTokenStream& operator=(const CSSParserTokenStream&) = delete;
+ 
++  bool IsAttrTainted(wtf_size_t start_offset, wtf_size_t end_offset) {
++    if (!attr_taint_ranges_) {
++      return false;
++    }
++    for (auto [tainted_start, tainted_end] : *attr_taint_ranges_) {
++      int64_t end = std::min(end_offset, tainted_end);
++      int64_t start = std::max(start_offset, tainted_start);
++      if (end - start > 0) {
++        return true;
++      }
++    }
++    return false;
++  }
++
+   inline void EnsureLookAhead() {
+     if (!HasLookAhead()) {
+       has_look_ahead_ = true;
+@@ -641,6 +694,15 @@ class CORE_EXPORT CSSParserTokenStream {
      return next_;
    }
  
@@ -51,3 +103,12 @@ index a86f0f7d27335886c27e13901b79671628ad6199..e476a33de8e3c43420628e32c8751164
    // Assuming the last token was a BlockStart token, ignores tokens
    // until the matching BlockEnd token or EOF. Requires but does _not_
    // leave a lookahead token active (for unknown reasons).
+@@ -654,6 +716,8 @@ class CORE_EXPORT CSSParserTokenStream {
+   wtf_size_t offset_ = 0;
+   bool has_look_ahead_ = false;
+   uint64_t boundaries_ = FlagForTokenType(kEOFToken);
++  // Attr tainted intervals [start, end).
++  const Vector<std::pair<wtf_size_t, wtf_size_t>>* attr_taint_ranges_ = nullptr;
+ };
+ 
+ }  // namespace blink

@@ -1,8 +1,8 @@
 diff --git a/third_party/blink/renderer/core/css/parser/css_variable_parser.h b/third_party/blink/renderer/core/css/parser/css_variable_parser.h
-index a3cddc35247d789ce08e47509ed940aefc36622f..0a9913bd0e34a99ced6e556bec5da6688f1ad191 100644
+index a3cddc35247d789ce08e47509ed940aefc36622f..bc1acc705b3a8432b65d7deb68a5e54ce4eae009 100644
 --- a/third_party/blink/renderer/core/css/parser/css_variable_parser.h
 +++ b/third_party/blink/renderer/core/css/parser/css_variable_parser.h
-@@ -14,16 +14,20 @@
+@@ -14,29 +14,69 @@
  
  namespace blink {
  
@@ -15,17 +15,19 @@ index a3cddc35247d789ce08e47509ed940aefc36622f..0a9913bd0e34a99ced6e556bec5da668
  
  class CORE_EXPORT CSSVariableParser {
   public:
+-  static bool ContainsValidVariableReferences(CSSParserTokenRange,
 +  // TODO(sesse): Get rid of this (and then a lot of utility functions can go
 +  // away, too).
-   static bool ContainsValidVariableReferences(CSSParserTokenRange,
++  static bool ContainsValidVariableReferences(StringView,
                                                const ExecutionContext* context);
  
 +  // TODO(sesse): Same.
    static CSSValue* ParseDeclarationIncludingCSSWide(const CSSTokenizedValue&,
                                                      bool is_animation_tainted,
                                                      const CSSParserContext&);
-@@ -31,6 +35,42 @@ class CORE_EXPORT CSSVariableParser {
-       const CSSTokenizedValue&,
+   static CSSUnparsedDeclarationValue* ParseDeclarationValue(
+-      const CSSTokenizedValue&,
++      StringView,
        bool is_animation_tainted,
        const CSSParserContext&);
 +
@@ -67,3 +69,10 @@ index a3cddc35247d789ce08e47509ed940aefc36622f..0a9913bd0e34a99ced6e556bec5da668
    // Custom properties registered with universal syntax [1] are parsed with
    // this function.
    //
+   // https://drafts.css-houdini.org/css-properties-values-api-1/#universal-syntax-definition
+   static CSSUnparsedDeclarationValue* ParseUniversalSyntaxValue(
+-      CSSTokenizedValue,
++      StringView,
+       const CSSParserContext&,
+       bool is_animation_tainted);
+ 

@@ -1,0 +1,24 @@
+diff --git a/third_party/blink/renderer/core/css/properties/longhands/custom_property.h b/third_party/blink/renderer/core/css/properties/longhands/custom_property.h
+index 903c63b01b5998bbfd2acdd7876be6c2919bce87..a2f4e5d1c0b83b2d45c4d14807b3c9dcb0d94cfd 100644
+--- a/third_party/blink/renderer/core/css/properties/longhands/custom_property.h
++++ b/third_party/blink/renderer/core/css/properties/longhands/custom_property.h
+@@ -48,8 +48,8 @@ class CORE_EXPORT CustomProperty : public Variable {
+   // available).
+   //
+   // NOTE: This is distinct from ParseSingleValue() because it takes in
+-  // original_text, not just a token range.
+-  const CSSValue* Parse(const CSSTokenizedValue,
++  // original_text, not a token stream.
++  const CSSValue* Parse(StringView,
+                         const CSSParserContext&,
+                         const CSSParserLocalContext&) const;
+ 
+@@ -76,7 +76,7 @@ class CORE_EXPORT CustomProperty : public Variable {
+                  const PropertyRegistration* registration);
+   explicit CustomProperty(const PropertyRegistration* registration);
+ 
+-  const CSSValue* ParseUntyped(const CSSTokenizedValue&,
++  const CSSValue* ParseUntyped(StringView,
+                                const CSSParserContext&,
+                                const CSSParserLocalContext&) const;
+ 

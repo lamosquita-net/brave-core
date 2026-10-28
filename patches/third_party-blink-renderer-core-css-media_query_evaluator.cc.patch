@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/media_query_evaluator.cc b/third_party/blink/renderer/core/css/media_query_evaluator.cc
-index de014a852fb2887e7d89d974110f2750fe47c9d1..f14e0807cff8d29a88afecc29027404252033407 100644
+index de014a852fb2887e7d89d974110f2750fe47c9d1..23bcf75de5555868540ea7a4b4ca2188ab447603 100644
 --- a/third_party/blink/renderer/core/css/media_query_evaluator.cc
 +++ b/third_party/blink/renderer/core/css/media_query_evaluator.cc
 @@ -1761,7 +1761,9 @@ KleeneValue MediaQueryEvaluator::EvalStyleFeature(
@@ -9,7 +9,7 @@ index de014a852fb2887e7d89d974110f2750fe47c9d1..f14e0807cff8d29a88afecc290274042
 -    if (base::ValuesEquivalent(computed, query_computed)) {
 +    if (computed == query_computed ||
 +        (computed && query_computed &&
-+         computed->EqualsIgnoringTaint(*query_computed))) {
++         computed->EqualsIgnoringAttrTainting(*query_computed))) {
        return KleeneValue::kTrue;
      }
      return KleeneValue::kFalse;

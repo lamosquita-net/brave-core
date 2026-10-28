@@ -1,8 +1,31 @@
 diff --git a/third_party/blink/renderer/core/css/css_test_helpers.cc b/third_party/blink/renderer/core/css/css_test_helpers.cc
-index b1f6d8feca4114cc42399e6b8dc544a8bb9fa59d..a6ece610c32c0afeb750320d7bb324b092a17216 100644
+index b1f6d8feca4114cc42399e6b8dc544a8bb9fa59d..77536e627618ad8657e50c07275fa72887f66c1c 100644
 --- a/third_party/blink/renderer/core/css/css_test_helpers.cc
 +++ b/third_party/blink/renderer/core/css/css_test_helpers.cc
-@@ -258,54 +258,5 @@ CSSSelectorList* ParseSelectorList(const String& string,
+@@ -182,8 +182,9 @@ void DeclareProperty(Document& document,
+ 
+ CSSVariableData* CreateVariableData(String s) {
+   bool is_animation_tainted = false;
++  bool is_attr_tainted = false;
+   bool needs_variable_resolution = false;
+-  return CSSVariableData::Create(s, is_animation_tainted,
++  return CSSVariableData::Create(s, is_animation_tainted, is_attr_tainted,
+                                  needs_variable_resolution);
+ }
+ 
+@@ -229,10 +230,7 @@ const CSSValue* ParseValue(Document& document, String syntax, String value) {
+     return nullptr;
+   }
+   const auto* context = MakeGarbageCollected<CSSParserContext>(document);
+-  CSSTokenizer tokenizer(value);
+-  auto tokens = tokenizer.TokenizeToEOF();
+-  CSSParserTokenRange range(tokens);
+-  return syntax_definition->Parse(CSSTokenizedValue{range, value}, *context,
++  return syntax_definition->Parse(value, *context,
+                                   /* is_animation_tainted */ false);
+ }
+ 
+@@ -258,54 +256,5 @@ CSSSelectorList* ParseSelectorList(const String& string,
    return CSSSelectorList::AdoptSelectorVector(vector);
  }
  

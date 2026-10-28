@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_builder_converter.h b/third_party/blink/renderer/core/css/resolver/style_builder_converter.h
-index 5ed57e0ad5e830975e62eb4d396e101c79184ebd..a106b81d556ac0d1a8d178296317c248c064287c 100644
+index 5ed57e0ad5e830975e62eb4d396e101c79184ebd..d3d62142efb664060877be06039aa3853708cb65 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_builder_converter.h
 +++ b/third_party/blink/renderer/core/css/resolver/style_builder_converter.h
 @@ -50,6 +50,7 @@
@@ -54,7 +54,17 @@ index 5ed57e0ad5e830975e62eb4d396e101c79184ebd..a106b81d556ac0d1a8d178296317c248
    static TextBoxEdge ConvertTextBoxEdge(StyleResolverState&, const CSSValue&);
    static TextDecorationThickness ConvertTextDecorationThickness(
        StyleResolverState&,
-@@ -392,7 +397,7 @@ class StyleBuilderConverter {
+@@ -334,7 +339,8 @@ class StyleBuilderConverter {
+ 
+   static CSSVariableData* ConvertRegisteredPropertyVariableData(
+       const CSSValue&,
+-      bool is_animation_tainted);
++      bool is_animation_tainted,
++      bool is_attr_tainted);
+ 
+   static StyleAspectRatio ConvertAspectRatio(const StyleResolverState&,
+                                              const CSSValue&);
+@@ -392,7 +398,7 @@ class StyleBuilderConverter {
    static ScopedCSSNameList* ConvertTimelineScope(StyleResolverState&,
                                                   const CSSValue&);
  
@@ -63,7 +73,7 @@ index 5ed57e0ad5e830975e62eb4d396e101c79184ebd..a106b81d556ac0d1a8d178296317c248
  };
  
  template <typename T>
-@@ -509,7 +514,8 @@ int StyleBuilderConverter::ConvertIntegerOrNone(StyleResolverState& state,
+@@ -509,7 +515,8 @@ int StyleBuilderConverter::ConvertIntegerOrNone(StyleResolverState& state,
  // `value` is the result of parsing a <color> value.
  // See: https://drafts.csswg.org/css-color/#resolving-color-values
  CORE_EXPORT StyleColor

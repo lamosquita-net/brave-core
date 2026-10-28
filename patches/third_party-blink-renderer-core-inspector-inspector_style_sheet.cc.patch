@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/inspector/inspector_style_sheet.cc b/third_party/blink/renderer/core/inspector/inspector_style_sheet.cc
-index 766ac2e04516b695017d5ad9c6036844021f218b..f2abf4da4c45e1d5e10a3adf23902c72ad748a05 100644
+index 766ac2e04516b695017d5ad9c6036844021f218b..04a1102984e68bba238239af7bd99c217c959869 100644
 --- a/third_party/blink/renderer/core/inspector/inspector_style_sheet.cc
 +++ b/third_party/blink/renderer/core/inspector/inspector_style_sheet.cc
 @@ -41,6 +41,7 @@
@@ -244,7 +244,40 @@ index 766ac2e04516b695017d5ad9c6036844021f218b..f2abf4da4c45e1d5e10a3adf23902c72
        default:
          break;
      }
-@@ -1654,6 +1799,17 @@ CSSRule* InspectorStyleSheet::SetStyleText(const SourceRange& range,
+@@ -1202,16 +1347,11 @@ bool InspectorStyle::CheckRegisteredPropertySyntaxWithVarSubstitution(
+     return false;
+   }
+ 
+-  CSSTokenizer tokenizer(property.value);
+-  Vector<CSSParserToken, 32> tokens = tokenizer.TokenizeToEOF();
+-  CSSTokenizedValue tokenized_value{CSSParserTokenRange(tokens),
+-                                    property.value};
+-
+   PropertyRegistry empty_registry;
+   CustomProperty p(atomic_name, &empty_registry);
+ 
+   const CSSParserContext* parser_context = ParserContextForDocument(document);
+-  const CSSValue* result = p.Parse(tokenized_value, *parser_context, {});
++  const CSSValue* result = p.Parse(property.value, *parser_context, {});
+   if (!result) {
+     return false;
+   }
+@@ -1225,13 +1365,7 @@ bool InspectorStyle::CheckRegisteredPropertySyntaxWithVarSubstitution(
+   }
+ 
+   // Now check the substitution result against the registered syntax.
+-  String computed_text = computed_value->CssText();
+-  CSSTokenizer computed_text_tokenizer(computed_text);
+-  Vector<CSSParserToken, 32> computed_text_tokens =
+-      computed_text_tokenizer.TokenizeToEOF();
+-  CSSTokenizedValue tokenized_computed_value{
+-      CSSParserTokenRange(computed_text_tokens), computed_text};
+-  if (!registration->Syntax().Parse(tokenized_computed_value, *parser_context,
++  if (!registration->Syntax().Parse(computed_value->CssText(), *parser_context,
+                                     false)) {
+     return false;
+   }
+@@ -1654,6 +1788,17 @@ CSSRule* InspectorStyleSheet::SetStyleText(const SourceRange& range,
      return nullptr;
    }
  
@@ -262,3 +295,19 @@ index 766ac2e04516b695017d5ad9c6036844021f218b..f2abf4da4c45e1d5e10a3adf23902c72
    CSSRule* rule = RuleForSourceData(source_data);
    if (!rule || !rule->parentStyleSheet() ||
        (!IsA<CSSStyleRule>(rule) && !IsA<CSSKeyframeRule>(rule) &&
+@@ -2150,12 +2295,9 @@ void InspectorStyleSheet::ParseText(const String& text) {
+           if (!registration) {
+             continue;
+           }
+-          CSSTokenizer tokenizer(property_source_data.value);
+-          Vector<CSSParserToken, 32> tokens = tokenizer.TokenizeToEOF();
+-          CSSTokenizedValue tokenized_value{CSSParserTokenRange(tokens),
+-                                            property_source_data.value};
+-          if (!registration->Syntax().Parse(
+-                  tokenized_value, *style_sheet->ParserContext(), false)) {
++          if (!registration->Syntax().Parse(property_source_data.value,
++                                            *style_sheet->ParserContext(),
++                                            false)) {
+             property_source_data.parsed_ok = false;
+           }
+         }

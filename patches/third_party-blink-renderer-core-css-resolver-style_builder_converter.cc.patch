@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc b/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
-index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..818de7ebeb25bca944d4031f51c82a7a52a2ddbb 100644
+index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..b486194ed61fff68b6ffab7b520e10aa135b07e5 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
 @@ -66,6 +66,8 @@
@@ -317,7 +317,20 @@ index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..818de7ebeb25bca944d4031f51c82a7a
    }
  
    return value;
-@@ -3364,186 +3407,187 @@ ScopedCSSNameList* StyleBuilderConverter::ConvertTimelineScope(
+@@ -3023,9 +3066,11 @@ const CSSValue& StyleBuilderConverter::ConvertRegisteredPropertyValue(
+ // https://drafts.css-houdini.org/css-properties-values-api-1/#substitution
+ CSSVariableData* StyleBuilderConverter::ConvertRegisteredPropertyVariableData(
+     const CSSValue& value,
+-    bool is_animation_tainted) {
++    bool is_animation_tainted,
++    bool is_attr_tainted) {
+   // TODO(andruud): Produce tokens directly from CSSValue.
+   return CSSVariableData::Create(value.CssText(), is_animation_tainted,
++                                 is_attr_tainted,
+                                  /* needs_variable_resolution */ false);
+ }
+ 
+@@ -3364,186 +3409,187 @@ ScopedCSSNameList* StyleBuilderConverter::ConvertTimelineScope(
    return MakeGarbageCollected<ScopedCSSNameList>(std::move(names));
  }
  
@@ -585,7 +598,7 @@ index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..818de7ebeb25bca944d4031f51c82a7a
          break;
        default:
          NOTREACHED_IN_MIGRATION();
-@@ -3555,26 +3599,26 @@ InsetArea StyleBuilderConverter::ConvertInsetArea(StyleResolverState& state,
+@@ -3555,26 +3601,26 @@ InsetArea StyleBuilderConverter::ConvertInsetArea(StyleResolverState& state,
    if (const auto* first_value = DynamicTo<CSSIdentifierValue>(value)) {
      CSSValueID first_keyword = first_value->GetValueID();
      if (first_keyword == CSSValueID::kNone) {
