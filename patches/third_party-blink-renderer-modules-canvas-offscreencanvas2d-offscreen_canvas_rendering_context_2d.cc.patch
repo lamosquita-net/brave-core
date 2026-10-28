@@ -1,13 +1,12 @@
 diff --git a/third_party/blink/renderer/modules/canvas/offscreencanvas2d/offscreen_canvas_rendering_context_2d.cc b/third_party/blink/renderer/modules/canvas/offscreencanvas2d/offscreen_canvas_rendering_context_2d.cc
-index 69c4e3a8b8aa0a2badf1ccac2eb31c784c770748..4456d11243c5ca61c048414f2269baa43f1be514 100644
+index 69c4e3a8b8aa0a2badf1ccac2eb31c784c770748..6966c37aeda15321b3b15ef5e4f9af4158c49383 100644
 --- a/third_party/blink/renderer/modules/canvas/offscreencanvas2d/offscreen_canvas_rendering_context_2d.cc
 +++ b/third_party/blink/renderer/modules/canvas/offscreencanvas2d/offscreen_canvas_rendering_context_2d.cc
-@@ -18,10 +18,13 @@
+@@ -18,10 +18,12 @@
  #include "third_party/blink/renderer/core/frame/local_frame.h"
  #include "third_party/blink/renderer/core/frame/settings.h"
  #include "third_party/blink/renderer/core/html/canvas/text_metrics.h"
 +#include "third_party/blink/renderer/bindings/modules/v8/v8_canvas_rendering_context_2d_settings.h"
-+#include "third_party/blink/renderer/bindings/modules/v8/v8_canvas_will_read_frequently.h"
  #include "third_party/blink/renderer/core/imagebitmap/image_bitmap.h"
  #include "third_party/blink/renderer/core/workers/worker_global_scope.h"
  #include "third_party/blink/renderer/core/workers/worker_settings.h"
@@ -16,7 +15,7 @@ index 69c4e3a8b8aa0a2badf1ccac2eb31c784c770748..4456d11243c5ca61c048414f2269baa4
  #include "third_party/blink/renderer/platform/fonts/text_run_paint_info.h"
  #include "third_party/blink/renderer/platform/graphics/canvas_resource_provider.h"
  #include "third_party/blink/renderer/platform/graphics/graphics_types.h"
-@@ -139,6 +142,32 @@ void OffscreenCanvasRenderingContext2D::FinalizeFrame(FlushReason reason) {
+@@ -139,6 +141,30 @@ void OffscreenCanvasRenderingContext2D::FinalizeFrame(FlushReason reason) {
    }
  }
  
@@ -34,14 +33,12 @@ index 69c4e3a8b8aa0a2badf1ccac2eb31c784c770748..4456d11243c5ca61c048414f2269baa4
 +  settings->setDesynchronized(CreationAttributes().desynchronized);
 +  switch (CreationAttributes().will_read_frequently) {
 +    case CanvasContextCreationAttributesCore::WillReadFrequently::kTrue:
-+      settings->setWillReadFrequently(V8CanvasWillReadFrequently::Enum::kTrue);
++      settings->setWillReadFrequently(true);
 +      break;
 +    case CanvasContextCreationAttributesCore::WillReadFrequently::kFalse:
-+      settings->setWillReadFrequently(V8CanvasWillReadFrequently::Enum::kFalse);
-+      break;
 +    case CanvasContextCreationAttributesCore::WillReadFrequently::kUndefined:
-+      settings->setWillReadFrequently(
-+          V8CanvasWillReadFrequently::Enum::kUndefined);
++      settings->setWillReadFrequently(false);
++      break;
 +  }
 +  return settings;
 +}

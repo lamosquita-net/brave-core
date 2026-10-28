@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/modules/canvas/canvas2d/canvas_rendering_context_2d.cc b/third_party/blink/renderer/modules/canvas/canvas2d/canvas_rendering_context_2d.cc
-index 2c56d3894a9269496e8128687d60b3d54d6f60f4..0c2e1f5ed78ca82c273e6d8586e1784e91673b4e 100644
+index 2c56d3894a9269496e8128687d60b3d54d6f60f4..bad22526b7f767a857b1a08274bc6cb200f9f26d 100644
 --- a/third_party/blink/renderer/modules/canvas/canvas2d/canvas_rendering_context_2d.cc
 +++ b/third_party/blink/renderer/modules/canvas/canvas2d/canvas_rendering_context_2d.cc
-@@ -388,7 +388,7 @@ void CanvasRenderingContext2D::ScrollPathIntoViewInternal(const Path& path) {
+@@ -54,7 +54,6 @@
+ #include "third_party/blink/public/mojom/scroll/scroll_into_view_params.mojom-blink.h"
+ #include "third_party/blink/public/platform/task_type.h"
+ #include "third_party/blink/renderer/bindings/modules/v8/v8_canvas_rendering_context_2d_settings.h"
+-#include "third_party/blink/renderer/bindings/modules/v8/v8_canvas_will_read_frequently.h"
+ #include "third_party/blink/renderer/bindings/modules/v8/v8_typedefs.h"
+ #include "third_party/blink/renderer/bindings/modules/v8/v8_union_canvasrenderingcontext2d_gpucanvascontext_imagebitmaprenderingcontext_webgl2renderingcontext_webglrenderingcontext.h"
+ #include "third_party/blink/renderer/core/accessibility/ax_object_cache.h"
+@@ -388,7 +387,7 @@ void CanvasRenderingContext2D::ScrollPathIntoViewInternal(const Path& path) {
    }
    scroll_into_view_util::ScrollRectToVisible(
        *renderer, path_rect,
@@ -11,3 +19,21 @@ index 2c56d3894a9269496e8128687d60b3d54d6f60f4..0c2e1f5ed78ca82c273e6d8586e1784e
            horizontal_scroll_mode, vertical_scroll_mode,
            mojom::blink::ScrollType::kProgrammatic, false,
            mojom::blink::ScrollBehavior::kAuto));
+@@ -753,14 +752,12 @@ CanvasRenderingContext2D::getContextAttributes() const {
+   settings->setDesynchronized(Host()->LowLatencyEnabled());
+   switch (CreationAttributes().will_read_frequently) {
+     case CanvasContextCreationAttributesCore::WillReadFrequently::kTrue:
+-      settings->setWillReadFrequently(V8CanvasWillReadFrequently::Enum::kTrue);
++      settings->setWillReadFrequently(true);
+       break;
+     case CanvasContextCreationAttributesCore::WillReadFrequently::kFalse:
+-      settings->setWillReadFrequently(V8CanvasWillReadFrequently::Enum::kFalse);
+-      break;
+     case CanvasContextCreationAttributesCore::WillReadFrequently::kUndefined:
+-      settings->setWillReadFrequently(
+-          V8CanvasWillReadFrequently::Enum::kUndefined);
++      settings->setWillReadFrequently(false);
++      break;
+   }
+   return settings;
+ }
