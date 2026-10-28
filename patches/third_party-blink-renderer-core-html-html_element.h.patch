@@ -1,9 +1,12 @@
 diff --git a/third_party/blink/renderer/core/html/html_element.h b/third_party/blink/renderer/core/html/html_element.h
-index 6c647294ae105590d222e8603f0893507264a1b0..286c07134126a9652b2da32b661e45f3b940218d 100644
+index 6c647294ae105590d222e8603f0893507264a1b0..2f897e8751153e1345ff16cc809d254927710938 100644
 --- a/third_party/blink/renderer/core/html/html_element.h
 +++ b/third_party/blink/renderer/core/html/html_element.h
-@@ -48,6 +48,8 @@ class HTMLSelectListElement;
+@@ -46,8 +46,11 @@ class FormAssociated;
+ class HTMLFormElement;
+ class HTMLSelectListElement;
  class KeyboardEvent;
++class PointerEvent;
  class TextControlElement;
  class V8UnionStringLegacyNullToEmptyStringOrTrustedScript;
 +class V8UnionBooleanOrTogglePopoverOptions;
@@ -11,7 +14,7 @@ index 6c647294ae105590d222e8603f0893507264a1b0..286c07134126a9652b2da32b661e45f3
  
  enum TranslateAttributeMode {
    kTranslateAttributeYes,
-@@ -190,6 +192,7 @@ class CORE_EXPORT HTMLElement : public Element {
+@@ -190,6 +193,7 @@ class CORE_EXPORT HTMLElement : public Element {
    virtual bool IsLabelable() const;
    // |labels| IDL attribute implementation for IsLabelable()==true elements.
    LabelsNodeList* labels();
@@ -19,7 +22,7 @@ index 6c647294ae105590d222e8603f0893507264a1b0..286c07134126a9652b2da32b661e45f3
  
    // https://html.spec.whatwg.org/C/#interactive-content
    virtual bool IsInteractiveContent() const;
-@@ -259,8 +262,11 @@ class CORE_EXPORT HTMLElement : public Element {
+@@ -259,8 +263,11 @@ class CORE_EXPORT HTMLElement : public Element {
                        bool include_event_handler_text,
                        Document* expected_document) const;
    bool togglePopover(ExceptionState& exception_state);
@@ -32,7 +35,17 @@ index 6c647294ae105590d222e8603f0893507264a1b0..286c07134126a9652b2da32b661e45f3
    void hidePopover(ExceptionState& exception_state);
    // |exception_state| can be nullptr when exceptions can't be thrown, such as
    // when the browser hides a popover during light dismiss or shows a popover in
-@@ -295,6 +301,9 @@ class CORE_EXPORT HTMLElement : public Element {
+@@ -281,7 +288,8 @@ class CORE_EXPORT HTMLElement : public Element {
+       Element& top_layer_element,
+       TopLayerElementType top_layer_element_type);
+ 
+-  static void HandlePopoverLightDismiss(const Event& event, const Node& node);
++  static void HandlePopoverLightDismiss(const PointerEvent& event,
++                                        const Node& node);
+   void InvokePopover(Element& invoker);
+   void SetPopoverFocusOnShow();
+   // This hides all visible popovers up to, but not including,
+@@ -295,6 +303,9 @@ class CORE_EXPORT HTMLElement : public Element {
    void MaybeQueuePopoverHideEvent();
    static void HoveredElementChanged(Element* old_element, Element* new_element);
  

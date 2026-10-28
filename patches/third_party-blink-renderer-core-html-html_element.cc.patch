@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/html_element.cc b/third_party/blink/renderer/core/html/html_element.cc
-index 59ba47318a79b8bde236add57f1207ca00bd0242..c0d3a8e912155c4d3300ece5c27242cf0537adf4 100644
+index 59ba47318a79b8bde236add57f1207ca00bd0242..661cd6c59b642e089973863d676bc2017029e9f8 100644
 --- a/third_party/blink/renderer/core/html/html_element.cc
 +++ b/third_party/blink/renderer/core/html/html_element.cc
 @@ -35,6 +35,9 @@
@@ -164,7 +164,79 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..c0d3a8e912155c4d3300ece5c27242cf
        dialog->SetFocusForDialog();
      } else {
        HTMLDialogElement::SetFocusForDialogLegacy(dialog);
-@@ -2362,6 +2405,23 @@ HTMLSelectListElement* HTMLElement::popoverOwnerSelectListElement() const {
+@@ -2181,7 +2224,7 @@ const HTMLElement* FindTopmostRelatedPopover(
+ }  // namespace
+ 
+ // static
+-void HTMLElement::HandlePopoverLightDismiss(const Event& event,
++void HTMLElement::HandlePopoverLightDismiss(const PointerEvent& event,
+                                             const Node& target_node) {
+   CHECK(event.isTrusted());
+   auto& document = target_node.GetDocument();
+@@ -2189,36 +2232,33 @@ void HTMLElement::HandlePopoverLightDismiss(const Event& event,
+     return;
+   }
+ 
++  // PointerEventManager will call this function before actually dispatching
++  // the event.
++  CHECK(!event.HasEventPath());
++  CHECK_EQ(Event::PhaseType::kNone, event.eventPhase());
++
+   const AtomicString& event_type = event.type();
+-  if (IsA<PointerEvent>(event)) {
+-    // PointerEventManager will call this function before actually dispatching
+-    // the event.
+-    CHECK(!event.HasEventPath());
+-    CHECK_EQ(Event::PhaseType::kNone, event.eventPhase());
+-
+-    if (event_type == event_type_names::kPointerdown) {
+-      document.SetPopoverPointerdownTarget(
+-          FindTopmostRelatedPopover(target_node));
+-    } else if (event_type == event_type_names::kPointerup) {
+-      // Hide everything up to the clicked element. We do this on pointerup,
+-      // rather than pointerdown or click, primarily for accessibility concerns.
+-      // See
+-      // https://www.w3.org/WAI/WCAG21/Understanding/pointer-cancellation.html
+-      // for more information on why it is better to perform potentially
+-      // destructive actions (including hiding a popover) on pointer-up rather
+-      // than pointer-down. To properly handle the use case where a user starts
+-      // a pointer-drag on a popover, and finishes off the popover (to highlight
+-      // text), the ancestral popover is stored in pointerdown and compared
+-      // here.
+-      auto* ancestor_popover = FindTopmostRelatedPopover(target_node);
+-      bool same_target =
+-          ancestor_popover == document.PopoverPointerdownTarget();
+-      document.SetPopoverPointerdownTarget(nullptr);
+-      if (same_target) {
+-        HideAllPopoversUntil(
+-            ancestor_popover, document, HidePopoverFocusBehavior::kNone,
+-            HidePopoverTransitionBehavior::kFireEventsAndWaitForTransitions);
+-      }
++  if (event_type == event_type_names::kPointerdown) {
++    document.SetPopoverPointerdownTarget(
++        FindTopmostRelatedPopover(target_node));
++  } else if (event_type == event_type_names::kPointerup) {
++    // Hide everything up to the clicked element. We do this on pointerup,
++    // rather than pointerdown or click, primarily for accessibility concerns.
++    // See
++    // https://www.w3.org/WAI/WCAG21/Understanding/pointer-cancellation.html
++    // for more information on why it is better to perform potentially
++    // destructive actions (including hiding a popover) on pointer-up rather
++    // than pointer-down. To properly handle the use case where a user starts
++    // a pointer-drag on a popover, and finishes off the popover (to highlight
++    // text), the ancestral popover is stored in pointerdown and compared
++    // here.
++    auto* ancestor_popover = FindTopmostRelatedPopover(target_node);
++    bool same_target = ancestor_popover == document.PopoverPointerdownTarget();
++    document.SetPopoverPointerdownTarget(nullptr);
++    if (same_target) {
++      HideAllPopoversUntil(
++          ancestor_popover, document, HidePopoverFocusBehavior::kNone,
++          HidePopoverTransitionBehavior::kFireEventsAndWaitForTransitions);
+     }
+   } else if (event_type == event_type_names::kKeydown) {
+     // TODO(http://crbug.com/1171318): Remove this keydown branch once
+@@ -2362,6 +2402,23 @@ HTMLSelectListElement* HTMLElement::popoverOwnerSelectListElement() const {
                            : nullptr;
  }
  
@@ -188,7 +260,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..c0d3a8e912155c4d3300ece5c27242cf
  bool HTMLElement::DispatchFocusEvent(
      Element* old_focused_element,
      mojom::blink::FocusType type,
-@@ -3250,6 +3310,17 @@ bool HTMLElement::IsLabelable() const {
+@@ -3250,6 +3307,17 @@ bool HTMLElement::IsLabelable() const {
    return IsFormAssociatedCustomElement();
  }
  

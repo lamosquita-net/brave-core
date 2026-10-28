@@ -1,8 +1,8 @@
 diff --git a/third_party/blink/renderer/core/html/html_dialog_element.h b/third_party/blink/renderer/core/html/html_dialog_element.h
-index 5bd8fd518d33ce31d6dccb89d912fc3e28733900..e9bee4dc0408dccb7ed6f6c65394392af5d57889 100644
+index 5bd8fd518d33ce31d6dccb89d912fc3e28733900..7c13c9e4ee225e34b8b36737aa7253c2dc1df219 100644
 --- a/third_party/blink/renderer/core/html/html_dialog_element.h
 +++ b/third_party/blink/renderer/core/html/html_dialog_element.h
-@@ -27,9 +27,11 @@
+@@ -27,14 +27,23 @@
  #define THIRD_PARTY_BLINK_RENDERER_CORE_HTML_HTML_DIALOG_ELEMENT_H_
  
  #include "third_party/blink/renderer/core/core_export.h"
@@ -14,7 +14,68 @@ index 5bd8fd518d33ce31d6dccb89d912fc3e28733900..e9bee4dc0408dccb7ed6f6c65394392a
  
  namespace blink {
  
-@@ -88,6 +90,9 @@ class CORE_EXPORT HTMLDialogElement final : public HTMLElement {
+ class Document;
+ class ExceptionState;
++class PointerEvent;
++
++enum class ClosedByState {
++  kAny,
++  kCloseRequest,
++  kNone,
++};
+ 
+ class CORE_EXPORT HTMLDialogElement final : public HTMLElement {
+   DEFINE_WRAPPERTYPEINFO();
+@@ -44,19 +53,36 @@ class CORE_EXPORT HTMLDialogElement final : public HTMLElement {
+ 
+   void Trace(Visitor*) const override;
+ 
++  // ignore_open_attribute ensures that the closing steps are run even if the
++  // open attribute is removed by script.
++  // async_focus makes previously_focused_element_ get focused after waiting
++  // for a task instead of getting focused synchronously.
+   void close(const String& return_value = String(),
+-             bool ignore_open_attribute = false);
++             bool ignore_open_attribute = false,
++             bool async_focus = false);
++  void requestClose(ExceptionState& exception_state) {
++    requestClose(String(), exception_state);
++  }
++  void requestClose(const String& return_value, ExceptionState&);
+   void show(ExceptionState&);
+   void showModal(ExceptionState&);
+   void RemovedFrom(ContainerNode&) override;
+ 
+   bool IsModal() const { return is_modal_; }
++  bool IsOpen() const { return FastHasAttribute(html_names::kOpenAttr); }
+ 
+   String returnValue() const { return return_value_; }
+   void setReturnValue(const String& return_value) {
+     return_value_ = return_value;
+   }
+ 
++  ClosedByState ClosedBy() const;
++  String closedBy() const;
++  void setClosedBy(const String& return_value);
++
++  static void HandleDialogLightDismiss(const PointerEvent& pointer_event,
++                                       const Node& target_node);
++
+   void CloseWatcherFiredCancel(Event*);
+   void CloseWatcherFiredClose();
+ 
+@@ -82,20 +108,31 @@ class CORE_EXPORT HTMLDialogElement final : public HTMLElement {
+   bool HandleCommandInternal(HTMLElement& invoker,
+                              CommandEventType command) override;
+ 
+- private:
++  void AttributeChanged(const AttributeModificationParams&) override;
+   void ParseAttribute(const AttributeModificationParams&) override;
+ 
++ private:
++  void SetCloseWatcherEnabledState();
++  void CreateCloseWatcher();
++
    void SetIsModal(bool is_modal);
    void ScheduleCloseEvent();
  
@@ -24,7 +85,9 @@ index 5bd8fd518d33ce31d6dccb89d912fc3e28733900..e9bee4dc0408dccb7ed6f6c65394392a
    bool is_modal_;
    // is_closing_ is set to true at the beginning of close() and is reset to
    // false after the call to close() finishes.
-@@ -96,6 +101,9 @@ class CORE_EXPORT HTMLDialogElement final : public HTMLElement {
+   bool is_closing_ = false;
+   String return_value_;
++  String request_close_return_value_;
    WeakMember<Element> previously_focused_element_;
  
    Member<CloseWatcher> close_watcher_;

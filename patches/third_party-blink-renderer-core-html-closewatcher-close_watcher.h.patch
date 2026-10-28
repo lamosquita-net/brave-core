@@ -1,0 +1,32 @@
+diff --git a/third_party/blink/renderer/core/html/closewatcher/close_watcher.h b/third_party/blink/renderer/core/html/closewatcher/close_watcher.h
+index ab63d176941fdf06f710985b1d6e5a94db7fdeb2..44c44062e8bf089a092fabe6001c2c40f187633b 100644
+--- a/third_party/blink/renderer/core/html/closewatcher/close_watcher.h
++++ b/third_party/blink/renderer/core/html/closewatcher/close_watcher.h
+@@ -36,9 +36,16 @@ class CloseWatcher final : public EventTarget, public ExecutionContextClient {
+ 
+   bool IsClosed() const { return state_ == State::kClosed; }
+ 
+-  // Note: return value is not exposed to JS via IDL; it's only for internal
+-  // use.
+-  bool requestClose();
++  void setEnabled(bool enabled) { enabled_ = enabled; }
++
++  void requestCloseForBinding();
++
++  enum class AllowCancel {
++    kAlways,
++    kWithUserActivation,
++  };
++  bool RequestClose(AllowCancel allow_cancel);
++
+   void close();
+   void destroy();
+ 
+@@ -92,6 +99,7 @@ class CloseWatcher final : public EventTarget, public ExecutionContextClient {
+   enum class State { kActive, kClosed };
+   State state_ = State::kActive;
+   bool dispatching_cancel_ = false;
++  bool enabled_ = true;
+   Member<AbortSignal::AlgorithmHandle> abort_handle_;
+ };
+ 

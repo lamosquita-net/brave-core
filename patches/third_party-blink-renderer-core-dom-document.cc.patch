@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/document.cc b/third_party/blink/renderer/core/dom/document.cc
-index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..4788400a3d5fd1bdf7dcf9238f77722da89a107d 100644
+index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..51f2f4be16d7d2406a50a82f233851885eb7db5d 100644
 --- a/third_party/blink/renderer/core/dom/document.cc
 +++ b/third_party/blink/renderer/core/dom/document.cc
 @@ -4767,13 +4767,25 @@ void Document::ProcessBaseElement() {
@@ -93,3 +93,32 @@ index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..4788400a3d5fd1bdf7dcf9238f77722d
  }
  
  std::optional<Document::TopLayerReason> Document::IsScheduledForTopLayerRemoval(
+@@ -8108,6 +8147,17 @@ void Document::SetPopoverPointerdownTarget(const HTMLElement* popover) {
+   popover_pointerdown_target_ = popover;
+ }
+ 
++const HTMLDialogElement* Document::DialogPointerdownTarget() const {
++  CHECK(RuntimeEnabledFeatures::HTMLDialogLightDismissEnabled());
++  return dialog_pointerdown_target_.Get();
++}
++
++void Document::SetDialogPointerdownTarget(const HTMLDialogElement* dialog) {
++  CHECK(RuntimeEnabledFeatures::HTMLDialogLightDismissEnabled());
++  DCHECK(!dialog || dialog->IsOpen());
++  dialog_pointerdown_target_ = dialog;
++}
++
+ void Document::exitPointerLock() {
+   if (!GetPage())
+     return;
+@@ -8842,8 +8892,10 @@ void Document::Trace(Visitor* visitor) const {
+   visitor->Trace(popover_auto_stack_);
+   visitor->Trace(popover_hint_stack_);
+   visitor->Trace(popover_pointerdown_target_);
++  visitor->Trace(dialog_pointerdown_target_);
+   visitor->Trace(popovers_waiting_to_hide_);
+   visitor->Trace(all_open_popovers_);
++  visitor->Trace(all_open_dialogs_);
+   visitor->Trace(document_part_root_);
+   visitor->Trace(load_event_delay_timer_);
+   visitor->Trace(plugin_loading_timer_);
