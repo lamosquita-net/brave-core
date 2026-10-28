@@ -28,6 +28,12 @@ Cache epoch 21. Not compiled yet. Review: SEGURIDAD-PORTES, row FS.33 (rule 17).
 V8 13.3 ships `Atomics.pause` and Wasm Memory64 by default, as Chrome 133; `turboshaft_wasm` and `flush_liftoff_code`
 are gone as flags (gin's `kWebAssemblyLiftoffCodeFlushing` only passes the flag when overridden, so it is left as is).
 
+**Stack clash in optimized JS frames** (SEGURIDAD-PORTES-11, 28-10-2026; v8 ea2f03dfff, crbug 574660146, merged into
+15.6/15.7 on 26-10-2026): the prologue grows an optimized frame with one stack pointer decrement before the entry stack
+check, so a frame over 4 KB can step over the guard page. Optimization now aborts with `kFunctionTooBig` (frames over
+4 KB are rare). 13.3 has two register allocation paths (Turboshaft's `pipelines.h` and TurboFan's `PipelineImpl`): both
+get the check and report failure to their callers (`pipeline.cc`, `turboshaft/pipelines.{h,cc}`), plus its mjsunit test.
+
 ---
 
 # FlyWeb: V8 13.2.152.56 (Chrome 132, M132-LTS) and its security backports

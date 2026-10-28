@@ -1,0 +1,24 @@
+diff --git a/src/compiler/turboshaft/pipelines.cc b/src/compiler/turboshaft/pipelines.cc
+index 0e4a60bd1c3208627caf24b150a6507c37631813..63fe769be236ff28cb13ceba8bc2d0a89acb17cf 100644
+--- a/src/compiler/turboshaft/pipelines.cc
++++ b/src/compiler/turboshaft/pipelines.cc
+@@ -30,7 +30,7 @@ void Pipeline::RecreateTurbofanGraph(compiler::TFPipelineData* turbofan_data,
+   // Perform instruction selection and register allocation.
+   PrepareForInstructionSelection(profile);
+   CHECK(SelectInstructions(linkage));
+-  CHECK(AllocateRegisters(linkage->GetIncomingDescriptor()));
++  if (!AllocateRegisters(linkage->GetIncomingDescriptor())) return false;
+   AssembleCode(linkage);
+ 
+   if (v8_flags.turbo_profiling) {
+@@ -47,7 +47,9 @@ void Pipeline::RecreateTurbofanGraph(compiler::TFPipelineData* turbofan_data,
+     if (!SelectInstructions(linkage)) {
+       return false;
+     }
+-    AllocateRegisters(linkage->GetIncomingDescriptor());
++    if (!AllocateRegisters(linkage->GetIncomingDescriptor())) {
++      return false;
++    }
+     // Generate the final machine code.
+     AssembleCode(linkage);
+   }
