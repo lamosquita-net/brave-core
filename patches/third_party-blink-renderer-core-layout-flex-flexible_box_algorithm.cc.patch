@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/flex/flexible_box_algorithm.cc b/third_party/blink/renderer/core/layout/flex/flexible_box_algorithm.cc
-index ff25c2fe85c9650ef5ce925c4298d4def2cd7aa5..1257f89f79f2c86d5e176c4b60e3fc6dd62f4fde 100644
+index ff25c2fe85c9650ef5ce925c4298d4def2cd7aa5..48c0fbb9a72c35cb14d1029ca91f3cf50f815545 100644
 --- a/third_party/blink/renderer/core/layout/flex/flexible_box_algorithm.cc
 +++ b/third_party/blink/renderer/core/layout/flex/flexible_box_algorithm.cc
 @@ -117,25 +117,33 @@ bool FlexItem::MainAxisIsInlineAxis() const {
@@ -83,7 +83,19 @@ index ff25c2fe85c9650ef5ce925c4298d4def2cd7aa5..1257f89f79f2c86d5e176c4b60e3fc6d
  // static
  const StyleContentAlignmentData&
  FlexibleBoxAlgorithm::ContentAlignmentNormalBehavior() {
-@@ -881,7 +880,9 @@ void FlexibleBoxAlgorithm::AlignChildren() {
+@@ -821,7 +820,11 @@ void FlexibleBoxAlgorithm::AlignFlexLines(
+     LayoutUnit cross_axis_content_extent,
+     HeapVector<NGFlexLine>* flex_line_outputs) {
+   const StyleContentAlignmentData align_content = ResolvedAlignContent(*style_);
++  // FlyWeb (2.1.1): 'safe flex-start' still has to go through
++  // InitialContentPositionOffset, which makes it fall back to 'start' when the
++  // lines overflow (flexbox-safe-overflow-position-002/005 with wrap-reverse).
+   if (align_content.GetPosition() == ContentPosition::kFlexStart &&
++      align_content.Overflow() != OverflowAlignment::kSafe &&
+       gap_between_lines_ == 0) {
+     return;
+   }
+@@ -881,7 +884,9 @@ void FlexibleBoxAlgorithm::AlignChildren() {
        LayoutUnit available_space = flex_item.AvailableAlignmentSpace();
        if (!is_webkit_box &&
            flex_item.style_
@@ -94,7 +106,7 @@ index ff25c2fe85c9650ef5ce925c4298d4def2cd7aa5..1257f89f79f2c86d5e176c4b60e3fc6d
                    .Overflow() == OverflowAlignment::kSafe) {
          available_space = available_space.ClampNegativeToZero();
        }
-@@ -927,7 +928,18 @@ void FlexibleBoxAlgorithm::FlipForWrapReverse(
+@@ -927,7 +932,18 @@ void FlexibleBoxAlgorithm::FlipForWrapReverse(
    }
  }
  
@@ -114,7 +126,7 @@ index ff25c2fe85c9650ef5ce925c4298d4def2cd7aa5..1257f89f79f2c86d5e176c4b60e3fc6d
    WritingDirectionMode mode = style_->GetWritingDirection();
    if (!style_->ResolvedIsColumnFlexDirection()) {
      return mode.BlockEnd();
-@@ -965,7 +977,8 @@ StyleContentAlignmentData FlexibleBoxAlgorithm::ResolvedJustifyContent(
+@@ -965,7 +981,8 @@ StyleContentAlignmentData FlexibleBoxAlgorithm::ResolvedJustifyContent(
        } else if ((position == ContentPosition::kLeft &&
                    style.IsFlippedBlocksWritingMode()) ||
                   (position == ContentPosition::kRight &&
@@ -124,7 +136,7 @@ index ff25c2fe85c9650ef5ce925c4298d4def2cd7aa5..1257f89f79f2c86d5e176c4b60e3fc6d
          position = ContentPosition::kEnd;
        } else {
          position = ContentPosition::kStart;
-@@ -1016,7 +1029,9 @@ ItemPosition FlexibleBoxAlgorithm::AlignmentForChild(
+@@ -1016,7 +1033,9 @@ ItemPosition FlexibleBoxAlgorithm::AlignmentForChild(
        flexbox_style.IsDeprecatedWebkitBox()
            ? BoxAlignmentToItemPosition(flexbox_style.BoxAlign())
            : child_style
@@ -135,7 +147,7 @@ index ff25c2fe85c9650ef5ce925c4298d4def2cd7aa5..1257f89f79f2c86d5e176c4b60e3fc6d
                  .GetPosition();
    return TranslateItemPosition(flexbox_style, child_style, align);
  }
-@@ -1052,9 +1067,10 @@ ItemPosition FlexibleBoxAlgorithm::TranslateItemPosition(
+@@ -1052,9 +1071,10 @@ ItemPosition FlexibleBoxAlgorithm::TranslateItemPosition(
    }
  
    if (align == ItemPosition::kLeft || align == ItemPosition::kRight) {
@@ -149,7 +161,7 @@ index ff25c2fe85c9650ef5ce925c4298d4def2cd7aa5..1257f89f79f2c86d5e176c4b60e3fc6d
          << "justify-self is the only way that we can get a left or right "
             "ItemPosition";
      DCHECK(IsColumnFlow(flexbox_style))
-@@ -1106,14 +1122,19 @@ LayoutUnit FlexibleBoxAlgorithm::InitialContentPositionOffset(
+@@ -1106,14 +1126,19 @@ LayoutUnit FlexibleBoxAlgorithm::InitialContentPositionOffset(
      const StyleContentAlignmentData& data,
      unsigned number_of_items,
      bool is_reversed) {
@@ -173,7 +185,7 @@ index ff25c2fe85c9650ef5ce925c4298d4def2cd7aa5..1257f89f79f2c86d5e176c4b60e3fc6d
    DCHECK_NE(position, ContentPosition::kLeft)
        << "ResolvedJustifyContent was supposed to translate this to kStart/End";
    DCHECK_NE(position, ContentPosition::kRight)
-@@ -1123,7 +1144,7 @@ LayoutUnit FlexibleBoxAlgorithm::InitialContentPositionOffset(
+@@ -1123,7 +1148,7 @@ LayoutUnit FlexibleBoxAlgorithm::InitialContentPositionOffset(
        (position == ContentPosition::kStart && is_reversed)) {
      return available_free_space;
    }
