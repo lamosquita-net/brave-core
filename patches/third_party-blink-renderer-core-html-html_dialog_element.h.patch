@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/html_dialog_element.h b/third_party/blink/renderer/core/html/html_dialog_element.h
-index 5bd8fd518d33ce31d6dccb89d912fc3e28733900..7c13c9e4ee225e34b8b36737aa7253c2dc1df219 100644
+index 5bd8fd518d33ce31d6dccb89d912fc3e28733900..061a6ff8b56348401a44a0230580fc988361bc9e 100644
 --- a/third_party/blink/renderer/core/html/html_dialog_element.h
 +++ b/third_party/blink/renderer/core/html/html_dialog_element.h
 @@ -27,14 +27,23 @@
@@ -26,7 +26,7 @@ index 5bd8fd518d33ce31d6dccb89d912fc3e28733900..7c13c9e4ee225e34b8b36737aa7253c2
  
  class CORE_EXPORT HTMLDialogElement final : public HTMLElement {
    DEFINE_WRAPPERTYPEINFO();
-@@ -44,19 +53,36 @@ class CORE_EXPORT HTMLDialogElement final : public HTMLElement {
+@@ -44,19 +53,38 @@ class CORE_EXPORT HTMLDialogElement final : public HTMLElement {
  
    void Trace(Visitor*) const override;
  
@@ -44,10 +44,12 @@ index 5bd8fd518d33ce31d6dccb89d912fc3e28733900..7c13c9e4ee225e34b8b36737aa7253c2
 +  void requestClose(const String& return_value, ExceptionState&);
    void show(ExceptionState&);
    void showModal(ExceptionState&);
++  InsertionNotificationRequest InsertedInto(ContainerNode&) override;
    void RemovedFrom(ContainerNode&) override;
  
    bool IsModal() const { return is_modal_; }
 +  bool IsOpen() const { return FastHasAttribute(html_names::kOpenAttr); }
++  bool IsOpenAndActive() const { return IsOpen() && InActiveDocument(); }
  
    String returnValue() const { return return_value_; }
    void setReturnValue(const String& return_value) {
@@ -64,7 +66,7 @@ index 5bd8fd518d33ce31d6dccb89d912fc3e28733900..7c13c9e4ee225e34b8b36737aa7253c2
    void CloseWatcherFiredCancel(Event*);
    void CloseWatcherFiredClose();
  
-@@ -82,20 +108,31 @@ class CORE_EXPORT HTMLDialogElement final : public HTMLElement {
+@@ -82,20 +110,31 @@ class CORE_EXPORT HTMLDialogElement final : public HTMLElement {
    bool HandleCommandInternal(HTMLElement& invoker,
                               CommandEventType command) override;
  

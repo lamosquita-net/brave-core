@@ -1,0 +1,22 @@
+diff --git a/third_party/blink/renderer/core/editing/commands/apply_style_command.h b/third_party/blink/renderer/core/editing/commands/apply_style_command.h
+index f5dba8b0191994b238c60a7ce4f4c44395b18826..84e935fef610a50f24dd098c7acdf85eb096a463 100644
+--- a/third_party/blink/renderer/core/editing/commands/apply_style_command.h
++++ b/third_party/blink/renderer/core/editing/commands/apply_style_command.h
+@@ -44,6 +44,7 @@ class CORE_EXPORT ApplyStyleCommand final : public CompositeEditCommand {
+   enum PropertyLevel { kPropertyDefault, kForceBlockProperties };
+   enum InlineStyleRemovalMode { kRemoveIfNeeded, kRemoveAlways, kRemoveNone };
+   enum AddStyledElement { kAddStyledElement, kDoNotAddStyledElement };
++  enum MergeSiblings { kMergeSiblings, kDoNotMergeSiblings };
+   typedef bool (*IsInlineElementToRemoveFunction)(const Element*);
+ 
+   ApplyStyleCommand(Document&,
+@@ -151,7 +152,8 @@ class CORE_EXPORT ApplyStyleCommand final : public CompositeEditCommand {
+   void SurroundNodeRangeWithElement(Node* start,
+                                     Node* end,
+                                     Element*,
+-                                    EditingState*);
++                                    EditingState*,
++                                    MergeSiblings = kMergeSiblings);
+   float ComputedFontSize(Node*);
+   void JoinChildTextNodes(ContainerNode*,
+                           const Position& start,

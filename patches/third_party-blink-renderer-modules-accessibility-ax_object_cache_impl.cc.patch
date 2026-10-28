@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/modules/accessibility/ax_object_cache_impl.cc b/third_party/blink/renderer/modules/accessibility/ax_object_cache_impl.cc
-index 0b1e1099746f94695c17f9ca1b044c72c590d1ff..aa88e06b1a0b3d4a493fac38d62f807835a6517a 100644
+index 0b1e1099746f94695c17f9ca1b044c72c590d1ff..cba7ecca40009361d63f6e5cfcab70afa0607f94 100644
 --- a/third_party/blink/renderer/modules/accessibility/ax_object_cache_impl.cc
 +++ b/third_party/blink/renderer/modules/accessibility/ax_object_cache_impl.cc
 @@ -739,6 +739,7 @@ static std::string TreeUpdateReasonAsDebugString(
@@ -61,7 +61,7 @@ index 0b1e1099746f94695c17f9ca1b044c72c590d1ff..aa88e06b1a0b3d4a493fac38d62f8078
      if (!obj->IsDetached()) {
        // Remove and rebuild the subtree, because some descendant computations
        // rely on the role of ancestors.
-@@ -4513,6 +4537,10 @@ void AXObjectCacheImpl::IdChangedWithCleanLayout(Node* node) {
+@@ -4513,10 +4537,18 @@ void AXObjectCacheImpl::IdChangedWithCleanLayout(Node* node) {
    MaybeNewRelationTarget(*node, Get(node));
  }
  
@@ -72,7 +72,15 @@ index 0b1e1099746f94695c17f9ca1b044c72c590d1ff..aa88e06b1a0b3d4a493fac38d62f8078
  void AXObjectCacheImpl::AriaOwnsChangedWithCleanLayout(Node* node) {
    CHECK(relation_cache_);
    if (AXObject* obj = Get(node)) {
-@@ -4711,6 +4739,7 @@ bool AXObjectCacheImpl::IsImmediateProcessingRequired(
+     relation_cache_->UpdateAriaOwnsWithCleanLayout(obj);
++    // Make sure that the owner's children are updated even in the case where
++    // aria-owns is empty, or the object is not a valid owner. This protects
++    // from ending up with parent containing invalid children.
++    ChildrenChangedWithCleanLayout(obj);
+   }
+ }
+ 
+@@ -4711,6 +4743,7 @@ bool AXObjectCacheImpl::IsImmediateProcessingRequired(
        return true;
  
      case TreeUpdateReason::kAriaOwnsChanged:
