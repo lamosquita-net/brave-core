@@ -1,0 +1,22 @@
+diff --git a/third_party/blink/renderer/core/inspector/devtools_agent.h b/third_party/blink/renderer/core/inspector/devtools_agent.h
+index f44494a98affab251f6f09c45dcd5901dcb0ab8f..acf99ddd6850b5053e716677b7723715f9d147fd 100644
+--- a/third_party/blink/renderer/core/inspector/devtools_agent.h
++++ b/third_party/blink/renderer/core/inspector/devtools_agent.h
+@@ -40,7 +40,7 @@ struct WorkerDevToolsParams;
+ class CORE_EXPORT DevToolsAgent : public GarbageCollected<DevToolsAgent>,
+                                   public mojom::blink::DevToolsAgent {
+  public:
+-  class Client {
++  class Client : public GarbageCollectedMixin {
+    public:
+     virtual ~Client() = default;
+     virtual void AttachSession(DevToolsSession*, bool restore) = 0;
+@@ -139,7 +139,7 @@ class CORE_EXPORT DevToolsAgent : public GarbageCollected<DevToolsAgent>,
+   void ReportChildTargetsImpl(bool report,
+                               bool wait_for_debugger,
+                               base::OnceClosure callback);
+-  Client* client_;
++  Member<Client> const client_;
+   // DevToolsAgent is not tied to ExecutionContext
+   HeapMojoAssociatedReceiver<mojom::blink::DevToolsAgent, DevToolsAgent>
+       associated_receiver_{this, nullptr};
