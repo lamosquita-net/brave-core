@@ -59,6 +59,12 @@ The M132-LTS branch took fixes until 10-2025 and skipped some; the merges to bra
 **48 patches** (32 + 12 new for sources + 4 tests; the `js-native-context-specialization.cc` and `version.h` patches
 already existed and were regenerated).
 
+**Stack clash in optimized JS frames** (SEGURIDAD-PORTES-11, 28-10-2026; v8 ea2f03dfff, crbug 574660146, merged into
+15.6/15.7 on 26-10-2026): optimization aborts with `kFunctionTooBig` when a frame is over 4 KB, because the prologue grows
+it with one stack pointer decrement before the entry stack check. Both register allocation paths (Turboshaft's
+`pipelines.h` and TurboFan's `PipelineImpl`) get the check and report failure to their callers; plus its mjsunit test.
+Reserve branch for a 2.1.2 (COORDINACIÓN-18: it goes with level 133 unless that stalls or it shows up exploited).
+
 ## 3. Options (rule 19)
 
 | Option | 13.2 upstream | FlyWeb level 132 |

@@ -1,0 +1,24 @@
+diff --git a/src/compiler/turboshaft/pipelines.cc b/src/compiler/turboshaft/pipelines.cc
+index dea60191184041a23419dc656acf6efd528a0cee..c87e05a11ee04582788815b7a09867ce18cbade9 100644
+--- a/src/compiler/turboshaft/pipelines.cc
++++ b/src/compiler/turboshaft/pipelines.cc
+@@ -30,7 +30,7 @@ MaybeHandle<Code> Pipeline::GenerateCode(
+   // Perform instruction selection and register allocation.
+   PrepareForInstructionSelection(profile);
+   CHECK(SelectInstructions(linkage));
+-  CHECK(AllocateRegisters(linkage->GetIncomingDescriptor()));
++  if (!AllocateRegisters(linkage->GetIncomingDescriptor())) return false;
+   AssembleCode(linkage);
+ 
+   if (v8_flags.turbo_profiling) {
+@@ -47,7 +47,9 @@ MaybeHandle<Code> Pipeline::GenerateCode(
+     if (!SelectInstructions(linkage)) {
+       return MaybeHandle<Code>{};
+     }
+-    AllocateRegisters(linkage->GetIncomingDescriptor());
++    if (!AllocateRegisters(linkage->GetIncomingDescriptor())) {
++      return false;
++    }
+     // Generate the final machine code.
+     AssembleCode(linkage);
+   }
