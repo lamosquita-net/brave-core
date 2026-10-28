@@ -1,0 +1,15 @@
+diff --git a/src/compiler/turboshaft/pipelines.cc b/src/compiler/turboshaft/pipelines.cc
+index 0e4a60bd1c3208627caf24b150a6507c37631813..bcf47abbba5f0850ebde6740b5b8b1301d95b63d 100644
+--- a/src/compiler/turboshaft/pipelines.cc
++++ b/src/compiler/turboshaft/pipelines.cc
+@@ -47,7 +47,9 @@ void Pipeline::RecreateTurbofanGraph(compiler::TFPipelineData* turbofan_data,
+     if (!SelectInstructions(linkage)) {
+       return false;
+     }
+-    AllocateRegisters(linkage->GetIncomingDescriptor());
++    if (!AllocateRegisters(linkage->GetIncomingDescriptor())) {
++      return false;
++    }
+     // Generate the final machine code.
+     AssembleCode(linkage);
+   }
