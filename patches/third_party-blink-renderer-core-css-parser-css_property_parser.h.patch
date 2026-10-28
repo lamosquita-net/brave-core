@@ -1,0 +1,31 @@
+diff --git a/third_party/blink/renderer/core/css/parser/css_property_parser.h b/third_party/blink/renderer/core/css/parser/css_property_parser.h
+index 27d5fc43ae374e446571c4663c33dbc3633dcf1f..acbeb24b65eaa5df9e9ce4130ac5b265a74e7970 100644
+--- a/third_party/blink/renderer/core/css/parser/css_property_parser.h
++++ b/third_party/blink/renderer/core/css/parser/css_property_parser.h
+@@ -69,6 +69,15 @@ class CORE_EXPORT CSSPropertyParser {
+                                           CSSParserTokenStream&,
+                                           const CSSParserContext*);
+ 
++  // Tries to parse an entire value consisting solely of a CSS-wide
++  // keyword (and potentially !important). Returns nullptr on failure,
++  // and then leaves the stream position untouched (but “important”
++  // in an undeterminate state). Unlike the ParseFoo() functions,
++  // this is static, so does not touch parsed_properties_.
++  static const CSSValue* ConsumeCSSWideKeyword(CSSParserTokenStream& stream,
++                                               bool allow_important_annotation,
++                                               bool& important);
++
+  private:
+   CSSPropertyParser(CSSParserTokenStream&,
+                     const CSSParserContext*,
+@@ -78,8 +87,8 @@ class CORE_EXPORT CSSPropertyParser {
+   bool ParseValueStart(CSSPropertyID unresolved_property,
+                        bool allow_important_annotation,
+                        StyleRule::RuleType rule_type);
+-  bool ConsumeCSSWideKeyword(CSSPropertyID unresolved_property,
+-                             bool allow_important_annotation);
++  bool ParseCSSWideKeyword(CSSPropertyID unresolved_property,
++                           bool allow_important_annotation);
+ 
+   bool ParseFontFaceDescriptor(CSSPropertyID);
+ 

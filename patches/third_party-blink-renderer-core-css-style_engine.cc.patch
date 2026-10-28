@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/style_engine.cc b/third_party/blink/renderer/core/css/style_engine.cc
-index c2ce887b549a64a91c51778148791c277096cc21..6d945cda01ae78f286e9c57215b0415f81499a61 100644
+index c2ce887b549a64a91c51778148791c277096cc21..289a581eb8bf68243d1f45960156b7da230a8dbb 100644
 --- a/third_party/blink/renderer/core/css/style_engine.cc
 +++ b/third_party/blink/renderer/core/css/style_engine.cc
 @@ -702,13 +702,11 @@ void StyleEngine::UpdateCounterStyles() {
@@ -37,7 +37,17 @@ index c2ce887b549a64a91c51778148791c277096cc21..6d945cda01ae78f286e9c57215b0415f
          inline_list_item->Ordinal().MarkDirty();
          inline_list_item->OrdinalValueChanged();
        }
-@@ -3100,12 +3098,12 @@ void StyleEngine::CollectMatchingUserRules(
+@@ -1710,8 +1708,7 @@ bool HasAttributeDependentStyle(const Element& element) {
+   if (style && style->HasAttrFunction()) {
+     return true;
+   }
+-  // TODO(crbug.com/40320391): Handle pseudo elements invalidation.
+-  return false;
++  return element.PseudoElementStylesDependOnAttr();
+ }
+ 
+ }  // namespace
+@@ -3100,12 +3097,12 @@ void StyleEngine::CollectMatchingUserRules(
    for (const ActiveStyleSheet& style_sheet : active_user_style_sheets_) {
      match_request.AddRuleset(style_sheet.second);
      if (match_request.IsFull()) {
@@ -52,7 +62,7 @@ index c2ce887b549a64a91c51778148791c277096cc21..6d945cda01ae78f286e9c57215b0415f
    }
  }
  
-@@ -4434,11 +4432,11 @@ bool InvalidatePositionTryNames(Element* root,
+@@ -4434,11 +4431,11 @@ bool InvalidatePositionTryNames(Element* root,
      if (auto* element = DynamicTo<Element>(current)) {
        if (OutOfFlowData* data = element->GetOutOfFlowData()) {
          if (data->InvalidatePositionTryNames(try_names)) {
@@ -69,7 +79,7 @@ index c2ce887b549a64a91c51778148791c277096cc21..6d945cda01ae78f286e9c57215b0415f
          }
        }
        if (ComputedStyle::NullifyEnsured(element->GetComputedStyle()) ==
-@@ -4456,11 +4454,6 @@ bool InvalidatePositionTryNames(Element* root,
+@@ -4456,11 +4453,6 @@ bool InvalidatePositionTryNames(Element* root,
  }  // namespace
  
  bool StyleEngine::UpdateLastSuccessfulPositionFallbacks() {

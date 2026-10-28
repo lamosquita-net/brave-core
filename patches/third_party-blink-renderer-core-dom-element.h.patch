@@ -1,8 +1,8 @@
 diff --git a/third_party/blink/renderer/core/dom/element.h b/third_party/blink/renderer/core/dom/element.h
-index c9ec614fa75af13d0173c25b4b5ee8131fa273fb..fb8f3bfd7b176dda644c3e5801aa537f5037a56f 100644
+index c9ec614fa75af13d0173c25b4b5ee8131fa273fb..1bcdd763b19928285adf722bed96bb271fb26a62 100644
 --- a/third_party/blink/renderer/core/dom/element.h
 +++ b/third_party/blink/renderer/core/dom/element.h
-@@ -1061,6 +1061,8 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1061,12 +1061,15 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    // usage of this ID is limited to pseudo elements generated for a
    // ViewTransition. See
    // third_party/blink/renderer/core/view_transition/README.md
@@ -11,7 +11,14 @@ index c9ec614fa75af13d0173c25b4b5ee8131fa273fb..fb8f3bfd7b176dda644c3e5801aa537f
    PseudoElement* GetPseudoElement(
        PseudoId,
        const AtomicString& view_transition_name = g_null_atom) const;
-@@ -1352,11 +1354,18 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+   LayoutObject* PseudoElementLayoutObject(PseudoId) const;
+ 
+   bool PseudoElementStylesDependOnFontMetrics() const;
++  bool PseudoElementStylesDependOnAttr() const;
+ 
+   // Retrieve the ComputedStyle (if any) corresponding to the provided
+   // PseudoId from cache, calculating the ComputedStyle on-demand if it's
+@@ -1352,11 +1355,18 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    std::optional<LayoutUnit> LastRememberedInlineSize() const;
    std::optional<LayoutUnit> LastRememberedBlockSize() const;
  
@@ -35,3 +42,13 @@ index c9ec614fa75af13d0173c25b4b5ee8131fa273fb..fb8f3bfd7b176dda644c3e5801aa537f
        PseudoId pseudo_id,
        const AtomicString& view_transition_name) const;
  
+@@ -1541,6 +1551,9 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+   friend class AXObject;
+   struct AffectedByPseudoStateChange;
+ 
++  template <typename Functor>
++  bool PseudoElementStylesDependOnFunc(Functor& func) const;
++
+   void ScrollLayoutBoxBy(const ScrollToOptions*);
+   void ScrollLayoutBoxTo(const ScrollToOptions*);
+   void ScrollFrameBy(const ScrollToOptions*);

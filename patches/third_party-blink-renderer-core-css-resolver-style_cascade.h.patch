@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_cascade.h b/third_party/blink/renderer/core/css/resolver/style_cascade.h
-index 70c1f2d42681719cd3632b4c4bf4857869048f97..dd004567793ec53f4c9c42b5a9d453b44201996b 100644
+index 70c1f2d42681719cd3632b4c4bf4857869048f97..88ac56e9725720c3bf0fd47a48a15de9b77cc659 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_cascade.h
 +++ b/third_party/blink/renderer/core/css/resolver/style_cascade.h
 @@ -25,6 +25,7 @@
@@ -18,7 +18,16 @@ index 70c1f2d42681719cd3632b4c4bf4857869048f97..dd004567793ec53f4c9c42b5a9d453b4
  
   public:
    StyleCascade(StyleResolverState& state) : state_(state) {}
-@@ -505,21 +505,6 @@ class CORE_EXPORT StyleCascade {
+@@ -437,6 +437,8 @@ class CORE_EXPORT StyleCascade {
+                        const CSSParserContext&,
+                        TokenSequence&);
+ 
++  void AppendTaintToken(TokenSequence& out);
++
+   // Check if <declaration-value> type is equal to <attr-type>.
+   bool ValidateAttrFallback(TokenSequence& sequence,
+                             CSSAttrType attr_type,
+@@ -505,21 +507,6 @@ class CORE_EXPORT StyleCascade {
    void MaybeUseCountRevert(const CSSValue&);
    void MaybeUseCountSummaryDisplayBlock();
  
@@ -40,7 +49,7 @@ index 70c1f2d42681719cd3632b4c4bf4857869048f97..dd004567793ec53f4c9c42b5a9d453b4
    StyleResolverState& state_;
    MatchResult match_result_;
    CascadeInterpolations interpolations_;
-@@ -569,28 +554,20 @@ class CORE_EXPORT StyleCascade {
+@@ -569,28 +556,20 @@ class CORE_EXPORT StyleCascade {
    // computed value of the property affects how e.g. margin-inline-start
    // (and other css-logical properties) cascade.
    bool depends_on_cascade_affecting_property_ = false;

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style.cc b/third_party/blink/renderer/core/style/computed_style.cc
-index bc061ec223ea93f74982b9ab4a2119f548caf978..dd8f9987a888a0857150c83324802e8d2cc1dd6b 100644
+index bc061ec223ea93f74982b9ab4a2119f548caf978..895297a5329d01c6a69a01e0ce1c93b50316a0cd 100644
 --- a/third_party/blink/renderer/core/style/computed_style.cc
 +++ b/third_party/blink/renderer/core/style/computed_style.cc
 @@ -57,6 +57,7 @@
@@ -79,7 +79,30 @@ index bc061ec223ea93f74982b9ab4a2119f548caf978..dd8f9987a888a0857150c83324802e8d
  }
  
  StyleContentAlignmentData ResolvedContentAlignment(
-@@ -1136,11 +1138,14 @@ bool ComputedStyle::DiffNeedsNormalPaintInvalidation(
+@@ -729,22 +731,6 @@ const ComputedStyle* ComputedStyle::GetCachedPseudoElementStyle(
+   return nullptr;
+ }
+ 
+-bool ComputedStyle::CachedPseudoElementStylesDependOnFontMetrics() const {
+-  if (!HasCachedPseudoElementStyles()) {
+-    return false;
+-  }
+-
+-  DCHECK_EQ(StyleType(), kPseudoIdNone);
+-
+-  for (const auto& pseudo_style : *GetPseudoElementStyleCache()) {
+-    if (pseudo_style->DependsOnFontMetrics()) {
+-      return true;
+-    }
+-  }
+-
+-  return false;
+-}
+-
+ const ComputedStyle* ComputedStyle::AddCachedPseudoElementStyle(
+     const ComputedStyle* pseudo,
+     PseudoId pseudo_id,
+@@ -1136,11 +1122,14 @@ bool ComputedStyle::DiffNeedsNormalPaintInvalidation(
    }
  
    if (field_diff & kBackgroundCurrentColor) {
@@ -98,7 +121,7 @@ index bc061ec223ea93f74982b9ab4a2119f548caf978..dd8f9987a888a0857150c83324802e8d
          (GetCurrentColor() != other.GetCurrentColor() ||
           GetInternalVisitedCurrentColor() !=
               other.GetInternalVisitedCurrentColor())) {
-@@ -2543,11 +2548,17 @@ blink::Color ComputedStyle::VisitedDependentContextPaint(
+@@ -2543,11 +2532,17 @@ blink::Color ComputedStyle::VisitedDependentContextPaint(
    if (!context_visited_paint.HasColor()) {
      return unvisited_color;
    }
@@ -121,7 +144,7 @@ index bc061ec223ea93f74982b9ab4a2119f548caf978..dd8f9987a888a0857150c83324802e8d
  }
  
  blink::Color ComputedStyle::ResolvedColor(const StyleColor& color,
-@@ -2572,7 +2583,11 @@ TextEmphasisMark ComputedStyle::GetTextEmphasisMark() const {
+@@ -2572,7 +2567,11 @@ TextEmphasisMark ComputedStyle::GetTextEmphasisMark() const {
      return mark;
    }
  

@@ -1,0 +1,22 @@
+diff --git a/third_party/blink/renderer/core/css/css_string_value.h b/third_party/blink/renderer/core/css/css_string_value.h
+index 854217049fdda9b429dc9e7790ef99c0b40d5672..4ee3acf7bbc2e8900f5667beeeab008cf78f0453 100644
+--- a/third_party/blink/renderer/core/css/css_string_value.h
++++ b/third_party/blink/renderer/core/css/css_string_value.h
+@@ -8,6 +8,7 @@
+ #include "third_party/blink/renderer/core/core_export.h"
+ #include "third_party/blink/renderer/core/css/css_value.h"
+ #include "third_party/blink/renderer/platform/wtf/casting.h"
++#include "third_party/blink/renderer/platform/wtf/text/string_builder.h"
+ #include "third_party/blink/renderer/platform/wtf/text/wtf_string.h"
+ 
+ namespace blink {
+@@ -24,6 +25,9 @@ class CORE_EXPORT CSSStringValue : public CSSValue {
+     return string_ == other.string_;
+   }
+ 
++  const CSSValue* TaintedCopy() const;
++  const CSSValue* UntaintedCopy() const;
++
+   void TraceAfterDispatch(blink::Visitor*) const;
+ 
+  private:

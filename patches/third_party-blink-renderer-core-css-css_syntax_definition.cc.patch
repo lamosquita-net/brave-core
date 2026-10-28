@@ -1,17 +1,31 @@
 diff --git a/third_party/blink/renderer/core/css/css_syntax_definition.cc b/third_party/blink/renderer/core/css/css_syntax_definition.cc
-index 71e5fe8fab9e1484a5b53ec97c652eabc42d6830..2411b94bec5d187c9773e5b792710a7f644da2b0 100644
+index 71e5fe8fab9e1484a5b53ec97c652eabc42d6830..d1c903fa83e58aa01f02dd8c8d3f47471bbbe11c 100644
 --- a/third_party/blink/renderer/core/css/css_syntax_definition.cc
 +++ b/third_party/blink/renderer/core/css/css_syntax_definition.cc
-@@ -5,6 +5,8 @@
+@@ -5,6 +5,9 @@
  #include "third_party/blink/renderer/core/css/css_syntax_definition.h"
  
  #include <utility>
 +
++#include "third_party/blink/renderer/core/css/css_attr_value_tainting.h"
 +#include "third_party/blink/renderer/core/css/css_string_value.h"
  #include "third_party/blink/renderer/core/css/css_syntax_component.h"
  #include "third_party/blink/renderer/core/css/css_unparsed_declaration_value.h"
  #include "third_party/blink/renderer/core/css/css_uri_value.h"
-@@ -73,6 +75,9 @@ const CSSValue* ConsumeSingleType(const CSSSyntaxComponent& syntax,
+@@ -17,9 +20,9 @@
+ namespace blink {
+ namespace {
+ 
+-const CSSValue* ConsumeSingleType(const CSSSyntaxComponent& syntax,
+-                                  CSSParserTokenStream& stream,
+-                                  const CSSParserContext& context) {
++const CSSValue* ConsumeSingleTypeInternal(const CSSSyntaxComponent& syntax,
++                                          CSSParserTokenStream& stream,
++                                          const CSSParserContext& context) {
+   switch (syntax.GetType()) {
+     case CSSSyntaxType::kIdent:
+       if (stream.Peek().GetType() == kIdentToken &&
+@@ -73,12 +76,38 @@ const CSSValue* ConsumeSingleType(const CSSSyntaxComponent& syntax,
        return css_parsing_utils::ConsumeTransformList(stream, context);
      case CSSSyntaxType::kCustomIdent:
        return css_parsing_utils::ConsumeCustomIdent(stream, context);
@@ -21,3 +35,32 @@ index 71e5fe8fab9e1484a5b53ec97c652eabc42d6830..2411b94bec5d187c9773e5b792710a7f
      default:
        NOTREACHED_IN_MIGRATION();
        return nullptr;
+   }
+ }
+ 
++const CSSValue* TaintedCopyIfNeeded(const CSSValue* value) {
++  if (const auto* v = DynamicTo<CSSStringValue>(value)) {
++    return v->TaintedCopy();
++  }
++  // Only needed for CSSStringValue for now.
++  return value;
++}
++
++const CSSValue* ConsumeSingleType(const CSSSyntaxComponent& syntax,
++                                  CSSParserTokenStream& stream,
++                                  const CSSParserContext& context) {
++  wtf_size_t offset_before = stream.Offset();
++  const CSSValue* value = ConsumeSingleTypeInternal(syntax, stream, context);
++  if (value) {
++    stream.EnsureLookAhead();
++    wtf_size_t offset_after = stream.LookAheadOffset();
++    if (IsAttrTainted(stream.StringRangeAt(
++            offset_before, /* length */ offset_after - offset_before))) {
++      value = TaintedCopyIfNeeded(value);
++    }
++  }
++  return value;
++}
+ const CSSValue* ConsumeSyntaxComponent(const CSSSyntaxComponent& syntax,
+                                        CSSParserTokenStream& stream,
+                                        const CSSParserContext& context) {

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/parser/css_parser_impl.h b/third_party/blink/renderer/core/css/parser/css_parser_impl.h
-index e0bc78163e59d3fb862762139fad8932a89b8cb5..681227a03cfa26d19d0cd332951fdaf9bb80a5a1 100644
+index e0bc78163e59d3fb862762139fad8932a89b8cb5..241b6ce75994f168ba008ef1f8a68d51a531385a 100644
 --- a/third_party/blink/renderer/core/css/parser/css_parser_impl.h
 +++ b/third_party/blink/renderer/core/css/parser/css_parser_impl.h
 @@ -45,6 +45,7 @@ class StyleRuleKeyframe;
@@ -24,7 +24,27 @@ index e0bc78163e59d3fb862762139fad8932a89b8cb5..681227a03cfa26d19d0cd332951fdaf9
    static StyleRuleBase* ParseRule(const String&,
                                    const CSSParserContext*,
                                    CSSNestingType,
-@@ -276,6 +284,7 @@ class CORE_EXPORT CSSParserImpl {
+@@ -165,17 +173,8 @@ class CORE_EXPORT CSSParserImpl {
+       wtf_size_t offset,
+       const CSSParserContext*);
+ 
+-  // A value for a standard property has the following restriction:
+-  // it can not contain braces unless it's the whole value [1].
+-  // This function makes use of that restriction to early-out of the
+-  // streaming tokenizer as soon as possible.
+-  //
+-  // [1] https://github.com/w3c/csswg-drafts/issues/9317
+-  static CSSTokenizedValue ConsumeRestrictedPropertyValue(
+-      CSSParserTokenStream&);
+-
+-  // Custom properties (as well as descriptors) do not have the restriction
+-  // explained above. This function will simply consume until AtEnd.
++  // Legacy function, mostly used for parsing descriptors. Will parsed
++  // until AtEnd.
+   static CSSTokenizedValue ConsumeUnrestrictedPropertyValue(
+       CSSParserTokenStream&);
+ 
+@@ -276,6 +275,7 @@ class CORE_EXPORT CSSParserImpl {
        StyleRule::RuleType,
        CSSNestingType,
        StyleRule* parent_rule_for_nesting,
@@ -32,7 +52,7 @@ index e0bc78163e59d3fb862762139fad8932a89b8cb5..681227a03cfa26d19d0cd332951fdaf9
        HeapVector<Member<StyleRuleBase>, 4>* child_rules);
  
    void ConsumeRuleListOrNestedDeclarationList(
-@@ -292,6 +301,7 @@ class CORE_EXPORT CSSParserImpl {
+@@ -292,6 +292,7 @@ class CORE_EXPORT CSSParserImpl {
                                     CSSParserTokenStream& stream,
                                     CSSNestingType,
                                     StyleRule* parent_rule_for_nesting);
@@ -40,7 +60,19 @@ index e0bc78163e59d3fb862762139fad8932a89b8cb5..681227a03cfa26d19d0cd332951fdaf9
    // Returns true if a declaration was parsed and added to parsed_properties_,
    // and false otherwise.
    bool ConsumeDeclaration(CSSParserTokenStream&, StyleRule::RuleType);
-@@ -329,30 +339,71 @@ class CORE_EXPORT CSSParserImpl {
+@@ -299,9 +300,9 @@ class CORE_EXPORT CSSParserImpl {
+                                CSSPropertyID,
+                                bool is_in_declaration_list,
+                                StyleRule::RuleType);
+-  void ConsumeVariableValue(const CSSTokenizedValue&,
++  bool ConsumeVariableValue(CSSParserTokenStream& stream,
+                             const AtomicString& property_name,
+-                            bool important,
++                            bool allow_important_annotation,
+                             bool is_animation_tainted);
+ 
+   // Consumes tokens from the stream using the provided function, and wraps
+@@ -329,30 +330,71 @@ class CORE_EXPORT CSSParserImpl {
    //
    // If CSSNestingType::kScope is provided, an implicit :scope {} rule
    // is created instead.
@@ -58,7 +90,8 @@ index e0bc78163e59d3fb862762139fad8932a89b8cb5..681227a03cfa26d19d0cd332951fdaf9
 +  //
 +  // Bare declarations that appear after a nested child rule
 +  // must be wrapped in CSSNestedDeclarations rules [1]. For example:
-+  //
+   //
+-  // The resulting rule will carry the specified signal, which may be kNone.
 +  //  .a {
 +  //    color: green;
 +  //    .b { }
@@ -67,9 +100,6 @@ index e0bc78163e59d3fb862762139fad8932a89b8cb5..681227a03cfa26d19d0cd332951fdaf9
 +  //    div { }
 +  //    opacity: 1;
 +  //  }
-   //
--  // The resulting rule will carry the specified signal, which may be kNone.
-+  // Must be wrapped as follows:
    //
 -  // See also CSSSelector::IsInvisible.
 -  StyleRule* CreateInvisibleRule(const CSSSelector* selector_list,
@@ -80,6 +110,8 @@ index e0bc78163e59d3fb862762139fad8932a89b8cb5..681227a03cfa26d19d0cd332951fdaf9
 -  // Adds the result of `CreateInvisibleRule` into `child_rules`,
 -  // provided that we have any declarations to add.
 -  void EmitInvisibleRuleIfNeeded(
++  // Must be wrapped as follows:
++  //
 +  //  .a {
 +  //    color: green;
 +  //    .b { }

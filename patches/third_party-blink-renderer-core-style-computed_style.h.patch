@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style.h b/third_party/blink/renderer/core/style/computed_style.h
-index d4d2a1ca1e5a4f492aecaa534714267bf640d520..701e96be60dfe050c1e15fda0312da55ebefb0d2 100644
+index d4d2a1ca1e5a4f492aecaa534714267bf640d520..fd5093f043a7829a685cc319f07736fedb1cc6e3 100644
 --- a/third_party/blink/renderer/core/style/computed_style.h
 +++ b/third_party/blink/renderer/core/style/computed_style.h
 @@ -403,12 +403,12 @@ class ComputedStyle final : public ComputedStyleBase {
@@ -17,7 +17,33 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..701e96be60dfe050c1e15fda0312da55
        const ComputedStyle* parent_style = nullptr) const;
    StyleContentAlignmentData ResolvedJustifyContent(
        const StyleContentAlignmentData& normal_behaviour) const;
-@@ -1062,6 +1062,9 @@ class ComputedStyle final : public ComputedStyleBase {
+@@ -791,7 +791,24 @@ class ComputedStyle final : public ComputedStyleBase {
+     return HasGlyphRelativeUnits() || HasFontSizeAdjust() ||
+            CustomStyleCallbackDependsOnFont();
+   }
+-  bool CachedPseudoElementStylesDependOnFontMetrics() const;
++
++  template <typename Functor>
++  bool HasCachedPseudoElementStyle(Functor& func) const {
++    if (!func || !HasCachedPseudoElementStyles()) {
++      return false;
++    }
++
++    DCHECK_EQ(StyleType(), kPseudoIdNone);
++
++    for (const auto& pseudo_style : *GetPseudoElementStyleCache()) {
++      if (func(*pseudo_style)) {
++        return true;
++      }
++    }
++
++    return false;
++  }
++
+   bool HighlightPseudoElementStylesDependOnRelativeUnits() const;
+   bool HighlightPseudoElementStylesDependOnContainerUnits() const;
+   bool HighlightPseudoElementStylesDependOnViewportUnits() const;
+@@ -1062,6 +1079,9 @@ class ComputedStyle final : public ComputedStyleBase {
    bool IsHorizontalWritingMode() const {
      return blink::IsHorizontalWritingMode(GetWritingMode());
    }
@@ -27,7 +53,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..701e96be60dfe050c1e15fda0312da55
    bool IsFlippedLinesWritingMode() const {
      return blink::IsFlippedLinesWritingMode(GetWritingMode());
    }
-@@ -1409,10 +1412,10 @@ class ComputedStyle final : public ComputedStyleBase {
+@@ -1409,10 +1429,10 @@ class ComputedStyle final : public ComputedStyleBase {
  
    // Whether or not a positioned element requires normal flow x/y to be computed
    // to determine its position.
@@ -40,7 +66,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..701e96be60dfe050c1e15fda0312da55
      return Top().IsAuto() && Bottom().IsAuto();
    }
  
-@@ -1420,18 +1423,20 @@ class ComputedStyle final : public ComputedStyleBase {
+@@ -1420,18 +1440,20 @@ class ComputedStyle final : public ComputedStyleBase {
    // fallback calculation purposes.
    // https://drafts.csswg.org/css-anchor-position-1/#determine-the-position-fallback-styles
    bool IsTopInsetNonAuto() const {
@@ -65,7 +91,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..701e96be60dfe050c1e15fda0312da55
    }
  
    // Content utility functions.
-@@ -1459,12 +1464,16 @@ class ComputedStyle final : public ComputedStyleBase {
+@@ -1459,12 +1481,16 @@ class ComputedStyle final : public ComputedStyleBase {
  
      if (container_type & kContainerTypeInlineSize) {
        effective |= kContainsStyle;
@@ -84,7 +110,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..701e96be60dfe050c1e15fda0312da55
        effective |= kContainsBlockSize;
      }
      if (!IsContentVisibilityVisible(content_visibility)) {
-@@ -1675,13 +1684,13 @@ class ComputedStyle final : public ComputedStyleBase {
+@@ -1675,13 +1701,13 @@ class ComputedStyle final : public ComputedStyleBase {
    // `text-box-trim` utility functions.
    bool ShouldTextBoxTrimStart() const {
      const ETextBoxTrim text_box_trim = TextBoxTrim();
@@ -102,7 +128,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..701e96be60dfe050c1e15fda0312da55
    }
  
    // Text decoration utility functions.
-@@ -2083,7 +2092,7 @@ class ComputedStyle final : public ComputedStyleBase {
+@@ -2083,7 +2109,7 @@ class ComputedStyle final : public ComputedStyleBase {
    // This function may return values not defined as the enum values. See
    // `EWhiteSpace`. Prefer using semantic functions below.
    EWhiteSpace WhiteSpace() const {
@@ -111,7 +137,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..701e96be60dfe050c1e15fda0312da55
    }
  
    // Semantic functions for the `white-space` property and its longhands.
-@@ -2110,7 +2119,12 @@ class ComputedStyle final : public ComputedStyleBase {
+@@ -2110,7 +2136,12 @@ class ComputedStyle final : public ComputedStyleBase {
      return false;
    }
  
@@ -125,7 +151,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..701e96be60dfe050c1e15fda0312da55
    bool ShouldBreakSpaces() const {
      return blink::ShouldBreakSpaces(GetWhiteSpaceCollapse());
    }
-@@ -2756,11 +2770,12 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+@@ -2756,11 +2787,12 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
      SetClipInternal(ComputedStyleInitialValues::InitialClip());
    }
  
@@ -139,7 +165,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..701e96be60dfe050c1e15fda0312da55
  
    // color
    blink::Color GetCurrentColor() const {
-@@ -3258,11 +3273,11 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+@@ -3258,11 +3290,11 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
    }
  
    EWhiteSpace WhiteSpace() const {

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/matched_properties_cache.cc b/third_party/blink/renderer/core/css/resolver/matched_properties_cache.cc
-index b8f7fc5ba490a38683b60975fa22bf49ffca6083..bafac77117a64b3305c714572ad6dde409e95b16 100644
+index b8f7fc5ba490a38683b60975fa22bf49ffca6083..69909e1ae332ce845868ac577f4b8637fdde0a6f 100644
 --- a/third_party/blink/renderer/core/css/resolver/matched_properties_cache.cc
 +++ b/third_party/blink/renderer/core/css/resolver/matched_properties_cache.cc
 @@ -197,13 +197,6 @@ bool CachedMatchedProperties::operator==(
@@ -16,3 +16,11 @@ index b8f7fc5ba490a38683b60975fa22bf49ffca6083..bafac77117a64b3305c714572ad6dde4
    }
    return true;
  }
+@@ -331,6 +324,7 @@ bool MatchedPropertiesCache::IsCacheable(const StyleResolverState& state) {
+   }
+ 
+   if (state.HasAttrFunction()) {
++    DCHECK(RuntimeEnabledFeatures::CSSAdvancedAttrFunctionEnabled());
+     return false;
+   }
+ 

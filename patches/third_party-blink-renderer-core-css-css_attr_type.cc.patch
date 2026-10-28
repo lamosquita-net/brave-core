@@ -1,0 +1,43 @@
+diff --git a/third_party/blink/renderer/core/css/css_attr_type.cc b/third_party/blink/renderer/core/css/css_attr_type.cc
+index db0931f076e6f1824a428cb418a8cf664a6913f7..d85cbf02b65bb5db53ac78e8ea5dd40dd4ad1d09 100644
+--- a/third_party/blink/renderer/core/css/css_attr_type.cc
++++ b/third_party/blink/renderer/core/css/css_attr_type.cc
+@@ -64,12 +64,20 @@ std::optional<CSSSyntaxDefinition> CSSAttrType::ConvertToCSSSyntaxDefinition()
+   String syntax;
+   switch (category) {
+     case Category::kUnknown:
+-      return std::nullopt;
+     case Category::kString:
+-      syntax = "<string>";
+-      break;
++      // The "string" type has special handling because
++      // it's not equivalent to <string>: the latter involves
++      // quotes, and the former does not.
++      // https://drafts.csswg.org/css-values-5/#attr-types
++      [[fallthrough]];
++    case Category::kFlex:
++    case Category::kFrequency:
++      // <flex> are not part of CSSSyntaxDefinition,
++      // so we need to handle them separately. <frequency> is not
++      // supported yet.
++      return std::nullopt;
+     case Category::kIdent:
+-      syntax = "<ident>";
++      syntax = "<custom-ident>";
+       break;
+     case Category::kColor:
+       syntax = "<color>";
+@@ -89,13 +97,6 @@ std::optional<CSSSyntaxDefinition> CSSAttrType::ConvertToCSSSyntaxDefinition()
+     case Category::kTime:
+       syntax = "<time>";
+       break;
+-    case Category::kFrequency:
+-      syntax = "<frequency>";
+-      break;
+-    case Category::kFlex:
+-      // TODO(crbug.com/40320391): Support parsing from <flex>.
+-      syntax = "<flex>";
+-      break;
+     case Category::kDimensionUnit:
+       syntax = "<number>";
+       break;

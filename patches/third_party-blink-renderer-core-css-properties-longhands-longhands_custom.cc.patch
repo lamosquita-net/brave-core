@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc b/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc
-index ea7a7084f13befb93ab67c985ea8de7b926aae4a..a04bcf79e462d8ed66a9fe290029a0447eef3060 100644
+index ea7a7084f13befb93ab67c985ea8de7b926aae4a..6234c9f1c4456173062950833efb7f45e0948722 100644
 --- a/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc
 +++ b/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc
 @@ -32,6 +32,7 @@
@@ -112,6 +112,19 @@ index ea7a7084f13befb93ab67c985ea8de7b926aae4a..a04bcf79e462d8ed66a9fe290029a044
            state.ParentStyle()->Color().GetColor()));
      } else if (color.IsCurrentColor()) {
        // As per the spec, 'color: currentColor' is treated as 'color: inherit'
+@@ -2668,9 +2682,9 @@ const CSSValue* Content::ParseSingleValue(CSSParserTokenStream& stream,
+               ConsumeAttr(css_parsing_utils::ConsumeFunction(stream), context);
+         } else {
+           alt_text = css_parsing_utils::ConsumeString(stream);
+-          if (!alt_text) {
+-            break;
+-          }
++        }
++        if (!alt_text) {
++          break;
+         }
+         alt_text_values->Append(*alt_text);
+         savepoint.Release();
 @@ -3140,7 +3154,11 @@ std::optional<DisplayValidationResult> ValidateDisplayKeywords(
    return result;
  }
@@ -218,8 +231,8 @@ index ea7a7084f13befb93ab67c985ea8de7b926aae4a..a04bcf79e462d8ed66a9fe290029a044
    }
 -  return css_parsing_utils::ConsumeInsetArea(stream);
 +  return css_parsing_utils::ConsumePositionArea(stream);
-+}
-+
+ }
+ 
 +// TODO(crbug.com/352360007): this can be removed when inset-area is removed.
 +const CSSValue* InsetArea::ParseSingleValue(
 +    CSSParserTokenStream& stream,
@@ -248,8 +261,8 @@ index ea7a7084f13befb93ab67c985ea8de7b926aae4a..a04bcf79e462d8ed66a9fe290029a044
 +    bool allow_visited_style,
 +    CSSValuePhase value_phase) const {
 +  return ComputedStyleUtils::ValueForPositionArea(style.GetPositionArea());
- }
- 
++}
++
 +// TODO(crbug.com/352360007): this can be removed when inset-area is removed.
  const CSSValue* InsetArea::CSSValueFromComputedStyleInternal(
      const ComputedStyle& style,
