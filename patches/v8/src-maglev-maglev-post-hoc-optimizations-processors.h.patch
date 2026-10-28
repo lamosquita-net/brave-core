@@ -1,0 +1,21 @@
+diff --git a/src/maglev/maglev-post-hoc-optimizations-processors.h b/src/maglev/maglev-post-hoc-optimizations-processors.h
+index ddbb70b5149f370b815f07db4f7c52c2cc20b532..25b22bbdaa38e0a32665b7af61d1a6110a2adca9 100644
+--- a/src/maglev/maglev-post-hoc-optimizations-processors.h
++++ b/src/maglev/maglev-post-hoc-optimizations-processors.h
+@@ -204,11 +204,13 @@ class AnyUseMarkingProcessor {
+     return ProcessResult::kContinue;
+   }
+ 
+-#ifdef DEBUG
++  // FlyWeb: dead context-slot stores (MarkNodeDead) are only swept by the phi
++  // representation selector, which does not run with maglev_untagged_phis off
++  // (CVE-2026-3910). Remove them here, as upstream does; otherwise they reach
++  // MarkTaggedInputsAsDecompressing/GenerateCode, which are UNREACHABLE.
+   ProcessResult Process(Dead* node, const ProcessingState& state) {
+-    UNREACHABLE();
++    return ProcessResult::kRemove;
+   }
+-#endif  // DEBUG
+ 
+   void PostProcessGraph(Graph* graph) {
+     RunEscapeAnalysis(graph);

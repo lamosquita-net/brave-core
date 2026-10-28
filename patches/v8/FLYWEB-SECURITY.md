@@ -18,7 +18,14 @@ failed background jobs; the table is in that README. af7d1483a5 changes bytecode
 is the `maglev` line of `src-flags-flag-definitions.h.patch` (with `maglev_untagged_phis` off), after the measurements
 on the 5,1 and 6,1.
 
-101 patches, `git apply --check` clean on 4f282ae4. **Cache epoch 22.** V8 13.4 needs `//third_party/simdutf` (6.0.2,
+**Rule 17 review (SEGURIDAD-PORTES-12, FS.35):** with `maglev_untagged_phis` off, dead context-slot stores
+(`MarkNodeDead`) were never swept: only the phi representation selector removed `Dead` nodes, and it does not run.
+`AnyUseMarkingProcessor` now removes them, as upstream main does (`src-maglev-maglev-post-hoc-optimizations-processors.h`);
+without it, Maglev code with a redundant context store hits `UNREACHABLE` (`mjsunit/compiler/try-finally-deopt` under
+`stress_maglev`), a renderer crash once Maglev is on. Cloud `d8` 13.4 with all these patches: mjsunit 7560/7561 (the
+usual `maglev/extras-cped`), with `maglev`+`stress_maglev` 15050/15050, OSR tests 126/126.
+
+102 patches, `git apply --check` clean on 4f282ae4. **Cache epoch 22.** V8 13.4 needs `//third_party/simdutf` (6.0.2,
 copied from Chromium 134 as brave-core patches) and fast_float cb1d42aa (`FlyWeb/fast_float-revision`). Not compiled
 yet. Review: SEGURIDAD-PORTES (rule 17).
 
