@@ -1,0 +1,25 @@
+diff --git a/third_party/blink/renderer/core/editing/commands/insert_paragraph_separator_command.cc b/third_party/blink/renderer/core/editing/commands/insert_paragraph_separator_command.cc
+index 9ebbec9d3314f2681e5b32a525bd66866197d94c..6097d13378fb6752bb7d251a23768ea2242830cd 100644
+--- a/third_party/blink/renderer/core/editing/commands/insert_paragraph_separator_command.cc
++++ b/third_party/blink/renderer/core/editing/commands/insert_paragraph_separator_command.cc
+@@ -102,6 +102,11 @@ bool IsEditableRootPhrasingContent(const Position& position) {
+                              IsPhrasingContent);
+ }
+ 
++bool IsDisplayInlineType(const HTMLElement* element) {
++  const ComputedStyle* style = element ? element->GetComputedStyle() : nullptr;
++  return style && style->IsDisplayInlineType();
++}
++
+ }  // namespace
+ 
+ // When inserting a new line, we want to avoid nesting empty divs if we can.
+@@ -275,6 +280,8 @@ void InsertParagraphSeparatorCommand::DoApply(EditingState* editing_state) {
+   if (!start_block || !start_block->NonShadowBoundaryParentNode() ||
+       (RuntimeEnabledFeatures::InsertLineBreakIfPhrasingContentEnabled() &&
+        IsEditableRootPhrasingContent(insertion_position)) ||
++      (RuntimeEnabledFeatures::InsertLineBreakIfInlineListItemEnabled() &&
++       IsDisplayInlineType(list_child)) ||
+       IsTableCell(start_block) ||
+       IsA<HTMLFormElement>(*start_block)
+       // FIXME: If the node is hidden, we don't have a canonical position so we

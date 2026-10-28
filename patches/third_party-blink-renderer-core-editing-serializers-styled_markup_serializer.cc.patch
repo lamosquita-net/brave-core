@@ -1,0 +1,19 @@
+diff --git a/third_party/blink/renderer/core/editing/serializers/styled_markup_serializer.cc b/third_party/blink/renderer/core/editing/serializers/styled_markup_serializer.cc
+index 5fa2e8a36b2f21f964d92097f555b800aaa4331f..56ac58954ebce242cb38bf9ad534df44bbcce185 100644
+--- a/third_party/blink/renderer/core/editing/serializers/styled_markup_serializer.cc
++++ b/third_party/blink/renderer/core/editing/serializers/styled_markup_serializer.cc
+@@ -356,9 +356,12 @@ Node* StyledMarkupTraverser<Strategy>::Traverse(Node* start_node,
+     } else {
+       next = Strategy::Next(*n);
+       if (IsEnclosingBlock(n) && CanHaveChildrenForEditing(n) &&
+-          next == past_end && !ContainsOnlyBRElement(To<Element>(*n))) {
++          next == past_end && !ContainsOnlyBRElement(To<Element>(*n)) &&
++          !(RuntimeEnabledFeatures::AllowCopyingEmptyLastTableCellEnabled() &&
++            IsTablePartElement(n))) {
+         // Don't write out empty block containers that aren't fully selected
+-        // unless the block container only contains br element.
++        // unless the block container only contains br element or is a part of
++        // table.
+         continue;
+       }
+ 

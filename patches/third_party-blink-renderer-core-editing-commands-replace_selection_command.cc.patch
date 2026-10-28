@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/editing/commands/replace_selection_command.cc b/third_party/blink/renderer/core/editing/commands/replace_selection_command.cc
-index 2acf875fcca6401fef15eb097373f6a5029c59e8..f56f6262ee81b33c8a06ce2c5891feac167707ba 100644
+index 2acf875fcca6401fef15eb097373f6a5029c59e8..b934ed94bca8a77f5ffd08e498a60608d495a877 100644
 --- a/third_party/blink/renderer/core/editing/commands/replace_selection_command.cc
 +++ b/third_party/blink/renderer/core/editing/commands/replace_selection_command.cc
 @@ -451,6 +451,17 @@ ReplaceSelectionCommand::ReplaceSelectionCommand(
@@ -20,7 +20,28 @@ index 2acf875fcca6401fef15eb097373f6a5029c59e8..f56f6262ee81b33c8a06ce2c5891feac
  static bool HasMatchingQuoteLevel(VisiblePosition end_of_existing_content,
                                    VisiblePosition end_of_inserted_content) {
    Position existing = end_of_existing_content.DeepEquivalent();
-@@ -1251,6 +1262,11 @@ void ReplaceSelectionCommand::DoApply(EditingState* editing_state) {
+@@ -1012,10 +1023,16 @@ void ReplaceSelectionCommand::MergeEndIfNeeded(EditingState* editing_state) {
+     start_of_paragraph_to_move = CreateVisiblePosition(
+         start_of_paragraph_to_move.ToPositionWithAffinity());
+   }
+-
+-  MoveParagraph(start_of_paragraph_to_move,
+-                EndOfParagraph(start_of_paragraph_to_move), destination,
+-                editing_state);
++  if (RuntimeEnabledFeatures::AllowSkippingEditingBoundaryToMergeEndEnabled()) {
++    MoveParagraph(
++        start_of_paragraph_to_move,
++        EndOfParagraph(start_of_paragraph_to_move, kCanSkipOverEditingBoundary),
++        destination, editing_state);
++  } else {
++    MoveParagraph(start_of_paragraph_to_move,
++                  EndOfParagraph(start_of_paragraph_to_move), destination,
++                  editing_state);
++  }
+   if (editing_state->IsAborted())
+     return;
+ 
+@@ -1251,6 +1268,11 @@ void ReplaceSelectionCommand::DoApply(EditingState* editing_state) {
      return;
  
    Position insertion_pos = EndingVisibleSelection().Start();
@@ -32,7 +53,40 @@ index 2acf875fcca6401fef15eb097373f6a5029c59e8..f56f6262ee81b33c8a06ce2c5891feac
    // We don't want any of the pasted content to end up nested in a Mail
    // blockquote, so first break out of any surrounding Mail blockquotes. Unless
    // we're inserting in a table, in which case breaking the blockquote will
-@@ -1705,13 +1721,17 @@ void ReplaceSelectionCommand::DoApply(EditingState* editing_state) {
+@@ -1376,7 +1398,14 @@ void ReplaceSelectionCommand::DoApply(EditingState* editing_state) {
+           split_start = insertion_pos.ComputeContainerNode();
+         Node* node_to_split_to =
+             SplitTreeToNode(split_start, element_to_split_to->parentNode());
+-        insertion_pos = Position::InParentBeforeNode(*node_to_split_to);
++        if (RuntimeEnabledFeatures::
++                ComputeInsertionPositionBasedOnAnchorTypeEnabled() &&
++            (insertion_pos.IsAfterChildren() ||
++             insertion_pos.IsAfterAnchor())) {
++          insertion_pos = Position::InParentAfterNode(*node_to_split_to);
++        } else {
++          insertion_pos = Position::InParentBeforeNode(*node_to_split_to);
++        }
+       }
+     }
+   }
+@@ -1484,8 +1513,15 @@ void ReplaceSelectionCommand::DoApply(EditingState* editing_state) {
+   }
+ 
+   GetDocument().UpdateStyleAndLayout(DocumentUpdateReason::kEditing);
++
++  bool is_root_display_inline = false;
++  if (RuntimeEnabledFeatures::RemovePlaceholderBRForDisplayInlineEnabled()) {
++    is_root_display_inline =
++        current_root && current_root->GetComputedStyle() &&
++        current_root->GetComputedStyle()->IsDisplayInlineType();
++  }
+   if (end_br &&
+-      (plain_text_fragment ||
++      (plain_text_fragment || is_root_display_inline ||
+        (ShouldRemoveEndBR(end_br, original_vis_pos_before_end_br) &&
+         !(fragment.HasInterchangeNewlineAtEnd() && selection_is_plain_text)))) {
+     ContainerNode* parent = end_br->parentNode();
+@@ -1705,13 +1741,17 @@ void ReplaceSelectionCommand::DoApply(EditingState* editing_state) {
      if (editing_state->IsAborted())
        return;
    }
@@ -51,7 +105,7 @@ index 2acf875fcca6401fef15eb097373f6a5029c59e8..f56f6262ee81b33c8a06ce2c5891feac
  }
  
  bool ReplaceSelectionCommand::ShouldRemoveEndBR(
-@@ -2116,6 +2136,11 @@ bool ReplaceSelectionCommand::PerformTrivialReplace(
+@@ -2116,6 +2156,11 @@ bool ReplaceSelectionCommand::PerformTrivialReplace(
        return false;
    }
  
