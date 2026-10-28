@@ -1,5 +1,5 @@
 diff --git a/src/compiler/pipeline.cc b/src/compiler/pipeline.cc
-index c9d3e56663e4c833d3d8a28f4ce12a59e7e1ed71..f6ed962c8fa3961a7dbbd45acc03771eaa2277ab 100644
+index c9d3e56663e4c833d3d8a28f4ce12a59e7e1ed71..ee7d202c99e04015f0b74f10752fdad98ee70e3e 100644
 --- a/src/compiler/pipeline.cc
 +++ b/src/compiler/pipeline.cc
 @@ -213,8 +213,9 @@ class PipelineImpl final {
@@ -26,6 +26,15 @@ index c9d3e56663e4c833d3d8a28f4ce12a59e7e1ed71..f6ed962c8fa3961a7dbbd45acc03771e
      turboshaft_pipeline.AssembleCode(linkage);
      return true;
    } else {
+@@ -3892,7 +3896,7 @@ void Pipeline::AllocateRegistersForTesting(const RegisterConfiguration* config,
+ 
+   // TODO(nicohartmann): Should migrate this to turboshaft::Pipeline eventually.
+   PipelineImpl pipeline(&data);
+-  pipeline.AllocateRegisters(config, nullptr, run_verifier);
++  CHECK(pipeline.AllocateRegisters(config, nullptr, run_verifier));
+ }
+ 
+ void PipelineImpl::ComputeScheduledGraph() {
 @@ -4030,7 +4034,7 @@ bool PipelineImpl::AllocateRegisters(CallDescriptor* call_descriptor,
          RegisterConfiguration::RestrictGeneralRegisters(registers));
      config = restricted_config.get();
