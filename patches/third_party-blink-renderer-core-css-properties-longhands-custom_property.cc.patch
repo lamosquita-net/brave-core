@@ -1,8 +1,22 @@
 diff --git a/third_party/blink/renderer/core/css/properties/longhands/custom_property.cc b/third_party/blink/renderer/core/css/properties/longhands/custom_property.cc
-index c06b5ed3ff0a86968b60eadaca171cda6188f4f9..2a1dc711837263e25491039f72cf4603bf1225e0 100644
+index c06b5ed3ff0a86968b60eadaca171cda6188f4f9..755ae4c115d30932ea076fa77d0734a07ea99a47 100644
 --- a/third_party/blink/renderer/core/css/properties/longhands/custom_property.cc
 +++ b/third_party/blink/renderer/core/css/properties/longhands/custom_property.cc
-@@ -184,12 +184,8 @@ void CustomProperty::ApplyValue(StyleResolverState& state,
+@@ -114,13 +114,6 @@ void CustomProperty::ApplyInherit(StyleResolverState& state) const {
+ void CustomProperty::ApplyValue(StyleResolverState& state,
+                                 const CSSValue& value,
+                                 ValueMode value_mode) const {
+-  // Highlight Pseudos do not allow custom property definitions.
+-  // Properties are copied from the originating element when the
+-  // style is created.
+-  if (state.UsesHighlightPseudoInheritance()) {
+-    return;
+-  }
+-
+   ComputedStyleBuilder& builder = state.StyleBuilder();
+   DCHECK(!value.IsCSSWideKeyword());
+ 
+@@ -184,12 +177,8 @@ void CustomProperty::ApplyValue(StyleResolverState& state,
    if (!registered_value) {
      DCHECK(declaration);
      CSSVariableData& data = *declaration->VariableDataValue();
@@ -16,7 +30,7 @@ index c06b5ed3ff0a86968b60eadaca171cda6188f4f9..2a1dc711837263e25491039f72cf4603
    }
  
    if (!registered_value) {
-@@ -203,12 +199,20 @@ void CustomProperty::ApplyValue(StyleResolverState& state,
+@@ -203,12 +192,20 @@ void CustomProperty::ApplyValue(StyleResolverState& state,
  
    bool is_animation_tainted = value_mode == ValueMode::kAnimated;
  
@@ -39,7 +53,7 @@ index c06b5ed3ff0a86968b60eadaca171cda6188f4f9..2a1dc711837263e25491039f72cf4603
    builder.SetVariableData(name_, data, is_inherited_property);
    builder.SetVariableValue(name_, registered_value, is_inherited_property);
  }
-@@ -247,21 +251,21 @@ const CSSValue* CustomProperty::CSSValueFromComputedStyleInternal(
+@@ -247,21 +244,21 @@ const CSSValue* CustomProperty::CSSValueFromComputedStyleInternal(
  }
  
  const CSSValue* CustomProperty::ParseUntyped(

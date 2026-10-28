@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_resolver.cc b/third_party/blink/renderer/core/css/resolver/style_resolver.cc
-index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..536fe33bff46d819d49491fd3fefb4227721e2c9 100644
+index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..3d3901620df8b6800e124649df710070b0f2a685 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_resolver.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_resolver.cc
 @@ -30,7 +30,10 @@
@@ -510,7 +510,25 @@ index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..536fe33bff46d819d49491fd3fefb422
      collector.SortAndTransferMatchedRules(
          CascadeOrigin::kUserAgent, /*is_vtt_embedded_style=*/false, tracker_);
    }
-@@ -2780,7 +2954,7 @@ StyleRuleList* StyleResolver::CollectMatchingRulesFromUnconnectedRuleSet(
+@@ -1203,13 +1377,12 @@ void StyleResolver::InitStyle(Element& element,
+     // the element has rules but no matched properties, we currently clone.
+     state.SetStyle(*parent_style);
+ 
+-    // Highlight Pseudos do not support custom properties defined on the
+-    // pseudo itself. They may use var() references but those must be resolved
++    // Highlight Pseudos may use var() references but those must be resolved
+     // against the originating element. Share the variables from the originating
+-    // style.
+-    state.StyleBuilder().CopyInheritedVariablesFrom(
++    // style and remove any from the highlight chain.
++    state.StyleBuilder().SetInheritedVariablesFrom(
+         state.OriginatingElementStyle());
+-    state.StyleBuilder().CopyNonInheritedVariablesFrom(
++    state.StyleBuilder().SetNonInheritedVariablesFrom(
+         state.OriginatingElementStyle());
+   } else {
+     state.CreateNewStyle(
+@@ -2780,7 +2953,7 @@ StyleRuleList* StyleResolver::CollectMatchingRulesFromUnconnectedRuleSet(
    collector.SetMatchingRulesFromNoStyleSheet(true);
    collector.SetMode(SelectorChecker::kCollectingStyleRules);
    MatchRequest match_request(rule_set, scope);

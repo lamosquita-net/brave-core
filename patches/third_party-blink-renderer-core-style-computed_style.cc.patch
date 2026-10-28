@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style.cc b/third_party/blink/renderer/core/style/computed_style.cc
-index bc061ec223ea93f74982b9ab4a2119f548caf978..895297a5329d01c6a69a01e0ce1c93b50316a0cd 100644
+index bc061ec223ea93f74982b9ab4a2119f548caf978..9a2724e25aeee17942acc1b78c1e1c99b87ea6ea 100644
 --- a/third_party/blink/renderer/core/style/computed_style.cc
 +++ b/third_party/blink/renderer/core/style/computed_style.cc
 @@ -57,6 +57,7 @@
@@ -157,3 +157,32 @@ index bc061ec223ea93f74982b9ab4a2119f548caf978..895297a5329d01c6a69a01e0ce1c93b5
      return TextEmphasisMark::kDot;
    }
  
+@@ -3103,21 +3102,17 @@ ComputedStyleBuilder::MutableNonInheritedVariables() {
+   return *variables;
+ }
+ 
+-void ComputedStyleBuilder::CopyInheritedVariablesFrom(
++void ComputedStyleBuilder::SetInheritedVariablesFrom(
+     const ComputedStyle* style) {
+-  if (style->InheritedVariablesInternal()) {
+-    has_own_inherited_variables_ = false;
+-    MutableInheritedVariablesInternal() = style->InheritedVariablesInternal();
+-  }
++  MutableInheritedVariablesInternal() = style->InheritedVariablesInternal();
++  has_own_inherited_variables_ = false;
+ }
+ 
+-void ComputedStyleBuilder::CopyNonInheritedVariablesFrom(
++void ComputedStyleBuilder::SetNonInheritedVariablesFrom(
+     const ComputedStyle* style) {
+-  if (style->NonInheritedVariablesInternal()) {
+-    has_own_non_inherited_variables_ = false;
+-    MutableNonInheritedVariablesInternal() =
+-        style->NonInheritedVariablesInternal();
+-  }
++  MutableNonInheritedVariablesInternal() =
++      style->NonInheritedVariablesInternal();
++  has_own_non_inherited_variables_ = false;
+ }
+ 
+ STATIC_ASSERT_ENUM(cc::OverscrollBehavior::Type::kAuto,
