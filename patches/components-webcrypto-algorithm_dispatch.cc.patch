@@ -1,0 +1,13 @@
+diff --git a/components/webcrypto/algorithm_dispatch.cc b/components/webcrypto/algorithm_dispatch.cc
+index 53448d4f7fce1adcfe5d6113f7d46f085b665f08..b61381590904c7d695b70bc52b31e1c13f5ff4cc 100644
+--- a/components/webcrypto/algorithm_dispatch.cc
++++ b/components/webcrypto/algorithm_dispatch.cc
+@@ -250,7 +250,7 @@ Status UnwrapKey(blink::WebCryptoKeyFormat format,
+ 
+ Status DeriveBits(const blink::WebCryptoAlgorithm& algorithm,
+                   const blink::WebCryptoKey& base_key,
+-                  unsigned int length_bits,
++                  std::optional<unsigned int> length_bits,
+                   std::vector<uint8_t>* derived_bytes) {
+   if (!base_key.KeyUsageAllows(blink::kWebCryptoKeyUsageDeriveBits))
+     return Status::ErrorUnexpected();

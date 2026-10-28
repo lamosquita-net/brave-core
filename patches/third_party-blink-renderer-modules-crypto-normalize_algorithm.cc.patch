@@ -1,0 +1,18 @@
+diff --git a/third_party/blink/renderer/modules/crypto/normalize_algorithm.cc b/third_party/blink/renderer/modules/crypto/normalize_algorithm.cc
+index 7ece9e78aeb651e7622027cd40df710952ced94a..d4414ae55f8e8ff5826afc51269101c154a14ce7 100644
+--- a/third_party/blink/renderer/modules/crypto/normalize_algorithm.cc
++++ b/third_party/blink/renderer/modules/crypto/normalize_algorithm.cc
+@@ -210,9 +210,12 @@ bool LookupAlgorithmIdByName(const String& algorithm_name,
+ 
+   id = it->algorithm_id;
+ 
+-  if (id == kWebCryptoAlgorithmIdEd25519 || id == kWebCryptoAlgorithmIdX25519) {
++  if (id == kWebCryptoAlgorithmIdX25519) {
+     return RuntimeEnabledFeatures::WebCryptoCurve25519Enabled();
+   }
++  if (id == kWebCryptoAlgorithmIdEd25519) {
++    return RuntimeEnabledFeatures::WebCryptoEd25519Enabled();
++  }
+ 
+   return true;
+ }
