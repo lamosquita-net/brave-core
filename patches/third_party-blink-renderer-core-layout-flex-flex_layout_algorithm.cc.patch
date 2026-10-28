@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/flex/flex_layout_algorithm.cc b/third_party/blink/renderer/core/layout/flex/flex_layout_algorithm.cc
-index 9187b256f9e526777ec0b44e2f07f00a22d32971..7be67f3af16f5124075ce0aa9a144d9aa1efd162 100644
+index 9187b256f9e526777ec0b44e2f07f00a22d32971..fe46b58c81dbe5017b4a84126ec565b62ff47e8a 100644
 --- a/third_party/blink/renderer/core/layout/flex/flex_layout_algorithm.cc
 +++ b/third_party/blink/renderer/core/layout/flex/flex_layout_algorithm.cc
 @@ -286,12 +286,14 @@ void FlexLayoutAlgorithm::HandleOutOfFlowPositionedItems(
@@ -50,7 +50,20 @@ index 9187b256f9e526777ec0b44e2f07f00a22d32971..7be67f3af16f5124075ce0aa9a144d9a
      const Length& flex_basis = child_style.FlexBasis();
      if (is_column_ && flex_basis.MayHavePercentDependence()) {
        has_column_percent_flex_basis_ = true;
-@@ -1982,7 +2007,15 @@ FlexLayoutAlgorithm::GiveItemsFinalPositionAndSizeForFragmentation(
+@@ -1892,8 +1917,10 @@ FlexLayoutAlgorithm::GiveItemsFinalPositionAndSizeForFragmentation(
+     // shift was (if any). Only do this if the item has completed layout.
+     if (is_column_) {
+       LayoutUnit cloned_block_decorations;
+-      if (!is_at_block_end) {
+-        cloned_block_decorations += fragment.BoxDecorations().BlockSum();
++      if (!is_at_block_end &&
++          flex_item->ng_input_node.Style().BoxDecorationBreak() ==
++              EBoxDecorationBreak::kClone) {
++        cloned_block_decorations = fragment.BoxDecorations().BlockSum();
+       }
+ 
+       // Cloned box decorations grow the border-box size of the flex item. In
+@@ -1982,7 +2009,15 @@ FlexLayoutAlgorithm::GiveItemsFinalPositionAndSizeForFragmentation(
      }
      baseline_accumulator.AccumulateItem(fragment, offset.block_offset,
                                          is_first_line, is_last_line);
