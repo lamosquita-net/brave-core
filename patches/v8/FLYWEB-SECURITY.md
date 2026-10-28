@@ -138,6 +138,7 @@ already existed and were regenerated).
 | `maglev` | true | **false** (patch kept; COORDINACIÓN-16, 27-10: stays off at level 132) |
 | `maglev_untagged_phis` | true | **false** (patch kept: main turned it off for CVE-2026-3910, 7076ba13, after 13.2) |
 | `turboshaft_instruction_selection` | true | true |
+| `reuse_scope_infos` | false in 13.2, **true** from 13.3 | **false** at level 134 (MOTOR-30, 28-10): 13.4.114.21 (13-03-2025) predates the fixes for crbug.com/401059828 (ab049402, 82f746c6, fa9a281e, 2c219a1f, 4ebc23cf; scope info reuse in background merges and after bytecode flushing). Suspected cause of the 2.3.0 renderer crashes; `--js-flags=--reuse-scope-infos` turns it back on |
 
 **Why Maglev stays off (rule 19, to review at each level):** 13.2 is parked, so upstream's later Maglev fixes do not
 arrive with it. About 15 security fixes after the LTS apply to 13.2's Maglev (+250/−100 lines, 8 to rewrite; 4–6

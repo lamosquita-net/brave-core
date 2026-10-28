@@ -1,5 +1,5 @@
 diff --git a/src/flags/flag-definitions.h b/src/flags/flag-definitions.h
-index 2fa08475e1c34d519f55d0b2e6126559a8810d1f..3f0c9cfba149c9f5851496918da46a9fc29127b5 100644
+index 2fa08475e1c34d519f55d0b2e6126559a8810d1f..00f26af63967cd925727363d48500c387243d66c 100644
 --- a/src/flags/flag-definitions.h
 +++ b/src/flags/flag-definitions.h
 @@ -530,7 +530,9 @@ DEFINE_BOOL(force_emit_interrupt_budget_checks, false,
@@ -23,7 +23,21 @@ index 2fa08475e1c34d519f55d0b2e6126559a8810d1f..3f0c9cfba149c9f5851496918da46a9f
              "enable phi untagging in the maglev optimizing compiler")
  DEFINE_BOOL(maglev_hoist_osr_value_phi_untagging, true,
              "enable phi untagging to hoist untagging of osr values")
-@@ -1345,6 +1348,8 @@ DEFINE_NEG_VALUE_IMPLICATION(use_osr, maglev_osr, false)
+@@ -1046,7 +1049,12 @@ DEFINE_BOOL(trace_track_allocation_sites, false,
+ DEFINE_BOOL(trace_migration, false, "trace object migration")
+ DEFINE_BOOL(trace_generalization, false, "trace map generalization")
+ 
+-DEFINE_BOOL(reuse_scope_infos, true, "reuse scope infos from previous compiles")
++// FlyWeb: off, as in V8 13.2 (FlyWeb 2.1.1). V8 13.4.114.21 predates the
++// fixes for crbug.com/401059828 (ab049402, 82f746c6, fa9a281e, 2c219a1f,
++// 4ebc23cf); suspected cause of the 2.3.0 renderer crashes on GitHub,
++// YouTube and Wikipedia. Back on with --js-flags=--reuse-scope-infos.
++DEFINE_BOOL(reuse_scope_infos, false,
++            "reuse scope infos from previous compiles")
+ 
+ DEFINE_IMPLICATION(fuzzing, reuse_scope_infos)
+ 
+@@ -1345,6 +1353,8 @@ DEFINE_NEG_VALUE_IMPLICATION(use_osr, maglev_osr, false)
  DEFINE_NEG_VALUE_IMPLICATION(turbofan, osr_from_maglev, false)
  DEFINE_BOOL(concurrent_osr, true, "enable concurrent OSR")
  
@@ -32,7 +46,7 @@ index 2fa08475e1c34d519f55d0b2e6126559a8810d1f..3f0c9cfba149c9f5851496918da46a9f
  DEFINE_BOOL(maglev_escape_analysis, true,
              "avoid inlined allocation of objects that cannot escape")
  DEFINE_BOOL(trace_maglev_escape_analysis, false, "trace maglev escape analysis")
-@@ -1558,6 +1563,8 @@ DEFINE_BOOL_READONLY(turboshaft_trace_emitted, false,
+@@ -1558,6 +1568,8 @@ DEFINE_BOOL_READONLY(turboshaft_trace_emitted, false,
                       "trace emitted Turboshaft instructions")
  DEFINE_BOOL_READONLY(turboshaft_trace_intermediate_reductions, false,
                       "trace intermediate Turboshaft reduction steps")
