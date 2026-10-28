@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/parser/css_tokenizer.h b/third_party/blink/renderer/core/css/parser/css_tokenizer.h
-index 370f87f6f34e9feeb43cbae9a2f2727fcb9c9a06..ac5041b00ff1122f219d34436035e883ee59377f 100644
+index 370f87f6f34e9feeb43cbae9a2f2727fcb9c9a06..31abcf9d08474cb4263285733f53636113183437 100644
 --- a/third_party/blink/renderer/core/css/parser/css_tokenizer.h
 +++ b/third_party/blink/renderer/core/css/parser/css_tokenizer.h
 @@ -46,14 +46,6 @@ class CORE_EXPORT CSSTokenizer {
@@ -17,7 +17,22 @@ index 370f87f6f34e9feeb43cbae9a2f2727fcb9c9a06..ac5041b00ff1122f219d34436035e883
    wtf_size_t Offset() const { return input_.Offset(); }
    wtf_size_t PreviousOffset() const { return prev_offset_; }
    StringView StringRangeFrom(wtf_size_t start) const;
-@@ -192,6 +184,10 @@ class CORE_EXPORT CSSTokenizer {
+@@ -62,14 +54,6 @@ class CORE_EXPORT CSSTokenizer {
+   CSSParserToken TokenizeSingle();
+   CSSParserToken TokenizeSingleWithComments();
+ 
+-  // If you want the returned CSSParserTokens' Value() to be valid beyond
+-  // the destruction of CSSTokenizer, you'll need to call PersistString()
+-  // to some longer-lived tokenizer (escaped string tokens may have
+-  // StringViews that refer to the string pool). The tokenizer
+-  // (*this, not the destination) is in an undefined state after this;
+-  // all you can do is destroy it.
+-  void PersistStrings(CSSTokenizer& destination);
+-
+   // Skips to the given offset, which _must_ be exactly the end of
+   // the current block. Does _not_ return a new token for lookahead
+   // (because the only caller in question does not want that).
+@@ -192,6 +176,10 @@ class CORE_EXPORT CSSTokenizer {
    wtf_size_t prev_offset_ = 0;
    wtf_size_t token_count_ = 0;
  

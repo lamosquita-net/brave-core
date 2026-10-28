@@ -1,0 +1,18 @@
+diff --git a/third_party/blink/renderer/core/css/parser/css_parser_token.h b/third_party/blink/renderer/core/css/parser/css_parser_token.h
+index a678d6450ce0a25c28abb5a3c8f630368981f8fd..0a61608304072de853f02fa6872e53c6c5f4e124 100644
+--- a/third_party/blink/renderer/core/css/parser/css_parser_token.h
++++ b/third_party/blink/renderer/core/css/parser/css_parser_token.h
+@@ -179,6 +179,13 @@ class CORE_EXPORT CSSParserToken {
+   void Serialize(StringBuilder&) const;
+ 
+   CSSParserToken CopyWithUpdatedString(const StringView&) const;
++  CSSParserToken CopyWithoutValue() const {
++    CSSParserToken token = *this;
++    token.value_is_inline_ = false;
++    token.value_length_ = 0;
++    token.value_data_char_raw_ = nullptr;
++    return token;
++  }
+ 
+   static CSSParserTokenType ClosingTokenType(CSSParserTokenType opening_type) {
+     switch (opening_type) {

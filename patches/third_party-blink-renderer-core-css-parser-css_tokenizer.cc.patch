@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/parser/css_tokenizer.cc b/third_party/blink/renderer/core/css/parser/css_tokenizer.cc
-index 5cd0c583a08886c3aea8d2af22f580c91719a796..2fa9520e602f4571887762c6a9d5bf6d7a978c9e 100644
+index 5cd0c583a08886c3aea8d2af22f580c91719a796..6866cb8807298a21d0b14a985715e2eee72dc731 100644
 --- a/third_party/blink/renderer/core/css/parser/css_tokenizer.cc
 +++ b/third_party/blink/renderer/core/css/parser/css_tokenizer.cc
 @@ -83,13 +83,6 @@ CSSTokenizer::TokenizeToEOFWithOffsets() {
@@ -15,4 +15,17 @@ index 5cd0c583a08886c3aea8d2af22f580c91719a796..2fa9520e602f4571887762c6a9d5bf6d
 -
  StringView CSSTokenizer::StringRangeFrom(wtf_size_t start) const {
    return input_.RangeFrom(start);
+ }
+@@ -107,12 +100,6 @@ CSSParserToken CSSTokenizer::TokenizeSingleWithComments() {
+   return NextToken</*SkipComments=*/false, /*StoreOffset=*/true>();
+ }
+ 
+-void CSSTokenizer::PersistStrings(CSSTokenizer& destination) {
+-  for (String& s : string_pool_) {
+-    destination.string_pool_.push_back(std::move(s));
+-  }
+-}
+-
+ wtf_size_t CSSTokenizer::TokenCount() {
+   return token_count_;
  }

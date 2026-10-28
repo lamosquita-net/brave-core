@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/css_syntax_string_parser.cc b/third_party/blink/renderer/core/css/css_syntax_string_parser.cc
-index db8172a3042964c3006cab2c737ec1028c8eae0c..0b4c81c03373f69c8ce8b68b3bd2a373a687c06f 100644
+index db8172a3042964c3006cab2c737ec1028c8eae0c..221fc3981a2c9976a6cdaf69239e9b26b7a80e30 100644
 --- a/third_party/blink/renderer/core/css/css_syntax_string_parser.cc
 +++ b/third_party/blink/renderer/core/css/css_syntax_string_parser.cc
 @@ -59,6 +59,10 @@ std::optional<CSSSyntaxType> ParseSyntaxType(StringView type) {
@@ -13,3 +13,39 @@ index db8172a3042964c3006cab2c737ec1028c8eae0c..0b4c81c03373f69c8ce8b68b3bd2a373
    return std::nullopt;
  }
  
+@@ -69,14 +73,22 @@ bool IsPreMultiplied(CSSSyntaxType type) {
+ }  // namespace
+ 
+ CSSSyntaxStringParser::CSSSyntaxStringParser(const String& string)
+-    : string_(string.StripWhiteSpace()), input_(string_) {}
++    : input_(string) {}
+ 
+ std::optional<CSSSyntaxDefinition> CSSSyntaxStringParser::Parse() {
+-  if (string_.empty()) {
++  input_.AdvanceUntilNonWhitespace();
++
++  if (!input_.length()) {
+     return std::nullopt;
+   }
+-  if (string_.length() == 1 && string_[0] == '*') {
+-    return CSSSyntaxDefinition::CreateUniversal();
++  if (input_.NextInputChar() == '*') {
++    input_.Advance();
++    input_.AdvanceUntilNonWhitespace();
++    if (input_.NextInputChar() == '\0') {
++      return CSSSyntaxDefinition::CreateUniversal();
++    } else {
++      return std::nullopt;
++    }
+   }
+ 
+   Vector<CSSSyntaxComponent> components;
+@@ -97,7 +109,7 @@ std::optional<CSSSyntaxDefinition> CSSSyntaxStringParser::Parse() {
+     return std::nullopt;
+   }
+ 
+-  return CSSSyntaxDefinition(std::move(components), string_);
++  return CSSSyntaxDefinition(std::move(components));
+ }
+ 
+ bool CSSSyntaxStringParser::ConsumeSyntaxComponent(
