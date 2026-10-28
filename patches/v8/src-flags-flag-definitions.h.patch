@@ -1,8 +1,8 @@
 diff --git a/src/flags/flag-definitions.h b/src/flags/flag-definitions.h
-index 20a696f400ecd5d6cb6d029a1033343f8ac88b55..8602187ae9c49c73e7ccad877b7b9a3b77f7c6f3 100644
+index 2fa08475e1c34d519f55d0b2e6126559a8810d1f..3f0c9cfba149c9f5851496918da46a9fc29127b5 100644
 --- a/src/flags/flag-definitions.h
 +++ b/src/flags/flag-definitions.h
-@@ -514,7 +514,9 @@ DEFINE_BOOL(force_emit_interrupt_budget_checks, false,
+@@ -530,7 +530,9 @@ DEFINE_BOOL(force_emit_interrupt_budget_checks, false,
              "force emit tier-up logic from all non-turbofan code, even if it "
              "is the top enabled tier")
  #ifdef V8_ENABLE_MAGLEV
@@ -13,7 +13,7 @@ index 20a696f400ecd5d6cb6d029a1033343f8ac88b55..8602187ae9c49c73e7ccad877b7b9a3b
  #if !ENABLE_MAGLEV
  // Enable Maglev on Future for platforms in which it's not enabled by default
  // (eg, Android).
-@@ -604,7 +606,8 @@ DEFINE_WEAK_VALUE_IMPLICATION(turbofan,
+@@ -620,7 +622,8 @@ DEFINE_WEAK_VALUE_IMPLICATION(turbofan,
  DEFINE_WEAK_VALUE_IMPLICATION(turbofan, min_maglev_inlining_frequency, 0.95)
  DEFINE_BOOL(maglev_reuse_stack_slots, true,
              "reuse stack slots in the maglev optimizing compiler")
@@ -23,7 +23,16 @@ index 20a696f400ecd5d6cb6d029a1033343f8ac88b55..8602187ae9c49c73e7ccad877b7b9a3b
              "enable phi untagging in the maglev optimizing compiler")
  DEFINE_BOOL(maglev_hoist_osr_value_phi_untagging, true,
              "enable phi untagging to hoist untagging of osr values")
-@@ -1541,6 +1544,8 @@ DEFINE_BOOL_READONLY(turboshaft_trace_emitted, false,
+@@ -1345,6 +1348,8 @@ DEFINE_NEG_VALUE_IMPLICATION(use_osr, maglev_osr, false)
+ DEFINE_NEG_VALUE_IMPLICATION(turbofan, osr_from_maglev, false)
+ DEFINE_BOOL(concurrent_osr, true, "enable concurrent OSR")
+ 
++DEFINE_INT(maglev_allocation_folding, 1, "maglev allocation folding level")
++DEFINE_WEAK_VALUE_IMPLICATION(maglev_future, maglev_allocation_folding, 2)
+ DEFINE_BOOL(maglev_escape_analysis, true,
+             "avoid inlined allocation of objects that cannot escape")
+ DEFINE_BOOL(trace_maglev_escape_analysis, false, "trace maglev escape analysis")
+@@ -1558,6 +1563,8 @@ DEFINE_BOOL_READONLY(turboshaft_trace_emitted, false,
                       "trace emitted Turboshaft instructions")
  DEFINE_BOOL_READONLY(turboshaft_trace_intermediate_reductions, false,
                       "trace intermediate Turboshaft reduction steps")

@@ -1,5 +1,5 @@
 diff --git a/src/objects/js-regexp.cc b/src/objects/js-regexp.cc
-index b68ce0f4ec41a22621be8c2d114a646346aafa1b..99bac2af488133b11de91c6ed750a3e0ee357049 100644
+index a03b08cd9f076769e51af9844622ab3b8a541941..36443a7b4eb2bc5dbf53e4dee8465ba5c839f8ee 100644
 --- a/src/objects/js-regexp.cc
 +++ b/src/objects/js-regexp.cc
 @@ -188,10 +188,14 @@ bool IsLineTerminator(int c) {
@@ -37,7 +37,7 @@ index b68ce0f4ec41a22621be8c2d114a646346aafa1b..99bac2af488133b11de91c6ed750a3e0
    int s = 0;
    while (string[s] != '\0') v[(*d)++] = string[s++];
  }
-@@ -248,13 +252,13 @@ Handle<StringType> WriteEscapedRegExpSource(DirectHandle<String> source,
+@@ -248,13 +252,13 @@ DirectHandle<StringType> WriteEscapedRegExpSource(
    DisallowGarbageCollection no_gc;
    base::Vector<const Char> src = source->GetCharVector<Char>(no_gc);
    base::Vector<Char> dst(result->GetChars(no_gc), result->length());
@@ -55,7 +55,7 @@ index b68ce0f4ec41a22621be8c2d114a646346aafa1b..99bac2af488133b11de91c6ed750a3e0
          // This '\' is ignored since the next character itself will be escaped.
          s++;
          continue;
-@@ -262,7 +266,7 @@ Handle<StringType> WriteEscapedRegExpSource(DirectHandle<String> source,
+@@ -262,7 +266,7 @@ DirectHandle<StringType> WriteEscapedRegExpSource(
          // Escape. Copy this and next character.
          dst[d++] = src[s++];
        }
@@ -64,9 +64,9 @@ index b68ce0f4ec41a22621be8c2d114a646346aafa1b..99bac2af488133b11de91c6ed750a3e0
      } else if (c == '/' && !in_character_class) {
        // Not escaped forward-slash needs escape.
        dst[d++] = '\\';
-@@ -302,11 +306,13 @@ MaybeHandle<String> EscapeRegExpSource(Isolate* isolate,
+@@ -302,11 +306,13 @@ MaybeDirectHandle<String> EscapeRegExpSource(Isolate* isolate,
    if (source->length() == 0) return isolate->factory()->query_colon_string();
-   bool one_byte = source->IsOneByteRepresentation();
+   bool one_byte = String::IsOneByteRepresentationUnderneath(*source);
    bool needs_escapes = false;
 -  int additional_escape_chars =
 +  uint32_t additional_escape_chars =
@@ -78,5 +78,5 @@ index b68ce0f4ec41a22621be8c2d114a646346aafa1b..99bac2af488133b11de91c6ed750a3e0
 +            std::numeric_limits<uint32_t>::max());
 +  uint32_t length = source->length() + additional_escape_chars;
    if (one_byte) {
-     Handle<SeqOneByteString> result;
+     DirectHandle<SeqOneByteString> result;
      ASSIGN_RETURN_ON_EXCEPTION(isolate, result,

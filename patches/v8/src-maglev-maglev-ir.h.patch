@@ -1,0 +1,36 @@
+diff --git a/src/maglev/maglev-ir.h b/src/maglev/maglev-ir.h
+index c43fa4da249799436a7611abf155ef102d889648..e1b9fba66c2c467a14674711aeadaeaf83a1f564 100644
+--- a/src/maglev/maglev-ir.h
++++ b/src/maglev/maglev-ir.h
+@@ -1794,9 +1794,10 @@ class NodeBase : public ZoneObject {
+   template <class T, int size>
+   using NextBitField = ReservedField::Next<T, size>;
+ 
++ public:
++  // FlyWeb: public, as upstream made it with v8 24ae3662bf.
+   static constexpr int kMaxInputs = InputCountField::kMax;
+ 
+- public:
+   template <class T>
+   static constexpr Opcode opcode_of = detail::opcode_of_helper<T>::value;
+ 
+@@ -5469,6 +5470,7 @@ class VirtualObject : public FixedInputValueNodeT<0, VirtualObject> {
+ 
+   ValueNode* get_by_index(uint32_t i) const {
+     DCHECK_EQ(type_, kDefault);
++    SBXCHECK_LT(i, slot_count());
+     return slots_.data[i];
+   }
+ 
+@@ -5477,6 +5479,11 @@ class VirtualObject : public FixedInputValueNodeT<0, VirtualObject> {
+     // Values set here can leak to the interpreter. Conversions should be stored
+     // in known_node_aspects/NodeInfo.
+     DCHECK(!value->properties().is_conversion());
++    // TODO(jgruber): Indices are commonly passed in from places that read
++    // potentially attacker-corrupted heap objects. Either we catch all such
++    // usages with CHECKs, or we add one here. Honestly I like neither option
++    // that much, but doing so in this chokepoint is safer.
++    SBXCHECK_LT(i, slot_count());
+     slots_.data[i] = value;
+   }
+ 

@@ -1,5 +1,5 @@
 diff --git a/src/compiler/js-native-context-specialization.cc b/src/compiler/js-native-context-specialization.cc
-index d855ffbf499d337aa77d9380837afe6918bd35d1..d7c163ab3c95ff99983e37ee95d87d4c47cbf149 100644
+index 32462e808c7d4f1067adbc7f2fea4325eccae34b..7429563164576842d22b6a1a4be953e0891f1623 100644
 --- a/src/compiler/js-native-context-specialization.cc
 +++ b/src/compiler/js-native-context-specialization.cc
 @@ -37,6 +37,7 @@
@@ -10,7 +10,7 @@ index d855ffbf499d337aa77d9380837afe6918bd35d1..d7c163ab3c95ff99983e37ee95d87d4c
  #include "src/objects/string.h"
  
  namespace v8 {
-@@ -2125,9 +2126,9 @@ Reduction JSNativeContextSpecialization::ReduceJSDefineNamedOwnProperty(
+@@ -2136,9 +2137,9 @@ Reduction JSNativeContextSpecialization::ReduceJSDefineNamedOwnProperty(
    JSDefineNamedOwnPropertyNode n(node);
    DefineNamedOwnPropertyParameters const& p = n.Parameters();
    if (!p.feedback().IsValid()) return NoChange();
@@ -23,7 +23,7 @@ index d855ffbf499d337aa77d9380837afe6918bd35d1..d7c163ab3c95ff99983e37ee95d87d4c
  }
  
  Reduction JSNativeContextSpecialization::ReduceElementAccessOnString(
-@@ -3143,7 +3144,8 @@ JSNativeContextSpecialization::BuildPropertyStore(
+@@ -3148,7 +3149,8 @@ JSNativeContextSpecialization::BuildPropertyStore(
                AccessBuilder::ForJSObjectPropertiesOrHashKnownPointer()),
            storage, effect, control);
      }
@@ -33,7 +33,7 @@ index d855ffbf499d337aa77d9380837afe6918bd35d1..d7c163ab3c95ff99983e37ee95d87d4c
          !access_info.HasTransitionMap()) {
        Node* deoptimize = graph()->NewNode(
            simplified()->CheckIf(DeoptimizeReason::kStoreToConstant),
-@@ -4110,25 +4112,67 @@ Node* JSNativeContextSpecialization::BuildExtendPropertiesBackingStore(
+@@ -4121,25 +4123,67 @@ Node* JSNativeContextSpecialization::BuildExtendPropertiesBackingStore(
    // for intermediate states of chains of property additions. That makes
    // it unclear what the best approach is here.
    DCHECK_EQ(map.UnusedPropertyFields(), 0);
@@ -107,7 +107,7 @@ index d855ffbf499d337aa77d9380837afe6918bd35d1..d7c163ab3c95ff99983e37ee95d87d4c
    }
  
    // Compute new length and hash.
-@@ -4166,7 +4210,8 @@ Node* JSNativeContextSpecialization::BuildExtendPropertiesBackingStore(
+@@ -4177,7 +4221,8 @@ Node* JSNativeContextSpecialization::BuildExtendPropertiesBackingStore(
    a.Store(AccessBuilder::ForMap(), jsgraph()->PropertyArrayMapConstant());
    a.Store(AccessBuilder::ForPropertyArrayLengthAndHash(), new_length_and_hash);
    for (int i = 0; i < new_length; ++i) {

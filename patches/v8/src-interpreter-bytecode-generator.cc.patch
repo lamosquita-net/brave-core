@@ -1,5 +1,5 @@
 diff --git a/src/interpreter/bytecode-generator.cc b/src/interpreter/bytecode-generator.cc
-index f44c172d0a51825bd10758775eca12386204064b..bfd94802187169702a9febc74bb212b2b81e210b 100644
+index f43124e3d2abf860acc2f58488350647f22807de..6c290017e66918e778b815568d9284a4318e0c3d 100644
 --- a/src/interpreter/bytecode-generator.cc
 +++ b/src/interpreter/bytecode-generator.cc
 @@ -1206,7 +1206,8 @@ class V8_NODISCARD BytecodeGenerator::OptionalChainNullLabelScope final {
@@ -22,7 +22,81 @@ index f44c172d0a51825bd10758775eca12386204064b..bfd94802187169702a9febc74bb212b2
  };
  
  // LoopScope delimits the scope of {loop}, from its header to its final jump.
-@@ -4009,8 +4013,13 @@ void BytecodeGenerator::VisitObjectLiteral(ObjectLiteral* expr) {
+@@ -3377,6 +3381,36 @@ void BytecodeGenerator::BuildClassLiteral(ClassLiteral* expr, Register name) {
+     }
+   }
+ 
++  // Define private accessors early, using only a single call to the runtime for
++  // each pair of corresponding getters and setters, in the order the first
++  // component is declared.
++  for (auto accessors : private_accessors.ordered_accessors()) {
++    RegisterAllocationScope inner_register_scope(this);
++    RegisterList accessors_reg = register_allocator()->NewRegisterList(2);
++    ClassLiteral::Property* getter = accessors.second->getter;
++    ClassLiteral::Property* setter = accessors.second->setter;
++    Variable* accessor_pair_var;
++    if (getter && getter->kind() == ClassLiteral::Property::AUTO_ACCESSOR) {
++      DCHECK_EQ(setter, getter);
++      AutoAccessorInfo* auto_accessor_info = getter->auto_accessor_info();
++      VisitForRegisterValue(auto_accessor_info->generated_getter(),
++                            accessors_reg[0]);
++      VisitForRegisterValue(auto_accessor_info->generated_setter(),
++                            accessors_reg[1]);
++      accessor_pair_var =
++          auto_accessor_info->property_private_name_proxy()->var();
++    } else {
++      VisitLiteralAccessor(getter, accessors_reg[0]);
++      VisitLiteralAccessor(setter, accessors_reg[1]);
++      accessor_pair_var = getter != nullptr ? getter->private_name_var()
++                                            : setter->private_name_var();
++    }
++    builder()->CallRuntime(Runtime::kCreatePrivateAccessors, accessors_reg);
++    DCHECK_NOT_NULL(accessor_pair_var);
++    BuildVariableAssignment(accessor_pair_var, Token::kInit,
++                            HoleCheckMode::kElided);
++  }
++
+   {
+     RegisterAllocationScope register_scope(this);
+     RegisterList args = register_allocator()->NewGrowableRegisterList();
+@@ -3498,36 +3532,6 @@ void BytecodeGenerator::BuildClassLiteral(ClassLiteral* expr, Register name) {
+                             HoleCheckMode::kElided);
+   }
+ 
+-  // Define private accessors, using only a single call to the runtime for
+-  // each pair of corresponding getters and setters, in the order the first
+-  // component is declared.
+-  for (auto accessors : private_accessors.ordered_accessors()) {
+-    RegisterAllocationScope inner_register_scope(this);
+-    RegisterList accessors_reg = register_allocator()->NewRegisterList(2);
+-    ClassLiteral::Property* getter = accessors.second->getter;
+-    ClassLiteral::Property* setter = accessors.second->setter;
+-    Variable* accessor_pair_var;
+-    if (getter && getter->kind() == ClassLiteral::Property::AUTO_ACCESSOR) {
+-      DCHECK_EQ(setter, getter);
+-      AutoAccessorInfo* auto_accessor_info = getter->auto_accessor_info();
+-      VisitForRegisterValue(auto_accessor_info->generated_getter(),
+-                            accessors_reg[0]);
+-      VisitForRegisterValue(auto_accessor_info->generated_setter(),
+-                            accessors_reg[1]);
+-      accessor_pair_var =
+-          auto_accessor_info->property_private_name_proxy()->var();
+-    } else {
+-      VisitLiteralAccessor(getter, accessors_reg[0]);
+-      VisitLiteralAccessor(setter, accessors_reg[1]);
+-      accessor_pair_var = getter != nullptr ? getter->private_name_var()
+-                                            : setter->private_name_var();
+-    }
+-    builder()->CallRuntime(Runtime::kCreatePrivateAccessors, accessors_reg);
+-    DCHECK_NOT_NULL(accessor_pair_var);
+-    BuildVariableAssignment(accessor_pair_var, Token::kInit,
+-                            HoleCheckMode::kElided);
+-  }
+-
+   if (expr->instance_members_initializer_function() != nullptr) {
+     VisitForAccumulatorValue(expr->instance_members_initializer_function());
+ 
+@@ -4014,8 +4018,13 @@ void BytecodeGenerator::VisitObjectLiteral(ObjectLiteral* expr) {
            VisitForAccumulatorValue(property->value());
            if (key->IsStringLiteral()) {
              FeedbackSlot slot = feedback_spec()->AddDefineNamedOwnICSlot();
@@ -38,7 +112,7 @@ index f44c172d0a51825bd10758775eca12386204064b..bfd94802187169702a9febc74bb212b2
            } else {
              FeedbackSlot slot = feedback_spec()->AddDefineKeyedOwnICSlot();
              builder()->DefineKeyedOwnProperty(
-@@ -6423,9 +6432,6 @@ template <typename ExpressionFunc>
+@@ -6428,9 +6437,6 @@ template <typename ExpressionFunc>
  void BytecodeGenerator::BuildOptionalChain(ExpressionFunc expression_func) {
    BytecodeLabel done;
    OptionalChainNullLabelScope label_scope(this);

@@ -1,12 +1,21 @@
 diff --git a/src/maglev/maglev-graph-builder.h b/src/maglev/maglev-graph-builder.h
-index 9c56eada62eb9f28d6a5e1399e256b8be9769932..95060477005e85e9d8e5cf428f4c55b501e2be92 100644
+index 277494bbb4e004879146e176804b65b3318561e6..ff6e29bfff94412fbbcd7171bcb6207e3b92c40b 100644
 --- a/src/maglev/maglev-graph-builder.h
 +++ b/src/maglev/maglev-graph-builder.h
-@@ -2294,6 +2294,7 @@ class MaglevGraphBuilder {
-   void BuildGetKeyedProperty(
+@@ -2276,6 +2276,7 @@ class MaglevGraphBuilder {
+   ReduceResult BuildGetKeyedProperty(
        ValueNode* object, const compiler::FeedbackSource& feedback_source,
        const compiler::ProcessedFeedback& processed_feedback);
-+  void VisitDefineNamedOwnPropertyHelper(bool in_literal);
++  ReduceResult VisitDefineNamedOwnPropertyHelper(bool in_literal);
  
    ValueNode* BuildLoadFixedArrayLength(ValueNode* fixed_array);
    ValueNode* BuildLoadJSArrayLength(ValueNode* js_array,
+@@ -2478,6 +2479,8 @@ class MaglevGraphBuilder {
+       VirtualObject* object, AllocationType allocation);
+   ValueNode* BuildInlinedAllocation(VirtualObject* object,
+                                     AllocationType allocation);
++  ValueNode* BuildInlinedAllocationImpl(VirtualObject* object,
++                                        AllocationType allocation);
+   ValueNode* BuildInlinedArgumentsElements(int start_index, int length);
+   ValueNode* BuildInlinedUnmappedArgumentsElements(int mapped_count);
+ 

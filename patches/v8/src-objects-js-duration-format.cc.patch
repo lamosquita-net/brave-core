@@ -1,8 +1,8 @@
 diff --git a/src/objects/js-duration-format.cc b/src/objects/js-duration-format.cc
-index fea017f6cffcfd13af8353ea80613a3dba392f13..ec46138c529ff3d2906e75c386b169706d02335b 100644
+index 5a9414b853e9ac5d24a7edf1863369b2c8e3e668..b4ca1162f510ec0621d93d8137781281247a4b9e 100644
 --- a/src/objects/js-duration-format.cc
 +++ b/src/objects/js-duration-format.cc
-@@ -286,13 +286,12 @@ MaybeHandle<JSDurationFormat> JSDurationFormat::New(
+@@ -289,13 +289,12 @@ MaybeDirectHandle<JSDurationFormat> JSDurationFormat::New(
    // 9. Let r be ResolveLocale(%DurationFormat%.[[AvailableLocales]],
    // requestedLocales, opt, %DurationFormat%.[[RelevantExtensionKeys]],
    // %DurationFormat%.[[LocaleData]]).
@@ -12,7 +12,7 @@ index fea017f6cffcfd13af8353ea80613a3dba392f13..ec46138c529ff3d2906e75c386b16970
 -      isolate, r,
 -      Intl::ResolveLocale(isolate, JSDurationFormat::GetAvailableLocales(),
 -                          requested_locales, matcher, relevant_extension_keys),
--      Handle<JSDurationFormat>());
+-      DirectHandle<JSDurationFormat>());
 +  if (!Intl::ResolveLocale(isolate, JSDurationFormat::GetAvailableLocales(),
 +                           requested_locales, matcher, {"nu"})
 +           .To(&r)) {

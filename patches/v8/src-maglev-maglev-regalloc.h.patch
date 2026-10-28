@@ -1,0 +1,19 @@
+diff --git a/src/maglev/maglev-regalloc.h b/src/maglev/maglev-regalloc.h
+index 11734b0506608db9947f924bf09def6a51fc7cd9..568f14dcaa401e9bd20efa86fd3f3cb04459a83d 100644
+--- a/src/maglev/maglev-regalloc.h
++++ b/src/maglev/maglev-regalloc.h
+@@ -210,8 +210,13 @@ class StraightForwardRegisterAllocator {
+   void Spill(ValueNode* node);
+   void SpillRegisters();
+ 
++  template <typename RegisterT, bool spill = false>
++  void ClearRegisters(RegisterFrameState<RegisterT>& registers);
+   template <typename RegisterT>
+-  void SpillAndClearRegisters(RegisterFrameState<RegisterT>& registers);
++  void SpillAndClearRegisters(RegisterFrameState<RegisterT>& registers) {
++    ClearRegisters<RegisterT, true>(registers);
++  }
++  void ClearRegisters();
+   void SpillAndClearRegisters();
+ 
+   void SaveRegisterSnapshot(NodeBase* node);

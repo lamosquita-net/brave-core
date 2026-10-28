@@ -1,0 +1,21 @@
+diff --git a/src/maglev/maglev-interpreter-frame-state.h b/src/maglev/maglev-interpreter-frame-state.h
+index 894368e9fe25a8feb46ee48d7f27f5605413c397..a0bd890a87de606450e33043fb631a58526843d8 100644
+--- a/src/maglev/maglev-interpreter-frame-state.h
++++ b/src/maglev/maglev-interpreter-frame-state.h
+@@ -939,6 +939,8 @@ class MergePointInterpreterFrameState {
+            basic_block_type() == BasicBlockType::kUnusedExceptionHandlerStart;
+   }
+ 
++  bool is_inline() const { return kIsInline::decode(bitfield_); }
++
+   bool is_unmerged_loop() const {
+     // If this is a loop and not all predecessors are set, then the loop isn't
+     // merged yet.
+@@ -990,6 +992,7 @@ class MergePointInterpreterFrameState {
+   using kBasicBlockTypeBits = base::BitField<BasicBlockType, 0, 2>;
+   using kIsResumableLoopBit = kBasicBlockTypeBits::Next<bool, 1>;
+   using kIsLoopWithPeeledIterationBit = kIsResumableLoopBit::Next<bool, 1>;
++  using kIsInline = kIsLoopWithPeeledIterationBit::Next<bool, 1>;
+ 
+   // For each non-Phi value in the frame state, store its alternative
+   // representations to avoid re-converting on Phi creation.

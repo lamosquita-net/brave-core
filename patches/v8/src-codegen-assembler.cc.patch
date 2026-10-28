@@ -1,0 +1,16 @@
+diff --git a/src/codegen/assembler.cc b/src/codegen/assembler.cc
+index 9d13f2bbd8b1a999f9f32fa25dd8c2c47600950a..0354e365793ca57b1429f525640cd7b7036a8a30 100644
+--- a/src/codegen/assembler.cc
++++ b/src/codegen/assembler.cc
+@@ -303,6 +303,11 @@ IndirectHandle<HeapObject> AssemblerBase::GetEmbeddedObject(
+   return embedded_objects_[index];
+ }
+ 
++void AssemblerBase::RecordJSDispatchHandle(JSDispatchHandle handle,
++                                           uint16_t argument_count) {
++  js_dispatch_handles_.push_back({handle, argument_count});
++}
++
+ int Assembler::WriteCodeComments() {
+   if (!v8_flags.code_comments) return 0;
+   CHECK_IMPLIES(code_comments_writer_.entry_count() > 0,

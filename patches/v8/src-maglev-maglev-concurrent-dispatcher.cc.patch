@@ -1,0 +1,16 @@
+diff --git a/src/maglev/maglev-concurrent-dispatcher.cc b/src/maglev/maglev-concurrent-dispatcher.cc
+index f5c6051dd4213d50562ad10f97827d3d244486b6..e8873bd57a27d23c26c95f39e36f8c489b635ec3 100644
+--- a/src/maglev/maglev-concurrent-dispatcher.cc
++++ b/src/maglev/maglev-concurrent-dispatcher.cc
+@@ -289,6 +289,11 @@ class MaglevConcurrentDispatcher::JobTask final : public v8::JobTask {
+         if (status == CompilationJob::SUCCEEDED) {
+           outgoing_queue()->Enqueue(std::move(job));
+           isolate()->stack_guard()->RequestInstallMaglevCode();
++        } else {
++          // FlyWeb: as upstream (v8 d6a92ca485's tree): a failed job owns
++          // persistent handles and strong roots, so it is destroyed unparked.
++          UnparkedScope unparked_scope(&local_isolate);
++          job.reset();
+         }
+       } else if (destruction_queue()->Dequeue(&job)) {
+         // Maglev jobs aren't cheap to destruct, so destroy them here in the

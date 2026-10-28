@@ -1,3 +1,29 @@
+# FlyWeb: V8 13.4.114.21 (Chrome 134) with the M132-LTS backports and the Maglev debt
+
+Engine level 134 (MOTOR-29, 28-10-2026) uses V8 **13.4.114.21** (4f282ae4, head of branch-heads/13.4, the V8 of
+134.0.6998.129–.166). 13.4 is not an LTS either: of the 12 M132-LTS fixes carried for 13.3, **11 are still missing**
+and stay as patches; 45d40ca20 (Maglev `ClearCurrentAllocationBlock`) is upstream as 2b4812d50 and its hunk is gone. The
+stack clash fix (ea2f03dfff) moves along unchanged.
+
+The 79 patches of level 133 were moved with `v8re.sh` (three-way merge). Gone because 13.4 has them: `js-to-wasm.tq`,
+`wasm-to-js.tq`, `microtask-queue.{cc,h}`. By hand: `compiler/pipeline.cc` (13.4 dropped TurboFan's instruction
+selection path, so only Turboshaft's `AllocateRegisters` reports failure), `maglev-graph-builder.{cc,h}` (13.4's
+visitors return `ReduceResult`, so the `DefineNamedOwnPropertyInLiteral` helper does too) and `js-duration-format.cc`
+(`MaybeDirectHandle`).
+
+**Maglev debt (SEGURIDAD-PORTES-11, FS.34; brave-core `seg/maglev-134` 127ec285b, `FlyWeb/v8-maglev-134/`):** the 20
+patches of that series applied on top, except its 0014, which is ea2f03dfff and was already here (all its lines present).
+16 Maglev fixes, 2 sandbox hardenings, 2 regression tests without a code change and FlyWeb's unparked destruction of
+failed background jobs; the table is in that README. af7d1483a5 changes bytecode. **Maglev stays off**: turning it on
+is the `maglev` line of `src-flags-flag-definitions.h.patch` (with `maglev_untagged_phis` off), after the measurements
+on the 5,1 and 6,1.
+
+101 patches, `git apply --check` clean on 4f282ae4. **Cache epoch 22.** V8 13.4 needs `//third_party/simdutf` (6.0.2,
+copied from Chromium 134 as brave-core patches) and fast_float cb1d42aa (`FlyWeb/fast_float-revision`). Not compiled
+yet. Review: SEGURIDAD-PORTES (rule 17).
+
+---
+
 # FlyWeb: V8 13.3.415.23 (Chrome 133) with the M132-LTS backports it lacks
 
 Engine level 133 (FM.49, MOTOR-27, 28-10-2026) uses V8 **13.3.415.23** (93c6f108, head of branch-heads/13.3, the V8 of

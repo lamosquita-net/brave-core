@@ -1,0 +1,26 @@
+diff --git a/src/codegen/assembler.h b/src/codegen/assembler.h
+index 0e5edf8708d11bb259eedc7a742ce594f5a15e9d..5db5f5946ec4b38f9f5f584eaecf200a2f85ef20 100644
+--- a/src/codegen/assembler.h
++++ b/src/codegen/assembler.h
+@@ -488,6 +488,12 @@ class V8_EXPORT_PRIVATE AssemblerBase : public Malloced {
+   // generated code.
+   static constexpr int kDefaultBufferSize = 4 * KB;
+ 
++  void RecordJSDispatchHandle(JSDispatchHandle handle, uint16_t argument_count);
++  const std::vector<std::pair<JSDispatchHandle, uint16_t>>&
++  js_dispatch_handles() const {
++    return js_dispatch_handles_;
++  }
++
+  protected:
+   // Add 'target' to the {code_targets_} vector, if necessary, and return the
+   // offset at which it is stored.
+@@ -560,6 +566,8 @@ class V8_EXPORT_PRIVATE AssemblerBase : public Malloced {
+                      IndirectHandle<HeapObject>::equal_to>
+       embedded_objects_map_;
+ 
++  std::vector<std::pair<JSDispatchHandle, uint16_t>> js_dispatch_handles_;
++
+   const AssemblerOptions options_;
+   uint64_t enabled_cpu_features_;
+   bool predictable_code_size_;

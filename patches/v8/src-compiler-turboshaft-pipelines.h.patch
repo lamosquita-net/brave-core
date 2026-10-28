@@ -1,8 +1,8 @@
 diff --git a/src/compiler/turboshaft/pipelines.h b/src/compiler/turboshaft/pipelines.h
-index 99c1e691edf48edd26edfa5150706dc3ce6423a8..9f54e0c2668bc30752a1af2c4a985c762fc237ab 100644
+index fbf1f39ee2501425eb6078713b0e9a1c64a74dd6..e526582e9a56cf01b04eddb5d7fe81a3cf497160 100644
 --- a/src/compiler/turboshaft/pipelines.h
 +++ b/src/compiler/turboshaft/pipelines.h
-@@ -344,7 +344,9 @@ class Pipeline {
+@@ -355,7 +355,9 @@ class Pipeline {
            RegisterConfiguration::RestrictGeneralRegisters(registers));
        config = restricted_config.get();
      }
@@ -13,7 +13,7 @@ index 99c1e691edf48edd26edfa5150706dc3ce6423a8..9f54e0c2668bc30752a1af2c4a985c76
  
      // Verify the instruction sequence has the same hash in two stages.
      VerifyGeneratedCodeIsIdempotent();
-@@ -392,8 +394,9 @@ class Pipeline {
+@@ -403,8 +405,9 @@ class Pipeline {
      }
    }
  
@@ -25,7 +25,7 @@ index 99c1e691edf48edd26edfa5150706dc3ce6423a8..9f54e0c2668bc30752a1af2c4a985c76
      // Don't track usage for this zone in compiler stats.
      std::unique_ptr<Zone> verifier_zone;
      RegisterAllocatorVerifier* verifier = nullptr;
-@@ -445,6 +448,20 @@ class Pipeline {
+@@ -456,6 +459,20 @@ class Pipeline {
  
      Run<DecideSpillingModePhase>();
      Run<AssignSpillSlotsPhase>();
@@ -46,7 +46,7 @@ index 99c1e691edf48edd26edfa5150706dc3ce6423a8..9f54e0c2668bc30752a1af2c4a985c76
      Run<CommitAssignmentPhase>();
  
      // TODO(chromium:725559): remove this check once
-@@ -478,6 +495,7 @@ class Pipeline {
+@@ -489,6 +506,7 @@ class Pipeline {
      }
  
      data()->ClearRegisterComponent();
@@ -54,7 +54,7 @@ index 99c1e691edf48edd26edfa5150706dc3ce6423a8..9f54e0c2668bc30752a1af2c4a985c76
    }
  
    void AssembleCode(Linkage* linkage) {
-@@ -507,7 +525,9 @@ class Pipeline {
+@@ -518,7 +536,9 @@ class Pipeline {
      if (!SelectInstructions(&linkage)) {
        return MaybeHandle<Code>();
      }

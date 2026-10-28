@@ -1,0 +1,14 @@
+diff --git a/src/maglev/maglev-interpreter-frame-state.cc b/src/maglev/maglev-interpreter-frame-state.cc
+index 2c9d8d4463fdae28a088ab7b69a12889bb2d6928..64946da7ec0d4816bf80a4e927dddd9ad2b19cbb 100644
+--- a/src/maglev/maglev-interpreter-frame-state.cc
++++ b/src/maglev/maglev-interpreter-frame-state.cc
+@@ -473,7 +473,8 @@ MergePointInterpreterFrameState::MergePointInterpreterFrameState(
+     : merge_offset_(merge_offset),
+       predecessor_count_(predecessor_count),
+       predecessors_so_far_(predecessors_so_far),
+-      bitfield_(kBasicBlockTypeBits::encode(type)),
++      bitfield_(kBasicBlockTypeBits::encode(type) |
++                kIsInline::encode(info.is_inline())),
+       predecessors_(predecessors),
+       frame_state_(info, liveness),
+       per_predecessor_alternatives_(

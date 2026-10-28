@@ -1,0 +1,26 @@
+diff --git a/src/maglev/maglev-code-generator.h b/src/maglev/maglev-code-generator.h
+index 198d2f867763211ae666ad60fbf92bb6fc60d33b..5f653281b7b5212ed87b68e65f3b597c70b85923 100644
+--- a/src/maglev/maglev-code-generator.h
++++ b/src/maglev/maglev-code-generator.h
+@@ -11,9 +11,12 @@
+ #include "src/maglev/maglev-assembler.h"
+ #include "src/maglev/maglev-code-gen-state.h"
+ #include "src/utils/identity-map.h"
++#include "src/zone/zone-containers.h"
+ 
+ namespace v8 {
+ namespace internal {
++class TrustedObject;
++
+ namespace maglev {
+ 
+ class Graph;
+@@ -60,6 +63,8 @@ class MaglevCodeGenerator final {
+ 
+   IdentityMap<int, base::DefaultAllocationPolicy> protected_deopt_literals_;
+   IdentityMap<int, base::DefaultAllocationPolicy> deopt_literals_;
++  ZoneVector<IndirectHandle<TrustedObject>> protected_deopt_literals_vector_;
++  ZoneVector<IndirectHandle<Object>> deopt_literals_vector_;
+   int deopt_exit_start_offset_ = -1;
+   int handler_table_offset_ = 0;
+   int inlined_function_count_ = 0;

@@ -1,8 +1,45 @@
 diff --git a/src/maglev/maglev-graph-builder.cc b/src/maglev/maglev-graph-builder.cc
-index c9ac4d5fea0cf0fe7d9944be3fe7df7dfa385f42..6a20a86d6bb8ceb4b6faaeb5af5b20e3db290724 100644
+index 1535afca2b0c6bd93a31a14831a5c87a517c66bd..f60eaca24497a15bdb24c80f4277234d5c515558 100644
 --- a/src/maglev/maglev-graph-builder.cc
 +++ b/src/maglev/maglev-graph-builder.cc
-@@ -5470,7 +5470,7 @@ ReduceResult MaglevGraphBuilder::TryBuildStoreField(
+@@ -4960,7 +4960,7 @@ bool MaglevGraphBuilder::CanElideWriteBarrier(ValueNode* object,
+   // No need for a write barrier if both object and value are part of the same
+   // folded young allocation.
+   AllocationBlock* allocation = GetAllocation(object);
+-  if (allocation != nullptr &&
++  if (allocation != nullptr && current_allocation_block_ == allocation &&
+       allocation->allocation_type() == AllocationType::kYoung &&
+       allocation == GetAllocation(value)) {
+     return true;
+@@ -5041,6 +5041,9 @@ bool MaglevGraphBuilder::CanTrackObjectChanges(ValueNode* receiver,
+   if (!v8_flags.maglev_object_tracking) return false;
+   if (!receiver->Is<InlinedAllocation>()) return false;
+   InlinedAllocation* alloc = receiver->Cast<InlinedAllocation>();
++  // FlyWeb: port of v8 a068030f51 (crbug 495751197): the transitive check
++  // applies to stores too.
++  if (IsEscaping(graph_, alloc)) return false;
+   if (mode == TrackObjectMode::kStore) {
+     // If we have two objects A and B, such that A points to B (it contains B in
+     // one of its field), we cannot change B without also changing A, even if
+@@ -5049,7 +5052,6 @@ bool MaglevGraphBuilder::CanTrackObjectChanges(ValueNode* receiver,
+         graph_->allocations_elide_map().end()) {
+       return false;
+     }
+-    if (alloc->IsEscaping()) return false;
+     // Ensure object is escaped if we are within a try-catch block. This is
+     // crucial because a deoptimization point inside the catch handler could
+     // re-materialize objects differently, depending on whether the throw
+@@ -5058,9 +5060,6 @@ bool MaglevGraphBuilder::CanTrackObjectChanges(ValueNode* receiver,
+     // the try-block started,  but for now, err on the side of caution and
+     // always escape.
+     if (IsInsideTryBlock()) return false;
+-  } else {
+-    DCHECK_EQ(mode, TrackObjectMode::kLoad);
+-    if (IsEscaping(graph_, alloc)) return false;
+   }
+   // We don't support loop phis inside VirtualObjects, so any access inside a
+   // loop should escape the object, except for objects that were created since
+@@ -5551,7 +5550,7 @@ MaybeReduceResult MaglevGraphBuilder::TryBuildStoreField(
        broker()->dependencies()->DependOnNoSlackTrackingChange(*original_map);
      }
    } else if (access_info.IsFastDataConstant() &&
@@ -11,36 +48,57 @@ index c9ac4d5fea0cf0fe7d9944be3fe7df7dfa385f42..6a20a86d6bb8ceb4b6faaeb5af5b20e3
      return EmitUnconditionalDeopt(DeoptimizeReason::kStoreToConstant);
    }
  
-@@ -5724,9 +5724,9 @@ ReduceResult MaglevGraphBuilder::TryBuildNamedAccess(
+@@ -5695,9 +5694,17 @@ MaybeReduceResult MaglevGraphBuilder::TryBuildPropertyLoad(
+       return AddNewNode<StringLength>({string});
+     }
+     case compiler::PropertyAccessInfo::kTypedArrayLength: {
+-      DCHECK_EQ(receiver, lookup_start_object);
+       CHECK(!IsRabGsabTypedArrayElementsKind(access_info.elements_kind()));
+-      return BuildLoadTypedArrayLength(receiver, access_info.elements_kind());
++      if (receiver != lookup_start_object) {
++        // We're accessing the TypedArray length via a prototype (a TypedArray
++        // object in the prototype chain, objects below it not having a "length"
++        // property, reading via super.length). That will throw a TypeError.
++        // This should never occur in any realistic code, so we can deopt here
++        // instead of implementing special handling for it.
++        return EmitUnconditionalDeopt(DeoptimizeReason::kWrongMap);
++      }
++      return BuildLoadTypedArrayLength(lookup_start_object,
++                                       access_info.elements_kind());
+     }
+   }
+ }
+@@ -5812,9 +5819,9 @@ MaybeReduceResult MaglevGraphBuilder::TryBuildNamedAccess(
                 GetTaggedValue(GetAccumulator())},
                feedback_source);
          case compiler::AccessMode::kDefine:
 +        case compiler::AccessMode::kStoreInLiteral:
-           return ReduceResult::Fail();
+           return {};
          case compiler::AccessMode::kHas:
 -        case compiler::AccessMode::kStoreInLiteral:
            UNREACHABLE();
        }
      }
-@@ -7311,6 +7311,15 @@ void MaglevGraphBuilder::VisitSetNamedProperty() {
+@@ -7401,6 +7408,16 @@ ReduceResult MaglevGraphBuilder::VisitSetNamedProperty() {
  
- void MaglevGraphBuilder::VisitDefineNamedOwnProperty() {
+ ReduceResult MaglevGraphBuilder::VisitDefineNamedOwnProperty() {
    // DefineNamedOwnProperty <object> <name_index> <slot>
-+  VisitDefineNamedOwnPropertyHelper(false);
++  return VisitDefineNamedOwnPropertyHelper(false);
 +}
 +
-+void MaglevGraphBuilder::VisitDefineNamedOwnPropertyInLiteral() {
++ReduceResult MaglevGraphBuilder::VisitDefineNamedOwnPropertyInLiteral() {
 +  // DefineNamedOwnPropertyInLiteral <object> <name_index> <slot>
-+  VisitDefineNamedOwnPropertyHelper(true);
++  return VisitDefineNamedOwnPropertyHelper(true);
 +}
 +
-+void MaglevGraphBuilder::VisitDefineNamedOwnPropertyHelper(bool in_literal) {
++ReduceResult MaglevGraphBuilder::VisitDefineNamedOwnPropertyHelper(
++    bool in_literal) {
    ValueNode* object = LoadRegister(0);
    compiler::NameRef name = GetRefOperand<Name>(1);
    FeedbackSlot slot = GetSlotOperand(2);
-@@ -7335,7 +7344,9 @@ void MaglevGraphBuilder::VisitDefineNamedOwnProperty() {
+@@ -7425,7 +7442,9 @@ ReduceResult MaglevGraphBuilder::VisitDefineNamedOwnProperty() {
      case compiler::ProcessedFeedback::kNamedAccess:
-       RETURN_VOID_IF_DONE(TryBuildNamedAccess(
+       RETURN_IF_DONE(TryBuildNamedAccess(
            object, object, processed_feedback.AsNamedAccess(), feedback_source,
 -          compiler::AccessMode::kDefine, build_generic_access));
 +          in_literal ? compiler::AccessMode::kStoreInLiteral
@@ -49,18 +107,79 @@ index c9ac4d5fea0cf0fe7d9944be3fe7df7dfa385f42..6a20a86d6bb8ceb4b6faaeb5af5b20e3
        break;
  
      default:
-@@ -12404,7 +12415,13 @@ ValueNode* MaglevGraphBuilder::BuildInlinedAllocation(
-           CreateHeapNumber(node->Cast<Float64Constant>()->value()),
-           allocation_type);
-     } else {
--      node = GetTaggedValue(node);
-+      ValueNode* new_node = GetTaggedValue(node);
-+      if (new_node != node && new_node->properties().can_allocate()) {
-+        // TODO(olivf): Remove this and instead always clear when we
-+        // emit an allocating instruction.
-+        ClearCurrentAllocationBlock();
-+      }
-+      node = new_node;
+@@ -7933,6 +7952,12 @@ ReduceResult MaglevGraphBuilder::BuildInlined(ValueNode* context,
+ bool MaglevGraphBuilder::ShouldInlineCall(
+     compiler::SharedFunctionInfoRef shared,
+     compiler::OptionalFeedbackVectorRef feedback_vector, float call_frequency) {
++  if (static_cast<int>(graph()->inlined_functions().size()) >=
++      SourcePosition::MaxInliningId()) {
++    compilation_unit_->info()->set_could_not_inline_all_candidates();
++    TRACE_CANNOT_INLINE("maximum inlining ids");
++    return false;
++  }
+   if (graph()->total_inlined_bytecode_size() >
+       v8_flags.max_maglev_inlined_bytecode_size_cumulative) {
+     compilation_unit_->info()->set_could_not_inline_all_candidates();
+@@ -8457,7 +8482,7 @@ MaybeReduceResult MaglevGraphBuilder::TryReduceArrayIteratorPrototypeNext(
+     VirtualObject* array = iterated_object->Cast<InlinedAllocation>()->object();
+     // TODO(victorgomes): Remove this once we track changes in the inlined
+     // allocated object.
+-    if (iterated_object->Cast<InlinedAllocation>()->IsEscaping()) {
++    if (IsEscaping(graph_, iterated_object->Cast<InlinedAllocation>())) {
+       FAIL("allocation is escaping, map could have been changed");
      }
-     values[i] = node;
+     // TODO(victorgomes): This effectively disable the optimization for `for-of`
+@@ -8495,6 +8520,14 @@ MaybeReduceResult MaglevGraphBuilder::TryReduceArrayIteratorPrototypeNext(
+     FAIL("no elements protector");
    }
+ 
++  // FlyWeb: port of v8 811ebc89d5 (crbug 523884658). The map of an inlined
++  // array can still change behind our back (e.g. through
++  // `function.arguments`), so check it like upstream does when there is no
++  // map inference.
++  if (iterated_object->Is<InlinedAllocation>()) {
++    RETURN_IF_ABORT(BuildCheckMaps(iterated_object, base::VectorOf(maps)));
++  }
++
+   // Load the [[NextIndex]] from the {iterator}.
+   // We can assume index and length fit in Uint32.
+   ValueNode* index =
+@@ -10398,7 +10431,7 @@ MaglevGraphBuilder::TryGetNonEscapingArgumentsObject(ValueNode* value) {
+   }
+   // TODO(victorgomes): We can probably loosen the IsNotEscaping requirement if
+   // we keep track of the arguments object changes so far.
+-  if (alloc->IsEscaping()) return {};
++  if (IsEscaping(graph_, alloc)) return {};
+   VirtualObject* object = alloc->object();
+   // TODO(victorgomes): Support simple JSArray forwarding.
+   compiler::MapRef map = object->map();
+@@ -12377,7 +12410,7 @@ VirtualObject* MaglevGraphBuilder::CreateJSStringIterator(compiler::MapRef map,
+ InlinedAllocation* MaglevGraphBuilder::ExtendOrReallocateCurrentAllocationBlock(
+     AllocationType allocation_type, VirtualObject* vobject) {
+   DCHECK_LE(vobject->size(), kMaxRegularHeapObjectSize);
+-  if (!current_allocation_block_ ||
++  if (!current_allocation_block_ || v8_flags.maglev_allocation_folding == 0 ||
+       current_allocation_block_->allocation_type() != allocation_type ||
+       !v8_flags.inline_new ||
+       compilation_unit()->info()->for_turboshaft_frontend()) {
+@@ -12466,8 +12499,20 @@ ValueNode* MaglevGraphBuilder::BuildInlinedAllocationForDoubleFixedArray(
+   return allocation;
+ }
+ 
++// FlyWeb: port of v8 f7bf2ff1fa (crbug 400944465): folding level 1 (the
++// default, as upstream) closes the allocation block after each inlined
++// allocation; level 2 is 13.4's folding across allocation sites.
+ ValueNode* MaglevGraphBuilder::BuildInlinedAllocation(
+     VirtualObject* vobject, AllocationType allocation_type) {
++  ValueNode* allocation = BuildInlinedAllocationImpl(vobject, allocation_type);
++  if (v8_flags.maglev_allocation_folding < 2) {
++    ClearCurrentAllocationBlock();
++  }
++  return allocation;
++}
++
++ValueNode* MaglevGraphBuilder::BuildInlinedAllocationImpl(
++    VirtualObject* vobject, AllocationType allocation_type) {
+   current_interpreter_frame_.add_object(vobject);
+   if (vobject->type() == VirtualObject::kHeapNumber) {
+     return BuildInlinedAllocationForHeapNumber(vobject, allocation_type);
