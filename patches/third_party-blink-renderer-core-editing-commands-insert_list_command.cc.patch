@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/editing/commands/insert_list_command.cc b/third_party/blink/renderer/core/editing/commands/insert_list_command.cc
-index 0df86e5d3d6e08d18b03cf8a9591d940ee168f2d..8b423cd54eb722e4de48616129addae4d42f091a 100644
+index 0df86e5d3d6e08d18b03cf8a9591d940ee168f2d..644da5df1cd3541545bb293a193253e0055ff8c7 100644
 --- a/third_party/blink/renderer/core/editing/commands/insert_list_command.cc
 +++ b/third_party/blink/renderer/core/editing/commands/insert_list_command.cc
 @@ -28,6 +28,7 @@
@@ -10,7 +10,31 @@ index 0df86e5d3d6e08d18b03cf8a9591d940ee168f2d..8b423cd54eb722e4de48616129addae4
  #include "third_party/blink/renderer/core/editing/commands/editing_commands_utilities.h"
  #include "third_party/blink/renderer/core/editing/editing_utilities.h"
  #include "third_party/blink/renderer/core/editing/ephemeral_range.h"
-@@ -455,12 +456,15 @@ bool InsertListCommand::DoApplyForSingleParagraph(
+@@ -285,8 +286,22 @@ void InsertListCommand::DoApply(EditingState* editing_state) {
+         visible_end_of_selection = CreateVisiblePosition(end_of_selection);
+       }
+ 
+-      start_of_current_paragraph =
++      VisiblePosition start_of_next_paragraph =
+           StartOfNextParagraph(EndingVisibleSelection().VisibleStart());
++      // Move to the start of the next paragraph. If the start of the next
++      // paragraph goes before the start of the current paragraph, then we
++      // should move to the next position from the start of the next paragraph
++      // in order to avoid infinite loop causing a renderer freeze.
++      // TODO(crbug.com/417631316): Below change fixes the renderer freeze but
++      // it uncovers another bug where the empty span is not unlistified.
++      // FlyWeb: upstream fda8019f78 without its runtime flag.
++      if (!start_of_current_paragraph.IsOrphan() &&
++          start_of_next_paragraph.DeepEquivalent() <=
++              start_of_current_paragraph.DeepEquivalent()) {
++        start_of_current_paragraph = NextPositionOf(start_of_next_paragraph);
++      } else {
++        start_of_current_paragraph = start_of_next_paragraph;
++      }
+     }
+     SetEndingSelection(SelectionForUndoStep::From(
+         SelectionInDOMTree::Builder()
+@@ -455,12 +470,15 @@ bool InsertListCommand::DoApplyForSingleParagraph(
  
        return true;
      }
@@ -28,7 +52,7 @@ index 0df86e5d3d6e08d18b03cf8a9591d940ee168f2d..8b423cd54eb722e4de48616129addae4
    }
  
    if (!list_child_node || switch_list_type || force_create_list) {
-@@ -471,14 +475,18 @@ bool InsertListCommand::DoApplyForSingleParagraph(
+@@ -471,14 +489,18 @@ bool InsertListCommand::DoApplyForSingleParagraph(
    return true;
  }
  
@@ -49,7 +73,7 @@ index 0df86e5d3d6e08d18b03cf8a9591d940ee168f2d..8b423cd54eb722e4de48616129addae4
    Node* next_list_child;
    Node* previous_list_child;
    Position start;
-@@ -557,6 +565,28 @@ void InsertListCommand::UnlistifyParagraph(
+@@ -557,6 +579,28 @@ void InsertListCommand::UnlistifyParagraph(
    ABORT_EDITING_COMMAND_IF(visible_start.IsNull());
    VisiblePosition visible_end = CreateVisiblePosition(end);
    ABORT_EDITING_COMMAND_IF(visible_end.IsNull());
@@ -78,7 +102,7 @@ index 0df86e5d3d6e08d18b03cf8a9591d940ee168f2d..8b423cd54eb722e4de48616129addae4
    DCHECK_LE(start, end);
    if (visible_end.DeepEquivalent() < visible_start.DeepEquivalent())
      visible_end = visible_start;
-@@ -586,16 +616,16 @@ static HTMLElement* AdjacentEnclosingList(const VisiblePosition& pos,
+@@ -586,16 +630,16 @@ static HTMLElement* AdjacentEnclosingList(const VisiblePosition& pos,
    return list_element;
  }
  
@@ -99,7 +123,7 @@ index 0df86e5d3d6e08d18b03cf8a9591d940ee168f2d..8b423cd54eb722e4de48616129addae4
  
    // If original_start is of type kOffsetInAnchor, then the offset can become
    // invalid when inserting the <li>. So use a RelocatablePosition.
-@@ -620,18 +650,18 @@ void InsertListCommand::ListifyParagraph(const VisiblePosition& original_start,
+@@ -620,18 +664,18 @@ void InsertListCommand::ListifyParagraph(const VisiblePosition& original_start,
        InsertNodeAt(list_item_element, Position::BeforeNode(*next_list),
                     editing_state);
      if (editing_state->IsAborted())
@@ -121,7 +145,7 @@ index 0df86e5d3d6e08d18b03cf8a9591d940ee168f2d..8b423cd54eb722e4de48616129addae4
    }
  
    // Create new list element.
-@@ -645,7 +675,7 @@ void InsertListCommand::ListifyParagraph(const VisiblePosition& original_start,
+@@ -645,7 +689,7 @@ void InsertListCommand::ListifyParagraph(const VisiblePosition& original_start,
      HTMLBRElement* placeholder =
          InsertBlockPlaceholder(start_pos, editing_state);
      if (editing_state->IsAborted())
@@ -130,7 +154,7 @@ index 0df86e5d3d6e08d18b03cf8a9591d940ee168f2d..8b423cd54eb722e4de48616129addae4
      start_pos = Position::BeforeNode(*placeholder);
    }
  
-@@ -676,11 +706,11 @@ void InsertListCommand::ListifyParagraph(const VisiblePosition& original_start,
+@@ -676,11 +720,11 @@ void InsertListCommand::ListifyParagraph(const VisiblePosition& original_start,
    HTMLElement* list_element = CreateHTMLElement(GetDocument(), list_tag);
    InsertNodeAt(list_element, insertion_pos, editing_state);
    if (editing_state->IsAborted())
@@ -144,7 +168,7 @@ index 0df86e5d3d6e08d18b03cf8a9591d940ee168f2d..8b423cd54eb722e4de48616129addae4
  
    // We inserted the list at the start of the content we're about to move.
    // https://bugs.webkit.org/show_bug.cgi?id=19066: Update the start of content,
-@@ -702,9 +732,10 @@ void InsertListCommand::ListifyParagraph(const VisiblePosition& original_start,
+@@ -702,9 +746,10 @@ void InsertListCommand::ListifyParagraph(const VisiblePosition& original_start,
          original_start, list_item_element, editing_state);
    }
    if (editing_state->IsAborted())
