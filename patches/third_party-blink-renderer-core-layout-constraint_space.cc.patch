@@ -1,0 +1,23 @@
+diff --git a/third_party/blink/renderer/core/layout/constraint_space.cc b/third_party/blink/renderer/core/layout/constraint_space.cc
+index e052ad99ad926a7192f3e31118f51665ec4b3add..7f9b729cc6c0e90460119a9a6cafab742f75c147 100644
+--- a/third_party/blink/renderer/core/layout/constraint_space.cc
++++ b/third_party/blink/renderer/core/layout/constraint_space.cc
+@@ -35,7 +35,7 @@ ASSERT_SIZE(ConstraintSpace, SameSizeAsConstraintSpace);
+ 
+ const ConstraintSpace& ConstraintSpace::CloneForBlockInInlineIfNeeded(
+     std::optional<ConstraintSpace>& space) const {
+-  if (ShouldTextBoxTrimEnd()) {
++  if (ShouldTextBoxTrimNodeEnd()) {
+     // A block-in-inline always has following lines, though it could be empty.
+     // `ShouldTextBoxTrimEnd()` shouldn't trim the end if it's not the last
+     // inflow child. See `CreateConstraintSpaceForChild()`.
+@@ -47,7 +47,8 @@ const ConstraintSpace& ConstraintSpace::CloneForBlockInInlineIfNeeded(
+     if (ShouldForceTextBoxTrimEnd()) {
+       space->SetShouldForceTextBoxTrimEnd(false);
+     } else {
+-      space->SetShouldTextBoxTrimEnd(false);
++      space->EnsureRareData()->should_text_box_trim_node_end = false;
++      space->EnsureRareData()->should_text_box_trim_fragmentainer_end = false;
+     }
+     return *space;
+   } else {

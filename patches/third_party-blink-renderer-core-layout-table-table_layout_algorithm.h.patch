@@ -1,0 +1,23 @@
+diff --git a/third_party/blink/renderer/core/layout/table/table_layout_algorithm.h b/third_party/blink/renderer/core/layout/table/table_layout_algorithm.h
+index 7ef7a601ab344b3d8cc9f720cad7f8eb6949a55e..1f800aeb80ac5243285c09e15759762b7ee8f276 100644
+--- a/third_party/blink/renderer/core/layout/table/table_layout_algorithm.h
++++ b/third_party/blink/renderer/core/layout/table/table_layout_algorithm.h
+@@ -21,6 +21,9 @@ class CORE_EXPORT TableLayoutAlgorithm
+  public:
+   explicit TableLayoutAlgorithm(const LayoutAlgorithmParams& params)
+       : LayoutAlgorithm(params) {}
++
++  void SetupRelayoutData(const TableLayoutAlgorithm& previous, RelayoutType);
++
+   const LayoutResult* Layout();
+ 
+   MinMaxSizesResult ComputeMinMaxSizes(const MinMaxSizesFloatInput&);
+@@ -52,8 +55,6 @@ class CORE_EXPORT TableLayoutAlgorithm
+   };
+ 
+  private:
+-  const LayoutResult* RelayoutAsLastTableBox();
+-
+   void ComputeRows(const LayoutUnit table_grid_inline_size,
+                    const TableGroupedChildren& grouped_children,
+                    const Vector<TableColumnLocation>& column_locations,

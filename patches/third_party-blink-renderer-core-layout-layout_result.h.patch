@@ -1,8 +1,30 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_result.h b/third_party/blink/renderer/core/layout/layout_result.h
-index bb1ccd410ce9a7e35d73f4a598444dd0757e02d1..d3c4626f8fc00134a659a1a50f9736256eaf2dca 100644
+index bb1ccd410ce9a7e35d73f4a598444dd0757e02d1..53dfbb5bab48483d3d7e63e20ae9599f0da1404d 100644
 --- a/third_party/blink/renderer/core/layout/layout_result.h
 +++ b/third_party/blink/renderer/core/layout/layout_result.h
-@@ -489,6 +489,15 @@ class CORE_EXPORT LayoutResult final : public GarbageCollected<LayoutResult> {
+@@ -116,14 +116,13 @@ class CORE_EXPORT LayoutResult final : public GarbageCollected<LayoutResult> {
+     return rare_data_ && rare_data_->has_content_after_line_clamp();
+   }
+ 
+-  // Returns true if the block-start/-end is trimmed by the `text-box-trim`
+-  // property. Set not only for inline nodes, but also for block nodes when
+-  // propagating.
+-  bool IsBlockStartTrimmed() const {
+-    return rare_data_ && rare_data_->is_block_start_trimmed();
+-  }
+-  bool IsBlockEndTrimmed() const {
+-    return rare_data_ && rare_data_->is_block_end_trimmed();
++  // Returns true if the block-end of this line box is trimmable by the
++  // `text-box-trim` property. If it's true, it means that this is the line box
++  // that was the candidate for block-end trimming, but this doesn't necessarily
++  // mean that trimming actually took place. Trimming may be prevented by
++  // non-zero trailing border / padding, for instance.
++  bool IsBlockEndTrimmableLine() const {
++    return rare_data_ && rare_data_->is_block_end_trimmable_line();
+   }
+ 
+   // Return true if this is an orthogonal writing-mode root that depends on the
+@@ -489,6 +488,15 @@ class CORE_EXPORT LayoutResult final : public GarbageCollected<LayoutResult> {
    // Returns the space which generated this object for caching purposes.
    const ConstraintSpace& GetConstraintSpaceForCaching() const { return space_; }
  
@@ -18,7 +40,7 @@ index bb1ccd410ce9a7e35d73f4a598444dd0757e02d1..d3c4626f8fc00134a659a1a50f973625
    const HeapHashSet<Member<Element>>* DisplayLocksAffectedByAnchors() const {
      if (!rare_data_) {
        return nullptr;
-@@ -551,6 +560,8 @@ class CORE_EXPORT LayoutResult final : public GarbageCollected<LayoutResult> {
+@@ -551,6 +559,8 @@ class CORE_EXPORT LayoutResult final : public GarbageCollected<LayoutResult> {
        }
      }
  
@@ -27,7 +49,46 @@ index bb1ccd410ce9a7e35d73f4a598444dd0757e02d1..d3c4626f8fc00134a659a1a50f973625
      void SetDisplayLocksAffectedByAnchors(
          HeapHashSet<Member<Element>>* display_locks);
  
-@@ -995,6 +1006,7 @@ class CORE_EXPORT LayoutResult final : public GarbageCollected<LayoutResult> {
+@@ -650,12 +660,10 @@ class CORE_EXPORT LayoutResult final : public GarbageCollected<LayoutResult> {
+         NeedsAnchorPositionScrollAdjustmentInXFlag::DefineNextValue<bool, 1>;
+     using DataUnionTypeValue =
+         NeedsAnchorPositionScrollAdjustmentInYFlag::DefineNextValue<uint8_t, 3>;
+-    using IsBlockStartTrimmedFlag =
++    using IsBlockEndTrimmableLineFlag =
+         DataUnionTypeValue::DefineNextValue<bool, 1>;
+-    using IsBlockEndTrimmedFlag =
+-        IsBlockStartTrimmedFlag::DefineNextValue<bool, 1>;
+     using HasContentAfterLineClampFlag =
+-        IsBlockEndTrimmedFlag::DefineNextValue<bool, 1>;
++        IsBlockEndTrimmableLineFlag::DefineNextValue<bool, 1>;
+ 
+     struct BlockData {
+       GC_PLUGIN_IGNORE("crbug.com/1146383")
+@@ -759,19 +767,11 @@ class CORE_EXPORT LayoutResult final : public GarbageCollected<LayoutResult> {
+       return bit_field.set<DataUnionTypeValue>(static_cast<uint8_t>(data_type));
+     }
+ 
+-    bool is_block_start_trimmed() const {
+-      return bit_field.get<IsBlockStartTrimmedFlag>();
+-    }
+-
+-    void set_is_block_start_trimmed() {
+-      bit_field.set<IsBlockStartTrimmedFlag>(true);
+-    }
+-
+-    bool is_block_end_trimmed() const {
+-      return bit_field.get<IsBlockEndTrimmedFlag>();
++    bool is_block_end_trimmable_line() const {
++      return bit_field.get<IsBlockEndTrimmableLineFlag>();
+     }
+-    void set_is_block_end_trimmed() {
+-      bit_field.set<IsBlockEndTrimmedFlag>(true);
++    void set_is_block_end_trimmable_line() {
++      bit_field.set<IsBlockEndTrimmableLineFlag>(true);
+     }
+ 
+     bool has_content_after_line_clamp() const {
+@@ -995,6 +995,7 @@ class CORE_EXPORT LayoutResult final : public GarbageCollected<LayoutResult> {
      LayoutUnit annotation_overflow;
      LayoutUnit block_end_annotation_space;
      int lines_until_clamp = 0;

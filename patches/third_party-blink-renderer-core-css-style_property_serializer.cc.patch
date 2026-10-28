@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/style_property_serializer.cc b/third_party/blink/renderer/core/css/style_property_serializer.cc
-index e9b012c3afc74447c2ca114f34ce53b0273281bd..d332cebf0e41e84f17ba4f4541400996ca5ff039 100644
+index e9b012c3afc74447c2ca114f34ce53b0273281bd..774cd9ccc05ab541698c4d1412a5ab8f8fd46a37 100644
 --- a/third_party/blink/renderer/core/css/style_property_serializer.cc
 +++ b/third_party/blink/renderer/core/css/style_property_serializer.cc
 @@ -73,9 +73,14 @@ inline WhiteSpaceCollapse ToWhiteSpaceCollapse(const CSSValue* value) {
@@ -28,7 +28,15 @@ index e9b012c3afc74447c2ca114f34ce53b0273281bd..d332cebf0e41e84f17ba4f4541400996
      case CSSPropertyID::kMask:
      case CSSPropertyID::kWebkitTextStroke:
      case CSSPropertyID::kWhiteSpace:
-@@ -654,6 +660,8 @@ String StylePropertySerializer::SerializeShorthand(
+@@ -648,12 +654,16 @@ String StylePropertySerializer::SerializeShorthand(
+       return GetLayeredShorthandValue(maskPositionShorthand());
+     case CSSPropertyID::kMask:
+       return GetLayeredShorthandValue(maskShorthand());
++    case CSSPropertyID::kTextBox:
++      return TextBoxValue();
+     case CSSPropertyID::kTextEmphasis:
+       return GetShorthandValue(textEmphasisShorthand());
+     case CSSPropertyID::kTextSpacing:
        return TextSpacingValue();
      case CSSPropertyID::kWebkitTextStroke:
        return GetShorthandValue(webkitTextStrokeShorthand());
@@ -37,7 +45,47 @@ index e9b012c3afc74447c2ca114f34ce53b0273281bd..d332cebf0e41e84f17ba4f4541400996
      case CSSPropertyID::kMarker: {
        if (const CSSValue* start =
                property_set_.GetPropertyCSSValue(GetCSSPropertyMarkerStart())) {
-@@ -2355,11 +2363,41 @@ String StylePropertySerializer::TextSpacingValue() const {
+@@ -2319,6 +2329,39 @@ String StylePropertySerializer::ContainIntrinsicSizeValue() const {
+   return GetShorthandValue(containIntrinsicSizeShorthand());
+ }
+ 
++String StylePropertySerializer::TextBoxValue() const {
++  const auto* trim_value = DynamicTo<CSSIdentifierValue>(
++      property_set_.GetPropertyCSSValue(GetCSSPropertyTextBoxTrim()));
++  CHECK(trim_value);
++  const CSSValueID trim_id = trim_value->GetValueID();
++  const CSSValue* edge_value =
++      property_set_.GetPropertyCSSValue(GetCSSPropertyTextBoxEdge());
++  CHECK(edge_value);
++
++  // If `text-box-edge: auto`, produce `normal` or `<text-box-trim>`.
++  if (const auto* edge_identifier = DynamicTo<CSSIdentifierValue>(edge_value)) {
++    const CSSValueID edge_id = edge_identifier->GetValueID();
++    if (edge_id == CSSValueID::kAuto) {
++      if (trim_id == CSSValueID::kNone) {
++        return getValueName(CSSValueID::kNormal);
++      }
++      return trim_value->CssText();
++    }
++  }
++
++  // Omit `text-box-trim` if `trim-both`, not when it's initial.
++  if (trim_id == CSSValueID::kTrimBoth) {
++    return edge_value->CssText();
++  }
++
++  // Otherwise build a multi-value list.
++  StringBuilder result;
++  result.Append(trim_value->CssText());
++  result.Append(kSpaceCharacter);
++  result.Append(edge_value->CssText());
++  return result.ToString();
++}
++
+ String StylePropertySerializer::TextSpacingValue() const {
+   const auto* autospace_value = DynamicTo<CSSIdentifierValue>(
+       property_set_.GetPropertyCSSValue(GetCSSPropertyTextAutospace()));
+@@ -2355,11 +2398,41 @@ String StylePropertySerializer::TextSpacingValue() const {
    return result.ToString();
  }
  
@@ -80,7 +128,7 @@ index e9b012c3afc74447c2ca114f34ce53b0273281bd..d332cebf0e41e84f17ba4f4541400996
    if (!collapse_value || !wrap_value) {
      // If any longhands are missing, don't serialize as a shorthand.
      return g_empty_string;
-@@ -2367,7 +2405,7 @@ String StylePropertySerializer::WhiteSpaceValue() const {
+@@ -2367,7 +2440,7 @@ String StylePropertySerializer::WhiteSpaceValue() const {
  
    // Check if longhands are one of pre-defined keywords of `white-space`.
    const WhiteSpaceCollapse collapse = ToWhiteSpaceCollapse(collapse_value);
@@ -89,7 +137,7 @@ index e9b012c3afc74447c2ca114f34ce53b0273281bd..d332cebf0e41e84f17ba4f4541400996
    const EWhiteSpace whitespace = ToWhiteSpace(collapse, wrap);
    if (IsValidWhiteSpace(whitespace)) {
      return getValueName(PlatformEnumToCSSValueID(whitespace));
-@@ -2378,7 +2416,7 @@ String StylePropertySerializer::WhiteSpaceValue() const {
+@@ -2378,7 +2451,7 @@ String StylePropertySerializer::WhiteSpaceValue() const {
    if (collapse != ComputedStyleInitialValues::InitialWhiteSpaceCollapse()) {
      result.Append(getValueName(PlatformEnumToCSSValueID(collapse)));
    }

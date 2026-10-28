@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc b/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
-index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..df0dd39bfec713d3bf7e1218ef25fb8616674093 100644
+index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..41f40aa44efe9219436b89e45992988a002b2da7 100644
 --- a/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
 +++ b/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
 @@ -53,6 +53,7 @@
@@ -519,7 +519,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..df0dd39bfec713d3bf7e1218ef25fb86
 -                     p2_numeric->ComputePercentage() > 100.0)) {
 -    return nullptr;
 -  }
--
+ 
 -  // If both values are literally zero (and not calc()) reject at parse time
 -  if (p1 && p2 && p1->IsNumericLiteralValue() &&
 -      To<CSSNumericLiteralValue>(p1)->ComputePercentage() == 0.0f &&
@@ -564,7 +564,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..df0dd39bfec713d3bf7e1218ef25fb86
 -  }
 -
 -  const bool no_quirky_colors = false;
- 
+-
 -  CSSValue* color1 =
 -      ConsumeColorInternal(args, context, no_quirky_colors, allowed_colors);
 -  CSSPrimitiveValue* p1 =
@@ -590,12 +590,12 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..df0dd39bfec713d3bf7e1218ef25fb86
 -    stream.Restore(savepoint);
 -    return nullptr;
 -  }
--
+ 
 -  if (!ConsumeCommaIncludingWhitespace(args)) {
 -    stream.Restore(savepoint);
 -    return nullptr;
 -  }
- 
+-
 -  CSSValue* color2 =
 -      ConsumeColorInternal(args, context, no_quirky_colors, allowed_colors);
 -  CSSPrimitiveValue* p2 =
@@ -688,11 +688,11 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..df0dd39bfec713d3bf7e1218ef25fb86
      }
 -    colors_to_compare_against.push_back(color);
 -  } while (ConsumeCommaIncludingWhitespace(args));
--
+ 
 -  if (colors_to_compare_against.size() < 2) {
 -    return nullptr;
 -  }
- 
+-
 -  std::optional<double> target_contrast;
 -  if (ConsumeIdent<CSSValueID::kTo>(args)) {
 -    double target_contrast_temp;
@@ -711,12 +711,12 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..df0dd39bfec713d3bf7e1218ef25fb86
        return nullptr;
      }
 -  }
- 
+-
 -  // Bail out if there is any trailing stuff after we parse everything
 -  if (!args.AtEnd()) {
 -    return nullptr;
 -  }
--
+ 
 -  const ui::ColorProvider* color_provider = nullptr;
 -  if (const auto* document = context.GetDocument()) {
 -    // TODO(crbug.com/929098) Need to pass an appropriate color scheme here.
@@ -849,13 +849,13 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..df0dd39bfec713d3bf7e1218ef25fb86
        return nullptr;
      }
 -  }
- 
+-
 -  // Bail out if there is any trailing stuff after we parse everything
 -  if (!args.AtEnd()) {
 -    stream.Restore(savepoint);
 -    return nullptr;
 -  }
--
+ 
 -  const ui::ColorProvider* color_provider = nullptr;
 -  if (const auto* document = context.GetDocument()) {
 -    // TODO(crbug.com/929098) Need to pass an appropriate color scheme here.
@@ -2233,7 +2233,81 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..df0dd39bfec713d3bf7e1218ef25fb86
    return list;
  }
  
-@@ -8505,9 +8314,9 @@ CSSValue* ConsumeDashedIdentOrTactic(CSSParserTokenStream& stream,
+@@ -7915,43 +7724,53 @@ CSSValue* ConsumeTextDecorationLine(CSSParserTokenStream& stream) {
+ 
+ // Consume the `text-box-edge` production.
+ CSSValue* ConsumeTextBoxEdge(CSSParserTokenStream& stream) {
+-  if (CSSIdentifierValue* leading =
+-          ConsumeIdent<CSSValueID::kLeading>(stream)) {
+-    return leading;
++  if (CSSIdentifierValue* auto_value =
++          ConsumeIdent<CSSValueID::kAuto>(stream)) {
++    return auto_value;
+   }
++
+   CSSIdentifierValue* over_type =
+       ConsumeIdent<CSSValueID::kText, CSSValueID::kCap, CSSValueID::kEx>(
+           stream);
+   if (!over_type) {
+     return nullptr;
+   }
++  const auto over = over_type->ConvertTo<TextBoxEdge::Type>();
++  const std::optional<TextBoxEdge::Type> default_under =
++      TextBoxEdge::UnderForOver(over);
++
+   // The second parameter is optional, the first parameter will be used for
+   // both if the second parameter is not provided.
+   if (CSSIdentifierValue* under_type =
+-          ConsumeIdent<CSSValueID::kText, CSSValueID::kAlphabetic>(stream);
+-      under_type) {
++          ConsumeIdent<CSSValueID::kText, CSSValueID::kAlphabetic>(stream)) {
+     // Align with the CSS specification: "If only one value is specified,
+-    // both edges are assigned that same keyword if possible; else 'text' is
+-    // assumed as the missing value.".
+-    // If the `over_type` is 'cap' or 'ex', since it does not have a
+-    // corresponding line-under baseline, `text` will be used to fill the
+-    // missing value. If the `over_type` is `text`, the default `under_type` is
+-    // `text` to prioritize the same keyword.
+-    // In all cases above, the `under_type` of `text` can be omitted for
+-    // serialization.
+-    if (under_type->GetValueID() == CSSValueID::kText) {
+-      if (over_type->GetValueID() == CSSValueID::kText ||
+-          over_type->GetValueID() == CSSValueID::kCap ||
+-          over_type->GetValueID() == CSSValueID::kEx) {
+-        return over_type;
+-      }
++    // both edges are assigned that same keyword if possible".
++    // If the `default_under` has a value, and if it's the specified `under'
++    // value, the `under` value can be omitted.
++    if (default_under == under_type->ConvertTo<TextBoxEdge::Type>()) {
++      return over_type;
+     }
++
+     CSSValueList* const list = CSSValueList::CreateSpaceSeparated();
+     list->Append(*over_type);
+     list->Append(*under_type);
+     return list;
+   }
+-  return over_type;
++
++  // If the `default_under` has a value; i.e., if the `under` can be omitted,
++  // return the `over` value.
++  if (default_under) {
++    return over_type;
++  }
++
++  // Fail if the `under` is required but it's missing.
++  return nullptr;
++}
++
++// Consume the `text-box-trim` production.
++CSSValue* ConsumeTextBoxTrim(CSSParserTokenStream& stream) {
++  return ConsumeIdent<CSSValueID::kNone, CSSValueID::kTrimStart,
++                      CSSValueID::kTrimEnd, CSSValueID::kTrimBoth>(stream);
+ }
+ 
+ // Consume the `autospace` production.
+@@ -8505,9 +8324,9 @@ CSSValue* ConsumeDashedIdentOrTactic(CSSParserTokenStream& stream,
        continue;
      }
      if (context.Mode() == kUASheetMode && !dashed_ident) {
@@ -2246,7 +2320,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..df0dd39bfec713d3bf7e1218ef25fb86
          continue;
        }
      }
-@@ -8533,21 +8342,21 @@ CSSValue* ConsumeDashedIdentOrTactic(CSSParserTokenStream& stream,
+@@ -8533,21 +8352,21 @@ CSSValue* ConsumeDashedIdentOrTactic(CSSParserTokenStream& stream,
    return list;
  }
  
@@ -2276,7 +2350,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..df0dd39bfec713d3bf7e1218ef25fb86
    return function;
  }
  
-@@ -8559,17 +8368,17 @@ CSSValue* ConsumeSinglePositionTryFallback(CSSParserTokenStream& stream,
+@@ -8559,17 +8378,17 @@ CSSValue* ConsumeSinglePositionTryFallback(CSSParserTokenStream& stream,
    if (CSSValue* value = ConsumeDashedIdentOrTactic(stream, context)) {
      return value;
    }
@@ -2300,7 +2374,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..df0dd39bfec713d3bf7e1218ef25fb86
    if (stream.Peek().Id() == CSSValueID::kNone) {
      return ConsumeIdent(stream);
    }
-@@ -8579,7 +8388,7 @@ CSSValue* ConsumePositionTryFallbacks(CSSParserTokenStream& stream,
+@@ -8579,7 +8398,7 @@ CSSValue* ConsumePositionTryFallbacks(CSSParserTokenStream& stream,
  
  namespace {
  
@@ -2309,7 +2383,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..df0dd39bfec713d3bf7e1218ef25fb86
    STACK_ALLOCATED();
  
   public:
-@@ -8612,8 +8421,8 @@ struct InsetAreaKeyword {
+@@ -8612,8 +8431,8 @@ struct InsetAreaKeyword {
      kSelfStartEnd,
    };
  
@@ -2320,7 +2394,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..df0dd39bfec713d3bf7e1218ef25fb86
      if (first.type == kGeneral || second.type == kGeneral) {
        return true;
      }
-@@ -8636,8 +8445,8 @@ struct InsetAreaKeyword {
+@@ -8636,8 +8455,8 @@ struct InsetAreaKeyword {
  template <class T>
    requires std::is_same_v<T, CSSParserTokenStream> ||
             std::is_same_v<T, CSSParserTokenRange>
@@ -2331,7 +2405,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..df0dd39bfec713d3bf7e1218ef25fb86
    switch (stream.Peek().Id()) {
      case CSSValueID::kSpanAll:
      case CSSValueID::kCenter:
-@@ -8655,7 +8464,7 @@ std::optional<InsetAreaKeyword> ConsumeInsetAreaKeyword(T& stream) {
+@@ -8655,7 +8474,7 @@ std::optional<InsetAreaKeyword> ConsumeInsetAreaKeyword(T& stream) {
      case CSSValueID::kXSelfEnd:
      case CSSValueID::kSpanXSelfStart:
      case CSSValueID::kSpanXSelfEnd:
@@ -2340,7 +2414,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..df0dd39bfec713d3bf7e1218ef25fb86
        break;
      case CSSValueID::kTop:
      case CSSValueID::kBottom:
-@@ -8669,53 +8478,53 @@ std::optional<InsetAreaKeyword> ConsumeInsetAreaKeyword(T& stream) {
+@@ -8669,53 +8488,53 @@ std::optional<InsetAreaKeyword> ConsumeInsetAreaKeyword(T& stream) {
      case CSSValueID::kYSelfEnd:
      case CSSValueID::kSpanYSelfStart:
      case CSSValueID::kSpanYSelfEnd:
@@ -2403,7 +2477,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..df0dd39bfec713d3bf7e1218ef25fb86
  //                  [ left | center | right | span-left | span-right |
  //                    x-start | x-end | span-x-start | span-x-end |
  //                    x-self-start | x-self-end | span-x-self-start |
-@@ -8746,25 +8555,25 @@ std::optional<InsetAreaKeyword> ConsumeInsetAreaKeyword(T& stream) {
+@@ -8746,25 +8565,25 @@ std::optional<InsetAreaKeyword> ConsumeInsetAreaKeyword(T& stream) {
  template <class T>
    requires std::is_same_v<T, CSSParserTokenStream> ||
             std::is_same_v<T, CSSParserTokenRange>
@@ -2439,7 +2513,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..df0dd39bfec713d3bf7e1218ef25fb86
      return nullptr;
    }
    CSSIdentifierValue* first_value = first.value().value;
-@@ -8773,21 +8582,22 @@ CSSValue* ConsumeInsetArea(T& range) {
+@@ -8773,21 +8592,22 @@ CSSValue* ConsumeInsetArea(T& range) {
      return first_value;
    }
    if (first_value->GetValueID() == CSSValueID::kSpanAll &&

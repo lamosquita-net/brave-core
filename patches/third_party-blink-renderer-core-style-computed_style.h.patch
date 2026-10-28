@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style.h b/third_party/blink/renderer/core/style/computed_style.h
-index d4d2a1ca1e5a4f492aecaa534714267bf640d520..6ba0505ff01332e9685874da00419811436dee0d 100644
+index d4d2a1ca1e5a4f492aecaa534714267bf640d520..701e96be60dfe050c1e15fda0312da55ebefb0d2 100644
 --- a/third_party/blink/renderer/core/style/computed_style.h
 +++ b/third_party/blink/renderer/core/style/computed_style.h
 @@ -403,12 +403,12 @@ class ComputedStyle final : public ComputedStyleBase {
@@ -84,6 +84,24 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..6ba0505ff01332e9685874da00419811
        effective |= kContainsBlockSize;
      }
      if (!IsContentVisibilityVisible(content_visibility)) {
+@@ -1675,13 +1684,13 @@ class ComputedStyle final : public ComputedStyleBase {
+   // `text-box-trim` utility functions.
+   bool ShouldTextBoxTrimStart() const {
+     const ETextBoxTrim text_box_trim = TextBoxTrim();
+-    return text_box_trim == ETextBoxTrim::kStart ||
+-           text_box_trim == ETextBoxTrim::kBoth;
++    return text_box_trim == ETextBoxTrim::kTrimStart ||
++           text_box_trim == ETextBoxTrim::kTrimBoth;
+   }
+   bool ShouldTextBoxTrimEnd() const {
+     const ETextBoxTrim text_box_trim = TextBoxTrim();
+-    return text_box_trim == ETextBoxTrim::kEnd ||
+-           text_box_trim == ETextBoxTrim::kBoth;
++    return text_box_trim == ETextBoxTrim::kTrimEnd ||
++           text_box_trim == ETextBoxTrim::kTrimBoth;
+   }
+ 
+   // Text decoration utility functions.
 @@ -2083,7 +2092,7 @@ class ComputedStyle final : public ComputedStyleBase {
    // This function may return values not defined as the enum values. See
    // `EWhiteSpace`. Prefer using semantic functions below.

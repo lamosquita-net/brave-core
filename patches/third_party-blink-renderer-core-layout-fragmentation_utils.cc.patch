@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/fragmentation_utils.cc b/third_party/blink/renderer/core/layout/fragmentation_utils.cc
-index cf8d991fcf3d81bb58c1164a9f54f81ec8d93d5a..713f1e38ba5631eac6d4fae8093debe369e78b35 100644
+index cf8d991fcf3d81bb58c1164a9f54f81ec8d93d5a..a9ed5c50a7cef5d7a51bffc7a199e569758dd333 100644
 --- a/third_party/blink/renderer/core/layout/fragmentation_utils.cc
 +++ b/third_party/blink/renderer/core/layout/fragmentation_utils.cc
 @@ -482,6 +482,10 @@ void SetupFragmentBuilderForFragmentation(
@@ -49,3 +49,14 @@ index cf8d991fcf3d81bb58c1164a9f54f81ec8d93d5a..713f1e38ba5631eac6d4fae8093debe3
      DCHECK_GE(desired_intrinsic_block_size, trailing_border_padding);
      DCHECK_GE(desired_block_size, trailing_border_padding);
  
+@@ -1572,6 +1572,10 @@ LayoutUnit BlockSizeForFragmentation(
+     LogicalSize logical_size =
+         result.GetPhysicalFragment().Size().ConvertToLogical(writing_mode);
+     block_size = logical_size.block_size;
++
++    // Then remove any block-end trimming, since it shouldn't take up space in
++    // ancestry layout.
++    block_size -= result.TrimBlockEndBy().value_or(LayoutUnit());
+   }
+ 
+   // Ruby annotations do not take up space in the line box, so we need this to

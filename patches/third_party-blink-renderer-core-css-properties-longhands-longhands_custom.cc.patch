@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc b/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc
-index ea7a7084f13befb93ab67c985ea8de7b926aae4a..36e38360c3cc8fe0042af50d15a7bbf37c04fcc9 100644
+index ea7a7084f13befb93ab67c985ea8de7b926aae4a..a04bcf79e462d8ed66a9fe290029a0447eef3060 100644
 --- a/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc
 +++ b/third_party/blink/renderer/core/css/properties/longhands/longhands_custom.cc
 @@ -32,6 +32,7 @@
@@ -240,16 +240,16 @@ index ea7a7084f13befb93ab67c985ea8de7b926aae4a..36e38360c3cc8fe0042af50d15a7bbf3
 +                                  WebFeature::kCSSInsetAreaProperty);
 +  }
 +  return css_parsing_utils::ConsumePositionArea(stream);
- }
- 
++}
++
 +const CSSValue* PositionArea::CSSValueFromComputedStyleInternal(
 +    const ComputedStyle& style,
 +    const LayoutObject*,
 +    bool allow_visited_style,
 +    CSSValuePhase value_phase) const {
 +  return ComputedStyleUtils::ValueForPositionArea(style.GetPositionArea());
-+}
-+
+ }
+ 
 +// TODO(crbug.com/352360007): this can be removed when inset-area is removed.
  const CSSValue* InsetArea::CSSValueFromComputedStyleInternal(
      const ComputedStyle& style,
@@ -603,7 +603,32 @@ index ea7a7084f13befb93ab67c985ea8de7b926aae4a..36e38360c3cc8fe0042af50d15a7bbf3
  const CSSValue* StrokeDasharray::ParseSingleValue(
      CSSParserTokenStream& stream,
      const CSSParserContext& context,
-@@ -9005,10 +9161,13 @@ const CSSValue* Top::ParseSingleValue(
+@@ -8615,22 +8771,10 @@ const CSSValue* TextBoxEdge::CSSValueFromComputedStyleInternal(
+     bool allow_visited_style,
+     CSSValuePhase value_phase) const {
+   const blink::TextBoxEdge& text_box_edge = style.GetTextBoxEdge();
+-  if (text_box_edge.Under() == text_box_edge.Over()) {
++  if (text_box_edge.IsUnderDefault()) {
+     return CSSIdentifierValue::Create(text_box_edge.Over());
+   }
+-  if (text_box_edge.Under() == ::blink::TextBoxEdge::Type::kText) {
+-    using enum ::blink::TextBoxEdge::Type;
+-    switch (text_box_edge.Over()) {
+-      case kCap:
+-      case kEx:
+-        return CSSIdentifierValue::Create(text_box_edge.Over());
+-      case kAlphabetic:
+-        break;
+-      case kLeading:
+-      case kText:
+-        NOTREACHED_NORETURN();
+-    }
+-  }
++
+   CSSValueList* list = CSSValueList::CreateSpaceSeparated();
+   list->Append(*CSSIdentifierValue::Create(text_box_edge.Over()));
+   list->Append(*CSSIdentifierValue::Create(text_box_edge.Under()));
+@@ -9005,10 +9149,13 @@ const CSSValue* Top::ParseSingleValue(
      CSSParserTokenStream& stream,
      const CSSParserContext& context,
      const CSSParserLocalContext& local_context) const {
@@ -619,7 +644,7 @@ index ea7a7084f13befb93ab67c985ea8de7b926aae4a..36e38360c3cc8fe0042af50d15a7bbf3
  }
  
  bool Top::IsLayoutDependent(const ComputedStyle* style,
-@@ -10836,12 +10995,20 @@ const CSSValue* WhiteSpaceCollapse::CSSValueFromComputedStyleInternal(
+@@ -10836,12 +10983,20 @@ const CSSValue* WhiteSpaceCollapse::CSSValueFromComputedStyleInternal(
    return CSSIdentifierValue::Create(style.GetWhiteSpaceCollapse());
  }
  

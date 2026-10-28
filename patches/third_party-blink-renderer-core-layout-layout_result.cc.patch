@@ -1,8 +1,22 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_result.cc b/third_party/blink/renderer/core/layout/layout_result.cc
-index 9995feb56c9dbe9546b9a1f031c7d85db94d4695..a359e22dc29942dd5327f58817319e534e52ce32 100644
+index 9995feb56c9dbe9546b9a1f031c7d85db94d4695..48ed2a063adab36a5349952bde29d50bcb7de726 100644
 --- a/third_party/blink/renderer/core/layout/layout_result.cc
 +++ b/third_party/blink/renderer/core/layout/layout_result.cc
-@@ -329,6 +329,13 @@ void LayoutResult::CopyMutableOutOfFlowData(const LayoutResult& other) const {
+@@ -250,11 +250,8 @@ LayoutResult::LayoutResult(const PhysicalFragment* physical_fragment,
+   if (builder->has_content_after_line_clamp_) {
+     EnsureRareData()->set_has_content_after_line_clamp();
+   }
+-  if (builder->is_block_start_trimmed_) {
+-    EnsureRareData()->set_is_block_start_trimmed();
+-  }
+-  if (builder->is_block_end_trimmed_) {
+-    EnsureRareData()->set_is_block_end_trimmed();
++  if (builder->is_block_end_trimmable_line_) {
++    EnsureRareData()->set_is_block_end_trimmable_line();
+   }
+ 
+   if (builder->tallest_unbreakable_block_size_ >= LayoutUnit()) {
+@@ -329,6 +326,13 @@ void LayoutResult::CopyMutableOutOfFlowData(const LayoutResult& other) const {
        other.OutOfFlowPositionedOffset());
  }
  
@@ -16,7 +30,7 @@ index 9995feb56c9dbe9546b9a1f031c7d85db94d4695..a359e22dc29942dd5327f58817319e53
  void LayoutResult::MutableForOutOfFlow::SetDisplayLocksAffectedByAnchors(
      HeapHashSet<Member<Element>>* display_locks) {
    if (layout_result_->rare_data_ || display_locks) {
-@@ -403,6 +410,7 @@ void LayoutResult::RareData::Trace(Visitor* visitor) const {
+@@ -403,6 +407,7 @@ void LayoutResult::RareData::Trace(Visitor* visitor) const {
    // constructor and never changed.
    if (const BlockData* data = GetBlockData())
      visitor->Trace(data->column_spanner_path);

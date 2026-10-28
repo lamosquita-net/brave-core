@@ -1,0 +1,34 @@
+diff --git a/third_party/blink/renderer/core/layout/constraint_space_builder.h b/third_party/blink/renderer/core/layout/constraint_space_builder.h
+index 0862d38ebc5b5530a911f1feec8ff99430491a53..519b916b99a262a47022f94b8d83e8d1af697da0 100644
+--- a/third_party/blink/renderer/core/layout/constraint_space_builder.h
++++ b/third_party/blink/renderer/core/layout/constraint_space_builder.h
+@@ -506,8 +506,27 @@ class CORE_EXPORT ConstraintSpaceBuilder final {
+     }
+   }
+ 
+-  void SetShouldTextBoxTrimStart() { space_.SetShouldTextBoxTrimStart(); }
+-  void SetShouldTextBoxTrimEnd() { space_.SetShouldTextBoxTrimEnd(); }
++  void SetShouldTextBoxTrimNodeStart(bool b) {
++    if (b || space_.rare_data_) {
++      space_.EnsureRareData()->should_text_box_trim_node_start = b;
++    }
++  }
++  void SetShouldTextBoxTrimNodeEnd(bool b) {
++    if (b || space_.rare_data_) {
++      space_.EnsureRareData()->should_text_box_trim_node_end = b;
++    }
++  }
++  void SetShouldTextBoxTrimFragmentainerStart(bool b) {
++    if (b || space_.rare_data_) {
++      space_.EnsureRareData()->should_text_box_trim_fragmentainer_start = b;
++    }
++  }
++  void SetShouldTextBoxTrimFragmentainerEnd(bool b) {
++    if (b || space_.rare_data_) {
++      space_.EnsureRareData()->should_text_box_trim_fragmentainer_end = b;
++    }
++  }
++
+   void SetShouldForceTextBoxTrimEnd() { space_.SetShouldForceTextBoxTrimEnd(); }
+ 
+   void SetDecorationPercentageResolutionType(
