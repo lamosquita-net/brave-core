@@ -1,0 +1,23 @@
+diff --git a/third_party/blink/renderer/core/html/forms/picker_indicator_element.cc b/third_party/blink/renderer/core/html/forms/picker_indicator_element.cc
+index df693d37e88cbe92a57f60face74bd639d721d4e..195a50d7187d1e348b422f53c0a1b693e35f8069 100644
+--- a/third_party/blink/renderer/core/html/forms/picker_indicator_element.cc
++++ b/third_party/blink/renderer/core/html/forms/picker_indicator_element.cc
+@@ -125,6 +125,7 @@ void PickerIndicatorElement::OpenPopup() {
+     // Invalidate paint to ensure that the focus ring is removed.
+     OwnerElement().GetLayoutObject()->SetShouldDoFullPaintInvalidation();
+   }
++  OwnerElement().PseudoStateChanged(CSSSelector::kPseudoOpen);
+ }
+ 
+ Element& PickerIndicatorElement::OwnerElement() const {
+@@ -142,6 +143,10 @@ bool PickerIndicatorElement::HasOpenedPopup() const {
+   return chooser_ != nullptr;
+ }
+ 
++bool PickerIndicatorElement::IsPickerVisible() const {
++  return chooser_ && chooser_->IsPickerVisible();
++}
++
+ void PickerIndicatorElement::DetachLayoutTree(bool performing_reattach) {
+   ClosePopup();
+   HTMLDivElement::DetachLayoutTree(performing_reattach);

@@ -1,0 +1,31 @@
+diff --git a/third_party/blink/renderer/core/html/forms/color_input_type.cc b/third_party/blink/renderer/core/html/forms/color_input_type.cc
+index 14e979482e95009fc63bebf4ab1143bb2dbf6caa..8d4052f60a4bc3c832a3da0584193d506042d1a1 100644
+--- a/third_party/blink/renderer/core/html/forms/color_input_type.cc
++++ b/third_party/blink/renderer/core/html/forms/color_input_type.cc
+@@ -182,6 +182,7 @@ void ColorInputType::OpenPopupView() {
+     // Invalidate paint to ensure that the focus ring is removed.
+     GetElement().GetLayoutObject()->SetShouldDoFullPaintInvalidation();
+   }
++  GetElement().PseudoStateChanged(CSSSelector::kPseudoOpen);
+ }
+ 
+ void ColorInputType::ClosePopupView() {
+@@ -193,6 +194,10 @@ bool ColorInputType::HasOpenedPopup() const {
+   return chooser_ != nullptr;
+ }
+ 
++bool ColorInputType::IsPickerVisible() const {
++  return chooser_ && chooser_->IsPickerVisible();
++}
++
+ bool ColorInputType::ShouldRespectListAttribute() {
+   return true;
+ }
+@@ -232,6 +237,7 @@ void ColorInputType::DidEndChooser() {
+     // Invalidate paint to ensure that the focus ring is shown.
+     GetElement().GetLayoutObject()->SetShouldDoFullPaintInvalidation();
+   }
++  GetElement().PseudoStateChanged(CSSSelector::kPseudoOpen);
+ }
+ 
+ void ColorInputType::UpdateView() {

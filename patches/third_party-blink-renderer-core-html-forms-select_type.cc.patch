@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/forms/select_type.cc b/third_party/blink/renderer/core/html/forms/select_type.cc
-index 860c00f93eb071b71de1ce916876abac8618829f..c8b31fccf49ad764778ff815ed069c439fd5a816 100644
+index 860c00f93eb071b71de1ce916876abac8618829f..53ecef8e3818ee59b2dc60e9d69cba5e7ae2fc17 100644
 --- a/third_party/blink/renderer/core/html/forms/select_type.cc
 +++ b/third_party/blink/renderer/core/html/forms/select_type.cc
 @@ -66,6 +66,7 @@
@@ -10,7 +10,27 @@ index 860c00f93eb071b71de1ce916876abac8618829f..c8b31fccf49ad764778ff815ed069c43
  #include "third_party/blink/renderer/core/svg/svg_path_element.h"
  #include "third_party/blink/renderer/core/svg/svg_svg_element.h"
  #include "third_party/blink/renderer/platform/text/platform_locale.h"
-@@ -1429,7 +1430,7 @@ void ListBoxSelectType::ScrollToOptionTask() {
+@@ -595,7 +596,7 @@ void MenuListSelectType::ShowPopup(PopupMenu::ShowEventType type) {
+   // the UA sheet need to remove display:none from a <datalist> which may be
+   // wrapping the <option>s.
+   SetNativePopupIsVisible(true);
+-  if (RuntimeEnabledFeatures::CSSPseudoOpenClosedEnabled()) {
++  if (RuntimeEnabledFeatures::CSSPseudoOpenEnabled()) {
+     select_->GetDocument().UpdateStyleAndLayoutForNode(
+         select_, DocumentUpdateReason::kPagePopup);
+   }
+@@ -635,9 +636,8 @@ bool MenuListSelectType::PopupIsVisible() const {
+ 
+ void MenuListSelectType::SetNativePopupIsVisible(bool popup_is_visible) {
+   native_popup_is_visible_ = popup_is_visible;
+-  if (RuntimeEnabledFeatures::CSSPseudoOpenClosedEnabled()) {
++  if (RuntimeEnabledFeatures::CSSPseudoOpenEnabled()) {
+     select_->PseudoStateChanged(CSSSelector::kPseudoOpen);
+-    select_->PseudoStateChanged(CSSSelector::kPseudoClosed);
+   }
+   if (auto* layout_object = select_->GetLayoutObject()) {
+     // Invalidate paint to ensure that the focus ring is updated.
+@@ -1429,7 +1429,7 @@ void ListBoxSelectType::ScrollToOptionTask() {
    DCHECK(box->Layer()->GetScrollableArea());
    box->Layer()->GetScrollableArea()->ScrollIntoView(
        bounds, PhysicalBoxStrut(),

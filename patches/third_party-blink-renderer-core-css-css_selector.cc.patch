@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/css_selector.cc b/third_party/blink/renderer/core/css/css_selector.cc
-index ae55bd16418f586bb754fa9a9b12b31d2b091fb0..ec33e69a9b16955d5318963231b886cd4992e2b7 100644
+index ae55bd16418f586bb754fa9a9b12b31d2b091fb0..c327438a6a4633b001a8657d5a86113e5f32c5cc 100644
 --- a/third_party/blink/renderer/core/css/css_selector.cc
 +++ b/third_party/blink/renderer/core/css/css_selector.cc
 @@ -96,8 +96,6 @@ CSSSelector::CSSSelector(MatchType match_type,
@@ -96,7 +96,27 @@ index ae55bd16418f586bb754fa9a9b12b31d2b091fb0..ec33e69a9b16955d5318963231b886cd
      {"-internal-spatial-navigation-focus",
       CSSSelector::kPseudoSpatialNavigationFocus},
      {"-internal-video-persistent", CSSSelector::kPseudoVideoPersistent},
-@@ -862,7 +865,7 @@ void CSSSelector::UpdatePseudoType(const AtomicString& value,
+@@ -549,7 +552,6 @@ constexpr static NameToPseudoStruct kPseudoTypeWithoutArgumentsMap[] = {
+     {"backdrop", CSSSelector::kPseudoBackdrop},
+     {"before", CSSSelector::kPseudoBefore},
+     {"checked", CSSSelector::kPseudoChecked},
+-    {"closed", CSSSelector::kPseudoClosed},
+     {"corner-present", CSSSelector::kPseudoCornerPresent},
+     {"cue", CSSSelector::kPseudoWebKitCustomElement},
+     {"current", CSSSelector::kPseudoCurrent},
+@@ -725,9 +727,8 @@ CSSSelector::PseudoType CSSSelector::NameToPseudoType(
+     return CSSSelector::kPseudoUnknown;
+   }
+ 
+-  if ((match->type == CSSSelector::kPseudoOpen ||
+-       match->type == CSSSelector::kPseudoClosed) &&
+-      !RuntimeEnabledFeatures::CSSPseudoOpenClosedEnabled()) {
++  if (match->type == CSSSelector::kPseudoOpen &&
++      !RuntimeEnabledFeatures::CSSPseudoOpenEnabled()) {
+     return CSSSelector::kPseudoUnknown;
+   }
+ 
+@@ -862,7 +863,7 @@ void CSSSelector::UpdatePseudoType(const AtomicString& value,
        }
        break;
      case kPseudoHasDatalist:
@@ -105,7 +125,7 @@ index ae55bd16418f586bb754fa9a9b12b31d2b091fb0..ec33e69a9b16955d5318963231b886cd
      case kPseudoIsHtml:
      case kPseudoListBox:
      case kPseudoMultiSelectFocus:
-@@ -1009,6 +1012,12 @@ void CSSSelector::SetTrue() {
+@@ -1009,6 +1010,12 @@ void CSSSelector::SetTrue() {
    bits_.set<IsImplicitlyAddedField>(true);
  }
  
@@ -118,7 +138,7 @@ index ae55bd16418f586bb754fa9a9b12b31d2b091fb0..ec33e69a9b16955d5318963231b886cd
  static void SerializeIdentifierOrAny(const AtomicString& identifier,
                                       const AtomicString& any,
                                       StringBuilder& builder) {
-@@ -1408,7 +1417,7 @@ static bool ValidateSubSelector(const CSSSelector* selector) {
+@@ -1408,7 +1415,7 @@ static bool ValidateSubSelector(const CSSSelector* selector) {
      case CSSSelector::kPseudoHasDatalist:
      case CSSSelector::kPseudoIsHtml:
      case CSSSelector::kPseudoListBox:
@@ -127,7 +147,7 @@ index ae55bd16418f586bb754fa9a9b12b31d2b091fb0..ec33e69a9b16955d5318963231b886cd
        // TODO(https://crbug.com/1346456): Many pseudos should probably be
        // added to this list.  The default: case below should also be removed
        // so that those adding new pseudos know they need to choose one path or
-@@ -1501,7 +1510,20 @@ bool CSSSelector::IsTreeAbidingPseudoElement() const {
+@@ -1501,7 +1508,20 @@ bool CSSSelector::IsTreeAbidingPseudoElement() const {
            GetPseudoType() == kPseudoSelectFallbackButton ||
            GetPseudoType() == kPseudoSelectFallbackButtonIcon ||
            GetPseudoType() == kPseudoSelectFallbackButtonText ||
@@ -149,7 +169,7 @@ index ae55bd16418f586bb754fa9a9b12b31d2b091fb0..ec33e69a9b16955d5318963231b886cd
  }
  
  bool CSSSelector::IsAllowedAfterPart() const {
-@@ -1509,14 +1531,13 @@ bool CSSSelector::IsAllowedAfterPart() const {
+@@ -1509,14 +1529,13 @@ bool CSSSelector::IsAllowedAfterPart() const {
        Match() != CSSSelector::kPseudoClass) {
      return false;
    }
@@ -168,7 +188,7 @@ index ae55bd16418f586bb754fa9a9b12b31d2b091fb0..ec33e69a9b16955d5318963231b886cd
      case kPseudoPlaceholder:
      case kPseudoFileSelectorButton:
      case kPseudoFirstLine:
-@@ -1531,9 +1552,180 @@ bool CSSSelector::IsAllowedAfterPart() const {
+@@ -1531,9 +1550,180 @@ bool CSSSelector::IsAllowedAfterPart() const {
      case kPseudoHighlight:
      case kPseudoSpellingError:
      case kPseudoGrammarError:
@@ -350,7 +370,7 @@ index ae55bd16418f586bb754fa9a9b12b31d2b091fb0..ec33e69a9b16955d5318963231b886cd
        return false;
    }
  }
-@@ -1589,6 +1781,20 @@ bool CSSSelector::FollowsSlotted() const {
+@@ -1589,6 +1779,20 @@ bool CSSSelector::FollowsSlotted() const {
    return previous->GetPseudoType() == kPseudoSlotted;
  }
  

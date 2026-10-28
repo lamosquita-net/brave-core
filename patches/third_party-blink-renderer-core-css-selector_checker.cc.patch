@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/selector_checker.cc b/third_party/blink/renderer/core/css/selector_checker.cc
-index 5e85ed1e6875b5f6768c514a22cf0da6dfc62647..021d63978cd16f0eaa5bf7c95d59a1486d9f13b9 100644
+index 5e85ed1e6875b5f6768c514a22cf0da6dfc62647..d7b020ab3b3c7246437f02e79bcd6a916a64aefc 100644
 --- a/third_party/blink/renderer/core/css/selector_checker.cc
 +++ b/third_party/blink/renderer/core/css/selector_checker.cc
 @@ -540,6 +540,7 @@ SelectorChecker::MatchStatus SelectorChecker::MatchForRelation(
@@ -46,7 +46,16 @@ index 5e85ed1e6875b5f6768c514a22cf0da6dfc62647..021d63978cd16f0eaa5bf7c95d59a148
      case CSSSelector::kSubSelector:
      case CSSSelector::kScopeActivation:
        break;
-@@ -1956,7 +1968,7 @@ bool SelectorChecker::CheckPseudoClass(const SelectorCheckingContext& context,
+@@ -1865,6 +1877,8 @@ bool SelectorChecker::CheckPseudoClass(const SelectorCheckingContext& context,
+         return details->FastHasAttribute(html_names::kOpenAttr);
+       } else if (auto* select = DynamicTo<HTMLSelectElement>(element)) {
+         return select->PopupIsVisible();
++      } else if (auto* input = DynamicTo<HTMLInputElement>(element)) {
++        return input->IsPickerVisible();
+       }
+       return false;
+     case CSSSelector::kPseudoClosed:
+@@ -1956,7 +1970,7 @@ bool SelectorChecker::CheckPseudoClass(const SelectorCheckingContext& context,
      case CSSSelector::kPseudoMultiSelectFocus:
        DCHECK(is_ua_rule_);
        return MatchesMultiSelectFocusPseudoClass(element);
@@ -55,7 +64,7 @@ index 5e85ed1e6875b5f6768c514a22cf0da6dfc62647..021d63978cd16f0eaa5bf7c95d59a148
        DCHECK(is_ua_rule_);
        if (ShadowRoot* root = element.ContainingShadowRoot()) {
          if (!root->IsUserAgent()) {
-@@ -2143,7 +2155,9 @@ bool SelectorChecker::CheckPseudoElement(const SelectorCheckingContext& context,
+@@ -2143,7 +2157,9 @@ bool SelectorChecker::CheckPseudoElement(const SelectorCheckingContext& context,
        return false;
      }
      case CSSSelector::kPseudoPart:

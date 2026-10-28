@@ -1,0 +1,18 @@
+diff --git a/third_party/blink/renderer/core/html/forms/multiple_fields_temporal_input_type_view.cc b/third_party/blink/renderer/core/html/forms/multiple_fields_temporal_input_type_view.cc
+index 787f3cb564bb377dfbf35e9cad739d8807dfccd0..4c25d7ef1f9928f6eb443efca2e23427bffa9ff9 100644
+--- a/third_party/blink/renderer/core/html/forms/multiple_fields_temporal_input_type_view.cc
++++ b/third_party/blink/renderer/core/html/forms/multiple_fields_temporal_input_type_view.cc
+@@ -639,6 +639,13 @@ bool MultipleFieldsTemporalInputTypeView::HasOpenedPopup() const {
+   return false;
+ }
+ 
++bool MultipleFieldsTemporalInputTypeView::IsPickerVisible() const {
++  if (PickerIndicatorElement* picker = GetPickerIndicatorElement()) {
++    return picker->IsPickerVisible();
++  }
++  return false;
++}
++
+ void MultipleFieldsTemporalInputTypeView::ValueAttributeChanged() {
+   if (!GetElement().HasDirtyValue())
+     UpdateView();
