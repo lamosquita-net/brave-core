@@ -76,6 +76,9 @@ async function applyPatches() {
     // FlyWeb 2.4.0: emoji variation selectors (font-variant-emoji), from the
     // emoji-segmenter of Chrome 131 (955936be).
     path.join('third_party', 'emoji-segmenter', 'src'),
+    // FlyWeb 2.4.0: QUIC version_information with the RFC 9368 codepoint, as
+    // Chrome 135 (QUICHE f4690dbf with quic_version_negotiation_rfc on).
+    path.join('net', 'third_party', 'quiche', 'src'),
   ]
   const flywebPatchStatus = []
   for (const repo of flywebRepos) {

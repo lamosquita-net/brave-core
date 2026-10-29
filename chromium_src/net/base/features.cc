@@ -21,6 +21,10 @@ OVERRIDE_FEATURE_DEFAULT_STATES({{
      base::FEATURE_ENABLED_BY_DEFAULT},
     {kTopLevelTpcdOriginTrial, base::FEATURE_DISABLED_BY_DEFAULT},
     {kTpcdMetadataGrants, base::FEATURE_DISABLED_BY_DEFAULT},
+    // FlyWeb (level 135): new ALPS codepoint (17613) as in Chrome 135
+    // (90243a7416f); it changes the ClientHello (JA3/JA4).
+    {kUseNewAlpsCodepointHttp2, base::FEATURE_ENABLED_BY_DEFAULT},
+    {kUseNewAlpsCodepointQUIC, base::FEATURE_ENABLED_BY_DEFAULT},
     {kWaitForFirstPartySetsInit, base::FEATURE_DISABLED_BY_DEFAULT},
 }});
 
