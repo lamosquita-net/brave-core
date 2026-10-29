@@ -1,0 +1,30 @@
+diff --git a/src/ast/ast-function-literal-id-reindexer.cc b/src/ast/ast-function-literal-id-reindexer.cc
+index c0892994528850ffd092170b1c43a07dd6534327..4234f5398a59399a00b17aafecfb06526c98a7a1 100644
+--- a/src/ast/ast-function-literal-id-reindexer.cc
++++ b/src/ast/ast-function-literal-id-reindexer.cc
+@@ -15,12 +15,15 @@ AstFunctionLiteralIdReindexer::AstFunctionLiteralIdReindexer(size_t stack_limit,
+ 
+ AstFunctionLiteralIdReindexer::~AstFunctionLiteralIdReindexer() = default;
+ 
+-void AstFunctionLiteralIdReindexer::Reindex(Expression* pattern) {
++void AstFunctionLiteralIdReindexer::Reindex(Expression* pattern,
++                                            const AllowReindexScope& scope) {
+ #ifdef DEBUG
+   visited_.clear();
+ #endif
+   Visit(pattern);
+-  CheckVisited(pattern);
++  if (!CheckStackOverflow()) {
++    CheckVisited(pattern);
++  }
+ }
+ 
+ void AstFunctionLiteralIdReindexer::VisitFunctionLiteral(FunctionLiteral* lit) {
+@@ -111,6 +114,7 @@ class AstFunctionLiteralIdReindexChecker final
+ }  // namespace
+ 
+ void AstFunctionLiteralIdReindexer::CheckVisited(Expression* expr) {
++  DCHECK(!HasStackOverflow());
+   AstFunctionLiteralIdReindexChecker(stack_limit(), &visited_).Visit(expr);
+ }
+ #endif
