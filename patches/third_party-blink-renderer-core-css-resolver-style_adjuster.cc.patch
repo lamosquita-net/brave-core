@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_adjuster.cc b/third_party/blink/renderer/core/css/resolver/style_adjuster.cc
-index 57d616479701ca4acbadc3c164eb5fc0c623d280..224144d6764787155df8ffbf23c885f5ed022b43 100644
+index 57d616479701ca4acbadc3c164eb5fc0c623d280..6a1b4a9291b46dd20e402aaaa8cb9921398527d6 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_adjuster.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_adjuster.cc
 @@ -177,6 +177,22 @@ bool ElementForcesStackingContext(Element* element) {
@@ -50,3 +50,43 @@ index 57d616479701ca4acbadc3c164eb5fc0c623d280..224144d6764787155df8ffbf23c885f5
      builder.SetWritingMode(layout_parent_style.GetWritingMode());
      builder.SetTextOrientation(layout_parent_style.GetTextOrientation());
      builder.UpdateFontOrientation();
+@@ -839,8 +857,8 @@ static void AdjustStyleForInert(ComputedStyleBuilder& builder,
+   }
+ 
+   if (element->IsInertRoot()) {
+-    builder.SetIsInert(true);
+-    builder.SetIsInertIsInherited(false);
++    builder.SetIsHTMLInert(true);
++    builder.SetIsHTMLInertIsInherited(false);
+     return;
+   }
+ 
+@@ -850,13 +868,13 @@ static void AdjustStyleForInert(ComputedStyleBuilder& builder,
+     modal_element = Fullscreen::FullscreenElementFrom(document);
+   }
+   if (modal_element == element) {
+-    builder.SetIsInert(false);
+-    builder.SetIsInertIsInherited(false);
++    builder.SetIsHTMLInert(false);
++    builder.SetIsHTMLInertIsInherited(false);
+     return;
+   }
+   if (modal_element && element == document.documentElement()) {
+-    builder.SetIsInert(true);
+-    builder.SetIsInertIsInherited(false);
++    builder.SetIsHTMLInert(true);
++    builder.SetIsHTMLInertIsInherited(false);
+     return;
+   }
+ 
+@@ -865,8 +883,8 @@ static void AdjustStyleForInert(ComputedStyleBuilder& builder,
+         base_data->GetBaseComputedStyle()->Display() == EDisplay::kNone) {
+       // Elements which are transitioning to display:none should become inert:
+       // https://github.com/w3c/csswg-drafts/issues/8389
+-      builder.SetIsInert(true);
+-      builder.SetIsInertIsInherited(false);
++      builder.SetIsHTMLInert(true);
++      builder.SetIsHTMLInertIsInherited(false);
+       return;
+     }
+   }

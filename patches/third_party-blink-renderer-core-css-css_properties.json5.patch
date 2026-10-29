@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/css_properties.json5 b/third_party/blink/renderer/core/css/css_properties.json5
-index 4947f61156639057adec5cb80f9bf09c9aa3c665..561f9c2cf5ed2e0e1eafd56bea1525db1f7d0b3c 100644
+index 4947f61156639057adec5cb80f9bf09c9aa3c665..11b451f28d2ff40bf4628d823e1f91045d3f8cb9 100644
 --- a/third_party/blink/renderer/core/css/css_properties.json5
 +++ b/third_party/blink/renderer/core/css/css_properties.json5
 @@ -282,14 +282,15 @@
@@ -58,7 +58,28 @@ index 4947f61156639057adec5cb80f9bf09c9aa3c665..561f9c2cf5ed2e0e1eafd56bea1525db
        logical_property_group: {
          name: "size",
          resolver: "vertical",
-@@ -3704,6 +3704,7 @@
+@@ -3502,6 +3502,20 @@
+       valid_for_first_letter: true,
+       invalidate: ["reshape", "layout", "paint"],
+     },
++    {
++      name: "interactivity",
++      property_methods: ["CSSValueFromComputedStyleInternal"],
++      inherited: true,
++      independent: true,
++      field_group: "*",
++      field_template: "keyword",
++      keywords: ["auto", "inert"],
++      typedom_types: ["Keyword"],
++      default_value: "auto",
++      invalidate: [],
++      affected_by_all: false,
++      runtime_flag: "CSSInert",
++    },
+     {
+       name: "interpolate-size",
+       property_methods: ["CSSValueFromComputedStyleInternal"],
+@@ -3704,6 +3718,7 @@
        valid_for_limited_page_context: true,
        valid_for_page_context: true,
        invalidate: ["margin", "out-of-flow", "scroll-anchor"],
@@ -66,7 +87,7 @@ index 4947f61156639057adec5cb80f9bf09c9aa3c665..561f9c2cf5ed2e0e1eafd56bea1525db
      },
      {
        name: "margin-left",
-@@ -3728,6 +3729,7 @@
+@@ -3728,6 +3743,7 @@
        valid_for_limited_page_context: true,
        valid_for_page_context: true,
        invalidate: ["margin", "out-of-flow", "scroll-anchor"],
@@ -74,7 +95,7 @@ index 4947f61156639057adec5cb80f9bf09c9aa3c665..561f9c2cf5ed2e0e1eafd56bea1525db
      },
      {
        name: "margin-right",
-@@ -3752,6 +3754,7 @@
+@@ -3752,6 +3768,7 @@
        valid_for_limited_page_context: true,
        valid_for_page_context: true,
        invalidate: ["margin", "out-of-flow", "scroll-anchor"],
@@ -82,7 +103,7 @@ index 4947f61156639057adec5cb80f9bf09c9aa3c665..561f9c2cf5ed2e0e1eafd56bea1525db
      },
      {
        name: "margin-top",
-@@ -3776,6 +3779,7 @@
+@@ -3776,6 +3793,7 @@
        valid_for_limited_page_context: true,
        valid_for_page_context: true,
        invalidate: ["margin", "out-of-flow", "scroll-anchor"],
@@ -90,7 +111,7 @@ index 4947f61156639057adec5cb80f9bf09c9aa3c665..561f9c2cf5ed2e0e1eafd56bea1525db
      },
      {
        name: "marker-end",
-@@ -3788,7 +3792,7 @@
+@@ -3788,7 +3806,7 @@
        wrapper_pointer_name: "Member",
        default_value: "nullptr",
        name_for_methods: "MarkerEndResource",
@@ -99,7 +120,7 @@ index 4947f61156639057adec5cb80f9bf09c9aa3c665..561f9c2cf5ed2e0e1eafd56bea1525db
        keywords: ["none"],
        typedom_types: ["Keyword"],
        invalidate: ["layout", "paint"],
-@@ -3804,7 +3808,7 @@
+@@ -3804,7 +3822,7 @@
        wrapper_pointer_name: "Member",
        default_value: "nullptr",
        name_for_methods: "MarkerMidResource",
@@ -108,7 +129,7 @@ index 4947f61156639057adec5cb80f9bf09c9aa3c665..561f9c2cf5ed2e0e1eafd56bea1525db
        keywords: ["none"],
        typedom_types: ["Keyword"],
        invalidate: ["layout", "paint"],
-@@ -3820,7 +3824,7 @@
+@@ -3820,7 +3838,7 @@
        wrapper_pointer_name: "Member",
        default_value: "nullptr",
        name_for_methods: "MarkerStartResource",
@@ -117,7 +138,7 @@ index 4947f61156639057adec5cb80f9bf09c9aa3c665..561f9c2cf5ed2e0e1eafd56bea1525db
        keywords: ["none"],
        typedom_types: ["Keyword"],
        invalidate: ["layout", "paint"],
-@@ -3863,7 +3867,7 @@
+@@ -3863,7 +3881,7 @@
        field_template: "<length>",
        default_value: "Length::None()",
        converter: "ConvertLengthMaxSizing",
@@ -126,7 +147,7 @@ index 4947f61156639057adec5cb80f9bf09c9aa3c665..561f9c2cf5ed2e0e1eafd56bea1525db
        keywords: ["none"],
        typedom_types: ["Keyword", "Length", "Percentage"],
        logical_property_group: {
-@@ -3884,7 +3888,7 @@
+@@ -3884,7 +3902,7 @@
        field_template: "<length>",
        default_value: "Length::None()",
        converter: "ConvertLengthMaxSizing",
@@ -135,7 +156,7 @@ index 4947f61156639057adec5cb80f9bf09c9aa3c665..561f9c2cf5ed2e0e1eafd56bea1525db
        keywords: ["none"],
        typedom_types: ["Keyword", "Length", "Percentage"],
        logical_property_group: {
-@@ -3905,7 +3909,7 @@
+@@ -3905,7 +3923,7 @@
        field_template: "<length>",
        default_value: "Length()",
        converter: "ConvertLengthSizing",
@@ -144,7 +165,7 @@ index 4947f61156639057adec5cb80f9bf09c9aa3c665..561f9c2cf5ed2e0e1eafd56bea1525db
        typedom_types: ["Length", "Percentage"],
        logical_property_group: {
          name: "min-size",
-@@ -3925,7 +3929,7 @@
+@@ -3925,7 +3943,7 @@
        field_template: "<length>",
        default_value: "Length()",
        converter: "ConvertLengthSizing",
@@ -153,7 +174,7 @@ index 4947f61156639057adec5cb80f9bf09c9aa3c665..561f9c2cf5ed2e0e1eafd56bea1525db
        typedom_types: ["Length", "Percentage"],
        logical_property_group: {
          name: "min-size",
-@@ -4535,7 +4539,7 @@
+@@ -4535,7 +4553,7 @@
        // @position-try-styling rely on this being high-priority, so that
        // declarations from @position-try blocks can be applied conditionally
        // based on whether or not we're out-of-flow positioned. Also, it needs to
@@ -162,7 +183,7 @@ index 4947f61156639057adec5cb80f9bf09c9aa3c665..561f9c2cf5ed2e0e1eafd56bea1525db
        priority: 2,
        valid_for_permission_element: true,
        invalidate: ["clip", "layout", "scroll-anchor"],
-@@ -4553,10 +4557,9 @@
+@@ -4553,10 +4571,9 @@
        converter: "ConvertPositionAnchor",
        keywords: ["auto"],
        typedom_types: ["Keyword"],
@@ -174,7 +195,7 @@ index 4947f61156639057adec5cb80f9bf09c9aa3c665..561f9c2cf5ed2e0e1eafd56bea1525db
        // before inset properties.
        priority: 2,
        invalidate: ["layout", "paint"],
-@@ -4591,7 +4594,6 @@
+@@ -4591,7 +4608,6 @@
        typedom_types: ["Keyword"],
        default_value: "normal",
        invalidate: ["layout", "paint"],
@@ -182,7 +203,7 @@ index 4947f61156639057adec5cb80f9bf09c9aa3c665..561f9c2cf5ed2e0e1eafd56bea1525db
      },
      {
        name: "position-visibility",
-@@ -4607,7 +4609,6 @@
+@@ -4607,7 +4623,6 @@
        keywords: ["always", "anchors-visible", "no-overflow"],
        typedom_types: ["Keyword"],
        invalidate: ["layout", "paint"],
@@ -190,7 +211,7 @@ index 4947f61156639057adec5cb80f9bf09c9aa3c665..561f9c2cf5ed2e0e1eafd56bea1525db
      },
      {
        name: "quotes",
-@@ -5249,6 +5250,7 @@
+@@ -5249,6 +5264,7 @@
        style_builder_template_args: {
          initial_color: "ComputedStyleInitialValues::InitialStrokePaint",
        },
@@ -198,7 +219,7 @@ index 4947f61156639057adec5cb80f9bf09c9aa3c665..561f9c2cf5ed2e0e1eafd56bea1525db
        valid_for_highlight_legacy: true,
        valid_for_highlight: true,
        invalidate: ["paint", "stroke"],
-@@ -5439,6 +5441,12 @@
+@@ -5439,6 +5455,12 @@
        invalidate: ["reshape"],
        runtime_flag: "CSSTextAutoSpace",
      },
@@ -211,7 +232,7 @@ index 4947f61156639057adec5cb80f9bf09c9aa3c665..561f9c2cf5ed2e0e1eafd56bea1525db
      {
        name: "text-box-edge",
        property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
-@@ -5459,7 +5467,7 @@
+@@ -5459,7 +5481,7 @@
        field_group: "box",
        field_template: "keyword",
        default_value: "none",
@@ -220,7 +241,7 @@ index 4947f61156639057adec5cb80f9bf09c9aa3c665..561f9c2cf5ed2e0e1eafd56bea1525db
        typedom_types: ["Keyword"],
        invalidate: ["layout"],
        runtime_flag: "CSSTextBoxTrim",
-@@ -6775,7 +6783,7 @@
+@@ -6775,7 +6797,7 @@
      {
        name: "white-space",
        longhands: [
@@ -229,7 +250,7 @@ index 4947f61156639057adec5cb80f9bf09c9aa3c665..561f9c2cf5ed2e0e1eafd56bea1525db
        ],
        property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
        valid_for_page_context: true,
-@@ -6798,14 +6806,34 @@
+@@ -6798,14 +6820,34 @@
      },
      {
        name: "text-wrap",
@@ -270,7 +291,7 @@ index 4947f61156639057adec5cb80f9bf09c9aa3c665..561f9c2cf5ed2e0e1eafd56bea1525db
        typedom_types: ["Keyword"],
        valid_for_cue: true,
        valid_for_marker: true,
-@@ -6836,7 +6864,7 @@
+@@ -6836,7 +6878,7 @@
        default_value: "Length()",
        typedom_types: ["Keyword", "Length", "Percentage"],
        converter: "ConvertLengthSizing",
@@ -279,7 +300,7 @@ index 4947f61156639057adec5cb80f9bf09c9aa3c665..561f9c2cf5ed2e0e1eafd56bea1525db
        logical_property_group: {
          name: "size",
          resolver: "horizontal",
-@@ -7606,30 +7634,42 @@
+@@ -7606,30 +7648,42 @@
        runtime_flag: "ViewTransitionOnNavigation",
      },
      {
@@ -330,7 +351,7 @@ index 4947f61156639057adec5cb80f9bf09c9aa3c665..561f9c2cf5ed2e0e1eafd56bea1525db
      // Shorthands
      {
        name: "animation",
-@@ -8171,7 +8211,6 @@
+@@ -8171,7 +8225,6 @@
        name: "position-try",
        longhands: ["position-try-order", "position-try-options"],
        property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],

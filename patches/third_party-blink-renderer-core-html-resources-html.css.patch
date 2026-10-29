@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/resources/html.css b/third_party/blink/renderer/core/html/resources/html.css
-index 53c4b85564e80f2daeb97cdc9720e740921920c2..5ede04bbfbefb76aca7be8e6c7a057416e939b6c 100644
+index 53c4b85564e80f2daeb97cdc9720e740921920c2..3144de737fe6e856da3df5f8da4324df38c5eeb9 100644
 --- a/third_party/blink/renderer/core/html/resources/html.css
 +++ b/third_party/blink/renderer/core/html/resources/html.css
 @@ -328,8 +328,10 @@ ul, menu, dir {
@@ -279,3 +279,19 @@ index 53c4b85564e80f2daeb97cdc9720e740921920c2..5ede04bbfbefb76aca7be8e6c7a05741
  }
  
  i, cite, em, var, address, dfn {
+@@ -1624,4 +1743,15 @@ html::grammar-error {
+   }
+ }
+ 
++/* https://drafts.csswg.org/css-ui-4/#inertness */
++/* Reducing specificity with :where since [inert] needs to override. Also
++   explicitly use 'dialog' to avoid adding universal bucket rule. Separate rule
++   added for :fullscreen in fullscreen.css. */
++dialog:where(:modal) {
++  interactivity: auto;
++}
++[inert] {
++  interactivity: inert;
++}
++
+ /* noscript is handled internally, as it depends on settings. */

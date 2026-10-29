@@ -1,8 +1,18 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style.h b/third_party/blink/renderer/core/style/computed_style.h
-index d4d2a1ca1e5a4f492aecaa534714267bf640d520..9a60bfe53f7b6188dcc81910aaca22abfe9681ac 100644
+index d4d2a1ca1e5a4f492aecaa534714267bf640d520..c1efd762eaef88510ae26452fd47eca538f2413c 100644
 --- a/third_party/blink/renderer/core/style/computed_style.h
 +++ b/third_party/blink/renderer/core/style/computed_style.h
-@@ -403,12 +403,12 @@ class ComputedStyle final : public ComputedStyleBase {
+@@ -219,6 +219,9 @@ class ComputedStyle final : public ComputedStyleBase {
+   // Used by CSS animations. We can't allow them to animate based off visited
+   // colors.
+   friend class CSSPropertyEquality;
++  // Access Visibility()
++  friend class CSSVisibilityInterpolationType;
++  friend class InheritedVisibilityChecker;
+ 
+   // Accesses GetColor().
+   friend class ComputedStyleUtils;
+@@ -403,12 +406,12 @@ class ComputedStyle final : public ComputedStyleBase {
    ContentDistributionType ResolvedAlignContentDistribution(
        const StyleContentAlignmentData& normal_value_behavior) const;
    StyleSelfAlignmentData ResolvedAlignSelf(
@@ -17,7 +27,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..9a60bfe53f7b6188dcc81910aaca22ab
        const ComputedStyle* parent_style = nullptr) const;
    StyleContentAlignmentData ResolvedJustifyContent(
        const StyleContentAlignmentData& normal_behaviour) const;
-@@ -791,7 +791,24 @@ class ComputedStyle final : public ComputedStyleBase {
+@@ -791,7 +794,24 @@ class ComputedStyle final : public ComputedStyleBase {
      return HasGlyphRelativeUnits() || HasFontSizeAdjust() ||
             CustomStyleCallbackDependsOnFont();
    }
@@ -43,7 +53,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..9a60bfe53f7b6188dcc81910aaca22ab
    bool HighlightPseudoElementStylesDependOnRelativeUnits() const;
    bool HighlightPseudoElementStylesDependOnContainerUnits() const;
    bool HighlightPseudoElementStylesDependOnViewportUnits() const;
-@@ -1062,6 +1079,9 @@ class ComputedStyle final : public ComputedStyleBase {
+@@ -1062,6 +1082,9 @@ class ComputedStyle final : public ComputedStyleBase {
    bool IsHorizontalWritingMode() const {
      return blink::IsHorizontalWritingMode(GetWritingMode());
    }
@@ -53,7 +63,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..9a60bfe53f7b6188dcc81910aaca22ab
    bool IsFlippedLinesWritingMode() const {
      return blink::IsFlippedLinesWritingMode(GetWritingMode());
    }
-@@ -1409,10 +1429,10 @@ class ComputedStyle final : public ComputedStyleBase {
+@@ -1409,10 +1432,10 @@ class ComputedStyle final : public ComputedStyleBase {
  
    // Whether or not a positioned element requires normal flow x/y to be computed
    // to determine its position.
@@ -66,7 +76,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..9a60bfe53f7b6188dcc81910aaca22ab
      return Top().IsAuto() && Bottom().IsAuto();
    }
  
-@@ -1420,18 +1440,20 @@ class ComputedStyle final : public ComputedStyleBase {
+@@ -1420,18 +1443,20 @@ class ComputedStyle final : public ComputedStyleBase {
    // fallback calculation purposes.
    // https://drafts.csswg.org/css-anchor-position-1/#determine-the-position-fallback-styles
    bool IsTopInsetNonAuto() const {
@@ -91,7 +101,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..9a60bfe53f7b6188dcc81910aaca22ab
    }
  
    // Content utility functions.
-@@ -1459,12 +1481,16 @@ class ComputedStyle final : public ComputedStyleBase {
+@@ -1459,12 +1484,16 @@ class ComputedStyle final : public ComputedStyleBase {
  
      if (container_type & kContainerTypeInlineSize) {
        effective |= kContainsStyle;
@@ -110,7 +120,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..9a60bfe53f7b6188dcc81910aaca22ab
        effective |= kContainsBlockSize;
      }
      if (!IsContentVisibilityVisible(content_visibility)) {
-@@ -1675,13 +1701,13 @@ class ComputedStyle final : public ComputedStyleBase {
+@@ -1675,13 +1704,13 @@ class ComputedStyle final : public ComputedStyleBase {
    // `text-box-trim` utility functions.
    bool ShouldTextBoxTrimStart() const {
      const ETextBoxTrim text_box_trim = TextBoxTrim();
@@ -128,7 +138,20 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..9a60bfe53f7b6188dcc81910aaca22ab
    }
  
    // Text decoration utility functions.
-@@ -2083,7 +2109,7 @@ class ComputedStyle final : public ComputedStyleBase {
+@@ -1816,6 +1845,12 @@ class ComputedStyle final : public ComputedStyleBase {
+     return ScrollsOverflowX() || ScrollsOverflowY();
+   }
+ 
++  // Returns true if the element is HTML inert, or if 'interactivity' computes
++  // to 'inert'.
++  bool IsInert() const {
++    return IsHTMLInert() || Interactivity() == EInteractivity::kInert;
++  }
++
+   // Visibility utility functions.
+   bool VisibleToHitTesting() const {
+     return Visibility() == EVisibility::kVisible &&
+@@ -2083,7 +2118,7 @@ class ComputedStyle final : public ComputedStyleBase {
    // This function may return values not defined as the enum values. See
    // `EWhiteSpace`. Prefer using semantic functions below.
    EWhiteSpace WhiteSpace() const {
@@ -137,7 +160,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..9a60bfe53f7b6188dcc81910aaca22ab
    }
  
    // Semantic functions for the `white-space` property and its longhands.
-@@ -2110,7 +2136,12 @@ class ComputedStyle final : public ComputedStyleBase {
+@@ -2110,7 +2145,12 @@ class ComputedStyle final : public ComputedStyleBase {
      return false;
    }
  
@@ -151,7 +174,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..9a60bfe53f7b6188dcc81910aaca22ab
    bool ShouldBreakSpaces() const {
      return blink::ShouldBreakSpaces(GetWhiteSpaceCollapse());
    }
-@@ -2613,6 +2644,7 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+@@ -2613,6 +2653,7 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
    friend class LayoutTheme;
    friend class StyleAdjuster;
    friend class StyleResolverState;
@@ -159,7 +182,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..9a60bfe53f7b6188dcc81910aaca22ab
    // Access to UserModify().
    friend class MatchedPropertiesCache;
  
-@@ -2756,11 +2788,12 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+@@ -2756,11 +2797,12 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
      SetClipInternal(ComputedStyleInitialValues::InitialClip());
    }
  
@@ -173,7 +196,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..9a60bfe53f7b6188dcc81910aaca22ab
  
    // color
    blink::Color GetCurrentColor() const {
-@@ -3236,8 +3269,8 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+@@ -3236,8 +3278,8 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
                                     bool is_inherited_property) const;
    CORE_EXPORT StyleInheritedVariables& MutableInheritedVariables();
    CORE_EXPORT StyleNonInheritedVariables& MutableNonInheritedVariables();
@@ -184,7 +207,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..9a60bfe53f7b6188dcc81910aaca22ab
    CORE_EXPORT void SetVariableData(const AtomicString& name,
                                     CSSVariableData* value,
                                     bool is_inherited_property) {
-@@ -3258,11 +3291,11 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+@@ -3258,11 +3300,11 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
    }
  
    EWhiteSpace WhiteSpace() const {
