@@ -1,0 +1,28 @@
+diff --git a/third_party/blink/common/features.cc b/third_party/blink/common/features.cc
+index 46bd3fa71b397fa550fb3f57eb7960fe34285a8b..7dc2f499d2e9ea886cfa4b06fe7b8704e14eef49 100644
+--- a/third_party/blink/common/features.cc
++++ b/third_party/blink/common/features.cc
+@@ -2143,6 +2143,12 @@ BASE_FEATURE(kSetTimeoutWithoutClamp,
+              "SetTimeoutWithoutClamp",
+              base::FEATURE_ENABLED_BY_DEFAULT);
+ 
++// If enabled, calling setInterval(..., 0) will not clamp to 1ms.
++// Tracking bug: https://crbug.com/402694.
++BASE_FEATURE(kSetIntervalWithoutClamp,
++             "SetIntervalWithoutClamp",
++             base::FEATURE_ENABLED_BY_DEFAULT);
++
+ // Enable the shared storage API. Note that enabling this feature does not
+ // automatically expose this API to the web, it only allows the element to be
+ // enabled by the runtime enabled feature, for origin trials.
+@@ -2647,6 +2653,10 @@ bool IsSetTimeoutWithoutClampEnabled() {
+   return base::FeatureList::IsEnabled(features::kSetTimeoutWithoutClamp);
+ }
+ 
++bool IsSetIntervalWithoutClampEnabled() {
++  return base::FeatureList::IsEnabled(features::kSetIntervalWithoutClamp);
++}
++
+ bool IsUnloadBlocklisted() {
+   return base::FeatureList::IsEnabled(kUnloadBlocklisted);
+ }

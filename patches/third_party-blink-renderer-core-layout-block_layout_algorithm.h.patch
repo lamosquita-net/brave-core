@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/block_layout_algorithm.h b/third_party/blink/renderer/core/layout/block_layout_algorithm.h
-index 040a54bdb16be480e61106daa431a7f94b19b350..8fbfcafa2e5e082f8b73fcfdb905975b8a3b7a5d 100644
+index 040a54bdb16be480e61106daa431a7f94b19b350..3a9b956d6a6234225503011348dc2016e72a5a47 100644
 --- a/third_party/blink/renderer/core/layout/block_layout_algorithm.h
 +++ b/third_party/blink/renderer/core/layout/block_layout_algorithm.h
 @@ -16,6 +16,7 @@
@@ -23,7 +23,21 @@ index 040a54bdb16be480e61106daa431a7f94b19b350..8fbfcafa2e5e082f8b73fcfdb905975b
    void SetBoxType(PhysicalFragment::BoxType type);
  
    MinMaxSizesResult ComputeMinMaxSizes(const MinMaxSizesFloatInput&);
-@@ -558,6 +559,24 @@ class CORE_EXPORT BlockLayoutAlgorithm
+@@ -391,6 +392,13 @@ class CORE_EXPORT BlockLayoutAlgorithm
+       InlineChildLayoutContext*,
+       const InlineBreakToken** previous_inline_break_token);
+ 
++  // Update text box trim state after child layout.
++  void UpdateTextBoxTrim(LayoutInputNode child,
++                         const BreakToken* incoming_child_break_token,
++                         const InlineBreakToken* outgoing_inline_break_token,
++                         const LayoutResult*,
++                         PreviousInflowPosition*);
++
+   // Consume all remaining fragmentainer space. This happens when we decide to
+   // break before a child.
+   //
+@@ -558,6 +566,24 @@ class CORE_EXPORT BlockLayoutAlgorithm
        const LogicalFragment& fragment,
        const LogicalOffset& logical_offset);
  
@@ -48,7 +62,7 @@ index 040a54bdb16be480e61106daa431a7f94b19b350..8fbfcafa2e5e082f8b73fcfdb905975b
    LogicalSize child_percentage_size_;
    LogicalSize replaced_child_percentage_size_;
  
-@@ -568,18 +587,21 @@ class CORE_EXPORT BlockLayoutAlgorithm
+@@ -568,18 +594,21 @@ class CORE_EXPORT BlockLayoutAlgorithm
    // The last non-empty inflow child. Currently this is used only when
    // `should_text_box_trim_end_` and when the last child was empty. Thus this is
    // updated only in that case.
@@ -72,7 +86,7 @@ index 040a54bdb16be480e61106daa431a7f94b19b350..8fbfcafa2e5e082f8b73fcfdb905975b
  
    // The line box index at which we ran out of space. This where we'll actually
    // end up breaking, unless we determine that we should break earlier in order
-@@ -609,9 +631,14 @@ class CORE_EXPORT BlockLayoutAlgorithm
+@@ -609,9 +638,14 @@ class CORE_EXPORT BlockLayoutAlgorithm
    // (between block-level siblings or line box siblings).
    bool has_break_opportunity_before_next_child_ : 1;
  

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/highlight/highlight_style_utils.cc b/third_party/blink/renderer/core/highlight/highlight_style_utils.cc
-index 42b88d3f17da56c25aa274e75c94101f74a97038..437dc42fdc4b84c9420fae3ead680f1891180287 100644
+index 42b88d3f17da56c25aa274e75c94101f74a97038..aa547f70274620e050188f5b3303769bd00e01d3 100644
 --- a/third_party/blink/renderer/core/highlight/highlight_style_utils.cc
 +++ b/third_party/blink/renderer/core/highlight/highlight_style_utils.cc
 @@ -14,8 +14,10 @@
@@ -13,7 +13,24 @@ index 42b88d3f17da56c25aa274e75c94101f74a97038..437dc42fdc4b84c9420fae3ead680f18
  #include "third_party/blink/renderer/core/layout/layout_theme.h"
  #include "third_party/blink/renderer/core/page/focus_controller.h"
  #include "third_party/blink/renderer/core/page/page.h"
-@@ -583,12 +585,10 @@ void HighlightStyleUtils::ResolveColorsFromPreviousLayer(
+@@ -504,14 +506,8 @@ HighlightStyleUtils::HighlightPaintingStyle(
+ 
+   if (pseudo_style) {
+     highlight_style.stroke_width = pseudo_style->TextStrokeWidth();
+-    // TODO(crbug.com/1164461) For now, don't paint text shadows for ::highlight
+-    // because some details of how this will be standardized aren't yet
+-    // settled. Once the final standardization and implementation of highlight
+-    // text-shadow behavior is complete, remove the following check.
+-    if (pseudo != kPseudoIdHighlight) {
+-      highlight_style.shadow =
+-          uses_text_as_clip ? nullptr : pseudo_style->TextShadow();
+-    }
++    highlight_style.shadow =
++        uses_text_as_clip ? nullptr : pseudo_style->TextShadow();
+     std::optional<AppliedTextDecoration> selection_decoration =
+         SelectionTextDecoration(document, style, *pseudo_style);
+     if (selection_decoration) {
+@@ -583,12 +579,10 @@ void HighlightStyleUtils::ResolveColorsFromPreviousLayer(
  }
  
  bool HighlightStyleUtils::ShouldInvalidateVisualOverflow(
@@ -28,7 +45,7 @@ index 42b88d3f17da56c25aa274e75c94101f74a97038..437dc42fdc4b84c9420fae3ead680f18
    if (type == DocumentMarker::kSpelling || type == DocumentMarker::kGrammar) {
      return true;
    }
-@@ -596,11 +596,8 @@ bool HighlightStyleUtils::ShouldInvalidateVisualOverflow(
+@@ -596,11 +590,8 @@ bool HighlightStyleUtils::ShouldInvalidateVisualOverflow(
    if (type != DocumentMarker::kTextFragment) {
      return false;
    }
@@ -42,7 +59,7 @@ index 42b88d3f17da56c25aa274e75c94101f74a97038..437dc42fdc4b84c9420fae3ead680f18
    if (!pseudo_style) {
      return false;
    }
-@@ -609,14 +606,15 @@ bool HighlightStyleUtils::ShouldInvalidateVisualOverflow(
+@@ -609,14 +600,15 @@ bool HighlightStyleUtils::ShouldInvalidateVisualOverflow(
  }
  
  bool HighlightStyleUtils::CustomHighlightHasVisualOverflow(

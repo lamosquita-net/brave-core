@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/block_layout_algorithm.cc b/third_party/blink/renderer/core/layout/block_layout_algorithm.cc
-index 444730e6db58accd0f41796c4c9f102e75f148e3..877ae6c058e3a81502d921d83f9e91c0bbfdadd1 100644
+index 444730e6db58accd0f41796c4c9f102e75f148e3..1b33a605b01c975ec360663099fc83e3738b0a74 100644
 --- a/third_party/blink/renderer/core/layout/block_layout_algorithm.cc
 +++ b/third_party/blink/renderer/core/layout/block_layout_algorithm.cc
 @@ -256,18 +256,15 @@ BlockLayoutAlgorithm::BlockLayoutAlgorithm(const LayoutAlgorithmParams& params)
@@ -309,7 +309,20 @@ index 444730e6db58accd0f41796c4c9f102e75f148e3..877ae6c058e3a81502d921d83f9e91c0
      return false;
    }
  
-@@ -2110,17 +2156,6 @@ LayoutResult::EStatus BlockLayoutAlgorithm::FinishInflow(
+@@ -1788,6 +1834,12 @@ LayoutResult::EStatus BlockLayoutAlgorithm::HandleNewFormattingContext(
+         /* self_collapsing_child_had_clearance */ false);
+   }
+ 
++  if (ShouldTextBoxTrim()) {
++    UpdateTextBoxTrim(child, child_break_token,
++                      /*outgoing_inline_break_token=*/nullptr, layout_result,
++                      previous_inflow_position);
++  }
++
+   if (constraint_space.HasBlockFragmentation() &&
+       !has_break_opportunity_before_next_child_) {
+     has_break_opportunity_before_next_child_ =
+@@ -2110,17 +2162,6 @@ LayoutResult::EStatus BlockLayoutAlgorithm::FinishInflow(
      PreviousInflowPosition* previous_inflow_position,
      InlineChildLayoutContext* inline_child_layout_context,
      const InlineBreakToken** previous_inline_break_token) {
@@ -327,7 +340,7 @@ index 444730e6db58accd0f41796c4c9f102e75f148e3..877ae6c058e3a81502d921d83f9e91c0
    std::optional<LayoutUnit> child_bfc_block_offset =
        layout_result->BfcBlockOffset();
  
-@@ -2363,9 +2398,29 @@ LayoutResult::EStatus BlockLayoutAlgorithm::FinishInflow(
+@@ -2363,9 +2404,29 @@ LayoutResult::EStatus BlockLayoutAlgorithm::FinishInflow(
            child, layout_result_to_use, previous_inflow_position,
            line_box_bfc_block_offset.value_or(*child_bfc_block_offset),
            has_container_separation);
@@ -357,7 +370,7 @@ index 444730e6db58accd0f41796c4c9f102e75f148e3..877ae6c058e3a81502d921d83f9e91c0
        if (break_status == BreakStatus::kNeedsEarlierBreak) {
          return LayoutResult::kNeedsEarlierBreak;
        }
-@@ -2450,12 +2505,12 @@ LayoutResult::EStatus BlockLayoutAlgorithm::FinishInflow(
+@@ -2450,12 +2511,12 @@ LayoutResult::EStatus BlockLayoutAlgorithm::FinishInflow(
          self_collapsing_child_had_clearance);
    }
  
@@ -373,14 +386,12 @@ index 444730e6db58accd0f41796c4c9f102e75f148e3..877ae6c058e3a81502d921d83f9e91c0
  
    // Update |line_clamp_data_| from the LayoutResult, and abort if needed.
    if (!line_clamp_data_.UpdateAfterLayout(layout_result,
-@@ -2464,20 +2519,26 @@ LayoutResult::EStatus BlockLayoutAlgorithm::FinishInflow(
+@@ -2464,23 +2525,9 @@ LayoutResult::EStatus BlockLayoutAlgorithm::FinishInflow(
      return LayoutResult::kNeedsLineClampRelayout;
    }
  
 -  if (UNLIKELY(should_text_box_trim_start_ || should_text_box_trim_end_)) {
-+  if (ShouldTextBoxTrim()) [[unlikely]] {
-+    should_text_box_trim_fragmentainer_start_ = false;
-     // Update `should_text_box_trim_{start,end}_` if the child `layout_result`
+-    // Update `should_text_box_trim_{start,end}_` if the child `layout_result`
 -    // has applied `text-box-trim`.
 -    if (should_text_box_trim_start_ && layout_result->IsBlockStartTrimmed()) {
 -      should_text_box_trim_start_ = false;
@@ -391,28 +402,55 @@ index 444730e6db58accd0f41796c4c9f102e75f148e3..877ae6c058e3a81502d921d83f9e91c0
 -        should_text_box_trim_end_ = false;
 -        container_builder_.SetIsBlockEndTrimmed();
 -      } else if (!layout_result->IsSelfCollapsing()) {
-+    // has applied `text-box-trim`, or was meant to apply it.
-+    if (should_text_box_trim_node_start_) {
-+      if (!child.IsInline() || !outgoing_inline_break_token ||
-+          outgoing_inline_break_token->IsPastFirstFormattedLine()) {
-+        should_text_box_trim_node_start_ = false;
-+      }
-+    }
-+    if (should_text_box_trim_node_end_) {
-+      // FlyWeb: no `line-clamp: auto` measuring pass in the 128 (7f48814f67
-+      // not ported), so there is no trim to carry over here.
-+      if (layout_result->IsBlockEndTrimmableLine() ||
-+          (child.IsBlock() && IsLastInflowChild(*child.GetLayoutBox()))) {
-+        ClearShouldTextBoxTrimEnd();
-+      } else if (!layout_result->IsSelfCollapsing() && child.IsInline() &&
-+                 !override_text_box_trim_end_child_) {
-         // Keep the last non-empty child for `RelayoutForTextBoxTrimEnd`.
+-        // Keep the last non-empty child for `RelayoutForTextBoxTrimEnd`.
 -        last_non_empty_inflow_child_ = child;
-+        last_non_empty_inflow_child_ = To<InlineNode>(child);
-         last_non_empty_break_token_ = child_break_token;
-       }
-     }
-@@ -2632,12 +2693,12 @@ PreviousInflowPosition BlockLayoutAlgorithm::ComputeInflowPosition(
+-        last_non_empty_break_token_ = child_break_token;
+-      }
+-    }
++  if (ShouldTextBoxTrim()) [[unlikely]] {
++    UpdateTextBoxTrim(child, child_break_token, outgoing_inline_break_token,
++                      layout_result, previous_inflow_position);
+   }
+ 
+   if (GetConstraintSpace().HasBlockFragmentation() &&
+@@ -2493,6 +2540,36 @@ LayoutResult::EStatus BlockLayoutAlgorithm::FinishInflow(
+   return LayoutResult::kSuccess;
+ }
+ 
++void BlockLayoutAlgorithm::UpdateTextBoxTrim(
++    LayoutInputNode child,
++    const BreakToken* incoming_child_break_token,
++    const InlineBreakToken* outgoing_inline_break_token,
++    const LayoutResult* layout_result,
++    PreviousInflowPosition* previous_inflow_position) {
++  should_text_box_trim_fragmentainer_start_ = false;
++  // Update `should_text_box_trim_{start,end}_` if the child `layout_result` has
++  // applied `text-box-trim`, or was meant to apply it.
++  if (should_text_box_trim_node_start_) {
++    if (!child.IsInline() || !outgoing_inline_break_token ||
++        outgoing_inline_break_token->IsPastFirstFormattedLine()) {
++      should_text_box_trim_node_start_ = false;
++    }
++  }
++  if (should_text_box_trim_node_end_) {
++    // FlyWeb: no `line-clamp: auto` measuring pass in the 128 (7f48814f67
++    // not ported), so there is no trim to carry over here.
++    if (layout_result->IsBlockEndTrimmableLine() ||
++        (child.IsBlock() && IsLastInflowChild(*child.GetLayoutBox()))) {
++      ClearShouldTextBoxTrimEnd();
++    } else if (!layout_result->IsSelfCollapsing() && child.IsInline() &&
++               !override_text_box_trim_end_child_) {
++      // Keep the last non-empty child for `RelayoutForTextBoxTrimEnd`.
++      last_non_empty_inflow_child_ = To<InlineNode>(child);
++      last_non_empty_break_token_ = incoming_child_break_token;
++    }
++  }
++}
++
+ InflowChildData BlockLayoutAlgorithm::ComputeChildData(
+     const PreviousInflowPosition& previous_inflow_position,
+     LayoutInputNode child,
+@@ -2632,12 +2709,12 @@ PreviousInflowPosition BlockLayoutAlgorithm::ComputeInflowPosition(
        // Trim the space to respect the `text-box-trim` property here. Objects
        // that pushes following boxes down (e.g., Ruby annotations) are also
        // trimmed.
@@ -427,7 +465,7 @@ index 444730e6db58accd0f41796c4c9f102e75f148e3..877ae6c058e3a81502d921d83f9e91c0
        }
      } else {
        // We add the greater of AnnotationOverflow and ClearanceAfterLine here.
-@@ -2751,6 +2812,14 @@ void BlockLayoutAlgorithm::ConsumeRemainingFragmentainerSpace(
+@@ -2751,6 +2828,14 @@ void BlockLayoutAlgorithm::ConsumeRemainingFragmentainerSpace(
  
  BreakStatus BlockLayoutAlgorithm::FinalizeForFragmentation(
      LayoutUnit block_end_border_padding_added) {
@@ -442,7 +480,7 @@ index 444730e6db58accd0f41796c4c9f102e75f148e3..877ae6c058e3a81502d921d83f9e91c0
    if (Node().IsInlineFormattingContextRoot() && !early_break_ &&
        GetConstraintSpace().HasBlockFragmentation()) {
      if (container_builder_.HasInflowChildBreakInside() ||
-@@ -2902,7 +2971,14 @@ BreakStatus BlockLayoutAlgorithm::BreakBeforeChildIfNeeded(
+@@ -2902,7 +2987,14 @@ BreakStatus BlockLayoutAlgorithm::BreakBeforeChildIfNeeded(
            // (if at all possible), which means that lines that could fit in the
            // current fragment (that we have already laid out) may have to be
            // saved for the next fragment.
@@ -458,7 +496,7 @@ index 444730e6db58accd0f41796c4c9f102e75f148e3..877ae6c058e3a81502d921d83f9e91c0
          }
  
          // We have determined that there are plenty of lines for the next
-@@ -3167,32 +3243,29 @@ ConstraintSpace BlockLayoutAlgorithm::CreateConstraintSpaceForChild(
+@@ -3167,32 +3259,29 @@ ConstraintSpace BlockLayoutAlgorithm::CreateConstraintSpaceForChild(
    }
    builder.SetBlockStartAnnotationSpace(block_start_annotation_space);
  
