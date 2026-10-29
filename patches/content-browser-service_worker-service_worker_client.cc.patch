@@ -1,5 +1,5 @@
 diff --git a/content/browser/service_worker/service_worker_client.cc b/content/browser/service_worker/service_worker_client.cc
-index fdb66794339517cd608f883e69a21e2b15353260..dc6d24d6afe1e008284b07da714e0a8855542094 100644
+index fdb66794339517cd608f883e69a21e2b15353260..62e0de9ee97b88d6f101d60c9bbd3e4ee479dd46 100644
 --- a/content/browser/service_worker/service_worker_client.cc
 +++ b/content/browser/service_worker/service_worker_client.cc
 @@ -23,6 +23,7 @@
@@ -72,7 +72,7 @@ index fdb66794339517cd608f883e69a21e2b15353260..dc6d24d6afe1e008284b07da714e0a88
                            url() != GetUrlForScopeMatch());
      SCOPED_CRASH_KEY_BOOL("SWV_RCFBCM", "is_inherited", is_inherited());
      CHECK(!version->BFCacheContainsControllee(client_uuid()));
-@@ -965,26 +971,39 @@ void ServiceWorkerClient::CheckControllerConsistency(bool should_crash) const {
+@@ -965,26 +971,42 @@ void ServiceWorkerClient::CheckControllerConsistency(bool should_crash) const {
  #endif  // DCHECK_IS_ON()
  
  const GURL& ServiceWorkerClient::GetUrlForScopeMatch() const {
@@ -95,8 +95,6 @@ index fdb66794339517cd608f883e69a21e2b15353260..dc6d24d6afe1e008284b07da714e0a88
 -  DCHECK(blob_url.SchemeIsBlob());
 -
 -  UpdateUrls(blob_url, creator_host.top_frame_origin(), creator_host.key());
--
--  // Let `scope_match_url_for_blob_client_` be the creator's url for scope match
 +  DCHECK(GetClientType() ==
 +             blink::mojom::ServiceWorkerClientType::kDedicatedWorker ||
 +         (base::FeatureList::IsEnabled(kSharedWorkerBlobURLFix) &&
@@ -105,14 +103,18 @@ index fdb66794339517cd608f883e69a21e2b15353260..dc6d24d6afe1e008284b07da714e0a88
 +         (base::FeatureList::IsEnabled(features::kServiceWorkerSrcdocSupport) &&
 +          GetClientType() == blink::mojom::ServiceWorkerClientType::kWindow &&
 +          client_url.IsAboutSrcdoc()));
-+  // Only expect srcdoc url or blob url of same origin as creator for
-+  // client_url.
-+  DCHECK((client_url.SchemeIsBlob() &&
-+          url::Origin::Create(client_url)
-+              .IsSameOriginWith(creator_host.key().origin())) ||
++  // Only expect srcdoc url or blob url.
++  DCHECK(client_url.SchemeIsBlob() ||
 +         (base::FeatureList::IsEnabled(features::kServiceWorkerSrcdocSupport) &&
 +          client_url.IsAboutSrcdoc()));
-+
++  // origins of blob client_url and creator host should be the same or both
++  // opaque.
++  if (client_url.SchemeIsBlob()) {
++    service_worker_security_utils::CheckOnUpdateUrls(client_url,
++                                                     creator_host.key());
++  }
+ 
+-  // Let `scope_match_url_for_blob_client_` be the creator's url for scope match
 +  // Let `scope_match_url_for_client_` be the creator's url for scope match
    // because a client should be handled by the service worker of its creator.
 -  scope_match_url_for_blob_client_ = creator_host.GetUrlForScopeMatch();
