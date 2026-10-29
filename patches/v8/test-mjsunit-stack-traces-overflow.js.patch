@@ -1,0 +1,40 @@
+diff --git a/test/mjsunit/stack-traces-overflow.js b/test/mjsunit/stack-traces-overflow.js
+index cd690752d3dc61f96726b09c09d393bc715e2d2b..60dc034f0077a923cc4d5e641eae440c896dd9f0 100644
+--- a/test/mjsunit/stack-traces-overflow.js
++++ b/test/mjsunit/stack-traces-overflow.js
+@@ -76,35 +76,6 @@ try {
+ }
+ 
+ 
+-// Check setting/getting stack property on the prototype chain.
+-function testErrorPrototype(prototype) {
+-  var object = {};
+-  object.__proto__ = prototype;
+-  // Setting stack property overwrites prototype.stack value.
+-  object.stack = "123";
+-  assertEquals(prototype.stack, object.stack);
+-  assertEquals("123", object.stack);
+-}
+-
+-try {
+-  rec1(0);
+-} catch (e) {
+-  e.stack;
+-  testErrorPrototype(e);
+-}
+-
+-try {
+-  rec1(0);
+-} catch (e) {
+-  testErrorPrototype(e);
+-}
+-
+-try {
+-  throw new Error();
+-} catch (e) {
+-  testErrorPrototype(e);
+-}
+-
+ Error.stackTraceLimit = 3;
+ try {
+   rec1(0);

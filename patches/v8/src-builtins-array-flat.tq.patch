@@ -1,0 +1,16 @@
+diff --git a/src/builtins/array-flat.tq b/src/builtins/array-flat.tq
+index 1cbe33b4911913cccd2ce72e8436aa94150688a5..28cac7c396db8d669f8d7cdb0d3b4bc6d71a7b1a 100644
+--- a/src/builtins/array-flat.tq
++++ b/src/builtins/array-flat.tq
+@@ -30,9 +30,8 @@ transitioning macro FlattenIntoArrayFast(
+       otherwise goto Bailout(targetIndex, smiSourceIndex);
+   let fastOW = NewFastJSArrayWitness(fastSource);
+ 
+-  // The source is a FastJSArray, thus its length must be a Smi.
+-  dcheck(Is<Smi>(sourceLength));
+-  const smiSourceLength = UnsafeCast<Smi>(sourceLength);
++  const smiSourceLength = Cast<Smi>(sourceLength)
++      otherwise goto Bailout(targetIndex, smiSourceIndex);
+ 
+   // 3. Repeat, while sourceIndex < sourceLen
+   for (; smiSourceIndex < smiSourceLength; smiSourceIndex++) {

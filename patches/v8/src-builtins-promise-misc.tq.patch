@@ -1,0 +1,20 @@
+diff --git a/src/builtins/promise-misc.tq b/src/builtins/promise-misc.tq
+index 00d70d004d4e5d360acd32c8def308145433a944..727e0a474c732d6b325a4508957e4aa9c3020990 100644
+--- a/src/builtins/promise-misc.tq
++++ b/src/builtins/promise-misc.tq
+@@ -51,6 +51,7 @@ macro PromiseInit(promise: JSPromise): void {
+   promise.reactions_or_result = kZero;
+   promise.flags = SmiTag(JSPromiseFlags{
+     status: PromiseState::kPending,
++    is_native_resolver_invoked: false,
+     has_handler: false,
+     is_silent: false,
+     async_task_id: kInvalidAsyncTaskId
+@@ -70,6 +71,7 @@ macro InnerNewJSPromise(implicit context: Context)(): JSPromise {
+   promise.reactions_or_result = kZero;
+   promise.flags = SmiTag(JSPromiseFlags{
+     status: PromiseState::kPending,
++    is_native_resolver_invoked: false,
+     has_handler: false,
+     is_silent: false,
+     async_task_id: kInvalidAsyncTaskId

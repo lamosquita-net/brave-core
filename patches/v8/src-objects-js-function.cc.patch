@@ -1,0 +1,31 @@
+diff --git a/src/objects/js-function.cc b/src/objects/js-function.cc
+index 22df966c8ffd04dea74d93e3508bf4bedc4fb97e..1a1ec086a060be7e77aaca65c34f7480a65f718e 100644
+--- a/src/objects/js-function.cc
++++ b/src/objects/js-function.cc
+@@ -984,8 +984,9 @@ void JSFunction::EnsureHasInitialMap(DirectHandle<JSFunction> function) {
+   // system.
+   // TODO(leszeks): Figure out if this CHECK is needed.
+   CHECK(IsJSReceiver(*prototype));
+-  JSFunction::SetInitialMap(isolate, function, map, prototype);
++  // Initialize slack tracking before publishing the map to concurrent readers.
+   map->StartInobjectSlackTracking();
++  JSFunction::SetInitialMap(isolate, function, map, prototype);
+ }
+ 
+ namespace {
+@@ -1176,12 +1177,13 @@ bool FastInitializeDerivedMap(Isolate* isolate,
+       Map::CopyInitialMap(isolate, constructor_initial_map, instance_size,
+                           in_object_properties, unused_property_fields);
+   map->set_new_target_is_base(false);
++  // Initialize slack tracking before publishing the map to concurrent readers.
++  map->set_construction_counter(Map::kNoSlackTracking);
++  map->StartInobjectSlackTracking();
+   DirectHandle<JSPrototype> prototype(new_target->instance_prototype(),
+                                       isolate);
+   JSFunction::SetInitialMap(isolate, new_target, map, prototype, constructor);
+   DCHECK(IsJSReceiver(new_target->instance_prototype()));
+-  map->set_construction_counter(Map::kNoSlackTracking);
+-  map->StartInobjectSlackTracking();
+   return true;
+ }
+ 
