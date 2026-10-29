@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_resolver.cc b/third_party/blink/renderer/core/css/resolver/style_resolver.cc
-index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..47b5fb7c099886ec63ad13f8664147edafdd5bea 100644
+index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..95b20f27ad5818df4496208501021b2bf98176fd 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_resolver.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_resolver.cc
 @@ -30,7 +30,10 @@
@@ -540,7 +540,16 @@ index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..47b5fb7c099886ec63ad13f8664147ed
      // Some pseudo-elements, like ::highlight, are special in that
      // they inherit _non-inherited_ properties from their parent.
      // This is different from what the MPC expects; it checks that
-@@ -2780,7 +2956,7 @@ StyleRuleList* StyleResolver::CollectMatchingRulesFromUnconnectedRuleSet(
+@@ -2448,6 +2624,8 @@ StyleResolver::CacheSuccess StyleResolver::ApplyMatchedCache(
+     // properties on top of it.
+     InitStyle(element, style_request, initial_style, state.ParentStyle(),
+               state);
++
++    ExpandInheritedVisitedProperties(state);
+   }
+ 
+   // This is needed because pseudo_argument is copied to the
+@@ -2780,7 +2958,7 @@ StyleRuleList* StyleResolver::CollectMatchingRulesFromUnconnectedRuleSet(
    collector.SetMatchingRulesFromNoStyleSheet(true);
    collector.SetMode(SelectorChecker::kCollectingStyleRules);
    MatchRequest match_request(rule_set, scope);
@@ -549,3 +558,39 @@ index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..47b5fb7c099886ec63ad13f8664147ed
    collector.SortAndTransferMatchedRules(
        CascadeOrigin::kAuthor, /*is_vtt_embedded_style=*/false, tracker_);
    collector.SetMatchingRulesFromNoStyleSheet(false);
+@@ -2849,6 +3027,35 @@ bool StyleResolver::IsForcedColorsModeEnabled() const {
+   return GetDocument().InForcedColorsMode();
+ }
+ 
++// Expand inherited visited properties at visited-link boundaries.
++//
++// This expansion normally happens cascade-time (see ExpandCascade),
++// but for performance reasons we only do this when we're inside
++// a visited link. This causes problems when inheriting colors (or
++// other affected properties) into a visited link, since (once inside
++// that visited link), we'll start using the visited color field
++// for rendering, which wasn't expanded higher up in the ancestor chain.
++void StyleResolver::ExpandInheritedVisitedProperties(
++    StyleResolverState& state) {
++  if (state.ParentStyle() &&
++      state.ParentStyle()->InsideLink() == EInsideLink::kNotInsideLink &&
++      state.InsideLink() == EInsideLink::kInsideVisitedLink) {
++    state.StyleBuilder().SetInternalVisitedColor(state.StyleBuilder().Color());
++    state.StyleBuilder().SetInternalVisitedCaretColor(
++        state.StyleBuilder().CaretColor());
++    state.StyleBuilder().SetInternalVisitedFillPaint(
++        state.StyleBuilder().FillPaint());
++    state.StyleBuilder().SetInternalVisitedStrokePaint(
++        state.StyleBuilder().StrokePaint());
++    state.StyleBuilder().SetInternalVisitedTextEmphasisColor(
++        state.StyleBuilder().TextEmphasisColor());
++    state.StyleBuilder().SetInternalVisitedTextFillColor(
++        state.StyleBuilder().TextFillColor());
++    state.StyleBuilder().SetInternalVisitedTextStrokeColor(
++        state.StyleBuilder().TextStrokeColor());
++  }
++}
++
+ ComputedStyleBuilder StyleResolver::CreateAnonymousStyleBuilderWithDisplay(
+     const ComputedStyle& parent_style,
+     EDisplay display) {

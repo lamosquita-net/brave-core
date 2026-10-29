@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style.h b/third_party/blink/renderer/core/style/computed_style.h
-index d4d2a1ca1e5a4f492aecaa534714267bf640d520..13b24dab322111e2bdd65c14586bd288d7fd6e87 100644
+index d4d2a1ca1e5a4f492aecaa534714267bf640d520..9a60bfe53f7b6188dcc81910aaca22abfe9681ac 100644
 --- a/third_party/blink/renderer/core/style/computed_style.h
 +++ b/third_party/blink/renderer/core/style/computed_style.h
 @@ -403,12 +403,12 @@ class ComputedStyle final : public ComputedStyleBase {
@@ -151,7 +151,15 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..13b24dab322111e2bdd65c14586bd288
    bool ShouldBreakSpaces() const {
      return blink::ShouldBreakSpaces(GetWhiteSpaceCollapse());
    }
-@@ -2756,11 +2787,12 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+@@ -2613,6 +2644,7 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+   friend class LayoutTheme;
+   friend class StyleAdjuster;
+   friend class StyleResolverState;
++  friend class StyleResolver;
+   // Access to UserModify().
+   friend class MatchedPropertiesCache;
+ 
+@@ -2756,11 +2788,12 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
      SetClipInternal(ComputedStyleInitialValues::InitialClip());
    }
  
@@ -165,7 +173,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..13b24dab322111e2bdd65c14586bd288
  
    // color
    blink::Color GetCurrentColor() const {
-@@ -3236,8 +3268,8 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+@@ -3236,8 +3269,8 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
                                     bool is_inherited_property) const;
    CORE_EXPORT StyleInheritedVariables& MutableInheritedVariables();
    CORE_EXPORT StyleNonInheritedVariables& MutableNonInheritedVariables();
@@ -176,7 +184,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..13b24dab322111e2bdd65c14586bd288
    CORE_EXPORT void SetVariableData(const AtomicString& name,
                                     CSSVariableData* value,
                                     bool is_inherited_property) {
-@@ -3258,11 +3290,11 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+@@ -3258,11 +3291,11 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
    }
  
    EWhiteSpace WhiteSpace() const {
