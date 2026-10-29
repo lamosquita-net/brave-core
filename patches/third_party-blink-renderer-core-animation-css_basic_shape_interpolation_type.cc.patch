@@ -1,0 +1,41 @@
+diff --git a/third_party/blink/renderer/core/animation/css_basic_shape_interpolation_type.cc b/third_party/blink/renderer/core/animation/css_basic_shape_interpolation_type.cc
+index f5686df3b65a8d6d23cef9589e156cc956971229..ee5dd36b5706c21a18bddcec28a6489063d287c2 100644
+--- a/third_party/blink/renderer/core/animation/css_basic_shape_interpolation_type.cc
++++ b/third_party/blink/renderer/core/animation/css_basic_shape_interpolation_type.cc
+@@ -47,7 +47,8 @@ const BasicShape* GetBasicShape(const CSSProperty& property,
+       // Path and Ray shapes are handled by PathInterpolationType and
+       // RayInterpolationType.
+       if (shape.GetType() == BasicShape::kStylePathType ||
+-          shape.GetType() == BasicShape::kStyleRayType) {
++          shape.GetType() == BasicShape::kStyleRayType ||
++          shape.GetType() == BasicShape::kStyleShapeType) {
+         return nullptr;
+       }
+ 
+@@ -61,8 +62,11 @@ const BasicShape* GetBasicShape(const CSSProperty& property,
+       auto* shape = clip_path_operation->GetBasicShape();
+ 
+       // Path shape is handled by PathInterpolationType.
+-      if (shape->GetType() == BasicShape::kStylePathType)
++      // Shape is handled by ShapeInterpolationType
++      if (shape->GetType() == BasicShape::kStylePathType ||
++          shape->GetType() == BasicShape::kStyleShapeType) {
+         return nullptr;
++      }
+ 
+       return shape;
+     }
+@@ -158,10 +162,10 @@ InterpolationValue CSSBasicShapeInterpolationType::MaybeConvertValue(
+   }
+ 
+   const auto& list = To<CSSValueList>(value);
+-  // Path and Ray shapes are handled by PathInterpolationType and
+-  // RayInterpolationType.
++  // Path, Shape and Ray shapes are handled by PathInterpolationType,
++  // ShapeInterpolationType and RayInterpolationType.
+   if (!list.First().IsBasicShapeValue() || list.First().IsRayValue() ||
+-      list.First().IsPathValue()) {
++      list.First().IsPathValue() || list.First().IsShapeValue()) {
+     return nullptr;
+   }
+   return basic_shape_interpolation_functions::MaybeConvertCSSValue(

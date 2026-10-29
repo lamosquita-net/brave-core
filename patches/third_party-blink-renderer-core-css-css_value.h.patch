@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/css_value.h b/third_party/blink/renderer/core/css/css_value.h
-index 93e14b94396134e3c3420f822606eebc1a05ae88..1e197b4ea08a63a4c9022b961ba20f5c10e614b4 100644
+index 93e14b94396134e3c3420f822606eebc1a05ae88..890c0840255747cfce72b00fd525c89178510e5c 100644
 --- a/third_party/blink/renderer/core/css/css_value.h
 +++ b/third_party/blink/renderer/core/css/css_value.h
 @@ -52,6 +52,9 @@ class CORE_EXPORT CSSValue : public GarbageCollected<CSSValue> {
@@ -12,7 +12,15 @@ index 93e14b94396134e3c3420f822606eebc1a05ae88..1e197b4ea08a63a4c9022b961ba20f5c
    bool IsValuePair() const { return class_type_ == kValuePairClass; }
    bool IsValueList() const { return class_type_ >= kValueListClass; }
  
-@@ -211,6 +214,10 @@ class CORE_EXPORT CSSValue : public GarbageCollected<CSSValue> {
+@@ -133,6 +136,7 @@ class CORE_EXPORT CSSValue : public GarbageCollected<CSSValue> {
+   }
+   bool IsPaletteMixValue() const { return class_type_ == kPaletteMixClass; }
+   bool IsPathValue() const { return class_type_ == kPathClass; }
++  bool IsShapeValue() const { return class_type_ == kShapeClass; }
+   bool IsQuadValue() const { return class_type_ == kQuadClass; }
+   bool IsRayValue() const { return class_type_ == kRayClass; }
+   bool IsRadialGradientValue() const {
+@@ -211,6 +215,10 @@ class CORE_EXPORT CSSValue : public GarbageCollected<CSSValue> {
  
    bool IsRepeatStyleValue() const { return class_type_ == kRepeatStyleClass; }
  
@@ -23,7 +31,7 @@ index 93e14b94396134e3c3420f822606eebc1a05ae88..1e197b4ea08a63a4c9022b961ba20f5c
    bool HasFailedOrCanceledSubresources() const;
    bool MayContainUrl() const;
    void ReResolveUrl(const Document&) const;
-@@ -243,6 +250,7 @@ class CORE_EXPORT CSSValue : public GarbageCollected<CSSValue> {
+@@ -243,6 +251,7 @@ class CORE_EXPORT CSSValue : public GarbageCollected<CSSValue> {
      kNumericLiteralClass,
      kMathFunctionClass,
      kIdentifierClass,
@@ -31,7 +39,7 @@ index 93e14b94396134e3c3420f822606eebc1a05ae88..1e197b4ea08a63a4c9022b961ba20f5c
      kColorClass,
      kColorMixClass,
      kCounterClass,
-@@ -256,6 +264,7 @@ class CORE_EXPORT CSSValue : public GarbageCollected<CSSValue> {
+@@ -256,6 +265,7 @@ class CORE_EXPORT CSSValue : public GarbageCollected<CSSValue> {
      kScrollClass,
      kViewClass,
      kRatioClass,
@@ -39,3 +47,11 @@ index 93e14b94396134e3c3420f822606eebc1a05ae88..1e197b4ea08a63a4c9022b961ba20f5c
  
      // Basic shape classes.
      // TODO(sashab): Represent these as a single subclass, BasicShapeClass.
+@@ -305,6 +315,7 @@ class CORE_EXPORT CSSValue : public GarbageCollected<CSSValue> {
+     kGridTemplateAreasClass,
+     kPaletteMixClass,
+     kPathClass,
++    kShapeClass,
+     kRayClass,
+     kUnparsedDeclarationClass,
+     kPendingSubstitutionValueClass,

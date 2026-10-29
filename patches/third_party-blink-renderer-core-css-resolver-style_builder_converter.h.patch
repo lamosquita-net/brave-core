@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_builder_converter.h b/third_party/blink/renderer/core/css/resolver/style_builder_converter.h
-index 5ed57e0ad5e830975e62eb4d396e101c79184ebd..afdc3c00a01acb6d7b0785f794c405de624863d3 100644
+index 5ed57e0ad5e830975e62eb4d396e101c79184ebd..494f9a9eb6960ece991b51811d4f14a9457e9699 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_builder_converter.h
 +++ b/third_party/blink/renderer/core/css/resolver/style_builder_converter.h
 @@ -50,6 +50,7 @@
@@ -43,7 +43,7 @@ index 5ed57e0ad5e830975e62eb4d396e101c79184ebd..afdc3c00a01acb6d7b0785f794c405de
    static FilterOperations ConvertFilterOperations(StyleResolverState&,
                                                    const CSSValue&,
                                                    CSSPropertyID);
-@@ -240,8 +245,8 @@ class StyleBuilderConverter {
+@@ -240,13 +245,14 @@ class StyleBuilderConverter {
                                                        const CSSValue& value);
    static ScopedCSSNameList* ConvertAnchorName(StyleResolverState&,
                                                const CSSValue&);
@@ -54,7 +54,23 @@ index 5ed57e0ad5e830975e62eb4d396e101c79184ebd..afdc3c00a01acb6d7b0785f794c405de
    static StyleInitialLetter ConvertInitialLetter(StyleResolverState&,
                                                   const CSSValue&);
    static StyleOffsetRotation ConvertOffsetRotate(StyleResolverState&,
-@@ -275,7 +280,8 @@ class StyleBuilderConverter {
+                                                  const CSSValue&);
+-  static LengthPoint ConvertPosition(StyleResolverState&, const CSSValue&);
++  static LengthPoint ConvertPosition(const StyleResolverState&,
++                                     const CSSValue&);
+   static LengthPoint ConvertPositionOrAuto(StyleResolverState&,
+                                            const CSSValue&);
+   static LengthPoint ConvertOffsetPosition(StyleResolverState&,
+@@ -255,7 +261,7 @@ class StyleBuilderConverter {
+   static Length ConvertQuirkyLength(StyleResolverState&, const CSSValue&);
+   static scoped_refptr<QuotesData> ConvertQuotes(StyleResolverState&,
+                                                  const CSSValue&);
+-  static LengthSize ConvertRadius(StyleResolverState&, const CSSValue&);
++  static LengthSize ConvertRadius(const StyleResolverState&, const CSSValue&);
+   static EPaintOrder ConvertPaintOrder(StyleResolverState&, const CSSValue&);
+   static ShadowData ConvertShadow(const CSSToLengthConversionData&,
+                                   StyleResolverState*,
+@@ -275,7 +281,8 @@ class StyleBuilderConverter {
                                                bool for_visited_link = false);
    static SVGPaint ConvertSVGPaint(StyleResolverState&,
                                    const CSSValue&,
@@ -64,7 +80,17 @@ index 5ed57e0ad5e830975e62eb4d396e101c79184ebd..afdc3c00a01acb6d7b0785f794c405de
    static TextBoxEdge ConvertTextBoxEdge(StyleResolverState&, const CSSValue&);
    static TextDecorationThickness ConvertTextDecorationThickness(
        StyleResolverState&,
-@@ -334,7 +340,8 @@ class StyleBuilderConverter {
+@@ -322,7 +329,8 @@ class StyleBuilderConverter {
+   static StyleOffsetRotation ConvertOffsetRotate(const CSSLengthResolver&,
+                                                  const CSSValue&);
+   template <CSSValueID cssValueFor0, CSSValueID cssValueFor100>
+-  static Length ConvertPositionLength(StyleResolverState&, const CSSValue&);
++  static Length ConvertPositionLength(const StyleResolverState&,
++                                      const CSSValue&);
+   static Rotation ConvertRotation(const CSSLengthResolver&, const CSSValue&);
+ 
+   static const CSSValue& ConvertRegisteredPropertyInitialValue(Document&,
+@@ -334,7 +342,8 @@ class StyleBuilderConverter {
  
    static CSSVariableData* ConvertRegisteredPropertyVariableData(
        const CSSValue&,
@@ -74,7 +100,7 @@ index 5ed57e0ad5e830975e62eb4d396e101c79184ebd..afdc3c00a01acb6d7b0785f794c405de
  
    static StyleAspectRatio ConvertAspectRatio(const StyleResolverState&,
                                               const CSSValue&);
-@@ -392,7 +399,7 @@ class StyleBuilderConverter {
+@@ -392,7 +401,7 @@ class StyleBuilderConverter {
    static ScopedCSSNameList* ConvertTimelineScope(StyleResolverState&,
                                                   const CSSValue&);
  
@@ -83,7 +109,19 @@ index 5ed57e0ad5e830975e62eb4d396e101c79184ebd..afdc3c00a01acb6d7b0785f794c405de
  };
  
  template <typename T>
-@@ -509,7 +516,8 @@ int StyleBuilderConverter::ConvertIntegerOrNone(StyleResolverState& state,
+@@ -456,8 +465,9 @@ T StyleBuilderConverter::ConvertLineWidth(StyleResolverState& state,
+ }
+ 
+ template <CSSValueID cssValueFor0, CSSValueID cssValueFor100>
+-Length StyleBuilderConverter::ConvertPositionLength(StyleResolverState& state,
+-                                                    const CSSValue& value) {
++Length StyleBuilderConverter::ConvertPositionLength(
++    const StyleResolverState& state,
++    const CSSValue& value) {
+   if (const auto* pair = DynamicTo<CSSValuePair>(value)) {
+     Length length = StyleBuilderConverter::ConvertLength(state, pair->Second());
+     if (To<CSSIdentifierValue>(pair->First()).GetValueID() == cssValueFor0) {
+@@ -509,7 +519,8 @@ int StyleBuilderConverter::ConvertIntegerOrNone(StyleResolverState& state,
  // `value` is the result of parsing a <color> value.
  // See: https://drafts.csswg.org/css-color/#resolving-color-values
  CORE_EXPORT StyleColor

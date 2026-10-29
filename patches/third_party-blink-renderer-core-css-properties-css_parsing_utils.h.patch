@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/properties/css_parsing_utils.h b/third_party/blink/renderer/core/css/properties/css_parsing_utils.h
-index 4c9b9d0be3ea85dff5cd33b76e48374a7b747f8d..b0d6e187a34657d261e5c0133187b4860ff81a6f 100644
+index 4c9b9d0be3ea85dff5cd33b76e48374a7b747f8d..56c90f5093c717b0ee1bfb2c8fdb00f7353aecd0 100644
 --- a/third_party/blink/renderer/core/css/properties/css_parsing_utils.h
 +++ b/third_party/blink/renderer/core/css/properties/css_parsing_utils.h
 @@ -29,6 +29,7 @@ namespace blink {
@@ -10,7 +10,15 @@ index 4c9b9d0be3ea85dff5cd33b76e48374a7b747f8d..b0d6e187a34657d261e5c0133187b486
  class CSSURIValue;
  }  // namespace cssvalue
  class CSSIdentifierValue;
-@@ -216,6 +217,15 @@ CSSIdentifierValue* ConsumeIdent(CSSParserTokenRange&);
+@@ -51,6 +52,7 @@ namespace css_parsing_utils {
+ enum class AllowInsetAndSpread { kAllow, kForbid };
+ enum class AllowTextValue { kAllow, kForbid };
+ enum class AllowPathValue { kAllow, kForbid };
++enum class AllowShapeValue { kAllow, kForbid };
+ enum class AllowBasicShapeRectValue { kAllow, kForbid };
+ enum class AllowBasicShapeXYWHValue { kAllow, kForbid };
+ enum class DefaultFill { kFill, kNoFill };
+@@ -216,6 +218,15 @@ CSSIdentifierValue* ConsumeIdent(CSSParserTokenRange&);
  template <CSSValueID... allowedIdents>
  CSSIdentifierValue* ConsumeIdent(CSSParserTokenStream&);
  
@@ -26,7 +34,7 @@ index 4c9b9d0be3ea85dff5cd33b76e48374a7b747f8d..b0d6e187a34657d261e5c0133187b486
  CSSCustomIdentValue* ConsumeCustomIdent(CSSParserTokenRange&,
                                          const CSSParserContext&);
  CSSCustomIdentValue* ConsumeCustomIdent(CSSParserTokenStream&,
-@@ -227,8 +237,6 @@ CSSCustomIdentValue* ConsumeDashedIdent(T&, const CSSParserContext&);
+@@ -227,8 +238,6 @@ CSSCustomIdentValue* ConsumeDashedIdent(T&, const CSSParserContext&);
  CSSStringValue* ConsumeString(CSSParserTokenRange&);
  CSSStringValue* ConsumeString(CSSParserTokenStream&);
  StringView ConsumeStringAsStringView(CSSParserTokenRange&);
@@ -35,7 +43,7 @@ index 4c9b9d0be3ea85dff5cd33b76e48374a7b747f8d..b0d6e187a34657d261e5c0133187b486
  cssvalue::CSSURIValue* ConsumeUrl(CSSParserTokenStream&,
                                    const CSSParserContext&);
  
-@@ -238,13 +246,11 @@ CORE_EXPORT CSSValue* ConsumeColorMaybeQuirky(CSSParserTokenStream&,
+@@ -238,13 +247,11 @@ CORE_EXPORT CSSValue* ConsumeColorMaybeQuirky(CSSParserTokenStream&,
                                                const CSSParserContext&);
  
  // https://drafts.csswg.org/css-color-5/#typedef-color
@@ -52,7 +60,7 @@ index 4c9b9d0be3ea85dff5cd33b76e48374a7b747f8d..b0d6e187a34657d261e5c0133187b486
                                             const CSSParserContext&);
  
  CSSValue* ConsumeLineWidth(CSSParserTokenRange&,
-@@ -292,11 +298,8 @@ enum class ConsumeGeneratedImagePolicy { kAllow, kForbid };
+@@ -292,11 +299,8 @@ enum class ConsumeGeneratedImagePolicy { kAllow, kForbid };
  enum class ConsumeStringUrlImagePolicy { kAllow, kForbid };
  enum class ConsumeImageSetImagePolicy { kAllow, kForbid };
  
@@ -65,7 +73,7 @@ index 4c9b9d0be3ea85dff5cd33b76e48374a7b747f8d..b0d6e187a34657d261e5c0133187b486
      const CSSParserContext&,
      const ConsumeGeneratedImagePolicy = ConsumeGeneratedImagePolicy::kAllow,
      const ConsumeStringUrlImagePolicy = ConsumeStringUrlImagePolicy::kForbid,
-@@ -559,17 +562,12 @@ CSSValue* ConsumeLineHeight(CSSParserTokenStream&, const CSSParserContext&);
+@@ -559,17 +563,12 @@ CSSValue* ConsumeLineHeight(CSSParserTokenStream&, const CSSParserContext&);
  CSSValue* ConsumeMathDepth(CSSParserTokenStream& stream,
                             const CSSParserContext& context);
  
@@ -87,7 +95,22 @@ index 4c9b9d0be3ea85dff5cd33b76e48374a7b747f8d..b0d6e187a34657d261e5c0133187b486
  CSSValue* ConsumeGenericFamily(CSSParserTokenRange&);
  CSSValue* ConsumeGenericFamily(CSSParserTokenStream&);
  template <typename T>
-@@ -701,6 +699,7 @@ bool ConsumeRadii(CSSValue* horizontal_radii[4],
+@@ -682,12 +681,14 @@ CSSValue* ConsumeBasicShape(
+     CSSParserTokenRange&,
+     const CSSParserContext&,
+     AllowPathValue = AllowPathValue::kAllow,
++    AllowShapeValue = AllowShapeValue::kAllow,
+     AllowBasicShapeRectValue = AllowBasicShapeRectValue::kAllow,
+     AllowBasicShapeXYWHValue = AllowBasicShapeXYWHValue::kAllow);
+ CSSValue* ConsumeBasicShape(
+     CSSParserTokenStream&,
+     const CSSParserContext&,
+     AllowPathValue = AllowPathValue::kAllow,
++    AllowShapeValue = AllowShapeValue::kAllow,
+     AllowBasicShapeRectValue = AllowBasicShapeRectValue::kAllow,
+     AllowBasicShapeXYWHValue = AllowBasicShapeXYWHValue::kAllow);
+ template <typename T>
+@@ -701,6 +702,7 @@ bool ConsumeRadii(CSSValue* horizontal_radii[4],
  
  CSSValue* ConsumeTextDecorationLine(CSSParserTokenStream&);
  CSSValue* ConsumeTextBoxEdge(CSSParserTokenStream&);
@@ -95,7 +118,7 @@ index 4c9b9d0be3ea85dff5cd33b76e48374a7b747f8d..b0d6e187a34657d261e5c0133187b486
  
  // Consume the `autospace` production.
  // https://drafts.csswg.org/css-text-4/#typedef-autospace
-@@ -760,16 +759,16 @@ CSSValue* ConsumeFontSizeAdjust(CSSParserTokenStream&, const CSSParserContext&);
+@@ -760,16 +762,16 @@ CSSValue* ConsumeFontSizeAdjust(CSSParserTokenStream&, const CSSParserContext&);
  bool ShouldLowerCaseCounterStyleNameOnParse(const AtomicString&,
                                              const CSSParserContext&);
  
@@ -118,7 +141,7 @@ index 4c9b9d0be3ea85dff5cd33b76e48374a7b747f8d..b0d6e187a34657d261e5c0133187b486
  
  // Template implementations are at the bottom of the file for readability.
  
-@@ -782,6 +781,12 @@ inline bool IdentMatches(CSSValueID id) {
+@@ -782,6 +784,12 @@ inline bool IdentMatches(CSSValueID id) {
    return id == head || IdentMatches<tail...>(id);
  }
  
@@ -131,7 +154,7 @@ index 4c9b9d0be3ea85dff5cd33b76e48374a7b747f8d..b0d6e187a34657d261e5c0133187b486
  template <typename...>
  bool IsCustomIdent(CSSValueID id) {
    return !IsCSSWideKeyword(id) && id != CSSValueID::kDefault;
-@@ -803,13 +808,21 @@ CSSIdentifierValue* ConsumeIdent(CSSParserTokenRange& range) {
+@@ -803,13 +811,21 @@ CSSIdentifierValue* ConsumeIdent(CSSParserTokenRange& range) {
  
  template <CSSValueID... names>
  CSSIdentifierValue* ConsumeIdent(CSSParserTokenStream& stream) {
@@ -155,7 +178,7 @@ index 4c9b9d0be3ea85dff5cd33b76e48374a7b747f8d..b0d6e187a34657d261e5c0133187b486
  // ConsumeCommaSeparatedList and ConsumeSpaceSeparatedList take a callback
  // function to call on each item in the list, followed by the arguments to pass
  // to this callback.  The first argument to the callback must be the
-@@ -933,8 +946,8 @@ bool ConsumeIfDelimiter(T& range_or_stream, UChar c) {
+@@ -933,8 +949,8 @@ bool ConsumeIfDelimiter(T& range_or_stream, UChar c) {
  
  CORE_EXPORT CSSValue* ConsumeSinglePositionTryFallback(CSSParserTokenStream&,
                                                         const CSSParserContext&);

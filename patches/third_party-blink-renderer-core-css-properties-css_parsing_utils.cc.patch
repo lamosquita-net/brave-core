@@ -1,16 +1,19 @@
 diff --git a/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc b/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
-index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554c824c554 100644
+index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..c5a3c3a16f0379657208042e1c65d92a5b2bb1f0 100644
 --- a/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
 +++ b/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
-@@ -53,6 +53,7 @@
+@@ -53,8 +53,10 @@
  #include "third_party/blink/renderer/core/css/css_ray_value.h"
  #include "third_party/blink/renderer/core/css/css_revert_layer_value.h"
  #include "third_party/blink/renderer/core/css/css_revert_value.h"
 +#include "third_party/blink/renderer/core/css/css_scoped_keyword_value.h"
  #include "third_party/blink/renderer/core/css/css_scroll_value.h"
  #include "third_party/blink/renderer/core/css/css_shadow_value.h"
++#include "third_party/blink/renderer/core/css/css_shape_value.h"
  #include "third_party/blink/renderer/core/css/css_string_value.h"
-@@ -723,17 +724,17 @@ bool AddCSSPaintArgument(
+ #include "third_party/blink/renderer/core/css/css_timing_function_value.h"
+ #include "third_party/blink/renderer/core/css/css_unset_value.h"
+@@ -723,17 +725,17 @@ bool AddCSSPaintArgument(
      HeapVector<Member<CSSVariableData>>* const variable_data,
      const CSSParserContext& context) {
    CSSParserTokenRange token_range(tokens);
@@ -35,7 +38,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
      if (CSSVariableData* unparsed_css_variable_data =
              CSSVariableData::Create({token_range, text}, false, false)) {
        variable_data->push_back(unparsed_css_variable_data);
-@@ -746,28 +747,30 @@ bool AddCSSPaintArgument(
+@@ -746,28 +748,30 @@ bool AddCSSPaintArgument(
  // Consume input arguments, if encounter function, will return the function
  // block as a Vector of CSSParserToken, otherwise, will just return a Vector of
  // a single CSSParserToken.
@@ -74,7 +77,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
    }
    return argument_tokens;
  }
-@@ -779,88 +782,101 @@ CSSFunctionValue* ConsumeFilterFunction(CSSParserTokenStream& stream,
+@@ -779,88 +783,101 @@ CSSFunctionValue* ConsumeFilterFunction(CSSParserTokenStream& stream,
        filter_type > CSSValueID::kDropShadow) {
      return nullptr;
    }
@@ -100,15 +103,15 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
 -    }
 -    if (filter_type == CSSValueID::kBrightness) {
 -      // FIXME (crbug.com/397061): Support calc expressions like calc(10% + 0.5)
-+    if (filter_type == CSSValueID::kDropShadow) {
-       parsed_value =
+-      parsed_value =
 -          ConsumePercent(args, context, CSSPrimitiveValue::ValueRange::kAll);
 -      if (!parsed_value) {
 -        parsed_value = ConsumeNumber(
 -            args, context, CSSPrimitiveValue::ValueRange::kNonNegative);
 -      }
 -    } else if (filter_type == CSSValueID::kHueRotate) {
--      parsed_value =
++    if (filter_type == CSSValueID::kDropShadow) {
+       parsed_value =
 -          ConsumeAngle(args, context, WebFeature::kUnitlessZeroAngleFilter);
 -    } else if (filter_type == CSSValueID::kBlur) {
 -      CSSParserContext::ParserModeOverridingScope scope(context,
@@ -238,7 +241,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
    return MakeGarbageCollected<CSSLightDarkValuePair>(light_value, dark_value);
  }
  
-@@ -868,23 +884,29 @@ template <class T = CSSParserTokenRange>
+@@ -868,23 +885,29 @@ template <class T = CSSParserTokenRange>
    requires std::is_same_v<T, CSSParserTokenStream> ||
             std::is_same_v<T, CSSParserTokenRange>
  CSSAppearanceAutoBaseSelectValuePair* ConsumeAppearanceAutoBaseSelectColor(
@@ -280,7 +283,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
    return MakeGarbageCollected<CSSAppearanceAutoBaseSelectValuePair>(
        auto_value, base_select_value);
  }
-@@ -1612,11 +1634,11 @@ CSSPrimitiveValue* ConsumeSVGGeometryPropertyLength(
+@@ -1612,11 +1635,11 @@ CSSPrimitiveValue* ConsumeSVGGeometryPropertyLength(
  }
  
  CSSPrimitiveValue* ConsumeGradientLengthOrPercent(
@@ -294,7 +297,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
  }
  
  template <class T>
-@@ -1920,6 +1942,15 @@ template CSSCustomIdentValue* ConsumeDashedIdent(CSSParserTokenStream&,
+@@ -1920,6 +1943,15 @@ template CSSCustomIdentValue* ConsumeDashedIdent(CSSParserTokenStream&,
  template CSSCustomIdentValue* ConsumeDashedIdent(CSSParserTokenRange&,
                                                   const CSSParserContext&);
  
@@ -310,7 +313,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
  CSSStringValue* ConsumeString(CSSParserTokenRange& range) {
    if (range.Peek().GetType() != kStringToken) {
      return nullptr;
-@@ -1944,12 +1975,15 @@ StringView ConsumeStringAsStringView(CSSParserTokenRange& range) {
+@@ -1944,12 +1976,15 @@ StringView ConsumeStringAsStringView(CSSParserTokenRange& range) {
    return range.ConsumeIncludingWhitespace().Value();
  }
  
@@ -329,7 +332,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
  }
  
  namespace {
-@@ -1983,37 +2017,13 @@ CSSUrlData CollectUrlData(const StringView& url,
+@@ -1983,37 +2018,13 @@ CSSUrlData CollectUrlData(const StringView& url,
  // or the empty string if there are fetch restrictions,
  // or an EOF token if we failed to parse.
  //
@@ -372,7 +375,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
    CSSParserToken token = stream.Peek();
    if (token.GetType() == kUrlToken) {
      stream.ConsumeIncludingWhitespace();
-@@ -2034,17 +2044,18 @@ CSSParserToken ConsumeUrlAsToken(CSSParserTokenStream& stream,
+@@ -2034,17 +2045,18 @@ CSSParserToken ConsumeUrlAsToken(CSSParserTokenStream& stream,
    } else {
      return CSSParserToken(kEOFToken);
    }
@@ -397,7 +400,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
    if (url.GetType() == kEOFToken) {
      return nullptr;
    }
-@@ -2052,54 +2063,44 @@ cssvalue::CSSURIValue* ConsumeUrlInternal(T& range,
+@@ -2052,54 +2064,44 @@ cssvalue::CSSURIValue* ConsumeUrlInternal(T& range,
        CollectUrlData(url.Value(), context));
  }
  
@@ -469,7 +472,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
      read_color_space = Color::ColorSpace::kHWB;
    }
  
-@@ -2110,17 +2111,17 @@ static bool ConsumeColorInterpolationSpace(
+@@ -2110,17 +2112,17 @@ static bool ConsumeColorInterpolationSpace(
          color_space == Color::ColorSpace::kHWB ||
          color_space == Color::ColorSpace::kLch ||
          color_space == Color::ColorSpace::kOklch) {
@@ -492,7 +495,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
            return false;
          }
          hue_interpolation = read_hue.value();
-@@ -2137,10 +2138,7 @@ static bool ConsumeColorInterpolationSpace(
+@@ -2137,10 +2139,7 @@ static bool ConsumeColorInterpolationSpace(
  
  namespace {
  
@@ -504,7 +507,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
                                 const CSSParserContext&,
                                 bool accept_quirky_colors,
                                 AllowedColors);
-@@ -2148,180 +2146,91 @@ CSSValue* ConsumeColorInternal(T&,
+@@ -2148,180 +2147,91 @@ CSSValue* ConsumeColorInternal(T&,
  }  // namespace
  
  // https://www.w3.org/TR/css-color-5/#color-mix
@@ -635,7 +638,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
 -  if (!args.AtEnd()) {
 -    return nullptr;
 -  }
--
+ 
 -  savepoint.Release();
 -
 -  cssvalue::CSSColorMixValue* result =
@@ -661,7 +664,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
 -    stream.Restore(savepoint);
 -    return nullptr;
 -  }
- 
+-
 -  if (!ConsumeCommaIncludingWhitespace(args)) {
 -    stream.Restore(savepoint);
 -    return nullptr;
@@ -694,12 +697,12 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
 -    stream.Restore(savepoint);
 -    return nullptr;
 -  }
- 
+-
 -  if (!ConsumeCommaIncludingWhitespace(args)) {
 -    stream.Restore(savepoint);
 -    return nullptr;
 -  }
--
+ 
 -  CSSValue* color2 =
 -      ConsumeColorInternal(args, context, no_quirky_colors, allowed_colors);
 -  CSSPrimitiveValue* p2 =
@@ -746,7 +749,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
    return result;
  }
  
-@@ -2390,205 +2299,99 @@ Color ResolveColor(CSSValue* value, const ui::ColorProvider* color_provider) {
+@@ -2390,205 +2300,99 @@ Color ResolveColor(CSSValue* value, const ui::ColorProvider* color_provider) {
  
  }  // namespace
  
@@ -896,16 +899,15 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
 -    stream.Restore(savepoint);
 -    return nullptr;
 -  }
--
++      colors_to_compare_against.push_back(color);
++    } while (ConsumeCommaIncludingWhitespace(stream));
+ 
 -  VectorOf<CSSValue> colors_to_compare_against;
 -  do {
 -    CSSValue* color =
 -        ConsumeColorInternal(args, context, no_quirky_colors, allowed_colors);
 -    if (!color) {
 -      stream.Restore(savepoint);
-+      colors_to_compare_against.push_back(color);
-+    } while (ConsumeCommaIncludingWhitespace(stream));
-+
 +    if (colors_to_compare_against.size() < 2) {
        return nullptr;
      }
@@ -1021,7 +1023,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
  
    if (highest_contrast_index < 0) {
      // If an explicit target contrast was set and no provided colors have enough
-@@ -2625,24 +2428,21 @@ bool SystemAccentColorAllowed(const CSSParserContext& context) {
+@@ -2625,24 +2429,21 @@ bool SystemAccentColorAllowed(const CSSParserContext& context) {
    return true;
  }
  
@@ -1052,7 +1054,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
    if ((id == CSSValueID::kAccentcolor || id == CSSValueID::kAccentcolortext) &&
        !SystemAccentColorAllowed(context)) {
      return nullptr;
-@@ -2657,12 +2457,12 @@ CSSValue* ConsumeColorInternal(T& range,
+@@ -2657,12 +2458,12 @@ CSSValue* ConsumeColorInternal(T& range,
           StyleColor::IsSystemColor(id))) {
        return nullptr;
      }
@@ -1067,7 +1069,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
      return cssvalue::CSSColor::Create(color);
    }
  
-@@ -2670,20 +2470,20 @@ CSSValue* ConsumeColorInternal(T& range,
+@@ -2670,20 +2471,20 @@ CSSValue* ConsumeColorInternal(T& range,
    // oklab(), lch(), oklch() and color(). https://www.w3.org/TR/css-color-4/
    ColorFunctionParser parser;
    if (CSSValue* functional_syntax_color =
@@ -1091,7 +1093,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
    }
    return nullptr;
  }
-@@ -2697,22 +2497,15 @@ CSSValue* ConsumeColorMaybeQuirky(CSSParserTokenStream& stream,
+@@ -2697,22 +2498,15 @@ CSSValue* ConsumeColorMaybeQuirky(CSSParserTokenStream& stream,
                                AllowedColors::kAll);
  }
  
@@ -1119,7 +1121,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
                                AllowedColors::kAbsolute);
  }
  
-@@ -3154,120 +2947,128 @@ bool ConsumeBorderShorthand(CSSParserTokenStream& stream,
+@@ -3154,120 +2948,128 @@ bool ConsumeBorderShorthand(CSSParserTokenStream& stream,
  
  // This should go away once we drop support for -webkit-gradient
  static CSSPrimitiveValue* ConsumeDeprecatedGradientPoint(
@@ -1289,7 +1291,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
    if (!second_y) {
      return nullptr;
    }
-@@ -3275,10 +3076,10 @@ static CSSValue* ConsumeDeprecatedGradient(CSSParserTokenRange& args,
+@@ -3275,10 +3077,10 @@ static CSSValue* ConsumeDeprecatedGradient(CSSParserTokenRange& args,
    // For radial gradients only, we now expect the second radius.
    const CSSPrimitiveValue* second_radius = nullptr;
    if (id == CSSValueID::kRadial) {
@@ -1302,7 +1304,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
                                    CSSPrimitiveValue::ValueRange::kNonNegative);
      if (!second_radius) {
        return nullptr;
-@@ -3296,8 +3097,8 @@ static CSSValue* ConsumeDeprecatedGradient(CSSParserTokenRange& args,
+@@ -3296,8 +3098,8 @@ static CSSValue* ConsumeDeprecatedGradient(CSSParserTokenRange& args,
          cssvalue::kCSSDeprecatedLinearGradient);
    }
    cssvalue::CSSGradientColorStop stop;
@@ -1313,7 +1315,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
        return nullptr;
      }
      result->AddStop(stop);
-@@ -3307,18 +3108,19 @@ static CSSValue* ConsumeDeprecatedGradient(CSSParserTokenRange& args,
+@@ -3307,18 +3109,19 @@ static CSSValue* ConsumeDeprecatedGradient(CSSParserTokenRange& args,
  }
  
  static CSSPrimitiveValue* ConsumeGradientAngleOrPercent(
@@ -1338,7 +1340,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
    if (const CSSMathFunctionValue* calculation = math_parser.Value()) {
      CalculationResultCategory category = calculation->Category();
      // TODO(fs): Add and support kCalcPercentAngle?
-@@ -3329,12 +3131,12 @@ static CSSPrimitiveValue* ConsumeGradientAngleOrPercent(
+@@ -3329,12 +3132,12 @@ static CSSPrimitiveValue* ConsumeGradientAngleOrPercent(
    return nullptr;
  }
  
@@ -1353,7 +1355,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
                                        const CSSParserContext& context,
                                        cssvalue::CSSGradientValue* gradient,
                                        PositionFunctor consume_position_func) {
-@@ -3347,14 +3149,14 @@ static bool ConsumeGradientColorStops(CSSParserTokenRange& range,
+@@ -3347,14 +3150,14 @@ static bool ConsumeGradientColorStops(CSSParserTokenRange& range,
    bool previous_stop_was_color_hint = true;
    do {
      cssvalue::CSSGradientColorStop stop;
@@ -1370,7 +1372,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
                                           CSSPrimitiveValue::ValueRange::kAll,
                                           UnitlessQuirk::kForbid);
      if (!stop.color_ && !stop.offset_) {
-@@ -3367,43 +3169,43 @@ static bool ConsumeGradientColorStops(CSSParserTokenRange& range,
+@@ -3367,43 +3170,43 @@ static bool ConsumeGradientColorStops(CSSParserTokenRange& range,
      }
  
      // Optional second position.
@@ -1425,7 +1427,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
    }
  
    // Or, two lengths or percentages
-@@ -3411,30 +3213,30 @@ static CSSValue* ConsumeDeprecatedRadialGradient(
+@@ -3411,30 +3214,30 @@ static CSSValue* ConsumeDeprecatedRadialGradient(
    const CSSPrimitiveValue* vertical_size = nullptr;
    if (!shape && !size_keyword) {
      horizontal_size = ConsumeLengthOrPercent(
@@ -1462,7 +1464,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
                                         const CSSParserContext& context,
                                         cssvalue::CSSGradientRepeat repeating) {
    const CSSIdentifierValue* shape = nullptr;
-@@ -3452,16 +3254,16 @@ static CSSValue* ConsumeRadialGradient(CSSParserTokenRange& args,
+@@ -3452,16 +3255,16 @@ static CSSValue* ConsumeRadialGradient(CSSParserTokenRange& args,
    Color::HueInterpolationMethod hue_interpolation_method =
        Color::HueInterpolationMethod::kShorter;
    bool has_color_space = ConsumeColorInterpolationSpace(
@@ -1483,7 +1485,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
        } else if (id == CSSValueID::kClosestSide ||
                   id == CSSValueID::kClosestCorner ||
                   id == CSSValueID::kFarthestSide ||
-@@ -3469,13 +3271,13 @@ static CSSValue* ConsumeRadialGradient(CSSParserTokenRange& args,
+@@ -3469,13 +3272,13 @@ static CSSValue* ConsumeRadialGradient(CSSParserTokenRange& args,
          if (size_keyword) {
            return nullptr;
          }
@@ -1499,7 +1501,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
        if (!center) {
          break;
        }
-@@ -3484,7 +3286,7 @@ static CSSValue* ConsumeRadialGradient(CSSParserTokenRange& args,
+@@ -3484,7 +3287,7 @@ static CSSValue* ConsumeRadialGradient(CSSParserTokenRange& args,
        }
        horizontal_size = center;
        center = ConsumeLengthOrPercent(
@@ -1508,7 +1510,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
        if (center) {
          vertical_size = center;
          ++i;
-@@ -3517,9 +3319,9 @@ static CSSValue* ConsumeRadialGradient(CSSParserTokenRange& args,
+@@ -3517,9 +3320,9 @@ static CSSValue* ConsumeRadialGradient(CSSParserTokenRange& args,
  
    CSSValue* center_x = nullptr;
    CSSValue* center_y = nullptr;
@@ -1521,7 +1523,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
                      std::optional<WebFeature>(), center_x, center_y);
      if (!(center_x && center_y)) {
        return nullptr;
-@@ -3528,13 +3330,13 @@ static CSSValue* ConsumeRadialGradient(CSSParserTokenRange& args,
+@@ -3528,13 +3331,13 @@ static CSSValue* ConsumeRadialGradient(CSSParserTokenRange& args,
    }
  
    if (!has_color_space) {
@@ -1537,7 +1539,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
      return nullptr;
    }
  
-@@ -3548,14 +3350,14 @@ static CSSValue* ConsumeRadialGradient(CSSParserTokenRange& args,
+@@ -3548,14 +3351,14 @@ static CSSValue* ConsumeRadialGradient(CSSParserTokenRange& args,
      context.Count(WebFeature::kCSSColorGradientColorSpace);
    }
  
@@ -1554,7 +1556,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
      const CSSParserContext& context,
      cssvalue::CSSGradientRepeat repeating,
      cssvalue::CSSGradientType gradient_type) {
-@@ -3566,18 +3368,18 @@ static CSSValue* ConsumeLinearGradient(
+@@ -3566,18 +3369,18 @@ static CSSValue* ConsumeLinearGradient(
    Color::HueInterpolationMethod hue_interpolation_method =
        Color::HueInterpolationMethod::kShorter;
    bool has_color_space = ConsumeColorInterpolationSpace(
@@ -1578,7 +1580,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
        if (!end_x && !end_y) {
          if (gradient_type == cssvalue::kCSSLinearGradient) {
            return nullptr;
-@@ -3585,7 +3387,7 @@ static CSSValue* ConsumeLinearGradient(
+@@ -3585,7 +3388,7 @@ static CSSValue* ConsumeLinearGradient(
          end_y = CSSIdentifierValue::Create(CSSValueID::kTop);
          expect_comma = false;
        } else if (!end_x) {
@@ -1587,7 +1589,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
        }
      } else {
        // No <angle> or <side-to-corner>
-@@ -3595,7 +3397,7 @@ static CSSValue* ConsumeLinearGradient(
+@@ -3595,7 +3398,7 @@ static CSSValue* ConsumeLinearGradient(
    // It's possible that the <color-space> comes after the [ <angle> |
    // <side-or-corner> ]
    if (!has_color_space) {
@@ -1596,7 +1598,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
                                                       hue_interpolation_method);
    }
  
-@@ -3603,7 +3405,7 @@ static CSSValue* ConsumeLinearGradient(
+@@ -3603,7 +3406,7 @@ static CSSValue* ConsumeLinearGradient(
      expect_comma = true;
    }
  
@@ -1605,7 +1607,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
      return nullptr;
    }
  
-@@ -3616,24 +3418,24 @@ static CSSValue* ConsumeLinearGradient(
+@@ -3616,24 +3419,24 @@ static CSSValue* ConsumeLinearGradient(
      context.Count(WebFeature::kCSSColorGradientColorSpace);
    }
  
@@ -1635,7 +1637,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
                                      WebFeature::kUnitlessZeroAngleGradient))) {
        return nullptr;
      }
-@@ -3641,22 +3443,22 @@ static CSSValue* ConsumeConicGradient(CSSParserTokenRange& args,
+@@ -3641,22 +3444,22 @@ static CSSValue* ConsumeConicGradient(CSSParserTokenRange& args,
  
    CSSValue* center_x = nullptr;
    CSSValue* center_y = nullptr;
@@ -1662,7 +1664,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
      return nullptr;
    }
  
-@@ -3668,7 +3470,7 @@ static CSSValue* ConsumeConicGradient(CSSParserTokenRange& args,
+@@ -3668,7 +3471,7 @@ static CSSValue* ConsumeConicGradient(CSSParserTokenRange& args,
      context.Count(WebFeature::kCSSColorGradientColorSpace);
    }
  
@@ -1671,7 +1673,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
                                     ConsumeGradientAngleOrPercent)
               ? result
               : nullptr;
-@@ -3682,14 +3484,6 @@ CSSValue* ConsumeImageOrNone(CSSParserTokenStream& stream,
+@@ -3682,14 +3485,6 @@ CSSValue* ConsumeImageOrNone(CSSParserTokenStream& stream,
    return ConsumeImage(stream, context);
  }
  
@@ -1686,7 +1688,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
  CSSValue* ConsumeAxis(CSSParserTokenStream& stream,
                        const CSSParserContext& context) {
    CSSValueID axis_id = stream.Peek().Id();
-@@ -3736,25 +3530,25 @@ CSSValue* ConsumeIntrinsicSizeLonghand(CSSParserTokenStream& stream,
+@@ -3736,25 +3531,25 @@ CSSValue* ConsumeIntrinsicSizeLonghand(CSSParserTokenStream& stream,
  }
  
  static CSSValue* ConsumeDeprecatedWebkitCrossFade(
@@ -1720,7 +1722,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
      percentage = CSSNumericLiteralValue::Create(
          ClampTo<double>(number_value->GetDoubleValue(), 0, 1),
          CSSPrimitiveValue::UnitType::kNumber);
-@@ -3770,7 +3564,7 @@ static CSSValue* ConsumeDeprecatedWebkitCrossFade(
+@@ -3770,7 +3565,7 @@ static CSSValue* ConsumeDeprecatedWebkitCrossFade(
  }
  
  // https://drafts.csswg.org/css-images-4/#cross-fade-function
@@ -1729,7 +1731,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
                                    const CSSParserContext& context) {
    // Parse an arbitrary comma-separated image|color values,
    // where each image may have a percentage before or after it.
-@@ -3780,7 +3574,7 @@ static CSSValue* ConsumeCrossFade(CSSParserTokenRange& args,
+@@ -3780,7 +3575,7 @@ static CSSValue* ConsumeCrossFade(CSSParserTokenRange& args,
    CSSPrimitiveValue* percentage = nullptr;
    for (;;) {
      if (CSSPrimitiveValue* percent_value = ConsumePercent(
@@ -1738,7 +1740,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
        if (percentage) {
          return nullptr;
        }
-@@ -3793,12 +3587,12 @@ static CSSValue* ConsumeCrossFade(CSSParserTokenRange& args,
+@@ -3793,12 +3588,12 @@ static CSSValue* ConsumeCrossFade(CSSParserTokenRange& args,
        }
        percentage = percent_value;
        continue;
@@ -1753,7 +1755,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
        if (image) {
          return nullptr;
        }
-@@ -3814,7 +3608,7 @@ static CSSValue* ConsumeCrossFade(CSSParserTokenRange& args,
+@@ -3814,7 +3609,7 @@ static CSSValue* ConsumeCrossFade(CSSParserTokenRange& args,
        image_and_percentages.emplace_back(image, percentage);
        image = nullptr;
        percentage = nullptr;
@@ -1762,7 +1764,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
          break;
        }
      }
-@@ -3827,14 +3621,14 @@ static CSSValue* ConsumeCrossFade(CSSParserTokenRange& args,
+@@ -3827,14 +3622,14 @@ static CSSValue* ConsumeCrossFade(CSSParserTokenRange& args,
        /*is_legacy_variant=*/false, image_and_percentages);
  }
  
@@ -1780,7 +1782,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
      return MakeGarbageCollected<CSSPaintValue>(name);
    }
  
-@@ -3844,7 +3638,7 @@ static CSSValue* ConsumePaint(CSSParserTokenRange& args,
+@@ -3844,7 +3639,7 @@ static CSSValue* ConsumePaint(CSSParserTokenRange& args,
    }
  
    // Begin parse paint arguments.
@@ -1789,7 +1791,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
      return nullptr;
    }
  
-@@ -3853,15 +3647,15 @@ static CSSValue* ConsumePaint(CSSParserTokenRange& args,
+@@ -3853,15 +3648,15 @@ static CSSValue* ConsumePaint(CSSParserTokenRange& args,
    // variables early if paint function is registered.
    Vector<CSSParserToken> argument_tokens;
    HeapVector<Member<CSSVariableData>> variable_data;
@@ -1809,7 +1811,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
          return nullptr;
        }
      }
-@@ -3873,63 +3667,65 @@ static CSSValue* ConsumePaint(CSSParserTokenRange& args,
+@@ -3873,63 +3668,65 @@ static CSSValue* ConsumePaint(CSSParserTokenRange& args,
    return MakeGarbageCollected<CSSPaintValue>(name, std::move(variable_data));
  }
  
@@ -1924,7 +1926,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
  
    WebFeature feature;
    if (id == CSSValueID::kWebkitCrossFade) {
-@@ -3941,7 +3737,6 @@ static CSSValue* ConsumeGeneratedImage(T& stream,
+@@ -3941,7 +3738,6 @@ static CSSValue* ConsumeGeneratedImage(T& stream,
    }
    context.Count(feature);
  
@@ -1932,7 +1934,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
    return result;
  }
  
-@@ -3956,28 +3751,32 @@ static CSSImageValue* CreateCSSImageValueWithReferrer(
+@@ -3956,28 +3752,32 @@ static CSSImageValue* CreateCSSImageValueWithReferrer(
    return image_value;
  }
  
@@ -1977,7 +1979,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
                                         ConsumeStringUrlImagePolicy::kAllow,
                                         ConsumeImageSetImagePolicy::kForbid);
    if (!image) {
-@@ -3985,66 +3784,63 @@ static CSSImageSetOptionValue* ConsumeImageSetOption(
+@@ -3985,66 +3785,63 @@ static CSSImageSetOptionValue* ConsumeImageSetOption(
    }
  
    // Type could appear before or after resolution
@@ -2077,7 +2079,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
      const CSSParserContext& context,
      const ConsumeGeneratedImagePolicy generated_image_policy,
      const ConsumeStringUrlImagePolicy string_url_image_policy,
-@@ -4054,8 +3850,17 @@ CSSValue* ConsumeImage(
+@@ -4054,8 +3851,17 @@ CSSValue* ConsumeImage(
      return CreateCSSImageValueWithReferrer(uri.Value(), context);
    }
    if (string_url_image_policy == ConsumeStringUrlImagePolicy::kAllow) {
@@ -2096,7 +2098,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
        if (IsFetchRestricted(uri_string, context)) {
          uri_string = "";
        }
-@@ -4074,7 +3879,7 @@ CSSValue* ConsumeImage(
+@@ -4074,7 +3880,7 @@ CSSValue* ConsumeImage(
      }
      if (IsUASheetBehavior(context.Mode())) {
        return ConsumeLightDark(
@@ -2105,7 +2107,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
                                      const CSSParserContext&)>(
                ConsumeImageOrNone),
            stream, context);
-@@ -4083,19 +3888,6 @@ CSSValue* ConsumeImage(
+@@ -4083,19 +3889,6 @@ CSSValue* ConsumeImage(
    return nullptr;
  }
  
@@ -2125,7 +2127,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
  // https://drafts.csswg.org/css-shapes-1/#typedef-shape-box
  CSSIdentifierValue* ConsumeShapeBox(CSSParserTokenStream& stream) {
    return ConsumeIdent<CSSValueID::kContentBox, CSSValueID::kPaddingBox,
-@@ -4574,13 +4366,10 @@ bool IsBaselineKeyword(CSSValueID id) {
+@@ -4574,13 +4367,10 @@ bool IsBaselineKeyword(CSSValueID id) {
  }
  
  bool IsSelfPositionKeyword(CSSValueID id) {
@@ -2143,7 +2145,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
  }
  
  bool IsSelfPositionOrLeftOrRightKeyword(CSSValueID id) {
-@@ -6063,10 +5852,8 @@ CSSValue* ConsumeLineHeight(CSSParserTokenStream& stream,
+@@ -6063,10 +5853,8 @@ CSSValue* ConsumeLineHeight(CSSParserTokenStream& stream,
                                  CSSPrimitiveValue::ValueRange::kNonNegative);
  }
  
@@ -2156,7 +2158,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
    // Grammar proposal in: https://github.com/w3c/csswg-drafts/issues/8922
    //
    // palette-mix() = palette-mix(<color-interpolation-method> , [ [normal |
-@@ -6074,103 +5861,101 @@ CSSValue* ConsumePaletteMixFunction(T& range, const CSSParserContext& context) {
+@@ -6074,103 +5862,101 @@ CSSValue* ConsumePaletteMixFunction(T& range, const CSSParserContext& context) {
    // [0,100]>? ]#{2})
    DCHECK(RuntimeEnabledFeatures::FontPaletteAnimationEnabled());
  
@@ -2252,7 +2254,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
      }
 -    return std::make_pair(palette, percentage);
 -  };
- 
+-
 -  auto palette_with_percentage_1 =
 -      consume_endpoint_palette_with_percentage(args, context);
 -  auto palette_with_percentage_2 =
@@ -2261,7 +2263,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
 -  CSSValue* palette2 = palette_with_percentage_2.first;
 -  CSSPrimitiveValue* percentage1 = palette_with_percentage_1.second;
 -  CSSPrimitiveValue* percentage2 = palette_with_percentage_2.second;
--
+ 
 -  if (!palette1 || !palette2) {
 -    return nullptr;
 -  }
@@ -2327,7 +2329,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
  CSSValueList* ConsumeFontFamily(CSSParserTokenRange& range) {
    CSSValueList* list = CSSValueList::CreateCommaSeparated();
    do {
-@@ -6207,22 +5992,22 @@ CSSValueList* ConsumeFontFamily(CSSParserTokenStream& stream) {
+@@ -6207,22 +5993,22 @@ CSSValueList* ConsumeFontFamily(CSSParserTokenStream& stream) {
    return list;
  }
  
@@ -2354,7 +2356,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
    return list;
  }
  
-@@ -6440,8 +6225,10 @@ CSSValue* ConsumeFontWeight(T& stream, const CSSParserContext& context) {
+@@ -6440,8 +6226,10 @@ CSSValue* ConsumeFontWeight(T& stream, const CSSParserContext& context) {
  
    CSSPrimitiveValue* start_weight = ConsumeNumber(
        stream, context, CSSPrimitiveValue::ValueRange::kNonNegative);
@@ -2367,7 +2369,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
      return nullptr;
    }
  
-@@ -6454,8 +6241,10 @@ CSSValue* ConsumeFontWeight(T& stream, const CSSParserContext& context) {
+@@ -6454,8 +6242,10 @@ CSSValue* ConsumeFontWeight(T& stream, const CSSParserContext& context) {
  
    CSSPrimitiveValue* end_weight = ConsumeNumber(
        stream, context, CSSPrimitiveValue::ValueRange::kNonNegative);
@@ -2380,7 +2382,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
      return nullptr;
    }
  
-@@ -6555,6 +6344,7 @@ CSSIdentifierValue* ConsumeFontTechIdent(T& stream) {
+@@ -6555,6 +6345,7 @@ CSSIdentifierValue* ConsumeFontTechIdent(T& stream) {
  }
  
  template CSSIdentifierValue* ConsumeFontTechIdent(CSSParserTokenRange& stream);
@@ -2388,7 +2390,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
  
  template <typename T>
    requires std::is_same_v<T, CSSParserTokenStream> ||
-@@ -6568,6 +6358,8 @@ CSSIdentifierValue* ConsumeFontFormatIdent(T& stream) {
+@@ -6568,6 +6359,8 @@ CSSIdentifierValue* ConsumeFontFormatIdent(T& stream) {
  
  template CSSIdentifierValue* ConsumeFontFormatIdent(
      CSSParserTokenRange& stream);
@@ -2397,7 +2399,474 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
  
  CSSValueID FontFormatToId(String font_format) {
    CSSValueID converted_id = CssValueKeywordID(font_format);
-@@ -7915,43 +7707,53 @@ CSSValue* ConsumeTextDecorationLine(CSSParserTokenStream& stream) {
+@@ -7455,6 +7248,411 @@ cssvalue::CSSPathValue* ConsumeBasicShapePath(CSSParserTokenRange& args) {
+                                                       wind_rule);
+ }
+ 
++// https://drafts.csswg.org/css-shapes-2/#typedef-shape-coordinate-pair
++// <coordinate-pair> = <length-percentage>{2}
++CSSValuePair* ConsumeCoordinatePair(CSSParserTokenRange& args,
++                                    const CSSParserContext& context) {
++  CSSValue* x = ConsumeLengthOrPercent(args, context,
++                                       CSSPrimitiveValue::ValueRange::kAll);
++  if (!x) {
++    return nullptr;
++  }
++  args.ConsumeWhitespace();
++  if (CSSValue* y = ConsumeLengthOrPercent(
++          args, context, CSSPrimitiveValue::ValueRange::kAll)) {
++    return MakeGarbageCollected<CSSValuePair>(
++        x, y, CSSValuePair::IdenticalValuesPolicy::kKeepIdenticalValues);
++  } else {
++    return nullptr;
++  }
++}
++
++using cssvalue::CSSShapeCommand;
++using cssvalue::CSSShapeValue;
++
++/// https://drafts.csswg.org/css-shapes-2/#typedef-shape-command-end-point
++// <command-end-point> = [ to <position> | by <coordinate-pair> ]
++const CSSValuePair* ConsumeShapeCommandEndPoint(CSSParserTokenRange& args,
++                                                const CSSParserContext& context,
++                                                CSSValueID& point_origin) {
++  point_origin = args.ConsumeIncludingWhitespace().Id();
++  switch (point_origin) {
++    case CSSValueID::kTo:
++      return ConsumePosition(args, context, UnitlessQuirk::kForbid,
++                             std::nullopt);
++    case CSSValueID::kBy:
++      return ConsumeCoordinatePair(args, context);
++    default:
++      return nullptr;
++  }
++}
++
++const CSSValuePair* ConsumeShapeCommandControlPoint(
++    CSSParserTokenRange& args,
++    const CSSParserContext& context,
++    CSSValueID end_point_origin,
++    CSSValueID& control_point_origin) {
++  const CSSValuePair* control_point = nullptr;
++  if (end_point_origin == CSSValueID::kTo) {
++    control_point =
++        ConsumePosition(args, context, UnitlessQuirk::kForbid, std::nullopt);
++    if (!control_point) {
++      return nullptr;
++    }
++    if (control_point->First().IsIdentifierValue() ||
++        control_point->Second().IsIdentifierValue()) {
++      control_point_origin = CSSValueID::kOrigin;
++      return control_point;
++    }
++  } else {
++    control_point = ConsumeCoordinatePair(args, context);
++    if (!control_point) {
++      return nullptr;
++    }
++  }
++
++  if (args.Peek().Id() != CSSValueID::kFrom) {
++    control_point_origin = end_point_origin == CSSValueID::kTo
++                               ? CSSValueID::kOrigin
++                               : CSSValueID::kStart;
++    return control_point;
++  }
++
++  args.ConsumeIncludingWhitespace();
++  if (args.AtEnd()) {
++    return nullptr;
++  }
++  control_point_origin = args.ConsumeIncludingWhitespace().Id();
++  if (IdentMatches<CSSValueID::kStart, CSSValueID::kEnd, CSSValueID::kOrigin>(
++          control_point_origin)) {
++    return control_point;
++  }
++  return nullptr;
++}
++
++// https://drafts.csswg.org/css-shapes-2/#funcdef-shape
++cssvalue::CSSShapeValue* ConsumeBasicShapeShape(
++    CSSParserTokenRange& args,
++    const CSSParserContext& context) {
++  CHECK(RuntimeEnabledFeatures::CSSShapeFunctionEnabled());
++
++  // shape() = shape( <'fill-rule'>? ...
++  WindRule wind_rule = RULE_NONZERO;
++  if (args.Peek().Id() == CSSValueID::kEvenodd) {
++    wind_rule = RULE_EVENODD;
++    args.ConsumeIncludingWhitespace();
++  } else if (args.Peek().Id() == CSSValueID::kNonzero) {
++    args.ConsumeIncludingWhitespace();
++  }
++
++  // ... from <coordinate-pair> ... , though this is about to change to
++  // <<position>>: https://github.com/w3c/csswg-drafts/issues/11358
++  if (args.Peek().Id() != CSSValueID::kFrom) {
++    return nullptr;
++  }
++
++  args.ConsumeIncludingWhitespace();
++
++  CSSValuePair* origin =
++      ConsumePosition(args, context, UnitlessQuirk::kForbid, std::nullopt);
++  if (!origin) {
++    return nullptr;
++  }
++
++  if (!ConsumeCommaIncludingWhitespace(args)) {
++    return nullptr;
++  }
++
++  // <shape-command>#
++  HeapVector<Member<const CSSShapeCommand>> commands;
++  while (!args.AtEnd()) {
++    CSSValueID end_point_origin = CSSValueID::kInvalid;
++    CSSValueID command_type = args.ConsumeIncludingWhitespace().Id();
++    switch (command_type) {
++      // https://drafts.csswg.org/css-shapes-2/#typedef-shape-move-command
++      // <move-command> = move <command-end-point>
++      // https://drafts.csswg.org/css-shapes-2/#typedef-shape-line-command
++      // <line-command> = line <command-end-point>
++      case CSSValueID::kMove:
++      case CSSValueID::kLine: {
++        if (const CSSValuePair* end_point =
++                ConsumeShapeCommandEndPoint(args, context, end_point_origin)) {
++          commands.push_back(MakeGarbageCollected<const CSSShapeCommand>(
++              command_type == CSSValueID::kLine
++                  ? (end_point_origin == CSSValueID::kTo
++                         ? CSSShapeCommand::Type::kPathSegLineToAbs
++                         : CSSShapeCommand::Type::kPathSegLineToRel)
++                  : (end_point_origin == CSSValueID::kTo
++                         ? CSSShapeCommand::Type::kPathSegMoveToAbs
++                         : CSSShapeCommand::Type::kPathSegMoveToRel),
++              *end_point));
++        } else {
++          return nullptr;
++        }
++        break;
++      }
++      // https://drafts.csswg.org/css-shapes-2/#typedef-shape-horizontal-line-command
++      // hline [ to [ <length-percentage> | left | center | right | x-start |
++      // x-end ] | by <length-percentage> ]
++      // https://drafts.csswg.org/css-shapes-2/#typedef-shape-vertical-line-command
++      // vline [ to [ <length-percentage> | top | center | bottom | y-start |
++      // y-end ] | by <length-percentage> ]
++
++      // TODO(crbug.com/388616180): Support x-start/y-start/x-end/y-end in
++      // position component
++      case CSSValueID::kHline:
++      case CSSValueID::kVline: {
++        end_point_origin = args.ConsumeIncludingWhitespace().Id();
++        bool horizontal_edge = command_type == CSSValueID::kVline;
++        bool vertical_edge = !horizontal_edge;
++        const CSSValue* end_point = nullptr;
++        switch (end_point_origin) {
++          case CSSValueID::kTo:
++            end_point =
++                command_type == CSSValueID::kHline
++                    ? ConsumeIdent<CSSValueID::kXStart, CSSValueID::kXEnd>(args)
++                    : ConsumeIdent<CSSValueID::kYStart, CSSValueID::kYEnd>(
++                          args);
++            if (!end_point) {
++              end_point = ConsumePositionComponent(
++                  args, context, UnitlessQuirk::kForbid, horizontal_edge,
++                  vertical_edge);
++            }
++            break;
++          case CSSValueID::kBy:
++            end_point = ConsumeLengthOrPercent(
++                args, context, CSSPrimitiveValue::ValueRange::kAll);
++            break;
++          default:
++            return nullptr;
++        }
++
++        if (end_point) {
++          commands.push_back(MakeGarbageCollected<const CSSShapeCommand>(
++              command_type == CSSValueID::kHline
++                  ? (end_point_origin == CSSValueID::kTo
++                         ? CSSShapeCommand::Type::kPathSegLineToHorizontalAbs
++                         : CSSShapeCommand::Type::kPathSegLineToHorizontalRel)
++                  : (end_point_origin == CSSValueID::kTo
++                         ? CSSShapeCommand::Type::kPathSegLineToVerticalAbs
++                         : CSSShapeCommand::Type::kPathSegLineToVerticalRel),
++              *end_point));
++        } else {
++          return nullptr;
++        }
++        break;
++      }
++
++      case CSSValueID::kCurve: {
++        const CSSValuePair* end_point =
++            ConsumeShapeCommandEndPoint(args, context, end_point_origin);
++        if (!end_point) {
++          return nullptr;
++        }
++
++        if (args.ConsumeIncludingWhitespace().Id() != CSSValueID::kWith) {
++          return nullptr;
++        }
++
++        CSSValueID control_point_origin_1 = CSSValueID::kInvalid;
++
++        const CSSValuePair* control_point_1 = ConsumeShapeCommandControlPoint(
++            args, context, end_point_origin, control_point_origin_1);
++        if (!control_point_1) {
++          return nullptr;
++        }
++
++        if (ConsumeSlashIncludingWhitespace(args)) {
++          CSSValueID control_point_origin_2 = CSSValueID::kInvalid;
++          if (const CSSValuePair* control_point_2 =
++                  ConsumeShapeCommandControlPoint(args, context,
++                                                  end_point_origin,
++                                                  control_point_origin_2)) {
++            commands.push_back(
++                MakeGarbageCollected<cssvalue::CSSShapeCurveCommand<2>>(
++                    end_point_origin == CSSValueID::kTo
++                        ? CSSShapeCommand::Type::kPathSegCurveToCubicAbs
++                        : CSSShapeCommand::Type::kPathSegCurveToCubicRel,
++                    *end_point,
++                    cssvalue::CSSShapeControlPoint(control_point_origin_1,
++                                                   control_point_1),
++                    cssvalue::CSSShapeControlPoint(control_point_origin_2,
++                                                   control_point_2)));
++
++          } else {
++            return nullptr;
++          }
++        } else {
++          commands.push_back(
++              MakeGarbageCollected<cssvalue::CSSShapeCurveCommand<1>>(
++                  end_point_origin == CSSValueID::kTo
++                      ? CSSShapeCommand::Type::kPathSegCurveToQuadraticAbs
++                      : CSSShapeCommand::Type::kPathSegCurveToQuadraticRel,
++                  *end_point,
++                  cssvalue::CSSShapeControlPoint(control_point_origin_1,
++                                                 control_point_1)));
++        }
++
++        break;
++      }
++
++      case CSSValueID::kSmooth: {
++        const CSSValuePair* end_point =
++            ConsumeShapeCommandEndPoint(args, context, end_point_origin);
++        if (!end_point) {
++          return nullptr;
++        }
++
++        CSSValueID control_point_origin = CSSValueID::kInvalid;
++        if (args.Peek().Id() == CSSValueID::kWith) {
++          args.ConsumeIncludingWhitespace();
++          if (const CSSValuePair* control_point =
++                  ConsumeShapeCommandControlPoint(
++                      args, context, end_point_origin, control_point_origin)) {
++            commands.push_back(
++                MakeGarbageCollected<cssvalue::CSSShapeCurveCommand<1>>(
++                    end_point_origin == CSSValueID::kTo
++                        ? CSSShapeCommand::Type::kPathSegCurveToCubicSmoothAbs
++                        : CSSShapeCommand::Type::kPathSegCurveToCubicSmoothRel,
++                    *end_point,
++                    cssvalue::CSSShapeControlPoint(control_point_origin,
++                                                   control_point)));
++
++          } else {
++            return nullptr;
++          }
++        } else {
++          commands.push_back(MakeGarbageCollected<cssvalue::CSSShapeCommand>(
++              end_point_origin == CSSValueID::kTo
++                  ? CSSShapeCommand::Type::kPathSegCurveToQuadraticSmoothAbs
++                  : CSSShapeCommand::Type::kPathSegCurveToQuadraticSmoothRel,
++              *end_point));
++        }
++
++        break;
++      }
++
++      // https://drafts.csswg.org/css-shapes-2/#typedef-shape-arc-command
++      // arc [[<by-to> <coordinate-pair>] || [of <length-percentage>{1,2}] ||
++      // <arc-sweep>? || <arc-size>?|| rotate <angle>? ]
++      case CSSValueID::kArc: {
++        const CSSValuePair* end_point =
++            ConsumeShapeCommandEndPoint(args, context, end_point_origin);
++        if (!end_point) {
++          return nullptr;
++        }
++
++        CSSValueID sweep = CSSValueID::kInvalid;
++        CSSValueID size = CSSValueID::kInvalid;
++
++        const CSSValuePair* radius = nullptr;
++        const CSSPrimitiveValue* angle = nullptr;
++        while (!args.AtEnd() && args.Peek().GetType() != kCommaToken) {
++          CSSValueID next_id = args.Peek().Id();
++          switch (next_id) {
++            case CSSValueID::kOf: {
++              if (radius) {
++                return nullptr;
++              }
++              args.ConsumeIncludingWhitespace();
++              const CSSValue* radius_x = ConsumeLengthOrPercent(
++                  args, context, CSSPrimitiveValue::ValueRange::kAll);
++              if (!radius_x) {
++                return nullptr;
++              }
++
++              const CSSValue* radius_y = ConsumeLengthOrPercent(
++                  args, context, CSSPrimitiveValue::ValueRange::kAll);
++
++              if (!radius_y) {
++                radius_y = radius_x;
++              }
++
++              radius = MakeGarbageCollected<CSSValuePair>(
++                  radius_x, radius_y, CSSValuePair::kDropIdenticalValues);
++              break;
++            }
++            // https://drafts.csswg.org/css-shapes-2/#typedef-shape-arc-sweep
++            case CSSValueID::kCw:
++            case CSSValueID::kCcw: {
++              if (sweep != CSSValueID::kInvalid) {
++                return nullptr;
++              }
++              args.ConsumeIncludingWhitespace();
++              sweep = next_id;
++              break;
++            }
++
++            // https://drafts.csswg.org/css-shapes-2/#typedef-shape-arc-size
++            case CSSValueID::kLarge:
++            case CSSValueID::kSmall: {
++              if (size != CSSValueID::kInvalid) {
++                return nullptr;
++              }
++              args.ConsumeIncludingWhitespace();
++              size = next_id;
++              break;
++            }
++            case CSSValueID::kRotate: {
++              if (angle) {
++                return nullptr;
++              }
++              args.ConsumeIncludingWhitespace();
++              angle = ConsumeAngle(args, context, std::nullopt);
++              if (!angle) {
++                return nullptr;
++              }
++              break;
++            }
++            default:
++              return nullptr;
++          }
++        }
++
++        if (!radius) {
++          return nullptr;
++        }
++
++        if (!angle) {
++          angle = CSSNumericLiteralValue::Create(
++              0, CSSPrimitiveValue::UnitType::kDegrees);
++        }
++        if (size == CSSValueID::kInvalid) {
++          size = CSSValueID::kSmall;
++        }
++        if (sweep == CSSValueID::kInvalid) {
++          sweep = CSSValueID::kCcw;
++        }
++
++        commands.push_back(MakeGarbageCollected<cssvalue::CSSShapeArcCommand>(
++            end_point_origin == CSSValueID::kTo
++                ? CSSShapeCommand::Type::kPathSegArcAbs
++                : CSSShapeCommand::Type::kPathSegArcRel,
++            *end_point, *angle, *radius, size, sweep));
++        break;
++      }
++
++      // https://drafts.csswg.org/css-shapes-2/#typedef-shape-close
++      case CSSValueID::kClose:
++        commands.push_back(CSSShapeCommand::Close());
++        break;
++      default:
++        return nullptr;
++    }
++
++    if (!args.AtEnd() && !ConsumeCommaIncludingWhitespace(args)) {
++      return nullptr;
++    }
++  }
++
++  if (commands.empty()) {
++    return nullptr;
++  }
++
++  return MakeGarbageCollected<CSSShapeValue>(wind_rule, *origin,
++                                             std::move(commands));
++}
++
+ CSSValue* ConsumePathFunction(CSSParserTokenStream& stream,
+                               EmptyPathStringHandling empty_handling) {
+   // FIXME: Add support for <url>, <basic-shape>, <geometry-box>.
+@@ -7628,7 +7826,8 @@ CSSValue* ConsumeOffsetPath(CSSParserTokenStream& stream,
+ 
+   CSSValue* offset_path = ConsumeRay(stream, context);
+   if (!offset_path) {
+-    offset_path = ConsumeBasicShape(stream, context, AllowPathValue::kForbid);
++    offset_path = ConsumeBasicShape(stream, context, AllowPathValue::kForbid,
++                                    AllowShapeValue::kForbid);
+   }
+   if (!offset_path) {
+     offset_path = ConsumeUrl(stream, context);
+@@ -7804,6 +8003,7 @@ template <class T = CSSParserTokenRange>
+ CSSValue* ConsumeBasicShapeInternal(T& range,
+                                     const CSSParserContext& context,
+                                     AllowPathValue allow_path,
++                                    AllowShapeValue allow_shape,
+                                     AllowBasicShapeRectValue allow_rect,
+                                     AllowBasicShapeXYWHValue allow_xywh) {
+   CSSValue* shape = nullptr;
+@@ -7823,6 +8023,10 @@ CSSValue* ConsumeBasicShapeInternal(T& range,
+     shape = ConsumeBasicShapeInset(args, context);
+   } else if (id == CSSValueID::kPath && allow_path == AllowPathValue::kAllow) {
+     shape = ConsumeBasicShapePath(args);
++  } else if (id == CSSValueID::kShape &&
++             allow_shape == AllowShapeValue::kAllow &&
++             RuntimeEnabledFeatures::CSSShapeFunctionEnabled()) {
++    shape = ConsumeBasicShapeShape(args, context);
+   } else if (id == CSSValueID::kRect &&
+              allow_rect == AllowBasicShapeRectValue::kAllow) {
+     shape = ConsumeBasicShapeRect(args, context);
+@@ -7842,19 +8046,21 @@ CSSValue* ConsumeBasicShapeInternal(T& range,
+ CSSValue* ConsumeBasicShape(CSSParserTokenRange& range,
+                             const CSSParserContext& context,
+                             AllowPathValue allow_path,
++                            AllowShapeValue allow_shape,
+                             AllowBasicShapeRectValue allow_rect,
+                             AllowBasicShapeXYWHValue allow_xywh) {
+-  return ConsumeBasicShapeInternal(range, context, allow_path, allow_rect,
+-                                   allow_xywh);
++  return ConsumeBasicShapeInternal(range, context, allow_path, allow_shape,
++                                   allow_rect, allow_xywh);
+ }
+ 
+ CSSValue* ConsumeBasicShape(CSSParserTokenStream& stream,
+                             const CSSParserContext& context,
+                             AllowPathValue allow_path,
++                            AllowShapeValue allow_shape,
+                             AllowBasicShapeRectValue allow_rect,
+                             AllowBasicShapeXYWHValue allow_xywh) {
+-  return ConsumeBasicShapeInternal(stream, context, allow_path, allow_rect,
+-                                   allow_xywh);
++  return ConsumeBasicShapeInternal(stream, context, allow_path, allow_shape,
++                                   allow_rect, allow_xywh);
+ }
+ 
+ // none | [ underline || overline || line-through || blink ] | spelling-error |
+@@ -7915,43 +8121,53 @@ CSSValue* ConsumeTextDecorationLine(CSSParserTokenStream& stream) {
  
  // Consume the `text-box-edge` production.
  CSSValue* ConsumeTextBoxEdge(CSSParserTokenStream& stream) {
@@ -2471,7 +2940,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
  }
  
  // Consume the `autospace` production.
-@@ -8505,9 +8307,9 @@ CSSValue* ConsumeDashedIdentOrTactic(CSSParserTokenStream& stream,
+@@ -8505,9 +8721,9 @@ CSSValue* ConsumeDashedIdentOrTactic(CSSParserTokenStream& stream,
        continue;
      }
      if (context.Mode() == kUASheetMode && !dashed_ident) {
@@ -2484,7 +2953,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
          continue;
        }
      }
-@@ -8533,21 +8335,21 @@ CSSValue* ConsumeDashedIdentOrTactic(CSSParserTokenStream& stream,
+@@ -8533,21 +8749,21 @@ CSSValue* ConsumeDashedIdentOrTactic(CSSParserTokenStream& stream,
    return list;
  }
  
@@ -2514,7 +2983,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
    return function;
  }
  
-@@ -8559,17 +8361,17 @@ CSSValue* ConsumeSinglePositionTryFallback(CSSParserTokenStream& stream,
+@@ -8559,17 +8775,17 @@ CSSValue* ConsumeSinglePositionTryFallback(CSSParserTokenStream& stream,
    if (CSSValue* value = ConsumeDashedIdentOrTactic(stream, context)) {
      return value;
    }
@@ -2538,7 +3007,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
    if (stream.Peek().Id() == CSSValueID::kNone) {
      return ConsumeIdent(stream);
    }
-@@ -8579,7 +8381,7 @@ CSSValue* ConsumePositionTryFallbacks(CSSParserTokenStream& stream,
+@@ -8579,7 +8795,7 @@ CSSValue* ConsumePositionTryFallbacks(CSSParserTokenStream& stream,
  
  namespace {
  
@@ -2547,7 +3016,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
    STACK_ALLOCATED();
  
   public:
-@@ -8612,8 +8414,8 @@ struct InsetAreaKeyword {
+@@ -8612,8 +8828,8 @@ struct InsetAreaKeyword {
      kSelfStartEnd,
    };
  
@@ -2558,7 +3027,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
      if (first.type == kGeneral || second.type == kGeneral) {
        return true;
      }
-@@ -8636,8 +8438,8 @@ struct InsetAreaKeyword {
+@@ -8636,8 +8852,8 @@ struct InsetAreaKeyword {
  template <class T>
    requires std::is_same_v<T, CSSParserTokenStream> ||
             std::is_same_v<T, CSSParserTokenRange>
@@ -2569,7 +3038,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
    switch (stream.Peek().Id()) {
      case CSSValueID::kSpanAll:
      case CSSValueID::kCenter:
-@@ -8655,7 +8457,7 @@ std::optional<InsetAreaKeyword> ConsumeInsetAreaKeyword(T& stream) {
+@@ -8655,7 +8871,7 @@ std::optional<InsetAreaKeyword> ConsumeInsetAreaKeyword(T& stream) {
      case CSSValueID::kXSelfEnd:
      case CSSValueID::kSpanXSelfStart:
      case CSSValueID::kSpanXSelfEnd:
@@ -2578,7 +3047,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
        break;
      case CSSValueID::kTop:
      case CSSValueID::kBottom:
-@@ -8669,53 +8471,53 @@ std::optional<InsetAreaKeyword> ConsumeInsetAreaKeyword(T& stream) {
+@@ -8669,53 +8885,53 @@ std::optional<InsetAreaKeyword> ConsumeInsetAreaKeyword(T& stream) {
      case CSSValueID::kYSelfEnd:
      case CSSValueID::kSpanYSelfStart:
      case CSSValueID::kSpanYSelfEnd:
@@ -2641,7 +3110,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
  //                  [ left | center | right | span-left | span-right |
  //                    x-start | x-end | span-x-start | span-x-end |
  //                    x-self-start | x-self-end | span-x-self-start |
-@@ -8746,25 +8548,25 @@ std::optional<InsetAreaKeyword> ConsumeInsetAreaKeyword(T& stream) {
+@@ -8746,25 +8962,25 @@ std::optional<InsetAreaKeyword> ConsumeInsetAreaKeyword(T& stream) {
  template <class T>
    requires std::is_same_v<T, CSSParserTokenStream> ||
             std::is_same_v<T, CSSParserTokenRange>
@@ -2677,7 +3146,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..59f99224a9b9ab638e7e9011b1932554
      return nullptr;
    }
    CSSIdentifierValue* first_value = first.value().value;
-@@ -8773,21 +8575,22 @@ CSSValue* ConsumeInsetArea(T& range) {
+@@ -8773,21 +8989,22 @@ CSSValue* ConsumeInsetArea(T& range) {
      return first_value;
    }
    if (first_value->GetValueID() == CSSValueID::kSpanAll &&

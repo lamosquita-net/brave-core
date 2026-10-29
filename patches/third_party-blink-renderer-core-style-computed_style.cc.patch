@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style.cc b/third_party/blink/renderer/core/style/computed_style.cc
-index bc061ec223ea93f74982b9ab4a2119f548caf978..9a2724e25aeee17942acc1b78c1e1c99b87ea6ea 100644
+index bc061ec223ea93f74982b9ab4a2119f548caf978..7546950f5daf4e5d80102a4e78d29327dbb10f62 100644
 --- a/third_party/blink/renderer/core/style/computed_style.cc
 +++ b/third_party/blink/renderer/core/style/computed_style.cc
 @@ -57,6 +57,7 @@
@@ -10,7 +10,15 @@ index bc061ec223ea93f74982b9ab4a2119f548caf978..9a2724e25aeee17942acc1b78c1e1c99
  #include "third_party/blink/renderer/core/layout/layout_theme.h"
  #include "third_party/blink/renderer/core/layout/map_coordinates_flags.h"
  #include "third_party/blink/renderer/core/layout/text_autosizer.h"
-@@ -366,9 +367,10 @@ bool ComputedStyle::NeedsReattachLayoutTree(const Element& element,
+@@ -78,6 +79,7 @@
+ #include "third_party/blink/renderer/core/style/style_inherited_variables.h"
+ #include "third_party/blink/renderer/core/style/style_non_inherited_variables.h"
+ #include "third_party/blink/renderer/core/style/style_ray.h"
++#include "third_party/blink/renderer/core/style/style_shape.h"
+ #include "third_party/blink/renderer/core/svg/svg_element.h"
+ #include "third_party/blink/renderer/core/svg/svg_geometry_element.h"
+ #include "third_party/blink/renderer/core/svg/svg_length_functions.h"
+@@ -366,9 +368,10 @@ bool ComputedStyle::NeedsReattachLayoutTree(const Element& element,
      return true;
    }
  
@@ -24,7 +32,7 @@ index bc061ec223ea93f74982b9ab4a2119f548caf978..9a2724e25aeee17942acc1b78c1e1c99
      DCHECK_EQ(old_style->HasTextCombine(), new_style->HasTextCombine());
      return true;
    }
-@@ -481,12 +483,12 @@ ComputedStyle::ComputeDifferenceIgnoringInheritedFirstLineStyle(
+@@ -481,12 +484,12 @@ ComputedStyle::ComputeDifferenceIgnoringInheritedFirstLineStyle(
  
  StyleSelfAlignmentData ResolvedSelfAlignment(
      const StyleSelfAlignmentData& value,
@@ -39,7 +47,7 @@ index bc061ec223ea93f74982b9ab4a2119f548caf978..9a2724e25aeee17942acc1b78c1e1c99
    }
    if (!has_out_of_flow_position &&
        value.GetPosition() == ItemPosition::kAnchorCenter) {
-@@ -496,33 +498,33 @@ StyleSelfAlignmentData ResolvedSelfAlignment(
+@@ -496,33 +499,33 @@ StyleSelfAlignmentData ResolvedSelfAlignment(
  }
  
  StyleSelfAlignmentData ComputedStyle::ResolvedAlignSelf(
@@ -79,7 +87,7 @@ index bc061ec223ea93f74982b9ab4a2119f548caf978..9a2724e25aeee17942acc1b78c1e1c99
  }
  
  StyleContentAlignmentData ResolvedContentAlignment(
-@@ -729,22 +731,6 @@ const ComputedStyle* ComputedStyle::GetCachedPseudoElementStyle(
+@@ -729,22 +732,6 @@ const ComputedStyle* ComputedStyle::GetCachedPseudoElementStyle(
    return nullptr;
  }
  
@@ -102,7 +110,7 @@ index bc061ec223ea93f74982b9ab4a2119f548caf978..9a2724e25aeee17942acc1b78c1e1c99
  const ComputedStyle* ComputedStyle::AddCachedPseudoElementStyle(
      const ComputedStyle* pseudo,
      PseudoId pseudo_id,
-@@ -1136,11 +1122,14 @@ bool ComputedStyle::DiffNeedsNormalPaintInvalidation(
+@@ -1136,11 +1123,14 @@ bool ComputedStyle::DiffNeedsNormalPaintInvalidation(
    }
  
    if (field_diff & kBackgroundCurrentColor) {
@@ -121,7 +129,21 @@ index bc061ec223ea93f74982b9ab4a2119f548caf978..9a2724e25aeee17942acc1b78c1e1c99
          (GetCurrentColor() != other.GetCurrentColor() ||
           GetInternalVisitedCurrentColor() !=
               other.GetInternalVisitedCurrentColor())) {
-@@ -2543,11 +2532,17 @@ blink::Color ComputedStyle::VisitedDependentContextPaint(
+@@ -1741,6 +1731,13 @@ void ComputedStyle::ApplyMotionPathTransform(float origin_x,
+         path_position = CalculatePointAndTangentOnPath(path.GetPath());
+         break;
+       }
++      case BasicShape::kStyleShapeType: {
++        const StyleShape& shape = To<StyleShape>(basic_shape);
++        Path path;
++        shape.GetPath(path, bounding_box, EffectiveZoom());
++        path_position = CalculatePointAndTangentOnPath(path);
++        break;
++      }
+       case BasicShape::kStyleRayType: {
+         const gfx::RectF reference_box = GetReferenceBox(box, coord_box);
+         const gfx::PointF offset_from_reference_box =
+@@ -2543,11 +2540,17 @@ blink::Color ComputedStyle::VisitedDependentContextPaint(
    if (!context_visited_paint.HasColor()) {
      return unvisited_color;
    }
@@ -144,7 +166,7 @@ index bc061ec223ea93f74982b9ab4a2119f548caf978..9a2724e25aeee17942acc1b78c1e1c99
  }
  
  blink::Color ComputedStyle::ResolvedColor(const StyleColor& color,
-@@ -2572,7 +2567,11 @@ TextEmphasisMark ComputedStyle::GetTextEmphasisMark() const {
+@@ -2572,7 +2575,11 @@ TextEmphasisMark ComputedStyle::GetTextEmphasisMark() const {
      return mark;
    }
  
@@ -157,7 +179,7 @@ index bc061ec223ea93f74982b9ab4a2119f548caf978..9a2724e25aeee17942acc1b78c1e1c99
      return TextEmphasisMark::kDot;
    }
  
-@@ -3103,21 +3102,17 @@ ComputedStyleBuilder::MutableNonInheritedVariables() {
+@@ -3103,21 +3110,17 @@ ComputedStyleBuilder::MutableNonInheritedVariables() {
    return *variables;
  }
  
