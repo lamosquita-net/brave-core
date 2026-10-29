@@ -1,8 +1,22 @@
 diff --git a/src/maglev/maglev-graph-builder.h b/src/maglev/maglev-graph-builder.h
-index 32f9aea1c736aa7d323b018150f50e3970fda798..75976bdaf41c8c582a0b4d39f6c6bc553434e2de 100644
+index 32f9aea1c736aa7d323b018150f50e3970fda798..a26b4d293338eef290a0979645e168e61a798964 100644
 --- a/src/maglev/maglev-graph-builder.h
 +++ b/src/maglev/maglev-graph-builder.h
-@@ -2380,6 +2380,7 @@ class MaglevGraphBuilder {
+@@ -1816,10 +1816,13 @@ class MaglevGraphBuilder {
+     // TODO(leszeks): Track this on merge states / known node aspects, rather
+     // than on the graph, so that it can survive control flow.
+     if constexpr (is_possible_map_change) {
++      may_have_changed_maps_ = true;
+       current_for_in_state.receiver_needs_map_check = true;
+     }
+   }
+ 
++  bool may_have_changed_maps() const { return may_have_changed_maps_; }
++
+   int next_offset() const {
+     return iterator_.current_offset() + iterator_.current_bytecode_size();
+   }
+@@ -2380,6 +2383,7 @@ class MaglevGraphBuilder {
    ReduceResult BuildGetKeyedProperty(
        ValueNode* object, const compiler::FeedbackSource& feedback_source,
        const compiler::ProcessedFeedback& processed_feedback);
@@ -10,3 +24,13 @@ index 32f9aea1c736aa7d323b018150f50e3970fda798..75976bdaf41c8c582a0b4d39f6c6bc55
  
    ValueNode* BuildLoadFixedArrayLength(ValueNode* fixed_array);
    ValueNode* BuildLoadJSArrayLength(ValueNode* js_array,
+@@ -3131,6 +3135,9 @@ class MaglevGraphBuilder {
+   };
+   // TODO(leszeks): Allow having a stack of these.
+   ForInState current_for_in_state = ForInState();
++  // FlyWeb (upstream dd7e9b5ef6): whether a possible map change was seen, so
++  // that inlining invalidates the caller's for-in receiver map check.
++  bool may_have_changed_maps_ = false;
+ 
+   AllocationBlock* current_allocation_block_ = nullptr;
+ 
