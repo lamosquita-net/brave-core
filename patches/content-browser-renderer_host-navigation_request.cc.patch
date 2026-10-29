@@ -1,5 +1,5 @@
 diff --git a/content/browser/renderer_host/navigation_request.cc b/content/browser/renderer_host/navigation_request.cc
-index c90fd914ef5b041ff86e6467c985df32ba7b0b43..342dfa1dd1db54d9c14472a7029986fc983c7269 100644
+index c90fd914ef5b041ff86e6467c985df32ba7b0b43..ecc95d9f2b881512cfb2297f00ddb58996d89575 100644
 --- a/content/browser/renderer_host/navigation_request.cc
 +++ b/content/browser/renderer_host/navigation_request.cc
 @@ -3458,6 +3458,7 @@ void NavigationRequest::OnRequestRedirected(
@@ -10,7 +10,26 @@ index c90fd914ef5b041ff86e6467c985df32ba7b0b43..342dfa1dd1db54d9c14472a7029986fc
    common_params_->referrer = Referrer::SanitizeForRequest(
        common_params_->url, *common_params_->referrer);
  
-@@ -5234,6 +5235,7 @@ void NavigationRequest::OnStartChecksComplete(
+@@ -5189,12 +5190,13 @@ void NavigationRequest::OnStartChecksComplete(
+   // comment in the header for |loader_|.
+   DCHECK(!loader_);
+ 
+-  // Only initialize the ServiceWorkerMainResourceHandle if it can be created
+-  // for this frame.
++  // Only initialize the `ServiceWorkerMainResourceHandle` if it can be created
++  // for this frame. PDF content frames run in a restricted PDF renderer process
++  // that must not receive service worker capabilities for the hosting origin.
+   bool can_create_service_worker =
+-      (frame_tree_node_->pending_frame_policy().sandbox_flags &
+-       network::mojom::WebSandboxFlags::kOrigin) !=
+-      network::mojom::WebSandboxFlags::kOrigin;
++      !IsPdf() && (frame_tree_node_->pending_frame_policy().sandbox_flags &
++                   network::mojom::WebSandboxFlags::kOrigin) !=
++                      network::mojom::WebSandboxFlags::kOrigin;
+   if (can_create_service_worker) {
+     ServiceWorkerContextWrapper* service_worker_context =
+         static_cast<ServiceWorkerContextWrapper*>(
+@@ -5234,6 +5236,7 @@ void NavigationRequest::OnStartChecksComplete(
    headers.MergeFrom(TakeModifiedRequestHeaders());
    begin_params_->headers = headers.ToString();
  
@@ -18,7 +37,7 @@ index c90fd914ef5b041ff86e6467c985df32ba7b0b43..342dfa1dd1db54d9c14472a7029986fc
    // TODO(clamy): Avoid cloning the navigation params and create the
    // ResourceRequest directly here.
    std::vector<std::unique_ptr<NavigationLoaderInterceptor>> interceptor;
-@@ -5821,9 +5823,51 @@ void NavigationRequest::OnWillCommitWithoutUrlLoaderChecksComplete(
+@@ -5821,9 +5824,55 @@ void NavigationRequest::OnWillCommitWithoutUrlLoaderChecksComplete(
    // Cases with a UrlLoader are handled in OnStartChecksComplete.
    MaybeDispatchNavigateEventForCrossDocumentTraversal();
  
@@ -44,9 +63,13 @@ index c90fd914ef5b041ff86e6467c985df32ba7b0b43..342dfa1dd1db54d9c14472a7029986fc
 +    return;
 +  }
 +
-+  if ((frame_tree_node_->pending_frame_policy().sandbox_flags &
-+       network::mojom::WebSandboxFlags::kOrigin) ==
-+      network::mojom::WebSandboxFlags::kOrigin) {
++  // Do not inherit the parent's service worker controller if this frame is a
++  // PDF content frame or has an opaque sandboxed origin. PDF content frames run
++  // in a restricted PDF renderer process that must not receive service worker
++  // capabilities for the hosting origin.
++  if (IsPdf() || (frame_tree_node_->pending_frame_policy().sandbox_flags &
++                  network::mojom::WebSandboxFlags::kOrigin) ==
++                     network::mojom::WebSandboxFlags::kOrigin) {
 +    return;
 +  }
 +  StoragePartition* partition = GetStoragePartitionWithCurrentSiteInfo();
@@ -70,3 +93,23 @@ index c90fd914ef5b041ff86e6467c985df32ba7b0b43..342dfa1dd1db54d9c14472a7029986fc
  void NavigationRequest::RunCommitDeferringConditions() {
    commit_deferrer_->RegisterDeferringConditions(*this);
    commit_deferrer_->ProcessChecks();
+@@ -6152,6 +6201,19 @@ void NavigationRequest::CommitNavigation() {
+       service_worker_container_info;
+   blink::mojom::ControllerServiceWorkerInfoPtr controller;
+ 
++  // The decision to create `service_worker_handle_` was made before the
++  // request was sent, based only on the sandbox flags inherited from the frame
++  // owner element. If the response delivered a `Content-Security-Policy:
++  // sandbox` header without `allow-same-origin`, the document will commit with
++  // an opaque origin and is not eligible to use service workers, so drop the
++  // handle now instead of creating a container host for the committed document.
++  if (service_worker_handle_ &&
++      (policy_container_builder_->FinalPolicies().sandbox_flags &
++       network::mojom::WebSandboxFlags::kOrigin) ==
++          network::mojom::WebSandboxFlags::kOrigin) {
++    service_worker_handle_.reset();
++  }
++
+   // Notify the service worker navigation handle that navigation commit is
+   // about to go.
+   if (service_worker_handle_ &&
