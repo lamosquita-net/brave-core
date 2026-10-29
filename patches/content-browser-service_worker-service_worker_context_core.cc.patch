@@ -1,0 +1,24 @@
+diff --git a/content/browser/service_worker/service_worker_context_core.cc b/content/browser/service_worker/service_worker_context_core.cc
+index 37eaa660c62e4f2c148b3c00ffde93feb2c3876b..613368ab8575bd388e469b5b0f22cb2a77f54330 100644
+--- a/content/browser/service_worker/service_worker_context_core.cc
++++ b/content/browser/service_worker/service_worker_context_core.cc
+@@ -513,7 +513,8 @@ void ServiceWorkerContextCore::OnClientDestroyed(
+       service_worker_client.container_host()
+           ? service_worker_client.container_host()->ukm_source_id()
+           : ukm::kInvalidSourceId,
+-      service_worker_client.url(), service_worker_client.GetClientType());
++      service_worker_client.GetUrlForScopeMatch(),
++      service_worker_client.GetClientType());
+ }
+ 
+ void ServiceWorkerClientOwner::DestroyServiceWorkerClient(
+@@ -697,7 +698,8 @@ void ServiceWorkerContextCore::NotifyClientIsExecutionReady(
+   observer_list_->Notify(
+       FROM_HERE, &ServiceWorkerContextCoreObserver::OnClientIsExecutionReady,
+       service_worker_client.container_host()->ukm_source_id(),
+-      service_worker_client.url(), service_worker_client.GetClientType());
++      service_worker_client.GetUrlForScopeMatch(),
++      service_worker_client.GetClientType());
+ }
+ 
+ bool ServiceWorkerContextCore::MaybeHasRegistrationForStorageKey(
