@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/html_element.cc b/third_party/blink/renderer/core/html/html_element.cc
-index 59ba47318a79b8bde236add57f1207ca00bd0242..eaecb5b393b01f9e454e7936a6650e61ab16350a 100644
+index 59ba47318a79b8bde236add57f1207ca00bd0242..0c5e89ce791554b3d40c3dd231403bb400aed1c0 100644
 --- a/third_party/blink/renderer/core/html/html_element.cc
 +++ b/third_party/blink/renderer/core/html/html_element.cc
 @@ -35,6 +35,9 @@
@@ -270,7 +270,24 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..eaecb5b393b01f9e454e7936a6650e61
    hide_stack_until(endpoint, auto_stack);
  }
  
-@@ -1921,7 +1954,7 @@ void HTMLElement::SetPopoverFocusOnShow() {
+@@ -1908,9 +1941,13 @@ void HTMLElement::HidePopoverInternal(
+     }
+   }
+ 
+-  if (auto* close_watcher = GetPopoverData()->closeWatcher()) {
+-    close_watcher->destroy();
+-    GetPopoverData()->setCloseWatcher(nullptr);
++  // Focusing previously_focused_element may have removed the popover attribute
++  // from this element, making GetPopoverData return null.
++  if (GetPopoverData()) {
++    if (auto* close_watcher = GetPopoverData()->closeWatcher()) {
++      close_watcher->destroy();
++      GetPopoverData()->setCloseWatcher(nullptr);
++    }
+   }
+ }
+ 
+@@ -1921,7 +1958,7 @@ void HTMLElement::SetPopoverFocusOnShow() {
        this, DocumentUpdateReason::kPopover);
  
    if (auto* dialog = DynamicTo<HTMLDialogElement>(this)) {
@@ -279,7 +296,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..eaecb5b393b01f9e454e7936a6650e61
        dialog->SetFocusForDialog();
      } else {
        HTMLDialogElement::SetFocusForDialogLegacy(dialog);
-@@ -2023,7 +2056,9 @@ const HTMLElement* NearestTargetPopoverForInvoker(
+@@ -2023,7 +2060,9 @@ const HTMLElement* NearestTargetPopoverForInvoker(
          if (!form_element) {
            return nullptr;
          }
@@ -290,7 +307,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..eaecb5b393b01f9e454e7936a6650e61
  
          return target_element
                     ? DynamicTo<HTMLElement>(target_element)
-@@ -2181,7 +2216,7 @@ const HTMLElement* FindTopmostRelatedPopover(
+@@ -2181,7 +2220,7 @@ const HTMLElement* FindTopmostRelatedPopover(
  }  // namespace
  
  // static
@@ -299,7 +316,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..eaecb5b393b01f9e454e7936a6650e61
                                              const Node& target_node) {
    CHECK(event.isTrusted());
    auto& document = target_node.GetDocument();
-@@ -2189,51 +2224,33 @@ void HTMLElement::HandlePopoverLightDismiss(const Event& event,
+@@ -2189,51 +2228,33 @@ void HTMLElement::HandlePopoverLightDismiss(const Event& event,
      return;
    }
  
@@ -377,7 +394,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..eaecb5b393b01f9e454e7936a6650e61
      }
    }
  }
-@@ -2362,6 +2379,23 @@ HTMLSelectListElement* HTMLElement::popoverOwnerSelectListElement() const {
+@@ -2362,6 +2383,23 @@ HTMLSelectListElement* HTMLElement::popoverOwnerSelectListElement() const {
                            : nullptr;
  }
  
@@ -401,7 +418,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..eaecb5b393b01f9e454e7936a6650e61
  bool HTMLElement::DispatchFocusEvent(
      Element* old_focused_element,
      mojom::blink::FocusType type,
-@@ -2370,13 +2404,13 @@ bool HTMLElement::DispatchFocusEvent(
+@@ -2370,13 +2408,13 @@ bool HTMLElement::DispatchFocusEvent(
                                       source_capabilities);
  }
  
@@ -419,7 +436,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..eaecb5b393b01f9e454e7936a6650e61
            (command == CommandEventType::kToggleFullscreen ||
             command == CommandEventType::kRequestFullscreen ||
             command == CommandEventType::kExitFullscreen));
-@@ -2384,7 +2418,7 @@ bool HTMLElement::IsValidCommand(HTMLElement& invoker,
+@@ -2384,7 +2422,7 @@ bool HTMLElement::IsValidCommand(HTMLElement& invoker,
  
  bool HTMLElement::HandleCommandInternal(HTMLElement& invoker,
                                          CommandEventType command) {
@@ -428,7 +445,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..eaecb5b393b01f9e454e7936a6650e61
  
    if (Element::HandleCommandInternal(invoker, command)) {
      return true;
-@@ -2458,7 +2492,7 @@ bool HTMLElement::HandleCommandInternal(HTMLElement& invoker,
+@@ -2458,7 +2496,7 @@ bool HTMLElement::HandleCommandInternal(HTMLElement& invoker,
      }
    }
  
@@ -437,7 +454,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..eaecb5b393b01f9e454e7936a6650e61
      return false;
    }
  
-@@ -3250,6 +3284,17 @@ bool HTMLElement::IsLabelable() const {
+@@ -3250,6 +3288,17 @@ bool HTMLElement::IsLabelable() const {
    return IsFormAssociatedCustomElement();
  }
  
