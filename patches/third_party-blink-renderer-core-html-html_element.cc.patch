@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/html_element.cc b/third_party/blink/renderer/core/html/html_element.cc
-index 59ba47318a79b8bde236add57f1207ca00bd0242..2613259a62c920b050f39ef8aba8736b39e8f020 100644
+index 59ba47318a79b8bde236add57f1207ca00bd0242..d0ad039d45dbd80e9dfc09fea7efcfb904dd3468 100644
 --- a/third_party/blink/renderer/core/html/html_element.cc
 +++ b/third_party/blink/renderer/core/html/html_element.cc
 @@ -35,6 +35,9 @@
@@ -343,7 +343,45 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..2613259a62c920b050f39ef8aba8736b
    hide_stack_until(endpoint, auto_stack);
  }
  
-@@ -1908,9 +1951,13 @@ void HTMLElement::HidePopoverInternal(
+@@ -1811,6 +1854,15 @@ void HTMLElement::HidePopoverInternal(
+       CHECK_EQ(result, DispatchEventResult::kCanceledBeforeDispatch);
+       return;
+     }
++
++    // The 'beforetoggle' event handler could have changed this popover, e.g. by
++    // changing its type, removing it from the document, or calling
++    // showPopover().
++    if (!IsPopoverReady(PopoverTriggerAction::kHide, exception_state,
++                        /*include_event_handler_text=*/true, &document)) {
++      return;
++    }
++
+     if (stack_containing_this && !stack_containing_this->empty() &&
+         stack_containing_this->back() != this) {
+       CHECK(PopoverType() == PopoverValueType::kAuto ||
+@@ -1822,14 +1874,13 @@ void HTMLElement::HidePopoverInternal(
+           "popover to be shown. This is not recommended.");
+       HideAllPopoversUntil(this, document, focus_behavior,
+                            HidePopoverTransitionBehavior::kNoEventsNoWaiting);
+-    }
+-
+-    // The 'beforetoggle' event handler could have changed this popover, e.g. by
+-    // changing its type, removing it from the document, or calling
+-    // showPopover().
+-    if (!IsPopoverReady(PopoverTriggerAction::kHide, exception_state,
+-                        /*include_event_handler_text=*/true, &document)) {
+-      return;
++      // The 'beforetoggle' event handler (from the HideAllPopoversUntil call)
++      // could have changed this popover, e.g. by changing its type, removing it
++      // from the document, or calling showPopover().
++      if (!IsPopoverReady(PopoverTriggerAction::kHide, exception_state,
++                          /*include_event_handler_text=*/true, &document)) {
++        return;
++      }
+     }
+ 
+     // Queue the "closing" toggle event.
+@@ -1908,9 +1959,13 @@ void HTMLElement::HidePopoverInternal(
      }
    }
  
@@ -360,7 +398,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..2613259a62c920b050f39ef8aba8736b
    }
  }
  
-@@ -1921,7 +1968,7 @@ void HTMLElement::SetPopoverFocusOnShow() {
+@@ -1921,7 +1976,7 @@ void HTMLElement::SetPopoverFocusOnShow() {
        this, DocumentUpdateReason::kPopover);
  
    if (auto* dialog = DynamicTo<HTMLDialogElement>(this)) {
@@ -369,7 +407,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..2613259a62c920b050f39ef8aba8736b
        dialog->SetFocusForDialog();
      } else {
        HTMLDialogElement::SetFocusForDialogLegacy(dialog);
-@@ -2023,7 +2070,9 @@ const HTMLElement* NearestTargetPopoverForInvoker(
+@@ -2023,7 +2078,9 @@ const HTMLElement* NearestTargetPopoverForInvoker(
          if (!form_element) {
            return nullptr;
          }
@@ -380,7 +418,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..2613259a62c920b050f39ef8aba8736b
  
          return target_element
                     ? DynamicTo<HTMLElement>(target_element)
-@@ -2181,7 +2230,7 @@ const HTMLElement* FindTopmostRelatedPopover(
+@@ -2181,7 +2238,7 @@ const HTMLElement* FindTopmostRelatedPopover(
  }  // namespace
  
  // static
@@ -389,7 +427,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..2613259a62c920b050f39ef8aba8736b
                                              const Node& target_node) {
    CHECK(event.isTrusted());
    auto& document = target_node.GetDocument();
-@@ -2189,51 +2238,33 @@ void HTMLElement::HandlePopoverLightDismiss(const Event& event,
+@@ -2189,51 +2246,33 @@ void HTMLElement::HandlePopoverLightDismiss(const Event& event,
      return;
    }
  
@@ -467,7 +505,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..2613259a62c920b050f39ef8aba8736b
      }
    }
  }
-@@ -2362,6 +2393,23 @@ HTMLSelectListElement* HTMLElement::popoverOwnerSelectListElement() const {
+@@ -2362,6 +2401,23 @@ HTMLSelectListElement* HTMLElement::popoverOwnerSelectListElement() const {
                            : nullptr;
  }
  
@@ -491,7 +529,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..2613259a62c920b050f39ef8aba8736b
  bool HTMLElement::DispatchFocusEvent(
      Element* old_focused_element,
      mojom::blink::FocusType type,
-@@ -2370,13 +2418,13 @@ bool HTMLElement::DispatchFocusEvent(
+@@ -2370,13 +2426,13 @@ bool HTMLElement::DispatchFocusEvent(
                                       source_capabilities);
  }
  
@@ -509,7 +547,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..2613259a62c920b050f39ef8aba8736b
            (command == CommandEventType::kToggleFullscreen ||
             command == CommandEventType::kRequestFullscreen ||
             command == CommandEventType::kExitFullscreen));
-@@ -2384,7 +2432,7 @@ bool HTMLElement::IsValidCommand(HTMLElement& invoker,
+@@ -2384,7 +2440,7 @@ bool HTMLElement::IsValidCommand(HTMLElement& invoker,
  
  bool HTMLElement::HandleCommandInternal(HTMLElement& invoker,
                                          CommandEventType command) {
@@ -518,7 +556,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..2613259a62c920b050f39ef8aba8736b
  
    if (Element::HandleCommandInternal(invoker, command)) {
      return true;
-@@ -2458,7 +2506,7 @@ bool HTMLElement::HandleCommandInternal(HTMLElement& invoker,
+@@ -2458,7 +2514,7 @@ bool HTMLElement::HandleCommandInternal(HTMLElement& invoker,
      }
    }
  
@@ -527,7 +565,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..2613259a62c920b050f39ef8aba8736b
      return false;
    }
  
-@@ -3250,6 +3298,17 @@ bool HTMLElement::IsLabelable() const {
+@@ -3250,6 +3306,17 @@ bool HTMLElement::IsLabelable() const {
    return IsFormAssociatedCustomElement();
  }
  
