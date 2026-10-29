@@ -1,0 +1,37 @@
+diff --git a/third_party/blink/renderer/core/events/command_event.h b/third_party/blink/renderer/core/events/command_event.h
+index e440ecb2c081be94e5a7fec5dc71e9a22451f99b..fc5d56b76091c9d6bda257c5497d140140974959 100644
+--- a/third_party/blink/renderer/core/events/command_event.h
++++ b/third_party/blink/renderer/core/events/command_event.h
+@@ -25,14 +25,14 @@ class CommandEvent final : public Event {
+ 
+   static CommandEvent* Create(const AtomicString& type,
+                               const AtomicString& command,
+-                              Element* invoker) {
+-    return MakeGarbageCollected<CommandEvent>(type, command, invoker);
++                              Element* source) {
++    return MakeGarbageCollected<CommandEvent>(type, command, source);
+   }
+ 
+   CommandEvent(const AtomicString& type, const CommandEventInit* initializer);
+   CommandEvent(const AtomicString& type,
+                const String& command,
+-               Element* invoker);
++               Element* source);
+ 
+   const AtomicString& InterfaceName() const override {
+     return event_interface_names::kCommandEvent;
+@@ -42,11 +42,11 @@ class CommandEvent final : public Event {
+ 
+   const String& command() const { return command_; }
+ 
+-  Element* invoker() const;
+-  void SetInvoker(Element* invoker) { invoker_ = invoker; }
++  Element* source() const;
++  void SetSource(Element* source) { source_ = source; }
+ 
+  private:
+-  Member<Element> invoker_;
++  Member<Element> source_;
+   String command_;
+ };
+ 

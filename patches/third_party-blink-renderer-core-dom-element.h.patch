@@ -1,8 +1,35 @@
 diff --git a/third_party/blink/renderer/core/dom/element.h b/third_party/blink/renderer/core/dom/element.h
-index c9ec614fa75af13d0173c25b4b5ee8131fa273fb..1bcdd763b19928285adf722bed96bb271fb26a62 100644
+index c9ec614fa75af13d0173c25b4b5ee8131fa273fb..f6ee584c57e43f03b3296abd79613b374e2aa443 100644
 --- a/third_party/blink/renderer/core/dom/element.h
 +++ b/third_party/blink/renderer/core/dom/element.h
-@@ -1061,12 +1061,15 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -202,6 +202,7 @@ enum class CommandEventType {
+   // Dialog
+   kShowModal,
+   kClose,
++  kRequestClose,
+   // Details
+   kToggle,
+   kOpen,
+@@ -216,7 +217,7 @@ enum class CommandEventType {
+   kRequestFullscreen,
+   kExitFullscreen,
+   // Audio/Video
+-  kPlaypause,
++  kPlayPause,
+   kPause,
+   kPlay,
+   kToggleMuted,
+@@ -979,7 +980,8 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+ 
+   // This allows customization of how Invoker Commands are handled, per element.
+   // See: crbug.com/1490919, https://open-ui.org/components/invokers.explainer/
+-  virtual bool IsValidCommand(HTMLElement& invoker, CommandEventType command) {
++  virtual bool IsValidBuiltinCommand(HTMLElement& invoker,
++                                     CommandEventType command) {
+     return false;
+   }
+   virtual bool HandleCommandInternal(HTMLElement& invoker,
+@@ -1061,12 +1063,15 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    // usage of this ID is limited to pseudo elements generated for a
    // ViewTransition. See
    // third_party/blink/renderer/core/view_transition/README.md
@@ -18,7 +45,7 @@ index c9ec614fa75af13d0173c25b4b5ee8131fa273fb..1bcdd763b19928285adf722bed96bb27
  
    // Retrieve the ComputedStyle (if any) corresponding to the provided
    // PseudoId from cache, calculating the ComputedStyle on-demand if it's
-@@ -1352,11 +1355,18 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1352,11 +1357,18 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    std::optional<LayoutUnit> LastRememberedInlineSize() const;
    std::optional<LayoutUnit> LastRememberedBlockSize() const;
  
@@ -42,7 +69,7 @@ index c9ec614fa75af13d0173c25b4b5ee8131fa273fb..1bcdd763b19928285adf722bed96bb27
        PseudoId pseudo_id,
        const AtomicString& view_transition_name) const;
  
-@@ -1541,6 +1551,9 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1541,6 +1553,9 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    friend class AXObject;
    struct AffectedByPseudoStateChange;
  

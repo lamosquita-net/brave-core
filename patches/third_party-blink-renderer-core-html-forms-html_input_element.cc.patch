@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/forms/html_input_element.cc b/third_party/blink/renderer/core/html/forms/html_input_element.cc
-index ac38820c42cbab7ceb772f3a40eefc452836314f..e36e1998e6a06ed830714c389af1d25c7a9e8cca 100644
+index ac38820c42cbab7ceb772f3a40eefc452836314f..9c6612ffb61a7f08edbfd12e26e6ad0bef9f378d 100644
 --- a/third_party/blink/renderer/core/html/forms/html_input_element.cc
 +++ b/third_party/blink/renderer/core/html/forms/html_input_element.cc
 @@ -346,7 +346,7 @@ void HTMLInputElement::UpdateSelectionOnFocus(
@@ -28,14 +28,31 @@ index ac38820c42cbab7ceb772f3a40eefc452836314f..e36e1998e6a06ed830714c389af1d25c
  }
  
  FormControlType HTMLInputElement::FormControlType() const {
-@@ -2415,6 +2419,10 @@ void HTMLInputElement::showPicker(ExceptionState& exception_state) {
+@@ -2415,10 +2419,14 @@ void HTMLInputElement::showPicker(ExceptionState& exception_state) {
    input_type_view_->OpenPopupView();
  }
  
+-bool HTMLInputElement::IsValidCommand(HTMLElement& invoker,
+-                                      CommandEventType command) {
+-  bool parent_is_valid = HTMLElement::IsValidCommand(invoker, command);
+-  if (!RuntimeEnabledFeatures::HTMLInvokeActionsV2Enabled() ||
 +bool HTMLInputElement::IsPickerVisible() const {
 +  return input_type_view_->IsPickerVisible();
 +}
 +
- bool HTMLInputElement::IsValidCommand(HTMLElement& invoker,
-                                       CommandEventType command) {
-   bool parent_is_valid = HTMLElement::IsValidCommand(invoker, command);
++bool HTMLInputElement::IsValidBuiltinCommand(HTMLElement& invoker,
++                                             CommandEventType command) {
++  bool parent_is_valid = HTMLElement::IsValidBuiltinCommand(invoker, command);
++  if (!RuntimeEnabledFeatures::HTMLCommandActionsV2Enabled() ||
+       parent_is_valid) {
+     return parent_is_valid;
+   }
+@@ -2435,7 +2443,7 @@ bool HTMLInputElement::IsValidCommand(HTMLElement& invoker,
+ 
+ bool HTMLInputElement::HandleCommandInternal(HTMLElement& invoker,
+                                              CommandEventType command) {
+-  CHECK(IsValidCommand(invoker, command));
++  CHECK(IsValidBuiltinCommand(invoker, command));
+ 
+   if (HTMLElement::HandleCommandInternal(invoker, command)) {
+     return true;

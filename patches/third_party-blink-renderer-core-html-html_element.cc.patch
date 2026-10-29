@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/html_element.cc b/third_party/blink/renderer/core/html/html_element.cc
-index 59ba47318a79b8bde236add57f1207ca00bd0242..12087c9018b10e54408ee290768aa9b9003f7621 100644
+index 59ba47318a79b8bde236add57f1207ca00bd0242..c0b4f48ade23dad0550a01aee81e0998081d5517 100644
 --- a/third_party/blink/renderer/core/html/html_element.cc
 +++ b/third_party/blink/renderer/core/html/html_element.cc
 @@ -35,6 +35,9 @@
@@ -20,7 +20,16 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..12087c9018b10e54408ee290768aa9b9
  #include "third_party/blink/renderer/core/html/forms/html_listbox_element.h"
  #include "third_party/blink/renderer/core/html/forms/labels_node_list.h"
  #include "third_party/blink/renderer/core/html/forms/text_control_element.h"
-@@ -1243,6 +1247,9 @@ void HTMLElement::UpdatePopoverAttribute(const AtomicString& value) {
+@@ -472,6 +476,8 @@ AttributeTriggers* HTMLElement::TriggersForAttributeName(
+        nullptr},
+       {html_names::kOncloseAttr, kNoWebFeature, event_type_names::kClose,
+        nullptr},
++      {html_names::kOncommandAttr, kNoWebFeature, event_type_names::kCommand,
++       nullptr},
+       {html_names::kOncontentvisibilityautostatechangeAttr, kNoWebFeature,
+        event_type_names::kContentvisibilityautostatechange, nullptr},
+       {html_names::kOncontextlostAttr, kNoWebFeature,
+@@ -1243,6 +1249,9 @@ void HTMLElement::UpdatePopoverAttribute(const AtomicString& value) {
    }
    if (type == PopoverValueType::kNone) {
      if (HasPopoverAttribute()) {
@@ -30,7 +39,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..12087c9018b10e54408ee290768aa9b9
        // If the popover attribute is being removed, remove the PopoverData.
        RemovePopoverData();
      }
-@@ -1332,6 +1339,13 @@ bool HTMLElement::IsPopoverReady(PopoverTriggerAction action,
+@@ -1332,6 +1341,13 @@ bool HTMLElement::IsPopoverReady(PopoverTriggerAction action,
                            "value for the 'popover' attribute.");
      return false;
    }
@@ -44,7 +53,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..12087c9018b10e54408ee290768aa9b9
    if (action == PopoverTriggerAction::kShow &&
        GetPopoverData()->visibilityState() != PopoverVisibilityState::kHidden) {
      return false;
-@@ -1394,41 +1408,64 @@ void MarkPopoverInvokersDirty(const HTMLElement& popover) {
+@@ -1394,41 +1410,64 @@ void MarkPopoverInvokersDirty(const HTMLElement& popover) {
  }  // namespace
  
  bool HTMLElement::togglePopover(ExceptionState& exception_state) {
@@ -133,7 +142,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..12087c9018b10e54408ee290768aa9b9
  }
  
  void HTMLElement::ShowPopoverInternal(Element* invoker,
-@@ -1577,6 +1614,9 @@ void HTMLElement::ShowPopoverInternal(Element* invoker,
+@@ -1577,6 +1616,9 @@ void HTMLElement::ShowPopoverInternal(Element* invoker,
    // Make the popover match `:popover-open` and remove `display:none` styling:
    GetPopoverData()->setVisibilityState(PopoverVisibilityState::kShowing);
    GetPopoverData()->setInvoker(invoker);
@@ -143,7 +152,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..12087c9018b10e54408ee290768aa9b9
    PseudoStateChanged(CSSSelector::kPseudoPopoverOpen);
    CHECK(!original_document.AllOpenPopovers().Contains(this));
    original_document.AllOpenPopovers().insert(this);
-@@ -1737,7 +1777,10 @@ void HTMLElement::HideAllPopoversUntil(
+@@ -1737,7 +1779,10 @@ void HTMLElement::HideAllPopoversUntil(
  
    // Now check the auto stack.
    auto& auto_stack = document.PopoverAutoStack();
@@ -155,7 +164,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..12087c9018b10e54408ee290768aa9b9
    hide_stack_until(endpoint, auto_stack);
  }
  
-@@ -1921,7 +1964,7 @@ void HTMLElement::SetPopoverFocusOnShow() {
+@@ -1921,7 +1966,7 @@ void HTMLElement::SetPopoverFocusOnShow() {
        this, DocumentUpdateReason::kPopover);
  
    if (auto* dialog = DynamicTo<HTMLDialogElement>(this)) {
@@ -164,7 +173,18 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..12087c9018b10e54408ee290768aa9b9
        dialog->SetFocusForDialog();
      } else {
        HTMLDialogElement::SetFocusForDialogLegacy(dialog);
-@@ -2181,7 +2224,7 @@ const HTMLElement* FindTopmostRelatedPopover(
+@@ -2023,7 +2068,9 @@ const HTMLElement* NearestTargetPopoverForInvoker(
+         if (!form_element) {
+           return nullptr;
+         }
+-        auto* target_element = form_element->commandForElement();
++        auto* button_element = DynamicTo<HTMLButtonElement>(form_element);
++        auto* target_element =
++            button_element ? button_element->commandForElement() : nullptr;
+ 
+         return target_element
+                    ? DynamicTo<HTMLElement>(target_element)
+@@ -2181,7 +2228,7 @@ const HTMLElement* FindTopmostRelatedPopover(
  }  // namespace
  
  // static
@@ -173,7 +193,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..12087c9018b10e54408ee290768aa9b9
                                              const Node& target_node) {
    CHECK(event.isTrusted());
    auto& document = target_node.GetDocument();
-@@ -2189,51 +2232,33 @@ void HTMLElement::HandlePopoverLightDismiss(const Event& event,
+@@ -2189,51 +2236,33 @@ void HTMLElement::HandlePopoverLightDismiss(const Event& event,
      return;
    }
  
@@ -251,7 +271,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..12087c9018b10e54408ee290768aa9b9
      }
    }
  }
-@@ -2362,6 +2387,23 @@ HTMLSelectListElement* HTMLElement::popoverOwnerSelectListElement() const {
+@@ -2362,6 +2391,23 @@ HTMLSelectListElement* HTMLElement::popoverOwnerSelectListElement() const {
                            : nullptr;
  }
  
@@ -275,7 +295,43 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..12087c9018b10e54408ee290768aa9b9
  bool HTMLElement::DispatchFocusEvent(
      Element* old_focused_element,
      mojom::blink::FocusType type,
-@@ -3250,6 +3292,17 @@ bool HTMLElement::IsLabelable() const {
+@@ -2370,13 +2416,13 @@ bool HTMLElement::DispatchFocusEvent(
+                                      source_capabilities);
+ }
+ 
+-bool HTMLElement::IsValidCommand(HTMLElement& invoker,
+-                                 CommandEventType command) {
+-  return Element::IsValidCommand(invoker, command) ||
++bool HTMLElement::IsValidBuiltinCommand(HTMLElement& invoker,
++                                        CommandEventType command) {
++  return Element::IsValidBuiltinCommand(invoker, command) ||
+          command == CommandEventType::kTogglePopover ||
+          command == CommandEventType::kHidePopover ||
+          command == CommandEventType::kShowPopover ||
+-         (RuntimeEnabledFeatures::HTMLInvokeActionsV2Enabled() &&
++         (RuntimeEnabledFeatures::HTMLCommandActionsV2Enabled() &&
+           (command == CommandEventType::kToggleFullscreen ||
+            command == CommandEventType::kRequestFullscreen ||
+            command == CommandEventType::kExitFullscreen));
+@@ -2384,7 +2430,7 @@ bool HTMLElement::IsValidCommand(HTMLElement& invoker,
+ 
+ bool HTMLElement::HandleCommandInternal(HTMLElement& invoker,
+                                         CommandEventType command) {
+-  CHECK(IsValidCommand(invoker, command));
++  CHECK(IsValidBuiltinCommand(invoker, command));
+ 
+   if (Element::HandleCommandInternal(invoker, command)) {
+     return true;
+@@ -2458,7 +2504,7 @@ bool HTMLElement::HandleCommandInternal(HTMLElement& invoker,
+     }
+   }
+ 
+-  if (!RuntimeEnabledFeatures::HTMLInvokeActionsV2Enabled()) {
++  if (!RuntimeEnabledFeatures::HTMLCommandActionsV2Enabled()) {
+     return false;
+   }
+ 
+@@ -3250,6 +3296,17 @@ bool HTMLElement::IsLabelable() const {
    return IsFormAssociatedCustomElement();
  }
  
