@@ -1,8 +1,28 @@
 diff --git a/third_party/blink/renderer/core/offscreencanvas/offscreen_canvas.h b/third_party/blink/renderer/core/offscreencanvas/offscreen_canvas.h
-index c1a3c79aca64d769310169d83a00493482baf168..0e50ada89bfb2e620639e1e2de00efe76937e109 100644
+index c1a3c79aca64d769310169d83a00493482baf168..3dea9bd582de9dab98ef7af711f28f980c6ea2b8 100644
 --- a/third_party/blink/renderer/core/offscreencanvas/offscreen_canvas.h
 +++ b/third_party/blink/renderer/core/offscreencanvas/offscreen_canvas.h
-@@ -289,6 +289,8 @@ class CORE_EXPORT OffscreenCanvas final
+@@ -197,6 +197,11 @@ class CORE_EXPORT OffscreenCanvas final
+     restoring_gpu_context_ = restoring_gpu_context;
+   }
+ 
++  TextDirection GetTextDirection(const ComputedStyle*) override;
++  void SetTextDirection(TextDirection direction) {
++    text_direction_ = direction;
++  }
++
+   FontSelector* GetFontSelector() override;
+ 
+   void Trace(Visitor*) const override;
+@@ -262,6 +267,7 @@ class CORE_EXPORT OffscreenCanvas final
+   WeakMember<ExecutionContext> execution_context_;
+ 
+   DOMNodeId placeholder_canvas_id_ = kInvalidDOMNodeId;
++  std::optional<TextDirection> text_direction_;
+ 
+   bool disposing_ = false;
+   bool is_neutered_ = false;
+@@ -289,6 +295,8 @@ class CORE_EXPORT OffscreenCanvas final
    uint32_t sink_id_ = 0;
  
    bool restoring_gpu_context_ = false;

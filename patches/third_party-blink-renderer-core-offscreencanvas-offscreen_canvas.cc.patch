@@ -1,8 +1,21 @@
 diff --git a/third_party/blink/renderer/core/offscreencanvas/offscreen_canvas.cc b/third_party/blink/renderer/core/offscreencanvas/offscreen_canvas.cc
-index 8d8a3f7b2384cf51a6c6a81cbfd0f9623985c4dc..a9216c1a11408a1e496e60f515c8175def650b30 100644
+index 8d8a3f7b2384cf51a6c6a81cbfd0f9623985c4dc..0472be7a69dbe524796f1186b597e8de072c7ecd 100644
 --- a/third_party/blink/renderer/core/offscreencanvas/offscreen_canvas.cc
 +++ b/third_party/blink/renderer/core/offscreencanvas/offscreen_canvas.cc
-@@ -92,8 +92,7 @@ OffscreenCanvas* OffscreenCanvas::Create(ScriptState* script_state,
+@@ -61,6 +61,12 @@ OffscreenCanvas::OffscreenCanvas(ExecutionContext* context, gfx::Size size)
+   // robust here as well.
+   if (!context->IsContextDestroyed()) {
+     if (auto* window = DynamicTo<LocalDOMWindow>(context)) {
++      // Snapshot the text direction. For a offscreen transferred from
++      // an element this will be over-written by the value from the element.
++      if (window->document()->documentElement()) {
++        text_direction_ =
++            window->document()->documentElement()->CachedDirectionality();
++      }
+       // If this OffscreenCanvas is being created in the context of a
+       // cross-origin iframe, it should prefer to use the low-power GPU.
+       LocalFrame* frame = window->GetFrame();
+@@ -92,8 +98,7 @@ OffscreenCanvas* OffscreenCanvas::Create(ScriptState* script_state,
  }
  
  OffscreenCanvas::~OffscreenCanvas() {
@@ -12,7 +25,24 @@ index 8d8a3f7b2384cf51a6c6a81cbfd0f9623985c4dc..a9216c1a11408a1e496e60f515c8175d
  }
  
  void OffscreenCanvas::Commit(scoped_refptr<CanvasResource>&& canvas_resource,
-@@ -726,8 +725,7 @@ void OffscreenCanvas::UpdateMemoryUsage() {
+@@ -692,11 +697,15 @@ void OffscreenCanvas::CheckForGpuContextLost() {
+   }
+ }
+ 
++TextDirection OffscreenCanvas::GetTextDirection(const ComputedStyle*) {
++  return text_direction_.value_or(TextDirection::kLtr);
++}
++
+ FontSelector* OffscreenCanvas::GetFontSelector() {
+   if (auto* window = DynamicTo<LocalDOMWindow>(GetExecutionContext())) {
+     return window->document()->GetStyleEngine().GetFontSelector();
+   }
+-  // TODO(crbug.com/1334864): Temporary mitigation.  Remove the following
++  // TODO(crbug.com/40059901): Temporary mitigation.  Remove the following
+   // CHECK once a more comprehensive solution has been implemented.
+   CHECK(GetExecutionContext()->IsWorkerGlobalScope());
+   return To<WorkerGlobalScope>(GetExecutionContext())->GetFontSelector();
+@@ -726,8 +735,7 @@ void OffscreenCanvas::UpdateMemoryUsage() {
      // AdjustAmountOfExternalAllocatedMemory is safe, hence the
      // 'diposing_' condition in the DCHECK below.
      DCHECK(ThreadState::Current()->IsAllocationAllowed() || disposing_);

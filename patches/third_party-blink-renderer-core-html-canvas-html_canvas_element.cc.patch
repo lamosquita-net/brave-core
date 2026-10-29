@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc b/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc
-index 63c943727517aff4d0264a993dc30fc0e2bed7c9..b36da9df500d9d2491a319b593eded7e50b789e9 100644
+index 63c943727517aff4d0264a993dc30fc0e2bed7c9..2c3547d77c02fc25ac6966f16a50e4f7383d41cf 100644
 --- a/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc
 +++ b/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc
 @@ -242,8 +242,10 @@ HTMLCanvasElement::HTMLCanvasElement(Document& document)
@@ -23,7 +23,34 @@ index 63c943727517aff4d0264a993dc30fc0e2bed7c9..b36da9df500d9d2491a319b593eded7e
      String data_url = data_buffer->ToDataURL(encoding_mime_type, quality);
      base::TimeDelta elapsed_time = base::TimeTicks::Now() - start_time;
      float sqrt_pixels =
-@@ -1806,8 +1809,7 @@ void HTMLCanvasElement::UpdateMemoryUsage() {
+@@ -1738,6 +1741,26 @@ void HTMLCanvasElement::UnregisterContentsLayer(cc::Layer* layer) {
+   SetNeedsCompositingUpdate();
+ }
+ 
++TextDirection HTMLCanvasElement::GetTextDirection(const ComputedStyle* style) {
++  // In the absence of an explicit CSS direction property, the HTML dir
++  // attribute has been pushed as the default style direction. So we fallback
++  // to the HTML attribute if CSS has not provided a direction.
++  if (!style) {
++    GetDocument().UpdateStyleAndLayoutTreeForElement(
++        this, DocumentUpdateReason::kCanvas);
++    style = EnsureComputedStyle();
++  }
++  // Detached elements may still not have style.
++  if (style) {
++    return style->Direction();
++  }
++
++  // In the absence of style, use the element's dir attribute to resolve the
++  // direction. This value would have been pushed to the style had there been
++  // a style.
++  return CachedDirectionality();
++}
++
+ FontSelector* HTMLCanvasElement::GetFontSelector() {
+   return GetDocument().GetStyleEngine().GetFontSelector();
+ }
+@@ -1806,8 +1829,7 @@ void HTMLCanvasElement::UpdateMemoryUsage() {
      // AdjustAmountOfExternalAllocatedMemory is safe, hence the
      // 'diposing_' condition in the DCHECK below.
      DCHECK(ThreadState::Current()->IsAllocationAllowed() || disposing_);
