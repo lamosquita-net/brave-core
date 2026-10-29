@@ -1,0 +1,48 @@
+diff --git a/third_party/blink/renderer/platform/fonts/font_fallback_priority.h b/third_party/blink/renderer/platform/fonts/font_fallback_priority.h
+index ab31d9d3b4c766643f4596ade932393ef6150968..714c79fdeb214450c7904f32997c539bbd1313d6 100644
+--- a/third_party/blink/renderer/platform/fonts/font_fallback_priority.h
++++ b/third_party/blink/renderer/platform/fonts/font_fallback_priority.h
+@@ -15,14 +15,41 @@ enum class FontFallbackPriority {
+   // For regular non-symbols text,
+   // normal text fallback in FontFallbackIterator
+   kText,
+-  // For emoji in text presentaiton
++  // For emoji in text presentation
+   kEmojiText,
++  // For emoji in text presentation with variation selector 15
++  kEmojiTextWithVS,
+   // For emoji in emoji presentation
+   kEmojiEmoji,
++  // For emoji in emoji presentation with variation selector 16
++  kEmojiEmojiWithVS,
+   kInvalid
++
++  // When adding values, ensure `kFontFallbackPriorityBits` in
++  // `InlineItemSegment` is in sync.
+ };
+ 
+-bool IsNonTextFallbackPriority(FontFallbackPriority);
++inline bool IsNonTextFallbackPriority(FontFallbackPriority fallback_priority) {
++  return fallback_priority == FontFallbackPriority::kEmojiText ||
++         fallback_priority == FontFallbackPriority::kEmojiEmoji ||
++         fallback_priority == FontFallbackPriority::kEmojiTextWithVS ||
++         fallback_priority == FontFallbackPriority::kEmojiEmojiWithVS;
++}
++
++inline bool HasVSFallbackPriority(FontFallbackPriority fallback_priority) {
++  return fallback_priority == FontFallbackPriority::kEmojiTextWithVS ||
++         fallback_priority == FontFallbackPriority::kEmojiEmojiWithVS;
++}
++
++inline bool IsEmojiPresentationEmoji(FontFallbackPriority fallback_priority) {
++  return fallback_priority == FontFallbackPriority::kEmojiEmoji ||
++         fallback_priority == FontFallbackPriority::kEmojiEmojiWithVS;
++}
++
++inline bool IsTextPresentationEmoji(FontFallbackPriority fallback_priority) {
++  return fallback_priority == FontFallbackPriority::kEmojiText ||
++         fallback_priority == FontFallbackPriority::kEmojiTextWithVS;
++}
+ 
+ }  // namespace blink
+ 

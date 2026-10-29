@@ -73,6 +73,9 @@ async function applyPatches() {
     // FlyWeb level 131 (FS.17): ML-KEM and X25519MLKEM768 backported from
     // upstream BoringSSL.
     path.join('third_party', 'boringssl', 'src'),
+    // FlyWeb 2.4.0: emoji variation selectors (font-variant-emoji), from the
+    // emoji-segmenter of Chrome 131 (955936be).
+    path.join('third_party', 'emoji-segmenter', 'src'),
   ]
   const flywebPatchStatus = []
   for (const repo of flywebRepos) {

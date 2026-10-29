@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/runtime_enabled_features.json5 b/third_party/blink/renderer/platform/runtime_enabled_features.json5
-index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f2e899db110593f36d3e923685c8dd4feb89bc13 100644
+index 75e44e6b7cdd95c1e39b3759939ec1146232f255..69567555a2435ef7e7a139faee0ed130f7512893 100644
 --- a/third_party/blink/renderer/platform/runtime_enabled_features.json5
 +++ b/third_party/blink/renderer/platform/runtime_enabled_features.json5
 @@ -311,10 +311,18 @@
@@ -439,6 +439,20 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f2e899db110593f36d3e923685c8dd4f
      {
        name: "Fledge",
        status: "stable",
+@@ -2000,11 +2112,11 @@
+     },
+     {
+       name: "FontVariantEmoji",
+-      status: "test",
++      status: "stable",
+     },
+     {
+       name: "FontVariationSequences",
+-      status: "experimental",
++      status: "stable",
+     },
+     {
+       // TODO(crbug.com/1231644): This flag is being kept (even though the
 @@ -2054,6 +2166,10 @@
        name: "FormStateRestoreCallbackCallWithState",
        status: "stable",
@@ -933,7 +947,25 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f2e899db110593f36d3e923685c8dd4f
      {
        name: "SvgFilterUserSpaceViewportForNonSvg",
        status: "stable",
-@@ -4051,10 +4358,21 @@
+@@ -3951,6 +4258,17 @@
+       name: "SynthesizedKeyboardEventsForAccessibilityActions",
+       status: "experimental",
+     },
++    {
++      // This is used for emoji variation selectors support in system
++      // fallback matching. This is a workaround solution that helps to
++      // avoid incorrect font matching due to lack of cmap format 14
++      // subtable in system emoji fonts on various platforms.
++      // This should be eventually removed when the custom emoji font
++      // is shipped with Chrome or when system emoji fonts will have
++      // cmap format 14 subtable.
++      name: "SystemFallbackEmojiVSSupport",
++      status: "stable",
++    },
+     {
+       name: "SystemWakeLock",
+       status: "experimental",
+@@ -4051,10 +4369,21 @@
        name: "TextFragmentTapOpensContextMenu",
        status: {"Android": "stable"},
      },
@@ -955,7 +987,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f2e899db110593f36d3e923685c8dd4f
      {
        // New implementation of text-size-adjust that applies during style rather
        // than via the text autosizer. This also includes changes such as
-@@ -4062,7 +4380,7 @@
+@@ -4062,7 +4391,7 @@
        // disabling automatic size adjustments when non-auto values are used.
        // See: https://crbug.com/340389272.
        name: "TextSizeAdjustImprovements",
@@ -964,7 +996,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f2e899db110593f36d3e923685c8dd4f
      },
      {
        // Support for the timeline-scope property.
-@@ -4094,6 +4412,13 @@
+@@ -4094,6 +4423,13 @@
        public: true,
        status: "stable",
      },
@@ -978,7 +1010,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f2e899db110593f36d3e923685c8dd4f
      {
        name: "TopLevelTpcd",
        origin_trial_feature_name: "TopLevelTpcd",
-@@ -4143,6 +4468,10 @@
+@@ -4143,6 +4479,10 @@
        status: "experimental",
        base_feature: "none",
      },
@@ -989,7 +1021,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f2e899db110593f36d3e923685c8dd4f
      // This is conditionally set if the platform supports translation.
      {
        name: "TranslateService",
-@@ -4255,6 +4584,13 @@
+@@ -4255,6 +4595,13 @@
        base_feature: "none",
        public: true,
      },
@@ -1003,7 +1035,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f2e899db110593f36d3e923685c8dd4f
      {
        name: "UseUndoStepElementDispatchBeforeInput",
        status: "stable",
-@@ -4264,6 +4600,11 @@
+@@ -4264,6 +4611,11 @@
        base_feature: "none",
        public: true,
      },
@@ -1015,7 +1047,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f2e899db110593f36d3e923685c8dd4f
      {
        // Whether a video element should automatically play fullscreen unless
        // 'playsinline' is set.
-@@ -4420,8 +4761,7 @@
+@@ -4420,8 +4772,7 @@
      {
        name: "WebAssemblyJSStringBuiltins",
        origin_trial_feature_name: "WebAssemblyJSStringBuiltins",
@@ -1025,7 +1057,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f2e899db110593f36d3e923685c8dd4f
      },
      // WebAuth is disabled on Android versions prior to N (7.0) due to lack of
      // supporting APIs, see runtime_features.cc.
-@@ -4435,12 +4775,14 @@
+@@ -4435,12 +4786,14 @@
        name: "WebAuthAuthenticatorAttachment",
        status: "test",
      },
@@ -1041,7 +1073,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..f2e899db110593f36d3e923685c8dd4f
      },
      {
        name: "WebAuthenticationLargeBlobExtension",
-@@ -4506,6 +4848,10 @@
+@@ -4506,6 +4859,10 @@
      },
      {
        name: "WebCryptoCurve25519",
