@@ -1,0 +1,23 @@
+diff --git a/third_party/blink/renderer/core/page/page_popup_client.h b/third_party/blink/renderer/core/page/page_popup_client.h
+index 5d92ac7f84fd632983371f2aded8669a0898f3f8..3fb7b4c4ef1ac5574868358c71e79b322fcc6dc9 100644
+--- a/third_party/blink/renderer/core/page/page_popup_client.h
++++ b/third_party/blink/renderer/core/page/page_popup_client.h
+@@ -56,7 +56,7 @@ class CORE_EXPORT PagePopupClient {
+   // source is rendered in a PagePopup.
+   // The content HTML supports:
+   //  - No <select> popups
+-  //  - window.setValueAndClosePopup(number, string).
++  //  - window.setValueAndClosePopup(number, string, bool).
+   virtual void WriteDocument(SegmentedBuffer&) = 0;
+ 
+   virtual Element& OwnerElement() = 0;
+@@ -81,7 +81,8 @@ class CORE_EXPORT PagePopupClient {
+   // An implementation of this function should call
+   // ChromeClient::closePagePopup().
+   virtual void SetValueAndClosePopup(int num_value,
+-                                     const String& string_value) = 0;
++                                     const String& string_value,
++                                     const bool is_keyboard_event) = 0;
+ 
+   // This is called by the content HTML of a PagePopup.
+   virtual void SetValue(const String&) = 0;

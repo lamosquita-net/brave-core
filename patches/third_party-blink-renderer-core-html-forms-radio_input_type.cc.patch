@@ -1,0 +1,28 @@
+diff --git a/third_party/blink/renderer/core/html/forms/radio_input_type.cc b/third_party/blink/renderer/core/html/forms/radio_input_type.cc
+index 9cb2e6191824ee5de20148f6b8bed0f28724f905..0a567e8481a14d5d32f028409014ad6bffd5d6cb 100644
+--- a/third_party/blink/renderer/core/html/forms/radio_input_type.cc
++++ b/third_party/blink/renderer/core/html/forms/radio_input_type.cc
+@@ -44,8 +44,12 @@ using mojom::blink::FormControlType;
+ namespace {
+ 
+ HTMLInputElement* NextInputElement(const HTMLInputElement& element,
+-                                   const HTMLFormElement* stay_within,
++                                   const HTMLFormElement* form,
+                                    bool forward) {
++  const Node* stay_within =
++      form && RuntimeEnabledFeatures::RadioInputNextButtonInScopeEnabled()
++          ? form->GetListedElementsScope()
++          : form;
+   return forward ? Traversal<HTMLInputElement>::Next(element, stay_within)
+                  : Traversal<HTMLInputElement>::Previous(element, stay_within);
+ }
+@@ -274,9 +278,6 @@ bool RadioInputType::ShouldAppearIndeterminate() const {
+ HTMLInputElement* RadioInputType::NextRadioButtonInGroup(
+     HTMLInputElement* current,
+     bool forward) {
+-  // TODO(https://crbug.com/323953913): Staying within form() is
+-  // incorrect.  This code ignore input elements associated by |form|
+-  // content attribute.
+   // TODO(tkent): Comparing name() with == is incorrect.  It should be
+   // case-insensitive.
+   for (HTMLInputElement* input_element =

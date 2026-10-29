@@ -1,8 +1,31 @@
 diff --git a/third_party/blink/renderer/core/editing/serializers/styled_markup_serializer.cc b/third_party/blink/renderer/core/editing/serializers/styled_markup_serializer.cc
-index 5fa2e8a36b2f21f964d92097f555b800aaa4331f..56ac58954ebce242cb38bf9ad534df44bbcce185 100644
+index 5fa2e8a36b2f21f964d92097f555b800aaa4331f..b3ce16e752e5cce68b020098e4c9d5460273b850 100644
 --- a/third_party/blink/renderer/core/editing/serializers/styled_markup_serializer.cc
 +++ b/third_party/blink/renderer/core/editing/serializers/styled_markup_serializer.cc
-@@ -356,9 +356,12 @@ Node* StyledMarkupTraverser<Strategy>::Traverse(Node* start_node,
+@@ -30,6 +30,7 @@
+ #include "third_party/blink/renderer/core/editing/serializers/styled_markup_serializer.h"
+ 
+ #include "third_party/blink/renderer/core/css/css_property_value_set.h"
++#include "third_party/blink/renderer/core/css/style_engine.h"
+ #include "third_party/blink/renderer/core/dom/document.h"
+ #include "third_party/blink/renderer/core/dom/element.h"
+ #include "third_party/blink/renderer/core/dom/text.h"
+@@ -216,6 +217,14 @@ String StyledMarkupSerializer<Strategy>::CreateMarkup() {
+     }
+   }
+ 
++  // `UpdateViewportSize` ensures viewport_size_ is defined.
++  //  See comment on viewport_size_ in style_engine.h
++  //  without `UpdateViewportSize` call to `GetViewportsize()` while
++  //  resolving style causes crash  in other unit tests and resize scenarios
++  if (RuntimeEnabledFeatures::ResolveVarStylesOnCopyEnabled()) {
++    start_.GetDocument()->GetStyleEngine().UpdateViewportSize();
++  }
++
+   StyledMarkupTraverser<Strategy> traverser(&markup_accumulator, last_closed_);
+   Node* last_closed = traverser.Traverse(first_node, past_end);
+ 
+@@ -356,9 +365,12 @@ Node* StyledMarkupTraverser<Strategy>::Traverse(Node* start_node,
      } else {
        next = Strategy::Next(*n);
        if (IsEnclosingBlock(n) && CanHaveChildrenForEditing(n) &&

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_cascade.cc b/third_party/blink/renderer/core/css/resolver/style_cascade.cc
-index bdb4709b5da753411687e8bcfe2d5cf183382cfd..6ce3f8a437463070eda7c560af5780b4fcd95e97 100644
+index bdb4709b5da753411687e8bcfe2d5cf183382cfd..e6c95283bb25d4613f2f3dad259cd3b96c788ef2 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_cascade.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_cascade.cc
 @@ -10,6 +10,7 @@
@@ -375,7 +375,17 @@ index bdb4709b5da753411687e8bcfe2d5cf183382cfd..6ce3f8a437463070eda7c560af5780b4
      if (const auto* parsed = Parse(property, stream2, context)) {
        return parsed;
      }
-@@ -1245,7 +1191,7 @@ const CSSValue* StyleCascade::ResolvePendingSubstitution(
+@@ -1226,9 +1172,7 @@ const CSSValue* StyleCascade::ResolvePendingSubstitution(
+   DCHECK(!resolver.IsLocked(property));
+   CascadeResolver::AutoLock lock(property, resolver);
+ 
+-  CascadePriority priority = map_.At(property.GetCSSPropertyName());
+   DCHECK_NE(property.PropertyID(), CSSPropertyID::kVariable);
+-  DCHECK_NE(priority.GetOrigin(), CascadeOrigin::kNone);
+ 
+   MarkHasVariableReference(property);
+ 
+@@ -1245,7 +1189,7 @@ const CSSValue* StyleCascade::ResolvePendingSubstitution(
  
      CSSTokenizer tokenizer(shorthand_data->OriginalText());
      CSSParserTokenStream stream(tokenizer);
@@ -384,7 +394,7 @@ index bdb4709b5da753411687e8bcfe2d5cf183382cfd..6ce3f8a437463070eda7c560af5780b4
                             *GetParserContext(*shorthand_value),
                             FunctionContext{}, sequence)) {
        return cssvalue::CSSUnsetValue::Create();
-@@ -1351,7 +1297,7 @@ const CSSValue* StyleCascade::ResolveFlipRevert(const CSSProperty& property,
+@@ -1351,7 +1295,7 @@ const CSSValue* StyleCascade::ResolveFlipRevert(const CSSProperty& property,
    // Note: the value is transformed *from* the property we're reverting *to*.
    const CSSValue* flipped = TryValueFlips::FlipValue(
        /* from_property */ to_property.PropertyID(), unflipped,
@@ -393,7 +403,7 @@ index bdb4709b5da753411687e8bcfe2d5cf183382cfd..6ce3f8a437463070eda7c560af5780b4
    return Resolve(property, *flipped, priority, origin, resolver);
  }
  
-@@ -1413,8 +1359,8 @@ CSSVariableData* StyleCascade::ResolveVariableData(
+@@ -1413,8 +1357,8 @@ CSSVariableData* StyleCascade::ResolveVariableData(
  
    CSSTokenizer tokenizer(data->OriginalText());
    CSSParserTokenStream stream(tokenizer);
@@ -404,7 +414,7 @@ index bdb4709b5da753411687e8bcfe2d5cf183382cfd..6ce3f8a437463070eda7c560af5780b4
      return nullptr;
    }
  
-@@ -1423,7 +1369,6 @@ CSSVariableData* StyleCascade::ResolveVariableData(
+@@ -1423,7 +1367,6 @@ CSSVariableData* StyleCascade::ResolveVariableData(
  
  bool StyleCascade::ResolveTokensInto(CSSParserTokenStream& stream,
                                       CascadeResolver& resolver,
@@ -412,7 +422,7 @@ index bdb4709b5da753411687e8bcfe2d5cf183382cfd..6ce3f8a437463070eda7c560af5780b4
                                       const CSSParserContext& context,
                                       const FunctionContext& function_context,
                                       TokenSequence& out) {
-@@ -1435,31 +1380,27 @@ bool StyleCascade::ResolveTokensInto(CSSParserTokenStream& stream,
+@@ -1435,31 +1378,27 @@ bool StyleCascade::ResolveTokensInto(CSSParserTokenStream& stream,
        break;
      } else if (token.FunctionId() == CSSValueID::kVar) {
        CSSParserTokenStream::BlockGuard guard(stream);
@@ -451,7 +461,7 @@ index bdb4709b5da753411687e8bcfe2d5cf183382cfd..6ce3f8a437463070eda7c560af5780b4
      } else {
        if (token.GetBlockType() == CSSParserToken::kBlockStart) {
          ++nesting_level;
-@@ -1479,7 +1420,8 @@ bool StyleCascade::ResolveTokensInto(CSSParserTokenStream& stream,
+@@ -1479,7 +1418,8 @@ bool StyleCascade::ResolveTokensInto(CSSParserTokenStream& stream,
        // token after it and any trailing comments will be skipped.
        // This is fine, because trailing comments (sans whitespace)
        // should be skipped anyway.
@@ -461,7 +471,7 @@ index bdb4709b5da753411687e8bcfe2d5cf183382cfd..6ce3f8a437463070eda7c560af5780b4
      }
    }
    return success;
-@@ -1487,7 +1429,6 @@ bool StyleCascade::ResolveTokensInto(CSSParserTokenStream& stream,
+@@ -1487,7 +1427,6 @@ bool StyleCascade::ResolveTokensInto(CSSParserTokenStream& stream,
  
  bool StyleCascade::ResolveVarInto(CSSParserTokenStream& stream,
                                    CascadeResolver& resolver,
@@ -469,7 +479,7 @@ index bdb4709b5da753411687e8bcfe2d5cf183382cfd..6ce3f8a437463070eda7c560af5780b4
                                    const CSSParserContext& context,
                                    TokenSequence& out) {
    CustomProperty property(ConsumeVariableName(stream), state_.GetDocument());
-@@ -1530,19 +1471,19 @@ bool StyleCascade::ResolveVarInto(CSSParserTokenStream& stream,
+@@ -1530,19 +1469,19 @@ bool StyleCascade::ResolveVarInto(CSSParserTokenStream& stream,
      stream.ConsumeWhitespace();
  
      TokenSequence fallback;
@@ -495,7 +505,7 @@ index bdb4709b5da753411687e8bcfe2d5cf183382cfd..6ce3f8a437463070eda7c560af5780b4
      }
    }
  
-@@ -1550,13 +1491,13 @@ bool StyleCascade::ResolveVarInto(CSSParserTokenStream& stream,
+@@ -1550,13 +1489,13 @@ bool StyleCascade::ResolveVarInto(CSSParserTokenStream& stream,
      return false;
    }
  
@@ -511,7 +521,7 @@ index bdb4709b5da753411687e8bcfe2d5cf183382cfd..6ce3f8a437463070eda7c560af5780b4
                                         const CSSParserContext& context,
                                         const FunctionContext& function_context,
                                         TokenSequence& out) {
-@@ -1622,7 +1563,7 @@ bool StyleCascade::ResolveFunctionInto(StringView function_name,
+@@ -1622,7 +1561,7 @@ bool StyleCascade::ResolveFunctionInto(StringView function_name,
    // Urggg
    CSSTokenizer tokenizer(ret_value->CssText());
    CSSParserTokenStream ret_value_stream(tokenizer);
@@ -520,7 +530,7 @@ index bdb4709b5da753411687e8bcfe2d5cf183382cfd..6ce3f8a437463070eda7c560af5780b4
                             FunctionContext{}, out);
  }
  
-@@ -1648,13 +1589,13 @@ const CSSValue* StyleCascade::ResolveFunctionExpression(
+@@ -1648,13 +1587,13 @@ const CSSValue* StyleCascade::ResolveFunctionExpression(
      static const char kCalcStart[] = "calc(";
      resolved_expr.Append(
          CSSParserToken(kFunctionToken, kCalcToken, CSSParserToken::kBlockStart),
@@ -537,7 +547,7 @@ index bdb4709b5da753411687e8bcfe2d5cf183382cfd..6ce3f8a437463070eda7c560af5780b4
      return nullptr;
    }
  
-@@ -1662,13 +1603,11 @@ const CSSValue* StyleCascade::ResolveFunctionExpression(
+@@ -1662,13 +1601,11 @@ const CSSValue* StyleCascade::ResolveFunctionExpression(
      static const char kCalcEnd[] = ")";
      resolved_expr.Append(
          CSSParserToken(kRightParenthesisToken, CSSParserToken::kBlockEnd),
@@ -554,7 +564,7 @@ index bdb4709b5da753411687e8bcfe2d5cf183382cfd..6ce3f8a437463070eda7c560af5780b4
    if (!value) {
      return nullptr;
    }
-@@ -1681,7 +1620,6 @@ const CSSValue* StyleCascade::ResolveFunctionExpression(
+@@ -1681,7 +1618,6 @@ const CSSValue* StyleCascade::ResolveFunctionExpression(
  
  bool StyleCascade::ResolveEnvInto(CSSParserTokenStream& stream,
                                    CascadeResolver& resolver,
@@ -562,7 +572,7 @@ index bdb4709b5da753411687e8bcfe2d5cf183382cfd..6ce3f8a437463070eda7c560af5780b4
                                    const CSSParserContext& context,
                                    TokenSequence& out) {
    AtomicString variable_name = ConsumeVariableName(stream);
-@@ -1704,18 +1642,17 @@ bool StyleCascade::ResolveEnvInto(CSSParserTokenStream& stream,
+@@ -1704,18 +1640,17 @@ bool StyleCascade::ResolveEnvInto(CSSParserTokenStream& stream,
  
    if (!data) {
      if (ConsumeComma(stream)) {
@@ -584,7 +594,7 @@ index bdb4709b5da753411687e8bcfe2d5cf183382cfd..6ce3f8a437463070eda7c560af5780b4
                                    const CSSParserContext& context,
                                    const FunctionContext& function_context,
                                    TokenSequence& out) {
-@@ -1730,48 +1667,76 @@ bool StyleCascade::ResolveArgInto(CSSParserTokenStream& stream,
+@@ -1730,48 +1665,76 @@ bool StyleCascade::ResolveArgInto(CSSParserTokenStream& stream,
  
    CSSTokenizer tokenizer(it->value->CssText());
    CSSParserTokenStream arg_value_stream(tokenizer);
@@ -684,7 +694,7 @@ index bdb4709b5da753411687e8bcfe2d5cf183382cfd..6ce3f8a437463070eda7c560af5780b4
      return true;
    }
  
-@@ -1836,10 +1801,7 @@ bool StyleCascade::HasLineHeightDependency(const CustomProperty& property,
+@@ -1836,10 +1799,7 @@ bool StyleCascade::HasLineHeightDependency(const CustomProperty& property,
  }
  
  bool StyleCascade::ValidateFallback(const CustomProperty& property,
@@ -696,7 +706,7 @@ index bdb4709b5da753411687e8bcfe2d5cf183382cfd..6ce3f8a437463070eda7c560af5780b4
    if (!property.IsRegistered()) {
      return true;
    }
-@@ -1884,8 +1846,7 @@ const CSSProperty& StyleCascade::ResolveSurrogate(const CSSProperty& property) {
+@@ -1884,8 +1844,7 @@ const CSSProperty& StyleCascade::ResolveSurrogate(const CSSProperty& property) {
    // currently a flag to distinguish such surrogates from e.g. css-logical
    // properties.
    depends_on_cascade_affecting_property_ = true;
@@ -706,7 +716,7 @@ index bdb4709b5da753411687e8bcfe2d5cf183382cfd..6ce3f8a437463070eda7c560af5780b4
    DCHECK(original);
    return *original;
  }
-@@ -1900,75 +1861,4 @@ void StyleCascade::MaybeUseCountRevert(const CSSValue& value) {
+@@ -1900,75 +1859,4 @@ void StyleCascade::MaybeUseCountRevert(const CSSValue& value) {
    }
  }
  

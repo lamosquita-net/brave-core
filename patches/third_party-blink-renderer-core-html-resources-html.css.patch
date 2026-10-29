@@ -1,8 +1,112 @@
 diff --git a/third_party/blink/renderer/core/html/resources/html.css b/third_party/blink/renderer/core/html/resources/html.css
-index 53c4b85564e80f2daeb97cdc9720e740921920c2..e966ee47dd5139ae1538083b6d14809959b94a90 100644
+index 53c4b85564e80f2daeb97cdc9720e740921920c2..5ede04bbfbefb76aca7be8e6c7a057416e939b6c 100644
 --- a/third_party/blink/renderer/core/html/resources/html.css
 +++ b/third_party/blink/renderer/core/html/resources/html.css
-@@ -1059,7 +1059,8 @@ output {
+@@ -328,8 +328,10 @@ ul, menu, dir {
+     list-style-type: disc;
+     margin-block-start: 1__qem;
+     margin-block-end: 1em;
+-    margin-inline-start: 0;
+-    margin-inline-end: 0;
++    @supports not blink-feature(CorrectStylesForLists) {
++        margin-inline-start: 0;
++        margin-inline-end: 0;
++    }
+     padding-inline-start: 40px
+ }
+ 
+@@ -338,22 +340,60 @@ ol {
+     list-style-type: decimal;
+     margin-block-start: 1__qem;
+     margin-block-end: 1em;
+-    margin-inline-start: 0;
+-    margin-inline-end: 0;
++    @supports not blink-feature(CorrectStylesForLists) {
++        margin-inline-start: 0;
++        margin-inline-end: 0;
++    }
+     padding-inline-start: 40px
+ }
+ 
+ li {
+     display: list-item;
++    /* TODO(crbug.com/40774317, crbug.com/40787216): We should use
++       text-align: match-parent once it is supported. */
+     text-align: -webkit-match-parent;
+ }
+ 
+-ul ul, ol ul {
+-    list-style-type: circle
++@supports not blink-feature(CorrectStylesForLists) {
++    ul ul, ol ul {
++        list-style-type: circle
++    }
++
++    ol ol ul, ol ul ul, ul ol ul, ul ul ul {
++        list-style-type: square
++    }
++
++    ol ul, ul ol, ul ul, ol ol {
++        margin-block-start: 0;
++        margin-block-end: 0
++    }
+ }
+ 
+-ol ol ul, ol ul ul, ul ol ul, ul ul ul {
+-    list-style-type: square
++@supports blink-feature(CorrectStylesForLists) {
++    :is(dir, dl, menu, ol, ul) dir,
++    :is(dir, dl, menu, ol, ul) dl,
++    :is(dir, dl, menu, ol, ul) menu,
++    :is(dir, dl, menu, ol, ul) ol,
++    :is(dir, dl, menu, ol, ul) ul {
++        margin-block-start: 0;
++        margin-block-end: 0;
++    }
++
++    :is(dir, menu, ol, ul) dir,
++    :is(dir, menu, ol, ul) menu,
++    :is(dir, menu, ol, ul) ul {
++        list-style-type: circle
++    }
++
++    :is(dir, menu, ol, ul) :is(dir, menu, ol, ul) dir,
++    :is(dir, menu, ol, ul) :is(dir, menu, ol, ul) menu,
++    :is(dir, menu, ol, ul) :is(dir, menu, ol, ul) ul {
++        list-style-type: square
++    }
++
++    /* TODO(crbug.com/40774317, crbug.com/354025385): We should add rule
++       ol, ul, menu { counter-reset: list-item; }
++       once it is supported. */
+ }
+ 
+ dd {
+@@ -365,19 +405,16 @@ dl {
+     display: block;
+     margin-block-start: 1__qem;
+     margin-block-end: 1em;
+-    margin-inline-start: 0;
+-    margin-inline-end: 0;
++    @supports not blink-feature(CorrectStylesForLists) {
++        margin-inline-start: 0;
++        margin-inline-end: 0;
++    }
+ }
+ 
+ dt {
+     display: block
+ }
+ 
+-ol ul, ul ol, ul ul, ol ol {
+-    margin-block-start: 0;
+-    margin-block-end: 0
+-}
+-
+ /* form elements */
+ 
+ form {
+@@ -1059,7 +1096,8 @@ output {
  
  /* meter */
  
@@ -12,7 +116,7 @@ index 53c4b85564e80f2daeb97cdc9720e740921920c2..e966ee47dd5139ae1538083b6d148099
      appearance: auto;
      box-sizing: border-box;
      display: inline-block;
-@@ -1067,28 +1068,28 @@ meter {
+@@ -1067,28 +1105,28 @@ meter {
      inline-size: 5em;
      vertical-align: -0.2em;
      -webkit-user-modify: read-only !important;
@@ -49,7 +153,7 @@ index 53c4b85564e80f2daeb97cdc9720e740921920c2..e966ee47dd5139ae1538083b6d148099
      block-size: 100%;
      inline-size: 100%;
      -webkit-user-modify: read-only !important;
-@@ -1101,27 +1102,103 @@ meter::-webkit-meter-bar {
+@@ -1101,27 +1139,103 @@ meter::-webkit-meter-bar {
      align-self: unsafe center;
      position: absolute;
      overflow: hidden;
@@ -65,20 +169,20 @@ index 53c4b85564e80f2daeb97cdc9720e740921920c2..e966ee47dd5139ae1538083b6d148099
 -}
 +    background: light-dark(#107c10, #74b374);
 +  }
++
++  meter::-webkit-meter-suboptimum-value {
++    block-size: 100%;
++    -webkit-user-modify: read-only !important;
++    box-sizing: border-box;
++    background: light-dark(#ffb900, #f2c812);
++  }
  
 -meter::-webkit-meter-suboptimum-value {
-+  meter::-webkit-meter-suboptimum-value {
++  meter::-webkit-meter-even-less-good-value {
      block-size: 100%;
      -webkit-user-modify: read-only !important;
      box-sizing: border-box;
 -    background: light-dark(#ffb900, #f2c812)
-+    background: light-dark(#ffb900, #f2c812);
-+  }
-+
-+  meter::-webkit-meter-even-less-good-value {
-+    block-size: 100%;
-+    -webkit-user-modify: read-only !important;
-+    box-sizing: border-box;
 +    background: light-dark(#d83b01, #e98f6d);
 +  }
  }
@@ -98,7 +202,7 @@ index 53c4b85564e80f2daeb97cdc9720e740921920c2..e966ee47dd5139ae1538083b6d148099
 +  meter::-webkit-meter-inner-element {
 +    -webkit-user-modify: read-only !important;
 +    appearance: inherit;
-+    block-size: 100%;
+     block-size: 100%;
 +    box-sizing: inherit;
 +    display: grid;
 +    grid-template-rows: 1fr [line1] 2fr [line2] 1fr;
@@ -107,11 +211,12 @@ index 53c4b85564e80f2daeb97cdc9720e740921920c2..e966ee47dd5139ae1538083b6d148099
 +  }
 +
 +  meter::-webkit-meter-bar {
-+    -webkit-user-modify: read-only !important;
+     -webkit-user-modify: read-only !important;
 +    align-self: unsafe center;
 +    background: linear-gradient(to bottom, #ddd, #eee 20%, #ccc 45%, #ccc 55%, #ddd);
-     block-size: 100%;
-+    box-sizing: border-box;
++    block-size: 100%;
+     box-sizing: border-box;
+-    background: light-dark(#d83b01, #e98f6d)
 +    grid-row-end: line2;
 +    grid-row-start: line1;
 +    inline-size: 100%;
@@ -126,11 +231,10 @@ index 53c4b85564e80f2daeb97cdc9720e740921920c2..e966ee47dd5139ae1538083b6d148099
 +  }
 +
 +  meter::-webkit-meter-optimum-value {
-     -webkit-user-modify: read-only !important;
++    -webkit-user-modify: read-only !important;
 +    background: linear-gradient(to bottom, #ad7, #cea 20%, #7a3 45%, #7a3 55%, #ad7);
 +    block-size: 100%;
-     box-sizing: border-box;
--    background: light-dark(#d83b01, #e98f6d)
++    box-sizing: border-box;
 +  }
 +
 +  meter::-webkit-meter-optimum-value:-internal-shadow-host-has-non-auto-appearance {
@@ -161,3 +265,17 @@ index 53c4b85564e80f2daeb97cdc9720e740921920c2..e966ee47dd5139ae1538083b6d148099
  }
  
  /* progress */
+@@ -1169,7 +1283,12 @@ abbr[title], acronym[title] {
+ }
+ 
+ strong, b {
+-    font-weight: bold
++    @supports blink-feature(StrongBolder) {
++      font-weight: bolder;
++    }
++    @supports not blink-feature(StrongBolder) {
++     font-weight: bold;
++    }
+ }
+ 
+ i, cite, em, var, address, dfn {

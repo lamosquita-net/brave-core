@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/forms/color_chooser_popup_ui_controller.cc b/third_party/blink/renderer/core/html/forms/color_chooser_popup_ui_controller.cc
-index 9b9e90de0afa7e71c2718019d9b4d4ba9f9248b5..31e9be8415d74943e3b61ea3cf6004e1a8d2c8da 100644
+index 9b9e90de0afa7e71c2718019d9b4d4ba9f9248b5..e6725d831e3d18b440da62a605a068a5f438334a 100644
 --- a/third_party/blink/renderer/core/html/forms/color_chooser_popup_ui_controller.cc
 +++ b/third_party/blink/renderer/core/html/forms/color_chooser_popup_ui_controller.cc
 @@ -82,6 +82,10 @@ AXObject* ColorChooserPopupUIController::RootAXObject(Element* popup_owner) {
@@ -13,3 +13,13 @@ index 9b9e90de0afa7e71c2718019d9b4d4ba9f9248b5..31e9be8415d74943e3b61ea3cf6004e1
  void ColorChooserPopupUIController::WriteDocument(SegmentedBuffer& data) {
    if (client_->ShouldShowSuggestions()) {
      WriteColorSuggestionPickerDocument(data);
+@@ -198,7 +202,8 @@ Locale& ColorChooserPopupUIController::GetLocale() {
+ 
+ void ColorChooserPopupUIController::SetValueAndClosePopup(
+     int num_value,
+-    const String& string_value) {
++    const String& string_value,
++    const bool is_keyboard_event) {
+   DCHECK(popup_);
+   DCHECK(client_);
+   if (num_value == kColorPickerPopupActionSetValue)

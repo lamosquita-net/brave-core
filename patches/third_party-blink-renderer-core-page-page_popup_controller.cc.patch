@@ -1,0 +1,20 @@
+diff --git a/third_party/blink/renderer/core/page/page_popup_controller.cc b/third_party/blink/renderer/core/page/page_popup_controller.cc
+index 4e883678a4c4b6d9f6f59cdb4e8a4486df06bddd..50aea62d3f3623c92528a137b2c32a0b98da7951 100644
+--- a/third_party/blink/renderer/core/page/page_popup_controller.cc
++++ b/third_party/blink/renderer/core/page/page_popup_controller.cc
+@@ -56,9 +56,12 @@ PagePopupController::PagePopupController(Page& page,
+ }
+ 
+ void PagePopupController::setValueAndClosePopup(int num_value,
+-                                                const String& string_value) {
+-  if (popup_client_)
+-    popup_client_->SetValueAndClosePopup(num_value, string_value);
++                                                const String& string_value,
++                                                const bool is_keyboard_event) {
++  if (popup_client_) {
++    popup_client_->SetValueAndClosePopup(num_value, string_value,
++                                         is_keyboard_event);
++  }
+ }
+ 
+ void PagePopupController::setValue(const String& value) {
