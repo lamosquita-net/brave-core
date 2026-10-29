@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/html_element.cc b/third_party/blink/renderer/core/html/html_element.cc
-index 59ba47318a79b8bde236add57f1207ca00bd0242..0c5e89ce791554b3d40c3dd231403bb400aed1c0 100644
+index 59ba47318a79b8bde236add57f1207ca00bd0242..2613259a62c920b050f39ef8aba8736b39e8f020 100644
 --- a/third_party/blink/renderer/core/html/html_element.cc
 +++ b/third_party/blink/renderer/core/html/html_element.cc
 @@ -35,6 +35,9 @@
@@ -258,7 +258,80 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..0c5e89ce791554b3d40c3dd231403bb4
    PseudoStateChanged(CSSSelector::kPseudoPopoverOpen);
    CHECK(!original_document.AllOpenPopovers().Contains(this));
    original_document.AllOpenPopovers().insert(this);
-@@ -1737,7 +1767,10 @@ void HTMLElement::HideAllPopoversUntil(
+@@ -1591,40 +1621,50 @@ void HTMLElement::ShowPopoverInternal(Element* invoker,
+ 
+   SetPopoverFocusOnShow();
+ 
++  // Focus/blur event handlers could have changed the popover, so we continue
++  // checking that `popoverOpen()` below before accessing popover things.
++
+   // Store the element to focus when this popover closes.
+-  if (should_restore_focus && HasPopoverAttribute()) {
++  if (should_restore_focus && HasPopoverAttribute() && popoverOpen()) {
+     GetPopoverData()->setPreviouslyFocusedElement(originally_focused_element);
+   }
+ 
+   // Queue the "opening" toggle event.
+   String old_state = "closed";
+-  ToggleEvent* after_event;
+-  if (GetPopoverData()->hasPendingToggleEventTask()) {
+-    // There's already a queued 'toggle' event. Cancel it and fire a new one
+-    // keeping the original value for old_state.
+-    old_state =
+-        GetPopoverData()->pendingToggleEventStartedClosed() ? "closed" : "open";
+-    GetPopoverData()->cancelPendingToggleEventTask();
+-  } else {
+-    GetPopoverData()->setPendingToggleEventStartedClosed(true);
++  if (popoverOpen()) {
++    if (GetPopoverData()->hasPendingToggleEventTask()) {
++      // There's already a queued 'toggle' event. Cancel it and fire a new one
++      // keeping the original value for old_state.
++      old_state = GetPopoverData()->pendingToggleEventStartedClosed() ? "closed"
++                                                                      : "open";
++      GetPopoverData()->cancelPendingToggleEventTask();
++    } else {
++      GetPopoverData()->setPendingToggleEventStartedClosed(true);
++    }
+   }
+-  after_event = ToggleEvent::Create(event_type_names::kToggle,
+-                                    Event::Cancelable::kNo, old_state,
+-                                    /*new_state*/ "open");
++  ToggleEvent* after_event = ToggleEvent::Create(
++      event_type_names::kToggle, Event::Cancelable::kNo, old_state,
++      /*new_state*/ "open");
+   CHECK_EQ(after_event->newState(), "open");
+   CHECK_EQ(after_event->oldState(), old_state);
+   CHECK(!after_event->bubbles());
+   CHECK(!after_event->cancelable());
+   after_event->SetTarget(this);
+-  GetPopoverData()->setPendingToggleEventTask(PostCancellableTask(
+-      *original_document.GetTaskRunner(TaskType::kDOMManipulation), FROM_HERE,
+-      WTF::BindOnce(
+-          [](HTMLElement* element, ToggleEvent* event) {
+-            CHECK(element);
+-            CHECK(event);
+-            element->DispatchEvent(*event);
+-          },
+-          WrapPersistent(this), WrapPersistent(after_event))));
++  auto task_runner =
++      original_document.GetTaskRunner(TaskType::kDOMManipulation);
++  auto callback = WTF::BindOnce(
++      [](HTMLElement* element, ToggleEvent* event) {
++        CHECK(element);
++        CHECK(event);
++        element->DispatchEvent(*event);
++      },
++      WrapPersistent(this), WrapPersistent(after_event));
++  if (popoverOpen()) {
++    GetPopoverData()->setPendingToggleEventTask(
++        PostCancellableTask(*task_runner, FROM_HERE, std::move(callback)));
++  } else {
++    task_runner->PostTask(FROM_HERE, std::move(callback));
++  }
+ }
+ 
+ // static
+@@ -1737,7 +1777,10 @@ void HTMLElement::HideAllPopoversUntil(
  
    // Now check the auto stack.
    auto& auto_stack = document.PopoverAutoStack();
@@ -270,7 +343,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..0c5e89ce791554b3d40c3dd231403bb4
    hide_stack_until(endpoint, auto_stack);
  }
  
-@@ -1908,9 +1941,13 @@ void HTMLElement::HidePopoverInternal(
+@@ -1908,9 +1951,13 @@ void HTMLElement::HidePopoverInternal(
      }
    }
  
@@ -287,7 +360,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..0c5e89ce791554b3d40c3dd231403bb4
    }
  }
  
-@@ -1921,7 +1958,7 @@ void HTMLElement::SetPopoverFocusOnShow() {
+@@ -1921,7 +1968,7 @@ void HTMLElement::SetPopoverFocusOnShow() {
        this, DocumentUpdateReason::kPopover);
  
    if (auto* dialog = DynamicTo<HTMLDialogElement>(this)) {
@@ -296,7 +369,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..0c5e89ce791554b3d40c3dd231403bb4
        dialog->SetFocusForDialog();
      } else {
        HTMLDialogElement::SetFocusForDialogLegacy(dialog);
-@@ -2023,7 +2060,9 @@ const HTMLElement* NearestTargetPopoverForInvoker(
+@@ -2023,7 +2070,9 @@ const HTMLElement* NearestTargetPopoverForInvoker(
          if (!form_element) {
            return nullptr;
          }
@@ -307,7 +380,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..0c5e89ce791554b3d40c3dd231403bb4
  
          return target_element
                     ? DynamicTo<HTMLElement>(target_element)
-@@ -2181,7 +2220,7 @@ const HTMLElement* FindTopmostRelatedPopover(
+@@ -2181,7 +2230,7 @@ const HTMLElement* FindTopmostRelatedPopover(
  }  // namespace
  
  // static
@@ -316,7 +389,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..0c5e89ce791554b3d40c3dd231403bb4
                                              const Node& target_node) {
    CHECK(event.isTrusted());
    auto& document = target_node.GetDocument();
-@@ -2189,51 +2228,33 @@ void HTMLElement::HandlePopoverLightDismiss(const Event& event,
+@@ -2189,51 +2238,33 @@ void HTMLElement::HandlePopoverLightDismiss(const Event& event,
      return;
    }
  
@@ -394,7 +467,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..0c5e89ce791554b3d40c3dd231403bb4
      }
    }
  }
-@@ -2362,6 +2383,23 @@ HTMLSelectListElement* HTMLElement::popoverOwnerSelectListElement() const {
+@@ -2362,6 +2393,23 @@ HTMLSelectListElement* HTMLElement::popoverOwnerSelectListElement() const {
                            : nullptr;
  }
  
@@ -418,7 +491,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..0c5e89ce791554b3d40c3dd231403bb4
  bool HTMLElement::DispatchFocusEvent(
      Element* old_focused_element,
      mojom::blink::FocusType type,
-@@ -2370,13 +2408,13 @@ bool HTMLElement::DispatchFocusEvent(
+@@ -2370,13 +2418,13 @@ bool HTMLElement::DispatchFocusEvent(
                                       source_capabilities);
  }
  
@@ -436,7 +509,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..0c5e89ce791554b3d40c3dd231403bb4
            (command == CommandEventType::kToggleFullscreen ||
             command == CommandEventType::kRequestFullscreen ||
             command == CommandEventType::kExitFullscreen));
-@@ -2384,7 +2422,7 @@ bool HTMLElement::IsValidCommand(HTMLElement& invoker,
+@@ -2384,7 +2432,7 @@ bool HTMLElement::IsValidCommand(HTMLElement& invoker,
  
  bool HTMLElement::HandleCommandInternal(HTMLElement& invoker,
                                          CommandEventType command) {
@@ -445,7 +518,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..0c5e89ce791554b3d40c3dd231403bb4
  
    if (Element::HandleCommandInternal(invoker, command)) {
      return true;
-@@ -2458,7 +2496,7 @@ bool HTMLElement::HandleCommandInternal(HTMLElement& invoker,
+@@ -2458,7 +2506,7 @@ bool HTMLElement::HandleCommandInternal(HTMLElement& invoker,
      }
    }
  
@@ -454,7 +527,7 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..0c5e89ce791554b3d40c3dd231403bb4
      return false;
    }
  
-@@ -3250,6 +3288,17 @@ bool HTMLElement::IsLabelable() const {
+@@ -3250,6 +3298,17 @@ bool HTMLElement::IsLabelable() const {
    return IsFormAssociatedCustomElement();
  }
  
