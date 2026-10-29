@@ -1,9 +1,9 @@
 diff --git a/third_party/blink/renderer/core/css/css_shape_value.cc b/third_party/blink/renderer/core/css/css_shape_value.cc
 new file mode 100644
-index 0000000000000000000000000000000000000000..6a7b9dc2d7614a8fc777dee3ab9acbce8a8df78f
+index 0000000000000000000000000000000000000000..55881082ef3e9704c3e6fc42ebc152127abdcbdd
 --- /dev/null
 +++ b/third_party/blink/renderer/core/css/css_shape_value.cc
-@@ -0,0 +1,177 @@
+@@ -0,0 +1,178 @@
 +// Copyright 2024 The Chromium Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -32,13 +32,14 @@ index 0000000000000000000000000000000000000000..6a7b9dc2d7614a8fc777dee3ab9acbce
 +  if ((is_relative && control_point.first != CSSValueID::kStart) ||
 +      (!is_relative && control_point.first != CSSValueID::kOrigin)) {
 +    builder.Append(" from ");
-+    builder.Append(GetCSSValueNameAs<StringView>(control_point.first));
++    // FlyWeb: the 128 has getValueName() instead of GetCSSValueNameAs<>().
++    builder.Append(getValueName(control_point.first));
 +  }
 +}
 +}  // namespace
 +String CSSShapeCommand::CSSText() const {
 +  if (type_ == Type::kPathSegClosePath) {
-+    return GetCSSValueNameAs<String>(CSSValueID::kClose);
++    return String(getValueName(CSSValueID::kClose));
 +  }
 +
 +  StringBuilder builder;

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/editing/editing_style.cc b/third_party/blink/renderer/core/editing/editing_style.cc
-index 9f232abff869bb8ba88ecd2bdffe56766efb2362..ee1781a6a7030d8d1c894843d8bd70279a075735 100644
+index 9f232abff869bb8ba88ecd2bdffe56766efb2362..4ef6878b0fb4acec8cb299c8f2d2fa8b34932d09 100644
 --- a/third_party/blink/renderer/core/editing/editing_style.cc
 +++ b/third_party/blink/renderer/core/editing/editing_style.cc
 @@ -68,6 +68,7 @@
@@ -48,7 +48,7 @@ index 9f232abff869bb8ba88ecd2bdffe56766efb2362..ee1781a6a7030d8d1c894843d8bd7027
  }
  
  static void RemovePropertiesInStyle(
-@@ -1962,6 +1973,46 @@ static bool FontWeightNeedsResolving(const CSSValue* font_weight) {
+@@ -1962,6 +1973,50 @@ static bool FontWeightNeedsResolving(const CSSValue* font_weight) {
    return value == CSSValueID::kLighter || value == CSSValueID::kBolder;
  }
  
@@ -72,7 +72,11 @@ index 9f232abff869bb8ba88ecd2bdffe56766efb2362..ee1781a6a7030d8d1c894843d8bd7027
 +          mutable_style_->CssParserMode());
 +
 +  // Resolve each property in the current mutable_style_.
-+  for (const CSSPropertyValue& property : mutable_style_->Properties()) {
++  // FlyWeb: the 128 has no MutableCSSPropertyValueSet::Properties(); walk by
++  // index with PropertyAt(), which gives the same Name/Value/IsImportant.
++  for (unsigned i = 0; i < mutable_style_->PropertyCount(); ++i) {
++    CSSPropertyValueSet::PropertyReference property =
++        mutable_style_->PropertyAt(i);
 +    const CSSValue& value = property.Value();
 +
 +    if (value.IsUnparsedDeclaration() || value.IsPendingSubstitutionValue()) {
