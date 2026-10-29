@@ -1,0 +1,15 @@
+diff --git a/src/compiler/frame-states.h b/src/compiler/frame-states.h
+index db1e99f82b4fe2dd74707bf457249fc60fc10396..4e6cb016ed2d10f4a73896552f242d99f0b2ff59 100644
+--- a/src/compiler/frame-states.h
++++ b/src/compiler/frame-states.h
+@@ -108,6 +108,10 @@ class FrameStateFunctionInfo {
+         bytecode_array_(bytecode_array) {
+   }
+ 
++  // Prevent slicing when copying through base-class references.
++  FrameStateFunctionInfo(const FrameStateFunctionInfo&) = delete;
++  FrameStateFunctionInfo& operator=(const FrameStateFunctionInfo&) = delete;
++
+   int local_count() const { return local_count_; }
+   uint16_t parameter_count() const { return parameter_count_; }
+   uint16_t max_arguments() const { return max_arguments_; }

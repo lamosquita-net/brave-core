@@ -1,8 +1,32 @@
 diff --git a/src/compiler/js-operator.h b/src/compiler/js-operator.h
-index 554704840e74f8460821a0465b0613f3a3d4a77d..ff5ad157b0bf2e1c09254b6bb0bf0b6b28e6b937 100644
+index 554704840e74f8460821a0465b0613f3a3d4a77d..0494df337bb3096b02b63defd0c63af950da3e5b 100644
 --- a/src/compiler/js-operator.h
 +++ b/src/compiler/js-operator.h
-@@ -399,13 +399,16 @@ CreateFunctionContextParameters const& CreateFunctionContextParametersOf(
+@@ -342,15 +342,19 @@ class ContextAccess final {
+  public:
+   ContextAccess(size_t depth, size_t index, bool immutable);
+ 
+-  size_t depth() const { return depth_; }
++  size_t depth() const { return DepthField::decode(immutable_and_depth_); }
+   size_t index() const { return index_; }
+-  bool immutable() const { return immutable_; }
++  bool immutable() const {
++    return ImmutableField::decode(immutable_and_depth_);
++  }
+ 
+  private:
++  using ImmutableField = base::BitField<bool, 0, 1>;
++  using DepthField = ImmutableField::Next<uint32_t, 31>;
++
+   // For space reasons, we keep this tightly packed, otherwise we could just use
+   // a simple int/int/bool POD.
+-  const bool immutable_;
+-  const uint16_t depth_;
++  uint32_t immutable_and_depth_;
+   const uint32_t index_;
+ };
+ 
+@@ -399,13 +403,16 @@ CreateFunctionContextParameters const& CreateFunctionContextParametersOf(
  // Defines parameters for JSDefineNamedOwnProperty operator.
  class DefineNamedOwnPropertyParameters final {
   public:
@@ -21,7 +45,7 @@ index 554704840e74f8460821a0465b0613f3a3d4a77d..ff5ad157b0bf2e1c09254b6bb0bf0b6b
    const NameRef name_;
    FeedbackSource const feedback_;
  
-@@ -1042,7 +1045,7 @@ class V8_EXPORT_PRIVATE JSOperatorBuilder final
+@@ -1042,7 +1049,7 @@ class V8_EXPORT_PRIVATE JSOperatorBuilder final
    const Operator* SetNamedProperty(LanguageMode language_mode, NameRef name,
                                     FeedbackSource const& feedback);
  

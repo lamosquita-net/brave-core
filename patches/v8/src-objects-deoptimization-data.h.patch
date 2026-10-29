@@ -1,0 +1,16 @@
+diff --git a/src/objects/deoptimization-data.h b/src/objects/deoptimization-data.h
+index 20c9d01e52ad63d3dd8f3f386ddebe034f6e2bee..b5d86b965f44009a19838ca3959a14c6bbc5aa4b 100644
+--- a/src/objects/deoptimization-data.h
++++ b/src/objects/deoptimization-data.h
+@@ -88,7 +88,10 @@ class DeoptimizationLiteral {
+     return literal;
+   }
+ 
+-  IndirectHandle<Object> object() const { return object_; }
++  bool IsObject(IndirectHandle<Object> object) const {
++    return kind_ == DeoptimizationLiteralKind::kObject &&
++           object_.equals(object);
++  }
+ 
+   bool operator==(const DeoptimizationLiteral& other) const {
+     if (kind_ != other.kind_) {
