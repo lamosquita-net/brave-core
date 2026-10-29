@@ -1,0 +1,14 @@
+diff --git a/src/builtins/builtins-regexp-gen.cc b/src/builtins/builtins-regexp-gen.cc
+index e68c51a05dd3bf9029dbf9d9579d4668bc1c8ab6..70cf496dd9b07c8bbc47bd84655bc7e563688022 100644
+--- a/src/builtins/builtins-regexp-gen.cc
++++ b/src/builtins/builtins-regexp-gen.cc
+@@ -1575,7 +1575,8 @@ TNode<Number> RegExpBuiltinsAssembler::AdvanceStringIndex(
+     // Must be in Smi range on the fast path. We control the value of {index}
+     // on all call-sites and can never exceed the length of the string.
+     static_assert(String::kMaxLength + 2 < Smi::kMaxValue);
+-    CSA_DCHECK(this, TaggedIsPositiveSmi(index_plus_one));
++    // TODO(532595489): Hard CHECK for now as a quick fix.
++    CSA_CHECK(this, TaggedIsPositiveSmi(index_plus_one));
+   }
+ 
+   Label if_isunicode(this), out(this);

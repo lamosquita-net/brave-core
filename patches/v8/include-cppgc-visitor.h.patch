@@ -1,0 +1,15 @@
+diff --git a/include/cppgc/visitor.h b/include/cppgc/visitor.h
+index 1d6b39a14fd16af143ded6592934e8db1e42811f..014685282845340fea27af5ed4b13bde3d3b3c96 100644
+--- a/include/cppgc/visitor.h
++++ b/include/cppgc/visitor.h
+@@ -198,8 +198,8 @@ class V8_EXPORT Visitor {
+   template <typename K, typename V>
+   void Trace(const EphemeronPair<K, V>& ephemeron_pair) {
+     TraceEphemeron(ephemeron_pair.key, &ephemeron_pair.value);
+-    RegisterWeakCallbackMethod<EphemeronPair<K, V>,
+-                               &EphemeronPair<K, V>::ClearValueIfKeyIsDead>(
++    RegisterWeakCallbackMethod<
++        EphemeronPair<K, V>, &EphemeronPair<K, V>::ClearKeyAndValueIfKeyIsDead>(
+         &ephemeron_pair);
+   }
+ 

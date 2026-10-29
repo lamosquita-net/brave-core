@@ -1,0 +1,18 @@
+diff --git a/src/objects/map-inl.h b/src/objects/map-inl.h
+index 3689a1d6a466a176257671f5247cc41d8dcee4f8..7258d57d5ba65b2fcf3dcad2eccb36c4a39179bc 100644
+--- a/src/objects/map-inl.h
++++ b/src/objects/map-inl.h
+@@ -1009,9 +1009,12 @@ void Map::InobjectSlackTrackingStep(Isolate* isolate) {
+   DCHECK(IsUndefined(GetBackPointer()));
+   if (!this->IsInobjectSlackTrackingInProgress()) return;
+   int counter = construction_counter();
+-  set_construction_counter(counter - 1);
+   if (counter == kSlackTrackingCounterEnd) {
++    // The last decrement must happen under the map_updater_access mutex,
++    // together with the instance size changes.
+     MapUpdater::CompleteInobjectSlackTracking(isolate, *this);
++  } else {
++    set_construction_counter(counter - 1);
+   }
+ }
+ 

@@ -1,7 +1,31 @@
 diff --git a/src/execution/messages.cc b/src/execution/messages.cc
-index f4fbd33dd43d2ab4158006e25c25c3402ee7cf81..258abc72bc34590b4fafe9c65365faa97e6a748a 100644
+index f4fbd33dd43d2ab4158006e25c25c3402ee7cf81..fb2325187241953493dbb5c2b0d6e53c48175b7a 100644
 --- a/src/execution/messages.cc
 +++ b/src/execution/messages.cc
+@@ -690,8 +690,8 @@ MaybeHandle<String> ErrorUtils::ToString(Isolate* isolate,
+     // is accessed the first time.
+     //
+     // If |recv| was not constructed with %Error%, use the "message" property.
+-    LookupIterator it(isolate, LookupIterator::PROTOTYPE_CHAIN_SKIP_INTERCEPTOR,
+-                      recv, isolate->factory()->error_message_symbol());
++    LookupIterator it(isolate, recv, isolate->factory()->error_message_symbol(),
++                      LookupIterator::OWN_SKIP_INTERCEPTOR);
+     Handle<Object> result = JSReceiver::GetDataProperty(&it);
+     if (it.IsFound() && IsUndefined(*result, isolate)) {
+       msg = msg_default;
+@@ -1131,9 +1131,9 @@ bool ErrorUtils::HasErrorStackSymbolOwnProperty(Isolate* isolate,
+ // static
+ ErrorUtils::StackPropertyLookupResult ErrorUtils::GetErrorStackProperty(
+     Isolate* isolate, DirectHandle<JSReceiver> maybe_error_object) {
+-  LookupIterator it(isolate, LookupIterator::PROTOTYPE_CHAIN_SKIP_INTERCEPTOR,
+-                    maybe_error_object,
+-                    isolate->factory()->error_stack_symbol());
++  LookupIterator it(isolate, maybe_error_object,
++                    isolate->factory()->error_stack_symbol(),
++                    LookupIterator::OWN_SKIP_INTERCEPTOR);
+   Handle<Object> result = JSReceiver::GetDataProperty(&it);
+ 
+   if (!it.IsFound()) {
 @@ -1148,6 +1148,13 @@ MaybeDirectHandle<Object> ErrorUtils::GetFormattedStack(
      Isolate* isolate, DirectHandle<JSObject> maybe_error_object) {
    TRACE_EVENT0(TRACE_DISABLED_BY_DEFAULT("v8.stack_trace"), __func__);

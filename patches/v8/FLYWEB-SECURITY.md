@@ -1,189 +1,51 @@
-# FlyWeb: V8 13.5.212.10 (Chrome 135) with the M132-LTS backports and the Maglev debt
+# FlyWeb: FS.36 (rule 17 of level 135), post-135 V8 fixes on 13.5.212.10
 
-Level 135 (MOTOR-31, 29-10-2026). `patches/v8` rebased from 13.4.114.21 (4f282ae4) to 13.5.212.10 (e2591684) with
-`v8re.sh`: 97 of 104 apply after a context-only rebase.
-- **Dropped (upstream in 13.5):** `src/base/platform/mutex.cc` (13.5 removes `SpinningMutex` and its
-  `OS_UNFAIR_LOCK_ADAPTIVE_SPIN`, the 2.3.0 SIGILL on Mojave; `base::Mutex` is `absl::Mutex` now) and the
-  `regress-402646504.js` Maglev test.
-- **By hand:** the stack clash bailout (ea2f03dfff) goes back to its upstream shape: 13.5 moved
-  `Pipeline::AllocateRegisters` from `turboshaft/pipelines.h` to `pipelines.cc`; it returns `bool` again and its
-  callers in `pipelines.{h,cc}` and `compiler/pipeline.cc` bail out. `maglev-graph-builder.cc`: the
-  `DefineNamedOwnProperty` constness fix (6937df3c) keeps upstream main's unconditional deopt for every mode but
-  `kStoreInLiteral` (13.5's constant check for `kStore` goes, as in main); the `MaxInliningId` guard moves to
-  `CanInlineCall` (13.5's name); f7bf2ff1fa (allocation folding level 1) is upstream. `maglev-ir.h`: the
-  `VirtualObject` index `SBXCHECK`s and public `kMaxInputs`.
-- **New:** d73530cfd9 (crbug 403345130, TurboFan reading a TypedArray length through a prototype) because 13.5
-  turns `typed_array_length_loading` on by default (rule 19); without its new heap string, which would change
-  `static-roots.h`: the TypeError names `length`. Its test comes along.
-- Maglev stays off (`maglev`, `maglev_untagged_phis` and `turbolev` keep 13.4's values). Cache epoch 23.
-- API: no new `CHECK` Blink can reach (the same-arity `CHECK_NE` of `NewWithCFunctionOverloads` is as in 13.4);
-  `FunctionCallbackInfo::Holder()` is gone (gin and Blink 128 only use the `PropertyCallbackInfo` one). No new
-  macOS 10.15+ API in `src/base`, `src/libplatform` or `src/heap/base`; nothing that needs AVX without a runtime
-  check. simdutf, fast_float, highway and fp16 as in 13.4.
+SEGURIDAD-PORTES-13, 29-10-2026 (brave-core `seg/fs36-v8` on `nube/motor-135` ebd8c17f). Branch 13.5 has nothing after
+.10 but a whitespace change (.11). Reviewed: every merge on the 13.6–15.8 branch heads (13.8 = M138-LTS, 14.4 = M144-LTS,
+15.0 = M150-LTS; 690 merges, 340 originals), each `git apply`-checked and read against 13.5 + `patches/v8`. Main-only
+fixes are out, except the two prerequisites below. **70 fixes ported** (one brave-core commit per area):
 
-# FlyWeb: V8 13.4.114.21 (Chrome 134) with the M132-LTS backports and the Maglev debt
+- **TurboFan/Turboshaft:** 8378f79d34 (413800519), 1926a0d990 (558734727), 036e5e8f69 (495273999), ec136c5038 (559780376), 057dcc408d (560536731,562243479), be842e713c (546670199), 0cc5dcf121 (522125255), 006d1038ec (430265109,419503126), a10d231ead (577327383), 07398289d9 (497404188), af9e5c36d8 (569659194), dd0f8f20b6 (560233248), a90e80ff48 (527385397).
+- **Builtins, runtime, objects, API:** 50a6c0c69c (552342545), de11d56041 (532595489), 615d074ab2 (502830119), 6f81b563fa (545767601), 383120c3ac (535000102), e7f117bdb2 (473851441), 3d445698df (562038980), 5a4d7a78db (568894515), 26b9a1e79b (574351803), 9cfa2ca3fe (531319201,512450179), a9509c5e81 (487746373), 0197c35257 (436140742), 5d91cd2961 (513289241), d49d5148c9 (469878492), fbf1d9e1fd (554236352), ebf22f9a92 (429703123), e48ce362eb (428451956).
+- **IC:** 62af07e961 (450328966), 7ce954c3ae (571853016), 243b68bea4 (566091009), 1ea0d1c531 (509312809).
+- **Parser and interpreter:** 2a21c75603 (526380803), 58ab897331 (545412300), 9180d91eb6 (511228272), 4615af981a (563716534), 82455926cf (460166688), b371b4f8ba (449760249), 1f5fbf6824 (450618029), b80a7539b7 (536271629), d7d46a7be (421933369), 89ba284081 (506499280), b07860d015 (485267831), 119e64dc34 (490642836), c29f676270 (490642836), d643369e98 (568831100).
+- **RegExp and JSON:** ddf1b5dac0 (451663011), ce4bc856e0 (486084137), 50eba5e6c2 (452296415).
+- **Wasm and asm.js:** daf86cef6b (408253898), c0a41078e6 (485152421), 1eda9300e2 (433533359), c250ecfd8b (427918760), c82024befb (430960844), c3ea7757b1 (538378084), 11a31ce52c (574223268), a970eed899 (422313191), df3874776c (421403261), dec3cffe63 (487213150), 00250c2d2c (541448581,540430406), dec5f6bdb (490980546), d8801666fd (560536735).
+- **Heap, cppgc, code cache:** 5a113ffdf2 (508082779), e19035b316 (575143870), 7fd662da8a (541837151), 81b2acf3bb (541837151), 7e9d59456d (425703809).
+- **Maglev (still off):** dd7e9b5ef6 (550360762).
 
-Engine level 134 (MOTOR-29, 28-10-2026) uses V8 **13.4.114.21** (4f282ae4, head of branch-heads/13.4, the V8 of
-134.0.6998.129–.166). 13.4 is not an LTS either: of the 12 M132-LTS fixes carried for 13.3, **11 are still missing**
-and stay as patches; 45d40ca20 (Maglev `ClearCurrentAllocationBlock`) is upstream as 2b4812d50 and its hunk is gone. The
-stack clash fix (ea2f03dfff) moves along unchanged.
+By hand (13.5 differs): af9e5c36d8 also gives the `CreateJSGeneratorObject` intrinsic a FrameState (`linkage.cc`, as
+upstream since a1fa446ef); 89ba284081 needs d7d46a7be (main-only `kTooManyEvals`: without it the 20-bit eval index
+wraps and the bytecode generator writes a ScopeInfo into another function's `Script::infos()` slot); d8801666fd needs
+dec5f6bdb (main-only, `WasmLiftoffSetupFrame::CallingPC()`; its regression test segfaulted on 13.5); 0197c35257 only
+its `CopyElementsFromTypedArray` part; 5d91cd2961 keeps the status check next to the new flag; 7e9d59456d only the
+flag hash (13.5 has no `FlushDenormalsScope`); ddf1b5dac0 keeps upstream's symmetric bound; 4615af981a, c82024befb,
+dec3cffe63, 7fd662da8a/81b2acf3bb, 26b9a1e79b, 7ce954c3ae, 243b68bea4, 1ea0d1c531, a9509c5e81, 50eba5e6c2, 3d445698df,
+5a4d7a78db, e19035b316, 5a113ffdf2 (the old `ClearValueIfKeyIsDead` stays), d643369e98, 00250c2d2c (only the lookup) and
+dd7e9b5ef6 rewritten for 13.5's code. Four upstream tests dropped (they need d8/runtime helpers 13.5 lacks).
 
-The 79 patches of level 133 were moved with `v8re.sh` (three-way merge). Gone because 13.4 has them: `js-to-wasm.tq`,
-`wasm-to-js.tq`, `microtask-queue.{cc,h}`. By hand: `compiler/pipeline.cc` (13.4 dropped TurboFan's instruction
-selection path, so only Turboshaft's `AllocateRegisters` reports failure), `maglev-graph-builder.{cc,h}` (13.4's
-visitors return `ReduceResult`, so the `DefineNamedOwnPropertyInLiteral` helper does too) and `js-duration-format.cc`
-(`MaybeDirectHandle`).
+**Maglev debt (still off):** dd7e9b5ef6 now needs its code (13.5 copies the inlinee's for-in state back; its test,
+already here, failed with `--maglev`). b04613a419 still test-only (no empty node type in 13.5). The rest of the Maglev
+merges fix code 13.5 does not have (KNA processor, range analysis, hole tracking, Turbolev, later reductions) or are
+already in 13.5 (4940f770b4); ffc18dfff9 (unreachable catch blocks; changes bytecode) and e321b042d4 (retain constant
+TypedArray buffers, defense in depth) are left for when Maglev is turned on. Untagged-phi fixes: not needed
+(`maglev_untagged_phis` off).
 
-**Maglev debt (SEGURIDAD-PORTES-11, FS.34; brave-core `seg/maglev-134` 127ec285b, `FlyWeb/v8-maglev-134/`):** the 20
-patches of that series applied on top, except its 0014, which is ea2f03dfff and was already here (all its lines present).
-16 Maglev fixes, 2 sandbox hardenings, 2 regression tests without a code change and FlyWeb's unparked destruction of
-failed background jobs; the table is in that README. af7d1483a5 changes bytecode. **Maglev stays off**: turning it on
-is the `maglev` line of `src-flags-flag-definitions.h.patch` (with `maglev_untagged_phis` off), after the measurements
-on the 5,1 and 6,1.
+**Not ported:** not in 13.5 (363347672a, c69bace374, fba00590cb, 56501aaabb, ddee520d8c, 8118921e3f, 7fd7eec11e,
+55dcff77d1, a81b3eb9de, 95fa109f9b, 12cc665311/c30fe0dc44/f29abbb8e0, 6fa92847a9/71a8c6aed7, c2eab5ee18, 746dc18862,
+fast-call deopt 268068728c/32a6c8d4eb/8a46942d6b, d4dbd1dc45, 3d3e6a10b5, c4a1766500, CVE-2026-85046's e0562d87ad);
+already in 13.5 (279d280296) or in `patches/v8` (19c0bf473e, 04d57e1a86, 55cc1df038, bb38f8914d); ARM/32-bit only;
+DevTools/inspector only (4ae4e70abd and the inspector merges). **Left as risks:** 9d9ccafe3b (code cache source hash
+before the background merge), 17f229f3ea + e1ac1f641a (reparse of `Function()` top-level; needs `Script::CompilationKind`),
+93fdd4a2bc and 3a6df68901 (Wasm async compile race, NativeModule cache key), and the sandbox/JSPI hardenings
+(9c0c301876, dc31719c94, d4374eaec8, bb8724fd6c, 493ea0b937, 1a4a2b03b1, JSPI ones; JSPI is off in 13.5).
 
-**Rule 17 review (SEGURIDAD-PORTES-12, FS.35):** with `maglev_untagged_phis` off, dead context-slot stores
-(`MarkNodeDead`) were never swept: only the phi representation selector removed `Dead` nodes, and it does not run.
-`AnyUseMarkingProcessor` now removes them, as upstream main does (`src-maglev-maglev-post-hoc-optimizations-processors.h`);
-without it, Maglev code with a redundant context store hits `UNREACHABLE` (`mjsunit/compiler/try-finally-deopt` under
-`stress_maglev`), a renderer crash once Maglev is on. Cloud `d8` 13.4 with all these patches: mjsunit 7560/7561 (the
-usual `maglev/extras-cped`), with `maglev`+`stress_maglev` 15050/15050, OSR tests 126/126.
-
-102 patches, `git apply --check` clean on 4f282ae4. **Cache epoch 22.** V8 13.4 needs `//third_party/simdutf` (6.0.2,
-copied from Chromium 134 as brave-core patches) and fast_float cb1d42aa (`FlyWeb/fast_float-revision`). Not compiled
-yet. Review: SEGURIDAD-PORTES (rule 17).
+**Cache epoch 24.** Cloud `d8` 13.5 with all 239 `patches/v8` (Linux x64, `dcheck_always_on`, no Intl): mjsunit
+7656/7657, with `--always-osr` 7656/7657 (both: the usual `maglev/extras-cped`), `maglev`+`stress_maglev` 15238/15238,
+`maglev/*`+`compiler/*` with `--maglev --stress-maglev` (untagged phis off) 1288/1288. The upstream regression tests
+of the ported fixes pass (four dropped, see above).
 
 ---
 
-# FlyWeb: V8 13.3.415.23 (Chrome 133) with the M132-LTS backports it lacks
 
-Engine level 133 (FM.49, MOTOR-27, 28-10-2026) uses V8 **13.3.415.23** (93c6f108, head of branch-heads/13.3, the V8 of
-133.0.6943.141). Branch 13.3 froze on 22-01-2025, while 13.2.152.56 (M132-LTS, level 132) has merges up to 01-10-2025:
-`git rev-list 93c6f108..5eabe0e1` leaves **12 security fixes that 13.3 lacks**, carried here as patches:
 
-| v8 commit | crbug | Files | How |
-|---|---|---|---|
-| 3bdf541ae | 443765373 | `codegen/handler-table.cc` | as is |
-| 19301b95f | 445380761 | arm64 instruction selector | as is |
-| 725b6a21c | 427600180 | `bigint/fromstring.cc` | as is |
-| 385d92ca6 | 425583995 | arm64 macro assembler | as is |
-| 42421010c | 430344952 | `parsing/preparser.cc` | as is |
-| f39628536 | 427663123 | `interpreter/bytecode-generator.cc` | as is (with FlyWeb's patch) |
-| 5a7e02c2e | 412149700 | 10 Intl `js-*.cc` | as is |
-| 80600881c | 420636529 | `store-store-elimination-reducer-inl.h` | as is |
-| 2b2a58c26 | 420637585 | `compiler/representation-change.cc` | as is |
-| 45d40ca20 | 398065918 | `maglev/maglev-graph-builder.cc` | as is (Maglev stays off until level 134) |
-| 20c1b8e9b | 420697404 | `objects/js-regexp.cc` | by hand: 13.3 checks `IsOneByteRepresentation()` |
-| 5cf18d038 | 417169470 | Late Load Elimination, `snapshot-table-opindex.h`, `store-store-elimination-phase.cc` | by hand: 13.3 already has the trace flag; only the map wipe on map stores |
-
-The 48 patches of level 132 were moved with a three-way merge (`FlyWeb/tools/port/v8re.sh`); by hand
-`late-load-elimination-reducer.cc` (FlyWeb's cabe17f3/153cde95/0652ef4b hunks on 13.3's `ProcessCall` with traces),
-`messages.cc` (access checks; `DirectHandle` context), `store-store-elimination-reducer-inl.h` (after 80600881c) and
-`js-to-wasm.tq` (one `check()` is already in 13.3). All 76 patches checked with `git apply --check` on a clean 93c6f108.
-Cache epoch 21. Not compiled yet. Review: SEGURIDAD-PORTES, row FS.33 (rule 17).
-
-V8 13.3 ships `Atomics.pause` and Wasm Memory64 by default, as Chrome 133; `turboshaft_wasm` and `flush_liftoff_code`
-are gone as flags (gin's `kWebAssemblyLiftoffCodeFlushing` only passes the flag when overridden, so it is left as is).
-
-**Stack clash in optimized JS frames** (SEGURIDAD-PORTES-11, 28-10-2026; v8 ea2f03dfff, crbug 574660146, merged into
-15.6/15.7 on 26-10-2026): the prologue grows an optimized frame with one stack pointer decrement before the entry stack
-check, so a frame over 4 KB can step over the guard page. Optimization now aborts with `kFunctionTooBig` (frames over
-4 KB are rare). 13.3 has two register allocation paths (Turboshaft's `pipelines.h` and TurboFan's `PipelineImpl`): both
-get the check and report failure to their callers (`pipeline.cc`, `turboshaft/pipelines.{h,cc}`), plus its mjsunit test.
-
----
-
-# FlyWeb: V8 13.2.152.56 (Chrome 132, M132-LTS) and its security backports
-
-Since engine level 118 each level carries the V8 of Chrome N (FM.5). Level 132 uses V8 **13.2.152.56** (5eabe0e1,
-`FlyWeb/v8-revision`: the head of branch-heads/13.2, i.e. 132.0.6834.160's 13.2.152.36 plus the M132-LTS merges),
-on top of MOTOR-25's `nube/motor-132` (FlyWeb 2.0.3 + level 132; MOTOR sets `FlyWeb/v8-revision` and adapts Blink).
-SEGURIDAD-PORTES-9, 27-10-2026 (task FS.28).
-
-## 1. Rebase of the 61 patches of V8 13.1.201.22
-
-Each patch checked on a clean 13.2.152.56 (`git apply --check`, `-R --check`, `git apply -3` and by hand):
-
-- **26 already in 13.2** (the whole patch reverses cleanly): bigint `fromstring.cc`, `code-stub-assembler-inl.h` and
-  `.h`, `handler-table.cc`, `access-info.cc`, arm64 instruction selector, `property-access-builder.cc`,
-  `representation-change.cc`, Turboshaft ISel phase (`.cc`, `.h`), `snapshot-table-opindex.h`, `deoptimizer.cc`,
-  `bytecode-generator.cc` (CVE-2025-6554), `objects/code.h`, the 11 Intl `js-*.cc`, `wasm-code-manager.h`,
-  `wasm-engine.h`.
-- **10 more already in 13.2** (after `git apply -3`, only FlyWeb's comments differed, or 13.2 has upstream's own
-  version of the fix): `code-stub-assembler.cc` (13.2 keeps upstream's `CSA_DCHECK`), `escape-analysis.cc`
-  (91343bb4), `js-call-reducer.cc` and `js-inlining.cc` (d3577087), `late-load-elimination-reducer.cc` (5cf18d03),
-  `loop-unrolling-reducer.h` (2e96808d), `js-regexp.cc` (62ee3244), `preparser.cc` (9a884b1b), `wasm-engine.cc` and
-  `wasm-import-wrapper-cache.cc` (924c1a79). Each file equals 13.2's once the conflict keeps 13.2's side.
-- **2 rebased by hand:** `codegen/compiler.cc` (Brave's `BRAVE_COMPILER_GET_FUNCTION_FROM_EVAL` hook after 13.2's
-  `CHECK`, identical to Brave 1.74.51's patch) and `store-store-elimination-reducer-inl.h` (v8 67c8f3a9, crbug
-  547936520, kept on 13.2's `is_fixed_offset_store`; the CVE-2025-5419 half, 7bc0a67e, is in 13.2).
-- **23 apply unchanged** (all are fixes from after the 13.2 LTS, or FlyWeb's own): `BUILD.gn` (Brave's hook),
-  collections and `Object.groupBy` (`builtins-collections-gen.{cc,h}`, `object-groupby.tq`,
-  `runtime-collections.cc`), CVE-2026-87491 (`builtins-definitions.h`, `builtins-wasm-gen.cc`, `wasm.tq`),
-  JS↔Wasm `check()`s (`js-to-wasm.tq`, `wasm-to-js.tq`), CVE-2025-13223's TurboFan part and 9b5250b9
-  (`js-native-context-specialization.cc`, `access-builder.{cc,h}`), `turboshaft/operations.cc`, access checks
-  (`messages.cc`, `ic.cc`, `accessor-assembler.cc`), `microtask-queue.{cc,h}`, `cppgc/js-cpp-heap.cc`,
-  CVE-2026-11645 (`js-objects.cc`), options (`flag-definitions.h`) and the cache epoch (`version.h`).
-
-## 2. Fixes after the 13.2 LTS (new in level 132)
-
-The M132-LTS branch took fixes until 10-2025 and skipped some; the merges to branch-heads 13.3–15.8 were reviewed
-(SEGURIDAD-PORTES-9, 454 commits not on main; 119 groups touching Maglev, Turboshaft or Wasm). Ported (7 new files):
-
-- **JS late load elimination** (`turboshaft_load_elimination`, on in 13.1 and 13.2; earlier triage took it as off,
-  as in 12.0): 0652ef4b (crbug 436623746, maps after an allocation), 153cde95 (508811477, maps on calls), cabe17f3
-  (554421904, non-writing calls can still create aliases; adapted: 13.2's `ProcessCall` bails out on `!can_write()`
-  first, so the non-aliasing inputs are now invalidated before it), 45353e2b (556908674, map changes in loops).
-  `WipeAllMaps()`, which 153cde95 calls, does not exist in 13.2: added as upstream. The same four also go to 2.0.3 on
-  13.1 (`seg/v8-13.1-lle`, epoch 18).
-- **Turboshaft-Wasm** (on by default in 13.2): e60c703d (481074858), 588bb212 (445870128), 43357c8e (505481948),
-  4239d7f5 (509268941) and ab3bec43 (518228382) in their final upstream form; 13.2 has no `SparseOpIndexSideTable`
-  and ab3bec43 already replaces it with a `ZoneVector` of pairs.
-- **TurboFan, Wasm inlined into JS:** 6cbcff99 (427502241), do not drop TypeGuards in `WasmGCLowering`.
-- Already in 13.2 or in these patches: b3c01ac1 (CVE-2024-4947), CVE-2025-5419/6554/10585, ef1b6876 (`IsOnlyUserOf`),
-  CVE-2026-11645 and CVE-2026-87491 (FlyWeb's own ports). Not applicable: CVE-2026-85046 (13.2 does not inline
-  `Array.prototype.sort`).
-- **Constness in `DefineNamedOwnProperty`** (FS.29, SEGURIDAD-PORTES-10): main 6937df3c (crbug 567088929, 10-2026;
-  22e588df is its merge). New bytecode `DefineNamedOwnPropertyInLiteral` for the initializing stores of object
-  literals; `DefineNamedOwnProperty` (spread literals, class fields) now deopts on a const field in TurboFan
-  (`AccessMode::kDefine` instead of `kStoreInLiteral`) and in Maglev (adapted to 13.2's void visitors and
-  `ReduceResult::Fail()`), so a redefinition can no longer keep a stale constant. Its 4 mjsunit tests come along
-  (3 run with `--maglev`; `assertMaglevved` → `assertTrue(isMaglevved())`, which 13.2's `mjsunit.js` has). Not ported: the cctest goldens (13.2's format differs) and the follow-up c58171d6
-  (performance only: spread literals back to the literal bytecode). Changes the bytecode list: cache epoch 20.
-
-**48 patches** (32 + 12 new for sources + 4 tests; the `js-native-context-specialization.cc` and `version.h` patches
-already existed and were regenerated).
-
-## 3. Options (rule 19)
-
-| Option | 13.2 upstream | FlyWeb level 132 |
-|---|---|---|
-| `turboshaft_wasm` | **true** (new default) | true, as upstream (no patch) |
-| `maglev` | true | **false** (patch kept; COORDINACIÓN-16, 27-10: stays off at level 132) |
-| `maglev_untagged_phis` | true | **false** (patch kept: main turned it off for CVE-2026-3910, 7076ba13, after 13.2) |
-| `turboshaft_instruction_selection` | true | true |
-
-**Why Maglev stays off (rule 19, to review at each level):** 13.2 is parked, so upstream's later Maglev fixes do not
-arrive with it. About 15 security fixes after the LTS apply to 13.2's Maglev (+250/−100 lines, 8 to rewrite; 4–6
-days), plus 6 of Phi untagging that `maglev_untagged_phis = false` covers, and about 1–1.5 new ones a month. The Maglev
-half of CVE-2025-13223 (4cf93118) is not needed in 13.2 (it feeds Turbolev). TurboFan stays the optimizing tier.
-
-## 4. Cache epoch
-
-`kFlyWebCacheEpoch` **20** (17 = 2.0.1–2.0.2 on 13.1, 18 = 2.0.3 with `seg/v8-13.1-lle`, 19 = level 132, 20 = FS.29).
-
-## 5. Tests (cloud `d8`, Linux x64, V8 only; `FlyWeb/scripts/v8-d8.sh`)
-
-`d8` 13.2.152.56 with these 32 patches (without Brave's two `//brave` hooks), release with DCHECKs, clang of Chromium
-116, libstdc++ (SEGURIDAD-PORTES-9, 27-10-2026).
-
-- Build: the first try failed (`InvalidateAtMapOffset()` private; upstream has it public, fixed); then it builds.
-- Options (`--print-flag-values`): `--no-maglev`, `--no-maglev-untagged-phis`, `--turboshaft-wasm`,
-  `--turboshaft-wasm-load-elimination`, `--turboshaft-load-elimination`, `--turboshaft-instruction-selection`,
-  `--wasm-generic-wrapper`, `--regexp-simd`.
-- FlyWeb's regression tests (`FlyWeb/tools/v8-pruebas/`): **9/9**.
-- **mjsunit 7336/7337** (default variant, includes `mjsunit/wasm`). The 1 is `maglev/extras-cped` (asserts Maglev code),
-  as in 1.13–1.15.
-- Not covered by the `d8`: Intl (no ICU) and Chromium's libc++. **Not compiled in FlyWeb**: LOCAL builds it.
-
-**FS.29 (SEGURIDAD-PORTES-10, 27-10-2026), same `d8` with the 48 patches:** builds; FlyWeb's regression tests 9/9;
-the 4 new tests 4/4; **mjsunit 7340/7341** (the 1 is `maglev/extras-cped`, as before).

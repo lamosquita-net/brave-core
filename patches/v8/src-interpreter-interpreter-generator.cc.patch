@@ -1,5 +1,5 @@
 diff --git a/src/interpreter/interpreter-generator.cc b/src/interpreter/interpreter-generator.cc
-index 4885a75fa7b10a30df723417a37a11a584f95e91..c7bb1f2589af13009317ec324e350f158491cb0d 100644
+index 4885a75fa7b10a30df723417a37a11a584f95e91..6e2d0f57d705df2e46a3db6d8bdc5af5ec94ebf1 100644
 --- a/src/interpreter/interpreter-generator.cc
 +++ b/src/interpreter/interpreter-generator.cc
 @@ -739,6 +739,17 @@ IGNITION_HANDLER(DefineNamedOwnProperty, InterpreterSetNamedPropertyAssembler) {
@@ -20,3 +20,25 @@ index 4885a75fa7b10a30df723417a37a11a584f95e91..c7bb1f2589af13009317ec324e350f15
  // SetKeyedProperty <object> <key> <slot>
  //
  // Calls the KeyedStoreIC at FeedbackVector slot <slot> for <object> and
+@@ -2477,7 +2488,9 @@ IGNITION_HANDLER(SwitchOnSmiNoFeedback, InterpreterAssembler) {
+   GotoIf(IntPtrGreaterThanOrEqual(case_value, table_length), &fall_through);
+ 
+   TNode<WordT> entry = IntPtrAdd(table_start, case_value);
+-  TNode<IntPtrT> relative_jump = LoadAndUntagConstantPoolEntry(entry);
++  TNode<Object> constant_entry = LoadConstantPoolEntry(entry);
++  CSA_SBXCHECK(this, TaggedIsSmi(constant_entry));
++  TNode<IntPtrT> relative_jump = SmiUntag(CAST(constant_entry));
+   Jump(relative_jump);
+ 
+   BIND(&fall_through);
+@@ -3329,7 +3342,9 @@ IGNITION_HANDLER(SwitchOnGeneratorState, InterpreterAssembler) {
+   USE(table_length);  // SBXCHECK is a DCHECK when the sandbox is disabled.
+ 
+   TNode<WordT> entry = IntPtrAdd(table_start, case_value);
+-  TNode<IntPtrT> relative_jump = LoadAndUntagConstantPoolEntry(entry);
++  TNode<Object> constant_entry = LoadConstantPoolEntry(entry);
++  CSA_SBXCHECK(this, TaggedIsSmi(constant_entry));
++  TNode<IntPtrT> relative_jump = SmiUntag(CAST(constant_entry));
+   Jump(relative_jump);
+ 
+   BIND(&fallthrough);

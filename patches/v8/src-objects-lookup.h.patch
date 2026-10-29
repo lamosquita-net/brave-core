@@ -1,0 +1,18 @@
+diff --git a/src/objects/lookup.h b/src/objects/lookup.h
+index a57013621f5600e984838fc02f28f970ee70e273..2f41854375ba58c58efedf5c42d3634e29b40898 100644
+--- a/src/objects/lookup.h
++++ b/src/objects/lookup.h
+@@ -136,13 +136,6 @@ class V8_EXPORT_PRIVATE LookupIterator final {
+                         DirectHandle<JSAny> lookup_start_object,
+                         Configuration configuration = DEFAULT);
+ 
+-  // Special case for lookup of the |error_stack_trace| private symbol in
+-  // prototype chain (usually private symbols are limited to
+-  // OWN_SKIP_INTERCEPTOR lookups).
+-  inline LookupIterator(Isolate* isolate, Configuration configuration,
+-                        DirectHandle<JSAny> receiver,
+-                        DirectHandle<Symbol> name);
+-
+   void Restart() {
+     InterceptorState state = InterceptorState::kUninitialized;
+     IsElement() ? RestartInternal<true>(state) : RestartInternal<false>(state);

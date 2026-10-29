@@ -1,0 +1,14 @@
+diff --git a/src/deoptimizer/deoptimizer.cc b/src/deoptimizer/deoptimizer.cc
+index 44304637137c6e20b5c16e137527dadecaddc08e..a54f2f3b536e44b289b0372ff9a05c4bcbe636e9 100644
+--- a/src/deoptimizer/deoptimizer.cc
++++ b/src/deoptimizer/deoptimizer.cc
+@@ -783,8 +783,7 @@ int LookupCatchHandler(Isolate* isolate, TranslatedFrame* translated_frame,
+   switch (translated_frame->kind()) {
+     case TranslatedFrame::kUnoptimizedFunction: {
+       int bytecode_offset = translated_frame->bytecode_offset().ToInt();
+-      HandlerTable table(
+-          translated_frame->raw_shared_info()->GetBytecodeArray(isolate));
++      HandlerTable table(translated_frame->raw_bytecode_array());
+       int handler_index = table.LookupHandlerIndexForRange(bytecode_offset);
+       if (handler_index == HandlerTable::kNoHandlerFound) return handler_index;
+       *data_out = table.GetRangeData(handler_index);
