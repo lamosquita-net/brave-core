@@ -1,14 +1,14 @@
-diff --git a/test/mjsunit/maglev/regress-402646504.js b/test/mjsunit/maglev/regress-402646504.js
+diff --git a/test/mjsunit/compiler/regress-402646504.js b/test/mjsunit/compiler/regress-402646504.js
 new file mode 100644
-index 0000000000000000000000000000000000000000..a70e845e215882c9aa18fef52a6eea69b0ebb585
+index 0000000000000000000000000000000000000000..6d45bea9d9050ceb498016f6329031944be24850
 --- /dev/null
-+++ b/test/mjsunit/maglev/regress-402646504.js
++++ b/test/mjsunit/compiler/regress-402646504.js
 @@ -0,0 +1,30 @@
 +// Copyright 2025 the V8 project authors. All rights reserved.
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
 +
-+// Flags: --allow-natives-syntax --maglev --no-always-turbofan
++// Flags: --allow-natives-syntax --turbofan --no-always-turbofan
 +
 +const obj = {
 +  func(optimize) {
@@ -17,7 +17,7 @@ index 0000000000000000000000000000000000000000..a70e845e215882c9aa18fef52a6eea69
 +      };
 +      %PrepareFunctionForOptimization(arrowFunc);
 +      if (optimize) {
-+        %OptimizeMaglevOnNextCall(arrowFunc);
++        %OptimizeFunctionOnNextCall(arrowFunc);
 +      }
 +      return arrowFunc();
 +  }
@@ -32,5 +32,5 @@ index 0000000000000000000000000000000000000000..a70e845e215882c9aa18fef52a6eea69
 +obj.__proto__ = u8Arr;
 +assertThrows(() => { obj.func(false); }, TypeError);
 +
-+// Optimize for Maglev.
++// Optimize for Turbofan.
 +assertThrows(() => { obj.func(true); }, TypeError);

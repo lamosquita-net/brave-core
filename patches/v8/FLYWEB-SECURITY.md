@@ -1,3 +1,26 @@
+# FlyWeb: V8 13.5.212.10 (Chrome 135) with the M132-LTS backports and the Maglev debt
+
+Level 135 (MOTOR-31, 29-10-2026). `patches/v8` rebased from 13.4.114.21 (4f282ae4) to 13.5.212.10 (e2591684) with
+`v8re.sh`: 97 of 104 apply after a context-only rebase.
+- **Dropped (upstream in 13.5):** `src/base/platform/mutex.cc` (13.5 removes `SpinningMutex` and its
+  `OS_UNFAIR_LOCK_ADAPTIVE_SPIN`, the 2.3.0 SIGILL on Mojave; `base::Mutex` is `absl::Mutex` now) and the
+  `regress-402646504.js` Maglev test.
+- **By hand:** the stack clash bailout (ea2f03dfff) goes back to its upstream shape: 13.5 moved
+  `Pipeline::AllocateRegisters` from `turboshaft/pipelines.h` to `pipelines.cc`; it returns `bool` again and its
+  callers in `pipelines.{h,cc}` and `compiler/pipeline.cc` bail out. `maglev-graph-builder.cc`: the
+  `DefineNamedOwnProperty` constness fix (6937df3c) keeps upstream main's unconditional deopt for every mode but
+  `kStoreInLiteral` (13.5's constant check for `kStore` goes, as in main); the `MaxInliningId` guard moves to
+  `CanInlineCall` (13.5's name); f7bf2ff1fa (allocation folding level 1) is upstream. `maglev-ir.h`: the
+  `VirtualObject` index `SBXCHECK`s and public `kMaxInputs`.
+- **New:** d73530cfd9 (crbug 403345130, TurboFan reading a TypedArray length through a prototype) because 13.5
+  turns `typed_array_length_loading` on by default (rule 19); without its new heap string, which would change
+  `static-roots.h`: the TypeError names `length`. Its test comes along.
+- Maglev stays off (`maglev`, `maglev_untagged_phis` and `turbolev` keep 13.4's values). Cache epoch 23.
+- API: no new `CHECK` Blink can reach (the same-arity `CHECK_NE` of `NewWithCFunctionOverloads` is as in 13.4);
+  `FunctionCallbackInfo::Holder()` is gone (gin and Blink 128 only use the `PropertyCallbackInfo` one). No new
+  macOS 10.15+ API in `src/base`, `src/libplatform` or `src/heap/base`; nothing that needs AVX without a runtime
+  check. simdutf, fast_float, highway and fp16 as in 13.4.
+
 # FlyWeb: V8 13.4.114.21 (Chrome 134) with the M132-LTS backports and the Maglev debt
 
 Engine level 134 (MOTOR-29, 28-10-2026) uses V8 **13.4.114.21** (4f282ae4, head of branch-heads/13.4, the V8 of

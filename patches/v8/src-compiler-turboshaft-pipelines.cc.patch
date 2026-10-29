@@ -1,8 +1,46 @@
 diff --git a/src/compiler/turboshaft/pipelines.cc b/src/compiler/turboshaft/pipelines.cc
-index 6317640f73383923a4b298dab2ce2983ef3ed1a3..fb48949f4e83856a1c77f0999de75f24cb0a8da6 100644
+index 0131e7b7c6cff0455220373309e52324cd2d674a..806dea9a8650b27c88c1e148c010e48dce0ffdad 100644
 --- a/src/compiler/turboshaft/pipelines.cc
 +++ b/src/compiler/turboshaft/pipelines.cc
-@@ -29,7 +29,7 @@ void SimplificationAndNormalizationPhase::Run(PipelineData* data,
+@@ -19,7 +19,7 @@ void SimplificationAndNormalizationPhase::Run(PipelineData* data,
+                InstructionSelectionNormalizationReducer>::Run(data, temp_zone);
+ }
+ 
+-void Pipeline::AllocateRegisters(const RegisterConfiguration* config,
++bool Pipeline::AllocateRegisters(const RegisterConfiguration* config,
+                                  CallDescriptor* call_descriptor,
+                                  bool run_verifier) {
+   // Don't track usage for this zone in compiler stats.
+@@ -73,6 +73,20 @@ void Pipeline::AllocateRegisters(const RegisterConfiguration* config,
+ 
+   Run<DecideSpillingModePhase>();
+   Run<AssignSpillSlotsPhase>();
++
++  // The prologue grows the frame with a single stack pointer decrement, before
++  // the function entry stack check runs. A frame no larger than the smallest OS
++  // page cannot step over a guard page, so bail out rather than emit an
++  // unchecked stack pointer jump of arbitrary size (FlyWeb: port of v8
++  // ea2f03dfff, crbug 574660146).
++  constexpr int kMaxStackSlots = 4 * KB / kSystemPointerSize;
++  if (data_->info()->IsOptimizing() &&
++      data_->frame()->GetTotalFrameSlotCount() > kMaxStackSlots) {
++    data_->info()->AbortOptimization(BailoutReason::kFunctionTooBig);
++    data()->ClearRegisterComponent();
++    return false;
++  }
++
+   Run<CommitAssignmentPhase>();
+ 
+   // TODO(chromium:725559): remove this check once
+@@ -106,6 +120,7 @@ void Pipeline::AllocateRegisters(const RegisterConfiguration* config,
+   }
+ 
+   data()->ClearRegisterComponent();
++  return true;
+ }
+ 
+ [[nodiscard]] bool Pipeline::GenerateCode(
+@@ -118,7 +133,7 @@ void Pipeline::AllocateRegisters(const RegisterConfiguration* config,
    // Perform instruction selection and register allocation.
    PrepareForInstructionSelection(profile);
    CHECK(SelectInstructions(linkage));
@@ -11,7 +49,7 @@ index 6317640f73383923a4b298dab2ce2983ef3ed1a3..fb48949f4e83856a1c77f0999de75f24
    AssembleCode(linkage);
  
    if (v8_flags.turbo_profiling) {
-@@ -46,7 +46,9 @@ void SimplificationAndNormalizationPhase::Run(PipelineData* data,
+@@ -135,7 +150,9 @@ void Pipeline::AllocateRegisters(const RegisterConfiguration* config,
      if (!SelectInstructions(linkage)) {
        return false;
      }

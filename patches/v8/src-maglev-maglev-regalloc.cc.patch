@@ -1,8 +1,8 @@
 diff --git a/src/maglev/maglev-regalloc.cc b/src/maglev/maglev-regalloc.cc
-index 3d4b1f741d76556fa152a112ab19187ea1737c0b..fb3b3f174b44a86e2fdbba38295c0279dfc3b8d4 100644
+index 102ec48cb74c5be7ec25f34c79fd580f99b565b9..a4612f00ecf3eaa9eb48db428b127c765255d4c8 100644
 --- a/src/maglev/maglev-regalloc.cc
 +++ b/src/maglev/maglev-regalloc.cc
-@@ -478,17 +478,17 @@ void StraightForwardRegisterAllocator::AllocateRegisters() {
+@@ -503,17 +503,17 @@ void StraightForwardRegisterAllocator::AllocateRegisters() {
                }
              }
            } else if (phi->owner().is_parameter() &&
@@ -25,9 +25,9 @@ index 3d4b1f741d76556fa152a112ab19187ea1737c0b..fb3b3f174b44a86e2fdbba38295c0279
              phi->Spill(compiler::AllocatedOperand(
                  compiler::AllocatedOperand::STACK_SLOT,
                  MachineRepresentation::kTagged,
-@@ -591,6 +591,9 @@ void StraightForwardRegisterAllocator::AllocateRegisters() {
-     }
+@@ -617,6 +617,9 @@ void StraightForwardRegisterAllocator::AllocateRegisters() {
      AllocateControlNode(block->control_node(), block);
+     ApplyPatches(block);
    }
 +
 +  // Clean up remaining register allocations at the end
@@ -35,7 +35,7 @@ index 3d4b1f741d76556fa152a112ab19187ea1737c0b..fb3b3f174b44a86e2fdbba38295c0279
  }
  
  void StraightForwardRegisterAllocator::FreeRegistersUsedBy(ValueNode* node) {
-@@ -1559,8 +1562,8 @@ void StraightForwardRegisterAllocator::SpillRegisters() {
+@@ -1585,8 +1588,8 @@ void StraightForwardRegisterAllocator::SpillRegisters() {
    double_registers_.ForEachUsedRegister(spill);
  }
  
@@ -46,7 +46,7 @@ index 3d4b1f741d76556fa152a112ab19187ea1737c0b..fb3b3f174b44a86e2fdbba38295c0279
      RegisterFrameState<RegisterT>& registers) {
    while (registers.used() != registers.empty()) {
      RegisterT reg = registers.used().first();
-@@ -1569,7 +1572,9 @@ void StraightForwardRegisterAllocator::SpillAndClearRegisters(
+@@ -1595,7 +1598,9 @@ void StraightForwardRegisterAllocator::SpillAndClearRegisters(
        printing_visitor_->os() << "  clearing registers with "
                                << PrintNodeLabel(graph_labeller(), node) << "\n";
      }
@@ -57,7 +57,7 @@ index 3d4b1f741d76556fa152a112ab19187ea1737c0b..fb3b3f174b44a86e2fdbba38295c0279
      registers.FreeRegistersUsedBy(node);
      DCHECK(!registers.used().has(reg));
    }
-@@ -1580,6 +1585,11 @@ void StraightForwardRegisterAllocator::SpillAndClearRegisters() {
+@@ -1606,6 +1611,11 @@ void StraightForwardRegisterAllocator::SpillAndClearRegisters() {
    SpillAndClearRegisters(double_registers_);
  }
  

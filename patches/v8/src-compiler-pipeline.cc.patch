@@ -1,20 +1,8 @@
 diff --git a/src/compiler/pipeline.cc b/src/compiler/pipeline.cc
-index 7adde146c9e49e9fb2d0d3faed06d8b8a72d8e0d..72bd468af4f3de3e8ef7ea4aed0561519ac3ad08 100644
+index 1a4570a62aaa88c1d8d5ec6ae065bc3f91366fbf..320b9807ee2eab746a5fb0cc8d6dfb495f0940d5 100644
 --- a/src/compiler/pipeline.cc
 +++ b/src/compiler/pipeline.cc
-@@ -202,8 +202,9 @@ class PipelineImpl final {
- 
-   void VerifyGeneratedCodeIsIdempotent();
-   void RunPrintAndVerify(const char* phase, bool untyped = false);
--  void AllocateRegisters(const RegisterConfiguration* config,
--                         CallDescriptor* call_descriptor, bool run_verifier);
-+  [[nodiscard]] bool AllocateRegisters(const RegisterConfiguration* config,
-+                                       CallDescriptor* call_descriptor,
-+                                       bool run_verifier);
- 
-   TFPipelineData* data() const { return data_; }
-   OptimizedCompilationInfo* info() const;
-@@ -505,7 +506,10 @@ TurbofanPipelineStatistics* CreatePipelineStatistics(
+@@ -490,7 +490,10 @@ TurbofanPipelineStatistics* CreatePipelineStatistics(
    // We can release the graph now.
    turboshaft_data->ClearGraphComponent();
  
@@ -26,59 +14,3 @@ index 7adde146c9e49e9fb2d0d3faed06d8b8a72d8e0d..72bd468af4f3de3e8ef7ea4aed056151
    turboshaft_pipeline.AssembleCode(linkage);
    return true;
  }
-@@ -3553,7 +3557,7 @@ void Pipeline::AllocateRegistersForTesting(const RegisterConfiguration* config,
- 
-   // TODO(nicohartmann): Should migrate this to turboshaft::Pipeline eventually.
-   PipelineImpl pipeline(&data);
--  pipeline.AllocateRegisters(config, nullptr, run_verifier);
-+  CHECK(pipeline.AllocateRegisters(config, nullptr, run_verifier));
- }
- 
- void PipelineImpl::ComputeScheduledGraph() {
-@@ -3590,7 +3594,7 @@ bool PipelineImpl::AllocateRegisters(CallDescriptor* call_descriptor,
-         RegisterConfiguration::RestrictGeneralRegisters(registers));
-     config = restricted_config.get();
-   }
--  AllocateRegisters(config, call_descriptor, run_verifier);
-+  if (!AllocateRegisters(config, call_descriptor, run_verifier)) return false;
- 
-   // Verify the instruction sequence has the same hash in two stages.
-   VerifyGeneratedCodeIsIdempotent();
-@@ -3752,7 +3756,7 @@ void TraceSequence(OptimizedCompilationInfo* info, TFPipelineData* data,
- 
- }  // namespace
- 
--void PipelineImpl::AllocateRegisters(const RegisterConfiguration* config,
-+bool PipelineImpl::AllocateRegisters(const RegisterConfiguration* config,
-                                      CallDescriptor* call_descriptor,
-                                      bool run_verifier) {
-   TFPipelineData* data = this->data_;
-@@ -3805,6 +3809,20 @@ void PipelineImpl::AllocateRegisters(const RegisterConfiguration* config,
- 
-   Run<DecideSpillingModePhase>();
-   Run<AssignSpillSlotsPhase>();
-+
-+  // The prologue grows the frame with a single stack pointer decrement,
-+  // before the function entry stack check runs. A frame no larger than the
-+  // smallest OS page cannot step over a guard page, so bail out rather than
-+  // emit an unchecked stack pointer jump of arbitrary size (FlyWeb: port of
-+  // v8 ea2f03dfff, crbug 574660146).
-+  constexpr int kMaxStackSlots = 4 * KB / kSystemPointerSize;
-+  if (info()->IsOptimizing() &&
-+      data->frame()->GetTotalFrameSlotCount() > kMaxStackSlots) {
-+    info()->AbortOptimization(BailoutReason::kFunctionTooBig);
-+    data->DeleteRegisterAllocationZone();
-+    return false;
-+  }
-+
-   Run<CommitAssignmentPhase>();
- 
-   // TODO(chromium:725559): remove this check once
-@@ -3838,6 +3856,7 @@ void PipelineImpl::AllocateRegisters(const RegisterConfiguration* config,
-   }
- 
-   data->DeleteRegisterAllocationZone();
-+  return true;
- }
- 
- OptimizedCompilationInfo* PipelineImpl::info() const { return data_->info(); }

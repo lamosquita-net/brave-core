@@ -1,5 +1,5 @@
 diff --git a/src/interpreter/bytecode-generator.cc b/src/interpreter/bytecode-generator.cc
-index f43124e3d2abf860acc2f58488350647f22807de..6c290017e66918e778b815568d9284a4318e0c3d 100644
+index a7e07e7fc8ce6cd64f7deef51a466f2884254fc0..f5f0b22ae74e348c975edf4598c1a1ea079fa067 100644
 --- a/src/interpreter/bytecode-generator.cc
 +++ b/src/interpreter/bytecode-generator.cc
 @@ -1206,7 +1206,8 @@ class V8_NODISCARD BytecodeGenerator::OptionalChainNullLabelScope final {
@@ -22,7 +22,7 @@ index f43124e3d2abf860acc2f58488350647f22807de..6c290017e66918e778b815568d9284a4
  };
  
  // LoopScope delimits the scope of {loop}, from its header to its final jump.
-@@ -3377,6 +3381,36 @@ void BytecodeGenerator::BuildClassLiteral(ClassLiteral* expr, Register name) {
+@@ -3386,6 +3390,36 @@ void BytecodeGenerator::BuildClassLiteral(ClassLiteral* expr, Register name) {
      }
    }
  
@@ -59,7 +59,7 @@ index f43124e3d2abf860acc2f58488350647f22807de..6c290017e66918e778b815568d9284a4
    {
      RegisterAllocationScope register_scope(this);
      RegisterList args = register_allocator()->NewGrowableRegisterList();
-@@ -3498,36 +3532,6 @@ void BytecodeGenerator::BuildClassLiteral(ClassLiteral* expr, Register name) {
+@@ -3507,36 +3541,6 @@ void BytecodeGenerator::BuildClassLiteral(ClassLiteral* expr, Register name) {
                              HoleCheckMode::kElided);
    }
  
@@ -96,7 +96,7 @@ index f43124e3d2abf860acc2f58488350647f22807de..6c290017e66918e778b815568d9284a4
    if (expr->instance_members_initializer_function() != nullptr) {
      VisitForAccumulatorValue(expr->instance_members_initializer_function());
  
-@@ -4014,8 +4018,13 @@ void BytecodeGenerator::VisitObjectLiteral(ObjectLiteral* expr) {
+@@ -4023,8 +4027,13 @@ void BytecodeGenerator::VisitObjectLiteral(ObjectLiteral* expr) {
            VisitForAccumulatorValue(property->value());
            if (key->IsStringLiteral()) {
              FeedbackSlot slot = feedback_spec()->AddDefineNamedOwnICSlot();
@@ -112,7 +112,7 @@ index f43124e3d2abf860acc2f58488350647f22807de..6c290017e66918e778b815568d9284a4
            } else {
              FeedbackSlot slot = feedback_spec()->AddDefineKeyedOwnICSlot();
              builder()->DefineKeyedOwnProperty(
-@@ -6428,9 +6437,6 @@ template <typename ExpressionFunc>
+@@ -6437,9 +6446,6 @@ template <typename ExpressionFunc>
  void BytecodeGenerator::BuildOptionalChain(ExpressionFunc expression_func) {
    BytecodeLabel done;
    OptionalChainNullLabelScope label_scope(this);

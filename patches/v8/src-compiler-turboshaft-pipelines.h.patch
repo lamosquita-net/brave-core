@@ -1,8 +1,8 @@
 diff --git a/src/compiler/turboshaft/pipelines.h b/src/compiler/turboshaft/pipelines.h
-index fbf1f39ee2501425eb6078713b0e9a1c64a74dd6..e526582e9a56cf01b04eddb5d7fe81a3cf497160 100644
+index 914779a82cca9236c0d5018c97bb5b7be4e7e88a..c252d38d6374a3893596455965154db1cb09e366 100644
 --- a/src/compiler/turboshaft/pipelines.h
 +++ b/src/compiler/turboshaft/pipelines.h
-@@ -355,7 +355,9 @@ class Pipeline {
+@@ -355,7 +355,9 @@ class V8_EXPORT_PRIVATE Pipeline {
            RegisterConfiguration::RestrictGeneralRegisters(registers));
        config = restricted_config.get();
      }
@@ -13,48 +13,19 @@ index fbf1f39ee2501425eb6078713b0e9a1c64a74dd6..e526582e9a56cf01b04eddb5d7fe81a3
  
      // Verify the instruction sequence has the same hash in two stages.
      VerifyGeneratedCodeIsIdempotent();
-@@ -403,8 +405,9 @@ class Pipeline {
+@@ -403,8 +405,9 @@ class V8_EXPORT_PRIVATE Pipeline {
      }
    }
  
 -  void AllocateRegisters(const RegisterConfiguration* config,
--                         CallDescriptor* call_descriptor, bool run_verifier) {
+-                         CallDescriptor* call_descriptor, bool run_verifier);
 +  [[nodiscard]] bool AllocateRegisters(const RegisterConfiguration* config,
 +                                       CallDescriptor* call_descriptor,
-+                                       bool run_verifier) {
-     // Don't track usage for this zone in compiler stats.
-     std::unique_ptr<Zone> verifier_zone;
-     RegisterAllocatorVerifier* verifier = nullptr;
-@@ -456,6 +459,20 @@ class Pipeline {
- 
-     Run<DecideSpillingModePhase>();
-     Run<AssignSpillSlotsPhase>();
-+
-+    // The prologue grows the frame with a single stack pointer decrement,
-+    // before the function entry stack check runs. A frame no larger than the
-+    // smallest OS page cannot step over a guard page, so bail out rather than
-+    // emit an unchecked stack pointer jump of arbitrary size (FlyWeb: port of
-+    // v8 ea2f03dfff, crbug 574660146).
-+    constexpr int kMaxStackSlots = 4 * KB / kSystemPointerSize;
-+    if (data_->info()->IsOptimizing() &&
-+        data_->frame()->GetTotalFrameSlotCount() > kMaxStackSlots) {
-+      data_->info()->AbortOptimization(BailoutReason::kFunctionTooBig);
-+      data()->ClearRegisterComponent();
-+      return false;
-+    }
-+
-     Run<CommitAssignmentPhase>();
- 
-     // TODO(chromium:725559): remove this check once
-@@ -489,6 +506,7 @@ class Pipeline {
-     }
- 
-     data()->ClearRegisterComponent();
-+    return true;
-   }
++                                       bool run_verifier);
  
    void AssembleCode(Linkage* linkage) {
-@@ -518,7 +536,9 @@ class Pipeline {
+     BeginPhaseKind("V8.TFCodeGeneration");
+@@ -433,7 +436,9 @@ class V8_EXPORT_PRIVATE Pipeline {
      if (!SelectInstructions(&linkage)) {
        return MaybeHandle<Code>();
      }

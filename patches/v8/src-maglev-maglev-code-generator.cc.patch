@@ -1,8 +1,8 @@
 diff --git a/src/maglev/maglev-code-generator.cc b/src/maglev/maglev-code-generator.cc
-index ca6c4920862998085bcc0006d106ba672d2b7915..46339cc2d56eea86ce4accac01cf66eaeb911bc6 100644
+index 2a621a7b84f36e4c5b4e92d88f3e96da5efc2695..3760ecf29c1e4a40d6d5988539769297dc5df00d 100644
 --- a/src/maglev/maglev-code-generator.cc
 +++ b/src/maglev/maglev-code-generator.cc
-@@ -792,6 +792,12 @@ class MaglevCodeGeneratingNodeProcessor {
+@@ -793,6 +793,12 @@ class MaglevCodeGeneratingNodeProcessor {
  
    template <typename NodeT>
    ProcessResult Process(NodeT* node, const ProcessingState& state) {
@@ -15,7 +15,7 @@ index ca6c4920862998085bcc0006d106ba672d2b7915..46339cc2d56eea86ce4accac01cf66ea
      if (v8_flags.code_comments) {
        std::stringstream ss;
        ss << "--   " << graph_labeller()->NodeId(node) << ": "
-@@ -1197,12 +1203,17 @@ class MaglevFrameTranslationBuilder {
+@@ -1199,12 +1205,17 @@ class MaglevFrameTranslationBuilder {
        LocalIsolate* local_isolate, MaglevAssembler* masm,
        FrameTranslationBuilder* translation_array_builder,
        IdentityMap<int, base::DefaultAllocationPolicy>* protected_deopt_literals,
@@ -34,7 +34,7 @@ index ca6c4920862998085bcc0006d106ba672d2b7915..46339cc2d56eea86ce4accac01cf66ea
          object_ids_(10) {}
  
    void BuildEagerDeopt(EagerDeoptInfo* deopt_info) {
-@@ -1557,6 +1568,15 @@ class MaglevFrameTranslationBuilder {
+@@ -1568,6 +1579,15 @@ class MaglevFrameTranslationBuilder {
                            const InputLocation*& input_location,
                            const VirtualObject::List& virtual_objects) {
      if (object->type() == VirtualObject::kHeapNumber) {
@@ -50,7 +50,7 @@ index ca6c4920862998085bcc0006d106ba672d2b7915..46339cc2d56eea86ce4accac01cf66ea
        return BuildHeapNumber(object->number());
      }
      int dup_id =
-@@ -1690,7 +1710,14 @@ class MaglevFrameTranslationBuilder {
+@@ -1719,7 +1739,14 @@ class MaglevFrameTranslationBuilder {
          protected_deopt_literals_->FindOrInsert(obj);
      if (!res.already_exists) {
        DCHECK_EQ(0, *res.entry);
@@ -66,7 +66,7 @@ index ca6c4920862998085bcc0006d106ba672d2b7915..46339cc2d56eea86ce4accac01cf66ea
      }
      return *res.entry;
    }
-@@ -1699,13 +1726,25 @@ class MaglevFrameTranslationBuilder {
+@@ -1728,13 +1755,25 @@ class MaglevFrameTranslationBuilder {
      IdentityMapFindResult<int> res = deopt_literals_->FindOrInsert(obj);
      if (!res.already_exists) {
        DCHECK_EQ(0, *res.entry);
@@ -94,7 +94,7 @@ index ca6c4920862998085bcc0006d106ba672d2b7915..46339cc2d56eea86ce4accac01cf66ea
    }
  
    LocalIsolate* local_isolate_;
-@@ -1713,8 +1752,10 @@ class MaglevFrameTranslationBuilder {
+@@ -1742,8 +1781,10 @@ class MaglevFrameTranslationBuilder {
    FrameTranslationBuilder* translation_array_builder_;
    IdentityMap<int, base::DefaultAllocationPolicy>* protected_deopt_literals_;
    IdentityMap<int, base::DefaultAllocationPolicy>* deopt_literals_;
@@ -106,7 +106,7 @@ index ca6c4920862998085bcc0006d106ba672d2b7915..46339cc2d56eea86ce4accac01cf66ea
    std::vector<intptr_t> object_ids_;
  };
  
-@@ -1733,6 +1774,8 @@ MaglevCodeGenerator::MaglevCodeGenerator(
+@@ -1762,6 +1803,8 @@ MaglevCodeGenerator::MaglevCodeGenerator(
        graph_(graph),
        protected_deopt_literals_(isolate->heap()->heap()),
        deopt_literals_(isolate->heap()->heap()),
@@ -115,7 +115,7 @@ index ca6c4920862998085bcc0006d106ba672d2b7915..46339cc2d56eea86ce4accac01cf66ea
        retained_maps_(isolate->heap()),
        is_context_specialized_(
            compilation_info->specialize_to_function_context()),
-@@ -1815,17 +1858,19 @@ bool MaglevCodeGenerator::EmitCode() {
+@@ -1844,17 +1887,19 @@ bool MaglevCodeGenerator::EmitCode() {
  void MaglevCodeGenerator::RecordInlinedFunctions() {
    // The inlined functions should be the first literals.
    DCHECK_EQ(0u, deopt_literals_.size());
@@ -137,7 +137,7 @@ index ca6c4920862998085bcc0006d106ba672d2b7915..46339cc2d56eea86ce4accac01cf66ea
  }
  
  void MaglevCodeGenerator::EmitDeferredCode() {
-@@ -1850,7 +1895,8 @@ bool MaglevCodeGenerator::EmitDeopts() {
+@@ -1879,7 +1924,8 @@ bool MaglevCodeGenerator::EmitDeopts() {
  
    MaglevFrameTranslationBuilder translation_builder(
        local_isolate_, &masm_, &frame_translation_builder_,
@@ -147,7 +147,7 @@ index ca6c4920862998085bcc0006d106ba672d2b7915..46339cc2d56eea86ce4accac01cf66ea
  
    // Deoptimization exits must be as small as possible, since their count grows
    // with function size. These labels are an optimization which extracts the
-@@ -2037,10 +2083,10 @@ Handle<DeoptimizationData> MaglevCodeGenerator::GenerateDeoptimizationData(
+@@ -2067,10 +2113,10 @@ Handle<DeoptimizationData> MaglevCodeGenerator::GenerateDeoptimizationData(
        static_cast<int>(graph_->inlined_functions().size());
    DirectHandle<ProtectedDeoptimizationLiteralArray> protected_literals =
        local_isolate->factory()->NewProtectedFixedArray(
@@ -160,7 +160,7 @@ index ca6c4920862998085bcc0006d106ba672d2b7915..46339cc2d56eea86ce4accac01cf66ea
    DirectHandle<TrustedPodArray<InliningPosition>> inlining_positions =
        TrustedPodArray<InliningPosition>::New(local_isolate,
                                               inlined_functions_size);
-@@ -2049,21 +2095,14 @@ Handle<DeoptimizationData> MaglevCodeGenerator::GenerateDeoptimizationData(
+@@ -2079,21 +2125,14 @@ Handle<DeoptimizationData> MaglevCodeGenerator::GenerateDeoptimizationData(
  
    Tagged<ProtectedDeoptimizationLiteralArray> raw_protected_literals =
        *protected_literals;
