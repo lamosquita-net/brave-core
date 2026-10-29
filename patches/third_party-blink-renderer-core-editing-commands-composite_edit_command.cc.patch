@@ -1,22 +1,77 @@
 diff --git a/third_party/blink/renderer/core/editing/commands/composite_edit_command.cc b/third_party/blink/renderer/core/editing/commands/composite_edit_command.cc
-index a2cc985bc10cf7c31025837700ed7b0c910d81d1..125910dc64576377e20e8fbf4f77efc65e623856 100644
+index a2cc985bc10cf7c31025837700ed7b0c910d81d1..bb770fe6181fabb6184debd8aa548fe50e66678b 100644
 --- a/third_party/blink/renderer/core/editing/commands/composite_edit_command.cc
 +++ b/third_party/blink/renderer/core/editing/commands/composite_edit_command.cc
-@@ -1474,9 +1474,11 @@ void CompositeEditCommand::MoveParagraphs(
-           ComparePositions(visible_start, start_of_paragraph_to_move) >= 0;
-       bool end_in_paragraph =
-           ComparePositions(visible_end, end_of_paragraph_to_move) <= 0;
--
-       const TextIteratorBehavior behavior =
--          TextIteratorBehavior::AllVisiblePositionsRangeLengthBehavior();
-+          RuntimeEnabledFeatures::EnterInOpenShadowRootsEnabled()
-+              ? TextIteratorBehavior::
-+                    AllVisiblePositionsIncludingShadowRootRangeLengthBehavior()
-+              : TextIteratorBehavior::AllVisiblePositionsRangeLengthBehavior();
+@@ -1464,32 +1464,42 @@ void CompositeEditCommand::MoveParagraphs(
+     VisiblePosition visible_start = EndingVisibleSelection().VisibleStart();
+     VisiblePosition visible_end = EndingVisibleSelection().VisibleEnd();
  
-       start_index = 0;
-       if (start_in_paragraph) {
-@@ -1551,10 +1553,17 @@ void CompositeEditCommand::MoveParagraphs(
+-    bool start_after_paragraph =
+-        ComparePositions(visible_start, end_of_paragraph_to_move) > 0;
+-    bool end_before_paragraph =
+-        ComparePositions(visible_end, start_of_paragraph_to_move) < 0;
+-
+-    if (!start_after_paragraph && !end_before_paragraph) {
+-      bool start_in_paragraph =
+-          ComparePositions(visible_start, start_of_paragraph_to_move) >= 0;
+-      bool end_in_paragraph =
+-          ComparePositions(visible_end, end_of_paragraph_to_move) <= 0;
+-
+-      const TextIteratorBehavior behavior =
+-          TextIteratorBehavior::AllVisiblePositionsRangeLengthBehavior();
+-
+-      start_index = 0;
+-      if (start_in_paragraph) {
+-        start_index = TextIterator::RangeLength(
+-            start_of_paragraph_to_move.ToParentAnchoredPosition(),
+-            visible_start.ToParentAnchoredPosition(), behavior);
+-      }
+-
+-      end_index = 0;
+-      if (end_in_paragraph) {
+-        end_index = TextIterator::RangeLength(
+-            start_of_paragraph_to_move.ToParentAnchoredPosition(),
+-            visible_end.ToParentAnchoredPosition(), behavior);
++    if (visible_start.IsNull() || visible_end.IsNull()) {
++      // Skip preserving the selection if the selection endpoints
++      // visible_start and visible_end are invalid.
++      // It can happen due to a callback of a synchronous event
++      // dispatched by a prior DOM mutation.
++    } else {
++      bool start_after_paragraph =
++          ComparePositions(visible_start, end_of_paragraph_to_move) > 0;
++      bool end_before_paragraph =
++          ComparePositions(visible_end, start_of_paragraph_to_move) < 0;
++
++      if (!start_after_paragraph && !end_before_paragraph) {
++        bool start_in_paragraph =
++            ComparePositions(visible_start, start_of_paragraph_to_move) >= 0;
++        bool end_in_paragraph =
++            ComparePositions(visible_end, end_of_paragraph_to_move) <= 0;
++        const TextIteratorBehavior behavior =
++            RuntimeEnabledFeatures::EnterInOpenShadowRootsEnabled()
++                ? TextIteratorBehavior::
++                      AllVisiblePositionsIncludingShadowRootRangeLengthBehavior()
++                : TextIteratorBehavior::
++                      AllVisiblePositionsRangeLengthBehavior();
++
++        start_index = 0;
++        if (start_in_paragraph) {
++          start_index = TextIterator::RangeLength(
++              start_of_paragraph_to_move.ToParentAnchoredPosition(),
++              visible_start.ToParentAnchoredPosition(), behavior);
++        }
++
++        end_index = 0;
++        if (end_in_paragraph) {
++          end_index = TextIterator::RangeLength(
++              start_of_paragraph_to_move.ToParentAnchoredPosition(),
++              visible_end.ToParentAnchoredPosition(), behavior);
++        }
+       }
+     }
+   }
+@@ -1551,10 +1561,17 @@ void CompositeEditCommand::MoveParagraphs(
  
    DCHECK(!GetDocument().NeedsLayoutTreeUpdate());
  
@@ -38,7 +93,7 @@ index a2cc985bc10cf7c31025837700ed7b0c910d81d1..125910dc64576377e20e8fbf4f77efc6
    if (!DeleteSelection(
            editing_state,
            DeleteSelectionOptions::Builder().SetSanitizeMarkup(true).Build()))
-@@ -1595,12 +1604,18 @@ void CompositeEditCommand::MoveParagraphs(
+@@ -1595,12 +1612,18 @@ void CompositeEditCommand::MoveParagraphs(
  
    // TextIterator::rangeLength requires clean layout.
    GetDocument().UpdateStyleAndLayout(DocumentUpdateReason::kEditing);

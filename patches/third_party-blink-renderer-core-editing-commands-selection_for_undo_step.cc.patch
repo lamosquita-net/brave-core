@@ -1,0 +1,20 @@
+diff --git a/third_party/blink/renderer/core/editing/commands/selection_for_undo_step.cc b/third_party/blink/renderer/core/editing/commands/selection_for_undo_step.cc
+index fe6b98d0788bc6057531ae9ee8f0f2a6089dcde0..239938d1c4dbe6a9c46070f69869e4e0e46074cc 100644
+--- a/third_party/blink/renderer/core/editing/commands/selection_for_undo_step.cc
++++ b/third_party/blink/renderer/core/editing/commands/selection_for_undo_step.cc
+@@ -50,6 +50,15 @@ SelectionInDOMTree SelectionForUndoStep::AsSelection() const {
+   if (IsNone()) {
+     return SelectionInDOMTree();
+   }
++
++  // Guard against concurrent DOM modifications that may have disconnected
++  // positions. This prevents crashes when JavaScript callbacks modify DOM
++  // during editing operations.
++  if (!anchor_.IsConnected() || !focus_.IsConnected()) {
++    // If positions are disconnected, return empty selection
++    return SelectionInDOMTree();
++  }
++
+   return SelectionInDOMTree::Builder()
+       .SetBaseAndExtent(anchor_, focus_)
+       .SetAffinity(affinity_)
