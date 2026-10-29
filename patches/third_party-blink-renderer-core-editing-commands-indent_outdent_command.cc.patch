@@ -1,0 +1,18 @@
+diff --git a/third_party/blink/renderer/core/editing/commands/indent_outdent_command.cc b/third_party/blink/renderer/core/editing/commands/indent_outdent_command.cc
+index 8c1427f54a1a35a3023f96626e894b6552de53c9..a8f4cd78f6f4556e19530d2792f8077e530cc4bb 100644
+--- a/third_party/blink/renderer/core/editing/commands/indent_outdent_command.cc
++++ b/third_party/blink/renderer/core/editing/commands/indent_outdent_command.cc
+@@ -116,7 +116,12 @@ bool IndentOutdentCommand::TryIndentingAsListItem(
+       end.AnchorNode()->IsDescendantOf(selected_list_item->lastChild());
+ 
+   const VisiblePosition& start_of_paragraph_to_move =
+-      CreateVisiblePosition(start);
++      (RuntimeEnabledFeatures::
++           AdjustStartOfParagraphToMoveDuringIndentEnabled() &&
++       !should_keep_selected_list)
++          ? VisiblePosition::BeforeNode(*selected_list_item->firstChild())
++          : CreateVisiblePosition(start);
++
+   const VisiblePosition& end_of_paragraph_to_move =
+       should_keep_selected_list
+           ? CreateVisiblePosition(end)

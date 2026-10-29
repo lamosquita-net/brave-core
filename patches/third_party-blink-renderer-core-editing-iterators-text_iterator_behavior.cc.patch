@@ -1,0 +1,21 @@
+diff --git a/third_party/blink/renderer/core/editing/iterators/text_iterator_behavior.cc b/third_party/blink/renderer/core/editing/iterators/text_iterator_behavior.cc
+index 344c41a66d6eba663320fb1f9a7731a4e1307dae..b66371a838a2dff41e8fbd50dd60e2b6badfc7b4 100644
+--- a/third_party/blink/renderer/core/editing/iterators/text_iterator_behavior.cc
++++ b/third_party/blink/renderer/core/editing/iterators/text_iterator_behavior.cc
+@@ -185,6 +185,16 @@ TextIteratorBehavior::AllVisiblePositionsRangeLengthBehavior() {
+       .Build();
+ }
+ 
++// static
++TextIteratorBehavior TextIteratorBehavior::
++    AllVisiblePositionsIncludingShadowRootRangeLengthBehavior() {
++  return TextIteratorBehavior::Builder()
++      .SetEmitsObjectReplacementCharacter(true)
++      .SetEmitsCharactersBetweenAllVisiblePositions(true)
++      .SetEntersOpenShadowRoots(true)
++      .Build();
++}
++
+ // static
+ TextIteratorBehavior
+ TextIteratorBehavior::NoTrailingSpaceRangeLengthBehavior() {

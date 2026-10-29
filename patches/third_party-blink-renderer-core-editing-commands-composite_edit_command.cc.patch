@@ -1,8 +1,22 @@
 diff --git a/third_party/blink/renderer/core/editing/commands/composite_edit_command.cc b/third_party/blink/renderer/core/editing/commands/composite_edit_command.cc
-index a2cc985bc10cf7c31025837700ed7b0c910d81d1..8fb08c123fa9f8346ee9d7e00ab0a37584f32bf8 100644
+index a2cc985bc10cf7c31025837700ed7b0c910d81d1..125910dc64576377e20e8fbf4f77efc65e623856 100644
 --- a/third_party/blink/renderer/core/editing/commands/composite_edit_command.cc
 +++ b/third_party/blink/renderer/core/editing/commands/composite_edit_command.cc
-@@ -1551,10 +1551,17 @@ void CompositeEditCommand::MoveParagraphs(
+@@ -1474,9 +1474,11 @@ void CompositeEditCommand::MoveParagraphs(
+           ComparePositions(visible_start, start_of_paragraph_to_move) >= 0;
+       bool end_in_paragraph =
+           ComparePositions(visible_end, end_of_paragraph_to_move) <= 0;
+-
+       const TextIteratorBehavior behavior =
+-          TextIteratorBehavior::AllVisiblePositionsRangeLengthBehavior();
++          RuntimeEnabledFeatures::EnterInOpenShadowRootsEnabled()
++              ? TextIteratorBehavior::
++                    AllVisiblePositionsIncludingShadowRootRangeLengthBehavior()
++              : TextIteratorBehavior::AllVisiblePositionsRangeLengthBehavior();
+ 
+       start_index = 0;
+       if (start_in_paragraph) {
+@@ -1551,10 +1553,17 @@ void CompositeEditCommand::MoveParagraphs(
  
    DCHECK(!GetDocument().NeedsLayoutTreeUpdate());
  
@@ -24,3 +38,28 @@ index a2cc985bc10cf7c31025837700ed7b0c910d81d1..8fb08c123fa9f8346ee9d7e00ab0a375
    if (!DeleteSelection(
            editing_state,
            DeleteSelectionOptions::Builder().SetSanitizeMarkup(true).Build()))
+@@ -1595,12 +1604,18 @@ void CompositeEditCommand::MoveParagraphs(
+ 
+   // TextIterator::rangeLength requires clean layout.
+   GetDocument().UpdateStyleAndLayout(DocumentUpdateReason::kEditing);
+-
+-  destination_index = TextIterator::RangeLength(
+-      Position::FirstPositionInNode(*GetDocument().documentElement()),
+-      destination.ToParentAnchoredPosition(),
+-      TextIteratorBehavior::AllVisiblePositionsRangeLengthBehavior());
+-
++  if (RuntimeEnabledFeatures::EnterInOpenShadowRootsEnabled()) {
++    destination_index = TextIterator::RangeLength(
++        Position::FirstPositionInNode(*GetDocument().documentElement()),
++        destination.ToParentAnchoredPosition(),
++        TextIteratorBehavior::
++            AllVisiblePositionsIncludingShadowRootRangeLengthBehavior());
++  } else {
++    destination_index = TextIterator::RangeLength(
++        Position::FirstPositionInNode(*GetDocument().documentElement()),
++        destination.ToParentAnchoredPosition(),
++        TextIteratorBehavior::AllVisiblePositionsRangeLengthBehavior());
++  }
+   const VisibleSelection& destination_selection =
+       CreateVisibleSelection(SelectionInDOMTree::Builder()
+                                  .Collapse(destination.ToPositionWithAffinity())

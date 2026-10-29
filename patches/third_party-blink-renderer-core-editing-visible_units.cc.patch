@@ -1,8 +1,44 @@
 diff --git a/third_party/blink/renderer/core/editing/visible_units.cc b/third_party/blink/renderer/core/editing/visible_units.cc
-index e42fded957e1946eab37cf81818d3b88accf8caf..28fb58b32eb70e16ad1c6624ae1bc75a7f073b5c 100644
+index e42fded957e1946eab37cf81818d3b88accf8caf..323c101ee843932fdd45b960bdbd02b16225588e 100644
 --- a/third_party/blink/renderer/core/editing/visible_units.cc
 +++ b/third_party/blink/renderer/core/editing/visible_units.cc
-@@ -228,8 +228,16 @@ AdjustBackwardPositionToAvoidCrossingEditingBoundariesTemplate(
+@@ -185,19 +185,32 @@ static PositionType CanonicalPosition(const PositionType& position) {
+     return next.IsNotNull() ? next : prev;
+ 
+   Node* const next_node = next.AnchorNode();
++  Node* next_editing_root = RootEditableElementOf(next);
+   Node* const prev_node = prev.AnchorNode();
++  Node* prev_editing_root = RootEditableElementOf(prev);
+   const bool prev_is_in_same_editable_element =
+-      prev_node && RootEditableElementOf(prev) == editing_root;
++      prev_node && prev_editing_root == editing_root;
+   const bool next_is_in_same_editable_element =
+-      next_node && RootEditableElementOf(next) == editing_root;
++      next_node && next_editing_root == editing_root;
+   if (prev_is_in_same_editable_element && !next_is_in_same_editable_element)
+     return prev;
+ 
+   if (next_is_in_same_editable_element && !prev_is_in_same_editable_element)
+     return next;
+ 
+-  if (!next_is_in_same_editable_element && !prev_is_in_same_editable_element)
++  if (!next_is_in_same_editable_element && !prev_is_in_same_editable_element) {
++    // `prev/next_editing_root` is a child node of `editing_root`.
++    if (RuntimeEnabledFeatures::
++            PrevOrNextCandidateIsEditingRootChildEnabled() &&
++        editing_root) {
++      if (editing_root->contains(next_editing_root)) {
++        return next;
++      } else if (editing_root->contains(prev_editing_root)) {
++        return prev;
++      }
++    }
+     return PositionType();
++  }
+ 
+   // The new position should be in the same block flow element. Favor that.
+   const bool next_is_same_original_block = InSameBlock(node, next_node);
+@@ -228,8 +241,16 @@ AdjustBackwardPositionToAvoidCrossingEditingBoundariesTemplate(
  
    // Return empty position if |pos| is not somewhere inside the editable
    // region containing this position

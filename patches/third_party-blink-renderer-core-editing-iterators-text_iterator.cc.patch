@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/editing/iterators/text_iterator.cc b/third_party/blink/renderer/core/editing/iterators/text_iterator.cc
-index 41ababbf4a59e5822a00d34cfcafb1f997be3a02..e6db392789aae49c1119e75141b95498cbf68c21 100644
+index 41ababbf4a59e5822a00d34cfcafb1f997be3a02..591034f1f5c643b96369ffcb749bb5635d31a1d8 100644
 --- a/third_party/blink/renderer/core/editing/iterators/text_iterator.cc
 +++ b/third_party/blink/renderer/core/editing/iterators/text_iterator.cc
 @@ -58,6 +58,7 @@
@@ -10,7 +10,21 @@ index 41ababbf4a59e5822a00d34cfcafb1f997be3a02..e6db392789aae49c1119e75141b95498
  #include "third_party/blink/renderer/platform/wtf/text/string_builder.h"
  
  namespace blink {
-@@ -448,11 +449,15 @@ void TextIteratorAlgorithm<Strategy>::Advance() {
+@@ -308,8 +309,11 @@ void TextIteratorAlgorithm<Strategy>::Advance() {
+ 
+   if (HandleRememberedProgress())
+     return;
+-
+-  while (node_ && (node_ != past_end_node_ || shadow_depth_)) {
++  bool should_continue_iteration = (node_ != past_end_node_ || shadow_depth_);
++  if (RuntimeEnabledFeatures::EnterInOpenShadowRootsEnabled()) {
++    should_continue_iteration = (node_ != past_end_node_);
++  }
++  while (node_ && should_continue_iteration) {
+     // TODO(crbug.com/1296290): Disable this DCHECK as it's troubling CrOS engs.
+ #if DCHECK_IS_ON() && !BUILDFLAG(IS_CHROMEOS)
+     // |node_| shouldn't be after |past_end_node_|.
+@@ -448,11 +452,15 @@ void TextIteratorAlgorithm<Strategy>::Advance() {
                Strategy::IsDescendantOf(*end_container_, *parent_node)) {
              return;
            }
@@ -27,3 +41,16 @@ index 41ababbf4a59e5822a00d34cfcafb1f997be3a02..e6db392789aae49c1119e75141b95498
              ExitNode();
            }
            if (text_state_.PositionNode()) {
+@@ -506,6 +514,12 @@ void TextIteratorAlgorithm<Strategy>::Advance() {
+     // how would this ever be?
+     if (text_state_.PositionNode())
+       return;
++
++    if (RuntimeEnabledFeatures::EnterInOpenShadowRootsEnabled()) {
++      should_continue_iteration = (node_ != past_end_node_);
++    } else {
++      should_continue_iteration = (node_ != past_end_node_ || shadow_depth_);
++    }
+   }
+ }
+ 

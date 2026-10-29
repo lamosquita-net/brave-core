@@ -1,8 +1,48 @@
 diff --git a/third_party/blink/renderer/core/layout/inline/inline_items_builder.cc b/third_party/blink/renderer/core/layout/inline/inline_items_builder.cc
-index 0fa19b53aa4588aa248a414cf27eeb646396aaea..537c23c1fea0029ad2d363dc8eac73bc47b59a1e 100644
+index 0fa19b53aa4588aa248a414cf27eeb646396aaea..4b1d043f9095c70f553549c6be0c0ff0358e4b64 100644
 --- a/third_party/blink/renderer/core/layout/inline/inline_items_builder.cc
 +++ b/third_party/blink/renderer/core/layout/inline/inline_items_builder.cc
-@@ -513,7 +513,8 @@ bool InlineItemsBuilderTemplate<MappingBuilder>::AppendTextReusing(
+@@ -370,7 +370,7 @@ bool InlineItemsBuilderTemplate<MappingBuilder>::AppendTextReusing(
+   if (InlineItem* last_item = LastItemToCollapseWith(items_)) {
+     if (collapse_spaces) {
+       switch (last_item->EndCollapseType()) {
+-        case InlineItem::kCollapsible:
++        case InlineItem::kCollapsible: {
+           switch (original_string[old_item0.StartOffset()]) {
+             case kSpaceCharacter:
+               // If the original string starts with a collapsible space, it may
+@@ -380,8 +380,21 @@ bool InlineItemsBuilderTemplate<MappingBuilder>::AppendTextReusing(
+               // Collapsible spaces immediately before a preserved newline
+               // should be removed to be consistent with
+               // AppendForcedBreakCollapseWhitespace.
+-              if (preserve_newlines)
++              if (preserve_newlines) {
+                 return false;
++              }
++              break;
++            case kZeroWidthSpaceCharacter:
++              // `AppendBreakOpportunity` appends a zero width space to the
++              // `text_`. If the `original_string` starts with a zero width
++              // space, it should be collapsed. See
++              // https://issues.chromium.org/issues/389738294 for more details.
++              if (RuntimeEnabledFeatures::
++                      CollapseZeroWidthSpaceWhenReuseItemEnabled() &&
++                  old_item0.TextType() == TextItemType::kFlowControl) {
++                return false;
++              }
++              break;
+           }
+           // If the last item ended with a collapsible space run with segment
+           // breaks, we need to run the full algorithm to apply segment break
+@@ -396,6 +409,7 @@ bool InlineItemsBuilderTemplate<MappingBuilder>::AppendTextReusing(
+             }
+           }
+           break;
++        }
+         case InlineItem::kNotCollapsible: {
+           const String& source_text = layout_text->TransformedText();
+           if (source_text.length() &&
+@@ -513,7 +527,8 @@ bool InlineItemsBuilderTemplate<MappingBuilder>::AppendTextReusing(
        // The following should be true, but some unit tests fail.
        // DCHECK_EQ(item->Type(), InlineItem::kControl);
      }
@@ -12,7 +52,7 @@ index 0fa19b53aa4588aa248a414cf27eeb646396aaea..537c23c1fea0029ad2d363dc8eac73bc
  
  #if DCHECK_IS_ON()
      DCHECK_EQ(start, adjusted_item.StartOffset());
-@@ -524,8 +525,6 @@ bool InlineItemsBuilderTemplate<MappingBuilder>::AppendTextReusing(
+@@ -524,8 +539,6 @@ bool InlineItemsBuilderTemplate<MappingBuilder>::AppendTextReusing(
      }
      DCHECK_EQ(item.IsEmptyItem(), adjusted_item.IsEmptyItem());
  #endif
