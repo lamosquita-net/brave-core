@@ -1,0 +1,16 @@
+diff --git a/third_party/blink/renderer/core/animation/css_font_weight_interpolation_type.cc b/third_party/blink/renderer/core/animation/css_font_weight_interpolation_type.cc
+index 6bf1d01c4c181bcd1db57e115b88e1967de5e66c..e48fe39963bb5961de28fcf61d341a44987b17f8 100644
+--- a/third_party/blink/renderer/core/animation/css_font_weight_interpolation_type.cc
++++ b/third_party/blink/renderer/core/animation/css_font_weight_interpolation_type.cc
+@@ -74,8 +74,10 @@ InterpolationValue CSSFontWeightInterpolationType::MaybeConvertValue(
+               inherited_font_weight));
+     }
+   }
++  // TODO(40946458): Should do a proper interpolation here instead of converting
++  // relative units first.
+   return CreateFontWeightValue(StyleBuilderConverterBase::ConvertFontWeight(
+-      value, inherited_font_weight));
++      state->CssToLengthConversionData(), value, inherited_font_weight));
+ }
+ 
+ InterpolationValue

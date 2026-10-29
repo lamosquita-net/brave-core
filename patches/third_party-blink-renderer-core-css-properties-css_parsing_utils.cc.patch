@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc b/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
-index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..e190f0fab6319fc57ae560c3f525c80191cd1f43 100644
+index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..8248322e10294c74de115ec5d92e37efa33f055a 100644
 --- a/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
 +++ b/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
 @@ -53,6 +53,7 @@
@@ -2348,7 +2348,33 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..e190f0fab6319fc57ae560c3f525c801
    return list;
  }
  
-@@ -6555,6 +6340,7 @@ CSSIdentifierValue* ConsumeFontTechIdent(T& stream) {
+@@ -6440,8 +6225,10 @@ CSSValue* ConsumeFontWeight(T& stream, const CSSParserContext& context) {
+ 
+   CSSPrimitiveValue* start_weight = ConsumeNumber(
+       stream, context, CSSPrimitiveValue::ValueRange::kNonNegative);
+-  if (!start_weight || start_weight->GetFloatValue() < 1 ||
+-      start_weight->GetFloatValue() > 1000) {
++  auto* numeric_start_weight = DynamicTo<CSSNumericLiteralValue>(start_weight);
++  if (!start_weight ||
++      (numeric_start_weight && (numeric_start_weight->DoubleValue() < 1 ||
++                                numeric_start_weight->DoubleValue() > 1000))) {
+     return nullptr;
+   }
+ 
+@@ -6454,8 +6241,10 @@ CSSValue* ConsumeFontWeight(T& stream, const CSSParserContext& context) {
+ 
+   CSSPrimitiveValue* end_weight = ConsumeNumber(
+       stream, context, CSSPrimitiveValue::ValueRange::kNonNegative);
+-  if (!end_weight || end_weight->GetFloatValue() < 1 ||
+-      end_weight->GetFloatValue() > 1000) {
++  auto* numeric_end_weight = DynamicTo<CSSNumericLiteralValue>(end_weight);
++  if (!end_weight ||
++      (numeric_end_weight && (numeric_end_weight->DoubleValue() < 1 ||
++                              numeric_end_weight->DoubleValue() > 1000))) {
+     return nullptr;
+   }
+ 
+@@ -6555,6 +6344,7 @@ CSSIdentifierValue* ConsumeFontTechIdent(T& stream) {
  }
  
  template CSSIdentifierValue* ConsumeFontTechIdent(CSSParserTokenRange& stream);
@@ -2356,7 +2382,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..e190f0fab6319fc57ae560c3f525c801
  
  template <typename T>
    requires std::is_same_v<T, CSSParserTokenStream> ||
-@@ -6568,6 +6354,8 @@ CSSIdentifierValue* ConsumeFontFormatIdent(T& stream) {
+@@ -6568,6 +6358,8 @@ CSSIdentifierValue* ConsumeFontFormatIdent(T& stream) {
  
  template CSSIdentifierValue* ConsumeFontFormatIdent(
      CSSParserTokenRange& stream);
@@ -2365,7 +2391,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..e190f0fab6319fc57ae560c3f525c801
  
  CSSValueID FontFormatToId(String font_format) {
    CSSValueID converted_id = CssValueKeywordID(font_format);
-@@ -7915,43 +7703,53 @@ CSSValue* ConsumeTextDecorationLine(CSSParserTokenStream& stream) {
+@@ -7915,43 +7707,53 @@ CSSValue* ConsumeTextDecorationLine(CSSParserTokenStream& stream) {
  
  // Consume the `text-box-edge` production.
  CSSValue* ConsumeTextBoxEdge(CSSParserTokenStream& stream) {
@@ -2439,7 +2465,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..e190f0fab6319fc57ae560c3f525c801
  }
  
  // Consume the `autospace` production.
-@@ -8505,9 +8303,9 @@ CSSValue* ConsumeDashedIdentOrTactic(CSSParserTokenStream& stream,
+@@ -8505,9 +8307,9 @@ CSSValue* ConsumeDashedIdentOrTactic(CSSParserTokenStream& stream,
        continue;
      }
      if (context.Mode() == kUASheetMode && !dashed_ident) {
@@ -2452,7 +2478,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..e190f0fab6319fc57ae560c3f525c801
          continue;
        }
      }
-@@ -8533,21 +8331,21 @@ CSSValue* ConsumeDashedIdentOrTactic(CSSParserTokenStream& stream,
+@@ -8533,21 +8335,21 @@ CSSValue* ConsumeDashedIdentOrTactic(CSSParserTokenStream& stream,
    return list;
  }
  
@@ -2482,7 +2508,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..e190f0fab6319fc57ae560c3f525c801
    return function;
  }
  
-@@ -8559,17 +8357,17 @@ CSSValue* ConsumeSinglePositionTryFallback(CSSParserTokenStream& stream,
+@@ -8559,17 +8361,17 @@ CSSValue* ConsumeSinglePositionTryFallback(CSSParserTokenStream& stream,
    if (CSSValue* value = ConsumeDashedIdentOrTactic(stream, context)) {
      return value;
    }
@@ -2506,7 +2532,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..e190f0fab6319fc57ae560c3f525c801
    if (stream.Peek().Id() == CSSValueID::kNone) {
      return ConsumeIdent(stream);
    }
-@@ -8579,7 +8377,7 @@ CSSValue* ConsumePositionTryFallbacks(CSSParserTokenStream& stream,
+@@ -8579,7 +8381,7 @@ CSSValue* ConsumePositionTryFallbacks(CSSParserTokenStream& stream,
  
  namespace {
  
@@ -2515,7 +2541,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..e190f0fab6319fc57ae560c3f525c801
    STACK_ALLOCATED();
  
   public:
-@@ -8612,8 +8410,8 @@ struct InsetAreaKeyword {
+@@ -8612,8 +8414,8 @@ struct InsetAreaKeyword {
      kSelfStartEnd,
    };
  
@@ -2526,7 +2552,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..e190f0fab6319fc57ae560c3f525c801
      if (first.type == kGeneral || second.type == kGeneral) {
        return true;
      }
-@@ -8636,8 +8434,8 @@ struct InsetAreaKeyword {
+@@ -8636,8 +8438,8 @@ struct InsetAreaKeyword {
  template <class T>
    requires std::is_same_v<T, CSSParserTokenStream> ||
             std::is_same_v<T, CSSParserTokenRange>
@@ -2537,7 +2563,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..e190f0fab6319fc57ae560c3f525c801
    switch (stream.Peek().Id()) {
      case CSSValueID::kSpanAll:
      case CSSValueID::kCenter:
-@@ -8655,7 +8453,7 @@ std::optional<InsetAreaKeyword> ConsumeInsetAreaKeyword(T& stream) {
+@@ -8655,7 +8457,7 @@ std::optional<InsetAreaKeyword> ConsumeInsetAreaKeyword(T& stream) {
      case CSSValueID::kXSelfEnd:
      case CSSValueID::kSpanXSelfStart:
      case CSSValueID::kSpanXSelfEnd:
@@ -2546,7 +2572,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..e190f0fab6319fc57ae560c3f525c801
        break;
      case CSSValueID::kTop:
      case CSSValueID::kBottom:
-@@ -8669,53 +8467,53 @@ std::optional<InsetAreaKeyword> ConsumeInsetAreaKeyword(T& stream) {
+@@ -8669,53 +8471,53 @@ std::optional<InsetAreaKeyword> ConsumeInsetAreaKeyword(T& stream) {
      case CSSValueID::kYSelfEnd:
      case CSSValueID::kSpanYSelfStart:
      case CSSValueID::kSpanYSelfEnd:
@@ -2609,7 +2635,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..e190f0fab6319fc57ae560c3f525c801
  //                  [ left | center | right | span-left | span-right |
  //                    x-start | x-end | span-x-start | span-x-end |
  //                    x-self-start | x-self-end | span-x-self-start |
-@@ -8746,25 +8544,25 @@ std::optional<InsetAreaKeyword> ConsumeInsetAreaKeyword(T& stream) {
+@@ -8746,25 +8548,25 @@ std::optional<InsetAreaKeyword> ConsumeInsetAreaKeyword(T& stream) {
  template <class T>
    requires std::is_same_v<T, CSSParserTokenStream> ||
             std::is_same_v<T, CSSParserTokenRange>
@@ -2645,7 +2671,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..e190f0fab6319fc57ae560c3f525c801
      return nullptr;
    }
    CSSIdentifierValue* first_value = first.value().value;
-@@ -8773,21 +8571,22 @@ CSSValue* ConsumeInsetArea(T& range) {
+@@ -8773,21 +8575,22 @@ CSSValue* ConsumeInsetArea(T& range) {
      return first_value;
    }
    if (first_value->GetValueID() == CSSValueID::kSpanAll &&

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_builder_converter.h b/third_party/blink/renderer/core/css/resolver/style_builder_converter.h
-index 5ed57e0ad5e830975e62eb4d396e101c79184ebd..d3d62142efb664060877be06039aa3853708cb65 100644
+index 5ed57e0ad5e830975e62eb4d396e101c79184ebd..afdc3c00a01acb6d7b0785f794c405de624863d3 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_builder_converter.h
 +++ b/third_party/blink/renderer/core/css/resolver/style_builder_converter.h
 @@ -50,6 +50,7 @@
@@ -10,7 +10,17 @@ index 5ed57e0ad5e830975e62eb4d396e101c79184ebd..d3d62142efb664060877be06039aa385
  #include "third_party/blink/renderer/core/style/style_offset_rotation.h"
  #include "third_party/blink/renderer/core/style/style_overflow_clip_margin.h"
  #include "third_party/blink/renderer/core/style/style_reflection.h"
-@@ -106,8 +107,10 @@ class StyleBuilderConverterBase {
+@@ -90,7 +91,8 @@ class StyleBuilderConverterBase {
+   static FontSelectionValue ConvertFontStretch(const CSSLengthResolver&,
+                                                const CSSValue&);
+   static FontSelectionValue ConvertFontStyle(const CSSValue&);
+-  static FontSelectionValue ConvertFontWeight(const CSSValue&,
++  static FontSelectionValue ConvertFontWeight(const CSSLengthResolver&,
++                                              const CSSValue&,
+                                               FontSelectionValue);
+   static FontDescription::FontVariantCaps ConvertFontVariantCaps(
+       const CSSValue&);
+@@ -106,8 +108,10 @@ class StyleBuilderConverterBase {
    static DynamicRangeLimit ConvertDynamicRangeLimit(const CSSValue&);
    static FontSizeAdjust ConvertFontSizeAdjust(const StyleResolverState&,
                                                const CSSValue&);
@@ -23,7 +33,7 @@ index 5ed57e0ad5e830975e62eb4d396e101c79184ebd..d3d62142efb664060877be06039aa385
  };
  
  // Note that we assume the parser only allows valid CSSValue types.
-@@ -125,7 +128,8 @@ class StyleBuilderConverter {
+@@ -125,7 +129,8 @@ class StyleBuilderConverter {
    static DynamicRangeLimit ConvertDynamicRangeLimit(StyleResolverState&,
                                                      const CSSValue&);
    static StyleSVGResource* ConvertElementReference(StyleResolverState&,
@@ -33,7 +43,7 @@ index 5ed57e0ad5e830975e62eb4d396e101c79184ebd..d3d62142efb664060877be06039aa385
    static FilterOperations ConvertFilterOperations(StyleResolverState&,
                                                    const CSSValue&,
                                                    CSSPropertyID);
-@@ -240,8 +244,8 @@ class StyleBuilderConverter {
+@@ -240,8 +245,8 @@ class StyleBuilderConverter {
                                                        const CSSValue& value);
    static ScopedCSSNameList* ConvertAnchorName(StyleResolverState&,
                                                const CSSValue&);
@@ -44,7 +54,7 @@ index 5ed57e0ad5e830975e62eb4d396e101c79184ebd..d3d62142efb664060877be06039aa385
    static StyleInitialLetter ConvertInitialLetter(StyleResolverState&,
                                                   const CSSValue&);
    static StyleOffsetRotation ConvertOffsetRotate(StyleResolverState&,
-@@ -275,7 +279,8 @@ class StyleBuilderConverter {
+@@ -275,7 +280,8 @@ class StyleBuilderConverter {
                                                bool for_visited_link = false);
    static SVGPaint ConvertSVGPaint(StyleResolverState&,
                                    const CSSValue&,
@@ -54,7 +64,7 @@ index 5ed57e0ad5e830975e62eb4d396e101c79184ebd..d3d62142efb664060877be06039aa385
    static TextBoxEdge ConvertTextBoxEdge(StyleResolverState&, const CSSValue&);
    static TextDecorationThickness ConvertTextDecorationThickness(
        StyleResolverState&,
-@@ -334,7 +339,8 @@ class StyleBuilderConverter {
+@@ -334,7 +340,8 @@ class StyleBuilderConverter {
  
    static CSSVariableData* ConvertRegisteredPropertyVariableData(
        const CSSValue&,
@@ -64,7 +74,7 @@ index 5ed57e0ad5e830975e62eb4d396e101c79184ebd..d3d62142efb664060877be06039aa385
  
    static StyleAspectRatio ConvertAspectRatio(const StyleResolverState&,
                                               const CSSValue&);
-@@ -392,7 +398,7 @@ class StyleBuilderConverter {
+@@ -392,7 +399,7 @@ class StyleBuilderConverter {
    static ScopedCSSNameList* ConvertTimelineScope(StyleResolverState&,
                                                   const CSSValue&);
  
@@ -73,7 +83,7 @@ index 5ed57e0ad5e830975e62eb4d396e101c79184ebd..d3d62142efb664060877be06039aa385
  };
  
  template <typename T>
-@@ -509,7 +515,8 @@ int StyleBuilderConverter::ConvertIntegerOrNone(StyleResolverState& state,
+@@ -509,7 +516,8 @@ int StyleBuilderConverter::ConvertIntegerOrNone(StyleResolverState& state,
  // `value` is the result of parsing a <color> value.
  // See: https://drafts.csswg.org/css-color/#resolving-color-values
  CORE_EXPORT StyleColor
