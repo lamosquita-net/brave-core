@@ -1,0 +1,14 @@
+diff --git a/src/regexp/regexp-bytecode-generator.cc b/src/regexp/regexp-bytecode-generator.cc
+index 3aa7027df5cd29603d967e40211bb10b07c62a4d..7a277d46dff2bee10631dbbb534245c89f0f4edd 100644
+--- a/src/regexp/regexp-bytecode-generator.cc
++++ b/src/regexp/regexp-bytecode-generator.cc
+@@ -193,8 +193,7 @@ void RegExpBytecodeGenerator::LoadCurrentCharacterImpl(int cp_offset,
+     check_bounds = false;  // Load below doesn't need to check.
+   }
+ 
+-  DCHECK_LE(kMinCPOffset, cp_offset);
+-  DCHECK_GE(kMaxCPOffset, cp_offset);
++  CHECK(base::IsInRange(cp_offset, kMinCPOffset, kMaxCPOffset));
+   int bytecode;
+   if (check_bounds) {
+     if (characters == 4) {
