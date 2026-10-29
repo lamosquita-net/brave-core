@@ -1,8 +1,52 @@
 diff --git a/third_party/blink/renderer/core/html/forms/date_time_chooser_impl.cc b/third_party/blink/renderer/core/html/forms/date_time_chooser_impl.cc
-index 0905ae69297e29a36adda9bbaab6bc06c144e76c..6a2fa95055fc4093bc3bdc12023f2ac61772e904 100644
+index 0905ae69297e29a36adda9bbaab6bc06c144e76c..ebdbbee58681b82f6d6af5c7d6f30580c1917f1f 100644
 --- a/third_party/blink/renderer/core/html/forms/date_time_chooser_impl.cc
 +++ b/third_party/blink/renderer/core/html/forms/date_time_chooser_impl.cc
-@@ -85,6 +85,10 @@ AXObject* DateTimeChooserImpl::RootAXObject(Element* popup_owner) {
+@@ -43,6 +43,7 @@
+ #include "third_party/blink/renderer/core/input_type_names.h"
+ #include "third_party/blink/renderer/core/layout/layout_theme.h"
+ #include "third_party/blink/renderer/core/page/chrome_client.h"
++#include "third_party/blink/renderer/core/page/page.h"
+ #include "third_party/blink/renderer/core/page/page_popup.h"
+ #include "third_party/blink/renderer/platform/language.h"
+ #include "third_party/blink/renderer/platform/text/date_components.h"
+@@ -55,22 +56,21 @@ DateTimeChooserImpl::DateTimeChooserImpl(
+     LocalFrame* frame,
+     DateTimeChooserClient* client,
+     const DateTimeChooserParameters& parameters)
+-    : frame_(frame),
++    : chrome_client_(&frame->GetPage()->GetChromeClient()),
+       client_(client),
+       popup_(nullptr),
+       parameters_(&parameters),
+       locale_(Locale::Create(parameters.locale)) {
+   DCHECK(RuntimeEnabledFeatures::InputMultipleFieldsUIEnabled());
+-  DCHECK(frame_);
+   DCHECK(client_);
+-  popup_ = frame_->View()->GetChromeClient()->OpenPagePopup(this);
++  popup_ = chrome_client_->OpenPagePopup(this);
+   parameters_ = nullptr;
+ }
+ 
+ DateTimeChooserImpl::~DateTimeChooserImpl() = default;
+ 
+ void DateTimeChooserImpl::Trace(Visitor* visitor) const {
+-  visitor->Trace(frame_);
++  visitor->Trace(chrome_client_);
+   visitor->Trace(client_);
+   DateTimeChooser::Trace(visitor);
+ }
+@@ -78,13 +78,19 @@ void DateTimeChooserImpl::Trace(Visitor* visitor) const {
+ void DateTimeChooserImpl::EndChooser() {
+   if (!popup_)
+     return;
+-  frame_->View()->GetChromeClient()->ClosePagePopup(popup_);
++  if (chrome_client_) {
++    chrome_client_->ClosePagePopup(popup_);
++  }
+ }
+ 
+ AXObject* DateTimeChooserImpl::RootAXObject(Element* popup_owner) {
    return popup_ ? popup_->RootAXObject(popup_owner) : nullptr;
  }
  
@@ -13,7 +57,7 @@ index 0905ae69297e29a36adda9bbaab6bc06c144e76c..6a2fa95055fc4093bc3bdc12023f2ac6
  static String ValueToDateTimeString(double value, InputType::Type type) {
    DateComponents components;
    switch (type) {
-@@ -140,6 +144,16 @@ void DateTimeChooserImpl::WriteDocument(SegmentedBuffer& data) {
+@@ -140,6 +146,16 @@ void DateTimeChooserImpl::WriteDocument(SegmentedBuffer& data) {
  
    data.Append(ChooserResourceLoader::GetPickerCommonStyleSheet());
    data.Append(ChooserResourceLoader::GetSuggestionPickerStyleSheet());
@@ -30,7 +74,16 @@ index 0905ae69297e29a36adda9bbaab6bc06c144e76c..6a2fa95055fc4093bc3bdc12023f2ac6
    data.Append(ChooserResourceLoader::GetCalendarPickerStyleSheet());
    if (parameters_->type == InputType::Type::kTime ||
        parameters_->type == InputType::Type::kDateTimeLocal) {
-@@ -263,7 +277,8 @@ Locale& DateTimeChooserImpl::GetLocale() {
+@@ -255,7 +271,7 @@ Element& DateTimeChooserImpl::OwnerElement() {
+ }
+ 
+ ChromeClient& DateTimeChooserImpl::GetChromeClient() {
+-  return *frame_->View()->GetChromeClient();
++  return *chrome_client_;
+ }
+ 
+ Locale& DateTimeChooserImpl::GetLocale() {
+@@ -263,7 +279,8 @@ Locale& DateTimeChooserImpl::GetLocale() {
  }
  
  void DateTimeChooserImpl::SetValueAndClosePopup(int num_value,

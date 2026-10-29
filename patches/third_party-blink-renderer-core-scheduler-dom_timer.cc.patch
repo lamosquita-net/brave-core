@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/scheduler/dom_timer.cc b/third_party/blink/renderer/core/scheduler/dom_timer.cc
-index 16fe97d2ac623876b14901c077e8a22e02195a97..af7493cd901298e77df1d0152e46de7191b8de27 100644
+index 16fe97d2ac623876b14901c077e8a22e02195a97..066f44f0d64bd2d9b572acda6e51128866fdbc49 100644
 --- a/third_party/blink/renderer/core/scheduler/dom_timer.cc
 +++ b/third_party/blink/renderer/core/scheduler/dom_timer.cc
 @@ -303,7 +303,10 @@ DOMTimer::DOMTimer(ExecutionContext& context,
@@ -14,16 +14,58 @@ index 16fe97d2ac623876b14901c077e8a22e02195a97..af7493cd901298e77df1d0152e46de71
      timeout = std::max(timeout, base::Milliseconds(1));
    }
  
-@@ -333,7 +336,7 @@ void DOMTimer::Stop() {
-   }
+@@ -328,22 +331,29 @@ void DOMTimer::Dispose() {
+ }
  
-   async_task_context_.Cancel();
+ void DOMTimer::Stop() {
+-  if (!action_) {
+-    return;
+-  }
++  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
++  // TimerBase::Stop() must run even when action_ is null. During cppgc lazy
++  // sweeping the pre-finalizer (Dispose) may call Stop() after action_ has
++  // already been cleared by a previous Stop(). Skipping TimerBase::Stop() in
++  // that case would leave an Unretained(this) closure in the task queue whose
++  // captured pointer is poisoned by Oilpan right after Dispose() returns.
++  if (action_) {
++    async_task_context_.Cancel();
++    const bool is_interval = RepeatInterval().has_value();
+ 
+-  async_task_context_.Cancel();
 -  const bool is_interval = !RepeatInterval().is_zero();
-+  const bool is_interval = RepeatInterval().has_value();
-   probe::BreakableLocation(GetExecutionContext(),
-                            is_interval ? "clearInterval" : "clearTimeout");
+-  probe::BreakableLocation(GetExecutionContext(),
+-                           is_interval ? "clearInterval" : "clearTimeout");
++    // Release the action before invoking the probe to ensure that any
++    // re-entrant Stop() calls will safely and silently no-op.
++    ScheduledAction* action = action_.Release();
  
-@@ -361,7 +364,7 @@ void DOMTimer::Fired() {
+-  // Need to release JS objects potentially protected by ScheduledAction
+-  // because they can form circular references back to the ExecutionContext
+-  // which will cause a memory leak.
+-  if (action_) {
+-    action_->Dispose();
++    probe::BreakableLocation(GetExecutionContext(),
++                             is_interval ? "clearInterval" : "clearTimeout");
++
++    // Need to release JS objects potentially protected by ScheduledAction
++    // because they can form circular references back to the ExecutionContext
++    // which will cause a memory leak.
++    action->Dispose();
+   }
+-  action_ = nullptr;
++
+   TimerBase::Stop();
+ }
+ 
+@@ -352,6 +362,7 @@ void DOMTimer::ContextDestroyed() {
+ }
+ 
+ void DOMTimer::Fired() {
++  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+   ExecutionContext* context = GetExecutionContext();
+   DCHECK(context);
+   DOMTimerCoordinator::From(*context).SetTimerNestingLevel(nesting_level_);
+@@ -361,7 +372,7 @@ void DOMTimer::Fired() {
  
    DEVTOOLS_TIMELINE_TRACE_EVENT("TimerFire", inspector_timer_fire_event::Data,
                                  context, timeout_id_);
@@ -32,7 +74,7 @@ index 16fe97d2ac623876b14901c077e8a22e02195a97..af7493cd901298e77df1d0152e46de71
  
    probe::UserCallback probe(context, is_interval ? "setInterval" : "setTimeout",
                              g_null_atom, true);
-@@ -386,8 +389,8 @@ void DOMTimer::Fired() {
+@@ -386,8 +397,8 @@ void DOMTimer::Fired() {
      // Note: The implementation uses >= instead of >, contrary to what the spec
      // requires crbug.com/1108877.
      if (nesting_level_ == kMaxTimerNestingLevel &&
@@ -43,7 +85,7 @@ index 16fe97d2ac623876b14901c077e8a22e02195a97..af7493cd901298e77df1d0152e46de71
      }
      if (nesting_level_ == kMaxTimerNestingLevel) {
        // Move to the TaskType that corresponds to nesting level >=
-@@ -397,7 +400,7 @@ void DOMTimer::Fired() {
+@@ -397,7 +408,7 @@ void DOMTimer::Fired() {
      }
  
      DCHECK(nesting_level_ < kMaxTimerNestingLevel ||

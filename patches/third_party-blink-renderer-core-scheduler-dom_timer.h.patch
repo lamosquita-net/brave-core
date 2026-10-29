@@ -1,0 +1,20 @@
+diff --git a/third_party/blink/renderer/core/scheduler/dom_timer.h b/third_party/blink/renderer/core/scheduler/dom_timer.h
+index 4b7dae575560d84e733336bd7ff5558332bf0b4f..0565866fb3a062c0d4540b840222be8c81a67d91 100644
+--- a/third_party/blink/renderer/core/scheduler/dom_timer.h
++++ b/third_party/blink/renderer/core/scheduler/dom_timer.h
+@@ -28,6 +28,7 @@
+ #define THIRD_PARTY_BLINK_RENDERER_CORE_SCHEDULER_DOM_TIMER_H_
+ 
+ #include "base/memory/scoped_refptr.h"
++#include "base/sequence_checker.h"
+ #include "third_party/blink/renderer/core/core_export.h"
+ #include "third_party/blink/renderer/core/execution_context/execution_context_lifecycle_observer.h"
+ #include "third_party/blink/renderer/core/probe/async_task_context.h"
+@@ -113,6 +114,7 @@ class CORE_EXPORT DOMTimer final : public GarbageCollected<DOMTimer>,
+   int nesting_level_;
+   probe::AsyncTaskContext async_task_context_;
+   Member<ScheduledAction> action_;
++  SEQUENCE_CHECKER(sequence_checker_);
+ };
+ 
+ }  // namespace blink

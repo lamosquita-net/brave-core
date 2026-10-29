@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/page/page_popup_controller.cc b/third_party/blink/renderer/core/page/page_popup_controller.cc
-index 4e883678a4c4b6d9f6f59cdb4e8a4486df06bddd..50aea62d3f3623c92528a137b2c32a0b98da7951 100644
+index 4e883678a4c4b6d9f6f59cdb4e8a4486df06bddd..42245e57d58faa7119c5bc0b90becee832759f90 100644
 --- a/third_party/blink/renderer/core/page/page_popup_controller.cc
 +++ b/third_party/blink/renderer/core/page/page_popup_controller.cc
 @@ -56,9 +56,12 @@ PagePopupController::PagePopupController(Page& page,
@@ -18,3 +18,14 @@ index 4e883678a4c4b6d9f6f59cdb4e8a4486df06bddd..50aea62d3f3623c92528a137b2c32a0b
  }
  
  void PagePopupController::setValue(const String& value) {
+@@ -114,6 +117,10 @@ void PagePopupController::ClearPagePopupClient() {
+ }
+ 
+ void PagePopupController::setWindowRect(int x, int y, int width, int height) {
++  if (!popup_client_) {
++    return;
++  }
++
+   popup_.SetWindowRect(gfx::Rect(x, y, width, height));
+ 
+   popup_origin_ = gfx::Point(x, y);
