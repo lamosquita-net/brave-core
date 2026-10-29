@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/editing/markers/document_marker_controller.cc b/third_party/blink/renderer/core/editing/markers/document_marker_controller.cc
-index 94c08bd3baadadab82e6d1cc61e83320ba65a25d..2cdc46801bca270f6cc5224a0eb0fbbf0c65a2bb 100644
+index 94c08bd3baadadab82e6d1cc61e83320ba65a25d..34168da6d721851b0816f9222e0b972f83da06dd 100644
 --- a/third_party/blink/renderer/core/editing/markers/document_marker_controller.cc
 +++ b/third_party/blink/renderer/core/editing/markers/document_marker_controller.cc
 @@ -29,6 +29,7 @@
@@ -18,7 +18,23 @@ index 94c08bd3baadadab82e6d1cc61e83320ba65a25d..2cdc46801bca270f6cc5224a0eb0fbbf
  #include "third_party/blink/renderer/core/layout/layout_view.h"
  #include "third_party/blink/renderer/platform/heap/collection_support/heap_hash_set.h"
  
-@@ -128,13 +130,26 @@ void InvalidateVisualOverflowForNode(const Node& node,
+@@ -117,24 +119,39 @@ DocumentMarkerList* CreateListForType(DocumentMarker::MarkerType type) {
+ 
+ void InvalidateVisualOverflowForNode(const Node& node,
+                                      DocumentMarker::MarkerType type) {
+-  if (!node.GetLayoutObject() ||
++  LayoutObject* layout_object = node.GetLayoutObject();
++  if (!layout_object ||
+       !DocumentMarker::MarkerTypes::HighlightPseudos().Intersects(
+           DocumentMarker::MarkerTypes(type))) {
+     return;
+   }
+-  if (HighlightStyleUtils::ShouldInvalidateVisualOverflow(node, type)) {
+-    node.GetLayoutObject()->InvalidateVisualOverflow();
++  if (HighlightStyleUtils::ShouldInvalidateVisualOverflow(*layout_object,
++                                                          type)) {
++    layout_object->InvalidateVisualOverflow();
+   }
  }
  
  void InvalidatePaintForNode(const Node& node) {

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_resolver.cc b/third_party/blink/renderer/core/css/resolver/style_resolver.cc
-index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..3d3901620df8b6800e124649df710070b0f2a685 100644
+index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..47b5fb7c099886ec63ad13f8664147edafdd5bea 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_resolver.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_resolver.cc
 @@ -30,7 +30,10 @@
@@ -318,8 +318,8 @@ index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..3d3901620df8b6800e124649df710070
 +      CHECK(!style_attribute_cascaded_in_parent_scope);
 +    }
 +  }
-+}
-+
+ }
+ 
 +void MatchOuterScopeRules(const Element& matching_element,
 +                          ElementRuleCollector& collector,
 +                          StyleRuleUsageTracker* tracker) {
@@ -442,8 +442,8 @@ index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..3d3901620df8b6800e124649df710070
 +      }
 +    }
 +  }
- }
- 
++}
++
 +}  // namespace
 +
  void StyleResolver::MatchPseudoPartRulesForUAHost(
@@ -528,7 +528,19 @@ index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..3d3901620df8b6800e124649df710070
          state.OriginatingElementStyle());
    } else {
      state.CreateNewStyle(
-@@ -2780,7 +2953,7 @@ StyleRuleList* StyleResolver::CollectMatchingRulesFromUnconnectedRuleSet(
+@@ -2352,7 +2525,10 @@ StyleResolver::CacheSuccess StyleResolver::ApplyMatchedCache(
+   MatchedPropertiesCache::Key key(match_result);
+ 
+   bool can_use_cache = key.IsValid();
+-  if (UsesHighlightPseudoInheritance(style_request.pseudo_id)) {
++  // NOTE: Do not add anything here without also adding it to
++  // MatchedPropertiesCache::IsCacheable(); you would be inserting
++  // elements that can never be fetched.
++  if (state.UsesHighlightPseudoInheritance()) {
+     // Some pseudo-elements, like ::highlight, are special in that
+     // they inherit _non-inherited_ properties from their parent.
+     // This is different from what the MPC expects; it checks that
+@@ -2780,7 +2956,7 @@ StyleRuleList* StyleResolver::CollectMatchingRulesFromUnconnectedRuleSet(
    collector.SetMatchingRulesFromNoStyleSheet(true);
    collector.SetMode(SelectorChecker::kCollectingStyleRules);
    MatchRequest match_request(rule_set, scope);

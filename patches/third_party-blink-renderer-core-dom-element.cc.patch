@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/element.cc b/third_party/blink/renderer/core/dom/element.cc
-index afa9718ce5b9dd841e33d89610d524df1db4e2c9..b1f65677637edadb3601453b44d5ad5563f01f93 100644
+index afa9718ce5b9dd841e33d89610d524df1db4e2c9..3af4862071944cddb491662a6611ae3185c97ceb 100644
 --- a/third_party/blink/renderer/core/dom/element.cc
 +++ b/third_party/blink/renderer/core/dom/element.cc
 @@ -178,6 +178,7 @@
@@ -188,7 +188,39 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..b1f65677637edadb3601453b44d5ad55
          node = NodeTraversal::NextSkippingChildren(*node, this);
          continue;
        }
-@@ -6406,7 +6423,7 @@ void Element::UpdateSelectionOnFocus(
+@@ -5014,11 +5031,17 @@ Element::HighlightRecalc Element::CalculateHighlightRecalc(
+     return HighlightRecalc::kNone;
+   }
+   // If we are a root element (our parent is a Document or ShadowRoot), we can
+-  // skip highlight recalc if there neither are nor were any non-UA highlight
+-  // rules (regardless of whether or not they are non-universal), and the root’s
+-  // effective zoom (‘zoom’ × page zoom × device scale factor) did not change.
++  // skip highlight recalc if all of the following are true:
++  // * there neither are nor were any non-UA highlight rules (regardless of
++  //   whether or not they are non-universal), because then no inherited
++  //   highlight properties have changed.
++  // * the root’s effective zoom (‘zoom’ × page zoom × device scale factor) did
++  //   not change, because then no units have changed size.
++  // * the InitialData for custom properties has not changed, because then
++  //   custom properties will still have the same initial values.
+   // In that case, we only need to calculate highlight styles once, because our
+-  // UA styles only use type selectors and we never change them dynamically.
++  // UA styles only use type selectors, do not have custom properties, and we
++  // never change them dynamically.
+   DCHECK(IsInTreeScope());
+   if (parentNode() == GetTreeScope().RootNode()) {
+     if (new_style.HasNonUaHighlightPseudoStyles()) {
+@@ -5031,6 +5054,9 @@ Element::HighlightRecalc Element::CalculateHighlightRecalc(
+       if (old_style->EffectiveZoom() != new_style.EffectiveZoom()) {
+         return HighlightRecalc::kFull;
+       }
++      if (old_style->InitialData() != new_style.InitialData()) {
++        return HighlightRecalc::kFull;
++      }
+       // Neither the new style nor the old style has any non-UA highlight rules,
+       // so they will be equal. Let’s reuse the old styles for all highlights.
+       return HighlightRecalc::kReuse;
+@@ -6406,7 +6432,7 @@ void Element::UpdateSelectionOnFocus(
    } else if (GetLayoutObject() &&
               !GetLayoutObject()->IsLayoutEmbeddedContent()) {
      if (!options->preventScroll()) {
@@ -197,7 +229,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..b1f65677637edadb3601453b44d5ad55
  
        // It's common to have menus and list controls that have items slightly
        // overflowing horizontally but the control isn't horizontally
-@@ -7441,8 +7458,8 @@ const ComputedStyle* Element::EnsureComputedStyle(
+@@ -7441,8 +7467,8 @@ const ComputedStyle* Element::EnsureComputedStyle(
    StyleEngine::InEnsureComputedStyleScope ensure_scope(
        GetDocument().GetStyleEngine());
  
@@ -208,7 +240,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..b1f65677637edadb3601453b44d5ad55
      return element->EnsureComputedStyle();
    }
  
-@@ -7911,6 +7928,17 @@ PseudoElement* Element::UpdatePseudoElement(
+@@ -7911,6 +7937,17 @@ PseudoElement* Element::UpdatePseudoElement(
            !PseudoElementLayoutObjectIsNeeded(
                pseudo_id, element->GetComputedStyle(), this)) {
          generate_pseudo = false;
@@ -226,7 +258,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..b1f65677637edadb3601453b44d5ad55
        }
      }
      if (!generate_pseudo) {
-@@ -7948,10 +7976,21 @@ PseudoElement* Element::CreatePseudoElementIfNeeded(
+@@ -7948,10 +7985,21 @@ PseudoElement* Element::CreatePseudoElementIfNeeded(
    if (!PseudoElementLayoutObjectIsNeeded(pseudo_id, pseudo_style, this)) {
      GetElementRareData()->SetPseudoElement(pseudo_id, nullptr,
                                             view_transition_name);
@@ -249,7 +281,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..b1f65677637edadb3601453b44d5ad55
      GetDocument().AddToTopLayer(pseudo_element, this);
    }
  
-@@ -7984,11 +8023,32 @@ PseudoElement* Element::GetPseudoElement(
+@@ -7984,11 +8032,32 @@ PseudoElement* Element::GetPseudoElement(
    return nullptr;
  }
  
@@ -284,7 +316,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..b1f65677637edadb3601453b44d5ad55
    }
  
    // The transition pseudos can currently only exist on the document element.
-@@ -8021,18 +8081,44 @@ PseudoElement* Element::GetNestedPseudoElement(
+@@ -8021,18 +8090,44 @@ PseudoElement* Element::GetNestedPseudoElement(
  }
  
  LayoutObject* Element::PseudoElementLayoutObject(PseudoId pseudo_id) const {
@@ -331,7 +363,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..b1f65677637edadb3601453b44d5ad55
      return true;
    }
  
-@@ -8044,10 +8130,6 @@ bool Element::PseudoElementStylesDependOnFontMetrics() const {
+@@ -8044,10 +8139,6 @@ bool Element::PseudoElementStylesDependOnFontMetrics() const {
      return false;
    }
  
@@ -342,7 +374,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..b1f65677637edadb3601453b44d5ad55
    // Note that |HasAnyPseudoElementStyles()| counts public pseudo elements only.
    // ::-webkit-scrollbar-*  are internal, and hence are not counted. So we must
    // perform this check after checking scrollbar pseudo element styles.
-@@ -8056,7 +8138,7 @@ bool Element::PseudoElementStylesDependOnFontMetrics() const {
+@@ -8056,7 +8147,7 @@ bool Element::PseudoElementStylesDependOnFontMetrics() const {
    }
  
    for (PseudoElement* pseudo_element : rare_data->GetPseudoElements()) {
@@ -351,7 +383,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..b1f65677637edadb3601453b44d5ad55
        return true;
      }
    }
-@@ -10146,7 +10228,6 @@ AnchorPositionScrollData* Element::GetAnchorPositionScrollData() const {
+@@ -10146,7 +10237,6 @@ AnchorPositionScrollData* Element::GetAnchorPositionScrollData() const {
  }
  
  void Element::IncrementImplicitlyAnchoredElementCount() {
@@ -359,7 +391,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..b1f65677637edadb3601453b44d5ad55
    if (!HasImplicitlyAnchoredElement() && GetLayoutObject()) {
      // Invalidate layout to populate itself into Physical/LogicalAnchorQuery.
      GetLayoutObject()->SetNeedsLayoutAndFullPaintInvalidation(
-@@ -10175,20 +10256,19 @@ AnchorElementObserver* Element::GetAnchorElementObserver() const {
+@@ -10175,20 +10265,19 @@ AnchorElementObserver* Element::GetAnchorElementObserver() const {
  
  AnchorElementObserver& Element::EnsureAnchorElementObserver() {
    DCHECK(IsHTMLElement());
