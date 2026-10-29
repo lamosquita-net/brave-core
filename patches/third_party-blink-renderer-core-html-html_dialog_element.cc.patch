@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/html_dialog_element.cc b/third_party/blink/renderer/core/html/html_dialog_element.cc
-index 8c5398ae2353e8bc7664fcc3c960521f15197942..7b24227c82a544ebea6e9a335cd9ad0501c33412 100644
+index 8c5398ae2353e8bc7664fcc3c960521f15197942..888b081e2eea42c9857f9cb4c1aabfda092d0911 100644
 --- a/third_party/blink/renderer/core/html/html_dialog_element.cc
 +++ b/third_party/blink/renderer/core/html/html_dialog_element.cc
 @@ -32,11 +32,15 @@
@@ -112,7 +112,7 @@ index 8c5398ae2353e8bc7664fcc3c960521f15197942..7b24227c82a544ebea6e9a335cd9ad05
      Element* previously_focused_element = previously_focused_element_;
      previously_focused_element_ = nullptr;
  
-@@ -183,28 +209,161 @@ void HTMLDialogElement::close(const String& return_value,
+@@ -183,28 +209,160 @@ void HTMLDialogElement::close(const String& return_value,
                                   FlatTreeTraversal::IsDescendantOf(
                                       *GetDocument().FocusedElement(), *this);
      if (previously_focused_element && (was_modal || descendant_is_focused)) {
@@ -208,7 +208,6 @@ index 8c5398ae2353e8bc7664fcc3c960521f15197942..7b24227c82a544ebea6e9a335cd9ad05
 +        const_cast<HTMLDialogElement*>(dialog)->GetBoundingClientRect();
 +    if (!dialog_rect->IsPointInside(pointer_event.clientX(),
 +                                    pointer_event.clientY())) {
-+      CHECK(dialog->GetPseudoElement(kPseudoIdBackdrop));
 +      return nullptr;  // Return nullptr for a backdrop click.
 +    }
 +  }
@@ -285,7 +284,7 @@ index 8c5398ae2353e8bc7664fcc3c960521f15197942..7b24227c82a544ebea6e9a335cd9ad05
  
    if (HTMLElement::HandleCommandInternal(invoker, command)) {
      return true;
-@@ -219,17 +378,36 @@ bool HTMLDialogElement::HandleCommandInternal(HTMLElement& invoker,
+@@ -219,17 +377,36 @@ bool HTMLDialogElement::HandleCommandInternal(HTMLElement& invoker,
      return false;
    }
  
@@ -325,7 +324,7 @@ index 8c5398ae2353e8bc7664fcc3c960521f15197942..7b24227c82a544ebea6e9a335cd9ad05
      }
    } else if (command == CommandEventType::kShowModal) {
      if (isConnected() && !open) {
-@@ -259,8 +437,8 @@ void HTMLDialogElement::ScheduleCloseEvent() {
+@@ -259,8 +436,8 @@ void HTMLDialogElement::ScheduleCloseEvent() {
  }
  
  void HTMLDialogElement::show(ExceptionState& exception_state) {
@@ -336,7 +335,7 @@ index 8c5398ae2353e8bc7664fcc3c960521f15197942..7b24227c82a544ebea6e9a335cd9ad05
        exception_state.ThrowDOMException(
            DOMExceptionCode::kInvalidStateError,
            "The dialog is already open as a modal dialog, and therefore "
-@@ -269,16 +447,17 @@ void HTMLDialogElement::show(ExceptionState& exception_state) {
+@@ -269,16 +446,17 @@ void HTMLDialogElement::show(ExceptionState& exception_state) {
      return;
    }
  
@@ -358,7 +357,7 @@ index 8c5398ae2353e8bc7664fcc3c960521f15197942..7b24227c82a544ebea6e9a335cd9ad05
    auto* hide_until = HTMLElement::TopLayerElementPopoverAncestor(
        *this, TopLayerElementType::kDialog);
    HTMLElement::HideAllPopoversUntil(
-@@ -326,9 +505,43 @@ class DialogCloseWatcherEventListener : public NativeEventListener {
+@@ -326,9 +504,43 @@ class DialogCloseWatcherEventListener : public NativeEventListener {
    WeakMember<HTMLDialogElement> dialog_;
  };
  
@@ -404,7 +403,7 @@ index 8c5398ae2353e8bc7664fcc3c960521f15197942..7b24227c82a544ebea6e9a335cd9ad05
        exception_state.ThrowDOMException(
            DOMExceptionCode::kInvalidStateError,
            "The dialog is already open as a non-modal dialog, and therefore "
-@@ -347,6 +560,15 @@ void HTMLDialogElement::showModal(ExceptionState& exception_state) {
+@@ -347,6 +559,15 @@ void HTMLDialogElement::showModal(ExceptionState& exception_state) {
          "The dialog is already open as a Popover, and therefore cannot be "
          "opened as a modal dialog.");
    }
@@ -420,7 +419,7 @@ index 8c5398ae2353e8bc7664fcc3c960521f15197942..7b24227c82a544ebea6e9a335cd9ad05
  
    Document& document = GetDocument();
    HTMLDialogElement* old_modal_dialog = document.ActiveModalDialog();
-@@ -358,24 +580,20 @@ void HTMLDialogElement::showModal(ExceptionState& exception_state) {
+@@ -358,24 +579,20 @@ void HTMLDialogElement::showModal(ExceptionState& exception_state) {
    }
  
    document.AddToTopLayer(this);
@@ -453,7 +452,7 @@ index 8c5398ae2353e8bc7664fcc3c960521f15197942..7b24227c82a544ebea6e9a335cd9ad05
    }
  
    // Proposed new behavior: top layer elements like dialogs and fullscreen
-@@ -395,13 +613,34 @@ void HTMLDialogElement::showModal(ExceptionState& exception_state) {
+@@ -395,13 +612,34 @@ void HTMLDialogElement::showModal(ExceptionState& exception_state) {
    }
  }
  
@@ -489,7 +488,7 @@ index 8c5398ae2353e8bc7664fcc3c960521f15197942..7b24227c82a544ebea6e9a335cd9ad05
    if (close_watcher_) {
      close_watcher_->destroy();
      close_watcher_ = nullptr;
-@@ -427,7 +666,7 @@ void HTMLDialogElement::CloseWatcherFiredClose() {
+@@ -427,7 +665,7 @@ void HTMLDialogElement::CloseWatcherFiredClose() {
      return;
    // https://wicg.github.io/close-watcher/#patch-dialog closeAction
  
@@ -498,7 +497,7 @@ index 8c5398ae2353e8bc7664fcc3c960521f15197942..7b24227c82a544ebea6e9a335cd9ad05
  }
  
  // https://html.spec.whatwg.org#dialog-focusing-steps
-@@ -438,12 +677,13 @@ void HTMLDialogElement::SetFocusForDialog() {
+@@ -438,12 +676,13 @@ void HTMLDialogElement::SetFocusForDialog() {
    if (IsAutofocusable()) {
      control = this;
    }
@@ -515,7 +514,7 @@ index 8c5398ae2353e8bc7664fcc3c960521f15197942..7b24227c82a544ebea6e9a335cd9ad05
      control->GetDocument().ClearFocusedElement();
    }
  
-@@ -465,26 +705,104 @@ void HTMLDialogElement::SetFocusForDialog() {
+@@ -465,26 +704,104 @@ void HTMLDialogElement::SetFocusForDialog() {
    doc.TopDocument().FinalizeAutofocus();
  }
  
