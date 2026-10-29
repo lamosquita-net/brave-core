@@ -1,0 +1,18 @@
+diff --git a/third_party/blink/renderer/modules/canvas/htmlcanvas/canvas_context_creation_attributes_helpers.cc b/third_party/blink/renderer/modules/canvas/htmlcanvas/canvas_context_creation_attributes_helpers.cc
+index 8938e79c1cbd0715f78be85b0d378112cd98d818..97a6a498d2a3deb6df6f944ca5ea70f2190aeb1a 100644
+--- a/third_party/blink/renderer/modules/canvas/htmlcanvas/canvas_context_creation_attributes_helpers.cc
++++ b/third_party/blink/renderer/modules/canvas/htmlcanvas/canvas_context_creation_attributes_helpers.cc
+@@ -24,11 +24,12 @@ bool ToCanvasContextCreationAttributes(
+   result.depth = attrs->depth();
+   result.fail_if_major_performance_caveat =
+       attrs->failIfMajorPerformanceCaveat();
++  result.desynchronized_specified = attrs->desynchronized();
+ #if BUILDFLAG(IS_MAC)
+   // TODO(crbug.com/945835): enable desynchronized on Mac.
+   result.desynchronized = false;
+ #else
+-  result.desynchronized = attrs->desynchronized();
++  result.desynchronized = result.desynchronized_specified;
+ #endif
+   switch (attrs->pixelFormat().AsEnum()) {
+     case V8CanvasPixelFormat::Enum::kUint8:

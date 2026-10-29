@@ -1,0 +1,17 @@
+diff --git a/third_party/blink/renderer/core/html/canvas/canvas_context_creation_attributes_core.h b/third_party/blink/renderer/core/html/canvas/canvas_context_creation_attributes_core.h
+index 8652e81f0d18c6ab61ffa1d3a0bfd43f7312ace3..aea4d7188131410c388abdb84cb141519a75342a 100644
+--- a/third_party/blink/renderer/core/html/canvas/canvas_context_creation_attributes_core.h
++++ b/third_party/blink/renderer/core/html/canvas/canvas_context_creation_attributes_core.h
+@@ -28,7 +28,12 @@ class CORE_EXPORT CanvasContextCreationAttributesCore {
+   PredefinedColorSpace color_space = PredefinedColorSpace::kSRGB;
+   bool depth = true;
+   bool fail_if_major_performance_caveat = false;
++  // This value may be different from the one specified at context creation,
++  // because it may be disabled on some platforms.
+   bool desynchronized = false;
++  // This is the value that was specified, and should be returned by
++  // getContextAttributes.
++  bool desynchronized_specified = false;
+   CanvasPixelFormat pixel_format = CanvasPixelFormat::kUint8;
+   bool premultiplied_alpha = true;
+   bool preserve_drawing_buffer = false;

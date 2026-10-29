@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/modules/canvas/canvas2d/canvas_rendering_context_2d.cc b/third_party/blink/renderer/modules/canvas/canvas2d/canvas_rendering_context_2d.cc
-index 2c56d3894a9269496e8128687d60b3d54d6f60f4..bad22526b7f767a857b1a08274bc6cb200f9f26d 100644
+index 2c56d3894a9269496e8128687d60b3d54d6f60f4..a819e7e71307e92ac1ee54ecd40aeaf71b4f1e3f 100644
 --- a/third_party/blink/renderer/modules/canvas/canvas2d/canvas_rendering_context_2d.cc
 +++ b/third_party/blink/renderer/modules/canvas/canvas2d/canvas_rendering_context_2d.cc
 @@ -54,7 +54,6 @@
@@ -19,8 +19,12 @@ index 2c56d3894a9269496e8128687d60b3d54d6f60f4..bad22526b7f767a857b1a08274bc6cb2
            horizontal_scroll_mode, vertical_scroll_mode,
            mojom::blink::ScrollType::kProgrammatic, false,
            mojom::blink::ScrollBehavior::kAuto));
-@@ -753,14 +752,12 @@ CanvasRenderingContext2D::getContextAttributes() const {
-   settings->setDesynchronized(Host()->LowLatencyEnabled());
+@@ -750,17 +749,15 @@ CanvasRenderingContext2D::getContextAttributes() const {
+   settings->setColorSpace(color_params_.GetColorSpaceAsString());
+   if (RuntimeEnabledFeatures::CanvasFloatingPointEnabled())
+     settings->setPixelFormat(color_params_.GetPixelFormatAsString());
+-  settings->setDesynchronized(Host()->LowLatencyEnabled());
++  settings->setDesynchronized(CreationAttributes().desynchronized_specified);
    switch (CreationAttributes().will_read_frequently) {
      case CanvasContextCreationAttributesCore::WillReadFrequently::kTrue:
 -      settings->setWillReadFrequently(V8CanvasWillReadFrequently::Enum::kTrue);
