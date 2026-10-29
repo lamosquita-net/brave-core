@@ -1,8 +1,40 @@
 diff --git a/third_party/blink/renderer/core/css/style_environment_variables.cc b/third_party/blink/renderer/core/css/style_environment_variables.cc
-index 9bbf0db85d75c15b7b7b1ce7bcaa3a8076d79f52..f1247d5008431b58bddd56358b4f8b5538eeb080 100644
+index 9bbf0db85d75c15b7b7b1ce7bcaa3a8076d79f52..fb4aa185d233017470b336f2b6aaa7d9e2ba3186 100644
 --- a/third_party/blink/renderer/core/css/style_environment_variables.cc
 +++ b/third_party/blink/renderer/core/css/style_environment_variables.cc
-@@ -127,6 +127,7 @@ void StyleEnvironmentVariables::SetVariable(const AtomicString& name,
+@@ -27,6 +27,16 @@ void SetDefaultEnvironmentVariables(StyleEnvironmentVariables* instance) {
+                         kSafeAreaInsetDefault);
+   instance->SetVariable(UADefinedVariable::kSafeAreaInsetRight,
+                         kSafeAreaInsetDefault);
++  if (RuntimeEnabledFeatures::CSSSafeAreaMaxInsetEnabled()) {
++    instance->SetVariable(UADefinedVariable::kSafeAreaMaxInsetTop,
++                          kSafeAreaInsetDefault);
++    instance->SetVariable(UADefinedVariable::kSafeAreaMaxInsetLeft,
++                          kSafeAreaInsetDefault);
++    instance->SetVariable(UADefinedVariable::kSafeAreaMaxInsetBottom,
++                          kSafeAreaInsetDefault);
++    instance->SetVariable(UADefinedVariable::kSafeAreaMaxInsetRight,
++                          kSafeAreaInsetDefault);
++  }
+   instance->SetVariable(UADefinedVariable::kKeyboardInsetTop,
+                         kKeyboardInsetDefault);
+   instance->SetVariable(UADefinedVariable::kKeyboardInsetLeft,
+@@ -59,6 +69,14 @@ const AtomicString StyleEnvironmentVariables::GetVariableName(
+     UADefinedVariable variable,
+     const FeatureContext* feature_context) {
+   switch (variable) {
++    case UADefinedVariable::kSafeAreaMaxInsetTop:
++      return AtomicString("safe-area-max-inset-top");
++    case UADefinedVariable::kSafeAreaMaxInsetLeft:
++      return AtomicString("safe-area-max-inset-left");
++    case UADefinedVariable::kSafeAreaMaxInsetBottom:
++      return AtomicString("safe-area-max-inset-bottom");
++    case UADefinedVariable::kSafeAreaMaxInsetRight:
++      return AtomicString("safe-area-max-inset-right");
+     case UADefinedVariable::kSafeAreaInsetTop:
+       return AtomicString("safe-area-inset-top");
+     case UADefinedVariable::kSafeAreaInsetLeft:
+@@ -127,6 +145,7 @@ void StyleEnvironmentVariables::SetVariable(const AtomicString& name,
                                              const String& value) {
    data_.Set(name,
              CSSVariableData::Create(value, false /* is_animation_tainted */,
@@ -10,7 +42,7 @@ index 9bbf0db85d75c15b7b7b1ce7bcaa3a8076d79f52..f1247d5008431b58bddd56358b4f8b55
                                      false /* needs_variable_resolution */));
    InvalidateVariable(name);
  }
-@@ -147,9 +148,9 @@ void StyleEnvironmentVariables::SetVariable(const AtomicString& name,
+@@ -147,9 +166,9 @@ void StyleEnvironmentVariables::SetVariable(const AtomicString& name,
      return;
    }
  
