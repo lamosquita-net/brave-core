@@ -1,5 +1,5 @@
 diff --git a/src/objects/shared-function-info-inl.h b/src/objects/shared-function-info-inl.h
-index b478f0c6dcd43962ef3688eda68b73a65a0afd49..bd7f43c375824e824185eb36bd58c6d8e61ce4f3 100644
+index b478f0c6dcd43962ef3688eda68b73a65a0afd49..a44b28277d1ccaca5528dddef4620b86ca99c80f 100644
 --- a/src/objects/shared-function-info-inl.h
 +++ b/src/objects/shared-function-info-inl.h
 @@ -397,6 +397,9 @@ BIT_FIELD_ACCESSORS(SharedFunctionInfo, relaxed_flags, properties_are_final,
@@ -12,3 +12,27 @@ index b478f0c6dcd43962ef3688eda68b73a65a0afd49..bd7f43c375824e824185eb36bd58c6d8
  
  bool SharedFunctionInfo::optimization_disabled() const {
    return disabled_optimization_reason() != BailoutReason::kNoReason;
+@@ -611,6 +614,23 @@ Tagged<ScopeInfo> SharedFunctionInfo::GetOuterScopeInfo() const {
+   return info->OuterScopeInfo();
+ }
+ 
++Tagged<ScopeInfo> SharedFunctionInfo::TryGetOuterScopeInfo() const {
++  Tagged<Object> maybe_scope_info = name_or_scope_info(kAcquireLoad);
++  if (IsScopeInfo(maybe_scope_info)) {
++    Tagged<ScopeInfo> scope_info = Cast<ScopeInfo>(maybe_scope_info);
++    if (scope_info->HasOuterScopeInfo()) {
++      return scope_info->OuterScopeInfo();
++    }
++    return GetReadOnlyRoots().empty_scope_info();
++  }
++  Tagged<Object> maybe_outer_scope_info =
++      raw_outer_scope_info_or_feedback_metadata(kAcquireLoad);
++  if (IsScopeInfo(maybe_outer_scope_info)) {
++    return Cast<ScopeInfo>(maybe_outer_scope_info);
++  }
++  return GetReadOnlyRoots().empty_scope_info();
++}
++
+ void SharedFunctionInfo::set_outer_scope_info(Tagged<HeapObject> value,
+                                               WriteBarrierMode mode) {
+   DCHECK(!is_compiled());

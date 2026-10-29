@@ -1,8 +1,19 @@
 diff --git a/src/objects/shared-function-info.h b/src/objects/shared-function-info.h
-index 85968d4500f2c72b09a505ed20df54c0d087e86a..b06358ebdd24d31ee7fe6dc4547332dc65cb490e 100644
+index 85968d4500f2c72b09a505ed20df54c0d087e86a..468407e9620c6931a593100bd969d011c69d637b 100644
 --- a/src/objects/shared-function-info.h
 +++ b/src/objects/shared-function-info.h
-@@ -581,6 +581,9 @@ class SharedFunctionInfo
+@@ -286,6 +286,10 @@ class SharedFunctionInfo
+   // Get the outer scope info whether this function is compiled or not.
+   inline bool HasOuterScopeInfo() const;
+   inline Tagged<ScopeInfo> GetOuterScopeInfo() const;
++  // FlyWeb (upstream 7fd662da8a): reads the outer ScopeInfo with one load of
++  // each field, for background threads racing with main-thread compilation.
++  // Returns the empty ScopeInfo if there is none.
++  inline Tagged<ScopeInfo> TryGetOuterScopeInfo() const;
+ 
+   // [feedback metadata] Metadata template for feedback vectors of instances of
+   // this function.
+@@ -581,6 +585,9 @@ class SharedFunctionInfo
    // closest outer class scope.
    DECL_BOOLEAN_ACCESSORS(private_name_lookup_skips_outer_class)
  
