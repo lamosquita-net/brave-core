@@ -1,0 +1,36 @@
+diff --git a/third_party/blink/renderer/core/html/html_iframe_element_sandbox.cc b/third_party/blink/renderer/core/html/html_iframe_element_sandbox.cc
+index d2a59c6a73bd8414a1edf2542e0159ed5622de24..c80f36f601fabe5cc732a97c8b22c3ac86aa43b9 100644
+--- a/third_party/blink/renderer/core/html/html_iframe_element_sandbox.cc
++++ b/third_party/blink/renderer/core/html/html_iframe_element_sandbox.cc
+@@ -7,6 +7,7 @@
+ #include "third_party/blink/renderer/core/html/fenced_frame/html_fenced_frame_element.h"
+ #include "third_party/blink/renderer/core/html/html_frame_owner_element.h"
+ #include "third_party/blink/renderer/core/html/html_iframe_element.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+ 
+ namespace blink {
+ 
+@@ -34,13 +35,22 @@ const char* const kSupportedSandboxTokens[] = {
+ constexpr char kStorageAccessAPISandboxToken[] =
+     "allow-storage-access-by-user-activation";
+ 
++// TODO (https://crbug.com/372894175) move this into |kSupportedSandboxTokens|
++// when feature is enabled by default.
++constexpr char kAllowSameSiteNoneCookiesSandboxToken[] =
++    "allow-same-site-none-cookies";
++
+ bool IsTokenSupported(const AtomicString& token) {
+   for (const char* supported_token : kSupportedSandboxTokens) {
+     if (token == supported_token)
+       return true;
+   }
+ 
+-  return token == kStorageAccessAPISandboxToken;
++  if (token == kStorageAccessAPISandboxToken) {
++    return true;
++  }
++  return token == kAllowSameSiteNoneCookiesSandboxToken &&
++         RuntimeEnabledFeatures::AllowSameSiteNoneCookiesInSandboxEnabled();
+ }
+ 
+ }  // namespace

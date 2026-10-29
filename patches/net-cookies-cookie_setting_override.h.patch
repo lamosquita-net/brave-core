@@ -1,0 +1,19 @@
+diff --git a/net/cookies/cookie_setting_override.h b/net/cookies/cookie_setting_override.h
+index 5bbc54ad3ea50485850689dc367bff1684c1a51e..c9f01a412e7ec0f0f6e2b42c92cf2f4e09de9b5b 100644
+--- a/net/cookies/cookie_setting_override.h
++++ b/net/cookies/cookie_setting_override.h
+@@ -47,8 +47,13 @@ enum class CookieSettingOverride {
+   // stringent requirements, such as the FedCM/SAA integration (which requires
+   // the `identity-credentials-get` policy), are not in scope for this variant.
+   kStorageAccessGrantEligibleViaHeader = 8,
++  // When present, the context is sandboxed in a frame that is same-site
++  // with the top-level up its entire ancestor chain. SameSite=None
++  // cookies should be included in same-site requests from sandboxed contexts
++  // that have the 'allow-same-site-none-cookies' value.
++  kAllowSameSiteNoneCookiesInSandbox = 9,
+ 
+-  kMaxValue = kStorageAccessGrantEligibleViaHeader,
++  kMaxValue = kAllowSameSiteNoneCookiesInSandbox,
+ };
+ 
+ using CookieSettingOverrides = base::EnumSet<CookieSettingOverride,

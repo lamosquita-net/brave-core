@@ -1,5 +1,5 @@
 diff --git a/components/content_settings/core/common/cookie_settings_base.h b/components/content_settings/core/common/cookie_settings_base.h
-index 89081590c50680e17c1ac03044854801440f1907..984649d5ec638650cae630fbb19664d539f0e302 100644
+index 89081590c50680e17c1ac03044854801440f1907..6ab0b72cac2e41580309027436f3c8cbd3a17b52 100644
 --- a/components/content_settings/core/common/cookie_settings_base.h
 +++ b/components/content_settings/core/common/cookie_settings_base.h
 @@ -76,7 +76,7 @@ class CookieSettingsBase {
@@ -11,3 +11,26 @@ index 89081590c50680e17c1ac03044854801440f1907..984649d5ec638650cae630fbb19664d5
  
    // Enum for measuring the mechanism for re-enabling third-party cookies when
    // applying 3PCD experiment. These values are persisted to logs. Entries
+@@ -134,8 +134,10 @@ class CookieSettingsBase {
+     kAllowByScheme = 19,
+     // Allowed by tracking protection exception.
+     kAllowByTrackingProtectionException = 20,
++    // Allowed by sandbox 'allow-same-site-none-cookies' value.
++    kAllowBySandboxValue = 21,
+ 
+-    kMaxValue = kAllowByTrackingProtectionException,
++    kMaxValue = kAllowBySandboxValue,
+   };
+ 
+   // Returns true if the allow mechanism represents one of the multiple allow
+@@ -383,6 +385,10 @@ class CookieSettingsBase {
+       const GURL& first_party_url,
+       net::CookieSettingOverrides overrides) const;
+ 
++  bool IsAllowedBySandboxValue(const GURL& url,
++                               const GURL& first_party_url,
++                               net::CookieSettingOverrides overrides) const;
++
+   bool IsAllowedBy3pcdTrialSettings(
+       const GURL& url,
+       const GURL& first_party_url,

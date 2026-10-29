@@ -1,0 +1,16 @@
+diff --git a/content/browser/renderer_host/render_frame_host_impl.h b/content/browser/renderer_host/render_frame_host_impl.h
+index 81e1f833a6da4cf977003c48ca3eb6e7d1b7e0d2..a9fe0c255643c47a160a73be711ab7cbe5cefaad 100644
+--- a/content/browser/renderer_host/render_frame_host_impl.h
++++ b/content/browser/renderer_host/render_frame_host_impl.h
+@@ -3078,6 +3078,11 @@ class CONTENT_EXPORT RenderFrameHostImpl
+     associated_registry_->GetInterfacesForTesting(out);
+   }
+ 
++  // Returns true if no frame ancestors of a sandboxed context are cross-site
++  // with `frame_origin` (or its precursor if opaque).
++  bool AncestorsAllowSameSiteNoneCookiesOverride(
++      const url::Origin& frame_origin) const;
++
+  protected:
+   friend class RenderFrameHostFactory;
+ 
