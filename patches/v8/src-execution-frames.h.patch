@@ -1,0 +1,21 @@
+diff --git a/src/execution/frames.h b/src/execution/frames.h
+index d105cf614dbb9be0eff44bd7bf4897f32af4c87e..ab0f1b38236fb41b0c70361aa5af4a7addda15ab 100644
+--- a/src/execution/frames.h
++++ b/src/execution/frames.h
+@@ -1481,6 +1481,7 @@ class WasmLiftoffSetupFrame : public TypedFrame {
+ 
+   FullObjectSlot wasm_instance_data_slot() const;
+ 
++  Address CallingPC() const;
+   int GetDeclaredFunctionIndex() const;
+ 
+   wasm::NativeModule* GetNativeModule() const;
+@@ -1496,6 +1497,8 @@ class WasmLiftoffSetupFrame : public TypedFrame {
+  protected:
+   inline explicit WasmLiftoffSetupFrame(StackFrameIteratorBase* iterator);
+ 
++  void ComputeCallerState(State* state) const override;
++
+  private:
+   friend class StackFrameIteratorBase;
+ };

@@ -1,0 +1,28 @@
+diff --git a/src/common/code-memory-access.cc b/src/common/code-memory-access.cc
+index 02b32dcd01ecaef3e00eea443be6e136b4a49f2d..e2a9b9fbb3ac0e64e941a5edf1042ea497afc682 100644
+--- a/src/common/code-memory-access.cc
++++ b/src/common/code-memory-access.cc
+@@ -402,6 +402,14 @@ ThreadIsolation::JitPageReference::AllocationContaining(
+   return {it->first, it->second};
+ }
+ 
++base::Address ThreadIsolation::JitPageReference::EndOfLastAllocation() {
++  if (jit_page_->allocations_.empty()) {
++    return address_;
++  }
++  auto last = jit_page_->allocations_.rbegin();
++  return last->first + last->second.Size();
++}
++
+ // static
+ void ThreadIsolation::RegisterJitPage(Address address, size_t size) {
+   CFIMetadataWriteScope write_scope("Adding new executable memory.");
+@@ -557,6 +565,8 @@ ThreadIsolation::JitPageReference ThreadIsolation::SplitJitPageLocked(
+     JitPage* mid;
+     ConstructNew(&mid, size);
+     jit_page.Shrink(mid);
++    // Defense in depth: the cut should not be in the middle of a code object.
++    CHECK(jit_page.EndOfLastAllocation() <= jit_page.End());
+     trusted_data_.jit_pages_->emplace(addr, mid);
+     return JitPageReference(mid, addr);
+   }

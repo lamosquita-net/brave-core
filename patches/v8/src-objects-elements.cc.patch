@@ -1,5 +1,5 @@
 diff --git a/src/objects/elements.cc b/src/objects/elements.cc
-index 2677725fb09f9423081f84b4a95a34614692fcfe..7cc4bc7b83644af8e60b19e83344ad25388164b8 100644
+index 2677725fb09f9423081f84b4a95a34614692fcfe..21cf4a6e151767dce3a2d321070d695e8d046002 100644
 --- a/src/objects/elements.cc
 +++ b/src/objects/elements.cc
 @@ -1264,14 +1264,19 @@ class ElementsAccessorBase : public InternalElementsAccessor {
@@ -91,7 +91,28 @@ index 2677725fb09f9423081f84b4a95a34614692fcfe..7cc4bc7b83644af8e60b19e83344ad25
      return list;
    }
  
-@@ -3903,6 +3911,22 @@ class TypedElementsAccessor
+@@ -2299,6 +2307,7 @@ class FastElementsAccessor : public ElementsAccessorBase<Subclass, KindTraits> {
+     Tagged<BackingStore> backing_store = Cast<BackingStore>(elements);
+     DCHECK(length <= std::numeric_limits<int>::max());
+     int length_int = static_cast<int>(length);
++    int capacity_int = static_cast<int>(backing_store->length());
+     if (IsSmiElementsKind(KindTraits::Kind)) {
+       HandleScope scope(isolate);
+       for (int i = 0; i < length_int; i++) {
+@@ -2314,6 +2323,12 @@ class FastElementsAccessor : public ElementsAccessorBase<Subclass, KindTraits> {
+     } else {
+       DCHECK(IsHoleyElementsKind(KindTraits::Kind));
+     }
++    // Any values in the backing store outside of the length have to be holes,
++    // even if it is PACKED, in case it is extended (and made HOLEY as part of
++    // that extension).
++    for (int i = length_int; i < capacity_int; i++) {
++      DCHECK(backing_store->is_the_hole(isolate, i));
++    }
+ #endif
+ #endif
+   }
+@@ -3903,6 +3918,22 @@ class TypedElementsAccessor
                                                            is_shared);
    }
  
@@ -114,7 +135,7 @@ index 2677725fb09f9423081f84b4a95a34614692fcfe..7cc4bc7b83644af8e60b19e83344ad25
    static void CopyElementsFromTypedArray(Tagged<JSTypedArray> source,
                                           Tagged<JSTypedArray> destination,
                                           size_t length, size_t offset) {
-@@ -3917,18 +3941,29 @@ class TypedElementsAccessor
+@@ -3917,18 +3948,29 @@ class TypedElementsAccessor
      DCHECK_LE(length, destination->GetLength() - offset);
      DCHECK_LE(length, source->GetLength());
  
@@ -150,7 +171,7 @@ index 2677725fb09f9423081f84b4a95a34614692fcfe..7cc4bc7b83644af8e60b19e83344ad25
  
      bool source_shared = source->buffer()->is_shared();
      bool destination_shared = destination->buffer()->is_shared();
-@@ -3938,18 +3973,17 @@ class TypedElementsAccessor
+@@ -3938,18 +3980,17 @@ class TypedElementsAccessor
      // will be the same. This is not the case for floats or clamped Uint8,
      // which have special conversion operations.
      if (same_type || (same_size && both_are_simple)) {
@@ -175,7 +196,7 @@ index 2677725fb09f9423081f84b4a95a34614692fcfe..7cc4bc7b83644af8e60b19e83344ad25
  
        // If the typedarrays are overlapped, clone the source.
        if (dest_data + dest_byte_length > source_data &&
-@@ -3967,12 +4001,12 @@ class TypedElementsAccessor
+@@ -3967,12 +4008,12 @@ class TypedElementsAccessor
          source_data = cloned_source_elements.get();
        }
  
@@ -190,7 +211,7 @@ index 2677725fb09f9423081f84b4a95a34614692fcfe..7cc4bc7b83644af8e60b19e83344ad25
          source_shared || destination_shared ? kShared : kUnshared); \
      break;
          TYPED_ARRAYS(TYPED_ARRAY_CASE)
-@@ -4991,12 +5025,13 @@ class SloppyArgumentsElementsAccessor
+@@ -4991,12 +5032,13 @@ class SloppyArgumentsElementsAccessor
        DirectHandle<JSObject> object, DirectHandle<FixedArrayBase> backing_store,
        KeyAccumulator* keys) {
      Isolate* isolate = keys->isolate();
@@ -209,7 +230,7 @@ index 2677725fb09f9423081f84b4a95a34614692fcfe..7cc4bc7b83644af8e60b19e83344ad25
      SortIndices(isolate, indices, nof_indices);
      for (uint32_t i = 0; i < nof_indices; i++) {
        RETURN_FAILURE_IF_NOT_SUCCESSFUL(keys->AddKey(indices->get(i)));
-@@ -5007,8 +5042,8 @@ class SloppyArgumentsElementsAccessor
+@@ -5007,8 +5049,8 @@ class SloppyArgumentsElementsAccessor
    static Handle<FixedArray> DirectCollectElementIndicesImpl(
        Isolate* isolate, DirectHandle<JSObject> object,
        DirectHandle<FixedArrayBase> backing_store, GetKeysConversion convert,
@@ -220,7 +241,7 @@ index 2677725fb09f9423081f84b4a95a34614692fcfe..7cc4bc7b83644af8e60b19e83344ad25
      auto elements = Cast<SloppyArgumentsElements>(backing_store);
      uint32_t length = elements->length();
  
-@@ -5027,8 +5062,8 @@ class SloppyArgumentsElementsAccessor
+@@ -5027,8 +5069,8 @@ class SloppyArgumentsElementsAccessor
  
      DirectHandle<FixedArray> store(elements->arguments(), isolate);
      return ArgumentsAccessor::DirectCollectElementIndicesImpl(
