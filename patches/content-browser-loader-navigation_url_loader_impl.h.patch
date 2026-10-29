@@ -1,0 +1,26 @@
+diff --git a/content/browser/loader/navigation_url_loader_impl.h b/content/browser/loader/navigation_url_loader_impl.h
+index 8a4f0dc2dbab8e25141b1caf581473bb61e6c086..a5d731c0b66b812ec46f154c1302567c0e9ba480 100644
+--- a/content/browser/loader/navigation_url_loader_impl.h
++++ b/content/browser/loader/navigation_url_loader_impl.h
+@@ -145,7 +145,8 @@ class CONTENT_EXPORT NavigationURLLoaderImpl
+                              StoragePartitionImpl* storage_partition,
+                              FrameTreeNode* frame_tree_node,
+                              const ukm::SourceIdObj& ukm_id,
+-                             bool* bypass_redirect_checks);
++                             bool* bypass_redirect_checks,
++                             bool allow_same_site_none_cookies_override);
+ 
+   void BindAndInterceptNonNetworkURLLoaderFactoryReceiver(
+       const GURL& url,
+@@ -284,6 +285,11 @@ class CONTENT_EXPORT NavigationURLLoaderImpl
+ 
+   scoped_refptr<network::SharedURLLoaderFactory> network_loader_factory_;
+ 
++  // Whether `network_loader_factory_` was created with the cookie-setting
++  // override that allows SameSite=None cookies in sandboxed contexts. Tracked
++  // so the factory can be recreated if the value changes after a redirect.
++  bool allow_same_site_none_cookies_override_ = false;
++
+   // Caches the modified request headers provided by clients during redirect,
+   // will be consumed by next `url_loader_->FollowRedirect()`.
+   std::vector<std::string> url_loader_removed_headers_;
