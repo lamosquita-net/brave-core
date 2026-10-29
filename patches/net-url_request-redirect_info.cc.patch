@@ -1,0 +1,25 @@
+diff --git a/net/url_request/redirect_info.cc b/net/url_request/redirect_info.cc
+index 1ab65cb7481a0764e16b55cdecd9edb2cb40f18d..56de6c59580933b2dbdb581295770f6031dffd14 100644
+--- a/net/url_request/redirect_info.cc
++++ b/net/url_request/redirect_info.cc
+@@ -125,6 +125,11 @@ RedirectInfo RedirectInfo::ComputeRedirectInfo(
+   redirect_info.status_code = http_status_code;
+ 
+   // The request method may change, depending on the status code.
++  // See 4.4. HTTP-redirect fetch
++  // (https://fetch.spec.whatwg.org/#http-redirect-fetch), step 12.
++  // The headers and request body are updated later using
++  // RedirectUtil::UpdateHttpRequest for requests whose method
++  // changed to GET.
+   redirect_info.new_method =
+       ComputeMethodForRedirect(original_method, http_status_code);
+ 
+@@ -154,6 +159,8 @@ RedirectInfo RedirectInfo::ComputeRedirectInfo(
+     redirect_info.new_site_for_cookies = original_site_for_cookies;
+   }
+ 
++  // See 4.4. HTTP-redirect fetch
++  // (https://fetch.spec.whatwg.org/#http-redirect-fetch), step 19.
+   redirect_info.new_referrer_policy = ProcessReferrerPolicyHeaderOnRedirect(
+       original_referrer_policy, referrer_policy_header);
+ 
