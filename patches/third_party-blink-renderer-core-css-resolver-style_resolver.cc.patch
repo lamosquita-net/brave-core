@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_resolver.cc b/third_party/blink/renderer/core/css/resolver/style_resolver.cc
-index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..95b20f27ad5818df4496208501021b2bf98176fd 100644
+index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..da5dc8d63c31bfb5f9f3d7f9d034b03fd819c569 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_resolver.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_resolver.cc
 @@ -30,7 +30,10 @@
@@ -318,8 +318,8 @@ index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..95b20f27ad5818df4496208501021b2b
 +      CHECK(!style_attribute_cascaded_in_parent_scope);
 +    }
 +  }
- }
- 
++}
++
 +void MatchOuterScopeRules(const Element& matching_element,
 +                          ElementRuleCollector& collector,
 +                          StyleRuleUsageTracker* tracker) {
@@ -442,8 +442,8 @@ index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..95b20f27ad5818df4496208501021b2b
 +      }
 +    }
 +  }
-+}
-+
+ }
+ 
 +}  // namespace
 +
  void StyleResolver::MatchPseudoPartRulesForUAHost(
@@ -549,7 +549,21 @@ index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..95b20f27ad5818df4496208501021b2b
    }
  
    // This is needed because pseudo_argument is copied to the
-@@ -2780,7 +2958,7 @@ StyleRuleList* StyleResolver::CollectMatchingRulesFromUnconnectedRuleSet(
+@@ -2566,6 +2744,13 @@ const CSSValue* StyleResolver::ComputeValue(
+     const CSSValue& value) {
+   const ComputedStyle* base_style = element->GetComputedStyle();
+   StyleResolverState state(element->GetDocument(), *element);
++  // The document element has no parent style; make sure there is one, as
++  // StyleResolverState::EnsureParentStyle() does in 135 (crbug 404734313).
++  if (!state.ParentStyle()) {
++    state.SetParentStyle(
++        element->GetDocument().GetStyleResolver().InitialStyleForElement());
++    state.SetLayoutParentStyle(state.ParentStyle());
++  }
+   STACK_UNINITIALIZED StyleCascade cascade(state);
+   state.SetStyle(*base_style);
+   auto* set =
+@@ -2780,7 +2965,7 @@ StyleRuleList* StyleResolver::CollectMatchingRulesFromUnconnectedRuleSet(
    collector.SetMatchingRulesFromNoStyleSheet(true);
    collector.SetMode(SelectorChecker::kCollectingStyleRules);
    MatchRequest match_request(rule_set, scope);
@@ -558,7 +572,7 @@ index 624662def933a08d6e0ea1416ff51a8ef8cda0f7..95b20f27ad5818df4496208501021b2b
    collector.SortAndTransferMatchedRules(
        CascadeOrigin::kAuthor, /*is_vtt_embedded_style=*/false, tracker_);
    collector.SetMatchingRulesFromNoStyleSheet(false);
-@@ -2849,6 +3027,35 @@ bool StyleResolver::IsForcedColorsModeEnabled() const {
+@@ -2849,6 +3034,35 @@ bool StyleResolver::IsForcedColorsModeEnabled() const {
    return GetDocument().InForcedColorsMode();
  }
  
