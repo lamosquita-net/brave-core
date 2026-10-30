@@ -55,11 +55,16 @@ class FakeKeychain : public crypto::AppleKeychain {
       return errSecItemNotFound;
     }
     *password_length = it->second.size();
-    *password_data = const_cast<char*>(it->second.data());
+    // A copy, like the real keychain: the provider wipes this buffer.
+    *password_data = malloc(it->second.size());
+    memcpy(*password_data, it->second.data(), it->second.size());
     return noErr;
   }
 
-  OSStatus ItemFreeContent(void* data) const override { return noErr; }
+  OSStatus ItemFreeContent(void* data) const override {
+    free(data);
+    return noErr;
+  }
 
   OSStatus AddGenericPassword(UInt32 service_name_length,
                               const char* service_name,
