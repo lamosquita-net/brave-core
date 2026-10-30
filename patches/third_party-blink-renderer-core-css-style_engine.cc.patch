@@ -1,8 +1,31 @@
 diff --git a/third_party/blink/renderer/core/css/style_engine.cc b/third_party/blink/renderer/core/css/style_engine.cc
-index c2ce887b549a64a91c51778148791c277096cc21..990d75ae77874e617b20af1d654d19393eeb0cd8 100644
+index c2ce887b549a64a91c51778148791c277096cc21..be1b18103458b33612fee38443d029d5cc0d592d 100644
 --- a/third_party/blink/renderer/core/css/style_engine.cc
 +++ b/third_party/blink/renderer/core/css/style_engine.cc
-@@ -702,13 +702,11 @@ void StyleEngine::UpdateCounterStyles() {
+@@ -60,6 +60,7 @@
+ #include "third_party/blink/renderer/core/css/out_of_flow_data.h"
+ #include "third_party/blink/renderer/core/css/property_registration.h"
+ #include "third_party/blink/renderer/core/css/property_registry.h"
++#include "third_party/blink/renderer/core/css/resolver/media_query_result.h"
+ #include "third_party/blink/renderer/core/css/resolver/scoped_style_resolver.h"
+ #include "third_party/blink/renderer/core/css/resolver/selector_filter_parent_scope.h"
+ #include "third_party/blink/renderer/core/css/resolver/style_builder_converter.h"
+@@ -509,9 +510,14 @@ void StyleEngine::MediaQueryAffectingValueChanged(TreeScope& tree_scope,
+                                                   MediaValueChange change) {
+   auto* collection = StyleSheetCollectionFor(tree_scope);
+   DCHECK(collection);
++  // Regular media queries are invalidated through rebuilding of the RuleSets.
+   if (AffectedByMediaValueChange(collection->ActiveStyleSheets(), change)) {
+     SetNeedsActiveStyleUpdate(tree_scope);
+   }
++
++  // Styles that use functional media queries (those within @function)
++  // are invalidated by marking the affected elements for recalc directly.
++  InvalidateFunctionalMediaDependentStylesIfNeeded();
+ }
+ 
+ void StyleEngine::WatchedSelectorsChanged() {
+@@ -702,13 +708,11 @@ void StyleEngine::UpdateCounterStyles() {
  
  void StyleEngine::MarkPositionTryStylesDirty(
      const HeapHashSet<Member<RuleSet>>& changed_rule_sets) {
@@ -21,7 +44,7 @@ index c2ce887b549a64a91c51778148791c277096cc21..990d75ae77874e617b20af1d654d1939
        }
      }
    }
-@@ -814,13 +812,13 @@ void StyleEngine::UpdateCounters(const Element& element,
+@@ -814,13 +818,13 @@ void StyleEngine::UpdateCounters(const Element& element,
    // Manually update list item ordinals here.
    if (LayoutObject* layout_object = element.GetLayoutObject()) {
      if (auto* ng_list_item = DynamicTo<LayoutListItem>(layout_object)) {
@@ -37,7 +60,30 @@ index c2ce887b549a64a91c51778148791c277096cc21..990d75ae77874e617b20af1d654d1939
          inline_list_item->Ordinal().MarkDirty();
          inline_list_item->OrdinalValueChanged();
        }
-@@ -1710,8 +1708,7 @@ bool HasAttributeDependentStyle(const Element& element) {
+@@ -1175,6 +1179,22 @@ void SetNeedsStyleRecalcForViewportUnits(TreeScope& tree_scope,
+   }
+ }
+ 
++template <typename Func>
++void MarkElementsForRecalc(TreeScope& tree_scope,
++                           const StyleChangeReasonForTracing& reason,
++                           Func predicate) {
++  for (Element* element = ElementTraversal::FirstWithin(tree_scope.RootNode());
++       element; element = ElementTraversal::NextIncludingPseudo(*element)) {
++    if (ShadowRoot* root = element->GetShadowRoot()) {
++      MarkElementsForRecalc(*root, reason, predicate);
++    }
++    const ComputedStyle* style = element->GetComputedStyle();
++    if (style && predicate(*style)) {
++      element->SetNeedsStyleRecalc(kLocalStyleChange, reason);
++    }
++  }
++}
++
+ }  // namespace
+ 
+ void StyleEngine::InvalidateViewportUnitStylesIfNeeded() {
+@@ -1710,8 +1730,7 @@ bool HasAttributeDependentStyle(const Element& element) {
    if (style && style->HasAttrFunction()) {
      return true;
    }
@@ -47,7 +93,50 @@ index c2ce887b549a64a91c51778148791c277096cc21..990d75ae77874e617b20af1d654d1939
  }
  
  }  // namespace
-@@ -3100,12 +3097,12 @@ void StyleEngine::CollectMatchingUserRules(
+@@ -2254,6 +2273,14 @@ void StyleEngine::InvalidateSlottedElements(
+   }
+ }
+ 
++bool StyleEngine::HasViewportDependentMediaQueries() {
++  DCHECK(global_rule_set_);
++  UpdateActiveStyle();
++  return global_rule_set_->GetRuleFeatureSet()
++             .HasViewportDependentMediaQueries() ||
++         functional_media_query_result_flags_.is_viewport_dependent;
++}
++
+ bool StyleEngine::HasViewportDependentPropertyRegistrations() {
+   UpdateActiveStyle();
+   const PropertyRegistry* registry = GetDocument().GetPropertyRegistry();
+@@ -2976,6 +3003,27 @@ void StyleEngine::ApplyVisionDeficiencyStyle(
+   }
+ }
+ 
++bool StyleEngine::EvaluateFunctionalMediaQuery(const MediaQuerySet& query_set) {
++  bool result = EnsureMediaQueryEvaluator().Eval(
++      query_set, &functional_media_query_result_flags_);
++  functional_media_query_results_.insert(&query_set, result);
++  return result;
++}
++
++void StyleEngine::InvalidateFunctionalMediaDependentStylesIfNeeded() {
++  if (!EnsureMediaQueryEvaluator().DidResultsChange(
++          functional_media_query_results_)) {
++    return;
++  }
++  functional_media_query_results_.clear();
++  functional_media_query_result_flags_.Clear();
++  const auto& reason =
++      StyleChangeReasonForTracing::Create(style_change_reason::kMediaQuery);
++  MarkElementsForRecalc(GetDocument(), reason, [](const ComputedStyle& style) {
++    return style.AffectedByFunctionalMedia();
++  });
++}
++
+ const MediaQueryEvaluator& StyleEngine::EnsureMediaQueryEvaluator() {
+   if (!media_query_evaluator_) {
+     if (GetDocument().GetFrame()) {
+@@ -3100,12 +3148,12 @@ void StyleEngine::CollectMatchingUserRules(
    for (const ActiveStyleSheet& style_sheet : active_user_style_sheets_) {
      match_request.AddRuleset(style_sheet.second);
      if (match_request.IsFull()) {
@@ -62,16 +151,27 @@ index c2ce887b549a64a91c51778148791c277096cc21..990d75ae77874e617b20af1d654d1939
    }
  }
  
-@@ -4320,7 +4317,7 @@ void StyleEngine::Trace(Visitor* visitor) const {
+@@ -4219,6 +4267,9 @@ void StyleEngine::MarkAllElementsForStyleRecalc(
+   if (Element* root = GetDocument().documentElement()) {
+     root->SetNeedsStyleRecalc(kSubtreeStyleChange, reason);
+   }
++
++  functional_media_query_results_.clear();
++  functional_media_query_result_flags_.Clear();
+ }
+ 
+ void StyleEngine::UpdateViewportStyle() {
+@@ -4320,7 +4371,8 @@ void StyleEngine::Trace(Visitor* visitor) const {
    visitor->Trace(fill_or_clip_path_uri_value_cache_);
    visitor->Trace(style_containment_scope_tree_);
    visitor->Trace(try_value_flips_);
 -  visitor->Trace(last_successful_option_dirty_set_);
 +  visitor->Trace(anchored_element_dirty_set_);
++  visitor->Trace(functional_media_query_results_);
    FontSelectorClient::Trace(visitor);
  }
  
-@@ -4412,10 +4409,11 @@ void StyleEngine::UpdateViewportSize() {
+@@ -4412,10 +4464,11 @@ void StyleEngine::UpdateViewportSize() {
  
  namespace {
  
@@ -86,7 +186,7 @@ index c2ce887b549a64a91c51778148791c277096cc21..990d75ae77874e617b20af1d654d1939
              layout_object) &&
          layout_object) {
        layout_object->SetNeedsLayoutAndFullPaintInvalidation(
-@@ -4434,11 +4432,11 @@ bool InvalidatePositionTryNames(Element* root,
+@@ -4434,11 +4487,11 @@ bool InvalidatePositionTryNames(Element* root,
      if (auto* element = DynamicTo<Element>(current)) {
        if (OutOfFlowData* data = element->GetOutOfFlowData()) {
          if (data->InvalidatePositionTryNames(try_names)) {
@@ -103,7 +203,7 @@ index c2ce887b549a64a91c51778148791c277096cc21..990d75ae77874e617b20af1d654d1939
          }
        }
        if (ComputedStyle::NullifyEnsured(element->GetComputedStyle()) ==
-@@ -4455,12 +4453,7 @@ bool InvalidatePositionTryNames(Element* root,
+@@ -4455,12 +4508,7 @@ bool InvalidatePositionTryNames(Element* root,
  
  }  // namespace
  
@@ -117,7 +217,7 @@ index c2ce887b549a64a91c51778148791c277096cc21..990d75ae77874e617b20af1d654d1939
    bool invalidated = false;
    if (!dirty_position_try_names_.empty()) {
      // Added, removed, or modified @position-try rules.
-@@ -4473,13 +4466,13 @@ bool StyleEngine::UpdateLastSuccessfulPositionFallbacks() {
+@@ -4473,13 +4521,13 @@ bool StyleEngine::UpdateLastSuccessfulPositionFallbacks() {
      dirty_position_try_names_.clear();
    }
  

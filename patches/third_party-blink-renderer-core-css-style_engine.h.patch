@@ -1,8 +1,42 @@
 diff --git a/third_party/blink/renderer/core/css/style_engine.h b/third_party/blink/renderer/core/css/style_engine.h
-index cea432b6183b4521344fa0867c9c52b6dde5f916..d2934d3f4cfcf59650769f6d87e2bbc1de183a65 100644
+index cea432b6183b4521344fa0867c9c52b6dde5f916..f69562643178a45de54f77e90360776d20facbce 100644
 --- a/third_party/blink/renderer/core/css/style_engine.h
 +++ b/third_party/blink/renderer/core/css/style_engine.h
-@@ -581,8 +581,10 @@ class CORE_EXPORT StyleEngine final : public GarbageCollected<StyleEngine>,
+@@ -91,6 +91,7 @@ class Font;
+ class FontSelector;
+ class HTMLBodyElement;
+ class MediaQueryEvaluator;
++class MediaQuerySet;
+ class Node;
+ class ReferenceFilterOperation;
+ class RuleFeatureSet;
+@@ -285,6 +286,11 @@ class CORE_EXPORT StyleEngine final : public GarbageCollected<StyleEngine>,
+   };
+ 
+   RuleSet* RuleSetForSheet(CSSStyleSheet&);
++
++  // A functional @media query is evaluated as a part of some function
++  // during value resolution. This is different from regular media queries,
++  // which are evaluated when building the RuleSet.
++  bool EvaluateFunctionalMediaQuery(const MediaQuerySet&);
+   void MediaQueryAffectingValueChanged(MediaValueChange change);
+   void UpdateActiveStyle();
+ 
+@@ -378,12 +384,7 @@ class CORE_EXPORT StyleEngine final : public GarbageCollected<StyleEngine>,
+   }
+   // Push all pending invalidations on the document.
+   void InvalidateStyle();
+-  bool HasViewportDependentMediaQueries() {
+-    DCHECK(global_rule_set_);
+-    UpdateActiveStyle();
+-    return global_rule_set_->GetRuleFeatureSet()
+-        .HasViewportDependentMediaQueries();
+-  }
++  bool HasViewportDependentMediaQueries();
+   bool HasViewportDependentPropertyRegistrations();
+ 
+   class InApplyAnimationUpdateScope {
+@@ -581,8 +582,10 @@ class CORE_EXPORT StyleEngine final : public GarbageCollected<StyleEngine>,
    void InvalidatePositionTryStyles();
  
    void MarkLastSuccessfulPositionFallbackDirtyForElement(Element& element) {
@@ -15,7 +49,7 @@ index cea432b6183b4521344fa0867c9c52b6dde5f916..d2934d3f4cfcf59650769f6d87e2bbc1
    }
  
    StyleRuleKeyframes* KeyframeStylesForAnimation(
-@@ -733,7 +735,7 @@ class CORE_EXPORT StyleEngine final : public GarbageCollected<StyleEngine>,
+@@ -733,7 +736,7 @@ class CORE_EXPORT StyleEngine final : public GarbageCollected<StyleEngine>,
    }
  
    // Returns true if marked dirty for layout
@@ -24,7 +58,17 @@ index cea432b6183b4521344fa0867c9c52b6dde5f916..d2934d3f4cfcf59650769f6d87e2bbc1
  
   private:
    void UpdateCounters(const Element& element,
-@@ -1123,7 +1125,7 @@ class CORE_EXPORT StyleEngine final : public GarbageCollected<StyleEngine>,
+@@ -913,6 +916,9 @@ class CORE_EXPORT StyleEngine final : public GarbageCollected<StyleEngine>,
+   // Initialization value for SkipStyleRecalcScope.
+   bool AllowSkipStyleRecalcForScope() const;
+ 
++  // See EvaluateFunctionalMediaQuery
++  void InvalidateFunctionalMediaDependentStylesIfNeeded();
++
+   Member<Document> document_;
+ 
+   // Tree of style containment scopes. Is in charge of the document's quotes.
+@@ -1123,13 +1129,27 @@ class CORE_EXPORT StyleEngine final : public GarbageCollected<StyleEngine>,
    // Elements which had their computed position-try-fallbacks changed since last
    // time resize observers were considered. May need to have their last
    // successful option invalidated.
@@ -33,3 +77,23 @@ index cea432b6183b4521344fa0867c9c52b6dde5f916..d2934d3f4cfcf59650769f6d87e2bbc1
  
    // Names of @position-try rules which were added, removed, or modified since
    // last time resize observers were considered. Anchored elements with a last
+   // successful option with position-try-fallbacks referring any of these names
+   // will be invalidated.
+   HashSet<AtomicString> dirty_position_try_names_;
++
++  // Flags collected from all calls to EvaluateFunctionalMediaQuery.
++  MediaQueryResultFlags functional_media_query_result_flags_;
++
++  // Maps a functional media query to its evaluated result. When media values
++  // change, this can be used to check if we need to invalidate any elements
++  // as a response to that.
++  //
++  // Note that MediaQuerySets are cached during parsing [1], so identical @media
++  // preludes are represented by the same pointer.
++  //
++  // [1] CSSParserImpl::ConsumeMediaRule
++  HeapHashMap<Member<const MediaQuerySet>, bool>
++      functional_media_query_results_;
+ };
+ 
+ void PossiblyScheduleNthPseudoInvalidations(Node& node);

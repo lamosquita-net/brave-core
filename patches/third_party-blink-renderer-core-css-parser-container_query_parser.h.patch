@@ -1,0 +1,16 @@
+diff --git a/third_party/blink/renderer/core/css/parser/container_query_parser.h b/third_party/blink/renderer/core/css/parser/container_query_parser.h
+index 29ce49df5cb31d779ea89466502290d5409bce8c..87360f7da904bc071503c3097a09de55e0076a7d 100644
+--- a/third_party/blink/renderer/core/css/parser/container_query_parser.h
++++ b/third_party/blink/renderer/core/css/parser/container_query_parser.h
+@@ -28,6 +28,11 @@ class CORE_EXPORT ContainerQueryParser {
+   const MediaQueryExpNode* ParseCondition(CSSParserTokenRange,
+                                           const CSSParserTokenOffsets&);
+ 
++  // The contents of style( <style-query> ) in if() (FlyWeb: by range, since
++  // the 128's query parsers are range-based; Chromium 137 uses a stream).
++  const MediaQueryExpNode* ConsumeIfStyleQuery(CSSParserTokenRange&,
++                                               const CSSParserTokenOffsets&);
++
+  private:
+   friend class ContainerQueryParserTest;
+ 

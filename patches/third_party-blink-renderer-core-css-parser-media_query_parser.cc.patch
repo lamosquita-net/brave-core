@@ -1,0 +1,33 @@
+diff --git a/third_party/blink/renderer/core/css/parser/media_query_parser.cc b/third_party/blink/renderer/core/css/parser/media_query_parser.cc
+index 2abe942d1301d8f1dcb916a37dd4d89b963a94aa..42d50d161627859bb19cad0b4c07718af90d8aa7 100644
+--- a/third_party/blink/renderer/core/css/parser/media_query_parser.cc
++++ b/third_party/blink/renderer/core/css/parser/media_query_parser.cc
+@@ -524,6 +524,28 @@ const MediaQueryExpNode* MediaQueryParser::ConsumeInParens(
+   return ConsumeGeneralEnclosed(range);
+ }
+ 
++const MediaQueryExpNode* MediaQueryParser::ConsumeIfMediaTest(
++    CSSParserTokenRange& range,
++    const CSSParserTokenOffsets& offsets) {
++  // As in Chromium 137, <media-condition> first and then <media-feature>.
++  CSSParserTokenRange original = range;
++  if (const MediaQueryExpNode* node = ConsumeCondition(range, offsets)) {
++    range.ConsumeWhitespace();
++    if (range.AtEnd()) {
++      return node;
++    }
++  }
++  range = original;
++  if (const MediaQueryExpNode* node =
++          ConsumeFeature(range, offsets, MediaQueryFeatureSet())) {
++    range.ConsumeWhitespace();
++    if (range.AtEnd()) {
++      return node;
++    }
++  }
++  return nullptr;
++}
++
+ const MediaQueryExpNode* MediaQueryParser::ConsumeGeneralEnclosed(
+     CSSParserTokenRange& range) {
+   if (range.Peek().GetType() != kLeftParenthesisToken &&

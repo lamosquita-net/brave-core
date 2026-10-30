@@ -1,8 +1,8 @@
 diff --git a/third_party/blink/renderer/core/css/parser/css_variable_parser.cc b/third_party/blink/renderer/core/css/parser/css_variable_parser.cc
-index 790741c82097ac7532cb7a3f12ce2b81dee1e88d..940ccf0fa38f0d89bce70657da236088186e2672 100644
+index 790741c82097ac7532cb7a3f12ce2b81dee1e88d..8513da5eaceee86cffd7b15df1b8707cbd76150e 100644
 --- a/third_party/blink/renderer/core/css/parser/css_variable_parser.cc
 +++ b/third_party/blink/renderer/core/css/parser/css_variable_parser.cc
-@@ -4,8 +4,12 @@
+@@ -4,9 +4,15 @@
  
  #include "third_party/blink/renderer/core/css/parser/css_variable_parser.h"
  
@@ -13,9 +13,12 @@ index 790741c82097ac7532cb7a3f12ce2b81dee1e88d..940ccf0fa38f0d89bce70657da236088
 +#include "third_party/blink/renderer/core/css/css_syntax_component.h"
 +#include "third_party/blink/renderer/core/css/css_syntax_definition.h"
  #include "third_party/blink/renderer/core/css/css_unparsed_declaration_value.h"
++#include "third_party/blink/renderer/core/css/parser/css_if_parser.h"
++#include "third_party/blink/renderer/core/css/parser/css_parser_context.h"
  #include "third_party/blink/renderer/core/css/parser/css_parser_token.h"
  #include "third_party/blink/renderer/core/css/parser/css_parser_token_range.h"
-@@ -20,58 +24,245 @@ namespace blink {
+ #include "third_party/blink/renderer/core/css/properties/css_parsing_utils.h"
+@@ -20,58 +26,295 @@ namespace blink {
  
  namespace {
  
@@ -46,9 +49,6 @@ index 790741c82097ac7532cb7a3f12ce2b81dee1e88d..940ccf0fa38f0d89bce70657da236088
 -//   {} foo    =>  Positioned
 -//   { foo }   =>  Not positioned (the {} covers the whole value).
 -//   foo [{}]  =>  Not positioned (the {} appears within another block).
--//
--// Token sequences with "positioned" braces are not valid in standard
--// properties, even if var()/env() is present in the value [3].
 +}  // namespace
 +
 +bool CSSVariableParser::IsValidVariableName(const CSSParserToken& token) {
@@ -248,6 +248,58 @@ index 790741c82097ac7532cb7a3f12ce2b81dee1e88d..940ccf0fa38f0d89bce70657da236088
 +  return stream.AtEnd();
 +}
 +
++// <if()> = if( [ <if-condition> : <declaration-value>? ; ]*
++//              <if-condition> : <declaration-value>? ;? )
++// <if-condition> = <boolean-expr[ <if-test> ]> | else
++// <if-test> =
++//   supports( [ <supports-condition> | <ident> : <declaration-value> ] ) |
++//   media( <media-query> ) |
++//   style( <style-query> )
++// https://www.w3.org/TR/css-values-5/#if-notation
+ //
+-// Token sequences with "positioned" braces are not valid in standard
+-// properties, even if var()/env() is present in the value [3].
++// FlyWeb: this parser takes an ExecutionContext instead of the
++// CSSParserContext of Chromium 137, so one is built for CSSIfParser.
++static bool ConsumeIf(CSSParserTokenStream& stream,
++                      bool& has_references,
++                      bool& has_font_units,
++                      bool& has_root_font_units,
++                      bool& has_line_height_units,
++                      const ExecutionContext* context) {
++  CSSParserTokenStream::BlockGuard guard(stream);
++  const CSSParserContext* parser_context =
++      context ? MakeGarbageCollected<CSSParserContext>(*context)
++              : StrictCSSParserContext(SecureContextMode::kInsecureContext);
++  CSSIfParser parser(*parser_context);
++
++  stream.ConsumeWhitespace();
++  while (parser.ConsumeIfCondition(stream)) {
++    if (stream.Peek().GetType() != kColonToken) {
++      return false;
++    }
++    stream.ConsumeIncludingWhitespace();
++    // Parse <declaration-value>
++    if (!ConsumeUnparsedValue(stream, /*restricted_value=*/false,
++                              has_references, has_font_units,
++                              has_root_font_units, has_line_height_units,
++                              context)) {
++      return false;
++    }
++    if (stream.AtEnd()) {
++      return true;
++    }
++    if (stream.Peek().GetType() != kSemicolonToken) {
++      return false;
++    }
++    stream.ConsumeIncludingWhitespace();
++    if (stream.AtEnd()) {
++      return true;
++    }
++  }
++  return false;
++}
++
 +// Utility function for ConsumeUnparsedDeclaration(). Parses until it
 +// detects some error (such as a stray top-level right-paren; if so,
 +// returns false) or something that should end a declaration, such as
@@ -301,7 +353,7 @@ index 790741c82097ac7532cb7a3f12ce2b81dee1e88d..940ccf0fa38f0d89bce70657da236088
        // A block may have both var and env references. They can also be nested
        // and used as fallbacks.
        switch (token.FunctionId()) {
-@@ -85,14 +276,20 @@ bool IsValidRestrictedDeclarationValue(CSSParserTokenRange range,
+@@ -85,14 +328,20 @@ bool IsValidRestrictedDeclarationValue(CSSParserTokenRange range,
            }
            break;
          case CSSValueID::kVar:
@@ -326,7 +378,7 @@ index 790741c82097ac7532cb7a3f12ce2b81dee1e88d..940ccf0fa38f0d89bce70657da236088
            }
            has_references = true;
            continue;
-@@ -100,8 +297,11 @@ bool IsValidRestrictedDeclarationValue(CSSParserTokenRange range,
+@@ -100,8 +349,22 @@ bool IsValidRestrictedDeclarationValue(CSSParserTokenRange range,
            if (!RuntimeEnabledFeatures::CSSAdvancedAttrFunctionEnabled()) {
              break;
            }
@@ -337,10 +389,21 @@ index 790741c82097ac7532cb7a3f12ce2b81dee1e88d..940ccf0fa38f0d89bce70657da236088
 +                                         has_line_height_units, context)) {
 +            error = true;
 +            break;
++          }
++          has_references = true;
++          continue;
++        case CSSValueID::kIf:
++          if (!RuntimeEnabledFeatures::CSSInlineIfForStyleQueriesEnabled()) {
++            break;
++          }
++          if (!ConsumeIf(stream, has_references, has_font_units,
++                         has_root_font_units, has_line_height_units, context)) {
++            error = true;
++            break;
            }
            has_references = true;
            continue;
-@@ -110,16 +310,18 @@ bool IsValidRestrictedDeclarationValue(CSSParserTokenRange range,
+@@ -110,16 +373,18 @@ bool IsValidRestrictedDeclarationValue(CSSParserTokenRange range,
        }
      }
  
@@ -361,7 +424,7 @@ index 790741c82097ac7532cb7a3f12ce2b81dee1e88d..940ccf0fa38f0d89bce70657da236088
            }
            break;
          }
-@@ -128,219 +330,122 @@ bool IsValidRestrictedDeclarationValue(CSSParserTokenRange range,
+@@ -128,219 +393,122 @@ bool IsValidRestrictedDeclarationValue(CSSParserTokenRange range,
          case kRightBracketToken:
          case kBadStringToken:
          case kBadUrlToken:
@@ -379,13 +442,13 @@ index 790741c82097ac7532cb7a3f12ce2b81dee1e88d..940ccf0fa38f0d89bce70657da236088
        }
      }
 -  }
- 
+-
 -  has_positioned_braces =
 -      has_top_level_brace && (top_level_component_values > 1);
 -
 -  return true;
 -}
--
+ 
 -bool IsValidVariableReference(CSSParserTokenRange range,
 -                              const ExecutionContext* context) {
 -  range.ConsumeWhitespace();
@@ -445,25 +508,25 @@ index 790741c82097ac7532cb7a3f12ce2b81dee1e88d..940ccf0fa38f0d89bce70657da236088
          return false;
        }
 -      token = range.ConsumeIncludingWhitespace();
--    }
--
+     }
+ 
 -    // If that's all we had (either ident then integers or just the ident) then
 -    // the env() is valid.
 -    if (token.GetType() == kEOFToken) {
 -      return true;
-     }
+-    }
 -  } else {
 -    token = range.Consume();
--  }
- 
--  // Otherwise we need a comma followed by an optional fallback value.
--  if (token.GetType() != kCommaToken) {
--    return false;
 +    CSSVariableData::ExtractFeatures(token, has_font_units, has_root_font_units,
 +                                     has_line_height_units);
 +    stream.ConsumeRaw();
    }
  
+-  // Otherwise we need a comma followed by an optional fallback value.
+-  if (token.GetType() != kCommaToken) {
+-    return false;
+-  }
+-
 -  bool has_references = false;
 -  bool has_positioned_braces = false;
 -  return IsValidRestrictedDeclarationValue(range, has_references,
@@ -530,7 +593,7 @@ index 790741c82097ac7532cb7a3f12ce2b81dee1e88d..940ccf0fa38f0d89bce70657da236088
 -  return IsValidRestrictedDeclarationValue(range, has_references,
 -                                           has_positioned_braces, context);
 -}
--
+ 
 -bool IsValidVariable(CSSParserTokenRange range,
 -                     bool& has_references,
 -                     bool& has_positioned_braces,
@@ -540,17 +603,17 @@ index 790741c82097ac7532cb7a3f12ce2b81dee1e88d..940ccf0fa38f0d89bce70657da236088
 -  return IsValidRestrictedDeclarationValue(range, has_references,
 -                                           has_positioned_braces, context);
 -}
--
++  stream.EnsureLookAhead();
++  wtf_size_t value_end_offset = stream.LookAheadOffset();
+ 
 -CSSValue* ParseCSSWideValue(CSSParserTokenRange range) {
 -  range.ConsumeWhitespace();
 -  CSSValue* value = css_parsing_utils::ConsumeCSSWideKeyword(range);
 -  return range.AtEnd() ? value : nullptr;
 -}
- 
+-
 -}  // namespace
-+  stream.EnsureLookAhead();
-+  wtf_size_t value_end_offset = stream.LookAheadOffset();
- 
+-
 -bool CSSVariableParser::IsValidVariableName(const CSSParserToken& token) {
 -  if (token.GetType() != kIdentToken) {
 -    return false;

@@ -1,0 +1,25 @@
+diff --git a/third_party/blink/renderer/core/css/parser/media_query_parser.h b/third_party/blink/renderer/core/css/parser/media_query_parser.h
+index 984891d563fb12c3f324973eb14c9e82cc560cc3..c656bc7076077861ad9c01c9820845d4b1f3e5fc 100644
+--- a/third_party/blink/renderer/core/css/parser/media_query_parser.h
++++ b/third_party/blink/renderer/core/css/parser/media_query_parser.h
+@@ -59,6 +59,7 @@ class CORE_EXPORT MediaQueryParser {
+ 
+  private:
+   friend class ContainerQueryParser;
++  friend class CSSIfParser;
+ 
+   enum ParserType {
+     kMediaQuerySetParser,
+@@ -150,6 +151,12 @@ class CORE_EXPORT MediaQueryParser {
+   // https://drafts.csswg.org/mediaqueries-4/#typedef-general-enclosed
+   const MediaQueryExpNode* ConsumeGeneralEnclosed(CSSParserTokenRange&);
+ 
++  // The contents of media( <media-feature> | <media-condition> ) in if(),
++  // which must consume the whole range (FlyWeb: by range; Chromium 137 uses a
++  // stream).
++  const MediaQueryExpNode* ConsumeIfMediaTest(CSSParserTokenRange&,
++                                              const CSSParserTokenOffsets&);
++
+   // https://drafts.csswg.org/mediaqueries-4/#typedef-media-query
+   MediaQuery* ConsumeQuery(CSSParserTokenRange&, const CSSParserTokenOffsets&);
+ 

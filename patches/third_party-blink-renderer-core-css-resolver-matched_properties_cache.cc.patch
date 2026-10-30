@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/matched_properties_cache.cc b/third_party/blink/renderer/core/css/resolver/matched_properties_cache.cc
-index b8f7fc5ba490a38683b60975fa22bf49ffca6083..422d4202e80f63246a06e70676429057a551738c 100644
+index b8f7fc5ba490a38683b60975fa22bf49ffca6083..ced871507b0cd78d9226254079142e5018dd54c4 100644
 --- a/third_party/blink/renderer/core/css/resolver/matched_properties_cache.cc
 +++ b/third_party/blink/renderer/core/css/resolver/matched_properties_cache.cc
 @@ -197,13 +197,6 @@ bool CachedMatchedProperties::operator==(
@@ -16,7 +16,20 @@ index b8f7fc5ba490a38683b60975fa22bf49ffca6083..422d4202e80f63246a06e70676429057
    }
    return true;
  }
-@@ -324,6 +317,10 @@ bool MatchedPropertiesCache::IsCacheable(const StyleResolverState& state) {
+@@ -281,6 +274,12 @@ bool MatchedPropertiesCache::IsStyleCacheable(
+       builder.StyleType() == kPseudoIdHighlight) {
+     return false;
+   }
++  // Functional media queries cause the style to depend directly on
++  // the current MediaValues, without going through RuleSet invalidation.
++  // These values are not captured by the MatchResult.
++  if (builder.AffectedByFunctionalMedia()) {
++    return false;
++  }
+   return true;
+ }
+ 
+@@ -324,6 +323,10 @@ bool MatchedPropertiesCache::IsCacheable(const StyleResolverState& state) {
      return false;
    }
  
@@ -27,7 +40,7 @@ index b8f7fc5ba490a38683b60975fa22bf49ffca6083..422d4202e80f63246a06e70676429057
    if (!state.GetElement().GetCascadeFilter().IsEmpty()) {
      // The result of applying properties with the same matching declarations can
      // be different if the cascade filter is different.
-@@ -331,6 +328,7 @@ bool MatchedPropertiesCache::IsCacheable(const StyleResolverState& state) {
+@@ -331,6 +334,7 @@ bool MatchedPropertiesCache::IsCacheable(const StyleResolverState& state) {
    }
  
    if (state.HasAttrFunction()) {
