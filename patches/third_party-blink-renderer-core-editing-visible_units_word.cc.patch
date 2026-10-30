@@ -1,0 +1,37 @@
+diff --git a/third_party/blink/renderer/core/editing/visible_units_word.cc b/third_party/blink/renderer/core/editing/visible_units_word.cc
+index 955bf20bb55c187a22f97b3ce9b5803662ce910c..cf144221293fc42a2a7df1be8d425f049d7daaa0 100644
+--- a/third_party/blink/renderer/core/editing/visible_units_word.cc
++++ b/third_party/blink/renderer/core/editing/visible_units_word.cc
+@@ -132,8 +132,7 @@ PositionInFlatTree NextWordPositionInternal(
+           return SkipWhitespaceIfNeeded(text, runner);
+         // Accumulate punctuation/surrogate pair runs.
+         if (static_cast<unsigned>(runner) < text.length() &&
+-            (WTF::unicode::IsPunct(text[runner]) ||
+-             U16_IS_SURROGATE(text[runner]))) {
++            IsWordBoundary(text[runner])) {
+           if (WTF::unicode::IsAlphanumeric(text[runner - 1]))
+             return SkipWhitespaceIfNeeded(text, runner);
+           continue;
+@@ -213,8 +212,7 @@ PositionInFlatTree PreviousWordPositionInternal(
+            runner = it->preceding(runner)) {
+         // Accumulate punctuation/surrogate pair runs.
+         if (static_cast<unsigned>(runner) < text.length() &&
+-            (WTF::unicode::IsPunct(text[runner]) ||
+-             U16_IS_SURROGATE(text[runner]))) {
++            IsWordBoundary(text[runner])) {
+           if (WTF::unicode::IsAlphanumeric(text[runner - 1]))
+             return Position::Before(runner);
+           punct_runner = runner;
+@@ -379,4 +377,12 @@ bool IsWordBreak(UChar ch) {
+   return (WTF::unicode::IsPrintableChar(ch) && !IsWhitespace(ch)) ||
+          U16_IS_SURROGATE(ch) || IsLineBreak(ch) || ch == kLowLineCharacter;
+ }
++
++bool IsWordBoundary(UChar ch) {
++  return WTF::unicode::IsPunct(ch) ||
++         (RuntimeEnabledFeatures::TreatSymbolsAsWordBoundaryEnabled() &&
++          WTF::unicode::IsSymbol(ch)) ||
++         U16_IS_SURROGATE(ch);
++}
++
+ }  // namespace blink

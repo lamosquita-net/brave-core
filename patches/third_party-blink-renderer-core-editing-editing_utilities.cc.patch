@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/editing/editing_utilities.cc b/third_party/blink/renderer/core/editing/editing_utilities.cc
-index df6e4b78dbde104302974d6627752c3a45658067..bcbe4b41d406a1881d051d41a935eac637d886d3 100644
+index df6e4b78dbde104302974d6627752c3a45658067..08e296a866117ead359b1c8788f63990d526decb 100644
 --- a/third_party/blink/renderer/core/editing/editing_utilities.cc
 +++ b/third_party/blink/renderer/core/editing/editing_utilities.cc
 @@ -41,6 +41,7 @@
@@ -23,7 +23,29 @@ index df6e4b78dbde104302974d6627752c3a45658067..bcbe4b41d406a1881d051d41a935eac6
  #include "third_party/blink/renderer/core/html/html_ulist_element.h"
  #include "third_party/blink/renderer/core/html/image_document.h"
  #include "third_party/blink/renderer/core/html/parser/html_parser_idioms.h"
-@@ -208,8 +213,17 @@ static bool HasEditableLevel(const Node& node, EditableLevel editable_level) {
+@@ -187,6 +192,21 @@ bool IsNodeFullyContained(const EphemeralRange& range, const Node& node) {
+          Position::AfterNode(node) <= range.EndPosition();
+ }
+ 
++bool EnsureNodeVisibility(HTMLElement* container) {
++  bool style_changed = false;
++  if (container->GetComputedStyle()->Visibility() == EVisibility::kHidden) {
++    container->SetInlineStyleProperty(CSSPropertyID::kVisibility,
++                                      CSSValueID::kVisible, true);
++    style_changed = true;
++  }
++  if (container->GetComputedStyle()->Display() == EDisplay::kNone) {
++    container->SetInlineStyleProperty(CSSPropertyID::kDisplay,
++                                      CSSValueID::kInline, true);
++    style_changed = true;
++  }
++  return style_changed;
++}
++
+ // TODO(editing-dev): We should implement real version which refers
+ // "user-select" CSS property.
+ bool IsUserSelectContain(const Node& node) {
+@@ -208,8 +228,17 @@ static bool HasEditableLevel(const Node& node, EditableLevel editable_level) {
    // would fire in the middle of Document::setFocusedNode().
  
    for (const Node& ancestor : NodeTraversal::InclusiveAncestorsOf(node)) {
@@ -42,7 +64,7 @@ index df6e4b78dbde104302974d6627752c3a45658067..bcbe4b41d406a1881d051d41a935eac6
      // An inert subtree should not contain any content or controls which are
      // critical to understanding or using aspects of the page which are not in
      // the inert state. Content in an inert subtree will not be perceivable by
-@@ -1139,6 +1153,14 @@ bool IsTableCell(const Node* node) {
+@@ -1139,6 +1168,14 @@ bool IsTableCell(const Node* node) {
    return r ? r->IsTableCell() : IsA<HTMLTableCellElement>(*node);
  }
  
@@ -57,7 +79,7 @@ index df6e4b78dbde104302974d6627752c3a45658067..bcbe4b41d406a1881d051d41a935eac6
  HTMLElement* CreateDefaultParagraphElement(Document& document) {
    switch (document.GetFrame()->GetEditor().DefaultParagraphSeparator()) {
      case EditorParagraphSeparator::kIsDiv:
-@@ -1294,6 +1316,30 @@ PositionWithAffinity AdjustForEditingBoundary(const Position& position) {
+@@ -1294,6 +1331,30 @@ PositionWithAffinity AdjustForEditingBoundary(const Position& position) {
    return AdjustForEditingBoundary(PositionWithAffinity(position));
  }
  

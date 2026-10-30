@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/frame/local_frame_view.cc b/third_party/blink/renderer/core/frame/local_frame_view.cc
-index 7882732c87c5e02d2ee785897c48b1d20a0b51db..31bb75580276b53274cf879a76e799e5c7ad63f0 100644
+index 7882732c87c5e02d2ee785897c48b1d20a0b51db..580116dfd080c8b4b8a206fd3e90f392d9a01eb6 100644
 --- a/third_party/blink/renderer/core/frame/local_frame_view.cc
 +++ b/third_party/blink/renderer/core/frame/local_frame_view.cc
 @@ -745,9 +745,19 @@ void LocalFrameView::PerformLayout() {
@@ -35,7 +35,21 @@ index 7882732c87c5e02d2ee785897c48b1d20a0b51db..31bb75580276b53274cf879a76e799e5
  
    ForAllNonThrottledLocalFrameViews(
        [&re_run_lifecycles](LocalFrameView& frame_view) {
-@@ -5062,11 +5074,4 @@ void LocalFrameView::NotifyElementWithRememberedSizeDisconnected(
+@@ -4996,6 +5008,13 @@ void LocalFrameView::AddPendingStickyUpdate(PaintLayerScrollableArea* object) {
+   pending_sticky_updates_->insert(object);
+ }
+ 
++void LocalFrameView::RemovePendingStickyUpdate(
++    PaintLayerScrollableArea* object) {
++  if (pending_sticky_updates_) {
++    pending_sticky_updates_->erase(object);
++  }
++}
++
+ bool LocalFrameView::HasPendingStickyUpdate(
+     PaintLayerScrollableArea* object) const {
+   if (pending_sticky_updates_) {
+@@ -5062,11 +5081,4 @@ void LocalFrameView::NotifyElementWithRememberedSizeDisconnected(
    disconnected_elements_with_remembered_size_.insert(element);
  }
  

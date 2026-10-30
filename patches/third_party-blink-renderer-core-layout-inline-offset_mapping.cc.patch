@@ -1,0 +1,15 @@
+diff --git a/third_party/blink/renderer/core/layout/inline/offset_mapping.cc b/third_party/blink/renderer/core/layout/inline/offset_mapping.cc
+index 0369f9654dd3f524e8be293187bb48925a211cb7..7b56d5ca3a2b2fcc6cdaf3da1055c58fea7d6429 100644
+--- a/third_party/blink/renderer/core/layout/inline/offset_mapping.cc
++++ b/third_party/blink/renderer/core/layout/inline/offset_mapping.cc
+@@ -180,7 +180,9 @@ unsigned OffsetMappingUnit::ConvertDOMOffsetToTextContent(
+   if (text_content_start_ == text_content_end_)
+     return text_content_start_;
+   // Handle has identity mapping.
+-  return offset - dom_start_ + text_content_start_;
++  unsigned text_content_offset = offset - dom_start_ + text_content_start_;
++  return text_content_offset < text_content_end_ ? text_content_offset
++                                                 : text_content_end_;
+ }
+ 
+ unsigned OffsetMappingUnit::ConvertTextContentToFirstDOMOffset(

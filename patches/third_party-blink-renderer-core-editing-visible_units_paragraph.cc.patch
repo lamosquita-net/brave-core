@@ -1,0 +1,23 @@
+diff --git a/third_party/blink/renderer/core/editing/visible_units_paragraph.cc b/third_party/blink/renderer/core/editing/visible_units_paragraph.cc
+index 4a323522fbf6178749ecd37e81001b2328f6de5d..c4f481f274caea1a0f0634d0f5584adc69cebaa0 100644
+--- a/third_party/blink/renderer/core/editing/visible_units_paragraph.cc
++++ b/third_party/blink/renderer/core/editing/visible_units_paragraph.cc
+@@ -245,7 +245,17 @@ PositionTemplate<Strategy> EndOfParagraphAlgorithm(
+     }
+     const ComputedStyle& style = layout_object->StyleRef();
+     if (style.Visibility() != EVisibility::kVisible) {
+-      next_node_iterator = nextNode();
++      if (RuntimeEnabledFeatures::
++              HandleDeletionAtStartAndEndBoundaryContainingHiddenElementEnabled()) {
++        // We should skip the children of hidden elements and
++        // place the position immediately after the anchor.
++        candidate_node = next_node_iterator;
++        candidate_type = PositionAnchorType::kAfterAnchor;
++        next_node_iterator =
++            Strategy::NextSkippingChildren(*next_node_iterator, start_block);
++      } else {
++        next_node_iterator = nextNode();
++      }
+       continue;
+     }
+ 

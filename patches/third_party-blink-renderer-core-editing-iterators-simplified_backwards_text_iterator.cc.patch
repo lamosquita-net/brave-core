@@ -1,0 +1,70 @@
+diff --git a/third_party/blink/renderer/core/editing/iterators/simplified_backwards_text_iterator.cc b/third_party/blink/renderer/core/editing/iterators/simplified_backwards_text_iterator.cc
+index 076235acd47b9b0d4c9f92f290bae8b34e8c5c47..858090131f040f821d63ea030b4d0c1b39641369 100644
+--- a/third_party/blink/renderer/core/editing/iterators/simplified_backwards_text_iterator.cc
++++ b/third_party/blink/renderer/core/editing/iterators/simplified_backwards_text_iterator.cc
+@@ -35,6 +35,7 @@
+ #include "third_party/blink/renderer/core/editing/position.h"
+ #include "third_party/blink/renderer/core/editing/visible_units.h"
+ #include "third_party/blink/renderer/core/html/forms/html_form_control_element.h"
++#include "third_party/blink/renderer/core/layout/inline/offset_mapping.h"
+ #include "third_party/blink/renderer/core/layout/layout_text_fragment.h"
+ 
+ namespace blink {
+@@ -57,6 +58,37 @@ static int MaxOffsetIncludingCollapsedSpaces(const Node* node) {
+   return offset;
+ }
+ 
++// For a given DOM offset in a text node, returns the corresponding offset in
++// the layout relative to the same node when `-webkit-text-security` property is
++// applied. Example:
++// In a text node with -webkit-text-security applied
++// DOM representation: "A&#x305;&#x332;B&#x305;&#x332;"
++// Layout representation: "••"
++// AdjustedOffsetForSecureText(node, 3) returns 1.
++// AdjustedOffsetForSecureText(node, 4) returns 2.
++static int AdjustedOffsetForSecureText(const Node* node, int offset) {
++  if (!node || !node->IsCharacterDataNode()) {
++    return offset;
++  }
++
++  LayoutText* layout_text = DynamicTo<LayoutText>(node->GetLayoutObject());
++  // Position in DOM for which the offset needs to be calculated in layout.
++  Position current = Position(node, offset);
++  const OffsetMapping* mapping = OffsetMapping::GetFor(current);
++  if (!layout_text || !layout_text->IsSecure() || !mapping) {
++    return offset;
++  }
++
++  // First DOM Position inside the node.
++  Position node_start = Position::FirstPositionInNode(*node);
++
++  // OffsetMapping gives offsets relative to the whole text in the layout, so
++  // subtract the node's start offset to get the offset relative to this node
++  // only.
++  return *mapping->GetTextContentOffset(current) -
++         *mapping->GetTextContentOffset(node_start);
++}
++
+ template <typename Strategy>
+ SimplifiedBackwardsTextIteratorAlgorithm<Strategy>::
+     SimplifiedBackwardsTextIteratorAlgorithm(
+@@ -100,6 +132,7 @@ void SimplifiedBackwardsTextIteratorAlgorithm<Strategy>::Init(
+       start_offset = 0;
+     }
+   }
++
+   if (!end_node->IsCharacterDataNode() && end_offset > 0) {
+     // |Strategy::childAt()| will return 0 if the offset is out of range. We
+     // rely on this behavior instead of calling |countChildren()| to avoid
+@@ -109,6 +142,11 @@ void SimplifiedBackwardsTextIteratorAlgorithm<Strategy>::Init(
+       end_offset = Position::LastOffsetInNode(*end_node);
+     }
+   }
++  if (RuntimeEnabledFeatures::
++          AdjustDOMOffsetToLayoutOffsetForSecureTextEnabled()) {
++    start_offset = AdjustedOffsetForSecureText(start_node, start_offset);
++    end_offset = AdjustedOffsetForSecureText(end_node, end_offset);
++  }
+ 
+   node_ = end_node;
+   fully_clipped_stack_.SetUpFullyClippedStack(node_);
