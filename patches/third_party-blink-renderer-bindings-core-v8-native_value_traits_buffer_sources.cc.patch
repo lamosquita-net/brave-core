@@ -1,0 +1,21 @@
+diff --git a/third_party/blink/renderer/bindings/core/v8/native_value_traits_buffer_sources.cc b/third_party/blink/renderer/bindings/core/v8/native_value_traits_buffer_sources.cc
+index 72de4bc65fe70e5253beb80760b1ffef9c8b4c60..05f1a73ab5347991c19ed1798b9fbc26456645fb 100644
+--- a/third_party/blink/renderer/bindings/core/v8/native_value_traits_buffer_sources.cc
++++ b/third_party/blink/renderer/bindings/core/v8/native_value_traits_buffer_sources.cc
+@@ -220,6 +220,7 @@ DEFINE_ABV_TRAIT(Uint16Array)
+ DEFINE_ABV_TRAIT(Uint32Array)
+ DEFINE_ABV_TRAIT(BigInt64Array)
+ DEFINE_ABV_TRAIT(BigUint64Array)
++DEFINE_ABV_TRAIT(Float16Array)
+ DEFINE_ABV_TRAIT(Float32Array)
+ DEFINE_ABV_TRAIT(Float64Array)
+ #undef DEFINE_ABV_TRAIT
+@@ -397,6 +398,8 @@ DOMArrayBufferView* ToDOMArrayBufferView(v8::Isolate* isolate,
+     return ToDOMViewType<DOMBigInt64Array, allow_shared>(isolate, value);
+   if (v8_view->IsBigUint64Array())
+     return ToDOMViewType<DOMBigUint64Array, allow_shared>(isolate, value);
++  if (v8_view->IsFloat16Array())
++    return ToDOMViewType<DOMFloat16Array, allow_shared>(isolate, value);
+   if (v8_view->IsFloat32Array())
+     return ToDOMViewType<DOMFloat32Array, allow_shared>(isolate, value);
+   if (v8_view->IsFloat64Array())
