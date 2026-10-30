@@ -1,8 +1,8 @@
 diff --git a/third_party/blink/renderer/modules/canvas/htmlcanvas/canvas_context_creation_attributes_helpers.cc b/third_party/blink/renderer/modules/canvas/htmlcanvas/canvas_context_creation_attributes_helpers.cc
-index 8938e79c1cbd0715f78be85b0d378112cd98d818..97a6a498d2a3deb6df6f944ca5ea70f2190aeb1a 100644
+index 8938e79c1cbd0715f78be85b0d378112cd98d818..9bca82dd83055fba5fb86dc726d91fdabfb2b35f 100644
 --- a/third_party/blink/renderer/modules/canvas/htmlcanvas/canvas_context_creation_attributes_helpers.cc
 +++ b/third_party/blink/renderer/modules/canvas/htmlcanvas/canvas_context_creation_attributes_helpers.cc
-@@ -24,11 +24,12 @@ bool ToCanvasContextCreationAttributes(
+@@ -24,17 +24,18 @@ bool ToCanvasContextCreationAttributes(
    result.depth = attrs->depth();
    result.fail_if_major_performance_caveat =
        attrs->failIfMajorPerformanceCaveat();
@@ -14,5 +14,14 @@ index 8938e79c1cbd0715f78be85b0d378112cd98d818..97a6a498d2a3deb6df6f944ca5ea70f2
 -  result.desynchronized = attrs->desynchronized();
 +  result.desynchronized = result.desynchronized_specified;
  #endif
-   switch (attrs->pixelFormat().AsEnum()) {
-     case V8CanvasPixelFormat::Enum::kUint8:
+-  switch (attrs->pixelFormat().AsEnum()) {
+-    case V8CanvasPixelFormat::Enum::kUint8:
++  switch (attrs->colorType().AsEnum()) {
++    case V8CanvasColorType::Enum::kUnorm8:
+       result.pixel_format = CanvasPixelFormat::kUint8;
+       break;
+-    case V8CanvasPixelFormat::Enum::kFloat16:
++    case V8CanvasColorType::Enum::kFloat16:
+       result.pixel_format = CanvasPixelFormat::kF16;
+       break;
+   }

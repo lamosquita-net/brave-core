@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/bindings/core/v8/serialization/serialized_color_params.h b/third_party/blink/renderer/bindings/core/v8/serialization/serialized_color_params.h
-index f93f2e6951987cd68245d084982e03c2701d8083..095368b77ce0d3018edb88dc5bd2cba71c185ccf 100644
+index f93f2e6951987cd68245d084982e03c2701d8083..51f3d84823c3fe383f81dd0772d68d93604454e6 100644
 --- a/third_party/blink/renderer/bindings/core/v8/serialization/serialized_color_params.h
 +++ b/third_party/blink/renderer/bindings/core/v8/serialization/serialized_color_params.h
 @@ -8,6 +8,7 @@
@@ -10,7 +10,26 @@ index f93f2e6951987cd68245d084982e03c2701d8083..095368b77ce0d3018edb88dc5bd2cba7
  
  namespace blink {
  
-@@ -104,6 +105,12 @@ enum class SerializedImageOrientation : uint32_t {
+@@ -22,7 +23,7 @@ enum class ImageSerializationTag : uint32_t {
+   // both should not be specified).
+   kPredefinedColorSpaceTag = 1,
+   // followed by a SerializedPixelFormat enum, used only for ImageBitmap.
+-  kCanvasPixelFormatTag = 2,
++  kImageBitmapPixelFormatTag = 2,
+   // followed by a SerializedImageDataStorageFormat enum, used only for
+   // ImageData.
+   kImageDataStorageFormatTag = 3,
+@@ -64,7 +65,8 @@ enum class SerializedPredefinedColorSpace : uint32_t {
+   kLast = kSRGBLinear,
+ };
+ 
+-// This enumeration specifies the values used to serialize CanvasPixelFormat.
++// This enumeration specifies the values used to serialize the SkColorType used
++// by an ImageBitmap.
+ enum class SerializedPixelFormat : uint32_t {
+   // This is to preserve legacy object when Native was a possible enum state
+   // this will be resolved as either a RGB or BGR pixel format for
+@@ -104,6 +106,12 @@ enum class SerializedImageOrientation : uint32_t {
    kLast = kLeftBottom,
  };
  
@@ -23,7 +42,7 @@ index f93f2e6951987cd68245d084982e03c2701d8083..095368b77ce0d3018edb88dc5bd2cba7
  class SerializedImageDataSettings {
   public:
    SerializedImageDataSettings(PredefinedColorSpace, ImageDataStorageFormat);
-@@ -169,6 +176,21 @@ class SerializedImageBitmapSettings {
+@@ -169,6 +177,21 @@ class SerializedImageBitmapSettings {
        SerializedImageOrientation::kTopLeft;
  };
  

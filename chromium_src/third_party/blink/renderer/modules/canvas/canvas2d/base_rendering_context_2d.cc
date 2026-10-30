@@ -30,7 +30,8 @@ bool IsGoogleMaps(const blink::KURL& url) {
       brave::BraveSessionCache::From(*context).PerturbPixels(             \
           static_cast<const unsigned char*>(                              \
               image_data_pixmap.writable_addr()),                         \
-          image_data_pixmap.computeByteSize());                           \
+          image_data_pixmap.computeByteSize(),                            \
+          image_data_pixmap.info().bytesPerPixel() / 4);                  \
     }                                                                     \
   }
 

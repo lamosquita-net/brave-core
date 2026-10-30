@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/bindings/core/v8/serialization/v8_script_value_serializer.cc b/third_party/blink/renderer/bindings/core/v8/serialization/v8_script_value_serializer.cc
-index 8db4c3d9ae1c006a0134c9424e58d06b50c573e6..c26480b65a4b550c8f449667a5583a8403370f72 100644
+index 8db4c3d9ae1c006a0134c9424e58d06b50c573e6..872c85eaebfd48ac365905b8746996e1cfc7c41f 100644
 --- a/third_party/blink/renderer/bindings/core/v8/serialization/v8_script_value_serializer.cc
 +++ b/third_party/blink/renderer/bindings/core/v8/serialization/v8_script_value_serializer.cc
 @@ -59,6 +59,7 @@
@@ -10,6 +10,15 @@ index 8db4c3d9ae1c006a0134c9424e58d06b50c573e6..c26480b65a4b550c8f449667a5583a84
  #include "third_party/blink/renderer/platform/wtf/allocator/partitions.h"
  #include "third_party/blink/renderer/platform/wtf/date_math.h"
  #include "third_party/blink/renderer/platform/wtf/text/string_utf8_adaptor.h"
+@@ -493,7 +494,7 @@ bool V8ScriptValueSerializer::WriteDOMObject(ScriptWrappable* wrappable,
+               kSerializedParametricColorSpaceLength);
+     for (const auto& value : bitmap_settings.GetSerializedSkColorSpace())
+       WriteDouble(value);
+-    WriteUint32Enum(ImageSerializationTag::kCanvasPixelFormatTag);
++    WriteUint32Enum(ImageSerializationTag::kImageBitmapPixelFormatTag);
+     WriteUint32Enum(bitmap_settings.GetSerializedPixelFormat());
+     WriteUint32Enum(ImageSerializationTag::kCanvasOpacityModeTag);
+     WriteUint32Enum(bitmap_settings.GetSerializedOpacityMode());
 @@ -709,9 +710,13 @@ bool V8ScriptValueSerializer::WriteDOMObject(ScriptWrappable* wrappable,
            "because it had a rendering context.");
        return false;

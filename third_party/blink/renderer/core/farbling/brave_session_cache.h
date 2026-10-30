@@ -82,7 +82,11 @@ class CORE_EXPORT BraveSessionCache final
   BraveFarblingLevel GetBraveFarblingLevel(
       ContentSettingsType webcompat_settings_type);
   void FarbleAudioChannel(float* dst, size_t count);
-  void PerturbPixels(const unsigned char* data, size_t size);
+  // |bytes_per_channel| is 1 for 8-bit RGBA, 2 for half float (F16) and 4 for
+  // float (F32) pixels.
+  void PerturbPixels(const unsigned char* data,
+                     size_t size,
+                     size_t bytes_per_channel = 1);
   WTF::String GenerateRandomString(std::string seed, wtf_size_t length);
   WTF::String FarbledUserAgent(WTF::String real_user_agent);
   int FarbledInteger(FarbleKey key,
@@ -105,7 +109,9 @@ class CORE_EXPORT BraveSessionCache final
   std::optional<blink::BraveAudioFarblingHelper> audio_farbling_helper_;
   WTF::HashMap<ContentSettingsType, BraveFarblingLevel> farbling_levels_;
 
-  void PerturbPixelsInternal(const unsigned char* data, size_t size);
+  void PerturbPixelsInternal(const unsigned char* data,
+                             size_t size,
+                             size_t bytes_per_channel);
 };
 
 }  // namespace brave

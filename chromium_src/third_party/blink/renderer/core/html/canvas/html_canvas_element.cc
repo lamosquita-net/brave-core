@@ -6,6 +6,20 @@
 #include "base/auto_reset.h"
 #include "brave/third_party/blink/renderer/core/farbling/brave_session_cache.h"
 #include "third_party/blink/public/platform/web_content_settings_client.h"
+#include "third_party/blink/renderer/platform/graphics/image_data_buffer.h"
+
+namespace blink {
+namespace {
+
+// FlyWeb: ImageDataBuffer keeps the canvas color type (F16 for a float16
+// canvas) but does not expose it; derive it from the buffer size.
+size_t BytesPerChannel(const ImageDataBuffer& buffer) {
+  const size_t pixels = static_cast<size_t>(buffer.Width()) * buffer.Height();
+  return pixels ? buffer.ComputeByteSize() / pixels / 4 : 1;
+}
+
+}  // namespace
+}  // namespace blink
 
 #define BRAVE_TO_DATA_URL_INTERNAL                               \
   {                                                              \
@@ -16,7 +30,8 @@
     if (execution_context) {                                     \
       brave::BraveSessionCache::From(*execution_context)         \
           .PerturbPixels(data_buffer->Pixels(),                  \
-                         data_buffer->ComputeByteSize());        \
+                         data_buffer->ComputeByteSize(),         \
+                         BytesPerChannel(*data_buffer));         \
     }                                                            \
   }
 

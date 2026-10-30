@@ -9,7 +9,7 @@
 #define BRAVE_CANVAS_ASYNC_BLOB_CREATOR                    \
   brave::BraveSessionCache::From(*context_).PerturbPixels( \
       static_cast<const unsigned char*>(src_data_.addr()), \
-      src_data_.computeByteSize());
+      src_data_.computeByteSize(), src_data_.info().bytesPerPixel() / 4);
 
 #include "src/third_party/blink/renderer/core/html/canvas/canvas_async_blob_creator.cc"
 

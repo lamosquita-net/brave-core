@@ -5,6 +5,7 @@
 
 #include "brave/third_party/blink/renderer/core/farbling/brave_session_cache.h"
 
+#include <cstring>
 #include <string_view>
 
 #include "base/command_line.h"
@@ -38,6 +39,27 @@ namespace {
 
 constexpr uint64_t zero = 0;
 constexpr double maxUInt64AsDouble = static_cast<double>(UINT64_MAX);
+
+// Flips bit 0 of the mantissa of a half float (2 bytes) or float (4 bytes)
+// channel, leaving infinities and NaNs alone (flipping their mantissa would
+// turn an infinity into a NaN).
+void PerturbFloatChannel(uint8_t* channel, size_t size, uint8_t flip) {
+  if (size == 2) {
+    uint16_t value;
+    memcpy(&value, channel, sizeof value);
+    if ((value & 0x7C00) == 0x7C00)
+      return;
+    value ^= flip;
+    memcpy(channel, &value, sizeof value);
+  } else {
+    uint32_t value;
+    memcpy(&value, channel, sizeof value);
+    if ((value & 0x7F800000) == 0x7F800000)
+      return;
+    value ^= flip;
+    memcpy(channel, &value, sizeof value);
+  }
+}
 
 inline uint64_t lfsr_next(uint64_t v) {
   return ((v >> 1) | (((v << 62) ^ (v << 61)) & (~(~zero << 63) << 62)));
@@ -267,26 +289,38 @@ void BraveSessionCache::FarbleAudioChannel(float* dst, size_t count) {
     audio_farbling_helper_->FarbleAudioChannel(dst, count);
 }
 
-void BraveSessionCache::PerturbPixels(const unsigned char* data, size_t size) {
+void BraveSessionCache::PerturbPixels(const unsigned char* data,
+                                      size_t size,
+                                      size_t bytes_per_channel) {
   if (GetBraveFarblingLevel(ContentSettingsType::BRAVE_WEBCOMPAT_CANVAS) ==
       BraveFarblingLevel::OFF) {
     return;
   }
-  PerturbPixelsInternal(data, size);
+  PerturbPixelsInternal(data, size, bytes_per_channel);
 }
 
 void BraveSessionCache::PerturbPixelsInternal(const unsigned char* data,
-                                              size_t size) {
+                                              size_t size,
+                                              size_t bytes_per_channel) {
   if (!data || size == 0)
     return;
+  // FlyWeb: floating point canvases (CanvasFloatingPoint, ImageData with
+  // Float16Array/Float32Array) store 2 or 4 bytes per channel. Flipping bit 0
+  // of an arbitrary byte there could hit high mantissa bits or the alpha
+  // channel, so flip bit 0 of the mantissa of R, G or B instead. Unknown sizes
+  // fall back to the 8-bit behaviour.
+  if (bytes_per_channel != 2 && bytes_per_channel != 4)
+    bytes_per_channel = 1;
 
   uint8_t* pixels = const_cast<uint8_t*>(data);
   // This needs to be type size_t because we pass it to std::string_view
   // later for content hashing. This is safe because the maximum canvas
   // dimensions are less than SIZE_T_MAX. (Width and height are each
   // limited to 32,767 pixels.)
-  // Four bits per pixel
-  const size_t pixel_count = size / 4;
+  // Four channels per pixel
+  const size_t pixel_count = size / (4 * bytes_per_channel);
+  if (pixel_count == 0)
+    return;
   // calculate initial seed to find first pixel to perturb, based on session
   // key, domain key, and canvas contents
   crypto::HMAC h(crypto::HMAC::SHA256);
@@ -310,7 +344,12 @@ void BraveSessionCache::PerturbPixelsInternal(const unsigned char* data,
         bit = canvas_key[i];
       channel = v % 3;
       pixel_index = 4 * (v % pixel_count) + channel;
-      pixels[pixel_index] = pixels[pixel_index] ^ (bit & 0x1);
+      if (bytes_per_channel == 1) {
+        pixels[pixel_index] = pixels[pixel_index] ^ (bit & 0x1);
+      } else {
+        PerturbFloatChannel(pixels + pixel_index * bytes_per_channel,
+                            bytes_per_channel, bit & 0x1);
+      }
       bit = bit >> 1;
       // find next pixel to perturb
       v = lfsr_next(v);

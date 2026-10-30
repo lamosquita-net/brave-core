@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/modules/canvas/canvas2d/canvas_rendering_context_2d.cc b/third_party/blink/renderer/modules/canvas/canvas2d/canvas_rendering_context_2d.cc
-index 2c56d3894a9269496e8128687d60b3d54d6f60f4..368eafbedd3a34417557ec0ed09a7abf158ea96f 100644
+index 2c56d3894a9269496e8128687d60b3d54d6f60f4..cf84a2e6d2b7f3a42c14c260a914bb1d12f7445a 100644
 --- a/third_party/blink/renderer/modules/canvas/canvas2d/canvas_rendering_context_2d.cc
 +++ b/third_party/blink/renderer/modules/canvas/canvas2d/canvas_rendering_context_2d.cc
 @@ -54,7 +54,6 @@
@@ -91,11 +91,13 @@ index 2c56d3894a9269496e8128687d60b3d54d6f60f4..368eafbedd3a34417557ec0ed09a7abf
  void CanvasRenderingContext2D::ClearFilterReferences() {
    filter_operations_.RemoveClient(*this);
    filter_operations_.clear();
-@@ -750,17 +771,15 @@ CanvasRenderingContext2D::getContextAttributes() const {
+@@ -749,18 +770,16 @@ CanvasRenderingContext2D::getContextAttributes() const {
+   settings->setAlpha(CreationAttributes().alpha);
    settings->setColorSpace(color_params_.GetColorSpaceAsString());
    if (RuntimeEnabledFeatures::CanvasFloatingPointEnabled())
-     settings->setPixelFormat(color_params_.GetPixelFormatAsString());
+-    settings->setPixelFormat(color_params_.GetPixelFormatAsString());
 -  settings->setDesynchronized(Host()->LowLatencyEnabled());
++    settings->setColorType(color_params_.GetPixelFormatAsString());
 +  settings->setDesynchronized(CreationAttributes().desynchronized_specified);
    switch (CreationAttributes().will_read_frequently) {
      case CanvasContextCreationAttributesCore::WillReadFrequently::kTrue:
