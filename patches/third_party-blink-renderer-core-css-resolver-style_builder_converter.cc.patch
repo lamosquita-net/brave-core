@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc b/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
-index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..b5fb74f25045ad5a2116de500f55f164af09ef46 100644
+index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..4c82fdb0375f30d2daf9071762fb4cb9003264df 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
 @@ -66,6 +66,8 @@
@@ -163,7 +163,19 @@ index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..b5fb74f25045ad5a2116de500f55f164
  }
  
  FontDescription::FontVariantCaps
-@@ -2016,25 +2031,30 @@ ScopedCSSNameList* StyleBuilderConverter::ConvertAnchorName(
+@@ -1923,10 +1938,7 @@ float StyleBuilderConverter::ConvertNumberOrPercentage(
+     const CSSValue& value) {
+   const auto& primitive_value = To<CSSPrimitiveValue>(value);
+   DCHECK(primitive_value.IsNumber() || primitive_value.IsPercentage());
+-  if (primitive_value.IsNumber()) {
+-    return primitive_value.GetFloatValue();
+-  }
+-  return primitive_value.GetFloatValue() / 100.0f;
++  return primitive_value.ConvertTo<float>(state.CssToLengthConversionData());
+ }
+ 
+ int StyleBuilderConverter::ConvertInteger(StyleResolverState& state,
+@@ -2016,25 +2028,30 @@ ScopedCSSNameList* StyleBuilderConverter::ConvertAnchorName(
    return MakeGarbageCollected<ScopedCSSNameList>(std::move(names));
  }
  
@@ -202,7 +214,7 @@ index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..b5fb74f25045ad5a2116de500f55f164
  }
  
  StyleInitialLetter StyleBuilderConverter::ConvertInitialLetter(
-@@ -2112,8 +2132,9 @@ StyleOffsetRotation StyleBuilderConverter::ConvertOffsetRotate(
+@@ -2112,8 +2129,9 @@ StyleOffsetRotation StyleBuilderConverter::ConvertOffsetRotate(
    return result;
  }
  
@@ -214,7 +226,7 @@ index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..b5fb74f25045ad5a2116de500f55f164
    const auto& pair = To<CSSValuePair>(value);
    return LengthPoint(
        ConvertPositionLength<CSSValueID::kLeft, CSSValueID::kRight>(
-@@ -2212,7 +2233,7 @@ scoped_refptr<QuotesData> StyleBuilderConverter::ConvertQuotes(
+@@ -2212,7 +2230,7 @@ scoped_refptr<QuotesData> StyleBuilderConverter::ConvertQuotes(
    return nullptr;
  }
  
@@ -223,7 +235,7 @@ index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..b5fb74f25045ad5a2116de500f55f164
                                                  const CSSValue& value) {
    const auto& pair = To<CSSValuePair>(value);
    Length radius_width = To<CSSPrimitiveValue>(pair.First())
-@@ -2251,7 +2272,8 @@ ShadowData StyleBuilderConverter::ConvertShadow(
+@@ -2251,7 +2269,8 @@ ShadowData StyleBuilderConverter::ConvertShadow(
        black_text_link_colors.SetVisitedLinkColor(Color::kBlack);
        black_text_link_colors.SetActiveLinkColor(Color::kBlack);
  
@@ -233,7 +245,7 @@ index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..b5fb74f25045ad5a2116de500f55f164
                                  mojom::blink::ColorScheme::kLight, nullptr,
                                  /*for_visited_link=*/false);
        if (!color.IsAbsoluteColor()) {
-@@ -2364,7 +2386,8 @@ Vector<AtomicString> StyleBuilderConverter::ConvertViewTransitionClass(
+@@ -2364,7 +2383,8 @@ Vector<AtomicString> StyleBuilderConverter::ConvertViewTransitionClass(
    return result;
  }
  
@@ -243,7 +255,7 @@ index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..b5fb74f25045ad5a2116de500f55f164
                               const TextLinkColors& text_link_colors,
                               mojom::blink::ColorScheme used_color_scheme,
                               const ui::ColorProvider* color_provider,
-@@ -2396,11 +2419,13 @@ StyleColor ResolveColorValue(const CSSValue& value,
+@@ -2396,11 +2416,13 @@ StyleColor ResolveColorValue(const CSSValue& value,
  
    if (auto* color_mix_value = DynamicTo<cssvalue::CSSColorMixValue>(value)) {
      const StyleColor style_color1 =
@@ -261,7 +273,7 @@ index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..b5fb74f25045ad5a2116de500f55f164
      // If neither color is "currentcolor" (or a color-mix function containing a
      // currentcolor) then color-mix functions can be resolved right now like
      // other colors. Otherwise we need to store an unresolved value on
-@@ -2408,26 +2433,45 @@ StyleColor ResolveColorValue(const CSSValue& value,
+@@ -2408,26 +2430,45 @@ StyleColor ResolveColorValue(const CSSValue& value,
      if (style_color1.IsAbsoluteColor() && style_color2.IsAbsoluteColor()) {
        const Color c1 = style_color1.Resolve(Color(), used_color_scheme);
        const Color c2 = style_color2.Resolve(Color(), used_color_scheme);
@@ -311,7 +323,7 @@ index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..b5fb74f25045ad5a2116de500f55f164
  }
  
  StyleColor StyleBuilderConverter::ConvertStyleColor(StyleResolverState& state,
-@@ -2436,7 +2480,8 @@ StyleColor StyleBuilderConverter::ConvertStyleColor(StyleResolverState& state,
+@@ -2436,7 +2477,8 @@ StyleColor StyleBuilderConverter::ConvertStyleColor(StyleResolverState& state,
    mojom::blink::ColorScheme color_scheme =
        state.StyleBuilder().UsedColorScheme();
    return ResolveColorValue(
@@ -321,7 +333,7 @@ index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..b5fb74f25045ad5a2116de500f55f164
        state.GetDocument().GetColorProviderForPainting(color_scheme),
        for_visited_link);
  }
-@@ -2455,18 +2500,19 @@ StyleAutoColor StyleBuilderConverter::ConvertStyleAutoColor(
+@@ -2455,18 +2497,19 @@ StyleAutoColor StyleBuilderConverter::ConvertStyleAutoColor(
  
  SVGPaint StyleBuilderConverter::ConvertSVGPaint(StyleResolverState& state,
                                                  const CSSValue& value,
@@ -344,7 +356,7 @@ index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..b5fb74f25045ad5a2116de500f55f164
    } else {
      auto* local_identifier_value = DynamicTo<CSSIdentifierValue>(local_value);
      if (local_identifier_value) {
-@@ -2516,6 +2562,7 @@ TextBoxEdge StyleBuilderConverter::ConvertTextBoxEdge(
+@@ -2516,6 +2559,7 @@ TextBoxEdge StyleBuilderConverter::ConvertTextBoxEdge(
    if (auto* identifier_value = DynamicTo<CSSIdentifierValue>(value)) {
      return TextBoxEdge(identifier_value->ConvertTo<TextBoxEdge::Type>());
    }
@@ -352,7 +364,18 @@ index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..b5fb74f25045ad5a2116de500f55f164
    const auto* const list = DynamicTo<CSSValueList>(&value);
    DCHECK_EQ(list->length(), 2u);
    const CSSIdentifierValue& over = To<CSSIdentifierValue>(list->Item(0));
-@@ -2859,12 +2906,13 @@ scoped_refptr<BasicShape> StyleBuilderConverter::ConvertObjectViewBox(
+@@ -2592,7 +2636,9 @@ TextSizeAdjust StyleBuilderConverter::ConvertTextSizeAdjust(
+   }
+   const CSSPrimitiveValue& primitive_value = To<CSSPrimitiveValue>(value);
+   DCHECK(primitive_value.IsPercentage());
+-  return TextSizeAdjust(primitive_value.GetFloatValue() / 100.0f);
++  return TextSizeAdjust(primitive_value.ComputePercentage<float>(
++                            state.CssToLengthConversionData()) /
++                        100.0f);
+ }
+ 
+ TextUnderlinePosition StyleBuilderConverter::ConvertTextUnderlinePosition(
+@@ -2859,12 +2905,13 @@ scoped_refptr<BasicShape> StyleBuilderConverter::ConvertObjectViewBox(
  }
  
  static const CSSValue& ComputeColorValue(
@@ -367,7 +390,7 @@ index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..b5fb74f25045ad5a2116de500f55f164
        document.GetColorProviderForPainting(color_scheme), kNotForVisitedLink);
    return *ComputedStyleUtils::ValueForColor(style_color);
  }
-@@ -2954,7 +3002,8 @@ static const CSSValue& ComputeRegisteredPropertyValue(
+@@ -2954,7 +3001,8 @@ static const CSSValue& ComputeRegisteredPropertyValue(
        return value;
      }
      if (StyleColor::IsColorKeyword(value_id)) {
@@ -377,7 +400,7 @@ index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..b5fb74f25045ad5a2116de500f55f164
      }
    }
  
-@@ -2976,7 +3025,14 @@ static const CSSValue& ComputeRegisteredPropertyValue(
+@@ -2976,7 +3024,14 @@ static const CSSValue& ComputeRegisteredPropertyValue(
    }
  
    if (auto* color_mix_value = DynamicTo<cssvalue::CSSColorMixValue>(value)) {
@@ -393,7 +416,7 @@ index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..b5fb74f25045ad5a2116de500f55f164
    }
  
    return value;
-@@ -3023,9 +3079,11 @@ const CSSValue& StyleBuilderConverter::ConvertRegisteredPropertyValue(
+@@ -3023,9 +3078,11 @@ const CSSValue& StyleBuilderConverter::ConvertRegisteredPropertyValue(
  // https://drafts.css-houdini.org/css-properties-values-api-1/#substitution
  CSSVariableData* StyleBuilderConverter::ConvertRegisteredPropertyVariableData(
      const CSSValue& value,
@@ -406,7 +429,7 @@ index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..b5fb74f25045ad5a2116de500f55f164
                                   /* needs_variable_resolution */ false);
  }
  
-@@ -3364,186 +3422,187 @@ ScopedCSSNameList* StyleBuilderConverter::ConvertTimelineScope(
+@@ -3364,186 +3421,187 @@ ScopedCSSNameList* StyleBuilderConverter::ConvertTimelineScope(
    return MakeGarbageCollected<ScopedCSSNameList>(std::move(names));
  }
  
@@ -674,7 +697,7 @@ index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..b5fb74f25045ad5a2116de500f55f164
          break;
        default:
          NOTREACHED_IN_MIGRATION();
-@@ -3555,26 +3614,26 @@ InsetArea StyleBuilderConverter::ConvertInsetArea(StyleResolverState& state,
+@@ -3555,26 +3613,26 @@ InsetArea StyleBuilderConverter::ConvertInsetArea(StyleResolverState& state,
    if (const auto* first_value = DynamicTo<CSSIdentifierValue>(value)) {
      CSSValueID first_keyword = first_value->GetValueID();
      if (first_keyword == CSSValueID::kNone) {

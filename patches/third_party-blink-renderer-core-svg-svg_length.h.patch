@@ -1,0 +1,15 @@
+diff --git a/third_party/blink/renderer/core/svg/svg_length.h b/third_party/blink/renderer/core/svg/svg_length.h
+index 8e2340f9bb089af99f2c13229ff6148a62177d4a..8dc2562e9962e63826309edbbde8ca44f1901e1a 100644
+--- a/third_party/blink/renderer/core/svg/svg_length.h
++++ b/third_party/blink/renderer/core/svg/svg_length.h
+@@ -83,7 +83,9 @@ class CORE_EXPORT SVGLength final : public SVGListablePropertyBase {
+   Length ConvertToLength(const SVGLengthConversionData&) const;
+   float Value(const SVGLengthConversionData&, float dimension) const;
+   float Value(const SVGLengthContext&) const;
+-  float ValueInSpecifiedUnits() const { return value_->GetFloatValue(); }
++  float ValueInSpecifiedUnits() const {
++    return To<CSSNumericLiteralValue>(*value_).GetFloatValue();
++  }
+ 
+   void SetValueAsNumber(float);
+   void SetValueInSpecifiedUnits(float value);
