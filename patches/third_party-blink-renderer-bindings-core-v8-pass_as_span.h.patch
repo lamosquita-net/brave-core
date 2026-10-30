@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/bindings/core/v8/pass_as_span.h b/third_party/blink/renderer/bindings/core/v8/pass_as_span.h
-index bc51e55c73cc7d1401815f5823139e76e126add8..2f33329fa8240e26a7f2223e8dda663db4b8e840 100644
+index bc51e55c73cc7d1401815f5823139e76e126add8..11f682b921e695118b2985c8e597ce00494713ec 100644
 --- a/third_party/blink/renderer/bindings/core/v8/pass_as_span.h
 +++ b/third_party/blink/renderer/bindings/core/v8/pass_as_span.h
 @@ -13,6 +13,8 @@
@@ -60,7 +60,7 @@ index bc51e55c73cc7d1401815f5823139e76e126add8..2f33329fa8240e26a7f2223e8dda663d
    void Assign(base::span<const uint8_t> span) { bytes_.Assign(span); }
    base::span<uint8_t, ByteSpanWithInlineStorage::kInlineStorageSize>
    GetInlineStorage() {
-@@ -85,34 +105,72 @@ class SpanWithInlineStorage {
+@@ -85,34 +105,80 @@ class SpanWithInlineStorage {
    ByteSpanWithInlineStorage bytes_;
  };
  
@@ -115,9 +115,8 @@ index bc51e55c73cc7d1401815f5823139e76e126add8..2f33329fa8240e26a7f2223e8dda663d
    }
  
 -DEFINE_TYPED_ARRAY_ELEMENT_TRAITS(int8_t, IsInt8Array);
-+DEFINE_TYPED_ARRAY_ELEMENT_TRAITS(int8_t, IsInt8Array, IDLByte);
- // Note Uint8 array is special case due to need to account for
- // Uint8 clamped array, so not declared here.
+-// Note Uint8 array is special case due to need to account for
+-// Uint8 clamped array, so not declared here.
 -DEFINE_TYPED_ARRAY_ELEMENT_TRAITS(int16_t, IsInt16Array);
 -DEFINE_TYPED_ARRAY_ELEMENT_TRAITS(uint16_t, IsUint16Array);
 -DEFINE_TYPED_ARRAY_ELEMENT_TRAITS(int32_t, IsInt32Array);
@@ -126,8 +125,11 @@ index bc51e55c73cc7d1401815f5823139e76e126add8..2f33329fa8240e26a7f2223e8dda663d
 -DEFINE_TYPED_ARRAY_ELEMENT_TRAITS(uint64_t, IsBigUint64Array);
 -DEFINE_TYPED_ARRAY_ELEMENT_TRAITS(float, IsFloat32Array);
 -DEFINE_TYPED_ARRAY_ELEMENT_TRAITS(double, IsFloat64Array);
++DEFINE_TYPED_ARRAY_ELEMENT_TRAITS(int8_t, IsInt8Array, IDLByte);
++// Note Uint8Array and Uint8ClampedArray are special cases because they map to
++// the same type, as do Uint16Array and Float16Array, so they are not declared
++// here.
 +DEFINE_TYPED_ARRAY_ELEMENT_TRAITS(int16_t, IsInt16Array, IDLShort);
-+DEFINE_TYPED_ARRAY_ELEMENT_TRAITS(uint16_t, IsUint16Array, IDLUnsignedShort);
 +DEFINE_TYPED_ARRAY_ELEMENT_TRAITS(int32_t, IsInt32Array, IDLLong);
 +DEFINE_TYPED_ARRAY_ELEMENT_TRAITS(uint32_t, IsUint32Array, IDLUnsignedLong);
 +DEFINE_TYPED_ARRAY_ELEMENT_TRAITS(int64_t, IsBigInt64Array, IDLLongLong);
@@ -145,10 +147,18 @@ index bc51e55c73cc7d1401815f5823139e76e126add8..2f33329fa8240e26a7f2223e8dda663d
      return value->IsUint8Array() || value->IsUint8ClampedArray();
    }
 +  using IDLType = IDLOctet;
++};
++
++template <>
++struct TypedArrayElementTraits<uint16_t> {
++  static bool IsViewOfType(v8::Local<v8::Value> value) {
++    return value->IsFloat16Array() || value->IsUint16Array();
++  }
++  using IDLType = IDLUnsignedShort;
  };
  
  }  // namespace bindings::internal
-@@ -126,6 +184,7 @@ struct PassAsSpanMarkerBase {
+@@ -126,6 +192,7 @@ struct PassAsSpanMarkerBase {
    enum Flags {
      kNone,
      kAllowShared = 1 << 0,
@@ -156,7 +166,7 @@ index bc51e55c73cc7d1401815f5823139e76e126add8..2f33329fa8240e26a7f2223e8dda663d
    };
  };
  
-@@ -140,12 +199,18 @@ template <PassAsSpanMarkerBase::Flags flags =
+@@ -140,12 +207,18 @@ template <PassAsSpanMarkerBase::Flags flags =
            typename T = void>
  struct PassAsSpan : public PassAsSpanMarkerBase {
    static constexpr bool allow_shared = flags & Flags::kAllowShared;
