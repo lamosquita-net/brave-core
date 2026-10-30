@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/block_layout_algorithm.cc b/third_party/blink/renderer/core/layout/block_layout_algorithm.cc
-index 444730e6db58accd0f41796c4c9f102e75f148e3..1b33a605b01c975ec360663099fc83e3738b0a74 100644
+index 444730e6db58accd0f41796c4c9f102e75f148e3..3b397cf01236595645138cdb276288e854b3d585 100644
 --- a/third_party/blink/renderer/core/layout/block_layout_algorithm.cc
 +++ b/third_party/blink/renderer/core/layout/block_layout_algorithm.cc
 @@ -256,18 +256,15 @@ BlockLayoutAlgorithm::BlockLayoutAlgorithm(const LayoutAlgorithmParams& params)
@@ -309,6 +309,15 @@ index 444730e6db58accd0f41796c4c9f102e75f148e3..1b33a605b01c975ec360663099fc83e3
      return false;
    }
  
+@@ -1470,7 +1516,7 @@ void BlockLayoutAlgorithm::HandleOutOfFlowPositioned(
+ 
+   container_builder_.AddOutOfFlowChildCandidate(
+       child, static_offset, LogicalStaticPosition::kInlineStart,
+-      LogicalStaticPosition::kBlockStart,
++      LogicalStaticPosition::kBlockStart, LogicalStaticPosition::kBlock,
+       line_clamp_data_.ShouldHideForPaint(BfcBlockOffset() +
+                                           static_offset.block_offset));
+ }
 @@ -1788,6 +1834,12 @@ LayoutResult::EStatus BlockLayoutAlgorithm::HandleNewFormattingContext(
          /* self_collapsing_child_had_clearance */ false);
    }

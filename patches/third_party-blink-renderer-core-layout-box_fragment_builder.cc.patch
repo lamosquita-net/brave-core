@@ -1,0 +1,26 @@
+diff --git a/third_party/blink/renderer/core/layout/box_fragment_builder.cc b/third_party/blink/renderer/core/layout/box_fragment_builder.cc
+index eb58f4f2013bb250a1dba83904123db1e4ca0749..0bf1fac86d7988212819509b9636cf5701eff699 100644
+--- a/third_party/blink/renderer/core/layout/box_fragment_builder.cc
++++ b/third_party/blink/renderer/core/layout/box_fragment_builder.cc
+@@ -542,6 +542,12 @@ void BoxFragmentBuilder::PropagateChildBreakValues(
+ }
+ 
+ void BoxFragmentBuilder::HandleOofsAndSpecialDescendants() {
++  has_final_size_ = true;
++
++  // There may be OOFs with anchor queries. So be sure to propagate any anchors
++  // that we've found so far.
++  PropagateSizeDependentData();
++
+   OutOfFlowLayoutPart(this).Run();
+   if (Style().ScrollMarkerGroup() != EScrollMarkerGroup::kNone &&
+       !GetConstraintSpace().IsAnonymous()) {
+@@ -559,6 +565,8 @@ const LayoutResult* BoxFragmentBuilder::ToBoxFragment(
+       DCHECK(fragment.IsLineBox() ||
+              // TODO(kojii): How to place floats and OOF is TBD.
+              fragment.IsFloatingOrOutOfFlowPositioned());
++  Finalize();
++
+     }
+   }
+ #endif

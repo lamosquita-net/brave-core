@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/try_value_flips.cc b/third_party/blink/renderer/core/css/try_value_flips.cc
-index f2b73d2f0e34bfc5b1f1fe45c839f912af29a5bc..65d0209533c60ac50a908c83c5fe62ecdf59c6ea 100644
+index f2b73d2f0e34bfc5b1f1fe45c839f912af29a5bc..943d13d9762ebe159b1d657a3f106dbfa01fb187 100644
 --- a/third_party/blink/renderer/core/css/try_value_flips.cc
 +++ b/third_party/blink/renderer/core/css/try_value_flips.cc
 @@ -14,6 +14,7 @@
@@ -74,7 +74,7 @@ index f2b73d2f0e34bfc5b1f1fe45c839f912af29a5bc..65d0209533c60ac50a908c83c5fe62ec
        second_value, second_axis.value(), transform, writing_direction);
  
    // Maintain grammar order after flip-start.
-@@ -630,11 +634,13 @@ const CSSValue* TransformInsetArea(
+@@ -630,19 +634,20 @@ const CSSValue* TransformInsetArea(
    // [1] https://drafts.csswg.org/css-anchor-position-1/#resolving-spans
  
    if (first_value_transformed == CSSValueID::kSpanAll &&
@@ -90,7 +90,16 @@ index f2b73d2f0e34bfc5b1f1fe45c839f912af29a5bc..65d0209533c60ac50a908c83c5fe62ec
      return CSSIdentifierValue::Create(first_value_transformed);
    }
  
-@@ -665,8 +671,9 @@ const CSSValue* TryValueFlips::FlipValue(
+   return MakeGarbageCollected<CSSValuePair>(
+       CSSIdentifierValue::Create(first_value_transformed),
+       CSSIdentifierValue::Create(second_value_transformed),
+-      pair->KeepIdenticalValues() ? CSSValuePair::kKeepIdenticalValues
+-                                  : CSSValuePair::kDropIdenticalValues);
++      CSSValuePair::kKeepIdenticalValues);
+ }
+ 
+ }  // namespace
+@@ -665,8 +670,9 @@ const CSSValue* TryValueFlips::FlipValue(
      return TransformSelfAlignment(value, logical_axis, transform,
                                    writing_direction);
    }

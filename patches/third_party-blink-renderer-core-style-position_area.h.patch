@@ -1,9 +1,9 @@
 diff --git a/third_party/blink/renderer/core/style/position_area.h b/third_party/blink/renderer/core/style/position_area.h
 new file mode 100644
-index 0000000000000000000000000000000000000000..4f36c4388c6ef90e3164a6325e1caeca76bedadc
+index 0000000000000000000000000000000000000000..892952bfb2cd1d398321f2d9a4fbf83442239299
 --- /dev/null
 +++ b/third_party/blink/renderer/core/style/position_area.h
-@@ -0,0 +1,148 @@
+@@ -0,0 +1,139 @@
 +// Copyright 2023 The Chromium Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -16,6 +16,8 @@ index 0000000000000000000000000000000000000000..4f36c4388c6ef90e3164a6325e1caeca
 +#include "third_party/blink/renderer/core/core_export.h"
 +#include "third_party/blink/renderer/core/css/anchor_query.h"
 +#include "third_party/blink/renderer/core/css/css_anchor_query_enums.h"
++#include "third_party/blink/renderer/core/layout/geometry/box_sides.h"
++#include "third_party/blink/renderer/core/layout/geometry/box_strut.h"
 +#include "third_party/blink/renderer/core/style/computed_style_constants.h"
 +#include "third_party/blink/renderer/core/style/style_self_alignment_data.h"
 +#include "third_party/blink/renderer/platform/geometry/layout_unit.h"
@@ -103,15 +105,6 @@ index 0000000000000000000000000000000000000000..4f36c4388c6ef90e3164a6325e1caeca
 +      const WritingDirectionMode& container_writing_direction,
 +      const WritingDirectionMode& self_writing_direction) const;
 +
-+  // Return anchor() functions to override auto inset values according to the
-+  // resolved position-area. May only be called on PositionAreas returned from
-+  // ToPhysical() which ensures physical vertical / horizontal areas.
-+  // A return value of nullopt represents 0px rather than an anchor() function.
-+  std::optional<AnchorQuery> UsedTop() const;
-+  std::optional<AnchorQuery> UsedBottom() const;
-+  std::optional<AnchorQuery> UsedLeft() const;
-+  std::optional<AnchorQuery> UsedRight() const;
-+
 +  // Anchored elements using position-area align towards the unused area through
 +  // different 'normal' behavior for align-self and justify-self. Compute the
 +  // alignments to be passed into ResolvedAlignSelf()/ResolvedJustifySelf().
@@ -133,19 +126,17 @@ index 0000000000000000000000000000000000000000..4f36c4388c6ef90e3164a6325e1caeca
 +  PositionAreaRegion span2_end_ = PositionAreaRegion::kNone;
 +};
 +
-+// Used to store inset offsets on ComputedStyle for adjusting the
-+// containing-block rectangle. All zeros means a span-all position-area is applied.
-+// Non-zero values refer to an anchor edge offset relative to the containing
-+// block rectangle.
++// Used to store insets on ComputedStyle for adjusting the containing-block.
 +struct PositionAreaOffsets {
-+  std::optional<LayoutUnit> top;
-+  std::optional<LayoutUnit> bottom;
-+  std::optional<LayoutUnit> left;
-+  std::optional<LayoutUnit> right;
++  PhysicalBoxStrut insets;
++  PhysicalBoxSides behaves_as_auto;
++
++  PositionAreaOffsets() = default;
++  PositionAreaOffsets(PhysicalBoxStrut insets, PhysicalBoxSides behaves_as_auto)
++      : insets(insets), behaves_as_auto(behaves_as_auto) {}
 +
 +  bool operator==(const PositionAreaOffsets& other) const {
-+    return top == other.top && bottom == other.bottom && left == other.left &&
-+           right == other.right;
++    return insets == other.insets && behaves_as_auto == other.behaves_as_auto;
 +  }
 +};
 +

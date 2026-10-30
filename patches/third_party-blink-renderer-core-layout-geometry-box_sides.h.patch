@@ -1,0 +1,25 @@
+diff --git a/third_party/blink/renderer/core/layout/geometry/box_sides.h b/third_party/blink/renderer/core/layout/geometry/box_sides.h
+index d34cb7e0f89ce029bab032254bf8da418f6cf810..6dc8d84e5acf01dd4f4aabaf1f0fd7db925da46f 100644
+--- a/third_party/blink/renderer/core/layout/geometry/box_sides.h
++++ b/third_party/blink/renderer/core/layout/geometry/box_sides.h
+@@ -40,8 +40,6 @@ struct LogicalBoxSides {
+ // Presence of box sides (e.g. borders) for a fragment, in the physical
+ // coordinate space.
+ struct PhysicalBoxSides {
+-  STACK_ALLOCATED();
+-
+  public:
+   bool top = true;
+   bool right = true;
+@@ -77,6 +75,11 @@ struct PhysicalBoxSides {
+     }
+   }
+ 
++  bool operator==(const PhysicalBoxSides& other) const {
++    return top == other.top && right == other.right && bottom == other.bottom &&
++           left == other.left;
++  }
++
+   bool IsEmpty() const { return !top && !right && !bottom && !left; }
+   bool HasAllSides() const { return top && right && bottom && left; }
+ };

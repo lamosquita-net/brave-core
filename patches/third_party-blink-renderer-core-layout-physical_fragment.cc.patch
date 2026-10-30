@@ -1,12 +1,35 @@
 diff --git a/third_party/blink/renderer/core/layout/physical_fragment.cc b/third_party/blink/renderer/core/layout/physical_fragment.cc
-index 65bdefa4262175613e7da5f1caeb28bee4a9ce71..e2af8a14aec422eb5407528441e2dc85d67d99bd 100644
+index 65bdefa4262175613e7da5f1caeb28bee4a9ce71..fb5a8c454e631668f380c93496e6ff1701ea5cae 100644
 --- a/third_party/blink/renderer/core/layout/physical_fragment.cc
 +++ b/third_party/blink/renderer/core/layout/physical_fragment.cc
-@@ -559,7 +559,6 @@ PhysicalFragment::OofData* PhysicalFragment::OofDataFromBuilder(
+@@ -558,12 +558,11 @@ PhysicalFragment::OofData* PhysicalFragment::OofDataFromBuilder(
+     }
    }
  
-   if (const LogicalAnchorQuery* anchor_query = builder->AnchorQuery()) {
+-  if (const LogicalAnchorQuery* anchor_query = builder->AnchorQuery()) {
 -    DCHECK(RuntimeEnabledFeatures::CSSAnchorPositioningEnabled());
++  if (builder->anchor_query_) {
      if (!oof_data) {
        oof_data = MakeGarbageCollected<OofData>();
      }
+-    oof_data->anchor_query.SetFromLogical(*anchor_query, converter);
++    oof_data->SetAnchorQuery(builder->anchor_query_);
+   }
+ 
+   return oof_data;
+@@ -1035,7 +1034,14 @@ bool PhysicalFragment::DependsOnPercentageBlockSize(
+ 
+ void PhysicalFragment::OofData::Trace(Visitor* visitor) const {
+   visitor->Trace(oof_positioned_descendants);
+-  visitor->Trace(anchor_query);
++  visitor->Trace(anchor_query_);
++}
++
++PhysicalAnchorQuery& PhysicalFragment::OofData::EnsureAnchorQuery() {
++  if (!anchor_query_) {
++    anchor_query_ = MakeGarbageCollected<PhysicalAnchorQuery>();
++  }
++  return *anchor_query_;
+ }
+ 
+ std::ostream& operator<<(std::ostream& out, const PhysicalFragment& fragment) {

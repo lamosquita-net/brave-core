@@ -1,8 +1,29 @@
 diff --git a/third_party/blink/renderer/core/layout/box_fragment_builder.h b/third_party/blink/renderer/core/layout/box_fragment_builder.h
-index 952b4eaf65b99f781846d5f7297d2bbde66acefe..6b9fb0cc0fa16c0edf5c17be4dc46ff03d09a170 100644
+index 952b4eaf65b99f781846d5f7297d2bbde66acefe..fc2e5e1fe0aa4b0e9ecf827da08f5cd831000fff 100644
 --- a/third_party/blink/renderer/core/layout/box_fragment_builder.h
 +++ b/third_party/blink/renderer/core/layout/box_fragment_builder.h
-@@ -329,6 +329,13 @@ class CORE_EXPORT BoxFragmentBuilder final : public FragmentBuilder {
+@@ -142,6 +142,20 @@ class CORE_EXPORT BoxFragmentBuilder final : public FragmentBuilder {
+     return size_.block_size;
+   }
+ 
++  LogicalSize SizeForAnchorQueries() const {
++    // TODO(layout-dev): This isn't great. But sometimes anchor queries are
++    // evaluated in the middle of layout of an OOF container. This happens when
++    // the OOF container is a multicol container, and column layout gets
++    // interrupted by a column spanner. We should probably provide the multicol
++    // block size we have at the point of being interrupted by the spanner,
++    // rather than using 0.
++    LogicalSize logical_size(InlineSize(), LayoutUnit());
++    if (HasBlockSize()) {
++      logical_size.block_size = FragmentBlockSize();
++    }
++    return logical_size;
++  }
++
+   void SetIntrinsicBlockSize(LayoutUnit intrinsic_block_size) {
+     intrinsic_block_size_ = intrinsic_block_size;
+   }
+@@ -329,6 +343,13 @@ class CORE_EXPORT BoxFragmentBuilder final : public FragmentBuilder {
      should_clone_box_end_decorations_ = b;
    }
  
@@ -16,7 +37,7 @@ index 952b4eaf65b99f781846d5f7297d2bbde66acefe..6b9fb0cc0fa16c0edf5c17be4dc46ff0
    void SetIsMonolithic(bool b) { is_monolithic_ = b; }
  
    // Set how much of the block-size we've used so far for this box. This will be
-@@ -701,6 +708,7 @@ class CORE_EXPORT BoxFragmentBuilder final : public FragmentBuilder {
+@@ -701,6 +722,7 @@ class CORE_EXPORT BoxFragmentBuilder final : public FragmentBuilder {
    bool is_monolithic_ = true;
    bool is_first_for_node_ = true;
    bool should_clone_box_end_decorations_ = false;

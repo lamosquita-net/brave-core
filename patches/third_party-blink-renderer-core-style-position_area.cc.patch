@@ -1,9 +1,9 @@
 diff --git a/third_party/blink/renderer/core/style/position_area.cc b/third_party/blink/renderer/core/style/position_area.cc
 new file mode 100644
-index 0000000000000000000000000000000000000000..5fb36ff4b33301eca229ca86f56981ebd976d1d6
+index 0000000000000000000000000000000000000000..51b74b1f52b7f2b6d4ed160997c2d72fb20f858b
 --- /dev/null
 +++ b/third_party/blink/renderer/core/style/position_area.cc
-@@ -0,0 +1,371 @@
+@@ -0,0 +1,307 @@
 +// Copyright 2023 The Chromium Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -224,70 +224,6 @@ index 0000000000000000000000000000000000000000..5fb36ff4b33301eca229ca86f56981eb
 +    std::swap(regions[2], regions[3]);
 +  }
 +  return PositionArea(regions[0], regions[1], regions[2], regions[3]);
-+}
-+
-+std::optional<AnchorQuery> PositionArea::UsedTop() const {
-+  switch (FirstStart()) {
-+    case PositionAreaRegion::kTop:
-+      return std::nullopt;
-+    case PositionAreaRegion::kCenter:
-+      return AnchorTop();
-+    case PositionAreaRegion::kBottom:
-+      return AnchorBottom();
-+    default:
-+      NOTREACHED_IN_MIGRATION();
-+      [[fallthrough]];
-+    case PositionAreaRegion::kNone:
-+      return std::nullopt;
-+  }
-+}
-+
-+std::optional<AnchorQuery> PositionArea::UsedBottom() const {
-+  switch (FirstEnd()) {
-+    case PositionAreaRegion::kTop:
-+      return AnchorTop();
-+    case PositionAreaRegion::kCenter:
-+      return AnchorBottom();
-+    case PositionAreaRegion::kBottom:
-+      return std::nullopt;
-+    default:
-+      NOTREACHED_IN_MIGRATION();
-+      [[fallthrough]];
-+    case PositionAreaRegion::kNone:
-+      return std::nullopt;
-+  }
-+}
-+
-+std::optional<AnchorQuery> PositionArea::UsedLeft() const {
-+  switch (SecondStart()) {
-+    case PositionAreaRegion::kLeft:
-+      return std::nullopt;
-+    case PositionAreaRegion::kCenter:
-+      return AnchorLeft();
-+    case PositionAreaRegion::kRight:
-+      return AnchorRight();
-+    default:
-+      NOTREACHED_IN_MIGRATION();
-+      [[fallthrough]];
-+    case PositionAreaRegion::kNone:
-+      return std::nullopt;
-+  }
-+}
-+
-+std::optional<AnchorQuery> PositionArea::UsedRight() const {
-+  switch (SecondEnd()) {
-+    case PositionAreaRegion::kLeft:
-+      return AnchorLeft();
-+    case PositionAreaRegion::kCenter:
-+      return AnchorRight();
-+    case PositionAreaRegion::kRight:
-+      return std::nullopt;
-+    default:
-+      NOTREACHED_IN_MIGRATION();
-+      [[fallthrough]];
-+    case PositionAreaRegion::kNone:
-+      return std::nullopt;
-+  }
 +}
 +
 +std::pair<StyleSelfAlignmentData, StyleSelfAlignmentData>

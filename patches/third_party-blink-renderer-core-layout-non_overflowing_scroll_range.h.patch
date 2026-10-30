@@ -1,0 +1,36 @@
+diff --git a/third_party/blink/renderer/core/layout/non_overflowing_scroll_range.h b/third_party/blink/renderer/core/layout/non_overflowing_scroll_range.h
+index 4a74ac334053f9bf71f7698a4dbc01424cba15ec..fd58d7c283112cc9c353ab96c68e3a0e87ef1a06 100644
+--- a/third_party/blink/renderer/core/layout/non_overflowing_scroll_range.h
++++ b/third_party/blink/renderer/core/layout/non_overflowing_scroll_range.h
+@@ -11,7 +11,7 @@
+ 
+ namespace blink {
+ 
+-class LayoutObject;
++class Element;
+ 
+ // Helper structure for CSS anchor positioning's fallback positioning. Each
+ // fallback position has a corresponding `NonOverflowingScrollRange`. See
+@@ -25,11 +25,11 @@ struct NonOverflowingScrollRange {
+   PhysicalScrollRange containing_block_range;
+ 
+   // The default anchor used for the corresponding fallback position.
+-  Member<const LayoutObject> anchor_object;
++  Member<const Element> anchor_element;
+ 
+   // Checks if the given scroll offsets are within the scroll ranges, i.e., if
+   // the fallback position's margin box overflows the bounds.
+-  bool Contains(const gfx::Vector2dF& anchor_scroll_offset) const {
++  bool Contains(const PhysicalOffset& anchor_scroll_offset) const {
+     return containing_block_range.Contains(anchor_scroll_offset);
+   }
+ 
+@@ -37,7 +37,7 @@ struct NonOverflowingScrollRange {
+     return containing_block_range == other.containing_block_range;
+   }
+ 
+-  void Trace(Visitor* visitor) const { visitor->Trace(anchor_object); }
++  void Trace(Visitor* visitor) const { visitor->Trace(anchor_element); }
+ };
+ 
+ }  // namespace blink

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/frame/local_frame_view.cc b/third_party/blink/renderer/core/frame/local_frame_view.cc
-index 7882732c87c5e02d2ee785897c48b1d20a0b51db..dd9a4f30ba72c8487c626a4878ff2598d1407a9a 100644
+index 7882732c87c5e02d2ee785897c48b1d20a0b51db..31bb75580276b53274cf879a76e799e5c7ad63f0 100644
 --- a/third_party/blink/renderer/core/frame/local_frame_view.cc
 +++ b/third_party/blink/renderer/core/frame/local_frame_view.cc
 @@ -745,9 +745,19 @@ void LocalFrameView::PerformLayout() {
@@ -24,3 +24,26 @@ index 7882732c87c5e02d2ee785897c48b1d20a0b51db..dd9a4f30ba72c8487c626a4878ff2598
          LayoutBox* container_box = root->ContainingNGBox();
          if (container_box) {
            auto it = fragment_tree_spines.find(container_box);
+@@ -2426,7 +2436,9 @@ bool LocalFrameView::RunResizeObserverSteps(
+   disconnected_elements_with_remembered_size_.clear();
+ 
+   // https://drafts.csswg.org/css-anchor-position-1/#last-successful-position-option
+-  bool re_run_lifecycles = UpdateLastSuccessfulPositionFallbacks();
++  StyleEngine& engine = GetFrame().GetDocument()->GetStyleEngine();
++  bool re_run_lifecycles =
++      engine.UpdateLastSuccessfulPositionFallbacksAndAnchorScrollShift();
+ 
+   ForAllNonThrottledLocalFrameViews(
+       [&re_run_lifecycles](LocalFrameView& frame_view) {
+@@ -5062,11 +5074,4 @@ void LocalFrameView::NotifyElementWithRememberedSizeDisconnected(
+   disconnected_elements_with_remembered_size_.insert(element);
+ }
+ 
+-bool LocalFrameView::UpdateLastSuccessfulPositionFallbacks() {
+-  return GetFrame()
+-      .GetDocument()
+-      ->GetStyleEngine()
+-      .UpdateLastSuccessfulPositionFallbacks();
+-}
+-
+ }  // namespace blink

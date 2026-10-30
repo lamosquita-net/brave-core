@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/out_of_flow_layout_part.h b/third_party/blink/renderer/core/layout/out_of_flow_layout_part.h
-index 4c7c05af514b112ae215025d2285f648cde8990e..4d30cb122597d6c44a9a0badc4a72187bcaa37ea 100644
+index 4c7c05af514b112ae215025d2285f648cde8990e..4bd3dc8051e19b58297807222a20dfc13d6a4477 100644
 --- a/third_party/blink/renderer/core/layout/out_of_flow_layout_part.h
 +++ b/third_party/blink/renderer/core/layout/out_of_flow_layout_part.h
 @@ -106,6 +106,9 @@ class CORE_EXPORT OutOfFlowLayoutPart {
@@ -38,14 +38,50 @@ index 4c7c05af514b112ae215025d2285f648cde8990e..4d30cb122597d6c44a9a0badc4a72187
  
    void HandleMulticolsWithPendingOOFs(BoxFragmentBuilder* container_builder);
    void LayoutOOFsInMulticol(
-@@ -320,8 +326,8 @@ class CORE_EXPORT OutOfFlowLayoutPart {
+@@ -318,10 +324,11 @@ class CORE_EXPORT OutOfFlowLayoutPart {
+   AnchorEvaluatorImpl CreateAnchorEvaluator(
+       const ContainingBlockInfo& container_info,
        const BlockNode& candidate,
-       const LogicalAnchorQueryMap* anchor_queries) const;
+-      const LogicalAnchorQueryMap* anchor_queries) const;
++      const StitchedAnchorQueries* anchor_queries) const;
  
 -  ContainingBlockInfo ApplyInsetAreaOffsets(
 -      const InsetAreaOffsets& offsets,
 +  ContainingBlockInfo ApplyPositionAreaOffsets(
 +      const PositionAreaOffsets& offsets,
++      PhysicalOffset default_anchor_scroll_shift,
        const ContainingBlockInfo& container_info) const;
  
    NodeInfo SetupNodeInfo(const LogicalOofPositionedNode& oof_node);
+@@ -335,7 +342,7 @@ class CORE_EXPORT OutOfFlowLayoutPart {
+   // changing this to a more accurate name.
+   OffsetInfo CalculateOffset(
+       const NodeInfo& node_info,
+-      const LogicalAnchorQueryMap* anchor_queries = nullptr);
++      const StitchedAnchorQueries* anchor_queries = nullptr);
+   // Calculates offsets with the given ComputedStyle. Returns nullopt if
+   // |try_fit_available_space| is true and the layout result does not fit the
+   // available space.
+@@ -343,7 +350,9 @@ class CORE_EXPORT OutOfFlowLayoutPart {
+       const NodeInfo& node_info,
+       const ComputedStyle& style,
+       AnchorEvaluatorImpl&,
++      std::optional<wtf_size_t> option_index,
+       bool try_fit_available_space,
++      PhysicalOffset default_anchor_scroll_shift,
+       NonOverflowingScrollRange* out_scroll_range);
+ 
+   const LayoutResult* Layout(
+@@ -434,9 +443,9 @@ class CORE_EXPORT OutOfFlowLayoutPart {
+   const BlockBreakToken* PreviousFragmentainerBreakToken(wtf_size_t) const;
+ 
+   BoxFragmentBuilder* container_builder_;
+-  // The builder for the outer block fragmentation context when this is an inner
+-  // layout of nested block fragmentation.
+-  BoxFragmentBuilder* outer_container_builder_ = nullptr;
++  // The OutOfFlowLayoutPart for the outer block fragmentation context when this
++  // is an inner layout of nested block fragmentation.
++  OutOfFlowLayoutPart* outer_oof_layout_part_ = nullptr;
+   ContainingBlockInfo default_containing_block_info_for_absolute_;
+   ContainingBlockInfo default_containing_block_info_for_fixed_;
+   HeapHashMap<Member<const LayoutObject>, ContainingBlockInfo>

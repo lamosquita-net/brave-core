@@ -1,12 +1,35 @@
 diff --git a/third_party/blink/renderer/core/css/style_engine.h b/third_party/blink/renderer/core/css/style_engine.h
-index cea432b6183b4521344fa0867c9c52b6dde5f916..bd34dc37e4a23d34b0611cfced59397b1df06a54 100644
+index cea432b6183b4521344fa0867c9c52b6dde5f916..d2934d3f4cfcf59650769f6d87e2bbc1de183a65 100644
 --- a/third_party/blink/renderer/core/css/style_engine.h
 +++ b/third_party/blink/renderer/core/css/style_engine.h
-@@ -581,7 +581,6 @@ class CORE_EXPORT StyleEngine final : public GarbageCollected<StyleEngine>,
+@@ -581,8 +581,10 @@ class CORE_EXPORT StyleEngine final : public GarbageCollected<StyleEngine>,
    void InvalidatePositionTryStyles();
  
    void MarkLastSuccessfulPositionFallbackDirtyForElement(Element& element) {
 -    CHECK(RuntimeEnabledFeatures::LastSuccessfulPositionOptionEnabled());
-     last_successful_option_dirty_set_.insert(&element);
+-    last_successful_option_dirty_set_.insert(&element);
++    anchored_element_dirty_set_.insert(&element);
++  }
++  void MarkForDefaultAnchorScrollShift(Element& element) {
++    anchored_element_dirty_set_.insert(&element);
    }
  
+   StyleRuleKeyframes* KeyframeStylesForAnimation(
+@@ -733,7 +735,7 @@ class CORE_EXPORT StyleEngine final : public GarbageCollected<StyleEngine>,
+   }
+ 
+   // Returns true if marked dirty for layout
+-  bool UpdateLastSuccessfulPositionFallbacks();
++  bool UpdateLastSuccessfulPositionFallbacksAndAnchorScrollShift();
+ 
+  private:
+   void UpdateCounters(const Element& element,
+@@ -1123,7 +1125,7 @@ class CORE_EXPORT StyleEngine final : public GarbageCollected<StyleEngine>,
+   // Elements which had their computed position-try-fallbacks changed since last
+   // time resize observers were considered. May need to have their last
+   // successful option invalidated.
+-  HeapHashSet<Member<Element>> last_successful_option_dirty_set_;
++  HeapHashSet<Member<Element>> anchored_element_dirty_set_;
+ 
+   // Names of @position-try rules which were added, removed, or modified since
+   // last time resize observers were considered. Anchored elements with a last
