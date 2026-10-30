@@ -3,22 +3,24 @@
 SEGURIDAD-PORTES-14, 30-10-2026 (brave-core `seg/fs37-v8` on `nube/motor-136` 1747f79f). Base: 13.6.233.10 + the 235
 `patches/v8` of level 136 (all apply). Reviewed again every merge on the branch heads 13.6 (after .10) to 15.8 (672
 merges, 346 originals), `git apply`-checked against 13.6 + `patches/v8`; the FS.36 verdicts "not in 13.5" and the risks
-were re-read against 13.6. **Ported (cache epoch 25 -> 26):**
+were re-read against 13.6. **Ported, 11 (cache epoch 25 -> 26):**
 
-- **Clean:** 8118921e3f (534417753, TurboFan does not inline element access on detached typed array maps; "not in
-  13.5" in FS.36), 7e802b909a (574339635, `JSGetTemplateObject` is not `kNoWrite`), 74b6f1e095 (560121552, Promise.race
+- **Clean:** 7e802b909a (574339635, `JSGetTemplateObject` is not `kNoWrite`), 74b6f1e095 (560121552, Promise.race
   catch prediction), 5472defe56 (511290038, `CodeEntry` refcount race), 848d7f4122 (436181695, `await using` in C-style
   for loops; **changes bytecode**), e16e6ceda4 (503869362, the 14.8 form of eb3fc08220: a shared Wasm module with other
-  denormal flags is recompiled on import), 81ed440d87 (522126182, FastArray limit in `lower_limits_mode`), b04613a419
-  (413419840, Maglev debt: code part, its test was already here).
+  denormal flags is recompiled on import), 81ed440d87 (522126182, FastArray limit in `lower_limits_mode`).
 - **By hand:** 7587a107c1 (577318603, normalize non-extensible root maps in MapUpdater; fuzz), d4dbd1dc45 (424905890,
-  no code space compaction with stack; "not in 13.5" in FS.36), ebf970d8a3 (515431687, Sparkplug size estimate with
-  `CheckedNumeric`; `AllocateBuffer` of 13.6 had no size check at all), 695bea76a6 (560406548, Wasm source map under
+  no code space compaction with stack; "not in 13.5" in FS.36), ebf970d8a3 (515431687, Sparkplug size estimate;
+  13.6 has no `base::CheckedNumeric`, so 64-bit arithmetic saturated at `kMaxInt` and an OOM check in `AllocateBuffer`,
+  which in 13.6 had no size check at all), 695bea76a6 (560406548, Wasm source map under
   `allocation_mutex_`), d87667efce (559893859, cyclic module SCC initialized before any module becomes `kLinked`; core
   only: `MaybeTransitionComponent`, `GetSharedFunctionInfo`, `Reset`, verifier; `CheckedCast` does not exist in 13.6, so
-  a CHECK in `RunInitializationCode`). One upstream test dropped (`fast-api-calls-nested.js`: needs `call_to_number`).
+  a CHECK in `RunInitializationCode`). The first push (179e9dbd) did not compile on 13.6 (8118921e3f, b04613a419,
+ebf970d8a3 as upstream); D8-LINUX caught it. One upstream test dropped (`fast-api-calls-nested.js`: needs `call_to_number`).
 
-**Not needed on 13.6:** 9236a84b32 (`WellKnown_FastApi` has no `check_for_exception` in 13.6, single caller), e814d52038
+**Not needed on 13.6:** 8118921e3f (needs `JS_DETACHED_TYPED_ARRAY_TYPE` from `--track-array-buffer-views`, which
+13.6 does not have: detaching does not change the map), b04613a419 (needs `IsEmptyNodeType`; still test-only, as in
+FS.36), 9236a84b32 (`WellKnown_FastApi` has no `check_for_exception` in 13.6, single caller), e814d52038
 (13.6 already installs the dispatch handle by offset), 4cf9311810 (already in `patches/v8`, with 9b5250b9), 7893ac23bc
 (the counter overflow is 32-bit only; x64), c055ccbcde/faa4a23b32 (cppgc ordering on weak memory models; x86 is TSO),
 3d3e6a10b5 and c2eab5ee18 (13.6 does not have the bug), 97e76199e8 (ICU 77 only). **Left (hardening or low value):**

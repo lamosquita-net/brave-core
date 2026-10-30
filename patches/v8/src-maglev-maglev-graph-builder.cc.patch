@@ -1,19 +1,8 @@
 diff --git a/src/maglev/maglev-graph-builder.cc b/src/maglev/maglev-graph-builder.cc
-index db081bfde623c3fd491d4d773a560ac446b32660..bfc5e6eec3ad81f9d4f83f98b713dd1725fcbef0 100644
+index db081bfde623c3fd491d4d773a560ac446b32660..9a13213cece91331897eaf0df23e9ba3622b6528 100644
 --- a/src/maglev/maglev-graph-builder.cc
 +++ b/src/maglev/maglev-graph-builder.cc
-@@ -5084,6 +5084,10 @@ ReduceResult MaglevGraphBuilder::BuildCheckMaps(
-   KnownMapsMerger merger(broker(), zone(), maps);
-   merger.IntersectWithKnownNodeAspects(object, known_node_aspects());
- 
-+  if (IsEmptyNodeType(CombineType(merger.node_type(), GetType(object)))) {
-+    return EmitUnconditionalDeopt(DeoptimizeReason::kWrongMap);
-+  }
-+
-   // If the known maps are the subset of the maps to check, we are done.
-   if (merger.known_maps_are_subset_of_requested_maps()) {
-     // The node type of known_info can get out of sync with the possible maps.
-@@ -5341,6 +5345,9 @@ bool MaglevGraphBuilder::CanTrackObjectChanges(ValueNode* receiver,
+@@ -5341,6 +5341,9 @@ bool MaglevGraphBuilder::CanTrackObjectChanges(ValueNode* receiver,
    if (!v8_flags.maglev_object_tracking) return false;
    if (!receiver->Is<InlinedAllocation>()) return false;
    InlinedAllocation* alloc = receiver->Cast<InlinedAllocation>();
@@ -23,7 +12,7 @@ index db081bfde623c3fd491d4d773a560ac446b32660..bfc5e6eec3ad81f9d4f83f98b713dd17
    if (mode == TrackObjectMode::kStore) {
      // If we have two objects A and B, such that A points to B (it contains B in
      // one of its field), we cannot change B without also changing A, even if
-@@ -5349,7 +5356,6 @@ bool MaglevGraphBuilder::CanTrackObjectChanges(ValueNode* receiver,
+@@ -5349,7 +5352,6 @@ bool MaglevGraphBuilder::CanTrackObjectChanges(ValueNode* receiver,
          graph_->allocations_elide_map().end()) {
        return false;
      }
@@ -31,7 +20,7 @@ index db081bfde623c3fd491d4d773a560ac446b32660..bfc5e6eec3ad81f9d4f83f98b713dd17
      // Ensure object is escaped if we are within a try-catch block. This is
      // crucial because a deoptimization point inside the catch handler could
      // re-materialize objects differently, depending on whether the throw
-@@ -5358,9 +5364,6 @@ bool MaglevGraphBuilder::CanTrackObjectChanges(ValueNode* receiver,
+@@ -5358,9 +5360,6 @@ bool MaglevGraphBuilder::CanTrackObjectChanges(ValueNode* receiver,
      // the try-block started,  but for now, err on the side of caution and
      // always escape.
      if (IsInsideTryBlock()) return false;
@@ -41,7 +30,7 @@ index db081bfde623c3fd491d4d773a560ac446b32660..bfc5e6eec3ad81f9d4f83f98b713dd17
    }
    // We don't support loop phis inside VirtualObjects, so any access inside a
    // loop should escape the object, except for objects that were created since
-@@ -5861,7 +5864,7 @@ MaybeReduceResult MaglevGraphBuilder::TryBuildStoreField(
+@@ -5861,7 +5860,7 @@ MaybeReduceResult MaglevGraphBuilder::TryBuildStoreField(
        broker()->dependencies()->DependOnNoSlackTrackingChange(*original_map);
      }
    } else if (access_info.IsFastDataConstant() &&
@@ -50,7 +39,7 @@ index db081bfde623c3fd491d4d773a560ac446b32660..bfc5e6eec3ad81f9d4f83f98b713dd17
      return EmitUnconditionalDeopt(DeoptimizeReason::kStoreToConstant);
    }
  
-@@ -6130,9 +6133,9 @@ MaybeReduceResult MaglevGraphBuilder::TryBuildNamedAccess(
+@@ -6130,9 +6129,9 @@ MaybeReduceResult MaglevGraphBuilder::TryBuildNamedAccess(
                 GetTaggedValue(GetAccumulator())},
                feedback_source);
          case compiler::AccessMode::kDefine:
@@ -61,54 +50,7 @@ index db081bfde623c3fd491d4d773a560ac446b32660..bfc5e6eec3ad81f9d4f83f98b713dd17
            UNREACHABLE();
        }
      }
-@@ -7062,7 +7065,7 @@ MaybeReduceResult MaglevGraphBuilder::TryBuildPolymorphicPropertyAccess(
-     GenericAccessFunc&& build_generic_access) {
-   const bool is_any_store = compiler::IsAnyStore(access_mode);
-   const int access_info_count = static_cast<int>(access_infos.size());
--  int number_map_index = -1;
-+  int number_map_index_for_smi = -1;
- 
-   bool needs_migration = false;
-   bool has_deprecated_map_without_migration_target =
-@@ -7080,9 +7083,11 @@ MaybeReduceResult MaglevGraphBuilder::TryBuildPolymorphicPropertyAccess(
-         KnownMapsMerger merger(broker(), zone(), base::VectorOf(known_maps));
-         merger.IntersectWithKnownNodeAspects(lookup_start_object,
-                                              known_node_aspects());
--        if (!merger.intersect_set().is_empty()) {
--          DCHECK_EQ(number_map_index, -1);
--          number_map_index = i;
-+        if (!merger.intersect_set().is_empty() &&
-+            !IsEmptyNodeType(
-+                CombineType(GetType(lookup_start_object), NodeType::kSmi))) {
-+          DCHECK_EQ(number_map_index_for_smi, -1);
-+          number_map_index_for_smi = i;
-         }
-       }
-     }
-@@ -7095,7 +7100,7 @@ MaybeReduceResult MaglevGraphBuilder::TryBuildPolymorphicPropertyAccess(
-   std::optional<MaglevSubGraphBuilder::Label> is_number;
-   std::optional<MaglevSubGraphBuilder::Label> generic_access;
- 
--  if (number_map_index >= 0) {
-+  if (number_map_index_for_smi >= 0) {
-     is_number.emplace(&sub_graph, 2);
-     sub_graph.GotoIfTrue<BranchIfSmi>(&*is_number, {lookup_start_object});
-   } else {
-@@ -7128,11 +7133,12 @@ MaybeReduceResult MaglevGraphBuilder::TryBuildPolymorphicPropertyAccess(
-                            base::VectorOf(maps), &sub_graph, check_next_map);
-     }
-     if (map_check_result.IsDoneWithAbort()) {
-+      DCHECK_NE(i, number_map_index_for_smi);
-       // We know from known possible maps that this branch is not reachable,
-       // so don't emit any code for it.
-       continue;
-     }
--    if (i == number_map_index) {
-+    if (i == number_map_index_for_smi) {
-       DCHECK(is_number.has_value());
-       sub_graph.Goto(&*is_number);
-       sub_graph.Bind(&*is_number);
-@@ -7740,6 +7746,16 @@ ReduceResult MaglevGraphBuilder::VisitSetNamedProperty() {
+@@ -7740,6 +7739,16 @@ ReduceResult MaglevGraphBuilder::VisitSetNamedProperty() {
  
  ReduceResult MaglevGraphBuilder::VisitDefineNamedOwnProperty() {
    // DefineNamedOwnProperty <object> <name_index> <slot>
@@ -125,7 +67,7 @@ index db081bfde623c3fd491d4d773a560ac446b32660..bfc5e6eec3ad81f9d4f83f98b713dd17
    ValueNode* object = LoadRegister(0);
    compiler::NameRef name = GetRefOperand<Name>(1);
    FeedbackSlot slot = GetSlotOperand(2);
-@@ -7764,7 +7780,9 @@ ReduceResult MaglevGraphBuilder::VisitDefineNamedOwnProperty() {
+@@ -7764,7 +7773,9 @@ ReduceResult MaglevGraphBuilder::VisitDefineNamedOwnProperty() {
      case compiler::ProcessedFeedback::kNamedAccess:
        RETURN_IF_DONE(TryBuildNamedAccess(
            object, object, processed_feedback.AsNamedAccess(), feedback_source,
@@ -136,7 +78,7 @@ index db081bfde623c3fd491d4d773a560ac446b32660..bfc5e6eec3ad81f9d4f83f98b713dd17
        break;
  
      default:
-@@ -8297,6 +8315,12 @@ ReduceResult MaglevGraphBuilder::BuildInlineFunction(
+@@ -8297,6 +8308,12 @@ ReduceResult MaglevGraphBuilder::BuildInlineFunction(
  
  bool MaglevGraphBuilder::CanInlineCall(compiler::SharedFunctionInfoRef shared,
                                         float call_frequency) {
@@ -149,7 +91,7 @@ index db081bfde623c3fd491d4d773a560ac446b32660..bfc5e6eec3ad81f9d4f83f98b713dd17
    if (graph()->total_inlined_bytecode_size() >
        max_inlined_bytecode_size_cumulative()) {
      compilation_unit_->info()->set_could_not_inline_all_candidates();
-@@ -8500,8 +8524,10 @@ ReduceResult MaglevGraphBuilder::BuildEagerInlineCall(
+@@ -8500,8 +8517,10 @@ ReduceResult MaglevGraphBuilder::BuildEagerInlineCall(
        inner_graph_builder.current_interpreter_frame_.known_node_aspects());
    current_interpreter_frame_.set_virtual_objects(
        inner_graph_builder.current_interpreter_frame_.virtual_objects());
@@ -162,7 +104,7 @@ index db081bfde623c3fd491d4d773a560ac446b32660..bfc5e6eec3ad81f9d4f83f98b713dd17
  
    // Resume execution using the final block of the inner builder.
    current_block_ = inner_graph_builder.current_block_;
-@@ -9051,7 +9077,7 @@ MaybeReduceResult MaglevGraphBuilder::TryReduceArrayIteratorPrototypeNext(
+@@ -9051,7 +9070,7 @@ MaybeReduceResult MaglevGraphBuilder::TryReduceArrayIteratorPrototypeNext(
      VirtualObject* array = iterated_object->Cast<InlinedAllocation>()->object();
      // TODO(victorgomes): Remove this once we track changes in the inlined
      // allocated object.
@@ -171,7 +113,7 @@ index db081bfde623c3fd491d4d773a560ac446b32660..bfc5e6eec3ad81f9d4f83f98b713dd17
        FAIL("allocation is escaping, map could have been changed");
      }
      // TODO(victorgomes): This effectively disable the optimization for `for-of`
-@@ -9089,6 +9115,14 @@ MaybeReduceResult MaglevGraphBuilder::TryReduceArrayIteratorPrototypeNext(
+@@ -9089,6 +9108,14 @@ MaybeReduceResult MaglevGraphBuilder::TryReduceArrayIteratorPrototypeNext(
      FAIL("no elements protector");
    }
  
@@ -186,7 +128,7 @@ index db081bfde623c3fd491d4d773a560ac446b32660..bfc5e6eec3ad81f9d4f83f98b713dd17
    // Load the [[NextIndex]] from the {iterator}.
    // We can assume index and length fit in Uint32.
    ValueNode* index =
-@@ -11198,7 +11232,7 @@ MaglevGraphBuilder::TryGetNonEscapingArgumentsObject(ValueNode* value) {
+@@ -11198,7 +11225,7 @@ MaglevGraphBuilder::TryGetNonEscapingArgumentsObject(ValueNode* value) {
    }
    // TODO(victorgomes): We can probably loosen the IsNotEscaping requirement if
    // we keep track of the arguments object changes so far.
