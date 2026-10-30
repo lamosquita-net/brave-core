@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/canvas/html_canvas_element.h b/third_party/blink/renderer/core/html/canvas/html_canvas_element.h
-index 8de96d2bbb188089e345eb3d57c525ac711f916d..33d5cd91cd99a737db6b5484dbda2cce0fe49d3c 100644
+index 8de96d2bbb188089e345eb3d57c525ac711f916d..d791a29893ce97735800339a8f2c492391634985 100644
 --- a/third_party/blink/renderer/core/html/canvas/html_canvas_element.h
 +++ b/third_party/blink/renderer/core/html/canvas/html_canvas_element.h
 @@ -42,6 +42,7 @@
@@ -10,16 +10,25 @@ index 8de96d2bbb188089e345eb3d57c525ac711f916d..33d5cd91cd99a737db6b5484dbda2cce
  #include "third_party/blink/renderer/platform/graphics/canvas_resource_host.h"
  #include "third_party/blink/renderer/platform/graphics/graphics_types.h"
  #include "third_party/blink/renderer/platform/graphics/graphics_types_3d.h"
-@@ -164,6 +165,8 @@ class CORE_EXPORT HTMLCanvasElement final
+@@ -164,6 +165,9 @@ class CORE_EXPORT HTMLCanvasElement final
  
    void DiscardResourceProvider() override;
  
 +  TextDirection GetTextDirection(const ComputedStyle*) override;
++  const LayoutLocale* GetLocale() const override;
 +
    FontSelector* GetFontSelector() override;
  
    bool ShouldBeDirectComposited() const;
-@@ -316,6 +319,7 @@ class CORE_EXPORT HTMLCanvasElement final
+@@ -255,6 +259,7 @@ class CORE_EXPORT HTMLCanvasElement final
+   void StyleDidChange(const ComputedStyle* old_style,
+                       const ComputedStyle& new_style);
+   void LayoutObjectDestroyed();
++  void LangAttributeChanged() override;
+ 
+   void NotifyListenersCanvasChanged();
+ 
+@@ -316,6 +321,7 @@ class CORE_EXPORT HTMLCanvasElement final
  
    bool ShouldDisableAccelerationBecauseOfReadback() const;
  
@@ -27,7 +36,7 @@ index 8de96d2bbb188089e345eb3d57c525ac711f916d..33d5cd91cd99a737db6b5484dbda2cce
   protected:
    void DidMoveToNewDocument(Document& old_document) override;
    void DidRecalcStyle(const StyleRecalcChange change) override;
-@@ -421,6 +425,8 @@ class CORE_EXPORT HTMLCanvasElement final
+@@ -421,6 +427,8 @@ class CORE_EXPORT HTMLCanvasElement final
    mutable intptr_t externally_allocated_memory_;
  
    scoped_refptr<StaticBitmapImage> transparent_image_;

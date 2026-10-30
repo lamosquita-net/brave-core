@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/modules/canvas/canvas2d/base_rendering_context_2d.cc b/third_party/blink/renderer/modules/canvas/canvas2d/base_rendering_context_2d.cc
-index 0608026f6e8507107bd64d609813df02d01fbbc6..29b9e151d93c769ca5a0333346b5c4d313fb3e35 100644
+index 0608026f6e8507107bd64d609813df02d01fbbc6..74d934b2526b0ee4448e1a42920f3f7ee02d8a5d 100644
 --- a/third_party/blink/renderer/modules/canvas/canvas2d/base_rendering_context_2d.cc
 +++ b/third_party/blink/renderer/modules/canvas/canvas2d/base_rendering_context_2d.cc
 @@ -69,6 +69,7 @@
@@ -10,7 +10,23 @@ index 0608026f6e8507107bd64d609813df02d01fbbc6..29b9e151d93c769ca5a0333346b5c4d3
  #include "third_party/blink/renderer/core/css/resolver/style_builder_converter.h"
  #include "third_party/blink/renderer/core/css/style_color.h"
  #include "third_party/blink/renderer/core/dom/document.h"
-@@ -936,8 +937,10 @@ ColorParseResult BaseRenderingContext2D::ParseColorOrCurrentColor(
+@@ -107,6 +108,7 @@
+ #include "third_party/blink/renderer/modules/canvas/canvas2d/identifiability_study_helper.h"
+ #include "third_party/blink/renderer/modules/canvas/canvas2d/mesh_2d_index_buffer.h"
+ #include "third_party/blink/renderer/modules/canvas/canvas2d/mesh_2d_uv_buffer.h"
++#include "third_party/blink/renderer/core/xml_names.h"
+ #include "third_party/blink/renderer/modules/canvas/canvas2d/mesh_2d_vertex_buffer.h"
+ #include "third_party/blink/renderer/modules/canvas/canvas2d/path_2d.h"
+ #include "third_party/blink/renderer/modules/canvas/canvas2d/v8_canvas_style.h"
+@@ -250,6 +252,7 @@ const char BaseRenderingContext2D::kCondensedString[] = "condensed";
+ const char BaseRenderingContext2D::kSemiCondensedString[] = "semi-condensed";
+ const char BaseRenderingContext2D::kNormalStretchString[] = "normal";
+ const char BaseRenderingContext2D::kSemiExpandedString[] = "semi-expanded";
++const char BaseRenderingContext2D::kInheritString[] = "inherit";
+ const char BaseRenderingContext2D::kExpandedString[] = "expanded";
+ const char BaseRenderingContext2D::kExtraExpandedString[] = "extra-expanded";
+ const char BaseRenderingContext2D::kUltraExpandedString[] = "ultra-expanded";
+@@ -936,8 +939,10 @@ ColorParseResult BaseRenderingContext2D::ParseColorOrCurrentColor(
      const TextLinkColors& text_link_colors =
          window ? window->document()->GetTextLinkColors()
                 : kDefaultTextLinkColors;
@@ -23,7 +39,7 @@ index 0608026f6e8507107bd64d609813df02d01fbbc6..29b9e151d93c769ca5a0333346b5c4d3
      color = style_color.Resolve(GetCurrentColor(), color_scheme_);
      return ColorParseResult::kColor;
    }
-@@ -2660,6 +2663,7 @@ ImageData* BaseRenderingContext2D::getImageData(
+@@ -2660,6 +2665,7 @@ ImageData* BaseRenderingContext2D::getImageData(
  perfetto::EventContext GetEventContext();
  
  ImageData* BaseRenderingContext2D::getImageDataInternal(
@@ -31,7 +47,7 @@ index 0608026f6e8507107bd64d609813df02d01fbbc6..29b9e151d93c769ca5a0333346b5c4d3
      int sx,
      int sy,
      int sw,
-@@ -2833,6 +2837,7 @@ ImageData* BaseRenderingContext2D::getImageDataInternal(
+@@ -2833,6 +2839,7 @@ ImageData* BaseRenderingContext2D::getImageDataInternal(
        DCHECK(!bounds.intersect(SkIRect::MakeXYWH(sx, sy, sw, sh)));
      }
    }
@@ -39,7 +55,17 @@ index 0608026f6e8507107bd64d609813df02d01fbbc6..29b9e151d93c769ca5a0333346b5c4d3
  
    return image_data;
  }
-@@ -3245,20 +3250,11 @@ void BaseRenderingContext2D::setFont(const String& new_font) {
+@@ -3217,7 +3224,8 @@ bool BaseRenderingContext2D::WillSetFont() const {
+ }
+ 
+ bool BaseRenderingContext2D::CurrentFontResolvedAndUpToDate() const {
+-  return GetState().HasRealizedFont();
++  const CanvasRenderingContext2DState& state = GetState();
++  return state.HasRealizedFont() && !state.LangIsDirty();
+ }
+ 
+ void BaseRenderingContext2D::setFont(const String& new_font) {
+@@ -3245,20 +3253,11 @@ void BaseRenderingContext2D::setFont(const String& new_font) {
  
  static inline TextDirection ToTextDirection(
      CanvasRenderingContext2DState::Direction direction,
@@ -63,7 +89,7 @@ index 0608026f6e8507107bd64d609813df02d01fbbc6..29b9e151d93c769ca5a0333346b5c4d3
      case CanvasRenderingContext2DState::kDirectionRTL:
        return TextDirection::kRtl;
      case CanvasRenderingContext2DState::kDirectionLTR:
-@@ -3277,15 +3273,9 @@ OffscreenCanvas* BaseRenderingContext2D::HostAsOffscreenCanvas() const {
+@@ -3277,15 +3276,9 @@ OffscreenCanvas* BaseRenderingContext2D::HostAsOffscreenCanvas() const {
  }
  
  String BaseRenderingContext2D::direction() const {
@@ -81,7 +107,7 @@ index 0608026f6e8507107bd64d609813df02d01fbbc6..29b9e151d93c769ca5a0333346b5c4d3
               ? kRtlDirectionString
               : kLtrDirectionString;
  }
-@@ -3400,10 +3390,11 @@ void BaseRenderingContext2D::DrawTextInternal(
+@@ -3400,10 +3393,11 @@ void BaseRenderingContext2D::DrawTextInternal(
  
    // FIXME: Need to turn off font smoothing.
  
@@ -96,7 +122,7 @@ index 0608026f6e8507107bd64d609813df02d01fbbc6..29b9e151d93c769ca5a0333346b5c4d3
    bool is_rtl = direction == TextDirection::kRtl;
    bool bidi_override =
        computed_style ? IsOverride(computed_style->GetUnicodeBidi()) : false;
-@@ -3503,6 +3494,7 @@ TextMetrics* BaseRenderingContext2D::measureText(const String& text) {
+@@ -3503,6 +3497,7 @@ TextMetrics* BaseRenderingContext2D::measureText(const String& text) {
        return MakeGarbageCollected<TextMetrics>();
      }
  
@@ -104,7 +130,7 @@ index 0608026f6e8507107bd64d609813df02d01fbbc6..29b9e151d93c769ca5a0333346b5c4d3
      canvas->GetDocument().UpdateStyleAndLayoutTreeForElement(
          canvas, DocumentUpdateReason::kCanvas);
    }
-@@ -3510,7 +3502,10 @@ TextMetrics* BaseRenderingContext2D::measureText(const String& text) {
+@@ -3510,7 +3505,10 @@ TextMetrics* BaseRenderingContext2D::measureText(const String& text) {
    const Font& font = AccessFont(canvas);
  
    const CanvasRenderingContext2DState& state = GetState();
@@ -116,3 +142,48 @@ index 0608026f6e8507107bd64d609813df02d01fbbc6..29b9e151d93c769ca5a0333346b5c4d3
  
    return MakeGarbageCollected<TextMetrics>(
        font, direction, state.GetTextBaseline(), state.GetTextAlign(), text);
+@@ -3527,10 +3525,43 @@ void BaseRenderingContext2D::SnapshotStateForFilter() {
+   GetState().SetFontForFilter(AccessFont(canvas));
+ }
+ 
++String BaseRenderingContext2D::lang() const {
++  return GetState().GetLang();
++}
++
++void BaseRenderingContext2D::setLang(const String& lang_string) {
++  CanvasRenderingContext2DState& state = GetState();
++  if (state.GetLang() == lang_string) {
++    return;
++  }
++
++  // TODO(crbug.com/40191831): Instrument new canvas APIs.
++  identifiability_study_helper_.set_encountered_skipped_ops();
++
++  state.SetLang(lang_string);
++
++  // If the font has been realized, reset it to account for the new lang
++  // setting. When not yet realized, the lang will be accounted for the first
++  // time the font is realized.
++  if (state.HasRealizedFont()) {
++    setFont(font());
++  }
++}
++
++const LayoutLocale* BaseRenderingContext2D::LocaleFromLang() {
++  String lang_string = GetState().GetLang();
++  if (lang_string == kInheritString) {
++    return GetCanvasRenderingContextHost()->GetLocale();
++  }
++
++  return &LayoutLocale::ValueOrDefault(
++      LayoutLocale::Get(AtomicString(lang_string)));
++}
++
+ void BaseRenderingContext2D::setLetterSpacing(const String& letter_spacing) {
+   UseCounter::Count(GetTopExecutionContext(),
+                     WebFeature::kCanvasRenderingContext2DLetterSpacing);
+-  // TODO(crbug.com/1234113): Instrument new canvas APIs.
++  // TODO(crbug.com/40191831): Instrument new canvas APIs.
+   identifiability_study_helper_.set_encountered_skipped_ops();
+   CanvasRenderingContext2DState& state = GetState();
+   if (!state.HasRealizedFont()) {

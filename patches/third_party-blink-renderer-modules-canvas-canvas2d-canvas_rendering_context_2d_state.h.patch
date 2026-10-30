@@ -1,0 +1,38 @@
+diff --git a/third_party/blink/renderer/modules/canvas/canvas2d/canvas_rendering_context_2d_state.h b/third_party/blink/renderer/modules/canvas/canvas2d/canvas_rendering_context_2d_state.h
+index a429cbfba9663f2d0447f4352725f93f0e8b9a04..c36cd8c883392f52546992ecce9eb4eeff3d60eb 100644
+--- a/third_party/blink/renderer/modules/canvas/canvas2d/canvas_rendering_context_2d_state.h
++++ b/third_party/blink/renderer/modules/canvas/canvas2d/canvas_rendering_context_2d_state.h
+@@ -134,6 +134,7 @@ class MODULES_EXPORT CanvasRenderingContext2DState final
+   const Font& GetFont() const;
+   const FontDescription& GetFontDescription() const;
+   inline bool HasRealizedFont() const { return realized_font_; }
++  inline bool LangIsDirty() const { return lang_is_dirty_; }
+   void SetUnparsedFont(const String& font) { unparsed_font_ = font; }
+   const String& UnparsedFont() const { return unparsed_font_; }
+ 
+@@ -210,6 +211,9 @@ class MODULES_EXPORT CanvasRenderingContext2DState final
+     return Style(type).GetCanvasPattern()->GetPattern()->IsTextureBacked();
+   }
+ 
++  void SetLang(const String& lang);
++  String GetLang() const { return lang_; }
++
+   enum Direction { kDirectionInherit, kDirectionRTL, kDirectionLTR };
+ 
+   void SetDirection(Direction direction) { direction_ = direction; }
+@@ -391,6 +395,7 @@ class MODULES_EXPORT CanvasRenderingContext2DState final
+   sk_sp<PaintFilter> resolved_filter_;
+ 
+   // Text state.
++  String lang_ = "inherit";
+   TextAlign text_align_;
+   TextBaseline text_baseline_{kAlphabeticTextBaseline};
+   Direction direction_{kDirectionInherit};
+@@ -416,6 +421,7 @@ class MODULES_EXPORT CanvasRenderingContext2DState final
+   bool has_complex_clip_ : 1;
+   bool letter_spacing_is_set_ : 1;
+   bool word_spacing_is_set_ : 1;
++  bool lang_is_dirty_ : 1;
+   mutable bool line_dash_dirty_ : 1;
+ 
+   bool image_smoothing_enabled_;

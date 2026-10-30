@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/bindings/core/v8/serialization/v8_script_value_serializer.cc b/third_party/blink/renderer/bindings/core/v8/serialization/v8_script_value_serializer.cc
-index 8db4c3d9ae1c006a0134c9424e58d06b50c573e6..9a55d5d7b16a81ffd0159b5823a3e2a87e9c3776 100644
+index 8db4c3d9ae1c006a0134c9424e58d06b50c573e6..c26480b65a4b550c8f449667a5583a8403370f72 100644
 --- a/third_party/blink/renderer/bindings/core/v8/serialization/v8_script_value_serializer.cc
 +++ b/third_party/blink/renderer/bindings/core/v8/serialization/v8_script_value_serializer.cc
-@@ -709,9 +709,12 @@ bool V8ScriptValueSerializer::WriteDOMObject(ScriptWrappable* wrappable,
+@@ -59,6 +59,7 @@
+ #include "third_party/blink/renderer/platform/file_metadata.h"
+ #include "third_party/blink/renderer/platform/instrumentation/use_counter.h"
+ #include "third_party/blink/renderer/platform/runtime_enabled_features.h"
++#include "third_party/blink/renderer/platform/text/layout_locale.h"
+ #include "third_party/blink/renderer/platform/wtf/allocator/partitions.h"
+ #include "third_party/blink/renderer/platform/wtf/date_math.h"
+ #include "third_party/blink/renderer/platform/wtf/text/string_utf8_adaptor.h"
+@@ -709,9 +710,13 @@ bool V8ScriptValueSerializer::WriteDOMObject(ScriptWrappable* wrappable,
            "because it had a rendering context.");
        return false;
      }
@@ -11,6 +19,7 @@ index 8db4c3d9ae1c006a0134c9424e58d06b50c573e6..9a55d5d7b16a81ffd0159b5823a3e2a8
      WriteAndRequireInterfaceTag(kOffscreenCanvasTransferTag);
      WriteUint32(canvas->width());
      WriteUint32(canvas->height());
++    WriteUTF8String(canvas->GetLocale()->LocaleString());
 +    WriteUint32Enum(serialized_direction.GetSerializedTextDirection());
      WriteUint64(canvas->PlaceholderCanvasId());
      WriteUint32(canvas->ClientId());

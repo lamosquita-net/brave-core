@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/offscreencanvas/offscreen_canvas.cc b/third_party/blink/renderer/core/offscreencanvas/offscreen_canvas.cc
-index 8d8a3f7b2384cf51a6c6a81cbfd0f9623985c4dc..0472be7a69dbe524796f1186b597e8de072c7ecd 100644
+index 8d8a3f7b2384cf51a6c6a81cbfd0f9623985c4dc..940dbf712b75f72b1bc2f3ac9921adef089f4f14 100644
 --- a/third_party/blink/renderer/core/offscreencanvas/offscreen_canvas.cc
 +++ b/third_party/blink/renderer/core/offscreencanvas/offscreen_canvas.cc
 @@ -61,6 +61,12 @@ OffscreenCanvas::OffscreenCanvas(ExecutionContext* context, gfx::Size size)
@@ -25,12 +25,30 @@ index 8d8a3f7b2384cf51a6c6a81cbfd0f9623985c4dc..0472be7a69dbe524796f1186b597e8de
  }
  
  void OffscreenCanvas::Commit(scoped_refptr<CanvasResource>&& canvas_resource,
-@@ -692,11 +697,15 @@ void OffscreenCanvas::CheckForGpuContextLost() {
+@@ -692,11 +697,33 @@ void OffscreenCanvas::CheckForGpuContextLost() {
    }
  }
  
 +TextDirection OffscreenCanvas::GetTextDirection(const ComputedStyle*) {
 +  return text_direction_.value_or(TextDirection::kLtr);
++}
++
++void OffscreenCanvas::SetLocale(scoped_refptr<const LayoutLocale> locale) {
++  locale_ = std::move(locale);
++}
++
++const LayoutLocale* OffscreenCanvas::GetLocale() const {
++  if (locale_) {
++    return locale_.get();
++  }
++  if (const auto* window = DynamicTo<LocalDOMWindow>(GetExecutionContext())) {
++    const Element* document_element = window->document()->documentElement();
++    if (document_element) {
++      return &LayoutLocale::ValueOrDefault(
++          LayoutLocale::Get(document_element->ComputeInheritedLanguage()));
++    }
++  }
++  return &LayoutLocale::GetDefault();
 +}
 +
  FontSelector* OffscreenCanvas::GetFontSelector() {
@@ -42,7 +60,7 @@ index 8d8a3f7b2384cf51a6c6a81cbfd0f9623985c4dc..0472be7a69dbe524796f1186b597e8de
    // CHECK once a more comprehensive solution has been implemented.
    CHECK(GetExecutionContext()->IsWorkerGlobalScope());
    return To<WorkerGlobalScope>(GetExecutionContext())->GetFontSelector();
-@@ -726,8 +735,7 @@ void OffscreenCanvas::UpdateMemoryUsage() {
+@@ -726,8 +753,7 @@ void OffscreenCanvas::UpdateMemoryUsage() {
      // AdjustAmountOfExternalAllocatedMemory is safe, hence the
      // 'diposing_' condition in the DCHECK below.
      DCHECK(ThreadState::Current()->IsAllocationAllowed() || disposing_);

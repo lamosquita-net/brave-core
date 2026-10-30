@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc b/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc
-index 63c943727517aff4d0264a993dc30fc0e2bed7c9..2c3547d77c02fc25ac6966f16a50e4f7383d41cf 100644
+index 63c943727517aff4d0264a993dc30fc0e2bed7c9..e7d34302ab8dcccf54e8eb2cf121cb8dc39ed896 100644
 --- a/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc
 +++ b/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc
 @@ -242,8 +242,10 @@ HTMLCanvasElement::HTMLCanvasElement(Document& document)
@@ -23,7 +23,20 @@ index 63c943727517aff4d0264a993dc30fc0e2bed7c9..2c3547d77c02fc25ac6966f16a50e4f7
      String data_url = data_buffer->ToDataURL(encoding_mime_type, quality);
      base::TimeDelta elapsed_time = base::TimeTicks::Now() - start_time;
      float sqrt_pixels =
-@@ -1738,6 +1741,26 @@ void HTMLCanvasElement::UnregisterContentsLayer(cc::Layer* layer) {
+@@ -1536,6 +1539,12 @@ void HTMLCanvasElement::LayoutObjectDestroyed() {
+   SetIsDisplayed(false);
+ }
+ 
++void HTMLCanvasElement::LangAttributeChanged() {
++  if (context_) {
++    context_->LangAttributeChanged();
++  }
++}
++
+ void HTMLCanvasElement::DidMoveToNewDocument(Document& old_document) {
+   SetExecutionContext(GetExecutionContext());
+   SetPage(GetDocument().GetPage());
+@@ -1738,6 +1747,47 @@ void HTMLCanvasElement::UnregisterContentsLayer(cc::Layer* layer) {
    SetNeedsCompositingUpdate();
  }
  
@@ -47,10 +60,31 @@ index 63c943727517aff4d0264a993dc30fc0e2bed7c9..2c3547d77c02fc25ac6966f16a50e4f7
 +  return CachedDirectionality();
 +}
 +
++const LayoutLocale* HTMLCanvasElement::GetLocale() const {
++  const AtomicString language = ComputeInheritedLanguage();
++  if (!language.IsNull()) {
++    return LayoutLocale::Get(language);
++  }
++
++  // The computed language may be null if the element is disconnected and does
++  // not have it's own language attribute. Fall back to the language of the
++  // document from the execution context.
++  if (const auto* window = DynamicTo<LocalDOMWindow>(GetExecutionContext())) {
++    const Element* document_element = window->document()->documentElement();
++    if (document_element) {
++      return &LayoutLocale::ValueOrDefault(
++          LayoutLocale::Get(document_element->ComputeInheritedLanguage()));
++    }
++  }
++
++  // If all else fails, return the default.
++  return &LayoutLocale::GetDefault();
++}
++
  FontSelector* HTMLCanvasElement::GetFontSelector() {
    return GetDocument().GetStyleEngine().GetFontSelector();
  }
-@@ -1806,8 +1829,7 @@ void HTMLCanvasElement::UpdateMemoryUsage() {
+@@ -1806,8 +1856,7 @@ void HTMLCanvasElement::UpdateMemoryUsage() {
      // AdjustAmountOfExternalAllocatedMemory is safe, hence the
      // 'diposing_' condition in the DCHECK below.
      DCHECK(ThreadState::Current()->IsAllocationAllowed() || disposing_);
