@@ -1,0 +1,12 @@
+diff --git a/third_party/blink/renderer/platform/bindings/script_state.cc b/third_party/blink/renderer/platform/bindings/script_state.cc
+index e4a27a24c83dd1a478b2ada8b6c8220076790791..58aa3d5b24355a4346c9d6992e6090d28cad513f 100644
+--- a/third_party/blink/renderer/platform/bindings/script_state.cc
++++ b/third_party/blink/renderer/platform/bindings/script_state.cc
+@@ -60,6 +60,7 @@ void ScriptState::DetachGlobalObject() {
+ }
+ 
+ void ScriptState::DisposePerContextData() {
++  v8::HandleScope scope(GetIsolate());
+   per_context_data_->Dispose();
+   per_context_data_ = nullptr;
+   InstanceCounters::IncrementCounter(
