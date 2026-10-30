@@ -1,5 +1,5 @@
 diff --git a/src/api/api.cc b/src/api/api.cc
-index 545c1093ee7544da3878637e11c557e3964b8835..fe4f726d23d9f62f7a1ca0af3fddd65b983a5fc7 100644
+index 545c1093ee7544da3878637e11c557e3964b8835..b3d151e5769f498ccfffc4ee0e1d08ed0c0f16a3 100644
 --- a/src/api/api.cc
 +++ b/src/api/api.cc
 @@ -5251,12 +5251,25 @@ V8_INLINE void* GetAlignedPointerFromEmbedderDataInCreationContextImpl(
@@ -68,3 +68,18 @@ index 545c1093ee7544da3878637e11c557e3964b8835..fe4f726d23d9f62f7a1ca0af3fddd65b
  
    has_exception =
        i::JSPromise::Reject(promise, Utils::OpenDirectHandle(*value)).is_null();
+@@ -8891,11 +8920,12 @@ MaybeLocal<WasmModuleObject> WasmModuleObject::FromCompiledModule(
+     Isolate* v8_isolate, const CompiledWasmModule& compiled_module) {
+ #if V8_ENABLE_WEBASSEMBLY
+   i::Isolate* i_isolate = reinterpret_cast<i::Isolate*>(v8_isolate);
+-  i::DirectHandle<i::WasmModuleObject> module_object =
++  i::MaybeDirectHandle<i::WasmModuleObject> module_object =
+       i::wasm::GetWasmEngine()->ImportNativeModule(
+           i_isolate, compiled_module.native_module_,
+           base::VectorOf(compiled_module.source_url()));
+-  return Utils::ToLocal(module_object);
++  if (module_object.is_null()) return {};
++  return Utils::ToLocal(module_object.ToHandleChecked());
+ #else
+   UNREACHABLE();
+ #endif  // V8_ENABLE_WEBASSEMBLY

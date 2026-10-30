@@ -1,5 +1,5 @@
 diff --git a/src/objects/map-updater.cc b/src/objects/map-updater.cc
-index ca8f3df2f4aa34f564b60a89bdbdf4f399e8c522..6448a2357feb61cd828d80b651f2a7d4ad81e89c 100644
+index ca8f3df2f4aa34f564b60a89bdbdf4f399e8c522..f74ab19532b2edf11afa520edc9947829a8a0b3d 100644
 --- a/src/objects/map-updater.cc
 +++ b/src/objects/map-updater.cc
 @@ -371,8 +371,16 @@ std::optional<Tagged<Map>> MapUpdater::TryUpdateNoLock(Isolate* isolate,
@@ -21,3 +21,32 @@ index ca8f3df2f4aa34f564b60a89bdbdf4f399e8c522..6448a2357feb61cd828d80b651f2a7d4
      if (!maybe_transition) {
        return {};
      }
+@@ -385,7 +393,9 @@ std::optional<Tagged<Map>> MapUpdater::TryUpdateNoLock(Isolate* isolate,
+   ElementsKind to_kind = old_map->elements_kind();
+ 
+   IntegrityLevelTransitionInfo info(old_map);
+-  if (root_map->is_extensible() != old_map->is_extensible()) {
++  if (!root_map->is_extensible() && old_map != root_map) {
++    return {};
++  } else if (root_map->is_extensible() != old_map->is_extensible()) {
+     DCHECK(!old_map->is_extensible());
+     DCHECK(root_map->is_extensible());
+     info = DetectIntegrityLevelTransitions(old_map, isolate, &no_gc, cmode);
+@@ -397,7 +407,7 @@ std::optional<Tagged<Map>> MapUpdater::TryUpdateNoLock(Isolate* isolate,
+     DCHECK(to_kind == DICTIONARY_ELEMENTS ||
+            to_kind == SLOW_STRING_WRAPPER_ELEMENTS ||
+            IsTypedArrayOrRabGsabTypedArrayElementsKind(to_kind) ||
+-           IsAnyHoleyNonextensibleElementsKind(to_kind));
++           IsAnyNonextensibleElementsKind(to_kind));
+     to_kind = info.integrity_level_source_map->elements_kind();
+   }
+   if (from_kind != to_kind) {
+@@ -614,6 +624,8 @@ MapUpdater::State MapUpdater::FindRootMap() {
+               ? direct_handle(root_map_->prototype(), isolate_)
+               : DirectHandle<HeapObject>())) {
+     return Normalize("Normalize_NotEquivalent");
++  } else if (!root_map_->is_extensible() && *old_map_ != *root_map_) {
++    return Normalize("Normalize_PrivateSymbolsOnNonExtensible");
+   } else if (old_map_->is_extensible() != root_map_->is_extensible()) {
+     DCHECK(!old_map_->is_extensible());
+     DCHECK(root_map_->is_extensible());

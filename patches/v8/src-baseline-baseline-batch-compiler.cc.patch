@@ -1,0 +1,17 @@
+diff --git a/src/baseline/baseline-batch-compiler.cc b/src/baseline/baseline-batch-compiler.cc
+index 7cad725a715de3a79e55549f6e05f6b79e50768d..718505eead3a1511b345076e899c27c3d4118fff 100644
+--- a/src/baseline/baseline-batch-compiler.cc
++++ b/src/baseline/baseline-batch-compiler.cc
+@@ -349,7 +349,11 @@ bool BaselineBatchCompiler::ShouldCompileBatch(
+     estimated_size = BaselineCompiler::EstimateInstructionSize(
+         shared->GetBytecodeArray(isolate_));
+   }
+-  estimated_instruction_size_ += estimated_size;
++  // FlyWeb: upstream ebf970d8a3, saturating sum.
++  int64_t new_size =
++      static_cast<int64_t>(estimated_instruction_size_) + estimated_size;
++  estimated_instruction_size_ =
++      new_size > kMaxInt ? kMaxInt : static_cast<int>(new_size);
+   if (v8_flags.trace_baseline_batch_compilation) {
+     CodeTracer::Scope trace_scope(isolate_->GetCodeTracer());
+     PrintF(trace_scope.file(), "[Baseline batch compilation] Enqueued SFI %s",

@@ -1,5 +1,5 @@
 diff --git a/src/compiler/js-generic-lowering.cc b/src/compiler/js-generic-lowering.cc
-index d679b34558a04c3e90e061ffdfc1b6ee9fc2d2e2..b8d09547ebf192b65a4011debd3f1f0c0c998f87 100644
+index d679b34558a04c3e90e061ffdfc1b6ee9fc2d2e2..017982297c294c15da1982d0f504a3824bdccb2d 100644
 --- a/src/compiler/js-generic-lowering.cc
 +++ b/src/compiler/js-generic-lowering.cc
 @@ -729,7 +729,6 @@ void JSGenericLowering::LowerJSCreateFunctionContext(Node* node) {
@@ -10,3 +10,13 @@ index d679b34558a04c3e90e061ffdfc1b6ee9fc2d2e2..b8d09547ebf192b65a4011debd3f1f0c
    ReplaceWithBuiltinCall(node, Builtin::kCreateGeneratorObject);
  }
  
+@@ -779,9 +778,6 @@ void JSGenericLowering::LowerJSGetTemplateObject(Node* node) {
+   SharedFunctionInfoRef shared = p.shared();
+   TemplateObjectDescriptionRef description = p.description();
+ 
+-  DCHECK_EQ(node->op()->ControlInputCount(), 1);
+-  node->RemoveInput(NodeProperties::FirstControlIndex(node));
+-
+   static_assert(JSGetTemplateObjectNode::FeedbackVectorIndex() == 0);
+   node->InsertInput(zone(), 0, jsgraph()->ConstantNoHole(shared, broker()));
+   node->InsertInput(zone(), 1,
