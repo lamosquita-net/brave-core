@@ -1,0 +1,21 @@
+diff --git a/third_party/blink/renderer/core/html/custom/custom_element.cc b/third_party/blink/renderer/core/html/custom/custom_element.cc
+index 3b6bdb5e2d7e9d322437ec243f85f611e90433bc..b0efce216f7b4641384c60ba939b544cd71627b2 100644
+--- a/third_party/blink/renderer/core/html/custom/custom_element.cc
++++ b/third_party/blink/renderer/core/html/custom/custom_element.cc
+@@ -237,6 +237,16 @@ void CustomElement::EnqueueConnectedCallback(Element& element) {
+     definition->EnqueueConnectedCallback(element);
+ }
+ 
++void CustomElement::EnqueueConnectedMoveCallback(Element& element) {
++  auto* definition = DefinitionForElementWithoutCheck(element);
++  if (definition->HasConnectedMoveCallback()) {
++    definition->EnqueueConnectedMoveCallback(element);
++  } else {
++    EnqueueDisconnectedCallback(element);
++    EnqueueConnectedCallback(element);
++  }
++}
++
+ void CustomElement::EnqueueDisconnectedCallback(Element& element) {
+   auto* definition = DefinitionForElementWithoutCheck(element);
+   if (definition->HasDisconnectedCallback())

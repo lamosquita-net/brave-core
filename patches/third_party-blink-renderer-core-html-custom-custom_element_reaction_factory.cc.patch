@@ -1,0 +1,45 @@
+diff --git a/third_party/blink/renderer/core/html/custom/custom_element_reaction_factory.cc b/third_party/blink/renderer/core/html/custom/custom_element_reaction_factory.cc
+index dccbbca2dd235fa52461d40476e0d12f429ef4ae..12c53106980d59f35b23bb83b7a91606788f3a50 100644
+--- a/third_party/blink/renderer/core/html/custom/custom_element_reaction_factory.cc
++++ b/third_party/blink/renderer/core/html/custom/custom_element_reaction_factory.cc
+@@ -72,6 +72,27 @@ class CustomElementDisconnectedCallbackReaction final
+ 
+ // ----------------------------------------------------------------
+ 
++class CustomElementConnectedMoveCallbackReaction final
++    : public CustomElementReaction {
++ public:
++  explicit CustomElementConnectedMoveCallbackReaction(
++      CustomElementDefinition& definition)
++      : CustomElementReaction(definition) {
++    DCHECK(definition.HasConnectedMoveCallback());
++  }
++  CustomElementConnectedMoveCallbackReaction(
++      const CustomElementConnectedMoveCallbackReaction&) = delete;
++  CustomElementDisconnectedCallbackReaction& operator=(
++      const CustomElementConnectedMoveCallbackReaction&) = delete;
++
++ private:
++  void Invoke(Element& element) override {
++    definition_->RunConnectedMoveCallback(element);
++  }
++};
++
++// ----------------------------------------------------------------
++
+ class CustomElementAdoptedCallbackReaction final
+     : public CustomElementReaction {
+  public:
+@@ -264,6 +285,12 @@ CustomElementReaction& CustomElementReactionFactory::CreateDisconnected(
+       definition);
+ }
+ 
++CustomElementReaction& CustomElementReactionFactory::CreateConnectedMove(
++    CustomElementDefinition& definition) {
++  return *MakeGarbageCollected<CustomElementConnectedMoveCallbackReaction>(
++      definition);
++}
++
+ CustomElementReaction& CustomElementReactionFactory::CreateAdopted(
+     CustomElementDefinition& definition,
+     Document& old_owner,

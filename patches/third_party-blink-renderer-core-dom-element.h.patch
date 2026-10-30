@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/element.h b/third_party/blink/renderer/core/dom/element.h
-index c9ec614fa75af13d0173c25b4b5ee8131fa273fb..f6ee584c57e43f03b3296abd79613b374e2aa443 100644
+index c9ec614fa75af13d0173c25b4b5ee8131fa273fb..6b3e3eff6660e8dbb490b935e934a4fb76f175a1 100644
 --- a/third_party/blink/renderer/core/dom/element.h
 +++ b/third_party/blink/renderer/core/dom/element.h
 @@ -202,6 +202,7 @@ enum class CommandEventType {
@@ -69,7 +69,18 @@ index c9ec614fa75af13d0173c25b4b5ee8131fa273fb..f6ee584c57e43f03b3296abd79613b37
        PseudoId pseudo_id,
        const AtomicString& view_transition_name) const;
  
-@@ -1541,6 +1553,9 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1466,6 +1478,10 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+   void RemovedFrom(ContainerNode&) override;
+   void ChildrenChanged(const ChildrenChange&) override;
+ 
++  // This is an implementation of
++  // https://whatpr.org/html/10657/infrastructure.html#html-element-moving-steps
++  void MovedFrom(ContainerNode& old_parent) override;
++
+   virtual void WillRecalcStyle(const StyleRecalcChange);
+   virtual void DidRecalcStyle(const StyleRecalcChange);
+   virtual const ComputedStyle* CustomStyleForLayoutObject(
+@@ -1541,6 +1557,9 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    friend class AXObject;
    struct AffectedByPseudoStateChange;
  

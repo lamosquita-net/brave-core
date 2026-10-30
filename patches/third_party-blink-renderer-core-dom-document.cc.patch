@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/document.cc b/third_party/blink/renderer/core/dom/document.cc
-index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..51f2f4be16d7d2406a50a82f233851885eb7db5d 100644
+index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..3b4ff1cc035a9cd43d21ad30df7f0e4f1ca0bc9e 100644
 --- a/third_party/blink/renderer/core/dom/document.cc
 +++ b/third_party/blink/renderer/core/dom/document.cc
 @@ -4767,13 +4767,25 @@ void Document::ProcessBaseElement() {
@@ -35,7 +35,29 @@ index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..51f2f4be16d7d2406a50a82f23385188
    }
  
    AtomicString old_base_target = base_target_;
-@@ -7989,11 +8001,11 @@ void Document::AddToTopLayer(Element* element, const Element* before) {
+@@ -5853,10 +5865,17 @@ void Document::NodeWillBeRemoved(Node& n) {
+   for (NodeIterator* ni : node_iterators_)
+     ni->NodeWillBeRemoved(n);
+ 
+-  for (Range* range : ranges_) {
+-    range->NodeWillBeRemoved(n);
+-    if (range == sequential_focus_navigation_starting_point_)
+-      range->FixupRemovedNodeAcrossShadowBoundary(n);
++  // We want to run the normal Range reset code when we're not in the middle of
++  // `moveBefore()`, or when we *are* but when range preservation is disabled
++  // (it is by default).
++  if (!StatePreservingAtomicMoveInProgress() ||
++      !RuntimeEnabledFeatures::AtomicMoveRangePreservationEnabled()) {
++    for (Range* range : ranges_) {
++      range->NodeWillBeRemoved(n);
++      if (range == sequential_focus_navigation_starting_point_) {
++        range->FixupRemovedNodeAcrossShadowBoundary(n);
++      }
++    }
+   }
+ 
+   synchronous_mutation_observer_set_.ForEachObserver(
+@@ -7989,11 +8008,11 @@ void Document::AddToTopLayer(Element* element, const Element* before) {
      }
    }
  
@@ -50,7 +72,7 @@ index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..51f2f4be16d7d2406a50a82f23385188
          << "If this invariant changes, we might need to revisit Container "
             "Queries for top layer elements.";
      wtf_size_t before_position = top_layer_elements_.Find(before);
-@@ -8006,6 +8018,16 @@ void Document::AddToTopLayer(Element* element, const Element* before) {
+@@ -8006,6 +8025,16 @@ void Document::AddToTopLayer(Element* element, const Element* before) {
    display_lock_document_state_->ElementAddedToTopLayer(element);
  
    probe::TopLayerElementsChanged(this);
@@ -67,7 +89,7 @@ index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..51f2f4be16d7d2406a50a82f23385188
  }
  
  void Document::ScheduleForTopLayerRemoval(Element* element,
-@@ -8063,8 +8085,25 @@ void Document::RemoveFromTopLayerImmediately(Element* element) {
+@@ -8063,8 +8092,25 @@ void Document::RemoveFromTopLayerImmediately(Element* element) {
    }
    element->SetIsInTopLayer(false);
    display_lock_document_state_->ElementRemovedFromTopLayer(element);
@@ -93,7 +115,7 @@ index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..51f2f4be16d7d2406a50a82f23385188
  }
  
  std::optional<Document::TopLayerReason> Document::IsScheduledForTopLayerRemoval(
-@@ -8108,6 +8147,17 @@ void Document::SetPopoverPointerdownTarget(const HTMLElement* popover) {
+@@ -8108,6 +8154,17 @@ void Document::SetPopoverPointerdownTarget(const HTMLElement* popover) {
    popover_pointerdown_target_ = popover;
  }
  
@@ -111,7 +133,7 @@ index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..51f2f4be16d7d2406a50a82f23385188
  void Document::exitPointerLock() {
    if (!GetPage())
      return;
-@@ -8842,8 +8892,10 @@ void Document::Trace(Visitor* visitor) const {
+@@ -8842,8 +8899,10 @@ void Document::Trace(Visitor* visitor) const {
    visitor->Trace(popover_auto_stack_);
    visitor->Trace(popover_hint_stack_);
    visitor->Trace(popover_pointerdown_target_);

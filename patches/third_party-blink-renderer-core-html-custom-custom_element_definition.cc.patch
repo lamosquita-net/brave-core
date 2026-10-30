@@ -1,0 +1,16 @@
+diff --git a/third_party/blink/renderer/core/html/custom/custom_element_definition.cc b/third_party/blink/renderer/core/html/custom/custom_element_definition.cc
+index d281c064e53268e1d42b9200ae5b811f661d2661..2e8b66159c12c5eb8c7f23298d742f5ad9de3c4a 100644
+--- a/third_party/blink/renderer/core/html/custom/custom_element_definition.cc
++++ b/third_party/blink/renderer/core/html/custom/custom_element_definition.cc
+@@ -270,6 +270,11 @@ void CustomElementDefinition::EnqueueDisconnectedCallback(Element& element) {
+       element, CustomElementReactionFactory::CreateDisconnected(*this));
+ }
+ 
++void CustomElementDefinition::EnqueueConnectedMoveCallback(Element& element) {
++  CustomElement::Enqueue(
++      element, CustomElementReactionFactory::CreateConnectedMove(*this));
++}
++
+ void CustomElementDefinition::EnqueueAdoptedCallback(Element& element,
+                                                      Document& old_document,
+                                                      Document& new_document) {

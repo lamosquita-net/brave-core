@@ -1,0 +1,16 @@
+diff --git a/third_party/blink/renderer/core/html/html_link_element.cc b/third_party/blink/renderer/core/html/html_link_element.cc
+index 13f2984342f052719578794c0f62639607d1255c..2c69d57b9ff4033d2900d4f698d0356ffcd831cc 100644
+--- a/third_party/blink/renderer/core/html/html_link_element.cc
++++ b/third_party/blink/renderer/core/html/html_link_element.cc
+@@ -285,8 +285,10 @@ void HTMLLinkElement::RemovedFrom(ContainerNode& insertion_point) {
+   // the flags.
+   bool was_connected = isConnected();
+   HTMLElement::RemovedFrom(insertion_point);
+-  if (!insertion_point.isConnected())
++  if (!insertion_point.isConnected() ||
++      GetDocument().StatePreservingAtomicMoveInProgress()) {
+     return;
++  }
+ 
+   link_loader_->Abort();
+ 
