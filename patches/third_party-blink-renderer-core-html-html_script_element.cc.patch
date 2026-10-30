@@ -1,8 +1,22 @@
 diff --git a/third_party/blink/renderer/core/html/html_script_element.cc b/third_party/blink/renderer/core/html/html_script_element.cc
-index a2eaf66028d573bf80cbb810792f3a16df0fd640..b42003b189637dcbc2ad330e08b6daf9ec98ada5 100644
+index a2eaf66028d573bf80cbb810792f3a16df0fd640..0e809238bd02594694ac15abf46fa4007cdca71b 100644
 --- a/third_party/blink/renderer/core/html/html_script_element.cc
 +++ b/third_party/blink/renderer/core/html/html_script_element.cc
-@@ -145,7 +145,8 @@ Node::InsertionNotificationRequest HTMLScriptElement::InsertedInto(
+@@ -75,8 +75,12 @@ bool HTMLScriptElement::HasLegalLinkAttribute(const QualifiedName& name) const {
+ 
+ void HTMLScriptElement::ChildrenChanged(const ChildrenChange& change) {
+   HTMLElement::ChildrenChanged(change);
+-  if (change.IsChildInsertion())
++  // FlyWeb: no script execution inside moveBefore() (upstream 2e3a535512,
++  // crbug.com/496292089).
++  if (change.IsChildInsertion() &&
++      !GetDocument().StatePreservingAtomicMoveInProgress()) {
+     loader_->ChildrenChanged();
++  }
+ 
+   // We'll record whether the script element children were ever changed by
+   // the API (as opposed to the parser).
+@@ -145,7 +149,8 @@ Node::InsertionNotificationRequest HTMLScriptElement::InsertedInto(
  void HTMLScriptElement::RemovedFrom(ContainerNode& insertion_point) {
    HTMLElement::RemovedFrom(insertion_point);
    loader_->Removed();

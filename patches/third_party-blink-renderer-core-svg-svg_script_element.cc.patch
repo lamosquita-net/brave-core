@@ -1,0 +1,17 @@
+diff --git a/third_party/blink/renderer/core/svg/svg_script_element.cc b/third_party/blink/renderer/core/svg/svg_script_element.cc
+index 894c05b7e56c2d753d77072c673e1b7950c1e683..03317132ad89fbdfe88872836fbac696fa58426c 100644
+--- a/third_party/blink/renderer/core/svg/svg_script_element.cc
++++ b/third_party/blink/renderer/core/svg/svg_script_element.cc
+@@ -80,7 +80,11 @@ void SVGScriptElement::DidNotifySubtreeInsertionsToDocument() {
+ 
+ void SVGScriptElement::ChildrenChanged(const ChildrenChange& change) {
+   SVGElement::ChildrenChanged(change);
+-  loader_->ChildrenChanged();
++  // FlyWeb: no script execution inside moveBefore() (upstream 08939d0c19,
++  // crbug.com/502118936).
++  if (!GetDocument().StatePreservingAtomicMoveInProgress()) {
++    loader_->ChildrenChanged();
++  }
+ 
+   // We'll record whether the script element children were ever changed by
+   // the API (as opposed to the parser).
