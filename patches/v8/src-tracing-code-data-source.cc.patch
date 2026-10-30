@@ -1,5 +1,5 @@
 diff --git a/src/tracing/code-data-source.cc b/src/tracing/code-data-source.cc
-index 35e23fab566bc9f25ff76a7136a87c7369dcb4ce..047c9f6f42c7a8fcbc3d47806a22ebb719f5e707 100644
+index 35e23fab566bc9f25ff76a7136a87c7369dcb4ce..4bcf95b5535ec291cbc25374311991a77c9e5352 100644
 --- a/src/tracing/code-data-source.cc
 +++ b/src/tracing/code-data-source.cc
 @@ -223,10 +223,11 @@ uint64_t CodeDataSourceIncrementalState::InternJsFunction(
@@ -15,6 +15,21 @@ index 35e23fab566bc9f25ff76a7136a87c7369dcb4ce..047c9f6f42c7a8fcbc3d47806a22ebb7
 +  // written; the byte offset above still locates the function.
 +  static_cast<void>(line_num);
 +  static_cast<void>(column_num);
+ 
+   return iid;
+ }
+@@ -247,11 +248,9 @@ uint64_t CodeDataSourceIncrementalState::InternWasmScript(
+   script->set_iid(iid);
+   script->set_script_id(script_id);
+   script->set_url(url);
+-  if (log_script_sources()) {
+-    base::Vector<const uint8_t> bytes_vec = native_module->wire_bytes();
+-    script->set_wire_bytes(bytes_vec.begin(), bytes_vec.size());
+-    // TODO(carlscab): Log script source if needed.
+-  }
++  // FlyWeb: the perfetto protos of the Chromium 128 base have no wire_bytes in
++  // InternedV8WasmScript (added for V8 13.6), so the module is not written.
++  static_cast<void>(native_module);
  
    return iid;
  }

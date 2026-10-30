@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/animation/css_color_interpolation_type.cc b/third_party/blink/renderer/core/animation/css_color_interpolation_type.cc
-index af246d4544c61767b880df38a4a26637a2c4bb87..059b251c0aaa0324e7f64d08fe0f15901deff272 100644
+index af246d4544c61767b880df38a4a26637a2c4bb87..d8ecc478920759b9a41e631f51254dc14c3473a1 100644
 --- a/third_party/blink/renderer/core/animation/css_color_interpolation_type.cc
 +++ b/third_party/blink/renderer/core/animation/css_color_interpolation_type.cc
 @@ -13,6 +13,7 @@
@@ -46,7 +46,7 @@ index af246d4544c61767b880df38a4a26637a2c4bb87..059b251c0aaa0324e7f64d08fe0f1590
      return InterpolableStyleColor::Create(color);
    }
    return CreateInterpolableColor(color, color_scheme, color_provider);
-@@ -111,22 +124,42 @@ BaseInterpolableColor* CSSColorInterpolationType::CreateBaseInterpolableColor(
+@@ -111,22 +124,39 @@ BaseInterpolableColor* CSSColorInterpolationType::CreateBaseInterpolableColor(
  
  InterpolableColor* CSSColorInterpolationType::MaybeCreateInterpolableColor(
      const CSSValue& value,
@@ -82,12 +82,9 @@ index af246d4544c61767b880df38a4a26637a2c4bb87..059b251c0aaa0324e7f64d08fe0f1590
 -                                 color_provider);
 +  if (state && (value.IsLightDarkValuePair() || value.IsColorMixValue() ||
 +                value.IsRelativeColorValue())) {
-+    ResolveColorValueContext context{
-+        .length_resolver = state->CssToLengthConversionData(),
-+        .text_link_colors = state->GetDocument().GetTextLinkColors(),
-+        .used_color_scheme = color_scheme,
-+        .color_provider = color_provider};
-+    StyleColor style_color = ResolveColorValue(value, context);
++    StyleColor style_color = ResolveColorValue(
++        state->CssToLengthConversionData(), value,
++        state->GetDocument().GetTextLinkColors(), color_scheme, color_provider);
 +    if (!style_color.IsUnresolvedColorFunction()) {
 +      return CreateInterpolableColor(style_color.GetColor());
 +    }
@@ -100,7 +97,7 @@ index af246d4544c61767b880df38a4a26637a2c4bb87..059b251c0aaa0324e7f64d08fe0f1590
  }
  
  Color CSSColorInterpolationType::GetColor(const InterpolableValue& value) {
-@@ -255,14 +288,8 @@ InterpolationValue CSSColorInterpolationType::MaybeConvertValue(
+@@ -255,14 +285,8 @@ InterpolationValue CSSColorInterpolationType::MaybeConvertValue(
      }
    }
  
@@ -116,7 +113,7 @@ index af246d4544c61767b880df38a4a26637a2c4bb87..059b251c0aaa0324e7f64d08fe0f1590
    if (!interpolable_color) {
      return nullptr;
    }
-@@ -386,7 +413,6 @@ void CSSColorInterpolationType::Composite(
+@@ -386,7 +410,6 @@ void CSSColorInterpolationType::Composite(
      auto& underlying =
          To<BaseInterpolableColor>(*underlying_list.GetMutable(i));
      auto& other = To<BaseInterpolableColor>(*other_list.Get(i));
