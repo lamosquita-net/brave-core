@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/range.cc b/third_party/blink/renderer/core/dom/range.cc
-index 630a811864c651094fe6c661f7f4953f238b2611..0847c55967ec7c09aa84b1f056fec0143f486147 100644
+index 630a811864c651094fe6c661f7f4953f238b2611..cb4f1503b90ec524c2ab866d45981c897bf64417 100644
 --- a/third_party/blink/renderer/core/dom/range.cc
 +++ b/third_party/blink/renderer/core/dom/range.cc
 @@ -63,6 +63,7 @@
@@ -168,7 +168,18 @@ index 630a811864c651094fe6c661f7f4953f238b2611..0847c55967ec7c09aa84b1f056fec014
  }
  
  void Range::deleteContents(ExceptionState& exception_state) {
-@@ -1640,7 +1671,7 @@ void Range::GetBorderAndTextQuads(Vector<gfx::QuadF>& quads) const {
+@@ -576,6 +607,10 @@ DocumentFragment* Range::ProcessContents(ActionType action,
+   Node* process_end = ChildOfCommonRootBeforeOffset(
+       &original_end.Container(), original_end.Offset(), common_root);
+ 
++  if (!process_end && !common_root->contains(&original_end.Container())) {
++    process_start = nullptr;
++  }
++
+   // Collapse the range, making sure that the result is not within a node that
+   // was partially selected.
+   if (action == kExtractContents || action == kDeleteContents) {
+@@ -1640,7 +1675,7 @@ void Range::GetBorderAndTextQuads(Vector<gfx::QuadF>& quads) const {
  
    // Stores the elements selected by the range.
    HeapHashSet<Member<const Node>> selected_elements;
@@ -177,7 +188,7 @@ index 630a811864c651094fe6c661f7f4953f238b2611..0847c55967ec7c09aa84b1f056fec014
         node = NodeTraversal::Next(*node)) {
      if (!node->IsElementNode())
        continue;
-@@ -1653,7 +1684,7 @@ void Range::GetBorderAndTextQuads(Vector<gfx::QuadF>& quads) const {
+@@ -1653,7 +1688,7 @@ void Range::GetBorderAndTextQuads(Vector<gfx::QuadF>& quads) const {
      }
    }
  
@@ -186,7 +197,7 @@ index 630a811864c651094fe6c661f7f4953f238b2611..0847c55967ec7c09aa84b1f056fec014
         node = NodeTraversal::Next(*node)) {
      auto* element_node = DynamicTo<Element>(node);
      if (element_node) {
-@@ -1761,9 +1792,26 @@ void Range::UpdateSelectionIfAddedToSelection() {
+@@ -1761,9 +1796,26 @@ void Range::UpdateSelectionIfAddedToSelection() {
    DCHECK(endContainer()->isConnected());
    DCHECK(endContainer()->GetDocument() == OwnerDocument());
    EventDispatchForbiddenScope no_events;
@@ -215,7 +226,7 @@ index 630a811864c651094fe6c661f7f4953f238b2611..0847c55967ec7c09aa84b1f056fec014
                               .Build(),
                           SetSelectionOptions::Builder()
                               .SetShouldCloseTyping(true)
-@@ -1773,6 +1821,10 @@ void Range::UpdateSelectionIfAddedToSelection() {
+@@ -1773,6 +1825,10 @@ void Range::UpdateSelectionIfAddedToSelection() {
    selection.CacheRangeOfDocument(this);
  }
  
