@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/geometry/calculation_expression_node.cc b/third_party/blink/renderer/platform/geometry/calculation_expression_node.cc
-index 785746c00ab2fbbec0d55462eded19bc9ffe827d..9952db0275a53941656f9a273dfc6fbd560a389e 100644
+index 785746c00ab2fbbec0d55462eded19bc9ffe827d..ca9dc07e0e2ca5942c480b2ab23a4f8fabf5dbd6 100644
 --- a/third_party/blink/renderer/platform/geometry/calculation_expression_node.cc
 +++ b/third_party/blink/renderer/platform/geometry/calculation_expression_node.cc
 @@ -18,18 +18,18 @@ namespace blink {
@@ -36,7 +36,7 @@ index 785746c00ab2fbbec0d55462eded19bc9ffe827d..9952db0275a53941656f9a273dfc6fbd
    Length::Type intrinsic_type = Length::kFixed;
    switch (keyword_) {
      case Keyword::kSize:
-@@ -112,22 +112,40 @@ float CalculationExpressionSizingKeywordNode::Evaluate(
+@@ -112,22 +112,42 @@ float CalculationExpressionSizingKeywordNode::Evaluate(
    return (*input.intrinsic_evaluator)(Length(intrinsic_type));
  }
  
@@ -44,7 +44,9 @@ index 785746c00ab2fbbec0d55462eded19bc9ffe827d..9952db0275a53941656f9a273dfc6fbd
 +
 +CalculationExpressionColorChannelKeywordNode::
 +    CalculationExpressionColorChannelKeywordNode(ColorChannelKeyword channel)
-+    : channel_(channel) {}
++    : channel_(channel) {
++  has_color_channel_keyword_ = true;
++}
 +
 +float CalculationExpressionColorChannelKeywordNode::Evaluate(
 +    float max_value,
@@ -83,7 +85,16 @@ index 785746c00ab2fbbec0d55462eded19bc9ffe827d..9952db0275a53941656f9a273dfc6fbd
  }
  
  scoped_refptr<const CalculationExpressionNode>
-@@ -407,7 +425,7 @@ CalculationExpressionOperationNode::CalculationExpressionOperationNode(
+@@ -401,13 +421,16 @@ CalculationExpressionOperationNode::CalculationExpressionOperationNode(
+       if (child->HasPercent()) {
+         has_percent_ = true;
+       }
++      if (child->HasColorChannelKeyword()) {
++        has_color_channel_keyword_ = true;
++      }
+     }
+   }
+ }
  
  float CalculationExpressionOperationNode::Evaluate(
      float max_value,
@@ -92,7 +103,7 @@ index 785746c00ab2fbbec0d55462eded19bc9ffe827d..9952db0275a53941656f9a273dfc6fbd
    switch (operator_) {
      case CalculationOperator::kAdd: {
        DCHECK_EQ(children_.size(), 2u);
-@@ -486,7 +504,7 @@ float CalculationExpressionOperationNode::Evaluate(
+@@ -486,7 +509,7 @@ float CalculationExpressionOperationNode::Evaluate(
      }
      case CalculationOperator::kCalcSize: {
        DCHECK_EQ(children_.size(), 2u);
@@ -101,7 +112,7 @@ index 785746c00ab2fbbec0d55462eded19bc9ffe827d..9952db0275a53941656f9a273dfc6fbd
        calculation_input.size_keyword_basis =
            children_[0]->Evaluate(max_value, input);
        if (max_value == kIndefiniteSize.ToFloat()) {
-@@ -517,14 +535,16 @@ float CalculationExpressionOperationNode::Evaluate(
+@@ -517,14 +540,16 @@ float CalculationExpressionOperationNode::Evaluate(
  
  bool CalculationExpressionOperationNode::Equals(
      const CalculationExpressionNode& other) const {

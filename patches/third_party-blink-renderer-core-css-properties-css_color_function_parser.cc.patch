@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/properties/css_color_function_parser.cc b/third_party/blink/renderer/core/css/properties/css_color_function_parser.cc
-index 420aa1d78b3f47e072547d79a3d5e41e46b4efa1..cc3cb6167e4b23048c2993d66e4954bbf042c396 100644
+index 420aa1d78b3f47e072547d79a3d5e41e46b4efa1..999bf4910f0cde237836e32df25b5ff65d402779 100644
 --- a/third_party/blink/renderer/core/css/properties/css_color_function_parser.cc
 +++ b/third_party/blink/renderer/core/css/properties/css_color_function_parser.cc
 @@ -2,21 +2,18 @@
@@ -135,12 +135,21 @@ index 420aa1d78b3f47e072547d79a3d5e41e46b4efa1..cc3cb6167e4b23048c2993d66e4954bb
  bool ColorChannelIsHue(Color::ColorSpace color_space, int channel) {
    if (color_space == Color::ColorSpace::kHSL ||
        color_space == Color::ColorSpace::kHWB) {
-@@ -229,42 +132,26 @@ std::optional<Color> TryResolveAtParseTime(const CSSValue& value) {
+@@ -229,42 +132,41 @@ std::optional<Color> TryResolveAtParseTime(const CSSValue& value) {
      if (!color1 || !color2) {
        return std::nullopt;
      }
 -    return color_mix_value->Mix(*color1, *color2);
--  }
++    // We can only mix with percentages being numeric literals from here,
++    // as we don't have a length conversion data to resolve against yet.
++    if ((!color_mix_value->Percentage1() ||
++         color_mix_value->Percentage1()->IsNumericLiteralValue()) &&
++        (!color_mix_value->Percentage2() ||
++         color_mix_value->Percentage2()->IsNumericLiteralValue())) {
++      return color_mix_value->Mix(*color1, *color2,
++                                  CSSToLengthConversionData());
++    }
+   }
 -  return std::nullopt;
 -}
 -
@@ -158,20 +167,25 @@ index 420aa1d78b3f47e072547d79a3d5e41e46b4efa1..cc3cb6167e4b23048c2993d66e4954bb
 -    if (auto absolute_color = TryResolveAtParseTime(*css_color)) {
 -      result = absolute_color.value();
 -      return true;
-+    // We can only mix with percentages being numeric literals from here,
-+    // as we don't have a length conversion data to resolve against yet.
-+    if ((!color_mix_value->Percentage1() ||
-+         color_mix_value->Percentage1()->IsNumericLiteralValue()) &&
-+        (!color_mix_value->Percentage2() ||
-+         color_mix_value->Percentage2()->IsNumericLiteralValue())) {
-+      return color_mix_value->Mix(*color1, *color2,
-+                                  CSSToLengthConversionData());
++  if (auto* relative_color_value =
++          DynamicTo<cssvalue::CSSRelativeColorValue>(value)) {
++    auto origin_color =
++        TryResolveAtParseTime(relative_color_value->OriginColor());
++    if (!origin_color) {
++      return std::nullopt;
      }
 -    // TODO(crbug.com/325309578): Just like with
 -    // css_parsing_utils::ResolveColor(), currentcolor is not currently
 -    // handled.
 -    // TODO(crbug.com/41492196): Similarly, color-mix() with non-absolute
 -    // arguments is not supported as an origin color yet.
++    StyleColor::UnresolvedRelativeColor* unresolved_relative_color =
++        MakeGarbageCollected<StyleColor::UnresolvedRelativeColor>(
++            StyleColor(origin_color.value()),
++            relative_color_value->ColorInterpolationSpace(),
++            relative_color_value->Channel0(), relative_color_value->Channel1(),
++            relative_color_value->Channel2(), relative_color_value->Alpha());
++    return unresolved_relative_color->Resolve(Color());
    }
 -  return false;
 +  return std::nullopt;
@@ -190,7 +204,7 @@ index 420aa1d78b3f47e072547d79a3d5e41e46b4efa1..cc3cb6167e4b23048c2993d66e4954bb
    // Relative color channels can be calc() functions with color channel
    // replacements. e.g. In "color(from magenta srgb calc(r / 2) 0 0)", the
    // "calc" should substitute "1" for "r" (magenta has a full red channel).
-@@ -273,48 +160,31 @@ std::optional<double> ConsumeRelativeColorChannel(
+@@ -273,48 +175,31 @@ std::optional<double> ConsumeRelativeColorChannel(
      using Flags = CSSMathExpressionNode::Flags;
  
      // Don't consume the range if the parsing fails.
@@ -246,7 +260,7 @@ index 420aa1d78b3f47e072547d79a3d5e41e46b4efa1..cc3cb6167e4b23048c2993d66e4954bb
  }
  
  // Returns true if, when converted to Rec2020 space, all components of `color`
-@@ -330,23 +200,29 @@ bool IsInGamutRec2020(Color color) {
+@@ -330,23 +215,29 @@ bool IsInGamutRec2020(Color color) {
  }  // namespace
  
  bool ColorFunctionParser::ConsumeColorSpaceAndOriginColor(
@@ -281,7 +295,7 @@ index 420aa1d78b3f47e072547d79a3d5e41e46b4efa1..cc3cb6167e4b23048c2993d66e4954bb
      if (color_space_ == Color::ColorSpace::kNone) {
        return false;
      }
-@@ -354,120 +230,106 @@ bool ColorFunctionParser::ConsumeColorSpaceAndOriginColor(
+@@ -354,120 +245,108 @@ bool ColorFunctionParser::ConsumeColorSpaceAndOriginColor(
      color_space_ = ColorSpaceFromFunctionName(function_id);
    }
  
@@ -327,7 +341,8 @@ index 420aa1d78b3f47e072547d79a3d5e41e46b4efa1..cc3cb6167e4b23048c2993d66e4954bb
 +
 +  if (unresolved_origin_color_) {
 +    origin_color_ = TryResolveAtParseTime(*unresolved_origin_color_);
-+    if (origin_color_.has_value()) {
++    if (origin_color_.has_value() &&
++        !RuntimeEnabledFeatures::CSSRelativeColorLateResolveAlwaysEnabled()) {
 +      origin_color_->ConvertToColorSpace(color_space_);
 +      // Relative color syntax requires "channel keyword" substitutions for
 +      // color channels. Each color space has three "channel keywords", plus
@@ -369,7 +384,8 @@ index 420aa1d78b3f47e072547d79a3d5e41e46b4efa1..cc3cb6167e4b23048c2993d66e4954bb
 +          {CSSValueID::kAlpha, origin_color_->Alpha()},
 +      };
 +    } else {
-+      if (!RuntimeEnabledFeatures::
++      if (!origin_color_.has_value() &&
++          !RuntimeEnabledFeatures::
 +              CSSRelativeColorSupportsCurrentcolorEnabled()) {
 +        return false;
 +      }
@@ -407,13 +423,13 @@ index 420aa1d78b3f47e072547d79a3d5e41e46b4efa1..cc3cb6167e4b23048c2993d66e4954bb
 -    if ((channels_[i] = ConsumeHue(args, context))) {
 +    if ((unresolved_channels_[i] =
 +             css_parsing_utils::ConsumeAngle(stream, context, std::nullopt))) {
-+      channel_types_[i] = ChannelType::kNumber;
-+    } else if ((unresolved_channels_[i] = css_parsing_utils::ConsumeNumber(
-+                    stream, context, CSSPrimitiveValue::ValueRange::kAll))) {
        channel_types_[i] = ChannelType::kNumber;
 -    } else if (is_relative_color_) {
 -      if ((channels_[i] = ConsumeRelativeColorChannel(
 -               args, context, color_channel_map_, {kCalcNumber, kCalcAngle}))) {
++    } else if ((unresolved_channels_[i] = css_parsing_utils::ConsumeNumber(
++                    stream, context, CSSPrimitiveValue::ValueRange::kAll))) {
++      channel_types_[i] = ChannelType::kNumber;
 +    } else if (IsRelativeColor()) {
 +      if ((unresolved_channels_[i] =
 +               ConsumeRelativeColorChannel(stream, context, color_channel_map_,
@@ -469,7 +485,7 @@ index 420aa1d78b3f47e072547d79a3d5e41e46b4efa1..cc3cb6167e4b23048c2993d66e4954bb
               function_metadata_->channel_percentage[i]))) {
        return true;
      }
-@@ -477,62 +339,46 @@ bool ColorFunctionParser::ConsumeChannel(CSSParserTokenRange& args,
+@@ -477,62 +356,46 @@ bool ColorFunctionParser::ConsumeChannel(CSSParserTokenRange& args,
    return false;
  }
  
@@ -548,7 +564,7 @@ index 420aa1d78b3f47e072547d79a3d5e41e46b4efa1..cc3cb6167e4b23048c2993d66e4954bb
          // Clamp to [0, 1] range, but allow out-of-gamut relative colors.
          channels_[i].value() =
              ClampTo<double>(channels_[i].value(), 0.0, 255.0);
-@@ -544,25 +390,14 @@ bool ColorFunctionParser::MakePerColorSpaceAdjustments() {
+@@ -544,25 +407,14 @@ bool ColorFunctionParser::MakePerColorSpaceAdjustments() {
      // See compositing/background-color/background-color-alpha.html for example.
      // Ideally we would allow alpha to be any float value, but we have to clean
      // up all spots where this compression happens before this is possible.
@@ -575,7 +591,7 @@ index 420aa1d78b3f47e072547d79a3d5e41e46b4efa1..cc3cb6167e4b23048c2993d66e4954bb
        // Raw numbers are interpreted as percentages in these color spaces.
        if (channels_[i].has_value()) {
          channels_[i] = channels_[i].value() / 100.0;
-@@ -573,109 +408,259 @@ bool ColorFunctionParser::MakePerColorSpaceAdjustments() {
+@@ -573,109 +425,263 @@ bool ColorFunctionParser::MakePerColorSpaceAdjustments() {
        }
      }
    }
@@ -851,10 +867,14 @@ index 420aa1d78b3f47e072547d79a3d5e41e46b4efa1..cc3cb6167e4b23048c2993d66e4954bb
    }
 +  stream.ConsumeWhitespace();
 +
-+  // We should be able to resolve channel values for all non-relative colors
-+  // and all relative colors where the origin color is resolvable at parse
-+  // time.
-+  if (!IsRelativeColor() || origin_color_.has_value()) {
++  // For non-relative colors, resolve channel values at parse time.
++  // For relative colors:
++  // - (Legacy behavior) Resolve channel values at parse time if the origin
++  //   color is resolvable at parse time.
++  // - (WPT-compliant behavior) Always defer resolution until used-value time.
++  if (!IsRelativeColor() ||
++      (origin_color_.has_value() &&
++       !RuntimeEnabledFeatures::CSSRelativeColorLateResolveAlwaysEnabled())) {
 +    // Resolve channel values.
 +    for (int i = 0; i < 3; i++) {
 +      if (channel_types_[i] != ChannelType::kNone) {
@@ -910,7 +930,7 @@ index 420aa1d78b3f47e072547d79a3d5e41e46b4efa1..cc3cb6167e4b23048c2993d66e4954bb
      context.Count(WebFeature::kCSSRelativeColor);
    } else {
      switch (color_space_) {
-@@ -685,20 +670,16 @@ CSSValue* ColorFunctionParser::ConsumeFunctionalSyntaxColorInternal(
+@@ -685,20 +691,16 @@ CSSValue* ColorFunctionParser::ConsumeFunctionalSyntaxColorInternal(
        case Color::ColorSpace::kA98RGB:
        case Color::ColorSpace::kProPhotoRGB:
        case Color::ColorSpace::kRec2020:
@@ -937,7 +957,7 @@ index 420aa1d78b3f47e072547d79a3d5e41e46b4efa1..cc3cb6167e4b23048c2993d66e4954bb
          }
          break;
        case Color::ColorSpace::kXYZD50:
-@@ -713,7 +694,13 @@ CSSValue* ColorFunctionParser::ConsumeFunctionalSyntaxColorInternal(
+@@ -713,7 +715,13 @@ CSSValue* ColorFunctionParser::ConsumeFunctionalSyntaxColorInternal(
      }
    }
  

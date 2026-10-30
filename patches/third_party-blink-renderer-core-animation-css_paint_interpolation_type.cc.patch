@@ -1,0 +1,21 @@
+diff --git a/third_party/blink/renderer/core/animation/css_paint_interpolation_type.cc b/third_party/blink/renderer/core/animation/css_paint_interpolation_type.cc
+index 7d1a2c017db8d905ef40ed882695bc70736fa4b5..d47acab59720da7b18f36c27a5ce29328a9e98af 100644
+--- a/third_party/blink/renderer/core/animation/css_paint_interpolation_type.cc
++++ b/third_party/blink/renderer/core/animation/css_paint_interpolation_type.cc
+@@ -134,15 +134,8 @@ InterpolationValue CSSPaintInterpolationType::MaybeConvertValue(
+     const CSSValue& value,
+     const StyleResolverState* state,
+     ConversionCheckers&) const {
+-  mojom::blink::ColorScheme color_scheme =
+-      state ? state->StyleBuilder().UsedColorScheme()
+-            : mojom::blink::ColorScheme::kLight;
+-  const ui::ColorProvider* color_provider =
+-      state ? state->GetDocument().GetColorProviderForPainting(color_scheme)
+-            : nullptr;
+   InterpolableValue* interpolable_color =
+-      CSSColorInterpolationType::MaybeCreateInterpolableColor(
+-          value, color_scheme, color_provider);
++      CSSColorInterpolationType::MaybeCreateInterpolableColor(value, state);
+   if (!interpolable_color)
+     return nullptr;
+   return InterpolationValue(interpolable_color);

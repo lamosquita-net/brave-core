@@ -1,0 +1,21 @@
+diff --git a/third_party/blink/renderer/core/animation/css_filter_list_interpolation_type.cc b/third_party/blink/renderer/core/animation/css_filter_list_interpolation_type.cc
+index ead754889786cbe8a0122ee33ff6913c9ab0bd26..cb2ec60b48cabc3c39ca1aba92b93f3f97dcaf49 100644
+--- a/third_party/blink/renderer/core/animation/css_filter_list_interpolation_type.cc
++++ b/third_party/blink/renderer/core/animation/css_filter_list_interpolation_type.cc
+@@ -198,14 +198,8 @@ InterpolationValue CSSFilterListInterpolationType::MaybeConvertValue(
+   wtf_size_t length = list.length();
+   auto* interpolable_list = MakeGarbageCollected<InterpolableList>(length);
+   for (wtf_size_t i = 0; i < length; i++) {
+-    mojom::blink::ColorScheme color_scheme =
+-        state ? state->StyleBuilder().UsedColorScheme()
+-              : mojom::blink::ColorScheme::kLight;
+-    const ui::ColorProvider* color_provider =
+-        state ? state->GetDocument().GetColorProviderForPainting(color_scheme)
+-              : nullptr;
+-    InterpolableFilter* result = InterpolableFilter::MaybeConvertCSSValue(
+-        list.Item(i), color_scheme, color_provider);
++    InterpolableFilter* result =
++        InterpolableFilter::MaybeConvertCSSValue(list.Item(i), state);
+     if (!result) {
+       return nullptr;
+     }

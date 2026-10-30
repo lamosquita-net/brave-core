@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/animation/css_color_interpolation_type.cc b/third_party/blink/renderer/core/animation/css_color_interpolation_type.cc
-index af246d4544c61767b880df38a4a26637a2c4bb87..fa48960b7e5cec576e338392ec9a00391a25e4d3 100644
+index af246d4544c61767b880df38a4a26637a2c4bb87..059b251c0aaa0324e7f64d08fe0f15901deff272 100644
 --- a/third_party/blink/renderer/core/animation/css_color_interpolation_type.cc
 +++ b/third_party/blink/renderer/core/animation/css_color_interpolation_type.cc
-@@ -65,12 +65,24 @@ void CSSColorInterpolationType::EnsureCompatibleInterpolableColorTypes(
+@@ -13,6 +13,7 @@
+ #include "third_party/blink/renderer/core/animation/interpolable_value.h"
+ #include "third_party/blink/renderer/core/css/css_color.h"
+ #include "third_party/blink/renderer/core/css/css_identifier_value.h"
++#include "third_party/blink/renderer/core/css/resolver/style_builder_converter.h"
+ #include "third_party/blink/renderer/core/css/resolver/style_resolver.h"
+ #include "third_party/blink/renderer/core/css/resolver/style_resolver_state.h"
+ #include "third_party/blink/renderer/core/style/computed_style.h"
+@@ -65,12 +66,24 @@ void CSSColorInterpolationType::EnsureCompatibleInterpolableColorTypes(
      InterpolableList& list_b) {
    CHECK_EQ(list_a.length(), list_b.length());
    for (wtf_size_t i = 0; i < list_a.length(); i++) {
@@ -29,7 +37,7 @@ index af246d4544c61767b880df38a4a26637a2c4bb87..fa48960b7e5cec576e338392ec9a0039
    }
  }
  
-@@ -103,7 +115,7 @@ BaseInterpolableColor* CSSColorInterpolationType::CreateBaseInterpolableColor(
+@@ -103,7 +116,7 @@ BaseInterpolableColor* CSSColorInterpolationType::CreateBaseInterpolableColor(
      const StyleColor& color,
      mojom::blink::ColorScheme color_scheme,
      const ui::ColorProvider* color_provider) {
@@ -38,7 +46,77 @@ index af246d4544c61767b880df38a4a26637a2c4bb87..fa48960b7e5cec576e338392ec9a0039
      return InterpolableStyleColor::Create(color);
    }
    return CreateInterpolableColor(color, color_scheme, color_provider);
-@@ -386,7 +398,6 @@ void CSSColorInterpolationType::Composite(
+@@ -111,22 +124,42 @@ BaseInterpolableColor* CSSColorInterpolationType::CreateBaseInterpolableColor(
+ 
+ InterpolableColor* CSSColorInterpolationType::MaybeCreateInterpolableColor(
+     const CSSValue& value,
+-    mojom::blink::ColorScheme color_scheme,
+-    const ui::ColorProvider* color_provider) {
++    const StyleResolverState* state) {
+   if (auto* color_value = DynamicTo<cssvalue::CSSColor>(value)) {
+     return CreateInterpolableColor(color_value->Value());
+   }
++
++  mojom::blink::ColorScheme color_scheme =
++      state ? state->StyleBuilder().UsedColorScheme()
++            : mojom::blink::ColorScheme::kLight;
++  const ui::ColorProvider* color_provider =
++      state ? state->GetDocument().GetColorProviderForPainting(color_scheme)
++            : nullptr;
++
+   auto* identifier_value = DynamicTo<CSSIdentifierValue>(value);
+-  if (!identifier_value)
+-    return nullptr;
++  if (identifier_value &&
++      StyleColor::IsColorKeyword(identifier_value->GetValueID())) {
++    return CreateInterpolableColor(identifier_value->GetValueID(), color_scheme,
++                                   color_provider);
++  }
+ 
+-  // TODO(crbug.com/1500708): Handle unresolved-color-mix. CSS-animations go
+-  // through this code path. Unresolved color-mix results in a discrete
+-  // animation.
+-  if (!StyleColor::IsColorKeyword(identifier_value->GetValueID()))
+-    return nullptr;
+-  return CreateInterpolableColor(identifier_value->GetValueID(), color_scheme,
+-                                 color_provider);
++  if (state && (value.IsLightDarkValuePair() || value.IsColorMixValue() ||
++                value.IsRelativeColorValue())) {
++    ResolveColorValueContext context{
++        .length_resolver = state->CssToLengthConversionData(),
++        .text_link_colors = state->GetDocument().GetTextLinkColors(),
++        .used_color_scheme = color_scheme,
++        .color_provider = color_provider};
++    StyleColor style_color = ResolveColorValue(value, context);
++    if (!style_color.IsUnresolvedColorFunction()) {
++      return CreateInterpolableColor(style_color.GetColor());
++    }
++    // TODO(crbug.com/40940960): Handle unresolved-color-mix and unresolved
++    // relative colors. CSS-animations go through this code path. Unresolved
++    // color-mix and unresolved relative colors result in a discrete animation.
++  }
++
++  return nullptr;
+ }
+ 
+ Color CSSColorInterpolationType::GetColor(const InterpolableValue& value) {
+@@ -255,14 +288,8 @@ InterpolationValue CSSColorInterpolationType::MaybeConvertValue(
+     }
+   }
+ 
+-  mojom::blink::ColorScheme color_scheme =
+-      state ? state->StyleBuilder().UsedColorScheme()
+-            : mojom::blink::ColorScheme::kLight;
+-  const ui::ColorProvider* color_provider =
+-      state ? state->GetDocument().GetColorProviderForPainting(color_scheme)
+-            : nullptr;
+   InterpolableColor* interpolable_color =
+-      MaybeCreateInterpolableColor(value, color_scheme, color_provider);
++      MaybeCreateInterpolableColor(value, state);
+   if (!interpolable_color) {
+     return nullptr;
+   }
+@@ -386,7 +413,6 @@ void CSSColorInterpolationType::Composite(
      auto& underlying =
          To<BaseInterpolableColor>(*underlying_list.GetMutable(i));
      auto& other = To<BaseInterpolableColor>(*other_list.Get(i));

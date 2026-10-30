@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/geometry/calculation_expression_node.h b/third_party/blink/renderer/platform/geometry/calculation_expression_node.h
-index 5edfc43020a77f9a8fc7243858e336837440ac07..35bfc1ea830fd5f58824615ac2baf7099a01b275 100644
+index 5edfc43020a77f9a8fc7243858e336837440ac07..b0e0131141fe43fc81503afd620e95199957f0c4 100644
 --- a/third_party/blink/renderer/platform/geometry/calculation_expression_node.h
 +++ b/third_party/blink/renderer/platform/geometry/calculation_expression_node.h
 @@ -43,8 +43,7 @@ enum class CalculationOperator {
@@ -12,7 +12,15 @@ index 5edfc43020a77f9a8fc7243858e336837440ac07..35bfc1ea830fd5f58824615ac2baf709
    bool operator==(const CalculationExpressionNode& other) const {
      return Equals(other);
    }
-@@ -72,6 +71,7 @@ class PLATFORM_EXPORT CalculationExpressionNode
+@@ -64,6 +63,7 @@ class PLATFORM_EXPORT CalculationExpressionNode
+   // calc-size() act as though it has a percent.
+   bool HasPercent() const { return has_percent_; }
+   bool HasPercentOrStretch() const { return has_percent_ || has_stretch_; }
++  bool HasColorChannelKeyword() const { return has_color_channel_keyword_; }
+ 
+   virtual bool HasMinContent() const { return false; }
+   virtual bool HasMaxContent() const { return false; }
+@@ -72,6 +72,7 @@ class PLATFORM_EXPORT CalculationExpressionNode
    virtual bool IsNumber() const { return false; }
    virtual bool IsIdentifier() const { return false; }
    virtual bool IsSizingKeyword() const { return false; }
@@ -20,7 +28,15 @@ index 5edfc43020a77f9a8fc7243858e336837440ac07..35bfc1ea830fd5f58824615ac2baf709
    virtual bool IsPixelsAndPercent() const { return false; }
    virtual bool IsOperation() const { return false; }
  
-@@ -110,7 +110,7 @@ class PLATFORM_EXPORT CalculationExpressionNumberNode final
+@@ -96,6 +97,7 @@ class PLATFORM_EXPORT CalculationExpressionNode
+   bool has_auto_ = false;
+   bool has_percent_ = false;
+   bool has_stretch_ = false;
++  bool has_color_channel_keyword_ = false;
+ };
+ 
+ class PLATFORM_EXPORT CalculationExpressionNumberNode final
+@@ -110,7 +112,7 @@ class PLATFORM_EXPORT CalculationExpressionNumberNode final
    float Value() const { return value_; }
  
    // Implement |CalculationExpressionNode|:
@@ -29,7 +45,7 @@ index 5edfc43020a77f9a8fc7243858e336837440ac07..35bfc1ea830fd5f58824615ac2baf709
    bool Equals(const CalculationExpressionNode& other) const final;
    scoped_refptr<const CalculationExpressionNode> Zoom(
        double factor) const final;
-@@ -145,13 +145,13 @@ class PLATFORM_EXPORT CalculationExpressionIdentifierNode final
+@@ -145,13 +147,13 @@ class PLATFORM_EXPORT CalculationExpressionIdentifierNode final
    const AtomicString& Value() const { return identifier_; }
  
    // Implement |CalculationExpressionNode|:
@@ -47,7 +63,7 @@ index 5edfc43020a77f9a8fc7243858e336837440ac07..35bfc1ea830fd5f58824615ac2baf709
    }
    scoped_refptr<const CalculationExpressionNode> Zoom(
        double factor) const final {
-@@ -198,11 +198,11 @@ class PLATFORM_EXPORT CalculationExpressionSizingKeywordNode final
+@@ -198,11 +200,11 @@ class PLATFORM_EXPORT CalculationExpressionSizingKeywordNode final
    Keyword Value() const { return keyword_; }
  
    // Implement |CalculationExpressionNode|:
@@ -63,7 +79,7 @@ index 5edfc43020a77f9a8fc7243858e336837440ac07..35bfc1ea830fd5f58824615ac2baf709
    }
    scoped_refptr<const CalculationExpressionNode> Zoom(
        double factor) const final {
-@@ -242,6 +242,43 @@ struct DowncastTraits<CalculationExpressionSizingKeywordNode> {
+@@ -242,6 +244,43 @@ struct DowncastTraits<CalculationExpressionSizingKeywordNode> {
    }
  };
  
@@ -107,7 +123,7 @@ index 5edfc43020a77f9a8fc7243858e336837440ac07..35bfc1ea830fd5f58824615ac2baf709
  class PLATFORM_EXPORT CalculationExpressionPixelsAndPercentNode final
      : public CalculationExpressionNode {
   public:
-@@ -262,7 +299,7 @@ class PLATFORM_EXPORT CalculationExpressionPixelsAndPercentNode final
+@@ -262,7 +301,7 @@ class PLATFORM_EXPORT CalculationExpressionPixelsAndPercentNode final
    bool HasExplicitPercent() const { return value_.has_explicit_percent; }
  
    // Implement |CalculationExpressionNode|:
@@ -116,7 +132,7 @@ index 5edfc43020a77f9a8fc7243858e336837440ac07..35bfc1ea830fd5f58824615ac2baf709
    bool Equals(const CalculationExpressionNode& other) const final;
    scoped_refptr<const CalculationExpressionNode> Zoom(
        double factor) const final;
-@@ -300,7 +337,7 @@ class PLATFORM_EXPORT CalculationExpressionOperationNode final
+@@ -300,7 +339,7 @@ class PLATFORM_EXPORT CalculationExpressionOperationNode final
    CalculationOperator GetOperator() const { return operator_; }
  
    // Implement |CalculationExpressionNode|:

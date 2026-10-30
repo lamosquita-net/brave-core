@@ -1,0 +1,24 @@
+diff --git a/third_party/blink/renderer/core/animation/interpolable_filter.cc b/third_party/blink/renderer/core/animation/interpolable_filter.cc
+index 72dc660e8b0326d7a10b07b08dd0eff3989a2b42..bac280c0ead806f44d58a47baf0fa818ecf5a8f4 100644
+--- a/third_party/blink/renderer/core/animation/interpolable_filter.cc
++++ b/third_party/blink/renderer/core/animation/interpolable_filter.cc
+@@ -91,8 +91,7 @@ InterpolableFilter* InterpolableFilter::MaybeCreate(
+ // static
+ InterpolableFilter* InterpolableFilter::MaybeConvertCSSValue(
+     const CSSValue& css_value,
+-    mojom::blink::ColorScheme color_scheme,
+-    const ui::ColorProvider* color_provider) {
++    const StyleResolverState* state) {
+   if (css_value.IsURIValue())
+     return nullptr;
+ 
+@@ -122,8 +121,7 @@ InterpolableFilter* InterpolableFilter::MaybeConvertCSSValue(
+       break;
+ 
+     case FilterOperation::OperationType::kDropShadow:
+-      value = InterpolableShadow::MaybeConvertCSSValue(
+-          filter.Item(0), color_scheme, color_provider);
++      value = InterpolableShadow::MaybeConvertCSSValue(filter.Item(0), state);
+       break;
+ 
+     default:
