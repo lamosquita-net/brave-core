@@ -1,0 +1,31 @@
+diff --git a/third_party/blink/renderer/core/view_transition/view_transition_style_tracker.h b/third_party/blink/renderer/core/view_transition/view_transition_style_tracker.h
+index ee2b77ef89f4bce014d66efa85f408fa0adb523c..5776fd7f122ce627c2ad5fa38a7119cad8676b17 100644
+--- a/third_party/blink/renderer/core/view_transition/view_transition_style_tracker.h
++++ b/third_party/blink/renderer/core/view_transition/view_transition_style_tracker.h
+@@ -6,6 +6,7 @@
+ #define THIRD_PARTY_BLINK_RENDERER_CORE_VIEW_TRANSITION_VIEW_TRANSITION_STYLE_TRACKER_H_
+ 
+ #include "base/containers/flat_map.h"
++#include "base/token.h"
+ #include "base/unguessable_token.h"
+ #include "cc/layers/view_transition_content_layer.h"
+ #include "components/viz/common/view_transition_element_resource_id.h"
+@@ -292,6 +293,7 @@ class ViewTransitionStyleTracker
+   bool FlattenAndVerifyElements(VectorOf<Element>&, VectorOf<AtomicString>&);
+ 
+   void AddTransitionElementsFromCSSRecursive(PaintLayer*, const TreeScope*);
++  AtomicString GenerateMatchElementName(Element&);
+ 
+   void InvalidateHitTestingCache();
+ 
+@@ -322,6 +324,10 @@ class ViewTransitionStyleTracker
+ 
+   const blink::ViewTransitionToken transition_token_;
+ 
++  // Random part of the names generated for `view-transition-name:
++  // match-element`, so they never match those of another document.
++  base::Token match_element_token_;
++
+   // Set if this style tracker was created by deserializing captured state
+   // instead of running through the capture phase. This is done for transitions
+   // initiated by navigations where capture and animation could run in different
