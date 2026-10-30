@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_cascade.cc b/third_party/blink/renderer/core/css/resolver/style_cascade.cc
-index bdb4709b5da753411687e8bcfe2d5cf183382cfd..64c76e4b5479aa2da440780cd86242575a281cd2 100644
+index bdb4709b5da753411687e8bcfe2d5cf183382cfd..f72076c6db81f20e0e5cac3414c79dc5644f6028 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_cascade.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_cascade.cc
 @@ -10,6 +10,7 @@
@@ -403,6 +403,15 @@ index bdb4709b5da753411687e8bcfe2d5cf183382cfd..64c76e4b5479aa2da440780cd8624257
                             *GetParserContext(*shorthand_value),
                             FunctionContext{}, sequence)) {
        return cssvalue::CSSUnsetValue::Create();
+@@ -1330,7 +1274,7 @@ const CSSValue* StyleCascade::ResolveRevertLayer(const CSSProperty& property,
+                                                  CascadeResolver& resolver) {
+   const CascadePriority* p = map_.FindRevertLayer(
+       property.GetCSSPropertyName(), priority.ForLayerComparison());
+-  if (!p) {
++  if (!p || !p->HasOrigin()) {
+     origin = CascadeOrigin::kNone;
+     return cssvalue::CSSUnsetValue::Create();
+   }
 @@ -1351,7 +1295,7 @@ const CSSValue* StyleCascade::ResolveFlipRevert(const CSSProperty& property,
    // Note: the value is transformed *from* the property we're reverting *to*.
    const CSSValue* flipped = TryValueFlips::FlipValue(

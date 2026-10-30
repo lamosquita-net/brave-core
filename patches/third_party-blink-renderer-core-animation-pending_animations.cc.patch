@@ -1,0 +1,21 @@
+diff --git a/third_party/blink/renderer/core/animation/pending_animations.cc b/third_party/blink/renderer/core/animation/pending_animations.cc
+index b936c9f9ebccca715c75c747783739a3fcec033a..3dffde2fbaf9c2d3662500f17cb13f3653def78b 100644
+--- a/third_party/blink/renderer/core/animation/pending_animations.cc
++++ b/third_party/blink/renderer/core/animation/pending_animations.cc
+@@ -95,12 +95,13 @@ bool PendingAnimations::Update(
+         continue;
+       }
+ 
+-      if (animation->Playing() && !animation->StartTimeInternal() &&
+-          has_monotonic_timeline) {
++      if (animation->Playing() && !animation->StartTimeInternal()) {
+         // Scroll timelines get their start time set during timeline validation
+         // and do not need to be added to the list. Once the start time is set
+         // they must be re-added to the pending animations.
+-        waiting_for_start_time.push_back(animation.Get());
++        if (has_monotonic_timeline) {
++          waiting_for_start_time.push_back(animation.Get());
++        }
+       } else if (animation->PendingInternal()) {
+         DCHECK(animation->TimelineInternal()->IsActive() &&
+                animation->TimelineInternal()->CurrentTime() &&

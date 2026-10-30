@@ -1,15 +1,57 @@
 diff --git a/third_party/blink/renderer/core/html/closewatcher/close_watcher.h b/third_party/blink/renderer/core/html/closewatcher/close_watcher.h
-index ab63d176941fdf06f710985b1d6e5a94db7fdeb2..44c44062e8bf089a092fabe6001c2c40f187633b 100644
+index ab63d176941fdf06f710985b1d6e5a94db7fdeb2..b7c1fec75e9289c5d9e7cdf07dda24e612cb8346 100644
 --- a/third_party/blink/renderer/core/html/closewatcher/close_watcher.h
 +++ b/third_party/blink/renderer/core/html/closewatcher/close_watcher.h
-@@ -36,9 +36,16 @@ class CloseWatcher final : public EventTarget, public ExecutionContextClient {
+@@ -30,27 +30,6 @@ class CloseWatcher final : public EventTarget, public ExecutionContextClient {
  
-   bool IsClosed() const { return state_ == State::kClosed; }
+   static CloseWatcher* Create(LocalDOMWindow&);
  
+-  explicit CloseWatcher(LocalDOMWindow&);
+-
+-  void Trace(Visitor*) const override;
+-
+-  bool IsClosed() const { return state_ == State::kClosed; }
+-
 -  // Note: return value is not exposed to JS via IDL; it's only for internal
 -  // use.
 -  bool requestClose();
-+  void setEnabled(bool enabled) { enabled_ = enabled; }
+-  void close();
+-  void destroy();
+-
+-  DEFINE_ATTRIBUTE_EVENT_LISTENER(cancel, kCancel)
+-  DEFINE_ATTRIBUTE_EVENT_LISTENER(close, kClose)
+-
+-  // EventTarget overrides:
+-  const AtomicString& InterfaceName() const final;
+-  ExecutionContext* GetExecutionContext() const final {
+-    return ExecutionContextClient::GetExecutionContext();
+-  }
+-
+   // If multiple close watchers are active in a given window, they form a stack
+   // of groups of close watchers. Groups close together in response to a single
+   // close request, and new close watchers are either added to the topmost group
+@@ -70,6 +49,10 @@ class CloseWatcher final : public EventTarget, public ExecutionContextClient {
+ 
+     void EscapeKeyHandler(KeyboardEvent*);
+ 
++    bool AnyEnabledWatchers();
++    void MaybeCloseReceiver();
++    void BindNewPipe();
++
+    private:
+     // mojom::blink::CloseListener override:
+     void Signal() final;
+@@ -84,6 +67,34 @@ class CloseWatcher final : public EventTarget, public ExecutionContextClient {
+     Member<LocalDOMWindow> window_;
+   };
+ 
++  CloseWatcher(LocalDOMWindow&, WatcherStack& stack);
++
++  void Trace(Visitor*) const override;
++
++  bool IsClosed() const { return state_ == State::kClosed; }
++
++  void setEnabled(bool enabled);
 +
 +  void requestCloseForBinding();
 +
@@ -19,14 +61,28 @@ index ab63d176941fdf06f710985b1d6e5a94db7fdeb2..44c44062e8bf089a092fabe6001c2c40
 +  };
 +  bool RequestClose(AllowCancel allow_cancel);
 +
-   void close();
-   void destroy();
- 
-@@ -92,6 +99,7 @@ class CloseWatcher final : public EventTarget, public ExecutionContextClient {
++  void close();
++  void destroy();
++
++  DEFINE_ATTRIBUTE_EVENT_LISTENER(cancel, kCancel)
++  DEFINE_ATTRIBUTE_EVENT_LISTENER(close, kClose)
++
++  // EventTarget overrides:
++  const AtomicString& InterfaceName() const final;
++  ExecutionContext* GetExecutionContext() const final {
++    return ExecutionContextClient::GetExecutionContext();
++  }
++
+  private:
+   static CloseWatcher* CreateInternal(LocalDOMWindow&,
+                                       WatcherStack&,
+@@ -92,7 +103,9 @@ class CloseWatcher final : public EventTarget, public ExecutionContextClient {
    enum class State { kActive, kClosed };
    State state_ = State::kActive;
    bool dispatching_cancel_ = false;
 +  bool enabled_ = true;
    Member<AbortSignal::AlgorithmHandle> abort_handle_;
++  Member<WatcherStack> stack_;
  };
  
+ }  // namespace blink
