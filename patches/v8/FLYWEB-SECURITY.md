@@ -1,3 +1,16 @@
+# FlyWeb: own crash fix, Float16Array in Blink 128 (MOTOR-39, 30-10-2026; enters 2.5.0)
+
+Not a V8 change, noted here because it comes from a V8 flag. Since 2.4.0, gin turns on `--js-float16array`; a
+`Float16Array` passed to a Blink API (e.g. `crypto.getRandomValues(new Float16Array(4))`) reached the
+`NOTREACHED_IN_MIGRATION()` in `ToDOMArrayBufferView`, which is fatal in release in 128 (`kNotReachedIsFatal`): any page
+could crash its renderer (DoS only; no memory corruption found). Fix: brave-core `nube/float16-abv` f7a89181a (part of
+Chromium 130: `DOMFloat16Array`, `kTypeFloat16`, `ABVTrait`, `ReadableByteStreamController`), merged into
+`nube/motor-137` (d7ad12b4b). The other gin flags were checked for the same pattern (MOTOR-40, FM.52): no risk.
+`--js-explicit-resource-management` adds no public V8 type (DisposableStack is internal; structured clone throws
+`DataCloneError`, SuppressedError serializes as a plain `Error`; the use counters 164-166 hit the `default:` of
+`use_counter_callback.cc`); `--js-regexp-escape` only adds a static function and is already shipping in 13.7.
+Not yet tested in a renderer: `structuredClone(new DisposableStack())`, `postMessage(new SuppressedError(1, 2))`.
+
 # FlyWeb: FS.37 (rule 17 of level 136), post-136 V8 fixes on 13.6.233.10
 
 SEGURIDAD-PORTES-14, 30-10-2026 (brave-core `seg/fs37-v8` on `nube/motor-136` 1747f79f). Base: 13.6.233.10 + the 235
