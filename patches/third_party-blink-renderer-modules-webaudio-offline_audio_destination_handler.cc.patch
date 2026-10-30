@@ -1,0 +1,20 @@
+diff --git a/third_party/blink/renderer/modules/webaudio/offline_audio_destination_handler.cc b/third_party/blink/renderer/modules/webaudio/offline_audio_destination_handler.cc
+index b9678035fe29941e22aa28e6e68a34ccdbce3c0a..c0b54d970623726c56114606872496fc2f277a63 100644
+--- a/third_party/blink/renderer/modules/webaudio/offline_audio_destination_handler.cc
++++ b/third_party/blink/renderer/modules/webaudio/offline_audio_destination_handler.cc
+@@ -365,6 +365,15 @@ void OfflineAudioDestinationHandler::PrepareTaskRunnerForRendering() {
+   DCHECK(render_thread_task_runner_);
+ }
+ 
++void OfflineAudioDestinationHandler::PrepareTaskRunnerForWorklet() {
++  CHECK(IsMainThread());
++
++  // Updates the render task runner to the AudioWorklet backing thread when a
++  // worklet becomes ready while the context is suspended, ensuring that
++  // rendering resumes on the correct thread.
++  PrepareTaskRunnerForRendering();
++}
++
+ void OfflineAudioDestinationHandler::RestartRendering() {
+   DCHECK(IsMainThread());
+ 

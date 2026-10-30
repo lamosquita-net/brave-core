@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/modules/webaudio/audio_worklet_processor.cc b/third_party/blink/renderer/modules/webaudio/audio_worklet_processor.cc
-index 2b7b358335fd6757ffadce3268adafdf1e2a96ca..088cb5c0f018cb0cdd21180286b387ee8595c47e 100644
+index 2b7b358335fd6757ffadce3268adafdf1e2a96ca..763bcb56c3a735acd77d83058cd7edc9d1046870 100644
 --- a/third_party/blink/renderer/modules/webaudio/audio_worklet_processor.cc
 +++ b/third_party/blink/renderer/modules/webaudio/audio_worklet_processor.cc
 @@ -11,6 +11,7 @@
@@ -18,6 +18,24 @@ index 2b7b358335fd6757ffadce3268adafdf1e2a96ca..088cb5c0f018cb0cdd21180286b387ee
  #include "third_party/blink/renderer/platform/instrumentation/instance_counters.h"
  #include "third_party/blink/renderer/platform/instrumentation/tracing/trace_event.h"
  
+@@ -29,7 +31,7 @@ AudioWorkletProcessor* AudioWorkletProcessor::Create(
+     ExceptionState& exception_state) {
+   AudioWorkletGlobalScope* global_scope = To<AudioWorkletGlobalScope>(context);
+   DCHECK(global_scope);
+-  DCHECK(global_scope->IsContextThread());
++  CHECK(global_scope->IsContextThread());
+ 
+   // Get the stored initialization parameter from the global scope.
+   std::unique_ptr<ProcessorCreationParams> params =
+@@ -69,7 +71,7 @@ bool AudioWorkletProcessor::Process(
+   TRACE_EVENT0(TRACE_DISABLED_BY_DEFAULT("audio-worklet"),
+                "AudioWorkletProcessor::Process");
+ 
+-  DCHECK(global_scope_->IsContextThread());
++  CHECK(global_scope_->IsContextThread());
+   DCHECK(!hasErrorOccurred());
+ 
+   ScriptState* script_state =
 @@ -80,8 +82,6 @@ bool AudioWorkletProcessor::Process(
    v8::MicrotasksScope microtasks_scope(
        isolate, ToMicrotaskQueue(script_state),
