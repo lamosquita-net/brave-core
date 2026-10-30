@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/animation/css_interpolation_types_map.cc b/third_party/blink/renderer/core/animation/css_interpolation_types_map.cc
-index 013338d35e618a18e9e2df4217a96904c9b8ca7e..2cea54304697e3a573e98c229c99818531695403 100644
+index 013338d35e618a18e9e2df4217a96904c9b8ca7e..e7dc2884fa28aefe4b0ae586d9c1e7e17486631f 100644
 --- a/third_party/blink/renderer/core/animation/css_interpolation_types_map.cc
 +++ b/third_party/blink/renderer/core/animation/css_interpolation_types_map.cc
 @@ -51,6 +51,7 @@
@@ -10,7 +10,15 @@ index 013338d35e618a18e9e2df4217a96904c9b8ca7e..2cea54304697e3a573e98c229c998185
  #include "third_party/blink/renderer/core/animation/css_size_list_interpolation_type.h"
  #include "third_party/blink/renderer/core/animation/css_text_indent_interpolation_type.h"
  #include "third_party/blink/renderer/core/animation/css_time_interpolation_type.h"
-@@ -394,6 +395,8 @@ const InterpolationTypes& CSSInterpolationTypesMap::Get(
+@@ -212,6 +213,7 @@ const InterpolationTypes& CSSInterpolationTypesMap::Get(
+       case CSSPropertyID::kOpacity:
+       case CSSPropertyID::kOrder:
+       case CSSPropertyID::kOrphans:
++      case CSSPropertyID::kReadingOrder:
+       case CSSPropertyID::kShapeImageThreshold:
+       case CSSPropertyID::kStopOpacity:
+       case CSSPropertyID::kStrokeMiterlimit:
+@@ -394,6 +396,8 @@ const InterpolationTypes& CSSInterpolationTypesMap::Get(
              std::make_unique<CSSBasicShapeInterpolationType>(used_property));
          applicable_types->push_back(
              std::make_unique<CSSPathInterpolationType>(used_property));
@@ -19,7 +27,7 @@ index 013338d35e618a18e9e2df4217a96904c9b8ca7e..2cea54304697e3a573e98c229c998185
          break;
        case CSSPropertyID::kShapeOutside:
          applicable_types->push_back(
-@@ -509,6 +512,10 @@ CreateInterpolationTypeForCSSSyntax(const CSSSyntaxComponent syntax,
+@@ -509,6 +513,10 @@ CreateInterpolationTypeForCSSSyntax(const CSSSyntaxComponent syntax,
      case CSSSyntaxType::kUrl:
        // Smooth interpolation not supported for these types.
        return nullptr;

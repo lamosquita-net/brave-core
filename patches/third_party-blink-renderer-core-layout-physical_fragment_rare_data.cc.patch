@@ -1,0 +1,20 @@
+diff --git a/third_party/blink/renderer/core/layout/physical_fragment_rare_data.cc b/third_party/blink/renderer/core/layout/physical_fragment_rare_data.cc
+index 95d1e2bfb58ff2d040fc90b8206b627576f81a22..ac215f8ea6b2e007f4441b378b3a4d192d96cb9f 100644
+--- a/third_party/blink/renderer/core/layout/physical_fragment_rare_data.cc
++++ b/third_party/blink/renderer/core/layout/physical_fragment_rare_data.cc
+@@ -24,11 +24,10 @@ PhysicalFragmentRareData::PhysicalFragmentRareData(
+     wtf_size_t num_fields)
+     : table_collapsed_borders_(builder.table_collapsed_borders_),
+       mathml_paint_info_(builder.mathml_paint_info_),
+-      reading_flow_elements_(
+-          builder.reading_flow_elements_.size()
+-              ? MakeGarbageCollected<HeapVector<Member<Element>>>(
+-                    builder.reading_flow_elements_)
+-              : nullptr) {
++      reading_flow_nodes_(builder.reading_flow_nodes_.size()
++                              ? MakeGarbageCollected<HeapVector<Member<Node>>>(
++                                    builder.reading_flow_nodes_)
++                              : nullptr) {
+   field_list_.ReserveInitialCapacity(num_fields);
+ 
+   // Each field should be processed in order of FieldId to avoid vector

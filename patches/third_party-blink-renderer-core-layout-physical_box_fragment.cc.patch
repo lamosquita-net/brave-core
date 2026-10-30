@@ -1,7 +1,16 @@
 diff --git a/third_party/blink/renderer/core/layout/physical_box_fragment.cc b/third_party/blink/renderer/core/layout/physical_box_fragment.cc
-index e82ee5284ac9bc90f58ca418722ab486987b6cfc..e2883a1fe372bbb1a3c3532e57c40bea868722a3 100644
+index e82ee5284ac9bc90f58ca418722ab486987b6cfc..8d70900770375fa98686c33cb0b95ecc07990286 100644
 --- a/third_party/blink/renderer/core/layout/physical_box_fragment.cc
 +++ b/third_party/blink/renderer/core/layout/physical_box_fragment.cc
+@@ -330,7 +330,7 @@ PhysicalBoxFragment::PhysicalBoxFragment(
+       inflow_bounds.has_value() + !!builder->Style().MayHaveMargin();
+ 
+   if (rare_fields_size > 0 || !builder->table_column_geometries_.empty() ||
+-      !builder->reading_flow_elements_.empty()) {
++      !builder->reading_flow_nodes_.empty()) {
+     rare_data_ = MakeGarbageCollected<PhysicalFragmentRareData>(
+         has_scrollable_overflow ? &scrollable_overflow : nullptr, borders,
+         scrollbar, padding, inflow_bounds, *builder, rare_fields_size);
 @@ -839,8 +839,10 @@ void PhysicalBoxFragment::MutableForOofFragmentation::Merge(
      if (!fragment_.oof_data_) {
        fragment_.oof_data_ = MakeGarbageCollected<OofData>();

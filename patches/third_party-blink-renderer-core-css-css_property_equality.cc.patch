@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/css_property_equality.cc b/third_party/blink/renderer/core/css/css_property_equality.cc
-index 211eb5ca4ec32ef2fb0fa798583e16f0847ca335..cc250c156a98761d9b0a9fb2a9168503d0e3dbbf 100644
+index 211eb5ca4ec32ef2fb0fa798583e16f0847ca335..c9f95078fbcd06afae319d9b6e92f08acff345a8 100644
 --- a/third_party/blink/renderer/core/css/css_property_equality.cc
 +++ b/third_party/blink/renderer/core/css/css_property_equality.cc
 @@ -174,7 +174,7 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
@@ -24,7 +24,16 @@ index 211eb5ca4ec32ef2fb0fa798583e16f0847ca335..cc250c156a98761d9b0a9fb2a9168503
      case CSSPropertyID::kInterpolateSize:
        return a.InterpolateSize() == b.InterpolateSize();
      case CSSPropertyID::kIsolation:
-@@ -733,8 +736,10 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
+@@ -598,6 +601,8 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
+       return a.Quotes() == b.Quotes();
+     case CSSPropertyID::kReadingFlow:
+       return a.ReadingFlow() == b.ReadingFlow();
++    case CSSPropertyID::kReadingOrder:
++      return a.ReadingOrder() == b.ReadingOrder();
+     case CSSPropertyID::kResize:
+       return a.Resize() == b.Resize();
+     case CSSPropertyID::kRight:
+@@ -733,8 +738,10 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
        return a.TextUnderlineOffset() == b.TextUnderlineOffset();
      case CSSPropertyID::kTextUnderlinePosition:
        return a.GetTextUnderlinePosition() == b.GetTextUnderlinePosition();
@@ -37,7 +46,7 @@ index 211eb5ca4ec32ef2fb0fa798583e16f0847ca335..cc250c156a98761d9b0a9fb2a9168503
      case CSSPropertyID::kTop:
        return a.Top() == b.Top();
      case CSSPropertyID::kOverlay:
-@@ -915,6 +920,8 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
+@@ -915,6 +922,8 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
                                      b.GetPositionTryFallbacks());
      case CSSPropertyID::kPositionVisibility:
        return a.GetPositionVisibility() == b.GetPositionVisibility();
@@ -46,7 +55,7 @@ index 211eb5ca4ec32ef2fb0fa798583e16f0847ca335..cc250c156a98761d9b0a9fb2a9168503
  
      // These properties are not animateable, but perhaps equality should still
      // be defined for them.
-@@ -1027,6 +1034,7 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
+@@ -1027,6 +1036,7 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
      case CSSPropertyID::kAliasWebkitPaddingStart:
      case CSSPropertyID::kAliasWebkitPerspective:
      case CSSPropertyID::kAliasWebkitPerspectiveOrigin:
@@ -54,7 +63,7 @@ index 211eb5ca4ec32ef2fb0fa798583e16f0847ca335..cc250c156a98761d9b0a9fb2a9168503
      case CSSPropertyID::kAliasWebkitShapeImageThreshold:
      case CSSPropertyID::kAliasWebkitShapeMargin:
      case CSSPropertyID::kAliasWebkitShapeOutside:
-@@ -1068,7 +1076,6 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
+@@ -1068,7 +1078,6 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
      case CSSPropertyID::kWebkitBoxReflect:
      case CSSPropertyID::kWebkitLineBreak:
      case CSSPropertyID::kWebkitMaskBoxImageRepeat:
@@ -62,7 +71,7 @@ index 211eb5ca4ec32ef2fb0fa798583e16f0847ca335..cc250c156a98761d9b0a9fb2a9168503
      case CSSPropertyID::kWebkitRtlOrdering:
      case CSSPropertyID::kWebkitRubyPosition:
      case CSSPropertyID::kWebkitTapHighlightColor:
-@@ -1245,9 +1252,11 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
+@@ -1245,9 +1254,11 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
      case CSSPropertyID::kScrollStart:
      case CSSPropertyID::kScrollStartTarget:
      case CSSPropertyID::kScrollTimeline:

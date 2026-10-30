@@ -1,0 +1,31 @@
+diff --git a/third_party/blink/renderer/core/animation/number_property_functions.cc b/third_party/blink/renderer/core/animation/number_property_functions.cc
+index 700153a44476bb66d3ad1fad8115122bdcddf5fb..01d9f8019df274c243e2ffc64cc609eda5d32fb8 100644
+--- a/third_party/blink/renderer/core/animation/number_property_functions.cc
++++ b/third_party/blink/renderer/core/animation/number_property_functions.cc
+@@ -32,6 +32,8 @@ std::optional<double> NumberPropertyFunctions::GetNumber(
+       return style.Order();
+     case CSSPropertyID::kOrphans:
+       return style.Orphans();
++    case CSSPropertyID::kReadingOrder:
++      return style.ReadingOrder();
+     case CSSPropertyID::kShapeImageThreshold:
+       return style.ShapeImageThreshold();
+     case CSSPropertyID::kStopOpacity:
+@@ -112,6 +114,7 @@ double NumberPropertyFunctions::ClampNumber(const CSSProperty& property,
+       return ClampTo<uint16_t>(round(value), 1);
+ 
+     case CSSPropertyID::kOrder:
++    case CSSPropertyID::kReadingOrder:
+     case CSSPropertyID::kZIndex:
+       return ClampTo<int>(RoundHalfTowardsPositiveInfinity(value));
+ 
+@@ -153,6 +156,9 @@ bool NumberPropertyFunctions::SetNumber(const CSSProperty& property,
+     case CSSPropertyID::kOrphans:
+       builder.SetOrphans(value);
+       return true;
++    case CSSPropertyID::kReadingOrder:
++      builder.SetReadingOrder(value);
++      return true;
+     case CSSPropertyID::kShapeImageThreshold:
+       builder.SetShapeImageThreshold(value);
+       return true;

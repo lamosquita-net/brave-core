@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_box.cc b/third_party/blink/renderer/core/layout/layout_box.cc
-index d2ea5eabc04227ec1ace4430604ceaeea097c4e5..09db77d079d8bc7501a9270d84bb331b0ce791ee 100644
+index d2ea5eabc04227ec1ace4430604ceaeea097c4e5..dc8f9397366c57e671631ee9a32927d150afb84e 100644
 --- a/third_party/blink/renderer/core/layout/layout_box.cc
 +++ b/third_party/blink/renderer/core/layout/layout_box.cc
 @@ -1516,7 +1516,7 @@ void LayoutBox::Autoscroll(const PhysicalOffset& position_in_root_frame) {
@@ -78,3 +78,27 @@ index d2ea5eabc04227ec1ace4430604ceaeea097c4e5..09db77d079d8bc7501a9270d84bb331b
  const HeapHashSet<Member<Element>>* LayoutBox::DisplayLocksAffectedByAnchors()
      const {
    const auto& layout_results = GetLayoutResults();
+@@ -4410,16 +4454,18 @@ bool LayoutBox::IsReadingFlowContainer() const {
+     case EReadingFlow::kGridColumns:
+     case EReadingFlow::kGridOrder:
+       return IsLayoutGrid();
++    case EReadingFlow::kSourceOrder:
++      return IsLayoutBlock() || IsFlexibleBox() || IsLayoutGrid();
+   }
+   return false;
+ }
+ 
+-const HeapVector<Member<Element>>& LayoutBox::ReadingFlowElements() const {
+-  if (const auto* elements = GetPhysicalFragment(0)->ReadingFlowElements()) {
+-    return *elements;
++const HeapVector<Member<Node>>& LayoutBox::ReadingFlowNodes() const {
++  if (const auto* nodes = GetPhysicalFragment(0)->ReadingFlowNodes()) {
++    return *nodes;
+   }
+-  DEFINE_STATIC_LOCAL(Persistent<HeapVector<Member<Element>>>, empty_vector,
+-                      (MakeGarbageCollected<HeapVector<Member<Element>>>()));
++  DEFINE_STATIC_LOCAL(Persistent<HeapVector<Member<Node>>>, empty_vector,
++                      (MakeGarbageCollected<HeapVector<Member<Node>>>()));
+   return *empty_vector;
+ }
+ 

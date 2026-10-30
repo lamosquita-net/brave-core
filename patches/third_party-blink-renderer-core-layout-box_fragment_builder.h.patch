@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/box_fragment_builder.h b/third_party/blink/renderer/core/layout/box_fragment_builder.h
-index 952b4eaf65b99f781846d5f7297d2bbde66acefe..fc2e5e1fe0aa4b0e9ecf827da08f5cd831000fff 100644
+index 952b4eaf65b99f781846d5f7297d2bbde66acefe..2c8d1808014d82794d18479fadbbec08a25bc60d 100644
 --- a/third_party/blink/renderer/core/layout/box_fragment_builder.h
 +++ b/third_party/blink/renderer/core/layout/box_fragment_builder.h
 @@ -142,6 +142,20 @@ class CORE_EXPORT BoxFragmentBuilder final : public FragmentBuilder {
@@ -37,6 +37,17 @@ index 952b4eaf65b99f781846d5f7297d2bbde66acefe..fc2e5e1fe0aa4b0e9ecf827da08f5cd8
    void SetIsMonolithic(bool b) { is_monolithic_ = b; }
  
    // Set how much of the block-size we've used so far for this box. This will be
+@@ -600,8 +621,8 @@ class CORE_EXPORT BoxFragmentBuilder final : public FragmentBuilder {
+   void TransferFrameSetLayoutData(std::unique_ptr<FrameSetLayoutData> data) {
+     frame_set_layout_data_ = std::move(data);
+   }
+-  void SetReadingFlowElements(HeapVector<Member<Element>>&& elements) {
+-    reading_flow_elements_ = std::move(elements);
++  void SetReadingFlowNodes(HeapVector<Member<blink::Node>>&& nodes) {
++    reading_flow_nodes_ = std::move(nodes);
+   }
+ 
+   const GridLayoutData& GetGridLayoutData() const {
 @@ -701,6 +722,7 @@ class CORE_EXPORT BoxFragmentBuilder final : public FragmentBuilder {
    bool is_monolithic_ = true;
    bool is_first_for_node_ = true;
@@ -45,3 +56,12 @@ index 952b4eaf65b99f781846d5f7297d2bbde66acefe..fc2e5e1fe0aa4b0e9ecf827da08f5cd8
    bool did_break_self_ = false;
    bool has_inflow_child_break_inside_ = false;
    bool has_forced_break_ = false;
+@@ -750,7 +772,7 @@ class CORE_EXPORT BoxFragmentBuilder final : public FragmentBuilder {
+   std::unique_ptr<DevtoolsFlexInfo> flex_layout_data_;
+   std::unique_ptr<FrameSetLayoutData> frame_set_layout_data_;
+ 
+-  HeapVector<Member<Element>> reading_flow_elements_;
++  HeapVector<Member<blink::Node>> reading_flow_nodes_;
+ 
+   LogicalBoxSides sides_to_include_;
+ 

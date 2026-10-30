@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/element.cc b/third_party/blink/renderer/core/dom/element.cc
-index afa9718ce5b9dd841e33d89610d524df1db4e2c9..d58503e7447e11b36c47789e107e61442af723c7 100644
+index afa9718ce5b9dd841e33d89610d524df1db4e2c9..178a22f15ad417494439e7d3abf84d763496b386 100644
 --- a/third_party/blink/renderer/core/dom/element.cc
 +++ b/third_party/blink/renderer/core/dom/element.cc
 @@ -107,6 +107,7 @@
@@ -83,7 +83,67 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..d58503e7447e11b36c47789e107e6144
  }  // namespace
  
  Element::Element(const QualifiedName& tag_name,
-@@ -1259,9 +1276,7 @@ Element* Element::anchorElement() const {
+@@ -615,6 +632,59 @@ int Element::DefaultTabIndex() const {
+   return -1;
+ }
+ 
++const HeapVector<Member<Node>> Element::ReadingFlowChildren() const {
++  HeapVector<Member<Node>> children;
++  const Element* layout_parent =
++      HasDisplayContentsStyle()
++          ? LayoutTreeBuilderTraversal::LayoutParentElement(*this)
++          : this;
++  if (!layout_parent || !layout_parent->IsReadingFlowContainer()) {
++    return children;
++  }
++  // Add all reading flow items first, in the reading flow order.
++  for (Node* reading_flow_item :
++       layout_parent->GetLayoutBox()->ReadingFlowNodes()) {
++    // reading_flow_item or its ancestor (display: contents) might not be a
++    // direct child of this. Loop the parents and only add the node if its
++    // FlatTreeTraversal::ParentElement is this element.
++    while (reading_flow_item) {
++      auto* parent = FlatTreeTraversal::ParentElement(*reading_flow_item);
++      if (parent == this) {
++        // TODO(dizhangg) this check is O(n^2)
++        if (!children.Contains(reading_flow_item)) {
++          children.push_back(reading_flow_item);
++        }
++        break;
++      }
++      reading_flow_item = parent;
++    }
++  }
++  // Add all non-reading flow items at the end of the reading flow.
++  // We use LayoutTreeBuilder traversal to make sure all pseudo elements
++  // (including scroll markers) are accounted for.
++  for (Node* child = LayoutTreeBuilderTraversal::FirstChild(*this); child;
++       child = LayoutTreeBuilderTraversal::NextSibling(*child)) {
++    // TODO(dizhangg) this check is O(n^2)
++    if (!children.Contains(child)) {
++      children.push_back(child);
++    }
++  }
++  // Now that we have a complete list of children, sort them by reading-order.
++  auto reading_order = [](Node* node) {
++    if (const Element* el = DynamicTo<Element>(node)) {
++      if (const ComputedStyle* style = el->GetComputedStyle()) {
++        return style->ReadingOrder();
++      }
++    }
++    return 0;
++  };
++  std::stable_sort(children.begin(), children.end(),
++                   [&reading_order](const auto& lhs, const auto& rhs) {
++                     return reading_order(lhs) < reading_order(rhs);
++                   });
++  return children;
++}
++
+ bool Element::IsFocusableStyle(UpdateBehavior update_behavior) const {
+   // TODO(vmpstr): Note that this may be called by accessibility during layout
+   // tree attachment, at which point we might not have cleared all of the dirty
+@@ -1259,9 +1329,7 @@ Element* Element::anchorElement() const {
  void Element::setAnchorElement(Element* new_element) {
    CHECK(RuntimeEnabledFeatures::HTMLAnchorAttributeEnabled());
    SetElementAttribute(html_names::kAnchorAttr, new_element);
@@ -94,7 +154,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..d58503e7447e11b36c47789e107e6144
  }
  
  inline void Element::SynchronizeAttribute(const QualifiedName& name) const {
-@@ -1415,8 +1430,8 @@ void Element::scrollIntoViewWithOptions(const ScrollIntoViewOptions* options) {
+@@ -1415,8 +1483,8 @@ void Element::scrollIntoViewWithOptions(const ScrollIntoViewOptions* options) {
    }
  
    mojom::blink::ScrollIntoViewParamsPtr params =
@@ -105,7 +165,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..d58503e7447e11b36c47789e107e6144
  
    ScrollIntoViewNoVisualUpdate(std::move(params));
  }
-@@ -1451,13 +1466,13 @@ void Element::scrollIntoViewIfNeeded(bool center_if_needed) {
+@@ -1451,13 +1519,13 @@ void Element::scrollIntoViewIfNeeded(bool center_if_needed) {
    if (center_if_needed) {
      scroll_into_view_util::ScrollRectToVisible(
          *GetLayoutObject(), bounds,
@@ -121,7 +181,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..d58503e7447e11b36c47789e107e6144
              ScrollAlignment::ToEdgeIfNeeded(),
              ScrollAlignment::ToEdgeIfNeeded()));
    }
-@@ -2409,7 +2424,8 @@ void Element::ClientQuads(Vector<gfx::QuadF>& quads) const {
+@@ -2409,7 +2477,8 @@ void Element::ClientQuads(Vector<gfx::QuadF>& quads) const {
      // TODO(pdr): ObjectBoundingBox does not include stroke and the spec is not
      // clear (see: https://github.com/w3c/svgwg/issues/339, crbug.com/529734).
      // If stroke is desired, we can update this to use AbsoluteQuads, below.
@@ -131,7 +191,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..d58503e7447e11b36c47789e107e6144
        quads.push_back(element_layout_object->LocalToAbsoluteQuad(
            gfx::QuadF(element_layout_object->ObjectBoundingBox())));
      }
-@@ -2773,8 +2789,7 @@ void Element::AttributeChanged(const AttributeModificationParams& params) {
+@@ -2773,8 +2842,7 @@ void Element::AttributeChanged(const AttributeModificationParams& params) {
        }
      }
    } else if (params.name == html_names::kAnchorAttr) {
@@ -141,7 +201,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..d58503e7447e11b36c47789e107e6144
        EnsureAnchorElementObserver().Notify();
        return;
      }
-@@ -3027,7 +3042,11 @@ Node::InsertionNotificationRequest Element::InsertedInto(
+@@ -3027,7 +3095,11 @@ Node::InsertionNotificationRequest Element::InsertedInto(
      EnqueueAutofocus(*this);
  
      if (GetCustomElementState() == CustomElementState::kCustom) {
@@ -154,7 +214,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..d58503e7447e11b36c47789e107e6144
      } else if (GetCustomElementState() == CustomElementState::kUndefined) {
        CustomElement::TryToUpgrade(*this);
      }
-@@ -3065,6 +3084,11 @@ Node::InsertionNotificationRequest Element::InsertedInto(
+@@ -3065,6 +3137,11 @@ Node::InsertionNotificationRequest Element::InsertedInto(
      }
    }
  
@@ -166,7 +226,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..d58503e7447e11b36c47789e107e6144
    if (parentElement() && parentElement()->IsInCanvasSubtree()) {
      SetIsInCanvasSubtree(true);
    }
-@@ -3079,6 +3103,32 @@ Node::InsertionNotificationRequest Element::InsertedInto(
+@@ -3079,6 +3156,32 @@ Node::InsertionNotificationRequest Element::InsertedInto(
    return kInsertionDone;
  }
  
@@ -199,7 +259,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..d58503e7447e11b36c47789e107e6144
  void Element::RemovedFrom(ContainerNode& insertion_point) {
    bool was_in_document = insertion_point.isConnected();
  
-@@ -3130,7 +3180,8 @@ void Element::RemovedFrom(ContainerNode& insertion_point) {
+@@ -3130,7 +3233,8 @@ void Element::RemovedFrom(ContainerNode& insertion_point) {
        document.SetCSSTarget(nullptr);
      }
  
@@ -209,7 +269,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..d58503e7447e11b36c47789e107e6144
        CustomElement::EnqueueDisconnectedCallback(*this);
      }
    }
-@@ -3459,6 +3510,7 @@ const ComputedStyle* Element::StyleForLayoutObject(
+@@ -3459,6 +3563,7 @@ const ComputedStyle* Element::StyleForLayoutObject(
      // change as the result.
      DCHECK(GetDocument().GetStyleEngine().InContainerQueryStyleRecalc() ||
             GetDocument().GetStyleEngine().InPositionTryStyleRecalc() ||
@@ -217,7 +277,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..d58503e7447e11b36c47789e107e6144
             element_animations->CssAnimations().PendingUpdate().IsEmpty());
      element_animations->CssAnimations().ClearPendingUpdate();
    }
-@@ -4065,7 +4117,19 @@ StyleRecalcChange Element::RecalcOwnStyle(
+@@ -4065,7 +4170,19 @@ StyleRecalcChange Element::RecalcOwnStyle(
    if (!child_change.ReattachLayoutTree() &&
        (GetForceReattachLayoutTree() || NeedsReattachLayoutTree() ||
         ComputedStyle::NeedsReattachLayoutTree(*this, old_style, new_style))) {
@@ -238,7 +298,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..d58503e7447e11b36c47789e107e6144
    }
  
    if (diff == ComputedStyle::Difference::kEqual) {
-@@ -4499,6 +4563,19 @@ void Element::UpdateDirectionalityAndDescendant(TextDirection direction) {
+@@ -4499,6 +4616,19 @@ void Element::UpdateDirectionalityAndDescendant(TextDirection direction) {
            }
          }
        }
@@ -258,7 +318,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..d58503e7447e11b36c47789e107e6144
      }
      element = ElementTraversal::Next(*element, this);
    } while (element);
-@@ -4590,14 +4667,68 @@ void Element::UpdateDescendantHasDirAutoAttribute(bool has_dir_auto) {
+@@ -4590,14 +4720,68 @@ void Element::UpdateDescendantHasDirAutoAttribute(bool has_dir_auto) {
    }
  }
  
@@ -330,7 +390,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..d58503e7447e11b36c47789e107e6144
    if (const HTMLSlotElement* slot_this =
            ToHTMLSlotElementIfSupportsAssignmentOrNull(this)) {
      auto& assigned_nodes = slot_this->AssignedNodes();
-@@ -4613,10 +4744,13 @@ std::optional<TextDirection> Element::ResolveAutoDirectionality(
+@@ -4613,10 +4797,13 @@ std::optional<TextDirection> Element::ResolveAutoDirectionality(
            }
          } else if (Element* slotted_element =
                         DynamicTo<Element>(slotted_node)) {
@@ -348,7 +408,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..d58503e7447e11b36c47789e107e6144
            }
          }
        }
-@@ -4624,45 +4758,7 @@ std::optional<TextDirection> Element::ResolveAutoDirectionality(
+@@ -4624,45 +4811,7 @@ std::optional<TextDirection> Element::ResolveAutoDirectionality(
      }
    }
  
@@ -395,7 +455,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..d58503e7447e11b36c47789e107e6144
  }
  
  void Element::AdjustDirectionalityIfNeededAfterChildrenChanged(
-@@ -5014,11 +5110,17 @@ Element::HighlightRecalc Element::CalculateHighlightRecalc(
+@@ -5014,11 +5163,17 @@ Element::HighlightRecalc Element::CalculateHighlightRecalc(
      return HighlightRecalc::kNone;
    }
    // If we are a root element (our parent is a Document or ShadowRoot), we can
@@ -417,7 +477,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..d58503e7447e11b36c47789e107e6144
    DCHECK(IsInTreeScope());
    if (parentNode() == GetTreeScope().RootNode()) {
      if (new_style.HasNonUaHighlightPseudoStyles()) {
-@@ -5031,6 +5133,9 @@ Element::HighlightRecalc Element::CalculateHighlightRecalc(
+@@ -5031,6 +5186,9 @@ Element::HighlightRecalc Element::CalculateHighlightRecalc(
        if (old_style->EffectiveZoom() != new_style.EffectiveZoom()) {
          return HighlightRecalc::kFull;
        }
@@ -427,7 +487,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..d58503e7447e11b36c47789e107e6144
        // Neither the new style nor the old style has any non-UA highlight rules,
        // so they will be equal. Let’s reuse the old styles for all highlights.
        return HighlightRecalc::kReuse;
-@@ -6406,7 +6511,7 @@ void Element::UpdateSelectionOnFocus(
+@@ -6406,7 +6564,7 @@ void Element::UpdateSelectionOnFocus(
    } else if (GetLayoutObject() &&
               !GetLayoutObject()->IsLayoutEmbeddedContent()) {
      if (!options->preventScroll()) {
@@ -436,7 +496,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..d58503e7447e11b36c47789e107e6144
  
        // It's common to have menus and list controls that have items slightly
        // overflowing horizontally but the control isn't horizontally
-@@ -7094,6 +7199,10 @@ Node* Element::InsertAdjacent(const String& where,
+@@ -7094,6 +7252,10 @@ Node* Element::InsertAdjacent(const String& where,
  }
  
  void Element::HideNonce() {
@@ -447,7 +507,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..d58503e7447e11b36c47789e107e6144
    const AtomicString& nonce_value = FastGetAttribute(html_names::kNonceAttr);
    if (nonce_value.empty()) {
      return;
-@@ -7441,8 +7550,8 @@ const ComputedStyle* Element::EnsureComputedStyle(
+@@ -7441,8 +7603,8 @@ const ComputedStyle* Element::EnsureComputedStyle(
    StyleEngine::InEnsureComputedStyleScope ensure_scope(
        GetDocument().GetStyleEngine());
  
@@ -458,7 +518,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..d58503e7447e11b36c47789e107e6144
      return element->EnsureComputedStyle();
    }
  
-@@ -7911,6 +8020,17 @@ PseudoElement* Element::UpdatePseudoElement(
+@@ -7911,6 +8073,17 @@ PseudoElement* Element::UpdatePseudoElement(
            !PseudoElementLayoutObjectIsNeeded(
                pseudo_id, element->GetComputedStyle(), this)) {
          generate_pseudo = false;
@@ -476,7 +536,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..d58503e7447e11b36c47789e107e6144
        }
      }
      if (!generate_pseudo) {
-@@ -7948,10 +8068,21 @@ PseudoElement* Element::CreatePseudoElementIfNeeded(
+@@ -7948,10 +8121,21 @@ PseudoElement* Element::CreatePseudoElementIfNeeded(
    if (!PseudoElementLayoutObjectIsNeeded(pseudo_id, pseudo_style, this)) {
      GetElementRareData()->SetPseudoElement(pseudo_id, nullptr,
                                             view_transition_name);
@@ -499,7 +559,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..d58503e7447e11b36c47789e107e6144
      GetDocument().AddToTopLayer(pseudo_element, this);
    }
  
-@@ -7984,11 +8115,32 @@ PseudoElement* Element::GetPseudoElement(
+@@ -7984,11 +8168,32 @@ PseudoElement* Element::GetPseudoElement(
    return nullptr;
  }
  
@@ -534,7 +594,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..d58503e7447e11b36c47789e107e6144
    }
  
    // The transition pseudos can currently only exist on the document element.
-@@ -8021,18 +8173,44 @@ PseudoElement* Element::GetNestedPseudoElement(
+@@ -8021,18 +8226,44 @@ PseudoElement* Element::GetNestedPseudoElement(
  }
  
  LayoutObject* Element::PseudoElementLayoutObject(PseudoId pseudo_id) const {
@@ -581,7 +641,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..d58503e7447e11b36c47789e107e6144
      return true;
    }
  
-@@ -8044,10 +8222,6 @@ bool Element::PseudoElementStylesDependOnFontMetrics() const {
+@@ -8044,10 +8275,6 @@ bool Element::PseudoElementStylesDependOnFontMetrics() const {
      return false;
    }
  
@@ -592,7 +652,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..d58503e7447e11b36c47789e107e6144
    // Note that |HasAnyPseudoElementStyles()| counts public pseudo elements only.
    // ::-webkit-scrollbar-*  are internal, and hence are not counted. So we must
    // perform this check after checking scrollbar pseudo element styles.
-@@ -8056,7 +8230,7 @@ bool Element::PseudoElementStylesDependOnFontMetrics() const {
+@@ -8056,7 +8283,7 @@ bool Element::PseudoElementStylesDependOnFontMetrics() const {
    }
  
    for (PseudoElement* pseudo_element : rare_data->GetPseudoElements()) {
@@ -601,7 +661,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..d58503e7447e11b36c47789e107e6144
        return true;
      }
    }
-@@ -10020,6 +10194,13 @@ ALWAYS_INLINE void Element::SetAttributeInternal(
+@@ -10020,6 +10247,13 @@ ALWAYS_INLINE void Element::SetAttributeInternal(
  
  Attr* Element::setAttributeNode(Attr* attr_node,
                                  ExceptionState& exception_state) {
@@ -615,7 +675,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..d58503e7447e11b36c47789e107e6144
    Attr* old_attr_node = AttrIfExists(attr_node->GetQualifiedName());
    if (old_attr_node == attr_node) {
      return attr_node;  // This Attr is already attached to the element.
-@@ -10047,13 +10228,6 @@ Attr* Element::setAttributeNode(Attr* attr_node,
+@@ -10047,13 +10281,6 @@ Attr* Element::setAttributeNode(Attr* attr_node,
    SynchronizeAllAttributes();
    const UniqueElementData& element_data = EnsureUniqueElementData();
  
@@ -629,7 +689,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..d58503e7447e11b36c47789e107e6144
    AttributeCollection attributes = element_data.Attributes();
    wtf_size_t index = attributes.FindIndex(attr_node->GetQualifiedName());
    AtomicString local_name;
-@@ -10146,7 +10320,6 @@ AnchorPositionScrollData* Element::GetAnchorPositionScrollData() const {
+@@ -10146,7 +10373,6 @@ AnchorPositionScrollData* Element::GetAnchorPositionScrollData() const {
  }
  
  void Element::IncrementImplicitlyAnchoredElementCount() {
@@ -637,7 +697,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..d58503e7447e11b36c47789e107e6144
    if (!HasImplicitlyAnchoredElement() && GetLayoutObject()) {
      // Invalidate layout to populate itself into Physical/LogicalAnchorQuery.
      GetLayoutObject()->SetNeedsLayoutAndFullPaintInvalidation(
-@@ -10175,20 +10348,19 @@ AnchorElementObserver* Element::GetAnchorElementObserver() const {
+@@ -10175,20 +10401,19 @@ AnchorElementObserver* Element::GetAnchorElementObserver() const {
  
  AnchorElementObserver& Element::EnsureAnchorElementObserver() {
    DCHECK(IsHTMLElement());
