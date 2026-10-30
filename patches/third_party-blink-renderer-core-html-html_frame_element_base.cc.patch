@@ -1,0 +1,17 @@
+diff --git a/third_party/blink/renderer/core/html/html_frame_element_base.cc b/third_party/blink/renderer/core/html/html_frame_element_base.cc
+index b024da869203c9c3a65480483fc8bfffeabc7127..bb85185c7d11b238f6bc5fe6b7920407b2d25ece 100644
+--- a/third_party/blink/renderer/core/html/html_frame_element_base.cc
++++ b/third_party/blink/renderer/core/html/html_frame_element_base.cc
+@@ -176,10 +176,8 @@ void HTMLFrameElementBase::SetNameAndOpenURL() {
+ Node::InsertionNotificationRequest HTMLFrameElementBase::InsertedInto(
+     ContainerNode& insertion_point) {
+   HTMLFrameOwnerElement::InsertedInto(insertion_point);
+-  // Except for when state-preserving atomic moves are enabled, we should never
+-  // have a content frame at the point where we got inserted into a tree.
+-  SECURITY_CHECK(!ContentFrame() ||
+-                 GetDocument().StatePreservingAtomicMoveInProgress());
++  // FlyWeb: the SECURITY_CHECK moved to HTMLFrameOwnerElement::InsertedInto()
++  // (upstream 49abdbb201), so <object>/<embed>/<fencedframe> get it too.
+   return kInsertionShouldCallDidNotifySubtreeInsertions;
+ }
+ 
