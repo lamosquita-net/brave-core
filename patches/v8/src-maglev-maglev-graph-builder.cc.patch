@@ -1,8 +1,8 @@
 diff --git a/src/maglev/maglev-graph-builder.cc b/src/maglev/maglev-graph-builder.cc
-index 6443e00cb50701b158252f41aa1ba9ca3468b03a..834f4d3b176b4221a397543d8e3d10f81e953a76 100644
+index db081bfde623c3fd491d4d773a560ac446b32660..9a13213cece91331897eaf0df23e9ba3622b6528 100644
 --- a/src/maglev/maglev-graph-builder.cc
 +++ b/src/maglev/maglev-graph-builder.cc
-@@ -5316,6 +5316,9 @@ bool MaglevGraphBuilder::CanTrackObjectChanges(ValueNode* receiver,
+@@ -5341,6 +5341,9 @@ bool MaglevGraphBuilder::CanTrackObjectChanges(ValueNode* receiver,
    if (!v8_flags.maglev_object_tracking) return false;
    if (!receiver->Is<InlinedAllocation>()) return false;
    InlinedAllocation* alloc = receiver->Cast<InlinedAllocation>();
@@ -12,7 +12,7 @@ index 6443e00cb50701b158252f41aa1ba9ca3468b03a..834f4d3b176b4221a397543d8e3d10f8
    if (mode == TrackObjectMode::kStore) {
      // If we have two objects A and B, such that A points to B (it contains B in
      // one of its field), we cannot change B without also changing A, even if
-@@ -5324,7 +5327,6 @@ bool MaglevGraphBuilder::CanTrackObjectChanges(ValueNode* receiver,
+@@ -5349,7 +5352,6 @@ bool MaglevGraphBuilder::CanTrackObjectChanges(ValueNode* receiver,
          graph_->allocations_elide_map().end()) {
        return false;
      }
@@ -20,7 +20,7 @@ index 6443e00cb50701b158252f41aa1ba9ca3468b03a..834f4d3b176b4221a397543d8e3d10f8
      // Ensure object is escaped if we are within a try-catch block. This is
      // crucial because a deoptimization point inside the catch handler could
      // re-materialize objects differently, depending on whether the throw
-@@ -5333,9 +5335,6 @@ bool MaglevGraphBuilder::CanTrackObjectChanges(ValueNode* receiver,
+@@ -5358,9 +5360,6 @@ bool MaglevGraphBuilder::CanTrackObjectChanges(ValueNode* receiver,
      // the try-block started,  but for now, err on the side of caution and
      // always escape.
      if (IsInsideTryBlock()) return false;
@@ -30,41 +30,16 @@ index 6443e00cb50701b158252f41aa1ba9ca3468b03a..834f4d3b176b4221a397543d8e3d10f8
    }
    // We don't support loop phis inside VirtualObjects, so any access inside a
    // loop should escape the object, except for objects that were created since
-@@ -5838,32 +5837,7 @@ MaybeReduceResult MaglevGraphBuilder::TryBuildStoreField(
+@@ -5861,7 +5860,7 @@ MaybeReduceResult MaglevGraphBuilder::TryBuildStoreField(
        broker()->dependencies()->DependOnNoSlackTrackingChange(*original_map);
      }
    } else if (access_info.IsFastDataConstant() &&
 -             access_mode == compiler::AccessMode::kStore) {
--    compiler::OptionalJSObjectRef constant_holder =
--        TryGetConstantDataFieldHolder(access_info, receiver);
--    if (constant_holder) {
--      auto constant_value = constant_holder.value();
--      if (access_info.field_representation().IsDouble()) {
--        std::optional<Float64> constant =
--            TryFoldLoadConstantDoubleField(constant_value, access_info);
--        if (constant.has_value()) {
--          if (!constant->is_nan()) {
--            AddNewNode<CheckValueEqualsFloat64>(
--                {GetAccumulator()}, constant.value(),
--                DeoptimizeReason::kStoreToConstant);
--            return ReduceResult::Done();
--          }
--        }
--      } else {
--        compiler::OptionalObjectRef constant =
--            TryFoldLoadConstantDataField(constant_value, access_info);
--        if (constant.has_value()) {
--          return BuildCheckNumericalValueOrByReference(
--              GetAccumulator(), constant.value(),
--              DeoptimizeReason::kStoreToConstant);
--        }
--      }
--    }
 +             access_mode != compiler::AccessMode::kStoreInLiteral) {
      return EmitUnconditionalDeopt(DeoptimizeReason::kStoreToConstant);
    }
  
-@@ -6132,9 +6106,9 @@ MaybeReduceResult MaglevGraphBuilder::TryBuildNamedAccess(
+@@ -6130,9 +6129,9 @@ MaybeReduceResult MaglevGraphBuilder::TryBuildNamedAccess(
                 GetTaggedValue(GetAccumulator())},
                feedback_source);
          case compiler::AccessMode::kDefine:
@@ -75,7 +50,7 @@ index 6443e00cb50701b158252f41aa1ba9ca3468b03a..834f4d3b176b4221a397543d8e3d10f8
            UNREACHABLE();
        }
      }
-@@ -7742,6 +7716,16 @@ ReduceResult MaglevGraphBuilder::VisitSetNamedProperty() {
+@@ -7740,6 +7739,16 @@ ReduceResult MaglevGraphBuilder::VisitSetNamedProperty() {
  
  ReduceResult MaglevGraphBuilder::VisitDefineNamedOwnProperty() {
    // DefineNamedOwnProperty <object> <name_index> <slot>
@@ -92,7 +67,7 @@ index 6443e00cb50701b158252f41aa1ba9ca3468b03a..834f4d3b176b4221a397543d8e3d10f8
    ValueNode* object = LoadRegister(0);
    compiler::NameRef name = GetRefOperand<Name>(1);
    FeedbackSlot slot = GetSlotOperand(2);
-@@ -7766,7 +7750,9 @@ ReduceResult MaglevGraphBuilder::VisitDefineNamedOwnProperty() {
+@@ -7764,7 +7773,9 @@ ReduceResult MaglevGraphBuilder::VisitDefineNamedOwnProperty() {
      case compiler::ProcessedFeedback::kNamedAccess:
        RETURN_IF_DONE(TryBuildNamedAccess(
            object, object, processed_feedback.AsNamedAccess(), feedback_source,
@@ -103,7 +78,7 @@ index 6443e00cb50701b158252f41aa1ba9ca3468b03a..834f4d3b176b4221a397543d8e3d10f8
        break;
  
      default:
-@@ -8303,6 +8289,12 @@ ReduceResult MaglevGraphBuilder::BuildInlineFunction(ValueNode* context,
+@@ -8297,6 +8308,12 @@ ReduceResult MaglevGraphBuilder::BuildInlineFunction(
  
  bool MaglevGraphBuilder::CanInlineCall(compiler::SharedFunctionInfoRef shared,
                                         float call_frequency) {
@@ -116,7 +91,7 @@ index 6443e00cb50701b158252f41aa1ba9ca3468b03a..834f4d3b176b4221a397543d8e3d10f8
    if (graph()->total_inlined_bytecode_size() >
        max_inlined_bytecode_size_cumulative()) {
      compilation_unit_->info()->set_could_not_inline_all_candidates();
-@@ -8509,8 +8501,10 @@ ReduceResult MaglevGraphBuilder::BuildEagerInlineCall(
+@@ -8500,8 +8517,10 @@ ReduceResult MaglevGraphBuilder::BuildEagerInlineCall(
        inner_graph_builder.current_interpreter_frame_.known_node_aspects());
    current_interpreter_frame_.set_virtual_objects(
        inner_graph_builder.current_interpreter_frame_.virtual_objects());
@@ -129,7 +104,7 @@ index 6443e00cb50701b158252f41aa1ba9ca3468b03a..834f4d3b176b4221a397543d8e3d10f8
  
    // Resume execution using the final block of the inner builder.
    current_block_ = inner_graph_builder.current_block_;
-@@ -8871,7 +8865,7 @@ MaybeReduceResult MaglevGraphBuilder::TryReduceArrayIteratorPrototypeNext(
+@@ -9051,7 +9070,7 @@ MaybeReduceResult MaglevGraphBuilder::TryReduceArrayIteratorPrototypeNext(
      VirtualObject* array = iterated_object->Cast<InlinedAllocation>()->object();
      // TODO(victorgomes): Remove this once we track changes in the inlined
      // allocated object.
@@ -138,7 +113,7 @@ index 6443e00cb50701b158252f41aa1ba9ca3468b03a..834f4d3b176b4221a397543d8e3d10f8
        FAIL("allocation is escaping, map could have been changed");
      }
      // TODO(victorgomes): This effectively disable the optimization for `for-of`
-@@ -8909,6 +8903,14 @@ MaybeReduceResult MaglevGraphBuilder::TryReduceArrayIteratorPrototypeNext(
+@@ -9089,6 +9108,14 @@ MaybeReduceResult MaglevGraphBuilder::TryReduceArrayIteratorPrototypeNext(
      FAIL("no elements protector");
    }
  
@@ -153,12 +128,12 @@ index 6443e00cb50701b158252f41aa1ba9ca3468b03a..834f4d3b176b4221a397543d8e3d10f8
    // Load the [[NextIndex]] from the {iterator}.
    // We can assume index and length fit in Uint32.
    ValueNode* index =
-@@ -10942,7 +10944,7 @@ MaglevGraphBuilder::TryGetNonEscapingArgumentsObject(ValueNode* value) {
+@@ -11198,7 +11225,7 @@ MaglevGraphBuilder::TryGetNonEscapingArgumentsObject(ValueNode* value) {
    }
    // TODO(victorgomes): We can probably loosen the IsNotEscaping requirement if
    // we keep track of the arguments object changes so far.
 -  if (alloc->IsEscaping()) return {};
 +  if (IsEscaping(graph_, alloc)) return {};
    VirtualObject* object = alloc->object();
+   if (!object->has_static_map()) return {};
    // TODO(victorgomes): Support simple JSArray forwarding.
-   compiler::MapRef map = object->map();

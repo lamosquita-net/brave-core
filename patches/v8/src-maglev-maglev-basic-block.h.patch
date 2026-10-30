@@ -1,12 +1,12 @@
 diff --git a/src/maglev/maglev-basic-block.h b/src/maglev/maglev-basic-block.h
-index 55c680a25242d3f0f50a84a72af44d30122eea54..f4a9f98c30ca914fde623209db64496d69508b8d 100644
+index 71d5407d6e39336558af5b83596e5c77be2fecce..303a2755302dd2b37322bc079a5f18b343297592 100644
 --- a/src/maglev/maglev-basic-block.h
 +++ b/src/maglev/maglev-basic-block.h
-@@ -212,6 +212,7 @@ class BasicBlock {
+@@ -235,6 +235,7 @@ class BasicBlock {
    bool is_exception_handler_block() const {
      return has_state() && state_->is_exception_handler();
    }
 +  bool is_inline() const { return has_state() && state_->is_inline(); }
  
-   Snapshot snapshot() const {
-     DCHECK(snapshot_.has_value());
+   // If the basic block is an empty (unnecessary) block containing only an
+   // unconditional jump to the successor block, return the successor block.

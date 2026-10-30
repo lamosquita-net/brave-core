@@ -1,8 +1,8 @@
 diff --git a/src/maglev/maglev-post-hoc-optimizations-processors.h b/src/maglev/maglev-post-hoc-optimizations-processors.h
-index 49ec54ce247f2911b14ad1a9cabf688763c47051..abbfe37ab5b5fc0f914a54949138b111a5193298 100644
+index 684eebd2967727020d8164f47780e256d44b70f4..5dafe158f5c276d3fc5c126d41b5e46b6e59e1a0 100644
 --- a/src/maglev/maglev-post-hoc-optimizations-processors.h
 +++ b/src/maglev/maglev-post-hoc-optimizations-processors.h
-@@ -202,11 +202,13 @@ class AnyUseMarkingProcessor {
+@@ -222,7 +222,10 @@ class AnyUseMarkingProcessor {
      return ProcessResult::kContinue;
    }
  
@@ -12,8 +12,11 @@ index 49ec54ce247f2911b14ad1a9cabf688763c47051..abbfe37ab5b5fc0f914a54949138b111
 +  // (CVE-2026-3910). Remove them here, as upstream does; otherwise they reach
 +  // MarkTaggedInputsAsDecompressing/GenerateCode, which are UNREACHABLE.
    ProcessResult Process(Dead* node, const ProcessingState& state) {
--    UNREACHABLE();
-+    return ProcessResult::kRemove;
+     if (!v8_flags.maglev_untagged_phis) {
+       // These nodes are removed in the phi representation selector, if we are
+@@ -231,7 +234,6 @@ class AnyUseMarkingProcessor {
+     }
+     UNREACHABLE();
    }
 -#endif  // DEBUG
  

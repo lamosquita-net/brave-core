@@ -1,8 +1,8 @@
 diff --git a/src/ic/accessor-assembler.cc b/src/ic/accessor-assembler.cc
-index 051724f1c29095e2ba72ac0e97e007a8e92d4618..ae901cbbc18603ed4d7db56823b47e43e889f479 100644
+index 7f0031fb99589245f8644aa130e0467f522cc31c..3c2929568da58da477415411906a55bf68547817 100644
 --- a/src/ic/accessor-assembler.cc
 +++ b/src/ic/accessor-assembler.cc
-@@ -868,9 +868,13 @@ void AccessorAssembler::HandleLoadICSmiHandlerLoadNamedCase(
+@@ -851,9 +851,13 @@ void AccessorAssembler::HandleLoadICSmiHandlerLoadNamedCase(
        TVARIABLE(Object, var_value);
        LoadPropertyFromDictionary<PropertyDictionary>(
            properties, var_name_index.value(), &var_details, &var_value);
@@ -17,7 +17,7 @@ index 051724f1c29095e2ba72ac0e97e007a8e92d4618..ae901cbbc18603ed4d7db56823b47e43
        exit_point->Return(value);
      }
    }
-@@ -948,17 +952,18 @@ void AccessorAssembler::HandleLoadICSmiHandlerLoadNamedCase(
+@@ -931,17 +935,18 @@ void AccessorAssembler::HandleLoadICSmiHandlerLoadNamedCase(
  
    BIND(&global);
    {
@@ -43,7 +43,7 @@ index 051724f1c29095e2ba72ac0e97e007a8e92d4618..ae901cbbc18603ed4d7db56823b47e43
    }
  
    BIND(&interceptor);
-@@ -1241,9 +1246,14 @@ void AccessorAssembler::HandleLoadICProtoHandler(
+@@ -1221,9 +1226,14 @@ void AccessorAssembler::HandleLoadICProtoHandler(
            TVARIABLE(Object, var_value);
            LoadPropertyFromDictionary<PropertyDictionary>(
                properties, name_index, &var_details, &var_value);
@@ -59,21 +59,7 @@ index 051724f1c29095e2ba72ac0e97e007a8e92d4618..ae901cbbc18603ed4d7db56823b47e43
            exit_point->Return(value);
          }
        },
-@@ -1547,7 +1557,12 @@ void AccessorAssembler::HandleStoreICHandlerCase(
- 
-     BIND(&store_global);
-     {
--      if (p->IsDefineKeyedOwn()) {
-+      if (p->IsDefineNamedOwn()) {
-+        // The global proxy has its attributes set in the global object,
-+        // which can't be handled by StoreGlobalIC_PropertyCellCase when
-+        // defining public fields. Handle it in runtime.
-+        GotoIf(IsJSGlobalProxy(CAST(p->receiver())), &if_slow);
-+      } else if (p->IsDefineKeyedOwn()) {
-         Label proceed_defining(this);
-         // StoreGlobalIC_PropertyCellCase doesn't support definition
-         // of private fields, so handle them in runtime.
-@@ -2979,9 +2994,12 @@ void AccessorAssembler::GenericPropertyLoad(
+@@ -2948,9 +2958,12 @@ void AccessorAssembler::GenericPropertyLoad(
  
    BIND(&if_found_on_lookup_start_object);
    {

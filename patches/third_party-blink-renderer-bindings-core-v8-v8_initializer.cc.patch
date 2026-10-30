@@ -1,8 +1,8 @@
 diff --git a/third_party/blink/renderer/bindings/core/v8/v8_initializer.cc b/third_party/blink/renderer/bindings/core/v8/v8_initializer.cc
-index db17ae78f6c71d782a8cda91a9129eb565bc8b74..381fafae21b17197a24824bd8f0aee2bd11c7481 100644
+index db17ae78f6c71d782a8cda91a9129eb565bc8b74..3a6cb1f76e4ca2affddebefab9f597868fe2c33c 100644
 --- a/third_party/blink/renderer/bindings/core/v8/v8_initializer.cc
 +++ b/third_party/blink/renderer/bindings/core/v8/v8_initializer.cc
-@@ -905,8 +905,9 @@ v8::Isolate* V8Initializer::InitializeMainThread() {
+@@ -905,8 +905,10 @@ v8::Isolate* V8Initializer::InitializeMainThread() {
      add_histogram_sample_callback = AddHistogramSample;
    }
    v8::Isolate* isolate = V8PerIsolateData::Initialize(
@@ -10,7 +10,8 @@ index db17ae78f6c71d782a8cda91a9129eb565bc8b74..381fafae21b17197a24824bd8f0aee2b
 -      snapshot_mode, create_histogram_callback, add_histogram_sample_callback);
 +      scheduler->V8TaskRunner(), scheduler->V8UserVisibleTaskRunner(),
 +      scheduler->V8BestEffortTaskRunner(), snapshot_mode,
-+      create_histogram_callback, add_histogram_sample_callback);
++      create_histogram_callback, add_histogram_sample_callback,
++      ThreadState::Current()->ReleaseCppHeap());
    scheduler->SetV8Isolate(isolate);
  
    // ThreadState::isolate_ needs to be set before setting the EmbedderHeapTracer

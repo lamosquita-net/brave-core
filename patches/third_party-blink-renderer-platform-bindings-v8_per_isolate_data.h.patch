@@ -1,8 +1,8 @@
 diff --git a/third_party/blink/renderer/platform/bindings/v8_per_isolate_data.h b/third_party/blink/renderer/platform/bindings/v8_per_isolate_data.h
-index 2fb8ef2eafa515a9e6ff925655c0e18750f9b1ae..696a22f4ff433a62934b264405dfe7144a593c84 100644
+index 2fb8ef2eafa515a9e6ff925655c0e18750f9b1ae..e418478070ac1b72bcc1a5edbc941885926ad570 100644
 --- a/third_party/blink/renderer/platform/bindings/v8_per_isolate_data.h
 +++ b/third_party/blink/renderer/platform/bindings/v8_per_isolate_data.h
-@@ -107,6 +107,7 @@ class PLATFORM_EXPORT V8PerIsolateData final {
+@@ -107,10 +107,12 @@ class PLATFORM_EXPORT V8PerIsolateData final {
    };
  
    static v8::Isolate* Initialize(scoped_refptr<base::SingleThreadTaskRunner>,
@@ -10,7 +10,13 @@ index 2fb8ef2eafa515a9e6ff925655c0e18750f9b1ae..696a22f4ff433a62934b264405dfe714
                                   scoped_refptr<base::SingleThreadTaskRunner>,
                                   V8ContextSnapshotMode,
                                   v8::CreateHistogramCallback,
-@@ -252,6 +253,7 @@ class PLATFORM_EXPORT V8PerIsolateData final {
+-                                 v8::AddHistogramSampleCallback);
++                                 v8::AddHistogramSampleCallback,
++                                 std::unique_ptr<v8::CppHeap>);
+ 
+   static V8PerIsolateData* From(v8::Isolate* isolate) {
+     DCHECK(isolate);
+@@ -252,10 +254,12 @@ class PLATFORM_EXPORT V8PerIsolateData final {
  
   private:
    V8PerIsolateData(scoped_refptr<base::SingleThreadTaskRunner>,
@@ -18,3 +24,32 @@ index 2fb8ef2eafa515a9e6ff925655c0e18750f9b1ae..696a22f4ff433a62934b264405dfe714
                     scoped_refptr<base::SingleThreadTaskRunner>,
                     V8ContextSnapshotMode,
                     v8::CreateHistogramCallback,
+-                   v8::AddHistogramSampleCallback);
++                   v8::AddHistogramSampleCallback,
++                   std::unique_ptr<v8::CppHeap>);
+   ~V8PerIsolateData();
+ 
+   // A really simple hash function, which makes lookups faster. The set of
+@@ -280,6 +284,14 @@ class PLATFORM_EXPORT V8PerIsolateData final {
+ 
+   V8ContextSnapshotMode v8_context_snapshot_mode_;
+ 
++  // The thread_debugger_ has to be destructed after the IsolateHolder, and
++  // therefore has to be defined before the IsolateHolder. The reason is that
++  // when the IsolateHolder gets destructed, all objects allocated on the
++  // CppHeap get deallocated. AsyncTaskContext objects are allocated on the
++  // CppHeap, and these objects load the ThreadDebugger from the
++  // V8PerIsolateData in its destructor.
++  std::unique_ptr<ThreadDebugger> thread_debugger_;
++
+   // This isolate_holder_ must be initialized before initializing some other
+   // members below.
+   gin::IsolateHolder isolate_holder_;
+@@ -310,7 +322,6 @@ class PLATFORM_EXPORT V8PerIsolateData final {
+ 
+   bool is_handling_recursion_level_error_ = false;
+ 
+-  std::unique_ptr<ThreadDebugger> thread_debugger_;
+   Persistent<ScriptRegexp> password_regexp_;
+   Persistent<UserData>
+       user_data_[static_cast<size_t>(UserData::Key::kNumberOfKeys)];

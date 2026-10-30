@@ -1,5 +1,5 @@
 diff --git a/src/json/json-parser.cc b/src/json/json-parser.cc
-index 389fe3d5544e1e86d99baa898b86ad860339c2c7..f7639578afb5a13177778096518c0f73d6040d82 100644
+index 2225b60f2fa74e65a39072c67a654236a684e857..db8a87c1ff6186e4590557b518cf2f56f459f077 100644
 --- a/src/json/json-parser.cc
 +++ b/src/json/json-parser.cc
 @@ -1494,20 +1494,20 @@ MaybeHandle<Object> JsonParser<Char>::ParseJsonObject(Handle<Map> feedback) {
@@ -26,7 +26,7 @@ index 389fe3d5544e1e86d99baa898b86ad860339c2c7..f7639578afb5a13177778096518c0f73
 -  Expect(JsonToken::RBRACE, MessageTemplate::kJsonParseExpectedCommaOrRBrace);
 +  if (V8_UNLIKELY(!Expect(JsonToken::RBRACE, MessageTemplate::kJsonParseExpectedCommaOrRBrace))) return {};
    Handle<Object> result = BuildJsonObject<false>(cont, feedback);
-   property_stack_.resize_no_init(cont.index);
+   property_stack_.resize(cont.index);
    return cont.scope.CloseAndEscape(result);
 @@ -1553,8 +1553,8 @@ MaybeHandle<Object> JsonParser<Char>::ParseJsonArray() {
        SkipWhitespace();
@@ -46,7 +46,7 @@ index 389fe3d5544e1e86d99baa898b86ad860339c2c7..f7639578afb5a13177778096518c0f73
 -  Expect(JsonToken::RBRACK, MessageTemplate::kJsonParseExpectedCommaOrRBrack);
 +  if (V8_UNLIKELY(!Expect(JsonToken::RBRACK, MessageTemplate::kJsonParseExpectedCommaOrRBrack))) return {};
    Handle<Object> result = BuildJsonArray(start);
-   element_stack_.resize_no_init(start);
+   element_stack_.resize(start);
    return handle_scope.CloseAndEscape(result);
 @@ -1732,15 +1732,15 @@ MaybeHandle<Object> JsonParser<Char>::ParseJsonValue() {
                                    property_stack_.size());
