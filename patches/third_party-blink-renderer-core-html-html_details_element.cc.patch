@@ -1,8 +1,28 @@
 diff --git a/third_party/blink/renderer/core/html/html_details_element.cc b/third_party/blink/renderer/core/html/html_details_element.cc
-index 90a2ea23a7f80a6a783e162c2869c196bafa7a2f..90e70a253ac6f16734d700b1d5985ab68a70c7b2 100644
+index 90a2ea23a7f80a6a783e162c2869c196bafa7a2f..71568ab461ca639a65bf78874cc385f60e4952c6 100644
 --- a/third_party/blink/renderer/core/html/html_details_element.cc
 +++ b/third_party/blink/renderer/core/html/html_details_element.cc
-@@ -352,10 +352,10 @@ bool HTMLDetailsElement::ExpandDetailsAncestors(const Node& node) {
+@@ -245,14 +245,17 @@ void HTMLDetailsElement::ParseAttribute(
+ 
+ void HTMLDetailsElement::AttributeChanged(
+     const AttributeModificationParams& params) {
+-  const QualifiedName& name = params.name;
+-  if (name == html_names::kNameAttr) {
++  if (params.name == html_names::kNameAttr) {
+     if (!params.new_value.empty()) {
+       UseCounter::Count(GetDocument(),
+                         WebFeature::kHTMLDetailsElementNameAttribute);
+     }
+     MaybeCloseForExclusivity();
+   }
++  if (params.name == html_names::kOpenAttr &&
++      params.old_value != params.new_value) {
++    PseudoStateChanged(CSSSelector::kPseudoOpen);
++  }
+ 
+   HTMLElement::AttributeChanged(params);
+ }
+@@ -352,10 +355,10 @@ bool HTMLDetailsElement::ExpandDetailsAncestors(const Node& node) {
    return details_to_open.size();
  }
  
@@ -17,7 +37,7 @@ index 90a2ea23a7f80a6a783e162c2869c196bafa7a2f..90e70a253ac6f16734d700b1d5985ab6
      return parent_is_valid;
    }
    return parent_is_valid || command == CommandEventType::kToggle ||
-@@ -365,7 +365,7 @@ bool HTMLDetailsElement::IsValidCommand(HTMLElement& invoker,
+@@ -365,7 +368,7 @@ bool HTMLDetailsElement::IsValidCommand(HTMLElement& invoker,
  
  bool HTMLDetailsElement::HandleCommandInternal(HTMLElement& invoker,
                                                 CommandEventType command) {

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc b/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
-index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..66423ee380afbb0d031775f33551d2c88bf6c034 100644
+index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..1f8dfbeaf279cad5ad0338307a6756f11b110f12 100644
 --- a/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
 +++ b/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
 @@ -11,6 +11,7 @@
@@ -893,15 +893,9 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..66423ee380afbb0d031775f33551d2c8
 -
 -  CSSParserSavePoint savepoint(range);
 -  CSSParserTokenRange args = ConsumeFunction(range);
--
--  const bool no_quirky_colors = false;
 +  DCHECK_EQ(stream.Peek().FunctionId(), CSSValueID::kColorContrast);
  
--  CSSValue* background_color =
--      ConsumeColorInternal(args, context, no_quirky_colors, allowed_colors);
--  if (!background_color) {
--    return nullptr;
--  }
+-  const bool no_quirky_colors = false;
 +  VectorOf<CSSValue> colors_to_compare_against;
 +  int highest_contrast_index = -1;
 +  SkColor4f resolved_background_color;
@@ -910,11 +904,17 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..66423ee380afbb0d031775f33551d2c8
 +    CSSParserTokenStream::RestoringBlockGuard guard(stream);
 +    stream.ConsumeWhitespace();
  
--  if (!ConsumeIdent<CSSValueID::kVs>(args)) {
+-  CSSValue* background_color =
+-      ConsumeColorInternal(args, context, no_quirky_colors, allowed_colors);
+-  if (!background_color) {
 -    return nullptr;
 -  }
 +    const bool no_quirky_colors = false;
  
+-  if (!ConsumeIdent<CSSValueID::kVs>(args)) {
+-    return nullptr;
+-  }
+-
 -  VectorOf<CSSValue> colors_to_compare_against;
 -  do {
 -    CSSValue* color =
@@ -1089,13 +1089,13 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..66423ee380afbb0d031775f33551d2c8
        return nullptr;
      }
 -  }
- 
+-
 -  // Bail out if there is any trailing stuff after we parse everything
 -  if (!args.AtEnd()) {
 -    stream.Restore(savepoint);
 -    return nullptr;
 -  }
--
+ 
 -  const ui::ColorProvider* color_provider = nullptr;
 -  if (const auto* document = context.GetDocument()) {
 -    // TODO(crbug.com/929098) Need to pass an appropriate color scheme here.
@@ -2244,12 +2244,11 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..66423ee380afbb0d031775f33551d2c8
    }
  
    return MakeGarbageCollected<CSSImageSetOptionValue>(image, resolution, type);
--}
+ }
 -
 -template <typename T>
 -  requires std::is_same_v<T, CSSParserTokenStream> ||
 -           std::is_same_v<T, CSSParserTokenRange>
-+}
 +
  static CSSValue* ConsumeImageSet(
 -    T& stream,
@@ -2398,6 +2397,15 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..66423ee380afbb0d031775f33551d2c8
  }
  
  bool IsSelfPositionOrLeftOrRightKeyword(CSSValueID id) {
+@@ -4947,7 +4848,7 @@ CSSValue* ConsumeTimelineRangeNameAndPercent(T& stream,
+   list->Append(*range_name);
+   CSSValue* percentage =
+       ConsumePercent(stream, context, CSSPrimitiveValue::ValueRange::kAll);
+-  if (!percentage) {
++  if (!percentage || !percentage->IsNumericLiteralValue()) {
+     return nullptr;
+   }
+   list->Append(*percentage);
 @@ -6063,10 +5964,8 @@ CSSValue* ConsumeLineHeight(CSSParserTokenStream& stream,
                                  CSSPrimitiveValue::ValueRange::kNonNegative);
  }
