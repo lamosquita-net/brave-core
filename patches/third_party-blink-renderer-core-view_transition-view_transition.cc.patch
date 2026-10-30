@@ -1,8 +1,21 @@
 diff --git a/third_party/blink/renderer/core/view_transition/view_transition.cc b/third_party/blink/renderer/core/view_transition/view_transition.cc
-index 74ae03bc12ba9a4be33dbeed3aa6805de59a562e..5415d0415512d09fba2a68ea60bfe06ca7bcf01b 100644
+index 74ae03bc12ba9a4be33dbeed3aa6805de59a562e..9612a9cd7805dc1795d6c8c7dac846f0f744f513 100644
 --- a/third_party/blink/renderer/core/view_transition/view_transition.cc
 +++ b/third_party/blink/renderer/core/view_transition/view_transition.cc
-@@ -572,6 +572,13 @@ void ViewTransition::ProcessCurrentState() {
+@@ -552,6 +552,12 @@ void ViewTransition::ProcessCurrentState() {
+         DCHECK_GE(document_->Lifecycle().GetState(),
+                   DocumentLifecycle::kPrePaintClean);
+ 
++        // Lifecycle update can cause the transition to abort (e.g. if the
++        // snapshot root changed size during layout).
++        if (IsTerminalState(state_)) {
++          break;
++        }
++
+         // Note: this happens after updating the lifecycle since the snapshot
+         // root can depend on layout when using a mobile viewport (i.e.
+         // horizontally overflowing element expanding the size of the frame
+@@ -572,6 +578,21 @@ void ViewTransition::ProcessCurrentState() {
            break;
          }
  
@@ -10,9 +23,26 @@ index 74ae03bc12ba9a4be33dbeed3aa6805de59a562e..5415d0415512d09fba2a68ea60bfe06c
 +                ViewTransitionUpdateLifecycleBeforeReadyEnabled()) {
 +          document_->View()->UpdateAllLifecyclePhasesExceptPaint(
 +              DocumentUpdateReason::kViewTransition);
-+          style_tracker_->RunPostPrePaintSteps();
++          // Lifecycle update can cause the transition to abort (e.g. if the
++          // snapshot root changed size during layout).
++          if (IsTerminalState(state_)) {
++            break;
++          }
++          if (!style_tracker_->RunPostPrePaintSteps()) {
++            SkipTransition(PromiseResponse::kRejectInvalidState);
++            break;
++          }
 +        }
 +
          delegate_->AddPendingRequest(
              ViewTransitionRequest::CreateAnimateRenderer(
                  transition_token_, MaybeCrossFrameSink()));
+@@ -824,7 +845,7 @@ void ViewTransition::RunViewTransitionStepsDuringMainFrame() {
+   if (StateRunsInViewTransitionStepsDuringMainFrame(state_))
+     ProcessCurrentState();
+ 
+-  if (style_tracker_ &&
++  if (!IsTerminalState(state_) && style_tracker_ &&
+       document_->Lifecycle().GetState() >= DocumentLifecycle::kPrePaintClean &&
+       !style_tracker_->RunPostPrePaintSteps()) {
+     SkipTransition(PromiseResponse::kRejectInvalidState);

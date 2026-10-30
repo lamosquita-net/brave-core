@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/view_transition/view_transition_style_tracker.cc b/third_party/blink/renderer/core/view_transition/view_transition_style_tracker.cc
-index 1fc15728e5f5e382c77a36592d3b425ebfa9f16d..e21471fc0696daa28f2feaec5b3991393db55b0f 100644
+index 1fc15728e5f5e382c77a36592d3b425ebfa9f16d..8a2e72bf820523b782b53ce3148ecb0aff63c26b 100644
 --- a/third_party/blink/renderer/core/view_transition/view_transition_style_tracker.cc
 +++ b/third_party/blink/renderer/core/view_transition/view_transition_style_tracker.cc
 @@ -43,6 +43,7 @@
@@ -47,7 +47,37 @@ index 1fc15728e5f5e382c77a36592d3b425ebfa9f16d..e21471fc0696daa28f2feaec5b399139
  bool ViewTransitionStyleTracker::FlattenAndVerifyElements(
      VectorOf<Element>& elements,
      VectorOf<AtomicString>& transition_names) {
-@@ -1260,7 +1281,7 @@ bool ViewTransitionStyleTracker::RunPostPrePaintSteps() {
+@@ -1124,6 +1145,12 @@ PseudoElement* ViewTransitionStyleTracker::CreatePseudoElement(
+ bool ViewTransitionStyleTracker::RunPostPrePaintSteps() {
+   DCHECK_GE(document_->Lifecycle().GetState(),
+             DocumentLifecycle::kPrePaintClean);
++  // As Chromium 57683b55a8 (a CHECK there): never run on a finished tracker.
++  DCHECK_NE(state_, State::kFinished);
++  if (state_ == State::kFinished) {
++    return false;
++  }
++
+   // Abort if the document element is not there.
+   if (!document_->documentElement()) {
+     return false;
+@@ -1155,6 +1182,16 @@ bool ViewTransitionStyleTracker::RunPostPrePaintSteps() {
+     return false;
+   }
+ 
++  // If we haven't captured the snapshot root size yet, we can't compute the
++  // max capture size. This can happen if RunPostPrePaintSteps is called before
++  // Capture (e.g., by forcing layout early).
++  // In this case, we should only proceed if we are still in the idle state
++  // (i.e. before capture has even started). If we are past the idle state but
++  // don't have the size, we should abort the transition.
++  if (!snapshot_root_layout_size_at_capture_.has_value()) {
++    return state_ == State::kIdle;
++  }
++
+   const int max_capture_size_in_layout = ComputeMaxCaptureSize(
+       *document_,
+       document_->GetPage()->GetChromeClient().GetMaxRenderBufferBounds(
+@@ -1260,7 +1297,7 @@ bool ViewTransitionStyleTracker::RunPostPrePaintSteps() {
                                          : kPseudoIdViewTransitionOld;
      DCHECK(document_->documentElement());
      if (auto* pseudo_element =
