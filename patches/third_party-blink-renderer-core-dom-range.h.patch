@@ -1,0 +1,30 @@
+diff --git a/third_party/blink/renderer/core/dom/range.h b/third_party/blink/renderer/core/dom/range.h
+index d7138d156bf453e85a409be2feaa8ff83e8a0b8b..8d527e3c2be95800b2415383da11a4e50d9909e0 100644
+--- a/third_party/blink/renderer/core/dom/range.h
++++ b/third_party/blink/renderer/core/dom/range.h
+@@ -206,10 +206,25 @@ class CORE_EXPORT Range final : public AbstractRange {
+   void ScheduleVisualUpdateIfInRegisteredHighlight(Document& document);
+   void RemoveFromSelectionIfInDifferentRoot(Document& old_document);
+ 
++  void CollapseIfNeeded(bool did_move_document, bool collapse_to_start);
++
+   Member<Document> owner_document_;  // Cannot be null.
+   RangeBoundaryPoint start_;
+   RangeBoundaryPoint end_;
+ 
++  // This tracks how the range updates the selection:
++  // If kAll, set selection to have the same start and end as range.
++  // If kStartOnly, set selection to have the same start as range.
++  // If kEndOnly, set selection to have the same end as range.
++  enum class UpdateSelectionBehavior {
++    kAll,
++    kStartOnly,
++    kEndOnly,
++  };
++  UpdateSelectionBehavior update_selection_behavior_ =
++      UpdateSelectionBehavior::kAll;
++  void ResetUpdateSelectionBehavior();
++
+   friend class RangeUpdateScope;
+ };
+ 
