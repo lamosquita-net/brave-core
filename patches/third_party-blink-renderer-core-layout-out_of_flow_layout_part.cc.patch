@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/out_of_flow_layout_part.cc b/third_party/blink/renderer/core/layout/out_of_flow_layout_part.cc
-index d24567f1e070c7f68cd80338285b58428d463fd0..9b46643e3a0b401d96aa9af3d008959ab929c509 100644
+index d24567f1e070c7f68cd80338285b58428d463fd0..44081ac7e5d36f9f986c6459d36811bbf581633c 100644
 --- a/third_party/blink/renderer/core/layout/out_of_flow_layout_part.cc
 +++ b/third_party/blink/renderer/core/layout/out_of_flow_layout_part.cc
 @@ -10,6 +10,7 @@
@@ -123,7 +123,21 @@ index d24567f1e070c7f68cd80338285b58428d463fd0..9b46643e3a0b401d96aa9af3d008959a
  }
  
  }  // namespace
-@@ -470,12 +473,13 @@ OutOfFlowLayoutPart::OutOfFlowLayoutPart(BoxFragmentBuilder* container_builder)
+@@ -458,8 +461,11 @@ std::optional<LogicalSize> OutOfFlowLayoutPart::InitialContainingBlockFixedSize(
+     return std::nullopt;
+   const auto* frame_view = container.GetDocument().View();
+   DCHECK(frame_view);
+-  PhysicalSize size(
+-      frame_view->LayoutViewport()->ExcludeScrollbars(frame_view->Size()));
++  PhysicalSize size =
++      RuntimeEnabledFeatures::ScrollbarGutterFixedPosBugfixEnabled()
++          ? PhysicalSize(frame_view->Size())
++          : PhysicalSize(frame_view->LayoutViewport()->ExcludeScrollbars(
++                frame_view->Size()));
+   return size.ConvertToLogical(container.Style().GetWritingMode());
+ }
+ 
+@@ -470,12 +476,13 @@ OutOfFlowLayoutPart::OutOfFlowLayoutPart(BoxFragmentBuilder* container_builder)
        has_block_fragmentation_(
            InvolvedInBlockFragmentation(*container_builder)) {
    // If there are no OOFs inside, we can return early, except if this is the
@@ -140,7 +154,7 @@ index d24567f1e070c7f68cd80338285b58428d463fd0..9b46643e3a0b401d96aa9af3d008959a
      return;
    }
  
-@@ -487,6 +491,10 @@ OutOfFlowLayoutPart::OutOfFlowLayoutPart(BoxFragmentBuilder* container_builder)
+@@ -487,12 +494,22 @@ OutOfFlowLayoutPart::OutOfFlowLayoutPart(BoxFragmentBuilder* container_builder)
        GetConstraintSpace().GetWritingDirection();
    default_containing_block_info_for_fixed_.writing_direction =
        GetConstraintSpace().GetWritingDirection();
@@ -151,7 +165,21 @@ index d24567f1e070c7f68cd80338285b58428d463fd0..9b46643e3a0b401d96aa9af3d008959a
    if (container_builder_->HasBlockSize()) {
      default_containing_block_info_for_absolute_.rect.size =
          ShrinkLogicalSize(container_builder_->Size(), border_scrollbar);
-@@ -501,22 +509,85 @@ OutOfFlowLayoutPart::OutOfFlowLayoutPart(BoxFragmentBuilder* container_builder)
+     default_containing_block_info_for_fixed_.rect.size =
+-        InitialContainingBlockFixedSize(container_builder->Node())
+-            .value_or(default_containing_block_info_for_absolute_.rect.size);
++        RuntimeEnabledFeatures::ScrollbarGutterFixedPosBugfixEnabled()
++            ? ShrinkLogicalSize(
++                  InitialContainingBlockFixedSize(container_builder->Node())
++                      .value_or(container_builder_->Size()),
++                  border_scrollbar)
++            : InitialContainingBlockFixedSize(container_builder->Node())
++                  .value_or(
++                      default_containing_block_info_for_absolute_.rect.size);
+   }
+   LogicalOffset container_offset = {border_scrollbar.inline_start,
+                                     border_scrollbar.block_start};
+@@ -501,22 +518,85 @@ OutOfFlowLayoutPart::OutOfFlowLayoutPart(BoxFragmentBuilder* container_builder)
  }
  
  void OutOfFlowLayoutPart::Run() {
@@ -244,7 +272,7 @@ index d24567f1e070c7f68cd80338285b58428d463fd0..9b46643e3a0b401d96aa9af3d008959a
  }
  
  void OutOfFlowLayoutPart::HandleFragmentation() {
-@@ -534,23 +605,6 @@ void OutOfFlowLayoutPart::HandleFragmentation() {
+@@ -534,23 +614,6 @@ void OutOfFlowLayoutPart::HandleFragmentation() {
    }
  
    if (container_builder_->Node().IsPaginatedRoot()) {
@@ -268,7 +296,7 @@ index d24567f1e070c7f68cd80338285b58428d463fd0..9b46643e3a0b401d96aa9af3d008959a
      HeapVector<LogicalOofPositionedNode> candidates;
      ClearCollectionScope<HeapVector<LogicalOofPositionedNode>> scope(
          &candidates);
-@@ -610,8 +664,8 @@ void OutOfFlowLayoutPart::HandleFragmentation() {
+@@ -610,8 +673,8 @@ void OutOfFlowLayoutPart::HandleFragmentation() {
  }
  
  OutOfFlowLayoutPart::ContainingBlockInfo
@@ -279,7 +307,7 @@ index d24567f1e070c7f68cd80338285b58428d463fd0..9b46643e3a0b401d96aa9af3d008959a
      const OutOfFlowLayoutPart::ContainingBlockInfo& container_info) const {
    ContainingBlockInfo adjusted_container_info(container_info);
    PhysicalToLogical converter(container_info.writing_direction,
-@@ -620,7 +674,7 @@ OutOfFlowLayoutPart::ApplyInsetAreaOffsets(
+@@ -620,7 +683,7 @@ OutOfFlowLayoutPart::ApplyInsetAreaOffsets(
                                offsets.bottom.value_or(LayoutUnit()),
                                offsets.left.value_or(LayoutUnit()));
  
@@ -288,7 +316,7 @@ index d24567f1e070c7f68cd80338285b58428d463fd0..9b46643e3a0b401d96aa9af3d008959a
    adjusted_container_info.rect.ContractEdges(
        converter.BlockStart(), converter.InlineEnd(), converter.BlockEnd(),
        converter.InlineStart());
-@@ -628,15 +682,15 @@ OutOfFlowLayoutPart::ApplyInsetAreaOffsets(
+@@ -628,15 +691,15 @@ OutOfFlowLayoutPart::ApplyInsetAreaOffsets(
    // For 'center' values (aligned with start and end anchor sides), the
    // containing block is aligned and sized with the anchor, regardless of
    // whether it's inside the original containing block or not. Otherwise,
@@ -307,7 +335,7 @@ index d24567f1e070c7f68cd80338285b58428d463fd0..9b46643e3a0b401d96aa9af3d008959a
      if (converter.InlineStart() == LayoutUnit()) {
        DCHECK(converter.InlineEnd() != LayoutUnit());
        adjusted_container_info.rect.offset.inline_offset +=
-@@ -650,7 +704,7 @@ OutOfFlowLayoutPart::ApplyInsetAreaOffsets(
+@@ -650,7 +713,7 @@ OutOfFlowLayoutPart::ApplyInsetAreaOffsets(
          << "If aligned to both anchor edges, the size should never be "
             "negative.";
      // Collapse the block size to 0 and align with the single anchor edge
@@ -316,7 +344,7 @@ index d24567f1e070c7f68cd80338285b58428d463fd0..9b46643e3a0b401d96aa9af3d008959a
      if (converter.BlockStart() == LayoutUnit()) {
        DCHECK(converter.BlockEnd() != LayoutUnit());
        adjusted_container_info.rect.offset.block_offset +=
-@@ -748,7 +802,7 @@ OutOfFlowLayoutPart::GetContainingBlockInfo(
+@@ -748,7 +811,7 @@ OutOfFlowLayoutPart::GetContainingBlockInfo(
        container_offset += fragmentainer_descendant.containing_block.Offset();
  
        ContainingBlockInfo containing_block_info{
@@ -325,7 +353,7 @@ index d24567f1e070c7f68cd80338285b58428d463fd0..9b46643e3a0b401d96aa9af3d008959a
            LogicalRect(container_offset, content_size),
            fragmentainer_descendant.containing_block.RelativeOffset(),
            fragmentainer_descendant.containing_block.Offset()};
-@@ -1026,26 +1080,25 @@ void OutOfFlowLayoutPart::AddInlineContainingBlockInfo(
+@@ -1026,26 +1089,25 @@ void OutOfFlowLayoutPart::AddInlineContainingBlockInfo(
          block_info.key.Get(),
          ContainingBlockInfo{
              inline_writing_direction,
@@ -362,7 +390,7 @@ index d24567f1e070c7f68cd80338285b58428d463fd0..9b46643e3a0b401d96aa9af3d008959a
        if (IsContainingBlockForCandidate(candidate)) {
          if (has_block_fragmentation_) {
            container_builder_->SetHasOutOfFlowInFragmentainerSubtree(true);
-@@ -1082,10 +1135,11 @@ void OutOfFlowLayoutPart::LayoutCandidates() {
+@@ -1082,10 +1144,11 @@ void OutOfFlowLayoutPart::LayoutCandidates() {
          container_builder_->AddOutOfFlowDescendant(candidate);
        }
      }
@@ -376,7 +404,7 @@ index d24567f1e070c7f68cd80338285b58428d463fd0..9b46643e3a0b401d96aa9af3d008959a
    }
  }
  
-@@ -1953,7 +2007,6 @@ OutOfFlowLayoutPart::OffsetInfo OutOfFlowLayoutPart::CalculateOffset(
+@@ -1953,7 +2016,6 @@ OutOfFlowLayoutPart::OffsetInfo OutOfFlowLayoutPart::CalculateOffset(
  
    unsigned attempts_left = kMaxTryAttempts;
    bool has_no_overflow_visibility =
@@ -384,7 +412,7 @@ index d24567f1e070c7f68cd80338285b58428d463fd0..9b46643e3a0b401d96aa9af3d008959a
        node_info.node.Style().HasPositionVisibility(
            PositionVisibility::kNoOverflow);
    // If `position-try-fallbacks` or `position-visibility: no-overflow` exists,
-@@ -2034,6 +2087,7 @@ OutOfFlowLayoutPart::OffsetInfo OutOfFlowLayoutPart::CalculateOffset(
+@@ -2034,6 +2096,7 @@ OutOfFlowLayoutPart::OffsetInfo OutOfFlowLayoutPart::CalculateOffset(
      DCHECK(offset_info->non_overflowing_scroll_ranges.empty());
    }
  
@@ -392,7 +420,7 @@ index d24567f1e070c7f68cd80338285b58428d463fd0..9b46643e3a0b401d96aa9af3d008959a
    offset_info->display_locks_affected_by_anchors =
        anchor_evaluator.GetDisplayLocksAffectedByAnchors();
  
-@@ -2061,9 +2115,10 @@ OutOfFlowLayoutPart::TryCalculateOffset(
+@@ -2061,9 +2124,10 @@ OutOfFlowLayoutPart::TryCalculateOffset(
  
    const ContainingBlockInfo container_info = ([&]() -> ContainingBlockInfo {
      ContainingBlockInfo container_info = node_info.base_container_info;
@@ -406,7 +434,7 @@ index d24567f1e070c7f68cd80338285b58428d463fd0..9b46643e3a0b401d96aa9af3d008959a
      }
      return container_info;
    })();
-@@ -2077,14 +2132,10 @@ OutOfFlowLayoutPart::TryCalculateOffset(
+@@ -2077,14 +2141,10 @@ OutOfFlowLayoutPart::TryCalculateOffset(
        ToPhysicalSize(container_rect.size,
                       node_info.default_writing_direction.GetWritingMode());
  
@@ -425,7 +453,7 @@ index d24567f1e070c7f68cd80338285b58428d463fd0..9b46643e3a0b401d96aa9af3d008959a
      const LogicalRect& base_rect = node_info.base_container_info.rect;
      const BoxStrut insets(
          container_rect.offset.inline_offset - base_rect.offset.inline_offset,
-@@ -2117,19 +2168,14 @@ OutOfFlowLayoutPart::TryCalculateOffset(
+@@ -2117,19 +2177,14 @@ OutOfFlowLayoutPart::TryCalculateOffset(
      return builder.ToConstraintSpace();
    })();
  
@@ -448,7 +476,7 @@ index d24567f1e070c7f68cd80338285b58428d463fd0..9b46643e3a0b401d96aa9af3d008959a
    // Adjust the |static_position| (which is currently relative to the default
    // container's border-box) to be relative to the padding-box.
    // Since |container_rect.offset| is relative to its fragmentainer in this
-@@ -2147,8 +2193,7 @@ OutOfFlowLayoutPart::TryCalculateOffset(
+@@ -2147,8 +2202,7 @@ OutOfFlowLayoutPart::TryCalculateOffset(
  
    const InsetModifiedContainingBlock imcb = ComputeInsetModifiedContainingBlock(
        node_info.node, space.AvailableSize(), alignment, insets, static_position,
@@ -458,7 +486,7 @@ index d24567f1e070c7f68cd80338285b58428d463fd0..9b46643e3a0b401d96aa9af3d008959a
  
    {
      auto& document = node_info.node.GetDocument();
-@@ -2216,11 +2261,17 @@ OutOfFlowLayoutPart::TryCalculateOffset(
+@@ -2216,11 +2270,17 @@ OutOfFlowLayoutPart::TryCalculateOffset(
                              border_padding, ReplacedSizeMode::kNormal);
    }
  
@@ -478,7 +506,7 @@ index d24567f1e070c7f68cd80338285b58428d463fd0..9b46643e3a0b401d96aa9af3d008959a
  
    PhysicalToLogicalGetter has_non_auto_inset(
        candidate_writing_direction, candidate_style,
-@@ -2242,7 +2293,7 @@ OutOfFlowLayoutPart::TryCalculateOffset(
+@@ -2242,7 +2302,7 @@ OutOfFlowLayoutPart::TryCalculateOffset(
              node_dimensions.MarginBoxInlineEnd(),
              imcb_for_position_fallback->inline_start,
              imcb_for_position_fallback->InlineEndOffset(),
@@ -487,7 +515,7 @@ index d24567f1e070c7f68cd80338285b58428d463fd0..9b46643e3a0b401d96aa9af3d008959a
              has_non_auto_inset.InlineStart(), has_non_auto_inset.InlineEnd(),
              &inline_scroll_min, &inline_scroll_max)) {
        return std::nullopt;
-@@ -2253,8 +2304,9 @@ OutOfFlowLayoutPart::TryCalculateOffset(
+@@ -2253,8 +2313,9 @@ OutOfFlowLayoutPart::TryCalculateOffset(
    // our min/max sizes, only run if needed.
    if (node_dimensions.size.block_size == kIndefiniteSize) {
      offset_info.initial_layout_result = ComputeOofBlockDimensions(
@@ -499,7 +527,7 @@ index d24567f1e070c7f68cd80338285b58428d463fd0..9b46643e3a0b401d96aa9af3d008959a
    }
  
    // Calculate the block scroll offset range where the block dimension fits.
-@@ -2266,7 +2318,7 @@ OutOfFlowLayoutPart::TryCalculateOffset(
+@@ -2266,7 +2327,7 @@ OutOfFlowLayoutPart::TryCalculateOffset(
              node_dimensions.MarginBoxBlockEnd(),
              imcb_for_position_fallback->block_start,
              imcb_for_position_fallback->BlockEndOffset(),
@@ -508,7 +536,7 @@ index d24567f1e070c7f68cd80338285b58428d463fd0..9b46643e3a0b401d96aa9af3d008959a
              has_non_auto_inset.BlockStart(), has_non_auto_inset.BlockEnd(),
              &block_scroll_min, &block_scroll_max)) {
        return std::nullopt;
-@@ -2366,11 +2418,15 @@ const LayoutResult* OutOfFlowLayoutPart::Layout(
+@@ -2366,11 +2427,15 @@ const LayoutResult* OutOfFlowLayoutPart::Layout(
    layout_result->GetMutableForOutOfFlow().SetNonOverflowingScrollRanges(
        offset_info.non_overflowing_scroll_ranges);
  
@@ -526,7 +554,7 @@ index d24567f1e070c7f68cd80338285b58428d463fd0..9b46643e3a0b401d96aa9af3d008959a
                                        container_builder_->AnchorQuery());
  
    return layout_result;
-@@ -2939,6 +2995,7 @@ void OutOfFlowLayoutPart::NodeInfo::Trace(Visitor* visitor) const {
+@@ -2939,6 +3004,7 @@ void OutOfFlowLayoutPart::NodeInfo::Trace(Visitor* visitor) const {
  void OutOfFlowLayoutPart::OffsetInfo::Trace(Visitor* visitor) const {
    visitor->Trace(initial_layout_result);
    visitor->Trace(non_overflowing_scroll_ranges);

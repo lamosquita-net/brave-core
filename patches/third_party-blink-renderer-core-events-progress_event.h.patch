@@ -1,0 +1,44 @@
+diff --git a/third_party/blink/renderer/core/events/progress_event.h b/third_party/blink/renderer/core/events/progress_event.h
+index 61f401b348573c1eb4cf9d4c0f52f98adb0b956e..a6b9f375fbf83214d52b7c52c8a9296d01b2dacf 100644
+--- a/third_party/blink/renderer/core/events/progress_event.h
++++ b/third_party/blink/renderer/core/events/progress_event.h
+@@ -42,8 +42,8 @@ class CORE_EXPORT ProgressEvent : public Event {
+   }
+   static ProgressEvent* Create(const AtomicString& type,
+                                bool length_computable,
+-                               uint64_t loaded,
+-                               uint64_t total) {
++                               double loaded,
++                               double total) {
+     return MakeGarbageCollected<ProgressEvent>(type, length_computable, loaded,
+                                                total);
+   }
+@@ -55,13 +55,13 @@ class CORE_EXPORT ProgressEvent : public Event {
+   ProgressEvent();
+   ProgressEvent(const AtomicString& type,
+                 bool length_computable,
+-                uint64_t loaded,
+-                uint64_t total);
++                double loaded,
++                double total);
+   ProgressEvent(const AtomicString&, const ProgressEventInit*);
+ 
+   bool lengthComputable() const { return length_computable_; }
+-  uint64_t loaded() const { return loaded_; }
+-  uint64_t total() const { return total_; }
++  double loaded() const { return loaded_; }
++  double total() const { return total_; }
+ 
+   const AtomicString& InterfaceName() const override;
+ 
+@@ -69,8 +69,8 @@ class CORE_EXPORT ProgressEvent : public Event {
+ 
+  private:
+   bool length_computable_;
+-  uint64_t loaded_;
+-  uint64_t total_;
++  double loaded_;
++  double total_;
+ };
+ 
+ }  // namespace blink

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/inline/line_breaker.cc b/third_party/blink/renderer/core/layout/inline/line_breaker.cc
-index 32fdcd1f620473fe802f2a6d5636ef2032eb61b9..f55ed060dfd9c7b4b433200825f638eda931aab8 100644
+index 32fdcd1f620473fe802f2a6d5636ef2032eb61b9..bffca0a1c27de61c5ad23dec64a2c32963bc2eab 100644
 --- a/third_party/blink/renderer/core/layout/inline/line_breaker.cc
 +++ b/third_party/blink/renderer/core/layout/inline/line_breaker.cc
 @@ -38,6 +38,7 @@
@@ -224,7 +224,7 @@ index 32fdcd1f620473fe802f2a6d5636ef2032eb61b9..f55ed060dfd9c7b4b433200825f638ed
      return true;
    }
  
-@@ -3465,6 +3497,11 @@ LineInfo LineBreaker::CreateSubLineInfo(
+@@ -3465,11 +3497,18 @@ LineInfo LineBreaker::CreateSubLineInfo(
    sub_line_breaker.disallow_auto_wrap_ = disallow_auto_wrap;
    sub_line_breaker.SetInputRange(start, end_item_index,
                                   initial_whitespace_state, this);
@@ -236,7 +236,14 @@ index 32fdcd1f620473fe802f2a6d5636ef2032eb61b9..f55ed060dfd9c7b4b433200825f638ed
    // OverrideAvailableWidth() prevents HandleFloat() from updating
    // available_width_.
    sub_line_breaker.OverrideAvailableWidth(limit);
-@@ -3668,6 +3705,10 @@ void LineBreaker::HandleFloat(const InlineItem& item,
+   sub_line_breaker.NextLine(&sub_line_info);
+   if (disallow_auto_wrap) {
++    // If this check fails, a forced break or a block-in-inline might
++    // appear unexpectedly.
+     CHECK(sub_line_breaker.IsAtEnd());
+   }
+   return sub_line_info;
+@@ -3668,6 +3707,10 @@ void LineBreaker::HandleFloat(const InlineItem& item,
      item_result->exclusion_space_before_position_float.CopyFrom(
          *exclusion_space_);
  
@@ -247,7 +254,7 @@ index 32fdcd1f620473fe802f2a6d5636ef2032eb61b9..f55ed060dfd9c7b4b433200825f638ed
      // Don't break after leading floats if indented.
      if (position_ != 0)
        item_result->can_break_after = false;
-@@ -4080,6 +4121,30 @@ void LineBreaker::HandleOverflow(LineInfo* line_info) {
+@@ -4080,6 +4123,30 @@ void LineBreaker::HandleOverflow(LineInfo* line_info) {
      }
    }
  
@@ -278,7 +285,7 @@ index 32fdcd1f620473fe802f2a6d5636ef2032eb61b9..f55ed060dfd9c7b4b433200825f638ed
    // Reaching here means that the rewind point was not found.
  
    if (break_iterator_.BreakType() == LineBreakType::kPhrase &&
-@@ -4111,8 +4176,13 @@ void LineBreaker::HandleOverflow(LineInfo* line_info) {
+@@ -4111,8 +4178,13 @@ void LineBreaker::HandleOverflow(LineInfo* line_info) {
  
    // Restore the hyphenation states to before the loop if needed.
    DCHECK(!HasHyphen());
@@ -293,7 +300,7 @@ index 32fdcd1f620473fe802f2a6d5636ef2032eb61b9..f55ed060dfd9c7b4b433200825f638ed
  
    // If there was a break opportunity, the overflow should stop there.
    if (break_before) {
-@@ -4581,6 +4651,9 @@ const InlineBreakToken* LineBreaker::CreateBreakToken(
+@@ -4581,6 +4653,9 @@ const InlineBreakToken* LineBreaker::CreateBreakToken(
      sub_break_token = block_in_inline_fragment.GetBreakToken();
    }
  
@@ -303,7 +310,7 @@ index 32fdcd1f620473fe802f2a6d5636ef2032eb61b9..f55ed060dfd9c7b4b433200825f638ed
    DCHECK_EQ(line_info.HasForcedBreak(), is_after_forced_break_);
    unsigned flags =
        (is_after_forced_break_ ? InlineBreakToken::kIsForcedBreak : 0) |
-@@ -4588,6 +4661,9 @@ const InlineBreakToken* LineBreaker::CreateBreakToken(
+@@ -4588,6 +4663,9 @@ const InlineBreakToken* LineBreaker::CreateBreakToken(
                                       : 0) |
        (cloned_box_decorations_count_
             ? InlineBreakToken::kHasClonedBoxDecorations

@@ -1,0 +1,22 @@
+diff --git a/third_party/blink/renderer/core/layout/forms/layout_fieldset.cc b/third_party/blink/renderer/core/layout/forms/layout_fieldset.cc
+index 8bf59f87a985e31257f8d71e50fb13490ee2b31c..933f2938d40961cf3e120e8f1b21e537d8219b4f 100644
+--- a/third_party/blink/renderer/core/layout/forms/layout_fieldset.cc
++++ b/third_party/blink/renderer/core/layout/forms/layout_fieldset.cc
+@@ -127,11 +127,12 @@ void LayoutFieldset::UpdateAnonymousChildStyle(
+   child_style_builder.SetPaddingLeft(StyleRef().PaddingLeft());
+ 
+   if (StyleRef().SpecifiesColumns() && AllowsColumns()) {
+-    child_style_builder.SetColumnCount(StyleRef().ColumnCount());
+-    child_style_builder.SetColumnWidth(StyleRef().ColumnWidth());
+-  } else {
+-    child_style_builder.SetHasAutoColumnCount();
+-    child_style_builder.SetHasAutoColumnWidth();
++    if (!StyleRef().HasAutoColumnCount()) {
++      child_style_builder.SetColumnCount(StyleRef().ColumnCount());
++    }
++    if (!StyleRef().HasAutoColumnWidth()) {
++      child_style_builder.SetColumnWidth(StyleRef().ColumnWidth());
++    }
+   }
+   child_style_builder.SetColumnGap(StyleRef().ColumnGap());
+   child_style_builder.SetColumnFill(StyleRef().GetColumnFill());

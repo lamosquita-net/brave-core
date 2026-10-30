@@ -1,0 +1,19 @@
+diff --git a/third_party/blink/renderer/core/html/html_br_element.cc b/third_party/blink/renderer/core/html/html_br_element.cc
+index adf7c2b2f43db08c889eca331bdacc4ec0ea4f7e..f613a9cb8c796432adb9b80d96f49deeccd80350 100644
+--- a/third_party/blink/renderer/core/html/html_br_element.cc
++++ b/third_party/blink/renderer/core/html/html_br_element.cc
+@@ -62,10 +62,10 @@ void HTMLBRElement::CollectStyleForPresentationAttribute(
+ }
+ 
+ LayoutObject* HTMLBRElement::CreateLayoutObject(const ComputedStyle& style) {
+-  if (style.ContentBehavesAsNormal())
+-    return MakeGarbageCollected<LayoutBR>(*this);
+-
+-  return LayoutObject::CreateObject(this, style);
++  if (ShouldUseContentDataForElement(style.GetContentData())) {
++    return LayoutObject::CreateObject(this, style);
++  }
++  return MakeGarbageCollected<LayoutBR>(*this);
+ }
+ 
+ }  // namespace blink

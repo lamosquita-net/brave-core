@@ -1,8 +1,8 @@
 diff --git a/third_party/blink/renderer/core/css/css_attr_type.cc b/third_party/blink/renderer/core/css/css_attr_type.cc
-index db0931f076e6f1824a428cb418a8cf664a6913f7..1d37fe2017afd28ea9f16938279b71ed87153bd1 100644
+index db0931f076e6f1824a428cb418a8cf664a6913f7..e86a013e3552d17aef2044f10d69eeb485aa90f8 100644
 --- a/third_party/blink/renderer/core/css/css_attr_type.cc
 +++ b/third_party/blink/renderer/core/css/css_attr_type.cc
-@@ -4,103 +4,100 @@
+@@ -4,103 +4,101 @@
  
  #include "third_party/blink/renderer/core/css/css_attr_type.h"
  
@@ -168,11 +168,12 @@ index db0931f076e6f1824a428cb418a8cf664a6913f7..1d37fe2017afd28ea9f16938279b71ed
 +    CSSParserTokenStream stream(tokenizer);
 +    CSSPrimitiveValue* number_value = css_parsing_utils::ConsumeNumber(
 +        stream, context, CSSPrimitiveValue::ValueRange::kAll);
-+    if (!number_value) {
-+      return nullptr;
++    if (CSSNumericLiteralValue* literal =
++            DynamicTo<CSSNumericLiteralValue>(number_value)) {
++      return MakeGarbageCollected<CSSNumericLiteralValue>(
++          literal->GetDoubleValue(), *dimension_unit_);
 +    }
-+    return MakeGarbageCollected<CSSNumericLiteralValue>(
-+        number_value->GetDoubleValue(), *dimension_unit_);
++    return nullptr;
 +  }
 +  if (IsSyntax()) {
 +    return syntax_->Parse(text, context, false);

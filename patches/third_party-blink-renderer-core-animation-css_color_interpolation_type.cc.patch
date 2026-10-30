@@ -1,8 +1,35 @@
 diff --git a/third_party/blink/renderer/core/animation/css_color_interpolation_type.cc b/third_party/blink/renderer/core/animation/css_color_interpolation_type.cc
-index af246d4544c61767b880df38a4a26637a2c4bb87..beb32c9f8351d42266529172479e0140fafe06ba 100644
+index af246d4544c61767b880df38a4a26637a2c4bb87..fa48960b7e5cec576e338392ec9a00391a25e4d3 100644
 --- a/third_party/blink/renderer/core/animation/css_color_interpolation_type.cc
 +++ b/third_party/blink/renderer/core/animation/css_color_interpolation_type.cc
-@@ -103,7 +103,7 @@ BaseInterpolableColor* CSSColorInterpolationType::CreateBaseInterpolableColor(
+@@ -65,12 +65,24 @@ void CSSColorInterpolationType::EnsureCompatibleInterpolableColorTypes(
+     InterpolableList& list_b) {
+   CHECK_EQ(list_a.length(), list_b.length());
+   for (wtf_size_t i = 0; i < list_a.length(); i++) {
+-    if (list_a.Get(i)->IsStyleColor() != list_b.Get(i)->IsStyleColor()) {
++    auto& underlying = list_a.GetMutable(i);
++    auto& other = list_b.GetMutable(i);
++
++    if (underlying->IsStyleColor() != other->IsStyleColor()) {
+       // If either value is a style color then both must be.
+       EnsureInterpolableStyleColor(list_a, i);
+       EnsureInterpolableStyleColor(list_b, i);
+     }
+-    DCHECK_EQ(list_a.Get(i)->IsStyleColor(), list_b.Get(i)->IsStyleColor());
++    DCHECK_EQ(underlying->IsStyleColor(), other->IsStyleColor());
++    DCHECK_EQ(underlying->IsColor(), other->IsColor());
++
++    if (underlying->IsColor() && other->IsColor()) {
++      auto& a = To<InterpolableColor>(*underlying);
++      auto& b = To<InterpolableColor>(*other);
++      if (a.GetColor().GetColorSpace() != b.GetColor().GetColorSpace()) {
++        InterpolableColor::SetupColorInterpolationSpaces(a, b);
++      }
++    }
+   }
+ }
+ 
+@@ -103,7 +115,7 @@ BaseInterpolableColor* CSSColorInterpolationType::CreateBaseInterpolableColor(
      const StyleColor& color,
      mojom::blink::ColorScheme color_scheme,
      const ui::ColorProvider* color_provider) {
@@ -11,3 +38,11 @@ index af246d4544c61767b880df38a4a26637a2c4bb87..beb32c9f8351d42266529172479e0140
      return InterpolableStyleColor::Create(color);
    }
    return CreateInterpolableColor(color, color_scheme, color_provider);
+@@ -386,7 +398,6 @@ void CSSColorInterpolationType::Composite(
+     auto& underlying =
+         To<BaseInterpolableColor>(*underlying_list.GetMutable(i));
+     auto& other = To<BaseInterpolableColor>(*other_list.Get(i));
+-    DCHECK_EQ(underlying.IsStyleColor(), other.IsStyleColor());
+     underlying.Composite(other, underlying_fraction);
+   }
+ }

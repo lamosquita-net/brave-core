@@ -1,8 +1,34 @@
 diff --git a/third_party/blink/renderer/core/css/css_color_mix_value.h b/third_party/blink/renderer/core/css/css_color_mix_value.h
-index 0def2be0bf7a2237e4b15211c6c6cbb4572d4a6a..e913a8fbe36d4b23d263424b6aa94f442aa6ab4d 100644
+index 0def2be0bf7a2237e4b15211c6c6cbb4572d4a6a..8c57a16b321621728f1e1bcfe0ccb83fcd00ea59 100644
 --- a/third_party/blink/renderer/core/css/css_color_mix_value.h
 +++ b/third_party/blink/renderer/core/css/css_color_mix_value.h
-@@ -52,17 +52,21 @@ class CORE_EXPORT CSSColorMixValue : public CSSValue {
+@@ -6,12 +6,15 @@
+ #define THIRD_PARTY_BLINK_RENDERER_CORE_CSS_CSS_COLOR_MIX_VALUE_H_
+ 
+ #include "third_party/blink/renderer/core/core_export.h"
+-#include "third_party/blink/renderer/core/css/css_primitive_value.h"
+ #include "third_party/blink/renderer/core/css/css_value.h"
+ #include "third_party/blink/renderer/platform/graphics/color.h"
+ #include "third_party/blink/renderer/platform/wtf/casting.h"
+ 
+ namespace blink {
++
++class CSSLengthResolver;
++class CSSPrimitiveValue;
++
+ namespace cssvalue {
+ 
+ // This is a class for storing the result of parsing the color-mix function
+@@ -33,7 +36,7 @@ class CORE_EXPORT CSSColorMixValue : public CSSValue {
+         color_interpolation_space_(color_interpolation_space),
+         hue_interpolation_method_(hue_interpolation_method) {}
+ 
+-  String CustomCSSText() const;
++  WTF::String CustomCSSText() const;
+ 
+   void TraceAfterDispatch(blink::Visitor* visitor) const;
+ 
+@@ -52,19 +55,28 @@ class CORE_EXPORT CSSColorMixValue : public CSSValue {
  
    // Mix `color1` with `color2` using the parameters defined by the color-mix()
    // function defined by this CSS value.
@@ -27,4 +53,11 @@ index 0def2be0bf7a2237e4b15211c6c6cbb4572d4a6a..e913a8fbe36d4b23d263424b6aa94f44
 +                                alpha_multiplier, length_resolver);
    }
  
++  // https://drafts.csswg.org/css-color-5/#serial-color-mix
++  static std::pair<const CSSPrimitiveValue*, const CSSPrimitiveValue*>
++  PercentageValuesForSerialization(const CSSPrimitiveValue* p1,
++                                   const CSSPrimitiveValue* p2);
++
   private:
+   Member<const CSSValue> color1_;
+   Member<const CSSValue> color2_;
