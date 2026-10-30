@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/css_properties.json5 b/third_party/blink/renderer/core/css/css_properties.json5
-index 4947f61156639057adec5cb80f9bf09c9aa3c665..85898d719bd05f22abbb100c2118b58d44e5b07f 100644
+index 4947f61156639057adec5cb80f9bf09c9aa3c665..4f7ad01c025dfcfbbf6721b3f517a43641c69fec 100644
 --- a/third_party/blink/renderer/core/css/css_properties.json5
 +++ b/third_party/blink/renderer/core/css/css_properties.json5
 @@ -282,14 +282,15 @@
@@ -459,3 +459,62 @@ index 4947f61156639057adec5cb80f9bf09c9aa3c665..85898d719bd05f22abbb100c2118b58d
      },
      {
        // Variant of the "position-try" shorthand which has the new
+@@ -8558,6 +8625,36 @@
+       valid_for_highlight_legacy: true,
+       valid_for_highlight: true,
+     },
++    {
++      name: "-internal-visited-flood-color",
++      visited_property_for: "flood-color",
++      property_methods: ["ParseSingleValue", "ColorIncludingFallback"],
++      field_group: "*->visited",
++      field_template: "external",
++      include_paths: ["third_party/blink/renderer/core/css/style_color.h"],
++      default_value: "StyleColor(Color::kBlack)",
++      type_name: "StyleColor",
++      style_builder_template: "visited_color",
++      style_builder_template_args: {
++        initial_color: "ComputedStyleInitialValues::InitialFloodColor",
++      },
++      converter: "ConvertStyleColor",
++    },
++    {
++      name: "-internal-visited-lighting-color",
++      visited_property_for: "lighting-color",
++      property_methods: ["ParseSingleValue", "ColorIncludingFallback"],
++      field_group: "*->visited",
++      field_template: "external",
++      include_paths: ["third_party/blink/renderer/core/css/style_color.h"],
++      default_value: "StyleColor(Color::kWhite)",
++      type_name: "StyleColor",
++      style_builder_template: "visited_color",
++      style_builder_template_args: {
++        initial_color: "ComputedStyleInitialValues::InitialLightingColor",
++      },
++      converter: "ConvertStyleColor",
++    },
+     {
+       name: "-internal-visited-outline-color",
+       visited_property_for: "outline-color",
+@@ -8573,6 +8670,21 @@
+       valid_for_cue: true,
+       invalidate: ["border-outline-visited-color"],
+     },
++    {
++      name: "-internal-visited-stop-color",
++      visited_property_for: "stop-color",
++      property_methods: ["ParseSingleValue", "ColorIncludingFallback"],
++      field_group: "*->visited",
++      field_template: "external",
++      include_paths: ["third_party/blink/renderer/core/css/style_color.h"],
++      default_value: "StyleColor(Color::kBlack)",
++      type_name: "StyleColor",
++      style_builder_template: "visited_color",
++      style_builder_template_args: {
++        initial_color: "ComputedStyleInitialValues::InitialStopColor",
++      },
++      converter: "ConvertStyleColor",
++    },
+     {
+       name: "-internal-visited-stroke",
+       visited_property_for: "stroke",
