@@ -1,0 +1,47 @@
+diff --git a/components/visitedlink/common/visitedlink_common.cc b/components/visitedlink/common/visitedlink_common.cc
+index ffb57b8926bfe59cdb8b831ac4e8ff3ac4146d10..2eab1cf2bbece8d694078b195f73199b09921bb2 100644
+--- a/components/visitedlink/common/visitedlink_common.cc
++++ b/components/visitedlink/common/visitedlink_common.cc
+@@ -66,8 +66,7 @@ bool VisitedLinkCommon::IsVisited(const VisitedLink& link, uint64_t salt) {
+   if (!link.IsValid()) {
+     return false;
+   }
+-  return IsVisited(ComputePartitionedFingerprint(
+-      link.link_url, link.top_level_site, link.frame_origin, salt));
++  return IsVisited(ComputePartitionedFingerprint(link, salt));
+ }
+ 
+ bool VisitedLinkCommon::IsVisited(const GURL& link_url,
+@@ -135,17 +134,18 @@ VisitedLinkCommon::Fingerprint VisitedLinkCommon::ComputeURLFingerprint(
+ VisitedLinkCommon::Fingerprint VisitedLinkCommon::ComputePartitionedFingerprint(
+     const VisitedLink& link,
+     uint64_t salt) {
+-  return ComputePartitionedFingerprint(link.link_url, link.top_level_site,
+-                                       link.frame_origin, salt);
++  return ComputePartitionedFingerprint(
++      link.link_url.spec(), link.top_level_site, link.frame_origin, salt);
+ }
+ 
+ // static
+ VisitedLinkCommon::Fingerprint VisitedLinkCommon::ComputePartitionedFingerprint(
+-    const GURL& link_url,
++    std::string_view canonical_link_url,
+     const net::SchemefulSite& top_level_site,
+     const url::Origin& frame_origin,
+     uint64_t salt) {
+-  DCHECK(link_url.spec().size()) << "link_url should not be empty.";
++  DCHECK(canonical_link_url.size() > 0)
++      << "Canonical link URLs should not be empty";
+   DCHECK(!top_level_site.opaque())
+       << "Do not call ComputePartitionedFingerprint with an opaque top-level "
+          "site.";
+@@ -160,8 +160,7 @@ VisitedLinkCommon::Fingerprint VisitedLinkCommon::ComputePartitionedFingerprint(
+                                          sizeof(salt)));
+ 
+   // Add the link url.
+-  base::MD5Update(
+-      &ctx, std::string_view(link_url.spec().data(), link_url.spec().size()));
++  base::MD5Update(&ctx, canonical_link_url);
+ 
+   // Add the serialized schemeful top-level site.
+   const std::string serialized_site = top_level_site.Serialize();

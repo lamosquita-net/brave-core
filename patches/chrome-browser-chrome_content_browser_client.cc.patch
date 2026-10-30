@@ -1,0 +1,15 @@
+diff --git a/chrome/browser/chrome_content_browser_client.cc b/chrome/browser/chrome_content_browser_client.cc
+index c4b98aa0e759f35d6be59c8f2f9b10d7e3ff3b53..799e3155375f70fc15f1edd5cd26c6725a86d1d4 100644
+--- a/chrome/browser/chrome_content_browser_client.cc
++++ b/chrome/browser/chrome_content_browser_client.cc
+@@ -1464,7 +1464,9 @@ std::unique_ptr<VisitedLinkNavigationThrottle>
+ MaybeCreateVisitedLinkNavigationThrottleFor(
+     content::NavigationHandle* navigation_handle) {
+   if (!base::FeatureList::IsEnabled(
+-          blink::features::kPartitionVisitedLinkDatabase)) {
++          blink::features::kPartitionVisitedLinkDatabase) &&
++      !base::FeatureList::IsEnabled(
++          blink::features::kPartitionVisitedLinkDatabaseWithSelfLinks)) {
+     return nullptr;
+   }
+   Profile* profile = Profile::FromBrowserContext(

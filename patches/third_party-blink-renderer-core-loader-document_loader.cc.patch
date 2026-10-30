@@ -1,0 +1,22 @@
+diff --git a/third_party/blink/renderer/core/loader/document_loader.cc b/third_party/blink/renderer/core/loader/document_loader.cc
+index 85c4d912e2fdb5e9cb3336ecbfe0cbad112fafe8..c27a7c46398194ab946c386e81dcdf8ae979a16d 100644
+--- a/third_party/blink/renderer/core/loader/document_loader.cc
++++ b/third_party/blink/renderer/core/loader/document_loader.cc
+@@ -2882,10 +2882,13 @@ void DocumentLoader::CommitNavigation() {
+   // resulting `document`. The `visited_link_salt_` allows the `document` to
+   // hash and identify which links should be styled as :visited. Without the
+   // salt, the hashtable is unreadable to the Document.
+-  if (visited_link_salt_.has_value() &&
+-      base::FeatureList::IsEnabled(
+-          blink::features::kPartitionVisitedLinkDatabase)) {
+-    document->GetVisitedLinkState().UpdateSalt(visited_link_salt_.value());
++  if (visited_link_salt_.has_value()) {
++    if (base::FeatureList::IsEnabled(
++            blink::features::kPartitionVisitedLinkDatabase) ||
++        base::FeatureList::IsEnabled(
++            blink::features::kPartitionVisitedLinkDatabaseWithSelfLinks)) {
++      document->GetVisitedLinkState().UpdateSalt(visited_link_salt_.value());
++    }
+   }
+ 
+   // The navigation API is not initialized on the initial about:blank document

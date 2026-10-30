@@ -1,5 +1,5 @@
 diff --git a/components/history/core/browser/history_types.h b/components/history/core/browser/history_types.h
-index 91868bb6762c1bda1aea69b662de4db96d8212e7..99b962ce533ef6f9fa2d828b39103e26ea83a7e3 100644
+index 91868bb6762c1bda1aea69b662de4db96d8212e7..fb114820449db1de4432255432915c79b314c8c6 100644
 --- a/components/history/core/browser/history_types.h
 +++ b/components/history/core/browser/history_types.h
 @@ -53,6 +53,8 @@ enum VisitSource {
@@ -11,3 +11,39 @@ index 91868bb6762c1bda1aea69b662de4db96d8212e7..99b962ce533ef6f9fa2d828b39103e26
  };
  
  // Corresponds to the "id" column of the "visits" SQL table.
+@@ -1250,7 +1252,7 @@ struct HistoryAddPageArgs {
+   //       RedirectList(), ui::PAGE_TRANSITION_LINK,
+   //       false, SOURCE_BROWSED, false, true,
+   //       std::nullopt, std::nullopt, std::nullopt, std::nullopt,
+-  //       std::nullopt, std::nullopt)
++  //       std::nullopt, std::nullopt, false)
+   HistoryAddPageArgs();
+   HistoryAddPageArgs(const GURL& url,
+                      base::Time time,
+@@ -1270,7 +1272,9 @@ struct HistoryAddPageArgs {
+                      std::optional<int64_t> bookmark_id = std::nullopt,
+                      std::optional<std::string> app_id = std::nullopt,
+                      std::optional<VisitContextAnnotations::OnVisitFields>
+-                         context_annotations = std::nullopt);
++                         context_annotations = std::nullopt,
++                     bool is_ephemeral = false,
++                     std::optional<GURL> frame_url = std::nullopt);
+   HistoryAddPageArgs(const HistoryAddPageArgs& other);
+   ~HistoryAddPageArgs();
+ 
+@@ -1294,10 +1298,15 @@ struct HistoryAddPageArgs {
+   // `top_level_url` is a GURL representing the top-level frame that this
+   // navigation originated from.
+   std::optional<GURL> top_level_url;
++  // `frame_url` is a GURL representing the frame that this navigation
++  // originated from. This is distinct from referrer because it persists
++  // regardless of referrer policy.
++  std::optional<GURL> frame_url;
+   std::optional<Opener> opener;
+   std::optional<int64_t> bookmark_id;
+   std::optional<std::string> app_id;
+   std::optional<VisitContextAnnotations::OnVisitFields> context_annotations;
++  bool is_ephemeral;
+ };
+ 
+ }  // namespace history

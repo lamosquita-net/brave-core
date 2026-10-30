@@ -1,8 +1,33 @@
 diff --git a/third_party/blink/renderer/core/dom/document.cc b/third_party/blink/renderer/core/dom/document.cc
-index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..cc9718ac17771390a97eb2119215bca4212c9ffe 100644
+index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..56d07684c5b189bb2c7952da31fcb3fa6db8423c 100644
 --- a/third_party/blink/renderer/core/dom/document.cc
 +++ b/third_party/blink/renderer/core/dom/document.cc
-@@ -4767,13 +4767,25 @@ void Document::ProcessBaseElement() {
+@@ -56,6 +56,7 @@
+ #include "mojo/public/cpp/bindings/pending_remote.h"
+ #include "mojo/public/cpp/bindings/remote.h"
+ #include "mojo/public/mojom/base/text_direction.mojom-blink.h"
++#include "net/base/schemeful_site.h"
+ #include "services/metrics/public/cpp/delegating_ukm_recorder.h"
+ #include "services/metrics/public/cpp/metrics_utils.h"
+ #include "services/metrics/public/cpp/mojo_ukm_recorder.h"
+@@ -825,7 +826,6 @@ Document::Document(const DocumentInit& initializer,
+       style_version_(0),
+       listener_types_(0),
+       mutation_observer_types_(0),
+-      visited_link_state_(MakeGarbageCollected<VisitedLinkState>(*this)),
+       visually_ordered_(false),
+       // https://html.spec.whatwg.org/multipage/dom.html#current-document-readiness
+       // says the ready state starts as 'loading' if there's an associated
+@@ -926,6 +926,8 @@ Document::Document(const DocumentInit& initializer,
+     fetcher_ = FrameFetchContext::CreateFetcherForCommittedDocument(
+         *GetFrame()->Loader().GetDocumentLoader(), *this);
+     cookie_jar_ = MakeGarbageCollected<CookieJar>(this);
++    cached_top_frame_site_for_visited_links_ =
++        net::SchemefulSite(TopFrameOrigin()->ToUrlOrigin());
+   } else {
+     // We disable fetches for frame-less Documents.
+     // See https://crbug.com/961614 for details.
+@@ -4767,13 +4769,25 @@ void Document::ProcessBaseElement() {
      }
    }
  
@@ -35,7 +60,7 @@ index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..cc9718ac17771390a97eb2119215bca4
    }
  
    AtomicString old_base_target = base_target_;
-@@ -5444,6 +5456,12 @@ bool Document::SetFocusedElement(Element* new_focused_element,
+@@ -5444,6 +5458,12 @@ bool Document::SetFocusedElement(Element* new_focused_element,
          new_focused_element = nullptr;
        }
      }
@@ -48,7 +73,7 @@ index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..cc9718ac17771390a97eb2119215bca4
    }
  
    // Blur/focusout handlers could have moved the new element out of this
-@@ -5556,13 +5574,8 @@ bool Document::SetFocusedElement(Element* new_focused_element,
+@@ -5556,13 +5576,8 @@ bool Document::SetFocusedElement(Element* new_focused_element,
      frame->Selection().DidChangeFocus();
  
    // EditContext's activation is synced with the associated element being
@@ -64,7 +89,7 @@ index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..cc9718ac17771390a97eb2119215bca4
    if (new_focused_element) {
      if (auto* edit_context = new_focused_element->editContext()) {
        edit_context->Focus();
-@@ -5853,10 +5866,17 @@ void Document::NodeWillBeRemoved(Node& n) {
+@@ -5853,10 +5868,17 @@ void Document::NodeWillBeRemoved(Node& n) {
    for (NodeIterator* ni : node_iterators_)
      ni->NodeWillBeRemoved(n);
  
@@ -86,7 +111,7 @@ index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..cc9718ac17771390a97eb2119215bca4
    }
  
    synchronous_mutation_observer_set_.ForEachObserver(
-@@ -7989,11 +8009,11 @@ void Document::AddToTopLayer(Element* element, const Element* before) {
+@@ -7989,11 +8011,11 @@ void Document::AddToTopLayer(Element* element, const Element* before) {
      }
    }
  
@@ -101,7 +126,7 @@ index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..cc9718ac17771390a97eb2119215bca4
          << "If this invariant changes, we might need to revisit Container "
             "Queries for top layer elements.";
      wtf_size_t before_position = top_layer_elements_.Find(before);
-@@ -8006,6 +8026,16 @@ void Document::AddToTopLayer(Element* element, const Element* before) {
+@@ -8006,6 +8028,16 @@ void Document::AddToTopLayer(Element* element, const Element* before) {
    display_lock_document_state_->ElementAddedToTopLayer(element);
  
    probe::TopLayerElementsChanged(this);
@@ -118,7 +143,7 @@ index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..cc9718ac17771390a97eb2119215bca4
  }
  
  void Document::ScheduleForTopLayerRemoval(Element* element,
-@@ -8063,8 +8093,25 @@ void Document::RemoveFromTopLayerImmediately(Element* element) {
+@@ -8063,8 +8095,25 @@ void Document::RemoveFromTopLayerImmediately(Element* element) {
    }
    element->SetIsInTopLayer(false);
    display_lock_document_state_->ElementRemovedFromTopLayer(element);
@@ -144,7 +169,7 @@ index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..cc9718ac17771390a97eb2119215bca4
  }
  
  std::optional<Document::TopLayerReason> Document::IsScheduledForTopLayerRemoval(
-@@ -8108,6 +8155,17 @@ void Document::SetPopoverPointerdownTarget(const HTMLElement* popover) {
+@@ -8108,6 +8157,17 @@ void Document::SetPopoverPointerdownTarget(const HTMLElement* popover) {
    popover_pointerdown_target_ = popover;
  }
  
@@ -162,7 +187,7 @@ index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..cc9718ac17771390a97eb2119215bca4
  void Document::exitPointerLock() {
    if (!GetPage())
      return;
-@@ -8842,8 +8900,10 @@ void Document::Trace(Visitor* visitor) const {
+@@ -8842,8 +8902,10 @@ void Document::Trace(Visitor* visitor) const {
    visitor->Trace(popover_auto_stack_);
    visitor->Trace(popover_hint_stack_);
    visitor->Trace(popover_pointerdown_target_);
@@ -173,3 +198,26 @@ index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..cc9718ac17771390a97eb2119215bca4
    visitor->Trace(document_part_root_);
    visitor->Trace(load_event_delay_timer_);
    visitor->Trace(plugin_loading_timer_);
+@@ -9458,6 +9520,22 @@ void Document::OnWarnUnusedPreloads(Vector<KURL> unused_preloads) {
+   }
+ }
+ 
++VisitedLinkState& Document::GetVisitedLinkState() {
++  if (!visited_link_state_) [[unlikely]] {
++    visited_link_state_ = MakeGarbageCollected<VisitedLinkState>(*this);
++  }
++  return *visited_link_state_;
++}
++
++net::SchemefulSite Document::GetCachedTopFrameSite(VisitedLinkPassKey) {
++  // NOTE: frame-less Documents will have a value of std::nullopt, HOWEVER,
++  // since this function can only be called from a Document associated with a
++  // valid VisitedLinkState or HTMLAnchorElement, we are guaranteed to have a
++  // top frame and thus a value for top frame site.
++  DCHECK(cached_top_frame_site_for_visited_links_.has_value());
++  return cached_top_frame_site_for_visited_links_.value();
++}
++
+ template class CORE_TEMPLATE_EXPORT Supplement<Document>;
+ 
+ }  // namespace blink

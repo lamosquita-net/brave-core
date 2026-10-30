@@ -1,0 +1,32 @@
+diff --git a/third_party/blink/renderer/build/scripts/core/css/css_properties.py b/third_party/blink/renderer/build/scripts/core/css/css_properties.py
+old mode 100755
+new mode 100644
+index 92d62270fbc855e985cce2eb6011053763e8fce3..a89111b26b86af59338120970d876dc356268506
+--- a/third_party/blink/renderer/build/scripts/core/css/css_properties.py
++++ b/third_party/blink/renderer/build/scripts/core/css/css_properties.py
+@@ -308,14 +308,22 @@ class CSSProperties(object):
+             if (not property_.alias_for and not property_.longhands)
+         ]
+ 
+-        # Sort the properties by priority, then alphabetically. Ensure that
+-        # the resulting order is deterministic.
+-        # Sort properties by priority, then alphabetically.
++        # Sort the properties by priority, then internal-visited first,
++        # then alphabetically. Ensures that the resulting order is deterministic.
++        # (internal-visited is because we want to fit their number into an
++        # uint8_t for kPropertyVisitedIDs.)
+         for property_ in self._longhands + self._shorthands:
+             name_without_leading_dash = property_.name.original
+             if name_without_leading_dash.startswith('-'):
+                 name_without_leading_dash = name_without_leading_dash[1:]
++            internal_visited_order = 1
++            if name_without_leading_dash.startswith(
++                    'internal-visited-'
++            ) or name_without_leading_dash.startswith(
++                    'internal-forced-visited-'):
++                internal_visited_order = 0
+             property_.sorting_key = (-property_.priority,
++                                     internal_visited_order,
+                                      name_without_leading_dash)
+ 
+         sorting_keys = {}
