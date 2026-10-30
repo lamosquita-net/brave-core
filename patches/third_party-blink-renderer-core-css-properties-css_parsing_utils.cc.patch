@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc b/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
-index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..1f8dfbeaf279cad5ad0338307a6756f11b110f12 100644
+index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..e18c688ea4d4baa7df2c3a156bb57d0b189b8f6f 100644
 --- a/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
 +++ b/third_party/blink/renderer/core/css/properties/css_parsing_utils.cc
 @@ -11,6 +11,7 @@
@@ -3078,17 +3078,20 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..1f8dfbeaf279cad5ad0338307a6756f1
  CSSValue* ConsumePathFunction(CSSParserTokenStream& stream,
                                EmptyPathStringHandling empty_handling) {
    // FIXME: Add support for <url>, <basic-shape>, <geometry-box>.
-@@ -7628,7 +7942,8 @@ CSSValue* ConsumeOffsetPath(CSSParserTokenStream& stream,
+@@ -7628,7 +7942,11 @@ CSSValue* ConsumeOffsetPath(CSSParserTokenStream& stream,
  
    CSSValue* offset_path = ConsumeRay(stream, context);
    if (!offset_path) {
 -    offset_path = ConsumeBasicShape(stream, context, AllowPathValue::kForbid);
-+    offset_path = ConsumeBasicShape(stream, context, AllowPathValue::kForbid,
-+                                    AllowShapeValue::kForbid);
++    offset_path = ConsumeBasicShape(
++        stream, context, AllowPathValue::kForbid,
++        RuntimeEnabledFeatures::CSSShapeFunctionOffsetPathEnabled()
++            ? AllowShapeValue::kAllow
++            : AllowShapeValue::kForbid);
    }
    if (!offset_path) {
      offset_path = ConsumeUrl(stream, context);
-@@ -7804,6 +8119,7 @@ template <class T = CSSParserTokenRange>
+@@ -7804,6 +8122,7 @@ template <class T = CSSParserTokenRange>
  CSSValue* ConsumeBasicShapeInternal(T& range,
                                      const CSSParserContext& context,
                                      AllowPathValue allow_path,
@@ -3096,7 +3099,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..1f8dfbeaf279cad5ad0338307a6756f1
                                      AllowBasicShapeRectValue allow_rect,
                                      AllowBasicShapeXYWHValue allow_xywh) {
    CSSValue* shape = nullptr;
-@@ -7823,6 +8139,10 @@ CSSValue* ConsumeBasicShapeInternal(T& range,
+@@ -7823,6 +8142,10 @@ CSSValue* ConsumeBasicShapeInternal(T& range,
      shape = ConsumeBasicShapeInset(args, context);
    } else if (id == CSSValueID::kPath && allow_path == AllowPathValue::kAllow) {
      shape = ConsumeBasicShapePath(args);
@@ -3107,7 +3110,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..1f8dfbeaf279cad5ad0338307a6756f1
    } else if (id == CSSValueID::kRect &&
               allow_rect == AllowBasicShapeRectValue::kAllow) {
      shape = ConsumeBasicShapeRect(args, context);
-@@ -7842,19 +8162,21 @@ CSSValue* ConsumeBasicShapeInternal(T& range,
+@@ -7842,19 +8165,21 @@ CSSValue* ConsumeBasicShapeInternal(T& range,
  CSSValue* ConsumeBasicShape(CSSParserTokenRange& range,
                              const CSSParserContext& context,
                              AllowPathValue allow_path,
@@ -3133,7 +3136,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..1f8dfbeaf279cad5ad0338307a6756f1
  }
  
  // none | [ underline || overline || line-through || blink ] | spelling-error |
-@@ -7915,43 +8237,53 @@ CSSValue* ConsumeTextDecorationLine(CSSParserTokenStream& stream) {
+@@ -7915,43 +8240,53 @@ CSSValue* ConsumeTextDecorationLine(CSSParserTokenStream& stream) {
  
  // Consume the `text-box-edge` production.
  CSSValue* ConsumeTextBoxEdge(CSSParserTokenStream& stream) {
@@ -3207,7 +3210,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..1f8dfbeaf279cad5ad0338307a6756f1
  }
  
  // Consume the `autospace` production.
-@@ -8505,9 +8837,9 @@ CSSValue* ConsumeDashedIdentOrTactic(CSSParserTokenStream& stream,
+@@ -8505,9 +8840,9 @@ CSSValue* ConsumeDashedIdentOrTactic(CSSParserTokenStream& stream,
        continue;
      }
      if (context.Mode() == kUASheetMode && !dashed_ident) {
@@ -3220,7 +3223,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..1f8dfbeaf279cad5ad0338307a6756f1
          continue;
        }
      }
-@@ -8533,21 +8865,21 @@ CSSValue* ConsumeDashedIdentOrTactic(CSSParserTokenStream& stream,
+@@ -8533,21 +8868,21 @@ CSSValue* ConsumeDashedIdentOrTactic(CSSParserTokenStream& stream,
    return list;
  }
  
@@ -3250,7 +3253,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..1f8dfbeaf279cad5ad0338307a6756f1
    return function;
  }
  
-@@ -8559,17 +8891,17 @@ CSSValue* ConsumeSinglePositionTryFallback(CSSParserTokenStream& stream,
+@@ -8559,17 +8894,17 @@ CSSValue* ConsumeSinglePositionTryFallback(CSSParserTokenStream& stream,
    if (CSSValue* value = ConsumeDashedIdentOrTactic(stream, context)) {
      return value;
    }
@@ -3274,7 +3277,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..1f8dfbeaf279cad5ad0338307a6756f1
    if (stream.Peek().Id() == CSSValueID::kNone) {
      return ConsumeIdent(stream);
    }
-@@ -8579,7 +8911,7 @@ CSSValue* ConsumePositionTryFallbacks(CSSParserTokenStream& stream,
+@@ -8579,7 +8914,7 @@ CSSValue* ConsumePositionTryFallbacks(CSSParserTokenStream& stream,
  
  namespace {
  
@@ -3283,7 +3286,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..1f8dfbeaf279cad5ad0338307a6756f1
    STACK_ALLOCATED();
  
   public:
-@@ -8612,8 +8944,8 @@ struct InsetAreaKeyword {
+@@ -8612,8 +8947,8 @@ struct InsetAreaKeyword {
      kSelfStartEnd,
    };
  
@@ -3294,7 +3297,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..1f8dfbeaf279cad5ad0338307a6756f1
      if (first.type == kGeneral || second.type == kGeneral) {
        return true;
      }
-@@ -8636,8 +8968,8 @@ struct InsetAreaKeyword {
+@@ -8636,8 +8971,8 @@ struct InsetAreaKeyword {
  template <class T>
    requires std::is_same_v<T, CSSParserTokenStream> ||
             std::is_same_v<T, CSSParserTokenRange>
@@ -3305,7 +3308,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..1f8dfbeaf279cad5ad0338307a6756f1
    switch (stream.Peek().Id()) {
      case CSSValueID::kSpanAll:
      case CSSValueID::kCenter:
-@@ -8655,7 +8987,7 @@ std::optional<InsetAreaKeyword> ConsumeInsetAreaKeyword(T& stream) {
+@@ -8655,7 +8990,7 @@ std::optional<InsetAreaKeyword> ConsumeInsetAreaKeyword(T& stream) {
      case CSSValueID::kXSelfEnd:
      case CSSValueID::kSpanXSelfStart:
      case CSSValueID::kSpanXSelfEnd:
@@ -3314,7 +3317,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..1f8dfbeaf279cad5ad0338307a6756f1
        break;
      case CSSValueID::kTop:
      case CSSValueID::kBottom:
-@@ -8669,53 +9001,53 @@ std::optional<InsetAreaKeyword> ConsumeInsetAreaKeyword(T& stream) {
+@@ -8669,53 +9004,53 @@ std::optional<InsetAreaKeyword> ConsumeInsetAreaKeyword(T& stream) {
      case CSSValueID::kYSelfEnd:
      case CSSValueID::kSpanYSelfStart:
      case CSSValueID::kSpanYSelfEnd:
@@ -3377,7 +3380,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..1f8dfbeaf279cad5ad0338307a6756f1
  //                  [ left | center | right | span-left | span-right |
  //                    x-start | x-end | span-x-start | span-x-end |
  //                    x-self-start | x-self-end | span-x-self-start |
-@@ -8746,25 +9078,25 @@ std::optional<InsetAreaKeyword> ConsumeInsetAreaKeyword(T& stream) {
+@@ -8746,25 +9081,25 @@ std::optional<InsetAreaKeyword> ConsumeInsetAreaKeyword(T& stream) {
  template <class T>
    requires std::is_same_v<T, CSSParserTokenStream> ||
             std::is_same_v<T, CSSParserTokenRange>
@@ -3413,7 +3416,7 @@ index 6dd495900cf7cd450ec7ff2a93a2085b7f979647..1f8dfbeaf279cad5ad0338307a6756f1
      return nullptr;
    }
    CSSIdentifierValue* first_value = first.value().value;
-@@ -8773,21 +9105,22 @@ CSSValue* ConsumeInsetArea(T& range) {
+@@ -8773,21 +9108,22 @@ CSSValue* ConsumeInsetArea(T& range) {
      return first_value;
    }
    if (first_value->GetValueID() == CSSValueID::kSpanAll &&

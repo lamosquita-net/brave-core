@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/frame/local_dom_window.cc b/third_party/blink/renderer/core/frame/local_dom_window.cc
-index 98896006653dfc7e691f51d5a9934ce7c185e1cc..ba26afa35d6b4f930c6c694dec6ae3fd3c72a8a9 100644
+index 98896006653dfc7e691f51d5a9934ce7c185e1cc..601ea9e969081221e142afdb8036af6bac22af18 100644
 --- a/third_party/blink/renderer/core/frame/local_dom_window.cc
 +++ b/third_party/blink/renderer/core/frame/local_dom_window.cc
-@@ -486,6 +486,7 @@ bool LocalDOMWindow::CanExecuteScripts(
+@@ -146,6 +146,7 @@
+ #include "third_party/blink/renderer/platform/bindings/exception_messages.h"
+ #include "third_party/blink/renderer/platform/bindings/script_state.h"
+ #include "third_party/blink/renderer/platform/bindings/source_location.h"
++#include "third_party/blink/renderer/platform/blob/blob_url.h"
+ #include "third_party/blink/renderer/platform/heap/garbage_collected.h"
+ #include "third_party/blink/renderer/platform/loader/fetch/resource_fetcher.h"
+ #include "third_party/blink/renderer/platform/network/network_state_notifier.h"
+@@ -486,6 +487,7 @@ bool LocalDOMWindow::CanExecuteScripts(
      return false;
    }
    bool script_enabled = GetFrame()->ScriptEnabled();
@@ -10,3 +18,20 @@ index 98896006653dfc7e691f51d5a9934ce7c185e1cc..ba26afa35d6b4f930c6c694dec6ae3fd
    if (!script_enabled && reason == kAboutToExecuteScript) {
      WebContentSettingsClient* settings_client =
          GetFrame()->GetContentSettingsClient();
+@@ -2243,6 +2245,16 @@ DOMWindow* LocalDOMWindow::open(v8::Isolate* isolate,
+   // In fenced frames, we should always use `noopener`.
+   if (GetFrame()->IsInFencedFrameTree()) {
+     window_features.noopener = true;
++  } else if (base::FeatureList::IsEnabled(
++                 features::kEnforceNoopenerOnBlobURLNavigation) &&
++             completed_url.ProtocolIs("blob")) {
++    auto blob_url_site =
++        BlinkSchemefulSite(SecurityOrigin::Create(completed_url));
++    BlinkSchemefulSite top_level_site =
++        entered_window->GetStorageKey().GetTopLevelSite();
++    if (top_level_site != blob_url_site) {
++      window_features.noopener = true;
++    }
+   }
+ 
+   FrameLoadRequest frame_request(entered_window,

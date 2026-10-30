@@ -1,8 +1,21 @@
 diff --git a/third_party/blink/common/features.cc b/third_party/blink/common/features.cc
-index 46bd3fa71b397fa550fb3f57eb7960fe34285a8b..f6f5ebe2db8a95bd65cd9880718bdbb385e2e346 100644
+index 46bd3fa71b397fa550fb3f57eb7960fe34285a8b..9c3f9844bb5f0ea8cb175466f16c172f072f3cee 100644
 --- a/third_party/blink/common/features.cc
 +++ b/third_party/blink/common/features.cc
-@@ -1766,7 +1766,6 @@ const base::FeatureParam<bool> kPartialLowEndModeExcludeCanvasFontCache{
+@@ -798,6 +798,12 @@ BASE_FEATURE(kEventTimingFallbackToModalDialogStart,
+              "EventTimingFallbackToModalDialogStart",
+              base::FEATURE_ENABLED_BY_DEFAULT);
+ 
++// Prevents an opener from being returned when a BlobURL is cross-site to the
++// window's top-level site.
++BASE_FEATURE(kEnforceNoopenerOnBlobURLNavigation,
++             "EnforceNoopenerOnBlobURLNavigation",
++             base::FEATURE_ENABLED_BY_DEFAULT);
++
+ // Enable not reporting orphan pointerup (pointerup not accompanied by
+ // pointerdown) as an interaction in performance event timing.
+ BASE_FEATURE(kEventTimingHandleOrphanPointerup,
+@@ -1766,7 +1772,6 @@ const base::FeatureParam<bool> kPartialLowEndModeExcludeCanvasFontCache{
  
  // When enabled, this flag partitions the :visited link hashtable by <link url,
  // top-level site, frame origin>.
@@ -10,7 +23,7 @@ index 46bd3fa71b397fa550fb3f57eb7960fe34285a8b..f6f5ebe2db8a95bd65cd9880718bdbb3
  BASE_FEATURE(kPartitionVisitedLinkDatabase,
               "PartitionVisitedLinkDatabase",
               base::FEATURE_DISABLED_BY_DEFAULT);
-@@ -2143,6 +2142,12 @@ BASE_FEATURE(kSetTimeoutWithoutClamp,
+@@ -2143,6 +2148,12 @@ BASE_FEATURE(kSetTimeoutWithoutClamp,
               "SetTimeoutWithoutClamp",
               base::FEATURE_ENABLED_BY_DEFAULT);
  
@@ -23,7 +36,7 @@ index 46bd3fa71b397fa550fb3f57eb7960fe34285a8b..f6f5ebe2db8a95bd65cd9880718bdbb3
  // Enable the shared storage API. Note that enabling this feature does not
  // automatically expose this API to the web, it only allows the element to be
  // enabled by the runtime enabled feature, for origin trials.
-@@ -2647,6 +2652,10 @@ bool IsSetTimeoutWithoutClampEnabled() {
+@@ -2647,6 +2658,10 @@ bool IsSetTimeoutWithoutClampEnabled() {
    return base::FeatureList::IsEnabled(features::kSetTimeoutWithoutClamp);
  }
  

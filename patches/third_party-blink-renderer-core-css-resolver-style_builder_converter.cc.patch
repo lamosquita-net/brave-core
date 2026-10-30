@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc b/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
-index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..4c82fdb0375f30d2daf9071762fb4cb9003264df 100644
+index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..967d79bc46cd0ece454dc9658db70e133d685502 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
 @@ -66,6 +66,8 @@
@@ -375,7 +375,36 @@ index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..4c82fdb0375f30d2daf9071762fb4cb9
  }
  
  TextUnderlinePosition StyleBuilderConverter::ConvertTextUnderlinePosition(
-@@ -2859,12 +2905,13 @@ scoped_refptr<BasicShape> StyleBuilderConverter::ConvertObjectViewBox(
+@@ -2806,20 +2852,15 @@ OffsetPathOperation* ConvertOffsetPathValueToOperation(
+     StyleResolverState& state,
+     const CSSValue& value,
+     CoordBox coord_box) {
+-  if (value.IsRayValue() || value.IsBasicShapeValue()) {
+-    return MakeGarbageCollected<ShapeOffsetPathOperation>(
+-        BasicShapeForValue(state, value), coord_box);
+-  }
+-  if (auto* path_value = DynamicTo<cssvalue::CSSPathValue>(value)) {
+-    return MakeGarbageCollected<ShapeOffsetPathOperation>(
+-        path_value->GetStylePath(), coord_box);
++  if (auto* url_value = DynamicTo<cssvalue::CSSURIValue>(value)) {
++    SVGResource* resource =
++        state.GetElementStyleResources().GetSVGResourceFromValue(
++            CSSPropertyID::kOffsetPath, *url_value);
++    return MakeGarbageCollected<ReferenceOffsetPathOperation>(
++        url_value->ValueForSerialization(), resource, coord_box);
+   }
+-  const auto& url_value = To<cssvalue::CSSURIValue>(value);
+-  SVGResource* resource =
+-      state.GetElementStyleResources().GetSVGResourceFromValue(
+-          CSSPropertyID::kOffsetPath, url_value);
+-  return MakeGarbageCollected<ReferenceOffsetPathOperation>(
+-      url_value.ValueForSerialization(), resource, coord_box);
++  return MakeGarbageCollected<ShapeOffsetPathOperation>(
++      BasicShapeForValue(state, value), coord_box);
+ }
+ 
+ }  // namespace
+@@ -2859,12 +2900,13 @@ scoped_refptr<BasicShape> StyleBuilderConverter::ConvertObjectViewBox(
  }
  
  static const CSSValue& ComputeColorValue(
@@ -390,7 +419,7 @@ index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..4c82fdb0375f30d2daf9071762fb4cb9
        document.GetColorProviderForPainting(color_scheme), kNotForVisitedLink);
    return *ComputedStyleUtils::ValueForColor(style_color);
  }
-@@ -2954,7 +3001,8 @@ static const CSSValue& ComputeRegisteredPropertyValue(
+@@ -2954,7 +2996,8 @@ static const CSSValue& ComputeRegisteredPropertyValue(
        return value;
      }
      if (StyleColor::IsColorKeyword(value_id)) {
@@ -400,7 +429,7 @@ index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..4c82fdb0375f30d2daf9071762fb4cb9
      }
    }
  
-@@ -2976,7 +3024,14 @@ static const CSSValue& ComputeRegisteredPropertyValue(
+@@ -2976,7 +3019,14 @@ static const CSSValue& ComputeRegisteredPropertyValue(
    }
  
    if (auto* color_mix_value = DynamicTo<cssvalue::CSSColorMixValue>(value)) {
@@ -416,7 +445,7 @@ index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..4c82fdb0375f30d2daf9071762fb4cb9
    }
  
    return value;
-@@ -3023,9 +3078,11 @@ const CSSValue& StyleBuilderConverter::ConvertRegisteredPropertyValue(
+@@ -3023,9 +3073,11 @@ const CSSValue& StyleBuilderConverter::ConvertRegisteredPropertyValue(
  // https://drafts.css-houdini.org/css-properties-values-api-1/#substitution
  CSSVariableData* StyleBuilderConverter::ConvertRegisteredPropertyVariableData(
      const CSSValue& value,
@@ -429,7 +458,7 @@ index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..4c82fdb0375f30d2daf9071762fb4cb9
                                   /* needs_variable_resolution */ false);
  }
  
-@@ -3364,186 +3421,187 @@ ScopedCSSNameList* StyleBuilderConverter::ConvertTimelineScope(
+@@ -3364,186 +3416,187 @@ ScopedCSSNameList* StyleBuilderConverter::ConvertTimelineScope(
    return MakeGarbageCollected<ScopedCSSNameList>(std::move(names));
  }
  
@@ -697,7 +726,7 @@ index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..4c82fdb0375f30d2daf9071762fb4cb9
          break;
        default:
          NOTREACHED_IN_MIGRATION();
-@@ -3555,26 +3613,26 @@ InsetArea StyleBuilderConverter::ConvertInsetArea(StyleResolverState& state,
+@@ -3555,26 +3608,26 @@ InsetArea StyleBuilderConverter::ConvertInsetArea(StyleResolverState& state,
    if (const auto* first_value = DynamicTo<CSSIdentifierValue>(value)) {
      CSSValueID first_keyword = first_value->GetValueID();
      if (first_keyword == CSSValueID::kNone) {

@@ -1,0 +1,30 @@
+diff --git a/third_party/blink/renderer/core/html/html_anchor_element.cc b/third_party/blink/renderer/core/html/html_anchor_element.cc
+index 5e9c95fb7ec4cf1360666bfd83be209e0057ec71..279f673ad488758702162b9362bef9840b10db76 100644
+--- a/third_party/blink/renderer/core/html/html_anchor_element.cc
++++ b/third_party/blink/renderer/core/html/html_anchor_element.cc
+@@ -71,6 +71,7 @@
+ #include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+ #include "third_party/blink/renderer/platform/timer.h"
+ #include "third_party/blink/renderer/platform/weborigin/kurl.h"
++#include "third_party/blink/renderer/platform/network/blink_schemeful_site.h"
+ #include "third_party/blink/renderer/platform/weborigin/security_origin.h"
+ #include "third_party/blink/renderer/platform/weborigin/security_policy.h"
+ #include "ui/events/event_constants.h"
+@@ -555,6 +556,17 @@ void HTMLAnchorElement::NavigateToHyperlink(ResourceRequest request,
+       HasRel(kRelationOpener) && !frame_request.GetWindowFeatures().noopener) {
+     frame_request.SetExplicitOpener();
+   }
++  if (completed_url.ProtocolIs("blob")) {
++    auto blob_url_site =
++        BlinkSchemefulSite(SecurityOrigin::Create(completed_url));
++    BlinkSchemefulSite top_level_site =
++        window->GetStorageKey().GetTopLevelSite();
++    if (top_level_site != blob_url_site &&
++        base::FeatureList::IsEnabled(
++            features::kEnforceNoopenerOnBlobURLNavigation)) {
++      frame_request.SetNoOpener();
++    }
++  }
+ 
+   frame_request.SetTriggeringEventInfo(
+       is_trusted ? mojom::blink::TriggeringEventInfo::kFromTrustedEvent
