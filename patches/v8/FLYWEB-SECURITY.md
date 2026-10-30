@@ -1,3 +1,40 @@
+# FlyWeb: FS.37 (rule 17 of level 136), post-136 V8 fixes on 13.6.233.10
+
+SEGURIDAD-PORTES-14, 30-10-2026 (brave-core `seg/fs37-v8` on `nube/motor-136` 1747f79f). Base: 13.6.233.10 + the 235
+`patches/v8` of level 136 (all apply). Reviewed again every merge on the branch heads 13.6 (after .10) to 15.8 (672
+merges, 346 originals), `git apply`-checked against 13.6 + `patches/v8`; the FS.36 verdicts "not in 13.5" and the risks
+were re-read against 13.6. **Ported (cache epoch 25 -> 26):**
+
+- **Clean:** 8118921e3f (534417753, TurboFan does not inline element access on detached typed array maps; "not in
+  13.5" in FS.36), 7e802b909a (574339635, `JSGetTemplateObject` is not `kNoWrite`), 74b6f1e095 (560121552, Promise.race
+  catch prediction), 5472defe56 (511290038, `CodeEntry` refcount race), 848d7f4122 (436181695, `await using` in C-style
+  for loops; **changes bytecode**), e16e6ceda4 (503869362, the 14.8 form of eb3fc08220: a shared Wasm module with other
+  denormal flags is recompiled on import), 81ed440d87 (522126182, FastArray limit in `lower_limits_mode`), b04613a419
+  (413419840, Maglev debt: code part, its test was already here).
+- **By hand:** 7587a107c1 (577318603, normalize non-extensible root maps in MapUpdater; fuzz), d4dbd1dc45 (424905890,
+  no code space compaction with stack; "not in 13.5" in FS.36), ebf970d8a3 (515431687, Sparkplug size estimate with
+  `CheckedNumeric`; `AllocateBuffer` of 13.6 had no size check at all), 695bea76a6 (560406548, Wasm source map under
+  `allocation_mutex_`), d87667efce (559893859, cyclic module SCC initialized before any module becomes `kLinked`; core
+  only: `MaybeTransitionComponent`, `GetSharedFunctionInfo`, `Reset`, verifier; `CheckedCast` does not exist in 13.6, so
+  a CHECK in `RunInitializationCode`). One upstream test dropped (`fast-api-calls-nested.js`: needs `call_to_number`).
+
+**Not needed on 13.6:** 9236a84b32 (`WellKnown_FastApi` has no `check_for_exception` in 13.6, single caller), e814d52038
+(13.6 already installs the dispatch handle by offset), 4cf9311810 (already in `patches/v8`, with 9b5250b9), 7893ac23bc
+(the counter overflow is 32-bit only; x64), c055ccbcde/faa4a23b32 (cppgc ordering on weak memory models; x86 is TSO),
+3d3e6a10b5 and c2eab5ee18 (13.6 does not have the bug), 97e76199e8 (ICU 77 only). **Left (hardening or low value):**
+714b5478d3 (CHECK in `FeedbackVector::SizeFor`, Torque-generated in 13.6), 56c28da60f/327251377d (no allocation in OOM
+stack traces), db1a465144 (non-nestable Wasm compile tasks), c4a1766500 (code generator CHECKs; Wasm deopt is off),
+28fc9a12ce (WKI inlining exceptions, large). **Still risks from FS.36:** 9d9ccafe3b, 17f229f3ea/e1ac1f641a, 93fdd4a2bc,
+3a6df68901 and the sandbox hardenings (cfaa590b51, 3c03b1d9e8, e9f61f1bbc, 58bdae122c, bb8724fd6c, 9c0c301876,
+dc31719c94, 493ea0b937, d4374eaec8). **Maglev debt (still off), for when it is turned on:** ffc18dfff9 (changes
+bytecode), e321b042d4, 6c83fb0eda, 5c719bd690, 604e1bec59, d05f2fc478, bcefebe849, 4000d6244b, a2b0edcc8c; with
+`maglev_untagged_phis` only: e91f547823, 473f721634, e9252d44a8.
+
+Not compiled in the cloud (directive of 30-10): `d8` 13.6 and mjsunit by D8-LINUX (normal, `--always-osr`,
+`maglev`/`compiler` with `--maglev --stress-maglev`).
+
+---
+
 # FlyWeb: FS.36 (rule 17 of level 135), post-135 V8 fixes on 13.5.212.10
 
 SEGURIDAD-PORTES-13, 29-10-2026 (brave-core `seg/fs36-v8` on `nube/motor-135` ebd8c17f). Branch 13.5 has nothing after

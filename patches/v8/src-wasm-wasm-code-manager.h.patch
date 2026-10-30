@@ -1,0 +1,15 @@
+diff --git a/src/wasm/wasm-code-manager.h b/src/wasm/wasm-code-manager.h
+index 49258f516d225179a75bca82ffbdf8c3e40d8dd9..b55aefec24129d6694351e3f90f4ae3e28511ce6 100644
+--- a/src/wasm/wasm-code-manager.h
++++ b/src/wasm/wasm-code-manager.h
+@@ -674,7 +674,9 @@ class V8_EXPORT_PRIVATE NativeModule final {
+   bool HasCode(uint32_t index) const;
+   bool HasCodeWithTier(uint32_t index, ExecutionTier tier) const;
+ 
+-  void SetWasmSourceMap(std::unique_ptr<WasmModuleSourceMap> source_map);
++  // Protected by {allocation_mutex_}.
++  // Does nothing if {source_map_} is already populated.
++  void SetWasmSourceMapIfUnset(std::unique_ptr<WasmModuleSourceMap> source_map);
+   WasmModuleSourceMap* GetWasmSourceMap() const;
+ 
+   Address jump_table_start() const {

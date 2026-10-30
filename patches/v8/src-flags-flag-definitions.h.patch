@@ -1,5 +1,5 @@
 diff --git a/src/flags/flag-definitions.h b/src/flags/flag-definitions.h
-index dd713090c674585c23f9b9574df7ed258c0cd23e..ddb434131a2fe639f421537a8cb0251af88fe2de 100644
+index dd713090c674585c23f9b9574df7ed258c0cd23e..bec2114d3012c7b3801e31f77e13634bcf6be1d1 100644
 --- a/src/flags/flag-definitions.h
 +++ b/src/flags/flag-definitions.h
 @@ -541,7 +541,9 @@ DEFINE_BOOL(force_emit_interrupt_budget_checks, false,
@@ -13,7 +13,17 @@ index dd713090c674585c23f9b9574df7ed258c0cd23e..ddb434131a2fe639f421537a8cb0251a
  #if !ENABLE_MAGLEV
  // Enable Maglev on Future for platforms in which it's not enabled by default
  // (eg, Android).
-@@ -638,7 +640,8 @@ DEFINE_WEAK_VALUE_IMPLICATION(turbofan,
+@@ -606,9 +608,6 @@ DEFINE_WEAK_IMPLICATION(maglev_future, maglev_escape_analysis)
+ DEFINE_WEAK_IMPLICATION(maglev_future, maglev_licm)
+ DEFINE_WEAK_IMPLICATION(maglev_future, maglev_cons_string_elision)
+ DEFINE_WEAK_IMPLICATION(maglev_future, maglev_pretenure_store_values)
+-// This might be too big of a hammer but we must prohibit moving the C++
+-// trampolines while we are executing a C++ code.
+-DEFINE_NEG_IMPLICATION(maglev_inline_api_calls, compact_code_space_with_stack)
+ 
+ DEFINE_UINT(
+     concurrent_maglev_max_threads, 2,
+@@ -638,7 +637,8 @@ DEFINE_WEAK_VALUE_IMPLICATION(turbofan,
  DEFINE_WEAK_VALUE_IMPLICATION(turbofan, min_maglev_inlining_frequency, 0.95)
  DEFINE_BOOL(maglev_reuse_stack_slots, true,
              "reuse stack slots in the maglev optimizing compiler")
@@ -23,7 +33,7 @@ index dd713090c674585c23f9b9574df7ed258c0cd23e..ddb434131a2fe639f421537a8cb0251a
              "enable phi untagging in the maglev optimizing compiler")
  DEFINE_BOOL(maglev_hoist_osr_value_phi_untagging, true,
              "enable phi untagging to hoist untagging of osr values")
-@@ -1618,6 +1621,8 @@ DEFINE_BOOL_READONLY(turboshaft_trace_emitted, false,
+@@ -1618,6 +1618,8 @@ DEFINE_BOOL_READONLY(turboshaft_trace_emitted, false,
                       "trace emitted Turboshaft instructions")
  DEFINE_BOOL_READONLY(turboshaft_trace_intermediate_reductions, false,
                       "trace intermediate Turboshaft reduction steps")
@@ -32,3 +42,24 @@ index dd713090c674585c23f9b9574df7ed258c0cd23e..ddb434131a2fe639f421537a8cb0251a
  #endif  // DEBUG
  
  DEFINE_BOOL(profile_guided_optimization, true, "profile guided optimization")
+@@ -2263,12 +2265,6 @@ DEFINE_BOOL(compact_on_every_full_gc, false,
+             "Perform compaction on every full GC")
+ DEFINE_BOOL(compact_with_stack, true,
+             "Perform compaction when finalizing a full GC with stack")
+-DEFINE_BOOL(
+-    compact_code_space_with_stack, true,
+-    "Perform code space compaction when finalizing a full GC with stack")
+-// Disabling compaction with stack implies also disabling code space compaction
+-// with stack.
+-DEFINE_NEG_NEG_IMPLICATION(compact_with_stack, compact_code_space_with_stack)
+ DEFINE_BOOL(shortcut_strings_with_stack, true,
+             "Shortcut Strings during GC with stack")
+ DEFINE_BOOL(stress_compaction, false,
+@@ -3000,7 +2996,6 @@ DEFINE_BOOL(freeze_flags_after_init, true,
+ #endif
+ DEFINE_BOOL(cet_compatible, V8_CET_SHADOW_STACK_BOOL,
+             "Generate Intel CET compatible code")
+-DEFINE_NEG_IMPLICATION(cet_compatible, compact_code_space_with_stack)
+ 
+ // mksnapshot.cc
+ DEFINE_STRING(embedded_src, nullptr,

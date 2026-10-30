@@ -1,8 +1,53 @@
 diff --git a/src/baseline/baseline-compiler.cc b/src/baseline/baseline-compiler.cc
-index eaec6ca8a4bb6358f84f4b6ffd31463c8921eb97..8361c326fab571203bde8f38be17becf3f7b412f 100644
+index eaec6ca8a4bb6358f84f4b6ffd31463c8921eb97..0adc83aa24587ba9eecf5392b62fa4190e8ce67a 100644
 --- a/src/baseline/baseline-compiler.cc
 +++ b/src/baseline/baseline-compiler.cc
-@@ -1023,6 +1023,10 @@ void BaselineCompiler::VisitDefineNamedOwnProperty() {
+@@ -25,6 +25,7 @@
+ #include "src/interpreter/bytecode-array-iterator.h"
+ #include "src/interpreter/bytecode-flags-and-tokens.h"
+ #include "src/logging/runtime-call-stats-scope.h"
++#include "src/init/v8.h"
+ #include "src/objects/code.h"
+ #include "src/objects/heap-object.h"
+ #include "src/objects/instance-type.h"
+@@ -268,12 +269,21 @@ const int kAverageBytecodeToInstructionRatio = 7;
+ #endif
+ std::unique_ptr<AssemblerBuffer> AllocateBuffer(
+     DirectHandle<BytecodeArray> bytecodes) {
+-  int estimated_size;
++  base::CheckedNumeric<int> estimated_size;
+   {
+     DisallowHeapAllocation no_gc;
+     estimated_size = BaselineCompiler::EstimateInstructionSize(*bytecodes);
+   }
+-  return NewAssemblerBuffer(RoundUp(estimated_size, 4 * KB));
++  int raw_estimated_size;
++  if (!estimated_size.AssignIfValid(&raw_estimated_size) ||
++      raw_estimated_size > Assembler::kMaximalBufferSize) {
++    V8::FatalProcessOutOfMemory(nullptr, "BaselineCompiler::AllocateBuffer");
++  }
++  int rounded_size = RoundUp(raw_estimated_size, 4 * KB);
++  if (rounded_size > Assembler::kMaximalBufferSize) {
++    V8::FatalProcessOutOfMemory(nullptr, "BaselineCompiler::AllocateBuffer");
++  }
++  return NewAssemblerBuffer(rounded_size);
+ }
+ }  // namespace
+ 
+@@ -354,8 +364,10 @@ MaybeHandle<Code> BaselineCompiler::Build() {
+   return code_builder.TryBuild();
+ }
+ 
+-int BaselineCompiler::EstimateInstructionSize(Tagged<BytecodeArray> bytecode) {
+-  return bytecode->length() * kAverageBytecodeToInstructionRatio;
++base::CheckedNumeric<int> BaselineCompiler::EstimateInstructionSize(
++    Tagged<BytecodeArray> bytecode) {
++  return base::CheckedNumeric<int>(bytecode->length()) *
++         kAverageBytecodeToInstructionRatio;
+ }
+ 
+ interpreter::Register BaselineCompiler::RegisterOperand(int operand_index) {
+@@ -1023,6 +1035,10 @@ void BaselineCompiler::VisitDefineNamedOwnProperty() {
        IndexAsTagged(2));                // slot
  }
  

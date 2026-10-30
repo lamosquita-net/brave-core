@@ -1,0 +1,22 @@
+diff --git a/src/profiler/profile-generator.h b/src/profiler/profile-generator.h
+index 2307c6546c998e5483d8d6b08bdc8ef87b7b337b..5ee6bf41e956491a07a53d12620d2c802de3f503 100644
+--- a/src/profiler/profile-generator.h
++++ b/src/profiler/profile-generator.h
+@@ -221,15 +221,13 @@ class CodeEntry {
+   size_t AddRef() {
+     DCHECK(is_ref_counted());
+     DCHECK_LT(ref_count_, std::numeric_limits<size_t>::max());
+-    ref_count_++;
+-    return ref_count_;
++    return ++ref_count_;
+   }
+ 
+   size_t DecRef() {
+     DCHECK(is_ref_counted());
+     DCHECK_GT(ref_count_, 0UL);
+-    ref_count_--;
+-    return ref_count_;
++    return --ref_count_;
+   }
+ 
+   using EventField = base::BitField<LogEventListener::Event, 0, 4>;

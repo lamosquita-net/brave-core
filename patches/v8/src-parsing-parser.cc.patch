@@ -1,5 +1,5 @@
 diff --git a/src/parsing/parser.cc b/src/parsing/parser.cc
-index c1364b9151fc2453ddb68feda4d94cfb368660bb..7c52d77c4cfef6699d5fa001212f24ab8e53497f 100644
+index c1364b9151fc2453ddb68feda4d94cfb368660bb..41e36cb054f08fe117be2fb44028470f035419f8 100644
 --- a/src/parsing/parser.cc
 +++ b/src/parsing/parser.cc
 @@ -583,7 +583,10 @@ Parser::Parser(LocalIsolate* local_isolate, ParseInfo* info)
@@ -36,7 +36,19 @@ index c1364b9151fc2453ddb68feda4d94cfb368660bb..7c52d77c4cfef6699d5fa001212f24ab
  
    // We will reindex the function literals later.
    ResetInfoId();
-@@ -2609,26 +2621,33 @@ void Parser::DeclareArrowFunctionFormalParameters(
+@@ -2375,7 +2387,10 @@ Statement* Parser::DesugarLexicalBindingsInForStatement(
+     //    make statement: let/const x = temp_x.
+     for (int i = 0; i < for_info.bound_names.length(); i++) {
+       VariableProxy* proxy = DeclareBoundVariable(
+-          for_info.bound_names[i], for_info.parsing_result.descriptor.mode,
++          for_info.bound_names[i],
++          for_info.parsing_result.descriptor.mode == VariableMode::kAwaitUsing
++              ? VariableMode::kConst
++              : for_info.parsing_result.descriptor.mode,
+           kNoSourcePosition);
+       inner_vars.Add(proxy->var());
+       VariableProxy* temp_proxy = factory()->NewVariableProxy(temps.at(i));
+@@ -2609,26 +2624,33 @@ void Parser::DeclareArrowFunctionFormalParameters(
  }
  
  void Parser::ReindexArrowFunctionFormalParameters(
@@ -75,7 +87,7 @@ index c1364b9151fc2453ddb68feda4d94cfb368660bb..7c52d77c4cfef6699d5fa001212f24ab
  }
  
  void Parser::PrepareGeneratorVariables() {
-@@ -2925,6 +2944,7 @@ bool Parser::SkipFunction(const AstRawString* function_name, FunctionKind kind,
+@@ -2925,6 +2947,7 @@ bool Parser::SkipFunction(const AstRawString* function_name, FunctionKind kind,
    // AST. This gathers the data needed to build a lazy function.
    TRACE_EVENT0(TRACE_DISABLED_BY_DEFAULT("v8.compile"), "V8.PreParse");
  
@@ -83,7 +95,7 @@ index c1364b9151fc2453ddb68feda4d94cfb368660bb..7c52d77c4cfef6699d5fa001212f24ab
    PreParser::PreParseResult result = reusable_preparser()->PreParseFunction(
        function_name, kind, function_syntax_kind, function_scope, use_counts_,
        produced_preparse_data);
-@@ -3032,9 +3052,10 @@ void Parser::ParseFunction(
+@@ -3032,9 +3055,10 @@ void Parser::ParseFunction(
    bool is_wrapped = function_syntax_kind == FunctionSyntaxKind::kWrapped;
  
    int expected_parameters_end_pos = parameters_end_pos_;
