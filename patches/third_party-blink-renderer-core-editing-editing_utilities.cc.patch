@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/editing/editing_utilities.cc b/third_party/blink/renderer/core/editing/editing_utilities.cc
-index df6e4b78dbde104302974d6627752c3a45658067..c5bb42aff789af32617620a55f0782fee1f0e97e 100644
+index df6e4b78dbde104302974d6627752c3a45658067..bcbe4b41d406a1881d051d41a935eac637d886d3 100644
 --- a/third_party/blink/renderer/core/editing/editing_utilities.cc
 +++ b/third_party/blink/renderer/core/editing/editing_utilities.cc
 @@ -41,6 +41,7 @@
@@ -23,7 +23,26 @@ index df6e4b78dbde104302974d6627752c3a45658067..c5bb42aff789af32617620a55f0782fe
  #include "third_party/blink/renderer/core/html/html_ulist_element.h"
  #include "third_party/blink/renderer/core/html/image_document.h"
  #include "third_party/blink/renderer/core/html/parser/html_parser_idioms.h"
-@@ -1139,6 +1144,14 @@ bool IsTableCell(const Node* node) {
+@@ -208,8 +213,17 @@ static bool HasEditableLevel(const Node& node, EditableLevel editable_level) {
+   // would fire in the middle of Document::setFocusedNode().
+ 
+   for (const Node& ancestor : NodeTraversal::InclusiveAncestorsOf(node)) {
+-    if (!(ancestor.IsHTMLElement() || ancestor.IsDocumentNode()))
++    if (!(ancestor.IsHTMLElement() || ancestor.IsDocumentNode())) {
+       continue;
++    }
++    // If the `ancestor` is a child of the shadow host and does not have a slot
++    // assigned, it should use the style of the shadow host and therefore be
++    // skipped.
++    // See https://issues.chromium.org/issues/392725745 for more details.
++    if (RuntimeEnabledFeatures::UseShadowHostStyleCheckEditableEnabled() &&
++        ancestor.IsChildOfShadowHost() && !ancestor.AssignedSlot()) {
++      continue;
++    }
+     // An inert subtree should not contain any content or controls which are
+     // critical to understanding or using aspects of the page which are not in
+     // the inert state. Content in an inert subtree will not be perceivable by
+@@ -1139,6 +1153,14 @@ bool IsTableCell(const Node* node) {
    return r ? r->IsTableCell() : IsA<HTMLTableCellElement>(*node);
  }
  
@@ -38,7 +57,7 @@ index df6e4b78dbde104302974d6627752c3a45658067..c5bb42aff789af32617620a55f0782fe
  HTMLElement* CreateDefaultParagraphElement(Document& document) {
    switch (document.GetFrame()->GetEditor().DefaultParagraphSeparator()) {
      case EditorParagraphSeparator::kIsDiv:
-@@ -1294,6 +1307,30 @@ PositionWithAffinity AdjustForEditingBoundary(const Position& position) {
+@@ -1294,6 +1316,30 @@ PositionWithAffinity AdjustForEditingBoundary(const Position& position) {
    return AdjustForEditingBoundary(PositionWithAffinity(position));
  }
  

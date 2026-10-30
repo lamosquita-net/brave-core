@@ -1,8 +1,8 @@
 diff --git a/third_party/blink/renderer/core/editing/commands/insert_list_command.h b/third_party/blink/renderer/core/editing/commands/insert_list_command.h
-index a0f37f4215418f5110288f37aafa27d88792b5b0..a5874e4c0f63960bc2d6218051256ffcaf8f7963 100644
+index a0f37f4215418f5110288f37aafa27d88792b5b0..cd6bdf522c9090a585f8d486d03d140f27c82400 100644
 --- a/third_party/blink/renderer/core/editing/commands/insert_list_command.h
 +++ b/third_party/blink/renderer/core/editing/commands/insert_list_command.h
-@@ -58,13 +58,23 @@ class CORE_EXPORT InsertListCommand final : public CompositeEditCommand {
+@@ -58,14 +58,26 @@ class CORE_EXPORT InsertListCommand final : public CompositeEditCommand {
                                   const HTMLQualifiedName&,
                                   Range& current_selection,
                                   EditingState*);
@@ -13,6 +13,7 @@ index a0f37f4215418f5110288f37aafa27d88792b5b0..a5874e4c0f63960bc2d6218051256ffc
 -  void ListifyParagraph(const VisiblePosition& original_start,
 -                        const HTMLQualifiedName& list_tag,
 -                        EditingState*);
+-  void MoveParagraphOverPositionIntoEmptyListItem(const VisiblePosition&,
 +
 +  // If InsertListCommand is run on the same type of list as |list_tag|,
 +  // unlistify the list child node. Otherwise, create a new list of type
@@ -27,9 +28,12 @@ index a0f37f4215418f5110288f37aafa27d88792b5b0..a5874e4c0f63960bc2d6218051256ffc
 +
 +  // This function will return the node which we are listifying. This is required
 +  // to get |listified_placeholder| in ToggleSelectedListItem function.
-+  Node* ListifyParagraph(const VisiblePosition& original_start,
++  Node* ListifyParagraph(const VisibleSelection& initial_selection,
++                         const VisiblePosition& original_start,
 +                         const HTMLQualifiedName& list_tag,
 +                         EditingState*);
-   void MoveParagraphOverPositionIntoEmptyListItem(const VisiblePosition&,
++  void MoveParagraphOverPositionIntoEmptyListItem(const VisibleSelection&,
++                                                  const VisiblePosition&,
                                                    HTMLLIElement*,
                                                    EditingState*);
+ 

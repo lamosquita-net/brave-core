@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/fonts/font_custom_platform_data.cc b/third_party/blink/renderer/platform/fonts/font_custom_platform_data.cc
-index 14059cf552f4ba052006903ebcb818cd5a48475d..90c5488e5c4846b6d728b3280d7834f84aa364a8 100644
+index 14059cf552f4ba052006903ebcb818cd5a48475d..25c2cca23cf44765a4b47862e9659309630f141b 100644
 --- a/third_party/blink/renderer/platform/fonts/font_custom_platform_data.cc
 +++ b/third_party/blink/renderer/platform/fonts/font_custom_platform_data.cc
 @@ -94,13 +94,19 @@ namespace blink {
@@ -25,7 +25,60 @@ index 14059cf552f4ba052006903ebcb818cd5a48475d..90c5488e5c4846b6d728b3280d7834f8
    }
  }
  
-@@ -321,12 +327,6 @@ FontCustomPlatformData* FontCustomPlatformData::Create(
+@@ -147,11 +153,13 @@ const FontPlatformData* FontCustomPlatformData::GetFontPlatformData(
+       FontSelectionRange wght_range = {
+           FontSelectionValue(wght_parameters->min),
+           FontSelectionValue(wght_parameters->max)};
+-      weight_coordinate = {
+-          kWghtTag,
+-          SkFloatToScalar(wght_range.clampToRange(selection_request.weight))};
+-      synthetic_bold = bold && wght_range.maximum < kBoldThreshold &&
+-                       selection_request.weight >= kBoldThreshold;
++      if (wght_range.IsValid()) {
++        weight_coordinate = {
++            kWghtTag,
++            SkFloatToScalar(wght_range.clampToRange(selection_request.weight))};
++        synthetic_bold = bold && wght_range.maximum < kBoldThreshold &&
++                         selection_request.weight >= kBoldThreshold;
++      }
+     }
+ 
+     SkFontArguments::VariationPosition::Coordinate width_coordinate = {
+@@ -163,9 +171,11 @@ const FontPlatformData* FontCustomPlatformData::GetFontPlatformData(
+       FontSelectionRange wdth_range = {
+           FontSelectionValue(wdth_parameters->min),
+           FontSelectionValue(wdth_parameters->max)};
+-      width_coordinate = {
+-          kWdthTag,
+-          SkFloatToScalar(wdth_range.clampToRange(selection_request.width))};
++      if (wdth_range.IsValid()) {
++        width_coordinate = {
++            kWdthTag,
++            SkFloatToScalar(wdth_range.clampToRange(selection_request.width))};
++      }
+     }
+     // CSS and OpenType have opposite definitions of direction of slant
+     // angle. In OpenType positive values turn counter-clockwise, negative
+@@ -181,11 +191,13 @@ const FontPlatformData* FontCustomPlatformData::GetFontPlatformData(
+       FontSelectionRange slnt_range = {
+           FontSelectionValue(slnt_parameters->min),
+           FontSelectionValue(slnt_parameters->max)};
+-      slant_coordinate = {
+-          kSlntTag,
+-          SkFloatToScalar(slnt_range.clampToRange(-selection_request.slope))};
+-      synthetic_italic = italic && slnt_range.maximum < kItalicSlopeValue &&
+-                         selection_request.slope >= kItalicSlopeValue;
++      if (slnt_range.IsValid()) {
++        slant_coordinate = {
++            kSlntTag,
++            SkFloatToScalar(slnt_range.clampToRange(-selection_request.slope))};
++        synthetic_italic = italic && slnt_range.maximum < kItalicSlopeValue &&
++                           selection_request.slope >= kItalicSlopeValue;
++      }
+     }
+ 
+     variation.push_back(weight_coordinate);
+@@ -321,12 +333,6 @@ FontCustomPlatformData* FontCustomPlatformData::Create(
  FontCustomPlatformData* FontCustomPlatformData::Create(
      sk_sp<SkTypeface> typeface,
      size_t data_size) {

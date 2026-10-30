@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/fonts/font_fallback_iterator.cc b/third_party/blink/renderer/platform/fonts/font_fallback_iterator.cc
-index 271b7742cb5373b8f1c8395d0f4bac73c185924a..de1b88e6e07146842e83cc21afdeba97074b7f26 100644
+index 271b7742cb5373b8f1c8395d0f4bac73c185924a..5cf2527136aae1a1b3387ca0f95258a3d9079125 100644
 --- a/third_party/blink/renderer/platform/fonts/font_fallback_iterator.cc
 +++ b/third_party/blink/renderer/platform/fonts/font_fallback_iterator.cc
 @@ -14,6 +14,7 @@
@@ -10,3 +10,21 @@ index 271b7742cb5373b8f1c8395d0f4bac73c185924a..de1b88e6e07146842e83cc21afdeba97
  #include "third_party/blink/renderer/platform/fonts/simple_font_data.h"
  #include "third_party/blink/renderer/platform/runtime_enabled_features.h"
  
+@@ -242,7 +243,7 @@ FontDataForRangeSet* FontFallbackIterator::Next(const HintCharList& hint_list) {
+ const SimpleFontData* FontFallbackIterator::FallbackPriorityFont(UChar32 hint) {
+   const SimpleFontData* font_data = FontCache::Get().FallbackFontForCharacter(
+       font_description_, hint,
+-      font_fallback_list_->PrimarySimpleFontData(font_description_),
++      font_fallback_list_->PrimarySimpleFontDataWithSpace(font_description_),
+       font_fallback_priority_);
+ 
+   if (FontSelector* font_selector = font_fallback_list_->GetFontSelector()) {
+@@ -290,7 +291,7 @@ const SimpleFontData* FontFallbackIterator::UniqueSystemFontForHintList(
+ 
+   const SimpleFontData* font_data = font_cache.FallbackFontForCharacter(
+       font_description_, hint,
+-      font_fallback_list_->PrimarySimpleFontData(font_description_));
++      font_fallback_list_->PrimarySimpleFontDataWithSpace(font_description_));
+ 
+   if (FontSelector* font_selector = font_fallback_list_->GetFontSelector()) {
+     font_selector->ReportFontLookupByFallbackCharacter(
