@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/element.cc b/third_party/blink/renderer/core/dom/element.cc
-index afa9718ce5b9dd841e33d89610d524df1db4e2c9..52f08f54e7dc59029ea3df848f54cfe8c4292e86 100644
+index afa9718ce5b9dd841e33d89610d524df1db4e2c9..24060ee158ce2e41a08246ea1ffc6ce3bb896546 100644
 --- a/third_party/blink/renderer/core/dom/element.cc
 +++ b/third_party/blink/renderer/core/dom/element.cc
 @@ -107,6 +107,7 @@
@@ -18,7 +18,15 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..52f08f54e7dc59029ea3df848f54cfe8
  #include "third_party/blink/renderer/core/html_element_type_helpers.h"
  #include "third_party/blink/renderer/core/html_names.h"
  #include "third_party/blink/renderer/core/input/event_handler.h"
-@@ -360,11 +362,9 @@ bool HasLeftwardDirection(const Element& element) {
+@@ -189,6 +191,7 @@
+ #include "third_party/blink/renderer/core/layout/layout_text_combine.h"
+ #include "third_party/blink/renderer/core/layout/layout_text_fragment.h"
+ #include "third_party/blink/renderer/core/layout/layout_view.h"
++#include "third_party/blink/renderer/core/layout/svg/layout_svg_root.h"
+ #include "third_party/blink/renderer/core/loader/render_blocking_resource_manager.h"
+ #include "third_party/blink/renderer/core/page/chrome_client.h"
+ #include "third_party/blink/renderer/core/page/focus_controller.h"
+@@ -360,11 +363,9 @@ bool HasLeftwardDirection(const Element& element) {
      return false;
    }
  
@@ -33,7 +41,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..52f08f54e7dc59029ea3df848f54cfe8
  }
  
  bool HasUpwardDirection(const Element& element) {
-@@ -373,12 +373,9 @@ bool HasUpwardDirection(const Element& element) {
+@@ -373,12 +374,9 @@ bool HasUpwardDirection(const Element& element) {
      return false;
    }
  
@@ -49,7 +57,33 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..52f08f54e7dc59029ea3df848f54cfe8
  }
  
  // TODO(meredithl): Automatically generate this method once the IDL compiler has
-@@ -1259,9 +1256,7 @@ Element* Element::anchorElement() const {
+@@ -553,6 +551,25 @@ bool IsValidShadowHostName(const AtomicString& local_name) {
+   return shadow_root_tags.Contains(local_name);
+ }
+ 
++bool IsInsideLayoutSVGHiddenContainer(const LayoutObject* object) {
++  if (!RuntimeEnabledFeatures::
++          RestrictGetBoundingClientRectForHiddenSVGElementsEnabled()) {
++    return false;
++  }
++
++  for (; object; object = object->Parent()) {
++    // Check if the Element's LayoutObject or any ancestor is a
++    // LayoutSVGHiddenContainer
++    if (object->IsSVGHiddenContainer()) {
++      return true;
++    }
++
++    if (IsA<LayoutSVGRoot>(*object)) {
++      break;
++    }
++  }
++  return false;
++}
+ }  // namespace
+ 
+ Element::Element(const QualifiedName& tag_name,
+@@ -1259,9 +1276,7 @@ Element* Element::anchorElement() const {
  void Element::setAnchorElement(Element* new_element) {
    CHECK(RuntimeEnabledFeatures::HTMLAnchorAttributeEnabled());
    SetElementAttribute(html_names::kAnchorAttr, new_element);
@@ -60,7 +94,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..52f08f54e7dc59029ea3df848f54cfe8
  }
  
  inline void Element::SynchronizeAttribute(const QualifiedName& name) const {
-@@ -1415,8 +1410,8 @@ void Element::scrollIntoViewWithOptions(const ScrollIntoViewOptions* options) {
+@@ -1415,8 +1430,8 @@ void Element::scrollIntoViewWithOptions(const ScrollIntoViewOptions* options) {
    }
  
    mojom::blink::ScrollIntoViewParamsPtr params =
@@ -71,7 +105,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..52f08f54e7dc59029ea3df848f54cfe8
  
    ScrollIntoViewNoVisualUpdate(std::move(params));
  }
-@@ -1451,13 +1446,13 @@ void Element::scrollIntoViewIfNeeded(bool center_if_needed) {
+@@ -1451,13 +1466,13 @@ void Element::scrollIntoViewIfNeeded(bool center_if_needed) {
    if (center_if_needed) {
      scroll_into_view_util::ScrollRectToVisible(
          *GetLayoutObject(), bounds,
@@ -87,7 +121,17 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..52f08f54e7dc59029ea3df848f54cfe8
              ScrollAlignment::ToEdgeIfNeeded(),
              ScrollAlignment::ToEdgeIfNeeded()));
    }
-@@ -2773,8 +2768,7 @@ void Element::AttributeChanged(const AttributeModificationParams& params) {
+@@ -2409,7 +2424,8 @@ void Element::ClientQuads(Vector<gfx::QuadF>& quads) const {
+     // TODO(pdr): ObjectBoundingBox does not include stroke and the spec is not
+     // clear (see: https://github.com/w3c/svgwg/issues/339, crbug.com/529734).
+     // If stroke is desired, we can update this to use AbsoluteQuads, below.
+-    if (IsA<SVGGraphicsElement>(svg_element)) {
++    if (IsA<SVGGraphicsElement>(svg_element) &&
++        !IsInsideLayoutSVGHiddenContainer(element_layout_object)) {
+       quads.push_back(element_layout_object->LocalToAbsoluteQuad(
+           gfx::QuadF(element_layout_object->ObjectBoundingBox())));
+     }
+@@ -2773,8 +2789,7 @@ void Element::AttributeChanged(const AttributeModificationParams& params) {
        }
      }
    } else if (params.name == html_names::kAnchorAttr) {
@@ -97,7 +141,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..52f08f54e7dc59029ea3df848f54cfe8
        EnsureAnchorElementObserver().Notify();
        return;
      }
-@@ -3027,7 +3021,11 @@ Node::InsertionNotificationRequest Element::InsertedInto(
+@@ -3027,7 +3042,11 @@ Node::InsertionNotificationRequest Element::InsertedInto(
      EnqueueAutofocus(*this);
  
      if (GetCustomElementState() == CustomElementState::kCustom) {
@@ -110,7 +154,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..52f08f54e7dc59029ea3df848f54cfe8
      } else if (GetCustomElementState() == CustomElementState::kUndefined) {
        CustomElement::TryToUpgrade(*this);
      }
-@@ -3065,6 +3063,11 @@ Node::InsertionNotificationRequest Element::InsertedInto(
+@@ -3065,6 +3084,11 @@ Node::InsertionNotificationRequest Element::InsertedInto(
      }
    }
  
@@ -122,7 +166,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..52f08f54e7dc59029ea3df848f54cfe8
    if (parentElement() && parentElement()->IsInCanvasSubtree()) {
      SetIsInCanvasSubtree(true);
    }
-@@ -3079,6 +3082,32 @@ Node::InsertionNotificationRequest Element::InsertedInto(
+@@ -3079,6 +3103,32 @@ Node::InsertionNotificationRequest Element::InsertedInto(
    return kInsertionDone;
  }
  
@@ -155,7 +199,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..52f08f54e7dc59029ea3df848f54cfe8
  void Element::RemovedFrom(ContainerNode& insertion_point) {
    bool was_in_document = insertion_point.isConnected();
  
-@@ -3130,7 +3159,8 @@ void Element::RemovedFrom(ContainerNode& insertion_point) {
+@@ -3130,7 +3180,8 @@ void Element::RemovedFrom(ContainerNode& insertion_point) {
        document.SetCSSTarget(nullptr);
      }
  
@@ -165,7 +209,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..52f08f54e7dc59029ea3df848f54cfe8
        CustomElement::EnqueueDisconnectedCallback(*this);
      }
    }
-@@ -3459,6 +3489,7 @@ const ComputedStyle* Element::StyleForLayoutObject(
+@@ -3459,6 +3510,7 @@ const ComputedStyle* Element::StyleForLayoutObject(
      // change as the result.
      DCHECK(GetDocument().GetStyleEngine().InContainerQueryStyleRecalc() ||
             GetDocument().GetStyleEngine().InPositionTryStyleRecalc() ||
@@ -173,7 +217,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..52f08f54e7dc59029ea3df848f54cfe8
             element_animations->CssAnimations().PendingUpdate().IsEmpty());
      element_animations->CssAnimations().ClearPendingUpdate();
    }
-@@ -4499,6 +4530,19 @@ void Element::UpdateDirectionalityAndDescendant(TextDirection direction) {
+@@ -4499,6 +4551,19 @@ void Element::UpdateDirectionalityAndDescendant(TextDirection direction) {
            }
          }
        }
@@ -193,7 +237,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..52f08f54e7dc59029ea3df848f54cfe8
      }
      element = ElementTraversal::Next(*element, this);
    } while (element);
-@@ -4590,14 +4634,68 @@ void Element::UpdateDescendantHasDirAutoAttribute(bool has_dir_auto) {
+@@ -4590,14 +4655,68 @@ void Element::UpdateDescendantHasDirAutoAttribute(bool has_dir_auto) {
    }
  }
  
@@ -265,7 +309,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..52f08f54e7dc59029ea3df848f54cfe8
    if (const HTMLSlotElement* slot_this =
            ToHTMLSlotElementIfSupportsAssignmentOrNull(this)) {
      auto& assigned_nodes = slot_this->AssignedNodes();
-@@ -4613,10 +4711,13 @@ std::optional<TextDirection> Element::ResolveAutoDirectionality(
+@@ -4613,10 +4732,13 @@ std::optional<TextDirection> Element::ResolveAutoDirectionality(
            }
          } else if (Element* slotted_element =
                         DynamicTo<Element>(slotted_node)) {
@@ -283,7 +327,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..52f08f54e7dc59029ea3df848f54cfe8
            }
          }
        }
-@@ -4624,45 +4725,7 @@ std::optional<TextDirection> Element::ResolveAutoDirectionality(
+@@ -4624,45 +4746,7 @@ std::optional<TextDirection> Element::ResolveAutoDirectionality(
      }
    }
  
@@ -330,7 +374,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..52f08f54e7dc59029ea3df848f54cfe8
  }
  
  void Element::AdjustDirectionalityIfNeededAfterChildrenChanged(
-@@ -5014,11 +5077,17 @@ Element::HighlightRecalc Element::CalculateHighlightRecalc(
+@@ -5014,11 +5098,17 @@ Element::HighlightRecalc Element::CalculateHighlightRecalc(
      return HighlightRecalc::kNone;
    }
    // If we are a root element (our parent is a Document or ShadowRoot), we can
@@ -352,7 +396,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..52f08f54e7dc59029ea3df848f54cfe8
    DCHECK(IsInTreeScope());
    if (parentNode() == GetTreeScope().RootNode()) {
      if (new_style.HasNonUaHighlightPseudoStyles()) {
-@@ -5031,6 +5100,9 @@ Element::HighlightRecalc Element::CalculateHighlightRecalc(
+@@ -5031,6 +5121,9 @@ Element::HighlightRecalc Element::CalculateHighlightRecalc(
        if (old_style->EffectiveZoom() != new_style.EffectiveZoom()) {
          return HighlightRecalc::kFull;
        }
@@ -362,7 +406,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..52f08f54e7dc59029ea3df848f54cfe8
        // Neither the new style nor the old style has any non-UA highlight rules,
        // so they will be equal. Let’s reuse the old styles for all highlights.
        return HighlightRecalc::kReuse;
-@@ -6406,7 +6478,7 @@ void Element::UpdateSelectionOnFocus(
+@@ -6406,7 +6499,7 @@ void Element::UpdateSelectionOnFocus(
    } else if (GetLayoutObject() &&
               !GetLayoutObject()->IsLayoutEmbeddedContent()) {
      if (!options->preventScroll()) {
@@ -371,7 +415,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..52f08f54e7dc59029ea3df848f54cfe8
  
        // It's common to have menus and list controls that have items slightly
        // overflowing horizontally but the control isn't horizontally
-@@ -7094,6 +7166,10 @@ Node* Element::InsertAdjacent(const String& where,
+@@ -7094,6 +7187,10 @@ Node* Element::InsertAdjacent(const String& where,
  }
  
  void Element::HideNonce() {
@@ -382,7 +426,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..52f08f54e7dc59029ea3df848f54cfe8
    const AtomicString& nonce_value = FastGetAttribute(html_names::kNonceAttr);
    if (nonce_value.empty()) {
      return;
-@@ -7441,8 +7517,8 @@ const ComputedStyle* Element::EnsureComputedStyle(
+@@ -7441,8 +7538,8 @@ const ComputedStyle* Element::EnsureComputedStyle(
    StyleEngine::InEnsureComputedStyleScope ensure_scope(
        GetDocument().GetStyleEngine());
  
@@ -393,7 +437,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..52f08f54e7dc59029ea3df848f54cfe8
      return element->EnsureComputedStyle();
    }
  
-@@ -7911,6 +7987,17 @@ PseudoElement* Element::UpdatePseudoElement(
+@@ -7911,6 +8008,17 @@ PseudoElement* Element::UpdatePseudoElement(
            !PseudoElementLayoutObjectIsNeeded(
                pseudo_id, element->GetComputedStyle(), this)) {
          generate_pseudo = false;
@@ -411,7 +455,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..52f08f54e7dc59029ea3df848f54cfe8
        }
      }
      if (!generate_pseudo) {
-@@ -7948,10 +8035,21 @@ PseudoElement* Element::CreatePseudoElementIfNeeded(
+@@ -7948,10 +8056,21 @@ PseudoElement* Element::CreatePseudoElementIfNeeded(
    if (!PseudoElementLayoutObjectIsNeeded(pseudo_id, pseudo_style, this)) {
      GetElementRareData()->SetPseudoElement(pseudo_id, nullptr,
                                             view_transition_name);
@@ -434,7 +478,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..52f08f54e7dc59029ea3df848f54cfe8
      GetDocument().AddToTopLayer(pseudo_element, this);
    }
  
-@@ -7984,11 +8082,32 @@ PseudoElement* Element::GetPseudoElement(
+@@ -7984,11 +8103,32 @@ PseudoElement* Element::GetPseudoElement(
    return nullptr;
  }
  
@@ -469,7 +513,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..52f08f54e7dc59029ea3df848f54cfe8
    }
  
    // The transition pseudos can currently only exist on the document element.
-@@ -8021,18 +8140,44 @@ PseudoElement* Element::GetNestedPseudoElement(
+@@ -8021,18 +8161,44 @@ PseudoElement* Element::GetNestedPseudoElement(
  }
  
  LayoutObject* Element::PseudoElementLayoutObject(PseudoId pseudo_id) const {
@@ -516,7 +560,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..52f08f54e7dc59029ea3df848f54cfe8
      return true;
    }
  
-@@ -8044,10 +8189,6 @@ bool Element::PseudoElementStylesDependOnFontMetrics() const {
+@@ -8044,10 +8210,6 @@ bool Element::PseudoElementStylesDependOnFontMetrics() const {
      return false;
    }
  
@@ -527,7 +571,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..52f08f54e7dc59029ea3df848f54cfe8
    // Note that |HasAnyPseudoElementStyles()| counts public pseudo elements only.
    // ::-webkit-scrollbar-*  are internal, and hence are not counted. So we must
    // perform this check after checking scrollbar pseudo element styles.
-@@ -8056,7 +8197,7 @@ bool Element::PseudoElementStylesDependOnFontMetrics() const {
+@@ -8056,7 +8218,7 @@ bool Element::PseudoElementStylesDependOnFontMetrics() const {
    }
  
    for (PseudoElement* pseudo_element : rare_data->GetPseudoElements()) {
@@ -536,7 +580,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..52f08f54e7dc59029ea3df848f54cfe8
        return true;
      }
    }
-@@ -10020,6 +10161,13 @@ ALWAYS_INLINE void Element::SetAttributeInternal(
+@@ -10020,6 +10182,13 @@ ALWAYS_INLINE void Element::SetAttributeInternal(
  
  Attr* Element::setAttributeNode(Attr* attr_node,
                                  ExceptionState& exception_state) {
@@ -550,7 +594,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..52f08f54e7dc59029ea3df848f54cfe8
    Attr* old_attr_node = AttrIfExists(attr_node->GetQualifiedName());
    if (old_attr_node == attr_node) {
      return attr_node;  // This Attr is already attached to the element.
-@@ -10047,13 +10195,6 @@ Attr* Element::setAttributeNode(Attr* attr_node,
+@@ -10047,13 +10216,6 @@ Attr* Element::setAttributeNode(Attr* attr_node,
    SynchronizeAllAttributes();
    const UniqueElementData& element_data = EnsureUniqueElementData();
  
@@ -564,7 +608,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..52f08f54e7dc59029ea3df848f54cfe8
    AttributeCollection attributes = element_data.Attributes();
    wtf_size_t index = attributes.FindIndex(attr_node->GetQualifiedName());
    AtomicString local_name;
-@@ -10146,7 +10287,6 @@ AnchorPositionScrollData* Element::GetAnchorPositionScrollData() const {
+@@ -10146,7 +10308,6 @@ AnchorPositionScrollData* Element::GetAnchorPositionScrollData() const {
  }
  
  void Element::IncrementImplicitlyAnchoredElementCount() {
@@ -572,7 +616,7 @@ index afa9718ce5b9dd841e33d89610d524df1db4e2c9..52f08f54e7dc59029ea3df848f54cfe8
    if (!HasImplicitlyAnchoredElement() && GetLayoutObject()) {
      // Invalidate layout to populate itself into Physical/LogicalAnchorQuery.
      GetLayoutObject()->SetNeedsLayoutAndFullPaintInvalidation(
-@@ -10175,20 +10315,19 @@ AnchorElementObserver* Element::GetAnchorElementObserver() const {
+@@ -10175,20 +10336,19 @@ AnchorElementObserver* Element::GetAnchorElementObserver() const {
  
  AnchorElementObserver& Element::EnsureAnchorElementObserver() {
    DCHECK(IsHTMLElement());

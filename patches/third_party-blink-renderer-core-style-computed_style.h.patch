@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style.h b/third_party/blink/renderer/core/style/computed_style.h
-index d4d2a1ca1e5a4f492aecaa534714267bf640d520..4759013940dec5d91107f5d40045f0515ca28ef0 100644
+index d4d2a1ca1e5a4f492aecaa534714267bf640d520..7539554149a958bda122dc6684e98a043b7da63b 100644
 --- a/third_party/blink/renderer/core/style/computed_style.h
 +++ b/third_party/blink/renderer/core/style/computed_style.h
 @@ -219,6 +219,9 @@ class ComputedStyle final : public ComputedStyleBase {
@@ -196,7 +196,18 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..4759013940dec5d91107f5d40045f051
    // Visibility utility functions.
    bool VisibleToHitTesting() const {
      return Visibility() == EVisibility::kVisible &&
-@@ -2083,7 +2131,7 @@ class ComputedStyle final : public ComputedStyleBase {
+@@ -1854,6 +1902,10 @@ class ComputedStyle final : public ComputedStyleBase {
+ 
+   // Table layout utility functions.
+   bool IsFixedTableLayout() const {
++    if (RuntimeEnabledFeatures::TableIsAutoFixedLayoutEnabled()) {
++      // https://github.com/w3c/csswg-drafts/issues/10937
++      return TableLayout() == ETableLayout::kFixed && !LogicalWidth().IsAuto();
++    }
+     // https://www.w3.org/TR/css-tables-3/#table-layout-property
+     return TableLayout() == ETableLayout::kFixed &&
+            (!LogicalWidth().HasAuto() && !LogicalWidth().HasMaxContent());
+@@ -2083,7 +2135,7 @@ class ComputedStyle final : public ComputedStyleBase {
    // This function may return values not defined as the enum values. See
    // `EWhiteSpace`. Prefer using semantic functions below.
    EWhiteSpace WhiteSpace() const {
@@ -205,7 +216,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..4759013940dec5d91107f5d40045f051
    }
  
    // Semantic functions for the `white-space` property and its longhands.
-@@ -2110,7 +2158,12 @@ class ComputedStyle final : public ComputedStyleBase {
+@@ -2110,7 +2162,12 @@ class ComputedStyle final : public ComputedStyleBase {
      return false;
    }
  
@@ -219,7 +230,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..4759013940dec5d91107f5d40045f051
    bool ShouldBreakSpaces() const {
      return blink::ShouldBreakSpaces(GetWhiteSpaceCollapse());
    }
-@@ -2613,6 +2666,7 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+@@ -2613,6 +2670,7 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
    friend class LayoutTheme;
    friend class StyleAdjuster;
    friend class StyleResolverState;
@@ -227,7 +238,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..4759013940dec5d91107f5d40045f051
    // Access to UserModify().
    friend class MatchedPropertiesCache;
  
-@@ -2756,11 +2810,12 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+@@ -2756,11 +2814,12 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
      SetClipInternal(ComputedStyleInitialValues::InitialClip());
    }
  
@@ -241,7 +252,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..4759013940dec5d91107f5d40045f051
  
    // color
    blink::Color GetCurrentColor() const {
-@@ -3236,8 +3291,8 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+@@ -3236,8 +3295,8 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
                                     bool is_inherited_property) const;
    CORE_EXPORT StyleInheritedVariables& MutableInheritedVariables();
    CORE_EXPORT StyleNonInheritedVariables& MutableNonInheritedVariables();
@@ -252,7 +263,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..4759013940dec5d91107f5d40045f051
    CORE_EXPORT void SetVariableData(const AtomicString& name,
                                     CSSVariableData* value,
                                     bool is_inherited_property) {
-@@ -3258,11 +3313,11 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+@@ -3258,11 +3317,11 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
    }
  
    EWhiteSpace WhiteSpace() const {

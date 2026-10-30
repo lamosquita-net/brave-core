@@ -1,0 +1,17 @@
+diff --git a/third_party/blink/renderer/core/layout/text_autosizer.cc b/third_party/blink/renderer/core/layout/text_autosizer.cc
+index 9db6bda3833cf6b20f0ec376684c42ce7b52d7f3..29cf85df7150d98b3682b6b1693cdc74c8cc216b 100644
+--- a/third_party/blink/renderer/core/layout/text_autosizer.cc
++++ b/third_party/blink/renderer/core/layout/text_autosizer.cc
+@@ -240,6 +240,12 @@ static bool BlockSuppressesAutosizing(const LayoutBlock* block) {
+   if (BlockHeightConstrained(block))
+     return true;
+ 
++  if (RuntimeEnabledFeatures::TextAutoSizingDisabledOnFlexboxEnabled() &&
++      block->IsFlexItem()) {
++    block->GetDocument().CountUse(WebFeature::kTextAutoSizingDisabledOnFlexbox);
++    return true;
++  }
++
+   return false;
+ }
+ 
