@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc b/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc
-index 63c943727517aff4d0264a993dc30fc0e2bed7c9..e7d34302ab8dcccf54e8eb2cf121cb8dc39ed896 100644
+index 63c943727517aff4d0264a993dc30fc0e2bed7c9..d590384976678e644e2ab206a7d5809442367596 100644
 --- a/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc
 +++ b/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc
 @@ -242,8 +242,10 @@ HTMLCanvasElement::HTMLCanvasElement(Document& document)
@@ -23,11 +23,12 @@ index 63c943727517aff4d0264a993dc30fc0e2bed7c9..e7d34302ab8dcccf54e8eb2cf121cb8d
      String data_url = data_buffer->ToDataURL(encoding_mime_type, quality);
      base::TimeDelta elapsed_time = base::TimeTicks::Now() - start_time;
      float sqrt_pixels =
-@@ -1536,6 +1539,12 @@ void HTMLCanvasElement::LayoutObjectDestroyed() {
+@@ -1536,6 +1539,13 @@ void HTMLCanvasElement::LayoutObjectDestroyed() {
    SetIsDisplayed(false);
  }
  
 +void HTMLCanvasElement::LangAttributeChanged() {
++  HTMLElement::LangAttributeChanged();
 +  if (context_) {
 +    context_->LangAttributeChanged();
 +  }
@@ -36,7 +37,7 @@ index 63c943727517aff4d0264a993dc30fc0e2bed7c9..e7d34302ab8dcccf54e8eb2cf121cb8d
  void HTMLCanvasElement::DidMoveToNewDocument(Document& old_document) {
    SetExecutionContext(GetExecutionContext());
    SetPage(GetDocument().GetPage());
-@@ -1738,6 +1747,47 @@ void HTMLCanvasElement::UnregisterContentsLayer(cc::Layer* layer) {
+@@ -1738,6 +1748,47 @@ void HTMLCanvasElement::UnregisterContentsLayer(cc::Layer* layer) {
    SetNeedsCompositingUpdate();
  }
  
@@ -84,7 +85,7 @@ index 63c943727517aff4d0264a993dc30fc0e2bed7c9..e7d34302ab8dcccf54e8eb2cf121cb8d
  FontSelector* HTMLCanvasElement::GetFontSelector() {
    return GetDocument().GetStyleEngine().GetFontSelector();
  }
-@@ -1806,8 +1856,7 @@ void HTMLCanvasElement::UpdateMemoryUsage() {
+@@ -1806,8 +1857,7 @@ void HTMLCanvasElement::UpdateMemoryUsage() {
      // AdjustAmountOfExternalAllocatedMemory is safe, hence the
      // 'diposing_' condition in the DCHECK below.
      DCHECK(ThreadState::Current()->IsAllocationAllowed() || disposing_);
