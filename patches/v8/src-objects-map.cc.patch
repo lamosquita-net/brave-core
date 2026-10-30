@@ -1,8 +1,8 @@
 diff --git a/src/objects/map.cc b/src/objects/map.cc
-index c9ab8c7c7e07e67e491b1f1d444d860997410da3..9df7686b351b7d3c20551d68aca8512049311713 100644
+index 35e4e90895c135706d19f2538b579b81209038fa..eb1e498a07f55b4756eaf9547d31ff784c696464 100644
 --- a/src/objects/map.cc
 +++ b/src/objects/map.cc
-@@ -533,9 +533,7 @@ MaybeHandle<Map> Map::CopyWithField(Isolate* isolate, DirectHandle<Map> map,
+@@ -540,9 +540,7 @@ MaybeHandle<Map> Map::CopyWithField(Isolate* isolate, DirectHandle<Map> map,
  
    Descriptor d = Descriptor::DataField(name, index, attributes, constness,
                                         representation, wrapped_type);
@@ -13,7 +13,7 @@ index c9ab8c7c7e07e67e491b1f1d444d860997410da3..9df7686b351b7d3c20551d68aca85120
  }
  
  MaybeHandle<Map> Map::CopyWithConstant(Isolate* isolate, DirectHandle<Map> map,
-@@ -640,20 +638,25 @@ Map::FieldCounts Map::GetFieldCounts() const {
+@@ -647,20 +645,25 @@ Map::FieldCounts Map::GetFieldCounts() const {
  }
  
  void Map::DeprecateTransitionTree(Isolate* isolate) {
@@ -42,7 +42,7 @@ index c9ab8c7c7e07e67e491b1f1d444d860997410da3..9df7686b351b7d3c20551d68aca85120
    set_is_deprecated(true);
    if (v8_flags.log_maps) {
      LOG(isolate, MapEvent("Deprecate", direct_handle(*this, isolate), {}));
-@@ -1054,14 +1057,19 @@ Tagged<Map> Map::LookupElementsTransitionMap(Isolate* isolate,
+@@ -1061,14 +1064,19 @@ Tagged<Map> Map::LookupElementsTransitionMap(Isolate* isolate,
  }
  
  bool Map::IsMapInArrayPrototypeChain(Isolate* isolate) const {
@@ -67,7 +67,7 @@ index c9ab8c7c7e07e67e491b1f1d444d860997410da3..9df7686b351b7d3c20551d68aca85120
    return false;
  }
  
-@@ -1292,8 +1300,10 @@ Handle<Map> Map::Normalize(Isolate* isolate, DirectHandle<Map> fast_map,
+@@ -1299,8 +1307,10 @@ Handle<Map> Map::Normalize(Isolate* isolate, DirectHandle<Map> fast_map,
    }
    DirectHandle<NormalizedMapCache> cache;
    if (use_cache) {
@@ -79,7 +79,7 @@ index c9ab8c7c7e07e67e491b1f1d444d860997410da3..9df7686b351b7d3c20551d68aca85120
      use_cache = !IsUndefined(normalized_map_cache, isolate);
      if (use_cache) {
        cache = Cast<NormalizedMapCache>(
-@@ -1523,6 +1533,10 @@ Handle<Map> Map::ShareDescriptor(Isolate* isolate, DirectHandle<Map> map,
+@@ -1530,6 +1540,10 @@ Handle<Map> Map::ShareDescriptor(Isolate* isolate, DirectHandle<Map> map,
      DisallowGarbageCollection no_gc;
      descriptors->Append(descriptor);
      result->InitializeDescriptors(isolate, *descriptors);
@@ -90,7 +90,7 @@ index c9ab8c7c7e07e67e491b1f1d444d860997410da3..9df7686b351b7d3c20551d68aca85120
    }
  
    DCHECK(result->NumberOfOwnDescriptors() == map->NumberOfOwnDescriptors() + 1);
-@@ -1566,6 +1580,22 @@ Handle<Map> Map::CopyReplaceDescriptors(
+@@ -1573,6 +1587,22 @@ Handle<Map> Map::CopyReplaceDescriptors(
      DirectHandle<DescriptorArray> descriptors, TransitionFlag flag,
      MaybeDirectHandle<Name> maybe_name, const char* reason,
      TransitionKindFlag transition_kind) {
@@ -113,7 +113,7 @@ index c9ab8c7c7e07e67e491b1f1d444d860997410da3..9df7686b351b7d3c20551d68aca85120
    DCHECK(descriptors->IsSortedNoDuplicates());
  
    Handle<Map> result = CopyDropDescriptors(isolate, map);
-@@ -1577,15 +1607,16 @@ Handle<Map> Map::CopyReplaceDescriptors(
+@@ -1584,15 +1614,16 @@ Handle<Map> Map::CopyReplaceDescriptors(
      result->set_may_have_interesting_properties(true);
    }
  
@@ -131,7 +131,7 @@ index c9ab8c7c7e07e67e491b1f1d444d860997410da3..9df7686b351b7d3c20551d68aca85120
        is_connected = true;
      } else if ((transition_kind == PROTOTYPE_TRANSITION &&
                  v8_flags.move_prototype_transitions_first) ||
-@@ -1603,6 +1634,10 @@ Handle<Map> Map::CopyReplaceDescriptors(
+@@ -1610,6 +1641,10 @@ Handle<Map> Map::CopyReplaceDescriptors(
        result->InitializeDescriptors(isolate, *descriptors);
      }
    }
@@ -142,7 +142,7 @@ index c9ab8c7c7e07e67e491b1f1d444d860997410da3..9df7686b351b7d3c20551d68aca85120
    if (v8_flags.log_maps && !is_connected) {
      LOG(isolate,
          MapEvent("ReplaceDescriptors", map, result, reason,
-@@ -1858,68 +1893,70 @@ Handle<Map> Map::CopyForPreventExtensions(
+@@ -1865,68 +1900,70 @@ Handle<Map> Map::CopyForPreventExtensions(
        DescriptorArray::CopyUpToAddAttributes(
            isolate, direct_handle(map->instance_descriptors(isolate), isolate),
            num_descriptors, attrs_to_add);
@@ -272,7 +272,7 @@ index c9ab8c7c7e07e67e491b1f1d444d860997410da3..9df7686b351b7d3c20551d68aca85120
  }
  
  namespace {
-@@ -2201,7 +2238,12 @@ Handle<Map> Map::CopyAddDescriptor(Isolate* isolate, DirectHandle<Map> map,
+@@ -2208,7 +2245,12 @@ Handle<Map> Map::CopyAddDescriptor(Isolate* isolate, DirectHandle<Map> map,
        DescriptorArray::CopyUpTo(isolate, descriptors, nof, 1);
    new_descriptors->Append(descriptor);
  

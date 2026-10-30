@@ -1,8 +1,8 @@
 diff --git a/src/execution/frames.cc b/src/execution/frames.cc
-index 8588e71521ee4a06a3da51fcda3cd562ac291a85..cb23f7a694449100d3c385bfd3c15086eac59e75 100644
+index 2b93457521da09cc329ef4214f7cd9c5285d1fde..cb16f7e757ce09bc05a432268e4bb918e46f6360 100644
 --- a/src/execution/frames.cc
 +++ b/src/execution/frames.cc
-@@ -848,9 +848,9 @@ void StackFrame::IteratePc(RootVisitor* v, Address* constant_pool_address,
+@@ -796,9 +796,9 @@ void StackFrame::IteratePc(RootVisitor* v, Address* constant_pool_address,
    // stack pointer is known. This means we cannot relocate InstructionStreams
    // for fast c calls.
    DCHECK(!InFastCCall());
@@ -15,7 +15,7 @@ index 8588e71521ee4a06a3da51fcda3cd562ac291a85..cb23f7a694449100d3c385bfd3c15086
  
    Tagged<InstructionStream> istream =
        GCSafeCast<InstructionStream>(visited_istream, isolate()->heap());
-@@ -1870,10 +1870,35 @@ void WasmFrame::Iterate(RootVisitor* v) const {
+@@ -1818,10 +1818,35 @@ void WasmFrame::Iterate(RootVisitor* v) const {
    bool has_tagged_outgoing_params =
        wasm_code->kind() != wasm::WasmCode::kWasmFunction &&
        wasm_code->kind() != wasm::WasmCode::kWasmToCapiWrapper;
@@ -55,7 +55,7 @@ index 8588e71521ee4a06a3da51fcda3cd562ac291a85..cb23f7a694449100d3c385bfd3c15086
    }
  
    // Visit pointer spill slots and locals.
-@@ -3936,6 +3961,16 @@ FullObjectSlot WasmLiftoffSetupFrame::wasm_instance_data_slot() const {
+@@ -3885,6 +3910,16 @@ FullObjectSlot WasmLiftoffSetupFrame::wasm_instance_data_slot() const {
        sp() + WasmLiftoffSetupFrameConstants::kWasmInstanceDataOffset));
  }
  
@@ -72,7 +72,7 @@ index 8588e71521ee4a06a3da51fcda3cd562ac291a85..cb23f7a694449100d3c385bfd3c15086
  void WasmLiftoffSetupFrame::Iterate(RootVisitor* v) const {
    FullObjectSlot spilled_instance_slot(&Memory<Address>(
        fp() + WasmLiftoffSetupFrameConstants::kInstanceSpillOffset));
-@@ -3988,7 +4023,8 @@ void WasmLiftoffSetupFrame::Iterate(RootVisitor* v) const {
+@@ -3937,7 +3972,8 @@ void WasmLiftoffSetupFrame::Iterate(RootVisitor* v) const {
    }
  
    // Next we scan the slots of stack parameters.

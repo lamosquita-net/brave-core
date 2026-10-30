@@ -1,30 +1,8 @@
 diff --git a/src/compiler/turboshaft/late-load-elimination-reducer.cc b/src/compiler/turboshaft/late-load-elimination-reducer.cc
-index 7b21b8477545abaf8e021e16ba69d228cd64cc98..cf62f6deb1e0907b2f2a7e44a6ed1b13cf23e074 100644
+index e70e556163ccb455e76dabdbb5401ed1861b55ad..cf62f6deb1e0907b2f2a7e44a6ed1b13cf23e074 100644
 --- a/src/compiler/turboshaft/late-load-elimination-reducer.cc
 +++ b/src/compiler/turboshaft/late-load-elimination-reducer.cc
-@@ -409,11 +409,17 @@ void LateLoadEliminationAnalyzer::ProcessStore(OpIndex op_idx,
-     non_aliasing_objects_.Set(value, false);
-   }
- 
--  // If we just stored a map, invalidate the maps for this base.
-+  // If we just stored a map, invalidate all object_maps_.
-   if (store.offset == HeapObject::kMapOffset && !store.index().valid()) {
--    if (object_maps_.HasKeyFor(store.base())) {
--      TRACE(">> Wiping map\n");
--      object_maps_.Set(store.base(), MapMaskAndOr{});
-+    // TODO(dmercadier): can we only do this for objects that are potentially
-+    // aliasing with the `base` (based on their maps and the maps of `base`)?
-+    // Also, it might be worth to record a new map if this is actually a map
-+    // store.
-+    // TODO(dmercadier): do this only if `value` is a Constant with kind
-+    // kHeapObject, since all map stores should store a known constant maps.
-+    TRACE(">> Wiping all maps\n");
-+    for (auto it : object_maps_) {
-+      object_maps_.Set(it.second, MapMaskAndOr{});
-     }
-   }
- }
-@@ -439,6 +445,11 @@ void LateLoadEliminationAnalyzer::ProcessCall(OpIndex op_idx,
+@@ -445,6 +445,11 @@ void LateLoadEliminationAnalyzer::ProcessCall(OpIndex op_idx,
    // Some builtins do not create aliases and do not invalidate existing
    // memory, and some even return fresh objects. For such cases, we don't
    // invalidate the state, and record the non-alias if any.
@@ -36,7 +14,7 @@ index 7b21b8477545abaf8e021e16ba69d228cd64cc98..cf62f6deb1e0907b2f2a7e44a6ed1b13
    if (!op.Effects().can_write()) {
      TRACE(">> Call doesn't write, skipping");
      return;
-@@ -490,6 +501,14 @@ void LateLoadEliminationAnalyzer::ProcessCall(OpIndex op_idx,
+@@ -496,6 +501,14 @@ void LateLoadEliminationAnalyzer::ProcessCall(OpIndex op_idx,
    // The call could modify arbitrary memory, so we invalidate every
    // potentially-aliasing object.
    memory_.InvalidateMaybeAliasing();
@@ -51,7 +29,7 @@ index 7b21b8477545abaf8e021e16ba69d228cd64cc98..cf62f6deb1e0907b2f2a7e44a6ed1b13
  }
  
  // The only time an Allocate should flow into a WordBinop is for Smi checks
-@@ -550,10 +569,27 @@ void LateLoadEliminationAnalyzer::InvalidateIfAlias(OpIndex op_idx) {
+@@ -556,10 +569,27 @@ void LateLoadEliminationAnalyzer::InvalidateIfAlias(OpIndex op_idx) {
    }
  }
  
@@ -79,7 +57,7 @@ index 7b21b8477545abaf8e021e16ba69d228cd64cc98..cf62f6deb1e0907b2f2a7e44a6ed1b13
  }
  
  void LateLoadEliminationAnalyzer::ProcessAssumeMap(
-@@ -671,13 +707,7 @@ bool LateLoadEliminationAnalyzer::BeginBlock(const Block* block) {
+@@ -677,13 +707,7 @@ bool LateLoadEliminationAnalyzer::BeginBlock(const Block* block) {
        // edge of the inner loop should reflect this restriction.
        predecessor_alias_snapshots_.push_back(pred_snapshots->alias_snapshot);
        predecessor_memory_snapshots_.push_back(pred_snapshots->memory_snapshot);
@@ -94,7 +72,7 @@ index 7b21b8477545abaf8e021e16ba69d228cd64cc98..cf62f6deb1e0907b2f2a7e44a6ed1b13
      }
    }
  
-@@ -710,10 +740,14 @@ bool LateLoadEliminationAnalyzer::BeginBlock(const Block* block) {
+@@ -716,10 +740,14 @@ bool LateLoadEliminationAnalyzer::BeginBlock(const Block* block) {
        if (is_empty(pred)) {
          // One of the predecessors doesn't have maps for this object, so we have
          // to assume that this object could have any map.

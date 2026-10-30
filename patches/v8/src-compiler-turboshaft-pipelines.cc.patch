@@ -1,20 +1,11 @@
 diff --git a/src/compiler/turboshaft/pipelines.cc b/src/compiler/turboshaft/pipelines.cc
-index 0131e7b7c6cff0455220373309e52324cd2d674a..806dea9a8650b27c88c1e148c010e48dce0ffdad 100644
+index f25eb4c9b5ef24917ca8ccdb52eb0738a254ce93..f096ab0976eb1d02fe377d76b04ca3dfc0a7c9ae 100644
 --- a/src/compiler/turboshaft/pipelines.cc
 +++ b/src/compiler/turboshaft/pipelines.cc
-@@ -19,7 +19,7 @@ void SimplificationAndNormalizationPhase::Run(PipelineData* data,
-                InstructionSelectionNormalizationReducer>::Run(data, temp_zone);
- }
+@@ -76,6 +76,20 @@ bool Pipeline::AllocateRegisters(const RegisterConfiguration* config,
  
--void Pipeline::AllocateRegisters(const RegisterConfiguration* config,
-+bool Pipeline::AllocateRegisters(const RegisterConfiguration* config,
-                                  CallDescriptor* call_descriptor,
-                                  bool run_verifier) {
-   // Don't track usage for this zone in compiler stats.
-@@ -73,6 +73,20 @@ void Pipeline::AllocateRegisters(const RegisterConfiguration* config,
- 
-   Run<DecideSpillingModePhase>();
-   Run<AssignSpillSlotsPhase>();
+   RUN_MAYBE_ABORT(DecideSpillingModePhase);
+   RUN_MAYBE_ABORT(AssignSpillSlotsPhase);
 +
 +  // The prologue grows the frame with a single stack pointer decrement, before
 +  // the function entry stack check runs. A frame no larger than the smallest OS
@@ -29,34 +20,6 @@ index 0131e7b7c6cff0455220373309e52324cd2d674a..806dea9a8650b27c88c1e148c010e48d
 +    return false;
 +  }
 +
-   Run<CommitAssignmentPhase>();
+   RUN_MAYBE_ABORT(CommitAssignmentPhase);
  
    // TODO(chromium:725559): remove this check once
-@@ -106,6 +120,7 @@ void Pipeline::AllocateRegisters(const RegisterConfiguration* config,
-   }
- 
-   data()->ClearRegisterComponent();
-+  return true;
- }
- 
- [[nodiscard]] bool Pipeline::GenerateCode(
-@@ -118,7 +133,7 @@ void Pipeline::AllocateRegisters(const RegisterConfiguration* config,
-   // Perform instruction selection and register allocation.
-   PrepareForInstructionSelection(profile);
-   CHECK(SelectInstructions(linkage));
--  CHECK(AllocateRegisters(linkage->GetIncomingDescriptor()));
-+  if (!AllocateRegisters(linkage->GetIncomingDescriptor())) return false;
-   AssembleCode(linkage);
- 
-   if (v8_flags.turbo_profiling) {
-@@ -135,7 +150,9 @@ void Pipeline::AllocateRegisters(const RegisterConfiguration* config,
-     if (!SelectInstructions(linkage)) {
-       return false;
-     }
--    AllocateRegisters(linkage->GetIncomingDescriptor());
-+    if (!AllocateRegisters(linkage->GetIncomingDescriptor())) {
-+      return false;
-+    }
-     // Generate the final machine code.
-     AssembleCode(linkage);
-   }

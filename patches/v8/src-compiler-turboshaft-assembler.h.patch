@@ -1,8 +1,8 @@
 diff --git a/src/compiler/turboshaft/assembler.h b/src/compiler/turboshaft/assembler.h
-index 1491c6e67036d8baf0063352c904455f8f4202c7..4ba97fed653a65b6a7ab77e3b0ffb9925bb81b4b 100644
+index ef1ccb5c6f13ccf5edabb5a5fcfaad4f372d62ca..90b7b6c85107e1249918472dac94d5bfa57b83f0 100644
 --- a/src/compiler/turboshaft/assembler.h
 +++ b/src/compiler/turboshaft/assembler.h
-@@ -3112,15 +3112,19 @@ class TurboshaftAssemblerOpInterface
+@@ -3118,15 +3118,19 @@ class TurboshaftAssemblerOpInterface
      return StoreElement(object, access, index, value, true);
    }
    template <typename Base>
@@ -27,7 +27,7 @@ index 1491c6e67036d8baf0063352c904455f8f4202c7..4ba97fed653a65b6a7ab77e3b0ffb992
    }
  
    template <typename Class, typename T>
-@@ -3128,7 +3132,8 @@ class TurboshaftAssemblerOpInterface
+@@ -3134,7 +3138,8 @@ class TurboshaftAssemblerOpInterface
                           const ElementAccessTS<Class, T>& access,
                           ConstOrV<WordPtr> index, V<T> value) {
      StoreElement(object.object(), access, index, value,
@@ -37,7 +37,7 @@ index 1491c6e67036d8baf0063352c904455f8f4202c7..4ba97fed653a65b6a7ab77e3b0ffb992
    }
  
    // TODO(nicohartmann): Remove `InitializeArrayBufferElement` once fully
-@@ -3145,7 +3150,8 @@ class TurboshaftAssemblerOpInterface
+@@ -3151,7 +3156,8 @@ class TurboshaftAssemblerOpInterface
    void InitializeNonArrayBufferElement(Uninitialized<Base>& object,
                                         const ElementAccess& access,
                                         V<WordPtr> index, V<Any> value) {
@@ -47,7 +47,7 @@ index 1491c6e67036d8baf0063352c904455f8f4202c7..4ba97fed653a65b6a7ab77e3b0ffb992
    }
  
    V<Word32> ArrayBufferIsDetached(V<JSArrayBufferView> object) {
-@@ -5222,8 +5228,8 @@ class TurboshaftAssemblerOpInterface
+@@ -5231,8 +5237,8 @@ class TurboshaftAssemblerOpInterface
    // instead of StoreElement.
    template <typename Base>
    void StoreElement(V<Base> object, const ElementAccess& access,
@@ -58,7 +58,7 @@ index 1491c6e67036d8baf0063352c904455f8f4202c7..4ba97fed653a65b6a7ab77e3b0ffb992
      if constexpr (is_taggable_v<Base>) {
        DCHECK_EQ(access.base_is_tagged, BaseTaggedness::kTaggedBase);
      } else {
-@@ -5235,7 +5241,8 @@ class TurboshaftAssemblerOpInterface
+@@ -5244,7 +5250,8 @@ class TurboshaftAssemblerOpInterface
      MemoryRepresentation rep =
          MemoryRepresentation::FromMachineType(access.machine_type);
      Store(object, resolve(index), value, kind, rep, access.write_barrier_kind,

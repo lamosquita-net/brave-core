@@ -1,8 +1,8 @@
 diff --git a/src/compiler/compilation-dependencies.cc b/src/compiler/compilation-dependencies.cc
-index f6ecd1f49c8fcce133df283792fa915a88dcfd90..f892406a9fa001bf1ef92e370e16fd3f6d5996d1 100644
+index 83a2c9f9568c92cf1139dff7375ed62538c6aac3..b7b1b28e28a79009a99455db5782ef56ae004cba 100644
 --- a/src/compiler/compilation-dependencies.cc
 +++ b/src/compiler/compilation-dependencies.cc
-@@ -864,11 +864,12 @@ class FieldConstnessDependency final : public CompilationDependency {
+@@ -867,11 +867,12 @@ class FieldConstnessDependency final : public CompilationDependency {
  class GlobalPropertyDependency final : public CompilationDependency {
   public:
    GlobalPropertyDependency(PropertyCellRef cell, PropertyCellType type,
@@ -17,7 +17,7 @@ index f6ecd1f49c8fcce133df283792fa915a88dcfd90..f892406a9fa001bf1ef92e370e16fd3f
      DCHECK_EQ(type_, cell_.property_details().cell_type());
      DCHECK_EQ(read_only_, cell_.property_details().IsReadOnly());
    }
-@@ -881,8 +882,24 @@ class GlobalPropertyDependency final : public CompilationDependency {
+@@ -884,8 +885,24 @@ class GlobalPropertyDependency final : public CompilationDependency {
          *(broker->isolate()->factory()->property_cell_hole_value())) {
        return false;
      }
@@ -44,7 +44,7 @@ index f6ecd1f49c8fcce133df283792fa915a88dcfd90..f892406a9fa001bf1ef92e370e16fd3f
    }
    void Install(JSHeapBroker* broker, PendingDependencies* deps) const override {
      SLOW_DCHECK(IsValid(broker));
-@@ -892,11 +909,16 @@ class GlobalPropertyDependency final : public CompilationDependency {
+@@ -895,11 +912,16 @@ class GlobalPropertyDependency final : public CompilationDependency {
   private:
    size_t Hash() const override {
      ObjectRef::Hash h;
@@ -62,7 +62,7 @@ index f6ecd1f49c8fcce133df283792fa915a88dcfd90..f892406a9fa001bf1ef92e370e16fd3f
      return cell_.equals(zat->cell_) && type_ == zat->type_ &&
             read_only_ == zat->read_only_;
    }
-@@ -904,6 +926,8 @@ class GlobalPropertyDependency final : public CompilationDependency {
+@@ -907,6 +929,8 @@ class GlobalPropertyDependency final : public CompilationDependency {
    const PropertyCellRef cell_;
    const PropertyCellType type_;
    const bool read_only_;
@@ -70,8 +70,8 @@ index f6ecd1f49c8fcce133df283792fa915a88dcfd90..f892406a9fa001bf1ef92e370e16fd3f
 +  const OptionalMapRef value_map_;
  };
  
- class ScriptContextSlotPropertyDependency final : public CompilationDependency {
-@@ -1299,7 +1323,15 @@ CompilationDependencies::FieldConstnessDependencyOffTheRecord(
+ class ContextCellDependency final : public CompilationDependency {
+@@ -1288,7 +1312,15 @@ CompilationDependencies::FieldConstnessDependencyOffTheRecord(
  void CompilationDependencies::DependOnGlobalProperty(PropertyCellRef cell) {
    PropertyCellType type = cell.property_details().cell_type();
    bool read_only = cell.property_details().IsReadOnly();
@@ -87,4 +87,4 @@ index f6ecd1f49c8fcce133df283792fa915a88dcfd90..f892406a9fa001bf1ef92e370e16fd3f
 +      zone_->New<GlobalPropertyDependency>(cell, type, read_only, value_map));
  }
  
- bool CompilationDependencies::DependOnScriptContextSlotProperty(
+ bool CompilationDependencies::DependOnContextCell(ContextRef script_context,

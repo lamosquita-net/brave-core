@@ -1,8 +1,8 @@
 diff --git a/src/maglev/maglev-ir.h b/src/maglev/maglev-ir.h
-index ba1313dabd7bd38dfd3b128863cbf69c7289f0ce..0c489e8920f7947b1fb1cf669a785d65427cfee6 100644
+index df4de9c9dcb312284cc95fa9efbdd24001872c20..ae992c8a8bc5b890e974858b43773882ca575268 100644
 --- a/src/maglev/maglev-ir.h
 +++ b/src/maglev/maglev-ir.h
-@@ -1945,9 +1945,10 @@ class NodeBase : public ZoneObject {
+@@ -1907,9 +1907,10 @@ class NodeBase : public ZoneObject {
    template <class T, int size>
    using NextBitField = ReservedField::Next<T, size>;
  
@@ -14,7 +14,7 @@ index ba1313dabd7bd38dfd3b128863cbf69c7289f0ce..0c489e8920f7947b1fb1cf669a785d65
    template <class T>
    static constexpr Opcode opcode_of = detail::opcode_of_helper<T>::value;
  
-@@ -5850,6 +5851,7 @@ class VirtualObject : public FixedInputValueNodeT<0, VirtualObject> {
+@@ -5838,6 +5839,7 @@ class VirtualObject : public FixedInputValueNodeT<0, VirtualObject> {
   private:
    ValueNode* get_by_index(uint32_t i) const {
      DCHECK_EQ(type_, kDefault);
@@ -22,7 +22,7 @@ index ba1313dabd7bd38dfd3b128863cbf69c7289f0ce..0c489e8920f7947b1fb1cf669a785d65
      return slots_.data[i];
    }
  
-@@ -5858,6 +5860,11 @@ class VirtualObject : public FixedInputValueNodeT<0, VirtualObject> {
+@@ -5846,6 +5848,11 @@ class VirtualObject : public FixedInputValueNodeT<0, VirtualObject> {
      // Values set here can leak to the interpreter. Conversions should be stored
      // in known_node_aspects/NodeInfo.
      DCHECK(!value->properties().is_conversion());

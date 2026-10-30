@@ -1,8 +1,8 @@
 diff --git a/src/codegen/compiler.cc b/src/codegen/compiler.cc
-index e31937f0429645a4f5bb7cf677c2888a077448c0..531ee1af2cb12ccd99c9a3b4e90251f24f5dcb8b 100644
+index 9c60944288630c33af4b6f1f7540dae4a4ec709f..e84ef749130f4a467e885414ef5b878838205c55 100644
 --- a/src/codegen/compiler.cc
 +++ b/src/codegen/compiler.cc
-@@ -2092,13 +2092,15 @@ class ConstantPoolPointerForwarder {
+@@ -2096,13 +2096,15 @@ class ConstantPoolPointerForwarder {
      if (Is<SharedFunctionInfo>(info)) {
        Tagged<SharedFunctionInfo> old_sfi = Cast<SharedFunctionInfo>(info);
        // Also record context-having own scope infos for SFIs.
@@ -24,20 +24,21 @@ index e31937f0429645a4f5bb7cf677c2888a077448c0..531ee1af2cb12ccd99c9a3b4e90251f2
        }
      } else {
        scope_info = Cast<ScopeInfo>(info);
-@@ -2447,9 +2449,9 @@ void BackgroundMergeTask::BeginMergeInBackground(
-           // Also push the old_sfi to make sure it stays alive / isn't replaced.
-           new_compiled_data_for_cached_sfis_.push_back(
-               {old_sfi_handle, local_heap->NewPersistentHandle(new_sfi)});
--          if (old_sfi->HasOuterScopeInfo()) {
+@@ -2463,9 +2465,10 @@ void BackgroundMergeTask::BeginMergeInBackground(
+           Tagged<ScopeInfo> info = old_sfi->scope_info();
+           if (!info->IsEmpty()) {
+             new_sfi->SetScopeInfo(info);
+-          } else if (old_sfi->HasOuterScopeInfo()) {
 -            new_sfi->scope_info()->set_outer_scope_info(
 -                old_sfi->GetOuterScopeInfo());
-+          Tagged<ScopeInfo> outer_info = old_sfi->TryGetOuterScopeInfo();
-+          if (!outer_info->IsEmpty()) {
++          } else if (Tagged<ScopeInfo> outer_info =
++                         old_sfi->TryGetOuterScopeInfo();
++                     !outer_info->IsEmpty()) {
 +            new_sfi->scope_info()->set_outer_scope_info(outer_info);
            }
            forwarder.AddBytecodeArray(new_sfi->GetBytecodeArray(isolate));
          }
-@@ -3374,6 +3376,7 @@ MaybeDirectHandle<JSFunction> Compiler::GetFunctionFromEval(
+@@ -3398,6 +3401,7 @@ MaybeDirectHandle<JSFunction> Compiler::GetFunctionFromEval(
      }
    }
    CHECK(is_compiled_scope.is_compiled());

@@ -1,8 +1,8 @@
 diff --git a/src/execution/messages.cc b/src/execution/messages.cc
-index de64c5d75e0192a786b3966de18e39735dc011fd..1c1346a01e13d0ae2c684b284203ca53a5c72791 100644
+index 507ee906057ab1610f6f9f600badca890644ecf5..9bc668d66df2419164a1c7998d1da4b9e7948941 100644
 --- a/src/execution/messages.cc
 +++ b/src/execution/messages.cc
-@@ -690,8 +690,8 @@ MaybeHandle<String> ErrorUtils::ToString(Isolate* isolate,
+@@ -691,8 +691,8 @@ MaybeHandle<String> ErrorUtils::ToString(Isolate* isolate,
      // is accessed the first time.
      //
      // If |recv| was not constructed with %Error%, use the "message" property.
@@ -13,7 +13,7 @@ index de64c5d75e0192a786b3966de18e39735dc011fd..1c1346a01e13d0ae2c684b284203ca53
      Handle<Object> result = JSReceiver::GetDataProperty(&it);
      if (it.IsFound() && IsUndefined(*result, isolate)) {
        msg = msg_default;
-@@ -1131,9 +1131,9 @@ bool ErrorUtils::HasErrorStackSymbolOwnProperty(Isolate* isolate,
+@@ -1132,9 +1132,9 @@ bool ErrorUtils::HasErrorStackSymbolOwnProperty(Isolate* isolate,
  // static
  ErrorUtils::StackPropertyLookupResult ErrorUtils::GetErrorStackProperty(
      Isolate* isolate, DirectHandle<JSReceiver> maybe_error_object) {
@@ -26,7 +26,7 @@ index de64c5d75e0192a786b3966de18e39735dc011fd..1c1346a01e13d0ae2c684b284203ca53
    Handle<Object> result = JSReceiver::GetDataProperty(&it);
  
    if (!it.IsFound()) {
-@@ -1148,6 +1148,13 @@ MaybeDirectHandle<Object> ErrorUtils::GetFormattedStack(
+@@ -1149,6 +1149,13 @@ MaybeDirectHandle<Object> ErrorUtils::GetFormattedStack(
      Isolate* isolate, DirectHandle<JSObject> maybe_error_object) {
    TRACE_EVENT0(TRACE_DISABLED_BY_DEFAULT("v8.stack_trace"), __func__);
  
@@ -40,7 +40,7 @@ index de64c5d75e0192a786b3966de18e39735dc011fd..1c1346a01e13d0ae2c684b284203ca53
    ErrorUtils::StackPropertyLookupResult lookup =
        ErrorUtils::GetErrorStackProperty(isolate, maybe_error_object);
  
-@@ -1192,6 +1199,12 @@ MaybeDirectHandle<Object> ErrorUtils::GetFormattedStack(
+@@ -1193,6 +1200,12 @@ MaybeDirectHandle<Object> ErrorUtils::GetFormattedStack(
  void ErrorUtils::SetFormattedStack(Isolate* isolate,
                                     DirectHandle<JSObject> maybe_error_object,
                                     DirectHandle<Object> formatted_stack) {

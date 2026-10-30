@@ -1,8 +1,8 @@
 diff --git a/src/objects/elements.cc b/src/objects/elements.cc
-index 1858ebedd524f14fa85f1253bd2a9b5ca93bd5bb..c10b1f2b08522a2d204f3c846032fee0588564c3 100644
+index 0dc0b593ebc14571e6f57821a818f191aea5a015..7a0f539abe29173b02e36beb43343291b72ede7a 100644
 --- a/src/objects/elements.cc
 +++ b/src/objects/elements.cc
-@@ -1281,14 +1281,19 @@ class ElementsAccessorBase : public InternalElementsAccessor {
+@@ -1294,14 +1294,19 @@ class ElementsAccessorBase : public InternalElementsAccessor {
    static Handle<FixedArray> DirectCollectElementIndicesImpl(
        Isolate* isolate, DirectHandle<JSObject> object,
        DirectHandle<FixedArrayBase> backing_store, GetKeysConversion convert,
@@ -24,7 +24,7 @@ index 1858ebedd524f14fa85f1253bd2a9b5ca93bd5bb..c10b1f2b08522a2d204f3c846032fee0
          if (convert == GetKeysConversion::kConvertToString) {
            bool use_cache = i < kMaxStringTableEntries;
            DirectHandle<String> index_string =
-@@ -1303,6 +1308,7 @@ class ElementsAccessorBase : public InternalElementsAccessor {
+@@ -1316,6 +1321,7 @@ class ElementsAccessorBase : public InternalElementsAccessor {
        }
      }
      *nof_indices = insertion_index;
@@ -32,7 +32,7 @@ index 1858ebedd524f14fa85f1253bd2a9b5ca93bd5bb..c10b1f2b08522a2d204f3c846032fee0
      return list;
    }
  
-@@ -1319,14 +1325,15 @@ class ElementsAccessorBase : public InternalElementsAccessor {
+@@ -1332,14 +1338,15 @@ class ElementsAccessorBase : public InternalElementsAccessor {
        DirectHandle<FixedArrayBase> backing_store, DirectHandle<FixedArray> keys,
        GetKeysConversion convert, PropertyFilter filter) {
      uint32_t nof_property_keys = keys->length();
@@ -51,7 +51,7 @@ index 1858ebedd524f14fa85f1253bd2a9b5ca93bd5bb..c10b1f2b08522a2d204f3c846032fee0
  
      // Collect the element indices into a new list.
      DCHECK_LE(initial_list_length, std::numeric_limits<int>::max());
-@@ -1343,9 +1350,9 @@ class ElementsAccessorBase : public InternalElementsAccessor {
+@@ -1356,9 +1363,9 @@ class ElementsAccessorBase : public InternalElementsAccessor {
          // large-object space which doesn't free memory on shrinking the list.
          // Hence we try to estimate the final size for holey backing stores more
          // precisely here.
@@ -63,7 +63,7 @@ index 1858ebedd524f14fa85f1253bd2a9b5ca93bd5bb..c10b1f2b08522a2d204f3c846032fee0
        }
        DCHECK_LE(initial_list_length, std::numeric_limits<int>::max());
        combined_keys = isolate->factory()->NewFixedArray(
-@@ -1358,7 +1365,7 @@ class ElementsAccessorBase : public InternalElementsAccessor {
+@@ -1371,7 +1378,7 @@ class ElementsAccessorBase : public InternalElementsAccessor {
      combined_keys = Subclass::DirectCollectElementIndicesImpl(
          isolate, object, backing_store,
          needs_sorting ? GetKeysConversion::kKeepNumbers : convert, filter,
@@ -72,7 +72,7 @@ index 1858ebedd524f14fa85f1253bd2a9b5ca93bd5bb..c10b1f2b08522a2d204f3c846032fee0
  
      if (needs_sorting) {
        SortIndices(isolate, combined_keys, nof_indices);
-@@ -1813,8 +1820,8 @@ class DictionaryElementsAccessor
+@@ -1829,8 +1836,8 @@ class DictionaryElementsAccessor
    static Handle<FixedArray> DirectCollectElementIndicesImpl(
        Isolate* isolate, DirectHandle<JSObject> object,
        DirectHandle<FixedArrayBase> backing_store, GetKeysConversion convert,
@@ -83,7 +83,7 @@ index 1858ebedd524f14fa85f1253bd2a9b5ca93bd5bb..c10b1f2b08522a2d204f3c846032fee0
      if (filter & SKIP_STRINGS) return list;
  
      auto dictionary = Cast<NumberDictionary>(backing_store);
-@@ -1826,6 +1833,7 @@ class DictionaryElementsAccessor
+@@ -1842,6 +1849,7 @@ class DictionaryElementsAccessor
        insertion_index++;
      }
      *nof_indices = insertion_index;
@@ -91,7 +91,7 @@ index 1858ebedd524f14fa85f1253bd2a9b5ca93bd5bb..c10b1f2b08522a2d204f3c846032fee0
      return list;
    }
  
-@@ -3927,6 +3935,22 @@ class TypedElementsAccessor
+@@ -3960,6 +3968,22 @@ class TypedElementsAccessor
                                                            is_shared);
    }
  
@@ -114,7 +114,7 @@ index 1858ebedd524f14fa85f1253bd2a9b5ca93bd5bb..c10b1f2b08522a2d204f3c846032fee0
    static void CopyElementsFromTypedArray(Tagged<JSTypedArray> source,
                                           Tagged<JSTypedArray> destination,
                                           size_t length, size_t offset) {
-@@ -3941,18 +3965,29 @@ class TypedElementsAccessor
+@@ -3974,18 +3998,29 @@ class TypedElementsAccessor
      DCHECK_LE(length, destination->GetLength() - offset);
      DCHECK_LE(length, source->GetLength());
  
@@ -150,7 +150,7 @@ index 1858ebedd524f14fa85f1253bd2a9b5ca93bd5bb..c10b1f2b08522a2d204f3c846032fee0
  
      bool source_shared = source->buffer()->is_shared();
      bool destination_shared = destination->buffer()->is_shared();
-@@ -3962,18 +3997,17 @@ class TypedElementsAccessor
+@@ -3995,18 +4030,17 @@ class TypedElementsAccessor
      // will be the same. This is not the case for floats or clamped Uint8,
      // which have special conversion operations.
      if (same_type || (same_size && both_are_simple)) {
@@ -175,7 +175,7 @@ index 1858ebedd524f14fa85f1253bd2a9b5ca93bd5bb..c10b1f2b08522a2d204f3c846032fee0
  
        // If the typedarrays are overlapped, clone the source.
        if (dest_data + dest_byte_length > source_data &&
-@@ -3991,12 +4025,12 @@ class TypedElementsAccessor
+@@ -4024,12 +4058,12 @@ class TypedElementsAccessor
          source_data = cloned_source_elements.get();
        }
  
@@ -190,7 +190,7 @@ index 1858ebedd524f14fa85f1253bd2a9b5ca93bd5bb..c10b1f2b08522a2d204f3c846032fee0
          source_shared || destination_shared ? kShared : kUnshared); \
      break;
          TYPED_ARRAYS(TYPED_ARRAY_CASE)
-@@ -5015,12 +5049,13 @@ class SloppyArgumentsElementsAccessor
+@@ -5050,12 +5084,13 @@ class SloppyArgumentsElementsAccessor
        DirectHandle<JSObject> object, DirectHandle<FixedArrayBase> backing_store,
        KeyAccumulator* keys) {
      Isolate* isolate = keys->isolate();
@@ -209,7 +209,7 @@ index 1858ebedd524f14fa85f1253bd2a9b5ca93bd5bb..c10b1f2b08522a2d204f3c846032fee0
      SortIndices(isolate, indices, nof_indices);
      for (uint32_t i = 0; i < nof_indices; i++) {
        RETURN_FAILURE_IF_NOT_SUCCESSFUL(keys->AddKey(indices->get(i)));
-@@ -5031,8 +5066,8 @@ class SloppyArgumentsElementsAccessor
+@@ -5066,8 +5101,8 @@ class SloppyArgumentsElementsAccessor
    static Handle<FixedArray> DirectCollectElementIndicesImpl(
        Isolate* isolate, DirectHandle<JSObject> object,
        DirectHandle<FixedArrayBase> backing_store, GetKeysConversion convert,
@@ -220,7 +220,7 @@ index 1858ebedd524f14fa85f1253bd2a9b5ca93bd5bb..c10b1f2b08522a2d204f3c846032fee0
      auto elements = Cast<SloppyArgumentsElements>(backing_store);
      uint32_t length = elements->length();
  
-@@ -5051,8 +5086,8 @@ class SloppyArgumentsElementsAccessor
+@@ -5086,8 +5121,8 @@ class SloppyArgumentsElementsAccessor
  
      DirectHandle<FixedArray> store(elements->arguments(), isolate);
      return ArgumentsAccessor::DirectCollectElementIndicesImpl(
