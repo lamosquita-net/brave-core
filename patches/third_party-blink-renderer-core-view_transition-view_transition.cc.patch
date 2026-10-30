@@ -1,0 +1,18 @@
+diff --git a/third_party/blink/renderer/core/view_transition/view_transition.cc b/third_party/blink/renderer/core/view_transition/view_transition.cc
+index 74ae03bc12ba9a4be33dbeed3aa6805de59a562e..5415d0415512d09fba2a68ea60bfe06ca7bcf01b 100644
+--- a/third_party/blink/renderer/core/view_transition/view_transition.cc
++++ b/third_party/blink/renderer/core/view_transition/view_transition.cc
+@@ -572,6 +572,13 @@ void ViewTransition::ProcessCurrentState() {
+           break;
+         }
+ 
++        if (RuntimeEnabledFeatures::
++                ViewTransitionUpdateLifecycleBeforeReadyEnabled()) {
++          document_->View()->UpdateAllLifecyclePhasesExceptPaint(
++              DocumentUpdateReason::kViewTransition);
++          style_tracker_->RunPostPrePaintSteps();
++        }
++
+         delegate_->AddPendingRequest(
+             ViewTransitionRequest::CreateAnimateRenderer(
+                 transition_token_, MaybeCrossFrameSink()));

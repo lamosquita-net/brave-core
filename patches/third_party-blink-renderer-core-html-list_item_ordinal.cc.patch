@@ -1,8 +1,25 @@
 diff --git a/third_party/blink/renderer/core/html/list_item_ordinal.cc b/third_party/blink/renderer/core/html/list_item_ordinal.cc
-index a6a7ee1e44927bed07d2b1b99291031b7c246740..a344eac9345189292a2c8e5be35c99fd8b125ac5 100644
+index a6a7ee1e44927bed07d2b1b99291031b7c246740..9b84956fad83425490b4fa0588efbb14d3087996 100644
 --- a/third_party/blink/renderer/core/html/list_item_ordinal.cc
 +++ b/third_party/blink/renderer/core/html/list_item_ordinal.cc
-@@ -152,15 +152,18 @@ ListItemOrdinal::NodeAndOrdinal ListItemOrdinal::NextOrdinalItem(
+@@ -26,9 +26,13 @@ bool ListItemOrdinal::IsListOwner(const Node& node) {
+   // the purposes of calculating ordinal values.
+   // See https://html.spec.whatwg.org/#the-li-element and
+   // https://drafts.csswg.org/css-contain-2/#containment-style for more details.
+-  return IsA<HTMLUListElement>(node) || IsA<HTMLOListElement>(node) ||
+-         (RuntimeEnabledFeatures::HTMLMenuElementIsListOwnerEnabled() &&
+-          IsA<HTMLMenuElement>(node)) ||
++  bool is_list_owner_element =
++      IsA<HTMLUListElement>(node) || IsA<HTMLOListElement>(node) ||
++      (RuntimeEnabledFeatures::HTMLMenuElementIsListOwnerEnabled() &&
++       IsA<HTMLMenuElement>(node));
++  return (is_list_owner_element &&
++          (!RuntimeEnabledFeatures::ListOwnerMustHaveCSSBoxEnabled() ||
++           node.GetLayoutObject())) ||
+          HasStyleContainment(node);
+ }
+ 
+@@ -152,15 +156,18 @@ ListItemOrdinal::NodeAndOrdinal ListItemOrdinal::NextOrdinalItem(
  }
  
  std::optional<int> ListItemOrdinal::ExplicitValue() const {
@@ -25,7 +42,7 @@ index a6a7ee1e44927bed07d2b1b99291031b7c246740..a344eac9345189292a2c8e5be35c99fd
    Node* list = EnclosingList(&item_node);
    auto* o_list_element = DynamicTo<HTMLOListElement>(list);
    const bool is_reversed = o_list_element && o_list_element->IsReversed();
-@@ -174,6 +177,14 @@ int ListItemOrdinal::CalcValue(const Node& item_node) const {
+@@ -174,6 +181,14 @@ int ListItemOrdinal::CalcValue(const Node& item_node) const {
        value_step = directives.CombinedValue();
    }
  
@@ -40,7 +57,7 @@ index a6a7ee1e44927bed07d2b1b99291031b7c246740..a344eac9345189292a2c8e5be35c99fd
    int64_t base_value = 0;
    // FIXME: This recurses to a possible depth of the length of the list.
    // That's not good -- we need to change this to an iterative algorithm.
-@@ -236,17 +247,42 @@ void ListItemOrdinal::InvalidateOrdinalsAfter(bool is_reversed,
+@@ -236,17 +251,42 @@ void ListItemOrdinal::InvalidateOrdinalsAfter(bool is_reversed,
    }
  }
  

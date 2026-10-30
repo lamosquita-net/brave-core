@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/runtime_enabled_features.json5 b/third_party/blink/renderer/platform/runtime_enabled_features.json5
-index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba723856361a73b 100644
+index 75e44e6b7cdd95c1e39b3759939ec1146232f255..63d79bc383d03c793c98a25dd423de4fa7718f2e 100644
 --- a/third_party/blink/renderer/platform/runtime_enabled_features.json5
 +++ b/third_party/blink/renderer/platform/runtime_enabled_features.json5
 @@ -284,6 +284,11 @@
@@ -794,20 +794,20 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
 +      name: "HTMLCommandActionsV2",
 +      depends_on: ["HTMLCommandAttributes"],
 +      status: "test",
-+    },
+     },
+-    // Additional default invoke actions that aren't part of v1 of invokers.
+-    // When this flag is disabled only v1 actions (popover and dialog defaults) will work.
 +    // Adds support for the `command` and `commandfor` attributes, as specified
 +    // in the open-ui "Invokers" explainer.
 +    // https://open-ui.org/components/invokers.explainer/
 +    // This feature was shipped in M135 and can be removed in M137.
-+    {
-+      name: "HTMLCommandAttributes",
-+      status: "stable",
-     },
--    // Additional default invoke actions that aren't part of v1 of invokers.
--    // When this flag is disabled only v1 actions (popover and dialog defaults) will work.
-+    // Adds support for the 'request-close' command.
      {
 -      name: "HTMLInvokeActionsV2",
++      name: "HTMLCommandAttributes",
++      status: "stable",
++    },
++    // Adds support for the 'request-close' command.
++    {
 +      name: "HTMLCommandRequestClose",
 +      depends_on: ["HTMLCommandAttributes"],
        status: "experimental",
@@ -954,7 +954,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
        base_feature: "LayoutNGShapeCache",
      },
      {
-@@ -2473,6 +2784,15 @@
+@@ -2473,6 +2784,19 @@
        status: "experimental",
        base_feature: "none",
      },
@@ -967,10 +967,14 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
 +      name: "ListItemWithCounterSetNotSetExplicitValue",
 +      status: "stable",
 +    },
++    {
++      name: "ListOwnerMustHaveCSSBox",
++      status: "stable",
++    },
      {
        name: "LockedMode",
        status: "test",
-@@ -2643,11 +2963,24 @@
+@@ -2643,11 +2967,24 @@
        name: "MetaRefreshNoFractional",
        status: "stable",
      },
@@ -995,7 +999,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      },
      {
        name: "MobileLayoutTheme",
-@@ -2687,19 +3020,23 @@
+@@ -2687,19 +3024,23 @@
        name: "MoveEndingSelectionToListChild",
        status: "stable",
      },
@@ -1021,7 +1025,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
        origin_trial_feature_name: "MutationEvents",
        origin_trial_type: "deprecation",
        origin_trial_allows_insecure: true,
-@@ -2719,7 +3056,11 @@
+@@ -2719,7 +3060,11 @@
      },
      {
        name: "NavigateEventSourceElement",
@@ -1034,7 +1038,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      },
      {
        name: "NavigationActivation",
-@@ -2787,6 +3128,13 @@
+@@ -2787,6 +3132,13 @@
        name: "NonEmptyBlockquotesOnOutdenting",
        status: "stable",
      },
@@ -1048,7 +1052,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      {
        // TODO(crbug.com/924486): This feature enables the deprecated values
        // inner-spin-button, push-button, searchfield-cancel-button,
-@@ -2844,6 +3192,10 @@
+@@ -2844,6 +3196,10 @@
        name: "OffscreenCanvasCommit",
        status: "experimental",
      },
@@ -1059,7 +1063,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      {
        name: "OmitBlurEventOnElementRemoval",
        status: "test"
-@@ -2853,6 +3205,14 @@
+@@ -2853,6 +3209,14 @@
        // Android does not yet support SystemMonitor.
        status: {"Android": "", "default": "stable"},
      },
@@ -1074,7 +1078,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      {
        name: "OrientationEvent",
        status: {"Android": "stable"},
-@@ -3016,6 +3376,15 @@
+@@ -3016,6 +3380,15 @@
        name: "PageSwapEvent",
        status: "stable",
      },
@@ -1090,7 +1094,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      {
        name: "PaintHoldingForIframes",
        status: "stable",
-@@ -3034,6 +3403,10 @@
+@@ -3034,6 +3407,10 @@
        origin_trial_feature_name: "Parakeet",
      },
      // This is to add an option to enable the Reveal button on password inputs while waiting ::reveal gets standardized.
@@ -1101,7 +1105,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      {
        name: "PasswordReveal",
      },
-@@ -3041,6 +3414,10 @@
+@@ -3041,6 +3418,10 @@
        name: "PasswordStrongLabel",
        status: "experimental",
      },
@@ -1112,7 +1116,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      {
        name: "PaymentApp",
        depends_on: ["PaymentRequest"],
-@@ -3136,6 +3513,33 @@
+@@ -3136,6 +3517,33 @@
        name: "PointerEventDeviceId",
        status: "stable",
      },
@@ -1146,7 +1150,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      {
        name: "PositionOutsideTabSpanCheckSiblingNode",
        status: "stable",
-@@ -3206,6 +3610,12 @@
+@@ -3206,6 +3614,12 @@
        name:"PrettyPrintJSONDocument",
        status: "stable",
      },
@@ -1159,7 +1163,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      {
        // Controls whether filtering IDs can be specified for Private Aggregation
        // contributions. If disabled, any IDs will be ignored.
-@@ -3245,6 +3655,12 @@
+@@ -3245,6 +3659,12 @@
        origin_trial_allows_third_party: true,
        public: true,
      },
@@ -1172,7 +1176,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      {
        // Always allow trust token issuance (so long as the base::Feature
        // is enabled). Used for testing; circumvents a runtime check that,
-@@ -3283,6 +3699,12 @@
+@@ -3283,6 +3703,12 @@
        implied_by: ["ProtectedOriginTrialsSampleAPI"],
        is_protected_feature: "true",
      },
@@ -1185,7 +1189,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      {
        name: "PushMessaging",
        public: true,
-@@ -3303,6 +3725,10 @@
+@@ -3303,6 +3729,10 @@
        name: "QuotaChange",
        status: "experimental",
      },
@@ -1196,7 +1200,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      {
        name: "RasterInducingScroll",
        status: "test",
-@@ -3370,6 +3796,11 @@
+@@ -3370,6 +3800,11 @@
          "Linux": "stable",
          "default": "experimental"},
      },
@@ -1208,7 +1212,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      {
        name: "RemoveDanglingMarkupInTarget",
        status: "stable",
-@@ -3390,6 +3821,14 @@
+@@ -3390,6 +3825,14 @@
        name: "RemoveNodeHavingChildrenIfFullySelected",
        status: "stable",
      },
@@ -1223,7 +1227,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      {
        // See https://issues.chromium.org/issues/41311101
        name: "RemoveVisibleSelectionInDOMSelection",
-@@ -3422,10 +3861,22 @@
+@@ -3422,10 +3865,22 @@
          "default": "",
        }
      },
@@ -1246,7 +1250,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      {
        name: "ResourceTimingUseCORSForBodySizes",
        status: "test",
-@@ -3436,11 +3887,21 @@
+@@ -3436,11 +3891,21 @@
        status: "experimental",
        base_feature: "none",
      },
@@ -1268,7 +1272,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      {
        name: "RtcAudioJitterBufferMaxPackets",
        origin_trial_feature_name: "RtcAudioJitterBufferMaxPackets",
-@@ -3530,15 +3991,22 @@
+@@ -3530,15 +3995,22 @@
        name: "RunMicrotaskBeforeXmlCustomElement",
        status: "stable",
      },
@@ -1294,7 +1298,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      },
      {
        // https://wicg.github.io/webcomponents/proposals/Scoped-Custom-Element-Registries
-@@ -3559,10 +4027,19 @@
+@@ -3559,10 +4031,19 @@
        status: "stable",
        base_feature: "none",
      },
@@ -1314,7 +1318,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      {
        name: "ScrollbarWidth",
        status: "stable",
-@@ -3571,6 +4048,13 @@
+@@ -3571,6 +4052,13 @@
        name: "ScrollEndEvents",
        status: "stable",
      },
@@ -1328,7 +1332,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      // Killswitch. Remove after M126 or M127 stable.
      {
        name: "ScrollNodeForOverflowHidden",
-@@ -3634,7 +4118,23 @@
+@@ -3634,7 +4122,23 @@
        // Implement Selection API across shadow DOM
        // See https://w3c.github.io/selection-api/
        name: "SelectionAcrossShadowDOM",
@@ -1353,7 +1357,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      },
      {
        // Maintain author-defined ::selection highlight colors, even if they
-@@ -3642,6 +4142,12 @@
+@@ -3642,6 +4146,12 @@
        name: "SelectionRespectsColors",
        status: "stable",
      },
@@ -1366,7 +1370,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      {
        // Sets the minimum target size of <option> in <select> to 24x24 CSS
        // pixels to meet Accessibility standards.
-@@ -3679,6 +4185,7 @@
+@@ -3679,6 +4189,7 @@
      {
        name: "Serial",
        status: {"Android": "", "default": "stable"},
@@ -1374,7 +1378,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      },
      {
        name: "SerializeViewTransitionStateInSPA",
-@@ -3764,7 +4271,7 @@
+@@ -3764,7 +4275,7 @@
      {
        // crbug.com/40501131
        name: "SidewaysWritingModes",
@@ -1383,7 +1387,18 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      },
      {
        name: "SignatureBasedIntegrity",
-@@ -3864,6 +4371,10 @@
+@@ -3781,6 +4292,10 @@
+       depends_on: ["MediaSession"],
+       status: "stable",
+     },
++    {
++      name: "SkipLineBreakItemWhenIsCollapsed",
++      status: "stable",
++    },
+     {
+       // If enabled, HTMLPreloadScanner will be skipped.
+       name: "SkipPreloadScanning",
+@@ -3864,6 +4379,10 @@
      {
        name: "SpeculationRulesPrefetchWithSubresources",
      },
@@ -1394,7 +1409,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      {
        name: "SrcsetMaxDensity",
      },
-@@ -3888,6 +4399,11 @@
+@@ -3888,6 +4407,11 @@
        origin_trial_allows_insecure: true,
        origin_trial_allows_third_party: true,
      },
@@ -1406,7 +1421,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      {
        name: "StaticAnimationOptimization",
        status: "experimental",
-@@ -3907,10 +4423,21 @@
+@@ -3907,10 +4431,21 @@
        name: "StorageBucketsLocks",
        status: "experimental",
      },
@@ -1428,7 +1443,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      {
        // Adds the appearance:base-select CSS value which makes <select>
        // rendering using alternate content in the UA shadowroot which is
-@@ -3918,15 +4445,19 @@
+@@ -3918,15 +4453,19 @@
        name: "StylableSelect",
        status: "experimental",
        // :open is used in the UA stylesheet for StylableSelect, so this feature
@@ -1450,7 +1465,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      {
        name: "SvgContextPaint",
        status: "stable",
-@@ -3935,10 +4466,20 @@
+@@ -3935,10 +4474,20 @@
        name: "SvgCrossOriginAttribute",
        status: "stable",
      },
@@ -1471,7 +1486,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      {
        name: "SvgGradientColorInterpolationLinearRgbSupport",
        status: "stable",
-@@ -3949,12 +4490,27 @@
+@@ -3949,12 +4498,27 @@
      },
      {
        name: "SynthesizedKeyboardEventsForAccessibilityActions",
@@ -1500,7 +1515,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      // For unit tests.
      {
        // This is for testing copied_from_base_feature_if.
-@@ -4036,6 +4592,11 @@
+@@ -4036,6 +4600,11 @@
        name: "TextDiffSplitFix",
        status: "stable",
      },
@@ -1512,7 +1527,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      {
        name: "TextFragmentAPI",
        status: "experimental",
-@@ -4051,10 +4612,21 @@
+@@ -4051,10 +4620,21 @@
        name: "TextFragmentTapOpensContextMenu",
        status: {"Android": "stable"},
      },
@@ -1534,7 +1549,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      {
        // New implementation of text-size-adjust that applies during style rather
        // than via the text autosizer. This also includes changes such as
-@@ -4062,7 +4634,7 @@
+@@ -4062,7 +4642,7 @@
        // disabling automatic size adjustments when non-auto values are used.
        // See: https://crbug.com/340389272.
        name: "TextSizeAdjustImprovements",
@@ -1543,7 +1558,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      },
      {
        // Support for the timeline-scope property.
-@@ -4094,6 +4666,19 @@
+@@ -4094,6 +4674,19 @@
        public: true,
        status: "stable",
      },
@@ -1563,7 +1578,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      {
        name: "TopLevelTpcd",
        origin_trial_feature_name: "TopLevelTpcd",
-@@ -4143,6 +4728,10 @@
+@@ -4143,6 +4736,10 @@
        status: "experimental",
        base_feature: "none",
      },
@@ -1574,7 +1589,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      // This is conditionally set if the platform supports translation.
      {
        name: "TranslateService",
-@@ -4255,6 +4844,17 @@
+@@ -4255,6 +4852,17 @@
        base_feature: "none",
        public: true,
      },
@@ -1592,7 +1607,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      {
        name: "UseUndoStepElementDispatchBeforeInput",
        status: "stable",
-@@ -4264,6 +4864,11 @@
+@@ -4264,6 +4872,11 @@
        base_feature: "none",
        public: true,
      },
@@ -1604,7 +1619,18 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      {
        // Whether a video element should automatically play fullscreen unless
        // 'playsinline' is set.
-@@ -4420,8 +5025,7 @@
+@@ -4323,6 +4936,10 @@
+       name: "ViewTransitionTypes",
+       status: "stable",
+     },
++    {
++      name: "ViewTransitionUpdateLifecycleBeforeReady",
++      status: "stable",
++    },
+     {
+       name: "VisibilityCollapseColumn",
+     },
+@@ -4420,8 +5037,7 @@
      {
        name: "WebAssemblyJSStringBuiltins",
        origin_trial_feature_name: "WebAssemblyJSStringBuiltins",
@@ -1614,7 +1640,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      },
      // WebAuth is disabled on Android versions prior to N (7.0) due to lack of
      // supporting APIs, see runtime_features.cc.
-@@ -4435,12 +5039,14 @@
+@@ -4435,12 +5051,14 @@
        name: "WebAuthAuthenticatorAttachment",
        status: "test",
      },
@@ -1630,7 +1656,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..fd0471fd04b9f88af19fb777bba72385
      },
      {
        name: "WebAuthenticationLargeBlobExtension",
-@@ -4506,7 +5112,11 @@
+@@ -4506,7 +5124,11 @@
      },
      {
        name: "WebCryptoCurve25519",
