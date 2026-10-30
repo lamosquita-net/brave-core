@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/editing/commands/apply_style_command.cc b/third_party/blink/renderer/core/editing/commands/apply_style_command.cc
-index 544ce7556b5aee93c8d24a95ffdacf47e8190f73..d1bc04deef06699f6e1e0c733bc54bd370a6c2e0 100644
+index 544ce7556b5aee93c8d24a95ffdacf47e8190f73..89f630e4402f15bb7d6f0c589aa16fb5fefec6cf 100644
 --- a/third_party/blink/renderer/core/editing/commands/apply_style_command.cc
 +++ b/third_party/blink/renderer/core/editing/commands/apply_style_command.cc
 @@ -61,6 +61,7 @@
@@ -10,7 +10,20 @@ index 544ce7556b5aee93c8d24a95ffdacf47e8190f73..d1bc04deef06699f6e1e0c733bc54bd3
  #include "third_party/blink/renderer/platform/wtf/std_lib_extras.h"
  #include "third_party/blink/renderer/platform/wtf/text/string_builder.h"
  
-@@ -464,7 +465,12 @@ void ApplyStyleCommand::ApplyRelativeFontStyleChange(
+@@ -287,8 +288,10 @@ void ApplyStyleCommand::ApplyBlockStyle(EditingStyle* style,
+       visible_end.DeepEquivalent().ParentAnchoredEquivalent());
+ 
+   const TextIteratorBehavior behavior =
+-      TextIteratorBehavior::AllVisiblePositionsRangeLengthBehavior();
+-
++      RuntimeEnabledFeatures::EnterInOpenShadowRootsEnabled()
++          ? TextIteratorBehavior::
++                AllVisiblePositionsIncludingShadowRootRangeLengthBehavior()
++          : TextIteratorBehavior::AllVisiblePositionsRangeLengthBehavior();
+   const int start_index = TextIterator::RangeLength(start_range, behavior);
+   const int end_index = TextIterator::RangeLength(end_range, behavior);
+ 
+@@ -464,7 +467,12 @@ void ApplyStyleCommand::ApplyRelativeFontStyleChange(
        // style this text node. To make this possible, add a style span to
        // surround this text node.
        auto* span = MakeGarbageCollected<HTMLSpanElement>(GetDocument());
@@ -24,7 +37,7 @@ index 544ce7556b5aee93c8d24a95ffdacf47e8190f73..d1bc04deef06699f6e1e0c733bc54bd3
        if (editing_state->IsAborted())
          return;
        element = span;
-@@ -704,30 +710,42 @@ void ApplyStyleCommand::ApplyInlineStyle(EditingStyle* style,
+@@ -704,30 +712,42 @@ void ApplyStyleCommand::ApplyInlineStyle(EditingStyle* style,
    // of it
    bool split_start = IsValidCaretPositionInTextNode(start);
    if (split_start) {
@@ -73,7 +86,7 @@ index 544ce7556b5aee93c8d24a95ffdacf47e8190f73..d1bc04deef06699f6e1e0c733bc54bd3
    }
  
    // Remove style from the selection.
-@@ -1769,7 +1787,8 @@ void ApplyStyleCommand::SurroundNodeRangeWithElement(
+@@ -1769,7 +1789,8 @@ void ApplyStyleCommand::SurroundNodeRangeWithElement(
      Node* passed_start_node,
      Node* end_node,
      Element* element_to_insert,
@@ -83,7 +96,7 @@ index 544ce7556b5aee93c8d24a95ffdacf47e8190f73..d1bc04deef06699f6e1e0c733bc54bd3
    DCHECK(passed_start_node);
    DCHECK(end_node);
    DCHECK(element_to_insert);
-@@ -1796,6 +1815,10 @@ void ApplyStyleCommand::SurroundNodeRangeWithElement(
+@@ -1796,6 +1817,10 @@ void ApplyStyleCommand::SurroundNodeRangeWithElement(
      node = next;
    }
  
