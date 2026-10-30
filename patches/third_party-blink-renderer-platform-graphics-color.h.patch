@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/graphics/color.h b/third_party/blink/renderer/platform/graphics/color.h
-index 301bd0757378557699df2d187e7112643f871bbb..56f9a25459e005a3faf78e08d49f6cf802d7821a 100644
+index 301bd0757378557699df2d187e7112643f871bbb..1bfa71a67b069cd4a32bc6e5aee5aecbde53bd7e 100644
 --- a/third_party/blink/renderer/platform/graphics/color.h
 +++ b/third_party/blink/renderer/platform/graphics/color.h
 @@ -26,6 +26,7 @@
@@ -42,11 +42,21 @@ index 301bd0757378557699df2d187e7112643f871bbb..56f9a25459e005a3faf78e08d49f6cf8
      // The values of `params0_`, `params1_`, and `params2_` are Hue, White,
      // and Black. These can be none. Hue is a namber in the range from 0.0
      // to 6.0, and the rest are in the rance from 0.0 to 1.0.
-@@ -108,7 +116,11 @@ class PLATFORM_EXPORT Color {
+@@ -108,7 +116,21 @@ class PLATFORM_EXPORT Color {
      kNone,
    };
  
 -  static bool HasRGBOrXYZComponents(ColorSpace color_space) {
++  // TODO(crbug.com/383270111): As of 2024-12-12 Skia does not yet support these
++  // color spaces for gradient interpolation.
++  static bool IsUndefinedColorSpaceForGradientInterpolation(
++      ColorSpace color_space) {
++    return color_space == ColorSpace::kDisplayP3 ||
++           color_space == ColorSpace::kA98RGB ||
++           color_space == ColorSpace::kProPhotoRGB ||
++           color_space == ColorSpace::kRec2020;
++  }
++
 +  // For testing purposes and for serializer.
 +  static WTF::String ColorSpaceToString(Color::ColorSpace color_space);
 +
@@ -55,7 +65,7 @@ index 301bd0757378557699df2d187e7112643f871bbb..56f9a25459e005a3faf78e08d49f6cf8
      return color_space == ColorSpace::kSRGB ||
             color_space == ColorSpace::kSRGBLinear ||
             color_space == ColorSpace::kDisplayP3 ||
-@@ -116,8 +128,7 @@ class PLATFORM_EXPORT Color {
+@@ -116,8 +138,7 @@ class PLATFORM_EXPORT Color {
             color_space == ColorSpace::kProPhotoRGB ||
             color_space == ColorSpace::kRec2020 ||
             color_space == ColorSpace::kXYZD50 ||
@@ -65,7 +75,7 @@ index 301bd0757378557699df2d187e7112643f871bbb..56f9a25459e005a3faf78e08d49f6cf8
    }
  
    static bool IsLightnessFirstComponent(ColorSpace color_space) {
-@@ -379,6 +390,8 @@ class PLATFORM_EXPORT Color {
+@@ -379,6 +400,8 @@ class PLATFORM_EXPORT Color {
    void ConvertToColorSpace(ColorSpace destination_color_space,
                             bool resolve_missing_components = true);
  
@@ -74,7 +84,7 @@ index 301bd0757378557699df2d187e7112643f871bbb..56f9a25459e005a3faf78e08d49f6cf8
    // Colors can parse calc(NaN) and calc(Infinity). At computed value time this
    // function is called which resolves all NaNs to zero and +/-infinities to
    // maximum/minimum values, if they exist. It leaves finite values unchanged.
-@@ -426,9 +439,6 @@ class PLATFORM_EXPORT Color {
+@@ -426,9 +449,6 @@ class PLATFORM_EXPORT Color {
    // Common helper function to toSkColor4f and ToGradientStopSkColor4f.
    SkColor4f ToSkColor4fInternal(bool gamut_map_oklab_oklch) const;
  
@@ -84,7 +94,7 @@ index 301bd0757378557699df2d187e7112643f871bbb..56f9a25459e005a3faf78e08d49f6cf8
    float PremultiplyColor();
    void UnpremultiplyColor();
    void ResolveMissingComponents();
-@@ -443,9 +453,19 @@ class PLATFORM_EXPORT Color {
+@@ -443,9 +463,19 @@ class PLATFORM_EXPORT Color {
    // According the Spec https://www.w3.org/TR/css-color-4/#interpolation-missing
    // we have to do a special treatment of when to carry forward the 'noneness'
    // of a component, given if it's an 'analog component'.

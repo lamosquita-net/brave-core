@@ -1,0 +1,47 @@
+diff --git a/third_party/blink/renderer/bindings/core/v8/serialization/serialized_color_params.h b/third_party/blink/renderer/bindings/core/v8/serialization/serialized_color_params.h
+index f93f2e6951987cd68245d084982e03c2701d8083..095368b77ce0d3018edb88dc5bd2cba71c185ccf 100644
+--- a/third_party/blink/renderer/bindings/core/v8/serialization/serialized_color_params.h
++++ b/third_party/blink/renderer/bindings/core/v8/serialization/serialized_color_params.h
+@@ -8,6 +8,7 @@
+ #include "third_party/blink/renderer/core/html/canvas/image_data.h"
+ #include "third_party/blink/renderer/platform/graphics/canvas_color_params.h"
+ #include "third_party/blink/renderer/platform/graphics/image_orientation.h"
++#include "third_party/blink/renderer/platform/text/text_direction.h"
+ 
+ namespace blink {
+ 
+@@ -104,6 +105,12 @@ enum class SerializedImageOrientation : uint32_t {
+   kLast = kLeftBottom,
+ };
+ 
++enum class SerializedTextDirection : uint32_t {
++  kLtr = 0,
++  kRtl = 1,
++  kLast = kRtl,
++};
++
+ class SerializedImageDataSettings {
+  public:
+   SerializedImageDataSettings(PredefinedColorSpace, ImageDataStorageFormat);
+@@ -169,6 +176,21 @@ class SerializedImageBitmapSettings {
+       SerializedImageOrientation::kTopLeft;
+ };
+ 
++class SerializedTextDirectionSettings {
++ public:
++  SerializedTextDirectionSettings(TextDirection);
++  SerializedTextDirectionSettings(SerializedTextDirection);
++
++  TextDirection GetTextDirection() const;
++
++  SerializedTextDirection GetSerializedTextDirection() const {
++    return text_direction_;
++  }
++
++ private:
++  SerializedTextDirection text_direction_ = SerializedTextDirection::kLtr;
++};
++
+ }  // namespace blink
+ 
+ #endif  // THIRD_PARTY_BLINK_RENDERER_BINDINGS_CORE_V8_SERIALIZATION_SERIALIZED_COLOR_PARAMS_H_

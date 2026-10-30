@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_object.h b/third_party/blink/renderer/core/layout/layout_object.h
-index 1c63197847997fbc9691cd3a3eb841c71f76481c..7669d4165efe6b1c1e6d7dfc1480fb771cc91f7d 100644
+index 1c63197847997fbc9691cd3a3eb841c71f76481c..fdf9a0f55b36f015cee4fdcfabe49d7e6610f0ff 100644
 --- a/third_party/blink/renderer/core/layout/layout_object.h
 +++ b/third_party/blink/renderer/core/layout/layout_object.h
 @@ -743,10 +743,11 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
@@ -30,3 +30,25 @@ index 1c63197847997fbc9691cd3a3eb841c71f76481c..7669d4165efe6b1c1e6d7dfc1480fb77
    bool HasFlippedBlocksWritingMode() const {
      NOT_DESTROYED();
      return StyleRef().IsFlippedBlocksWritingMode();
+@@ -2955,9 +2961,7 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+   void SetNeedsOverflowRecalc(
+       OverflowRecalcType = OverflowRecalcType::kLayoutAndVisualOverflowRecalc);
+ 
+-  // Call |SetShouldDoFullPaintInvalidation| for LayoutNG or
+-  // |SetShouldInvalidateSelection| on all selected children.
+-  void InvalidateSelectedChildrenOnStyleChange();
++  void InvalidateSelectionOnStyleChange();
+ 
+   // The allowed touch action is the union of the effective touch action
+   // (from style) and blocking touch event handlers.
+@@ -3615,6 +3619,10 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
+ 
+   inline void InvalidateContainerIntrinsicLogicalWidths();
+ 
++  // Call |SetShouldDoFullPaintInvalidation| for LayoutNG or
++  // |SetShouldInvalidateSelection| on all selected children.
++  void InvalidateSelectedChildrenOnStyleChange();
++
+   LayoutFlowThread* LocateFlowThreadContainingBlock() const;
+   void RemoveFromLayoutFlowThreadRecursive(LayoutFlowThread*);
+ 

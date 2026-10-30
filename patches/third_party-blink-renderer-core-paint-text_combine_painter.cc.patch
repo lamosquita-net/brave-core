@@ -1,0 +1,21 @@
+diff --git a/third_party/blink/renderer/core/paint/text_combine_painter.cc b/third_party/blink/renderer/core/paint/text_combine_painter.cc
+index 28f67016216955d983eeae408f721fc4b2c6296c..11810d05b6bf542da6bd45873d3191abac0e840f 100644
+--- a/third_party/blink/renderer/core/paint/text_combine_painter.cc
++++ b/third_party/blink/renderer/core/paint/text_combine_painter.cc
+@@ -136,7 +136,15 @@ void TextCombinePainter::PaintEmphasisMark(const TextPaintStyle& text_style,
+   }
+ 
+   const int font_ascent = font_data->GetFontMetrics().Ascent();
+-  const TextRun placeholder_text_run(&kIdeographicFullStopCharacter, 1);
++  // https://drafts.csswg.org/css-writing-modes/#text-combine-layout
++  // > For other text layout purposes, e.g. emphasis marks, text-decoration,
++  // > spacing, etc. the resulting composition is treated as a single glyph
++  // > representing the Object Replacement Character U+FFFC.
++  //
++  // However the shape size of U+FFFC isn't suitable for emphasis mark
++  // positioning. We use Hiragana Letter A instead. See crbug.com/40386493
++  const TextRun placeholder_text_run(&WTF::unicode::kHiraganaLetterACharacter,
++                                     1);
+   const gfx::PointF emphasis_mark_text_origin =
+       gfx::PointF(text_origin()) +
+       gfx::Vector2dF(0, font_ascent + emphasis_mark_offset());

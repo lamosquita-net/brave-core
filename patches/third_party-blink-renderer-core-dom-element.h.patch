@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/element.h b/third_party/blink/renderer/core/dom/element.h
-index c9ec614fa75af13d0173c25b4b5ee8131fa273fb..6b3e3eff6660e8dbb490b935e934a4fb76f175a1 100644
+index c9ec614fa75af13d0173c25b4b5ee8131fa273fb..f383b74ef5c9d607cf7654789985b1fa02c2da3f 100644
 --- a/third_party/blink/renderer/core/dom/element.h
 +++ b/third_party/blink/renderer/core/dom/element.h
 @@ -202,6 +202,7 @@ enum class CommandEventType {
@@ -80,7 +80,15 @@ index c9ec614fa75af13d0173c25b4b5ee8131fa273fb..6b3e3eff6660e8dbb490b935e934a4fb
    virtual void WillRecalcStyle(const StyleRecalcChange);
    virtual void DidRecalcStyle(const StyleRecalcChange);
    virtual const ComputedStyle* CustomStyleForLayoutObject(
-@@ -1541,6 +1557,9 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1534,13 +1550,15 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+ 
+   TextDirection ParentDirectionality() const;
+   bool RecalcSelfOrAncestorHasDirAuto();
+-  std::optional<TextDirection> ResolveAutoDirectionality(
+-      bool& is_deferred) const;
++  std::optional<TextDirection> ResolveAutoDirectionality() const;
+ 
+  private:
    friend class AXObject;
    struct AffectedByPseudoStateChange;
  

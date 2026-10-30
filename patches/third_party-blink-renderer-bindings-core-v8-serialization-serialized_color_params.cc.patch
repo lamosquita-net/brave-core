@@ -1,0 +1,39 @@
+diff --git a/third_party/blink/renderer/bindings/core/v8/serialization/serialized_color_params.cc b/third_party/blink/renderer/bindings/core/v8/serialization/serialized_color_params.cc
+index ef4f785cd94b8456c78e1d1a6cdcb39ff344e707..35311ad59dbf9e9cdd2e9a4fa8d9e8c5fa417139 100644
+--- a/third_party/blink/renderer/bindings/core/v8/serialization/serialized_color_params.cc
++++ b/third_party/blink/renderer/bindings/core/v8/serialization/serialized_color_params.cc
+@@ -295,4 +295,34 @@ ImageOrientationEnum SerializedImageBitmapSettings::GetImageOrientation()
+   return ImageOrientationEnum::kOriginTopLeft;
+ }
+ 
++////////////////////////////////////////////////////////////////////////////////
++// SerializedTextDirection
++SerializedTextDirectionSettings::SerializedTextDirectionSettings(
++    TextDirection direction) {
++  switch (direction) {
++    case TextDirection::kLtr:
++      text_direction_ = SerializedTextDirection::kLtr;
++      return;
++    case TextDirection::kRtl:
++      text_direction_ = SerializedTextDirection::kRtl;
++      return;
++  }
++  NOTREACHED_IN_MIGRATION();
++}
++
++SerializedTextDirectionSettings::SerializedTextDirectionSettings(
++    SerializedTextDirection direction)
++    : text_direction_(direction) {}
++
++TextDirection SerializedTextDirectionSettings::GetTextDirection() const {
++  switch (text_direction_) {
++    case SerializedTextDirection::kLtr:
++      return TextDirection::kLtr;
++    case SerializedTextDirection::kRtl:
++      return TextDirection::kRtl;
++  }
++  NOTREACHED_IN_MIGRATION();
++  return TextDirection::kLtr;
++}
++
+ }  // namespace blink

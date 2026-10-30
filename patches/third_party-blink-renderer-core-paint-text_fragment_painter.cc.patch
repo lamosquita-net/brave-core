@@ -1,0 +1,15 @@
+diff --git a/third_party/blink/renderer/core/paint/text_fragment_painter.cc b/third_party/blink/renderer/core/paint/text_fragment_painter.cc
+index 0a066cb60e0eefba65731549f8f99082fccdee56..ebff42bafc264d6ace9c5d1aed49f651ba1a5e31 100644
+--- a/third_party/blink/renderer/core/paint/text_fragment_painter.cc
++++ b/third_party/blink/renderer/core/paint/text_fragment_painter.cc
+@@ -113,6 +113,10 @@ bool ShouldPaintEmphasisMark(const ComputedStyle& style,
+   // emphasis mark at left/right side of |LayoutTextCombine|.
+   DCHECK(!IsA<LayoutTextCombine>(layout_object.Parent()));
+ 
++  if (text_item.IsEllipsis()) {
++    return false;
++  }
++
+   if (RuntimeEnabledFeatures::RubyLineBreakableEnabled()) {
+     if (style.GetTextEmphasisLineLogicalSide() == LineLogicalSide::kOver) {
+       return !text_item.HasOverAnnotation();

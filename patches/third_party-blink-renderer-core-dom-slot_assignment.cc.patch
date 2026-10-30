@@ -1,0 +1,19 @@
+diff --git a/third_party/blink/renderer/core/dom/slot_assignment.cc b/third_party/blink/renderer/core/dom/slot_assignment.cc
+index 18c75c1c67e317421bf05f66d67d1132862c77b9..94bf0ab4b0ee0c2262911808e12bcb6d21b320a1 100644
+--- a/third_party/blink/renderer/core/dom/slot_assignment.cc
++++ b/third_party/blink/renderer/core/dom/slot_assignment.cc
+@@ -339,6 +339,14 @@ void SlotAssignment::RecalcAssignment() {
+     }
+   }
+ 
++  // We need to update any slots with dir=auto for two reasons:
++  //  (1) because this call might have assigned them different assigned nodes
++  //      and changed the result of the dir=auto, or
++  //  (2) because an earlier call to the slot's
++  //      CalculateAndAdjustAutoDirectionality method was deferred because the
++  //      slot needed assignment recalc (which is necessary because some such
++  //      calls happen when it's not safe to recalc assignment).
++  //
+   // This needs to happen outside of the scope above, when flat tree traversal
+   // is allowed, because Element::UpdateDescendantHasDirAutoAttribute uses
+   // FlatTreeTraversal.

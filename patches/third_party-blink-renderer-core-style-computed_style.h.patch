@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/style/computed_style.h b/third_party/blink/renderer/core/style/computed_style.h
-index d4d2a1ca1e5a4f492aecaa534714267bf640d520..c1efd762eaef88510ae26452fd47eca538f2413c 100644
+index d4d2a1ca1e5a4f492aecaa534714267bf640d520..2b85ad0c99b1ced52f78c80a207ea4c8a9ec778b 100644
 --- a/third_party/blink/renderer/core/style/computed_style.h
 +++ b/third_party/blink/renderer/core/style/computed_style.h
 @@ -219,6 +219,9 @@ class ComputedStyle final : public ComputedStyleBase {
@@ -27,7 +27,34 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..c1efd762eaef88510ae26452fd47eca5
        const ComputedStyle* parent_style = nullptr) const;
    StyleContentAlignmentData ResolvedJustifyContent(
        const StyleContentAlignmentData& normal_behaviour) const;
-@@ -791,7 +794,24 @@ class ComputedStyle final : public ComputedStyleBase {
+@@ -597,7 +600,7 @@ class ComputedStyle final : public ComputedStyleBase {
+   ContentData* GetContentData() const { return ContentInternal().Get(); }
+ 
+   // Returns the value of `line-clamp` or of `-webkit-line-clamp`, whichever
+-  // applies (i.e. `-webkit-line-clamp` doesn't apply without
++  // applies (i.e. `-webkit-line-clamp` doesn't apply without specifying
+   // `display: -webkit-box`). To get the raw value of the properties, use
+   // `StandardLineClamp()` or `WebkitLineClamp()`.
+   int LineClamp() const {
+@@ -605,8 +608,15 @@ class ComputedStyle final : public ComputedStyleBase {
+       DCHECK(RuntimeEnabledFeatures::CSSLineClampEnabled());
+       return StandardLineClamp();
+     }
+-    if (IsDeprecatedWebkitBox() && BoxOrient() == EBoxOrient::kVertical) {
+-      return WebkitLineClamp();
++    if (RuntimeEnabledFeatures::CSSLineClampWebkitBoxBlockificationEnabled()) {
++      if (IsSpecifiedDisplayWebkitBox()) {
++        DCHECK_EQ(BoxOrient(), EBoxOrient::kVertical);
++        return WebkitLineClamp();
++      }
++    } else {
++      if (IsDeprecatedWebkitBox() && BoxOrient() == EBoxOrient::kVertical) {
++        return WebkitLineClamp();
++      }
+     }
+     return 0;
+   }
+@@ -791,7 +801,24 @@ class ComputedStyle final : public ComputedStyleBase {
      return HasGlyphRelativeUnits() || HasFontSizeAdjust() ||
             CustomStyleCallbackDependsOnFont();
    }
@@ -53,7 +80,23 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..c1efd762eaef88510ae26452fd47eca5
    bool HighlightPseudoElementStylesDependOnRelativeUnits() const;
    bool HighlightPseudoElementStylesDependOnContainerUnits() const;
    bool HighlightPseudoElementStylesDependOnViewportUnits() const;
-@@ -1062,6 +1082,9 @@ class ComputedStyle final : public ComputedStyleBase {
+@@ -925,10 +952,15 @@ class ComputedStyle final : public ComputedStyleBase {
+            Display() == EDisplay::kWebkitInlineBox;
+   }
+   bool IsDeprecatedFlexboxUsingFlexLayout() const {
++    if (RuntimeEnabledFeatures::CSSLineClampWebkitBoxBlockificationEnabled()) {
++      return IsDeprecatedWebkitBox();
++    }
+     return IsDeprecatedWebkitBox() &&
+            !IsDeprecatedWebkitBoxWithVerticalLineClamp();
+   }
+   bool IsDeprecatedWebkitBoxWithVerticalLineClamp() const {
++    DCHECK(
++        !RuntimeEnabledFeatures::CSSLineClampWebkitBoxBlockificationEnabled());
+     return IsDeprecatedWebkitBox() && BoxOrient() == EBoxOrient::kVertical &&
+            HasLineClamp();
+   }
+@@ -1062,6 +1094,9 @@ class ComputedStyle final : public ComputedStyleBase {
    bool IsHorizontalWritingMode() const {
      return blink::IsHorizontalWritingMode(GetWritingMode());
    }
@@ -63,7 +106,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..c1efd762eaef88510ae26452fd47eca5
    bool IsFlippedLinesWritingMode() const {
      return blink::IsFlippedLinesWritingMode(GetWritingMode());
    }
-@@ -1409,10 +1432,10 @@ class ComputedStyle final : public ComputedStyleBase {
+@@ -1409,10 +1444,10 @@ class ComputedStyle final : public ComputedStyleBase {
  
    // Whether or not a positioned element requires normal flow x/y to be computed
    // to determine its position.
@@ -76,7 +119,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..c1efd762eaef88510ae26452fd47eca5
      return Top().IsAuto() && Bottom().IsAuto();
    }
  
-@@ -1420,18 +1443,20 @@ class ComputedStyle final : public ComputedStyleBase {
+@@ -1420,18 +1455,20 @@ class ComputedStyle final : public ComputedStyleBase {
    // fallback calculation purposes.
    // https://drafts.csswg.org/css-anchor-position-1/#determine-the-position-fallback-styles
    bool IsTopInsetNonAuto() const {
@@ -101,7 +144,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..c1efd762eaef88510ae26452fd47eca5
    }
  
    // Content utility functions.
-@@ -1459,12 +1484,16 @@ class ComputedStyle final : public ComputedStyleBase {
+@@ -1459,12 +1496,16 @@ class ComputedStyle final : public ComputedStyleBase {
  
      if (container_type & kContainerTypeInlineSize) {
        effective |= kContainsStyle;
@@ -120,7 +163,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..c1efd762eaef88510ae26452fd47eca5
        effective |= kContainsBlockSize;
      }
      if (!IsContentVisibilityVisible(content_visibility)) {
-@@ -1675,13 +1704,13 @@ class ComputedStyle final : public ComputedStyleBase {
+@@ -1675,13 +1716,13 @@ class ComputedStyle final : public ComputedStyleBase {
    // `text-box-trim` utility functions.
    bool ShouldTextBoxTrimStart() const {
      const ETextBoxTrim text_box_trim = TextBoxTrim();
@@ -138,7 +181,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..c1efd762eaef88510ae26452fd47eca5
    }
  
    // Text decoration utility functions.
-@@ -1816,6 +1845,12 @@ class ComputedStyle final : public ComputedStyleBase {
+@@ -1816,6 +1857,12 @@ class ComputedStyle final : public ComputedStyleBase {
      return ScrollsOverflowX() || ScrollsOverflowY();
    }
  
@@ -151,7 +194,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..c1efd762eaef88510ae26452fd47eca5
    // Visibility utility functions.
    bool VisibleToHitTesting() const {
      return Visibility() == EVisibility::kVisible &&
-@@ -2083,7 +2118,7 @@ class ComputedStyle final : public ComputedStyleBase {
+@@ -2083,7 +2130,7 @@ class ComputedStyle final : public ComputedStyleBase {
    // This function may return values not defined as the enum values. See
    // `EWhiteSpace`. Prefer using semantic functions below.
    EWhiteSpace WhiteSpace() const {
@@ -160,7 +203,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..c1efd762eaef88510ae26452fd47eca5
    }
  
    // Semantic functions for the `white-space` property and its longhands.
-@@ -2110,7 +2145,12 @@ class ComputedStyle final : public ComputedStyleBase {
+@@ -2110,7 +2157,12 @@ class ComputedStyle final : public ComputedStyleBase {
      return false;
    }
  
@@ -174,7 +217,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..c1efd762eaef88510ae26452fd47eca5
    bool ShouldBreakSpaces() const {
      return blink::ShouldBreakSpaces(GetWhiteSpaceCollapse());
    }
-@@ -2613,6 +2653,7 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+@@ -2613,6 +2665,7 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
    friend class LayoutTheme;
    friend class StyleAdjuster;
    friend class StyleResolverState;
@@ -182,7 +225,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..c1efd762eaef88510ae26452fd47eca5
    // Access to UserModify().
    friend class MatchedPropertiesCache;
  
-@@ -2756,11 +2797,12 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+@@ -2756,11 +2809,12 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
      SetClipInternal(ComputedStyleInitialValues::InitialClip());
    }
  
@@ -196,7 +239,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..c1efd762eaef88510ae26452fd47eca5
  
    // color
    blink::Color GetCurrentColor() const {
-@@ -3236,8 +3278,8 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+@@ -3236,8 +3290,8 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
                                     bool is_inherited_property) const;
    CORE_EXPORT StyleInheritedVariables& MutableInheritedVariables();
    CORE_EXPORT StyleNonInheritedVariables& MutableNonInheritedVariables();
@@ -207,7 +250,7 @@ index d4d2a1ca1e5a4f492aecaa534714267bf640d520..c1efd762eaef88510ae26452fd47eca5
    CORE_EXPORT void SetVariableData(const AtomicString& name,
                                     CSSVariableData* value,
                                     bool is_inherited_property) {
-@@ -3258,11 +3300,11 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
+@@ -3258,11 +3312,11 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
    }
  
    EWhiteSpace WhiteSpace() const {

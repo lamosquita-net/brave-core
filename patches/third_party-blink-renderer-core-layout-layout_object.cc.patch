@@ -1,8 +1,19 @@
 diff --git a/third_party/blink/renderer/core/layout/layout_object.cc b/third_party/blink/renderer/core/layout/layout_object.cc
-index 81ae68736127bf3885e16810b5d34da6bc377070..f596fc30e6d7e63aa669981dffad22395fc6a5c5 100644
+index 81ae68736127bf3885e16810b5d34da6bc377070..57886bc7b0189cc4a528ed63104915a49f55d81b 100644
 --- a/third_party/blink/renderer/core/layout/layout_object.cc
 +++ b/third_party/blink/renderer/core/layout/layout_object.cc
-@@ -702,14 +702,15 @@ void LayoutObject::AddChild(LayoutObject* new_child,
+@@ -389,7 +389,9 @@ LayoutObject* LayoutObject::CreateObject(Element* element,
+       return MakeGarbageCollected<LayoutTableCaption>(element);
+     case EDisplay::kWebkitBox:
+     case EDisplay::kWebkitInlineBox:
+-      if (style.IsDeprecatedWebkitBoxWithVerticalLineClamp()) {
++      if (!RuntimeEnabledFeatures::
++              CSSLineClampWebkitBoxBlockificationEnabled() &&
++          style.IsDeprecatedWebkitBoxWithVerticalLineClamp()) {
+         return MakeGarbageCollected<LayoutBlockFlow>(element);
+       }
+       UseCounter::Count(element->GetDocument(),
+@@ -702,14 +704,15 @@ void LayoutObject::AddChild(LayoutObject* new_child,
        children->InsertChildNode(this, table, before_child);
      }
      table->AddChild(new_child);
@@ -20,7 +31,7 @@ index 81ae68736127bf3885e16810b5d34da6bc377070..f596fc30e6d7e63aa669981dffad2239
               LayoutTextCombine::ShouldBeParentOf(*new_child)) {
      if (before_child) {
        if (IsA<LayoutTextCombine>(before_child)) {
-@@ -1357,13 +1358,13 @@ static inline bool ObjectIsRelayoutBoundary(const LayoutObject* object) {
+@@ -1357,13 +1360,13 @@ static inline bool ObjectIsRelayoutBoundary(const LayoutObject* object) {
  
    // OOF-positioned objects which rely on their static-position for placement
    // cannot be relayout boundaries (their final position would be incorrect).
@@ -39,7 +50,7 @@ index 81ae68736127bf3885e16810b5d34da6bc377070..f596fc30e6d7e63aa669981dffad2239
      return false;
    }
  
-@@ -1648,7 +1649,11 @@ void LayoutObject::MarkParentForSpannerOrOutOfFlowPositionedChange() {
+@@ -1648,7 +1651,11 @@ void LayoutObject::MarkParentForSpannerOrOutOfFlowPositionedChange() {
    //
    // Note that this isn't necessary if we're dealing with a column spanner here,
    // but in order to keep things simple, we'll make no difference.
@@ -52,7 +63,7 @@ index 81ae68736127bf3885e16810b5d34da6bc377070..f596fc30e6d7e63aa669981dffad2239
  
    const LayoutBlock* containing_block = ContainingBlock();
    while (object != containing_block) {
-@@ -2544,13 +2549,19 @@ const ComputedStyle& LayoutObject::SlowEffectiveStyle(
+@@ -2544,13 +2551,19 @@ const ComputedStyle& LayoutObject::SlowEffectiveStyle(
        if (IsInline() && IsAtomicInlineLevel())
          return StyleRef();
        return FirstLineStyleRef();
@@ -75,3 +86,83 @@ index 81ae68736127bf3885e16810b5d34da6bc377070..f596fc30e6d7e63aa669981dffad2239
        return FirstLineStyleRef();
    }
    NOTREACHED_IN_MIGRATION();
+@@ -2746,10 +2759,9 @@ void LayoutObject::SetStyle(const ComputedStyle* style,
+         };
+ 
+     // See HighlightRegistry for ::highlight() paint invalidation.
+-    // TODO(rego): We don't do anything regarding ::selection, as ::selection
++    // We don't do anything regarding ::selection, as ::selection
+     // uses its own mechanism for this (see
+-    // LayoutObject::InvalidateSelectedChildrenOnStyleChange()). Maybe in the
+-    // future we could detect changes here for ::selection too.
++    // LayoutObject::InvalidateSelectionOnStyleChange()).
+     if (RuntimeEnabledFeatures::SearchTextHighlightPseudoEnabled() &&
+         UsesHighlightPseudoInheritance(kPseudoIdSearchText)) {
+       HighlightPseudoUpdateDiff(kPseudoIdSearchText,
+@@ -3286,7 +3298,7 @@ void LayoutObject::ApplyPseudoElementStyleChanges(
+ 
+   if ((old_style && old_style->HasPseudoElementStyle(kPseudoIdSelection)) ||
+       StyleRef().HasPseudoElementStyle(kPseudoIdSelection))
+-    InvalidateSelectedChildrenOnStyleChange();
++    InvalidateSelectionOnStyleChange();
+ }
+ 
+ void LayoutObject::ApplyFirstLineChanges(const ComputedStyle* old_style) {
+@@ -4622,8 +4634,7 @@ void LayoutObject::SetShouldInvalidateSelection() {
+   bitfields_.SetShouldInvalidateSelection(true);
+   SetShouldCheckForPaintInvalidation();
+   // Invalidate overflow for ::selection styles that contain overflowing
+-  // effects. Do this only for text objects, at least until
+-  // crbug.com/1128199 is resolved (see InvalidateVisualOverflow())
++  // effects.
+   if (IsText()) {
+     if (auto* computed_style = GetSelectionStyle()) {
+       if (computed_style->HasAppliedTextDecorations() ||
+@@ -4885,13 +4896,12 @@ PhysicalRect LayoutObject::DebugRect() const {
+   return PhysicalRect();
+ }
+ 
+-void LayoutObject::InvalidateSelectedChildrenOnStyleChange() {
++void LayoutObject::InvalidateSelectionOnStyleChange() {
+   NOT_DESTROYED();
+   // LayoutSelection::Commit() propagates the state up the containing node
+-  // chain to
+-  // tell if a block contains selected nodes or not. If this layout object is
+-  // not a block, we need to get the selection state from the containing block
+-  // to tell if we have any selected node children.
++  // chain to tell if a block contains selected nodes or not. If this layout
++  // object is not a block, we need to get the selection state from the
++  // containing block to tell if we have any selected node children.
+   LayoutBlock* block =
+       IsLayoutBlock() ? To<LayoutBlock>(this) : ContainingBlock();
+   if (!block)
+@@ -4899,16 +4909,23 @@ void LayoutObject::InvalidateSelectedChildrenOnStyleChange() {
+   if (!block->IsSelected())
+     return;
+ 
+-  // ::selection style only applies to direct selection leaf children of the
+-  // element on which the ::selection style is set. Thus, we only walk the
+-  // direct children here.
++  InvalidateSelectedChildrenOnStyleChange();
++}
++
++void LayoutObject::InvalidateSelectedChildrenOnStyleChange() {
++  // Process the entire subtree for selected nodes, marking those that are
++  // leaves as needing invalidation. This is necessary because ::selection
++  // styling may apply to the entire subtree.
+   for (LayoutObject* child = SlowFirstChild(); child;
+        child = child->NextSibling()) {
+-    if (!child->CanBeSelectionLeaf())
++    if (!child->IsSelected()) {
+       continue;
+-    if (!child->IsSelected())
++    }
++    if (child->CanBeSelectionLeaf()) {
++      child->SetShouldInvalidateSelection();
+       continue;
+-    child->SetShouldInvalidateSelection();
++    }
++    child->InvalidateSelectedChildrenOnStyleChange();
+   }
+ }
+ 

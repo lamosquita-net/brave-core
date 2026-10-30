@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/html_element.cc b/third_party/blink/renderer/core/html/html_element.cc
-index 59ba47318a79b8bde236add57f1207ca00bd0242..6861cd5a97f00a3eeccab9a24331832eb0198c64 100644
+index 59ba47318a79b8bde236add57f1207ca00bd0242..d7ae2eb1ccc1d083be7d95271d0f7a988b8c3d9d 100644
 --- a/third_party/blink/renderer/core/html/html_element.cc
 +++ b/third_party/blink/renderer/core/html/html_element.cc
 @@ -35,6 +35,9 @@
@@ -565,7 +565,29 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..6861cd5a97f00a3eeccab9a24331832e
      return false;
    }
  
-@@ -2719,7 +2775,8 @@ Node::InsertionNotificationRequest HTMLElement::InsertedInto(
+@@ -2662,16 +2718,17 @@ HTMLElement::ElementIfAutoDirectionalityFormAssociatedOrNull(
+ }
+ 
+ bool HTMLElement::CalculateAndAdjustAutoDirectionality() {
+-  bool is_deferred = false;
++  // Note that HTMLSlotElement overrides this method in order to defer
++  // its work in some cases.
++
+   TextDirection text_direction;
+-  std::optional<TextDirection> resolve_result =
+-      ResolveAutoDirectionality(is_deferred);
++  std::optional<TextDirection> resolve_result = ResolveAutoDirectionality();
+   if (resolve_result) {
+     text_direction = *resolve_result;
+   } else {
+     text_direction = TextDirection::kLtr;
+   }
+-  if (CachedDirectionality() != text_direction && !is_deferred) {
++  if (CachedDirectionality() != text_direction) {
+     UpdateDirectionalityAndDescendant(text_direction);
+ 
+     const ComputedStyle* style = GetComputedStyle();
+@@ -2719,7 +2776,8 @@ Node::InsertionNotificationRequest HTMLElement::InsertedInto(
  }
  
  void HTMLElement::RemovedFrom(ContainerNode& insertion_point) {
@@ -575,7 +597,28 @@ index 59ba47318a79b8bde236add57f1207ca00bd0242..6861cd5a97f00a3eeccab9a24331832e
      // If a popover is removed from the document, make sure it gets
      // removed from the popover element stack and the top layer.
      bool was_in_document = insertion_point.isConnected();
-@@ -3250,6 +3307,17 @@ bool HTMLElement::IsLabelable() const {
+@@ -3090,14 +3148,16 @@ void HTMLElement::OnDirAttrChanged(const AttributeModificationParams& params) {
+     UpdateAncestorWithDirAuto(UpdateAncestorTraversal::ExcludeSelf);
+   }
+ 
+-  if (is_old_auto && !is_new_auto) {
++  if (is_old_auto) {
+     if (!RecalcSelfOrAncestorHasDirAuto()) {
+       ClearSelfOrAncestorHasDirAutoAttribute();
+       UpdateDescendantHasDirAutoAttribute(false /* has_dir_auto */);
+     }
+-  } else if (!is_old_auto && is_new_auto) {
+-    SetSelfOrAncestorHasDirAutoAttribute();
+-    UpdateDescendantHasDirAutoAttribute(true /* has_dir_auto */);
++  } else {
++    if (RecalcSelfOrAncestorHasDirAuto()) {
++      SetSelfOrAncestorHasDirAutoAttribute();
++      UpdateDescendantHasDirAutoAttribute(true /* has_dir_auto */);
++    }
+   }
+ 
+   if (is_new_auto) {
+@@ -3250,6 +3310,17 @@ bool HTMLElement::IsLabelable() const {
    return IsFormAssociatedCustomElement();
  }
  

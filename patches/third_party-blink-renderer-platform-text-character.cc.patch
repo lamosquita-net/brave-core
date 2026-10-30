@@ -1,0 +1,35 @@
+diff --git a/third_party/blink/renderer/platform/text/character.cc b/third_party/blink/renderer/platform/text/character.cc
+index 945aa6b9c1105c1317b4f9edf4a1a56dd5b9604a..883a3faf24c7794a99bb2a21912d5368e7f8847d 100644
+--- a/third_party/blink/renderer/platform/text/character.cc
++++ b/third_party/blink/renderer/platform/text/character.cc
+@@ -253,6 +253,7 @@ bool Character::CanReceiveTextEmphasis(UChar32 c) {
+ 
+   // Additional word-separator characters listed in CSS Text Level 3 Editor's
+   // Draft 3 November 2010.
++  // https://www.w3.org/TR/css-text-3/#word-separator
+   if (c == kEthiopicWordspaceCharacter ||
+       c == kAegeanWordSeparatorLineCharacter ||
+       c == kAegeanWordSeparatorDotCharacter ||
+@@ -261,6 +262,22 @@ bool Character::CanReceiveTextEmphasis(UChar32 c) {
+       c == kTibetanMarkDelimiterTshegBstarCharacter)
+     return false;
+ 
++  if (!RuntimeEnabledFeatures::TextEmphasisNoPunctuationEnabled()) {
++    return true;
++  }
++  // Punctuation
++  if (category &
++      (WTF::unicode::kPunctuation_Dash | WTF::unicode::kPunctuation_Open |
++       WTF::unicode::kPunctuation_Close | WTF::unicode::kPunctuation_Connector |
++       WTF::unicode::kPunctuation_Other |
++       WTF::unicode::kPunctuation_InitialQuote |
++       WTF::unicode::kPunctuation_FinalQuote)) {
++    return false;
++  }
++  // TODO(layout-dev): css/css-text-decor/text-emphasis-punctuation-3.html
++  // requires implementation for the following rule in the specification:
++  // > do not NFKD normalize to any of the following symbols:
++
+   return true;
+ }
+ 

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_adjuster.cc b/third_party/blink/renderer/core/css/resolver/style_adjuster.cc
-index 57d616479701ca4acbadc3c164eb5fc0c623d280..6a1b4a9291b46dd20e402aaaa8cb9921398527d6 100644
+index 57d616479701ca4acbadc3c164eb5fc0c623d280..38d0c1ac7adf84acab5ea814e704badbe40897e5 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_adjuster.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_adjuster.cc
 @@ -177,6 +177,22 @@ bool ElementForcesStackingContext(Element* element) {
@@ -50,7 +50,28 @@ index 57d616479701ca4acbadc3c164eb5fc0c623d280..6a1b4a9291b46dd20e402aaaa8cb9921
      builder.SetWritingMode(layout_parent_style.GetWritingMode());
      builder.SetTextOrientation(layout_parent_style.GetTextOrientation());
      builder.UpdateFontOrientation();
-@@ -839,8 +857,8 @@ static void AdjustStyleForInert(ComputedStyleBuilder& builder,
+@@ -700,6 +718,20 @@ static void AdjustStyleForDisplay(ComputedStyleBuilder& builder,
+   if (IsAtMediaUAShadowBoundary(element)) {
+     builder.SetDisplay(EquivalentBlockDisplay(builder.Display()));
+   }
++
++  // display: -webkit-box when used with (-webkit)-line-clamp
++  if (RuntimeEnabledFeatures::CSSLineClampWebkitBoxBlockificationEnabled() &&
++      builder.BoxOrient() == EBoxOrient::kVertical &&
++      (builder.WebkitLineClamp() != 0 || builder.StandardLineClamp() != 0 ||
++       builder.HasAutoStandardLineClamp())) {
++    if (builder.Display() == EDisplay::kWebkitBox) {
++      builder.SetDisplay(EDisplay::kFlowRoot);
++      builder.SetIsSpecifiedDisplayWebkitBox();
++    } else if (builder.Display() == EDisplay::kWebkitInlineBox) {
++      builder.SetDisplay(EDisplay::kInlineBlock);
++      builder.SetIsSpecifiedDisplayWebkitBox();
++    }
++  }
+ }
+ 
+ bool StyleAdjuster::IsEditableElement(Element* element,
+@@ -839,8 +871,8 @@ static void AdjustStyleForInert(ComputedStyleBuilder& builder,
    }
  
    if (element->IsInertRoot()) {
@@ -61,7 +82,7 @@ index 57d616479701ca4acbadc3c164eb5fc0c623d280..6a1b4a9291b46dd20e402aaaa8cb9921
      return;
    }
  
-@@ -850,13 +868,13 @@ static void AdjustStyleForInert(ComputedStyleBuilder& builder,
+@@ -850,13 +882,13 @@ static void AdjustStyleForInert(ComputedStyleBuilder& builder,
      modal_element = Fullscreen::FullscreenElementFrom(document);
    }
    if (modal_element == element) {
@@ -79,7 +100,7 @@ index 57d616479701ca4acbadc3c164eb5fc0c623d280..6a1b4a9291b46dd20e402aaaa8cb9921
      return;
    }
  
-@@ -865,8 +883,8 @@ static void AdjustStyleForInert(ComputedStyleBuilder& builder,
+@@ -865,8 +897,8 @@ static void AdjustStyleForInert(ComputedStyleBuilder& builder,
          base_data->GetBaseComputedStyle()->Display() == EDisplay::kNone) {
        // Elements which are transitioning to display:none should become inert:
        // https://github.com/w3c/csswg-drafts/issues/8389

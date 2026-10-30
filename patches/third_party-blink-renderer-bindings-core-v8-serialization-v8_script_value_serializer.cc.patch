@@ -1,0 +1,17 @@
+diff --git a/third_party/blink/renderer/bindings/core/v8/serialization/v8_script_value_serializer.cc b/third_party/blink/renderer/bindings/core/v8/serialization/v8_script_value_serializer.cc
+index 8db4c3d9ae1c006a0134c9424e58d06b50c573e6..9a55d5d7b16a81ffd0159b5823a3e2a87e9c3776 100644
+--- a/third_party/blink/renderer/bindings/core/v8/serialization/v8_script_value_serializer.cc
++++ b/third_party/blink/renderer/bindings/core/v8/serialization/v8_script_value_serializer.cc
+@@ -709,9 +709,12 @@ bool V8ScriptValueSerializer::WriteDOMObject(ScriptWrappable* wrappable,
+           "because it had a rendering context.");
+       return false;
+     }
++    SerializedTextDirectionSettings serialized_direction(
++        canvas->GetTextDirection(nullptr));
+     WriteAndRequireInterfaceTag(kOffscreenCanvasTransferTag);
+     WriteUint32(canvas->width());
+     WriteUint32(canvas->height());
++    WriteUint32Enum(serialized_direction.GetSerializedTextDirection());
+     WriteUint64(canvas->PlaceholderCanvasId());
+     WriteUint32(canvas->ClientId());
+     WriteUint32(canvas->SinkId());
