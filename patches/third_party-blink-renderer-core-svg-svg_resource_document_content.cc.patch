@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/svg/svg_resource_document_content.cc b/third_party/blink/renderer/core/svg/svg_resource_document_content.cc
-index 19309bbe2f68521e2e1a7e007e707720ac38cb52..7c734cabad9d63019a2b9c6c6dcd59a1e56891c5 100644
+index 19309bbe2f68521e2e1a7e007e707720ac38cb52..514ad6e8dca981a3188e30a01066564f66d00a99 100644
 --- a/third_party/blink/renderer/core/svg/svg_resource_document_content.cc
 +++ b/third_party/blink/renderer/core/svg/svg_resource_document_content.cc
-@@ -31,6 +31,7 @@
+@@ -22,6 +22,7 @@
+ 
+ #include "third_party/blink/renderer/core/svg/svg_resource_document_content.h"
+ 
++#include "base/auto_reset.h"
+ #include "base/task/single_thread_task_runner.h"
+ #include "third_party/blink/renderer/core/frame/local_frame.h"
+ #include "third_party/blink/renderer/core/loader/resource/svg_document_resource.h"
+@@ -31,6 +32,7 @@
  #include "third_party/blink/renderer/core/svg/svg_element.h"
  #include "third_party/blink/renderer/core/svg/svg_resource_document_cache.h"
  #include "third_party/blink/renderer/core/svg/svg_resource_document_observer.h"
@@ -10,7 +18,18 @@ index 19309bbe2f68521e2e1a7e007e707720ac38cb52..7c734cabad9d63019a2b9c6c6dcd59a1
  #include "third_party/blink/renderer/platform/loader/fetch/fetch_parameters.h"
  #include "third_party/blink/renderer/platform/supplementable.h"
  
-@@ -238,6 +239,21 @@ SVGResourceTarget* SVGResourceDocumentContent::GetResourceTarget(
+@@ -155,9 +157,7 @@ SVGResourceDocumentContent::UpdateDocument(scoped_refptr<SharedBuffer> data,
+ }
+ 
+ void SVGResourceDocumentContent::LoadingFinished() {
+-  LocalFrame* frame = document_host_->GetFrame();
+-  frame->View()->UpdateAllLifecyclePhasesExceptPaint(
+-      DocumentUpdateReason::kSVGImage);
++  UpdateLifecycleForUse();
+   UpdateStatus(ResourceStatus::kCached);
+ }
+ 
+@@ -238,7 +238,37 @@ SVGResourceTarget* SVGResourceDocumentContent::GetResourceTarget(
    return &svg_target->EnsureResourceTarget();
  }
  
@@ -29,6 +48,22 @@ index 19309bbe2f68521e2e1a7e007e707720ac38cb52..7c734cabad9d63019a2b9c6c6dcd59a1
 +  return &svg_target->EnsureResourceTarget();
 +}
 +
++void SVGResourceDocumentContent::UpdateLifecycleForUse() {
++  if (!document_host_) {
++    return;
++  }
++  // Temporarily disable content-changed notifications triggered by the
++  // lifecycle update.
++  base::AutoReset validate_scope(&inhibit_content_change_, true);
++  LocalFrame* frame = document_host_->GetFrame();
++  frame->View()->UpdateAllLifecyclePhasesExceptPaint(
++      DocumentUpdateReason::kSVGImage);
++}
++
  void SVGResourceDocumentContent::ContentChanged() {
++  if (inhibit_content_change_) {
++    return;
++  }
    for (auto& observer : observers_) {
      observer->ResourceContentChanged(this);
+   }
