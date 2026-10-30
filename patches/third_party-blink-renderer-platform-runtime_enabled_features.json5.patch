@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/runtime_enabled_features.json5 b/third_party/blink/renderer/platform/runtime_enabled_features.json5
-index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6194dcf8a0ee883aa8c357ec5c2c4068aca6a57a 100644
+index 75e44e6b7cdd95c1e39b3759939ec1146232f255..b2345a4badd9336a449160d40ef4cf9fd5138c19 100644
 --- a/third_party/blink/renderer/platform/runtime_enabled_features.json5
 +++ b/third_party/blink/renderer/platform/runtime_enabled_features.json5
 @@ -291,6 +291,11 @@
@@ -697,13 +697,13 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6194dcf8a0ee883aa8c357ec5c2c4068
 +    // in the open-ui "Invokers" explainer.
 +    // https://open-ui.org/components/invokers.explainer/
 +    // This feature was shipped in M135 and can be removed in M137.
-+    {
+     {
+-      name: "HTMLInvokeActionsV2",
 +      name: "HTMLCommandAttributes",
 +      status: "stable",
 +    },
 +    // Adds support for the 'request-close' command.
-     {
--      name: "HTMLInvokeActionsV2",
++    {
 +      name: "HTMLCommandRequestClose",
 +      depends_on: ["HTMLCommandAttributes"],
        status: "experimental",
@@ -1229,7 +1229,19 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6194dcf8a0ee883aa8c357ec5c2c4068
      {
        name: "SrcsetMaxDensity",
      },
-@@ -3907,10 +4337,21 @@
+@@ -3888,6 +4318,11 @@
+       origin_trial_allows_insecure: true,
+       origin_trial_allows_third_party: true,
+     },
++    {
++      name: "StandardizedTimerClamping",
++      status: "stable",
++      public: true,
++    },
+     {
+       name: "StaticAnimationOptimization",
+       status: "experimental",
+@@ -3907,10 +4342,21 @@
        name: "StorageBucketsLocks",
        status: "experimental",
      },
@@ -1251,7 +1263,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6194dcf8a0ee883aa8c357ec5c2c4068
      {
        // Adds the appearance:base-select CSS value which makes <select>
        // rendering using alternate content in the UA shadowroot which is
-@@ -3918,10 +4359,10 @@
+@@ -3918,15 +4364,19 @@
        name: "StylableSelect",
        status: "experimental",
        // :open is used in the UA stylesheet for StylableSelect, so this feature
@@ -1264,7 +1276,16 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6194dcf8a0ee883aa8c357ec5c2c4068
      },
      {
        name: "StylusHandwriting",
-@@ -3935,6 +4376,12 @@
+       base_feature: "none",
+     },
++    {
++      name: "SvgAnchorElementRelAttributes",
++      status: "stable",
++    },
+     {
+       name: "SvgContextPaint",
+       status: "stable",
+@@ -3935,6 +4385,12 @@
        name: "SvgCrossOriginAttribute",
        status: "stable",
      },
@@ -1277,7 +1298,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6194dcf8a0ee883aa8c357ec5c2c4068
      {
        name: "SvgFilterUserSpaceViewportForNonSvg",
        status: "stable",
-@@ -3951,6 +4398,17 @@
+@@ -3951,6 +4407,17 @@
        name: "SynthesizedKeyboardEventsForAccessibilityActions",
        status: "experimental",
      },
@@ -1295,7 +1316,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6194dcf8a0ee883aa8c357ec5c2c4068
      {
        name: "SystemWakeLock",
        status: "experimental",
-@@ -4036,6 +4494,11 @@
+@@ -4036,6 +4503,11 @@
        name: "TextDiffSplitFix",
        status: "stable",
      },
@@ -1307,7 +1328,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6194dcf8a0ee883aa8c357ec5c2c4068
      {
        name: "TextFragmentAPI",
        status: "experimental",
-@@ -4051,10 +4514,21 @@
+@@ -4051,10 +4523,21 @@
        name: "TextFragmentTapOpensContextMenu",
        status: {"Android": "stable"},
      },
@@ -1329,7 +1350,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6194dcf8a0ee883aa8c357ec5c2c4068
      {
        // New implementation of text-size-adjust that applies during style rather
        // than via the text autosizer. This also includes changes such as
-@@ -4062,7 +4536,7 @@
+@@ -4062,7 +4545,7 @@
        // disabling automatic size adjustments when non-auto values are used.
        // See: https://crbug.com/340389272.
        name: "TextSizeAdjustImprovements",
@@ -1338,7 +1359,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6194dcf8a0ee883aa8c357ec5c2c4068
      },
      {
        // Support for the timeline-scope property.
-@@ -4094,6 +4568,13 @@
+@@ -4094,6 +4577,13 @@
        public: true,
        status: "stable",
      },
@@ -1352,7 +1373,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6194dcf8a0ee883aa8c357ec5c2c4068
      {
        name: "TopLevelTpcd",
        origin_trial_feature_name: "TopLevelTpcd",
-@@ -4143,6 +4624,10 @@
+@@ -4143,6 +4633,10 @@
        status: "experimental",
        base_feature: "none",
      },
@@ -1363,7 +1384,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6194dcf8a0ee883aa8c357ec5c2c4068
      // This is conditionally set if the platform supports translation.
      {
        name: "TranslateService",
-@@ -4255,6 +4740,13 @@
+@@ -4255,6 +4749,13 @@
        base_feature: "none",
        public: true,
      },
@@ -1377,7 +1398,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6194dcf8a0ee883aa8c357ec5c2c4068
      {
        name: "UseUndoStepElementDispatchBeforeInput",
        status: "stable",
-@@ -4264,6 +4756,11 @@
+@@ -4264,6 +4765,11 @@
        base_feature: "none",
        public: true,
      },
@@ -1389,7 +1410,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6194dcf8a0ee883aa8c357ec5c2c4068
      {
        // Whether a video element should automatically play fullscreen unless
        // 'playsinline' is set.
-@@ -4420,8 +4917,7 @@
+@@ -4420,8 +4926,7 @@
      {
        name: "WebAssemblyJSStringBuiltins",
        origin_trial_feature_name: "WebAssemblyJSStringBuiltins",
@@ -1399,7 +1420,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6194dcf8a0ee883aa8c357ec5c2c4068
      },
      // WebAuth is disabled on Android versions prior to N (7.0) due to lack of
      // supporting APIs, see runtime_features.cc.
-@@ -4435,12 +4931,14 @@
+@@ -4435,12 +4940,14 @@
        name: "WebAuthAuthenticatorAttachment",
        status: "test",
      },
@@ -1415,7 +1436,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..6194dcf8a0ee883aa8c357ec5c2c4068
      },
      {
        name: "WebAuthenticationLargeBlobExtension",
-@@ -4506,6 +5004,10 @@
+@@ -4506,6 +5013,10 @@
      },
      {
        name: "WebCryptoCurve25519",

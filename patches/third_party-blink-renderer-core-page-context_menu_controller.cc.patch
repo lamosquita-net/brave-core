@@ -1,0 +1,33 @@
+diff --git a/third_party/blink/renderer/core/page/context_menu_controller.cc b/third_party/blink/renderer/core/page/context_menu_controller.cc
+index 5bd6035616c012b8dde51fe2f77676532693322a..86b22c6fb7bc09f3767ee847eeb16558e30ab5c5 100644
+--- a/third_party/blink/renderer/core/page/context_menu_controller.cc
++++ b/third_party/blink/renderer/core/page/context_menu_controller.cc
+@@ -92,6 +92,7 @@
+ #include "third_party/blink/renderer/core/page/focus_controller.h"
+ #include "third_party/blink/renderer/core/page/page.h"
+ #include "third_party/blink/renderer/core/paint/paint_layer.h"
++#include "third_party/blink/renderer/core/svg/svg_a_element.h"
+ #include "third_party/blink/renderer/platform/bindings/script_regexp.h"
+ #include "third_party/blink/renderer/platform/exported/wrapped_resource_response.h"
+ 
+@@ -825,6 +826,20 @@ bool ContextMenuController::ShowContextMenu(LocalFrame* frame,
+     }
+   }
+ 
++  if (RuntimeEnabledFeatures::SvgAnchorElementRelAttributesEnabled()) {
++    if (auto* anchor = DynamicTo<SVGAElement>(result.URLElement())) {
++      // TODO(dmangal): Add support for `download` attribute
++
++      // If the anchor wants to suppress the referrer, update the referrerPolicy
++      // accordingly.
++      if (anchor->HasRel(kRelationNoReferrer)) {
++        data.referrer_policy = network::mojom::ReferrerPolicy::kNever;
++      }
++
++      data.link_text = anchor->innerText().Utf8();
++    }
++  }
++
+   data.selection_rect = ComputeSelectionRect(selected_frame);
+   data.source_type = source_type;
+ 

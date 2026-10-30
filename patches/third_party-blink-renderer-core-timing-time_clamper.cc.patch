@@ -1,0 +1,15 @@
+diff --git a/third_party/blink/renderer/core/timing/time_clamper.cc b/third_party/blink/renderer/core/timing/time_clamper.cc
+index 960167cb7b6c843caffb99f6c57ccdc4b6e0e50f..875e5b226c3ec1aa077fab0821fc3d0f8cf795a6 100644
+--- a/third_party/blink/renderer/core/timing/time_clamper.cc
++++ b/third_party/blink/renderer/core/timing/time_clamper.cc
+@@ -56,7 +56,9 @@ base::TimeDelta TimeClamper::ClampTimeResolution(
+   if (time_lower_digits >= tick_threshold)
+     clamped_time += resolution;
+ 
+-  // Add back the upper digits portion.
++  // Add back the upper digits portion while avoiding signed integer overflow.
++  time_upper_digits = std::min(
++      time_upper_digits, std::numeric_limits<int64_t>::max() - clamped_time);
+   clamped_time += time_upper_digits;
+ 
+   // Flip the number back to being negative if it started that way.
