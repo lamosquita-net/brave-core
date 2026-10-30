@@ -1,0 +1,18 @@
+diff --git a/third_party/blink/renderer/core/html/forms/date_time_edit_element.cc b/third_party/blink/renderer/core/html/forms/date_time_edit_element.cc
+index bb01507212cf1d3f51a2137ad842e7cc5c1228ae..facd48258c59377a3ff97a239d9def5ff95dd773 100644
+--- a/third_party/blink/renderer/core/html/forms/date_time_edit_element.cc
++++ b/third_party/blink/renderer/core/html/forms/date_time_edit_element.cc
+@@ -966,6 +966,13 @@ void DateTimeEditElement::StepUp() {
+ 
+ void DateTimeEditElement::UpdateUIState() {
+   if (IsDisabled()) {
++    // Skip blur() during Node::moveBefore: it would dispatch synchronous
++    // events to author script, which must not run while an atomic move is
++    // in progress. Mirrors the guard in `HTMLFieldSetElement::ChildrenChanged`
++    // (FlyWeb: upstream 4a8c856694, crbug.com/516945697).
++    if (GetDocument().StatePreservingAtomicMoveInProgress()) {
++      return;
++    }
+     if (DateTimeFieldElement* field = FocusedField())
+       field->blur();
+   }

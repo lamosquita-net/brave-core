@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/editing/ime/edit_context.cc b/third_party/blink/renderer/core/editing/ime/edit_context.cc
-index 71efa75c49ccee79895e5eedf60ccc5d576ac2a3..6b9f384623335e9e7c1886e8d8347fbdaa5421f6 100644
+index 71efa75c49ccee79895e5eedf60ccc5d576ac2a3..6a537e6c65091e272c3d7444bfa99050a87c2aa3 100644
 --- a/third_party/blink/renderer/core/editing/ime/edit_context.cc
 +++ b/third_party/blink/renderer/core/editing/ime/edit_context.cc
 @@ -68,6 +68,10 @@ ExecutionContext* EditContext::GetExecutionContext() const {
@@ -13,3 +13,26 @@ index 71efa75c49ccee79895e5eedf60ccc5d576ac2a3..6b9f384623335e9e7c1886e8d8347fbd
  LocalDOMWindow* EditContext::DomWindow() const {
    return To<LocalDOMWindow>(GetExecutionContext());
  }
+@@ -629,10 +633,18 @@ void EditContext::DeleteSurroundingText(int before, int after) {
+   TRACE_EVENT1("ime", "EditContext::DeleteSurroundingText", "before, after",
+                std::to_string(before) + ", " + std::to_string(after));
+   const bool is_backwards_selection = selection_start_ > selection_end_;
+-  const uint32_t update_range_start =
+-      std::max(OrderedSelectionStart() - before, 0U);
+-  const uint32_t update_range_end =
+-      std::min(OrderedSelectionEnd() + after, text_.length());
++
++  // Safe clamping to avoid unsigned underflow and negative before / after
++  // (FlyWeb: upstream f567e63314).
++  int clamped_before =
++      std::max(0, std::min(before, static_cast<int>(OrderedSelectionStart())));
++  int clamped_after = std::max(
++      0, std::min(after,
++                  static_cast<int>(text_.length() - OrderedSelectionEnd())));
++
++  const uint32_t update_range_start = OrderedSelectionStart() - clamped_before;
++  const uint32_t update_range_end = OrderedSelectionEnd() + clamped_after;
++
+   SetSelection(
+       update_range_start,
+       OrderedSelectionEnd() - (OrderedSelectionStart() - update_range_start));

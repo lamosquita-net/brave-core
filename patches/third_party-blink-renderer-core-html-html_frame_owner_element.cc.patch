@@ -1,8 +1,17 @@
 diff --git a/third_party/blink/renderer/core/html/html_frame_owner_element.cc b/third_party/blink/renderer/core/html/html_frame_owner_element.cc
-index 80b8141588f8ca97507bb44f6139d1be9c79065c..24638bc445df869c18a6f3c85126bc6c40169ddb 100644
+index 80b8141588f8ca97507bb44f6139d1be9c79065c..7d562684b09b9c391c73b2e586e74b8d24e6dedc 100644
 --- a/third_party/blink/renderer/core/html/html_frame_owner_element.cc
 +++ b/third_party/blink/renderer/core/html/html_frame_owner_element.cc
-@@ -293,11 +293,7 @@ Node::InsertionNotificationRequest HTMLFrameOwnerElement::InsertedInto(
+@@ -289,22 +289,27 @@ Node::InsertionNotificationRequest HTMLFrameOwnerElement::InsertedInto(
+     ContainerNode& insertion_point) {
+   InsertionNotificationRequest result =
+       HTMLElement::InsertedInto(insertion_point);
++  // Except for when state-preserving atomic moves are enabled, we should never
++  // have a content frame at the point where we got inserted into a tree.
++  SECURITY_CHECK(!ContentFrame() ||
++                 GetDocument().StatePreservingAtomicMoveInProgress());
++
+   // If a state-preserving atomic move is in progress, then we have to manually
    // perform some bookkeeping that ordinarily would only be done deeper in the
    // frame setup logic that gets triggered in the *NON* state-preserving atomic
    // move flow.
@@ -13,9 +22,22 @@ index 80b8141588f8ca97507bb44f6139d1be9c79065c..24638bc445df869c18a6f3c85126bc6c
 -    CHECK(ContentFrame());
 +  if (GetDocument().StatePreservingAtomicMoveInProgress() && ContentFrame()) {
      // During a state-preserving atomic move, we must specifically inform all of
-     // `this`'s ancestor nodes of the new connected frame they are adopting.
+-    // `this`'s ancestor nodes of the new connected frame they are adopting.
++    // `this`'s new ancestor nodes, starting from `insertion_point`, of the new
++    // connected frame they are adopting. We also re-increment `this` to match
++    // the decrement performed in `RemovedFrom()` below.
      //
-@@ -323,7 +319,7 @@ void HTMLFrameOwnerElement::RemovedFrom(ContainerNode& insertion_point) {
+     // For the non-state-preserving atomic move case (i.e., when we're setting
+     // up a full frame due to real insertion), this is done in
+     // `HTMLFrameOwnerElement::SetContentFrame()` below.
+-    for (ContainerNode* node = this; node;
++    // FlyWeb: upstream 64a1e16742 (crbug.com/517345069).
++    IncrementConnectedSubframeCount();
++    for (ContainerNode* node = &insertion_point; node;
+          node = node->ParentOrShadowHostNode()) {
+       node->IncrementConnectedSubframeCount();
+     }
+@@ -323,7 +328,7 @@ void HTMLFrameOwnerElement::RemovedFrom(ContainerNode& insertion_point) {
    // Not doing (1) is a good thing, since we're trying to preserve the frame,
    // but we still have to do (2) manually to maintain bookkeeping consistency
    // among the ancestor nodes.

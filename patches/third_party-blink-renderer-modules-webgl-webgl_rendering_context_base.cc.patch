@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/modules/webgl/webgl_rendering_context_base.cc b/third_party/blink/renderer/modules/webgl/webgl_rendering_context_base.cc
-index 4b0dd3b86bec2a9619ecc83dfff283dabe9bbbc1..4c286ce42202b8721461ba6f6859d9eb0c11e873 100644
+index 4b0dd3b86bec2a9619ecc83dfff283dabe9bbbc1..9514243524f778c20c5560be632ca7a02868f907 100644
 --- a/third_party/blink/renderer/modules/webgl/webgl_rendering_context_base.cc
 +++ b/third_party/blink/renderer/modules/webgl/webgl_rendering_context_base.cc
 @@ -3179,6 +3179,7 @@ WebGLActiveInfo* WebGLRenderingContextBase::getActiveAttrib(
@@ -170,7 +170,7 @@ index 4b0dd3b86bec2a9619ecc83dfff283dabe9bbbc1..4c286ce42202b8721461ba6f6859d9eb
    // Due to WebGL's same-origin restrictions, it is not possible to
    // taint the origin using the WebGL API.
    DCHECK(Host()->OriginClean());
-@@ -5777,6 +5798,14 @@ void WebGLRenderingContextBase::TexImageHelperHTMLImageElement(
+@@ -5777,6 +5798,20 @@ void WebGLRenderingContextBase::TexImageHelperHTMLImageElement(
      if (have_svg_image && canvas()) {
        UseCounter::Count(canvas()->GetDocument(), WebFeature::kSVGInWebGL);
      }
@@ -181,6 +181,12 @@ index 4b0dd3b86bec2a9619ecc83dfff283dabe9bbbc1..4c286ce42202b8721461ba6f6859d9eb
 +      SourceImageStatus status;
 +      image_for_render = image->GetSourceImageForCanvas(
 +          FlushReason::kWebGLTexImage, &status, gfx::SizeF(300, 150));
++      // Since the size of the source has not been previously validated,
++      // GetSourceImageForCanvas() can return nullptr (FlyWeb: upstream
++      // 7716014246, crbug.com/447031622).
++      if (!image_for_render) {
++        image_for_render = Image::NullImage();
++      }
 +    }
      // DrawImageIntoBuffer always respects orientation
      image_for_render = DrawImageIntoBufferForTexImage(
