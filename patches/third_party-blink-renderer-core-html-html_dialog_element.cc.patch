@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/html_dialog_element.cc b/third_party/blink/renderer/core/html/html_dialog_element.cc
-index 8c5398ae2353e8bc7664fcc3c960521f15197942..fb5cf5893a4d7d10f16812cadff5f538c3589d83 100644
+index 8c5398ae2353e8bc7664fcc3c960521f15197942..d995a78d0e16e6eb0e0cce7a40a9069c15dafb4c 100644
 --- a/third_party/blink/renderer/core/html/html_dialog_element.cc
 +++ b/third_party/blink/renderer/core/html/html_dialog_element.cc
 @@ -32,11 +32,15 @@
@@ -274,7 +274,7 @@ index 8c5398ae2353e8bc7664fcc3c960521f15197942..fb5cf5893a4d7d10f16812cadff5f538
 -         command == CommandEventType::kClose;
 +         command == CommandEventType::kClose ||
 +         (command == CommandEventType::kRequestClose &&
-+          RuntimeEnabledFeatures::HTMLCommandActionsV2Enabled());
++          RuntimeEnabledFeatures::HTMLCommandRequestCloseEnabled());
  }
  
  bool HTMLDialogElement::HandleCommandInternal(HTMLElement& invoker,
@@ -311,7 +311,7 @@ index 8c5398ae2353e8bc7664fcc3c960521f15197942..fb5cf5893a4d7d10f16812cadff5f538
 +          "A command attempted to close an already closed Dialog");
 +    }
 +  } else if (command == CommandEventType::kRequestClose) {
-+    CHECK(RuntimeEnabledFeatures::HTMLCommandActionsV2Enabled());
++    CHECK(RuntimeEnabledFeatures::HTMLCommandRequestCloseEnabled());
 +    if (open) {
 +      requestClose(return_value, ASSERT_NO_EXCEPTION);
        return true;

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/css_property_equality.cc b/third_party/blink/renderer/core/css/css_property_equality.cc
-index 211eb5ca4ec32ef2fb0fa798583e16f0847ca335..4f1a0a5ac3164f2fcfa33fb026f8c1165e9881f5 100644
+index 211eb5ca4ec32ef2fb0fa798583e16f0847ca335..cc250c156a98761d9b0a9fb2a9168503d0e3dbbf 100644
 --- a/third_party/blink/renderer/core/css/css_property_equality.cc
 +++ b/third_party/blink/renderer/core/css/css_property_equality.cc
 @@ -174,7 +174,7 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
@@ -37,7 +37,32 @@ index 211eb5ca4ec32ef2fb0fa798583e16f0847ca335..4f1a0a5ac3164f2fcfa33fb026f8c116
      case CSSPropertyID::kTop:
        return a.Top() == b.Top();
      case CSSPropertyID::kOverlay:
-@@ -1245,9 +1250,11 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
+@@ -915,6 +920,8 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
+                                     b.GetPositionTryFallbacks());
+     case CSSPropertyID::kPositionVisibility:
+       return a.GetPositionVisibility() == b.GetPositionVisibility();
++    case CSSPropertyID::kPrintColorAdjust:
++      return a.PrintColorAdjust() == b.PrintColorAdjust();
+ 
+     // These properties are not animateable, but perhaps equality should still
+     // be defined for them.
+@@ -1027,6 +1034,7 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
+     case CSSPropertyID::kAliasWebkitPaddingStart:
+     case CSSPropertyID::kAliasWebkitPerspective:
+     case CSSPropertyID::kAliasWebkitPerspectiveOrigin:
++    case CSSPropertyID::kAliasWebkitPrintColorAdjust:
+     case CSSPropertyID::kAliasWebkitShapeImageThreshold:
+     case CSSPropertyID::kAliasWebkitShapeMargin:
+     case CSSPropertyID::kAliasWebkitShapeOutside:
+@@ -1068,7 +1076,6 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
+     case CSSPropertyID::kWebkitBoxReflect:
+     case CSSPropertyID::kWebkitLineBreak:
+     case CSSPropertyID::kWebkitMaskBoxImageRepeat:
+-    case CSSPropertyID::kWebkitPrintColorAdjust:
+     case CSSPropertyID::kWebkitRtlOrdering:
+     case CSSPropertyID::kWebkitRubyPosition:
+     case CSSPropertyID::kWebkitTapHighlightColor:
+@@ -1245,9 +1252,11 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
      case CSSPropertyID::kScrollStart:
      case CSSPropertyID::kScrollStartTarget:
      case CSSPropertyID::kScrollTimeline:

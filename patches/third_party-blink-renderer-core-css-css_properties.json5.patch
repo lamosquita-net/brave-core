@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/css_properties.json5 b/third_party/blink/renderer/core/css/css_properties.json5
-index 4947f61156639057adec5cb80f9bf09c9aa3c665..436713709de18fcde8297e862a0c27b8a736f32b 100644
+index 4947f61156639057adec5cb80f9bf09c9aa3c665..dfe66ceaff287b2ff22fb25b08e0dbfe6aa74c95 100644
 --- a/third_party/blink/renderer/core/css/css_properties.json5
 +++ b/third_party/blink/renderer/core/css/css_properties.json5
 @@ -282,14 +282,15 @@
@@ -58,6 +58,15 @@ index 4947f61156639057adec5cb80f9bf09c9aa3c665..436713709de18fcde8297e862a0c27b8
        logical_property_group: {
          name: "size",
          resolver: "vertical",
+@@ -3482,7 +3482,7 @@
+       type_name: "DynamicRangeLimit",
+       field_group: "*",
+       field_template: "external",
+-      keywords: ["standard", "high", "constrained-high"],
++      keywords: ["standard", "no-limit", "constrained"],
+       typedom_types: ["Keyword"],
+       include_paths: ["third_party/blink/renderer/platform/graphics/graphics_types.h"],
+       default_value: "DynamicRangeLimit(cc::PaintFlags::DynamicRangeLimit::kHigh)",
 @@ -3502,6 +3502,20 @@
        valid_for_first_letter: true,
        invalidate: ["reshape", "layout", "paint"],
@@ -203,15 +212,26 @@ index 4947f61156639057adec5cb80f9bf09c9aa3c665..436713709de18fcde8297e862a0c27b8
      },
      {
        name: "position-visibility",
-@@ -4607,7 +4623,6 @@
+@@ -4607,7 +4623,17 @@
        keywords: ["always", "anchors-visible", "no-overflow"],
        typedom_types: ["Keyword"],
        invalidate: ["layout", "paint"],
 -      runtime_flag: "CSSPositionVisibility",
++    },
++    {
++      name: "print-color-adjust",
++      property_methods: ["CSSValueFromComputedStyleInternal"],
++      independent: false,  // Actually true, but setting it to false saves a precious bit in ComputedStyleBase.
++      inherited: true,
++      field_template: "keyword",
++      keywords: ["economy", "exact"],
++      default_value: "economy",
++      valid_for_permission_element: true,
++      invalidate: ["paint"],
      },
      {
        name: "quotes",
-@@ -5249,6 +5264,7 @@
+@@ -5249,6 +5275,7 @@
        style_builder_template_args: {
          initial_color: "ComputedStyleInitialValues::InitialStrokePaint",
        },
@@ -219,7 +239,7 @@ index 4947f61156639057adec5cb80f9bf09c9aa3c665..436713709de18fcde8297e862a0c27b8
        valid_for_highlight_legacy: true,
        valid_for_highlight: true,
        invalidate: ["paint", "stroke"],
-@@ -5439,6 +5455,12 @@
+@@ -5439,6 +5466,12 @@
        invalidate: ["reshape"],
        runtime_flag: "CSSTextAutoSpace",
      },
@@ -232,7 +252,7 @@ index 4947f61156639057adec5cb80f9bf09c9aa3c665..436713709de18fcde8297e862a0c27b8
      {
        name: "text-box-edge",
        property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
-@@ -5459,7 +5481,7 @@
+@@ -5459,7 +5492,7 @@
        field_group: "box",
        field_template: "keyword",
        default_value: "none",
@@ -241,6 +261,24 @@ index 4947f61156639057adec5cb80f9bf09c9aa3c665..436713709de18fcde8297e862a0c27b8
        typedom_types: ["Keyword"],
        invalidate: ["layout"],
        runtime_flag: "CSSTextBoxTrim",
+@@ -6529,17 +6562,6 @@
+       // Overlaps with perspective-origin.
+       legacy_overlapping: true,
+     },
+-    {
+-      name: "-webkit-print-color-adjust",
+-      property_methods: ["CSSValueFromComputedStyleInternal"],
+-      independent: false,  // Actually true, but setting it to false saves a precious bit in ComputedStyleBase.
+-      inherited: true,
+-      field_template: "keyword",
+-      keywords: ["economy", "exact"],
+-      default_value: "economy",
+-      valid_for_permission_element: true,
+-      invalidate: ["paint"],
+-    },
+     {
+       name: "-webkit-rtl-ordering",
+       property_methods: ["CSSValueFromComputedStyleInternal"],
 @@ -6660,7 +6682,6 @@
        converter: "ConvertStyleColor",
        style_builder_template: "color",
@@ -324,7 +362,18 @@ index 4947f61156639057adec5cb80f9bf09c9aa3c665..436713709de18fcde8297e862a0c27b8
        logical_property_group: {
          name: "size",
          resolver: "horizontal",
-@@ -7606,30 +7645,42 @@
+@@ -7457,6 +7496,10 @@
+       name: "-webkit-max-logical-height",
+       alias_for: "max-block-size",
+     },
++    {
++      name: "-webkit-print-color-adjust",
++      alias_for: "print-color-adjust",
++    },
+ 
+     // Properties that we ignore in the StyleBuilder.
+     // TODO(timloh): This seems wrong, most of these shouldn't reach the
+@@ -7606,30 +7649,42 @@
        runtime_flag: "ViewTransitionOnNavigation",
      },
      {
@@ -375,7 +424,7 @@ index 4947f61156639057adec5cb80f9bf09c9aa3c665..436713709de18fcde8297e862a0c27b8
      // Shorthands
      {
        name: "animation",
-@@ -8171,7 +8222,6 @@
+@@ -8171,7 +8226,6 @@
        name: "position-try",
        longhands: ["position-try-order", "position-try-options"],
        property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc b/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
-index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..12c4167ec2557235a474c4d8ba8c115273e6b11d 100644
+index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..6b6cf6b99bf7cbaf96dc4d0ea2d6468563784854 100644
 --- a/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
 +++ b/third_party/blink/renderer/core/css/resolver/style_builder_converter.cc
 @@ -66,6 +66,8 @@
@@ -11,6 +11,18 @@ index 205db3bcfe4f7528ab0e0223db67ca4da4ebc90d..12c4167ec2557235a474c4d8ba8c1152
  #include "third_party/blink/renderer/core/css/css_shadow_value.h"
  #include "third_party/blink/renderer/core/css/css_uri_value.h"
  #include "third_party/blink/renderer/core/css/css_value_list.h"
+@@ -225,9 +227,9 @@ DynamicRangeLimit StyleBuilderConverterBase::ConvertDynamicRangeLimit(
+   }
+   if (auto* identifier_value = DynamicTo<CSSIdentifierValue>(value)) {
+     switch (identifier_value->GetValueID()) {
+-      case CSSValueID::kHigh:
++      case CSSValueID::kNoLimit:
+         return DynamicRangeLimit(cc::PaintFlags::DynamicRangeLimit::kHigh);
+-      case CSSValueID::kConstrainedHigh:
++      case CSSValueID::kConstrained:
+         return DynamicRangeLimit(
+             cc::PaintFlags::DynamicRangeLimit::kConstrainedHigh);
+       case CSSValueID::kStandard:
 @@ -241,7 +243,8 @@ DynamicRangeLimit StyleBuilderConverterBase::ConvertDynamicRangeLimit(
  
  StyleSVGResource* StyleBuilderConverter::ConvertElementReference(

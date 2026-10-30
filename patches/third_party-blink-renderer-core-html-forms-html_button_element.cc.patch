@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/forms/html_button_element.cc b/third_party/blink/renderer/core/html/forms/html_button_element.cc
-index dada119db0fc925c6595808558bb21ea8e44b67a..6c990a30f616863bddd72ae8ecd302345ec869e0 100644
+index dada119db0fc925c6595808558bb21ea8e44b67a..f30b782a5e0203824918a4f7eb345ac86cd4fd38 100644
 --- a/third_party/blink/renderer/core/html/forms/html_button_element.cc
 +++ b/third_party/blink/renderer/core/html/forms/html_button_element.cc
 @@ -32,6 +32,7 @@
@@ -28,7 +28,7 @@ index dada119db0fc925c6595808558bb21ea8e44b67a..6c990a30f616863bddd72ae8ecd30234
      }
      UpdateWillValidateCache();
      if (formOwner() && isConnected())
-@@ -153,10 +163,170 @@ void HTMLButtonElement::ParseAttribute(
+@@ -153,10 +163,171 @@ void HTMLButtonElement::ParseAttribute(
    }
  }
  
@@ -96,14 +96,15 @@ index dada119db0fc925c6595808558bb21ea8e44b67a..6c990a30f616863bddd72ae8ecd30234
 +    return CommandEventType::kShowModal;
 +  }
 +
++  if (RuntimeEnabledFeatures::HTMLCommandRequestCloseEnabled() &&
++      EqualIgnoringASCIICase(action, keywords::kRequestClose)) {
++    return CommandEventType::kRequestClose;
++  }
++
 +  // V2 commands go below this point
 +
 +  if (!RuntimeEnabledFeatures::HTMLCommandActionsV2Enabled()) {
 +    return CommandEventType::kNone;
-+  }
-+
-+  if (EqualIgnoringASCIICase(action, keywords::kRequestClose)) {
-+    return CommandEventType::kRequestClose;
 +  }
 +
 +  // Input/Select Cases
@@ -199,7 +200,7 @@ index dada119db0fc925c6595808558bb21ea8e44b67a..6c990a30f616863bddd72ae8ecd30234
          Form()->PrepareForSubmission(&event, this);
          event.SetDefaultHandled();
          return;
-@@ -164,9 +334,45 @@ void HTMLButtonElement::DefaultEventHandler(Event& event) {
+@@ -164,9 +335,45 @@ void HTMLButtonElement::DefaultEventHandler(Event& event) {
        if (Form() && type_ == kReset) {
          Form()->reset();
          event.SetDefaultHandled();
@@ -245,7 +246,7 @@ index dada119db0fc925c6595808558bb21ea8e44b67a..6c990a30f616863bddd72ae8ecd30234
    }
  
    if (type_ == kSelectlist) {
-@@ -277,7 +483,13 @@ void HTMLButtonElement::DispatchBlurEvent(
+@@ -277,7 +484,13 @@ void HTMLButtonElement::DispatchBlurEvent(
      Element* new_focused_element,
      mojom::blink::FocusType type,
      InputDeviceCapabilities* source_capabilities) {
