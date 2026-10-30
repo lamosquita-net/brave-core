@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/paint/box_fragment_painter.cc b/third_party/blink/renderer/core/paint/box_fragment_painter.cc
-index e3aa3e0c54a25a6964c2a363e41369e487c44102..53fe8ff40addb753af590de32d032b971a10eaa0 100644
+index e3aa3e0c54a25a6964c2a363e41369e487c44102..b30ae3424c13bdd44ef3596dced2d1d49a7bc981 100644
 --- a/third_party/blink/renderer/core/paint/box_fragment_painter.cc
 +++ b/third_party/blink/renderer/core/paint/box_fragment_painter.cc
 @@ -1435,8 +1435,9 @@ void BoxFragmentPainter::PaintColumnRules(const PaintInfo& paint_info,
@@ -31,3 +31,13 @@ index e3aa3e0c54a25a6964c2a363e41369e487c44102..53fe8ff40addb753af590de32d032b97
            const LayoutUnit column_box_left = box_fragment_.ContentOffset().left;
            rule_length = previous_column.Width() +
                          (previous_column.offset.left - column_box_left);
+@@ -1852,7 +1853,8 @@ bool BoxFragmentPainter::ShouldPaint(
+   if (box_fragment_.IsPaginatedRoot())
+     return true;
+   return paint_state.LocalRectIntersectsCullRect(
+-      box_fragment_.InkOverflowRect());
++      To<LayoutBoxModelObject>(box_fragment_.GetLayoutObject())
++          ->ApplyFiltersToRect(box_fragment_.InkOverflowRect()));
+ }
+ 
+ void BoxFragmentPainter::PaintTextClipMask(const PaintInfo& paint_info,

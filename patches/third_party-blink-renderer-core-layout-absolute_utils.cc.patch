@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/absolute_utils.cc b/third_party/blink/renderer/core/layout/absolute_utils.cc
-index c360ec1e801cd3321ba2b2beb812a209e4d86d79..bed5cf7a3cee48d8f4c37787c9af20c95599639c 100644
+index c360ec1e801cd3321ba2b2beb812a209e4d86d79..e270154795df7fb16a7a6bd3c3136cd224e4dafd 100644
 --- a/third_party/blink/renderer/core/layout/absolute_utils.cc
 +++ b/third_party/blink/renderer/core/layout/absolute_utils.cc
 @@ -51,7 +51,8 @@ InsetBias GetAlignmentInsetBias(
@@ -34,7 +34,7 @@ index c360ec1e801cd3321ba2b2beb812a209e4d86d79..bed5cf7a3cee48d8f4c37787c9af20c9
      case ItemPosition::kCenter:
        return InsetBias::kEqual;
      case ItemPosition::kEnd:
-@@ -114,18 +120,6 @@ void ResizeIMCBInOneAxis(const InsetBias inset_bias,
+@@ -114,32 +120,24 @@ void ResizeIMCBInOneAxis(const InsetBias inset_bias,
    }
  }
  
@@ -53,12 +53,16 @@ index c360ec1e801cd3321ba2b2beb812a209e4d86d79..bed5cf7a3cee48d8f4c37787c9af20c9
  // Computes the inset modified containing block in one axis, accounting for
  // insets and the static-position.
  void ComputeUnclampedIMCBInOneAxis(
-@@ -135,11 +129,13 @@ void ComputeUnclampedIMCBInOneAxis(
+     const LayoutUnit available_size,
+     const std::optional<LayoutUnit>& inset_start,
+     const std::optional<LayoutUnit>& inset_end,
++    bool is_static_alignment_parallel,
      const LayoutUnit static_position_offset,
      InsetBias static_position_inset_bias,
      InsetBias alignment_inset_bias,
 -    const std::optional<InsetBias>& safe_alignment_inset_bias,
 +    const std::optional<InsetBias>& safe_inset_bias,
++    const std::optional<InsetBias>& alt_safe_inset_bias,
 +    const std::optional<InsetBias>& default_inset_bias,
      LayoutUnit* imcb_start_out,
      LayoutUnit* imcb_end_out,
@@ -69,7 +73,7 @@ index c360ec1e801cd3321ba2b2beb812a209e4d86d79..bed5cf7a3cee48d8f4c37787c9af20c9
    DCHECK_NE(available_size, kIndefiniteSize);
    if (!inset_start && !inset_end) {
      // If both our insets are auto, the available-space is defined by the
-@@ -156,10 +152,10 @@ void ComputeUnclampedIMCBInOneAxis(
+@@ -156,10 +154,10 @@ void ComputeUnclampedIMCBInOneAxis(
          // The available-space for the center static-position "grows" towards
          // both edges (equally), and stops when it hits the first one.
          // |<-----*----->      |
@@ -84,7 +88,16 @@ index c360ec1e801cd3321ba2b2beb812a209e4d86d79..bed5cf7a3cee48d8f4c37787c9af20c9
          break;
        }
        case InsetBias::kEnd:
-@@ -184,7 +180,8 @@ void ComputeUnclampedIMCBInOneAxis(
+@@ -171,6 +169,8 @@ void ComputeUnclampedIMCBInOneAxis(
+         break;
+     }
+     *imcb_inset_bias_out = static_position_inset_bias;
++    *safe_inset_bias_out =
++        is_static_alignment_parallel ? safe_inset_bias : alt_safe_inset_bias;
+   } else {
+     // Otherwise we just resolve auto to 0.
+     *imcb_start_out = inset_start.value_or(LayoutUnit());
+@@ -184,7 +184,8 @@ void ComputeUnclampedIMCBInOneAxis(
        // Both insets were set - use the alignment bias (defaults to the "start"
        // edge of the containing block if we have normal alignment).
        *imcb_inset_bias_out = alignment_inset_bias;
@@ -94,7 +107,7 @@ index c360ec1e801cd3321ba2b2beb812a209e4d86d79..bed5cf7a3cee48d8f4c37787c9af20c9
      }
    }
  }
-@@ -206,37 +203,43 @@ InsetModifiedContainingBlock ComputeUnclampedIMCB(
+@@ -206,37 +207,47 @@ InsetModifiedContainingBlock ComputeUnclampedIMCB(
        IsParallelWritingMode(container_writing_direction.GetWritingMode(),
                              self_writing_direction.GetWritingMode());
  
@@ -119,26 +132,32 @@ index c360ec1e801cd3321ba2b2beb812a209e4d86d79..bed5cf7a3cee48d8f4c37787c9af20c9
 +                            container_writing_direction, self_writing_direction,
 +                            /* is_justify_axis */ !is_parallel,
 +                            &block_safe_inset_bias, &block_default_inset_bias);
++
++  const bool is_static_alignment_parallel =
++      static_position.align_self_direction ==
++      LogicalStaticPosition::LogicalAlignmentDirection::kBlock;
  
    ComputeUnclampedIMCBInOneAxis(
        available_size.inline_size, insets.inline_start, insets.inline_end,
-       static_position.offset.inline_offset,
+-      static_position.offset.inline_offset,
++      is_static_alignment_parallel, static_position.offset.inline_offset,
        GetStaticPositionInsetBias(static_position.inline_edge),
 -      inline_alignment_inset_bias, safe_inline_alignment_inset_bias,
 -      &imcb.inline_start, &imcb.inline_end, &imcb.inline_inset_bias,
 -      &imcb.safe_inline_inset_bias);
 +      inline_alignment_inset_bias, inline_safe_inset_bias,
-+      inline_default_inset_bias, &imcb.inline_start, &imcb.inline_end,
-+      &imcb.inline_inset_bias, &imcb.inline_safe_inset_bias,
++      block_safe_inset_bias, inline_default_inset_bias, &imcb.inline_start,
++      &imcb.inline_end, &imcb.inline_inset_bias, &imcb.inline_safe_inset_bias,
 +      &imcb.inline_default_inset_bias);
    ComputeUnclampedIMCBInOneAxis(
        available_size.block_size, insets.block_start, insets.block_end,
-       static_position.offset.block_offset,
+-      static_position.offset.block_offset,
++      is_static_alignment_parallel, static_position.offset.block_offset,
        GetStaticPositionInsetBias(static_position.block_edge),
 -      block_alignment_inset_bias, safe_block_alignment_inset_bias,
 -      &imcb.block_start, &imcb.block_end, &imcb.block_inset_bias,
 -      &imcb.safe_block_inset_bias);
-+      block_alignment_inset_bias, block_safe_inset_bias,
++      block_alignment_inset_bias, block_safe_inset_bias, inline_safe_inset_bias,
 +      block_default_inset_bias, &imcb.block_start, &imcb.block_end,
 +      &imcb.block_inset_bias, &imcb.block_safe_inset_bias,
 +      &imcb.block_default_inset_bias);
@@ -152,7 +171,7 @@ index c360ec1e801cd3321ba2b2beb812a209e4d86d79..bed5cf7a3cee48d8f4c37787c9af20c9
                      const LayoutUnit imcb_size,
                      const Length& margin_start_length,
                      const Length& margin_end_length,
-@@ -257,9 +260,12 @@ void ComputeMargins(LogicalSize margin_percentage_resolution_size,
+@@ -257,9 +268,12 @@ void ComputeMargins(LogicalSize margin_percentage_resolution_size,
          margin_end_length, margin_percentage_resolution_size.inline_size);
    }
  
@@ -166,7 +185,7 @@ index c360ec1e801cd3321ba2b2beb812a209e4d86d79..bed5cf7a3cee48d8f4c37787c9af20c9
      // "If left, right, and width are not auto:"
      // Compute margins.
      const LayoutUnit free_space = imcb_size - size -
-@@ -288,31 +294,59 @@ void ComputeMargins(LogicalSize margin_percentage_resolution_size,
+@@ -288,31 +302,59 @@ void ComputeMargins(LogicalSize margin_percentage_resolution_size,
      }
    }
  
@@ -233,7 +252,7 @@ index c360ec1e801cd3321ba2b2beb812a209e4d86d79..bed5cf7a3cee48d8f4c37787c9af20c9
    }
  
    // Move the weaker inset edge to consume all the free space, so that:
-@@ -320,6 +354,40 @@ void ComputeInsets(const LayoutUnit available_size,
+@@ -320,6 +362,40 @@ void ComputeInsets(const LayoutUnit available_size,
    // `available_size`
    ResizeIMCBInOneAxis(bias, free_space, &imcb_start, &imcb_end);
  
@@ -274,7 +293,7 @@ index c360ec1e801cd3321ba2b2beb812a209e4d86d79..bed5cf7a3cee48d8f4c37787c9af20c9
    *inset_start_out = imcb_start + margin_start;
    *inset_end_out = imcb_end + margin_end;
  }
-@@ -368,7 +436,7 @@ LogicalOofInsets ComputeOutOfFlowInsets(
+@@ -368,7 +444,7 @@ LogicalOofInsets ComputeOutOfFlowInsets(
      WritingDirectionMode self_writing_direction) {
    bool force_x_insets_to_zero = false;
    bool force_y_insets_to_zero = false;
@@ -283,7 +302,7 @@ index c360ec1e801cd3321ba2b2beb812a209e4d86d79..bed5cf7a3cee48d8f4c37787c9af20c9
    if (offsets.has_value()) {
      force_x_insets_to_zero = force_y_insets_to_zero = true;
    }
-@@ -426,15 +494,19 @@ LogicalOofInsets ComputeOutOfFlowInsets(
+@@ -426,15 +502,19 @@ LogicalOofInsets ComputeOutOfFlowInsets(
  
  LogicalAlignment ComputeAlignment(
      const ComputedStyle& style,
@@ -308,7 +327,7 @@ index c360ec1e801cd3321ba2b2beb812a209e4d86d79..bed5cf7a3cee48d8f4c37787c9af20c9
    }
    const bool is_parallel =
        IsParallelWritingMode(container_writing_direction.GetWritingMode(),
-@@ -499,27 +571,11 @@ InsetModifiedContainingBlock ComputeInsetModifiedContainingBlock(
+@@ -499,27 +579,11 @@ InsetModifiedContainingBlock ComputeInsetModifiedContainingBlock(
      const LogicalAlignment& alignment,
      const LogicalOofInsets& insets,
      const LogicalStaticPosition& static_position,
@@ -336,7 +355,7 @@ index c360ec1e801cd3321ba2b2beb812a209e4d86d79..bed5cf7a3cee48d8f4c37787c9af20c9
    // Clamp any negative size to 0.
    if (imcb.InlineSize() < LayoutUnit()) {
      ResizeIMCBInOneAxis(imcb.inline_inset_bias, imcb.InlineSize(),
-@@ -563,9 +619,11 @@ bool ComputeOofInlineDimensions(
+@@ -563,9 +627,11 @@ bool ComputeOofInlineDimensions(
      const ComputedStyle& style,
      const ConstraintSpace& space,
      const InsetModifiedContainingBlock& imcb,
@@ -348,7 +367,7 @@ index c360ec1e801cd3321ba2b2beb812a209e4d86d79..bed5cf7a3cee48d8f4c37787c9af20c9
      WritingDirectionMode container_writing_direction,
      LogicalOofDimensions* dimensions) {
    DCHECK(dimensions);
-@@ -593,10 +651,11 @@ bool ComputeOofInlineDimensions(
+@@ -593,10 +659,11 @@ bool ComputeOofInlineDimensions(
  
      // Compute our block-size if we haven't already.
      if (dimensions->size.block_size == kIndefiniteSize) {
@@ -364,7 +383,7 @@ index c360ec1e801cd3321ba2b2beb812a209e4d86d79..bed5cf7a3cee48d8f4c37787c9af20c9
      }
  
      // Create a new space, setting the fixed block-size.
-@@ -687,17 +746,27 @@ bool ComputeOofInlineDimensions(
+@@ -687,17 +754,27 @@ bool ComputeOofInlineDimensions(
    const bool is_block_direction = !IsParallelWritingMode(
        container_writing_direction.GetWritingMode(), style.GetWritingMode());
  
@@ -398,7 +417,7 @@ index c360ec1e801cd3321ba2b2beb812a209e4d86d79..bed5cf7a3cee48d8f4c37787c9af20c9
  
    return depends_on_min_max_sizes;
  }
-@@ -707,9 +776,11 @@ const LayoutResult* ComputeOofBlockDimensions(
+@@ -707,9 +784,11 @@ const LayoutResult* ComputeOofBlockDimensions(
      const ComputedStyle& style,
      const ConstraintSpace& space,
      const InsetModifiedContainingBlock& imcb,
@@ -410,7 +429,7 @@ index c360ec1e801cd3321ba2b2beb812a209e4d86d79..bed5cf7a3cee48d8f4c37787c9af20c9
      WritingDirectionMode container_writing_direction,
      LogicalOofDimensions* dimensions) {
    DCHECK(dimensions);
-@@ -825,18 +896,27 @@ const LayoutResult* ComputeOofBlockDimensions(
+@@ -825,18 +904,27 @@ const LayoutResult* ComputeOofBlockDimensions(
    const bool is_block_direction = IsParallelWritingMode(
        container_writing_direction.GetWritingMode(), style.GetWritingMode());
  

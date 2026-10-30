@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/graphics/color.h b/third_party/blink/renderer/platform/graphics/color.h
-index 301bd0757378557699df2d187e7112643f871bbb..69ee6e1c14053b869c79277f10046df59ea8e4b2 100644
+index 301bd0757378557699df2d187e7112643f871bbb..56f9a25459e005a3faf78e08d49f6cf802d7821a 100644
 --- a/third_party/blink/renderer/platform/graphics/color.h
 +++ b/third_party/blink/renderer/platform/graphics/color.h
 @@ -26,6 +26,7 @@
@@ -65,7 +65,16 @@ index 301bd0757378557699df2d187e7112643f871bbb..69ee6e1c14053b869c79277f10046df5
    }
  
    static bool IsLightnessFirstComponent(ColorSpace color_space) {
-@@ -426,9 +437,6 @@ class PLATFORM_EXPORT Color {
+@@ -379,6 +390,8 @@ class PLATFORM_EXPORT Color {
+   void ConvertToColorSpace(ColorSpace destination_color_space,
+                            bool resolve_missing_components = true);
+ 
++  void ConvertToColorSpaceForInterpolation(ColorSpace destination_color_space);
++
+   // Colors can parse calc(NaN) and calc(Infinity). At computed value time this
+   // function is called which resolves all NaNs to zero and +/-infinities to
+   // maximum/minimum values, if they exist. It leaves finite values unchanged.
+@@ -426,9 +439,6 @@ class PLATFORM_EXPORT Color {
    // Common helper function to toSkColor4f and ToGradientStopSkColor4f.
    SkColor4f ToSkColor4fInternal(bool gamut_map_oklab_oklch) const;
  
@@ -75,7 +84,7 @@ index 301bd0757378557699df2d187e7112643f871bbb..69ee6e1c14053b869c79277f10046df5
    float PremultiplyColor();
    void UnpremultiplyColor();
    void ResolveMissingComponents();
-@@ -443,9 +451,19 @@ class PLATFORM_EXPORT Color {
+@@ -443,9 +453,19 @@ class PLATFORM_EXPORT Color {
    // According the Spec https://www.w3.org/TR/css-color-4/#interpolation-missing
    // we have to do a special treatment of when to carry forward the 'noneness'
    // of a component, given if it's an 'analog component'.

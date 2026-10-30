@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/graphics/color.cc b/third_party/blink/renderer/platform/graphics/color.cc
-index 957805021fa9ba6e85dfe2a047796d35a211a0dd..fd84ef6b3af00508edc7fb8025f13aa590498944 100644
+index 957805021fa9ba6e85dfe2a047796d35a211a0dd..3815140d60e2d75585f9c206be388c1b261fe2e8 100644
 --- a/third_party/blink/renderer/platform/graphics/color.cc
 +++ b/third_party/blink/renderer/platform/graphics/color.cc
 @@ -308,53 +308,125 @@ float Color::HueInterpolation(float value1,
@@ -169,35 +169,56 @@ index 957805021fa9ba6e85dfe2a047796d35a211a0dd..fd84ef6b3af00508edc7fb8025f13aa5
  }
  
  // static
-@@ -407,15 +479,19 @@ Color Color::InterpolateColors(Color::ColorSpace interpolation_space,
-   // https://www.w3.org/TR/css-color-4/#missing:
-   // When interpolating colors, missing components do not behave as zero values
-   // for color space conversions.
+@@ -404,18 +476,8 @@ Color Color::InterpolateColors(Color::ColorSpace interpolation_space,
+                                Color color1,
+                                Color color2,
+                                float percentage) {
+-  // https://www.w3.org/TR/css-color-4/#missing:
+-  // When interpolating colors, missing components do not behave as zero values
+-  // for color space conversions.
 -  const auto color1_prev_color_space = color1.GetColorSpace();
 -  color1.ConvertToColorSpace(interpolation_space,
 -                             false /* resolve_missing_components */);
 -  const auto color2_prev_color_space = color2.GetColorSpace();
 -  color2.ConvertToColorSpace(interpolation_space,
 -                             false /* resolve_missing_components */);
-+  if (color1.GetColorSpace() != interpolation_space) {
-+    const std::array<bool, 3> color1_missing =
-+        color1.GetAnalogousMissingComponents(interpolation_space);
-+    color1.ConvertToColorSpace(interpolation_space);
-+    color1.CarryForwardAnalogousMissingComponents(color1_missing);
-+  }
- 
+-
 -  CarryForwardAnalogousMissingComponents(color1, color1_prev_color_space);
 -  CarryForwardAnalogousMissingComponents(color2, color2_prev_color_space);
-+  if (color2.GetColorSpace() != interpolation_space) {
-+    const std::array<bool, 3> color2_missing =
-+        color2.GetAnalogousMissingComponents(interpolation_space);
-+    color2.ConvertToColorSpace(interpolation_space);
-+    color2.CarryForwardAnalogousMissingComponents(color2_missing);
-+  }
++  color1.ConvertToColorSpaceForInterpolation(interpolation_space);
++  color2.ConvertToColorSpaceForInterpolation(interpolation_space);
  
    if (!SubstituteMissingParameters(color1, color2)) {
      NOTREACHED_IN_MIGRATION();
-@@ -969,11 +1045,11 @@ String Color::ColorSpaceToString(Color::ColorSpace color_space) {
+@@ -776,6 +838,27 @@ void Color::ConvertToColorSpace(ColorSpace destination_color_space,
+   }
+ }
+ 
++void Color::ConvertToColorSpaceForInterpolation(
++    ColorSpace destination_color_space) {
++  if (color_space_ == destination_color_space) {
++    return;
++  }
++
++  // https://www.w3.org/TR/css-color-4/#missing:
++  // When interpolating colors, missing components do not behave as zero values
++  // for color space conversions.
++  // https://www.w3.org/TR/css-color-4/#interpolation:
++  // 1. Checking the two colors for analogous components which will be
++  // carried forward.
++  auto analogous = GetAnalogousMissingComponents(destination_color_space);
++  // 2. Converting them to a given color space which will be referred to as
++  // the interpolation color space below.
++  ConvertToColorSpace(destination_color_space);
++  // 3. (If required) Re-inserting carried-forward values in the converted
++  // colors.
++  CarryForwardAnalogousMissingComponents(analogous);
++}
++
+ SkColor4f Color::toSkColor4f() const {
+   return ToSkColor4fInternal(IsBakedGamutMappingEnabled());
+ }
+@@ -969,11 +1052,11 @@ String Color::ColorSpaceToString(Color::ColorSpace color_space) {
      case Color::ColorSpace::kOklch:
        return "oklch";
      case Color::ColorSpace::kSRGBLegacy:

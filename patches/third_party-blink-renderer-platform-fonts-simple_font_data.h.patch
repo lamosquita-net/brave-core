@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/fonts/simple_font_data.h b/third_party/blink/renderer/platform/fonts/simple_font_data.h
-index 7f9701ff343937dafd3931ae11233f424f2a095c..5ad9b5e3239d79a767fcad0d274ea1ac1a482b59 100644
+index 7f9701ff343937dafd3931ae11233f424f2a095c..2c621248c7843ca7f493c01221c816b24094521a 100644
 --- a/third_party/blink/renderer/platform/fonts/simple_font_data.h
 +++ b/third_party/blink/renderer/platform/fonts/simple_font_data.h
 @@ -29,6 +29,7 @@
@@ -10,7 +10,19 @@ index 7f9701ff343937dafd3931ae11233f424f2a095c..5ad9b5e3239d79a767fcad0d274ea1ac
  #include "third_party/blink/renderer/platform/fonts/canvas_rotation_in_vertical.h"
  #include "third_party/blink/renderer/platform/fonts/custom_font_data.h"
  #include "third_party/blink/renderer/platform/fonts/font_baseline.h"
-@@ -226,6 +227,8 @@ class PLATFORM_EXPORT SimpleFontData final : public FontData {
+@@ -114,6 +115,11 @@ class PLATFORM_EXPORT SimpleFontData final : public FontData {
+   const std::optional<float>& IdeographicAdvanceWidth() const;
+   const std::optional<float>& IdeographicAdvanceHeight() const;
+ 
++  // The approximated advance of “0” (ZERO, U+0030) character in the inline
++  // axis. This is currently used to support the `ch` unit.
++  // https://drafts.csswg.org/css-values-4/#ch
++  inline float ZeroInlineSize() const;
++
+   // |sTypoAscender| and |sTypoDescender| in |OS/2| table, normalized to 1em.
+   // This metrics can simulate ideographics em-box when the font doesn't have
+   // better ways to compute it.
+@@ -226,6 +232,8 @@ class PLATFORM_EXPORT SimpleFontData final : public FontData {
  #if BUILDFLAG(IS_APPLE)
    mutable std::unique_ptr<GlyphMetricsMap<gfx::RectF>> glyph_to_bounds_map_;
  #endif
