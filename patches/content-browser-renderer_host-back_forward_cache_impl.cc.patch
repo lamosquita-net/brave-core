@@ -1,0 +1,20 @@
+diff --git a/content/browser/renderer_host/back_forward_cache_impl.cc b/content/browser/renderer_host/back_forward_cache_impl.cc
+index 4f345c18aef231ba33ef565820f7bbc3a223e2f6..7d46e4f479c07033e166da3be0d0579296557389 100644
+--- a/content/browser/renderer_host/back_forward_cache_impl.cc
++++ b/content/browser/renderer_host/back_forward_cache_impl.cc
+@@ -397,10 +397,11 @@ static constexpr base::FeatureParam<CacheControlNoStoreExperimentLevel>::Option
+          "restore-unless-http-only-cookie-change"},
+ };
+ const base::FeatureParam<CacheControlNoStoreExperimentLevel>
+-    cache_control_level{&features::kCacheControlNoStoreEnterBackForwardCache,
+-                        kCacheControlNoStoreExperimentLevelName,
+-                        CacheControlNoStoreExperimentLevel::kDoNotStore,
+-                        &cache_control_levels};
++    cache_control_level{
++        &features::kCacheControlNoStoreEnterBackForwardCache,
++        kCacheControlNoStoreExperimentLevelName,
++        CacheControlNoStoreExperimentLevel::kStoreAndRestoreUnlessCookieChange,
++        &cache_control_levels};
+ 
+ CacheControlNoStoreExperimentLevel GetCacheControlNoStoreLevel() {
+   if (!IsBackForwardCacheEnabled() ||
