@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/layout/box_fragment_builder.cc b/third_party/blink/renderer/core/layout/box_fragment_builder.cc
-index eb58f4f2013bb250a1dba83904123db1e4ca0749..0bf1fac86d7988212819509b9636cf5701eff699 100644
+index eb58f4f2013bb250a1dba83904123db1e4ca0749..afb85426a4a3c9cff71d8f97d593aa74b469bd39 100644
 --- a/third_party/blink/renderer/core/layout/box_fragment_builder.cc
 +++ b/third_party/blink/renderer/core/layout/box_fragment_builder.cc
 @@ -542,6 +542,12 @@ void BoxFragmentBuilder::PropagateChildBreakValues(
@@ -15,12 +15,12 @@ index eb58f4f2013bb250a1dba83904123db1e4ca0749..0bf1fac86d7988212819509b9636cf57
    OutOfFlowLayoutPart(this).Run();
    if (Style().ScrollMarkerGroup() != EScrollMarkerGroup::kNone &&
        !GetConstraintSpace().IsAnonymous()) {
-@@ -559,6 +565,8 @@ const LayoutResult* BoxFragmentBuilder::ToBoxFragment(
-       DCHECK(fragment.IsLineBox() ||
-              // TODO(kojii): How to place floats and OOF is TBD.
-              fragment.IsFloatingOrOutOfFlowPositioned());
-+  Finalize();
-+
-     }
+@@ -563,6 +569,8 @@ const LayoutResult* BoxFragmentBuilder::ToBoxFragment(
    }
  #endif
+ 
++  Finalize();
++
+   if (UNLIKELY(box_type_ == PhysicalFragment::kNormalBox && node_ &&
+                node_.IsBlockInInline())) {
+     SetIsBlockInInline();
