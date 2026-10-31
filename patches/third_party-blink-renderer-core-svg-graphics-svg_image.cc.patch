@@ -1,0 +1,33 @@
+diff --git a/third_party/blink/renderer/core/svg/graphics/svg_image.cc b/third_party/blink/renderer/core/svg/graphics/svg_image.cc
+index 51fe63acb57813cf363e5d8c511d51bc0b1ee2e9..c55d07c9d611edb3375cd278156e5968d680a8ab 100644
+--- a/third_party/blink/renderer/core/svg/graphics/svg_image.cc
++++ b/third_party/blink/renderer/core/svg/graphics/svg_image.cc
+@@ -637,13 +637,27 @@ void SVGImage::MaybeRecordSvgImageProcessingTime(const Document& document) {
+   }
+ }
+ 
+-Element* SVGImage::GetResourceElement(const AtomicString& id) const {
++Element* SVGImage::GetResourceElement(
++    base::PassKey<ExternalSVGResourceImageContent>,
++    const AtomicString& id) const {
+   if (!document_host_) {
+     return nullptr;
+   }
+   return GetFrame()->GetDocument()->getElementById(id);
+ }
+ 
++void SVGImage::UpdateLifecycleForUse(
++    base::PassKey<ExternalSVGResourceImageContent>) {
++  if (!document_host_) {
++    return;
++  }
++  // Temporarily disable change notifications triggered by the lifecycle
++  // update.
++  ImageObserverDisabler disable_image_observer(this);
++  GetFrame()->View()->UpdateAllLifecyclePhasesExceptPaint(
++      DocumentUpdateReason::kSVGImage);
++}
++
+ void SVGImage::NotifyAsyncLoadCompleted() {
+   if (GetImageObserver())
+     GetImageObserver()->AsyncLoadCompleted(this);

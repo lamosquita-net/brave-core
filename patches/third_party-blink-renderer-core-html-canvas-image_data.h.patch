@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/canvas/image_data.h b/third_party/blink/renderer/core/html/canvas/image_data.h
-index ba41d284b629f215b6b38991cf6a2adef0f8c27f..09c560fedb4d312828e16d16e7410faf66eba6f0 100644
+index ba41d284b629f215b6b38991cf6a2adef0f8c27f..40c5d9de47c9ee8497e3967fcabbb865a7b38f14 100644
 --- a/third_party/blink/renderer/core/html/canvas/image_data.h
 +++ b/third_party/blink/renderer/core/html/canvas/image_data.h
 @@ -92,9 +92,9 @@ class CORE_EXPORT ImageData final : public ScriptWrappable,
@@ -33,7 +33,7 @@ index ba41d284b629f215b6b38991cf6a2adef0f8c27f..09c560fedb4d312828e16d16e7410faf
  
    // TODO(https://crbug.com/1198606): Remove this.
    ImageDataSettings* getSettings() const;
-@@ -215,7 +215,7 @@ class CORE_EXPORT ImageData final : public ScriptWrappable,
+@@ -215,13 +215,13 @@ class CORE_EXPORT ImageData final : public ScriptWrappable,
    Member<ImageDataSettings> settings_;
    Member<V8ImageDataArray> data_;
    NotShared<DOMUint8ClampedArray> data_u8_;
@@ -42,3 +42,10 @@ index ba41d284b629f215b6b38991cf6a2adef0f8c27f..09c560fedb4d312828e16d16e7410faf
    NotShared<DOMFloat32Array> data_f32_;
    PredefinedColorSpace color_space_ = PredefinedColorSpace::kSRGB;
    ImageDataStorageFormat storage_format_ = ImageDataStorageFormat::kUint8;
+ 
+   static NotShared<DOMArrayBufferView> AllocateAndValidateDataArray(
+-      const unsigned&,
++      size_t,
+       ImageDataStorageFormat,
+       bool initialize,
+       ExceptionState&);

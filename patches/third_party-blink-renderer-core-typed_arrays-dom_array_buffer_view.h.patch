@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/typed_arrays/dom_array_buffer_view.h b/third_party/blink/renderer/core/typed_arrays/dom_array_buffer_view.h
-index b6ca4e958b5f37b8fddea8939062ba59ff4f4a75..976bb38fdf90455c05479460838303533d307e39 100644
+index b6ca4e958b5f37b8fddea8939062ba59ff4f4a75..7c2247f6b461461103d1bb24434bc88afbab340f 100644
 --- a/third_party/blink/renderer/core/typed_arrays/dom_array_buffer_view.h
 +++ b/third_party/blink/renderer/core/typed_arrays/dom_array_buffer_view.h
 @@ -33,6 +33,7 @@ class CORE_EXPORT DOMArrayBufferView : public ScriptWrappable {
@@ -10,6 +10,22 @@ index b6ca4e958b5f37b8fddea8939062ba59ff4f4a75..976bb38fdf90455c0547946083830353
      kTypeFloat32,
      kTypeFloat64,
      kTypeBigInt64,
+@@ -43,13 +44,13 @@ class CORE_EXPORT DOMArrayBufferView : public ScriptWrappable {
+   ~DOMArrayBufferView() override = default;
+ 
+   DOMArrayBuffer* buffer() const {
+-    DCHECK(!IsShared());
++    CHECK(!IsShared());
+     DCHECK(dom_array_buffer_);
+     return static_cast<DOMArrayBuffer*>(dom_array_buffer_.Get());
+   }
+ 
+   DOMSharedArrayBuffer* BufferShared() const {
+-    DCHECK(IsShared());
++    CHECK(IsShared());
+     DCHECK(dom_array_buffer_);
+     return static_cast<DOMSharedArrayBuffer*>(dom_array_buffer_.Get());
+   }
 @@ -92,6 +93,9 @@ class CORE_EXPORT DOMArrayBufferView : public ScriptWrappable {
        case kTypeBigUint64:
          return "BigUint64";

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/css/css_property_equality.cc b/third_party/blink/renderer/core/css/css_property_equality.cc
-index 211eb5ca4ec32ef2fb0fa798583e16f0847ca335..c9f95078fbcd06afae319d9b6e92f08acff345a8 100644
+index 211eb5ca4ec32ef2fb0fa798583e16f0847ca335..d66de9abd553076b2cabb4ad3dbc11eff66714c5 100644
 --- a/third_party/blink/renderer/core/css/css_property_equality.cc
 +++ b/third_party/blink/renderer/core/css/css_property_equality.cc
 @@ -174,7 +174,7 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
@@ -11,7 +11,17 @@ index 211eb5ca4ec32ef2fb0fa798583e16f0847ca335..c9f95078fbcd06afae319d9b6e92f08a
      case CSSPropertyID::kAppearance:
        return a.Appearance() == b.Appearance();
      case CSSPropertyID::kAppRegion:
-@@ -467,8 +467,11 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
+@@ -359,7 +359,8 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
+     case CSSPropertyID::kFloat:
+       return a.Floating() == b.Floating();
+     case CSSPropertyID::kFloodColor:
+-      return a.FloodColor() == b.FloodColor();
++      return a.FloodColor() == b.FloodColor() &&
++             a.InternalVisitedFloodColor() == b.InternalVisitedFloodColor();
+     case CSSPropertyID::kFloodOpacity:
+       return a.FloodOpacity() == b.FloodOpacity();
+     case CSSPropertyID::kFontFamily:
+@@ -467,8 +468,11 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
        return a.ImageRendering() == b.ImageRendering();
      case CSSPropertyID::kInitialLetter:
        return a.InitialLetter() == b.InitialLetter();
@@ -24,7 +34,17 @@ index 211eb5ca4ec32ef2fb0fa798583e16f0847ca335..c9f95078fbcd06afae319d9b6e92f08a
      case CSSPropertyID::kInterpolateSize:
        return a.InterpolateSize() == b.InterpolateSize();
      case CSSPropertyID::kIsolation:
-@@ -598,6 +601,8 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
+@@ -484,7 +488,8 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
+     case CSSPropertyID::kLetterSpacing:
+       return a.LetterSpacing() == b.LetterSpacing();
+     case CSSPropertyID::kLightingColor:
+-      return a.LightingColor() == b.LightingColor();
++      return a.LightingColor() == b.LightingColor() &&
++             a.InternalVisitedLightingColor() == b.InternalVisitedLightingColor();
+     case CSSPropertyID::kLineBreak:
+       return a.GetLineBreak() == b.GetLineBreak();
+     case CSSPropertyID::kLineClamp:
+@@ -598,6 +603,8 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
        return a.Quotes() == b.Quotes();
      case CSSPropertyID::kReadingFlow:
        return a.ReadingFlow() == b.ReadingFlow();
@@ -33,7 +53,17 @@ index 211eb5ca4ec32ef2fb0fa798583e16f0847ca335..c9f95078fbcd06afae319d9b6e92f08a
      case CSSPropertyID::kResize:
        return a.Resize() == b.Resize();
      case CSSPropertyID::kRight:
-@@ -733,8 +738,10 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
+@@ -660,7 +667,8 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
+     case CSSPropertyID::kSpeak:
+       return a.Speak() == b.Speak();
+     case CSSPropertyID::kStopColor:
+-      return a.StopColor() == b.StopColor();
++      return a.StopColor() == b.StopColor() &&
++             a.InternalVisitedStopColor() == b.InternalVisitedStopColor();
+     case CSSPropertyID::kStopOpacity:
+       return a.StopOpacity() == b.StopOpacity();
+     case CSSPropertyID::kStroke:
+@@ -733,8 +741,10 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
        return a.TextUnderlineOffset() == b.TextUnderlineOffset();
      case CSSPropertyID::kTextUnderlinePosition:
        return a.GetTextUnderlinePosition() == b.GetTextUnderlinePosition();
@@ -46,7 +76,7 @@ index 211eb5ca4ec32ef2fb0fa798583e16f0847ca335..c9f95078fbcd06afae319d9b6e92f08a
      case CSSPropertyID::kTop:
        return a.Top() == b.Top();
      case CSSPropertyID::kOverlay:
-@@ -915,6 +922,8 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
+@@ -915,6 +925,8 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
                                      b.GetPositionTryFallbacks());
      case CSSPropertyID::kPositionVisibility:
        return a.GetPositionVisibility() == b.GetPositionVisibility();
@@ -55,7 +85,7 @@ index 211eb5ca4ec32ef2fb0fa798583e16f0847ca335..c9f95078fbcd06afae319d9b6e92f08a
  
      // These properties are not animateable, but perhaps equality should still
      // be defined for them.
-@@ -1027,6 +1036,7 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
+@@ -1027,6 +1039,7 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
      case CSSPropertyID::kAliasWebkitPaddingStart:
      case CSSPropertyID::kAliasWebkitPerspective:
      case CSSPropertyID::kAliasWebkitPerspectiveOrigin:
@@ -63,7 +93,7 @@ index 211eb5ca4ec32ef2fb0fa798583e16f0847ca335..c9f95078fbcd06afae319d9b6e92f08a
      case CSSPropertyID::kAliasWebkitShapeImageThreshold:
      case CSSPropertyID::kAliasWebkitShapeMargin:
      case CSSPropertyID::kAliasWebkitShapeOutside:
-@@ -1068,7 +1078,6 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
+@@ -1068,7 +1081,6 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
      case CSSPropertyID::kWebkitBoxReflect:
      case CSSPropertyID::kWebkitLineBreak:
      case CSSPropertyID::kWebkitMaskBoxImageRepeat:
@@ -71,7 +101,18 @@ index 211eb5ca4ec32ef2fb0fa798583e16f0847ca335..c9f95078fbcd06afae319d9b6e92f08a
      case CSSPropertyID::kWebkitRtlOrdering:
      case CSSPropertyID::kWebkitRubyPosition:
      case CSSPropertyID::kWebkitTapHighlightColor:
-@@ -1245,9 +1254,11 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
+@@ -1183,7 +1195,10 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
+     case CSSPropertyID::kInternalVisitedColor:
+     case CSSPropertyID::kInternalVisitedColumnRuleColor:
+     case CSSPropertyID::kInternalVisitedFill:
++    case CSSPropertyID::kInternalVisitedFloodColor:
++    case CSSPropertyID::kInternalVisitedLightingColor:
+     case CSSPropertyID::kInternalVisitedOutlineColor:
++    case CSSPropertyID::kInternalVisitedStopColor:
+     case CSSPropertyID::kInternalVisitedStroke:
+     case CSSPropertyID::kInternalVisitedTextDecorationColor:
+     case CSSPropertyID::kInternalVisitedTextEmphasisColor:
+@@ -1245,9 +1260,11 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
      case CSSPropertyID::kScrollStart:
      case CSSPropertyID::kScrollStartTarget:
      case CSSPropertyID::kScrollTimeline:

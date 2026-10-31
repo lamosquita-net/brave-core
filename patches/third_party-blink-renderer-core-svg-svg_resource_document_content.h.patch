@@ -1,12 +1,22 @@
 diff --git a/third_party/blink/renderer/core/svg/svg_resource_document_content.h b/third_party/blink/renderer/core/svg/svg_resource_document_content.h
-index 70443163d78ed0577aa9a86a7598bdb84e7af919..7d293ca335fb0d216b70eee18ef744a9db52dc8e 100644
+index 70443163d78ed0577aa9a86a7598bdb84e7af919..a8f513e279e4d024a6b79d72b748bb455f345b99 100644
 --- a/third_party/blink/renderer/core/svg/svg_resource_document_content.h
 +++ b/third_party/blink/renderer/core/svg/svg_resource_document_content.h
-@@ -100,6 +100,7 @@ class CORE_EXPORT SVGResourceDocumentContent final
+@@ -100,6 +100,9 @@ class CORE_EXPORT SVGResourceDocumentContent final
    void NotifyObservers();
  
    SVGResourceTarget* GetResourceTarget(const AtomicString& element_id);
 +  SVGResourceTarget* GetResourceTargetForRoot() const;
++  void UpdateLifecycleForUse();
++
    void Trace(Visitor*) const;
  
   private:
+@@ -116,6 +119,7 @@ class CORE_EXPORT SVGResourceDocumentContent final
+   scoped_refptr<base::SingleThreadTaskRunner> task_runner_;
+   KURL url_;
+   ResourceStatus status_ = ResourceStatus::kNotStarted;
++  bool inhibit_content_change_ = false;
+   bool was_disposed_ = false;
+ };
+ 

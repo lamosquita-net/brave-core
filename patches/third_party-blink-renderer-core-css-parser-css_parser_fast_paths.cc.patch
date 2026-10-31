@@ -1,8 +1,19 @@
 diff --git a/third_party/blink/renderer/core/css/parser/css_parser_fast_paths.cc b/third_party/blink/renderer/core/css/parser/css_parser_fast_paths.cc
-index 1854f676e01a116577eca2f83eb58a7dd1ba8559..978014f94433243c23fe89a2c7a9a3b8ed49da03 100644
+index 1854f676e01a116577eca2f83eb58a7dd1ba8559..2735c8077add883c78ab7155f7fc240e8e341008 100644
 --- a/third_party/blink/renderer/core/css/parser/css_parser_fast_paths.cc
 +++ b/third_party/blink/renderer/core/css/parser/css_parser_fast_paths.cc
-@@ -1253,6 +1253,9 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
+@@ -267,7 +267,10 @@ static inline bool IsColorPropertyID(CSSPropertyID property_id) {
+       CSSPropertyID::kInternalVisitedBorderRightColor,
+       CSSPropertyID::kInternalVisitedBorderTopColor,
+       CSSPropertyID::kInternalVisitedFill,
++      CSSPropertyID::kInternalVisitedFloodColor,
++      CSSPropertyID::kInternalVisitedLightingColor,
+       CSSPropertyID::kInternalVisitedOutlineColor,
++      CSSPropertyID::kInternalVisitedStopColor,
+       CSSPropertyID::kInternalVisitedStroke,
+       CSSPropertyID::kInternalVisitedBorderBlockEndColor,
+       CSSPropertyID::kInternalVisitedBorderBlockStartColor,
+@@ -1253,6 +1256,9 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
      case CSSPropertyID::kInterpolateSize:
        return value_id == CSSValueID::kNumericOnly ||
               value_id == CSSValueID::kAllowKeywords;
@@ -12,7 +23,7 @@ index 1854f676e01a116577eca2f83eb58a7dd1ba8559..978014f94433243c23fe89a2c7a9a3b8
      case CSSPropertyID::kIsolation:
        return value_id == CSSValueID::kAuto || value_id == CSSValueID::kIsolate;
      case CSSPropertyID::kListStylePosition:
-@@ -1334,7 +1337,8 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
+@@ -1334,7 +1340,8 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
               value_id == CSSValueID::kFlexFlow ||
               value_id == CSSValueID::kGridRows ||
               value_id == CSSValueID::kGridColumns ||
@@ -22,7 +33,7 @@ index 1854f676e01a116577eca2f83eb58a7dd1ba8559..978014f94433243c23fe89a2c7a9a3b8
      case CSSPropertyID::kResize:
        return value_id == CSSValueID::kNone || value_id == CSSValueID::kBoth ||
               value_id == CSSValueID::kHorizontal ||
-@@ -1587,7 +1591,7 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
+@@ -1587,7 +1594,7 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
               value_id == CSSValueID::kNormal ||
               value_id == CSSValueID::kStrict ||
               value_id == CSSValueID::kAfterWhiteSpace;
@@ -31,7 +42,7 @@ index 1854f676e01a116577eca2f83eb58a7dd1ba8559..978014f94433243c23fe89a2c7a9a3b8
        return value_id == CSSValueID::kExact || value_id == CSSValueID::kEconomy;
      case CSSPropertyID::kWebkitRtlOrdering:
        return value_id == CSSValueID::kLogical ||
-@@ -1616,10 +1620,12 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
+@@ -1616,10 +1623,12 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
      case CSSPropertyID::kWebkitTextSecurity:
        return value_id == CSSValueID::kDisc || value_id == CSSValueID::kCircle ||
               value_id == CSSValueID::kSquare || value_id == CSSValueID::kNone;
@@ -47,7 +58,7 @@ index 1854f676e01a116577eca2f83eb58a7dd1ba8559..978014f94433243c23fe89a2c7a9a3b8
      case CSSPropertyID::kTransformBox:
        return value_id == CSSValueID::kContentBox ||
               value_id == CSSValueID::kBorderBox ||
-@@ -1686,8 +1692,10 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
+@@ -1686,8 +1695,10 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
        return value_id == CSSValueID::kNormal || value_id == CSSValueID::kNone;
      case CSSPropertyID::kTextBoxTrim:
        DCHECK(RuntimeEnabledFeatures::CSSTextBoxTrimEnabled());
@@ -60,7 +71,7 @@ index 1854f676e01a116577eca2f83eb58a7dd1ba8559..978014f94433243c23fe89a2c7a9a3b8
      default:
        NOTREACHED_IN_MIGRATION();
        return false;
-@@ -1701,6 +1709,7 @@ CSSBitset CSSParserFastPaths::handled_by_keyword_fast_paths_properties_{{
+@@ -1701,6 +1712,7 @@ CSSBitset CSSParserFastPaths::handled_by_keyword_fast_paths_properties_{{
      CSSPropertyID::kAll,
      CSSPropertyID::kAppearance,
      CSSPropertyID::kMixBlendMode,
@@ -68,7 +79,7 @@ index 1854f676e01a116577eca2f83eb58a7dd1ba8559..978014f94433243c23fe89a2c7a9a3b8
      CSSPropertyID::kIsolation,
      CSSPropertyID::kBaselineSource,
      CSSPropertyID::kBorderBottomStyle,
-@@ -1803,12 +1812,13 @@ CSSBitset CSSParserFastPaths::handled_by_keyword_fast_paths_properties_{{
+@@ -1803,12 +1815,13 @@ CSSBitset CSSParserFastPaths::handled_by_keyword_fast_paths_properties_{{
      CSSPropertyID::kWebkitFontSmoothing,
      CSSPropertyID::kLineBreak,
      CSSPropertyID::kWebkitLineBreak,

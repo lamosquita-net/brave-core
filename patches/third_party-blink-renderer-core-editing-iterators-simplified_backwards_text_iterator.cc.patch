@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/editing/iterators/simplified_backwards_text_iterator.cc b/third_party/blink/renderer/core/editing/iterators/simplified_backwards_text_iterator.cc
-index 076235acd47b9b0d4c9f92f290bae8b34e8c5c47..858090131f040f821d63ea030b4d0c1b39641369 100644
+index 076235acd47b9b0d4c9f92f290bae8b34e8c5c47..601d54397c69ba97f65b2f50df79d2b160c899e6 100644
 --- a/third_party/blink/renderer/core/editing/iterators/simplified_backwards_text_iterator.cc
 +++ b/third_party/blink/renderer/core/editing/iterators/simplified_backwards_text_iterator.cc
 @@ -35,6 +35,7 @@
@@ -10,7 +10,7 @@ index 076235acd47b9b0d4c9f92f290bae8b34e8c5c47..858090131f040f821d63ea030b4d0c1b
  #include "third_party/blink/renderer/core/layout/layout_text_fragment.h"
  
  namespace blink {
-@@ -57,6 +58,37 @@ static int MaxOffsetIncludingCollapsedSpaces(const Node* node) {
+@@ -57,6 +58,43 @@ static int MaxOffsetIncludingCollapsedSpaces(const Node* node) {
    return offset;
  }
  
@@ -41,14 +41,20 @@ index 076235acd47b9b0d4c9f92f290bae8b34e8c5c47..858090131f040f821d63ea030b4d0c1b
 +  // OffsetMapping gives offsets relative to the whole text in the layout, so
 +  // subtract the node's start offset to get the offset relative to this node
 +  // only.
-+  return *mapping->GetTextContentOffset(current) -
-+         *mapping->GetTextContentOffset(node_start);
++  std::optional<unsigned> current_offset =
++      mapping->GetTextContentOffset(current);
++  std::optional<unsigned> node_start_offset =
++      mapping->GetTextContentOffset(node_start);
++  if (!current_offset || !node_start_offset) {
++    return offset;
++  }
++  return *current_offset - *node_start_offset;
 +}
 +
  template <typename Strategy>
  SimplifiedBackwardsTextIteratorAlgorithm<Strategy>::
      SimplifiedBackwardsTextIteratorAlgorithm(
-@@ -100,6 +132,7 @@ void SimplifiedBackwardsTextIteratorAlgorithm<Strategy>::Init(
+@@ -100,6 +138,7 @@ void SimplifiedBackwardsTextIteratorAlgorithm<Strategy>::Init(
        start_offset = 0;
      }
    }
@@ -56,7 +62,7 @@ index 076235acd47b9b0d4c9f92f290bae8b34e8c5c47..858090131f040f821d63ea030b4d0c1b
    if (!end_node->IsCharacterDataNode() && end_offset > 0) {
      // |Strategy::childAt()| will return 0 if the offset is out of range. We
      // rely on this behavior instead of calling |countChildren()| to avoid
-@@ -109,6 +142,11 @@ void SimplifiedBackwardsTextIteratorAlgorithm<Strategy>::Init(
+@@ -109,6 +148,11 @@ void SimplifiedBackwardsTextIteratorAlgorithm<Strategy>::Init(
        end_offset = Position::LastOffsetInNode(*end_node);
      }
    }

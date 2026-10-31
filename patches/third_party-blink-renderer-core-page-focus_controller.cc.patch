@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/page/focus_controller.cc b/third_party/blink/renderer/core/page/focus_controller.cc
-index 408a07d51fc3932e3df6f2ae0dfff5e7ad69e4c5..575017136e50b59caa846edf72883503387b2466 100644
+index 408a07d51fc3932e3df6f2ae0dfff5e7ad69e4c5..4f932d805802d96e4758c2927fc37354dd766d03 100644
 --- a/third_party/blink/renderer/core/page/focus_controller.cc
 +++ b/third_party/blink/renderer/core/page/focus_controller.cc
 @@ -104,18 +104,67 @@ bool IsOpenPopoverInvoker(const Node* node) {
@@ -525,7 +525,33 @@ index 408a07d51fc3932e3df6f2ae0dfff5e7ad69e4c5..575017136e50b59caa846edf72883503
        Element* found_in_inner_focus_scope =
            FindFocusableElementRecursivelyBackward(inner_scope, owner_map);
        if (found_in_inner_focus_scope) {
-@@ -1066,9 +1036,9 @@ Element* FindFocusableElementAcrossFocusScopesForward(
+@@ -1053,6 +1023,25 @@ Element* FindFocusableElementDescendingDownIntoFrameDocument(
+   return element;
+ }
+ 
++namespace {
++ScopedFocusNavigation GetScopeFor(Element*& owner,
++                                  FocusController::OwnerMap& owner_map) {
++  ScopedFocusNavigation new_scope =
++      ScopedFocusNavigation::CreateFor(*owner, owner_map);
++  while (new_scope.Owner() == owner) {
++    // This can happen if a single element is both the root of a scope,
++    // *and* the owner of a scope. E.g. <slot popover>. See
++    // crbug.com/447888734.
++    owner = owner->parentElement();
++    if (!owner) {
++      break;
++    }
++    new_scope = ScopedFocusNavigation::CreateFor(*owner, owner_map);
++  }
++  return new_scope;
++}
++}  // namespace
++
+ Element* FindFocusableElementAcrossFocusScopesForward(
+     ScopedFocusNavigation& scope,
+     FocusController::OwnerMap& owner_map) {
+@@ -1066,9 +1055,9 @@ Element* FindFocusableElementAcrossFocusScopesForward(
      ScopedFocusNavigation inner_scope =
          ScopedFocusNavigation::OwnedByPopoverInvoker(*current, owner_map);
      found = FindFocusableElementRecursivelyForward(inner_scope, owner_map);
@@ -537,7 +563,16 @@ index 408a07d51fc3932e3df6f2ae0dfff5e7ad69e4c5..575017136e50b59caa846edf72883503
      found = FindFocusableElementRecursivelyForward(inner_scope, owner_map);
    }
    if (!found)
-@@ -1113,14 +1083,14 @@ Element* FindFocusableElementAcrossFocusScopesBackward(
+@@ -1081,7 +1070,7 @@ Element* FindFocusableElementAcrossFocusScopesForward(
+     Element* owner = current_scope.Owner();
+     if (!owner)
+       break;
+-    current_scope = ScopedFocusNavigation::CreateFor(*owner, owner_map);
++    current_scope = GetScopeFor(owner, owner_map);
+     found = FindFocusableElementRecursivelyForward(current_scope, owner_map);
+   }
+   return FindFocusableElementDescendingDownIntoFrameDocument(
+@@ -1113,14 +1102,14 @@ Element* FindFocusableElementAcrossFocusScopesBackward(
      Element* owner = current_scope.Owner();
      if (!owner)
        break;
@@ -550,11 +585,11 @@ index 408a07d51fc3932e3df6f2ae0dfff5e7ad69e4c5..575017136e50b59caa846edf72883503
        found = owner;
        break;
      }
-+    current_scope = ScopedFocusNavigation::CreateFor(*owner, owner_map);
++    current_scope = GetScopeFor(owner, owner_map);
      found = FindFocusableElementRecursivelyBackward(current_scope, owner_map);
    }
    return FindFocusableElementDescendingDownIntoFrameDocument(
-@@ -1670,7 +1640,7 @@ HTMLElement* FocusController::FindScopeOwnerSlotOrReadingFlowContainer(
+@@ -1670,7 +1659,7 @@ HTMLElement* FocusController::FindScopeOwnerSlotOrReadingFlowContainer(
        return slot_element;
      }
      element = element->parentElement();
@@ -563,7 +598,7 @@ index 408a07d51fc3932e3df6f2ae0dfff5e7ad69e4c5..575017136e50b59caa846edf72883503
        return DynamicTo<HTMLElement>(element);
      }
    }
-@@ -1800,7 +1770,7 @@ int FocusController::AdjustedTabIndex(const Element& element) {
+@@ -1800,7 +1789,7 @@ int FocusController::AdjustedTabIndex(const Element& element) {
      return 0;
    }
    if (element.IsShadowHostWithDelegatesFocus() ||
