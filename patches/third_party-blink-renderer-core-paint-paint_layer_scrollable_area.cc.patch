@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/paint/paint_layer_scrollable_area.cc b/third_party/blink/renderer/core/paint/paint_layer_scrollable_area.cc
-index 36c88cbc723f10319605754148ab89e7ce7476fb..da92dcddd2eb0d3673841132c7f03be19f702e07 100644
+index 36c88cbc723f10319605754148ab89e7ce7476fb..a5951cc581452ed0de6ae45dd53e81f4f1096a8e 100644
 --- a/third_party/blink/renderer/core/paint/paint_layer_scrollable_area.cc
 +++ b/third_party/blink/renderer/core/paint/paint_layer_scrollable_area.cc
 @@ -108,6 +108,7 @@
@@ -10,14 +10,14 @@ index 36c88cbc723f10319605754148ab89e7ce7476fb..da92dcddd2eb0d3673841132c7f03be1
  #include "third_party/blink/renderer/core/scroll/scrollable_area.h"
  #include "third_party/blink/renderer/core/scroll/scrollbar_theme.h"
  #include "third_party/blink/renderer/core/scroll/smooth_scroll_sequencer.h"
-@@ -206,6 +207,7 @@ void PaintLayerScrollableArea::DisposeImpl() {
-   // leaving the ScrollAnchor with a stale LayoutObject pointer.
-   scroll_anchor_.Dispose();
+@@ -192,6 +193,7 @@ void PaintLayerScrollableArea::DisposeImpl() {
+       frame_view->RemoveUserScrollableArea(this);
+       frame_view->RemoveAnimatingScrollableArea(this);
+       frame_view->RemovePendingSnapUpdate(this);
++      frame_view->RemovePendingStickyUpdate(this);
+     }
+   }
  
-+    frame_view->RemovePendingStickyUpdate(this);
-   GetLayoutBox()
-       ->GetDocument()
-       .GetPage()
 @@ -237,9 +239,7 @@ void PaintLayerScrollableArea::ApplyPendingHistoryRestoreScrollOffset() {
    // TODO(pnoland): attempt to restore the anchor in more places than this.
    // Anchor-based restore should allow for earlier restoration.
