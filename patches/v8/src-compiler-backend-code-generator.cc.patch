@@ -1,8 +1,25 @@
 diff --git a/src/compiler/backend/code-generator.cc b/src/compiler/backend/code-generator.cc
-index b6fa4df98b9864897ec993d2a0fea947cdc15dfe..e3b53c48ce7a83b889d127e00961be540864c471 100644
+index b6fa4df98b9864897ec993d2a0fea947cdc15dfe..6a69bf8f71dda0c5f717a94bca456b36d2fa4572 100644
 --- a/src/compiler/backend/code-generator.cc
 +++ b/src/compiler/backend/code-generator.cc
-@@ -1586,8 +1586,8 @@ void CodeGenerator::AddTranslationForOperand(Instruction* instr,
+@@ -1050,6 +1050,7 @@ Handle<DeoptimizationData> CodeGenerator::GenerateDeoptimizationData() {
+ 
+ #if V8_ENABLE_WEBASSEMBLY
+ base::OwnedVector<uint8_t> CodeGenerator::GenerateWasmDeoptimizationData() {
++  CHECK_EQ(result_, kSuccess);
+   int deopt_count = static_cast<int>(deoptimization_exits_.size());
+   if (deopt_count == 0) {
+     return {};
+@@ -1065,7 +1066,7 @@ base::OwnedVector<uint8_t> CodeGenerator::GenerateWasmDeoptimizationData() {
+   for (int i = 0; i < deopt_count; i++) {
+     const DeoptimizationExit* deoptimization_exit = deoptimization_exits_[i];
+     CHECK_NOT_NULL(deoptimization_exit);
+-    DCHECK_EQ(i, deoptimization_exit->deoptimization_id());
++    CHECK_EQ(i, deoptimization_exit->deoptimization_id());
+     deopt_entries[i] = {deoptimization_exit->bailout_id(),
+                         deoptimization_exit->translation_id()};
+   }
+@@ -1586,8 +1587,8 @@ void CodeGenerator::AddTranslationForOperand(Instruction* instr,
        default:
          UNREACHABLE();
      }

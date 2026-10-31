@@ -1,0 +1,23 @@
+diff --git a/src/compiler/backend/code-generator.h b/src/compiler/backend/code-generator.h
+index 897fc4cf84cc5b0699654f5b4e1608fa15e33324..7c5ab7dadecea278f8da60ebff4ccb766afcfa6c 100644
+--- a/src/compiler/backend/code-generator.h
++++ b/src/compiler/backend/code-generator.h
+@@ -153,6 +153,9 @@ class V8_EXPORT_PRIVATE CodeGenerator final : public GapResolver::Assembler {
+ 
+   CodeKind code_kind() const { return info_->code_kind(); }
+ 
++  enum CodeGenResult { kSuccess, kTooManyDeoptimizationBailouts };
++  CodeGenResult result() const { return result_; }
++
+  private:
+   GapResolver* resolver() { return &resolver_; }
+   SafepointTableBuilder* safepoints() { return &safepoints_; }
+@@ -175,8 +178,6 @@ class V8_EXPORT_PRIVATE CodeGenerator final : public GapResolver::Assembler {
+   bool IsMaterializableFromRoot(Handle<HeapObject> object,
+                                 RootIndex* index_return);
+ 
+-  enum CodeGenResult { kSuccess, kTooManyDeoptimizationBailouts };
+-
+   // Assemble instructions for the specified block.
+   CodeGenResult AssembleBlock(const InstructionBlock* block);
+ 

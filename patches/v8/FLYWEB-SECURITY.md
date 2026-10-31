@@ -1,3 +1,67 @@
+# FlyWeb: FS.38 (rule 17 of level 137), post-137 V8 fixes on 13.7.152.17
+
+SEGURIDAD-PORTES-15, 30-10-2026 (brave-core `seg/fs38-v8` on `nube/motor-137` 78237a70). Base: 13.7.152.17 + the 240
+`patches/v8` of level 137 (all apply; the .18/.19 merges 484172fda and 4278d6d37 are already in them). Branch 13.7 has
+nothing else after .19; the newest branch head is still 15.8. Reviewed every merge on the branch heads 13.7 (after .17)
+to 15.8 (657 commits, 341 originals), each `git apply`-checked against 13.7 + `patches/v8`: 67 already in, 36 apply,
+238 conflict (most are already ported by hand in FS.29-FS.37, need code 13.7 does not have, or are Maglev). The FS.36
+and FS.37 verdicts were re-read against 13.7. **New in 13.7: JSPI and Wasm deopt are on by default** (`jspi` is a
+shipped Wasm feature, `wasm_deopt` defaults to true on x64; 13.5 and 13.6 had both off), and neither gin 116 nor
+brave-core touches them (no `--no-experimental-wasm-jspi`/`--no-wasm-deopt`, no `SetWasmJSPIEnabledCallback`). So the
+JSPI and Wasm deopt merges that FS.36/FS.37 left as "off" were redone. **Ported, 6 (cache epoch 27 -> 28; none changes
+bytecode):**
+
+- **Clean:** 9d9ccafe3b (code cache source hash checked before the background merge; was a risk since FS.36).
+- **Almost clean:** c4a1766500 (565328105, Wasm deopt data checks and no cloning of blocks with `DeoptimizeIf` in
+  Turboshaft branch elimination; the deoptimizer CHECKs on 13.7's code, which has no `is_simd128_reg` case).
+- **By hand, JSPI (x64 only; FlyWeb ships no other architecture):** 49a1dbeb1b (561655173, `WasmResume`/`WasmReject`
+  abort unless called with exactly one argument), 3137a74400 (561655173, a returning or rejecting JSPI stack jumps to
+  the parent's own return address, kept in `StackSwitchFrameConstants::kParentReturnAddressOffset` = the wrapper
+  buffer slot, so `WasmResume`'s two slots are popped), 54cf5fa964 (485784597, `return_switch` clears the active
+  suspender's stack EPT entry before the stack goes to the pool; 13.7 has no `return_jspi_stack`), 13c7629466
+  (501147587, the same when an exception, e.g. a termination, unwinds through the stack: 13.7's unwind loop does not
+  track the suspender, so the chain from `kActiveSuspender` is searched for the owner). All four are sandbox-escape
+  hardenings (they need an in-sandbox corruption first). The upstream tests need `--sandbox-testing` and the
+  `sandbox/wasm-jspi.js` helper 13.7 lacks; our own `wasm/regress-flyweb-jspi-return.js` checks the normal
+  completion and rejection paths instead.
+
+**JSPI / Wasm deopt merges after 13.7.152.17:** ported the five above; already in 13.7 + `patches/v8`: 25e22b601c
+(SBXCHECK), 07398289d9, d49d5148c9. Not ported: 7f6e1abfad and 752405a70a (WasmResume formal parameter count /
+JSDispatchTable arity metadata: 13.7 has no `GetJSBuiltinState`/JS-trampoline allowlist, and changing the SFI to
+`kAdapt` with a fixed-arity builtin could trip the JDT checks; 49a1dbeb1b already blocks over-application),
+fd5c378f2a (Windows TEB only), 90e0d729f8/a905bbec03/51d117fbc0/03ac65ce51/23c6caade2 (other architectures),
+fast-call deopt 268068728c/32a6c8d4eb/189386bca7 (exceptions thrown from fast API calls: 13.7 differs, and
+Blink 116 never throws from a fast call). **None of these is exploited in the wild**, so
+nothing has to be turned off from gin. The in-the-wild V8 bugs since 2025 are all covered: CVE-2025-5419 (7bc0a67ebf,
+in 13.7), -6554 (22e9d9621d, .19), -10585 (ec6c184783), -13223 (4cf9311810), CVE-2026-3910 (Maglev untagged phis
+off), -11645 (3c869652b0), -85046 (e0562d87ad: 13.7 does not inline `Array.prototype.sort`), -87491 (36079c3628,
+already in `patches/v8`).
+
+**Not needed on 13.7:** 8118921e3f (no `JS_DETACHED_TYPED_ARRAY_TYPE`), fba00590cb and ab2cad06c8
+(`additive_safe_int_feedback` is off in 13.7), e0562d87ad (see above), f56988e020 (13.7's shuffle reducer has no
+demanded-lanes halving), 59121a5f05 (no `sfis_without_scope_info_`), c5977fcc75 (13.7 already reads `next_` before
+removing the node), 1a00890534 (no lightweight `Summarize`), 3ab87be544 (no embedded feedback), 1868e5fb96 and
+32fd863235/bdded6d679 (fix regressions from later changes), e2ffaa3479/a638de4ac0/80c2fa2080/55496daf90 (features 13.7
+does not have), 65acd1f043/562b9d1272 and the other ARM/32-bit merges, inspector-only merges (47a3dfaccd,
+907d1fa76c, 3c3aab471d: DevTools), GC heuristics and build/test/infra merges. The FS.36/FS.37 "not in 13.5/13.6" list
+was rechecked: still not in 13.7.
+
+**Maglev (still off):** 74 originals not ported (the FS.37 debt list is unchanged; a54bf5cd45 is CVE-2026-3910, covered
+by `maglev_untagged_phis` off).
+
+**Risks:** b01d779c20/19d60f6362 (stale buffer when a shared Wasm memory is posted while it grows; 13.7 still uses
+the old `WasmMemoryObject::New(buffer)` path, a smaller view only, not ported); the FS.37 left list (714b5478d3,
+56c28da60f/327251377d, db1a465144, 28fc9a12ce, now with Wasm inlining and deopt on); FS.36 risks 17f229f3ea/
+e1ac1f641a, 93fdd4a2bc, 3a6df68901 (JSPI is on for every context, so the feature key matters less); the sandbox
+hardenings (cfaa590b51, 3c03b1d9e8, e9f61f1bbc, 58bdae122c, bb8724fd6c, 9c0c301876, dc31719c94, 493ea0b937,
+d4374eaec8, 1a4a2b03b1, b5db50f99b), now more relevant with JSPI on.
+
+Not compiled in the cloud: `d8` 13.7 and mjsunit by D8-LINUX (normal, `--always-osr`, `wasm/stack-switching*`,
+`wasm/regress-flyweb-jspi-return.js`, `wasm/deopt/*` with and without `--no-wasm-deopt`, and
+`--stress-wasm-stack-switching`).
+
+---
+
 # FlyWeb: own crash fix, Float16Array in Blink 128 (MOTOR-39, 30-10-2026; enters 2.5.0)
 
 Not a V8 change, noted here because it comes from a V8 flag. Since 2.4.0, gin turns on `--js-float16array`; a
