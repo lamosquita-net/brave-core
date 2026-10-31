@@ -1,5 +1,5 @@
 diff --git a/net/cert/internal/trust_store_chrome.cc b/net/cert/internal/trust_store_chrome.cc
-index bea0157d66fccc59781b3e08f982488c270e4c05..5a3ce16ad3f2b4670636d754d16958149e335bf2 100644
+index bea0157d66fccc59781b3e08f982488c270e4c05..5a32a7f57536db88ffe7f142bb434d043fed3c0d 100644
 --- a/net/cert/internal/trust_store_chrome.cc
 +++ b/net/cert/internal/trust_store_chrome.cc
 @@ -8,6 +8,7 @@
@@ -44,7 +44,23 @@ index bea0157d66fccc59781b3e08f982488c270e4c05..5a3ce16ad3f2b4670636d754d1695814
  ChromeRootCertConstraints::~ChromeRootCertConstraints() = default;
  ChromeRootCertConstraints::ChromeRootCertConstraints(
      const ChromeRootCertConstraints& other) = default;
-@@ -134,7 +142,8 @@ ChromeRootStoreData::CreateChromeRootStoreData(
+@@ -125,6 +133,15 @@ ChromeRootStoreData::CreateChromeRootStoreData(
+         }
+       }
+ 
++      // FlyWeb: a PKI Metadata update from a newer Chrome can carry constraint
++      // fields this code does not know (validity_starts_not_after_sec,
++      // index_not_after...). Ignoring one would widen the set (an empty set
++      // matches everything), so such a set never matches instead.
++      if (!constraint.unknown_fields().empty()) {
++        LOG(ERROR) << "Unknown constraint field in update; set disabled";
++        max_version_exclusive = base::Version("0");
++      }
++
+       constraints.emplace_back(
+           constraint.has_sct_not_after_sec()
+               ? std::optional(base::Time::UnixEpoch() +
+@@ -134,7 +151,8 @@ ChromeRootStoreData::CreateChromeRootStoreData(
                ? std::optional(base::Time::UnixEpoch() +
                                base::Seconds(constraint.sct_all_after_sec()))
                : std::nullopt,
@@ -54,7 +70,7 @@ index bea0157d66fccc59781b3e08f982488c270e4c05..5a3ce16ad3f2b4670636d754d1695814
      }
      root_store_data.anchors_.emplace_back(std::move(parsed),
                                            std::move(constraints));
-@@ -298,6 +307,8 @@ TrustStoreChrome::ParseCrsConstraintsSwitch(std::string_view switch_value) {
+@@ -298,6 +316,8 @@ TrustStoreChrome::ParseCrsConstraintsSwitch(std::string_view switch_value) {
            continue;
          }
          constraint.max_version_exclusive = version;

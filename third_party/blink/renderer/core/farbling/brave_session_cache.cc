@@ -5,6 +5,8 @@
 
 #include "brave/third_party/blink/renderer/core/farbling/brave_session_cache.h"
 
+#include <algorithm>
+#include <cmath>
 #include <cstring>
 #include <string_view>
 
@@ -40,24 +42,80 @@ namespace {
 constexpr uint64_t zero = 0;
 constexpr double maxUInt64AsDouble = static_cast<double>(UINT64_MAX);
 
-// Flips bit 0 of the mantissa of a half float (2 bytes) or float (4 bytes)
-// channel, leaving infinities and NaNs alone (flipping their mantissa would
-// turn an infinity into a NaN).
-void PerturbFloatChannel(uint8_t* channel, size_t size, uint8_t flip) {
-  if (size == 2) {
-    uint16_t value;
-    memcpy(&value, channel, sizeof value);
-    if ((value & 0x7C00) == 0x7C00)
-      return;
-    value ^= flip;
-    memcpy(channel, &value, sizeof value);
+// FlyWeb: half float <-> float, enough for the farbling below (round to
+// nearest even, subnormals kept, Inf/NaN never reach FloatToHalf).
+float HalfToFloat(uint16_t h) {
+  const uint32_t sign = static_cast<uint32_t>(h & 0x8000) << 16;
+  const uint32_t exponent = (h >> 10) & 0x1F;
+  const uint32_t mantissa = h & 0x3FF;
+  float magnitude;
+  if (exponent == 0) {
+    magnitude = std::ldexp(static_cast<float>(mantissa), -24);
   } else {
-    uint32_t value;
-    memcpy(&value, channel, sizeof value);
-    if ((value & 0x7F800000) == 0x7F800000)
+    magnitude = std::ldexp(static_cast<float>(mantissa | 0x400),
+                           static_cast<int>(exponent) - 25);
+  }
+  uint32_t bits;
+  memcpy(&bits, &magnitude, sizeof bits);
+  bits |= sign;
+  float result;
+  memcpy(&result, &bits, sizeof result);
+  return result;
+}
+
+uint16_t FloatToHalf(float f) {
+  uint32_t bits;
+  memcpy(&bits, &f, sizeof bits);
+  const uint16_t sign = static_cast<uint16_t>((bits >> 16) & 0x8000);
+  float magnitude = std::fabs(f);
+  if (magnitude >= 65520.0f)
+    return sign | 0x7BFF;  // Clamp to the largest finite half.
+  if (magnitude < 0.00006103515625f) {  // 2^-14: subnormal half.
+    return sign | static_cast<uint16_t>(
+                      std::nearbyint(std::ldexp(magnitude, 24)));
+  }
+  int exponent;
+  const float fraction = std::frexp(magnitude, &exponent);  // [0.5, 1)
+  uint32_t mantissa =
+      static_cast<uint32_t>(std::nearbyint(std::ldexp(fraction, 11)));
+  if (mantissa == 0x800) {  // Rounded up to the next power of two.
+    mantissa = 0x400;
+    exponent++;
+  }
+  return sign | static_cast<uint16_t>(((exponent + 14) << 10) |
+                                      (mantissa & 0x3FF));
+}
+
+// FlyWeb: perturbs a half float (2 bytes) or float (4 bytes) channel by one
+// 8-bit step (1/255), the same visible change as flipping bit 0 of an 8-bit
+// channel: round(v * 255) goes from q to q ^ 1. Flipping a mantissa bit
+// instead is undone by rounding to 8 bits (e.g. reading an 8-bit canvas with
+// getImageData(..., {pixelFormat: "rgba-float16"})). Infinities and NaNs are
+// left alone.
+void PerturbFloatChannel(uint8_t* channel, size_t size) {
+  float value;
+  uint16_t half = 0;
+  if (size == 2) {
+    memcpy(&half, channel, sizeof half);
+    if ((half & 0x7C00) == 0x7C00)
       return;
-    value ^= flip;
-    memcpy(channel, &value, sizeof value);
+    value = HalfToFloat(half);
+  } else {
+    memcpy(&value, channel, sizeof value);
+    if (!std::isfinite(value))
+      return;
+  }
+  const bool in_unit_range = value >= 0.0f && value <= 1.0f;
+  const int64_t step = static_cast<int64_t>(
+      std::nearbyint(std::clamp(value * 255.0f, -1e9f, 1e9f)));
+  float perturbed = value + ((step & 1) ? -1.0f : 1.0f) / 255.0f;
+  if (in_unit_range)
+    perturbed = std::clamp(perturbed, 0.0f, 1.0f);
+  if (size == 2) {
+    half = FloatToHalf(perturbed);
+    memcpy(channel, &half, sizeof half);
+  } else {
+    memcpy(channel, &perturbed, sizeof perturbed);
   }
 }
 
@@ -306,9 +364,9 @@ void BraveSessionCache::PerturbPixelsInternal(const unsigned char* data,
     return;
   // FlyWeb: floating point canvases (CanvasFloatingPoint, ImageData with
   // Float16Array/Float32Array) store 2 or 4 bytes per channel. Flipping bit 0
-  // of an arbitrary byte there could hit high mantissa bits or the alpha
-  // channel, so flip bit 0 of the mantissa of R, G or B instead. Unknown sizes
-  // fall back to the 8-bit behaviour.
+  // of an arbitrary byte there could hit the exponent or the alpha channel,
+  // so move R, G or B by one 8-bit step instead (PerturbFloatChannel).
+  // Unknown sizes fall back to the 8-bit behaviour.
   if (bytes_per_channel != 2 && bytes_per_channel != 4)
     bytes_per_channel = 1;
 
@@ -346,9 +404,9 @@ void BraveSessionCache::PerturbPixelsInternal(const unsigned char* data,
       pixel_index = 4 * (v % pixel_count) + channel;
       if (bytes_per_channel == 1) {
         pixels[pixel_index] = pixels[pixel_index] ^ (bit & 0x1);
-      } else {
+      } else if (bit & 0x1) {
         PerturbFloatChannel(pixels + pixel_index * bytes_per_channel,
-                            bytes_per_channel, bit & 0x1);
+                            bytes_per_channel);
       }
       bit = bit >> 1;
       // find next pixel to perturb
