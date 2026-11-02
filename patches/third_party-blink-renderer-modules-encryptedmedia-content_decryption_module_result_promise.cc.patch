@@ -1,0 +1,22 @@
+diff --git a/third_party/blink/renderer/modules/encryptedmedia/content_decryption_module_result_promise.cc b/third_party/blink/renderer/modules/encryptedmedia/content_decryption_module_result_promise.cc
+index 1409cc035979feda3d9e0be8b1774a22c3a3de35..f8179d9d1e8aaacd51025ea595fc5b84bfb18f29 100644
+--- a/third_party/blink/renderer/modules/encryptedmedia/content_decryption_module_result_promise.cc
++++ b/third_party/blink/renderer/modules/encryptedmedia/content_decryption_module_result_promise.cc
+@@ -14,6 +14,7 @@
+ #include "third_party/blink/renderer/bindings/core/v8/v8_throw_dom_exception.h"
+ #include "third_party/blink/renderer/core/dom/document.h"
+ #include "third_party/blink/renderer/core/dom/dom_exception.h"
++#include "third_party/blink/renderer/core/dom/quota_exceeded_error.h"
+ #include "third_party/blink/renderer/core/execution_context/execution_context.h"
+ #include "third_party/blink/renderer/core/frame/local_dom_window.h"
+ #include "third_party/blink/renderer/platform/bindings/exception_state.h"
+@@ -39,8 +40,7 @@ void WebCdmExceptionToPromiseRejection(
+                                        message);
+       return;
+     case kWebContentDecryptionModuleExceptionQuotaExceededError:
+-      resolver->RejectWithDOMException(DOMExceptionCode::kQuotaExceededError,
+-                                       message);
++      QuotaExceededError::Reject(resolver, message);
+       return;
+   }
+ 

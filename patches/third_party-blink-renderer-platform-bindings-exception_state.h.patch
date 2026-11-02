@@ -1,0 +1,16 @@
+diff --git a/third_party/blink/renderer/platform/bindings/exception_state.h b/third_party/blink/renderer/platform/bindings/exception_state.h
+index ffbda52e348fc970d97b02fd1f8ce7171b7a0f38..35e558f1440ea1ce63b292e0a19b7d9fdbf38c45 100644
+--- a/third_party/blink/renderer/platform/bindings/exception_state.h
++++ b/third_party/blink/renderer/platform/bindings/exception_state.h
+@@ -146,6 +146,11 @@ class PLATFORM_EXPORT ExceptionState {
+   // Throws a DOMException due to the given exception code.
+   NOINLINE void ThrowDOMException(DOMExceptionCode, const String& message);
+ 
++  // Throws a constructed DOMException.
++  NOINLINE void ThrowDOMException(v8::Local<v8::Value> exception,
++                                  DOMExceptionCode code,
++                                  const String& message);
++
+   // Throws a DOMException with SECURITY_ERR.
+   NOINLINE void ThrowSecurityError(
+       const String& sanitized_message,
