@@ -1,5 +1,5 @@
 diff --git a/content/browser/renderer_host/render_frame_host_impl.cc b/content/browser/renderer_host/render_frame_host_impl.cc
-index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..35d239e62beb633a21ee242bbf77e9ddc02f3cf7 100644
+index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..5b5699e6fa55276fcd513124019300a550bd1376 100644
 --- a/content/browser/renderer_host/render_frame_host_impl.cc
 +++ b/content/browser/renderer_host/render_frame_host_impl.cc
 @@ -9,6 +9,7 @@
@@ -103,7 +103,22 @@ index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..35d239e62beb633a21ee242bbf77e9dd
    // If it's a credentialless frame tree, use its nonce even if it's within a
    // fenced frame tree to maintain the guarantee that a credentialless frame
    // tree has a unique nonce.
-@@ -6017,6 +6062,29 @@ void RenderFrameHostImpl::SetSubframeUnloadTimeoutForTesting(
+@@ -5356,8 +5401,14 @@ void RenderFrameHostImpl::DidCommitPageActivation(
+   });
+ #endif
+ 
++  // FlyWeb (FS.39, upstream 8ed77b6a0d7): this RFH may be deleted after
++  // DidCommitNavigationInternal due to a nested message loop.
++  base::WeakPtr<RenderFrameHostImpl> weak_ptr = GetWeakPtr();
+   DidCommitNavigationInternal(std::move(owned_request), std::move(params),
+                               /*same_document_params=*/nullptr);
++  if (!weak_ptr) {
++    return;
++  }
+ 
+   // If any load events occurred pre-activation and were deferred until
+   // activation, dispatch them now. This must happen before DidStopLoading() is
+@@ -6017,6 +6068,29 @@ void RenderFrameHostImpl::SetSubframeUnloadTimeoutForTesting(
    subframe_unload_timeout_ = timeout;
  }
  
@@ -133,7 +148,7 @@ index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..35d239e62beb633a21ee242bbf77e9dd
  #if BUILDFLAG(IS_ANDROID)
  void RenderFrameHostImpl::RequestSmartClipExtract(
      ExtractSmartClipDataCallback callback,
-@@ -8785,6 +8853,13 @@ void RenderFrameHostImpl::CreateNewWindow(
+@@ -8785,6 +8859,13 @@ void RenderFrameHostImpl::CreateNewWindow(
    TRACE_EVENT2("navigation", "RenderFrameHostImpl::CreateNewWindow",
                 "render_frame_host", this, "url", params->target_url);
  
@@ -147,7 +162,7 @@ index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..35d239e62beb633a21ee242bbf77e9dd
    // Only top-most frames can open picture-in-picture windows.
    if (params->disposition == WindowOpenDisposition::NEW_PICTURE_IN_PICTURE &&
        GetParentOrOuterDocumentOrEmbedder()) {
-@@ -8881,6 +8956,8 @@ void RenderFrameHostImpl::CreateNewWindow(
+@@ -8881,6 +8962,8 @@ void RenderFrameHostImpl::CreateNewWindow(
          dom_storage_context, params->session_storage_namespace_id);
    }
  
@@ -156,7 +171,7 @@ index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..35d239e62beb633a21ee242bbf77e9dd
    if (IsCredentialless() || IsNestedWithinFencedFrame() ||
        CoopSuppressOpener(/*opener=*/this)) {
      params->opener_suppressed = true;
-@@ -10406,6 +10483,15 @@ CanCommitStatus RenderFrameHostImpl::CanCommitOriginAndUrl(
+@@ -10406,6 +10489,15 @@ CanCommitStatus RenderFrameHostImpl::CanCommitOriginAndUrl(
    // (e.g. "http://localhost"). In such cases, don't verify the URL, but require
    // the URL to commit in the process of the main frame.
    if (IsMhtmlSubframe()) {
@@ -172,7 +187,7 @@ index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..35d239e62beb633a21ee242bbf77e9dd
      RenderFrameHostImpl* main_frame = GetMainFrame();
      if (IsSameSiteInstance(main_frame)) {
        return CanCommitStatus::CAN_COMMIT_ORIGIN_AND_URL;
-@@ -12157,8 +12243,29 @@ RenderFrameHostImpl* RenderFrameHostImpl::GetOutermostMainFrame() {
+@@ -12157,8 +12249,29 @@ RenderFrameHostImpl* RenderFrameHostImpl::GetOutermostMainFrame() {
  
  bool RenderFrameHostImpl::CanAccessFilesOfPageState(
      const blink::PageState& state) {
@@ -203,7 +218,28 @@ index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..35d239e62beb633a21ee242bbf77e9dd
  }
  
  void RenderFrameHostImpl::GrantFileAccessFromPageState(
-@@ -14961,8 +15068,24 @@ void RenderFrameHostImpl::DidCommitNavigation(
+@@ -14310,10 +14423,18 @@ bool RenderFrameHostImpl::DidCommitNavigationInternal(
+   }
+ 
+   // TODO(crbug.com/40150370): Do not pass |params| to DidNavigate().
+-  NavigationRequest* raw_navigation_request = navigation_request.get();
+-  raw_navigation_request->frame_tree_node()->navigator().DidNavigate(
++  FrameTreeNode* frame_tree_node = navigation_request->frame_tree_node();
++  base::WeakPtr<RenderFrameHostImpl> weak_ptr = GetWeakPtr();
++  frame_tree_node->navigator().DidNavigate(
+       this, *params, std::move(navigation_request),
+       is_same_document_navigation);
++  if (!weak_ptr) {
++    // This RFH may be deleted after DidNavigate due to a nested message loop
++    // (FlyWeb FS.39, upstream 8ed77b6a0d7). That occurs before the navigation
++    // has actually committed, so return false to indicate that the commit did
++    // not succeed.
++    return false;
++  }
+ 
+   // Run any deferred shared storage operations from response headers now that
+   // commit has occurred.
+@@ -14961,8 +15082,24 @@ void RenderFrameHostImpl::DidCommitNavigation(
    // BackForwardCache (see the check IsInactiveAndDisallowActivation in
    // RFH::DidCommitSameDocumentNavigation() and RFH::BeginNavigation()) so it
    // isn't possible to get a DidCommitNavigation IPC from the renderer in
