@@ -1,5 +1,5 @@
 diff --git a/src/objects/source-text-module.cc b/src/objects/source-text-module.cc
-index ed807634b871ff5b86dc84e014347c1b7e2d301a..802e2f91cdb65a5e2d1b6c5eb778b3270a38fd75 100644
+index ed807634b871ff5b86dc84e014347c1b7e2d301a..5439040a819124dfde50a89ab3b41b7c65d9e501 100644
 --- a/src/objects/source-text-module.cc
 +++ b/src/objects/source-text-module.cc
 @@ -94,7 +94,9 @@ Tagged<SharedFunctionInfo> SourceTextModule::GetSharedFunctionInfo() const {
@@ -13,7 +13,30 @@ index ed807634b871ff5b86dc84e014347c1b7e2d301a..802e2f91cdb65a5e2d1b6c5eb778b327
      case kLinked:
      case kEvaluating:
      case kEvaluatingAsync:
-@@ -440,6 +442,7 @@ bool SourceTextModule::PrepareInstantiate(
+@@ -324,10 +326,18 @@ MaybeHandle<Cell> SourceTextModule::ResolveExportUsingStarExports(
+ 
+     if (!unique_cell.is_null()) {
+       // Found a unique star export for this name.
+-      Handle<ObjectHashTable> exports(module->exports(), isolate);
+-      DCHECK(IsTheHole(exports->Lookup(export_name), isolate));
+-      exports = ObjectHashTable::Put(exports, export_name, unique_cell);
+-      module->set_exports(*exports);
++      // FlyWeb: port of v8 137e7f93d7 (crbug 574038247). Only cache it while
++      // the module is still linking: once linked, its exports table may back
++      // a finalized JSModuleNamespace whose LoadIC handlers index into it.
++      // 13.8 has no deferred namespace and no setter check, so the
++      // ExportsFinalized() CHECK of upstream's set_exports() is done here.
++      if (module->status() <= kLinking) {
++        CHECK(!IsJSModuleNamespace(module->module_namespace()));
++        Handle<ObjectHashTable> exports(module->exports(), isolate);
++        DCHECK(IsTheHole(exports->Lookup(export_name), isolate));
++        exports = ObjectHashTable::Put(exports, export_name, unique_cell);
++        module->set_exports(*exports);
++      }
+       return unique_cell;
+     }
+   }
+@@ -440,6 +450,7 @@ bool SourceTextModule::PrepareInstantiate(
  bool SourceTextModule::RunInitializationCode(
      Isolate* isolate, DirectHandle<SourceTextModule> module) {
    DCHECK_EQ(module->status(), kLinking);
@@ -21,7 +44,7 @@ index ed807634b871ff5b86dc84e014347c1b7e2d301a..802e2f91cdb65a5e2d1b6c5eb778b327
    DirectHandle<JSFunction> function(Cast<JSFunction>(module->code()), isolate);
    DCHECK_EQ(MODULE_SCOPE, function->shared()->scope_info()->scope_type());
    DirectHandle<Object> receiver = isolate->factory()->undefined_value();
-@@ -520,15 +523,32 @@ bool SourceTextModule::MaybeTransitionComponent(
+@@ -520,15 +531,32 @@ bool SourceTextModule::MaybeTransitionComponent(
      //    iv. Set requiredModule.[[Status]] to LINKED.
      //     v. If requiredModule and module are the same Module Record, set done
      //        to true.
@@ -57,7 +80,7 @@ index ed807634b871ff5b86dc84e014347c1b7e2d301a..802e2f91cdb65a5e2d1b6c5eb778b327
          ancestor->SetStatus(kLinked);
        } else {
          DCHECK(IsTheHole(ancestor->cycle_root(), isolate));
-@@ -1353,7 +1373,11 @@ void SourceTextModule::Reset(Isolate* isolate,
+@@ -1353,7 +1381,11 @@ void SourceTextModule::Reset(Isolate* isolate,
    DisallowGarbageCollection no_gc;
    Tagged<SourceTextModule> raw_module = *module;
    if (raw_module->status() == kLinking) {
