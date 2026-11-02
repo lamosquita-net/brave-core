@@ -79,3 +79,9 @@ All of them are adapted by hand: none applied as is on 128 plus the existing pat
     IOSurface backings (`kIOSurfaceMultiThreading`). 128 always builds them with `is_thread_safe=false`.
   - **4631eb9169** (VP9 `show_existing_frame` in VideoToolbox). A decode error, not a security fix; VP9 hardware
     decoding needs macOS 11 or later.
+
+### Brotli (CVE-2026-111497, KEV 27-10-2026)
+- google/brotli 0ed4268a ("Detect and report invalid stream earlier"; released as 1.0.10/1.1.1/1.2.1 on 21-10-2026).
+  `third_party/brotli` of 128 (and 138) is upstream 9801a2c: the fast path dropped the result of the block-switch
+  decoders. Reachable from any page (`Content-Encoding: br`, WOFF2). decode.c from 1.0.10 (50a9b70), decode.h from
+  1.1.1 (da98063); the four call sites of 128 use `BROTLI_SAFE_WITH_STATUS`. Only in 2.7.0 (no 2.6.x, owner's call).
