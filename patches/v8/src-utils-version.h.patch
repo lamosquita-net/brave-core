@@ -1,8 +1,8 @@
 diff --git a/src/utils/version.h b/src/utils/version.h
-index 1bae3e72371a18a81e48bdc451e55bac58d86214..4264baf4b9030634eaa848b78c5a1ad31554c172 100644
+index 1bae3e72371a18a81e48bdc451e55bac58d86214..9b6fc881ea69339f8a2408450689ba29829f679e 100644
 --- a/src/utils/version.h
 +++ b/src/utils/version.h
-@@ -27,9 +27,39 @@ class V8_EXPORT Version {
+@@ -27,9 +27,42 @@ class V8_EXPORT Version {
    static int GetPatch() { return patch_; }
    static const char* GetEmbedder() { return embedder_; }
    static bool IsCandidate() { return candidate_; }
@@ -34,8 +34,11 @@ index 1bae3e72371a18a81e48bdc451e55bac58d86214..4264baf4b9030634eaa848b78c5a1ad3
 +  // merges; 848d7f4122 changes the bytecode of `await using` in for loops),
 +  // 27 = engine level 137 (V8 13.7 with the same backports), 28 =
 +  // seg/fs38-v8 (FS.38: post-137 merges; no bytecode change, but new
-+  // builtins code and code cache checks).
-+  static constexpr int kFlyWebCacheEpoch = 29;
++  // builtins code and code cache checks), 29 = engine level 138 (V8 13.8
++  // with the same backports), 30 = seg/fs39-v8 (FS.39: post-138 merges; no
++  // bytecode change, but new Promise.any builtin code, the code cache FPU
++  // state and the redone 13.7 patches).
++  static constexpr int kFlyWebCacheEpoch = 30;
    static uint32_t Hash() {
 -    return static_cast<uint32_t>(
 -        base::hash_combine(major_, minor_, build_, patch_));
