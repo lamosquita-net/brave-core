@@ -36,8 +36,8 @@ Los parches se regeneran completos contra 128.0.6613.138 y se comprueban con `gi
 
 ## Fuera del alcance de lo portado (código previo de la 128 en ficheros que tocó el porte)
 
-Arreglos de seguridad fusionados a ramas estables/LTS sobre código que ya estaba en la 128. No se aplican aquí para no
-chocar con la rama general del 138, que regenera los mismos `.patch`; quedan para quien lleve `content/` y Blink:
+Arreglos de seguridad fusionados a ramas estables/LTS sobre código que ya estaba en la 128. No se aplicaron en
+`seg/fs39-propio`; COORDINACIÓN los metió en la 2.7.0 como rama `seg/fs39-lts` (sección siguiente):
 
 - `render_frame_host_impl.cc`: cf3b685c0d5 [M138-LTS] (ficheros de PageState no validados, crbug 487383169),
   eb3896190a2 [M144-LTS] (ResourceRequestBody en CreateNewWindowParams; los dos primeros ya están en 138.0.7204.310), 9971d3de459 [M144-LTS] + 0dcb0580163
@@ -49,6 +49,38 @@ chocar con la rama general del 138, que regenera los mismos `.patch`; quedan par
 - `element.cc`: b619f72c646 [M148] (EventDispatchForbiddenScope en la notificación por lotes de atributos).
 - `frame_selection.cc`: bae0c060694 [M144] (comprobaciones tras `CompositionRange()`).
 - `anchor_position_scroll_data.cc`: 95c7adc412f [M145] (doble desplazamiento en hit testing de anclas).
+
+## seg/fs39-lts
+
+Rama sobre `seg/fs39-propio` 17f009dfda (cadena blink138 → v8 → gpu → brotli → propio → lts, lineal). Un commit por
+arreglo; cada `.patch` se regenera completo contra 128.0.6613.138 desde el de la cadena (conserva lo de FS.39 Blink y
+del porte). Comprobado: los 11 `.patch` tocados aplican sobre el original de la 128; `fuera.py --ref` main: 0 avisos.
+Sin compilar ni pruebas (las de upstream no se portan).
+
+| Commit | Upstream | Qué arregla (128) |
+|---|---|---|
+| FS.39 LTS: every file in a PageState must be in its referenced files | cf3b685c0d5 [M138-LTS], crbug 487383169 | El navegador solo validaba los ficheros que lista `GetReferencedFiles()`; el renderer podía esconder más en el árbol de marcos. `GetAllFilesInPageState()` nuevo en `page_state_serialization.{h,cc}` |
+| FS.39 LTS: validate the form body of CreateNewWindow | eb3896190a2 [M144-LTS] (también en la .310), crbug 487768779 | `form_submission_post_data` de `window.open()` se cargaba sin `CanReadRequestBody()` (`web_contents_impl.cc` la usa en la 128). `VerifyCreateNewWindowParams()` nuevo en `ipc_utils` |
+| FS.39 LTS: no DidCommitNavigation from a frame in the back-forward cache | 9971d3de459 [M144-LTS] + 0dcb0580163 [M149], crbug 517148260 | En la 128 era un `DCHECK`. Mata al renderer si hubo ACK de bfcache; si no, expulsa la entrada. Valores de enum como upstream (`RFH_DID_COMMIT_NAVIGATION_WHILE_BFCACHED = 354`, `kDidCommitNavigation = 44`); sin `enums.xml` |
+| FS.39 LTS: MHTML subframes may only commit opaque origins | 176da1f0c7b [M149], crbug 498783665 | `CanCommitOriginAndUrl()` salía antes sin mirar el origen en subtramas MHTML: salto de Site Isolation |
+| FS.39 LTS: stop after DidNavigate if a nested loop deleted the frame | 8ed77b6a0d7 [M148], crbug 516608438 | `WeakPtr` tras `DidNavigate()` y tras `DidCommitNavigationInternal()` en la activación |
+| FS.39 LTS: NavigationRequest::frame_tree_node_ is a raw_ptr | d5c6640b6e7 (1e6b1e116cc [M148] / e40949404db [M149]), crbug 516608438 | `RAW_PTR_EXCLUSION` → `raw_ptr<FrameTreeNode> const`; la 128 ya tiene `raw_ptr.h` y el resto de usos convierten solos. Solo el de tracing pasa por `frame_tree_node()` |
+| FS.39 LTS: service worker request timeouts without dangling iterators | ee4d43b9004 [M140] (también en la .310), crbug 440454442; **más 405dcf07fd1**, crbug 499449324 [M144-LTS] | Carrera en `OnTimeoutTimer()`. ee4d43b9004 solo deja `InflightRequest::timeout_iter` apuntando a una entrada borrada (UAF en `FinishRequestWithFetchCount`), así que va con su arreglo posterior (iterador opcional; upstream con interruptor, aquí sin él) |
+
+Fuera, con motivo:
+
+- **b3727a40d28** (propiedad de widgets emergentes): el único consumidor es la extracción de contenido de página de
+  `optimization_guide` (APC, IA de Chrome), que no está en la 128; el resto es fontanería de 15 ficheros.
+- **b2b579bb87c** (restaurar el `CHECK` de `CanAccessOrigin()`): en la 128 ya es `CHECK`; lo rebajó un cambio de 2026.
+- **b619f72c646** (`element.cc` + `html_select_element.cc`), **bae0c060694** (`frame_selection.cc` + `widget_base.cc`):
+  ya en la cadena por FS.39 Blink (6aa38f2d02 y 9fb841bf28). En la 128, `RootEditableElementOrDocumentElement()` no
+  fuerza layout, así que basta la comprobación inicial.
+- **95c7adc412f** (anclas): solo corrige la rama de `CSSAnchorUpdate`, que no existe en la 128 (allí no hay doble suma).
+
+**KEV (CISA, catálogo 2026.10.30, espejo cisagov/kev-data): ninguno.** Las entradas de Chrome desde junio de 2025 son de
+V8, Dawn, Skia, ANGLE, CSS (CVE-2026-2441) y Brotli (CVE-2026-111497, ya en `seg/fs39-gpu`); ninguna es de navegación,
+PageState, bfcache, MHTML ni service workers. No he podido cruzar crbug → CVE en Chrome Releases (crbug cerrado); la
+deducción es por componente.
 
 ## Privacidad (regla 20)
 
