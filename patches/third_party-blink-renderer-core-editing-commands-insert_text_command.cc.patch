@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/core/editing/commands/insert_text_command.cc b/third_party/blink/renderer/core/editing/commands/insert_text_command.cc
-index d9025e511b96b2be46650e95b66aa395e447b19b..87f053b8fa85f13d3029d9f6c46ac82bb7c96c38 100644
+index d9025e511b96b2be46650e95b66aa395e447b19b..6e45ef6095df9e12e425918098b4d5cc74020275 100644
 --- a/third_party/blink/renderer/core/editing/commands/insert_text_command.cc
 +++ b/third_party/blink/renderer/core/editing/commands/insert_text_command.cc
-@@ -181,25 +181,7 @@ void InsertTextCommand::DoApply(EditingState* editing_state) {
+@@ -38,6 +38,7 @@
+ #include "third_party/blink/renderer/core/editing/visible_units.h"
+ #include "third_party/blink/renderer/core/frame/local_frame.h"
+ #include "third_party/blink/renderer/core/html/html_span_element.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+ 
+ namespace blink {
+ 
+@@ -181,25 +182,7 @@ void InsertTextCommand::DoApply(EditingState* editing_state) {
  
    Position start_position(EndingVisibleSelection().Start());
  
@@ -29,3 +37,17 @@ index d9025e511b96b2be46650e95b66aa395e447b19b..87f053b8fa85f13d3029d9f6c46ac82b
  
    // Insert the character at the leftmost candidate.
    start_position = MostBackwardCaretPosition(start_position);
+@@ -287,7 +270,12 @@ void InsertTextCommand::DoApply(EditingState* editing_state) {
+ 
+   SelectionInDOMTree::Builder builder;
+   const VisibleSelection& selection = EndingVisibleSelection();
+-  builder.SetAffinity(selection.Affinity());
++  if (RuntimeEnabledFeatures::CaretWithTextAffinityUpstreamEnabled() &&
++      text_ == " " && !IsRichlyEditablePosition(start_position)) {
++    builder.SetAffinity(TextAffinity::kUpstreamIfPossible);
++  } else {
++    builder.SetAffinity(selection.Affinity());
++  }
+   if (selection.End().IsNotNull())
+     builder.Collapse(selection.End());
+   SetEndingSelection(SelectionForUndoStep::From(builder.Build()));
