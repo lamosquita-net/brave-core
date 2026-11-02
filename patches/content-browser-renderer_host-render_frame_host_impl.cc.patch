@@ -1,8 +1,24 @@
 diff --git a/content/browser/renderer_host/render_frame_host_impl.cc b/content/browser/renderer_host/render_frame_host_impl.cc
-index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..08449bd8e0ffd73e196f4928ba819fd2fcd4cf57 100644
+index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..b0a36a2b72f0d0076b95286057d28324d2636a2b 100644
 --- a/content/browser/renderer_host/render_frame_host_impl.cc
 +++ b/content/browser/renderer_host/render_frame_host_impl.cc
-@@ -736,6 +736,20 @@ DetermineAfterCommitWhetherToForbidTrustTokenOperation(
+@@ -9,6 +9,7 @@
+ #include <limits>
+ #include <memory>
+ #include <optional>
++#include <set>
+ #include <string_view>
+ #include <tuple>
+ #include <unordered_map>
+@@ -250,6 +251,7 @@
+ #include "third_party/blink/public/common/messaging/transferable_message.h"
+ #include "third_party/blink/public/common/navigation/navigation_params_mojom_traits.h"
+ #include "third_party/blink/public/common/page/browsing_context_group_info.h"
++#include "third_party/blink/public/common/page_state/page_state_serialization.h"
+ #include "third_party/blink/public/common/permissions/permission_utils.h"
+ #include "third_party/blink/public/common/permissions_policy/document_policy.h"
+ #include "third_party/blink/public/common/permissions_policy/permissions_policy.h"
+@@ -736,6 +738,20 @@ DetermineAfterCommitWhetherToForbidTrustTokenOperation(
    return network::mojom::TrustTokenOperationPolicyVerdict::kForbid;
  }
  
@@ -23,7 +39,7 @@ index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..08449bd8e0ffd73e196f4928ba819fd2
  // Verify that |browser_side_origin| and |renderer_side_origin| match.  See also
  // https://crbug.com/888079.
  void VerifyThatBrowserAndRendererCalculatedOriginsToCommitMatch(
-@@ -1456,6 +1470,17 @@ class RenderFrameHostImpl::SubresourceLoaderFactoriesConfig {
+@@ -1456,6 +1472,17 @@ class RenderFrameHostImpl::SubresourceLoaderFactoriesConfig {
              ? ukm::kInvalidSourceId
              : frame.GetPageUkmSourceId());
  
@@ -41,7 +57,7 @@ index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..08449bd8e0ffd73e196f4928ba819fd2
      return result;
    }
  
-@@ -1497,6 +1522,20 @@ class RenderFrameHostImpl::SubresourceLoaderFactoriesConfig {
+@@ -1497,6 +1524,20 @@ class RenderFrameHostImpl::SubresourceLoaderFactoriesConfig {
                navigation_request.GetRenderFrameHost(),
                navigation_request.commit_params(), result.origin(),
                network::mojom::TrustTokenOperationType::kIssuance);
@@ -62,7 +78,7 @@ index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..08449bd8e0ffd73e196f4928ba819fd2
      }
  
      return result;
-@@ -3411,6 +3450,8 @@ void RenderFrameHostImpl::InitializePolicyContainerHost(
+@@ -3411,6 +3452,8 @@ void RenderFrameHostImpl::InitializePolicyContainerHost(
              parent_policies.cross_origin_opener_policy,
              parent_policies.cross_origin_embedder_policy,
              parent_policies.document_isolation_policy,
@@ -71,7 +87,7 @@ index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..08449bd8e0ffd73e196f4928ba819fd2
              network::mojom::WebSandboxFlags::kNone,
              /*is_credentialless=*/false,
              /*can_navigate_top_without_user_gesture=*/true,
-@@ -4584,6 +4625,7 @@ net::IsolationInfo RenderFrameHostImpl::ComputeIsolationInfoInternal(
+@@ -4584,6 +4627,7 @@ net::IsolationInfo RenderFrameHostImpl::ComputeIsolationInfoInternal(
      candidate_site_for_cookies = net::SiteForCookies(top_frame_site);
    }
  
@@ -79,7 +95,7 @@ index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..08449bd8e0ffd73e196f4928ba819fd2
    std::optional<base::UnguessableToken> nonce =
        ComputeNonce(is_credentialless, fenced_frame_nonce_for_navigation);
    return net::IsolationInfo::Create(request_type, top_frame_origin,
-@@ -4594,6 +4636,7 @@ net::IsolationInfo RenderFrameHostImpl::ComputeIsolationInfoInternal(
+@@ -4594,6 +4638,7 @@ net::IsolationInfo RenderFrameHostImpl::ComputeIsolationInfoInternal(
  std::optional<base::UnguessableToken> RenderFrameHostImpl::ComputeNonce(
      bool is_credentialless,
      std::optional<base::UnguessableToken> fenced_frame_nonce_for_navigation) {
@@ -87,7 +103,7 @@ index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..08449bd8e0ffd73e196f4928ba819fd2
    // If it's a credentialless frame tree, use its nonce even if it's within a
    // fenced frame tree to maintain the guarantee that a credentialless frame
    // tree has a unique nonce.
-@@ -6017,6 +6060,29 @@ void RenderFrameHostImpl::SetSubframeUnloadTimeoutForTesting(
+@@ -6017,6 +6062,29 @@ void RenderFrameHostImpl::SetSubframeUnloadTimeoutForTesting(
    subframe_unload_timeout_ = timeout;
  }
  
@@ -117,7 +133,7 @@ index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..08449bd8e0ffd73e196f4928ba819fd2
  #if BUILDFLAG(IS_ANDROID)
  void RenderFrameHostImpl::RequestSmartClipExtract(
      ExtractSmartClipDataCallback callback,
-@@ -8881,6 +8947,8 @@ void RenderFrameHostImpl::CreateNewWindow(
+@@ -8881,6 +8949,8 @@ void RenderFrameHostImpl::CreateNewWindow(
          dom_storage_context, params->session_storage_namespace_id);
    }
  
@@ -126,3 +142,34 @@ index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..08449bd8e0ffd73e196f4928ba819fd2
    if (IsCredentialless() || IsNestedWithinFencedFrame() ||
        CoopSuppressOpener(/*opener=*/this)) {
      params->opener_suppressed = true;
+@@ -12157,8 +12227,29 @@ RenderFrameHostImpl* RenderFrameHostImpl::GetOutermostMainFrame() {
+ 
+ bool RenderFrameHostImpl::CanAccessFilesOfPageState(
+     const blink::PageState& state) {
++  // FlyWeb (FS.39): ensure that all of the files in the PageState were
++  // actually listed in the GetReferencedFiles list, using a set to prune
++  // duplicates (upstream cf3b685c0d5, crbug.com/487383169).
++  std::vector<base::FilePath> all_files;
++  if (!blink::GetAllFilesInPageState(state.ToEncodedData(), &all_files)) {
++    // All files in the PageState weren't recovered due to parsing failures.
++    // The renderer should be killed instead of proceeding with a PageState that
++    // might still contain files that could be used without being validated.
++    return false;
++  }
++  std::vector<base::FilePath> referenced_files = state.GetReferencedFiles();
++  std::set<base::FilePath> referenced_file_set(referenced_files.begin(),
++                                               referenced_files.end());
++  for (const base::FilePath& file : all_files) {
++    if (!referenced_file_set.contains(file)) {
++      // Found a file that was not in the list to be validated, so the renderer
++      // should be killed.
++      return false;
++    }
++  }
++
+   return ChildProcessSecurityPolicyImpl::GetInstance()->CanReadAllFiles(
+-      GetProcess()->GetID(), state.GetReferencedFiles());
++      GetProcess()->GetID(), referenced_files);
+ }
+ 
+ void RenderFrameHostImpl::GrantFileAccessFromPageState(
