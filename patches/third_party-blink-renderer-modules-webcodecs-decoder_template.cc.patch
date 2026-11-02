@@ -1,0 +1,22 @@
+diff --git a/third_party/blink/renderer/modules/webcodecs/decoder_template.cc b/third_party/blink/renderer/modules/webcodecs/decoder_template.cc
+index c7b884f111d7365429396c43e0338a368a4a8aa7..d0b49d5558f4e7acc2abaa6c672b189269f27890 100644
+--- a/third_party/blink/renderer/modules/webcodecs/decoder_template.cc
++++ b/third_party/blink/renderer/modules/webcodecs/decoder_template.cc
+@@ -125,6 +125,9 @@ bool DecoderTemplate<Traits>::GetLowDelayPreference(const ConfigType&) {
+ template <typename Traits>
+ void DecoderTemplate<Traits>::SetHardwarePreference(HardwarePreference) {}
+ 
++template <typename Traits>
++void DecoderTemplate<Traits>::OnActiveConfigChanged(const MediaConfigType&) {}
++
+ template <typename Traits>
+ void DecoderTemplate<Traits>::configure(const ConfigType* config,
+                                         ExceptionState& exception_state) {
+@@ -674,6 +677,7 @@ void DecoderTemplate<Traits>::OnInitializeDone(media::DecoderStatus status) {
+ 
+     low_delay_ = pending_request_->low_delay.value();
+     active_config_ = std::move(pending_request_->media_config);
++    OnActiveConfigChanged(*active_config_);
+   }
+ 
+   pending_request_.Release()->EndTracing();

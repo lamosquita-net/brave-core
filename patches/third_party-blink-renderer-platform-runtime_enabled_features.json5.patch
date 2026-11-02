@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/platform/runtime_enabled_features.json5 b/third_party/blink/renderer/platform/runtime_enabled_features.json5
-index 75e44e6b7cdd95c1e39b3759939ec1146232f255..3280aabecca2b5329704c37b471f537718e1582d 100644
+index 75e44e6b7cdd95c1e39b3759939ec1146232f255..3a24ac0339037d6ce5abf594e57570c55b1fe8b6 100644
 --- a/third_party/blink/renderer/platform/runtime_enabled_features.json5
 +++ b/third_party/blink/renderer/platform/runtime_enabled_features.json5
 @@ -284,6 +284,11 @@
@@ -864,20 +864,20 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..3280aabecca2b5329704c37b471f5377
 +      name: "HTMLCommandActionsV2",
 +      depends_on: ["HTMLCommandAttributes"],
 +      status: "test",
-+    },
+     },
+-    // Additional default invoke actions that aren't part of v1 of invokers.
+-    // When this flag is disabled only v1 actions (popover and dialog defaults) will work.
 +    // Adds support for the `command` and `commandfor` attributes, as specified
 +    // in the open-ui "Invokers" explainer.
 +    // https://open-ui.org/components/invokers.explainer/
 +    // This feature was shipped in M135 and can be removed in M137.
-+    {
-+      name: "HTMLCommandAttributes",
-+      status: "stable",
-     },
--    // Additional default invoke actions that aren't part of v1 of invokers.
--    // When this flag is disabled only v1 actions (popover and dialog defaults) will work.
-+    // Adds support for the 'request-close' command.
      {
 -      name: "HTMLInvokeActionsV2",
++      name: "HTMLCommandAttributes",
++      status: "stable",
++    },
++    // Adds support for the 'request-close' command.
++    {
 +      name: "HTMLCommandRequestClose",
 +      depends_on: ["HTMLCommandAttributes"],
        status: "experimental",
@@ -954,7 +954,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..3280aabecca2b5329704c37b471f5377
      {
        name: "ImplicitRootScroller",
        public: true,
-@@ -2258,17 +2606,18 @@
+@@ -2258,10 +2606,6 @@
        name: "InertElementNonEditable",
        status: "stable",
      },
@@ -965,30 +965,31 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..3280aabecca2b5329704c37b471f5377
      {
        // If a painting bug no longer reproduces with this feature enabled, then
        // the bug is caused by incorrect cull rects.
-       name: "InfiniteCullRect",
+@@ -2271,6 +2615,11 @@
+       name: "InheritUserModifyWithoutContenteditable",
+       status: "stable",
      },
-     {
--      name: "InheritUserModifyWithoutContenteditable",
-+      name: "InheritUserModifyWithoutContenteditable",
-+      status: "stable",
-+    },
 +    {
 +      // crbug.com/370217727
 +      name: "InitialLetterRaiseBySpecified",
-       status: "stable",
-     },
-     {
-@@ -2317,6 +2666,10 @@
-       name: "InsertBlockquoteBeforeOuterBlock",
-       status: "stable",
-     },
-+    {
-+      name: "InsertLineBreakIfInlineListItem",
 +      status: "stable",
 +    },
      {
-       // crbug.com/1420675
-       name: "InsertLineBreakIfPhrasingContent",
+       name: "InlineBlockInSameLine",
+       status: "stable",
+@@ -2314,7 +2663,11 @@
+     // when indenting a node whose outer block is a blockquote. See
+     // https://crbug.com/327665597
+     {
+-      name: "InsertBlockquoteBeforeOuterBlock",
++      name: "InsertBlockquoteBeforeOuterBlock",
++      status: "stable",
++    },
++    {
++      name: "InsertLineBreakIfInlineListItem",
+       status: "stable",
+     },
+     {
 @@ -2328,6 +2681,12 @@
        status: "stable",
        base_feature: "none",
@@ -1808,7 +1809,17 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..3280aabecca2b5329704c37b471f5377
      },
      {
        name: "WebAuthenticationLargeBlobExtension",
-@@ -4506,7 +5197,11 @@
+@@ -4500,13 +5191,21 @@
+       name: "WebCodecsHBDFormats",
+       status: "stable",
+     },
++    {
++      name: "WebCodecsOrientation",
++      status: "stable",
++    },
+     {
+       name: "WebCodecsVideoEncoderBuffers",
+       status: "experimental",
      },
      {
        name: "WebCryptoCurve25519",
@@ -1821,7 +1832,7 @@ index 75e44e6b7cdd95c1e39b3759939ec1146232f255..3280aabecca2b5329704c37b471f5377
      },
      {
        name: "WebExposedScrollOffset",
-@@ -4802,6 +5497,6 @@
+@@ -4802,6 +5501,6 @@
        // If enabled, the `getDisplayMedia()` family of APIs will ask for NV12
        // frames, which should trigger a zero-copy path in the tab capture code.
        name: "ZeroCopyTabCapture",
