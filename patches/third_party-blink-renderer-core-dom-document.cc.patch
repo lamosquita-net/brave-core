@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/document.cc b/third_party/blink/renderer/core/dom/document.cc
-index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..56d07684c5b189bb2c7952da31fcb3fa6db8423c 100644
+index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..1fe52b15f108ee8e79950ec3c60011dea0d5c4ca 100644
 --- a/third_party/blink/renderer/core/dom/document.cc
 +++ b/third_party/blink/renderer/core/dom/document.cc
 @@ -56,6 +56,7 @@
@@ -27,7 +27,50 @@ index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..56d07684c5b189bb2c7952da31fcb3fa
    } else {
      // We disable fetches for frame-less Documents.
      // See https://crbug.com/961614 for details.
-@@ -4767,13 +4769,25 @@ void Document::ProcessBaseElement() {
+@@ -4719,21 +4721,19 @@ void Document::ProcessBaseElement() {
+ 
+   // Find the first href attribute in a base element and the first target
+   // attribute in a base element.
+-  const AtomicString* href = nullptr;
+-  const AtomicString* target = nullptr;
++  // FlyWeb (upstream dffb572d0b, crbug.com/515155946): keep copies, not
++  // pointers into the element's attribute storage, which may change while
++  // this function runs.
++  AtomicString href;
++  AtomicString target;
+   for (HTMLBaseElement* base = Traversal<HTMLBaseElement>::FirstWithin(*this);
+-       base && (!href || !target);
++       base && (href.IsNull() || target.IsNull());
+        base = Traversal<HTMLBaseElement>::Next(*base)) {
+-    if (!href) {
+-      const AtomicString& value = base->FastGetAttribute(html_names::kHrefAttr);
+-      if (!value.IsNull())
+-        href = &value;
++    if (href.IsNull()) {
++      href = base->FastGetAttribute(html_names::kHrefAttr);
+     }
+-    if (!target) {
+-      const AtomicString& value =
+-          base->FastGetAttribute(html_names::kTargetAttr);
+-      if (!value.IsNull())
+-        target = &value;
++    if (target.IsNull()) {
++      target = base->FastGetAttribute(html_names::kTargetAttr);
+     }
+     if (GetExecutionContext() &&
+         GetExecutionContext()->GetContentSecurityPolicy()->IsActive()) {
+@@ -4745,8 +4745,8 @@ void Document::ProcessBaseElement() {
+   // FIXME: Since this doesn't share code with completeURL it may not handle
+   // encodings correctly.
+   KURL base_element_url;
+-  if (href) {
+-    String stripped_href = StripLeadingAndTrailingHTMLSpaces(*href);
++  if (!href.IsNull()) {
++    String stripped_href = StripLeadingAndTrailingHTMLSpaces(href);
+     if (!stripped_href.empty())
+       base_element_url = KURL(FallbackBaseURL(), stripped_href);
+   }
+@@ -4767,22 +4767,34 @@ void Document::ProcessBaseElement() {
      }
    }
  
@@ -60,7 +103,20 @@ index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..56d07684c5b189bb2c7952da31fcb3fa
    }
  
    AtomicString old_base_target = base_target_;
-@@ -5444,6 +5458,12 @@ bool Document::SetFocusedElement(Element* new_focused_element,
+-  if (target) {
+-    if (target->Contains('\n') || target->Contains('\r'))
++  if (!target.IsNull()) {
++    if (target.Contains('\n') || target.Contains('\r'))
+       UseCounter::Count(*this, WebFeature::kBaseWithNewlinesInTarget);
+-    if (target->Contains('<'))
++    if (target.Contains('<'))
+       UseCounter::Count(*this, WebFeature::kBaseWithOpenBracketInTarget);
+-    base_target_ = *target;
++    base_target_ = target;
+   } else {
+     base_target_ = g_null_atom;
+   }
+@@ -5444,6 +5456,12 @@ bool Document::SetFocusedElement(Element* new_focused_element,
          new_focused_element = nullptr;
        }
      }
@@ -73,7 +129,7 @@ index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..56d07684c5b189bb2c7952da31fcb3fa
    }
  
    // Blur/focusout handlers could have moved the new element out of this
-@@ -5556,13 +5576,8 @@ bool Document::SetFocusedElement(Element* new_focused_element,
+@@ -5556,13 +5574,8 @@ bool Document::SetFocusedElement(Element* new_focused_element,
      frame->Selection().DidChangeFocus();
  
    // EditContext's activation is synced with the associated element being
@@ -89,7 +145,7 @@ index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..56d07684c5b189bb2c7952da31fcb3fa
    if (new_focused_element) {
      if (auto* edit_context = new_focused_element->editContext()) {
        edit_context->Focus();
-@@ -5853,10 +5868,17 @@ void Document::NodeWillBeRemoved(Node& n) {
+@@ -5853,10 +5866,17 @@ void Document::NodeWillBeRemoved(Node& n) {
    for (NodeIterator* ni : node_iterators_)
      ni->NodeWillBeRemoved(n);
  
@@ -111,7 +167,7 @@ index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..56d07684c5b189bb2c7952da31fcb3fa
    }
  
    synchronous_mutation_observer_set_.ForEachObserver(
-@@ -7989,11 +8011,11 @@ void Document::AddToTopLayer(Element* element, const Element* before) {
+@@ -7989,11 +8009,11 @@ void Document::AddToTopLayer(Element* element, const Element* before) {
      }
    }
  
@@ -126,7 +182,7 @@ index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..56d07684c5b189bb2c7952da31fcb3fa
          << "If this invariant changes, we might need to revisit Container "
             "Queries for top layer elements.";
      wtf_size_t before_position = top_layer_elements_.Find(before);
-@@ -8006,6 +8028,16 @@ void Document::AddToTopLayer(Element* element, const Element* before) {
+@@ -8006,6 +8026,16 @@ void Document::AddToTopLayer(Element* element, const Element* before) {
    display_lock_document_state_->ElementAddedToTopLayer(element);
  
    probe::TopLayerElementsChanged(this);
@@ -143,7 +199,7 @@ index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..56d07684c5b189bb2c7952da31fcb3fa
  }
  
  void Document::ScheduleForTopLayerRemoval(Element* element,
-@@ -8063,8 +8095,25 @@ void Document::RemoveFromTopLayerImmediately(Element* element) {
+@@ -8063,8 +8093,25 @@ void Document::RemoveFromTopLayerImmediately(Element* element) {
    }
    element->SetIsInTopLayer(false);
    display_lock_document_state_->ElementRemovedFromTopLayer(element);
@@ -169,7 +225,7 @@ index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..56d07684c5b189bb2c7952da31fcb3fa
  }
  
  std::optional<Document::TopLayerReason> Document::IsScheduledForTopLayerRemoval(
-@@ -8108,6 +8157,17 @@ void Document::SetPopoverPointerdownTarget(const HTMLElement* popover) {
+@@ -8108,6 +8155,17 @@ void Document::SetPopoverPointerdownTarget(const HTMLElement* popover) {
    popover_pointerdown_target_ = popover;
  }
  
@@ -187,7 +243,7 @@ index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..56d07684c5b189bb2c7952da31fcb3fa
  void Document::exitPointerLock() {
    if (!GetPage())
      return;
-@@ -8842,8 +8902,10 @@ void Document::Trace(Visitor* visitor) const {
+@@ -8842,8 +8900,10 @@ void Document::Trace(Visitor* visitor) const {
    visitor->Trace(popover_auto_stack_);
    visitor->Trace(popover_hint_stack_);
    visitor->Trace(popover_pointerdown_target_);
@@ -198,7 +254,7 @@ index 7ee972f09ce6ce13b3d42d6b53e8d11fd9615c33..56d07684c5b189bb2c7952da31fcb3fa
    visitor->Trace(document_part_root_);
    visitor->Trace(load_event_delay_timer_);
    visitor->Trace(plugin_loading_timer_);
-@@ -9458,6 +9520,22 @@ void Document::OnWarnUnusedPreloads(Vector<KURL> unused_preloads) {
+@@ -9458,6 +9518,22 @@ void Document::OnWarnUnusedPreloads(Vector<KURL> unused_preloads) {
    }
  }
  
