@@ -1,5 +1,5 @@
 diff --git a/content/browser/renderer_host/render_frame_host_impl.cc b/content/browser/renderer_host/render_frame_host_impl.cc
-index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..b0a36a2b72f0d0076b95286057d28324d2636a2b 100644
+index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..e46bad4e68526a9f1ba28dd81710252f9b442725 100644
 --- a/content/browser/renderer_host/render_frame_host_impl.cc
 +++ b/content/browser/renderer_host/render_frame_host_impl.cc
 @@ -9,6 +9,7 @@
@@ -133,7 +133,21 @@ index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..b0a36a2b72f0d0076b95286057d28324
  #if BUILDFLAG(IS_ANDROID)
  void RenderFrameHostImpl::RequestSmartClipExtract(
      ExtractSmartClipDataCallback callback,
-@@ -8881,6 +8949,8 @@ void RenderFrameHostImpl::CreateNewWindow(
+@@ -8785,6 +8853,13 @@ void RenderFrameHostImpl::CreateNewWindow(
+   TRACE_EVENT2("navigation", "RenderFrameHostImpl::CreateNewWindow",
+                "render_frame_host", this, "url", params->target_url);
+ 
++  // FlyWeb (FS.39, upstream eb3896190a2, crbug.com/487768779): the renderer
++  // must be able to read the files in the form submission body.
++  if (!VerifyCreateNewWindowParams(*this, *params)) {
++    std::move(callback).Run(mojom::CreateNewWindowStatus::kBlocked, nullptr);
++    return;
++  }
++
+   // Only top-most frames can open picture-in-picture windows.
+   if (params->disposition == WindowOpenDisposition::NEW_PICTURE_IN_PICTURE &&
+       GetParentOrOuterDocumentOrEmbedder()) {
+@@ -8881,6 +8956,8 @@ void RenderFrameHostImpl::CreateNewWindow(
          dom_storage_context, params->session_storage_namespace_id);
    }
  
@@ -142,7 +156,7 @@ index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..b0a36a2b72f0d0076b95286057d28324
    if (IsCredentialless() || IsNestedWithinFencedFrame() ||
        CoopSuppressOpener(/*opener=*/this)) {
      params->opener_suppressed = true;
-@@ -12157,8 +12227,29 @@ RenderFrameHostImpl* RenderFrameHostImpl::GetOutermostMainFrame() {
+@@ -12157,8 +12234,29 @@ RenderFrameHostImpl* RenderFrameHostImpl::GetOutermostMainFrame() {
  
  bool RenderFrameHostImpl::CanAccessFilesOfPageState(
      const blink::PageState& state) {
