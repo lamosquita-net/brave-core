@@ -52,3 +52,30 @@ All of them are adapted by hand: none applied as is on 128 plus the existing pat
 - **60f004b926** (M138-LTS; upstream c1433740f3, crbug 485935305; merged to M144-LTS and M146). A WebGL context
   restore bumps the `WebGLContextGroup` counter, as a context loss does, so objects created while the context was lost
   are invalid after the restore. 128 has no `WebGLContextObjectSupport`. The counter stays `uint32_t`.
+
+### GPU, media and ANGLE (IOSurface/Metal of 138 and what the 138 branches carry)
+
+- **25210ac50d** (crbug 40254930; correctness, not security). `ScopedIOSurfaceLock` unlocks with the options it locked
+  with. 128 unlocked with 0, even after `kIOSurfaceLockAvoidSync`. `ReadbackToMemory()` now locks with
+  `kIOSurfaceLockReadOnly`, which 128 already uses on 10.14.
+- **f35ac32d66** (M138-LTS; upstream 6345b520b1, crbug 488270257; merged to M144-LTS and M146). `SharedImageStub`
+  rejects upload data that is empty or smaller than the image. Applied clean.
+- **cdf876cf92** (crbug 416294710; a crash, possibly a double free). The VideoToolbox encoder always hands the request
+  to VT, even when `VTCompressionSessionEncodeFrame()` fails.
+- **ANGLE aa51faff4110 and 4664989d810d** (M138-LTS; crbug 489585044 and 489494022). Every Metal buffer is rounded up
+  to 16 bytes, and the shadow copy follows the real buffer size. aa51faf applies clean; 4664989 is adapted by hand.
+  Metal backend only: the default from 10.15, or with `--use-angle=metal` on 10.14.
+- **ANGLE 4e2ac155b53f** (M138; crbug 435139154). The location of `inout` fragment outputs is validated against
+  MaxDrawBuffers, and `RewritePixelLocalStorage()` runs after `ValidateOutputs()`.
+- Already in: ANGLE e1dc0a7ab5d1 (crbug 427162086, transform feedback buffers), in the existing
+  `TransformFeedback.*` and `validationES2.cpp` patches.
+- **Pending: ANGLE 2d08a9518d40** (M138-LTS; upstream af0386cb8f, crbug 438038775, structs made only of samplers are
+  moved to the end). It needs Gerrit change 5748789 (August 2024, samplers moved to the end of structs) first, which is
+  not in 128's ANGLE (713102774487). That needs its own round.
+- Not ported:
+  - **be4505626e** (no `waitUntilScheduled` on the same MTLDevice). An optimisation that needs Dawn's
+    `GetMTLDevice`, the ANGLE fixes for its CTS failures and the backing lock of 13x. ANGLE-GL on 10.14 waits anyway.
+  - **59b5a2bf52 and 3989bcdba4** (crbug 405946930, EGL state across threads). Only reachable with thread-safe
+    IOSurface backings (`kIOSurfaceMultiThreading`). 128 always builds them with `is_thread_safe=false`.
+  - **4631eb9169** (VP9 `show_existing_frame` in VideoToolbox). A decode error, not a security fix; VP9 hardware
+    decoding needs macOS 11 or later.
