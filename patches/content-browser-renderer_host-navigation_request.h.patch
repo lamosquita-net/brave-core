@@ -1,5 +1,5 @@
 diff --git a/content/browser/renderer_host/navigation_request.h b/content/browser/renderer_host/navigation_request.h
-index 10b561a65c6976787f7b207da8c5bc0300c731a4..785aa28d7a8ae388b566045d15c0660b0a90c6dc 100644
+index 10b561a65c6976787f7b207da8c5bc0300c731a4..b1a858f72f3f5b08d5d947016b795e523d1545ce 100644
 --- a/content/browser/renderer_host/navigation_request.h
 +++ b/content/browser/renderer_host/navigation_request.h
 @@ -78,6 +78,7 @@
@@ -10,6 +10,15 @@ index 10b561a65c6976787f7b207da8c5bc0300c731a4..785aa28d7a8ae388b566045d15c0660b
  struct URLLoaderCompletionStatus;
  }  // namespace network
  
+@@ -493,7 +494,7 @@ class CONTENT_EXPORT NavigationRequest
+ 
+   NavigationState state() const { return state_; }
+ 
+-  FrameTreeNode* frame_tree_node() const { return frame_tree_node_; }
++  FrameTreeNode* frame_tree_node() const { return frame_tree_node_.get(); }
+ 
+   bool is_synchronous_renderer_commit() const {
+     return is_synchronous_renderer_commit_;
 @@ -1818,6 +1819,15 @@ class CONTENT_EXPORT NavigationRequest
    // or retrieved from response headers.
    network::CrossOriginEmbedderPolicy ComputeCrossOriginEmbedderPolicy();
@@ -26,10 +35,14 @@ index 10b561a65c6976787f7b207da8c5bc0300c731a4..785aa28d7a8ae388b566045d15c0660b
    // [spec]:
    // https://html.spec.whatwg.org/C/#check-a-navigation-response's-adherence-to-its-embedder-policy
    //
-@@ -2080,6 +2090,13 @@ class CONTENT_EXPORT NavigationRequest
+@@ -2080,10 +2090,18 @@ class CONTENT_EXPORT NavigationRequest
    // contexts or if DocumentIsolationPolicy is not supported.
    void SanitizeDocumentIsolationPolicyHeader();
  
+-  // Never null. The pointee node owns this navigation request instance.
+-  // This field is not a raw_ptr because of incompatibilities with tracing
+-  // (TRACE_EVENT*), perfetto::TracedDictionary::Add and gmock/EXPECT_THAT.
+-  RAW_PTR_EXCLUSION FrameTreeNode* const frame_tree_node_;
 +  // Sets up service worker client info to inherit controller from the parent
 +  // frame if it is a same origin srcdoc iframe.
 +  // This method creates a ServiceWorkerClient associated with the navigating
@@ -37,6 +50,11 @@ index 10b561a65c6976787f7b207da8c5bc0300c731a4..785aa28d7a8ae388b566045d15c0660b
 +  // would also create ServiceWorkerClient and cause conflict.
 +  void InheritServiceWorkerControllerFromParentIfNeeded();
 +
-   // Never null. The pointee node owns this navigation request instance.
-   // This field is not a raw_ptr because of incompatibilities with tracing
-   // (TRACE_EVENT*), perfetto::TracedDictionary::Add and gmock/EXPECT_THAT.
++  // Never null, and intended to outlive this NavigationRequest. Initially, this
++  // NavigationRequest instance is owned by this FrameTreeNode, until ownership
++  // is transferred to the committing RenderFrameHost. FlyWeb (FS.39): a
++  // raw_ptr (MiraclePtr) as upstream e40949404db.
++  raw_ptr<FrameTreeNode> const frame_tree_node_;
+ 
+   // Used for short-lived NavigationRequest created at DidCommit time for the
+   // purpose of committing navigation that were not driven by the browser
