@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/modules/accessibility/ax_node_object.cc b/third_party/blink/renderer/modules/accessibility/ax_node_object.cc
-index 59a5d41a3a64676d939e32fe48c15552df5dc00a..9428189a28396efee8bf9d132ee3ac0a8388954d 100644
+index 59a5d41a3a64676d939e32fe48c15552df5dc00a..7b831a791d13de18154bd60c48fbb314d663cd6d 100644
 --- a/third_party/blink/renderer/modules/accessibility/ax_node_object.cc
 +++ b/third_party/blink/renderer/modules/accessibility/ax_node_object.cc
 @@ -2986,7 +2986,11 @@ AccessibilityExpanded AXNodeObject::IsExpanded() const {
@@ -68,3 +68,19 @@ index 59a5d41a3a64676d939e32fe48c15552df5dc00a..9428189a28396efee8bf9d132ee3ac0a
        }
      }
  #if DCHECK_IS_ON()
+@@ -5824,7 +5809,14 @@ void AXNodeObject::InsertChild(AXObject* child,
+ }
+ 
+ bool AXNodeObject::CanHaveChildren() const {
+-  DCHECK(!IsDetached());
++  // When Detached, calling methods such as AXObjectCache can cause a crash,
++  // instead, fail gracefully here. (FlyWeb: upstream a16cd5c0ad,
++  // crbug.com/442619489.)
++  if (IsDetached()) {
++    DUMP_WILL_BE_NOTREACHED()
++        << "Calling CanHaveChildren on a detached node is not allowed." << this;
++    return false;
++  }
+ 
+   // A child tree has been stitched onto this node, hiding its usual subtree.
+   if (child_tree_id()) {
