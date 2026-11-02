@@ -184,3 +184,76 @@ check the stack-overflow handling), `src/ic/ic.cc`, `src/json/json-parser.cc` (1
 path; the patch replaced it with the plain loop), `src/maglev/maglev-graph-builder.cc` (a068030f51, 811ebc89d5; Maglev
 off) and `src/regexp/regexp-compiler.h` (13.8 has `FlushMode` and `action_`; the patch adds `kCPOffsetSlack`).
 Resolved files of the merge (with conflict markers) were in the MOTOR-42 container only; rerun `v8re.sh` to get them.
+
+---
+
+# FlyWeb: FS.39 (level 138, SEGURIDAD-PORTES-16), post-138 V8 fixes on 13.8.258.30
+
+SEGURIDAD-PORTES-16, 02-11-2026 (brave-core `seg/fs39-v8` on `nube/motor-138` ae7e11c1). Base: 13.8.258.30 + the
+`patches/v8` of level 138 (225): 218 applied, the 7 left as the 13.7 version did not. Branch 13.8 (M138-LTS) ends at
+13.8.258.54; every merge .31-.54 was checked against 13.8.258.30 + `patches/v8`. **After FS.39 all 239 patches apply on
+a clean 13.8.258.30** (`git apply` in alphabetical order, the `v8-d8.sh` method). Cache epoch 29 -> 30 (no bytecode
+change). Not compiled in the cloud.
+
+**The seven 13.7 patches, redone on 13.8 (same intent):**
+
+- `src/builtins/builtins-wasm-gen.cc` (CVE-2026-87491, 36079c3628, crbug 543557673): the CSA `WasmGetOwnProperty` is
+  unchanged, placed before 13.8's new `WasmConstructorWrapper` (the `builtins-definitions.h` and `wasm.tq` halves
+  already applied).
+- `src/debug/liveedit.cc` (b07860d015, crbug 485267831, AST visitors and stack overflow): the upstream hunk applies
+  as is on 13.8's `Run(literals, eval_calls)`; the reindexer, traversal visitor and parser halves were already in
+  `patches/v8`.
+- `src/ic/ic.cc` (access checks and elements in the load/store IC handlers): identical changed lines; the indexed
+  interceptor block that moves after the access-check bailout no longer matched 13.8's `LoadElementHandler`
+  signature (extra `maybe_transition_target`), so the old block was removed by hand.
+- `src/json/json-parser.cc`: replaced by the 13.8 LTS merge 472c23c5db (50eba5e6c2, crbug 452296415, early return
+  when `Expect()` fails) as is; 13.8 keeps its `FastIterableState` fast path (the 13.7 patch had no such path). The
+  `json-parser.h` half was already in `patches/v8`.
+- `src/maglev/maglev-graph-builder.cc` (a068030f51 crbug 495751197, 811ebc89d5 crbug 523884658, the
+  `DefineNamedOwnPropertyInLiteral` store-to-constant deopt and the inlined `for-in` map check): same hunks; the
+  `SourcePosition::MaxInliningId()` inlining limit is dropped because 13.8 already has it.
+- `src/regexp/regexp-compiler.h`: `Trace::kCPOffsetSlack` added next to 13.8's `Flush(..., FlushMode)` (the
+  `regexp-compiler.cc` half applied).
+- **Dropped:** `src/codegen/arm64/macro-assembler-arm64.h`: 13.8's `InstructionAccurateScope` already has the change
+  (mandatory count, `DCHECK_GT`, unconditional bind) plus a `(count + 1)` veneer margin. ARM64 only.
+
+**Checked, nothing to do:** LTS .52 e0a04a9af6 (a9509c5e81, crbug 487746373, RAB/GSAB `Object.keys` on a grown typed
+array) is in `src-objects-elements.cc.patch`: every hunk of the merge is there, the only differences are
+`size_t initial_list_length` (upstream `uint32_t`) and no `static_cast` on `NumberOfElementsImpl` (it returns
+`uint32_t` in 13.8); the patch also carries 0197c35257 (typed array copy with a single elements-kind read).
+ea2f03dfff (crbug 574660146, Turboshaft JS frames bounded to 4 KB against stack clash) was already in
+`src-compiler-turboshaft-pipelines.cc.patch` and `test-mjsunit-turboshaft-regress-574660146.js.patch` (same code and
+test); its Maglev half is only a comment, and 13.8's Maglev already has the 4 KB bailout.
+
+**Ported, 5:**
+
+- **.33 d9453204c3** (7e9d59456d, crbug 425703809): the `compiler.cc` half, clean: background code cache
+  deserialization and merge run under the isolate's `FlushDenormalsScope` (the `flags.cc` half, FPU state in the flag
+  hash, was already in).
+- **.46 f29abbb8e0** (LTS only, crbug 469143679): clean on top of .38: the JSON parser re-checks the descriptor index
+  against a descriptor array a GC may have shrunk.
+- **137e7f93d7** (crbug 574038247, by hand): star-exported bindings are cached in `Module::exports()` only while the
+  module is linking (`status() <= kLinking`), so a linked module's table, indexed by the LoadIC handlers of its
+  namespace, is never rehashed (e.g. by a later cyclic dynamic import that fails to link). 13.8 has no deferred
+  module namespace, so `ExportsFinalized()` is `IsJSModuleNamespace(module_namespace())`; the `exports` setter is
+  Torque-generated, so upstream's `CHECK(!ExportsFinalized())` in it became a `CHECK` in the only writer that runs
+  after linking; the factory reordering (needed only by that setter CHECK) is not ported. Test: upstream's
+  `--bundle` test (13.8's d8 has no `--bundle`) split into `regress/regress-574038247.mjs` and eleven
+  `modules-skip-regress-574038247-*.mjs` resources, like FS.36's `regress-559893859`.
+- **e48d942f29** (crbug 577627207, clean): `UnwindAndFindHandler` skips the `DeoptimizationEntry_LazyAfterFastCall`
+  handler lookup for exceptions JavaScript cannot catch (a termination during a fast API call that lazily deopts its
+  caller was swallowed by the caller's try/catch). With `regress-577627207.js`.
+- **85adfcb327** (crbug 578688670, clean): `PromiseAnyRejectElementClosure` keeps its already-called state in the
+  errors array (`errors[index] != PromiseHole`, remaining count 0) instead of replacing the closure's context, which
+  optimized callers constant-fold; it also CHECKs the value is not `PromiseHole` and the count stays >= 0. With
+  `compiler/regress-578688670.js`.
+
+**Not ported:** .48 082a248a66 and .50 e9bb0688e0 (crbug 483853098, inspector: DevTools only, and .50 adds API to
+`include/v8-inspector.h`); .35/.54 (ARM64), .43 (32-bit), .39/.44 (rename, infra); 0a60c4aa30 (Maglev prewalk) and
+7fd7eec11e (`SetPrototypeProperties`, not in 13.8). **Risks unchanged:** b01d779c20/19d60f6362 (13.8 has the same
+old `WasmMemoryObject::New(buffer)` path) and 28fc9a12ce (same `kInlinedTailCall` mode, Wasm inlining on); the rest of
+the FS.38 risk list.
+
+To check (D8-LINUX): `d8` 13.8 and mjsunit, especially `regress/regress-574038247.mjs`, `regress/regress-577627207.js`,
+`compiler/regress-578688670.js`, `turboshaft/regress-574660146.js`, `json*`, `modules-*`, `es6/promise-any*` and
+`wasm/*`.
