@@ -1,5 +1,5 @@
 diff --git a/content/browser/renderer_host/render_frame_host_impl.cc b/content/browser/renderer_host/render_frame_host_impl.cc
-index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..5b5ac4fe7c3a0cd9f111b6f728d9da72d3fe5a9e 100644
+index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..08449bd8e0ffd73e196f4928ba819fd2fcd4cf57 100644
 --- a/content/browser/renderer_host/render_frame_host_impl.cc
 +++ b/content/browser/renderer_host/render_frame_host_impl.cc
 @@ -736,6 +736,20 @@ DetermineAfterCommitWhetherToForbidTrustTokenOperation(
@@ -62,7 +62,16 @@ index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..5b5ac4fe7c3a0cd9f111b6f728d9da72
      }
  
      return result;
-@@ -4584,6 +4623,7 @@ net::IsolationInfo RenderFrameHostImpl::ComputeIsolationInfoInternal(
+@@ -3411,6 +3450,8 @@ void RenderFrameHostImpl::InitializePolicyContainerHost(
+             parent_policies.cross_origin_opener_policy,
+             parent_policies.cross_origin_embedder_policy,
+             parent_policies.document_isolation_policy,
++            parent_policies.integrity_policy,
++            parent_policies.integrity_policy_report_only,
+             network::mojom::WebSandboxFlags::kNone,
+             /*is_credentialless=*/false,
+             /*can_navigate_top_without_user_gesture=*/true,
+@@ -4584,6 +4625,7 @@ net::IsolationInfo RenderFrameHostImpl::ComputeIsolationInfoInternal(
      candidate_site_for_cookies = net::SiteForCookies(top_frame_site);
    }
  
@@ -70,7 +79,7 @@ index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..5b5ac4fe7c3a0cd9f111b6f728d9da72
    std::optional<base::UnguessableToken> nonce =
        ComputeNonce(is_credentialless, fenced_frame_nonce_for_navigation);
    return net::IsolationInfo::Create(request_type, top_frame_origin,
-@@ -4594,6 +4634,7 @@ net::IsolationInfo RenderFrameHostImpl::ComputeIsolationInfoInternal(
+@@ -4594,6 +4636,7 @@ net::IsolationInfo RenderFrameHostImpl::ComputeIsolationInfoInternal(
  std::optional<base::UnguessableToken> RenderFrameHostImpl::ComputeNonce(
      bool is_credentialless,
      std::optional<base::UnguessableToken> fenced_frame_nonce_for_navigation) {
@@ -78,7 +87,7 @@ index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..5b5ac4fe7c3a0cd9f111b6f728d9da72
    // If it's a credentialless frame tree, use its nonce even if it's within a
    // fenced frame tree to maintain the guarantee that a credentialless frame
    // tree has a unique nonce.
-@@ -6017,6 +6058,29 @@ void RenderFrameHostImpl::SetSubframeUnloadTimeoutForTesting(
+@@ -6017,6 +6060,29 @@ void RenderFrameHostImpl::SetSubframeUnloadTimeoutForTesting(
    subframe_unload_timeout_ = timeout;
  }
  
@@ -108,7 +117,7 @@ index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..5b5ac4fe7c3a0cd9f111b6f728d9da72
  #if BUILDFLAG(IS_ANDROID)
  void RenderFrameHostImpl::RequestSmartClipExtract(
      ExtractSmartClipDataCallback callback,
-@@ -8881,6 +8945,8 @@ void RenderFrameHostImpl::CreateNewWindow(
+@@ -8881,6 +8947,8 @@ void RenderFrameHostImpl::CreateNewWindow(
          dom_storage_context, params->session_storage_namespace_id);
    }
  

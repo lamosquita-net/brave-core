@@ -1,0 +1,25 @@
+diff --git a/content/browser/renderer_host/navigation_policy_container_builder.cc b/content/browser/renderer_host/navigation_policy_container_builder.cc
+index e1ca0489459054ee0905edec01e46f007ff0b222..f8a2e8ee1d6b115c4b394bd1d78ea2b1e06181f2 100644
+--- a/content/browser/renderer_host/navigation_policy_container_builder.cc
++++ b/content/browser/renderer_host/navigation_policy_container_builder.cc
+@@ -153,6 +153,20 @@ void NavigationPolicyContainerBuilder::SetDocumentIsolationPolicy(
+   delivered_policies_.document_isolation_policy = dip;
+ }
+ 
++void NavigationPolicyContainerBuilder::SetIntegrityPolicy(
++    network::IntegrityPolicy ip) {
++  DCHECK(!HasComputedPolicies());
++
++  delivered_policies_.integrity_policy = std::move(ip);
++}
++
++void NavigationPolicyContainerBuilder::SetIntegrityPolicyReportOnly(
++    network::IntegrityPolicy ip) {
++  DCHECK(!HasComputedPolicies());
++
++  delivered_policies_.integrity_policy_report_only = std::move(ip);
++}
++
+ const PolicyContainerPolicies&
+ NavigationPolicyContainerBuilder::DeliveredPoliciesForTesting() const {
+   DCHECK(!HasComputedPolicies());

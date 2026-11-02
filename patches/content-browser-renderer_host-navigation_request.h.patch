@@ -1,8 +1,32 @@
 diff --git a/content/browser/renderer_host/navigation_request.h b/content/browser/renderer_host/navigation_request.h
-index 10b561a65c6976787f7b207da8c5bc0300c731a4..ebe2f22c7407131fbf1ba360ad6fa81dbc42d6b7 100644
+index 10b561a65c6976787f7b207da8c5bc0300c731a4..785aa28d7a8ae388b566045d15c0660b0a90c6dc 100644
 --- a/content/browser/renderer_host/navigation_request.h
 +++ b/content/browser/renderer_host/navigation_request.h
-@@ -2080,6 +2080,13 @@ class CONTENT_EXPORT NavigationRequest
+@@ -78,6 +78,7 @@
+ #endif
+ 
+ namespace network {
++struct IntegrityPolicy;
+ struct URLLoaderCompletionStatus;
+ }  // namespace network
+ 
+@@ -1818,6 +1819,15 @@ class CONTENT_EXPORT NavigationRequest
+   // or retrieved from response headers.
+   network::CrossOriginEmbedderPolicy ComputeCrossOriginEmbedderPolicy();
+ 
++  struct IntegrityPolicies {
++    network::IntegrityPolicy enforced;
++    network::IntegrityPolicy report_only;
++  };
++
++  // Calculates the integrity policies for a document, based on the
++  // `Integrity-Policy` and `Integrity-Policy-Report-Only` headers.
++  IntegrityPolicies ComputeIntegrityPolicies();
++
+   // [spec]:
+   // https://html.spec.whatwg.org/C/#check-a-navigation-response's-adherence-to-its-embedder-policy
+   //
+@@ -2080,6 +2090,13 @@ class CONTENT_EXPORT NavigationRequest
    // contexts or if DocumentIsolationPolicy is not supported.
    void SanitizeDocumentIsolationPolicyHeader();
  
