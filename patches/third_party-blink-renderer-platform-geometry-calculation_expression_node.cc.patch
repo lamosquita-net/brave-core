@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/platform/geometry/calculation_expression_node.cc b/third_party/blink/renderer/platform/geometry/calculation_expression_node.cc
-index 785746c00ab2fbbec0d55462eded19bc9ffe827d..90a43e151cc6d9caed559aea134731a265346ddf 100644
+index 785746c00ab2fbbec0d55462eded19bc9ffe827d..7292171d3d934a86db8ba34d8f3583565126b8f1 100644
 --- a/third_party/blink/renderer/platform/geometry/calculation_expression_node.cc
 +++ b/third_party/blink/renderer/platform/geometry/calculation_expression_node.cc
-@@ -18,18 +18,18 @@ namespace blink {
+@@ -4,6 +4,7 @@
+ 
+ #include "third_party/blink/renderer/platform/geometry/calculation_expression_node.h"
+ 
++#include <algorithm>
+ #include <cfloat>
+ #include <numeric>
+ 
+@@ -18,18 +19,18 @@ namespace blink {
  
  // ------ CalculationExpressionNumberNode ------
  
@@ -27,7 +35,7 @@ index 785746c00ab2fbbec0d55462eded19bc9ffe827d..90a43e151cc6d9caed559aea134731a2
  }
  
  scoped_refptr<const CalculationExpressionNode>
-@@ -65,7 +65,7 @@ CalculationExpressionSizingKeywordNode::CalculationExpressionSizingKeywordNode(
+@@ -65,7 +66,7 @@ CalculationExpressionSizingKeywordNode::CalculationExpressionSizingKeywordNode(
  
  float CalculationExpressionSizingKeywordNode::Evaluate(
      float max_value,
@@ -36,7 +44,7 @@ index 785746c00ab2fbbec0d55462eded19bc9ffe827d..90a43e151cc6d9caed559aea134731a2
    Length::Type intrinsic_type = Length::kFixed;
    switch (keyword_) {
      case Keyword::kSize:
-@@ -112,22 +112,42 @@ float CalculationExpressionSizingKeywordNode::Evaluate(
+@@ -112,22 +113,42 @@ float CalculationExpressionSizingKeywordNode::Evaluate(
    return (*input.intrinsic_evaluator)(Length(intrinsic_type));
  }
  
@@ -85,7 +93,17 @@ index 785746c00ab2fbbec0d55462eded19bc9ffe827d..90a43e151cc6d9caed559aea134731a2
  }
  
  scoped_refptr<const CalculationExpressionNode>
-@@ -361,6 +381,17 @@ CalculationExpressionOperationNode::CreateSimplified(Children&& children,
+@@ -346,7 +367,8 @@ CalculationExpressionOperationNode::CreateSimplified(Children&& children,
+         float progress_px = operand_pixels[0];
+         float from_px = operand_pixels[1];
+         float to_px = operand_pixels[2];
+-        float progress = (progress_px - from_px) / (to_px - from_px);
++        float progress_value = (progress_px - from_px) / (to_px - from_px);
++        float progress = std::clamp(progress_value, 0.f, 1.f);
+         return base::MakeRefCounted<CalculationExpressionPixelsAndPercentNode>(
+             PixelsAndPercent(progress));
+       }
+@@ -361,6 +383,17 @@ CalculationExpressionOperationNode::CreateSimplified(Children&& children,
        return base::MakeRefCounted<CalculationExpressionOperationNode>(
            std::move(children), op);
      }
@@ -103,7 +121,7 @@ index 785746c00ab2fbbec0d55462eded19bc9ffe827d..90a43e151cc6d9caed559aea134731a2
      case CalculationOperator::kInvalid:
        NOTREACHED_IN_MIGRATION();
        return nullptr;
-@@ -401,13 +432,16 @@ CalculationExpressionOperationNode::CalculationExpressionOperationNode(
+@@ -401,13 +434,16 @@ CalculationExpressionOperationNode::CalculationExpressionOperationNode(
        if (child->HasPercent()) {
          has_percent_ = true;
        }
@@ -121,7 +139,7 @@ index 785746c00ab2fbbec0d55462eded19bc9ffe827d..90a43e151cc6d9caed559aea134731a2
    switch (operator_) {
      case CalculationOperator::kAdd: {
        DCHECK_EQ(children_.size(), 2u);
-@@ -486,7 +520,7 @@ float CalculationExpressionOperationNode::Evaluate(
+@@ -486,7 +522,7 @@ float CalculationExpressionOperationNode::Evaluate(
      }
      case CalculationOperator::kCalcSize: {
        DCHECK_EQ(children_.size(), 2u);
@@ -130,20 +148,23 @@ index 785746c00ab2fbbec0d55462eded19bc9ffe827d..90a43e151cc6d9caed559aea134731a2
        calculation_input.size_keyword_basis =
            children_[0]->Evaluate(max_value, input);
        if (max_value == kIndefiniteSize.ToFloat()) {
-@@ -507,6 +541,12 @@ float CalculationExpressionOperationNode::Evaluate(
+@@ -505,7 +541,14 @@ float CalculationExpressionOperationNode::Evaluate(
+       float progress = children_[0]->Evaluate(max_value, input);
+       float from = children_[1]->Evaluate(max_value, input);
        float to = children_[2]->Evaluate(max_value, input);
-       return (progress - from) / (to - from);
-     }
+-      return (progress - from) / (to - from);
++      float progress_value = (progress - from) / (to - from);
++      return std::clamp(progress_value, 0.f, 1.f);
++    }
 +    case CalculationOperator::kPow: {
 +      DCHECK_EQ(children_.size(), 2u);
 +      float a = children_[0]->Evaluate(max_value, input);
 +      float b = children_[1]->Evaluate(max_value, input);
 +      return std::pow(a, b);
-+    }
+     }
      case CalculationOperator::kInvalid:
        break;
-       // TODO(crbug.com/1284199): Support other math functions.
-@@ -517,14 +557,16 @@ float CalculationExpressionOperationNode::Evaluate(
+@@ -517,14 +560,16 @@ float CalculationExpressionOperationNode::Evaluate(
  
  bool CalculationExpressionOperationNode::Equals(
      const CalculationExpressionNode& other) const {
@@ -164,7 +185,7 @@ index 785746c00ab2fbbec0d55462eded19bc9ffe827d..90a43e151cc6d9caed559aea134731a2
        [](const ValueType& a, const ValueType& b) { return *a == *b; });
  }
  
-@@ -564,7 +606,8 @@ CalculationExpressionOperationNode::Zoom(double factor) const {
+@@ -564,7 +609,8 @@ CalculationExpressionOperationNode::Zoom(double factor) const {
      case CalculationOperator::kSign:
      case CalculationOperator::kProgress:
      case CalculationOperator::kMediaProgress:
@@ -174,7 +195,7 @@ index 785746c00ab2fbbec0d55462eded19bc9ffe827d..90a43e151cc6d9caed559aea134731a2
        DCHECK(children_.size());
        Vector<scoped_refptr<const CalculationExpressionNode>> cloned_operands;
        cloned_operands.reserve(children_.size());
-@@ -672,6 +715,7 @@ CalculationExpressionOperationNode::ResolvedResultType() const {
+@@ -672,6 +718,7 @@ CalculationExpressionOperationNode::ResolvedResultType() const {
      case CalculationOperator::kContainerProgress:
      case CalculationOperator::kProgress:
      case CalculationOperator::kMediaProgress:
