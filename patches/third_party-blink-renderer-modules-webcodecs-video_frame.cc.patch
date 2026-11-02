@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/modules/webcodecs/video_frame.cc b/third_party/blink/renderer/modules/webcodecs/video_frame.cc
-index f97befe276f765162c1403182fa63560b1abf440..5bafd5cac72649029a0a6b96d0cb8254d2a1a3d0 100644
+index f97befe276f765162c1403182fa63560b1abf440..41f0159857ab6ad6160934e857e929f872dce594 100644
 --- a/third_party/blink/renderer/modules/webcodecs/video_frame.cc
 +++ b/third_party/blink/renderer/modules/webcodecs/video_frame.cc
 @@ -633,10 +633,10 @@ VideoFrame::VideoFrame(scoped_refptr<media::VideoFrame> frame,
@@ -162,7 +162,21 @@ index f97befe276f765162c1403182fa63560b1abf440..5bafd5cac72649029a0a6b96d0cb8254
        transform.rotation == media::VIDEO_ROTATION_180) {
      return local_frame->natural_size().height();
    }
-@@ -1468,11 +1513,7 @@ bool VideoFrame::IsAccelerated() const {
+@@ -1263,8 +1308,11 @@ bool VideoFrame::CopyToAsync(
+           resolver->Reject();
+         }
+       };
+-  auto done_cb = WTF::BindOnce(readback_done_handler, std::move(contents),
+-                               WrapPersistent(resolver), dest_layout);
++  // FlyWeb (FS.39): the callback may be destroyed off the main thread
++  // (upstream 9cad4244e46).
++  auto done_cb =
++      WTF::BindOnce(readback_done_handler, std::move(contents),
++                    MakeUnwrappingCrossThreadHandle(resolver), dest_layout);
+ 
+   auto buffer = AsSpan<uint8_t>(destination);
+   background_readback->ReadbackTextureBackedFrameToBuffer(
+@@ -1468,11 +1516,7 @@ bool VideoFrame::IsAccelerated() const {
  }
  
  void VideoFrame::ResetExternalMemory() {
