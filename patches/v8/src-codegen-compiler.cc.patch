@@ -1,8 +1,16 @@
 diff --git a/src/codegen/compiler.cc b/src/codegen/compiler.cc
-index e0fee92f7c21f4bc3ebc4bc6f9f4ec35b4b9c105..29abb825ef0cbeacd0a02edb9f91092967a89259 100644
+index e0fee92f7c21f4bc3ebc4bc6f9f4ec35b4b9c105..7fe961b528b6a7a6ede1727815857b1edcee500c 100644
 --- a/src/codegen/compiler.cc
 +++ b/src/codegen/compiler.cc
-@@ -2096,13 +2096,15 @@ class ConstantPoolPointerForwarder {
+@@ -12,6 +12,7 @@
+ #include "src/asmjs/asm-js.h"
+ #include "src/ast/prettyprinter.h"
+ #include "src/ast/scopes.h"
++#include "src/base/fpu.h"
+ #include "src/base/logging.h"
+ #include "src/base/platform/time.h"
+ #include "src/baseline/baseline.h"
+@@ -2096,13 +2097,15 @@ class ConstantPoolPointerForwarder {
      if (Is<SharedFunctionInfo>(info)) {
        Tagged<SharedFunctionInfo> old_sfi = Cast<SharedFunctionInfo>(info);
        // Also record context-having own scope infos for SFIs.
@@ -24,7 +32,7 @@ index e0fee92f7c21f4bc3ebc4bc6f9f4ec35b4b9c105..29abb825ef0cbeacd0a02edb9f910929
        }
      } else {
        scope_info = Cast<ScopeInfo>(info);
-@@ -2463,9 +2465,10 @@ void BackgroundMergeTask::BeginMergeInBackground(
+@@ -2463,9 +2466,10 @@ void BackgroundMergeTask::BeginMergeInBackground(
            Tagged<ScopeInfo> info = old_sfi->scope_info();
            if (!info->IsEmpty()) {
              new_sfi->SetScopeInfo(info);
@@ -38,7 +46,16 @@ index e0fee92f7c21f4bc3ebc4bc6f9f4ec35b4b9c105..29abb825ef0cbeacd0a02edb9f910929
            }
            forwarder.AddBytecodeArray(new_sfi->GetBytecodeArray(isolate));
          }
-@@ -2759,8 +2762,8 @@ void BackgroundDeserializeTask::Run() {
+@@ -2753,14 +2757,17 @@ BackgroundDeserializeTask::BackgroundDeserializeTask(
+ }
+ 
+ void BackgroundDeserializeTask::Run() {
++  base::FlushDenormalsScope flush_denormals_scope(
++      isolate_for_local_isolate_->flush_denormals());
++
+   TimedHistogramScope timer(timer_, nullptr, &background_time_in_microseconds_);
+   LocalIsolate isolate(isolate_for_local_isolate_, ThreadKind::kBackground);
+   UnparkedScope unparked_scope(&isolate);
    LocalHandleScope handle_scope(&isolate);
  
    DirectHandle<SharedFunctionInfo> inner_result;
@@ -49,7 +66,7 @@ index e0fee92f7c21f4bc3ebc4bc6f9f4ec35b4b9c105..29abb825ef0cbeacd0a02edb9f910929
    if (v8_flags.enable_slow_asserts && off_thread_data_.HasResult()) {
  #ifdef ENABLE_SLOW_DCHECKS
      MergeAssumptionChecker checker(&isolate);
-@@ -2773,6 +2776,11 @@ void BackgroundDeserializeTask::SourceTextAvailable(
+@@ -2773,6 +2780,11 @@ void BackgroundDeserializeTask::SourceTextAvailable(
      Isolate* isolate, Handle<String> source_text,
      const ScriptDetails& script_details) {
    DCHECK_EQ(isolate, isolate_for_local_isolate_);
@@ -61,7 +78,17 @@ index e0fee92f7c21f4bc3ebc4bc6f9f4ec35b4b9c105..29abb825ef0cbeacd0a02edb9f910929
    LanguageMode language_mode = construct_language_mode(v8_flags.use_strict);
    background_merge_task_.SetUpOnMainThread(isolate, source_text, script_details,
                                             language_mode);
-@@ -3399,6 +3407,7 @@ MaybeDirectHandle<JSFunction> Compiler::GetFunctionFromEval(
+@@ -2787,6 +2799,9 @@ bool BackgroundDeserializeTask::ShouldMergeWithExistingScript() const {
+ void BackgroundDeserializeTask::MergeWithExistingScript() {
+   DCHECK(ShouldMergeWithExistingScript());
+ 
++  base::FlushDenormalsScope flush_denormals_scope(
++      isolate_for_local_isolate_->flush_denormals());
++
+   LocalIsolate isolate(isolate_for_local_isolate_, ThreadKind::kBackground);
+   UnparkedScope unparked_scope(&isolate);
+   LocalHandleScope handle_scope(isolate.heap());
+@@ -3399,6 +3414,7 @@ MaybeDirectHandle<JSFunction> Compiler::GetFunctionFromEval(
      }
    }
    CHECK(is_compiled_scope.is_compiled());
