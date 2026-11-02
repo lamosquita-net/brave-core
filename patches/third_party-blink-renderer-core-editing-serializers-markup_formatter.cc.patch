@@ -1,0 +1,24 @@
+diff --git a/third_party/blink/renderer/core/editing/serializers/markup_formatter.cc b/third_party/blink/renderer/core/editing/serializers/markup_formatter.cc
+index 9ff30cb15e28ac2fceba01e0466c234922df4d3b..49cd87722fbb49870018bc080c5b09cb83469cfd 100644
+--- a/third_party/blink/renderer/core/editing/serializers/markup_formatter.cc
++++ b/third_party/blink/renderer/core/editing/serializers/markup_formatter.cc
+@@ -184,9 +184,17 @@ void MarkupFormatter::AppendStartMarkup(StringBuilder& result,
+     case Node::kElementNode:
+       NOTREACHED_IN_MIGRATION();
+       break;
+-    case Node::kCdataSectionNode:
+-      AppendCDATASection(result, To<CDATASection>(node).data());
++    case Node::kCdataSectionNode: {
++      auto& cdata = To<CDATASection>(node);
++      if (RuntimeEnabledFeatures::
++              SerializeCdataAsTextInHTMLDocumentsEnabled() &&
++          SerializeAsHTML()) {
++        AppendText(result, cdata);
++      } else {
++        AppendCDATASection(result, cdata.data());
++      }
+       break;
++    }
+     case Node::kAttributeNode:
+       NOTREACHED_IN_MIGRATION();
+       break;

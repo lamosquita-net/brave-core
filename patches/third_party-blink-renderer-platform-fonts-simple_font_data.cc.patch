@@ -1,8 +1,16 @@
 diff --git a/third_party/blink/renderer/platform/fonts/simple_font_data.cc b/third_party/blink/renderer/platform/fonts/simple_font_data.cc
-index 6309d31b5637e421c4fb0cbdb5f228a00a220888..4d52cb1048b3304a4e6a4309a0b90e218060e7c4 100644
+index 6309d31b5637e421c4fb0cbdb5f228a00a220888..ac05c275466140a9aae94b59ecdafb7c22b55180 100644
 --- a/third_party/blink/renderer/platform/fonts/simple_font_data.cc
 +++ b/third_party/blink/renderer/platform/fonts/simple_font_data.cc
-@@ -100,8 +100,7 @@ SimpleFontData::SimpleFontData(const FontPlatformData* platform_data,
+@@ -50,6 +50,7 @@
+ #include "third_party/blink/renderer/platform/fonts/opentype/open_type_vertical_data.h"
+ #include "third_party/blink/renderer/platform/fonts/shaping/harfbuzz_face.h"
+ #include "third_party/blink/renderer/platform/fonts/skia/skia_text_metrics.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+ #include "third_party/blink/renderer/platform/wtf/allocator/partitions.h"
+ #include "third_party/blink/renderer/platform/wtf/math_extras.h"
+ #include "third_party/blink/renderer/platform/wtf/text/character_names.h"
+@@ -100,8 +101,7 @@ SimpleFontData::SimpleFontData(const FontPlatformData* platform_data,
    // that we are informing GC about external allocated memory using
    // style_metrics_size as the font memory consumption.
    if (v8::Isolate* isolate = v8::Isolate::TryGetCurrent()) {
@@ -12,7 +20,7 @@ index 6309d31b5637e421c4fb0cbdb5f228a00a220888..4d52cb1048b3304a4e6a4309a0b90e21
    }
    PlatformInit(subpixel_ascent_descent, metrics_override);
    PlatformGlyphInit();
-@@ -109,8 +108,7 @@ SimpleFontData::SimpleFontData(const FontPlatformData* platform_data,
+@@ -109,8 +109,7 @@ SimpleFontData::SimpleFontData(const FontPlatformData* platform_data,
  
  SimpleFontData::~SimpleFontData() {
    if (v8::Isolate* isolate = v8::Isolate::TryGetCurrent()) {
@@ -22,7 +30,7 @@ index 6309d31b5637e421c4fb0cbdb5f228a00a220888..4d52cb1048b3304a4e6a4309a0b90e21
    }
  }
  
-@@ -241,7 +239,8 @@ void SimpleFontData::PlatformGlyphInit() {
+@@ -241,7 +240,8 @@ void SimpleFontData::PlatformGlyphInit() {
    float width = WidthForGlyph(space_glyph_);
    space_width_ = width;
    zero_glyph_ = GlyphForCharacter('0');
@@ -32,7 +40,7 @@ index 6309d31b5637e421c4fb0cbdb5f228a00a220888..4d52cb1048b3304a4e6a4309a0b90e21
  }
  
  const SimpleFontData* SimpleFontData::FontDataForCharacter(UChar32) const {
-@@ -505,4 +504,34 @@ float SimpleFontData::WidthForGlyph(Glyph glyph) const {
+@@ -505,4 +505,44 @@ float SimpleFontData::WidthForGlyph(Glyph glyph) const {
    return SkFontGetWidthForGlyph(font_, glyph);
  }
  
@@ -61,6 +69,16 @@ index 6309d31b5637e421c4fb0cbdb5f228a00a220888..4d52cb1048b3304a4e6a4309a0b90e21
 +  // vertical-lr and text-orientation is upright).
 +  SkScalar size = font_.getSize();
 +  if (!platform_data_->IsVerticalNonCJKUpright()) {
++    if (RuntimeEnabledFeatures::CSSChUnitSpecCompliantFallbackEnabled()) {
++      return size * 0.5f;
++    }
++
++    // This is a bug that was unfortunately introduced in
++    // crrev.com/c/6333369, and has shipped in m136.
++    // TODO(crbug.com/416145497): Remove this old behaviour
++    // when feature flag
++    // `RuntimeEnabledFeatures::CSSChUnitSpecCompliantFallbackEnabled` is tested
++    // out and is enabled by default.
 +    return size / 0.5f;
 +  }
 +  return size;

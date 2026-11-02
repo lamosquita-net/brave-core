@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/editing/dom_selection.cc b/third_party/blink/renderer/core/editing/dom_selection.cc
-index 79087763835bd80a5f4eaecd216e9855dc21795a..08fcf970d8e90d1d3ac0a55bdae6b1909245817b 100644
+index 79087763835bd80a5f4eaecd216e9855dc21795a..42d055b9eeb544b70be2b08a43b80f2ebd2a4f7c 100644
 --- a/third_party/blink/renderer/core/editing/dom_selection.cc
 +++ b/third_party/blink/renderer/core/editing/dom_selection.cc
 @@ -29,6 +29,7 @@
@@ -117,3 +117,37 @@ index 79087763835bd80a5f4eaecd216e9855dc21795a..08fcf970d8e90d1d3ac0a55bdae6b190
  Range* DOMSelection::PrimaryRangeOrNull() const {
    return rangeCount() > 0 ? getRangeAt(0, ASSERT_NO_EXCEPTION) : nullptr;
  }
+@@ -671,19 +744,26 @@ void DOMSelection::deleteFromDocument() {
+   DomWindow()->document()->UpdateStyleAndLayout(
+       DocumentUpdateReason::kSelection);
+ 
+-  // The following code is necessary for
+-  // editing/selection/deleteFromDocument-crash.html, which assumes
+-  // deleteFromDocument() for text selection in a TEXTAREA deletes the TEXTAREA
+-  // value.
+-
+-  if (Selection().ComputeVisibleSelectionInDOMTree().IsNone())
+-    return;
++  if (!RuntimeEnabledFeatures::
++          SelectionDeleteFromDocumentUaShadowFixEnabled()) {
++    // The following code is necessary for
++    // editing/selection/deleteFromDocument-crash.html, which assumes
++    // deleteFromDocument() for text selection in a TEXTAREA deletes the
++    // TEXTAREA value.
++    if (Selection().ComputeVisibleSelectionInDOMTree().IsNone()) {
++      return;
++    }
++  }
+ 
+   Range* selected_range = CreateRange(Selection()
+                                           .ComputeVisibleSelectionInDOMTree()
+                                           .ToNormalizedEphemeralRange());
+   if (!selected_range)
+     return;
++  if (RuntimeEnabledFeatures::SelectionDeleteFromDocumentUaShadowFixEnabled() &&
++      selected_range->startContainer()->IsInUserAgentShadowRoot()) {
++    return;
++  }
+ 
+   // |selectedRange| may point nodes in a different root.
+   selected_range->deleteContents(ASSERT_NO_EXCEPTION);

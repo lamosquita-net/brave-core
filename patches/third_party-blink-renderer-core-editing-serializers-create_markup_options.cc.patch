@@ -1,0 +1,21 @@
+diff --git a/third_party/blink/renderer/core/editing/serializers/create_markup_options.cc b/third_party/blink/renderer/core/editing/serializers/create_markup_options.cc
+index 1016b934c17ef071112bb7d5e9d0e092884f82dd..e999375ce92d84ab58950dfa8f948e7efadd881e 100644
+--- a/third_party/blink/renderer/core/editing/serializers/create_markup_options.cc
++++ b/third_party/blink/renderer/core/editing/serializers/create_markup_options.cc
+@@ -43,7 +43,15 @@ CreateMarkupOptions::Builder::SetIsForMarkupSanitization(
+ CreateMarkupOptions::Builder&
+ CreateMarkupOptions::Builder::SetIgnoresCSSTextTransformsForRenderedText(
+     bool ignores_text_transforms) {
+-  data_.ignores_css_text_transforms_for_rendered_text = ignores_text_transforms;
++  data_.ignores_css_text_transforms_for_rendered_text_ =
++      ignores_text_transforms;
++  return *this;
++}
++
++CreateMarkupOptions::Builder&
++CreateMarkupOptions::Builder::SetShouldSkipUnselectableContent(
++    bool skip_unselectable_content) {
++  data_.should_skip_unselectable_content_ = skip_unselectable_content;
+   return *this;
+ }
+ 
