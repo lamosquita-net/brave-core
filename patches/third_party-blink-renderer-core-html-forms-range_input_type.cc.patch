@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/html/forms/range_input_type.cc b/third_party/blink/renderer/core/html/forms/range_input_type.cc
-index c6c49b627df7e89b65788538e41170ee6e10adac..d8cf088cb0b58b36c5591a1ef1878f79f368055e 100644
+index c6c49b627df7e89b65788538e41170ee6e10adac..aec9e6b8d53034a5add400d1be14bf61e61d0296 100644
 --- a/third_party/blink/renderer/core/html/forms/range_input_type.cc
 +++ b/third_party/blink/renderer/core/html/forms/range_input_type.cc
 @@ -61,6 +61,7 @@
@@ -77,3 +77,17 @@ index c6c49b627df7e89b65788538e41170ee6e10adac..d8cf088cb0b58b36c5591a1ef1878f79
    } else if (key == keywords::kPageUp) {
      new_value = current + big_step;
    } else if (key == keywords::kPageDown) {
+@@ -265,7 +303,12 @@ void RangeInputType::CreateShadowSubtree() {
+   track->SetShadowPseudoId(shadow_element_names::kPseudoSliderTrack);
+   track->setAttribute(html_names::kIdAttr,
+                       shadow_element_names::kIdSliderTrack);
+-  track->AppendChild(MakeGarbageCollected<SliderThumbElement>(document));
++  // FlyWeb (upstream 926d3d2597): the id is set here, not in the
++  // SliderThumbElement constructor, so clones start without attributes.
++  auto* thumb = MakeGarbageCollected<SliderThumbElement>(document);
++  thumb->setAttribute(html_names::kIdAttr,
++                      shadow_element_names::kIdSliderThumb);
++  track->AppendChild(thumb);
+   auto* container = MakeGarbageCollected<SliderContainerElement>(document);
+   container->AppendChild(track);
+   GetElement().UserAgentShadowRoot()->AppendChild(container);

@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/dom/element.h b/third_party/blink/renderer/core/dom/element.h
-index c9ec614fa75af13d0173c25b4b5ee8131fa273fb..7f565eff0dccc37b30a6328ce09de70af708b04b 100644
+index c9ec614fa75af13d0173c25b4b5ee8131fa273fb..3446fd18df11e8abd0703e661d260f24bf286cdc 100644
 --- a/third_party/blink/renderer/core/dom/element.h
 +++ b/third_party/blink/renderer/core/dom/element.h
 @@ -202,6 +202,7 @@ enum class CommandEventType {
@@ -19,7 +19,15 @@ index c9ec614fa75af13d0173c25b4b5ee8131fa273fb..7f565eff0dccc37b30a6328ce09de70a
    kPause,
    kPlay,
    kToggleMuted,
-@@ -979,7 +980,8 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -498,6 +499,7 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+   }
+   void removeAttributeNS(const AtomicString& namespace_uri,
+                          const AtomicString& local_name);
++  void RemoveAllAttributes();
+ 
+   Attr* DetachAttribute(wtf_size_t index);
+ 
+@@ -979,7 +981,8 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
  
    // This allows customization of how Invoker Commands are handled, per element.
    // See: crbug.com/1490919, https://open-ui.org/components/invokers.explainer/
@@ -29,7 +37,7 @@ index c9ec614fa75af13d0173c25b4b5ee8131fa273fb..7f565eff0dccc37b30a6328ce09de70a
      return false;
    }
    virtual bool HandleCommandInternal(HTMLElement& invoker,
-@@ -1061,12 +1063,15 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1061,12 +1064,15 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    // usage of this ID is limited to pseudo elements generated for a
    // ViewTransition. See
    // third_party/blink/renderer/core/view_transition/README.md
@@ -45,7 +53,7 @@ index c9ec614fa75af13d0173c25b4b5ee8131fa273fb..7f565eff0dccc37b30a6328ce09de70a
  
    // Retrieve the ComputedStyle (if any) corresponding to the provided
    // PseudoId from cache, calculating the ComputedStyle on-demand if it's
-@@ -1238,6 +1243,10 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1238,6 +1244,10 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
  
    void setTabIndex(int);
    int tabIndex() const;
@@ -56,7 +64,7 @@ index c9ec614fa75af13d0173c25b4b5ee8131fa273fb..7f565eff0dccc37b30a6328ce09de70a
  
    void setEditContext(EditContext* editContext, ExceptionState&);
    EditContext* editContext() const;
-@@ -1352,11 +1361,18 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1352,11 +1362,18 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    std::optional<LayoutUnit> LastRememberedInlineSize() const;
    std::optional<LayoutUnit> LastRememberedBlockSize() const;
  
@@ -80,7 +88,7 @@ index c9ec614fa75af13d0173c25b4b5ee8131fa273fb..7f565eff0dccc37b30a6328ce09de70a
        PseudoId pseudo_id,
        const AtomicString& view_transition_name) const;
  
-@@ -1466,6 +1482,10 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1466,6 +1483,10 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
    void RemovedFrom(ContainerNode&) override;
    void ChildrenChanged(const ChildrenChange&) override;
  
@@ -91,7 +99,7 @@ index c9ec614fa75af13d0173c25b4b5ee8131fa273fb..7f565eff0dccc37b30a6328ce09de70a
    virtual void WillRecalcStyle(const StyleRecalcChange);
    virtual void DidRecalcStyle(const StyleRecalcChange);
    virtual const ComputedStyle* CustomStyleForLayoutObject(
-@@ -1530,17 +1550,19 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
+@@ -1530,17 +1551,19 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
  
    // Mark for style invalidation/recalc for :lang() selectors to pick up the
    // changes.
