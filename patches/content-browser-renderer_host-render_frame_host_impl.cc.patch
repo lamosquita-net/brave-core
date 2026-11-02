@@ -1,5 +1,5 @@
 diff --git a/content/browser/renderer_host/render_frame_host_impl.cc b/content/browser/renderer_host/render_frame_host_impl.cc
-index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..ccee69d4edb36f59dc81fe839b705e94d886da7f 100644
+index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..35d239e62beb633a21ee242bbf77e9ddc02f3cf7 100644
 --- a/content/browser/renderer_host/render_frame_host_impl.cc
 +++ b/content/browser/renderer_host/render_frame_host_impl.cc
 @@ -9,6 +9,7 @@
@@ -156,7 +156,23 @@ index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..ccee69d4edb36f59dc81fe839b705e94
    if (IsCredentialless() || IsNestedWithinFencedFrame() ||
        CoopSuppressOpener(/*opener=*/this)) {
      params->opener_suppressed = true;
-@@ -12157,8 +12234,29 @@ RenderFrameHostImpl* RenderFrameHostImpl::GetOutermostMainFrame() {
+@@ -10406,6 +10483,15 @@ CanCommitStatus RenderFrameHostImpl::CanCommitOriginAndUrl(
+   // (e.g. "http://localhost"). In such cases, don't verify the URL, but require
+   // the URL to commit in the process of the main frame.
+   if (IsMhtmlSubframe()) {
++    // Documents derived from an MHTML archive are behind sandbox flags, so
++    // their origin is opaque. The early-return below validates neither URL
++    // nor origin, so a compromised renderer could otherwise launder an
++    // arbitrary non-opaque origin past this point via
++    // DidCommitSameDocumentNavigation (FlyWeb FS.39, upstream 176da1f0c7b).
++    if (!origin.opaque()) {
++      LogCanCommitOriginAndUrlFailureReason("mhtml_subframe_non_opaque_origin");
++      return CanCommitStatus::CANNOT_COMMIT_ORIGIN;
++    }
+     RenderFrameHostImpl* main_frame = GetMainFrame();
+     if (IsSameSiteInstance(main_frame)) {
+       return CanCommitStatus::CAN_COMMIT_ORIGIN_AND_URL;
+@@ -12157,8 +12243,29 @@ RenderFrameHostImpl* RenderFrameHostImpl::GetOutermostMainFrame() {
  
  bool RenderFrameHostImpl::CanAccessFilesOfPageState(
      const blink::PageState& state) {
@@ -187,7 +203,7 @@ index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..ccee69d4edb36f59dc81fe839b705e94
  }
  
  void RenderFrameHostImpl::GrantFileAccessFromPageState(
-@@ -14961,8 +15059,24 @@ void RenderFrameHostImpl::DidCommitNavigation(
+@@ -14961,8 +15068,24 @@ void RenderFrameHostImpl::DidCommitNavigation(
    // BackForwardCache (see the check IsInactiveAndDisallowActivation in
    // RFH::DidCommitSameDocumentNavigation() and RFH::BeginNavigation()) so it
    // isn't possible to get a DidCommitNavigation IPC from the renderer in
