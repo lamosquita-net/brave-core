@@ -1,5 +1,5 @@
 diff --git a/src/json/json-parser.cc b/src/json/json-parser.cc
-index 2a251c39e96df5710dc4dd48bc1ef868aebd4aa8..5edf3b025896d4e23362a07014dc79d79d3fbc21 100644
+index 2a251c39e96df5710dc4dd48bc1ef868aebd4aa8..aa585dbd578f7c34210e1fd356294236f051f076 100644
 --- a/src/json/json-parser.cc
 +++ b/src/json/json-parser.cc
 @@ -129,6 +129,15 @@ static const constexpr uint8_t character_json_scan_flags[256] = {
@@ -48,7 +48,19 @@ index 2a251c39e96df5710dc4dd48bc1ef868aebd4aa8..5edf3b025896d4e23362a07014dc79d7
        first_token_msg =
            MessageTemplate::kJsonParseExpectedDoubleQuotedPropertyName;
        bool key_match;
-@@ -1710,7 +1720,8 @@ MaybeHandle<Object> JsonParser<Char>::ParseJsonObject(Handle<Map> feedback) {
+@@ -1586,6 +1596,11 @@ bool JsonParser<Char>::ParseJsonObjectProperties(
+           if (V8_UNLIKELY(!ParseJsonPropertyValue(key))) return false;
+           continue;
+         }
++        // Before accessing the descriptor array, make sure that it wasn't
++        // shrunk during a potential GC after the previous range check.
++        if (V8_UNLIKELY(idx.as_int() >= descriptors->number_of_descriptors())) {
++          break;
++        }
+         // Check if the key is fast iterable.
+         // Some of the checks below are not relevant for the parser, but are
+         // requirements for fast iterable keys in general (e.g. for
+@@ -1710,7 +1725,8 @@ MaybeHandle<Object> JsonParser<Char>::ParseJsonObject(Handle<Map> feedback) {
      return {};
    }
  
@@ -58,7 +70,7 @@ index 2a251c39e96df5710dc4dd48bc1ef868aebd4aa8..5edf3b025896d4e23362a07014dc79d7
    Handle<Object> result = BuildJsonObject<false>(cont, feedback);
    property_stack_.resize(cont.index);
    return cont.scope.CloseAndEscape(result);
-@@ -1756,8 +1767,9 @@ MaybeHandle<Object> JsonParser<Char>::ParseJsonArray() {
+@@ -1756,8 +1772,9 @@ MaybeHandle<Object> JsonParser<Char>::ParseJsonArray() {
        SkipWhitespace();
        continue;
      } else {
@@ -70,7 +82,7 @@ index 2a251c39e96df5710dc4dd48bc1ef868aebd4aa8..5edf3b025896d4e23362a07014dc79d7
        success = true;
        break;
      }
-@@ -1825,7 +1837,8 @@ MaybeHandle<Object> JsonParser<Char>::ParseJsonArray() {
+@@ -1825,7 +1842,8 @@ MaybeHandle<Object> JsonParser<Char>::ParseJsonArray() {
      element_stack_.emplace_back(value);
    }
  
@@ -80,7 +92,7 @@ index 2a251c39e96df5710dc4dd48bc1ef868aebd4aa8..5edf3b025896d4e23362a07014dc79d7
    Handle<Object> result = BuildJsonArray(start);
    element_stack_.resize(start);
    return handle_scope.CloseAndEscape(result);
-@@ -1935,15 +1948,17 @@ MaybeHandle<Object> JsonParser<Char>::ParseJsonValue() {
+@@ -1935,15 +1953,17 @@ MaybeHandle<Object> JsonParser<Char>::ParseJsonValue() {
                                    property_stack_.size());
  
            // Parse the property key.
@@ -102,7 +114,7 @@ index 2a251c39e96df5710dc4dd48bc1ef868aebd4aa8..5edf3b025896d4e23362a07014dc79d7
  
            // Continue to start producing the first property value.
            continue;
-@@ -2039,17 +2054,18 @@ MaybeHandle<Object> JsonParser<Char>::ParseJsonValue() {
+@@ -2039,17 +2059,18 @@ MaybeHandle<Object> JsonParser<Char>::ParseJsonValue() {
  
            if (V8_LIKELY(Check(JsonToken::COMMA))) {
              // Parse the property key.
@@ -125,7 +137,7 @@ index 2a251c39e96df5710dc4dd48bc1ef868aebd4aa8..5edf3b025896d4e23362a07014dc79d7
  
              // Break to start producing the subsequent property value.
              break;
-@@ -2069,8 +2085,9 @@ MaybeHandle<Object> JsonParser<Char>::ParseJsonValue() {
+@@ -2069,8 +2090,9 @@ MaybeHandle<Object> JsonParser<Char>::ParseJsonValue() {
              }
            }
            value = BuildJsonObject<should_track_json_source>(cont, feedback);
@@ -137,7 +149,7 @@ index 2a251c39e96df5710dc4dd48bc1ef868aebd4aa8..5edf3b025896d4e23362a07014dc79d7
            // Return the object.
            if constexpr (should_track_json_source) {
              size_t start = cont.index;
-@@ -2120,8 +2137,9 @@ MaybeHandle<Object> JsonParser<Char>::ParseJsonValue() {
+@@ -2120,8 +2142,9 @@ MaybeHandle<Object> JsonParser<Char>::ParseJsonValue() {
            if (V8_LIKELY(Check(JsonToken::COMMA))) break;
  
            value = BuildJsonArray(cont.index);
