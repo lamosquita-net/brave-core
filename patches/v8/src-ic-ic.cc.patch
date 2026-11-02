@@ -1,8 +1,8 @@
 diff --git a/src/ic/ic.cc b/src/ic/ic.cc
-index 5c916aa6137a6b550607c94ee7f12d35f9435b8a..147e105fff27a2038e5eab6f9564a75590aa4feb 100644
+index cbe65548ca89eaaea68ea2f49e7ed00a316e271e..60dc9f6723c8932b46d61c621324ef21858e56c4 100644
 --- a/src/ic/ic.cc
 +++ b/src/ic/ic.cc
-@@ -1043,6 +1043,10 @@ MaybeObjectHandle LoadIC::ComputeHandler(LookupIterator* lookup) {
+@@ -1040,6 +1040,10 @@ MaybeObjectHandle LoadIC::ComputeHandler(LookupIterator* lookup) {
        DirectHandle<JSReceiver> holder = lookup->GetHolder<JSReceiver>();
        DCHECK_EQ(PropertyKind::kData, lookup->property_details().kind());
        Handle<Smi> smi_handler;
@@ -13,7 +13,7 @@ index 5c916aa6137a6b550607c94ee7f12d35f9435b8a..147e105fff27a2038e5eab6f9564a755
        if (lookup->is_dictionary_holder()) {
          if (IsJSGlobalObject(*holder, isolate())) {
            // TODO(verwaest): Also supporting the global object as receiver is a
-@@ -1058,9 +1062,6 @@ MaybeObjectHandle LoadIC::ComputeHandler(LookupIterator* lookup) {
+@@ -1055,9 +1059,6 @@ MaybeObjectHandle LoadIC::ComputeHandler(LookupIterator* lookup) {
          if (holder_is_lookup_start_object)
            return MaybeObjectHandle(smi_handler);
          TRACE_HANDLER_STATS(isolate(), LoadIC_LoadNormalFromPrototypeDH);
@@ -23,7 +23,7 @@ index 5c916aa6137a6b550607c94ee7f12d35f9435b8a..147e105fff27a2038e5eab6f9564a755
        } else {
          DCHECK_EQ(PropertyLocation::kField,
                    lookup->property_details().location());
-@@ -1254,14 +1255,8 @@ bool AllowConvertHoleElementToUndefined(Isolate* isolate,
+@@ -1251,14 +1252,8 @@ bool AllowConvertHoleElementToUndefined(Isolate* isolate,
        // the {receiver}s prototype is either the initial Object.prototype
        // or the initial Array.prototype, which are both guarded by the
        // "no elements" protector checked above.
@@ -40,10 +40,10 @@ index 5c916aa6137a6b550607c94ee7f12d35f9435b8a..147e105fff27a2038e5eab6f9564a755
          return true;
        }
      }
-@@ -1355,17 +1350,6 @@ KeyedAccessLoadMode GetUpdatedLoadModeForMap(Isolate* isolate,
- 
+@@ -1366,17 +1361,6 @@ KeyedAccessLoadMode GetUpdatedLoadModeForMap(Isolate* isolate,
  Handle<Object> KeyedLoadIC::LoadElementHandler(
-     DirectHandle<Map> receiver_map, KeyedAccessLoadMode new_load_mode) {
+     DirectHandle<Map> receiver_map, KeyedAccessLoadMode new_load_mode,
+     MaybeDirectHandle<Map> maybe_transition_target) {
 -  // Has a getter interceptor, or is any has and has a query interceptor.
 -  if (receiver_map->has_indexed_interceptor() &&
 -      (receiver_map->GetIndexedInterceptor()->has_getter() ||
@@ -58,7 +58,7 @@ index 5c916aa6137a6b550607c94ee7f12d35f9435b8a..147e105fff27a2038e5eab6f9564a755
    InstanceType instance_type = receiver_map->instance_type();
    if (instance_type < FIRST_NONSTRING_TYPE) {
      TRACE_HANDLER_STATS(isolate(), KeyedLoadIC_LoadIndexedStringDH);
-@@ -1379,6 +1363,23 @@ Handle<Object> KeyedLoadIC::LoadElementHandler(
+@@ -1390,6 +1374,23 @@ Handle<Object> KeyedLoadIC::LoadElementHandler(
    if (instance_type == JS_PROXY_TYPE) {
      return LoadHandler::LoadProxy(isolate());
    }
@@ -82,7 +82,7 @@ index 5c916aa6137a6b550607c94ee7f12d35f9435b8a..147e105fff27a2038e5eab6f9564a755
  #if V8_ENABLE_WEBASSEMBLY
    if (InstanceTypeChecker::IsWasmObject(instance_type)) {
      // TODO(jgruber): Update counter name.
-@@ -1858,6 +1859,11 @@ MaybeDirectHandle<Object> StoreIC::Store(Handle<JSAny> object,
+@@ -1882,6 +1883,11 @@ MaybeDirectHandle<Object> StoreIC::Store(Handle<JSAny> object,
        if (!can_store.FromJust()) {
          return isolate()->factory()->undefined_value();
        }
@@ -94,7 +94,7 @@ index 5c916aa6137a6b550607c94ee7f12d35f9435b8a..147e105fff27a2038e5eab6f9564a755
      }
  
      // IC handling of private fields/symbols stores on JSProxy is not
-@@ -2139,6 +2145,11 @@ MaybeObjectHandle StoreIC::ComputeHandler(LookupIterator* lookup) {
+@@ -2163,6 +2169,11 @@ MaybeObjectHandle StoreIC::ComputeHandler(LookupIterator* lookup) {
        DCHECK(!IsAccessCheckNeeded(*receiver) || lookup->name()->IsPrivate());
  
        DCHECK_EQ(PropertyKind::kData, lookup->property_details().kind());
@@ -106,7 +106,7 @@ index 5c916aa6137a6b550607c94ee7f12d35f9435b8a..147e105fff27a2038e5eab6f9564a755
        if (lookup->is_dictionary_holder()) {
          if (IsJSGlobalObject(*holder)) {
            TRACE_HANDLER_STATS(isolate(), StoreIC_StoreGlobalDH);
-@@ -2154,12 +2165,6 @@ MaybeObjectHandle StoreIC::ComputeHandler(LookupIterator* lookup) {
+@@ -2178,12 +2189,6 @@ MaybeObjectHandle StoreIC::ComputeHandler(LookupIterator* lookup) {
          return MaybeObjectHandle(handler);
        }
  
@@ -119,7 +119,7 @@ index 5c916aa6137a6b550607c94ee7f12d35f9435b8a..147e105fff27a2038e5eab6f9564a755
        // -------------- Fields --------------
        if (lookup->property_details().location() == PropertyLocation::kField) {
          TRACE_HANDLER_STATS(isolate(), StoreIC_StoreFieldDH);
-@@ -2368,7 +2373,8 @@ Handle<Object> KeyedStoreIC::StoreElementHandler(
+@@ -2392,7 +2397,8 @@ Handle<Object> KeyedStoreIC::StoreElementHandler(
                isolate()),
        IsStoreInArrayLiteralIC());
  

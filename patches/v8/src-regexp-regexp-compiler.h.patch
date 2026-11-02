@@ -1,11 +1,11 @@
 diff --git a/src/regexp/regexp-compiler.h b/src/regexp/regexp-compiler.h
-index f599c50371f3d0d90d1ea71567f7ff33477a46a8..b15db4cfdf7fb521c0c92b958de82609c2a56c2e 100644
+index e5d21a4d21c0a838f8b8a4dffbf3167c017c5563..e412aee9646b27696a04a7cbdd2bb92b4f942371 100644
 --- a/src/regexp/regexp-compiler.h
 +++ b/src/regexp/regexp-compiler.h
-@@ -308,6 +308,14 @@ class Trace {
-   // done we can start a new trace or go to one that has already been
-   // generated.
-   void Flush(RegExpCompiler* compiler, RegExpNode* successor);
+@@ -278,6 +278,14 @@ class Trace {
+   };
+   void Flush(RegExpCompiler* compiler, RegExpNode* successor,
+              FlushMode mode = kFlushFull);
 +  // Some callers add/subtract 1 from cp_offset, assuming that the result is
 +  // still valid. That's obviously not the case when our `cp_offset` is only
 +  // checked against kMinCPOffset/kMaxCPOffset, so we need to apply the some
@@ -14,6 +14,6 @@ index f599c50371f3d0d90d1ea71567f7ff33477a46a8..b15db4cfdf7fb521c0c92b958de82609
 +  // themselves when doing so; but unfortunately not all callers have
 +  // abort-compilation mechanisms.
 +  static constexpr int kCPOffsetSlack = 1;
-   int cp_offset() { return cp_offset_; }
-   DeferredAction* actions() { return actions_; }
-   // A trivial trace is one that has no deferred actions or other state that
+   int cp_offset() const { return cp_offset_; }
+   // Does any trace in the chain have an action?
+   bool has_any_actions() const { return has_any_actions_; }

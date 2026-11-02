@@ -1,14 +1,15 @@
 diff --git a/src/debug/liveedit.cc b/src/debug/liveedit.cc
-index e77ca1a41045cdfc1b14cd896b05bab474600894..4b0f58ad2496c589511c13c3090d2602b30a9eea 100644
+index 28f6c7c3ad8089781ab93ec259edb8fb023cbc40..05a4ea2c021aa2834009d27fe3614a8ab06e26cf 100644
 --- a/src/debug/liveedit.cc
 +++ b/src/debug/liveedit.cc
-@@ -546,7 +546,12 @@ bool ParseScript(Isolate* isolate, Handle<Script> script, ParseInfo* parse_info,
+@@ -562,8 +562,12 @@ bool ParseScript(Isolate* isolate, Handle<Script> script, ParseInfo* parse_info,
      result->status = debug::LiveEditResult::COMPILE_ERROR;
      return false;
    }
--  CollectFunctionLiterals(isolate, parse_info->literal()).Run(literals);
+-  CollectFunctionLiterals(isolate, parse_info->literal())
+-      .Run(literals, eval_calls);
 +  CollectFunctionLiterals visitor(isolate, parse_info->literal());
-+  visitor.Run(literals);
++  visitor.Run(literals, eval_calls);
 +  if (visitor.HasStackOverflow()) {
 +    visitor.ClearStackOverflow();
 +    return false;

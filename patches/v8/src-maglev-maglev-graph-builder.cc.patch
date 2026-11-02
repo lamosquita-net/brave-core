@@ -1,8 +1,8 @@
 diff --git a/src/maglev/maglev-graph-builder.cc b/src/maglev/maglev-graph-builder.cc
-index 3163f9f0c8cac7355311adfcd4bac5699d0388aa..4a92dd46a17a64893871890fdabf2c3f65bccb38 100644
+index 7f4a2a1bbf005b4721f49165dde53af279cf2297..a10c40703835b43f4ebaa386cd948d6d3992d5ec 100644
 --- a/src/maglev/maglev-graph-builder.cc
 +++ b/src/maglev/maglev-graph-builder.cc
-@@ -5378,6 +5378,9 @@ bool MaglevGraphBuilder::CanTrackObjectChanges(ValueNode* receiver,
+@@ -5437,6 +5437,9 @@ bool MaglevGraphBuilder::CanTrackObjectChanges(ValueNode* receiver,
    if (!v8_flags.maglev_object_tracking) return false;
    if (!receiver->Is<InlinedAllocation>()) return false;
    InlinedAllocation* alloc = receiver->Cast<InlinedAllocation>();
@@ -12,7 +12,7 @@ index 3163f9f0c8cac7355311adfcd4bac5699d0388aa..4a92dd46a17a64893871890fdabf2c3f
    if (mode == TrackObjectMode::kStore) {
      // If we have two objects A and B, such that A points to B (it contains B in
      // one of its field), we cannot change B without also changing A, even if
-@@ -5386,7 +5389,6 @@ bool MaglevGraphBuilder::CanTrackObjectChanges(ValueNode* receiver,
+@@ -5445,7 +5448,6 @@ bool MaglevGraphBuilder::CanTrackObjectChanges(ValueNode* receiver,
          graph_->allocations_elide_map().end()) {
        return false;
      }
@@ -20,7 +20,7 @@ index 3163f9f0c8cac7355311adfcd4bac5699d0388aa..4a92dd46a17a64893871890fdabf2c3f
      // Ensure object is escaped if we are within a try-catch block. This is
      // crucial because a deoptimization point inside the catch handler could
      // re-materialize objects differently, depending on whether the throw
-@@ -5395,9 +5397,6 @@ bool MaglevGraphBuilder::CanTrackObjectChanges(ValueNode* receiver,
+@@ -5454,9 +5456,6 @@ bool MaglevGraphBuilder::CanTrackObjectChanges(ValueNode* receiver,
      // the try-block started,  but for now, err on the side of caution and
      // always escape.
      if (IsInsideTryBlock()) return false;
@@ -30,7 +30,7 @@ index 3163f9f0c8cac7355311adfcd4bac5699d0388aa..4a92dd46a17a64893871890fdabf2c3f
    }
    // We don't support loop phis inside VirtualObjects, so any access inside a
    // loop should escape the object, except for objects that were created since
-@@ -5900,7 +5899,7 @@ MaybeReduceResult MaglevGraphBuilder::TryBuildStoreField(
+@@ -5957,7 +5956,7 @@ MaybeReduceResult MaglevGraphBuilder::TryBuildStoreField(
        broker()->dependencies()->DependOnNoSlackTrackingChange(*original_map);
      }
    } else if (access_info.IsFastDataConstant() &&
@@ -39,7 +39,7 @@ index 3163f9f0c8cac7355311adfcd4bac5699d0388aa..4a92dd46a17a64893871890fdabf2c3f
      return EmitUnconditionalDeopt(DeoptimizeReason::kStoreToConstant);
    }
  
-@@ -6169,9 +6168,9 @@ MaybeReduceResult MaglevGraphBuilder::TryBuildNamedAccess(
+@@ -6230,9 +6229,9 @@ MaybeReduceResult MaglevGraphBuilder::TryBuildNamedAccess(
                 GetTaggedValue(GetAccumulator())},
                feedback_source);
          case compiler::AccessMode::kDefine:
@@ -50,7 +50,7 @@ index 3163f9f0c8cac7355311adfcd4bac5699d0388aa..4a92dd46a17a64893871890fdabf2c3f
            UNREACHABLE();
        }
      }
-@@ -7884,6 +7883,16 @@ ReduceResult MaglevGraphBuilder::VisitSetNamedProperty() {
+@@ -7987,6 +7986,16 @@ ReduceResult MaglevGraphBuilder::VisitSetNamedProperty() {
  
  ReduceResult MaglevGraphBuilder::VisitDefineNamedOwnProperty() {
    // DefineNamedOwnProperty <object> <name_index> <slot>
@@ -67,7 +67,7 @@ index 3163f9f0c8cac7355311adfcd4bac5699d0388aa..4a92dd46a17a64893871890fdabf2c3f
    ValueNode* object = LoadRegister(0);
    compiler::NameRef name = GetRefOperand<Name>(1);
    FeedbackSlot slot = GetSlotOperand(2);
-@@ -7908,7 +7917,9 @@ ReduceResult MaglevGraphBuilder::VisitDefineNamedOwnProperty() {
+@@ -8011,7 +8020,9 @@ ReduceResult MaglevGraphBuilder::VisitDefineNamedOwnProperty() {
      case compiler::ProcessedFeedback::kNamedAccess:
        RETURN_IF_DONE(TryBuildNamedAccess(
            object, object, processed_feedback.AsNamedAccess(), feedback_source,
@@ -78,20 +78,7 @@ index 3163f9f0c8cac7355311adfcd4bac5699d0388aa..4a92dd46a17a64893871890fdabf2c3f
        break;
  
      default:
-@@ -8460,6 +8471,12 @@ ReduceResult MaglevGraphBuilder::BuildInlineFunction(
- 
- bool MaglevGraphBuilder::CanInlineCall(compiler::SharedFunctionInfoRef shared,
-                                        float call_frequency) {
-+  if (static_cast<int>(graph()->inlined_functions().size()) >=
-+      SourcePosition::MaxInliningId()) {
-+    compilation_unit_->info()->set_could_not_inline_all_candidates();
-+    TRACE_CANNOT_INLINE("maximum inlining ids");
-+    return false;
-+  }
-   if (graph()->total_inlined_bytecode_size() >
-       max_inlined_bytecode_size_cumulative()) {
-     compilation_unit_->info()->set_could_not_inline_all_candidates();
-@@ -8663,8 +8680,10 @@ ReduceResult MaglevGraphBuilder::BuildEagerInlineCall(
+@@ -8774,8 +8785,10 @@ ReduceResult MaglevGraphBuilder::BuildEagerInlineCall(
        inner_graph_builder.current_interpreter_frame_.known_node_aspects());
    current_interpreter_frame_.set_virtual_objects(
        inner_graph_builder.current_interpreter_frame_.virtual_objects());
@@ -104,7 +91,7 @@ index 3163f9f0c8cac7355311adfcd4bac5699d0388aa..4a92dd46a17a64893871890fdabf2c3f
  
    // Resume execution using the final block of the inner builder.
    current_block_ = inner_graph_builder.current_block_;
-@@ -9214,7 +9233,7 @@ MaybeReduceResult MaglevGraphBuilder::TryReduceArrayIteratorPrototypeNext(
+@@ -9325,7 +9338,7 @@ MaybeReduceResult MaglevGraphBuilder::TryReduceArrayIteratorPrototypeNext(
      VirtualObject* array = iterated_object->Cast<InlinedAllocation>()->object();
      // TODO(victorgomes): Remove this once we track changes in the inlined
      // allocated object.
@@ -113,7 +100,7 @@ index 3163f9f0c8cac7355311adfcd4bac5699d0388aa..4a92dd46a17a64893871890fdabf2c3f
        FAIL("allocation is escaping, map could have been changed");
      }
      // TODO(victorgomes): This effectively disable the optimization for `for-of`
-@@ -9252,6 +9271,14 @@ MaybeReduceResult MaglevGraphBuilder::TryReduceArrayIteratorPrototypeNext(
+@@ -9363,6 +9376,14 @@ MaybeReduceResult MaglevGraphBuilder::TryReduceArrayIteratorPrototypeNext(
      FAIL("no elements protector");
    }
  
@@ -128,7 +115,7 @@ index 3163f9f0c8cac7355311adfcd4bac5699d0388aa..4a92dd46a17a64893871890fdabf2c3f
    // Load the [[NextIndex]] from the {iterator}.
    // We can assume index and length fit in Uint32.
    ValueNode* index =
-@@ -11361,7 +11388,7 @@ MaglevGraphBuilder::TryGetNonEscapingArgumentsObject(ValueNode* value) {
+@@ -11713,7 +11734,7 @@ MaglevGraphBuilder::TryGetNonEscapingArgumentsObject(ValueNode* value) {
    }
    // TODO(victorgomes): We can probably loosen the IsNotEscaping requirement if
    // we keep track of the arguments object changes so far.
