@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/editing/frame_selection.cc b/third_party/blink/renderer/core/editing/frame_selection.cc
-index a3940dba9333b388b2ef7932112ac0cadb45f682..a368396f6b4aa283720c8a7e737d617fb5d9900a 100644
+index a3940dba9333b388b2ef7932112ac0cadb45f682..e0d0b575ed9f62fcc635ae3631e7f8f34f61a950 100644
 --- a/third_party/blink/renderer/core/editing/frame_selection.cc
 +++ b/third_party/blink/renderer/core/editing/frame_selection.cc
 @@ -41,7 +41,9 @@
@@ -12,7 +12,19 @@ index a3940dba9333b388b2ef7932112ac0cadb45f682..a368396f6b4aa283720c8a7e737d617f
  #include "third_party/blink/renderer/core/dom/node_with_index.h"
  #include "third_party/blink/renderer/core/dom/text.h"
  #include "third_party/blink/renderer/core/editing/caret_display_item_client.h"
-@@ -537,8 +539,19 @@ bool FrameSelection::SelectionHasFocus() const {
+@@ -145,6 +147,11 @@ const SelectionInDOMTree& FrameSelection::GetSelectionInDOMTree() const {
+ }
+ 
+ Element* FrameSelection::RootEditableElementOrDocumentElement() const {
++  // FlyWeb (upstream 9fb841bf28, crbug.com/523292588): the selection may be
++  // gone (document_ cleared) after a layout forced by a caller.
++  if (!IsAvailable()) {
++    return nullptr;
++  }
+   Element* selection_root =
+       ComputeVisibleSelectionInDOMTreeDeprecated().RootEditableElement();
+   // Note that RootEditableElementOrDocumentElement can return null if the
+@@ -537,8 +544,19 @@ bool FrameSelection::SelectionHasFocus() const {
      return false;
    }
  
@@ -34,7 +46,7 @@ index a3940dba9333b388b2ef7932112ac0cadb45f682..a368396f6b4aa283720c8a7e737d617f
  
    // Selection has focus if it contains the focused element.
    const PositionInFlatTree& focused_position =
-@@ -548,16 +561,43 @@ bool FrameSelection::SelectionHasFocus() const {
+@@ -548,16 +566,43 @@ bool FrameSelection::SelectionHasFocus() const {
      return true;
  
    bool is_editable = IsEditable(*current);
@@ -81,7 +93,7 @@ index a3940dba9333b388b2ef7932112ac0cadb45f682..a368396f6b4aa283720c8a7e737d617f
    } while (current);
  
    return false;
-@@ -1031,7 +1071,7 @@ void FrameSelection::SetFocusedNodeIfNeeded() {
+@@ -1031,7 +1076,7 @@ void FrameSelection::SetFocusedNodeIfNeeded() {
                                                                    frame_);
          return;
        }
@@ -90,7 +102,7 @@ index a3940dba9333b388b2ef7932112ac0cadb45f682..a368396f6b4aa283720c8a7e737d617f
      }
      GetDocument().ClearFocusedElement();
    }
-@@ -1079,6 +1119,7 @@ String FrameSelection::SelectedHTMLForClipboard() const {
+@@ -1079,6 +1124,7 @@ String FrameSelection::SelectedHTMLForClipboard() const {
    return CreateMarkup(range.StartPosition(), range.EndPosition(),
                        builder.SetShouldAnnotateForInterchange(true)
                            .SetShouldResolveURLs(kResolveNonLocalURLs)
@@ -98,7 +110,7 @@ index a3940dba9333b388b2ef7932112ac0cadb45f682..a368396f6b4aa283720c8a7e737d617f
                            .Build());
  }
  
-@@ -1168,7 +1209,7 @@ void FrameSelection::RevealSelection(
+@@ -1168,7 +1214,7 @@ void FrameSelection::RevealSelection(
  
    scroll_into_view_util::ScrollRectToVisible(
        *start.AnchorNode()->GetLayoutObject(), selection_rect,

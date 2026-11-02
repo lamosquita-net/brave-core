@@ -1,0 +1,22 @@
+diff --git a/third_party/blink/renderer/platform/widget/widget_base.cc b/third_party/blink/renderer/platform/widget/widget_base.cc
+index 608a5d61d67a8b7318efc29d7623527110377684..92b2ad4f04cd13dc41fa707e9e62073619321f62 100644
+--- a/third_party/blink/renderer/platform/widget/widget_base.cc
++++ b/third_party/blink/renderer/platform/widget/widget_base.cc
+@@ -1333,8 +1333,17 @@ void WidgetBase::UpdateCompositionInfo(bool immediate_request) {
+     // Composition information is only available on editable node.
+     range = gfx::Range::InvalidRange();
+   } else {
++    // FlyWeb (upstream 9fb841bf28, crbug.com/523292588): CompositionRange()
++    // forces a style and layout update, after which this widget may be gone.
++    base::WeakPtr<WidgetBase> weak_this = weak_ptr_factory_.GetWeakPtr();
+     GetCompositionRange(&range);
++    if (!weak_this) {
++      return;
++    }
+     GetCompositionCharacterBounds(&character_bounds);
++    if (!weak_this) {
++      return;
++    }
+   }
+ 
+   if (!immediate_request &&
