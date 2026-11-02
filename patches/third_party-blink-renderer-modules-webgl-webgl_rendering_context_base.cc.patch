@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/modules/webgl/webgl_rendering_context_base.cc b/third_party/blink/renderer/modules/webgl/webgl_rendering_context_base.cc
-index 4b0dd3b86bec2a9619ecc83dfff283dabe9bbbc1..2c1c139a9cd64d0bc588aab2bf2df5f9d5d40567 100644
+index 4b0dd3b86bec2a9619ecc83dfff283dabe9bbbc1..ae47dbead79ee30f4af8647da1797d7485b8f9b2 100644
 --- a/third_party/blink/renderer/modules/webgl/webgl_rendering_context_base.cc
 +++ b/third_party/blink/renderer/modules/webgl/webgl_rendering_context_base.cc
 @@ -3179,6 +3179,7 @@ WebGLActiveInfo* WebGLRenderingContextBase::getActiveAttrib(
@@ -192,3 +192,13 @@ index 4b0dd3b86bec2a9619ecc83dfff283dabe9bbbc1..2c1c139a9cd64d0bc588aab2bf2df5f9
      // DrawImageIntoBuffer always respects orientation
      image_for_render = DrawImageIntoBufferForTexImage(
          std::move(image_for_render), image->width(), image->height(),
+@@ -8541,6 +8577,9 @@ void WebGLRenderingContextBase::MaybeRestoreContext(TimerBase*) {
+   restore_allowed_ = false;
+   RemoveFromEvictedList(this);
+ 
++  // Objects created while the context was lost must not be usable now.
++  context_group_->OnContextRestored();
++
+   SetupFlags();
+   InitializeNewContext();
+   MarkContextChanged(kCanvasContextChanged,
