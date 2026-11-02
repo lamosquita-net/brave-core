@@ -1,5 +1,5 @@
 diff --git a/content/browser/renderer_host/render_frame_host_impl.cc b/content/browser/renderer_host/render_frame_host_impl.cc
-index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..e46bad4e68526a9f1ba28dd81710252f9b442725 100644
+index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..ccee69d4edb36f59dc81fe839b705e94d886da7f 100644
 --- a/content/browser/renderer_host/render_frame_host_impl.cc
 +++ b/content/browser/renderer_host/render_frame_host_impl.cc
 @@ -9,6 +9,7 @@
@@ -187,3 +187,30 @@ index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..e46bad4e68526a9f1ba28dd81710252f
  }
  
  void RenderFrameHostImpl::GrantFileAccessFromPageState(
+@@ -14961,8 +15059,24 @@ void RenderFrameHostImpl::DidCommitNavigation(
+   // BackForwardCache (see the check IsInactiveAndDisallowActivation in
+   // RFH::DidCommitSameDocumentNavigation() and RFH::BeginNavigation()) so it
+   // isn't possible to get a DidCommitNavigation IPC from the renderer in
+-  // kInBackForwardCache state.
+-  DCHECK(!IsInBackForwardCache());
++  // kInBackForwardCache state. Trigger a renderer kill if we receive an
++  // unexpected DidCommit message (FlyWeb FS.39, upstream 9971d3de459 and
++  // 0dcb0580163).
++  if (IsInBackForwardCache()) {
++    if (render_view_host()->DidReceiveBackForwardCacheAck()) {
++      bad_message::ReceivedBadMessage(
++          GetProcess(), bad_message::RFH_DID_COMMIT_NAVIGATION_WHILE_BFCACHED);
++    } else {
++      // The renderer might not have realized that it's in BFCache when it sent
++      // the DidCommitNavigation call, since we haven't received the BFCache
++      // ACK. In this case, just evict from BFCache instead of killing the
++      // renderer.
++      IsInactiveAndDisallowActivation(
++          DisallowActivationReasonId::kDidCommitNavigation);
++    }
++    // Return early in any case.
++    return;
++  }
+ 
+   std::unique_ptr<NavigationRequest> request;
+   // TODO(crbug.com/40546539): a `committing_navigation_request` is not
