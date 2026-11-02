@@ -1,8 +1,8 @@
 diff --git a/src/regexp/regexp-compiler.cc b/src/regexp/regexp-compiler.cc
-index 7082484372dc605717f543aa9c0e0b3117c8ee36..a67b0fec34faac57076984cce0b10bef76862bcd 100644
+index 452694949078c64bfa9a1998877f339e9af591fa..ea7a8042285d858a6716b388d26d41ba6813ec90 100644
 --- a/src/regexp/regexp-compiler.cc
 +++ b/src/regexp/regexp-compiler.cc
-@@ -2315,6 +2315,7 @@ void AssertionNode::BacktrackIfPrevious(
+@@ -2313,6 +2313,7 @@ void AssertionNode::BacktrackIfPrevious(
    // If we've already checked that we are not at the start of input, it's okay
    // to load the previous character without bounds checks.
    const bool can_skip_bounds_check = !may_be_at_or_before_subject_string_start;
@@ -10,7 +10,7 @@ index 7082484372dc605717f543aa9c0e0b3117c8ee36..a67b0fec34faac57076984cce0b10bef
    assembler->LoadCurrentCharacter(new_trace.cp_offset() - 1, non_word,
                                    can_skip_bounds_check);
    EmitWordCheck(assembler, word, non_word, backtrack_if_previous == kIsNonWord);
-@@ -2569,6 +2570,7 @@ void TextNode::Emit(RegExpCompiler* compiler, Trace* trace) {
+@@ -2567,6 +2568,7 @@ void TextNode::Emit(RegExpCompiler* compiler, Trace* trace) {
    }
  
    bool first_elt_done = false;
@@ -18,7 +18,7 @@ index 7082484372dc605717f543aa9c0e0b3117c8ee36..a67b0fec34faac57076984cce0b10bef
    int bound_checked_to = trace->cp_offset() - 1;
    bound_checked_to += trace->bound_checked_up_to();
  
-@@ -2613,7 +2615,10 @@ void Trace::AdvanceCurrentPositionInTrace(int by, RegExpCompiler* compiler) {
+@@ -2611,7 +2613,10 @@ void Trace::AdvanceCurrentPositionInTrace(int by, RegExpCompiler* compiler) {
    // characters by means of mask and compare.
    quick_check_performed_.Advance(by, compiler->one_byte());
    cp_offset_ += by;

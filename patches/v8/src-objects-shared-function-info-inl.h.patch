@@ -1,8 +1,8 @@
 diff --git a/src/objects/shared-function-info-inl.h b/src/objects/shared-function-info-inl.h
-index bc383e145ea01743195e9bde18ccf0508f9864e8..147da618d018ffd6c614030cfbf6217d373d7750 100644
+index 9253bc5073d400221d29309578d6b3498c89d974..eaa3338a874e46b62ddb0cea4e6da8540f8df5c7 100644
 --- a/src/objects/shared-function-info-inl.h
 +++ b/src/objects/shared-function-info-inl.h
-@@ -401,6 +401,9 @@ BIT_FIELD_ACCESSORS(SharedFunctionInfo, relaxed_flags,
+@@ -408,6 +408,9 @@ BIT_FIELD_ACCESSORS(SharedFunctionInfo, relaxed_flags,
                      SharedFunctionInfo::PrivateNameLookupSkipsOuterClassBit)
  BIT_FIELD_ACCESSORS(SharedFunctionInfo, relaxed_flags, live_edited,
                      SharedFunctionInfo::LiveEditedBit)
@@ -10,9 +10,9 @@ index bc383e145ea01743195e9bde18ccf0508f9864e8..147da618d018ffd6c614030cfbf6217d
 +                    class_initializer_allows_await,
 +                    SharedFunctionInfo::ClassInitializerAllowsAwaitBit)
  
- bool SharedFunctionInfo::optimization_disabled() const {
-   return disabled_optimization_reason() != BailoutReason::kNoReason;
-@@ -610,6 +613,23 @@ Tagged<ScopeInfo> SharedFunctionInfo::GetOuterScopeInfo() const {
+ bool SharedFunctionInfo::optimization_disabled(CodeKind kind) const {
+   switch (kind) {
+@@ -628,6 +631,23 @@ Tagged<ScopeInfo> SharedFunctionInfo::GetOuterScopeInfo() const {
    return info->OuterScopeInfo();
  }
  

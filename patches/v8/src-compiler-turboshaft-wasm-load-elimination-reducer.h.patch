@@ -1,8 +1,8 @@
 diff --git a/src/compiler/turboshaft/wasm-load-elimination-reducer.h b/src/compiler/turboshaft/wasm-load-elimination-reducer.h
-index b60da48d01c318149acd1ac97afc0eba2fe6947b..ed81c26c125fc2be8a128718f7c3930549c0c2ff 100644
+index 2a33d3fa0f8a65bae7e41d0b75769a8a28a447b6..f52a3195ea020325e1e31f47b7cd918b7442841d 100644
 --- a/src/compiler/turboshaft/wasm-load-elimination-reducer.h
 +++ b/src/compiler/turboshaft/wasm-load-elimination-reducer.h
-@@ -391,7 +391,8 @@ class WasmLoadEliminationAnalyzer {
+@@ -399,7 +399,8 @@ class WasmLoadEliminationAnalyzer {
          memory_(data, phase_zone, non_aliasing_objects_, replacements_, graph_),
          block_to_snapshot_mapping_(graph.block_count(), phase_zone),
          predecessor_alias_snapshots_(phase_zone),
@@ -11,16 +11,16 @@ index b60da48d01c318149acd1ac97afc0eba2fe6947b..ed81c26c125fc2be8a128718f7c39305
 +        phi_replacements_backups_(phase_zone) {}
  
    void Run() {
-     LoopFinder loop_finder(phase_zone_, &graph_);
-@@ -459,6 +460,7 @@ class WasmLoadEliminationAnalyzer {
+     LoopFinder loop_finder(phase_zone_, &graph_, LoopFinder::Config{});
+@@ -467,6 +468,7 @@ class WasmLoadEliminationAnalyzer {
    void ProcessAllocate(OpIndex op_idx, const AllocateOp& op);
    void ProcessCall(OpIndex op_idx, const CallOp& op);
    void ProcessPhi(OpIndex op_idx, const PhiOp& op);
 +  OpIndex MaybeReplacePhi(const PhiOp& phi);
  
-   void DcheckWordBinop(OpIndex op_idx, const WordBinopOp& binop);
- 
-@@ -501,6 +503,12 @@ class WasmLoadEliminationAnalyzer {
+ #if V8_ENABLE_WEBASSEMBLY
+   void ProcessAtomicRMW(OpIndex op_idx, const StructAtomicRMWOp& op);
+@@ -513,6 +515,12 @@ class WasmLoadEliminationAnalyzer {
    // to process a block. We store them as members to avoid reallocation.
    ZoneVector<AliasSnapshot> predecessor_alias_snapshots_;
    ZoneVector<MemorySnapshot> predecessor_memory_snapshots_;
@@ -33,7 +33,7 @@ index b60da48d01c318149acd1ac97afc0eba2fe6947b..ed81c26c125fc2be8a128718f7c39305
  };
  
  template <class Next>
-@@ -917,9 +925,7 @@ void WasmLoadEliminationAnalyzer::ProcessAllocate(OpIndex op_idx,
+@@ -952,9 +960,7 @@ void WasmLoadEliminationAnalyzer::ProcessAllocate(OpIndex op_idx,
    non_aliasing_objects_.Set(op_idx, true);
  }
  
@@ -44,7 +44,7 @@ index b60da48d01c318149acd1ac97afc0eba2fe6947b..ed81c26c125fc2be8a128718f7c39305
    base::Vector<const OpIndex> inputs = phi.inputs();
    // This copies some of the functionality of {RequiredOptimizationReducer}:
    // Phis whose inputs are all the same value can be replaced by that value.
-@@ -927,19 +933,25 @@ void WasmLoadEliminationAnalyzer::ProcessPhi(OpIndex op_idx, const PhiOp& phi) {
+@@ -962,19 +968,25 @@ void WasmLoadEliminationAnalyzer::ProcessPhi(OpIndex op_idx, const PhiOp& phi) {
    // of load elimination can unlock further optimizations: simplifying Phis
    // can allow elimination of more loads, which can then allow simplification
    // of even more Phis.
@@ -81,7 +81,7 @@ index b60da48d01c318149acd1ac97afc0eba2fe6947b..ed81c26c125fc2be8a128718f7c39305
  }
  
  void WasmLoadEliminationAnalyzer::FinishBlock(const Block* block) {
-@@ -1046,6 +1058,44 @@ bool WasmLoadEliminationAnalyzer::BeginBlock(const Block* block) {
+@@ -1081,6 +1093,44 @@ bool WasmLoadEliminationAnalyzer::BeginBlock(const Block* block) {
    memory_.StartNewSnapshot(base::VectorOf(predecessor_memory_snapshots_),
                             merge_memory);
  

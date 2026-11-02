@@ -1,8 +1,8 @@
 diff --git a/src/compiler/turboshaft/late-load-elimination-reducer.cc b/src/compiler/turboshaft/late-load-elimination-reducer.cc
-index e70e556163ccb455e76dabdbb5401ed1861b55ad..cf62f6deb1e0907b2f2a7e44a6ed1b13cf23e074 100644
+index f0237c05711c2a4951abf2b0238a818cdda6cffa..5948d40b7885f42834fe1c56dacf1d08b1b94a3b 100644
 --- a/src/compiler/turboshaft/late-load-elimination-reducer.cc
 +++ b/src/compiler/turboshaft/late-load-elimination-reducer.cc
-@@ -445,6 +445,11 @@ void LateLoadEliminationAnalyzer::ProcessCall(OpIndex op_idx,
+@@ -462,6 +462,11 @@ void LateLoadEliminationAnalyzer::ProcessCall(OpIndex op_idx,
    // Some builtins do not create aliases and do not invalidate existing
    // memory, and some even return fresh objects. For such cases, we don't
    // invalidate the state, and record the non-alias if any.
@@ -14,7 +14,7 @@ index e70e556163ccb455e76dabdbb5401ed1861b55ad..cf62f6deb1e0907b2f2a7e44a6ed1b13
    if (!op.Effects().can_write()) {
      TRACE(">> Call doesn't write, skipping");
      return;
-@@ -496,6 +501,14 @@ void LateLoadEliminationAnalyzer::ProcessCall(OpIndex op_idx,
+@@ -506,6 +511,14 @@ void LateLoadEliminationAnalyzer::ProcessCall(OpIndex op_idx,
    // The call could modify arbitrary memory, so we invalidate every
    // potentially-aliasing object.
    memory_.InvalidateMaybeAliasing();
@@ -29,7 +29,7 @@ index e70e556163ccb455e76dabdbb5401ed1861b55ad..cf62f6deb1e0907b2f2a7e44a6ed1b13
  }
  
  // The only time an Allocate should flow into a WordBinop is for Smi checks
-@@ -556,10 +569,27 @@ void LateLoadEliminationAnalyzer::InvalidateIfAlias(OpIndex op_idx) {
+@@ -566,10 +579,27 @@ void LateLoadEliminationAnalyzer::InvalidateIfAlias(OpIndex op_idx) {
    }
  }
  
@@ -57,7 +57,7 @@ index e70e556163ccb455e76dabdbb5401ed1861b55ad..cf62f6deb1e0907b2f2a7e44a6ed1b13
  }
  
  void LateLoadEliminationAnalyzer::ProcessAssumeMap(
-@@ -677,13 +707,7 @@ bool LateLoadEliminationAnalyzer::BeginBlock(const Block* block) {
+@@ -687,13 +717,7 @@ bool LateLoadEliminationAnalyzer::BeginBlock(const Block* block) {
        // edge of the inner loop should reflect this restriction.
        predecessor_alias_snapshots_.push_back(pred_snapshots->alias_snapshot);
        predecessor_memory_snapshots_.push_back(pred_snapshots->memory_snapshot);
@@ -72,7 +72,7 @@ index e70e556163ccb455e76dabdbb5401ed1861b55ad..cf62f6deb1e0907b2f2a7e44a6ed1b13
      }
    }
  
-@@ -716,10 +740,14 @@ bool LateLoadEliminationAnalyzer::BeginBlock(const Block* block) {
+@@ -726,10 +750,14 @@ bool LateLoadEliminationAnalyzer::BeginBlock(const Block* block) {
        if (is_empty(pred)) {
          // One of the predecessors doesn't have maps for this object, so we have
          // to assume that this object could have any map.

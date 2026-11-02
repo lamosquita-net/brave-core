@@ -1,5 +1,5 @@
 diff --git a/src/interpreter/bytecode-generator.cc b/src/interpreter/bytecode-generator.cc
-index 9c24e1e8417b940fd266f4f669fe2c2cc700be40..bd8e50a38ccd274a38b3df387d2be91631eb2d09 100644
+index 2861ab78c45deb5d56aa7e771079f6d43ad0c6e9..6d8bd90834db7db12286c9ffabb0221edc4ca890 100644
 --- a/src/interpreter/bytecode-generator.cc
 +++ b/src/interpreter/bytecode-generator.cc
 @@ -433,6 +433,106 @@ class BytecodeGenerator::ControlScopeForTopLevel final
@@ -268,27 +268,7 @@ index 9c24e1e8417b940fd266f4f669fe2c2cc700be40..bd8e50a38ccd274a38b3df387d2be916
  class BytecodeGenerator::IteratorRecord final {
   public:
    IteratorRecord(Register object_register, Register next_register,
-@@ -1221,7 +1235,8 @@ class V8_NODISCARD BytecodeGenerator::OptionalChainNullLabelScope final {
-  public:
-   explicit OptionalChainNullLabelScope(BytecodeGenerator* bytecode_generator)
-       : bytecode_generator_(bytecode_generator),
--        labels_(bytecode_generator->zone()) {
-+        labels_(bytecode_generator->zone()),
-+        hole_check_scope_(bytecode_generator) {
-     prev_ = bytecode_generator_->optional_chaining_null_labels_;
-     bytecode_generator_->optional_chaining_null_labels_ = &labels_;
-   }
-@@ -1236,6 +1251,9 @@ class V8_NODISCARD BytecodeGenerator::OptionalChainNullLabelScope final {
-   BytecodeGenerator* bytecode_generator_;
-   BytecodeLabels labels_;
-   BytecodeLabels* prev_;
-+  // Use the same scope for the entire optional chain, as links earlier in the
-+  // chain dominate later links, linearly.
-+  HoleCheckElisionScope hole_check_scope_;
- };
- 
- // LoopScope delimits the scope of {loop}, from its header to its final jump.
-@@ -2050,22 +2068,18 @@ void BytecodeGenerator::VisitBlockMaybeDispose(Block* stmt) {
+@@ -2065,22 +2079,18 @@ void BytecodeGenerator::VisitBlockMaybeDispose(Block* stmt) {
  
  void BytecodeGenerator::VisitBlockDeclarationsAndStatements(Block* stmt) {
    BlockBuilder block_builder(builder(), block_coverage_builder_, stmt);
@@ -320,7 +300,7 @@ index 9c24e1e8417b940fd266f4f669fe2c2cc700be40..bd8e50a38ccd274a38b3df387d2be916
    } else {
      VisitStatements(stmt->statements());
    }
-@@ -2671,10 +2685,6 @@ void BytecodeGenerator::VisitSwitchStatement(SwitchStatement* stmt) {
+@@ -2686,10 +2696,6 @@ void BytecodeGenerator::VisitSwitchStatement(SwitchStatement* stmt) {
      switch_builder.Break();
    }
  
@@ -331,7 +311,7 @@ index 9c24e1e8417b940fd266f4f669fe2c2cc700be40..bd8e50a38ccd274a38b3df387d2be916
    case_compare_ctr = 0;
    for (int i = 0; i < clauses->length(); ++i) {
      CaseClause* clause = clauses->at(i);
-@@ -2698,11 +2708,11 @@ void BytecodeGenerator::VisitSwitchStatement(SwitchStatement* stmt) {
+@@ -2713,11 +2719,11 @@ void BytecodeGenerator::VisitSwitchStatement(SwitchStatement* stmt) {
        switch_builder.BindDefault(clause);
      }
      // Regardless, generate code (in case of fall throughs).
@@ -345,7 +325,7 @@ index 9c24e1e8417b940fd266f4f669fe2c2cc700be40..bd8e50a38ccd274a38b3df387d2be916
  }
  
  template <typename TryBodyFunc, typename CatchBodyFunc>
-@@ -2919,7 +2929,12 @@ void BytecodeGenerator::VisitIterationBody(IterationStatement* stmt,
+@@ -2934,7 +2940,12 @@ void BytecodeGenerator::VisitIterationBody(IterationStatement* stmt,
                                             LoopBuilder* loop_builder) {
    loop_builder->LoopBody();
    ControlScopeForIteration execution_control(this, stmt, loop_builder);
@@ -359,7 +339,7 @@ index 9c24e1e8417b940fd266f4f669fe2c2cc700be40..bd8e50a38ccd274a38b3df387d2be916
    loop_builder->BindContinueTarget();
  }
  
-@@ -3247,7 +3262,7 @@ void BytecodeGenerator::VisitDebuggerStatement(DebuggerStatement* stmt) {
+@@ -3266,7 +3277,7 @@ void BytecodeGenerator::VisitDebuggerStatement(DebuggerStatement* stmt) {
  void BytecodeGenerator::VisitFunctionLiteral(FunctionLiteral* expr) {
    CHECK_LT(info_->literal()->function_literal_id(),
             expr->function_literal_id());
@@ -368,7 +348,7 @@ index 9c24e1e8417b940fd266f4f669fe2c2cc700be40..bd8e50a38ccd274a38b3df387d2be916
    uint8_t flags = CreateClosureFlags::Encode(
        expr->pretenure(), closure_scope()->is_function_scope(),
        info()->flags().might_always_turbofan());
-@@ -3401,6 +3416,36 @@ void BytecodeGenerator::BuildClassLiteral(ClassLiteral* expr, Register name) {
+@@ -3420,6 +3431,36 @@ void BytecodeGenerator::BuildClassLiteral(ClassLiteral* expr, Register name) {
      }
    }
  
@@ -405,7 +385,7 @@ index 9c24e1e8417b940fd266f4f669fe2c2cc700be40..bd8e50a38ccd274a38b3df387d2be916
    {
      RegisterAllocationScope register_scope(this);
      RegisterList args = register_allocator()->NewGrowableRegisterList();
-@@ -3522,36 +3567,6 @@ void BytecodeGenerator::BuildClassLiteral(ClassLiteral* expr, Register name) {
+@@ -3541,36 +3582,6 @@ void BytecodeGenerator::BuildClassLiteral(ClassLiteral* expr, Register name) {
                              HoleCheckMode::kElided);
    }
  
@@ -442,7 +422,7 @@ index 9c24e1e8417b940fd266f4f669fe2c2cc700be40..bd8e50a38ccd274a38b3df387d2be916
    if (expr->instance_members_initializer_function() != nullptr) {
      VisitForAccumulatorValue(expr->instance_members_initializer_function());
  
-@@ -4038,8 +4053,13 @@ void BytecodeGenerator::VisitObjectLiteral(ObjectLiteral* expr) {
+@@ -4057,8 +4068,13 @@ void BytecodeGenerator::VisitObjectLiteral(ObjectLiteral* expr) {
            VisitForAccumulatorValue(property->value());
            if (key->IsStringLiteral()) {
              FeedbackSlot slot = feedback_spec()->AddDefineNamedOwnICSlot();
@@ -458,17 +438,7 @@ index 9c24e1e8417b940fd266f4f669fe2c2cc700be40..bd8e50a38ccd274a38b3df387d2be916
            } else {
              FeedbackSlot slot = feedback_spec()->AddDefineKeyedOwnICSlot();
              builder()->DefineKeyedOwnProperty(
-@@ -6461,9 +6481,6 @@ template <typename ExpressionFunc>
- void BytecodeGenerator::BuildOptionalChain(ExpressionFunc expression_func) {
-   BytecodeLabel done;
-   OptionalChainNullLabelScope label_scope(this);
--  // Use the same scope for the entire optional chain, as links earlier in the
--  // chain dominate later links, linearly.
--  HoleCheckElisionScope elider(this);
-   expression_func();
-   builder()->Jump(&done);
-   label_scope.labels()->Bind(builder());
-@@ -8200,7 +8217,7 @@ void BytecodeGenerator::VisitNaryNullishExpression(NaryOperation* expr) {
+@@ -8218,7 +8234,7 @@ void BytecodeGenerator::VisitNaryNullishExpression(NaryOperation* expr) {
  void BytecodeGenerator::BuildNewLocalActivationContext() {
    ValueResultScope value_execution_result(this);
    Scope* scope = closure_scope();

@@ -1,5 +1,5 @@
 diff --git a/src/parsing/parser-base.h b/src/parsing/parser-base.h
-index b11f1d683f8206f067f47b6b156054d76b7ddc31..37841d66a5db4733c82abc3c221bec2b7a5963e4 100644
+index 4c21772457c59d69edd0ac1e757b313f659f1373..ccbf3a502bfbbb76bf126687f54928e96592ceea 100644
 --- a/src/parsing/parser-base.h
 +++ b/src/parsing/parser-base.h
 @@ -446,7 +446,11 @@ class ParserBase {
@@ -58,7 +58,7 @@ index b11f1d683f8206f067f47b6b156054d76b7ddc31..37841d66a5db4733c82abc3c221bec2b
    };
  
    void DeclareLabel(ZonePtrList<const AstRawString>** labels,
-@@ -1669,6 +1679,10 @@ class ParserBase {
+@@ -1671,6 +1681,10 @@ class ParserBase {
      return expression_scope_;
    }
  
@@ -69,7 +69,7 @@ index b11f1d683f8206f067f47b6b156054d76b7ddc31..37841d66a5db4733c82abc3c221bec2b
    bool MaybeParsingArrowhead() const {
      return expression_scope_ != nullptr &&
             expression_scope_->has_possible_arrow_parameter_in_scope_chain();
-@@ -1731,6 +1745,7 @@ class ParserBase {
+@@ -1733,6 +1747,7 @@ class ParserBase {
    FuncNameInferrer fni_;
    AstValueFactory* ast_value_factory_;  // Not owned.
    typename Types::Factory ast_node_factory_;
@@ -77,7 +77,7 @@ index b11f1d683f8206f067f47b6b156054d76b7ddc31..37841d66a5db4733c82abc3c221bec2b
    RuntimeCallStats* runtime_call_stats_;
    internal::V8FileLogger* v8_file_logger_;
    bool parsing_on_main_thread_;
-@@ -1771,6 +1786,7 @@ class ParserBase {
+@@ -1773,6 +1788,7 @@ class ParserBase {
      DeclarationScope* scope = nullptr;
      int function_literal_id = -1;
      bool could_be_immediately_invoked = false;
@@ -85,7 +85,7 @@ index b11f1d683f8206f067f47b6b156054d76b7ddc31..37841d66a5db4733c82abc3c221bec2b
  
      bool HasInitialState() const { return scope == nullptr; }
  
-@@ -1779,6 +1795,7 @@ class ParserBase {
+@@ -1781,6 +1797,7 @@ class ParserBase {
        function_literal_id = -1;
        ClearStrictParameterError();
        could_be_immediately_invoked = false;
@@ -93,7 +93,7 @@ index b11f1d683f8206f067f47b6b156054d76b7ddc31..37841d66a5db4733c82abc3c221bec2b
        DCHECK(HasInitialState());
      }
  
-@@ -1806,13 +1823,14 @@ class ParserBase {
+@@ -1808,13 +1825,14 @@ class ParserBase {
  template <typename Impl>
  ParserBase<Impl>::FunctionState::FunctionState(
      FunctionState** function_state_stack, Scope** scope_stack,
@@ -109,7 +109,7 @@ index b11f1d683f8206f067f47b6b156054d76b7ddc31..37841d66a5db4733c82abc3c221bec2b
        dont_optimize_reason_(BailoutReason::kNoReason),
        next_function_is_likely_called_(false),
        previous_function_was_likely_called_(false),
-@@ -2554,6 +2572,7 @@ typename ParserBase<Impl>::ExpressionT ParserBase<Impl>::ParseProperty(
+@@ -2556,6 +2574,7 @@ typename ParserBase<Impl>::ExpressionT ParserBase<Impl>::ParseProperty(
        prop_info->is_computed_name = true;
        Consume(Token::kLeftBracket);
        AcceptINScope scope(this, true);
@@ -117,7 +117,7 @@ index b11f1d683f8206f067f47b6b156054d76b7ddc31..37841d66a5db4733c82abc3c221bec2b
        ExpressionT expression = ParseAssignmentExpression();
        Expect(Token::kRightBracket);
        if (prop_info->kind == ParsePropertyKind::kNotSet) {
-@@ -2720,7 +2739,9 @@ ParserBase<Impl>::ParseClassPropertyDefinition(ClassInfo* class_info,
+@@ -2722,7 +2741,9 @@ ParserBase<Impl>::ParseClassPropertyDefinition(ClassInfo* class_info,
          if (!has_error() && next_info_id != PeekNextInfoId() &&
              !(prop_info->is_static ? class_info->has_static_elements()
                                     : class_info->has_instance_members())) {
@@ -128,7 +128,7 @@ index b11f1d683f8206f067f47b6b156054d76b7ddc31..37841d66a5db4733c82abc3c221bec2b
          }
        } else {
          CheckClassFieldName(prop_info->name, prop_info->is_static);
-@@ -3293,7 +3314,8 @@ ParserBase<Impl>::ParseAssignmentExpressionCoverGrammarContinuation(
+@@ -3295,7 +3316,8 @@ ParserBase<Impl>::ParseAssignmentExpressionCoverGrammarContinuation(
      // not, we'll reindex the arrow function formal parameters to shift them all
      // 1 down to make space for the arrow function.
      if (function_literal_id != GetNextInfoId()) {
@@ -138,7 +138,7 @@ index b11f1d683f8206f067f47b6b156054d76b7ddc31..37841d66a5db4733c82abc3c221bec2b
      }
  
      expression = ParseArrowFunctionLiteral(parameters, function_literal_id,
-@@ -3985,6 +4007,11 @@ ParserBase<Impl>::ParseLeftHandSideContinuation(ExpressionT result) {
+@@ -3995,6 +4017,11 @@ ParserBase<Impl>::ParseLeftHandSideContinuation(ExpressionT result) {
          int eval_scope_info_index = 0;
          if (CheckPossibleEvalCall(result, is_optional, scope())) {
            eval_scope_info_index = GetNextInfoId();

@@ -165,3 +165,22 @@ of the ported fixes pass (four dropped, see above).
 
 
 
+
+---
+
+# FlyWeb: level 138 (FM.53), patches/v8 rebased from 13.7.152.17 to 13.8.258.30
+
+MOTOR-42, 02-11-2026 (brave-core `nube/motor-138`). `v8re.sh 13.7.152.17 13.8.258.30` (three-way merge per file):
+189 rebased cleanly; 23 dropped because the merge result equals 13.8 (the fix is upstream in 13.8, among them the 9
+`src/objects/js-*.cc` Intl `ResolveLocale` patches, `wasm-gc-lowering.{h,cc}`, `asm-scanner.{h,cc}`, `preparser.cc`,
+`source-position.h`, `mark-compact.cc`, `turboshaft/graph-builder.cc` and the arm64/loong64/ppc/riscv builtins); 4
+regression tests dropped because 13.8 already has them (`intl/regress-412149700.js`, `regress-425583995.js`,
+`regress-430344952.js`, `turboshaft/regress-419503126.js`). Cache epoch 29.
+
+**Left for SEGURIDAD-PORTES (conflict: 13.8 rewrote the code; the patch is still the 13.7 one and does not apply):**
+`src/builtins/builtins-wasm-gen.cc` (CVE-2026-87491, 36079c3628), `src/codegen/arm64/macro-assembler-arm64.h` (13.8 has
+a `(count + 1)` veneer margin: probably the same fix), `src/debug/liveedit.cc` (13.8 has `Run(literals, eval_calls)`;
+check the stack-overflow handling), `src/ic/ic.cc`, `src/json/json-parser.cc` (13.8 has the `FastIterableState` fast
+path; the patch replaced it with the plain loop), `src/maglev/maglev-graph-builder.cc` (a068030f51, 811ebc89d5; Maglev
+off) and `src/regexp/regexp-compiler.h` (13.8 has `FlushMode` and `action_`; the patch adds `kCPOffsetSlack`).
+Resolved files of the merge (with conflict markers) were in the MOTOR-42 container only; rerun `v8re.sh` to get them.

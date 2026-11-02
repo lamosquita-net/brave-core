@@ -1,5 +1,5 @@
 diff --git a/src/execution/isolate.cc b/src/execution/isolate.cc
-index 33abb93ea8e27cd746dd0acce5c123339fa9ed6b..3150575f10823c54fdc588e9666a519dcde55360 100644
+index 8860542b650e5570ae52a8733cf214a0043686ab..9820a62c80fdfdb8ea884d1a36fa78805479c04b 100644
 --- a/src/execution/isolate.cc
 +++ b/src/execution/isolate.cc
 @@ -154,6 +154,7 @@
@@ -10,9 +10,9 @@ index 33abb93ea8e27cd746dd0acce5c123339fa9ed6b..3150575f10823c54fdc588e9666a519d
  #include "src/wasm/wasm-objects.h"
  
  #if V8_ENABLE_DRUMBRAKE
-@@ -2289,6 +2290,21 @@ Tagged<Object> Isolate::UnwindAndFindHandler() {
-         SBXCHECK_EQ(parent->jmpbuf()->state, wasm::JumpBuffer::Inactive);
-         SwitchStacks(active_stack, parent);
+@@ -2295,6 +2296,21 @@ Tagged<Object> Isolate::UnwindAndFindHandler() {
+         // suspender can encapsulate multiple stacks.
+         suspender = Tagged<WasmSuspenderObject>::cast(suspender)->parent();
          parent->jmpbuf()->state = wasm::JumpBuffer::Active;
 +        // FlyWeb: v8 13c7629466 (crbug 501147587). The exception (e.g. a
 +        // termination) escapes the suspender that owns this stack: clear its

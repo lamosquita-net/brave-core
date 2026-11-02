@@ -1,5 +1,5 @@
 diff --git a/src/compiler/turboshaft/late-load-elimination-reducer.h b/src/compiler/turboshaft/late-load-elimination-reducer.h
-index 72cdf125cf1fb70eaaab17937ae10791915b06f8..b9f74a41cd21ed3d43cf60fdecbd4b3d4ba3ec77 100644
+index 3f4b5377df83559e06e7dbc8e820137728c8c7b9..c99c3bf1c7b5c0b72bda3884b47364ffd7ab1db2 100644
 --- a/src/compiler/turboshaft/late-load-elimination-reducer.h
 +++ b/src/compiler/turboshaft/late-load-elimination-reducer.h
 @@ -439,6 +439,11 @@ class MemoryContentTable
@@ -14,7 +14,7 @@ index 72cdf125cf1fb70eaaab17937ae10791915b06f8..b9f74a41cd21ed3d43cf60fdecbd4b3d
    OpIndex Find(const LoadOp& load) {
      OpIndex base = ResolveBase(load.base());
      OptionalOpIndex index = load.index();
-@@ -561,8 +566,9 @@ class MemoryContentTable
+@@ -569,8 +574,9 @@ class MemoryContentTable
      SetNoNotify(key, value);
    }
  
@@ -26,7 +26,7 @@ index 72cdf125cf1fb70eaaab17937ae10791915b06f8..b9f74a41cd21ed3d43cf60fdecbd4b3d
      auto offset_keys = offset_keys_.find(offset);
      if (offset_keys == offset_keys_.end()) return;
      for (auto it = offset_keys->second.begin();
-@@ -575,7 +581,8 @@ class MemoryContentTable
+@@ -583,7 +589,8 @@ class MemoryContentTable
          ++it;
          continue;
        }
@@ -36,7 +36,7 @@ index 72cdf125cf1fb70eaaab17937ae10791915b06f8..b9f74a41cd21ed3d43cf60fdecbd4b3d
                                     ? base_maps
                                     : object_maps_.Get(key.data().mem.base);
        if (!is_empty(base_maps) && !is_empty(this_maps) &&
-@@ -731,6 +738,8 @@ class V8_EXPORT_PRIVATE LateLoadEliminationAnalyzer {
+@@ -740,6 +747,8 @@ class V8_EXPORT_PRIVATE LateLoadEliminationAnalyzer {
  
    void InvalidateAllNonAliasingInputs(const Operation& op);
    void InvalidateIfAlias(OpIndex op_idx);

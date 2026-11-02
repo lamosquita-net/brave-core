@@ -1,8 +1,8 @@
 diff --git a/src/api/api.cc b/src/api/api.cc
-index 43e9000bf15dee4532def907bc41a8150c3cdc6e..8b5e9d02a91c5ebbf45e4261a3f62177270fe7eb 100644
+index 1298ed3d34f5c6234ebb98b25d385143e40922fb..e515170e7a30e02dd3a68ac77a8776557fcae024 100644
 --- a/src/api/api.cc
 +++ b/src/api/api.cc
-@@ -5239,12 +5239,25 @@ V8_INLINE void* GetAlignedPointerFromEmbedderDataInCreationContextImpl(
+@@ -5175,12 +5175,25 @@ V8_INLINE void* GetAlignedPointerFromEmbedderDataInCreationContextImpl(
    const char* location =
        "v8::Object::GetAlignedPointerFromEmbedderDataInCreationContext()";
    auto maybe_context = object->GetCreationContext();
@@ -30,7 +30,7 @@ index 43e9000bf15dee4532def907bc41a8150c3cdc6e..8b5e9d02a91c5ebbf45e4261a3f62177
  
    // This macro requires a real Isolate while |i_isolate_for_sandbox| might be
    // nullptr if the V8 sandbox is not enabled.
-@@ -8706,9 +8719,17 @@ Maybe<bool> Promise::Resolver::Resolve(Local<Context> context,
+@@ -8632,9 +8645,17 @@ Maybe<bool> Promise::Resolver::Resolve(Local<Context> context,
    auto self = Utils::OpenDirectHandle(this);
    auto promise = i::Cast<i::JSPromise>(self);
  
@@ -47,9 +47,9 @@ index 43e9000bf15dee4532def907bc41a8150c3cdc6e..8b5e9d02a91c5ebbf45e4261a3f62177
    }
 +  promise->set_is_native_resolver_invoked(true);
  
-   has_exception =
-       i::JSPromise::Resolve(promise, Utils::OpenDirectHandle(*value)).is_null();
-@@ -8723,9 +8744,17 @@ Maybe<bool> Promise::Resolver::Reject(Local<Context> context,
+   if (i::JSPromise::Resolve(promise, Utils::OpenDirectHandle(*value))
+           .is_null()) {
+@@ -8651,9 +8672,17 @@ Maybe<bool> Promise::Resolver::Reject(Local<Context> context,
    auto self = Utils::OpenDirectHandle(this);
    auto promise = i::Cast<i::JSPromise>(self);
  
@@ -66,9 +66,9 @@ index 43e9000bf15dee4532def907bc41a8150c3cdc6e..8b5e9d02a91c5ebbf45e4261a3f62177
    }
 +  promise->set_is_native_resolver_invoked(true);
  
-   has_exception =
-       i::JSPromise::Reject(promise, Utils::OpenDirectHandle(*value)).is_null();
-@@ -8907,11 +8936,12 @@ MaybeLocal<WasmModuleObject> WasmModuleObject::FromCompiledModule(
+   if (i::JSPromise::Reject(promise, Utils::OpenDirectHandle(*value))
+           .is_null()) {
+@@ -8827,11 +8856,12 @@ MaybeLocal<WasmModuleObject> WasmModuleObject::FromCompiledModule(
      Isolate* v8_isolate, const CompiledWasmModule& compiled_module) {
  #if V8_ENABLE_WEBASSEMBLY
    i::Isolate* i_isolate = reinterpret_cast<i::Isolate*>(v8_isolate);

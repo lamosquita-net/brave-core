@@ -1,8 +1,8 @@
 diff --git a/src/codegen/code-stub-assembler.cc b/src/codegen/code-stub-assembler.cc
-index 0cc6051ea5d187b100877709fb0f9067b8903ce7..3457c11828d70c5e5bc08e1e44f3884c386c3c28 100644
+index e450d1809b457f5cee145649348cade9f74cb5a8..260ca4f16f1896a0ad02f89e14c63b15411f2a83 100644
 --- a/src/codegen/code-stub-assembler.cc
 +++ b/src/codegen/code-stub-assembler.cc
-@@ -11212,7 +11212,8 @@ void CodeStubAssembler::ForEachEnumerableOwnProperty(
+@@ -11409,7 +11409,8 @@ void CodeStubAssembler::ForEachEnumerableOwnProperty(
  
                var_value = CallGetterIfAccessor(
                    value_or_accessor, object, var_details.value(), context,
@@ -12,7 +12,7 @@ index 0cc6051ea5d187b100877709fb0f9067b8903ce7..3457c11828d70c5e5bc08e1e44f3884c
                Goto(&value_ready);
  
                BIND(&slow_load);
-@@ -11708,15 +11709,11 @@ template void CodeStubAssembler::LoadPropertyFromDictionary(
+@@ -11905,15 +11906,11 @@ template void CodeStubAssembler::LoadPropertyFromDictionary(
      TNode<SwissNameDictionary> dictionary, TNode<IntPtrT> name_index,
      TVariable<Uint32T>* var_details, TVariable<Object>* var_value);
  
@@ -31,7 +31,7 @@ index 0cc6051ea5d187b100877709fb0f9067b8903ce7..3457c11828d70c5e5bc08e1e44f3884c
    TVARIABLE(Object, var_value, value);
    Label done(this), if_accessor_info(this, Label::kDeferred);
  
-@@ -11757,44 +11754,51 @@ TNode<Object> CodeStubAssembler::CallGetterIfAccessor(
+@@ -11954,44 +11951,51 @@ TNode<Object> CodeStubAssembler::CallGetterIfAccessor(
  
        BIND(&if_function_template_info);
        {
@@ -118,7 +118,7 @@ index 0cc6051ea5d187b100877709fb0f9067b8903ce7..3457c11828d70c5e5bc08e1e44f3884c
          }
        }
      } else {
-@@ -11806,56 +11810,61 @@ TNode<Object> CodeStubAssembler::CallGetterIfAccessor(
+@@ -12003,56 +12007,61 @@ TNode<Object> CodeStubAssembler::CallGetterIfAccessor(
    // AccessorInfo case.
    BIND(&if_accessor_info);
    {
@@ -228,7 +228,7 @@ index 0cc6051ea5d187b100877709fb0f9067b8903ce7..3457c11828d70c5e5bc08e1e44f3884c
      }
    }
  
-@@ -11940,7 +11949,7 @@ void CodeStubAssembler::TryGetOwnProperty(
+@@ -12137,7 +12146,7 @@ void CodeStubAssembler::TryGetOwnProperty(
      }
      TNode<Object> value = CallGetterIfAccessor(
          var_value->value(), object, var_details->value(), context, receiver,
@@ -237,7 +237,7 @@ index 0cc6051ea5d187b100877709fb0f9067b8903ce7..3457c11828d70c5e5bc08e1e44f3884c
      *var_value = value;
      Goto(if_found_value);
    }
-@@ -17605,8 +17614,9 @@ TNode<Code> CodeStubAssembler::GetSharedFunctionInfoCode(
+@@ -17827,8 +17836,9 @@ TNode<Code> CodeStubAssembler::GetSharedFunctionInfoCode(
  #if V8_ENABLE_WEBASSEMBLY
      // IsWasmFunctionData: Use the wrapper code
      BIND(&check_is_wasm_function_data);

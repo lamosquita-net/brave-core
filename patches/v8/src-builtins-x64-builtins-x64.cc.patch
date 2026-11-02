@@ -1,8 +1,8 @@
 diff --git a/src/builtins/x64/builtins-x64.cc b/src/builtins/x64/builtins-x64.cc
-index 9020ed56647339c2d198209a89bac8f85b038a51..2868a58f7fea39847336d8a3db1737b7dd37117b 100644
+index 5ec5cc8c3058b7c9aee83ef42425b5d073a3d95b..fcc416bd7952239106ff5a108b6067987991c495 100644
 --- a/src/builtins/x64/builtins-x64.cc
 +++ b/src/builtins/x64/builtins-x64.cc
-@@ -3500,7 +3500,15 @@ void ReloadParentStack(MacroAssembler* masm, Register promise,
+@@ -3505,7 +3505,15 @@ void ReloadParentStack(MacroAssembler* masm, Register promise,
    // Switch stack!
    SwitchStacks(masm, active_stack, true,
                 {promise, return_value, context, parent});
@@ -18,7 +18,7 @@ index 9020ed56647339c2d198209a89bac8f85b038a51..2868a58f7fea39847336d8a3db1737b7
  }
  
  // Loads the context field of the WasmTrustedInstanceData or WasmImportData
-@@ -3624,6 +3632,8 @@ void SwitchBackAndReturnPromise(MacroAssembler* masm, Register tmp1,
+@@ -3629,6 +3637,8 @@ void SwitchBackAndReturnPromise(MacroAssembler* masm, Register tmp1,
    }
  
    __ bind(return_promise);
@@ -27,7 +27,7 @@ index 9020ed56647339c2d198209a89bac8f85b038a51..2868a58f7fea39847336d8a3db1737b7
  }
  
  void GenerateExceptionHandlingLandingPad(MacroAssembler* masm,
-@@ -3847,6 +3857,7 @@ void JSToWasmWrapperHelper(MacroAssembler* masm, wasm::Promise mode) {
+@@ -3852,6 +3862,7 @@ void JSToWasmWrapperHelper(MacroAssembler* masm, wasm::Promise mode) {
    Label return_promise;
    if (stack_switch) {
      SwitchBackAndReturnPromise(masm, r8, rdi, mode, &return_promise);
@@ -35,7 +35,7 @@ index 9020ed56647339c2d198209a89bac8f85b038a51..2868a58f7fea39847336d8a3db1737b7
    }
    __ bind(&suspend);
    __ endbr64();
-@@ -3999,10 +4010,14 @@ namespace {
+@@ -4004,10 +4015,14 @@ namespace {
  // forwards the value, the onRejected variant throws the value.
  
  void Generate_WasmResumeHelper(MacroAssembler* masm, wasm::OnResume on_resume) {
@@ -52,7 +52,7 @@ index 9020ed56647339c2d198209a89bac8f85b038a51..2868a58f7fea39847336d8a3db1737b7
    Register closure = kJSFunctionRegister;  // rdi
  
    __ AllocateStackSpace(StackSwitchFrameConstants::kNumSpillSlots *
-@@ -4010,8 +4025,6 @@ void Generate_WasmResumeHelper(MacroAssembler* masm, wasm::OnResume on_resume) {
+@@ -4015,8 +4030,6 @@ void Generate_WasmResumeHelper(MacroAssembler* masm, wasm::OnResume on_resume) {
    // Set a sentinel value for the spill slots visited by the GC.
    ResetStackSwitchFrameStackSlots(masm);
  
@@ -61,12 +61,3 @@ index 9020ed56647339c2d198209a89bac8f85b038a51..2868a58f7fea39847336d8a3db1737b7
    // -------------------------------------------
    // Load suspender from closure.
    // -------------------------------------------
-@@ -5105,7 +5118,7 @@ void Builtins::Generate_InterpreterOnStackReplacement_ToBaseline(
-       code_obj,
-       FieldOperand(shared_function_info,
-                    SharedFunctionInfo::kTrustedFunctionDataOffset),
--      kUnknownIndirectPointerTag, kScratchRegister);
-+      kCodeIndirectPointerTag, kScratchRegister);
- 
-   // For OSR entry it is safe to assume we always have baseline code.
-   if (v8_flags.debug_code) {

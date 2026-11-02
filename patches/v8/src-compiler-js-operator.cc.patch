@@ -1,8 +1,8 @@
 diff --git a/src/compiler/js-operator.cc b/src/compiler/js-operator.cc
-index 6c0916fdd23b0f047995c3065c50cadd55a77aa7..ac62ca670b6de72cbe5ef9ed7bb4296dcd8f54de 100644
+index b1ebcceccf80f7a3e631dc217fef56310a93fd35..766d63fabddc29c7d2451163e4eed992cb7b5ea6 100644
 --- a/src/compiler/js-operator.cc
 +++ b/src/compiler/js-operator.cc
-@@ -147,16 +147,14 @@ const CallRuntimeParameters& CallRuntimeParametersOf(const Operator* op) {
+@@ -151,16 +151,14 @@ const CallRuntimeParameters& CallRuntimeParametersOf(const Operator* op) {
    return OpParameter<CallRuntimeParameters>(op);
  }
  
@@ -22,7 +22,7 @@ index 6c0916fdd23b0f047995c3065c50cadd55a77aa7..ac62ca670b6de72cbe5ef9ed7bb4296d
  bool operator==(ContextAccess const& lhs, ContextAccess const& rhs) {
    return lhs.depth() == rhs.depth() && lhs.index() == rhs.index() &&
           lhs.immutable() == rhs.immutable();
-@@ -219,7 +217,8 @@ CreateFunctionContextParameters const& CreateFunctionContextParametersOf(
+@@ -223,7 +221,8 @@ CreateFunctionContextParameters const& CreateFunctionContextParametersOf(
  
  bool operator==(DefineNamedOwnPropertyParameters const& lhs,
                  DefineNamedOwnPropertyParameters const& rhs) {
@@ -32,7 +32,7 @@ index 6c0916fdd23b0f047995c3065c50cadd55a77aa7..ac62ca670b6de72cbe5ef9ed7bb4296d
           lhs.feedback() == rhs.feedback();
  }
  
-@@ -229,7 +228,7 @@ bool operator!=(DefineNamedOwnPropertyParameters const& lhs,
+@@ -233,7 +232,7 @@ bool operator!=(DefineNamedOwnPropertyParameters const& lhs,
  }
  
  size_t hash_value(DefineNamedOwnPropertyParameters const& p) {
@@ -41,7 +41,7 @@ index 6c0916fdd23b0f047995c3065c50cadd55a77aa7..ac62ca670b6de72cbe5ef9ed7bb4296d
                              FeedbackSource::Hash()(p.feedback()));
  }
  
-@@ -1166,12 +1165,12 @@ const Operator* JSOperatorBuilder::DefineKeyedOwnProperty(
+@@ -1192,12 +1191,12 @@ const Operator* JSOperatorBuilder::DefineKeyedOwnProperty(
  }
  
  const Operator* JSOperatorBuilder::DefineNamedOwnProperty(
@@ -56,7 +56,7 @@ index 6c0916fdd23b0f047995c3065c50cadd55a77aa7..ac62ca670b6de72cbe5ef9ed7bb4296d
    return zone()->New<Operator1<DefineNamedOwnPropertyParameters>>(   // --
        IrOpcode::kJSDefineNamedOwnProperty, Operator::kNoProperties,  // opcode
        "JSDefineNamedOwnProperty",                                    // name
-@@ -1188,9 +1187,9 @@ const Operator* JSOperatorBuilder::DeleteProperty() {
+@@ -1214,9 +1213,9 @@ const Operator* JSOperatorBuilder::DeleteProperty() {
  
  const Operator* JSOperatorBuilder::CreateGeneratorObject() {
    return zone()->New<Operator>(                                     // --
@@ -69,7 +69,7 @@ index 6c0916fdd23b0f047995c3065c50cadd55a77aa7..ac62ca670b6de72cbe5ef9ed7bb4296d
  }
  
  const Operator* JSOperatorBuilder::LoadGlobal(NameRef name,
-@@ -1424,7 +1423,7 @@ const Operator* JSOperatorBuilder::GetTemplateObject(
+@@ -1450,7 +1449,7 @@ const Operator* JSOperatorBuilder::GetTemplateObject(
    GetTemplateObjectParameters parameters(description, shared, feedback);
    return zone()->New<Operator1<GetTemplateObjectParameters>>(  // --
        IrOpcode::kJSGetTemplateObject,                          // opcode
