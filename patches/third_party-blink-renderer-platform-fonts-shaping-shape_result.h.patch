@@ -1,0 +1,24 @@
+diff --git a/third_party/blink/renderer/platform/fonts/shaping/shape_result.h b/third_party/blink/renderer/platform/fonts/shaping/shape_result.h
+index 90da018ca43761a3c4e20c3da17c88a1ef4ad8ff..a7e918934ca13cae946a233fc7fe5731b30a6835 100644
+--- a/third_party/blink/renderer/platform/fonts/shaping/shape_result.h
++++ b/third_party/blink/renderer/platform/fonts/shaping/shape_result.h
+@@ -50,6 +50,7 @@
+ #include "third_party/blink/renderer/platform/wtf/hash_set.h"
+ #include "third_party/blink/renderer/platform/wtf/ref_counted.h"
+ #include "third_party/blink/renderer/platform/wtf/text/wtf_uchar.h"
++#include "third_party/harfbuzz-ng/src/src/hb.h"
+ #include "ui/gfx/geometry/rect_f.h"
+ #include "ui/gfx/geometry/vector2d_f.h"
+ 
+@@ -472,6 +473,11 @@ class PLATFORM_EXPORT ShapeResult : public GarbageCollected<ShapeResult> {
+   void ComputePositionData() const;
+   void RecalcCharacterPositions() const;
+ 
++  // Checks if the given script is a cursive script.
++  // Cursive scripts do not admit gaps between their letters for either
++  // justification or letter-spacing.
++  static bool IsCursiveScript(hb_script_t script);
++
+   template <typename TextContainerType>
+   float ApplySpacingImpl(ShapeResultSpacing<TextContainerType>&,
+                          int text_start_offset = 0);

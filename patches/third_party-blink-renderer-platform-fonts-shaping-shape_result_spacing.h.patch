@@ -1,0 +1,23 @@
+diff --git a/third_party/blink/renderer/platform/fonts/shaping/shape_result_spacing.h b/third_party/blink/renderer/platform/fonts/shaping/shape_result_spacing.h
+index 9e970967854feadf58ec3f8db8ebf1faeb90a59e..b14072b65e7a20f5fdf54f5ebf2cf841b76e3991 100644
+--- a/third_party/blink/renderer/platform/fonts/shaping/shape_result_spacing.h
++++ b/third_party/blink/renderer/platform/fonts/shaping/shape_result_spacing.h
+@@ -66,11 +66,15 @@ class PLATFORM_EXPORT ShapeResultSpacing final {
+     unsigned index;
+     float original_advance = 0.0;
+   };
+-  float ComputeSpacing(unsigned index, float& offset) {
+-    return ComputeSpacing(ComputeSpacingParameters{.index = index}, offset);
++  float ComputeSpacing(unsigned index,
++                       float& offset,
++                       bool is_cursive_script = false) {
++    return ComputeSpacing(ComputeSpacingParameters{.index = index}, offset,
++                          is_cursive_script);
+   }
+   float ComputeSpacing(const ComputeSpacingParameters& parameters,
+-                       float& offset);
++                       float& offset,
++                       bool is_cursive_script);
+ 
+  private:
+   bool IsAfterExpansion() const { return is_after_expansion_; }

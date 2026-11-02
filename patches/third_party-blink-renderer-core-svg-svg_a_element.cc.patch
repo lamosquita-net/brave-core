@@ -1,5 +1,5 @@
 diff --git a/third_party/blink/renderer/core/svg/svg_a_element.cc b/third_party/blink/renderer/core/svg/svg_a_element.cc
-index 797e0f88f0abf8fb01c4820232424ec6661360eb..398576f0d7aa6d016ba06dafc75708295e657724 100644
+index 797e0f88f0abf8fb01c4820232424ec6661360eb..4ce9466a17e0b255aad702687683db6a42dd789f 100644
 --- a/third_party/blink/renderer/core/svg/svg_a_element.cc
 +++ b/third_party/blink/renderer/core/svg/svg_a_element.cc
 @@ -30,6 +30,7 @@
@@ -10,7 +10,15 @@ index 797e0f88f0abf8fb01c4820232424ec6661360eb..398576f0d7aa6d016ba06dafc7570829
  #include "third_party/blink/renderer/core/html/forms/html_form_element.h"
  #include "third_party/blink/renderer/core/html/html_anchor_element.h"
  #include "third_party/blink/renderer/core/html/parser/html_parser_idioms.h"
-@@ -54,10 +55,12 @@ SVGAElement::SVGAElement(Document& document)
+@@ -46,6 +47,7 @@
+ #include "third_party/blink/renderer/core/xlink_names.h"
+ #include "third_party/blink/renderer/platform/heap/garbage_collected.h"
+ #include "third_party/blink/renderer/platform/loader/fetch/resource_request.h"
++#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+ 
+ namespace blink {
+ 
+@@ -54,10 +56,12 @@ SVGAElement::SVGAElement(Document& document)
        SVGURIReference(this),
        svg_target_(
            MakeGarbageCollected<SVGAnimatedString>(this,
@@ -24,7 +32,7 @@ index 797e0f88f0abf8fb01c4820232424ec6661360eb..398576f0d7aa6d016ba06dafc7570829
    SVGGraphicsElement::Trace(visitor);
    SVGURIReference::Trace(visitor);
  }
-@@ -124,8 +127,10 @@ void SVGAElement::DefaultEventHandler(Event& event) {
+@@ -124,8 +128,10 @@ void SVGAElement::DefaultEventHandler(Event& event) {
          }
        }
  
@@ -36,7 +44,7 @@ index 797e0f88f0abf8fb01c4820232424ec6661360eb..398576f0d7aa6d016ba06dafc7570829
  
        FrameLoadRequest frame_request(
            GetDocument().domWindow(),
-@@ -147,6 +152,29 @@ void SVGAElement::DefaultEventHandler(Event& event) {
+@@ -147,6 +153,29 @@ void SVGAElement::DefaultEventHandler(Event& event) {
        frame_request.SetClientRedirectReason(
            ClientNavigationReason::kAnchorClick);
        frame_request.SetSourceElement(this);
@@ -66,7 +74,7 @@ index 797e0f88f0abf8fb01c4820232424ec6661360eb..398576f0d7aa6d016ba06dafc7570829
        frame_request.SetTriggeringEventInfo(
            event.isTrusted()
                ? mojom::blink::TriggeringEventInfo::kFromTrustedEvent
-@@ -154,14 +182,14 @@ void SVGAElement::DefaultEventHandler(Event& event) {
+@@ -154,14 +183,14 @@ void SVGAElement::DefaultEventHandler(Event& event) {
        frame_request.GetResourceRequest().SetHasUserGesture(
            LocalFrame::HasTransientUserActivation(GetDocument().GetFrame()));
  
@@ -88,7 +96,23 @@ index 797e0f88f0abf8fb01c4820232424ec6661360eb..398576f0d7aa6d016ba06dafc7570829
        return;
      }
    }
-@@ -256,4 +284,40 @@ void SVGAElement::SynchronizeAllSVGAttributes() const {
+@@ -204,7 +233,14 @@ bool SVGAElement::SupportsFocus(UpdateBehavior update_behavior) const {
+   }
+   // If not a link we should still be able to focus the element if it has
+   // tabIndex.
+-  return IsLink() || SVGGraphicsElement::SupportsFocus(update_behavior);
++  if (IsLink()) {
++    if (RuntimeEnabledFeatures::RestrictTabFocusForHiddenSVGElementsEnabled() &&
++        IsNonRendered(GetLayoutObject())) {
++      return false;
++    }
++    return true;
++  }
++  return SVGGraphicsElement::SupportsFocus(update_behavior);
+ }
+ 
+ bool SVGAElement::ShouldHaveFocusAppearance() const {
+@@ -256,4 +292,40 @@ void SVGAElement::SynchronizeAllSVGAttributes() const {
    SVGGraphicsElement::SynchronizeAllSVGAttributes();
  }
  
