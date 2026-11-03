@@ -1,9 +1,9 @@
 diff --git a/third_party/blink/renderer/core/dom/quota_exceeded_error.cc b/third_party/blink/renderer/core/dom/quota_exceeded_error.cc
 new file mode 100644
-index 0000000000000000000000000000000000000000..60788bff22dc4a4ffaa0e4ca0b074455a532e1b9
+index 0000000000000000000000000000000000000000..6a9276f754eac5149f60537c6411fd4539286887
 --- /dev/null
 +++ b/third_party/blink/renderer/core/dom/quota_exceeded_error.cc
-@@ -0,0 +1,98 @@
+@@ -0,0 +1,100 @@
 +// Copyright 2025 The Chromium Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -49,7 +49,9 @@ index 0000000000000000000000000000000000000000..60788bff22dc4a4ffaa0e4ca0b074455
 +                               std::optional<double> quota,
 +                               std::optional<double> requested) {
 +  if (RuntimeEnabledFeatures::QuotaExceededErrorUpdateEnabled()) {
-+    v8::Isolate* isolate = exception_state.GetIsolate();
++    // FlyWeb (level 138): ExceptionState::GetIsolate() is protected in the
++    // 128; the exception is thrown into the isolate of the calling thread.
++    v8::Isolate* isolate = v8::Isolate::TryGetCurrent();
 +    if (!isolate) {
 +      // FlyWeb: record the error even without an isolate (upstream returns
 +      // silently; with the 128 ExceptionState the caller would see success).

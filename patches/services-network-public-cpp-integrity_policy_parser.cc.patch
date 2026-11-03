@@ -1,9 +1,9 @@
 diff --git a/services/network/public/cpp/integrity_policy_parser.cc b/services/network/public/cpp/integrity_policy_parser.cc
 new file mode 100644
-index 0000000000000000000000000000000000000000..08eee5eb11860c99a7f0952db284dcb8f2f7d3bf
+index 0000000000000000000000000000000000000000..20bb203e443c7a56380c7496ad1fa31439425b9f
 --- /dev/null
 +++ b/services/network/public/cpp/integrity_policy_parser.cc
-@@ -0,0 +1,115 @@
+@@ -0,0 +1,117 @@
 +// Copyright 2025 The Chromium Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -12,6 +12,7 @@ index 0000000000000000000000000000000000000000..08eee5eb11860c99a7f0952db284dcb8
 +
 +#include <string>
 +
++#include "base/strings/cstring_view.h"
 +#include "base/strings/stringprintf.h"
 +#include "net/http/http_response_headers.h"
 +#include "net/http/structured_headers.h"
@@ -80,8 +81,9 @@ index 0000000000000000000000000000000000000000..08eee5eb11860c99a7f0952db284dcb8
 +                                      ? "Integrity-Policy"
 +                                      : "Integrity-Policy-Report-Only";
 +
-+  const std::string integrity_policy_header =
-+      headers.GetNormalizedHeader(header_name).value_or("");
++  // FlyWeb (level 138): the 128 GetNormalizedHeader() takes an out parameter.
++  std::string integrity_policy_header;
++  headers.GetNormalizedHeader(header_name, &integrity_policy_header);
 +  if (integrity_policy_header.empty()) {
 +    return parsed_policy;
 +  }

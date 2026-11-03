@@ -1,8 +1,8 @@
 diff --git a/third_party/blink/renderer/core/editing/commands/replace_node_with_span_command.cc b/third_party/blink/renderer/core/editing/commands/replace_node_with_span_command.cc
-index 08cce41d69f5a9f73782232e595a65dfcb1f08d1..dcca8615bd5bc735cd6eb94802b5fdf23d907cc0 100644
+index 08cce41d69f5a9f73782232e595a65dfcb1f08d1..3c9b895ca2c66eab44e033eb291ab6e7461d6ed8 100644
 --- a/third_party/blink/renderer/core/editing/commands/replace_node_with_span_command.cc
 +++ b/third_party/blink/renderer/core/editing/commands/replace_node_with_span_command.cc
-@@ -56,9 +56,17 @@ static void SwapInNodePreservingAttributesAndChildren(
+@@ -56,9 +56,20 @@ static void SwapInNodePreservingAttributesAndChildren(
    for (const auto& child : children)
      new_element->AppendChild(child);
  
@@ -16,7 +16,10 @@ index 08cce41d69f5a9f73782232e595a65dfcb1f08d1..dcca8615bd5bc735cd6eb94802b5fdf2
 +  // Make a copy of element_to_replace's attributes since setting attributes
 +  // on new_element could run script and thus modify attributes on either
 +  // element.
-+  AttributeVector attributes(element_to_replace.Attributes());
++  AttributeVector attributes;
++  for (const Attribute& attr : element_to_replace.Attributes()) {
++    attributes.push_back(attr);
++  }
 +  for (const Attribute& attr : attributes) {
 +    new_element->setAttribute(attr.GetName(), attr.Value());
 +  }
