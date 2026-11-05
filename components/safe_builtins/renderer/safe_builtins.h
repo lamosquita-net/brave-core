@@ -6,23 +6,19 @@
 #ifndef BRAVE_COMPONENTS_SAFE_BUILTINS_RENDERER_SAFE_BUILTINS_H_
 #define BRAVE_COMPONENTS_SAFE_BUILTINS_RENDERER_SAFE_BUILTINS_H_
 
-#include <memory>
-
 #include "base/memory/stack_allocated.h"
 #include "v8/include/v8-forward.h"
-#include "v8/include/v8-persistent-handle.h"
+#include "v8/include/v8-local-handle.h"
 
 namespace brave {
 
 // This is originated from extensions::SafeBuiltins
 // see //extensions/renderer/safe_builtins.h for details
+//
 class SafeBuiltins {
   STACK_ALLOCATED();
 
  public:
-  // Creates the v8::Extension which manages SafeBuiltins instances.
-  static std::unique_ptr<v8::Extension> CreateV8Extension();
-
   explicit SafeBuiltins(const v8::Local<v8::Context>& context);
 
   SafeBuiltins(const SafeBuiltins&) = delete;
@@ -41,8 +37,7 @@ class SafeBuiltins {
   // Add more safe builtins if needed.
 
  private:
-  v8::Global<v8::Context> context_;
-  v8::Isolate* isolate_;
+  v8::Local<v8::Context> context_;
 };
 
 }  //  namespace brave
