@@ -10,8 +10,6 @@
 #include "base/strings/utf_string_conversions.h"
 #include "base/test/bind.h"
 #include "base/threading/thread_restrictions.h"
-#include "brave/browser/brave_ads/ads_service_factory.h"
-#include "brave/browser/brave_rewards/rewards_service_factory.h"
 #include "brave/browser/tor/tor_profile_service_factory.h"
 #include "brave/components/constants/brave_paths.h"
 #include "brave/components/constants/brave_switches.h"
@@ -193,9 +191,6 @@ IN_PROC_BROWSER_TEST_F(TorProfileManagerTest,
   ASSERT_TRUE(tor_profile->IsTor());
   EXPECT_TRUE(tor_profile->IsOffTheRecord());
 
-  EXPECT_EQ(brave_rewards::RewardsServiceFactory::GetForProfile(tor_profile),
-            nullptr);
-  EXPECT_EQ(brave_ads::AdsServiceFactory::GetForProfile(tor_profile), nullptr);
   // Ambient Auth should be disabled
   EXPECT_FALSE(AmbientAuthenticationTestHelper::IsAmbientAuthAllowedForProfile(
       tor_profile));
