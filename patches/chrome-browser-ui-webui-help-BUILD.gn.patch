@@ -1,0 +1,16 @@
+diff --git a/chrome/browser/ui/webui/help/BUILD.gn b/chrome/browser/ui/webui/help/BUILD.gn
+index 17d8d3e2832c4d572054a7c866690703e9fe87a2..2678fe97d9bf37449d0d4c356e1a8b657b55f979 100644
+--- a/chrome/browser/ui/webui/help/BUILD.gn
++++ b/chrome/browser/ui/webui/help/BUILD.gn
+@@ -62,7 +62,10 @@ source_set("help") {
+         "//ui/gfx",
+       ]
+     } else {
+-      sources = [ "version_updater_basic.cc" ]
++      if (!is_official_build) {
++        # In official build, //brave/browser/ui handles.
++        sources = [ "version_updater_basic.cc" ]
++      }
+     }
+   }
+ 
