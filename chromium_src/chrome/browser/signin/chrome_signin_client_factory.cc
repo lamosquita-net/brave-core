@@ -14,6 +14,6 @@
       .WithRegular(ProfileSelection::kOwnInstance) \
       .WithGuest(ProfileSelection::kOwnInstance)
 
-#include "src/chrome/browser/signin/chrome_signin_client_factory.cc"
+#include <chrome/browser/signin/chrome_signin_client_factory.cc>
 
 #undef WithAshInternals

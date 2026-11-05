@@ -21,6 +21,6 @@
   AddHeadersFromString(std::string(ARG1) + std::string(": ") + \
                        std::string(ARG2))
 
-#include "src/components/sync/engine/net/sync_server_connection_manager.cc"
+#include <components/sync/engine/net/sync_server_connection_manager.cc>
 
 #undef SetHeader

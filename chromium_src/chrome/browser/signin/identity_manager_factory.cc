@@ -13,6 +13,6 @@
       .WithRegular(ProfileSelection::kOwnInstance) \
       .WithGuest(ProfileSelection::kOwnInstance)
 
-#include "src/chrome/browser/signin/identity_manager_factory.cc"
+#include <chrome/browser/signin/identity_manager_factory.cc>
 
 #undef WithAshInternals

@@ -6,7 +6,7 @@
 #define EncryptableUserTypes EncryptableUserTypes_ChromiumImpl
 #define LowPriorityUserTypes LowPriorityUserTypes_ChromiumImpl
 
-#include "src/components/sync/base/data_type.cc"
+#include <components/sync/base/data_type.cc>
 
 #undef LowPriorityUserTypes
 #undef EncryptableUserTypes

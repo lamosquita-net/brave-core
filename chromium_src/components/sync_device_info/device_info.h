@@ -18,6 +18,6 @@ enum class SelfDeleteSupport {
 
 }  // namespace syncer
 
-#include "src/components/sync_device_info/device_info.h"  // IWYU pragma: export
+#include <components/sync_device_info/device_info.h>  // IWYU pragma: export
 
 #endif  // BRAVE_CHROMIUM_SRC_COMPONENTS_SYNC_DEVICE_INFO_DEVICE_INFO_H_

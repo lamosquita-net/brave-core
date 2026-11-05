@@ -32,7 +32,7 @@ std::unique_ptr<sync_pb::DeviceInfoSpecifics> MakeLocalDeviceSpecifics(
 
 #include "base/task/sequenced_task_runner.h"
 
-#include "src/components/sync_device_info/device_info_sync_bridge.cc"
+#include <components/sync_device_info/device_info_sync_bridge.cc>
 
 namespace syncer {
 
