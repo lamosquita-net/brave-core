@@ -22,7 +22,6 @@
 #include "brave/browser/ui/page_action/brave_page_action_icon_type.h"
 #include "brave/browser/ui/views/frame/brave_browser_view.h"
 #include "brave/browser/ui/webui/speedreader/speedreader_toolbar_data_handler_impl.h"
-#include "brave/components/brave_wallet/browser/brave_wallet_utils.h"
 #include "brave/components/constants/brave_paths.h"
 #include "brave/components/speedreader/common/constants.h"
 #include "brave/components/speedreader/common/features.h"
@@ -278,11 +277,6 @@ IN_PROC_BROWSER_TEST_F(SpeedReaderBrowserTest, DisableSiteWorks) {
 }
 
 IN_PROC_BROWSER_TEST_F(SpeedReaderBrowserTest, SmokeTest) {
-  // Solana web3.js console warning will interfere with console observer
-  brave_wallet::SetDefaultSolanaWallet(
-      browser()->profile()->GetPrefs(),
-      brave_wallet::mojom::DefaultWallet::None);
-
   const std::string kGetContentLength = "document.body.innerHTML.length";
 
   // Check that disabled speedreader doesn't affect the page.
