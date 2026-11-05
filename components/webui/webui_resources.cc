@@ -28,17 +28,7 @@ base::span<const webui::ResourcePath> GetWebUIResources(
       kResources{{
 #if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
           {"newtab",
-           {{"img/toolbar/menu_btn.svg", IDR_BRAVE_COMMON_TOOLBAR_IMG},
-            // Hash path is the MD5 of the file contents,
-            // webpack image loader does this
-            {"fd85070af5114d6ac462c466e78448e4.svg", IDR_BRAVE_NEW_TAB_IMG1},
-            {"314e7529efec41c8867019815f4d8dad.svg", IDR_BRAVE_NEW_TAB_IMG4},
-            {"6c337c63662ee0ba4e57f6f8156d69ce.svg", IDR_BRAVE_NEW_TAB_IMG2},
-            // New tab Backgrounds
-            {"dylan-malval_sea-min.webp", IDR_BRAVE_NEW_TAB_BACKGROUND1},
-            // private tab
-            {"dbdc336ccc651b8a7c925b3482d6e65a.svg",
-             IDR_BRAVE_PRIVATE_TAB_IMG}}},
+           {{"img/toolbar/menu_btn.svg", IDR_BRAVE_COMMON_TOOLBAR_IMG}}},
           {"welcome", {{"favicon.ico", IDR_BRAVE_WELCOME_PAGE_FAVICON}}},
 #endif
           {"adblock", {}},
