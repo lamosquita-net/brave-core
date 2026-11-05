@@ -9,6 +9,25 @@
 
 #define PermissionUtil PermissionUtil_ChromiumImpl
 
+// Since we don't do UMA just reuse an existing UMA type instead of adding one.
+// In 156 the UMA request type mapping moved from permission_uma_util.cc here.
+#define BRAVE_GET_UMA_VALUE_FOR_REQUEST_TYPE         \
+  case RequestType::kWidevine:                       \
+  case RequestType::kBraveEthereum:                  \
+  case RequestType::kBraveSolana:                    \
+  case RequestType::kBraveGoogleSignInPermission:    \
+  case RequestType::kBraveLocalhostAccessPermission: \
+    return RequestTypeForUma::PERMISSION_VR;
+
+// These requests may be batched together, so we must handle them explicitly as
+// GetUmaValueForMultipleRequests expects only a few specific request types to
+// be batched.
+#define BRAVE_GET_UMA_VALUE_FOR_REQUESTS                               \
+  if (first_request >= RequestType::kWidevine &&                       \
+      first_request <= RequestType::kBraveLocalhostAccessPermission) { \
+    return GetUmaValueForRequestType(first_request);                   \
+  }
+
 #define PERMISSION_UTIL_PERMISSION_TYPE_TO_CONTENT_SETTINGS_TYPE \
   case PermissionType::BRAVE_ADS:                                \
     return ContentSettingsType::BRAVE_ADS;                       \
@@ -39,6 +58,8 @@
 
 #include "src/components/permissions/permission_util.cc"
 #undef PermissionUtil
+#undef BRAVE_GET_UMA_VALUE_FOR_REQUESTS
+#undef BRAVE_GET_UMA_VALUE_FOR_REQUEST_TYPE
 #undef PERMISSION_UTIL_PERMISSION_TYPE_TO_CONTENT_SETTINGS_TYPE
 
 namespace permissions {
@@ -93,7 +114,7 @@ bool PermissionUtil::IsPermission(ContentSettingsType type) {
   }
 }
 
-PermissionType PermissionUtil::ContentSettingTypeToPermissionType(
+PermissionType PermissionUtil::ContentSettingsTypeToPermissionType(
     ContentSettingsType permission) {
   switch (permission) {
     case ContentSettingsType::BRAVE_ADS:
@@ -123,7 +144,7 @@ PermissionType PermissionUtil::ContentSettingTypeToPermissionType(
     case ContentSettingsType::BRAVE_LOCALHOST_ACCESS:
       return PermissionType::BRAVE_LOCALHOST_ACCESS;
     default:
-      return PermissionUtil_ChromiumImpl::ContentSettingTypeToPermissionType(
+      return PermissionUtil_ChromiumImpl::ContentSettingsTypeToPermissionType(
           permission);
   }
 }

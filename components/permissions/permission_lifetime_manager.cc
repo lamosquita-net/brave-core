@@ -16,6 +16,8 @@
 #include "components/content_settings/core/browser/content_settings_utils.h"
 #include "components/content_settings/core/browser/website_settings_info.h"
 #include "components/content_settings/core/browser/website_settings_registry.h"
+#include "components/permissions/permission_request.h"
+#include "components/permissions/permission_util.h"
 #include "components/pref_registry/pref_registry_syncable.h"
 
 using content_settings::WebsiteSettingsInfo;
@@ -72,12 +74,10 @@ void PermissionLifetimeManager::PermissionDecided(
     const PermissionRequest& permission_request,
     const GURL& requesting_origin,
     const GURL& embedding_origin,
-    ContentSetting content_setting,
-    bool is_one_time) {
+    PermissionDecision decision) {
   if (!permission_request.SupportsLifetime() ||
-      (content_setting != ContentSetting::CONTENT_SETTING_ALLOW &&
-       content_setting != ContentSetting::CONTENT_SETTING_BLOCK) ||
-      is_one_time) {
+      (decision != PermissionDecision::kAllow &&
+       decision != PermissionDecision::kDeny)) {
     // Only interested in ALLOW/BLOCK and non one-time (Chromium
     // geolocation-specific) decisions.
     return;
@@ -91,6 +91,12 @@ void PermissionLifetimeManager::PermissionDecided(
 
   const ContentSettingsType content_type =
       permission_request.GetContentSettingsType();
+  if (content_type == ContentSettingsType::DEFAULT) {
+    return;
+  }
+
+  ContentSetting content_setting =
+      PermissionUtil::PermissionDecisionToContentSetting(decision);
 
   DVLOG(1) << "PermissionLifetimeManager::PermissionDecided"
            << "\ntype: "
@@ -165,6 +171,17 @@ void PermissionLifetimeManager::OnContentSettingChanged(
         if (secondary_pattern->IsValid() &&
             !secondary_pattern->Matches(origins.embedding_origin())) {
           return false;
+        }
+        // Types registered only in PermissionSettingsRegistry (e.g.
+        // GEOLOCATION_WITH_OPTIONS) cannot be queried via GetContentSetting(),
+        // which requires ContentSettingsRegistry registration.
+        // ContentSettingsPref only fires the notification when the value
+        // actually changed, so a matching pattern is sufficient to remove
+        // the expiration. PLM's own resets are already guarded by
+        // is_currently_removing_permissions_.
+        if (!content_settings::ContentSettingsRegistry::GetInstance()->Get(
+                content_type)) {
+          return true;
         }
         return host_content_settings_map->GetContentSetting(
                    origins.requesting_origin(), origins.embedding_origin(),
@@ -277,9 +294,12 @@ void PermissionLifetimeManager::ResetPermission(
     ContentSettingsType content_type,
     const GURL& requesting_origin,
     const GURL& embedding_origin) {
-  host_content_settings_map_->SetContentSettingDefaultScope(
-      requesting_origin, embedding_origin, content_type,
-      CONTENT_SETTING_DEFAULT);
+  // Use SetPermissionSettingDefaultScope (nullopt = delete/reset) rather than
+  // SetContentSettingDefaultScope: the latter CHECKs the type is in
+  // ContentSettingsRegistry, which excludes types like GEOLOCATION_WITH_OPTIONS
+  // that are registered only in PermissionSettingsRegistry.
+  host_content_settings_map_->SetPermissionSettingDefaultScope(
+      requesting_origin, embedding_origin, content_type, std::nullopt);
 }
 
 }  // namespace permissions

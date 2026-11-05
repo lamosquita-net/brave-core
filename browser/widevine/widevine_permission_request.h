@@ -41,13 +41,12 @@ class WidevinePermissionRequest : public permissions::PermissionRequest {
 #else
   std::u16string GetMessageTextFragment() const override;
 #endif
-  void PermissionDecided(ContentSetting result,
-                         bool is_one_time,
-                         bool is_final_decision);
-  void DeleteRequest();
+  void PermissionDecided(
+      const permissions::PermissionPromptDecision& decision,
+      const permissions::PermissionRequestData& request_data);
 
-  // It's safe to use this raw |web_contents_| because this request is deleted
-  // by PermissionManager that is tied with this |web_contents_|.
+  // It's safe to use this raw |web_contents_| because this request is owned
+  // by the PermissionRequestManager that is tied with this |web_contents_|.
   raw_ptr<content::WebContents> web_contents_ = nullptr;
 
   // Only can be true on linux.
