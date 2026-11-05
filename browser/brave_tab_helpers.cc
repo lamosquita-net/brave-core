@@ -28,7 +28,6 @@
 #include "brave/components/brave_wayback_machine/buildflags/buildflags.h"
 #include "brave/components/greaselion/browser/buildflags/buildflags.h"
 #include "brave/components/playlist/common/buildflags/buildflags.h"
-#include "brave/components/psst/browser/content/psst_tab_helper.h"
 #include "brave/components/request_otr/common/buildflags/buildflags.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "brave/components/tor/buildflags/buildflags.h"
@@ -158,8 +157,6 @@ void AttachTabHelpers(content::WebContents* web_contents) {
   brave_ads::AdsTabHelper::CreateForWebContents(web_contents);
   brave_ads::CreativeSearchResultAdTabHelper::MaybeCreateForWebContents(
       web_contents);
-  psst::PsstTabHelper::MaybeCreateForWebContents(
-      web_contents, ISOLATED_WORLD_ID_BRAVE_INTERNAL);
   // FlyWeb: no WebDiscoveryTabHelper, so no infobar offering the Web
   // Discovery Project (it sends search data to Brave) on Brave Search.
 
