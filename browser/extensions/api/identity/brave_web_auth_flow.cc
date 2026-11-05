@@ -10,6 +10,7 @@
 #include <utility>
 #include <vector>
 
+#include "base/strings/string_number_conversions.h"
 #include "base/strings/string_split.h"
 #include "base/strings/string_util.h"
 #include "chrome/browser/extensions/api/identity/identity_api.h"
@@ -28,7 +29,12 @@ BraveWebAuthFlow::BraveWebAuthFlow() {}
 BraveWebAuthFlow::~BraveWebAuthFlow() {}
 
 // static
-std::optional<std::string> BraveWebAuthFlow::token_for_testing_;
+// TODO(https://github.com/brave/brave-browser/issues/48713): This is a case of
+// `-Wexit-time-destructors` violation and `[[clang::no_destroy]]` has been
+// added in the meantime to fix the build error. Remove this attribute and
+// provide a proper fix.
+[[clang::no_destroy]] std::optional<std::string>
+    BraveWebAuthFlow::token_for_testing_;
 // static
 void BraveWebAuthFlow::SetTokenForTesting(const std::string& token) {
   token_for_testing_ = token;
@@ -42,7 +48,8 @@ void BraveWebAuthFlow::StartWebAuthFlow(
     const std::string& oauth2_client_id,
     ExtensionTokenKey token_key,
     bool interactive,
-    bool user_gesture) {
+    bool user_gesture,
+    std::optional<url::Origin> initiator_origin) {
   profile_ = profile;
   complete_with_error_callback_ = std::move(complete_with_error_callback);
   complete_with_result_callback_ = std::move(complete_with_result_callback);
@@ -78,7 +85,7 @@ void BraveWebAuthFlow::StartWebAuthFlow(
   web_auth_flow_ = std::make_unique<WebAuthFlow>(
       this, profile_, google_oauth_url,
       interactive ? WebAuthFlow::INTERACTIVE : WebAuthFlow::SILENT,
-      user_gesture);
+      user_gesture, std::move(initiator_origin));
   web_auth_flow_->Start();
 }
 
@@ -94,11 +101,14 @@ void BraveWebAuthFlow::OnAuthFlowFailure(WebAuthFlow::Failure failure) {
           IdentityGetAuthTokenError::State::kGaiaConsentInteractionRequired);
       break;
     case WebAuthFlow::LOAD_FAILED:
+    case WebAuthFlow::TIMED_OUT:
       error = IdentityGetAuthTokenError(
           IdentityGetAuthTokenError::State::kRemoteConsentPageLoadFailure);
       break;
-    default:
-      NOTREACHED() << "Unexpected error from web auth flow: " << failure;
+    case WebAuthFlow::CANNOT_CREATE_WINDOW:
+      error = IdentityGetAuthTokenError(
+          IdentityGetAuthTokenError::State::kCannotCreateWindow);
+      break;
   }
   if (web_auth_flow_) {
     web_auth_flow_.release()->DetachDelegateAndDelete();
@@ -158,7 +168,7 @@ void BraveWebAuthFlow::OnAuthFlowURLChange(const GURL& redirect_url) {
   // the last used token will be cached.
   IdentityTokenCacheValue token = IdentityTokenCacheValue::CreateToken(
       access_token, token_key_.scopes, base::Seconds(time_to_live_seconds));
-  IdentityAPI::GetFactoryInstance()->Get(profile_)->token_cache()->SetToken(
+  IdentityAPI::GetFactoryInstance()->Get(profile_)->token_cache().SetToken(
       token_key_, token);
 
   std::move(complete_with_result_callback_)
