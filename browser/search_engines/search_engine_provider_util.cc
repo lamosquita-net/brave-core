@@ -9,30 +9,32 @@
 #include <string>
 #include <vector>
 
+#include "base/containers/map_util.h"
 #include "brave/browser/search_engines/pref_names.h"
 #include "brave/components/search_engines/brave_prepopulated_engines.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/search_engine_choice/search_engine_choice_service_factory.h"
+#include "chrome/browser/search_engines/template_url_prepopulate_data_resolver_factory.h"
 #include "chrome/browser/search_engines/template_url_service_factory.h"
 #include "components/pref_registry/pref_registry_syncable.h"
 #include "components/prefs/pref_service.h"
 #include "components/search_engines/search_engines_pref_names.h"
 #include "components/search_engines/template_url_data.h"
 #include "components/search_engines/template_url_data_util.h"
-#include "components/search_engines/template_url_prepopulate_data.h"
+#include "components/search_engines/template_url_prepopulate_data_resolver.h"
 #include "components/search_engines/template_url_service.h"
 
 namespace brave {
 
 void SetBraveAsDefaultPrivateSearchProvider(Profile* profile) {
   auto* prefs = profile->GetPrefs();
-  search_engines::SearchEngineChoiceService* search_engine_choice_service =
-      search_engines::SearchEngineChoiceServiceFactory::GetForProfile(profile);
 
   // FlyWeb: private windows use the same prepopulated default as normal ones
-  // (DuckDuckGo, see template_url_prepopulate_data.cc) instead of Brave Search.
-  auto data = TemplateURLPrepopulateData::GetPrepopulatedFallbackSearch(
-      prefs, search_engine_choice_service);
+  // (DuckDuckGo, see FlyWebDefaultSearchEngine() in chromium_src/components/
+  // regional_capabilities/regional_capabilities_utils.cc) instead of Brave
+  // Search.
+  auto data =
+      TemplateURLPrepopulateData::ResolverFactory::GetForProfile(profile)
+          ->GetFallbackSearch();
   DCHECK(data);
   prefs->SetString(prefs::kSyncedDefaultPrivateSearchProviderGUID,
                    data->sync_guid);
@@ -69,12 +71,15 @@ void MigrateSearchEngineProviderPrefs(PrefService* prefs) {
           TemplateURLPrepopulateData::
               PREPOPULATED_ENGINE_ID_DUCKDUCKGO_AU_NZ_IE};
 
+  // 156 resolves prepopulated engines per profile (Resolver); here there is
+  // only the PrefService, so take the engine from Brave's own definitions.
   std::unique_ptr<TemplateURLData> data;
   for (const auto& id : alt_search_providers) {
-    data =
-        TemplateURLPrepopulateData::GetPrepopulatedEngine(prefs, nullptr, id);
-    if (data)
+    if (const auto* engine = base::FindPtrOrNull(
+            TemplateURLPrepopulateData::kBraveEngines, id)) {
+      data = TemplateURLDataFromPrepopulatedEngine(*engine);
       break;
+    }
   }
 
   // There should ALWAYS be one entry
