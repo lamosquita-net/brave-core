@@ -3,11 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <algorithm>
 #include <memory>
 
 #include "base/files/file_path.h"
 #include "base/path_service.h"
-#include "base/ranges/algorithm.h"
 #include "base/strings/stringprintf.h"
 #include "base/test/bind.h"
 #include "base/test/mock_callback.h"
@@ -83,7 +83,7 @@ cr.googleTranslate.onLoadCSS("https://translate.googleapis.com/translate_static/
 cr.googleTranslate.onLoadJavascript("https://translate.googleapis.com/translate_static/js/element/main.js");
 )";
 
-const char kXhrPromiseTemplate[] = R"(
+constexpr char kXhrPromiseTemplate[] = R"(
   new Promise((resolve) => {
     const xhr = new XMLHttpRequest();
     xhr.onload = () => resolve(xhr.%s);
@@ -159,14 +159,14 @@ class BraveTranslateBrowserTest : public InProcessBrowserTest {
         << "Found a request to google backend " << request.GetURL();
 
     if (request.GetURL().path() == "/translate") {
-      const auto query = request.GetURL().query();
+      const auto query = request.GetURL().GetQuery();
       EXPECT_NE(query.find(base::StringPrintf("&key=%s",
                                               BUILDFLAG(BRAVE_SERVICES_KEY))),
                 std::string::npos)
           << "bad brave api key for request " << request.GetURL();
     }
 
-    const auto response = backend_request_.Call(request.GetURL().path());
+    const auto response = backend_request_.Call(request.GetURL().GetPath());
     if (std::get<0>(response) == 0)
       return nullptr;
 
@@ -230,10 +230,10 @@ class BraveTranslateBrowserTest : public InProcessBrowserTest {
     if (!infobar_manager)
       return ::testing::AssertionFailure() << "!infobar_manager";
 
-    const auto it = base::ranges::find(
-        infobar_manager->infobars(),
-        infobars::InfoBarDelegate::BAD_FLAGS_INFOBAR_DELEGATE,
-        &infobars::InfoBar::GetIdentifier);
+    const auto it =
+        std::ranges::find(infobar_manager->infobars(),
+                          infobars::InfoBarDelegate::BAD_FLAGS_INFOBAR_DELEGATE,
+                          &infobars::InfoBar::GetIdentifier);
     if (it != infobar_manager->infobars().cend()) {
       return ::testing::AssertionFailure() << "Bad flags infobar found.";
     }
@@ -381,7 +381,7 @@ IN_PROC_BROWSER_TEST_F(BraveTranslateBrowserGoogleRedirectTest,
   EXPECT_EQ("https://translate.brave.com/something.svg",
             EvalTranslateJs(do_xhr_and_get_final_url));
 
-  const char kLoadImageTemplate[] = R"(
+  static constexpr char kLoadImageTemplate[] = R"(
     new Promise((resolve) => {
       let p = new Image();
       p.onload = () => resolve(true);

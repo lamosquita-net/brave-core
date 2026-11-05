@@ -56,14 +56,12 @@ class TabHoverCardBubbleViewBrowserTest : public DialogBrowserTest,
     TabStrip* const tab_strip = GetTabStrip(browser());
     Tab* const tab = tab_strip->tab_at(1);
     if (!tab) {
-      NOTREACHED_IN_MIGRATION();
-      return false;
+      NOTREACHED();
     }
 
     TabHoverCardBubbleView* const hover_card = GetHoverCard(tab_strip);
     if (!hover_card) {
-      NOTREACHED_IN_MIGRATION();
-      return false;
+      NOTREACHED();
     }
 
     EXPECT_EQ(kTabTitle, hover_card->GetTitleTextForTesting());

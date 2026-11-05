@@ -45,7 +45,7 @@ bool IsURLLooksReadable(const GURL& url) {
   if (!url.has_path() || url.path() == "/")
     return false;
 
-  if (base::StartsWith(url.host_piece(), kReadableBlogSubdomain))
+  if (base::StartsWith(url.host(), kReadableBlogSubdomain))
     return true;
 
   // Look for single components such as /blog/, /news/, /article/ and for

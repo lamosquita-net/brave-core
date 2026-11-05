@@ -5,10 +5,10 @@
 
 #include "brave/net/http/partitioned_host_state_map.h"
 
+#include <algorithm>
 #include <optional>
 #include <utility>
 
-#include "base/ranges/algorithm.h"
 #include "crypto/sha2.h"
 #include "net/base/network_isolation_key.h"
 
@@ -16,8 +16,8 @@ namespace {
 
 bool IsEmptyPartitionHash(
     const net::PartitionedHostStateMapBase::HashedHost& hashed_host) {
-  return base::ranges::all_of(hashed_host.begin(), hashed_host.end(),
-                              [](uint8_t i) { return i == 0; });
+  return std::ranges::all_of(hashed_host.begin(), hashed_host.end(),
+                             [](uint8_t i) { return i == 0; });
 }
 
 }  // namespace
@@ -53,9 +53,9 @@ PartitionedHostStateMapBase::GetKeyWithPartitionHash(
   HashedHost result;
   static_assert(result.size() == crypto::kSHA256Length,
                 "Unexpected HashedHost size");
-  base::ranges::copy(GetHalfKey(k), result.begin());
-  base::ranges::copy(GetHalfKey(*partition_hash_),
-                     std::next(result.begin(), std::size(result) / 2));
+  std::ranges::copy(GetHalfKey(k), result.begin());
+  std::ranges::copy(GetHalfKey(*partition_hash_),
+                    std::next(result.begin(), std::size(result) / 2));
   return result;
 }
 

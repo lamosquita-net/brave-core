@@ -9,7 +9,6 @@
 #include <utility>
 
 #include "base/auto_reset.h"
-#include "base/containers/contains.h"
 #include "base/logging.h"
 #include "base/task/sequenced_task_runner.h"
 #include "brave/components/permissions/permission_lifetime_pref_names.h"
@@ -149,7 +148,7 @@ void PermissionLifetimeManager::OnContentSettingChanged(
   }
 
   // Don't try to do anything if a content_type is not handled at all.
-  if (!base::Contains(permission_expirations_.expirations(), content_type)) {
+  if (!permission_expirations_.expirations().contains(content_type)) {
     return;
   }
 

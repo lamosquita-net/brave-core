@@ -5,7 +5,6 @@
 
 #include <memory>
 
-#include "base/containers/contains.h"
 #include "base/path_service.h"
 #include "brave/components/brave_shields/content/browser/brave_shields_util.h"
 #include "brave/components/constants/brave_paths.h"
@@ -105,16 +104,14 @@ IN_PROC_BROWSER_TEST_F(BraveNavigatorKeyboardAPIBrowserTest,
   SetFingerprintingDefault();
   EXPECT_TRUE(ui_test_utils::NavigateToURL(browser(), test_url()));
   auto result_standard = EvalJs(contents(), kGetLayoutMapScript);
-  EXPECT_TRUE(base::Contains(
-      result_standard.error,
+  EXPECT_TRUE(result_standard.error.contains(
       "Cannot read properties of null (reading 'getLayoutMap')"));
 
   // Fingerprinting level: blocked (same as standard for this test)
   BlockFingerprinting();
   EXPECT_TRUE(ui_test_utils::NavigateToURL(browser(), test_url()));
   auto result_blocked = EvalJs(contents(), kGetLayoutMapScript);
-  EXPECT_TRUE(base::Contains(
-      result_blocked.error,
+  EXPECT_TRUE(result_blocked.error.contains(
       "Cannot read properties of null (reading 'getLayoutMap')"));
 
   // Fingerprinting level: default, but with webcompat exception enabled

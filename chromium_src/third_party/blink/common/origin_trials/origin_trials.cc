@@ -5,9 +5,8 @@
 
 #include "third_party/blink/public/common/origin_trials/origin_trials.h"
 
+#include <algorithm>
 #include <string_view>
-
-#include "base/containers/contains.h"
 
 namespace blink {
 namespace origin_trials {
@@ -37,7 +36,7 @@ bool IsTrialDisabledInBrave(std::string_view trial_name) {
       "TrustTokens",
   };
 
-  if (base::Contains(kBraveDisabledTrialNames, trial_name)) {
+  if (std::ranges::contains(kBraveDisabledTrialNames, trial_name)) {
     // Check if this is still a valid trial name in Chromium. If not, it needs
     // to be changed as in Chromium or removed.
     DCHECK(IsTrialValid_ChromiumImpl(trial_name));
@@ -57,7 +56,7 @@ bool IsTrialDisabledInBrave(blink::mojom::OriginTrialFeature feature) {
           blink::mojom::OriginTrialFeature::kPrivateStateTokens,
       };
 
-  return base::Contains(kBraveDisabledTrialFeatures, feature);
+  return std::ranges::contains(kBraveDisabledTrialFeatures, feature);
 }
 
 bool IsTrialValid(std::string_view trial_name) {

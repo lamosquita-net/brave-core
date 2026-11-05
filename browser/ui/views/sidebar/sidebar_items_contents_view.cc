@@ -63,7 +63,7 @@ constexpr gfx::Size kIconSize(SidebarButtonView::kExternalIconSize,
 std::string GetFirstCharFromURL(const GURL& url) {
   DCHECK(url.is_valid());
 
-  std::string target = url.host();
+  std::string target = url.GetHost();
   if (target.empty()) {
     target = url.spec();
   }
@@ -224,7 +224,7 @@ void SidebarItemsContentsView::ExecuteCommand(int command_id, int event_flags) {
     return;
   }
 
-  NOTREACHED_IN_MIGRATION();
+  NOTREACHED();
 }
 
 bool SidebarItemsContentsView::IsCommandIdVisible(int command_id) const {
@@ -242,8 +242,7 @@ bool SidebarItemsContentsView::IsCommandIdVisible(int command_id) const {
     return GetSidebarService(browser_)->IsEditableItemAt(*index);
   }
 
-  NOTREACHED_IN_MIGRATION();
-  return false;
+  NOTREACHED();
 }
 
 void SidebarItemsContentsView::OnContextMenuClosed() {
@@ -436,8 +435,7 @@ SidebarItemsContentsView::CalculateTargetDragIndicatorIndex(
     }
   }
 
-  NOTREACHED_IN_MIGRATION();
-  return std::nullopt;
+  NOTREACHED();
 }
 
 std::optional<size_t> SidebarItemsContentsView::DrawDragIndicator(

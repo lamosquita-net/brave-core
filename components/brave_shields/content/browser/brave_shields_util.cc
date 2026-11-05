@@ -156,8 +156,7 @@ std::string ControlTypeToString(ControlType type) {
     case ControlType::DEFAULT:
       return "default";
     default:
-      NOTREACHED_IN_MIGRATION();
-      return "invalid";
+      NOTREACHED();
   }
 }
 
@@ -171,8 +170,7 @@ ControlType ControlTypeFromString(const std::string& string) {
   } else if (string == "default") {
     return ControlType::DEFAULT;
   } else {
-    NOTREACHED_IN_MIGRATION();
-    return ControlType::DEFAULT;
+    NOTREACHED();
   }
 }
 
@@ -490,7 +488,7 @@ void SetCookieControlType(HostContentSettingsMap* map,
                 content_settings::CookieControlsMode::kBlockThirdParty));
         break;
       default:
-        NOTREACHED_IN_MIGRATION() << "Invalid ControlType for cookies";
+        NOTREACHED() << "Invalid ControlType for cookies";
     }
     return;
   }
@@ -525,7 +523,7 @@ void SetCookieControlType(HostContentSettingsMap* map,
                                        : CONTENT_SETTING_BLOCK);
       break;
     case ControlType::DEFAULT:
-      NOTREACHED_IN_MIGRATION() << "Invalid ControlType for cookies";
+      NOTREACHED() << "Invalid ControlType for cookies";
   }
 }
 
@@ -678,7 +676,7 @@ void SetHttpsUpgradeControlType(HostContentSettingsMap* map,
   if (url.is_empty()) {
     map->ClearSettingsForOneType(ContentSettingsType::HTTP_ALLOWED);
   } else {
-    const GURL& secure_url = GURL("https://" + url.host());
+    const GURL& secure_url = GURL("https://" + url.GetHost());
     map->SetWebsiteSettingDefaultScope(
         secure_url, GURL(), ContentSettingsType::HTTP_ALLOWED, base::Value());
   }

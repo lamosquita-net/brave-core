@@ -35,7 +35,7 @@ using brave_shields::ControlType;
 using brave_shields::features::kBraveDarkModeBlock;
 
 const char kEmbeddedTestServerDirectory[] = "dark_mode_block";
-const char kMatchDarkModeFormatString[] =
+constexpr char kMatchDarkModeFormatString[] =
     "window.matchMedia('(prefers-color-scheme: %s)').matches;";
 
 class BraveDarkModeFingerprintProtectionTest : public InProcessBrowserTest {

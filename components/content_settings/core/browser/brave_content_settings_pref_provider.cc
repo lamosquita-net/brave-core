@@ -5,15 +5,14 @@
 
 #include "brave/components/content_settings/core/browser/brave_content_settings_pref_provider.h"
 
+#include <algorithm>
 #include <memory>
 #include <utility>
 
-#include "base/containers/contains.h"
 #include "base/functional/bind.h"
 #include "base/json/values_util.h"
 #include "base/logging.h"
 #include "base/no_destructor.h"
-#include "base/ranges/algorithm.h"
 #include "base/strings/strcat.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/task/bind_post_task.h"
@@ -808,7 +807,7 @@ void BravePrefProvider::UpdateCookieRules(ContentSettingsType content_type,
   std::vector<std::unique_ptr<Rule>> brave_cookie_updates;
   for (const auto& new_rule : brave_cookie_rules_[incognito]) {
     auto match =
-        base::ranges::find_if(old_rules, [&new_rule](const auto& old_rule) {
+        std::ranges::find_if(old_rules, [&new_rule](const auto& old_rule) {
           // we want an exact match here because any change to the rule
           // is an update
           return new_rule->primary_pattern == old_rule->primary_pattern &&
@@ -823,7 +822,7 @@ void BravePrefProvider::UpdateCookieRules(ContentSettingsType content_type,
 
   // Find any removed rules.
   for (const auto& old_rule : old_rules) {
-    auto match = base::ranges::find_if(
+    auto match = std::ranges::find_if(
         brave_cookie_rules_[incognito], [&old_rule](const auto& new_rule) {
           // We only care about the patterns here because we're looking for
           // deleted rules, not changed rules.

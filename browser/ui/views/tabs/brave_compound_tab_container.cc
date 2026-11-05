@@ -11,6 +11,7 @@
 #include <utility>
 #include <vector>
 
+#include "base/functional/callback_helpers.h"
 #include "brave/browser/ui/color/brave_color_id.h"
 #include "brave/browser/ui/tabs/brave_tab_prefs.h"
 #include "brave/browser/ui/tabs/features.h"
@@ -157,8 +158,8 @@ base::OnceClosure BraveCompoundTabContainer::LockLayout() {
 
   return base::BindOnce(
       [](std::vector<base::OnceClosure> closures) {
-        base::ranges::for_each(closures,
-                               [](auto& closure) { std::move(closure).Run(); });
+        std::ranges::for_each(closures,
+                              [](auto& closure) { std::move(closure).Run(); });
       },
       std::move(closures));
 }

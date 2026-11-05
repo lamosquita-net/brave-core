@@ -11,10 +11,8 @@
 #include <utility>
 #include <vector>
 
-#include "base/containers/contains.h"
 #include "base/containers/flat_map.h"
 #include "base/containers/flat_set.h"
-#include "base/ranges/algorithm.h"
 #include "brave/app/command_utils.h"
 #include "brave/components/commands/browser/accelerator_pref_manager.h"
 #include "brave/components/commands/common/accelerator_parsing.h"
@@ -44,7 +42,7 @@ mojom::CommandPtr ToMojoCommand(
 
   command->modified =
       accelerators.size() != default_accelerator_codes.size() ||
-      base::ranges::find_if(
+      std::ranges::find_if(
           accelerators, [&default_accelerator_codes](const auto& a) {
             return !default_accelerator_codes.contains(ToCodesString(a));
           }) != accelerators.end();
@@ -53,7 +51,7 @@ mojom::CommandPtr ToMojoCommand(
     auto a = mojom::Accelerator::New();
     a->codes = commands::ToCodesString(accelerator);
     a->keys = commands::ToKeysString(accelerator);
-    a->unmodifiable = base::Contains(unmodifiable, accelerator);
+    a->unmodifiable = unmodifiable.contains(accelerator);
     command->accelerators.push_back(std::move(a));
   }
   return command;
@@ -113,20 +111,20 @@ void AcceleratorService::UpdateDefaultAccelerators() {
     const auto& old_accelerators = old_defaults[command_id];
 
     // Note all the added accelerators.
-    base::ranges::copy_if(
+    std::ranges::copy_if(
         new_accelerators, std::back_inserter(added[command_id]),
         [&old_accelerators, &system_managed](const auto& accelerator) {
-          return !base::Contains(old_accelerators, accelerator) ||
+          return !std::ranges::contains(old_accelerators, accelerator) ||
                  // If the accelerator is marked as a system command, be sure to
                  // reset it.
-                 base::Contains(system_managed, accelerator);
+                 system_managed.contains(accelerator);
         });
 
     // Note all the removed accelerators.
-    base::ranges::copy_if(
+    std::ranges::copy_if(
         old_accelerators, std::back_inserter(removed[command_id]),
         [&new_accelerators](const auto& accelerator) {
-          return !base::Contains(new_accelerators, accelerator);
+          return !std::ranges::contains(new_accelerators, accelerator);
         });
   }
 
@@ -134,12 +132,12 @@ void AcceleratorService::UpdateDefaultAccelerators() {
   // of default accelerators:
   for (const auto& [command_id, accelerators] : old_defaults) {
     // This is handled above.
-    if (base::Contains(default_accelerators_, command_id)) {
+    if (default_accelerators_.contains(command_id)) {
       continue;
     }
 
     // We used to have accelerators for this command, now we have none.
-    base::ranges::copy(accelerators, std::back_inserter(removed[command_id]));
+    std::ranges::copy(accelerators, std::back_inserter(removed[command_id]));
   }
 
   // Remove deleted accelerators
@@ -245,11 +243,10 @@ void AcceleratorService::AddObserver(Observer* observer) {
   observers_.AddObserver(observer);
   const auto& system_managed = system_managed_;
   for (const auto& [command_id, accelerators] : accelerators_) {
-    base::ranges::copy_if(
-        accelerators, std::back_inserter(changed[command_id]),
-        [&system_managed](const ui::Accelerator& accelerator) {
-          return !system_managed.contains(accelerator);
-        });
+    std::ranges::copy_if(accelerators, std::back_inserter(changed[command_id]),
+                         [&system_managed](const ui::Accelerator& accelerator) {
+                           return !system_managed.contains(accelerator);
+                         });
   }
   observer->OnAcceleratorsChanged(changed);
 }
@@ -282,18 +279,17 @@ std::vector<int> AcceleratorService::AssignAccelerator(
 
   // Find any other commands with this accelerator and remove it from them.
   for (auto& [other_command_id, accelerators] : accelerators_) {
-    if (std::erase_if(
-            accelerators, [&accelerator, &system_managed, &default_accelerators,
-                           other_command_id](const auto& other) {
-              bool is_default_accelerator =
-                  base::Contains(default_accelerators[other_command_id], other);
-              // Note: We don't erase system managed default accelerators, as
-              // the system can register the same accelerator for multiple
-              // commands, and we don't want resetting one to reset the other.
-              return !(base::Contains(system_managed, other) &&
-                       is_default_accelerator) &&
-                     ToCodesString(accelerator) == ToCodesString(other);
-            })) {
+    if (std::erase_if(accelerators, [&accelerator, &system_managed,
+                                     &default_accelerators,
+                                     other_command_id](const auto& other) {
+          bool is_default_accelerator = std::ranges::contains(
+              default_accelerators[other_command_id], other);
+          // Note: We don't erase system managed default accelerators, as
+          // the system can register the same accelerator for multiple
+          // commands, and we don't want resetting one to reset the other.
+          return !(system_managed.contains(other) && is_default_accelerator) &&
+                 ToCodesString(accelerator) == ToCodesString(other);
+        })) {
       pref_manager_.RemoveAccelerator(other_command_id, accelerator);
       modified_commands.push_back(other_command_id);
     }
@@ -328,11 +324,11 @@ void AcceleratorService::NotifyCommandsChanged(
 
     // Make sure system managed commands aren't registered with the Browser - as
     // that might break these commands being triggered from the system.
-    base::ranges::copy_if(
-        changed_command, std::back_inserter(changed[command_id]),
-        [&system_managed](const ui::Accelerator& accelerator) {
-          return !system_managed.contains(accelerator);
-        });
+    std::ranges::copy_if(changed_command,
+                         std::back_inserter(changed[command_id]),
+                         [&system_managed](const ui::Accelerator& accelerator) {
+                           return !system_managed.contains(accelerator);
+                         });
   }
 
   for (const auto& listener : mojo_listeners_) {

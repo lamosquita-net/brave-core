@@ -5,7 +5,6 @@
 
 #include <memory>
 
-#include "base/containers/contains.h"
 #include "base/functional/callback.h"
 #include "base/path_service.h"
 #include "base/strings/strcat.h"
@@ -141,7 +140,7 @@ class BraveSearchTest : public InProcessBrowserTest {
     }
 
     GURL url = request.GetURL();
-    auto path = url.path_piece();
+    auto path = url.path();
 
     if (path == "/" || path == "/sw.js" || path == kBraveSearchPath ||
         path == kPageWithCookie || path == kPageWithoutCookie ||
@@ -151,7 +150,7 @@ class BraveSearchTest : public InProcessBrowserTest {
 
     auto http_response =
         std::make_unique<net::test_server::BasicHttpResponse>();
-    if (url.path() + "?" + url.query() ==
+    if (url.GetPath() + "?" + url.GetQuery() ==
         "/search?q=test&start=10&hl=en&gl=us&safe=active") {
       auto cookie_header_it =
           request.headers.find(net::HttpRequestHeaders::kCookie);

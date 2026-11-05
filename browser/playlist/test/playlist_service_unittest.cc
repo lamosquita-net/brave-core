@@ -5,8 +5,11 @@
 
 #include "brave/components/playlist/browser/playlist_service.h"
 
+#include <algorithm>
+
 #include "base/files/file_util.h"
 #include "base/files/scoped_temp_dir.h"
+#include "base/functional/callback_helpers.h"
 #include "base/run_loop.h"
 #include "base/test/bind.h"
 #include "base/test/scoped_feature_list.h"
@@ -516,7 +519,7 @@ TEST_F(PlaylistServiceUnitTest, CreateAndRemovePlaylist) {
 
   service->GetAllPlaylists(base::BindLambdaForTesting(
       [&](std::vector<mojom::PlaylistPtr> playlists) {
-        auto iter = base::ranges::find_if(
+        auto iter = std::ranges::find_if(
             playlists, [&](const mojom::PlaylistPtr& playlist) {
               return new_playlist->id == playlist->id;
             });
@@ -536,7 +539,7 @@ TEST_F(PlaylistServiceUnitTest, CreateAndRemovePlaylist) {
   service->GetAllPlaylists(base::BindLambdaForTesting(
       [&](std::vector<mojom::PlaylistPtr> playlists) {
         EXPECT_EQ(initial_playlists.size(), playlists.size());
-        auto iter = base::ranges::find_if(
+        auto iter = std::ranges::find_if(
             playlists, [&](const mojom::PlaylistPtr& playlist) {
               return new_playlist->id == playlist->id;
             });
@@ -714,9 +717,9 @@ TEST_F(PlaylistServiceUnitTest, AddItemsToList) {
     default_playlist = GetPlaylist(kDefaultPlaylistID);
     EXPECT_TRUE(default_playlist);
     base::flat_set<std::string> stored_ids;
-    base::ranges::transform(default_playlist->items,
-                            std::inserter(stored_ids, stored_ids.end()),
-                            [](const auto& item) { return item->id; });
+    std::ranges::transform(default_playlist->items,
+                           std::inserter(stored_ids, stored_ids.end()),
+                           [](const auto& item) { return item->id; });
     EXPECT_EQ(item_ids, stored_ids);
   }
 
@@ -724,7 +727,7 @@ TEST_F(PlaylistServiceUnitTest, AddItemsToList) {
     service->GetPlaylistItem(
         item_id, base::BindLambdaForTesting([](mojom::PlaylistItemPtr item) {
           ASSERT_EQ(item->parents.size(), 1u);
-          EXPECT_TRUE(base::Contains(item->parents, kDefaultPlaylistID));
+          EXPECT_TRUE(std::ranges::contains(item->parents, kDefaultPlaylistID));
         }));
   }
 
@@ -746,8 +749,9 @@ TEST_F(PlaylistServiceUnitTest, AddItemsToList) {
     service->GetPlaylistItem(
         id, base::BindLambdaForTesting([&](mojom::PlaylistItemPtr item) {
           EXPECT_EQ(item->parents.size(), 2u);
-          EXPECT_TRUE(base::Contains(item->parents, kDefaultPlaylistID));
-          EXPECT_TRUE(base::Contains(item->parents, another_playlist_id));
+          EXPECT_TRUE(std::ranges::contains(item->parents, kDefaultPlaylistID));
+          EXPECT_TRUE(
+              std::ranges::contains(item->parents, another_playlist_id));
         }));
   }
 
@@ -802,7 +806,7 @@ TEST_F(PlaylistServiceUnitTest, MoveItem) {
     service->GetPlaylistItem(
         item_id, base::BindLambdaForTesting([](mojom::PlaylistItemPtr item) {
           ASSERT_EQ(item->parents.size(), 1u);
-          ASSERT_TRUE(base::Contains(item->parents, kDefaultPlaylistID));
+          ASSERT_TRUE(std::ranges::contains(item->parents, kDefaultPlaylistID));
         }));
   }
 
@@ -827,15 +831,16 @@ TEST_F(PlaylistServiceUnitTest, MoveItem) {
   playlist = GetPlaylist(another_playlist_id);
   EXPECT_TRUE(playlist);
   base::flat_set<std::string> stored_ids;
-  base::ranges::transform(playlist->items,
-                          std::inserter(stored_ids, stored_ids.end()),
-                          [](const auto& item) { return item->id; });
+  std::ranges::transform(playlist->items,
+                         std::inserter(stored_ids, stored_ids.end()),
+                         [](const auto& item) { return item->id; });
   EXPECT_EQ(item_ids, stored_ids);
   for (const auto& item_id : item_ids) {
     service->GetPlaylistItem(
         item_id, base::BindLambdaForTesting([&](mojom::PlaylistItemPtr item) {
           ASSERT_EQ(item->parents.size(), 1u);
-          ASSERT_TRUE(base::Contains(item->parents, another_playlist_id));
+          ASSERT_TRUE(
+              std::ranges::contains(item->parents, another_playlist_id));
         }));
   }
 
@@ -853,9 +858,9 @@ TEST_F(PlaylistServiceUnitTest, MoveItem) {
   playlist = GetPlaylist(another_playlist_id);
   EXPECT_TRUE(playlist);
   stored_ids.clear();
-  base::ranges::transform(playlist->items,
-                          std::inserter(stored_ids, stored_ids.end()),
-                          [](const auto& item) { return item->id; });
+  std::ranges::transform(playlist->items,
+                         std::inserter(stored_ids, stored_ids.end()),
+                         [](const auto& item) { return item->id; });
   EXPECT_EQ(item_ids, stored_ids);
 }
 
@@ -989,11 +994,11 @@ TEST_F(PlaylistServiceUnitTest, ReorderItemFromPlaylist) {
     return base::BindLambdaForTesting(
         [&](playlist::mojom::PlaylistPtr playlist) {
           EXPECT_TRUE(
-              base::ranges::equal(playlist->items, expected_orders,
-                                  [](const auto& item, const auto& name) {
-                                    EXPECT_EQ(item->name, name);
-                                    return item->name == name;
-                                  }));
+              std::ranges::equal(playlist->items, expected_orders,
+                                 [](const auto& item, const auto& name) {
+                                   EXPECT_EQ(item->name, name);
+                                   return item->name == name;
+                                 }));
         });
   };
 
@@ -1051,10 +1056,10 @@ TEST_F(PlaylistServiceUnitTest, RemoveItemFromPlaylist) {
     default_playlist = GetPlaylist(kDefaultPlaylistID);
 
     base::flat_set<std::string> stored_ids;
-    base::ranges::transform(default_playlist->items,
-                            std::inserter(stored_ids, stored_ids.end()),
-                            [](const auto& item) { return item->id; });
-    EXPECT_FALSE(base::Contains(stored_ids, id));
+    std::ranges::transform(default_playlist->items,
+                           std::inserter(stored_ids, stored_ids.end()),
+                           [](const auto& item) { return item->id; });
+    EXPECT_FALSE(stored_ids.contains(id));
     EXPECT_FALSE(prefs->GetDict(kPlaylistItemsPref).FindDict(id));
   }
 
@@ -1083,17 +1088,18 @@ TEST_F(PlaylistServiceUnitTest, RemoveItemFromPlaylist) {
     default_playlist = GetPlaylist(kDefaultPlaylistID);
 
     base::flat_set<std::string> stored_ids;
-    base::ranges::transform(default_playlist->items,
-                            std::inserter(stored_ids, stored_ids.end()),
-                            [](const auto& item) { return item->id; });
+    std::ranges::transform(default_playlist->items,
+                           std::inserter(stored_ids, stored_ids.end()),
+                           [](const auto& item) { return item->id; });
 
-    EXPECT_FALSE(base::Contains(stored_ids, id));
+    EXPECT_FALSE(stored_ids.contains(id));
     EXPECT_TRUE(prefs->GetDict(kPlaylistItemsPref).FindDict(id));
 
     service->GetPlaylistItem(
         id, base::BindLambdaForTesting([&](mojom::PlaylistItemPtr item) {
           EXPECT_EQ(item->parents.size(), 1u);
-          EXPECT_TRUE(base::Contains(item->parents, another_playlist_id));
+          EXPECT_TRUE(
+              std::ranges::contains(item->parents, another_playlist_id));
         }));
   }
 }
@@ -1275,10 +1281,10 @@ TEST_F(PlaylistServiceUnitTest, MigratePlaylistOrder) {
   }
 
   // Playlist order pref should have only default playlist id
-  EXPECT_TRUE(base::Contains(prefs()->GetList(kPlaylistOrderPref),
-                             base::Value(kDefaultPlaylistID)));
-  EXPECT_FALSE(base::Contains(prefs()->GetList(kPlaylistOrderPref),
-                              base::Value(*playlist->id)));
+  EXPECT_TRUE(std::ranges::contains(prefs()->GetList(kPlaylistOrderPref),
+                                    base::Value(kDefaultPlaylistID)));
+  EXPECT_FALSE(std::ranges::contains(prefs()->GetList(kPlaylistOrderPref),
+                                     base::Value(*playlist->id)));
 
   // Call migration
   auto new_order_list = prefs()->GetList(kPlaylistOrderPref).Clone();
@@ -1286,30 +1292,29 @@ TEST_F(PlaylistServiceUnitTest, MigratePlaylistOrder) {
   prefs()->SetList(kPlaylistOrderPref, std::move(new_order_list));
 
   // After migration, the order pref should have both default and new playlist
-  EXPECT_TRUE(base::Contains(prefs()->GetList(kPlaylistOrderPref),
-                             base::Value(*playlist->id)));
+  EXPECT_TRUE(std::ranges::contains(prefs()->GetList(kPlaylistOrderPref),
+                                    base::Value(*playlist->id)));
 
   // Remove a playlist from playlists pref and not from order pref.
   // https://github.com/brave/brave-browser/issues/35500
   auto playlists_dict = prefs()->GetDict(kPlaylistsPref).Clone();
   EXPECT_TRUE(playlists_dict.Remove(playlist->id.value()));
   prefs()->SetDict(kPlaylistsPref, std::move(playlists_dict));
-  EXPECT_FALSE(
-      base::Contains(prefs()->GetDict(kPlaylistsPref), playlist->id.value()));
+  EXPECT_FALSE(prefs()->GetDict(kPlaylistsPref).contains(playlist->id.value()));
 
   new_order_list = prefs()->GetList(kPlaylistOrderPref).Clone();
   MigratePlaylistOrder(prefs()->GetDict(kPlaylistsPref), new_order_list);
   prefs()->SetList(kPlaylistOrderPref, std::move(new_order_list));
 
   // After migration, the dangled item in the order pref should be gone.
-  EXPECT_FALSE(base::Contains(prefs()->GetList(kPlaylistOrderPref),
-                              base::Value(*playlist->id)));
+  EXPECT_FALSE(std::ranges::contains(prefs()->GetList(kPlaylistOrderPref),
+                                     base::Value(*playlist->id)));
 }
 
 TEST_F(PlaylistServiceUnitTest, PlaylistOrderSync) {
   // Pre-condition: Order pref should only have the default playlist
-  EXPECT_TRUE(base::Contains(prefs()->GetList(kPlaylistOrderPref),
-                             base::Value(kDefaultPlaylistID)));
+  EXPECT_TRUE(std::ranges::contains(prefs()->GetList(kPlaylistOrderPref),
+                                    base::Value(kDefaultPlaylistID)));
   EXPECT_EQ(1u, prefs()->GetList(kPlaylistOrderPref).size());
 
   // After creating a new playlist, order pref should contain that.
@@ -1319,14 +1324,14 @@ TEST_F(PlaylistServiceUnitTest, PlaylistOrderSync) {
       base::BindLambdaForTesting(
           [&](mojom::PlaylistPtr playlist) { new_id = *playlist->id; }));
 
-  EXPECT_TRUE(base::Contains(prefs()->GetList(kPlaylistOrderPref),
-                             base::Value(new_id)));
+  EXPECT_TRUE(std::ranges::contains(prefs()->GetList(kPlaylistOrderPref),
+                                    base::Value(new_id)));
   EXPECT_EQ(2u, prefs()->GetList(kPlaylistOrderPref).size());
 
   // After creating the playlist, order pref shouldn't contain that.
   playlist_service()->RemovePlaylist(new_id);
-  EXPECT_FALSE(base::Contains(prefs()->GetList(kPlaylistOrderPref),
-                              base::Value(new_id)));
+  EXPECT_FALSE(std::ranges::contains(prefs()->GetList(kPlaylistOrderPref),
+                                     base::Value(new_id)));
   EXPECT_EQ(1u, prefs()->GetList(kPlaylistOrderPref).size());
 }
 
@@ -1343,12 +1348,12 @@ TEST_F(PlaylistServiceUnitTest, ReorderPlaylist) {
   }
 
   auto CheckOrder = [&](const std::vector<std::string>& expected_orders) {
-    EXPECT_TRUE(base::ranges::equal(prefs()->GetList(kPlaylistOrderPref),
-                                    expected_orders,
-                                    [](const auto& value, const auto& id) {
-                                      EXPECT_EQ(value.GetString(), id);
-                                      return value.GetString() == id;
-                                    }));
+    EXPECT_TRUE(std::ranges::equal(prefs()->GetList(kPlaylistOrderPref),
+                                   expected_orders,
+                                   [](const auto& value, const auto& id) {
+                                     EXPECT_EQ(value.GetString(), id);
+                                     return value.GetString() == id;
+                                   }));
   };
 
   CheckOrder({

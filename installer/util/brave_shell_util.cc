@@ -22,8 +22,7 @@ std::wstring GetProgIdForFileType() {
     case version_info::Channel::CANARY:
       return L"BraveSSFile";
     default:
-      NOTREACHED_IN_MIGRATION();
-      return L"BraveFile";
+      NOTREACHED();
   }
 }
 

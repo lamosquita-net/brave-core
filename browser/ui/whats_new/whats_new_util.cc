@@ -5,11 +5,11 @@
 
 #include "brave/browser/ui/whats_new/whats_new_util.h"
 
+#include <algorithm>
 #include <optional>
 #include <string>
 
 #include "base/metrics/field_trial_params.h"
-#include "base/ranges/algorithm.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/stringprintf.h"
 #include "base/version.h"
@@ -148,7 +148,7 @@ bool ShouldShowBraveWhatsNewForState(PrefService* local_state) {
       "en", "zh", "fr", "de", "ja", "ko", "pt", "es"};
   const std::string default_lang_code =
       brave_l10n::GetDefaultISOLanguageCodeString();
-  if (base::ranges::find(kSupportedLanguages, default_lang_code) ==
+  if (std::ranges::find(kSupportedLanguages, default_lang_code) ==
       std::end(kSupportedLanguages)) {
     VLOG(2) << __func__ << " Not supported language - " << default_lang_code;
     return false;
@@ -163,8 +163,7 @@ bool ShouldShowBraveWhatsNewForState(PrefService* local_state) {
 
   const auto current_version = GetCurrentBrowserVersion();
   if (!current_version) {
-    NOTREACHED_IN_MIGRATION() << __func__ << " Should get current version.";
-    return false;
+    NOTREACHED() << __func__ << " Should get current version.";
   }
 
   if (*current_version != *target_major_version) {

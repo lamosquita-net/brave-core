@@ -154,9 +154,7 @@ class ExtensionImpl : public v8::Extension {
     if (name->StringEquals(ToV8StringUnsafe(isolate, "Save"))) {
       return v8::FunctionTemplate::New(isolate, Save);
     }
-    NOTREACHED_IN_MIGRATION()
-        << std::string(*v8::String::Utf8Value(isolate, name));
-    return v8::Local<v8::FunctionTemplate>();
+    NOTREACHED() << std::string(*v8::String::Utf8Value(isolate, name));
   }
 
   static void Apply(const v8::FunctionCallbackInfo<v8::Value>& info) {

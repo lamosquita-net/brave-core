@@ -53,8 +53,7 @@ class BraveInterceptNavigationDelegate : public InterceptNavigationDelegate {
  private:
   bool ShouldPlayVideoInBrowser(const GURL& url) {
     if (!pref_service_) {
-      NOTREACHED_IN_MIGRATION();
-      return false;
+      NOTREACHED();
     }
 
     if (!pref_service_->GetBoolean(kPlayYTVideoInBrowserEnabled)) {

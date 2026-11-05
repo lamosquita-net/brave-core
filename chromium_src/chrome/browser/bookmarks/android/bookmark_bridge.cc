@@ -5,6 +5,7 @@
 
 #include "chrome/browser/bookmarks/android/bookmark_bridge.h"
 
+#include <algorithm>
 #include <utility>
 
 #include "base/task/thread_pool.h"
@@ -52,7 +53,7 @@ bool CanImportURL(const GURL& url) {
   // that we support.
   if (url.SchemeIs(content::kChromeUIScheme) ||
       url.SchemeIs(url::kAboutScheme)) {
-    if (url.host_piece() == chrome::kChromeUIAboutHost) {
+    if (url.host() == chrome::kChromeUIAboutHost) {
       return true;
     }
 
@@ -64,7 +65,7 @@ bool CanImportURL(const GURL& url) {
       }
     }
 
-    if (base::Contains(chrome::ChromeDebugURLs(), fixed_url)) {
+    if (std::ranges::contains(chrome::ChromeDebugURLs(), fixed_url)) {
       return true;
     }
 

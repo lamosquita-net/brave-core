@@ -5,6 +5,7 @@
 
 #include <memory>
 
+#include "base/functional/callback_helpers.h"
 #include "base/path_service.h"
 #include "base/strings/utf_string_conversions.h"
 #include "brave/components/constants/brave_paths.h"

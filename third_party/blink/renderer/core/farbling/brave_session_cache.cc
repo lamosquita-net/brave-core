@@ -487,7 +487,7 @@ bool BraveSessionCache::AllowFontFamily(
       }
     }
     default:
-      NOTREACHED_IN_MIGRATION();
+      NOTREACHED();
   }
   return true;
 }

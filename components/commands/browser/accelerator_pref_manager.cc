@@ -9,7 +9,6 @@
 #include <vector>
 
 #include "base/check.h"
-#include "base/containers/contains.h"
 #include "base/containers/flat_map.h"
 #include "base/containers/flat_set.h"
 #include "base/logging.h"
@@ -43,7 +42,7 @@ AcceleratorPrefManager::Accelerators GetAcceleratorsFromPref(
       continue;
     }
 
-    if (!base::Contains(command_ids, id)) {
+    if (!command_ids.contains(id)) {
       DVLOG(1) << "Found non-existent command_id " << id
                << ". Maybe it has been removed?";
       continue;

@@ -9,7 +9,6 @@
 #include <string>
 #include <utility>
 
-#include "base/containers/contains.h"
 #include "base/memory/scoped_refptr.h"
 #include "brave/third_party/blink/renderer/core/brave_page_graph/graph_item/edge/request/edge_request_start.h"
 #include "brave/third_party/blink/renderer/core/brave_page_graph/graph_item/node/graph_node.h"
@@ -92,7 +91,7 @@ void RequestTracker::RegisterDocumentRequestStart(
 
   // If we get to this point, there should be no previous request with this
   // request ID.
-  CHECK(!base::Contains(document_requests_, request_id));
+  CHECK(!document_requests_.Contains(request_id));
   DocumentRequest request_record{
       .request_id = request_id,
       .url = url,

@@ -11,12 +11,12 @@
 #include <windows.media.ocr.h>
 #include <wrl/client.h>
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "base/containers/contains.h"
 #include "base/functional/bind.h"
 #include "base/functional/callback.h"
 #include "base/logging.h"
@@ -185,7 +185,7 @@ std::vector<std::string> GetAvailableRecognizerLanguages() {
 
     const auto code =
         brave_l10n::GetISOLanguageCode(ScopedHString(text).GetAsUTF8());
-    if (base::Contains(language_codes, code)) {
+    if (std::ranges::contains(language_codes, code)) {
       continue;
     }
 
@@ -200,7 +200,7 @@ std::vector<std::string> GetAvailableRecognizerLanguages() {
     std::string default_language_code =
         brave_l10n::GetISOLanguageCode(base::WideToUTF8(name));
     // Try to locate default language at 0.
-    const auto iter = base::ranges::find(language_codes, default_language_code);
+    const auto iter = std::ranges::find(language_codes, default_language_code);
     if (iter != language_codes.begin() && iter != language_codes.end()) {
       std::iter_swap(language_codes.begin(), iter);
     }

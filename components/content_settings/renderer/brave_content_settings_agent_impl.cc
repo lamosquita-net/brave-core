@@ -11,7 +11,6 @@
 #include <utility>
 #include <vector>
 
-#include "base/containers/contains.h"
 #include "base/feature_list.h"
 #include "base/functional/callback_helpers.h"
 #include "base/strings/utf_string_conversions.h"
@@ -76,9 +75,9 @@ bool IsBraveShieldsDown(const blink::WebFrame* frame,
 
 // Skips everything except main frame domain and javascript urls.
 bool ShouldSkipResource(const GURL& resource_url) {
-  return (resource_url.path_piece().empty() ||
-          ((resource_url.path_piece().size() > 1) &&
-           !base::EndsWith(resource_url.path_piece(), kJavascriptExtension)));
+  return (resource_url.path().empty() ||
+          ((resource_url.path().size() > 1) &&
+           !base::EndsWith(resource_url.path(), kJavascriptExtension)));
 }
 
 }  // namespace
@@ -103,9 +102,9 @@ bool BraveContentSettingsAgentImpl::IsScriptTemporilyAllowed(
   // Check if scripts from this origin are temporily allowed or not.
   // Also matches the full script URL to support data URL cases which we use
   // the full URL to allow it.
-  bool allow = base::Contains(temporarily_allowed_scripts_,
-                              url::Origin::Create(script_url).Serialize()) ||
-               base::Contains(temporarily_allowed_scripts_, script_url.spec());
+  bool allow = temporarily_allowed_scripts_.contains(
+                   url::Origin::Create(script_url).Serialize()) ||
+               temporarily_allowed_scripts_.contains(script_url.spec());
   if (!allow) {
     // Also check rules in the main frame, because this frame rules may be out
     // of sync.

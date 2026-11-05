@@ -15,7 +15,6 @@
 #include "base/functional/bind.h"
 #include "base/notimplemented.h"
 #include "base/notreached.h"
-#include "base/ranges/algorithm.h"
 #include "brave/browser/ui/browser_commands.h"
 #include "brave/browser/ui/tabs/brave_tab_menu_model.h"
 #include "brave/browser/ui/tabs/brave_tab_prefs.h"
@@ -188,8 +187,7 @@ bool BraveTabContextMenuContents::IsBraveCommandIdEnabled(
     case BraveTabMenuModel::CommandSwapTabsInTile:
       return true;
     default:
-      NOTREACHED_IN_MIGRATION();
-      break;
+      NOTREACHED();
   }
 
   return false;
@@ -246,8 +244,7 @@ void BraveTabContextMenuContents::ExecuteBraveCommand(int command_id) {
       SwapTabsInTile();
       return;
     default:
-      NOTREACHED_IN_MIGRATION();
-      return;
+      NOTREACHED();
   }
 }
 
@@ -291,7 +288,7 @@ std::vector<int> BraveTabContextMenuContents::GetTabIndicesForSplitViewCommand()
     const {
   auto* model = static_cast<BraveTabStripModel*>(controller_->model());
   auto selected_indices = model->GetTabIndicesForCommandAt(tab_index_);
-  if (base::Contains(selected_indices, tab_index_)) {
+  if (std::ranges::contains(selected_indices, tab_index_)) {
     return selected_indices;
   }
 

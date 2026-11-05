@@ -9,7 +9,6 @@
 #include <string_view>
 #include <vector>
 
-#include "base/containers/contains.h"
 #include "base/containers/fixed_flat_set.h"
 #include "base/feature_list.h"
 #include "brave/components/brave_search/common/features.h"
@@ -38,8 +37,8 @@ bool IsAllowedHost(const GURL& url) {
   if (!url.is_valid() || !url.SchemeIs(url::kHttpsScheme)) {
     return false;
   }
-  std::string host = url.host();
-  return base::Contains(kVettedHosts, host);
+  std::string host = url.GetHost();
+  return kVettedHosts.contains(host);
 }
 
 bool IsDefaultAPIEnabled() {

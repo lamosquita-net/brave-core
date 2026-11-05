@@ -5,11 +5,11 @@
 
 #include "brave/browser/ntp_background/ntp_background_prefs.h"
 
+#include <algorithm>
 #include <memory>
 #include <utility>
 
 #include "base/notreached.h"
-#include "base/ranges/algorithm.h"
 #include "brave/components/constants/pref_names.h"
 #include "components/pref_registry/pref_registry_syncable.h"
 #include "components/prefs/pref_service.h"
@@ -42,8 +42,7 @@ NTPBackgroundPrefs::Type StringToType(const std::string& type_string) {
   if (type_string == "solid_color" || type_string == "color")
     return NTPBackgroundPrefs::Type::kColor;
 
-  NOTREACHED_IN_MIGRATION();
-  return NTPBackgroundPrefs::Type::kBrave;
+  NOTREACHED();
 }
 
 }  // namespace
@@ -135,8 +134,11 @@ void NTPBackgroundPrefs::RemoveCustomImageFromList(
     const std::string& file_name) {
   ScopedListPrefUpdate update(service_,
                               NTPBackgroundPrefs::kCustomImageListPrefName);
-  update->erase(base::ranges::remove(update.Get(), file_name),
-                update.Get().end());
+  auto to_remove = std::ranges::remove_if(
+      update.Get(), [&file_name](const base::Value& value) {
+        return value.is_string() && value.GetString() == file_name;
+      });
+  update->erase(to_remove.begin(), to_remove.end());
 }
 
 std::vector<std::string> NTPBackgroundPrefs::GetCustomImageList() const {

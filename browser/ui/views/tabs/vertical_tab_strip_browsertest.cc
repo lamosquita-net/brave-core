@@ -3,6 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <algorithm>
+
+#include "base/functional/callback_helpers.h"
 #include "base/test/bind.h"
 #include "base/test/scoped_feature_list.h"
 #include "brave/browser/ui/browser_commands.h"
@@ -570,11 +573,11 @@ IN_PROC_BROWSER_TEST_F(VerticalTabStripStringBrowserTest, ContextMenuString) {
     // Check if there's no "Below" in context menu labels when it's horizontal
     // tab strip
     auto context_menu_contents = create_tab_context_menu_contents();
-    EXPECT_TRUE(base::ranges::none_of(get_all_labels(), [](const auto& label) {
+    EXPECT_TRUE(std::ranges::none_of(get_all_labels(), [](const auto& label) {
 #if BUILDFLAG(IS_MAC)
-      return base::Contains(label, u"Below");
+      return label.contains(u"Below");
 #else
-      return base::Contains(label, u"below");
+      return label.contains(u"below");
 #endif
     }));
   }
@@ -585,12 +588,12 @@ IN_PROC_BROWSER_TEST_F(VerticalTabStripStringBrowserTest, ContextMenuString) {
     // vertical tab strip. When this fails, we should revisit
     // BraveTabMenuModel::GetLabelAt().
     auto context_menu_contents = create_tab_context_menu_contents();
-    EXPECT_TRUE(base::ranges::none_of(get_all_labels(), [](const auto& label) {
+    EXPECT_TRUE(std::ranges::none_of(get_all_labels(), [](const auto& label) {
 #if BUILDFLAG(IS_MAC)
-      return base::Contains(label, u"Right") || base::Contains(label, u"Left");
+      return label.contains(u"Right") || label.contains(u"Left");
 #else
-      return base::Contains(label, u"right") ||
-          base::Contains(label, u"left");
+      return label.contains(u"right") ||
+          label.contains(u"left");
 #endif
     }));
   }
@@ -811,10 +814,10 @@ IN_PROC_BROWSER_TEST_F(VerticalTabStripDragAndDropBrowserTest,
                 // Creating new browser during drag-and-drop will create
                 // a nested run loop. So we should do things within callback.
                 auto* browser_list = BrowserList::GetInstance();
-                EXPECT_EQ(
-                    2, base::ranges::count_if(*browser_list, [&](Browser* b) {
-                      return b->profile() == browser()->profile();
-                    }));
+                EXPECT_EQ(2,
+                          std::ranges::count_if(*browser_list, [&](Browser* b) {
+                            return b->profile() == browser()->profile();
+                          }));
                 ReleaseMouse();
                 auto* new_browser = browser_list->GetLastActive();
                 new_browser->window()->Close();

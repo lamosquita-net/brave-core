@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <optional>
 
-#include "base/containers/contains.h"
 #include "base/no_destructor.h"
 #include "base/notreached.h"
 #include "base/strings/string_number_conversions.h"
@@ -40,7 +39,7 @@ bool CanPatternBeConvertedToWildcardSchemeAndPort(
     return false;
   if (url.has_scheme())
     return !ContentSettingsPattern::IsNonWildcardDomainNonPortScheme(
-        url.scheme_piece());
+        url.scheme());
   return url.has_port();
 }
 
@@ -83,13 +82,12 @@ std::string GetShieldsContentTypeName(const ContentSettingsType& content_type) {
     case ContentSettingsType::BRAVE_COOKIES:
       return brave_shields::kCookies;
     default:
-      NOTREACHED_IN_MIGRATION();
-      return std::string();
+      NOTREACHED();
   }
 }
 
 bool IsShieldsContentSettingsType(const ContentSettingsType& content_type) {
-  return base::Contains(GetShieldsContentSettingsTypes(), content_type);
+  return std::ranges::contains(GetShieldsContentSettingsTypes(), content_type);
 }
 
 bool IsShieldsContentSettingsTypeName(const std::string& content_type_name) {

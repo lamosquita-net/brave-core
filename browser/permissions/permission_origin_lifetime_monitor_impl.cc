@@ -7,7 +7,6 @@
 
 #include <utility>
 
-#include "base/containers/contains.h"
 #include "brave/browser/ephemeral_storage/ephemeral_storage_service_factory.h"
 #include "brave/components/ephemeral_storage/ephemeral_storage_service.h"
 #include "net/base/features.h"
@@ -43,7 +42,7 @@ PermissionOriginLifetimeMonitorImpl::SubscribeToPermissionOriginDestruction(
 
   std::string storage_domain =
       net::URLToEphemeralStorageDomain(requesting_origin);
-  if (!base::Contains(active_subscriptions_, storage_domain)) {
+  if (!active_subscriptions_.contains(storage_domain)) {
     active_subscriptions_.insert(storage_domain);
   }
   return storage_domain;

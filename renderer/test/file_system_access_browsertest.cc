@@ -78,8 +78,8 @@ IN_PROC_BROWSER_TEST_P(FileSystemAccessBrowserTest, FilePicker) {
   } else {
     auto result =
         content::EvalJs(primary_main_frame(), "self.showOpenFilePicker()");
-    EXPECT_TRUE(base::Contains(result.error,
-                               "self.showOpenFilePicker is not a function"))
+    EXPECT_TRUE(
+        result.error.contains("self.showOpenFilePicker is not a function"))
         << result.error;
   }
 }

@@ -8,6 +8,7 @@
 #include <libxml/tree.h>
 #include <signal.h>
 
+#include <algorithm>
 #include <climits>
 #include <iostream>
 #include <map>
@@ -25,7 +26,6 @@
 #include "base/debug/stack_trace.h"
 #include "base/json/json_string_value_serializer.h"
 #include "base/no_destructor.h"
-#include "base/ranges/algorithm.h"
 #include "base/values.h"
 #include "brave/components/brave_page_graph/common/features.h"
 #include "brave/components/brave_shields/core/common/brave_shield_constants.h"
@@ -270,10 +270,10 @@ class V8PageGraphDelegate : public v8::page_graph::PageGraphDelegate {
         }
         return base::Value(arg);
       };
-      base::ranges::for_each(
-          args, [&arguments, &to_safe_base_value](const auto& arg) {
-            arguments.Append(to_safe_base_value(arg));
-          });
+      std::ranges::for_each(args,
+                            [&arguments, &to_safe_base_value](const auto& arg) {
+                              arguments.Append(to_safe_base_value(arg));
+                            });
       std::optional<blink::PageGraphValue> result_value;
       if (result) {
         result_value = to_safe_base_value(*result);
@@ -393,7 +393,7 @@ void PageGraph::Trace(blink::Visitor* visitor) const {
 }
 
 void PageGraph::NodeCreated(blink::Node* node) {
-  DCHECK(!base::Contains(currently_constructed_nodes_, node));
+  DCHECK(!currently_constructed_nodes_.contains(node));
   currently_constructed_nodes_.emplace(node, false);
 }
 
@@ -718,8 +718,8 @@ void PageGraph::RegisterPageGraphScriptCompilation(
     if (processed_js_urls_it != processed_js_urls_.end()) {
       auto& processed_js_urls = processed_js_urls_it->value;
       auto* processed_js_url_it =
-          base::ranges::find(processed_js_urls, script_data.code,
-                             &ProcessedJavascriptURL::script_code);
+          std::ranges::find(processed_js_urls, script_data.code,
+                            &ProcessedJavascriptURL::script_code);
 
       if (processed_js_url_it != processed_js_urls.end()) {
         script_data.source.parent_script_id =
@@ -987,10 +987,10 @@ void PageGraph::AddGraphItem(std::unique_ptr<GraphItem> graph_item) {
   if (auto* graph_node = DynamicTo<GraphNode>(item)) {
     nodes_.push_back(graph_node);
     if (auto* element_node = DynamicTo<NodeHTMLElement>(graph_node)) {
-      DCHECK(!base::Contains(element_nodes_, element_node->GetDOMNodeId()));
+      DCHECK(!element_nodes_.Contains(element_node->GetDOMNodeId()));
       element_nodes_.insert(element_node->GetDOMNodeId(), element_node);
     } else if (auto* text_node = DynamicTo<NodeHTMLText>(graph_node)) {
-      DCHECK(!base::Contains(text_nodes_, text_node->GetDOMNodeId()));
+      DCHECK(!text_nodes_.Contains(text_node->GetDOMNodeId()));
       text_nodes_.insert(text_node->GetDOMNodeId(), text_node);
     } else if (auto* resource_node = DynamicTo<NodeResource>(graph_node)) {
       resource_nodes_.insert(resource_node->GetURL(), resource_node);
@@ -1022,7 +1022,7 @@ void PageGraph::AddGraphItem(std::unique_ptr<GraphItem> graph_item) {
       edges_.push_back(graph_edge);
     }
   } else {
-    NOTREACHED_IN_MIGRATION();
+    NOTREACHED();
   }
 }
 
@@ -1221,7 +1221,7 @@ bool PageGraph::RegisterCurrentlyConstructedNode(blink::Node* node) {
 
   RegisterPageGraphNodeFullyCreated(node);
   // Node should be removed from currently_constructed_nodes_.
-  DCHECK(!base::Contains(currently_constructed_nodes_, node));
+  DCHECK(!currently_constructed_nodes_.contains(node));
   // Mark the node as an already registered for the upcoming
   // RegisterPageGraphNodeFullyCreated call.
   currently_constructed_nodes_.emplace(node, true);

@@ -3,17 +3,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <algorithm>
 #include <functional>
 #include <set>
 #include <vector>
 
-#include "base/containers/contains.h"
 #include "base/feature_list.h"
 #include "base/functional/bind.h"
 #include "base/memory/weak_ptr.h"
 #include "base/path_service.h"
 #include "base/run_loop.h"
 #include "base/strings/string_util.h"
+#include "base/strings/stringprintf.h"
 #include "base/task/bind_post_task.h"
 #include "base/task/sequenced_task_runner.h"
 #include "base/test/scoped_feature_list.h"
@@ -192,11 +193,11 @@ class ClientHintsBrowserTest : public InProcessBrowserTest,
   void MonitorResourceRequest(const net::test_server::HttpRequest& request) {
     for (const auto& elem : network::GetClientHintToNameMap()) {
       const auto& header = elem.second;
-      if (base::Contains(request.headers, header)) {
-        if (base::Contains(default_hints_, header)) {
+      if (request.headers.contains(header)) {
+        if (std::ranges::contains(default_hints_, header)) {
           default_client_hints_headers_seen_.insert(header);
           continue;
-        } else if (base::Contains(allowed_hints_, header)) {
+        } else if (std::ranges::contains(allowed_hints_, header)) {
           allowed_client_hints_headers_seen_.insert(header);
           continue;
         }

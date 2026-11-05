@@ -5,8 +5,9 @@
 
 #include "brave/browser/ui/tabs/split_view_browser_data.h"
 
+#include <algorithm>
+
 #include "base/check_is_test.h"
-#include "base/containers/contains.h"
 #include "base/functional/callback_helpers.h"
 #include "base/notreached.h"
 #include "brave/browser/ui/tabs/features.h"
@@ -87,7 +88,7 @@ void SplitViewBrowserData::BreakTile(const tabs::TabHandle& tab) {
       observer.OnDidBreakTile(tile_to_break);
     }
   } else {
-    NOTREACHED_IN_MIGRATION() << "Tile doesn't exist";
+    NOTREACHED() << "Tile doesn't exist";
   }
 }
 
@@ -113,7 +114,7 @@ void SplitViewBrowserData::Transfer(SplitViewBrowserData* other,
 }
 
 bool SplitViewBrowserData::IsTabTiled(const tabs::TabHandle& tab) const {
-  return base::Contains(tile_index_for_tab_, tab);
+  return tile_index_for_tab_.contains(tab);
 }
 
 void SplitViewBrowserData::SwapTabsInTile(const Tile& tile) {
@@ -239,14 +240,13 @@ void SplitViewBrowserData::TabsWillBeAttachedToNewBrowser(
   }
 
   if (tiles_to_be_attached_to_new_window_.size() > 1) {
-    base::ranges::sort(tiles_to_be_attached_to_new_window_);
-    tiles_to_be_attached_to_new_window_.erase(
-        base::ranges::unique(tiles_to_be_attached_to_new_window_,
-                             [](auto& a, auto& b) {
-                               return a.first == b.first &&
-                                      a.second == b.second;
-                             }),
-        tiles_to_be_attached_to_new_window_.end());
+    std::ranges::sort(tiles_to_be_attached_to_new_window_);
+    auto to_remove = std::ranges::unique(
+        tiles_to_be_attached_to_new_window_, [](auto& a, auto& b) {
+          return a.first == b.first && a.second == b.second;
+        });
+    tiles_to_be_attached_to_new_window_.erase(to_remove.begin(),
+                                              to_remove.end());
   }
 }
 

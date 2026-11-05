@@ -85,9 +85,8 @@ int NonClientHitTest(BrowserView* browser_view,
     return HTBOTTOM;
   }
 
-  NOTREACHED_IN_MIGRATION()
+  NOTREACHED()
       << "This shouldn't happen. Maybe due to inclusive/exclusive comparison?";
-  return hit_test_result;
 }
 
 }  // namespace brave

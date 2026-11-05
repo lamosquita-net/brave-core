@@ -11,7 +11,6 @@
 #include <utility>
 #include <vector>
 
-#include "base/containers/contains.h"
 #include "base/json/json_reader.h"
 #include "base/logging.h"
 #include "base/metrics/histogram_functions.h"
@@ -119,7 +118,7 @@ adblock::BlockerResult AdBlockEngine::ShouldStartRequest(
       url::Origin::CreateFromNormalizedTuple("https", tab_host.c_str(), 80),
       INCLUDE_PRIVATE_REGISTRIES);
   return ad_block_client_->matches(
-      url.spec(), url.host(), tab_host, ResourceTypeToString(resource_type),
+      url.spec(), url.GetHost(), tab_host, ResourceTypeToString(resource_type),
       is_third_party,
       // Checking normal rules is skipped if a normal rule or exception rule was
       // found previously
@@ -141,7 +140,7 @@ std::optional<std::string> AdBlockEngine::GetCspDirectives(
       url::Origin::CreateFromNormalizedTuple("https", tab_host.c_str(), 80),
       INCLUDE_PRIVATE_REGISTRIES);
   auto result = ad_block_client_->get_csp_directives(
-      url.spec(), url.host(), tab_host, ResourceTypeToString(resource_type),
+      url.spec(), url.GetHost(), tab_host, ResourceTypeToString(resource_type),
       is_third_party);
 
   if (result.empty()) {
@@ -174,7 +173,7 @@ void AdBlockEngine::UseResources(const std::string& resources) {
 
 bool AdBlockEngine::TagExists(const std::string& tag) {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
-  return base::Contains(tags_, tag);
+  return tags_.contains(tag);
 }
 
 base::Value::Dict AdBlockEngine::GetDebugInfo() {

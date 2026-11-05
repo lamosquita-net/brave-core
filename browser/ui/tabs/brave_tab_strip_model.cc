@@ -12,7 +12,6 @@
 
 #include "base/containers/adapters.h"
 #include "base/containers/span.h"
-#include "base/ranges/algorithm.h"
 #include "brave/browser/ui/brave_browser_window.h"
 #include "brave/browser/ui/views/tabs/vertical_tab_utils.h"
 #include "brave/components/constants/pref_names.h"

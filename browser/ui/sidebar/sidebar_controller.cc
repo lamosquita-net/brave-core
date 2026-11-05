@@ -76,7 +76,7 @@ bool SidebarController::DoesBrowserHaveOpenedTabForItem(
       chrome::FindAllTabbedBrowsersWithProfile(browser_->profile());
   for (Browser* browser : browsers) {
     const auto all_index =
-        GetAllExistingTabIndexForHost(browser, item.url.host());
+        GetAllExistingTabIndexForHost(browser, item.url.GetHost());
     if (!all_index.empty())
       return true;
   }
@@ -154,7 +154,8 @@ bool SidebarController::ActiveTabFromOtherBrowsersForHost(const GURL& url) {
     if (browser == browser_)
       continue;
 
-    const auto all_index = GetAllExistingTabIndexForHost(browser, url.host());
+    const auto all_index =
+        GetAllExistingTabIndexForHost(browser, url.GetHost());
     if (all_index.empty())
       continue;
 
@@ -169,7 +170,7 @@ bool SidebarController::ActiveTabFromOtherBrowsersForHost(const GURL& url) {
 
 void SidebarController::IterateOrLoadAtActiveTab(const GURL& url) {
   // Get target tab index
-  const auto all_index = GetAllExistingTabIndexForHost(browser_, url.host());
+  const auto all_index = GetAllExistingTabIndexForHost(browser_, url.GetHost());
   if (all_index.empty()) {
     if (ActiveTabFromOtherBrowsersForHost(url))
       return;

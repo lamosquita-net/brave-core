@@ -5,11 +5,11 @@
 
 #include "brave/components/playlist/browser/mime_util.h"
 
+#include <algorithm>
 #include <optional>
 
 #include "base/containers/fixed_flat_map.h"
 #include "base/files/file_path.h"
-#include "base/ranges/algorithm.h"
 
 namespace playlist {
 namespace {
@@ -26,7 +26,7 @@ namespace {
 //   * https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
 //
 constexpr inline auto kMimeToExtensionMap =
-    base::MakeFixedFlatMap<std::string_view, base::FilePath::StringPieceType>(
+    base::MakeFixedFlatMap<std::string_view, base::FilePath::StringViewType>(
         {/*m3u8*/
          {"application/x-mpegurl", FILE_PATH_LITERAL("m3u8")},
          {"application/vnd.apple.mpegurl", FILE_PATH_LITERAL("m3u8")},
@@ -65,7 +65,7 @@ constexpr inline auto kMimeToExtensionMap =
          {"video/x-m4v", FILE_PATH_LITERAL("m4v")}});
 
 constexpr inline auto kExtensionToMimeMap =
-    base::MakeFixedFlatMap<base::FilePath::StringPieceType, std::string_view>(
+    base::MakeFixedFlatMap<base::FilePath::StringViewType, std::string_view>(
         {{FILE_PATH_LITERAL("m3u8"), "application/x-mpegurl"},
          {FILE_PATH_LITERAL("aac"), "audio/aac"},
          {FILE_PATH_LITERAL("flac"), "audio/flac"},
@@ -99,7 +99,7 @@ std::optional<base::FilePath::StringType> GetFileExtensionForMimetype(
 }
 
 std::optional<std::string> GetMimeTypeForFileExtension(
-    base::FilePath::StringPieceType file_extension) {
+    base::FilePath::StringViewType file_extension) {
   if (decltype(kExtensionToMimeMap)::const_iterator iter =
           kExtensionToMimeMap.find(file_extension);
       iter != kExtensionToMimeMap.end()) {
@@ -111,7 +111,7 @@ std::optional<std::string> GetMimeTypeForFileExtension(
 
 std::vector<std::string> GetSupportedMimetypes() {
   std::vector<std::string> supported_mimetypes;
-  base::ranges::transform(
+  std::ranges::transform(
       kMimeToExtensionMap,
       std::inserter(supported_mimetypes, supported_mimetypes.end()),
       [](const auto& pair) { return std::string(pair.first); });

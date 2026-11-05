@@ -7,6 +7,7 @@
 
 #include <string>
 
+#include "base/functional/callback_helpers.h"
 #include "base/strings/utf_string_conversions.h"
 #include "brave/browser/android/preferences/features.h"
 #include "brave/components/brave_shields/content/browser/brave_shields_util.h"

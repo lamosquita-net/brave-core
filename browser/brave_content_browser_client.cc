@@ -277,7 +277,7 @@ void BindBraveSearchDefaultHost(
   if (profile->IsRegularProfile()) {
     auto* template_url_service =
         TemplateURLServiceFactory::GetForProfile(profile);
-    const std::string host = frame_host->GetLastCommittedURL().host();
+    const std::string host = frame_host->GetLastCommittedURL().GetHost();
     mojo::MakeSelfOwnedReceiver(
         std::make_unique<brave_search::BraveSearchDefaultHost>(
             host, template_url_service, profile->GetPrefs()),

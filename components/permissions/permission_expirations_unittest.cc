@@ -124,9 +124,9 @@ class PermissionExpirationsTest : public testing::Test {
 
   void AddExpiringPermission(ContentSettingsType content_type,
                              const GURL& origin) {
-    expirations()->AddExpiringPermission(content_type,
-                                         PermissionExpirationKey(origin.host()),
-                                         MakePermissionOrigins(origin));
+    expirations()->AddExpiringPermission(
+        content_type, PermissionExpirationKey(origin.GetHost()),
+        MakePermissionOrigins(origin));
   }
 
   void CheckExpirationsPref(const base::Location& location,
@@ -144,7 +144,7 @@ class PermissionExpirationsTest : public testing::Test {
     return std::to_string(time.ToDeltaSinceWindowsEpoch().InMicroseconds());
   }
 
-  static std::string DomainKey(const GURL& url) { return url.host(); }
+  static std::string DomainKey(const GURL& url) { return url.GetHost(); }
 
  protected:
   const GURL kOrigin{"https://example.com"};
@@ -399,7 +399,8 @@ TEST_F(PermissionExpirationsTest, AddRemoveDomainExpiration) {
         {entry.type_key, DomainKey(entry.origin), entry.origin.spec(),
          entry.type_key2, DomainKey(entry.origin2), entry.origin2.spec()});
 
-    auto removed = expirations()->RemoveExpiredPermissions(entry.origin.host());
+    auto removed =
+        expirations()->RemoveExpiredPermissions(entry.origin.GetHost());
     EXPECT_EQ(removed,
               PermissionExpirations::ExpiredPermissions(
                   {{entry.type, {MakePermissionOrigins(entry.origin)}}}));
@@ -408,7 +409,7 @@ TEST_F(PermissionExpirationsTest, AddRemoveDomainExpiration) {
         FROM_HERE, kOneTypeOneExpirationPrefValue,
         {entry.type_key2, DomainKey(entry.origin2), entry.origin2.spec()});
 
-    removed = expirations()->RemoveExpiredPermissions(entry.origin2.host());
+    removed = expirations()->RemoveExpiredPermissions(entry.origin2.GetHost());
     EXPECT_EQ(removed,
               PermissionExpirations::ExpiredPermissions(
                   {{entry.type2, {MakePermissionOrigins(entry.origin2)}}}));
@@ -453,7 +454,7 @@ TEST_F(PermissionExpirationsTest, RemoveDomainThenTimeExpirations) {
          entry.type_key2, DomainKey(entry.origin2), entry.origin2.spec()});
 
     auto removed =
-        expirations()->RemoveExpiredPermissions(entry.origin2.host());
+        expirations()->RemoveExpiredPermissions(entry.origin2.GetHost());
     EXPECT_EQ(removed,
               PermissionExpirations::ExpiredPermissions(
                   {{entry.type2, {MakePermissionOrigins(entry.origin2)}}}));
@@ -512,7 +513,7 @@ TEST_F(PermissionExpirationsTest, RemoveTimeThenDomainExpirations) {
         FROM_HERE, kOneTypeOneExpirationPrefValue,
         {entry.type_key2, DomainKey(entry.origin2), entry.origin2.spec()});
 
-    removed = expirations()->RemoveExpiredPermissions(entry.origin2.host());
+    removed = expirations()->RemoveExpiredPermissions(entry.origin2.GetHost());
     EXPECT_EQ(removed,
               PermissionExpirations::ExpiredPermissions(
                   {{entry.type2, {MakePermissionOrigins(entry.origin2)}}}));

@@ -5,12 +5,12 @@
 
 #include "brave/components/ntp_background_images/browser/ntp_sponsored_images_data.h"
 
+#include <algorithm>
 #include <optional>
 #include <utility>
 
 #include "base/json/json_reader.h"
 #include "base/logging.h"
-#include "base/ranges/algorithm.h"
 #include "base/strings/stringprintf.h"
 #include "base/uuid.h"
 #include "brave/components/ntp_background_images/browser/url_constants.h"

@@ -3,10 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+#include <algorithm>
 #include <optional>
 #include <vector>
 
-#include "base/containers/contains.h"
 #include "build/build_config.h"
 #include "components/grit/brave_components_strings.h"
 #include "components/permissions/permission_request.h"
@@ -19,25 +19,17 @@
 // `kWidevine` handled by an override in `WidevinePermissionRequest` and the
 // Brave Ethereum/Solana permission has its own permission request prompt.
 #if BUILDFLAG(IS_ANDROID)
-#define BRAVE_ENUM_ITEMS_FOR_SWITCH                              \
-  case RequestType::kBraveEthereum:                              \
-  case RequestType::kBraveSolana:                                \
-    NOTREACHED_IN_MIGRATION();                                   \
-    return permissions::PermissionRequest::AnnotatedMessageText( \
-        std::u16string(), {});                                   \
-  case RequestType::kWidevine:                                   \
-    NOTREACHED_IN_MIGRATION();                                   \
-    return permissions::PermissionRequest::AnnotatedMessageText( \
-        std::u16string(), {});
+#define BRAVE_ENUM_ITEMS_FOR_SWITCH \
+  case RequestType::kBraveEthereum: \
+  case RequestType::kBraveSolana:   \
+  case RequestType::kWidevine:      \
+    NOTREACHED();
 #else
 #define BRAVE_ENUM_ITEMS_FOR_SWITCH \
   case RequestType::kBraveEthereum: \
   case RequestType::kBraveSolana:   \
-    NOTREACHED_IN_MIGRATION();      \
-    return std::u16string();        \
   case RequestType::kWidevine:      \
-    NOTREACHED_IN_MIGRATION();      \
-    return std::u16string();
+    NOTREACHED();
 #endif
 
 // For permission strings that we also need on Android, we need to use
@@ -166,7 +158,7 @@ bool PermissionRequest::SupportsLifetime() const {
     RequestType::kWidevine
 #endif  // BUILDFLAG(ENABLE_WIDEVINE)
   };
-  return !base::Contains(kExcludedTypes, request_type());
+  return !std::ranges::contains(kExcludedTypes, request_type());
 }
 
 void PermissionRequest::SetLifetime(std::optional<base::TimeDelta> lifetime) {

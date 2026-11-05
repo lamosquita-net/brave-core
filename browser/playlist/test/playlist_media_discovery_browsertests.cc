@@ -3,7 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#include "base/ranges/algorithm.h"
+#include <algorithm>
+
 #include "base/test/bind.h"
 #include "base/test/mock_callback.h"
 #include "base/test/scoped_feature_list.h"
@@ -99,9 +100,10 @@ class PlaylistMediaDiscoveryBrowserTest : public PlatformBrowserTest {
         .WillOnce(
             [&](const GURL&,
                 std::vector<playlist::mojom::PlaylistItemPtr> actual_items) {
-              OnGetMedia(test_info->name(), items,
-                         url.is_valid() ? url.host() : destination_url.host(),
-                         std::move(actual_items));
+              OnGetMedia(
+                  test_info->name(), items,
+                  url.is_valid() ? url.GetHost() : destination_url.GetHost(),
+                  std::move(actual_items));
               run_loop.Quit();
             });
 
@@ -171,7 +173,7 @@ class PlaylistMediaDiscoveryBrowserTest : public PlatformBrowserTest {
     VLOG(2) << test_name << ": " << __func__;
 
     std::vector<playlist::mojom::PlaylistItemPtr> expected_items;
-    base::ranges::for_each(expected_data, [&](ExpectedData& item) {
+    std::ranges::for_each(expected_data, [&](ExpectedData& item) {
       auto fix_host = [&](auto& url_str) {
         if (!base::StartsWith(url_str, "/")) {
           return;
@@ -198,7 +200,7 @@ class PlaylistMediaDiscoveryBrowserTest : public PlatformBrowserTest {
       return a->media_path == b->media_path && a->name == b->name &&
              a->thumbnail_path == b->thumbnail_path;
     };
-    EXPECT_TRUE(base::ranges::equal(actual_items, expected_items, equal));
+    EXPECT_TRUE(std::ranges::equal(actual_items, expected_items, equal));
   }
 
   base::test::ScopedFeatureList scoped_feature_list_;

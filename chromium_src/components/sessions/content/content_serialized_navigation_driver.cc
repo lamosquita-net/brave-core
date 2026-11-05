@@ -3,9 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <algorithm>
 #include <string>
 
-#include "base/containers/contains.h"
 #include "components/sessions/content/content_serialized_navigation_driver.h"
 #include "components/sessions/core/serialized_navigation_entry.h"
 #include "content/public/common/url_constants.h"
@@ -27,8 +27,8 @@ std::string ContentSerializedNavigationDriver::GetSanitizedPageStateForPickle(
   const auto& virtual_url = navigation->virtual_url();
   if (virtual_url.SchemeIs(content::kChromeUIScheme)) {
     // If empty string is returned, chrome url overriding is ignored.
-    if (base::Contains(kAllowedChromeUrlsOverridingHostList,
-                       virtual_url.host())) {
+    if (std::ranges::contains(kAllowedChromeUrlsOverridingHostList,
+                              virtual_url.host())) {
       // chrome url can be re-written when it's restored during the tab but
       // re-written url is ignored when encoded page state is empty.
       // In ContentSerializedNavigationBuilder::ToNavigationEntry(), re-written

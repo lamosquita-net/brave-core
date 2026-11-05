@@ -143,7 +143,7 @@ bool BraveBrowser::ShouldDisplayFavicon(
   // navigations from NTP generally don't hit this case and still show an icon.
   GURL url = web_contents->GetVisibleURL();
   if (url.SchemeIs(content::kChromeUIScheme) &&
-      url.host_piece() == chrome::kChromeUINewTabHost) {
+      url.host() == chrome::kChromeUINewTabHost) {
     return false;
   }
 

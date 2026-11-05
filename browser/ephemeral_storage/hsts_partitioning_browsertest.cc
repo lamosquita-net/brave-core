@@ -7,6 +7,7 @@
 #include "base/strings/pattern.h"
 #include "base/strings/strcat.h"
 #include "base/strings/string_util.h"
+#include "base/strings/stringprintf.h"
 #include "base/test/bind.h"
 #include "brave/components/brave_shields/content/browser/brave_shields_util.h"
 #include "chrome/browser/profiles/profile.h"
@@ -40,7 +41,7 @@ constexpr char kFetchScript[] = R"(
 std::unique_ptr<net::test_server::HttpResponse> RespondWithServerType(
     const net::test_server::HttpRequest& request) {
   GURL url = request.GetURL();
-  if (url.path_piece() != "/server_type") {
+  if (url.path() != "/server_type") {
     return nullptr;
   }
 

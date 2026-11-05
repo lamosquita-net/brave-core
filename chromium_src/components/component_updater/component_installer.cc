@@ -5,13 +5,13 @@
 
 #include "components/component_updater/component_installer.h"
 
+#include <algorithm>
+
 #include "build/build_config.h"
 
 #define Register Register_ChromiumImpl
 #include "src/components/component_updater/component_installer.cc"
 #undef Register
-
-#include "base/containers/contains.h"
 
 namespace component_updater {
 
@@ -55,7 +55,7 @@ void ComponentInstaller::Register(
     std::vector<uint8_t> hash;
     installer_policy_->GetHash(&hash);
     const std::string id = update_client::GetCrxIdFromPublicKeyHash(hash);
-    if (base::Contains(disallowed_components, id)) {
+    if (std::ranges::contains(disallowed_components, id)) {
       VLOG(1) << "Skipping registration of Brave-unsupported component "
               << id << ".";
       return;

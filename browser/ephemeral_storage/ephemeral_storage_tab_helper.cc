@@ -107,7 +107,7 @@ void EphemeralStorageTabHelper::UpdateShieldsState(const GURL& url) {
                                           cookie_settings_.get(), url) !=
       brave_shields::ControlType::ALLOW;
   tld_ephemeral_lifetime_->SetShieldsStateOnHost(
-      url.host(), shields_enabled && cookies_restricted);
+      url.GetHost(), shields_enabled && cookies_restricted);
 }
 
 WEB_CONTENTS_USER_DATA_KEY_IMPL(EphemeralStorageTabHelper);

@@ -5,7 +5,6 @@
 
 #include "brave/browser/ui/tabs/brave_tab_color_mixer.h"
 
-#include "base/containers/contains.h"
 #include "base/containers/fixed_flat_map.h"
 #include "base/no_destructor.h"
 #include "brave/browser/ui/color/brave_color_id.h"

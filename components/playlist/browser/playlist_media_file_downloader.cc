@@ -11,6 +11,7 @@
 
 #include "base/files/file_util.h"
 #include "base/functional/bind.h"
+#include "base/functional/callback_helpers.h"
 #include "base/task/thread_pool.h"
 #include "base/uuid.h"
 #include "brave/components/playlist/browser/mime_util.h"
@@ -127,7 +128,7 @@ void PlaylistMediaFileDownloader::ScheduleToDetachCachedFile(
 void PlaylistMediaFileDownloader::DetachCachedFile(
     download::DownloadItem* item) {
   // We allow only one item to be downloaded at a time.
-  auto iter = base::ranges::find_if(
+  auto iter = std::ranges::find_if(
       download_items_to_be_detached_,
       [item](const auto& download) { return download.get() == item; });
   DCHECK(iter != download_items_to_be_detached_.end());
@@ -263,7 +264,7 @@ void PlaylistMediaFileDownloader::OnRenameFile(const base::FilePath& new_path,
 
 void PlaylistMediaFileDownloader::OnDownloadRemoved(
     download::DownloadItem* item) {
-  NOTREACHED_IN_MIGRATION()
+  NOTREACHED()
       << "`item` was removed out of this class. This could cause flaky tests";
 }
 
