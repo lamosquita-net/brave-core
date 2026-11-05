@@ -1,16 +1,8 @@
 diff --git a/BUILD.gn b/BUILD.gn
-index 1df3d4e31bcc427acc5c2fd705ede40018412d9e..ee12c96aeb151f8bbe0f1efd604d5b8670ec14b9 100644
+index 1df3d4e31bcc427acc5c2fd705ede40018412d9e..bbfefe30cf7060d790d1717f6bd5874a3c6d3fb0 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
-@@ -4,6 +4,7 @@
- 
- # LINT.IfChange
- 
-+import("//brave/v8/sources.gni")
- import("//build/config/android/config.gni")
- import("//build/config/arm.gni")
- import("//build/config/c++/c++.gni")
-@@ -967,6 +968,9 @@ config("internal_config_base") {
+@@ -967,6 +967,9 @@ config("internal_config_base") {
      "$target_gen_dir",
      "$target_gen_dir/include",
    ]
@@ -20,27 +12,3 @@ index 1df3d4e31bcc427acc5c2fd705ede40018412d9e..ee12c96aeb151f8bbe0f1efd604d5b86
  }
  
  config("internal_config") {
-@@ -2507,6 +2511,7 @@ if (v8_use_metagen_instance_types) {
-     # configuration an explicit input. In particular, changing a feature define
-     # must re-run the driver even though the action command is unchanged.
-     deps = [ ":v8_dump_build_config" ]
-+    deps += brave_v8_headers_public_deps
- 
-     if (v8_generate_external_defines_header) {
-       # v8config.h includes the generated v8-gn.h in this configuration.
-@@ -3862,6 +3867,7 @@ v8_header_set("v8_headers") {
-     "include/v8-weak-callback-info.h",
-     "include/v8.h",
-   ]
-+  sources += brave_v8_headers_sources
- 
-   sources += [
-     # The following headers cannot be platform-specific. The include validation
-@@ -3872,6 +3878,7 @@ v8_header_set("v8_headers") {
-   ]
- 
-   public_deps = [ ":v8_config_headers" ]
-+  public_deps += brave_v8_headers_public_deps
- 
-   deps = [
-     ":cppgc_headers",
