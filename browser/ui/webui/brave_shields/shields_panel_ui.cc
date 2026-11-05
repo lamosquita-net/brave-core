@@ -64,10 +64,10 @@ ShieldsPanelUI::ShieldsPanelUI(content::WebUI* web_ui)
       profile_, std::make_unique<FaviconSource>(
                     profile_, chrome::FaviconUrlFormat::kFavicon2));
 
-  webui::SetupWebUIDataSource(source,
-                              base::make_span(kBraveShieldsPanelGenerated,
-                                              kBraveShieldsPanelGeneratedSize),
-                              IDR_SHIELDS_PANEL_HTML);
+  webui::SetupWebUIDataSource(
+      source,
+      base::span<const webui::ResourcePath>(kBraveShieldsPanelGenerated),
+      IDR_SHIELDS_PANEL_HTML);
 }
 
 ShieldsPanelUI::~ShieldsPanelUI() = default;

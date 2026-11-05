@@ -134,7 +134,6 @@ BraveAdblockInternalsUI::BraveAdblockInternalsUI(content::WebUI* web_ui,
                                                  const std::string& name)
     : content::WebUIController(web_ui) {
   CreateAndAddWebUIDataSource(web_ui, name, kBraveAdblockInternalsGenerated,
-                              kBraveAdblockInternalsGeneratedSize,
                               IDR_BRAVE_ADBLOCK_INTERNALS_HTML);
 
   web_ui->AddMessageHandler(

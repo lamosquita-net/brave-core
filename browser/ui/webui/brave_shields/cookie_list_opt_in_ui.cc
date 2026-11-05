@@ -48,8 +48,7 @@ CookieListOptInUI::CookieListOptInUI(content::WebUI* web_ui)
   source->AddLocalizedStrings(kStrings);
 
   webui::SetupWebUIDataSource(
-      source,
-      base::make_span(kCookieListOptInGenerated, kCookieListOptInGeneratedSize),
+      source, base::span<const webui::ResourcePath>(kCookieListOptInGenerated),
       IDR_COOKIE_LIST_OPT_IN_HTML);
 
   content::URLDataSource::Add(

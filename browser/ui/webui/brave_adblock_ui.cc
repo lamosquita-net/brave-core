@@ -321,7 +321,6 @@ void AdblockDOMHandler::RefreshSubscriptionsList() {
 BraveAdblockUI::BraveAdblockUI(content::WebUI* web_ui, const std::string& name)
     : WebUIController(web_ui) {
   CreateAndAddWebUIDataSource(web_ui, name, kBraveAdblockGenerated,
-                              kBraveAdblockGeneratedSize,
                               IDR_BRAVE_ADBLOCK_HTML);
   web_ui->AddMessageHandler(std::make_unique<AdblockDOMHandler>());
 }

@@ -8,10 +8,9 @@
 #include "brave/components/brave_extension/grit/brave_extension_generated_map.h"
 #include "brave/components/brave_extension/grit/brave_extension_resources_map.h"
 
-#define BRAVE_CHROME_COMPONENT_EXTENSION_RESOURCE_MANAGER_DATA_DATA  \
-  AddComponentResourceEntries(kBraveExtension, kBraveExtensionSize); \
-  AddComponentResourceEntries(kBraveExtensionGenerated,              \
-                              kBraveExtensionGeneratedSize);
+#define BRAVE_CHROME_COMPONENT_EXTENSION_RESOURCE_MANAGER_DATA_DATA \
+  AddComponentResourceEntries(kBraveExtension);                     \
+  AddComponentResourceEntries(kBraveExtensionGenerated);
 
 #include "src/chrome/browser/extensions/chrome_component_extension_resource_manager.cc"
 #undef BRAVE_CHROME_COMPONENT_EXTENSION_RESOURCE_MANAGER_DATA_DATA

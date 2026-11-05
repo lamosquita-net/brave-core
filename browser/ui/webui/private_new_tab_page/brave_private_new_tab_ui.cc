@@ -25,9 +25,9 @@ BravePrivateNewTabUI::BravePrivateNewTabUI(content::WebUI* web_ui,
   web_ui->OverrideTitle(
       brave_l10n::GetLocalizedResourceUTF16String(IDS_NEW_INCOGNITO_TAB_TITLE));
 
-  content::WebUIDataSource* source = CreateAndAddWebUIDataSource(
-      web_ui, name, kBravePrivateNewTabGenerated,
-      kBravePrivateNewTabGeneratedSize, IDR_BRAVE_PRIVATE_NEW_TAB_HTML);
+  content::WebUIDataSource* source =
+      CreateAndAddWebUIDataSource(web_ui, name, kBravePrivateNewTabGenerated,
+                                  IDR_BRAVE_PRIVATE_NEW_TAB_HTML);
 
   for (const auto& str : brave_private_new_tab::kLocalizedStrings) {
     std::u16string l10n_str =
