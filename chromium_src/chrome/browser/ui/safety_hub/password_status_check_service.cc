@@ -13,6 +13,6 @@
            static_cast<int>(safety_hub::SafetyHubCardState::kSafe)); \
   return dict;
 
-#include <chrome/browser/ui/safety_hub/password_status_check_service.cc>
+#include "src/chrome/browser/ui/safety_hub/password_status_check_service.cc"
 
 #undef BRAVE_PASSWORD_STATUS_CHECK_SERVICE_GET_PASSWORD_CARD_DATA

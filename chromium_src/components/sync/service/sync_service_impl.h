@@ -45,7 +45,7 @@
 #define ResetEngine virtual ResetEngine
 #define StopAndClear virtual StopAndClear
 
-#include <components/sync/service/sync_service_impl.h>  // IWYU pragma: export
+#include "src/components/sync/service/sync_service_impl.h"  // IWYU pragma: export
 
 #undef GetUserActionableError
 #undef ResetEngine

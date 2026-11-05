@@ -5,7 +5,7 @@
 
 #include "base/values.h"
 
-#include <components/sync_device_info/device_info.cc>
+#include "src/components/sync_device_info/device_info.cc"
 
 namespace syncer {
 

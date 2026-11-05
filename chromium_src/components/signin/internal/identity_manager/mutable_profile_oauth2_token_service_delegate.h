@@ -11,7 +11,7 @@
   friend class BraveMutableProfileOAuth2TokenServiceDelegate; \
   void StartWebWrappedKeyFetch
 
-#include <components/signin/internal/identity_manager/mutable_profile_oauth2_token_service_delegate.h>  // IWYU pragma: export
+#include "src/components/signin/internal/identity_manager/mutable_profile_oauth2_token_service_delegate.h"  // IWYU pragma: export
 
 #undef StartWebWrappedKeyFetch
 

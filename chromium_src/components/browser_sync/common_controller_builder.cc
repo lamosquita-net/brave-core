@@ -11,7 +11,7 @@
 
 #define HistoryDataTypeController BraveHistoryDataTypeController
 
-#include <components/browser_sync/common_controller_builder.cc>
+#include "src/components/browser_sync/common_controller_builder.cc"
 
 #undef HistoryDataTypeController
 #undef HistoryDeleteDirectivesDataTypeController

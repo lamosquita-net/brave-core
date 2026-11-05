@@ -13,7 +13,7 @@
 #define ShouldReuploadOnceAfterLocalDeviceInfoTombstone \
   DISABLED_ShouldReuploadOnceAfterLocalDeviceInfoTombstone
 
-#include <components/sync_device_info/device_info_sync_bridge_unittest.cc>
+#include "src/components/sync_device_info/device_info_sync_bridge_unittest.cc"
 
 #undef ShouldReuploadOnceAfterLocalDeviceInfoTombstone
 

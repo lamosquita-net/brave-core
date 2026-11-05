@@ -10,7 +10,7 @@
   ClearProgressToken();  \
   void SetDataTypeState
 
-#include <components/sync/model/metadata_batch.h>  // IWYU pragma: export
+#include "src/components/sync/model/metadata_batch.h"  // IWYU pragma: export
 
 #undef SetDataTypeState
 

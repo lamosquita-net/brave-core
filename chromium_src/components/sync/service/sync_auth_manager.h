@@ -22,7 +22,7 @@ class BraveSyncAuthManager;
   friend BraveSyncAuthManager;                                \
   bool UpdateSyncAccountIfNecessary
 
-#include <components/sync/service/sync_auth_manager.h>  // IWYU pragma: export
+#include "src/components/sync/service/sync_auth_manager.h"  // IWYU pragma: export
 
 #undef RequestAccessToken
 #undef UpdateSyncAccountIfNecessary

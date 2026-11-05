@@ -9,7 +9,7 @@
 #include "brave/components/sync/service/brave_sync_service_impl.h"
 
 #define ConstructAboutInformation ConstructAboutInformation_ChromiumImpl
-#include <components/sync/service/sync_internals_util.cc>
+#include "src/components/sync/service/sync_internals_util.cc"
 #undef ConstructAboutInformation
 
 namespace syncer::sync_ui_util {
