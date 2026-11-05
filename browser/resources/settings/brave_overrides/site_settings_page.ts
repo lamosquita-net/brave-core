@@ -137,29 +137,6 @@ RegisterPolymerComponentReplacement(
               lists_.permissionsAdvanced.splice(currentIndex, 0,
                 localhostAccessItem)
             }
-            const isNativeBraveWalletEnabled = loadTimeData.getBoolean('isNativeBraveWalletFeatureEnabled')
-            if (isNativeBraveWalletEnabled) {
-              currentIndex++
-              const ethereumItem = {
-                route: routes.SITE_SETTINGS_ETHEREUM,
-                id: 'ethereum',
-                label: 'siteSettingsEthereum',
-                icon: 'ethereum-on',
-                enabledLabel: 'siteSettingsEthereumAsk',
-                disabledLabel: 'siteSettingsEthereumBlock'
-              }
-              lists_.permissionsAdvanced.splice(currentIndex, 0, ethereumItem)
-              currentIndex++
-              const solanaItem = {
-                route: routes.SITE_SETTINGS_SOLANA,
-                id: 'solana',
-                label: 'siteSettingsSolana',
-                icon: 'solana-on',
-                enabledLabel: 'siteSettingsSolanaAsk',
-                disabledLabel: 'siteSettingsSolanaBlock'
-              }
-              lists_.permissionsAdvanced.splice(currentIndex, 0, solanaItem)
-            }
           }
         }
         lists_.shieldsBasic = [

@@ -71,11 +71,6 @@ export default function addBraveRoutes(r: Partial<SettingsRoutes>) {
       r.SITE_SETTINGS_LOCALHOST_ACCESS = r.SITE_SETTINGS
         .createChild('localhostAccess')
     }
-    const isNativeBraveWalletFeatureEnabled = loadTimeData.getBoolean('isNativeBraveWalletFeatureEnabled')
-    if (isNativeBraveWalletFeatureEnabled) {
-      r.SITE_SETTINGS_ETHEREUM = r.SITE_SETTINGS.createChild('ethereum')
-      r.SITE_SETTINGS_SOLANA = r.SITE_SETTINGS.createChild('solana')
-    }
     r.SITE_SETTINGS_SHIELDS_STATUS = r.SITE_SETTINGS.createChild('braveShields')
     if (r.SITE_SETTINGS_ADS) {
       delete r.SITE_SETTINGS_ADS

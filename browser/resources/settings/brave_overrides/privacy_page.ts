@@ -102,66 +102,6 @@ function InsertAutoplaySubpage (pages: Element)
     `)
 }
 
-function InsertEthereumSubpage (pages: Element)
-{
-  pages.appendChild(
-    html`
-      <template is="dom-if" route-path="/content/ethereum" no-search>
-        <settings-subpage
-          associated-control="[[$$('#ethereum')]]"
-          page-title="${loadTimeData.getString('siteSettingsEthereum')}">
-          <settings-category-default-radio-group
-              id="ethereumDefault"
-              category="[[contentSettingsTypesEnum_.ETHEREUM]]"
-              block-option-label=
-                "${loadTimeData.getString('siteSettingsEthereumBlock')}"
-              allow-option-label=
-                "${loadTimeData.getString('siteSettingsEthereumAsk')}"
-              allow-option-icon="ethereum-on"
-              block-option-icon="ethereum-off">
-          </settings-category-default-radio-group>
-          <category-setting-exceptions
-            id="ethereumExceptions"
-            category="[[contentSettingsTypesEnum_.ETHEREUM]]"
-            block-header="${loadTimeData.getString('siteSettingsBlock')}"
-            allow-header="${loadTimeData.getString('siteSettingsAllow')}"
-            read-only-list>
-          </category-setting-exceptions>
-        </settings-subpage>
-      </template>
-    `)
-}
-
-function InsertSolanaSubpage (pages: Element)
-{
-  pages.appendChild(
-    html`
-      <template is="dom-if" route-path="/content/solana" no-search>
-        <settings-subpage
-          associated-control="[[$$('#solana')]]"
-          page-title="${loadTimeData.getString('siteSettingsSolana')}">
-          <settings-category-default-radio-group
-              id="solanaDefault"
-              category="[[contentSettingsTypesEnum_.SOLANA]]"
-              block-option-label=
-                "${loadTimeData.getString('siteSettingsSolanaBlock')}"
-              allow-option-label=
-                "${loadTimeData.getString('siteSettingsSolanaAsk')}"
-              allow-option-icon="solana-on"
-              block-option-icon="solana-off">
-          </settings-category-default-radio-group>
-          <category-setting-exceptions
-            id="solanaExceptions"
-            category="[[contentSettingsTypesEnum_.SOLANA]]"
-            block-header="${loadTimeData.getString('siteSettingsBlock')}"
-            allow-header="${loadTimeData.getString('siteSettingsAllow')}"
-            read-only-list>
-          </category-setting-exceptions>
-        </settings-subpage>
-      </template>
-    `)
-}
-
 function InsertShieldsSubpage (pages: Element)
 {
   pages.appendChild(
@@ -209,12 +149,6 @@ RegisterPolymerTemplateModifications({
         InsertLocalhostAccessSubpage(pages)
       }
       InsertAutoplaySubpage(pages)
-      const isNativeBraveWalletEnabled =
-        loadTimeData.getBoolean('isNativeBraveWalletFeatureEnabled')
-      if (isNativeBraveWalletEnabled) {
-        InsertEthereumSubpage(pages)
-        InsertSolanaSubpage(pages)
-      }
       InsertShieldsSubpage(pages)
       const permissionsLinkRow =
         templateContent.getElementById('permissionsLinkRow')
