@@ -3,6 +3,14 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at https://mozilla.org/MPL/2.0/.
+
+# [VPYTHON:BEGIN]
+# wheel: <
+#   name: "infra/python/wheels/lxml/${vpython_platform}"
+#   version: "version:4.9.3"
+# >
+# [VPYTHON:END]
+
 """Rebrands UI strings from Brave to FlyWeb in every translated .grd/.grdp
 and keeps their .xtb translations attached.
 
