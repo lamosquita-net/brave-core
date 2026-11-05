@@ -5,7 +5,6 @@
 
 #include "brave/browser/ui/webui/navigation_bar_data_provider.h"
 
-#include "brave/browser/brave_wallet/brave_wallet_context_utils.h"
 #include "brave/grit/brave_generated_resources.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/grit/generated_resources.h"
@@ -27,6 +26,4 @@ void NavigationBarDataProvider::Initialize(content::WebUIDataSource* source,
 
   // FlyWeb: Brave Rewards is removed from the build.
   source->AddBoolean("brToolbarShowRewardsButton", false);
-  source->AddBoolean("isBraveWalletAllowed",
-                     brave_wallet::IsAllowedForContext(profile));
 }

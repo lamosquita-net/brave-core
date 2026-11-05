@@ -20,14 +20,10 @@
 #include "brave/browser/brave_browser_main_extra_parts.h"
 #include "brave/browser/brave_browser_process.h"
 #include "brave/browser/brave_shields/brave_shields_web_contents_observer.h"
-#include "brave/browser/brave_wallet/brave_wallet_context_utils.h"
-#include "brave/browser/brave_wallet/brave_wallet_provider_delegate_impl.h"
-#include "brave/browser/brave_wallet/brave_wallet_service_factory.h"
 #include "brave/browser/debounce/debounce_service_factory.h"
 #include "brave/browser/ephemeral_storage/ephemeral_storage_service_factory.h"
 #include "brave/browser/flyweb/declared_version.h"
 #include "brave/browser/ephemeral_storage/ephemeral_storage_tab_helper.h"
-#include "brave/browser/ethereum_remote_client/buildflags/buildflags.h"
 #include "brave/browser/net/brave_proxying_url_loader_factory.h"
 #include "brave/browser/net/brave_proxying_web_socket.h"
 #include "brave/browser/profiles/brave_renderer_updater.h"
@@ -47,13 +43,6 @@
 #include "brave/components/brave_shields/content/browser/domain_block_navigation_throttle.h"
 #include "brave/components/brave_shields/core/common/brave_shield_constants.h"
 #include "brave/components/brave_shields/core/common/features.h"
-#include "brave/components/brave_wallet/browser/brave_wallet_p3a_private.h"
-#include "brave/components/brave_wallet/browser/brave_wallet_service.h"
-#include "brave/components/brave_wallet/browser/brave_wallet_utils.h"
-#include "brave/components/brave_wallet/browser/ethereum_provider_impl.h"
-#include "brave/components/brave_wallet/browser/solana_provider_impl.h"
-#include "brave/components/brave_wallet/common/brave_wallet.mojom.h"
-#include "brave/components/brave_wallet/common/common_utils.h"
 #include "brave/components/brave_webtorrent/browser/buildflags/buildflags.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/constants/webui_url_constants.h"
@@ -61,7 +50,6 @@
 #include "brave/components/cosmetic_filters/common/cosmetic_filters.mojom.h"
 #include "brave/components/de_amp/browser/de_amp_body_handler.h"
 #include "brave/components/debounce/content/browser/debounce_navigation_throttle.h"
-#include "brave/components/decentralized_dns/content/decentralized_dns_navigation_throttle.h"
 #include "brave/components/google_sign_in_permission/google_sign_in_permission_throttle.h"
 #include "brave/components/google_sign_in_permission/google_sign_in_permission_util.h"
 #include "brave/components/playlist/common/buildflags/buildflags.h"
@@ -168,24 +156,12 @@ using extensions::ChromeContentBrowserClientExtensionsPart;
 #include "brave/browser/brave_drm_tab_helper.h"
 #endif
 
-#if BUILDFLAG(ETHEREUM_REMOTE_CLIENT_ENABLED)
-#include "brave/browser/ethereum_remote_client/ethereum_remote_client_constants.h"
-#include "brave/browser/ethereum_remote_client/ethereum_remote_client_service.h"
-#include "brave/browser/ethereum_remote_client/ethereum_remote_client_service_factory.h"
-#endif
-
-#if BUILDFLAG(IS_ANDROID)
-#include "brave/browser/ui/webui/brave_wallet/android/android_wallet_page_ui.h"
-#endif  // BUILDFLAG(IS_ANDROID)
-
 #if !BUILDFLAG(IS_ANDROID)
 #include "brave/browser/new_tab/new_tab_shows_navigation_throttle.h"
 #include "brave/browser/ui/geolocation/brave_geolocation_permission_tab_helper.h"
 #include "brave/browser/ui/webui/brave_settings_ui.h"
 #include "brave/browser/ui/webui/brave_shields/cookie_list_opt_in_ui.h"
 #include "brave/browser/ui/webui/brave_shields/shields_panel_ui.h"
-#include "brave/browser/ui/webui/brave_wallet/wallet_page_ui.h"
-#include "brave/browser/ui/webui/brave_wallet/wallet_panel_ui.h"
 #include "brave/browser/ui/webui/new_tab_page/brave_new_tab_ui.h"
 #include "brave/browser/ui/webui/private_new_tab_page/brave_private_new_tab_ui.h"
 #include "brave/components/brave_new_tab_ui/brave_new_tab_page.mojom.h"
@@ -281,82 +257,6 @@ void BindCosmeticFiltersResources(
   g_brave_browser_process->ad_block_service()->GetTaskRunner()->PostTask(
       FROM_HERE, base::BindOnce(&BindCosmeticFiltersResourcesOnTaskRunner,
                                 std::move(receiver)));
-}
-
-void MaybeBindWalletP3A(
-    content::RenderFrameHost* const frame_host,
-    mojo::PendingReceiver<brave_wallet::mojom::BraveWalletP3A> receiver) {
-  auto* context = frame_host->GetBrowserContext();
-  if (brave_wallet::IsAllowedForContext(frame_host->GetBrowserContext())) {
-    brave_wallet::BraveWalletService* wallet_service =
-        brave_wallet::BraveWalletServiceFactory::GetServiceForContext(context);
-    DCHECK(wallet_service);
-    wallet_service->GetBraveWalletP3A()->Bind(std::move(receiver));
-  } else {
-    // Dummy API to avoid reporting P3A for OTR contexts
-    mojo::MakeSelfOwnedReceiver(
-        std::make_unique<brave_wallet::BraveWalletP3APrivate>(),
-        std::move(receiver));
-  }
-}
-
-void MaybeBindEthereumProvider(
-    content::RenderFrameHost* const frame_host,
-    mojo::PendingReceiver<brave_wallet::mojom::EthereumProvider> receiver) {
-  auto* brave_wallet_service =
-      brave_wallet::BraveWalletServiceFactory::GetServiceForContext(
-          frame_host->GetBrowserContext());
-  if (!brave_wallet_service) {
-    return;
-  }
-
-  content::WebContents* web_contents =
-      content::WebContents::FromRenderFrameHost(frame_host);
-  mojo::MakeSelfOwnedReceiver(
-      std::make_unique<brave_wallet::EthereumProviderImpl>(
-          HostContentSettingsMapFactory::GetForProfile(
-              Profile::FromBrowserContext(frame_host->GetBrowserContext())),
-          brave_wallet_service,
-          std::make_unique<brave_wallet::BraveWalletProviderDelegateImpl>(
-              web_contents, frame_host),
-          user_prefs::UserPrefs::Get(web_contents->GetBrowserContext())),
-      std::move(receiver));
-}
-
-void MaybeBindSolanaProvider(
-    content::RenderFrameHost* const frame_host,
-    mojo::PendingReceiver<brave_wallet::mojom::SolanaProvider> receiver) {
-  auto* brave_wallet_service =
-      brave_wallet::BraveWalletServiceFactory::GetServiceForContext(
-          frame_host->GetBrowserContext());
-  if (!brave_wallet_service) {
-    return;
-  }
-
-  auto* json_rpc_service = brave_wallet_service->json_rpc_service();
-  CHECK(json_rpc_service);
-
-  auto* keyring_service = brave_wallet_service->keyring_service();
-  CHECK(keyring_service);
-
-  auto* tx_service = brave_wallet_service->tx_service();
-  CHECK(tx_service);
-
-  auto* host_content_settings_map =
-      HostContentSettingsMapFactory::GetForProfile(
-          frame_host->GetBrowserContext());
-  if (!host_content_settings_map) {
-    return;
-  }
-
-  content::WebContents* web_contents =
-      content::WebContents::FromRenderFrameHost(frame_host);
-  mojo::MakeSelfOwnedReceiver(
-      std::make_unique<brave_wallet::SolanaProviderImpl>(
-          *host_content_settings_map, brave_wallet_service,
-          std::make_unique<brave_wallet::BraveWalletProviderDelegateImpl>(
-              web_contents, frame_host)),
-      std::move(receiver));
 }
 
 void BindBraveSearchFallbackHost(
@@ -648,28 +548,7 @@ void BraveContentBrowserClient::RegisterBrowserInterfaceBindersForFrame(
         base::BindRepeating(&BindBraveSearchDefaultHost));
   }
 
-  map->Add<brave_wallet::mojom::BraveWalletP3A>(
-      base::BindRepeating(&MaybeBindWalletP3A));
-  if (brave_wallet::IsAllowedForContext(
-          render_frame_host->GetBrowserContext())) {
-    if (brave_wallet::IsNativeWalletEnabled()) {
-      map->Add<brave_wallet::mojom::EthereumProvider>(
-          base::BindRepeating(&MaybeBindEthereumProvider));
-      map->Add<brave_wallet::mojom::SolanaProvider>(
-          base::BindRepeating(&MaybeBindSolanaProvider));
-    }
-  }
-
-#if BUILDFLAG(IS_ANDROID)
-  content::RegisterWebUIControllerInterfaceBinder<
-      brave_wallet::mojom::PageHandlerFactory, AndroidWalletPageUI>(map);
-#endif
-
 #if !BUILDFLAG(IS_ANDROID)
-  content::RegisterWebUIControllerInterfaceBinder<
-      brave_wallet::mojom::PageHandlerFactory, WalletPageUI>(map);
-  content::RegisterWebUIControllerInterfaceBinder<
-      brave_wallet::mojom::PanelHandlerFactory, WalletPanelUI>(map);
   content::RegisterWebUIControllerInterfaceBinder<
       brave_private_new_tab::mojom::PageHandler, BravePrivateNewTabUI>(map);
   content::RegisterWebUIControllerInterfaceBinder<
@@ -972,28 +851,6 @@ bool BraveContentBrowserClient::HandleURLOverrideRewrite(
     return true;
   }
 
-#if BUILDFLAG(ETHEREUM_REMOTE_CLIENT_ENABLED) && BUILDFLAG(ENABLE_EXTENSIONS)
-  auto* prefs = user_prefs::UserPrefs::Get(browser_context);
-  brave_wallet::mojom::DefaultWallet default_wallet =
-      brave_wallet::GetDefaultEthereumWallet(prefs);
-  if (!brave_wallet::IsNativeWalletEnabled() ||
-      default_wallet == brave_wallet::mojom::DefaultWallet::CryptoWallets) {
-    // If the Crypto Wallets extension is loaded, then it replaces the WebUI
-    auto* service =
-        EthereumRemoteClientServiceFactory::GetForContext(browser_context);
-    if (service->IsCryptoWalletsReady() &&
-        url->SchemeIs(content::kChromeUIScheme) &&
-        url->host() == kEthereumRemoteClientHost) {
-      auto* registry = extensions::ExtensionRegistry::Get(browser_context);
-      if (registry && registry->ready_extensions().GetByID(
-                          kEthereumRemoteClientExtensionId)) {
-        *url = GURL(kEthereumRemoteClientBaseUrl);
-        return true;
-      }
-    }
-  }
-#endif
-
   return false;
 }
 
@@ -1035,15 +892,6 @@ BraveContentBrowserClient::CreateThrottlesForNavigation(
     throttles.push_back(std::move(onion_location_navigation_throttle));
   }
 #endif
-
-  std::unique_ptr<content::NavigationThrottle>
-      decentralized_dns_navigation_throttle =
-          decentralized_dns::DecentralizedDnsNavigationThrottle::
-              MaybeCreateThrottleFor(handle, g_browser_process->local_state(),
-                                     g_browser_process->GetApplicationLocale());
-  if (decentralized_dns_navigation_throttle) {
-    throttles.push_back(std::move(decentralized_dns_navigation_throttle));
-  }
 
   // Debounce
   if (auto debounce_throttle =

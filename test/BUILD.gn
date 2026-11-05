@@ -4,7 +4,6 @@
 # You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import("//brave/android/android_browser_tests.gni")
-import("//brave/browser/ethereum_remote_client/buildflags/buildflags.gni")
 import("//brave/browser/metrics/buildflags/buildflags.gni")
 import("//brave/build/config.gni")
 import("//brave/components/brave_wayback_machine/buildflags/buildflags.gni")
@@ -149,12 +148,8 @@ test("brave_unit_tests") {
     "//brave/brave_domains:unit_tests",
     "//brave/browser",
     "//brave/browser:unit_tests",
-    "//brave/browser/brave_wallet",
-    "//brave/browser/brave_wallet:unit_tests",
     "//brave/browser/content_settings:unit_tests",
-    "//brave/browser/decentralized_dns/test:unit_tests",
     "//brave/browser/ephemeral_storage:unit_tests",
-    "//brave/browser/ethereum_remote_client/buildflags",
     "//brave/browser/first_run:unit_tests",
     "//brave/browser/metrics:brave_metrics_unit_tests",
     "//brave/browser/net:unit_tests",
@@ -189,14 +184,6 @@ test("brave_unit_tests") {
     "//brave/components/brave_sync:crypto",
     "//brave/components/brave_sync:network_time_helper",
     "//brave/components/brave_sync:unit_tests",
-    "//brave/components/brave_wallet/browser",
-    "//brave/components/brave_wallet/browser:constants",
-    "//brave/components/brave_wallet/browser:pref_names",
-    "//brave/components/brave_wallet/browser/test:brave_wallet_unit_tests",
-    "//brave/components/brave_wallet/common",
-    "//brave/components/brave_wallet/common:mojom",
-    "//brave/components/brave_wallet/common:unit_tests",
-    "//brave/components/brave_wallet/renderer/test:unit_tests",
     "//brave/components/child_process_monitor:unittests",
     "//brave/components/constants",
     "//brave/components/de_amp/browser/test:unit_tests",
@@ -219,7 +206,6 @@ test("brave_unit_tests") {
     "//brave/components/request_otr/browser:unit_tests",
     "//brave/components/resources:strings_grit",
     "//brave/components/search_engines:unit_tests",
-    "//brave/components/services/brave_wallet/zcash:zcash_decoder_unit_tests",
     "//brave/components/sessions/content:unit_tests",
     "//brave/components/signin/public/identity_manager:unit_tests",
     "//brave/components/sync/engine:unit_tests",
@@ -336,9 +322,6 @@ test("brave_unit_tests") {
       "//brave/browser/ui/views/accelerator_table_unittest.cc",
       "//brave/browser/ui/views/bookmarks/brave_bookmark_context_menu_unittest.cc",
       "//brave/browser/ui/views/frame/brave_contents_layout_manager_unittest.cc",
-      "//brave/browser/ui/views/wallet_bubble_focus_observer_unittest.cc",
-      "//brave/browser/ui/webui/brave_wallet/wallet_common_ui_unittest.cc",
-      "//brave/browser/ui/webui/settings/brave_wallet_handler_unittest.cc",
       "//brave/chromium_src/chrome/browser/devtools/url_constants_unittest.cc",
       "//brave/chromium_src/chrome/browser/profiles/profile_avatar_icon_util_unittest.cc",
       "//chrome/browser/push_messaging/push_messaging_app_identifier_unittest.cc",
@@ -375,9 +358,6 @@ test("brave_unit_tests") {
       "//brave/browser/ui/webui/settings:unittests",
       "//brave/browser/ui/whats_new:unit_test",
       "//brave/components/brave_shields/core/common:mojom",
-      "//brave/components/brave_wallet/browser:pref_names",
-      "//brave/components/brave_wallet/browser:utils",
-      "//brave/components/brave_wallet/common:test_support",
       "//brave/components/commands/browser:unit_tests",
       "//brave/components/commands/common:unit_tests",
       "//brave/ui/views:unit_tests",
@@ -489,12 +469,6 @@ test("brave_unit_tests") {
       "//extensions/browser:test_support",
       "//url",
     ]
-  }
-
-  if (ethereum_remote_client_enabled) {
-    sources +=
-        [ "//brave/browser/extensions/ethereum_remote_client_unittest.cc" ]
-    deps += [ "//brave/browser/ethereum_remote_client" ]
   }
 
   if (enable_brave_wayback_machine) {
@@ -675,16 +649,6 @@ test("brave_browser_tests") {
     "//brave/browser/brave_shields/eventsource_pool_limit_browsertest.cc",
     "//brave/browser/brave_shields/https_upgrade_browsertest.cc",
     "//brave/browser/brave_shields/websockets_pool_limit_browsertest.cc",
-    "//brave/browser/brave_wallet/brave_wallet_ethereum_chain_browsertest.cc",
-    "//brave/browser/brave_wallet/brave_wallet_event_emitter_browsertest.cc",
-    "//brave/browser/brave_wallet/brave_wallet_service_browsertest.cc",
-    "//brave/browser/brave_wallet/brave_wallet_sign_message_browsertest.cc",
-    "//brave/browser/brave_wallet/brave_wallet_tab_helper_browsertest.cc",
-    "//brave/browser/brave_wallet/ethereum_provider_browsertest.cc",
-    "//brave/browser/brave_wallet/send_or_sign_transaction_browsertest.cc",
-    "//brave/browser/brave_wallet/solana_provider_browsertest.cc",
-    "//brave/browser/brave_wallet/solana_provider_renderer_browsertest.cc",
-    "//brave/browser/brave_wallet/wallet_watch_asset_browsertest.cc",
     "//brave/browser/content_settings/brave_content_settings_browsertest.cc",
     "//brave/browser/debounce/debounce_browsertest.cc",
     "//brave/browser/extensions/api/brave_theme_api_browsertest.cc",
@@ -709,7 +673,6 @@ test("brave_browser_tests") {
     "//brave/browser/ui/brave_browser_command_controller_browsertest.cc",
     "//brave/browser/ui/content_settings/brave_autoplay_blocked_image_model_browsertest.cc",
     "//brave/browser/ui/toolbar/brave_app_menu_model_browsertest.cc",
-    "//brave/browser/ui/webui/brave_wallet/wallet_panel_ui_browsertest.cc",
     "//brave/browser/ui/webui/new_tab_page/brave_new_tab_ui_browsertest.cc",
     "//brave/browser/ui/webui/private_new_tab_page/brave_private_new_tab_page_browsertest.cc",
     "//brave/browser/ui/webui/welcome_page/brave_welcome_ui_browsertest.cc",
@@ -741,13 +704,8 @@ test("brave_browser_tests") {
     "//brave/app:command_ids",
     "//brave/browser",
     "//brave/browser/autoplay:browser_tests",
-    "//brave/browser/brave_wallet",
-    "//brave/browser/brave_wallet:browser_tests",
-    "//brave/browser/brave_wallet:tab_helper",
     "//brave/browser/browsing_data:browser_tests",
-    "//brave/browser/decentralized_dns/test:browser_tests",
     "//brave/browser/ephemeral_storage:browser_tests",
-    "//brave/browser/ethereum_remote_client/buildflags",
     "//brave/browser/extensions",
     "//brave/browser/extensions:test_support",
     "//brave/browser/farbling:browser_tests",
@@ -775,17 +733,6 @@ test("brave_browser_tests") {
     "//brave/components/brave_shields/core/browser",
     "//brave/components/brave_shields/core/common",
     "//brave/components/brave_sync:prefs",
-    "//brave/components/brave_wallet/browser",
-    "//brave/components/brave_wallet/browser:constants",
-    "//brave/components/brave_wallet/browser:permission_utils",
-    "//brave/components/brave_wallet/browser:pref_names",
-    "//brave/components/brave_wallet/browser:utils",
-    "//brave/components/brave_wallet/common",
-    "//brave/components/brave_wallet/common:common_constants",
-    "//brave/components/brave_wallet/common:mojom",
-    "//brave/components/brave_wallet/common:test_support",
-    "//brave/components/brave_wallet/renderer",
-    "//brave/components/brave_wallet/resources:ethereum_provider_generated_resources",
     "//brave/components/brave_wayback_machine/buildflags",
     "//brave/components/constants",
     "//brave/components/de_amp/browser/test:browser_tests",
@@ -900,19 +847,6 @@ test("brave_browser_tests") {
     sources += [ "//brave/browser/ui/views/crash_report_permission_ask_dialog_browsertest.cc" ]
   }
 
-  if (ethereum_remote_client_enabled) {
-    sources += [ "//brave/browser/extensions/brave_wallet_apitest.cc" ]
-
-    deps += [
-      "//brave/browser/brave_wallet",
-      "//brave/browser/ethereum_remote_client",
-      "//brave/components/brave_wallet/common",
-      "//brave/components/brave_wallet/common:mojom",
-      "//components/infobars/content",
-      "//components/infobars/core",
-    ]
-  }
-
   if (enable_brave_wayback_machine) {
     sources += [ "//brave/components/brave_wayback_machine/brave_wayback_machine_browsertest.cc" ]
     deps += [ "//brave/components/brave_wayback_machine" ]
@@ -967,7 +901,6 @@ test("brave_browser_tests") {
       "//brave/browser/ui/views/tabs/vertical_tab_strip_browsertest.cc",
       "//brave/browser/ui/views/toolbar/brave_app_menu_browsertest.cc",
       "//brave/browser/ui/views/toolbar/brave_toolbar_view_browsertest.cc",
-      "//brave/browser/ui/views/toolbar/wallet_button_browsertest.cc",
     ]
     deps += [
       "//brave/browser/ui/sidebar:browser_tests",
@@ -983,7 +916,6 @@ test("brave_browser_tests") {
       "//brave/browser/brave_autofill_browsertest.cc",
       "//brave/browser/brave_resources_browsertest.cc",
       "//brave/browser/ssl/certificate_transparency_browsertest.cc",
-      "//brave/browser/ui/views/toolbar/wallet_button_notification_source_browsertest.cc",
     ]
     deps += [
       "//brave/app/theme:brave_theme_resources_grit",
@@ -992,7 +924,6 @@ test("brave_browser_tests") {
       "//brave/browser/ui/geolocation:browser_tests",
       "//brave/browser/ui/whats_new:browser_test",
       "//brave/browser/url_sanitizer:browser_tests",
-      "//brave/components/brave_wallet/browser:test_support",
       "//chrome/browser/apps/app_service:app_service",
       "//chrome/browser/apps/app_service:constants",
       "//chrome/browser/themes",

@@ -52,7 +52,6 @@ class SidebarBrowserTest;
 class BraveBrowser;
 class ContentsLayoutManager;
 class SidebarContainerView;
-class WalletButton;
 class ViewShadow;
 class VerticalTabStripWidgetDelegateView;
 class BraveHelpBubbleHostView;
@@ -70,11 +69,6 @@ class BraveBrowserView : public BrowserView,
 
   void SetStarredState(bool is_starred) override;
   void ShowUpdateChromeDialog() override;
-  void CreateWalletBubble();
-  void CreateApproveWalletBubble();
-  void CloseWalletBubble();
-  WalletButton* GetWalletButton();
-  views::View* GetWalletButtonAnchorView();
 
   // Triggers layout of web modal dialogs
   void NotifyDialogPositionRequiresUpdate();

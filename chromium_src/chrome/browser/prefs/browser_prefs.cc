@@ -11,10 +11,7 @@
 #include "brave/components/brave_search_conversion/p3a.h"
 #include "brave/components/brave_shields/content/browser/brave_shields_p3a.h"
 #include "brave/components/brave_sync/brave_sync_prefs.h"
-#include "brave/components/brave_wallet/browser/brave_wallet_prefs.h"
-#include "brave/components/brave_wallet/browser/keyring_service.h"
 #include "brave/components/constants/pref_names.h"
-#include "brave/components/decentralized_dns/core/utils.h"
 #include "brave/components/ntp_background_images/browser/view_counter_service.h"
 #include "brave/components/ntp_background_images/buildflags/buildflags.h"
 #include "brave/components/omnibox/browser/brave_omnibox_prefs.h"
@@ -97,8 +94,6 @@ void MigrateObsoleteProfilePrefs(PrefService* profile_prefs,
   profile_prefs->ClearPref(kBraveSearchVisitCount);
 #endif
 
-  brave_wallet::MigrateObsoleteProfilePrefs(profile_prefs);
-
   // Added 07/2021
   profile_prefs->ClearPref(prefs::kNetworkPredictionOptions);
 
@@ -173,8 +168,6 @@ void MigrateObsoleteLocalStatePrefs(PrefService* local_state) {
   // Added 4/2021.
   tor::MigrateLastUsedProfileFromLocalStatePrefs(local_state);
 #endif
-
-  decentralized_dns::MigrateObsoleteLocalStatePrefs(local_state);
 
 #if !BUILDFLAG(IS_ANDROID)
   // Added 10/2022

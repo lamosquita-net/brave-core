@@ -13,7 +13,6 @@
 #include "base/path_service.h"
 #include "base/task/thread_pool.h"
 #include "brave/browser/brave_shields/ad_block_subscription_download_manager_getter.h"
-#include "brave/browser/brave_wallet/wallet_data_files_installer_delegate_impl.h"
 #include "brave/browser/component_updater/brave_component_updater_configurator.h"
 #include "brave/browser/net/brave_system_request_handler.h"
 #include "brave/browser/profiles/brave_profile_manager.h"
@@ -26,7 +25,6 @@
 #include "brave/components/brave_shields/content/browser/brave_farbling_service.h"
 #include "brave/components/brave_shields/core/common/features.h"
 #include "brave/components/brave_sync/network_time_helper.h"
-#include "brave/components/brave_wallet/browser/wallet_data_files_installer.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/debounce/core/browser/debounce_component_installer.h"
 #include "brave/components/debounce/core/common/features.h"
@@ -188,9 +186,6 @@ void BraveBrowserProcessImpl::StartBraveServices() {
 
   brave_sync::NetworkTimeHelper::GetInstance()->SetNetworkTimeTracker(
       g_browser_process->network_time_tracker());
-
-  brave_wallet::WalletDataFilesInstaller::GetInstance().SetDelegate(
-      std::make_unique<brave_wallet::WalletDataFilesInstallerDelegateImpl>());
 }
 
 brave_shields::AdBlockService* BraveBrowserProcessImpl::ad_block_service() {

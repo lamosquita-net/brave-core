@@ -11,10 +11,8 @@
 #include "base/feature_list.h"
 #include "base/memory/ptr_util.h"
 #include "base/no_destructor.h"
-#include "brave/browser/ethereum_remote_client/buildflags/buildflags.h"
 #include "brave/browser/ui/webui/brave_adblock_internals_ui.h"
 #include "brave/browser/ui/webui/brave_adblock_ui.h"
-#include "brave/components/brave_wallet/common/common_utils.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/constants/webui_url_constants.h"
 #include "brave/components/playlist/common/buildflags/buildflags.h"
@@ -30,26 +28,11 @@
 #include "url/gurl.h"
 
 #if !BUILDFLAG(IS_ANDROID)
-#include "brave/browser/brave_wallet/brave_wallet_context_utils.h"
 #include "brave/browser/ui/webui/brave_settings_ui.h"
-#include "brave/browser/ui/webui/brave_wallet/wallet_page_ui.h"
 #include "brave/browser/ui/webui/new_tab_page/brave_new_tab_ui.h"
 #include "brave/browser/ui/webui/private_new_tab_page/brave_private_new_tab_ui.h"
 #include "brave/browser/ui/webui/welcome_page/brave_welcome_ui.h"
-#include "brave/components/brave_wallet/browser/brave_wallet_utils.h"
-#include "brave/components/brave_wallet/common/brave_wallet.mojom.h"
 #include "brave/components/commands/common/features.h"
-#endif
-
-#if BUILDFLAG(IS_ANDROID)
-#include "brave/browser/brave_wallet/brave_wallet_service_factory.h"
-#include "brave/browser/ui/webui/brave_wallet/android/android_wallet_page_ui.h"
-#include "brave/components/brave_wallet/browser/brave_wallet_service.h"
-#include "brave/components/brave_wallet/browser/keyring_service.h"
-#endif
-
-#if BUILDFLAG(ETHEREUM_REMOTE_CLIENT_ENABLED)
-#include "brave/browser/ui/webui/ethereum_remote_client/ethereum_remote_client_ui.h"
 #endif
 
 #if BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
@@ -79,21 +62,6 @@ WebUIController* NewWebUI(WebUI* web_ui, const GURL& url) {
   } else if (host == kAdblockInternalsHost) {
     return new BraveAdblockInternalsUI(web_ui, url.host());
 #if !BUILDFLAG(IS_ANDROID)
-  } else if (host == kWalletPageHost &&
-             brave_wallet::IsAllowedForContext(profile)) {
-    if (brave_wallet::IsNativeWalletEnabled()) {
-      auto default_wallet =
-          brave_wallet::GetDefaultEthereumWallet(profile->GetPrefs());
-      if (default_wallet == brave_wallet::mojom::DefaultWallet::CryptoWallets) {
-        return new EthereumRemoteClientUI(web_ui, url.host());
-      }
-      return new WalletPageUI(web_ui);
-    }
-#if BUILDFLAG(ETHEREUM_REMOTE_CLIENT_ENABLED)
-    return new EthereumRemoteClientUI(web_ui, url.host());
-#endif
-#endif  // !BUILDFLAG(OS_ANDROID)
-#if !BUILDFLAG(IS_ANDROID)
   } else if (host == kWelcomeHost && !profile->IsGuestSession()) {
     return new BraveWelcomeUI(web_ui, url.host());
   } else if (host == chrome::kChromeUISettingsHost) {
@@ -108,10 +76,6 @@ WebUIController* NewWebUI(WebUI* web_ui, const GURL& url) {
 #if BUILDFLAG(ENABLE_TOR)
   } else if (host == kTorInternalsHost) {
     return new TorInternalsUI(web_ui, url.host());
-#endif
-#if BUILDFLAG(IS_ANDROID)
-  } else if (url.is_valid() && url.host() == kWalletPageHost) {
-    return new AndroidWalletPageUI(web_ui, url);
 #endif
   }
 
@@ -136,11 +100,7 @@ WebUIFactoryFunction GetWebUIFactoryFunction(WebUI* web_ui,
 
   if (url.host_piece() == kAdblockHost ||
       url.host_piece() == kAdblockInternalsHost ||
-#if BUILDFLAG(IS_ANDROID)
-      (url.is_valid() && url.host_piece() == kWalletPageHost) ||
-#else
-      (url.host_piece() == kWalletPageHost &&
-       brave_wallet::IsAllowedForContext(profile)) ||
+#if !BUILDFLAG(IS_ANDROID)
       // On Android New Tab is a native page implemented in Java, so no need
       // in WebUI.
       url.host_piece() == chrome::kChromeUINewTabHost ||
@@ -160,37 +120,11 @@ WebUIFactoryFunction GetWebUIFactoryFunction(WebUI* web_ui,
   return nullptr;
 }
 
-#if BUILDFLAG(IS_ANDROID)
-bool ShouldBlockWalletWebUI(content::BrowserContext* browser_context,
-                            const GURL& url) {
-  if (!url.is_valid() || url.host() != kWalletPageHost) {
-    return false;
-  }
-  Profile* profile = Profile::FromBrowserContext(browser_context);
-  if (!profile) {
-    return false;
-  }
-  auto* brave_wallet_service =
-      brave_wallet::BraveWalletServiceFactory::GetServiceForContext(profile);
-  if (!brave_wallet_service) {
-    return true;
-  }
-  // Support to unlock Wallet has been extended also through WebUI,
-  // so we block only when Wallet hasn't been created yet, as onboarding
-  // is offered only via native Andrioid UI.
-  return !brave_wallet_service->keyring_service()->IsWalletCreatedSync();
-}
-#endif  // BUILDFLAG(IS_ANDROID)
 }  // namespace
 
 WebUI::TypeID BraveWebUIControllerFactory::GetWebUIType(
     content::BrowserContext* browser_context,
     const GURL& url) {
-#if BUILDFLAG(IS_ANDROID)
-  if (ShouldBlockWalletWebUI(browser_context, url)) {
-    return WebUI::kNoWebUI;
-  }
-#endif  // BUILDFLAG(IS_ANDROID)
 #if BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
   if (playlist::PlaylistUI::ShouldBlockPlaylistWebUI(browser_context, url)) {
     return WebUI::kNoWebUI;

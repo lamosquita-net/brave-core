@@ -165,25 +165,6 @@ void MaybeDistillAndShowSpeedreaderBubble(Browser* browser) {
 #endif  // BUILDFLAG(ENABLE_SPEEDREADER)
 }
 
-void ShowWalletBubble(Browser* browser) {
-#if defined(TOOLKIT_VIEWS)
-  static_cast<BraveBrowserView*>(browser->window())->CreateWalletBubble();
-#endif
-}
-
-void ShowApproveWalletBubble(Browser* browser) {
-#if defined(TOOLKIT_VIEWS)
-  static_cast<BraveBrowserView*>(browser->window())
-      ->CreateApproveWalletBubble();
-#endif
-}
-
-void CloseWalletBubble(Browser* browser) {
-#if defined(TOOLKIT_VIEWS)
-  static_cast<BraveBrowserView*>(browser->window())->CloseWalletBubble();
-#endif
-}
-
 void CopySanitizedURL(Browser* browser, const GURL& url) {
   if (!browser || !browser->profile()) {
     return;

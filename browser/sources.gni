@@ -5,13 +5,10 @@
 
 import("//brave/browser/autocomplete/sources.gni")
 import("//brave/browser/brave_shields/sources.gni")
-import("//brave/browser/brave_wallet/android/sources.gni")
-import("//brave/browser/brave_wallet/notifications/sources.gni")
 import("//brave/browser/browsing_data/sources.gni")
 import("//brave/browser/debounce/sources.gni")
 import("//brave/browser/download/sources.gni")
 import("//brave/browser/ephemeral_storage/sources.gni")
-import("//brave/browser/ethereum_remote_client/buildflags/buildflags.gni")
 import("//brave/browser/gcm_driver/sources.gni")
 import("//brave/browser/importer/sources.gni")
 import("//brave/browser/infobars/sources.gni")
@@ -78,8 +75,6 @@ brave_chrome_browser_sources = [
   "//brave/browser/brave_tab_helpers.h",
   "//brave/browser/flyweb/declared_version.cc",
   "//brave/browser/flyweb/declared_version.h",
-  "//brave/browser/brave_wallet/wallet_data_files_installer_delegate_impl.cc",
-  "//brave/browser/brave_wallet/wallet_data_files_installer_delegate_impl.h",
   "//brave/browser/browser_context_keyed_service_factories.cc",
   "//brave/browser/browser_context_keyed_service_factories.h",
   "//brave/browser/geolocation/brave_geolocation_permission_context_delegate.cc",
@@ -105,11 +100,7 @@ brave_chrome_browser_deps = [
   "//brave/app:brave_generated_resources_grit",
   "//brave/browser:browser_process",
   "//brave/browser:sparkle_buildflags",
-  "//brave/browser/brave_wallet",
-  "//brave/browser/brave_wallet:brave_wallet_delegate",
-  "//brave/browser/brave_wallet:tab_helper",
   "//brave/browser/component_updater",
-  "//brave/browser/ethereum_remote_client/buildflags",
   "//brave/browser/metrics/buildflags",
   "//brave/browser/profiles",
   "//brave/browser/search",
@@ -132,11 +123,6 @@ brave_chrome_browser_deps = [
   "//brave/components/brave_sync:features",
   "//brave/components/brave_sync:network_time_helper",
   "//brave/components/brave_sync:prefs",
-  "//brave/components/brave_wallet/browser",
-  "//brave/components/brave_wallet/browser:utils",
-  "//brave/components/brave_wallet/common",
-  "//brave/components/brave_wallet/common:mojom",
-  "//brave/components/brave_wallet/common:pref_names",
   "//brave/components/brave_wayback_machine/buildflags",
   "//brave/components/brave_webtorrent/browser/buildflags",
   "//brave/components/commander/common/buildflags",
@@ -146,8 +132,6 @@ brave_chrome_browser_deps = [
   "//brave/components/de_amp/browser",
   "//brave/components/de_amp/common",
   "//brave/components/debounce/content/browser",
-  "//brave/components/decentralized_dns/content",
-  "//brave/components/decentralized_dns/core",
   "//brave/components/google_sign_in_permission",
   "//brave/components/https_upgrade_exceptions/browser",
   "//brave/components/l10n/common",
@@ -260,13 +244,6 @@ if (enable_speedreader) {
 
 if (enable_request_otr) {
   brave_chrome_browser_deps += [ "//brave/components/request_otr/common" ]
-}
-
-if (ethereum_remote_client_enabled) {
-  brave_chrome_browser_deps += [
-    "//brave/browser/ethereum_remote_client",
-    "//brave/browser/ethereum_remote_client:browser",
-  ]
 }
 
 if (is_android) {
@@ -387,7 +364,6 @@ if (is_mac) {
 
 brave_chrome_browser_sources += brave_browser_autocomplete_sources
 brave_chrome_browser_sources += brave_browser_brave_shields_sources
-brave_chrome_browser_sources += brave_browser_brave_wallet_sources
 brave_chrome_browser_sources += brave_browser_browsing_data_sources
 brave_chrome_browser_sources += brave_browser_debounce_sources
 brave_chrome_browser_sources += brave_browser_download_sources
@@ -413,7 +389,6 @@ brave_chrome_browser_sources += brave_browser_url_sanitizer_sources
 
 brave_chrome_browser_deps += brave_browser_autocomplete_deps
 brave_chrome_browser_deps += brave_browser_brave_shields_deps
-brave_chrome_browser_deps += brave_browser_brave_wallet_deps
 brave_chrome_browser_deps += brave_browser_browsing_data_deps
 brave_chrome_browser_deps += brave_browser_debounce_deps
 brave_chrome_browser_deps += brave_browser_download_deps
