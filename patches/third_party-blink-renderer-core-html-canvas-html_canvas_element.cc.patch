@@ -1,21 +1,8 @@
 diff --git a/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc b/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc
-index 63c943727517aff4d0264a993dc30fc0e2bed7c9..d590384976678e644e2ab206a7d5809442367596 100644
+index 2a5404e4cf7c111f20515886466bc45610d6a5b6..7816a08d266a06da9ecabc0d1405f914245750c6 100644
 --- a/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc
 +++ b/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc
-@@ -242,8 +242,10 @@ HTMLCanvasElement::HTMLCanvasElement(Document& document)
- }
- 
- HTMLCanvasElement::~HTMLCanvasElement() {
--  v8::Isolate::GetCurrent()->AdjustAmountOfExternalAllocatedMemory(
--      -externally_allocated_memory_);
-+  if (externally_allocated_memory_ > 0) {
-+    external_memory_accounter_.Decrease(v8::Isolate::GetCurrent(),
-+                                        externally_allocated_memory_);
-+  }
- }
- 
- void HTMLCanvasElement::Dispose() {
-@@ -1140,6 +1142,7 @@ String HTMLCanvasElement::ToDataURLInternal(
+@@ -1464,6 +1464,7 @@ String HTMLCanvasElement::ToDataURLInternal(
      if (!data_buffer)
        return String("data:,");
  
@@ -23,75 +10,3 @@ index 63c943727517aff4d0264a993dc30fc0e2bed7c9..d590384976678e644e2ab206a7d58094
      String data_url = data_buffer->ToDataURL(encoding_mime_type, quality);
      base::TimeDelta elapsed_time = base::TimeTicks::Now() - start_time;
      float sqrt_pixels =
-@@ -1536,6 +1539,13 @@ void HTMLCanvasElement::LayoutObjectDestroyed() {
-   SetIsDisplayed(false);
- }
- 
-+void HTMLCanvasElement::LangAttributeChanged() {
-+  HTMLElement::LangAttributeChanged();
-+  if (context_) {
-+    context_->LangAttributeChanged();
-+  }
-+}
-+
- void HTMLCanvasElement::DidMoveToNewDocument(Document& old_document) {
-   SetExecutionContext(GetExecutionContext());
-   SetPage(GetDocument().GetPage());
-@@ -1738,6 +1748,47 @@ void HTMLCanvasElement::UnregisterContentsLayer(cc::Layer* layer) {
-   SetNeedsCompositingUpdate();
- }
- 
-+TextDirection HTMLCanvasElement::GetTextDirection(const ComputedStyle* style) {
-+  // In the absence of an explicit CSS direction property, the HTML dir
-+  // attribute has been pushed as the default style direction. So we fallback
-+  // to the HTML attribute if CSS has not provided a direction.
-+  if (!style) {
-+    GetDocument().UpdateStyleAndLayoutTreeForElement(
-+        this, DocumentUpdateReason::kCanvas);
-+    style = EnsureComputedStyle();
-+  }
-+  // Detached elements may still not have style.
-+  if (style) {
-+    return style->Direction();
-+  }
-+
-+  // In the absence of style, use the element's dir attribute to resolve the
-+  // direction. This value would have been pushed to the style had there been
-+  // a style.
-+  return CachedDirectionality();
-+}
-+
-+const LayoutLocale* HTMLCanvasElement::GetLocale() const {
-+  const AtomicString language = ComputeInheritedLanguage();
-+  if (!language.IsNull()) {
-+    return LayoutLocale::Get(language);
-+  }
-+
-+  // The computed language may be null if the element is disconnected and does
-+  // not have it's own language attribute. Fall back to the language of the
-+  // document from the execution context.
-+  if (const auto* window = DynamicTo<LocalDOMWindow>(GetExecutionContext())) {
-+    const Element* document_element = window->document()->documentElement();
-+    if (document_element) {
-+      return &LayoutLocale::ValueOrDefault(
-+          LayoutLocale::Get(document_element->ComputeInheritedLanguage()));
-+    }
-+  }
-+
-+  // If all else fails, return the default.
-+  return &LayoutLocale::GetDefault();
-+}
-+
- FontSelector* HTMLCanvasElement::GetFontSelector() {
-   return GetDocument().GetStyleEngine().GetFontSelector();
- }
-@@ -1806,8 +1857,7 @@ void HTMLCanvasElement::UpdateMemoryUsage() {
-     // AdjustAmountOfExternalAllocatedMemory is safe, hence the
-     // 'diposing_' condition in the DCHECK below.
-     DCHECK(ThreadState::Current()->IsAllocationAllowed() || disposing_);
--    v8::Isolate::GetCurrent()->AdjustAmountOfExternalAllocatedMemory(
--        delta_bytes);
-+    external_memory_accounter_.Update(v8::Isolate::GetCurrent(), delta_bytes);
-     externally_allocated_memory_ = externally_allocated_memory;
-   }
- }
