@@ -15,17 +15,16 @@ namespace {
 
 // Based on FromSchemeHostAndPort() from proxy_server.cc, but to consider auth
 // information when creating a ProxyServer, instead of bailing out.
-ProxyServer CreateProxyServerWithAuthInfo(
-    const ProxyServer::Scheme& scheme,
-    const std::string_view host_and_port) {
+ProxyServer CreateProxyServerWithAuthInfo(const ProxyServer::Scheme& scheme,
+                                          std::string_view host_and_port) {
   url::Component username_component;
   url::Component password_component;
   url::Component hostname_component;
   url::Component port_component;
-  url::ParseAuthority(host_and_port.data(),
-                      url::Component(0, host_and_port.size()),
-                      &username_component, &password_component,
-                      &hostname_component, &port_component);
+  url::ParseAuthority(host_and_port, url::Component(0, host_and_port.size()),
+                      url::ParserMode::kSpecialURL, &username_component,
+                      &password_component, &hostname_component,
+                      &port_component);
 
   std::string_view hostname =
       host_and_port.substr(hostname_component.begin, hostname_component.len);
@@ -79,14 +78,17 @@ std::string ProxyServerToPacResultElement_ChromiumImpl(
 #define ProxyServerToProxyUri ProxyServerToProxyUri_ChromiumImpl
 #define ProxyServerToPacResultElement ProxyServerToPacResultElement_ChromiumImpl
 
-#define ParseAuthority(HOST_AND_PORT, AUTH, USER, PASS, HOST, PORT)            \
-  ParseAuthority(host_and_port.data(),                                         \
-                 url::Component(0, host_and_port.size()), &username_component, \
-                 &password_component, &hostname_component, &port_component);   \
-  url::ParseAuthority(HOST_AND_PORT, AUTH, USER, PASS, HOST, PORT);            \
-  if (!hostname_component.is_nonempty())                                       \
-    return ProxyServer();                                                      \
-  else                                                                         \
+#define ParseAuthority(HOST_AND_PORT, AUTH, PARSER_MODE, USER, PASS, HOST, \
+                       PORT)                                               \
+  ParseAuthority(host_and_port.data(),                                     \
+                 url::Component(0, host_and_port.size()), PARSER_MODE,     \
+                 &username_component, &password_component,                 \
+                 &hostname_component, &port_component);                    \
+  url::ParseAuthority(HOST_AND_PORT, AUTH, PARSER_MODE, USER, PASS, HOST,  \
+                      PORT);                                               \
+  if (!hostname_component.is_nonempty())                                   \
+    return ProxyServer();                                                  \
+  else                                                                     \
     return CreateProxyServerWithAuthInfo(scheme, host_and_port);
 
 #include "src/net/base/proxy_string_util.cc"
