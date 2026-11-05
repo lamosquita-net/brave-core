@@ -16,8 +16,6 @@
 #include "brave/components/cosmetic_filters/renderer/cosmetic_filters_js_render_frame_observer.h"
 #include "brave/components/playlist/common/buildflags/buildflags.h"
 #include "brave/components/safe_builtins/renderer/safe_builtins.h"
-#include "brave/components/skus/common/features.h"
-#include "brave/components/skus/renderer/skus_render_frame_observer.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "brave/renderer/brave_render_thread_observer.h"
 #include "brave/renderer/brave_wallet/brave_wallet_render_frame_observer.h"
@@ -137,11 +135,6 @@ void BraveContentRendererClient::RenderFrameCreated(
   if (brave_search::IsDefaultAPIEnabled()) {
     new brave_search::BraveSearchRenderFrameObserver(
         render_frame, content::ISOLATED_WORLD_ID_GLOBAL);
-  }
-
-  if (base::FeatureList::IsEnabled(skus::features::kSkusFeature) &&
-      !ChromeRenderThreadObserver::is_incognito_process()) {
-    new skus::SkusRenderFrameObserver(render_frame);
   }
 
 #if BUILDFLAG(IS_ANDROID)
