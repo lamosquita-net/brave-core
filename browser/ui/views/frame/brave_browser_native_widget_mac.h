@@ -3,19 +3,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef BRAVE_BROWSER_UI_VIEWS_FRAME_BRAVE_BROWSER_FRAME_MAC_H_
-#define BRAVE_BROWSER_UI_VIEWS_FRAME_BRAVE_BROWSER_FRAME_MAC_H_
+#ifndef BRAVE_BROWSER_UI_VIEWS_FRAME_BRAVE_BROWSER_NATIVE_WIDGET_MAC_H_
+#define BRAVE_BROWSER_UI_VIEWS_FRAME_BRAVE_BROWSER_NATIVE_WIDGET_MAC_H_
 
-#include "chrome/browser/ui/views/frame/browser_frame_mac.h"
+#include "base/memory/weak_ptr.h"
+#include "chrome/browser/ui/views/frame/browser_native_widget_mac.h"
 
-class Browser;
+class BrowserView;
+class BrowserWidget;
 
-class BraveBrowserFrameMac : public BrowserFrameMac {
+class BraveBrowserNativeWidgetMac : public BrowserNativeWidgetMac {
  public:
-  BraveBrowserFrameMac(BrowserFrame* browser_frame, BrowserView* browser_view);
-  ~BraveBrowserFrameMac() override;
+  BraveBrowserNativeWidgetMac(BrowserWidget* browser_widget,
+                              BrowserView* browser_view);
+  ~BraveBrowserNativeWidgetMac() override;
 
-  // BrowserFrameMac:
+  // BrowserNativeWidgetMac:
   void GetWindowFrameTitlebarHeight(bool* override_titlebar_height,
                                     float* titlebar_height) override;
   void ValidateUserInterfaceItem(
@@ -27,8 +30,7 @@ class BraveBrowserFrameMac : public BrowserFrameMac {
                       bool is_before_first_responder) override;
 
  private:
-  raw_ptr<Browser> browser_;
-  raw_ptr<BrowserView> browser_view_;
+  base::WeakPtr<BrowserView> browser_view_;
 };
 
-#endif  // BRAVE_BROWSER_UI_VIEWS_FRAME_BRAVE_BROWSER_FRAME_MAC_H_
+#endif  // BRAVE_BROWSER_UI_VIEWS_FRAME_BRAVE_BROWSER_NATIVE_WIDGET_MAC_H_

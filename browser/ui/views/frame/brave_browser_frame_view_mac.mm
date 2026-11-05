@@ -5,14 +5,14 @@
 
 #include <memory>
 
-#include "brave/browser/ui/views/frame/brave_browser_non_client_frame_view_mac.h"
+#include "brave/browser/ui/views/frame/brave_browser_frame_view_mac.h"
 
 #include "brave/browser/ui/tabs/brave_tab_prefs.h"
 #include "brave/browser/ui/tabs/features.h"
 #include "brave/browser/ui/views/frame/brave_non_client_hit_test_helper.h"
 #include "brave/browser/ui/views/tabs/vertical_tab_utils.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/view_ids.h"
 #include "chrome/browser/ui/views/frame/browser_view.h"
 #include "ui/base/hit_test.h"
@@ -20,103 +20,105 @@
 #include "ui/gfx/geometry/rect.h"
 #include "ui/gfx/scoped_canvas.h"
 
-BraveBrowserNonClientFrameViewMac::BraveBrowserNonClientFrameViewMac(
-    BrowserFrame* frame, BrowserView* browser_view)
-    : BrowserNonClientFrameViewMac(frame, browser_view) {
+BraveBrowserFrameViewMac::BraveBrowserFrameViewMac(
+    BrowserWidget* browser_widget,
+    BrowserView* browser_view)
+    : BrowserFrameViewMac(browser_widget, browser_view) {
   auto* browser = browser_view->browser();
   if (tabs::utils::SupportsVerticalTabs(browser)) {
-    auto* prefs = browser->profile()->GetOriginalProfile()->GetPrefs();
+    auto* prefs = browser->GetProfile()->GetOriginalProfile()->GetPrefs();
     show_vertical_tabs_.Init(
         brave_tabs::kVerticalTabsEnabled, prefs,
         base::BindRepeating(
-            &BraveBrowserNonClientFrameViewMac::UpdateWindowTitleAndControls,
+            &BraveBrowserFrameViewMac::UpdateWindowTitleAndControls,
             base::Unretained(this)));
     show_title_bar_on_vertical_tabs_.Init(
         brave_tabs::kVerticalTabsShowTitleOnWindow, prefs,
         base::BindRepeating(
-            &BraveBrowserNonClientFrameViewMac::UpdateWindowTitleVisibility,
+            &BraveBrowserFrameViewMac::UpdateWindowTitleVisibility,
             base::Unretained(this)));
   }
 }
 
-BraveBrowserNonClientFrameViewMac::~BraveBrowserNonClientFrameViewMac() = default;
+BraveBrowserFrameViewMac::~BraveBrowserFrameViewMac() = default;
 
-int BraveBrowserNonClientFrameViewMac::GetTopInset(bool restored) const {
+int BraveBrowserFrameViewMac::GetTopInset(bool restored) const {
   if (tabs::utils::ShouldShowVerticalTabs(browser_view()->browser())) {
     if (ShouldShowWindowTitleForVerticalTabs()) {
       // Set minimum top inset to show caption buttons on frame.
       return 30;
     }
 
-    // Bypassing BrowserNonClientFrameViewMac's implementation so that we don't
+    // Bypassing BrowserFrameViewMac's implementation so that we don't
     // have any inset when hiding title bar.
     return 0;
   }
 
   if (!tabs::features::HorizontalTabsUpdateEnabled()) {
-    return BrowserNonClientFrameViewMac::GetTopInset(restored);
+    return BrowserFrameViewMac::GetTopInset(restored);
   }
 
   return 0;
 }
 
-bool BraveBrowserNonClientFrameViewMac::ShouldShowWindowTitleForVerticalTabs()
-    const {
+bool BraveBrowserFrameViewMac::ShouldShowWindowTitleForVerticalTabs() const {
   return tabs::utils::ShouldShowWindowTitleForVerticalTabs(
       browser_view()->browser());
 }
 
-void BraveBrowserNonClientFrameViewMac::UpdateWindowTitleVisibility() {
-  if (!browser_view()->browser()->is_type_normal())
+void BraveBrowserFrameViewMac::UpdateWindowTitleVisibility() {
+  if (browser_view()->browser()->GetType() !=
+      BrowserWindowInterface::TYPE_NORMAL)
     return;
 
-  frame()->SetWindowTitleVisibility(ShouldShowWindowTitleForVerticalTabs());
+  browser_widget()->SetWindowTitleVisibility(
+      ShouldShowWindowTitleForVerticalTabs());
 }
 
-void BraveBrowserNonClientFrameViewMac::UpdateWindowTitleColor() {
-  if (!browser_view()->browser()->is_type_normal()) {
+void BraveBrowserFrameViewMac::UpdateWindowTitleColor() {
+  if (browser_view()->browser()->GetType() !=
+      BrowserWindowInterface::TYPE_NORMAL) {
     return;
   }
 
-  frame()->UpdateWindowTitleColor(
+  browser_widget()->UpdateWindowTitleColor(
       GetCaptionColor(BrowserFrameActiveState::kUseCurrent));
 }
 
-int BraveBrowserNonClientFrameViewMac::NonClientHitTest(
-    const gfx::Point& point) {
+int BraveBrowserFrameViewMac::NonClientHitTest(const gfx::Point& point) {
   if (auto res = brave::NonClientHitTest(browser_view(), point);
       res != HTNOWHERE) {
     return res;
   }
 
-  return BrowserNonClientFrameViewMac::NonClientHitTest(point);
+  return BrowserFrameViewMac::NonClientHitTest(point);
 }
 
-void BraveBrowserNonClientFrameViewMac::OnThemeChanged() {
-  BrowserNonClientFrameViewMac::OnThemeChanged();
+void BraveBrowserFrameViewMac::OnThemeChanged() {
+  BrowserFrameViewMac::OnThemeChanged();
   UpdateWindowTitleColor();
 }
 
-void BraveBrowserNonClientFrameViewMac::UpdateWindowTitleAndControls() {
+void BraveBrowserFrameViewMac::UpdateWindowTitleAndControls() {
   UpdateWindowTitleVisibility();
 
   // In case title visibility wasn't changed and only vertical tab strip enabled
   // state changed, we should reset controls positions manually.
   base::SequencedTaskRunner::GetCurrentDefault()->PostTask(
       FROM_HERE, base::BindOnce(&views::Widget::ResetWindowControlsPosition,
-                                frame()->GetWeakPtr()));
+                                browser_widget()->GetWeakPtr()));
 }
 
-gfx::Size BraveBrowserNonClientFrameViewMac::GetMinimumSize() const {
+gfx::Size BraveBrowserFrameViewMac::GetMinimumSize() const {
   if (tabs::utils::ShouldShowVerticalTabs(browser_view()->browser())) {
-    // In order to ignore tab strip height, skip BrowserNonClientFrameViewMac's
+    // In order to ignore tab strip height, skip BrowserFrameViewMac's
     // implementation.
-    auto size = frame()->client_view()->GetMinimumSize();
+    auto size = browser_widget()->client_view()->GetMinimumSize();
     size.SetToMax(gfx::Size(0, (size.width() * 3) / 4));
     // Note that we can't set empty bounds on Mac.
     size.SetToMax({1, 1});
     return size;
   }
 
-  return BrowserNonClientFrameViewMac::GetMinimumSize();
+  return BrowserFrameViewMac::GetMinimumSize();
 }

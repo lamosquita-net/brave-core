@@ -8,29 +8,30 @@
 
 #include <utility>
 
-class Browser;
-class BrowserFrame;
+class BrowserWindowInterface;
+class BrowserWidget;
 
 namespace tabs::utils {
 
 // Returns true if the current |browser| might ever support vertical tabs.
-bool SupportsVerticalTabs(const Browser* browser);
+bool SupportsVerticalTabs(const BrowserWindowInterface* browser);
 
 // Returns true when users chose to use vertical tabs
-bool ShouldShowVerticalTabs(const Browser* browser);
+bool ShouldShowVerticalTabs(const BrowserWindowInterface* browser);
 
 // Returns true when we should show window title on window frame when vertical
 // tab strip is enabled.
-bool ShouldShowWindowTitleForVerticalTabs(const Browser* browser);
+bool ShouldShowWindowTitleForVerticalTabs(
+    const BrowserWindowInterface* browser);
 
 // Returns true if we should trigger floating vertical tab strip on mouse over.
-bool IsFloatingVerticalTabsEnabled(const Browser* browser);
+bool IsFloatingVerticalTabsEnabled(const BrowserWindowInterface* browser);
 
-bool IsVerticalTabOnRight(const Browser* browser);
+bool IsVerticalTabOnRight(const BrowserWindowInterface* browser);
 
 // Returns window caption buttons' width based on the current platform
 std::pair<int, int> GetLeadingTrailingCaptionButtonWidth(
-    const BrowserFrame* frame);
+    const BrowserWidget* frame);
 
 }  // namespace tabs::utils
 

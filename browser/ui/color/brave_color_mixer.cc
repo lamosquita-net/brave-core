@@ -525,7 +525,7 @@ void AddBravePrivateThemeColorMixer(ui::ColorProvider* provider,
   mixer[kColorToolbarButtonActivated] = {SkColorSetRGB(0x7C, 0x91, 0xFF)};
 
   // |key.color_mode| always dark as we use dark native theme for
-  // private/tor/guest profile. See BraveBrowserFrame::GetNativeTheme().
+  // private/tor/guest profile. See BraveBrowserWidget::GetColorProviderKey().
   // Exceptionally, below side panel header colors should be brave theme
   // specific because side panel header colors should be aligned with
   // side panel contents.

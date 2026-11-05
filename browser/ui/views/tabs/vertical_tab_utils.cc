@@ -10,7 +10,7 @@
 #include "brave/browser/ui/tabs/brave_tab_prefs.h"
 #include "brave/browser/ui/views/tabs/switches.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "components/prefs/pref_service.h"
 
 #if !BUILDFLAG(IS_MAC)
@@ -35,7 +35,7 @@
 
 namespace tabs::utils {
 
-bool SupportsVerticalTabs(const Browser* browser) {
+bool SupportsVerticalTabs(const BrowserWindowInterface* browser) {
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(
           switches::kDisableVerticalTabsSwitch)) {
     return false;
@@ -47,43 +47,44 @@ bool SupportsVerticalTabs(const Browser* browser) {
     return false;
   }
 
-  return browser->is_type_normal();
+  return (browser->GetType() == BrowserWindowInterface::TYPE_NORMAL);
 }
 
-bool ShouldShowVerticalTabs(const Browser* browser) {
+bool ShouldShowVerticalTabs(const BrowserWindowInterface* browser) {
   if (!SupportsVerticalTabs(browser)) {
     return false;
   }
 
-  return browser->profile()->GetPrefs()->GetBoolean(
+  return browser->GetProfile()->GetPrefs()->GetBoolean(
       brave_tabs::kVerticalTabsEnabled);
 }
 
-bool ShouldShowWindowTitleForVerticalTabs(const Browser* browser) {
+bool ShouldShowWindowTitleForVerticalTabs(
+    const BrowserWindowInterface* browser) {
   if (!ShouldShowVerticalTabs(browser)) {
     return false;
   }
 
-  return browser->profile()->GetPrefs()->GetBoolean(
+  return browser->GetProfile()->GetPrefs()->GetBoolean(
       brave_tabs::kVerticalTabsShowTitleOnWindow);
 }
 
-bool IsFloatingVerticalTabsEnabled(const Browser* browser) {
+bool IsFloatingVerticalTabsEnabled(const BrowserWindowInterface* browser) {
   if (!ShouldShowVerticalTabs(browser)) {
     return false;
   }
 
-  return browser->profile()->GetPrefs()->GetBoolean(
+  return browser->GetProfile()->GetPrefs()->GetBoolean(
       brave_tabs::kVerticalTabsFloatingEnabled);
 }
 
-bool IsVerticalTabOnRight(const Browser* browser) {
-  return browser->profile()->GetPrefs()->GetBoolean(
+bool IsVerticalTabOnRight(const BrowserWindowInterface* browser) {
+  return browser->GetProfile()->GetPrefs()->GetBoolean(
       brave_tabs::kVerticalTabsOnRight);
 }
 
 std::pair<int, int> GetLeadingTrailingCaptionButtonWidth(
-    const BrowserFrame* frame) {
+    const BrowserWidget* frame) {
 #if BUILDFLAG(IS_MAC)
   // On Mac, window caption buttons are drawn by the system.
   return {80, 0};
@@ -101,7 +102,7 @@ std::pair<int, int> GetLeadingTrailingCaptionButtonWidth(
     return {};
   }
 
-  auto* profile = browser_view->browser()->profile();
+  auto* profile = browser_view->browser()->GetProfile();
   auto* linux_ui_theme = ui::LinuxUiTheme::GetForProfile(profile);
   auto* theme_service_factory = ThemeServiceFactory::GetForProfile(profile);
   const bool using_gtk_caption_button =

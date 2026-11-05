@@ -52,8 +52,8 @@
 #include "chrome/browser/ui/exclusive_access/exclusive_access_manager.h"
 #include "chrome/browser/ui/exclusive_access/fullscreen_controller.h"
 #include "chrome/browser/ui/frame/window_frame_util.h"
-#include "chrome/browser/ui/views/frame/browser_frame.h"
 #include "chrome/browser/ui/views/frame/browser_view.h"
+#include "chrome/browser/ui/views/frame/browser_widget.h"
 #include "chrome/browser/ui/views/frame/contents_layout_manager.h"
 #include "chrome/browser/ui/views/frame/contents_web_view.h"
 #include "chrome/browser/ui/views/frame/tab_strip_region_view.h"
@@ -924,7 +924,7 @@ bool BraveBrowserView::AcceleratorPressed(const ui::Accelerator& accelerator) {
 }
 
 bool BraveBrowserView::IsInTabDragging() const {
-  return frame()->tab_drag_kind() == TabDragKind::kAllTabs;
+  return browser_widget()->tab_drag_kind() == TabDragKind::kAllTabs;
 }
 
 BraveBrowser* BraveBrowserView::GetBraveBrowser() const {

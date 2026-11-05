@@ -5,7 +5,7 @@
 
 #include "base/test/scoped_feature_list.h"
 #include "brave/browser/ui/browser_commands.h"
-#include "chrome/browser/ui/views/frame/browser_non_client_frame_view.h"
+#include "chrome/browser/ui/views/frame/browser_frame_view.h"
 #include "chrome/browser/ui/views/frame/browser_view.h"
 #include "chrome/browser/ui/views/toolbar/reload_button.h"
 #include "chrome/browser/ui/views/toolbar/toolbar_view.h"
@@ -25,7 +25,7 @@ IN_PROC_BROWSER_TEST_F(BraveNonClientHitTestHelperBrowserTest, Toolbar) {
   ASSERT_EQ(3u, toolbar->children().size());
   const int container_view_index = 2;
   auto* toolbar_container = toolbar->children()[container_view_index].get();
-  auto* frame_view = browser_view->frame()->GetFrameView();
+  auto* frame_view = browser_view->browser_widget()->GetFrameView();
 
   for (views::View* view : toolbar_container->GetChildrenInZOrder()) {
     // When a point is on a child view, hit test result will be HTCLIENT (see
