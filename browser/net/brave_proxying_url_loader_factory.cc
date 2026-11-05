@@ -9,6 +9,7 @@
 #include <string_view>
 #include <utility>
 
+#include "base/byte_size.h"
 #include "base/feature_list.h"
 #include "base/functional/bind.h"
 #include "base/metrics/histogram_macros.h"
@@ -49,9 +50,9 @@ void OnWrite(std::unique_ptr<WriteData> write_data, MojoResult result) {
   }
 
   network::URLLoaderCompletionStatus status(net::OK);
-  status.encoded_data_length = write_data->data.size();
-  status.encoded_body_length = write_data->data.size();
-  status.decoded_body_length = write_data->data.size();
+  status.encoded_data_length = base::ByteSize(write_data->data.size());
+  status.encoded_body_length = base::ByteSize(write_data->data.size());
+  status.decoded_body_length = base::ByteSize(write_data->data.size());
   write_data->client->OnComplete(status);
 }
 
@@ -76,8 +77,9 @@ net::RedirectInfo CreateRedirectInfo(
           ? net::RedirectInfo::FirstPartyURLPolicy::UPDATE_URL_ON_REDIRECT
           : net::RedirectInfo::FirstPartyURLPolicy::NEVER_CHANGE_URL,
       original_request.referrer_policy, original_request.referrer.spec(),
-      response_code, new_url, referrer_policy_header,
-      false /* insecure_scheme_was_upgraded */, false /* copy_fragment */,
+      original_request.request_initiator, response_code, new_url,
+      referrer_policy_header, false /* insecure_scheme_was_upgraded */,
+      false /* copy_fragment */,
       false /* is_signed_exchange_fallback_redirect */);
 }
 
@@ -93,7 +95,7 @@ BraveProxyingURLLoaderFactory::InProgressRequest::InProgressRequest(
     uint64_t request_id,
     int32_t network_service_request_id,
     int render_process_id,
-    int frame_tree_node_id,
+    content::FrameTreeNodeId frame_tree_node_id,
     uint32_t options,
     const network::ResourceRequest& request,
     content::BrowserContext* browser_context,
@@ -179,24 +181,24 @@ void BraveProxyingURLLoaderFactory::InProgressRequest::RestartInternal() {
 }
 
 void BraveProxyingURLLoaderFactory::InProgressRequest::FollowRedirect(
-    const std::vector<std::string>& removed_headers,
-    const net::HttpRequestHeaders& modified_headers,
-    const net::HttpRequestHeaders& modified_cors_exempt_headers,
+    network::HttpRequestHeadersUpdateParams headers_update_params,
     const std::optional<GURL>& new_url) {
   if (new_url)
     request_.url = new_url.value();
 
-  for (const std::string& header : removed_headers)
+  for (const std::string& header : headers_update_params.removed_headers)
     request_.headers.RemoveHeader(header);
-  request_.headers.MergeFrom(modified_headers);
+  request_.headers.MergeFrom(headers_update_params.modified_headers);
 
   UpdateRequestInfo();
 
   if (target_loader_.is_bound()) {
     auto params = std::make_unique<FollowRedirectParams>();
-    params->removed_headers = removed_headers;
-    params->modified_headers = modified_headers;
-    params->modified_cors_exempt_headers = modified_cors_exempt_headers;
+    params->removed_headers = std::move(headers_update_params.removed_headers);
+    params->modified_headers =
+        std::move(headers_update_params.modified_headers);
+    params->modified_cors_exempt_headers =
+        std::move(headers_update_params.modified_cors_exempt_headers);
     params->new_url = new_url;
     pending_follow_redirect_params_ = std::move(params);
   }
@@ -209,18 +211,6 @@ void BraveProxyingURLLoaderFactory::InProgressRequest::SetPriority(
     int32_t intra_priority_value) {
   if (target_loader_.is_bound())
     target_loader_->SetPriority(priority, intra_priority_value);
-}
-
-void BraveProxyingURLLoaderFactory::InProgressRequest::
-    PauseReadingBodyFromNet() {
-  if (target_loader_.is_bound())
-    target_loader_->PauseReadingBodyFromNet();
-}
-
-void BraveProxyingURLLoaderFactory::InProgressRequest::
-    ResumeReadingBodyFromNet() {
-  if (target_loader_.is_bound())
-    target_loader_->ResumeReadingBodyFromNet();
 }
 
 void BraveProxyingURLLoaderFactory::InProgressRequest::OnReceiveEarlyHints(
@@ -465,21 +455,23 @@ void BraveProxyingURLLoaderFactory::InProgressRequest::ContinueToSendHeaders(
         removed_headers.begin(), removed_headers.end());
 
     for (auto& set_header : set_headers) {
-      std::string header_value;
-      if (request_.headers.GetHeader(set_header, &header_value)) {
-        pending_follow_redirect_params_->modified_headers.SetHeader(
-            set_header, header_value);
-      } else {
-        NOTREACHED();
-      }
+      std::optional<std::string> header_value =
+          request_.headers.GetHeader(set_header);
+      CHECK(header_value);
+      pending_follow_redirect_params_->modified_headers.SetHeader(
+          set_header, *header_value);
     }
 
     if (target_loader_.is_bound()) {
-      target_loader_->FollowRedirect(
-          pending_follow_redirect_params_->removed_headers,
-          pending_follow_redirect_params_->modified_headers,
-          pending_follow_redirect_params_->modified_cors_exempt_headers,
-          pending_follow_redirect_params_->new_url);
+      network::HttpRequestHeadersUpdateParams headers_update_params;
+      headers_update_params.removed_headers =
+          std::move(pending_follow_redirect_params_->removed_headers);
+      headers_update_params.modified_headers =
+          std::move(pending_follow_redirect_params_->modified_headers);
+      headers_update_params.modified_cors_exempt_headers = std::move(
+          pending_follow_redirect_params_->modified_cors_exempt_headers);
+      target_loader_->FollowRedirect(std::move(headers_update_params),
+                                     pending_follow_redirect_params_->new_url);
     }
 
     pending_follow_redirect_params_.reset();
@@ -636,7 +628,7 @@ BraveProxyingURLLoaderFactory::BraveProxyingURLLoaderFactory(
     BraveRequestHandler& request_handler,
     content::BrowserContext* browser_context,
     int render_process_id,
-    int frame_tree_node_id,
+    content::FrameTreeNodeId frame_tree_node_id,
     network::URLLoaderFactoryBuilder& factory_builder,
     scoped_refptr<RequestIDGenerator> request_id_generator,
     DisconnectCallback on_disconnect,
@@ -680,7 +672,8 @@ void BraveProxyingURLLoaderFactory::MaybeProxyRequest(
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   ResourceContextData::StartProxying(
       browser_context, render_process_id,
-      render_frame_host ? render_frame_host->GetFrameTreeNodeId() : 0,
+      render_frame_host ? render_frame_host->GetFrameTreeNodeId()
+                        : content::FrameTreeNodeId(),
       factory_builder, navigation_response_task_runner);
 }
 

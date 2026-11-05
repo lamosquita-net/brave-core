@@ -30,6 +30,7 @@
 #include "mojo/public/cpp/bindings/remote.h"
 #include "net/base/completion_once_callback.h"
 #include "net/traffic_annotation/network_traffic_annotation.h"
+#include "services/network/public/cpp/http_request_headers_update_params.h"
 #include "services/network/public/cpp/resource_request.h"
 #include "services/network/public/mojom/early_hints.mojom-forward.h"
 #include "services/network/public/mojom/network_context.mojom.h"
@@ -59,7 +60,7 @@ class BraveProxyingURLLoaderFactory
         uint64_t request_id,
         int32_t network_service_request_id,
         int render_process_id,
-        int frame_tree_node_id,
+        content::FrameTreeNodeId frame_tree_node_id,
         uint32_t options,
         const network::ResourceRequest& request,
         content::BrowserContext* browser_context,
@@ -76,14 +77,10 @@ class BraveProxyingURLLoaderFactory
 
     // network::mojom::URLLoader:
     void FollowRedirect(
-        const std::vector<std::string>& removed_headers,
-        const net::HttpRequestHeaders& modified_headers,
-        const net::HttpRequestHeaders& modified_cors_exempt_headers,
+        network::HttpRequestHeadersUpdateParams headers_update_params,
         const std::optional<GURL>& new_url) override;
     void SetPriority(net::RequestPriority priority,
                      int32_t intra_priority_value) override;
-    void PauseReadingBodyFromNet() override;
-    void ResumeReadingBodyFromNet() override;
 
     // network::mojom::URLLoaderClient:
     void OnReceiveEarlyHints(
@@ -127,7 +124,7 @@ class BraveProxyingURLLoaderFactory
     const int32_t network_service_request_id_;
 
     const int render_process_id_;
-    const int frame_tree_node_id_;
+    const content::FrameTreeNodeId frame_tree_node_id_;
     const uint32_t options_;
 
     raw_ptr<content::BrowserContext> browser_context_ = nullptr;
@@ -187,7 +184,7 @@ class BraveProxyingURLLoaderFactory
       BraveRequestHandler& request_handler,
       content::BrowserContext* browser_context,
       int render_process_id,
-      int frame_tree_node_id,
+      content::FrameTreeNodeId frame_tree_node_id,
       network::URLLoaderFactoryBuilder& factory_builder,
       scoped_refptr<RequestIDGenerator> request_id_generator,
       DisconnectCallback on_disconnect,
@@ -231,7 +228,7 @@ class BraveProxyingURLLoaderFactory
   const raw_ref<BraveRequestHandler> request_handler_;
   raw_ptr<content::BrowserContext> browser_context_ = nullptr;
   const int render_process_id_;
-  const int frame_tree_node_id_;
+  const content::FrameTreeNodeId frame_tree_node_id_;
 
   mojo::ReceiverSet<network::mojom::URLLoaderFactory> proxy_receivers_;
   mojo::Remote<network::mojom::URLLoaderFactory> target_factory_;
