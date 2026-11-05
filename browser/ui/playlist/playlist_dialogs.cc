@@ -12,26 +12,26 @@ namespace playlist {
 #if !defined(TOOLKIT_VIEWS)
 
 void ShowCreatePlaylistDialog(content::WebContents* web_contents) {
-  NOTREACHED_IN_MIGRATION();
+  NOTREACHED();
 }
 
 void ShowRemovePlaylistDialog(content::WebContents* web_contents,
                               const std::string& playlist_id) {
-  NOTREACHED_IN_MIGRATION();
+  NOTREACHED();
 }
 
 void ShowMoveItemsDialog(content::WebContents* contents,
                          const std::string& playlist_id,
                          const std::vector<std::string>& items) {
-  NOTREACHED_IN_MIGRATION();
+  NOTREACHED();
 }
 
 void ShowPlaylistSettings() {
-  NOTREACHED_IN_MIGRATION();
+  NOTREACHED();
 }
 
 void ClosePanel() {
-  NOTREACHED_IN_MIGRATION();
+  NOTREACHED();
 }
 // #else functions are defined in playlist_action_dialogs.cc
 #endif

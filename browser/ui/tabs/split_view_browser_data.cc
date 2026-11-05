@@ -88,7 +88,7 @@ void SplitViewBrowserData::BreakTile(const tabs::TabHandle& tab) {
       observer.OnDidBreakTile(tile_to_break);
     }
   } else {
-    NOTREACHED_IN_MIGRATION() << "Tile doesn't exist";
+    NOTREACHED() << "Tile doesn't exist";
   }
 }
 

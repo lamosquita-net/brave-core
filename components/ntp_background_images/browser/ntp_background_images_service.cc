@@ -69,9 +69,8 @@ std::string HandleComponentData(const base::FilePath& installed_dir) {
   std::string contents;
 
   if (json_path.empty()) {
-    NOTREACHED_IN_MIGRATION()
-        << __func__ << ": Can't find valid manifest file in " << installed_dir;
-    return contents;
+    NOTREACHED() << __func__ << ": Can't find valid manifest file in "
+                 << installed_dir;
   }
 
   bool success = base::ReadFileToString(json_path, &contents);

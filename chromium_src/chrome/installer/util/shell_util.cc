@@ -25,8 +25,7 @@ int GetIconIndexForFileType() {
     case version_info::Channel::CANARY:
       return icon_resources::kSxSFileTypeIndex;
     default:
-      NOTREACHED_IN_MIGRATION();
-      return icon_resources::kFileTypeIndex;
+      NOTREACHED();
   }
 }
 

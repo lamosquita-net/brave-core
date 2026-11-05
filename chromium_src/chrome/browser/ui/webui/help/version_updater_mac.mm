@@ -180,8 +180,7 @@ void VersionUpdaterMac::UpdateStatus(NSDictionary* dictionary) {
       break;
 
     default:
-      NOTREACHED_IN_MIGRATION();
-      return;
+      NOTREACHED();
   }
 
   // If there are any detailed error messages being passed along by Keystone,

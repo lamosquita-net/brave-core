@@ -59,8 +59,7 @@ SidebarItem::BuiltInItemType GetBuiltInItemTypeForLegacyURL(
   if (url == "chrome://history/")
     return SidebarItem::BuiltInItemType::kHistory;
 
-  NOTREACHED_IN_MIGRATION() << url;
-  return SidebarItem::BuiltInItemType::kNone;
+  NOTREACHED() << url;
 }
 
 }  // namespace
@@ -628,8 +627,7 @@ SidebarItem SidebarService::GetBuiltInItemForType(
       return SidebarItem();
     }
     case SidebarItem::BuiltInItemType::kNone: {
-      NOTREACHED_IN_MIGRATION();
-      break;
+      NOTREACHED();
     }
   }
   return SidebarItem();

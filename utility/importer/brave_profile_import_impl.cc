@@ -43,8 +43,7 @@ scoped_refptr<Importer> CreateImporterByType(importer::ImporterType type) {
     case importer::TYPE_WHALE:
       return new ChromeImporter();
     default:
-      NOTREACHED_IN_MIGRATION();
-      return nullptr;
+      NOTREACHED();
   }
 }
 
@@ -98,8 +97,7 @@ void BraveProfileImportImpl::StartImport(
   import_thread_->init_com_with_mta(false);
 #endif
   if (!import_thread_->Start()) {
-    NOTREACHED_IN_MIGRATION();
-    ImporterCleanup();
+    NOTREACHED();
   }
   bridge_ = new BraveExternalProcessImporterBridge(
       localized_strings,

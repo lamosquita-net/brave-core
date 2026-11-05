@@ -74,8 +74,7 @@ std::string ConvertEnvironmentToString(brave_domains::ServicesEnvironment env) {
     return it->second;
   }
 
-  NOTREACHED_IN_MIGRATION();
-  return kBraveServicesSwitchValueProduction;
+  NOTREACHED();
 }
 #endif
 

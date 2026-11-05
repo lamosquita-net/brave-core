@@ -78,7 +78,7 @@ void RequestOTRBlockingPage::CommandReceived(const std::string& command) {
       request_otr_controller->SetDontWarnAgain(false);
       break;
     default:
-      NOTREACHED_IN_MIGRATION() << "Unsupported command: " << command;
+      NOTREACHED() << "Unsupported command: " << command;
   }
 }
 

@@ -437,7 +437,7 @@ void PlaylistMoveDialog::OnSavedItemsChanged(
   } else if (mode_ == Mode::kCreate) {
     EnterCreatePlaylistMode();
   } else {
-    NOTREACHED_IN_MIGRATION() << "If new mode was added, please revisit this.";
+    NOTREACHED() << "If new mode was added, please revisit this.";
   }
 }
 

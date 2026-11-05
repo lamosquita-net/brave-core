@@ -54,8 +54,7 @@ dark_mode::BraveDarkModeType GetDarkModeSwitchValue(
   if (requested_dark_mode_value_lower == "dark")
     return dark_mode::BraveDarkModeType::BRAVE_DARK_MODE_TYPE_DARK;
 
-  NOTREACHED_IN_MIGRATION();
-  return dark_mode::BraveDarkModeType::BRAVE_DARK_MODE_TYPE_LIGHT;
+  NOTREACHED();
 }
 
 }  // namespace
@@ -91,8 +90,7 @@ std::string GetStringFromBraveDarkModeType(BraveDarkModeType type) {
     case BraveDarkModeType::BRAVE_DARK_MODE_TYPE_DARK:
       return "Dark";
     default:
-      NOTREACHED_IN_MIGRATION();
-      return "Default";
+      NOTREACHED();
   }
 }
 

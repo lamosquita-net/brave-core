@@ -62,7 +62,7 @@ void DomainBlockPage::CommandReceived(const std::string& command) {
       domain_block_controller->SetDontWarnAgain(false);
       break;
     default:
-      NOTREACHED_IN_MIGRATION() << "Unsupported command: " << command;
+      NOTREACHED() << "Unsupported command: " << command;
   }
 }
 
