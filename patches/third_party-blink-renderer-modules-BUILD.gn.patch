@@ -1,8 +1,8 @@
 diff --git a/third_party/blink/renderer/modules/BUILD.gn b/third_party/blink/renderer/modules/BUILD.gn
-index 1dc1d143a1bb02d146f043faeac465f1cf14ce6c..a35019cb164561c4e0fb1e0912de657705ec55c4 100644
+index 57908c79e9e445feb9eeb52f56d317505fa5db5a..29d89b0688343f5a0000d005daa679189ea0266f 100644
 --- a/third_party/blink/renderer/modules/BUILD.gn
 +++ b/third_party/blink/renderer/modules/BUILD.gn
-@@ -19,6 +19,7 @@ if (is_ios) {
+@@ -21,6 +21,7 @@ if (is_ios) {
  }
  
  visibility = [ "//third_party/blink/renderer/*" ]
@@ -10,28 +10,11 @@ index 1dc1d143a1bb02d146f043faeac465f1cf14ce6c..a35019cb164561c4e0fb1e0912de6577
  
  config("modules_implementation") {
    defines = [ "BLINK_MODULES_IMPLEMENTATION=1" ]
-@@ -178,6 +179,7 @@ component("modules") {
-   # generating the snapshot for android, blink is compiled with
-   # current_os="linux" and target_os="android". Using target_os is necessary as
-   # we need to compile in the same way as would happen when current_os="android".
+@@ -169,6 +170,7 @@ component("modules") {
+     "//third_party/blink/renderer/modules/worklet",
+     "//third_party/blink/renderer/modules/xr",
+   ]
 +  sub_modules += brave_blink_sub_modules
-   if (target_os_is_android) {
-     sub_modules += [ "//third_party/blink/renderer/modules/remote_objects" ]
-   } else {
-@@ -236,6 +238,8 @@ source_set("modules_testing") {
-     "peerconnection/adapters/test/mock_ice_transport_adapter_cross_thread_factory.h",
-     "peerconnection/testing/fake_resource_listener.cc",
-     "peerconnection/testing/fake_resource_listener.h",
-+    "peerconnection/testing/fake_webrtc_data_channel.cc",
-+    "peerconnection/testing/fake_webrtc_data_channel.h",
-     "peerconnection/testing/internals_rtc_certificate.cc",
-     "peerconnection/testing/internals_rtc_certificate.h",
-     "peerconnection/testing/internals_rtc_peer_connection.cc",
-@@ -432,6 +436,7 @@ source_set("unit_tests") {
-     "credentialmanagement/credential_manager_type_converters_unittest.cc",
-     "credentialmanagement/digital_identity_credential_test.cc",
-     "credentialmanagement/password_credential_test.cc",
-+    "credentialmanagement/public_key_credential_unittest.cc",
-     "csspaint/document_paint_definition_test.cc",
-     "csspaint/nativepaint/background_color_paint_definition_test.cc",
-     "csspaint/nativepaint/clip_path_paint_definition_test.cc",
+ 
+   # This uses target_os rather than current_os (which is what is_android is set
+   # from) for the case of generating the v8 context snapshot for android. When
