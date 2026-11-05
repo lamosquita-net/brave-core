@@ -56,6 +56,26 @@ constexpr char kWaybackMachineEnabled[] = "brave.wayback_machine_enabled";
 constexpr char kCommanderSuggestionsEnabled[] =
     "brave.omnibox.commander_suggestions_enabled";
 
+// Brave Sidebar (removed 2026-11). brave.sidebar.side_panel_width stays: the
+// side panel still uses it.
+constexpr char kSidebarItems[] = "brave.sidebar.sidebar_items";
+constexpr char kSidebarHiddenBuiltInItems[] =
+    "brave.sidebar.hidden_built_in_items";
+constexpr char kSidebarLeoPanelOneShotOpen[] =
+    "brave.sidebar.leo_panel_one_shot_shot";
+constexpr char kSidebarShowOption[] = "brave.sidebar.sidebar_show_option";
+constexpr char kSidebarItemAddedFeedbackBubbleShowCount[] =
+    "brave.sidebar.item_added_feedback_bubble_shown_count";
+constexpr char kSidebarLastUsedBuiltInItemType[] =
+    "brave.sidebar.last_used_built_in_item_type";
+constexpr char kSidebarSettingChangeInitialP3AReport[] =
+    "brave.sidebar.setting_change_initial_p3a_reported";
+constexpr char kSidebarAlignmentChangedTemporarily[] =
+    "brave.sidebar.sidebar_alignment_changed_for_vertical_tabs";
+constexpr char kShowSidePanelButton[] = "brave.show_side_panel_button";
+constexpr char kTargetUserForSidebarEnabledTest[] =
+    "brave.sidebar.target_user_for_sidebar_enabled_test";
+
 constexpr const char* kProfilePrefs[] = {
     kPlaylistEnabled,
     kPlaylists,
@@ -79,6 +99,15 @@ constexpr const char* kProfilePrefs[] = {
     kWebTorrentEnabled,
     kWaybackMachineEnabled,
     kCommanderSuggestionsEnabled,
+    kSidebarItems,
+    kSidebarHiddenBuiltInItems,
+    kSidebarLeoPanelOneShotOpen,
+    kSidebarShowOption,
+    kSidebarItemAddedFeedbackBubbleShowCount,
+    kSidebarLastUsedBuiltInItemType,
+    kSidebarSettingChangeInitialP3AReport,
+    kSidebarAlignmentChangedTemporarily,
+    kShowSidePanelButton,
 };
 
 constexpr const char* kLocalStatePrefs[] = {
@@ -86,6 +115,7 @@ constexpr const char* kLocalStatePrefs[] = {
     kPlaylistLastUsageTime,
     kPlaylistUsedSecondDay,
     kPlaylistUsageWeeklyStorage,
+    kTargetUserForSidebarEnabledTest,
 };
 
 }  // namespace
@@ -124,6 +154,17 @@ void RegisterPrunedFeatureProfilePrefs(
 
   // Commander
   registry->RegisterBooleanPref(kCommanderSuggestionsEnabled, true);
+
+  // Brave Sidebar
+  registry->RegisterListPref(kSidebarItems);
+  registry->RegisterListPref(kSidebarHiddenBuiltInItems);
+  registry->RegisterBooleanPref(kSidebarLeoPanelOneShotOpen, false);
+  registry->RegisterIntegerPref(kSidebarShowOption, 0);
+  registry->RegisterIntegerPref(kSidebarItemAddedFeedbackBubbleShowCount, 0);
+  registry->RegisterIntegerPref(kSidebarLastUsedBuiltInItemType, 0);
+  registry->RegisterBooleanPref(kSidebarSettingChangeInitialP3AReport, false);
+  registry->RegisterBooleanPref(kSidebarAlignmentChangedTemporarily, false);
+  registry->RegisterBooleanPref(kShowSidePanelButton, true);
 }
 
 void ClearPrunedFeatureProfilePrefs(PrefService* profile_prefs) {
@@ -138,6 +179,9 @@ void RegisterPrunedFeatureLocalStatePrefs(PrefRegistrySimple* registry) {
   registry->RegisterTimePref(kPlaylistLastUsageTime, base::Time());
   registry->RegisterBooleanPref(kPlaylistUsedSecondDay, false);
   registry->RegisterListPref(kPlaylistUsageWeeklyStorage);
+
+  // Brave Sidebar
+  registry->RegisterBooleanPref(kTargetUserForSidebarEnabledTest, false);
 }
 
 void ClearPrunedFeatureLocalStatePrefs(PrefService* local_state) {

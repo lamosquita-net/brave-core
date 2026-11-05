@@ -14,7 +14,6 @@
 #include "ui/base/metadata/metadata_header_macros.h"
 
 class BraveBookmarkButton;
-class SidePanelButton;
 
 class BraveToolbarView : public ToolbarView,
                          public ProfileAttributesStorage::Observer {
@@ -24,7 +23,6 @@ class BraveToolbarView : public ToolbarView,
   ~BraveToolbarView() override;
 
   BraveBookmarkButton* bookmark_button() const { return bookmark_; }
-  SidePanelButton* side_panel_button() const { return side_panel_; }
 
   void UpdateHorizontalPadding();
 
@@ -60,8 +58,6 @@ class BraveToolbarView : public ToolbarView,
   raw_ptr<BraveBookmarkButton> bookmark_ = nullptr;
   // Tracks the preference to determine whether bookmark editing is allowed.
   BooleanPrefMember edit_bookmarks_enabled_;
-
-  raw_ptr<SidePanelButton> side_panel_ = nullptr;
 
   BooleanPrefMember show_bookmarks_button_;
 

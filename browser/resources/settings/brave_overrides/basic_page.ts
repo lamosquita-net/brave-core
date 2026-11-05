@@ -3,7 +3,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
-import '../brave_appearance_page/sidebar.js'
 import '../brave_appearance_page/tabs.js'
 import '../brave_appearance_page/toolbar.js'
 import '../brave_content_page/content.js'
@@ -156,19 +155,6 @@ RegisterPolymerTemplateModifications({
           prefs: '{{prefs}}'
         }
       ))
-      const sectionSidebar = document.createElement('template')
-      sectionSidebar.setAttribute('is', 'dom-if')
-      sectionSidebar.setAttribute('restamp', 'true')
-      sectionSidebar.setAttribute('if', '[[showPage_(pageVisibility.appearance)]]')
-      sectionSidebar.content.appendChild(createNestedSectionElement(
-        'sidebar',
-        'appearance',
-        'sideBar',
-        'settings-brave-appearance-sidebar',
-        {
-          prefs: '{{prefs}}'
-        }
-      ))
       const sectionExtensions = document.createElement('template')
       sectionExtensions.setAttribute('is', 'dom-if')
       sectionExtensions.setAttribute('restamp', 'true')
@@ -288,10 +274,9 @@ RegisterPolymerTemplateModifications({
       const sectionAppearance = getSectionElement(actualTemplate.content,
         'appearance')
       last = last.insertAdjacentElement('afterend', sectionAppearance)
-      // Insert nested Toolbar, Tabs, Sidebar under 'Appearance' menu
+      // Insert nested Toolbar, Tabs under 'Appearance' menu
       last = last.insertAdjacentElement('afterend', sectionToolbar)
       last = last.insertAdjacentElement('afterend', sectionTabs)
-      last = last.insertAdjacentElement('afterend', sectionSidebar)
       // Insert Content
       last = last.insertAdjacentElement('afterend', sectionContent)
       // Insert shields

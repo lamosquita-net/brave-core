@@ -33,7 +33,6 @@
 
 #if defined(TOOLKIT_VIEWS)
 #include "brave/browser/onboarding/onboarding_tab_helper.h"
-#include "brave/components/sidebar/browser/pref_names.h"
 #endif
 
 #if BUILDFLAG(ENABLE_WIDEVINE)
@@ -79,8 +78,6 @@ void RegisterLocalStatePrefs(PrefRegistrySimple* registry) {
 
 #if defined(TOOLKIT_VIEWS)
   onboarding::RegisterLocalStatePrefs(registry);
-  registry->RegisterBooleanPref(sidebar::kTargetUserForSidebarEnabledTest,
-                                false);
 #endif
 
 #if BUILDFLAG(ENABLE_CRASH_DIALOG)

@@ -8,7 +8,6 @@
 #include "base/strings/strcat.h"
 #include "brave/components/constants/url_constants.h"
 #include "brave/components/constants/webui_url_constants.h"
-#include "brave/components/sidebar/browser/constants.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_navigator_params.h"
 #include "chrome/browser/ui/chrome_pages.h"
@@ -21,6 +20,10 @@
 #include "url/gurl.h"
 
 namespace brave {
+
+namespace {
+constexpr char kBraveTalkURL[] = "https://talk.brave.com/widget";
+}  // namespace
 
 void ShowBraveRewards(Browser* browser) {
   ShowSingletonTabOverwritingNTP(browser, GURL(kRewardsPageURL));
@@ -40,7 +43,7 @@ void ShowShortcutsPage(Browser* browser) {
 }
 
 void ShowBraveTalk(Browser* browser) {
-  ShowSingletonTabOverwritingNTP(browser, GURL(sidebar::kBraveTalkURL));
+  ShowSingletonTabOverwritingNTP(browser, GURL(kBraveTalkURL));
 }
 
 void ShowWebcompatReporter(Browser* browser) {

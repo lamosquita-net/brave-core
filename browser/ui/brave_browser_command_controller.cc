@@ -17,7 +17,6 @@
 #include "brave/browser/profiles/profile_util.h"
 #include "brave/browser/ui/brave_pages.h"
 #include "brave/browser/ui/browser_commands.h"
-#include "brave/browser/ui/sidebar/sidebar_utils.h"
 #include "brave/browser/ui/tabs/features.h"
 #include "brave/browser/ui/tabs/split_view_browser_data.h"
 #include "brave/components/commands/common/features.h"
@@ -166,7 +165,6 @@ void BraveBrowserCommandController::InitBraveCommandState() {
     }
   }
   UpdateCommandForWebcompatReporter();
-  UpdateCommandForSidebar();
   bool add_new_profile_enabled = !is_guest_session;
   bool open_guest_profile_enabled = !is_guest_session;
   if (!is_guest_session) {
@@ -230,14 +228,6 @@ void BraveBrowserCommandController::UpdateCommandForBraveRewards() {
 
 void BraveBrowserCommandController::UpdateCommandForWebcompatReporter() {
   UpdateCommandEnabled(IDC_SHOW_BRAVE_WEBCOMPAT_REPORTER, true);
-}
-
-void BraveBrowserCommandController::UpdateCommandForSidebar() {
-  if (sidebar::CanUseSidebar(&*browser_)) {
-    UpdateCommandEnabled(IDC_SIDEBAR_SHOW_OPTION_MENU, true);
-    UpdateCommandEnabled(IDC_SIDEBAR_TOGGLE_POSITION, true);
-    UpdateCommandEnabled(IDC_TOGGLE_SIDEBAR, true);
-  }
 }
 
 void BraveBrowserCommandController::UpdateCommandsForTabs() {
@@ -337,12 +327,6 @@ bool BraveBrowserCommandController::ExecuteBraveCommandWithDisposition(
       brave::ShowBraveWallet(&*browser_);
       break;
     case IDC_TOGGLE_AI_CHAT:
-      break;
-    case IDC_SIDEBAR_TOGGLE_POSITION:
-      brave::ToggleSidebarPosition(&*browser_);
-      break;
-    case IDC_TOGGLE_SIDEBAR:
-      brave::ToggleSidebar(&*browser_);
       break;
     case IDC_COPY_CLEAN_LINK:
       brave::CopySanitizedURL(

@@ -14,12 +14,6 @@ namespace content {
 class WebContents;
 }  // namespace content
 
-#if defined(TOOLKIT_VIEWS)
-namespace sidebar {
-class Sidebar;
-}  // namespace sidebar
-#endif
-
 class BraveBrowserWindow : public BrowserWindow {
  public:
   ~BraveBrowserWindow() override {}
@@ -34,8 +28,6 @@ class BraveBrowserWindow : public BrowserWindow {
   virtual gfx::Rect GetShieldsBubbleRect();
 
 #if defined(TOOLKIT_VIEWS)
-  virtual sidebar::Sidebar* InitSidebar();
-  virtual void ToggleSidebar();
   virtual bool HasSelectedURL() const;
   virtual void CleanAndCopySelectedURL();
 

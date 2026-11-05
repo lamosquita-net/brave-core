@@ -82,17 +82,6 @@ source_set("ui") {
       "omnibox/brave_omnibox_client_impl.h",
       "page_action/brave_page_action_icon_type.h",
       "session_crashed_bubble_brave.cc",
-      "sidebar/sidebar.h",
-      "sidebar/sidebar_controller.cc",
-      "sidebar/sidebar_controller.h",
-      "sidebar/sidebar_model.cc",
-      "sidebar/sidebar_model.h",
-      "sidebar/sidebar_service_factory.cc",
-      "sidebar/sidebar_service_factory.h",
-      "sidebar/sidebar_tab_helper.cc",
-      "sidebar/sidebar_tab_helper.h",
-      "sidebar/sidebar_utils.cc",
-      "sidebar/sidebar_utils.h",
       "startup/brave_startup_tab_provider_impl.cc",
       "startup/brave_startup_tab_provider_impl.h",
       "tabs/brave_tab_color_mixer.cc",
@@ -194,8 +183,6 @@ source_set("ui") {
       "//brave/browser/profiles:util",
       "//brave/common",
       "//brave/components/constants",
-      "//brave/components/sidebar/browser",
-      "//brave/components/sidebar/common",
       "//chrome/app:generated_resources",
       "//chrome/browser/profiles",
       "//chrome/browser/sync",
@@ -252,9 +239,6 @@ source_set("ui") {
       ]
     }
 
-    # Was added with the Tor settings handler; sidebar_model.cc also uses it.
-    deps += [ "//chrome/browser/image_fetcher" ]
-
     if (enable_extensions) {
       sources += [
         "webui/settings/brave_extensions_manifest_v2_handler.cc",
@@ -273,6 +257,7 @@ source_set("ui") {
     sources += [
       "side_panel/brave_contextual_side_panel_tab_helper.cc",
       "side_panel/brave_contextual_side_panel_tab_helper.h",
+      "side_panel/brave_side_panel_prefs.h",
       "side_panel/brave_side_panel_utils.h",
       "views/bookmarks/bookmark_bar_instructions_view.cc",
       "views/bookmarks/bookmark_bar_instructions_view.h",
@@ -394,8 +379,6 @@ source_set("ui") {
       "views/toolbar/brave_app_menu.h",
       "views/toolbar/brave_browser_app_menu_button.cc",
       "views/toolbar/brave_browser_app_menu_button.h",
-      "views/toolbar/side_panel_button.cc",
-      "views/toolbar/side_panel_button.h",
       "views/view_shadow.cc",
       "views/view_shadow.h",
       "views/window_closing_confirm_dialog_view.cc",
@@ -674,37 +657,9 @@ source_set("ui") {
 
   if (toolkit_views) {
     deps += [
-      "//brave/components/sidebar/browser",
       "//chrome/app:generated_resources",
       "//chrome/browser/ui/views",
       "//components/favicon_base",
-    ]
-
-    sources += [
-      "views/sidebar/sidebar_add_item_bubble_delegate_view.cc",
-      "views/sidebar/sidebar_add_item_bubble_delegate_view.h",
-      "views/sidebar/sidebar_button_view.cc",
-      "views/sidebar/sidebar_button_view.h",
-      "views/sidebar/sidebar_container_view.cc",
-      "views/sidebar/sidebar_container_view.h",
-      "views/sidebar/sidebar_control_view.cc",
-      "views/sidebar/sidebar_control_view.h",
-      "views/sidebar/sidebar_edit_item_bubble_delegate_view.cc",
-      "views/sidebar/sidebar_edit_item_bubble_delegate_view.h",
-      "views/sidebar/sidebar_item_add_button.cc",
-      "views/sidebar/sidebar_item_add_button.h",
-      "views/sidebar/sidebar_item_added_feedback_bubble.cc",
-      "views/sidebar/sidebar_item_added_feedback_bubble.h",
-      "views/sidebar/sidebar_item_drag_context.cc",
-      "views/sidebar/sidebar_item_drag_context.h",
-      "views/sidebar/sidebar_item_view.cc",
-      "views/sidebar/sidebar_item_view.h",
-      "views/sidebar/sidebar_items_contents_view.cc",
-      "views/sidebar/sidebar_items_contents_view.h",
-      "views/sidebar/sidebar_items_scroll_view.cc",
-      "views/sidebar/sidebar_items_scroll_view.h",
-      "views/sidebar/sidebar_show_options_event_detect_widget.cc",
-      "views/sidebar/sidebar_show_options_event_detect_widget.h",
     ]
   }
 

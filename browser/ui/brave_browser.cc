@@ -9,7 +9,6 @@
 #include <optional>
 #include <utility>
 
-#include "base/check_is_test.h"
 #include "base/feature_list.h"
 #include "base/functional/bind.h"
 #include "base/functional/callback_helpers.h"
@@ -25,17 +24,10 @@
 #include "chrome/browser/ui/browser_finder.h"
 #include "chrome/browser/ui/browser_tabstrip.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
-#include "chrome/browser/ui/tabs/tab_strip_model_observer.h"
 #include "chrome/common/webui_url_constants.h"
 #include "components/prefs/pref_service.h"
 #include "content/public/common/url_constants.h"
 #include "url/gurl.h"
-
-#if defined(TOOLKIT_VIEWS)
-#include "brave/browser/ui/sidebar/sidebar.h"
-#include "brave/browser/ui/sidebar/sidebar_controller.h"
-#include "brave/browser/ui/sidebar/sidebar_utils.h"
-#endif
 
 namespace {
 
@@ -54,50 +46,9 @@ bool BraveBrowser::ShouldUseBraveWebViewRoundedCorners(Browser* browser) {
          browser->is_type_normal();
 }
 
-BraveBrowser::BraveBrowser(const CreateParams& params) : Browser(params) {
-#if defined(TOOLKIT_VIEWS)
-  if (!sidebar::CanUseSidebar(this)) {
-    return;
-  }
-  // Below call order is important.
-  // When reaches here, Sidebar UI is setup in BraveBrowserView but
-  // not initialized. It's just empty because sidebar controller/model is not
-  // ready yet. BraveBrowserView is instantiated by the ctor of Browser.
-  // So, initializing sidebar controller/model here and then ask to initialize
-  // sidebar UI. After that, UI will be updated for model's change.
-  sidebar_controller_ =
-      std::make_unique<sidebar::SidebarController>(this, profile());
-  sidebar_controller_->SetSidebar(brave_window()->InitSidebar());
-#endif
-}
+BraveBrowser::BraveBrowser(const CreateParams& params) : Browser(params) {}
 
 BraveBrowser::~BraveBrowser() = default;
-
-void BraveBrowser::ScheduleUIUpdate(content::WebContents* source,
-                                    unsigned changed_flags) {
-  Browser::ScheduleUIUpdate(source, changed_flags);
-
-#if defined(TOOLKIT_VIEWS)
-  if (tab_strip_model_->GetIndexOfWebContents(source) ==
-      TabStripModel::kNoTab) {
-    return;
-  }
-
-  // We need to update sidebar UI only when current active tab state is changed.
-  if (changed_flags & content::INVALIDATE_TYPE_URL) {
-    if (source == tab_strip_model_->GetActiveWebContents()) {
-      // sidebar() can return a nullptr in unit tests.
-      if (sidebar_controller_) {
-        if (sidebar_controller_->sidebar()) {
-          sidebar_controller_->sidebar()->UpdateSidebarItemsState();
-        } else {
-          CHECK_IS_TEST();
-        }
-      }
-    }
-  }
-#endif
-}
 
 void BraveBrowser::OnTabClosing(content::WebContents* contents) {
   Browser::OnTabClosing(contents);
@@ -155,27 +106,6 @@ bool BraveBrowser::ShouldDisplayFavicon(
   }
 
   return Browser::ShouldDisplayFavicon(web_contents);
-}
-
-void BraveBrowser::OnTabStripModelChanged(
-    TabStripModel* tab_strip_model,
-    const TabStripModelChange& change,
-    const TabStripSelectionChange& selection) {
-  Browser::OnTabStripModelChanged(tab_strip_model, change, selection);
-
-#if defined(TOOLKIT_VIEWS)
-  // sidebar() can return a nullptr in unit tests.
-  if (!sidebar_controller_ || !sidebar_controller_->sidebar()) {
-    return;
-  }
-  // We need to update sidebar UI whenever active tab is changed or
-  // inactive tab is added/removed.
-  if (change.type() == TabStripModelChange::Type::kInserted ||
-      change.type() == TabStripModelChange::Type::kRemoved ||
-      selection.active_tab_changed()) {
-    sidebar_controller_->sidebar()->UpdateSidebarItemsState();
-  }
-#endif
 }
 
 void BraveBrowser::FinishWarnBeforeClosing(WarnBeforeClosingResult result) {

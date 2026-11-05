@@ -10,7 +10,6 @@
 #include "chrome/browser/ui/unload_controller.h"
 
 #define FinishWarnBeforeClosing virtual FinishWarnBeforeClosing
-#define ScheduleUIUpdate virtual ScheduleUIUpdate
 #define ShouldDisplayFavicon virtual ShouldDisplayFavicon
 #define TryToCloseWindow virtual TryToCloseWindow
 #define OnTabClosing virtual OnTabClosing
@@ -29,7 +28,6 @@
 #undef TabStripEmpty
 #undef OnTabClosing
 #undef ShouldDisplayFavicon
-#undef ScheduleUIUpdate
 #undef FinishWarnBeforeClosing
 
 #endif  // BRAVE_CHROMIUM_SRC_CHROME_BROWSER_UI_BROWSER_H_

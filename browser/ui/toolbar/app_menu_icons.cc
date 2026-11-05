@@ -99,7 +99,6 @@ const std::map<int, const gfx::VectorIcon&>& GetCommandIcons() {
           {IDC_TASK_MANAGER, kLeoWindowBinaryCodeIcon},
           {IDC_SHOW_BRAVE_SYNC, kLeoProductSyncIcon},
           {IDC_ROUTE_MEDIA, kLeoChromeCastIcon},
-          {IDC_SIDEBAR_SHOW_OPTION_MENU, kLeoBrowserSidebarRightIcon},
       });
   return *kCommandIcons.get();
 }

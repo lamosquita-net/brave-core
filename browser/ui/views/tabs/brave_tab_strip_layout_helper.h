@@ -9,7 +9,6 @@
 #include <optional>
 #include <vector>
 
-#include "brave/browser/ui/views/sidebar/sidebar_item_view.h"
 #include "components/tab_groups/tab_group_id.h"
 
 namespace gfx {

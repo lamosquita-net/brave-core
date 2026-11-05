@@ -31,12 +31,6 @@
 #include "testing/gmock/include/gmock/gmock.h"
 #include "third_party/re2/src/re2/re2.h"
 
-#if defined(TOOLKIT_VIEWS)
-#include "brave/browser/ui/sidebar/sidebar_controller.h"
-#include "brave/browser/ui/sidebar/sidebar_model.h"
-#include "brave/components/sidebar/browser/sidebar_item.h"
-#endif
-
 namespace brave {
 namespace {
 
@@ -285,29 +279,6 @@ IN_PROC_BROWSER_TEST_F(BraveNetworkAuditTest, BasicTests) {
 
   ASSERT_TRUE(ui_test_utils::NavigateToURL(browser(), GURL("brave://wallet")));
   WaitForTimeout(kMaxTimeoutPerLoadedURL);
-
-#if defined(TOOLKIT_VIEWS)
-  auto* sidebar_controller =
-      static_cast<BraveBrowser*>(browser())->sidebar_controller();
-  auto* sidebar_model = sidebar_controller->model();
-  const auto& all_items = sidebar_model->GetAllSidebarItems();
-  const int item_num = all_items.size();
-  const int builtin_panel_item_total = 4;
-  int builtin_panel_item_count = 0;
-  for (int i = 0; i < item_num; ++i) {
-    auto item = all_items[i];
-    // Load all builtin panel items.
-    if (sidebar::IsBuiltInType(item) && item.open_in_panel) {
-      builtin_panel_item_count++;
-      sidebar_controller->ActivateItemAt(i);
-      WaitForTimeout(kMaxTimeoutPerLoadedURL);
-    }
-  }
-
-  // Currently, we have 4 builtin panel items.
-  // If it's increased, --test-launcher-time should be increased also.
-  EXPECT_EQ(builtin_panel_item_total, builtin_panel_item_count);
-#endif
 }
 
 }  // namespace

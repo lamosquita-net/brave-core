@@ -21,7 +21,6 @@
 #include "brave/browser/debounce/debounce_service_factory.h"
 #include "brave/browser/ui/bookmark/brave_bookmark_prefs.h"
 #include "brave/browser/ui/brave_browser.h"
-#include "brave/browser/ui/sidebar/sidebar_service_factory.h"
 #include "brave/browser/ui/tabs/brave_tab_prefs.h"
 #include "brave/browser/ui/tabs/brave_tab_strip_model.h"
 #include "brave/browser/ui/tabs/features.h"
@@ -30,7 +29,6 @@
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/debounce/core/browser/debounce_service.h"
 #include "brave/components/query_filter/utils.h"
-#include "brave/components/sidebar/browser/sidebar_service.h"
 #include "brave/components/url_sanitizer/browser/url_sanitizer_service.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/profile.h"
@@ -185,23 +183,6 @@ void ToggleActiveTabAudioMute(Browser* browser) {
   bool mute_tab = !contents->IsAudioMuted();
   chrome::SetTabAudioMuted(contents, mute_tab, TabMutedReason::AUDIO_INDICATOR,
                            std::string());
-}
-
-void ToggleSidebarPosition(Browser* browser) {
-  auto* prefs = browser->profile()->GetPrefs();
-  prefs->SetBoolean(prefs::kSidePanelHorizontalAlignment,
-                    !prefs->GetBoolean(prefs::kSidePanelHorizontalAlignment));
-}
-
-void ToggleSidebar(Browser* browser) {
-  if (!browser) {
-    return;
-  }
-
-  if (auto* brave_browser_window =
-          BraveBrowserWindow::From(browser->window())) {
-    brave_browser_window->ToggleSidebar();
-  }
 }
 
 bool HasSelectedURL(Browser* browser) {

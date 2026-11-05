@@ -30,10 +30,6 @@
 #include "brave/browser/brave_shields/filter_list_service_factory.h"
 #endif
 
-#if defined(TOOLKIT_VIEWS)
-#include "brave/browser/ui/sidebar/sidebar_service_factory.h"
-#endif
-
 #if BUILDFLAG(ENABLE_REQUEST_OTR)
 #include "brave/browser/request_otr/request_otr_service_factory.h"
 #endif
@@ -75,10 +71,6 @@ void EnsureBrowserContextKeyedServiceFactoriesBuilt() {
   if (base::FeatureList::IsEnabled(tabs::features::kBraveSharedPinnedTabs)) {
     SharedPinnedTabServiceFactory::GetInstance();
   }
-#endif
-
-#if defined(TOOLKIT_VIEWS)
-  sidebar::SidebarServiceFactory::GetInstance();
 #endif
 }
 

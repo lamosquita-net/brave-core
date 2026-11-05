@@ -52,10 +52,6 @@
 #include "brave/browser/ntp_background/ntp_background_prefs.h"
 #endif
 
-#if defined(TOOLKIT_VIEWS)
-#include "brave/components/sidebar/browser/pref_names.h"
-#endif
-
 // This method should be periodically pruned of year+ old migrations.
 void MigrateObsoleteProfilePrefs(PrefService* profile_prefs,
                                  const base::FilePath& profile_path) {
@@ -122,17 +118,6 @@ void MigrateObsoleteProfilePrefs(PrefService* profile_prefs,
 #endif
 
   // Added 03/2024
-
-#if defined(TOOLKIT_VIEWS)
-  // Added May 2023
-  if (profile_prefs->GetBoolean(sidebar::kSidebarAlignmentChangedTemporarily)) {
-    // If temporarily changed, it means sidebar is set to right.
-    // Just clear alignment prefs as default alignment is changed to right.
-    profile_prefs->ClearPref(prefs::kSidePanelHorizontalAlignment);
-  }
-
-  profile_prefs->ClearPref(sidebar::kSidebarAlignmentChangedTemporarily);
-#endif
 
   // Added 2023-09
   ntp_background_images::ViewCounterService::MigrateObsoleteProfilePrefs(

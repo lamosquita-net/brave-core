@@ -80,7 +80,7 @@
 #endif
 
 #if defined(TOOLKIT_VIEWS)
-#include "brave/components/sidebar/browser/pref_names.h"
+#include "brave/browser/ui/side_panel/brave_side_panel_prefs.h"
 #endif
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
@@ -136,12 +136,6 @@ void RegisterProfilePrefsForMigration(
   registry->RegisterBooleanPref(kBraveSuggestedSiteSuggestionsEnabled, false);
 #endif
 
-  // Added May 2023
-#if defined(TOOLKIT_VIEWS)
-  registry->RegisterBooleanPref(sidebar::kSidebarAlignmentChangedTemporarily,
-                                false);
-#endif
-
   // Added 2023-09
   ntp_background_images::ViewCounterService::RegisterProfilePrefsForMigration(
       registry);
@@ -170,7 +164,6 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
   registry->RegisterBooleanPref(kBraveAutofillPrivateWindows, true);
   // appearance
   registry->RegisterBooleanPref(kShowBookmarksButton, true);
-  registry->RegisterBooleanPref(kShowSidePanelButton, true);
   registry->RegisterBooleanPref(kLocationBarIsWide, false);
   registry->RegisterBooleanPref(kMRUCyclingEnabled, false);
   registry->RegisterBooleanPref(kTabsSearchShow, true);
@@ -396,6 +389,8 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
 
 #if defined(TOOLKIT_VIEWS)
   bookmarks::prefs::RegisterProfilePrefs(registry);
+  registry->RegisterIntegerPref(brave::kSidePanelWidth,
+                                brave::kDefaultSidePanelWidth);
 #endif
 
   registry->SetDefaultPrefValue(prefs::kSearchSuggestEnabled,

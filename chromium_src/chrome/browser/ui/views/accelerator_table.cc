@@ -16,8 +16,6 @@ namespace {
 
 const AcceleratorMapping kBraveAcceleratorMap[] = {
     {ui::VKEY_M, ui::EF_CONTROL_DOWN, IDC_TOGGLE_TAB_MUTE},
-    // Ctrl+B(or Cmd+B)
-    {ui::VKEY_B, ui::EF_PLATFORM_ACCELERATOR, IDC_TOGGLE_SIDEBAR},
 };
 
 }  // namespace

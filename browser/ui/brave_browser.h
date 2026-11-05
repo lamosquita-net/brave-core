@@ -11,12 +11,6 @@
 #include "base/memory/weak_ptr.h"
 #include "chrome/browser/ui/browser.h"
 
-#if defined(TOOLKIT_VIEWS)
-namespace sidebar {
-class SidebarController;
-}  // namespace sidebar
-#endif
-
 class BraveBrowserWindow;
 
 namespace content {
@@ -34,13 +28,7 @@ class BraveBrowser : public Browser {
   static bool ShouldUseBraveWebViewRoundedCorners(Browser* browser);
 
   // Browser overrides:
-  void ScheduleUIUpdate(content::WebContents* source,
-                        unsigned changed_flags) override;
   bool ShouldDisplayFavicon(content::WebContents* web_contents) const override;
-  void OnTabStripModelChanged(
-      TabStripModel* tab_strip_model,
-      const TabStripModelChange& change,
-      const TabStripSelectionChange& selection) override;
   void FinishWarnBeforeClosing(WarnBeforeClosingResult result) override;
   void BeforeUnloadFired(content::WebContents* source,
                          bool proceed,
@@ -57,12 +45,6 @@ class BraveBrowser : public Browser {
   // Returns true when we should ask browser closing to users before handling
   // any warning/onbeforeunload handlers.
   bool ShouldAskForBrowserClosingBeforeHandlers();
-
-#if defined(TOOLKIT_VIEWS)
-  sidebar::SidebarController* sidebar_controller() {
-    return sidebar_controller_.get();
-  }
-#endif
 
   BraveBrowserWindow* brave_window();
 
@@ -81,8 +63,6 @@ class BraveBrowser : public Browser {
   static void SuppressBrowserWindowClosingDialogForTesting(bool suppress);
 
   bool AreAllTabsSharedPinnedTabs();
-
-  std::unique_ptr<sidebar::SidebarController> sidebar_controller_;
 
   // Set true when user allowed to close browser before starting any
   // warning or onbeforeunload handlers.

@@ -30,10 +30,6 @@
 #include "extensions/buildflags/buildflags.h"
 #include "url/gurl.h"
 
-#if defined(TOOLKIT_VIEWS)
-#include "brave/components/sidebar/browser/pref_names.h"
-#endif
-
 namespace extensions {
 
 using ntp_background_images::prefs::kNewTabPageShowBackgroundImage;
@@ -86,7 +82,6 @@ const PrefsUtil::TypedPrefMap& BravePrefsUtil::GetAllowlistedKeys() {
 
   // appearance prefs
   (*s_brave_allowlist)[kShowBookmarksButton] = settings_api::PrefType::kBoolean;
-  (*s_brave_allowlist)[kShowSidePanelButton] = settings_api::PrefType::kBoolean;
   (*s_brave_allowlist)[kLocationBarIsWide] = settings_api::PrefType::kBoolean;
   (*s_brave_allowlist)[omnibox::kAutocompleteEnabled] =
       settings_api::PrefType::kBoolean;
@@ -105,10 +100,6 @@ const PrefsUtil::TypedPrefMap& BravePrefsUtil::GetAllowlistedKeys() {
 #if BUILDFLAG(IS_MAC)
   (*s_brave_allowlist)[prefs::kShowFullscreenToolbar] =
       settings_api::PrefType::kBoolean;
-#endif
-#if defined(TOOLKIT_VIEWS)
-  (*s_brave_allowlist)[sidebar::kSidebarShowOption] =
-      settings_api::PrefType::kNumber;
 #endif
   // De-AMP feature
   (*s_brave_allowlist)[de_amp::kDeAmpPrefEnabled] =

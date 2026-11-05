@@ -39,19 +39,6 @@
     E_CPONLY(kColorSearchConversionBannerTypeDescText)
 
 #define BRAVE_SIDEBAR_COLOR_IDS                               \
-    E_CPONLY(kColorSidebarAddBubbleBackground)                \
-    E_CPONLY(kColorSidebarAddBubbleHeaderText)                \
-    E_CPONLY(kColorSidebarAddBubbleItemTextBackgroundHovered) \
-    E_CPONLY(kColorSidebarAddBubbleItemTextHovered)           \
-    E_CPONLY(kColorSidebarAddBubbleItemTextNormal)            \
-    E_CPONLY(kColorSidebarAddButtonDisabled)                  \
-    E_CPONLY(kColorSidebarArrowBackgroundHovered)             \
-    E_CPONLY(kColorSidebarArrowDisabled)                      \
-    E_CPONLY(kColorSidebarArrowNormal)                        \
-    E_CPONLY(kColorSidebarButtonBase)                         \
-    E_CPONLY(kColorSidebarButtonPressed)                      \
-    E_CPONLY(kColorSidebarItemDragIndicator)                  \
-    E_CPONLY(kColorSidebarSeparator)                          \
     E_CPONLY(kColorSidebarPanelHeaderSeparator)               \
     E_CPONLY(kColorSidebarPanelHeaderBackground)              \
     E_CPONLY(kColorSidebarPanelHeaderTitle)                   \

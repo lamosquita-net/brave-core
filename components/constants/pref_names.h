@@ -43,7 +43,6 @@ inline constexpr char kWeekOfInstallation[] =
 inline constexpr char kWidevineEnabled[] = "brave.widevine_opted_in";
 inline constexpr char kAskEnableWidvine[] = "brave.ask_widevine_install";
 inline constexpr char kShowBookmarksButton[] = "brave.show_bookmarks_button";
-inline constexpr char kShowSidePanelButton[] = "brave.show_side_panel_button";
 inline constexpr char kLocationBarIsWide[] = "brave.location_bar_is_wide";
 inline constexpr char kReferralDownloadID[] = "brave.referral.download_id";
 inline constexpr char kReferralTimestamp[] = "brave.referral.timestamp";
