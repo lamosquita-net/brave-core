@@ -15,11 +15,6 @@ OVERRIDE_FEATURE_DEFAULT_STATES({{
     BUILDFLAG(IS_WIN)
     {kSkipUndecryptablePasswords, base::FEATURE_ENABLED_BY_DEFAULT},
 #endif
-#if BUILDFLAG(IS_MAC)
-    // FlyWeb `fw1` (FS.25): passwords go through os_crypt_async, so new and
-    // updated ones are written with the `fw1` key.
-    {kUseAsyncOsCryptInLoginDatabase, base::FEATURE_ENABLED_BY_DEFAULT},
-#endif
 }});
 
 }  // namespace password_manager::features

@@ -15,6 +15,11 @@ porte a Chromium 156, `FlyWeb/docs/brave-propio.md` §11.8.2 y §12.
 - `chromium_src/components/os_crypt/async/common/encryptor.cc` (+ parche de una línea), Mac y Linux: un dato sin
   prefijo (lo que OSCrypt de la 2.x devolvía tal cual) se devuelve en claro con `should_reencrypt`; uno con prefijo de
   proveedor (`vNN`, `fwN`) nunca sale en claro. Pruebas en `encryptor_legacy_unittest.cc`.
+- Contraseñas: `patches/...login_database.cc.patch`: una fila `fw1` o `v10` que no se descifra nunca se borra
+  (`IsEncryptionAvailable()` solo mira el proveedor de cifrado; el otro puede faltar).
+- Cookies: `patches/net-extras-sqlite-sqlite_persistent_cookie_store.cc.patch`: una cookie `fw1` ilegible se pierde sola
+  (se borra su fila con el mecanismo de las no canónicas de la 156), no todo su eTLD+1. Como en la 2.x, también con el
+  llavero denegado.
 
 Para cambiar de algoritmo (agilidad): proveedor nuevo con etiqueta nueva (`fw2`) y precedencia mayor; `fw1` se queda
 registrado para leer lo antiguo, igual que `v10`.
