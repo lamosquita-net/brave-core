@@ -5,83 +5,56 @@
 
 #include "components/sync_device_info/device_info_sync_bridge.h"
 
-#include "brave/components/sync_device_info/brave_device_info.h"
 #include "components/sync/base/deletion_origin.h"
+#include "components/sync/protocol/device_info_specifics.pb.h"
 
-#define BRAVE_MAKE_LOCAL_DEVICE_SPECIFICS \
-  specifics->mutable_brave_fields()->set_is_self_delete_supported(true);
+namespace syncer {
+namespace {
 
-#define RefreshLocalDeviceInfoIfNeeded \
-  RefreshLocalDeviceInfoIfNeeded_ChromiumImpl
-
-// This macro disables Chromium's block which detects whether the local
-// device record should be re-uploaded to server. We disable it because it
-// breaks the ability to remove other device in sync chain for Brave
-#define BRAVE_DEVICE_INFO_SYNC_BRIDGE_APPLY_SYNC_CHANGES_SKIP_NEXT_IF if (false)
-
-#define BRAVE_SKIP_EXPIRE_OLD_ENTRIES return;
-
-#define BRAVE_ON_READ_ALL_METADATA_CLEAR_PROGRESS_TOKEN         \
-  if (!device_info_prefs_->IsResetDevicesProgressTokenDone()) { \
-    metadata_batch->ClearProgressToken();                       \
-    device_info_prefs_->SetResetDevicesProgressTokenDone();     \
+// Our specifics support for SelfDeleteSupport.
+SelfDeleteSupport SpecificsToSelfDeleteSupport(
+    const sync_pb::DeviceInfoSpecifics& specifics) {
+  if (specifics.has_brave_fields() &&
+      specifics.brave_fields().has_is_self_delete_supported() &&
+      specifics.brave_fields().is_self_delete_supported()) {
+    return SelfDeleteSupport::kSupported;
   }
+  return SelfDeleteSupport::kNotSupported;
+}
 
-#include "src/components/sync_device_info/device_info_sync_bridge.cc"
+// Forward declared so upstream's caller of `MakeLocalDeviceSpecifics` resolves
+// to our wrapper rather than to the renamed `_ChromiumImpl`
+std::unique_ptr<sync_pb::DeviceInfoSpecifics> MakeLocalDeviceSpecifics(
+    const DeviceInfo& info);
 
-#undef BRAVE_ON_READ_ALL_METADATA_CLEAR_PROGRESS_TOKEN
-#undef BRAVE_SKIP_EXPIRE_OLD_ENTRIES
-#undef BRAVE_DEVICE_INFO_SYNC_BRIDGE_APPLY_SYNC_CHANGES_SKIP_NEXT_IF
-#undef RefreshLocalDeviceInfoIfNeeded
-#undef BRAVE_MAKE_LOCAL_DEVICE_SPECIFICS
+}  // namespace
+}  // namespace syncer
 
 #include "base/task/sequenced_task_runner.h"
+
+#include <components/sync_device_info/device_info_sync_bridge.cc>
 
 namespace syncer {
 
 namespace {
 
-const int kFailedAttemtpsToAckDeviceDelete = 5;
+constexpr int kFailedAttemtpsToAckDeviceDelete = 5;
 
-std::unique_ptr<BraveDeviceInfo> BraveSpecificsToModel(
-    const DeviceInfoSpecifics& specifics) {
-  ModelTypeSet data_types;
-  for (const int field_number :
-       specifics.invalidation_fields().interested_data_type_ids()) {
-    ModelType data_type = GetModelTypeFromSpecificsFieldNumber(field_number);
-    if (!IsRealDataType(data_type)) {
-      DLOG(WARNING) << "Unknown field number " << field_number;
-      continue;
-    }
-    data_types.Put(data_type);
-  }
-  // The code is duplicated from SpecificsToModel by intent to avoid use of
-  // extra patch
-  return std::make_unique<BraveDeviceInfo>(
-      specifics.cache_guid(), specifics.client_name(),
-      specifics.chrome_version(), specifics.sync_user_agent(),
-      specifics.device_type(),
-      DeriveOsFromDeviceType(specifics.device_type(), specifics.manufacturer()),
-      DeriveFormFactorFromDeviceType(specifics.device_type()),
-      specifics.signin_scoped_device_id(), specifics.manufacturer(),
-      specifics.model(), specifics.full_hardware_class(),
-      ProtoTimeToTime(specifics.last_updated_timestamp()),
-      GetPulseIntervalFromSpecifics(specifics),
-      specifics.feature_fields().send_tab_to_self_receiving_enabled(),
-      specifics.feature_fields().send_tab_to_self_receiving_type(),
-      SpecificsToSharingInfo(specifics),
-      SpecificsToPhoneAsASecurityKeyInfo(specifics),
-      specifics.invalidation_fields().instance_id_token(), data_types,
-      SpecificsToFloatingWorkspaceLastSigninTime(specifics),
-      specifics.has_brave_fields() &&
-          specifics.brave_fields().has_is_self_delete_supported() &&
-          specifics.brave_fields().is_self_delete_supported());
+std::unique_ptr<DeviceInfoSpecifics> MakeLocalDeviceSpecifics(
+    const DeviceInfo& info) {
+  std::unique_ptr<DeviceInfoSpecifics> specifics =
+      MakeLocalDeviceSpecifics_ChromiumImpl(info);
+  specifics->mutable_brave_fields()->set_is_self_delete_supported(true);
+  return specifics;
 }
 
 }  // namespace
 
 void DeviceInfoSyncBridge::DeleteDeviceInfo(const std::string& client_id,
                                             base::OnceClosure callback) {
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+  TRACE_EVENT0("sync", "DeviceInfoSyncBridge::DeleteDeviceInfo");
+  CHECK(store_);
   std::unique_ptr<WriteBatch> batch = store_->CreateWriteBatch();
   change_processor()->Delete(client_id, DeletionOrigin::Unspecified(),
                              batch->GetMetadataChangeList());
@@ -113,32 +86,22 @@ void DeviceInfoSyncBridge::OnDeviceInfoDeleted(const std::string& client_id,
   }
 }
 
-std::vector<std::unique_ptr<BraveDeviceInfo>>
-DeviceInfoSyncBridge::GetAllBraveDeviceInfo() const {
-  std::vector<std::unique_ptr<BraveDeviceInfo>> list;
-  for (auto iter = all_data_.begin(); iter != all_data_.end(); ++iter) {
-    list.push_back(BraveSpecificsToModel(iter->second.specifics()));
+std::vector<DeviceInfo> DeviceInfoSyncBridge::GetAllBraveDeviceInfo() const {
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+  TRACE_EVENT0("sync", "DeviceInfoSyncBridge::GetAllBraveDeviceInfo");
+  std::vector<DeviceInfo> list;
+  for (const auto& data : all_data_) {
+    list.push_back(SpecificsToModel(data.second.specifics()));
   }
   return list;
 }
 
-void DeviceInfoSyncBridge::RefreshLocalDeviceInfoIfNeeded() {
-  const DeviceInfo* current_info =
-      local_device_info_provider_->GetLocalDeviceInfo();
-  if (!current_info) {
-    return;
-  }
-
-  if (!all_data_.contains(current_info->guid())) {
-    // After initiating leave the sync chain `DeleteSpecifics` cleans
-    // `all_data_` map.
-    // It is possible that user close sync settings page or change the data type
-    // before the confirmation `DeviceInfoSyncBridge::OnDeviceInfoDeleted()`
-    // comes - this leaded to access to the invalid iterator and crash.
-    return;
-  }
-
-  RefreshLocalDeviceInfoIfNeeded_ChromiumImpl();
+// Tucking this function away here because `DeviceInfoTracker` has not
+// translation unit, and the clang plugin wont allow the definition in the
+// header. This function has to provide a dead definition, otherwise there are
+// certain types of breakages that require patching upstream code.
+std::vector<DeviceInfo> DeviceInfoTracker::GetAllBraveDeviceInfo() const {
+  NOTREACHED() << "This function must be overriden";
 }
 
 }  // namespace syncer

@@ -10,37 +10,11 @@
 #include "base/test/task_environment.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
-namespace base {
-namespace test {
-namespace {
-
-// This trick substitutes TaskEnvironment to make the test
-// LocalDeleteWhenOffline avoid wait 6 sec for real
-class TaskEnvironmentOptionalMockTime : public TaskEnvironment {
- public:
-  TaskEnvironmentOptionalMockTime()
-      : TaskEnvironment(
-            IsMockTimedTest(
-                testing::UnitTest::GetInstance()->current_test_info()->name())
-                ? TimeSource::MOCK_TIME
-                : TimeSource::DEFAULT) {}
-
-  static bool IsMockTimedTest(std::string_view test_name) {
-    return test_name == "LocalDeleteWhenOffline";
-  }
-};
-
-}  // namespace
-}  // namespace test
-}  // namespace base
-
-#define TaskEnvironment TaskEnvironmentOptionalMockTime
 #define ShouldReuploadOnceAfterLocalDeviceInfoTombstone \
   DISABLED_ShouldReuploadOnceAfterLocalDeviceInfoTombstone
 
-#include "src/components/sync_device_info/device_info_sync_bridge_unittest.cc"
+#include <components/sync_device_info/device_info_sync_bridge_unittest.cc>
 
-#undef TaskEnvironment
 #undef ShouldReuploadOnceAfterLocalDeviceInfoTombstone
 
 namespace syncer {
@@ -169,7 +143,7 @@ TEST_F(DeviceInfoSyncBridgeTest,
   const DeviceInfoSpecifics specifics = CreateLocalDeviceSpecifics();
   syncer::EntityChangeList entity_change_list;
   entity_change_list.push_back(
-      EntityChange::CreateDelete(specifics.cache_guid()));
+      EntityChange::CreateDelete(specifics.cache_guid(), syncer::EntityData()));
   auto error_on_delete = bridge()->ApplyIncrementalSyncChanges(
       bridge()->CreateMetadataChangeList(), std::move(entity_change_list));
   EXPECT_FALSE(error_on_delete);
@@ -182,8 +156,8 @@ TEST_F(DeviceInfoSyncBridgeTest,
   ASSERT_EQ(1u, bridge()->GetAllDeviceInfo().size());
 
   EntityChangeList changes;
-  changes.push_back(
-      EntityChange::CreateDelete(CacheGuidForSuffix(kLocalSuffix)));
+  changes.push_back(EntityChange::CreateDelete(CacheGuidForSuffix(kLocalSuffix),
+                                               syncer::EntityData()));
 
   // An incoming deletion for the local device info should not cause a reupload
   EXPECT_CALL(*processor(), Put(CacheGuidForSuffix(kLocalSuffix), _, _))
@@ -224,9 +198,9 @@ TEST_F(DeviceInfoSyncBridgeTest, BraveExpireOldEntriesUponStartup) {
 
 TEST_F(DeviceInfoSyncBridgeTest, BraveResetsProgressMarkerOnce) {
   const DeviceInfoSpecifics specifics = CreateLocalDeviceSpecifics();
-  ModelTypeState model_type_state = StateWithEncryption("ekn");
-  model_type_state.mutable_progress_marker()->set_token("ABC");
-  WriteToStoreWithMetadata({specifics}, model_type_state);
+  DataTypeState data_type_state = StateWithEncryption("ekn");
+  data_type_state.mutable_progress_marker()->set_token("ABC");
+  WriteToStoreWithMetadata({specifics}, data_type_state);
 
   {
     base::RunLoop run_loop;
@@ -238,9 +212,8 @@ TEST_F(DeviceInfoSyncBridgeTest, BraveResetsProgressMarkerOnce) {
         .WillOnce([&run_loop](std::unique_ptr<MetadataBatch> batch) {
           // When model is loaded for the first time and the progress token
           // was set then the token should be reset
-          EXPECT_TRUE(batch->GetModelTypeState().has_progress_marker());
-          EXPECT_FALSE(
-              batch->GetModelTypeState().progress_marker().has_token());
+          EXPECT_TRUE(batch->GetDataTypeState().has_progress_marker());
+          EXPECT_FALSE(batch->GetDataTypeState().progress_marker().has_token());
           run_loop.Quit();
         });
 
@@ -256,8 +229,8 @@ TEST_F(DeviceInfoSyncBridgeTest, BraveResetsProgressMarkerOnce) {
         .WillOnce([&run_loop](std::unique_ptr<MetadataBatch> batch) {
           // When the progress token already was reset, then do not reset it
           // again
-          EXPECT_TRUE(batch->GetModelTypeState().has_progress_marker());
-          EXPECT_TRUE(batch->GetModelTypeState().progress_marker().has_token());
+          EXPECT_TRUE(batch->GetDataTypeState().has_progress_marker());
+          EXPECT_TRUE(batch->GetDataTypeState().progress_marker().has_token());
           run_loop.Quit();
         });
     run_loop.Run();
