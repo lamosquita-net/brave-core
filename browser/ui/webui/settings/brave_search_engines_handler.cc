@@ -37,8 +37,8 @@ void BraveSearchEnginesHandler::RegisterMessages() {
           base::Unretained(this)));
 }
 
-void BraveSearchEnginesHandler::OnModelChanged() {
-  SearchEnginesHandler::OnModelChanged();
+void BraveSearchEnginesHandler::OnTemplateURLServiceChanged() {
+  SearchEnginesHandler::OnTemplateURLServiceChanged();
 
   brave::UpdateDefaultPrivateSearchProviderData(profile_);
 
@@ -63,7 +63,8 @@ base::ListValue BraveSearchEnginesHandler::GetPrivateSearchEnginesList() {
   base::ListValue defaults;
 
   for (int i = 0; i < last_default_engine_index; ++i) {
-    const TemplateURL* template_url = list_controller_.GetTemplateURL(i);
+    const TemplateURL* template_url =
+        list_controller_.GetTemplateURLForIndex(i);
     // Don't show two brave search entries from settings to prevent confusion.
     // Hide brave search for tor entry from settings UI. User doesn't need to
     // select brave search tor entry for private profile.

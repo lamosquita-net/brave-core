@@ -38,7 +38,7 @@ std::string GetHostFromTemplateURLData(const TemplateURLData& data) {
 using namespace TemplateURLPrepopulateData;  // NOLINT
 
 const PrepopulatedEngine* const kBraveAddedEngines[] = {
-    &startpage,
+    &brave_startpage,
 };
 
 const std::unordered_set<std::u16string_view> kOverriddenEnginesNames = {

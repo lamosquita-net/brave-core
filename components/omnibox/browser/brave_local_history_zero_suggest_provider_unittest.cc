@@ -11,7 +11,7 @@
 #include <string_view>
 #include <utility>
 
-#include "base/memory/ref_counted.h"
+#include "base/check.h"
 #include "base/run_loop.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/test/task_environment.h"
@@ -27,11 +27,12 @@
 #include "components/omnibox/browser/test_scheme_classifier.h"
 #include "components/prefs/pref_service.h"
 #include "components/prefs/testing_pref_service.h"
-#include "components/search_engines/prepopulated_engines.h"
 #include "components/search_engines/template_url.h"
 #include "components/search_engines/template_url_data_util.h"
+#include "components/sync_preferences/testing_pref_service_syncable.h"
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
+#include "third_party/search_engines_data/resources/definitions/prepopulated_engines.h"
 #include "url/gurl.h"
 
 class BraveLocalHistoryZeroSuggestProviderTest
@@ -84,8 +85,13 @@ class BraveLocalHistoryZeroSuggestProviderTest
   // testing::Test
   void SetUp() override {
     client_ = std::make_unique<FakeAutocompleteProviderClient>();
-    auto* registry =
-        static_cast<TestingPrefServiceSimple*>(client_->GetPrefs())->registry();
+
+    ON_CALL(*client_, SearchSuggestEnabled())
+        .WillByDefault(testing::Return(true));
+
+    auto* registry = static_cast<sync_preferences::TestingPrefServiceSyncable*>(
+                         client_->GetPrefs())
+                         ->registry();
     omnibox::RegisterBraveProfilePrefs(registry);
 
     CHECK(history_dir_.CreateUniqueTempDir());

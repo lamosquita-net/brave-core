@@ -3,20 +3,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "components/search_engines/util.h"
+
+#include <algorithm>
+#include <ranges>
+
 #define GetSearchProvidersUsingKeywordResult \
   GetSearchProvidersUsingKeywordResult_ChromiumImpl
 #include "src/components/search_engines/util.cc"
 #undef GetSearchProvidersUsingKeywordResult
 
-#include <algorithm>
-
-#include "base/containers/adapters.h"
-
 void GetSearchProvidersUsingKeywordResult(
-    const WDTypedResult& result,
+    const WDKeywordsResult& keyword_result,
     KeywordWebDataService* service,
     PrefService* prefs,
-    search_engines::SearchEngineChoiceService* search_engine_choice_service,
+    const TemplateURLPrepopulateData::Resolver& template_url_data_resolver,
     TemplateURLService::OwnedTemplateURLVector* template_urls,
     TemplateURL* default_search_provider,
     const SearchTermsData& search_terms_data,
@@ -24,15 +25,15 @@ void GetSearchProvidersUsingKeywordResult(
     std::set<std::string>* removed_keyword_guids) {
   // Call the original implementation to get template_urls.
   GetSearchProvidersUsingKeywordResult_ChromiumImpl(
-      result, service, prefs, search_engine_choice_service, template_urls,
+      keyword_result, service, prefs, template_url_data_resolver, template_urls,
       default_search_provider, search_terms_data, out_updated_keywords_metadata,
       removed_keyword_guids);
-  // Resort template_urls in the orider of prepopulated search engines.
+  // Resort template_urls in the order of prepopulated search engines.
   if (template_urls && !template_urls->empty()) {
     std::vector<std::unique_ptr<TemplateURLData>> prepopulated_urls =
-        TemplateURLPrepopulateData::GetPrepopulatedEngines(
-            prefs, search_engine_choice_service);
-    for (const auto& template_url_data : base::Reversed(prepopulated_urls)) {
+        template_url_data_resolver.GetPrepopulatedEngines();
+    for (const auto& template_url_data :
+         std::views::reverse(prepopulated_urls)) {
       auto it = std::ranges::find_if(
           *template_urls,
           [&template_url_data](std::unique_ptr<TemplateURL>& t_url1) {

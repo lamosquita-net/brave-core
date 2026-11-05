@@ -127,7 +127,7 @@ TEST_F(BraveSyncClientTest, PrefSyncedDefaultSearchProviderGUIDIsSyncable) {
   // But we have it here because we have profile here and both these tests are
   // related by the final purpose
   const PrefService::Preference* pref = profile()->GetPrefs()->FindPreference(
-      prefs::kSyncedDefaultSearchProviderGUID);
+      prefs::kDefaultSearchProviderGUID);
   EXPECT_TRUE(pref->registration_flags() &
               user_prefs::PrefRegistrySyncable::SYNCABLE_PREF);
 }

@@ -3,9 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "components/search_engines/template_url_starter_pack_data.h"
+
 #include <string_view>
 
-#include "components/search_engines/template_url_starter_pack_data.h"
 #include "base/strings/strcat.h"
 #include "base/strings/string_util.h"
 
@@ -16,11 +17,11 @@
 
 namespace {
 
-const char kChromeSchema[] = "chrome://";
-const char kBraveSchema[] = "flyweb://";
+constexpr char kChromeSchema[] = "chrome://";
+constexpr char kBraveSchema[] = "flyweb://";
 }  // namespace
 
-namespace TemplateURLStarterPackData {
+namespace template_url_starter_pack_data {
 
 std::vector<std::unique_ptr<TemplateURLData>> GetStarterPackEngines() {
   auto t_urls = GetStarterPackEngines_ChromiumImpl();
@@ -38,4 +39,4 @@ std::vector<std::unique_ptr<TemplateURLData>> GetStarterPackEngines() {
   return t_urls;
 }
 
-}  // namespace TemplateURLStarterPackData
+}  // namespace template_url_starter_pack_data

@@ -10,7 +10,7 @@
 #include <map>
 
 #include "build/build_config.h"
-#include "components/search_engines/prepopulated_engines.h"
+#include "third_party/search_engines_data/resources/definitions/prepopulated_engines.h"
 
 namespace TemplateURLPrepopulateData {
 
@@ -104,7 +104,7 @@ extern const PrepopulatedEngine duckduckgo_lite;
 #endif
 extern const PrepopulatedEngine brave_ecosia;
 extern const PrepopulatedEngine qwant;
-extern const PrepopulatedEngine startpage;
+extern const PrepopulatedEngine brave_startpage;
 extern const PrepopulatedEngine brave_yandex;
 extern const PrepopulatedEngine brave_search;
 extern const PrepopulatedEngine brave_search_tor;
