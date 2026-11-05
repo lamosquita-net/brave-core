@@ -21,10 +21,6 @@ class PermissionUtil : public PermissionUtil_ChromiumImpl {
 
   static blink::PermissionType ContentSettingsTypeToPermissionType(
       ContentSettingsType permission);
-
-  static GURL GetCanonicalOrigin(ContentSettingsType permission,
-                                 const GURL& requesting_origin,
-                                 const GURL& embedding_origin);
 };
 
 }  // namespace permissions

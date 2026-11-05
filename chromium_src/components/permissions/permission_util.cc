@@ -62,10 +62,6 @@ namespace permissions {
 std::string PermissionUtil::GetPermissionString(
     ContentSettingsType content_type) {
   switch (content_type) {
-    case ContentSettingsType::BRAVE_ETHEREUM:
-      return "BraveEthereum";
-    case ContentSettingsType::BRAVE_SOLANA:
-      return "BraveSolana";
     case ContentSettingsType::BRAVE_GOOGLE_SIGN_IN:
       return "BraveGoogleSignInPermission";
     case ContentSettingsType::BRAVE_LOCALHOST_ACCESS:
@@ -78,11 +74,6 @@ std::string PermissionUtil::GetPermissionString(
 // static
 bool PermissionUtil::GetPermissionType(ContentSettingsType type,
                                        blink::PermissionType* out) {
-  if (type == ContentSettingsType::BRAVE_ETHEREUM ||
-      type == ContentSettingsType::BRAVE_SOLANA) {
-    *out = PermissionType::WINDOW_MANAGEMENT;
-    return true;
-  }
   if (type == ContentSettingsType::BRAVE_GOOGLE_SIGN_IN) {
     *out = PermissionType::BRAVE_GOOGLE_SIGN_IN;
     return true;
@@ -98,8 +89,6 @@ bool PermissionUtil::GetPermissionType(ContentSettingsType type,
 // static
 bool PermissionUtil::IsPermission(ContentSettingsType type) {
   switch (type) {
-    case ContentSettingsType::BRAVE_ETHEREUM:
-    case ContentSettingsType::BRAVE_SOLANA:
     case ContentSettingsType::BRAVE_GOOGLE_SIGN_IN:
     case ContentSettingsType::BRAVE_LOCALHOST_ACCESS:
       return true;
@@ -137,18 +126,6 @@ PermissionType PermissionUtil::ContentSettingsTypeToPermissionType(
       return PermissionUtil_ChromiumImpl::ContentSettingsTypeToPermissionType(
           permission);
   }
-}
-
-GURL PermissionUtil::GetCanonicalOrigin(ContentSettingsType permission,
-                                        const GURL& requesting_origin,
-                                        const GURL& embedding_origin) {
-  // Use requesting_origin which will have ethereum or solana address info.
-  if (permission == ContentSettingsType::BRAVE_ETHEREUM ||
-      permission == ContentSettingsType::BRAVE_SOLANA)
-    return requesting_origin;
-
-  return PermissionUtil_ChromiumImpl::GetCanonicalOrigin(
-      permission, requesting_origin, embedding_origin);
 }
 
 }  // namespace permissions

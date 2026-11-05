@@ -72,8 +72,6 @@ std::string GetContentSettingTypeString(ContentSettingsType type) {
     break;
 
     TYPE_CASE(ContentSettingsType::GEOLOCATION)
-    TYPE_CASE(ContentSettingsType::BRAVE_ETHEREUM)
-    TYPE_CASE(ContentSettingsType::BRAVE_SOLANA)
 
 #undef TYPE_CASE
     default:
