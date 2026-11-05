@@ -15,14 +15,8 @@
 #include "brave/browser/translate/brave_translate_prefs_migration.h"
 #include "brave/browser/ui/bookmark/brave_bookmark_prefs.h"
 #include "brave/browser/ui/omnibox/brave_omnibox_client_impl.h"
-#include "brave/components/brave_adaptive_captcha/brave_adaptive_captcha_service.h"
-#include "brave/components/brave_ads/browser/analytics/p2a/p2a.h"
-#include "brave/components/brave_ads/core/public/prefs/obsolete_pref_util.h"
-#include "brave/components/brave_ads/core/public/prefs/pref_registry.h"
 #include "brave/components/brave_perf_predictor/browser/p3a_bandwidth_savings_tracker.h"
 #include "brave/components/brave_perf_predictor/browser/perf_predictor_tab_helper.h"
-#include "brave/components/brave_rewards/common/pref_names.h"
-#include "brave/components/brave_rewards/common/pref_registry.h"
 #include "brave/components/brave_search/browser/brave_search_default_host.h"
 #include "brave/components/brave_search/common/brave_search_utils.h"
 #include "brave/components/brave_search_conversion/utils.h"
@@ -169,11 +163,6 @@ void RegisterProfilePrefsForMigration(
   registry->RegisterBooleanPref(kBraveSuggestedSiteSuggestionsEnabled, false);
 #endif
 
-  // Added Feb 2023
-  registry->RegisterBooleanPref(brave_rewards::prefs::kShowButton, true);
-
-  brave_rewards::RegisterProfilePrefsForMigration(registry);
-
   // Added May 2023
 #if defined(TOOLKIT_VIEWS)
   registry->RegisterBooleanPref(sidebar::kSidebarAlignmentChangedTemporarily,
@@ -186,9 +175,6 @@ void RegisterProfilePrefsForMigration(
 
   // Added 2023-11
   brave_sync::Prefs::RegisterProfilePrefsForMigration(registry);
-
-  // Added 2023-11
-  brave_ads::RegisterProfilePrefsForMigration(registry);
 
   // Added 2024-04
   brave_shields::RegisterShieldsP3AProfilePrefsForMigration(registry);
@@ -251,9 +237,6 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
 #if BUILDFLAG(ENABLE_BRAVE_WAYBACK_MACHINE)
   registry->RegisterBooleanPref(kBraveWaybackMachineEnabled, true);
 #endif
-
-  brave_adaptive_captcha::BraveAdaptiveCaptchaService::RegisterProfilePrefs(
-      registry);
 
 #if BUILDFLAG(IS_ANDROID)
   registry->RegisterBooleanPref(kDesktopModeEnabled, false);
@@ -430,7 +413,6 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
 
 #if !BUILDFLAG(IS_ANDROID)
   BraveOmniboxClientImpl::RegisterProfilePrefs(registry);
-  brave_ads::RegisterP2APrefs(registry);
 
   // Turn on most visited mode on NTP by default.
   // We can turn customization mode on when we have add-shortcut feature.
@@ -470,9 +452,6 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
 #if defined(TOOLKIT_VIEWS)
   bookmarks::prefs::RegisterProfilePrefs(registry);
 #endif
-
-  brave_ads::RegisterProfilePrefs(registry);
-  brave_rewards::RegisterProfilePrefs(registry);
 
   registry->SetDefaultPrefValue(prefs::kSearchSuggestEnabled,
                                 base::Value(false));
