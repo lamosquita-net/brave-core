@@ -13,10 +13,6 @@ namespace permissions {
 std::optional<RequestType> ContentSettingsTypeToRequestTypeIfExists_BraveImpl(
     ContentSettingsType content_settings_type) {
   switch (content_settings_type) {
-    case ContentSettingsType::BRAVE_ETHEREUM:
-      return RequestType::kBraveEthereum;
-    case ContentSettingsType::BRAVE_SOLANA:
-      return RequestType::kBraveSolana;
     case ContentSettingsType::BRAVE_GOOGLE_SIGN_IN:
       return RequestType::kBraveGoogleSignInPermission;
     case ContentSettingsType::BRAVE_LOCALHOST_ACCESS:

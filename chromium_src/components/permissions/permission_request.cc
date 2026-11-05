@@ -16,21 +16,10 @@
 #define PermissionRequest PermissionRequest_ChromiumImpl
 #define IsDuplicateOf IsDuplicateOf_ChromiumImpl
 
-// `kWidevine` handled by an override in `WidevinePermissionRequest` and the
-// Brave Ethereum/Solana permission has its own permission request prompt.
-#if BUILDFLAG(IS_ANDROID)
+// `kWidevine` handled by an override in `WidevinePermissionRequest`.
 #define BRAVE_ENUM_ITEMS_FOR_SWITCH \
-  case RequestType::kBraveEthereum: \
-  case RequestType::kBraveSolana:   \
   case RequestType::kWidevine:      \
     NOTREACHED();
-#else
-#define BRAVE_ENUM_ITEMS_FOR_SWITCH \
-  case RequestType::kBraveEthereum: \
-  case RequestType::kBraveSolana:   \
-  case RequestType::kWidevine:      \
-    NOTREACHED();
-#endif
 
 // For permission strings that we also need on Android, we need to use
 // a string that has a placeholder ($1) in it.

@@ -13,8 +13,6 @@
 // In 156 the UMA request type mapping moved from permission_uma_util.cc here.
 #define BRAVE_GET_UMA_VALUE_FOR_REQUEST_TYPE         \
   case RequestType::kWidevine:                       \
-  case RequestType::kBraveEthereum:                  \
-  case RequestType::kBraveSolana:                    \
   case RequestType::kBraveGoogleSignInPermission:    \
   case RequestType::kBraveLocalhostAccessPermission: \
     return RequestTypeForUma::PERMISSION_VR;
