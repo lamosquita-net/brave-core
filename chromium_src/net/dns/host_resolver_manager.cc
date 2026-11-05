@@ -8,14 +8,16 @@
 // them in its Tor code, which FlyWeb no longer ships. Every resolve request
 // (RequestImpl and ServiceEndpointRequestImpl) goes through
 // HostResolverManager::ResolveLocally(), whose only call to
-// IsCanonicalizedHostCompliant() decides whether the name is resolvable at
-// all: an .onion name now fails there with ERR_NAME_NOT_RESOLVED before any
-// query leaves the machine. Proxy-resolved requests never reach this resolver.
+// IsCanonicalizedHostCompliant() (or dns_names_util::IsValidDnsName() for
+// source=MULTICAST_DNS) decides whether the name is resolvable at all: an
+// .onion name now fails there with ERR_NAME_NOT_RESOLVED before any query
+// leaves the machine. Proxy-resolved requests never reach this resolver.
 
 #include <string_view>
 
 #include "base/strings/string_util.h"
 #include "net/base/url_util.h"
+#include "net/dns/dns_names_util.h"
 
 namespace net {
 namespace {
@@ -33,10 +35,23 @@ bool IsCanonicalizedHostCompliantAndNotOnion(std::string_view host) {
 }
 
 }  // namespace
+
+namespace dns_names_util {
+namespace {
+
+bool IsValidDnsNameAndNotOnion(std::string_view dotted_form_name) {
+  return IsValidDnsName(dotted_form_name) &&
+         !net::IsOnionHostname(dotted_form_name);
+}
+
+}  // namespace
+}  // namespace dns_names_util
 }  // namespace net
 
 #define IsCanonicalizedHostCompliant IsCanonicalizedHostCompliantAndNotOnion
+#define IsValidDnsName IsValidDnsNameAndNotOnion
 
 #include "src/net/dns/host_resolver_manager.cc"
 
+#undef IsValidDnsName
 #undef IsCanonicalizedHostCompliant
