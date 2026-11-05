@@ -22,7 +22,6 @@
 #include "brave/browser/ui/page_action/brave_page_action_icon_type.h"
 #include "brave/browser/ui/views/frame/brave_browser_view.h"
 #include "brave/browser/ui/webui/speedreader/speedreader_toolbar_data_handler_impl.h"
-#include "brave/components/ai_chat/core/common/buildflags/buildflags.h"
 #include "brave/components/brave_wallet/browser/brave_wallet_utils.h"
 #include "brave/components/constants/brave_paths.h"
 #include "brave/components/speedreader/common/constants.h"
@@ -63,10 +62,6 @@
 #include "net/test/embedded_test_server/http_response.h"
 #include "services/network/public/cpp/network_switches.h"
 
-#if BUILDFLAG(ENABLE_AI_CHAT)
-#include "brave/components/ai_chat/core/common/features.h"
-#endif
-
 const char kTestHost[] = "a.test";
 const char kTestPageSimple[] = "/simple.html";
 const char kTestPageReadable[] = "/speedreader/article/guardian.html";
@@ -92,21 +87,9 @@ class SpeedReaderBrowserTest : public InProcessBrowserTest {
  public:
   SpeedReaderBrowserTest()
       : https_server_(net::EmbeddedTestServer::TYPE_HTTPS) {
-#if BUILDFLAG(ENABLE_AI_CHAT)
-    feature_list_.InitWithFeaturesAndParameters(
-        {{speedreader::kSpeedreaderFeature,
-          {
-            { speedreader::kSpeedreaderTTS.name,
-              "true" }
-          }},
-         { ai_chat::features::kAIChat,
-           { {} } }},
-        {});
-#else
     feature_list_.InitAndEnableFeatureWithParameters(
         speedreader::kSpeedreaderFeature,
         {{speedreader::kSpeedreaderTTS.name, "true"}});
-#endif
   }
 
   SpeedReaderBrowserTest(const SpeedReaderBrowserTest&) = delete;
@@ -773,20 +756,6 @@ IN_PROC_BROWSER_TEST_F(SpeedReaderBrowserTest, Toolbar) {
                            ->reader_mode_toolbar_view_.get();
   auto* toolbar = toolbar_view->GetWebContentsForTesting();
   WaitElement(toolbar, "appearance");
-
-#if BUILDFLAG(ENABLE_AI_CHAT)
-  Click(toolbar, "ai");
-  auto* side_panel = browser()->GetFeatures().side_panel_ui();
-  while (side_panel->GetCurrentEntryId() != SidePanelEntryId::kChatUI) {
-    NonBlockingDelay(base::Milliseconds(10));
-  }
-  EXPECT_EQ(SidePanelEntryId::kChatUI, side_panel->GetCurrentEntryId());
-  Click(toolbar, "ai");
-  while (side_panel->GetCurrentEntryId().has_value()) {
-    NonBlockingDelay(base::Milliseconds(10));
-  }
-  EXPECT_FALSE(side_panel->GetCurrentEntryId().has_value());
-#endif
 
   Click(toolbar, "appearance");
   {  // change theme
