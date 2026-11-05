@@ -112,7 +112,7 @@ class EventSourcePoolLimitBrowserTest : public InProcessBrowserTest {
 
   std::unique_ptr<HttpResponse> HandleRequest(const HttpRequest& request) {
     std::string event_source_host_colon_port =
-        es_url_.host() + ":" + es_url_.port();
+        es_url_.GetHost() + ":" + es_url_.GetPort();
     if (request.relative_url == es_url_.path() &&
         request.headers.at("Host") == event_source_host_colon_port) {
       auto http_response = std::make_unique<BasicHttpResponse>();

@@ -676,7 +676,7 @@ void SetHttpsUpgradeControlType(HostContentSettingsMap* map,
   if (url.is_empty()) {
     map->ClearSettingsForOneType(ContentSettingsType::HTTP_ALLOWED);
   } else {
-    const GURL& secure_url = GURL("https://" + url.host());
+    const GURL& secure_url = GURL("https://" + url.GetHost());
     map->SetWebsiteSettingDefaultScope(
         secure_url, GURL(), ContentSettingsType::HTTP_ALLOWED, base::Value());
   }

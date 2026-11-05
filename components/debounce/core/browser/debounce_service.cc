@@ -32,7 +32,7 @@ bool DebounceService::Debounce(const GURL& original_url,
   const base::flat_set<std::string>& host_cache =
       component_installer_->host_cache();
   const std::string etldp1 =
-      DebounceRule::GetETLDForDebounce(original_url.host());
+      DebounceRule::GetETLDForDebounce(original_url.GetHost());
   if (!host_cache.contains(etldp1)) {
     return false;
   }

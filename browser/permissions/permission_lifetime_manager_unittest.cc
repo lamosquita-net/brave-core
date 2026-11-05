@@ -606,22 +606,22 @@ TEST_F(PermissionLifetimeManagerWithOriginMonitorTest,
       kOrigin, ContentSettingsType::NOTIFICATIONS, base::TimeDelta()));
   EXPECT_CALL(*origin_lifetime_monitor_,
               SubscribeToPermissionOriginDestruction(kOrigin))
-      .WillOnce(testing::Return(kOrigin.host()));
+      .WillOnce(testing::Return(kOrigin.GetHost()));
   manager()->PermissionDecided(*request, kOrigin, kOrigin,
                                ContentSetting::CONTENT_SETTING_ALLOW, false);
   EXPECT_FALSE(timer().IsRunning());
 
   // Check data stored in prefs.
   CheckExpirationsPref(FROM_HERE, kOneTypeOneExpirationPrefValue,
-                       {"notifications", kOrigin.host(), kOrigin.spec()});
+                       {"notifications", kOrigin.GetHost(), kOrigin.spec()});
 
   // Invalid host destroy shouldn't trigger any reset.
   origin_lifetime_monitor_->NotifyOriginDestroyed("test.com");
   CheckExpirationsPref(FROM_HERE, kOneTypeOneExpirationPrefValue,
-                       {"notifications", kOrigin.host(), kOrigin.spec()});
+                       {"notifications", kOrigin.GetHost(), kOrigin.spec()});
 
   // Destroy origin, this should trigger a setting reset to default state.
-  origin_lifetime_monitor_->NotifyOriginDestroyed(kOrigin.host());
+  origin_lifetime_monitor_->NotifyOriginDestroyed(kOrigin.GetHost());
   ExpectContentSetting(FROM_HERE, kOrigin, ContentSettingsType::NOTIFICATIONS,
                        ContentSetting::CONTENT_SETTING_DEFAULT);
 
@@ -639,10 +639,10 @@ TEST_F(PermissionLifetimeManagerWithOriginMonitorTest,
       kOrigin2, ContentSettingsType::NOTIFICATIONS, base::TimeDelta()));
   EXPECT_CALL(*origin_lifetime_monitor_,
               SubscribeToPermissionOriginDestruction(kOrigin))
-      .WillOnce(testing::Return(kOrigin.host()));
+      .WillOnce(testing::Return(kOrigin.GetHost()));
   EXPECT_CALL(*origin_lifetime_monitor_,
               SubscribeToPermissionOriginDestruction(kOrigin2))
-      .WillOnce(testing::Return(kOrigin2.host()));
+      .WillOnce(testing::Return(kOrigin2.GetHost()));
   manager()->PermissionDecided(*request, kOrigin, kOrigin,
                                ContentSetting::CONTENT_SETTING_ALLOW, false);
   manager()->PermissionDecided(*request2, kOrigin2, kOrigin2,
@@ -651,8 +651,8 @@ TEST_F(PermissionLifetimeManagerWithOriginMonitorTest,
 
   // Check data stored in prefs.
   CheckExpirationsPref(FROM_HERE, kOneTypeTwoExpirationsPrefValue,
-                       {"notifications", kOrigin.host(), kOrigin.spec(),
-                        kOrigin2.host(), kOrigin2.spec()});
+                       {"notifications", kOrigin.GetHost(), kOrigin.spec(),
+                        kOrigin2.GetHost(), kOrigin2.spec()});
 
   ResetManager();
   // This will create a new PermissionLifetimeManager instance.
@@ -682,7 +682,7 @@ TEST_F(PermissionLifetimeManagerWithOriginMonitorTest,
       .Times(0);
   EXPECT_CALL(*origin_lifetime_monitor_,
               SubscribeToPermissionOriginDestruction(kOrigin2))
-      .WillOnce(testing::Return(kOrigin2.host()));
+      .WillOnce(testing::Return(kOrigin2.GetHost()));
   manager()->PermissionDecided(*request, kOrigin, kOrigin,
                                ContentSetting::CONTENT_SETTING_ALLOW, false);
   manager()->PermissionDecided(*request2, kOrigin2, kOrigin2,
@@ -695,7 +695,7 @@ TEST_F(PermissionLifetimeManagerWithOriginMonitorTest,
       {"notifications",
        std::to_string(expected_expiration_time.ToDeltaSinceWindowsEpoch()
                           .InMicroseconds()),
-       kOrigin.spec(), kOrigin2.host(), kOrigin2.spec()});
+       kOrigin.spec(), kOrigin2.GetHost(), kOrigin2.spec()});
 
   browser_task_environment_.FastForwardBy(*request->GetLifetime());
   ExpectContentSetting(FROM_HERE, kOrigin, ContentSettingsType::NOTIFICATIONS,
@@ -705,10 +705,10 @@ TEST_F(PermissionLifetimeManagerWithOriginMonitorTest,
 
   // Check data stored in prefs.
   CheckExpirationsPref(FROM_HERE, kOneTypeOneExpirationPrefValue,
-                       {"notifications", kOrigin2.host(), kOrigin2.spec()});
+                       {"notifications", kOrigin2.GetHost(), kOrigin2.spec()});
 
   // Destroy origin, this should trigger a setting reset to default state.
-  origin_lifetime_monitor_->NotifyOriginDestroyed(kOrigin2.host());
+  origin_lifetime_monitor_->NotifyOriginDestroyed(kOrigin2.GetHost());
   ExpectContentSetting(FROM_HERE, kOrigin2, ContentSettingsType::NOTIFICATIONS,
                        ContentSetting::CONTENT_SETTING_DEFAULT);
 

@@ -63,7 +63,7 @@ constexpr gfx::Size kIconSize(SidebarButtonView::kExternalIconSize,
 std::string GetFirstCharFromURL(const GURL& url) {
   DCHECK(url.is_valid());
 
-  std::string target = url.host();
+  std::string target = url.GetHost();
   if (target.empty()) {
     target = url.spec();
   }

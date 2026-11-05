@@ -48,7 +48,8 @@ void RequestOTRService::OnRulesReady(const std::string& json_content) {
 
 bool RequestOTRService::ShouldBlock(const GURL& url) const {
   // Check host cache
-  const std::string etldp1 = RequestOTRRule::GetETLDForRequestOTR(url.host());
+  const std::string etldp1 =
+      RequestOTRRule::GetETLDForRequestOTR(url.GetHost());
   if (!host_cache_.contains(etldp1)) {
     return false;
   }

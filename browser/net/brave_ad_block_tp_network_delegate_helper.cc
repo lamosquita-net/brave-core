@@ -176,7 +176,7 @@ EngineFlags ShouldBlockRequestOnTaskRunner(
   if (!ctx->initiator_url.is_valid()) {
     return previous_result;
   }
-  const std::string source_host = ctx->initiator_url.host();
+  const std::string source_host = ctx->initiator_url.GetHost();
 
   GURL url_to_check;
   if (canonical_url.has_value()) {

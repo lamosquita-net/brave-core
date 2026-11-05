@@ -339,7 +339,7 @@ void EphemeralStorageService::CleanupFirstPartyStorageAreasOnStartup() {
     if (!url.is_valid()) {
       continue;
     }
-    delegate_->CleanupFirstPartyStorageArea(url.host());
+    delegate_->CleanupFirstPartyStorageArea(url.GetHost());
   }
   first_party_storage_areas_to_cleanup_on_startup_.clear();
 }

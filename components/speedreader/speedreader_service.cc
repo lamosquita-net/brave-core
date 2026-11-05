@@ -180,7 +180,7 @@ void SpeedreaderService::EnableForSite(const GURL& url, bool enabled) {
   }
   // Rule covers all protocols and pages.
   const auto pattern =
-      ContentSettingsPattern::FromString("*://" + url.host() + "/*");
+      ContentSettingsPattern::FromString("*://" + url.GetHost() + "/*");
   if (!pattern.IsValid()) {
     return;
   }

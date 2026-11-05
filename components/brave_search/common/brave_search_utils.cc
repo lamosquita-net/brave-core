@@ -37,7 +37,7 @@ bool IsAllowedHost(const GURL& url) {
   if (!url.is_valid() || !url.SchemeIs(url::kHttpsScheme)) {
     return false;
   }
-  std::string host = url.host();
+  std::string host = url.GetHost();
   return kVettedHosts.contains(host);
 }
 

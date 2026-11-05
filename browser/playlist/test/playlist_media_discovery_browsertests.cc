@@ -100,9 +100,10 @@ class PlaylistMediaDiscoveryBrowserTest : public PlatformBrowserTest {
         .WillOnce(
             [&](const GURL&,
                 std::vector<playlist::mojom::PlaylistItemPtr> actual_items) {
-              OnGetMedia(test_info->name(), items,
-                         url.is_valid() ? url.host() : destination_url.host(),
-                         std::move(actual_items));
+              OnGetMedia(
+                  test_info->name(), items,
+                  url.is_valid() ? url.GetHost() : destination_url.GetHost(),
+                  std::move(actual_items));
               run_loop.Quit();
             });
 

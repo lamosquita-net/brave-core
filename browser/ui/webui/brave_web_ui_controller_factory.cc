@@ -53,19 +53,19 @@ WebUIController* NewWebUI(WebUI* web_ui, const GURL& url) {
   Profile* profile = Profile::FromBrowserContext(
       web_ui->GetWebContents()->GetBrowserContext());
   if (host == kAdblockHost) {
-    return new BraveAdblockUI(web_ui, url.host());
+    return new BraveAdblockUI(web_ui, url.GetHost());
   } else if (host == kAdblockInternalsHost) {
-    return new BraveAdblockInternalsUI(web_ui, url.host());
+    return new BraveAdblockInternalsUI(web_ui, url.GetHost());
 #if !BUILDFLAG(IS_ANDROID)
   } else if (host == kWelcomeHost && !profile->IsGuestSession()) {
-    return new BraveWelcomeUI(web_ui, url.host());
+    return new BraveWelcomeUI(web_ui, url.GetHost());
   } else if (host == chrome::kChromeUISettingsHost) {
-    return new BraveSettingsUI(web_ui, url.host());
+    return new BraveSettingsUI(web_ui, url.GetHost());
   } else if (host == chrome::kChromeUINewTabHost) {
     if (profile->IsIncognitoProfile() || profile->IsGuestSession()) {
-      return new BravePrivateNewTabUI(web_ui, url.host());
+      return new BravePrivateNewTabUI(web_ui, url.GetHost());
     }
-    return new BraveNewTabUI(web_ui, url.host());
+    return new BraveNewTabUI(web_ui, url.GetHost());
 #endif  // !BUILDFLAG(IS_ANDROID)
   }
 

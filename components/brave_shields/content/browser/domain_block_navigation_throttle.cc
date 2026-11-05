@@ -45,7 +45,7 @@ std::pair<bool, std::string> ShouldBlockDomainOnTaskRunner(
   // necessary.
   bool aggressive_for_engine = true;
   auto result = ad_block_service->ShouldStartRequest(
-      url, blink::mojom::ResourceType::kMainFrame, url.host(),
+      url, blink::mojom::ResourceType::kMainFrame, url.GetHost(),
       aggressive_for_engine, false, false, false);
 
   const bool should_block =

@@ -51,7 +51,7 @@ class DomainBlockTestBase : public AdBlockServiceTest {
   }
 
   void BlockDomainByURL(const GURL& url) {
-    UpdateAdBlockInstanceWithRules("||" + url.host() + "^");
+    UpdateAdBlockInstanceWithRules("||" + url.GetHost() + "^");
   }
 
   bool IsShowingInterstitial() {

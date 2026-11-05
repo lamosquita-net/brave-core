@@ -64,7 +64,7 @@ bool HttpsUpgradeExceptionsService::CanUpgradeToHTTPS(const GURL& url) {
     return false;
   }
   // Allow upgrade only if the domain is not on the exceptions list.
-  return !exceptional_domains_.contains(url.host());
+  return !exceptional_domains_.contains(url.GetHost());
 }
 
 // implementation of LocalDataFilesObserver

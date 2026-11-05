@@ -85,8 +85,9 @@ std::string GetContentForURL(const std::string& url) {
 bool URLLoaderInterceptorCallback(
     content::URLLoaderInterceptor::RequestParams* params) {
   content::URLLoaderInterceptor::WriteResponse(
-      GetHeadersForURL(params->url_request.url.path()),
-      GetContentForURL(params->url_request.url.path()), params->client.get());
+      GetHeadersForURL(params->url_request.url.GetPath()),
+      GetContentForURL(params->url_request.url.GetPath()),
+      params->client.get());
   return true;
 }
 
