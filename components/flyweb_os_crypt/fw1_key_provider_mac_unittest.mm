@@ -10,18 +10,23 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
 #include "base/base64.h"
+#include "base/containers/span.h"
 #include "base/memory/raw_ptr.h"
+#include "base/memory/scoped_refptr.h"
 #include "base/test/task_environment.h"
 #include "base/test/test_future.h"
+#include "base/types/expected.h"
+#include "components/os_crypt/async/browser/keychain_key_provider.h"
 #include "components/os_crypt/async/browser/os_crypt_async.h"
 #include "components/os_crypt/async/common/encryptor.h"
-#include "components/os_crypt/sync/os_crypt.h"
-#include "components/os_crypt/sync/os_crypt_mocker.h"
-#include "crypto/apple_keychain.h"
+#include "crypto/aead.h"
+#include "crypto/apple/keychain_v2.h"
+#include "crypto/apple/scoped_fake_keychain_v2.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 namespace os_crypt_async {
@@ -30,208 +35,279 @@ namespace {
 
 using Items = std::map<std::string, std::string>;
 
-// In-memory keychain: generic passwords keyed by "service/account".
-class FakeKeychain : public crypto::AppleKeychain {
+// In-memory generic passwords keyed by "service/account". Only the two calls
+// Fw1KeyProvider makes; upstream's FakeKeychainV2 returns a fixed password
+// for any item, which cannot tell `fw1` from `v10`.
+class FakeKeychain : public crypto::apple::KeychainV2 {
  public:
   explicit FakeKeychain(Items* items) : items_(items) {}
   ~FakeKeychain() override = default;
 
   void set_find_status(OSStatus status) { find_status_ = status; }
   void set_add_status(OSStatus status) { add_status_ = status; }
+  int add_calls() const { return add_calls_; }
 
-  OSStatus FindGenericPassword(UInt32 service_name_length,
-                               const char* service_name,
-                               UInt32 account_name_length,
-                               const char* account_name,
-                               UInt32* password_length,
-                               void** password_data,
-                               crypto::AppleSecKeychainItemRef* item) const override {
+  base::expected<std::vector<uint8_t>, OSStatus> FindGenericPassword(
+      std::string_view service_name,
+      std::string_view account_name) override {
     if (find_status_ != noErr) {
-      return find_status_;
+      return base::unexpected(find_status_);
     }
-    auto it = items_->find(Key(service_name, service_name_length, account_name,
-                               account_name_length));
+    auto it = items_->find(Key(service_name, account_name));
     if (it == items_->end()) {
-      return errSecItemNotFound;
+      return base::unexpected(errSecItemNotFound);
     }
-    *password_length = it->second.size();
-    // A copy, like the real keychain: the provider wipes this buffer.
-    *password_data = malloc(it->second.size());
-    memcpy(*password_data, it->second.data(), it->second.size());
-    return noErr;
+    return std::vector<uint8_t>(it->second.begin(), it->second.end());
   }
 
-  OSStatus ItemFreeContent(void* data) const override {
-    free(data);
-    return noErr;
-  }
-
-  OSStatus AddGenericPassword(UInt32 service_name_length,
-                              const char* service_name,
-                              UInt32 account_name_length,
-                              const char* account_name,
-                              UInt32 password_length,
-                              const void* password_data,
-                              crypto::AppleSecKeychainItemRef* item) const override {
+  OSStatus AddGenericPassword(std::string_view service_name,
+                              std::string_view account_name,
+                              base::span<const uint8_t> password) override {
+    ++add_calls_;
     if (add_status_ != noErr) {
       return add_status_;
     }
-    (*items_)[Key(service_name, service_name_length, account_name,
-                  account_name_length)] =
-        std::string(static_cast<const char*>(password_data), password_length);
+    (*items_)[Key(service_name, account_name)] =
+        std::string(password.begin(), password.end());
     return noErr;
   }
 
-  static std::string Key(const char* service,
-                         UInt32 service_length,
-                         const char* account,
-                         UInt32 account_length) {
-    return std::string(service, service_length) + "/" +
-           std::string(account, account_length);
+  static std::string Key(std::string_view service, std::string_view account) {
+    return std::string(service) + "/" + std::string(account);
   }
 
  private:
   raw_ptr<Items> items_;
   OSStatus find_status_ = noErr;
   OSStatus add_status_ = noErr;
+  int add_calls_ = 0;
 };
 
 constexpr char kItem[] = "FlyWeb Safe Storage/FlyWeb fw1";
 
+// A fixed 256-bit key, as FlyWeb 2.5-2.7 stores it (Base64 in the item).
+std::vector<uint8_t> GoldenKey() {
+  std::vector<uint8_t> key(32);
+  for (size_t i = 0; i < key.size(); ++i) {
+    key[i] = static_cast<uint8_t>(i * 7 + 1);
+  }
+  return key;
+}
+
+using KeyResult = base::expected<Encryptor::Key, KeyProvider::KeyError>;
+
 class Fw1KeyProviderTest : public ::testing::Test {
  protected:
-  void SetUp() override { OSCryptMocker::SetUp(); }
-  void TearDown() override { OSCryptMocker::TearDown(); }
+  KeyResult GetKey(FakeKeychain& keychain) {
+    Fw1KeyProvider provider(&keychain);
+    base::test::TestFuture<const std::string&, KeyResult> future;
+    static_cast<KeyProvider&>(provider).GetKey(future.GetCallback());
+    auto [tag, key] = future.Take();
+    EXPECT_EQ("fw1", tag);
+    return std::move(key);
+  }
 
-  std::unique_ptr<OSCryptAsync> MakeOSCryptAsync(
-      std::unique_ptr<FakeKeychain> keychain) {
+  // `fw1` next to upstream's `v10` provider, as browser_process_impl.cc
+  // registers them. `v10` reads the process-wide fake keychain.
+  scoped_refptr<Encryptor> GetEncryptor(FakeKeychain* fw1_keychain) {
     std::vector<std::pair<size_t, std::unique_ptr<KeyProvider>>> providers;
-    providers.emplace_back(
-        Fw1KeyProvider::kPrecedence,
-        std::make_unique<Fw1KeyProvider>(std::move(keychain)));
-    return std::make_unique<OSCryptAsync>(std::move(providers));
+    providers.emplace_back(10u, std::make_unique<KeychainKeyProvider>());
+    if (fw1_keychain) {
+      providers.emplace_back(Fw1KeyProvider::kPrecedence,
+                             std::make_unique<Fw1KeyProvider>(fw1_keychain));
+    }
+    OSCryptAsync os_crypt_async(std::move(providers));
+    base::test::TestFuture<scoped_refptr<Encryptor>> future;
+    os_crypt_async.GetInstance(future.GetCallback());
+    return future.Take();
   }
 
-  Encryptor GetEncryptor(OSCryptAsync& os_crypt_async) {
-    base::test::TestFuture<Encryptor, bool> future;
-    auto sub = os_crypt_async.GetInstance(future.GetCallback());
-    return std::get<0>(future.Take());
-  }
-
-  base::test::TaskEnvironment task_environment_;
+  base::test::TaskEnvironment task_environment_{
+      base::test::TaskEnvironment::MainThreadType::UI,
+      base::test::TaskEnvironment::ThreadPoolExecutionMode::ASYNC};
+  crypto::apple::ScopedFakeKeychainV2 v10_keychain_{"test-access-group"};
   Items items_;
 };
 
-TEST_F(Fw1KeyProviderTest, CreatesKeyAndWritesFw1) {
-  auto os_crypt = MakeOSCryptAsync(std::make_unique<FakeKeychain>(&items_));
-  Encryptor encryptor = GetEncryptor(*os_crypt);
-
+TEST_F(Fw1KeyProviderTest, CreatesKeyOnFirstUse) {
+  FakeKeychain keychain(&items_);
+  ASSERT_TRUE(GetKey(keychain).has_value());
   ASSERT_EQ(1u, items_.count(kItem));
   auto raw = base::Base64Decode(items_[kItem]);
   ASSERT_TRUE(raw);
   EXPECT_EQ(Encryptor::Key::kAES256GCMKeySize, raw->size());
-
-  std::string ciphertext;
-  ASSERT_TRUE(encryptor.EncryptString("secret", &ciphertext));
-  EXPECT_EQ(0u, ciphertext.find("fw1"));
-  std::string plaintext;
-  ASSERT_TRUE(encryptor.DecryptString(ciphertext, &plaintext));
-  EXPECT_EQ("secret", plaintext);
 }
 
-TEST_F(Fw1KeyProviderTest, ReusesKeyAcrossRestarts) {
-  std::string ciphertext;
-  {
-    auto os_crypt = MakeOSCryptAsync(std::make_unique<FakeKeychain>(&items_));
-    ASSERT_TRUE(GetEncryptor(*os_crypt).EncryptString("secret", &ciphertext));
-  }
+TEST_F(Fw1KeyProviderTest, ReusesKeyAndNeverReplacesIt) {
+  items_[kItem] = base::Base64Encode(GoldenKey());
   const std::string stored = items_[kItem];
-  auto os_crypt = MakeOSCryptAsync(std::make_unique<FakeKeychain>(&items_));
-  std::string plaintext;
-  ASSERT_TRUE(GetEncryptor(*os_crypt).DecryptString(ciphertext, &plaintext));
-  EXPECT_EQ("secret", plaintext);
+  FakeKeychain keychain(&items_);
+  ASSERT_TRUE(GetKey(keychain).has_value());
+  EXPECT_EQ(0, keychain.add_calls());
   EXPECT_EQ(stored, items_[kItem]);
 }
 
-// Migration: `v10` data written by OSCrypt sync stays readable; new data
-// is `fw1`.
-TEST_F(Fw1KeyProviderTest, ReadsV10) {
-  std::string v10;
-  ASSERT_TRUE(OSCrypt::EncryptString("old", &v10));
-  ASSERT_EQ(0u, v10.find("v10"));
+// Denied, locked or unreadable keychain: temporary, so nothing gets deleted.
+TEST_F(Fw1KeyProviderTest, FindFailureIsTemporary) {
+  for (OSStatus status : {errSecAuthFailed, errSecInteractionNotAllowed,
+                          errSecNotAvailable}) {
+    FakeKeychain keychain(&items_);
+    keychain.set_find_status(status);
+    KeyResult key = GetKey(keychain);
+    ASSERT_FALSE(key.has_value());
+    EXPECT_EQ(KeyProvider::KeyError::kTemporarilyUnavailable, key.error());
+    EXPECT_EQ(0, keychain.add_calls());
+    EXPECT_TRUE(items_.empty());
+  }
+}
 
-  auto os_crypt = MakeOSCryptAsync(std::make_unique<FakeKeychain>(&items_));
-  Encryptor encryptor = GetEncryptor(*os_crypt);
-  std::string plaintext;
-  ASSERT_TRUE(encryptor.DecryptString(v10, &plaintext));
-  EXPECT_EQ("old", plaintext);
-
-  std::string rewritten;
-  ASSERT_TRUE(encryptor.EncryptString(plaintext, &rewritten));
-  EXPECT_EQ(0u, rewritten.find("fw1"));
+TEST_F(Fw1KeyProviderTest, AddFailureIsTemporary) {
+  FakeKeychain keychain(&items_);
+  keychain.set_add_status(errSecWrPerm);
+  KeyResult key = GetKey(keychain);
+  ASSERT_FALSE(key.has_value());
+  EXPECT_EQ(KeyProvider::KeyError::kTemporarilyUnavailable, key.error());
 }
 
 // A corrupt item (wrong length or not Base64) must not crash and must not
-// be replaced: the Encryptor falls back to `v10`.
-TEST_F(Fw1KeyProviderTest, BadItemFallsBackToV10) {
+// be replaced.
+TEST_F(Fw1KeyProviderTest, BadItemIsTemporaryAndKept) {
   for (const std::string& bad :
        {base::Base64Encode(std::string(16, 'x')), std::string("my_password"),
         base::Base64Encode(std::string(33, 'x'))}) {
     items_[kItem] = bad;
-    auto os_crypt = MakeOSCryptAsync(std::make_unique<FakeKeychain>(&items_));
-    std::string ciphertext;
-    ASSERT_TRUE(GetEncryptor(*os_crypt).EncryptString("secret", &ciphertext));
-    EXPECT_EQ(0u, ciphertext.find("v10"));
+    FakeKeychain keychain(&items_);
+    KeyResult key = GetKey(keychain);
+    ASSERT_FALSE(key.has_value());
+    EXPECT_EQ(KeyProvider::KeyError::kTemporarilyUnavailable, key.error());
+    EXPECT_EQ(0, keychain.add_calls());
     EXPECT_EQ(bad, items_[kItem]);
   }
 }
 
-TEST_F(Fw1KeyProviderTest, DeniedKeychainFallsBackToV10) {
-  auto keychain = std::make_unique<FakeKeychain>(&items_);
-  keychain->set_find_status(errSecAuthFailed);
-  auto os_crypt = MakeOSCryptAsync(std::move(keychain));
-  std::string ciphertext;
-  ASSERT_TRUE(GetEncryptor(*os_crypt).EncryptString("secret", &ciphertext));
-  EXPECT_EQ(0u, ciphertext.find("v10"));
-  EXPECT_TRUE(items_.empty());
-}
+// Format check against 2.x: "fw1" + 12-byte nonce + AES-256-GCM(ciphertext,
+// tag) with the raw key from the item. Both directions.
+TEST_F(Fw1KeyProviderTest, SameFormatAs2x) {
+  items_[kItem] = base::Base64Encode(GoldenKey());
+  FakeKeychain keychain(&items_);
+  scoped_refptr<Encryptor> encryptor = GetEncryptor(&keychain);
 
-TEST_F(Fw1KeyProviderTest, AddFailureFallsBackToV10) {
-  auto keychain = std::make_unique<FakeKeychain>(&items_);
-  keychain->set_add_status(errSecWrPerm);
-  auto os_crypt = MakeOSCryptAsync(std::move(keychain));
   std::string ciphertext;
-  ASSERT_TRUE(GetEncryptor(*os_crypt).EncryptString("secret", &ciphertext));
-  EXPECT_EQ(0u, ciphertext.find("v10"));
-}
+  ASSERT_TRUE(encryptor->EncryptString("secret", &ciphertext));
+  ASSERT_EQ(0u, ciphertext.find("fw1"));
+  auto data = base::as_byte_span(ciphertext).subspan(3u);
+  auto opened = crypto::aead::Open(crypto::aead::AES_256_GCM, GoldenKey(),
+                                   data.subspan(12u), data.first(12u),
+                                   /*associated_data=*/{});
+  ASSERT_TRUE(opened);
+  EXPECT_EQ("secret", std::string(opened->begin(), opened->end()));
 
-// Without its key, `fw1` data must fail to decrypt. OSCrypt sync would hand
-// it back as "cleartext" (no `v10` prefix), corrupting cookies or passwords.
-TEST_F(Fw1KeyProviderTest, Fw1WithoutKeyFailsToDecrypt) {
-  std::string ciphertext;
-  {
-    auto os_crypt = MakeOSCryptAsync(std::make_unique<FakeKeychain>(&items_));
-    ASSERT_TRUE(GetEncryptor(*os_crypt).EncryptString("secret", &ciphertext));
-  }
-  auto keychain = std::make_unique<FakeKeychain>(&items_);
-  keychain->set_find_status(errSecAuthFailed);
-  auto os_crypt = MakeOSCryptAsync(std::move(keychain));
+  const std::vector<uint8_t> nonce(12, 0x42);
+  std::vector<uint8_t> sealed =
+      crypto::aead::Seal(crypto::aead::AES_256_GCM, GoldenKey(),
+                         base::byte_span_from_cstring("old"), nonce,
+                         /*associated_data=*/{});
+  std::string written_by_2x = "fw1" + std::string(nonce.begin(), nonce.end()) +
+                              std::string(sealed.begin(), sealed.end());
+  Encryptor::DecryptFlags flags;
   std::string plaintext;
-  EXPECT_FALSE(GetEncryptor(*os_crypt).DecryptString(ciphertext, &plaintext));
+  ASSERT_TRUE(encryptor->DecryptString(written_by_2x, &plaintext, &flags));
+  EXPECT_EQ("old", plaintext);
+  EXPECT_FALSE(flags.should_reencrypt);
 }
 
-// A different key in the item (e.g. the user deleted and recreated it):
-// GCM authentication fails, nothing is returned.
-TEST_F(Fw1KeyProviderTest, Fw1WithOtherKeyFailsToDecrypt) {
-  std::string ciphertext;
+// Migration: `v10` data stays readable and is marked for `fw1`.
+TEST_F(Fw1KeyProviderTest, ReadsV10AndEncryptsFw1) {
+  std::string v10;
+  ASSERT_TRUE(GetEncryptor(nullptr)->EncryptString("old", &v10));
+  ASSERT_EQ(0u, v10.find("v10"));
+
+  FakeKeychain keychain(&items_);
+  scoped_refptr<Encryptor> encryptor = GetEncryptor(&keychain);
+  Encryptor::DecryptFlags flags;
+  std::string plaintext;
+  ASSERT_TRUE(encryptor->DecryptString(v10, &plaintext, &flags));
+  EXPECT_EQ("old", plaintext);
+  EXPECT_TRUE(flags.should_reencrypt);
+
+  std::string rewritten;
+  ASSERT_TRUE(encryptor->EncryptString(plaintext, &rewritten));
+  EXPECT_EQ(0u, rewritten.find("fw1"));
+}
+
+// Without its key, `fw1` data fails as temporarily unavailable (never handed
+// back as cleartext) and new data is `v10`, as in 2.x.
+TEST_F(Fw1KeyProviderTest, Fw1KeychainDenied) {
+  std::string fw1;
   {
-    auto os_crypt = MakeOSCryptAsync(std::make_unique<FakeKeychain>(&items_));
-    ASSERT_TRUE(GetEncryptor(*os_crypt).EncryptString("secret", &ciphertext));
+    FakeKeychain keychain(&items_);
+    ASSERT_TRUE(GetEncryptor(&keychain)->EncryptString("secret", &fw1));
+  }
+  FakeKeychain keychain(&items_);
+  keychain.set_find_status(errSecAuthFailed);
+  scoped_refptr<Encryptor> encryptor = GetEncryptor(&keychain);
+
+  Encryptor::DecryptFlags flags;
+  std::string plaintext;
+  EXPECT_FALSE(encryptor->DecryptString(fw1, &plaintext, &flags));
+  EXPECT_TRUE(flags.temporarily_unavailable);
+  EXPECT_TRUE(plaintext.empty());
+
+  std::string ciphertext;
+  ASSERT_TRUE(encryptor->EncryptString("new", &ciphertext));
+  EXPECT_EQ(0u, ciphertext.find("v10"));
+}
+
+// `v10` keychain denied: `v10` data is temporarily unavailable, `fw1` works.
+TEST_F(Fw1KeyProviderTest, V10KeychainDenied) {
+  std::string v10;
+  ASSERT_TRUE(GetEncryptor(nullptr)->EncryptString("old", &v10));
+  v10_keychain_.SetFindGenericResult(errSecAuthFailed);
+
+  FakeKeychain keychain(&items_);
+  scoped_refptr<Encryptor> encryptor = GetEncryptor(&keychain);
+  Encryptor::DecryptFlags flags;
+  std::string plaintext;
+  EXPECT_FALSE(encryptor->DecryptString(v10, &plaintext, &flags));
+  EXPECT_TRUE(flags.temporarily_unavailable);
+
+  std::string ciphertext;
+  ASSERT_TRUE(encryptor->EncryptString("new", &ciphertext));
+  EXPECT_EQ(0u, ciphertext.find("fw1"));
+}
+
+// A different key in the item (e.g. the user deleted it and it was
+// recreated): GCM authentication fails, permanently, nothing is returned.
+TEST_F(Fw1KeyProviderTest, Fw1WithOtherKeyFails) {
+  std::string fw1;
+  {
+    FakeKeychain keychain(&items_);
+    ASSERT_TRUE(GetEncryptor(&keychain)->EncryptString("secret", &fw1));
   }
   items_.clear();
-  auto os_crypt = MakeOSCryptAsync(std::make_unique<FakeKeychain>(&items_));
+  FakeKeychain keychain(&items_);
+  Encryptor::DecryptFlags flags;
   std::string plaintext;
-  EXPECT_FALSE(GetEncryptor(*os_crypt).DecryptString(ciphertext, &plaintext));
+  EXPECT_FALSE(GetEncryptor(&keychain)->DecryptString(fw1, &plaintext, &flags));
+  EXPECT_FALSE(flags.temporarily_unavailable);
+  EXPECT_TRUE(plaintext.empty());
+}
+
+// Data without a prefix (what OSCrypt in 2.x handed back as is) comes back
+// in clear and marked for re-encryption; empty stays empty. See the FlyWeb
+// part of chromium_src/components/os_crypt/async/common/encryptor.cc.
+TEST_F(Fw1KeyProviderTest, UnprefixedAndEmpty) {
+  FakeKeychain keychain(&items_);
+  scoped_refptr<Encryptor> encryptor = GetEncryptor(&keychain);
+  Encryptor::DecryptFlags flags;
+  std::string plaintext;
+  ASSERT_TRUE(encryptor->DecryptString("legacy", &plaintext, &flags));
+  EXPECT_EQ("legacy", plaintext);
+  EXPECT_TRUE(flags.should_reencrypt);
+
+  ASSERT_TRUE(encryptor->DecryptString(std::string(), &plaintext, &flags));
+  EXPECT_TRUE(plaintext.empty());
+  EXPECT_FALSE(flags.should_reencrypt);
 }
 
 }  // namespace

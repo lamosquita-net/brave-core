@@ -13,7 +13,8 @@
 
 #if BUILDFLAG(IS_MAC)
 #include "brave/components/flyweb_os_crypt/fw1_key_provider_mac.h"
-// FlyWeb `fw1` (FS.25): AES-256-GCM key in the classic keychain.
+// FlyWeb `fw1` (FS.25): AES-256-GCM key in the classic keychain. Precedence
+// 20, above upstream's `v10` KeychainKeyProvider (10): `fw1` encrypts.
 #define BRAVE_BROWSER_PROCESS_IMPL_ADD_OS_CRYPT_ASYNC_PROVIDERS \
   providers.emplace_back(std::make_pair(                        \
       os_crypt_async::Fw1KeyProvider::kPrecedence,              \

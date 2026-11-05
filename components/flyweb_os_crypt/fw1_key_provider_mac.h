@@ -6,32 +6,38 @@
 #ifndef BRAVE_COMPONENTS_FLYWEB_OS_CRYPT_FW1_KEY_PROVIDER_MAC_H_
 #define BRAVE_COMPONENTS_FLYWEB_OS_CRYPT_FW1_KEY_PROVIDER_MAC_H_
 
-#include <memory>
-#include <optional>
+#include <cstddef>
 
+#include "base/memory/raw_ptr.h"
+#include "base/types/expected.h"
 #include "components/os_crypt/async/browser/key_provider.h"
 
-namespace crypto {
-class AppleKeychain;
-}  // namespace crypto
+namespace crypto::apple {
+class KeychainV2;
+}  // namespace crypto::apple
 
 namespace os_crypt_async {
 
 // FlyWeb `fw1` key provider (FS.25): AES-256-GCM with a random 256-bit key
-// kept in the classic login keychain ("FlyWeb Safe Storage" / "FlyWeb fw1").
-// No KDF, no T2 or Secure Enclave, so it works the same on Mojave and later.
-// Data written with this key carries the "fw1" prefix and cannot be read by
-// OSCrypt sync; `v10` data stays readable through the OSCrypt fallback.
+// kept in the classic login keychain ("FlyWeb Safe Storage" / "FlyWeb fw1"),
+// Base64 encoded. No KDF, no T2 or Secure Enclave, so it works the same on
+// Mojave and later. Same item and format as FlyWeb 2.5-2.7 (which read it
+// through crypto::AppleKeychain); 156 reads it through KeychainV2, which
+// still queries the file-based login keychain.
+//
+// Registered next to upstream's KeychainKeyProvider (`v10`, precedence 10),
+// so `fw1` encrypts new data whenever its key loads, and `v10` takes over
+// encryption when it does not, as in 2.x. Every failure is reported as
+// kTemporarilyUnavailable: callers may delete data on a permanent failure.
 class Fw1KeyProvider : public KeyProvider {
  public:
   static constexpr char kKeyTag[] = "fw1";
-  // Above the 10 of upstream's Keychain provider (level 143+), so `fw1` keeps
-  // encrypting if that provider is ever registered next to it.
+  // Above the 10 of upstream's KeychainKeyProvider.
   static constexpr size_t kPrecedence = 20u;
 
   Fw1KeyProvider();
-  // For tests. The keychain is moved into the thread pool task on GetKey().
-  explicit Fw1KeyProvider(std::unique_ptr<crypto::AppleKeychain> keychain);
+  // For tests. `keychain` must outlive the GetKey() reply.
+  explicit Fw1KeyProvider(crypto::apple::KeychainV2* keychain);
 
   Fw1KeyProvider(const Fw1KeyProvider&) = delete;
   Fw1KeyProvider& operator=(const Fw1KeyProvider&) = delete;
@@ -39,17 +45,17 @@ class Fw1KeyProvider : public KeyProvider {
   ~Fw1KeyProvider() override;
 
   // Reads the key from the keychain, creating it on first use. Never builds a
-  // Key from an item of the wrong length (Encryptor::Key CHECKs the size).
-  static std::optional<Encryptor::Key> GetOrCreateKey(
-      const crypto::AppleKeychain& keychain);
+  // Key from an item of the wrong length (Encryptor::Key CHECKs the size) and
+  // never replaces an existing item.
+  static base::expected<Encryptor::Key, KeyError> GetOrCreateKey(
+      crypto::apple::KeychainV2& keychain);
 
  private:
   // KeyProvider:
   void GetKey(KeyCallback callback) override;
   bool UseForEncryption() override;
-  bool IsCompatibleWithOsCryptSync() override;
 
-  std::unique_ptr<crypto::AppleKeychain> keychain_for_testing_;
+  raw_ptr<crypto::apple::KeychainV2> keychain_for_testing_ = nullptr;
 };
 
 }  // namespace os_crypt_async

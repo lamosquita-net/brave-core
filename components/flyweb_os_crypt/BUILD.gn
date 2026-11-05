@@ -3,40 +3,51 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at https://mozilla.org/MPL/2.0/.
 
-# FlyWeb `fw1` key provider for os_crypt_async (FS.25, FM.51).
-assert(is_mac)
+# FlyWeb `fw1` key provider for os_crypt_async (FS.25, FM.51), Mac only, and
+# the tests of FlyWeb's Encryptor rules (Mac and Linux).
+assert(is_mac || is_linux)
 
-source_set("fw1_key_provider") {
-  sources = [
-    "fw1_key_provider_mac.h",
-    "fw1_key_provider_mac.mm",
-  ]
+if (is_mac) {
+  source_set("fw1_key_provider") {
+    sources = [
+      "fw1_key_provider_mac.h",
+      "fw1_key_provider_mac.mm",
+    ]
 
-  public_deps = [ "//components/os_crypt/async/browser:key_provider_interface" ]
+    public_deps =
+        [ "//components/os_crypt/async/browser:key_provider_interface" ]
 
-  deps = [
-    "//base",
-    "//components/os_crypt/async/common",
-    "//components/os_crypt/sync",
-    "//crypto",
-    "//third_party/boringssl",
-  ]
+    deps = [
+      "//base",
+      "//components/os_crypt/async/common",
+      "//components/os_crypt/common:switches",
+      "//crypto",
+      "//third_party/boringssl",
+    ]
 
-  frameworks = [ "Security.framework" ]
+    frameworks = [ "Security.framework" ]
+  }
 }
 
 source_set("unit_tests") {
   testonly = true
-  sources = [ "fw1_key_provider_mac_unittest.mm" ]
+  sources = [ "encryptor_legacy_unittest.cc" ]
   deps = [
-    ":fw1_key_provider",
     "//base",
     "//base/test:test_support",
     "//components/os_crypt/async/browser",
+    "//components/os_crypt/async/browser:key_provider_interface",
     "//components/os_crypt/async/common",
-    "//components/os_crypt/sync",
-    "//components/os_crypt/sync:test_support",
-    "//crypto",
     "//testing/gtest",
   ]
+
+  if (is_mac) {
+    sources += [ "fw1_key_provider_mac_unittest.mm" ]
+    deps += [
+      ":fw1_key_provider",
+      "//components/os_crypt/async/browser:keychain_key_provider",
+      "//crypto",
+      "//crypto:mock_apple_keychain",
+    ]
+  }
 }
