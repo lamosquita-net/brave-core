@@ -19,11 +19,8 @@ class BraveMutableProfileOAuth2TokenServiceDelegate
       AccountTrackerService* account_tracker_service,
       network::NetworkConnectionTracker* network_connection_tracker,
       scoped_refptr<TokenWebData> token_web_data,
-      signin::AccountConsistencyMethod account_consistency,
       RevokeAllTokensOnLoad revoke_all_tokens_on_load,
-#if BUILDFLAG(ENABLE_BOUND_SESSION_CREDENTIALS)
       std::unique_ptr<TokenBindingHelper> token_binding_helper,
-#endif  // BUILDFLAG(ENABLE_BOUND_SESSION_CREDENTIALS)
       FixRequestErrorCallback fix_request_error_callback);
   ~BraveMutableProfileOAuth2TokenServiceDelegate() override;
   BraveMutableProfileOAuth2TokenServiceDelegate(
@@ -31,8 +28,8 @@ class BraveMutableProfileOAuth2TokenServiceDelegate
   BraveMutableProfileOAuth2TokenServiceDelegate& operator=(
       const BraveMutableProfileOAuth2TokenServiceDelegate&) = delete;
 
-  void LoadCredentialsInternal(const CoreAccountId& primary_account_id,
-                               bool is_syncing) override;
+  void LoadCredentialsInternal(
+      const CoreAccountId& primary_account_id) override;
 
  private:
   raw_ptr<AccountTrackerService> account_tracker_service_ = nullptr;

@@ -267,6 +267,7 @@ TEST(FeatureDefaultsTest, DisabledFeatures) {
       &shared_highlighting::kIOSSharedHighlightingV2,
       &shared_highlighting::kSharedHighlightingManager,
       &subresource_filter::kAdTagging,
+      &switches::kSyncEnableBookmarksInTransportMode,
 #if !BUILDFLAG(IS_ANDROID)
       &translate::kTFLiteLanguageDetectionEnabled,
 #endif
