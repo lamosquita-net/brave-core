@@ -14,7 +14,6 @@
 #include "brave/components/brave_shields/core/common/features.h"
 #include "brave/components/cosmetic_filters/renderer/cosmetic_filters_js_render_frame_observer.h"
 #include "brave/components/playlist/common/buildflags/buildflags.h"
-#include "brave/components/safe_builtins/renderer/safe_builtins.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "brave/renderer/brave_render_thread_observer.h"
 #include "chrome/common/chrome_isolated_world_ids.h"
@@ -24,7 +23,6 @@
 #include "third_party/blink/public/common/features.h"
 #include "third_party/blink/public/platform/web_runtime_features.h"
 #include "third_party/blink/public/web/modules/service_worker/web_service_worker_context_proxy.h"
-#include "third_party/blink/public/web/web_script_controller.h"
 #include "third_party/widevine/cdm/buildflags.h"
 #include "url/gurl.h"
 
@@ -102,9 +100,6 @@ void BraveContentRendererClient::RenderThreadStarted() {
   content::RenderThread::Get()->AddObserver(brave_observer_.get());
   brave_search_service_worker_holder_.SetBrowserInterfaceBrokerProxy(
       browser_interface_broker_.get());
-
-  blink::WebScriptController::RegisterExtension(
-      brave::SafeBuiltins::CreateV8Extension());
 }
 
 void BraveContentRendererClient::RenderFrameCreated(

@@ -6,23 +6,25 @@
 #include "base/auto_reset.h"
 #include "brave/third_party/blink/renderer/core/farbling/brave_session_cache.h"
 #include "third_party/blink/public/platform/web_content_settings_client.h"
+#include "ui/gfx/skia_span_util.h"
 
-// FlyWeb: ImageDataBuffer keeps the color type of the snapshot (F16 for a
-// float16 canvas) but does not expose it; |image_bitmap| is that snapshot.
-// Deriving it from the buffer size would misread a padded row stride.
-#define BRAVE_TO_DATA_URL_INTERNAL                               \
-  {                                                              \
-    ExecutionContext* execution_context = GetExecutionContext(); \
-    if (!execution_context) {                                    \
-      execution_context = scoped_execution_context_.Get();       \
-    }                                                            \
-    if (execution_context) {                                     \
-      brave::BraveSessionCache::From(*execution_context)         \
-          .PerturbPixels(data_buffer->Pixels(),                  \
-                         data_buffer->ComputeByteSize(),         \
-                         image_bitmap->GetSkColorInfo()          \
-                                 .bytesPerPixel() / 4);          \
-    }                                                            \
+// FlyWeb: pass the bytes per channel of the snapshot (2 for a float16 canvas)
+// so that PerturbPixels does not flip bits of the exponent or alpha. The
+// pixmap is the buffer's own, so its color info matches the bytes exactly.
+#define BRAVE_TO_DATA_URL_INTERNAL                                       \
+  {                                                                      \
+    ExecutionContext* execution_context = GetExecutionContext();         \
+    if (!execution_context) {                                            \
+      execution_context = scoped_execution_context_.Get();               \
+    }                                                                    \
+    if (execution_context) {                                             \
+      const SkPixmap pixmap = data_buffer->pixmap_multable();            \
+      const base::span<uint8_t> pixels =                                 \
+          gfx::SkPixmapToWritableSpan(pixmap);                           \
+      brave::BraveSessionCache::From(*execution_context)                 \
+          .PerturbPixels(pixels.data(), pixels.size(),                   \
+                         pixmap.info().bytesPerPixel() / 4);             \
+    }                                                                    \
   }
 
 #include "src/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc"

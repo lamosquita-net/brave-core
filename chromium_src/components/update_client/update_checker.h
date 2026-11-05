@@ -6,6 +6,8 @@
 #ifndef BRAVE_CHROMIUM_SRC_COMPONENTS_UPDATE_CLIENT_UPDATE_CHECKER_H_
 #define BRAVE_CHROMIUM_SRC_COMPONENTS_UPDATE_CLIENT_UPDATE_CHECKER_H_
 
+#include "src/components/update_client/update_checker.h"  // IWYU pragma: export
+
 #include <deque>
 #include <optional>
 #include <string>
@@ -13,13 +15,11 @@
 
 #include "base/containers/flat_map.h"
 #include "base/memory/raw_ptr.h"
-#include "base/memory/ref_counted.h"
 #include "base/threading/thread_checker.h"
 #include "components/update_client/component.h"
 #include "components/update_client/configurator.h"
 #include "components/update_client/persisted_data.h"
 #include "components/update_client/update_client_errors.h"
-#include "src/components/update_client/update_checker.h"  // IWYU pragma: export
 
 namespace update_client {
 
@@ -38,8 +38,7 @@ namespace update_client {
 class SequentialUpdateChecker : public UpdateChecker {
  public:
   static std::unique_ptr<UpdateChecker> Create(
-      scoped_refptr<Configurator> config,
-      PersistedData* persistent);
+      scoped_refptr<Configurator> config);
 
   void CheckForUpdates(
       scoped_refptr<UpdateContext> update_context,
@@ -47,24 +46,21 @@ class SequentialUpdateChecker : public UpdateChecker {
       UpdateCheckCallback update_check_callback) override;
 
   // Needs to be public so std::make_unique(...) works in Create(...).
-  SequentialUpdateChecker(scoped_refptr<Configurator> config,
-                          PersistedData* metadata);
+  explicit SequentialUpdateChecker(scoped_refptr<Configurator> config);
   SequentialUpdateChecker(const SequentialUpdateChecker&) = delete;
   SequentialUpdateChecker& operator=(const SequentialUpdateChecker&) = delete;
   ~SequentialUpdateChecker() override;
 
  private:
   void CheckNext();
-  void UpdateResultAvailable(
-      const std::optional<ProtocolParser::Results>& results,
-      ErrorCategory error_category,
-      int error,
-      int retry_after_sec);
+  void UpdateResultAvailable(std::optional<ProtocolParser::Results> results,
+                             ErrorCategory error_category,
+                             int error,
+                             int retry_after_sec);
 
   THREAD_CHECKER(thread_checker_);
 
   const scoped_refptr<Configurator> config_;
-  const raw_ptr<PersistedData> metadata_ = nullptr;
 
   // This update conext instance is stored locally and then used to create
   // individidual UpdateContext instances based on each application id.

@@ -5,11 +5,17 @@
 
 #include "brave/third_party/blink/renderer/core/farbling/brave_session_cache.h"
 #include "third_party/blink/public/platform/web_content_settings_client.h"
+#include "ui/gfx/skia_span_util.h"
 
-#define BRAVE_CANVAS_ASYNC_BLOB_CREATOR                    \
-  brave::BraveSessionCache::From(*context_).PerturbPixels( \
-      static_cast<const unsigned char*>(src_data_.addr()), \
-      src_data_.computeByteSize(), src_data_.info().bytesPerPixel() / 4);
+// FlyWeb: |bytes_per_channel| keeps the float16 (F16) snapshot safe, see
+// BraveSessionCache::PerturbPixels.
+#define BRAVE_CANVAS_ASYNC_BLOB_CREATOR                                   \
+  {                                                                       \
+    const base::span<uint8_t> pixels =                                    \
+        gfx::SkPixmapToWritableSpan(src_data_);                           \
+    brave::BraveSessionCache::From(*context_).PerturbPixels(              \
+        pixels.data(), pixels.size(), src_data_.info().bytesPerPixel() / 4); \
+  }
 
 #include "src/third_party/blink/renderer/core/html/canvas/canvas_async_blob_creator.cc"
 

@@ -17,7 +17,7 @@ namespace {
 
 bool IsConnectionConfig(const IDLMemberInstaller::AttributeConfig& config) {
   constexpr std::string_view kConnection = "connection";
-  return kConnection == config.name;
+  return kConnection == config.property_name;
 }
 
 }  // namespace
@@ -32,6 +32,7 @@ PLATFORM_EXPORT void IDLMemberInstaller::BraveInstallAttributes<
     v8::Local<v8::Template> prototype_template,
     v8::Local<v8::Template> interface_template,
     v8::Local<v8::Signature> signature,
+    const char* interface_name,
     base::span<const AttributeConfig> configs) {
   const bool connection_attribute_enabled = base::FeatureList::IsEnabled(
       blink::features::kNavigatorConnectionAttribute);
@@ -40,7 +41,7 @@ PLATFORM_EXPORT void IDLMemberInstaller::BraveInstallAttributes<
       continue;
     }
     InstallAttribute(isolate, world, instance_template, prototype_template,
-                     interface_template, signature, config);
+                     interface_template, signature, interface_name, config);
   }
 }
 
@@ -54,6 +55,7 @@ PLATFORM_EXPORT void IDLMemberInstaller::BraveInstallAttributes<
     v8::Local<v8::Object> prototype_object,
     v8::Local<v8::Object> interface_object,
     v8::Local<v8::Signature> signature,
+    const char* interface_name,
     base::span<const AttributeConfig> configs) {
   const bool connection_attribute_enabled = base::FeatureList::IsEnabled(
       blink::features::kNavigatorConnectionAttribute);
@@ -63,7 +65,7 @@ PLATFORM_EXPORT void IDLMemberInstaller::BraveInstallAttributes<
       continue;
     }
     InstallAttribute(isolate, context, world, instance_object, prototype_object,
-                     interface_object, signature, config);
+                     interface_object, signature, interface_name, config);
   }
 }
 

@@ -13,41 +13,19 @@ namespace features {
 OVERRIDE_FEATURE_DEFAULT_STATES({{
     // Upgrade all mixed content
     {kMixedContentAutoupgrade, base::FEATURE_ENABLED_BY_DEFAULT},
-    {kPrefetchPrivacyChanges, base::FEATURE_ENABLED_BY_DEFAULT},
     {kReducedReferrerGranularity, base::FEATURE_ENABLED_BY_DEFAULT},
     {kUACHOverrideBlank, base::FEATURE_ENABLED_BY_DEFAULT},
 
-    {kAdAuctionReportingWithMacroApi, base::FEATURE_DISABLED_BY_DEFAULT},
     {kAdInterestGroupAPI, base::FEATURE_DISABLED_BY_DEFAULT},
     {kAllowURNsInIframes, base::FEATURE_DISABLED_BY_DEFAULT},
-    {kAttributionReportingInBrowserMigration,
-     base::FEATURE_DISABLED_BY_DEFAULT},
     {kBackgroundResourceFetch, base::FEATURE_DISABLED_BY_DEFAULT},
-    {kBiddingAndScoringDebugReportingAPI, base::FEATURE_DISABLED_BY_DEFAULT},
-    {kBrowsingTopics, base::FEATURE_DISABLED_BY_DEFAULT},
-    {kClientHintsFormFactors, base::FEATURE_DISABLED_BY_DEFAULT},
     {kControlledFrame, base::FEATURE_DISABLED_BY_DEFAULT},
-    {kCssSelectorFragmentAnchor, base::FEATURE_DISABLED_BY_DEFAULT},
     {kFencedFrames, base::FEATURE_DISABLED_BY_DEFAULT},
-    {kFencedFramesM120FeaturesPart2, base::FEATURE_DISABLED_BY_DEFAULT},
     {kFledge, base::FEATURE_DISABLED_BY_DEFAULT},
-    {kFledgeBiddingAndAuctionServer, base::FEATURE_DISABLED_BY_DEFAULT},
-    {kFledgeConsiderKAnonymity, base::FEATURE_DISABLED_BY_DEFAULT},
-    {kFledgeEnforceKAnonymity, base::FEATURE_DISABLED_BY_DEFAULT},
-    {kInterestGroupStorage, base::FEATURE_DISABLED_BY_DEFAULT},
     {kParakeet, base::FEATURE_DISABLED_BY_DEFAULT},
     {kPrerender2, base::FEATURE_DISABLED_BY_DEFAULT},
-    {kPrivateAggregationApi, base::FEATURE_DISABLED_BY_DEFAULT},
-    // This feature uses shared memory to reduce IPCs to access cookies, but
-    // Ephemeral Storage can switch cookie storage backend at runtime, so we
-    // can't use it.
-    {kReduceCookieIPCs, base::FEATURE_DISABLED_BY_DEFAULT},
+    {kPrivateStateTokens, base::FEATURE_DISABLED_BY_DEFAULT},
     {kReduceUserAgentMinorVersion, base::FEATURE_ENABLED_BY_DEFAULT},
-    {kSharedStorageAPI, base::FEATURE_DISABLED_BY_DEFAULT},
-    {kSharedStorageAPIM118, base::FEATURE_DISABLED_BY_DEFAULT},
-    {kSharedStorageAPIM125, base::FEATURE_DISABLED_BY_DEFAULT},
-    {kSharedStorageSelectURLLimit, base::FEATURE_DISABLED_BY_DEFAULT},
-    {kSpeculationRulesPrefetchFuture, base::FEATURE_DISABLED_BY_DEFAULT},
     {kTextFragmentAnchor, base::FEATURE_DISABLED_BY_DEFAULT},
 }});
 

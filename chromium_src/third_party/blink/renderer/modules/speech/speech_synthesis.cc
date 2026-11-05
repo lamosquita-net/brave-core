@@ -47,7 +47,7 @@ void SpeechSynthesis::OnSetVoiceList(
             "Wilson", "Alva",   "Harley",    "Beauregard", "Cleveland",
             "Cecil",  "Reuben", "Sylvester", "Jasper"};
         const int kFakeNamesCount = std::size(kFakeNames);
-        fake_voice->name = WTF::String(kFakeNames[prng() % kFakeNamesCount]);
+        fake_voice->name = String(kFakeNames[prng() % kFakeNamesCount]);
       }
     }
     voice_list_.push_back(
