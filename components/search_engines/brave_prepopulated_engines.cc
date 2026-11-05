@@ -62,23 +62,6 @@ PrepopulatedEngine MakeBravePrepopulatedEngine(
           /*regulatory_extensions=*/{}};
 }
 
-// Maps BravePrepopulatedEngineID to Chromium's PrepopulatedEngine.
-const std::map<BravePrepopulatedEngineID, const PrepopulatedEngine*>
-    brave_engines_map = {
-        {PREPOPULATED_ENGINE_ID_GOOGLE, &google},
-        {PREPOPULATED_ENGINE_ID_YANDEX, &brave_yandex},
-        {PREPOPULATED_ENGINE_ID_BING, &brave_bing},
-        {PREPOPULATED_ENGINE_ID_NAVER, &naver},
-        {PREPOPULATED_ENGINE_ID_DAUM, &daum},
-        {PREPOPULATED_ENGINE_ID_DUCKDUCKGO, &duckduckgo},
-        {PREPOPULATED_ENGINE_ID_DUCKDUCKGO_DE, &duckduckgo_de},
-        {PREPOPULATED_ENGINE_ID_DUCKDUCKGO_AU_NZ_IE, &duckduckgo_au_nz_ie},
-        {PREPOPULATED_ENGINE_ID_QWANT, &qwant},
-        {PREPOPULATED_ENGINE_ID_STARTPAGE, &brave_startpage},
-        {PREPOPULATED_ENGINE_ID_ECOSIA, &brave_ecosia},
-        {PREPOPULATED_ENGINE_ID_BRAVE, &brave_search},
-};
-
 PrepopulatedEngine ModifyEngineParams(
     const PrepopulatedEngine& engine,
     const char16_t* const name,
@@ -251,15 +234,14 @@ const PrepopulatedEngine brave_search_tor = ModifyEngineParams(
 const PrepopulatedEngine brave_bing = ModifyEngineParams(
     bing,
     u"Bing",
-    nullptr,
+    u":b",
     "https://www.bing.com/search?q={searchTerms}",
     "https://www.bing.com/osjson.aspx?query={searchTerms}&language={language}",
     "https://www.bing.com/images/detail/search?iss=sbiupload#enterInsights",
     PREPOPULATED_ENGINE_ID_BING);
 
-const std::map<BravePrepopulatedEngineID, const PrepopulatedEngine*>&
-GetBraveEnginesMap() {
-  return brave_engines_map;
-}
+// Google keeps its id; Brave gives it the :g keyword (as :b for Bing above).
+const PrepopulatedEngine brave_google =
+    ModifyEngineParams(google, nullptr, u":g", nullptr, nullptr, nullptr, 0);
 
 }  // namespace TemplateURLPrepopulateData
