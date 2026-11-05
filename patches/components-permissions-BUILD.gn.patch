@@ -1,8 +1,13 @@
 diff --git a/components/permissions/BUILD.gn b/components/permissions/BUILD.gn
-index 69c6cfce9fe7b6459f55b20ec4883246204d1069..9f823100aab4e229980235becb62cc3b843fa454 100644
+index a2e6c6b98ed207a8fa162c9e15cdac21c44f0193..0fdfae177673cfb457e9488a001bcf9de830a972 100644
 --- a/components/permissions/BUILD.gn
 +++ b/components/permissions/BUILD.gn
-@@ -5,7 +5,7 @@
+@@ -2,11 +2,12 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+ 
++import("//brave/components/permissions/sources.gni")
+ import("//components/guest_view/buildflags/buildflags.gni")
  import("//device/vr/buildflags/buildflags.gni")
  import("//services/device/public/cpp/geolocation/buildflags.gni")
  
@@ -11,11 +16,12 @@ index 69c6cfce9fe7b6459f55b20ec4883246204d1069..9f823100aab4e229980235becb62cc3b
    sources = [
      "constants.cc",
      "constants.h",
-@@ -163,6 +163,7 @@ source_set("permissions") {
-   if (!is_android) {
+@@ -182,6 +183,8 @@ source_set("permissions") {
+   if (enable_guest_view) {
      deps += [ "//components/guest_view/browser" ]
    }
-+  import("//brave/components/permissions/sources.gni") sources += brave_components_permissions_sources deps += brave_components_permissions_deps
++  sources += brave_components_permissions_sources
++  deps += brave_components_permissions_deps
    if (is_android) {
      sources += [
        "android/android_permission_util.cc",
