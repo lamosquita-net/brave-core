@@ -39,7 +39,8 @@ DebounceServiceFactory::DebounceServiceFactory()
 
 DebounceServiceFactory::~DebounceServiceFactory() = default;
 
-KeyedService* DebounceServiceFactory::BuildServiceInstanceFor(
+std::unique_ptr<KeyedService>
+DebounceServiceFactory::BuildServiceInstanceForBrowserContext(
     content::BrowserContext* context) const {
   // Don't create service is debounce feature is disabled
   if (!base::FeatureList::IsEnabled(debounce::features::kBraveDebounce))
@@ -51,13 +52,13 @@ KeyedService* DebounceServiceFactory::BuildServiceInstanceFor(
   if (g_brave_browser_process)
     component_installer =
         g_brave_browser_process->debounce_component_installer();
-  return new DebounceService(component_installer,
-                             Profile::FromBrowserContext(context)->GetPrefs());
+  return std::make_unique<DebounceService>(
+      component_installer, Profile::FromBrowserContext(context)->GetPrefs());
 }
 
 content::BrowserContext* DebounceServiceFactory::GetBrowserContextToUse(
     content::BrowserContext* context) const {
-  return chrome::GetBrowserContextRedirectedInIncognito(context);
+  return GetBrowserContextRedirectedInIncognito(context);
 }
 
 bool DebounceServiceFactory::ServiceIsNULLWhileTesting() const {

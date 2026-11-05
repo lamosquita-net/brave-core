@@ -35,14 +35,16 @@ BraveSyncAlertsServiceFactory::BraveSyncAlertsServiceFactory()
 
 BraveSyncAlertsServiceFactory::~BraveSyncAlertsServiceFactory() {}
 
-KeyedService* BraveSyncAlertsServiceFactory::BuildServiceInstanceFor(
+std::unique_ptr<KeyedService>
+BraveSyncAlertsServiceFactory::BuildServiceInstanceForBrowserContext(
     content::BrowserContext* context) const {
-  return new BraveSyncAlertsService(Profile::FromBrowserContext(context));
+  return std::make_unique<BraveSyncAlertsService>(
+      Profile::FromBrowserContext(context));
 }
 
 content::BrowserContext* BraveSyncAlertsServiceFactory::GetBrowserContextToUse(
     content::BrowserContext* context) const {
-  return chrome::GetBrowserContextRedirectedInIncognito(context);
+  return GetBrowserContextRedirectedInIncognito(context);
 }
 
 bool BraveSyncAlertsServiceFactory::ServiceIsCreatedWithBrowserContext() const {

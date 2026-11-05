@@ -6,6 +6,8 @@
 #ifndef BRAVE_BROWSER_PERMISSIONS_PERMISSION_LIFETIME_MANAGER_FACTORY_H_
 #define BRAVE_BROWSER_PERMISSIONS_PERMISSION_LIFETIME_MANAGER_FACTORY_H_
 
+#include <memory>
+
 #include "components/keyed_service/content/browser_context_keyed_service_factory.h"
 
 namespace base {
@@ -41,7 +43,7 @@ class PermissionLifetimeManagerFactory
   ~PermissionLifetimeManagerFactory() override;
 
   // BrowserContextKeyedServiceFactory methods:
-  KeyedService* BuildServiceInstanceFor(
+  std::unique_ptr<KeyedService> BuildServiceInstanceForBrowserContext(
       content::BrowserContext* profile) const override;
   bool ServiceIsCreatedWithBrowserContext() const override;
   content::BrowserContext* GetBrowserContextToUse(

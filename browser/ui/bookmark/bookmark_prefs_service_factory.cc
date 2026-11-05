@@ -33,14 +33,16 @@ BookmarkPrefsServiceFactory::BookmarkPrefsServiceFactory()
 
 BookmarkPrefsServiceFactory::~BookmarkPrefsServiceFactory() = default;
 
-KeyedService* BookmarkPrefsServiceFactory::BuildServiceInstanceFor(
+std::unique_ptr<KeyedService>
+BookmarkPrefsServiceFactory::BuildServiceInstanceForBrowserContext(
     content::BrowserContext* context) const {
-  return new BookmarkPrefsService(Profile::FromBrowserContext(context));
+  return std::make_unique<BookmarkPrefsService>(
+      Profile::FromBrowserContext(context));
 }
 
 content::BrowserContext* BookmarkPrefsServiceFactory::GetBrowserContextToUse(
     content::BrowserContext* context) const {
-  return chrome::GetBrowserContextRedirectedInIncognito(context);
+  return GetBrowserContextRedirectedInIncognito(context);
 }
 
 bool BookmarkPrefsServiceFactory::ServiceIsCreatedWithBrowserContext() const {

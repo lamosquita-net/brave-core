@@ -29,23 +29,26 @@
 namespace {
 
 // Factory owns service object.
-KeyedService* InitializeSearchEngineProviderServiceIfNeeded(Profile* profile) {
+std::unique_ptr<KeyedService> InitializeSearchEngineProviderServiceIfNeeded(
+    Profile* profile) {
 #if BUILDFLAG(IS_ANDROID)
   if (profile->IsIncognitoProfile()) {
-    return new PrivateWindowSearchEngineProviderServiceAndroid(profile);
+    return std::make_unique<PrivateWindowSearchEngineProviderServiceAndroid>(
+        profile);
   }
 
   if (profile->IsRegularProfile()) {
-    return new NormalWindowSearchEngineProviderServiceAndroid(profile);
+    return std::make_unique<NormalWindowSearchEngineProviderServiceAndroid>(
+        profile);
   }
 #else
   // Set search engine handler for private profile.
   if (profile->IsIncognitoProfile()) {
-    return new PrivateWindowSearchEngineProviderService(profile);
+    return std::make_unique<PrivateWindowSearchEngineProviderService>(profile);
   }
 
   if (profile->IsRegularProfile()) {
-    return new NormalWindowSearchEngineProviderService(profile);
+    return std::make_unique<NormalWindowSearchEngineProviderService>(profile);
   }
 #endif
 
@@ -71,7 +74,8 @@ SearchEngineProviderServiceFactory::SearchEngineProviderServiceFactory()
 SearchEngineProviderServiceFactory::~SearchEngineProviderServiceFactory() =
     default;
 
-KeyedService* SearchEngineProviderServiceFactory::BuildServiceInstanceFor(
+std::unique_ptr<KeyedService>
+SearchEngineProviderServiceFactory::BuildServiceInstanceForBrowserContext(
     content::BrowserContext* context) const {
   return InitializeSearchEngineProviderServiceIfNeeded(
       Profile::FromBrowserContext(context));
@@ -80,7 +84,7 @@ KeyedService* SearchEngineProviderServiceFactory::BuildServiceInstanceFor(
 content::BrowserContext*
 SearchEngineProviderServiceFactory::GetBrowserContextToUse(
     content::BrowserContext* context) const {
-  return chrome::GetBrowserContextOwnInstanceInIncognito(context);
+  return GetBrowserContextOwnInstanceInIncognito(context);
 }
 
 bool SearchEngineProviderServiceFactory::ServiceIsNULLWhileTesting() const {
