@@ -126,8 +126,6 @@ module.exports = {
   'overrides': [
     // opt-out stories for rules of hooks, or we can't use useState in the render functions
     // https://github.com/storybookjs/eslint-plugin-storybook/pull/149
-    // Note: Just using that plugin doesn't help as we opt back in to the rules
-    // of hooks for wallet.
     {
       'files': [
         'components/**/*.stories.tsx',
