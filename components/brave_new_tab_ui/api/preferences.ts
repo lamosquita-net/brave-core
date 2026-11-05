@@ -26,18 +26,6 @@ export function saveShowBackgroundImage (value: boolean): void {
   sendSavePref('showBackgroundImage', value)
 }
 
-export function saveShowRewards (value: boolean): void {
-  sendSavePref('showRewards', value)
-}
-
-export function saveShowBraveTalk (value: boolean): void {
-  sendSavePref('showBraveTalk', value)
-}
-
-export function saveSetAllStackWidgets (visible: boolean): void {
-  sendSavePref('hideAllWidgets', !visible)
-}
-
 export function addChangeListener (listener: PreferencesUpdatedHandler): void {
   addWebUiListener('preferences-changed', listener)
 }

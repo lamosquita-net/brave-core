@@ -9,8 +9,6 @@ import * as storage from '../storage/new_tab_storage'
 // Reducers
 import newTabStateReducer from './new_tab_reducer'
 import gridSitesReducer from './grid_sites_reducer'
-import rewardsReducer from './rewards_reducer'
-import { stackWidgetReducer } from './stack_widget_reducer'
 
 export type ApplicationState = NewTab.ApplicationState
 
@@ -19,16 +17,7 @@ export const newTabReducers = (state: NewTab.State | undefined, action: any) => 
     state = storage.load()
   }
 
-  const startingState = state
-  state = newTabStateReducer(state, action)
-  state = rewardsReducer(state, action)
-  state = stackWidgetReducer(state, action)
-
-  if (state !== startingState) {
-    storage.debouncedSave(state)
-  }
-
-  return state
+  return newTabStateReducer(state, action)
 }
 
 export const mainNewTabReducer = combineReducers<ApplicationState>({

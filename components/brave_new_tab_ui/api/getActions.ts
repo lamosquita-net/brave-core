@@ -6,8 +6,6 @@
 import { bindActionCreators, Dispatch } from 'redux'
 import * as newTabActions from '../actions/new_tab_actions'
 import * as gridSitesActions from '../actions/grid_sites_actions'
-import * as rewardsActions from '../actions/rewards_actions'
-import * as stackWidgetActions from '../actions/stack_widget_actions'
 import { NewTabActions } from '../constants/new_tab_types'
 import store from '../store'
 
@@ -25,7 +23,7 @@ export default function getActions () {
 }
 
 export function getActionsForDispatch (dispatch: Dispatch) {
-  const allActions = Object.assign({}, newTabActions, stackWidgetActions, gridSitesActions, rewardsActions)
+  const allActions = Object.assign({}, newTabActions, gridSitesActions)
   return {
     ...bindActionCreators(allActions, dispatch)
   }

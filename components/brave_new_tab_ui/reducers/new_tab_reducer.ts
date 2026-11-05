@@ -16,9 +16,6 @@ import { InitialData } from '../api/initialData'
 import * as storage from '../storage/new_tab_storage'
 import { setMostVisitedSettings } from '../api/topSites'
 
-// Utils
-import { handleWidgetPrefsChange } from './stack_widget_reducer'
-import { NewTabAdsData } from '../api/newTabAdsData'
 import { Background, CustomBackground } from '../api/background'
 
 let sideEffectState: NewTab.State = storage.load()
@@ -41,8 +38,6 @@ export const newTabReducer: Reducer<NewTab.State | undefined> = (state: NewTab.S
         ...initialDataPayload.preferences,
         stats: initialDataPayload.stats,
         ...initialDataPayload.privateTabData,
-        braveRewardsSupported: initialDataPayload.braveRewardsSupported,
-        braveTalkSupported: initialDataPayload.braveTalkSupported,
         searchPromotionEnabled: initialDataPayload.searchPromotionEnabled,
         customImageBackgrounds: initialDataPayload.customImageBackgrounds
       }
@@ -69,10 +64,6 @@ export const newTabReducer: Reducer<NewTab.State | undefined> = (state: NewTab.S
         state.backgroundWallpaper = backgroundAPI.randomBackgroundImage()
       }
       console.timeStamp('reducer initial data received')
-
-      state = storage.addNewStackWidget(state)
-      state = storage.replaceStackWidgets(state)
-
       break
 
     case types.NEW_TAB_STATS_UPDATED:
@@ -140,11 +131,6 @@ export const newTabReducer: Reducer<NewTab.State | undefined> = (state: NewTab.S
       }
       break
 
-    case types.NEW_TAB_ADS_DATA_UPDATED:
-      const newTabAdsData = payload as NewTabAdsData
-      state.rewardsState.needsBrowserUpgradeToServeAds = newTabAdsData.needsBrowserUpgradeToServeAds
-      break
-
     case types.NEW_TAB_PREFERENCES_UPDATED:
       const preferences = payload as NewTab.Preferences
       const newState = {
@@ -157,8 +143,7 @@ export const newTabReducer: Reducer<NewTab.State | undefined> = (state: NewTab.S
       if (shouldChangeBackgroundImage && !newState.backgroundWallpaper) {
         newState.backgroundWallpaper = backgroundAPI.randomBackgroundImage()
       }
-      // Handle updated widget prefs
-      state = handleWidgetPrefsChange(newState, state)
+      state = newState
       break
 
     case types.SET_MOST_VISITED_SITES: {

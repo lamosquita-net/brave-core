@@ -9,7 +9,7 @@ import * as React from 'react'
 import getNTPBrowserAPI from '../../api/background'
 import { addNewTopSite, editTopSite } from '../../api/topSites'
 import {
-  BraveTalkWidget as BraveTalk, Clock, EditTopSite, OverrideReadabilityColor, SearchPromotion
+  Clock, EditTopSite, OverrideReadabilityColor, SearchPromotion
 } from '../../components/default'
 import FooterInfo from '../../components/default/footer/footer'
 import * as Page from '../../components/default/page'
@@ -46,9 +46,6 @@ interface Props {
   gridSitesData: NewTab.GridSitesState
   actions: NewTabActions
   saveShowBackgroundImage: (value: boolean) => void
-  saveShowRewards: (value: boolean) => void
-  saveShowBraveTalk: (value: boolean) => void
-  saveSetAllStackWidgets: (value: boolean) => void
   chooseNewCustomBackgroundImage: () => void
   setCustomImageBackground: (selectedBackground: string) => void
   removeCustomImageBackground: (background: string) => void
@@ -216,22 +213,6 @@ class NewTabPage extends React.Component<Props, State> {
     this.props.actions.setMostVisitedSettings(showTopSites, customLinksEnabled)
   }
 
-  toggleShowRewards = () => {
-    this.props.saveShowRewards(!this.props.newTabData.showRewards)
-  }
-
-  toggleShowBraveTalk = () => {
-    this.props.saveShowBraveTalk(!this.props.newTabData.showBraveTalk)
-  }
-
-  startRewards = () => {
-    // FlyWeb: Brave Rewards is removed from the build.
-  }
-
-  dismissNotification = (id: string) => {
-    this.props.actions.dismissNotification(id)
-  }
-
   closeSettings = () => {
     this.setState({
       showSettingsMenu: false,
@@ -276,87 +257,6 @@ class NewTabPage extends React.Component<Props, State> {
     })
   }
 
-  setForegroundStackWidget = (widget: NewTab.StackWidget) => {
-    this.props.actions.setForegroundStackWidget(widget)
-  }
-
-  learnMoreRewards = () => {
-    window.open('https://brave.com/brave-rewards/', '_blank', 'noopener')
-  }
-
-  getCryptoContent () {
-    if (this.props.newTabData.hideAllWidgets) {
-      return null
-    }
-    const {
-      widgetStackOrder,
-      braveRewardsSupported,
-      braveTalkSupported,
-      showRewards,
-      showBraveTalk
-    } = this.props.newTabData
-    const lookup = {
-      'rewards': {
-        display: braveRewardsSupported && showRewards,
-        render: this.renderRewardsWidget.bind(this)
-      },
-      'braveTalk': {
-        display: braveTalkSupported && showBraveTalk,
-        render: this.renderBraveTalkWidget.bind(this)
-      }
-    }
-
-    const widgetList = widgetStackOrder.filter((widget: NewTab.StackWidget) => {
-      if (!lookup.hasOwnProperty(widget)) {
-        return false
-      }
-
-      return lookup[widget].display
-    })
-
-    return (
-      <>
-        {widgetList.map((widget: NewTab.StackWidget, i: number) => {
-          const isForeground = i === widgetList.length - 1
-          return (
-            <div key={`widget-${widget}`}>
-              {lookup[widget].render(isForeground, i)}
-            </div>
-          )
-        })}
-      </>
-    )
-  }
-
-  allWidgetsHidden = () => {
-    const {
-      braveRewardsSupported,
-      braveTalkSupported,
-      showRewards,
-      showBraveTalk,
-      hideAllWidgets
-    } = this.props.newTabData
-    return hideAllWidgets || [
-      braveRewardsSupported && showRewards,
-      braveTalkSupported && showBraveTalk
-    ].every((widget: boolean) => !widget)
-  }
-
-  renderCryptoContent () {
-    const { newTabData } = this.props
-    const { widgetStackOrder } = newTabData
-
-    if (!widgetStackOrder.length) {
-      return null
-    }
-
-    return (
-      <Page.GridItemWidgetStack>
-        {this.getCryptoContent()}
-      </Page.GridItemWidgetStack>
-    )
-  }
-
   renderSearchPromotion () {
     if (!GetShouldShowSearchPromotion(this.props, this.state.showSearchPromotion)) {
       return null
@@ -368,35 +268,6 @@ class NewTabPage extends React.Component<Props, State> {
 
     return (
       <SearchPromotion textDirection={this.props.newTabData.textDirection} onTryBraveSearch={onTryBraveSearch} onClose={onClose} onDismiss={onDismiss} />
-    )
-  }
-
-  renderRewardsWidget (showContent: boolean, position: number) {
-    // FlyWeb: Brave Rewards is removed from the build; no widget.
-    return null
-  }
-
-  renderBraveTalkWidget (showContent: boolean, position: number) {
-    const { newTabData } = this.props
-    const { showBraveTalk, textDirection, braveTalkSupported } = newTabData
-
-    if (!showBraveTalk || !braveTalkSupported) {
-      return null
-    }
-
-    return (
-      <BraveTalk
-        isCardWidget
-        paddingType={'none'}
-        menuPosition={'left'}
-        widgetTitle={getLocale('braveTalkWidgetTitle')}
-        isForeground={showContent}
-        stackPosition={position}
-        textDirection={textDirection}
-        hideWidget={this.toggleShowBraveTalk}
-        showContent={showContent}
-        onShowContent={this.setForegroundStackWidget.bind(this, 'braveTalk')}
-      />
     )
   }
 
@@ -416,7 +287,6 @@ class NewTabPage extends React.Component<Props, State> {
     const coloresFlyWeb = hasImage && esFondoFlyWeb(fondo) ? fondo.flyweb : undefined
     const colorForBackground = newTabData.backgroundWallpaper?.type === 'color' ? newTabData.backgroundWallpaper.wallpaperColor : undefined
 
-    let cryptoContent = this.renderCryptoContent()
     const showAddNewSiteMenuItem = newTabData.customLinksNum < MAX_GRID_SIZE
 
     let { showTopSites, showStats, showClock } = newTabData
@@ -430,7 +300,6 @@ class NewTabPage extends React.Component<Props, State> {
       showTopSites = false
       showStats = false
       showClock = false
-      cryptoContent = null
     }
 
     return (
@@ -452,7 +321,6 @@ class NewTabPage extends React.Component<Props, State> {
             showStats={showStats}
             colorForBackground={colorForBackground}
             sinVelo={!!coloresFlyWeb}
-            showCryptoContent={!!cryptoContent}
             showTopSites={showTopSites}
         >
           {this.renderSearchPromotion()}
@@ -500,7 +368,6 @@ class NewTabPage extends React.Component<Props, State> {
                   </Page.GridItemNotification>
                 ) : null
             }
-            {cryptoContent}
             <Page.Footer>
               <Page.FooterContent>
                 <FooterInfo
@@ -535,16 +402,7 @@ class NewTabPage extends React.Component<Props, State> {
           showBackgroundImage={newTabData.showBackgroundImage}
           showTopSites={newTabData.showTopSites}
           customLinksEnabled={newTabData.customLinksEnabled}
-          showRewards={newTabData.showRewards}
-          braveRewardsSupported={newTabData.braveRewardsSupported}
-          toggleShowRewards={this.toggleShowRewards}
-          braveTalkSupported={newTabData.braveTalkSupported}
-          toggleShowBraveTalk={this.toggleShowBraveTalk}
-          showBraveTalk={newTabData.showBraveTalk}
-          cardsHidden={this.allWidgetsHidden()}
-          toggleCards={this.props.saveSetAllStackWidgets}
           newTabData={this.props.newTabData}
-          onEnableRewards={this.startRewards}
         />
         {
           showEditTopSite

@@ -16,7 +16,6 @@
 class Profile;
 
 namespace base {
-class Time;
 class Value;
 }  //  namespace base
 
@@ -35,8 +34,6 @@ class BraveNewTabMessageHandler : public content::WebUIMessageHandler {
 
   static void RegisterLocalStatePrefs(PrefRegistrySimple* local_state);
   static void RecordInitialP3AValues(PrefService* local_state);
-  static bool CanPromptBraveTalk();
-  static bool CanPromptBraveTalk(base::Time now);
   static BraveNewTabMessageHandler* Create(Profile* profile);
 
  private:
@@ -48,7 +45,6 @@ class BraveNewTabMessageHandler : public content::WebUIMessageHandler {
   void HandleGetPreferences(const base::ListValue& args);
   void HandleGetStats(const base::ListValue& args);
   void HandleGetPrivateProperties(const base::ListValue& args);
-  void HandleGetNewTabAdsData(const base::ListValue& args);
   void HandleSaveNewTabPagePref(const base::ListValue& args);
   void HandleToggleAlternativeSearchEngineProvider(const base::ListValue& args);
   void HandleGetWallpaperData(const base::ListValue& args);
@@ -57,8 +53,6 @@ class BraveNewTabMessageHandler : public content::WebUIMessageHandler {
   void OnStatsChanged();
   void OnPreferencesChanged();
   void OnPrivatePropertiesChanged();
-
-  base::DictValue GetAdsDataDictionary() const;
 
   PrefChangeRegistrar pref_change_registrar_;
   // Weak pointer.

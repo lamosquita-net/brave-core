@@ -30,10 +30,8 @@
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/first_run/first_run.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/webui/plural_string_handler.h"
 #include "chrome/common/chrome_features.h"
 #include "chrome/common/pref_names.h"
-#include "components/grit/brave_components_strings.h"
 #include "components/prefs/pref_change_registrar.h"
 #include "components/prefs/pref_registry_simple.h"
 #include "components/prefs/pref_service.h"
@@ -69,9 +67,6 @@ base::DictValue GetPreferencesDictionary(PrefService* prefs) {
   pref_data.Set("showClock", prefs->GetBoolean(kNewTabPageShowClock));
   pref_data.Set("clockFormat", prefs->GetString(kNewTabPageClockFormat));
   pref_data.Set("showStats", prefs->GetBoolean(kNewTabPageShowStats));
-  pref_data.Set("showRewards", prefs->GetBoolean(kNewTabPageShowRewards));
-  pref_data.Set("hideAllWidgets", prefs->GetBoolean(kNewTabPageHideAllWidgets));
-  pref_data.Set("showBraveTalk", prefs->GetBoolean(kNewTabPageShowBraveTalk));
   pref_data.Set(
       "showSearchBox",
       prefs->GetBoolean(brave_search_conversion::prefs::kShowNTPSearchBox));
@@ -128,11 +123,6 @@ void BraveNewTabMessageHandler::RegisterMessages() {
   // - Stats
   // - Preferences
   // - PrivatePage properties
-  auto plural_string_handler = std::make_unique<PluralStringHandler>();
-  plural_string_handler->AddLocalizedString("rewardsPublisherCountText",
-                                            IDS_REWARDS_PUBLISHER_COUNT_TEXT);
-  web_ui()->AddMessageHandler(std::move(plural_string_handler));
-
   web_ui()->RegisterMessageCallback(
       "getNewTabPagePreferences",
       base::BindRepeating(&BraveNewTabMessageHandler::HandleGetPreferences,
@@ -146,10 +136,6 @@ void BraveNewTabMessageHandler::RegisterMessages() {
       base::BindRepeating(
           &BraveNewTabMessageHandler::HandleGetPrivateProperties,
           base::Unretained(this)));
-  web_ui()->RegisterMessageCallback(
-      "getNewTabAdsData",
-      base::BindRepeating(&BraveNewTabMessageHandler::HandleGetNewTabAdsData,
-                          base::Unretained(this)));
   web_ui()->RegisterMessageCallback(
       "toggleAlternativePrivateSearchEngine",
       base::BindRepeating(&BraveNewTabMessageHandler::
@@ -232,18 +218,6 @@ void BraveNewTabMessageHandler::OnJavascriptAllowed() {
       kNewTabPageShowStats,
       base::BindRepeating(&BraveNewTabMessageHandler::OnPreferencesChanged,
                           base::Unretained(this)));
-  pref_change_registrar_.Add(
-      kNewTabPageShowRewards,
-      base::BindRepeating(&BraveNewTabMessageHandler::OnPreferencesChanged,
-                          base::Unretained(this)));
-  pref_change_registrar_.Add(
-      kNewTabPageShowBraveTalk,
-      base::BindRepeating(&BraveNewTabMessageHandler::OnPreferencesChanged,
-                          base::Unretained(this)));
-  pref_change_registrar_.Add(
-      kNewTabPageHideAllWidgets,
-      base::BindRepeating(&BraveNewTabMessageHandler::OnPreferencesChanged,
-                          base::Unretained(this)));
 }
 
 void BraveNewTabMessageHandler::OnJavascriptDisallowed() {
@@ -272,13 +246,6 @@ void BraveNewTabMessageHandler::HandleGetPrivateProperties(
   PrefService* prefs = profile_->GetPrefs();
   auto data = GetPrivatePropertiesDictionary(prefs);
   ResolveJavascriptCallback(args[0], data);
-}
-
-void BraveNewTabMessageHandler::HandleGetNewTabAdsData(
-    const base::ListValue& args) {
-  AllowJavascript();
-
-  ResolveJavascriptCallback(args[0], GetAdsDataDictionary());
 }
 
 void BraveNewTabMessageHandler::HandleToggleAlternativeSearchEngineProvider(
@@ -327,12 +294,6 @@ void BraveNewTabMessageHandler::HandleSaveNewTabPagePref(
     settingsKey = kNewTabPageShowClock;
   } else if (settingsKeyInput == "showStats") {
     settingsKey = kNewTabPageShowStats;
-  } else if (settingsKeyInput == "showRewards") {
-    settingsKey = kNewTabPageShowRewards;
-  } else if (settingsKeyInput == "hideAllWidgets") {
-    settingsKey = kNewTabPageHideAllWidgets;
-  } else if (settingsKeyInput == "showBraveTalk") {
-    settingsKey = kNewTabPageShowBraveTalk;
   } else if (settingsKeyInput == "showSearchBox") {
     settingsKey = brave_search_conversion::prefs::kShowNTPSearchBox;
   } else if (settingsKeyInput == "promptEnableSearchSuggestions") {
@@ -382,9 +343,4 @@ void BraveNewTabMessageHandler::OnPreferencesChanged() {
   PrefService* prefs = profile_->GetPrefs();
   auto data = GetPreferencesDictionary(prefs);
   FireWebUIListener("preferences-changed", data);
-}
-
-base::DictValue BraveNewTabMessageHandler::GetAdsDataDictionary() const {
-  // FlyWeb: Brave Ads is removed from the build.
-  return {};
 }

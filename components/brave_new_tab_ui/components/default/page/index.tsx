@@ -35,13 +35,12 @@ type AppProps = {
 type PageProps = {
   showClock: boolean
   showStats: boolean
-  showCryptoContent: boolean
   showTopSites: boolean
 } & HasImageProps
 
 function getItemRowCount(p: PageProps): number {
-  let right = (p.showClock ? 1 : 0) + (p.showCryptoContent ? 2 : 0)
-  let left = (p.showStats ? 1 : 0) + (p.showTopSites ? 1 : 0)
+  const right = p.showClock ? 1 : 0
+  const left = (p.showStats ? 1 : 0) + (p.showTopSites ? 1 : 0)
   return Math.max(left, right) + 1 // extra 1 for footer
 }
 
@@ -175,14 +174,6 @@ export const GridItemClock = styled('section')`
   grid-column: 3;
   justify-self: center;
   ${singleColumnSmallViewport}
-`
-
-export const GridItemWidgetStack = styled('section')`
-  grid-column: 3 / span 1;
-  grid-row-end: span 2;
-  @media screen and (max-width: ${breakpointLargeBlocks}) {
-    max-width: 284px;
-  }
 `
 
 export const GridItemTopSites = styled('section')`
