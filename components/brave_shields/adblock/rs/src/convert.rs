@@ -58,7 +58,7 @@ impl From<InnerRegexDebugInfo> for RegexDebugInfo {
 impl From<InnerBlockerResult> for BlockerResult {
     fn from(result: InnerBlockerResult) -> Self {
         Self {
-            matched: result.matched,
+            matched: result.should_block(),
             important: result.important,
             has_exception: result.exception.is_some(),
             redirect: result.redirect.into(),

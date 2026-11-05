@@ -35,12 +35,13 @@ impl FilterSet {
             Ok(self
                 .0
                 .add_filter_list(
-                    std::str::from_utf8(rules.as_slice())?,
+                    std::str::from_utf8(rules.as_slice())?.to_string(),
                     ParseOptions {
                         permissions: PermissionMask::from_bits(permission_mask),
                         ..Default::default()
                     },
                 )
+                .metadata
                 .into())
         }()
         .into()
