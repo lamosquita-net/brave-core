@@ -49,7 +49,6 @@ class BraveSyncPrefsTest : public testing::Test {
 #endif
 };
 
-
 using BraveSyncPrefsDeathTest = BraveSyncPrefsTest;
 
 TEST_F(BraveSyncPrefsTest, LeaveChainDetailsMaxLenIOS) {
