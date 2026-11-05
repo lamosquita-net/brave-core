@@ -8,6 +8,10 @@
 #include <algorithm>
 #include <optional>
 
+#include "base/check.h"
+#include "base/functional/callback_helpers.h"
+#include "base/logging.h"
+#include "base/task/single_thread_task_runner.h"
 #include "components/update_client/update_client.h"
 
 #include "src/components/update_client/update_checker.cc"
@@ -28,9 +32,8 @@ bool IsBraveComponent(const Component* component) {
 }  // namespace
 
 SequentialUpdateChecker::SequentialUpdateChecker(
-    scoped_refptr<Configurator> config,
-    PersistedData* metadata)
-    : config_(config), metadata_(metadata) {
+    scoped_refptr<Configurator> config)
+    : config_(config) {
   VLOG(3) << "SequentialUpdateChecker";
 }
 
@@ -87,10 +90,9 @@ void SequentialUpdateChecker::CheckNext() {
   }
 
   scoped_refptr<UpdateContext> context = new UpdateContext(
-      update_context_->config, update_context_->crx_cache_,
-      update_context_->is_foreground, update_context_->is_install, ids,
+      update_context_->config, update_context_->is_foreground,
+      update_context_->is_install, ids,
       update_context_->crx_state_change_callback,
-      update_context_->notify_observers_callback,
       // We don't pass a context callback here because UpdateChecker doesn't use
       // it. This is instead done by UpdateEngine, which calls us.
       base::DoNothing(), update_context_->persisted_data,
@@ -106,7 +108,7 @@ void SequentialUpdateChecker::CheckNext() {
     context->components_to_check_for_updates.push_back(id);
   }
 
-  update_checker_ = UpdateChecker::Create(config_, metadata_);
+  update_checker_ = UpdateChecker::Create(config_);
 
   update_checker_->CheckForUpdates(
       context, additional_attributes_,
@@ -117,7 +119,7 @@ void SequentialUpdateChecker::CheckNext() {
 }
 
 void SequentialUpdateChecker::UpdateResultAvailable(
-    const std::optional<ProtocolParser::Results>& results,
+    std::optional<ProtocolParser::Results> results,
     ErrorCategory error_category,
     int error,
     int retry_after_sec) {
@@ -129,8 +131,8 @@ void SequentialUpdateChecker::UpdateResultAvailable(
     // We expect results->list to contain precisely one element. However, in
     // practice during development, it has sometimes happened that the list was
     // empty. A for loop is an easy way to guard against such unexpected cases:
-    for (const auto& result : results->list) {
-      results_.list.push_back(result);
+    for (const auto& result : results->apps) {
+      results_.apps.push_back(result);
     }
   }
 
@@ -146,6 +148,11 @@ void SequentialUpdateChecker::UpdateResultAvailable(
             error_category, error, retry_after_sec));
 
     remaining_ids_.clear();
+
+    // `update_context_` owns this object via `UpdateContext::update_checker`.
+    // Holding a reference back to it is a cycle that would keep the context
+    // alive forever once the check is done.
+    update_context_.reset();
   } else {
     CheckNext();
   }
@@ -153,10 +160,9 @@ void SequentialUpdateChecker::UpdateResultAvailable(
 }
 
 std::unique_ptr<UpdateChecker> SequentialUpdateChecker::Create(
-    scoped_refptr<Configurator> config,
-    PersistedData* persistent) {
+    scoped_refptr<Configurator> config) {
   VLOG(3) << "Create";
-  return std::make_unique<SequentialUpdateChecker>(config, persistent);
+  return std::make_unique<SequentialUpdateChecker>(std::move(config));
 }
 
 }  // namespace update_client
