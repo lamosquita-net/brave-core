@@ -7,7 +7,6 @@ import '../brave_appearance_page/sidebar.js'
 import '../brave_appearance_page/tabs.js'
 import '../brave_appearance_page/toolbar.js'
 import '../brave_content_page/content.js'
-import '../brave_content_page/speedreader.js'
 import '../brave_data_collection_page/brave_data_collection_page.js'
 import '../brave_default_extensions_page/brave_default_extensions_page.js'
 import '../brave_new_tab_page/brave_new_tab_page.js'
@@ -246,20 +245,6 @@ RegisterPolymerTemplateModifications({
         }
       ))
 
-      const sectionSpeedreader = document.createElement('template')
-      sectionSpeedreader.setAttribute('is', 'dom-if')
-      sectionSpeedreader.setAttribute('restamp', 'true')
-      sectionSpeedreader.setAttribute('if', '[[showPage_(pageVisibility.speedreader)]]')
-      sectionSpeedreader.content.appendChild(createNestedSectionElement(
-        'speedreader',
-        'content',
-        'speedreaderSettingLabel',
-        'settings-brave-content-speedreader',
-        {
-          prefs: '{{prefs}}'
-        }
-      ))
-
       const sectionNewTab = document.createElement('template')
       sectionNewTab.setAttribute('is', 'dom-if')
       sectionNewTab.setAttribute('restamp', 'true')
@@ -307,9 +292,8 @@ RegisterPolymerTemplateModifications({
       last = last.insertAdjacentElement('afterend', sectionToolbar)
       last = last.insertAdjacentElement('afterend', sectionTabs)
       last = last.insertAdjacentElement('afterend', sectionSidebar)
-      // Insert nested Content, Speedreader under 'Content' menu
+      // Insert Content
       last = last.insertAdjacentElement('afterend', sectionContent)
-      last = last.insertAdjacentElement('afterend', sectionSpeedreader)
       // Insert shields
       last = last.insertAdjacentElement('afterend', sectionShields)
       // Insert nested Social Blocking under shields

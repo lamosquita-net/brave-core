@@ -24,7 +24,6 @@
 #include "brave/components/commander/common/buildflags/buildflags.h"
 #include "brave/components/commands/common/features.h"
 #include "brave/components/constants/pref_names.h"
-#include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "chrome/app/chrome_command_ids.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/profile.h"
@@ -39,10 +38,6 @@
 #include "components/prefs/pref_service.h"
 #include "components/sync/base/command_line_switches.h"
 #include "content/public/browser/web_contents.h"
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-#include "brave/components/speedreader/common/features.h"
-#endif
 
 #if BUILDFLAG(ENABLE_COMMANDER)
 #include "brave/browser/ui/commander/commander_service.h"
@@ -193,12 +188,6 @@ void BraveBrowserCommandController::InitBraveCommandState() {
   UpdateCommandEnabled(IDC_OPEN_GUEST_PROFILE, open_guest_profile_enabled);
   UpdateCommandEnabled(IDC_COPY_CLEAN_LINK, true);
   UpdateCommandEnabled(IDC_TOGGLE_TAB_MUTE, true);
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-  if (base::FeatureList::IsEnabled(speedreader::kSpeedreaderFeature)) {
-    UpdateCommandEnabled(IDC_SPEEDREADER_ICON_ONCLICK, true);
-  }
-#endif
 
 #if BUILDFLAG(ENABLE_COMMANDER)
   UpdateCommandEnabled(IDC_COMMANDER, commander::IsEnabled());
@@ -365,9 +354,6 @@ bool BraveBrowserCommandController::ExecuteBraveCommandWithDisposition(
       brave::ShowBraveWallet(&*browser_);
       break;
     case IDC_TOGGLE_AI_CHAT:
-      break;
-    case IDC_SPEEDREADER_ICON_ONCLICK:
-      brave::MaybeDistillAndShowSpeedreaderBubble(&*browser_);
       break;
     case IDC_SIDEBAR_TOGGLE_POSITION:
       brave::ToggleSidebarPosition(&*browser_);

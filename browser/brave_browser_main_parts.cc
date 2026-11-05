@@ -14,7 +14,6 @@
 #include "brave/components/brave_sync/features.h"
 #include "brave/components/constants/brave_constants.h"
 #include "brave/components/constants/pref_names.h"
-#include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "brave/components/translate/core/common/brave_translate_features.h"
 #include "build/build_config.h"
 #include "chrome/browser/browser_process.h"
@@ -27,11 +26,6 @@
 #include "content/public/browser/render_frame_host.h"
 #include "extensions/buildflags/buildflags.h"
 #include "media/base/media_switches.h"
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-#include "brave/components/speedreader/speedreader_extended_info_handler.h"
-#include "components/sessions/content/content_serialized_navigation_driver.h"
-#endif
 
 #if !BUILDFLAG(IS_ANDROID)
 #include "brave/browser/infobars/brave_sync_account_deleted_infobar_delegate.h"
@@ -58,20 +52,6 @@ int BraveBrowserMainParts::PreMainMessageLoopRun() {
           &g_browser_process->component_updater()->GetOnDemandUpdater());
 
   return ChromeBrowserMainParts::PreMainMessageLoopRun();
-}
-
-void BraveBrowserMainParts::PreBrowserStart() {
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-  // Register() must be called after the SerializedNavigationDriver is
-  // initialized, but before any calls to
-  // ContentSerializedNavigationBuilder::ToNavigationEntries()
-  //
-  // TODO(keur): Can we DCHECK the latter condition?
-  DCHECK(sessions::ContentSerializedNavigationDriver::GetInstance());
-  speedreader::SpeedreaderExtendedInfoHandler::Register();
-#endif
-
-  ChromeBrowserMainParts::PreBrowserStart();
 }
 
 void BraveBrowserMainParts::PostBrowserStart() {

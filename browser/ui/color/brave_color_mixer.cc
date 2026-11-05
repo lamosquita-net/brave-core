@@ -12,7 +12,6 @@
 #include "brave/browser/ui/color/color_palette.h"
 #include "brave/browser/ui/color/leo/colors.h"
 #include "brave/components/brave_wayback_machine/buildflags/buildflags.h"
-#include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "chrome/browser/themes/theme_properties.h"
 #include "chrome/browser/ui/color/chrome_color_id.h"
 #include "chrome/browser/ui/color/chrome_color_provider_utils.h"
@@ -70,64 +69,6 @@ bool HasCustomToolbarColor(const ui::ColorProviderKey& key) {
          key.custom_theme->GetColor(ThemeProperties::COLOR_TOOLBAR,
                                     &custom_toolbar_color);
 }
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-SkColor PickSimilarColorToToolbar(const ui::ColorProviderKey& key,
-                                  const ui::ColorMixer& mixer,
-                                  SkColor light_theme_color,
-                                  SkColor dark_theme_color) {
-  auto toolbar_color = mixer.GetResultColor(kColorToolbar);
-  SkColor custom_toolbar_color;
-  if (key.custom_theme &&
-      key.custom_theme->GetColor(ThemeProperties::COLOR_TOOLBAR,
-                                 &custom_toolbar_color)) {
-    toolbar_color = custom_toolbar_color;
-  }
-
-  // Give min constrast color.
-  return color_utils::IsDark(toolbar_color) ? dark_theme_color
-                                            : light_theme_color;
-}
-#endif
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-void AddBraveSpeedreaderColorMixer(ui::ColorProvider* provider,
-                                   const ui::ColorProviderKey& key) {
-  ui::ColorMixer& mixer = provider->AddMixer();
-
-  mixer[kColorSpeedreaderIcon] = {
-      PickSimilarColorToToolbar(key, mixer, SkColorSetRGB(0x4C, 0x54, 0xD2),
-                                SkColorSetRGB(0x73, 0x7A, 0xDE))};
-  mixer[kColorSpeedreaderToggleThumb] = {
-      PickSimilarColorToToolbar(key, mixer, SkColorSetRGB(0x4C, 0x54, 0xD2),
-                                SkColorSetRGB(0x44, 0x36, 0xE1))};
-  mixer[kColorSpeedreaderToggleTrack] = {
-      PickSimilarColorToToolbar(key, mixer, SkColorSetRGB(0xE1, 0xE2, 0xF6),
-                                SkColorSetRGB(0x76, 0x79, 0xB1))};
-
-  mixer[kColorSpeedreaderToolbarBackground] = {kColorToolbar};
-  mixer[kColorSpeedreaderToolbarBorder] = {kColorToolbarContentAreaSeparator};
-  mixer[kColorSpeedreaderToolbarForeground] = {PickColorContrastingToToolbar(
-      key, mixer,
-      leo::GetColor(leo::Color::kColorIconDefault, leo::Theme::kLight),
-      leo::GetColor(leo::Color::kColorIconDefault, leo::Theme::kDark))};
-
-  mixer[kColorSpeedreaderToolbarButtonHover] = {PickSimilarColorToToolbar(
-      key, mixer, SkColorSetARGB(0x0D, 0x13, 0x16, 0x20),
-      SkColorSetARGB(0x59, 0x0A, 0x0B, 0x10))};
-  mixer[kColorSpeedreaderToolbarButtonActive] = {PickSimilarColorToToolbar(
-      key, mixer, SkColorSetARGB(0x14, 0x13, 0x16, 0x20),
-      SkColorSetARGB(0x80, 0x0A, 0x0B, 0x10))};
-  mixer[kColorSpeedreaderToolbarButtonActiveText] = {PickSimilarColorToToolbar(
-      key, mixer,
-      leo::GetColor(leo::Color::kColorIconInteractive, leo::Theme::kLight),
-      leo::GetColor(leo::Color::kColorIconInteractive, leo::Theme::kDark))};
-  mixer[kColorSpeedreaderToolbarButtonBorder] = {PickSimilarColorToToolbar(
-      key, mixer,
-      leo::GetColor(leo::Color::kColorDividerSubtle, leo::Theme::kLight),
-      leo::GetColor(leo::Color::kColorDividerSubtle, leo::Theme::kDark))};
-}
-#endif
 
 void AddChromeLightThemeColorMixer(ui::ColorProvider* provider,
                                    const ui::ColorProviderKey& key) {
@@ -634,9 +575,6 @@ void AddBraveThemeColorMixer(ui::ColorProvider* provider,
   key.color_mode == ui::ColorProviderKey::ColorMode::kDark
       ? AddBraveDarkThemeColorMixer(provider, key)
       : AddBraveLightThemeColorMixer(provider, key);
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-  AddBraveSpeedreaderColorMixer(provider, key);
-#endif
 }
 
 void AddBravePrivateThemeColorMixer(ui::ColorProvider* provider,

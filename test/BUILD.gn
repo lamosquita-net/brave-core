@@ -10,7 +10,6 @@ import("//brave/components/brave_wayback_machine/buildflags/buildflags.gni")
 import("//brave/components/brave_webtorrent/browser/buildflags/buildflags.gni")
 import("//brave/components/ntp_background_images/buildflags/buildflags.gni")
 import("//brave/components/request_otr/common/buildflags/buildflags.gni")
-import("//brave/components/speedreader/common/buildflags/buildflags.gni")
 import("//brave/test/testing.gni")
 import("//brave/updater/config.gni")
 import("//chrome/common/features.gni")
@@ -447,15 +446,6 @@ test("brave_unit_tests") {
 
     deps += [ "//brave/components/brave_wayback_machine" ]
   }
-
-  if (enable_speedreader) {
-    sources += [
-      "//brave/components/speedreader/speedreader_rewriter_unittest.cc",
-      "//brave/components/speedreader/speedreader_util_unittest.cc",
-    ]
-
-    deps += [ "//brave/components/speedreader" ]
-  }
 }
 
 source_set("crypto_unittests") {
@@ -622,7 +612,6 @@ test("brave_browser_tests") {
     "//brave/browser/extensions/brave_extension_provider_browsertest.cc",
     "//brave/browser/extensions/brave_theme_event_router_browsertest.cc",
     "//brave/browser/extensions/extension_system_browsertest.cc",
-    "//brave/browser/perf/brave_perf_features_processor_browsertest.cc",
     "//brave/browser/policy/brave_policy_browsertest.cc",
     "//brave/browser/profiles/brave_profile_manager_browsertest.cc",
     "//brave/browser/profiles/delete_profile_helper_browsertest.cc",
@@ -708,7 +697,6 @@ test("brave_browser_tests") {
     "//brave/components/ntp_background_images/buildflags",
     "//brave/components/ntp_background_images/common",
     "//brave/components/resources:strings_grit",
-    "//brave/components/speedreader/common/buildflags",
     "//brave/components/url_sanitizer/browser",
     "//brave/components/webcompat:core",
     "//brave/renderer/test:browser_tests",
@@ -800,16 +788,6 @@ test("brave_browser_tests") {
   if (enable_brave_wayback_machine) {
     sources += [ "//brave/components/brave_wayback_machine/brave_wayback_machine_browsertest.cc" ]
     deps += [ "//brave/components/brave_wayback_machine" ]
-  }
-
-  if (enable_speedreader) {
-    sources += [ "//brave/browser/speedreader/speedreader_browsertest.cc" ]
-    deps += [
-      "//brave/components/speedreader",
-      "//brave/components/speedreader/common:mojom",
-      "//chrome/browser/ui/browser_window",
-      "//components/language/core/browser:browser",
-    ]
   }
 
   if (is_win || is_linux) {

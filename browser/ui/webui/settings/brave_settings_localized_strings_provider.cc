@@ -195,8 +195,6 @@ void BraveAddCommonStrings(content::WebUIDataSource* html_source,
       {"autofillInPrivateSettingDesc",
        IDS_SETTINGS_BRAVE_AUTOFILL_PRIVATE_WINDOWS_DESC},
       {"mruCyclingSettingLabel", IDS_SETTINGS_BRAVE_MRU_CYCLING_LABEL},
-      {"speedreaderSettingLabel", IDS_SETTINGS_SPEEDREADER_LABEL},
-      {"speedreaderSettingSubLabel", IDS_SETTINGS_SPEEDREADER_SUB_LABEL},
       {"deAmpSettingLabel", IDS_SETTINGS_DE_AMP_LABEL},
       {"deAmpSettingSubLabel", IDS_SETTINGS_DE_AMP_SUB_LABEL},
       {"debounceSettingLabel", IDS_SETTINGS_DEBOUNCE_LABEL},
@@ -683,7 +681,6 @@ void BraveAddCommonStrings(content::WebUIDataSource* html_source,
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   html_source->AddString("webDiscoveryLearnMoreURL", kWebDiscoveryLearnMoreUrl);
 #endif
-  html_source->AddString("speedreaderLearnMoreURL", kSpeedreaderLearnMoreUrl);
   html_source->AddString(
       "getMoreExtensionsUrl",
       base::ASCIIToUTF16(

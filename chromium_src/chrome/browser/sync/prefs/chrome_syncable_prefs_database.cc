@@ -25,7 +25,7 @@ enum {
   kProfileContentSettingsExceptionsCosmeticFiltering = 300006,
   kProfileContentSettingsExceptionsFingerprintingV2 = 300007,
   kProfileContentSettingsExceptionsBraveShields = 300008,
-  kProfileContentSettingsExceptionsBraveSpeedreader = 300009,
+  // Removed: kProfileContentSettingsExceptionsBraveSpeedreader = 300009.
   kProfileDefaultContentSettingValuesShieldsAds = 300010,
   kProfileDefaultContentSettingValuesTrackers = 300011,
   kProfileDefaultContentSettingValuesHttpsUpgrades = 300012,
@@ -35,7 +35,7 @@ enum {
   kProfileDefaultContentSettingValuesCosmeticFiltering = 300016,
   kProfileDefaultContentSettingValuesFingerprintingV2 = 300017,
   kProfileDefaultContentSettingValuesBraveShields = 300018,
-  kProfileDefaultContentSettingValuesBraveSpeedreader = 300019,
+  // Removed: kProfileDefaultContentSettingValuesBraveSpeedreader = 300019.
   kProfileContentSettingsPartitionedExceptionsShieldsAds = 300020,
   kProfileContentSettingsPartitionedExceptionsTrackers = 300021,
   kProfileContentSettingsPartitionedExceptionsHttpsUpgrades = 300022,
@@ -45,7 +45,7 @@ enum {
   kProfileContentSettingsPartitionedExceptionsCosmeticFiltering = 300026,
   kProfileContentSettingsPartitionedExceptionsFingerprintingV2 = 300027,
   kProfileContentSettingsPartitionedExceptionsBraveShields = 300028,
-  kProfileContentSettingsPartitionedExceptionsBraveSpeedreader = 300029,
+  // Removed: kProfileContentSettingsPartitionedExceptionsBraveSpeedreader = 300029.
 };
 }  // namespace brave_syncable_prefs_ids
 
@@ -54,12 +54,6 @@ const auto& BraveSyncablePreferences() {
       std::string_view, sync_preferences::SyncablePrefMetadata>({
       {"profile.content_settings.exceptions.braveShields",
        {brave_syncable_prefs_ids::kProfileContentSettingsExceptionsBraveShields,
-        syncer::PREFERENCES, sync_preferences::PrefSensitivity::kNone,
-        sync_preferences::MergeBehavior::kMergeableDict,
-        sync_preferences::WriteBehavior::kWriteToBoth}},
-      {"profile.content_settings.exceptions.braveSpeedreader",
-       {brave_syncable_prefs_ids::
-            kProfileContentSettingsExceptionsBraveSpeedreader,
         syncer::PREFERENCES, sync_preferences::PrefSensitivity::kNone,
         sync_preferences::MergeBehavior::kMergeableDict,
         sync_preferences::WriteBehavior::kWriteToBoth}},
@@ -114,12 +108,6 @@ const auto& BraveSyncablePreferences() {
         syncer::PREFERENCES, sync_preferences::PrefSensitivity::kNone,
         sync_preferences::MergeBehavior::kNone,
         sync_preferences::WriteBehavior::kWriteToBoth}},
-      {"profile.default_content_setting_values.braveSpeedreader",
-       {brave_syncable_prefs_ids::
-            kProfileDefaultContentSettingValuesBraveSpeedreader,
-        syncer::PREFERENCES, sync_preferences::PrefSensitivity::kNone,
-        sync_preferences::MergeBehavior::kNone,
-        sync_preferences::WriteBehavior::kWriteToBoth}},
       {"profile.default_content_setting_values.cosmeticFiltering",
        {brave_syncable_prefs_ids::
             kProfileDefaultContentSettingValuesCosmeticFiltering,
@@ -168,12 +156,6 @@ const auto& BraveSyncablePreferences() {
       {"profile.content_settings.partitioned_exceptions.braveShields",
        {brave_syncable_prefs_ids::
             kProfileContentSettingsPartitionedExceptionsBraveShields,
-        syncer::PREFERENCES, sync_preferences::PrefSensitivity::kNone,
-        sync_preferences::MergeBehavior::kMergeableDict,
-        sync_preferences::WriteBehavior::kWriteToBoth}},
-      {"profile.content_settings.partitioned_exceptions.braveSpeedreader",
-       {brave_syncable_prefs_ids::
-            kProfileContentSettingsPartitionedExceptionsBraveSpeedreader,
         syncer::PREFERENCES, sync_preferences::PrefSensitivity::kNone,
         sync_preferences::MergeBehavior::kMergeableDict,
         sync_preferences::WriteBehavior::kWriteToBoth}},

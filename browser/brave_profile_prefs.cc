@@ -34,7 +34,6 @@
 #include "brave/components/omnibox/browser/brave_omnibox_prefs.h"
 #include "brave/components/request_otr/common/buildflags/buildflags.h"
 #include "brave/components/search_engines/brave_prepopulated_engines.h"
-#include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "build/build_config.h"
 #include "chrome/browser/prefetch/pref_names.h"
 #include "chrome/browser/prefs/session_startup_pref.h"
@@ -69,10 +68,6 @@
 
 #if !BUILDFLAG(USE_GCM_FROM_PLATFORM)
 #include "brave/browser/gcm_driver/brave_gcm_utils.h"
-#endif
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-#include "brave/components/speedreader/speedreader_service.h"
 #endif
 
 #if BUILDFLAG(IS_ANDROID)
@@ -375,10 +370,6 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
   // Web discovery extension, default false
   registry->RegisterBooleanPref(kWebDiscoveryEnabled, false);
   registry->RegisterDictionaryPref(kWebDiscoveryCTAState);
-#endif
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-  speedreader::SpeedreaderService::RegisterProfilePrefs(registry);
 #endif
 
   de_amp::RegisterProfilePrefs(registry);

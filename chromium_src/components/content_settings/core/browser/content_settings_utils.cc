@@ -12,8 +12,7 @@
 #define GetRendererContentSettingRules \
   GetRendererContentSettingRules_ChromiumImpl
 
-// Brave's ContentSettingsType::BRAVE_COSMETIC_FILTERING,
-// ContentSettingsType::BRAVE_SPEEDREADER,  and
+// Brave's ContentSettingsType::BRAVE_COSMETIC_FILTERING and
 // ContentSettingsType::BRAVE_COOKIES types use
 // CONTENT_SETTING_DEFAULT as the initial default value, which is not a valid
 // initial default value according to CanTrackLastVisit and
@@ -22,8 +21,7 @@
 // https://github.com/brave/brave-browser/issues/25733
 #define BRAVE_CAN_TRACK_LAST_VISIT                             \
   if (type == ContentSettingsType::BRAVE_COOKIES ||            \
-      type == ContentSettingsType::BRAVE_COSMETIC_FILTERING || \
-      type == ContentSettingsType::BRAVE_SPEEDREADER) {        \
+      type == ContentSettingsType::BRAVE_COSMETIC_FILTERING) { \
     return false;                                              \
   }
 

@@ -54,7 +54,6 @@
 #include "brave/components/google_sign_in_permission/google_sign_in_permission_throttle.h"
 #include "brave/components/google_sign_in_permission/google_sign_in_permission_util.h"
 #include "brave/components/request_otr/common/buildflags/buildflags.h"
-#include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "brave/components/translate/core/common/brave_translate_switches.h"
 #include "brave/components/url_sanitizer/browser/url_sanitizer_service.h"
 #include "brave/grit/brave_generated_resources.h"
@@ -132,18 +131,6 @@ using extensions::ChromeContentBrowserClientExtensionsPart;
 #if BUILDFLAG(ENABLE_BRAVE_WEBTORRENT)
 #include "brave/browser/extensions/brave_webtorrent_navigation_throttle.h"
 #include "brave/components/brave_webtorrent/browser/magnet_protocol_handler.h"
-#endif
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-#include "brave/browser/speedreader/speedreader_service_factory.h"
-#include "brave/browser/speedreader/speedreader_tab_helper.h"
-#include "brave/components/speedreader/speedreader_body_distiller.h"
-#include "brave/components/speedreader/speedreader_distilled_page_producer.h"
-#include "brave/components/speedreader/speedreader_util.h"
-#if !BUILDFLAG(IS_ANDROID)
-#include "brave/browser/ui/webui/speedreader/speedreader_toolbar_ui.h"
-#include "brave/components/speedreader/common/speedreader_toolbar.mojom.h"
-#endif
 #endif
 
 #if BUILDFLAG(ENABLE_WIDEVINE)
@@ -363,18 +350,6 @@ void BraveContentBrowserClient::
       },
       &render_frame_host));
 
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-  associated_registry.AddInterface<speedreader::mojom::SpeedreaderHost>(
-      base::BindRepeating(
-          [](content::RenderFrameHost* render_frame_host,
-             mojo::PendingAssociatedReceiver<
-                 speedreader::mojom::SpeedreaderHost> receiver) {
-            speedreader::SpeedreaderTabHelper::BindSpeedreaderHost(
-                std::move(receiver), render_frame_host);
-          },
-          &render_frame_host));
-#endif
-
   ChromeContentBrowserClient::
       RegisterAssociatedInterfaceBindersForRenderFrameHost(render_frame_host,
                                                            associated_registry);
@@ -530,11 +505,6 @@ void BraveContentBrowserClient::RegisterBrowserInterfaceBindersForFrame(
         commands::mojom::CommandsService, BraveSettingsUI>(map);
   }
 #endif
-
-#if BUILDFLAG(ENABLE_SPEEDREADER) && !BUILDFLAG(IS_ANDROID)
-  content::RegisterWebUIControllerInterfaceBinder<
-      speedreader::mojom::ToolbarFactory, SpeedreaderToolbarUI>(map);
-#endif
 }
 
 bool BraveContentBrowserClient::HandleExternalProtocol(
@@ -622,31 +592,6 @@ BraveContentBrowserClient::CreateURLLoaderThrottles(
     auto body_sniffer_throttle =
         std::make_unique<body_sniffer::BodySnifferThrottle>(
             base::SingleThreadTaskRunner::GetCurrentDefault());
-
-    // Speedreader
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-    auto* tab_helper =
-        speedreader::SpeedreaderTabHelper::FromWebContents(contents);
-    if (tab_helper && isMainFrame) {
-      auto* speedreader_service =
-          speedreader::SpeedreaderServiceFactory::GetForBrowserContext(
-              browser_context);
-
-      auto producer =
-          speedreader::SpeedreaderDistilledPageProducer::MaybeCreate(
-              tab_helper->GetWeakPtr());
-      if (producer) {
-        body_sniffer_throttle->SetBodyProducer(std::move(producer));
-      }
-
-      auto handler = speedreader::SpeedreaderBodyDistiller::MaybeCreate(
-          g_brave_browser_process->speedreader_rewriter_service(),
-          speedreader_service, tab_helper->GetWeakPtr());
-      if (handler) {
-        body_sniffer_throttle->AddHandler(std::move(handler));
-      }
-    }
-#endif  // ENABLE_SPEEDREADER
 
     if (isMainFrame) {
       // De-AMP

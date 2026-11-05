@@ -13,7 +13,6 @@
 #include "brave/components/brave_search/renderer/brave_search_render_frame_observer.h"
 #include "brave/components/brave_shields/core/common/features.h"
 #include "brave/components/cosmetic_filters/renderer/cosmetic_filters_js_render_frame_observer.h"
-#include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "brave/renderer/brave_render_thread_observer.h"
 #include "chrome/common/chrome_isolated_world_ids.h"
 #include "chrome/renderer/url_loader_throttle_provider_impl.h"
@@ -23,11 +22,6 @@
 #include "third_party/blink/public/web/modules/service_worker/web_service_worker_context_proxy.h"
 #include "third_party/widevine/cdm/buildflags.h"
 #include "url/gurl.h"
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-#include "brave/components/speedreader/common/features.h"
-#include "brave/components/speedreader/renderer/speedreader_render_frame_observer.h"
-#endif
 
 #if BUILDFLAG(ENABLE_WIDEVINE)
 #include "media/base/key_system_info.h"
@@ -120,13 +114,6 @@ void BraveContentRendererClient::RenderFrameCreated(
   ) {
     new brave_subscription::SubscriptionRenderFrameObserver(
         render_frame, content::ISOLATED_WORLD_ID_GLOBAL);
-  }
-#endif
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-  if (base::FeatureList::IsEnabled(speedreader::kSpeedreaderFeature)) {
-    new speedreader::SpeedreaderRenderFrameObserver(
-        render_frame, ISOLATED_WORLD_ID_BRAVE_INTERNAL);
   }
 #endif
 }

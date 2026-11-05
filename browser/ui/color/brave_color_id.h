@@ -7,7 +7,6 @@
 #define BRAVE_BROWSER_UI_COLOR_BRAVE_COLOR_ID_H_
 
 #include "brave/components/brave_wayback_machine/buildflags/buildflags.h"
-#include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "chrome/browser/ui/color/chrome_color_id.h"
 
 // clang-format off
@@ -60,22 +59,6 @@
     E_CPONLY(kColorSidebarPanelHeaderButton)                  \
     E_CPONLY(kColorSidebarPanelHeaderButtonHovered)
 
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-#define BRAVE_SPEEDREADER_COLOR_IDS      \
-  E_CPONLY(kColorSpeedreaderIcon)        \
-  E_CPONLY(kColorSpeedreaderToggleThumb) \
-  E_CPONLY(kColorSpeedreaderToggleTrack) \
-  E_CPONLY(kColorSpeedreaderToolbarBackground) \
-  E_CPONLY(kColorSpeedreaderToolbarBorder) \
-  E_CPONLY(kColorSpeedreaderToolbarForeground) \
-  E_CPONLY(kColorSpeedreaderToolbarButtonHover) \
-  E_CPONLY(kColorSpeedreaderToolbarButtonActive) \
-  E_CPONLY(kColorSpeedreaderToolbarButtonActiveText)\
-  E_CPONLY(kColorSpeedreaderToolbarButtonBorder)
-#else
-#define BRAVE_SPEEDREADER_COLOR_IDS
-#endif
-
 #if BUILDFLAG(ENABLE_BRAVE_WAYBACK_MACHINE)
 #define BRAVE_WAYBACK_MACHINE_COLOR_IDS      \
     E_CPONLY(kColorWaybackMachineURLLoaded)  \
@@ -126,7 +109,6 @@
     BRAVE_COMMON_COLOR_IDS            \
     BRAVE_SEARCH_CONVERSION_COLOR_IDS \
     BRAVE_SIDEBAR_COLOR_IDS           \
-    BRAVE_SPEEDREADER_COLOR_IDS       \
     BRAVE_VERTICAL_TAB_COLOR_IDS      \
     BRAVE_SHARED_PINNED_TAB_COLOR_IDS \
     BRAVE_SPLIT_VIEW_COLOR_IDS        \

@@ -9,7 +9,6 @@ import("//brave/components/brave_wayback_machine/buildflags/buildflags.gni")
 import("//brave/components/commander/common/buildflags/buildflags.gni")
 import("//brave/components/ntp_background_images/buildflags/buildflags.gni")
 import("//brave/components/request_otr/common/buildflags/buildflags.gni")
-import("//brave/components/speedreader/common/buildflags/buildflags.gni")
 import("//brave/components/text_recognition/common/buildflags/buildflags.gni")
 import("//build/config/features.gni")
 import("//chrome/common/features.gni")
@@ -183,10 +182,6 @@ source_set("ui") {
       "webui/settings/default_brave_shields_handler.h",
       "webui/side_panel/reading_list/brave_reading_list_page_handler.cc",
       "webui/side_panel/reading_list/brave_reading_list_page_handler.h",
-      "webui/speedreader/speedreader_toolbar_data_handler_impl.cc",
-      "webui/speedreader/speedreader_toolbar_data_handler_impl.h",
-      "webui/speedreader/speedreader_toolbar_ui.cc",
-      "webui/speedreader/speedreader_toolbar_ui.h",
       "webui/welcome_page/brave_welcome_ui.cc",
       "webui/welcome_page/brave_welcome_ui.h",
       "webui/welcome_page/welcome_dom_handler.cc",
@@ -720,20 +715,6 @@ source_set("ui") {
     }
   }
 
-  if (enable_speedreader && !is_android) {
-    deps += [ "//brave/components/speedreader" ]
-
-    sources += [
-      "speedreader/speedreader_bubble_view.h",
-      "views/speedreader/reader_mode_bubble.cc",
-      "views/speedreader/reader_mode_bubble.h",
-      "views/speedreader/reader_mode_toolbar_view.cc",
-      "views/speedreader/reader_mode_toolbar_view.h",
-      "views/speedreader/speedreader_icon_view.cc",
-      "views/speedreader/speedreader_icon_view.h",
-    ]
-  }
-
   if (enable_request_otr) {
     deps += [
       "//brave/components/request_otr/browser",
@@ -795,9 +776,6 @@ source_set("ui") {
       "//brave/components/brave_welcome/common",
       "//brave/components/brave_welcome_ui:generated_resources",
       "//brave/components/commands/common",
-      "//brave/components/speedreader/common",
-      "//brave/components/speedreader/common:mojom",
-      "//brave/components/speedreader/resources/panel:generated_resources",
       "//brave/components/version_info",
       "//chrome/app:branded_strings",
       "//chrome/browser/ui/tabs:tab_enums",

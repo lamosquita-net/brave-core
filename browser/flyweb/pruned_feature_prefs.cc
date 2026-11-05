@@ -28,6 +28,24 @@ constexpr char kPlaylistUsedSecondDay[] = "brave.playlist.used_second_day";
 constexpr char kPlaylistUsageWeeklyStorage[] =
     "brave.playlist.usage_weekly_storage";
 
+// Speedreader (removed 2026-11), including its content setting type.
+constexpr char kSpeedreaderEnabled[] = "brave.speedreader.enabled";
+constexpr char kSpeedreaderEverEnabled[] = "brave.speedreader.ever_enabled";
+constexpr char kSpeedreaderToggleCount[] = "brave.speedreader.toggle_count";
+constexpr char kSpeedreaderPromptCount[] = "brave.speedreader.prompt_count";
+constexpr char kSpeedreaderTheme[] = "brave.speedreader.theme";
+constexpr char kSpeedreaderFontSize[] = "brave.speedreader.font_size";
+constexpr char kSpeedreaderFontFamily[] = "brave.speedreader.font_family";
+constexpr char kSpeedreaderColumnWidth[] = "brave.speedreader.column_width";
+constexpr char kSpeedreaderTtsVoice[] = "brave.speedreader.tts_voice";
+constexpr char kSpeedreaderTtsSpeed[] = "brave.speedreader.tts_speed";
+constexpr char kSpeedreaderContentSettingExceptions[] =
+    "profile.content_settings.exceptions.braveSpeedreader";
+constexpr char kSpeedreaderContentSettingPartitionedExceptions[] =
+    "profile.content_settings.partitioned_exceptions.braveSpeedreader";
+constexpr char kSpeedreaderContentSettingDefault[] =
+    "profile.default_content_setting_values.braveSpeedreader";
+
 constexpr const char* kProfilePrefs[] = {
     kPlaylistEnabled,
     kPlaylists,
@@ -35,6 +53,19 @@ constexpr const char* kProfilePrefs[] = {
     kPlaylistItems,
     kPlaylistCacheByDefault,
     kPlaylistDefaultSaveTargetListID,
+    kSpeedreaderEnabled,
+    kSpeedreaderEverEnabled,
+    kSpeedreaderToggleCount,
+    kSpeedreaderPromptCount,
+    kSpeedreaderTheme,
+    kSpeedreaderFontSize,
+    kSpeedreaderFontFamily,
+    kSpeedreaderColumnWidth,
+    kSpeedreaderTtsVoice,
+    kSpeedreaderTtsSpeed,
+    kSpeedreaderContentSettingExceptions,
+    kSpeedreaderContentSettingPartitionedExceptions,
+    kSpeedreaderContentSettingDefault,
 };
 
 constexpr const char* kLocalStatePrefs[] = {
@@ -55,6 +86,22 @@ void RegisterPrunedFeatureProfilePrefs(
   registry->RegisterDictionaryPref(kPlaylistItems);
   registry->RegisterBooleanPref(kPlaylistCacheByDefault, true);
   registry->RegisterStringPref(kPlaylistDefaultSaveTargetListID, "");
+
+  // Speedreader
+  registry->RegisterBooleanPref(kSpeedreaderEnabled, false);
+  registry->RegisterBooleanPref(kSpeedreaderEverEnabled, false);
+  registry->RegisterListPref(kSpeedreaderToggleCount);
+  registry->RegisterIntegerPref(kSpeedreaderPromptCount, 0);
+  registry->RegisterIntegerPref(kSpeedreaderTheme, 0);
+  registry->RegisterIntegerPref(kSpeedreaderFontSize, 0);
+  registry->RegisterIntegerPref(kSpeedreaderFontFamily, 0);
+  registry->RegisterIntegerPref(kSpeedreaderColumnWidth, 0);
+  registry->RegisterStringPref(kSpeedreaderTtsVoice, "");
+  registry->RegisterIntegerPref(kSpeedreaderTtsSpeed, 0);
+  registry->RegisterDictionaryPref(kSpeedreaderContentSettingExceptions);
+  registry->RegisterDictionaryPref(
+      kSpeedreaderContentSettingPartitionedExceptions);
+  registry->RegisterIntegerPref(kSpeedreaderContentSettingDefault, 0);
 }
 
 void ClearPrunedFeatureProfilePrefs(PrefService* profile_prefs) {

@@ -19,7 +19,6 @@
 #include "brave/components/brave_perf_predictor/browser/named_third_party_registry_factory.h"
 #include "brave/components/commander/common/buildflags/buildflags.h"
 #include "brave/components/request_otr/common/buildflags/buildflags.h"
-#include "brave/components/speedreader/common/buildflags/buildflags.h"
 
 #if !BUILDFLAG(IS_ANDROID)
 #include "brave/browser/ui/bookmark/bookmark_prefs_service_factory.h"
@@ -39,10 +38,6 @@
 
 #if defined(TOOLKIT_VIEWS)
 #include "brave/browser/ui/sidebar/sidebar_service_factory.h"
-#endif
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-#include "brave/browser/speedreader/speedreader_service_factory.h"
 #endif
 
 #if BUILDFLAG(ENABLE_REQUEST_OTR)
@@ -96,10 +91,6 @@ void EnsureBrowserContextKeyedServiceFactoriesBuilt() {
 
 #if defined(TOOLKIT_VIEWS)
   sidebar::SidebarServiceFactory::GetInstance();
-#endif
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-  speedreader::SpeedreaderServiceFactory::GetInstance();
 #endif
 }
 

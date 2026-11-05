@@ -11,7 +11,6 @@
 #include "base/memory/ref_counted.h"
 #include "brave/browser/brave_browser_process.h"
 #include "brave/components/brave_component_updater/browser/brave_component.h"
-#include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "brave/components/url_sanitizer/browser/url_sanitizer_component_installer.h"
 #include "build/build_config.h"
 #include "chrome/browser/browser_process_impl.h"
@@ -47,10 +46,6 @@ class RequestOTRComponentInstallerPolicy;
 #endif
 }  // namespace request_otr
 
-namespace speedreader {
-class SpeedreaderRewriterService;
-}
-
 class BraveBrowserProcessImpl : public BraveBrowserProcess,
                                 public BrowserProcessImpl {
  public:
@@ -81,10 +76,6 @@ class BraveBrowserProcessImpl : public BraveBrowserProcess,
       override;
   brave_component_updater::LocalDataFilesService* local_data_files_service()
       override;
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-  speedreader::SpeedreaderRewriterService* speedreader_rewriter_service()
-      override;
-#endif
   brave::BraveFarblingService* brave_farbling_service() override;
 
  private:
@@ -128,11 +119,6 @@ class BraveBrowserProcessImpl : public BraveBrowserProcess,
 #endif
   std::unique_ptr<brave::URLSanitizerComponentInstaller>
       url_sanitizer_component_installer_;
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-  std::unique_ptr<speedreader::SpeedreaderRewriterService>
-      speedreader_rewriter_service_;
-#endif
 
   std::unique_ptr<brave::BraveFarblingService> brave_farbling_service_;
 };

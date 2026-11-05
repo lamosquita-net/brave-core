@@ -59,10 +59,6 @@ class TestingBraveBrowserProcess : public BraveBrowserProcess {
   localhost_permission_component() override;
   brave_component_updater::LocalDataFilesService* local_data_files_service()
       override;
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-  speedreader::SpeedreaderRewriterService* speedreader_rewriter_service()
-      override;
-#endif
   brave::BraveFarblingService* brave_farbling_service() override;
 
   // Populate the mock process with services. Consumer is responsible for

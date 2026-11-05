@@ -50,10 +50,6 @@
 #include "services/network/public/cpp/shared_url_loader_factory.h"
 #include "url/gurl.h"
 
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-#include "brave/components/speedreader/speedreader_rewriter_service.h"
-#endif
-
 #if BUILDFLAG(IS_ANDROID)
 #include "chrome/browser/flags/android/chrome_feature_list.h"
 #else
@@ -162,9 +158,6 @@ void BraveBrowserProcessImpl::StartBraveServices() {
   debounce_component_installer();
 #if BUILDFLAG(ENABLE_REQUEST_OTR)
   request_otr_component_installer();
-#endif
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-  speedreader_rewriter_service();
 #endif
   URLSanitizerComponentInstaller();
   // Now start the local data files service, which calls all observers.
@@ -287,17 +280,6 @@ NotificationPlatformBridge*
 BraveBrowserProcessImpl::notification_platform_bridge() {
   return BrowserProcessImpl::notification_platform_bridge();
 }
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-speedreader::SpeedreaderRewriterService*
-BraveBrowserProcessImpl::speedreader_rewriter_service() {
-  if (!speedreader_rewriter_service_) {
-    speedreader_rewriter_service_ =
-        std::make_unique<speedreader::SpeedreaderRewriterService>();
-  }
-  return speedreader_rewriter_service_.get();
-}
-#endif  // BUILDFLAG(ENABLE_SPEEDREADER)
 
 brave::BraveFarblingService* BraveBrowserProcessImpl::brave_farbling_service() {
   if (!brave_farbling_service_) {

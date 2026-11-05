@@ -9,16 +9,11 @@
 
 #include "base/check_is_test.h"
 #include "brave/browser/ui/page_action/brave_page_action_icon_type.h"
-#include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/sharing_hub/sharing_hub_features.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/views/page_action/page_action_icon_params.h"
 #include "ui/base/metadata/metadata_impl_macros.h"
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-#include "brave/components/speedreader/common/features.h"
-#endif
 
 namespace {
 
@@ -37,19 +32,6 @@ PageActionIconParams& ModifyIconParamsForBrave(PageActionIconParams& params) {
   params.types_enabled.insert(
       std::ranges::find(params.types_enabled, PageActionIconType::kSharingHub),
       brave::kWaybackMachineActionIconType);
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-  if (base::FeatureList::IsEnabled(speedreader::kSpeedreaderFeature)) {
-    if (params.browser) {
-      params.types_enabled.insert(
-          std::ranges::find(
-              params.types_enabled,
-              PageActionIconType::kCookieControls),  // The place where
-                                                     // kReaderMode was.
-          brave::kSpeedreaderPageActionIconType);
-    }
-  }
-#endif
 
   return params;
 }

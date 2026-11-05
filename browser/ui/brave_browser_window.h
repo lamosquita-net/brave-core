@@ -9,7 +9,6 @@
 #include <string>
 
 #include "brave/components/brave_wayback_machine/buildflags/buildflags.h"
-#include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "chrome/browser/ui/browser_window.h"
 
 namespace content {
@@ -20,14 +19,6 @@ class WebContents;
 namespace sidebar {
 class Sidebar;
 }  // namespace sidebar
-#endif
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-namespace speedreader {
-class SpeedreaderBubbleView;
-class SpeedreaderTabHelper;
-enum class SpeedreaderBubbleLocation : int;
-}  // namespace speedreader
 #endif
 
 class BraveBrowserWindow : public BrowserWindow {
@@ -42,14 +33,6 @@ class BraveBrowserWindow : public BrowserWindow {
   // Renderers will call this to check if the bottom of the panel exceeds
   // the overall screen's height
   virtual gfx::Rect GetShieldsBubbleRect();
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-  virtual speedreader::SpeedreaderBubbleView* ShowSpeedreaderBubble(
-      speedreader::SpeedreaderTabHelper* tab_helper,
-      speedreader::SpeedreaderBubbleLocation location);
-  virtual void ShowReaderModeToolbar() {}
-  virtual void HideReaderModeToolbar() {}
-#endif
 
 #if defined(TOOLKIT_VIEWS)
   virtual sidebar::Sidebar* InitSidebar();

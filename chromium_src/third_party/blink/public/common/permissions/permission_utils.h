@@ -16,7 +16,6 @@
   BRAVE_SHIELDS,                    \
   BRAVE_REFERRERS,                  \
   BRAVE_COOKIES,                    \
-  BRAVE_SPEEDREADER,                \
   BRAVE_GOOGLE_SIGN_IN,             \
   BRAVE_LOCALHOST_ACCESS,             \
   NUM

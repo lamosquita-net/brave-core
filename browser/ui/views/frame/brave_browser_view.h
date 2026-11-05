@@ -29,18 +29,6 @@
 #include "ui/base/accelerators/accelerator.h"
 #include "ui/base/metadata/metadata_header_macros.h"
 
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-#include "brave/browser/ui/views/speedreader/reader_mode_toolbar_view.h"
-#endif
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-namespace speedreader {
-class SpeedreaderBubbleView;
-class SpeedreaderTabHelper;
-enum class SpeedreaderBubbleLocation : int;
-}  // namespace speedreader
-#endif
-
 namespace content {
 class WebContents;
 }  // namespace content
@@ -77,13 +65,6 @@ class BraveBrowserView : public BrowserView,
   void Layout(PassKey) override;
   void StartTabCycling() override;
   gfx::Rect GetShieldsBubbleRect() override;
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-  speedreader::SpeedreaderBubbleView* ShowSpeedreaderBubble(
-      speedreader::SpeedreaderTabHelper* tab_helper,
-      speedreader::SpeedreaderBubbleLocation location) override;
-  void ShowReaderModeToolbar() override;
-  void HideReaderModeToolbar() override;
-#endif
   bool GetTabStripVisible() const override;
 #if BUILDFLAG(IS_WIN)
   bool GetSupportsTitle() const override;
@@ -134,8 +115,6 @@ class BraveBrowserView : public BrowserView,
   FRIEND_TEST_ALL_PREFIXES(VerticalTabStripBrowserTest, Fullscreen);
   FRIEND_TEST_ALL_PREFIXES(VerticalTabStripDragAndDropBrowserTest,
                            DragTabToReorder);
-  FRIEND_TEST_ALL_PREFIXES(SpeedReaderBrowserTest, Toolbar);
-  FRIEND_TEST_ALL_PREFIXES(SpeedReaderBrowserTest, ToolbarLangs);
 
   static void SetDownloadConfirmReturnForTesting(bool allow);
 
@@ -196,10 +175,6 @@ class BraveBrowserView : public BrowserView,
 
 #if defined(USE_AURA)
   raw_ptr<views::View> sidebar_host_view_ = nullptr;
-#endif
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-  std::unique_ptr<ReaderModeToolbarView> reader_mode_toolbar_view_;
 #endif
 
   std::unique_ptr<TabCyclingEventHandler> tab_cycling_event_handler_;

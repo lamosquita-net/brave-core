@@ -77,10 +77,6 @@
     "META": {"sizes": {"includes": [10]}},
     "includes": [63580],
   },
-  "<(SHARED_INTERMEDIATE_DIR)/brave/web-ui-brave_speedreader_toolbar/brave_speedreader_toolbar.grd": {
-    "META": {"sizes": {"includes": [10]}},
-    "includes": [63590],
-  },
   "<(SHARED_INTERMEDIATE_DIR)/brave/web-ui-brave_adblock_internals/brave_adblock_internals.grd": {
     "META": {"sizes": {"includes": [10]}},
     "includes": [63600],

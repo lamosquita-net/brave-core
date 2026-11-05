@@ -10,12 +10,6 @@
 // Provide a base implementation (important for `TestBrowserWindow ` in tests)
 // For real implementation, see `BraveBrowserView`.
 
-speedreader::SpeedreaderBubbleView* BraveBrowserWindow::ShowSpeedreaderBubble(
-    speedreader::SpeedreaderTabHelper* tab_helper,
-    speedreader::SpeedreaderBubbleLocation location) {
-  return nullptr;
-}
-
 gfx::Rect BraveBrowserWindow::GetShieldsBubbleRect() {
   return gfx::Rect();
 }

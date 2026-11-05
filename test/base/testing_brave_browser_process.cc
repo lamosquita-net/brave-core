@@ -95,13 +95,6 @@ TestingBraveBrowserProcess::local_data_files_service() {
   return nullptr;
 }
 
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-speedreader::SpeedreaderRewriterService*
-TestingBraveBrowserProcess::speedreader_rewriter_service() {
-  return nullptr;
-}
-#endif
-
 brave::BraveFarblingService*
 TestingBraveBrowserProcess::brave_farbling_service() {
   return nullptr;

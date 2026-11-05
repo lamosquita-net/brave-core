@@ -31,7 +31,6 @@
 #include "brave/components/debounce/core/browser/debounce_service.h"
 #include "brave/components/query_filter/utils.h"
 #include "brave/components/sidebar/browser/sidebar_service.h"
-#include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "brave/components/url_sanitizer/browser/url_sanitizer_service.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/profile.h"
@@ -66,12 +65,6 @@
 #include "chrome/browser/ui/views/side_panel/side_panel_entry_id.h"
 #include "chrome/browser/ui/views/side_panel/side_panel_enums.h"
 #include "chrome/browser/ui/views/side_panel/side_panel_ui.h"
-#endif
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-#include "brave/browser/speedreader/speedreader_service_factory.h"
-#include "brave/browser/speedreader/speedreader_tab_helper.h"
-#include "brave/components/speedreader/speedreader_service.h"
 #endif
 
 #if BUILDFLAG(ENABLE_COMMANDER)
@@ -114,19 +107,6 @@ std::vector<int> GetSelectedIndices(Browser* browser) {
 }
 
 }  // namespace
-
-void MaybeDistillAndShowSpeedreaderBubble(Browser* browser) {
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-  WebContents* contents = browser->tab_strip_model()->GetActiveWebContents();
-  if (!contents) {
-    return;
-  }
-  if (auto* tab_helper =
-          speedreader::SpeedreaderTabHelper::FromWebContents(contents)) {
-    tab_helper->ProcessIconClick();
-  }
-#endif  // BUILDFLAG(ENABLE_SPEEDREADER)
-}
 
 void CopySanitizedURL(Browser* browser, const GURL& url) {
   if (!browser || !browser->profile()) {

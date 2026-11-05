@@ -64,9 +64,6 @@ inline constexpr char kCookieListOptInURL[] =
 inline constexpr char kFederatedInternalsURL[] = "flyweb://federated-internals";
 inline constexpr char kFederatedInternalsHost[] = "federated-internals";
 inline constexpr char kContentFiltersPath[] = "shields/filters";
-inline constexpr char kSpeedreaderPanelURL[] =
-    "chrome://brave-speedreader.top-chrome";
-inline constexpr char kSpeedreaderPanelHost[] = "brave-speedreader.top-chrome";
 inline constexpr char kShortcutsURL[] = "chrome://settings/system/shortcuts";
 inline constexpr char kChatUIURL[] = "chrome-untrusted://chat/";
 inline constexpr char kChatUIHost[] = "chat";
