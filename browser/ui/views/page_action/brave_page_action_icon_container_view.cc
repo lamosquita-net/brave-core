@@ -5,10 +5,7 @@
 
 #include "brave/browser/ui/views/page_action/brave_page_action_icon_container_view.h"
 
-#include <algorithm>
-
 #include "base/check_is_test.h"
-#include "brave/browser/ui/page_action/brave_page_action_icon_type.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/sharing_hub/sharing_hub_features.h"
 #include "chrome/browser/ui/browser.h"
@@ -28,10 +25,6 @@ PageActionIconParams& ModifyIconParamsForBrave(PageActionIconParams& params) {
                                  params.browser->is_type_popup())) {
     params.types_enabled.push_back(PageActionIconType::kSharingHub);
   }
-
-  params.types_enabled.insert(
-      std::ranges::find(params.types_enabled, PageActionIconType::kSharingHub),
-      brave::kWaybackMachineActionIconType);
 
   return params;
 }

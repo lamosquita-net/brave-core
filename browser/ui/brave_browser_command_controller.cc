@@ -20,7 +20,6 @@
 #include "brave/browser/ui/sidebar/sidebar_utils.h"
 #include "brave/browser/ui/tabs/features.h"
 #include "brave/browser/ui/tabs/split_view_browser_data.h"
-#include "brave/components/brave_wayback_machine/buildflags/buildflags.h"
 #include "brave/components/commander/common/buildflags/buildflags.h"
 #include "brave/components/commands/common/features.h"
 #include "brave/components/constants/pref_names.h"
@@ -173,7 +172,6 @@ void BraveBrowserCommandController::InitBraveCommandState() {
   }
   UpdateCommandForWebcompatReporter();
   UpdateCommandForSidebar();
-  UpdateCommandForWaybackMachine();
   bool add_new_profile_enabled = !is_guest_session;
   bool open_guest_profile_enabled = !is_guest_session;
   if (!is_guest_session) {
@@ -249,12 +247,6 @@ void BraveBrowserCommandController::UpdateCommandForSidebar() {
     UpdateCommandEnabled(IDC_SIDEBAR_TOGGLE_POSITION, true);
     UpdateCommandEnabled(IDC_TOGGLE_SIDEBAR, true);
   }
-}
-
-void BraveBrowserCommandController::UpdateCommandForWaybackMachine() {
-#if BUILDFLAG(ENABLE_BRAVE_WAYBACK_MACHINE)
-  UpdateCommandEnabled(IDC_SHOW_WAYBACK_MACHINE_BUBBLE, true);
-#endif
 }
 
 void BraveBrowserCommandController::UpdateCommandsForTabs() {
@@ -389,11 +381,6 @@ bool BraveBrowserCommandController::ExecuteBraveCommandWithDisposition(
       break;
     case IDC_TOGGLE_JAVASCRIPT:
       brave::ToggleJavascriptEnabled(&*browser_);
-      break;
-    case IDC_SHOW_WAYBACK_MACHINE_BUBBLE:
-#if BUILDFLAG(ENABLE_BRAVE_WAYBACK_MACHINE)
-      brave::ShowWaybackMachineBubble(&*browser_);
-#endif
       break;
     case IDC_GROUP_TABS_ON_CURRENT_ORIGIN:
       brave::GroupTabsOnCurrentOrigin(&*browser_);

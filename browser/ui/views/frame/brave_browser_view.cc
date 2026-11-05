@@ -23,7 +23,6 @@
 #include "brave/browser/ui/color/leo/colors.h"
 #include "brave/browser/ui/commands/accelerator_service.h"
 #include "brave/browser/ui/commands/accelerator_service_factory.h"
-#include "brave/browser/ui/page_action/brave_page_action_icon_type.h"
 #include "brave/browser/ui/sidebar/sidebar_utils.h"
 #include "brave/browser/ui/tabs/brave_tab_prefs.h"
 #include "brave/browser/ui/tabs/features.h"
@@ -84,10 +83,6 @@
 
 #if BUILDFLAG(ENABLE_SPARKLE)
 #include "brave/browser/ui/views/update_recommended_message_box_mac.h"
-#endif
-
-#if BUILDFLAG(ENABLE_BRAVE_WAYBACK_MACHINE)
-#include "brave/browser/ui/views/wayback_machine_bubble_view.h"
 #endif
 
 namespace {
@@ -634,17 +629,6 @@ void BraveBrowserView::CleanAndCopySelectedURL() {
   }
   brave_omnibox_view->CleanAndCopySelectedURL();
 }
-
-#if BUILDFLAG(ENABLE_BRAVE_WAYBACK_MACHINE)
-void BraveBrowserView::ShowWaybackMachineBubble() {
-  if (auto* anchor = toolbar_button_provider_->GetPageActionIconView(
-          brave::kWaybackMachineActionIconType)) {
-    DCHECK(anchor->GetVisible());
-    // Launch bubble with this anchor.
-    WaybackMachineBubbleView::Show(browser(), anchor);
-  }
-}
-#endif
 
 void BraveBrowserView::NotifyDialogPositionRequiresUpdate() {
   GetBrowserViewLayout()->NotifyDialogPositionRequiresUpdate();

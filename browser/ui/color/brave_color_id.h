@@ -6,7 +6,6 @@
 #ifndef BRAVE_BROWSER_UI_COLOR_BRAVE_COLOR_ID_H_
 #define BRAVE_BROWSER_UI_COLOR_BRAVE_COLOR_ID_H_
 
-#include "brave/components/brave_wayback_machine/buildflags/buildflags.h"
 #include "chrome/browser/ui/color/chrome_color_id.h"
 
 // clang-format off
@@ -59,14 +58,6 @@
     E_CPONLY(kColorSidebarPanelHeaderButton)                  \
     E_CPONLY(kColorSidebarPanelHeaderButtonHovered)
 
-#if BUILDFLAG(ENABLE_BRAVE_WAYBACK_MACHINE)
-#define BRAVE_WAYBACK_MACHINE_COLOR_IDS      \
-    E_CPONLY(kColorWaybackMachineURLLoaded)  \
-    E_CPONLY(kColorWaybackMachineURLNotAvailable)
-#else
-#define BRAVE_WAYBACK_MACHINE_COLOR_IDS
-#endif
-
 // Unfortunately, we can't have a defined(TOOLKIT_VIEWS) guard here
 // as brave_color_mixer depends on this without deps to //ui/views:flags.
 // But it's safe have without the guard as this file is included only when
@@ -113,7 +104,6 @@
     BRAVE_SHARED_PINNED_TAB_COLOR_IDS \
     BRAVE_SPLIT_VIEW_COLOR_IDS        \
     BRAVE_OMNIBOX_COLOR_IDS           \
-    BRAVE_WAYBACK_MACHINE_COLOR_IDS   \
     BRAVE_EXTENSION_MENU_COLOR_IDS    \
     BRAVE_APP_MENU_COLOR_IDS
 

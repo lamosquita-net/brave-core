@@ -5,7 +5,6 @@
 
 #include "brave/browser/ui/page_action/brave_page_action_icon_type.h"
 #include "brave/browser/ui/views/location_bar/brave_star_view.h"
-#include "brave/browser/ui/views/page_action/wayback_machine_action_icon_view.h"
 #include "chrome/browser/ui/page_action/page_action_icon_type.h"
 
 // Circumvent creation of CookieControlsIconView in
@@ -14,12 +13,6 @@
 #define kCookieControls                                                        \
   kCookieControls:                                                             \
   break;                                                                       \
-  case brave::kWaybackMachineActionIconType:                                   \
-    add_page_action_icon(type, std::make_unique<WaybackMachineActionIconView>( \
-                                   params.command_updater, params.browser,     \
-                                   params.icon_label_bubble_delegate,          \
-                                   params.page_action_icon_delegate));         \
-    break;                                                                     \
   case brave::kUndefinedPageActionIconType
 
 #define StarView BraveStarView

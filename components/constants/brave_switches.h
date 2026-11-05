@@ -27,10 +27,6 @@ inline constexpr char kDisableBraveExtension[] = "disable-brave-extension";
 // This switch disables update module(Sparkle).
 inline constexpr char kDisableBraveUpdate[] = "disable-brave-update";
 
-// Allows disabling the Wayback Machine extension.
-inline constexpr char kDisableBraveWaybackMachineExtension[] =
-    "disable-brave-wayback-machine-extension";
-
 // Allows disabling encryption on Windows for cookies, passwords, settings...
 // WARNING! Use ONLY if your hard drive is encrypted or if you know
 // what you are doing.

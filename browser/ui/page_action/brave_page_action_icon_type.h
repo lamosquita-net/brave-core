@@ -16,7 +16,6 @@ namespace brave {
 // Use negative values so that our values doesn't conflict with upstream values.
 DECLARE_BRAVE_PAGE_ACTION_ICON_TYPE(kUndefinedPageActionIconType, -1);
 DECLARE_BRAVE_PAGE_ACTION_ICON_TYPE(kBravePlayerPageActionIconType, -3);
-DECLARE_BRAVE_PAGE_ACTION_ICON_TYPE(kWaybackMachineActionIconType, -4);
 
 #undef DECLARE_BRAVE_PAGE_ACTION_ICON_TYPE
 
