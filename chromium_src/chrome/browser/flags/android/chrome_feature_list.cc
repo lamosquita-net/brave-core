@@ -12,7 +12,6 @@
 #include "brave/components/brave_search_conversion/features.h"
 #include "brave/components/brave_shields/core/common/features.h"
 #include "brave/components/brave_vpn/common/features.h"
-#include "brave/components/brave_wallet/common/features.h"
 #include "brave/components/debounce/core/common/features.h"
 #include "brave/components/google_sign_in_permission/features.h"
 #include "brave/components/playlist/common/features.h"
@@ -35,7 +34,6 @@
     &brave_rewards::features::kBraveRewards,                            \
     &brave_search_conversion::features::kOmniboxBanner,                 \
     &brave_vpn::features::kBraveVPNLinkSubscriptionAndroidUI,           \
-    &brave_wallet::features::kNativeBraveWalletFeature,                 \
     &playlist::features::kPlaylist,                                     \
     &preferences::features::kBraveBackgroundVideoPlayback,              \
     &request_otr::features::kBraveRequestOTRTab,                        \
