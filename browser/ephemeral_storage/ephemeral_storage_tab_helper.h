@@ -15,7 +15,6 @@
 #include "components/content_settings/core/browser/cookie_settings.h"
 #include "components/content_settings/core/browser/host_content_settings_map.h"
 #include "content/public/browser/browser_context.h"
-#include "content/public/browser/session_storage_namespace.h"
 #include "content/public/browser/web_contents_observer.h"
 #include "content/public/browser/web_contents_user_data.h"
 
@@ -56,7 +55,6 @@ class EphemeralStorageTabHelper
 
   const base::raw_ptr<HostContentSettingsMap> host_content_settings_map_;
   scoped_refptr<content_settings::CookieSettings> cookie_settings_;
-  scoped_refptr<content::SessionStorageNamespace> session_storage_namespace_;
   scoped_refptr<TLDEphemeralLifetime> tld_ephemeral_lifetime_;
 
   base::WeakPtrFactory<EphemeralStorageTabHelper> weak_factory_{this};
