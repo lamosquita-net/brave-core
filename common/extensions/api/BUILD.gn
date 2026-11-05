@@ -70,9 +70,22 @@ function_registration("generated_api_registration") {
   bundle_name = "Brave"
   root_namespace = brave_extensions_api_root_namespace
 
-  deps = [
-    "//extensions/common",
+  # Since Chromium 156, function_registration expects
+  # <impl_dir>/<schema>/<schema>_api.h unless the schema is listed here. Ours
+  # all set "implemented_in" in their compiler_options, so list them and pass
+  # their headers as inputs (as Brave does for brave_theme and brave_talk).
+  custom_impl_schemas = [
+    "brave_shields",
+    "brave_talk",
+    "brave_theme",
   ]
+  inputs = [
+    "//brave/browser/extensions/api/brave_shields_api.h",
+    "//brave/browser/extensions/api/brave_talk_api.h",
+    "//brave/browser/extensions/api/brave_theme_api.h",
+  ]
+
+  deps = [ "//extensions/common" ]
 
   visibility = [ ":api" ]
 }
