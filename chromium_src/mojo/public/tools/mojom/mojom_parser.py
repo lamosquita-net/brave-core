@@ -191,11 +191,13 @@ def _PatchInBraveMojomAst(mojom_abspath, parsed_ast, enabled_features):
 # Can't use @override_utils, because mojom_parser is running via multiprocessing
 # which can't restore local variables required for @override_utils to work.
 assert '_ParseAstHelper' in globals()
+# pylint: disable-next=used-before-assignment
 orig_parse_ast_helper = _ParseAstHelper
 
 
-def _ParseAstHelper(mojom_abspath, enabled_features):
+def _ParseAstHelper(mojom_abspath, mojom_path, enabled_features):
     mojom_abspath, parsed_ast = orig_parse_ast_helper(mojom_abspath,
+                                                      mojom_path,
                                                       enabled_features)
     _PatchInBraveMojomAst(mojom_abspath, parsed_ast, enabled_features)
     return mojom_abspath, parsed_ast
