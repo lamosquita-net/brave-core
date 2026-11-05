@@ -8,9 +8,9 @@
 #include <string>
 
 #include "base/values.h"
+#include "brave/browser/flyweb/pruned_feature_prefs.h"
 #include "brave/browser/metrics/buildflags/buildflags.h"
 #include "brave/browser/metrics/metrics_reporting_util.h"
-#include "brave/browser/playlist/playlist_service_factory.h"
 #include "brave/browser/search_engines/search_engine_tracker.h"
 #include "brave/browser/themes/brave_dark_mode_utils.h"
 #include "brave/components/brave_search_conversion/p3a.h"
@@ -53,6 +53,9 @@ void RegisterLocalStatePrefsForMigration(PrefRegistrySimple* registry) {
   // FlyWeb: added 11/2026 (T5), NTP sponsored images and super referrals.
   ntp_background_images::ViewCounterService::
       RegisterLocalStatePrefsForMigration(registry);
+
+  // Added 2026-11: features pruned in the Chromium 156 port.
+  flyweb::RegisterPrunedFeatureLocalStatePrefs(registry);
 }
 
 void RegisterLocalStatePrefs(PrefRegistrySimple* registry) {
@@ -91,8 +94,6 @@ void RegisterLocalStatePrefs(PrefRegistrySimple* registry) {
   RegisterLocalStatePrefsForMigration(registry);
 
   brave_search_conversion::p3a::RegisterLocalStatePrefs(registry);
-
-  playlist::PlaylistServiceFactory::RegisterLocalStatePrefs(registry);
 }
 
 }  // namespace brave

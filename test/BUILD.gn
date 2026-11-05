@@ -9,7 +9,6 @@ import("//brave/build/config.gni")
 import("//brave/components/brave_wayback_machine/buildflags/buildflags.gni")
 import("//brave/components/brave_webtorrent/browser/buildflags/buildflags.gni")
 import("//brave/components/ntp_background_images/buildflags/buildflags.gni")
-import("//brave/components/playlist/common/buildflags/buildflags.gni")
 import("//brave/components/request_otr/common/buildflags/buildflags.gni")
 import("//brave/components/speedreader/common/buildflags/buildflags.gni")
 import("//brave/test/testing.gni")
@@ -257,13 +256,6 @@ test("brave_unit_tests") {
 
   if (toolkit_views) {
     deps += [ "//chrome/browser/ui/views" ]
-  }
-
-  if (enable_playlist) {
-    deps += [
-      "//brave/browser/playlist/test:unit_tests",
-      "//brave/components/playlist/common:unit_tests",
-    ]
   }
 
   data = [ "data/" ]
@@ -583,10 +575,6 @@ if (!is_android) {
     if (toolkit_views) {
       deps += [ "//brave/components/sidebar/browser" ]
     }
-
-    if (enable_playlist_webui) {
-      deps += [ "//brave/components/playlist/common" ]
-    }
   }
 }
 
@@ -821,13 +809,6 @@ test("brave_browser_tests") {
       "//brave/components/speedreader/common:mojom",
       "//chrome/browser/ui/browser_window",
       "//components/language/core/browser:browser",
-    ]
-  }
-
-  if (enable_playlist) {
-    deps += [
-      "//brave/browser/playlist/test:browser_tests",
-      "//brave/components/playlist/browser",
     ]
   }
 

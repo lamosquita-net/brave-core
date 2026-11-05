@@ -7,7 +7,6 @@ import '../brave_appearance_page/sidebar.js'
 import '../brave_appearance_page/tabs.js'
 import '../brave_appearance_page/toolbar.js'
 import '../brave_content_page/content.js'
-import '../brave_content_page/playlist.js'
 import '../brave_content_page/speedreader.js'
 import '../brave_data_collection_page/brave_data_collection_page.js'
 import '../brave_default_extensions_page/brave_default_extensions_page.js'
@@ -247,20 +246,6 @@ RegisterPolymerTemplateModifications({
         }
       ))
 
-      const sectionPlaylist = document.createElement('template')
-      sectionPlaylist.setAttribute('is', 'dom-if')
-      sectionPlaylist.setAttribute('restamp', 'true')
-      sectionPlaylist.setAttribute('if', '[[showPage_(pageVisibility.playlist)]]')
-      sectionPlaylist.content.appendChild(createNestedSectionElement(
-        'playlist',
-        'content',
-        'playlist',
-        'settings-brave-content-playlist',
-        {
-          prefs: '{{prefs}}'
-        }
-      ))
-
       const sectionSpeedreader = document.createElement('template')
       sectionSpeedreader.setAttribute('is', 'dom-if')
       sectionSpeedreader.setAttribute('restamp', 'true')
@@ -322,9 +307,8 @@ RegisterPolymerTemplateModifications({
       last = last.insertAdjacentElement('afterend', sectionToolbar)
       last = last.insertAdjacentElement('afterend', sectionTabs)
       last = last.insertAdjacentElement('afterend', sectionSidebar)
-      // Insert nested Content, Playlist, Speedreader under 'Content' menu
+      // Insert nested Content, Speedreader under 'Content' menu
       last = last.insertAdjacentElement('afterend', sectionContent)
-      last = last.insertAdjacentElement('afterend', sectionPlaylist)
       last = last.insertAdjacentElement('afterend', sectionSpeedreader)
       // Insert shields
       last = last.insertAdjacentElement('afterend', sectionShields)

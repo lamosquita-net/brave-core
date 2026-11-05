@@ -20,7 +20,6 @@
 #include "base/time/time.h"
 #include "brave/browser/net/brave_network_audit_allowed_lists.h"
 #include "brave/browser/ui/brave_browser.h"
-#include "brave/components/playlist/common/buildflags/buildflags.h"
 #include "chrome/browser/password_manager/profile_password_store_factory.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser.h"
@@ -36,10 +35,6 @@
 #include "brave/browser/ui/sidebar/sidebar_controller.h"
 #include "brave/browser/ui/sidebar/sidebar_model.h"
 #include "brave/components/sidebar/browser/sidebar_item.h"
-#endif
-
-#if BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
-#include "brave/components/playlist/common/features.h"
 #endif
 
 namespace brave {
@@ -183,11 +178,7 @@ void WriteNetworkAuditResultsToDisk(const base::DictValue& results_dic,
 
 class BraveNetworkAuditTest : public InProcessBrowserTest {
  public:
-  BraveNetworkAuditTest() {
-#if BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
-    scoped_feature_list_.InitAndEnableFeature(playlist::features::kPlaylist);
-#endif  // BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
-  }
+  BraveNetworkAuditTest() = default;
 
   BraveNetworkAuditTest(const BraveNetworkAuditTest&) = delete;
   BraveNetworkAuditTest& operator=(const BraveNetworkAuditTest&) = delete;
@@ -260,10 +251,6 @@ class BraveNetworkAuditTest : public InProcessBrowserTest {
 
   base::FilePath net_log_path_;
   base::FilePath audit_results_path_;
-
-#if BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
-  base::test::ScopedFeatureList scoped_feature_list_;
-#endif  // BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
 };
 
 // Loads brave://welcome first to simulate a first run and then loads another

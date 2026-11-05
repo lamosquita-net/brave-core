@@ -3,8 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at https://mozilla.org/MPL/2.0/.
 
-import("//brave/components/playlist/common/buildflags/buildflags.gni")
-import("//brave/components/playlist/common/buildflags/buildflags.gni")
 import("//brave/components/speedreader/common/buildflags/buildflags.gni")
 import("//brave/resources/brave_grit.gni")
 import("//build/config/locales.gni")
@@ -31,8 +29,6 @@ brave_grit("static_resources") {
   }
 
   defines = [
-    "enable_playlist_webui=$enable_playlist_webui",
-    "enable_playlist=$enable_playlist",
     "enable_speedreader=$enable_speedreader",
   ]
 
@@ -81,12 +77,6 @@ repack("resources") {
     ]
   }
 
-  if (enable_playlist_webui) {
-    deps +=
-        [ "//brave/components/playlist/browser/resources:generated_resources" ]
-    sources += [ "$root_gen_dir/brave/components/playlist/browser/resources/playlist_generated.pak" ]
-  }
-
   if (!is_android && !is_ios) {
     deps += [
       "//brave/browser/resources/settings/shortcuts_page:generated_resources",
@@ -108,7 +98,6 @@ brave_grit("strings") {
     "enable_tor=false",
     # Brave VPN removed; kept for the <if> in the .grd until l10n pruning.
     "enable_brave_vpn=false",
-    "enable_playlist=$enable_playlist",
   ]
 
   if (translate_genders) {

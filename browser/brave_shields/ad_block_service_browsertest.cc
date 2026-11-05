@@ -41,7 +41,6 @@
 #include "brave/components/constants/brave_paths.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/de_amp/common/pref_names.h"
-#include "brave/components/playlist/common/buildflags/buildflags.h"
 #include "build/build_config.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
@@ -61,13 +60,6 @@
 #include "chrome/browser/ui/browser.h"
 #include "chrome/test/base/in_process_browser_test.h"
 #include "chrome/test/base/ui_test_utils.h"
-#endif
-
-#if BUILDFLAG(ENABLE_PLAYLIST)
-#include "brave/browser/playlist/playlist_service_factory.h"
-#include "brave/components/playlist/browser/playlist_background_web_contentses.h"
-#include "brave/components/playlist/browser/playlist_service.h"
-#include "brave/components/playlist/common/features.h"
 #endif
 
 const char kAdBlockTestPage[] = "/blocking.html";
@@ -1926,45 +1918,6 @@ IN_PROC_BROWSER_TEST_F(CosmeticFilteringFlagDisabledTest,
 
   ASSERT_EQ(true, EvalJs(contents, "checkSelector('.ad', 'display', 'block')"));
 }
-
-#if BUILDFLAG(ENABLE_PLAYLIST)
-
-class CosmeticFilteringPlaylistFlagEnabledTest : public AdBlockServiceTest {
- public:
-  CosmeticFilteringPlaylistFlagEnabledTest() {
-    feature_list_.InitAndEnableFeature(playlist::features::kPlaylist);
-  }
-
- private:
-  base::test::ScopedFeatureList feature_list_;
-};
-
-// Check cosmetic filtering is applied to any loading from Playlist's
-// background web contents.
-IN_PROC_BROWSER_TEST_F(CosmeticFilteringPlaylistFlagEnabledTest,
-                       AllowCosmeticFiltering) {
-  const GURL url =
-      embedded_test_server()->GetURL("b.com", "/cosmetic_filtering.html");
-
-  // Set cosmetic filtering is not enabled.
-  brave_shields::SetCosmeticFilteringControlType(
-      content_settings(), brave_shields::ControlType::ALLOW, url);
-  UpdateAdBlockInstanceWithRules("b.com###ad-banner");
-
-  playlist::PlaylistBackgroundWebContentses background_web_contentses(
-      profile(),
-      playlist::PlaylistServiceFactory::GetForBrowserContext(profile()));
-  background_web_contentses.Add(url, base::DoNothing());
-
-  auto* web_contents = &background_web_contentses.web_contents();
-  EXPECT_TRUE(content::WaitForLoadStop(web_contents));
-
-  // Check filter is applied properly.
-  EXPECT_EQ(false, EvalJs(web_contents,
-                          "checkSelector('#ad-banner', 'display', 'block')"));
-}
-
-#endif
 
 // Ensure no cosmetic filtering occurs when the shields setting is disabled
 IN_PROC_BROWSER_TEST_F(AdBlockServiceTest, CosmeticFilteringDisabled) {

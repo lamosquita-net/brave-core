@@ -33,7 +33,6 @@
 #include "brave/browser/ui/views/toolbar/brave_toolbar_view.h"
 #include "brave/browser/ui/views/toolbar/side_panel_button.h"
 #include "brave/components/constants/brave_switches.h"
-#include "brave/components/playlist/common/features.h"
 #include "brave/components/sidebar/browser/constants.h"
 #include "brave/components/sidebar/browser/pref_names.h"
 #include "brave/components/sidebar/browser/sidebar_item.h"
@@ -252,11 +251,8 @@ class SidebarBrowserTest : public InProcessBrowserTest {
     auto item_count =
         std::size(SidebarServiceFactory::kDefaultBuiltInItemTypes) -
         1 /* for history*/;
-#if BUILDFLAG(ENABLE_PLAYLIST)
-    if (!base::FeatureList::IsEnabled(playlist::features::kPlaylist)) {
-      item_count -= 1;
-    }
-#endif
+    // FlyWeb: Playlist removed, its item is never created.
+    item_count -= 1;
 
     return item_count;
   }
@@ -1000,17 +996,7 @@ INSTANTIATE_TEST_SUITE_P(
     SidebarBrowserTestWithkSidebarShowAlwaysOnStable,
     ::testing::Bool());
 
-class SidebarBrowserTestWithPlaylist : public SidebarBrowserTest {
- public:
-  SidebarBrowserTestWithPlaylist() {
-    feature_list_.InitAndEnableFeature(playlist::features::kPlaylist);
-  }
-  ~SidebarBrowserTestWithPlaylist() override = default;
-
-  base::test::ScopedFeatureList feature_list_;
-};
-
-IN_PROC_BROWSER_TEST_F(SidebarBrowserTestWithPlaylist, Incognito) {
+IN_PROC_BROWSER_TEST_F(SidebarBrowserTest, Incognito) {
   // There should be no crash with incognito.
   auto* private_browser =
       static_cast<BraveBrowser*>(CreateIncognitoBrowser(browser()->profile()));
@@ -1018,15 +1004,6 @@ IN_PROC_BROWSER_TEST_F(SidebarBrowserTestWithPlaylist, Incognito) {
 
   auto* sidebar_service =
       SidebarServiceFactory::GetForProfile(private_browser->profile());
-  const auto& items = sidebar_service->items();
-  auto iter = std::ranges::find_if(items, [](const auto& item) {
-    return item.type == SidebarItem::Type::kTypeBuiltIn &&
-           item.built_in_item_type == SidebarItem::BuiltInItemType::kPlaylist;
-  });
-
-  // Check playlist item is not included in private window.
-  EXPECT_EQ(iter, items.end());
-
   // Try Adding an item
   sidebar_service->AddItem(sidebar::SidebarItem::Create(
       GURL("http://foo.bar/"), u"title", SidebarItem::Type::kTypeWeb,

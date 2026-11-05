@@ -9,7 +9,6 @@
 #include <string>
 
 #include "brave/components/brave_wayback_machine/buildflags/buildflags.h"
-#include "brave/components/playlist/common/buildflags/buildflags.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "chrome/browser/ui/browser_window.h"
 
@@ -60,10 +59,6 @@ class BraveBrowserWindow : public BrowserWindow {
 
   // Returns true when bubble is shown.
   virtual bool ShowBraveHelpBubbleView(const std::string& text);
-#endif
-
-#if BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
-  virtual void ShowPlaylistBubble() {}
 #endif
 
 #if BUILDFLAG(ENABLE_BRAVE_WAYBACK_MACHINE)

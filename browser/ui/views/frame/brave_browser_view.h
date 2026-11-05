@@ -169,10 +169,6 @@ class BraveBrowserView : public BrowserView,
   bool HasSelectedURL() const override;
   void CleanAndCopySelectedURL() override;
 
-#if BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
-  void ShowPlaylistBubble() override;
-#endif
-
 #if BUILDFLAG(ENABLE_BRAVE_WAYBACK_MACHINE)
   void ShowWaybackMachineBubble() override;
 #endif

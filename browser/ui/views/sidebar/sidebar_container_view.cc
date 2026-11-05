@@ -6,7 +6,6 @@
 #include "brave/browser/ui/views/sidebar/sidebar_container_view.h"
 
 #include <algorithm>
-#include <limits>
 #include <optional>
 #include <utility>
 
@@ -25,7 +24,6 @@
 #include "brave/browser/ui/views/frame/brave_browser_view_layout.h"
 #include "brave/browser/ui/views/frame/brave_contents_view_util.h"
 #include "brave/browser/ui/views/side_panel/brave_side_panel.h"
-#include "brave/browser/ui/views/side_panel/playlist/playlist_side_panel_coordinator.h"
 #include "brave/browser/ui/views/sidebar/sidebar_control_view.h"
 #include "brave/browser/ui/views/toolbar/brave_toolbar_view.h"
 #include "brave/browser/ui/views/toolbar/side_panel_button.h"
@@ -37,7 +35,6 @@
 #include "chrome/browser/ui/color/chrome_color_id.h"
 #include "chrome/browser/ui/exclusive_access/exclusive_access_manager.h"
 #include "chrome/browser/ui/exclusive_access/fullscreen_controller.h"
-#include "chrome/browser/ui/exclusive_access/fullscreen_within_tab_helper.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/browser/ui/views/frame/browser_view.h"
 #include "chrome/browser/ui/views/side_panel/side_panel_entry.h"
@@ -185,36 +182,6 @@ bool SidebarContainerView::IsSidebarVisible() const {
   return sidebar_control_view_ && sidebar_control_view_->GetVisible();
 }
 
-bool SidebarContainerView::IsFullscreenForCurrentEntry() const {
-  // For now, we only supports fullscreen from playlist.
-  if (side_panel_coordinator_->GetCurrentEntryId() !=
-      SidePanelEntryId::kPlaylist) {
-    return false;
-  }
-
-  // TODO(sko) Do we have a more general way to get WebContents of the active
-  // entry?
-  auto web_view = PlaylistSidePanelCoordinator::FromBrowser(browser_)
-                      ->side_panel_web_view();
-  if (!web_view) {
-    return false;
-  }
-
-  auto* contents = web_view->web_contents();
-  if (!contents) {
-    return false;
-  }
-
-  if (auto* fullscreen_tab_helper =
-          FullscreenWithinTabHelper::FromWebContents(contents);
-      fullscreen_tab_helper &&
-      fullscreen_tab_helper->is_fullscreen_within_tab()) {
-    return true;
-  }
-
-  return false;
-}
-
 void SidebarContainerView::SetSidebarShowOption(ShowSidebarOption show_option) {
   DVLOG(2) << __func__;
 
@@ -299,11 +266,6 @@ void SidebarContainerView::Layout(PassKey) {
   int control_view_width =
       std::min(sidebar_control_view_->GetPreferredSize().width(), width());
 
-  // Control view should not be shown in panel-initiated fullscreen.
-  if (IsFullscreenForCurrentEntry()) {
-    control_view_width = 0;
-  }
-
   const int control_view_x =
       sidebar_on_left_ ? 0 : width() - control_view_width;
   const int side_panel_x = sidebar_on_left_ ? control_view_width : 0;
@@ -323,10 +285,6 @@ gfx::Size SidebarContainerView::CalculatePreferredSize(
   if (!initialized_ || !sidebar_control_view_->GetVisible() ||
       IsFullscreenByTab()) {
     return View::CalculatePreferredSize(available_size);
-  }
-
-  if (IsFullscreenForCurrentEntry()) {
-    return {std::numeric_limits<int>::max(), 0};
   }
 
   auto start_width = animation_start_width_;

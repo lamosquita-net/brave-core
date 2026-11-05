@@ -25,7 +25,6 @@
 #include "brave/components/commander/common/features.h"
 #include "brave/components/commands/common/commands.mojom.h"
 #include "brave/components/commands/common/features.h"
-#include "brave/components/playlist/common/buildflags/buildflags.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "brave/components/version_info/version_info.h"
 #include "build/build_config.h"
@@ -48,10 +47,6 @@
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "brave/browser/ui/webui/settings/brave_extensions_manifest_v2_handler.h"
-#endif
-
-#if BUILDFLAG(ENABLE_PLAYLIST)
-#include "brave/components/playlist/common/features.h"
 #endif
 
 BraveSettingsUI::BraveSettingsUI(content::WebUI* web_ui,
@@ -130,13 +125,6 @@ void BraveSettingsUI::AddResources(content::WebUIDataSource* html_source,
   html_source->AddBoolean("isLeoAssistantAllowed", false);
   html_source->AddBoolean("isLeoAssistantHistoryAllowed", false);
 
-#if BUILDFLAG(ENABLE_PLAYLIST)
-  html_source->AddBoolean(
-      "isPlaylistAllowed",
-      base::FeatureList::IsEnabled(playlist::features::kPlaylist));
-#else
-  html_source->AddBoolean("isPlaylistAllowed", false);
-#endif
   html_source->AddBoolean(
       "showCommandsInOmnibox",
       base::FeatureList::IsEnabled(features::kBraveCommandsInOmnibox));

@@ -64,11 +64,6 @@ inline constexpr char kCookieListOptInURL[] =
 inline constexpr char kFederatedInternalsURL[] = "flyweb://federated-internals";
 inline constexpr char kFederatedInternalsHost[] = "federated-internals";
 inline constexpr char kContentFiltersPath[] = "shields/filters";
-inline constexpr char kPlaylistHost[] = "playlist";
-inline constexpr char kPlaylistURL[] = "chrome-untrusted://playlist/";
-inline constexpr char kPlaylistPlayerHost[] = "playlist-player";
-inline constexpr char kPlaylistPlayerURL[] =
-    "chrome-untrusted://playlist-player/";
 inline constexpr char kSpeedreaderPanelURL[] =
     "chrome://brave-speedreader.top-chrome";
 inline constexpr char kSpeedreaderPanelHost[] = "brave-speedreader.top-chrome";

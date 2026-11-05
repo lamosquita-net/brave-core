@@ -18,7 +18,6 @@
 #include "brave/components/de_amp/common/features.h"
 #include "brave/components/debounce/core/common/features.h"
 #include "brave/components/google_sign_in_permission/features.h"
-#include "brave/components/playlist/common/buildflags/buildflags.h"
 #include "brave/components/request_otr/common/buildflags/buildflags.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "brave/components/webcompat/features.h"
@@ -36,10 +35,6 @@
 
 #if BUILDFLAG(ENABLE_SPEEDREADER)
 #include "brave/components/speedreader/common/features.h"
-#endif
-
-#if BUILDFLAG(ENABLE_PLAYLIST)
-#include "brave/components/playlist/common/features.h"
 #endif
 
 #if BUILDFLAG(ENABLE_REQUEST_OTR)
@@ -98,25 +93,6 @@
           kOsWin,                                                              \
           FEATURE_VALUE_TYPE(sandbox::policy::features::kModuleFileNamePatch), \
       }))
-
-#define PLAYLIST_FEATURE_ENTRIES                                       \
-  IF_BUILDFLAG(                                                        \
-      ENABLE_PLAYLIST,                                                 \
-      EXPAND_FEATURE_ENTRIES(                                          \
-          {                                                            \
-              kPlaylistFeatureInternalName,                            \
-              "Playlist",                                              \
-              "Enables Playlist",                                      \
-              kOsMac | kOsWin | kOsLinux | kOsAndroid,                 \
-              FEATURE_VALUE_TYPE(playlist::features::kPlaylist),       \
-          },                                                           \
-          {                                                            \
-              kPlaylistFakeUAFeatureInternalName,                      \
-              "PlaylistFakeUA",                                        \
-              "Use fake UA for playlist",                              \
-              kOsMac | kOsWin | kOsLinux | kOsAndroid,                 \
-              FEATURE_VALUE_TYPE(playlist::features::kPlaylistFakeUA), \
-          }))
 
 #if !BUILDFLAG(IS_ANDROID)
 #define BRAVE_COMMANDS_FEATURE_ENTRIES                                      \
@@ -629,7 +605,6 @@
   SPEEDREADER_FEATURE_ENTRIES                                                  \
   REQUEST_OTR_FEATURE_ENTRIES                                                  \
   BRAVE_MODULE_FILENAME_PATCH                                                  \
-  PLAYLIST_FEATURE_ENTRIES                                                     \
   BRAVE_COMMANDS_FEATURE_ENTRIES                                               \
   BRAVE_BACKGROUND_VIDEO_PLAYBACK_ANDROID                                      \
   BRAVE_SAFE_BROWSING_ANDROID                                                  \

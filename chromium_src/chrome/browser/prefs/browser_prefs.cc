@@ -5,6 +5,7 @@
 
 #include "brave/browser/brave_local_state_prefs.h"
 #include "brave/browser/brave_profile_prefs.h"
+#include "brave/browser/flyweb/pruned_feature_prefs.h"
 #include "brave/browser/search/ntp_utils.h"
 #include "brave/browser/themes/brave_dark_mode_utils.h"
 #include "brave/browser/translate/brave_translate_prefs_migration.h"
@@ -147,6 +148,9 @@ void MigrateObsoleteProfilePrefs(PrefService* profile_prefs,
   // Added 2024-07
   profile_prefs->ClearPref(kHangoutsEnabled);
 
+  // Added 2026-11: features pruned in the Chromium 156 port.
+  flyweb::ClearPrunedFeatureProfilePrefs(profile_prefs);
+
   // END_MIGRATE_OBSOLETE_PROFILE_PREFS
 }
 
@@ -165,6 +169,9 @@ void MigrateObsoleteLocalStatePrefs(PrefService* local_state) {
   // FlyWeb: added 11/2026 (T5), NTP sponsored images and super referrals.
   ntp_background_images::ViewCounterService::MigrateObsoleteLocalStatePrefs(
       local_state);
+
+  // Added 2026-11: features pruned in the Chromium 156 port.
+  flyweb::ClearPrunedFeatureLocalStatePrefs(local_state);
 
   // END_MIGRATE_OBSOLETE_LOCAL_STATE_PREFS
 }

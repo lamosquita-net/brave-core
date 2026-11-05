@@ -13,11 +13,9 @@
 #include "brave/components/brave_search/renderer/brave_search_render_frame_observer.h"
 #include "brave/components/brave_shields/core/common/features.h"
 #include "brave/components/cosmetic_filters/renderer/cosmetic_filters_js_render_frame_observer.h"
-#include "brave/components/playlist/common/buildflags/buildflags.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "brave/renderer/brave_render_thread_observer.h"
 #include "chrome/common/chrome_isolated_world_ids.h"
-#include "chrome/renderer/chrome_render_thread_observer.h"
 #include "chrome/renderer/url_loader_throttle_provider_impl.h"
 #include "content/public/renderer/render_thread.h"
 #include "third_party/blink/public/common/features.h"
@@ -29,11 +27,6 @@
 #if BUILDFLAG(ENABLE_SPEEDREADER)
 #include "brave/components/speedreader/common/features.h"
 #include "brave/components/speedreader/renderer/speedreader_render_frame_observer.h"
-#endif
-
-#if BUILDFLAG(ENABLE_PLAYLIST)
-#include "brave/components/playlist/common/features.h"
-#include "brave/components/playlist/renderer/playlist_render_frame_observer.h"
 #endif
 
 #if BUILDFLAG(ENABLE_WIDEVINE)
@@ -136,17 +129,6 @@ void BraveContentRendererClient::RenderFrameCreated(
         render_frame, ISOLATED_WORLD_ID_BRAVE_INTERNAL);
   }
 #endif
-
-#if BUILDFLAG(ENABLE_PLAYLIST)
-  if (base::FeatureList::IsEnabled(playlist::features::kPlaylist) &&
-      !ChromeRenderThreadObserver::is_incognito_process()) {
-    new playlist::PlaylistRenderFrameObserver(
-        render_frame, base::BindRepeating([] {
-          return BraveRenderThreadObserver::GetDynamicParams().playlist_enabled;
-        }),
-        ISOLATED_WORLD_ID_BRAVE_INTERNAL);
-  }
-#endif
 }
 
 std::unique_ptr<media::KeySystemSupportRegistration>
@@ -166,30 +148,7 @@ void BraveContentRendererClient::RunScriptsAtDocumentStart(
     observer->RunScriptsAtDocumentStart();
   }
 
-#if BUILDFLAG(ENABLE_PLAYLIST)
-  if (base::FeatureList::IsEnabled(playlist::features::kPlaylist)) {
-    if (auto* playlist_observer =
-            playlist::PlaylistRenderFrameObserver::Get(render_frame)) {
-      playlist_observer->RunScriptsAtDocumentStart();
-    }
-  }
-#endif
-
   ChromeContentRendererClient::RunScriptsAtDocumentStart(render_frame);
-}
-
-void BraveContentRendererClient::RunScriptsAtDocumentEnd(
-    content::RenderFrame* render_frame) {
-#if BUILDFLAG(ENABLE_PLAYLIST)
-  if (base::FeatureList::IsEnabled(playlist::features::kPlaylist)) {
-    if (auto* playlist_observer =
-            playlist::PlaylistRenderFrameObserver::Get(render_frame)) {
-      playlist_observer->RunScriptsAtDocumentEnd();
-    }
-  }
-#endif
-
-  ChromeContentRendererClient::RunScriptsAtDocumentEnd(render_frame);
 }
 
 void BraveContentRendererClient::WillEvaluateServiceWorkerOnWorkerThread(

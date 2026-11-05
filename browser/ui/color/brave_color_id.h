@@ -112,16 +112,6 @@
     E_CPONLY(kColorBraveSplitViewMenuButtonBorder)      \
     E_CPONLY(kColorBraveSplitViewMenuItemIcon)
 
-#define BRAVE_PLAYLIST_COLOR_IDS                                      \
-    E_CPONLY(kColorBravePlaylistAddedIcon)                            \
-    E_CPONLY(kColorBravePlaylistCheckedIcon)                          \
-    E_CPONLY(kColorBravePlaylistSelectedBackground)                   \
-    E_CPONLY(kColorBravePlaylistListBorder)                           \
-    E_CPONLY(kColorBravePlaylistMoveDialogDescription)                \
-    E_CPONLY(kColorBravePlaylistMoveDialogCreatePlaylistAndMoveTitle) \
-    E_CPONLY(kColorBravePlaylistNewPlaylistDialogNameLabel)           \
-    E_CPONLY(kColorBravePlaylistNewPlaylistDialogItemsLabel)
-
 #define BRAVE_OMNIBOX_COLOR_IDS \
     E_CPONLY(kColorBraveOmniboxResultViewSeparator) \
     E_CPONLY(kColorBravePlayerActionViewBorder)
@@ -140,7 +130,6 @@
     BRAVE_VERTICAL_TAB_COLOR_IDS      \
     BRAVE_SHARED_PINNED_TAB_COLOR_IDS \
     BRAVE_SPLIT_VIEW_COLOR_IDS        \
-    BRAVE_PLAYLIST_COLOR_IDS          \
     BRAVE_OMNIBOX_COLOR_IDS           \
     BRAVE_WAYBACK_MACHINE_COLOR_IDS   \
     BRAVE_EXTENSION_MENU_COLOR_IDS    \

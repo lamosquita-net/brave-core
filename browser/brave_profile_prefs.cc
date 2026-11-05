@@ -8,6 +8,7 @@
 #include <string>
 
 #include "brave/browser/brave_shields/brave_shields_web_contents_observer.h"
+#include "brave/browser/flyweb/pruned_feature_prefs.h"
 #include "brave/browser/new_tab/new_tab_shows_options.h"
 #include "brave/browser/search/ntp_utils.h"
 #include "brave/browser/themes/brave_dark_mode_utils.h"
@@ -168,6 +169,9 @@ void RegisterProfilePrefsForMigration(
 
   // Added 2024-07
   registry->RegisterBooleanPref(kHangoutsEnabled, false);
+
+  // Added 2026-11: features pruned in the Chromium 156 port.
+  flyweb::RegisterPrunedFeatureProfilePrefs(registry);
 }
 
 void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {

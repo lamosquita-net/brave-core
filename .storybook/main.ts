@@ -37,10 +37,6 @@ const config: StorybookConfig = {
   framework: '@storybook/react-webpack5',
   staticDirs: [
     { from: '../node_modules/@brave/leo/icons', to: 'icons/' },
-    {
-      from: '../components/playlist/browser/resources/stories/assets',
-      to: 'playlist/'
-    }
   ],
   core: {
     disableTelemetry: true

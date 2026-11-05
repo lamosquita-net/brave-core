@@ -8,9 +8,6 @@
 
 #include "build/build_config.h"
 
-inline constexpr char kPlaylistFeatureInternalName[] = "playlist";
-inline constexpr char kPlaylistFakeUAFeatureInternalName[] = "playlist-fake-ua";
-
 #if !BUILDFLAG(IS_ANDROID)
 inline constexpr char kSplitViewFeatureInternalName[] = "brave-split-view";
 #endif

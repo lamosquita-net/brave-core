@@ -130,10 +130,10 @@ SidePanelEntryId SidePanelIdFromSideBarItemType(BuiltInItemType type) {
       return SidePanelEntryId::kReadingList;
     case BuiltInItemType::kBookmarks:
       return SidePanelEntryId::kBookmarks;
-    case BuiltInItemType::kPlaylist:
-      return SidePanelEntryId::kPlaylist;
     case BuiltInItemType::kChatUI:
       return SidePanelEntryId::kChatUI;
+    case BuiltInItemType::kPlaylist:
+      [[fallthrough]];
     case BuiltInItemType::kWallet:
       [[fallthrough]];
     case BuiltInItemType::kBraveTalk:
@@ -183,9 +183,6 @@ void SetLastUsedSidePanel(PrefService* prefs,
         break;
       case SidePanelEntryId::kBookmarks:
         type = BuiltInItemType::kBookmarks;
-        break;
-      case SidePanelEntryId::kPlaylist:
-        type = BuiltInItemType::kPlaylist;
         break;
       case SidePanelEntryId::kChatUI:
         type = BuiltInItemType::kChatUI;

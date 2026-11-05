@@ -78,8 +78,6 @@ class SidebarContainerView
 
   BraveSidePanel* side_panel() { return side_panel_; }
 
-  bool IsFullscreenForCurrentEntry() const;
-
   void set_operation_from_active_tab_change(bool tab_change) {
     operation_from_active_tab_change_ = tab_change;
   }

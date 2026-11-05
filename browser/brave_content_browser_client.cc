@@ -53,8 +53,6 @@
 #include "brave/components/debounce/content/browser/debounce_navigation_throttle.h"
 #include "brave/components/google_sign_in_permission/google_sign_in_permission_throttle.h"
 #include "brave/components/google_sign_in_permission/google_sign_in_permission_util.h"
-#include "brave/components/playlist/common/buildflags/buildflags.h"
-#include "brave/components/playlist/common/features.h"
 #include "brave/components/request_otr/common/buildflags/buildflags.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "brave/components/translate/core/common/brave_translate_switches.h"
@@ -168,16 +166,6 @@ using extensions::ChromeContentBrowserClientExtensionsPart;
 #include "brave/components/commands/common/features.h"
 #include "ui/webui/resources/cr_components/searchbox/searchbox.mojom.h"
 #endif
-
-#if BUILDFLAG(ENABLE_PLAYLIST)
-#include "brave/components/playlist/browser/playlist_background_web_contents_helper.h"
-#include "brave/components/playlist/browser/playlist_media_handler.h"
-#include "brave/components/playlist/common/mojom/playlist.mojom.h"
-#endif
-
-#if BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
-#include "brave/browser/ui/webui/playlist_ui.h"
-#endif  // BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
 
 namespace {
 
@@ -387,13 +375,6 @@ void BraveContentBrowserClient::
           &render_frame_host));
 #endif
 
-#if BUILDFLAG(ENABLE_PLAYLIST)
-  associated_registry.AddInterface<playlist::mojom::PlaylistMediaResponder>(
-      base::BindRepeating(
-          &playlist::PlaylistMediaHandler::BindMediaResponderReceiver,
-          &render_frame_host));
-#endif  // BUILDFLAG(ENABLE_PLAYLIST)
-
   ChromeContentBrowserClient::
       RegisterAssociatedInterfaceBindersForRenderFrameHost(render_frame_host,
                                                            associated_registry);
@@ -402,13 +383,6 @@ void BraveContentBrowserClient::
 void BraveContentBrowserClient::RegisterWebUIInterfaceBrokers(
     content::WebUIBrowserInterfaceBrokerRegistry& registry) {
   ChromeContentBrowserClient::RegisterWebUIInterfaceBrokers(registry);
-
-#if BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
-  if (base::FeatureList::IsEnabled(playlist::features::kPlaylist)) {
-    registry.ForWebUI<playlist::PlaylistUI>()
-        .Add<playlist::mojom::PageHandlerFactory>();
-  }
-#endif
 
 #if !BUILDFLAG(IS_ANDROID)
   auto ntp_registration =
@@ -952,13 +926,6 @@ void BraveContentBrowserClient::OverrideWebPreferences(
   PreventDarkModeFingerprinting(web_contents, web_prefs);
   // 156 dropped allow_non_empty_navigator_plugins: DOMPluginArray always
   // builds the fixed PDF list, which the plugins farbling wrapper farbles.
-
-#if BUILDFLAG(ENABLE_PLAYLIST)
-  if (playlist::PlaylistBackgroundWebContentsHelper::FromWebContents(
-          web_contents)) {
-    web_prefs->force_cosmetic_filtering = true;
-  }
-#endif
 }
 
 std::string BraveContentBrowserClient::GetUserAgent() {

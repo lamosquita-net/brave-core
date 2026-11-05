@@ -293,12 +293,6 @@ void ToggleCommander(Browser* browser) {
 }
 #endif
 
-#if BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
-void ShowPlaylistBubble(Browser* browser) {
-  BraveBrowserWindow::From(browser->window())->ShowPlaylistBubble();
-}
-#endif
-
 #if BUILDFLAG(ENABLE_BRAVE_WAYBACK_MACHINE)
 void ShowWaybackMachineBubble(Browser* browser) {
   BraveBrowserWindow::From(browser->window())->ShowWaybackMachineBubble();

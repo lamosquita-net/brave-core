@@ -12,7 +12,6 @@
 #include "brave/browser/ui/color/color_palette.h"
 #include "brave/browser/ui/color/leo/colors.h"
 #include "brave/components/brave_wayback_machine/buildflags/buildflags.h"
-#include "brave/components/playlist/common/buildflags/buildflags.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "chrome/browser/themes/theme_properties.h"
 #include "chrome/browser/ui/color/chrome_color_id.h"
@@ -27,11 +26,6 @@
 #include "ui/gfx/color_palette.h"
 #include "ui/gfx/color_utils.h"
 #include "ui/native_theme/native_theme.h"
-
-#if BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
-#include "brave/browser/ui/color/playlist/playlist_color_mixer.h"
-#include "brave/components/playlist/common/features.h"
-#endif
 
 namespace {
 
@@ -515,12 +509,6 @@ void AddBraveLightThemeColorMixer(ui::ColorProvider* provider,
   mixer[kColorTabGroupBackgroundAlpha] = {
       SkColorSetA(SK_ColorBLACK, 0.15 * 255)};
 
-#if BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
-  if (base::FeatureList::IsEnabled(playlist::features::kPlaylist)) {
-    playlist::AddThemeColorMixer(provider, leo::Theme::kLight, key);
-  }
-#endif
-
   mixer[kColorBraveExtensionMenuIcon] = {
       leo::GetColor(leo::Color::kColorIconActive, leo::Theme::kLight)};
 
@@ -631,12 +619,6 @@ void AddBraveDarkThemeColorMixer(ui::ColorProvider* provider,
 
   mixer[kColorTabGroupBackgroundAlpha] = {
       SkColorSetA(SK_ColorBLACK, 0.25 * 255)};
-
-#if BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
-  if (base::FeatureList::IsEnabled(playlist::features::kPlaylist)) {
-    playlist::AddThemeColorMixer(provider, leo::Theme::kDark, key);
-  }
-#endif
 
   mixer[kColorBraveExtensionMenuIcon] = {
       leo::GetColor(leo::Color::kColorIconActive, leo::Theme::kDark)};

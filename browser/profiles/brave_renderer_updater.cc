@@ -13,8 +13,6 @@
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/de_amp/browser/de_amp_util.h"
 #include "brave/components/de_amp/common/pref_names.h"
-#include "brave/components/playlist/browser/pref_names.h"
-#include "brave/components/playlist/common/features.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/common/pref_names.h"
 #include "components/prefs/pref_service.h"
@@ -49,11 +47,6 @@ BraveRendererUpdater::BraveRendererUpdater(Profile* profile,
     CHECK_IS_TEST();
   }
 #endif
-
-  pref_change_registrar_.Add(
-      playlist::kPlaylistEnabledPref,
-      base::BindRepeating(&BraveRendererUpdater::UpdateAllRenderers,
-                          base::Unretained(this)));
 }
 
 BraveRendererUpdater::~BraveRendererUpdater() = default;
@@ -121,11 +114,7 @@ void BraveRendererUpdater::UpdateRenderer(
   }
 #endif
 
-  const bool playlist_enabled =
-      base::FeatureList::IsEnabled(playlist::features::kPlaylist) &&
-      pref_service->GetBoolean(playlist::kPlaylistEnabledPref);
-
   (*renderer_configuration)
       ->SetConfiguration(brave::mojom::DynamicParams::New(
-          de_amp_enabled, widevine_enabled, playlist_enabled));
+          de_amp_enabled, widevine_enabled));
 }

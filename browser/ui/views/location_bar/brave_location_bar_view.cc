@@ -16,7 +16,6 @@
 #include "brave/browser/ui/tabs/brave_tab_prefs.h"
 #include "brave/browser/ui/tabs/features.h"
 #include "brave/browser/ui/views/brave_actions/brave_actions_container.h"
-#include "brave/browser/ui/views/playlist/playlist_action_icon_view.h"
 #include "brave/browser/ui/views/toolbar/brave_toolbar_view.h"
 #include "brave/components/commander/common/buildflags/buildflags.h"
 #include "brave/components/l10n/common/localization_util.h"
@@ -118,22 +117,6 @@ void BraveLocationBarView::Init() {
   for (ContentSettingImageView* content_setting_view : content_setting_views_) {
     content_setting_view->disable_animation();
   }
-}
-
-void BraveLocationBarView::ShowPlaylistBubble() {
-  if (auto* playlist_action_icon_view = GetPlaylistActionIconView()) {
-    playlist_action_icon_view->ShowPlaylistBubble();
-  }
-}
-
-PlaylistActionIconView* BraveLocationBarView::GetPlaylistActionIconView() {
-  auto* playlist_action_icon_view =
-      page_action_icon_controller()->GetPlaylistActionIconView();
-  if (!playlist_action_icon_view) {
-    return nullptr;
-  }
-
-  return views::AsViewClass<PlaylistActionIconView>(playlist_action_icon_view);
 }
 
 void BraveLocationBarView::Update(content::WebContents* contents) {

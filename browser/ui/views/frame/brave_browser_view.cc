@@ -699,13 +699,6 @@ void BraveBrowserView::CleanAndCopySelectedURL() {
   brave_omnibox_view->CleanAndCopySelectedURL();
 }
 
-#if BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
-void BraveBrowserView::ShowPlaylistBubble() {
-  static_cast<BraveLocationBarView*>(GetLocationBarView())
-      ->ShowPlaylistBubble();
-}
-#endif
-
 #if BUILDFLAG(ENABLE_BRAVE_WAYBACK_MACHINE)
 void BraveBrowserView::ShowWaybackMachineBubble() {
   if (auto* anchor = toolbar_button_provider_->GetPageActionIconView(
