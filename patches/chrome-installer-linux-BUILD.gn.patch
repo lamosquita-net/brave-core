@@ -1,16 +1,16 @@
 diff --git a/chrome/installer/linux/BUILD.gn b/chrome/installer/linux/BUILD.gn
-index 51f7c978a0b321ce46f32df985a2321468dfb5bd..ae85d2083c75005f0ff701dde9f79445b0829eb6 100644
+index 2a75b4c07d1e744209f9c48e375d14f2820d6cd7..3152146bad55a53661aa2e34abc5cbe15176e9e4 100644
 --- a/chrome/installer/linux/BUILD.gn
 +++ b/chrome/installer/linux/BUILD.gn
-@@ -60,6 +60,7 @@ if (build_with_internal_optimization_guide) {
-       [ "$root_out_dir/liboptimization_guide_internal.so" ]
+@@ -105,6 +105,7 @@ if (build_with_internal_optimization_guide) {
+   }
  }
  
 +packaging_files_executables -= excluded_packaging_files_executables packaging_files_executables += brave_packaging_files_executables
  packaging_files_binaries = packaging_files_executables + packaging_files_shlibs
  
  # TODO(mmoss) Any convenient way to get all the relevant build files?
-@@ -162,6 +163,7 @@ action("merge_rpm_dependencies") {
+@@ -210,6 +211,7 @@ action("merge_rpm_dependencies") {
  strip_binary("strip_chrome_binary") {
    binary_input = "$root_out_dir/chrome"
    deps = [ "//chrome" ]
@@ -18,31 +18,31 @@ index 51f7c978a0b321ce46f32df985a2321468dfb5bd..ae85d2083c75005f0ff701dde9f79445
  }
  
  strip_binary("strip_chrome_crashpad_handler") {
-@@ -177,6 +179,7 @@ strip_binary("strip_chrome_management_service") {
+@@ -225,6 +227,7 @@ strip_binary("strip_chrome_management_service") {
  strip_binary("strip_chrome_sandbox") {
    binary_input = "$root_out_dir/chrome_sandbox"
    deps = [ "//sandbox/linux:chrome_sandbox" ]
 +  binary_input = "$root_out_dir/brave_sandbox" symbol_output = "$root_out_dir/brave_sandbox.debug" stripped_binary_output = "$root_out_dir/brave_sandbox.stripped" deps += strip_chrome_sandbox_deps
  }
  
- strip_binary("strip_libEGL_shlib") {
-@@ -269,6 +272,7 @@ copy("common_packaging_files") {
+ # On ChromeOS, system services depend on real ANGLE libraries rather than dummy
+@@ -378,6 +381,7 @@ copy("common_packaging_files") {
    }
  
-   sources += [ "//buildtools/third_party/eu-strip/bin/eu-strip" ]
-+  sources -= common_packaging_files_excluded_sources sources += common_packaging_files_sources
- 
    outputs = [ "$root_out_dir/installer/common/{{source_file_part}}" ]
++  sources -= common_packaging_files_excluded_sources sources += common_packaging_files_sources
  }
-@@ -381,6 +385,7 @@ group("installer_deps") {
-     "//third_party/angle:libEGL",
-     "//third_party/angle:libGLESv2",
+ 
+ copy("deb_packaging_files") {
+@@ -491,6 +495,7 @@ group("installer_deps") {
+     "//components/crash/core/app:chrome_crashpad_handler",
+     "//sandbox/linux:chrome_sandbox",
    ]
 +  public_deps += brave_installer_deps
    if (bundle_widevine_cdm) {
      public_deps += [ "//third_party/widevine/cdm" ]
    }
-@@ -427,6 +432,9 @@ group("installer_deps") {
+@@ -561,6 +566,9 @@ group("installer_deps") {
  template("linux_package") {
    assert(defined(invoker.channel))
    channel = invoker.channel
@@ -52,10 +52,13 @@ index 51f7c978a0b321ce46f32df985a2321468dfb5bd..ae85d2083c75005f0ff701dde9f79445
  
    if (is_chrome_branded) {
      package = "google-chrome"
-@@ -555,3 +563,6 @@ linux_package("unstable") {
+@@ -699,6 +707,9 @@ linux_package("unstable") {
  linux_package("canary") {
    channel = "canary"
  }
 +linux_package("nightly") {
 +  channel = "nightly"
 +}
+ 
+ # For convenience, alias 'dev' to 'unstable'.
+ group("dev") {

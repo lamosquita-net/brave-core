@@ -1,14 +1,14 @@
 diff --git a/chrome/installer/mac/BUILD.gn b/chrome/installer/mac/BUILD.gn
-index 59632e3433849608356269bdbb462078d7b42550..18e0f81bce6d2a099bf233ca901e0d528eeb3e9f 100644
+index 17dc6104bfb4f881124771d6f8350e06ddcf6bf8..0d62a3daf5ede2416f6739b753409f85582b74c8 100644
 --- a/chrome/installer/mac/BUILD.gn
 +++ b/chrome/installer/mac/BUILD.gn
-@@ -19,7 +19,8 @@ group("mac") {
-   public_deps = [ ":copies" ]
+@@ -23,7 +23,8 @@ group("mac") {
+   ]
  }
  
 -_packaging_dir = "$root_out_dir/$chrome_product_full_name Packaging"
 +_packaging_dir = "$root_out_dir/" + string_replace("$chrome_product_full_name Packaging", " ", "_")
 +_packaging_dir = "$brave_packaging_base_dir/" + string_replace("$chrome_product_full_name Packaging", " ", "_")
  
- process_version_rc_template("sign_config") {
-   visibility = [ ":copy_signing" ]
+ template("generate_dmg_dsstore") {
+   action(target_name) {
