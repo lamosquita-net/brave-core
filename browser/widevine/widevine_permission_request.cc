@@ -5,6 +5,8 @@
 
 #include "brave/browser/widevine/widevine_permission_request.h"
 
+#include <memory>
+
 #include "brave/browser/widevine/widevine_utils.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/l10n/common/localization_util.h"
@@ -13,6 +15,9 @@
 #include "build/build_config.h"
 #include "chrome/browser/lifetime/application_lifetime.h"
 #include "chrome/browser/profiles/profile.h"
+#include "components/permissions/permission_decision.h"
+#include "components/permissions/permission_prompt_decision.h"
+#include "components/permissions/permission_request_data.h"
 #include "components/permissions/request_type.h"
 #include "components/prefs/pref_service.h"
 #include "components/url_formatter/elide_url.h"
@@ -28,13 +33,12 @@ WidevinePermissionRequest::WidevinePermissionRequest(
     content::WebContents* web_contents,
     bool for_restart)
     : PermissionRequest(
-          web_contents->GetVisibleURL(),
-          permissions::RequestType::kWidevine,
-          /*has_gesture=*/false,
+          std::make_unique<permissions::PermissionRequestData>(
+              permissions::RequestType::kWidevine,
+              /*user_gesture=*/false,
+              web_contents->GetVisibleURL()),
           base::BindRepeating(&WidevinePermissionRequest::PermissionDecided,
-                              base::Unretained(this)),
-          base::BindOnce(&WidevinePermissionRequest::DeleteRequest,
-                         base::Unretained(this))),
+                              base::Unretained(this))),
       web_contents_(web_contents),
       for_restart_(for_restart) {}
 
@@ -59,11 +63,11 @@ std::u16string WidevinePermissionRequest::GetMessageTextFragment() const {
 }
 #endif
 
-void WidevinePermissionRequest::PermissionDecided(ContentSetting result,
-                                                  bool is_one_time,
-                                                  bool is_final_decision) {
+void WidevinePermissionRequest::PermissionDecided(
+    const permissions::PermissionPromptDecision& decision,
+    const permissions::PermissionRequestData& request_data) {
   // Permission granted
-  if (result == ContentSetting::CONTENT_SETTING_ALLOW) {
+  if (decision.overall_decision == permissions::PermissionDecision::kAllow) {
     if (!for_restart_) {
       EnableWidevineCdm();
     } else {
@@ -79,19 +83,13 @@ void WidevinePermissionRequest::PermissionDecided(ContentSetting result,
       }
     }
     // Permission denied
-  } else if (result == ContentSetting::CONTENT_SETTING_BLOCK) {
+  } else if (decision.overall_decision ==
+             permissions::PermissionDecision::kDeny) {
     Profile* profile =
         static_cast<Profile*>(web_contents_->GetBrowserContext());
     profile->GetPrefs()->SetBoolean(kAskEnableWidvine, !get_dont_ask_again());
-    // Cancelled
-  } else {
-    DCHECK(result == CONTENT_SETTING_DEFAULT);
-    // Do nothing.
   }
-}
-
-void WidevinePermissionRequest::DeleteRequest() {
-  delete this;
+  // Cancelled: do nothing.
 }
 
 std::u16string WidevinePermissionRequest::GetExplanatoryMessageText() const {

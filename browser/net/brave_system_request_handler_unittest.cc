@@ -19,8 +19,9 @@ TEST(BraveSystemRequestHandlerTest, AddBraveServiceKeyHeaderForBrave) {
 
   request.url = url;
   brave::AddBraveServicesKeyHeader(&request);
-  std::string key;
-  EXPECT_TRUE(request.headers.GetHeader(kBraveServicesKeyHeader, &key));
+  std::string key =
+      request.headers.GetHeader(kBraveServicesKeyHeader).value_or(std::string());
+  EXPECT_TRUE(request.headers.GetHeader(kBraveServicesKeyHeader).has_value());
   EXPECT_EQ(key, BraveServicesKeyForTesting());
 }
 
@@ -30,8 +31,9 @@ TEST(BraveSystemRequestHandlerTest, AddBraveServiceKeyHeaderForBraveSoftware) {
 
   request.url = url;
   brave::AddBraveServicesKeyHeader(&request);
-  std::string key;
-  EXPECT_TRUE(request.headers.GetHeader(kBraveServicesKeyHeader, &key));
+  std::string key =
+      request.headers.GetHeader(kBraveServicesKeyHeader).value_or(std::string());
+  EXPECT_TRUE(request.headers.GetHeader(kBraveServicesKeyHeader).has_value());
   EXPECT_EQ(key, BraveServicesKeyForTesting());
 }
 
@@ -41,8 +43,9 @@ TEST(BraveSystemRequestHandlerTest, DontAddBraveServiceKeyHeader) {
 
   request.url = url;
   brave::AddBraveServicesKeyHeader(&request);
-  std::string key;
-  EXPECT_FALSE(request.headers.GetHeader(kBraveServicesKeyHeader, &key));
+  std::string key =
+      request.headers.GetHeader(kBraveServicesKeyHeader).value_or(std::string());
+  EXPECT_FALSE(request.headers.GetHeader(kBraveServicesKeyHeader).has_value());
 }
 
 }  // namespace brave

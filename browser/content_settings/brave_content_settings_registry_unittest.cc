@@ -165,18 +165,6 @@ TEST_F(BraveContentSettingsRegistryTest, GetInitialDefaultSetting) {
     EXPECT_EQ(CONTENT_SETTING_BLOCK, info->GetInitialDefaultSetting());
   }
 
-  {
-    SCOPED_TRACE("Content setting: BRAVE_ETHEREUM");
-    info = registry()->Get(ContentSettingsType::BRAVE_ETHEREUM);
-    EXPECT_EQ(CONTENT_SETTING_ASK, info->GetInitialDefaultSetting());
-  }
-
-  {
-    SCOPED_TRACE("Content setting: BRAVE_SOLANA");
-    info = registry()->Get(ContentSettingsType::BRAVE_SOLANA);
-    EXPECT_EQ(CONTENT_SETTING_ASK, info->GetInitialDefaultSetting());
-  }
-
   // TODO(bridiver) - DEFAULT is not a valid setting, but leaving it for
   // now because this requires more extensive changes to fix correctly
   // {

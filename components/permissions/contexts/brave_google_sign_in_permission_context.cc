@@ -10,16 +10,15 @@
 #include "components/content_settings/browser/page_specific_content_settings.h"
 #include "components/content_settings/core/common/content_settings_types.h"
 #include "components/permissions/permission_request_id.h"
-#include "services/network/public/mojom/permissions_policy/permissions_policy_feature.mojom.h"
 
 namespace permissions {
 
 BraveGoogleSignInPermissionContext::BraveGoogleSignInPermissionContext(
     content::BrowserContext* browser_context)
-    : PermissionContextBase(browser_context,
-                            ContentSettingsType::BRAVE_GOOGLE_SIGN_IN,
-                            network::mojom::PermissionsPolicyFeature::kNotFound) {
-}
+    : ContentSettingPermissionContextBase(
+          browser_context,
+          ContentSettingsType::BRAVE_GOOGLE_SIGN_IN,
+          network::mojom::PermissionsPolicyFeature::kNotFound) {}
 
 BraveGoogleSignInPermissionContext::~BraveGoogleSignInPermissionContext() =
     default;

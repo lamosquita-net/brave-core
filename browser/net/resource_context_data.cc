@@ -31,8 +31,10 @@ ResourceContextData::~ResourceContextData() = default;
 void ResourceContextData::StartProxying(
     content::BrowserContext* browser_context,
     int render_process_id,
-    int frame_tree_node_id,
+    content::FrameTreeNodeId frame_tree_node_id,
     network::URLLoaderFactoryBuilder& factory_builder,
+    content::ContentBrowserClient::URLLoaderFactoryType url_loader_factory_type,
+    std::optional<int64_t> navigation_id,
     scoped_refptr<base::SequencedTaskRunner> navigation_response_task_runner) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
 
@@ -50,7 +52,8 @@ void ResourceContextData::StartProxying(
 
   auto proxy = std::make_unique<BraveProxyingURLLoaderFactory>(
       *self->request_handler_, browser_context, render_process_id,
-      frame_tree_node_id, factory_builder, self->request_id_generator_,
+      frame_tree_node_id, factory_builder, url_loader_factory_type,
+      navigation_id, self->request_id_generator_,
       base::BindOnce(&ResourceContextData::RemoveProxy,
                      self->weak_factory_.GetWeakPtr()),
       navigation_response_task_runner);
@@ -69,7 +72,7 @@ BraveProxyingWebSocket* ResourceContextData::StartProxyingWebSocket(
     content::BrowserContext* browser_context,
     int render_process_id,
     int frame_id,
-    int frame_tree_node_id,
+    content::FrameTreeNodeId frame_tree_node_id,
     const url::Origin& origin) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
 

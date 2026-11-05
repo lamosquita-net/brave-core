@@ -5,13 +5,13 @@
 
 #include "net/base/lookup_string_in_fixed_set.h"
 
+#include <optional>
 #include <string_view>
 
 #define LookupSuffixInReversedSet LookupSuffixInReversedSet_ChromiumImpl
 #include "src/net/base/lookup_string_in_fixed_set.cc"
 #undef LookupSuffixInReversedSet
 
-#include "base/strings/string_util.h"
 #include "brave/net/decentralized_dns/constants.h"
 
 namespace net {
@@ -23,38 +23,50 @@ namespace net {
 // in the run-time. This function is the only function which looks up entries
 // in the public suffix list, so we add our special case handling here to avoid
 // patching effective_tld_names.gperf directly.
-int LookupSuffixInReversedSet(base::span<const uint8_t> graph,
-                              bool include_private,
-                              std::string_view host,
-                              size_t* suffix_length) {
+namespace {
+
+// Matches `host` against the Brave `domain` suffix (which starts with a dot)
+// and returns the suffix without the leading dot, as the DAFSA lookup would.
+std::optional<SuffixMatch> MatchBraveSuffix(std::string_view host,
+                                            std::string_view domain) {
+  if (!host.ends_with(domain)) {
+    return std::nullopt;
+  }
+  return SuffixMatch{.tags = DomainRuleTags(),
+                     .suffix = host.substr(host.size() - (domain.size() - 1))};
+}
+
+}  // namespace
+
+std::optional<SuffixMatch> LookupSuffixInReversedSet(
+    base::span<const uint8_t> graph,
+    bool include_private,
+    std::string_view host) {
   // Recognize .crypto(and other ud suffixes) and .eth as known TLDs for
   // decentralized DNS support. With this, when users type *.crypto or *.eth in
   // omnibox, it will be parsed as OmniboxInputType::URL input type instead of
   // OmniboxInputType::UNKNOWN, The first entry in the autocomplete list will be
   // URL instead of search.
   for (auto* unstoppable_domain : decentralized_dns::kUnstoppableDomains) {
-    if (base::EndsWith(host, unstoppable_domain)) {
-      *suffix_length = strlen(unstoppable_domain) - 1;
-      return kDafsaFound;
+    if (auto match = MatchBraveSuffix(host, unstoppable_domain)) {
+      return match;
     }
   }
-  if (base::EndsWith(host, decentralized_dns::kEthDomain)) {
-    *suffix_length = strlen(decentralized_dns::kEthDomain) - 1;
-    return kDafsaFound;
+  if (auto match = MatchBraveSuffix(host, decentralized_dns::kEthDomain)) {
+    return match;
   }
-  if (base::EndsWith(host, decentralized_dns::kSolDomain)) {
-    *suffix_length = strlen(decentralized_dns::kSolDomain) - 1;
-    return kDafsaFound;
+  if (auto match = MatchBraveSuffix(host, decentralized_dns::kSolDomain)) {
+    return match;
   }
 
-  if (include_private &&
-      base::EndsWith(host, decentralized_dns::kDNSForEthDomain)) {
-    *suffix_length = strlen(decentralized_dns::kDNSForEthDomain) - 1;
-    return kDafsaFound;
+  if (include_private) {
+    if (auto match =
+            MatchBraveSuffix(host, decentralized_dns::kDNSForEthDomain)) {
+      return match;
+    }
   }
 
-  return LookupSuffixInReversedSet_ChromiumImpl(graph, include_private, host,
-                                                suffix_length);
+  return LookupSuffixInReversedSet_ChromiumImpl(graph, include_private, host);
 }
 
 }  // namespace net

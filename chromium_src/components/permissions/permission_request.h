@@ -8,8 +8,15 @@
 
 #include <optional>
 
+#include "base/memory/safe_ref.h"
 #include "base/memory/weak_ptr.h"
 #include "base/time/time.h"
+
+// This header has to be pre-emptively included as it eventually causes the
+// inclusion of components/permissions/permission_prompt.h, where
+// `PermissionRequest` is used as a forward declaration, but would otherwise be
+// replaced with `PermissionRequest_ChromiumImpl` (as in Brave 1.98).
+#include "components/permissions/permission_hats_trigger_helper.h"
 
 #define PermissionRequest PermissionRequest_ChromiumImpl
 #define IsDuplicateOf IsDuplicateOf_ChromiumImpl
@@ -21,16 +28,11 @@ namespace permissions {
 
 class PermissionRequest : public PermissionRequest_ChromiumImpl {
  public:
-  PermissionRequest(const GURL& requesting_origin,
-                    RequestType request_type,
-                    bool has_gesture,
-                    PermissionDecidedCallback permission_decided_callback,
-                    base::OnceClosure delete_callback);
-
-  PermissionRequest(PermissionRequestData request_data,
-                    PermissionDecidedCallback permission_decided_callback,
-                    base::OnceClosure delete_callback,
-                    bool uses_automatic_embargo);
+  PermissionRequest(
+      std::unique_ptr<PermissionRequestData> request_data,
+      PermissionDecidedCallback permission_decided_callback,
+      base::OnceClosure request_finished_callback = base::DoNothing(),
+      bool uses_automatic_embargo = true);
 
   PermissionRequest(const PermissionRequest&) = delete;
   PermissionRequest& operator=(const PermissionRequest&) = delete;
@@ -61,8 +63,8 @@ class PermissionRequest : public PermissionRequest_ChromiumImpl {
   // will affect this method's only parameter too, which will break subclasses.
   virtual bool IsDuplicateOf(PermissionRequest* other_request) const;
 
-  // Returns a weak pointer to this instance.
-  base::WeakPtr<PermissionRequest> GetWeakPtr();
+  // Returns a safe reference to this instance.
+  base::SafeRef<PermissionRequest> GetSafeRef();
 
  private:
   std::optional<base::TimeDelta> lifetime_;

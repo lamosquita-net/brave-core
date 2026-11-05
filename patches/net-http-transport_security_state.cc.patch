@@ -1,16 +1,8 @@
 diff --git a/net/http/transport_security_state.cc b/net/http/transport_security_state.cc
-index 141635e65b1c4e777491851fc0392c7737d8ebcd..9ee233b362130fd514811ed27258dc19e6b47437 100644
+index a154c324378f42a3bc1fa88ba31741b6f7be6982..139d2429a8a7c34bf2de4deef67b3781b88ddbd3 100644
 --- a/net/http/transport_security_state.cc
 +++ b/net/http/transport_security_state.cc
-@@ -40,6 +40,7 @@
- #include "net/base/features.h"
- #include "net/base/hash_value.h"
- #include "net/base/host_port_pair.h"
-+#include "net/base/url_util.h"
- #include "net/cert/ct_policy_status.h"
- #include "net/cert/x509_certificate.h"
- #include "net/dns/dns_names_util.h"
-@@ -248,6 +249,7 @@ TransportSecurityState::TransportSecurityState(
+@@ -241,6 +241,7 @@ TransportSecurityState::TransportSecurityState(
  // others don't end up with pins that cannot be easily updated.
  #if !BUILDFLAG(GOOGLE_CHROME_BRANDING) || BUILDFLAG(IS_IOS)
    enable_static_pins_ = false;
@@ -18,23 +10,3 @@ index 141635e65b1c4e777491851fc0392c7737d8ebcd..9ee233b362130fd514811ed27258dc19
  #endif
    // Check that there no invalid entries in the static HSTS bypass list.
    for (auto& host : hsts_host_bypass_list) {
-@@ -284,10 +286,16 @@ SSLUpgradeDecision TransportSecurityState::GetSSLUpgradeDecision(
-       NetLogEventType::TRANSPORT_SECURITY_STATE_SHOULD_UPGRADE_TO_SSL,
-       [&] { return NetLogUpgradeToSSLParam(host); });
-   STSState sts_state;
-+  // Check the dynamic list first (removing the entry if expired).
-   if (GetDynamicSTSState(host, &sts_state)) {
--    if (sts_state.ShouldUpgradeToSSL()) {
--      // If the static state also requires an upgrade, the dynamic state didn't
--      // need to be used in the decision.
-+    // [*.]localhost hosts now ignore Strict-Transport-Security response
-+    // headers, but an entry may have been stored before this restriction
-+    // was introduced (crbug.com/41251622).
-+    if (sts_state.ShouldUpgradeToSSL() &&
-+        !(net::IsLocalHostname(host) &&
-+          base::FeatureList::IsEnabled(features::kIgnoreHSTSForLocalhost))) {
-+      // If the static state also requires an upgrade, the dynamic state
-+      // didn't need to be used in the decision.
-       STSState static_sts_state;
-       if (GetStaticSTSState(host, &static_sts_state) &&
-           static_sts_state.ShouldUpgradeToSSL()) {

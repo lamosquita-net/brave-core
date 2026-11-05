@@ -27,7 +27,7 @@ BraveProxyingWebSocket::BraveProxyingWebSocket(
     mojo::PendingRemote<network::mojom::WebSocketHandshakeClient>
         handshake_client,
     int process_id,
-    int frame_tree_node_id,
+    content::FrameTreeNodeId frame_tree_node_id,
     content::BrowserContext* browser_context,
     scoped_refptr<RequestIDGenerator> request_id_generator,
     BraveRequestHandler& handler,
@@ -51,7 +51,7 @@ BraveProxyingWebSocket::~BraveProxyingWebSocket() {
   }
   if (on_before_send_headers_callback_) {
     std::move(on_before_send_headers_callback_)
-        .Run(net::ERR_ABORTED, std::nullopt);
+        .Run(net::ERR_ABORTED, std::nullopt, std::nullopt);
   }
   if (on_headers_received_callback_) {
     std::move(on_headers_received_callback_)
@@ -73,11 +73,19 @@ BraveProxyingWebSocket* BraveProxyingWebSocket::ProxyWebSocket(
   return ResourceContextData::StartProxyingWebSocket(
       std::move(factory), url, site_for_cookies, user_agent,
       std::move(handshake_client), frame->GetProcess()->GetBrowserContext(),
-      frame->GetProcess()->GetID(), frame->GetRoutingID(),
+      frame->GetProcess()->GetDeprecatedID(), frame->GetRoutingID(),
       frame->GetFrameTreeNodeId(), frame->GetLastCommittedOrigin());
 }
 
-void BraveProxyingWebSocket::Start() {
+void BraveProxyingWebSocket::Start(
+    mojo::PendingRemote<network::mojom::TrustedHeaderClient>
+        trusted_header_client) {
+  if (trusted_header_client) {
+    // Bind it before OnBeforeRequestComplete() so its header changes are
+    // merged into request_ before Brave's own handling (as in 1.98).
+    proxy_trusted_header_client_.Bind(std::move(trusted_header_client));
+  }
+
   request_id_ = request_id_generator_->Generate();
   // If the header client will be used, we start the request immediately, and
   // OnBeforeSendHeaders and OnSendHeaders will be handled there. Otherwise,
@@ -218,6 +226,7 @@ void BraveProxyingWebSocket::OnAuthRequired(
 }
 
 void BraveProxyingWebSocket::OnBeforeSendHeaders(
+    const GURL& request_url,
     const net::HttpRequestHeaders& headers,
     OnBeforeSendHeadersCallback callback) {
   DCHECK(proxy_has_extra_headers());
@@ -230,10 +239,12 @@ void BraveProxyingWebSocket::OnBeforeSendHeaders(
 void BraveProxyingWebSocket::OnHeadersReceived(
     const std::string& headers,
     const ::net::IPEndPoint& remote_endpoint,
+    const std::optional<net::SSLInfo>& ssl_info,
     OnHeadersReceivedCallback callback) {
   DCHECK(proxy_has_extra_headers());
 
   on_headers_received_callback_ = std::move(callback);
+  ssl_info_ = ssl_info;
   response_.headers = base::MakeRefCounted<net::HttpResponseHeaders>(headers);
 
   ContinueToHeadersReceived();
@@ -250,7 +261,7 @@ void BraveProxyingWebSocket::OnBeforeRequestComplete(int error_code) {
 
   if (proxy_has_extra_headers()) {
     proxy_trusted_header_client_->OnBeforeSendHeaders(
-        request_.headers,
+        request_.url, request_.headers,
         base::BindOnce(
             &BraveProxyingWebSocket::OnBeforeSendHeadersCompleteFromProxy,
             weak_factory_.GetWeakPtr()));
@@ -262,7 +273,8 @@ void BraveProxyingWebSocket::OnBeforeRequestComplete(int error_code) {
 
 void BraveProxyingWebSocket::OnBeforeSendHeadersCompleteFromProxy(
     int error_code,
-    const std::optional<net::HttpRequestHeaders>& headers) {
+    const std::optional<net::HttpRequestHeaders>& headers,
+    std::optional<base::DictValue> /*extended_net_log_events*/) {
   DCHECK(proxy_has_extra_headers() ||
          !receiver_as_handshake_client_.is_bound());
   if (error_code != net::OK) {
@@ -310,7 +322,8 @@ void BraveProxyingWebSocket::OnBeforeSendHeadersComplete(int error_code) {
   if (on_before_send_headers_callback_)
     std::move(on_before_send_headers_callback_)
         .Run(error_code,
-             std::optional<net::HttpRequestHeaders>(request_.headers));
+             std::optional<net::HttpRequestHeaders>(request_.headers),
+             std::nullopt);
 
   if (!proxy_has_extra_headers())
     ContinueToStartRequest(error_code);
@@ -379,8 +392,7 @@ void BraveProxyingWebSocket::OnHeadersReceivedComplete(int error_code) {
 
   if (proxy_has_extra_headers()) {
     proxy_trusted_header_client_->OnHeadersReceived(
-        headers,
-        remote_endpoint_,
+        headers, remote_endpoint_, ssl_info_,
         base::BindOnce(
             &BraveProxyingWebSocket::OnHeadersReceivedCompleteFromProxy,
             weak_factory_.GetWeakPtr()));

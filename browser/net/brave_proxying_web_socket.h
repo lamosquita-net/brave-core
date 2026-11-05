@@ -16,12 +16,15 @@
 #include "base/memory/raw_ref.h"
 #include "base/memory/ref_counted.h"
 #include "base/memory/weak_ptr.h"
+#include "base/values.h"
 #include "brave/browser/net/resource_context_data.h"
 #include "brave/browser/net/url_context.h"
 #include "content/public/browser/content_browser_client.h"
 #include "mojo/public/cpp/bindings/pending_receiver.h"
+#include "mojo/public/cpp/bindings/pending_remote.h"
 #include "mojo/public/cpp/bindings/receiver.h"
 #include "mojo/public/cpp/bindings/remote.h"
+#include "net/ssl/ssl_info.h"
 #include "services/network/public/cpp/resource_request.h"
 #include "services/network/public/mojom/ip_endpoint.mojom.h"
 #include "services/network/public/mojom/network_context.mojom.h"
@@ -52,7 +55,7 @@ class BraveProxyingWebSocket
       mojo::PendingRemote<network::mojom::WebSocketHandshakeClient>
           handshake_client,
       int process_id,
-      int frame_tree_node_id,
+      content::FrameTreeNodeId frame_tree_node_id,
       content::BrowserContext* browser_context,
       scoped_refptr<RequestIDGenerator> request_id_generator,
       BraveRequestHandler& handler,
@@ -70,7 +73,10 @@ class BraveProxyingWebSocket
       mojo::PendingRemote<network::mojom::WebSocketHandshakeClient>
           handshake_client);
 
-  void Start();
+  // `trusted_header_client` is the downstream header client from the 156
+  // WebSocketOptions when no other proxy sits behind this one.
+  void Start(mojo::PendingRemote<network::mojom::TrustedHeaderClient>
+                 trusted_header_client = mojo::NullRemote());
 
   content::ContentBrowserClient::WebSocketFactory web_socket_factory();
   mojo::Remote<network::mojom::WebSocketHandshakeClient> handshake_client();
@@ -96,10 +102,12 @@ class BraveProxyingWebSocket
                       OnAuthRequiredCallback callback) override;
 
   // network::mojom::TrustedHeaderClient methods:
-  void OnBeforeSendHeaders(const net::HttpRequestHeaders& headers,
+  void OnBeforeSendHeaders(const GURL& request_url,
+                           const net::HttpRequestHeaders& headers,
                            OnBeforeSendHeadersCallback callback) override;
   void OnHeadersReceived(const std::string& headers,
                          const ::net::IPEndPoint& remote_endpoint,
+                         const std::optional<net::SSLInfo>& ssl_info,
                          OnHeadersReceivedCallback callback) override;
 
  private:
@@ -120,7 +128,8 @@ class BraveProxyingWebSocket
   void ContinueToHeadersReceived();
   void OnBeforeSendHeadersCompleteFromProxy(
       int error_code,
-      const std::optional<net::HttpRequestHeaders>& headers);
+      const std::optional<net::HttpRequestHeaders>& headers,
+      std::optional<base::DictValue> extended_net_log_events = std::nullopt);
   void OnHeadersReceivedCompleteFromProxy(
       int error_code,
       const std::optional<std::string>& headers,
@@ -138,7 +147,7 @@ class BraveProxyingWebSocket
   std::shared_ptr<brave::BraveRequestInfo> ctx_;
 
   const int process_id_;
-  const int frame_tree_node_id_;
+  const content::FrameTreeNodeId frame_tree_node_id_;
   content::ContentBrowserClient::WebSocketFactory factory_;
   const raw_ptr<content::BrowserContext> browser_context_;
   scoped_refptr<RequestIDGenerator> request_id_generator_;
@@ -155,6 +164,7 @@ class BraveProxyingWebSocket
   network::mojom::URLResponseHead response_;
   scoped_refptr<net::HttpResponseHeaders> override_headers_;
   net::IPEndPoint remote_endpoint_;
+  std::optional<net::SSLInfo> ssl_info_;
 
   GURL redirect_url_;
   bool is_done_ = false;

@@ -8,6 +8,7 @@
 #include <memory>
 #include <vector>
 
+#include "base/check.h"
 #include "brave/components/webcompat/webcompat_exceptions_service.h"
 #include "components/content_settings/core/browser/content_settings_rule.h"
 
@@ -42,8 +43,7 @@ RemoteListProvider::RemoteListProvider() {}
 
 std::unique_ptr<RuleIterator> RemoteListProvider::GetRuleIterator(
     ContentSettingsType content_type,
-    bool off_the_record,
-    const PartitionKey& partition_key) const {
+    bool off_the_record) const {
   auto* svc = webcompat::WebcompatExceptionsService::GetInstance();
   if (!svc) {
     return nullptr;
@@ -56,8 +56,7 @@ std::unique_ptr<Rule> RemoteListProvider::GetRule(
     const GURL& primary_url,
     const GURL& secondary_url,
     ContentSettingsType content_type,
-    bool off_the_record,
-    const PartitionKey& partition_key) const {
+    bool off_the_record) const {
   auto* svc = webcompat::WebcompatExceptionsService::GetInstance();
   if (!svc) {
     return nullptr;
@@ -77,16 +76,14 @@ bool RemoteListProvider::SetWebsiteSetting(
     const ContentSettingsPattern& primary_pattern,
     const ContentSettingsPattern& secondary_pattern,
     ContentSettingsType content_type,
-    base::Value&& value,
-    const ContentSettingConstraints& constraints,
-    const PartitionKey& partition_key) {
+    const base::Value& value,
+    const ContentSettingConstraints& constraints) {
   // RemoteListProvider is read-only.
   return false;
 }
 
 void RemoteListProvider::ClearAllContentSettingsRules(
-    ContentSettingsType content_type,
-    const PartitionKey& partition_key) {
+    ContentSettingsType content_type) {
   // RemoteListProvider is read-only.
 }
 

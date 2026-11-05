@@ -19,7 +19,6 @@
 #include "brave/browser/permissions/mock_permission_lifetime_prompt_factory.h"
 #include "brave/browser/permissions/permission_lifetime_manager_factory.h"
 #include "brave/components/ephemeral_storage/ephemeral_storage_service.h"
-#include "brave/components/permissions/brave_permission_manager.h"
 #include "brave/components/permissions/permission_lifetime_pref_names.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/permissions/permission_manager_factory.h"
@@ -73,8 +72,6 @@ std::string GetContentSettingTypeString(ContentSettingsType type) {
     break;
 
     TYPE_CASE(ContentSettingsType::GEOLOCATION)
-    TYPE_CASE(ContentSettingsType::BRAVE_ETHEREUM)
-    TYPE_CASE(ContentSettingsType::BRAVE_SOLANA)
 
 #undef TYPE_CASE
     default:
@@ -129,9 +126,8 @@ class PermissionLifetimeManagerBrowserTest : public InProcessBrowserTest {
         browser()->tab_strip_model()->GetActiveWebContents());
   }
 
-  BravePermissionManager* permission_manager() {
-    return static_cast<permissions::BravePermissionManager*>(
-        PermissionManagerFactory::GetForProfile(browser()->profile()));
+  PermissionManager* permission_manager() {
+    return PermissionManagerFactory::GetForProfile(browser()->profile());
   }
 
   HostContentSettingsMap* host_content_settings_map() {

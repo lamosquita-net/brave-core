@@ -17,6 +17,7 @@
 #include "base/supports_user_data.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/content_browser_client.h"
+#include "content/public/browser/frame_tree_node_id.h"
 #include "mojo/public/cpp/bindings/pending_receiver.h"
 #include "mojo/public/cpp/bindings/pending_remote.h"
 #include "services/network/public/mojom/url_loader_factory.mojom.h"
@@ -63,8 +64,11 @@ class ResourceContextData : public base::SupportsUserData::Data {
   static void StartProxying(
       content::BrowserContext* browser_context,
       int render_process_id,
-      int frame_tree_node_id,
+      content::FrameTreeNodeId frame_tree_node_id,
       network::URLLoaderFactoryBuilder& factory_builder,
+      content::ContentBrowserClient::URLLoaderFactoryType
+          url_loader_factory_type,
+      std::optional<int64_t> navigation_id,
       scoped_refptr<base::SequencedTaskRunner> navigation_response_task_runner);
 
   static BraveProxyingWebSocket* StartProxyingWebSocket(
@@ -77,7 +81,7 @@ class ResourceContextData : public base::SupportsUserData::Data {
       content::BrowserContext* browser_context,
       int render_process_id,
       int frame_id,
-      int frame_tree_node_id,
+      content::FrameTreeNodeId frame_tree_node_id,
       const url::Origin& origin);
 
   void RemoveProxy(BraveProxyingURLLoaderFactory* proxy);

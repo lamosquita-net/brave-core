@@ -123,7 +123,7 @@ void BraveShieldsWebContentsObserver::BindBraveShieldsHost(
 // static
 void BraveShieldsWebContentsObserver::DispatchBlockedEvent(
     const GURL& request_url,
-    int frame_tree_node_id,
+    content::FrameTreeNodeId frame_tree_node_id,
     const std::string& block_type) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
 
@@ -156,7 +156,7 @@ void BraveShieldsWebContentsObserver::DispatchBlockedEvent(
     }
   }
   brave_perf_predictor::PerfPredictorTabHelper::DispatchBlockedEvent(
-      request_url.spec(), frame_tree_node_id);
+      request_url.spec(), frame_tree_node_id.value());
 }
 
 #if !BUILDFLAG(IS_ANDROID)
@@ -200,7 +200,7 @@ void BraveShieldsWebContentsObserver::OnJavaScriptAllowedOnce(
     const std::u16string& details) {
 #if !BUILDFLAG(IS_ANDROID)
   WebContents* web_contents =
-      WebContents::FromRenderFrameHost(receivers_.GetCurrentTargetFrame());
+      WebContents::FromRenderFrameHost(&receivers_.CurrentTargetFrame());
   if (!web_contents) {
     return;
   }
@@ -212,7 +212,7 @@ void BraveShieldsWebContentsObserver::OnJavaScriptAllowedOnce(
 void BraveShieldsWebContentsObserver::OnJavaScriptBlocked(
     const std::u16string& details) {
   WebContents* web_contents =
-      WebContents::FromRenderFrameHost(receivers_.GetCurrentTargetFrame());
+      WebContents::FromRenderFrameHost(&receivers_.CurrentTargetFrame());
   if (!web_contents) {
     return;
   }

@@ -5,16 +5,18 @@
 
 #include "brave/components/debounce/content/browser/debounce_navigation_throttle.h"
 
-#include <algorithm>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "base/check.h"
 #include "base/functional/bind.h"
+#include "base/logging.h"
 #include "base/memory/weak_ptr.h"
 #include "base/task/sequenced_task_runner.h"
 #include "brave/components/debounce/core/browser/debounce_service.h"
+#include "content/public/browser/navigation_throttle_registry.h"
 #include "components/user_prefs/user_prefs.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/navigation_entry.h"
@@ -50,7 +52,7 @@ class DebounceTabHelper
   DebounceTabHelper& operator=(const DebounceTabHelper&) = delete;
 
   void AddToRedirectChain(const GURL& url) {
-    redirects_.push_back(url.GetHost());
+    redirects_.push_back(std::string(url.host()));
   }
   void ClearRedirectChain() { redirects_.clear(); }
   bool IsInRedirectChain(const GURL& url) {
@@ -85,29 +87,28 @@ void ClearRedirectChain(NavigationHandle* navigation_handle) {
 }  // namespace
 
 // static
-std::unique_ptr<DebounceNavigationThrottle>
-DebounceNavigationThrottle::MaybeCreateThrottleFor(
-    NavigationHandle* navigation_handle,
+void DebounceNavigationThrottle::MaybeCreateAndAdd(
+    content::NavigationThrottleRegistry& registry,
     DebounceService* debounce_service) {
   // If debouncing is disabled in brave://flags, debounce service will
   // never be created (will be null) so we won't create the throttle
   // either. Caller must nullcheck this.
   if (!debounce_service) {
-    return nullptr;
+    return;
   }
 
   if (!debounce_service->IsEnabled()) {
-    return nullptr;
+    return;
   }
 
-  return std::make_unique<DebounceNavigationThrottle>(navigation_handle,
-                                                      *debounce_service);
+  registry.AddThrottle(std::make_unique<DebounceNavigationThrottle>(
+      registry, *debounce_service));
 }
 
 DebounceNavigationThrottle::DebounceNavigationThrottle(
-    NavigationHandle* handle,
+    content::NavigationThrottleRegistry& registry,
     DebounceService& debounce_service)
-    : NavigationThrottle(handle), debounce_service_(debounce_service) {}
+    : NavigationThrottle(registry), debounce_service_(debounce_service) {}
 
 DebounceNavigationThrottle::~DebounceNavigationThrottle() = default;
 

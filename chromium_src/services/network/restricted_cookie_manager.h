@@ -19,10 +19,12 @@
   net::CookieOptions MakeOptionsForSet(                               \
       mojom::RestrictedCookieManagerRole role, const GURL& url,       \
       const net::SiteForCookies& site_for_cookies,                    \
+      const url::Origin& top_frame_origin,                            \
       const CookieSettings& cookie_settings) const;                   \
   net::CookieOptions MakeOptionsForGet(                               \
       mojom::RestrictedCookieManagerRole role, const GURL& url,       \
       const net::SiteForCookies& site_for_cookies,                    \
+      const url::Origin& top_frame_origin,                            \
       const CookieSettings& cookie_settings) const;                   \
   void RemoveChangeListener
 

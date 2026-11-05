@@ -9,6 +9,23 @@
 
 #define PermissionUtil PermissionUtil_ChromiumImpl
 
+// Since we don't do UMA just reuse an existing UMA type instead of adding one.
+// In 156 the UMA request type mapping moved from permission_uma_util.cc here.
+#define BRAVE_GET_UMA_VALUE_FOR_REQUEST_TYPE         \
+  case RequestType::kWidevine:                       \
+  case RequestType::kBraveGoogleSignInPermission:    \
+  case RequestType::kBraveLocalhostAccessPermission: \
+    return RequestTypeForUma::PERMISSION_VR;
+
+// These requests may be batched together, so we must handle them explicitly as
+// GetUmaValueForMultipleRequests expects only a few specific request types to
+// be batched.
+#define BRAVE_GET_UMA_VALUE_FOR_REQUESTS                               \
+  if (first_request >= RequestType::kWidevine &&                       \
+      first_request <= RequestType::kBraveLocalhostAccessPermission) { \
+    return GetUmaValueForRequestType(first_request);                   \
+  }
+
 #define PERMISSION_UTIL_PERMISSION_TYPE_TO_CONTENT_SETTINGS_TYPE \
   case PermissionType::BRAVE_ADS:                                \
     return ContentSettingsType::BRAVE_ADS;                       \
@@ -28,10 +45,6 @@
     return ContentSettingsType::BRAVE_COOKIES;                   \
   case PermissionType::BRAVE_SPEEDREADER:                        \
     return ContentSettingsType::BRAVE_SPEEDREADER;               \
-  case PermissionType::BRAVE_ETHEREUM:                           \
-    return ContentSettingsType::BRAVE_ETHEREUM;                  \
-  case PermissionType::BRAVE_SOLANA:                             \
-    return ContentSettingsType::BRAVE_SOLANA;                    \
   case PermissionType::BRAVE_GOOGLE_SIGN_IN:                     \
     return ContentSettingsType::BRAVE_GOOGLE_SIGN_IN;            \
   case PermissionType::BRAVE_LOCALHOST_ACCESS:                   \
@@ -39,6 +52,8 @@
 
 #include "src/components/permissions/permission_util.cc"
 #undef PermissionUtil
+#undef BRAVE_GET_UMA_VALUE_FOR_REQUESTS
+#undef BRAVE_GET_UMA_VALUE_FOR_REQUEST_TYPE
 #undef PERMISSION_UTIL_PERMISSION_TYPE_TO_CONTENT_SETTINGS_TYPE
 
 namespace permissions {
@@ -47,10 +62,6 @@ namespace permissions {
 std::string PermissionUtil::GetPermissionString(
     ContentSettingsType content_type) {
   switch (content_type) {
-    case ContentSettingsType::BRAVE_ETHEREUM:
-      return "BraveEthereum";
-    case ContentSettingsType::BRAVE_SOLANA:
-      return "BraveSolana";
     case ContentSettingsType::BRAVE_GOOGLE_SIGN_IN:
       return "BraveGoogleSignInPermission";
     case ContentSettingsType::BRAVE_LOCALHOST_ACCESS:
@@ -63,11 +74,6 @@ std::string PermissionUtil::GetPermissionString(
 // static
 bool PermissionUtil::GetPermissionType(ContentSettingsType type,
                                        blink::PermissionType* out) {
-  if (type == ContentSettingsType::BRAVE_ETHEREUM ||
-      type == ContentSettingsType::BRAVE_SOLANA) {
-    *out = PermissionType::WINDOW_MANAGEMENT;
-    return true;
-  }
   if (type == ContentSettingsType::BRAVE_GOOGLE_SIGN_IN) {
     *out = PermissionType::BRAVE_GOOGLE_SIGN_IN;
     return true;
@@ -83,8 +89,6 @@ bool PermissionUtil::GetPermissionType(ContentSettingsType type,
 // static
 bool PermissionUtil::IsPermission(ContentSettingsType type) {
   switch (type) {
-    case ContentSettingsType::BRAVE_ETHEREUM:
-    case ContentSettingsType::BRAVE_SOLANA:
     case ContentSettingsType::BRAVE_GOOGLE_SIGN_IN:
     case ContentSettingsType::BRAVE_LOCALHOST_ACCESS:
       return true;
@@ -93,7 +97,7 @@ bool PermissionUtil::IsPermission(ContentSettingsType type) {
   }
 }
 
-PermissionType PermissionUtil::ContentSettingTypeToPermissionType(
+PermissionType PermissionUtil::ContentSettingsTypeToPermissionType(
     ContentSettingsType permission) {
   switch (permission) {
     case ContentSettingsType::BRAVE_ADS:
@@ -114,30 +118,14 @@ PermissionType PermissionUtil::ContentSettingTypeToPermissionType(
       return PermissionType::BRAVE_COOKIES;
     case ContentSettingsType::BRAVE_SPEEDREADER:
       return PermissionType::BRAVE_SPEEDREADER;
-    case ContentSettingsType::BRAVE_ETHEREUM:
-      return PermissionType::BRAVE_ETHEREUM;
-    case ContentSettingsType::BRAVE_SOLANA:
-      return PermissionType::BRAVE_SOLANA;
     case ContentSettingsType::BRAVE_GOOGLE_SIGN_IN:
       return PermissionType::BRAVE_GOOGLE_SIGN_IN;
     case ContentSettingsType::BRAVE_LOCALHOST_ACCESS:
       return PermissionType::BRAVE_LOCALHOST_ACCESS;
     default:
-      return PermissionUtil_ChromiumImpl::ContentSettingTypeToPermissionType(
+      return PermissionUtil_ChromiumImpl::ContentSettingsTypeToPermissionType(
           permission);
   }
-}
-
-GURL PermissionUtil::GetCanonicalOrigin(ContentSettingsType permission,
-                                        const GURL& requesting_origin,
-                                        const GURL& embedding_origin) {
-  // Use requesting_origin which will have ethereum or solana address info.
-  if (permission == ContentSettingsType::BRAVE_ETHEREUM ||
-      permission == ContentSettingsType::BRAVE_SOLANA)
-    return requesting_origin;
-
-  return PermissionUtil_ChromiumImpl::GetCanonicalOrigin(
-      permission, requesting_origin, embedding_origin);
 }
 
 }  // namespace permissions

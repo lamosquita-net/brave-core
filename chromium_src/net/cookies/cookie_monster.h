@@ -7,6 +7,7 @@
 #define BRAVE_CHROMIUM_SRC_NET_COOKIES_COOKIE_MONSTER_H_
 
 #define CookieMonster ChromiumCookieMonster
+#include <memory>
 #include <optional>
 
 #include "src/net/cookies/cookie_monster.h"  // IWYU pragma: export
@@ -17,11 +18,12 @@ namespace net {
 class NET_EXPORT CookieMonster : public ChromiumCookieMonster {
  public:
   // These constructors and destructors must be kept in sync with those in
-  // Chromium's CookieMonster.
-  CookieMonster(scoped_refptr<PersistentCookieStore> store, NetLog* net_log);
+  // Chromium's CookieMonster. In 156 the last_access_threshold constructor
+  // takes a PassKey and is only used by CreateForTesting(), so it is not
+  // mirrored here.
   CookieMonster(scoped_refptr<PersistentCookieStore> store,
-                base::TimeDelta last_access_threshold,
-                NetLog* net_log);
+                NetLog* net_log,
+                std::unique_ptr<PrefDelegate> pref_delegate = nullptr);
   ~CookieMonster() override;
 
   // CookieStore implementation.
@@ -36,7 +38,7 @@ class NET_EXPORT CookieMonster : public ChromiumCookieMonster {
   void DeleteAllMatchingInfoAsync(CookieDeletionInfo delete_info,
                                   DeleteCallback callback) override;
   void DeleteSessionCookiesAsync(DeleteCallback) override;
-  void SetCookieableSchemes(const std::vector<std::string>& schemes,
+  void SetCookieableSchemes(std::vector<std::string> schemes,
                             SetCookieableSchemesCallback callback) override;
 
   void SetCanonicalCookieAsync(
@@ -44,8 +46,7 @@ class NET_EXPORT CookieMonster : public ChromiumCookieMonster {
       const GURL& source_url,
       const CookieOptions& options,
       SetCookiesCallback callback,
-      std::optional<CookieAccessResult> cookie_access_result =
-          std::nullopt) override;
+      std::optional<CookieAccessResult> cookie_access_result) override;
   void GetCookieListWithOptionsAsync(
       const GURL& url,
       const CookieOptions& options,

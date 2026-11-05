@@ -8,6 +8,7 @@
 
 #include <map>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -56,7 +57,7 @@ class PermissionExpirations {
   // Remove expired permissions with expiration_time >= |current_time|.
   ExpiredPermissions RemoveExpiredPermissions(base::Time current_time);
   // Remove expired permissions with exact |domain|.
-  ExpiredPermissions RemoveExpiredPermissions(const std::string& domain);
+  ExpiredPermissions RemoveExpiredPermissions(std::string_view domain);
   // Remove expired permissions with a domain as a key.
   ExpiredPermissions RemoveAllDomainPermissions();
 

@@ -7,6 +7,7 @@
 #define BRAVE_COMPONENTS_PERMISSIONS_PERMISSION_EXPIRATION_KEY_H_
 
 #include <string>
+#include <string_view>
 
 #include "base/time/time.h"
 
@@ -16,14 +17,14 @@ namespace permissions {
 class PermissionExpirationKey {
  public:
   explicit PermissionExpirationKey(base::Time time);
-  explicit PermissionExpirationKey(std::string domain);
+  explicit PermissionExpirationKey(std::string_view domain);
   PermissionExpirationKey(const PermissionExpirationKey&);
   PermissionExpirationKey& operator=(const PermissionExpirationKey&);
   PermissionExpirationKey(PermissionExpirationKey&&) noexcept;
   PermissionExpirationKey& operator=(PermissionExpirationKey&&) noexcept;
   ~PermissionExpirationKey();
 
-  static PermissionExpirationKey FromString(const std::string& key_str);
+  static PermissionExpirationKey FromString(std::string_view key_str);
   std::string ToString() const;
 
   bool operator<(const PermissionExpirationKey&) const;

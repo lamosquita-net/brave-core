@@ -16,23 +16,13 @@ class PermissionLifetimeManager;
 
 #define PermissionContextBase PermissionContextBase_ChromiumImpl
 #define PermissionDecided virtual PermissionDecided
-#define BRAVE_PERMISSION_CONTEXT_BASE_H_              \
-  friend PermissionContextBase_BraveImpl;             \
-                                                      \
- protected:                                           \
-  base::RepeatingCallback<PermissionLifetimeManager*( \
-      content::BrowserContext*)>                      \
-      permission_lifetime_manager_factory_;
-#define CleanUpRequest virtual CleanUpRequest
+#define BRAVE_PERMISSION_CONTEXT_BASE_H_ friend PermissionContextBase_BraveImpl;
 
 #include "src/components/permissions/permission_context_base.h"  // IWYU pragma: export
 
 #undef BRAVE_PERMISSION_CONTEXT_BASE_H_
-#undef CleanUpRequest
 #undef PermissionDecided
 #undef PermissionContextBase
-
-#include <map>
 
 namespace permissions {
 
@@ -49,55 +39,12 @@ class PermissionContextBase : public PermissionContextBase_ChromiumImpl {
       const base::RepeatingCallback<
           PermissionLifetimeManager*(content::BrowserContext*)>& factory);
 
-  void DecidePermission(permissions::PermissionRequestData request_data,
-                        BrowserPermissionCallback callback) override;
-
-  bool IsPendingGroupedRequestsEmptyForTesting();
-
  private:
-  /**
-   * This class is map to one PermissionManager::RequestPermissions request,
-   * sub-requests will be kept in requests_.
-   * Chromium does not expect multiple sub-requests for a same permission type,
-   * this class is created to support tracking multiple sub-requests
-   * for each RequestPermissions request. It will clear all pending
-   * sub-requests for one RequestPermissions request after all of its
-   * sub-requests are finished.
-   */
-  class GroupedPermissionRequests {
-   public:
-    GroupedPermissionRequests();
-    ~GroupedPermissionRequests();
+  void PermissionDecided(const permissions::PermissionPromptDecision& decision,
+                         const PermissionRequestData& request_data) override;
 
-    using GroupedRequests =
-        std::vector<std::pair<std::unique_ptr<PermissionRequest>,
-                              BrowserPermissionCallback>>;
-
-    bool IsDone() const;
-    void AddRequest(std::pair<std::unique_ptr<PermissionRequest>,
-                              BrowserPermissionCallback> request);
-    BrowserPermissionCallback GetNextCallback();
-    void RequestFinished();
-
-    const GroupedRequests& Requests() const { return requests_; }
-
-   private:
-    GroupedRequests requests_;
-    size_t finished_request_count_ = 0;
-    size_t next_callback_index_ = 0;
-  };
-
-  void PermissionDecided(const PermissionRequestID& id,
-                         const GURL& requesting_origin,
-                         const GURL& embedding_origin,
-                         ContentSetting content_setting,
-                         bool is_one_time,
-                         bool is_final_decision) override;
-  void CleanUpRequest(const PermissionRequestID& id,
-                      bool embedded_permission_element_initiated) override;
-
-  std::map<std::string, std::unique_ptr<GroupedPermissionRequests>>
-      pending_grouped_requests_;
+  base::RepeatingCallback<PermissionLifetimeManager*(content::BrowserContext*)>
+      permission_lifetime_manager_factory_;
 };
 
 }  // namespace permissions

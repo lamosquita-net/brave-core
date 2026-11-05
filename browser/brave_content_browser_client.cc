@@ -16,6 +16,7 @@
 #include "base/json/json_reader.h"
 #include "base/strings/strcat.h"
 #include "base/system/sys_info.h"
+#include "brave/browser/bluetooth/brave_bluetooth_delegate.h"
 #include "brave/browser/brave_browser_features.h"
 #include "brave/browser/brave_browser_main_extra_parts.h"
 #include "brave/browser/brave_browser_process.h"
@@ -61,6 +62,7 @@
 #include "brave/grit/brave_generated_resources.h"
 #include "brave/third_party/blink/renderer/brave_farbling_constants.h"
 #include "build/build_config.h"
+#include "chrome/browser/bluetooth/chrome_bluetooth_delegate_impl_client.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/chrome_browser_interface_binders.h"
 #include "chrome/browser/chrome_content_browser_client.h"
@@ -82,8 +84,10 @@
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/browser_url_handler.h"
 #include "content/public/browser/navigation_handle.h"
+#include "content/public/browser/navigation_throttle_registry.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_process_host.h"
+#include "content/public/browser/site_instance.h"
 #include "content/public/browser/storage_partition.h"
 #include "content/public/browser/weak_document_ptr.h"
 #include "content/public/browser/web_ui_browser_interface_broker_registry.h"
@@ -98,7 +102,6 @@
 #include "net/cookies/site_for_cookies.h"
 #include "services/service_manager/public/cpp/binder_registry.h"
 #include "third_party/blink/public/common/associated_interfaces/associated_interface_registry.h"
-#include "third_party/blink/public/common/features.h"
 #include "third_party/blink/public/common/loader/url_loader_throttle.h"
 #include "third_party/blink/public/mojom/webpreferences/web_preferences.mojom.h"
 #include "third_party/widevine/cdm/buildflags.h"
@@ -465,17 +468,12 @@ uint8_t BraveContentBrowserClient::WorkerGetBraveFarblingLevel(
   return BraveFarblingLevel::BALANCED;
 }
 
-content::ContentBrowserClient::AllowWebBluetoothResult
-BraveContentBrowserClient::AllowWebBluetooth(
-    content::BrowserContext* browser_context,
-    const url::Origin& requesting_origin,
-    const url::Origin& embedding_origin) {
-  if (!base::FeatureList::IsEnabled(blink::features::kBraveWebBluetoothAPI)) {
-    return ContentBrowserClient::AllowWebBluetoothResult::
-        BLOCK_GLOBALLY_DISABLED;
+content::BluetoothDelegate* BraveContentBrowserClient::GetBluetoothDelegate() {
+  if (!bluetooth_delegate_) {
+    bluetooth_delegate_ = std::make_unique<BraveBluetoothDelegate>(
+        std::make_unique<ChromeBluetoothDelegateImplClient>());
   }
-  return ChromeContentBrowserClient::AllowWebBluetooth(
-      browser_context, requesting_origin, embedding_origin);
+  return bluetooth_delegate_.get();
 }
 
 bool BraveContentBrowserClient::CanCreateWindow(
@@ -524,9 +522,10 @@ void BraveContentBrowserClient::ExposeInterfacesToRenderer(
     content::RenderProcessHost* render_process_host) {
   ChromeContentBrowserClient::ExposeInterfacesToRenderer(
       registry, associated_registry, render_process_host);
-  registry->AddInterface(base::BindRepeating(&BindBraveSearchFallbackHost,
-                                             render_process_host->GetID()),
-                         content::GetUIThreadTaskRunner({}));
+  registry->AddInterface(
+      base::BindRepeating(&BindBraveSearchFallbackHost,
+                          render_process_host->GetDeprecatedID()),
+      content::GetUIThreadTaskRunner({}));
 }
 
 void BraveContentBrowserClient::RegisterBrowserInterfaceBindersForFrame(
@@ -567,7 +566,7 @@ void BraveContentBrowserClient::RegisterBrowserInterfaceBindersForFrame(
 bool BraveContentBrowserClient::HandleExternalProtocol(
     const GURL& url,
     content::WebContents::Getter web_contents_getter,
-    int frame_tree_node_id,
+    content::FrameTreeNodeId frame_tree_node_id,
     content::NavigationUIData* navigation_data,
     bool is_primary_main_frame,
     bool is_in_fenced_frame_tree,
@@ -576,12 +575,13 @@ bool BraveContentBrowserClient::HandleExternalProtocol(
     bool has_user_gesture,
     const std::optional<url::Origin>& initiating_origin,
     content::RenderFrameHost* initiator_document,
+    const net::IsolationInfo& isolation_info,
     mojo::PendingRemote<network::mojom::URLLoaderFactory>* out_factory) {
   return ChromeContentBrowserClient::HandleExternalProtocol(
       url, web_contents_getter, frame_tree_node_id, navigation_data,
       is_primary_main_frame, is_in_fenced_frame_tree, sandbox_flags,
       page_transition, has_user_gesture, initiating_origin, initiator_document,
-      out_factory);
+      isolation_info, out_factory);
 }
 
 void BraveContentBrowserClient::AppendExtraCommandLineSwitches(
@@ -633,7 +633,7 @@ BraveContentBrowserClient::CreateURLLoaderThrottles(
     content::BrowserContext* browser_context,
     const content::WebContents::Getter& wc_getter,
     content::NavigationUIData* navigation_ui_data,
-    int frame_tree_node_id,
+    content::FrameTreeNodeId frame_tree_node_id,
     std::optional<int64_t> navigation_id) {
   auto result = ChromeContentBrowserClient::CreateURLLoaderThrottles(
       request, browser_context, wc_getter, navigation_ui_data,
@@ -709,18 +709,20 @@ void BraveContentBrowserClient::WillCreateURLLoaderFactory(
     bool* bypass_redirect_checks,
     bool* disable_secure_dns,
     network::mojom::URLLoaderFactoryOverridePtr* factory_override,
-    scoped_refptr<base::SequencedTaskRunner> navigation_response_task_runner) {
+    scoped_refptr<base::SequencedTaskRunner> navigation_response_task_runner,
+    bool is_for_network_service) {
   // TODO(iefremov): Skip proxying for certain requests?
   BraveProxyingURLLoaderFactory::MaybeProxyRequest(
       browser_context, frame,
       type == URLLoaderFactoryType::kNavigation ? -1 : render_process_id,
-      factory_builder, navigation_response_task_runner);
+      factory_builder, type, navigation_id, navigation_response_task_runner);
 
   ChromeContentBrowserClient::WillCreateURLLoaderFactory(
       browser_context, frame, render_process_id, type, request_initiator,
       isolation_info, std::move(navigation_id), ukm_source_id, factory_builder,
       header_client, bypass_redirect_checks, disable_secure_dns,
-      factory_override, navigation_response_task_runner);
+      factory_override, navigation_response_task_runner,
+      is_for_network_service);
 }
 
 bool BraveContentBrowserClient::WillInterceptWebSocket(
@@ -735,17 +737,22 @@ void BraveContentBrowserClient::CreateWebSocket(
     const net::SiteForCookies& site_for_cookies,
     const std::optional<std::string>& user_agent,
     mojo::PendingRemote<network::mojom::WebSocketHandshakeClient>
-        handshake_client) {
+        handshake_client,
+    content::ContentBrowserClient::WebSocketOptions options) {
   auto* proxy = BraveProxyingWebSocket::ProxyWebSocket(
       frame, std::move(factory), url, site_for_cookies, user_agent,
       std::move(handshake_client));
 
   if (ChromeContentBrowserClient::WillInterceptWebSocket(frame)) {
+    // Chrome's proxy (extensions WebRequest) takes the options' header
+    // client and calls Brave's factory with its own.
     ChromeContentBrowserClient::CreateWebSocket(
         frame, proxy->web_socket_factory(), url, site_for_cookies, user_agent,
-        proxy->handshake_client().Unbind());
+        proxy->handshake_client().Unbind(), std::move(options));
   } else {
-    proxy->Start();
+    // Nobody else proxies: the options' header client (156 enterprise custom
+    // headers) is the downstream trusted-header client, as in 1.98.
+    proxy->Start(std::move(options.header_client));
   }
 }
 
@@ -781,7 +788,7 @@ void BraveContentBrowserClient::MaybeHideReferrer(
   }
 }
 
-GURL BraveContentBrowserClient::GetEffectiveURL(
+std::optional<GURL> BraveContentBrowserClient::GetEffectiveURL(
     content::BrowserContext* browser_context,
     const GURL& url) {
   Profile* profile = Profile::FromBrowserContext(browser_context);
@@ -847,69 +854,54 @@ bool BraveContentBrowserClient::HandleURLOverrideRewrite(
   return false;
 }
 
-std::vector<std::unique_ptr<content::NavigationThrottle>>
-BraveContentBrowserClient::CreateThrottlesForNavigation(
-    content::NavigationHandle* handle) {
-  std::vector<std::unique_ptr<content::NavigationThrottle>> throttles =
-      ChromeContentBrowserClient::CreateThrottlesForNavigation(handle);
+void BraveContentBrowserClient::CreateThrottlesForNavigation(
+    content::NavigationThrottleRegistry& registry) {
+  ChromeContentBrowserClient::CreateThrottlesForNavigation(registry);
+
+  content::NavigationHandle& navigation_handle = registry.GetNavigationHandle();
 
 #if !BUILDFLAG(IS_ANDROID)
-  std::unique_ptr<content::NavigationThrottle> ntp_shows_navigation_throttle =
-      NewTabShowsNavigationThrottle::MaybeCreateThrottleFor(handle);
-  if (ntp_shows_navigation_throttle) {
-    throttles.push_back(std::move(ntp_shows_navigation_throttle));
-  }
+  // TODO(T5): NewTabShowsNavigationThrottle (Brave NTP) still has the 128
+  // MaybeCreateThrottleFor(handle) shape; 1.98 calls it like this.
+  NewTabShowsNavigationThrottle::MaybeCreateAndAdd(registry);
 #endif
 
 #if BUILDFLAG(ENABLE_BRAVE_WEBTORRENT)
-  throttles.push_back(
-      std::make_unique<extensions::BraveWebTorrentNavigationThrottle>(handle));
+  // TODO(prune): WebTorrent goes away with its throttle (gone in 1.98).
+  registry.AddThrottle(
+      std::make_unique<extensions::BraveWebTorrentNavigationThrottle>(
+          registry));
 #endif
 
   content::BrowserContext* context =
-      handle->GetWebContents()->GetBrowserContext();
+      navigation_handle.GetWebContents()->GetBrowserContext();
 
   // Debounce
-  if (auto debounce_throttle =
-          debounce::DebounceNavigationThrottle::MaybeCreateThrottleFor(
-              handle, debounce::DebounceServiceFactory::GetForBrowserContext(
-                          context))) {
-    throttles.push_back(std::move(debounce_throttle));
-  }
+  debounce::DebounceNavigationThrottle::MaybeCreateAndAdd(
+      registry,
+      debounce::DebounceServiceFactory::GetForBrowserContext(context));
 
   // The HostContentSettingsMap might be null for some irregular profiles, e.g.
   // the System Profile.
   auto* host_content_settings_map =
       HostContentSettingsMapFactory::GetForProfile(context);
   if (host_content_settings_map) {
-    if (std::unique_ptr<content::NavigationThrottle>
-            domain_block_navigation_throttle = brave_shields::
-                DomainBlockNavigationThrottle::MaybeCreateThrottleFor(
-                    handle, g_brave_browser_process->ad_block_service(),
-                    g_brave_browser_process->ad_block_service()
-                        ->custom_filters_provider(),
-                    EphemeralStorageServiceFactory::GetForContext(context),
-                    host_content_settings_map,
-                    g_browser_process->GetApplicationLocale())) {
-      throttles.push_back(std::move(domain_block_navigation_throttle));
-    }
+    brave_shields::DomainBlockNavigationThrottle::MaybeCreateAndAdd(
+        registry, g_brave_browser_process->ad_block_service(),
+        g_brave_browser_process->ad_block_service()->custom_filters_provider(),
+        EphemeralStorageServiceFactory::GetForContext(context),
+        host_content_settings_map, g_browser_process->GetApplicationLocale());
   }
 
 #if BUILDFLAG(ENABLE_REQUEST_OTR)
   // Request Off-The-Record
-  if (auto request_otr_throttle =
-          request_otr::RequestOTRNavigationThrottle::MaybeCreateThrottleFor(
-              handle,
-              request_otr::RequestOTRServiceFactory::GetForBrowserContext(
-                  context),
-              EphemeralStorageServiceFactory::GetForContext(context),
-              Profile::FromBrowserContext(context)->GetPrefs(),
-              g_browser_process->GetApplicationLocale())) {
-    throttles.push_back(std::move(request_otr_throttle));
-  }
+  request_otr::RequestOTRNavigationThrottle::MaybeCreateAndAdd(
+      registry,
+      request_otr::RequestOTRServiceFactory::GetForBrowserContext(context),
+      EphemeralStorageServiceFactory::GetForContext(context),
+      Profile::FromBrowserContext(context)->GetPrefs(),
+      g_browser_process->GetApplicationLocale());
 #endif
-
-  return throttles;
 }
 
 bool PreventDarkModeFingerprinting(WebContents* web_contents,
@@ -943,20 +935,23 @@ bool PreventDarkModeFingerprinting(WebContents* web_contents,
 
 bool BraveContentBrowserClient::OverrideWebPreferencesAfterNavigation(
     WebContents* web_contents,
+    content::SiteInstance& main_frame_site,
     WebPreferences* prefs) {
   bool changed =
       ChromeContentBrowserClient::OverrideWebPreferencesAfterNavigation(
-          web_contents, prefs);
+          web_contents, main_frame_site, prefs);
   return PreventDarkModeFingerprinting(web_contents, prefs) || changed;
 }
 
-void BraveContentBrowserClient::OverrideWebkitPrefs(WebContents* web_contents,
-                                                    WebPreferences* web_prefs) {
-  ChromeContentBrowserClient::OverrideWebkitPrefs(web_contents, web_prefs);
+void BraveContentBrowserClient::OverrideWebPreferences(
+    WebContents* web_contents,
+    content::SiteInstance& main_frame_site,
+    WebPreferences* web_prefs) {
+  ChromeContentBrowserClient::OverrideWebPreferences(
+      web_contents, main_frame_site, web_prefs);
   PreventDarkModeFingerprinting(web_contents, web_prefs);
-  // This will stop NavigatorPlugins from returning fixed plugins data and will
-  // allow us to return our farbled data
-  web_prefs->allow_non_empty_navigator_plugins = true;
+  // 156 dropped allow_non_empty_navigator_plugins: DOMPluginArray always
+  // builds the fixed PDF list, which the plugins farbling wrapper farbles.
 
 #if BUILDFLAG(ENABLE_PLAYLIST)
   if (playlist::PlaylistBackgroundWebContentsHelper::FromWebContents(
@@ -968,17 +963,6 @@ void BraveContentBrowserClient::OverrideWebkitPrefs(WebContents* web_contents,
 
 std::string BraveContentBrowserClient::GetUserAgent() {
   const std::string user_agent = ChromeContentBrowserClient::GetUserAgent();
-  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-          embedder_support::kUserAgent)) {
-    return user_agent;
-  }
-  return flyweb::DeclareUserAgent(user_agent);
-}
-
-std::string BraveContentBrowserClient::GetUserAgentBasedOnPolicy(
-    content::BrowserContext* context) {
-  const std::string user_agent =
-      ChromeContentBrowserClient::GetUserAgentBasedOnPolicy(context);
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(
           embedder_support::kUserAgent)) {
     return user_agent;

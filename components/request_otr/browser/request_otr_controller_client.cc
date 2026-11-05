@@ -11,6 +11,7 @@
 #include "components/prefs/pref_service.h"
 #include "components/security_interstitials/content/settings_page_helper.h"
 #include "components/security_interstitials/core/metrics_helper.h"
+#include "content/public/browser/navigation_controller.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/page_navigator.h"
 #include "content/public/browser/web_contents.h"
@@ -57,7 +58,7 @@ void RequestOTRControllerClient::GoBack() {
 
 void RequestOTRControllerClient::Proceed() {
   RequestOTRStorageTabHelper* tab_storage =
-      RequestOTRStorageTabHelper::GetOrCreate(web_contents_);
+      RequestOTRStorageTabHelper::GetOrCreate(web_contents());
   tab_storage->set_is_proceeding(true);
   if (dont_warn_again_) {
     if (PrefService* prefs = GetPrefService()) {
@@ -72,7 +73,7 @@ void RequestOTRControllerClient::Proceed() {
 
 void RequestOTRControllerClient::ProceedOTR() {
   RequestOTRStorageTabHelper* tab_storage =
-      RequestOTRStorageTabHelper::GetOrCreate(web_contents_);
+      RequestOTRStorageTabHelper::GetOrCreate(web_contents());
   tab_storage->set_is_proceeding(true);
   tab_storage->set_requested_otr(true);
   if (dont_warn_again_) {
@@ -89,7 +90,7 @@ void RequestOTRControllerClient::ProceedOTR() {
 }
 
 void RequestOTRControllerClient::ReloadPage() {
-  web_contents_->GetController().Reload(content::ReloadType::NORMAL, false);
+  web_contents()->GetController().Reload(content::ReloadType::NORMAL, false);
 }
 
 void RequestOTRControllerClient::On1PESState(bool is_1pes_enabled) {

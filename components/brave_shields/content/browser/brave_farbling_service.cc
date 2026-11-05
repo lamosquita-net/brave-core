@@ -7,6 +7,8 @@
 
 #include <string>
 
+#include "base/check.h"
+#include "base/containers/span.h"
 #include "base/feature_list.h"
 #include "base/rand_util.h"
 #include "brave/components/brave_shields/core/common/features.h"
@@ -50,13 +52,13 @@ bool BraveFarblingService::MakePseudoRandomGeneratorForURL(
   if (domain.empty()) {
     return false;
   }
-  uint8_t domain_key[32];
   uint64_t session_key = session_token(is_off_the_record);
-  crypto::HMAC h(crypto::HMAC::SHA256);
-  CHECK(h.Init(reinterpret_cast<const unsigned char*>(&session_key),
-               sizeof session_key));
-  CHECK(h.Sign(domain, domain_key, sizeof domain_key));
-  uint64_t seed = *reinterpret_cast<uint64_t*>(domain_key);
+  // crypto::HMAC is gone in 156; same HMAC-SHA256 key, so seeds are unchanged.
+  const auto domain_key = crypto::hmac::SignSha256(
+      base::byte_span_from_ref(session_key), base::as_byte_span(domain));
+  uint64_t seed;
+  base::byte_span_from_ref(seed).copy_from(
+      base::span(domain_key).first<sizeof(seed)>());
   *prng = FarblingPRNG(seed);
   return true;
 }

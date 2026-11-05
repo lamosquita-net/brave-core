@@ -7,9 +7,9 @@
 
 #include "net/http/transport_security_state.h"
 
-#define GetSSLUpgradeDecision(host, net_log)                                   \
+#define GetSSLUpgradeDecision(host, is_top_level_nav, net_log)                 \
   GetSSLUpgradeDecision(request->isolation_info().network_anonymization_key(), \
-                        host, net_log)
+                        host, is_top_level_nav, net_log)
 #define ShouldSSLErrorsBeFatal(host) \
   ShouldSSLErrorsBeFatal(            \
       request_->isolation_info().network_anonymization_key(), host)
@@ -24,9 +24,20 @@
 
 namespace net {
 
+namespace {
+
+// In 156 the file-local CreateCookieOptions() lives in an anonymous namespace
+// inside net::, so it is reached through this trampoline (as in 1.98).
+CookieOptions CreateCookieOptionsCaller(
+    CookieOptions::SameSiteCookieContext same_site_context) {
+  return CreateCookieOptions(same_site_context);
+}
+
+}  // namespace
+
 CookieOptions URLRequestHttpJob::CreateCookieOptions(
     CookieOptions::SameSiteCookieContext same_site_context) const {
-  CookieOptions cookie_options = ::CreateCookieOptions(same_site_context);
+  CookieOptions cookie_options = CreateCookieOptionsCaller(same_site_context);
   FillEphemeralStorageParams(
       request_->url(), request_->site_for_cookies(),
       request_->isolation_info().top_frame_origin(),

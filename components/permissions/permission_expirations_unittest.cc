@@ -150,18 +150,12 @@ class PermissionExpirationsTest : public testing::Test {
   const GURL kOrigin{"https://example.com"};
   const GURL kOrigin2{"https://brave1.com"};
   const GURL kOrigin3{"https://brave2.com"};
-  const GURL kOriginWithETHAccount{
-      "https://example.com0x6bd1dbc7f4779d02a64053ca1b908767268c7164"};
-  const GURL kOrigin2WithETHAccount{
-      "https://brave1.com0x6bd1dbc7f4779d02a64053ca1b908767268c7164"};
-  const GURL kOrigin3WithETHAccount{
-      "https://brave2.com0x6bd1dbc7f4779d02a64053ca1b908767268c7164"};
-  const GURL kOriginWithSOLAccount{
-      "https://example.com__3zuhutvg3ax8vd1r9j5klr41raa1fxxqtuqyksz6kkot"};
-  const GURL kOrigin2WithSOLAccount{
-      "https://brave1.com__3zuhutvg3ax8vd1r9j5klr41raa1fxxqtuqyksz6kkot"};
-  const GURL kOrigin3WithSOLAccount{
-      "https://brave2.com__3zuhutvg3ax8vd1r9j5klr41raa1fxxqtuqyksz6kkot"};
+  const GURL kGeoOrigin{"https://geo.example.com"};
+  const GURL kGeoOrigin2{"https://geo.brave1.com"};
+  const GURL kGeoOrigin3{"https://geo.brave2.com"};
+  const GURL kCameraOrigin{"https://camera.example.com"};
+  const GURL kCameraOrigin2{"https://camera.brave1.com"};
+  const GURL kCameraOrigin3{"https://camera.brave2.com"};
   const base::TimeDelta kLifetime{base::Seconds(5)};
   const base::TimeDelta kOneSecond{base::Seconds(1)};
 
@@ -177,10 +171,9 @@ TEST_F(PermissionExpirationsTest, AddAndRemoveAfterExpiration) {
     ContentSettingsType type;
     const char* type_key;
   } cases[] = {{kOrigin, ContentSettingsType::NOTIFICATIONS, "notifications"},
-               {kOriginWithETHAccount, ContentSettingsType::BRAVE_ETHEREUM,
-                "brave_ethereum"},
-               {kOriginWithSOLAccount, ContentSettingsType::BRAVE_SOLANA,
-                "brave_solana"}};
+               {kGeoOrigin, ContentSettingsType::GEOLOCATION, "geolocation"},
+               {kCameraOrigin, ContentSettingsType::MEDIASTREAM_CAMERA,
+                "media-stream-camera"}};
 
   for (const auto& entry : cases) {
     SCOPED_TRACE(testing::Message() << entry.type_key << ": " << entry.origin);
@@ -215,10 +208,10 @@ TEST_F(PermissionExpirationsTest, AddWithAllAndRemoveDataAfterExpiration) {
     const char* type_key;
   } cases[] = {
       {kOrigin, kOrigin2, ContentSettingsType::NOTIFICATIONS, "notifications"},
-      {kOriginWithETHAccount, kOrigin2WithETHAccount,
-       ContentSettingsType::BRAVE_ETHEREUM, "brave_ethereum"},
-      {kOriginWithSOLAccount, kOrigin2WithSOLAccount,
-       ContentSettingsType::BRAVE_SOLANA, "brave_solana"}};
+      {kGeoOrigin, kGeoOrigin2, ContentSettingsType::GEOLOCATION,
+       "geolocation"},
+      {kCameraOrigin, kCameraOrigin2, ContentSettingsType::MEDIASTREAM_CAMERA,
+       "media-stream-camera"}};
   for (const auto& entry : cases) {
     SCOPED_TRACE(testing::Message() << entry.type_key << ": " << entry.origin
                                     << ", " << entry.origin2);
@@ -257,10 +250,10 @@ TEST_F(PermissionExpirationsTest, AddAndRemoveExpiring) {
     const char* type_key;
   } cases[] = {
       {kOrigin, kOrigin2, ContentSettingsType::NOTIFICATIONS, "notifications"},
-      {kOriginWithETHAccount, kOrigin2WithETHAccount,
-       ContentSettingsType::BRAVE_ETHEREUM, "brave_ethereum"},
-      {kOriginWithSOLAccount, kOrigin2WithSOLAccount,
-       ContentSettingsType::BRAVE_SOLANA, "brave_solana"}};
+      {kGeoOrigin, kGeoOrigin2, ContentSettingsType::GEOLOCATION,
+       "geolocation"},
+      {kCameraOrigin, kCameraOrigin2, ContentSettingsType::MEDIASTREAM_CAMERA,
+       "media-stream-camera"}};
   for (const auto& entry : cases) {
     SCOPED_TRACE(testing::Message() << entry.type_key << ": " << entry.origin
                                     << ", " << entry.origin2);
@@ -313,10 +306,10 @@ TEST_F(PermissionExpirationsTest, RemoveExpiredDifferentTypes) {
   } cases[] = {
       {kOrigin, ContentSettingsType::NOTIFICATIONS, "notifications",
        ContentSettingsType::GEOLOCATION, "geolocation"},
-      {kOriginWithETHAccount, ContentSettingsType::BRAVE_ETHEREUM,
-       "brave_ethereum", ContentSettingsType::BRAVE_SOLANA, "brave_solana"},
-      {kOriginWithSOLAccount, ContentSettingsType::BRAVE_SOLANA, "brave_solana",
-       ContentSettingsType::BRAVE_ETHEREUM, "brave_ethereum"},
+      {kGeoOrigin, ContentSettingsType::GEOLOCATION, "geolocation",
+       ContentSettingsType::MEDIASTREAM_CAMERA, "media-stream-camera"},
+      {kCameraOrigin, ContentSettingsType::MEDIASTREAM_CAMERA,
+       "media-stream-camera", ContentSettingsType::GEOLOCATION, "geolocation"},
   };
   for (const auto& entry : cases) {
     SCOPED_TRACE(testing::Message() << entry.type_key << ", " << entry.type_key2
@@ -379,12 +372,12 @@ TEST_F(PermissionExpirationsTest, AddRemoveDomainExpiration) {
   } cases[] = {
       {kOrigin, ContentSettingsType::NOTIFICATIONS, "notifications", kOrigin2,
        ContentSettingsType::GEOLOCATION, "geolocation"},
-      {kOriginWithETHAccount, ContentSettingsType::BRAVE_ETHEREUM,
-       "brave_ethereum", kOriginWithSOLAccount,
-       ContentSettingsType::BRAVE_SOLANA, "brave_solana"},
-      {kOriginWithSOLAccount, ContentSettingsType::BRAVE_SOLANA, "brave_solana",
-       kOriginWithETHAccount, ContentSettingsType::BRAVE_ETHEREUM,
-       "brave_ethereum"},
+      {kGeoOrigin, ContentSettingsType::GEOLOCATION, "geolocation",
+       kCameraOrigin, ContentSettingsType::MEDIASTREAM_CAMERA,
+       "media-stream-camera"},
+      {kCameraOrigin, ContentSettingsType::MEDIASTREAM_CAMERA,
+       "media-stream-camera", kGeoOrigin, ContentSettingsType::GEOLOCATION,
+       "geolocation"},
   };
   for (const auto& entry : cases) {
     SCOPED_TRACE(testing::Message()
@@ -431,12 +424,12 @@ TEST_F(PermissionExpirationsTest, RemoveDomainThenTimeExpirations) {
   } cases[] = {
       {kOrigin, ContentSettingsType::NOTIFICATIONS, "notifications", kOrigin2,
        ContentSettingsType::GEOLOCATION, "geolocation"},
-      {kOriginWithETHAccount, ContentSettingsType::BRAVE_ETHEREUM,
-       "brave_ethereum", kOriginWithSOLAccount,
-       ContentSettingsType::BRAVE_SOLANA, "brave_solana"},
-      {kOriginWithSOLAccount, ContentSettingsType::BRAVE_SOLANA, "brave_solana",
-       kOriginWithETHAccount, ContentSettingsType::BRAVE_ETHEREUM,
-       "brave_ethereum"},
+      {kGeoOrigin, ContentSettingsType::GEOLOCATION, "geolocation",
+       kCameraOrigin, ContentSettingsType::MEDIASTREAM_CAMERA,
+       "media-stream-camera"},
+      {kCameraOrigin, ContentSettingsType::MEDIASTREAM_CAMERA,
+       "media-stream-camera", kGeoOrigin, ContentSettingsType::GEOLOCATION,
+       "geolocation"},
   };
   for (const auto& entry : cases) {
     SCOPED_TRACE(testing::Message()
@@ -482,12 +475,12 @@ TEST_F(PermissionExpirationsTest, RemoveTimeThenDomainExpirations) {
   } cases[] = {
       {kOrigin, ContentSettingsType::NOTIFICATIONS, "notifications", kOrigin2,
        ContentSettingsType::GEOLOCATION, "geolocation"},
-      {kOriginWithETHAccount, ContentSettingsType::BRAVE_ETHEREUM,
-       "brave_ethereum", kOriginWithSOLAccount,
-       ContentSettingsType::BRAVE_SOLANA, "brave_solana"},
-      {kOriginWithSOLAccount, ContentSettingsType::BRAVE_SOLANA, "brave_solana",
-       kOriginWithETHAccount, ContentSettingsType::BRAVE_ETHEREUM,
-       "brave_ethereum"},
+      {kGeoOrigin, ContentSettingsType::GEOLOCATION, "geolocation",
+       kCameraOrigin, ContentSettingsType::MEDIASTREAM_CAMERA,
+       "media-stream-camera"},
+      {kCameraOrigin, ContentSettingsType::MEDIASTREAM_CAMERA,
+       "media-stream-camera", kGeoOrigin, ContentSettingsType::GEOLOCATION,
+       "geolocation"},
   };
   for (const auto& entry : cases) {
     SCOPED_TRACE(testing::Message()
@@ -531,10 +524,10 @@ TEST_F(PermissionExpirationsTest, RemoveAllDomainExpirations) {
   } cases[] = {
       {kOrigin, kOrigin2, kOrigin3, ContentSettingsType::NOTIFICATIONS,
        "notifications"},
-      {kOriginWithETHAccount, kOrigin2WithETHAccount, kOrigin3WithETHAccount,
-       ContentSettingsType::BRAVE_ETHEREUM, "brave_ethereum"},
-      {kOriginWithSOLAccount, kOrigin2WithSOLAccount, kOrigin3WithSOLAccount,
-       ContentSettingsType::BRAVE_SOLANA, "brave_solana"}};
+      {kGeoOrigin, kGeoOrigin2, kGeoOrigin3, ContentSettingsType::GEOLOCATION,
+       "geolocation"},
+      {kCameraOrigin, kCameraOrigin2, kCameraOrigin3,
+       ContentSettingsType::MEDIASTREAM_CAMERA, "media-stream-camera"}};
   for (const auto& entry : cases) {
     SCOPED_TRACE(testing::Message()
                  << entry.type_key << ": " << entry.origin << ", "

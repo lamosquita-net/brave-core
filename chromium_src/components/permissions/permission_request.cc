@@ -16,21 +16,10 @@
 #define PermissionRequest PermissionRequest_ChromiumImpl
 #define IsDuplicateOf IsDuplicateOf_ChromiumImpl
 
-// `kWidevine` handled by an override in `WidevinePermissionRequest` and the
-// Brave Ethereum/Solana permission has its own permission request prompt.
-#if BUILDFLAG(IS_ANDROID)
+// `kWidevine` handled by an override in `WidevinePermissionRequest`.
 #define BRAVE_ENUM_ITEMS_FOR_SWITCH \
-  case RequestType::kBraveEthereum: \
-  case RequestType::kBraveSolana:   \
   case RequestType::kWidevine:      \
     NOTREACHED();
-#else
-#define BRAVE_ENUM_ITEMS_FOR_SWITCH \
-  case RequestType::kBraveEthereum: \
-  case RequestType::kBraveSolana:   \
-  case RequestType::kWidevine:      \
-    NOTREACHED();
-#endif
 
 // For permission strings that we also need on Android, we need to use
 // a string that has a placeholder ($1) in it.
@@ -89,25 +78,13 @@ const unsigned int IDS_VR_PERMISSION_FRAGMENT_OVERRIDE =
 namespace permissions {
 
 PermissionRequest::PermissionRequest(
-    const GURL& requesting_origin,
-    RequestType request_type,
-    bool has_gesture,
+    std::unique_ptr<PermissionRequestData> request_data,
     PermissionDecidedCallback permission_decided_callback,
-    base::OnceClosure delete_callback)
-    : PermissionRequest_ChromiumImpl(requesting_origin,
-                                     request_type,
-                                     has_gesture,
-                                     std::move(permission_decided_callback),
-                                     std::move(delete_callback)) {}
-
-PermissionRequest::PermissionRequest(
-    PermissionRequestData request_data,
-    PermissionDecidedCallback permission_decided_callback,
-    base::OnceClosure delete_callback,
+    base::OnceClosure request_finished_callback,
     bool uses_automatic_embargo)
     : PermissionRequest_ChromiumImpl(std::move(request_data),
                                      std::move(permission_decided_callback),
-                                     std::move(delete_callback),
+                                     std::move(request_finished_callback),
                                      uses_automatic_embargo) {}
 
 PermissionRequest::~PermissionRequest() = default;
@@ -176,8 +153,8 @@ bool PermissionRequest::IsDuplicateOf(PermissionRequest* other_request) const {
       other_request);
 }
 
-base::WeakPtr<PermissionRequest> PermissionRequest::GetWeakPtr() {
-  return weak_factory_.GetWeakPtr();
+base::SafeRef<PermissionRequest> PermissionRequest::GetSafeRef() {
+  return weak_factory_.GetSafeRef();
 }
 
 }  // namespace permissions

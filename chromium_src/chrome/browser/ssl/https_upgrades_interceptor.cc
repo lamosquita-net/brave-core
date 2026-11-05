@@ -26,8 +26,6 @@
         std::move(callback).Run({});                                          \
         return;                                                               \
       }                                                                       \
-      http_interstitial_enabled_by_pref_ = brave_shields::ShouldForceHttps(   \
-          map, tentative_resource_request.url);                               \
     }                                                                         \
     MaybeCreateLoader_ChromiumImpl(tentative_resource_request,                \
                                    browser_context, std::move(callback));     \
@@ -46,7 +44,7 @@
       }                                                                     \
     }                                                                       \
     return MaybeCreateLoaderForResponse_ChromiumImpl(                       \
-        modified_status, request, response_head, response_body, loader,     \
+        modified_status, request, response_head, response_body,             \
         client_receiver, url_loader);                                       \
   }                                                                         \
   bool HttpsUpgradesInterceptor::MaybeCreateLoaderForResponse_ChromiumImpl( \

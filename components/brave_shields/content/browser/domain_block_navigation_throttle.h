@@ -35,7 +35,7 @@ class AdBlockCustomFiltersProvider;
 class DomainBlockNavigationThrottle : public content::NavigationThrottle {
  public:
   explicit DomainBlockNavigationThrottle(
-      content::NavigationHandle* navigation_handle,
+      content::NavigationThrottleRegistry& registry,
       AdBlockService* ad_block_service,
       AdBlockCustomFiltersProvider* ad_block_custom_filters_provider,
       ephemeral_storage::EphemeralStorageService* ephemeral_storage_service,
@@ -47,8 +47,8 @@ class DomainBlockNavigationThrottle : public content::NavigationThrottle {
   DomainBlockNavigationThrottle& operator=(
       const DomainBlockNavigationThrottle&) = delete;
 
-  static std::unique_ptr<DomainBlockNavigationThrottle> MaybeCreateThrottleFor(
-      content::NavigationHandle* navigation_handle,
+  static void MaybeCreateAndAdd(
+      content::NavigationThrottleRegistry& registry,
       AdBlockService* ad_block_service,
       AdBlockCustomFiltersProvider* ad_block_custom_filters_provider,
       ephemeral_storage::EphemeralStorageService* ephemeral_storage_service,

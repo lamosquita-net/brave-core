@@ -16,15 +16,9 @@
 namespace net {
 
 CookieMonster::CookieMonster(scoped_refptr<PersistentCookieStore> store,
-                             NetLog* net_log)
-    : ChromiumCookieMonster(store, net_log),
-      net_log_(
-          NetLogWithSource::Make(net_log, NetLogSourceType::COOKIE_STORE)) {}
-
-CookieMonster::CookieMonster(scoped_refptr<PersistentCookieStore> store,
-                             base::TimeDelta last_access_threshold,
-                             NetLog* net_log)
-    : ChromiumCookieMonster(store, last_access_threshold, net_log),
+                             NetLog* net_log,
+                             std::unique_ptr<PrefDelegate> pref_delegate)
+    : ChromiumCookieMonster(store, net_log, std::move(pref_delegate)),
       net_log_(
           NetLogWithSource::Make(net_log, NetLogSourceType::COOKIE_STORE)) {}
 
@@ -87,12 +81,13 @@ void CookieMonster::DeleteSessionCookiesAsync(DeleteCallback callback) {
 }
 
 void CookieMonster::SetCookieableSchemes(
-    const std::vector<std::string>& schemes,
+    std::vector<std::string> schemes,
     SetCookieableSchemesCallback callback) {
   for (auto& it : ephemeral_cookie_stores_) {
     it.second->SetCookieableSchemes(schemes, SetCookieableSchemesCallback());
   }
-  ChromiumCookieMonster::SetCookieableSchemes(schemes, std::move(callback));
+  ChromiumCookieMonster::SetCookieableSchemes(std::move(schemes),
+                                              std::move(callback));
 }
 
 void CookieMonster::SetCanonicalCookieAsync(
@@ -104,10 +99,11 @@ void CookieMonster::SetCanonicalCookieAsync(
   if (options.should_use_ephemeral_storage()) {
     if (!options.top_frame_origin()) {
       // Shouldn't happen, but don't do anything in this case.
-      MaybeRunCookieCallback(
-          std::move(callback),
-          CookieAccessResult(CookieInclusionStatus(
-              CookieInclusionStatus::EXCLUDE_UNKNOWN_ERROR)));
+      CookieInclusionStatus cookie_inclusion_status;
+      cookie_inclusion_status.AddExclusionReason(
+          CookieInclusionStatus::ExclusionReason::EXCLUDE_UNKNOWN_ERROR);
+      MaybeRunCookieCallback(std::move(callback),
+                             CookieAccessResult(cookie_inclusion_status));
       return;
     }
     ChromiumCookieMonster* ephemeral_monster =

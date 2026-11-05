@@ -25,8 +25,6 @@
   {ContentSettingsType::BRAVE_REFERRERS, nullptr},                    \
   {ContentSettingsType::BRAVE_COOKIES, nullptr},                      \
   {ContentSettingsType::BRAVE_SPEEDREADER, nullptr},                  \
-  {ContentSettingsType::BRAVE_ETHEREUM, "ethereum"},                  \
-  {ContentSettingsType::BRAVE_SOLANA, "solana"},                      \
   {ContentSettingsType::BRAVE_GOOGLE_SIGN_IN, "googleSignIn"},        \
   {ContentSettingsType::BRAVE_HTTPS_UPGRADE, nullptr},                \
   {ContentSettingsType::BRAVE_REMEMBER_1P_STORAGE, nullptr},          \
@@ -90,10 +88,6 @@ bool HasRegisteredGroupName(ContentSettingsType type) {
   if (type == ContentSettingsType::BRAVE_LOCALHOST_ACCESS) {
     return true;
   }
-  if (type == ContentSettingsType::BRAVE_ETHEREUM)
-    return true;
-  if (type == ContentSettingsType::BRAVE_SOLANA)
-    return true;
   if (type == ContentSettingsType::BRAVE_SHIELDS)
     return true;
   return HasRegisteredGroupName_ChromiumImpl(type);
@@ -104,8 +98,6 @@ std::vector<ContentSettingsType> GetVisiblePermissionCategories(
     Profile* profile) {
   static constexpr ContentSettingsType extra_types[] = {
       ContentSettingsType::AUTOPLAY,
-      ContentSettingsType::BRAVE_ETHEREUM,
-      ContentSettingsType::BRAVE_SOLANA,
       ContentSettingsType::BRAVE_GOOGLE_SIGN_IN,
       ContentSettingsType::BRAVE_LOCALHOST_ACCESS,
   };

@@ -6,7 +6,6 @@
 #ifndef BRAVE_COMPONENTS_GOOGLE_SIGN_IN_PERMISSION_GOOGLE_SIGN_IN_PERMISSION_UTIL_H_
 #define BRAVE_COMPONENTS_GOOGLE_SIGN_IN_PERMISSION_GOOGLE_SIGN_IN_PERMISSION_UTIL_H_
 
-#include <string>
 #include <vector>
 
 #include "components/content_settings/core/common/content_settings_pattern.h"
@@ -16,6 +15,10 @@
 #include "services/network/public/cpp/resource_request.h"
 #include "third_party/blink/public/mojom/permissions/permission_status.mojom-shared.h"
 #include "url/gurl.h"
+
+namespace content {
+struct PermissionResult;
+}  // namespace content
 
 namespace google_sign_in_permission {
 
@@ -35,7 +38,7 @@ bool GetPermissionAndMaybeCreatePrompt(
     content::WebContents* contents,
     const GURL& request_initiator_url,
     bool* defer,
-    base::OnceCallback<void(const std::vector<blink::mojom::PermissionStatus>&)>
+    base::OnceCallback<void(const std::vector<content::PermissionResult>&)>
         permission_result_callback);
 
 }  // namespace google_sign_in_permission

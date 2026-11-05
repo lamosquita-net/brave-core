@@ -1,0 +1,13 @@
+diff --git a/chrome/browser/ssl/https_upgrades_util.cc b/chrome/browser/ssl/https_upgrades_util.cc
+index e2722638ba073e22e8e6c3a3a75519aed4b63c1f..4fc20ff201173b022f010b406c90289ad37c93a1 100644
+--- a/chrome/browser/ssl/https_upgrades_util.cc
++++ b/chrome/browser/ssl/https_upgrades_util.cc
+@@ -75,7 +75,7 @@ ComputeInterstitialState(content::WebContents* web_contents, const GURL& url) {
+   security_interstitials::https_only_mode::HttpInterstitialState
+       interstitial_state;
+   interstitial_state.enabled_by_pref =
+-      prefs && prefs->GetBoolean(prefs::kHttpsOnlyModeEnabled);
++      (prefs && prefs->GetBoolean(prefs::kHttpsOnlyModeEnabled)) || BraveShouldForceHttps(url, profile);
+ 
+   if (base::FeatureList::IsEnabled(features::kHttpsFirstModeIncognito) &&
+       profile->IsPrimaryOTRProfileWithRegularParent() && prefs &&
