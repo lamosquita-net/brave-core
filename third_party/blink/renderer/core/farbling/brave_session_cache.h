@@ -55,7 +55,7 @@ CORE_EXPORT bool AllowFingerprinting(
     ExecutionContext* context,
     ContentSettingsType webcompat_settings_type);
 CORE_EXPORT bool AllowFontFamily(ExecutionContext* context,
-                                 const AtomicString& family_name);
+                                 const blink::AtomicString& family_name);
 CORE_EXPORT int FarbleInteger(ExecutionContext* context,
                               brave::FarbleKey key,
                               int spoof_value,
@@ -87,14 +87,15 @@ class CORE_EXPORT BraveSessionCache final
   void PerturbPixels(const unsigned char* data,
                      size_t size,
                      size_t bytes_per_channel = 1);
-  WTF::String GenerateRandomString(std::string seed, wtf_size_t length);
-  WTF::String FarbledUserAgent(WTF::String real_user_agent);
+  blink::String GenerateRandomString(std::string seed,
+                                     blink::wtf_size_t length);
+  blink::String FarbledUserAgent(blink::String real_user_agent);
   int FarbledInteger(FarbleKey key,
                      int spoof_value,
                      int min_random_offset,
                      int max_random_offset);
   bool AllowFontFamily(blink::WebContentSettingsClient* settings,
-                       const AtomicString& family_name);
+                       const blink::AtomicString& family_name);
   FarblingPRNG MakePseudoRandomGenerator(FarbleKey key = FarbleKey::kNone);
   std::optional<blink::BraveAudioFarblingHelper> GetAudioFarblingHelper() {
     return audio_farbling_helper_;
@@ -104,10 +105,10 @@ class CORE_EXPORT BraveSessionCache final
   bool farbling_enabled_;
   uint64_t session_key_;
   uint8_t domain_key_[32];
-  WTF::HashMap<FarbleKey, int> farbled_integers_;
+  blink::HashMap<FarbleKey, int> farbled_integers_;
   BraveFarblingLevel farbling_level_;
   std::optional<blink::BraveAudioFarblingHelper> audio_farbling_helper_;
-  WTF::HashMap<ContentSettingsType, BraveFarblingLevel> farbling_levels_;
+  blink::HashMap<ContentSettingsType, BraveFarblingLevel> farbling_levels_;
 
   void PerturbPixelsInternal(const unsigned char* data,
                              size_t size,

@@ -11,6 +11,8 @@
 #include <string_view>
 
 #include "base/command_line.h"
+#include "base/compiler_specific.h"
+#include "base/containers/span.h"
 #include "base/feature_list.h"
 #include "base/numerics/safe_conversions.h"
 #include "base/strings/string_number_conversions.h"
@@ -144,7 +146,7 @@ blink::WebContentSettingsClient* GetContentSettingsClientFor(
   if (!context)
     return settings;
   // Avoid blocking fingerprinting in WebUI, extensions, etc.
-  const String protocol = context->GetSecurityOrigin()->Protocol();
+  const blink::String protocol = context->GetSecurityOrigin()->Protocol();
   if (protocol == url::kAboutScheme || protocol == "chrome-extension" ||
       blink::SchemeRegistry::ShouldTreatURLSchemeAsDisplayIsolated(protocol)) {
     return settings;
@@ -198,7 +200,7 @@ bool AllowFingerprinting(ExecutionContext* context,
 }
 
 bool AllowFontFamily(ExecutionContext* context,
-                     const AtomicString& family_name) {
+                     const blink::AtomicString& family_name) {
   if (!context)
     return true;
 
@@ -290,10 +292,9 @@ BraveSessionCache::BraveSessionCache(ExecutionContext& context)
                       // our farbling tests
       &session_key_);
 
-  crypto::HMAC h(crypto::HMAC::SHA256);
-  CHECK(h.Init(reinterpret_cast<const unsigned char*>(&session_key_),
-               sizeof session_key_));
-  CHECK(h.Sign(domain, domain_key_, sizeof domain_key_));
+  const auto domain_key = crypto::hmac::SignSha256(
+      base::byte_span_from_ref(session_key_), base::as_byte_span(domain));
+  base::span(domain_key_).copy_from(domain_key);
   const uint64_t* fudge = reinterpret_cast<const uint64_t*>(domain_key_);
   double fudge_factor = 0.99 + ((*fudge / maxUInt64AsDouble) / 100);
   uint64_t seed = *reinterpret_cast<uint64_t*>(domain_key_);
@@ -381,15 +382,13 @@ void BraveSessionCache::PerturbPixelsInternal(const unsigned char* data,
     return;
   // calculate initial seed to find first pixel to perturb, based on session
   // key, domain key, and canvas contents
-  crypto::HMAC h(crypto::HMAC::SHA256);
   uint64_t session_plus_domain_key =
       session_key_ ^ *reinterpret_cast<uint64_t*>(domain_key_);
-  CHECK(h.Init(reinterpret_cast<const unsigned char*>(&session_plus_domain_key),
-               sizeof session_plus_domain_key));
-  uint8_t canvas_key[32];
-  CHECK(h.Sign(std::string_view(reinterpret_cast<const char*>(pixels), size),
-               canvas_key, sizeof canvas_key));
-  uint64_t v = *reinterpret_cast<uint64_t*>(canvas_key);
+  // SAFETY: the caller passes |size| bytes starting at |data|.
+  const auto canvas_key = crypto::hmac::SignSha256(
+      base::byte_span_from_ref(session_plus_domain_key),
+      UNSAFE_BUFFERS(base::span<const uint8_t>(pixels, size)));
+  uint64_t v = *reinterpret_cast<const uint64_t*>(canvas_key.data());
   uint64_t pixel_index;
   // choose which channel (R, G, or B) to perturb
   uint8_t channel;
@@ -415,18 +414,17 @@ void BraveSessionCache::PerturbPixelsInternal(const unsigned char* data,
   }
 }
 
-WTF::String BraveSessionCache::GenerateRandomString(std::string seed,
-                                                    wtf_size_t length) {
-  uint8_t key[32];
-  crypto::HMAC h(crypto::HMAC::SHA256);
-  CHECK(h.Init(reinterpret_cast<const unsigned char*>(&domain_key_),
-               sizeof domain_key_));
-  CHECK(h.Sign(seed, key, sizeof key));
+blink::String BraveSessionCache::GenerateRandomString(
+    std::string seed,
+    blink::wtf_size_t length) {
+  const auto key = crypto::hmac::SignSha256(base::span(domain_key_),
+                                            base::as_byte_span(seed));
   // initial PRNG seed based on session key and passed-in seed string
-  uint64_t v = *reinterpret_cast<uint64_t*>(key);
-  UChar* destination;
-  WTF::String value = WTF::String::CreateUninitialized(length, destination);
-  for (wtf_size_t i = 0; i < length; i++) {
+  uint64_t v = *reinterpret_cast<const uint64_t*>(key.data());
+  base::span<UChar> destination;
+  blink::String value =
+      blink::String::CreateUninitialized(length, destination);
+  for (blink::wtf_size_t i = 0; i < length; i++) {
     destination[i] =
         kLettersForRandomStrings[v % kLettersForRandomStringsLength];
     v = lfsr_next(v);
@@ -434,9 +432,10 @@ WTF::String BraveSessionCache::GenerateRandomString(std::string seed,
   return value;
 }
 
-WTF::String BraveSessionCache::FarbledUserAgent(WTF::String real_user_agent) {
+blink::String BraveSessionCache::FarbledUserAgent(
+    blink::String real_user_agent) {
   FarblingPRNG prng = MakePseudoRandomGenerator();
-  WTF::StringBuilder result;
+  blink::StringBuilder result;
   result.Append(real_user_agent);
   int extra = prng() % kFarbledUserAgentMaxExtraSpaces;
   for (int i = 0; i < extra; i++)
@@ -463,7 +462,7 @@ int BraveSessionCache::FarbledInteger(FarbleKey key,
 
 bool BraveSessionCache::AllowFontFamily(
     blink::WebContentSettingsClient* settings,
-    const AtomicString& family_name) {
+    const blink::AtomicString& family_name) {
   if (!farbling_enabled_ || !settings ||
       GetBraveFarblingLevel(ContentSettingsType::BRAVE_WEBCOMPAT_FONT) ==
           BraveFarblingLevel::OFF ||
@@ -475,9 +474,11 @@ bool BraveSessionCache::AllowFontFamily(
       break;
     case BraveFarblingLevel::BALANCED:
     case BraveFarblingLevel::MAXIMUM: {
-      if (AllowFontByFamilyName(family_name,
-                                blink::DefaultLanguage().GetString().Left(2)))
+      if (AllowFontByFamilyName(
+              family_name,
+              blink::DefaultLanguage().GetString().DeprecatedSubstring(0, 2))) {
         return true;
+      }
       if (IsFontAllowedForFarbling(family_name)) {
         FarblingPRNG prng = MakePseudoRandomGenerator();
         prng.discard(family_name.Impl()->GetHash() % 16);
