@@ -35,24 +35,24 @@ class BraveImportBulkDataHandler : public BraveImportDataHandler {
   void HandleImportDataBulk(const base::ListValue& args);
 
   std::optional<int> GetProfileIndex(
-      const importer::SourceProfile& source_profile);
+      const user_data_importer::SourceProfile& source_profile);
 
   void PrepareProfile(const std::u16string& name,
                       ProfileReadyCallback callback);
 
-  void ProfileReadyForImport(const importer::SourceProfile& source_profile,
+  void ProfileReadyForImport(const user_data_importer::SourceProfile& source_profile,
                              uint16_t imported_items,
                              Profile* profile);
   // BraveImportDataHandler
-  void NotifyImportProgress(const importer::SourceProfile& source_profile,
+  void NotifyImportProgress(const user_data_importer::SourceProfile& source_profile,
                             const base::DictValue& info) override;
-  void OnImportEnded(const importer::SourceProfile& source_profile) override;
+  void OnImportEnded(const user_data_importer::SourceProfile& source_profile) override;
 
   // SettingsPageUIHandler
   void RegisterMessages() override;
 
   // ImportDataHandler overrides:
-  void StartImport(const importer::SourceProfile& source_profile,
+  void StartImport(const user_data_importer::SourceProfile& source_profile,
                    uint16_t imported_items) override;
 
  private:

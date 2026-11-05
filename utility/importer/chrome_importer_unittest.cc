@@ -15,12 +15,11 @@
 #include "brave/components/constants/brave_paths.h"
 #include "build/build_config.h"
 #include "chrome/common/chrome_paths.h"
-#include "chrome/common/importer/imported_bookmark_entry.h"
-#include "chrome/common/importer/importer_data_types.h"
-#include "chrome/common/importer/importer_url_row.h"
 #include "chrome/common/importer/mock_importer_bridge.h"
 #include "components/favicon_base/favicon_usage_data.h"
-#include "components/os_crypt/sync/os_crypt_mocker.h"
+#include "components/user_data_importer/common/imported_bookmark_entry.h"
+#include "components/user_data_importer/common/importer_data_types.h"
+#include "components/user_data_importer/common/importer_url_row.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 using base::UTF16ToASCII;
@@ -64,22 +63,22 @@ class ChromeImporterTest : public ::testing::Test {
 
   base::ScopedTempDir temp_dir_;
   base::FilePath profile_dir_;
-  importer::SourceProfile profile_;
+  user_data_importer::SourceProfile profile_;
   scoped_refptr<ChromeImporter> importer_;
   scoped_refptr<MockImporterBridge> bridge_;
 };
 
 TEST_F(ChromeImporterTest, ImportHistory) {
-  std::vector<ImporterURLRow> history;
+  std::vector<user_data_importer::ImporterURLRow> history;
 
   EXPECT_CALL(*bridge_, NotifyStarted());
-  EXPECT_CALL(*bridge_, NotifyItemStarted(importer::HISTORY));
+  EXPECT_CALL(*bridge_, NotifyItemStarted(user_data_importer::HISTORY));
   EXPECT_CALL(*bridge_, SetHistoryItems(_, _))
       .WillOnce(::testing::SaveArg<0>(&history));
-  EXPECT_CALL(*bridge_, NotifyItemEnded(importer::HISTORY));
+  EXPECT_CALL(*bridge_, NotifyItemEnded(user_data_importer::HISTORY));
   EXPECT_CALL(*bridge_, NotifyEnded());
 
-  importer_->StartImport(profile_, importer::HISTORY, bridge_.get());
+  importer_->StartImport(profile_, user_data_importer::HISTORY, bridge_.get());
 
   ASSERT_EQ(3u, history.size());
   EXPECT_EQ("https://brave.com/", history[0].url.spec());
@@ -88,16 +87,17 @@ TEST_F(ChromeImporterTest, ImportHistory) {
 }
 
 TEST_F(ChromeImporterTest, ImportBookmarks) {
-  std::vector<ImportedBookmarkEntry> bookmarks;
+  std::vector<user_data_importer::ImportedBookmarkEntry> bookmarks;
 
   EXPECT_CALL(*bridge_, NotifyStarted());
-  EXPECT_CALL(*bridge_, NotifyItemStarted(importer::FAVORITES));
+  EXPECT_CALL(*bridge_, NotifyItemStarted(user_data_importer::FAVORITES));
   EXPECT_CALL(*bridge_, AddBookmarks(_, _))
       .WillOnce(::testing::SaveArg<0>(&bookmarks));
-  EXPECT_CALL(*bridge_, NotifyItemEnded(importer::FAVORITES));
+  EXPECT_CALL(*bridge_, NotifyItemEnded(user_data_importer::FAVORITES));
   EXPECT_CALL(*bridge_, NotifyEnded());
 
-  importer_->StartImport(profile_, importer::FAVORITES, bridge_.get());
+  importer_->StartImport(profile_, user_data_importer::FAVORITES,
+                         bridge_.get());
 
   ASSERT_EQ(3u, bookmarks.size());
 
@@ -118,13 +118,14 @@ TEST_F(ChromeImporterTest, ImportFavicons) {
   favicon_base::FaviconUsageDataList favicons;
 
   EXPECT_CALL(*bridge_, NotifyStarted());
-  EXPECT_CALL(*bridge_, NotifyItemStarted(importer::FAVORITES));
+  EXPECT_CALL(*bridge_, NotifyItemStarted(user_data_importer::FAVORITES));
   EXPECT_CALL(*bridge_, SetFavicons(_))
       .WillOnce(::testing::SaveArg<0>(&favicons));
-  EXPECT_CALL(*bridge_, NotifyItemEnded(importer::FAVORITES));
+  EXPECT_CALL(*bridge_, NotifyItemEnded(user_data_importer::FAVORITES));
   EXPECT_CALL(*bridge_, NotifyEnded());
 
-  importer_->StartImport(profile_, importer::FAVORITES, bridge_.get());
+  importer_->StartImport(profile_, user_data_importer::FAVORITES,
+                         bridge_.get());
 
   ASSERT_EQ(4u, favicons.size());
   EXPECT_EQ("https://www.google.com/favicon.ico",
@@ -136,42 +137,3 @@ TEST_F(ChromeImporterTest, ImportFavicons) {
   EXPECT_EQ("https://static.nytimes.com/favicon.ico",
             favicons[3].favicon_url.spec());
 }
-
-// The mock keychain only works on macOS, so only run this test on macOS (for
-// now)
-#if BUILDFLAG(IS_MAC)
-TEST_F(ChromeImporterTest, ImportPasswords) {
-  // Use mock keychain on mac to prevent blocking permissions dialogs.
-  OSCryptMocker::SetUp();
-
-  importer::ImportedPasswordForm autofillable_login;
-  importer::ImportedPasswordForm blocked_login;
-
-  EXPECT_CALL(*bridge_, NotifyStarted());
-  EXPECT_CALL(*bridge_, NotifyItemStarted(importer::PASSWORDS));
-  EXPECT_CALL(*bridge_, SetPasswordForm(_))
-      .WillOnce(::testing::SaveArg<0>(&autofillable_login))
-      .WillOnce(::testing::SaveArg<0>(&blocked_login));
-  EXPECT_CALL(*bridge_, NotifyItemEnded(importer::PASSWORDS));
-  EXPECT_CALL(*bridge_, NotifyEnded());
-
-  importer_->StartImport(profile_, importer::PASSWORDS, bridge_.get());
-
-  EXPECT_FALSE(autofillable_login.blocked_by_user);
-  EXPECT_EQ("http://127.0.0.1:8080/",
-            autofillable_login.signon_realm);
-  EXPECT_EQ("test-autofillable-login",
-            UTF16ToASCII(autofillable_login.username_value));
-  EXPECT_EQ("autofillable-login-password",
-            UTF16ToASCII(autofillable_login.password_value));
-
-  EXPECT_TRUE(blocked_login.blocked_by_user);
-  EXPECT_EQ("http://127.0.0.1:8081/",
-            blocked_login.signon_realm);
-  EXPECT_EQ("", UTF16ToASCII(blocked_login.username_value));
-  EXPECT_EQ("", UTF16ToASCII(blocked_login.password_value));
-
-  OSCryptMocker::TearDown();
-}
-
-#endif

@@ -11,7 +11,7 @@
 #include "base/path_service.h"
 #include "brave/common/importer/importer_constants.h"
 #include "brave/components/constants/brave_paths.h"
-#include "chrome/common/importer/importer_data_types.h"
+#include "components/user_data_importer/common/importer_data_types.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 class BraveChromeImporterUtilsTest : public testing::Test {
@@ -130,8 +130,8 @@ TEST_F(BraveChromeImporterUtilsTest, ChromeImporterCanImport) {
   CopyTestFileToProfile("Secure_Preferences_for_extension_import",
                         kChromeSecurePreferencesFile);
   CopyTestFileToProfile(kChromePreferencesFile, kChromePreferencesFile);
-  uint16_t services_supported = importer::NONE;
+  uint16_t services_supported = user_data_importer::NONE;
   EXPECT_TRUE(
       ChromeImporterCanImport(GetTestProfilePath(), &services_supported));
-  EXPECT_EQ(services_supported, importer::EXTENSIONS);
+  EXPECT_EQ(services_supported, user_data_importer::EXTENSIONS);
 }

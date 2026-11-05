@@ -20,7 +20,7 @@ class BraveExternalProcessImporterClient
  public:
   BraveExternalProcessImporterClient(
       base::WeakPtr<ExternalProcessImporterHost> importer_host,
-      const importer::SourceProfile& source_profile,
+      const user_data_importer::SourceProfile& source_profile,
       uint16_t items,
       InProcessImporterBridge* bridge);
 
@@ -33,7 +33,7 @@ class BraveExternalProcessImporterClient
   void Start() override;
   void Cancel() override;
   void CloseMojoHandles() override;
-  void OnImportItemFinished(importer::ImportItem import_item) override;
+  void OnImportItemFinished(user_data_importer::ImportItem import_item) override;
 
   // brave::mojom::ProfileImportObserver overrides:
   void OnCreditCardImportReady(const std::u16string& name_on_card,

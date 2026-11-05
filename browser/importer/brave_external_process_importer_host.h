@@ -14,7 +14,7 @@
 #include "base/memory/weak_ptr.h"
 #include "base/values.h"
 #include "chrome/browser/importer/external_process_importer_host.h"
-#include "chrome/common/extensions/webstore_install_result.h"
+#include "extensions/browser/webstore_install_result.h"
 #include "extensions/buildflags/buildflags.h"
 
 class BraveExternalProcessImporterHost : public ExternalProcessImporterHost {

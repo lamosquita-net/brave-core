@@ -130,7 +130,7 @@ void BookmarkBridge::ImportBookmarks(
       base::android::ConvertJavaStringToUTF16(env, j_import_path);
 
   std::vector<ImportedBookmarkEntry> bookmarks;
-  std::vector<importer::SearchEngineInfo> search_engines;
+  std::vector<user_data_importer::SearchEngineInfo> search_engines;
 
   base::ThreadPool::PostTaskAndReplyWithResult(
       FROM_HERE, {base::MayBlock()},
@@ -143,9 +143,9 @@ void BookmarkBridge::ImportBookmarks(
 
 void BookmarkBridge::ImportBookmarksImpl(
     std::pair<std::vector<ImportedBookmarkEntry>,
-              std::vector<importer::SearchEngineInfo>> importedItems) {
+              std::vector<user_data_importer::SearchEngineInfo>> importedItems) {
   std::vector<ImportedBookmarkEntry> bookmarks = get<0>(importedItems);
-  std::vector<importer::SearchEngineInfo> search_engines =
+  std::vector<user_data_importer::SearchEngineInfo> search_engines =
       get<1>(importedItems);
   auto* writer = new ProfileWriter(profile_);
 
@@ -176,11 +176,11 @@ void BookmarkBridge::ImportBookmarksImpl(
 }
 
 std::pair<std::vector<ImportedBookmarkEntry>,
-          std::vector<importer::SearchEngineInfo>>
+          std::vector<user_data_importer::SearchEngineInfo>>
 BookmarkBridge::ImportBookmarksReader(
     std::u16string import_path,
     std::vector<ImportedBookmarkEntry> bookmarks,
-    std::vector<importer::SearchEngineInfo> search_engines) {
+    std::vector<user_data_importer::SearchEngineInfo> search_engines) {
   base::FilePath import_path_ = base::FilePath::FromUTF16Unsafe(import_path);
   bookmark_html_reader::ImportBookmarksFile(
       base::RepeatingCallback<bool(void)>(),
