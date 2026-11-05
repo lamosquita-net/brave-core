@@ -35,23 +35,21 @@
   case PermissionType::BRAVE_SOLANA:                    \
     return "BraveSolana";
 
-#define kDisplayCapture                                         \
-  kDisplayCapture;                                              \
-  case PermissionType::BRAVE_ETHEREUM:                          \
-    return network::mojom::PermissionsPolicyFeature::kEthereum; \
-  case PermissionType::BRAVE_SOLANA:                            \
-    return network::mojom::PermissionsPolicyFeature::kSolana;   \
-  case PermissionType::BRAVE_ADS:                               \
-  case PermissionType::BRAVE_COSMETIC_FILTERING:                \
-  case PermissionType::BRAVE_TRACKERS:                          \
-  case PermissionType::BRAVE_HTTP_UPGRADABLE_RESOURCES:         \
-  case PermissionType::BRAVE_FINGERPRINTING_V2:                 \
-  case PermissionType::BRAVE_SHIELDS:                           \
-  case PermissionType::BRAVE_REFERRERS:                         \
-  case PermissionType::BRAVE_COOKIES:                           \
-  case PermissionType::BRAVE_SPEEDREADER:                       \
-  case PermissionType::BRAVE_GOOGLE_SIGN_IN:                    \
-  case PermissionType::BRAVE_LOCALHOST_ACCESS:                  \
+#define kDisplayCapture                                 \
+  kDisplayCapture;                                      \
+  case PermissionType::BRAVE_ETHEREUM:                  \
+  case PermissionType::BRAVE_SOLANA:                    \
+  case PermissionType::BRAVE_ADS:                       \
+  case PermissionType::BRAVE_COSMETIC_FILTERING:        \
+  case PermissionType::BRAVE_TRACKERS:                  \
+  case PermissionType::BRAVE_HTTP_UPGRADABLE_RESOURCES: \
+  case PermissionType::BRAVE_FINGERPRINTING_V2:         \
+  case PermissionType::BRAVE_SHIELDS:                   \
+  case PermissionType::BRAVE_REFERRERS:                 \
+  case PermissionType::BRAVE_COOKIES:                   \
+  case PermissionType::BRAVE_SPEEDREADER:               \
+  case PermissionType::BRAVE_GOOGLE_SIGN_IN:            \
+  case PermissionType::BRAVE_LOCALHOST_ACCESS:          \
     return std::nullopt
 
 #include "src/third_party/blink/common/permissions/permission_utils.cc"
