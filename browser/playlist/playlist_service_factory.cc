@@ -5,6 +5,7 @@
 
 #include "brave/browser/playlist/playlist_service_factory.h"
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <utility>
@@ -12,7 +13,6 @@
 
 #include "base/feature_list.h"
 #include "base/no_destructor.h"
-#include "base/ranges/algorithm.h"
 #include "base/task/thread_pool.h"
 #include "base/threading/thread_restrictions.h"
 #include "brave/components/playlist/browser/media_detector_component_manager.h"
@@ -73,7 +73,7 @@ class PlaylistServiceDelegateImpl : public PlaylistService::Delegate {
   content::WebContents* GetActiveWebContents() override {
 #if BUILDFLAG(IS_ANDROID)
     auto tab_models = TabModelList::models();
-    auto iter = base::ranges::find_if(
+    auto iter = std::ranges::find_if(
         tab_models, [](const auto& model) { return model->IsActiveModel(); });
     if (iter == tab_models.end()) {
       return nullptr;
@@ -127,7 +127,7 @@ class PlaylistServiceDelegateImpl : public PlaylistService::Delegate {
         sidebar::SidebarServiceFactory::GetForProfile(profile_.get());
     if (enabled) {
       const auto hidden_items = service->GetHiddenDefaultSidebarItems();
-      const auto iter = base::ranges::find(
+      const auto iter = std::ranges::find(
           hidden_items, sidebar::SidebarItem::BuiltInItemType::kPlaylist,
           &sidebar::SidebarItem::built_in_item_type);
       if (iter != hidden_items.end()) {
@@ -135,7 +135,7 @@ class PlaylistServiceDelegateImpl : public PlaylistService::Delegate {
       }
     } else {
       const auto visible_items = service->items();
-      const auto iter = base::ranges::find(
+      const auto iter = std::ranges::find(
           visible_items, sidebar::SidebarItem::BuiltInItemType::kPlaylist,
           &sidebar::SidebarItem::built_in_item_type);
       if (iter != visible_items.end()) {

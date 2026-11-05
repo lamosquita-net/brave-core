@@ -14,7 +14,6 @@
 #include "base/json/json_value_converter.h"
 #include "base/logging.h"
 #include "base/numerics/safe_conversions.h"
-#include "base/ranges/algorithm.h"
 #include "base/strings/string_util.h"
 #include "base/values.h"
 
@@ -177,7 +176,7 @@ bool FilterListCatalogEntry::SupportsCurrentPlatform() const {
 std::vector<FilterListCatalogEntry>::const_iterator FindAdBlockFilterListByUUID(
     const std::vector<FilterListCatalogEntry>& region_lists,
     const std::string& uuid) {
-  return base::ranges::find(region_lists, uuid, &FilterListCatalogEntry::uuid);
+  return std::ranges::find(region_lists, uuid, &FilterListCatalogEntry::uuid);
 }
 
 // Given a locale like `en-US`, find regional lists corresponding to the

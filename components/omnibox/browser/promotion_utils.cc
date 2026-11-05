@@ -5,7 +5,8 @@
 
 #include "brave/components/omnibox/browser/promotion_utils.h"
 
-#include "base/ranges/algorithm.h"
+#include <algorithm>
+
 #include "base/strings/string_number_conversions.h"
 #include "brave/components/brave_search_conversion/types.h"
 #include "brave/components/brave_search_conversion/utils.h"
@@ -28,7 +29,7 @@ void SortBraveSearchPromotionMatch(AutocompleteResult* result) {
     return;
 
   ACMatches::iterator brave_search_conversion_match =
-      base::ranges::find_if(*result, IsBraveSearchPromotionMatch);
+      std::ranges::find_if(*result, IsBraveSearchPromotionMatch);
 
   // Early return when |result| doesn't include promotion match.
   if (brave_search_conversion_match == result->end())

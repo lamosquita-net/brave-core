@@ -3,12 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+#include <algorithm>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "base/json/values_util.h"
-#include "base/ranges/algorithm.h"
 #include "base/values.h"
 #include "brave/components/playlist/common/mojom/playlist.mojom.h"
 #include "brave/components/playlist/common/playlist_render_frame_observer_helper.h"
@@ -112,7 +112,7 @@ TEST_P(PlaylistRenderFrameObserverHelperTest,
   auto [list, expected_items] = std::get<1>(GetParam())();
   auto items =
       ExtractPlaylistItems(GURL("https://example.com"), std::move(list));
-  base::ranges::for_each(
+  std::ranges::for_each(
       items,
       [](std::string& id) {
         EXPECT_FALSE(id.empty());

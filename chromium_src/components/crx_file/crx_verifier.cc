@@ -5,11 +5,11 @@
 
 #include "components/crx_file/crx_verifier.h"
 
+#include <algorithm>
 #include <utility>
 #include <vector>
 
 #include "base/no_destructor.h"
-#include "base/ranges/algorithm.h"
 
 namespace {
 
@@ -38,7 +38,7 @@ std::vector<uint8_t>& GetBravePublisherKeyHash() {
 // Used in the patch in crx_verifier.cc.
 bool IsBravePublisher(const std::vector<uint8_t>& key_hash) {
   return GetBravePublisherKeyHash() == key_hash ||
-         base::ranges::equal(kFlyWebPublisherKeyHash, key_hash);
+         std::ranges::equal(kFlyWebPublisherKeyHash, key_hash);
 }
 
 }  // namespace
