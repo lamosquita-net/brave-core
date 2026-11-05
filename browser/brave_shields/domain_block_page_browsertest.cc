@@ -5,6 +5,7 @@
 
 #include "brave/browser/brave_shields/ad_block_service_browsertest.h"
 
+#include "base/functional/callback_helpers.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/test/bind.h"
 #include "brave/browser/brave_browser_process.h"

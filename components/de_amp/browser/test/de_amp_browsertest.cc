@@ -52,7 +52,7 @@ const char kTestRedirectingAmpPage1[] = "/redirecting_amp_page_1";
 const char kTestRedirectingAmpPage2[] = "/redirecting_amp_page_2";
 const char kTestSimpleNonAmpPage[] = "/simple_page";
 const char kTestCanonicalPage[] = "/simple_canonical_page";
-const char kTestAmpBodyScaffolding[] =
+constexpr char kTestAmpBodyScaffolding[] =
     R"(
     <html amp>
     <head>
@@ -61,7 +61,7 @@ const char kTestAmpBodyScaffolding[] =
     </html>
     )";
 constexpr uint32_t kTestReadBufferSize = 65536;  // bytes
-const char kTestAmpCanonicalLink[] = "<link rel='canonical' href='%s'>";
+constexpr char kTestAmpCanonicalLink[] = "<link rel='canonical' href='%s'>";
 
 // HELPERS
 std::unique_ptr<net::test_server::HttpResponse> BuildHttpResponse(

@@ -7,6 +7,7 @@
 
 #include <utility>
 
+#include "base/functional/callback_helpers.h"
 #include "brave/components/brave_shields/content/browser/brave_shields_util.h"
 #include "chrome/browser/browsing_data/chrome_browsing_data_remover_constants.h"
 #include "components/content_settings/core/browser/host_content_settings_map.h"

@@ -83,7 +83,7 @@ cr.googleTranslate.onLoadCSS("https://translate.googleapis.com/translate_static/
 cr.googleTranslate.onLoadJavascript("https://translate.googleapis.com/translate_static/js/element/main.js");
 )";
 
-const char kXhrPromiseTemplate[] = R"(
+constexpr char kXhrPromiseTemplate[] = R"(
   new Promise((resolve) => {
     const xhr = new XMLHttpRequest();
     xhr.onload = () => resolve(xhr.%s);
@@ -381,7 +381,7 @@ IN_PROC_BROWSER_TEST_F(BraveTranslateBrowserGoogleRedirectTest,
   EXPECT_EQ("https://translate.brave.com/something.svg",
             EvalTranslateJs(do_xhr_and_get_final_url));
 
-  const char kLoadImageTemplate[] = R"(
+  static constexpr char kLoadImageTemplate[] = R"(
     new Promise((resolve) => {
       let p = new Image();
       p.onload = () => resolve(true);

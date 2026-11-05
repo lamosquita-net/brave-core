@@ -9,6 +9,8 @@
 #include <string>
 #include <utility>
 
+#include "base/functional/callback_helpers.h"
+#include "base/strings/stringprintf.h"
 #include "brave/browser/playlist/playlist_service_factory.h"
 #include "brave/browser/ui/color/brave_color_id.h"
 #include "brave/browser/ui/views/playlist/thumbnail_view.h"
