@@ -49,7 +49,7 @@ typedef WebUIController* (*WebUIFactoryFunction)(WebUI* web_ui,
                                                  const GURL& url);
 
 WebUIController* NewWebUI(WebUI* web_ui, const GURL& url) {
-  auto host = url.host_piece();
+  auto host = url.host();
   Profile* profile = Profile::FromBrowserContext(
       web_ui->GetWebContents()->GetBrowserContext());
   if (host == kAdblockHost) {
@@ -88,15 +88,14 @@ WebUIFactoryFunction GetWebUIFactoryFunction(WebUI* web_ui,
     return nullptr;
   }
 
-  if (url.host_piece() == kAdblockHost ||
-      url.host_piece() == kAdblockInternalsHost ||
+  if (url.host() == kAdblockHost || url.host() == kAdblockInternalsHost ||
 #if !BUILDFLAG(IS_ANDROID)
       // On Android New Tab is a native page implemented in Java, so no need
       // in WebUI.
-      url.host_piece() == chrome::kChromeUINewTabHost ||
-      url.host_piece() == chrome::kChromeUISettingsHost ||
-      ((url.host_piece() == kWelcomeHost ||
-        url.host_piece() == chrome::kChromeUIWelcomeURL) &&
+      url.host() == chrome::kChromeUINewTabHost ||
+      url.host() == chrome::kChromeUISettingsHost ||
+      ((url.host() == kWelcomeHost ||
+        url.host() == chrome::kChromeUIWelcomeURL) &&
        !profile->IsGuestSession()) ||
 #endif  // BUILDFLAG(IS_ANDROID)
       // FlyWeb: Brave Rewards WebUI removed (was the last term).
@@ -119,8 +118,8 @@ WebUI::TypeID BraveWebUIControllerFactory::GetWebUIType(
 #endif
 
   // Early return to prevent upstream create its WebUI.
-  if (url.host_piece() == optimization_guide_internals::
-                              kChromeUIOptimizationGuideInternalsHost &&
+  if (url.host() == optimization_guide_internals::
+                        kChromeUIOptimizationGuideInternalsHost &&
       !optimization_guide::features::IsOptimizationHintsEnabled()) {
     return WebUI::kNoWebUI;
   }

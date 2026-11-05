@@ -65,7 +65,7 @@ const char* ToString(EphemeralStorageBrowserTest::StorageType storage_type) {
 
 GURL GetHttpRequestURL(const HttpRequest& http_request) {
   return GURL(base::StrCat(
-      {http_request.base_url.scheme_piece(), "://",
+      {http_request.base_url.scheme(), "://",
        http_request.headers.at(net::HttpRequestHeaders::kHost).c_str(),
        http_request.relative_url.c_str()}));
 }
@@ -412,7 +412,7 @@ void EphemeralStorageBrowserTest::SetCookieSetting(
       HostContentSettingsMapFactory::GetForProfile(browser()->profile());
   host_content_settings_map->SetContentSettingCustomScope(
       ContentSettingsPattern::FromString(
-          base::StrCat({"[*.]", url.host_piece(), ":*"})),
+          base::StrCat({"[*.]", url.host(), ":*"})),
       ContentSettingsPattern::Wildcard(), ContentSettingsType::COOKIES,
       content_setting);
 }

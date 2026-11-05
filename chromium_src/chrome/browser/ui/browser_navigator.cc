@@ -29,7 +29,7 @@ bool IsURLAllowedInIncognitoBraveImpl(
     const GURL& url,
     content::BrowserContext* browser_context) {
   std::string scheme = url.scheme();
-  std::string_view host = url.host_piece();
+  std::string_view host = url.host();
   if (scheme != content::kChromeUIScheme) {
     return true;
   }

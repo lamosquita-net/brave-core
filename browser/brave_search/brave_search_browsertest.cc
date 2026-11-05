@@ -140,7 +140,7 @@ class BraveSearchTest : public InProcessBrowserTest {
     }
 
     GURL url = request.GetURL();
-    auto path = url.path_piece();
+    auto path = url.path();
 
     if (path == "/" || path == "/sw.js" || path == kBraveSearchPath ||
         path == kPageWithCookie || path == kPageWithoutCookie ||

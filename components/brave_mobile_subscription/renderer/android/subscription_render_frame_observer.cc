@@ -161,17 +161,15 @@ void SubscriptionRenderFrameObserver::OnGetPurchaseTokenOrderId(
 std::string SubscriptionRenderFrameObserver::ExtractParam(
     const GURL& url,
     const std::string& name) const {
-  url::Component query(0, static_cast<int>(url.query_piece().length())), key,
-      value;
-  std::string_view data =
-      url.query_piece().data() ? url.query_piece().data() : "";
+  url::Component query(0, static_cast<int>(url.query().length())), key, value;
+  std::string_view data = url.query().data() ? url.query().data() : "";
   while (url::ExtractQueryKeyValue(data, &query, &key, &value)) {
-    std::string_view key_str = url.query_piece().substr(key.begin, key.len);
+    std::string_view key_str = url.query().substr(key.begin, key.len);
     if (key_str != name) {
       continue;
     }
 
-    return std::string(url.query_piece().substr(value.begin, value.len));
+    return std::string(url.query().substr(value.begin, value.len));
   }
   return std::string();
 }

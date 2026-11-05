@@ -39,7 +39,7 @@ bool CanPatternBeConvertedToWildcardSchemeAndPort(
     return false;
   if (url.has_scheme())
     return !ContentSettingsPattern::IsNonWildcardDomainNonPortScheme(
-        url.scheme_piece());
+        url.scheme());
   return url.has_port();
 }
 
