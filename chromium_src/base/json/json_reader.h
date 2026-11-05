@@ -5,15 +5,14 @@
 #ifndef BRAVE_CHROMIUM_SRC_BASE_JSON_JSON_READER_H_
 #define BRAVE_CHROMIUM_SRC_BASE_JSON_JSON_READER_H_
 
-#include "base/rust_buildflags.h"       // IWYU pragma: private
 #include "src/base/json/json_reader.h"  // IWYU pragma: export
 
 namespace base {
 
-#if BUILDFLAG(BUILD_RUST_JSON_READER)
+// Chromium 156 always parses JSON in Rust (serde_json_lenient), so the
+// BUILD_RUST_JSON_READER buildflag and base/rust_buildflags.h are gone.
 BASE_EXPORT JSONReader::Result DecodeJSONInRust(std::string_view json,
                                                 int options);
-#endif  // BUILDFLAG(BUILD_RUST_JSON_READER)
 
 }  // namespace base
 
