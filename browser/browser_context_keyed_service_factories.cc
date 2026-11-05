@@ -6,9 +6,6 @@
 #include "brave/browser/browser_context_keyed_service_factories.h"
 
 #include "base/feature_list.h"
-#include "brave/browser/brave_adaptive_captcha/brave_adaptive_captcha_service_factory.h"
-#include "brave/browser/brave_ads/ads_service_factory.h"
-#include "brave/browser/brave_rewards/rewards_service_factory.h"
 #include "brave/browser/brave_shields/ad_block_pref_service_factory.h"
 #include "brave/browser/brave_wallet/asset_ratio_service_factory.h"
 #include "brave/browser/brave_wallet/brave_wallet_ipfs_service_factory.h"
@@ -30,15 +27,10 @@
 #include "brave/components/brave_perf_predictor/browser/named_third_party_registry_factory.h"
 #include "brave/components/brave_wallet/common/common_utils.h"
 #include "brave/components/commander/common/buildflags/buildflags.h"
-#include "brave/components/greaselion/browser/buildflags/buildflags.h"
 #include "brave/components/playlist/common/buildflags/buildflags.h"
 #include "brave/components/request_otr/common/buildflags/buildflags.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "brave/components/tor/buildflags/buildflags.h"
-
-#if BUILDFLAG(ENABLE_GREASELION)
-#include "brave/browser/greaselion/greaselion_service_factory.h"
-#endif
 
 #if !BUILDFLAG(IS_ANDROID)
 #include "brave/browser/ui/bookmark/bookmark_prefs_service_factory.h"
@@ -85,18 +77,12 @@
 namespace brave {
 
 void EnsureBrowserContextKeyedServiceFactoriesBuilt() {
-  brave_adaptive_captcha::BraveAdaptiveCaptchaServiceFactory::GetInstance();
-  brave_ads::AdsServiceFactory::GetInstance();
   brave_perf_predictor::NamedThirdPartyRegistryFactory::GetInstance();
-  brave_rewards::RewardsServiceFactory::GetInstance();
   brave_shields::AdBlockPrefServiceFactory::GetInstance();
   debounce::DebounceServiceFactory::GetInstance();
   brave::URLSanitizerServiceFactory::GetInstance();
   BraveRendererUpdaterFactory::GetInstance();
   SearchEngineProviderServiceFactory::GetInstance();
-#if BUILDFLAG(ENABLE_GREASELION)
-  greaselion::GreaselionServiceFactory::GetInstance();
-#endif
 #if BUILDFLAG(ENABLE_TOR)
   TorProfileServiceFactory::GetInstance();
 #endif
