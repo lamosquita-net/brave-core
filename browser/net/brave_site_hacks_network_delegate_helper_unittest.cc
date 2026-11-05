@@ -33,8 +33,8 @@ TEST(BraveSiteHacksNetworkDelegateHelperTest, UANotAllowedTest) {
     auto brave_request_info = std::make_shared<brave::BraveRequestInfo>(url);
     int rc = brave::OnBeforeStartTransaction_SiteHacksWork(
         &headers, ResponseCallback(), brave_request_info);
-    std::string user_agent;
-    headers.GetHeader(kUserAgentHeader, &user_agent);
+    std::string user_agent =
+        headers.GetHeader(kUserAgentHeader).value_or(std::string());
     EXPECT_EQ(rc, net::OK);
     EXPECT_EQ(user_agent,
               "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 "
