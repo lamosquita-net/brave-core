@@ -73,8 +73,20 @@ brave_grit("brave_generated_resources_grit") {
     "brave_generated_resources.pak",
   ]
 
+  if (translate_genders) {
+    grit_flags = [ "--translate-genders" ]
+  }
+
+  # grit clones every data_package <output> node per gender, including the
+  # lang-less "brave_generated_resources.pak" above.
+  foreach(gender_suffix, gender_suffixes - [ "" ]) {
+    outputs += [ "brave_generated_resources${gender_suffix}.pak" ]
+  }
+
   foreach(locale, all_chrome_locales) {
-    outputs += [ "brave_generated_resources_$locale.pak" ]
+    foreach(gender_suffix, gender_suffixes) {
+      outputs += [ "brave_generated_resources_${locale}${gender_suffix}.pak" ]
+    }
   }
 }
 
@@ -95,7 +107,7 @@ source_set("browser_tests") {
       "//brave/components/commands/common",
       "//chrome/app:command_ids",
       "//chrome/browser",
-      "//chrome/browser/promos:utils",
+      "//chrome/browser/desktop_to_mobile_promos:utils",
       "//chrome/browser/ui",
       "//chrome/common:non_code_constants",
       "//chrome/test",
@@ -122,13 +134,9 @@ source_set("unit_tests") {
     "//base/test:test_support",
     "//brave/components/variations:buildflags",
     "//chrome/browser",
-    "//chrome/browser/enterprise/connectors/analysis:features",
     "//chrome/browser/ui",
     "//chrome/browser/ui:ui_features",
-    "//chrome/common/companion/visual_query:flags",
-    "//chrome/common/privacy_budget",
-    "//components/aggregation_service",
-    "//components/attribution_reporting",
+    "//components/attribution_reporting:features",
     "//components/autofill/core/common",
     "//components/commerce/core:feature_list",
     "//components/compose/core/browser:features",
@@ -148,7 +156,6 @@ source_set("unit_tests") {
     "//components/page_info/core",
     "//components/performance_manager",
     "//components/permissions",
-    "//components/plus_addresses:features",
     "//components/privacy_sandbox",
     "//components/safe_browsing/core/common",
     "//components/search",
@@ -175,8 +182,8 @@ source_set("unit_tests") {
       "//brave/components/commands/common",
       "//chrome/app:command_ids",
       "//chrome/browser/apps/link_capturing:link_capturing",
-      "//chrome/browser/companion/core",
       "//chrome/common:chrome_features",
+      "//components/enterprise/connectors/core",
       "//components/translate/core/common",
       "//extensions/common",
       "//ui/accessibility:ax_base",

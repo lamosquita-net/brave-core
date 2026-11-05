@@ -28,6 +28,14 @@ const chromiumRebaseL10n = async (options) => {
       '--source_string_path', sourceStringPath], cmdOptions)
   })
   l10nUtil.logRemovedGRDParts(removed)
+  l10nUtil.deleteRemovedGRDParts(removed)
+  // FlyWeb: rebrand the regenerated strings and keep their .xtb translations
+  // attached (it also covers the texts chromium-rebase-l10n.py sets after its
+  // replacements), then record the Chromium version they were rebased on.
+  const cmdOptions = config.defaultOptions
+  cmdOptions.cwd = config.braveCoreDir
+  util.run('vpython3', ['script/flyweb-rebrand-strings.py'], cmdOptions)
+  l10nUtil.setL10nChromiumVersion(config.chromeVersion)
 }
 
 module.exports = chromiumRebaseL10n

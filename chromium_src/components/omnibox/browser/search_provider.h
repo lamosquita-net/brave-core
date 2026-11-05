@@ -6,11 +6,10 @@
 #ifndef BRAVE_CHROMIUM_SRC_COMPONENTS_OMNIBOX_BROWSER_SEARCH_PROVIDER_H_
 #define BRAVE_CHROMIUM_SRC_COMPONENTS_OMNIBOX_BROWSER_SEARCH_PROVIDER_H_
 
-#define DoHistoryQuery                         \
-  DoHistoryQueryUnused();                      \
-  friend class BraveSearchProvider;            \
-  friend class BraveSearchProviderTest;        \
-  bool IsBraveRichSuggestion(bool is_keyword); \
+#define DoHistoryQuery                  \
+  DoHistoryQueryUnused();               \
+  friend class BraveSearchProvider;     \
+  friend class BraveSearchProviderTest; \
   virtual void DoHistoryQuery
 
 #include "src/components/omnibox/browser/search_provider.h"  // IWYU pragma: export

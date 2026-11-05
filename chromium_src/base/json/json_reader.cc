@@ -7,11 +7,8 @@
 
 namespace base {
 
-#if BUILDFLAG(BUILD_RUST_JSON_READER)
 JSONReader::Result DecodeJSONInRust(std::string_view json, int options) {
-  SCOPED_UMA_HISTOGRAM_TIMER_MICROS(kSecurityJsonParsingTime);
-  return DecodeJSONInRust(json, options, internal::kAbsoluteMaxDepth);
+  return JSONReader::ReadAndReturnValueWithError(json, options);
 }
-#endif  // BUILDFLAG(BUILD_RUST_JSON_READER)
 
 }  // namespace base

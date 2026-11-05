@@ -1,12 +1,21 @@
 diff --git a/components/strings/BUILD.gn b/components/strings/BUILD.gn
-index dd16718545aa8c984db8c5178d884f5470948604..3e6c7f2af81f95401c08ce71cd48b2d72b9df026 100644
+index e96b67aaa07fd50fe657d4db13ff74add7119e04..d80f455805042def5b8c3247be4f9a16714e17c6 100644
 --- a/components/strings/BUILD.gn
 +++ b/components/strings/BUILD.gn
-@@ -53,6 +53,7 @@ grit("components_strings") {
-   if (is_android) {
-     outputs += android_components_strings_java_resources
+@@ -120,6 +120,7 @@ grit_strings("components_strings") {
+     create_android_resources = true
    }
+   gritdeps = "../components_strings.grd.gritdeps"
 +  deps = [ "//brave/components/resources:strings" ]
  }
  
  if (is_android) {
+@@ -132,7 +133,7 @@ grit_strings("components_branded_strings") {
+   source = "../components_${branding_path_product}_strings.grd"
+   inputs = process_file_template(
+           xtb_locales,
+-          [ "components_${branding_path_product}_strings_{{source_name_part}}.xtb" ])
++          [ "components_chromium_strings_{{source_name_part}}.xtb" ])
+   outputs = [ "grit/components_branded_strings.h" ]
+ }
+ 

@@ -14,7 +14,6 @@ const l10nUtil = require('./l10nUtil')
 const Log = require('./logging')
 const assert = require('assert')
 const updateChromeVersion = require('./updateChromeVersion')
-const updateUnsafeBuffersPaths = require('./updateUnsafeBuffersPaths.js')
 const ActionGuard = require('./actionGuard')
 
 // Do not limit the number of listeners to avoid warnings from EventEmitter.
@@ -97,8 +96,6 @@ async function applyPatches() {
     Log.error('Exiting as not all patches were successful!')
     process.exit(1)
   }
-
-  await updateUnsafeBuffersPaths()
 
   updateChromeVersion()
   Log.progressFinish('apply patches')
@@ -289,6 +286,19 @@ const util = {
 
   updateBranding: () => {
     Log.progressStart('update branding')
+    // FlyWeb: the .grd/.grdp files copied below replace Chromium's, so they
+    // must have been rebased on this Chromium (pnpm/npm run
+    // chromium_rebase_l10n, after every Chromium upgrade). Copying older ones
+    // drops the strings and grit variables of the new Chromium.
+    const l10nVersion = l10nUtil.getL10nChromiumVersion()
+    const l10nMajor = l10nVersion ? parseInt(l10nVersion.split('.')[0]) : 0
+    const chromeMajor = parseInt(config.chromeVersion.split('.')[0])
+    if (l10nMajor < chromeMajor) {
+      Log.error(`String files rebased on Chromium ${l10nVersion || '(unknown)'}, but Chromium is ${config.chromeVersion}: run 'npm run chromium_rebase_l10n' and commit the result.`)
+      process.exit(1)
+    } else if (l10nVersion !== config.chromeVersion) {
+      Log.warn(`String files rebased on Chromium ${l10nVersion}, building Chromium ${config.chromeVersion}.`)
+    }
     const chromeComponentsDir = path.join(config.srcDir, 'components')
     const braveComponentsDir = path.join(config.braveCoreDir, 'components')
     const chromeAppDir = path.join(config.srcDir, 'chrome', 'app')

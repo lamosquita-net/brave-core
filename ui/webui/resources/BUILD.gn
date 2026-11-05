@@ -8,7 +8,6 @@ import("//brave/components/speedreader/common/buildflags/buildflags.gni")
 import("//tools/grit/preprocess_if_expr.gni")
 import("//tools/polymer/css_to_wrapper.gni")
 import("//tools/polymer/html_to_wrapper.gni")
-import("//ui/webui/resources/include_polymer.gni")
 import("//ui/webui/resources/tools/build_webui.gni")
 import("//ui/webui/resources/tools/generate_grd.gni")
 import("//ui/webui/webui_features.gni")
@@ -21,6 +20,9 @@ import("./sources.gni")
 # - Files generates here are path mapped from chrome://resources/brave via:
 #    - Typescript compiler in //tools/typescript/ts_library.gni
 #    - Rollup bundler in //chrome/browser/resources/tools/optimize_webui.gni
+
+# Chromium 156 dropped //ui/webui/resources/include_polymer.gni.
+include_polymer = !is_android && !is_ios
 
 group("grdp") {
   public_deps = [
@@ -51,7 +53,7 @@ if (include_polymer) {
         web_component_files += [ "cr_elements/$cr_override/$cr_override.ts" ]
       }
 
-      non_web_component_files = [
+      ts_files = [
         "polymer_overriding.ts",
         "lit_overriding.ts",
       ]
