@@ -18,7 +18,6 @@
 #include "brave/browser/net/brave_service_key_network_delegate_helper.h"
 #include "brave/browser/net/brave_site_hacks_network_delegate_helper.h"
 #include "brave/browser/net/brave_stp_util.h"
-#include "brave/browser/net/decentralized_dns_network_delegate_helper.h"
 #include "brave/browser/net/global_privacy_control_network_delegate_helper.h"
 #include "brave/components/brave_shields/core/common/features.h"
 #include "brave/components/brave_webtorrent/browser/buildflags/buildflags.h"
@@ -63,10 +62,6 @@ void BraveRequestHandler::SetupCallbacks() {
 
   callback =
       base::BindRepeating(brave::OnBeforeURLRequest_CommonStaticRedirectWork);
-  before_url_request_callbacks_.push_back(callback);
-
-  callback = base::BindRepeating(
-      decentralized_dns::OnBeforeURLRequest_DecentralizedDnsPreRedirectWork);
   before_url_request_callbacks_.push_back(callback);
 
   if (base::FeatureList::IsEnabled(
