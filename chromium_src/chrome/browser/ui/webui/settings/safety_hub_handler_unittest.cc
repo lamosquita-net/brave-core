@@ -4,6 +4,8 @@
  * You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "components/content_settings/core/common/content_settings_types.h"
+// Included before MIDI is redefined below: its enum also has a MIDI value.
+#include "third_party/blink/public/common/permissions/permission_utils.h"
 
 // clang-format off
 #define TOP_LEVEL_STORAGE_ACCESS                     \
