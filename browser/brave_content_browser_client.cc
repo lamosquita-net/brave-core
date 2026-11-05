@@ -39,7 +39,6 @@
 #include "brave/browser/ui/webui/skus_internals_ui.h"
 #include "brave/browser/url_sanitizer/url_sanitizer_service_factory.h"
 #include "brave/components/body_sniffer/body_sniffer_throttle.h"
-#include "brave/components/brave_federated/features.h"
 #include "brave/components/brave_rewards/browser/rewards_protocol_navigation_throttle.h"
 #include "brave/components/brave_search/browser/brave_search_default_host.h"
 #include "brave/components/brave_search/browser/brave_search_default_host_private.h"
