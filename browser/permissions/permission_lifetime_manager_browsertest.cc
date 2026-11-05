@@ -18,7 +18,6 @@
 #include "brave/browser/ephemeral_storage/ephemeral_storage_service_factory.h"
 #include "brave/browser/permissions/mock_permission_lifetime_prompt_factory.h"
 #include "brave/browser/permissions/permission_lifetime_manager_factory.h"
-#include "brave/components/brave_wallet/browser/permission_utils.h"
 #include "brave/components/ephemeral_storage/ephemeral_storage_service.h"
 #include "brave/components/permissions/brave_permission_manager.h"
 #include "brave/components/permissions/permission_lifetime_pref_names.h"
@@ -61,12 +60,7 @@ struct TestCase {
 };
 
 constexpr TestCase kTestCases[] = {
-    {nullptr, ContentSettingsType::GEOLOCATION, std::nullopt},
-    {"0xaf5Ad1E10926C0Ee4af4eDAC61DD60E853753f8A",
-     ContentSettingsType::BRAVE_ETHEREUM,
-     blink::PermissionType::BRAVE_ETHEREUM},
-    {"BrG44HdsEhzapvs8bEqzvkq4egwevS3fRE6ze2ENo6S8",
-     ContentSettingsType::BRAVE_SOLANA, blink::PermissionType::BRAVE_SOLANA}};
+    {nullptr, ContentSettingsType::GEOLOCATION, std::nullopt}};
 
 const char kPreTestDataFileName[] = "pre_test_data";
 
@@ -195,27 +189,10 @@ class PermissionLifetimeManagerBrowserTest : public InProcessBrowserTest {
   }
 
   GURL RequestPermission(const TestCase& entry, const GURL& url) {
-    if (entry.address && entry.permission) {
-      auto last_committed_origin =
-          url::Origin::Create(active_web_contents()->GetLastCommittedURL());
-      url::Origin origin;
-      EXPECT_TRUE(brave_wallet::GetConcatOriginFromWalletAddresses(
-          last_committed_origin, {std::string(entry.address)}, &origin));
-      permission_manager()->RequestPermissionsForOrigin(
-          {*entry.permission}, active_web_contents()->GetPrimaryMainFrame(),
-          origin.GetURL(), true, base::DoNothing());
-
-      url::Origin sub_request_origin;
-      EXPECT_TRUE(brave_wallet::GetSubRequestOrigin(
-          ContentSettingsTypeToRequestType(entry.type), last_committed_origin,
-          entry.address, &sub_request_origin));
-      return sub_request_origin.GetURL();
-    } else {
-      content::ExecuteScriptAsync(
-          GetActiveMainFrame(),
-          "navigator.geolocation.getCurrentPosition(function(){});");
-      return url;
-    }
+    content::ExecuteScriptAsync(
+        GetActiveMainFrame(),
+        "navigator.geolocation.getCurrentPosition(function(){});");
+    return url;
   }
 
  protected:

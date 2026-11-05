@@ -20,9 +20,6 @@
 #include "brave/components/services/tor/tor_launcher_impl.h"
 #endif
 
-#include "brave/components/services/brave_wallet/brave_wallet_utils_service_impl.h"
-#include "brave/components/services/brave_wallet/public/mojom/brave_wallet_utils_service.mojom.h"
-
 namespace {
 
 #if !BUILDFLAG(IS_ANDROID)
@@ -38,13 +35,6 @@ auto RunTorLauncher(mojo::PendingReceiver<tor::mojom::TorLauncher> receiver) {
 }
 #endif
 
-auto RunBraveWalletUtilsService(
-    mojo::PendingReceiver<brave_wallet::mojom::BraveWalletUtilsService>
-        receiver) {
-  return std::make_unique<brave_wallet::BraveWalletUtilsServiceImpl>(
-      std::move(receiver));
-}
-
 }  // namespace
 
 BraveContentUtilityClient::BraveContentUtilityClient() = default;
@@ -59,8 +49,6 @@ void BraveContentUtilityClient::RegisterMainThreadServices(
 #if BUILDFLAG(ENABLE_TOR)
   services.Add(RunTorLauncher);
 #endif
-
-  services.Add(RunBraveWalletUtilsService);
 
   return ChromeContentUtilityClient::RegisterMainThreadServices(services);
 }

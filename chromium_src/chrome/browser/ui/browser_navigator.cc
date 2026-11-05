@@ -5,7 +5,6 @@
 
 #include <string_view>
 
-#include "brave/components/brave_wallet/browser/pref_names.h"
 #include "brave/components/constants/webui_url_constants.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser_navigator_params.h"
@@ -42,9 +41,7 @@ bool IsURLAllowedInIncognitoBraveImpl(
   }
 
   if (host == kWalletPageHost || host == kWalletPanelHost) {
-    return browser_context &&
-           user_prefs::UserPrefs::Get(browser_context)
-               ->GetBoolean(kBraveWalletPrivateWindowsEnabled);
+    return false;
   }
 
   return true;

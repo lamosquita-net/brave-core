@@ -6,7 +6,6 @@
 #include "brave/browser/ui/brave_pages.h"
 
 #include "base/strings/strcat.h"
-#include "brave/components/brave_wallet/common/brave_wallet.mojom.h"
 #include "brave/components/constants/url_constants.h"
 #include "brave/components/constants/webui_url_constants.h"
 #include "brave/components/sidebar/browser/constants.h"
@@ -72,18 +71,6 @@ void ShowBraveWallet(Browser* browser) {
 
 void ShowBraveWalletOnboarding(Browser* browser) {
   ShowSingletonTabOverwritingNTP(browser, GURL(kBraveUIWalletOnboardingURL));
-}
-
-void ShowBraveWalletAccountCreation(Browser* browser,
-                                    brave_wallet::mojom::CoinType coin_type) {
-  // Only solana is supported.
-  if (coin_type == brave_wallet::mojom::CoinType::SOL) {
-    ShowSingletonTabOverwritingNTP(
-        browser,
-        GURL(base::StrCat({kBraveUIWalletAccountCreationURL, "Solana"})));
-  } else {
-    NOTREACHED_IN_MIGRATION();
-  }
 }
 
 void ShowExtensionSettings(Browser* browser) {
