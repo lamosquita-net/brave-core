@@ -231,7 +231,3 @@ BraveContentRendererClient::CreateURLLoaderThrottleProvider(
   return URLLoaderThrottleProviderImpl::Create(provider_type, this,
                                                browser_interface_broker_.get());
 }
-
-bool BraveContentRendererClient::IsOnionAllowed() const {
-  return brave_observer_->IsOnionAllowed();
-}

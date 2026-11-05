@@ -50,8 +50,6 @@ class BraveContentRendererClient : public ChromeContentRendererClient {
   CreateURLLoaderThrottleProvider(
       blink::URLLoaderThrottleProviderType provider_type) override;
 
-  bool IsOnionAllowed() const;
-
  private:
   std::unique_ptr<BraveRenderThreadObserver> brave_observer_;
   brave_search::BraveSearchServiceWorkerHolder

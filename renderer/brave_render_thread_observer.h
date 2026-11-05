@@ -27,8 +27,6 @@ class BraveRenderThreadObserver
   BraveRenderThreadObserver();
   ~BraveRenderThreadObserver() override;
 
-  bool IsOnionAllowed() const;
-
   // Return the dynamic parameters - those that may change while the
   // render process is running.
   static const brave::mojom::DynamicParams& GetDynamicParams();
@@ -41,14 +39,12 @@ class BraveRenderThreadObserver
       blink::AssociatedInterfaceRegistry* associated_interfaces) override;
 
   // brave::mojom::BraveRendererConfiguration:
-  void SetInitialConfiguration(bool is_tor_process) override;
   void SetConfiguration(brave::mojom::DynamicParamsPtr params) override;
 
   void OnRendererConfigurationAssociatedRequest(
       mojo::PendingAssociatedReceiver<brave::mojom::BraveRendererConfiguration>
           receiver);
 
-  bool is_tor_process_ = false;
   mojo::AssociatedReceiverSet<brave::mojom::BraveRendererConfiguration>
       renderer_configuration_receivers_;
 };
