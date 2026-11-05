@@ -165,16 +165,6 @@ void MaybeDistillAndShowSpeedreaderBubble(Browser* browser) {
 #endif  // BUILDFLAG(ENABLE_SPEEDREADER)
 }
 
-#if BUILDFLAG(ENABLE_AI_CHAT)
-void ToggleAIChat(Browser* browser) {
-#if defined(TOOLKIT_VIEWS)
-  SidePanelUI* side_panel_ui = browser->GetFeatures().side_panel_ui();
-  side_panel_ui->Toggle(SidePanelEntry::Key(SidePanelEntryId::kChatUI),
-                        SidePanelOpenTrigger::kToolbarButton);
-#endif
-}
-#endif
-
 void ShowWalletBubble(Browser* browser) {
 #if defined(TOOLKIT_VIEWS)
   static_cast<BraveBrowserView*>(browser->window())->CreateWalletBubble();

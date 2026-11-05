@@ -15,7 +15,6 @@
 #include "brave/app/brave_command_ids.h"
 #include "brave/browser/ui/brave_browser_command_controller.h"
 #include "brave/browser/ui/browser_commands.h"
-#include "brave/components/ai_chat/core/common/buildflags/buildflags.h"
 #include "brave/components/skus/common/features.h"
 #include "brave/components/tor/buildflags/buildflags.h"
 #include "chrome/app/chrome_command_ids.h"
@@ -140,9 +139,6 @@ IN_PROC_BROWSER_TEST_F(BraveAppMenuModelBrowserTest, MenuOrderTest) {
 #if BUILDFLAG(ENABLE_TOR)
       IDC_NEW_OFFTHERECORD_WINDOW_TOR,
 #endif
-#if BUILDFLAG(ENABLE_AI_CHAT)
-      IDC_TOGGLE_AI_CHAT,
-#endif
       IDC_SHOW_BRAVE_WALLET,
 #if defined(TOOLKIT_VIEWS)
       IDC_SIDEBAR_SHOW_OPTION_MENU,
@@ -257,9 +253,6 @@ IN_PROC_BROWSER_TEST_F(BraveAppMenuModelBrowserTest, MenuOrderTest) {
 #if BUILDFLAG(ENABLE_TOR)
       IDC_NEW_OFFTHERECORD_WINDOW_TOR,
 #endif
-#if BUILDFLAG(ENABLE_AI_CHAT)
-      IDC_TOGGLE_AI_CHAT,
-#endif
       IDC_SHOW_BRAVE_WALLET,
       IDC_RECENT_TABS_MENU,
       IDC_BOOKMARKS_MENU,
@@ -312,9 +305,6 @@ IN_PROC_BROWSER_TEST_F(BraveAppMenuModelBrowserTest, MenuOrderTest) {
   };
   std::vector<int> commands_disabled_for_tor_profile = {
       IDC_RECENT_TABS_MENU,
-#if BUILDFLAG(ENABLE_AI_CHAT)
-      IDC_TOGGLE_AI_CHAT,
-#endif
   };
   CheckCommandsAreInOrderInMenuModel(tor_browser,
                                      commands_in_order_for_tor_profile);

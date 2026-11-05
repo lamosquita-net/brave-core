@@ -186,10 +186,6 @@
     "META": {"sizes": {"includes": [20]}},
     "includes": [64070]
   },
-  "<(SHARED_INTERMEDIATE_DIR)/brave/web-ui-ai_chat_ui/ai_chat_ui.grd": {
-    "META": {"sizes": {"includes": [200]}},
-    "includes": [64090],
-  },
   "<(SHARED_INTERMEDIATE_DIR)/brave/web-ui-skus_internals/skus_internals.grd": {
     "META": {"sizes": {"includes": [10]}},
     "includes": [64290],
@@ -198,10 +194,6 @@
   "<(SHARED_INTERMEDIATE_DIR)/brave/web-ui-line_chart_display/line_chart_display.grd": {
     "META": {"sizes": {"includes": [10]}},
     "includes": [64310]
-  },
-  "<(SHARED_INTERMEDIATE_DIR)/brave/web-ui-ai_rewriter_ui/ai_rewriter_ui.grd": {
-    "META": {"sizes": {"includes": [10]}},
-    "includes": [64330],
   },
   "<(SHARED_INTERMEDIATE_DIR)/brave/web-ui-rewards_page/rewards_page.grd": {
     "META": {"sizes": {"includes": [50]}},

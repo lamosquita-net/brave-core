@@ -26,7 +26,6 @@
 #include "brave/browser/ui/webui/settings/brave_sync_handler.h"
 #include "brave/browser/ui/webui/settings/brave_wallet_handler.h"
 #include "brave/browser/ui/webui/settings/default_brave_shields_handler.h"
-#include "brave/components/ai_chat/core/common/buildflags/buildflags.h"
 #include "brave/components/brave_wallet/common/features.h"
 #include "brave/components/commander/common/features.h"
 #include "brave/components/commands/common/commands.mojom.h"
@@ -61,12 +60,6 @@
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "brave/browser/ui/webui/settings/brave_extensions_manifest_v2_handler.h"
 #include "brave/browser/ui/webui/settings/brave_tor_snowflake_extension_handler.h"
-#endif
-
-#if BUILDFLAG(ENABLE_AI_CHAT)
-#include "brave/browser/ui/webui/settings/brave_settings_leo_assistant_handler.h"
-#include "brave/components/ai_chat/core/browser/utils.h"
-#include "brave/components/ai_chat/core/common/features.h"
 #endif
 
 #if BUILDFLAG(ENABLE_PLAYLIST)
@@ -163,15 +156,8 @@ void BraveSettingsUI::AddResources(content::WebUIDataSource* html_source,
   html_source->AddBoolean("extensionsManifestV2Feature",
                           base::FeatureList::IsEnabled(kExtensionsManifestV2));
 
-#if BUILDFLAG(ENABLE_AI_CHAT)
-  html_source->AddBoolean("isLeoAssistantAllowed",
-                          ai_chat::IsAIChatEnabled(profile->GetPrefs()));
-  html_source->AddBoolean("isLeoAssistantHistoryAllowed",
-                          ai_chat::features::IsAIChatHistoryEnabled());
-#else
   html_source->AddBoolean("isLeoAssistantAllowed", false);
   html_source->AddBoolean("isLeoAssistantHistoryAllowed", false);
-#endif
 
 #if BUILDFLAG(ENABLE_PLAYLIST)
   html_source->AddBoolean(
@@ -196,16 +182,4 @@ void BraveSettingsUI::BindInterface(
   commands::AcceleratorServiceFactory::GetForContext(
       web_ui()->GetWebContents()->GetBrowserContext())
       ->BindInterface(std::move(pending_receiver));
-}
-
-void BraveSettingsUI::BindInterface(
-    mojo::PendingReceiver<ai_chat::mojom::AIChatSettingsHelper>
-        pending_receiver) {
-#if BUILDFLAG(ENABLE_AI_CHAT)
-  auto assistant_handler = std::make_unique<settings::BraveLeoAssistantHandler>(
-      std::make_unique<ai_chat::AIChatSettingsHelper>(
-          web_ui()->GetWebContents()->GetBrowserContext()));
-  assistant_handler->BindInterface(std::move(pending_receiver));
-  web_ui()->AddMessageHandler(std::move(assistant_handler));
-#endif
 }

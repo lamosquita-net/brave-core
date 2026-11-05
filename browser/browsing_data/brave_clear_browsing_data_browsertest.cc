@@ -16,7 +16,6 @@
 #include "base/run_loop.h"
 #include "base/task/single_thread_task_runner.h"
 #include "base/test/scoped_feature_list.h"
-#include "brave/components/ai_chat/core/common/buildflags/buildflags.h"
 #include "chrome/app/chrome_command_ids.h"
 #include "chrome/browser/browsing_data/chrome_browsing_data_remover_constants.h"
 #include "chrome/browser/profiles/profile.h"
@@ -162,10 +161,6 @@ class BraveClearDataOnExitTest
                             true);
     prefService->SetBoolean(browsing_data::prefs::kDeleteSiteSettingsOnExit,
                             true);
-#if BUILDFLAG(ENABLE_AI_CHAT)
-    prefService->SetBoolean(browsing_data::prefs::kDeleteBraveLeoHistoryOnExit,
-                            true);
-#endif  // BUILDFLAG(ENABLE_AI_CHAT)
   }
 
   uint64_t GetRemoveMaskAll() {
@@ -175,9 +170,6 @@ class BraveClearDataOnExitTest
            chrome_browsing_data_remover::DATA_TYPE_SITE_DATA |
            chrome_browsing_data_remover::DATA_TYPE_PASSWORDS |
            chrome_browsing_data_remover::DATA_TYPE_FORM_DATA |
-#if BUILDFLAG(ENABLE_AI_CHAT)
-           chrome_browsing_data_remover::DATA_TYPE_BRAVE_LEO_HISTORY |
-#endif  // BUILDFLAG(ENABLE_AI_CHAT)
            chrome_browsing_data_remover::DATA_TYPE_CONTENT_SETTINGS;
   }
 

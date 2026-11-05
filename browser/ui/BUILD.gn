@@ -6,8 +6,6 @@
 import("//brave/browser/ethereum_remote_client/buildflags/buildflags.gni")
 import("//brave/browser/shell_integrations/buildflags/buildflags.gni")
 import("//brave/build/config.gni")
-import("//brave/components/ai_chat/core/common/buildflags/buildflags.gni")
-import("//brave/components/ai_rewriter/common/buildflags/buildflags.gni")
 import("//brave/components/brave_wayback_machine/buildflags/buildflags.gni")
 import("//brave/components/commander/common/buildflags/buildflags.gni")
 import("//brave/components/ntp_background_images/buildflags/buildflags.gni")
@@ -69,57 +67,6 @@ source_set("ui") {
     "webui/skus_internals_ui.h",
   ]
 
-  if (enable_ai_chat) {
-    sources += [
-      "webui/ai_chat/ai_chat_ui.cc",
-      "webui/ai_chat/ai_chat_ui.h",
-      "webui/ai_chat/ai_chat_ui_page_handler.cc",
-      "webui/ai_chat/ai_chat_ui_page_handler.h",
-    ]
-
-    if (enable_print_preview) {
-      sources += [
-        "webui/ai_chat/print_preview_extractor.cc",
-        "webui/ai_chat/print_preview_extractor.h",
-      ]
-      deps += [
-        "//chrome/browser/pdf",
-        "//chrome/browser/pdf:pdf_pref_names",
-        "//chrome/services/printing/public/mojom",
-        "//components/pdf/browser",
-        "//components/printing/browser",
-        "//components/printing/common:mojo_interfaces",
-        "//components/services/print_compositor/public/mojom",
-        "//pdf:buildflags",
-        "//pdf:features",
-      ]
-    }
-
-    if (is_android) {
-      sources += [
-        "android/ai_chat/brave_leo_settings_launcher_helper.cc",
-        "android/ai_chat/brave_leo_settings_launcher_helper.h",
-      ]
-
-      deps += [ "//brave/build/android:jni_headers" ]
-    }
-  }
-
-  if (enable_ai_rewriter) {
-    sources += [
-      "ai_rewriter/ai_rewriter_dialog_delegate.cc",
-      "ai_rewriter/ai_rewriter_dialog_delegate.h",
-      "webui/ai_rewriter/ai_rewriter_ui.cc",
-      "webui/ai_rewriter/ai_rewriter_ui.h",
-    ]
-
-    deps += [
-      "//brave/components/ai_rewriter/common",
-      "//brave/components/ai_rewriter/resources/page:generated_resources",
-      "//components/web_modal",
-    ]
-  }
-
   if (!is_android) {
     sources += [
       "bookmark/bookmark_helper.cc",
@@ -164,8 +111,6 @@ source_set("ui") {
       "omnibox/brave_omnibox_client_impl.h",
       "page_action/brave_page_action_icon_type.h",
       "session_crashed_bubble_brave.cc",
-      "side_panel/ai_chat/ai_chat_side_panel_utils.cc",
-      "side_panel/ai_chat/ai_chat_side_panel_utils.h",
       "sidebar/sidebar.h",
       "sidebar/sidebar_controller.cc",
       "sidebar/sidebar_controller.h",
@@ -337,15 +282,6 @@ source_set("ui") {
         "webui/settings/pin_shortcut_handler.cc",
         "webui/settings/pin_shortcut_handler.h",
       ]
-    }
-
-    if (enable_ai_chat) {
-      sources += [
-        "webui/settings/brave_settings_leo_assistant_handler.cc",
-        "webui/settings/brave_settings_leo_assistant_handler.h",
-      ]
-
-      deps += [ "//chrome/browser/favicon" ]
     }
 
     if (is_mac) {
@@ -561,13 +497,6 @@ source_set("ui") {
       "//components/bookmarks/browser",
     ]
 
-    if (enable_ai_chat) {
-      sources += [
-        "views/side_panel/ai_chat/ai_chat_side_panel_utils_views.cc",
-        "views/toolbar/ai_chat_button.cc",
-        "views/toolbar/ai_chat_button.h",
-      ]
-    }
     if (use_aura) {
       sources += [
         "views/renderer_context_menu/brave_render_view_context_menu_views.cc",
@@ -683,8 +612,6 @@ source_set("ui") {
     # to pull in dependencies needed for the overwrite codes in chromium_src.
     "//brave/chromium_src/chrome/browser/ui",
     "//brave/common",
-    "//brave/components/ai_chat/core/common/buildflags",
-    "//brave/components/ai_rewriter/common/buildflags",
     "//brave/components/brave_adblock_ui:generated_resources",
     "//brave/components/brave_adblock_ui/adblock_internals:generated_resources",
     "//brave/components/brave_ads/browser",
@@ -976,19 +903,6 @@ source_set("ui") {
       "//mojo/public/cpp/bindings",
       "//third_party/blink/public/common",
       "//ui/web_dialogs",
-    ]
-  }
-
-  # FlyWeb: brave_settings_ui.h includes settings_helper.mojom.h whatever
-  # enable_ai_chat says, so the mojom is needed with enable_ai_chat=false too.
-  deps += [ "//brave/components/ai_chat/core/common/mojom" ]
-
-  if (enable_ai_chat) {
-    deps += [
-      "//brave/components/ai_chat/content/browser",
-      "//brave/components/ai_chat/core/browser",
-      "//brave/components/ai_chat/core/common",
-      "//brave/components/ai_chat/resources/page:generated_resources",
     ]
   }
 

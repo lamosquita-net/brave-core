@@ -22,7 +22,6 @@
 #include "brave/browser/ntp_background/ntp_tab_helper.h"
 #include "brave/browser/skus/skus_service_factory.h"
 #include "brave/browser/ui/bookmark/brave_bookmark_tab_helper.h"
-#include "brave/components/ai_chat/core/common/buildflags/buildflags.h"
 #include "brave/components/brave_perf_predictor/browser/perf_predictor_tab_helper.h"
 #include "brave/components/brave_wayback_machine/buildflags/buildflags.h"
 #include "brave/components/greaselion/browser/buildflags/buildflags.h"
@@ -56,11 +55,6 @@
 #include "brave/browser/brave_shields/brave_shields_tab_helper.h"
 #include "brave/browser/ui/geolocation/brave_geolocation_permission_tab_helper.h"
 #include "chrome/browser/ui/thumbnails/thumbnail_tab_helper.h"
-#endif
-
-#if BUILDFLAG(ENABLE_AI_CHAT)
-#include "brave/browser/ai_chat/ai_chat_utils.h"
-#include "brave/components/ai_chat/content/browser/ai_chat_tab_helper.h"
 #endif
 
 #if BUILDFLAG(ENABLE_WIDEVINE)
@@ -123,24 +117,6 @@ void AttachTabHelpers(content::WebContents* web_contents) {
 #endif
 
   brave_rewards::RewardsTabHelper::CreateForWebContents(web_contents);
-
-#if BUILDFLAG(ENABLE_AI_CHAT)
-  content::BrowserContext* context = web_contents->GetBrowserContext();
-  if (ai_chat::IsAllowedForContext(context)) {
-    auto skus_service_getter = base::BindRepeating(
-        [](content::BrowserContext* context) {
-          return skus::SkusServiceFactory::GetForContext(context);
-        },
-        context);
-    ai_chat::AIChatTabHelper::CreateForWebContents(
-        web_contents,
-        g_brave_browser_process->process_misc_metrics()
-            ? g_brave_browser_process->process_misc_metrics()->ai_chat_metrics()
-            : nullptr,
-        skus_service_getter, g_browser_process->local_state(),
-        std::string(version_info::GetChannelString(chrome::GetChannel())));
-  }
-#endif
 
 #if BUILDFLAG(ENABLE_WIDEVINE)
   BraveDrmTabHelper::CreateForWebContents(web_contents);

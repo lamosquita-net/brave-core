@@ -18,7 +18,6 @@
 #include "brave/browser/playlist/playlist_service_factory.h"
 #include "brave/browser/search_engines/search_engine_tracker.h"
 #include "brave/browser/themes/brave_dark_mode_utils.h"
-#include "brave/components/ai_chat/core/common/buildflags/buildflags.h"
 #include "brave/components/brave_ads/browser/ads_service.h"
 #include "brave/components/brave_referrals/browser/brave_referrals_service.h"
 #include "brave/components/brave_search_conversion/p3a.h"
@@ -58,10 +57,6 @@
 #if defined(TOOLKIT_VIEWS)
 #include "brave/browser/onboarding/onboarding_tab_helper.h"
 #include "brave/components/sidebar/browser/pref_names.h"
-#endif
-
-#if BUILDFLAG(ENABLE_AI_CHAT)
-#include "brave/components/ai_chat/core/common/pref_names.h"
 #endif
 
 #if BUILDFLAG(ENABLE_WIDEVINE)
@@ -139,14 +134,6 @@ void RegisterLocalStatePrefs(PrefRegistrySimple* registry) {
   RegisterLocalStatePrefsForMigration(registry);
 
   brave_search_conversion::p3a::RegisterLocalStatePrefs(registry);
-
-#if BUILDFLAG(ENABLE_AI_CHAT)
-  ai_chat::prefs::RegisterLocalStatePrefs(registry);
-#endif
-
-#if BUILDFLAG(ENABLE_AI_CHAT)
-  skus::RegisterLocalStatePrefs(registry);
-#endif
 
   ntp_background_images::NTPP3AHelperImpl::RegisterLocalStatePrefs(registry);
 

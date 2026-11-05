@@ -11,7 +11,6 @@
 #include "brave/browser/search/ntp_utils.h"
 #include "brave/browser/themes/brave_dark_mode_utils.h"
 #include "brave/browser/translate/brave_translate_prefs_migration.h"
-#include "brave/components/ai_chat/core/common/buildflags/buildflags.h"
 #include "brave/components/brave_ads/core/public/prefs/obsolete_pref_util.h"
 #include "brave/components/brave_search_conversion/p3a.h"
 #include "brave/components/brave_shields/content/browser/brave_shields_p3a.h"
@@ -68,10 +67,6 @@
 
 #if defined(TOOLKIT_VIEWS)
 #include "brave/components/sidebar/browser/pref_names.h"
-#endif
-
-#if BUILDFLAG(ENABLE_AI_CHAT)
-#include "brave/components/ai_chat/core/browser/model_service.h"
 #endif
 
 // This method should be periodically pruned of year+ old migrations.
@@ -173,11 +168,6 @@ void MigrateObsoleteProfilePrefs(PrefService* profile_prefs,
   // Added 2024-01
   brave_tabs::MigrateBraveProfilePrefs(profile_prefs);
 #endif  // !BUILDFLAG(IS_ANDROID)
-
-#if BUILDFLAG(ENABLE_AI_CHAT)
-  // Added 2024-04
-  ai_chat::ModelService::MigrateProfilePrefs(profile_prefs);
-#endif
 
   // Added 2024-07
   profile_prefs->ClearPref(kHangoutsEnabled);

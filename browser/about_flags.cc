@@ -14,8 +14,6 @@
 #include "brave/browser/ethereum_remote_client/features.h"
 #include "brave/browser/ui/brave_ui_features.h"
 #include "brave/browser/ui/tabs/features.h"
-#include "brave/components/ai_chat/core/common/buildflags/buildflags.h"
-#include "brave/components/ai_rewriter/common/buildflags/buildflags.h"
 #include "brave/components/brave_ads/browser/ad_units/notification_ad/custom_notification_ad_feature.h"
 #include "brave/components/brave_ads/core/public/ad_units/notification_ad/notification_ad_feature.h"
 #include "brave/components/brave_ads/core/public/ads_feature.h"
@@ -45,14 +43,6 @@
 #include "components/translate/core/browser/translate_prefs.h"
 #include "net/base/features.h"
 #include "third_party/blink/public/common/features.h"
-
-#if BUILDFLAG(ENABLE_AI_CHAT)
-#include "brave/components/ai_chat/core/common/features.h"
-#endif
-
-#if BUILDFLAG(ENABLE_AI_REWRITER)
-#include "brave/components/ai_rewriter/common/features.h"
-#endif
 
 #if BUILDFLAG(ENABLE_SPEEDREADER)
 #include "brave/components/speedreader/common/features.h"
@@ -324,49 +314,6 @@
   })
 #else
 #define BRAVE_MIDDLE_CLICK_AUTOSCROLL_FEATURE_ENTRY
-#endif
-
-#if BUILDFLAG(ENABLE_AI_CHAT)
-#define BRAVE_AI_CHAT                                          \
-  EXPAND_FEATURE_ENTRIES({                                     \
-      "brave-ai-chat",                                         \
-      "Brave AI Chat",                                         \
-      "Summarize articles and engage in conversation with AI", \
-      kOsWin | kOsMac | kOsLinux | kOsAndroid,                 \
-      FEATURE_VALUE_TYPE(ai_chat::features::kAIChat),          \
-  })
-#define BRAVE_AI_CHAT_HISTORY                                \
-  EXPAND_FEATURE_ENTRIES({                                   \
-      "brave-ai-chat-history",                               \
-      "Brave AI Chat History",                               \
-      "Enables AI Chat History persistence and management",  \
-      kOsWin | kOsMac | kOsLinux,                            \
-      FEATURE_VALUE_TYPE(ai_chat::features::kAIChatHistory), \
-  })
-#define BRAVE_AI_CHAT_CONTEXT_MENU_REWRITE_IN_PLACE                      \
-  EXPAND_FEATURE_ENTRIES({                                               \
-      "brave-ai-chat-context-menu-rewrite-in-place",                     \
-      "Brave AI Chat Rewrite In Place From Context Menu",                \
-      "Enables AI Chat rewrite in place feature from the context menu",  \
-      kOsDesktop,                                                        \
-      FEATURE_VALUE_TYPE(ai_chat::features::kContextMenuRewriteInPlace), \
-  })
-#else
-#define BRAVE_AI_CHAT
-#define BRAVE_AI_CHAT_HISTORY
-#define BRAVE_AI_CHAT_CONTEXT_MENU_REWRITE_IN_PLACE
-#endif
-#if BUILDFLAG(ENABLE_AI_REWRITER)
-#define BRAVE_AI_REWRITER                                     \
-  EXPAND_FEATURE_ENTRIES({                                    \
-      "brave-ai-rewriter",                                    \
-      "Brave AI Rewriter",                                    \
-      "Enables the Brave AI rewriter dialog",                 \
-      kOsWin | kOsMac | kOsLinux,                             \
-      FEATURE_VALUE_TYPE(ai_rewriter::features::kAIRewriter), \
-  })
-#else
-#define BRAVE_AI_REWRITER
 #endif
 
 #define BRAVE_OMNIBOX_FEATURES                                                \
@@ -921,10 +868,6 @@
   BRAVE_SAFE_BROWSING_ANDROID                                                  \
   BRAVE_CHANGE_ACTIVE_TAB_ON_SCROLL_EVENT_FEATURE_ENTRIES                      \
   BRAVE_TABS_FEATURE_ENTRIES                                                   \
-  BRAVE_AI_CHAT                                                                \
-  BRAVE_AI_CHAT_HISTORY                                                        \
-  BRAVE_AI_CHAT_CONTEXT_MENU_REWRITE_IN_PLACE                                  \
-  BRAVE_AI_REWRITER                                                            \
   BRAVE_OMNIBOX_FEATURES                                                       \
   BRAVE_MIDDLE_CLICK_AUTOSCROLL_FEATURE_ENTRY                                  \
   BRAVE_EXTENSIONS_MANIFEST_V2                                                 \

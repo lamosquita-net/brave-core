@@ -6,7 +6,6 @@
 #ifndef BRAVE_BROWSER_POLICY_BRAVE_SIMPLE_POLICY_MAP_H_
 #define BRAVE_BROWSER_POLICY_BRAVE_SIMPLE_POLICY_MAP_H_
 
-#include "brave/components/ai_chat/core/common/buildflags/buildflags.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/tor/buildflags/buildflags.h"
 #include "build/build_config.h"
@@ -20,10 +19,6 @@
 
 #if BUILDFLAG(ENABLE_TOR)
 #include "brave/components/tor/pref_names.h"
-#endif
-
-#if BUILDFLAG(ENABLE_AI_CHAT)
-#include "brave/components/ai_chat/core/common/pref_names.h"
 #endif
 
 namespace policy {
@@ -41,10 +36,6 @@ inline constexpr PolicyToPreferenceMapEntry kBraveSimplePolicyMap[] = {
 #endif
 #if BUILDFLAG(ENABLE_TOR)
     {policy::key::kTorDisabled, tor::prefs::kTorDisabled,
-     base::Value::Type::BOOLEAN},
-#endif
-#if BUILDFLAG(ENABLE_AI_CHAT)
-    {policy::key::kBraveAIChatEnabled, ai_chat::prefs::kEnabledByPolicy,
      base::Value::Type::BOOLEAN},
 #endif
 };

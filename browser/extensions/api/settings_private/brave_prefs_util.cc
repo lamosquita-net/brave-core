@@ -8,7 +8,6 @@
 #include "base/feature_list.h"
 #include "brave/browser/ethereum_remote_client/buildflags/buildflags.h"
 #include "brave/browser/ui/tabs/brave_tab_prefs.h"
-#include "brave/components/ai_chat/core/common/buildflags/buildflags.h"
 #include "brave/components/brave_ads/core/public/prefs/pref_names.h"
 #include "brave/components/brave_rewards/common/pref_names.h"
 #include "brave/components/brave_shields/content/browser/brave_shields_util.h"
@@ -46,11 +45,6 @@
 
 #if BUILDFLAG(ETHEREUM_REMOTE_CLIENT_ENABLED)
 #include "brave/browser/ethereum_remote_client/pref_names.h"
-#endif
-
-#if BUILDFLAG(ENABLE_AI_CHAT)
-#include "brave/components/ai_chat/core/browser/model_service.h"
-#include "brave/components/ai_chat/core/common/pref_names.h"
 #endif
 
 #if defined(TOOLKIT_VIEWS)
@@ -243,14 +237,6 @@ const PrefsUtil::TypedPrefMap& BravePrefsUtil::GetAllowlistedKeys() {
       settings_api::PrefType::kBoolean;
 
 // Leo Assistant pref
-#if BUILDFLAG(ENABLE_AI_CHAT)
-  (*s_brave_allowlist)[ai_chat::prefs::kBraveChatAutocompleteProviderEnabled] =
-      settings_api::PrefType::kBoolean;
-  (*s_brave_allowlist)[ai_chat::prefs::kBraveAIChatContextMenuEnabled] =
-      settings_api::PrefType::kBoolean;
-  (*s_brave_allowlist)[ai_chat::prefs::kBraveAIChatShowToolbarButton] =
-      settings_api::PrefType::kBoolean;
-#endif
 
 #if !BUILDFLAG(USE_GCM_FROM_PLATFORM)
   // Push Messaging Pref

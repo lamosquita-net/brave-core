@@ -7,8 +7,6 @@ import("//brave/android/android_browser_tests.gni")
 import("//brave/browser/ethereum_remote_client/buildflags/buildflags.gni")
 import("//brave/browser/metrics/buildflags/buildflags.gni")
 import("//brave/build/config.gni")
-import("//brave/components/ai_chat/core/common/buildflags/buildflags.gni")
-import("//brave/components/ai_rewriter/common/buildflags/buildflags.gni")
 import("//brave/components/brave_wayback_machine/buildflags/buildflags.gni")
 import("//brave/components/brave_webtorrent/browser/buildflags/buildflags.gni")
 import("//brave/components/greaselion/browser/buildflags/buildflags.gni")
@@ -331,15 +329,6 @@ test("brave_unit_tests") {
     deps += [
       "//brave/browser/playlist/test:unit_tests",
       "//brave/components/playlist/common:unit_tests",
-    ]
-  }
-
-  if (enable_ai_chat) {
-    deps += [
-      "//brave/browser/ai_chat:unit_tests",
-      "//brave/components/ai_chat/core/browser:unit_tests",
-      "//brave/components/ai_chat/core/common:unit_tests",
-      "//brave/components/ai_chat/renderer:unit_tests",
     ]
   }
 
@@ -975,10 +964,6 @@ test("brave_browser_tests") {
     ]
   }
 
-  if (is_android && enable_ai_chat) {
-    deps += [ "//brave/components/brave_mobile_subscription/renderer/android:browser_tests" ]
-  }
-
   if (enable_crash_dialog) {
     sources += [ "//brave/browser/ui/views/crash_report_permission_ask_dialog_browsertest.cc" ]
   }
@@ -1100,12 +1085,6 @@ test("brave_browser_tests") {
     ]
   }
 
-  # FlyWeb: guarded (enable_ai_rewriter follows enable_ai_chat, which FlyWeb
-  # builds with false).
-  if (enable_ai_rewriter) {
-    deps += [ "//brave/browser/ui/ai_rewriter:browsertest" ]
-  }
-
   if (enable_commander) {
     deps += [ "//brave/browser/ui/commander:browser_tests" ]
   }
@@ -1135,15 +1114,6 @@ test("brave_browser_tests") {
     deps += [
       "//brave/browser/extensions/api/identity/test:browsertests",
       "//brave/components/brave_webtorrent/browser",
-    ]
-  }
-
-  if (enable_ai_chat) {
-    # FlyWeb: also guarded (ai_chat/core/browser asserts enable_ai_chat, and
-    # FlyWeb builds with enable_ai_chat=false).
-    deps += [
-      "//brave/browser/ai_chat:browser_tests",
-      "//brave/components/ai_chat/core/browser",
     ]
   }
 

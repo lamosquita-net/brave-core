@@ -17,11 +17,6 @@
 #include "chrome/common/buildflags.h"
 #include "components/content_settings/core/browser/host_content_settings_map.h"
 
-#if BUILDFLAG(ENABLE_AI_CHAT)
-#include "brave/components/ai_chat/core/browser/utils.h"
-#include "brave/components/ai_chat/core/common/features.h"
-#endif
-
 BraveBrowsingDataRemoverDelegate::BraveBrowsingDataRemoverDelegate(
     content::BrowserContext* browser_context)
     : ChromeBrowsingDataRemoverDelegate(browser_context),
@@ -51,13 +46,6 @@ void BraveBrowsingDataRemoverDelegate::RemoveEmbedderData(
   if (remove_mask & chrome_browsing_data_remover::DATA_TYPE_CONTENT_SETTINGS)
     ClearShieldsSettings(delete_begin, delete_end);
 
-#if BUILDFLAG(ENABLE_AI_CHAT)
-  if (remove_mask & chrome_browsing_data_remover::DATA_TYPE_BRAVE_LEO_HISTORY &&
-      ai_chat::IsAIChatEnabled(profile_->GetPrefs()) &&
-      ai_chat::features::IsAIChatHistoryEnabled()) {
-    ClearAiChatHistory(delete_begin, delete_end);
-  }
-#endif  // BUILDFLAG(ENABLE_AI_CHAT)
 }
 
 void BraveBrowsingDataRemoverDelegate::ClearShieldsSettings(
@@ -88,11 +76,3 @@ void BraveBrowsingDataRemoverDelegate::ClearShieldsSettings(
     }
   }
 }
-
-#if BUILDFLAG(ENABLE_AI_CHAT)
-void BraveBrowsingDataRemoverDelegate::ClearAiChatHistory(base::Time begin_time,
-                                                          base::Time end_time) {
-  // Handler for the Brave Leo History clearing.
-  // It is prepared for future implementation.
-}
-#endif  // BUILDFLAG(ENABLE_AI_CHAT)
