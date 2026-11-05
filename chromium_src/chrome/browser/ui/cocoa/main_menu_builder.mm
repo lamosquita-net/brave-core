@@ -14,18 +14,10 @@ namespace {
 constexpr int kPasteMacResourceId = IDS_PASTE_MAC;
 constexpr int kMuteSiteResourceId = IDS_MUTE_SITE_MAC;
 constexpr int kCloseOtherTabsResourceId = IDS_TAB_CXMENU_CLOSEOTHERTABS;
-constexpr int kReopenCloseTabsMacResourceId = IDS_REOPEN_CLOSED_TABS_MAC;
 constexpr int kHelpMacResourceId = IDS_HELP_MAC;
 constexpr int kMediaRouterMenuItemTitleResourceId =
     IDS_MEDIA_ROUTER_MENU_ITEM_TITLE;
 }  // namespace
-
-// Insert "New Private Window with Tor" in "File" menu
-#undef IDS_REOPEN_CLOSED_TABS_MAC
-#define IDS_REOPEN_CLOSED_TABS_MAC                  \
-  IDS_NEW_OFFTHERECORD_WINDOW_TOR)                  \
-      .command_id(IDC_NEW_OFFTHERECORD_WINDOW_TOR), \
-  Item(kReopenCloseTabsMacResourceId
 
 // Insert "Report Broken Site" in "Help" menu
 #undef IDS_HELP_MAC
@@ -68,5 +60,3 @@ IDS_IDC_COMMANDER).command_id(IDC_COMMANDER)                     \
 #define IDS_TAB_CXMENU_CLOSEOTHERTABS kCloseOtherTabsResourceId
 #undef IDS_HELP_MAC
 #define IDS_HELP_MAC kHelpMacResourceId
-#undef IDS_REOPEN_CLOSED_TABS_MAC
-#define IDS_REOPEN_CLOSED_TABS_MAC kReopenCloseTabsMacResourceId

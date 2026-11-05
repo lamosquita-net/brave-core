@@ -12,8 +12,6 @@
 #include "brave/browser/brave_browser_process.h"
 #include "brave/components/brave_component_updater/browser/brave_component.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
-#include "brave/components/tor/brave_tor_pluggable_transport_updater.h"
-#include "brave/components/tor/buildflags/buildflags.h"
 #include "brave/components/url_sanitizer/browser/url_sanitizer_component_installer.h"
 #include "build/build_config.h"
 #include "chrome/browser/browser_process_impl.h"
@@ -53,11 +51,6 @@ namespace ntp_background_images {
 class NTPBackgroundImagesService;
 }  // namespace ntp_background_images
 
-namespace tor {
-class BraveTorClientUpdater;
-class BraveTorPluggableTransportUpdater;
-}  // namespace tor
-
 namespace speedreader {
 class SpeedreaderRewriterService;
 }
@@ -92,11 +85,6 @@ class BraveBrowserProcessImpl : public BraveBrowserProcess,
       override;
   brave_component_updater::LocalDataFilesService* local_data_files_service()
       override;
-#if BUILDFLAG(ENABLE_TOR)
-  tor::BraveTorClientUpdater* tor_client_updater() override;
-  tor::BraveTorPluggableTransportUpdater* tor_pluggable_transport_updater()
-      override;
-#endif
   ntp_background_images::NTPBackgroundImagesService*
   ntp_background_images_service() override;
 #if BUILDFLAG(ENABLE_SPEEDREADER)
@@ -114,10 +102,6 @@ class BraveBrowserProcessImpl : public BraveBrowserProcess,
 #endif
 
   void CreateProfileManager();
-
-#if BUILDFLAG(ENABLE_TOR)
-  void OnTorEnabledChanged();
-#endif
 
   void UpdateBraveDarkMode();
   void OnBraveDarkModeChanged();
@@ -150,11 +134,6 @@ class BraveBrowserProcessImpl : public BraveBrowserProcess,
 #endif
   std::unique_ptr<brave::URLSanitizerComponentInstaller>
       url_sanitizer_component_installer_;
-#if BUILDFLAG(ENABLE_TOR)
-  std::unique_ptr<tor::BraveTorClientUpdater> tor_client_updater_;
-  std::unique_ptr<tor::BraveTorPluggableTransportUpdater>
-      tor_pluggable_transport_updater_;
-#endif
   std::unique_ptr<ntp_background_images::NTPBackgroundImagesService>
       ntp_background_images_service_;
 

@@ -29,7 +29,6 @@
 #include "brave/components/ntp_background_images/browser/view_counter_service.h"
 #include "brave/components/playlist/common/buildflags/buildflags.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
-#include "brave/components/tor/buildflags/buildflags.h"
 #include "brave/components/version_info/version_info.h"
 #include "build/build_config.h"
 #include "chrome/browser/profiles/profile.h"
@@ -49,13 +48,8 @@
 #include "brave/components/speedreader/common/features.h"
 #endif
 
-#if BUILDFLAG(ENABLE_TOR)
-#include "brave/browser/ui/webui/settings/brave_tor_handler.h"
-#endif
-
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "brave/browser/ui/webui/settings/brave_extensions_manifest_v2_handler.h"
-#include "brave/browser/ui/webui/settings/brave_tor_snowflake_extension_handler.h"
 #endif
 
 #if BUILDFLAG(ENABLE_PLAYLIST)
@@ -75,12 +69,7 @@ BraveSettingsUI::BraveSettingsUI(content::WebUI* web_ui,
   web_ui->AddMessageHandler(std::make_unique<BraveAppearanceHandler>());
   web_ui->AddMessageHandler(std::make_unique<BraveSyncHandler>());
   web_ui->AddMessageHandler(std::make_unique<BraveAdBlockHandler>());
-#if BUILDFLAG(ENABLE_TOR)
-  web_ui->AddMessageHandler(std::make_unique<BraveTorHandler>());
-#endif
 #if BUILDFLAG(ENABLE_EXTENSIONS)
-  web_ui->AddMessageHandler(
-      std::make_unique<BraveTorSnowflakeExtensionHandler>());
   if (base::FeatureList::IsEnabled(kExtensionsManifestV2)) {
     web_ui->AddMessageHandler(
         std::make_unique<BraveExtensionsManifestV2Handler>());

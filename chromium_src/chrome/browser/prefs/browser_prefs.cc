@@ -15,7 +15,6 @@
 #include "brave/components/ntp_background_images/browser/view_counter_service.h"
 #include "brave/components/ntp_background_images/buildflags/buildflags.h"
 #include "brave/components/omnibox/browser/brave_omnibox_prefs.h"
-#include "brave/components/tor/buildflags/buildflags.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/common/channel_info.h"
 #include "chrome/common/pref_names.h"
@@ -27,11 +26,6 @@
 #if !BUILDFLAG(IS_ANDROID)
 #include "brave/browser/search_engines/search_engine_provider_util.h"
 #include "brave/browser/ui/tabs/brave_tab_prefs.h"
-#endif
-
-#if BUILDFLAG(ENABLE_TOR)
-#include "brave/components/tor/pref_names.h"
-#include "brave/components/tor/tor_utils.h"
 #endif
 
 #if BUILDFLAG(ENABLE_WIDEVINE)
@@ -127,9 +121,6 @@ void MigrateObsoleteProfilePrefs(PrefService* profile_prefs,
 #endif
 
   // Added 03/2024
-#if BUILDFLAG(ENABLE_TOR)
-  profile_prefs->ClearPref(tor::prefs::kAutoOnionRedirect);
-#endif
 
 #if defined(TOOLKIT_VIEWS)
   // Added May 2023
@@ -163,11 +154,6 @@ void MigrateObsoleteProfilePrefs(PrefService* profile_prefs,
 void MigrateObsoleteLocalStatePrefs(PrefService* local_state) {
   // BEGIN_MIGRATE_OBSOLETE_LOCAL_STATE_PREFS
   MigrateObsoleteLocalStatePrefs_ChromiumImpl(local_state);
-
-#if BUILDFLAG(ENABLE_TOR)
-  // Added 4/2021.
-  tor::MigrateLastUsedProfileFromLocalStatePrefs(local_state);
-#endif
 
 #if !BUILDFLAG(IS_ANDROID)
   // Added 10/2022

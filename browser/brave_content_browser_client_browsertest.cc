@@ -17,7 +17,6 @@
 #include "brave/components/brave_webtorrent/browser/buildflags/buildflags.h"
 #include "brave/components/constants/brave_paths.h"
 #include "brave/components/constants/pref_names.h"
-#include "brave/components/tor/buildflags/buildflags.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/extensions/component_loader.h"
 #include "chrome/browser/extensions/extension_service.h"
@@ -41,12 +40,6 @@
 #include "extensions/common/constants.h"
 #include "net/dns/mock_host_resolver.h"
 #include "url/origin.h"
-
-#if BUILDFLAG(ENABLE_TOR)
-#include "brave/browser/tor/tor_profile_manager.h"
-#include "brave/components/tor/tor_navigation_throttle.h"
-#include "brave/net/proxy_resolution/proxy_config_service_tor.h"
-#endif
 
 #if BUILDFLAG(ENABLE_BRAVE_WEBTORRENT)
 #include "brave/components/brave_webtorrent/browser/magnet_protocol_handler.h"
@@ -541,90 +534,6 @@ IN_PROC_BROWSER_TEST_F(BraveContentBrowserClientTest,
                torrent_extension_url().spec().c_str())
       << "No changes on the real URL";
 }
-
-#if BUILDFLAG(ENABLE_TOR)
-IN_PROC_BROWSER_TEST_F(BraveContentBrowserClientTest, MixedContentForOnion) {
-  net::ProxyConfigServiceTor::SetBypassTorProxyConfigForTesting(true);
-  tor::TorNavigationThrottle::SetSkipWaitForTorConnectedForTesting(true);
-  Browser* tor_browser =
-      TorProfileManager::SwitchToTorProfile(browser()->profile());
-
-  const GURL onion_url =
-      embedded_test_server()->GetURL("test.onion", "/onion.html");
-  const GURL onion_upgradable_url =
-      embedded_test_server()->GetURL("test.onion", "/onion_upgradable.html");
-
-  ASSERT_EQ("http", onion_url.scheme());
-  content::WebContents* contents =
-      tor_browser->tab_strip_model()->GetActiveWebContents();
-  {
-    content::WebContentsConsoleObserver console_observer(contents);
-    // filter out noises like "crbug/1173575, non-JS module files deprecated"
-    // since we are only interested in mix content error
-    console_observer.SetFilter(base::BindLambdaForTesting(
-        [](const content::WebContentsConsoleObserver::Message& message) {
-          return message.log_level == blink::mojom::ConsoleMessageLevel::kError;
-        }));
-    ASSERT_TRUE(
-        ui_test_utils::NavigateToURL(tor_browser, onion_upgradable_url));
-    EXPECT_TRUE(console_observer.messages().empty());
-  }
-  {
-    content::WebContentsConsoleObserver console_observer(contents);
-    console_observer.SetPattern(
-        "Mixed Content: The page at 'http://test.onion*/onion.html' was loaded "
-        "over HTTPS, but requested an insecure element "
-        "'http://auto_upgradable_to_https.com/image.jpg'. This request was "
-        "automatically upgraded to HTTPS*");
-    ASSERT_TRUE(ui_test_utils::NavigateToURL(tor_browser, onion_url));
-    ASSERT_TRUE(console_observer.Wait());
-  }
-  auto fetch = [](const std::string& resource) {
-    return "fetch('" + resource + "').then((response) => { console.log('" +
-           resource + "' + ' ' + response.statusText) })";
-  };
-  {
-    content::WebContentsConsoleObserver console_observer(contents);
-    console_observer.SetPattern(
-        "Mixed Content: The page at 'http://test.onion*/onion.html' was "
-        "loaded over HTTPS, but requested an insecure resource "
-        "'http://example.com*'. This request has been blocked; the content "
-        "must be served over HTTPS.");
-    const GURL resource_url =
-        embedded_test_server()->GetURL("example.com", "/logo-referrer.png");
-    const std::string kFetchScript = fetch(resource_url.spec());
-    ASSERT_FALSE(content::ExecJs(contents, kFetchScript));
-    ASSERT_TRUE(console_observer.Wait());
-  }
-  {
-    auto https_server = std::make_unique<net::EmbeddedTestServer>(
-        net::test_server::EmbeddedTestServer::TYPE_HTTPS);
-    https_server->SetSSLConfig(net::EmbeddedTestServer::CERT_TEST_NAMES);
-    https_server->AddDefaultHandlers();
-    ASSERT_TRUE(https_server->Start());
-
-    content::WebContentsConsoleObserver console_observer(contents);
-    const auto resource_url =
-        https_server->GetURL("example.a.test", "/echoheader").spec();
-    console_observer.SetPattern(resource_url + " OK");
-    const std::string kFetchScript = fetch(resource_url);
-    ASSERT_TRUE(content::ExecJs(contents, kFetchScript));
-    ASSERT_TRUE(console_observer.Wait());
-  }
-  {
-    content::WebContentsConsoleObserver console_observer(contents);
-    // logo-referrer.png sets "access-control-allow-origin: *"
-    const auto resource_url =
-        embedded_test_server()
-            ->GetURL("example.onion", "/logo-referrer.png")
-            .spec();
-    console_observer.SetPattern(resource_url + " OK");
-    const std::string kFetchScript = fetch(resource_url);
-    ASSERT_TRUE(content::ExecJs(contents, kFetchScript));
-    ASSERT_TRUE(console_observer.Wait());
-  }
-}
-#endif
 
 class BraveContentBrowserClientReferrerTest
     : public BraveContentBrowserClientTest {

@@ -22,15 +22,6 @@ class BraveIncognitoMenuView : public IncognitoMenuView {
 
  private:
   friend class IncognitoMenuView;
-
-  // views::BubbleDialogDelegateView:
-  std::u16string GetAccessibleWindowTitle() const override;
-
-  // Button actions.
-  void OnExitButtonClicked() override;
-
-  void AddTorButton();
-  void OnTorProfileButtonClicked();
 };
 
 #endif  // BRAVE_BROWSER_UI_VIEWS_PROFILES_BRAVE_INCOGNITO_MENU_VIEW_H_

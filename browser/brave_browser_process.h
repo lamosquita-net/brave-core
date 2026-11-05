@@ -13,7 +13,6 @@
 
 #include "brave/components/request_otr/common/buildflags/buildflags.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
-#include "brave/components/tor/buildflags/buildflags.h"
 #include "build/build_config.h"
 #include "extensions/buildflags/buildflags.h"
 
@@ -52,11 +51,6 @@ namespace ntp_background_images {
 class NTPBackgroundImagesService;
 }  // namespace ntp_background_images
 
-namespace tor {
-class BraveTorClientUpdater;
-class BraveTorPluggableTransportUpdater;
-}  // namespace tor
-
 namespace speedreader {
 class SpeedreaderRewriterService;
 }
@@ -81,11 +75,6 @@ class BraveBrowserProcess {
   URLSanitizerComponentInstaller() = 0;
   virtual brave_component_updater::LocalDataFilesService*
   local_data_files_service() = 0;
-#if BUILDFLAG(ENABLE_TOR)
-  virtual tor::BraveTorClientUpdater* tor_client_updater() = 0;
-  virtual tor::BraveTorPluggableTransportUpdater*
-  tor_pluggable_transport_updater() = 0;
-#endif
   virtual ntp_background_images::NTPBackgroundImagesService*
   ntp_background_images_service() = 0;
 #if BUILDFLAG(ENABLE_SPEEDREADER)

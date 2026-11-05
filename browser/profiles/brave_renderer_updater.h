@@ -10,7 +10,6 @@
 
 #include "base/memory/raw_ptr.h"
 #include "brave/common/brave_renderer_configuration.mojom-forward.h"
-#include "brave/components/tor/buildflags/buildflags.h"
 #include "components/keyed_service/core/keyed_service.h"
 #include "components/prefs/pref_change_registrar.h"
 #include "components/prefs/pref_member.h"
@@ -55,9 +54,6 @@ class BraveRendererUpdater : public KeyedService {
 
   // Prefs that we sync to the renderers.
   BooleanPrefMember de_amp_enabled_;
-#if BUILDFLAG(ENABLE_TOR)
-  BooleanPrefMember onion_only_in_tor_windows_;
-#endif
   BooleanPrefMember widevine_enabled_;
 };
 

@@ -8,9 +8,6 @@
 #include "base/functional/callback_helpers.h"
 #include "base/strings/utf_string_conversions.h"
 #include "brave/components/constants/pref_names.h"
-#include "brave/components/tor/buildflags/buildflags.h"
-#include "brave/components/tor/tor_constants.h"
-#include "brave/components/tor/tor_utils.h"
 #include "build/build_config.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/profile.h"
@@ -151,23 +148,5 @@ IN_PROC_BROWSER_TEST_F(BraveProfileManagerTest, MediaRouterEnabledRestartTest) {
     EXPECT_TRUE(profile->GetPrefs()->GetBoolean(::prefs::kEnableMediaRouter));
     EXPECT_TRUE(profile->GetPrefs()->GetBoolean(kEnableMediaRouterOnRestart));
   }
-}
-#endif
-
-#if BUILDFLAG(ENABLE_TOR)
-IN_PROC_BROWSER_TEST_F(BraveProfileManagerTest,
-                       GetLastUsedProfileName) {
-  g_browser_process->local_state()->SetString(
-      prefs::kProfileLastUsed,
-      base::FilePath(tor::kTorProfileDir).AsUTF8Unsafe());
-
-  // The migration happens during the initialization of the browser process, so
-  // we need to explicitly call the method here to test it actually works.
-  tor::MigrateLastUsedProfileFromLocalStatePrefs(
-      g_browser_process->local_state());
-
-  ProfileManager* profile_manager = g_browser_process->profile_manager();
-  base::FilePath last_used_path = profile_manager->GetLastUsedProfileDir();
-  EXPECT_EQ(last_used_path.BaseName().AsUTF8Unsafe(), chrome::kInitialProfile);
 }
 #endif

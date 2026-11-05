@@ -13,11 +13,6 @@
 #include "base/task/sequenced_task_runner.h"
 #include "base/task/thread_pool.h"
 #include "brave/components/brave_shields/content/browser/ad_block_service.h"
-#include "brave/components/tor/buildflags/buildflags.h"
-
-namespace tor {
-class BraveTorClientUpdater;
-}
 
 // static
 TestingBraveBrowserProcess* TestingBraveBrowserProcess::GetGlobal() {
@@ -99,17 +94,6 @@ brave_component_updater::LocalDataFilesService*
 TestingBraveBrowserProcess::local_data_files_service() {
   return nullptr;
 }
-
-#if BUILDFLAG(ENABLE_TOR)
-tor::BraveTorClientUpdater* TestingBraveBrowserProcess::tor_client_updater() {
-  return nullptr;
-}
-
-tor::BraveTorPluggableTransportUpdater*
-TestingBraveBrowserProcess::tor_pluggable_transport_updater() {
-  return nullptr;
-}
-#endif
 
 ntp_background_images::NTPBackgroundImagesService*
 TestingBraveBrowserProcess::ntp_background_images_service() {

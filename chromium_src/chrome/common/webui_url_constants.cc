@@ -8,7 +8,7 @@
 
 #define kChromeUIAttributionInternalsHost                                 \
   kChromeUIAttributionInternalsHost, kAdblockHost, kAdblockInternalsHost, \
-      kWelcomeHost, kWalletPageHost, kTorInternalsHost
+      kWelcomeHost, kWalletPageHost
 
 #include "src/chrome/common/webui_url_constants.cc"
 

@@ -145,9 +145,6 @@ declare namespace NewTab {
     isIncognito: boolean
     useAlternativePrivateSearchEngine: boolean
     showAlternativePrivateSearchEngineToggle: boolean
-    torCircuitEstablished: boolean,
-    torInitProgress: string,
-    isTor: boolean
     gridLayoutSize?: 'small'
     showGridSiteRemovedNotification?: boolean
     showBackgroundImage: boolean

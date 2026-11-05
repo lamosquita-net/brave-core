@@ -11,21 +11,8 @@ interface PageHandler {
   SetClientPage(pending_remote<PrivateTabPage> page);
   SetDisclaimerDismissed(bool dismissed);
   GetDisclaimerDismissed() => (bool dismissed);
-  GetIsTorConnected() => (bool is_connected);
   GoToBraveSearch(string input, bool open_new_tab);
-  GoToBraveSupport();
 };
 
-enum ConnectionStatus {
-  kUnknown,
-  kConnecting,
-  kConnectionSlow,
-  kConnectionStuck,
-  kConnected,
-};
-
-interface PrivateTabPage {
-  OnTorCircuitEstablished(bool has_established);
-  OnTorInitializing(string percentage, string message);
-  OnTorCircuitStatus(ConnectionStatus status);
-};
+// Page-side interface; it had only Tor callbacks, which FlyWeb removed.
+interface PrivateTabPage {};

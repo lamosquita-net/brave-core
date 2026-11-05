@@ -16,16 +16,11 @@
 
 class Browser;
 class GURL;
-class Profile;
 
 namespace brave {
 
 bool HasSelectedURL(Browser* browser);
 void CleanAndCopySelectedURL(Browser* browser);
-void NewOffTheRecordWindowTor(Browser* browser);
-void NewOffTheRecordWindowTor(Profile* profile);
-
-void NewTorConnectionForSite(Browser*);
 
 void MaybeDistillAndShowSpeedreaderBubble(Browser* browser);
 // Copies an url sanitized by URLSanitizerService.

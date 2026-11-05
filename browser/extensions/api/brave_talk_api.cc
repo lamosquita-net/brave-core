@@ -9,17 +9,10 @@
 #include <string>
 
 #include "base/environment.h"
-#include "chrome/browser/profiles/profile.h"
 
 namespace extensions::api {
 
 ExtensionFunction::ResponseAction BraveTalkIsSupportedFunction::Run() {
-  Profile* profile = Profile::FromBrowserContext(browser_context());
-
-  if (profile->IsTor()) {
-    return RespondNow(Error("Not available in Tor profile"));
-  }
-
   return RespondNow(WithArguments(true));
 }
 

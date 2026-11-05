@@ -557,14 +557,6 @@
               blink::features::kBraveBlockScreenFingerprinting),               \
       },                                                                       \
       {                                                                        \
-          "brave-tor-windows-https-only",                                      \
-          "Use HTTPS-Only Mode in Private Windows with Tor",                   \
-          "Prevents Private Windows with Tor from making any insecure HTTP "   \
-          "connections without warning the user first.",                       \
-          kOsAll,                                                              \
-          FEATURE_VALUE_TYPE(net::features::kBraveTorWindowsHttpsOnly),        \
-      },                                                                       \
-      {                                                                        \
           "brave-round-time-stamps",                                           \
           "Round time stamps",                                                 \
           "Prevents JavaScript from getting access to high-resolution clocks " \

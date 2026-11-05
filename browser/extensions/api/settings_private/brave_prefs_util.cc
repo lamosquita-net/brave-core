@@ -18,7 +18,6 @@
 #include "brave/components/playlist/common/buildflags/buildflags.h"
 #include "brave/components/request_otr/common/pref_names.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
-#include "brave/components/tor/buildflags/buildflags.h"
 #include "chrome/browser/content_settings/cookie_settings_factory.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/extensions/api/settings_private/prefs_util.h"
@@ -44,10 +43,6 @@
 
 #if BUILDFLAG(ENABLE_SPEEDREADER)
 #include "brave/components/speedreader/speedreader_pref_names.h"
-#endif
-
-#if BUILDFLAG(ENABLE_TOR)
-#include "brave/components/tor/pref_names.h"
 #endif
 
 #if BUILDFLAG(ENABLE_PLAYLIST)
@@ -211,12 +206,6 @@ const PrefsUtil::TypedPrefMap& BravePrefsUtil::GetAllowlistedKeys() {
   // Omnibox pref
   (*s_brave_allowlist)[omnibox::kPreventUrlElisionsInOmnibox] =
       settings_api::PrefType::kBoolean;
-#if BUILDFLAG(ENABLE_TOR)
-  (*s_brave_allowlist)[tor::prefs::kOnionOnlyInTorWindows] =
-      settings_api::PrefType::kBoolean;
-  (*s_brave_allowlist)[tor::prefs::kBridgesConfig] =
-      settings_api::PrefType::kDictionary;
-#endif
   (*s_brave_allowlist)[prefs::kWebRTCIPHandlingPolicy] =
       settings_api::PrefType::kString;
   // Request OTR feature

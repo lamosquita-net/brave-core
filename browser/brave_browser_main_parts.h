@@ -22,9 +22,6 @@ class BraveBrowserMainParts : public ChromeBrowserMainParts {
   void PreShutdown() override;
   void PreProfileInit() override;
   void PostProfileInit(Profile* profile, bool is_initial_profile) override;
-
- private:
-  friend class ChromeBrowserMainExtraPartsTor;
 };
 
 #endif  // BRAVE_BROWSER_BRAVE_BROWSER_MAIN_PARTS_H_

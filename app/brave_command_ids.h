@@ -17,9 +17,7 @@
 // That could break custom shortcut feature
 #define IDC_BRAVE_COMMANDS_START 56000
 #define IDC_SHOW_BRAVE_REWARDS 56000
-#define IDC_NEW_TOR_CONNECTION_FOR_SITE 56002
-#define IDC_NEW_OFFTHERECORD_WINDOW_TOR 56003
-#define IDC_CONTENT_CONTEXT_OPENLINKTOR 56004
+// 56002-56004 were the Tor commands (removed in FlyWeb); do not reuse them.
 #define IDC_SHOW_BRAVE_SYNC 56005
 #define IDC_SHOW_BRAVE_WALLET 56006
 #define IDC_TOGGLE_AI_CHAT 56007

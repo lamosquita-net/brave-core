@@ -20,7 +20,6 @@
 #include "brave/components/playlist/common/buildflags/buildflags.h"
 #include "brave/components/request_otr/common/buildflags/buildflags.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
-#include "brave/components/tor/buildflags/buildflags.h"
 #include "build/build_config.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/profile.h"
@@ -55,11 +54,6 @@
 
 #if BUILDFLAG(ENABLE_SPEEDREADER)
 #include "brave/browser/speedreader/speedreader_tab_helper.h"
-#endif
-
-#if BUILDFLAG(ENABLE_TOR)
-#include "brave/components/tor/onion_location_tab_helper.h"
-#include "brave/components/tor/tor_tab_helper.h"
 #endif
 
 #if BUILDFLAG(ENABLE_REQUEST_OTR)
@@ -113,12 +107,6 @@ void AttachTabHelpers(content::WebContents* web_contents) {
 
 #if BUILDFLAG(ENABLE_SPEEDREADER)
   speedreader::SpeedreaderTabHelper::MaybeCreateForWebContents(web_contents);
-#endif
-
-#if BUILDFLAG(ENABLE_TOR)
-  tor::TorTabHelper::MaybeCreateForWebContents(
-      web_contents, web_contents->GetBrowserContext()->IsTor());
-  tor::OnionLocationTabHelper::CreateForWebContents(web_contents);
 #endif
 
 #if defined(TOOLKIT_VIEWS)

@@ -8,7 +8,6 @@
 #include <memory>
 
 #include "brave/browser/ui/views/frame/brave_non_client_hit_test_helper.h"
-#include "brave/browser/ui/views/frame/brave_window_frame_graphic.h"
 #include "brave/browser/ui/views/tabs/vertical_tab_utils.h"
 #include "brave/browser/ui/views/toolbar/brave_toolbar_view.h"
 #include "chrome/browser/profiles/profile.h"
@@ -27,27 +26,9 @@ BraveOpaqueBrowserFrameView::BraveOpaqueBrowserFrameView(
     BrowserFrame* frame,
     BrowserView* browser_view,
     OpaqueBrowserFrameViewLayout* layout)
-    : OpaqueBrowserFrameView(frame, browser_view, layout) {
-  frame_graphic_ = std::make_unique<BraveWindowFrameGraphic>(
-      browser_view->browser()->profile());
-}
+    : OpaqueBrowserFrameView(frame, browser_view, layout) {}
 
 BraveOpaqueBrowserFrameView::~BraveOpaqueBrowserFrameView() = default;
-
-void BraveOpaqueBrowserFrameView::OnPaint(gfx::Canvas* canvas) {
-  OpaqueBrowserFrameView::OnPaint(canvas);
-
-  // Don't draw frame graphic over border.
-  gfx::ScopedCanvas scoped_canvas(canvas);
-  gfx::Rect bounds_to_frame_graphic(bounds());
-  if (!IsFrameCondensed()) {
-    bounds_to_frame_graphic.Inset(
-        gfx::Insets::VH(layout()->FrameBorderInsets(false).top(),
-                        layout()->FrameEdgeInsets(false).top()));
-    canvas->ClipRect(bounds_to_frame_graphic);
-  }
-  frame_graphic_->Paint(canvas, bounds_to_frame_graphic);
-}
 
 int BraveOpaqueBrowserFrameView::NonClientHitTest(const gfx::Point& point) {
   if (tabs::utils::ShouldShowVerticalTabs(browser_view()->browser())) {

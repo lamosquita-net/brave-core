@@ -16,7 +16,6 @@
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/constants/webui_url_constants.h"
 #include "brave/components/playlist/common/buildflags/buildflags.h"
-#include "brave/components/tor/buildflags/buildflags.h"
 #include "build/build_config.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/common/url_constants.h"
@@ -37,10 +36,6 @@
 
 #if BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
 #include "brave/browser/ui/webui/playlist_ui.h"
-#endif
-
-#if BUILDFLAG(ENABLE_TOR)
-#include "brave/browser/ui/webui/tor_internals_ui.h"
 #endif
 
 using content::WebUI;
@@ -67,16 +62,11 @@ WebUIController* NewWebUI(WebUI* web_ui, const GURL& url) {
   } else if (host == chrome::kChromeUISettingsHost) {
     return new BraveSettingsUI(web_ui, url.host());
   } else if (host == chrome::kChromeUINewTabHost) {
-    if (profile->IsIncognitoProfile() || profile->IsTor() ||
-        profile->IsGuestSession()) {
+    if (profile->IsIncognitoProfile() || profile->IsGuestSession()) {
       return new BravePrivateNewTabUI(web_ui, url.host());
     }
     return new BraveNewTabUI(web_ui, url.host());
 #endif  // !BUILDFLAG(IS_ANDROID)
-#if BUILDFLAG(ENABLE_TOR)
-  } else if (host == kTorInternalsHost) {
-    return new TorInternalsUI(web_ui, url.host());
-#endif
   }
 
   return nullptr;
@@ -109,9 +99,6 @@ WebUIFactoryFunction GetWebUIFactoryFunction(WebUI* web_ui,
         url.host_piece() == chrome::kChromeUIWelcomeURL) &&
        !profile->IsGuestSession()) ||
 #endif  // BUILDFLAG(IS_ANDROID)
-#if BUILDFLAG(ENABLE_TOR)
-      url.host_piece() == kTorInternalsHost ||
-#endif
       // FlyWeb: Brave Rewards WebUI removed (was the last term).
       false) {
     return &NewWebUI;

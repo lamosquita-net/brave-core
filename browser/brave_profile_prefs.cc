@@ -34,7 +34,6 @@
 #include "brave/components/request_otr/common/buildflags/buildflags.h"
 #include "brave/components/search_engines/brave_prepopulated_engines.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
-#include "brave/components/tor/buildflags/buildflags.h"
 #include "build/build_config.h"
 #include "chrome/browser/prefetch/pref_names.h"
 #include "chrome/browser/prefs/session_startup_pref.h"
@@ -73,10 +72,6 @@
 
 #if BUILDFLAG(ENABLE_SPEEDREADER)
 #include "brave/components/speedreader/speedreader_service.h"
-#endif
-
-#if BUILDFLAG(ENABLE_TOR)
-#include "brave/components/tor/tor_profile_service.h"
 #endif
 
 #if BUILDFLAG(IS_ANDROID)
@@ -388,10 +383,6 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
 
   de_amp::RegisterProfilePrefs(registry);
   debounce::DebounceService::RegisterProfilePrefs(registry);
-
-#if BUILDFLAG(ENABLE_TOR)
-  tor::TorProfileService::RegisterProfilePrefs(registry);
-#endif
 
 #if !BUILDFLAG(IS_ANDROID)
   BraveOmniboxClientImpl::RegisterProfilePrefs(registry);

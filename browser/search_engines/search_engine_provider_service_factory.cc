@@ -24,7 +24,6 @@
 #else
 #include "brave/browser/search_engines/normal_window_search_engine_provider_service.h"
 #include "brave/browser/search_engines/private_window_search_engine_provider_service.h"
-#include "brave/browser/search_engines/tor_window_search_engine_provider_service.h"
 #endif
 
 namespace {
@@ -40,11 +39,7 @@ KeyedService* InitializeSearchEngineProviderServiceIfNeeded(Profile* profile) {
     return new NormalWindowSearchEngineProviderServiceAndroid(profile);
   }
 #else
-  // Set search engine handler for tor or private profile.
-  if (profile->IsTor()) {
-    return new TorWindowSearchEngineProviderService(profile);
-  }
-
+  // Set search engine handler for private profile.
   if (profile->IsIncognitoProfile()) {
     return new PrivateWindowSearchEngineProviderService(profile);
   }

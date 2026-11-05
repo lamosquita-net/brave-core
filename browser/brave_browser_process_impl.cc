@@ -50,12 +50,6 @@
 #include "services/network/public/cpp/shared_url_loader_factory.h"
 #include "url/gurl.h"
 
-#if BUILDFLAG(ENABLE_TOR)
-#include "brave/components/tor/brave_tor_client_updater.h"
-#include "brave/components/tor/brave_tor_pluggable_transport_updater.h"
-#include "brave/components/tor/pref_names.h"
-#endif
-
 #if BUILDFLAG(ENABLE_SPEEDREADER)
 #include "brave/components/speedreader/speedreader_rewriter_service.h"
 #endif
@@ -106,13 +100,6 @@ void BraveBrowserProcessImpl::Init() {
       kBraveDarkMode,
       base::BindRepeating(&BraveBrowserProcessImpl::OnBraveDarkModeChanged,
                           base::Unretained(this)));
-
-#if BUILDFLAG(ENABLE_TOR)
-  pref_change_registrar_.Add(
-      tor::prefs::kTorDisabled,
-      base::BindRepeating(&BraveBrowserProcessImpl::OnTorEnabledChanged,
-                          base::Unretained(this)));
-#endif
 
   InitSystemRequestHandlerCallback();
 
@@ -298,43 +285,6 @@ void BraveBrowserProcessImpl::UpdateBraveDarkMode() {
 void BraveBrowserProcessImpl::OnBraveDarkModeChanged() {
   UpdateBraveDarkMode();
 }
-
-#if BUILDFLAG(ENABLE_TOR)
-tor::BraveTorClientUpdater* BraveBrowserProcessImpl::tor_client_updater() {
-  if (tor_client_updater_) {
-    return tor_client_updater_.get();
-  }
-
-  base::FilePath user_data_dir;
-  base::PathService::Get(chrome::DIR_USER_DATA, &user_data_dir);
-
-  tor_client_updater_ = std::make_unique<tor::BraveTorClientUpdater>(
-      brave_component_updater_delegate(), local_state(), user_data_dir);
-  return tor_client_updater_.get();
-}
-
-tor::BraveTorPluggableTransportUpdater*
-BraveBrowserProcessImpl::tor_pluggable_transport_updater() {
-  if (!tor_pluggable_transport_updater_) {
-    base::FilePath user_data_dir;
-    base::PathService::Get(chrome::DIR_USER_DATA, &user_data_dir);
-
-    tor_pluggable_transport_updater_ =
-        std::make_unique<tor::BraveTorPluggableTransportUpdater>(
-            brave_component_updater_delegate(), local_state(), user_data_dir);
-  }
-  return tor_pluggable_transport_updater_.get();
-}
-
-void BraveBrowserProcessImpl::OnTorEnabledChanged() {
-  // Update all browsers' tor command status.
-  for (Browser* browser : *BrowserList::GetInstance()) {
-    static_cast<chrome::BraveBrowserCommandController*>(
-        browser->command_controller())
-        ->UpdateCommandForTor();
-  }
-}
-#endif
 
 void BraveBrowserProcessImpl::CreateProfileManager() {
   DCHECK(!created_profile_manager_ && !profile_manager_);

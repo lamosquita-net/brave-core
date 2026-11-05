@@ -20,16 +20,11 @@
 #include "brave/components/l10n/common/prefs.h"
 #include "brave/components/ntp_background_images/browser/ntp_background_images_service.h"
 #include "brave/components/ntp_background_images/browser/view_counter_service.h"
-#include "brave/components/tor/buildflags/buildflags.h"
 #include "build/build_config.h"
 #include "chrome/common/pref_names.h"
 #include "components/metrics/metrics_pref_names.h"
 #include "components/prefs/pref_registry_simple.h"
 #include "third_party/widevine/cdm/buildflags.h"
-
-#if BUILDFLAG(ENABLE_TOR)
-#include "brave/components/tor/tor_profile_service.h"
-#endif
 
 #include "brave/browser/ui/webui/new_tab_page/brave_new_tab_message_handler.h"
 
@@ -69,9 +64,6 @@ void RegisterLocalStatePrefs(PrefRegistrySimple* registry) {
   // Turn off super annoying 'Hold to quit'
   registry->SetDefaultPrefValue(prefs::kConfirmToQuitEnabled,
                                 base::Value(false));
-#endif
-#if BUILDFLAG(ENABLE_TOR)
-  tor::TorProfileService::RegisterLocalStatePrefs(registry);
 #endif
   registry->SetDefaultPrefValue(
       metrics::prefs::kMetricsReportingEnabled,

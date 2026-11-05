@@ -15,7 +15,6 @@
 #include "brave/app/brave_command_ids.h"
 #include "brave/browser/ui/brave_browser_command_controller.h"
 #include "brave/browser/ui/browser_commands.h"
-#include "brave/components/tor/buildflags/buildflags.h"
 #include "chrome/app/chrome_command_ids.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/profiles/profile_window.h"
@@ -135,9 +134,6 @@ IN_PROC_BROWSER_TEST_F(BraveAppMenuModelBrowserTest, MenuOrderTest) {
       IDC_NEW_TAB,
       IDC_NEW_WINDOW,
       IDC_NEW_INCOGNITO_WINDOW,
-#if BUILDFLAG(ENABLE_TOR)
-      IDC_NEW_OFFTHERECORD_WINDOW_TOR,
-#endif
       IDC_SHOW_BRAVE_WALLET,
 #if defined(TOOLKIT_VIEWS)
       IDC_SIDEBAR_SHOW_OPTION_MENU,
@@ -156,13 +152,8 @@ IN_PROC_BROWSER_TEST_F(BraveAppMenuModelBrowserTest, MenuOrderTest) {
       IDC_OPTIONS,
   };
 
-  std::vector<int> commands_disabled_for_normal_profile = {
-      IDC_NEW_TOR_CONNECTION_FOR_SITE,
-  };
   CheckCommandsAreInOrderInMenuModel(browser(),
                                      commands_in_order_for_normal_profile);
-  CheckCommandsAreDisabledInMenuModel(browser(),
-                                      commands_disabled_for_normal_profile);
 
   // Same help menu is used for all profiles.
   std::vector<int> help_commands_in_order = {
@@ -192,9 +183,6 @@ IN_PROC_BROWSER_TEST_F(BraveAppMenuModelBrowserTest, MenuOrderTest) {
       IDC_NEW_TAB,
       IDC_NEW_WINDOW,
       IDC_NEW_INCOGNITO_WINDOW,
-#if BUILDFLAG(ENABLE_TOR)
-      IDC_NEW_OFFTHERECORD_WINDOW_TOR,
-#endif
       IDC_SHOW_BRAVE_WALLET,
 #if defined(TOOLKIT_VIEWS)
       IDC_SIDEBAR_SHOW_OPTION_MENU,
@@ -212,7 +200,6 @@ IN_PROC_BROWSER_TEST_F(BraveAppMenuModelBrowserTest, MenuOrderTest) {
   };
 
   std::vector<int> commands_disabled_for_private_profile = {
-      IDC_NEW_TOR_CONNECTION_FOR_SITE,
       IDC_RECENT_TABS_MENU,
   };
 
@@ -249,9 +236,6 @@ IN_PROC_BROWSER_TEST_F(BraveAppMenuModelBrowserTest, MenuOrderTest) {
                                      commands_in_order_for_guest_profile);
   std::vector<int> commands_disabled_for_guest_profile = {
       IDC_NEW_INCOGNITO_WINDOW,
-#if BUILDFLAG(ENABLE_TOR)
-      IDC_NEW_OFFTHERECORD_WINDOW_TOR,
-#endif
       IDC_SHOW_BRAVE_WALLET,
       IDC_RECENT_TABS_MENU,
       IDC_BOOKMARKS_MENU,
@@ -277,42 +261,6 @@ IN_PROC_BROWSER_TEST_F(BraveAppMenuModelBrowserTest, MenuOrderTest) {
   CheckMoreToolsCommandsAreDisabledInMenuModel(
       guest_browser, more_tools_disabled_for_guest_profile);
 
-#if BUILDFLAG(ENABLE_TOR)
-  ui_test_utils::BrowserChangeObserver tor_browser_creation_observer(
-      nullptr, ui_test_utils::BrowserChangeObserver::ChangeType::kAdded);
-  brave::NewOffTheRecordWindowTor(browser());
-  Browser* tor_browser = tor_browser_creation_observer.Wait();
-  DCHECK(tor_browser);
-  EXPECT_TRUE(tor_browser->profile()->IsTor());
-  std::vector<int> commands_in_order_for_tor_profile = {
-      IDC_NEW_TAB,
-      IDC_NEW_TOR_CONNECTION_FOR_SITE,
-      IDC_NEW_WINDOW,
-      IDC_NEW_INCOGNITO_WINDOW,
-      IDC_NEW_OFFTHERECORD_WINDOW_TOR,
-      IDC_SHOW_BRAVE_WALLET,
-      IDC_BOOKMARKS_MENU,
-      IDC_SHOW_DOWNLOADS,
-      IDC_EXTENSIONS_SUBMENU_MANAGE_EXTENSIONS,
-      IDC_ZOOM_MENU,
-      IDC_PRINT,
-      IDC_FIND_AND_EDIT_MENU,
-      IDC_SAVE_AND_SHARE_MENU,
-      IDC_MORE_TOOLS_MENU,
-      IDC_HELP_MENU,
-      IDC_OPTIONS,
-  };
-  std::vector<int> commands_disabled_for_tor_profile = {
-      IDC_RECENT_TABS_MENU,
-  };
-  CheckCommandsAreInOrderInMenuModel(tor_browser,
-                                     commands_in_order_for_tor_profile);
-  CheckCommandsAreDisabledInMenuModel(tor_browser,
-                                      commands_disabled_for_tor_profile);
-  CheckHelpCommandsAreInOrderInMenuModel(tor_browser, help_commands_in_order);
-  CheckMoreToolsCommandsAreInOrderInMenuModel(tor_browser, more_tools_in_order);
-
-#endif
 }
 
 void CheckMenuIcons(ui::MenuModel* menu,

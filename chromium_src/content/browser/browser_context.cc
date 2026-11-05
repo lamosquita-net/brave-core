@@ -56,10 +56,4 @@ std::string GetSessionStorageNamespaceId(WebContents* web_contents) {
 
 }  // namespace content
 
-namespace content {
-bool BrowserContext::IsTor() const {
-  return false;
-}
-}  // namespace content
-
 #include "src/content/browser/browser_context.cc"

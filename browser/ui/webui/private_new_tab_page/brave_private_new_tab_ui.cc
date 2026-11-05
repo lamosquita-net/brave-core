@@ -22,8 +22,6 @@
 BravePrivateNewTabUI::BravePrivateNewTabUI(content::WebUI* web_ui,
                                            const std::string& name)
     : ui::MojoWebUIController(web_ui, false) {
-  Profile* profile = Profile::FromWebUI(web_ui);
-
   web_ui->OverrideTitle(
       brave_l10n::GetLocalizedResourceUTF16String(IDS_NEW_INCOGNITO_TAB_TITLE));
 
@@ -36,8 +34,6 @@ BravePrivateNewTabUI::BravePrivateNewTabUI(content::WebUI* web_ui,
         brave_l10n::GetLocalizedResourceUTF16String(str.id);
     source->AddString(str.name, l10n_str);
   }
-
-  source->AddBoolean("isWindowTor", profile->IsTor());
 
   AddBackgroundColorToSource(source, web_ui->GetWebContents());
 }

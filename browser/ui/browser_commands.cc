@@ -32,7 +32,6 @@
 #include "brave/components/query_filter/utils.h"
 #include "brave/components/sidebar/browser/sidebar_service.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
-#include "brave/components/tor/buildflags/buildflags.h"
 #include "brave/components/url_sanitizer/browser/url_sanitizer_service.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/profile.h"
@@ -75,12 +74,6 @@
 #include "brave/components/speedreader/speedreader_service.h"
 #endif
 
-#if BUILDFLAG(ENABLE_TOR)
-#include "brave/browser/tor/tor_profile_manager.h"
-#include "brave/browser/tor/tor_profile_service_factory.h"
-#include "brave/components/tor/tor_profile_service.h"
-#endif
-
 #if BUILDFLAG(ENABLE_COMMANDER)
 #include "brave/browser/ui/commander/commander_service.h"
 #include "brave/browser/ui/commander/commander_service_factory.h"
@@ -121,36 +114,6 @@ std::vector<int> GetSelectedIndices(Browser* browser) {
 }
 
 }  // namespace
-
-void NewOffTheRecordWindowTor(Browser* browser) {
-  CHECK(browser);
-  NewOffTheRecordWindowTor(browser->profile());
-}
-
-void NewOffTheRecordWindowTor(Profile* profile) {
-  CHECK(profile);
-  if (profile->IsTor()) {
-    chrome::OpenEmptyWindow(profile);
-    return;
-  }
-
-  TorProfileManager::SwitchToTorProfile(profile);
-}
-
-void NewTorConnectionForSite(Browser* browser) {
-#if BUILDFLAG(ENABLE_TOR)
-  Profile* profile = browser->profile();
-  DCHECK(profile);
-  tor::TorProfileService* service =
-      TorProfileServiceFactory::GetForContext(profile);
-  DCHECK(service);
-  WebContents* current_tab = browser->tab_strip_model()->GetActiveWebContents();
-  if (!current_tab) {
-    return;
-  }
-  service->SetNewTorCircuit(current_tab);
-#endif
-}
 
 void MaybeDistillAndShowSpeedreaderBubble(Browser* browser) {
 #if BUILDFLAG(ENABLE_SPEEDREADER)

@@ -15,7 +15,6 @@
 #include "brave/browser/renderer_context_menu/brave_spelling_options_submenu_observer.h"
 #include "brave/browser/ui/browser_commands.h"
 #include "brave/browser/ui/browser_dialogs.h"
-#include "brave/components/tor/buildflags/buildflags.h"
 #include "brave/grit/brave_theme_resources.h"
 #include "build/build_config.h"
 #include "chrome/browser/autocomplete/chrome_autocomplete_provider_client.h"
@@ -35,11 +34,6 @@
 
 #if BUILDFLAG(IS_MAC)
 #include "base/mac/mac_util.h"
-#endif
-
-#if BUILDFLAG(ENABLE_TOR)
-#include "brave/browser/tor/tor_profile_manager.h"
-#include "brave/browser/tor/tor_profile_service_factory.h"
 #endif
 
 // Our .h file creates a masquerade for RenderViewContextMenu.  Switch
@@ -115,48 +109,6 @@ void RenderViewContextMenu::RegisterMenuShownCallbackForTesting(
 
 namespace {
 
-#if BUILDFLAG(ENABLE_TOR)
-bool HasAlreadyOpenedTorWindow(Profile* profile) {
-  for (Browser* browser : *BrowserList::GetInstance()) {
-    if (browser->profile()->IsTor() &&
-        browser->profile()->GetOriginalProfile() == profile) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-// Modified OnProfileCreated() in render_view_context_menu.cc
-// to handle additional |use_new_tab| param.
-void OnTorProfileCreated(const GURL& link_url,
-                         bool use_new_tab,
-                         Browser* browser) {
-  CHECK(browser);
-  /* |ui::PAGE_TRANSITION_TYPED| is used rather than
-     |ui::PAGE_TRANSITION_LINK| since this ultimately opens the link in
-     another browser. This parameter is used within the tab strip model of
-     the browser it opens in implying a link from the active tab in the
-     destination browser which is not correct. */
-  NavigateParams nav_params(browser, link_url, ui::PAGE_TRANSITION_TYPED);
-  if (use_new_tab) {
-    nav_params.disposition = WindowOpenDisposition::NEW_FOREGROUND_TAB;
-  } else {
-    // Stop current loading to show tab throbber wait spinning till tor is
-    // initialized.
-    if (auto* contents = browser->tab_strip_model()->GetActiveWebContents()) {
-      contents->Stop();
-      nav_params.disposition = WindowOpenDisposition::CURRENT_TAB;
-    }
-  }
-  nav_params.referrer =
-      content::Referrer(GURL(), network::mojom::ReferrerPolicy::kStrictOrigin);
-  nav_params.window_action = NavigateParams::SHOW_WINDOW;
-  Navigate(&nav_params);
-}
-
-#endif
-
 #if BUILDFLAG(ENABLE_TEXT_RECOGNITION)
 void OnGetImageForTextCopy(base::WeakPtr<content::WebContents> web_contents,
                            const SkBitmap& image) {
@@ -191,18 +143,6 @@ bool BraveRenderViewContextMenu::IsCommandIdEnabled(int id) const {
       // IsPasteAndMatchStyleEnabled checks internally, but IsPasteEnabled
       // allows non text types
       return IsPasteAndMatchStyleEnabled();
-    case IDC_CONTENT_CONTEXT_OPENLINKTOR:
-#if BUILDFLAG(ENABLE_TOR)
-      if (brave::IsTorDisabledForProfile(GetProfile())) {
-        return false;
-      }
-
-      return params_.link_url.is_valid() &&
-             IsURLAllowedInIncognito(params_.link_url, browser_context_) &&
-             !GetProfile()->IsTor();
-#else
-      return false;
-#endif
     default:
       return RenderViewContextMenu_Chromium::IsCommandIdEnabled(id);
   }
@@ -231,16 +171,6 @@ void BraveRenderViewContextMenu::ExecuteCommand(int id, int event_flags) {
       // Replace works just like Paste, but it doesn't trigger onpaste handlers
       source_web_contents_->Replace(result);
     }; break;
-#if BUILDFLAG(ENABLE_TOR)
-    case IDC_CONTENT_CONTEXT_OPENLINKTOR: {
-      const bool has_tor_window = HasAlreadyOpenedTorWindow(GetProfile());
-      Browser* tor_browser =
-          TorProfileManager::SwitchToTorProfile(GetProfile());
-      if (tor_browser) {
-        OnTorProfileCreated(params_.link_url, has_tor_window, tor_browser);
-      }
-    } break;
-#endif
 #if BUILDFLAG(ENABLE_TEXT_RECOGNITION)
     case IDC_CONTENT_CONTEXT_COPY_TEXT_FROM_IMAGE:
       CopyTextFromImage();
@@ -313,24 +243,6 @@ void BraveRenderViewContextMenu::InitMenu() {
   }
 #endif
 
-#if BUILDFLAG(ENABLE_TOR)
-  // Add Open Link with Tor
-  if (!TorProfileServiceFactory::IsTorDisabled(GetProfile()) &&
-      content_type_->SupportsGroup(ContextMenuContentType::ITEM_GROUP_LINK) &&
-      !params_.link_url.is_empty()) {
-    const Browser* browser = GetBrowser();
-    const bool is_app = browser && browser->is_type_app();
-
-    index = menu_model_.GetIndexOfCommandId(
-        IDC_CONTENT_CONTEXT_OPENLINKOFFTHERECORD);
-    DCHECK(index.has_value());
-
-    menu_model_.InsertItemWithStringIdAt(
-        index.value() + 1, IDC_CONTENT_CONTEXT_OPENLINKTOR,
-        is_app ? IDS_CONTENT_CONTEXT_OPENLINKTOR_INAPP
-               : IDS_CONTENT_CONTEXT_OPENLINKTOR);
-  }
-#endif
   if (!params_.link_url.is_empty() && params_.link_url.SchemeIsHTTPOrHTTPS()) {
     std::optional<size_t> link_index =
         menu_model_.GetIndexOfCommandId(IDC_CONTENT_CONTEXT_COPYLINKLOCATION);

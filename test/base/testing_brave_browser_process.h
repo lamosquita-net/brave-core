@@ -59,11 +59,6 @@ class TestingBraveBrowserProcess : public BraveBrowserProcess {
   localhost_permission_component() override;
   brave_component_updater::LocalDataFilesService* local_data_files_service()
       override;
-#if BUILDFLAG(ENABLE_TOR)
-  tor::BraveTorClientUpdater* tor_client_updater() override;
-  tor::BraveTorPluggableTransportUpdater* tor_pluggable_transport_updater()
-      override;
-#endif
   ntp_background_images::NTPBackgroundImagesService*
   ntp_background_images_service() override;
 #if BUILDFLAG(ENABLE_SPEEDREADER)

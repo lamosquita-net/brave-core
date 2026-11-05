@@ -56,7 +56,6 @@
 #include "brave/components/playlist/common/features.h"
 #include "brave/components/request_otr/common/buildflags/buildflags.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
-#include "brave/components/tor/buildflags/buildflags.h"
 #include "brave/components/translate/core/common/brave_translate_switches.h"
 #include "brave/components/url_sanitizer/browser/url_sanitizer_service.h"
 #include "brave/grit/brave_generated_resources.h"
@@ -132,12 +131,6 @@ using extensions::ChromeContentBrowserClientExtensionsPart;
 #if BUILDFLAG(ENABLE_BRAVE_WEBTORRENT)
 #include "brave/browser/extensions/brave_webtorrent_navigation_throttle.h"
 #include "brave/components/brave_webtorrent/browser/magnet_protocol_handler.h"
-#endif
-
-#if BUILDFLAG(ENABLE_TOR)
-#include "brave/browser/tor/tor_profile_service_factory.h"
-#include "brave/components/tor/onion_location_navigation_throttle.h"
-#include "brave/components/tor/tor_navigation_throttle.h"
 #endif
 
 #if BUILDFLAG(ENABLE_SPEEDREADER)
@@ -875,23 +868,6 @@ BraveContentBrowserClient::CreateThrottlesForNavigation(
 
   content::BrowserContext* context =
       handle->GetWebContents()->GetBrowserContext();
-
-#if BUILDFLAG(ENABLE_TOR)
-  std::unique_ptr<content::NavigationThrottle> tor_navigation_throttle =
-      tor::TorNavigationThrottle::MaybeCreateThrottleFor(handle,
-                                                         context->IsTor());
-  if (tor_navigation_throttle) {
-    throttles.push_back(std::move(tor_navigation_throttle));
-  }
-  std::unique_ptr<content::NavigationThrottle>
-      onion_location_navigation_throttle =
-          tor::OnionLocationNavigationThrottle::MaybeCreateThrottleFor(
-              handle, TorProfileServiceFactory::IsTorDisabled(context),
-              context->IsTor());
-  if (onion_location_navigation_throttle) {
-    throttles.push_back(std::move(onion_location_navigation_throttle));
-  }
-#endif
 
   // Debounce
   if (auto debounce_throttle =

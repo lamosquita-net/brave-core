@@ -23,8 +23,6 @@ constexpr SkColor kDarkOmniboxText = SkColorSetRGB(0xff, 0xff, 0xff);
 
 constexpr SkColor kPrivateFrame = SkColorSetRGB(0x13, 0x05, 0x2A);
 
-constexpr SkColor kPrivateTorFrame = SkColorSetRGB(0x19, 0x04, 0x23);
-
 constexpr SkColor kBraveNewTabBackgroundDark = SkColorSetRGB(0x33, 0x36, 0x39);
 constexpr SkColor kBraveNewTabBackgroundLight = SkColorSetRGB(0x6B, 0x70, 0x84);
 

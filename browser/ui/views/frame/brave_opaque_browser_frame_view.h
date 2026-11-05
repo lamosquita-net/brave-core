@@ -11,8 +11,6 @@
 #include "chrome/browser/ui/views/frame/opaque_browser_frame_view.h"
 #include "ui/base/metadata/metadata_header_macros.h"
 
-class BraveWindowFrameGraphic;
-
 class BraveOpaqueBrowserFrameView : public OpaqueBrowserFrameView {
   METADATA_HEADER(BraveOpaqueBrowserFrameView, OpaqueBrowserFrameView)
  public:
@@ -26,7 +24,6 @@ class BraveOpaqueBrowserFrameView : public OpaqueBrowserFrameView {
       const BraveOpaqueBrowserFrameView&) = delete;
 
   // OpaqueBrowserFrameView overrides:
-  void OnPaint(gfx::Canvas* canvas) override;
   int NonClientHitTest(const gfx::Point& point) override;
   void UpdateCaptionButtonPlaceholderContainerBackground() override;
   void PaintClientEdge(gfx::Canvas* canvas) const override;
@@ -35,7 +32,6 @@ class BraveOpaqueBrowserFrameView : public OpaqueBrowserFrameView {
 
  private:
   bool ShouldShowVerticalTabs() const;
-  std::unique_ptr<BraveWindowFrameGraphic> frame_graphic_;
 };
 
 #endif  // BRAVE_BROWSER_UI_VIEWS_FRAME_BRAVE_OPAQUE_BROWSER_FRAME_VIEW_H_

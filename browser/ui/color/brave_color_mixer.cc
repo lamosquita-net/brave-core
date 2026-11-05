@@ -695,14 +695,6 @@ void AddBravePrivateThemeColorMixer(ui::ColorProvider* provider,
   mixer[kColorTabDividerFrameActive] = {SkColorSetRGB(0x3F, 0x32, 0x56)};
 }
 
-void AddBraveTorThemeColorMixer(ui::ColorProvider* provider,
-                                const ui::ColorProviderKey& key) {
-  AddBravePrivateThemeColorMixer(provider, key);
-  AddChromeDarkThemeColorMixer(provider, key);
-
-  // Add tor theme specific brave colors here.
-}
-
 void AddPrivateThemeColorMixer(ui::ColorProvider* provider,
                                const ui::ColorProviderKey& key) {
   AddBravePrivateThemeColorMixer(provider, key);
@@ -736,41 +728,6 @@ void AddPrivateThemeColorMixer(ui::ColorProvider* provider,
   mixer[kColorToolbarContentAreaSeparator] = {kColorToolbar};
   mixer[ui::kColorFrameActive] = {kPrivateFrame};
   mixer[ui::kColorFrameInactive] = {kPrivateFrame};
-}
-
-void AddTorThemeColorMixer(ui::ColorProvider* provider,
-                           const ui::ColorProviderKey& key) {
-  AddBraveTorThemeColorMixer(provider, key);
-
-  ui::ColorMixer& mixer = provider->AddMixer();
-
-  mixer[kColorLocationBarFocusRing] = {SkColorSetRGB(0xCF, 0xAB, 0xE2)};
-  mixer[kColorNewTabButtonBackgroundFrameActive] = {ui::kColorFrameActive};
-  mixer[kColorNewTabButtonBackgroundFrameInactive] = {ui::kColorFrameInactive};
-  mixer[kColorNewTabPageBackground] = {kPrivateTorFrame};
-  mixer[kColorTabBackgroundActiveFrameActive] = {
-      leo::kColorPrimitiveTorWindow80};
-  mixer[kColorTabBackgroundActiveFrameInactive] = {
-      kColorTabBackgroundActiveFrameActive};
-  mixer[kColorTabBackgroundInactiveFrameActive] = {ui::kColorFrameActive};
-  mixer[kColorTabBackgroundInactiveFrameInactive] = {ui::kColorFrameInactive};
-
-  // TODO(simonhong): Get color from leo when it's available.
-  mixer[kColorTabForegroundActiveFrameActive] = {
-      SkColorSetRGB(0xFA, 0xF3, 0xFF)};
-  mixer[kColorTabForegroundActiveFrameInactive] = {
-      SkColorSetRGB(0xE3, 0xB3, 0xFF)};
-  mixer[kColorTabForegroundInactiveFrameActive] = {
-      SkColorSetRGB(0xE3, 0xB3, 0xFF)};
-  mixer[kColorToolbar] = {leo::kColorPrimitiveTorWindow90};
-  mixer[kColorToolbarButtonIcon] = {leo::kColorPrimitiveTorWindow40};
-  mixer[kColorToolbarButtonIconInactive] = {
-      ui::SetAlpha(kColorToolbarButtonIcon, kBraveDisabledControlAlpha)};
-  mixer[kColorToolbarContentAreaSeparator] = {kColorToolbar};
-  mixer[ui::kColorFrameActive] = {kPrivateTorFrame};
-  mixer[ui::kColorFrameInactive] = {kPrivateTorFrame};
-  mixer[kColorTabDividerFrameInactive] = {SkColorSetRGB(0x5A, 0x53, 0x66)};
-  mixer[kColorTabDividerFrameActive] = {SkColorSetRGB(0x5A, 0x53, 0x66)};
 }
 
 void AddBraveOmniboxPrivateThemeColorMixer(ui::ColorProvider* provider,

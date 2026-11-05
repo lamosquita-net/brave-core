@@ -12,7 +12,6 @@
 #include "base/test/scoped_feature_list.h"
 #include "brave/app/brave_command_ids.h"
 #include "brave/browser/ui/browser_commands.h"
-#include "brave/components/tor/buildflags/buildflags.h"
 #include "chrome/app/chrome_command_ids.h"
 #include "chrome/browser/policy/configuration_policy_handler_list_factory.h"
 #include "chrome/browser/profiles/profile.h"
@@ -33,10 +32,6 @@
 #include "content/public/browser/notification_service.h"
 #include "content/public/test/browser_test.h"
 #include "content/public/test/test_utils.h"
-
-#if BUILDFLAG(ENABLE_TOR)
-#include "brave/browser/tor/tor_profile_service_factory.h"
-#endif
 
 #if defined(TOOLKIT_VIEWS)
 #include "chrome/browser/ui/views/frame/browser_view.h"
@@ -73,18 +68,6 @@ IN_PROC_BROWSER_TEST_F(BraveBrowserCommandControllerTest,
   auto* command_controller = browser()->command_controller();
   EXPECT_TRUE(command_controller->IsCommandEnabled(IDC_SHOW_BRAVE_REWARDS));
 
-#if BUILDFLAG(ENABLE_TOR)
-  EXPECT_FALSE(
-      command_controller->IsCommandEnabled(IDC_NEW_TOR_CONNECTION_FOR_SITE));
-  EXPECT_TRUE(
-      command_controller->IsCommandEnabled(IDC_NEW_OFFTHERECORD_WINDOW_TOR));
-#else
-  EXPECT_FALSE(
-      command_controller->IsCommandEnabled(IDC_NEW_TOR_CONNECTION_FOR_SITE));
-  EXPECT_FALSE(
-      command_controller->IsCommandEnabled(IDC_NEW_OFFTHERECORD_WINDOW_TOR));
-#endif
-
   if (syncer::IsSyncAllowedByFlag()) {
     EXPECT_TRUE(command_controller->IsCommandEnabled(IDC_SHOW_BRAVE_SYNC));
   } else {
@@ -107,13 +90,6 @@ IN_PROC_BROWSER_TEST_F(BraveBrowserCommandControllerTest,
   auto* private_browser = CreateIncognitoBrowser();
   auto* command_controller = private_browser->command_controller();
   EXPECT_TRUE(command_controller->IsCommandEnabled(IDC_SHOW_BRAVE_REWARDS));
-
-#if BUILDFLAG(ENABLE_TOR)
-  EXPECT_FALSE(
-      command_controller->IsCommandEnabled(IDC_NEW_TOR_CONNECTION_FOR_SITE));
-  EXPECT_TRUE(
-      command_controller->IsCommandEnabled(IDC_NEW_OFFTHERECORD_WINDOW_TOR));
-#endif
 
   if (syncer::IsSyncAllowedByFlag()) {
     EXPECT_TRUE(command_controller->IsCommandEnabled(IDC_SHOW_BRAVE_SYNC));
@@ -141,13 +117,6 @@ IN_PROC_BROWSER_TEST_F(BraveBrowserCommandControllerTest,
   auto* command_controller = guest_browser->command_controller();
   EXPECT_FALSE(command_controller->IsCommandEnabled(IDC_SHOW_BRAVE_REWARDS));
 
-#if BUILDFLAG(ENABLE_TOR)
-  EXPECT_FALSE(
-      command_controller->IsCommandEnabled(IDC_NEW_TOR_CONNECTION_FOR_SITE));
-  EXPECT_FALSE(
-      command_controller->IsCommandEnabled(IDC_NEW_OFFTHERECORD_WINDOW_TOR));
-#endif
-
   EXPECT_FALSE(command_controller->IsCommandEnabled(IDC_SHOW_BRAVE_SYNC));
 
   EXPECT_FALSE(command_controller->IsCommandEnabled(IDC_SHOW_BRAVE_WALLET));
@@ -156,46 +125,6 @@ IN_PROC_BROWSER_TEST_F(BraveBrowserCommandControllerTest,
   EXPECT_TRUE(
       command_controller->IsCommandEnabled(IDC_SHOW_BRAVE_WEBCOMPAT_REPORTER));
 }
-
-// Launch tor window and check its command status.
-#if BUILDFLAG(ENABLE_TOR)
-IN_PROC_BROWSER_TEST_F(BraveBrowserCommandControllerTest,
-                       BraveCommandsEnableTestPrivateTorWindow) {
-  ui_test_utils::BrowserChangeObserver tor_browser_creation_observer(
-      nullptr, ui_test_utils::BrowserChangeObserver::ChangeType::kAdded);
-  brave::NewOffTheRecordWindowTor(browser());
-  Browser* tor_browser = tor_browser_creation_observer.Wait();
-  DCHECK(tor_browser);
-  EXPECT_TRUE(tor_browser->profile()->IsTor());
-  auto* command_controller = tor_browser->command_controller();
-  EXPECT_TRUE(command_controller->IsCommandEnabled(IDC_SHOW_BRAVE_REWARDS));
-
-  EXPECT_TRUE(
-      command_controller->IsCommandEnabled(IDC_NEW_TOR_CONNECTION_FOR_SITE));
-  EXPECT_TRUE(
-      command_controller->IsCommandEnabled(IDC_NEW_OFFTHERECORD_WINDOW_TOR));
-
-  if (syncer::IsSyncAllowedByFlag()) {
-    EXPECT_TRUE(command_controller->IsCommandEnabled(IDC_SHOW_BRAVE_SYNC));
-  } else {
-    EXPECT_FALSE(command_controller->IsCommandEnabled(IDC_SHOW_BRAVE_SYNC));
-  }
-
-  EXPECT_TRUE(command_controller->IsCommandEnabled(IDC_SHOW_BRAVE_WALLET));
-  EXPECT_TRUE(command_controller->IsCommandEnabled(IDC_ADD_NEW_PROFILE));
-  EXPECT_TRUE(command_controller->IsCommandEnabled(IDC_OPEN_GUEST_PROFILE));
-  EXPECT_TRUE(
-      command_controller->IsCommandEnabled(IDC_SHOW_BRAVE_WEBCOMPAT_REPORTER));
-
-  // Check tor commands when tor is disabled.
-  TorProfileServiceFactory::SetTorDisabled(true);
-  command_controller = browser()->command_controller();
-  EXPECT_FALSE(
-      command_controller->IsCommandEnabled(IDC_NEW_TOR_CONNECTION_FOR_SITE));
-  EXPECT_FALSE(
-      command_controller->IsCommandEnabled(IDC_NEW_OFFTHERECORD_WINDOW_TOR));
-}
-#endif
 
 IN_PROC_BROWSER_TEST_F(BraveBrowserCommandControllerTest,
                        BraveCommandsCloseTabsToLeft) {

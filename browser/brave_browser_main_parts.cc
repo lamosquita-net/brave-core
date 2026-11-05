@@ -15,7 +15,6 @@
 #include "brave/components/constants/brave_constants.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
-#include "brave/components/tor/buildflags/buildflags.h"
 #include "brave/components/translate/core/common/brave_translate_features.h"
 #include "build/build_config.h"
 #include "chrome/browser/browser_process.h"
@@ -32,18 +31,6 @@
 #if BUILDFLAG(ENABLE_SPEEDREADER)
 #include "brave/components/speedreader/speedreader_extended_info_handler.h"
 #include "components/sessions/content/content_serialized_navigation_driver.h"
-#endif
-
-#if BUILDFLAG(ENABLE_TOR)
-#include <string>
-#include "base/files/file_util.h"
-#include "brave/components/tor/tor_constants.h"
-#include "chrome/browser/browser_process_impl.h"
-#include "chrome/browser/profiles/profile_attributes_init_params.h"
-#include "chrome/browser/profiles/profile_attributes_storage.h"
-#include "chrome/browser/profiles/profile_manager.h"
-#include "chrome/browser/profiles/profile_metrics.h"
-#include "components/account_id/account_id.h"
 #endif
 
 #if !BUILDFLAG(IS_ANDROID)
@@ -89,44 +76,6 @@ void BraveBrowserMainParts::PreBrowserStart() {
 
 void BraveBrowserMainParts::PostBrowserStart() {
   ChromeBrowserMainParts::PostBrowserStart();
-
-#if BUILDFLAG(ENABLE_TOR)
-  ProfileManager* profile_manager = g_browser_process->profile_manager();
-  base::FilePath tor_legacy_path =
-      profile_manager->user_data_dir().Append(tor::kTorProfileDir);
-
-  // Delete Tor legacy profile if exists.
-  if (base::PathExists(tor_legacy_path)) {
-    // Add tor legacy path into profile attributes storage first if nonexist
-    // because we will hit DCHECK(!GetProfileAttributesWithPath(...))  in
-    // ProfileInfoCache::DeleteProfileFromCache when we trying to delete it
-    // without this being added into the storage first.
-    ProfileAttributesStorage& storage =
-        profile_manager->GetProfileAttributesStorage();
-    ProfileAttributesEntry* entry =
-        storage.GetProfileAttributesWithPath(tor_legacy_path);
-    if (!entry) {
-      ProfileAttributesInitParams params;
-      params.profile_path = tor_legacy_path;
-      storage.AddProfile(std::move(params));
-    }
-
-    profile_manager->GetDeleteProfileHelper().MaybeScheduleProfileForDeletion(
-        tor_legacy_path, base::DoNothing(),
-        ProfileMetrics::DELETE_PROFILE_SETTINGS);
-  }
-  for (Profile* profile : profile_manager->GetLoadedProfiles()) {
-    const base::FilePath tor_legacy_session_path =
-        profile->GetPath()
-            .Append(brave::kSessionProfileDir)
-            .Append(tor::kTorProfileDir);
-    if (base::PathExists(tor_legacy_session_path)) {
-      profile_manager->GetDeleteProfileHelper().MaybeScheduleProfileForDeletion(
-          tor_legacy_session_path, base::DoNothing(),
-          ProfileMetrics::DELETE_PROFILE_SETTINGS);
-    }
-  }
-#endif
 
 #if !BUILDFLAG(IS_ANDROID)
   Browser* browser = chrome::FindLastActive();

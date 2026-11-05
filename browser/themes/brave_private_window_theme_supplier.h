@@ -8,10 +8,10 @@
 
 #include "chrome/browser/themes/custom_theme_supplier.h"
 
-// A theme supplier for private (or tor) window.
+// A theme supplier for private window.
 class BravePrivateWindowThemeSupplier : public CustomThemeSupplier {
  public:
-  explicit BravePrivateWindowThemeSupplier(bool private_window);
+  BravePrivateWindowThemeSupplier();
 
   BravePrivateWindowThemeSupplier(const BravePrivateWindowThemeSupplier&) =
       delete;
@@ -23,9 +23,6 @@ class BravePrivateWindowThemeSupplier : public CustomThemeSupplier {
 
   void AddColorMixers(ui::ColorProvider* provider,
                       const ui::ColorProviderKey& key) const override;
-
-  // false if this is for tor window.
-  bool for_private_window_ = true;
 };
 
 #endif  // BRAVE_BROWSER_THEMES_BRAVE_PRIVATE_WINDOW_THEME_SUPPLIER_H_

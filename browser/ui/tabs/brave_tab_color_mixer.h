@@ -21,8 +21,6 @@ void AddBraveTabDarkThemeColorMixer(ui::ColorProvider* provider,
 // //brave/browser/themes/brave_private_window_theme_supplier.cc
 void AddBraveTabPrivateThemeColorMixer(ui::ColorProvider* provider,
                                        const ui::ColorProviderKey& key);
-void AddBraveTabTorThemeColorMixer(ui::ColorProvider* provider,
-                                   const ui::ColorProviderKey& key);
 
 }  // namespace tabs
 

@@ -19,18 +19,9 @@ const AcceleratorMapping kBraveAcceleratorMap[] = {
     {ui::VKEY_M, ui::EF_CONTROL_DOWN, IDC_TOGGLE_TAB_MUTE},
     // Ctrl+B(or Cmd+B)
     {ui::VKEY_B, ui::EF_PLATFORM_ACCELERATOR, IDC_TOGGLE_SIDEBAR},
-#if BUILDFLAG(IS_MAC)
-    // Command-Option-N
-    {ui::VKEY_N, ui::EF_ALT_DOWN | ui::EF_PLATFORM_ACCELERATOR,
-     IDC_NEW_OFFTHERECORD_WINDOW_TOR},
-#else
-    // Alt-Shift-N
-    {ui::VKEY_N, ui::EF_ALT_DOWN | ui::EF_SHIFT_DOWN,
-     IDC_NEW_OFFTHERECORD_WINDOW_TOR},
-#if BUILDFLAG(ENABLE_COMMANDER)
+#if !BUILDFLAG(IS_MAC) && BUILDFLAG(ENABLE_COMMANDER)
     // Open Command with Ctrl+Space
     {ui::VKEY_SPACE, ui::EF_CONTROL_DOWN, IDC_COMMANDER}
-#endif
 #endif
 };
 

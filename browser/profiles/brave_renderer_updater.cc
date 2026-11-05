@@ -25,31 +25,17 @@
 #include "mojo/public/cpp/bindings/pending_receiver.h"
 #include "third_party/widevine/cdm/buildflags.h"
 
-#if BUILDFLAG(ENABLE_TOR)
-#include "brave/components/tor/pref_names.h"
-#endif
-
 BraveRendererUpdater::BraveRendererUpdater(Profile* profile,
                                            PrefService* local_state)
     : profile_(profile), local_state_(local_state) {
   PrefService* pref_service = profile->GetPrefs();
   de_amp_enabled_.Init(de_amp::kDeAmpPrefEnabled, pref_service);
-#if BUILDFLAG(ENABLE_TOR)
-  onion_only_in_tor_windows_.Init(tor::prefs::kOnionOnlyInTorWindows,
-                                  pref_service);
-#endif
 
   pref_change_registrar_.Init(pref_service);
   pref_change_registrar_.Add(
       de_amp::kDeAmpPrefEnabled,
       base::BindRepeating(&BraveRendererUpdater::UpdateAllRenderers,
                           base::Unretained(this)));
-#if BUILDFLAG(ENABLE_TOR)
-  pref_change_registrar_.Add(
-      tor::prefs::kOnionOnlyInTorWindows,
-      base::BindRepeating(&BraveRendererUpdater::UpdateAllRenderers,
-                          base::Unretained(this)));
-#endif
 
 #if BUILDFLAG(ENABLE_WIDEVINE)
   if (local_state_) {
@@ -75,9 +61,6 @@ BraveRendererUpdater::~BraveRendererUpdater() = default;
 void BraveRendererUpdater::InitializeRenderer(
     content::RenderProcessHost* render_process_host) {
   auto renderer_configuration = GetRendererConfiguration(render_process_host);
-  Profile* profile =
-      Profile::FromBrowserContext(render_process_host->GetBrowserContext());
-  renderer_configuration->SetInitialConfiguration(profile->IsTor());
   UpdateRenderer(&renderer_configuration);
 }
 
@@ -129,11 +112,6 @@ void BraveRendererUpdater::UpdateRenderer(
         renderer_configuration) {
   PrefService* pref_service = profile_->GetPrefs();
   bool de_amp_enabled = de_amp::IsDeAmpEnabled(pref_service);
-  bool onion_only_in_tor_windows = true;
-#if BUILDFLAG(ENABLE_TOR)
-  onion_only_in_tor_windows =
-      pref_service->GetBoolean(tor::prefs::kOnionOnlyInTorWindows);
-#endif
   bool widevine_enabled = false;
 #if BUILDFLAG(ENABLE_WIDEVINE)
   if (local_state_) {
@@ -149,6 +127,5 @@ void BraveRendererUpdater::UpdateRenderer(
 
   (*renderer_configuration)
       ->SetConfiguration(brave::mojom::DynamicParams::New(
-          de_amp_enabled, onion_only_in_tor_windows, widevine_enabled,
-          playlist_enabled));
+          de_amp_enabled, widevine_enabled, playlist_enabled));
 }

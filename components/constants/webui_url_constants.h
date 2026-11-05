@@ -42,7 +42,6 @@ inline constexpr char kExtensionSettingsURL[] = "flyweb://settings/extensions";
 inline constexpr char kWalletSettingsURL[] = "flyweb://settings/wallet";
 inline constexpr char kBraveSyncPath[] = "braveSync";
 inline constexpr char kBraveSyncSetupPath[] = "braveSync/setup";
-inline constexpr char kTorInternalsHost[] = "tor-internals";
 inline constexpr char kUntrustedLedgerHost[] = "ledger-bridge";
 inline constexpr char kUntrustedLedgerURL[] =
     "chrome-untrusted://ledger-bridge/";

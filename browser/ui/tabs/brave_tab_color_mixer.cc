@@ -191,14 +191,4 @@ void AddBraveTabPrivateThemeColorMixer(ui::ColorProvider* provider,
   mixer[kColorBraveSplitViewTileBackground] = {SkColorSetRGB(0x2A, 0xD, 0x58)};
 }
 
-void AddBraveTabTorThemeColorMixer(ui::ColorProvider* provider,
-                                   const ui::ColorProviderKey& key) {
-  auto& mixer = provider->AddMixer();
-  mixer[kColorBraveVerticalTabActiveBackground] = {
-      mixer.GetResultColor(kColorTabBackgroundActiveFrameActive)};
-  mixer[kColorBraveVerticalTabInactiveBackground] = {
-      mixer.GetResultColor(kColorToolbar)};
-  mixer[kColorBraveSplitViewTileBackground] = {SkColorSetRGB(0x35, 0x0B, 0x49)};
-}
-
 }  // namespace tabs

@@ -11,7 +11,6 @@
 
 #include "base/gtest_prod_util.h"
 #include "brave/browser/ui/views/view_shadow.h"
-#include "brave/components/tor/buildflags/buildflags.h"
 #include "chrome/browser/ui/views/location_bar/location_bar_view.h"
 #include "ui/base/metadata/metadata_header_macros.h"
 
@@ -20,10 +19,6 @@ class BraveActionsContainerTest;
 class PlaylistActionIconView;
 class RewardsBrowserTest;
 class SkPath;
-
-#if BUILDFLAG(ENABLE_TOR)
-class OnionLocationView;
-#endif
 
 namespace playlist {
 FORWARD_DECLARE_TEST(PlaylistBrowserTest, AddItemsToList);
@@ -59,9 +54,6 @@ class BraveLocationBarView : public LocationBarView {
   void Update(content::WebContents* contents) override;
   void OnChanged() override;
   BraveActionsContainer* GetBraveActionsContainer() { return brave_actions_; }
-#if BUILDFLAG(ENABLE_TOR)
-  OnionLocationView* GetOnionLocationView() { return onion_location_view_; }
-#endif
 
   // LocationBarView:
   // Views that locates at right side of upstream's trailing views.
@@ -108,9 +100,6 @@ class BraveLocationBarView : public LocationBarView {
 
   std::unique_ptr<ViewShadow> shadow_;
   raw_ptr<BraveActionsContainer> brave_actions_ = nullptr;
-#if BUILDFLAG(ENABLE_TOR)
-  raw_ptr<OnionLocationView> onion_location_view_ = nullptr;
-#endif
 };
 
 #endif  // BRAVE_BROWSER_UI_VIEWS_LOCATION_BAR_BRAVE_LOCATION_BAR_VIEW_H_

@@ -11,7 +11,6 @@
 #include "base/no_destructor.h"
 #include "base/strings/utf_string_conversions.h"
 #include "brave/components/constants/url_constants.h"
-#include "brave/components/tor/buildflags/buildflags.h"
 #include "build/build_config.h"
 #include "components/grit/brave_components_resources.h"
 #include "components/grit/brave_components_strings.h"
@@ -38,8 +37,6 @@ base::span<const webui::ResourcePath> GetWebUIResources(
             // New tab Backgrounds
             {"dylan-malval_sea-min.webp", IDR_BRAVE_NEW_TAB_BACKGROUND1},
             // private tab
-            {"c168145d6bf1abf2c0322636366f7dbe.svg",
-             IDR_BRAVE_PRIVATE_TAB_TOR_IMG},
             {"dbdc336ccc651b8a7c925b3482d6e65a.svg",
              IDR_BRAVE_PRIVATE_TAB_IMG}}},
           {"welcome", {{"favicon.ico", IDR_BRAVE_WELCOME_PAGE_FAVICON}}},
@@ -213,25 +210,8 @@ base::span<const webui::LocalizedString> GetWebUILocalizedStrings(
                {"headerButton",
                 IDS_BRAVE_PRIVATE_NEW_TAB_PRIVATE_WINDOW_BUTTON},
 
-               // Private Tab - Header Private Window with Tor
-               {"headerTorTitle", IDS_BRAVE_PRIVATE_NEW_TAB_PRIVATE_WINDOW_TOR},
-               {"headerTorText",
-                IDS_BRAVE_PRIVATE_NEW_TAB_PRIVATE_WINDOW_TOR_DESC},
-
                // Private Tab - Box for DDG
                {"boxDdgButton", IDS_BRAVE_PRIVATE_NEW_TAB_BOX_DDG_BUTTON},
-
-               // Private Tab - Box for Tor
-               {"boxTorLabel", IDS_BRAVE_PRIVATE_NEW_TAB_BOX_TOR_LABEL},
-               {"boxTorLabel2", IDS_BRAVE_PRIVATE_NEW_TAB_BOX_TOR_LABEL_2},
-               {"boxTorTitle", IDS_BRAVE_PRIVATE_NEW_TAB_BOX_TOR_TITLE},
-
-               // Private Tab - Private Window with Tor - Tor Box
-               {"boxTorText", IDS_BRAVE_PRIVATE_NEW_TAB_BOX_TOR_TEXT_1},
-
-               // Private Tab - Private Window - Tor Box
-               {"boxTorText2", IDS_BRAVE_PRIVATE_NEW_TAB_BOX_TOR_TEXT_2},
-               {"boxTorButton", IDS_BRAVE_PRIVATE_NEW_TAB_BOX_TOR_BUTTON},
 #endif  // !BUILDFLAG(IS_ANDROID)
 
                // Rewards widget
@@ -807,21 +787,6 @@ base::span<const webui::LocalizedString> GetWebUILocalizedStrings(
                {"loading", IDS_BRAVE_REWARDS_LOADING_LABEL},
            }},
           {
-#if BUILDFLAG(ENABLE_TOR)
-              "tor-internals",
-              {
-                  {"tabGeneralInfo", IDS_TOR_INTERNALS_TAB_GENERAL_INFO},
-                  {"tabLogs", IDS_TOR_INTERNALS_TAB_LOGS},
-                  {"torControlEvents", IDS_TOR_INTERNALS_TOR_CONTROL_EVENTS},
-                  {"torVersion", IDS_TOR_INTERNALS_TOR_VERSION},
-                  {"torPid", IDS_TOR_INTERNALS_TOR_PID},
-                  {"torProxyURI", IDS_TOR_INTERNALS_TOR_PROXY_URI},
-                  {"torConnectionStatus",
-                   IDS_TOR_INTERNALS_TOR_CONNECTION_STATUS},
-                  {"torInitProgress", IDS_TOR_INTERNALS_TOR_INIT_PROGRESS},
-              }},
-          {
-#endif
 #if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
               "webcompat",
               {

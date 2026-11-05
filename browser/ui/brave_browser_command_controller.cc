@@ -8,9 +8,7 @@
 #include <memory>
 #include <optional>
 #include <utility>
-#include <vector>
 
-#include "base/containers/contains.h"
 #include "base/debug/stack_trace.h"
 #include "base/feature_list.h"
 #include "base/notreached.h"
@@ -60,14 +58,6 @@ namespace {
 
 bool IsBraveCommands(int id) {
   return id >= IDC_BRAVE_COMMANDS_START && id <= IDC_BRAVE_COMMANDS_LAST;
-}
-
-bool IsBraveOverrideCommands(int id) {
-  static std::vector<int> override_commands({
-      IDC_NEW_WINDOW,
-      IDC_NEW_INCOGNITO_WINDOW,
-  });
-  return base::Contains(override_commands, id);
 }
 
 }  // namespace
@@ -148,7 +138,7 @@ bool BraveBrowserCommandController::ExecuteCommandWithDisposition(
     int id,
     WindowOpenDisposition disposition,
     base::TimeTicks time_stamp) {
-  return IsBraveCommands(id) || IsBraveOverrideCommands(id)
+  return IsBraveCommands(id)
              ? ExecuteBraveCommandWithDisposition(id, disposition, time_stamp)
              : BrowserCommandController::ExecuteCommandWithDisposition(
                    id, disposition, time_stamp);
@@ -193,9 +183,6 @@ void BraveBrowserCommandController::InitBraveCommandState() {
     }
   }
   UpdateCommandForWebcompatReporter();
-#if BUILDFLAG(ENABLE_TOR)
-  UpdateCommandForTor();
-#endif
   UpdateCommandForSidebar();
   UpdateCommandForPlaylist();
   UpdateCommandForWaybackMachine();
@@ -273,16 +260,6 @@ void BraveBrowserCommandController::UpdateCommandForBraveRewards() {
 void BraveBrowserCommandController::UpdateCommandForWebcompatReporter() {
   UpdateCommandEnabled(IDC_SHOW_BRAVE_WEBCOMPAT_REPORTER, true);
 }
-
-#if BUILDFLAG(ENABLE_TOR)
-void BraveBrowserCommandController::UpdateCommandForTor() {
-  // Enable new tor connection only for tor profile.
-  UpdateCommandEnabled(IDC_NEW_TOR_CONNECTION_FOR_SITE,
-                       browser_->profile()->IsTor());
-  UpdateCommandEnabled(IDC_NEW_OFFTHERECORD_WINDOW_TOR,
-                       !brave::IsTorDisabledForProfile(browser_->profile()));
-}
-#endif
 
 void BraveBrowserCommandController::UpdateCommandForSidebar() {
   if (sidebar::CanUseSidebar(&*browser_)) {
@@ -394,33 +371,11 @@ bool BraveBrowserCommandController::ExecuteBraveCommandWithDisposition(
   DCHECK(IsCommandEnabled(id)) << "Invalid/disabled command " << id;
 
   switch (id) {
-    case IDC_NEW_WINDOW:
-      // Use chromium's action for non-Tor profiles.
-      if (!browser_->profile()->IsTor()) {
-        return BrowserCommandController::ExecuteCommandWithDisposition(
-            id, disposition, time_stamp);
-      }
-      NewEmptyWindow(browser_->profile()->GetOriginalProfile());
-      break;
-    case IDC_NEW_INCOGNITO_WINDOW:
-      // Use chromium's action for non-Tor profiles.
-      if (!browser_->profile()->IsTor()) {
-        return BrowserCommandController::ExecuteCommandWithDisposition(
-            id, disposition, time_stamp);
-      }
-      NewIncognitoWindow(browser_->profile()->GetOriginalProfile());
-      break;
     case IDC_SHOW_BRAVE_REWARDS:
       brave::ShowBraveRewards(&*browser_);
       break;
     case IDC_SHOW_BRAVE_WEBCOMPAT_REPORTER:
       brave::ShowWebcompatReporter(&*browser_);
-      break;
-    case IDC_NEW_OFFTHERECORD_WINDOW_TOR:
-      brave::NewOffTheRecordWindowTor(&*browser_);
-      break;
-    case IDC_NEW_TOR_CONNECTION_FOR_SITE:
-      brave::NewTorConnectionForSite(&*browser_);
       break;
     case IDC_SHOW_BRAVE_SYNC:
       brave::ShowSync(&*browser_);

@@ -7,14 +7,9 @@
 #define BRAVE_BROWSER_POLICY_BRAVE_SIMPLE_POLICY_MAP_H_
 
 #include "brave/components/constants/pref_names.h"
-#include "brave/components/tor/buildflags/buildflags.h"
 #include "build/build_config.h"
 #include "components/policy/core/browser/configuration_policy_handler.h"
 #include "components/policy/policy_constants.h"
-
-#if BUILDFLAG(ENABLE_TOR)
-#include "brave/components/tor/pref_names.h"
-#endif
 
 namespace policy {
 
@@ -24,10 +19,6 @@ inline constexpr PolicyToPreferenceMapEntry kBraveSimplePolicyMap[] = {
      kManagedBraveShieldsDisabledForUrls, base::Value::Type::LIST},
     {policy::key::kBraveShieldsEnabledForUrls,
      kManagedBraveShieldsEnabledForUrls, base::Value::Type::LIST},
-#endif
-#if BUILDFLAG(ENABLE_TOR)
-    {policy::key::kTorDisabled, tor::prefs::kTorDisabled,
-     base::Value::Type::BOOLEAN},
 #endif
 };
 

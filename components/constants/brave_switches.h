@@ -43,9 +43,6 @@ inline constexpr char kDisableEncryptionWin[] = "disable-encryption-win";
 // Allows disabling the machine ID generation on Windows.
 inline constexpr char kDisableMachineId[] = "disable-machine-id";
 
-// Starts Brave in Tor mode.
-inline constexpr char kTor[] = "tor";
-
 // Override update feed url. Only valid on macOS.
 inline constexpr char kUpdateFeedURL[] = "update-feed-url";
 

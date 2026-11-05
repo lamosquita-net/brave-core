@@ -10,8 +10,6 @@
 
 #include "chrome/browser/ui/views/frame/browser_non_client_frame_view_mac.h"
 
-class BraveWindowFrameGraphic;
-
 class BraveBrowserNonClientFrameViewMac : public BrowserNonClientFrameViewMac {
  public:
   BraveBrowserNonClientFrameViewMac(BrowserFrame* frame,
@@ -31,12 +29,9 @@ class BraveBrowserNonClientFrameViewMac : public BrowserNonClientFrameViewMac {
   void UpdateWindowTitleColor();
 
   // BrowserNonClientFrameViewMac overrides:
-  void OnPaint(gfx::Canvas* canvas) override;
   int GetTopInset(bool restored) const override;
   int NonClientHitTest(const gfx::Point& point) override;
   void OnThemeChanged() override;
-
-  std::unique_ptr<BraveWindowFrameGraphic> frame_graphic_;
 
   BooleanPrefMember show_vertical_tabs_;
   BooleanPrefMember show_title_bar_on_vertical_tabs_;

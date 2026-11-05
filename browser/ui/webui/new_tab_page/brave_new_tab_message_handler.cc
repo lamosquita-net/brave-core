@@ -132,11 +132,6 @@ BraveNewTabMessageHandler* BraveNewTabMessageHandler::Create(
   //
   // FlyWeb: Brave Ads is removed from the build, so no sponsored images.
   source->AddBoolean("featureFlagBraveNTPSponsoredImagesWallpaper", false);
-
-  // Private Tab info
-  if (IsPrivateNewTab(profile)) {
-    source->AddBoolean("isTor", profile->IsTor());
-  }
   return new BraveNewTabMessageHandler(profile, was_restored);
 }
 
