@@ -8,15 +8,10 @@
 #include "base/check.h"
 #include "components/permissions/permission_prompt_decision.h"
 #include "components/permissions/permission_request.h"
-#include "components/permissions/permissions_client.h"
 
 #define PermissionContextBase PermissionContextBase_ChromiumImpl
-#define CanBypassEmbeddingOriginCheck(REQUESTING_ORIGIN, EMBEDDING_ORIGIN) \
-  BraveCanBypassEmbeddingOriginCheck(REQUESTING_ORIGIN, EMBEDDING_ORIGIN,  \
-                                     content_settings_type_)
 #include "src/components/permissions/permission_context_base.cc"
 #undef PermissionContextBase
-#undef CanBypassEmbeddingOriginCheck
 
 #include "brave/components/permissions/permission_lifetime_manager.h"
 
