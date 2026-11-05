@@ -5,6 +5,8 @@
 
 #include "brave/browser/sync/brave_sync_alerts_service_factory.h"
 
+#include <memory>
+
 #include "base/no_destructor.h"
 #include "brave/browser/sync/brave_sync_alerts_service.h"
 #include "chrome/browser/profiles/incognito_helpers.h"

@@ -10,7 +10,11 @@
 #include <utility>
 #include <vector>
 
+#include "base/check.h"
+#include "base/check_op.h"
 #include "base/functional/bind.h"
+#include "base/logging.h"
+#include "base/notreached.h"
 #include "base/strings/string_number_conversions.h"
 #include "brave/components/brave_sync/brave_sync_prefs.h"
 #include "brave/components/brave_sync/crypto/crypto.h"
@@ -18,7 +22,6 @@
 #include "brave/components/brave_sync/sync_service_impl_helper.h"
 #include "brave/components/brave_sync/time_limited_words.h"
 #include "brave/components/sync/service/brave_sync_service_impl.h"
-#include "brave/components/sync_device_info/brave_device_info.h"
 #include "brave/grit/brave_generated_resources.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/sync/device_info_sync_service_factory.h"
@@ -51,9 +54,12 @@ std::string GetSyncCodeValidationString(
       return l10n_util::GetStringUTF8(IDS_BRAVE_SYNC_CODE_EXPIRED);
     case ValidationStatus::kValidForTooLong:
       return l10n_util::GetStringUTF8(IDS_BRAVE_SYNC_CODE_VALID_FOR_TOO_LONG);
-    default:
-      NOTREACHED();
+    case ValidationStatus::kValid:
+      // kValid means no error and we don't display any error when all is ok
+      return "OK";
   }
+  NOTREACHED() << "Unexpected value for TimeLimitedWords::ValidationStatus: "
+               << std::to_underlying(validation_result);
 }
 
 }  // namespace
@@ -177,7 +183,7 @@ void BraveSyncHandler::HandleGetQRCode(const base::ListValue& args) {
 
   // QR code version 3 can only carry 84 bytes so we hex encode 32 bytes
   // seed then we will have 64 bytes input data
-  const std::string sync_code_hex = base::HexEncode(seed.data(), seed.size());
+  const std::string sync_code_hex = base::HexEncode(seed);
   const std::string qr_code_string =
       brave_sync::QrCodeData::CreateWithActualDate(sync_code_hex)->ToJson();
 
@@ -257,9 +263,7 @@ void BraveSyncHandler::HandleSetSyncCode(const base::ListValue& args) {
   // we will set the result at BraveSyncHandler::OnJoinChainResult.
   // Otherwise we will not let to send request to the server.
 
-  sync_service->SetSyncFeatureRequested();
-  sync_service->GetUserSettings()->SetInitialSyncFeatureSetupComplete(
-      syncer::SyncFirstSetupCompleteSource::ADVANCED_FLOW_CONFIRM);
+  sync_service->GetUserSettings()->SetInitialSyncFeatureSetupComplete();
 }
 
 void BraveSyncHandler::OnJoinChainResult(base::Value callback_id, bool result) {
@@ -379,13 +383,15 @@ base::ListValue BraveSyncHandler::GetSyncDeviceList() {
   base::ListValue device_list;
 
   for (const auto& device : tracker->GetAllBraveDeviceInfo()) {
-    auto device_value = device->ToValue();
+    auto device_value = device.ToValue();
     bool is_current_device =
-        local_device_info ? local_device_info->guid() == device->guid() : false;
+        local_device_info && local_device_info->guid() == device.guid();
     device_value.Set("isCurrentDevice", is_current_device);
-    device_value.Set("guid", device->guid());
-    device_value.Set("supportsSelfDelete",
-                     !is_current_device && device->is_self_delete_supported());
+    device_value.Set("guid", device.guid());
+    device_value.Set(
+        "supportsSelfDelete",
+        !is_current_device && device.self_delete_support() ==
+                                  syncer::SelfDeleteSupport::kSupported);
 
     device_list.Append(std::move(device_value));
   }

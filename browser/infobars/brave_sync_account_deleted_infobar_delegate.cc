@@ -25,8 +25,7 @@
 // static
 void BraveSyncAccountDeletedInfoBarDelegate::Create(
     content::WebContents* active_web_contents,
-    Profile* profile,
-    Browser* browser) {
+    Profile* profile) {
   brave_sync::Prefs brave_sync_prefs(profile->GetPrefs());
   const bool notification_pending =
       brave_sync_prefs.IsSyncAccountDeletedNoticePending();
@@ -52,7 +51,7 @@ void BraveSyncAccountDeletedInfoBarDelegate::Create(
   std::unique_ptr<infobars::InfoBar> infobar(
       std::make_unique<BraveSyncAccountDeletedInfoBar>(
           base::WrapUnique<ConfirmInfoBarDelegate>(
-              new BraveSyncAccountDeletedInfoBarDelegate(browser, profile))));
+              new BraveSyncAccountDeletedInfoBarDelegate(profile))));
 
   // Show infobar
   infobar_manager->AddInfoBar(std::move(infobar));
@@ -60,9 +59,8 @@ void BraveSyncAccountDeletedInfoBarDelegate::Create(
 
 // Start class impl
 BraveSyncAccountDeletedInfoBarDelegate::BraveSyncAccountDeletedInfoBarDelegate(
-    Browser* browser,
     Profile* profile)
-    : ConfirmInfoBarDelegate(), profile_(profile), browser_(browser) {}
+    : profile_(profile) {}
 
 BraveSyncAccountDeletedInfoBarDelegate::
     ~BraveSyncAccountDeletedInfoBarDelegate() {}
