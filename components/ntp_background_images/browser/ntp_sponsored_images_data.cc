@@ -13,7 +13,6 @@
 #include "base/ranges/algorithm.h"
 #include "base/strings/stringprintf.h"
 #include "base/uuid.h"
-#include "brave/components/brave_ads/core/public/ad_units/new_tab_page_ad/new_tab_page_ad_info.h"
 #include "brave/components/ntp_background_images/browser/url_constants.h"
 #include "content/public/common/url_constants.h"
 
@@ -342,54 +341,6 @@ std::optional<base::Value::Dict> NTPSponsoredImagesData::GetBackgroundAt(
   return data;
 }
 
-std::optional<base::Value::Dict>
-NTPSponsoredImagesData::GetBackgroundFromAdInfo(
-    const brave_ads::NewTabPageAdInfo& ad_info) {
-  // Find campaign
-  size_t campaign_index = 0;
-  for (; campaign_index != campaigns.size(); ++campaign_index) {
-    if (campaigns[campaign_index].campaign_id == ad_info.campaign_id) {
-      break;
-    }
-  }
-  if (campaign_index == campaigns.size()) {
-    VLOG(0) << "The ad campaign wasn't found in the NTP sponsored images data: "
-            << ad_info.campaign_id;
-    return std::nullopt;
-  }
-
-  const auto& sponsored_backgrounds = campaigns[campaign_index].backgrounds;
-  size_t background_index = 0;
-  for (; background_index != sponsored_backgrounds.size(); ++background_index) {
-    if (sponsored_backgrounds[background_index].creative_instance_id ==
-        ad_info.creative_instance_id) {
-      break;
-    }
-  }
-  if (background_index == sponsored_backgrounds.size()) {
-    VLOG(0) << "Creative instance wasn't found in NTP sposored images data: "
-            << ad_info.creative_instance_id;
-    return std::nullopt;
-  }
-
-  if (VLOG_IS_ON(0)) {
-    if (!AdInfoMatchesSponsoredImage(ad_info, campaign_index,
-                                     background_index)) {
-      VLOG(0) << "Served creative info does not fully match with NTP "
-                 "sponsored images metadata. Campaign id: "
-              << ad_info.campaign_id
-              << ". Creative instance id: " << ad_info.creative_instance_id;
-    }
-  }
-
-  std::optional<base::Value::Dict> data =
-      GetBackgroundAt(campaign_index, background_index);
-  if (data) {
-    data->Set(kWallpaperIDKey, ad_info.placement_id);
-  }
-  return data;
-}
-
 void NTPSponsoredImagesData::PrintCampaignsParsingResult() const {
   VLOG(2) << __func__ << ": This is "
           << (IsSuperReferral() ? " NTP SR Data" : " NTP SI Data");
@@ -403,69 +354,6 @@ void NTPSponsoredImagesData::PrintCampaignsParsingResult() const {
               << ") - id: " << background.creative_instance_id;
     }
   }
-}
-
-bool NTPSponsoredImagesData::AdInfoMatchesSponsoredImage(
-    const brave_ads::NewTabPageAdInfo& ad_info,
-    size_t campaign_index,
-    size_t background_index) const {
-  DCHECK(campaign_index < campaigns.size() && background_index >= 0 &&
-         background_index < campaigns[campaign_index].backgrounds.size());
-
-  const Campaign& campaign = campaigns[campaign_index];
-  if (!campaign.IsValid()) {
-    return false;
-  }
-
-  if (ad_info.campaign_id != campaign.campaign_id) {
-    return false;
-  }
-
-  const SponsoredBackground& background =
-      campaign.backgrounds[background_index];
-  if (ad_info.creative_instance_id != background.creative_instance_id) {
-    return false;
-  }
-
-  if (ad_info.target_url != GURL(background.logo.destination_url)) {
-    return false;
-  }
-
-  const std::string ad_image_filename = ad_info.image_url.ExtractFileName();
-  if (ad_image_filename.empty()) {
-    return false;
-  }
-
-  if (base::FilePath::FromUTF8Unsafe(ad_image_filename).BaseName() !=
-      background.logo.image_file.BaseName()) {
-    return false;
-  }
-
-  if (ad_info.alt != background.logo.alt_text) {
-    return false;
-  }
-
-  if (ad_info.company_name != background.logo.company_name) {
-    return false;
-  }
-
-  const auto it = base::ranges::find_if(
-      ad_info.wallpapers, [&background](const auto& wallpaper_info) {
-        const std::string wallpaper_image_filename =
-            wallpaper_info.image_url.ExtractFileName();
-        if (wallpaper_image_filename.empty()) {
-          return false;
-        }
-
-        if (base::FilePath::FromUTF8Unsafe(wallpaper_image_filename)
-                .BaseName() != background.image_file.BaseName()) {
-          return false;
-        }
-        return wallpaper_info.focal_point.x == background.focal_point.x() &&
-               wallpaper_info.focal_point.y == background.focal_point.y();
-      });
-
-  return it != ad_info.wallpapers.end();
 }
 
 }  // namespace ntp_background_images

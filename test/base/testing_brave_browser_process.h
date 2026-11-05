@@ -46,9 +46,6 @@ class TestingBraveBrowserProcess : public BraveBrowserProcess {
   // BraveBrowserProcess overrides:
   void StartBraveServices() override;
   brave_shields::AdBlockService* ad_block_service() override;
-#if BUILDFLAG(ENABLE_GREASELION)
-  greaselion::GreaselionDownloadService* greaselion_download_service() override;
-#endif
   debounce::DebounceComponentInstaller* debounce_component_installer() override;
 #if BUILDFLAG(ENABLE_REQUEST_OTR)
   request_otr::RequestOTRComponentInstallerPolicy*
@@ -67,15 +64,12 @@ class TestingBraveBrowserProcess : public BraveBrowserProcess {
   tor::BraveTorPluggableTransportUpdater* tor_pluggable_transport_updater()
       override;
 #endif
-  brave::BraveReferralsService* brave_referrals_service() override;
-  brave_ads::BraveStatsHelper* ads_brave_stats_helper() override;
   ntp_background_images::NTPBackgroundImagesService*
   ntp_background_images_service() override;
 #if BUILDFLAG(ENABLE_SPEEDREADER)
   speedreader::SpeedreaderRewriterService* speedreader_rewriter_service()
       override;
 #endif
-  brave_ads::ResourceComponent* resource_component() override;
   brave::BraveFarblingService* brave_farbling_service() override;
 
   // Populate the mock process with services. Consumer is responsible for

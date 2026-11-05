@@ -11,7 +11,6 @@
 #include "base/memory/ref_counted.h"
 #include "brave/browser/brave_browser_process.h"
 #include "brave/components/brave_component_updater/browser/brave_component.h"
-#include "brave/components/greaselion/browser/buildflags/buildflags.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "brave/components/tor/brave_tor_pluggable_transport_updater.h"
 #include "brave/components/tor/buildflags/buildflags.h"
@@ -21,7 +20,6 @@
 #include "extensions/buildflags/buildflags.h"
 
 namespace brave {
-class BraveReferralsService;
 class BraveFarblingService;
 }  // namespace brave
 
@@ -40,12 +38,6 @@ class HttpsUpgradeExceptionsService;
 namespace localhost_permission {
 class LocalhostPermissionComponent;
 }  // namespace localhost_permission
-
-namespace greaselion {
-#if BUILDFLAG(ENABLE_GREASELION)
-class GreaselionDownloadService;
-#endif
-}  // namespace greaselion
 
 namespace debounce {
 class DebounceComponentInstaller;
@@ -70,11 +62,6 @@ namespace speedreader {
 class SpeedreaderRewriterService;
 }
 
-namespace brave_ads {
-class BraveStatsHelper;
-class ResourceComponent;
-}  // namespace brave_ads
-
 class BraveBrowserProcessImpl : public BraveBrowserProcess,
                                 public BrowserProcessImpl {
  public:
@@ -96,9 +83,6 @@ class BraveBrowserProcessImpl : public BraveBrowserProcess,
   https_upgrade_exceptions_service() override;
   localhost_permission::LocalhostPermissionComponent*
   localhost_permission_component() override;
-#if BUILDFLAG(ENABLE_GREASELION)
-  greaselion::GreaselionDownloadService* greaselion_download_service() override;
-#endif
   debounce::DebounceComponentInstaller* debounce_component_installer() override;
 #if BUILDFLAG(ENABLE_REQUEST_OTR)
   request_otr::RequestOTRComponentInstallerPolicy*
@@ -113,11 +97,8 @@ class BraveBrowserProcessImpl : public BraveBrowserProcess,
   tor::BraveTorPluggableTransportUpdater* tor_pluggable_transport_updater()
       override;
 #endif
-  brave::BraveReferralsService* brave_referrals_service() override;
-  brave_ads::BraveStatsHelper* ads_brave_stats_helper() override;
   ntp_background_images::NTPBackgroundImagesService*
   ntp_background_images_service() override;
-  brave_ads::ResourceComponent* resource_component() override;
 #if BUILDFLAG(ENABLE_SPEEDREADER)
   speedreader::SpeedreaderRewriterService* speedreader_rewriter_service()
       override;
@@ -161,10 +142,6 @@ class BraveBrowserProcessImpl : public BraveBrowserProcess,
       https_upgrade_exceptions_service_;
   std::unique_ptr<localhost_permission::LocalhostPermissionComponent>
       localhost_permission_component_;
-#if BUILDFLAG(ENABLE_GREASELION)
-  std::unique_ptr<greaselion::GreaselionDownloadService>
-      greaselion_download_service_;
-#endif
   std::unique_ptr<debounce::DebounceComponentInstaller>
       debounce_component_installer_;
 #if BUILDFLAG(ENABLE_REQUEST_OTR)
@@ -173,7 +150,6 @@ class BraveBrowserProcessImpl : public BraveBrowserProcess,
 #endif
   std::unique_ptr<brave::URLSanitizerComponentInstaller>
       url_sanitizer_component_installer_;
-  std::unique_ptr<brave::BraveReferralsService> brave_referrals_service_;
 #if BUILDFLAG(ENABLE_TOR)
   std::unique_ptr<tor::BraveTorClientUpdater> tor_client_updater_;
   std::unique_ptr<tor::BraveTorPluggableTransportUpdater>
@@ -181,7 +157,6 @@ class BraveBrowserProcessImpl : public BraveBrowserProcess,
 #endif
   std::unique_ptr<ntp_background_images::NTPBackgroundImagesService>
       ntp_background_images_service_;
-  std::unique_ptr<brave_ads::ResourceComponent> resource_component_;
 
 #if BUILDFLAG(ENABLE_SPEEDREADER)
   std::unique_ptr<speedreader::SpeedreaderRewriterService>
@@ -189,7 +164,6 @@ class BraveBrowserProcessImpl : public BraveBrowserProcess,
 #endif
 
   std::unique_ptr<brave::BraveFarblingService> brave_farbling_service_;
-  std::unique_ptr<brave_ads::BraveStatsHelper> brave_stats_helper_;
 };
 
 #endif  // BRAVE_BROWSER_BRAVE_BROWSER_PROCESS_IMPL_H_

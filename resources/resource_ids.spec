@@ -47,34 +47,8 @@
   "brave/components/brave_webtorrent/resources.grd": {
     "includes": [60120],
   },
-  # This file is generated during the build.
-  "<(SHARED_INTERMEDIATE_DIR)/brave/web-ui-brave_rewards_panel/brave_rewards_panel.grd": {
-    "META": {"sizes": {"includes": [20]}},
-    "includes": [60130],
-  },
-  "brave/components/brave_rewards/resources/brave_rewards_static_resources.grd": {
-    "includes": [60150],
-  },
-  # This file is generated during the build.
-  "<(SHARED_INTERMEDIATE_DIR)/brave/web-ui-brave_rewards_page/brave_rewards_page.grd": {
-    "META": {"sizes": {"includes": [20]}},
-    "includes": [60160],
-  },
-  # This file is generated during the build.
-  "<(SHARED_INTERMEDIATE_DIR)/brave/web-ui-brave_rewards_internals/brave_rewards_internals.grd": {
-    "META": {"sizes": {"includes": [10]}},
-    "includes": [60180],
-  },
-  # This file is generated during the build.
-  "<(SHARED_INTERMEDIATE_DIR)/brave/web-ui-brave_rewards_tip/brave_rewards_tip.grd": {
-    "META": {"sizes": {"includes": [20]}},
-    "includes": [60190],
-  },
   "brave/components/resources/brave_components_strings.grd": {
     "messages": [60210],
-  },
-  "brave/components/brave_ads/resources/bat_ads_resources.grd": {
-    "includes": [62750]
   },
   # This file is generated during the build.
   "<(SHARED_INTERMEDIATE_DIR)/brave/web-ui-brave_wallet_page/brave_wallet_page.grd": {
@@ -182,21 +156,9 @@
     "META": {"sizes": {"includes": [100]}},
     "includes": [63970],
   },
-  "<(SHARED_INTERMEDIATE_DIR)/brave/web-ui-tip_panel/tip_panel.grd": {
-    "META": {"sizes": {"includes": [20]}},
-    "includes": [64070]
-  },
-  "<(SHARED_INTERMEDIATE_DIR)/brave/web-ui-skus_internals/skus_internals.grd": {
-    "META": {"sizes": {"includes": [10]}},
-    "includes": [64290],
-  },
   # This file is generated during the build.
   "<(SHARED_INTERMEDIATE_DIR)/brave/web-ui-line_chart_display/line_chart_display.grd": {
     "META": {"sizes": {"includes": [10]}},
     "includes": [64310]
-  },
-  "<(SHARED_INTERMEDIATE_DIR)/brave/web-ui-rewards_page/rewards_page.grd": {
-    "META": {"sizes": {"includes": [50]}},
-    "includes": [64340],
   },
 }

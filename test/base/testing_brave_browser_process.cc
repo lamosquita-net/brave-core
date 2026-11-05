@@ -68,13 +68,6 @@ brave_shields::AdBlockService* TestingBraveBrowserProcess::ad_block_service() {
   return ad_block_service_.get();
 }
 
-#if BUILDFLAG(ENABLE_GREASELION)
-greaselion::GreaselionDownloadService*
-TestingBraveBrowserProcess::greaselion_download_service() {
-  return nullptr;
-}
-#endif
-
 debounce::DebounceComponentInstaller*
 TestingBraveBrowserProcess::debounce_component_installer() {
   return nullptr;
@@ -118,17 +111,6 @@ TestingBraveBrowserProcess::tor_pluggable_transport_updater() {
 }
 #endif
 
-
-brave::BraveReferralsService*
-TestingBraveBrowserProcess::brave_referrals_service() {
-  return nullptr;
-}
-
-brave_ads::BraveStatsHelper*
-TestingBraveBrowserProcess::ads_brave_stats_helper() {
-  return nullptr;
-}
-
 ntp_background_images::NTPBackgroundImagesService*
 TestingBraveBrowserProcess::ntp_background_images_service() {
   return nullptr;
@@ -140,10 +122,6 @@ TestingBraveBrowserProcess::speedreader_rewriter_service() {
   return nullptr;
 }
 #endif
-
-brave_ads::ResourceComponent* TestingBraveBrowserProcess::resource_component() {
-  return nullptr;
-}
 
 brave::BraveFarblingService*
 TestingBraveBrowserProcess::brave_farbling_service() {

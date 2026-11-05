@@ -8,8 +8,6 @@
 #include "base/feature_list.h"
 #include "brave/browser/ethereum_remote_client/buildflags/buildflags.h"
 #include "brave/browser/ui/tabs/brave_tab_prefs.h"
-#include "brave/components/brave_ads/core/public/prefs/pref_names.h"
-#include "brave/components/brave_rewards/common/pref_names.h"
 #include "brave/components/brave_shields/content/browser/brave_shields_util.h"
 #include "brave/components/brave_shields/core/common/pref_names.h"
 #include "brave/components/brave_wallet/browser/pref_names.h"
@@ -104,12 +102,6 @@ const PrefsUtil::TypedPrefMap& BravePrefsUtil::GetAllowlistedKeys() {
   (*s_brave_allowlist)[brave_shields::prefs::kLinkedInEmbedControlType] =
       settings_api::PrefType::kBoolean;
   (*s_brave_allowlist)[brave_shields::prefs::kReduceLanguageEnabled] =
-      settings_api::PrefType::kBoolean;
-
-  // Rewards/Ads prefs
-  (*s_brave_allowlist)[brave_rewards::prefs::kEnabled] =
-      settings_api::PrefType::kBoolean;
-  (*s_brave_allowlist)[brave_rewards::prefs::kShowLocationBarButton] =
       settings_api::PrefType::kBoolean;
 
   // Search engine prefs

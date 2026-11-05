@@ -14,12 +14,7 @@
 #include "brave/browser/ethereum_remote_client/features.h"
 #include "brave/browser/ui/brave_ui_features.h"
 #include "brave/browser/ui/tabs/features.h"
-#include "brave/components/brave_ads/browser/ad_units/notification_ad/custom_notification_ad_feature.h"
-#include "brave/components/brave_ads/core/public/ad_units/notification_ad/notification_ad_feature.h"
-#include "brave/components/brave_ads/core/public/ads_feature.h"
 #include "brave/components/brave_component_updater/browser/features.h"
-#include "brave/components/brave_rewards/common/buildflags/buildflags.h"
-#include "brave/components/brave_rewards/common/features.h"
 #include "brave/components/brave_shields/core/common/features.h"
 #include "brave/components/brave_sync/features.h"
 #include "brave/components/brave_wallet/common/features.h"
@@ -29,7 +24,6 @@
 #include "brave/components/ntp_background_images/browser/features.h"
 #include "brave/components/playlist/common/buildflags/buildflags.h"
 #include "brave/components/request_otr/common/buildflags/buildflags.h"
-#include "brave/components/skus/common/features.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "brave/components/webcompat/features.h"
 #include "build/build_config.h"
@@ -74,15 +68,6 @@
 
 #define EXPAND_FEATURE_ENTRIES(...) __VA_ARGS__,
 
-#define BRAVE_SKU_SDK_FEATURE_ENTRIES                   \
-  EXPAND_FEATURE_ENTRIES({                              \
-      "skus-sdk",                                       \
-      "Enable experimental SKU SDK",                    \
-      "Experimental SKU SDK support",                   \
-      kOsMac | kOsWin | kOsAndroid,                     \
-      FEATURE_VALUE_TYPE(skus::features::kSkusFeature), \
-  })
-
 #define SPEEDREADER_FEATURE_ENTRIES                                        \
   IF_BUILDFLAG(                                                            \
       ENABLE_SPEEDREADER,                                                  \
@@ -116,18 +101,6 @@
           "chrome.exe in sandboxed processes.",                                \
           kOsWin,                                                              \
           FEATURE_VALUE_TYPE(sandbox::policy::features::kModuleFileNamePatch), \
-      }))
-
-#define BRAVE_REWARDS_GEMINI_FEATURE_ENTRIES                               \
-  IF_BUILDFLAG(                                                            \
-      ENABLE_GEMINI_WALLET,                                                \
-      EXPAND_FEATURE_ENTRIES({                                             \
-          "brave-rewards-gemini",                                          \
-          "Enable Gemini for Brave Rewards",                               \
-          "Enables support for Gemini as an external wallet provider for " \
-          "Brave",                                                         \
-          kOsDesktop,                                                      \
-          FEATURE_VALUE_TYPE(brave_rewards::features::kGeminiFeature),     \
       }))
 
 #define BRAVE_NATIVE_WALLET_FEATURE_ENTRIES                                   \
@@ -588,116 +561,6 @@
           FEATURE_VALUE_TYPE(net::features::kBraveForgetFirstPartyStorage),    \
       },                                                                       \
       {                                                                        \
-          "brave-rewards-verbose-logging",                                     \
-          "Enable Brave Rewards verbose logging",                              \
-          "Enables detailed logging of Brave Rewards system events to a log "  \
-          "file stored on your device. Please note that this log file could "  \
-          "include information such as browsing history and credentials such " \
-          "as passwords and access tokens depending on your activity. Please " \
-          "do not share it unless asked to by Brave staff.",                   \
-          kOsDesktop | kOsAndroid,                                             \
-          FEATURE_VALUE_TYPE(brave_rewards::features::kVerboseLoggingFeature), \
-      },                                                                       \
-      {                                                                        \
-          "brave-rewards-allow-unsupported-wallet-providers",                  \
-          "Always show Brave Rewards custodial connection options",            \
-                                                                               \
-          "Allows all custodial options to be selected in Brave Rewards, "     \
-          "including those not supported for your Rewards country.",           \
-          kOsDesktop | kOsAndroid,                                             \
-          FEATURE_VALUE_TYPE(brave_rewards::features::                         \
-                                 kAllowUnsupportedWalletProvidersFeature),     \
-      },                                                                       \
-      {                                                                        \
-          "brave-rewards-allow-self-custody-providers",                        \
-          "Enable Brave Rewards self-custody connection options",              \
-          "Enables self-custody options to be selected in Brave Rewards.",     \
-          kOsDesktop | kOsAndroid,                                             \
-          FEATURE_VALUE_TYPE(                                                  \
-              brave_rewards::features::kAllowSelfCustodyProvidersFeature),     \
-      },                                                                       \
-      {                                                                        \
-          "brave-rewards-new-rewards-ui",                                      \
-          "Show the new Rewards UI",                                           \
-          "Displays the new Rewards UI.",                                      \
-          kOsDesktop | kOsAndroid,                                             \
-          FEATURE_VALUE_TYPE(brave_rewards::features::kNewRewardsUIFeature),   \
-      },                                                                       \
-      {                                                                        \
-          "brave-rewards-animated-background",                                 \
-          "Show an animated background on the Rewards UI",                     \
-          "Shows an animated background on the Rewards panel and page.",       \
-          kOsDesktop | kOsAndroid,                                             \
-          FEATURE_VALUE_TYPE(                                                  \
-              brave_rewards::features::kAnimatedBackgroundFeature),            \
-      },                                                                       \
-      {                                                                        \
-          "brave-ads-should-launch-brave-ads-as-an-in-process-service",        \
-          "Launch Brave Ads as an in-process service",                         \
-          "Launch Brave Ads as an in-process service removing the utility "    \
-          "process.",                                                          \
-          kOsAll,                                                              \
-          FEATURE_VALUE_TYPE(                                                  \
-              brave_ads::kShouldLaunchBraveAdsAsAnInProcessServiceFeature),    \
-      },                                                                       \
-      {                                                                        \
-          "brave-ads-should-always-run-brave-ads-service",                     \
-          "Should always run Brave Ads service",                               \
-          "Always run Brave Ads service to support triggering ad events when " \
-          "Brave Private Ads are disabled.",                                   \
-          kOsAll,                                                              \
-          FEATURE_VALUE_TYPE(                                                  \
-              brave_ads::kShouldAlwaysRunBraveAdsServiceFeature),              \
-      },                                                                       \
-      {                                                                        \
-          "brave-ads-should-always-trigger-new-tab-page-ad-events",            \
-          "Should always trigger new tab page ad events",                      \
-          "Support triggering new tab page ad events if Brave Private Ads "    \
-          "are disabled. Requires "                                            \
-          "#brave-ads-should-always-run-brave-ads-service to be enabled.",     \
-          kOsAll,                                                              \
-          FEATURE_VALUE_TYPE(                                                  \
-              brave_ads::kShouldAlwaysTriggerBraveNewTabPageAdEventsFeature),  \
-      },                                                                       \
-      {                                                                        \
-          "brave-ads-should-support-search-result-ads",                        \
-          "Support Search Result Ads feature",                                 \
-          "Should be used in combination with "                                \
-          "#brave-ads-should-always-trigger-search-result-ad-events and "      \
-          "#brave-ads-should-always-run-brave-ads-service",                    \
-          kOsAll,                                                              \
-          FEATURE_VALUE_TYPE(brave_ads::kShouldSupportSearchResultAdsFeature), \
-      },                                                                       \
-      {                                                                        \
-          "brave-ads-should-always-trigger-search-result-ad-events",           \
-          "Should always trigger search result ad events",                     \
-          "Support triggering search result ad events if Brave Private Ads "   \
-          "are disabled. Requires "                                            \
-          "#brave-ads-should-always-run-brave-ads-service to be enabled.",     \
-          kOsAll,                                                              \
-          FEATURE_VALUE_TYPE(                                                  \
-              brave_ads::                                                      \
-                  kShouldAlwaysTriggerBraveSearchResultAdEventsFeature),       \
-      },                                                                       \
-      {                                                                        \
-          "brave-ads-custom-push-notifications-ads",                           \
-          "Enable Brave Ads custom push notifications",                        \
-          "Enable Brave Ads custom push notifications to support rich media",  \
-          kOsAll,                                                              \
-          FEATURE_VALUE_TYPE(brave_ads::kCustomNotificationAdFeature),         \
-      },                                                                       \
-      {                                                                        \
-          "brave-ads-allowed-to-fallback-to-custom-push-notification-ads",     \
-          "Allow Brave Ads to fallback from native to custom push "            \
-          "notifications",                                                     \
-          "Allow Brave Ads to fallback from native to custom push "            \
-          "notifications on operating systems which do not support native "    \
-          "notifications",                                                     \
-          kOsAll,                                                              \
-          FEATURE_VALUE_TYPE(                                                  \
-              brave_ads::kAllowedToFallbackToCustomNotificationAdFeature),     \
-      },                                                                       \
-      {                                                                        \
           "brave-sync-v2",                                                     \
           "Enable Brave Sync v2",                                              \
           "Brave Sync v2 integrates with chromium sync engine with Brave "     \
@@ -857,8 +720,6 @@
       })                                                                       \
   BRAVE_NATIVE_WALLET_FEATURE_ENTRIES                                          \
   CRYPTO_WALLETS_FEATURE_ENTRIES                                               \
-  BRAVE_REWARDS_GEMINI_FEATURE_ENTRIES                                         \
-  BRAVE_SKU_SDK_FEATURE_ENTRIES                                                \
   SPEEDREADER_FEATURE_ENTRIES                                                  \
   REQUEST_OTR_FEATURE_ENTRIES                                                  \
   BRAVE_MODULE_FILENAME_PATCH                                                  \
