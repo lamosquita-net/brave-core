@@ -14,7 +14,6 @@ void RegisterBraveProfilePrefs(PrefRegistrySimple* registry) {
   registry->RegisterBooleanPref(kTopSiteSuggestionsEnabled, true);
   registry->RegisterBooleanPref(kHistorySuggestionsEnabled, true);
   registry->RegisterBooleanPref(kBookmarkSuggestionsEnabled, true);
-  registry->RegisterBooleanPref(kCommanderSuggestionsEnabled, true);
 }
 
 }  // namespace omnibox

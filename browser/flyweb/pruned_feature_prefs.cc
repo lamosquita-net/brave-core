@@ -52,6 +52,10 @@ constexpr char kWebTorrentEnabled[] = "brave.webtorrent_enabled";
 // Wayback Machine (removed 2026-11).
 constexpr char kWaybackMachineEnabled[] = "brave.wayback_machine_enabled";
 
+// Commander (removed 2026-11).
+constexpr char kCommanderSuggestionsEnabled[] =
+    "brave.omnibox.commander_suggestions_enabled";
+
 constexpr const char* kProfilePrefs[] = {
     kPlaylistEnabled,
     kPlaylists,
@@ -74,6 +78,7 @@ constexpr const char* kProfilePrefs[] = {
     kSpeedreaderContentSettingDefault,
     kWebTorrentEnabled,
     kWaybackMachineEnabled,
+    kCommanderSuggestionsEnabled,
 };
 
 constexpr const char* kLocalStatePrefs[] = {
@@ -116,6 +121,9 @@ void RegisterPrunedFeatureProfilePrefs(
 
   // Wayback Machine
   registry->RegisterBooleanPref(kWaybackMachineEnabled, true);
+
+  // Commander
+  registry->RegisterBooleanPref(kCommanderSuggestionsEnabled, true);
 }
 
 void ClearPrunedFeatureProfilePrefs(PrefService* profile_prefs) {

@@ -67,11 +67,6 @@
 #include "chrome/browser/ui/views/side_panel/side_panel_ui.h"
 #endif
 
-#if BUILDFLAG(ENABLE_COMMANDER)
-#include "brave/browser/ui/commander/commander_service.h"
-#include "brave/browser/ui/commander/commander_service_factory.h"
-#endif
-
 using content::WebContents;
 
 namespace brave {
@@ -262,16 +257,6 @@ void ToggleJavascriptEnabled(Browser* browser) {
 
   shields->SetIsNoScriptEnabled(!shields->GetNoScriptEnabled());
 }
-
-#if BUILDFLAG(ENABLE_COMMANDER)
-void ToggleCommander(Browser* browser) {
-  if (auto* commander_service =
-          commander::CommanderServiceFactory::GetForBrowserContext(
-              browser->profile())) {
-    commander_service->Toggle();
-  }
-}
-#endif
 
 void GroupTabsOnCurrentOrigin(Browser* browser) {
   auto url =

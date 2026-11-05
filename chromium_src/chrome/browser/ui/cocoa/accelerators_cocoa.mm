@@ -10,10 +10,10 @@ constexpr int kNewWindowCmdID = IDC_NEW_WINDOW;
 }  // namespace
 
 #undef IDC_NEW_WINDOW
-#define IDC_NEW_WINDOW                                                        \
-  IDC_TOGGLE_TAB_MUTE, ui::EF_CONTROL_DOWN, ui::VKEY_M                        \
-  }                                                                           \
-  , {IDC_COMMANDER, ui::EF_COMMAND_DOWN | ui::EF_SHIFT_DOWN, ui::VKEY_P}, {   \
+#define IDC_NEW_WINDOW                                 \
+  IDC_TOGGLE_TAB_MUTE, ui::EF_CONTROL_DOWN, ui::VKEY_M \
+  }                                                    \
+  , {                                                  \
     kNewWindowCmdID
 
 #include "src/chrome/browser/ui/cocoa/accelerators_cocoa.mm"

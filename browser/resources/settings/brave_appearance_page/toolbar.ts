@@ -69,10 +69,6 @@ class SettingsBraveAppearanceToolbarElement extends SettingsBraveAppearanceToolb
   private isBraveRewardsSupported_() {
     return loadTimeData.getBoolean('isBraveRewardsSupported')
   }
-
-  private showCommandsInOmnibox_() {
-    return loadTimeData.getBoolean('showCommandsInOmnibox')
-  }
 }
 
 customElements.define(SettingsBraveAppearanceToolbarElement.is, SettingsBraveAppearanceToolbarElement)

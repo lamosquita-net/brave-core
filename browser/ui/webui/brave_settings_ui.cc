@@ -22,7 +22,6 @@
 #include "brave/browser/ui/webui/settings/brave_privacy_handler.h"
 #include "brave/browser/ui/webui/settings/brave_sync_handler.h"
 #include "brave/browser/ui/webui/settings/default_brave_shields_handler.h"
-#include "brave/components/commander/common/features.h"
 #include "brave/components/commands/common/commands.mojom.h"
 #include "brave/components/commands/common/features.h"
 #include "brave/components/version_info/version_info.h"
@@ -114,10 +113,6 @@ void BraveSettingsUI::AddResources(content::WebUIDataSource* html_source,
 
   html_source->AddBoolean("isLeoAssistantAllowed", false);
   html_source->AddBoolean("isLeoAssistantHistoryAllowed", false);
-
-  html_source->AddBoolean(
-      "showCommandsInOmnibox",
-      base::FeatureList::IsEnabled(features::kBraveCommandsInOmnibox));
 }
 
 // static

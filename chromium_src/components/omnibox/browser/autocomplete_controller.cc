@@ -10,7 +10,6 @@
 #include "base/memory/scoped_refptr.h"
 #include "base/strings/string_util.h"
 #include "brave/components/brave_search_conversion/utils.h"
-#include "brave/components/commander/common/buildflags/buildflags.h"
 #include "brave/components/omnibox/browser/brave_bookmark_provider.h"
 #include "brave/components/omnibox/browser/brave_history_quick_provider.h"
 #include "brave/components/omnibox/browser/brave_history_url_provider.h"
@@ -28,56 +27,9 @@
 #include "components/omnibox/browser/history_cluster_provider.h"
 #include "components/omnibox/browser/history_fuzzy_provider.h"
 
-#if BUILDFLAG(ENABLE_COMMANDER)
-#include "brave/components/commander/common/buildflags/buildflags.h"
-#include "brave/components/commander/common/constants.h"
-#include "brave/components/commander/common/features.h"
-#include "brave/components/omnibox/browser/commander_provider.h"
-#endif
-
 using brave_search_conversion::IsBraveSearchConversionFeatureEnabled;
 
 namespace {
-// If this input has triggered the commander then only show commander results.
-void MaybeShowCommands(AutocompleteResult* result,
-                       const AutocompleteInput& input) {
-#if BUILDFLAG(ENABLE_COMMANDER)
-  // If this input isn't a command, return and don't do any work.
-  if (!base::FeatureList::IsEnabled(features::kBraveCommander) ||
-      !base::StartsWith(input.text(), commander::kCommandPrefix)) {
-    return;
-  }
-
-  uint32_t seen_commands = 0;
-
-  // Move all the commands to the top of the Omnibox suggestions.
-  for (uint32_t i = 0; i < result->size(); ++i) {
-    auto* match = result->match_at(i);
-    if (match->provider->type() != AutocompleteProvider::TYPE_BRAVE_COMMANDER) {
-      continue;
-    }
-
-    result->ReorderMatch(result->begin() + i, seen_commands++);
-  }
-
-  // Remove all results after the commands.
-  for (auto it = result->end() - 1; it >= result->begin() + seen_commands;
-       --it) {
-    result->RemoveMatch(it);
-  }
-#endif
-}
-
-void MaybeAddCommanderProvider(AutocompleteController::Providers& providers,
-                               AutocompleteController* controller) {
-#if BUILDFLAG(ENABLE_COMMANDER)
-  if (base::FeatureList::IsEnabled(features::kBraveCommander)) {
-    providers.push_back(base::MakeRefCounted<commander::CommanderProvider>(
-        controller->autocomplete_provider_client(), controller));
-  }
-#endif
-}
-
 void MaybeAddLeoProvider(AutocompleteController::Providers& providers,
                          AutocompleteController* controller) {
 }
@@ -94,7 +46,6 @@ void MaybeShowLeoMatch(AutocompleteResult* result) {
 #define BookmarkProvider BraveBookmarkProvider
 #define ShortcutsProvider BraveShortcutsProvider
 #define BRAVE_AUTOCOMPLETE_CONTROLLER_AUTOCOMPLETE_CONTROLLER         \
-  MaybeAddCommanderProvider(providers_, this);                        \
   MaybeAddLeoProvider(providers_, this);                              \
   providers_.push_back(new TopSitesProvider(provider_client_.get())); \
   if (IsBraveSearchConversionFeatureEnabled() &&                      \
@@ -106,8 +57,7 @@ void MaybeShowLeoMatch(AutocompleteResult* result) {
 // run last but before notifying.
 #define BRAVE_AUTOCOMPLETE_CONTROLLER_UPDATE_RESULT \
   MaybeShowLeoMatch(&internal_result_);             \
-  SortBraveSearchPromotionMatch(&internal_result_); \
-  MaybeShowCommands(&internal_result_, input_);
+  SortBraveSearchPromotionMatch(&internal_result_);
 
 #include "src/components/omnibox/browser/autocomplete_controller.cc"
 

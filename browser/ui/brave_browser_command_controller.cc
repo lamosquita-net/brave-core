@@ -20,7 +20,6 @@
 #include "brave/browser/ui/sidebar/sidebar_utils.h"
 #include "brave/browser/ui/tabs/features.h"
 #include "brave/browser/ui/tabs/split_view_browser_data.h"
-#include "brave/components/commander/common/buildflags/buildflags.h"
 #include "brave/components/commands/common/features.h"
 #include "brave/components/constants/pref_names.h"
 #include "chrome/app/chrome_command_ids.h"
@@ -37,10 +36,6 @@
 #include "components/prefs/pref_service.h"
 #include "components/sync/base/command_line_switches.h"
 #include "content/public/browser/web_contents.h"
-
-#if BUILDFLAG(ENABLE_COMMANDER)
-#include "brave/browser/ui/commander/commander_service.h"
-#endif
 
 namespace {
 
@@ -186,10 +181,6 @@ void BraveBrowserCommandController::InitBraveCommandState() {
   UpdateCommandEnabled(IDC_OPEN_GUEST_PROFILE, open_guest_profile_enabled);
   UpdateCommandEnabled(IDC_COPY_CLEAN_LINK, true);
   UpdateCommandEnabled(IDC_TOGGLE_TAB_MUTE, true);
-
-#if BUILDFLAG(ENABLE_COMMANDER)
-  UpdateCommandEnabled(IDC_COMMANDER, commander::IsEnabled());
-#endif
 
   UpdateCommandEnabled(IDC_BRAVE_BOOKMARK_BAR_SUBMENU, true);
 
@@ -420,11 +411,6 @@ bool BraveBrowserCommandController::ExecuteBraveCommandWithDisposition(
       break;
     case IDC_TOGGLE_ALL_BOOKMARKS_BUTTON_VISIBILITY:
       brave::ToggleAllBookmarksButtonVisibility(base::to_address(browser_));
-      break;
-    case IDC_COMMANDER:
-#if BUILDFLAG(ENABLE_COMMANDER)
-      brave::ToggleCommander(base::to_address(browser_));
-#endif
       break;
     case IDC_WINDOW_GROUP_UNGROUPED_TABS:
       brave::GroupUngroupedTabs(&*browser_);

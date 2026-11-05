@@ -9,7 +9,6 @@
 #include <optional>
 #include <vector>
 
-#include "brave/components/commander/common/buildflags/buildflags.h"
 #include "chrome/browser/ui/tabs/tab_model.h"
 
 class Browser;
@@ -39,10 +38,6 @@ void ToggleSidebar(Browser* browser);
 
 void ToggleShieldsEnabled(Browser* browser);
 void ToggleJavascriptEnabled(Browser* browser);
-
-#if BUILDFLAG(ENABLE_COMMANDER)
-void ToggleCommander(Browser* browser);
-#endif
 
 void GroupTabsOnCurrentOrigin(Browser* browser);
 void MoveGroupToNewWindow(Browser* browser);

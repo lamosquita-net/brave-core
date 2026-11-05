@@ -40,7 +40,6 @@
 #include "brave/browser/android/preferences/features.h"
 #include "brave/browser/android/safe_browsing/features.h"
 #else
-#include "brave/components/commander/common/features.h"
 #include "brave/components/commands/common/features.h"
 #endif
 
@@ -88,10 +87,7 @@
           "Brave",                                                          \
           kOsWin | kOsMac | kOsLinux,                                       \
           FEATURE_VALUE_TYPE(commands::features::kBraveCommands),           \
-      },                                                                    \
-      {"brave-commands-omnibox", "Brave Commands in Omnibox",               \
-       "Enable quick commands in the omnibox", kOsWin | kOsMac | kOsLinux,  \
-       FEATURE_VALUE_TYPE(features::kBraveCommandsInOmnibox)})
+      })
 #else
 #define BRAVE_COMMANDS_FEATURE_ENTRIES
 #endif

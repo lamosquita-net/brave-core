@@ -17,7 +17,6 @@
 #include "brave/browser/ui/tabs/features.h"
 #include "brave/browser/ui/views/brave_actions/brave_actions_container.h"
 #include "brave/browser/ui/views/toolbar/brave_toolbar_view.h"
-#include "brave/components/commander/common/buildflags/buildflags.h"
 #include "brave/components/l10n/common/localization_util.h"
 #include "brave/grit/brave_theme_resources.h"
 #include "chrome/browser/profiles/profile.h"
@@ -43,12 +42,6 @@
 #include "ui/views/animation/ink_drop.h"
 #include "ui/views/controls/highlight_path_generator.h"
 #include "ui/views/view_utils.h"
-
-#if BUILDFLAG(ENABLE_COMMANDER)
-#include "brave/browser/ui/commander/commander_service_factory.h"
-#include "brave/components/commander/browser/commander_frontend_delegate.h"
-#include "brave/components/commander/common/features.h"
-#endif
 
 namespace {
 
@@ -127,19 +120,6 @@ void BraveLocationBarView::Update(content::WebContents* contents) {
   }
 
   LocationBarView::Update(contents);
-}
-
-void BraveLocationBarView::OnOmniboxBlurred() {
-#if BUILDFLAG(ENABLE_COMMANDER)
-  if (base::FeatureList::IsEnabled(features::kBraveCommander)) {
-    if (auto* commander_service =
-            commander::CommanderServiceFactory::GetForBrowserContext(
-                profile_)) {
-      commander_service->Hide();
-    }
-  }
-#endif
-  LocationBarView::OnOmniboxBlurred();
 }
 
 void BraveLocationBarView::OnChanged() {

@@ -5,12 +5,11 @@
 
 #include "brave/chromium_src/components/omnibox/browser/autocomplete_provider.h"
 
-// This is a bit of a hack to just make COMMANDER use the same metrics/friendly
+// This is a bit of a hack to just make LEO use the same metrics/friendly
 // name as BOOKMARK. It's easier than patching things and we don't use the
 // metrics and the name is mostly useful for debugging.
-#define TYPE_BOOKMARK   \
-  TYPE_BRAVE_COMMANDER: \
-  case TYPE_BRAVE_LEO:  \
+#define TYPE_BOOKMARK \
+  TYPE_BRAVE_LEO:     \
   case TYPE_BOOKMARK
 #include "src/components/omnibox/browser/autocomplete_provider.cc"
 #undef TYPE_BOOKMARK

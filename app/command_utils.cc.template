@@ -11,7 +11,6 @@
 #include "base/containers/span.h"
 #include "base/feature_list.h"
 #include "brave/app/brave_command_ids.h"
-#include "brave/components/commander/common/buildflags/buildflags.h"
 #include "brave/components/commands/common/features.h"
 #include "base/no_destructor.h"
 #include "base/strings/string_util.h"
@@ -24,10 +23,6 @@
 #include "third_party/re2/src/re2/stringpiece.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/strings/grit/ui_strings.h"
-
-#if BUILDFLAG(ENABLE_COMMANDER)
-#include "brave/components/commander/common/features.h"
-#endif
 
 namespace commands {
 namespace {
@@ -44,23 +39,13 @@ COMMAND_IDS
 }  // namespace
 
 base::span<const int> GetCommands() {
-  #if BUILDFLAG(ENABLE_COMMANDER)
-  DCHECK(base::FeatureList::IsEnabled(features::kBraveCommands) ||
-         base::FeatureList::IsEnabled(::features::kBraveCommander))
-  #else
   DCHECK(base::FeatureList::IsEnabled(features::kBraveCommands))
-  #endif
       << "This should only be used when |kBraveCommands| is enabled.";
   return kCommandIds;
 }
 
 std::string GetCommandName(int command_id) {
-  #if BUILDFLAG(ENABLE_COMMANDER)
-  DCHECK(base::FeatureList::IsEnabled(features::kBraveCommands) ||
-         base::FeatureList::IsEnabled(::features::kBraveCommander))
-  #else
   DCHECK(base::FeatureList::IsEnabled(features::kBraveCommands))
-  #endif
       << "This should only be used when |kBraveCommands| is enabled.";
   auto it = kCommandTranslationIds.find(command_id);
   CHECK(it != kCommandTranslationIds.end())

@@ -133,8 +133,6 @@ void BraveAddCommonStrings(content::WebUIDataSource* html_source,
        IDS_SETTINGS_APPEARANCE_SETTINGS_USE_AUTOCOMPLETE_HISTORY},
       {"appearanceSettingsUseBookmarkSuggestions",
        IDS_SETTINGS_APPEARANCE_SETTINGS_USE_AUTOCOMPLETE_BOOKMARKS},
-      {"appearanceSettingsUseCommanderSuggestions",
-       IDS_SETTINGS_APPEARANCE_SETTINGS_USE_AUTOCOMPLETE_COMMANDER},
       {"appearanceSettingsUseLeoSuggestions",
        IDS_SETTINGS_APPEARANCE_SETTINGS_USE_AUTOCOMPLETE_LEO},
 #if defined(TOOLKIT_VIEWS)

@@ -17,7 +17,6 @@
 #include "brave/browser/sync/brave_sync_alerts_service_factory.h"
 #include "brave/browser/url_sanitizer/url_sanitizer_service_factory.h"
 #include "brave/components/brave_perf_predictor/browser/named_third_party_registry_factory.h"
-#include "brave/components/commander/common/buildflags/buildflags.h"
 #include "brave/components/request_otr/common/buildflags/buildflags.h"
 
 #if !BUILDFLAG(IS_ANDROID)
@@ -29,11 +28,6 @@
 #else
 #include "brave/browser/brave_shields/cookie_list_opt_in_service_factory.h"
 #include "brave/browser/brave_shields/filter_list_service_factory.h"
-#endif
-
-#if BUILDFLAG(ENABLE_COMMANDER)
-#include "brave/browser/ui/commander/commander_service_factory.h"
-#include "brave/components/commander/common/features.h"
 #endif
 
 #if defined(TOOLKIT_VIEWS)
@@ -66,12 +60,6 @@ void EnsureBrowserContextKeyedServiceFactoriesBuilt() {
 #if !BUILDFLAG(IS_ANDROID)
   if (base::FeatureList::IsEnabled(commands::features::kBraveCommands)) {
     commands::AcceleratorServiceFactory::GetInstance();
-  }
-#endif
-
-#if BUILDFLAG(ENABLE_COMMANDER)
-  if (base::FeatureList::IsEnabled(features::kBraveCommander)) {
-    commander::CommanderServiceFactory::GetInstance();
   }
 #endif
 

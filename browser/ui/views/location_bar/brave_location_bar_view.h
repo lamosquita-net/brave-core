@@ -49,7 +49,6 @@ class BraveLocationBarView : public LocationBarView {
   // Views that locates at left side of upstream's trailing views.
   std::vector<views::View*> GetLeftMostTrailingViews() override;
   void RefreshBackground() override;
-  void OnOmniboxBlurred() override;
 
   // views::View:
   gfx::Size CalculatePreferredSize(

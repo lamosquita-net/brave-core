@@ -28,7 +28,6 @@ import("//brave/browser/url_sanitizer/sources.gni")
 import("//brave/build/config.gni")
 import("//brave/chromium_src/chrome/browser/prefs/sources.gni")
 import("//brave/chromium_src/chrome/browser/sources.gni")
-import("//brave/components/commander/common/buildflags/buildflags.gni")
 import("//extensions/buildflags/buildflags.gni")
 
 brave_chrome_browser_visibility = [
@@ -120,7 +119,6 @@ brave_chrome_browser_deps = [
   "//brave/components/brave_sync:features",
   "//brave/components/brave_sync:network_time_helper",
   "//brave/components/brave_sync:prefs",
-  "//brave/components/commander/common/buildflags",
   "//brave/components/constants",
   "//brave/components/cosmetic_filters/browser",
   "//brave/components/cosmetic_filters/common:mojom",
@@ -187,9 +185,8 @@ brave_chrome_browser_deps = [
   "//url",
 ]
 
-if (enable_commander) {
+if (!is_android && !is_ios) {
   brave_chrome_browser_deps += [
-    "//brave/components/commander/browser",
     "//brave/components/commands/browser",
     "//brave/components/commands/common",
   ]
