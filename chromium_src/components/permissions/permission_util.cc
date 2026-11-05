@@ -45,10 +45,6 @@
     return ContentSettingsType::BRAVE_COOKIES;                   \
   case PermissionType::BRAVE_SPEEDREADER:                        \
     return ContentSettingsType::BRAVE_SPEEDREADER;               \
-  case PermissionType::BRAVE_ETHEREUM:                           \
-    return ContentSettingsType::BRAVE_ETHEREUM;                  \
-  case PermissionType::BRAVE_SOLANA:                             \
-    return ContentSettingsType::BRAVE_SOLANA;                    \
   case PermissionType::BRAVE_GOOGLE_SIGN_IN:                     \
     return ContentSettingsType::BRAVE_GOOGLE_SIGN_IN;            \
   case PermissionType::BRAVE_LOCALHOST_ACCESS:                   \
@@ -133,10 +129,6 @@ PermissionType PermissionUtil::ContentSettingsTypeToPermissionType(
       return PermissionType::BRAVE_COOKIES;
     case ContentSettingsType::BRAVE_SPEEDREADER:
       return PermissionType::BRAVE_SPEEDREADER;
-    case ContentSettingsType::BRAVE_ETHEREUM:
-      return PermissionType::BRAVE_ETHEREUM;
-    case ContentSettingsType::BRAVE_SOLANA:
-      return PermissionType::BRAVE_SOLANA;
     case ContentSettingsType::BRAVE_GOOGLE_SIGN_IN:
       return PermissionType::BRAVE_GOOGLE_SIGN_IN;
     case ContentSettingsType::BRAVE_LOCALHOST_ACCESS:

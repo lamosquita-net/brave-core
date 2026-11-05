@@ -29,16 +29,10 @@
   case PermissionType::BRAVE_GOOGLE_SIGN_IN:            \
     return "BraveGoogleSignInPermission";               \
   case PermissionType::BRAVE_LOCALHOST_ACCESS:          \
-    return "BraveLocalhostAccessPermission";            \
-  case PermissionType::BRAVE_ETHEREUM:                  \
-    return "BraveEthereum";                             \
-  case PermissionType::BRAVE_SOLANA:                    \
-    return "BraveSolana";
+    return "BraveLocalhostAccessPermission";
 
 #define kDisplayCapture                                 \
   kDisplayCapture;                                      \
-  case PermissionType::BRAVE_ETHEREUM:                  \
-  case PermissionType::BRAVE_SOLANA:                    \
   case PermissionType::BRAVE_ADS:                       \
   case PermissionType::BRAVE_COSMETIC_FILTERING:        \
   case PermissionType::BRAVE_TRACKERS:                  \

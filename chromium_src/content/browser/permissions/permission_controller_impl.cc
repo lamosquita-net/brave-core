@@ -17,8 +17,6 @@
   case PermissionType::BRAVE_REFERRERS:                 \
   case PermissionType::BRAVE_COOKIES:                   \
   case PermissionType::BRAVE_SPEEDREADER:               \
-  case PermissionType::BRAVE_ETHEREUM:                  \
-  case PermissionType::BRAVE_SOLANA:                    \
   case PermissionType::BRAVE_GOOGLE_SIGN_IN:            \
   case PermissionType::BRAVE_LOCALHOST_ACCESS:          \
   case PermissionType::NUM
