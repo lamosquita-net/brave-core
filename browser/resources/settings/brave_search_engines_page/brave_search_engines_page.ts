@@ -55,7 +55,7 @@ class BraveSearchEnginesPage extends BraveSearchEnginesPageBase {
   shouldShowPrivateSearchProvider_(prefs) {
     // When default search engine is enforced, configured provider is not used.
     // If we install search provider extension, that extension will be used on normal and
-    // private(tor) window. So, just hide this option.
+    // private window. So, just hide this option.
     return !loadTimeData.getBoolean('isGuest') && !this.isDefaultSearchEngineEnforced_(prefs)
   }
 

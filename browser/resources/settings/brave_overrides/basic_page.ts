@@ -14,7 +14,6 @@ import '../brave_default_extensions_page/brave_default_extensions_page.js'
 import '../brave_new_tab_page/brave_new_tab_page.js'
 import '../brave_search_engines_page/brave_search_engines_page.js'
 import '../brave_sync_page/brave_sync_page.js'
-import '../brave_tor_page/brave_tor_subpage.js'
 import '../default_brave_shields_page/default_brave_shields_page.js'
 import '../getting_started_page/getting_started.js'
 import '../social_blocking_page/social_blocking_page.js'
@@ -184,19 +183,6 @@ RegisterPolymerTemplateModifications({
           prefs: '{{prefs}}'
         }
       ))
-      const sectionTor = document.createElement('template')
-      sectionTor.setAttribute('is', 'dom-if')
-      sectionTor.setAttribute('restamp', 'true')
-      sectionTor.setAttribute('if', '[[showPage_(pageVisibility.braveTor)]]')
-      sectionTor.content.appendChild(createNestedSectionElement(
-        'tor',
-        'privacy',
-        'braveTor',
-        'settings-brave-tor-subpage',
-        {
-          prefs: '{{prefs}}'
-        }
-      ))
       const sectionDataCollection = document.createElement('template')
       sectionDataCollection.setAttribute('is', 'dom-if')
       sectionDataCollection.setAttribute('restamp', 'true')
@@ -354,8 +340,6 @@ RegisterPolymerTemplateModifications({
       last = last.insertAdjacentElement('afterend', sectionSearch)
       // Insert extensions
       last = last.insertAdjacentElement('afterend', sectionExtensions)
-      // Insert Tor
-      last = last.insertAdjacentElement('afterend', sectionTor)
       // Insert Data collection
       last.insertAdjacentElement('afterend', sectionDataCollection)
 
