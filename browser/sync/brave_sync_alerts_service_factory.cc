@@ -44,7 +44,7 @@ BraveSyncAlertsServiceFactory::BuildServiceInstanceForBrowserContext(
 
 content::BrowserContext* BraveSyncAlertsServiceFactory::GetBrowserContextToUse(
     content::BrowserContext* context) const {
-  return chrome::GetBrowserContextRedirectedInIncognito(context);
+  return GetBrowserContextRedirectedInIncognito(context);
 }
 
 bool BraveSyncAlertsServiceFactory::ServiceIsCreatedWithBrowserContext() const {
