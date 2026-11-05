@@ -3,11 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <algorithm>
 #include <iostream>
+#include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 
-#include "base/containers/contains.h"
 #include "base/containers/span.h"
 #include "base/files/file_path.h"
 #include "base/files/file_util.h"
@@ -27,15 +29,15 @@
 #include "base/environment.h"
 #endif  // defined(REDIRECT_CC_AS_REWRAPPER)
 
-const base::FilePath::StringPieceType kIncludeFlag = FILE_PATH_LITERAL("-I");
-const base::FilePath::StringPieceType kBraveChromiumSrc =
+const base::FilePath::StringViewType kIncludeFlag = FILE_PATH_LITERAL("-I");
+const base::FilePath::StringViewType kBraveChromiumSrc =
     FILE_PATH_LITERAL("brave/chromium_src");
-const base::FilePath::StringPieceType kGen = FILE_PATH_LITERAL("gen");
-const base::FilePath::StringPieceType kCompileFileFlags[] = {
+const base::FilePath::StringViewType kGen = FILE_PATH_LITERAL("gen");
+const base::FilePath::StringViewType kCompileFileFlags[] = {
     FILE_PATH_LITERAL("-c"),
     FILE_PATH_LITERAL("/c"),
 };
-const base::FilePath::StringPieceType kShowIncludesFlag =
+const base::FilePath::StringViewType kShowIncludesFlag =
     FILE_PATH_LITERAL("/showIncludes");
 
 class RedirectCC {
@@ -56,15 +58,11 @@ class RedirectCC {
         .Append(UTF8ToFilePathString(BUILDFLAG(REAL_REWRAPPER)))
         .value();
 #else   // defined(REDIRECT_CC_AS_REWRAPPER)
-    std::string cc_wrapper;
     std::unique_ptr<base::Environment> env(base::Environment::Create());
-    if (env->HasVar("CC_WRAPPER")) {
-      CHECK(env->GetVar("CC_WRAPPER", &cc_wrapper));
-    }
-
-    if (!cc_wrapper.empty()) {
+    const std::optional<std::string> cc_wrapper = env->GetVar("CC_WRAPPER");
+    if (cc_wrapper && !cc_wrapper->empty()) {
       *first_compiler_arg_idx = 1;
-      return UTF8ToFilePathString(cc_wrapper);
+      return UTF8ToFilePathString(*cc_wrapper);
     }
 
     *first_compiler_arg_idx = 2;
@@ -95,7 +93,7 @@ class RedirectCC {
 
     // Find directories to work with first.
     for (const auto* arg : args_.subspan(first_compiler_arg_idx)) {
-      base::FilePath::StringPieceType arg_piece(arg);
+      base::FilePath::StringViewType arg_piece(arg);
       if (base::StartsWith(arg_piece, kIncludeFlag) &&
           base::EndsWith(arg_piece, kBraveChromiumSrc)) {
         arg_piece.remove_prefix(kIncludeFlag.size());
@@ -125,8 +123,9 @@ class RedirectCC {
 
     for (size_t arg_idx = first_compiler_arg_idx; arg_idx < args_.size();
          ++arg_idx) {
-      const base::FilePath::StringPieceType arg_piece = args_[arg_idx];
-      if (!compile_file_found && base::Contains(kCompileFileFlags, arg_piece)) {
+      const base::FilePath::StringViewType arg_piece = args_[arg_idx];
+      if (!compile_file_found &&
+          std::ranges::contains(kCompileFileFlags, arg_piece)) {
         compile_file_found = true;
         if (arg_idx + 1 >= args_.size()) {
           LOG(ERROR) << "No arg after compile flag " << arg_piece;
@@ -135,12 +134,12 @@ class RedirectCC {
 
         // Trim a file path to look for a similar file in
         // brave/chromium_src.
-        base::FilePath::StringPieceType path_cc = args_[arg_idx + 1];
+        base::FilePath::StringViewType path_cc = args_[arg_idx + 1];
         if (!path_cc.empty() && path_cc[0] == arg_piece[0]) {
           // That's not a file path, but another compiler parameter. This syntax
           // is used by asm compiler. We can safely ignore this, becaused we
           // don't redirect asm files.
-          path_cc = base::FilePath::StringPieceType();
+          path_cc = base::FilePath::StringViewType();
         } else if (base::StartsWith(path_cc, chromium_src_dir_with_slash)) {
           // Most common case - a file is located directly in src/...
           path_cc.remove_prefix(chromium_src_dir_with_slash.size());
@@ -162,7 +161,7 @@ class RedirectCC {
             path_cc.remove_prefix(path_cc_parts[1].size() + 1);
           } else {
             LOG(WARNING) << "unhandled path: " << path_cc;
-            path_cc = base::FilePath::StringPieceType();
+            path_cc = base::FilePath::StringViewType();
           }
         }
 
@@ -284,8 +283,8 @@ class RedirectCC {
     for (const auto& arg : argv) {
       const auto& space_separator =
           cmd_line.empty()
-              ? base::FilePath::StringPieceType()
-              : base::FilePath::StringPieceType(FILE_PATH_LITERAL(" "));
+              ? base::FilePath::StringViewType()
+              : base::FilePath::StringViewType(FILE_PATH_LITERAL(" "));
       const auto& arg_to_append =
           QuoteForCommandLineToArgvW(arg, &quotted_arg) ? quotted_arg : arg;
       base::StrAppend(&cmd_line, {space_separator, arg_to_append});
@@ -301,7 +300,9 @@ class RedirectCC {
 #define main wmain
 #endif  // BUILDFLAG(IS_WIN)
 int main(int argc, base::FilePath::CharType* argv[]) {
+  // SAFETY: `argv` holds `argc` valid elements, as guaranteed by the C runtime.
   RedirectCC redirect_cc(
-      UNSAFE_BUFFERS(base::make_span(argv, static_cast<size_t>(argc))));
+      UNSAFE_BUFFERS(base::span<const base::FilePath::CharType* const>(
+          argv, static_cast<size_t>(argc))));
   return redirect_cc.Run();
 }
