@@ -7,7 +7,6 @@
 #include <string>
 
 #include "base/test/task_environment.h"
-#include "brave/components/brave_referrals/browser/brave_referrals_service.h"
 #include "brave/components/ntp_background_images/browser/ntp_background_images_data.h"
 #include "brave/components/ntp_background_images/browser/ntp_background_images_service.h"
 #include "brave/components/ntp_background_images/browser/ntp_background_images_source.h"
@@ -26,7 +25,6 @@ class NTPBackgroundImagesSourceTest : public testing::Test {
   void SetUp() override {
     auto* registry = local_pref_.registry();
     NTPBackgroundImagesService::RegisterLocalStatePrefs(registry);
-    brave::RegisterPrefsForBraveReferralsService(registry);
     service_ =
         std::make_unique<NTPBackgroundImagesService>(nullptr, &local_pref_);
     source_ = std::make_unique<NTPSponsoredImagesSource>(service_.get());
