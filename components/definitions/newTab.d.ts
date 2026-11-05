@@ -124,7 +124,6 @@ declare namespace NewTab {
     showBackgroundImage: boolean
     brandedWallpaperOptIn: boolean
     showStats: boolean
-    showToday: boolean
     showClock: boolean
     clockFormat: string
     showTopSites: boolean
@@ -134,7 +133,6 @@ declare namespace NewTab {
     promptEnableSearchSuggestions: boolean
     searchSuggestionsEnabled: boolean
     hideAllWidgets: boolean
-    isBraveNewsOptedIn: boolean
     isBrandedWallpaperNotificationDismissed: boolean
   }
 
@@ -142,16 +140,11 @@ declare namespace NewTab {
     initialDataLoaded: boolean
     textDirection: string
     featureFlagBraveNTPSponsoredImagesWallpaper: boolean
-    featureFlagBraveNewsPromptEnabled: boolean
-    featureFlagBraveNewsFeedV2Enabled: boolean
     searchPromotionEnabled: boolean
     featureCustomBackgroundEnabled: boolean
     isIncognito: boolean
     useAlternativePrivateSearchEngine: boolean
     showAlternativePrivateSearchEngineToggle: boolean
-    torCircuitEstablished: boolean,
-    torInitProgress: string,
-    isTor: boolean
     gridLayoutSize?: 'small'
     showGridSiteRemovedNotification?: boolean
     showBackgroundImage: boolean

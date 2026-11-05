@@ -25,10 +25,6 @@ class PrefService;
 
 class GURL;
 
-namespace brave_ads {
-class AdsService;
-}  // namespace brave_ads
-
 namespace content {
 class WebUIDataSource;
 }  // namespace content
@@ -53,7 +49,6 @@ class ViewCounterService : public KeyedService,
  public:
   ViewCounterService(NTPBackgroundImagesService* service,
                      BraveNTPCustomBackgroundService* custom_service,
-                     brave_ads::AdsService* ads_service,
                      PrefService* prefs,
                      PrefService* local_state,
                      std::unique_ptr<NTPP3AHelper> ntp_p3a_helper,
@@ -82,7 +77,6 @@ class ViewCounterService : public KeyedService,
   std::optional<base::Value::Dict> GetCurrentWallpaperForDisplay();
   std::optional<base::Value::Dict> GetCurrentWallpaper() const;
   std::optional<base::Value::Dict> GetCurrentBrandedWallpaper() const;
-  std::optional<base::Value::Dict> GetCurrentBrandedWallpaperFromAdInfo() const;
   std::optional<base::Value::Dict> GetCurrentBrandedWallpaperFromModel() const;
   std::vector<TopSite> GetTopSitesData() const;
 
@@ -161,12 +155,9 @@ class ViewCounterService : public KeyedService,
 
   void ResetModel();
 
-  void MaybePrefetchNewTabPageAd();
-
   void UpdateP3AValues();
 
   raw_ptr<NTPBackgroundImagesService> service_ = nullptr;
-  raw_ptr<brave_ads::AdsService> ads_service_ = nullptr;
   raw_ptr<PrefService> prefs_ = nullptr;
   bool is_supported_locale_ = false;
   PrefChangeRegistrar pref_change_registrar_;

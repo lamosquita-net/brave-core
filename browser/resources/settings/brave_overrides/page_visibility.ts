@@ -29,7 +29,6 @@ function getPageVisibility () {
       newTab: false,
       braveWallet: false,
       braveWeb3: false,
-      leoAssistant: false,
       content: false,
       playlist: false,
       speedreader: false,
@@ -55,13 +54,12 @@ function getPageVisibility () {
     privacy: alwaysTrueProxy,
     // custom properties
     braveSync: !loadTimeData.getBoolean('isSyncDisabled'),
-    braveWallet: loadTimeData.getBoolean('isBraveWalletAllowed'),
+    braveWallet: false,
     // FlyWeb: no Web3 section. Without the wallet only the Web3 domains (ENS,
     // SNS, Unstoppable) were left, and those resolve through the wallet's RPC
     // services, which FlyWeb removes.
     braveWeb3: false,
     braveWeb3Domains: false,
-    leoAssistant: loadTimeData.getBoolean('isLeoAssistantAllowed'),
     content: alwaysTrueProxy,
     playlist: loadTimeData.getBoolean('isPlaylistAllowed'),
     speedreader: loadTimeData.getBoolean('isSpeedreaderFeatureEnabled'),

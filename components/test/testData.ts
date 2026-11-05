@@ -4,7 +4,6 @@
  * You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 // Initial state
-import { defaultState as rewardsData } from '../../components/brave_rewards/resources/page/reducers/default_state'
 import { defaultState as adblockData } from '../../components/brave_adblock_ui/storage'
 
 export class ChromeEvent {
@@ -23,8 +22,6 @@ export class ChromeEvent {
   }
 }
 
-export const rewardsInitialState: Rewards.ApplicationState = { rewardsData }
-
 export const adblockInitialState: AdBlock.ApplicationState = { adblockData }
 
 export const newTabInitialState: NewTab.ApplicationState = {
@@ -38,9 +35,6 @@ export const newTabInitialState: NewTab.ApplicationState = {
     isIncognito: new ChromeEvent(),
     useAlternativePrivateSearchEngine: false,
     showAlternativePrivateSearchEngineToggle: false,
-    torCircuitEstablished: false,
-    torInitProgress: '',
-    isTor: false,
     stats: {
       adsBlockedStat: 0,
       javascriptBlockedStat: 0,

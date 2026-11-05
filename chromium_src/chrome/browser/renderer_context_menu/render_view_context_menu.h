@@ -6,7 +6,6 @@
 #ifndef BRAVE_CHROMIUM_SRC_CHROME_BROWSER_RENDERER_CONTEXT_MENU_RENDER_VIEW_CONTEXT_MENU_H_
 #define BRAVE_CHROMIUM_SRC_CHROME_BROWSER_RENDERER_CONTEXT_MENU_RENDER_VIEW_CONTEXT_MENU_H_
 
-#include "brave/components/ai_chat/core/common/buildflags/buildflags.h"
 #include "brave/components/text_recognition/common/buildflags/buildflags.h"
 
 #define BRAVE_RENDER_VIEW_CONTEXT_MENU_H_ \
@@ -55,17 +54,6 @@ class BraveRenderViewContextMenu : public RenderViewContextMenu_Chromium {
   // RenderViewContextMenuBase:
   void InitMenu() override;
   void NotifyMenuShown() override;
-
-#if BUILDFLAG(ENABLE_AI_CHAT)
-  bool IsAIChatEnabled() const;
-  void ExecuteAIChatCommand(int command);
-  void BuildAIChatMenu();
-
-  ui::SimpleMenuModel ai_chat_submenu_model_;
-  ui::SimpleMenuModel ai_chat_change_tone_submenu_model_;
-  ui::SimpleMenuModel ai_chat_change_length_submenu_model_;
-  ui::SimpleMenuModel ai_chat_social_media_post_submenu_model_;
-#endif
 
 #if BUILDFLAG(ENABLE_TEXT_RECOGNITION)
   void CopyTextFromImage();

@@ -12,7 +12,6 @@
 #include "brave/components/de_amp/common/features.h"
 #include "brave/components/debounce/core/common/features.h"
 #include "brave/components/google_sign_in_permission/google_sign_in_permission_util.h"
-#include "brave/components/p3a/pref_names.h"
 #include "brave/components/request_otr/common/buildflags/buildflags.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/profile.h"
@@ -32,14 +31,6 @@
 
 BravePrivacyHandler::BravePrivacyHandler() {
   local_state_change_registrar_.Init(g_browser_process->local_state());
-  local_state_change_registrar_.Add(
-      kStatsReportingEnabled,
-      base::BindRepeating(&BravePrivacyHandler::OnStatsUsagePingEnabledChanged,
-                          base::Unretained(this)));
-  local_state_change_registrar_.Add(
-      p3a::kP3AEnabled,
-      base::BindRepeating(&BravePrivacyHandler::OnP3AEnabledChanged,
-                          base::Unretained(this)));
 }
 
 BravePrivacyHandler::~BravePrivacyHandler() {
@@ -48,21 +39,6 @@ BravePrivacyHandler::~BravePrivacyHandler() {
 
 void BravePrivacyHandler::RegisterMessages() {
   profile_ = Profile::FromWebUI(web_ui());
-
-  web_ui()->RegisterMessageCallback(
-      "setP3AEnabled", base::BindRepeating(&BravePrivacyHandler::SetP3AEnabled,
-                                           base::Unretained(this)));
-  web_ui()->RegisterMessageCallback(
-      "getP3AEnabled", base::BindRepeating(&BravePrivacyHandler::GetP3AEnabled,
-                                           base::Unretained(this)));
-  web_ui()->RegisterMessageCallback(
-      "setStatsUsagePingEnabled",
-      base::BindRepeating(&BravePrivacyHandler::SetStatsUsagePingEnabled,
-                          base::Unretained(this)));
-  web_ui()->RegisterMessageCallback(
-      "getStatsUsagePingEnabled",
-      base::BindRepeating(&BravePrivacyHandler::GetStatsUsagePingEnabled,
-                          base::Unretained(this)));
 }
 
 // static
@@ -121,40 +97,4 @@ void BravePrivacyHandler::GetLocalStateBooleanEnabled(
 
   AllowJavascript();
   ResolveJavascriptCallback(args[0], base::Value(enabled));
-}
-
-void BravePrivacyHandler::SetStatsUsagePingEnabled(
-    const base::Value::List& args) {
-  SetLocalStateBooleanEnabled(kStatsReportingEnabled, args);
-}
-
-void BravePrivacyHandler::GetStatsUsagePingEnabled(
-    const base::Value::List& args) {
-  GetLocalStateBooleanEnabled(kStatsReportingEnabled, args);
-}
-
-void BravePrivacyHandler::OnStatsUsagePingEnabledChanged() {
-  if (IsJavascriptAllowed()) {
-    PrefService* local_state = g_browser_process->local_state();
-    bool enabled = local_state->GetBoolean(kStatsReportingEnabled);
-
-    FireWebUIListener("stats-usage-ping-enabled-changed", base::Value(enabled));
-  }
-}
-
-void BravePrivacyHandler::SetP3AEnabled(const base::Value::List& args) {
-  SetLocalStateBooleanEnabled(p3a::kP3AEnabled, args);
-}
-
-void BravePrivacyHandler::GetP3AEnabled(const base::Value::List& args) {
-  GetLocalStateBooleanEnabled(p3a::kP3AEnabled, args);
-}
-
-void BravePrivacyHandler::OnP3AEnabledChanged() {
-  if (IsJavascriptAllowed()) {
-    PrefService* local_state = g_browser_process->local_state();
-    bool enabled = local_state->GetBoolean(p3a::kP3AEnabled);
-
-    FireWebUIListener("p3a-enabled-changed", base::Value(enabled));
-  }
 }

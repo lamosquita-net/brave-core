@@ -9,7 +9,6 @@
 #include <memory>
 #include <string>
 
-#include "brave/components/ai_chat/core/common/mojom/settings_helper.mojom.h"
 #include "brave/components/commands/common/commands.mojom.h"
 #include "chrome/browser/ui/webui/settings/settings_ui.h"
 
@@ -32,8 +31,6 @@ class BraveSettingsUI : public settings::SettingsUI {
 
   void BindInterface(
       mojo::PendingReceiver<commands::mojom::CommandsService> pending_receiver);
-  void BindInterface(mojo::PendingReceiver<ai_chat::mojom::AIChatSettingsHelper>
-                         pending_receiver);
 };
 
 #endif  // BRAVE_BROWSER_UI_WEBUI_BRAVE_SETTINGS_UI_H_

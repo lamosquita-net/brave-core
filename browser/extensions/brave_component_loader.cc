@@ -10,7 +10,6 @@
 #include "base/command_line.h"
 #include "base/feature_list.h"
 #include "base/functional/bind.h"
-#include "brave/browser/brave_rewards/rewards_util.h"
 #include "brave/components/brave_component_updater/browser/brave_component_installer.h"
 #include "brave/components/brave_component_updater/browser/brave_on_demand_updater.h"
 #include "brave/components/brave_extension/grit/brave_extension.h"
@@ -29,14 +28,6 @@
 #include "extensions/browser/extension_system.h"
 #include "extensions/common/constants.h"
 #include "extensions/common/mojom/manifest.mojom.h"
-
-#if BUILDFLAG(ETHEREUM_REMOTE_CLIENT_ENABLED)
-#include "brave/browser/ethereum_remote_client/ethereum_remote_client_constants.h"
-#include "brave/browser/ethereum_remote_client/pref_names.h"
-#include "brave/browser/extensions/ethereum_remote_client_util.h"
-#include "brave/components/brave_wallet/browser/brave_wallet_utils.h"
-#include "brave/components/brave_wallet/common/brave_wallet.mojom.h"
-#endif
 
 using extensions::mojom::ManifestLocation;
 
@@ -63,11 +54,6 @@ void BraveComponentLoader::OnComponentReady(std::string extension_id,
   if (allow_file_access) {
     ExtensionPrefs::Get(profile_)->SetAllowFileAccess(extension_id, true);
   }
-#if BUILDFLAG(ETHEREUM_REMOTE_CLIENT_ENABLED)
-  if (extension_id == kEthereumRemoteClientExtensionId) {
-    ReinstallAsNonComponent(kEthereumRemoteClientExtensionId);
-  }
-#endif
 }
 
 void BraveComponentLoader::ReinstallAsNonComponent(
@@ -112,32 +98,6 @@ void BraveComponentLoader::AddDefaultComponentExtensions(
     Add(IDR_BRAVE_EXTENSION, brave_extension_path);
   }
 }
-
-#if BUILDFLAG(ETHEREUM_REMOTE_CLIENT_ENABLED)
-void BraveComponentLoader::AddEthereumRemoteClientExtension() {
-  // FlyWeb: no crypto wallets. The legacy Crypto Wallets extension is never
-  // loaded, neither on startup nor when chosen as default wallet.
-}
-
-void BraveComponentLoader::AddEthereumRemoteClientExtensionOnStartup() {
-  // Only load Crypto Wallets if it is set as the default wallet
-  auto default_wallet = brave_wallet::GetDefaultEthereumWallet(profile_prefs_);
-  const bool is_opted_into_cw =
-      profile_prefs_->GetBoolean(kERCOptedIntoCryptoWallets);
-  if (HasInfuraProjectID() && is_opted_into_cw &&
-      default_wallet == brave_wallet::mojom::DefaultWallet::CryptoWallets) {
-    AddEthereumRemoteClientExtension();
-  }
-}
-
-void BraveComponentLoader::UnloadEthereumRemoteClientExtension() {
-  extensions::ExtensionService* service =
-      extensions::ExtensionSystem::Get(profile_)->extension_service();
-  DCHECK(service);
-  service->UnloadExtension(kEthereumRemoteClientExtensionId,
-                           extensions::UnloadedExtensionReason::DISABLE);
-}
-#endif
 
 void BraveComponentLoader::AddWebTorrentExtension() {
   const base::CommandLine& command_line =

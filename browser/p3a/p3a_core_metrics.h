@@ -8,8 +8,7 @@
 
 // The class below can be used on desktop only
 // because BrowserListObserver is available on desktop only
-// Brave.Core.LastTimeIncognitoUsed and
-// Brave.Core.TorEverUsed don't work on Android
+// Brave.Core.LastTimeIncognitoUsed doesn't work on Android
 
 #include "build/build_config.h"
 

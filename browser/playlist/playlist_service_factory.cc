@@ -14,7 +14,7 @@
 #include "base/no_destructor.h"
 #include "base/ranges/algorithm.h"
 #include "base/task/thread_pool.h"
-#include "brave/browser/brave_stats/first_run_util.h"
+#include "base/threading/thread_restrictions.h"
 #include "brave/components/playlist/browser/media_detector_component_manager.h"
 #include "brave/components/playlist/browser/playlist_constants.h"
 #include "brave/components/playlist/browser/playlist_service.h"
@@ -23,6 +23,7 @@
 #include "brave/components/playlist/common/buildflags/buildflags.h"
 #include "brave/components/playlist/common/features.h"
 #include "chrome/browser/browser_process.h"
+#include "chrome/browser/first_run/first_run.h"
 #include "chrome/browser/image_fetcher/image_decoder_impl.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/common/chrome_isolated_world_ids.h"
@@ -195,6 +196,13 @@ class PlaylistServiceDelegateImpl : public PlaylistService::Delegate {
   base::WeakPtrFactory<PlaylistServiceDelegateImpl> weak_ptr_factory_{this};
 };
 
+// FlyWeb: was brave_stats::GetFirstRunTime() (browser/brave_stats removed);
+// same desktop behavior: the cached first-run sentinel creation time.
+base::Time GetBrowserFirstRunTime() {
+  base::ScopedAllowBlockingForTesting allow_blocking;
+  return first_run::GetFirstRunSentinelCreationTime();
+}
+
 }  // namespace
 
 // static
@@ -276,7 +284,7 @@ KeyedService* PlaylistServiceFactory::BuildServiceInstanceFor(
   auto* service = new PlaylistService(
       context, local_state, media_detector_component_manager_.get(),
       std::make_unique<PlaylistServiceDelegateImpl>(profile),
-      brave_stats::GetFirstRunTime(local_state));
+      GetBrowserFirstRunTime());
 
 #if BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
   content::URLDataSource::Add(

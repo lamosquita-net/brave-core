@@ -27,13 +27,11 @@
 #include "brave/browser/ui/tabs/features.h"
 #include "brave/browser/ui/tabs/split_view_browser_data.h"
 #include "brave/browser/url_sanitizer/url_sanitizer_service_factory.h"
-#include "brave/components/brave_vpn/common/buildflags/buildflags.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/debounce/core/browser/debounce_service.h"
 #include "brave/components/query_filter/utils.h"
 #include "brave/components/sidebar/browser/sidebar_service.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
-#include "brave/components/tor/buildflags/buildflags.h"
 #include "brave/components/url_sanitizer/browser/url_sanitizer_service.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/profile.h"
@@ -76,26 +74,6 @@
 #include "brave/components/speedreader/speedreader_service.h"
 #endif
 
-#if BUILDFLAG(ENABLE_TOR)
-#include "brave/browser/tor/tor_profile_manager.h"
-#include "brave/browser/tor/tor_profile_service_factory.h"
-#include "brave/components/tor/tor_profile_service.h"
-#endif
-
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-#include "brave/browser/brave_vpn/brave_vpn_service_factory.h"
-#include "brave/components/brave_vpn/browser/brave_vpn_service.h"
-#include "brave/components/brave_vpn/common/brave_vpn_constants.h"
-#include "brave/components/brave_vpn/common/brave_vpn_utils.h"
-#include "brave/components/brave_vpn/common/pref_names.h"
-
-#if BUILDFLAG(IS_WIN)
-#include "brave/browser/brave_vpn/win/storage_utils.h"
-#include "brave/browser/brave_vpn/win/wireguard_utils_win.h"
-#endif  // BUILDFLAG(ENABLE_BRAVE_VPN)
-
-#endif  // BUILDFLAG(ENABLE_BRAVE_VPN)
-
 #if BUILDFLAG(ENABLE_COMMANDER)
 #include "brave/browser/ui/commander/commander_service.h"
 #include "brave/browser/ui/commander/commander_service_factory.h"
@@ -137,36 +115,6 @@ std::vector<int> GetSelectedIndices(Browser* browser) {
 
 }  // namespace
 
-void NewOffTheRecordWindowTor(Browser* browser) {
-  CHECK(browser);
-  NewOffTheRecordWindowTor(browser->profile());
-}
-
-void NewOffTheRecordWindowTor(Profile* profile) {
-  CHECK(profile);
-  if (profile->IsTor()) {
-    chrome::OpenEmptyWindow(profile);
-    return;
-  }
-
-  TorProfileManager::SwitchToTorProfile(profile);
-}
-
-void NewTorConnectionForSite(Browser* browser) {
-#if BUILDFLAG(ENABLE_TOR)
-  Profile* profile = browser->profile();
-  DCHECK(profile);
-  tor::TorProfileService* service =
-      TorProfileServiceFactory::GetForContext(profile);
-  DCHECK(service);
-  WebContents* current_tab = browser->tab_strip_model()->GetActiveWebContents();
-  if (!current_tab) {
-    return;
-  }
-  service->SetNewTorCircuit(current_tab);
-#endif
-}
-
 void MaybeDistillAndShowSpeedreaderBubble(Browser* browser) {
 #if BUILDFLAG(ENABLE_SPEEDREADER)
   WebContents* contents = browser->tab_strip_model()->GetActiveWebContents();
@@ -178,82 +126,6 @@ void MaybeDistillAndShowSpeedreaderBubble(Browser* browser) {
     tab_helper->ProcessIconClick();
   }
 #endif  // BUILDFLAG(ENABLE_SPEEDREADER)
-}
-
-void ShowBraveVPNBubble(Browser* browser) {
-  // Ask to browser view.
-  static_cast<BraveBrowserWindow*>(browser->window())->ShowBraveVPNBubble();
-}
-
-void ToggleBraveVPNTrayIcon() {
-#if BUILDFLAG(ENABLE_BRAVE_VPN) && BUILDFLAG(IS_WIN)
-  brave_vpn::EnableVPNTrayIcon(!brave_vpn::IsVPNTrayIconEnabled());
-  if (brave_vpn::IsVPNTrayIconEnabled()) {
-    brave_vpn::wireguard::ShowBraveVpnStatusTrayIcon();
-  }
-#endif
-}
-
-void ToggleBraveVPNButton(Browser* browser) {
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-  auto* prefs = browser->profile()->GetPrefs();
-  const bool show = prefs->GetBoolean(brave_vpn::prefs::kBraveVPNShowButton);
-  prefs->SetBoolean(brave_vpn::prefs::kBraveVPNShowButton, !show);
-#endif
-}
-
-void OpenBraveVPNUrls(Browser* browser, int command_id) {
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-  brave_vpn::BraveVpnService* vpn_service =
-      brave_vpn::BraveVpnServiceFactory::GetForProfile(browser->profile());
-  CHECK(vpn_service);
-  std::string target_url;
-  switch (command_id) {
-    case IDC_SEND_BRAVE_VPN_FEEDBACK:
-      target_url = brave_vpn::kFeedbackUrl;
-      break;
-    case IDC_ABOUT_BRAVE_VPN:
-      target_url = brave_vpn::kAboutUrl;
-      break;
-    case IDC_MANAGE_BRAVE_VPN_PLAN:
-      target_url =
-          brave_vpn::GetManageUrl(vpn_service->GetCurrentEnvironment());
-      break;
-    default:
-      NOTREACHED_IN_MIGRATION();
-  }
-
-  chrome::AddTabAt(browser, GURL(target_url), -1, true);
-#endif
-}
-
-#if BUILDFLAG(ENABLE_AI_CHAT)
-void ToggleAIChat(Browser* browser) {
-#if defined(TOOLKIT_VIEWS)
-  SidePanelUI* side_panel_ui = browser->GetFeatures().side_panel_ui();
-  side_panel_ui->Toggle(SidePanelEntry::Key(SidePanelEntryId::kChatUI),
-                        SidePanelOpenTrigger::kToolbarButton);
-#endif
-}
-#endif
-
-void ShowWalletBubble(Browser* browser) {
-#if defined(TOOLKIT_VIEWS)
-  static_cast<BraveBrowserView*>(browser->window())->CreateWalletBubble();
-#endif
-}
-
-void ShowApproveWalletBubble(Browser* browser) {
-#if defined(TOOLKIT_VIEWS)
-  static_cast<BraveBrowserView*>(browser->window())
-      ->CreateApproveWalletBubble();
-#endif
-}
-
-void CloseWalletBubble(Browser* browser) {
-#if defined(TOOLKIT_VIEWS)
-  static_cast<BraveBrowserView*>(browser->window())->CloseWalletBubble();
-#endif
 }
 
 void CopySanitizedURL(Browser* browser, const GURL& url) {

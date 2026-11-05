@@ -13,7 +13,6 @@
 #include <vector>
 
 #include "base/gtest_prod_util.h"
-#include "brave/components/brave_vpn/common/buildflags/buildflags.h"
 #include "chrome/browser/ui/toolbar/app_menu_model.h"
 #include "ui/base/models/simple_menu_model.h"
 
@@ -52,8 +51,6 @@ class BraveAppMenuModel : public AppMenuModel {
 
   std::optional<size_t> GetProperItemIndex(std::vector<int> commands_to_check,
                                            bool insert_next) const;
-
-  void BuildTabsAndWindowsSection();
 
   // Leo(not yet added), Wallet, VPN and IPFS.
   void BuildBraveProductsSection();

@@ -34,8 +34,6 @@
 #include "components/prefs/pref_service.h"
 
 #if !BUILDFLAG(IS_IOS)
-#include "brave/components/brave_referrals/browser/brave_referrals_service.h"
-#include "brave/components/brave_referrals/common/pref_names.h"
 #endif
 
 using brave_component_updater::BraveOnDemandUpdater;
@@ -188,121 +186,18 @@ void NTPBackgroundImagesService::RegisterSponsoredImagesComponent() {
 }
 
 void NTPBackgroundImagesService::CheckSuperReferralComponent() {
-#if BUILDFLAG(IS_IOS)
+  // FlyWeb: brave_referrals is removed from the build, so there is no referral
+  // promo code; this install is never a super referral.
   MarkThisInstallIsNotSuperReferralForever();
-#else
-  const auto& value =
-      local_pref_->GetDict(prefs::kNewTabPageCachedSuperReferralComponentInfo);
-  // If we have valid cached SR component info, it means this install is valid
-  // SR.
-  if (IsValidSuperReferralComponentInfo(value)) {
-    RegisterSuperReferralComponent();
-    const std::string cached_data = local_pref_->GetString(
-        prefs::kNewTabPageCachedSuperReferralComponentData);
-    if (!cached_data.empty()) {
-      DVLOG(2) << __func__ << ": Initialized SR Data from cache.";
-      sr_images_data_ = std::make_unique<NTPSponsoredImagesData>(
-          cached_data, sr_installed_dir_);
-    }
-    return;
-  }
-
-  if (local_pref_->FindPreference(
-          prefs::kNewTabPageCachedSuperReferralComponentInfo)->
-              IsDefaultValue()) {
-    // At first fresh launch, we should finish initial component downloading to
-    // set initial state properly.
-    // But browser could be shutdown accidently before getting it anytime.
-    // If this happens, we have to handle this abnormal situation strictly.
-    // If not, this install will be act as a non SR install forever.
-    // To resolve that situation,
-    // |kNewTabPageGetInitialSRComponentInProgress| introduced.
-    // If |kReferralCheckedForPromoCodeFile| or |kReferralInitialization|
-    // is true and |kNewTabPageCheckingMappingTableInProgress| is false,
-    // this means not first launch. Then, we can mark this install as non-SR.
-    // If both (|kReferralCheckedForPromoCodeFile| or |kReferralInitialization|)
-    // and |kNewTabPageCheckingMappingTableInProgress| are true,
-    // browser had some trouble at first run.
-    // If |kNewTabPageGetInitialSRComponentInProgress| is true, we assume that
-    // initial component downloading is in-progress
-    // So, We will try initialization again.
-    // If referral code is non empty, that means browser is shutdown after
-    // getting referal code. In this case, we should start downloading mapping
-    // table.
-    const bool referral_checked =
-        local_pref_->GetBoolean(kReferralCheckedForPromoCodeFile) ||
-        local_pref_->GetBoolean(kReferralInitialization);
-
-    if (referral_checked &&
-        !local_pref_->GetBoolean(
-            prefs::kNewTabPageGetInitialSRComponentInProgress)) {
-      MarkThisInstallIsNotSuperReferralForever();
-      DVLOG(2) << __func__ << ": Cached SR Info is clean and Referral Service"
-                           << " is not in initial state."
-                           << " Mark this is not SR install.";
-      return;
-    }
-
-    // If referral code is empty here, this is fresh launch.
-    // If browser is crashed before fetching this install's promo code at fiirst
-    // launch, it can be handled here also because code would be empty at this
-    // time.
-    const std::string code = GetReferralPromoCode();
-    if (code.empty()) {
-      local_pref_->SetBoolean(
-          prefs::kNewTabPageGetInitialSRComponentInProgress,
-          true);
-      MonitorReferralPromoCodeChange();
-      return;
-    }
-
-    // This below code is for recover above abnormal situation - Shutdown
-    // situation before getting map table or getting initial component.
-    if (brave::BraveReferralsService::IsDefaultReferralCode(code)) {
-      MarkThisInstallIsNotSuperReferralForever();
-    } else {
-      // If current code is not an default one, let's check it after fetching
-      // mapping table.
-      DownloadSuperReferralMappingTable();
-    }
-  }
-
-  DVLOG(2) << __func__ << ": This has invalid component info.";
-  DVLOG(2) << __func__ << ": In this case, this install is campaign ended super"
-                       << " referral, default referral or non super referral.";
-#endif  // BUILDFLAG(IS_IOS)
 }
 
 void NTPBackgroundImagesService::MonitorReferralPromoCodeChange() {
-#if !BUILDFLAG(IS_IOS)
-  DVLOG(2) << __func__ << ": Monitor referral promo code change";
-
-  pref_change_registrar_.Add(
-      kReferralPromoCode,
-      base::BindRepeating(&NTPBackgroundImagesService::OnPreferenceChanged,
-                          base::Unretained(this)));
-#endif
+  // FlyWeb: brave_referrals is removed from the build; nothing to monitor.
 }
 
 void NTPBackgroundImagesService::OnPreferenceChanged(
-  const std::string& pref_name) {
-#if !BUILDFLAG(IS_IOS)
-  DCHECK_EQ(kReferralPromoCode, pref_name);
-  const std::string new_referral_code = GetReferralPromoCode();
-  DVLOG(2) << __func__ << ": Got referral promo code: "
-                       << new_referral_code;
-  DCHECK(!new_referral_code.empty());
-  if (brave::BraveReferralsService::IsDefaultReferralCode(new_referral_code)) {
-    DVLOG(2) << __func__ << ": This has default referral promo code.";
-    MarkThisInstallIsNotSuperReferralForever();
-    return;
-  }
-
-  DVLOG(2) << __func__ << ": This has non default referral promo code."
-                       << " Let's check this code is super referral or not"
-                       << " after downloading mapping table.";
-  DownloadSuperReferralMappingTable();
-#endif
+    const std::string& pref_name) {
+  // FlyWeb: brave_referrals is removed from the build; nothing to observe.
 }
 
 void NTPBackgroundImagesService::OnCountryCodePrefChanged() {
@@ -538,11 +433,8 @@ void NTPBackgroundImagesService::UnRegisterSuperReferralComponent() {
 }
 
 std::string NTPBackgroundImagesService::GetReferralPromoCode() const {
-#if BUILDFLAG(IS_IOS)
+  // FlyWeb: brave_referrals is removed from the build.
   return "";
-#else
-  return local_pref_->GetString(kReferralPromoCode);
-#endif
 }
 
 bool NTPBackgroundImagesService::IsSuperReferral() const {

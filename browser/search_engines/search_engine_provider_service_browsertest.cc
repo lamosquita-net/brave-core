@@ -13,7 +13,6 @@
 #include "brave/browser/ui/browser_commands.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/search_engines/brave_prepopulated_engines.h"
-#include "brave/components/tor/buildflags/buildflags.h"
 #include "build/build_config.h"
 #include "chrome/browser/profile_resetter/brandcoded_default_settings.h"
 #include "chrome/browser/profile_resetter/profile_resetter_test_base.h"
@@ -44,10 +43,6 @@
 #include "chrome/browser/extensions/extension_browsertest.h"
 #include "extensions/browser/extension_prefs.h"
 #include "extensions/common/extension.h"
-#endif
-
-#if BUILDFLAG(ENABLE_TOR)
-#include "brave/browser/tor/tor_profile_manager.h"
 #endif
 
 using SearchEngineProviderServiceTest = InProcessBrowserTest;
@@ -243,21 +238,6 @@ IN_PROC_BROWSER_TEST_F(SearchEngineProviderServiceTest,
   EXPECT_EQ(initial_private_provider_id,
             incognito_service->GetDefaultSearchProvider()->prepopulate_id());
 
-#if BUILDFLAG(ENABLE_TOR)
-  Browser* tor_browser =
-      TorProfileManager::SwitchToTorProfile(browser()->profile());
-  Profile* tor_profile = tor_browser->profile();
-  EXPECT_TRUE(tor_profile->IsTor());
-
-  // Wait for the search provider to initialize.
-  base::RunLoop().RunUntilIdle();
-
-  const int default_provider_id =
-      TemplateURLPrepopulateData::PREPOPULATED_ENGINE_ID_BRAVE_TOR;
-  auto* tor_service = TemplateURLServiceFactory::GetForProfile(tor_profile);
-  EXPECT_EQ(tor_service->GetDefaultSearchProvider()->prepopulate_id(),
-            default_provider_id);
-#endif
 }
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)

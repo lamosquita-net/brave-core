@@ -204,7 +204,6 @@ const Config = function () {
   this.safeBrowsingApiEndpoint = getEnvConfig(['safebrowsing_api_endpoint']) || ''
   this.updaterProdEndpoint = getEnvConfig(['updater_prod_endpoint']) || ''
   this.updaterDevEndpoint = getEnvConfig(['updater_dev_endpoint']) || ''
-  this.webcompatReportApiEndpoint = getEnvConfig(['webcompat_report_api_endpoint']) || 'https://webcompat.brave.com/1/webcompat'
   this.rewardsGrantDevEndpoint = getEnvConfig(['rewards_grant_dev_endpoint']) || ''
   this.rewardsGrantStagingEndpoint = getEnvConfig(['rewards_grant_staging_endpoint']) || ''
   this.rewardsGrantProdEndpoint = getEnvConfig(['rewards_grant_prod_endpoint']) || ''
@@ -260,7 +259,6 @@ const Config = function () {
   this.androidAabToApk = false
   this.useBraveHermeticToolchain = this.rbeService.includes('.brave.com:')
   this.brave_services_key_id = getEnvConfig(['brave_services_key_id']) || ''
-  this.service_key_aichat = getEnvConfig(['service_key_aichat']) || ''
   this.braveIOSDeveloperOptionsCode = getEnvConfig(['brave_ios_developer_options_code']) || ''
 }
 
@@ -416,12 +414,9 @@ Config.prototype.buildArgs = function () {
     brave_variations_server_url: this.braveVariationsServerUrl,
     updater_prod_endpoint: this.updaterProdEndpoint,
     updater_dev_endpoint: this.updaterDevEndpoint,
-    webcompat_report_api_endpoint: this.webcompatReportApiEndpoint,
     rewards_grant_dev_endpoint: this.rewardsGrantDevEndpoint,
     rewards_grant_staging_endpoint: this.rewardsGrantStagingEndpoint,
     rewards_grant_prod_endpoint: this.rewardsGrantProdEndpoint,
-    brave_stats_api_key: this.braveStatsApiKey,
-    brave_stats_updater_url: this.braveStatsUpdaterUrl,
     enable_hangout_services_extension: this.enable_hangout_services_extension,
     enable_cdm_host_verification: this.enableCDMHostVerification(),
     enable_pseudolocales: this.enable_pseudolocales,
@@ -442,7 +437,6 @@ Config.prototype.buildArgs = function () {
     brave_services_dev_domain: this.braveServicesDevDomain,
     enable_dangling_raw_ptr_feature_flag: false,
     brave_services_key_id: this.brave_services_key_id,
-    service_key_aichat: this.service_key_aichat,
     ...this.extraGnArgs,
   }
 
@@ -610,8 +604,6 @@ Config.prototype.buildArgs = function () {
     // Required since cr126 to use Chrome password store
     args.use_login_database_as_backend = true
 
-    // TODO(fixme)
-    args.enable_tor = false
 
     // Fixes WebRTC IP leak with default option
     args.enable_mdns = true
@@ -1076,10 +1068,6 @@ Config.prototype.update = function (options) {
 
   if (options.updater_dev_endpoint) {
     this.updaterDevEndpoint = options.updater_dev_endpoint
-  }
-
-  if (options.webcompat_report_api_endpoint) {
-    this.webcompatReportApiEndpoint = options.webcompat_report_api_endpoint
   }
 
   if (options.rewards_grant_dev_endpoint) {

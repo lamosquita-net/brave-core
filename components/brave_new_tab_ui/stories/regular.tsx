@@ -2,9 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-// Import BraveNewsControllerMock first.
-import './default/data/mockBraveNewsController'
-
 import * as React from 'react'
 import { Dispatch } from 'redux'
 import { Provider as ReduxProvider } from 'react-redux'
@@ -14,8 +11,6 @@ import { getActionsForDispatch } from '../api/getActions'
 import store from '../store'
 import { useNewTabData, getGridSitesData } from './default/data/storybookState'
 import { onChangeColoredBackground, onUseBraveBackground, onShowBrandedImageChanged } from './default/data/backgroundWallpaper'
-import getTodayState from './default/data/todayStorybookState'
-import getBraveNewsDisplayAd from './default/data/getBraveNewsDisplayAd'
 import { getDataUrl, getUnpaddedAsDataUrl } from '../../common/privateCDN'
 import { images, updateImages } from '../data/backgrounds'
 
@@ -64,12 +59,10 @@ export const Regular = () => {
   const state = store.getState()
   const newTabData = useNewTabData(state.newTabData)
   const gridSitesData = getGridSitesData(state.gridSitesData)
-  const todayState = getTodayState()
 
   return (
     <NewTabPage
       newTabData={newTabData}
-      todayData={todayState}
       gridSitesData={gridSitesData}
       actions={getActions()}
       saveShowBackgroundImage={doNothing}
@@ -77,7 +70,6 @@ export const Regular = () => {
       saveShowBraveTalk={doNothing}
       saveBrandedWallpaperOptIn={onShowBrandedImageChanged}
       saveSetAllStackWidgets={doNothing}
-      getBraveNewsDisplayAd={getBraveNewsDisplayAd}
       setBraveBackground={onUseBraveBackground}
       chooseNewCustomBackgroundImage={doNothing}
       setCustomImageBackground={doNothing}

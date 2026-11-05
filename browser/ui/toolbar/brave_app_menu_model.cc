@@ -33,10 +33,6 @@
 #include "brave/browser/ui/sidebar/sidebar_utils.h"
 #endif
 
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-#include "brave/browser/ui/toolbar/brave_vpn_menu_model.h"
-#endif
-
 #if BUILDFLAG(ENABLE_COMMANDER)
 #include "brave/browser/ui/commander/commander_service.h"
 #endif
@@ -99,7 +95,6 @@ void BraveAppMenuModel::Build() {
   AppMenuModel::Build();
 
   RemoveUpstreamMenus();
-  BuildTabsAndWindowsSection();
   BuildBraveProductsSection();
   BuildBrowserSection();
   BuildMoreToolsSubMenu();
@@ -128,20 +123,6 @@ void BraveAppMenuModel::Build() {
   }
 }
 
-void BraveAppMenuModel::BuildTabsAndWindowsSection() {
-  if (IsCommandIdEnabled(IDC_NEW_TOR_CONNECTION_FOR_SITE)) {
-    InsertItemWithStringIdAt(GetIndexOfCommandId(IDC_NEW_WINDOW).value(),
-                             IDC_NEW_TOR_CONNECTION_FOR_SITE,
-                             IDS_NEW_TOR_CONNECTION_FOR_SITE);
-  }
-
-  if (IsCommandIdEnabled(IDC_NEW_OFFTHERECORD_WINDOW_TOR)) {
-    InsertItemWithStringIdAt(
-        GetIndexOfCommandId(IDC_NEW_INCOGNITO_WINDOW).value() + 1,
-        IDC_NEW_OFFTHERECORD_WINDOW_TOR, IDS_NEW_OFFTHERECORD_WINDOW_TOR);
-  }
-}
-
 void BraveAppMenuModel::BuildBraveProductsSection() {
   // Needs to add separator as this section is brave specific section.
   bool need_separator = false;
@@ -157,21 +138,6 @@ void BraveAppMenuModel::BuildBraveProductsSection() {
                              IDC_SHOW_BRAVE_WALLET, IDS_SHOW_BRAVE_WALLET);
     need_separator = true;
   }
-
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-  if (IsCommandIdEnabled(IDC_BRAVE_VPN_MENU)) {
-    sub_menus().push_back(std::make_unique<BraveVPNMenuModel>(
-        browser(), browser()->profile()->GetPrefs()));
-    InsertSubMenuWithStringIdAt(GetNextIndexOfBraveProductsSection(),
-                                IDC_BRAVE_VPN_MENU, IDS_BRAVE_VPN_MENU,
-                                sub_menus().back().get());
-    need_separator = true;
-  } else if (IsCommandIdEnabled(IDC_SHOW_BRAVE_VPN_PANEL)) {
-    InsertItemWithStringIdAt(GetNextIndexOfBraveProductsSection(),
-                             IDC_SHOW_BRAVE_VPN_PANEL, IDS_BRAVE_VPN_MENU);
-    need_separator = true;
-  }
-#endif
 
 #if defined(TOOLKIT_VIEWS)
   if (sidebar::CanUseSidebar(browser())) {
@@ -408,11 +374,8 @@ bool BraveAppMenuModel::IsCommandIdEnabled(int id) const {
 }
 
 size_t BraveAppMenuModel::GetNextIndexOfBraveProductsSection() const {
-  std::vector<int> commands_to_check = {IDC_SHOW_BRAVE_VPN_PANEL,
-                                        IDC_BRAVE_VPN_MENU,
-                                        IDC_SHOW_BRAVE_WALLET,
+  std::vector<int> commands_to_check = {IDC_SHOW_BRAVE_WALLET,
                                         IDC_TOGGLE_AI_CHAT,
-                                        IDC_NEW_OFFTHERECORD_WINDOW_TOR,
                                         IDC_NEW_INCOGNITO_WINDOW,
                                         IDC_NEW_WINDOW};
   const auto last_index_of_second_section =
@@ -422,8 +385,7 @@ size_t BraveAppMenuModel::GetNextIndexOfBraveProductsSection() const {
 
   // If |last_cmd_id_of_second_section| is from new tab & windows section,
   // no item is added to second section yet.
-  if (last_cmd_id_of_second_section == IDC_NEW_OFFTHERECORD_WINDOW_TOR ||
-      last_cmd_id_of_second_section == IDC_NEW_INCOGNITO_WINDOW ||
+  if (last_cmd_id_of_second_section == IDC_NEW_INCOGNITO_WINDOW ||
       last_cmd_id_of_second_section == IDC_NEW_WINDOW) {
     // Used additional "+1" to skip separator.
     DCHECK_EQ(ui::MenuModel::TYPE_SEPARATOR,

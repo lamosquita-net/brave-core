@@ -99,44 +99,6 @@ RegisterPolymerTemplateModifications({
         }
         curChild++
       }
-      const isNativeBraveWalletEnabled = loadTimeData.getBoolean('isNativeBraveWalletFeatureEnabled')
-      if (isNativeBraveWalletEnabled) {
-        firstPermissionItem.insertAdjacentHTML(
-          'beforebegin',
-          getTrustedHTML`
-            <site-details-permission
-              category="[[contentSettingsTypesEnum_.ETHEREUM]]"
-              icon="ethereum-on">
-            </site-details-permission>
-          `)
-        const ethereumSettings = templateContent.
-          querySelector(`div.list-frame > site-details-permission:nth-child(${curChild})`)
-        if (!ethereumSettings) {
-          console.error(
-              '[Brave Settings Overrides] Couldn\'t find Ethereum settings')
-        } else {
-          ethereumSettings.setAttribute(
-            'label', loadTimeData.getString('siteSettingsEthereum'))
-        }
-        curChild++
-        firstPermissionItem.insertAdjacentHTML(
-          'beforebegin',
-          getTrustedHTML`
-            <site-details-permission
-              category="[[contentSettingsTypesEnum_.SOLANA]]"
-              icon="solana-on">
-            </site-details-permission>
-          `)
-        const solanaSettings = templateContent.
-          querySelector(`div.list-frame > site-details-permission:nth-child(${curChild})`)
-        if (!solanaSettings) {
-          console.error(
-            '[Brave Settings Overrides] Couldn\'t find Solana settings')
-        } else {
-          solanaSettings.setAttribute(
-              'label', loadTimeData.getString('siteSettingsSolana'))
-        }
-      }
     }
 
     // In Chromium, the VR and AR icons are the same but we want to have separate ones.

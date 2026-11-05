@@ -16,13 +16,6 @@
   commander::CommanderFrontendDelegate* GetCommanderDelegate
 #endif  // BUILDFLAG(ENABLE_COMMANDER)
 
-#if BUILDFLAG(ENABLE_AI_CHAT)
-#define GetInMemoryDatabase                           \
-  GetInMemoryDatabase() override;                     \
-  void OpenLeo(const std::u16string& query) override; \
-  bool IsLeoProviderEnabled
-#endif  // BUILDFLAG(ENABLE_AI_CHAT)
-
 #include "src/chrome/browser/autocomplete/chrome_autocomplete_provider_client.h"  // IWYU pragma: export
 
 #undef GetInMemoryDatabase

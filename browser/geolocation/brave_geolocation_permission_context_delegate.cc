@@ -28,11 +28,6 @@ bool BraveGeolocationPermissionContextDelegate::DecidePermission(
     bool user_gesture,
     permissions::BrowserPermissionCallback* callback,
     permissions::GeolocationPermissionContext* context) {
-  if (profile_->IsTor()) {
-    std::move(*callback).Run(ContentSetting::CONTENT_SETTING_BLOCK);
-    return true;
-  }
-
   return GeolocationPermissionContextDelegate::DecidePermission(
       id, requesting_origin, user_gesture, callback, context);
 }

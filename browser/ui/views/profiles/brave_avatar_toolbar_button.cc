@@ -91,16 +91,7 @@ void BraveAvatarToolbarButton::SetHighlight(
     const std::u16string& highlight_text,
     std::optional<SkColor> highlight_color) {
   std::u16string revised_highlight_text;
-  if (browser_->profile()->IsTor()) {
-    revised_highlight_text = brave_l10n::GetLocalizedResourceUTF16String(
-        IDS_TOR_AVATAR_BUTTON_LABEL);
-
-    if (delegate_->GetWindowCount() > 1) {
-      revised_highlight_text = l10n_util::GetStringFUTF16(
-          IDS_TOR_AVATAR_BUTTON_LABEL_COUNT,
-          base::NumberToString16(delegate_->GetWindowCount()));
-    }
-  } else if (browser_->profile()->IsIncognitoProfile()) {
+  if (browser_->profile()->IsIncognitoProfile()) {
     // We only want the icon and count for Incognito profiles.
     revised_highlight_text = std::u16string();
     if (delegate_->GetWindowCount() > 1) {
@@ -136,11 +127,9 @@ void BraveAvatarToolbarButton::OnThemeChanged() {
 }
 
 void BraveAvatarToolbarButton::UpdateColorsAndInsets() {
-  // Use custom bg/border for private/tor window.
+  // Use custom bg/border for private window.
   if (browser_->profile()->IsOffTheRecord()) {
-    const bool is_tor = browser_->profile()->IsTor();
-    const auto text_color = is_tor ? SkColorSetRGB(0xE3, 0xB3, 0xFF)
-                                   : SkColorSetRGB(0xcc, 0xBE, 0xFE);
+    const auto text_color = SkColorSetRGB(0xcc, 0xBE, 0xFE);
     SetEnabledTextColors(text_color);
     SetTextColor(views::Button::STATE_DISABLED, text_color);
 
@@ -149,15 +138,12 @@ void BraveAvatarToolbarButton::UpdateColorsAndInsets() {
     gfx::Insets target_insets = ::GetLayoutInsets(TOOLBAR_BUTTON);
     target_insets.set_left_right(kBraveAvatarButtonHorizontalSpacing,
                                  kBraveAvatarButtonHorizontalSpacing);
-    if (!is_tor) {
-      // Use smaller vertical margins as we user more larger icon.
-      constexpr int kBraveAvatarButtonVerticalSpacing = 3;
-      target_insets.set_top_bottom(kBraveAvatarButtonVerticalSpacing,
-                                   kBraveAvatarButtonVerticalSpacing);
-    }
+    // Use smaller vertical margins as we user more larger icon.
+    constexpr int kBraveAvatarButtonVerticalSpacing = 3;
+    target_insets.set_top_bottom(kBraveAvatarButtonVerticalSpacing,
+                                 kBraveAvatarButtonVerticalSpacing);
 
-    const auto border_color = is_tor ? SkColorSetARGB(0x66, 0x91, 0x5E, 0xAE)
-                                     : SkColorSetARGB(0x66, 0x7B, 0x63, 0xBF);
+    const auto border_color = SkColorSetARGB(0x66, 0x7B, 0x63, 0xBF);
 
     SkColor toolbar_color = gfx::kPlaceholderColor;
     if (ui::ColorProvider* cp = GetColorProvider()) {

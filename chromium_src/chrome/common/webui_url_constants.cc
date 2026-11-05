@@ -6,10 +6,9 @@
 #include "brave/components/constants/webui_url_constants.h"
 #include "chrome/common/webui_url_constants.h"
 
-#define kChromeUIAttributionInternalsHost                                     \
-  kChromeUIAttributionInternalsHost, kAdblockHost, kAdblockInternalsHost,     \
-      kRewardsPageHost, kRewardsInternalsHost, kWelcomeHost, kWalletPageHost, \
-      kTorInternalsHost, kSkusInternalsHost
+#define kChromeUIAttributionInternalsHost                                 \
+  kChromeUIAttributionInternalsHost, kAdblockHost, kAdblockInternalsHost, \
+      kWelcomeHost, kWalletPageHost
 
 #include "src/chrome/common/webui_url_constants.cc"
 

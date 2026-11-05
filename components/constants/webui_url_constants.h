@@ -26,7 +26,6 @@ inline constexpr char kBraveRewardsPanelHost[] = "rewards-panel.top-chrome";
 inline constexpr char kBraveTipPanelURL[] = "chrome://tip-panel.top-chrome";
 inline constexpr char kBraveTipPanelHost[] = "tip-panel.top-chrome";
 inline constexpr char kBraveNewTabJS[] = "brave_new_tab.js";
-inline constexpr char kBraveNewsInternalsHost[] = "news-internals";
 inline constexpr char kBraveUIAdblockURL[] = "chrome://adblock/";
 inline constexpr char kBraveUIWebcompatReporterURL[] = "chrome://webcompat/";
 inline constexpr char kBraveUIWalletURL[] = "chrome://wallet/";
@@ -37,16 +36,12 @@ inline constexpr char kBraveUIWalletAccountCreationURL[] =
 inline constexpr char kBraveUIWalletPanelURL[] =
     "chrome://wallet-panel.top-chrome/";
 inline constexpr char kWalletPanelHost[] = "wallet-panel.top-chrome";
-inline constexpr char kVPNPanelURL[] =
-    "chrome-untrusted://vpn-panel.top-chrome/";
-inline constexpr char kVPNPanelHost[] = "vpn-panel.top-chrome";
 inline constexpr char kBraveUIWalletPageURL[] = "chrome://wallet/";
 inline constexpr char kWalletPageHost[] = "wallet";
 inline constexpr char kExtensionSettingsURL[] = "flyweb://settings/extensions";
 inline constexpr char kWalletSettingsURL[] = "flyweb://settings/wallet";
 inline constexpr char kBraveSyncPath[] = "braveSync";
 inline constexpr char kBraveSyncSetupPath[] = "braveSync/setup";
-inline constexpr char kTorInternalsHost[] = "tor-internals";
 inline constexpr char kUntrustedLedgerHost[] = "ledger-bridge";
 inline constexpr char kUntrustedLedgerURL[] =
     "chrome-untrusted://ledger-bridge/";

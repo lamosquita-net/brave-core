@@ -10,28 +10,16 @@
 
 #include "base/command_line.h"
 #include "base/feature_list.h"
-#include "brave/browser/brave_ads/creatives/search_result_ad/creative_search_result_ad_tab_helper.h"
-#include "brave/browser/brave_ads/tabs/ads_tab_helper.h"
 #include "brave/browser/brave_browser_process.h"
-#include "brave/browser/brave_news/brave_news_tab_helper.h"
-#include "brave/browser/brave_rewards/rewards_tab_helper.h"
 #include "brave/browser/brave_shields/brave_shields_web_contents_observer.h"
-#include "brave/browser/brave_wallet/brave_wallet_tab_helper.h"
 #include "brave/browser/ephemeral_storage/ephemeral_storage_tab_helper.h"
-#include "brave/browser/misc_metrics/page_metrics_tab_helper.h"
-#include "brave/browser/misc_metrics/process_misc_metrics.h"
 #include "brave/browser/ntp_background/ntp_tab_helper.h"
-#include "brave/browser/skus/skus_service_factory.h"
 #include "brave/browser/ui/bookmark/brave_bookmark_tab_helper.h"
-#include "brave/components/ai_chat/core/common/buildflags/buildflags.h"
 #include "brave/components/brave_perf_predictor/browser/perf_predictor_tab_helper.h"
 #include "brave/components/brave_wayback_machine/buildflags/buildflags.h"
-#include "brave/components/greaselion/browser/buildflags/buildflags.h"
 #include "brave/components/playlist/common/buildflags/buildflags.h"
-#include "brave/components/psst/browser/content/psst_tab_helper.h"
 #include "brave/components/request_otr/common/buildflags/buildflags.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
-#include "brave/components/tor/buildflags/buildflags.h"
 #include "build/build_config.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/profile.h"
@@ -46,10 +34,6 @@
 #include "net/base/features.h"
 #include "third_party/widevine/cdm/buildflags.h"
 
-#if BUILDFLAG(ENABLE_GREASELION)
-#include "brave/browser/greaselion/greaselion_tab_helper.h"
-#endif
-
 #if BUILDFLAG(IS_ANDROID)
 #include "brave/browser/android/preferences/background_video_playback_tab_helper.h"
 #endif
@@ -58,11 +42,6 @@
 #include "brave/browser/brave_shields/brave_shields_tab_helper.h"
 #include "brave/browser/ui/geolocation/brave_geolocation_permission_tab_helper.h"
 #include "chrome/browser/ui/thumbnails/thumbnail_tab_helper.h"
-#endif
-
-#if BUILDFLAG(ENABLE_AI_CHAT)
-#include "brave/browser/ai_chat/ai_chat_utils.h"
-#include "brave/components/ai_chat/content/browser/ai_chat_tab_helper.h"
 #endif
 
 #if BUILDFLAG(ENABLE_WIDEVINE)
@@ -75,15 +54,6 @@
 
 #if BUILDFLAG(ENABLE_SPEEDREADER)
 #include "brave/browser/speedreader/speedreader_tab_helper.h"
-#endif
-
-#if BUILDFLAG(ENABLE_TOR)
-#include "brave/components/tor/onion_location_tab_helper.h"
-#include "brave/components/tor/tor_tab_helper.h"
-#endif
-
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-#include "brave/browser/web_discovery/web_discovery_tab_helper.h"
 #endif
 
 #if BUILDFLAG(ENABLE_REQUEST_OTR)
@@ -109,9 +79,6 @@ void AttachTabHelpers(content::WebContents* web_contents) {
 #if defined(TOOLKIT_VIEWS)
   BraveContextualSidePanelTabHelper::CreateForWebContents(web_contents);
 #endif
-#if BUILDFLAG(ENABLE_GREASELION)
-  greaselion::GreaselionTabHelper::CreateForWebContents(web_contents);
-#endif
   brave_shields::BraveShieldsWebContentsObserver::CreateForWebContents(
       web_contents);
 #if BUILDFLAG(IS_ANDROID)
@@ -122,26 +89,6 @@ void AttachTabHelpers(content::WebContents* web_contents) {
   brave_shields::BraveShieldsTabHelper::CreateForWebContents(web_contents);
   ThumbnailTabHelper::CreateForWebContents(web_contents);
   BraveGeolocationPermissionTabHelper::CreateForWebContents(web_contents);
-#endif
-
-  brave_rewards::RewardsTabHelper::CreateForWebContents(web_contents);
-
-#if BUILDFLAG(ENABLE_AI_CHAT)
-  content::BrowserContext* context = web_contents->GetBrowserContext();
-  if (ai_chat::IsAllowedForContext(context)) {
-    auto skus_service_getter = base::BindRepeating(
-        [](content::BrowserContext* context) {
-          return skus::SkusServiceFactory::GetForContext(context);
-        },
-        context);
-    ai_chat::AIChatTabHelper::CreateForWebContents(
-        web_contents,
-        g_brave_browser_process->process_misc_metrics()
-            ? g_brave_browser_process->process_misc_metrics()->ai_chat_metrics()
-            : nullptr,
-        skus_service_getter, g_browser_process->local_state(),
-        std::string(version_info::GetChannelString(chrome::GetChannel())));
-  }
 #endif
 
 #if BUILDFLAG(ENABLE_WIDEVINE)
@@ -155,26 +102,12 @@ void AttachTabHelpers(content::WebContents* web_contents) {
   brave_perf_predictor::PerfPredictorTabHelper::CreateForWebContents(
       web_contents);
 
-  brave_ads::AdsTabHelper::CreateForWebContents(web_contents);
-  brave_ads::CreativeSearchResultAdTabHelper::MaybeCreateForWebContents(
-      web_contents);
-  psst::PsstTabHelper::MaybeCreateForWebContents(
-      web_contents, ISOLATED_WORLD_ID_BRAVE_INTERNAL);
   // FlyWeb: no WebDiscoveryTabHelper, so no infobar offering the Web
   // Discovery Project (it sends search data to Brave) on Brave Search.
 
 #if BUILDFLAG(ENABLE_SPEEDREADER)
   speedreader::SpeedreaderTabHelper::MaybeCreateForWebContents(web_contents);
 #endif
-
-#if BUILDFLAG(ENABLE_TOR)
-  tor::TorTabHelper::MaybeCreateForWebContents(
-      web_contents, web_contents->GetBrowserContext()->IsTor());
-  tor::OnionLocationTabHelper::CreateForWebContents(web_contents);
-#endif
-
-  // FlyWeb: no BraveNewsTabHelper (no Brave News; it looked up the page's
-  // feeds and Brave's publisher list on every tab).
 
 #if defined(TOOLKIT_VIEWS)
   OnboardingTabHelper::MaybeCreateForWebContents(web_contents);
@@ -186,11 +119,8 @@ void AttachTabHelpers(content::WebContents* web_contents) {
         web_contents);
   }
 
-  brave_wallet::BraveWalletTabHelper::CreateForWebContents(web_contents);
-
   if (!web_contents->GetBrowserContext()->IsOffTheRecord()) {
     ntp_background_images::NTPTabHelper::CreateForWebContents(web_contents);
-    misc_metrics::PageMetricsTabHelper::CreateForWebContents(web_contents);
 #if BUILDFLAG(ENABLE_REQUEST_OTR)
     if (base::FeatureList::IsEnabled(
             request_otr::features::kBraveRequestOTRTab)) {

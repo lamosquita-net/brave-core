@@ -7,7 +7,6 @@
 
 #include "brave/browser/ui/tabs/brave_tab_prefs.h"
 #include "brave/browser/ui/views/frame/brave_non_client_hit_test_helper.h"
-#include "brave/browser/ui/views/frame/brave_window_frame_graphic.h"
 #include "brave/browser/ui/views/tabs/vertical_tab_utils.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser.h"
@@ -23,9 +22,6 @@
 BraveBrowserFrameViewWin::BraveBrowserFrameViewWin(BrowserFrame* frame,
                                                    BrowserView* browser_view)
     : BrowserFrameViewWin(frame, browser_view) {
-  frame_graphic_.reset(
-      new BraveWindowFrameGraphic(browser_view->browser()->profile()));
-
   DCHECK(browser_view->browser());
   auto* prefs = browser_view->browser()->profile()->GetPrefs();
   using_vertical_tabs_.Init(
@@ -50,22 +46,6 @@ void BraveBrowserFrameViewWin::OnVerticalTabsPrefsChanged() {
   caption_button_container_->UpdateButtons();
   caption_button_container_->InvalidateLayout();
   LayoutCaptionButtons();
-}
-
-void BraveBrowserFrameViewWin::OnPaint(gfx::Canvas* canvas) {
-  BrowserFrameViewWin::OnPaint(canvas);
-
-  // Don't draw frame graphic over border outline.
-  gfx::ScopedCanvas scoped_canvas(canvas);
-  gfx::Rect bounds_to_frame_graphic(bounds());
-  if (!IsFrameCondensed()) {
-    // Native frame has 1px top border outline.
-    constexpr int kFrameBorderOutlineThickness = 1;
-    bounds_to_frame_graphic.Inset(
-        gfx::Insets::VH(0, kFrameBorderOutlineThickness));
-    canvas->ClipRect(bounds_to_frame_graphic);
-  }
-  frame_graphic_->Paint(canvas, bounds_to_frame_graphic);
 }
 
 int BraveBrowserFrameViewWin::GetTopInset(bool restored) const {

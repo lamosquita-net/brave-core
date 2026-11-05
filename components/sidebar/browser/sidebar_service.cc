@@ -20,8 +20,6 @@
 #include "base/ranges/algorithm.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/values.h"
-#include "brave/components/ai_chat/core/common/buildflags/buildflags.h"
-#include "brave/components/brave_wallet/common/common_utils.h"
 #include "brave/components/constants/webui_url_constants.h"
 #include "brave/components/l10n/common/locale_util.h"
 #include "brave/components/l10n/common/localization_util.h"
@@ -36,10 +34,6 @@
 #include "components/prefs/scoped_user_pref_update.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/resource/resource_bundle.h"
-
-#if BUILDFLAG(ENABLE_AI_CHAT)
-#include "brave/components/ai_chat/core/browser/utils.h"
-#endif  // BUILDFLAG(ENABLE_AI_CHAT)
 
 #if BUILDFLAG(ENABLE_PLAYLIST)
 #include "brave/components/playlist/common/features.h"
@@ -592,14 +586,7 @@ SidebarItem SidebarService::GetBuiltInItemForType(
       // FlyWeb: no Brave Talk (talk.brave.com) in the sidebar.
       return SidebarItem();
     case SidebarItem::BuiltInItemType::kWallet: {
-      if (brave_wallet::IsAllowed(prefs_)) {
-        return SidebarItem::Create(GURL("chrome://wallet/"),
-                                   brave_l10n::GetLocalizedResourceUTF16String(
-                                       IDS_SIDEBAR_WALLET_ITEM_TITLE),
-                                   SidebarItem::Type::kTypeBuiltIn,
-                                   SidebarItem::BuiltInItemType::kWallet,
-                                   /* open_in_panel = */ false);
-      }
+      // FlyWeb: no wallet.
       return SidebarItem();
     }
     case SidebarItem::BuiltInItemType::kBookmarks:
@@ -644,19 +631,7 @@ SidebarItem SidebarService::GetBuiltInItemForType(
       return SidebarItem();
     }
     case SidebarItem::BuiltInItemType::kChatUI: {
-#if BUILDFLAG(ENABLE_AI_CHAT)
-      if (ai_chat::IsAIChatEnabled(prefs_)) {
-        return SidebarItem::Create(
-            brave_l10n::GetLocalizedResourceUTF16String(IDS_CHAT_UI_TITLE),
-            SidebarItem::Type::kTypeBuiltIn,
-            SidebarItem::BuiltInItemType::kChatUI,
-            /* open_in_panel = */ true);
-      } else {
-        return SidebarItem();
-      }
-#else   // BUILDFLAG(ENABLE_AI_CHAT)
       return SidebarItem();
-#endif  // BUILDFLAG(ENABLE_AI_CHAT)
     }
     case SidebarItem::BuiltInItemType::kNone: {
       NOTREACHED_IN_MIGRATION();

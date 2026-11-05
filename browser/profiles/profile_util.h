@@ -11,8 +11,6 @@
 
 namespace brave {
 
-bool IsTorDisabledForProfile(Profile* profile);
-
 // Specifically used to record if sponsored images are enabled.
 // Called from BraveAppearanceHandler and BraveNewTabMessageHandler
 void RecordSponsoredImagesEnabledP3A(Profile* profile);

@@ -32,9 +32,6 @@ inline constexpr const char* kAllowedUrlPrefixes[] = {
     // needed for DoH on Mac build machines
     "https://chrome.cloudflare-dns.com/dns-query",
 
-    // for fetching tor client updater component
-    "https://tor.bravesoftware.com/",
-
     // brave sync v2 production
     "https://sync-v2.brave.com/v2",
 

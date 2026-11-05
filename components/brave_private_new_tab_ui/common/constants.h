@@ -17,28 +17,6 @@ inline constexpr webui::LocalizedString kLocalizedStrings[] = {
     {"headerText1", IDS_BRAVE_PRIVATE_NEW_TAB_PRIVATE_WINDOW_DESC1},
     {"headerText2", IDS_BRAVE_PRIVATE_NEW_TAB_PRIVATE_WINDOW_DESC2},
     {"headerButton", IDS_BRAVE_PRIVATE_NEW_TAB_PRIVATE_WINDOW_BUTTON},
-    {"headerTorTitle", IDS_BRAVE_PRIVATE_NEW_TAB_PRIVATE_WINDOW_TOR},
-    {"headerTorText", IDS_BRAVE_PRIVATE_NEW_TAB_PRIVATE_WINDOW_TOR_DESC},
-    {"torStatus", IDS_BRAVE_PRIVATE_NEW_TAB_TOR_STATUS},
-    {"torStatusConnected",
-     IDS_BRAVE_PRIVATE_NEW_TAB_TOR_STATUS_CONNECTED},  // NOLINT
-    {"torStatusDisconnected",
-     IDS_BRAVE_PRIVATE_NEW_TAB_TOR_STATUS_DISCONNECTED},  // NOLINT
-    {"torStatusInitializing",
-     IDS_BRAVE_PRIVATE_NEW_TAB_TOR_STATUS_INITIALIZING},  // NOLINT
-    {"torStatusConnectionSlow",
-     IDS_BRAVE_PRIVATE_NEW_TAB_TOR_STATUS_CONNECTION_SLOW},
-    {"torStatusConnectionSlowDesc",
-     IDS_BRAVE_PRIVATE_NEW_TAB_TOR_STATUS_CONNECTION_SLOW_DESC},
-    {"torStatusConnectionFailed",
-     IDS_BRAVE_PRIVATE_NEW_TAB_TOR_STATUS_CONNECTION_FAILED},
-    {"torHelpConnecting", IDS_BRAVE_PRIVATE_NEW_TAB_TOR_HELP_CONNECTING},
-    {"torHelpDisconnectedReenable",
-     IDS_BRAVE_PRIVATE_NEW_TAB_TOR_HELP_DISCONNECTED_REENABLE},  // NOLINT
-    {"torHelpDisconnectedBridges",
-     IDS_BRAVE_PRIVATE_NEW_TAB_TOR_HELP_DISCONNECTED_BRIDGES},  // NOLINT
-    {"torHelpContactSupport",
-     IDS_BRAVE_PRIVATE_NEW_TAB_TOR_HELP_CONTACT_SUPPORT},  // NOLINT
     {"searchPlaceholderLabel",
      IDS_BRAVE_PRIVATE_NEW_TAB_SEARCH_PLACEHOLDER},  // NOLINT
 };

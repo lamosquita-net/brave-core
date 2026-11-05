@@ -17,7 +17,6 @@
 #include "base/strings/utf_string_conversions.h"
 #include "brave/app/vector_icons/vector_icons.h"
 #include "brave/browser/brave_browser_process.h"
-#include "brave/browser/misc_metrics/process_misc_metrics.h"
 #include "brave/browser/profiles/profile_util.h"
 #include "brave/browser/ui/brave_browser.h"
 #include "brave/browser/ui/color/brave_color_id.h"
@@ -28,7 +27,6 @@
 #include "brave/browser/ui/views/sidebar/sidebar_edit_item_bubble_delegate_view.h"
 #include "brave/browser/ui/views/sidebar/sidebar_item_added_feedback_bubble.h"
 #include "brave/browser/ui/views/sidebar/sidebar_item_view.h"
-#include "brave/components/ai_chat/core/common/buildflags/buildflags.h"
 #include "brave/components/l10n/common/localization_util.h"
 #include "brave/components/playlist/common/features.h"
 #include "brave/components/sidebar/browser/pref_names.h"
@@ -56,11 +54,6 @@
 #include "ui/views/controls/menu/menu_runner.h"
 #include "ui/views/controls/separator.h"
 #include "ui/views/layout/box_layout.h"
-
-#if BUILDFLAG(ENABLE_AI_CHAT)
-#include "brave/components/ai_chat/core/browser/ai_chat_metrics.h"
-#include "brave/components/ai_chat/core/common/features.h"
-#endif
 
 namespace {
 
@@ -521,15 +514,6 @@ void SidebarItemsContentsView::OnItemPressed(const views::View* item,
 
   const auto& item_model = controller->model()->GetAllSidebarItems()[*index];
   if (item_model.open_in_panel) {
-#if BUILDFLAG(ENABLE_AI_CHAT)
-    if (item_model.built_in_item_type ==
-        sidebar::SidebarItem::BuiltInItemType::kChatUI) {
-      ai_chat::AIChatMetrics* metrics =
-          g_brave_browser_process->process_misc_metrics()->ai_chat_metrics();
-      CHECK(metrics);
-      metrics->HandleOpenViaEntryPoint(ai_chat::EntryPoint::kSidebar);
-    }
-#endif
     controller->ActivatePanelItem(item_model.built_in_item_type);
     return;
   }

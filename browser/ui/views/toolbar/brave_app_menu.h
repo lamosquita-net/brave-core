@@ -7,7 +7,6 @@
 #define BRAVE_BROWSER_UI_VIEWS_TOOLBAR_BRAVE_APP_MENU_H_
 
 #include "base/memory/raw_ptr.h"
-#include "brave/components/misc_metrics/menu_metrics.h"
 #include "chrome/browser/ui/views/toolbar/app_menu.h"
 
 class BraveAppMenu : public AppMenu {
@@ -27,12 +26,8 @@ class BraveAppMenu : public AppMenu {
   void OnMenuClosed(views::MenuItemView* menu) override;
 
  private:
-  void RecordMenuUsage(int command_id);
-
   // Update item's view as brave style.
   void UpdateMenuItemView();
-
-  base::raw_ptr<misc_metrics::MenuMetrics> menu_metrics_;
 };
 
 #endif  // BRAVE_BROWSER_UI_VIEWS_TOOLBAR_BRAVE_APP_MENU_H_

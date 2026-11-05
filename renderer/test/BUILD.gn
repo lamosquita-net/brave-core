@@ -3,7 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import("//brave/browser/ethereum_remote_client/buildflags/buildflags.gni")
 import("//extensions/buildflags/buildflags.gni")
 import("//testing/test.gni")
 
@@ -14,7 +13,6 @@ source_set("browser_tests") {
     "digital_goods_api_browsertest.cc",
     "file_system_access_browsertest.cc",
     "font_browsertest.cc",
-    "js_ethereum_provider_browsertest.cc",
     "navigator_connection_attribute_browsertest.cc",
     "subresource_web_bundles_browsertest.cc",
   ]
@@ -23,11 +21,8 @@ source_set("browser_tests") {
 
   deps = [
     "//base/test:test_support",
-    "//brave/browser/brave_wallet",
     "//brave/browser/profiles:profiles",
     "//brave/common",
-    "//brave/components/brave_wallet/browser",
-    "//brave/components/brave_wallet/browser:utils",
     "//chrome/browser/profiles:profile",
     "//chrome/browser/ui",
     "//chrome/common",
@@ -44,10 +39,5 @@ source_set("browser_tests") {
       "//extensions:test_support",
       "//extensions/browser",
     ]
-    # FlyWeb: respect the flag, so the legacy Crypto Wallets extension can be
-    # compiled out (its BUILD.gn asserts ethereum_remote_client_enabled).
-    if (ethereum_remote_client_enabled) {
-      deps += [ "//brave/browser/ethereum_remote_client:ethereum_remote_client" ]
-    }
   }
 }

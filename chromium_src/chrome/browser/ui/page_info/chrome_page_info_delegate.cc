@@ -5,18 +5,13 @@
 
 #include "chrome/browser/ui/page_info/chrome_page_info_delegate.h"
 
-#include "brave/components/content_settings/core/browser/brave_content_settings_utils.h"
-#include "chrome/browser/profiles/profile.h"
 #include "chrome/common/url_constants.h"
 
 #include "src/chrome/browser/ui/page_info/chrome_page_info_delegate.cc"
 
+// FlyWeb: the only permissions hidden here were the Shields and geolocation
+// ones in Tor windows, and Tor is gone, so every permission is shown.
 bool ChromePageInfoDelegate::BraveShouldShowPermission(
     ContentSettingsType type) {
-  if ((content_settings::IsShieldsContentSettingsType(type) ||
-       type == ContentSettingsType::GEOLOCATION) &&
-      GetProfile()->IsTor()) {
-    return false;
-  }
   return true;
 }

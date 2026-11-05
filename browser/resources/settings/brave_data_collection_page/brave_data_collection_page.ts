@@ -19,8 +19,6 @@ const SettingBraveDataCollectionPageElementBase =
 
 interface SettingsBraveDataCollectionPageElement {
   $: {
-    p3aEnabled: SettingsToggleButtonElement,
-    statsUsagePingEnabled: SettingsToggleButtonElement,
     metricsReportingControl: SettingsToggleButtonElement,
   }
 }
@@ -42,22 +40,6 @@ extends SettingBraveDataCollectionPageElementBase
 
   static get properties() {
     return {
-      p3aEnabledPref_: {
-        type: Object,
-        value() {
-          // TODO(dbeam): this is basically only to appease PrefControlMixin.
-          // Maybe add a no-validate attribute instead? This makes little sense.
-          return {}
-        },
-      },
-      statsUsagePingEnabledPref_: {
-        type: Object,
-        value() {
-          // TODO(dbeam): this is basically only to appease PrefControlMixin.
-          // Maybe add a no-validate attribute instead? This makes little sense.
-          return {}
-        },
-      },
       metricsReportingPref_: {
         type: Object,
         value() {
@@ -70,8 +52,6 @@ extends SettingBraveDataCollectionPageElementBase
     }
   }
 
-  private p3aEnabledPref_: Object
-  private statsUsagePingEnabledPref_: Object
   private metricsReportingPref_: chrome.settingsPrivate.PrefObject<boolean>
   private showRestartForMetricsReporting_: boolean
 
@@ -80,54 +60,10 @@ extends SettingBraveDataCollectionPageElementBase
   override ready() {
     super.ready()
 
-    // Used for first time initialization of checked state.
-    // Can't use `prefs` property of `settings-toggle-button` directly
-    // because p3a enabled is a local state setting, but PrefControlMixin
-    // checks for a pref being valid, so have to fake it, same as upstream.
-    const setP3AEnabledPref = (enabled: boolean) =>
-      this.setP3AEnabledPref_(enabled)
-    this.addWebUiListener('p3a-enabled-changed', setP3AEnabledPref)
-    this.browserProxy_.getP3AEnabled().then(
-      (enabled: boolean) => setP3AEnabledPref(enabled))
-
     const setMetricsReportingPref = (metricsReporting: MetricsReporting) =>
         this.setMetricsReportingPref_(metricsReporting)
     this.addWebUiListener('metrics-reporting-change', setMetricsReportingPref)
     this.browserProxy_.getMetricsReporting().then(setMetricsReportingPref)
-
-    const setStatsUsagePingEnabledPref = (enabled: boolean) =>
-      this.setStatsUsagePingEnabledPref_(enabled)
-    this.addWebUiListener(
-      'stats-usage-ping-enabled-changed', setStatsUsagePingEnabledPref)
-    this.browserProxy_.getStatsUsagePingEnabled().then(
-      (enabled: boolean) => setStatsUsagePingEnabledPref(enabled))
-  }
-
-  setP3AEnabledPref_(enabled: boolean) {
-    const pref = {
-      key: '',
-      type: chrome.settingsPrivate.PrefType.BOOLEAN,
-      value: enabled,
-    }
-    this.p3aEnabledPref_ = pref
-  }
-
-  onP3AEnabledChange_() {
-    this.browserProxy_.setP3AEnabled(this.$.p3aEnabled.checked)
-  }
-
-  setStatsUsagePingEnabledPref_(enabled: boolean) {
-    const pref = {
-      key: '',
-      type: chrome.settingsPrivate.PrefType.BOOLEAN,
-      value: enabled,
-    }
-    this.statsUsagePingEnabledPref_ = pref
-  }
-
-  onStatsUsagePingEnabledChange_() {
-    this.browserProxy_.
-      setStatsUsagePingEnabled(this.$.statsUsagePingEnabled.checked)
   }
 
   // Metrics related code is copied from

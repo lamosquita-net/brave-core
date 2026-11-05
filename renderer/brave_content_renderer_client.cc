@@ -9,21 +9,14 @@
 
 #include "base/feature_list.h"
 #include "base/ranges/algorithm.h"
-#include "brave/components/ai_chat/core/common/buildflags/buildflags.h"
 #include "brave/components/brave_search/common/brave_search_utils.h"
 #include "brave/components/brave_search/renderer/brave_search_render_frame_observer.h"
 #include "brave/components/brave_shields/core/common/features.h"
-#include "brave/components/brave_vpn/common/buildflags/buildflags.h"
-#include "brave/components/brave_wallet/common/features.h"
 #include "brave/components/cosmetic_filters/renderer/cosmetic_filters_js_render_frame_observer.h"
 #include "brave/components/playlist/common/buildflags/buildflags.h"
 #include "brave/components/safe_builtins/renderer/safe_builtins.h"
-#include "brave/components/script_injector/renderer/script_injector_render_frame_observer.h"
-#include "brave/components/skus/common/features.h"
-#include "brave/components/skus/renderer/skus_render_frame_observer.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "brave/renderer/brave_render_thread_observer.h"
-#include "brave/renderer/brave_wallet/brave_wallet_render_frame_observer.h"
 #include "chrome/common/chrome_isolated_world_ids.h"
 #include "chrome/renderer/chrome_render_thread_observer.h"
 #include "chrome/renderer/url_loader_throttle_provider_impl.h"
@@ -40,13 +33,6 @@
 #include "brave/components/speedreader/renderer/speedreader_render_frame_observer.h"
 #endif
 
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-#include "brave/components/brave_vpn/common/brave_vpn_utils.h"
-#if BUILDFLAG(IS_ANDROID)
-#include "brave/components/brave_mobile_subscription/renderer/android/subscription_render_frame_observer.h"
-#endif  // BUILDFLAG(IS_ANDROID)
-#endif  // BUILDFLAG(ENABLE_BRAVE_VPN)
-
 #if BUILDFLAG(ENABLE_PLAYLIST)
 #include "brave/components/playlist/common/features.h"
 #include "brave/components/playlist/renderer/playlist_render_frame_observer.h"
@@ -55,10 +41,6 @@
 #if BUILDFLAG(ENABLE_WIDEVINE)
 #include "media/base/key_system_info.h"
 #include "third_party/widevine/cdm/widevine_cdm_common.h"
-#endif
-
-#if BUILDFLAG(ENABLE_AI_CHAT) && BUILDFLAG(IS_ANDROID)
-#include "brave/components/ai_chat/core/common/features.h"
 #endif
 
 namespace {
@@ -141,30 +123,13 @@ void BraveContentRendererClient::RenderFrameCreated(
         render_frame, ISOLATED_WORLD_ID_BRAVE_INTERNAL, dynamic_params_closure);
   }
 
-  if (base::FeatureList::IsEnabled(
-          brave_wallet::features::kNativeBraveWalletFeature)) {
-    new brave_wallet::BraveWalletRenderFrameObserver(
-        render_frame,
-        base::BindRepeating(&BraveRenderThreadObserver::GetDynamicParams));
-  }
-
-  new script_injector::ScriptInjectorRenderFrameObserver(render_frame);
-
   if (brave_search::IsDefaultAPIEnabled()) {
     new brave_search::BraveSearchRenderFrameObserver(
         render_frame, content::ISOLATED_WORLD_ID_GLOBAL);
   }
 
-  if (base::FeatureList::IsEnabled(skus::features::kSkusFeature) &&
-      !ChromeRenderThreadObserver::is_incognito_process()) {
-    new skus::SkusRenderFrameObserver(render_frame);
-  }
-
 #if BUILDFLAG(IS_ANDROID)
   if (brave_vpn::IsBraveVPNFeatureEnabled()
-#if BUILDFLAG(ENABLE_AI_CHAT)
-      || ai_chat::features::IsAIChatHistoryEnabled()
-#endif
   ) {
     new brave_subscription::SubscriptionRenderFrameObserver(
         render_frame, content::ISOLATED_WORLD_ID_GLOBAL);
@@ -265,8 +230,4 @@ BraveContentRendererClient::CreateURLLoaderThrottleProvider(
     blink::URLLoaderThrottleProviderType provider_type) {
   return URLLoaderThrottleProviderImpl::Create(provider_type, this,
                                                browser_interface_broker_.get());
-}
-
-bool BraveContentRendererClient::IsOnionAllowed() const {
-  return brave_observer_->IsOnionAllowed();
 }

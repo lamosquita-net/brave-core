@@ -6,7 +6,6 @@
 #include "base/path_service.h"
 #include "base/strings/pattern.h"
 #include "base/strings/utf_string_conversions.h"
-#include "brave/components/brave_wallet/browser/pref_names.h"
 #include "brave/components/constants/brave_paths.h"
 #include "build/build_config.h"
 #include "chrome/browser/profiles/profile.h"
@@ -317,10 +316,6 @@ IN_PROC_BROWSER_TEST_F(BraveSchemeLoadBrowserTest,
   EXPECT_TRUE(
       IsURLAllowedInIncognito(GURL("http://wallet"), browser()->profile()));
   TestURLIsNotLoadedInPrivateWindow("brave://wallet");
-  prefs()->SetBoolean(kBraveWalletPrivateWindowsEnabled, true);
-  EXPECT_TRUE(
-      IsURLAllowedInIncognito(GURL("brave://wallet"), browser()->profile()));
-  TestURLIsLoadedInPrivateWindow("chrome://wallet/crypto/onboarding/welcome");
 }
 
 IN_PROC_BROWSER_TEST_F(BraveSchemeLoadBrowserTest,

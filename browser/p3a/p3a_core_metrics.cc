@@ -23,7 +23,6 @@ BraveWindowTracker* g_brave_windows_tracker_instance = nullptr;
 
 constexpr char kLastTimeIncognitoUsed[] =
     "core_p3a_metrics.incognito_used_timestamp";
-constexpr char kTorUsed[] = "core_p3a_metrics.tor_used";
 
 constexpr size_t kWindowUsageP3AIntervalMinutes = 10;
 
@@ -42,8 +41,7 @@ enum class WindowUsageStats {
 };
 
 const char* GetPrefNameForProfile(Profile* profile) {
-  if (profile->IsIncognitoProfile() &&
-      !profile->IsTor()) {
+  if (profile->IsIncognitoProfile()) {
     return kLastTimeIncognitoUsed;
   }
   return nullptr;
@@ -74,14 +72,9 @@ void BraveWindowTracker::CreateInstance(PrefService* local_state) {
 
 void BraveWindowTracker::RegisterPrefs(PrefRegistrySimple* registry) {
   registry->RegisterTimePref(kLastTimeIncognitoUsed, {});
-  registry->RegisterBooleanPref(kTorUsed, false);
 }
 
 void BraveWindowTracker::OnBrowserAdded(Browser* browser) {
-  if (browser->profile()->IsTor()) {
-    local_state_->SetBoolean(kTorUsed, true);
-    return;
-  }
   const char* pref = GetPrefNameForProfile(browser->profile());
   if (pref) {
     local_state_->SetTime(pref, base::Time::Now());
@@ -114,11 +107,6 @@ void BraveWindowTracker::UpdateP3AValues() const {
 
   UMA_HISTOGRAM_ENUMERATION("Brave.Core.LastTimeIncognitoUsed", bucket,
                             WindowUsageStats::kSize);
-
-  // Record if the TOR window was ever used.
-  // 0 -> Yes; 1 -> No.
-  const int tor_used = !local_state_->GetBoolean(kTorUsed);
-  UMA_HISTOGRAM_EXACT_LINEAR("Brave.Core.TorEverUsed", tor_used, 1);
 }
 
 }  // namespace brave

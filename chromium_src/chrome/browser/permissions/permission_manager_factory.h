@@ -8,23 +8,9 @@
 
 #include "components/keyed_service/content/browser_context_keyed_service_factory.h"
 
-namespace brave_wallet {
-class EthereumProviderImplUnitTest;
-class SolanaProviderImplUnitTest;
-class BraveWalletServiceUnitTest;
-}  // namespace brave_wallet
-
-namespace permissions {
-class BraveWalletPermissionContextUnitTest;
-}
-
-#define BuildServiceInstanceForBrowserContext               \
-  BuildServiceInstanceForBrowserContext_ChromiumImpl(       \
-      content::BrowserContext* profile) const;              \
-  friend brave_wallet::EthereumProviderImplUnitTest;        \
-  friend brave_wallet::SolanaProviderImplUnitTest;          \
-  friend brave_wallet::BraveWalletServiceUnitTest;          \
-  friend permissions::BraveWalletPermissionContextUnitTest; \
+#define BuildServiceInstanceForBrowserContext         \
+  BuildServiceInstanceForBrowserContext_ChromiumImpl( \
+      content::BrowserContext* profile) const;        \
   std::unique_ptr<KeyedService> BuildServiceInstanceForBrowserContext
 
 #include "src/chrome/browser/permissions/permission_manager_factory.h"  // IWYU pragma: export

@@ -23,6 +23,5 @@ bool HasCommandID(int command_id) {
 }  // namespace
 
 TEST(AcceleratorTableTest, CheckBraveAccelerators) {
-  EXPECT_TRUE(HasCommandID(IDC_NEW_OFFTHERECORD_WINDOW_TOR));
   EXPECT_TRUE(HasCommandID(IDC_TOGGLE_SIDEBAR));
 }

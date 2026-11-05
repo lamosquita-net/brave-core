@@ -325,13 +325,11 @@ void OnBeforeURLRequestAdBlockTP(const ResponseCallback& next_callback,
 
   bool doh_enabled = (secure_dns_config.mode() == net::SecureDnsMode::kSecure);
 
-  // DoH or standard DNS queries won't be routed through Tor, so we need to
-  // skip it.
-  // Also, skip CNAME uncloaking if there is currently a configured proxy.
+  // Skip CNAME uncloaking if there is currently a configured proxy.
   bool should_check_uncloaked =
       base::FeatureList::IsEnabled(
           brave_shields::features::kBraveAdblockCnameUncloaking) &&
-      ctx->browser_context && !ctx->browser_context->IsTor() &&
+      ctx->browser_context &&
       ProxySettingsAllowUncloaking(ctx->browser_context, doh_enabled);
 
   // When default 1p blocking is disabled, first-party requests should not be

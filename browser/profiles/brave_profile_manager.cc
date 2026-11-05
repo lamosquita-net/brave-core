@@ -11,12 +11,6 @@
 #include <vector>
 
 #include "base/metrics/histogram_macros.h"
-#include "brave/browser/brave_ads/ads_service_factory.h"
-#include "brave/browser/brave_federated/brave_federated_service_factory.h"
-#include "brave/browser/brave_news/brave_news_controller_factory.h"
-#include "brave/browser/brave_rewards/rewards_service_factory.h"
-#include "brave/browser/brave_wallet/brave_wallet_service_factory.h"
-#include "brave/browser/misc_metrics/profile_misc_metrics_service_factory.h"
 #include "brave/browser/perf/brave_perf_features_processor.h"
 #include "brave/browser/profiles/profile_util.h"
 #include "brave/browser/request_otr/request_otr_service_factory.h"
@@ -24,7 +18,6 @@
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/content_settings/core/browser/brave_content_settings_pref_provider.h"
 #include "brave/components/request_otr/common/buildflags/buildflags.h"
-#include "brave/components/tor/buildflags/buildflags.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/profile_attributes_entry.h"
 #include "chrome/browser/profiles/profile_attributes_storage.h"
@@ -42,10 +35,6 @@
 
 #if !BUILDFLAG(USE_GCM_FROM_PLATFORM)
 #include "brave/browser/gcm_driver/brave_gcm_channel_status.h"
-#endif
-
-#if BUILDFLAG(ENABLE_TOR)
-#include "brave/components/tor/tor_constants.h"
 #endif
 
 using content::BrowserThread;
@@ -94,19 +83,13 @@ void BraveProfileManager::DoFinalInitForServices(Profile* profile,
   ProfileManager::DoFinalInitForServices(profile, go_off_the_record);
   if (!do_final_services_init_)
     return;
-  brave_ads::AdsServiceFactory::GetForProfile(profile);
-  brave_rewards::RewardsServiceFactory::GetForProfile(profile);
-  brave_wallet::BraveWalletServiceFactory::GetServiceForContext(profile);
 #if !BUILDFLAG(USE_GCM_FROM_PLATFORM)
   gcm::BraveGCMChannelStatus* status =
       gcm::BraveGCMChannelStatus::GetForProfile(profile);
   DCHECK(status);
   status->UpdateGCMDriverStatus();
 #endif
-  brave_news::BraveNewsControllerFactory::GetForContext(profile);
-  brave_federated::BraveFederatedServiceFactory::GetForBrowserContext(profile);
   brave::URLSanitizerServiceFactory::GetForBrowserContext(profile);
-  misc_metrics::ProfileMiscMetricsServiceFactory::GetServiceForContext(profile);
 #if BUILDFLAG(ENABLE_REQUEST_OTR)
   request_otr::RequestOTRServiceFactory::GetForBrowserContext(profile);
 #endif
@@ -123,16 +106,6 @@ bool BraveProfileManager::IsAllowedProfilePath(
 bool BraveProfileManager::LoadProfileByPath(const base::FilePath& profile_path,
                                             bool incognito,
                                             ProfileLoadedCallback callback) {
-#if BUILDFLAG(ENABLE_TOR)
-  // Prevent legacy tor session profile to be loaded so we won't hit
-  // DCHECK(!GetProfileAttributesWithPath(...)). Workaround for legacy tor guest
-  // profile won't work because when AddProfile to storage we will hit
-  // DCHECK(user_data_dir_ == profile_path.DirName()), legacy tor session
-  // profile was not under user_data_dir like legacy tor guest profile did.
-  if (profile_path.BaseName().value() == tor::kTorProfileDir) {
-    return false;
-  }
-#endif
   return ProfileManager::LoadProfileByPath(profile_path, incognito,
                                            std::move(callback));
 }

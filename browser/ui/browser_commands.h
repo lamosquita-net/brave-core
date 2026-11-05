@@ -9,7 +9,6 @@
 #include <optional>
 #include <vector>
 
-#include "brave/components/ai_chat/core/common/buildflags/buildflags.h"
 #include "brave/components/brave_wayback_machine/buildflags/buildflags.h"
 #include "brave/components/commander/common/buildflags/buildflags.h"
 #include "brave/components/playlist/common/buildflags/buildflags.h"
@@ -17,29 +16,13 @@
 
 class Browser;
 class GURL;
-class Profile;
 
 namespace brave {
 
 bool HasSelectedURL(Browser* browser);
 void CleanAndCopySelectedURL(Browser* browser);
-void NewOffTheRecordWindowTor(Browser* browser);
-void NewOffTheRecordWindowTor(Profile* profile);
 
-void NewTorConnectionForSite(Browser*);
-
-#if BUILDFLAG(ENABLE_AI_CHAT)
-void ToggleAIChat(Browser* browser);
-#endif
-
-void ShowWalletBubble(Browser* browser);
-void ShowApproveWalletBubble(Browser* browser);
-void CloseWalletBubble(Browser* browser);
 void MaybeDistillAndShowSpeedreaderBubble(Browser* browser);
-void ShowBraveVPNBubble(Browser* browser);
-void ToggleBraveVPNButton(Browser* browser);
-void ToggleBraveVPNTrayIcon();
-void OpenBraveVPNUrls(Browser* browser, int command_id);
 // Copies an url sanitized by URLSanitizerService.
 void CopySanitizedURL(Browser* browser, const GURL& url);
 // Copies an url cleared through:

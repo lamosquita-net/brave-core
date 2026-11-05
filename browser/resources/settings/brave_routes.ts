@@ -51,10 +51,6 @@ export default function addBraveRoutes(r: Partial<SettingsRoutes>) {
   }
   r.BRAVE_NEW_TAB = r.BASIC.createSection('/newTab', 'newTab')
 
-  if (pageVisibility.leoAssistant) {
-    r.BRAVE_LEO_ASSISTANT =
-      r.BASIC.createSection('/leo-assistant', 'leoAssistant')
-  }
   if (pageVisibility.content) {
     r.BRAVE_CONTENT = r.BASIC.createSection('/braveContent', 'content')
     // Move fonts from APPEARANCE to BRAVE_CONTENT
@@ -74,11 +70,6 @@ export default function addBraveRoutes(r: Partial<SettingsRoutes>) {
     if (isLocalhostAccessFeatureEnabled) {
       r.SITE_SETTINGS_LOCALHOST_ACCESS = r.SITE_SETTINGS
         .createChild('localhostAccess')
-    }
-    const isNativeBraveWalletFeatureEnabled = loadTimeData.getBoolean('isNativeBraveWalletFeatureEnabled')
-    if (isNativeBraveWalletFeatureEnabled) {
-      r.SITE_SETTINGS_ETHEREUM = r.SITE_SETTINGS.createChild('ethereum')
-      r.SITE_SETTINGS_SOLANA = r.SITE_SETTINGS.createChild('solana')
     }
     r.SITE_SETTINGS_SHIELDS_STATUS = r.SITE_SETTINGS.createChild('braveShields')
     if (r.SITE_SETTINGS_ADS) {

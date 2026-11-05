@@ -12,8 +12,6 @@
 #include "brave/browser/brave_browser_features.h"
 #include "brave/browser/profiles/profile_util.h"
 #include "brave/browser/ui/browser_commands.h"
-#include "brave/components/tor/buildflags/buildflags.h"
-#include "brave/components/tor/pref_names.h"
 #include "chrome/app/chrome_command_ids.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/ui/browser.h"
@@ -28,46 +26,6 @@
 #error "This file requires ARC support."
 #endif
 
-namespace {
-
-#if BUILDFLAG(ENABLE_TOR)
-class TorPrefObserver : public BooleanPrefMember {
- public:
-  TorPrefObserver(BraveAppController* controller, NSMenu* menu)
-      : controller_(controller), menu_(menu) {
-    Profile* profile = [controller_ lastProfileIfLoaded];
-    CHECK(profile);
-
-    // The incognito profile will be deleted before app termination. So we
-    // should original profile in order to avoid crash.
-    // https://github.com/brave/brave-core/pull/21892#issuecomment-1928944343
-    profile = profile->GetOriginalProfile();
-
-    incognito_pref_observer_.Init(
-        policy::policy_prefs::kIncognitoModeAvailability, profile->GetPrefs(),
-        base::BindRepeating(&TorPrefObserver::UpdateMenu,
-                            base::Unretained(this)));
-    CHECK(g_browser_process);
-    CHECK(g_browser_process->local_state());
-    tor_disabled_pref_observer_.Init(
-        tor::prefs::kTorDisabled, g_browser_process->local_state(),
-        base::BindRepeating(&TorPrefObserver::UpdateMenu,
-                            base::Unretained(this)));
-  }
-
- private:
-  void UpdateMenu() { [controller_ menuNeedsUpdate:menu_]; }
-
-  BraveAppController* controller_;  // Owner of this
-  NSMenu* menu_;
-
-  IntegerPrefMember incognito_pref_observer_;
-  BooleanPrefMember tor_disabled_pref_observer_;
-};
-#endif  // BUILDFLAG(ENABLE_TOR)
-
-}  // namespace
-
 @interface AppController (Brave)
 // Expose method in chrome/..app_controller_mac.mm
 - (BOOL)canOpenNewBrowser;
@@ -76,11 +34,6 @@ class TorPrefObserver : public BooleanPrefMember {
 @interface BraveAppController () {
   NSMenuItem* _copyMenuItem;
   NSMenuItem* _copyCleanLinkMenuItem;
-
-#if BUILDFLAG(ENABLE_TOR)
-  NSMenuItem* _torMenuItem;
-  std::unique_ptr<TorPrefObserver> tor_pref_observer_;
-#endif  // BUILDFLAG(ENABLE_TOR)
 }
 @end
 
@@ -101,12 +54,6 @@ class TorPrefObserver : public BooleanPrefMember {
 - (void)dealloc {
   [[_copyMenuItem menu] setDelegate:nil];
   [[_copyCleanLinkMenuItem menu] setDelegate:nil];
-}
-
-- (void)applicationWillTerminate:(NSNotification*)notification {
-  tor_pref_observer_.reset();
-  _torMenuItem = nil;
-  [super applicationWillTerminate:notification];
 }
 
 - (Browser*)getBrowser {
@@ -136,13 +83,6 @@ class TorPrefObserver : public BooleanPrefMember {
     return;
   }
 
-#if BUILDFLAG(ENABLE_TOR)
-  if (menu == [_torMenuItem menu]) {
-    [self torMenuNeedsUpdate];
-    return;
-  }
-#endif  // BUILDFLAG(ENALBLE_TOR)
-
   [super menuNeedsUpdate:menu];
 }
 
@@ -160,28 +100,11 @@ class TorPrefObserver : public BooleanPrefMember {
   }
 }
 
-#if BUILDFLAG(ENABLE_TOR)
-- (void)torMenuNeedsUpdate {
-  _torMenuItem.enabled = [self validateUserInterfaceItem:_torMenuItem];
-  _torMenuItem.hidden = !_torMenuItem.enabled;
-}
-#endif  // BUILDFLAG(ENABLE_TOR)
-
 - (BOOL)validateUserInterfaceItem:(id<NSValidatedUserInterfaceItem>)item {
   NSInteger tag = [item tag];
   if (tag == IDC_COPY_CLEAN_LINK) {
     return [self shouldShowCleanLinkItem];
   }
-
-#if BUILDFLAG(ENABLE_TOR)
-  SEL action = [item action];
-  if (action == @selector(commandFromDock:) &&
-      tag == IDC_NEW_OFFTHERECORD_WINDOW_TOR) {
-    auto* profile = [self lastProfileIfLoaded];
-    return profile && !brave::IsTorDisabledForProfile(profile) &&
-           [self canOpenNewBrowser];
-  }
-#endif  // BUILDFLAG(ENABLE_TOR)
 
   return [super validateUserInterfaceItem:item];
 }
@@ -199,41 +122,7 @@ class TorPrefObserver : public BooleanPrefMember {
     return;
   }
 
-#if BUILDFLAG(ENABLE_TOR)
-  if (tag == IDC_NEW_OFFTHERECORD_WINDOW_TOR) {
-    brave::NewOffTheRecordWindowTor(profile);
-    return;
-  }
-#endif  // BUILDFLAG(ENABLE_TOR)
-
   [super executeCommand:sender withProfile:profile];
-}
-
-- (NSMenu*)applicationDockMenu:(NSApplication*)sender {
-  auto* menu = [super applicationDockMenu:sender];
-
-#if BUILDFLAG(ENABLE_TOR)
-  // Add "New Private Window with Tor" only if the "New Private Window" item
-  // exists. "New Private Window" could be missing when policy is set to
-  // disable it.
-  auto* open_new_private_window = [menu itemWithTag:IDC_NEW_INCOGNITO_WINDOW];
-  if (open_new_private_window) {
-    auto index = [menu indexOfItem:open_new_private_window];
-    _torMenuItem =
-        [[NSMenuItem alloc] initWithTitle:l10n_util::GetNSStringWithFixup(
-                                              IDS_NEW_OFFTHERECORD_WINDOW_TOR)
-                                   action:@selector(commandFromDock:)
-                            keyEquivalent:@""];
-    [menu insertItem:_torMenuItem atIndex:index + 1];
-    _torMenuItem.target = self;
-    _torMenuItem.tag = IDC_NEW_OFFTHERECORD_WINDOW_TOR;
-    [self torMenuNeedsUpdate];
-    tor_pref_observer_ =
-        std::make_unique<TorPrefObserver>(self, [_torMenuItem menu]);
-  }
-#endif
-
-  return menu;
 }
 
 @end  // @implementation BraveAppController

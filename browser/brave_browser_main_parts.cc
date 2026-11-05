@@ -10,15 +10,11 @@
 
 #include "base/command_line.h"
 #include "brave/browser/browsing_data/brave_clear_browsing_data.h"
-#include "brave/browser/ethereum_remote_client/buildflags/buildflags.h"
 #include "brave/components/brave_component_updater/browser/brave_on_demand_updater.h"
-#include "brave/components/brave_rewards/common/rewards_flags.h"
-#include "brave/components/brave_rewards/common/rewards_util.h"
 #include "brave/components/brave_sync/features.h"
 #include "brave/components/constants/brave_constants.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
-#include "brave/components/tor/buildflags/buildflags.h"
 #include "brave/components/translate/core/common/brave_translate_features.h"
 #include "build/build_config.h"
 #include "chrome/browser/browser_process.h"
@@ -37,20 +33,7 @@
 #include "components/sessions/content/content_serialized_navigation_driver.h"
 #endif
 
-#if BUILDFLAG(ENABLE_TOR)
-#include <string>
-#include "base/files/file_util.h"
-#include "brave/components/tor/tor_constants.h"
-#include "chrome/browser/browser_process_impl.h"
-#include "chrome/browser/profiles/profile_attributes_init_params.h"
-#include "chrome/browser/profiles/profile_attributes_storage.h"
-#include "chrome/browser/profiles/profile_manager.h"
-#include "chrome/browser/profiles/profile_metrics.h"
-#include "components/account_id/account_id.h"
-#endif
-
 #if !BUILDFLAG(IS_ANDROID)
-#include "brave/browser/infobars/brave_confirm_p3a_infobar_delegate.h"
 #include "brave/browser/infobars/brave_sync_account_deleted_infobar_delegate.h"
 #include "brave/browser/infobars/sync_cannot_run_infobar_delegate.h"
 #include "chrome/browser/ui/browser.h"
@@ -61,12 +44,6 @@
 #include "content/public/browser/web_contents.h"
 #else
 #include "brave/browser/android/preferences/features.h"
-#endif
-
-#if BUILDFLAG(ETHEREUM_REMOTE_CLIENT_ENABLED) && BUILDFLAG(ENABLE_EXTENSIONS)
-#include "brave/browser/extensions/brave_component_loader.h"
-#include "chrome/browser/extensions/extension_service.h"
-#include "extensions/browser/extension_system.h"
 #endif
 
 BraveBrowserMainParts::BraveBrowserMainParts(bool is_integration_test,
@@ -100,44 +77,6 @@ void BraveBrowserMainParts::PreBrowserStart() {
 void BraveBrowserMainParts::PostBrowserStart() {
   ChromeBrowserMainParts::PostBrowserStart();
 
-#if BUILDFLAG(ENABLE_TOR)
-  ProfileManager* profile_manager = g_browser_process->profile_manager();
-  base::FilePath tor_legacy_path =
-      profile_manager->user_data_dir().Append(tor::kTorProfileDir);
-
-  // Delete Tor legacy profile if exists.
-  if (base::PathExists(tor_legacy_path)) {
-    // Add tor legacy path into profile attributes storage first if nonexist
-    // because we will hit DCHECK(!GetProfileAttributesWithPath(...))  in
-    // ProfileInfoCache::DeleteProfileFromCache when we trying to delete it
-    // without this being added into the storage first.
-    ProfileAttributesStorage& storage =
-        profile_manager->GetProfileAttributesStorage();
-    ProfileAttributesEntry* entry =
-        storage.GetProfileAttributesWithPath(tor_legacy_path);
-    if (!entry) {
-      ProfileAttributesInitParams params;
-      params.profile_path = tor_legacy_path;
-      storage.AddProfile(std::move(params));
-    }
-
-    profile_manager->GetDeleteProfileHelper().MaybeScheduleProfileForDeletion(
-        tor_legacy_path, base::DoNothing(),
-        ProfileMetrics::DELETE_PROFILE_SETTINGS);
-  }
-  for (Profile* profile : profile_manager->GetLoadedProfiles()) {
-    const base::FilePath tor_legacy_session_path =
-        profile->GetPath()
-            .Append(brave::kSessionProfileDir)
-            .Append(tor::kTorProfileDir);
-    if (base::PathExists(tor_legacy_session_path)) {
-      profile_manager->GetDeleteProfileHelper().MaybeScheduleProfileForDeletion(
-          tor_legacy_session_path, base::DoNothing(),
-          ProfileMetrics::DELETE_PROFILE_SETTINGS);
-    }
-  }
-#endif
-
 #if !BUILDFLAG(IS_ANDROID)
   Browser* browser = chrome::FindLastActive();
   content::WebContents* active_web_contents = nullptr;
@@ -151,8 +90,6 @@ void BraveBrowserMainParts::PostBrowserStart() {
       infobars::ContentInfoBarManager* infobar_manager =
           infobars::ContentInfoBarManager::FromWebContents(active_web_contents);
       if (profile && infobar_manager) {
-        BraveConfirmP3AInfoBarDelegate::Create(
-            infobar_manager, g_browser_process->local_state());
         SyncCannotRunInfoBarDelegate::Create(infobar_manager, profile, browser);
 
         BraveSyncAccountDeletedInfoBarDelegate::Create(active_web_contents,
@@ -197,16 +134,6 @@ void BraveBrowserMainParts::PostProfileInit(Profile* profile,
     content::RenderFrameHost::AllowInjectingJavaScript();
     auto* command_line = base::CommandLine::ForCurrentProcess();
     command_line->AppendSwitch(switches::kDisableBackgroundMediaSuspend);
-  }
-#endif
-
-#if BUILDFLAG(ETHEREUM_REMOTE_CLIENT_ENABLED) && BUILDFLAG(ENABLE_EXTENSIONS)
-  extensions::ExtensionService* service =
-      extensions::ExtensionSystem::Get(profile)->extension_service();
-  if (service) {
-    extensions::ComponentLoader* loader = service->component_loader();
-    static_cast<extensions::BraveComponentLoader*>(loader)
-        ->AddEthereumRemoteClientExtensionOnStartup();
   }
 #endif
 }

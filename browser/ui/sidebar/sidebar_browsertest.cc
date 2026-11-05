@@ -31,7 +31,6 @@
 #include "brave/browser/ui/views/tabs/vertical_tab_utils.h"
 #include "brave/browser/ui/views/toolbar/brave_toolbar_view.h"
 #include "brave/browser/ui/views/toolbar/side_panel_button.h"
-#include "brave/components/ai_chat/core/common/buildflags/buildflags.h"
 #include "brave/components/constants/brave_switches.h"
 #include "brave/components/playlist/common/features.h"
 #include "brave/components/sidebar/browser/constants.h"
@@ -60,10 +59,6 @@
 #include "ui/events/base_event_utils.h"
 #include "ui/events/event.h"
 #include "ui/gfx/geometry/point.h"
-
-#if BUILDFLAG(ENABLE_AI_CHAT)
-#include "brave/components/ai_chat/core/common/features.h"
-#endif  // BUILDFLAG(ENABLE_AI_CHAT)
 
 using ::testing::Eq;
 using ::testing::Ne;
@@ -262,11 +257,6 @@ class SidebarBrowserTest : public InProcessBrowserTest {
     }
 #endif
 
-#if BUILDFLAG(ENABLE_AI_CHAT)
-    if (!ai_chat::features::IsAIChatEnabled()) {
-      item_count -= 1;
-    }
-#endif
     return item_count;
   }
 
@@ -1002,44 +992,6 @@ IN_PROC_BROWSER_TEST_P(SidebarBrowserTestWithkSidebarShowAlwaysOnStable,
   EXPECT_EQ(SidebarService::ShowSidebarOption::kShowAlways,
             sidebar_service->GetSidebarShowOption());
 
-#if BUILDFLAG(ENABLE_AI_CHAT)
-  observation_.Observe(model());
-
-  // Check one shot Leo panel is opened or not based on test parameter.
-  if (GetParam()) {
-    // If Leo panel is opened, panel active index is changed.
-    EXPECT_CALL(observer_, OnActiveIndexChanged(testing::_, testing::_))
-        .Times(1);
-  } else {
-    EXPECT_CALL(observer_, OnActiveIndexChanged(testing::_, testing::_))
-        .Times(0);
-  }
-
-  ASSERT_TRUE(ui_test_utils::NavigateToURLWithDisposition(
-      browser(), GURL("https://www.brave.com/"),
-      WindowOpenDisposition::NEW_FOREGROUND_TAB,
-      ui_test_utils::BROWSER_TEST_WAIT_FOR_LOAD_STOP));
-
-  auto* panel_ui = browser()->GetFeatures().side_panel_ui();
-  if (GetParam()) {
-    EXPECT_EQ(SidePanelEntryId::kChatUI, panel_ui->GetCurrentEntryId());
-  }
-  testing::Mock::VerifyAndClearExpectations(&observer_);
-
-  panel_ui->Close();
-  EXPECT_FALSE(panel_ui->IsSidePanelShowing());
-
-  // Check one shot panel is not opened anymore.
-  EXPECT_CALL(observer_, OnActiveIndexChanged(testing::_, testing::_)).Times(0);
-  ASSERT_TRUE(ui_test_utils::NavigateToURLWithDisposition(
-      browser(), GURL("https://www.brave.com/"),
-      WindowOpenDisposition::NEW_FOREGROUND_TAB,
-      ui_test_utils::BROWSER_TEST_WAIT_FOR_LOAD_STOP));
-  EXPECT_FALSE(panel_ui->IsSidePanelShowing());
-  testing::Mock::VerifyAndClearExpectations(&observer_);
-
-  observation_.Reset();
-#endif
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -1085,154 +1037,6 @@ IN_PROC_BROWSER_TEST_F(SidebarBrowserTestWithPlaylist, Incognito) {
   // Try Remove an item
   sidebar_service->RemoveItemAt(0);
 }
-
-#if BUILDFLAG(ENABLE_AI_CHAT)
-class SidebarBrowserTestWithAIChat : public SidebarBrowserTest {
- public:
-  SidebarBrowserTestWithAIChat() {
-    feature_list_.InitAndEnableFeature(ai_chat::features::kAIChat);
-  }
-  ~SidebarBrowserTestWithAIChat() override = default;
-
-  base::test::ScopedFeatureList feature_list_;
-};
-
-IN_PROC_BROWSER_TEST_F(SidebarBrowserTestWithAIChat, TabSpecificPanel) {
-  // Collect item indexes for test
-  constexpr auto kGlobalItemType = SidebarItem::BuiltInItemType::kBookmarks;
-  constexpr auto kTabSpecificItemType = SidebarItem::BuiltInItemType::kChatUI;
-  auto global_item_index = model()->GetIndexOf(kGlobalItemType);
-  ASSERT_TRUE(global_item_index.has_value());
-  auto tab_specific_item_index = model()->GetIndexOf(kTabSpecificItemType);
-  ASSERT_TRUE(tab_specific_item_index.has_value());
-  // Open 2 more tabs
-  ASSERT_TRUE(ui_test_utils::NavigateToURLWithDisposition(
-      browser(), GURL("brave://newtab/"),
-      WindowOpenDisposition::NEW_FOREGROUND_TAB,
-      ui_test_utils::BROWSER_TEST_WAIT_FOR_LOAD_STOP));
-  ASSERT_TRUE(ui_test_utils::NavigateToURLWithDisposition(
-      browser(), GURL("brave://newtab/"),
-      WindowOpenDisposition::NEW_FOREGROUND_TAB,
-      ui_test_utils::BROWSER_TEST_WAIT_FOR_LOAD_STOP));
-  ASSERT_EQ(tab_model()->GetTabCount(), 3);
-  // Open a "global" panel from Tab 0
-  tab_model()->ActivateTabAt(0);
-  // Tab changed flag should be cleared after ActivateTabAt() executed.
-  CheckOperationFromActiveTabChangedFlagCleared();
-  SimulateSidebarItemClickAt(global_item_index.value());
-  // Open a "tab specific" panel from Tab 1
-  tab_model()->ActivateTabAt(1);
-  SimulateSidebarItemClickAt(tab_specific_item_index.value());
-  // Tab Specific panel should be open when Tab 1 is active
-  EXPECT_EQ(model()->active_index(), tab_specific_item_index);
-  // Global panel should be open when Tab 0 is active
-  tab_model()->ActivateTabAt(0);
-  EXPECT_EQ(model()->active_index(), global_item_index);
-  // Global panel should be open when Tab 2 is active
-  tab_model()->ActivateTabAt(2);
-  EXPECT_EQ(model()->active_index(), global_item_index);
-}
-
-IN_PROC_BROWSER_TEST_F(SidebarBrowserTestWithAIChat,
-                       TabSpecificPanelAndUnManagedPanel) {
-  // Collect item indexes for test and remove global item.
-  constexpr auto kGlobalItemType = SidebarItem::BuiltInItemType::kBookmarks;
-  constexpr auto kTabSpecificItemType = SidebarItem::BuiltInItemType::kChatUI;
-  auto global_item_index = model()->GetIndexOf(kGlobalItemType);
-  ASSERT_TRUE(global_item_index.has_value());
-  SidebarServiceFactory::GetForProfile(browser()->profile())
-      ->RemoveItemAt(*global_item_index);
-  EXPECT_FALSE(!!model()->GetIndexOf(SidebarItem::BuiltInItemType::kBookmarks));
-
-  auto tab_specific_item_index = model()->GetIndexOf(kTabSpecificItemType);
-  ASSERT_TRUE(tab_specific_item_index.has_value());
-  // Open 2 more tabs
-  ASSERT_TRUE(ui_test_utils::NavigateToURLWithDisposition(
-      browser(), GURL("brave://newtab/"),
-      WindowOpenDisposition::NEW_FOREGROUND_TAB,
-      ui_test_utils::BROWSER_TEST_WAIT_FOR_LOAD_STOP));
-  ASSERT_TRUE(ui_test_utils::NavigateToURLWithDisposition(
-      browser(), GURL("brave://newtab/"),
-      WindowOpenDisposition::NEW_FOREGROUND_TAB,
-      ui_test_utils::BROWSER_TEST_WAIT_FOR_LOAD_STOP));
-  ASSERT_EQ(tab_model()->GetTabCount(), 3);
-
-  // Open a unmanaged "global" panel from Tab 0
-  tab_model()->ActivateTabAt(0);
-  auto* panel_ui = browser()->GetFeatures().side_panel_ui();
-  panel_ui->Show(SidePanelEntryId::kBookmarks);
-  // Wait till sidebar show ends.
-  WaitUntil(base::BindLambdaForTesting(
-      [&]() { return GetSidePanel()->width() == kDefaultSidePanelWidth; }));
-  // Unmanaged entry becomes managed when its panel is shown
-  // and it becomes active item.
-  EXPECT_TRUE(model()->active_index().has_value());
-  EXPECT_EQ(model()->active_index(),
-            model()->GetIndexOf(SidebarItem::BuiltInItemType::kBookmarks));
-
-  // Open a "tab specific" panel from Tab 1
-  tab_model()->ActivateTabAt(1);
-  SimulateSidebarItemClickAt(tab_specific_item_index.value());
-  EXPECT_EQ(SidePanelEntryId::kChatUI, panel_ui->GetCurrentEntryId());
-  EXPECT_TRUE(GetSidePanel()->GetVisible());
-  // Tab Specific panel should be open when Tab 1 is active
-  EXPECT_EQ(model()->active_index(), tab_specific_item_index);
-
-  // Global panel should be open when Tab 0 is active
-  tab_model()->ActivateTabAt(0);
-  EXPECT_EQ(SidePanelEntryId::kBookmarks, panel_ui->GetCurrentEntryId());
-  EXPECT_TRUE(model()->active_index().has_value());
-  EXPECT_EQ(model()->active_index(),
-            model()->GetIndexOf(SidebarItem::BuiltInItemType::kBookmarks));
-
-  // Global panel should be open when Tab 2 is active
-  tab_model()->ActivateTabAt(2);
-  EXPECT_EQ(SidePanelEntryId::kBookmarks, panel_ui->GetCurrentEntryId());
-  EXPECT_TRUE(model()->active_index().has_value());
-  EXPECT_EQ(model()->active_index(),
-            model()->GetIndexOf(SidebarItem::BuiltInItemType::kBookmarks));
-}
-
-IN_PROC_BROWSER_TEST_F(SidebarBrowserTestWithAIChat,
-                       TabSpecificPanelIdxChange) {
-  // Collect item indexes for test
-  constexpr auto kGlobalItemType = SidebarItem::BuiltInItemType::kBookmarks;
-  constexpr auto kTabSpecificItemType = SidebarItem::BuiltInItemType::kChatUI;
-  auto global_item_index = model()->GetIndexOf(kGlobalItemType);
-  ASSERT_TRUE(global_item_index.has_value());
-  auto tab_specific_item_index = model()->GetIndexOf(kTabSpecificItemType);
-  ASSERT_TRUE(tab_specific_item_index.has_value());
-  // Open 2 more tabs
-  ASSERT_TRUE(ui_test_utils::NavigateToURLWithDisposition(
-      browser(), GURL("brave://newtab/"),
-      WindowOpenDisposition::NEW_FOREGROUND_TAB,
-      ui_test_utils::BROWSER_TEST_WAIT_FOR_LOAD_STOP));
-  ASSERT_TRUE(ui_test_utils::NavigateToURLWithDisposition(
-      browser(), GURL("brave://newtab/"),
-      WindowOpenDisposition::NEW_FOREGROUND_TAB,
-      ui_test_utils::BROWSER_TEST_WAIT_FOR_LOAD_STOP));
-  ASSERT_EQ(tab_model()->GetTabCount(), 3);
-  // Open a "global" panel from Tab 0
-  tab_model()->ActivateTabAt(0);
-  SimulateSidebarItemClickAt(global_item_index.value());
-  // Open a "tab specific" panel from Tab 1
-  tab_model()->ActivateTabAt(1);
-  SimulateSidebarItemClickAt(tab_specific_item_index.value());
-  // Move global item
-  size_t new_global_item_index = (global_item_index > 0u) ? 0u : 1u;
-  SidebarServiceFactory::GetForProfile(browser()->profile())
-      ->MoveItem(global_item_index.value(), new_global_item_index);
-  tab_specific_item_index = model()->GetIndexOf(kTabSpecificItemType);
-  // Tab Specific panel should be open when Tab 1 is active
-  EXPECT_EQ(model()->active_index(), tab_specific_item_index);
-  // Global panel should be open when Tab 0 is active
-  tab_model()->ActivateTabAt(0);
-  EXPECT_EQ(model()->active_index(), new_global_item_index);
-  // Global panel should be open when Tab 2 is active
-  tab_model()->ActivateTabAt(2);
-  EXPECT_EQ(model()->active_index(), new_global_item_index);
-}
-#endif  // BUILDFLAG(ENABLE_AI_CHAT)
 
 IN_PROC_BROWSER_TEST_F(SidebarBrowserTest, SidebarRightSideTest) {
   // Sidebar is on right by default

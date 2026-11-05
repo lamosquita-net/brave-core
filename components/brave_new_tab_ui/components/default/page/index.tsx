@@ -6,7 +6,6 @@
 import * as React from 'react'
 import styled, { createGlobalStyle, css } from 'styled-components'
 import { requestAnimationFrameThrottle } from '../../../../common/throttle'
-import { defaultState } from '../../../storage/new_tab_storage'
 import { font, spacing } from '@brave/leo/tokens/css/variables'
 import { familia } from '../flyweb/estilos'
 
@@ -282,9 +281,6 @@ export const GridItemPageFooter = styled('div') <{}>`
   transform: translate(-50%, 0);
   margin: 0 auto;
   transition: bottom 2s ease-out;
-  [data-show-news-prompt] & {
-    bottom: 120px;
-  }
 
   display: flex;
   flex-direction: column;
@@ -389,15 +385,13 @@ export const App = styled('div') <AppProps & HasImageProps>`
   opacity: ${p => p.dataIsReady ? 1 : 0};
   ${getPageBackground}
 
-  ${defaultState.featureFlagBraveNewsFeedV2Enabled && css`
+  /* FlyWeb: this overlay came with Brave News' FeedV2 flag, which was on;
+   * kept unconditionally so the page looks the same without Brave News. */
   &::before {
-      /* The FeedV2 has a semi-transparent white overlay. This is done via a
-       * linear-gradient to not break any of the FeedV1 features. */
       --background-color: rgba(0,0,0, calc(0.65 * var(--ntp-extra-content-effect-multiplier)));
       background-image: linear-gradient(var(--background-color), var(--background-color)), ${getBackground};
       filter: blur(calc(var(--ntp-extra-content-effect-multiplier) * 32px));
     }
-  `}
 `
 
 export const Link = styled('a') <{}>`

@@ -4,7 +4,6 @@
 # you can obtain one at http://mozilla.org/MPL/2.0/.
 
 import("//brave/browser/shell_integrations/buildflags/buildflags.gni")
-import("//brave/components/brave_vpn/common/buildflags/buildflags.gni")
 
 # Provide our file list to chromium's settings page build
 # Since our components start in a different path, we'll do the first step (move them to
@@ -37,17 +36,6 @@ brave_settings_web_component_files = [
   "brave_sync_page/brave_sync_setup.ts",
   "brave_sync_page/brave_sync_subpage.ts",
   "brave_system_page/brave_performance_page.ts",
-  "brave_tor_page/brave_tor_bridges_dialog.ts",
-  "brave_tor_page/brave_tor_snowflake_install_failed_dialog.ts",
-  "brave_tor_page/brave_tor_subpage.ts",
-  "brave_leo_assistant_page/brave_leo_assistant_page.ts",
-  "brave_leo_assistant_page/model_list_section.ts",
-  "brave_leo_assistant_page/model_config_ui.ts",
-  "brave_wallet_page/add_wallet_network_dialog.ts",
-  "brave_wallet_page/brave_wallet_page.ts",
-  "brave_wallet_page/wallet_networks_list.ts",
-  "brave_wallet_page/wallet_networks_subpage.ts",
-  "brave_web3_domains_page/brave_web3_domains_page.ts",
   "default_brave_shields_page/brave_adblock_subpage.ts",
   "default_brave_shields_page/components/brave_adblock_editor.ts",
   "default_brave_shields_page/components/brave_adblock_subscribe_dropdown.ts",
@@ -65,7 +53,6 @@ brave_settings_non_web_component_files = [
   "brave_data_collection_page/brave_data_collection_browser_proxy.ts",
   "brave_default_extensions_page/brave_default_extensions_browser_proxy.ts",
   "brave_new_tab_page/brave_new_tab_browser_proxy.ts",
-  "brave_leo_assistant_page/brave_leo_assistant_browser_proxy.ts",
   "brave_overrides/about_page.ts",
   "brave_overrides/autofill_page.ts",
   "brave_overrides/appearance_page.ts",
@@ -106,20 +93,10 @@ brave_settings_non_web_component_files = [
   "brave_routes.ts",
   "brave_search_engines_page/brave_search_engines_page_browser_proxy.ts",
   "brave_sync_page/brave_sync_browser_proxy.ts",
-  "brave_tor_page/brave_tor_browser_proxy.ts",
-  "brave_wallet_page/brave_wallet_browser_proxy.ts",
-  "brave_web3_domains_page/brave_web3_domains_browser_proxy.ts",
   "default_brave_shields_page/brave_adblock_browser_proxy.ts",
   "default_brave_shields_page/default_brave_shields_browser_proxy.ts",
   "shortcuts_page/shortcuts_page.ts",
 ]
-
-if (enable_brave_vpn_wireguard) {
-  brave_settings_web_component_files +=
-      [ "brave_system_page/brave_vpn_page.ts" ]
-  brave_settings_non_web_component_files +=
-      [ "brave_system_page/brave_vpn_browser_proxy.ts" ]
-}
 
 if (enable_pin_shortcut) {
   brave_settings_web_component_files +=
@@ -131,7 +108,6 @@ if (enable_pin_shortcut) {
 brave_settings_icons_html_files = [ "brave_icons.html" ]
 brave_settings_ts_definitions = [
   "//brave/components/definitions/chrome_brave_theme.d.ts",
-  "//brave/components/definitions/chrome_brave_wallet.d.ts",
 ]
 
 # Generate the list for inclusion via preprocess and exclusion for chromium's preprocess
@@ -147,14 +123,6 @@ brave_settings_local_html_files += brave_settings_icons_html_files
 
 brave_settings_ts_extra_deps =
     [ "//brave/browser/resources/settings:preprocess" ]
-
-brave_settings_mojo_files = [
-  "$root_gen_dir/brave/components/ai_chat/core/common/mojom/settings_helper.mojom-webui.ts",
-  "$root_gen_dir/brave/components/ai_chat/core/common/mojom/ai_chat.mojom-webui.ts",
-]
-
-brave_settings_mojo_files_deps =
-    [ "//brave/components/ai_chat/core/common/mojom:mojom_ts__generator" ]
 
 brave_settings_ts_deps = [
   "//third_party/lit/v3_0:build_ts",

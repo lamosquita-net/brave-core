@@ -4,7 +4,6 @@
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import * as React from "react";
-import { useUnpaddedImageUrl } from "../../../brave_news/browser/resources/shared/useUnpaddedImageUrl";
 import { icon } from "@brave/leo/tokens/css/variables";
 import styled from "styled-components";
 import { SearchEngineInfo } from "../../api/background";
@@ -26,16 +25,11 @@ const icons = {
 
 const hide = { opacity: 0 }
 // Component which hides the image until it successfully loads (if ever).
+// FlyWeb: the image used to go through Brave News' image fetcher, which
+// FlyWeb never had (it never loaded); with Brave News removed it stays hidden.
 function MaybeImage(props: React.DetailedHTMLProps<React.ImgHTMLAttributes<HTMLImageElement>, HTMLImageElement>) {
-  const { src: oldSrc, ...rest } = props
-  const [loaded, setLoaded] = React.useState(false)
-  const onLoad = React.useCallback(() => setLoaded(true), []);
-  const src = useUnpaddedImageUrl(props.src, onLoad, true)
-
-  React.useEffect(() => {
-    setLoaded(false)
-  }, [oldSrc])
-  return <img {...rest} style={loaded ? undefined : hide} src={src} />
+  const { src, ...rest } = props
+  return <img {...rest} style={hide} />
 }
 
 export function SearchEngineIcon(props: { engine?: SearchEngineInfo, className?: string }) {

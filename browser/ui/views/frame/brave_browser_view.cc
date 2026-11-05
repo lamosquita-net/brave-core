@@ -17,12 +17,9 @@
 #include "base/feature_list.h"
 #include "base/functional/bind.h"
 #include "base/task/sequenced_task_runner.h"
-#include "brave/browser/brave_rewards/rewards_service_factory.h"
 #include "brave/browser/sparkle_buildflags.h"
 #include "brave/browser/translate/brave_translate_utils.h"
 #include "brave/browser/ui/brave_browser.h"
-#include "brave/browser/ui/brave_rewards/rewards_panel_coordinator.h"
-#include "brave/browser/ui/brave_rewards/tip_panel_coordinator.h"
 #include "brave/browser/ui/color/brave_color_id.h"
 #include "brave/browser/ui/color/leo/colors.h"
 #include "brave/browser/ui/commands/accelerator_service.h"
@@ -35,7 +32,6 @@
 #include "brave/browser/ui/views/brave_actions/brave_actions_container.h"
 #include "brave/browser/ui/views/brave_actions/brave_shields_action_view.h"
 #include "brave/browser/ui/views/brave_help_bubble/brave_help_bubble_host_view.h"
-#include "brave/browser/ui/views/brave_rewards/tip_panel_bubble_host.h"
 #include "brave/browser/ui/views/brave_shields/cookie_list_opt_in_bubble_host.h"
 #include "brave/browser/ui/views/frame/brave_contents_layout_manager.h"
 #include "brave/browser/ui/views/frame/brave_contents_view_util.h"
@@ -49,7 +45,6 @@
 #include "brave/browser/ui/views/tabs/vertical_tab_utils.h"
 #include "brave/browser/ui/views/toolbar/bookmark_button.h"
 #include "brave/browser/ui/views/toolbar/brave_toolbar_view.h"
-#include "brave/browser/ui/views/toolbar/wallet_button.h"
 #include "brave/browser/ui/views/window_closing_confirm_dialog_view.h"
 #include "brave/components/commands/common/features.h"
 #include "brave/components/constants/pref_names.h"
@@ -89,11 +84,6 @@
 #include "ui/views/controls/native/native_view_host.h"
 #include "ui/views/event_monitor.h"
 #include "ui/views/layout/fill_layout.h"
-
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-#include "brave/browser/ui/views/toolbar/brave_vpn_button.h"
-#include "brave/components/brave_vpn/common/pref_names.h"
-#endif
 
 #if BUILDFLAG(ENABLE_SPARKLE)
 #include "brave/browser/ui/views/update_recommended_message_box_mac.h"
@@ -256,25 +246,8 @@ BraveBrowserView::BraveBrowserView(std::unique_ptr<Browser> browser)
   // Show the correct value in settings on initial start
   UpdateSearchTabsButtonState();
 
-  auto* rewards_service =
-      brave_rewards::RewardsServiceFactory::GetForProfile(browser_->profile());
-  if (rewards_service) {
-    brave_rewards::RewardsPanelCoordinator::CreateForBrowser(browser_.get());
-    brave_rewards::TipPanelCoordinator::CreateForBrowser(browser_.get(),
-                                                         rewards_service);
-  }
-
-  brave_rewards::TipPanelBubbleHost::MaybeCreateForBrowser(browser_.get());
-
   brave_shields::CookieListOptInBubbleHost::MaybeCreateForBrowser(
       browser_.get());
-
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-  pref_change_registrar_.Add(
-      brave_vpn::prefs::kBraveVPNShowButton,
-      base::BindRepeating(&BraveBrowserView::OnPreferenceChanged,
-                          base::Unretained(this)));
-#endif
 
   // Only normal window (tabbed) should have sidebar.
   const bool can_have_sidebar = sidebar::CanUseSidebar(browser_.get());
@@ -364,13 +337,6 @@ void BraveBrowserView::OnPreferenceChanged(const std::string& pref_name) {
     UpdateSideBarHorizontalAlignment();
     return;
   }
-
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-  if (pref_name == brave_vpn::prefs::kBraveVPNShowButton) {
-    vpn_panel_controller_.ResetBubbleManager();
-    return;
-  }
-#endif
 }
 
 void BraveBrowserView::UpdateSideBarHorizontalAlignment() {
@@ -599,25 +565,6 @@ void BraveBrowserView::ToggleSidebar() {
   browser_->GetFeatures().side_panel_ui()->Toggle();
 }
 
-void BraveBrowserView::ShowBraveVPNBubble() {
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-  vpn_panel_controller_.ShowBraveVPNPanel();
-#endif
-}
-
-views::View* BraveBrowserView::GetAnchorViewForBraveVPNPanel() {
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-  auto* vpn_button =
-      static_cast<BraveToolbarView*>(toolbar())->brave_vpn_button();
-  if (vpn_button->GetVisible()) {
-    return vpn_button;
-  }
-  return toolbar()->app_menu_button();
-#else
-  return nullptr;
-#endif
-}
-
 gfx::Rect BraveBrowserView::GetShieldsBubbleRect() {
   auto* brave_location_bar_view =
       static_cast<BraveLocationBarView*>(GetLocationBarView());
@@ -771,18 +718,8 @@ void BraveBrowserView::ShowWaybackMachineBubble() {
 }
 #endif
 
-WalletButton* BraveBrowserView::GetWalletButton() {
-  return static_cast<BraveToolbarView*>(toolbar())->wallet_button();
-}
-
 void BraveBrowserView::NotifyDialogPositionRequiresUpdate() {
   GetBrowserViewLayout()->NotifyDialogPositionRequiresUpdate();
-}
-
-views::View* BraveBrowserView::GetWalletButtonAnchorView() {
-  return static_cast<BraveToolbarView*>(toolbar())
-      ->wallet_button()
-      ->GetAsAnchorView();
 }
 
 void BraveBrowserView::OnAcceleratorsChanged(
@@ -852,22 +789,6 @@ void BraveBrowserView::OnSwapTabsInTile(
   }
 
   UpdateSecondaryContentsWebViewVisibility();
-}
-
-void BraveBrowserView::CreateWalletBubble() {
-  DCHECK(GetWalletButton());
-  GetWalletButton()->ShowWalletBubble();
-}
-
-void BraveBrowserView::CreateApproveWalletBubble() {
-  DCHECK(GetWalletButton());
-  GetWalletButton()->ShowApproveWalletBubble();
-}
-
-void BraveBrowserView::CloseWalletBubble() {
-  if (GetWalletButton()) {
-    GetWalletButton()->CloseWalletBubble();
-  }
 }
 
 void BraveBrowserView::AddedToWidget() {

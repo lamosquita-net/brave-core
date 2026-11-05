@@ -6,27 +6,18 @@
 #include "brave/browser/extensions/api/settings_private/brave_prefs_util.h"
 
 #include "base/feature_list.h"
-#include "brave/browser/ethereum_remote_client/buildflags/buildflags.h"
 #include "brave/browser/ui/tabs/brave_tab_prefs.h"
-#include "brave/components/ai_chat/core/common/buildflags/buildflags.h"
-#include "brave/components/brave_ads/core/public/prefs/pref_names.h"
-#include "brave/components/brave_news/common/pref_names.h"
-#include "brave/components/brave_rewards/common/pref_names.h"
 #include "brave/components/brave_shields/content/browser/brave_shields_util.h"
 #include "brave/components/brave_shields/core/common/pref_names.h"
-#include "brave/components/brave_vpn/common/buildflags/buildflags.h"
-#include "brave/components/brave_wallet/browser/pref_names.h"
 #include "brave/components/brave_wayback_machine/buildflags/buildflags.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/de_amp/common/pref_names.h"
 #include "brave/components/debounce/core/common/pref_names.h"
-#include "brave/components/decentralized_dns/core/pref_names.h"
 #include "brave/components/ntp_background_images/common/pref_names.h"
 #include "brave/components/omnibox/browser/brave_omnibox_prefs.h"
 #include "brave/components/playlist/common/buildflags/buildflags.h"
 #include "brave/components/request_otr/common/pref_names.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
-#include "brave/components/tor/buildflags/buildflags.h"
 #include "chrome/browser/content_settings/cookie_settings_factory.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/extensions/api/settings_private/prefs_util.h"
@@ -46,29 +37,12 @@
 #include "brave/components/brave_wayback_machine/pref_names.h"
 #endif
 
-#if BUILDFLAG(ETHEREUM_REMOTE_CLIENT_ENABLED)
-#include "brave/browser/ethereum_remote_client/pref_names.h"
-#endif
-
-#if BUILDFLAG(ENABLE_AI_CHAT)
-#include "brave/components/ai_chat/core/browser/model_service.h"
-#include "brave/components/ai_chat/core/common/pref_names.h"
-#endif
-
 #if defined(TOOLKIT_VIEWS)
 #include "brave/components/sidebar/browser/pref_names.h"
 #endif
 
 #if BUILDFLAG(ENABLE_SPEEDREADER)
 #include "brave/components/speedreader/speedreader_pref_names.h"
-#endif
-
-#if BUILDFLAG(ENABLE_TOR)
-#include "brave/components/tor/pref_names.h"
-#endif
-
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-#include "brave/components/brave_vpn/common/pref_names.h"
 #endif
 
 #if BUILDFLAG(ENABLE_PLAYLIST)
@@ -118,12 +92,6 @@ const PrefsUtil::TypedPrefMap& BravePrefsUtil::GetAllowlistedKeys() {
   (*s_brave_allowlist)[brave_shields::prefs::kReduceLanguageEnabled] =
       settings_api::PrefType::kBoolean;
 
-  // Rewards/Ads prefs
-  (*s_brave_allowlist)[brave_rewards::prefs::kEnabled] =
-      settings_api::PrefType::kBoolean;
-  (*s_brave_allowlist)[brave_rewards::prefs::kShowLocationBarButton] =
-      settings_api::PrefType::kBoolean;
-
   // Search engine prefs
   (*s_brave_allowlist)[prefs::kAddOpenSearchEngines] =
       settings_api::PrefType::kBoolean;
@@ -137,8 +105,6 @@ const PrefsUtil::TypedPrefMap& BravePrefsUtil::GetAllowlistedKeys() {
   // appearance prefs
   (*s_brave_allowlist)[kShowBookmarksButton] = settings_api::PrefType::kBoolean;
   (*s_brave_allowlist)[kShowSidePanelButton] = settings_api::PrefType::kBoolean;
-  (*s_brave_allowlist)[brave_news::prefs::kShouldShowToolbarButton] =
-      settings_api::PrefType::kBoolean;
   (*s_brave_allowlist)[kLocationBarIsWide] = settings_api::PrefType::kBoolean;
   (*s_brave_allowlist)[omnibox::kAutocompleteEnabled] =
       settings_api::PrefType::kBoolean;
@@ -161,14 +127,6 @@ const PrefsUtil::TypedPrefMap& BravePrefsUtil::GetAllowlistedKeys() {
 #if BUILDFLAG(IS_MAC)
   (*s_brave_allowlist)[prefs::kShowFullscreenToolbar] =
       settings_api::PrefType::kBoolean;
-#endif
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-  (*s_brave_allowlist)[brave_vpn::prefs::kBraveVPNShowButton] =
-      settings_api::PrefType::kBoolean;
-#if BUILDFLAG(ENABLE_BRAVE_VPN_WIREGUARD)
-  (*s_brave_allowlist)[brave_vpn::prefs::kBraveVPNWireguardEnabled] =
-      settings_api::PrefType::kBoolean;
-#endif
 #endif
 #if defined(TOOLKIT_VIEWS)
   (*s_brave_allowlist)[sidebar::kSidebarShowOption] =
@@ -238,35 +196,7 @@ const PrefsUtil::TypedPrefMap& BravePrefsUtil::GetAllowlistedKeys() {
   (*s_brave_allowlist)[kShowFullscreenReminder] =
       settings_api::PrefType::kBoolean;
 
-  // Brave Wallet pref
-  (*s_brave_allowlist)[kBraveWalletSelectedNetworks] =
-      settings_api::PrefType::kDictionary;
-  (*s_brave_allowlist)[kDefaultEthereumWallet] =
-      settings_api::PrefType::kNumber;
-  (*s_brave_allowlist)[kDefaultSolanaWallet] = settings_api::PrefType::kNumber;
-  (*s_brave_allowlist)[kDefaultBaseCurrency] = settings_api::PrefType::kString;
-  (*s_brave_allowlist)[kDefaultBaseCryptocurrency] =
-      settings_api::PrefType::kString;
-  (*s_brave_allowlist)[kShowWalletIconOnToolbar] =
-      settings_api::PrefType::kBoolean;
-  (*s_brave_allowlist)[kBraveWalletAutoLockMinutes] =
-      settings_api::PrefType::kNumber;
-  (*s_brave_allowlist)[kBraveWalletTransactionSimulationOptInStatus] =
-      settings_api::PrefType::kNumber;
-  (*s_brave_allowlist)[kBraveWalletNftDiscoveryEnabled] =
-      settings_api::PrefType::kBoolean;
-  (*s_brave_allowlist)[kBraveWalletPrivateWindowsEnabled] =
-      settings_api::PrefType::kBoolean;
-
 // Leo Assistant pref
-#if BUILDFLAG(ENABLE_AI_CHAT)
-  (*s_brave_allowlist)[ai_chat::prefs::kBraveChatAutocompleteProviderEnabled] =
-      settings_api::PrefType::kBoolean;
-  (*s_brave_allowlist)[ai_chat::prefs::kBraveAIChatContextMenuEnabled] =
-      settings_api::PrefType::kBoolean;
-  (*s_brave_allowlist)[ai_chat::prefs::kBraveAIChatShowToolbarButton] =
-      settings_api::PrefType::kBoolean;
-#endif
 
 #if !BUILDFLAG(USE_GCM_FROM_PLATFORM)
   // Push Messaging Pref
@@ -276,25 +206,10 @@ const PrefsUtil::TypedPrefMap& BravePrefsUtil::GetAllowlistedKeys() {
   // Omnibox pref
   (*s_brave_allowlist)[omnibox::kPreventUrlElisionsInOmnibox] =
       settings_api::PrefType::kBoolean;
-#if BUILDFLAG(ENABLE_TOR)
-  (*s_brave_allowlist)[tor::prefs::kOnionOnlyInTorWindows] =
-      settings_api::PrefType::kBoolean;
-  (*s_brave_allowlist)[tor::prefs::kBridgesConfig] =
-      settings_api::PrefType::kDictionary;
-#endif
   (*s_brave_allowlist)[prefs::kWebRTCIPHandlingPolicy] =
       settings_api::PrefType::kString;
   // Request OTR feature
   (*s_brave_allowlist)[request_otr::kRequestOTRActionOption] =
-      settings_api::PrefType::kNumber;
-
-  (*s_brave_allowlist)[decentralized_dns::kUnstoppableDomainsResolveMethod] =
-      settings_api::PrefType::kNumber;
-  (*s_brave_allowlist)[decentralized_dns::kENSResolveMethod] =
-      settings_api::PrefType::kNumber;
-  (*s_brave_allowlist)[decentralized_dns::kEnsOffchainResolveMethod] =
-      settings_api::PrefType::kNumber;
-  (*s_brave_allowlist)[decentralized_dns::kSnsResolveMethod] =
       settings_api::PrefType::kNumber;
 
   // Media router pref

@@ -21,8 +21,6 @@
 #include "brave/browser/brave_browser_process.h"
 #include "brave/browser/profiles/profile_util.h"
 #include "brave/browser/ui/views/frame/brave_browser_view.h"
-#include "brave/components/tor/buildflags/buildflags.h"
-#include "brave/components/tor/pref_names.h"
 #include "chrome/app/chrome_command_ids.h"
 #include "chrome/browser/bookmarks/bookmark_model_factory.h"
 #include "chrome/browser/browser_process.h"
@@ -246,90 +244,5 @@ IN_PROC_BROWSER_TEST_F(BraveAppControllerBrowserTest,
       std::u16string(kPersistBookmarkTitle),
       base::SysNSStringToUTF16([[normal_window_submenu itemAtIndex:4] title]));
 }
-
-#if BUILDFLAG(ENABLE_TOR)
-IN_PROC_BROWSER_TEST_F(BraveAppControllerBrowserTest, TorItemEnabled) {
-  NSApplication* app = [NSApplication sharedApplication];
-  BraveAppController* ac =
-      base::apple::ObjCCastStrict<BraveAppController>([app delegate]);
-  ASSERT_TRUE(ac);
-
-  NSMenu* dockMenu = [ac applicationDockMenu:app];
-  ASSERT_TRUE(dockMenu);
-  ASSERT_FALSE(brave::IsTorDisabledForProfile(browser()->profile()));
-
-  // Tor item should exist and be enabled
-  NSMenuItem* tor_menu = [dockMenu itemWithTag:IDC_NEW_OFFTHERECORD_WINDOW_TOR];
-  EXPECT_TRUE(tor_menu);
-  EXPECT_FALSE(tor_menu.isHidden);
-  EXPECT_TRUE([ac validateUserInterfaceItem:tor_menu]);
-  EXPECT_TRUE(tor_menu.enabled);
-  EXPECT_FALSE(tor_menu.isHidden);
-
-  // Executing the item should create a new incognito window with Tor
-  [ac executeCommand:tor_menu withProfile:browser()->profile()];
-  base::RunLoop().RunUntilIdle();
-
-  Browser* tor_window = chrome::FindLastActive();
-  EXPECT_TRUE(tor_window);
-  EXPECT_TRUE(tor_window->profile()->IsTor());
-}
-
-IN_PROC_BROWSER_TEST_F(BraveAppControllerBrowserTest,
-                       TorItemDisabled_ByPolicy) {
-  NSApplication* app = [NSApplication sharedApplication];
-  BraveAppController* ac =
-      base::apple::ObjCCastStrict<BraveAppController>([app delegate]);
-  ASSERT_TRUE(ac);
-
-  NSMenu* dockMenu = [ac applicationDockMenu:app];
-  ASSERT_TRUE(dockMenu);
-  ASSERT_FALSE(brave::IsTorDisabledForProfile(browser()->profile()));
-  NSMenuItem* tor_menu = [dockMenu itemWithTag:IDC_NEW_OFFTHERECORD_WINDOW_TOR];
-  EXPECT_TRUE(tor_menu);
-  EXPECT_TRUE(tor_menu.enabled);
-  EXPECT_FALSE(tor_menu.isHidden);
-
-  // When policy disabled incognito mode, the tor itme should be hidden
-  PrefService* pref_service = browser()->profile()->GetPrefs();
-  pref_service->SetInteger(
-      policy::policy_prefs::kIncognitoModeAvailability,
-      static_cast<int>(policy::IncognitoModeAvailability::kDisabled));
-  ASSERT_TRUE(brave::IsTorDisabledForProfile(browser()->profile()));
-
-  // Tor item should exist and be enabled
-  EXPECT_FALSE([ac validateUserInterfaceItem:tor_menu]);
-  EXPECT_FALSE(tor_menu.enabled);
-  EXPECT_TRUE(tor_menu.isHidden);
-}
-
-IN_PROC_BROWSER_TEST_F(BraveAppControllerBrowserTest,
-                       TorItemDisabled_ByLocalState) {
-  NSApplication* app = [NSApplication sharedApplication];
-  BraveAppController* ac =
-      base::apple::ObjCCastStrict<BraveAppController>([app delegate]);
-  ASSERT_TRUE(ac);
-  CHECK(g_browser_process);
-
-  ASSERT_TRUE(g_browser_process);
-  auto* local_state = g_browser_process->local_state();
-  ASSERT_TRUE(local_state);
-  ASSERT_FALSE(local_state->GetBoolean(tor::prefs::kTorDisabled));
-
-  NSMenu* dockMenu = [ac applicationDockMenu:app];
-  ASSERT_TRUE(dockMenu);
-  ASSERT_FALSE(brave::IsTorDisabledForProfile(browser()->profile()));
-  NSMenuItem* tor_menu = [dockMenu itemWithTag:IDC_NEW_OFFTHERECORD_WINDOW_TOR];
-  EXPECT_TRUE(tor_menu);
-  EXPECT_TRUE(tor_menu.enabled);
-  EXPECT_FALSE(tor_menu.isHidden);
-
-  // When local state changed to disable tor, the tor itme should be hidden
-  local_state->SetBoolean(tor::prefs::kTorDisabled, true);
-  EXPECT_FALSE([ac validateUserInterfaceItem:tor_menu]);
-  EXPECT_FALSE(tor_menu.enabled);
-  EXPECT_TRUE(tor_menu.isHidden);
-}
-#endif  // BUILDFLAG(ENABLE_TOR)
 
 }  // namespace

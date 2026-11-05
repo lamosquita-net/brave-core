@@ -13,13 +13,10 @@ export const defaultState: NewTab.State = {
   initialDataLoaded: false,
   textDirection: loadTimeData.getString('textdirection'),
   featureFlagBraveNTPSponsoredImagesWallpaper: loadTimeData.getBoolean('featureFlagBraveNTPSponsoredImagesWallpaper'),
-  featureFlagBraveNewsPromptEnabled: loadTimeData.getBoolean('featureFlagBraveNewsPromptEnabled'),
-  featureFlagBraveNewsFeedV2Enabled: loadTimeData.getBoolean('featureFlagBraveNewsFeedV2Enabled'),
   featureCustomBackgroundEnabled: loadTimeData.getBoolean('featureCustomBackgroundEnabled'),
   searchPromotionEnabled: false,
   showBackgroundImage: false,
   showStats: false,
-  showToday: false,
   showClock: false,
   clockFormat: '',
   showTopSites: false,
@@ -34,7 +31,6 @@ export const defaultState: NewTab.State = {
   hideAllWidgets: false,
   brandedWallpaperOptIn: false,
   isBrandedWallpaperNotificationDismissed: true,
-  isBraveNewsOptedIn: false,
   showEmptyPage: false,
   braveRewardsSupported: false,
   braveTalkSupported: false,
@@ -42,9 +38,6 @@ export const defaultState: NewTab.State = {
   isIncognito: chrome.extension.inIncognitoContext,
   useAlternativePrivateSearchEngine: false,
   showAlternativePrivateSearchEngineToggle: false,
-  torCircuitEstablished: false,
-  torInitProgress: '',
-  isTor: false,
   stats: {
     adsBlockedStat: 0,
     javascriptBlockedStat: 0,
@@ -87,10 +80,6 @@ export const defaultState: NewTab.State = {
   // Order is ascending, with last entry being in the foreground
   widgetStackOrder: ['rewards'],
   customImageBackgrounds: []
-}
-
-if (chrome.extension.inIncognitoContext) {
-  defaultState.isTor = loadTimeData.getBoolean('isTor')
 }
 
 // Ensure any new stack widgets introduced are put behind

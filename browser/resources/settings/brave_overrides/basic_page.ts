@@ -14,14 +14,9 @@ import '../brave_default_extensions_page/brave_default_extensions_page.js'
 import '../brave_new_tab_page/brave_new_tab_page.js'
 import '../brave_search_engines_page/brave_search_engines_page.js'
 import '../brave_sync_page/brave_sync_page.js'
-import '../brave_tor_page/brave_tor_subpage.js'
-import '../brave_wallet_page/brave_wallet_page.js'
-import '../brave_web3_domains_page/brave_web3_domains_page.js'
 import '../default_brave_shields_page/default_brave_shields_page.js'
 import '../getting_started_page/getting_started.js'
 import '../social_blocking_page/social_blocking_page.js'
-import '../brave_leo_assistant_page/brave_leo_assistant_page.js'
-import '../brave_leo_assistant_page/model_list_section.js'
 
 import {html, RegisterPolymerTemplateModifications, RegisterStyleOverride} from 'chrome://resources/brave/polymer_overriding.js'
 
@@ -188,19 +183,6 @@ RegisterPolymerTemplateModifications({
           prefs: '{{prefs}}'
         }
       ))
-      const sectionTor = document.createElement('template')
-      sectionTor.setAttribute('is', 'dom-if')
-      sectionTor.setAttribute('restamp', 'true')
-      sectionTor.setAttribute('if', '[[showPage_(pageVisibility.braveTor)]]')
-      sectionTor.content.appendChild(createNestedSectionElement(
-        'tor',
-        'privacy',
-        'braveTor',
-        'settings-brave-tor-subpage',
-        {
-          prefs: '{{prefs}}'
-        }
-      ))
       const sectionDataCollection = document.createElement('template')
       sectionDataCollection.setAttribute('is', 'dom-if')
       sectionDataCollection.setAttribute('restamp', 'true')
@@ -211,37 +193,6 @@ RegisterPolymerTemplateModifications({
         'privacy',
         'braveDataCollection',
         'settings-brave-data-collection-subpage',
-        {
-          prefs: '{{prefs}}'
-        }
-      ))
-      const isBraveWalletAllowed = loadTimeData.getBoolean('isBraveWalletAllowed')
-      let sectionWallet = undefined
-      if (isBraveWalletAllowed) {
-        sectionWallet = document.createElement('template')
-        sectionWallet.setAttribute('is', 'dom-if')
-        sectionWallet.setAttribute('restamp', 'true')
-        sectionWallet.setAttribute('if', '[[showPage_(pageVisibility.braveWallet)]]')
-        sectionWallet.content.appendChild(createNestedSectionElement(
-          'wallet',
-          'web3',
-          'braveWallet',
-          'settings-brave-wallet-page',
-          {
-            prefs: '{{prefs}}'
-          }
-        ))
-      }
-      const sectionWeb3Domains = document.createElement('template')
-      sectionWeb3Domains.setAttribute('is', 'dom-if')
-      sectionWeb3Domains.setAttribute('restamp', 'true')
-      sectionWeb3Domains.setAttribute('if',
-        '[[showPage_(pageVisibility.braveWeb3Domains)]]')
-      sectionWeb3Domains.content.appendChild(createNestedSectionElement(
-        'web3Domains',
-        'web3',
-        'braveWeb3Domains',
-        'settings-brave-web3-domains-page',
         {
           prefs: '{{prefs}}'
         }
@@ -281,34 +232,6 @@ RegisterPolymerTemplateModifications({
           prefs: '{{prefs}}'
         }
       ))
-      const sectionLeoAssist = document.createElement('template')
-      sectionLeoAssist.setAttribute('is', 'dom-if')
-      sectionLeoAssist.setAttribute('restamp', 'true')
-      sectionLeoAssist
-        .setAttribute('if', '[[showPage_(pageVisibility.leoAssistant)]]')
-      sectionLeoAssist.content.appendChild(createSectionElement(
-        'leoAssistant',
-        'leoAssistant',
-        'settings-brave-leo-assistant-page',
-        {
-          prefs: '{{prefs}}'
-        }
-      ))
-      const sectionLeoCustomModels = document.createElement('template')
-      sectionLeoCustomModels.setAttribute('is', 'dom-if')
-      sectionLeoCustomModels.setAttribute('restamp', 'true')
-      sectionLeoCustomModels
-        .setAttribute('if', '[[showPage_(pageVisibility.leoAssistant)]]')
-      sectionLeoCustomModels.content.appendChild(createNestedSectionElement(
-        'leoAssistant',
-        'leoAssistant',
-        'braveLeoAssistantByomLabel',
-        'model-list-section',
-        {
-          prefs: '{{prefs}}'
-        }
-      ))
-
       const sectionContent = document.createElement('template')
       sectionContent.setAttribute('is', 'dom-if')
       sectionContent.setAttribute('restamp', 'true')
@@ -417,20 +340,8 @@ RegisterPolymerTemplateModifications({
       last = last.insertAdjacentElement('afterend', sectionSearch)
       // Insert extensions
       last = last.insertAdjacentElement('afterend', sectionExtensions)
-      // Insert Wallet
-      if (sectionWallet) {
-        last = last.insertAdjacentElement('afterend', sectionWallet)
-      }
-      // Insert Web3 Domains
-      last = last.insertAdjacentElement('afterend', sectionWeb3Domains)
-      // Insert Tor
-      last = last.insertAdjacentElement('afterend', sectionTor)
       // Insert Data collection
-      last = last.insertAdjacentElement('afterend', sectionDataCollection)
-      // Insert Leo Assistant
-      last = last.insertAdjacentElement('afterend', sectionLeoAssist)
-      // Insert Custom Models List
-      last.insertAdjacentElement('afterend', sectionLeoCustomModels)
+      last.insertAdjacentElement('afterend', sectionDataCollection)
 
       // Advanced
       const advancedTemplate = templateContent.querySelector('template[if="[[showAdvancedSettings_(pageVisibility.advancedSettings)]]"]')

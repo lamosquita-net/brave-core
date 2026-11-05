@@ -8,27 +8,14 @@
 #include <string>
 
 #include "brave/browser/brave_shields/brave_shields_web_contents_observer.h"
-#include "brave/browser/ethereum_remote_client/buildflags/buildflags.h"
 #include "brave/browser/new_tab/new_tab_shows_options.h"
 #include "brave/browser/search/ntp_utils.h"
 #include "brave/browser/themes/brave_dark_mode_utils.h"
 #include "brave/browser/translate/brave_translate_prefs_migration.h"
 #include "brave/browser/ui/bookmark/brave_bookmark_prefs.h"
 #include "brave/browser/ui/omnibox/brave_omnibox_client_impl.h"
-#include "brave/components/ai_chat/core/common/buildflags/buildflags.h"
-#include "brave/components/brave_adaptive_captcha/brave_adaptive_captcha_service.h"
-#include "brave/components/brave_ads/browser/analytics/p2a/p2a.h"
-#include "brave/components/brave_ads/core/public/prefs/obsolete_pref_util.h"
-#include "brave/components/brave_ads/core/public/prefs/pref_registry.h"
-#include "brave/components/brave_news/browser/brave_news_controller.h"
-#include "brave/components/brave_news/browser/brave_news_p3a.h"
-#include "brave/components/brave_news/browser/brave_news_pref_manager.h"
-#include "brave/components/brave_news/common/p3a_pref_names.h"
-#include "brave/components/brave_news/common/pref_names.h"
 #include "brave/components/brave_perf_predictor/browser/p3a_bandwidth_savings_tracker.h"
 #include "brave/components/brave_perf_predictor/browser/perf_predictor_tab_helper.h"
-#include "brave/components/brave_rewards/common/pref_names.h"
-#include "brave/components/brave_rewards/common/pref_registry.h"
 #include "brave/components/brave_search/browser/brave_search_default_host.h"
 #include "brave/components/brave_search/common/brave_search_utils.h"
 #include "brave/components/brave_search_conversion/utils.h"
@@ -36,20 +23,17 @@
 #include "brave/components/brave_shields/content/browser/brave_shields_p3a.h"
 #include "brave/components/brave_shields/core/common/pref_names.h"
 #include "brave/components/brave_sync/brave_sync_prefs.h"
-#include "brave/components/brave_wallet/browser/brave_wallet_prefs.h"
 #include "brave/components/brave_wayback_machine/buildflags/buildflags.h"
 #include "brave/components/brave_webtorrent/browser/buildflags/buildflags.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/de_amp/common/pref_names.h"
 #include "brave/components/debounce/core/browser/debounce_service.h"
-#include "brave/components/ipfs/ipfs_prefs.h"
 #include "brave/components/ntp_background_images/browser/view_counter_service.h"
 #include "brave/components/ntp_background_images/buildflags/buildflags.h"
 #include "brave/components/omnibox/browser/brave_omnibox_prefs.h"
 #include "brave/components/request_otr/common/buildflags/buildflags.h"
 #include "brave/components/search_engines/brave_prepopulated_engines.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
-#include "brave/components/tor/buildflags/buildflags.h"
 #include "build/build_config.h"
 #include "chrome/browser/prefetch/pref_names.h"
 #include "chrome/browser/prefs/session_startup_pref.h"
@@ -82,21 +66,12 @@
 #include "brave/components/brave_wayback_machine/pref_names.h"
 #endif
 
-#if BUILDFLAG(ETHEREUM_REMOTE_CLIENT_ENABLED)
-#include "brave/browser/ethereum_remote_client/ethereum_remote_client_constants.h"
-#include "brave/browser/ethereum_remote_client/pref_names.h"
-#endif
-
 #if !BUILDFLAG(USE_GCM_FROM_PLATFORM)
 #include "brave/browser/gcm_driver/brave_gcm_utils.h"
 #endif
 
 #if BUILDFLAG(ENABLE_SPEEDREADER)
 #include "brave/components/speedreader/speedreader_service.h"
-#endif
-
-#if BUILDFLAG(ENABLE_TOR)
-#include "brave/components/tor/tor_profile_service.h"
 #endif
 
 #if BUILDFLAG(IS_ANDROID)
@@ -112,12 +87,6 @@
 #include "brave/components/brave_private_new_tab_ui/common/pref_names.h"
 #include "chrome/browser/ui/webui/bookmarks/bookmark_prefs.h"
 #include "chrome/browser/ui/webui/side_panel/bookmarks/bookmarks.mojom.h"
-#endif
-
-#if BUILDFLAG(ENABLE_AI_CHAT)
-#include "brave/components/ai_chat/core/browser/model_service.h"
-#include "brave/components/ai_chat/core/common/features.h"
-#include "brave/components/ai_chat/core/common/pref_names.h"
 #endif
 
 #if BUILDFLAG(ENABLE_REQUEST_OTR)
@@ -150,13 +119,9 @@ void RegisterProfilePrefsForMigration(
   // Added 10/2022
   registry->RegisterIntegerPref(kDefaultBrowserLaunchingCount, 0);
 #endif
-  brave_wallet::RegisterProfilePrefsForMigration(registry);
 
   // Restore "Other Bookmarks" migration
   registry->RegisterBooleanPref(kOtherBookmarksMigrated, false);
-
-  // Added 05/2021
-  registry->RegisterBooleanPref(kBraveNewsIntroDismissed, false);
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   // Added 11/2022
@@ -185,13 +150,6 @@ void RegisterProfilePrefsForMigration(
   registry->RegisterBooleanPref(kBraveSuggestedSiteSuggestionsEnabled, false);
 #endif
 
-  // Added Feb 2023
-  registry->RegisterBooleanPref(brave_rewards::prefs::kShowButton, true);
-
-  brave_rewards::RegisterProfilePrefsForMigration(registry);
-
-  brave_news::p3a::prefs::RegisterProfileNewsMetricsPrefsForMigration(registry);
-
   // Added May 2023
 #if defined(TOOLKIT_VIEWS)
   registry->RegisterBooleanPref(sidebar::kSidebarAlignmentChangedTemporarily,
@@ -205,17 +163,8 @@ void RegisterProfilePrefsForMigration(
   // Added 2023-11
   brave_sync::Prefs::RegisterProfilePrefsForMigration(registry);
 
-  // Added 2023-11
-  brave_ads::RegisterProfilePrefsForMigration(registry);
-
   // Added 2024-04
-#if BUILDFLAG(ENABLE_AI_CHAT)
-  ai_chat::prefs::RegisterProfilePrefsForMigration(registry);
-#endif
   brave_shields::RegisterShieldsP3AProfilePrefsForMigration(registry);
-
-  // Added 2024-05
-  ipfs::RegisterDeprecatedIpfsPrefs(registry);
 
   // Added 2024-07
   registry->RegisterBooleanPref(kHangoutsEnabled, false);
@@ -241,8 +190,6 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
   brave_sync::Prefs::RegisterProfilePrefs(registry);
 
   brave_shields::RegisterShieldsP3AProfilePrefs(registry);
-
-  brave_news::prefs::RegisterProfilePrefs(registry);
 
   // TODO(shong): Migrate this to local state also and guard in ENABLE_WIDEVINE.
   // We don't need to display "don't ask widevine prompt option" in settings
@@ -277,9 +224,6 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
 #if BUILDFLAG(ENABLE_BRAVE_WAYBACK_MACHINE)
   registry->RegisterBooleanPref(kBraveWaybackMachineEnabled, true);
 #endif
-
-  brave_adaptive_captcha::BraveAdaptiveCaptchaService::RegisterProfilePrefs(
-      registry);
 
 #if BUILDFLAG(IS_ANDROID)
   registry->RegisterBooleanPref(kDesktopModeEnabled, false);
@@ -393,16 +337,6 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
   NTPBackgroundPrefs::RegisterPref(registry);
 #endif
 
-#if BUILDFLAG(ETHEREUM_REMOTE_CLIENT_ENABLED)
-  registry->RegisterIntegerPref(kERCPrefVersion, 0);
-  registry->RegisterStringPref(kERCAES256GCMSivNonce, "");
-  registry->RegisterStringPref(kERCEncryptedSeed, "");
-  registry->RegisterBooleanPref(kERCOptedIntoCryptoWallets, false);
-#endif
-
-  // Brave Wallet
-  brave_wallet::RegisterProfilePrefs(registry);
-
   // Brave Search
   if (brave_search::IsDefaultAPIEnabled()) {
     brave_search::BraveSearchDefaultHost::RegisterProfilePrefs(registry);
@@ -450,13 +384,8 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
   de_amp::RegisterProfilePrefs(registry);
   debounce::DebounceService::RegisterProfilePrefs(registry);
 
-#if BUILDFLAG(ENABLE_TOR)
-  tor::TorProfileService::RegisterProfilePrefs(registry);
-#endif
-
 #if !BUILDFLAG(IS_ANDROID)
   BraveOmniboxClientImpl::RegisterProfilePrefs(registry);
-  brave_ads::RegisterP2APrefs(registry);
 
   // Turn on most visited mode on NTP by default.
   // We can turn customization mode on when we have add-shortcut feature.
@@ -471,11 +400,6 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
   registry->SetDefaultPrefValue(
       bookmarks_webui::prefs::kBookmarksViewType,
       base::Value(static_cast<int>(side_panel::mojom::ViewType::kCompact)));
-#endif
-
-#if BUILDFLAG(ENABLE_AI_CHAT)
-  ai_chat::prefs::RegisterProfilePrefs(registry);
-  ai_chat::ModelService::RegisterProfilePrefs(registry);
 #endif
 
   brave_search_conversion::RegisterPrefs(registry);
@@ -501,9 +425,6 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
 #if defined(TOOLKIT_VIEWS)
   bookmarks::prefs::RegisterProfilePrefs(registry);
 #endif
-
-  brave_ads::RegisterProfilePrefs(registry);
-  brave_rewards::RegisterProfilePrefs(registry);
 
   registry->SetDefaultPrefValue(prefs::kSearchSuggestEnabled,
                                 base::Value(false));

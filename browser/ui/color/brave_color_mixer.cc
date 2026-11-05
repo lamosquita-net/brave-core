@@ -11,7 +11,6 @@
 #include "brave/browser/ui/color/brave_color_id.h"
 #include "brave/browser/ui/color/color_palette.h"
 #include "brave/browser/ui/color/leo/colors.h"
-#include "brave/components/brave_vpn/common/buildflags/buildflags.h"
 #include "brave/components/brave_wayback_machine/buildflags/buildflags.h"
 #include "brave/components/playlist/common/buildflags/buildflags.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
@@ -78,7 +77,7 @@ bool HasCustomToolbarColor(const ui::ColorProviderKey& key) {
                                     &custom_toolbar_color);
 }
 
-#if BUILDFLAG(ENABLE_BRAVE_VPN) || BUILDFLAG(ENABLE_SPEEDREADER)
+#if BUILDFLAG(ENABLE_SPEEDREADER)
 SkColor PickSimilarColorToToolbar(const ui::ColorProviderKey& key,
                                   const ui::ColorMixer& mixer,
                                   SkColor light_theme_color,
@@ -94,60 +93,6 @@ SkColor PickSimilarColorToToolbar(const ui::ColorProviderKey& key,
   // Give min constrast color.
   return color_utils::IsDark(toolbar_color) ? dark_theme_color
                                             : light_theme_color;
-}
-#endif
-
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-void AddBraveVpnColorMixer(ui::ColorProvider* provider,
-                           const ui::ColorProviderKey& key) {
-  ui::ColorMixer& mixer = provider->AddMixer();
-
-  mixer[kColorBraveVpnButtonText] = {
-      PickColorContrastingToToolbar(key, mixer, SkColorSetRGB(0x1C, 0x1E, 0x26),
-                                    SkColorSetRGB(0xED, 0xEE, 0xF1))};
-  mixer[kColorBraveVpnButtonTextError] = {
-      PickColorContrastingToToolbar(key, mixer, SkColorSetRGB(0xDC, 0x1D, 0x3C),
-                                    SkColorSetRGB(0xEB, 0x63, 0x7A))};
-
-  const bool is_dark = key.color_mode == ui::ColorProviderKey::ColorMode::kDark;
-  const bool has_custom_theme = !!key.custom_theme;
-  if (has_custom_theme) {
-    // TODO(simonhong): Use proper vpn bg/border colors with custom theme.
-    mixer[kColorBraveVpnButtonBorder] = {PickSimilarColorToToolbar(
-        key, mixer, SkColorSetARGB(0x14, 0x13, 0x16, 0x20),
-        SkColorSetARGB(0x4D, 0x04, 0x04, 0x06))};
-    mixer[kColorBraveVpnButtonBackgroundHover] = {PickSimilarColorToToolbar(
-        key, mixer, SkColorSetARGB(0x14, 0x13, 0x16, 0x20),
-        SkColorSetARGB(0x4D, 0x04, 0x04, 0x06))};
-  } else {
-    mixer[kColorBraveVpnButtonBorder] = {
-        leo::GetColor(leo::Color::kColorDividerSubtle,
-                      is_dark ? leo::Theme::kDark : leo::Theme::kLight)};
-    // TODO(simonhong): Use leo color. button/Background-active is not available
-    // yet.
-    mixer[kColorBraveVpnButtonBackgroundHover] = {
-        is_dark ? SkColorSetRGB(0x0D, 0x0F, 0x14)
-                : SkColorSetRGB(0xDB, 0xDE, 0xE2)};
-  }
-  mixer[kColorBraveVpnButtonErrorBorder] = {kColorBraveVpnButtonTextError};
-
-  mixer[kColorBraveVpnButtonIconConnected] = {SkColorSetRGB(0x3F, 0xA4, 0x50)};
-  mixer[kColorBraveVpnButtonIconDisconnected] = {PickColorContrastingToToolbar(
-      key, mixer, SkColorSetARGB(0x99, 0x0B, 0x16, 0x41),
-      SkColorSetARGB(0xCC, 0xB1, 0xB7, 0xCD))};
-  mixer[kColorBraveVpnButtonIconInner] = {PickSimilarColorToToolbar(
-      key, mixer, SK_ColorWHITE, SkColorSetARGB(0x33, 0x04, 0x04, 0x06))};
-  mixer[kColorBraveVpnButtonIconError] = {kColorBraveVpnButtonErrorBorder};
-  mixer[kColorBraveVpnButtonIconErrorInner] = {PickSimilarColorToToolbar(
-      key, mixer, SK_ColorWHITE, SkColorSetRGB(0x0F, 0x17, 0x2A))};
-
-  mixer[kColorBraveVpnButtonBackgroundNormal] = {kColorToolbar};
-  mixer[kColorBraveVpnButtonErrorBackgroundNormal] = {PickSimilarColorToToolbar(
-      key, mixer, SkColorSetARGB(0x31, 0xDC, 0x1D, 0x3C),
-      SkColorSetARGB(0x33, 0xEB, 0x63, 0x7A))};
-  mixer[kColorBraveVpnButtonErrorBackgroundHover] = {PickSimilarColorToToolbar(
-      key, mixer, SkColorSetARGB(0x40, 0xDC, 0x1D, 0x3C),
-      SkColorSetARGB(0x40, 0xEB, 0x63, 0x7A))};
 }
 #endif
 
@@ -707,9 +652,6 @@ void AddBraveThemeColorMixer(ui::ColorProvider* provider,
   key.color_mode == ui::ColorProviderKey::ColorMode::kDark
       ? AddBraveDarkThemeColorMixer(provider, key)
       : AddBraveLightThemeColorMixer(provider, key);
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-  AddBraveVpnColorMixer(provider, key);
-#endif
 #if BUILDFLAG(ENABLE_SPEEDREADER)
   AddBraveSpeedreaderColorMixer(provider, key);
 #endif
@@ -753,14 +695,6 @@ void AddBravePrivateThemeColorMixer(ui::ColorProvider* provider,
   mixer[kColorTabDividerFrameActive] = {SkColorSetRGB(0x3F, 0x32, 0x56)};
 }
 
-void AddBraveTorThemeColorMixer(ui::ColorProvider* provider,
-                                const ui::ColorProviderKey& key) {
-  AddBravePrivateThemeColorMixer(provider, key);
-  AddChromeDarkThemeColorMixer(provider, key);
-
-  // Add tor theme specific brave colors here.
-}
-
 void AddPrivateThemeColorMixer(ui::ColorProvider* provider,
                                const ui::ColorProviderKey& key) {
   AddBravePrivateThemeColorMixer(provider, key);
@@ -794,41 +728,6 @@ void AddPrivateThemeColorMixer(ui::ColorProvider* provider,
   mixer[kColorToolbarContentAreaSeparator] = {kColorToolbar};
   mixer[ui::kColorFrameActive] = {kPrivateFrame};
   mixer[ui::kColorFrameInactive] = {kPrivateFrame};
-}
-
-void AddTorThemeColorMixer(ui::ColorProvider* provider,
-                           const ui::ColorProviderKey& key) {
-  AddBraveTorThemeColorMixer(provider, key);
-
-  ui::ColorMixer& mixer = provider->AddMixer();
-
-  mixer[kColorLocationBarFocusRing] = {SkColorSetRGB(0xCF, 0xAB, 0xE2)};
-  mixer[kColorNewTabButtonBackgroundFrameActive] = {ui::kColorFrameActive};
-  mixer[kColorNewTabButtonBackgroundFrameInactive] = {ui::kColorFrameInactive};
-  mixer[kColorNewTabPageBackground] = {kPrivateTorFrame};
-  mixer[kColorTabBackgroundActiveFrameActive] = {
-      leo::kColorPrimitiveTorWindow80};
-  mixer[kColorTabBackgroundActiveFrameInactive] = {
-      kColorTabBackgroundActiveFrameActive};
-  mixer[kColorTabBackgroundInactiveFrameActive] = {ui::kColorFrameActive};
-  mixer[kColorTabBackgroundInactiveFrameInactive] = {ui::kColorFrameInactive};
-
-  // TODO(simonhong): Get color from leo when it's available.
-  mixer[kColorTabForegroundActiveFrameActive] = {
-      SkColorSetRGB(0xFA, 0xF3, 0xFF)};
-  mixer[kColorTabForegroundActiveFrameInactive] = {
-      SkColorSetRGB(0xE3, 0xB3, 0xFF)};
-  mixer[kColorTabForegroundInactiveFrameActive] = {
-      SkColorSetRGB(0xE3, 0xB3, 0xFF)};
-  mixer[kColorToolbar] = {leo::kColorPrimitiveTorWindow90};
-  mixer[kColorToolbarButtonIcon] = {leo::kColorPrimitiveTorWindow40};
-  mixer[kColorToolbarButtonIconInactive] = {
-      ui::SetAlpha(kColorToolbarButtonIcon, kBraveDisabledControlAlpha)};
-  mixer[kColorToolbarContentAreaSeparator] = {kColorToolbar};
-  mixer[ui::kColorFrameActive] = {kPrivateTorFrame};
-  mixer[ui::kColorFrameInactive] = {kPrivateTorFrame};
-  mixer[kColorTabDividerFrameInactive] = {SkColorSetRGB(0x5A, 0x53, 0x66)};
-  mixer[kColorTabDividerFrameActive] = {SkColorSetRGB(0x5A, 0x53, 0x66)};
 }
 
 void AddBraveOmniboxPrivateThemeColorMixer(ui::ColorProvider* provider,

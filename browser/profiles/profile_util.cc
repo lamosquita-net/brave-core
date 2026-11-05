@@ -17,7 +17,6 @@
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/ntp_background_images/common/pref_names.h"
 #include "brave/components/search_engines/brave_prepopulated_engines.h"
-#include "brave/components/tor/buildflags/buildflags.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/common/pref_names.h"
@@ -31,19 +30,7 @@ using ntp_background_images::prefs::kNewTabPageShowBackgroundImage;
 using ntp_background_images::prefs::
     kNewTabPageShowSponsoredImagesBackgroundImage;  // NOLINT
 
-#if BUILDFLAG(ENABLE_TOR)
-#include "brave/browser/tor/tor_profile_service_factory.h"
-#endif
-
 namespace brave {
-
-bool IsTorDisabledForProfile(Profile* profile) {
-#if BUILDFLAG(ENABLE_TOR)
-  return TorProfileServiceFactory::IsTorDisabled(profile);
-#else
-  return true;
-#endif
-}
 
 void RecordSponsoredImagesEnabledP3A(Profile* profile) {
   bool is_sponsored_image_enabled =

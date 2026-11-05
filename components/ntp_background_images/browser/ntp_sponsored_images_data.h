@@ -15,10 +15,6 @@
 #include "ui/gfx/geometry/point.h"
 #include "ui/gfx/geometry/rect.h"
 
-namespace brave_ads {
-struct NewTabPageAdInfo;
-}  // namespace brave_ads
-
 namespace ntp_background_images {
 
 struct TopSite {
@@ -109,15 +105,9 @@ struct NTPSponsoredImagesData {
 
   std::optional<base::Value::Dict> GetBackgroundAt(size_t campaign_index,
                                                    size_t background_index);
-  std::optional<base::Value::Dict> GetBackgroundFromAdInfo(
-      const brave_ads::NewTabPageAdInfo& ad_info);
 
   bool IsSuperReferral() const;
   void PrintCampaignsParsingResult() const;
-
-  bool AdInfoMatchesSponsoredImage(const brave_ads::NewTabPageAdInfo& ad_info,
-                                   size_t campaign_index,
-                                   size_t background_index) const;
 
   std::string url_prefix;
 

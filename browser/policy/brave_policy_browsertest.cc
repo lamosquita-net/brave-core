@@ -4,9 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "brave/app/brave_command_ids.h"
-#include "brave/browser/tor/tor_profile_service_factory.h"
 #include "brave/components/constants/pref_names.h"
-#include "brave/components/tor/buildflags/buildflags.h"
 #include "chrome/app/chrome_command_ids.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser.h"
@@ -20,7 +18,6 @@
 
 using testing::_;
 using testing::Return;
-using NoTorPolicyBrowserTest = InProcessBrowserTest;
 
 namespace policy {
 
@@ -37,54 +34,6 @@ class BravePolicyTest : public InProcessBrowserTest {
 
   MockConfigurationPolicyProvider provider_;
 };
-
-#if BUILDFLAG(ENABLE_TOR)
-// This policy only exists on Windows.
-// Sets the tor policy before the browser is started.
-class TorDisabledPolicyBrowserTest : public BravePolicyTest {
- public:
-  TorDisabledPolicyBrowserTest() = default;
-  ~TorDisabledPolicyBrowserTest() override = default;
-
-  void SetUpInProcessBrowserTestFixture() override {
-    BravePolicyTest::SetUpInProcessBrowserTestFixture();
-
-    PolicyMap policies;
-    policies.Set(key::kTorDisabled, POLICY_LEVEL_MANDATORY,
-                 POLICY_SCOPE_MACHINE, POLICY_SOURCE_PLATFORM,
-                 base::Value(true), nullptr);
-    provider_.UpdateChromePolicy(policies);
-  }
-};
-
-IN_PROC_BROWSER_TEST_F(TorDisabledPolicyBrowserTest, TorDisabledPrefValueTest) {
-  // When policy is set, explicit setting doesn't change its pref value.
-  TorProfileServiceFactory::SetTorDisabled(false);
-  EXPECT_TRUE(TorProfileServiceFactory::IsTorDisabled(browser()->profile()));
-}
-
-class TorEnabledPolicyBrowserTest : public BravePolicyTest {
- public:
-  TorEnabledPolicyBrowserTest() = default;
-  ~TorEnabledPolicyBrowserTest() override = default;
-
-  void SetUpInProcessBrowserTestFixture() override {
-    BravePolicyTest::SetUpInProcessBrowserTestFixture();
-
-    PolicyMap policies;
-    policies.Set(key::kTorDisabled, POLICY_LEVEL_MANDATORY,
-                 POLICY_SCOPE_MACHINE, POLICY_SOURCE_PLATFORM,
-                 base::Value(false), nullptr);
-    provider_.UpdateChromePolicy(policies);
-  }
-};
-
-IN_PROC_BROWSER_TEST_F(TorEnabledPolicyBrowserTest, TorDisabledPrefValueTest) {
-  // When policy is set, explicit setting doesn't change its pref value.
-  TorProfileServiceFactory::SetTorDisabled(true);
-  EXPECT_FALSE(TorProfileServiceFactory::IsTorDisabled(browser()->profile()));
-}
-#endif
 
 template <bool enable>
 class BrowserAddPersonPolicyTest : public BravePolicyTest {

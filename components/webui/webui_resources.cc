@@ -11,7 +11,6 @@
 #include "base/no_destructor.h"
 #include "base/strings/utf_string_conversions.h"
 #include "brave/components/constants/url_constants.h"
-#include "brave/components/tor/buildflags/buildflags.h"
 #include "build/build_config.h"
 #include "components/grit/brave_components_resources.h"
 #include "components/grit/brave_components_strings.h"
@@ -19,10 +18,6 @@
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/webui/resource_path.h"
 #include "ui/base/webui/web_ui_util.h"
-
-#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
-#include "brave/components/brave_rewards/resources/grit/brave_rewards_resources.h"
-#endif
 
 namespace brave {
 
@@ -42,14 +37,8 @@ base::span<const webui::ResourcePath> GetWebUIResources(
             // New tab Backgrounds
             {"dylan-malval_sea-min.webp", IDR_BRAVE_NEW_TAB_BACKGROUND1},
             // private tab
-            {"c168145d6bf1abf2c0322636366f7dbe.svg",
-             IDR_BRAVE_PRIVATE_TAB_TOR_IMG},
             {"dbdc336ccc651b8a7c925b3482d6e65a.svg",
              IDR_BRAVE_PRIVATE_TAB_IMG}}},
-          {"rewards",
-           {
-               {"favicon.ico", IDR_BRAVE_REWARDS_FAVICON},
-           }},
           {"welcome", {{"favicon.ico", IDR_BRAVE_WELCOME_PAGE_FAVICON}}},
 #endif
           {"adblock", {}},
@@ -200,128 +189,6 @@ base::span<const webui::LocalizedString> GetWebUILocalizedStrings(
                {"searchPromotionSearchBoxPlaceholderLabel",
                 IDS_BRAVE_NEW_TAB_SEARCH_PROMOTION_SEARCH_BOX_PLACEHOLDER},
 
-               {"braveNewsTitle", IDS_BRAVE_NEWS_TITLE},
-               {"braveNewsStatusFetching", IDS_BRAVE_NEWS_STATUS_FETCHING},
-               {"braveNewsActionRefresh", IDS_BRAVE_NEWS_ACTION_REFRESH},
-               {"braveNewsScrollHint", IDS_BRAVE_NEWS_SCROLL_HINT},
-               {"braveNewsResetAction", IDS_BRAVE_NEWS_RESET_ACTION},
-               {"braveNewsResetConfirm", IDS_BRAVE_NEWS_RESET_CONFIRM},
-               {"braveNewsCategoryNameAll", IDS_BRAVE_NEWS_CATEGORY_NAME_ALL},
-               {"braveNewsSourcesTitle", IDS_BRAVE_NEWS_SOURCES_TITLE},
-               {"braveNewsDisableSourceCommand",
-                IDS_BRAVE_NEWS_DISABLE_SOURCE_COMMAND},
-               {"promoted", IDS_BRAVE_NEWS_PROMOTED},
-               {"ad", IDS_BRAVE_NEWS_DISPLAY_AD_LABEL},
-
-               {"braveNewsIntroTitle", IDS_BRAVE_NEWS_INTRO_TITLE},
-               {"braveNewsIntroDescription", IDS_BRAVE_NEWS_INTRO_DESCRIPTION},
-               {"braveNewsIntroDescriptionTwo",
-                IDS_BRAVE_NEWS_INTRO_DESCRIPTION_TWO},
-               {"braveNewsOptInActionLabel",
-                IDS_BRAVE_NEWS_OPT_IN_ACTION_LABEL},
-               {"braveNewsOptOutActionLabel",
-                IDS_BRAVE_NEWS_OPT_OUT_ACTION_LABEL},
-               {"braveNewsBackToDashboard", IDS_BRAVE_NEWS_BACK_TO_DASHBOARD},
-               {"braveNewsBackButton", IDS_BRAVE_NEWS_BACK_BUTTON},
-               {"braveNewsSearchPlaceholderLabel",
-                IDS_BRAVE_NEWS_SEARCH_PLACEHOLDER_LABEL},
-               {"braveNewsChannelsHeader",
-                IDS_BRAVE_NEWS_BROWSE_CHANNELS_HEADER},
-               {"braveNewsViewAllButton", IDS_BRAVE_NEWS_VIEW_ALL_BUTTON},
-               {"braveNewsAllSourcesHeader", IDS_BRAVE_NEWS_ALL_SOURCES_HEADER},
-               {"braveNewsFeedsHeading", IDS_BRAVE_NEWS_FEEDS_HEADING},
-               {"braveNewsFollowButtonFollowing",
-                IDS_BRAVE_NEWS_FOLLOW_BUTTON_FOLLOWING},
-               {"braveNewsFollowButtonNotFollowing",
-                IDS_BRAVE_NEWS_FOLLOW_BUTTON_NOT_FOLLOWING},
-               {"braveNewsDirectSearchButton",
-                IDS_BRAVE_NEWS_DIRECT_SEARCH_BUTTON},
-               {"braveNewsDirectSearchNoResults",
-                IDS_BRAVE_NEWS_DIRECT_SEARCH_NO_RESULTS},
-               {"braveNewsSearchResultsNoResults",
-                IDS_BRAVE_NEWS_SEARCH_RESULTS_NO_RESULTS},
-               {"braveNewsSearchResultsLocalResults",
-                IDS_BRAVE_NEWS_SEARCH_RESULTS_LOCAL_RESULTS},
-               {"braveNewsSearchResultsDirectResults",
-                IDS_BRAVE_NEWS_SEARCH_RESULTS_DIRECT_RESULTS},
-               {"braveNewsSearchQueryTooShort",
-                IDS_BRAVE_NEWS_SEARCH_QUERY_TOO_SHORT},
-               {"braveNewsSuggestionsTitle", IDS_BRAVE_NEWS_SUGGESTIONS_TITLE},
-               {"braveNewsSuggestionsSubtitle",
-                IDS_BRAVE_NEWS_SUGGESTIONS_SUBTITLE},
-               {"braveNewsErrorHeading", IDS_BRAVE_NEWS_ERROR_HEADING},
-               {"braveNewsErrorMessage", IDS_BRAVE_NEWS_ERROR_MESSAGE},
-               {"braveNewsErrorActionLabel", IDS_BRAVE_NEWS_ERROR_ACTION_LABEL},
-               {"braveNewsNoContentHeading", IDS_BRAVE_NEWS_NO_CONTENT_HEADING},
-               {"braveNewsNoContentMessage", IDS_BRAVE_NEWS_NO_CONTENT_MESSAGE},
-               {"braveNewsNoContentActionLabel",
-                IDS_BRAVE_NEWS_NO_CONTENT_ACTION_LABEL},
-               {"braveNewsPopularTitle", IDS_BRAVE_NEWS_POPULAR_TITLE},
-               {"braveNewsNewsPeek", IDS_BRAVE_NEWS_NEWS_PEEK},
-               {"braveNewsForYouFeed", IDS_BRAVE_NEWS_FOR_YOU_FEED},
-               {"braveNewsFollowingFeed", IDS_BRAVE_NEWS_FOLLOWING_FEED},
-               {"braveNewsPublishersHeading",
-                IDS_BRAVE_NEWS_PUBLISHERS_HEADING},
-               {"braveNewsShowAll", IDS_BRAVE_NEWS_SHOW_ALL},
-               {"braveNewsShowLess", IDS_BRAVE_NEWS_SHOW_LESS},
-               {"braveNewsAdvertBadge", IDS_BRAVE_NEWS_ADVERT_BADGE},
-               {"braveNewsHideContentFrom", IDS_BRAVE_NEWS_HIDE_CONTENT_FROM},
-               {"braveNewsSourcesRecommendation",
-                IDS_BRAVE_NEWS_SOURCES_RECOMMENDATION},
-               {"braveNewsNoArticlesTitle", IDS_BRAVE_NEWS_NO_ARTICLES_TITLE},
-               {"braveNewsNoArticlesMessage",
-                IDS_BRAVE_NEWS_NO_ARTICLES_MESSAGE},
-               {"braveNewsOfflineTitle", IDS_BRAVE_NEWS_OFFLINE_TITLE},
-               {"braveNewsOfflineMessage", IDS_BRAVE_NEWS_OFFLINE_MESSAGE},
-               {"braveNewsCustomizeFeed", IDS_BRAVE_NEWS_CUSTOMIZE_FEED},
-               {"braveNewsRefreshFeed", IDS_BRAVE_NEWS_REFRESH_FEED},
-               {"braveNewsOpenArticlesIn", IDS_BRAVE_NEWS_OPEN_ARTICLES_IN},
-               {"braveNewsOpenArticlesInNewTab",
-                IDS_BRAVE_NEWS_OPEN_ARTICLES_IN_NEW_TAB},
-               {"braveNewsOpenArticlesInCurrentTab",
-                IDS_BRAVE_NEWS_OPEN_ARTICLES_IN_CURRENT_TAB},
-               {"braveNewsCaughtUp", IDS_BRAVE_NEWS_CAUGHT_UP},
-               {"braveNewsNewContentAvailable",
-                IDS_BRAVE_NEWS_NEW_CONTENT_AVAILABLE},
-
-               // Brave News Channels
-               {"braveNewsChannel-Brave", IDS_BRAVE_NEWS_CHANNEL_BRAVE},
-               {"braveNewsChannel-Business", IDS_BRAVE_NEWS_CHANNEL_BUSINESS},
-               {"braveNewsChannel-Cars", IDS_BRAVE_NEWS_CHANNEL_CARS},
-               {"braveNewsChannel-Celebrities",
-                IDS_BRAVE_NEWS_CHANNEL_CELEBRITIES},
-               {"braveNewsChannel-Crypto", IDS_BRAVE_NEWS_CHANNEL_CRYPTO},
-               {"braveNewsChannel-Culture", IDS_BRAVE_NEWS_CHANNEL_CULTURE},
-               {"braveNewsChannel-Education", IDS_BRAVE_NEWS_CHANNEL_EDUCATION},
-               {"braveNewsChannel-Entertainment",
-                IDS_BRAVE_NEWS_CHANNEL_ENTERTAINMENT},
-               {"braveNewsChannel-Fashion", IDS_BRAVE_NEWS_CHANNEL_FASHION},
-               {"braveNewsChannel-Film and TV",
-                IDS_BRAVE_NEWS_CHANNEL_FILM_AND_TV},
-               {"braveNewsChannel-Food", IDS_BRAVE_NEWS_CHANNEL_FOOD},
-               {"braveNewsChannel-Fun", IDS_BRAVE_NEWS_CHANNEL_FUN},
-               {"braveNewsChannel-Gaming", IDS_BRAVE_NEWS_CHANNEL_GAMING},
-               {"braveNewsChannel-Health", IDS_BRAVE_NEWS_CHANNEL_HEALTH},
-               {"braveNewsChannel-Home", IDS_BRAVE_NEWS_CHANNEL_HOME},
-               {"braveNewsChannel-Lifestyle", IDS_BRAVE_NEWS_CHANNEL_LIFESTYLE},
-               {"braveNewsChannel-Music", IDS_BRAVE_NEWS_CHANNEL_MUSIC},
-               {"braveNewsChannel-Politics", IDS_BRAVE_NEWS_CHANNEL_POLITICS},
-               {"braveNewsChannel-Regional News",
-                IDS_BRAVE_NEWS_CHANNEL_REGIONAL_NEWS},
-               {"braveNewsChannel-Science", IDS_BRAVE_NEWS_CHANNEL_SCIENCE},
-               {"braveNewsChannel-Sports", IDS_BRAVE_NEWS_CHANNEL_SPORTS},
-               {"braveNewsChannel-Travel", IDS_BRAVE_NEWS_CHANNEL_TRAVEL},
-               {"braveNewsChannel-Technology",
-                IDS_BRAVE_NEWS_CHANNEL_TECHNOLOGY},
-               {"braveNewsChannel-Top News", IDS_BRAVE_NEWS_CHANNEL_TOP_NEWS},
-               {"braveNewsChannel-Top Sources",
-                IDS_BRAVE_NEWS_CHANNEL_TOP_SOURCES},
-               {"braveNewsChannel-UK News", IDS_BRAVE_NEWS_CHANNEL_UK_NEWS},
-               {"braveNewsChannel-US News", IDS_BRAVE_NEWS_CHANNEL_US_NEWS},
-               {"braveNewsChannel-Weather", IDS_BRAVE_NEWS_CHANNEL_WEATHER},
-               {"braveNewsChannel-World News",
-                IDS_BRAVE_NEWS_CHANNEL_WORLD_NEWS},
-
                {"addWidget", IDS_BRAVE_NEW_TAB_WIDGET_ADD},
                {"hideWidget", IDS_BRAVE_NEW_TAB_WIDGET_HIDE},
                {"rewardsWidgetDesc", IDS_BRAVE_NEW_TAB_REWARDS_WIDGET_DESC},
@@ -343,25 +210,8 @@ base::span<const webui::LocalizedString> GetWebUILocalizedStrings(
                {"headerButton",
                 IDS_BRAVE_PRIVATE_NEW_TAB_PRIVATE_WINDOW_BUTTON},
 
-               // Private Tab - Header Private Window with Tor
-               {"headerTorTitle", IDS_BRAVE_PRIVATE_NEW_TAB_PRIVATE_WINDOW_TOR},
-               {"headerTorText",
-                IDS_BRAVE_PRIVATE_NEW_TAB_PRIVATE_WINDOW_TOR_DESC},
-
                // Private Tab - Box for DDG
                {"boxDdgButton", IDS_BRAVE_PRIVATE_NEW_TAB_BOX_DDG_BUTTON},
-
-               // Private Tab - Box for Tor
-               {"boxTorLabel", IDS_BRAVE_PRIVATE_NEW_TAB_BOX_TOR_LABEL},
-               {"boxTorLabel2", IDS_BRAVE_PRIVATE_NEW_TAB_BOX_TOR_LABEL_2},
-               {"boxTorTitle", IDS_BRAVE_PRIVATE_NEW_TAB_BOX_TOR_TITLE},
-
-               // Private Tab - Private Window with Tor - Tor Box
-               {"boxTorText", IDS_BRAVE_PRIVATE_NEW_TAB_BOX_TOR_TEXT_1},
-
-               // Private Tab - Private Window - Tor Box
-               {"boxTorText2", IDS_BRAVE_PRIVATE_NEW_TAB_BOX_TOR_TEXT_2},
-               {"boxTorButton", IDS_BRAVE_PRIVATE_NEW_TAB_BOX_TOR_BUTTON},
 #endif  // !BUILDFLAG(IS_ANDROID)
 
                // Rewards widget
@@ -937,21 +787,6 @@ base::span<const webui::LocalizedString> GetWebUILocalizedStrings(
                {"loading", IDS_BRAVE_REWARDS_LOADING_LABEL},
            }},
           {
-#if BUILDFLAG(ENABLE_TOR)
-              "tor-internals",
-              {
-                  {"tabGeneralInfo", IDS_TOR_INTERNALS_TAB_GENERAL_INFO},
-                  {"tabLogs", IDS_TOR_INTERNALS_TAB_LOGS},
-                  {"torControlEvents", IDS_TOR_INTERNALS_TOR_CONTROL_EVENTS},
-                  {"torVersion", IDS_TOR_INTERNALS_TOR_VERSION},
-                  {"torPid", IDS_TOR_INTERNALS_TOR_PID},
-                  {"torProxyURI", IDS_TOR_INTERNALS_TOR_PROXY_URI},
-                  {"torConnectionStatus",
-                   IDS_TOR_INTERNALS_TOR_CONNECTION_STATUS},
-                  {"torInitProgress", IDS_TOR_INTERNALS_TOR_INIT_PROGRESS},
-              }},
-          {
-#endif
 #if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
               "webcompat",
               {

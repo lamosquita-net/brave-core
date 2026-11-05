@@ -22,10 +22,6 @@ namespace brave_shields {
 class AdBlockService;
 }
 
-namespace brave_vpn {
-class BraveVPNConnectionManager;
-}
-
 class TestingBraveBrowserProcess : public BraveBrowserProcess {
  public:
   // Initializes |g_brave_browser_process| with a new
@@ -50,9 +46,6 @@ class TestingBraveBrowserProcess : public BraveBrowserProcess {
   // BraveBrowserProcess overrides:
   void StartBraveServices() override;
   brave_shields::AdBlockService* ad_block_service() override;
-#if BUILDFLAG(ENABLE_GREASELION)
-  greaselion::GreaselionDownloadService* greaselion_download_service() override;
-#endif
   debounce::DebounceComponentInstaller* debounce_component_installer() override;
 #if BUILDFLAG(ENABLE_REQUEST_OTR)
   request_otr::RequestOTRComponentInstallerPolicy*
@@ -66,29 +59,13 @@ class TestingBraveBrowserProcess : public BraveBrowserProcess {
   localhost_permission_component() override;
   brave_component_updater::LocalDataFilesService* local_data_files_service()
       override;
-#if BUILDFLAG(ENABLE_TOR)
-  tor::BraveTorClientUpdater* tor_client_updater() override;
-  tor::BraveTorPluggableTransportUpdater* tor_pluggable_transport_updater()
-      override;
-#endif
-  p3a::P3AService* p3a_service() override;
-  brave::BraveReferralsService* brave_referrals_service() override;
-  brave_stats::BraveStatsUpdater* brave_stats_updater() override;
-  brave_ads::BraveStatsHelper* ads_brave_stats_helper() override;
   ntp_background_images::NTPBackgroundImagesService*
   ntp_background_images_service() override;
 #if BUILDFLAG(ENABLE_SPEEDREADER)
   speedreader::SpeedreaderRewriterService* speedreader_rewriter_service()
       override;
 #endif
-  brave_ads::ResourceComponent* resource_component() override;
   brave::BraveFarblingService* brave_farbling_service() override;
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-  brave_vpn::BraveVPNConnectionManager* brave_vpn_connection_manager() override;
-  void SetBraveVPNConnectionManagerForTesting(
-      std::unique_ptr<brave_vpn::BraveVPNConnectionManager> manager);
-#endif
-  misc_metrics::ProcessMiscMetrics* process_misc_metrics() override;
 
   // Populate the mock process with services. Consumer is responsible for
   // cleaning these up after completion of a test.
@@ -104,10 +81,6 @@ class TestingBraveBrowserProcess : public BraveBrowserProcess {
 
   std::unique_ptr<brave_shields::AdBlockService> ad_block_service_;
 
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-  std::unique_ptr<brave_vpn::BraveVPNConnectionManager>
-      brave_vpn_connection_manager_;
-#endif
 };
 
 class TestingBraveBrowserProcessInitializer {

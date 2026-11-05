@@ -8,7 +8,6 @@
 
 #include <string>
 
-#include "brave/components/ai_chat/core/common/buildflags/buildflags.h"
 #include "brave/components/brave_wayback_machine/buildflags/buildflags.h"
 #include "brave/components/playlist/common/buildflags/buildflags.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
@@ -70,8 +69,6 @@ class BraveBrowserWindow : public BrowserWindow {
 #if BUILDFLAG(ENABLE_BRAVE_WAYBACK_MACHINE)
   virtual void ShowWaybackMachineBubble() {}
 #endif
-
-  virtual void ShowBraveVPNBubble() {}
 
   // Returns true if all tabs in this window is being dragged.
   virtual bool IsInTabDragging() const;

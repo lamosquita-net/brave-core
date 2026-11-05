@@ -221,14 +221,6 @@ declare namespace chrome.greaselion {
   const isGreaselionExtension: (id: string, callback: (valid: boolean) => void) => {}
 }
 
-declare namespace chrome.braveNews {
-  const onClearHistory: {
-    addListener: (callback: () => any) => void
-  }
-  const getHostname: (callback: (hostname: string) => any) => void
-  const getRegionUrlPart: (callback: (regionURLPart: string) => any) => void
-}
-
 type BlockTypes = 'shieldsAds' | 'trackers' | 'httpUpgradableResources' | 'javascript' | 'fingerprinting'
 
 declare namespace chrome.tabs {

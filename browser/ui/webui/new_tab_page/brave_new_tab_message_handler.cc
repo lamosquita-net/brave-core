@@ -18,21 +18,16 @@
 #include "base/threading/thread_restrictions.h"
 #include "base/time/time.h"
 #include "base/values.h"
-#include "brave/browser/brave_ads/ads_service_factory.h"
 #include "brave/browser/ntp_background/view_counter_service_factory.h"
 #include "brave/browser/profiles/profile_util.h"
 #include "brave/browser/search_engines/pref_names.h"
 #include "brave/browser/ui/webui/new_tab_page/brave_new_tab_ui.h"
-#include "brave/components/brave_ads/core/public/ads_util.h"
-#include "brave/components/brave_news/common/pref_names.h"
 #include "brave/components/brave_perf_predictor/common/pref_names.h"
 #include "brave/components/brave_search_conversion/pref_names.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/ntp_background_images/browser/url_constants.h"
 #include "brave/components/ntp_background_images/browser/view_counter_service.h"
 #include "brave/components/ntp_background_images/common/pref_names.h"
-#include "brave/components/p3a/utils.h"
-#include "brave/components/services/bat_ads/public/interfaces/bat_ads.mojom.h"
 #include "brave/components/time_period_storage/weekly_storage.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/first_run/first_run.h"
@@ -83,13 +78,9 @@ base::Value::Dict GetPreferencesDictionary(PrefService* prefs) {
   pref_data.Set("showClock", prefs->GetBoolean(kNewTabPageShowClock));
   pref_data.Set("clockFormat", prefs->GetString(kNewTabPageClockFormat));
   pref_data.Set("showStats", prefs->GetBoolean(kNewTabPageShowStats));
-  // FlyWeb: Brave News never shows (there is no Brave News controller).
-  pref_data.Set("showToday", false);
   pref_data.Set("showRewards", prefs->GetBoolean(kNewTabPageShowRewards));
   pref_data.Set("isBrandedWallpaperNotificationDismissed",
                 prefs->GetBoolean(kBrandedWallpaperNotificationDismissed));
-  pref_data.Set("isBraveNewsOptedIn",
-                prefs->GetBoolean(brave_news::prefs::kBraveNewsOptedIn));
   pref_data.Set("hideAllWidgets", prefs->GetBoolean(kNewTabPageHideAllWidgets));
   pref_data.Set("showBraveTalk", prefs->GetBoolean(kNewTabPageShowBraveTalk));
   pref_data.Set(
@@ -114,17 +105,8 @@ base::Value::Dict GetPrivatePropertiesDictionary(PrefService* prefs) {
   return private_data;
 }
 
-// TODO(petemill): Move p3a to own NTP component so it can
-// be used by other platforms.
-
-enum class NTPCustomizeUsage { kNeverOpened, kOpened, kOpenedAndEdited, kSize };
-
 constexpr char kNTPCustomizeUsageStatus[] =
     "brave.new_tab_page.customize_p3a_usage";
-constexpr char kCustomizeUsageHistogramName[] =
-    "Brave.NTP.CustomizeUsageStatus.2";
-
-const char kNeedsBrowserUpgradeToServeAds[] = "needsBrowserUpgradeToServeAds";
 
 }  // namespace
 
@@ -136,9 +118,7 @@ void BraveNewTabMessageHandler::RegisterLocalStatePrefs(
 
 void BraveNewTabMessageHandler::RecordInitialP3AValues(
     PrefService* local_state) {
-  p3a::RecordValueIfGreater<NTPCustomizeUsage>(
-      NTPCustomizeUsage::kNeverOpened, kCustomizeUsageHistogramName,
-      kNTPCustomizeUsageStatus, local_state);
+  // FlyWeb: components/p3a removed; the NTP customize usage metric is gone.
 }
 
 // static
@@ -150,32 +130,14 @@ BraveNewTabMessageHandler* BraveNewTabMessageHandler::Create(
   // Initial Values
   // Should only contain data that is static
   //
-  auto* ads_service = brave_ads::AdsServiceFactory::GetForProfile(profile);
-  // For safety, default |is_ads_supported_locale_| to true. Better to have
-  // false positive than falsen egative,
-  // in which case we would not show "opt out" toggle.
-  bool is_ads_supported_locale = true;
-  if (!ads_service) {
-    LOG(ERROR) << "Ads service is not initialized!";
-  } else {
-    is_ads_supported_locale = brave_ads::IsSupportedRegion();
-  }
-
-  source->AddBoolean("featureFlagBraveNTPSponsoredImagesWallpaper",
-                     is_ads_supported_locale);
-
-  // Private Tab info
-  if (IsPrivateNewTab(profile)) {
-    source->AddBoolean("isTor", profile->IsTor());
-  }
+  // FlyWeb: Brave Ads is removed from the build, so no sponsored images.
+  source->AddBoolean("featureFlagBraveNTPSponsoredImagesWallpaper", false);
   return new BraveNewTabMessageHandler(profile, was_restored);
 }
 
 BraveNewTabMessageHandler::BraveNewTabMessageHandler(Profile* profile,
                                                      bool was_restored)
-    : profile_(profile), was_restored_(was_restored), weak_ptr_factory_(this) {
-  ads_service_ = brave_ads::AdsServiceFactory::GetForProfile(profile_);
-}
+    : profile_(profile), was_restored_(was_restored), weak_ptr_factory_(this) {}
 
 BraveNewTabMessageHandler::~BraveNewTabMessageHandler() = default;
 
@@ -187,8 +149,6 @@ void BraveNewTabMessageHandler::RegisterMessages() {
   // - Preferences
   // - PrivatePage properties
   auto plural_string_handler = std::make_unique<PluralStringHandler>();
-  plural_string_handler->AddLocalizedString("braveNewsSourceCount",
-                                            IDS_BRAVE_NEWS_SOURCE_COUNT);
   plural_string_handler->AddLocalizedString("rewardsPublisherCountText",
                                             IDS_REWARDS_PUBLISHER_COUNT_TEXT);
   web_ui()->AddMessageHandler(std::move(plural_string_handler));
@@ -273,11 +233,6 @@ void BraveNewTabMessageHandler::OnJavascriptAllowed() {
             &BraveNewTabMessageHandler::OnPrivatePropertiesChanged,
             base::Unretained(this)));
   }
-  // News
-  pref_change_registrar_.Add(
-      brave_news::prefs::kBraveNewsOptedIn,
-      base::BindRepeating(&BraveNewTabMessageHandler::OnPreferencesChanged,
-                          base::Unretained(this)));
   // New Tab Page preferences
   pref_change_registrar_.Add(
       kNewTabPageShowBackgroundImage,
@@ -312,10 +267,6 @@ void BraveNewTabMessageHandler::OnJavascriptAllowed() {
       base::BindRepeating(&BraveNewTabMessageHandler::OnPreferencesChanged,
                           base::Unretained(this)));
   pref_change_registrar_.Add(
-      brave_news::prefs::kNewTabPageShowToday,
-      base::BindRepeating(&BraveNewTabMessageHandler::OnPreferencesChanged,
-                          base::Unretained(this)));
-  pref_change_registrar_.Add(
       kNewTabPageShowRewards,
       base::BindRepeating(&BraveNewTabMessageHandler::OnPreferencesChanged,
                           base::Unretained(this)));
@@ -331,17 +282,10 @@ void BraveNewTabMessageHandler::OnJavascriptAllowed() {
       kNewTabPageHideAllWidgets,
       base::BindRepeating(&BraveNewTabMessageHandler::OnPreferencesChanged,
                           base::Unretained(this)));
-
-  bat_ads_observer_receiver_.reset();
-  if (ads_service_) {
-    ads_service_->AddBatAdsObserver(
-        bat_ads_observer_receiver_.BindNewPipeAndPassRemote());
-  }
 }
 
 void BraveNewTabMessageHandler::OnJavascriptDisallowed() {
   pref_change_registrar_.RemoveAll();
-  bat_ads_observer_receiver_.reset();
   weak_ptr_factory_.InvalidateWeakPtrs();
 }
 
@@ -396,17 +340,6 @@ void BraveNewTabMessageHandler::HandleSaveNewTabPagePref(
   auto settingsValue = args[1].Clone();
   std::string settingsKey;
 
-  // Prevent News onboarding below NTP and sponsored NTP notification
-  // state from triggering the "shown & changed" answer for the
-  // customize dialog metric.
-  if (settingsKeyInput != "showToday" &&
-      settingsKeyInput != "isBraveNewsOptedIn" &&
-      settingsKeyInput != "isBrandedWallpaperNotificationDismissed") {
-    p3a::RecordValueIfGreater<NTPCustomizeUsage>(
-        NTPCustomizeUsage::kOpenedAndEdited, kCustomizeUsageHistogramName,
-        kNTPCustomizeUsageStatus, g_browser_process->local_state());
-  }
-
   // Handle string settings
   if (settingsValue.is_string()) {
     const auto settingsValueString = settingsValue.GetString();
@@ -436,12 +369,6 @@ void BraveNewTabMessageHandler::HandleSaveNewTabPagePref(
     settingsKey = kNewTabPageShowClock;
   } else if (settingsKeyInput == "showStats") {
     settingsKey = kNewTabPageShowStats;
-  } else if (settingsKeyInput == "showToday") {
-    // FlyWeb: Brave News cannot be turned on.
-    return;
-  } else if (settingsKeyInput == "isBraveNewsOptedIn") {
-    // FlyWeb: no Brave News.
-    return;
   } else if (settingsKeyInput == "showRewards") {
     settingsKey = kNewTabPageShowRewards;
   } else if (settingsKeyInput == "isBrandedWallpaperNotificationDismissed") {
@@ -570,9 +497,6 @@ void BraveNewTabMessageHandler::HandleGetWallpaperData(
 void BraveNewTabMessageHandler::HandleCustomizeClicked(
     const base::Value::List& args) {
   AllowJavascript();
-  p3a::RecordValueIfGreater<NTPCustomizeUsage>(
-      NTPCustomizeUsage::kOpened, kCustomizeUsageHistogramName,
-      kNTPCustomizeUsageStatus, g_browser_process->local_state());
 }
 
 void BraveNewTabMessageHandler::OnPrivatePropertiesChanged() {
@@ -594,15 +518,6 @@ void BraveNewTabMessageHandler::OnPreferencesChanged() {
 }
 
 base::Value::Dict BraveNewTabMessageHandler::GetAdsDataDictionary() const {
-  if (!ads_service_) {
-    return {};
-  }
-
-  return base::Value::Dict().Set(
-      kNeedsBrowserUpgradeToServeAds,
-      ads_service_->IsBrowserUpgradeRequiredToServeAds());
-}
-
-void BraveNewTabMessageHandler::OnBrowserUpgradeRequiredToServeAds() {
-  FireWebUIListener("new-tab-ads-data-updated", GetAdsDataDictionary());
+  // FlyWeb: Brave Ads is removed from the build.
+  return {};
 }
