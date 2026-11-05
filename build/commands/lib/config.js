@@ -204,7 +204,6 @@ const Config = function () {
   this.safeBrowsingApiEndpoint = getEnvConfig(['safebrowsing_api_endpoint']) || ''
   this.updaterProdEndpoint = getEnvConfig(['updater_prod_endpoint']) || ''
   this.updaterDevEndpoint = getEnvConfig(['updater_dev_endpoint']) || ''
-  this.webcompatReportApiEndpoint = getEnvConfig(['webcompat_report_api_endpoint']) || 'https://webcompat.brave.com/1/webcompat'
   this.rewardsGrantDevEndpoint = getEnvConfig(['rewards_grant_dev_endpoint']) || ''
   this.rewardsGrantStagingEndpoint = getEnvConfig(['rewards_grant_staging_endpoint']) || ''
   this.rewardsGrantProdEndpoint = getEnvConfig(['rewards_grant_prod_endpoint']) || ''
@@ -416,7 +415,6 @@ Config.prototype.buildArgs = function () {
     brave_variations_server_url: this.braveVariationsServerUrl,
     updater_prod_endpoint: this.updaterProdEndpoint,
     updater_dev_endpoint: this.updaterDevEndpoint,
-    webcompat_report_api_endpoint: this.webcompatReportApiEndpoint,
     rewards_grant_dev_endpoint: this.rewardsGrantDevEndpoint,
     rewards_grant_staging_endpoint: this.rewardsGrantStagingEndpoint,
     rewards_grant_prod_endpoint: this.rewardsGrantProdEndpoint,
@@ -1076,10 +1074,6 @@ Config.prototype.update = function (options) {
 
   if (options.updater_dev_endpoint) {
     this.updaterDevEndpoint = options.updater_dev_endpoint
-  }
-
-  if (options.webcompat_report_api_endpoint) {
-    this.webcompatReportApiEndpoint = options.webcompat_report_api_endpoint
   }
 
   if (options.rewards_grant_dev_endpoint) {
