@@ -13,6 +13,8 @@
 namespace chrome {
 
 inline constexpr char kPerformanceSubPage[] = "system";
+// 156 dropped kChromeUISyncHost; brave://sync still redirects to settings.
+inline constexpr char kBraveUISyncHost[] = "sync";
 
 }  // namespace chrome
 

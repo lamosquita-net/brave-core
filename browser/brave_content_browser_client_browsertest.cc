@@ -16,6 +16,7 @@
 #include "brave/components/brave_shields/core/common/brave_shield_constants.h"
 #include "brave/components/constants/brave_paths.h"
 #include "brave/components/constants/pref_names.h"
+#include "brave/components/constants/webui_url_constants.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/extensions/component_loader.h"
 #include "chrome/browser/extensions/extension_service.h"
@@ -92,7 +93,7 @@ class BraveContentBrowserClientTest : public InProcessBrowserTest {
 
 IN_PROC_BROWSER_TEST_F(BraveContentBrowserClientTest, CanLoadChromeURL) {
   std::vector<std::string> pages{
-      chrome::kChromeUIWelcomeHost,
+      kWelcomeHost,
   };
 
   std::vector<std::string> schemes{
@@ -207,7 +208,7 @@ IN_PROC_BROWSER_TEST_F(BraveContentBrowserClientTest, RewriteChromeSync) {
     content::WebContents* contents =
         browser()->tab_strip_model()->GetActiveWebContents();
     NavigateToURLAndWaitForRewrites(contents,
-                                    GURL(scheme + chrome::kChromeUISyncHost),
+                                    GURL(scheme + chrome::kBraveUISyncHost),
                                     GURL("chrome://sync"));
 
     EXPECT_STREQ(base::UTF16ToUTF8(

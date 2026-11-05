@@ -90,7 +90,7 @@ WebUIFactoryFunction GetWebUIFactoryFunction(WebUI* web_ui,
       url.host() == chrome::kChromeUINewTabHost ||
       url.host() == chrome::kChromeUISettingsHost ||
       ((url.host() == kWelcomeHost ||
-        url.host() == chrome::kChromeUIWelcomeURL) &&
+        url.host() == kWelcomeURL) &&
        !profile->IsGuestSession()) ||
 #endif  // BUILDFLAG(IS_ANDROID)
       // FlyWeb: Brave Rewards WebUI removed (was the last term).

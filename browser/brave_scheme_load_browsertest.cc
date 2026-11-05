@@ -10,8 +10,9 @@
 #include "build/build_config.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser.h"
-#include "chrome/browser/ui/browser_navigator.h"
-#include "chrome/browser/ui/browser_navigator_params.h"
+#include "chrome/browser/ui/incognito_allowed_url.h"
+#include "chrome/browser/ui/navigator/browser_navigator.h"
+#include "chrome/browser/ui/navigator/browser_navigator_params.h"
 #include "chrome/browser/ui/tabs/tab_strip_model_observer.h"
 #include "chrome/test/base/in_process_browser_test.h"
 #include "chrome/test/base/ui_test_utils.h"
@@ -302,19 +303,15 @@ IN_PROC_BROWSER_TEST_F(BraveSchemeLoadBrowserTest,
   // window. chrome scheme is used because brave scheme is already replaced with
   // chrome when IsURLAllowedInIncognito() is called. Verify brave scheme url
   // with TestURLIsNotLoadedInPrivateWindow().
-  EXPECT_FALSE(
-      IsURLAllowedInIncognito(GURL("chrome://rewards"), browser()->profile()));
-  EXPECT_TRUE(
-      IsURLAllowedInIncognito(GURL("http://rewards"), browser()->profile()));
+  EXPECT_FALSE(IsURLAllowedInIncognito(GURL("chrome://rewards")));
+  EXPECT_TRUE(IsURLAllowedInIncognito(GURL("http://rewards")));
   TestURLIsNotLoadedInPrivateWindow("brave://rewards");
 }
 
 IN_PROC_BROWSER_TEST_F(BraveSchemeLoadBrowserTest,
                        WalletPageIsNotAllowedInPrivateWindow) {
-  EXPECT_FALSE(
-      IsURLAllowedInIncognito(GURL("chrome://wallet"), browser()->profile()));
-  EXPECT_TRUE(
-      IsURLAllowedInIncognito(GURL("http://wallet"), browser()->profile()));
+  EXPECT_FALSE(IsURLAllowedInIncognito(GURL("chrome://wallet")));
+  EXPECT_TRUE(IsURLAllowedInIncognito(GURL("http://wallet")));
   TestURLIsNotLoadedInPrivateWindow("brave://wallet");
 }
 
@@ -325,19 +322,15 @@ IN_PROC_BROWSER_TEST_F(BraveSchemeLoadBrowserTest,
 
 IN_PROC_BROWSER_TEST_F(BraveSchemeLoadBrowserTest,
                        BraveSyncPageIsNotAllowedInPrivateWindow) {
-  EXPECT_FALSE(
-      IsURLAllowedInIncognito(GURL("chrome://sync"), browser()->profile()));
-  EXPECT_TRUE(
-      IsURLAllowedInIncognito(GURL("http://sync"), browser()->profile()));
+  EXPECT_FALSE(IsURLAllowedInIncognito(GURL("chrome://sync")));
+  EXPECT_TRUE(IsURLAllowedInIncognito(GURL("http://sync")));
   TestURLIsNotLoadedInPrivateWindow("brave://sync");
 }
 
 IN_PROC_BROWSER_TEST_F(BraveSchemeLoadBrowserTest,
                        BraveWelcomePageIsNotAllowedInPrivateWindow) {
-  EXPECT_FALSE(
-      IsURLAllowedInIncognito(GURL("chrome://welcome"), browser()->profile()));
-  EXPECT_TRUE(
-      IsURLAllowedInIncognito(GURL("http://welcome"), browser()->profile()));
+  EXPECT_FALSE(IsURLAllowedInIncognito(GURL("chrome://welcome")));
+  EXPECT_TRUE(IsURLAllowedInIncognito(GURL("http://welcome")));
   TestURLIsNotLoadedInPrivateWindow("brave://welcome");
 }
 
