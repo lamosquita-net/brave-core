@@ -62,11 +62,8 @@ export async function getInitialData (): Promise<InitialData> {
       statsAPI.getStats(),
       privateTabDataAPI.getPrivateTabData(),
       !isIncognito ? wallpaper.getWallpaper() : Promise.resolve(undefined),
-      new Promise((resolve) => {
-        chrome.braveRewards.isSupported((supported: boolean) => {
-          resolve(supported)
-        })
-      }),
+      // FlyWeb: no Brave Rewards (removed from the build).
+      Promise.resolve(false),
       // FlyWeb: no Brave Talk (no card, no widget, no toggle).
       Promise.resolve(false),
       getNTPBrowserAPI().pageHandler.isSearchPromotionEnabled().then(({ enabled }) => enabled),

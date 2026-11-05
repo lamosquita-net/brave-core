@@ -5,9 +5,12 @@
 
 declare namespace RewardsExtension {
   interface State {
-    balance: import(
-      '../brave_rewards/resources/shared/lib/optional'
-    ).Optional<number>
+    // FlyWeb: brave_rewards removed; structural stand-in for Optional<number>.
+    balance: {
+      hasValue: () => boolean
+      value: () => number
+      valueOr: <U>(fallback: U) => number | U
+    }
     currentNotification?: string | number
     enabledAC: boolean
     notifications: Record<string, Notification>
@@ -37,9 +40,8 @@ declare namespace RewardsExtension {
     maxAttemptsExceeded: boolean
   }
 
-  type PublisherStatus = import(
-    '../../components/brave_rewards/resources/shared/lib/publisher_status'
-  ).PublisherStatus
+  // FlyWeb: brave_rewards removed; was a const enum (0, 2, 3, 4).
+  type PublisherStatus = number
 
   interface Publisher {
     excluded?: boolean
@@ -125,7 +127,8 @@ declare namespace RewardsExtension {
 
   export type TipDialogEntryPoint = 'one-time' | 'set-monthly' | 'clear-monthly'
 
-  type WalletStatus = import('gen/brave/components/brave_rewards/common/mojom/rewards.mojom.m.js').WalletStatus
+  // FlyWeb: brave_rewards removed; was the mojom WalletStatus enum.
+  type WalletStatus = number
 
   export type WalletType = 'uphold' | 'bitflyer' | 'gemini'
 

@@ -10,7 +10,7 @@ import getNTPBrowserAPI from '../../api/background'
 import { addNewTopSite, editTopSite } from '../../api/topSites'
 import { brandedWallpaperLogoClicked } from '../../api/wallpaper'
 import {
-  BraveTalkWidget as BraveTalk, Clock, EditTopSite, OverrideReadabilityColor, RewardsWidget as Rewards, SearchPromotion
+  BraveTalkWidget as BraveTalk, Clock, EditTopSite, OverrideReadabilityColor, SearchPromotion
 } from '../../components/default'
 import BrandedWallpaperLogo from '../../components/default/brandedWallpaper/logo'
 import FooterInfo from '../../components/default/footer/footer'
@@ -38,7 +38,7 @@ import Settings, { TabType as SettingsTabType } from './settings'
 import SponsoredImageClickArea from '../../components/default/sponsoredImage/sponsoredImageClickArea'
 import GridWidget from './gridWidget'
 
-import Icon, { setIconBasePath } from '@brave/leo/react/icon'
+import { setIconBasePath } from '@brave/leo/react/icon'
 setIconBasePath('chrome://resources/brave-icons')
 
 import * as style from './style'
@@ -288,7 +288,7 @@ class NewTabPage extends React.Component<Props, State> {
   }
 
   startRewards = () => {
-    chrome.braveRewards.openRewardsPanel()
+    // FlyWeb: Brave Rewards is removed from the build.
   }
 
   dismissBrandedWallpaperNotification = (isUserAction: boolean) => {
@@ -454,65 +454,8 @@ class NewTabPage extends React.Component<Props, State> {
   }
 
   renderRewardsWidget (showContent: boolean, position: number) {
-    const { rewardsState, showRewards, textDirection, braveRewardsSupported } = this.props.newTabData
-    if (!braveRewardsSupported || !showRewards) {
-      return null
-    }
-
-    const customMenuItems = [
-      {
-        label: 'rewardsOpenPanel',
-        renderIcon: () => {
-          return (
-            <style.rewardsMenuIcon>
-              <Icon name='product-bat-outline' />
-            </style.rewardsMenuIcon>
-          )
-        },
-        onClick: () => { chrome.braveRewards.openRewardsPanel() }
-      },
-      {
-        label: 'rewardsSettings',
-        renderIcon: () => {
-          return (
-            <style.rewardsMenuIcon>
-              <Icon name='settings' />
-            </style.rewardsMenuIcon>
-          )
-        },
-        onClick: () => { window.open('chrome://rewards', '_blank', 'noopener') }
-      }
-    ]
-
-    const onSelfCustodyInviteDismissed = () => {
-      chrome.braveRewards.dismissSelfCustodyInvite()
-    }
-
-    const onTosUpdateAccepted = () => {
-      chrome.braveRewards.acceptTermsOfServiceUpdate()
-    }
-
-    return (
-      <Rewards
-        {...rewardsState}
-        widgetTitle={getLocale('rewardsWidgetBraveRewards')}
-        onLearnMore={this.learnMoreRewards}
-        menuPosition={'left'}
-        isCardWidget
-        paddingType={'none'}
-        isForeground={showContent}
-        stackPosition={position}
-        textDirection={textDirection}
-        preventFocus={false}
-        hideWidget={this.toggleShowRewards}
-        showContent={showContent}
-        onShowContent={this.setForegroundStackWidget.bind(this, 'rewards')}
-        onDismissNotification={this.dismissNotification}
-        customMenuItems={customMenuItems}
-        onSelfCustodyInviteDismissed={onSelfCustodyInviteDismissed}
-        onTermsOfServiceUpdateAccepted={onTosUpdateAccepted}
-      />
-    )
+    // FlyWeb: Brave Rewards is removed from the build; no widget.
+    return null
   }
 
   renderBraveTalkWidget (showContent: boolean, position: number) {

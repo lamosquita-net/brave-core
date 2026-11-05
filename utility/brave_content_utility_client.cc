@@ -8,10 +8,6 @@
 #include <memory>
 #include <utility>
 
-#include "brave/components/services/bat_ads/bat_ads_service_impl.h"
-#include "brave/components/services/bat_ads/public/interfaces/bat_ads.mojom.h"
-#include "brave/components/services/bat_rewards/public/interfaces/rewards_engine_factory.mojom.h"
-#include "brave/components/services/bat_rewards/rewards_engine_factory.h"
 #include "brave/components/tor/buildflags/buildflags.h"
 #include "mojo/public/cpp/bindings/service_factory.h"
 
@@ -42,18 +38,6 @@ auto RunTorLauncher(mojo::PendingReceiver<tor::mojom::TorLauncher> receiver) {
 }
 #endif
 
-auto RunRewardsEngineFactory(
-    mojo::PendingReceiver<brave_rewards::mojom::RewardsEngineFactory>
-        receiver) {
-  return std::make_unique<brave_rewards::internal::RewardsEngineFactory>(
-      std::move(receiver));
-}
-
-auto RunBatAdsService(
-    mojo::PendingReceiver<bat_ads::mojom::BatAdsService> receiver) {
-  return std::make_unique<bat_ads::BatAdsServiceImpl>(std::move(receiver));
-}
-
 auto RunBraveWalletUtilsService(
     mojo::PendingReceiver<brave_wallet::mojom::BraveWalletUtilsService>
         receiver) {
@@ -75,10 +59,6 @@ void BraveContentUtilityClient::RegisterMainThreadServices(
 #if BUILDFLAG(ENABLE_TOR)
   services.Add(RunTorLauncher);
 #endif
-
-  services.Add(RunRewardsEngineFactory);
-
-  services.Add(RunBatAdsService);
 
   services.Add(RunBraveWalletUtilsService);
 

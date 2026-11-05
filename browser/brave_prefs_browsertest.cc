@@ -6,7 +6,6 @@
 #include "base/feature_list.h"
 #include "brave/browser/ethereum_remote_client/buildflags/buildflags.h"
 #include "brave/browser/metrics/buildflags/buildflags.h"
-#include "brave/components/brave_rewards/common/pref_names.h"
 #include "brave/components/brave_shields/core/common/features.h"
 #include "brave/components/brave_shields/core/common/pref_names.h"
 #include "brave/components/brave_wallet/browser/brave_wallet_utils.h"
@@ -89,8 +88,6 @@ IN_PROC_BROWSER_TEST_F(BraveProfilePrefsBrowserTest, MiscBravePrefs) {
   EXPECT_TRUE(chrome_test_utils::GetProfile(this)->GetPrefs()->GetBoolean(
       kBraveWaybackMachineEnabled));
 #endif
-  EXPECT_TRUE(chrome_test_utils::GetProfile(this)->GetPrefs()->GetBoolean(
-      brave_rewards::prefs::kShowLocationBarButton));
 #if BUILDFLAG(ETHEREUM_REMOTE_CLIENT_ENABLED)
   EXPECT_FALSE(chrome_test_utils::GetProfile(this)->GetPrefs()->GetBoolean(
       kERCOptedIntoCryptoWallets));
