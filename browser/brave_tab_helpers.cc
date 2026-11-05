@@ -10,19 +10,14 @@
 
 #include "base/command_line.h"
 #include "base/feature_list.h"
-#include "brave/browser/brave_ads/creatives/search_result_ad/creative_search_result_ad_tab_helper.h"
-#include "brave/browser/brave_ads/tabs/ads_tab_helper.h"
 #include "brave/browser/brave_browser_process.h"
-#include "brave/browser/brave_rewards/rewards_tab_helper.h"
 #include "brave/browser/brave_shields/brave_shields_web_contents_observer.h"
 #include "brave/browser/brave_wallet/brave_wallet_tab_helper.h"
 #include "brave/browser/ephemeral_storage/ephemeral_storage_tab_helper.h"
 #include "brave/browser/ntp_background/ntp_tab_helper.h"
-#include "brave/browser/skus/skus_service_factory.h"
 #include "brave/browser/ui/bookmark/brave_bookmark_tab_helper.h"
 #include "brave/components/brave_perf_predictor/browser/perf_predictor_tab_helper.h"
 #include "brave/components/brave_wayback_machine/buildflags/buildflags.h"
-#include "brave/components/greaselion/browser/buildflags/buildflags.h"
 #include "brave/components/playlist/common/buildflags/buildflags.h"
 #include "brave/components/request_otr/common/buildflags/buildflags.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
@@ -40,10 +35,6 @@
 #include "extensions/buildflags/buildflags.h"
 #include "net/base/features.h"
 #include "third_party/widevine/cdm/buildflags.h"
-
-#if BUILDFLAG(ENABLE_GREASELION)
-#include "brave/browser/greaselion/greaselion_tab_helper.h"
-#endif
 
 #if BUILDFLAG(IS_ANDROID)
 #include "brave/browser/android/preferences/background_video_playback_tab_helper.h"
@@ -95,9 +86,6 @@ void AttachTabHelpers(content::WebContents* web_contents) {
 #if defined(TOOLKIT_VIEWS)
   BraveContextualSidePanelTabHelper::CreateForWebContents(web_contents);
 #endif
-#if BUILDFLAG(ENABLE_GREASELION)
-  greaselion::GreaselionTabHelper::CreateForWebContents(web_contents);
-#endif
   brave_shields::BraveShieldsWebContentsObserver::CreateForWebContents(
       web_contents);
 #if BUILDFLAG(IS_ANDROID)
@@ -110,8 +98,6 @@ void AttachTabHelpers(content::WebContents* web_contents) {
   BraveGeolocationPermissionTabHelper::CreateForWebContents(web_contents);
 #endif
 
-  brave_rewards::RewardsTabHelper::CreateForWebContents(web_contents);
-
 #if BUILDFLAG(ENABLE_WIDEVINE)
   BraveDrmTabHelper::CreateForWebContents(web_contents);
 #endif
@@ -123,9 +109,6 @@ void AttachTabHelpers(content::WebContents* web_contents) {
   brave_perf_predictor::PerfPredictorTabHelper::CreateForWebContents(
       web_contents);
 
-  brave_ads::AdsTabHelper::CreateForWebContents(web_contents);
-  brave_ads::CreativeSearchResultAdTabHelper::MaybeCreateForWebContents(
-      web_contents);
   // FlyWeb: no WebDiscoveryTabHelper, so no infobar offering the Web
   // Discovery Project (it sends search data to Brave) on Brave Search.
 

@@ -16,7 +16,6 @@
 #include "base/json/json_reader.h"
 #include "base/strings/strcat.h"
 #include "base/system/sys_info.h"
-#include "brave/browser/brave_ads/ads_service_factory.h"
 #include "brave/browser/brave_browser_features.h"
 #include "brave/browser/brave_browser_main_extra_parts.h"
 #include "brave/browser/brave_browser_process.h"
@@ -33,13 +32,9 @@
 #include "brave/browser/net/brave_proxying_web_socket.h"
 #include "brave/browser/profiles/brave_renderer_updater.h"
 #include "brave/browser/profiles/brave_renderer_updater_factory.h"
-#include "brave/browser/skus/skus_service_factory.h"
 #include "brave/browser/ui/brave_ui_features.h"
-#include "brave/browser/ui/webui/brave_rewards/rewards_page_ui.h"
-#include "brave/browser/ui/webui/skus_internals_ui.h"
 #include "brave/browser/url_sanitizer/url_sanitizer_service_factory.h"
 #include "brave/components/body_sniffer/body_sniffer_throttle.h"
-#include "brave/components/brave_rewards/browser/rewards_protocol_navigation_throttle.h"
 #include "brave/components/brave_search/browser/brave_search_default_host.h"
 #include "brave/components/brave_search/browser/brave_search_default_host_private.h"
 #include "brave/components/brave_search/browser/brave_search_fallback_host.h"
@@ -72,9 +67,6 @@
 #include "brave/components/playlist/common/buildflags/buildflags.h"
 #include "brave/components/playlist/common/features.h"
 #include "brave/components/request_otr/common/buildflags/buildflags.h"
-#include "brave/components/skus/common/features.h"
-#include "brave/components/skus/common/skus_internals.mojom.h"
-#include "brave/components/skus/common/skus_sdk.mojom.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "brave/components/tor/buildflags/buildflags.h"
 #include "brave/components/translate/core/common/brave_translate_switches.h"
@@ -189,9 +181,6 @@ using extensions::ChromeContentBrowserClientExtensionsPart;
 #if !BUILDFLAG(IS_ANDROID)
 #include "brave/browser/new_tab/new_tab_shows_navigation_throttle.h"
 #include "brave/browser/ui/geolocation/brave_geolocation_permission_tab_helper.h"
-#include "brave/browser/ui/webui/brave_rewards/rewards_page_top_ui.h"
-#include "brave/browser/ui/webui/brave_rewards/rewards_panel_ui.h"
-#include "brave/browser/ui/webui/brave_rewards/tip_panel_ui.h"
 #include "brave/browser/ui/webui/brave_settings_ui.h"
 #include "brave/browser/ui/webui/brave_shields/cookie_list_opt_in_ui.h"
 #include "brave/browser/ui/webui/brave_shields/shields_panel_ui.h"
@@ -201,9 +190,6 @@ using extensions::ChromeContentBrowserClientExtensionsPart;
 #include "brave/browser/ui/webui/private_new_tab_page/brave_private_new_tab_ui.h"
 #include "brave/components/brave_new_tab_ui/brave_new_tab_page.mojom.h"
 #include "brave/components/brave_private_new_tab_ui/common/brave_private_new_tab.mojom.h"
-#include "brave/components/brave_rewards/common/features.h"
-#include "brave/components/brave_rewards/common/mojom/rewards_panel.mojom.h"
-#include "brave/components/brave_rewards/common/mojom/rewards_tip_panel.mojom.h"
 #include "brave/components/brave_shields/core/common/brave_shields_panel.mojom.h"
 #include "brave/components/brave_shields/core/common/cookie_list_opt_in.mojom.h"
 #include "brave/components/commands/common/commands.mojom.h"
@@ -411,13 +397,6 @@ void BindBraveSearchDefaultHost(
   }
 }
 
-void MaybeBindSkusSdkImpl(
-    content::RenderFrameHost* const frame_host,
-    mojo::PendingReceiver<skus::mojom::SkusService> receiver) {
-  auto* context = frame_host->GetBrowserContext();
-  skus::SkusServiceFactory::BindForContext(context, std::move(receiver));
-}
-
 }  // namespace
 
 BraveContentBrowserClient::BraveContentBrowserClient() = default;
@@ -534,13 +513,6 @@ void BraveContentBrowserClient::RegisterWebUIInterfaceBrokers(
         .Add<playlist::mojom::PageHandlerFactory>();
   }
 #endif
-
-  if (base::FeatureList::IsEnabled(skus::features::kSkusFeature)) {
-    registry.ForWebUI<SkusInternalsUI>().Add<skus::mojom::SkusInternals>();
-  }
-
-  registry.ForWebUI<brave_rewards::RewardsPageUI>()
-      .Add<brave_rewards::mojom::RewardsPageHandlerFactory>();
 
 #if !BUILDFLAG(IS_ANDROID)
   auto ntp_registration =
@@ -688,9 +660,6 @@ void BraveContentBrowserClient::RegisterBrowserInterfaceBindersForFrame(
     }
   }
 
-  map->Add<skus::mojom::SkusService>(
-      base::BindRepeating(&MaybeBindSkusSdkImpl));
-
 #if BUILDFLAG(IS_ANDROID)
   content::RegisterWebUIControllerInterfaceBinder<
       brave_wallet::mojom::PageHandlerFactory, AndroidWalletPageUI>(map);
@@ -711,15 +680,6 @@ void BraveContentBrowserClient::RegisterBrowserInterfaceBindersForFrame(
         brave_shields::mojom::CookieListOptInPageHandlerFactory,
         CookieListOptInUI>(map);
   }
-  content::RegisterWebUIControllerInterfaceBinder<
-      brave_rewards::mojom::RewardsPageHandlerFactory,
-      brave_rewards::RewardsPageTopUI>(map);
-  content::RegisterWebUIControllerInterfaceBinder<
-      brave_rewards::mojom::PanelHandlerFactory, brave_rewards::RewardsPanelUI>(
-      map);
-  content::RegisterWebUIControllerInterfaceBinder<
-      brave_rewards::mojom::TipPanelHandlerFactory, brave_rewards::TipPanelUI>(
-      map);
   if (base::FeatureList::IsEnabled(commands::features::kBraveCommands)) {
     content::RegisterWebUIControllerInterfaceBinder<
         commands::mojom::CommandsService, BraveSettingsUI>(map);
@@ -1042,13 +1002,6 @@ BraveContentBrowserClient::CreateThrottlesForNavigation(
     content::NavigationHandle* handle) {
   std::vector<std::unique_ptr<content::NavigationThrottle>> throttles =
       ChromeContentBrowserClient::CreateThrottlesForNavigation(handle);
-
-  // inserting the navigation throttle at the fist position before any java
-  // navigation happens
-  throttles.insert(
-      throttles.begin(),
-      std::make_unique<brave_rewards::RewardsProtocolNavigationThrottle>(
-          handle));
 
 #if !BUILDFLAG(IS_ANDROID)
   std::unique_ptr<content::NavigationThrottle> ntp_shows_navigation_throttle =

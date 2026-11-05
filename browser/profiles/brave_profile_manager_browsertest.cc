@@ -7,8 +7,6 @@
 
 #include "base/functional/callback_helpers.h"
 #include "base/strings/utf_string_conversions.h"
-#include "brave/browser/brave_ads/ads_service_factory.h"
-#include "brave/browser/brave_rewards/rewards_service_factory.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/tor/buildflags/buildflags.h"
 #include "brave/components/tor/tor_constants.h"
@@ -114,42 +112,6 @@ IN_PROC_BROWSER_TEST_F(BraveProfileManagerTest,
     ASSERT_EQ(entries[i]->GetPath(), profile_data[i].profile_path);
   }
 }
-
-// We use x86 builds on Android to run tests and rewards with ads
-// are off on x86 builds
-#if !BUILDFLAG(IS_ANDROID)
-IN_PROC_BROWSER_TEST_F(BraveProfileManagerTest,
-                       ExcludeServicesInOTRAndGuestProfiles) {
-  ProfileManager* profile_manager = g_browser_process->profile_manager();
-  ASSERT_TRUE(profile_manager);
-  Profile* profile = ProfileManager::GetLastUsedProfile();
-  Profile* otr_profile =
-      profile->GetPrimaryOTRProfile(/*create_if_needed=*/true);
-
-  profiles::SwitchToGuestProfile(base::DoNothing());
-  ui_test_utils::WaitForBrowserToOpen();
-
-  Profile* guest_profile =
-      profile_manager->GetProfileByPath(ProfileManager::GetGuestProfilePath());
-
-  ASSERT_TRUE(guest_profile->IsGuestSession());
-
-  EXPECT_EQ(brave_rewards::RewardsServiceFactory::GetForProfile(guest_profile),
-            nullptr);
-  EXPECT_EQ(brave_ads::AdsServiceFactory::GetForProfile(guest_profile),
-            nullptr);
-
-  ASSERT_TRUE(otr_profile->IsOffTheRecord());
-
-  EXPECT_NE(brave_rewards::RewardsServiceFactory::GetForProfile(profile),
-            nullptr);
-  EXPECT_EQ(brave_rewards::RewardsServiceFactory::GetForProfile(otr_profile),
-            nullptr);
-
-  EXPECT_NE(brave_ads::AdsServiceFactory::GetForProfile(profile), nullptr);
-  EXPECT_EQ(brave_ads::AdsServiceFactory::GetForProfile(otr_profile), nullptr);
-}
-#endif
 
 #if !BUILDFLAG(IS_ANDROID)
 IN_PROC_BROWSER_TEST_F(BraveProfileManagerTest,

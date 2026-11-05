@@ -18,19 +18,16 @@
 #include "base/threading/thread_restrictions.h"
 #include "base/time/time.h"
 #include "base/values.h"
-#include "brave/browser/brave_ads/ads_service_factory.h"
 #include "brave/browser/ntp_background/view_counter_service_factory.h"
 #include "brave/browser/profiles/profile_util.h"
 #include "brave/browser/search_engines/pref_names.h"
 #include "brave/browser/ui/webui/new_tab_page/brave_new_tab_ui.h"
-#include "brave/components/brave_ads/core/public/ads_util.h"
 #include "brave/components/brave_perf_predictor/common/pref_names.h"
 #include "brave/components/brave_search_conversion/pref_names.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/ntp_background_images/browser/url_constants.h"
 #include "brave/components/ntp_background_images/browser/view_counter_service.h"
 #include "brave/components/ntp_background_images/common/pref_names.h"
-#include "brave/components/services/bat_ads/public/interfaces/bat_ads.mojom.h"
 #include "brave/components/time_period_storage/weekly_storage.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/first_run/first_run.h"
@@ -111,8 +108,6 @@ base::Value::Dict GetPrivatePropertiesDictionary(PrefService* prefs) {
 constexpr char kNTPCustomizeUsageStatus[] =
     "brave.new_tab_page.customize_p3a_usage";
 
-const char kNeedsBrowserUpgradeToServeAds[] = "needsBrowserUpgradeToServeAds";
-
 }  // namespace
 
 // static
@@ -135,19 +130,8 @@ BraveNewTabMessageHandler* BraveNewTabMessageHandler::Create(
   // Initial Values
   // Should only contain data that is static
   //
-  auto* ads_service = brave_ads::AdsServiceFactory::GetForProfile(profile);
-  // For safety, default |is_ads_supported_locale_| to true. Better to have
-  // false positive than falsen egative,
-  // in which case we would not show "opt out" toggle.
-  bool is_ads_supported_locale = true;
-  if (!ads_service) {
-    LOG(ERROR) << "Ads service is not initialized!";
-  } else {
-    is_ads_supported_locale = brave_ads::IsSupportedRegion();
-  }
-
-  source->AddBoolean("featureFlagBraveNTPSponsoredImagesWallpaper",
-                     is_ads_supported_locale);
+  // FlyWeb: Brave Ads is removed from the build, so no sponsored images.
+  source->AddBoolean("featureFlagBraveNTPSponsoredImagesWallpaper", false);
 
   // Private Tab info
   if (IsPrivateNewTab(profile)) {
@@ -158,9 +142,7 @@ BraveNewTabMessageHandler* BraveNewTabMessageHandler::Create(
 
 BraveNewTabMessageHandler::BraveNewTabMessageHandler(Profile* profile,
                                                      bool was_restored)
-    : profile_(profile), was_restored_(was_restored), weak_ptr_factory_(this) {
-  ads_service_ = brave_ads::AdsServiceFactory::GetForProfile(profile_);
-}
+    : profile_(profile), was_restored_(was_restored), weak_ptr_factory_(this) {}
 
 BraveNewTabMessageHandler::~BraveNewTabMessageHandler() = default;
 
@@ -305,17 +287,10 @@ void BraveNewTabMessageHandler::OnJavascriptAllowed() {
       kNewTabPageHideAllWidgets,
       base::BindRepeating(&BraveNewTabMessageHandler::OnPreferencesChanged,
                           base::Unretained(this)));
-
-  bat_ads_observer_receiver_.reset();
-  if (ads_service_) {
-    ads_service_->AddBatAdsObserver(
-        bat_ads_observer_receiver_.BindNewPipeAndPassRemote());
-  }
 }
 
 void BraveNewTabMessageHandler::OnJavascriptDisallowed() {
   pref_change_registrar_.RemoveAll();
-  bat_ads_observer_receiver_.reset();
   weak_ptr_factory_.InvalidateWeakPtrs();
 }
 
@@ -548,15 +523,6 @@ void BraveNewTabMessageHandler::OnPreferencesChanged() {
 }
 
 base::Value::Dict BraveNewTabMessageHandler::GetAdsDataDictionary() const {
-  if (!ads_service_) {
-    return {};
-  }
-
-  return base::Value::Dict().Set(
-      kNeedsBrowserUpgradeToServeAds,
-      ads_service_->IsBrowserUpgradeRequiredToServeAds());
-}
-
-void BraveNewTabMessageHandler::OnBrowserUpgradeRequiredToServeAds() {
-  FireWebUIListener("new-tab-ads-data-updated", GetAdsDataDictionary());
+  // FlyWeb: Brave Ads is removed from the build.
+  return {};
 }

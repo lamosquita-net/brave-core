@@ -8,14 +8,11 @@
 #include <string>
 
 #include "base/values.h"
-#include "brave/browser/brave_ads/analytics/p3a/brave_stats_helper.h"
 #include "brave/browser/metrics/buildflags/buildflags.h"
 #include "brave/browser/metrics/metrics_reporting_util.h"
 #include "brave/browser/playlist/playlist_service_factory.h"
 #include "brave/browser/search_engines/search_engine_tracker.h"
 #include "brave/browser/themes/brave_dark_mode_utils.h"
-#include "brave/components/brave_ads/browser/ads_service.h"
-#include "brave/components/brave_referrals/browser/brave_referrals_service.h"
 #include "brave/components/brave_search_conversion/p3a.h"
 #include "brave/components/brave_shields/content/browser/ad_block_service.h"
 #include "brave/components/brave_shields/content/browser/brave_shields_p3a.h"
@@ -25,7 +22,6 @@
 #include "brave/components/l10n/common/prefs.h"
 #include "brave/components/ntp_background_images/browser/ntp_background_images_service.h"
 #include "brave/components/ntp_background_images/browser/view_counter_service.h"
-#include "brave/components/skus/browser/skus_utils.h"
 #include "brave/components/tor/buildflags/buildflags.h"
 #include "build/build_config.h"
 #include "chrome/common/pref_names.h"
@@ -71,7 +67,6 @@ void RegisterLocalStatePrefs(PrefRegistrySimple* registry) {
   ntp_background_images::NTPBackgroundImagesService::RegisterLocalStatePrefs(
       registry);
   ntp_background_images::ViewCounterService::RegisterLocalStatePrefs(registry);
-  RegisterPrefsForBraveReferralsService(registry);
   brave_l10n::RegisterL10nLocalStatePrefs(registry);
 #if BUILDFLAG(IS_MAC)
   // Turn off super annoying 'Hold to quit'
@@ -114,8 +109,6 @@ void RegisterLocalStatePrefs(PrefRegistrySimple* registry) {
   brave_search_conversion::p3a::RegisterLocalStatePrefs(registry);
 
   brave_wallet::RegisterLocalStatePrefs(registry);
-
-  brave_ads::BraveStatsHelper::RegisterLocalStatePrefs(registry);
 
   playlist::PlaylistServiceFactory::RegisterLocalStatePrefs(registry);
 }

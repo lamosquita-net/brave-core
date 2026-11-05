@@ -12,8 +12,6 @@
 #include "base/functional/bind.h"
 #include "base/path_service.h"
 #include "base/task/thread_pool.h"
-#include "brave/browser/brave_ads/analytics/p3a/brave_stats_helper.h"
-#include "brave/browser/brave_referrals/referrals_service_delegate.h"
 #include "brave/browser/brave_shields/ad_block_subscription_download_manager_getter.h"
 #include "brave/browser/brave_wallet/wallet_data_files_installer_delegate_impl.h"
 #include "brave/browser/component_updater/brave_component_updater_configurator.h"
@@ -21,10 +19,8 @@
 #include "brave/browser/profiles/brave_profile_manager.h"
 #include "brave/browser/themes/brave_dark_mode_utils.h"
 #include "brave/common/brave_channel_info.h"
-#include "brave/components/brave_ads/browser/component_updater/resource_component.h"
 #include "brave/components/brave_component_updater/browser/brave_component_updater_delegate.h"
 #include "brave/components/brave_component_updater/browser/local_data_files_service.h"
-#include "brave/components/brave_referrals/browser/brave_referrals_service.h"
 #include "brave/components/brave_shields/content/browser/ad_block_service.h"
 #include "brave/components/brave_shields/content/browser/ad_block_subscription_service_manager.h"
 #include "brave/components/brave_shields/content/browser/brave_farbling_service.h"
@@ -55,10 +51,6 @@
 #include "services/network/public/cpp/resource_request.h"
 #include "services/network/public/cpp/shared_url_loader_factory.h"
 #include "url/gurl.h"
-
-#if BUILDFLAG(ENABLE_GREASELION)
-#include "brave/components/greaselion/browser/greaselion_download_service.h"
-#endif
 
 #if BUILDFLAG(ENABLE_TOR)
 #include "brave/components/tor/brave_tor_client_updater.h"
@@ -107,12 +99,6 @@ BraveBrowserProcessImpl::BraveBrowserProcessImpl(StartupData* startup_data)
     : BrowserProcessImpl(startup_data) {
   g_browser_process = this;
   g_brave_browser_process = this;
-
-  // early initialize referrals
-  brave_referrals_service();
-
-  // initialize ads stats helper
-  ads_brave_stats_helper();
 }
 
 void BraveBrowserProcessImpl::Init() {
@@ -143,7 +129,6 @@ void BraveBrowserProcessImpl::Init() {
 
 #if !BUILDFLAG(IS_ANDROID)
 void BraveBrowserProcessImpl::StartTearDown() {
-  brave_referrals_service_.reset();
   BrowserProcessImpl::StartTearDown();
 }
 
@@ -175,8 +160,6 @@ ProfileManager* BraveBrowserProcessImpl::profile_manager() {
 void BraveBrowserProcessImpl::StartBraveServices() {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
 
-  resource_component();
-
   if (base::FeatureList::IsEnabled(net::features::kBraveHttpsByDefault)) {
     https_upgrade_exceptions_service();
   }
@@ -192,9 +175,6 @@ void BraveBrowserProcessImpl::StartBraveServices() {
         local_data_files_service());
   }
 
-#if BUILDFLAG(ENABLE_GREASELION)
-  greaselion_download_service();
-#endif
   debounce_component_installer();
 #if BUILDFLAG(ENABLE_REQUEST_OTR)
   request_otr_component_installer();
@@ -264,17 +244,6 @@ BraveBrowserProcessImpl::localhost_permission_component() {
   }
   return localhost_permission_component_.get();
 }
-
-#if BUILDFLAG(ENABLE_GREASELION)
-greaselion::GreaselionDownloadService*
-BraveBrowserProcessImpl::greaselion_download_service() {
-  if (!greaselion_download_service_) {
-    greaselion_download_service_ = greaselion::GreaselionDownloadServiceFactory(
-        local_data_files_service());
-  }
-  return greaselion_download_service_.get();
-}
-#endif
 
 debounce::DebounceComponentInstaller*
 BraveBrowserProcessImpl::debounce_component_installer() {
@@ -371,34 +340,6 @@ void BraveBrowserProcessImpl::OnTorEnabledChanged() {
   }
 }
 #endif
-
-brave::BraveReferralsService*
-BraveBrowserProcessImpl::brave_referrals_service() {
-  if (!brave_referrals_service_) {
-    brave_referrals_service_ = std::make_unique<brave::BraveReferralsService>(
-        local_state(), brave_stats::GetAPIKey(),
-        brave_stats::GetPlatformIdentifier());
-    brave_referrals_service_->set_delegate(
-        std::make_unique<ReferralsServiceDelegate>(
-            brave_referrals_service_.get()));
-  }
-  return brave_referrals_service_.get();
-}
-
-brave_ads::BraveStatsHelper* BraveBrowserProcessImpl::ads_brave_stats_helper() {
-  if (!brave_stats_helper_) {
-    brave_stats_helper_ = std::make_unique<brave_ads::BraveStatsHelper>();
-  }
-  return brave_stats_helper_.get();
-}
-
-brave_ads::ResourceComponent* BraveBrowserProcessImpl::resource_component() {
-  if (!resource_component_) {
-    resource_component_ = std::make_unique<brave_ads::ResourceComponent>(
-        brave_component_updater_delegate());
-  }
-  return resource_component_.get();
-}
 
 void BraveBrowserProcessImpl::CreateProfileManager() {
   DCHECK(!created_profile_manager_ && !profile_manager_);

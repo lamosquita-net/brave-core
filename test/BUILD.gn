@@ -9,7 +9,6 @@ import("//brave/browser/metrics/buildflags/buildflags.gni")
 import("//brave/build/config.gni")
 import("//brave/components/brave_wayback_machine/buildflags/buildflags.gni")
 import("//brave/components/brave_webtorrent/browser/buildflags/buildflags.gni")
-import("//brave/components/greaselion/browser/buildflags/buildflags.gni")
 import("//brave/components/ntp_background_images/buildflags/buildflags.gni")
 import("//brave/components/playlist/common/buildflags/buildflags.gni")
 import("//brave/components/request_otr/common/buildflags/buildflags.gni")
@@ -167,27 +166,15 @@ test("brave_unit_tests") {
     "//brave/browser/search:unit_tests",
     "//brave/browser/themes",
     "//brave/browser/ui:unit_tests",
-    "//brave/browser/ui/brave_rewards:unit_tests",
     "//brave/browser/ui/brave_tooltips",
     "//brave/browser/ui/tabs/test:unit_tests",
     "//brave/chromium_src/components/flags_ui:unit_tests",
     "//brave/chromium_src/components/privacy_sandbox:unit_tests",
     "//brave/chromium_src/net/base:unit_tests",
     "//brave/components/api_request_helper:api_request_helper_unit_tests",
-    "//brave/components/brave_adaptive_captcha/test:brave_adaptive_captcha_unit_tests",
-    "//brave/components/brave_ads/browser:test_support",
-    "//brave/components/brave_ads/browser:unit_tests",
-    "//brave/components/brave_ads/content/browser:unit_tests",
-    "//brave/components/brave_ads/core",
-    "//brave/components/brave_ads/core/test:brave_ads_unit_tests",
     "//brave/components/brave_component_updater/browser",
     "//brave/components/brave_perf_predictor/browser",
     "//brave/components/brave_private_cdn",
-    "//brave/components/brave_referrals/browser:unit_tests",
-    "//brave/components/brave_rewards/common",
-    "//brave/components/brave_rewards/common:features",
-    "//brave/components/brave_rewards/core/test",
-    "//brave/components/brave_rewards/test:brave_rewards_unit_tests",
     "//brave/components/brave_search/browser",
     "//brave/components/brave_search/common",
     "//brave/components/brave_search_conversion",
@@ -210,7 +197,6 @@ test("brave_unit_tests") {
     "//brave/components/brave_wallet/common:mojom",
     "//brave/components/brave_wallet/common:unit_tests",
     "//brave/components/brave_wallet/renderer/test:unit_tests",
-    "//brave/components/challenge_bypass_ristretto:unit_tests",
     "//brave/components/child_process_monitor:unittests",
     "//brave/components/constants",
     "//brave/components/de_amp/browser/test:unit_tests",
@@ -236,8 +222,6 @@ test("brave_unit_tests") {
     "//brave/components/services/brave_wallet/zcash:zcash_decoder_unit_tests",
     "//brave/components/sessions/content:unit_tests",
     "//brave/components/signin/public/identity_manager:unit_tests",
-    "//brave/components/skus/browser:unit_tests",
-    "//brave/components/skus/renderer:unit_tests",
     "//brave/components/sync/engine:unit_tests",
     "//brave/components/sync/service:unit_tests",
     "//brave/components/time_period_storage",
@@ -295,8 +279,6 @@ test("brave_unit_tests") {
     # test.
     # TODO(keur): Reminder to move this out when we migrate
     # stats browser tests into unit tests.
-    "//brave/components/brave_referrals/browser",
-    "//brave/components/brave_rewards/browser",
   ]
 
   if (enable_tor) {
@@ -431,7 +413,6 @@ test("brave_unit_tests") {
     deps += [
       "//brave/browser/onboarding:unit_tests",
       "//brave/browser/ui/sidebar:unit_tests",
-      "//brave/browser/ui/views/brave_ads:unit_tests",
       "//brave/browser/ui/views/brave_tooltips",
       "//brave/components/sidebar/browser:unit_tests",
     ]
@@ -636,7 +617,6 @@ if (!is_android) {
 
     deps = [
       "//base",
-      "//brave/components/brave_rewards/browser",
       "//chrome/browser",
       "//chrome/browser/profiles:profile",
       "//chrome/browser/ui",
@@ -740,25 +720,6 @@ test("brave_browser_tests") {
     "//brave/chromium_src/chrome/browser/ui/views/tabs/tab_hover_card_bubble_view_browsertest.cc",
     "//brave/common/brave_channel_info_browsertest.cc",
     "//brave/components/brave_perf_predictor/browser/perf_predictor_tab_helper_browsertest.cc",
-    "//brave/components/brave_rewards/browser/test/common/rewards_browsertest_context_helper.cc",
-    "//brave/components/brave_rewards/browser/test/common/rewards_browsertest_context_helper.h",
-    "//brave/components/brave_rewards/browser/test/common/rewards_browsertest_context_util.cc",
-    "//brave/components/brave_rewards/browser/test/common/rewards_browsertest_context_util.h",
-    "//brave/components/brave_rewards/browser/test/common/rewards_browsertest_contribution.cc",
-    "//brave/components/brave_rewards/browser/test/common/rewards_browsertest_contribution.h",
-    "//brave/components/brave_rewards/browser/test/common/rewards_browsertest_network_util.cc",
-    "//brave/components/brave_rewards/browser/test/common/rewards_browsertest_network_util.h",
-    "//brave/components/brave_rewards/browser/test/common/rewards_browsertest_response.cc",
-    "//brave/components/brave_rewards/browser/test/common/rewards_browsertest_response.h",
-    "//brave/components/brave_rewards/browser/test/common/rewards_browsertest_util.cc",
-    "//brave/components/brave_rewards/browser/test/common/rewards_browsertest_util.h",
-    "//brave/components/brave_rewards/browser/test/rewards_browsertest.cc",
-    "//brave/components/brave_rewards/browser/test/rewards_contribution_browsertest.cc",
-    "//brave/components/brave_rewards/browser/test/rewards_flag_browsertest.cc",
-    "//brave/components/brave_rewards/browser/test/rewards_notification_browsertest.cc",
-    "//brave/components/brave_rewards/browser/test/rewards_p3a_browsertest.cc",
-    "//brave/components/brave_rewards/browser/test/rewards_publisher_browsertest.cc",
-    "//brave/components/brave_rewards/browser/test/rewards_state_browsertest.cc",
     "//brave/components/content_settings/renderer/brave_content_settings_agent_impl_autoplay_browsertest.cc",
     "//brave/components/content_settings/renderer/brave_content_settings_agent_impl_browsertest.cc",
     "//brave/components/webcompat/webcompat_exceptions_browsertest.cc",
@@ -780,8 +741,6 @@ test("brave_browser_tests") {
     "//brave/app:command_ids",
     "//brave/browser",
     "//brave/browser/autoplay:browser_tests",
-    "//brave/browser/brave_ads:browser_tests",
-    "//brave/browser/brave_rewards/test:browser_tests",
     "//brave/browser/brave_wallet",
     "//brave/browser/brave_wallet:browser_tests",
     "//brave/browser/brave_wallet:tab_helper",
@@ -798,7 +757,6 @@ test("brave_browser_tests") {
     "//brave/browser/profiles",
     "//brave/browser/sandbox:browser_tests",
     "//brave/browser/sessions:browser_tests",
-    "//brave/browser/skus/test:browser_tests",
     "//brave/browser/storage_access_api:browser_tests",
     "//brave/browser/test:browser_tests",
     "//brave/browser/themes",
@@ -807,19 +765,9 @@ test("brave_browser_tests") {
     "//brave/browser/ui/views/tabs:browser_tests",
     "//brave/browser/ui/webui:browser_tests",
     "//brave/common",
-    "//brave/components/brave_ads/browser",
-    "//brave/components/brave_ads/core",
     "//brave/components/brave_component_updater/browser",
     "//brave/components/brave_perf_predictor/browser",
     "//brave/components/brave_perf_predictor/common",
-    "//brave/components/brave_referrals/browser",
-    "//brave/components/brave_rewards/browser",
-    "//brave/components/brave_rewards/common",
-    "//brave/components/brave_rewards/common:features",
-    "//brave/components/brave_rewards/common/buildflags:buildflags",
-    "//brave/components/brave_rewards/common/mojom:core",
-    "//brave/components/brave_rewards/core",
-    "//brave/components/brave_rewards/core:publishers_proto",
     "//brave/components/brave_search/browser",
     "//brave/components/brave_search/common",
     "//brave/components/brave_shields/content/browser",
@@ -850,12 +798,10 @@ test("brave_browser_tests") {
     "//brave/components/ntp_background_images/buildflags",
     "//brave/components/ntp_background_images/common",
     "//brave/components/resources:strings_grit",
-    "//brave/components/skus/common",
     "//brave/components/speedreader/common/buildflags",
     "//brave/components/tor/buildflags",
     "//brave/components/url_sanitizer/browser",
     "//brave/components/webcompat:core",
-    "//brave/renderer/skus:browser_tests",
     "//brave/renderer/test:browser_tests",
     "//brave/third_party/blink/renderer:renderer",
     "//build:chromeos_buildflags",
@@ -954,15 +900,6 @@ test("brave_browser_tests") {
     sources += [ "//brave/browser/ui/views/crash_report_permission_ask_dialog_browsertest.cc" ]
   }
 
-  if (enable_greaselion) {
-    sources += [ "//brave/browser/greaselion/greaselion_browsertest.cc" ]
-
-    deps += [
-      "//brave/components/greaselion/browser",
-      "//chrome/browser",
-    ]
-  }
-
   if (ethereum_remote_client_enabled) {
     sources += [ "//brave/browser/extensions/brave_wallet_apitest.cc" ]
 
@@ -1018,7 +955,6 @@ test("brave_browser_tests") {
   if (toolkit_views) {
     sources += [
       "//brave/browser/ui/views/bookmarks/bookmark_bar_browsertest.cc",
-      "//brave/browser/ui/views/brave_actions/brave_actions_container_browsertest.cc",
       "//brave/browser/ui/views/brave_shields/cookie_list_opt_in_browsertest.cc",
       "//brave/browser/ui/views/frame/brave_non_client_hit_test_helper_browsertest.cc",
       "//brave/browser/ui/views/frame/brave_tabs_search_button_browsertest.cc",
@@ -1035,7 +971,6 @@ test("brave_browser_tests") {
     ]
     deps += [
       "//brave/browser/ui/sidebar:browser_tests",
-      "//brave/browser/ui/views/brave_ads:browser_tests",
       "//brave/browser/ui/views/tabs:browser_tests",
       "//brave/components/sidebar/browser",
       "//brave/test/views/snapshot",
