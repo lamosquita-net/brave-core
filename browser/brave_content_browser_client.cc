@@ -715,7 +715,7 @@ void BraveContentBrowserClient::WillCreateURLLoaderFactory(
   BraveProxyingURLLoaderFactory::MaybeProxyRequest(
       browser_context, frame,
       type == URLLoaderFactoryType::kNavigation ? -1 : render_process_id,
-      factory_builder, navigation_response_task_runner);
+      factory_builder, type, navigation_response_task_runner);
 
   ChromeContentBrowserClient::WillCreateURLLoaderFactory(
       browser_context, frame, render_process_id, type, request_initiator,

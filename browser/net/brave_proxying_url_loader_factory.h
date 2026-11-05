@@ -12,6 +12,7 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -24,11 +25,13 @@
 #include "base/time/time.h"
 #include "brave/browser/net/resource_context_data.h"
 #include "brave/browser/net/url_context.h"
+#include "content/public/browser/content_browser_client.h"
 #include "mojo/public/cpp/bindings/pending_receiver.h"
 #include "mojo/public/cpp/bindings/pending_remote.h"
 #include "mojo/public/cpp/bindings/receiver_set.h"
 #include "mojo/public/cpp/bindings/remote.h"
 #include "net/base/completion_once_callback.h"
+#include "net/base/net_errors.h"
 #include "net/traffic_annotation/network_traffic_annotation.h"
 #include "services/network/public/cpp/http_request_headers_update_params.h"
 #include "services/network/public/cpp/resource_request.h"
@@ -45,7 +48,12 @@ class RenderFrameHost;
 }  // namespace content
 
 // Cargoculted from WebRequestProxyingURLLoaderFactory and
-// signin::ProxyingURLLoaderFactory
+// signin::ProxyingURLLoaderFactory.
+//
+// NOTE: FollowRedirect()'s validation against an unsolicited/malformed call
+// (see `deferred_redirect_url_` and `RejectFollowRedirect()` below) is ported
+// from WebRequestProxyingURLLoaderFactory::InProgressRequest::FollowRedirect()
+// (crbug.com/497494634). Re-diff against it when rebasing.
 class BraveProxyingURLLoaderFactory
     : public network::mojom::URLLoaderFactory {
  public:
@@ -114,6 +122,13 @@ class BraveProxyingURLLoaderFactory
     void OnRequestError(const network::URLLoaderCompletionStatus& status);
     void HandleBeforeRequestRedirect();
 
+    // Terminates a request whose client violated the URLLoader contract for
+    // FollowRedirect(), and reports `reason` as a bad message if the client is
+    // a renderer process. Deletes `this`.
+    void RejectFollowRedirect(
+        std::string_view reason,
+        net::Error error_code = net::ERR_INVALID_ARGUMENT);
+
     base::TimeTicks start_time_;
 
     // TODO(iefremov): Get rid of shared_ptr, we should clearly own the pointer.
@@ -152,7 +167,14 @@ class BraveProxyingURLLoaderFactory
     network::mojom::URLResponseHeadPtr current_response_head_;
     mojo::ScopedDataPipeConsumerHandle current_response_body_;
     scoped_refptr<net::HttpResponseHeaders> override_headers_;
+    // A redirect *requested by a Brave request handler*, which this class then
+    // synthesizes. Not to be confused with `deferred_redirect_url_` below.
     GURL redirect_url_;
+
+    // The target of a redirect already forwarded to `target_client_` via
+    // OnReceiveRedirect(), but not yet followed. Must be set for a legitimate
+    // call to FollowRedirect(). See RejectFollowRedirect().
+    std::optional<GURL> deferred_redirect_url_;
 
     bool request_completed_ = false;
 
@@ -186,6 +208,8 @@ class BraveProxyingURLLoaderFactory
       int render_process_id,
       content::FrameTreeNodeId frame_tree_node_id,
       network::URLLoaderFactoryBuilder& factory_builder,
+      content::ContentBrowserClient::URLLoaderFactoryType
+          url_loader_factory_type,
       scoped_refptr<RequestIDGenerator> request_id_generator,
       DisconnectCallback on_disconnect,
       scoped_refptr<base::SequencedTaskRunner> navigation_response_task_runner);
@@ -201,6 +225,8 @@ class BraveProxyingURLLoaderFactory
       content::RenderFrameHost* render_frame_host,
       int render_process_id,
       network::URLLoaderFactoryBuilder& factory_builder,
+      content::ContentBrowserClient::URLLoaderFactoryType
+          url_loader_factory_type,
       scoped_refptr<base::SequencedTaskRunner> navigation_response_task_runner);
 
   // network::mojom::URLLoaderFactory:
@@ -229,6 +255,8 @@ class BraveProxyingURLLoaderFactory
   raw_ptr<content::BrowserContext> browser_context_ = nullptr;
   const int render_process_id_;
   const content::FrameTreeNodeId frame_tree_node_id_;
+  const content::ContentBrowserClient::URLLoaderFactoryType
+      url_loader_factory_type_;
 
   mojo::ReceiverSet<network::mojom::URLLoaderFactory> proxy_receivers_;
   mojo::Remote<network::mojom::URLLoaderFactory> target_factory_;
