@@ -14,15 +14,20 @@
 #include "chrome/browser/chrome_content_browser_client.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/content_browser_client.h"
+#include "content/public/browser/frame_tree_node_id.h"
 #include "mojo/public/cpp/bindings/pending_remote.h"
 #include "services/metrics/public/cpp/ukm_source_id.h"
 #include "third_party/blink/public/mojom/loader/referrer.mojom.h"
 
+class BraveBluetoothDelegate;
 class PrefChangeRegistrar;
 
 namespace content {
+class BluetoothDelegate;
 class BrowserContext;
+class NavigationThrottleRegistry;
 class RenderProcessHost;
+class SiteInstance;
 }  // namespace content
 
 namespace blink {
@@ -57,7 +62,7 @@ class BraveContentBrowserClient : public ChromeContentBrowserClient {
   bool HandleExternalProtocol(
       const GURL& url,
       content::WebContents::Getter web_contents_getter,
-      int frame_tree_node_id,
+      content::FrameTreeNodeId frame_tree_node_id,
       content::NavigationUIData* navigation_data,
       bool is_primary_main_frame,
       bool is_in_fenced_frame_tree,
@@ -66,6 +71,7 @@ class BraveContentBrowserClient : public ChromeContentBrowserClient {
       bool has_user_gesture,
       const std::optional<url::Origin>& initiating_origin,
       content::RenderFrameHost* initiator_document,
+      const net::IsolationInfo& isolation_info,
       mojo::PendingRemote<network::mojom::URLLoaderFactory>* out_factory)
       override;
 
@@ -81,10 +87,9 @@ class BraveContentBrowserClient : public ChromeContentBrowserClient {
       const GURL& url,
       content::BrowserContext* browser_context) override;
 
-  content::ContentBrowserClient::AllowWebBluetoothResult AllowWebBluetooth(
-      content::BrowserContext* browser_context,
-      const url::Origin& requesting_origin,
-      const url::Origin& embedding_origin) override;
+  // Web Bluetooth stays behind kBraveWebBluetoothAPI (BraveBluetoothDelegate):
+  // 156 moved AllowWebBluetooth() to the BluetoothDelegate.
+  content::BluetoothDelegate* GetBluetoothDelegate() override;
 
   void RegisterBrowserInterfaceBindersForFrame(
       content::RenderFrameHost* render_frame_host,
@@ -99,7 +104,7 @@ class BraveContentBrowserClient : public ChromeContentBrowserClient {
       content::BrowserContext* browser_context,
       const base::RepeatingCallback<content::WebContents*()>& wc_getter,
       content::NavigationUIData* navigation_ui_data,
-      int frame_tree_node_id,
+      content::FrameTreeNodeId frame_tree_node_id,
       std::optional<int64_t> navigation_id) override;
 
   void WillCreateURLLoaderFactory(
@@ -117,8 +122,8 @@ class BraveContentBrowserClient : public ChromeContentBrowserClient {
       bool* bypass_redirect_checks,
       bool* disable_secure_dns,
       network::mojom::URLLoaderFactoryOverridePtr* factory_override,
-      scoped_refptr<base::SequencedTaskRunner> navigation_response_task_runner)
-      override;
+      scoped_refptr<base::SequencedTaskRunner> navigation_response_task_runner,
+      bool is_for_network_service) override;
 
   bool WillInterceptWebSocket(content::RenderFrameHost* frame) override;
   void CreateWebSocket(
@@ -128,20 +133,21 @@ class BraveContentBrowserClient : public ChromeContentBrowserClient {
       const net::SiteForCookies& site_for_cookies,
       const std::optional<std::string>& user_agent,
       mojo::PendingRemote<network::mojom::WebSocketHandshakeClient>
-          handshake_client) override;
+          handshake_client,
+      content::ContentBrowserClient::WebSocketOptions options) override;
 
   void MaybeHideReferrer(content::BrowserContext* browser_context,
                          const GURL& request_url,
                          const GURL& document_url,
                          blink::mojom::ReferrerPtr* referrer) override;
 
-  GURL GetEffectiveURL(content::BrowserContext* browser_context,
-                       const GURL& url) override;
+  std::optional<GURL> GetEffectiveURL(content::BrowserContext* browser_context,
+                                      const GURL& url) override;
   static bool HandleURLOverrideRewrite(
       GURL* url,
       content::BrowserContext* browser_context);
-  std::vector<std::unique_ptr<content::NavigationThrottle>>
-  CreateThrottlesForNavigation(content::NavigationHandle* handle) override;
+  void CreateThrottlesForNavigation(
+      content::NavigationThrottleRegistry& registry) override;
 
   // We use this for the Google Sign-In feature
   bool CanCreateWindow(content::RenderFrameHost* opener,
@@ -165,14 +171,15 @@ class BraveContentBrowserClient : public ChromeContentBrowserClient {
 
   bool OverrideWebPreferencesAfterNavigation(
       content::WebContents* web_contents,
+      content::SiteInstance& main_frame_site,
       blink::web_pref::WebPreferences* prefs) override;
 
-  void OverrideWebkitPrefs(content::WebContents* web_contents,
-                           blink::web_pref::WebPreferences* prefs) override;
+  void OverrideWebPreferences(content::WebContents* web_contents,
+                              content::SiteInstance& main_frame_site,
+                              blink::web_pref::WebPreferences* prefs) override;
   // FlyWeb: User-Agent with the declared engine level (flyweb/declared_version.h).
+  // 156 dropped GetUserAgentBasedOnPolicy(); every UA goes through here.
   std::string GetUserAgent() override;
-  std::string GetUserAgentBasedOnPolicy(
-      content::BrowserContext* context) override;
   blink::UserAgentMetadata GetUserAgentMetadata() override;
 
   GURL SanitizeURL(content::RenderFrameHost* render_frame_host,
@@ -183,6 +190,7 @@ class BraveContentBrowserClient : public ChromeContentBrowserClient {
 
   std::unique_ptr<PrefChangeRegistrar, content::BrowserThread::DeleteOnUIThread>
       pref_change_registrar_;
+  std::unique_ptr<BraveBluetoothDelegate> bluetooth_delegate_;
 };
 
 #endif  // BRAVE_BROWSER_BRAVE_CONTENT_BROWSER_CLIENT_H_

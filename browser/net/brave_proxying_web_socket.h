@@ -21,6 +21,7 @@
 #include "brave/browser/net/url_context.h"
 #include "content/public/browser/content_browser_client.h"
 #include "mojo/public/cpp/bindings/pending_receiver.h"
+#include "mojo/public/cpp/bindings/pending_remote.h"
 #include "mojo/public/cpp/bindings/receiver.h"
 #include "mojo/public/cpp/bindings/remote.h"
 #include "net/ssl/ssl_info.h"
@@ -72,7 +73,10 @@ class BraveProxyingWebSocket
       mojo::PendingRemote<network::mojom::WebSocketHandshakeClient>
           handshake_client);
 
-  void Start();
+  // `trusted_header_client` is the downstream header client from the 156
+  // WebSocketOptions when no other proxy sits behind this one.
+  void Start(mojo::PendingRemote<network::mojom::TrustedHeaderClient>
+                 trusted_header_client = mojo::NullRemote());
 
   content::ContentBrowserClient::WebSocketFactory web_socket_factory();
   mojo::Remote<network::mojom::WebSocketHandshakeClient> handshake_client();

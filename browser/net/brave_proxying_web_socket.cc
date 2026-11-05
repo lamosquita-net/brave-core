@@ -77,7 +77,15 @@ BraveProxyingWebSocket* BraveProxyingWebSocket::ProxyWebSocket(
       frame->GetFrameTreeNodeId(), frame->GetLastCommittedOrigin());
 }
 
-void BraveProxyingWebSocket::Start() {
+void BraveProxyingWebSocket::Start(
+    mojo::PendingRemote<network::mojom::TrustedHeaderClient>
+        trusted_header_client) {
+  if (trusted_header_client) {
+    // Bind it before OnBeforeRequestComplete() so its header changes are
+    // merged into request_ before Brave's own handling (as in 1.98).
+    proxy_trusted_header_client_.Bind(std::move(trusted_header_client));
+  }
+
   request_id_ = request_id_generator_->Generate();
   // If the header client will be used, we start the request immediately, and
   // OnBeforeSendHeaders and OnSendHeaders will be handled there. Otherwise,
