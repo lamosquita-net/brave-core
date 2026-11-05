@@ -61,7 +61,7 @@ PartitionedHostStateMapBase::GetKeyWithPartitionHash(
 
 base::span<const uint8_t> PartitionedHostStateMapBase::GetHalfKey(
     const HashedHost& k) {
-  return base::make_span(k.data(), std::size(k) / 2);
+  return base::span(k).first<crypto::kSHA256Length / 2>();
 }
 
 }  // namespace net
