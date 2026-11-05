@@ -11,7 +11,6 @@
 
 #if !BUILDFLAG(IS_ANDROID)
 #include "brave/browser/brave_browser_process.h"
-#include "brave/browser/misc_metrics/process_misc_metrics.h"
 #include "brave/browser/ui/brave_browser.h"
 #include "brave/browser/ui/sidebar/sidebar_controller.h"
 #endif  // BUILDFLAG(!IS_ANDROID)

@@ -51,10 +51,6 @@ namespace debounce {
 class DebounceComponentInstaller;
 }  // namespace debounce
 
-namespace misc_metrics {
-class ProcessMiscMetrics;
-}  // namespace misc_metrics
-
 namespace request_otr {
 #if BUILDFLAG(ENABLE_REQUEST_OTR)
 class RequestOTRComponentInstallerPolicy;
@@ -133,7 +129,6 @@ class BraveBrowserProcessImpl : public BraveBrowserProcess,
       override;
 #endif
   brave::BraveFarblingService* brave_farbling_service() override;
-  misc_metrics::ProcessMiscMetrics* process_misc_metrics() override;
 
  private:
   // BrowserProcessImpl overrides:
@@ -202,7 +197,6 @@ class BraveBrowserProcessImpl : public BraveBrowserProcess,
 #endif
 
   std::unique_ptr<brave::BraveFarblingService> brave_farbling_service_;
-  std::unique_ptr<misc_metrics::ProcessMiscMetrics> process_misc_metrics_;
   std::unique_ptr<brave_ads::BraveStatsHelper> brave_stats_helper_;
 };
 

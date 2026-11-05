@@ -12,7 +12,6 @@
 #include "base/check.h"
 #include "base/feature_list.h"
 #include "brave/browser/brave_browser_process.h"
-#include "brave/browser/misc_metrics/process_misc_metrics.h"
 #include "brave/browser/new_tab/new_tab_shows_options.h"
 #include "brave/browser/ntp_background/brave_ntp_custom_background_service_factory.h"
 #include "brave/browser/ui/brave_ui_features.h"
@@ -22,7 +21,6 @@
 #include "brave/browser/ui/webui/new_tab_page/top_sites_message_handler.h"
 #include "brave/components/brave_new_tab/resources/grit/brave_new_tab_generated_map.h"
 #include "brave/components/l10n/common/localization_util.h"
-#include "brave/components/misc_metrics/new_tab_metrics.h"
 #include "brave/components/ntp_background_images/browser/ntp_custom_images_source.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/search_engines/template_url_service_factory.h"
@@ -131,8 +129,8 @@ void BraveNewTabUI::CreatePageHandler(
   page_handler_ = std::make_unique<BraveNewTabPageHandler>(
       std::move(pending_page_handler), std::move(pending_page), profile,
       web_ui()->GetWebContents());
-  g_brave_browser_process->process_misc_metrics()->new_tab_metrics()->Bind(
-      std::move(pending_new_tab_metrics));
+  // FlyWeb: misc_metrics removed; the NewTabMetrics receiver is dropped, so
+  // the page's metric calls are discarded.
 }
 
 WEB_UI_CONTROLLER_TYPE_IMPL(BraveNewTabUI)

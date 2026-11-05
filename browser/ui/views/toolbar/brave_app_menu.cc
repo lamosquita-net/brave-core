@@ -13,11 +13,9 @@
 #include "base/scoped_observation.h"
 #include "brave/app/brave_command_ids.h"
 #include "brave/browser/brave_browser_process.h"
-#include "brave/browser/misc_metrics/process_misc_metrics.h"
 #include "brave/browser/ui/color/brave_color_id.h"
 #include "brave/browser/ui/sidebar/sidebar_service_factory.h"
 #include "brave/browser/ui/toolbar/brave_app_menu_model.h"
-#include "brave/components/misc_metrics/menu_metrics.h"
 #include "brave/components/sidebar/browser/sidebar_service.h"
 #include "brave/grit/brave_generated_resources.h"
 #include "cc/paint/paint_flags.h"
@@ -167,10 +165,7 @@ SidebarShowOptionMenu::SidebarShowOptionMenu(BraveAppMenu* app_menu,
 BraveAppMenu::BraveAppMenu(Browser* browser,
                            ui::MenuModel* model,
                            int run_types)
-    : AppMenu(browser, model, run_types),
-      menu_metrics_(
-          g_brave_browser_process->process_misc_metrics()->menu_metrics()) {
-  DCHECK(menu_metrics_);
+    : AppMenu(browser, model, run_types) {
   UpdateMenuItemView();
 }
 
@@ -178,7 +173,6 @@ BraveAppMenu::~BraveAppMenu() = default;
 
 void BraveAppMenu::RunMenu(views::MenuButtonController* host) {
   AppMenu::RunMenu(host);
-  menu_metrics_->RecordMenuShown();
 }
 
 void BraveAppMenu::ExecuteCommand(int command_id, int mouse_event_flags) {
@@ -194,52 +188,10 @@ void BraveAppMenu::ExecuteCommand(int command_id, int mouse_event_flags) {
     return;
   }
   AppMenu::ExecuteCommand(command_id, mouse_event_flags);
-  RecordMenuUsage(command_id);
 }
 
 void BraveAppMenu::OnMenuClosed(views::MenuItemView* menu) {
   AppMenu::OnMenuClosed(menu);
-  if (menu == nullptr) {
-    menu_metrics_->RecordMenuDismiss();
-  }
-}
-
-void BraveAppMenu::RecordMenuUsage(int command_id) {
-  misc_metrics::MenuGroup group;
-
-  switch (command_id) {
-    case IDC_NEW_WINDOW:
-    case IDC_NEW_TAB:
-    case IDC_NEW_INCOGNITO_WINDOW:
-    case IDC_NEW_OFFTHERECORD_WINDOW_TOR:
-    case IDC_OPEN_GUEST_PROFILE:
-      group = misc_metrics::MenuGroup::kTabWindow;
-      break;
-    case IDC_SHOW_BRAVE_WALLET:
-    case IDC_TOGGLE_AI_CHAT:
-    case IDC_SHOW_BRAVE_SYNC:
-    case IDC_SHOW_BRAVE_REWARDS:
-      group = misc_metrics::MenuGroup::kBraveFeatures;
-      break;
-    case IDC_SHOW_HISTORY:
-    case IDC_MANAGE_EXTENSIONS:
-    case IDC_SHOW_BOOKMARK_MANAGER:
-    case IDC_BOOKMARK_THIS_TAB:
-    case IDC_BOOKMARK_ALL_TABS:
-    case IDC_SHOW_BOOKMARK_BAR:
-    case IDC_IMPORT_SETTINGS:
-    case IDC_OPTIONS:
-    case IDC_SHOW_DOWNLOADS:
-      group = misc_metrics::MenuGroup::kBrowserViews;
-      break;
-    default:
-      if (command_id >= IDC_FIRST_UNBOUNDED_MENU) {
-        group = misc_metrics::MenuGroup::kBrowserViews;
-      } else {
-        return;
-      }
-  }
-  menu_metrics_->RecordMenuGroupAction(group);
 }
 
 void BraveAppMenu::UpdateMenuItemView() {

@@ -20,7 +20,6 @@
 #include "brave/browser/debounce/debounce_service_factory.h"
 #include "brave/browser/ephemeral_storage/ephemeral_storage_service_factory.h"
 #include "brave/browser/ethereum_remote_client/buildflags/buildflags.h"
-#include "brave/browser/misc_metrics/profile_misc_metrics_service_factory.h"
 #include "brave/browser/ntp_background/view_counter_service_factory.h"
 #include "brave/browser/permissions/permission_lifetime_manager_factory.h"
 #include "brave/browser/profiles/brave_renderer_updater_factory.h"
@@ -95,7 +94,6 @@ void EnsureBrowserContextKeyedServiceFactoriesBuilt() {
   brave::URLSanitizerServiceFactory::GetInstance();
   BraveRendererUpdaterFactory::GetInstance();
   SearchEngineProviderServiceFactory::GetInstance();
-  misc_metrics::ProfileMiscMetricsServiceFactory::GetInstance();
 #if BUILDFLAG(ENABLE_GREASELION)
   greaselion::GreaselionServiceFactory::GetInstance();
 #endif

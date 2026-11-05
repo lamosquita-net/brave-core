@@ -154,11 +154,6 @@ TestingBraveBrowserProcess::brave_farbling_service() {
   return nullptr;
 }
 
-misc_metrics::ProcessMiscMetrics*
-TestingBraveBrowserProcess::process_misc_metrics() {
-  return nullptr;
-}
-
 void TestingBraveBrowserProcess::SetAdBlockService(
     std::unique_ptr<brave_shields::AdBlockService> service) {
   ad_block_service_ = std::move(service);

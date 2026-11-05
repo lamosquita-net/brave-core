@@ -17,7 +17,6 @@
 #include "brave/browser/brave_shields/ad_block_subscription_download_manager_getter.h"
 #include "brave/browser/brave_wallet/wallet_data_files_installer_delegate_impl.h"
 #include "brave/browser/component_updater/brave_component_updater_configurator.h"
-#include "brave/browser/misc_metrics/process_misc_metrics.h"
 #include "brave/browser/net/brave_system_request_handler.h"
 #include "brave/browser/profiles/brave_profile_manager.h"
 #include "brave/browser/themes/brave_dark_mode_utils.h"
@@ -126,9 +125,6 @@ BraveBrowserProcessImpl::BraveBrowserProcessImpl(StartupData* startup_data)
 
   // initialize ads stats helper
   ads_brave_stats_helper();
-
-  // early initialize misc metrics
-  process_misc_metrics();
 }
 
 void BraveBrowserProcessImpl::Init() {
@@ -462,13 +458,4 @@ brave::BraveFarblingService* BraveBrowserProcessImpl::brave_farbling_service() {
     brave_farbling_service_ = std::make_unique<brave::BraveFarblingService>();
   }
   return brave_farbling_service_.get();
-}
-
-misc_metrics::ProcessMiscMetrics*
-BraveBrowserProcessImpl::process_misc_metrics() {
-  if (!process_misc_metrics_) {
-    process_misc_metrics_ =
-        std::make_unique<misc_metrics::ProcessMiscMetrics>(local_state());
-  }
-  return process_misc_metrics_.get();
 }

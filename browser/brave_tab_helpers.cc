@@ -17,8 +17,6 @@
 #include "brave/browser/brave_shields/brave_shields_web_contents_observer.h"
 #include "brave/browser/brave_wallet/brave_wallet_tab_helper.h"
 #include "brave/browser/ephemeral_storage/ephemeral_storage_tab_helper.h"
-#include "brave/browser/misc_metrics/page_metrics_tab_helper.h"
-#include "brave/browser/misc_metrics/process_misc_metrics.h"
 #include "brave/browser/ntp_background/ntp_tab_helper.h"
 #include "brave/browser/skus/skus_service_factory.h"
 #include "brave/browser/ui/bookmark/brave_bookmark_tab_helper.h"
@@ -159,7 +157,6 @@ void AttachTabHelpers(content::WebContents* web_contents) {
 
   if (!web_contents->GetBrowserContext()->IsOffTheRecord()) {
     ntp_background_images::NTPTabHelper::CreateForWebContents(web_contents);
-    misc_metrics::PageMetricsTabHelper::CreateForWebContents(web_contents);
 #if BUILDFLAG(ENABLE_REQUEST_OTR)
     if (base::FeatureList::IsEnabled(
             request_otr::features::kBraveRequestOTRTab)) {
