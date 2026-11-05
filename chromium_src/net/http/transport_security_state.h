@@ -37,6 +37,7 @@ class NET_EXPORT TransportSecurityState
   SSLUpgradeDecision GetSSLUpgradeDecision(
       const NetworkAnonymizationKey& network_anonymization_key,
       const std::string& host,
+      bool is_top_level_nav,
       const NetLogWithSource& net_log = NetLogWithSource());
   bool ShouldSSLErrorsBeFatal(
       const NetworkAnonymizationKey& network_anonymization_key,
@@ -44,18 +45,20 @@ class NET_EXPORT TransportSecurityState
   bool ShouldUpgradeToSSL(
       const NetworkAnonymizationKey& network_anonymization_key,
       const std::string& host,
+      bool is_top_level_nav,
       const NetLogWithSource& net_log = NetLogWithSource());
   bool AddHSTSHeader(const IsolationInfo& isolation_info,
-                     const std::string& host,
-                     const std::string& value);
+                     std::string_view host,
+                     std::string_view value);
 
   // This is used only for manual adding via net-internals page.
-  void AddHSTS(const std::string& host,
+  void AddHSTS(std::string_view host,
                const base::Time& expiry,
                bool include_subdomains);
   // These are used in some places where no NIK is available.
   bool ShouldSSLErrorsBeFatal(const std::string& host);
   bool ShouldUpgradeToSSL(const std::string& host,
+                          bool is_top_level_nav,
                           const NetLogWithSource& net_log = NetLogWithSource());
   bool GetDynamicSTSState(const std::string& host, STSState* result);
   bool DeleteDynamicDataForHost(const std::string& host);

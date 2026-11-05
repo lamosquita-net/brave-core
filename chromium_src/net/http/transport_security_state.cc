@@ -3,12 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+#include "net/http/transport_security_state.h"
+
 #include <optional>
 
+#include "base/check.h"
+#include "base/strings/strcat.h"
 #include "build/build_config.h"
 #include "net/base/network_anonymization_key.h"
 #include "net/base/registry_controlled_domains/registry_controlled_domain.h"
-#include "net/http/transport_security_state.h"
 #include "url/gurl.h"
 #include "url/url_util.h"
 
@@ -119,11 +122,12 @@ std::optional<TransportSecurityState::HashedHost> GetPartitionHashForHSTS(
 // page, PasswordManager. All network::NetworkContext HSTS-related public
 // methods will use this.
 std::optional<TransportSecurityState::HashedHost>
-GetHostBoundPartitionHashForHSTS(const std::string& host) {
+GetHostBoundPartitionHashForHSTS(std::string_view host) {
   if (!base::FeatureList::IsEnabled(features::kBravePartitionHSTS)) {
     return std::nullopt;
   }
-  SchemefulSite schemeful_site(url::Origin::Create(GURL("https://" + host)));
+  SchemefulSite schemeful_site(
+      url::Origin::Create(GURL(base::StrCat({"https://", host}))));
   auto network_anonymization_key =
       net::NetworkAnonymizationKey::CreateFromFrameSite(schemeful_site,
                                                         schemeful_site);
@@ -137,11 +141,12 @@ GetHostBoundPartitionHashForHSTS(const std::string& host) {
 SSLUpgradeDecision TransportSecurityState::GetSSLUpgradeDecision(
     const NetworkAnonymizationKey& network_anonymization_key,
     const std::string& host,
+    bool is_top_level_nav,
     const NetLogWithSource& net_log) {
   auto auto_reset_partition_hash = enabled_sts_hosts_.SetScopedPartitionHash(
       GetPartitionHashForHSTS(network_anonymization_key));
-  return TransportSecurityState_ChromiumImpl::GetSSLUpgradeDecision(host,
-                                                                    net_log);
+  return TransportSecurityState_ChromiumImpl::GetSSLUpgradeDecision(
+      host, is_top_level_nav, net_log);
 }
 
 // Use NetworkAnonymizationKey to create PartitionHash for accessing/storing
@@ -160,18 +165,20 @@ bool TransportSecurityState::ShouldSSLErrorsBeFatal(
 bool TransportSecurityState::ShouldUpgradeToSSL(
     const NetworkAnonymizationKey& network_anonymization_key,
     const std::string& host,
+    bool is_top_level_nav,
     const NetLogWithSource& net_log) {
   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
   auto auto_reset_partition_hash = enabled_sts_hosts_.SetScopedPartitionHash(
       GetPartitionHashForHSTS(network_anonymization_key));
-  return TransportSecurityState_ChromiumImpl::ShouldUpgradeToSSL(host, net_log);
+  return TransportSecurityState_ChromiumImpl::ShouldUpgradeToSSL(
+      host, is_top_level_nav, net_log);
 }
 
 // Use NetworkAnonymizationKey to create PartitionHash for accessing/storing
 // data before calling Chromium implementation
 bool TransportSecurityState::AddHSTSHeader(const IsolationInfo& isolation_info,
-                                           const std::string& host,
-                                           const std::string& value) {
+                                           std::string_view host,
+                                           std::string_view value) {
   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
   auto auto_reset_partition_hash = enabled_sts_hosts_.SetScopedPartitionHash(
       GetPartitionHashForAddingHSTS(isolation_info));
@@ -184,7 +191,7 @@ bool TransportSecurityState::AddHSTSHeader(const IsolationInfo& isolation_info,
 
 // Use NetworkAnonymizationKey to create PartitionHash for accessing/storing
 // data before calling Chromium implementation
-void TransportSecurityState::AddHSTS(const std::string& host,
+void TransportSecurityState::AddHSTS(std::string_view host,
                                      const base::Time& expiry,
                                      bool include_subdomains) {
   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
@@ -207,11 +214,13 @@ bool TransportSecurityState::ShouldSSLErrorsBeFatal(const std::string& host) {
 // data before calling Chromium implementation
 bool TransportSecurityState::ShouldUpgradeToSSL(
     const std::string& host,
+    bool is_top_level_nav,
     const NetLogWithSource& net_log) {
   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
   auto auto_reset_partition_hash = enabled_sts_hosts_.SetScopedPartitionHash(
       GetHostBoundPartitionHashForHSTS(host));
-  return TransportSecurityState_ChromiumImpl::ShouldUpgradeToSSL(host, net_log);
+  return TransportSecurityState_ChromiumImpl::ShouldUpgradeToSSL(
+      host, is_top_level_nav, net_log);
 }
 
 // Use NetworkAnonymizationKey to create PartitionHash for accessing/storing
