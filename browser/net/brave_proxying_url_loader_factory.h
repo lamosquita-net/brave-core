@@ -122,6 +122,14 @@ class BraveProxyingURLLoaderFactory
     void OnRequestError(const network::URLLoaderCompletionStatus& status);
     void HandleBeforeRequestRedirect();
 
+    // A redirect Brave synthesizes for a navigation (HandleBeforeRequestRedirect
+    // or an overridden redirect response) is authorized to skip the 156
+    // NavigationURLLoaderImpl redirect checks, as extensions' webRequest is.
+    void AuthorizeBypassRedirectChecks();
+    // True if a proxy behind this one already authorized the next redirect of
+    // this navigation to skip the redirect checks.
+    bool IsBypassRedirectChecksAuthorized() const;
+
     // Terminates a request whose client violated the URLLoader contract for
     // FollowRedirect(), and reports `reason` as a bad message if the client is
     // a renderer process. Deletes `this`.
@@ -210,6 +218,7 @@ class BraveProxyingURLLoaderFactory
       network::URLLoaderFactoryBuilder& factory_builder,
       content::ContentBrowserClient::URLLoaderFactoryType
           url_loader_factory_type,
+      std::optional<int64_t> navigation_id,
       scoped_refptr<RequestIDGenerator> request_id_generator,
       DisconnectCallback on_disconnect,
       scoped_refptr<base::SequencedTaskRunner> navigation_response_task_runner);
@@ -227,6 +236,7 @@ class BraveProxyingURLLoaderFactory
       network::URLLoaderFactoryBuilder& factory_builder,
       content::ContentBrowserClient::URLLoaderFactoryType
           url_loader_factory_type,
+      std::optional<int64_t> navigation_id,
       scoped_refptr<base::SequencedTaskRunner> navigation_response_task_runner);
 
   // network::mojom::URLLoaderFactory:
@@ -257,6 +267,7 @@ class BraveProxyingURLLoaderFactory
   const content::FrameTreeNodeId frame_tree_node_id_;
   const content::ContentBrowserClient::URLLoaderFactoryType
       url_loader_factory_type_;
+  const std::optional<int64_t> navigation_id_;
 
   mojo::ReceiverSet<network::mojom::URLLoaderFactory> proxy_receivers_;
   mojo::Remote<network::mojom::URLLoaderFactory> target_factory_;

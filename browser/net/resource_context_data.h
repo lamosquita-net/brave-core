@@ -68,6 +68,7 @@ class ResourceContextData : public base::SupportsUserData::Data {
       network::URLLoaderFactoryBuilder& factory_builder,
       content::ContentBrowserClient::URLLoaderFactoryType
           url_loader_factory_type,
+      std::optional<int64_t> navigation_id,
       scoped_refptr<base::SequencedTaskRunner> navigation_response_task_runner);
 
   static BraveProxyingWebSocket* StartProxyingWebSocket(

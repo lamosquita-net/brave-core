@@ -20,6 +20,7 @@
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/browser_task_traits.h"
 #include "content/public/browser/browser_thread.h"
+#include "content/public/browser/navigation_handle.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/common/url_utils.h"
 #include "mojo/public/cpp/system/data_pipe_producer.h"
@@ -180,6 +181,24 @@ void BraveProxyingURLLoaderFactory::InProgressRequest::RestartInternal() {
   continuation.Run(net::OK);
 }
 
+void BraveProxyingURLLoaderFactory::InProgressRequest::
+    AuthorizeBypassRedirectChecks() {
+  if (!factory_->navigation_id_ || frame_tree_node_id_.is_null()) {
+    return;
+  }
+  content::NavigationHandle::SetBypassRedirectChecksForNextRedirect(
+      frame_tree_node_id_, *factory_->navigation_id_);
+}
+
+bool BraveProxyingURLLoaderFactory::InProgressRequest::
+    IsBypassRedirectChecksAuthorized() const {
+  if (!factory_->navigation_id_ || frame_tree_node_id_.is_null()) {
+    return false;
+  }
+  return content::NavigationHandle::HasBypassRedirectChecksForNextRedirect(
+      frame_tree_node_id_, *factory_->navigation_id_);
+}
+
 void BraveProxyingURLLoaderFactory::InProgressRequest::FollowRedirect(
     network::HttpRequestHeadersUpdateParams headers_update_params,
     const std::optional<GURL>& new_url) {
@@ -282,6 +301,16 @@ void BraveProxyingURLLoaderFactory::InProgressRequest::OnReceiveResponse(
 void BraveProxyingURLLoaderFactory::InProgressRequest::OnReceiveRedirect(
     const net::RedirectInfo& redirect_info,
     network::mojom::URLResponseHeadPtr head) {
+  // Network redirects to targets a web page may not reach (e.g. chrome://,
+  // file:) are refused here too, unless a proxy behind this one authorized
+  // the redirect for this navigation (as in 1.98).
+  if (!IsBypassRedirectChecksAuthorized() &&
+      !content::IsSafeRedirectTarget(request_.url, redirect_info.new_url)) {
+    OnRequestError(
+        network::URLLoaderCompletionStatus(net::ERR_UNSAFE_REDIRECT));
+    return;
+  }
+
   current_response_head_ = std::move(head);
   DCHECK(ctx_);
   ctx_->internal_redirect = false;
@@ -362,6 +391,7 @@ void BraveProxyingURLLoaderFactory::InProgressRequest::
   head->headers = base::MakeRefCounted<net::HttpResponseHeaders>(
       net::HttpUtil::AssembleRawHeaders(headers));
   head->encoded_data_length = 0;
+  AuthorizeBypassRedirectChecks();
 
   current_response_head_ = std::move(head);
   ctx_->internal_redirect = true;
@@ -563,6 +593,7 @@ void BraveProxyingURLLoaderFactory::InProgressRequest::
     net::RedirectInfo redirect_info = CreateRedirectInfo(
          request_, new_url, override_headers_->response_code(),
          net::RedirectUtil::GetReferrerPolicyHeader(override_headers_.get()));
+    AuthorizeBypassRedirectChecks();
 
     // These will get re-bound if a new request is initiated by
     // |FollowRedirect()|.
@@ -682,6 +713,7 @@ BraveProxyingURLLoaderFactory::BraveProxyingURLLoaderFactory(
     content::FrameTreeNodeId frame_tree_node_id,
     network::URLLoaderFactoryBuilder& factory_builder,
     content::ContentBrowserClient::URLLoaderFactoryType url_loader_factory_type,
+    std::optional<int64_t> navigation_id,
     scoped_refptr<RequestIDGenerator> request_id_generator,
     DisconnectCallback on_disconnect,
     scoped_refptr<base::SequencedTaskRunner> navigation_response_task_runner)
@@ -690,6 +722,7 @@ BraveProxyingURLLoaderFactory::BraveProxyingURLLoaderFactory(
       render_process_id_(render_process_id),
       frame_tree_node_id_(frame_tree_node_id),
       url_loader_factory_type_(url_loader_factory_type),
+      navigation_id_(navigation_id),
       request_id_generator_(request_id_generator),
       disconnect_callback_(std::move(on_disconnect)),
       navigation_response_task_runner_(
@@ -722,13 +755,14 @@ void BraveProxyingURLLoaderFactory::MaybeProxyRequest(
     int render_process_id,
     network::URLLoaderFactoryBuilder& factory_builder,
     content::ContentBrowserClient::URLLoaderFactoryType url_loader_factory_type,
+    std::optional<int64_t> navigation_id,
     scoped_refptr<base::SequencedTaskRunner> navigation_response_task_runner) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   ResourceContextData::StartProxying(
       browser_context, render_process_id,
       render_frame_host ? render_frame_host->GetFrameTreeNodeId()
                         : content::FrameTreeNodeId(),
-      factory_builder, url_loader_factory_type,
+      factory_builder, url_loader_factory_type, navigation_id,
       navigation_response_task_runner);
 }
 
