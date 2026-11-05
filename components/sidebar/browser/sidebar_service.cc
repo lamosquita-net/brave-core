@@ -20,7 +20,6 @@
 #include "base/ranges/algorithm.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/values.h"
-#include "brave/components/brave_wallet/common/common_utils.h"
 #include "brave/components/constants/webui_url_constants.h"
 #include "brave/components/l10n/common/locale_util.h"
 #include "brave/components/l10n/common/localization_util.h"
@@ -587,14 +586,7 @@ SidebarItem SidebarService::GetBuiltInItemForType(
       // FlyWeb: no Brave Talk (talk.brave.com) in the sidebar.
       return SidebarItem();
     case SidebarItem::BuiltInItemType::kWallet: {
-      if (brave_wallet::IsAllowed(prefs_)) {
-        return SidebarItem::Create(GURL("chrome://wallet/"),
-                                   brave_l10n::GetLocalizedResourceUTF16String(
-                                       IDS_SIDEBAR_WALLET_ITEM_TITLE),
-                                   SidebarItem::Type::kTypeBuiltIn,
-                                   SidebarItem::BuiltInItemType::kWallet,
-                                   /* open_in_panel = */ false);
-      }
+      // FlyWeb: no wallet.
       return SidebarItem();
     }
     case SidebarItem::BuiltInItemType::kBookmarks:
