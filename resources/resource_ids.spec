@@ -118,11 +118,6 @@
     "includes": [63320],
   },
   # This file is generated during the build.
-  "<(SHARED_INTERMEDIATE_DIR)/brave/web-ui-brave_vpn_panel/brave_vpn_panel.grd": {
-    "META": {"sizes": {"includes": [10]}},
-    "includes": [63330],
-  },
-  # This file is generated during the build.
   "<(SHARED_INTERMEDIATE_DIR)/brave/web-ui-brave_shields_panel/brave_shields_panel.grd": {
     "META": {"sizes": {"includes": [10]}},
     "includes": [63340],
