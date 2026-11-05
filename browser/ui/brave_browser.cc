@@ -21,13 +21,13 @@
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/search/search.h"
 #include "chrome/browser/ui/browser_commands.h"
-#include "chrome/browser/ui/browser_finder.h"
 #include "chrome/browser/ui/browser_tabstrip.h"
+#include "chrome/browser/ui/browser_window/public/profile_browser_collection.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
-#include "chrome/common/webui_url_constants.h"
+#include "chrome/browser/ui/tabs/tab_strip_model_observer.h"
+#include "chrome/browser/ui/unload_controller.h"
 #include "components/prefs/pref_service.h"
-#include "content/public/common/url_constants.h"
-#include "url/gurl.h"
+#include "components/tabs/public/tab_interface.h"
 
 namespace {
 
@@ -41,23 +41,34 @@ void BraveBrowser::SuppressBrowserWindowClosingDialogForTesting(bool suppress) {
 }
 
 // static
-bool BraveBrowser::ShouldUseBraveWebViewRoundedCorners(Browser* browser) {
+bool BraveBrowser::ShouldUseBraveWebViewRoundedCorners(
+    BrowserWindowInterface* browser) {
   return base::FeatureList::IsEnabled(features::kBraveWebViewRoundedCorners) &&
-         browser->is_type_normal();
+         browser->GetType() == BrowserWindowInterface::TYPE_NORMAL;
 }
 
-BraveBrowser::BraveBrowser(const CreateParams& params) : Browser(params) {}
+BraveBrowser::BraveBrowser(BrowserWindowCreateParams params)
+    : Browser(std::move(params)) {}
 
 BraveBrowser::~BraveBrowser() = default;
 
-void BraveBrowser::OnTabClosing(content::WebContents* contents) {
-  Browser::OnTabClosing(contents);
+void BraveBrowser::OnTabClosing(tabs::TabInterface* tab,
+                                bool* had_active_modal_dialog) {
+  Browser::OnTabClosing(tab, had_active_modal_dialog);
 
   if (!AreAllTabsSharedPinnedTabs()) {
     return;
   }
 
-  if (chrome::FindAllTabbedBrowsersWithProfile(profile()).size() > 1) {
+  int tabbed_browser_count = 0;
+  ProfileBrowserCollection::GetForProfile(GetProfile())
+      ->ForEach([&tabbed_browser_count](BrowserWindowInterface* browser) {
+        if (browser->GetType() == BrowserWindowInterface::TYPE_NORMAL) {
+          ++tabbed_browser_count;
+        }
+        return tabbed_browser_count < 2;
+      });
+  if (tabbed_browser_count > 1) {
     base::SequencedTaskRunner::GetCurrentDefault()->PostTask(
         FROM_HERE, base::BindOnce(
                        [](base::WeakPtr<BraveBrowser> browser) {
@@ -65,7 +76,7 @@ void BraveBrowser::OnTabClosing(content::WebContents* contents) {
                            // We don't want close confirm dialog to show up. In
                            // this case, Shared pinned tabs will be moved to
                            // another window, so we don't have to warn users.
-                           browser->confirmed_to_close_ = true;
+                           browser->set_confirmed_to_close(true);
                            chrome::CloseWindow(browser.get());
                          }
                        },
@@ -74,88 +85,29 @@ void BraveBrowser::OnTabClosing(content::WebContents* contents) {
 }
 
 void BraveBrowser::TabStripEmpty() {
-  if (unload_controller_.is_attempting_to_close_browser() ||
-      !is_type_normal() || ignore_enable_closing_last_tab_pref_) {
+  if (UnloadController::From(this)->is_attempting_to_close_browser() ||
+      GetType() != BrowserWindowInterface::TYPE_NORMAL ||
+      ignore_enable_closing_last_tab_pref_) {
     Browser::TabStripEmpty();
     return;
   }
 
   base::SequencedTaskRunner::GetCurrentDefault()->PostTask(
-      FROM_HERE, base::BindOnce(&chrome::AddTabAt, this, GetNewTabURL(), -1,
-                                true, std::nullopt));
+      FROM_HERE, base::BindOnce(
+                     [](base::WeakPtr<BraveBrowser> browser) {
+                       if (browser) {
+                         chrome::AddTabAt(browser.get(),
+                                          chrome::GetNewTabURL(browser.get()),
+                                          /*index=*/-1, /*foreground=*/true,
+                                          /*group=*/std::nullopt,
+                                          /*pinned=*/false);
+                       }
+                     },
+                     weak_ptr_factory_.GetWeakPtr()));
 }
 
-bool BraveBrowser::ShouldDisplayFavicon(
-    content::WebContents* web_contents) const {
-  // Override to not show favicon for NTP in tab.
-
-  // Suppress the icon for the new-tab page, even if a navigation to it is
-  // not committed yet. Note that we're looking at the visible URL, so
-  // navigations from NTP generally don't hit this case and still show an icon.
-  GURL url = web_contents->GetVisibleURL();
-  if (url.SchemeIs(content::kChromeUIScheme) &&
-      url.host() == chrome::kChromeUINewTabHost) {
-    return false;
-  }
-
-  // Also suppress instant-NTP. This does not use search::IsInstantNTP since
-  // it looks at the last-committed entry and we need to show icons for pending
-  // navigations away from it.
-  if (search::IsInstantNTPURL(url, profile())) {
-    return false;
-  }
-
-  return Browser::ShouldDisplayFavicon(web_contents);
-}
-
-void BraveBrowser::FinishWarnBeforeClosing(WarnBeforeClosingResult result) {
-  // Clear user's choice because user cancelled window closing by some
-  // warning(ex, download is in-progress).
-  if (result == WarnBeforeClosingResult::kDoNotClose) {
-    confirmed_to_close_ = false;
-  }
-  Browser::FinishWarnBeforeClosing(result);
-}
-
-void BraveBrowser::BeforeUnloadFired(content::WebContents* source,
-                                     bool proceed,
-                                     bool* proceed_to_fire_unload) {
-  // Clear user's choice when user cancelled window closing by beforeunload
-  // handler.
-  if (!proceed) {
-    confirmed_to_close_ = false;
-  }
-  Browser::BeforeUnloadFired(source, proceed, proceed_to_fire_unload);
-}
-
-bool BraveBrowser::TryToCloseWindow(
-    bool skip_beforeunload,
-    const base::RepeatingCallback<void(bool)>& on_close_confirmed) {
-  // Window closing could be asked directly to browser object by this method.
-  // For example, when user tries to delete profile, this method is called on
-  // all its browser object. After all handlers are done, its all browser window
-  // start to close. In this case, we should not ask to users about this
-  // closing. So, treats like user confirmed closing. If this try blocked by
-  // user, |confirmed_to_close_| is set to false by ResetTryToCloseWindow().
-  confirmed_to_close_ = true;
-  return Browser::TryToCloseWindow(skip_beforeunload,
-                                   std::move(on_close_confirmed));
-}
-
-void BraveBrowser::ResetTryToCloseWindow() {
-  confirmed_to_close_ = false;
-  Browser::ResetTryToCloseWindow();
-}
-
-void BraveBrowser::UpdateTargetURL(content::WebContents* source,
-                                   const GURL& url) {
-  GURL target_url = url;
-  if (url.SchemeIs(content::kChromeUIScheme)) {
-    GURL::Replacements replacements;
-    replacements.SetSchemeStr(content::kBraveUIScheme);
-    target_url = target_url.ReplaceComponents(replacements);
-  }
-  Browser::UpdateTargetURL(source, target_url);
+void BraveBrowser::set_confirmed_to_close(bool close) {
+  UnloadController::From(this)->set_confirmed_to_close(close);
 }
 
 bool BraveBrowser::ShouldAskForBrowserClosingBeforeHandlers() {
@@ -168,11 +120,11 @@ bool BraveBrowser::ShouldAskForBrowserClosingBeforeHandlers() {
     return false;
   }
 
-  if (confirmed_to_close_) {
+  if (UnloadController::From(this)->confirmed_to_close()) {
     return false;
   }
 
-  PrefService* prefs = profile()->GetPrefs();
+  PrefService* prefs = GetProfile()->GetPrefs();
   if (!prefs->GetBoolean(kEnableWindowClosingConfirm)) {
     return false;
   }
@@ -186,11 +138,11 @@ bool BraveBrowser::AreAllTabsSharedPinnedTabs() {
     return false;
   }
 
-  if (!is_type_normal()) {
+  if (GetType() != BrowserWindowInterface::TYPE_NORMAL) {
     return false;
   }
 
-  if (!profile()->GetPrefs()->GetBoolean(brave_tabs::kSharedPinnedTab)) {
+  if (!GetProfile()->GetPrefs()->GetBoolean(brave_tabs::kSharedPinnedTab)) {
     return false;
   }
 
@@ -200,5 +152,5 @@ bool BraveBrowser::AreAllTabsSharedPinnedTabs() {
 }
 
 BraveBrowserWindow* BraveBrowser::brave_window() {
-  return static_cast<BraveBrowserWindow*>(window_);
+  return BraveBrowserWindow::From(window_.get());
 }

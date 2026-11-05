@@ -1,0 +1,40 @@
+diff --git a/chrome/browser/ui/browser_window/internal/browser_window_features.cc b/chrome/browser/ui/browser_window/internal/browser_window_features.cc
+index f51b0713750fb9775d39c252edc3f3caf4be7c52..b15f25afe16c567a5329dd57ae89a6cbbf6ba81e 100644
+--- a/chrome/browser/ui/browser_window/internal/browser_window_features.cc
++++ b/chrome/browser/ui/browser_window/internal/browser_window_features.cc
+@@ -337,7 +337,7 @@ void BrowserWindowFeatures::Init(BrowserWindowInterface* browser) {
+   browser_actions_->InitializeBrowserActions();
+ 
+   browser_command_controller_ =
+-      std::make_unique<chrome::BrowserCommandController>(browser);
++      std::make_unique<chrome::BraveBrowserCommandController>(browser);
+ 
+   browser_animation_controller_ =
+       GetUserDataFactory().CreateInstance<BrowserAnimationController>(*browser,
+@@ -383,7 +383,7 @@ void BrowserWindowFeatures::Init(BrowserWindowInterface* browser) {
+ 
+   content_setting_bubble_model_delegate_ =
+       GetUserDataFactory()
+-          .CreateInstance<BrowserContentSettingBubbleModelDelegate>(*browser,
++          .CreateInstance<BraveBrowserContentSettingBubbleModelDelegate>(*browser,
+                                                                     browser);
+ 
+   context_highlight_window_feature_ =
+@@ -460,7 +460,7 @@ void BrowserWindowFeatures::Init(BrowserWindowInterface* browser) {
+ 
+   // Must be before location_bar_model_.
+   location_bar_model_delegate_ =
+-      std::make_unique<BrowserLocationBarModelDelegate>(tab_strip_model_);
++      std::make_unique<BraveLocationBarModelDelegate>(tab_strip_model_);
+   location_bar_model_ =
+       GetUserDataFactory().CreateInstance<LocationBarModelImpl>(
+           *browser, browser->GetUnownedUserDataHost(),
+@@ -908,7 +908,7 @@ void BrowserWindowFeatures::InitPostWindowConstruction(
+   // this for most browser.h types, we should also stop making the side_panel_.
+   if (browser_view) {
+     side_panel_coordinator_ =
+-        GetUserDataFactory().CreateInstance<SidePanelCoordinator>(*browser_,
++        GetUserDataFactory().CreateInstance<BraveSidePanelCoordinator>(*browser_,
+                                                                   browser);
+   } else if (webui_browser_window) {
+     webui_browser_side_panel_ui_ =

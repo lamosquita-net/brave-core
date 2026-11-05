@@ -12,16 +12,17 @@
 #include "base/callback_list.h"
 #include "base/scoped_observation.h"
 #include "chrome/browser/profiles/profile_observer.h"
-#include "chrome/browser/ui/browser_list_observer.h"
+#include "chrome/browser/ui/browser_window/public/browser_collection_observer.h"
+#include "chrome/browser/ui/tabs/tab_data.h"
 #include "chrome/browser/ui/tabs/tab_model.h"
-#include "chrome/browser/ui/tabs/tab_renderer_data.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/browser/ui/tabs/tab_strip_model_observer.h"
 #include "components/keyed_service/core/keyed_service.h"
 #include "components/prefs/pref_member.h"
 
 class Profile;
-class BrowserList;
+class BrowserWindowInterface;
+class BrowserCollection;
 
 // SharedPinnedTabService observes pinned tabs and synchronizes it to all
 // windows with the same profile. When a pinned tab in a window is activated,
@@ -31,13 +32,13 @@ class BrowserList;
 // This service will be created when profile is created, so we don't have to
 // create this explicitly.
 class SharedPinnedTabService : public KeyedService,
-                               public BrowserListObserver,
+                               public BrowserCollectionObserver,
                                public TabStripModelObserver,
                                public ProfileObserver {
  public:
   struct PinnedTabData {
-    TabRendererData renderer_data;
-    raw_ptr<content::WebContents> shared_contents = nullptr;
+    tabs::TabData renderer_data;
+    raw_ptr<content::WebContents, DanglingUntriaged> shared_contents = nullptr;
     raw_ptr<TabStripModel> contents_owner_model = nullptr;
   };
 
@@ -54,41 +55,38 @@ class SharedPinnedTabService : public KeyedService,
   bool IsDummyContents(content::WebContents* contents) const;
 
   // Returns nullptr if it's not dummy contents or the data isn't ready yet.
-  const TabRendererData* GetTabRendererDataForDummyContents(
+  const tabs::TabData* GetTabDataForDummyContents(
       int index,
       content::WebContents* maybe_dummy_contents);
 
-  void TabDraggingEnded(Browser* browser);
+  void TabDraggingEnded(BrowserWindowInterface* browser);
+
+  // Returns true if the browser will be closed by this method. If true,
+  // Browser::OnWindowClosing() should not proceed, as TabStrip::Empty() will
+  // be invoked again.
+  [[nodiscard]] bool BrowserClosing(TabStripModel* tab_strip_model);
 
   // KeyedService:
   void Shutdown() override;
 
-  // BrowserListObserver:
-  void OnBrowserAdded(Browser* browser) override;
-  void OnBrowserSetLastActive(Browser* browser) override;
-  void OnBrowserClosing(Browser* browser) override;
-  void OnBrowserRemoved(Browser* browser) override;
+  // BrowserCollectionObserver:
+  void OnBrowserCreated(BrowserWindowInterface* browser) override;
+  void OnBrowserActivated(BrowserWindowInterface* browser) override;
+  void OnBrowserClosed(BrowserWindowInterface* browser) override;
 
   // TabStripModelObserver:
   void OnTabStripModelChanged(
       TabStripModel* tab_strip_model,
       const TabStripModelChange& change,
       const TabStripSelectionChange& selection) override;
-  void TabPinnedStateChanged(TabStripModel* tab_strip_model,
-                             content::WebContents* contents,
-                             int index) override;
-  void TabChangedAt(content::WebContents* contents,
-                    int index,
-                    TabChangeType change_type) override;
+  void OnTabPinnedStateChanged(tabs::TabInterface* tab, int index) override;
+  void OnTabChangedAt(tabs::TabInterface* tab,
+                      TabChangeType change_type) override;
 
   // ProfileWillBeDestroyed;
   void OnProfileWillBeDestroyed(Profile* profile) override;
 
  private:
-  void CacheWebContentsIfNeeded(
-      Browser* browser,
-      std::vector<std::unique_ptr<tabs::TabModel>> pinned_tabs);
-
   void OnTabAdded(TabStripModel* tab_strip_model,
                   const TabStripModelChange::Insert* insert);
   void OnTabMoved(TabStripModel* tab_strip_model,
@@ -104,17 +102,17 @@ class SharedPinnedTabService : public KeyedService,
   void SynchronizeNewPinnedTab(int index);
   void SynchronizeDeletedPinnedTab(int index);
   void SynchronizeMovedPinnedTab(int from, int to);
-  void SynchronizeNewBrowser(Browser* browser);
+  void SynchronizeNewBrowser(BrowserWindowInterface* browser);
 
   void MoveSharedWebContentsToActiveBrowser(int index);
-  void MoveSharedWebContentsToBrowser(Browser* browser,
+  void MoveSharedWebContentsToBrowser(BrowserWindowInterface* browser,
                                       int index,
                                       bool is_last_closing_browser = false);
 
   // FlyWeb: windows created while a session or a closed window is restored.
   bool IsRestoredBrowserModel(TabStripModel* tab_strip_model) const;
   void OnSessionRestored(Profile* profile, int num_tabs_restored);
-  void SynchronizeRestoredBrowser(Browser* browser);
+  void SynchronizeRestoredBrowser(BrowserWindowInterface* browser);
 
   void OnSharedPinnedTabPrefChanged();
   void OnSharedPinnedTabEnabled();
@@ -123,20 +121,20 @@ class SharedPinnedTabService : public KeyedService,
   std::unique_ptr<content::WebContents> CreateDummyWebContents(
       content::WebContents* shared_contents);
 
-  bool IsBrowserInTabDragging(Browser* browser) const;
+  bool IsBrowserInTabDragging(BrowserWindowInterface* browser) const;
 
   raw_ptr<Profile> profile_;
 
-  base::flat_set<Browser*> browsers_;
-  raw_ptr<Browser> last_active_browser_ = nullptr;
+  base::flat_set<BrowserWindowInterface*> browsers_;
+  raw_ptr<BrowserWindowInterface> last_active_browser_ = nullptr;
 
-  base::flat_set<Browser*> closing_browsers_;
+  base::flat_set<BrowserWindowInterface*> closing_browsers_;
   // FlyWeb: windows created while restoring, kept out of |browsers_| until
   // they are synchronized (SynchronizeRestoredBrowser()).
-  base::flat_set<Browser*> restored_browsers_;
+  base::flat_set<BrowserWindowInterface*> restored_browsers_;
   base::flat_set<std::unique_ptr<content::WebContents>>
       cached_shared_contentses_from_closing_browser_;
-  base::flat_set<Browser*> in_tab_dragging_browsers_;
+  base::flat_set<BrowserWindowInterface*> in_tab_dragging_browsers_;
 
   // This data is ordered in the actual pinned tab order.
   std::vector<PinnedTabData> pinned_tab_data_;
@@ -147,8 +145,8 @@ class SharedPinnedTabService : public KeyedService,
 
   base::ScopedObservation<Profile, ProfileObserver> profile_observation_{this};
 
-  base::ScopedObservation<BrowserList, BrowserListObserver>
-      browser_list_observation_{this};
+  base::ScopedObservation<BrowserCollection, BrowserCollectionObserver>
+      browser_collection_observation_{this};
 
   BooleanPrefMember shared_pinned_tab_enabled_;
 
