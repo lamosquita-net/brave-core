@@ -11,8 +11,10 @@
 #include "base/functional/bind.h"
 #include "brave/components/google_sign_in_permission/google_sign_in_permission_util.h"
 #include "components/user_prefs/user_prefs.h"
+#include "content/public/browser/navigation_controller.h"
 #include "content/public/browser/navigation_entry.h"
 #include "content/public/browser/permission_controller_delegate.h"
+#include "content/public/browser/permission_result.h"
 #include "content/public/browser/web_contents.h"
 #include "services/network/public/cpp/resource_request.h"
 #include "third_party/blink/public/common/permissions/permission_utils.h"
@@ -32,7 +34,7 @@ void OnPermissionRequestStatus(
     content::WebContents::Getter wc_getter,
     const GURL& request_initiator_url,
     URLLoaderThrottle::Delegate* delegate,
-    const std::vector<blink::mojom::PermissionStatus>& permission_statuses) {
+    const std::vector<content::PermissionResult>& permission_statuses) {
   DCHECK_EQ(1u, permission_statuses.size());
 
   auto* contents = wc_getter.Run();
