@@ -33,7 +33,7 @@ class BraveBrowserCommandController : public chrome::BrowserCommandController,
                                       public SplitViewBrowserDataObserver
 {
  public:
-  explicit BraveBrowserCommandController(Browser* browser);
+  explicit BraveBrowserCommandController(BrowserWindowInterface* browser);
   BraveBrowserCommandController(const BraveBrowserCommandController&) = delete;
   BraveBrowserCommandController& operator=(
       const BraveBrowserCommandController&) = delete;
@@ -85,7 +85,7 @@ class BraveBrowserCommandController : public chrome::BrowserCommandController,
   bool ExecuteBraveCommandWithDisposition(int id,
                                           WindowOpenDisposition disposition,
                                           base::TimeTicks time_stamp);
-  const raw_ref<Browser> browser_;
+  const raw_ref<BrowserWindowInterface> browser_;
 
   CommandUpdaterImpl brave_command_updater_;
 

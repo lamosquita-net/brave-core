@@ -25,9 +25,9 @@
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/send_tab_to_self/send_tab_to_self_util.h"
-#include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_command_controller.h"
 #include "chrome/browser/ui/browser_commands.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/tabs/tab_change_type.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/browser/ui/tabs/tab_strip_model_observer.h"
@@ -46,7 +46,8 @@ bool IsBraveCommands(int id) {
 
 namespace chrome {
 
-BraveBrowserCommandController::BraveBrowserCommandController(Browser* browser)
+BraveBrowserCommandController::BraveBrowserCommandController(
+    BrowserWindowInterface* browser)
     : BrowserCommandController(browser),
       browser_(*browser),
       brave_command_updater_(nullptr) {
@@ -87,7 +88,8 @@ void BraveBrowserCommandController::OnTabStripModelChanged(
   UpdateCommandsForPin();
 
   if (base::FeatureList::IsEnabled(tabs::features::kBraveSplitView) &&
-      browser_->is_type_normal() && selection.active_tab_changed()) {
+      browser_->GetType() == BrowserWindowInterface::TYPE_NORMAL &&
+      selection.active_tab_changed()) {
     UpdateCommandForSplitView();
   }
 }
@@ -158,7 +160,7 @@ void BraveBrowserCommandController::InitBraveCommandState() {
   // Sync, Rewards, and Wallet pages don't work in tor(guest) sessions.
   // They also don't work in private windows but they are redirected
   // to a normal window in this case.
-  const bool is_guest_session = browser_->profile()->IsGuestSession();
+  const bool is_guest_session = browser_->GetProfile()->IsGuestSession();
   if (!is_guest_session) {
     if (syncer::IsSyncAllowedByFlag()) {
       UpdateCommandForBraveSync();
@@ -209,7 +211,7 @@ void BraveBrowserCommandController::InitBraveCommandState() {
 
   UpdateCommandEnabled(IDC_TOGGLE_ALL_BOOKMARKS_BUTTON_VISIBILITY, true);
 
-  if (browser_->is_type_normal()) {
+  if (browser_->GetType() == BrowserWindowInterface::TYPE_NORMAL) {
     // Delete these when upstream enables by default.
     UpdateCommandEnabled(IDC_READING_LIST_MENU, true);
     UpdateCommandEnabled(IDC_READING_LIST_MENU_ADD_TAB, true);
@@ -217,7 +219,7 @@ void BraveBrowserCommandController::InitBraveCommandState() {
   }
 
   if (base::FeatureList::IsEnabled(tabs::features::kBraveSplitView) &&
-      browser_->is_type_normal()) {
+      browser_->GetType() == BrowserWindowInterface::TYPE_NORMAL) {
     UpdateCommandForSplitView();
   }
 }

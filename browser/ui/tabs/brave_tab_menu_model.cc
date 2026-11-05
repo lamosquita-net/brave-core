@@ -17,7 +17,8 @@
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/sessions/tab_restore_service_factory.h"
 #include "chrome/browser/ui/browser.h"
-#include "chrome/browser/ui/browser_finder.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+#include "chrome/browser/ui/browser_window/public/global_browser_collection.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/grit/generated_resources.h"
 #include "components/grit/brave_components_strings.h"
@@ -34,11 +35,12 @@ BraveTabMenuModel::BraveTabMenuModel(
       is_vertical_tab_(is_vertical_tab) {
   web_contents_ = tab_strip_model->GetWebContentsAt(index);
   CHECK(web_contents_);
-  Browser* browser = chrome::FindBrowserWithTab(web_contents_);
+  BrowserWindowInterface* browser =
+      GlobalBrowserCollection::GetInstance()->FindBrowserWithTab(web_contents_);
   CHECK(browser);
 
   restore_service_ =
-      TabRestoreServiceFactory::GetForProfile(browser->profile());
+      TabRestoreServiceFactory::GetForProfile(browser->GetProfile());
 
   auto indices = static_cast<BraveTabStripModel*>(tab_strip_model)
                      ->GetTabIndicesForCommandAt(index);

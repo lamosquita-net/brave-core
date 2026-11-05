@@ -20,8 +20,8 @@
 #include "chrome/browser/first_run/first_run.h"
 #include "chrome/browser/infobars/confirm_infobar_creator.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
-#include "chrome/browser/ui/browser_finder.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface_iterator.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/browser/updater/browser_updater_client_util.h"
 #include "chrome/common/chrome_features.h"
@@ -104,10 +104,11 @@ KeystonePromotionInfoBar* g_currentPromotionInfoBar;
 
   if (status != kAutoupdateRegisterFailed &&
       [[KeystoneGlue defaultKeystoneGlue] needsPromotion]) {
-    Browser* browser = chrome::FindLastActive();
+    BrowserWindowInterface* browser =
+        GetLastActiveBrowserWindowInterfaceWithAnyProfile();
     if (browser) {
       content::WebContents* webContents =
-          browser->tab_strip_model()->GetActiveWebContents();
+          browser->GetTabStripModel()->GetActiveWebContents();
       if (webContents) {
         KeystonePromotionInfoBarDelegate::Create(webContents);
       }
@@ -187,10 +188,11 @@ bool KeystonePromotionInfoBarDelegate::Cancel() {
 }
 
 void ShowUpdaterPromotionInfoBar() {
-  Browser* browser = chrome::FindLastActive();
-  if (browser && browser->profile()) {
+  BrowserWindowInterface* browser =
+      GetLastActiveBrowserWindowInterfaceWithAnyProfile();
+  if (browser && browser->GetProfile()) {
     KeystonePromotionInfoBar* promotionInfoBar =
         [[KeystonePromotionInfoBar alloc] init];
-    [promotionInfoBar checkAndShowInfoBarForProfile:browser->profile()];
+    [promotionInfoBar checkAndShowInfoBarForProfile:browser->GetProfile()];
   }
 }

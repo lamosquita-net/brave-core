@@ -11,89 +11,95 @@
 
 #include "chrome/browser/ui/tabs/tab_model.h"
 
-class Browser;
+class BrowserWindowInterface;
 class GURL;
 
 namespace brave {
 
-bool HasSelectedURL(Browser* browser);
-void CleanAndCopySelectedURL(Browser* browser);
+bool HasSelectedURL(BrowserWindowInterface* browser);
+void CleanAndCopySelectedURL(BrowserWindowInterface* browser);
 
 // Copies an url sanitized by URLSanitizerService.
-void CopySanitizedURL(Browser* browser, const GURL& url);
+void CopySanitizedURL(BrowserWindowInterface* browser, const GURL& url);
 // Copies an url cleared through:
 // - Debouncer (potentially debouncing many levels)
 // - Query filter
 // - URLSanitizerService
-void CopyLinkWithStrictCleaning(Browser* browser, const GURL& url);
+void CopyLinkWithStrictCleaning(BrowserWindowInterface* browser,
+                                const GURL& url);
 
-void ToggleWindowTitleVisibilityForVerticalTabs(Browser* browser);
-void ToggleVerticalTabStrip(Browser* browser);
-void ToggleVerticalTabStripFloatingMode(Browser* browser);
-void ToggleVerticalTabStripExpanded(Browser* browser);
+void ToggleWindowTitleVisibilityForVerticalTabs(
+    BrowserWindowInterface* browser);
+void ToggleVerticalTabStrip(BrowserWindowInterface* browser);
+void ToggleVerticalTabStripFloatingMode(BrowserWindowInterface* browser);
+void ToggleVerticalTabStripExpanded(BrowserWindowInterface* browser);
 
-void ToggleActiveTabAudioMute(Browser* browser);
+void ToggleActiveTabAudioMute(BrowserWindowInterface* browser);
 
-void ToggleShieldsEnabled(Browser* browser);
-void ToggleJavascriptEnabled(Browser* browser);
+void ToggleShieldsEnabled(BrowserWindowInterface* browser);
+void ToggleJavascriptEnabled(BrowserWindowInterface* browser);
 
-void GroupTabsOnCurrentOrigin(Browser* browser);
-void MoveGroupToNewWindow(Browser* browser);
+void GroupTabsOnCurrentOrigin(BrowserWindowInterface* browser);
+void MoveGroupToNewWindow(BrowserWindowInterface* browser);
 
-bool IsInGroup(Browser* browser);
-bool HasUngroupedTabs(Browser* browser);
+bool IsInGroup(BrowserWindowInterface* browser);
+bool HasUngroupedTabs(BrowserWindowInterface* browser);
 
-void GroupUngroupedTabs(Browser* browser);
-void UngroupCurrentGroup(Browser* browser);
-void RemoveTabFromGroup(Browser* browser);
-void NameGroup(Browser* browser);
-void NewTabInGroup(Browser* browser);
+void GroupUngroupedTabs(BrowserWindowInterface* browser);
+void UngroupCurrentGroup(BrowserWindowInterface* browser);
+void RemoveTabFromGroup(BrowserWindowInterface* browser);
+void NameGroup(BrowserWindowInterface* browser);
+void NewTabInGroup(BrowserWindowInterface* browser);
 
-bool CanUngroupAllTabs(Browser* browser);
-void UngroupAllTabs(Browser* browser);
+bool CanUngroupAllTabs(BrowserWindowInterface* browser);
+void UngroupAllTabs(BrowserWindowInterface* browser);
 
-void ToggleGroupExpanded(Browser* browser);
-void CloseUngroupedTabs(Browser* browser);
-void CloseTabsNotInCurrentGroup(Browser* browser);
-void CloseGroup(Browser* browser);
+void ToggleGroupExpanded(BrowserWindowInterface* browser);
+void CloseUngroupedTabs(BrowserWindowInterface* browser);
+void CloseTabsNotInCurrentGroup(BrowserWindowInterface* browser);
+void CloseGroup(BrowserWindowInterface* browser);
 
-bool CanBringAllTabs(Browser* browser);
-void BringAllTabs(Browser* browser);
+bool CanBringAllTabs(BrowserWindowInterface* browser);
+void BringAllTabs(BrowserWindowInterface* browser);
 
-bool HasDuplicateTabs(Browser* browser);
-void CloseDuplicateTabs(Browser* browser);
+bool HasDuplicateTabs(BrowserWindowInterface* browser);
+void CloseDuplicateTabs(BrowserWindowInterface* browser);
 
-bool CanCloseTabsToLeft(Browser* browser);
-void CloseTabsToLeft(Browser* browser);
+bool CanCloseTabsToLeft(BrowserWindowInterface* browser);
+void CloseTabsToLeft(BrowserWindowInterface* browser);
 
-bool CanCloseUnpinnedTabs(Browser* browser);
-void CloseUnpinnedTabs(Browser* browser);
+bool CanCloseUnpinnedTabs(BrowserWindowInterface* browser);
+void CloseUnpinnedTabs(BrowserWindowInterface* browser);
 
-void AddAllTabsToNewGroup(Browser* browser);
+void AddAllTabsToNewGroup(BrowserWindowInterface* browser);
 
-bool CanMuteAllTabs(Browser* browser, bool exclude_active);
-void MuteAllTabs(Browser* browser, bool exclude_active);
+bool CanMuteAllTabs(BrowserWindowInterface* browser, bool exclude_active);
+void MuteAllTabs(BrowserWindowInterface* browser, bool exclude_active);
 
-bool CanUnmuteAllTabs(Browser* browser);
-void UnmuteAllTabs(Browser* browser);
+bool CanUnmuteAllTabs(BrowserWindowInterface* browser);
+void UnmuteAllTabs(BrowserWindowInterface* browser);
 
-void ScrollTabToTop(Browser* browser);
-void ScrollTabToBottom(Browser* browser);
+void ScrollTabToTop(BrowserWindowInterface* browser);
+void ScrollTabToBottom(BrowserWindowInterface* browser);
 
-void ToggleAllBookmarksButtonVisibility(Browser* browser);
+void ToggleAllBookmarksButtonVisibility(BrowserWindowInterface* browser);
 
 // In case |tab| is not provided, the active tab will be used.
 bool CanOpenNewSplitViewForTab(
-    Browser* browser,
+    BrowserWindowInterface* browser,
     std::optional<tabs::TabHandle> tab = std::nullopt);
-void NewSplitViewForTab(Browser* browser,
+void NewSplitViewForTab(BrowserWindowInterface* browser,
                         std::optional<tabs::TabHandle> tab = std::nullopt);
 // In case |indices| empty, selected tabs will be used.
-void TileTabs(Browser* browser, const std::vector<int>& indices = {});
-void BreakTiles(Browser* browser, const std::vector<int>& indices = {});
-bool IsTabsTiled(Browser* browser, const std::vector<int>& indices = {});
-bool CanTileTabs(Browser* browser, const std::vector<int>& indices = {});
-void SwapTabsInTile(Browser* browser);
+void TileTabs(BrowserWindowInterface* browser,
+              const std::vector<int>& indices = {});
+void BreakTiles(BrowserWindowInterface* browser,
+                const std::vector<int>& indices = {});
+bool IsTabsTiled(BrowserWindowInterface* browser,
+                 const std::vector<int>& indices = {});
+bool CanTileTabs(BrowserWindowInterface* browser,
+                 const std::vector<int>& indices = {});
+void SwapTabsInTile(BrowserWindowInterface* browser);
 
 }  // namespace brave
 

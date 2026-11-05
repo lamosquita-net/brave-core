@@ -9,7 +9,7 @@
 #include "base/functional/callback_forward.h"
 #include "brave/components/text_recognition/common/buildflags/buildflags.h"
 
-class Browser;
+class BrowserWindowInterface;
 class SkBitmap;
 
 namespace content {
@@ -19,7 +19,7 @@ class WebContents;
 namespace brave {
 
 // Tab restore dialog will be launched after ask dialog is closed.
-void ShowCrashReportPermissionAskDialog(Browser* browser);
+void ShowCrashReportPermissionAskDialog(BrowserWindowInterface* browser);
 
 // Run |callback| when dialog closed.
 void ShowObsoleteSystemConfirmDialog(base::OnceCallback<void(bool)> callback);

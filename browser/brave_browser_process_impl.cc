@@ -38,6 +38,7 @@
 #include "chrome/browser/component_updater/component_updater_utils.h"
 #include "chrome/browser/net/system_network_context_manager.h"
 #include "chrome/browser/obsolete_system/obsolete_system.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/common/buildflags.h"
 #include "chrome/common/channel_info.h"
 #include "chrome/common/chrome_paths.h"
@@ -55,7 +56,6 @@
 #else
 #include "brave/browser/ui/brave_browser_command_controller.h"
 #include "chrome/browser/ui/browser.h"
-#include "chrome/browser/ui/browser_list.h"
 #endif
 
 #if BUILDFLAG(ENABLE_REQUEST_OTR)

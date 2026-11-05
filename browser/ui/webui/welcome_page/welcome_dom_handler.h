@@ -15,7 +15,7 @@
 #include "content/public/browser/web_ui_message_handler.h"
 
 class Profile;
-class Browser;
+class BrowserWindowInterface;
 
 // The handler for Javascript messages for the chrome://welcome page
 class WelcomeDOMHandler : public content::WebUIMessageHandler {
@@ -40,7 +40,7 @@ class WelcomeDOMHandler : public content::WebUIMessageHandler {
   void HandleSetMetricsReportingEnabled(const base::ListValue& args);
   void HandleEnableWebDiscovery(const base::ListValue& args);
 
-  Browser* GetBrowser();
+  BrowserWindowInterface* GetBrowser();
 
   size_t last_onboarding_phase_ = 0;
   std::u16string default_browser_name_;

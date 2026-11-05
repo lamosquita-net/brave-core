@@ -16,7 +16,7 @@
 #include "chrome/browser/profiles/profile_manager.h"
 #include "chrome/browser/profiles/profile_window.h"
 #include "chrome/browser/ui/browser.h"
-#include "chrome/browser/ui/browser_list.h"
+#include "chrome/browser/ui/browser_window/public/profile_browser_collection.h"
 #include "chrome/browser/ui/views/chrome_layout_provider.h"
 #include "chrome/grit/generated_resources.h"
 #include "components/vector_icons/vector_icons.h"
@@ -40,8 +40,9 @@ void BraveIncognitoMenuView::AddedToWidget() {
   const ui::ColorId icon_color = provider->GetTypographyProvider().GetColorId(
       views::style::CONTEXT_LABEL, views::style::STYLE_PRIMARY);
 
-  int window_count = BrowserList::GetOffTheRecordBrowsersActiveForProfile(
-      browser()->profile());
+  int window_count =
+      ProfileBrowserCollection::GetForProfile(profile().GetOriginalProfile())
+          ->GetOffTheRecordBrowserCount();
   SetProfileIdentityInfo(
       /*profile_name=*/std::u16string(),
       /*profile_background_color=*/SK_ColorTRANSPARENT,

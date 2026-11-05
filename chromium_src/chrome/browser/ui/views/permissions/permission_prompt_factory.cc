@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+#include "chrome/browser/ui/browser_window/public/global_browser_collection.h"
 #include "chrome/browser/ui/permission_bubble/permission_prompt.h"
 #include "components/permissions/request_type.h"
 
@@ -13,7 +15,8 @@
 std::unique_ptr<permissions::PermissionPrompt> CreatePermissionPrompt(
     content::WebContents* web_contents,
     permissions::PermissionPrompt::Delegate* delegate) {
-  Browser* browser = chrome::FindBrowserWithTab(web_contents);
+  BrowserWindowInterface* browser =
+      GlobalBrowserCollection::GetInstance()->FindBrowserWithTab(web_contents);
   if (!browser) {
     DLOG(WARNING) << "Permission prompt suppressed because the WebContents is "
                      "not attached to any Browser window.";

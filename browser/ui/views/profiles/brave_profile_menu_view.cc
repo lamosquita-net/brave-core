@@ -16,7 +16,7 @@
 #include "chrome/browser/profiles/profile_attributes_entry.h"
 #include "chrome/browser/profiles/profile_manager.h"
 #include "chrome/browser/profiles/profile_window.h"
-#include "chrome/browser/ui/browser_finder.h"
+#include "chrome/browser/ui/browser_window/public/profile_browser_collection.h"
 #include "chrome/browser/ui/profiles/profile_colors_util.h"
 #include "chrome/browser/ui/ui_features.h"
 #include "chrome/grit/generated_resources.h"
@@ -26,7 +26,7 @@
 
 void BraveProfileMenuView::BuildIdentity() {
   ProfileMenuView::BuildIdentity();
-  Profile* profile = browser()->profile();
+  Profile* profile = &this->profile();
   ProfileAttributesEntry* profile_attributes =
       g_browser_process->profile_manager()
           ->GetProfileAttributesStorage()
@@ -50,11 +50,15 @@ void BraveProfileMenuView::BuildSyncInfo() {}
 
 // We don't want feature buttons to manage google account
 void BraveProfileMenuView::BuildFeatureButtons() {
-  Profile* profile = browser()->profile();
-  int window_count = chrome::GetBrowserCount(profile);
-  if (!profile->IsOffTheRecord() && profile->HasPrimaryOTRProfile())
-    window_count += chrome::GetBrowserCount(
-        profile->GetPrimaryOTRProfile(/*create_if_needed=*/true));
+  Profile* profile = &this->profile();
+  int window_count =
+      ProfileBrowserCollection::GetForProfile(profile)->GetSize();
+  if (!profile->IsOffTheRecord() && profile->HasPrimaryOTRProfile()) {
+    window_count +=
+        ProfileBrowserCollection::GetForProfile(
+            profile->GetPrimaryOTRProfile(/*create_if_needed=*/true))
+            ->GetSize();
+  }
   if (profile->IsGuestSession()) {
     AddFeatureButton(
         l10n_util::GetPluralStringFUTF16(IDS_GUEST_PROFILE_MENU_CLOSE_BUTTON,

@@ -9,7 +9,7 @@
 #include "base/memory/raw_ptr.h"
 #include "ui/views/window/dialog_delegate.h"
 
-class Browser;
+class BrowserWindowInterface;
 
 namespace views {
 class Checkbox;
@@ -17,10 +17,10 @@ class Checkbox;
 
 class CrashReportPermissionAskDialogView : public views::DialogDelegateView {
  public:
-  static void Show(Browser* browser);
+  static void Show(BrowserWindowInterface* browser);
 
  private:
-  explicit CrashReportPermissionAskDialogView(Browser* browser);
+  explicit CrashReportPermissionAskDialogView(BrowserWindowInterface* browser);
   ~CrashReportPermissionAskDialogView() override;
 
   CrashReportPermissionAskDialogView(
@@ -29,7 +29,7 @@ class CrashReportPermissionAskDialogView : public views::DialogDelegateView {
       const CrashReportPermissionAskDialogView&) = delete;
 
   // views::DialogDelegateView overrides:
-  ui::ModalType GetModalType() const override;
+  ui::mojom::ModalType GetModalType() const override;
   bool ShouldShowCloseButton() const override;
   bool ShouldShowWindowTitle() const override;
   void OnWidgetInitialized() override;

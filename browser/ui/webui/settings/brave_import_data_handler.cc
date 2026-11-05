@@ -13,6 +13,8 @@
 #include "chrome/browser/importer/importer_list.h"
 #include "chrome/browser/importer/profile_writer.h"
 #include "chrome/browser/profiles/profile.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+#include "chrome/browser/ui/browser_window/public/global_browser_collection.h"
 #include "content/public/browser/browser_task_traits.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/web_contents.h"
@@ -23,7 +25,6 @@
 #include "base/files/file_util.h"
 #include "base/task/thread_pool.h"
 #include "brave/browser/ui/webui/settings/brave_full_disk_access_confirm_dialog_delegate.h"
-#include "chrome/browser/ui/browser_finder.h"
 #include "chrome/browser/ui/tab_modal_confirm_dialog.h"
 #endif  // BUILDFLAG(IS_MAC)
 
@@ -191,7 +192,9 @@ void BraveImportDataHandler::DidStopLoading() {
   auto* web_contents = web_ui()->GetWebContents();
   TabModalConfirmDialog::Create(
       std::make_unique<FullDiskAccessConfirmDialogDelegate>(
-          web_contents, chrome::FindBrowserWithTab(web_contents)),
+          web_contents,
+          GlobalBrowserCollection::GetInstance()->FindBrowserWithTab(
+              web_contents)),
       web_contents);
 }
 #endif

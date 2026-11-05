@@ -15,7 +15,8 @@
 #include "brave/components/brave_shields/content/browser/ad_block_service.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/content_settings/cookie_settings_factory.h"
-#include "chrome/browser/ui/browser_finder.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface_iterator.h"
 #include "components/content_settings/core/browser/cookie_settings.h"
 
 namespace extensions::api {
@@ -35,7 +36,8 @@ BraveShieldsAddSiteCosmeticFilterFunction::Run() {
 
 ExtensionFunction::ResponseAction
 BraveShieldsOpenFilterManagementPageFunction::Run() {
-  Browser* browser = chrome::FindLastActive();
+  BrowserWindowInterface* browser =
+      GetLastActiveBrowserWindowInterfaceWithAnyProfile();
   if (browser) {
     brave::ShowBraveAdblock(browser);
   }

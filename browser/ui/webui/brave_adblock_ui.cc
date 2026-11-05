@@ -26,9 +26,10 @@
 
 #if BUILDFLAG(IS_ANDROID)
 #include "chrome/browser/android/tab_web_contents_delegate_android.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+#include "chrome/browser/ui/browser_window/public/global_browser_collection.h"
 #include "content/public/browser/web_contents.h"
 #else
-#include "chrome/browser/ui/browser_finder.h"
 #include "chrome/browser/ui/navigator/browser_navigator_params.h"
 #include "chrome/browser/ui/singleton_tabs.h"
 #endif
@@ -282,7 +283,8 @@ void AdblockDOMHandler::HandleViewSubscriptionSource(
                              ui::PAGE_TRANSITION_AUTO_TOPLEVEL, false),
       /*navigation_handle_callback=*/{});
 #else
-  auto* browser = chrome::FindBrowserWithTab(web_ui()->GetWebContents());
+  auto* browser = GlobalBrowserCollection::GetInstance()->FindBrowserWithTab(
+      web_ui()->GetWebContents());
   ShowSingletonTabOverwritingNTP(browser, file_url);
 #endif
 }

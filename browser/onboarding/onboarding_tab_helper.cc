@@ -16,7 +16,8 @@
 #include "brave/browser/ui/brave_browser_window.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/first_run/first_run.h"
-#include "chrome/browser/ui/browser_finder.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+#include "chrome/browser/ui/browser_window/public/global_browser_collection.h"
 #include "components/grit/brave_components_strings.h"
 #include "components/permissions/permission_request_manager.h"
 #include "components/prefs/pref_registry_simple.h"
@@ -83,7 +84,9 @@ OnboardingTabHelper::OnboardingTabHelper(content::WebContents* web_contents)
 OnboardingTabHelper::~OnboardingTabHelper() = default;
 
 void OnboardingTabHelper::DidStopLoading() {
-  Browser* browser = chrome::FindBrowserWithTab(web_contents());
+  BrowserWindowInterface* browser =
+      GlobalBrowserCollection::GetInstance()->FindBrowserWithTab(
+          web_contents());
   DCHECK(browser);
 
   if (!browser) {
@@ -150,14 +153,16 @@ bool OnboardingTabHelper::CanHighlightBraveShields() {
 }
 
 void OnboardingTabHelper::ShowBraveHelpBubbleView() {
-  Browser* browser = chrome::FindBrowserWithTab(web_contents());
+  BrowserWindowInterface* browser =
+      GlobalBrowserCollection::GetInstance()->FindBrowserWithTab(
+          web_contents());
   DCHECK(browser);
   if (!browser) {
     return;
   }
 
-  if (!BraveBrowserWindow::From(browser->window())
-           ->ShowBraveHelpBubbleView(GetTextForOnboardingShieldsBubble())) {
+  if (!BraveBrowserWindow::FromBrowser(browser)->ShowBraveHelpBubbleView(
+          GetTextForOnboardingShieldsBubble())) {
     return;
   }
 

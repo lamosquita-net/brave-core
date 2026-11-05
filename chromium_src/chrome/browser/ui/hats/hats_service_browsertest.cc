@@ -13,7 +13,7 @@
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/metrics/chrome_metrics_service_accessor.h"
 #include "chrome/browser/profiles/profile_impl.h"
-#include "chrome/browser/ui/browser.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/hats/hats_service_desktop.h"
 #include "chrome/browser/ui/hats/hats_service_factory.h"
 #include "chrome/common/chrome_features.h"
@@ -68,7 +68,7 @@ class HatsServiceBrowserTestBase : public InProcessBrowserTest {
 
   HatsServiceDesktop* GetHatsService() {
     return static_cast<HatsServiceDesktop*>(
-        HatsServiceFactory::GetForProfile(browser()->profile(), true));
+        HatsServiceFactory::GetForProfile(browser()->GetProfile(), true));
   }
 
   void SetMetricsConsent(bool consent) {
@@ -104,8 +104,8 @@ class HatsServiceProbabilityOne : public HatsServiceBrowserTestBase {
   void SetUpOnMainThread() override {
     host_resolver()->AddRule("*", "127.0.0.1");
     // Set the profile creation time to be old enough to ensure triggering.
-    browser()->profile()->SetCreationTimeForTesting(base::Time::Now() -
-                                                    base::Days(45));
+    browser()->GetProfile()->SetCreationTimeForTesting(base::Time::Now() -
+                                                       base::Days(45));
   }
 
   void TearDownOnMainThread() override {

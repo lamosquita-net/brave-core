@@ -10,8 +10,8 @@
 #include "base/metrics/histogram_macros.h"
 #include "base/time/time.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
-#include "chrome/browser/ui/browser_list.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+#include "chrome/browser/ui/browser_window/public/global_browser_collection.h"
 #include "components/prefs/pref_registry_simple.h"
 #include "components/prefs/pref_service.h"
 
@@ -55,16 +55,15 @@ BraveWindowTracker::BraveWindowTracker(PrefService* local_state)
     // Can happen in tests.
     return;
   }
-  BrowserList::AddObserver(this);
+  browser_collection_observation_.Observe(
+      GlobalBrowserCollection::GetInstance());
   timer_.Start(FROM_HERE, base::Minutes(kWindowUsageP3AIntervalMinutes),
                base::BindRepeating(&BraveWindowTracker::UpdateP3AValues,
                                    base::Unretained(this)));
   UpdateP3AValues();
 }
 
-BraveWindowTracker::~BraveWindowTracker() {
-  BrowserList::RemoveObserver(this);
-}
+BraveWindowTracker::~BraveWindowTracker() = default;
 
 void BraveWindowTracker::CreateInstance(PrefService* local_state) {
   g_brave_windows_tracker_instance = new BraveWindowTracker(local_state);
@@ -74,15 +73,15 @@ void BraveWindowTracker::RegisterPrefs(PrefRegistrySimple* registry) {
   registry->RegisterTimePref(kLastTimeIncognitoUsed, {});
 }
 
-void BraveWindowTracker::OnBrowserAdded(Browser* browser) {
-  const char* pref = GetPrefNameForProfile(browser->profile());
+void BraveWindowTracker::OnBrowserCreated(BrowserWindowInterface* browser) {
+  const char* pref = GetPrefNameForProfile(browser->GetProfile());
   if (pref) {
     local_state_->SetTime(pref, base::Time::Now());
   }
 }
 
-void BraveWindowTracker::OnBrowserSetLastActive(Browser* browser) {
-  const char* pref = GetPrefNameForProfile(browser->profile());
+void BraveWindowTracker::OnBrowserActivated(BrowserWindowInterface* browser) {
+  const char* pref = GetPrefNameForProfile(browser->GetProfile());
   if (pref) {
     local_state_->SetTime(pref, base::Time::Now());
   }
