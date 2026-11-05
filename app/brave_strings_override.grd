@@ -101,15 +101,23 @@ If you update this file, be sure also to update google_chrome_strings.grd. -->
         </if>
       <if expr="is_macosx or is_linux">
         </if>
-      <if expr="chromeos_ash">
+      <if expr="is_linux">
+        </if>
+      <if expr="is_chromeos">
+        </if>
+      <if expr="is_macosx or is_chromeos">
+        </if>
+      <if expr="not is_macosx and not is_chromeos">
+        </if>
+      <if expr="not is_android">
+        </if>
+      <if expr="is_android">
         </if>
       <if expr="is_win">
         </if>
-      <if expr="is_macosx or chromeos_ash">
+      <if expr="not is_win">
         </if>
-      <if expr="not is_macosx and not chromeos_ash">
-        </if>
-      <if expr="not chromeos_ash">
+      <if expr="not is_chromeos">
         <if expr="_is_chrome_for_testing_branded">
           <then>
             </then>
@@ -117,7 +125,7 @@ If you update this file, be sure also to update google_chrome_strings.grd. -->
             </else>
         </if>
       </if>
-      <if expr="chromeos_ash">
+      <if expr="is_chromeos">
         </if>
       <if expr="not is_chromeos and not is_macosx">
         </if>
@@ -137,7 +145,7 @@ If you update this file, be sure also to update google_chrome_strings.grd. -->
         <else>
           </else>
       </if>
-      <if expr="chromeos_ash">
+      <if expr="is_chromeos">
         </if>
       <if expr="_is_chrome_for_testing_branded">
         <then>
@@ -159,32 +167,46 @@ If you update this file, be sure also to update google_chrome_strings.grd. -->
         </if>
       <if expr="is_win">
         </if>
+      <if expr="not is_chromeos and not is_android">
+        </if>
+      <if expr="is_win">
+        </if>
       <if expr="is_win">
         </if>
       <if expr="use_titlecase">
         </if>
       <if expr="not use_titlecase">
         </if>
-      <if expr="chromeos_ash">
+      <if expr="use_titlecase">
         </if>
-      <if expr="chromeos_ash">
-        <message name="IDS_ACCOUNT_MANAGER_DIALOG_WELCOME_BODY_V2_WITH_GUEST_MODE" desc="Text body for the Welcome screen in ChromeOS 'Add account' dialog.">
-If you want to use this account one-time only, you can use <ph name="GUEST_LINK_BEGIN">&lt;a id="guestModeLink" href="#"&gt;</ph>Guest mode<ph name="GUEST_LINK_END">&lt;/a&gt;</ph> in FlyWeb browser. If you want to add an account for someone else, <ph name="LINK_BEGIN">&lt;a target="_blank" id="newPersonLink" href="$1<ex>https://google.com/</ex>"&gt;</ph>add a new profile<ph name="LINK_END">&lt;/a&gt;</ph> to your <ph name="DEVICE_TYPE">$2<ex>Chromebook</ex></ph>.
-
-Permissions you've already given to websites and apps may apply to this account. You can manage your FlyWeb sync chains in <ph name="SETTINGS_LINK_BEGIN">&lt;a id="osSettingsLink" href="$3<ex>https://google.com/</ex>"&gt;</ph>Settings<ph name="SETTINGS_LINK_END">&lt;/a&gt;</ph>.
-        </message>
-      </if>
-
+      <if expr="not use_titlecase">
+        </if>
+      <if expr="is_chromeos">
+        </if>
       <if expr="is_linux">
         </if>
 
-      <if expr="is_win">
-        </if>
       <if expr="is_macosx">
       </if>
       <if expr="is_win">
         </if>
+      <if expr="not is_android">
+        </if>
       <if expr="is_win">
+        </if>
+      <if expr="is_macosx">
+        </if>
+
+            <if expr="is_win">
+        </if>
+      <if expr="is_macosx">
+        </if>
+
+      <if expr="not is_android and not is_chromeos">
+        </if>
+      <if expr="is_win or is_macosx">
+        </if>
+      <if expr="enable_pdf">
         </if>
       <message name="IDS_DOWNLOAD_BUBBLE_SUBPAGE_SUMMARY_UNKNOWN_SOURCE" desc="Summary of dangerous warning for a file (like an extension) from an unknown source.">
         Extensions, apps, and themes from unknown sources can harm your device. FlyWeb recommends only installing them from the <ph name="IDS_EXTENSION_WEB_STORE_TITLE">$1<ex>Web Store</ex></ph>
@@ -197,8 +219,14 @@ Permissions you've already given to websites and apps may apply to this account.
       <if expr="is_macosx">
         </if>
 
-      <if expr="enable_extensions">
-        </if>
+      <if expr="enable_extensions_core">
+        <if expr="is_android">
+          </if>
+
+        <message name="IDS_OPEN_WEB_STORE_BUTTON_TEXT" desc="Text for the open Web Store button." formatter_data="android_java">
+          Open Web Store
+        </message>
+      </if>
 
       <message name="IDS_SAFETY_CHECK_EXTENSIONS_POLICY_VIOLATION" desc="The text explaining the reason for disabling extension. The extension in question violates Web Store policy.">
         This extension violates the Web Store policy, and might be unsafe. Remove it from FlyWeb so it can no longer see and change your data on sites you visit, including your personal info.
@@ -215,7 +243,7 @@ Permissions you've already given to websites and apps may apply to this account.
         </message>
       </if>
 
-      <if expr="use_titlecase and not chromeos_ash">
+      <if expr="use_titlecase and not is_chromeos">
         <if expr="_is_chrome_for_testing_branded">
           <then>
             </then>
@@ -223,7 +251,7 @@ Permissions you've already given to websites and apps may apply to this account.
             </else>
         </if>
         </if>
-      <if expr="not use_titlecase and not chromeos_ash">
+      <if expr="not use_titlecase and not is_chromeos">
         <if expr="_is_chrome_for_testing_branded">
           <then>
             </then>
@@ -231,13 +259,16 @@ Permissions you've already given to websites and apps may apply to this account.
             </else>
         </if>
         </if>
-      <if expr="chromeos_ash">
+      <if expr="is_chromeos">
         </if>
 
       <if expr="is_macosx">
         </if>
 
-      <if expr="not chromeos_ash">
+      <if expr="not is_android">
+        </if>
+
+      <if expr="not is_chromeos">
         </if>
 
       <if expr="toolkit_views">
@@ -246,7 +277,7 @@ Permissions you've already given to websites and apps may apply to this account.
       <if expr="enable_extensions">
         </if>
 
-      <if expr="toolkit_views and not chromeos_lacros and not chromeos_ash">
+      <if expr="toolkit_views and not is_chromeos">
         </if>
 
       <if expr="_is_chrome_for_testing_branded">
@@ -255,21 +286,10 @@ Permissions you've already given to websites and apps may apply to this account.
         <else>
           </else>
       </if>
-
-      <if expr="not chromeos_ash">
+      <if expr="not is_android">
         </if>
 
-      <if expr="not chromeos_ash and not is_android and not chromeos_lacros">
-        <if expr="not use_titlecase">
-          </if>
-        <if expr="use_titlecase">
-          </if>
-        </if>
-
-      <if expr="not chromeos_ash and not is_android">
-        </if>
-
-      <if expr="chromeos_ash">
+      <if expr="not is_chromeos">
         </if>
 
       <if expr="not use_titlecase">
@@ -277,13 +297,24 @@ Permissions you've already given to websites and apps may apply to this account.
       <if expr="use_titlecase">
         </if>
 
-      <if expr="chromeos_ash">
+      <if expr="not is_chromeos and not is_android">
+        </if>
+
+      <if expr="not is_chromeos and not is_android">
+        </if>
+
+      <if expr="is_chromeos">
+        </if>
+
+      <if expr="not use_titlecase">
+        </if>
+      <if expr="use_titlecase">
+        </if>
+
+      <if expr="is_chromeos">
         </if>
 
       <if expr="is_win">
-        </if>
-
-      <if expr="chromeos_ash">
         </if>
 
       <if expr="not is_android">
@@ -295,14 +326,7 @@ Permissions you've already given to websites and apps may apply to this account.
       <if expr="is_macosx">
         </if>
 
-      <if expr="not is_android and not chromeos_ash">
-        <message name="IDS_LOGIN_POD_USER_REMOVE_WARNING_SYNC" desc="Main text shown as a warning when attempting to remove an user.">
-          This profile's browsing data will be deleted from this device. To recover the data, sign in to FlyWeb as <ph name="USER_EMAIL">$2<ex>foo@example.com</ex></ph>.
-        </message>
-
-        </if>
-
-      <if expr="not is_android">
+      <if expr="not is_android and not is_chromeos">
         </if>
 
       <if expr="not is_android">
@@ -316,15 +340,26 @@ Permissions you've already given to websites and apps may apply to this account.
           <message name="IDS_CONTENT_CONTEXT_OPENLINKOFFTHERECORD_INAPP" desc="The name of the command to open a link in a Private browser window when the user is in an app window">
             Open link in FlyWeb &amp;private window
           </message>
+          <message name="IDS_CONTENT_CONTEXT_OPENLINKOFFTHERECORD_INAPP_V2" desc="The name of the command to open a link in a Private browser window when the user is in an app window">
+            Open link in FlyWeb &amp;Private window
+          </message>
         </if>
         <if expr="use_titlecase">
           <message name="IDS_CONTENT_CONTEXT_OPENLINKOFFTHERECORD_INAPP" desc="In Title Case: The name of the command to open a link in a Private browser window when the user is in an app window">
             Open Link in FlyWeb &amp;Private Window
           </message>
+          <message name="IDS_CONTENT_CONTEXT_OPENLINKOFFTHERECORD_INAPP_V2" desc="In Title Case: The name of the command to open a link in a Private browser window when the user is in an app window">
+            Open Link in FlyWeb &amp;Private Window
+          </message>
         </if>
+
+        <if expr="not use_titlecase">
+          </if>
+        <if expr="use_titlecase">
+           </if>
       </if>
 
-      <if expr="not chromeos_ash">
+      <if expr="not is_chromeos">
         <message name="IDS_UPDATE_RECOMMENDED" desc="The main text of the Update Recommended dialog with a count of open Private windows.">
           {COUNT, plural,
           =0 {A new update for FlyWeb is available and will be applied as soon as you relaunch.}
@@ -332,7 +367,7 @@ Permissions you've already given to websites and apps may apply to this account.
           other {A new update for FlyWeb is available and will be applied as soon as you relaunch. Your # Private windows won't reopen.}}
         </message>
         </if>
-      <if expr="chromeos_ash">
+      <if expr="is_chromeos">
         </if>
 
       <if expr="is_win or is_macosx or is_linux">
@@ -342,29 +377,42 @@ Permissions you've already given to websites and apps may apply to this account.
         </if>
       <if expr="not use_titlecase">
         </if>
-      <if expr="not is_android">
-        </if>
-
       <if expr="use_titlecase">
         </if>
       <if expr="not use_titlecase">
         </if>
       <if expr="is_android">
+
         </if>
 
       <if expr="is_macosx">
+        <message name="IDS_LOCAL_NETWORK_ACCESS_PERMISSION_DESC" desc="Text shown in the macOS permission dialog, describing why FlyWeb needs the permission to access local network.">
+          This will allow you to share content from FlyWeb to your local devices, such as a TV or speaker.
+        </message>
+      </if>
+
+      <if expr="not is_android">
+        <if expr="use_titlecase">
+          </if>
+        <if expr="not use_titlecase">
+          </if>
         </if>
 
-      <if expr="chromeos_ash">
+      <if expr="not is_android">
+        <if expr="use_titlecase">
+          </if>
+        <if expr="not use_titlecase">
+          </if>
+
         </if>
 
-      <if expr="not chromeos_ash and not is_android">
+      <if expr="is_chromeos">
         </if>
 
       <if expr="is_win">
         </if>
       <if expr="not is_android">
-        <if expr="not chromeos_ash">
+        <if expr="not is_chromeos">
           <message name="IDS_RELAUNCH_RECOMMENDED_BODY" desc="The body text of a dialog that tells users that a browser relaunch is recommended for an update with Private counter.">
              {COUNT, plural,
               =0 {Your administrator asks that you relaunch FlyWeb to apply this update}
@@ -377,9 +425,15 @@ Permissions you've already given to websites and apps may apply to this account.
               =1 {Your administrator requires that you relaunch FlyWeb to apply an update. Your Private window won't reopen.}
               other {Your administrator requires that you relaunch FlyWeb to apply an update. Your # Private windows won't reopen.}}
           </message>
+             <message name="IDS_ADVANCED_PROTECTION_RELAUNCH_REQUIRED_BODY" desc="The body text of a dialog that tells Advanced Protection users the browser must be relaunched with Private counter">
+             {COUNT, plural,
+              =0 {Advanced Protection requires that you relaunch FlyWeb to apply an update}
+              =1 {Advanced Protection requires that you relaunch FlyWeb to apply an update. Your Private window won't reopen.}
+              other {Advanced Protection requires that you relaunch FlyWeb to apply an update. Your # Private windows won't reopen.}}
+          </message>
         </if>
       </if>
-      <if expr="not is_android and not chromeos_ash">
+      <if expr="not is_android and not is_chromeos">
          </if>
       <if expr="toolkit_views">
         </if>
@@ -388,27 +442,60 @@ Permissions you've already given to websites and apps may apply to this account.
       <if expr="not is_android">
         </if>
 
-      <if expr="enable_extensions">
+      <if expr="is_android">
+        <message name="IDS_MESSAGE_ACT_SURVEY_INVITATION" desc="Survey invitation text that's shown in a pop up. The user can then ignore the invitation or accept it, which will cause the survey to be shown.">
+          Help us improve Private by taking this 1 minute survey.
+        </message>
+      </if>
+
+      <if expr="enable_extensions_core">
         </if>
 
-      <if expr="not chromeos_ash and not is_android">
-        <if expr="chromeos_lacros">
-          </if>
-        <if expr="not chromeos_lacros">
-          </if>
-        <if expr="chromeos_lacros">
-          </if>
-        <if expr="not chromeos_lacros">
-          </if>
-
-        </if>
-
-      <if expr="chromeos_ash">
+      <if expr="not is_chromeos and not is_android">
         </if>
 
       <if expr="is_win">
         </if>
+
+      <if expr="is_win">
+        </if>
+
       <if expr="not is_android">
+        </if>
+
+      <if expr="not is_android">
+        </if>
+
+      <if expr="not is_android">
+        <if expr="use_titlecase">
+          </if>
+        <if expr="not use_titlecase">
+          </if>
+      </if>
+
+      <if expr="not is_android and not is_chromeos">
+        </if>
+      <if expr="is_macosx">
+        </if>
+
+      <if expr="not is_android">
+        </if>
+      <if expr="is_macosx">
+        </if>
+      <if expr="is_win or is_linux or is_chromeos">
+        </if>
+
+      <if expr="is_macosx">
+        </if>
+      <if expr="not is_macosx">
+        </if>
+      <if expr="is_win">
+        </if>
+      <if expr="is_macosx">
+        </if>
+      <if expr="is_win or is_linux or is_chromeos">
+        </if>
+      <if expr="enable_extensions">
         </if>
 
       <if expr="not is_android">
@@ -421,10 +508,13 @@ Permissions you've already given to websites and apps may apply to this account.
       <if expr="not is_android">
         </if>
 
-      <if expr="not is_android and not is_chromeos">
+      <if expr="not is_android">
+        <if expr="use_titlecase">
+          </if>
+        <if expr="not use_titlecase">
+          </if>
         </if>
-      <if expr="is_macosx">
-        </if>
-    </messages>
+
+      </messages>
   </release>
 </grit>
