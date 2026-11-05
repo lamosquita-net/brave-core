@@ -11,21 +11,13 @@
 #include "base/feature_list.h"
 #include "base/memory/ptr_util.h"
 #include "base/no_destructor.h"
-#include "brave/browser/brave_rewards/rewards_util.h"
 #include "brave/browser/ethereum_remote_client/buildflags/buildflags.h"
 #include "brave/browser/ui/webui/brave_adblock_internals_ui.h"
 #include "brave/browser/ui/webui/brave_adblock_ui.h"
-#include "brave/browser/ui/webui/brave_rewards/rewards_page_ui.h"
-#include "brave/browser/ui/webui/brave_rewards/rewards_web_ui_utils.h"
-#include "brave/browser/ui/webui/brave_rewards_internals_ui.h"
-#include "brave/browser/ui/webui/brave_rewards_page_ui.h"
-#include "brave/browser/ui/webui/skus_internals_ui.h"
-#include "brave/components/brave_rewards/common/features.h"
 #include "brave/components/brave_wallet/common/common_utils.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/constants/webui_url_constants.h"
 #include "brave/components/playlist/common/buildflags/buildflags.h"
-#include "brave/components/skus/common/features.h"
 #include "brave/components/tor/buildflags/buildflags.h"
 #include "build/build_config.h"
 #include "chrome/browser/profiles/profile.h"
@@ -86,8 +78,6 @@ WebUIController* NewWebUI(WebUI* web_ui, const GURL& url) {
     return new BraveAdblockUI(web_ui, url.host());
   } else if (host == kAdblockInternalsHost) {
     return new BraveAdblockInternalsUI(web_ui, url.host());
-  } else if (host == kSkusInternalsHost) {
-    return new SkusInternalsUI(web_ui, url.host());
 #if !BUILDFLAG(IS_ANDROID)
   } else if (host == kWalletPageHost &&
              brave_wallet::IsAllowedForContext(profile)) {
@@ -103,24 +93,6 @@ WebUIController* NewWebUI(WebUI* web_ui, const GURL& url) {
     return new EthereumRemoteClientUI(web_ui, url.host());
 #endif
 #endif  // !BUILDFLAG(OS_ANDROID)
-  } else if (host == kRewardsPageHost &&
-             // We don't want to check for supported profile type here because
-             // we want private windows to redirect to the regular profile.
-             // Additionally, if Rewards aren't supported because of the OFAC
-             // sanctions we want to show the page with an appropriate error
-             // message.
-             // Guest session will just show an error page.
-             brave_rewards::IsSupported(
-                 profile->GetPrefs(),
-                 brave_rewards::IsSupportedOptions::kSkipRegionCheck)) {
-    if (base::FeatureList::IsEnabled(
-            brave_rewards::features::kNewRewardsUIFeature)) {
-      return new brave_rewards::RewardsPageUI(web_ui, url.host());
-    }
-    return new BraveRewardsPageUI(web_ui, url.host());
-  } else if (host == kRewardsInternalsHost &&
-             brave_rewards::IsSupportedForProfile(profile)) {
-    return new BraveRewardsInternalsUI(web_ui, url.host());
 #if !BUILDFLAG(IS_ANDROID)
   } else if (host == kWelcomeHost && !profile->IsGuestSession()) {
     return new BraveWelcomeUI(web_ui, url.host());
@@ -164,8 +136,6 @@ WebUIFactoryFunction GetWebUIFactoryFunction(WebUI* web_ui,
 
   if (url.host_piece() == kAdblockHost ||
       url.host_piece() == kAdblockInternalsHost ||
-      (url.host_piece() == kSkusInternalsHost &&
-       base::FeatureList::IsEnabled(skus::features::kSkusFeature)) ||
 #if BUILDFLAG(IS_ANDROID)
       (url.is_valid() && url.host_piece() == kWalletPageHost) ||
 #else
@@ -182,8 +152,8 @@ WebUIFactoryFunction GetWebUIFactoryFunction(WebUI* web_ui,
 #if BUILDFLAG(ENABLE_TOR)
       url.host_piece() == kTorInternalsHost ||
 #endif
-      url.host_piece() == kRewardsPageHost ||
-      url.host_piece() == kRewardsInternalsHost) {
+      // FlyWeb: Brave Rewards WebUI removed (was the last term).
+      false) {
     return &NewWebUI;
   }
 
@@ -216,9 +186,6 @@ bool ShouldBlockWalletWebUI(content::BrowserContext* browser_context,
 WebUI::TypeID BraveWebUIControllerFactory::GetWebUIType(
     content::BrowserContext* browser_context,
     const GURL& url) {
-  if (brave_rewards::ShouldBlockRewardsWebUI(browser_context, url)) {
-    return WebUI::kNoWebUI;
-  }
 #if BUILDFLAG(IS_ANDROID)
   if (ShouldBlockWalletWebUI(browser_context, url)) {
     return WebUI::kNoWebUI;

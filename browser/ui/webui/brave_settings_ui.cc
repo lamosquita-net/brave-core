@@ -10,7 +10,6 @@
 #include <utility>
 
 #include "base/feature_list.h"
-#include "brave/browser/brave_rewards/rewards_util.h"
 #include "brave/browser/brave_wallet/brave_wallet_context_utils.h"
 #include "brave/browser/ntp_background/view_counter_service_factory.h"
 #include "brave/browser/resources/settings/grit/brave_settings_resources.h"
@@ -142,8 +141,8 @@ void BraveSettingsUI::AddResources(content::WebUIDataSource* html_source,
   html_source->AddBoolean("isForgetFirstPartyStorageFeatureEnabled",
                           base::FeatureList::IsEnabled(
                               net::features::kBraveForgetFirstPartyStorage));
-  html_source->AddBoolean("isBraveRewardsSupported",
-                          brave_rewards::IsSupportedForProfile(profile));
+  // FlyWeb: Brave Rewards is removed from the build.
+  html_source->AddBoolean("isBraveRewardsSupported", false);
   html_source->AddBoolean(
       "areShortcutsSupported",
       base::FeatureList::IsEnabled(commands::features::kBraveCommands));

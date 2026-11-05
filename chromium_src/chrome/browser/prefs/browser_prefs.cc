@@ -5,11 +5,9 @@
 
 #include "brave/browser/brave_local_state_prefs.h"
 #include "brave/browser/brave_profile_prefs.h"
-#include "brave/browser/brave_rewards/rewards_prefs_util.h"
 #include "brave/browser/search/ntp_utils.h"
 #include "brave/browser/themes/brave_dark_mode_utils.h"
 #include "brave/browser/translate/brave_translate_prefs_migration.h"
-#include "brave/components/brave_ads/core/public/prefs/obsolete_pref_util.h"
 #include "brave/components/brave_search_conversion/p3a.h"
 #include "brave/components/brave_shields/content/browser/brave_shields_p3a.h"
 #include "brave/components/brave_sync/brave_sync_prefs.h"
@@ -104,9 +102,6 @@ void MigrateObsoleteProfilePrefs(PrefService* profile_prefs,
   // Added 07/2021
   profile_prefs->ClearPref(prefs::kNetworkPredictionOptions);
 
-  // Added 01/2022
-  brave_rewards::MigrateObsoleteProfilePrefs(profile_prefs);
-
   // Added 05/2022
   translate::ClearMigrationBraveProfilePrefs(profile_prefs);
 
@@ -155,9 +150,6 @@ void MigrateObsoleteProfilePrefs(PrefService* profile_prefs,
   // Added 2023-09
   ntp_background_images::ViewCounterService::MigrateObsoleteProfilePrefs(
       profile_prefs);
-
-  // Added 2023-11
-  brave_ads::MigrateObsoleteProfilePrefs(profile_prefs);
 
   brave_shields::MigrateObsoleteProfilePrefs(profile_prefs);
 
