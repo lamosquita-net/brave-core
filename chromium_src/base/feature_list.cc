@@ -5,7 +5,9 @@
 
 #include "base/feature_list.h"
 
+#include <algorithm>
 #include <optional>
+#include <string_view>
 
 #include "base/check_op.h"
 #include "base/containers/flat_map.h"
@@ -13,7 +15,6 @@
 #include "base/feature_override.h"
 #include "base/logging.h"
 #include "base/no_destructor.h"
-#include "base/ranges/algorithm.h"
 
 namespace base {
 namespace internal {
@@ -64,10 +65,11 @@ FeatureDefaultStateOverrider::FeatureDefaultStateOverrider(
       DCHECK(new_overrides.insert(override.first).second)
           << "Feature " << override.first.get().name
           << " is duplicated in the current override macros";
-      DCHECK(!ranges::any_of(default_state_overrides,
-                             [&override](const auto& v) {
-                               return &v.first.get() == &override.first.get();
-                             }))
+      DCHECK(!std::ranges::any_of(default_state_overrides,
+                                  [&override](const auto& v) {
+                                    return &v.first.get() ==
+                                           &override.first.get();
+                                  }))
           << "Feature " << override.first.get().name
           << " has already been overridden";
     }
@@ -87,7 +89,7 @@ static inline bool operator<(const std::reference_wrapper<const Feature>& lhs,
   return &lhs.get() < &rhs.get();
 }
 
-bool FeatureList::IsFeatureOverridden(const std::string& feature_name) const {
+bool FeatureList::IsFeatureOverridden(std::string_view feature_name) const {
   if (FeatureList::IsFeatureOverridden_ChromiumImpl(feature_name)) {
     return true;
   }
@@ -127,11 +129,32 @@ FeatureState FeatureList::GetCompileTimeFeatureState(const Feature& feature) {
              : feature.default_state;
 }
 
+namespace internal {
+
+// Carries the compile time default state of a feature. Used below to rewrite
+// `feature.default_state` as `feature.name->*CompileTimeFeatureState{...}`:
+// `->*` binds tighter than any operator Chromium applies to `default_state`,
+// so the result is a plain FeatureState usable in comparisons, in
+// IsCountrySpecificFeatureState() and in a switch.
+struct CompileTimeFeatureState {
+  FeatureState state;
+};
+
+inline FeatureState operator->*(const char* /*feature_name*/,
+                                CompileTimeFeatureState compile_time_state) {
+  return compile_time_state.state;
+}
+
+}  // namespace internal
 }  // namespace base
 
-// This replaces |default_state| compare blocks with a modified one that
-// includes the compile time override check.
-#define default_state name&& GetCompileTimeFeatureState(feature)
+// This replaces |default_state| reads with the compile time overridden state.
+// Every use in feature_list.cc has a `const Feature& feature` in scope (for
+// FeatureWithCountryRestriction it is the same object).
+#define default_state                              \
+  name->*::base::internal::CompileTimeFeatureState { \
+    GetCompileTimeFeatureState(feature)              \
+  }
 #define IsFeatureOverridden IsFeatureOverridden_ChromiumImpl
 #define GetStateIfOverridden GetStateIfOverridden_ChromiumImpl
 
