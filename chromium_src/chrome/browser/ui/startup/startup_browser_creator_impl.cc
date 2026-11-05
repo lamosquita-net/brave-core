@@ -12,7 +12,7 @@
 #include "components/signin/public/base/signin_buildflags.h"
 
 #if BUILDFLAG(ENABLE_UPDATER)
-#include "chrome/browser/ui/browser_list.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface_iterator.h"
 #include "chrome/browser/ui/cocoa/keystone_infobar_delegate.h"
 #include "chrome/browser/ui/startup/startup_types.h"
 #endif
@@ -29,10 +29,13 @@ void MaybeShowPromotionInfoBar(
 }
 }  // namespace
 
-#define GetLastActive                         \
-  GetLastActive();                            \
-  MaybeShowPromotionInfoBar(process_startup); \
-  BrowserList::GetInstance()->GetLastActive
+// 156 looks the last active window up with
+// GetLastActiveBrowserWindowInterfaceWithAnyProfile() (BrowserList is gone).
+// Its header is included above, so only the call in Launch() is expanded.
+#define GetLastActiveBrowserWindowInterfaceWithAnyProfile() \
+  GetLastActiveBrowserWindowInterfaceWithAnyProfile();      \
+  MaybeShowPromotionInfoBar(process_startup);               \
+  GetLastActiveBrowserWindowInterfaceWithAnyProfile()
 #endif
 
 #define StartupTabProviderImpl BraveStartupTabProviderImpl
@@ -40,7 +43,7 @@ void MaybeShowPromotionInfoBar(
 #include "src/chrome/browser/ui/startup/startup_browser_creator_impl.cc"
 
 #if BUILDFLAG(IS_MAC) && BUILDFLAG(ENABLE_UPDATER)
-#undef GetLastActive
+#undef GetLastActiveBrowserWindowInterfaceWithAnyProfile
 #endif
 
 #undef StartupTabProviderImpl

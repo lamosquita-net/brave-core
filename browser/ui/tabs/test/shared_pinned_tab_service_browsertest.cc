@@ -17,10 +17,12 @@
 #include "brave/browser/ui/tabs/test/shared_pinned_tab_service_browsertest.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser_commands.h"
-#include "chrome/browser/ui/browser_list.h"
-#include "chrome/browser/ui/navigator/browser_navigator_params.h"
 #include "chrome/browser/ui/browser_tabstrip.h"
 #include "chrome/browser/ui/browser_window.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface_iterator.h"
+#include "chrome/browser/ui/browser_window/public/global_browser_collection.h"
+#include "chrome/browser/ui/navigator/browser_navigator_params.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/browser/ui/views/frame/browser_view.h"
 #include "chrome/test/base/in_process_browser_test.h"
@@ -277,10 +279,10 @@ IN_PROC_BROWSER_TEST_F(SharedPinnedTabServiceBrowserTest, BringAllTabs) {
   brave::BringAllTabs(browser_1);
 
   // Then only the target browser should be left with shared contents.
-  auto* browser_list = BrowserList::GetInstance();
-  WaitUntil(
-      base::BindLambdaForTesting([&]() { return browser_list->size() == 1u; }));
-  EXPECT_EQ(browser_1, *browser_list->begin());
+  WaitUntil(base::BindLambdaForTesting([&]() {
+    return GlobalBrowserCollection::GetInstance()->GetSize() == 1u;
+  }));
+  EXPECT_EQ(browser_1, GetAllBrowserWindowInterfaces().front());
   browser_1->window()->Show();
   WaitUntil(base::BindLambdaForTesting([&]() {
     return shared_pinned_tab_service->IsSharedContents(
@@ -345,7 +347,7 @@ IN_PROC_BROWSER_TEST_F(SharedPinnedTabServiceBrowserTest,
 
   // Then the window should be closed
   WaitUntil(base::BindRepeating(
-      []() { return BrowserList::GetInstance()->size() == 1; }));
+      []() { return GlobalBrowserCollection::GetInstance()->GetSize() == 1; }));
 }
 
 IN_PROC_BROWSER_TEST_F(SharedPinnedTabServiceBrowserTest, PreferenceChanged) {
