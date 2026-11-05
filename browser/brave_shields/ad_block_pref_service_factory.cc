@@ -40,11 +40,12 @@ AdBlockPrefServiceFactory::AdBlockPrefServiceFactory()
 
 AdBlockPrefServiceFactory::~AdBlockPrefServiceFactory() = default;
 
-KeyedService* AdBlockPrefServiceFactory::BuildServiceInstanceFor(
+std::unique_ptr<KeyedService>
+AdBlockPrefServiceFactory::BuildServiceInstanceForBrowserContext(
     content::BrowserContext* context) const {
   Profile* profile = Profile::FromBrowserContext(context);
 
-  auto* service = new AdBlockPrefService(
+  auto service = std::make_unique<AdBlockPrefService>(
       g_brave_browser_process->ad_block_service(), profile->GetPrefs());
 
   auto pref_proxy_config_tracker =

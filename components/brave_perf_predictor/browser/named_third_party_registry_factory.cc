@@ -31,9 +31,10 @@ NamedThirdPartyRegistryFactory::NamedThirdPartyRegistryFactory()
 
 NamedThirdPartyRegistryFactory::~NamedThirdPartyRegistryFactory() = default;
 
-KeyedService* NamedThirdPartyRegistryFactory::BuildServiceInstanceFor(
+std::unique_ptr<KeyedService>
+NamedThirdPartyRegistryFactory::BuildServiceInstanceForBrowserContext(
     content::BrowserContext* context) const {
-  auto* registry = new NamedThirdPartyRegistry();
+  auto registry = std::make_unique<NamedThirdPartyRegistry>();
   registry->InitializeDefault();
   return registry;
 }

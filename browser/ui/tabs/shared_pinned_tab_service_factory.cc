@@ -32,9 +32,11 @@ SharedPinnedTabServiceFactory::SharedPinnedTabServiceFactory()
 
 SharedPinnedTabServiceFactory::~SharedPinnedTabServiceFactory() {}
 
-KeyedService* SharedPinnedTabServiceFactory::BuildServiceInstanceFor(
+std::unique_ptr<KeyedService>
+SharedPinnedTabServiceFactory::BuildServiceInstanceForBrowserContext(
     content::BrowserContext* context) const {
-  return new SharedPinnedTabService(Profile::FromBrowserContext(context));
+  return std::make_unique<SharedPinnedTabService>(
+      Profile::FromBrowserContext(context));
 }
 
 bool SharedPinnedTabServiceFactory::ServiceIsCreatedWithBrowserContext() const {
