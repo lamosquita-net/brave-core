@@ -3,14 +3,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+#include "chrome/browser/ui/safety_hub/safety_hub_test_util.h"
 #include "components/content_settings/core/common/content_settings_types.h"
-// Included before MIDI is redefined below: its enum also has a MIDI value.
+// Included before MIDI is redefined below: their enums also have a MIDI value.
 #include "third_party/blink/public/common/permissions/permission_utils.h"
+#include "third_party/blink/public/mojom/permissions/permission.mojom.h"
 
 // clang-format off
-#define TOP_LEVEL_STORAGE_ACCESS                     \
-                           TOP_LEVEL_STORAGE_ACCESS, \
-      ContentSettingsType::BRAVE_FINGERPRINTING_V2,  \
+#define FILE_SYSTEM_ACCESS_EXTENDED_PERMISSION      \
+  FILE_SYSTEM_ACCESS_EXTENDED_PERMISSION,           \
+      ContentSettingsType::BRAVE_FINGERPRINTING_V2, \
       ContentSettingsType::BRAVE_HTTPS_UPGRADE
 // clang-format on
 
@@ -35,5 +37,5 @@
       ContentSettingsType::BRAVE_WEBCOMPAT_ALL, ContentSettingsType::MIDI
 
 #include "src/chrome/browser/ui/webui/settings/safety_hub_handler_unittest.cc"
-#undef TOP_LEVEL_STORAGE_ACCESS
+#undef FILE_SYSTEM_ACCESS_EXTENDED_PERMISSION
 #undef MIDI
