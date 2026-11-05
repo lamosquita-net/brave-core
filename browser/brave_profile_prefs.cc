@@ -70,6 +70,7 @@
 #if !BUILDFLAG(IS_ANDROID)
 #include "brave/browser/search_engines/search_engine_provider_util.h"
 #include "brave/browser/ui/tabs/brave_tab_prefs.h"
+#include "brave/browser/ui/webui/welcome_page/brave_welcome_page_prefs.h"
 #include "brave/components/brave_private_new_tab_ui/common/pref_names.h"
 #include "chrome/browser/ui/webui/bookmarks/bookmark_prefs.h"
 #include "chrome/browser/ui/webui/side_panel/bookmarks/bookmarks.mojom.h"
@@ -104,6 +105,9 @@ void RegisterProfilePrefsForMigration(
 
   // Added 10/2022
   registry->RegisterIntegerPref(kDefaultBrowserLaunchingCount, 0);
+
+  // Added 11/2026
+  brave_welcome_page::prefs::RegisterProfilePrefsForMigration(registry);
 #endif
 
   // Restore "Other Bookmarks" migration
@@ -361,6 +365,8 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
   registry->RegisterBooleanPref(kShowFullscreenReminder, true);
 
   brave_tabs::RegisterBraveProfilePrefs(registry);
+
+  brave_welcome_page::prefs::RegisterProfilePrefs(registry);
 
   registry->SetDefaultPrefValue(
       bookmarks_webui::prefs::kBookmarksViewType,

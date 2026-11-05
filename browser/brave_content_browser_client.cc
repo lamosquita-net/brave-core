@@ -343,9 +343,9 @@ void BraveContentBrowserClient::
                                                            associated_registry);
 }
 
-void BraveContentBrowserClient::RegisterWebUIInterfaceBrokers(
+void BraveContentBrowserClient::RegisterTrustedWebUIInterfaceBrokers(
     content::WebUIBrowserInterfaceBrokerRegistry& registry) {
-  ChromeContentBrowserClient::RegisterWebUIInterfaceBrokers(registry);
+  ChromeContentBrowserClient::RegisterTrustedWebUIInterfaceBrokers(registry);
 
 #if !BUILDFLAG(IS_ANDROID)
   auto ntp_registration =
@@ -768,8 +768,6 @@ void BraveContentBrowserClient::CreateThrottlesForNavigation(
   content::NavigationHandle& navigation_handle = registry.GetNavigationHandle();
 
 #if !BUILDFLAG(IS_ANDROID)
-  // TODO(T5): NewTabShowsNavigationThrottle (Brave NTP) still has the 128
-  // MaybeCreateThrottleFor(handle) shape; 1.98 calls it like this.
   NewTabShowsNavigationThrottle::MaybeCreateAndAdd(registry);
 #endif
 

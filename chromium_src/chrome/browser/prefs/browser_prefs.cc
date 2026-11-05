@@ -27,6 +27,7 @@
 #if !BUILDFLAG(IS_ANDROID)
 #include "brave/browser/search_engines/search_engine_provider_util.h"
 #include "brave/browser/ui/tabs/brave_tab_prefs.h"
+#include "brave/browser/ui/webui/welcome_page/brave_welcome_page_prefs.h"
 #endif
 
 #if BUILDFLAG(ENABLE_WIDEVINE)
@@ -63,6 +64,11 @@ void MigrateObsoleteProfilePrefs(PrefService* profile_prefs,
   // to Brave pref.
   gcm::MigrateGCMPrefs(profile_prefs);
 #endif
+
+#if !BUILDFLAG(IS_ANDROID)
+  // Added 11/2026 (156 removed Chromium's prefs::kHasSeenWelcomePage).
+  brave_welcome_page::prefs::MigratePrefs(profile_prefs);
+#endif  // !BUILDFLAG(IS_ANDROID)
 
   MigrateObsoleteProfilePrefs_ChromiumImpl(profile_prefs, profile_path);
 
