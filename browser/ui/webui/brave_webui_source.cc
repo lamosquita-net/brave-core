@@ -42,7 +42,7 @@ void CustomizeWebUIHTMLSource(content::WebUI* web_ui,
                               const std::string& name,
                               content::WebUIDataSource* source) {
 #if !BUILDFLAG(IS_ANDROID)
-  if (name == "rewards" || name == "wallet") {
+  if (name == "rewards") {
     NavigationBarDataProvider::Initialize(source, Profile::FromWebUI(web_ui));
   }
 #endif

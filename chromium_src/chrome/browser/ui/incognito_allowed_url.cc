@@ -26,10 +26,6 @@ bool IsURLAllowedInIncognitoBraveImpl(const GURL& url) {
     return false;
   }
 
-  if (host == kWalletPageHost || host == kWalletPanelHost) {
-    return false;
-  }
-
   return true;
 }
 

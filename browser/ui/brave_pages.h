@@ -19,10 +19,7 @@ void ShowWebcompatReporter(BrowserWindowInterface* browser);
 // FlyWeb: opens flyweb.lamosquita.net's "report a problem" page in a new tab.
 void OpenFlyWebReportProblemPage(content::WebContents* initiator);
 void ShowBraveRewards(BrowserWindowInterface* browser);
-void ShowBraveWallet(BrowserWindowInterface* browser);
-void ShowBraveWalletOnboarding(BrowserWindowInterface* browser);
 void ShowExtensionSettings(BrowserWindowInterface* browser);
-void ShowWalletSettings(BrowserWindowInterface* browser);
 void ShowSync(BrowserWindowInterface* browser);
 void ShowShortcutsPage(BrowserWindowInterface* browser);
 void ShowBraveTalk(BrowserWindowInterface* browser);

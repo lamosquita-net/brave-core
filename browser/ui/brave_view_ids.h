@@ -9,7 +9,6 @@
 // See src/chrome/browser/ui/view_ids.h
 enum BraveViewIds {
   BRAVE_VIEW_ID_BOOKMARK_IMPORT_INSTRUCTION_VIEW = 100001,
-  BRAVE_VIEW_ID_WALLET_BUTTON = 100002,
 };
 
 #endif  // BRAVE_BROWSER_UI_BRAVE_VIEW_IDS_H_

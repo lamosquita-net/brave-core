@@ -178,16 +178,6 @@ base::span<const webui::LocalizedString> GetWebUILocalizedStrings(
                {"boxDdgButton", IDS_BRAVE_PRIVATE_NEW_TAB_BOX_DDG_BUTTON},
 #endif  // !BUILDFLAG(IS_ANDROID)
            }},
-          {"wallet",
-           {{"cryptoWalletsWelcome", IDS_BRAVE_WALLET_WELCOME},
-            {"cryptoWalletsDisclosureOne", IDS_BRAVE_WALLET_DISCLOSURE_ONE},
-            {"cryptoWalletsDisclosureTwo", IDS_BRAVE_WALLET_DISCLOSURE_TWO},
-            {"cryptoWalletsDisclosureThree", IDS_BRAVE_WALLET_DISCLOSURE_THREE},
-            {"cryptoWalletsDisclosureFour", IDS_BRAVE_WALLET_DISCLOSURE_FOUR},
-            {"cryptoWalletsBraveRewards", IDS_BRAVE_WALLET_BRAVE_REWARDS},
-            {"cryptoWalletsDownloading", IDS_BRAVE_WALLET_DOWNLOADING},
-            {"cryptoWalletsDisclosureConfirm",
-             IDS_BRAVE_WALLET_DISCLOSURE_CONFIRM}}},
           {"rewards",
            {
                {"adsCurrentEarnings",
