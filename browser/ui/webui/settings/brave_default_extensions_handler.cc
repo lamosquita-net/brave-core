@@ -12,7 +12,6 @@
 #include "base/strings/utf_string_conversions.h"
 #include "base/values.h"
 #include "brave/browser/extensions/brave_component_loader.h"
-#include "brave/components/brave_webtorrent/grit/brave_webtorrent_resources.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/l10n/common/localization_util.h"
 #include "chrome/browser/about_flags.h"
@@ -55,11 +54,6 @@ BraveDefaultExtensionsHandler::~BraveDefaultExtensionsHandler() = default;
 
 void BraveDefaultExtensionsHandler::RegisterMessages() {
   profile_ = Profile::FromWebUI(web_ui());
-  web_ui()->RegisterMessageCallback(
-      "setWebTorrentEnabled",
-      base::BindRepeating(&BraveDefaultExtensionsHandler::SetWebTorrentEnabled,
-                          base::Unretained(this)));
-
   // TODO(petemill): If anything outside this handler is responsible for causing
   // restart-neccessary actions, then this should be moved to a generic handler
   // and the flag should be moved to somewhere more static / singleton-like.
@@ -107,31 +101,6 @@ void BraveDefaultExtensionsHandler::GetRestartNeeded(
 
   AllowJavascript();
   ResolveJavascriptCallback(args[0], base::Value(IsRestartNeeded()));
-}
-
-void BraveDefaultExtensionsHandler::SetWebTorrentEnabled(
-    const base::ListValue& args) {
-  CHECK_EQ(args.size(), 1U);
-  CHECK(profile_);
-  bool enabled = args[0].GetBool();
-
-  extensions::ExtensionService* service =
-      extensions::ExtensionSystem::Get(profile_)->extension_service();
-  extensions::ComponentLoader* loader = service->component_loader();
-
-  if (enabled) {
-    if (!loader->Exists(brave_webtorrent_extension_id)) {
-      base::FilePath brave_webtorrent_path(FILE_PATH_LITERAL(""));
-      brave_webtorrent_path =
-          brave_webtorrent_path.Append(FILE_PATH_LITERAL("brave_webtorrent"));
-      loader->Add(IDR_BRAVE_WEBTORRENT, brave_webtorrent_path);
-    }
-    service->EnableExtension(brave_webtorrent_extension_id);
-  } else {
-    service->DisableExtension(
-        brave_webtorrent_extension_id,
-        extensions::disable_reason::DisableReason::DISABLE_BLOCKED_BY_POLICY);
-  }
 }
 
 bool BraveDefaultExtensionsHandler::IsExtensionInstalled(

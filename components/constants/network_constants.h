@@ -70,9 +70,6 @@ inline constexpr char kWidevineGoogleDlPrefix[] =
 inline constexpr char kUserAgentHeader[] = "User-Agent";
 inline constexpr char kBraveServicesKeyHeader[] = "BraveServiceKey";
 
-inline constexpr char kBittorrentMimeType[] = "application/x-bittorrent";
-inline constexpr char kOctetStreamMimeType[] = "application/octet-stream";
-
 inline constexpr char kSecGpcHeader[] = "Sec-GPC";
 
 #endif  // BRAVE_COMPONENTS_CONSTANTS_NETWORK_CONSTANTS_H_

@@ -39,14 +39,6 @@
   "brave/app/theme/brave_unscaled_resources.grd": {
     "includes": [60100],
   },
-  # This file is generated during the build.
-  "<(SHARED_INTERMEDIATE_DIR)/brave/web-ui-brave_webtorrent/brave_webtorrent.grd": {
-    "META": {"sizes": {"includes": [10]}},
-    "includes": [60110],
-  },
-  "brave/components/brave_webtorrent/resources.grd": {
-    "includes": [60120],
-  },
   "brave/components/resources/brave_components_strings.grd": {
     "messages": [60210],
   },

@@ -60,7 +60,6 @@ inline constexpr char kShieldsStatsBadgeVisible[] =
     "brave.shields.stats_badge_visible";
 inline constexpr char kAdControlType[] = "brave.ad_default";
 inline constexpr char kGoogleLoginControlType[] = "brave.google_login_default";
-inline constexpr char kWebTorrentEnabled[] = "brave.webtorrent_enabled";
 // Deprecated
 inline constexpr char kHangoutsEnabled[] = "brave.hangouts_enabled";
 inline constexpr char kNewTabPageShowClock[] = "brave.new_tab_page.show_clock";

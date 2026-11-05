@@ -25,7 +25,6 @@
 #include "brave/components/brave_shields/core/common/pref_names.h"
 #include "brave/components/brave_sync/brave_sync_prefs.h"
 #include "brave/components/brave_wayback_machine/buildflags/buildflags.h"
-#include "brave/components/brave_webtorrent/browser/buildflags/buildflags.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/de_amp/common/pref_names.h"
 #include "brave/components/debounce/core/browser/debounce_service.h"
@@ -57,10 +56,6 @@
 #include "components/sync/base/pref_names.h"
 #include "extensions/buildflags/buildflags.h"
 #include "third_party/widevine/cdm/buildflags.h"
-
-#if BUILDFLAG(ENABLE_BRAVE_WEBTORRENT)
-#include "brave/components/brave_webtorrent/browser/webtorrent_util.h"
-#endif
 
 #if BUILDFLAG(ENABLE_BRAVE_WAYBACK_MACHINE)
 #include "brave/components/brave_wayback_machine/pref_names.h"
@@ -214,11 +209,6 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
                                 true);
   registry->RegisterBooleanPref(brave_shields::prefs::kLinkedInEmbedControlType,
                                 false);
-
-  // WebTorrent
-#if BUILDFLAG(ENABLE_BRAVE_WEBTORRENT)
-  webtorrent::RegisterProfilePrefs(registry);
-#endif
 
 #if BUILDFLAG(ENABLE_BRAVE_WAYBACK_MACHINE)
   registry->RegisterBooleanPref(kBraveWaybackMachineEnabled, true);

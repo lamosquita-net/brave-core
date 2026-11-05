@@ -44,7 +44,6 @@
 #include "brave/components/brave_shields/content/browser/domain_block_navigation_throttle.h"
 #include "brave/components/brave_shields/core/common/brave_shield_constants.h"
 #include "brave/components/brave_shields/core/common/features.h"
-#include "brave/components/brave_webtorrent/browser/buildflags/buildflags.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/constants/webui_url_constants.h"
 #include "brave/components/cosmetic_filters/browser/cosmetic_filters_resources.h"
@@ -126,11 +125,6 @@ using content::WebContents;
 #include "extensions/common/constants.h"
 
 using extensions::ChromeContentBrowserClientExtensionsPart;
-#endif
-
-#if BUILDFLAG(ENABLE_BRAVE_WEBTORRENT)
-#include "brave/browser/extensions/brave_webtorrent_navigation_throttle.h"
-#include "brave/components/brave_webtorrent/browser/magnet_protocol_handler.h"
 #endif
 
 #if BUILDFLAG(ENABLE_WIDEVINE)
@@ -291,12 +285,6 @@ bool BraveContentBrowserClient::AreIsolatedWebAppsEnabled(
 
 void BraveContentBrowserClient::BrowserURLHandlerCreated(
     content::BrowserURLHandler* handler) {
-#if BUILDFLAG(ENABLE_BRAVE_WEBTORRENT)
-  handler->AddHandlerPair(&webtorrent::HandleMagnetURLRewrite,
-                          content::BrowserURLHandler::null_handler());
-  handler->AddHandlerPair(&webtorrent::HandleTorrentURLRewrite,
-                          &webtorrent::HandleTorrentURLReverseRewrite);
-#endif
   handler->AddHandlerPair(&HandleURLRewrite, &HandleURLReverseOverrideRewrite);
   ChromeContentBrowserClient::BrowserURLHandlerCreated(handler);
 }
@@ -783,13 +771,6 @@ void BraveContentBrowserClient::CreateThrottlesForNavigation(
   // TODO(T5): NewTabShowsNavigationThrottle (Brave NTP) still has the 128
   // MaybeCreateThrottleFor(handle) shape; 1.98 calls it like this.
   NewTabShowsNavigationThrottle::MaybeCreateAndAdd(registry);
-#endif
-
-#if BUILDFLAG(ENABLE_BRAVE_WEBTORRENT)
-  // TODO(prune): WebTorrent goes away with its throttle (gone in 1.98).
-  registry.AddThrottle(
-      std::make_unique<extensions::BraveWebTorrentNavigationThrottle>(
-          registry));
 #endif
 
   content::BrowserContext* context =

@@ -76,8 +76,6 @@ IN_PROC_BROWSER_TEST_F(BraveProfilePrefsBrowserTest, MiscBravePrefs) {
                 brave_shields::features::kBraveReduceLanguage));
 #if BUILDFLAG(ENABLE_BRAVE_WAYBACK_MACHINE)
   EXPECT_TRUE(chrome_test_utils::GetProfile(this)->GetPrefs()->GetBoolean(
-      kWebTorrentEnabled));
-  EXPECT_TRUE(chrome_test_utils::GetProfile(this)->GetPrefs()->GetBoolean(
       kBraveWaybackMachineEnabled));
 #endif
   EXPECT_FALSE(chrome_test_utils::GetProfile(this)->GetPrefs()->GetBoolean(

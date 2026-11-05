@@ -46,6 +46,9 @@ constexpr char kSpeedreaderContentSettingPartitionedExceptions[] =
 constexpr char kSpeedreaderContentSettingDefault[] =
     "profile.default_content_setting_values.braveSpeedreader";
 
+// WebTorrent (removed 2026-11).
+constexpr char kWebTorrentEnabled[] = "brave.webtorrent_enabled";
+
 constexpr const char* kProfilePrefs[] = {
     kPlaylistEnabled,
     kPlaylists,
@@ -66,6 +69,7 @@ constexpr const char* kProfilePrefs[] = {
     kSpeedreaderContentSettingExceptions,
     kSpeedreaderContentSettingPartitionedExceptions,
     kSpeedreaderContentSettingDefault,
+    kWebTorrentEnabled,
 };
 
 constexpr const char* kLocalStatePrefs[] = {
@@ -102,6 +106,9 @@ void RegisterPrunedFeatureProfilePrefs(
   registry->RegisterDictionaryPref(
       kSpeedreaderContentSettingPartitionedExceptions);
   registry->RegisterIntegerPref(kSpeedreaderContentSettingDefault, 0);
+
+  // WebTorrent
+  registry->RegisterBooleanPref(kWebTorrentEnabled, true);
 }
 
 void ClearPrunedFeatureProfilePrefs(PrefService* profile_prefs) {
