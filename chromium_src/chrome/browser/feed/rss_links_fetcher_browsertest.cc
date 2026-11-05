@@ -3,6 +3,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // you can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include <string_view>
+
 #include "base/metrics/histogram_base.h"
 #include "base/test/metrics/histogram_tester.h"
 
@@ -16,7 +18,8 @@ class HistogramTesterStub {
   HistogramTesterStub() = default;
   ~HistogramTesterStub() = default;
 
-  void ExpectTotalCount(StringPiece name, HistogramBase::Count count) const {}
+  void ExpectTotalCount(std::string_view name,
+                        HistogramBase::Count count) const {}
 };
 }  // namespace
 }  // namespace base

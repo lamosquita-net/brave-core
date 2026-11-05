@@ -12,7 +12,6 @@
 
 #include "base/functional/bind.h"
 #include "base/strings/string_number_conversions.h"
-#include "base/types/cxx23_to_underlying.h"
 #include "brave/components/brave_sync/brave_sync_prefs.h"
 #include "brave/components/brave_sync/crypto/crypto.h"
 #include "brave/components/brave_sync/qr_code_data.h"
@@ -191,7 +190,7 @@ void BraveSyncHandler::HandleGetQRCode(const base::Value::List& args) {
 
   if (!qr_image.has_value()) {
     VLOG(1) << "QR code generator failure: "
-            << base::to_underlying(qr_image.error());
+            << std::to_underlying(qr_image.error());
     ResolveJavascriptCallback(args[0].Clone(), base::Value(false));
     return;
   }
