@@ -1,20 +1,32 @@
 diff --git a/chrome/installer/util/BUILD.gn b/chrome/installer/util/BUILD.gn
-index ae76dc29bc9a20b70dcda829c60785f3665ddefb..b58efffc8eb1e2e2333dbcbd9aba6e91d6380e79 100644
+index d0dc85a33426788b4d5fc42bb554a1780e3f6453..a554c7038e80eb0723680390339243f89fd825de 100644
 --- a/chrome/installer/util/BUILD.gn
 +++ b/chrome/installer/util/BUILD.gn
-@@ -196,6 +196,7 @@ static_library("with_no_strings") {
-       "initial_preferences.h",
-     ]
-   }
-+  import("//brave/chromium_src/chrome/installer/util/sources.gni") deps += brave_chromium_src_chrome_installer_util_deps sources += brave_chromium_src_chrome_installer_util_sources
- }
+@@ -2,7 +2,9 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
  
- # Use this version of installer_util to link to the generated strings in .rc
-@@ -228,6 +229,7 @@ generate_embedded_i18n("generate_strings") {
++import("//brave/installer/util/sources.gni")
+ import("//base/i18n/win/embedded_i18n/generate_embedded_i18n.gni")
++import("//brave/chromium_src/chrome/installer/util/sources.gni")
+ import("//build/config/chrome_build.gni")
+ 
+ import("//testing/test.gni")
+@@ -118,6 +120,8 @@ static_library("with_no_strings") {
+     "//components/variations",
+     "//third_party/abseil-cpp:absl",
+   ]
++  deps += brave_chromium_src_chrome_installer_util_deps
++  sources += brave_chromium_src_chrome_installer_util_sources
+ 
+   if (is_win) {
+     sources += [
+@@ -240,6 +244,8 @@ generate_embedded_i18n("generate_strings") {
    output_file_name_base = "installer_util_strings"
  
    branding = branding_path_product
-+  sources = [ "//chrome/app/brave_strings.grd" ] import("//brave/installer/util/sources.gni") extractor_datafile = brave_installer_util_generate_strings_extractor_datafile
++  extractor_datafile =
++      brave_installer_util_generate_strings_extractor_datafile
  }
  
  # Compile the generated .rc file.
