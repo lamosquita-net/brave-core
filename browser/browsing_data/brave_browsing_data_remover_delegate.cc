@@ -8,8 +8,6 @@
 #include <memory>
 #include <utility>
 
-#include "brave/browser/brave_news/brave_news_controller_factory.h"
-#include "brave/components/brave_news/browser/brave_news_controller.h"
 #include "brave/components/content_settings/core/browser/brave_content_settings_pref_provider.h"
 #include "brave/components/content_settings/core/browser/brave_content_settings_utils.h"
 #include "build/build_config.h"
@@ -53,14 +51,6 @@ void BraveBrowsingDataRemoverDelegate::RemoveEmbedderData(
   if (remove_mask & chrome_browsing_data_remover::DATA_TYPE_CONTENT_SETTINGS)
     ClearShieldsSettings(delete_begin, delete_end);
 
-  // Brave News feed cache
-  // FlyWeb: there is no Brave News controller (brave_news_controller_factory).
-  if (remove_mask & chrome_browsing_data_remover::DATA_TYPE_HISTORY) {
-    if (auto* controller =
-            brave_news::BraveNewsControllerFactory::GetForContext(profile_)) {
-      controller->ClearHistory();
-    }
-  }
 #if BUILDFLAG(ENABLE_AI_CHAT)
   if (remove_mask & chrome_browsing_data_remover::DATA_TYPE_BRAVE_LEO_HISTORY &&
       ai_chat::IsAIChatEnabled(profile_->GetPrefs()) &&

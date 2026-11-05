@@ -10,7 +10,6 @@
 #include <string>
 
 #include "brave/components/brave_new_tab_ui/brave_new_tab_page.mojom.h"
-#include "brave/components/brave_news/common/brave_news.mojom.h"
 #include "chrome/browser/ui/webui/searchbox/realbox_handler.h"
 #include "content/public/browser/web_ui_controller.h"
 #include "mojo/public/cpp/bindings/pending_receiver.h"
@@ -18,10 +17,6 @@
 #include "mojo/public/cpp/bindings/receiver.h"
 #include "ui/webui/mojo_web_ui_controller.h"
 #include "ui/webui/resources/cr_components/searchbox/searchbox.mojom.h"
-
-namespace brave_news {
-class BraveNewsController;
-}  // namespace brave_news
 
 class BraveNewTabPageHandler;
 
@@ -35,9 +30,6 @@ class BraveNewTabUI : public ui::MojoWebUIController,
 
   // Instantiates the implementor of the mojo
   // interface passing the pending receiver that will be internally bound.
-  void BindInterface(
-      mojo::PendingReceiver<brave_news::mojom::BraveNewsController> receiver);
-
   void BindInterface(
       mojo::PendingReceiver<brave_new_tab_page::mojom::PageHandlerFactory>
           pending_receiver);

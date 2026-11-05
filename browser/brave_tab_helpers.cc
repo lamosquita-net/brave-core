@@ -13,7 +13,6 @@
 #include "brave/browser/brave_ads/creatives/search_result_ad/creative_search_result_ad_tab_helper.h"
 #include "brave/browser/brave_ads/tabs/ads_tab_helper.h"
 #include "brave/browser/brave_browser_process.h"
-#include "brave/browser/brave_news/brave_news_tab_helper.h"
 #include "brave/browser/brave_rewards/rewards_tab_helper.h"
 #include "brave/browser/brave_shields/brave_shields_web_contents_observer.h"
 #include "brave/browser/brave_wallet/brave_wallet_tab_helper.h"
@@ -169,9 +168,6 @@ void AttachTabHelpers(content::WebContents* web_contents) {
       web_contents, web_contents->GetBrowserContext()->IsTor());
   tor::OnionLocationTabHelper::CreateForWebContents(web_contents);
 #endif
-
-  // FlyWeb: no BraveNewsTabHelper (no Brave News; it looked up the page's
-  // feeds and Brave's publisher list on every tab).
 
 #if defined(TOOLKIT_VIEWS)
   OnboardingTabHelper::MaybeCreateForWebContents(web_contents);

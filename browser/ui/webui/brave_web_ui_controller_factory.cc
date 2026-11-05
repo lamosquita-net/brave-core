@@ -41,13 +41,11 @@
 
 #if !BUILDFLAG(IS_ANDROID)
 #include "brave/browser/brave_wallet/brave_wallet_context_utils.h"
-#include "brave/browser/ui/webui/brave_news_internals/brave_news_internals_ui.h"
 #include "brave/browser/ui/webui/brave_settings_ui.h"
 #include "brave/browser/ui/webui/brave_wallet/wallet_page_ui.h"
 #include "brave/browser/ui/webui/new_tab_page/brave_new_tab_ui.h"
 #include "brave/browser/ui/webui/private_new_tab_page/brave_private_new_tab_ui.h"
 #include "brave/browser/ui/webui/welcome_page/brave_welcome_ui.h"
-#include "brave/components/brave_news/common/features.h"
 #include "brave/components/brave_wallet/browser/brave_wallet_utils.h"
 #include "brave/components/brave_wallet/common/brave_wallet.mojom.h"
 #include "brave/components/commands/common/features.h"
@@ -132,10 +130,6 @@ WebUIController* NewWebUI(WebUI* web_ui, const GURL& url) {
              brave_rewards::IsSupportedForProfile(profile)) {
     return new BraveRewardsInternalsUI(web_ui, url.host());
 #if !BUILDFLAG(IS_ANDROID)
-  } else if (base::FeatureList::IsEnabled(
-                 brave_news::features::kBraveNewsFeedUpdate) &&
-             host == kBraveNewsInternalsHost) {
-    return new BraveNewsInternalsUI(web_ui, url.host());
   } else if (host == kWelcomeHost && !profile->IsGuestSession()) {
     return new BraveWelcomeUI(web_ui, url.host());
   } else if (host == chrome::kChromeUISettingsHost) {
@@ -189,9 +183,6 @@ WebUIFactoryFunction GetWebUIFactoryFunction(WebUI* web_ui,
 #if BUILDFLAG(IS_ANDROID)
       (url.is_valid() && url.host_piece() == kWalletPageHost) ||
 #else
-      (base::FeatureList::IsEnabled(
-           brave_news::features::kBraveNewsFeedUpdate) &&
-       url.host_piece() == kBraveNewsInternalsHost) ||
       (url.host_piece() == kWalletPageHost &&
        brave_wallet::IsAllowedForContext(profile)) ||
       // On Android New Tab is a native page implemented in Java, so no need
