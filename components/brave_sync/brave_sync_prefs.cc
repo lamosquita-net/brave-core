@@ -7,12 +7,12 @@
 
 #include <utility>
 
-#include "base/base64.h"
+#include "base/check.h"
+#include "base/check_is_test.h"
 #include "base/files/file_path.h"
 #include "base/logging.h"
 #include "base/strings/strcat.h"
 #include "build/build_config.h"
-#include "components/os_crypt/sync/os_crypt.h"
 #include "components/prefs/pref_registry_simple.h"
 #include "components/prefs/pref_service.h"
 #include "components/prefs/scoped_user_pref_update.h"
@@ -21,45 +21,46 @@ namespace brave_sync {
 namespace {
 
 // Stored as bip39 keywords (encrypted)
-const char kSyncV2Seed[] = "brave_sync_v2.seed";
-const char kSyncFailedDecryptSeedNoticeDismissed[] =
+constexpr char kSyncV2Seed[] = "brave_sync_v2.seed";
+constexpr char kSyncFailedDecryptSeedNoticeDismissed[] =
     "brave_sync_v2.failed_decrypt_seed_notice_dismissed";
-const char kSyncAccountDeletedNoticePending[] =
+constexpr char kSyncAccountDeletedNoticePending[] =
     "brave_sync_v2.account_deleted_notice_pending";
-const char kSyncLeaveChainDetails[] = "brave_sync_v2.diag.leave_chain_details";
+constexpr char kSyncLeaveChainDetails[] =
+    "brave_sync_v2.diag.leave_chain_details";
 
 // Deprecated
 // ============================================================================
-const char kSyncSeed[] = "brave_sync.seed";
-const char kSyncEnabled[] = "brave_sync.enabled";
-const char kSyncDeviceId[] = "brave_sync.device_id";
-const char kSyncDeviceIdV2[] = "brave_sync.device_id_v2";
-const char kSyncDeviceObjectId[] = "brave_sync.device_object_id";
-const char kSyncPrevSeed[] = "brave_sync.previous_seed";
-const char kSyncDeviceName[] = "brave_sync.device_name";
-const char kSyncBookmarksBaseOrder[] = "brave_sync.bookmarks_base_order";
-const char kSyncBookmarksEnabled[] = "brave_sync.bookmarks_enabled";
-const char kSyncSiteSettingsEnabled[] = "brave_sync.site_settings_enabled";
-const char kSyncHistoryEnabled[] = "brave_sync.history_enabled";
-const char kSyncLatestRecordTime[] = "brave_sync.latest_record_time";
-const char kSyncLatestDeviceRecordTime[] =
+constexpr char kSyncSeed[] = "brave_sync.seed";
+constexpr char kSyncEnabled[] = "brave_sync.enabled";
+constexpr char kSyncDeviceId[] = "brave_sync.device_id";
+constexpr char kSyncDeviceIdV2[] = "brave_sync.device_id_v2";
+constexpr char kSyncDeviceObjectId[] = "brave_sync.device_object_id";
+constexpr char kSyncPrevSeed[] = "brave_sync.previous_seed";
+constexpr char kSyncDeviceName[] = "brave_sync.device_name";
+constexpr char kSyncBookmarksBaseOrder[] = "brave_sync.bookmarks_base_order";
+constexpr char kSyncBookmarksEnabled[] = "brave_sync.bookmarks_enabled";
+constexpr char kSyncSiteSettingsEnabled[] = "brave_sync.site_settings_enabled";
+constexpr char kSyncHistoryEnabled[] = "brave_sync.history_enabled";
+constexpr char kSyncLatestRecordTime[] = "brave_sync.latest_record_time";
+constexpr char kSyncLatestDeviceRecordTime[] =
     "brave_sync.latest_device_record_time";
-const char kSyncLastFetchTime[] = "brave_sync.last_fetch_time";
-const char kSyncLastCompactTimeBookmarks[] =
+constexpr char kSyncLastFetchTime[] = "brave_sync.last_fetch_time";
+constexpr char kSyncLastCompactTimeBookmarks[] =
     "brave_sync.last_compact_time.bookmarks";
-const char kSyncDeviceList[] = "brave_sync.device_list";
-const char kSyncApiVersion[] = "brave_sync.api_version";
-const char kSyncMigrateBookmarksVersion[]
-                                       = "brave_sync.migrate_bookmarks_version";
-const char kSyncRecordsToResend[] = "brave_sync_records_to_resend";
-const char kSyncRecordsToResendMeta[] = "brave_sync_records_to_resend_meta";
-const char kDuplicatedBookmarksRecovered[] =
+constexpr char kSyncDeviceList[] = "brave_sync.device_list";
+constexpr char kSyncApiVersion[] = "brave_sync.api_version";
+constexpr char kSyncMigrateBookmarksVersion[] =
+    "brave_sync.migrate_bookmarks_version";
+constexpr char kSyncRecordsToResend[] = "brave_sync_records_to_resend";
+constexpr char kSyncRecordsToResendMeta[] = "brave_sync_records_to_resend_meta";
+constexpr char kDuplicatedBookmarksRecovered[] =
     "brave_sync_duplicated_bookmarks_recovered";
-const char kDuplicatedBookmarksMigrateVersion[] =
+constexpr char kDuplicatedBookmarksMigrateVersion[] =
     "brave_sync_duplicated_bookmarks_migrate_version";
-const char kSyncV1Migrated[] = "brave_sync_v2.v1_migrated";
-const char kSyncV1MetaInfoCleared[] = "brave_sync_v2.v1_meta_info_cleared";
-const char kSyncV2MigrateNoticeDismissed[] =
+constexpr char kSyncV1Migrated[] = "brave_sync_v2.v1_migrated";
+constexpr char kSyncV1MetaInfoCleared[] = "brave_sync_v2.v1_meta_info_cleared";
+constexpr char kSyncV2MigrateNoticeDismissed[] =
     "brave_sync_v2.migrate_notice_dismissed";
 // ============================================================================
 
@@ -120,43 +121,12 @@ std::string Prefs::GetSeedPath() {
   return kSyncV2Seed;
 }
 
-std::string Prefs::GetSeed(bool* failed_to_decrypt) const {
-  CHECK(failed_to_decrypt);
-  *failed_to_decrypt = true;
-
-  const std::string encoded_seed = pref_service_->GetString(kSyncV2Seed);
-  if (encoded_seed.empty()) {
-    *failed_to_decrypt = false;
-    return std::string();
-  }
-
-  std::string encrypted_seed;
-  if (!base::Base64Decode(encoded_seed, &encrypted_seed)) {
-    LOG(ERROR) << "base64 decode sync seed failure";
-    return std::string();
-  }
-
-  std::string seed;
-  if (!OSCrypt::DecryptString(encrypted_seed, &seed)) {
-    LOG(ERROR) << "Decrypt sync seed failure";
-    return std::string();
-  }
-
-  *failed_to_decrypt = false;
-  return seed;
+std::string Prefs::GetEncryptedSeed() const {
+  return pref_service_->GetString(kSyncV2Seed);
 }
 
-bool Prefs::SetSeed(const std::string& seed) {
-  DCHECK(!seed.empty());
-  std::string encrypted_seed;
-  if (!OSCrypt::EncryptString(seed, &encrypted_seed)) {
-    LOG(ERROR) << "Encrypt sync seed failure";
-    return false;
-  }
-  // String stored in prefs has to be UTF8 string so we use base64 to encode it.
-  pref_service_->SetString(kSyncV2Seed, base::Base64Encode(encrypted_seed));
-  SetSyncAccountDeletedNoticePending(false);
-  return true;
+void Prefs::SetEncryptedSeed(const std::string& encrypted_seed) {
+  return pref_service_->SetString(kSyncV2Seed, encrypted_seed);
 }
 
 bool Prefs::IsFailedDecryptSeedNoticeDismissed() const {
@@ -181,7 +151,7 @@ void Prefs::AddLeaveChainDetail(const char* file, int line, const char* func) {
     return;
   }
 
-  std::string details = pref_service_->GetString(kSyncLeaveChainDetails);
+  const auto& details = pref_service_->GetString(kSyncLeaveChainDetails);
 
   std::ostringstream stream;
   stream << base::Time::Now() << " "
@@ -207,17 +177,20 @@ void Prefs::ClearLeaveChainDetails() {
 }
 
 // static
-size_t Prefs::GetLeaveChainDetailsMaxLenForTests() {
+size_t Prefs::GetLeaveChainDetailsMaxLenForTesting() {
+  CHECK_IS_TEST();
   return kLeaveChainDetailsMaxLen;
 }
 
 // static
-std::string Prefs::GetLeaveChainDetailsPathForTests() {
+std::string Prefs::GetLeaveChainDetailsPathForTesting() {
+  CHECK_IS_TEST();
   return kSyncLeaveChainDetails;
 }
 
-void Prefs::SetAddLeaveChainDetailBehaviourForTests(
+void Prefs::SetAddLeaveChainDetailBehaviourForTesting(
     AddLeaveChainDetailBehaviour add_leave_chain_detail_behaviour) {
+  CHECK_IS_TEST();
   add_leave_chain_detail_behaviour_ = add_leave_chain_detail_behaviour;
 }
 

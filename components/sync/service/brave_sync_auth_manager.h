@@ -16,9 +16,10 @@ namespace syncer {
 
 class BraveSyncAuthManager : public SyncAuthManager {
  public:
-  BraveSyncAuthManager(signin::IdentityManager* identity_manager,
-                       const AccountStateChangedCallback& account_state_changed,
-                       const CredentialsChangedCallback& credentials_changed);
+  BraveSyncAuthManager(
+      signin::IdentityManager* identity_manager,
+      SyncAuthManager::Delegate* delegate,
+      base::TimeDelta account_managed_status_finder_timeout = base::Seconds(5));
   BraveSyncAuthManager(const BraveSyncAuthManager&) = delete;
   BraveSyncAuthManager& operator=(const BraveSyncAuthManager&) = delete;
   ~BraveSyncAuthManager() override;
@@ -36,8 +37,9 @@ class BraveSyncAuthManager : public SyncAuthManager {
   void OnRefreshTokensLoaded() override {}
 
  private:
-  SyncAccountInfo DetermineAccountToUse() const override;
-  std::string GenerateAccessToken(const std::string& timestamp);
+  SyncAccountInfo DetermineAccountToUse(
+      const signin::IdentityManager* identity_manager) const override;
+  signin::AccessTokenInfo GenerateAccessToken(const std::string& timestamp);
   void OnNetworkTimeFetched(const base::Time& time);
 
   std::vector<uint8_t> public_key_;
