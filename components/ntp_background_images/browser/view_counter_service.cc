@@ -42,6 +42,8 @@ constexpr char kObsoleteGetInitialSRComponentInProgress[] =
     "brave.new_tab_page.get_initial_sr_component_in_progress";
 constexpr char kObsoleteCachedSuperReferralCode[] =
     "brave.new_tab_page.cached_referral_code";
+constexpr char kObsoleteNTPCustomizeUsageStatus[] =
+    "brave.new_tab_page.customize_p3a_usage";
 
 }  // namespace
 
@@ -92,6 +94,7 @@ void ViewCounterService::RegisterLocalStatePrefsForMigration(
                                std::string());
   registry->RegisterBooleanPref(kObsoleteGetInitialSRComponentInProgress,
                                 false);
+  registry->RegisterIntegerPref(kObsoleteNTPCustomizeUsageStatus, -1);
 }
 
 // static
@@ -104,6 +107,7 @@ void ViewCounterService::MigrateObsoleteLocalStatePrefs(
   local_state->ClearPref(kObsoleteCachedSuperReferralComponentData);
   local_state->ClearPref(kObsoleteCachedSuperReferralCode);
   local_state->ClearPref(kObsoleteGetInitialSRComponentInProgress);
+  local_state->ClearPref(kObsoleteNTPCustomizeUsageStatus);
 }
 
 ViewCounterService::ViewCounterService(

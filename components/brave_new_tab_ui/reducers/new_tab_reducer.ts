@@ -165,13 +165,6 @@ export const newTabReducer: Reducer<NewTab.State | undefined> = (state: NewTab.S
       break
     }
 
-    case types.CUSTOMIZE_CLICKED: {
-      performSideEffect(async function (state) {
-        chrome.send('customizeClicked', [])
-      })
-      break
-    }
-
     default:
       break
   }

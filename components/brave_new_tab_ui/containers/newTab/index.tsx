@@ -250,7 +250,6 @@ class NewTabPage extends React.Component<Props, State> {
   }
 
   openSettings = (activeTab?: SettingsTabType) => {
-    this.props.actions.customizeClicked()
     this.setState({
       showSettingsMenu: !this.state.showSettingsMenu,
       activeSettingsTab: activeTab || null

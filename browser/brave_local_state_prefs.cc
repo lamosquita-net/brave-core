@@ -25,8 +25,6 @@
 #include "components/prefs/pref_registry_simple.h"
 #include "third_party/widevine/cdm/buildflags.h"
 
-#include "brave/browser/ui/webui/new_tab_page/brave_new_tab_message_handler.h"
-
 #if !BUILDFLAG(IS_ANDROID)
 #include "brave/browser/p3a/p3a_core_metrics.h"
 #include "brave/browser/ui/whats_new/whats_new_util.h"
@@ -71,7 +69,6 @@ void RegisterLocalStatePrefs(PrefRegistrySimple* registry) {
 
   brave_shields::RegisterShieldsP3ALocalPrefs(registry);
 #if !BUILDFLAG(IS_ANDROID)
-  BraveNewTabMessageHandler::RegisterLocalStatePrefs(registry);
   BraveWindowTracker::RegisterPrefs(registry);
   dark_mode::RegisterBraveDarkModeLocalStatePrefs(registry);
   whats_new::RegisterLocalStatePrefs(registry);

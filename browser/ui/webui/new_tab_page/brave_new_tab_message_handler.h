@@ -19,9 +19,6 @@ namespace base {
 class Value;
 }  //  namespace base
 
-class PrefRegistrySimple;
-class PrefService;
-
 // TODO(simonhong): Migrate to brave_new_tab_page.mojom.
 // Handles messages to and from the New Tab Page javascript
 class BraveNewTabMessageHandler : public content::WebUIMessageHandler {
@@ -32,8 +29,6 @@ class BraveNewTabMessageHandler : public content::WebUIMessageHandler {
       delete;
   ~BraveNewTabMessageHandler() override;
 
-  static void RegisterLocalStatePrefs(PrefRegistrySimple* local_state);
-  static void RecordInitialP3AValues(PrefService* local_state);
   static BraveNewTabMessageHandler* Create(Profile* profile);
 
  private:
@@ -48,7 +43,6 @@ class BraveNewTabMessageHandler : public content::WebUIMessageHandler {
   void HandleSaveNewTabPagePref(const base::ListValue& args);
   void HandleToggleAlternativeSearchEngineProvider(const base::ListValue& args);
   void HandleGetWallpaperData(const base::ListValue& args);
-  void HandleCustomizeClicked(const base::ListValue& args);
 
   void OnStatsChanged();
   void OnPreferencesChanged();

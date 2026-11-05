@@ -115,16 +115,12 @@ void BraveNewTabUI::BindInterface(
 void BraveNewTabUI::CreatePageHandler(
     mojo::PendingRemote<brave_new_tab_page::mojom::Page> pending_page,
     mojo::PendingReceiver<brave_new_tab_page::mojom::PageHandler>
-        pending_page_handler,
-    mojo::PendingReceiver<brave_new_tab_page::mojom::NewTabMetrics>
-        pending_new_tab_metrics) {
+        pending_page_handler) {
   DCHECK(pending_page.is_valid());
   Profile* profile = Profile::FromWebUI(web_ui());
   page_handler_ = std::make_unique<BraveNewTabPageHandler>(
       std::move(pending_page_handler), std::move(pending_page), profile,
       web_ui()->GetWebContents());
-  // FlyWeb: misc_metrics removed; the NewTabMetrics receiver is dropped, so
-  // the page's metric calls are discarded.
 }
 
 WEB_UI_CONTROLLER_TYPE_IMPL(BraveNewTabUI)

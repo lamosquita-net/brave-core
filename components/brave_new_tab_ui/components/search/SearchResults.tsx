@@ -7,7 +7,7 @@ import { AutocompleteMatch, AutocompleteResult, OmniboxPopupSelection } from 'ge
 import * as React from 'react'
 import styled from 'styled-components'
 import SearchResult from './SearchResult'
-import getNTPBrowserAPI, { SearchEngineInfo } from '../../api/background'
+import getNTPBrowserAPI from '../../api/background'
 import { omniboxController, search, useSearchContext } from './SearchContext'
 import { braveSearchHost } from './config'
 import { stringToMojoString16 } from 'gen/ui/webui/resources/tsc/js/mojo_type_util';
@@ -36,16 +36,13 @@ const Container = styled.div`
 
 // Handles opening an autocomplete match, which may or may not be part of an
 // autocomplete result.
-const openMatch = (match: AutocompleteMatch, line: number, event: React.MouseEvent | KeyboardEvent, searchEngine?: SearchEngineInfo) => {
+const openMatch = (match: AutocompleteMatch, line: number, event: React.MouseEvent | KeyboardEvent) => {
   if (line === -1) {
     handleOpenURLClick(match.destinationUrl.url, event)
     return
   }
 
   const button = 'button' in event ? event.button : 0
-  if (searchEngine) {
-    getNTPBrowserAPI().newTabMetrics.reportNTPSearchUsage(searchEngine.prepopulateId)
-  }
   omniboxController.openAutocompleteMatch(line, match.destinationUrl, true, button, event.altKey, event.ctrlKey, event.metaKey, event.shiftKey)
 }
 
@@ -164,7 +161,7 @@ export default function SearchResults() {
         return;
       }
 
-      openMatch(match, result?.matches.indexOf(match) ?? -1, e, searchEngine)
+      openMatch(match, result?.matches.indexOf(match) ?? -1, e)
     }
     document.addEventListener('keydown', handler)
     return () => {
@@ -174,7 +171,7 @@ export default function SearchResults() {
 
   const onSearchResultClick = (match: AutocompleteMatch) => {
     const line = result?.matches.indexOf(match) ?? -1
-    return (e: React.MouseEvent) => openMatch(match, line, e, searchEngine)
+    return (e: React.MouseEvent) => openMatch(match, line, e)
   }
 
   return matches.length ? <Container data-theme="dark" className='search-results'>

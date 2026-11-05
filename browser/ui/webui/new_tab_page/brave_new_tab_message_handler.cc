@@ -33,7 +33,6 @@
 #include "chrome/common/chrome_features.h"
 #include "chrome/common/pref_names.h"
 #include "components/prefs/pref_change_registrar.h"
-#include "components/prefs/pref_registry_simple.h"
 #include "components/prefs/pref_service.h"
 
 using ntp_background_images::ViewCounterServiceFactory;
@@ -89,21 +88,7 @@ base::DictValue GetPrivatePropertiesDictionary(PrefService* prefs) {
   return private_data;
 }
 
-constexpr char kNTPCustomizeUsageStatus[] =
-    "brave.new_tab_page.customize_p3a_usage";
-
 }  // namespace
-
-// static
-void BraveNewTabMessageHandler::RegisterLocalStatePrefs(
-    PrefRegistrySimple* local_state) {
-  local_state->RegisterIntegerPref(kNTPCustomizeUsageStatus, -1);
-}
-
-void BraveNewTabMessageHandler::RecordInitialP3AValues(
-    PrefService* local_state) {
-  // FlyWeb: components/p3a removed; the NTP customize usage metric is gone.
-}
 
 // static
 BraveNewTabMessageHandler* BraveNewTabMessageHandler::Create(
@@ -148,10 +133,6 @@ void BraveNewTabMessageHandler::RegisterMessages() {
   web_ui()->RegisterMessageCallback(
       "getWallpaperData",
       base::BindRepeating(&BraveNewTabMessageHandler::HandleGetWallpaperData,
-                          base::Unretained(this)));
-  web_ui()->RegisterMessageCallback(
-      "customizeClicked",
-      base::BindRepeating(&BraveNewTabMessageHandler::HandleCustomizeClicked,
                           base::Unretained(this)));
 }
 
@@ -320,11 +301,6 @@ void BraveNewTabMessageHandler::HandleGetWallpaperData(
     }
   }
   ResolveJavascriptCallback(args[0], wallpaper);
-}
-
-void BraveNewTabMessageHandler::HandleCustomizeClicked(
-    const base::ListValue& args) {
-  AllowJavascript();
 }
 
 void BraveNewTabMessageHandler::OnPrivatePropertiesChanged() {
