@@ -10,10 +10,16 @@
 
 class Browser;
 
+namespace content {
+class WebContents;
+}  // namespace content
+
 namespace brave {
 
 void ShowBraveAdblock(Browser* browser);
 void ShowWebcompatReporter(Browser* browser);
+// FlyWeb: opens flyweb.lamosquita.net's "report a problem" page in a new tab.
+void OpenFlyWebReportProblemPage(content::WebContents* initiator);
 void ShowBraveRewards(Browser* browser);
 void ShowBraveWallet(Browser* browser);
 void ShowBraveWalletOnboarding(Browser* browser);
