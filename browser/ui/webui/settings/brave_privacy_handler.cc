@@ -76,7 +76,7 @@ void BravePrivacyHandler::AddLoadTimeData(content::WebUIDataSource* data_source,
 
 void BravePrivacyHandler::SetLocalStateBooleanEnabled(
     const std::string& path,
-    const base::Value::List& args) {
+    const base::ListValue& args) {
   CHECK_EQ(args.size(), 1U);
   if (!args[0].is_bool()) {
     return;
@@ -89,7 +89,7 @@ void BravePrivacyHandler::SetLocalStateBooleanEnabled(
 
 void BravePrivacyHandler::GetLocalStateBooleanEnabled(
     const std::string& path,
-    const base::Value::List& args) {
+    const base::ListValue& args) {
   CHECK_EQ(args.size(), 1U);
 
   PrefService* local_state = g_browser_process->local_state();

@@ -85,12 +85,12 @@ bool isPrivateURL(const GURL& url) {
   return false;
 }
 
-bool PerformNetworkAuditProcess(base::Value::List* events) {
+bool PerformNetworkAuditProcess(base::ListValue* events) {
   DCHECK(events);
 
   bool failed = false;
   events->EraseIf([&failed](base::Value& event_value) {
-    base::Value::Dict* event_dict = event_value.GetIfDict();
+    base::DictValue* event_dict = event_value.GetIfDict();
     EXPECT_TRUE(event_dict);
 
     std::optional<int> event_type = event_dict->FindInt("type");
@@ -180,7 +180,7 @@ bool PerformNetworkAuditProcess(base::Value::List* events) {
   return !failed;
 }
 
-void WriteNetworkAuditResultsToDisk(const base::Value::Dict& results_dic,
+void WriteNetworkAuditResultsToDisk(const base::DictValue& results_dic,
                                     const base::FilePath& path) {
   std::string results;
   JSONFileValueSerializer serializer(path);
@@ -239,7 +239,8 @@ class BraveNetworkAuditTest : public InProcessBrowserTest {
         << "Could not read: " << net_log_path_;
 
     // Parse it as JSON.
-    auto parsed = base::JSONReader::Read(file_contents);
+    auto parsed = base::JSONReader::Read(file_contents,
+                                         base::JSON_PARSE_CHROMIUM_EXTENSIONS);
     ASSERT_TRUE(parsed.has_value());
 
     // Ensure the root value is a dictionary.

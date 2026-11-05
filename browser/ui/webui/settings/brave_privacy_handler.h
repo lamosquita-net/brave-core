@@ -33,9 +33,9 @@ class BravePrivacyHandler : public settings::SettingsPageUIHandler {
   void OnJavascriptDisallowed() override {}
 
   void SetLocalStateBooleanEnabled(const std::string& path,
-                                   const base::Value::List& args);
+                                   const base::ListValue& args);
   void GetLocalStateBooleanEnabled(const std::string& path,
-                                   const base::Value::List& args);
+                                   const base::ListValue& args);
 
   raw_ptr<Profile> profile_ = nullptr;
   PrefChangeRegistrar local_state_change_registrar_;

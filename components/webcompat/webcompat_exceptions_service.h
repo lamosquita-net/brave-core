@@ -50,8 +50,8 @@ class WebcompatExceptionsService
 
  private:
   void LoadWebcompatExceptions(const base::FilePath& install_dir);
-  void AddRules(const base::Value::List& include_strings,
-                const base::Value::Dict& rule_dict);
+  void AddRules(const base::ListValue& include_strings,
+                const base::DictValue& rule_dict);
   bool AddRule(const ContentSettingsPattern& pattern,
                const std::string& exception_string);
   void ClearRules();

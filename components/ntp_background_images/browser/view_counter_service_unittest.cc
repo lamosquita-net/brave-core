@@ -126,7 +126,7 @@ class TestDelegate : public BraveNTPCustomBackgroundService::Delegate {
   std::string GetColor() const override { return "#ff0000"; }
   bool ShouldUseRandomValue() const override { return false; }
   bool HasPreferredBraveBackground() const override { return false; }
-  base::Value::Dict GetPreferredBraveBackground() const override { return {}; }
+  base::DictValue GetPreferredBraveBackground() const override { return {}; }
 
   bool image_enabled_ = false;
   bool color_enabled_ = false;
@@ -167,7 +167,7 @@ class NTPBackgroundImagesViewCounterTest : public testing::Test {
 
     // Set sr component info.
     local_pref_.SetDict(prefs::kNewTabPageCachedSuperReferralComponentInfo,
-                        base::Value::Dict());
+                        base::DictValue());
   }
 
   void EnableSIPref(bool enable) {
@@ -202,7 +202,7 @@ class NTPBackgroundImagesViewCounterTest : public testing::Test {
     return features::kInitialCountToBrandedWallpaper.Get() - 1;
   }
 
-  std::optional<base::Value::Dict> TryGetFirstSponsoredImageWallpaper() {
+  std::optional<base::DictValue> TryGetFirstSponsoredImageWallpaper() {
     // Loading initial count times.
     for (int i = 0; i < GetInitialCountToBrandedWallpaper(); ++i) {
       auto wallpaper = view_counter_->GetCurrentWallpaperForDisplay();

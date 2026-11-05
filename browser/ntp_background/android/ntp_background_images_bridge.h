@@ -73,9 +73,9 @@ class NTPBackgroundImagesBridge : public NTPBackgroundImagesService::Observer,
   void OnSuperReferralEnded() override;
 
   base::android::ScopedJavaLocalRef<jobject> CreateWallpaper(
-      const base::Value::Dict& data);
+      const base::DictValue& data);
   base::android::ScopedJavaLocalRef<jobject> CreateBrandedWallpaper(
-      const base::Value::Dict& data);
+      const base::DictValue& data);
 
   raw_ptr<Profile> profile_ = nullptr;
   raw_ptr<ViewCounterService> view_counter_service_ = nullptr;

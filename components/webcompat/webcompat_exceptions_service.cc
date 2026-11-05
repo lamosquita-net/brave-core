@@ -106,8 +106,8 @@ bool WebcompatExceptionsService::AddRuleForTesting(
 }
 
 void WebcompatExceptionsService::AddRules(
-    const base::Value::List& include_strings,
-    const base::Value::Dict& rule_dict) {
+    const base::ListValue& include_strings,
+    const base::DictValue& rule_dict) {
   const base::Value* exceptions = rule_dict.Find(kExceptions);
   if (exceptions->is_list()) {
     for (const base::Value& include_string : include_strings) {
@@ -146,7 +146,8 @@ void WebcompatExceptionsService::OnJsonFileDataReady(
     // We don't have the file yet.
     return;
   }
-  const auto json_root = base::JSONReader::Read(contents);
+  const auto json_root =
+      base::JSONReader::Read(contents, base::JSON_PARSE_CHROMIUM_EXTENSIONS);
   if (json_root == std::nullopt) {
     DLOG(ERROR) << "Failed to parse " << WEBCOMPAT_EXCEPTIONS_JSON_FILE;
     return;

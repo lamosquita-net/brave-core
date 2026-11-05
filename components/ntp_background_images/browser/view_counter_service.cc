@@ -151,19 +151,19 @@ NTPSponsoredImagesData* ViewCounterService::GetCurrentBrandedWallpaperData()
   return service_->GetBrandedImagesData(false);
 }
 
-std::optional<base::Value::Dict>
+std::optional<base::DictValue>
 ViewCounterService::GetNextWallpaperForDisplay() {
   model_.RotateBackgroundWallpaperImageIndex();
   return GetCurrentWallpaper();
 }
 
-std::optional<base::Value::Dict>
+std::optional<base::DictValue>
 ViewCounterService::GetCurrentWallpaperForDisplay() {
   if (!ShouldShowBrandedWallpaper()) {
     return GetCurrentWallpaper();
   }
 
-  if (std::optional<base::Value::Dict> branded_wallpaper =
+  if (std::optional<base::DictValue> branded_wallpaper =
           GetCurrentBrandedWallpaper()) {
     return branded_wallpaper;
   }
@@ -174,8 +174,7 @@ ViewCounterService::GetCurrentWallpaperForDisplay() {
   return GetNextWallpaperForDisplay();
 }
 
-std::optional<base::Value::Dict> ViewCounterService::GetCurrentWallpaper()
-    const {
+std::optional<base::DictValue> ViewCounterService::GetCurrentWallpaper() const {
   if (!IsBackgroundWallpaperActive())
     return std::nullopt;
 
@@ -200,8 +199,8 @@ std::optional<base::Value::Dict> ViewCounterService::GetCurrentWallpaper()
   return background;
 }
 
-std::optional<base::Value::Dict>
-ViewCounterService::GetCurrentBrandedWallpaper() const {
+std::optional<base::DictValue> ViewCounterService::GetCurrentBrandedWallpaper()
+    const {
   NTPSponsoredImagesData* images_data = GetCurrentBrandedWallpaperData();
   if (!images_data) {
     return std::nullopt;
@@ -212,7 +211,7 @@ ViewCounterService::GetCurrentBrandedWallpaper() const {
   return GetCurrentBrandedWallpaperFromModel();
 }
 
-std::optional<base::Value::Dict>
+std::optional<base::DictValue>
 ViewCounterService::GetCurrentBrandedWallpaperFromModel() const {
   size_t current_campaign_index;
   size_t current_background_index;

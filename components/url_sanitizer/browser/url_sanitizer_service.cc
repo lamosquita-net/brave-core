@@ -22,7 +22,7 @@ namespace brave {
 
 namespace {
 std::optional<extensions::URLPatternSet> CreateURLPatternSetFromList(
-    const base::Value::List* value) {
+    const base::ListValue* value) {
   if (!value) {
     return std::nullopt;
   }
@@ -39,7 +39,7 @@ std::optional<extensions::URLPatternSet> CreateURLPatternSetFromList(
 }
 
 std::optional<base::flat_set<std::string>> CreateParamsList(
-    const base::Value::List* value) {
+    const base::ListValue* value) {
   if (!value) {
     return std::nullopt;
   }
@@ -53,14 +53,14 @@ std::optional<base::flat_set<std::string>> CreateParamsList(
 
 URLSanitizerService::Config ParseConfig(
     const URLSanitizerComponentInstaller::RawConfig& raw_config) {
-  auto parsed_json =
-      base::JSONReader::ReadAndReturnValueWithError(raw_config.matchers);
+  auto parsed_json = base::JSONReader::ReadAndReturnValueWithError(
+      raw_config.matchers, base::JSON_PARSE_CHROMIUM_EXTENSIONS);
   if (!parsed_json.has_value()) {
     VLOG(1) << "Error parsing feature JSON [matchers]: "
             << parsed_json.error().message;
     return {};
   }
-  const base::Value::List* list = parsed_json->GetIfList();
+  const base::ListValue* list = parsed_json->GetIfList();
   if (!list) {
     return {};
   }
@@ -68,7 +68,7 @@ URLSanitizerService::Config ParseConfig(
   URLSanitizerService::Config config;
   config.matchers.reserve(list->size());
   for (const auto& it : *list) {
-    const base::Value::Dict* items = it.GetIfDict();
+    const base::DictValue* items = it.GetIfDict();
     if (!items) {
       continue;
     }
@@ -91,8 +91,8 @@ URLSanitizerService::Config ParseConfig(
                                  std::move(*params));
   }
 
-  parsed_json =
-      base::JSONReader::ReadAndReturnValueWithError(raw_config.permissions);
+  parsed_json = base::JSONReader::ReadAndReturnValueWithError(
+      raw_config.permissions, base::JSON_PARSE_CHROMIUM_EXTENSIONS);
   if (!parsed_json.has_value()) {
     VLOG(1) << "Error parsing feature JSON [permission]: "
             << parsed_json.error().message;

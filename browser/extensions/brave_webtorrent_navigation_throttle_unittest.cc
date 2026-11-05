@@ -134,7 +134,7 @@ class BraveWebTorrentNavigationThrottleUnitTest
 
   void AddExtension() {
     extension_ = ExtensionBuilder()
-                     .SetManifest(base::Value::Dict()
+                     .SetManifest(base::DictValue()
                                       .Set("name", "ext")
                                       .Set("version", "0.1")
                                       .Set("manifest_version", 2))

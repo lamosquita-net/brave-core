@@ -9,7 +9,7 @@
 #define GetSearchEnginesList                    \
   GetSearchEnginesList_NotUsed() { return {}; } \
   friend class BraveSearchEnginesHandler;       \
-  virtual base::Value::Dict GetSearchEnginesList
+  virtual base::DictValue GetSearchEnginesList
 
 #include "src/chrome/browser/ui/webui/settings/search_engines_handler.h"  // IWYU pragma: export
 

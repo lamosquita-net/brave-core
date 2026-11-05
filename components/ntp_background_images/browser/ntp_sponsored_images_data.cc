@@ -66,7 +66,7 @@ constexpr int kExpectedSchemaVersion = 1;
 
 Logo GetLogoFromValue(const base::FilePath& installed_dir,
                       const std::string& url_prefix,
-                      const base::Value::Dict& value) {
+                      const base::DictValue& value) {
   Logo logo;
 
   if (auto* url = value.FindString(kImageURLKey)) {
@@ -139,12 +139,13 @@ NTPSponsoredImagesData::NTPSponsoredImagesData(
     const std::string& json_string,
     const base::FilePath& installed_dir)
     : NTPSponsoredImagesData() {
-  std::optional<base::Value> json_value = base::JSONReader::Read(json_string);
+  std::optional<base::Value> json_value =
+      base::JSONReader::Read(json_string, base::JSON_PARSE_CHROMIUM_EXTENSIONS);
   if (!json_value || !json_value->is_dict()) {
     DVLOG(2) << "Read json data failed. Invalid JSON data";
     return;
   }
-  base::Value::Dict& root = json_value->GetDict();
+  base::DictValue& root = json_value->GetDict();
 
   std::optional<int> incomingSchemaVersion = root.FindInt(kSchemaVersionKey);
   const bool schemaVersionIsValid =
@@ -189,7 +190,7 @@ NTPSponsoredImagesData::NTPSponsoredImagesData(
 NTPSponsoredImagesData::~NTPSponsoredImagesData() = default;
 
 void NTPSponsoredImagesData::ParseCampaignsList(
-    const base::Value::List& campaigns_value,
+    const base::ListValue& campaigns_value,
     const base::FilePath& installed_dir) {
   for (const auto& campaign_value : campaigns_value) {
     DCHECK(campaign_value.is_dict());
@@ -201,7 +202,7 @@ void NTPSponsoredImagesData::ParseCampaignsList(
 }
 
 Campaign NTPSponsoredImagesData::GetCampaignFromValue(
-    const base::Value::Dict& value,
+    const base::DictValue& value,
     const base::FilePath& installed_dir) {
   Campaign campaign;
 
@@ -254,7 +255,7 @@ Campaign NTPSponsoredImagesData::GetCampaignFromValue(
 }
 
 void NTPSponsoredImagesData::ParseSRProperties(
-    const base::Value::Dict& value,
+    const base::DictValue& value,
     const base::FilePath& installed_dir) {
   if (theme_name.empty()) {
     DVLOG(2) << __func__ << ": Don't have NTP SR properties";
@@ -299,7 +300,7 @@ bool NTPSponsoredImagesData::IsSuperReferral() const {
   return IsValid() && !theme_name.empty();
 }
 
-std::optional<base::Value::Dict> NTPSponsoredImagesData::GetBackgroundAt(
+std::optional<base::DictValue> NTPSponsoredImagesData::GetBackgroundAt(
     size_t campaign_index,
     size_t background_index) {
   DCHECK(campaign_index < campaigns.size() && background_index >= 0 &&
@@ -309,7 +310,7 @@ std::optional<base::Value::Dict> NTPSponsoredImagesData::GetBackgroundAt(
   if (!campaign.IsValid())
     return std::nullopt;
 
-  base::Value::Dict data;
+  base::DictValue data;
   data.Set(kThemeNameKey, theme_name);
   data.Set(kIsSponsoredKey, !IsSuperReferral());
   data.Set(kIsBackgroundKey, false);
@@ -330,7 +331,7 @@ std::optional<base::Value::Dict> NTPSponsoredImagesData::GetBackgroundAt(
   data.Set(kCreativeInstanceIDKey,
            campaign.backgrounds[background_index].creative_instance_id);
 
-  base::Value::Dict logo_data;
+  base::DictValue logo_data;
   Logo logo = campaign.backgrounds[background_index].logo;
   logo_data.Set(kImageKey, logo.image_url);
   logo_data.Set(kImagePathKey, logo.image_file.AsUTF8Unsafe());

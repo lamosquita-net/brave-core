@@ -52,23 +52,22 @@ class BraveNewTabMessageHandler : public content::WebUIMessageHandler {
   void OnJavascriptAllowed() override;
   void OnJavascriptDisallowed() override;
 
-  void HandleGetPreferences(const base::Value::List& args);
-  void HandleGetStats(const base::Value::List& args);
-  void HandleGetPrivateProperties(const base::Value::List& args);
-  void HandleGetNewTabAdsData(const base::Value::List& args);
-  void HandleSaveNewTabPagePref(const base::Value::List& args);
-  void HandleToggleAlternativeSearchEngineProvider(
-      const base::Value::List& args);
-  void HandleRegisterNewTabPageView(const base::Value::List& args);
-  void HandleBrandedWallpaperLogoClicked(const base::Value::List& args);
-  void HandleGetWallpaperData(const base::Value::List& args);
-  void HandleCustomizeClicked(const base::Value::List& args);
+  void HandleGetPreferences(const base::ListValue& args);
+  void HandleGetStats(const base::ListValue& args);
+  void HandleGetPrivateProperties(const base::ListValue& args);
+  void HandleGetNewTabAdsData(const base::ListValue& args);
+  void HandleSaveNewTabPagePref(const base::ListValue& args);
+  void HandleToggleAlternativeSearchEngineProvider(const base::ListValue& args);
+  void HandleRegisterNewTabPageView(const base::ListValue& args);
+  void HandleBrandedWallpaperLogoClicked(const base::ListValue& args);
+  void HandleGetWallpaperData(const base::ListValue& args);
+  void HandleCustomizeClicked(const base::ListValue& args);
 
   void OnStatsChanged();
   void OnPreferencesChanged();
   void OnPrivatePropertiesChanged();
 
-  base::Value::Dict GetAdsDataDictionary() const;
+  base::DictValue GetAdsDataDictionary() const;
 
   PrefChangeRegistrar pref_change_registrar_;
   // Weak pointer.

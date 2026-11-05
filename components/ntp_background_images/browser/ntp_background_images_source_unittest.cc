@@ -30,7 +30,7 @@ class NTPBackgroundImagesSourceTest : public testing::Test {
     source_ = std::make_unique<NTPSponsoredImagesSource>(service_.get());
     bg_source_ = std::make_unique<NTPBackgroundImagesSource>(service_.get());
     local_pref_.SetDict(prefs::kNewTabPageCachedSuperReferralComponentInfo,
-                        base::Value::Dict());
+                        base::DictValue());
   }
 
   base::test::SingleThreadTaskEnvironment task_environment;

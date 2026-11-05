@@ -102,7 +102,7 @@ bool BraveDefaultExtensionsHandler::IsRestartNeeded() {
 }
 
 void BraveDefaultExtensionsHandler::GetRestartNeeded(
-    const base::Value::List& args) {
+    const base::ListValue& args) {
   CHECK_EQ(args.size(), 1U);
 
   AllowJavascript();
@@ -110,7 +110,7 @@ void BraveDefaultExtensionsHandler::GetRestartNeeded(
 }
 
 void BraveDefaultExtensionsHandler::SetWebTorrentEnabled(
-    const base::Value::List& args) {
+    const base::ListValue& args) {
   CHECK_EQ(args.size(), 1U);
   CHECK(profile_);
   bool enabled = args[0].GetBool();
@@ -160,7 +160,7 @@ void BraveDefaultExtensionsHandler::OnRestartNeededChanged() {
 }
 
 void BraveDefaultExtensionsHandler::SetWidevineEnabled(
-    const base::Value::List& args) {
+    const base::ListValue& args) {
 #if BUILDFLAG(ENABLE_WIDEVINE)
   CHECK_EQ(args.size(), 1U);
   bool enabled = args[0].GetBool();
@@ -170,7 +170,7 @@ void BraveDefaultExtensionsHandler::SetWidevineEnabled(
 }
 
 void BraveDefaultExtensionsHandler::IsWidevineEnabled(
-    const base::Value::List& args) {
+    const base::ListValue& args) {
   CHECK_EQ(args.size(), 1U);
   AllowJavascript();
   ResolveJavascriptCallback(args[0],

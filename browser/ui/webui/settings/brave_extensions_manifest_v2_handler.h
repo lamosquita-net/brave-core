@@ -57,8 +57,8 @@ class BraveExtensionsManifestV2Handler
 
   extensions::ExtensionRegistry* GetExtensionRegistry();
 
-  void GetExtensionsManifestV2(const base::Value::List& args);
-  void EnableExtensionManifestV2(const base::Value::List& args);
+  void GetExtensionsManifestV2(const base::ListValue& args);
+  void EnableExtensionManifestV2(const base::ListValue& args);
   void OnExtensionManifestV2Installed(
       base::Value js_callback,
       bool success,

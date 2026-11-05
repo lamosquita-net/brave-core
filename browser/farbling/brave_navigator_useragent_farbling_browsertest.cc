@@ -53,7 +53,7 @@ constexpr char kGetHighEntropyValuesScript[] = R"(
 )";
 
 void CheckUserAgentMetadataVersionsList(
-    const base::Value::List& versions_list,
+    const base::ListValue& versions_list,
     const std::string& expected_version,
     std::function<void(const std::string&)> check_greased_version) {
   // Expect 3 items in the list: Brave, Chromium, and greased.
@@ -352,11 +352,11 @@ IN_PROC_BROWSER_TEST_F(BraveNavigatorUserAgentFarblingBrowserTest,
   const content::EvalJsResult result =
       EvalJs(contents(), kGetHighEntropyValuesScript);
   EXPECT_TRUE(result.error.empty());
-  const base::Value::Dict* values = result.value.GetIfDict();
+  const base::DictValue* values = result.value.GetIfDict();
   ASSERT_NE(nullptr, values);
 
   // Check brands versions
-  const base::Value::List* brands_list = values->FindList("brands");
+  const base::ListValue* brands_list = values->FindList("brands");
   ASSERT_NE(nullptr, brands_list);
 
   // Expected major version for Brave and Chromium.
@@ -368,7 +368,7 @@ IN_PROC_BROWSER_TEST_F(BraveNavigatorUserAgentFarblingBrowserTest,
       });
 
   // Check full versions
-  const base::Value::List* full_version_list =
+  const base::ListValue* full_version_list =
       values->FindList("fullVersionList");
   ASSERT_NE(nullptr, full_version_list);
 

@@ -23,7 +23,7 @@ bool GetComponentId(const base::Value* value, std::string* field) {
   if (value == nullptr || !value->is_dict()) {
     return false;
   } else {
-    const base::Value::Dict& dict = value->GetDict();
+    const base::DictValue& dict = value->GetDict();
     const auto* component_id = dict.FindString("component_id");
     if (component_id) {
       *field = *component_id;
@@ -38,7 +38,7 @@ bool GetBase64PublicKey(const base::Value* value, std::string* field) {
   if (value == nullptr || !value->is_dict()) {
     return false;
   } else {
-    const base::Value::Dict& dict = value->GetDict();
+    const base::DictValue& dict = value->GetDict();
     const auto* component_id = dict.FindString("base64_public_key");
     if (component_id) {
       *field = *component_id;
@@ -56,7 +56,7 @@ bool GetStringVector(const base::Value* value,
   if (value == nullptr || !value->is_list()) {
     return false;
   } else {
-    const base::Value::List& list = value->GetList();
+    const base::ListValue& list = value->GetList();
     for (const auto& list_value : list) {
       const auto* s = list_value.GetIfString();
       if (s) {
@@ -210,7 +210,8 @@ std::vector<FilterListCatalogEntry> FilterListCatalogFromJSON(
   std::vector<FilterListCatalogEntry> catalog =
       std::vector<FilterListCatalogEntry>();
 
-  std::optional<base::Value> parsed_json = base::JSONReader::Read(catalog_json);
+  std::optional<base::Value> parsed_json = base::JSONReader::Read(
+      catalog_json, base::JSON_PARSE_CHROMIUM_EXTENSIONS);
   if (!parsed_json || !parsed_json->is_list()) {
     LOG(ERROR) << "Could not load regional adblock catalog";
     return catalog;
@@ -218,7 +219,7 @@ std::vector<FilterListCatalogEntry> FilterListCatalogFromJSON(
 
   base::JSONValueConverter<FilterListCatalogEntry> converter;
 
-  base::Value::List& regional_lists = parsed_json->GetList();
+  base::ListValue& regional_lists = parsed_json->GetList();
   for (const auto& item : regional_lists) {
     DCHECK(item.is_dict());
     FilterListCatalogEntry entry;

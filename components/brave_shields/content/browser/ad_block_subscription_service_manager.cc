@@ -88,7 +88,7 @@ const base::TimeDelta kListRetryInterval = base::Hours(1);
 const base::TimeDelta kListCheckInitialDelay = base::Minutes(1);
 
 SubscriptionInfo BuildInfoFromDict(const GURL& sub_url,
-                                   const base::Value::Dict& dict) {
+                                   const base::DictValue& dict) {
   SubscriptionInfo info;
   base::JSONValueConverter<SubscriptionInfo> converter;
   converter.Convert(base::Value(dict.Clone()), &info);
@@ -193,7 +193,7 @@ void AdBlockSubscriptionServiceManager::OnUpdateTimer(
   for (const auto it : subscriptions_) {
     const std::string key = it.first;
     SubscriptionInfo info;
-    const base::Value::Dict* list_subscription_dict =
+    const base::DictValue* list_subscription_dict =
         subscriptions_.FindDict(key);
     if (list_subscription_dict) {
       GURL sub_url(key);
@@ -427,7 +427,7 @@ void AdBlockSubscriptionServiceManager::LoadSubscriptionServices() {
   for (const auto it : subscriptions_) {
     const std::string key = it.first;
     SubscriptionInfo info;
-    const base::Value::Dict* list_subscription_dict =
+    const base::DictValue* list_subscription_dict =
         subscriptions_.FindDict(key);
     if (list_subscription_dict) {
       GURL sub_url(key);
@@ -462,8 +462,8 @@ void AdBlockSubscriptionServiceManager::UpdateSubscriptionPrefs(
 
   {
     ScopedDictPrefUpdate update(local_state_, prefs::kAdBlockListSubscriptions);
-    base::Value::Dict& subscriptions = update.Get();
-    base::Value::Dict subscription_dict;
+    base::DictValue& subscriptions = update.Get();
+    base::DictValue subscription_dict;
     subscription_dict.Set("enabled", info.enabled);
     subscription_dict.Set("last_update_attempt",
                           base::TimeToValue(info.last_update_attempt));
@@ -495,7 +495,7 @@ void AdBlockSubscriptionServiceManager::ClearSubscriptionPrefs(
   }
 
   ScopedDictPrefUpdate update(local_state_, prefs::kAdBlockListSubscriptions);
-  base::Value::Dict& subscriptions = update.Get();
+  base::DictValue& subscriptions = update.Get();
   subscriptions.Remove(sub_url.spec());
 
   // TODO(bridiver) - change to pref registrar

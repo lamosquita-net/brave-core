@@ -257,7 +257,7 @@ class CookieListOptInPreEnabledBrowserTest : public CookieListOptInBrowserTest {
     // update local state directly before proceeding.
     ScopedDictPrefUpdate pref_update(g_browser_process->local_state(),
                                      prefs::kAdBlockRegionalFilters);
-    base::Value::Dict entry;
+    base::DictValue entry;
     entry.Set("enabled", true);
     pref_update->Set(kCookieListUuid, std::move(entry));
   }

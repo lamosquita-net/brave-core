@@ -134,7 +134,7 @@ void NTPBackgroundImagesBridge::WallpaperLogoClicked(
 }
 
 base::android::ScopedJavaLocalRef<jobject>
-NTPBackgroundImagesBridge::CreateWallpaper(const base::Value::Dict& data) {
+NTPBackgroundImagesBridge::CreateWallpaper(const base::DictValue& data) {
   JNIEnv* env = AttachCurrentThread();
 
   auto* image_path =
@@ -149,8 +149,7 @@ NTPBackgroundImagesBridge::CreateWallpaper(const base::Value::Dict& data) {
 }
 
 base::android::ScopedJavaLocalRef<jobject>
-NTPBackgroundImagesBridge::CreateBrandedWallpaper(
-    const base::Value::Dict& data) {
+NTPBackgroundImagesBridge::CreateBrandedWallpaper(const base::DictValue& data) {
   JNIEnv* env = AttachCurrentThread();
 
   auto* image_path =
@@ -246,7 +245,7 @@ NTPBackgroundImagesBridge::GetCurrentWallpaper(
     const JavaParamRef<jobject>& obj) {
   DCHECK_CURRENTLY_ON(BrowserThread::UI);
 
-  std::optional<base::Value::Dict> data;
+  std::optional<base::DictValue> data;
   if (view_counter_service_)
     data = view_counter_service_->GetCurrentWallpaperForDisplay();
 

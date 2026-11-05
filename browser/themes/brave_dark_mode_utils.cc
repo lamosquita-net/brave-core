@@ -160,11 +160,11 @@ BraveDarkModeType GetBraveDarkModeType() {
   return type;
 }
 
-base::Value::List GetBraveDarkModeTypeList() {
-  base::Value::List list;
+base::ListValue GetBraveDarkModeTypeList() {
+  base::ListValue list;
 
   if (SystemDarkModeEnabled()) {
-    base::Value::Dict system_type;
+    base::DictValue system_type;
     system_type.Set(
         "value",
         static_cast<int>(BraveDarkModeType::BRAVE_DARK_MODE_TYPE_DEFAULT));
@@ -173,14 +173,14 @@ base::Value::List GetBraveDarkModeTypeList() {
     list.Append(std::move(system_type));
   }
 
-  base::Value::Dict dark_type;
+  base::DictValue dark_type;
   dark_type.Set("value",
                 static_cast<int>(BraveDarkModeType::BRAVE_DARK_MODE_TYPE_DARK));
   dark_type.Set("name", brave_l10n::GetLocalizedResourceUTF16String(
                             IDS_BRAVE_THEME_TYPE_DARK));
   list.Append(std::move(dark_type));
 
-  base::Value::Dict light_type;
+  base::DictValue light_type;
   light_type.Set(
       "value", static_cast<int>(BraveDarkModeType::BRAVE_DARK_MODE_TYPE_LIGHT));
   light_type.Set("name", brave_l10n::GetLocalizedResourceUTF16String(

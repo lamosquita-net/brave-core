@@ -31,10 +31,10 @@ class BraveAppearanceHandler : public settings::SettingsPageUIHandler {
   void OnBraveDarkModeChanged();
   void OnBackgroundPreferenceChanged(const std::string& pref_name);
   void OnPreferenceChanged(const std::string& pref_name);
-  void SetBraveThemeType(const base::Value::List& args);
-  void GetBraveThemeType(const base::Value::List& args);
-  void GetNewTabShowsOptionsList(const base::Value::List& args);
-  void ShouldShowNewTabDashboardSettings(const base::Value::List& args);
+  void SetBraveThemeType(const base::ListValue& args);
+  void GetBraveThemeType(const base::ListValue& args);
+  void GetNewTabShowsOptionsList(const base::ListValue& args);
+  void ShouldShowNewTabDashboardSettings(const base::ListValue& args);
 
   raw_ptr<Profile> profile_ = nullptr;
   PrefChangeRegistrar local_state_change_registrar_;

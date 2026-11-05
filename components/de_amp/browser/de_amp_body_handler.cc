@@ -38,12 +38,13 @@ base::Value LoadNavigationChain(const network::ResourceRequest& request) {
   std::string de_amp_header;
   if (!request.headers.GetHeader(kDeAmpHeaderName, &de_amp_header)) {
     return base::Value(
-        base::Value::List().Append(base::Value(request.url.spec())));
+        base::ListValue().Append(base::Value(request.url.spec())));
   }
-  auto value = base::JSONReader::Read(de_amp_header);
+  auto value = base::JSONReader::Read(de_amp_header,
+                                      base::JSON_PARSE_CHROMIUM_EXTENSIONS);
   if (!value || !value->is_list()) {
     return base::Value(
-        base::Value::List().Append(base::Value(request.url.spec())));
+        base::ListValue().Append(base::Value(request.url.spec())));
   }
   DCHECK(value->GetList().size() < kMaxRedirectHops);
   return std::move(*value);

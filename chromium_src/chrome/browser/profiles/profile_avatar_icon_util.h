@@ -12,7 +12,7 @@ namespace profiles {
   // Access original value for tests
   extern const size_t kBraveDefaultAvatarIconsCount;
   // Provide direct access to custom implementation
-  base::Value::Dict GetDefaultProfileAvatarIconAndLabel_Brave(
+  base::DictValue GetDefaultProfileAvatarIconAndLabel_Brave(
       SkColor fill_color,
       SkColor stroke_color,
       bool selected);
