@@ -72,10 +72,6 @@
 #include "brave/components/tor/tor_tab_helper.h"
 #endif
 
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-#include "brave/browser/web_discovery/web_discovery_tab_helper.h"
-#endif
-
 #if BUILDFLAG(ENABLE_REQUEST_OTR)
 #include "brave/browser/request_otr/request_otr_tab_helper.h"
 #include "brave/components/request_otr/common/features.h"
