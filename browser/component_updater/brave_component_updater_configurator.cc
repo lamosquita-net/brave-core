@@ -15,6 +15,8 @@
 
 #include "base/command_line.h"
 #include "base/files/file_path.h"
+#include "base/functional/bind.h"
+#include "base/memory/scoped_refptr.h"
 #include "base/path_service.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/sys_string_conversions.h"
@@ -57,9 +59,20 @@ BraveConfigurator::BraveConfigurator(
     : configurator_impl_(ComponentUpdaterCommandLineConfigPolicy(cmdline),
                          false),
       pref_service_(raw_ref<PrefService>::from_ptr(pref_service)),
-      persisted_data_(
-          update_client::CreatePersistedData(pref_service, nullptr)),
-      url_loader_factory_(std::move(url_loader_factory)) {}
+      persisted_data_(update_client::CreatePersistedData(
+          base::BindRepeating(
+              [](PrefService* pref_service) { return pref_service; },
+              pref_service),
+          nullptr)),
+      url_loader_factory_(std::move(url_loader_factory)) {
+  // 156 passes the CRX cache itself instead of its path (as in Brave 1.98).
+  base::FilePath path;
+  bool result = base::PathService::Get(chrome::DIR_USER_DATA, &path);
+  crx_cache_ = base::MakeRefCounted<update_client::CrxCache>(
+      result ? std::optional<base::FilePath>(
+                   path.AppendASCII("component_crx_cache"))
+             : std::nullopt);
+}
 
 BraveConfigurator::~BraveConfigurator() = default;
 
@@ -170,10 +183,6 @@ BraveConfigurator::GetPatcherFactory() {
   return patch_factory_;
 }
 
-bool BraveConfigurator::EnabledDeltas() const {
-  return configurator_impl_.EnabledDeltas();
-}
-
 bool BraveConfigurator::EnabledBackgroundDownloader() const {
   return configurator_impl_.EnabledBackgroundDownloader();
 }
@@ -211,12 +220,8 @@ update_client::UpdaterStateProvider BraveConfigurator::GetUpdaterStateProvider()
   return configurator_impl_.GetUpdaterStateProvider();
 }
 
-std::optional<base::FilePath> BraveConfigurator::GetCrxCachePath() const {
-  base::FilePath path;
-  bool result = base::PathService::Get(chrome::DIR_USER_DATA, &path);
-  return result ? std::optional<base::FilePath>(
-                      path.AppendASCII("component_crx_cache"))
-                : std::nullopt;
+scoped_refptr<update_client::CrxCache> BraveConfigurator::GetCrxCache() const {
+  return crx_cache_;
 }
 
 bool BraveConfigurator::IsConnectionMetered() const {
