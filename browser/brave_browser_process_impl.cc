@@ -11,6 +11,7 @@
 
 #include "base/functional/bind.h"
 #include "base/path_service.h"
+#include "base/task/single_thread_task_runner.h"
 #include "base/task/thread_pool.h"
 #include "brave/browser/brave_shields/ad_block_subscription_download_manager_getter.h"
 #include "brave/browser/component_updater/brave_component_updater_configurator.h"
@@ -172,7 +173,8 @@ void BraveBrowserProcessImpl::StartBraveServices() {
   local_data_files_service()->Start();
 
   brave_sync::NetworkTimeHelper::GetInstance()->SetNetworkTimeTracker(
-      g_browser_process->network_time_tracker());
+      g_browser_process->network_time_tracker(),
+      base::SingleThreadTaskRunner::GetCurrentDefault());
 }
 
 brave_shields::AdBlockService* BraveBrowserProcessImpl::ad_block_service() {
