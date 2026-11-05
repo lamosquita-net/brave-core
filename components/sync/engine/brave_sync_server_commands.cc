@@ -9,7 +9,6 @@
 
 #include "base/functional/callback.h"
 #include "base/logging.h"
-#include "base/sequence_checker.h"
 #include "components/sync/engine/sync_protocol_error.h"
 #include "components/sync/engine/syncer_proto_util.h"
 #include "components/sync/protocol/sync.pb.h"
@@ -20,7 +19,7 @@ namespace {
 
 void InitClearServerDataContext(SyncCycle* cycle,
                                 sync_pb::ClientToServerMessage* message) {
-  message->set_share(cycle->context()->account_name());
+  message->set_share(cycle->context()->account_email());
   message->set_message_contents(
       sync_pb::ClientToServerMessage::CLEAR_SERVER_DATA);
 }
