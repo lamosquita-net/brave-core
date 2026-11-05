@@ -13,12 +13,8 @@
 #include "base/task/sequenced_task_runner.h"
 #include "base/task/thread_pool.h"
 #include "brave/components/brave_shields/content/browser/ad_block_service.h"
-#include "brave/components/brave_vpn/common/buildflags/buildflags.h"
 #include "brave/components/tor/buildflags/buildflags.h"
 
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-#include "brave/components/brave_vpn/browser/connection/brave_vpn_connection_manager.h"
-#endif
 namespace tor {
 class BraveTorClientUpdater;
 }
@@ -162,17 +158,6 @@ brave::BraveFarblingService*
 TestingBraveBrowserProcess::brave_farbling_service() {
   return nullptr;
 }
-
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-brave_vpn::BraveVPNConnectionManager*
-TestingBraveBrowserProcess::brave_vpn_connection_manager() {
-  return brave_vpn_connection_manager_.get();
-}
-void TestingBraveBrowserProcess::SetBraveVPNConnectionManagerForTesting(
-    std::unique_ptr<brave_vpn::BraveVPNConnectionManager> manager) {
-  brave_vpn_connection_manager_ = std::move(manager);
-}
-#endif
 
 misc_metrics::ProcessMiscMetrics*
 TestingBraveBrowserProcess::process_misc_metrics() {

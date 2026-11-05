@@ -13,7 +13,6 @@
 #include "brave/components/brave_rewards/common/pref_names.h"
 #include "brave/components/brave_shields/content/browser/brave_shields_util.h"
 #include "brave/components/brave_shields/core/common/pref_names.h"
-#include "brave/components/brave_vpn/common/buildflags/buildflags.h"
 #include "brave/components/brave_wallet/browser/pref_names.h"
 #include "brave/components/brave_wayback_machine/buildflags/buildflags.h"
 #include "brave/components/constants/pref_names.h"
@@ -64,10 +63,6 @@
 
 #if BUILDFLAG(ENABLE_TOR)
 #include "brave/components/tor/pref_names.h"
-#endif
-
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-#include "brave/components/brave_vpn/common/pref_names.h"
 #endif
 
 #if BUILDFLAG(ENABLE_PLAYLIST)
@@ -158,14 +153,6 @@ const PrefsUtil::TypedPrefMap& BravePrefsUtil::GetAllowlistedKeys() {
 #if BUILDFLAG(IS_MAC)
   (*s_brave_allowlist)[prefs::kShowFullscreenToolbar] =
       settings_api::PrefType::kBoolean;
-#endif
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-  (*s_brave_allowlist)[brave_vpn::prefs::kBraveVPNShowButton] =
-      settings_api::PrefType::kBoolean;
-#if BUILDFLAG(ENABLE_BRAVE_VPN_WIREGUARD)
-  (*s_brave_allowlist)[brave_vpn::prefs::kBraveVPNWireguardEnabled] =
-      settings_api::PrefType::kBoolean;
-#endif
 #endif
 #if defined(TOOLKIT_VIEWS)
   (*s_brave_allowlist)[sidebar::kSidebarShowOption] =

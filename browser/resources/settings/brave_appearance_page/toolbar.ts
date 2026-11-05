@@ -91,10 +91,6 @@ class SettingsBraveAppearanceToolbarElement extends SettingsBraveAppearanceToolb
     return loadTimeData.getBoolean('isBraveRewardsSupported')
   }
 
-  private showBraveVPNOption_() {
-    return loadTimeData.getBoolean('isBraveVPNEnabled')
-  }
-
   private showLeoAssistant_() {
     return loadTimeData.getBoolean('isLeoAssistantAllowed')
   }

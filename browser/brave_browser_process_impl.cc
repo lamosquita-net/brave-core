@@ -89,11 +89,6 @@
 #include "brave/components/request_otr/common/features.h"
 #endif
 
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-#include "brave/browser/brave_vpn/vpn_utils.h"
-#include "brave/components/brave_vpn/browser/connection/brave_vpn_connection_manager.h"
-#endif
-
 using brave_component_updater::BraveComponent;
 using ntp_background_images::NTPBackgroundImagesService;
 
@@ -474,19 +469,6 @@ BraveBrowserProcessImpl::speedreader_rewriter_service() {
   return speedreader_rewriter_service_.get();
 }
 #endif  // BUILDFLAG(ENABLE_SPEEDREADER)
-
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-brave_vpn::BraveVPNConnectionManager*
-BraveBrowserProcessImpl::brave_vpn_connection_manager() {
-  if (brave_vpn_connection_manager_) {
-    return brave_vpn_connection_manager_.get();
-  }
-
-  brave_vpn_connection_manager_ = brave_vpn::CreateBraveVPNConnectionManager(
-      shared_url_loader_factory(), local_state());
-  return brave_vpn_connection_manager_.get();
-}
-#endif
 
 brave::BraveFarblingService* BraveBrowserProcessImpl::brave_farbling_service() {
   if (!brave_farbling_service_) {

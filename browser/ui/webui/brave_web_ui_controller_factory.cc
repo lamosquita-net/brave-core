@@ -58,7 +58,6 @@
 #include "brave/components/brave_wallet/browser/keyring_service.h"
 #endif
 
-#include "brave/browser/brave_vpn/vpn_utils.h"
 #if BUILDFLAG(ETHEREUM_REMOTE_CLIENT_ENABLED)
 #include "brave/browser/ui/webui/ethereum_remote_client/ethereum_remote_client_ui.h"
 #endif

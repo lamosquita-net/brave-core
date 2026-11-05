@@ -6,7 +6,6 @@
 import("//brave/browser/ethereum_remote_client/buildflags/buildflags.gni")
 import("//brave/components/ai_chat/core/common/buildflags/buildflags.gni")
 import("//brave/components/ai_rewriter/common/buildflags/buildflags.gni")
-import("//brave/components/brave_vpn/common/buildflags/buildflags.gni")
 import("//brave/components/playlist/common/buildflags/buildflags.gni")
 import("//brave/components/playlist/common/buildflags/buildflags.gni")
 import("//brave/components/speedreader/common/buildflags/buildflags.gni")
@@ -42,7 +41,6 @@ brave_grit("static_resources") {
   }
 
   defines = [
-    "enable_brave_vpn=$enable_brave_vpn",
     "enable_playlist_webui=$enable_playlist_webui",
     "enable_playlist=$enable_playlist",
     "enable_speedreader=$enable_speedreader",
@@ -117,13 +115,6 @@ repack("resources") {
   deps += [ "//brave/components/brave_wallet/resources:ethereum_provider_generated_resources" ]
   sources += [ "$root_gen_dir/brave/components/brave_wallet/resources/brave_wallet_script_generated.pak" ]
 
-  if (enable_brave_vpn_panel) {
-    deps += [ "//brave/components/brave_vpn/resources/panel:resources" ]
-    sources += [
-      "$root_gen_dir/brave/components/brave_vpn/brave_vpn_panel_resources.pak",
-    ]
-  }
-
   if (ethereum_remote_client_enabled) {
     if (!is_android && !is_ios) {
       sources += [ "$root_gen_dir/brave/components/ethereum_remote_client_page/resources/ethereum_remote_client_page_generated.pak" ]
@@ -156,7 +147,8 @@ brave_grit("strings") {
     "enable_speedreader=$enable_speedreader",
     "ethereum_remote_client_enabled=$ethereum_remote_client_enabled",
     "enable_tor=$enable_tor",
-    "enable_brave_vpn=$enable_brave_vpn",
+    # Brave VPN removed; kept for the <if> in the .grd until l10n pruning.
+    "enable_brave_vpn=false",
     "enable_playlist=$enable_playlist",
   ]
 

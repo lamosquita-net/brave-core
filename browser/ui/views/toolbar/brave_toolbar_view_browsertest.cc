@@ -50,13 +50,6 @@
 #include "brave/components/ai_chat/core/common/pref_names.h"
 #endif
 
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-#include "brave/browser/ui/views/toolbar/brave_vpn_button.h"
-#include "brave/components/brave_vpn/common/brave_vpn_utils.h"
-#include "brave/components/brave_vpn/common/features.h"
-#include "brave/components/brave_vpn/common/pref_names.h"
-#endif
-
 class BraveToolbarViewTest : public InProcessBrowserTest {
  public:
   BraveToolbarViewTest() = default;
@@ -74,19 +67,6 @@ class BraveToolbarViewTest : public InProcessBrowserTest {
         /*is_first_policy_load_complete_return=*/true);
     policy::BrowserPolicyConnector::SetPolicyProviderForTesting(&provider_);
   }
-
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-  void BlockVPNByPolicy(bool value) {
-    policy::PolicyMap policies;
-    policies.Set(policy::key::kBraveVPNDisabled, policy::POLICY_LEVEL_MANDATORY,
-                 policy::POLICY_SCOPE_MACHINE, policy::POLICY_SOURCE_PLATFORM,
-                 base::Value(value), nullptr);
-    provider_.UpdateChromePolicy(policies);
-    EXPECT_EQ(
-        brave_vpn::IsBraveVPNDisabledByPolicy(browser()->profile()->GetPrefs()),
-        value);
-  }
-#endif
 
 #if BUILDFLAG(ENABLE_AI_CHAT)
   void BlockAIChatByPolicy(bool value) {
@@ -146,27 +126,10 @@ class BraveToolbarViewTest : public InProcessBrowserTest {
   raw_ptr<ToolbarButtonProvider> toolbar_button_provider_ = nullptr;
   raw_ptr<BraveToolbarView> toolbar_view_ = nullptr;
 
-#if BUILDFLAG(ENABLE_BRAVE_VPN) || BUILDFLAG(ENABLE_AI_CHAT)
+#if BUILDFLAG(ENABLE_AI_CHAT)
   testing::NiceMock<policy::MockConfigurationPolicyProvider> provider_;
 #endif
 };
-
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-class BraveToolbarViewTest_VPNEnabled : public BraveToolbarViewTest {
- public:
-  BraveToolbarViewTest_VPNEnabled() {
-    scoped_feature_list_.InitWithFeatures(
-        {
-            skus::features::kSkusFeature,
-            brave_vpn::features::kBraveVPN,
-        },
-        {});
-  }
-
- protected:
-  base::test::ScopedFeatureList scoped_feature_list_;
-};
-#endif
 
 #if BUILDFLAG(ENABLE_AI_CHAT)
 class BraveToolbarViewTest_AIChatEnabled : public BraveToolbarViewTest {
@@ -188,36 +151,6 @@ class BraveToolbarViewTest_AIChatDisabled : public BraveToolbarViewTest {
  protected:
   base::test::ScopedFeatureList scoped_feature_list_;
 };
-#endif
-
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-IN_PROC_BROWSER_TEST_F(BraveToolbarViewTest_VPNEnabled, VPNButtonVisibility) {
-  auto* browser_view = static_cast<BraveBrowserView*>(
-      BrowserView::GetBrowserViewForBrowser(browser()));
-  auto* toolbar = static_cast<BraveToolbarView*>(browser_view->toolbar());
-  auto* prefs = browser()->profile()->GetPrefs();
-
-  // Button is visible by default.
-  EXPECT_TRUE(prefs->GetBoolean(brave_vpn::prefs::kBraveVPNShowButton));
-  EXPECT_TRUE(toolbar->brave_vpn_button()->GetVisible());
-  EXPECT_EQ(browser_view->GetAnchorViewForBraveVPNPanel(),
-            toolbar->brave_vpn_button());
-
-  // Hide button.
-  prefs->SetBoolean(brave_vpn::prefs::kBraveVPNShowButton, false);
-  EXPECT_FALSE(toolbar->brave_vpn_button()->GetVisible());
-  EXPECT_EQ(browser_view->GetAnchorViewForBraveVPNPanel(),
-            static_cast<views::View*>(toolbar->app_menu_button()));
-  // Show button.
-  prefs->SetBoolean(brave_vpn::prefs::kBraveVPNShowButton, true);
-  EXPECT_TRUE(toolbar->brave_vpn_button()->GetVisible());
-  BlockVPNByPolicy(true);
-  EXPECT_FALSE(toolbar->brave_vpn_button()->GetVisible());
-  EXPECT_TRUE(prefs->GetBoolean(brave_vpn::prefs::kBraveVPNShowButton));
-  BlockVPNByPolicy(false);
-  EXPECT_TRUE(toolbar->brave_vpn_button()->GetVisible());
-  EXPECT_TRUE(prefs->GetBoolean(brave_vpn::prefs::kBraveVPNShowButton));
-}
 #endif
 
 #if BUILDFLAG(ENABLE_AI_CHAT)

@@ -22,10 +22,6 @@ namespace brave_shields {
 class AdBlockService;
 }
 
-namespace brave_vpn {
-class BraveVPNConnectionManager;
-}
-
 class TestingBraveBrowserProcess : public BraveBrowserProcess {
  public:
   // Initializes |g_brave_browser_process| with a new
@@ -83,11 +79,6 @@ class TestingBraveBrowserProcess : public BraveBrowserProcess {
 #endif
   brave_ads::ResourceComponent* resource_component() override;
   brave::BraveFarblingService* brave_farbling_service() override;
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-  brave_vpn::BraveVPNConnectionManager* brave_vpn_connection_manager() override;
-  void SetBraveVPNConnectionManagerForTesting(
-      std::unique_ptr<brave_vpn::BraveVPNConnectionManager> manager);
-#endif
   misc_metrics::ProcessMiscMetrics* process_misc_metrics() override;
 
   // Populate the mock process with services. Consumer is responsible for
@@ -104,10 +95,6 @@ class TestingBraveBrowserProcess : public BraveBrowserProcess {
 
   std::unique_ptr<brave_shields::AdBlockService> ad_block_service_;
 
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-  std::unique_ptr<brave_vpn::BraveVPNConnectionManager>
-      brave_vpn_connection_manager_;
-#endif
 };
 
 class TestingBraveBrowserProcessInitializer {

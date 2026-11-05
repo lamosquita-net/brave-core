@@ -17,7 +17,6 @@
 #include "brave/browser/ui/color/brave_color_id.h"
 #include "brave/browser/ui/sidebar/sidebar_service_factory.h"
 #include "brave/browser/ui/toolbar/brave_app_menu_model.h"
-#include "brave/components/brave_vpn/common/buildflags/buildflags.h"
 #include "brave/components/misc_metrics/menu_metrics.h"
 #include "brave/components/sidebar/browser/sidebar_service.h"
 #include "brave/grit/brave_generated_resources.h"
@@ -37,11 +36,6 @@
 #include "ui/views/layout/box_layout_view.h"
 #include "ui/views/metadata/view_factory.h"
 #include "ui/views/view.h"
-
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-#include "brave/browser/ui/views/toolbar/brave_vpn_status_label.h"
-#include "brave/browser/ui/views/toolbar/brave_vpn_toggle_button.h"
-#endif
 
 #if BUILDFLAG(ENABLE_AI_CHAT)
 #include "brave/components/ai_chat/core/browser/ai_chat_metrics.h"
@@ -262,15 +256,6 @@ void BraveAppMenu::RecordMenuUsage(int command_id) {
 }
 
 void BraveAppMenu::UpdateMenuItemView() {
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-  CHECK(root_menu_item());
-  if (auto* menu_item =
-          root_menu_item()->GetMenuItemByID(IDC_TOGGLE_BRAVE_VPN)) {
-    menu_item->AddChildView(std::make_unique<BraveVPNStatusLabel>(browser_));
-    menu_item->AddChildView(std::make_unique<BraveVPNToggleButton>(browser_));
-  }
-#endif
-
   if (auto* sidebar_item =
           root_menu_item()->GetMenuItemByID(IDC_SIDEBAR_SHOW_OPTION_MENU)) {
     // Find button model for Sidebar visibility

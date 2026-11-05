@@ -11,7 +11,6 @@
 #include "base/memory/ref_counted.h"
 #include "brave/browser/brave_browser_process.h"
 #include "brave/components/brave_component_updater/browser/brave_component.h"
-#include "brave/components/brave_vpn/common/buildflags/buildflags.h"
 #include "brave/components/greaselion/browser/buildflags/buildflags.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "brave/components/tor/brave_tor_pluggable_transport_updater.h"
@@ -138,9 +137,6 @@ class BraveBrowserProcessImpl : public BraveBrowserProcess,
   speedreader::SpeedreaderRewriterService* speedreader_rewriter_service()
       override;
 #endif
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-  brave_vpn::BraveVPNConnectionManager* brave_vpn_connection_manager() override;
-#endif
   brave::BraveFarblingService* brave_farbling_service() override;
   misc_metrics::ProcessMiscMetrics* process_misc_metrics() override;
 
@@ -209,11 +205,6 @@ class BraveBrowserProcessImpl : public BraveBrowserProcess,
 #if BUILDFLAG(ENABLE_SPEEDREADER)
   std::unique_ptr<speedreader::SpeedreaderRewriterService>
       speedreader_rewriter_service_;
-#endif
-
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-  std::unique_ptr<brave_vpn::BraveVPNConnectionManager>
-      brave_vpn_connection_manager_;
 #endif
 
   std::unique_ptr<brave::BraveFarblingService> brave_farbling_service_;

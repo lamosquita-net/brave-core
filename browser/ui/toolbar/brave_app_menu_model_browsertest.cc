@@ -16,7 +16,6 @@
 #include "brave/browser/ui/brave_browser_command_controller.h"
 #include "brave/browser/ui/browser_commands.h"
 #include "brave/components/ai_chat/core/common/buildflags/buildflags.h"
-#include "brave/components/brave_vpn/common/buildflags/buildflags.h"
 #include "brave/components/skus/common/features.h"
 #include "brave/components/tor/buildflags/buildflags.h"
 #include "chrome/app/chrome_command_ids.h"
@@ -34,39 +33,10 @@
 #include "content/public/test/browser_test.h"
 #include "content/public/test/test_utils.h"
 
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-#include "brave/browser/brave_vpn/brave_vpn_service_factory.h"
-#include "brave/components/brave_vpn/browser/brave_vpn_service.h"
-#include "brave/components/brave_vpn/common/features.h"
-#endif
-
 class BraveAppMenuModelBrowserTest : public InProcessBrowserTest {
  public:
   BraveAppMenuModelBrowserTest() {
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-    scoped_feature_list_.InitWithFeatures(
-        {skus::features::kSkusFeature, brave_vpn::features::kBraveVPN}, {});
-#endif
   }
-
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-  void SetPurchasedUserForBraveVPN(Browser* browser, bool purchased) {
-    auto* service =
-        brave_vpn::BraveVpnServiceFactory::GetForProfile(browser->profile());
-    ASSERT_TRUE(!!service);
-    auto target_state = purchased
-                            ? brave_vpn::mojom::PurchasedState::PURCHASED
-                            : brave_vpn::mojom::PurchasedState::NOT_PURCHASED;
-    service->SetPurchasedState(skus::GetDefaultEnvironment(), target_state);
-    // Call explicitely to update vpn commands status because mojo works in
-    // async way.
-    static_cast<chrome::BraveBrowserCommandController*>(
-        browser->command_controller())
-        ->OnPurchasedStateChanged(target_state, std::nullopt);
-  }
-
-  base::test::ScopedFeatureList scoped_feature_list_;
-#endif
 
   void RunCommandFromAppMenuModel(Browser* browser, int command_id) {
     auto* browser_view = BrowserView::GetBrowserViewForBrowser(browser);
@@ -174,9 +144,6 @@ IN_PROC_BROWSER_TEST_F(BraveAppMenuModelBrowserTest, MenuOrderTest) {
       IDC_TOGGLE_AI_CHAT,
 #endif
       IDC_SHOW_BRAVE_WALLET,
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-      IDC_SHOW_BRAVE_VPN_PANEL,
-#endif
 #if defined(TOOLKIT_VIEWS)
       IDC_SIDEBAR_SHOW_OPTION_MENU,
 #endif
@@ -252,9 +219,6 @@ IN_PROC_BROWSER_TEST_F(BraveAppMenuModelBrowserTest, MenuOrderTest) {
   std::vector<int> commands_disabled_for_private_profile = {
       IDC_NEW_TOR_CONNECTION_FOR_SITE,
       IDC_RECENT_TABS_MENU,
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-      IDC_SHOW_BRAVE_VPN_PANEL,
-#endif
   };
 
   CheckCommandsAreInOrderInMenuModel(private_browser,
@@ -297,9 +261,6 @@ IN_PROC_BROWSER_TEST_F(BraveAppMenuModelBrowserTest, MenuOrderTest) {
       IDC_TOGGLE_AI_CHAT,
 #endif
       IDC_SHOW_BRAVE_WALLET,
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-      IDC_SHOW_BRAVE_VPN_PANEL,
-#endif
       IDC_RECENT_TABS_MENU,
       IDC_BOOKMARKS_MENU,
       IDC_EXTENSIONS_SUBMENU_MANAGE_EXTENSIONS,
@@ -354,9 +315,6 @@ IN_PROC_BROWSER_TEST_F(BraveAppMenuModelBrowserTest, MenuOrderTest) {
 #if BUILDFLAG(ENABLE_AI_CHAT)
       IDC_TOGGLE_AI_CHAT,
 #endif
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-      IDC_SHOW_BRAVE_VPN_PANEL,
-#endif
   };
   CheckCommandsAreInOrderInMenuModel(tor_browser,
                                      commands_in_order_for_tor_profile);
@@ -367,36 +325,6 @@ IN_PROC_BROWSER_TEST_F(BraveAppMenuModelBrowserTest, MenuOrderTest) {
 
 #endif
 }
-
-#if BUILDFLAG(ENABLE_BRAVE_VPN)
-// Check vpn menu based on purchased status.
-IN_PROC_BROWSER_TEST_F(BraveAppMenuModelBrowserTest, BraveVPNMenuTest) {
-  std::vector<int> commands_enabled_for_non_purchased = {
-      IDC_SHOW_BRAVE_VPN_PANEL,
-  };
-  std::vector<int> commands_disabled_for_non_purchased = {
-      IDC_BRAVE_VPN_MENU,
-  };
-
-  SetPurchasedUserForBraveVPN(browser(), false);
-  CheckCommandsAreInOrderInMenuModel(browser(),
-                                     commands_enabled_for_non_purchased);
-  CheckCommandsAreDisabledInMenuModel(browser(),
-                                      commands_disabled_for_non_purchased);
-
-  std::vector<int> commands_enabled_for_purchased = {
-      IDC_BRAVE_VPN_MENU,
-  };
-  std::vector<int> commands_disabled_for_purchased = {
-      IDC_SHOW_BRAVE_VPN_PANEL,
-  };
-
-  SetPurchasedUserForBraveVPN(browser(), true);
-  CheckCommandsAreInOrderInMenuModel(browser(), commands_enabled_for_purchased);
-  CheckCommandsAreDisabledInMenuModel(browser(),
-                                      commands_disabled_for_purchased);
-}
-#endif
 
 void CheckMenuIcons(ui::MenuModel* menu,
                     int submenu_depth,

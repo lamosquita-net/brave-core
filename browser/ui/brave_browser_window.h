@@ -71,8 +71,6 @@ class BraveBrowserWindow : public BrowserWindow {
   virtual void ShowWaybackMachineBubble() {}
 #endif
 
-  virtual void ShowBraveVPNBubble() {}
-
   // Returns true if all tabs in this window is being dragged.
   virtual bool IsInTabDragging() const;
 };

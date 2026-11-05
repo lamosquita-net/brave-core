@@ -32,7 +32,6 @@ const std::map<int, const gfx::VectorIcon&>& GetCommandIcons() {
           {IDC_SHOW_BRAVE_REWARDS, kLeoProductBatOutlineIcon},
           {IDC_SHOW_BRAVE_WALLET, kLeoProductBraveWalletIcon},
           {IDC_TOGGLE_AI_CHAT, kLeoProductBraveLeoIcon},
-          {IDC_BRAVE_VPN_MENU, kLeoProductVpnIcon},
           {IDC_PASSWORDS_AND_AUTOFILL_MENU, kLeoKeyIcon},
           {IDC_RECENT_TABS_MENU, kLeoHistoryIcon},
           {IDC_BOOKMARKS_MENU, kLeoProductBookmarksIcon},
@@ -47,14 +46,6 @@ const std::map<int, const gfx::VectorIcon&>& GetCommandIcons() {
           {IDC_OPTIONS, kLeoSettingsIcon},
           {IDC_HELP_MENU, kLeoHelpOutlineIcon},
           {IDC_EXIT, kLeoCloseIcon},
-
-          // The `VPN` submenu
-          {IDC_TOGGLE_BRAVE_VPN, kLeoProductVpnIcon},
-          {IDC_TOGGLE_BRAVE_VPN_TOOLBAR_BUTTON, kLeoEyeOnIcon},
-          {IDC_SHOW_BRAVE_VPN_PANEL, kLeoProductVpnIcon},
-          {IDC_SEND_BRAVE_VPN_FEEDBACK, kLeoMessageBubbleHeartIcon},
-          {IDC_MANAGE_BRAVE_VPN_PLAN, kLeoLaunchIcon},
-          {IDC_ABOUT_BRAVE_VPN, kLeoInfoOutlineIcon},
 
           // The `Bookmarks` submenu
           {IDC_BOOKMARK_THIS_TAB, kLeoBrowserBookmarkAddIcon},
