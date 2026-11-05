@@ -6,6 +6,7 @@
 #include "brave/components/cosmetic_filters/renderer/cosmetic_filters_js_handler.h"
 
 #include <optional>
+#include <string_view>
 #include <utility>
 
 #include "base/feature_list.h"
@@ -145,12 +146,13 @@ bool IsVettedSearchEngine(const GURL& url) {
   std::string domain_and_registry =
       net::registry_controlled_domains::GetDomainAndRegistry(
           url, net::registry_controlled_domains::INCLUDE_PRIVATE_REGISTRIES);
-  size_t registry_len = net::registry_controlled_domains::GetRegistryLength(
-      url, net::registry_controlled_domains::EXCLUDE_UNKNOWN_REGISTRIES,
-      net::registry_controlled_domains::INCLUDE_PRIVATE_REGISTRIES);
-  if (domain_and_registry.length() > registry_len + 1) {
+  std::optional<std::string_view> registry =
+      net::registry_controlled_domains::GetRegistry(
+          url, net::registry_controlled_domains::EXCLUDE_UNKNOWN_REGISTRIES,
+          net::registry_controlled_domains::INCLUDE_PRIVATE_REGISTRIES);
+  if (registry && domain_and_registry.length() > registry->length() + 1) {
     std::string host = domain_and_registry.substr(
-        0, domain_and_registry.length() - registry_len - 1);
+        0, domain_and_registry.length() - registry->length() - 1);
     for (size_t i = 0; i < g_vetted_search_engines->size(); i++) {
       if ((*g_vetted_search_engines)[i] == host)
         return true;

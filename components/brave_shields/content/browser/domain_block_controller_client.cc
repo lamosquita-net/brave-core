@@ -10,6 +10,7 @@
 #include "components/prefs/pref_service.h"
 #include "components/security_interstitials/content/settings_page_helper.h"
 #include "components/security_interstitials/core/metrics_helper.h"
+#include "content/public/browser/navigation_controller.h"
 #include "content/public/browser/page_navigator.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/common/referrer.h"
@@ -55,7 +56,7 @@ void DomainBlockControllerClient::GoBack() {
 
 void DomainBlockControllerClient::Proceed() {
   DomainBlockTabStorage* tab_storage =
-      DomainBlockTabStorage::GetOrCreate(web_contents_);
+      DomainBlockTabStorage::GetOrCreate(web_contents());
   tab_storage->SetIsProceeding(true);
   if (dont_warn_again_) {
     ad_block_custom_filters_provider_->CreateSiteExemption(
@@ -73,7 +74,7 @@ void DomainBlockControllerClient::Proceed() {
 }
 
 void DomainBlockControllerClient::ReloadPage() {
-  web_contents_->GetController().Reload(content::ReloadType::NORMAL, false);
+  web_contents()->GetController().Reload(content::ReloadType::NORMAL, false);
 }
 
 void DomainBlockControllerClient::On1PESState(bool is_1pes_enabled) {
