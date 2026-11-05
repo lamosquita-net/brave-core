@@ -36,11 +36,6 @@ void ShowSync(Browser* browser) {
       browser, chrome::GetSettingsUrl(chrome::kSyncSetupSubPage));
 }
 
-void ShowBraveNewsConfigure(Browser* browser) {
-  ShowSingletonTabOverwritingNTP(
-      browser, GURL("flyweb://newtab/?openSettings=BraveNews"));
-}
-
 void ShowShortcutsPage(Browser* browser) {
   ShowSingletonTabOverwritingNTP(browser, GURL(kShortcutsURL));
 }

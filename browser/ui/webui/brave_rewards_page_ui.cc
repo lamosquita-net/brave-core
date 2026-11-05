@@ -25,7 +25,6 @@
 #include "brave/components/brave_ads/core/public/ads_util.h"
 #include "brave/components/brave_ads/core/public/prefs/pref_names.h"
 #include "brave/components/brave_ads/core/public/targeting/geographical/subdivision/supported_subdivisions.h"
-#include "brave/components/brave_news/common/pref_names.h"
 #include "brave/components/brave_rewards/browser/rewards_p3a.h"
 #include "brave/components/brave_rewards/browser/rewards_service.h"
 #include "brave/components/brave_rewards/browser/rewards_service_observer.h"
@@ -511,15 +510,6 @@ void RewardsDOMHandler::InitPrefChangeRegistrar() {
       base::BindRepeating(&RewardsDOMHandler::OnPrefChanged,
                           base::Unretained(this)));
 
-  pref_change_registrar_.Add(
-      brave_news::prefs::kBraveNewsOptedIn,
-      base::BindRepeating(&RewardsDOMHandler::OnPrefChanged,
-                          base::Unretained(this)));
-
-  pref_change_registrar_.Add(
-      brave_news::prefs::kNewTabPageShowToday,
-      base::BindRepeating(&RewardsDOMHandler::OnPrefChanged,
-                          base::Unretained(this)));
   pref_change_registrar_.Add(
       ntp_background_images::prefs::
           kNewTabPageShowSponsoredImagesBackgroundImage,
@@ -1101,9 +1091,8 @@ void RewardsDOMHandler::GetAdsData(const base::Value::List& args) {
   ads_data.Set("searchAdsEnabled",
                prefs->GetBoolean(brave_ads::prefs::kOptedInToSearchResultAds));
 
-  ads_data.Set("newsAdsEnabled",
-               prefs->GetBoolean(brave_news::prefs::kBraveNewsOptedIn) &&
-                   prefs->GetBoolean(brave_news::prefs::kNewTabPageShowToday));
+  // FlyWeb: no Brave News, so never any news ads.
+  ads_data.Set("newsAdsEnabled", false);
 
   CallJavascriptFunction("brave_rewards.adsData", ads_data);
 }

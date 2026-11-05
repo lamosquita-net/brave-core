@@ -17,7 +17,6 @@ import {
 
 import { getLocale } from '$web-common/locale'
 import Icon from '@brave/leo/react/icon'
-import { useBraveNews } from '../../../brave_news/browser/resources/shared/Context'
 import { loadTimeData } from '$web-common/loadTimeData'
 import Dialog from '@brave/leo/react/dialog'
 
@@ -72,7 +71,6 @@ export enum TabType {
   BackgroundImage = 'backgroundImage',
   BraveStats = 'braveStats',
   TopSites = 'topSites',
-  BraveNews = 'braveNews',
   Clock = 'clock',
   Cards = 'cards',
   Search = 'search'
@@ -83,7 +81,6 @@ const tabTypes = Object.values(TabType)
 type TabMap<T> = { [P in TabType]: T }
 const tabIcons: TabMap<string> = {
   [TabType.BackgroundImage]: 'image',
-  [TabType.BraveNews]: 'product-brave-news',
   [TabType.BraveStats]: 'bar-chart',
   [TabType.Clock]: 'clock',
   [TabType.TopSites]: 'window-content',
@@ -93,7 +90,6 @@ const tabIcons: TabMap<string> = {
 
 const tabTranslationKeys: TabMap<string> = {
   [TabType.BackgroundImage]: 'backgroundImageTitle',
-  [TabType.BraveNews]: 'braveNewsTitle',
   [TabType.BraveStats]: 'statsTitle',
   [TabType.Clock]: 'clockTitle',
   [TabType.TopSites]: 'topSitesTitle',
@@ -103,22 +99,13 @@ const tabTranslationKeys: TabMap<string> = {
 
 const featureFlagSearchWidget = loadTimeData.getBoolean('featureFlagSearchWidget')
 export default function Settings(props: Props) {
-  // FlyWeb: no Brave News tab (no Brave News at all).
   const allowedTabTypes = React.useMemo(() => tabTypes.filter(t =>
-    t !== TabType.BraveNews &&
     (props.allowBackgroundCustomization || t !== TabType.BackgroundImage) &&
     (featureFlagSearchWidget || t !== TabType.Search)), [props.allowBackgroundCustomization])
   const [activeTab, setActiveTab] = React.useState(props.allowBackgroundCustomization
     ? TabType.BackgroundImage
     : TabType.BraveStats)
-  const { customizePage, setCustomizePage } = useBraveNews()
-
   const changeTab = React.useCallback((tab: TabType) => {
-    if (tab === TabType.BraveNews) {
-      setCustomizePage('news')
-      return
-    }
-
     setActiveTab(tab)
   }, [])
 
@@ -129,10 +116,6 @@ export default function Settings(props: Props) {
   }, [props.setActiveTab])
 
   return <SettingsDialog isOpen={props.showSettingsMenu} showClose onClose={() => {
-    if (customizePage) {
-      return
-    }
-
     props.onClose?.()
   }}>
     <SettingsTitle slot='title'>

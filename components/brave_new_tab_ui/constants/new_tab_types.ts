@@ -6,7 +6,6 @@ import * as newTabActions from '../actions/new_tab_actions'
 import * as gridSitesActions from '../actions/grid_sites_actions'
 import * as rewardsActions from '../actions/rewards_actions'
 import * as stackWidgetActions from '../actions/stack_widget_actions'
-import * as todayActions from '../actions/today_actions'
 
 export const enum types {
   NEW_TAB_STATS_UPDATED = '@@newtab/NEW_TAB_STATS_UPDATED',
@@ -32,7 +31,4 @@ export type NewTabActions =
   typeof newTabActions &
   typeof gridSitesActions &
   typeof rewardsActions &
-  typeof stackWidgetActions &
-  {
-    today: typeof todayActions
-  }
+  typeof stackWidgetActions

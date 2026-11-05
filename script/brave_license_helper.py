@@ -42,7 +42,6 @@ def AddBraveCredits(root, prune_paths, special_cases, prune_dirs,
 
         # Rust code written by Brave and under the same license as the browser.
         os.path.join('brave', 'third_party', 'rust', 'adblock_cxx'),
-        os.path.join('brave', 'third_party', 'rust', 'brave_news_cxx'),
         os.path.join('brave', 'third_party', 'rust', 'brave_wallet'),
         os.path.join('brave', 'third_party', 'rust',
                      'challenge_bypass_ristretto_cxx'),

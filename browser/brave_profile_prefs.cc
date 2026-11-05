@@ -20,11 +20,6 @@
 #include "brave/components/brave_ads/browser/analytics/p2a/p2a.h"
 #include "brave/components/brave_ads/core/public/prefs/obsolete_pref_util.h"
 #include "brave/components/brave_ads/core/public/prefs/pref_registry.h"
-#include "brave/components/brave_news/browser/brave_news_controller.h"
-#include "brave/components/brave_news/browser/brave_news_p3a.h"
-#include "brave/components/brave_news/browser/brave_news_pref_manager.h"
-#include "brave/components/brave_news/common/p3a_pref_names.h"
-#include "brave/components/brave_news/common/pref_names.h"
 #include "brave/components/brave_perf_predictor/browser/p3a_bandwidth_savings_tracker.h"
 #include "brave/components/brave_perf_predictor/browser/perf_predictor_tab_helper.h"
 #include "brave/components/brave_rewards/common/pref_names.h"
@@ -154,9 +149,6 @@ void RegisterProfilePrefsForMigration(
   // Restore "Other Bookmarks" migration
   registry->RegisterBooleanPref(kOtherBookmarksMigrated, false);
 
-  // Added 05/2021
-  registry->RegisterBooleanPref(kBraveNewsIntroDismissed, false);
-
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   // Added 11/2022
   registry->RegisterBooleanPref(kDontAskEnableWebDiscovery, false);
@@ -188,8 +180,6 @@ void RegisterProfilePrefsForMigration(
   registry->RegisterBooleanPref(brave_rewards::prefs::kShowButton, true);
 
   brave_rewards::RegisterProfilePrefsForMigration(registry);
-
-  brave_news::p3a::prefs::RegisterProfileNewsMetricsPrefsForMigration(registry);
 
   // Added May 2023
 #if defined(TOOLKIT_VIEWS)
@@ -237,8 +227,6 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
   brave_sync::Prefs::RegisterProfilePrefs(registry);
 
   brave_shields::RegisterShieldsP3AProfilePrefs(registry);
-
-  brave_news::prefs::RegisterProfilePrefs(registry);
 
   // TODO(shong): Migrate this to local state also and guard in ENABLE_WIDEVINE.
   // We don't need to display "don't ask widevine prompt option" in settings

@@ -12,7 +12,6 @@
 #include "brave/browser/perf/brave_perf_switches.h"
 #include "brave/components/ai_chat/core/common/buildflags/buildflags.h"
 #include "brave/components/brave_ads/core/public/prefs/pref_names.h"
-#include "brave/components/brave_news/common/pref_names.h"
 #include "brave/components/brave_rewards/browser/rewards_service.h"
 #include "brave/components/brave_shields/content/browser/ad_block_service.h"
 #include "brave/components/brave_shields/core/browser/ad_block_component_service_manager.h"
@@ -72,11 +71,6 @@ void MaybeEnableBraveFeatureForPerfTesting(Profile* profile) {
   auto* rewards_service =
       brave_rewards::RewardsServiceFactory::GetForProfile(profile);
   rewards_service->CreateRewardsWallet("US", base::BindOnce(&FakeCallback));
-
-  // Brave news
-  profile->GetPrefs()->SetBoolean(brave_news::prefs::kNewTabPageShowToday,
-                                  true);
-  profile->GetPrefs()->SetBoolean(brave_news::prefs::kBraveNewsOptedIn, true);
 
 #if BUILDFLAG(ENABLE_SPEEDREADER)
   // Speedreader

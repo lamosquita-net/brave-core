@@ -20,7 +20,6 @@
 #include "brave/components/brave_ads/core/public/ad_units/notification_ad/notification_ad_feature.h"
 #include "brave/components/brave_ads/core/public/ads_feature.h"
 #include "brave/components/brave_component_updater/browser/features.h"
-#include "brave/components/brave_news/common/features.h"
 #include "brave/components/brave_rewards/common/buildflags/buildflags.h"
 #include "brave/components/brave_rewards/common/features.h"
 #include "brave/components/brave_shields/core/common/features.h"
@@ -239,24 +238,6 @@
           kOsDesktop | kOsAndroid,                                            \
           FEATURE_VALUE_TYPE(brave_wallet::features::                         \
                                  kBraveWalletTransactionSimulationsFeature),  \
-      })
-
-#define BRAVE_NEWS_FEATURE_ENTRIES                                             \
-  EXPAND_FEATURE_ENTRIES(                                                      \
-      {                                                                        \
-          "brave-news-peek",                                                   \
-          "Brave News prompts on New Tab Page",                                \
-          "Prompt Brave News via the top featured article peeking up from "    \
-          "the bottom of the New Tab Page, after a short delay.",              \
-          kOsDesktop,                                                          \
-          FEATURE_VALUE_TYPE(brave_news::features::kBraveNewsCardPeekFeature), \
-      },                                                                       \
-      {                                                                        \
-          "brave-news-feed-update",                                            \
-          "Brave News Feed Update",                                            \
-          "Use the updated Brave News feed",                                   \
-          kOsDesktop,                                                          \
-          FEATURE_VALUE_TYPE(brave_news::features::kBraveNewsFeedUpdate),      \
       })
 
 #define CRYPTO_WALLETS_FEATURE_ENTRIES                                      \
@@ -982,7 +963,6 @@
           FEATURE_VALUE_TYPE(features::kBraveWebViewRoundedCorners),           \
       })                                                                       \
   BRAVE_NATIVE_WALLET_FEATURE_ENTRIES                                          \
-  BRAVE_NEWS_FEATURE_ENTRIES                                                   \
   CRYPTO_WALLETS_FEATURE_ENTRIES                                               \
   BRAVE_REWARDS_GEMINI_FEATURE_ENTRIES                                         \
   BRAVE_VPN_FEATURE_ENTRIES                                                    \

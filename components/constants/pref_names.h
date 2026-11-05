@@ -75,8 +75,6 @@ inline constexpr char kNewTabPageHideAllWidgets[] =
     "brave.new_tab_page.hide_all_widgets";
 inline constexpr char kNewTabPageShowsOptions[] =
     "brave.new_tab_page.shows_options";
-inline constexpr char kBraveNewsIntroDismissed[] =
-    "brave.today.intro_dismissed";
 inline constexpr char kAlwaysShowBookmarkBarOnNTP[] =
     "brave.always_show_bookmark_bar_on_ntp";
 inline constexpr char kBraveDarkMode[] = "brave.dark_mode";

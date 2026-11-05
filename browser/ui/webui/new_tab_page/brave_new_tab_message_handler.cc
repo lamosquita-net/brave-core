@@ -24,7 +24,6 @@
 #include "brave/browser/search_engines/pref_names.h"
 #include "brave/browser/ui/webui/new_tab_page/brave_new_tab_ui.h"
 #include "brave/components/brave_ads/core/public/ads_util.h"
-#include "brave/components/brave_news/common/pref_names.h"
 #include "brave/components/brave_perf_predictor/common/pref_names.h"
 #include "brave/components/brave_search_conversion/pref_names.h"
 #include "brave/components/constants/pref_names.h"
@@ -83,13 +82,9 @@ base::Value::Dict GetPreferencesDictionary(PrefService* prefs) {
   pref_data.Set("showClock", prefs->GetBoolean(kNewTabPageShowClock));
   pref_data.Set("clockFormat", prefs->GetString(kNewTabPageClockFormat));
   pref_data.Set("showStats", prefs->GetBoolean(kNewTabPageShowStats));
-  // FlyWeb: Brave News never shows (there is no Brave News controller).
-  pref_data.Set("showToday", false);
   pref_data.Set("showRewards", prefs->GetBoolean(kNewTabPageShowRewards));
   pref_data.Set("isBrandedWallpaperNotificationDismissed",
                 prefs->GetBoolean(kBrandedWallpaperNotificationDismissed));
-  pref_data.Set("isBraveNewsOptedIn",
-                prefs->GetBoolean(brave_news::prefs::kBraveNewsOptedIn));
   pref_data.Set("hideAllWidgets", prefs->GetBoolean(kNewTabPageHideAllWidgets));
   pref_data.Set("showBraveTalk", prefs->GetBoolean(kNewTabPageShowBraveTalk));
   pref_data.Set(
@@ -187,8 +182,6 @@ void BraveNewTabMessageHandler::RegisterMessages() {
   // - Preferences
   // - PrivatePage properties
   auto plural_string_handler = std::make_unique<PluralStringHandler>();
-  plural_string_handler->AddLocalizedString("braveNewsSourceCount",
-                                            IDS_BRAVE_NEWS_SOURCE_COUNT);
   plural_string_handler->AddLocalizedString("rewardsPublisherCountText",
                                             IDS_REWARDS_PUBLISHER_COUNT_TEXT);
   web_ui()->AddMessageHandler(std::move(plural_string_handler));
@@ -273,11 +266,6 @@ void BraveNewTabMessageHandler::OnJavascriptAllowed() {
             &BraveNewTabMessageHandler::OnPrivatePropertiesChanged,
             base::Unretained(this)));
   }
-  // News
-  pref_change_registrar_.Add(
-      brave_news::prefs::kBraveNewsOptedIn,
-      base::BindRepeating(&BraveNewTabMessageHandler::OnPreferencesChanged,
-                          base::Unretained(this)));
   // New Tab Page preferences
   pref_change_registrar_.Add(
       kNewTabPageShowBackgroundImage,
@@ -309,10 +297,6 @@ void BraveNewTabMessageHandler::OnJavascriptAllowed() {
                           base::Unretained(this)));
   pref_change_registrar_.Add(
       kNewTabPageShowStats,
-      base::BindRepeating(&BraveNewTabMessageHandler::OnPreferencesChanged,
-                          base::Unretained(this)));
-  pref_change_registrar_.Add(
-      brave_news::prefs::kNewTabPageShowToday,
       base::BindRepeating(&BraveNewTabMessageHandler::OnPreferencesChanged,
                           base::Unretained(this)));
   pref_change_registrar_.Add(
@@ -396,12 +380,9 @@ void BraveNewTabMessageHandler::HandleSaveNewTabPagePref(
   auto settingsValue = args[1].Clone();
   std::string settingsKey;
 
-  // Prevent News onboarding below NTP and sponsored NTP notification
-  // state from triggering the "shown & changed" answer for the
-  // customize dialog metric.
-  if (settingsKeyInput != "showToday" &&
-      settingsKeyInput != "isBraveNewsOptedIn" &&
-      settingsKeyInput != "isBrandedWallpaperNotificationDismissed") {
+  // Prevent sponsored NTP notification state from triggering the
+  // "shown & changed" answer for the customize dialog metric.
+  if (settingsKeyInput != "isBrandedWallpaperNotificationDismissed") {
     p3a::RecordValueIfGreater<NTPCustomizeUsage>(
         NTPCustomizeUsage::kOpenedAndEdited, kCustomizeUsageHistogramName,
         kNTPCustomizeUsageStatus, g_browser_process->local_state());
@@ -436,12 +417,6 @@ void BraveNewTabMessageHandler::HandleSaveNewTabPagePref(
     settingsKey = kNewTabPageShowClock;
   } else if (settingsKeyInput == "showStats") {
     settingsKey = kNewTabPageShowStats;
-  } else if (settingsKeyInput == "showToday") {
-    // FlyWeb: Brave News cannot be turned on.
-    return;
-  } else if (settingsKeyInput == "isBraveNewsOptedIn") {
-    // FlyWeb: no Brave News.
-    return;
   } else if (settingsKeyInput == "showRewards") {
     settingsKey = kNewTabPageShowRewards;
   } else if (settingsKeyInput == "isBrandedWallpaperNotificationDismissed") {

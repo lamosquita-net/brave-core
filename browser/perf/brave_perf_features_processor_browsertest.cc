@@ -8,7 +8,6 @@
 #include "brave/browser/perf/brave_perf_switches.h"
 #include "brave/components/ai_chat/core/common/buildflags/buildflags.h"
 #include "brave/components/brave_ads/core/public/prefs/pref_names.h"
-#include "brave/components/brave_news/common/pref_names.h"
 #include "brave/components/brave_rewards/browser/rewards_service.h"
 #include "brave/components/brave_rewards/browser/rewards_service_observer.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
@@ -70,10 +69,6 @@ class BraveSpeedFeatureProcessorBrowserTest : public InProcessBrowserTest {
   }
 #endif  // BUILDFLAG(ENABLE_SPEEDREADER)
 
-  bool BraveNewsAreEnabled() {
-    return brave_news::IsEnabled(browser()->profile()->GetPrefs());
-  }
-
   bool HasOptedInToNotificationAds() {
     return browser()->profile()->GetPrefs()->GetBoolean(
         brave_ads::prefs::kOptedInToNotificationAds);
@@ -96,7 +91,6 @@ IN_PROC_BROWSER_TEST_F(BraveSpeedFeatureProcessorBrowserTest, Default) {
   EXPECT_TRUE(SpeedreaderIsEnabled());
 #endif
   EXPECT_TRUE(HasOptedInToNotificationAds());
-  EXPECT_TRUE(BraveNewsAreEnabled());
   WaitForRewardsServiceInitialized();
 
 #if BUILDFLAG(ENABLE_AI_CHAT)
