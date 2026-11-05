@@ -8,16 +8,11 @@
 #include <memory>
 #include <utility>
 
-#include "brave/components/tor/buildflags/buildflags.h"
+#include "build/build_config.h"
 #include "mojo/public/cpp/bindings/service_factory.h"
 
 #if !BUILDFLAG(IS_ANDROID)
 #include "brave/utility/importer/brave_profile_import_impl.h"
-#endif
-
-#if BUILDFLAG(ENABLE_TOR)
-#include "brave/components/services/tor/public/interfaces/tor.mojom.h"
-#include "brave/components/services/tor/tor_launcher_impl.h"
 #endif
 
 namespace {
@@ -26,12 +21,6 @@ namespace {
 auto RunBraveProfileImporter(
     mojo::PendingReceiver<brave::mojom::ProfileImport> receiver) {
   return std::make_unique<BraveProfileImportImpl>(std::move(receiver));
-}
-#endif
-
-#if BUILDFLAG(ENABLE_TOR)
-auto RunTorLauncher(mojo::PendingReceiver<tor::mojom::TorLauncher> receiver) {
-  return std::make_unique<tor::TorLauncherImpl>(std::move(receiver));
 }
 #endif
 
@@ -44,10 +33,6 @@ void BraveContentUtilityClient::RegisterMainThreadServices(
     mojo::ServiceFactory& services) {
 #if !BUILDFLAG(IS_ANDROID)
   services.Add(RunBraveProfileImporter);
-#endif
-
-#if BUILDFLAG(ENABLE_TOR)
-  services.Add(RunTorLauncher);
 #endif
 
   return ChromeContentUtilityClient::RegisterMainThreadServices(services);
