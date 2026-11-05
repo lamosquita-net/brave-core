@@ -152,7 +152,8 @@ DebounceRule::ParseRules(const std::string& contents) {
   if (contents.empty()) {
     return base::unexpected("Could not obtain debounce configuration");
   }
-  std::optional<base::Value> root = base::JSONReader::Read(contents);
+  std::optional<base::Value> root =
+      base::JSONReader::Read(contents, base::JSON_PARSE_CHROMIUM_EXTENSIONS);
   if (!root) {
     return base::unexpected("Failed to parse debounce configuration");
   }

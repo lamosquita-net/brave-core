@@ -210,7 +210,8 @@ std::vector<FilterListCatalogEntry> FilterListCatalogFromJSON(
   std::vector<FilterListCatalogEntry> catalog =
       std::vector<FilterListCatalogEntry>();
 
-  std::optional<base::Value> parsed_json = base::JSONReader::Read(catalog_json);
+  std::optional<base::Value> parsed_json = base::JSONReader::Read(
+      catalog_json, base::JSON_PARSE_CHROMIUM_EXTENSIONS);
   if (!parsed_json || !parsed_json->is_list()) {
     LOG(ERROR) << "Could not load regional adblock catalog";
     return catalog;

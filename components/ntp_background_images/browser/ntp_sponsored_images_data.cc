@@ -139,7 +139,8 @@ NTPSponsoredImagesData::NTPSponsoredImagesData(
     const std::string& json_string,
     const base::FilePath& installed_dir)
     : NTPSponsoredImagesData() {
-  std::optional<base::Value> json_value = base::JSONReader::Read(json_string);
+  std::optional<base::Value> json_value =
+      base::JSONReader::Read(json_string, base::JSON_PARSE_CHROMIUM_EXTENSIONS);
   if (!json_value || !json_value->is_dict()) {
     DVLOG(2) << "Read json data failed. Invalid JSON data";
     return;

@@ -146,7 +146,8 @@ void WebcompatExceptionsService::OnJsonFileDataReady(
     // We don't have the file yet.
     return;
   }
-  const auto json_root = base::JSONReader::Read(contents);
+  const auto json_root =
+      base::JSONReader::Read(contents, base::JSON_PARSE_CHROMIUM_EXTENSIONS);
   if (json_root == std::nullopt) {
     DLOG(ERROR) << "Failed to parse " << WEBCOMPAT_EXCEPTIONS_JSON_FILE;
     return;

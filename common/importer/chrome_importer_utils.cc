@@ -41,8 +41,8 @@ std::optional<base::DictValue> GetChromeExtensionsListFromFile(
   std::string preference_content;
   base::ReadFileToString(preference_path, &preference_content);
 
-  std::optional<base::Value> preference =
-      base::JSONReader::Read(preference_content);
+  std::optional<base::Value> preference = base::JSONReader::Read(
+      preference_content, base::JSON_PARSE_CHROMIUM_EXTENSIONS);
   DCHECK(preference);
   DCHECK(preference->is_dict());
   if (auto* extensions = preference->GetDict().FindDictByDottedPath(
@@ -143,8 +143,8 @@ base::ListValue GetChromeSourceProfiles(
   if (base::PathExists(local_state_path)) {
     std::string local_state_content;
     base::ReadFileToString(local_state_path, &local_state_content);
-    std::optional<base::Value> local_state =
-        base::JSONReader::Read(local_state_content);
+    std::optional<base::Value> local_state = base::JSONReader::Read(
+        local_state_content, base::JSON_PARSE_CHROMIUM_EXTENSIONS);
     if (!local_state)
       return profiles;
 

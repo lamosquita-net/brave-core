@@ -268,7 +268,7 @@ void NTPBackgroundImagesService::OnGetMappingTableData(
   }
 
   std::optional<base::Value> mapping_table_value =
-      base::JSONReader::Read(json_string);
+      base::JSONReader::Read(json_string, base::JSON_PARSE_CHROMIUM_EXTENSIONS);
 
   if (!mapping_table_value) {
     DVLOG(2) << __func__ << ": has invalid mapping table.";

@@ -40,7 +40,8 @@ base::Value LoadNavigationChain(const network::ResourceRequest& request) {
     return base::Value(
         base::ListValue().Append(base::Value(request.url.spec())));
   }
-  auto value = base::JSONReader::Read(de_amp_header);
+  auto value = base::JSONReader::Read(de_amp_header,
+                                      base::JSON_PARSE_CHROMIUM_EXTENSIONS);
   if (!value || !value->is_list()) {
     return base::Value(
         base::ListValue().Append(base::Value(request.url.spec())));

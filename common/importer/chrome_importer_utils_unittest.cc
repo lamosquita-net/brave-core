@@ -83,23 +83,26 @@ TEST_F(BraveChromeImporterUtilsTest, ExtensionImportTest) {
 TEST_F(BraveChromeImporterUtilsTest, GetChromeUserDataFolder) {
   CopyTestFileToProfile("Local State", "Local State");
 
-  EXPECT_EQ(
-      GetChromeSourceProfiles(base::FilePath(FILE_PATH_LITERAL("fake"))),
-      base::JSONReader::Read(R"([{"id": "", "name": "Default" }])")->GetList());
+  EXPECT_EQ(GetChromeSourceProfiles(base::FilePath(FILE_PATH_LITERAL("fake"))),
+            base::JSONReader::Read(R"([{"id": "", "name": "Default" }])",
+                                   base::JSON_PARSE_CHROMIUM_EXTENSIONS)
+                ->GetList());
 
   EXPECT_EQ(GetChromeSourceProfiles(GetTestProfilePath().Append(
                 base::FilePath::StringType(FILE_PATH_LITERAL("Local State")))),
             base::JSONReader::Read(R"([
         {"id": "Default", "name": "Profile 1"},
         {"id": "Profile 2", "name": "Profile 2"}
-      ])")
+      ])",
+                                   base::JSON_PARSE_CHROMIUM_EXTENSIONS)
                 ->GetList());
   CopyTestFileToProfile("No Profile Local State", "No Profile Local State");
-  EXPECT_EQ(
-      GetChromeSourceProfiles(
-          GetTestProfilePath().Append(base::FilePath::StringType(
-              FILE_PATH_LITERAL("No Profile Local State")))),
-      base::JSONReader::Read(R"([{"id": "", "name": "Default" }])")->GetList());
+  EXPECT_EQ(GetChromeSourceProfiles(
+                GetTestProfilePath().Append(base::FilePath::StringType(
+                    FILE_PATH_LITERAL("No Profile Local State")))),
+            base::JSONReader::Read(R"([{"id": "", "name": "Default" }])",
+                                   base::JSON_PARSE_CHROMIUM_EXTENSIONS)
+                ->GetList());
 
   CopyTestFileToProfile("Local State With Avatar", "Local State With Avatar");
   EXPECT_EQ(GetChromeSourceProfiles(
@@ -118,7 +121,8 @@ TEST_F(BraveChromeImporterUtilsTest, GetChromeUserDataFolder) {
           "name": "Profile 2",
           "last_active": false
         }
-      ])")
+      ])",
+                                   base::JSON_PARSE_CHROMIUM_EXTENSIONS)
                 ->GetList());
 }
 

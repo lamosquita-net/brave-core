@@ -170,21 +170,24 @@ TEST_F(BraveExternalProcessImporterHostUnitTest, ImportExtensionsSettings) {
     "a": "b",
     "c": "d",
     "id": "id1"
-  })"));
+  })",
+                             base::JSON_PARSE_CHROMIUM_EXTENSIONS));
   EXPECT_EQ(
       brave::ReadStore(GetExtensionLocalSettingsPath("Brave", "id2"), "id2"),
       base::JSONReader::Read(R"({
     "a": "b",
     "c": "d",
     "id": "id2"
-  })"));
+  })",
+                             base::JSON_PARSE_CHROMIUM_EXTENSIONS));
   EXPECT_EQ(
       brave::ReadStore(GetExtensionLocalSettingsPath("Brave", "id3"), "id3"),
       base::JSONReader::Read(R"({
     "a": "b",
     "c": "d",
     "id": "id3"
-  })"));
+  })",
+                             base::JSON_PARSE_CHROMIUM_EXTENSIONS));
   EXPECT_FALSE(
       brave::ReadStore(GetExtensionLocalSettingsPath("Brave", "id0"), "id0"));
 }

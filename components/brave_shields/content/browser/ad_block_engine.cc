@@ -212,8 +212,8 @@ base::DictValue AdBlockEngine::UrlCosmeticResources(const std::string& url) {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
   auto result = ad_block_client_->url_cosmetic_resources(url);
 
-  std::optional<base::Value> parsed_result =
-      base::JSONReader::Read(result.c_str());
+  std::optional<base::Value> parsed_result = base::JSONReader::Read(
+      result.c_str(), base::JSON_PARSE_CHROMIUM_EXTENSIONS);
 
   if (!parsed_result) {
     return base::DictValue();

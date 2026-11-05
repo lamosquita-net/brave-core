@@ -239,7 +239,8 @@ class BraveNetworkAuditTest : public InProcessBrowserTest {
         << "Could not read: " << net_log_path_;
 
     // Parse it as JSON.
-    auto parsed = base::JSONReader::Read(file_contents);
+    auto parsed = base::JSONReader::Read(file_contents,
+                                         base::JSON_PARSE_CHROMIUM_EXTENSIONS);
     ASSERT_TRUE(parsed.has_value());
 
     // Ensure the root value is a dictionary.
