@@ -11,7 +11,6 @@
 #include "base/strings/utf_string_conversions.h"
 #include "brave/common/importer/importer_constants.h"
 #include "brave/components/constants/pref_names.h"
-#include "brave/components/p3a/pref_names.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/metrics/metrics_reporting_state.h"
 #include "chrome/browser/profiles/profile.h"
@@ -85,9 +84,6 @@ void WelcomeDOMHandler::RegisterMessages() {
   web_ui()->RegisterMessageCallback(
       "recordP3A", base::BindRepeating(&WelcomeDOMHandler::HandleRecordP3A,
                                        base::Unretained(this)));
-  web_ui()->RegisterMessageCallback(
-      "setP3AEnabled", base::BindRepeating(&WelcomeDOMHandler::SetP3AEnabled,
-                                           base::Unretained(this)));
   web_ui()->RegisterMessageCallback(
       "openSettingsPage",
       base::BindRepeating(&WelcomeDOMHandler::HandleOpenSettingsPage,
@@ -184,8 +180,4 @@ void WelcomeDOMHandler::SetLocalStateBooleanEnabled(
   bool enabled = args[0].GetBool();
   PrefService* local_state = g_browser_process->local_state();
   local_state->SetBoolean(path, enabled);
-}
-
-void WelcomeDOMHandler::SetP3AEnabled(const base::Value::List& args) {
-  SetLocalStateBooleanEnabled(p3a::kP3AEnabled, args);
 }

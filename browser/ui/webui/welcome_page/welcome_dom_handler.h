@@ -36,7 +36,6 @@ class WelcomeDOMHandler : public content::WebUIMessageHandler {
                                    const base::Value::List& args);
   void OnGetDefaultBrowser(shell_integration::DefaultWebClientState state,
                            const std::u16string& name);
-  void SetP3AEnabled(const base::Value::List& args);
   void HandleOpenSettingsPage(const base::Value::List& args);
   void HandleSetMetricsReportingEnabled(const base::Value::List& args);
   void HandleEnableWebDiscovery(const base::Value::List& args);

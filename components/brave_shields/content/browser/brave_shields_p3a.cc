@@ -12,7 +12,6 @@
 #include "base/metrics/histogram_macros.h"
 #include "brave/components/brave_shields/content/browser/brave_shields_util.h"
 #include "brave/components/brave_shields/core/common/brave_shield_utils.h"
-#include "brave/components/p3a/utils.h"
 #include "brave/components/p3a_utils/bucket.h"
 #include "components/content_settings/core/browser/host_content_settings_map.h"
 #include "components/content_settings/core/common/content_settings.h"
@@ -154,8 +153,7 @@ int DomainCountRelativeToGlobalSetting(PrefService* profile_prefs,
 
 void MaybeRecordShieldsUsageP3A(ShieldsIconUsage usage,
                                 PrefService* local_state) {
-  p3a::RecordValueIfGreater<ShieldsIconUsage>(usage, kUsageStatusHistogramName,
-                                              kUsagePrefName, local_state);
+  // FlyWeb: components/p3a removed; the Shields usage-status metric is gone.
 }
 
 void RecordShieldsAdsSetting(ControlType setting) {

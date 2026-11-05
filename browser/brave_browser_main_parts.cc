@@ -50,7 +50,6 @@
 #endif
 
 #if !BUILDFLAG(IS_ANDROID)
-#include "brave/browser/infobars/brave_confirm_p3a_infobar_delegate.h"
 #include "brave/browser/infobars/brave_sync_account_deleted_infobar_delegate.h"
 #include "brave/browser/infobars/sync_cannot_run_infobar_delegate.h"
 #include "chrome/browser/ui/browser.h"
@@ -151,8 +150,6 @@ void BraveBrowserMainParts::PostBrowserStart() {
       infobars::ContentInfoBarManager* infobar_manager =
           infobars::ContentInfoBarManager::FromWebContents(active_web_contents);
       if (profile && infobar_manager) {
-        BraveConfirmP3AInfoBarDelegate::Create(
-            infobar_manager, g_browser_process->local_state());
         SyncCannotRunInfoBarDelegate::Create(infobar_manager, profile, browser);
 
         BraveSyncAccountDeletedInfoBarDelegate::Create(active_web_contents,

@@ -67,7 +67,6 @@ class TestingBraveBrowserProcess : public BraveBrowserProcess {
   tor::BraveTorPluggableTransportUpdater* tor_pluggable_transport_updater()
       override;
 #endif
-  p3a::P3AService* p3a_service() override;
   brave::BraveReferralsService* brave_referrals_service() override;
   brave_ads::BraveStatsHelper* ads_brave_stats_helper() override;
   ntp_background_images::NTPBackgroundImagesService*

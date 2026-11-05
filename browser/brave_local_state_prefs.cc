@@ -11,7 +11,6 @@
 #include "brave/browser/brave_ads/analytics/p3a/brave_stats_helper.h"
 #include "brave/browser/metrics/buildflags/buildflags.h"
 #include "brave/browser/metrics/metrics_reporting_util.h"
-#include "brave/browser/ntp_background/ntp_p3a_helper_impl.h"
 #include "brave/browser/playlist/playlist_service_factory.h"
 #include "brave/browser/search_engines/search_engine_tracker.h"
 #include "brave/browser/themes/brave_dark_mode_utils.h"
@@ -26,8 +25,6 @@
 #include "brave/components/l10n/common/prefs.h"
 #include "brave/components/ntp_background_images/browser/ntp_background_images_service.h"
 #include "brave/components/ntp_background_images/browser/view_counter_service.h"
-#include "brave/components/p3a/p3a_service.h"
-#include "brave/components/p3a/star_randomness_meta.h"
 #include "brave/components/skus/browser/skus_utils.h"
 #include "brave/components/tor/buildflags/buildflags.h"
 #include "build/build_config.h"
@@ -67,7 +64,6 @@ void RegisterLocalStatePrefsForMigration(PrefRegistrySimple* registry) {
 
   brave_wallet::RegisterLocalStatePrefsForMigration(registry);
   brave_search_conversion::p3a::RegisterLocalStatePrefsForMigration(registry);
-  p3a::StarRandomnessMeta::RegisterPrefsForMigration(registry);
 }
 
 void RegisterLocalStatePrefs(PrefRegistrySimple* registry) {
@@ -88,15 +84,6 @@ void RegisterLocalStatePrefs(PrefRegistrySimple* registry) {
   registry->SetDefaultPrefValue(
       metrics::prefs::kMetricsReportingEnabled,
       base::Value(GetDefaultPrefValueForMetricsReporting()));
-
-  p3a::P3AService::RegisterPrefs(registry,
-#if !BUILDFLAG(IS_ANDROID)
-                                 first_run::IsChromeFirstRun());
-#else
-                                 // BraveP3AService::RegisterPrefs
-                                 // doesn't use this arg on Android
-                                 false);
-#endif  // !BUILDFLAG(IS_ANDROID)
 
   brave_shields::RegisterShieldsP3ALocalPrefs(registry);
 #if !BUILDFLAG(IS_ANDROID)
@@ -125,8 +112,6 @@ void RegisterLocalStatePrefs(PrefRegistrySimple* registry) {
   RegisterLocalStatePrefsForMigration(registry);
 
   brave_search_conversion::p3a::RegisterLocalStatePrefs(registry);
-
-  ntp_background_images::NTPP3AHelperImpl::RegisterLocalStatePrefs(registry);
 
   brave_wallet::RegisterLocalStatePrefs(registry);
 

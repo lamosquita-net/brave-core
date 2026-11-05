@@ -37,10 +37,6 @@ class BravePrivacyHandler : public settings::SettingsPageUIHandler {
   void GetLocalStateBooleanEnabled(const std::string& path,
                                    const base::Value::List& args);
 
-  void SetP3AEnabled(const base::Value::List& args);
-  void GetP3AEnabled(const base::Value::List& args);
-  void OnP3AEnabledChanged();
-
   raw_ptr<Profile> profile_ = nullptr;
   PrefChangeRegistrar local_state_change_registrar_;
 };

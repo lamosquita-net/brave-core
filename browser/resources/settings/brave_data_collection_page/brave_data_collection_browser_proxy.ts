@@ -7,8 +7,6 @@ import {MetricsReporting} from '/shared/settings/privacy_page/privacy_page_brows
 import {sendWithPromise} from 'chrome://resources/js/cr.js'
 
 export interface BraveDataCollectionBrowserProxy {
-  getP3AEnabled: () => Promise<boolean>
-  setP3AEnabled: (value: boolean) => void
   setMetricsReportingEnabled: (enabled: boolean) => void
   getMetricsReporting: () => Promise<MetricsReporting>
 }
@@ -18,14 +16,6 @@ implements BraveDataCollectionBrowserProxy
 {
   static getInstance() {
     return instance || (instance = new BraveDataCollectionBrowserProxyImpl())
-  }
-
-  getP3AEnabled(): Promise<boolean> {
-    return sendWithPromise('getP3AEnabled')
-  }
-
-  setP3AEnabled(value: boolean): void {
-    chrome.send('setP3AEnabled', [value])
   }
 
   setMetricsReportingEnabled(enabled: boolean) {

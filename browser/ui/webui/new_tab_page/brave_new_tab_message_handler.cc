@@ -30,7 +30,6 @@
 #include "brave/components/ntp_background_images/browser/url_constants.h"
 #include "brave/components/ntp_background_images/browser/view_counter_service.h"
 #include "brave/components/ntp_background_images/common/pref_names.h"
-#include "brave/components/p3a/utils.h"
 #include "brave/components/services/bat_ads/public/interfaces/bat_ads.mojom.h"
 #include "brave/components/time_period_storage/weekly_storage.h"
 #include "chrome/browser/browser_process.h"
@@ -109,15 +108,8 @@ base::Value::Dict GetPrivatePropertiesDictionary(PrefService* prefs) {
   return private_data;
 }
 
-// TODO(petemill): Move p3a to own NTP component so it can
-// be used by other platforms.
-
-enum class NTPCustomizeUsage { kNeverOpened, kOpened, kOpenedAndEdited, kSize };
-
 constexpr char kNTPCustomizeUsageStatus[] =
     "brave.new_tab_page.customize_p3a_usage";
-constexpr char kCustomizeUsageHistogramName[] =
-    "Brave.NTP.CustomizeUsageStatus.2";
 
 const char kNeedsBrowserUpgradeToServeAds[] = "needsBrowserUpgradeToServeAds";
 
@@ -131,9 +123,7 @@ void BraveNewTabMessageHandler::RegisterLocalStatePrefs(
 
 void BraveNewTabMessageHandler::RecordInitialP3AValues(
     PrefService* local_state) {
-  p3a::RecordValueIfGreater<NTPCustomizeUsage>(
-      NTPCustomizeUsage::kNeverOpened, kCustomizeUsageHistogramName,
-      kNTPCustomizeUsageStatus, local_state);
+  // FlyWeb: components/p3a removed; the NTP customize usage metric is gone.
 }
 
 // static
@@ -380,14 +370,6 @@ void BraveNewTabMessageHandler::HandleSaveNewTabPagePref(
   auto settingsValue = args[1].Clone();
   std::string settingsKey;
 
-  // Prevent sponsored NTP notification state from triggering the
-  // "shown & changed" answer for the customize dialog metric.
-  if (settingsKeyInput != "isBrandedWallpaperNotificationDismissed") {
-    p3a::RecordValueIfGreater<NTPCustomizeUsage>(
-        NTPCustomizeUsage::kOpenedAndEdited, kCustomizeUsageHistogramName,
-        kNTPCustomizeUsageStatus, g_browser_process->local_state());
-  }
-
   // Handle string settings
   if (settingsValue.is_string()) {
     const auto settingsValueString = settingsValue.GetString();
@@ -545,9 +527,6 @@ void BraveNewTabMessageHandler::HandleGetWallpaperData(
 void BraveNewTabMessageHandler::HandleCustomizeClicked(
     const base::Value::List& args) {
   AllowJavascript();
-  p3a::RecordValueIfGreater<NTPCustomizeUsage>(
-      NTPCustomizeUsage::kOpened, kCustomizeUsageHistogramName,
-      kNTPCustomizeUsageStatus, g_browser_process->local_state());
 }
 
 void BraveNewTabMessageHandler::OnPrivatePropertiesChanged() {

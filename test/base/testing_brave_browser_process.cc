@@ -119,10 +119,6 @@ TestingBraveBrowserProcess::tor_pluggable_transport_updater() {
 #endif
 
 
-p3a::P3AService* TestingBraveBrowserProcess::p3a_service() {
-  return nullptr;
-}
-
 brave::BraveReferralsService*
 TestingBraveBrowserProcess::brave_referrals_service() {
   return nullptr;
