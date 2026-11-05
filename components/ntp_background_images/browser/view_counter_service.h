@@ -73,11 +73,11 @@ class ViewCounterService : public KeyedService,
                                    const std::string& destination_url,
                                    const std::string& wallpaper_id);
 
-  std::optional<base::Value::Dict> GetNextWallpaperForDisplay();
-  std::optional<base::Value::Dict> GetCurrentWallpaperForDisplay();
-  std::optional<base::Value::Dict> GetCurrentWallpaper() const;
-  std::optional<base::Value::Dict> GetCurrentBrandedWallpaper() const;
-  std::optional<base::Value::Dict> GetCurrentBrandedWallpaperFromModel() const;
+  std::optional<base::DictValue> GetNextWallpaperForDisplay();
+  std::optional<base::DictValue> GetCurrentWallpaperForDisplay();
+  std::optional<base::DictValue> GetCurrentWallpaper() const;
+  std::optional<base::DictValue> GetCurrentBrandedWallpaper() const;
+  std::optional<base::DictValue> GetCurrentBrandedWallpaperFromModel() const;
   std::vector<TopSite> GetTopSitesData() const;
 
   bool IsSuperReferral() const;

@@ -187,19 +187,18 @@ std::optional<std::string> AdBlockService::GetCspDirectives(
   return csp_directives;
 }
 
-base::Value::Dict AdBlockService::UrlCosmeticResources(
-    const std::string& url,
-    bool aggressive_blocking) {
+base::DictValue AdBlockService::UrlCosmeticResources(const std::string& url,
+                                                     bool aggressive_blocking) {
   DCHECK(GetTaskRunner()->RunsTasksInCurrentSequence());
-  base::Value::Dict resources = default_engine_->UrlCosmeticResources(url);
+  base::DictValue resources = default_engine_->UrlCosmeticResources(url);
 
   if (!aggressive_blocking) {
     // `:has` procedural selectors from the default engine should not be hidden
     // in standard blocking mode.
-    base::Value::List* default_hide_selectors =
+    base::ListValue* default_hide_selectors =
         resources.FindList("hide_selectors");
     if (default_hide_selectors) {
-      base::Value::List::iterator it = default_hide_selectors->begin();
+      base::ListValue::iterator it = default_hide_selectors->begin();
       while (it < default_hide_selectors->end()) {
         DCHECK(it->is_string());
         if (it->GetString().find(":has(") != std::string::npos) {
@@ -211,7 +210,7 @@ base::Value::Dict AdBlockService::UrlCosmeticResources(
     }
   }
 
-  base::Value::Dict additional_resources =
+  base::DictValue additional_resources =
       additional_filters_engine_->UrlCosmeticResources(url);
 
   MergeResourcesInto(std::move(additional_resources), resources,
@@ -229,21 +228,21 @@ base::Value::Dict AdBlockService::UrlCosmeticResources(
 // For now, this returns a dict with two properties:
 //  - "hide_selectors" - wraps the result from the default engine
 //  - "force_hide_selectors" - wraps appended results from all other engines
-base::Value::Dict AdBlockService::HiddenClassIdSelectors(
+base::DictValue AdBlockService::HiddenClassIdSelectors(
     const std::vector<std::string>& classes,
     const std::vector<std::string>& ids,
     const std::vector<std::string>& exceptions) {
   DCHECK(GetTaskRunner()->RunsTasksInCurrentSequence());
-  base::Value::List hide_selectors =
+  base::ListValue hide_selectors =
       default_engine_->HiddenClassIdSelectors(classes, ids, exceptions);
 
-  base::Value::List additional_selectors =
+  base::ListValue additional_selectors =
       additional_filters_engine_->HiddenClassIdSelectors(classes, ids,
                                                          exceptions);
 
-  base::Value::List force_hide_selectors = std::move(additional_selectors);
+  base::ListValue force_hide_selectors = std::move(additional_selectors);
 
-  base::Value::Dict result;
+  base::DictValue result;
   result.Set("hide_selectors", std::move(hide_selectors));
   result.Set("force_hide_selectors", std::move(force_hide_selectors));
   return result;
@@ -421,7 +420,7 @@ void AdBlockService::UseCustomSourceProviderForTest(
 
 void AdBlockService::OnGetDebugInfoFromDefaultEngine(
     GetDebugInfoCallback callback,
-    base::Value::Dict default_engine_debug_info) {
+    base::DictValue default_engine_debug_info) {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
   // base::Unretained() is safe because |additional_filters_engine_| is deleted

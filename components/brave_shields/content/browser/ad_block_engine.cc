@@ -176,12 +176,12 @@ bool AdBlockEngine::TagExists(const std::string& tag) {
   return tags_.contains(tag);
 }
 
-base::Value::Dict AdBlockEngine::GetDebugInfo() {
+base::DictValue AdBlockEngine::GetDebugInfo() {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
   const auto debug_info_struct = ad_block_client_->get_regex_debug_info();
-  base::Value::List regex_list;
+  base::ListValue regex_list;
   for (const auto& regex_entry : debug_info_struct.regex_data) {
-    base::Value::Dict regex_info;
+    base::DictValue regex_info;
     regex_info.Set("id", base::NumberToString(regex_entry.id));
     regex_info.Set("regex", std::string(regex_entry.regex.value));
     regex_info.Set("unused_sec", static_cast<int>(regex_entry.unused_secs));
@@ -189,7 +189,7 @@ base::Value::Dict AdBlockEngine::GetDebugInfo() {
     regex_list.Append(std::move(regex_info));
   }
 
-  base::Value::Dict result;
+  base::DictValue result;
   result.Set("compiled_regex_count",
              static_cast<int>(debug_info_struct.compiled_regex_count));
   result.Set("regex_data", std::move(regex_list));
@@ -208,7 +208,7 @@ void AdBlockEngine::SetupDiscardPolicy(
   ad_block_client_->set_regex_discard_policy(policy);
 }
 
-base::Value::Dict AdBlockEngine::UrlCosmeticResources(const std::string& url) {
+base::DictValue AdBlockEngine::UrlCosmeticResources(const std::string& url) {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
   auto result = ad_block_client_->url_cosmetic_resources(url);
 
@@ -216,14 +216,14 @@ base::Value::Dict AdBlockEngine::UrlCosmeticResources(const std::string& url) {
       base::JSONReader::Read(result.c_str());
 
   if (!parsed_result) {
-    return base::Value::Dict();
+    return base::DictValue();
   } else {
     DCHECK(parsed_result->is_dict());
     return std::move(parsed_result->GetDict());
   }
 }
 
-base::Value::List AdBlockEngine::HiddenClassIdSelectors(
+base::ListValue AdBlockEngine::HiddenClassIdSelectors(
     const std::vector<std::string>& classes,
     const std::vector<std::string>& ids,
     const std::vector<std::string>& exceptions) {
@@ -233,10 +233,10 @@ base::Value::List AdBlockEngine::HiddenClassIdSelectors(
   if (result.result_kind != adblock::ResultKind::Success) {
     LOG(ERROR) << "AdBlockEngine::HiddenClassIdSelectors failed: "
                << result.error_message.c_str();
-    return base::Value::List();
+    return base::ListValue();
   }
 
-  base::Value::List list_result;
+  base::ListValue list_result;
   for (const auto& selector : result.value) {
     list_result.Append(std::string(selector));
   }

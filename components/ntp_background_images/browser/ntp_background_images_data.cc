@@ -60,7 +60,7 @@ NTPBackgroundImagesData::NTPBackgroundImagesData(
     DVLOG(2) << "Read json data failed. Invalid JSON data";
     return;
   }
-  base::Value::Dict& root = json_value->GetDict();
+  base::DictValue& root = json_value->GetDict();
 
   std::optional<int> incomingSchemaVersion = root.FindInt(kSchemaVersionKey);
   const bool schemaVersionIsValid = incomingSchemaVersion &&
@@ -98,12 +98,12 @@ bool NTPBackgroundImagesData::IsValid() const {
   return !backgrounds.empty();
 }
 
-base::Value::Dict NTPBackgroundImagesData::GetBackgroundAt(size_t index) {
+base::DictValue NTPBackgroundImagesData::GetBackgroundAt(size_t index) {
   DCHECK(index >= 0 && index < backgrounds.size());
 
   // The |data| should be compliant with NewTab.BackgroundWallpaper type from JS
   // side.
-  base::Value::Dict data;
+  base::DictValue data;
   if (!IsValid())
     return data;
 

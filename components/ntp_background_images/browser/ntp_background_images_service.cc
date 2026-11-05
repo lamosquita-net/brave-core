@@ -282,7 +282,7 @@ void NTPBackgroundImagesService::OnGetMappingTableData(
 
   DVLOG(2) << __func__ << ": Downloaded valid mapping table.";
 
-  if (base::Value::Dict* value =
+  if (base::DictValue* value =
           mapping_table_value->GetDict().FindDict(GetReferralPromoCode())) {
     DVLOG(2) << __func__
              << ": This is super referral. Cache SR's referral code";
@@ -403,7 +403,7 @@ void NTPBackgroundImagesService::OnGetSponsoredComponentJsonData(
 
 void NTPBackgroundImagesService::MarkThisInstallIsNotSuperReferralForever() {
   local_pref_->SetDict(prefs::kNewTabPageCachedSuperReferralComponentInfo,
-                       base::Value::Dict());
+                       base::DictValue());
   local_pref_->SetString(prefs::kNewTabPageCachedSuperReferralComponentData,
                          std::string());
   local_pref_->SetString(prefs::kNewTabPageCachedSuperReferralCode,
@@ -414,7 +414,7 @@ void NTPBackgroundImagesService::MarkThisInstallIsNotSuperReferralForever() {
 }
 
 bool NTPBackgroundImagesService::IsValidSuperReferralComponentInfo(
-    const base::Value::Dict& component_info) const {
+    const base::DictValue& component_info) const {
   return component_info.FindString(kPublicKey) &&
          component_info.FindString(kComponentIDKey) &&
          component_info.FindString(kThemeNameKey);

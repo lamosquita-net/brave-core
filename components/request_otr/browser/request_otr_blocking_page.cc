@@ -83,7 +83,7 @@ void RequestOTRBlockingPage::CommandReceived(const std::string& command) {
 }
 
 void RequestOTRBlockingPage::PopulateInterstitialStrings(
-    base::Value::Dict& load_time_data) {
+    base::DictValue& load_time_data) {
   load_time_data.Set("tabTitle", brave_l10n::GetLocalizedResourceUTF16String(
                                      IDS_REQUEST_OTR_TITLE));
   load_time_data.Set("heading", brave_l10n::GetLocalizedResourceUTF16String(

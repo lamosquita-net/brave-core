@@ -42,20 +42,20 @@ void MergeCspDirectiveInto(std::optional<std::string> from,
 // If `force_hide` is true, the contents of `from`'s `hide_selectors` field
 // will be moved into a possibly new field of `into` called
 // `force_hide_selectors`.
-void MergeResourcesInto(base::Value::Dict from,
-                        base::Value::Dict& into,
+void MergeResourcesInto(base::DictValue from,
+                        base::DictValue& into,
                         bool force_hide) {
-  base::Value::List* resources_hide_selectors = nullptr;
+  base::ListValue* resources_hide_selectors = nullptr;
   if (force_hide) {
     resources_hide_selectors = into.FindList("force_hide_selectors");
     if (!resources_hide_selectors) {
       resources_hide_selectors =
-          into.Set("force_hide_selectors", base::Value::List())->GetIfList();
+          into.Set("force_hide_selectors", base::ListValue())->GetIfList();
     }
   } else {
     resources_hide_selectors = into.FindList("hide_selectors");
   }
-  base::Value::List* from_resources_hide_selectors =
+  base::ListValue* from_resources_hide_selectors =
       from.FindList("hide_selectors");
   if (resources_hide_selectors && from_resources_hide_selectors) {
     for (auto& selector : *from_resources_hide_selectors) {
@@ -66,11 +66,11 @@ void MergeResourcesInto(base::Value::Dict from,
   constexpr std::string_view kDictListKeys[] = {
       "style_selectors", "remove_classes", "remove_attrs"};
   for (const auto& key_ : kDictListKeys) {
-    base::Value::Dict* resources = into.FindDict(key_);
-    base::Value::Dict* from_resources = from.FindDict(key_);
+    base::DictValue* resources = into.FindDict(key_);
+    base::DictValue* from_resources = from.FindDict(key_);
     if (resources && from_resources) {
       for (auto [key, value] : *from_resources) {
-        base::Value::List* resources_entry = resources->FindList(key);
+        base::ListValue* resources_entry = resources->FindList(key);
         if (resources_entry) {
           DCHECK(value.is_list());
           for (auto& item : value.GetList()) {
@@ -85,8 +85,8 @@ void MergeResourcesInto(base::Value::Dict from,
 
   constexpr std::string_view kListKeys[] = {"exceptions", "remove_selectors"};
   for (const auto& key_ : kListKeys) {
-    base::Value::List* resources = into.FindList(key_);
-    base::Value::List* from_resources = from.FindList(key_);
+    base::ListValue* resources = into.FindList(key_);
+    base::ListValue* from_resources = from.FindList(key_);
     if (resources && from_resources) {
       for (auto& exception : *from_resources) {
         resources->Append(std::move(exception));

@@ -14,8 +14,8 @@
 #include "base/values.h"
 
 namespace brave {
-std::optional<base::Value::Dict> ReadStore(base::FilePath path,
-                                           const std::string& id);
+std::optional<base::DictValue> ReadStore(base::FilePath path,
+                                         const std::string& id);
 void CreateTestingStore(base::FilePath path,
                         const std::string& id,
                         const base::flat_map<std::string, std::string>& values);

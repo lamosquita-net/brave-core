@@ -13,10 +13,10 @@
 namespace gin {
 
 template <>
-struct Converter<base::Value::List> {
+struct Converter<base::ListValue> {
   static bool FromV8(v8::Isolate* isolate,
                      v8::Local<v8::Value> v8_value,
-                     base::Value::List* out);
+                     base::ListValue* out);
 };
 
 }  // namespace gin

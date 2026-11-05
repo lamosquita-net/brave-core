@@ -30,8 +30,8 @@ void CreateTestingStore(
   }
 }
 
-std::optional<base::Value::Dict> ReadStore(base::FilePath path,
-                                           const std::string& id) {
+std::optional<base::DictValue> ReadStore(base::FilePath path,
+                                         const std::string& id) {
   if (!base::DirectoryExists(path))
     return std::nullopt;
   auto store_factory =

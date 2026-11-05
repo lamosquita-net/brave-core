@@ -25,7 +25,7 @@ void PinShortcutHandler::RegisterMessages() {
                                          base::Unretained(this)));
 }
 
-void PinShortcutHandler::HandlePinShortcut(const base::Value::List& args) {
+void PinShortcutHandler::HandlePinShortcut(const base::ListValue& args) {
   AllowJavascript();
 
   shell_integration::PinShortcut(
@@ -35,7 +35,7 @@ void PinShortcutHandler::HandlePinShortcut(const base::Value::List& args) {
 }
 
 void PinShortcutHandler::HandleCheckShortcutPinState(
-    const base::Value::List& args) {
+    const base::ListValue& args) {
   AllowJavascript();
 
   CheckShortcutPinState(/*from_timer*/ false);

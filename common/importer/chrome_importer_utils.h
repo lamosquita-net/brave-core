@@ -39,7 +39,7 @@ base::FilePath GetWhaleUserDataFolder();
 #if BUILDFLAG(IS_LINUX)
 base::FilePath GetOperaSnapUserDataFolder();
 #endif
-base::Value::List GetChromeSourceProfiles(const base::FilePath& local_state);
+base::ListValue GetChromeSourceProfiles(const base::FilePath& local_state);
 bool ChromeImporterCanImport(const base::FilePath& profile,
                              uint16_t* services_supported);
 

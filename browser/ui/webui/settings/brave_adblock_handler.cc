@@ -105,7 +105,7 @@ void BraveAdBlockHandler::OnServiceUpdateEvent() {
   RefreshSubscriptionsList();
 }
 
-void BraveAdBlockHandler::GetRegionalLists(const base::Value::List& args) {
+void BraveAdBlockHandler::GetRegionalLists(const base::ListValue& args) {
   AllowJavascript();
   auto regional_lists = g_brave_browser_process->ad_block_service()
                             ->component_service_manager()
@@ -114,7 +114,7 @@ void BraveAdBlockHandler::GetRegionalLists(const base::Value::List& args) {
   ResolveJavascriptCallback(args[0], regional_lists);
 }
 
-void BraveAdBlockHandler::EnableFilterList(const base::Value::List& args) {
+void BraveAdBlockHandler::EnableFilterList(const base::ListValue& args) {
   DCHECK_EQ(args.size(), 2U);
 
   if (!args[0].is_string() || !args[1].is_bool())
@@ -128,7 +128,7 @@ void BraveAdBlockHandler::EnableFilterList(const base::Value::List& args) {
       ->EnableFilterList(uuid, enabled);
 }
 
-void BraveAdBlockHandler::UpdateFilterLists(const base::Value::List& args) {
+void BraveAdBlockHandler::UpdateFilterLists(const base::ListValue& args) {
   AllowJavascript();
 
   DCHECK_EQ(args.size(), 1U);
@@ -145,12 +145,12 @@ void BraveAdBlockHandler::UpdateFilterLists(const base::Value::List& args) {
                          weak_factory_.GetWeakPtr(), std::move(callback_id)));
 }
 
-void BraveAdBlockHandler::GetListSubscriptions(const base::Value::List& args) {
+void BraveAdBlockHandler::GetListSubscriptions(const base::ListValue& args) {
   AllowJavascript();
   ResolveJavascriptCallback(args[0], GetSubscriptions());
 }
 
-void BraveAdBlockHandler::GetCustomFilters(const base::Value::List& args) {
+void BraveAdBlockHandler::GetCustomFilters(const base::ListValue& args) {
   AllowJavascript();
   const std::string custom_filters = g_brave_browser_process->ad_block_service()
                                          ->custom_filters_provider()
@@ -159,7 +159,7 @@ void BraveAdBlockHandler::GetCustomFilters(const base::Value::List& args) {
   ResolveJavascriptCallback(args[0], base::Value(custom_filters));
 }
 
-void BraveAdBlockHandler::AddSubscription(const base::Value::List& args) {
+void BraveAdBlockHandler::AddSubscription(const base::ListValue& args) {
   DCHECK_EQ(args.size(), 1U);
   AllowJavascript();
   if (!args[0].is_string())
@@ -178,8 +178,7 @@ void BraveAdBlockHandler::AddSubscription(const base::Value::List& args) {
   RefreshSubscriptionsList();
 }
 
-void BraveAdBlockHandler::SetSubscriptionEnabled(
-    const base::Value::List& args) {
+void BraveAdBlockHandler::SetSubscriptionEnabled(const base::ListValue& args) {
   DCHECK_EQ(args.size(), 2U);
   AllowJavascript();
   if (!args[0].is_string() || !args[1].is_bool())
@@ -197,7 +196,7 @@ void BraveAdBlockHandler::SetSubscriptionEnabled(
   RefreshSubscriptionsList();
 }
 
-void BraveAdBlockHandler::UpdateSubscription(const base::Value::List& args) {
+void BraveAdBlockHandler::UpdateSubscription(const base::ListValue& args) {
   DCHECK_EQ(args.size(), 1U);
   AllowJavascript();
   if (!args[0].is_string())
@@ -214,7 +213,7 @@ void BraveAdBlockHandler::UpdateSubscription(const base::Value::List& args) {
       ->RefreshSubscription(subscription_url, true);
 }
 
-void BraveAdBlockHandler::DeleteSubscription(const base::Value::List& args) {
+void BraveAdBlockHandler::DeleteSubscription(const base::ListValue& args) {
   DCHECK_EQ(args.size(), 1U);
   AllowJavascript();
   if (!args[0].is_string())
@@ -232,8 +231,7 @@ void BraveAdBlockHandler::DeleteSubscription(const base::Value::List& args) {
   RefreshSubscriptionsList();
 }
 
-void BraveAdBlockHandler::ViewSubscriptionSource(
-    const base::Value::List& args) {
+void BraveAdBlockHandler::ViewSubscriptionSource(const base::ListValue& args) {
   DCHECK_EQ(args.size(), 1U);
   if (!args[0].is_string())
     return;
@@ -252,7 +250,7 @@ void BraveAdBlockHandler::ViewSubscriptionSource(
   ShowSingletonTabOverwritingNTP(browser, file_url);
 }
 
-void BraveAdBlockHandler::UpdateCustomFilters(const base::Value::List& args) {
+void BraveAdBlockHandler::UpdateCustomFilters(const base::ListValue& args) {
   if (!args[0].is_string())
     return;
 
@@ -266,16 +264,16 @@ void BraveAdBlockHandler::RefreshSubscriptionsList() {
   FireWebUIListener("brave_adblock.onGetListSubscriptions", GetSubscriptions());
 }
 
-base::Value::List BraveAdBlockHandler::GetSubscriptions() {
+base::ListValue BraveAdBlockHandler::GetSubscriptions() {
   auto list_subscriptions = g_brave_browser_process->ad_block_service()
                                 ->subscription_service_manager()
                                 ->GetSubscriptions();
 
-  base::Value::List list_value;
+  base::ListValue list_value;
   base::Time now = base::Time::Now();
 
   for (const auto& subscription : list_subscriptions) {
-    base::Value::Dict dict;
+    base::DictValue dict;
 
     base::TimeDelta relative_time_delta =
         now - subscription.last_successful_update_attempt;

@@ -11,9 +11,9 @@
 #include "content/public/renderer/v8_value_converter.h"
 
 namespace gin {
-bool Converter<base::Value::List>::FromV8(v8::Isolate* isolate,
-                                          v8::Local<v8::Value> v8_value,
-                                          base::Value::List* out) {
+bool Converter<base::ListValue>::FromV8(v8::Isolate* isolate,
+                                        v8::Local<v8::Value> v8_value,
+                                        base::ListValue* out) {
   std::unique_ptr<base::Value> base_value =
       content::V8ValueConverter::Create()->FromV8Value(
           v8_value, isolate->GetCurrentContext());

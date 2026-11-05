@@ -42,7 +42,7 @@ struct NTPBackgroundImagesData {
 
   bool IsValid() const;
   // Generate Value with background image at |index|.
-  base::Value::Dict GetBackgroundAt(size_t index);
+  base::DictValue GetBackgroundAt(size_t index);
 
   std::vector<Background> backgrounds;
   std::string url_prefix;

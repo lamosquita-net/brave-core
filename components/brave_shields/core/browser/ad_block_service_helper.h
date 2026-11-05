@@ -19,8 +19,8 @@ namespace brave_shields {
 void MergeCspDirectiveInto(std::optional<std::string> from,
                            std::optional<std::string>* into);
 
-void MergeResourcesInto(base::Value::Dict from,
-                        base::Value::Dict& into,
+void MergeResourcesInto(base::DictValue from,
+                        base::DictValue& into,
                         bool force_hide);
 
 }  // namespace brave_shields

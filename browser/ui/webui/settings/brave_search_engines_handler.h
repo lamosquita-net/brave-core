@@ -23,10 +23,10 @@ class BraveSearchEnginesHandler : public SearchEnginesHandler {
   // SearchEnginesHandler overrides:
   void RegisterMessages() override;
   void OnModelChanged() override;
-  base::Value::Dict GetSearchEnginesList() override;
+  base::DictValue GetSearchEnginesList() override;
 
-  base::Value::List GetPrivateSearchEnginesList();
-  void HandleGetPrivateSearchEnginesList(const base::Value::List& args);
+  base::ListValue GetPrivateSearchEnginesList();
+  void HandleGetPrivateSearchEnginesList(const base::ListValue& args);
 };
 
 }  // namespace settings

@@ -35,8 +35,8 @@ BraveDarkModeType GetBraveDarkModeType() {
   return BraveDarkModeType::BRAVE_DARK_MODE_TYPE_DEFAULT;
 }
 
-base::Value::List GetBraveDarkModeTypeList() {
-  return base::Value::List();
+base::ListValue GetBraveDarkModeTypeList() {
+  return base::ListValue();
 }
 
 void SetSystemDarkMode(BraveDarkModeType type) {

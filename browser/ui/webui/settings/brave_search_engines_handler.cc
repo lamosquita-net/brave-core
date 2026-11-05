@@ -49,18 +49,18 @@ void BraveSearchEnginesHandler::OnModelChanged() {
 }
 
 void BraveSearchEnginesHandler::HandleGetPrivateSearchEnginesList(
-    const base::Value::List& args) {
+    const base::ListValue& args) {
   CHECK_EQ(1U, args.size());
   AllowJavascript();
   ResolveJavascriptCallback(args[0], GetPrivateSearchEnginesList());
 }
 
-base::Value::List BraveSearchEnginesHandler::GetPrivateSearchEnginesList() {
+base::ListValue BraveSearchEnginesHandler::GetPrivateSearchEnginesList() {
   // Construct list with normal profile's default list.
   // Normal and Private profile use same default list.
   int last_default_engine_index =
       list_controller_.table_model()->last_search_engine_index();
-  base::Value::List defaults;
+  base::ListValue defaults;
 
   for (int i = 0; i < last_default_engine_index; ++i) {
     const TemplateURL* template_url = list_controller_.GetTemplateURL(i);
@@ -70,7 +70,7 @@ base::Value::List BraveSearchEnginesHandler::GetPrivateSearchEnginesList() {
     if (base::UTF16ToUTF8(template_url->keyword()) == kBraveSearchForTorKeyword)
       continue;
 
-    base::Value::Dict dict;
+    base::DictValue dict;
     dict.Set("value", template_url->sync_guid());
     dict.Set("name", template_url->short_name());
     defaults.Append(std::move(dict));
@@ -79,7 +79,7 @@ base::Value::List BraveSearchEnginesHandler::GetPrivateSearchEnginesList() {
   return defaults;
 }
 
-base::Value::Dict BraveSearchEnginesHandler::GetSearchEnginesList() {
+base::DictValue BraveSearchEnginesHandler::GetSearchEnginesList() {
   auto search_engines_info = SearchEnginesHandler::GetSearchEnginesList();
   // Don't show two brave search entries from settings to prevent confusion.
   // Hide brave search for tor entry from settings UI. User doesn't need to

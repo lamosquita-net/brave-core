@@ -8,7 +8,7 @@
 
 TEST(BraveThemeServiceTest, GetBraveThemeListTest) {
   dark_mode::SetUseSystemDarkModeEnabledForTest(true);
-  base::Value::List list = dark_mode::GetBraveDarkModeTypeList();
+  base::ListValue list = dark_mode::GetBraveDarkModeTypeList();
   EXPECT_EQ(3UL, list.size());
 
   dark_mode::SetUseSystemDarkModeEnabledForTest(false);

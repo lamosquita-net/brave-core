@@ -228,7 +228,7 @@ void BravePrefProvider::MigrateShieldsSettingsFromResourceIds() {
 
   for (const auto [key, value] : plugins_dict) {
     const std::string& patterns_string(key);
-    const base::Value::Dict* settings_dict = value.GetIfDict();
+    const base::DictValue* settings_dict = value.GetIfDict();
     DCHECK(settings_dict);
 
     base::Time expiration =
@@ -237,7 +237,7 @@ void BravePrefProvider::MigrateShieldsSettingsFromResourceIds() {
     content_settings::mojom::SessionModel session_model =
         GetSessionModelFromDictionary(*settings_dict, kSessionModelPath);
 
-    const base::Value::Dict* resource_dict =
+    const base::DictValue* resource_dict =
         settings_dict->FindDictByDottedPath(kPerResourcePath);
     if (resource_dict) {
       base::Time last_modified =
@@ -295,7 +295,7 @@ void BravePrefProvider::MigrateShieldsSettingsFromResourceIdsForOneType(
 
   ScopedDictPrefUpdate update(prefs_, preference_path);
 
-  base::Value::Dict* shield_settings = update->EnsureDict(patterns_string);
+  base::DictValue* shield_settings = update->EnsureDict(patterns_string);
   DCHECK(shield_settings);
 
   shield_settings->Set(
