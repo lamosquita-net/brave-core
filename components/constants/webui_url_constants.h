@@ -36,9 +36,6 @@ inline constexpr char kBraveUIWalletAccountCreationURL[] =
 inline constexpr char kBraveUIWalletPanelURL[] =
     "chrome://wallet-panel.top-chrome/";
 inline constexpr char kWalletPanelHost[] = "wallet-panel.top-chrome";
-inline constexpr char kVPNPanelURL[] =
-    "chrome-untrusted://vpn-panel.top-chrome/";
-inline constexpr char kVPNPanelHost[] = "vpn-panel.top-chrome";
 inline constexpr char kBraveUIWalletPageURL[] = "chrome://wallet/";
 inline constexpr char kWalletPageHost[] = "wallet";
 inline constexpr char kExtensionSettingsURL[] = "flyweb://settings/extensions";
