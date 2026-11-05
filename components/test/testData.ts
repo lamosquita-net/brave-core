@@ -165,9 +165,6 @@ export const getMockChrome = () => {
 export const getMockLoadTimeData = () => {
   return {
     getString(key) {
-      if (key === 'braveWalletLedgerBridgeUrl') {
-        return 'chrome-untrusted://ledger-bridge'
-      }
       return key
     },
     getBoolean() {

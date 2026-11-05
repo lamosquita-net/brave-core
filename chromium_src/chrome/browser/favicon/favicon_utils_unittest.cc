@@ -13,7 +13,7 @@ namespace favicon {
 TEST(BraveFaviconUtilsTest, ShouldThemeifyFaviconForBraveInternalUrl) {
   std::unique_ptr<content::NavigationEntry> entry =
       content::NavigationEntry::Create();
-  const GURL unthemeable_url("chrome://wallet");
+  const GURL unthemeable_url("chrome://rewards");
   const GURL themeable_url("chrome://brave-somethingelse");
 
   entry->SetVirtualURL(unthemeable_url);
