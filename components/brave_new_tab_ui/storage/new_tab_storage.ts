@@ -12,7 +12,6 @@ export const keyName = 'new-tab-data'
 export const defaultState: NewTab.State = {
   initialDataLoaded: false,
   textDirection: loadTimeData.getString('textdirection'),
-  featureFlagBraveNTPSponsoredImagesWallpaper: loadTimeData.getBoolean('featureFlagBraveNTPSponsoredImagesWallpaper'),
   featureCustomBackgroundEnabled: loadTimeData.getBoolean('featureCustomBackgroundEnabled'),
   searchPromotionEnabled: false,
   showBackgroundImage: false,
@@ -29,8 +28,6 @@ export const defaultState: NewTab.State = {
   searchSuggestionsEnabled: false,
   showBitcoinDotCom: false,
   hideAllWidgets: false,
-  brandedWallpaperOptIn: false,
-  isBrandedWallpaperNotificationDismissed: true,
   showEmptyPage: false,
   braveRewardsSupported: false,
   braveTalkSupported: false,

@@ -95,11 +95,6 @@ TestingBraveBrowserProcess::local_data_files_service() {
   return nullptr;
 }
 
-ntp_background_images::NTPBackgroundImagesService*
-TestingBraveBrowserProcess::ntp_background_images_service() {
-  return nullptr;
-}
-
 #if BUILDFLAG(ENABLE_SPEEDREADER)
 speedreader::SpeedreaderRewriterService*
 TestingBraveBrowserProcess::speedreader_rewriter_service() {

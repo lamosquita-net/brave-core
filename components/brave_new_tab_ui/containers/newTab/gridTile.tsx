@@ -106,16 +106,14 @@ function TopSite (props: Props) {
   })
 
   return <SiteTile site={props.siteData} draggable={sortable} isMenuShowing={showMenu}>
-    {!siteData.defaultSRTopSite
-      ? <TileActionsContainer>
-        <TileAction ref={setEditMenuRef} aria-label={getLocale('editSiteTileMenuItem')} onClick={(e) => {
-          e.preventDefault()
-          setShowMenu(true)
-        }}>
-          <Icon name='edit-pencil' />
-        </TileAction>
-      </TileActionsContainer>
-      : null}
+    <TileActionsContainer>
+      <TileAction ref={setEditMenuRef} aria-label={getLocale('editSiteTileMenuItem')} onClick={(e) => {
+        e.preventDefault()
+        setShowMenu(true)
+      }}>
+        <Icon name='edit-pencil' />
+      </TileAction>
+    </TileActionsContainer>
     {showMenu && ReactDOM.createPortal(<TileMenu ref={tileMenuRef} style={editMenuStyle}>
       <TileMenuItem onClick={e => {
         e.preventDefault()

@@ -41,24 +41,9 @@ declare namespace NewTab {
 
   export type BackgroundWallpaper = ColorBackground | ImageBackground | BraveBackground
 
-  export type BrandedWallpaperLogo = {
-    image: string
-    companyName: string
-    alt: string
-    destinationUrl: string
-  }
-
-  export type BrandedWallpaper = {
-    wallpaperImageUrl: string
-    isSponsored: boolean
-    creativeInstanceId: string
-    wallpaperId: string
-    logo: BrandedWallpaperLogo
-  }
-
+  // FlyWeb: only the user's own background comes from the browser.
   export interface Wallpaper {
-    backgroundWallpaper: BackgroundWallpaper
-    brandedWallpaper?: BrandedWallpaper
+    backgroundWallpaper?: BackgroundWallpaper
   }
 
   export interface ApplicationState {
@@ -73,7 +58,6 @@ declare namespace NewTab {
     favicon: string
     letter: string
     pinnedIndex: number | undefined
-    defaultSRTopSite: boolean | undefined
   }
 
   export interface Stats {
@@ -122,7 +106,6 @@ declare namespace NewTab {
 
   export type Preferences = {
     showBackgroundImage: boolean
-    brandedWallpaperOptIn: boolean
     showStats: boolean
     showClock: boolean
     clockFormat: string
@@ -133,13 +116,11 @@ declare namespace NewTab {
     promptEnableSearchSuggestions: boolean
     searchSuggestionsEnabled: boolean
     hideAllWidgets: boolean
-    isBrandedWallpaperNotificationDismissed: boolean
   }
 
   export type EphemeralState = Preferences & {
     initialDataLoaded: boolean
     textDirection: string
-    featureFlagBraveNTPSponsoredImagesWallpaper: boolean
     searchPromotionEnabled: boolean
     featureCustomBackgroundEnabled: boolean
     isIncognito: boolean
@@ -152,7 +133,6 @@ declare namespace NewTab {
     customLinksNum: number
     showBitcoinDotCom: boolean
     stats: Stats,
-    brandedWallpaper?: BrandedWallpaper
     backgroundWallpaper?: BackgroundWallpaper
     customImageBackgrounds: ImageBackground[]
   }
@@ -215,13 +195,6 @@ declare namespace NewTab {
     walletProviderRegions?: Record<string, { allow: string[], block: string[] } | undefined>
     vbatDeadline: number | undefined
     vbatExpired: boolean
-  }
-
-  export interface DefaultSuperReferralTopSite {
-    pinnedIndex: number
-    url: string
-    title: string
-    favicon: string
   }
 
   interface StorybookStateExtras {

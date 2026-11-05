@@ -47,10 +47,6 @@ class RequestOTRComponentInstallerPolicy;
 #endif
 }  // namespace request_otr
 
-namespace ntp_background_images {
-class NTPBackgroundImagesService;
-}  // namespace ntp_background_images
-
 namespace speedreader {
 class SpeedreaderRewriterService;
 }
@@ -85,8 +81,6 @@ class BraveBrowserProcessImpl : public BraveBrowserProcess,
       override;
   brave_component_updater::LocalDataFilesService* local_data_files_service()
       override;
-  ntp_background_images::NTPBackgroundImagesService*
-  ntp_background_images_service() override;
 #if BUILDFLAG(ENABLE_SPEEDREADER)
   speedreader::SpeedreaderRewriterService* speedreader_rewriter_service()
       override;
@@ -134,8 +128,6 @@ class BraveBrowserProcessImpl : public BraveBrowserProcess,
 #endif
   std::unique_ptr<brave::URLSanitizerComponentInstaller>
       url_sanitizer_component_installer_;
-  std::unique_ptr<ntp_background_images::NTPBackgroundImagesService>
-      ntp_background_images_service_;
 
 #if BUILDFLAG(ENABLE_SPEEDREADER)
   std::unique_ptr<speedreader::SpeedreaderRewriterService>

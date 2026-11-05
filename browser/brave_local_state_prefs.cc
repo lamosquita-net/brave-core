@@ -18,7 +18,6 @@
 #include "brave/components/brave_shields/content/browser/brave_shields_p3a.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/l10n/common/prefs.h"
-#include "brave/components/ntp_background_images/browser/ntp_background_images_service.h"
 #include "brave/components/ntp_background_images/browser/view_counter_service.h"
 #include "build/build_config.h"
 #include "chrome/common/pref_names.h"
@@ -52,13 +51,14 @@ void RegisterLocalStatePrefsForMigration(PrefRegistrySimple* registry) {
 #endif
 
   brave_search_conversion::p3a::RegisterLocalStatePrefsForMigration(registry);
+
+  // FlyWeb: added 11/2026 (T5), NTP sponsored images and super referrals.
+  ntp_background_images::ViewCounterService::
+      RegisterLocalStatePrefsForMigration(registry);
 }
 
 void RegisterLocalStatePrefs(PrefRegistrySimple* registry) {
   brave_shields::RegisterPrefsForAdBlockService(registry);
-  ntp_background_images::NTPBackgroundImagesService::RegisterLocalStatePrefs(
-      registry);
-  ntp_background_images::ViewCounterService::RegisterLocalStatePrefs(registry);
   brave_l10n::RegisterL10nLocalStatePrefs(registry);
 #if BUILDFLAG(IS_MAC)
   // Turn off super annoying 'Hold to quit'

@@ -15,7 +15,6 @@ export type InitialData = {
   stats: statsAPI.Stats
   privateTabData: privateTabDataAPI.PrivateTabData
   wallpaperData?: NewTab.Wallpaper
-  braveBackgrounds: NewTab.BraveBackground[]
   customImageBackgrounds: NewTab.ImageBackground[]
   braveRewardsSupported: boolean
   braveTalkSupported: boolean
@@ -55,7 +54,6 @@ export async function getInitialData (): Promise<InitialData> {
       braveRewardsSupported,
       braveTalkSupported,
       searchPromotionEnabled,
-      braveBackgrounds,
       customImageBackgrounds
     ] = await Promise.all([
       preferencesAPI.getPreferences(),
@@ -67,9 +65,6 @@ export async function getInitialData (): Promise<InitialData> {
       // FlyWeb: no Brave Talk (no card, no widget, no toggle).
       Promise.resolve(false),
       getNTPBrowserAPI().pageHandler.isSearchPromotionEnabled().then(({ enabled }) => enabled),
-      getNTPBrowserAPI().pageHandler.getBraveBackgrounds().then(({ backgrounds }) => {
-        return backgrounds.map(background => ({ type: 'brave', wallpaperImageUrl: background.imageUrl.url, author: background.author, link: background.link.url }))
-      }),
       getNTPBrowserAPI().pageHandler.getCustomImageBackgrounds().then(({ backgrounds }) => {
         return backgrounds.map(background => ({ type: 'image', wallpaperImageUrl: background.url.url }))
       })
@@ -80,7 +75,6 @@ export async function getInitialData (): Promise<InitialData> {
       stats,
       privateTabData,
       wallpaperData,
-      braveBackgrounds,
       customImageBackgrounds,
       braveRewardsSupported,
       braveTalkSupported,

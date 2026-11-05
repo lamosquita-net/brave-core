@@ -23,7 +23,6 @@
 @class AdblockService;
 @class BraveTabGeneratorAPI;
 @class WebImageDownloader;
-@class NTPBackgroundImagesService;
 @class DeAmpPrefs;
 @class AIChat;
 @class HTTPSUpgradeExceptionsService;
@@ -100,8 +99,6 @@ OBJC_EXPORT
 @property(readonly) BraveP3AUtils* p3aUtils;
 
 @property(readonly) DeAmpPrefs* deAmpPrefs;
-
-@property(readonly) NTPBackgroundImagesService* backgroundImagesService;
 
 - (AIChat*)aiChatAPIWithDelegate:(id<AIChatDelegate>)delegate;
 

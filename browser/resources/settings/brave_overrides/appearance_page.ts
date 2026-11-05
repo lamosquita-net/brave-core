@@ -3,16 +3,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // you can obtain one at https://mozilla.org/MPL/2.0/.
 
-import '../brave_appearance_page/super_referral.js'
 import '../brave_appearance_page/brave_theme.js'
 
-import {html, RegisterPolymerTemplateModifications} from 'chrome://resources/brave/polymer_overriding.js'
+import {RegisterPolymerTemplateModifications} from 'chrome://resources/brave/polymer_overriding.js'
 import {getTrustedHTML} from 'chrome://resources/js/static_types.js'
-
-import {loadTimeData} from '../i18n_setup.js'
-import {Router} from '../router.js'
-
-const superReferralStringId = 'superReferralThemeName'
 
 RegisterPolymerTemplateModifications({
   'settings-appearance-page': (templateContent) => {
@@ -36,47 +30,6 @@ RegisterPolymerTemplateModifications({
           <settings-brave-appearance-theme prefs="{{prefs}}">
           </settings-brave-appearance-theme>
         `)
-    }
-
-    // Super-referral
-    // W/o super referral, we don't need to themes link option with themes sub
-    // page.
-    const hasSuperReferral = (
-      loadTimeData.valueExists(superReferralStringId) &&
-      loadTimeData.getString(superReferralStringId) !== ''
-    )
-    if (hasSuperReferral) {
-      // Routes
-      const r = Router.getInstance().getRoutes()
-      if (!r.APPEARANCE) {
-        console.error(
-          '[Settings] Routes: could not find APPEARANCE page')
-        return
-      } else {
-        r.THEMES = r.APPEARANCE.createChild('/themes')
-        // Hide chromium's theme section. It's replaced with our themes page.
-        if (theme) {
-          theme.remove()
-        }
-      }
-      // Subpage
-      const pages = templateContent.getElementById('pages')
-      if (!pages) {
-        console.error(
-          `[Settings] Couldn't find appearance_page #pages`)
-      } else {
-        pages.appendChild(
-          html`
-            <template is="dom-if" route-path="/themes">
-              <settings-subpage
-                associated-control="[[$$('#themes-subpage-trigger')]]"
-                page-title="${loadTimeData.getString('themes')}">
-                <settings-brave-appearance-super-referral prefs="{{prefs}}">
-                </settings-brave-appearance-super-referral>
-              </settings-subpage>
-            </template>
-          `)
-      }
     }
 
     // Remove home button toggle & options template as it's moved into

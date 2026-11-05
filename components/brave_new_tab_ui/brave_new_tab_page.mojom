@@ -12,14 +12,6 @@ const string kRandomGradientColorValue = "gradient";
 
 const int8 kMaxCustomImageBackgrounds = 24;
 
-struct BraveBackground {
-  string name;
-  string author;
-  url.mojom.Url image_url;
-  url.mojom.Url link;
-  url.mojom.Url original_url;
-};
-
 struct CustomBackground {
   url.mojom.Url url;
 
@@ -33,9 +25,10 @@ struct CustomBackground {
   bool use_random_item = false;
 };
 
+// FlyWeb: no Brave photo wallpapers; a null Background means the page picks
+// one of its own (components/default/flyweb).
 union Background {
   CustomBackground custom;
-  BraveBackground brave;
 };
 
 // Used by the WebUI page to bootstrap bidirectional communication.
@@ -66,7 +59,6 @@ interface PageHandler {
 
   // When |seleteceBackground| is empty, should use random background.
   UseBraveBackground(string selected_background);
-  GetBraveBackgrounds() => (array<BraveBackground> backgrounds);
   
   // |color| is a 
   //   * color value for css background property or 'gradient' when 

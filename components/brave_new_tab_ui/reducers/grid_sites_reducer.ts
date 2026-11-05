@@ -51,17 +51,8 @@ export const gridSitesReducer: Reducer<NewTab.GridSitesState | undefined> = (
 
     case types.TILES_REORDERED: {
       const { gridSites, oldPos, newPos } = payload
-      // "Super referral" entries (if present) are always at the beginning
-      // Skip these indices when determining the new position for Chromium
-      let offset: number = 0
-      for (let i: number = 0; i < gridSites.length; i++) {
-        if (!gridSites[i].defaultSRTopSite) {
-          break
-        }
-        offset++
-      }
       // Change the order in Chromium
-      reorderMostVisitedTile(gridSites[oldPos].url, (newPos - offset))
+      reorderMostVisitedTile(gridSites[oldPos].url, newPos)
       // Change the order that user sees. Chromium will overwrite this
       // when `MostVisitedInfoChanged` is called- but changing BEFORE that
       // avoids a flicker for the user where (for a second or so), tiles would

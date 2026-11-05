@@ -5,12 +5,9 @@
 
 import {PolymerElement, html} from 'chrome://resources/polymer/v3_0/polymer/polymer_bundled.min.js'
 import {WebUiListenerMixin, WebUiListenerMixinInterface} from 'chrome://resources/cr_elements/web_ui_listener_mixin.js'
-import {routes} from '../route.js'
-import {Router} from '../router.js'
 import 'chrome://resources/cr_elements/md_select.css.js';
 import '../settings_shared.css.js'
 import '../settings_vars.css.js'
-import {loadTimeData} from "../i18n_setup.js"
 import {BraveAppearanceBrowserProxy,  BraveAppearanceBrowserProxyImpl} from './brave_appearance_browser_proxy.js'
 import {BaseMixin} from '../base_mixin.js'
 import {getTemplate} from './brave_theme.html.js'
@@ -72,21 +69,12 @@ export class SettingsBraveAppearanceThemeElement extends SettingsBraveAppearance
     return theme1 === theme2
   }
 
-  private onThemeTap_() {
-    Router.getInstance().navigateTo(routes.THEMES)
-  }
-
   private updateSelected_() {
     // Wait for the dom-repeat to populate the <select> before setting
     // <select>#value so the correct option gets selected.
     setTimeout(() => {
       this.$.braveThemeType.value = String(this.braveThemeType_)
     })
-  }
-
-  useThemesSubPage_() {
-    return loadTimeData.valueExists('superReferralThemeName') &&
-      loadTimeData.getString('superReferralThemeName') !== ''
   }
 }
 

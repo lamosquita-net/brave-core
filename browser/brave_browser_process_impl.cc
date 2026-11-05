@@ -31,7 +31,6 @@
 #include "brave/components/debounce/core/common/features.h"
 #include "brave/components/https_upgrade_exceptions/browser/https_upgrade_exceptions_service.h"
 #include "brave/components/localhost_permission/localhost_permission_component.h"
-#include "brave/components/ntp_background_images/browser/ntp_background_images_service.h"
 #include "brave/components/webcompat/features.h"
 #include "brave/components/webcompat/webcompat_exceptions_service.h"
 #include "brave/services/network/public/cpp/system_request_handler.h"
@@ -69,7 +68,6 @@
 #endif
 
 using brave_component_updater::BraveComponent;
-using ntp_background_images::NTPBackgroundImagesService;
 
 namespace {
 
@@ -190,18 +188,6 @@ brave_shields::AdBlockService* BraveBrowserProcessImpl::ad_block_service() {
             profile_manager()->GetInitialProfileDir()));
   }
   return ad_block_service_.get();
-}
-
-NTPBackgroundImagesService*
-BraveBrowserProcessImpl::ntp_background_images_service() {
-  if (!ntp_background_images_service_) {
-    ntp_background_images_service_ =
-        std::make_unique<NTPBackgroundImagesService>(component_updater(),
-                                                     local_state());
-    ntp_background_images_service_->Init();
-  }
-
-  return ntp_background_images_service_.get();
 }
 
 https_upgrade_exceptions::HttpsUpgradeExceptionsService*

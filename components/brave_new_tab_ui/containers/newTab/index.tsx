@@ -8,11 +8,9 @@ import * as React from 'react'
 // Components
 import getNTPBrowserAPI from '../../api/background'
 import { addNewTopSite, editTopSite } from '../../api/topSites'
-import { brandedWallpaperLogoClicked } from '../../api/wallpaper'
 import {
   BraveTalkWidget as BraveTalk, Clock, EditTopSite, OverrideReadabilityColor, SearchPromotion
 } from '../../components/default'
-import BrandedWallpaperLogo from '../../components/default/brandedWallpaper/logo'
 import FooterInfo from '../../components/default/footer/footer'
 import * as Page from '../../components/default/page'
 import TopSitesGrid from './gridSites'
@@ -24,7 +22,6 @@ import { esFondoFlyWeb } from '../../components/default/flyweb/recursos'
 
 // Helpers
 import { getLocale } from '$web-common/locale'
-import VisibilityTimer from '$web-common/visibilityTimer'
 import { loadTimeData } from '$web-common/loadTimeData'
 import isReadableOnBackground from '../../helpers/colorUtil'
 
@@ -35,7 +32,6 @@ import { NewTabActions } from '../../constants/new_tab_types'
 import { MAX_GRID_SIZE } from '../../constants/new_tab_ui'
 import Settings, { TabType as SettingsTabType } from './settings'
 
-import SponsoredImageClickArea from '../../components/default/sponsoredImage/sponsoredImageClickArea'
 import GridWidget from './gridWidget'
 
 import { setIconBasePath } from '@brave/leo/react/icon'
@@ -52,7 +48,6 @@ interface Props {
   saveShowBackgroundImage: (value: boolean) => void
   saveShowRewards: (value: boolean) => void
   saveShowBraveTalk: (value: boolean) => void
-  saveBrandedWallpaperOptIn: (value: boolean) => void
   saveSetAllStackWidgets: (value: boolean) => void
   chooseNewCustomBackgroundImage: () => void
   setCustomImageBackground: (selectedBackground: string) => void
@@ -72,15 +67,8 @@ interface State {
 }
 
 function GetBackgroundImageSrc (props: Props) {
-  if (!props.newTabData.showBackgroundImage &&
-    (!props.newTabData.brandedWallpaper || props.newTabData.brandedWallpaper.isSponsored)) {
+  if (!props.newTabData.showBackgroundImage) {
     return undefined
-  }
-  if (props.newTabData.brandedWallpaper) {
-    const wallpaperData = props.newTabData.brandedWallpaper
-    if (wallpaperData.wallpaperImageUrl) {
-      return wallpaperData.wallpaperImageUrl
-    }
   }
 
   if (props.newTabData.backgroundWallpaper?.type === 'image' ||
@@ -92,8 +80,6 @@ function GetBackgroundImageSrc (props: Props) {
 }
 
 function GetShouldShowSearchPromotion (props: Props, showSearchPromotion: boolean) {
-  if (GetIsShowingBrandedWallpaper(props)) { return false }
-
   return props.newTabData.searchPromotionEnabled && showSearchPromotion
 }
 
@@ -104,17 +90,6 @@ function GetShouldForceToHideWidget (props: Props, showSearchPromotion: boolean)
 
   // Avoid promotion popup and other widgets overlap with narrow window.
   return window.innerWidth < 1000
-}
-
-function GetIsShowingBrandedWallpaper (props: Props) {
-  const { newTabData } = props
-  return !!((newTabData.brandedWallpaper &&
-    newTabData.brandedWallpaper.isSponsored))
-}
-
-function GetShouldShowBrandedWallpaperNotification (props: Props) {
-  return GetIsShowingBrandedWallpaper(props) &&
-    !props.newTabData.isBrandedWallpaperNotificationDismissed
 }
 
 class NewTabPage extends React.Component<Props, State> {
@@ -129,21 +104,12 @@ class NewTabPage extends React.Component<Props, State> {
 
   imgCache: HTMLImageElement
   imageSource?: string = undefined
-  timerIdForBrandedWallpaperNotification?: number = undefined
-  onVisiblityTimerExpired = () => {
-    this.dismissBrandedWallpaperNotification(false)
-  }
-
-  visibilityTimer = new VisibilityTimer(this.onVisiblityTimerExpired, 4000)
 
   componentDidMount () {
     // if a notification is open at component mounting time, close it
     this.props.actions.showTilesRemovedNotice(false)
     this.imageSource = GetBackgroundImageSrc(this.props)
     this.trackCachedImage()
-    if (GetShouldShowBrandedWallpaperNotification(this.props)) {
-      this.trackBrandedWallpaperNotificationAutoDismiss()
-    }
     this.checkShouldOpenSettings()
     const searchPromotionEnabled = this.props.newTabData.searchPromotionEnabled
     this.setState({
@@ -172,19 +138,10 @@ class NewTabPage extends React.Component<Props, State> {
       console.debug('reset image loaded state due to removing image source')
       this.setState({ backgroundHasLoaded: false })
     }
-    if (!GetShouldShowBrandedWallpaperNotification(prevProps) &&
-      GetShouldShowBrandedWallpaperNotification(this.props)) {
-      this.trackBrandedWallpaperNotificationAutoDismiss()
-    }
-
-    if (GetShouldShowBrandedWallpaperNotification(prevProps) &&
-      !GetShouldShowBrandedWallpaperNotification(this.props)) {
-      this.stopWaitingForBrandedWallpaperNotificationAutoDismiss()
-    }
   }
 
   shouldOverrideReadabilityColor (newTabData: NewTab.State) {
-    return !newTabData.brandedWallpaper && newTabData.backgroundWallpaper?.type === 'color' && !isReadableOnBackground(newTabData.backgroundWallpaper)
+    return newTabData.backgroundWallpaper?.type === 'color' && !isReadableOnBackground(newTabData.backgroundWallpaper)
   }
 
   handleResize = () => {
@@ -217,12 +174,6 @@ class NewTabPage extends React.Component<Props, State> {
     }
   }
 
-  trackBrandedWallpaperNotificationAutoDismiss () {
-    // Wait until page has been visible for an uninterupted Y seconds and then
-    // dismiss the notification.
-    this.visibilityTimer.startTracking()
-  }
-
   checkShouldOpenSettings = () => {
     const params = window.location.search
     const urlParams = new URLSearchParams(params)
@@ -243,10 +194,6 @@ class NewTabPage extends React.Component<Props, State> {
       // Remove settings param so menu doesn't persist on reload
       window.history.pushState(null, '', '/')
     }
-  }
-
-  stopWaitingForBrandedWallpaperNotificationAutoDismiss () {
-    this.visibilityTimer.stopTracking()
   }
 
   toggleShowBackgroundImage = () => {
@@ -277,22 +224,8 @@ class NewTabPage extends React.Component<Props, State> {
     this.props.saveShowBraveTalk(!this.props.newTabData.showBraveTalk)
   }
 
-  disableBrandedWallpaper = () => {
-    this.props.saveBrandedWallpaperOptIn(false)
-  }
-
-  toggleShowBrandedWallpaper = () => {
-    this.props.saveBrandedWallpaperOptIn(
-      !this.props.newTabData.brandedWallpaperOptIn
-    )
-  }
-
   startRewards = () => {
     // FlyWeb: Brave Rewards is removed from the build.
-  }
-
-  dismissBrandedWallpaperNotification = (isUserAction: boolean) => {
-    this.props.actions.dismissBrandedWallpaperNotification(isUserAction)
   }
 
   dismissNotification = (id: string) => {
@@ -341,10 +274,6 @@ class NewTabPage extends React.Component<Props, State> {
       showSettingsMenu: !this.state.showSettingsMenu,
       activeSettingsTab: activeTab || null
     })
-  }
-
-  onClickLogo = () => {
-    brandedWallpaperLogoClicked(this.props.newTabData.brandedWallpaper)
   }
 
   setForegroundStackWidget = (widget: NewTab.StackWidget) => {
@@ -442,17 +371,6 @@ class NewTabPage extends React.Component<Props, State> {
     )
   }
 
-  renderBrandedWallpaperNotification () {
-    if (!GetShouldShowBrandedWallpaperNotification(this.props)) {
-      return null
-    }
-
-    // Previously the NTP would show a Rewards tooltip on top of a sponsored
-    // image under certain conditions. We no longer show that tooltip, and there
-    // are currently no other "branded wallpaper notifications" defined.
-    return null
-  }
-
   renderRewardsWidget (showContent: boolean, position: number) {
     // FlyWeb: Brave Rewards is removed from the build; no widget.
     return null
@@ -491,7 +409,6 @@ class NewTabPage extends React.Component<Props, State> {
     }
 
     const hasImage = this.imageSource !== undefined
-    const isShowingBrandedWallpaper = !!newTabData.brandedWallpaper
 
     const hasWallpaperInfo = newTabData.backgroundWallpaper?.type === 'brave'
     // FlyWeb: on one of our backgrounds, no dark veil and our text colours.
@@ -508,10 +425,6 @@ class NewTabPage extends React.Component<Props, State> {
     if (showTopSites && !newTabData.customLinksEnabled) {
       showTopSites = this.props.gridSitesData.gridSites.length !== 0
     }
-
-    // Allow background customization if Super Referrals is not activated.
-    const isSuperReferral = newTabData.brandedWallpaper && !newTabData.brandedWallpaper.isSponsored
-    const allowBackgroundCustomization = !isSuperReferral
 
     if (forceToHideWidget) {
       showTopSites = false
@@ -541,7 +454,6 @@ class NewTabPage extends React.Component<Props, State> {
             sinVelo={!!coloresFlyWeb}
             showCryptoContent={!!cryptoContent}
             showTopSites={showTopSites}
-            showBrandedWallpaper={isShowingBrandedWallpaper}
         >
           {this.renderSearchPromotion()}
           <GridWidget
@@ -580,10 +492,6 @@ class NewTabPage extends React.Component<Props, State> {
                 />
               </Page.GridItemTopSites>
             }
-            {newTabData.brandedWallpaper?.isSponsored && <Page.GridItemSponsoredImageClickArea otherWidgetsHidden={this.allWidgetsHidden()}>
-              <SponsoredImageClickArea onClick={this.onClickLogo}
-                sponsoredImageUrl={newTabData.brandedWallpaper.logo.destinationUrl}/>
-              </Page.GridItemSponsoredImageClickArea>}
             {
               gridSitesData.shouldShowSiteRemovedNotification
                 ? (
@@ -595,22 +503,10 @@ class NewTabPage extends React.Component<Props, State> {
             {cryptoContent}
             <Page.Footer>
               <Page.FooterContent>
-                {isShowingBrandedWallpaper && newTabData.brandedWallpaper &&
-                  newTabData.brandedWallpaper.logo &&
-                  <Page.GridItemBrandedLogo>
-                    <BrandedWallpaperLogo
-                      menuPosition={'right'}
-                      paddingType={'default'}
-                      textDirection={newTabData.textDirection}
-                      onClickLogo={this.onClickLogo}
-                      data={newTabData.brandedWallpaper.logo}
-                    />
-                    {this.renderBrandedWallpaperNotification()}
-                  </Page.GridItemBrandedLogo>}
                 <FooterInfo
                   textDirection={newTabData.textDirection}
                   backgroundImageInfo={newTabData.backgroundWallpaper}
-                  showPhotoInfo={!isShowingBrandedWallpaper && hasWallpaperInfo && newTabData.showBackgroundImage}
+                  showPhotoInfo={hasWallpaperInfo && newTabData.showBackgroundImage}
                   onClickSettings={this.openSettings}
                 />
               </Page.FooterContent>
@@ -631,7 +527,6 @@ class NewTabPage extends React.Component<Props, State> {
           toggleShowBackgroundImage={this.toggleShowBackgroundImage}
           toggleShowTopSites={this.toggleShowTopSites}
           setMostVisitedSettings={this.setMostVisitedSettings}
-          toggleBrandedWallpaperOptIn={this.toggleShowBrandedWallpaper}
           chooseNewCustomImageBackground={this.props.chooseNewCustomBackgroundImage}
           setCustomImageBackground={this.props.setCustomImageBackground}
           removeCustomImageBackground={this.props.removeCustomImageBackground}
@@ -642,8 +537,6 @@ class NewTabPage extends React.Component<Props, State> {
           customLinksEnabled={newTabData.customLinksEnabled}
           showRewards={newTabData.showRewards}
           braveRewardsSupported={newTabData.braveRewardsSupported}
-          brandedWallpaperOptIn={newTabData.brandedWallpaperOptIn}
-          allowBackgroundCustomization={allowBackgroundCustomization}
           toggleShowRewards={this.toggleShowRewards}
           braveTalkSupported={newTabData.braveTalkSupported}
           toggleShowBraveTalk={this.toggleShowBraveTalk}

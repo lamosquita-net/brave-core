@@ -46,7 +46,6 @@ export interface Props {
   setMostVisitedSettings: (show: boolean, customize: boolean) => void
   toggleShowRewards: () => void
   toggleShowBraveTalk: () => void
-  toggleBrandedWallpaperOptIn: () => void
   toggleCards: (show: boolean) => void
   chooseNewCustomImageBackground: () => void
   setCustomImageBackground: (selectedBackground: string) => void
@@ -57,8 +56,6 @@ export interface Props {
   showBackgroundImage: boolean
   showTopSites: boolean
   customLinksEnabled: boolean
-  brandedWallpaperOptIn: boolean
-  allowBackgroundCustomization: boolean
   showRewards: boolean
   showBraveTalk: boolean
   braveRewardsSupported: boolean
@@ -100,11 +97,8 @@ const tabTranslationKeys: TabMap<string> = {
 const featureFlagSearchWidget = loadTimeData.getBoolean('featureFlagSearchWidget')
 export default function Settings(props: Props) {
   const allowedTabTypes = React.useMemo(() => tabTypes.filter(t =>
-    (props.allowBackgroundCustomization || t !== TabType.BackgroundImage) &&
-    (featureFlagSearchWidget || t !== TabType.Search)), [props.allowBackgroundCustomization])
-  const [activeTab, setActiveTab] = React.useState(props.allowBackgroundCustomization
-    ? TabType.BackgroundImage
-    : TabType.BraveStats)
+    featureFlagSearchWidget || t !== TabType.Search), [])
+  const [activeTab, setActiveTab] = React.useState(TabType.BackgroundImage)
   const changeTab = React.useCallback((tab: TabType) => {
     setActiveTab(tab)
   }, [])
@@ -152,18 +146,14 @@ export default function Settings(props: Props) {
         <React.Suspense fallback={(<div />)}>
           {activeTab === TabType.BackgroundImage && <BackgroundImageSettings
             newTabData={props.newTabData}
-            toggleBrandedWallpaperOptIn={props.toggleBrandedWallpaperOptIn}
             toggleShowBackgroundImage={props.toggleShowBackgroundImage}
             chooseNewCustomImageBackground={props.chooseNewCustomImageBackground}
             setCustomImageBackground={props.setCustomImageBackground}
             removeCustomImageBackground={props.removeCustomImageBackground}
             setBraveBackground={props.setBraveBackground}
             setColorBackground={props.setColorBackground}
-            brandedWallpaperOptIn={props.brandedWallpaperOptIn}
             showBackgroundImage={props.showBackgroundImage}
             featureCustomBackgroundEnabled={props.featureCustomBackgroundEnabled}
-            onEnableRewards={props.onEnableRewards}
-            braveRewardsSupported={props.braveRewardsSupported}
           />}
           {activeTab === TabType.BraveStats && <BraveStatsSettings />}
           {activeTab === TabType.TopSites && <TopSitesSettings

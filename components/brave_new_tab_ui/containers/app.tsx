@@ -43,7 +43,6 @@ function DefaultPage (props: Props) {
       saveShowBackgroundImage={PreferencesAPI.saveShowBackgroundImage}
       saveShowRewards={PreferencesAPI.saveShowRewards}
       saveShowBraveTalk={PreferencesAPI.saveShowBraveTalk}
-      saveBrandedWallpaperOptIn={PreferencesAPI.saveBrandedWallpaperOptIn}
       saveSetAllStackWidgets={PreferencesAPI.saveSetAllStackWidgets}
       chooseNewCustomBackgroundImage={() => getNTPBrowserAPI().pageHandler.chooseLocalCustomBackground() }
       setCustomImageBackground={background => getNTPBrowserAPI().pageHandler.useCustomImageBackground(background) }

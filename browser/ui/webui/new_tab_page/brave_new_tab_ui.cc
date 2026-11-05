@@ -27,7 +27,6 @@
 #include "chrome/common/pref_names.h"
 #include "components/grit/brave_components_resources.h"
 #include "components/strings/grit/components_strings.h"
-#include "content/public/browser/navigation_entry.h"
 #include "content/public/browser/url_data_source.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/browser/web_ui_data_source.h"
@@ -43,11 +42,6 @@ BraveNewTabUI::BraveNewTabUI(content::WebUI* web_ui, const std::string& name)
       page_factory_receiver_(this) {
   content::WebContents* web_contents = web_ui->GetWebContents();
   CHECK(web_contents);
-
-  content::NavigationEntry* navigation_entry =
-      web_contents->GetController().GetLastCommittedEntry();
-  const bool was_restored =
-      navigation_entry ? navigation_entry->IsRestored() : false;
 
   Profile* profile = Profile::FromWebUI(web_ui);
   const std::u16string new_tab_title =
@@ -82,7 +76,7 @@ BraveNewTabUI::BraveNewTabUI(content::WebUI* web_ui, const std::string& name)
       base::FeatureList::IsEnabled(features::kBraveNtpSearchWidget));
 
   web_ui->AddMessageHandler(base::WrapUnique(
-      BraveNewTabMessageHandler::Create(source, profile, was_restored)));
+      BraveNewTabMessageHandler::Create(profile)));
   web_ui->AddMessageHandler(
       base::WrapUnique(new TopSitesMessageHandler(profile)));
 

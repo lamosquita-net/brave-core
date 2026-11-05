@@ -10,7 +10,6 @@
 #include <utility>
 
 #include "base/feature_list.h"
-#include "brave/browser/ntp_background/view_counter_service_factory.h"
 #include "brave/browser/resources/settings/grit/brave_settings_resources.h"
 #include "brave/browser/resources/settings/grit/brave_settings_resources_map.h"
 #include "brave/browser/resources/settings/shortcuts_page/grit/commands_generated_map.h"
@@ -26,7 +25,6 @@
 #include "brave/components/commander/common/features.h"
 #include "brave/components/commands/common/commands.mojom.h"
 #include "brave/components/commands/common/features.h"
-#include "brave/components/ntp_background_images/browser/view_counter_service.h"
 #include "brave/components/playlist/common/buildflags/buildflags.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "brave/components/version_info/version_info.h"
@@ -55,8 +53,6 @@
 #if BUILDFLAG(ENABLE_PLAYLIST)
 #include "brave/components/playlist/common/features.h"
 #endif
-
-using ntp_background_images::ViewCounterServiceFactory;
 
 BraveSettingsUI::BraveSettingsUI(content::WebUI* web_ui,
                                  const std::string& host)
@@ -106,9 +102,6 @@ void BraveSettingsUI::AddResources(content::WebUIDataSource* html_source,
   html_source->AddString(
       "braveProductVersion", version_info::GetFlyWebVersion());
   NavigationBarDataProvider::Initialize(html_source, profile);
-  if (auto* service = ViewCounterServiceFactory::GetForProfile(profile)) {
-    service->InitializeWebUIDataSource(html_source);
-  }
   html_source->AddBoolean(
       "isIdleDetectionFeatureEnabled",
       base::FeatureList::IsEnabled(features::kIdleDetection));

@@ -162,6 +162,10 @@ void MigrateObsoleteLocalStatePrefs(PrefService* local_state) {
 
   brave_search_conversion::p3a::MigrateObsoleteLocalStatePrefs(local_state);
 
+  // FlyWeb: added 11/2026 (T5), NTP sponsored images and super referrals.
+  ntp_background_images::ViewCounterService::MigrateObsoleteLocalStatePrefs(
+      local_state);
+
   // END_MIGRATE_OBSOLETE_LOCAL_STATE_PREFS
 }
 

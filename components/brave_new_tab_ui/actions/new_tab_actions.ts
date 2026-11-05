@@ -27,11 +27,6 @@ export const privateTabDataUpdated = (data: PrivateTabData) =>
 export const newTabAdsDataUpdated = (data: NewTabAdsData) =>
   action(types.NEW_TAB_ADS_DATA_UPDATED, data)
 
-export const dismissBrandedWallpaperNotification = (isUserAction: boolean) =>
-  action(types.NEW_TAB_DISMISS_BRANDED_WALLPAPER_NOTIFICATION, {
-    isUserAction
-  })
-
 export const preferencesUpdated = (preferences: NewTab.Preferences) =>
   action(types.NEW_TAB_PREFERENCES_UPDATED, preferences)
 

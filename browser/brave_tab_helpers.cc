@@ -13,7 +13,6 @@
 #include "brave/browser/brave_browser_process.h"
 #include "brave/browser/brave_shields/brave_shields_web_contents_observer.h"
 #include "brave/browser/ephemeral_storage/ephemeral_storage_tab_helper.h"
-#include "brave/browser/ntp_background/ntp_tab_helper.h"
 #include "brave/browser/ui/bookmark/brave_bookmark_tab_helper.h"
 #include "brave/components/brave_perf_predictor/browser/perf_predictor_tab_helper.h"
 #include "brave/components/brave_wayback_machine/buildflags/buildflags.h"
@@ -120,7 +119,6 @@ void AttachTabHelpers(content::WebContents* web_contents) {
   }
 
   if (!web_contents->GetBrowserContext()->IsOffTheRecord()) {
-    ntp_background_images::NTPTabHelper::CreateForWebContents(web_contents);
 #if BUILDFLAG(ENABLE_REQUEST_OTR)
     if (base::FeatureList::IsEnabled(
             request_otr::features::kBraveRequestOTRTab)) {

@@ -10,12 +10,10 @@
 #include <utility>
 
 #include "base/memory/raw_ptr.h"
-#include "base/metrics/histogram_macros.h"
 #include "brave/components/brave_shields/content/browser/brave_shields_p3a.h"
 #include "brave/components/brave_shields/core/common/brave_shield_utils.h"
 #include "brave/components/constants/brave_constants.h"
 #include "brave/components/constants/pref_names.h"
-#include "brave/components/ntp_background_images/common/pref_names.h"
 #include "brave/components/search_engines/brave_prepopulated_engines.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/profiles/profile.h"
@@ -26,30 +24,10 @@
 #include "components/search_engines/search_engines_pref_names.h"
 
 using brave_shields::ControlType;
-using ntp_background_images::prefs::kNewTabPageShowBackgroundImage;
-using ntp_background_images::prefs::
-    kNewTabPageShowSponsoredImagesBackgroundImage;  // NOLINT
 
 namespace brave {
 
-void RecordSponsoredImagesEnabledP3A(Profile* profile) {
-  bool is_sponsored_image_enabled =
-      profile->GetPrefs()->GetBoolean(kNewTabPageShowBackgroundImage) &&
-      profile->GetPrefs()->GetBoolean(
-          kNewTabPageShowSponsoredImagesBackgroundImage);
-  UMA_HISTOGRAM_BOOLEAN("Brave.NTP.SponsoredImagesEnabled",
-                        is_sponsored_image_enabled);
-}
-
 void RecordInitialP3AValues(Profile* profile) {
-  // Preference is unregistered for some reason in profile_manager_unittest
-  // TODO(bsclifton): create a proper testing profile
-  if (!profile->GetPrefs()->FindPreference(kNewTabPageShowBackgroundImage) ||
-      !profile->GetPrefs()->FindPreference(
-          kNewTabPageShowSponsoredImagesBackgroundImage)) {
-    return;
-  }
-  RecordSponsoredImagesEnabledP3A(profile);
   if (profile->IsRegularProfile()) {
     brave_shields::MaybeRecordInitialShieldsSettings(
         profile->GetPrefs(),
