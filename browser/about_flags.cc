@@ -10,14 +10,11 @@
 #include "base/strings/string_util.h"
 #include "brave/browser/brave_browser_features.h"
 #include "brave/browser/brave_features_internal_names.h"
-#include "brave/browser/ethereum_remote_client/buildflags/buildflags.h"
-#include "brave/browser/ethereum_remote_client/features.h"
 #include "brave/browser/ui/brave_ui_features.h"
 #include "brave/browser/ui/tabs/features.h"
 #include "brave/components/brave_component_updater/browser/features.h"
 #include "brave/components/brave_shields/core/common/features.h"
 #include "brave/components/brave_sync/features.h"
-#include "brave/components/brave_wallet/common/features.h"
 #include "brave/components/de_amp/common/features.h"
 #include "brave/components/debounce/core/common/features.h"
 #include "brave/components/google_sign_in_permission/features.h"
@@ -101,68 +98,6 @@
           "chrome.exe in sandboxed processes.",                                \
           kOsWin,                                                              \
           FEATURE_VALUE_TYPE(sandbox::policy::features::kModuleFileNamePatch), \
-      }))
-
-#define BRAVE_NATIVE_WALLET_FEATURE_ENTRIES                                   \
-  EXPAND_FEATURE_ENTRIES(                                                     \
-      {                                                                       \
-          "native-brave-wallet",                                              \
-          "Enable Brave Wallet",                                              \
-          "Native cryptocurrency wallet support without the use of "          \
-          "extensions",                                                       \
-          kOsDesktop | kOsAndroid,                                            \
-          FEATURE_VALUE_TYPE(                                                 \
-              brave_wallet::features::kNativeBraveWalletFeature),             \
-      },                                                                      \
-      {                                                                       \
-          "brave-wallet-zcash",                                               \
-          "Enable BraveWallet ZCash support",                                 \
-          "Zcash support for native Brave Wallet",                            \
-          kOsDesktop | kOsAndroid,                                            \
-          FEATURE_VALUE_TYPE(                                                 \
-              brave_wallet::features::kBraveWalletZCashFeature),              \
-      },                                                                      \
-      {                                                                       \
-          "brave-wallet-bitcoin",                                             \
-          "Enable Brave Wallet Bitcoin support",                              \
-          "Bitcoin support for native Brave Wallet",                          \
-          kOsDesktop | kOsAndroid,                                            \
-          FEATURE_VALUE_TYPE(                                                 \
-              brave_wallet::features::kBraveWalletBitcoinFeature),            \
-      },                                                                      \
-      {                                                                       \
-          "brave-wallet-enable-ankr-balances",                                \
-          "Enable Ankr balances",                                             \
-          "Enable usage of Ankr Advanced API for fetching balances in Brave " \
-          "Wallet",                                                           \
-          kOsDesktop | kOsAndroid,                                            \
-          FEATURE_VALUE_TYPE(                                                 \
-              brave_wallet::features::kBraveWalletAnkrBalancesFeature),       \
-      },                                                                      \
-      {                                                                       \
-          "brave-wallet-enable-transaction-simulations",                      \
-          "Enable transaction simulations",                                   \
-          "Enable usage of Blowfish API for running transaction simulations " \
-          "in Brave Wallet",                                                  \
-          kOsDesktop | kOsAndroid,                                            \
-          FEATURE_VALUE_TYPE(brave_wallet::features::                         \
-                                 kBraveWalletTransactionSimulationsFeature),  \
-      })
-
-#define CRYPTO_WALLETS_FEATURE_ENTRIES                                      \
-  IF_BUILDFLAG(                                                             \
-      ETHEREUM_REMOTE_CLIENT_ENABLED,                                       \
-      EXPAND_FEATURE_ENTRIES({                                              \
-          "ethereum_remote-client_new-installs",                            \
-          "Enable Crypto Wallets option in settings",                       \
-          "Crypto Wallets extension is deprecated but with this option it " \
-          "can "                                                            \
-          "still be enabled in settings. If it was previously used, this "  \
-          "flag is "                                                        \
-          "ignored.",                                                       \
-          kOsDesktop,                                                       \
-          FEATURE_VALUE_TYPE(ethereum_remote_client::features::             \
-                                 kCryptoWalletsForNewInstallsFeature),      \
       }))
 
 #define PLAYLIST_FEATURE_ENTRIES                                       \
@@ -718,8 +653,6 @@
           kOsWin | kOsLinux | kOsMac,                                          \
           FEATURE_VALUE_TYPE(features::kBraveWebViewRoundedCorners),           \
       })                                                                       \
-  BRAVE_NATIVE_WALLET_FEATURE_ENTRIES                                          \
-  CRYPTO_WALLETS_FEATURE_ENTRIES                                               \
   SPEEDREADER_FEATURE_ENTRIES                                                  \
   REQUEST_OTR_FEATURE_ENTRIES                                                  \
   BRAVE_MODULE_FILENAME_PATCH                                                  \

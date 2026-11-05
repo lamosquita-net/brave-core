@@ -7,7 +7,6 @@
 
 #include "base/feature_list.h"
 #include "base/strings/utf_string_conversions.h"
-#include "brave/browser/ethereum_remote_client/buildflags/buildflags.h"
 #include "brave/browser/ui/tabs/features.h"
 #include "brave/components/constants/url_constants.h"
 #include "brave/components/constants/webui_url_constants.h"
@@ -16,10 +15,6 @@
 #include "components/prefs/pref_service.h"
 #include "content/public/browser/navigation_entry.h"
 #include "extensions/buildflags/buildflags.h"
-
-#if BUILDFLAG(ETHEREUM_REMOTE_CLIENT_ENABLED)
-#include "brave/browser/ethereum_remote_client/ethereum_remote_client_constants.h"
-#endif
 
 #if !BUILDFLAG(IS_ANDROID)
 #include "brave/browser/ui/tabs/brave_tab_prefs.h"
@@ -40,20 +35,6 @@ void BraveLocationBarModelDelegate::FormattedStringFromURL(
     base::ReplaceFirstSubstringAfterOffset(new_formatted_url, 0, u"chrome://",
                                            u"flyweb://");
   }
-
-#if BUILDFLAG(ETHEREUM_REMOTE_CLIENT_ENABLED)
-  if (url.SchemeIs(kChromeExtensionScheme) &&
-      url.host() == kEthereumRemoteClientExtensionId) {
-    base::ReplaceFirstSubstringAfterOffset(
-        new_formatted_url, 0, kEthereumRemoteClientBaseUrl, u"flyweb://wallet");
-    base::ReplaceFirstSubstringAfterOffset(new_formatted_url, 0,
-                                           kEthereumRemoteClientPhishingUrl,
-                                           u"flyweb://wallet");
-    base::ReplaceFirstSubstringAfterOffset(new_formatted_url, 0,
-                                           kEthereumRemoteClientEnsRedirectUrl,
-                                           u"flyweb://wallet");
-  }
-#endif
 }
 
 std::u16string

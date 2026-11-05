@@ -6,16 +6,13 @@
 #include "brave/browser/extensions/api/settings_private/brave_prefs_util.h"
 
 #include "base/feature_list.h"
-#include "brave/browser/ethereum_remote_client/buildflags/buildflags.h"
 #include "brave/browser/ui/tabs/brave_tab_prefs.h"
 #include "brave/components/brave_shields/content/browser/brave_shields_util.h"
 #include "brave/components/brave_shields/core/common/pref_names.h"
-#include "brave/components/brave_wallet/browser/pref_names.h"
 #include "brave/components/brave_wayback_machine/buildflags/buildflags.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/de_amp/common/pref_names.h"
 #include "brave/components/debounce/core/common/pref_names.h"
-#include "brave/components/decentralized_dns/core/pref_names.h"
 #include "brave/components/ntp_background_images/common/pref_names.h"
 #include "brave/components/omnibox/browser/brave_omnibox_prefs.h"
 #include "brave/components/playlist/common/buildflags/buildflags.h"
@@ -39,10 +36,6 @@
 
 #if BUILDFLAG(ENABLE_BRAVE_WAYBACK_MACHINE)
 #include "brave/components/brave_wayback_machine/pref_names.h"
-#endif
-
-#if BUILDFLAG(ETHEREUM_REMOTE_CLIENT_ENABLED)
-#include "brave/browser/ethereum_remote_client/pref_names.h"
 #endif
 
 #if defined(TOOLKIT_VIEWS)
@@ -208,26 +201,6 @@ const PrefsUtil::TypedPrefMap& BravePrefsUtil::GetAllowlistedKeys() {
   (*s_brave_allowlist)[kShowFullscreenReminder] =
       settings_api::PrefType::kBoolean;
 
-  // Brave Wallet pref
-  (*s_brave_allowlist)[kBraveWalletSelectedNetworks] =
-      settings_api::PrefType::kDictionary;
-  (*s_brave_allowlist)[kDefaultEthereumWallet] =
-      settings_api::PrefType::kNumber;
-  (*s_brave_allowlist)[kDefaultSolanaWallet] = settings_api::PrefType::kNumber;
-  (*s_brave_allowlist)[kDefaultBaseCurrency] = settings_api::PrefType::kString;
-  (*s_brave_allowlist)[kDefaultBaseCryptocurrency] =
-      settings_api::PrefType::kString;
-  (*s_brave_allowlist)[kShowWalletIconOnToolbar] =
-      settings_api::PrefType::kBoolean;
-  (*s_brave_allowlist)[kBraveWalletAutoLockMinutes] =
-      settings_api::PrefType::kNumber;
-  (*s_brave_allowlist)[kBraveWalletTransactionSimulationOptInStatus] =
-      settings_api::PrefType::kNumber;
-  (*s_brave_allowlist)[kBraveWalletNftDiscoveryEnabled] =
-      settings_api::PrefType::kBoolean;
-  (*s_brave_allowlist)[kBraveWalletPrivateWindowsEnabled] =
-      settings_api::PrefType::kBoolean;
-
 // Leo Assistant pref
 
 #if !BUILDFLAG(USE_GCM_FROM_PLATFORM)
@@ -248,15 +221,6 @@ const PrefsUtil::TypedPrefMap& BravePrefsUtil::GetAllowlistedKeys() {
       settings_api::PrefType::kString;
   // Request OTR feature
   (*s_brave_allowlist)[request_otr::kRequestOTRActionOption] =
-      settings_api::PrefType::kNumber;
-
-  (*s_brave_allowlist)[decentralized_dns::kUnstoppableDomainsResolveMethod] =
-      settings_api::PrefType::kNumber;
-  (*s_brave_allowlist)[decentralized_dns::kENSResolveMethod] =
-      settings_api::PrefType::kNumber;
-  (*s_brave_allowlist)[decentralized_dns::kEnsOffchainResolveMethod] =
-      settings_api::PrefType::kNumber;
-  (*s_brave_allowlist)[decentralized_dns::kSnsResolveMethod] =
       settings_api::PrefType::kNumber;
 
   // Media router pref

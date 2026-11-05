@@ -3,7 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at https://mozilla.org/MPL/2.0/.
 
-import("//brave/browser/ethereum_remote_client/buildflags/buildflags.gni")
 import("//brave/components/brave_wayback_machine/buildflags/buildflags.gni")
 import("//brave/components/brave_webtorrent/browser/buildflags/buildflags.gni")
 import("//brave/components/speedreader/common/buildflags/buildflags.gni")
@@ -58,12 +57,9 @@ source_set("extensions") {
     "//brave/components/brave_component_updater/browser",
     "//brave/components/brave_shields/content/browser",
     "//brave/components/brave_shields/core/common",
-    "//brave/components/brave_wallet/browser:utils",
-    "//brave/components/brave_wallet/common",
     "//brave/components/brave_wayback_machine/buildflags",
     "//brave/components/constants",
     "//brave/components/de_amp/common",
-    "//brave/components/decentralized_dns/content",
     "//brave/components/ntp_widget_utils/browser",
     "//brave/components/sidebar/browser",
     "//brave/components/tor/buildflags",
@@ -87,26 +83,6 @@ source_set("extensions") {
 
   if (enable_speedreader) {
     deps += [ "//brave/components/speedreader" ]
-  }
-
-  # It seems like this brave_wallet_api should be renamed to ethereum_remote_client_api.
-  # However this is not possible right now because the ethereum-remote-client extension
-  # uses chrome.braveWallet, so the API is intentionally not being renamed now.
-  if (ethereum_remote_client_enabled) {
-    sources += [
-      "api/brave_wallet_api.cc",
-      "api/brave_wallet_api.h",
-      "ethereum_remote_client_util.cc",
-      "ethereum_remote_client_util.h",
-    ]
-
-    deps += [
-      "//brave/browser/ethereum_remote_client",
-      "//brave/components/brave_wallet/browser",
-      "//brave/components/brave_wallet/common:buildflags",
-      "//components/infobars/content",
-      "//components/prefs",
-    ]
   }
 
   if (enable_brave_webtorrent) {
