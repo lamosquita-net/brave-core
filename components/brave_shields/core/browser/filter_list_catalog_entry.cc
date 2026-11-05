@@ -10,7 +10,6 @@
 #include <string>
 #include <vector>
 
-#include "base/containers/contains.h"
 #include "base/json/json_reader.h"
 #include "base/json/json_value_converter.h"
 #include "base/logging.h"
@@ -201,7 +200,7 @@ FindAdBlockFilterListsByLocale(
   std::copy_if(region_lists.begin(), region_lists.end(),
                std::back_inserter(output),
                [&adjusted_locale](const FilterListCatalogEntry& entry) {
-                 return base::Contains(entry.langs, adjusted_locale);
+                 return std::ranges::contains(entry.langs, adjusted_locale);
                });
 
   return output;

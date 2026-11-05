@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <optional>
 
-#include "base/containers/contains.h"
 #include "base/no_destructor.h"
 #include "base/notreached.h"
 #include "base/strings/string_number_conversions.h"
@@ -89,7 +88,7 @@ std::string GetShieldsContentTypeName(const ContentSettingsType& content_type) {
 }
 
 bool IsShieldsContentSettingsType(const ContentSettingsType& content_type) {
-  return base::Contains(GetShieldsContentSettingsTypes(), content_type);
+  return std::ranges::contains(GetShieldsContentSettingsTypes(), content_type);
 }
 
 bool IsShieldsContentSettingsTypeName(const std::string& content_type_name) {

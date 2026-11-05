@@ -10,7 +10,6 @@
 #include <utility>
 #include <vector>
 
-#include "base/containers/contains.h"
 #include "base/files/file_path.h"
 #include "base/strings/string_split.h"
 #include "base/task/thread_pool.h"
@@ -85,7 +84,7 @@ bool LocalhostPermissionComponent::CanAskForLocalhostPermission(
     const GURL& url) {
   // Allow asking for permission only if the URL
   // matches an eTLD+1 on the allowlist.
-  return base::Contains(allowed_domains_, GetDomain(url));
+  return allowed_domains_.contains(GetDomain(url));
 }
 
 // implementation of LocalDataFilesObserver

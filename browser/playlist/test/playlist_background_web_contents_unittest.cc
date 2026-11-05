@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#include "base/containers/contains.h"
 #include "base/functional/callback_helpers.h"
 #include "base/run_loop.h"
 #include "base/test/mock_callback.h"
@@ -86,8 +85,8 @@ TEST_F(PlaylistBackgroundWebContentsTest, UserAgentOverride) {
   const auto ua_string_override = background_web_contentses.web_contents()
                                       .GetUserAgentOverride()
                                       .ua_string_override;
-  EXPECT_TRUE(base::Contains(ua_string_override, "iPhone"));
-  EXPECT_FALSE(base::Contains(ua_string_override, "Chrome"));
+  EXPECT_TRUE(ua_string_override.contains("iPhone"));
+  EXPECT_FALSE(ua_string_override.contains("Chrome"));
 }
 
 }  // namespace playlist

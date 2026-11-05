@@ -5,7 +5,8 @@
 
 #include "brave/app/command_utils.h"
 
-#include "base/containers/contains.h"
+#include <algorithm>
+
 #include "base/test/scoped_feature_list.h"
 #include "brave/components/commands/common/features.h"
 #include "build/buildflag.h"
@@ -96,7 +97,8 @@ IN_PROC_BROWSER_TEST_F(CommandUtilsBrowserTest,
   ASSERT_TRUE(ui_test_utils::NavigateToURL(browser(), GURL("chrome://newtab")));
   const auto& commands = commands::GetCommands();
   for (const auto& command : commands) {
-    if (base::Contains(kKnownGoodCommandsThatSometimesBreakTest, command)) {
+    if (std::ranges::contains(kKnownGoodCommandsThatSometimesBreakTest,
+                              command)) {
       continue;
     }
 

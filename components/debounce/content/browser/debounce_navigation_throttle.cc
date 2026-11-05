@@ -5,12 +5,12 @@
 
 #include "brave/components/debounce/content/browser/debounce_navigation_throttle.h"
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "base/containers/contains.h"
 #include "base/functional/bind.h"
 #include "base/memory/weak_ptr.h"
 #include "base/task/sequenced_task_runner.h"
@@ -52,7 +52,7 @@ class DebounceTabHelper
   void AddToRedirectChain(const GURL& url) { redirects_.push_back(url.host()); }
   void ClearRedirectChain() { redirects_.clear(); }
   bool IsInRedirectChain(const GURL& url) {
-    return base::Contains(redirects_, url.host());
+    return std::ranges::contains(redirects_, url.host());
   }
 
  private:

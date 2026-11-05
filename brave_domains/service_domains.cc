@@ -8,7 +8,6 @@
 #include <string>
 
 #include "base/command_line.h"
-#include "base/containers/contains.h"
 #include "base/containers/fixed_flat_set.h"
 #include "base/containers/flat_map.h"
 #include "base/logging.h"
@@ -41,7 +40,7 @@ bool IsValidSwitchValue(std::string value) {
       base::MakeFixedFlatSet<std::string_view>(
           {kBraveServicesSwitchValueDev, kBraveServicesSwitchValueStaging,
            kBraveServicesSwitchValueProduction});
-  return base::Contains(kAllowedSwitchValues, value);
+  return kAllowedSwitchValues.contains(value);
 }
 
 void MaybeWarnSwitchValue(std::string key, std::string value) {

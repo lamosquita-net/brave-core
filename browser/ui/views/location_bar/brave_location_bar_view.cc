@@ -5,10 +5,10 @@
 
 #include "brave/browser/ui/views/location_bar/brave_location_bar_view.h"
 
+#include <algorithm>
 #include <optional>
 #include <utility>
 
-#include "base/containers/contains.h"
 #include "base/feature_list.h"
 #include "brave/app/vector_icons/vector_icons.h"
 #include "brave/browser/themes/brave_theme_service.h"
@@ -228,8 +228,8 @@ void BraveLocationBarView::ChildVisibilityChanged(views::View* child) {
   // the size changes when an icon is shown or hidden. The LocationBarView
   // does not listen to ChildVisibilityChanged events so we must make we Layout
   // and re-caculate trailing decorator positions when a child changes.
-  if (base::Contains(GetLeftMostTrailingViews(), child) ||
-      base::Contains(GetRightMostTrailingViews(), child)) {
+  if (std::ranges::contains(GetLeftMostTrailingViews(), child) ||
+      std::ranges::contains(GetRightMostTrailingViews(), child)) {
     DeprecatedLayoutImmediately();
     SchedulePaint();
   }

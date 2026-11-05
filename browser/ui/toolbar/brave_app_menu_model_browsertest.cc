@@ -9,7 +9,6 @@
 #include <optional>
 #include <vector>
 
-#include "base/containers/contains.h"
 #include "base/functional/callback_helpers.h"
 #include "base/test/scoped_feature_list.h"
 #include "brave/app/brave_command_ids.h"
@@ -273,7 +272,7 @@ void CheckMenuIcons(ui::MenuModel* menu,
     auto command_id = menu->GetCommandIdAt(i);
     // Skip separators, headers, & commands which deliberately have no icons
     if (command_id == -1 || command_id == -2 ||
-        base::Contains(kIconlessCommands, command_id)) {
+        std::ranges::contains(kIconlessCommands, command_id)) {
       continue;
     }
 

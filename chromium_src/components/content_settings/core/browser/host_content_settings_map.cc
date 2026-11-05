@@ -5,7 +5,8 @@
 
 #include "components/content_settings/core/browser/host_content_settings_map.h"
 
-#include "base/containers/contains.h"
+#include <algorithm>
+
 #include "brave/components/content_settings/core/browser/remote_list_provider.h"
 #include "build/build_config.h"
 #include "components/content_settings/core/browser/content_settings_utils.h"
@@ -38,7 +39,7 @@ bool IsMorePermissive_BraveImpl(ContentSettingsType content_type,
 
   const bool is_more_permissive = IsMorePermissive(setting, initial_setting);
   if (is_more_permissive ||
-      base::Contains(kOffTheRecordAwareTypes, content_type) ||
+      std::ranges::contains(kOffTheRecordAwareTypes, content_type) ||
       base::FeatureList::IsEnabled(kAllowIncognitoPermissionInheritance)) {
     return is_more_permissive;
   }

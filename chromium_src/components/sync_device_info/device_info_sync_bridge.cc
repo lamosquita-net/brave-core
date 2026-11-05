@@ -35,7 +35,6 @@
 #undef RefreshLocalDeviceInfoIfNeeded
 #undef BRAVE_MAKE_LOCAL_DEVICE_SPECIFICS
 
-#include "base/containers/contains.h"
 #include "base/task/sequenced_task_runner.h"
 
 namespace syncer {
@@ -130,7 +129,7 @@ void DeviceInfoSyncBridge::RefreshLocalDeviceInfoIfNeeded() {
     return;
   }
 
-  if (!base::Contains(all_data_, current_info->guid())) {
+  if (!all_data_.contains(current_info->guid())) {
     // After initiating leave the sync chain `DeleteSpecifics` cleans
     // `all_data_` map.
     // It is possible that user close sync settings page or change the data type

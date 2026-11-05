@@ -291,7 +291,7 @@ std::vector<int> BraveTabContextMenuContents::GetTabIndicesForSplitViewCommand()
     const {
   auto* model = static_cast<BraveTabStripModel*>(controller_->model());
   auto selected_indices = model->GetTabIndicesForCommandAt(tab_index_);
-  if (base::Contains(selected_indices, tab_index_)) {
+  if (std::ranges::contains(selected_indices, tab_index_)) {
     return selected_indices;
   }
 

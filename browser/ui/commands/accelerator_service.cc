@@ -11,7 +11,6 @@
 #include <utility>
 #include <vector>
 
-#include "base/containers/contains.h"
 #include "base/containers/flat_map.h"
 #include "base/containers/flat_set.h"
 #include "base/ranges/algorithm.h"
@@ -53,7 +52,7 @@ mojom::CommandPtr ToMojoCommand(
     auto a = mojom::Accelerator::New();
     a->codes = commands::ToCodesString(accelerator);
     a->keys = commands::ToKeysString(accelerator);
-    a->unmodifiable = base::Contains(unmodifiable, accelerator);
+    a->unmodifiable = unmodifiable.contains(accelerator);
     command->accelerators.push_back(std::move(a));
   }
   return command;
@@ -116,17 +115,17 @@ void AcceleratorService::UpdateDefaultAccelerators() {
     base::ranges::copy_if(
         new_accelerators, std::back_inserter(added[command_id]),
         [&old_accelerators, &system_managed](const auto& accelerator) {
-          return !base::Contains(old_accelerators, accelerator) ||
+          return !std::ranges::contains(old_accelerators, accelerator) ||
                  // If the accelerator is marked as a system command, be sure to
                  // reset it.
-                 base::Contains(system_managed, accelerator);
+                 system_managed.contains(accelerator);
         });
 
     // Note all the removed accelerators.
     base::ranges::copy_if(
         old_accelerators, std::back_inserter(removed[command_id]),
         [&new_accelerators](const auto& accelerator) {
-          return !base::Contains(new_accelerators, accelerator);
+          return !std::ranges::contains(new_accelerators, accelerator);
         });
   }
 
@@ -134,7 +133,7 @@ void AcceleratorService::UpdateDefaultAccelerators() {
   // of default accelerators:
   for (const auto& [command_id, accelerators] : old_defaults) {
     // This is handled above.
-    if (base::Contains(default_accelerators_, command_id)) {
+    if (default_accelerators_.contains(command_id)) {
       continue;
     }
 
@@ -282,18 +281,17 @@ std::vector<int> AcceleratorService::AssignAccelerator(
 
   // Find any other commands with this accelerator and remove it from them.
   for (auto& [other_command_id, accelerators] : accelerators_) {
-    if (std::erase_if(
-            accelerators, [&accelerator, &system_managed, &default_accelerators,
-                           other_command_id](const auto& other) {
-              bool is_default_accelerator =
-                  base::Contains(default_accelerators[other_command_id], other);
-              // Note: We don't erase system managed default accelerators, as
-              // the system can register the same accelerator for multiple
-              // commands, and we don't want resetting one to reset the other.
-              return !(base::Contains(system_managed, other) &&
-                       is_default_accelerator) &&
-                     ToCodesString(accelerator) == ToCodesString(other);
-            })) {
+    if (std::erase_if(accelerators, [&accelerator, &system_managed,
+                                     &default_accelerators,
+                                     other_command_id](const auto& other) {
+          bool is_default_accelerator = std::ranges::contains(
+              default_accelerators[other_command_id], other);
+          // Note: We don't erase system managed default accelerators, as
+          // the system can register the same accelerator for multiple
+          // commands, and we don't want resetting one to reset the other.
+          return !(system_managed.contains(other) && is_default_accelerator) &&
+                 ToCodesString(accelerator) == ToCodesString(other);
+        })) {
       pref_manager_.RemoveAccelerator(other_command_id, accelerator);
       modified_commands.push_back(other_command_id);
     }

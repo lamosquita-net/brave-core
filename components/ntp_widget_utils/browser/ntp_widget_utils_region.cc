@@ -3,10 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
-#include "base/containers/contains.h"
 #include "brave/components/l10n/common/locale_util.h"
 #include "brave/components/ntp_widget_utils/browser/ntp_widget_utils_region.h"
 #include "components/country_codes/country_codes.h"
@@ -37,7 +37,7 @@ std::string FindLocale(const std::vector<std::string>& list,
                        const std::string& default_locale) {
   const std::string language_code =
       brave_l10n::GetDefaultISOLanguageCodeString();
-  if (!base::Contains(list, language_code)) {
+  if (!std::ranges::contains(list, language_code)) {
     return default_locale;
   }
 

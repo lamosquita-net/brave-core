@@ -6,7 +6,6 @@
 #include "brave/browser/ui/tabs/split_view_browser_data.h"
 
 #include "base/check_is_test.h"
-#include "base/containers/contains.h"
 #include "base/functional/callback_helpers.h"
 #include "base/notreached.h"
 #include "brave/browser/ui/tabs/features.h"
@@ -113,7 +112,7 @@ void SplitViewBrowserData::Transfer(SplitViewBrowserData* other,
 }
 
 bool SplitViewBrowserData::IsTabTiled(const tabs::TabHandle& tab) const {
-  return base::Contains(tile_index_for_tab_, tab);
+  return tile_index_for_tab_.contains(tab);
 }
 
 void SplitViewBrowserData::SwapTabsInTile(const Tile& tile) {

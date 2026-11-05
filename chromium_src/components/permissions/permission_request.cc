@@ -3,10 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+#include <algorithm>
 #include <optional>
 #include <vector>
 
-#include "base/containers/contains.h"
 #include "build/build_config.h"
 #include "components/grit/brave_components_strings.h"
 #include "components/permissions/permission_request.h"
@@ -166,7 +166,7 @@ bool PermissionRequest::SupportsLifetime() const {
     RequestType::kWidevine
 #endif  // BUILDFLAG(ENABLE_WIDEVINE)
   };
-  return !base::Contains(kExcludedTypes, request_type());
+  return !std::ranges::contains(kExcludedTypes, request_type());
 }
 
 void PermissionRequest::SetLifetime(std::optional<base::TimeDelta> lifetime) {

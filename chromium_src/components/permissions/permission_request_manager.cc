@@ -3,9 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <algorithm>
 #include <string>
-
-#include "base/containers/contains.h"
 
 #define BRAVE_PERMISSION_REQUEST_MANAGER_GET_REQUESTING_ORIGIN \
   if (!ShouldBeGrouppedInRequests(request))
@@ -49,9 +48,9 @@ void PermissionRequestManager::AcceptDenyCancel(
           cancelled_requests.size()) == requests_.size());
 
   for (const auto& request : requests_) {
-    if (base::Contains(accepted_requests, request)) {
+    if (std::ranges::contains(accepted_requests, request)) {
       PermissionGrantedIncludingDuplicates(request, /*is_one_time=*/false);
-    } else if (base::Contains(denied_requests, request)) {
+    } else if (std::ranges::contains(denied_requests, request)) {
       PermissionDeniedIncludingDuplicates(request);
     } else {
       CancelledIncludingDuplicates(request);

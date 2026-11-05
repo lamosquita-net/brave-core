@@ -31,7 +31,7 @@ ItemImageCache& GetInMemoryCache(playlist::PlaylistService* service) {
   // We don't want to mix up images from different services, as the
   // PlaylistService is bound to a Profile.
   static base::NoDestructor<base::flat_map<uintptr_t, ItemImageCache>> s_cache;
-  if (!base::Contains(*s_cache, key)) {
+  if (!s_cache->contains(key)) {
     s_cache->insert({key, ItemImageCache(/*max size=*/30)});
   }
   return s_cache->at(key);

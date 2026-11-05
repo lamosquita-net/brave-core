@@ -5,6 +5,7 @@
 
 #include "brave/browser/ui/tabs/shared_pinned_tab_service.h"
 
+#include <algorithm>
 #include <utility>
 
 #include "base/functional/bind.h"
@@ -256,7 +257,7 @@ void SharedPinnedTabService::CacheWebContentsIfNeeded(
 
   // Caches shared contents from closing browser so that we can extend the
   // lifetime of the contents.
-  if (!base::Contains(closing_browsers_, browser)) {
+  if (!closing_browsers_.contains(browser)) {
     return;
   }
 
@@ -335,16 +336,16 @@ void SharedPinnedTabService::OnBrowserSetLastActive(Browser* browser) {
 
   // FlyWeb: a restored window that joins now has just been synchronized.
   bool restored_browser_synchronized = false;
-  if (base::Contains(restored_browsers_, browser)) {
+  if (restored_browsers_.contains(browser)) {
     SynchronizeRestoredBrowser(browser);
     restored_browser_synchronized = true;
   }
 
-  if (!base::Contains(browsers_, browser)) {
+  if (!browsers_.contains(browser)) {
     // Browser could be different profile or not a type we're
     // looking for. Let |OnBrowserAdded| decide which to look for.
     DCHECK(!browser->is_type_normal() || profile_ != browser->profile() ||
-           base::Contains(closing_browsers_, browser))
+           closing_browsers_.contains(browser))
         << "We expect a Browser to be created before set active";
     return;
   }
@@ -365,7 +366,7 @@ void SharedPinnedTabService::OnBrowserSetLastActive(Browser* browser) {
 
 void SharedPinnedTabService::OnBrowserClosing(Browser* browser) {
   DVLOG(2) << __FUNCTION__;
-  if (!base::Contains(browsers_, browser)) {
+  if (!browsers_.contains(browser)) {
     // This could be called multiple times for the same |browser|
     return;
   }
@@ -611,8 +612,8 @@ void SharedPinnedTabService::OnTabRemoved(
   DVLOG(2) << __FUNCTION__;
   DCHECK(remove);
 
-  if (base::Contains(closing_browsers_, tab_strip_model,
-                     &Browser::tab_strip_model)) {
+  if (std::ranges::contains(closing_browsers_, tab_strip_model,
+                            &Browser::tab_strip_model)) {
     // We don't close pinned tabs if this browser is being closed.
     return;
   }
@@ -660,8 +661,8 @@ void SharedPinnedTabService::OnActiveTabChanged(
     return;
   }
 
-  if (base::Contains(closing_browsers_, tab_strip_model,
-                     &Browser::tab_strip_model)) {
+  if (std::ranges::contains(closing_browsers_, tab_strip_model,
+                            &Browser::tab_strip_model)) {
     return;
   }
 
@@ -1001,8 +1002,8 @@ void SharedPinnedTabService::OnSharedPinnedTabDisabled() {
 
 bool SharedPinnedTabService::IsRestoredBrowserModel(
     TabStripModel* tab_strip_model) const {
-  return base::Contains(restored_browsers_, tab_strip_model,
-                        &Browser::tab_strip_model);
+  return std::ranges::contains(restored_browsers_, tab_strip_model,
+                               &Browser::tab_strip_model);
 }
 
 void SharedPinnedTabService::OnSessionRestored(Profile* profile,
@@ -1014,7 +1015,7 @@ void SharedPinnedTabService::OnSessionRestored(Profile* profile,
   // In window order: the first restored window sets the order of the shared
   // pinned tabs it brings.
   for (Browser* browser : *BrowserList::GetInstance()) {
-    if (base::Contains(restored_browsers_, browser)) {
+    if (restored_browsers_.contains(browser)) {
       SynchronizeRestoredBrowser(browser);
     }
   }
@@ -1033,7 +1034,7 @@ void SharedPinnedTabService::OnSessionRestored(Profile* profile,
 // up duplicated. Here the restored window first gets dummies for the pinned
 // tabs shared so far, and its own pinned tabs are then shared after them.
 void SharedPinnedTabService::SynchronizeRestoredBrowser(Browser* browser) {
-  DCHECK(base::Contains(restored_browsers_, browser));
+  DCHECK(restored_browsers_.contains(browser));
   restored_browsers_.erase(browser);
   browsers_.insert(browser);
 
