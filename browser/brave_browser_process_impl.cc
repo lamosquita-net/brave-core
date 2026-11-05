@@ -15,7 +15,6 @@
 #include "brave/browser/brave_ads/analytics/p3a/brave_stats_helper.h"
 #include "brave/browser/brave_referrals/referrals_service_delegate.h"
 #include "brave/browser/brave_shields/ad_block_subscription_download_manager_getter.h"
-#include "brave/browser/brave_stats/brave_stats_updater.h"
 #include "brave/browser/brave_wallet/wallet_data_files_installer_delegate_impl.h"
 #include "brave/browser/component_updater/brave_component_updater_configurator.h"
 #include "brave/browser/misc_metrics/process_misc_metrics.h"
@@ -128,9 +127,6 @@ BraveBrowserProcessImpl::BraveBrowserProcessImpl(StartupData* startup_data)
   // initialize ads stats helper
   ads_brave_stats_helper();
 
-  // early initialize brave stats
-  brave_stats_updater();
-
   // early initialize misc metrics
   process_misc_metrics();
 }
@@ -163,7 +159,6 @@ void BraveBrowserProcessImpl::Init() {
 
 #if !BUILDFLAG(IS_ANDROID)
 void BraveBrowserProcessImpl::StartTearDown() {
-  brave_stats_updater_.reset();
   brave_referrals_service_.reset();
   BrowserProcessImpl::StartTearDown();
 }
@@ -420,14 +415,6 @@ BraveBrowserProcessImpl::brave_referrals_service() {
             brave_referrals_service_.get()));
   }
   return brave_referrals_service_.get();
-}
-
-brave_stats::BraveStatsUpdater* BraveBrowserProcessImpl::brave_stats_updater() {
-  if (!brave_stats_updater_) {
-    brave_stats_updater_ = std::make_unique<brave_stats::BraveStatsUpdater>(
-        local_state(), g_browser_process->profile_manager());
-  }
-  return brave_stats_updater_.get();
 }
 
 brave_ads::BraveStatsHelper* BraveBrowserProcessImpl::ads_brave_stats_helper() {

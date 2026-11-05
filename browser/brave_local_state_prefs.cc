@@ -9,7 +9,6 @@
 
 #include "base/values.h"
 #include "brave/browser/brave_ads/analytics/p3a/brave_stats_helper.h"
-#include "brave/browser/brave_stats/brave_stats_updater.h"
 #include "brave/browser/metrics/buildflags/buildflags.h"
 #include "brave/browser/metrics/metrics_reporting_util.h"
 #include "brave/browser/misc_metrics/process_misc_metrics.h"
@@ -74,13 +73,11 @@ void RegisterLocalStatePrefsForMigration(PrefRegistrySimple* registry) {
   misc_metrics::UptimeMonitor::RegisterPrefsForMigration(registry);
   brave_wallet::RegisterLocalStatePrefsForMigration(registry);
   brave_search_conversion::p3a::RegisterLocalStatePrefsForMigration(registry);
-  brave_stats::RegisterLocalStatePrefsForMigration(registry);
   p3a::StarRandomnessMeta::RegisterPrefsForMigration(registry);
 }
 
 void RegisterLocalStatePrefs(PrefRegistrySimple* registry) {
   brave_shields::RegisterPrefsForAdBlockService(registry);
-  brave_stats::RegisterLocalStatePrefs(registry);
   ntp_background_images::NTPBackgroundImagesService::RegisterLocalStatePrefs(
       registry);
   ntp_background_images::ViewCounterService::RegisterLocalStatePrefs(registry);

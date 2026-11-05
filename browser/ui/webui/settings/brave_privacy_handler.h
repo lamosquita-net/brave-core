@@ -37,10 +37,6 @@ class BravePrivacyHandler : public settings::SettingsPageUIHandler {
   void GetLocalStateBooleanEnabled(const std::string& path,
                                    const base::Value::List& args);
 
-  void SetStatsUsagePingEnabled(const base::Value::List& args);
-  void GetStatsUsagePingEnabled(const base::Value::List& args);
-  void OnStatsUsagePingEnabledChanged();
-
   void SetP3AEnabled(const base::Value::List& args);
   void GetP3AEnabled(const base::Value::List& args);
   void OnP3AEnabledChanged();

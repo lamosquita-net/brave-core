@@ -41,10 +41,6 @@ namespace localhost_permission {
 class LocalhostPermissionComponent;
 }  // namespace localhost_permission
 
-namespace brave_stats {
-class BraveStatsUpdater;
-}  // namespace brave_stats
-
 namespace greaselion {
 #if BUILDFLAG(ENABLE_GREASELION)
 class GreaselionDownloadService;
@@ -128,7 +124,6 @@ class BraveBrowserProcessImpl : public BraveBrowserProcess,
 #endif
   p3a::P3AService* p3a_service() override;
   brave::BraveReferralsService* brave_referrals_service() override;
-  brave_stats::BraveStatsUpdater* brave_stats_updater() override;
   brave_ads::BraveStatsHelper* ads_brave_stats_helper() override;
   ntp_background_images::NTPBackgroundImagesService*
   ntp_background_images_service() override;
@@ -189,7 +184,6 @@ class BraveBrowserProcessImpl : public BraveBrowserProcess,
 #endif
   std::unique_ptr<brave::URLSanitizerComponentInstaller>
       url_sanitizer_component_installer_;
-  std::unique_ptr<brave_stats::BraveStatsUpdater> brave_stats_updater_;
   std::unique_ptr<brave::BraveReferralsService> brave_referrals_service_;
 #if BUILDFLAG(ENABLE_TOR)
   std::unique_ptr<tor::BraveTorClientUpdater> tor_client_updater_;

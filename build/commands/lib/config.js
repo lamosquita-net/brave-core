@@ -417,8 +417,6 @@ Config.prototype.buildArgs = function () {
     rewards_grant_dev_endpoint: this.rewardsGrantDevEndpoint,
     rewards_grant_staging_endpoint: this.rewardsGrantStagingEndpoint,
     rewards_grant_prod_endpoint: this.rewardsGrantProdEndpoint,
-    brave_stats_api_key: this.braveStatsApiKey,
-    brave_stats_updater_url: this.braveStatsUpdaterUrl,
     enable_hangout_services_extension: this.enable_hangout_services_extension,
     enable_cdm_host_verification: this.enableCDMHostVerification(),
     enable_pseudolocales: this.enable_pseudolocales,

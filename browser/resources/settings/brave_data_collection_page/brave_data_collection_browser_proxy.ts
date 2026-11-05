@@ -9,8 +9,6 @@ import {sendWithPromise} from 'chrome://resources/js/cr.js'
 export interface BraveDataCollectionBrowserProxy {
   getP3AEnabled: () => Promise<boolean>
   setP3AEnabled: (value: boolean) => void
-  getStatsUsagePingEnabled: () => Promise<boolean>
-  setStatsUsagePingEnabled: (value: boolean) => void
   setMetricsReportingEnabled: (enabled: boolean) => void
   getMetricsReporting: () => Promise<MetricsReporting>
 }
@@ -28,14 +26,6 @@ implements BraveDataCollectionBrowserProxy
 
   setP3AEnabled(value: boolean): void {
     chrome.send('setP3AEnabled', [value])
-  }
-
-  getStatsUsagePingEnabled(): Promise<boolean> {
-    return sendWithPromise('getStatsUsagePingEnabled')
-  }
-
-  setStatsUsagePingEnabled(value: boolean): void {
-    chrome.send('setStatsUsagePingEnabled', [value])
   }
 
   setMetricsReportingEnabled(enabled: boolean) {

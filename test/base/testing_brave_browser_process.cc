@@ -128,11 +128,6 @@ TestingBraveBrowserProcess::brave_referrals_service() {
   return nullptr;
 }
 
-brave_stats::BraveStatsUpdater*
-TestingBraveBrowserProcess::brave_stats_updater() {
-  return nullptr;
-}
-
 brave_ads::BraveStatsHelper*
 TestingBraveBrowserProcess::ads_brave_stats_helper() {
   return nullptr;
