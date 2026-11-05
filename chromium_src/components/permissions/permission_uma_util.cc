@@ -7,26 +7,8 @@
 
 #include "components/permissions/permissions_client.h"
 
-// Since we don't do UMA just reuse an existing UMA type instead of adding one.
-#define BRAVE_GET_UMA_VALUE_FOR_REQUEST_TYPE         \
-  case RequestType::kWidevine:                       \
-  case RequestType::kBraveEthereum:                  \
-  case RequestType::kBraveSolana:                    \
-  case RequestType::kBraveGoogleSignInPermission:    \
-  case RequestType::kBraveLocalhostAccessPermission: \
-    return RequestTypeForUma::PERMISSION_VR;
-
-// These requests may be batched together, so we must handle them explicitly as
-// GetUmaValueForRequests expects only a few specific request types to be
-// batched
-#define BRAVE_GET_UMA_VALUE_FOR_REQUESTS                              \
-  if (request_type >= RequestType::kWidevine &&                       \
-      request_type <= RequestType::kBraveLocalhostAccessPermission) { \
-    return GetUmaValueForRequestType(request_type);                   \
-  }
-
 // We do not record permissions UKM and this can save us from patching
-// in RecordPermissionAction for unhandling switch cases for Brave's content
+// in RecordPermissionAction for unhandled switch cases for Brave's content
 // settings type.
 #define GetUkmSourceId             \
   GetSettingsMap(browser_context); \
@@ -34,14 +16,16 @@
     return;                        \
   PermissionsClient::Get()->GetUkmSourceId
 
-#define kTpcdGrant                  \
+#define kOsJavascriptOptimizer      \
   kRemoteList:                      \
   source_suffix = "FromRemoteList"; \
   break;                            \
-  case SettingSource::kTpcdGrant
+  case SettingSource::kOsJavascriptOptimizer
+
+// Don't let GetPermissionStringForUma hit NOTREACHED for missing Brave types.
+#define BRAVE_GET_PERMISSION_STRING_FOR_UMA return "";
 
 #include "src/components/permissions/permission_uma_util.cc"
-#undef BRAVE_GET_UMA_VALUE_FOR_REQUESTS
-#undef BRAVE_GET_UMA_VALUE_FOR_REQUEST_TYPE
+#undef BRAVE_GET_PERMISSION_STRING_FOR_UMA
 #undef GetUkmSourceId
-#undef kTpcdGrant
+#undef kOsJavascriptOptimizer

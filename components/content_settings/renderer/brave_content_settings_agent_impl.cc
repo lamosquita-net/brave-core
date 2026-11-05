@@ -77,18 +77,15 @@ bool IsBraveShieldsDown(const blink::WebFrame* frame,
 bool ShouldSkipResource(const GURL& resource_url) {
   return (resource_url.path().empty() ||
           ((resource_url.path().size() > 1) &&
-           !base::EndsWith(resource_url.path(), kJavascriptExtension)));
+           !resource_url.path().ends_with(kJavascriptExtension)));
 }
 
 }  // namespace
 
 BraveContentSettingsAgentImpl::BraveContentSettingsAgentImpl(
     content::RenderFrame* render_frame,
-    bool should_whitelist,
     std::unique_ptr<Delegate> delegate)
-    : ContentSettingsAgentImpl(render_frame,
-                               should_whitelist,
-                               std::move(delegate)) {
+    : ContentSettingsAgentImpl(render_frame, std::move(delegate)) {
   render_frame->GetAssociatedInterfaceRegistry()
       ->AddInterface<brave_shields::mojom::BraveShields>(base::BindRepeating(
           &BraveContentSettingsAgentImpl::BindBraveShieldsReceiver,
@@ -188,16 +185,12 @@ bool BraveContentSettingsAgentImpl::AllowScriptFromSource(
   bool allow = ContentSettingsAgentImpl::AllowScriptFromSource(
       enabled_per_settings, script_url);
 
-  // scripts with whitelisted protocols, such as chrome://extensions should
-  // be allowed
-  bool should_white_list = IsAllowlistedForContentSettings(
-      blink::WebSecurityOrigin::Create(script_url),
-      render_frame()->GetWebFrame()->GetDocument().Url());
+  // 156 dropped ContentSettingsAgentImpl::IsAllowlistedForContentSettings();
+  // allowlisted schemes are no longer special-cased here (as in 1.98).
   auto is_shields_down =
       IsBraveShieldsDown(render_frame()->GetWebFrame(), secondary_url);
   auto is_script_temprily_allowed = IsScriptTemporilyAllowed(secondary_url);
-  allow = allow || should_white_list || is_shields_down ||
-          is_script_temprily_allowed;
+  allow = allow || is_shields_down || is_script_temprily_allowed;
 
   if (!allow) {
     blocked_script_url_ = secondary_url;
