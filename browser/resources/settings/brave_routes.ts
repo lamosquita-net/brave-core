@@ -51,10 +51,6 @@ export default function addBraveRoutes(r: Partial<SettingsRoutes>) {
   }
   r.BRAVE_NEW_TAB = r.BASIC.createSection('/newTab', 'newTab')
 
-  if (pageVisibility.leoAssistant) {
-    r.BRAVE_LEO_ASSISTANT =
-      r.BASIC.createSection('/leo-assistant', 'leoAssistant')
-  }
   if (pageVisibility.content) {
     r.BRAVE_CONTENT = r.BASIC.createSection('/braveContent', 'content')
     // Move fonts from APPEARANCE to BRAVE_CONTENT

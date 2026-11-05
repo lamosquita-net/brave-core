@@ -29,7 +29,6 @@ function getPageVisibility () {
       newTab: false,
       braveWallet: false,
       braveWeb3: false,
-      leoAssistant: false,
       content: false,
       playlist: false,
       speedreader: false,
@@ -61,7 +60,6 @@ function getPageVisibility () {
     // services, which FlyWeb removes.
     braveWeb3: false,
     braveWeb3Domains: false,
-    leoAssistant: loadTimeData.getBoolean('isLeoAssistantAllowed'),
     content: alwaysTrueProxy,
     playlist: loadTimeData.getBoolean('isPlaylistAllowed'),
     speedreader: loadTimeData.getBoolean('isSpeedreaderFeatureEnabled'),
