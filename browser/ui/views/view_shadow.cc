@@ -10,6 +10,7 @@
 #include <tuple>
 
 #include "ui/compositor/layer.h"
+#include "ui/compositor/layer_textured.h"
 #include "ui/compositor/paint_recorder.h"
 #include "ui/gfx/skia_paint_util.h"
 #include "ui/views/view.h"
@@ -44,7 +45,7 @@ const gfx::ShadowValues& GetCachedShadowValues(
 ViewShadow::ViewShadow(views::View* view,
                        int corner_radius,
                        const ShadowParameters& params)
-    : layer_owner_(std::make_unique<ui::Layer>()),
+    : layer_owner_(std::make_unique<ui::LayerTextured>()),
       view_(view),
       corner_radius_(corner_radius),
       shadow_values_(GetCachedShadowValues(params)) {
