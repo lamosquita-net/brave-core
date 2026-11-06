@@ -31,23 +31,23 @@ std::optional<gfx::Insets> GetBraveLayoutInsets(LayoutInset inset) {
 std::optional<int> GetBraveLayoutConstant(LayoutConstant constant) {
   const bool touch = ui::TouchUiController::Get()->touch_ui();
   switch (constant) {
-    case LOCATION_BAR_CHILD_CORNER_RADIUS:
+    case LayoutConstant::kLocationBarChildCornerRadius:
       return 4;
-    case TOOLBAR_BUTTON_HEIGHT: {
+    case LayoutConstant::kToolbarButtonHeight: {
       return touch ? 48 : 28;
     }
-    case TOOLBAR_CORNER_RADIUS: {
+    case LayoutConstant::kToolbarCornerRadius: {
       return 0;
     }
-    case LOCATION_BAR_HEIGHT:
+    case LayoutConstant::kLocationBarHeight:
       // Consider adjust below element padding also when this height is changed.
       return 32;
-    case LOCATION_BAR_TRAILING_ICON_SIZE:
+    case LayoutConstant::kLocationBarTrailingIconSize:
       return 18;
-    case LOCATION_BAR_ICON_SIZE:
+    case LayoutConstant::kLocationBarIconSize:
       return 16;
-    case LOCATION_BAR_ELEMENT_PADDING:
-    case LOCATION_BAR_PAGE_INFO_ICON_VERTICAL_PADDING:
+    case LayoutConstant::kLocationBarElementPadding:
+    case LayoutConstant::kLocationBarPageInfoIconVerticalPadding:
       return 2;
     default:
       break;
