@@ -5,13 +5,16 @@
 
 import {sendWithPromise} from 'chrome://resources/js/cr.js';
 
+import type {DropdownMenuOptionList} from '../controls/settings_dropdown_menu.js';
+
 export interface BraveSearchEnginesPageBrowserProxy {
-  getPrivateSearchEnginesList(): Promise<any[]> // TODO(petemill): Define the expected type
+  getPrivateSearchEnginesList(): Promise<DropdownMenuOptionList>
 }
  
 export class BraveSearchEnginesPageBrowserProxyImpl implements BraveSearchEnginesPageBrowserProxy {
   getPrivateSearchEnginesList() {
-    return sendWithPromise<any[]>('getPrivateSearchEnginesList');
+    return sendWithPromise<DropdownMenuOptionList>(
+        'getPrivateSearchEnginesList');
   }
   static getInstance() {
     return instance || (instance = new BraveSearchEnginesPageBrowserProxyImpl())

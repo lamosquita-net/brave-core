@@ -5,6 +5,8 @@
 
 // @ts-nocheck TODO(petemill): Define types and remove ts-nocheck
 
+import '../controls/settings_dropdown_menu.js';
+import '../controls/settings_toggle_button.js';
 import '../settings_shared.css.js';
 import '../settings_vars.css.js';
 
@@ -13,12 +15,13 @@ import {WebUiListenerMixin} from 'chrome://resources/cr_elements/web_ui_listener
 import {loadTimeData} from "../i18n_setup.js"
 import {BraveSearchEnginesPageBrowserProxyImpl} from './brave_search_engines_page_browser_proxy.js';
 import {getTemplate} from './brave_search_engines_page.html.js'
+import type {DropdownMenuOptionList} from '../controls/settings_dropdown_menu.js';
 
 const BraveSearchEnginesPageBase = WebUiListenerMixin(PolymerElement)
 
 class BraveSearchEnginesPage extends BraveSearchEnginesPageBase {
   static get is() {
-    return 'settings-brave-search-page'
+    return 'settings-brave-search-engines-page'
   }
 
   static get template() {
@@ -33,6 +36,8 @@ class BraveSearchEnginesPage extends BraveSearchEnginesPageBase {
       }
     }
   }
+
+  declare privateSearchEngines_: DropdownMenuOptionList
 
   browserProxy_ = BraveSearchEnginesPageBrowserProxyImpl.getInstance()
 
