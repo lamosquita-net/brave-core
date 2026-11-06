@@ -3,14 +3,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#ifndef BRAVE_CHROMIUM_SRC_UI_RESOURCES_GRIT_WEBUI_RESOURCES_H_
-#define BRAVE_CHROMIUM_SRC_UI_RESOURCES_GRIT_WEBUI_RESOURCES_H_
+#ifndef BRAVE_CHROMIUM_SRC_UI_WEBUI_RESOURCES_GRIT_WEBUI_RESOURCES_H_
+#define BRAVE_CHROMIUM_SRC_UI_WEBUI_RESOURCES_GRIT_WEBUI_RESOURCES_H_
 
 #include "build/build_config.h"
 
-#include "../gen/ui/resources/grit/webui_resources.h"  // IWYU pragma: export
+#include "../gen/ui/webui/resources/grit/webui_resources.h"  // IWYU pragma: export
 
 #if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
+// Chromium 156 moved this header from ui/resources/grit to
+// ui/webui/resources/grit (FlyWeb moved the override with it).
+
 // Override cr-button HTML
 #ifdef IDR_WEBUI_CR_ELEMENTS_CR_BUTTON_CR_BUTTON_HTML_JS
 #undef IDR_WEBUI_CR_ELEMENTS_CR_BUTTON_CR_BUTTON_HTML_JS
@@ -48,4 +51,4 @@
 #endif
 #endif
 
-#endif  // BRAVE_CHROMIUM_SRC_UI_RESOURCES_GRIT_WEBUI_RESOURCES_H_
+#endif  // BRAVE_CHROMIUM_SRC_UI_WEBUI_RESOURCES_GRIT_WEBUI_RESOURCES_H_

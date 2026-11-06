@@ -5,6 +5,6 @@
 
 // webui_resources_map imports webui_resources as "webui_resources.h" so our
 // overrides aren't included.
-#include "ui/resources/grit/webui_resources.h"
+#include "ui/webui/resources/grit/webui_resources.h"
 
-#include "../gen/ui/resources/grit/webui_resources_map.cc"
+#include "../gen/ui/webui/resources/grit/webui_resources_map.cc"
