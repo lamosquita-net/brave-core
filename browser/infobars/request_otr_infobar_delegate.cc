@@ -8,7 +8,6 @@
 #include <memory>
 
 #include "base/check_op.h"
-#include "brave/components/l10n/common/localization_util.h"
 #include "brave/components/request_otr/browser/request_otr_storage_tab_helper.h"
 #include "build/build_config.h"
 #include "chrome/browser/infobars/confirm_infobar_creator.h"
@@ -18,6 +17,7 @@
 #include "components/infobars/content/content_infobar_manager.h"
 #include "components/infobars/core/infobar.h"
 #include "components/vector_icons/vector_icons.h"
+#include "content/public/browser/navigation_controller.h"
 #include "content/public/browser/web_contents.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/views/vector_icons.h"
@@ -43,7 +43,7 @@ RequestOTRInfoBarDelegate::GetIdentifier() const {
 }
 
 const gfx::VectorIcon& RequestOTRInfoBarDelegate::GetVectorIcon() const {
-  return views::kInfoIcon;
+  return views::kInfoOldIcon;
 }
 
 std::u16string RequestOTRInfoBarDelegate::GetMessageText() const {
