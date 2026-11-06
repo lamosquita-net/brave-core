@@ -14,7 +14,6 @@
 #include "brave/browser/ui/tabs/brave_tab_prefs.h"
 #include "brave/browser/ui/views/tabs/vertical_tab_utils.h"
 #include "brave/browser/ui/views/toolbar/bookmark_button.h"
-#include "brave/browser/ui/views/toolbar/side_panel_button.h"
 #include "brave/components/constants/pref_names.h"
 #include "chrome/app/chrome_command_ids.h"
 #include "chrome/browser/browser_process.h"
@@ -200,10 +199,6 @@ void BraveToolbarView::Init() {
                                       ui::EF_MIDDLE_MOUSE_BUTTON);
   bookmark_->UpdateImageAndText();
 
-  side_panel_ = container_view->AddChildViewAt(
-      std::make_unique<SidePanelButton>(browser()),
-      *container_view->GetIndexOf(GetAppMenuButton()) - 1);
-
   // Make sure that avatar button should be located right before the app menu.
   if (auto* avatar = GetAvatarToolbarButton()) {
     container_view->ReorderChildView(
@@ -316,7 +311,7 @@ void BraveToolbarView::UpdateHorizontalPadding() {
   } else {
     auto [leading, trailing] =
         tabs::utils::GetLeadingTrailingCaptionButtonWidth(
-            browser_view_->frame());
+            browser_view_->browser_widget());
     container_view->SetBorder(views::CreateEmptyBorder(
         gfx::Insets().set_left(leading).set_right(trailing)));
   }

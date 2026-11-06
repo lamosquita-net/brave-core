@@ -171,16 +171,9 @@ EXCLUDE_COMMANDS = [
     # These commands are in a submenu, which we can't trigger
     "_SUBMENU",
 
-    # Crashes if speedreader doesn't work on page.
-    "IDC_SPEEDREADER_ICON_ONCLICK",
-
     # Not useful menu commands - mostly these are submenu commands, which do
     # nothing unless the parent menu is open.
-    "IDC_SIDEBAR_SHOW_OPTION_MENU",
     "IDC_BRAVE_BOOKMARK_BAR_SUBMENU",
-    "IDC_SIDEBAR_SHOW_OPTION_ALWAYS",
-    "IDC_SIDEBAR_SHOW_OPTION_MOUSEOVER",
-    "IDC_SIDEBAR_SHOW_OPTION_NEVER",
 
     # Not actually commands
     "IDC_BRAVE_COMMANDS_START",

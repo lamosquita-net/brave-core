@@ -19,6 +19,7 @@ inline constexpr char kRewardsPageTopHost[] = "rewards.top-chrome";
 inline constexpr char kRewardsPageTopURL[] = "chrome://rewards.top-chrome";
 inline constexpr char kRewardsInternalsHost[] = "rewards-internals";
 inline constexpr char kWelcomeHost[] = "welcome";
+inline constexpr char kWelcomeURL[] = "chrome://welcome/";
 inline constexpr char kWelcomeJS[] = "brave_welcome.js";
 inline constexpr char kBraveRewardsPanelURL[] =
     "chrome://rewards-panel.top-chrome";
@@ -64,14 +65,6 @@ inline constexpr char kCookieListOptInURL[] =
 inline constexpr char kFederatedInternalsURL[] = "flyweb://federated-internals";
 inline constexpr char kFederatedInternalsHost[] = "federated-internals";
 inline constexpr char kContentFiltersPath[] = "shields/filters";
-inline constexpr char kPlaylistHost[] = "playlist";
-inline constexpr char kPlaylistURL[] = "chrome-untrusted://playlist/";
-inline constexpr char kPlaylistPlayerHost[] = "playlist-player";
-inline constexpr char kPlaylistPlayerURL[] =
-    "chrome-untrusted://playlist-player/";
-inline constexpr char kSpeedreaderPanelURL[] =
-    "chrome://brave-speedreader.top-chrome";
-inline constexpr char kSpeedreaderPanelHost[] = "brave-speedreader.top-chrome";
 inline constexpr char kShortcutsURL[] = "chrome://settings/system/shortcuts";
 inline constexpr char kChatUIURL[] = "chrome-untrusted://chat/";
 inline constexpr char kChatUIHost[] = "chat";

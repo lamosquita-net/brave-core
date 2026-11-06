@@ -1,21 +1,33 @@
 diff --git a/chrome/browser/ui/browser.cc b/chrome/browser/ui/browser.cc
-index 5513b0d21ea63e53088cd815f13b51174bf06d19..9b371cc51a4da61bb61d1383f3564eed261e9fb3 100644
+index 07de580deb67c305fdbf25ddb9c168b3cc646a4f..f7385bd308e4f638e17cec026cdd879939a43cdd 100644
 --- a/chrome/browser/ui/browser.cc
 +++ b/chrome/browser/ui/browser.cc
-@@ -528,6 +528,7 @@ Browser* Browser::Create(const CreateParams& params) {
-   // not possible, e.g. using the wrong profile or during shutdown. The caller
-   // should handle this; see e.g. crbug.com/1141608 and crbug.com/1261628.
-   CHECK_EQ(CreationStatus::kOk, GetCreationStatusForProfile(params.profile));
-+  BRAVE_BROWSER_CREATE
-   return new Browser(params);
- }
+@@ -239,7 +239,7 @@ Browser* Browser::Create(BrowserWindowCreateParams params) {
  
-@@ -538,7 +539,7 @@ Browser::Browser(const CreateParams& params)
+   Profile* const profile_ptr = &*params.profile;
+   std::unique_ptr<Browser> browser =
+-      base::WrapUnique(new Browser(std::move(params)));
++      base::WrapUnique(new BraveBrowser(std::move(params)));
+   Browser* const browser_ptr = browser.get();
+   BrowserManagerServiceFactory::GetForProfile(profile_ptr)
+       ->AddBrowser(std::move(browser));
+@@ -258,7 +258,7 @@ std::unique_ptr<Browser> Browser::DeprecatedCreateOwnedForTesting(
+ 
+   Profile* const profile_ptr = &*params.profile;
+   std::unique_ptr<Browser> browser =
+-      base::WrapUnique(new Browser(std::move(params)));
++      base::WrapUnique(new BraveBrowser(std::move(params)));
+   BrowserManagerServiceFactory::GetForProfile(profile_ptr)
+       ->AddBrowserForTesting(browser.get());
+   return browser;
+@@ -269,8 +269,8 @@ Browser::Browser(BrowserWindowCreateParams params)
+       profile_(&*params.profile),
        window_(nullptr),
        tab_strip_model_delegate_(
-           std::make_unique<chrome::BrowserTabStripModelDelegate>(this)),
+-          std::make_unique<chrome::BrowserTabStripModelDelegate>(this)),
 -      tab_strip_model_(std::make_unique<TabStripModel>(
++          std::make_unique<chrome::BraveTabStripModelDelegate>(this)),
 +      tab_strip_model_(std::make_unique<BraveTabStripModel>(
            tab_strip_model_delegate_.get(),
-           params.profile,
-           params.are_tab_groups_enabled ? TabGroupModelFactory::GetInstance()
+           profile_,
+           // Tab groups are disabled for app browsers.

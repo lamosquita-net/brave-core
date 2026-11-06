@@ -11,17 +11,9 @@
 #include "brave/components/constants/url_constants.h"
 #include "chrome/browser/profiles/profile.h"
 
-#if BUILDFLAG(ENABLE_BRAVE_WEBTORRENT)
-#include "brave/components/brave_webtorrent/browser/webtorrent_util.h"
-#endif
-
 BraveAutocompleteSchemeClassifier::BraveAutocompleteSchemeClassifier(
     Profile* profile)
-    : ChromeAutocompleteSchemeClassifier(profile) {
-#if BUILDFLAG(ENABLE_BRAVE_WEBTORRENT)
-  profile_ = profile;
-#endif
-}
+    : ChromeAutocompleteSchemeClassifier(profile) {}
 
 BraveAutocompleteSchemeClassifier::~BraveAutocompleteSchemeClassifier() =
     default;
@@ -37,14 +29,6 @@ BraveAutocompleteSchemeClassifier::GetInputTypeForScheme(
       base::EqualsCaseInsensitiveASCII(scheme, kBraveUIScheme)) {
     return metrics::OmniboxInputType::URL;
   }
-
-#if BUILDFLAG(ENABLE_BRAVE_WEBTORRENT)
-  if (base::IsStringASCII(scheme) &&
-      webtorrent::IsWebtorrentPrefEnabled(profile_->GetPrefs()) &&
-      base::EqualsCaseInsensitiveASCII(scheme, kMagnetScheme)) {
-    return metrics::OmniboxInputType::URL;
-  }
-#endif
 
   return ChromeAutocompleteSchemeClassifier::GetInputTypeForScheme(scheme);
 }

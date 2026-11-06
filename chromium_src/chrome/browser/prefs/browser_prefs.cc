@@ -5,6 +5,7 @@
 
 #include "brave/browser/brave_local_state_prefs.h"
 #include "brave/browser/brave_profile_prefs.h"
+#include "brave/browser/flyweb/pruned_feature_prefs.h"
 #include "brave/browser/search/ntp_utils.h"
 #include "brave/browser/themes/brave_dark_mode_utils.h"
 #include "brave/browser/translate/brave_translate_prefs_migration.h"
@@ -26,6 +27,7 @@
 #if !BUILDFLAG(IS_ANDROID)
 #include "brave/browser/search_engines/search_engine_provider_util.h"
 #include "brave/browser/ui/tabs/brave_tab_prefs.h"
+#include "brave/browser/ui/webui/welcome_page/brave_welcome_page_prefs.h"
 #endif
 
 #if BUILDFLAG(ENABLE_WIDEVINE)
@@ -51,10 +53,6 @@
 #include "brave/browser/ntp_background/ntp_background_prefs.h"
 #endif
 
-#if defined(TOOLKIT_VIEWS)
-#include "brave/components/sidebar/browser/pref_names.h"
-#endif
-
 // This method should be periodically pruned of year+ old migrations.
 void MigrateObsoleteProfilePrefs(PrefService* profile_prefs,
                                  const base::FilePath& profile_path) {
@@ -66,6 +64,11 @@ void MigrateObsoleteProfilePrefs(PrefService* profile_prefs,
   // to Brave pref.
   gcm::MigrateGCMPrefs(profile_prefs);
 #endif
+
+#if !BUILDFLAG(IS_ANDROID)
+  // Added 11/2026 (156 removed Chromium's prefs::kHasSeenWelcomePage).
+  brave_welcome_page::prefs::MigratePrefs(profile_prefs);
+#endif  // !BUILDFLAG(IS_ANDROID)
 
   MigrateObsoleteProfilePrefs_ChromiumImpl(profile_prefs, profile_path);
 
@@ -122,17 +125,6 @@ void MigrateObsoleteProfilePrefs(PrefService* profile_prefs,
 
   // Added 03/2024
 
-#if defined(TOOLKIT_VIEWS)
-  // Added May 2023
-  if (profile_prefs->GetBoolean(sidebar::kSidebarAlignmentChangedTemporarily)) {
-    // If temporarily changed, it means sidebar is set to right.
-    // Just clear alignment prefs as default alignment is changed to right.
-    profile_prefs->ClearPref(prefs::kSidePanelHorizontalAlignment);
-  }
-
-  profile_prefs->ClearPref(sidebar::kSidebarAlignmentChangedTemporarily);
-#endif
-
   // Added 2023-09
   ntp_background_images::ViewCounterService::MigrateObsoleteProfilePrefs(
       profile_prefs);
@@ -146,6 +138,9 @@ void MigrateObsoleteProfilePrefs(PrefService* profile_prefs,
 
   // Added 2024-07
   profile_prefs->ClearPref(kHangoutsEnabled);
+
+  // Added 2026-11: features pruned in the Chromium 156 port.
+  flyweb::ClearPrunedFeatureProfilePrefs(profile_prefs);
 
   // END_MIGRATE_OBSOLETE_PROFILE_PREFS
 }
@@ -161,6 +156,13 @@ void MigrateObsoleteLocalStatePrefs(PrefService* local_state) {
 #endif
 
   brave_search_conversion::p3a::MigrateObsoleteLocalStatePrefs(local_state);
+
+  // FlyWeb: added 11/2026 (T5), NTP sponsored images and super referrals.
+  ntp_background_images::ViewCounterService::MigrateObsoleteLocalStatePrefs(
+      local_state);
+
+  // Added 2026-11: features pruned in the Chromium 156 port.
+  flyweb::ClearPrunedFeatureLocalStatePrefs(local_state);
 
   // END_MIGRATE_OBSOLETE_LOCAL_STATE_PREFS
 }

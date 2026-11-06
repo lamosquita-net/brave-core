@@ -17,8 +17,9 @@
 #include "brave/components/constants/pref_names.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser.h"
-#include "chrome/browser/ui/browser_finder.h"
 #include "chrome/browser/ui/browser_window.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+#include "chrome/browser/ui/browser_window/public/global_browser_collection.h"
 #include "chrome/browser/ui/tabs/tab_group_model.h"
 #include "chrome/browser/ui/tabs/tab_strip_model_delegate.h"
 #include "chrome/browser/ui/tabs/tab_strip_model_observer.h"
@@ -50,7 +51,9 @@ void BraveTabStripModel::SelectRelativeTab(TabRelativeDirection direction,
 void BraveTabStripModel::ExecuteContextMenuCommand(
     int context_index,
     ContextMenuCommand command_id) {
-  Browser* browser = chrome::FindBrowserWithTab(GetWebContentsAt(0));
+  BrowserWindowInterface* browser =
+      GlobalBrowserCollection::GetInstance()->FindBrowserWithTab(
+          GetWebContentsAt(0));
   if (tabs::utils::ShouldShowVerticalTabs(browser) &&
       command_id == CommandTogglePinned && WillContextMenuPin(context_index)) {
     // For vertical tabs, we need to ungroup the tabs before pinning tabs in
@@ -74,7 +77,9 @@ void BraveTabStripModel::SelectMRUTab(TabRelativeDirection direction,
   if (mru_cycle_list_.empty()) {
     // Start cycling
 
-    Browser* browser = chrome::FindBrowserWithTab(GetWebContentsAt(0));
+    BrowserWindowInterface* browser =
+        GlobalBrowserCollection::GetInstance()->FindBrowserWithTab(
+            GetWebContentsAt(0));
     if (!browser) {
       return;
     }
@@ -91,7 +96,7 @@ void BraveTabStripModel::SelectMRUTab(TabRelativeDirection direction,
               });
 
     // Tell the cycling controller that we start cycling to handle tabs keys
-    static_cast<BraveBrowserWindow*>(browser->window())->StartTabCycling();
+    BraveBrowserWindow::FromBrowser(browser)->StartTabCycling();
   }
 
   if (direction == TabRelativeDirection::kNext) {

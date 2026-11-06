@@ -30,7 +30,7 @@
 #include "chrome/browser/ui/exclusive_access/exclusive_access_manager.h"
 #include "chrome/browser/ui/exclusive_access/fullscreen_controller.h"
 #include "chrome/browser/ui/tabs/features.h"
-#include "chrome/browser/ui/views/frame/browser_non_client_frame_view.h"
+#include "chrome/browser/ui/views/frame/browser_frame_view.h"
 #include "chrome/browser/ui/views/frame/browser_view.h"
 #include "chrome/browser/ui/views/frame/tab_strip_region_view.h"
 #include "chrome/browser/ui/views/location_bar/location_bar_view.h"
@@ -129,11 +129,11 @@ class VerticalTabStripBrowserTest : public InProcessBrowserTest {
   BraveBrowserView* browser_view() {
     return static_cast<BraveBrowserView*>(browser()->window());
   }
-  BrowserNonClientFrameView* browser_non_client_frame_view() {
-    return browser_view()->frame()->GetFrameView();
+  BrowserFrameView* browser_non_client_frame_view() {
+    return browser_view()->browser_widget()->GetFrameView();
   }
-  const BrowserNonClientFrameView* browser_non_client_frame_view() const {
-    return browser_view()->frame()->GetFrameView();
+  const BrowserFrameView* browser_non_client_frame_view() const {
+    return browser_view()->browser_widget()->GetFrameView();
   }
 
   void ToggleVerticalTabStrip() {
@@ -308,7 +308,7 @@ IN_PROC_BROWSER_TEST_F(VerticalTabStripBrowserTest, MinHeight) {
 
   const auto browser_view_min_size = browser_view()->GetMinimumSize();
   const auto browser_non_client_frame_view_min_size =
-      browser_view()->frame()->GetFrameView()->GetMinimumSize();
+      browser_view()->browser_widget()->GetFrameView()->GetMinimumSize();
 
   // Add tabs as much as it can grow mih height of tab strip.
   auto tab_strip_min_height =
@@ -323,7 +323,11 @@ IN_PROC_BROWSER_TEST_F(VerticalTabStripBrowserTest, MinHeight) {
   EXPECT_EQ(browser_view_min_size.height(),
             browser_view()->GetMinimumSize().height());
   EXPECT_EQ(browser_non_client_frame_view_min_size.height(),
-            browser_view()->frame()->GetFrameView()->GetMinimumSize().height());
+            browser_view()
+                ->browser_widget()
+                ->GetFrameView()
+                ->GetMinimumSize()
+                .height());
 }
 
 IN_PROC_BROWSER_TEST_F(VerticalTabStripBrowserTest, VisualState) {

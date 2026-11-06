@@ -7,14 +7,10 @@
 
 #include <vector>
 
+#include "ui/gfx/geometry/rect.h"
+
 // Provide a base implementation (important for `TestBrowserWindow ` in tests)
 // For real implementation, see `BraveBrowserView`.
-
-speedreader::SpeedreaderBubbleView* BraveBrowserWindow::ShowSpeedreaderBubble(
-    speedreader::SpeedreaderTabHelper* tab_helper,
-    speedreader::SpeedreaderBubbleLocation location) {
-  return nullptr;
-}
 
 gfx::Rect BraveBrowserWindow::GetShieldsBubbleRect() {
   return gfx::Rect();
@@ -25,13 +21,13 @@ BraveBrowserWindow* BraveBrowserWindow::From(BrowserWindow* window) {
   return static_cast<BraveBrowserWindow*>(window);
 }
 
-#if defined(TOOLKIT_VIEWS)
-sidebar::Sidebar* BraveBrowserWindow::InitSidebar() {
-  return nullptr;
+// static
+BraveBrowserWindow* BraveBrowserWindow::FromBrowser(
+    BrowserWindowInterface* browser) {
+  return From(BrowserWindow::FromBrowser(browser));
 }
 
-void BraveBrowserWindow::ToggleSidebar() {}
-
+#if defined(TOOLKIT_VIEWS)
 bool BraveBrowserWindow::HasSelectedURL() const {
   return false;
 }

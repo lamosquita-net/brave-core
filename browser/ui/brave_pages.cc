@@ -8,10 +8,9 @@
 #include "base/strings/strcat.h"
 #include "brave/components/constants/url_constants.h"
 #include "brave/components/constants/webui_url_constants.h"
-#include "brave/components/sidebar/browser/constants.h"
-#include "chrome/browser/ui/browser.h"
-#include "chrome/browser/ui/browser_navigator_params.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/chrome_pages.h"
+#include "chrome/browser/ui/navigator/browser_navigator_params.h"
 #include "chrome/browser/ui/singleton_tabs.h"
 #include "chrome/common/webui_url_constants.h"
 #include "content/public/browser/page_navigator.h"
@@ -22,28 +21,32 @@
 
 namespace brave {
 
-void ShowBraveRewards(Browser* browser) {
+namespace {
+constexpr char kBraveTalkURL[] = "https://talk.brave.com/widget";
+}  // namespace
+
+void ShowBraveRewards(BrowserWindowInterface* browser) {
   ShowSingletonTabOverwritingNTP(browser, GURL(kRewardsPageURL));
 }
 
-void ShowBraveAdblock(Browser* browser) {
+void ShowBraveAdblock(BrowserWindowInterface* browser) {
   ShowSingletonTabOverwritingNTP(browser, GURL(kBraveUIAdblockURL));
 }
 
-void ShowSync(Browser* browser) {
+void ShowSync(BrowserWindowInterface* browser) {
   ShowSingletonTabOverwritingNTP(
       browser, chrome::GetSettingsUrl(chrome::kSyncSetupSubPage));
 }
 
-void ShowShortcutsPage(Browser* browser) {
+void ShowShortcutsPage(BrowserWindowInterface* browser) {
   ShowSingletonTabOverwritingNTP(browser, GURL(kShortcutsURL));
 }
 
-void ShowBraveTalk(Browser* browser) {
-  ShowSingletonTabOverwritingNTP(browser, GURL(sidebar::kBraveTalkURL));
+void ShowBraveTalk(BrowserWindowInterface* browser) {
+  ShowSingletonTabOverwritingNTP(browser, GURL(kBraveTalkURL));
 }
 
-void ShowWebcompatReporter(Browser* browser) {
+void ShowWebcompatReporter(BrowserWindowInterface* browser) {
   content::WebContents* web_contents =
       browser->tab_strip_model()->GetActiveWebContents();
   if (!web_contents) {
@@ -65,19 +68,19 @@ void OpenFlyWebReportProblemPage(content::WebContents* initiator) {
       /*navigation_handle_callback=*/{});
 }
 
-void ShowBraveWallet(Browser* browser) {
+void ShowBraveWallet(BrowserWindowInterface* browser) {
   ShowSingletonTabOverwritingNTP(browser, GURL(kBraveUIWalletURL));
 }
 
-void ShowBraveWalletOnboarding(Browser* browser) {
+void ShowBraveWalletOnboarding(BrowserWindowInterface* browser) {
   ShowSingletonTabOverwritingNTP(browser, GURL(kBraveUIWalletOnboardingURL));
 }
 
-void ShowExtensionSettings(Browser* browser) {
+void ShowExtensionSettings(BrowserWindowInterface* browser) {
   ShowSingletonTabOverwritingNTP(browser, GURL(kExtensionSettingsURL));
 }
 
-void ShowWalletSettings(Browser* browser) {
+void ShowWalletSettings(BrowserWindowInterface* browser) {
   ShowSingletonTabOverwritingNTP(browser, GURL(kWalletSettingsURL));
 }
 

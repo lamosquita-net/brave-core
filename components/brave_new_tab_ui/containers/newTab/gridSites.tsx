@@ -58,8 +58,7 @@ function TopSitesPage (props: Props & { maxGridSize: number, page: number }) {
         siteData={siteData}
         onShowEditTopSite={props.onShowEditTopSite}
         // User can't change order in "Most Visited" mode
-        // and they can't change position of super referral tiles
-        isSortable={siteData.defaultSRTopSite || !props.customLinksEnabled}
+        isSortable={!props.customLinksEnabled}
       />
     ))}
     {start + props.maxGridSize > props.gridSites.length &&
@@ -94,7 +93,7 @@ function TopSitesList (props: Props) {
 
     if (draggingIndex === undefined || droppedIndex === undefined) { return }
 
-    if (gridSites[droppedIndex].defaultSRTopSite || !props.customLinksEnabled) { return }
+    if (!props.customLinksEnabled) { return }
 
     props.actions.tilesReordered(gridSites, draggingIndex, droppedIndex)
   }

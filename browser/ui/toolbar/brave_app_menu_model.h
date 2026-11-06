@@ -16,10 +16,6 @@
 #include "chrome/browser/ui/toolbar/app_menu_model.h"
 #include "ui/base/models/simple_menu_model.h"
 
-#if defined(TOOLKIT_VIEWS)
-#include "brave/components/sidebar/browser/sidebar_service.h"
-#endif  // defined(TOOLKIT_VIEWS)
-
 namespace ui {
 class ButtonMenuItemModel;
 }
@@ -34,11 +30,6 @@ class BraveAppMenuModel : public AppMenuModel {
 
   BraveAppMenuModel(const BraveAppMenuModel&) = delete;
   BraveAppMenuModel& operator=(const BraveAppMenuModel&) = delete;
-
-#if defined(TOOLKIT_VIEWS)
-  static sidebar::SidebarService::ShowSidebarOption
-  ConvertIDCToSidebarShowOptions(int id);
-#endif  // defined(TOOLKIT_VIEWS)
 
  private:
   FRIEND_TEST_ALL_PREFIXES(BraveAppMenuModelBrowserTest, BraveIpfsMenuTest);
@@ -59,7 +50,7 @@ class BraveAppMenuModel : public AppMenuModel {
   // History, bookmarks, downloads and extensions.
   void BuildBrowserSection();
 
-  // Insert profile, sidebar, sync and cast entries into existing more tools
+  // Insert profile, sync and cast entries into existing more tools
   // sub menu.
   void BuildMoreToolsSubMenu();
 
@@ -69,10 +60,6 @@ class BraveAppMenuModel : public AppMenuModel {
   // We relocate some upstream items. Need to remove them before adding them
   // to another location.
   void RemoveUpstreamMenus();
-
-#if defined(TOOLKIT_VIEWS)
-  std::unique_ptr<ui::ButtonMenuItemModel> sidebar_show_option_model_;
-#endif  // defined(TOOLKIT_VIEWS)
 };
 
 #endif  // BRAVE_BROWSER_UI_TOOLBAR_BRAVE_APP_MENU_MODEL_H_

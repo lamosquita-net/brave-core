@@ -8,9 +8,9 @@
 #include <string>
 
 #include "base/values.h"
+#include "brave/browser/flyweb/pruned_feature_prefs.h"
 #include "brave/browser/metrics/buildflags/buildflags.h"
 #include "brave/browser/metrics/metrics_reporting_util.h"
-#include "brave/browser/playlist/playlist_service_factory.h"
 #include "brave/browser/search_engines/search_engine_tracker.h"
 #include "brave/browser/themes/brave_dark_mode_utils.h"
 #include "brave/components/brave_search_conversion/p3a.h"
@@ -18,15 +18,12 @@
 #include "brave/components/brave_shields/content/browser/brave_shields_p3a.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/l10n/common/prefs.h"
-#include "brave/components/ntp_background_images/browser/ntp_background_images_service.h"
 #include "brave/components/ntp_background_images/browser/view_counter_service.h"
 #include "build/build_config.h"
 #include "chrome/common/pref_names.h"
 #include "components/metrics/metrics_pref_names.h"
 #include "components/prefs/pref_registry_simple.h"
 #include "third_party/widevine/cdm/buildflags.h"
-
-#include "brave/browser/ui/webui/new_tab_page/brave_new_tab_message_handler.h"
 
 #if !BUILDFLAG(IS_ANDROID)
 #include "brave/browser/p3a/p3a_core_metrics.h"
@@ -36,7 +33,6 @@
 
 #if defined(TOOLKIT_VIEWS)
 #include "brave/browser/onboarding/onboarding_tab_helper.h"
-#include "brave/components/sidebar/browser/pref_names.h"
 #endif
 
 #if BUILDFLAG(ENABLE_WIDEVINE)
@@ -52,13 +48,17 @@ void RegisterLocalStatePrefsForMigration(PrefRegistrySimple* registry) {
 #endif
 
   brave_search_conversion::p3a::RegisterLocalStatePrefsForMigration(registry);
+
+  // FlyWeb: added 11/2026 (T5), NTP sponsored images and super referrals.
+  ntp_background_images::ViewCounterService::
+      RegisterLocalStatePrefsForMigration(registry);
+
+  // Added 2026-11: features pruned in the Chromium 156 port.
+  flyweb::RegisterPrunedFeatureLocalStatePrefs(registry);
 }
 
 void RegisterLocalStatePrefs(PrefRegistrySimple* registry) {
   brave_shields::RegisterPrefsForAdBlockService(registry);
-  ntp_background_images::NTPBackgroundImagesService::RegisterLocalStatePrefs(
-      registry);
-  ntp_background_images::ViewCounterService::RegisterLocalStatePrefs(registry);
   brave_l10n::RegisterL10nLocalStatePrefs(registry);
 #if BUILDFLAG(IS_MAC)
   // Turn off super annoying 'Hold to quit'
@@ -71,7 +71,6 @@ void RegisterLocalStatePrefs(PrefRegistrySimple* registry) {
 
   brave_shields::RegisterShieldsP3ALocalPrefs(registry);
 #if !BUILDFLAG(IS_ANDROID)
-  BraveNewTabMessageHandler::RegisterLocalStatePrefs(registry);
   BraveWindowTracker::RegisterPrefs(registry);
   dark_mode::RegisterBraveDarkModeLocalStatePrefs(registry);
   whats_new::RegisterLocalStatePrefs(registry);
@@ -79,8 +78,6 @@ void RegisterLocalStatePrefs(PrefRegistrySimple* registry) {
 
 #if defined(TOOLKIT_VIEWS)
   onboarding::RegisterLocalStatePrefs(registry);
-  registry->RegisterBooleanPref(sidebar::kTargetUserForSidebarEnabledTest,
-                                false);
 #endif
 
 #if BUILDFLAG(ENABLE_CRASH_DIALOG)
@@ -94,8 +91,6 @@ void RegisterLocalStatePrefs(PrefRegistrySimple* registry) {
   RegisterLocalStatePrefsForMigration(registry);
 
   brave_search_conversion::p3a::RegisterLocalStatePrefs(registry);
-
-  playlist::PlaylistServiceFactory::RegisterLocalStatePrefs(registry);
 }
 
 }  // namespace brave

@@ -19,33 +19,24 @@
 #include "base/time/time.h"
 #include "base/values.h"
 #include "brave/browser/ntp_background/view_counter_service_factory.h"
-#include "brave/browser/profiles/profile_util.h"
 #include "brave/browser/search_engines/pref_names.h"
 #include "brave/browser/ui/webui/new_tab_page/brave_new_tab_ui.h"
 #include "brave/components/brave_perf_predictor/common/pref_names.h"
 #include "brave/components/brave_search_conversion/pref_names.h"
 #include "brave/components/constants/pref_names.h"
-#include "brave/components/ntp_background_images/browser/url_constants.h"
 #include "brave/components/ntp_background_images/browser/view_counter_service.h"
 #include "brave/components/ntp_background_images/common/pref_names.h"
 #include "brave/components/time_period_storage/weekly_storage.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/first_run/first_run.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/webui/plural_string_handler.h"
 #include "chrome/common/chrome_features.h"
 #include "chrome/common/pref_names.h"
-#include "components/grit/brave_components_strings.h"
 #include "components/prefs/pref_change_registrar.h"
-#include "components/prefs/pref_registry_simple.h"
 #include "components/prefs/pref_service.h"
-#include "content/public/browser/web_ui_data_source.h"
 
 using ntp_background_images::ViewCounterServiceFactory;
-using ntp_background_images::prefs::kBrandedWallpaperNotificationDismissed;
 using ntp_background_images::prefs::kNewTabPageShowBackgroundImage;
-using ntp_background_images::prefs::
-    kNewTabPageShowSponsoredImagesBackgroundImage;  // NOLINT
 
 namespace {
 
@@ -72,17 +63,9 @@ base::DictValue GetPreferencesDictionary(PrefService* prefs) {
   base::DictValue pref_data;
   pref_data.Set("showBackgroundImage",
                 prefs->GetBoolean(kNewTabPageShowBackgroundImage));
-  pref_data.Set(
-      "brandedWallpaperOptIn",
-      prefs->GetBoolean(kNewTabPageShowSponsoredImagesBackgroundImage));
   pref_data.Set("showClock", prefs->GetBoolean(kNewTabPageShowClock));
   pref_data.Set("clockFormat", prefs->GetString(kNewTabPageClockFormat));
   pref_data.Set("showStats", prefs->GetBoolean(kNewTabPageShowStats));
-  pref_data.Set("showRewards", prefs->GetBoolean(kNewTabPageShowRewards));
-  pref_data.Set("isBrandedWallpaperNotificationDismissed",
-                prefs->GetBoolean(kBrandedWallpaperNotificationDismissed));
-  pref_data.Set("hideAllWidgets", prefs->GetBoolean(kNewTabPageHideAllWidgets));
-  pref_data.Set("showBraveTalk", prefs->GetBoolean(kNewTabPageShowBraveTalk));
   pref_data.Set(
       "showSearchBox",
       prefs->GetBoolean(brave_search_conversion::prefs::kShowNTPSearchBox));
@@ -105,39 +88,16 @@ base::DictValue GetPrivatePropertiesDictionary(PrefService* prefs) {
   return private_data;
 }
 
-constexpr char kNTPCustomizeUsageStatus[] =
-    "brave.new_tab_page.customize_p3a_usage";
-
 }  // namespace
 
 // static
-void BraveNewTabMessageHandler::RegisterLocalStatePrefs(
-    PrefRegistrySimple* local_state) {
-  local_state->RegisterIntegerPref(kNTPCustomizeUsageStatus, -1);
-}
-
-void BraveNewTabMessageHandler::RecordInitialP3AValues(
-    PrefService* local_state) {
-  // FlyWeb: components/p3a removed; the NTP customize usage metric is gone.
-}
-
-// static
 BraveNewTabMessageHandler* BraveNewTabMessageHandler::Create(
-    content::WebUIDataSource* source,
-    Profile* profile,
-    bool was_restored) {
-  //
-  // Initial Values
-  // Should only contain data that is static
-  //
-  // FlyWeb: Brave Ads is removed from the build, so no sponsored images.
-  source->AddBoolean("featureFlagBraveNTPSponsoredImagesWallpaper", false);
-  return new BraveNewTabMessageHandler(profile, was_restored);
+    Profile* profile) {
+  return new BraveNewTabMessageHandler(profile);
 }
 
-BraveNewTabMessageHandler::BraveNewTabMessageHandler(Profile* profile,
-                                                     bool was_restored)
-    : profile_(profile), was_restored_(was_restored), weak_ptr_factory_(this) {}
+BraveNewTabMessageHandler::BraveNewTabMessageHandler(Profile* profile)
+    : profile_(profile), weak_ptr_factory_(this) {}
 
 BraveNewTabMessageHandler::~BraveNewTabMessageHandler() = default;
 
@@ -148,11 +108,6 @@ void BraveNewTabMessageHandler::RegisterMessages() {
   // - Stats
   // - Preferences
   // - PrivatePage properties
-  auto plural_string_handler = std::make_unique<PluralStringHandler>();
-  plural_string_handler->AddLocalizedString("rewardsPublisherCountText",
-                                            IDS_REWARDS_PUBLISHER_COUNT_TEXT);
-  web_ui()->AddMessageHandler(std::move(plural_string_handler));
-
   web_ui()->RegisterMessageCallback(
       "getNewTabPagePreferences",
       base::BindRepeating(&BraveNewTabMessageHandler::HandleGetPreferences,
@@ -167,10 +122,6 @@ void BraveNewTabMessageHandler::RegisterMessages() {
           &BraveNewTabMessageHandler::HandleGetPrivateProperties,
           base::Unretained(this)));
   web_ui()->RegisterMessageCallback(
-      "getNewTabAdsData",
-      base::BindRepeating(&BraveNewTabMessageHandler::HandleGetNewTabAdsData,
-                          base::Unretained(this)));
-  web_ui()->RegisterMessageCallback(
       "toggleAlternativePrivateSearchEngine",
       base::BindRepeating(&BraveNewTabMessageHandler::
                               HandleToggleAlternativeSearchEngineProvider,
@@ -180,22 +131,8 @@ void BraveNewTabMessageHandler::RegisterMessages() {
       base::BindRepeating(&BraveNewTabMessageHandler::HandleSaveNewTabPagePref,
                           base::Unretained(this)));
   web_ui()->RegisterMessageCallback(
-      "registerNewTabPageView",
-      base::BindRepeating(
-          &BraveNewTabMessageHandler::HandleRegisterNewTabPageView,
-          base::Unretained(this)));
-  web_ui()->RegisterMessageCallback(
-      "brandedWallpaperLogoClicked",
-      base::BindRepeating(
-          &BraveNewTabMessageHandler::HandleBrandedWallpaperLogoClicked,
-          base::Unretained(this)));
-  web_ui()->RegisterMessageCallback(
       "getWallpaperData",
       base::BindRepeating(&BraveNewTabMessageHandler::HandleGetWallpaperData,
-                          base::Unretained(this)));
-  web_ui()->RegisterMessageCallback(
-      "customizeClicked",
-      base::BindRepeating(&BraveNewTabMessageHandler::HandleCustomizeClicked,
                           base::Unretained(this)));
 }
 
@@ -239,10 +176,6 @@ void BraveNewTabMessageHandler::OnJavascriptAllowed() {
       base::BindRepeating(&BraveNewTabMessageHandler::OnPreferencesChanged,
                           base::Unretained(this)));
   pref_change_registrar_.Add(
-      kNewTabPageShowSponsoredImagesBackgroundImage,
-      base::BindRepeating(&BraveNewTabMessageHandler::OnPreferencesChanged,
-                          base::Unretained(this)));
-  pref_change_registrar_.Add(
       brave_search_conversion::prefs::kShowNTPSearchBox,
       base::BindRepeating(&BraveNewTabMessageHandler::OnPreferencesChanged,
                           base::Unretained(this)));
@@ -264,22 +197,6 @@ void BraveNewTabMessageHandler::OnJavascriptAllowed() {
                           base::Unretained(this)));
   pref_change_registrar_.Add(
       kNewTabPageShowStats,
-      base::BindRepeating(&BraveNewTabMessageHandler::OnPreferencesChanged,
-                          base::Unretained(this)));
-  pref_change_registrar_.Add(
-      kNewTabPageShowRewards,
-      base::BindRepeating(&BraveNewTabMessageHandler::OnPreferencesChanged,
-                          base::Unretained(this)));
-  pref_change_registrar_.Add(
-      kBrandedWallpaperNotificationDismissed,
-      base::BindRepeating(&BraveNewTabMessageHandler::OnPreferencesChanged,
-                          base::Unretained(this)));
-  pref_change_registrar_.Add(
-      kNewTabPageShowBraveTalk,
-      base::BindRepeating(&BraveNewTabMessageHandler::OnPreferencesChanged,
-                          base::Unretained(this)));
-  pref_change_registrar_.Add(
-      kNewTabPageHideAllWidgets,
       base::BindRepeating(&BraveNewTabMessageHandler::OnPreferencesChanged,
                           base::Unretained(this)));
 }
@@ -310,13 +227,6 @@ void BraveNewTabMessageHandler::HandleGetPrivateProperties(
   PrefService* prefs = profile_->GetPrefs();
   auto data = GetPrivatePropertiesDictionary(prefs);
   ResolveJavascriptCallback(args[0], data);
-}
-
-void BraveNewTabMessageHandler::HandleGetNewTabAdsData(
-    const base::ListValue& args) {
-  AllowJavascript();
-
-  ResolveJavascriptCallback(args[0], GetAdsDataDictionary());
 }
 
 void BraveNewTabMessageHandler::HandleToggleAlternativeSearchEngineProvider(
@@ -361,22 +271,10 @@ void BraveNewTabMessageHandler::HandleSaveNewTabPagePref(
   const auto settingsValueBool = settingsValue.GetBool();
   if (settingsKeyInput == "showBackgroundImage") {
     settingsKey = kNewTabPageShowBackgroundImage;
-  } else if (settingsKeyInput == "brandedWallpaperOptIn") {
-    // TODO(simonhong): I think above |brandedWallpaperOptIn| should be changed
-    // to |sponsoredImagesWallpaperOptIn|.
-    settingsKey = kNewTabPageShowSponsoredImagesBackgroundImage;
   } else if (settingsKeyInput == "showClock") {
     settingsKey = kNewTabPageShowClock;
   } else if (settingsKeyInput == "showStats") {
     settingsKey = kNewTabPageShowStats;
-  } else if (settingsKeyInput == "showRewards") {
-    settingsKey = kNewTabPageShowRewards;
-  } else if (settingsKeyInput == "isBrandedWallpaperNotificationDismissed") {
-    settingsKey = kBrandedWallpaperNotificationDismissed;
-  } else if (settingsKeyInput == "hideAllWidgets") {
-    settingsKey = kNewTabPageHideAllWidgets;
-  } else if (settingsKeyInput == "showBraveTalk") {
-    settingsKey = kNewTabPageShowBraveTalk;
   } else if (settingsKeyInput == "showSearchBox") {
     settingsKey = brave_search_conversion::prefs::kShowNTPSearchBox;
   } else if (settingsKeyInput == "promptEnableSearchSuggestions") {
@@ -388,115 +286,21 @@ void BraveNewTabMessageHandler::HandleSaveNewTabPagePref(
     return;
   }
   prefs->SetBoolean(settingsKey, settingsValueBool);
-
-  // P3A can only be recorded after profile is updated
-  if (settingsKeyInput == "showBackgroundImage" ||
-      settingsKeyInput == "brandedWallpaperOptIn") {
-    brave::RecordSponsoredImagesEnabledP3A(profile_);
-  }
-}
-
-void BraveNewTabMessageHandler::HandleRegisterNewTabPageView(
-    const base::ListValue& args) {
-  AllowJavascript();
-
-  // Decrement original value only if there's actual branded content and we are
-  // not restoring browser tabs.
-  if (was_restored_) {
-    was_restored_ = false;
-    return;
-  }
-
-  if (auto* service = ViewCounterServiceFactory::GetForProfile(profile_)) {
-    service->RegisterPageView();
-  }
-}
-
-void BraveNewTabMessageHandler::HandleBrandedWallpaperLogoClicked(
-    const base::ListValue& args) {
-  AllowJavascript();
-  if (args.size() != 1) {
-    LOG(ERROR) << "Invalid input";
-    return;
-  }
-
-  if (auto* service = ViewCounterServiceFactory::GetForProfile(profile_)) {
-    const auto& arg = args[0].GetDict();
-    auto* creative_instance_id =
-        arg.FindString(ntp_background_images::kCreativeInstanceIDKey);
-    auto* destination_url = arg.FindStringByDottedPath(
-        ntp_background_images::kLogoDestinationURLPath);
-    auto* wallpaper_id =
-        arg.FindStringByDottedPath(ntp_background_images::kWallpaperIDKey);
-
-    DCHECK(creative_instance_id);
-    DCHECK(destination_url);
-    DCHECK(wallpaper_id);
-
-    service->BrandedWallpaperLogoClicked(
-        creative_instance_id ? *creative_instance_id : "",
-        destination_url ? *destination_url : "",
-        wallpaper_id ? *wallpaper_id : "");
-  }
 }
 
 void BraveNewTabMessageHandler::HandleGetWallpaperData(
     const base::ListValue& args) {
   AllowJavascript();
 
-  auto* service = ViewCounterServiceFactory::GetForProfile(profile_);
+  // FlyWeb: only the user's own background (image or colour) comes from here;
+  // without it the page picks one of its bundled backgrounds.
   base::DictValue wallpaper;
-
-  if (!service) {
-    ResolveJavascriptCallback(args[0], wallpaper);
-    return;
+  if (auto* service = ViewCounterServiceFactory::GetForProfile(profile_)) {
+    if (std::optional<base::DictValue> data = service->GetCurrentWallpaper()) {
+      wallpaper.Set("backgroundWallpaper", std::move(*data));
+    }
   }
-
-  std::optional<base::DictValue> data =
-      was_restored_ ? service->GetNextWallpaperForDisplay()
-                    : service->GetCurrentWallpaperForDisplay();
-
-  if (!data) {
-    ResolveJavascriptCallback(args[0], wallpaper);
-    return;
-  }
-
-  const auto is_background =
-      data->FindBool(ntp_background_images::kIsBackgroundKey);
-  DCHECK(is_background);
-
-  constexpr char kBackgroundWallpaperKey[] = "backgroundWallpaper";
-  if (is_background.value()) {
-    wallpaper.Set(kBackgroundWallpaperKey, std::move(*data));
-    ResolveJavascriptCallback(args[0], wallpaper);
-    return;
-  }
-
-  // Even though we show sponsored image, we should pass "Background wallpaper"
-  // data so that NTP customization menu can know which wallpaper is selected by
-  // users.
-  auto backgroundWallpaper = service->GetCurrentWallpaper();
-  wallpaper.Set(kBackgroundWallpaperKey,
-                backgroundWallpaper
-                    ? base::Value(std::move(*backgroundWallpaper))
-                    : base::Value());
-
-  const std::string* creative_instance_id =
-      data->FindString(ntp_background_images::kCreativeInstanceIDKey);
-  const std::string* wallpaper_id =
-      data->FindString(ntp_background_images::kWallpaperIDKey);
-  service->BrandedWallpaperWillBeDisplayed(
-      wallpaper_id ? *wallpaper_id : "",
-      creative_instance_id ? *creative_instance_id : "");
-
-  constexpr char kBrandedWallpaperKey[] = "brandedWallpaper";
-  wallpaper.Set(kBrandedWallpaperKey, std::move(*data));
   ResolveJavascriptCallback(args[0], wallpaper);
-}
-
-void BraveNewTabMessageHandler::HandleCustomizeClicked(
-    const base::ListValue& args) {
-  AllowJavascript();
 }
 
 void BraveNewTabMessageHandler::OnPrivatePropertiesChanged() {
@@ -515,9 +319,4 @@ void BraveNewTabMessageHandler::OnPreferencesChanged() {
   PrefService* prefs = profile_->GetPrefs();
   auto data = GetPreferencesDictionary(prefs);
   FireWebUIListener("preferences-changed", data);
-}
-
-base::DictValue BraveNewTabMessageHandler::GetAdsDataDictionary() const {
-  // FlyWeb: Brave Ads is removed from the build.
-  return {};
 }

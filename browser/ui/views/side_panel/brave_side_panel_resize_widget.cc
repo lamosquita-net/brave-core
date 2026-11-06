@@ -43,7 +43,7 @@ SidePanelResizeWidget::SidePanelResizeWidget(
 
 #if defined(USE_AURA)
   widget_->GetNativeView()->SetProperty(views::kHostViewKey,
-                                        browser_view->sidebar_host_view());
+                                        browser_view->side_panel_host_view());
 #endif
 
   if (panel_->GetVisible()) {

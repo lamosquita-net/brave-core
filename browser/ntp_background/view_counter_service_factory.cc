@@ -5,26 +5,14 @@
 
 #include "brave/browser/ntp_background/view_counter_service_factory.h"
 
-#include <memory>
-#include <utility>
-
 #include "base/no_destructor.h"
-#include "brave/browser/brave_browser_process.h"
-#include "brave/components/constants/pref_names.h"
-#include "brave/components/ntp_background_images/browser/ntp_background_images_service.h"
-#include "brave/components/ntp_background_images/browser/ntp_background_images_source.h"
-#include "brave/components/ntp_background_images/browser/ntp_p3a_helper.h"
-#include "brave/components/ntp_background_images/browser/ntp_sponsored_images_source.h"
 #include "brave/components/ntp_background_images/browser/view_counter_service.h"
 #include "brave/components/ntp_background_images/buildflags/buildflags.h"
-#include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/profile.h"
 #include "components/keyed_service/content/browser_context_dependency_manager.h"
 #include "components/keyed_service/content/browser_context_keyed_service_factory.h"
 #include "components/pref_registry/pref_registry_syncable.h"
-#include "components/prefs/pref_service.h"
 #include "content/public/browser/browser_context.h"
-#include "content/public/browser/url_data_source.h"
 
 #if BUILDFLAG(ENABLE_CUSTOM_BACKGROUND)
 #include "brave/browser/ntp_background/brave_ntp_custom_background_service_factory.h"
@@ -57,33 +45,19 @@ ViewCounterServiceFactory::~ViewCounterServiceFactory() = default;
 
 KeyedService* ViewCounterServiceFactory::BuildServiceInstanceFor(
     content::BrowserContext* browser_context) const {
-  // Only NTP in normal profile uses sponsored services.
+  // Only NTP in normal profile shows backgrounds.
   if (!Profile::FromBrowserContext(browser_context)->IsRegularProfile()) {
     return nullptr;
   }
 
-  if (auto* service =
-          g_brave_browser_process->ntp_background_images_service()) {
-    Profile* profile = Profile::FromBrowserContext(browser_context);
-    // FlyWeb: Brave Ads is removed from the build, so no sponsored images.
-    const bool is_supported_locale = false;
-    content::URLDataSource::Add(
-        browser_context, std::make_unique<NTPBackgroundImagesSource>(service));
-    content::URLDataSource::Add(
-        browser_context, std::make_unique<NTPSponsoredImagesSource>(service));
-
-    return new ViewCounterService(
-        service,
+  Profile* profile = Profile::FromBrowserContext(browser_context);
+  return new ViewCounterService(
 #if BUILDFLAG(ENABLE_CUSTOM_BACKGROUND)
-        BraveNTPCustomBackgroundServiceFactory::GetForContext(profile),
+      BraveNTPCustomBackgroundServiceFactory::GetForContext(profile),
 #else
-        nullptr,
+      nullptr,
 #endif
-        profile->GetPrefs(), g_browser_process->local_state(),
-        /*ntp_p3a_helper=*/nullptr, is_supported_locale);
-  }
-
-  return nullptr;
+      profile->GetPrefs());
 }
 
 void ViewCounterServiceFactory::RegisterProfilePrefs(

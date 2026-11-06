@@ -16,6 +16,7 @@
 #include "base/time/time.h"
 #include "components/component_updater/configurator_impl.h"
 #include "components/update_client/configurator.h"
+#include "components/update_client/crx_cache.h"
 
 class PrefRegistrySimple;
 class PrefService;
@@ -61,7 +62,6 @@ class BraveConfigurator : public update_client::Configurator {
       override;
   scoped_refptr<update_client::UnzipperFactory> GetUnzipperFactory() override;
   scoped_refptr<update_client::PatcherFactory> GetPatcherFactory() override;
-  bool EnabledDeltas() const override;
   bool EnabledBackgroundDownloader() const override;
   bool EnabledCupSigning() const override;
   PrefService* GetPrefService() const override;
@@ -71,7 +71,7 @@ class BraveConfigurator : public update_client::Configurator {
   GetProtocolHandlerFactory() const override;
   std::optional<bool> IsMachineExternallyManaged() const override;
   update_client::UpdaterStateProvider GetUpdaterStateProvider() const override;
-  std::optional<base::FilePath> GetCrxCachePath() const override;
+  scoped_refptr<update_client::CrxCache> GetCrxCache() const override;
   bool IsConnectionMetered() const override;
 
  private:
@@ -86,6 +86,7 @@ class BraveConfigurator : public update_client::Configurator {
   scoped_refptr<update_client::CrxDownloaderFactory> crx_downloader_factory_;
   scoped_refptr<update_client::UnzipperFactory> unzip_factory_;
   scoped_refptr<update_client::PatcherFactory> patch_factory_;
+  scoped_refptr<update_client::CrxCache> crx_cache_;
 
   ~BraveConfigurator() override;
 };

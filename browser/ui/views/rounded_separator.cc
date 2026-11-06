@@ -10,18 +10,26 @@
 #include "base/strings/utf_string_conversions.h"
 #include "chrome/grit/generated_resources.h"
 #include "ui/accessibility/ax_enums.mojom.h"
-#include "ui/accessibility/ax_node_data.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/metadata/metadata_impl_macros.h"
 #include "ui/color/color_id.h"
 #include "ui/color/color_provider.h"
 #include "ui/gfx/canvas.h"
 #include "ui/native_theme/native_theme.h"
+#include "ui/views/accessibility/view_accessibility.h"
 
 // static
 const int RoundedSeparator::kThickness = 1;
 
-RoundedSeparator::RoundedSeparator() = default;
+RoundedSeparator::RoundedSeparator() {
+  // 156 removed View::GetAccessibleNodeData(); the accessible properties are
+  // set once on the ViewAccessibility (as in Brave 1.98).
+  // A valid role must be set in the AXNodeData prior to setting the name
+  // via AXNodeData::SetName.
+  GetViewAccessibility().SetRole(ax::mojom::Role::kSplitter);
+  GetViewAccessibility().SetName(
+      l10n_util::GetStringUTF8(IDS_ACCNAME_SEPARATOR));
+}
 
 RoundedSeparator::~RoundedSeparator() = default;
 
@@ -44,13 +52,6 @@ gfx::Size RoundedSeparator::CalculatePreferredSize(
   gfx::Insets insets = GetInsets();
   size.Enlarge(insets.width(), insets.height());
   return size;
-}
-
-void RoundedSeparator::GetAccessibleNodeData(ui::AXNodeData* node_data) {
-  // A valid role must be set in the AXNodeData prior to setting the name
-  // via AXNodeData::SetName.
-  node_data->role = ax::mojom::Role::kSplitter;
-  node_data->SetName(l10n_util::GetStringUTF8(IDS_ACCNAME_SEPARATOR));
 }
 
 void RoundedSeparator::OnPaint(gfx::Canvas* canvas) {

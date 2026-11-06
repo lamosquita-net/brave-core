@@ -5,12 +5,8 @@
 
 #include "brave/browser/ui/views/frame/brave_browser_view_layout.h"
 
-#include <algorithm>
-#include <limits>
-
 #include "brave/browser/ui/brave_browser.h"
 #include "brave/browser/ui/views/frame/brave_contents_view_util.h"
-#include "brave/browser/ui/views/sidebar/sidebar_container_view.h"
 #include "brave/browser/ui/views/tabs/vertical_tab_utils.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser.h"
@@ -21,45 +17,11 @@
 #include "chrome/browser/ui/views/frame/browser_view.h"
 #include "chrome/browser/ui/views/frame/browser_view_layout_delegate.h"
 #include "chrome/browser/ui/views/infobars/infobar_container_view.h"
-#include "chrome/browser/ui/views/side_panel/side_panel_ui.h"
 #include "components/bookmarks/common/bookmark_pref_names.h"
 #include "ui/views/border.h"
 #include "ui/views/view_class_properties.h"
 
-namespace {
-
-constexpr int kSidebarSeparatorWidth = 1;
-constexpr int kSidebarSeparatorMargin = 4;
-
-}  // namespace
-
 BraveBrowserViewLayout::~BraveBrowserViewLayout() = default;
-
-int BraveBrowserViewLayout::GetIdealSideBarWidth() const {
-  if (!sidebar_container_) {
-    return 0;
-  }
-
-  return GetIdealSideBarWidth(contents_container_->width() +
-                              GetContentsMargins().width() +
-                              sidebar_container_->width());
-}
-
-int BraveBrowserViewLayout::GetIdealSideBarWidth(int available_width) const {
-  if (!sidebar_container_) {
-    return 0;
-  }
-
-  int sidebar_width = sidebar_container_->GetPreferredSize().width();
-
-  // The sidebar can take up the entire space for fullscreen.
-  if (sidebar_width == std::numeric_limits<int>::max()) {
-    return available_width;
-  }
-
-  // The sidebar should take up no more than 80% of the content area.
-  return std::min<int>(available_width * 0.8, sidebar_width);
-}
 
 void BraveBrowserViewLayout::Layout(views::View* host) {
   BrowserViewLayout::Layout(host);
@@ -82,9 +44,6 @@ void BraveBrowserViewLayout::LayoutVerticalTabs() {
     }
     if (IsInfobarVisible()) {
       return infobar_container_->y();
-    }
-    if (IsReaderModeToolbarVisible()) {
-      return reader_mode_toolbar_->y();
     }
     return contents_container_->y() - GetContentsMargins().top();
   };
@@ -129,8 +88,7 @@ void BraveBrowserViewLayout::LayoutSidePanelView(
     contents_background_->SetBoundsRect(contents_container_bounds);
   }
 
-  LayoutSideBar(contents_container_bounds);
-  LayoutReaderModeToolbar(contents_container_bounds);
+  BrowserViewLayout::LayoutSidePanelView(side_panel, contents_container_bounds);
 
   UpdateContentsContainerInsets(contents_container_bounds);
 }
@@ -183,71 +141,9 @@ void BraveBrowserViewLayout::LayoutContentsContainerView(int top, int bottom) {
   return BrowserViewLayout::LayoutContentsContainerView(top, bottom);
 }
 
-void BraveBrowserViewLayout::LayoutSideBar(gfx::Rect& contents_bounds) {
-  if (!sidebar_container_) {
-    return;
-  }
-
-  gfx::Rect sidebar_bounds = contents_bounds;
-  sidebar_bounds.set_width(GetIdealSideBarWidth(contents_bounds.width()));
-
-  contents_bounds.set_width(contents_bounds.width() - sidebar_bounds.width());
-
-#if BUILDFLAG(IS_MAC)
-  // On Mac, setting an empty rect for the contents web view could cause a crash
-  // in `StatusBubbleViews`. As the `StatusBubbleViews` width is one third of
-  // the base view, set 3 here so that `StatusBubbleViews` can have a width of
-  // at least 1.
-  if (contents_bounds.width() <= 0) {
-    contents_bounds.set_width(3);
-  }
-#endif
-
-  gfx::Rect separator_bounds;
-
-  if (sidebar_container_->sidebar_on_left()) {
-    contents_bounds.set_x(contents_bounds.x() + sidebar_bounds.width());
-
-    // When vertical tabs and the sidebar are adjacent, add a separator between
-    // them.
-    if (tabs::utils::ShouldShowVerticalTabs(browser_view_->browser()) &&
-        sidebar_separator_ && !sidebar_bounds.IsEmpty()) {
-      separator_bounds = sidebar_bounds;
-      separator_bounds.set_width(kSidebarSeparatorWidth);
-      separator_bounds.Inset(gfx::Insets::VH(kSidebarSeparatorMargin, 0));
-
-      // Move sidebar and content over to make room for the separator.
-      sidebar_bounds.set_x(sidebar_bounds.x() + kSidebarSeparatorWidth);
-      contents_bounds.Inset(gfx::Insets::TLBR(0, kSidebarSeparatorWidth, 0, 0));
-    }
-  } else {
-    sidebar_bounds.set_x(contents_bounds.right());
-  }
-
-  // Side panel doesn't need margin as sidebar UI and contents container
-  // will have margins if needed.
-  gfx::Insets panel_margins = GetContentsMargins();
-  panel_margins.set_left_right(0, 0);
-  sidebar_container_->side_panel()->SetProperty(views::kMarginsKey,
-                                                panel_margins);
-
-  sidebar_container_->SetBoundsRect(
-      browser_view_->GetMirroredRect(sidebar_bounds));
-
-  if (sidebar_separator_) {
-    if (separator_bounds.IsEmpty()) {
-      sidebar_separator_->SetVisible(false);
-    } else {
-      sidebar_separator_->SetBoundsRect(
-          browser_view_->GetMirroredRect(separator_bounds));
-      sidebar_separator_->SetVisible(true);
-    }
-  }
-}
-
 void BraveBrowserViewLayout::UpdateContentsContainerInsets(
     gfx::Rect& contents_container_bounds) {
-  // Control contents's margin with sidebar & vertical tab state.
+  // Control contents's margin with vertical tab state.
   gfx::Insets contents_margins = GetContentsMargins();
 
   // Don't need contents container's left or right margin with vertical tab as
@@ -261,45 +157,7 @@ void BraveBrowserViewLayout::UpdateContentsContainerInsets(
     }
   }
 
-  // If side panel is shown, contents container should have margin
-  // because panel doesn't have margin.
-  if (browser_view_->browser()
-          ->GetFeatures()
-          .side_panel_ui()
-          ->GetCurrentEntryId()) {
-    contents_container_bounds.Inset(contents_margins);
-    return;
-  }
-
-  // If sidebar UI is not shown, contents container should have margin.
-  if (!sidebar_container_ || !sidebar_container_->IsSidebarVisible()) {
-    contents_container_bounds.Inset(contents_margins);
-    return;
-  }
-
-  // If sidebar UI is only shown, contents container should have margin
-  // based on sidebar's position because sidebar UI itself has padding always.
-  // If sidebar is shown in left-side, contents container doens't need its
-  // left margin.
-  if (sidebar_container_->sidebar_on_left()) {
-    contents_margins.set_left(0);
-  } else {
-    contents_margins.set_right(0);
-  }
   contents_container_bounds.Inset(contents_margins);
-}
-
-void BraveBrowserViewLayout::LayoutReaderModeToolbar(
-    gfx::Rect& contents_bounds) {
-  if (!IsReaderModeToolbarVisible()) {
-    return;
-  }
-
-  gfx::Rect bounds = contents_bounds;
-  bounds.set_height(reader_mode_toolbar_->GetPreferredSize().height());
-  reader_mode_toolbar_->SetBoundsRect(bounds);
-
-  contents_bounds.Inset(gfx::Insets::TLBR(bounds.height(), 0, 0, 0));
 }
 
 gfx::Insets BraveBrowserViewLayout::GetContentsMargins() const {
@@ -318,16 +176,11 @@ gfx::Insets BraveBrowserViewLayout::GetContentsMargins() const {
   // no need for a top margin.
   if (browser_view_->GetTabStripVisible() ||
       browser_view_->IsToolbarVisible() ||
-      browser_view_->IsBookmarkBarVisible() || IsInfobarVisible() ||
-      IsReaderModeToolbarVisible()) {
+      browser_view_->IsBookmarkBarVisible() || IsInfobarVisible()) {
     margins.set_top(0);
   }
 
   return margins;
-}
-
-bool BraveBrowserViewLayout::IsReaderModeToolbarVisible() const {
-  return reader_mode_toolbar_ && reader_mode_toolbar_->GetVisible();
 }
 
 bool BraveBrowserViewLayout::IsFullscreenForBrowser() const {

@@ -39,14 +39,6 @@
   "brave/app/theme/brave_unscaled_resources.grd": {
     "includes": [60100],
   },
-  # This file is generated during the build.
-  "<(SHARED_INTERMEDIATE_DIR)/brave/web-ui-brave_webtorrent/brave_webtorrent.grd": {
-    "META": {"sizes": {"includes": [10]}},
-    "includes": [60110],
-  },
-  "brave/components/brave_webtorrent/resources.grd": {
-    "includes": [60120],
-  },
   "brave/components/resources/brave_components_strings.grd": {
     "messages": [60210],
   },
@@ -73,17 +65,9 @@
     "META": {"sizes": {"includes": [10]}},
     "includes": [63460],
   },
-  "<(SHARED_INTERMEDIATE_DIR)/brave/web-ui-playlist/playlist.grd": {
-    "META": {"sizes": {"includes": [10]}},
-    "includes": [63470],
-  },
   "<(SHARED_INTERMEDIATE_DIR)/brave/web-ui-cookie_list_opt_in/cookie_list_opt_in.grd": {
     "META": {"sizes": {"includes": [10]}},
     "includes": [63580],
-  },
-  "<(SHARED_INTERMEDIATE_DIR)/brave/web-ui-brave_speedreader_toolbar/brave_speedreader_toolbar.grd": {
-    "META": {"sizes": {"includes": [10]}},
-    "includes": [63590],
   },
   "<(SHARED_INTERMEDIATE_DIR)/brave/web-ui-brave_adblock_internals/brave_adblock_internals.grd": {
     "META": {"sizes": {"includes": [10]}},

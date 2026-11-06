@@ -9,7 +9,7 @@
 #include "brave/browser/ui/views/frame/vertical_tab_strip_root_view.h"
 #include "brave/browser/ui/views/frame/vertical_tab_strip_widget_delegate_view.h"
 #include "brave/browser/ui/views/tabs/vertical_tab_utils.h"
-#include "chrome/browser/ui/views/frame/browser_non_client_frame_view.h"
+#include "chrome/browser/ui/views/frame/browser_frame_view.h"
 #include "chrome/browser/ui/views/frame/browser_view.h"
 #include "chrome/browser/ui/views/tabs/tab_strip.h"
 #include "chrome/test/base/in_process_browser_test.h"
@@ -45,8 +45,8 @@ class VerticalTabStripRootViewBrowserTest : public InProcessBrowserTest {
     return nullptr;
   }
 
-  BrowserNonClientFrameView* browser_non_client_frame_view() {
-    return browser_view()->frame()->GetFrameView();
+  BrowserFrameView* browser_non_client_frame_view() {
+    return browser_view()->browser_widget()->GetFrameView();
   }
 
   void ToggleVerticalTabStrip() {

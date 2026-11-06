@@ -8,6 +8,7 @@
 #include <string>
 
 #include "brave/browser/brave_shields/brave_shields_web_contents_observer.h"
+#include "brave/browser/flyweb/pruned_feature_prefs.h"
 #include "brave/browser/new_tab/new_tab_shows_options.h"
 #include "brave/browser/search/ntp_utils.h"
 #include "brave/browser/themes/brave_dark_mode_utils.h"
@@ -23,8 +24,6 @@
 #include "brave/components/brave_shields/content/browser/brave_shields_p3a.h"
 #include "brave/components/brave_shields/core/common/pref_names.h"
 #include "brave/components/brave_sync/brave_sync_prefs.h"
-#include "brave/components/brave_wayback_machine/buildflags/buildflags.h"
-#include "brave/components/brave_webtorrent/browser/buildflags/buildflags.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/de_amp/common/pref_names.h"
 #include "brave/components/debounce/core/browser/debounce_service.h"
@@ -33,7 +32,6 @@
 #include "brave/components/omnibox/browser/brave_omnibox_prefs.h"
 #include "brave/components/request_otr/common/buildflags/buildflags.h"
 #include "brave/components/search_engines/brave_prepopulated_engines.h"
-#include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "build/build_config.h"
 #include "chrome/browser/prefetch/pref_names.h"
 #include "chrome/browser/prefs/session_startup_pref.h"
@@ -58,20 +56,8 @@
 #include "extensions/buildflags/buildflags.h"
 #include "third_party/widevine/cdm/buildflags.h"
 
-#if BUILDFLAG(ENABLE_BRAVE_WEBTORRENT)
-#include "brave/components/brave_webtorrent/browser/webtorrent_util.h"
-#endif
-
-#if BUILDFLAG(ENABLE_BRAVE_WAYBACK_MACHINE)
-#include "brave/components/brave_wayback_machine/pref_names.h"
-#endif
-
 #if !BUILDFLAG(USE_GCM_FROM_PLATFORM)
 #include "brave/browser/gcm_driver/brave_gcm_utils.h"
-#endif
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-#include "brave/components/speedreader/speedreader_service.h"
 #endif
 
 #if BUILDFLAG(IS_ANDROID)
@@ -84,6 +70,7 @@
 #if !BUILDFLAG(IS_ANDROID)
 #include "brave/browser/search_engines/search_engine_provider_util.h"
 #include "brave/browser/ui/tabs/brave_tab_prefs.h"
+#include "brave/browser/ui/webui/welcome_page/brave_welcome_page_prefs.h"
 #include "brave/components/brave_private_new_tab_ui/common/pref_names.h"
 #include "chrome/browser/ui/webui/bookmarks/bookmark_prefs.h"
 #include "chrome/browser/ui/webui/side_panel/bookmarks/bookmarks.mojom.h"
@@ -94,7 +81,7 @@
 #endif
 
 #if defined(TOOLKIT_VIEWS)
-#include "brave/components/sidebar/browser/pref_names.h"
+#include "brave/browser/ui/side_panel/brave_side_panel_prefs.h"
 #endif
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
@@ -118,6 +105,9 @@ void RegisterProfilePrefsForMigration(
 
   // Added 10/2022
   registry->RegisterIntegerPref(kDefaultBrowserLaunchingCount, 0);
+
+  // Added 11/2026
+  brave_welcome_page::prefs::RegisterProfilePrefsForMigration(registry);
 #endif
 
   // Restore "Other Bookmarks" migration
@@ -150,12 +140,6 @@ void RegisterProfilePrefsForMigration(
   registry->RegisterBooleanPref(kBraveSuggestedSiteSuggestionsEnabled, false);
 #endif
 
-  // Added May 2023
-#if defined(TOOLKIT_VIEWS)
-  registry->RegisterBooleanPref(sidebar::kSidebarAlignmentChangedTemporarily,
-                                false);
-#endif
-
   // Added 2023-09
   ntp_background_images::ViewCounterService::RegisterProfilePrefsForMigration(
       registry);
@@ -168,6 +152,9 @@ void RegisterProfilePrefsForMigration(
 
   // Added 2024-07
   registry->RegisterBooleanPref(kHangoutsEnabled, false);
+
+  // Added 2026-11: features pruned in the Chromium 156 port.
+  flyweb::RegisterPrunedFeatureProfilePrefs(registry);
 }
 
 void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
@@ -181,7 +168,6 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
   registry->RegisterBooleanPref(kBraveAutofillPrivateWindows, true);
   // appearance
   registry->RegisterBooleanPref(kShowBookmarksButton, true);
-  registry->RegisterBooleanPref(kShowSidePanelButton, true);
   registry->RegisterBooleanPref(kLocationBarIsWide, false);
   registry->RegisterBooleanPref(kMRUCyclingEnabled, false);
   registry->RegisterBooleanPref(kTabsSearchShow, true);
@@ -215,15 +201,6 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
                                 true);
   registry->RegisterBooleanPref(brave_shields::prefs::kLinkedInEmbedControlType,
                                 false);
-
-  // WebTorrent
-#if BUILDFLAG(ENABLE_BRAVE_WEBTORRENT)
-  webtorrent::RegisterProfilePrefs(registry);
-#endif
-
-#if BUILDFLAG(ENABLE_BRAVE_WAYBACK_MACHINE)
-  registry->RegisterBooleanPref(kBraveWaybackMachineEnabled, true);
-#endif
 
 #if BUILDFLAG(IS_ANDROID)
   registry->RegisterBooleanPref(kDesktopModeEnabled, false);
@@ -319,10 +296,6 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
   registry->RegisterBooleanPref(kNewTabPageShowClock, false);
   registry->RegisterStringPref(kNewTabPageClockFormat, "");
   registry->RegisterBooleanPref(kNewTabPageShowStats, true);
-  registry->RegisterBooleanPref(kNewTabPageShowRewards, true);
-  // FlyWeb: Brave Talk card hidden on the new tab page by default.
-  registry->RegisterBooleanPref(kNewTabPageShowBraveTalk, false);
-  registry->RegisterBooleanPref(kNewTabPageHideAllWidgets, false);
 
 // Private New Tab Page
 #if !BUILDFLAG(IS_ANDROID)
@@ -377,10 +350,6 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
   registry->RegisterDictionaryPref(kWebDiscoveryCTAState);
 #endif
 
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-  speedreader::SpeedreaderService::RegisterProfilePrefs(registry);
-#endif
-
   de_amp::RegisterProfilePrefs(registry);
   debounce::DebounceService::RegisterProfilePrefs(registry);
 
@@ -396,6 +365,8 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
   registry->RegisterBooleanPref(kShowFullscreenReminder, true);
 
   brave_tabs::RegisterBraveProfilePrefs(registry);
+
+  brave_welcome_page::prefs::RegisterProfilePrefs(registry);
 
   registry->SetDefaultPrefValue(
       bookmarks_webui::prefs::kBookmarksViewType,
@@ -424,6 +395,8 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
 
 #if defined(TOOLKIT_VIEWS)
   bookmarks::prefs::RegisterProfilePrefs(registry);
+  registry->RegisterIntegerPref(brave::kSidePanelWidth,
+                                brave::kDefaultSidePanelWidth);
 #endif
 
   registry->SetDefaultPrefValue(prefs::kSearchSuggestEnabled,

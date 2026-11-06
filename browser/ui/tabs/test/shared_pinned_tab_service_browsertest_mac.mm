@@ -7,7 +7,7 @@
 
 #include <AppKit/AppKit.h>
 
-#include "brave/browser/ui/views/frame/brave_browser_frame_mac.h"
+#include "brave/browser/ui/views/frame/brave_browser_native_widget_mac.h"
 #include "chrome/app/chrome_command_ids.h"
 #include "chrome/browser/ui/browser_commands.h"
 #import "chrome/browser/ui/views/frame/browser_frame_mac.h"

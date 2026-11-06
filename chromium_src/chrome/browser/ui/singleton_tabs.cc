@@ -14,7 +14,7 @@
 // and remote (on https://www.google.com and https://support.google.com).
 // For remote URLs going to Google we want to point users to our community site
 // instead.
-void ShowSingletonTab(Browser* browser, const GURL& url) {
+void ShowSingletonTab(BrowserWindowInterface* browser, const GURL& url) {
   // FlyWeb: Google help pages (support.google.com...) go to our help page.
   GURL new_url = url.DomainIs("google.com") ? GURL(kFlyWebHelpURL) : url;
 

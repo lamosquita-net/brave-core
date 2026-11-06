@@ -4,7 +4,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "brave/app/brave_command_ids.h"
-#include "brave/browser/ui/commander/commander_service.h"
 #include "brave/grit/brave_generated_resources.h"
 #include "chrome/grit/generated_resources.h"
 #include "components/dom_distiller/core/dom_distiller_features.h"
@@ -15,8 +14,6 @@ constexpr int kPasteMacResourceId = IDS_PASTE_MAC;
 constexpr int kMuteSiteResourceId = IDS_MUTE_SITE_MAC;
 constexpr int kCloseOtherTabsResourceId = IDS_TAB_CXMENU_CLOSEOTHERTABS;
 constexpr int kHelpMacResourceId = IDS_HELP_MAC;
-constexpr int kMediaRouterMenuItemTitleResourceId =
-    IDS_MEDIA_ROUTER_MENU_ITEM_TITLE;
 }  // namespace
 
 // Insert "Report Broken Site" in "Help" menu
@@ -42,16 +39,8 @@ IDS_MUTE_TAB_MAC).command_id(IDC_TOGGLE_TAB_MUTE), \
 IDS_TAB_CXMENU_CLOSE_DUPLICATE_TABS).command_id(IDC_CLOSE_DUPLICATE_TABS), \
               Item(kCloseOtherTabsResourceId
 
-// Insert Commander item right after media router
-#undef IDS_MEDIA_ROUTER_MENU_ITEM_TITLE
-#define IDS_MEDIA_ROUTER_MENU_ITEM_TITLE                         \
-IDS_IDC_COMMANDER).command_id(IDC_COMMANDER)                     \
-                  .remove_if(is_pwa || !commander::IsEnabled()), \
-              Item(kMediaRouterMenuItemTitleResourceId
-
 #include "src/chrome/browser/ui/cocoa/main_menu_builder.mm"
 
-#undef IDS_MEDIA_ROUTER_MENU_ITEM_TITLE
 #undef IDS_MUTE_SITE_MAC
 #define IDS_MUTE_SITE_MAC kMuteSiteResourceId
 #undef IDS_PASTE_MAC

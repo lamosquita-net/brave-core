@@ -16,35 +16,20 @@
 class Profile;
 
 namespace base {
-class Time;
 class Value;
 }  //  namespace base
-
-namespace content {
-class WebUIDataSource;
-}
-
-class PrefRegistrySimple;
-class PrefService;
 
 // TODO(simonhong): Migrate to brave_new_tab_page.mojom.
 // Handles messages to and from the New Tab Page javascript
 class BraveNewTabMessageHandler : public content::WebUIMessageHandler {
  public:
-  BraveNewTabMessageHandler(Profile* profile, bool was_restored);
+  explicit BraveNewTabMessageHandler(Profile* profile);
   BraveNewTabMessageHandler(const BraveNewTabMessageHandler&) = delete;
   BraveNewTabMessageHandler& operator=(const BraveNewTabMessageHandler&) =
       delete;
   ~BraveNewTabMessageHandler() override;
 
-  static void RegisterLocalStatePrefs(PrefRegistrySimple* local_state);
-  static void RecordInitialP3AValues(PrefService* local_state);
-  static bool CanPromptBraveTalk();
-  static bool CanPromptBraveTalk(base::Time now);
-  static BraveNewTabMessageHandler* Create(
-      content::WebUIDataSource* html_source,
-      Profile* profile,
-      bool was_restored);
+  static BraveNewTabMessageHandler* Create(Profile* profile);
 
  private:
   // WebUIMessageHandler implementation.
@@ -55,25 +40,17 @@ class BraveNewTabMessageHandler : public content::WebUIMessageHandler {
   void HandleGetPreferences(const base::ListValue& args);
   void HandleGetStats(const base::ListValue& args);
   void HandleGetPrivateProperties(const base::ListValue& args);
-  void HandleGetNewTabAdsData(const base::ListValue& args);
   void HandleSaveNewTabPagePref(const base::ListValue& args);
   void HandleToggleAlternativeSearchEngineProvider(const base::ListValue& args);
-  void HandleRegisterNewTabPageView(const base::ListValue& args);
-  void HandleBrandedWallpaperLogoClicked(const base::ListValue& args);
   void HandleGetWallpaperData(const base::ListValue& args);
-  void HandleCustomizeClicked(const base::ListValue& args);
 
   void OnStatsChanged();
   void OnPreferencesChanged();
   void OnPrivatePropertiesChanged();
 
-  base::DictValue GetAdsDataDictionary() const;
-
   PrefChangeRegistrar pref_change_registrar_;
   // Weak pointer.
   raw_ptr<Profile> profile_ = nullptr;
-
-  bool was_restored_ = false;
 
   base::WeakPtrFactory<BraveNewTabMessageHandler> weak_ptr_factory_;
 };

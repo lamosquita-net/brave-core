@@ -44,7 +44,6 @@
 #include "brave/components/brave_shields/content/browser/domain_block_navigation_throttle.h"
 #include "brave/components/brave_shields/core/common/brave_shield_constants.h"
 #include "brave/components/brave_shields/core/common/features.h"
-#include "brave/components/brave_webtorrent/browser/buildflags/buildflags.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/constants/webui_url_constants.h"
 #include "brave/components/cosmetic_filters/browser/cosmetic_filters_resources.h"
@@ -53,10 +52,7 @@
 #include "brave/components/debounce/content/browser/debounce_navigation_throttle.h"
 #include "brave/components/google_sign_in_permission/google_sign_in_permission_throttle.h"
 #include "brave/components/google_sign_in_permission/google_sign_in_permission_util.h"
-#include "brave/components/playlist/common/buildflags/buildflags.h"
-#include "brave/components/playlist/common/features.h"
 #include "brave/components/request_otr/common/buildflags/buildflags.h"
-#include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "brave/components/translate/core/common/brave_translate_switches.h"
 #include "brave/components/url_sanitizer/browser/url_sanitizer_service.h"
 #include "brave/grit/brave_generated_resources.h"
@@ -131,23 +127,6 @@ using content::WebContents;
 using extensions::ChromeContentBrowserClientExtensionsPart;
 #endif
 
-#if BUILDFLAG(ENABLE_BRAVE_WEBTORRENT)
-#include "brave/browser/extensions/brave_webtorrent_navigation_throttle.h"
-#include "brave/components/brave_webtorrent/browser/magnet_protocol_handler.h"
-#endif
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-#include "brave/browser/speedreader/speedreader_service_factory.h"
-#include "brave/browser/speedreader/speedreader_tab_helper.h"
-#include "brave/components/speedreader/speedreader_body_distiller.h"
-#include "brave/components/speedreader/speedreader_distilled_page_producer.h"
-#include "brave/components/speedreader/speedreader_util.h"
-#if !BUILDFLAG(IS_ANDROID)
-#include "brave/browser/ui/webui/speedreader/speedreader_toolbar_ui.h"
-#include "brave/components/speedreader/common/speedreader_toolbar.mojom.h"
-#endif
-#endif
-
 #if BUILDFLAG(ENABLE_WIDEVINE)
 #include "brave/browser/brave_drm_tab_helper.h"
 #endif
@@ -168,16 +147,6 @@ using extensions::ChromeContentBrowserClientExtensionsPart;
 #include "brave/components/commands/common/features.h"
 #include "ui/webui/resources/cr_components/searchbox/searchbox.mojom.h"
 #endif
-
-#if BUILDFLAG(ENABLE_PLAYLIST)
-#include "brave/components/playlist/browser/playlist_background_web_contents_helper.h"
-#include "brave/components/playlist/browser/playlist_media_handler.h"
-#include "brave/components/playlist/common/mojom/playlist.mojom.h"
-#endif
-
-#if BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
-#include "brave/browser/ui/webui/playlist_ui.h"
-#endif  // BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
 
 namespace {
 
@@ -316,12 +285,6 @@ bool BraveContentBrowserClient::AreIsolatedWebAppsEnabled(
 
 void BraveContentBrowserClient::BrowserURLHandlerCreated(
     content::BrowserURLHandler* handler) {
-#if BUILDFLAG(ENABLE_BRAVE_WEBTORRENT)
-  handler->AddHandlerPair(&webtorrent::HandleMagnetURLRewrite,
-                          content::BrowserURLHandler::null_handler());
-  handler->AddHandlerPair(&webtorrent::HandleTorrentURLRewrite,
-                          &webtorrent::HandleTorrentURLReverseRewrite);
-#endif
   handler->AddHandlerPair(&HandleURLRewrite, &HandleURLReverseOverrideRewrite);
   ChromeContentBrowserClient::BrowserURLHandlerCreated(handler);
 }
@@ -375,40 +338,14 @@ void BraveContentBrowserClient::
       },
       &render_frame_host));
 
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-  associated_registry.AddInterface<speedreader::mojom::SpeedreaderHost>(
-      base::BindRepeating(
-          [](content::RenderFrameHost* render_frame_host,
-             mojo::PendingAssociatedReceiver<
-                 speedreader::mojom::SpeedreaderHost> receiver) {
-            speedreader::SpeedreaderTabHelper::BindSpeedreaderHost(
-                std::move(receiver), render_frame_host);
-          },
-          &render_frame_host));
-#endif
-
-#if BUILDFLAG(ENABLE_PLAYLIST)
-  associated_registry.AddInterface<playlist::mojom::PlaylistMediaResponder>(
-      base::BindRepeating(
-          &playlist::PlaylistMediaHandler::BindMediaResponderReceiver,
-          &render_frame_host));
-#endif  // BUILDFLAG(ENABLE_PLAYLIST)
-
   ChromeContentBrowserClient::
       RegisterAssociatedInterfaceBindersForRenderFrameHost(render_frame_host,
                                                            associated_registry);
 }
 
-void BraveContentBrowserClient::RegisterWebUIInterfaceBrokers(
+void BraveContentBrowserClient::RegisterTrustedWebUIInterfaceBrokers(
     content::WebUIBrowserInterfaceBrokerRegistry& registry) {
-  ChromeContentBrowserClient::RegisterWebUIInterfaceBrokers(registry);
-
-#if BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
-  if (base::FeatureList::IsEnabled(playlist::features::kPlaylist)) {
-    registry.ForWebUI<playlist::PlaylistUI>()
-        .Add<playlist::mojom::PageHandlerFactory>();
-  }
-#endif
+  ChromeContentBrowserClient::RegisterTrustedWebUIInterfaceBrokers(registry);
 
 #if !BUILDFLAG(IS_ANDROID)
   auto ntp_registration =
@@ -556,11 +493,6 @@ void BraveContentBrowserClient::RegisterBrowserInterfaceBindersForFrame(
         commands::mojom::CommandsService, BraveSettingsUI>(map);
   }
 #endif
-
-#if BUILDFLAG(ENABLE_SPEEDREADER) && !BUILDFLAG(IS_ANDROID)
-  content::RegisterWebUIControllerInterfaceBinder<
-      speedreader::mojom::ToolbarFactory, SpeedreaderToolbarUI>(map);
-#endif
 }
 
 bool BraveContentBrowserClient::HandleExternalProtocol(
@@ -648,31 +580,6 @@ BraveContentBrowserClient::CreateURLLoaderThrottles(
     auto body_sniffer_throttle =
         std::make_unique<body_sniffer::BodySnifferThrottle>(
             base::SingleThreadTaskRunner::GetCurrentDefault());
-
-    // Speedreader
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-    auto* tab_helper =
-        speedreader::SpeedreaderTabHelper::FromWebContents(contents);
-    if (tab_helper && isMainFrame) {
-      auto* speedreader_service =
-          speedreader::SpeedreaderServiceFactory::GetForBrowserContext(
-              browser_context);
-
-      auto producer =
-          speedreader::SpeedreaderDistilledPageProducer::MaybeCreate(
-              tab_helper->GetWeakPtr());
-      if (producer) {
-        body_sniffer_throttle->SetBodyProducer(std::move(producer));
-      }
-
-      auto handler = speedreader::SpeedreaderBodyDistiller::MaybeCreate(
-          g_brave_browser_process->speedreader_rewriter_service(),
-          speedreader_service, tab_helper->GetWeakPtr());
-      if (handler) {
-        body_sniffer_throttle->AddHandler(std::move(handler));
-      }
-    }
-#endif  // ENABLE_SPEEDREADER
 
     if (isMainFrame) {
       // De-AMP
@@ -824,7 +731,7 @@ bool BraveContentBrowserClient::HandleURLOverrideRewrite(
   }
 
   // brave://sync => brave://settings/braveSync
-  if (url->host() == chrome::kChromeUISyncHost) {
+  if (url->host() == chrome::kBraveUISyncHost) {
     GURL::Replacements replacements;
     replacements.SetSchemeStr(content::kChromeUIScheme);
     replacements.SetHostStr(chrome::kChromeUISettingsHost);
@@ -846,8 +753,8 @@ bool BraveContentBrowserClient::HandleURLOverrideRewrite(
 #endif
 
   // no special win10 welcome page
-  if (url->host() == chrome::kChromeUIWelcomeHost) {
-    *url = GURL(chrome::kChromeUIWelcomeURL);
+  if (url->host() == kWelcomeHost) {
+    *url = GURL(kWelcomeURL);
     return true;
   }
 
@@ -861,16 +768,7 @@ void BraveContentBrowserClient::CreateThrottlesForNavigation(
   content::NavigationHandle& navigation_handle = registry.GetNavigationHandle();
 
 #if !BUILDFLAG(IS_ANDROID)
-  // TODO(T5): NewTabShowsNavigationThrottle (Brave NTP) still has the 128
-  // MaybeCreateThrottleFor(handle) shape; 1.98 calls it like this.
   NewTabShowsNavigationThrottle::MaybeCreateAndAdd(registry);
-#endif
-
-#if BUILDFLAG(ENABLE_BRAVE_WEBTORRENT)
-  // TODO(prune): WebTorrent goes away with its throttle (gone in 1.98).
-  registry.AddThrottle(
-      std::make_unique<extensions::BraveWebTorrentNavigationThrottle>(
-          registry));
 #endif
 
   content::BrowserContext* context =
@@ -952,13 +850,6 @@ void BraveContentBrowserClient::OverrideWebPreferences(
   PreventDarkModeFingerprinting(web_contents, web_prefs);
   // 156 dropped allow_non_empty_navigator_plugins: DOMPluginArray always
   // builds the fixed PDF list, which the plugins farbling wrapper farbles.
-
-#if BUILDFLAG(ENABLE_PLAYLIST)
-  if (playlist::PlaylistBackgroundWebContentsHelper::FromWebContents(
-          web_contents)) {
-    web_prefs->force_cosmetic_filtering = true;
-  }
-#endif
 }
 
 std::string BraveContentBrowserClient::GetUserAgent() {

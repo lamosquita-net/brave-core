@@ -13,8 +13,9 @@
 #include "brave/browser/ui/browser_commands.h"
 #include "chrome/app/chrome_command_ids.h"
 #include "chrome/browser/ui/browser.h"
-#include "chrome/browser/ui/browser_finder.h"
-#include "chrome/browser/ui/browser_navigator.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface_iterator.h"
+#include "chrome/browser/ui/navigator/browser_navigator.h"
 #include "chrome/browser/ui/omnibox/clipboard_utils.h"
 #include "chrome/browser/ui/views/location_bar/location_bar_view.h"
 #include "chrome/grit/generated_resources.h"
@@ -76,7 +77,8 @@ void BraveOmniboxViewViews::CleanAndCopySelectedURL() {
 
 void BraveOmniboxViewViews::CopySanitizedURL(const GURL& url) {
   OnBeforePossibleChange();
-  brave::CopySanitizedURL(chrome::FindLastActive(), url);
+  brave::CopySanitizedURL(GetLastActiveBrowserWindowInterfaceWithAnyProfile(),
+                          url);
   OnAfterPossibleChange(true);
 }
 

@@ -11,7 +11,8 @@
 #include "base/types/to_address.h"
 #include "brave/browser/ui/tabs/split_view_browser_data.h"
 #include "brave/browser/ui/views/frame/brave_browser_view.h"
-#include "chrome/browser/ui/browser_finder.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+#include "chrome/browser/ui/browser_window/public/global_browser_collection.h"
 #include "chrome/browser/ui/javascript_dialogs/javascript_tab_modal_dialog_manager_delegate_desktop.h"
 #include "chrome/browser/ui/views/chrome_widget_sublevel.h"
 #include "components/web_modal/web_contents_modal_dialog_host.h"
@@ -67,7 +68,8 @@ JavaScriptTabModalDialogManagerDelegateDesktop::CreateNewDialog(
     const std::u16string& default_prompt_text,
     content::JavaScriptDialogManager::DialogClosedCallback dialog_callback,
     base::OnceClosure dialog_force_closed_callback) {
-  auto* browser = chrome::FindBrowserWithTab(alerting_web_contents);
+  auto* browser = GlobalBrowserCollection::GetInstance()->FindBrowserWithTab(
+      alerting_web_contents);
   if (!browser) {
     // Can be popup up or other type of window.
     return CreateNewDialog_ChromiumImpl(
@@ -126,7 +128,8 @@ gfx::Point BraveJavaScriptTabModalDialogViewViews::
   bounds.set_origin(modal_dialog_host.GetDialogPosition(bounds.size()));
 
   // 1. Check if the tab is in split view mode.
-  auto* browser = chrome::FindBrowserWithTab(base::to_address(web_contents_));
+  auto* browser = GlobalBrowserCollection::GetInstance()->FindBrowserWithTab(
+      base::to_address(web_contents_));
   if (!browser) {
     // This can happen on shutting down.
     return bounds.origin();
@@ -146,7 +149,8 @@ gfx::Point BraveJavaScriptTabModalDialogViewViews::
 
   // 2. It's in split view mode. Center the dialog to the relevant web
   // view.
-  auto* browser_view = static_cast<BraveBrowserView*>(browser->window());
+  auto* browser_view = static_cast<BraveBrowserView*>(
+      BrowserView::GetBrowserViewForBrowser(browser));
   auto* target_web_view =
       tab_strip_model->GetActiveTab()->GetHandle() == tab_handle
           ? browser_view->contents_web_view()

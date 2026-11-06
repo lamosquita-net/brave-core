@@ -41,10 +41,6 @@ function DefaultPage (props: Props) {
       gridSitesData={gridSitesData}
       actions={actions}
       saveShowBackgroundImage={PreferencesAPI.saveShowBackgroundImage}
-      saveShowRewards={PreferencesAPI.saveShowRewards}
-      saveShowBraveTalk={PreferencesAPI.saveShowBraveTalk}
-      saveBrandedWallpaperOptIn={PreferencesAPI.saveBrandedWallpaperOptIn}
-      saveSetAllStackWidgets={PreferencesAPI.saveSetAllStackWidgets}
       chooseNewCustomBackgroundImage={() => getNTPBrowserAPI().pageHandler.chooseLocalCustomBackground() }
       setCustomImageBackground={background => getNTPBrowserAPI().pageHandler.useCustomImageBackground(background) }
       removeCustomImageBackground={background => getNTPBrowserAPI().pageHandler.removeCustomImageBackground(background) }

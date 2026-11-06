@@ -235,83 +235,11 @@ export const SettingsSectionTitle = styled('h3') <ControllableLayoutProps>`
   line-height: 24px;
 `
 
-export const SettingsWidget = styled('div') <{}>`
-  width: calc(50% - var(--widget-gap));
-  margin-top: calc(20px - var(--widget-gap));
-  padding: 0px 1px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-`
-
-export const StyledWidgetSettings = styled('div')`
-  --widget-gap: 17px;
-  font-family: ${p => p.theme.fontFamily.heading};
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: var(--widget-gap);
-`
-
-export const FeaturedSettingsWidget = styled('div') <{}>`
-  width: 100%;
-`
-
-export const StyledBannerImage = styled('img') <{}>`
-  width: 100%;
-  margin-bottom: 10px;
-`
-
-export const StyledSettingsInfo = styled('div') <{}>`
-  float: left;
-  max-width: 250px;
-  flex-grow: 1;
-`
-
-export const StyledSettingsTitle = styled('div') <{}>`
-  font-weight: 600;
-  font-size: 14px;
-  margin-bottom: 5px;
-`
-
-export const StyledSettingsCopy = styled('div') <{}>`
-  font-size: 13px;
-  font-weight: 300;
-  line-height: 17px;
-`
-
 export const StyledButtonIcon = styled('div') <{}>`
   display: inline-block;
   margin-right: 5px;
   width: 19px;
   height: 17px;
-`
-
-export const ToggleCardsWrapper = styled('div') <{}>`
-  padding: 15px 15px 5px 15px;
-  clear: both;
-  border-radius: 10px;
-  background: ${p => isDarkTheme(p) ? '#3B3F4E' : '#F3F3FE'};
-  color: ${p => isDarkTheme(p) ? '#FFF' : 'rgb(59, 62, 79)'};
-`
-
-export const ToggleCardsText = styled('div') <{}>`
-  text-align: left;
-  max-width: 325px;
-`
-
-export const ToggleCardsTitle = styled('span') <{}>`
-  font-weight: bold;
-`
-
-export const ToggleCardsCopy = styled('p') <{}>`
-  line-height: 18px;
-  font-weight: normal;
-`
-
-export const ToggleCardsSwitch = styled('div') <{}>`
-  float: right;
-  margin: -65px -10px 0 0;
 `
 
 export const StyledTopSitesCustomizationSettings = styled('div')`

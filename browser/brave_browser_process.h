@@ -12,7 +12,6 @@
 #define BRAVE_BROWSER_BRAVE_BROWSER_PROCESS_H_
 
 #include "brave/components/request_otr/common/buildflags/buildflags.h"
-#include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "build/build_config.h"
 #include "extensions/buildflags/buildflags.h"
 
@@ -47,14 +46,6 @@ class RequestOTRComponentInstallerPolicy;
 #endif
 }  // namespace request_otr
 
-namespace ntp_background_images {
-class NTPBackgroundImagesService;
-}  // namespace ntp_background_images
-
-namespace speedreader {
-class SpeedreaderRewriterService;
-}
-
 class BraveBrowserProcess {
  public:
   BraveBrowserProcess();
@@ -75,12 +66,6 @@ class BraveBrowserProcess {
   URLSanitizerComponentInstaller() = 0;
   virtual brave_component_updater::LocalDataFilesService*
   local_data_files_service() = 0;
-  virtual ntp_background_images::NTPBackgroundImagesService*
-  ntp_background_images_service() = 0;
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-  virtual speedreader::SpeedreaderRewriterService*
-  speedreader_rewriter_service() = 0;
-#endif
   virtual brave::BraveFarblingService* brave_farbling_service() = 0;
 };
 

@@ -3,12 +3,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
-import '../brave_appearance_page/sidebar.js'
 import '../brave_appearance_page/tabs.js'
 import '../brave_appearance_page/toolbar.js'
 import '../brave_content_page/content.js'
-import '../brave_content_page/playlist.js'
-import '../brave_content_page/speedreader.js'
 import '../brave_data_collection_page/brave_data_collection_page.js'
 import '../brave_default_extensions_page/brave_default_extensions_page.js'
 import '../brave_new_tab_page/brave_new_tab_page.js'
@@ -158,19 +155,6 @@ RegisterPolymerTemplateModifications({
           prefs: '{{prefs}}'
         }
       ))
-      const sectionSidebar = document.createElement('template')
-      sectionSidebar.setAttribute('is', 'dom-if')
-      sectionSidebar.setAttribute('restamp', 'true')
-      sectionSidebar.setAttribute('if', '[[showPage_(pageVisibility.appearance)]]')
-      sectionSidebar.content.appendChild(createNestedSectionElement(
-        'sidebar',
-        'appearance',
-        'sideBar',
-        'settings-brave-appearance-sidebar',
-        {
-          prefs: '{{prefs}}'
-        }
-      ))
       const sectionExtensions = document.createElement('template')
       sectionExtensions.setAttribute('is', 'dom-if')
       sectionExtensions.setAttribute('restamp', 'true')
@@ -247,34 +231,6 @@ RegisterPolymerTemplateModifications({
         }
       ))
 
-      const sectionPlaylist = document.createElement('template')
-      sectionPlaylist.setAttribute('is', 'dom-if')
-      sectionPlaylist.setAttribute('restamp', 'true')
-      sectionPlaylist.setAttribute('if', '[[showPage_(pageVisibility.playlist)]]')
-      sectionPlaylist.content.appendChild(createNestedSectionElement(
-        'playlist',
-        'content',
-        'playlist',
-        'settings-brave-content-playlist',
-        {
-          prefs: '{{prefs}}'
-        }
-      ))
-
-      const sectionSpeedreader = document.createElement('template')
-      sectionSpeedreader.setAttribute('is', 'dom-if')
-      sectionSpeedreader.setAttribute('restamp', 'true')
-      sectionSpeedreader.setAttribute('if', '[[showPage_(pageVisibility.speedreader)]]')
-      sectionSpeedreader.content.appendChild(createNestedSectionElement(
-        'speedreader',
-        'content',
-        'speedreaderSettingLabel',
-        'settings-brave-content-speedreader',
-        {
-          prefs: '{{prefs}}'
-        }
-      ))
-
       const sectionNewTab = document.createElement('template')
       sectionNewTab.setAttribute('is', 'dom-if')
       sectionNewTab.setAttribute('restamp', 'true')
@@ -318,14 +274,11 @@ RegisterPolymerTemplateModifications({
       const sectionAppearance = getSectionElement(actualTemplate.content,
         'appearance')
       last = last.insertAdjacentElement('afterend', sectionAppearance)
-      // Insert nested Toolbar, Tabs, Sidebar under 'Appearance' menu
+      // Insert nested Toolbar, Tabs under 'Appearance' menu
       last = last.insertAdjacentElement('afterend', sectionToolbar)
       last = last.insertAdjacentElement('afterend', sectionTabs)
-      last = last.insertAdjacentElement('afterend', sectionSidebar)
-      // Insert nested Content, Playlist, Speedreader under 'Content' menu
+      // Insert Content
       last = last.insertAdjacentElement('afterend', sectionContent)
-      last = last.insertAdjacentElement('afterend', sectionPlaylist)
-      last = last.insertAdjacentElement('afterend', sectionSpeedreader)
       // Insert shields
       last = last.insertAdjacentElement('afterend', sectionShields)
       // Insert nested Social Blocking under shields

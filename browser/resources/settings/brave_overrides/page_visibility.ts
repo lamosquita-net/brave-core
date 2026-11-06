@@ -30,8 +30,6 @@ function getPageVisibility () {
       braveWallet: false,
       braveWeb3: false,
       content: false,
-      playlist: false,
-      speedreader: false,
     }
   }
   // We need to specify values for every attribute in pageVisibility instead of
@@ -61,8 +59,6 @@ function getPageVisibility () {
     braveWeb3: false,
     braveWeb3Domains: false,
     content: alwaysTrueProxy,
-    playlist: loadTimeData.getBoolean('isPlaylistAllowed'),
-    speedreader: loadTimeData.getBoolean('isSpeedreaderFeatureEnabled'),
   }
   // Proxy so we can respond to any other property
   return new Proxy(staticProps, {

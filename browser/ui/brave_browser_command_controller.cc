@@ -17,22 +17,17 @@
 #include "brave/browser/profiles/profile_util.h"
 #include "brave/browser/ui/brave_pages.h"
 #include "brave/browser/ui/browser_commands.h"
-#include "brave/browser/ui/sidebar/sidebar_utils.h"
 #include "brave/browser/ui/tabs/features.h"
 #include "brave/browser/ui/tabs/split_view_browser_data.h"
-#include "brave/components/brave_wayback_machine/buildflags/buildflags.h"
-#include "brave/components/commander/common/buildflags/buildflags.h"
 #include "brave/components/commands/common/features.h"
 #include "brave/components/constants/pref_names.h"
-#include "brave/components/playlist/common/buildflags/buildflags.h"
-#include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "chrome/app/chrome_command_ids.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/send_tab_to_self/send_tab_to_self_util.h"
-#include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_command_controller.h"
 #include "chrome/browser/ui/browser_commands.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/tabs/tab_change_type.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/browser/ui/tabs/tab_strip_model_observer.h"
@@ -40,19 +35,6 @@
 #include "components/prefs/pref_service.h"
 #include "components/sync/base/command_line_switches.h"
 #include "content/public/browser/web_contents.h"
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-#include "brave/components/speedreader/common/features.h"
-#endif
-
-#if BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
-#include "brave/browser/playlist/playlist_service_factory.h"
-#include "brave/components/playlist/common/features.h"
-#endif
-
-#if BUILDFLAG(ENABLE_COMMANDER)
-#include "brave/browser/ui/commander/commander_service.h"
-#endif
 
 namespace {
 
@@ -64,7 +46,8 @@ bool IsBraveCommands(int id) {
 
 namespace chrome {
 
-BraveBrowserCommandController::BraveBrowserCommandController(Browser* browser)
+BraveBrowserCommandController::BraveBrowserCommandController(
+    BrowserWindowInterface* browser)
     : BrowserCommandController(browser),
       browser_(*browser),
       brave_command_updater_(nullptr) {
@@ -105,7 +88,8 @@ void BraveBrowserCommandController::OnTabStripModelChanged(
   UpdateCommandsForPin();
 
   if (base::FeatureList::IsEnabled(tabs::features::kBraveSplitView) &&
-      browser_->is_type_normal() && selection.active_tab_changed()) {
+      browser_->GetType() == BrowserWindowInterface::TYPE_NORMAL &&
+      selection.active_tab_changed()) {
     UpdateCommandForSplitView();
   }
 }
@@ -176,16 +160,13 @@ void BraveBrowserCommandController::InitBraveCommandState() {
   // Sync, Rewards, and Wallet pages don't work in tor(guest) sessions.
   // They also don't work in private windows but they are redirected
   // to a normal window in this case.
-  const bool is_guest_session = browser_->profile()->IsGuestSession();
+  const bool is_guest_session = browser_->GetProfile()->IsGuestSession();
   if (!is_guest_session) {
     if (syncer::IsSyncAllowedByFlag()) {
       UpdateCommandForBraveSync();
     }
   }
   UpdateCommandForWebcompatReporter();
-  UpdateCommandForSidebar();
-  UpdateCommandForPlaylist();
-  UpdateCommandForWaybackMachine();
   bool add_new_profile_enabled = !is_guest_session;
   bool open_guest_profile_enabled = !is_guest_session;
   if (!is_guest_session) {
@@ -200,16 +181,6 @@ void BraveBrowserCommandController::InitBraveCommandState() {
   UpdateCommandEnabled(IDC_OPEN_GUEST_PROFILE, open_guest_profile_enabled);
   UpdateCommandEnabled(IDC_COPY_CLEAN_LINK, true);
   UpdateCommandEnabled(IDC_TOGGLE_TAB_MUTE, true);
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-  if (base::FeatureList::IsEnabled(speedreader::kSpeedreaderFeature)) {
-    UpdateCommandEnabled(IDC_SPEEDREADER_ICON_ONCLICK, true);
-  }
-#endif
-
-#if BUILDFLAG(ENABLE_COMMANDER)
-  UpdateCommandEnabled(IDC_COMMANDER, commander::IsEnabled());
-#endif
 
   UpdateCommandEnabled(IDC_BRAVE_BOOKMARK_BAR_SUBMENU, true);
 
@@ -240,7 +211,7 @@ void BraveBrowserCommandController::InitBraveCommandState() {
 
   UpdateCommandEnabled(IDC_TOGGLE_ALL_BOOKMARKS_BUTTON_VISIBILITY, true);
 
-  if (browser_->is_type_normal()) {
+  if (browser_->GetType() == BrowserWindowInterface::TYPE_NORMAL) {
     // Delete these when upstream enables by default.
     UpdateCommandEnabled(IDC_READING_LIST_MENU, true);
     UpdateCommandEnabled(IDC_READING_LIST_MENU_ADD_TAB, true);
@@ -248,7 +219,7 @@ void BraveBrowserCommandController::InitBraveCommandState() {
   }
 
   if (base::FeatureList::IsEnabled(tabs::features::kBraveSplitView) &&
-      browser_->is_type_normal()) {
+      browser_->GetType() == BrowserWindowInterface::TYPE_NORMAL) {
     UpdateCommandForSplitView();
   }
 }
@@ -259,32 +230,6 @@ void BraveBrowserCommandController::UpdateCommandForBraveRewards() {
 
 void BraveBrowserCommandController::UpdateCommandForWebcompatReporter() {
   UpdateCommandEnabled(IDC_SHOW_BRAVE_WEBCOMPAT_REPORTER, true);
-}
-
-void BraveBrowserCommandController::UpdateCommandForSidebar() {
-  if (sidebar::CanUseSidebar(&*browser_)) {
-    UpdateCommandEnabled(IDC_SIDEBAR_SHOW_OPTION_MENU, true);
-    UpdateCommandEnabled(IDC_SIDEBAR_TOGGLE_POSITION, true);
-    UpdateCommandEnabled(IDC_TOGGLE_SIDEBAR, true);
-  }
-}
-
-void BraveBrowserCommandController::UpdateCommandForPlaylist() {
-#if BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
-  if (base::FeatureList::IsEnabled(playlist::features::kPlaylist)) {
-    UpdateCommandEnabled(
-        IDC_SHOW_PLAYLIST_BUBBLE,
-        browser_->is_type_normal() &&
-            playlist::PlaylistServiceFactory::GetForBrowserContext(
-                browser_->profile()));
-  }
-#endif
-}
-
-void BraveBrowserCommandController::UpdateCommandForWaybackMachine() {
-#if BUILDFLAG(ENABLE_BRAVE_WAYBACK_MACHINE)
-  UpdateCommandEnabled(IDC_SHOW_WAYBACK_MACHINE_BUBBLE, true);
-#endif
 }
 
 void BraveBrowserCommandController::UpdateCommandsForTabs() {
@@ -385,15 +330,6 @@ bool BraveBrowserCommandController::ExecuteBraveCommandWithDisposition(
       break;
     case IDC_TOGGLE_AI_CHAT:
       break;
-    case IDC_SPEEDREADER_ICON_ONCLICK:
-      brave::MaybeDistillAndShowSpeedreaderBubble(&*browser_);
-      break;
-    case IDC_SIDEBAR_TOGGLE_POSITION:
-      brave::ToggleSidebarPosition(&*browser_);
-      break;
-    case IDC_TOGGLE_SIDEBAR:
-      brave::ToggleSidebar(&*browser_);
-      break;
     case IDC_COPY_CLEAN_LINK:
       brave::CopySanitizedURL(
           &*browser_,
@@ -422,18 +358,6 @@ bool BraveBrowserCommandController::ExecuteBraveCommandWithDisposition(
       break;
     case IDC_TOGGLE_JAVASCRIPT:
       brave::ToggleJavascriptEnabled(&*browser_);
-      break;
-    case IDC_SHOW_PLAYLIST_BUBBLE:
-#if BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
-      brave::ShowPlaylistBubble(&*browser_);
-#else
-      NOTREACHED() << " This command shouldn't be enabled";
-#endif
-      break;
-    case IDC_SHOW_WAYBACK_MACHINE_BUBBLE:
-#if BUILDFLAG(ENABLE_BRAVE_WAYBACK_MACHINE)
-      brave::ShowWaybackMachineBubble(&*browser_);
-#endif
       break;
     case IDC_GROUP_TABS_ON_CURRENT_ORIGIN:
       brave::GroupTabsOnCurrentOrigin(&*browser_);
@@ -473,11 +397,6 @@ bool BraveBrowserCommandController::ExecuteBraveCommandWithDisposition(
       break;
     case IDC_TOGGLE_ALL_BOOKMARKS_BUTTON_VISIBILITY:
       brave::ToggleAllBookmarksButtonVisibility(base::to_address(browser_));
-      break;
-    case IDC_COMMANDER:
-#if BUILDFLAG(ENABLE_COMMANDER)
-      brave::ToggleCommander(base::to_address(browser_));
-#endif
       break;
     case IDC_WINDOW_GROUP_UNGROUPED_TABS:
       brave::GroupUngroupedTabs(&*browser_);

@@ -24,7 +24,7 @@ bool IsBrowserFrameCondensed(const Browser* browser) {
   }
   auto* browser_view = BrowserView::GetBrowserViewForBrowser(browser);
   DCHECK(browser_view);
-  return browser_view->frame()->GetFrameView()->IsFrameCondensed();
+  return browser_view->browser_widget()->GetFrameView()->IsFrameCondensed();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

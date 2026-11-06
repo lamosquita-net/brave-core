@@ -10,7 +10,6 @@ import { action } from 'typesafe-actions'
 import { types } from '../constants/new_tab_types'
 import { Stats } from '../api/stats'
 import { PrivateTabData } from '../api/privateTabData'
-import { NewTabAdsData } from '../api/newTabAdsData'
 import { InitialData } from '../api/initialData'
 import { Background, CustomBackground } from '../api/background'
 
@@ -24,14 +23,6 @@ export const init = createAction<void>('page init')
 export const privateTabDataUpdated = (data: PrivateTabData) =>
   action(types.NEW_TAB_PRIVATE_TAB_DATA_UPDATED, data)
 
-export const newTabAdsDataUpdated = (data: NewTabAdsData) =>
-  action(types.NEW_TAB_ADS_DATA_UPDATED, data)
-
-export const dismissBrandedWallpaperNotification = (isUserAction: boolean) =>
-  action(types.NEW_TAB_DISMISS_BRANDED_WALLPAPER_NOTIFICATION, {
-    isUserAction
-  })
-
 export const preferencesUpdated = (preferences: NewTab.Preferences) =>
   action(types.NEW_TAB_PREFERENCES_UPDATED, preferences)
 
@@ -43,8 +34,6 @@ export const setMostVisitedSettings = (showTopSites: boolean, customLinksEnabled
 
 export const topSitesStateUpdated = (newShowTopSites: boolean, newCustomLinksEnabled: boolean, customLinksNum: number) =>
   action(types.TOP_SITES_STATE_UPDATED, { newShowTopSites, newCustomLinksEnabled, customLinksNum })
-
-export const customizeClicked = () => action(types.CUSTOMIZE_CLICKED, {})
 
 export const customBackgroundUpdated = (background: Background) =>
   action(types.BACKGROUND_UPDATED, { background })

@@ -59,7 +59,6 @@ class BraveNewTabPageHandler : public brave_new_tab_page::mojom::PageHandler,
   void RemoveCustomImageBackground(const std::string& background) override;
 
   void UseBraveBackground(const std::string& selected_background) override;
-  void GetBraveBackgrounds(GetBraveBackgroundsCallback callback) override;
   void TryBraveSearchPromotion(const std::string& input,
                                bool open_new_tab) override;
   void DismissBraveSearchPromotion() override;

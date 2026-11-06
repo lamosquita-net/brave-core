@@ -15,7 +15,6 @@
 #include "brave/components/constants/url_constants.h"
 #include "brave/components/constants/webui_url_constants.h"
 #include "brave/components/l10n/common/localization_util.h"
-#include "brave/components/playlist/common/buildflags/buildflags.h"
 #include "brave/components/request_otr/common/buildflags/buildflags.h"
 #include "brave/components/version_info/version_info.h"
 #include "brave/grit/brave_generated_resources.h"
@@ -35,10 +34,6 @@
 #include "extensions/common/extension_urls.h"
 #include "net/base/features.h"
 #include "ui/base/l10n/l10n_util.h"
-
-#if BUILDFLAG(ENABLE_PLAYLIST)
-#include "brave/components/playlist/common/features.h"
-#endif
 
 namespace settings {
 
@@ -138,14 +133,8 @@ void BraveAddCommonStrings(content::WebUIDataSource* html_source,
        IDS_SETTINGS_APPEARANCE_SETTINGS_USE_AUTOCOMPLETE_HISTORY},
       {"appearanceSettingsUseBookmarkSuggestions",
        IDS_SETTINGS_APPEARANCE_SETTINGS_USE_AUTOCOMPLETE_BOOKMARKS},
-      {"appearanceSettingsUseCommanderSuggestions",
-       IDS_SETTINGS_APPEARANCE_SETTINGS_USE_AUTOCOMPLETE_COMMANDER},
       {"appearanceSettingsUseLeoSuggestions",
        IDS_SETTINGS_APPEARANCE_SETTINGS_USE_AUTOCOMPLETE_LEO},
-      {"appearanceSettingsGetMoreThemes",
-       IDS_SETTINGS_APPEARANCE_SETTINGS_GET_MORE_THEMES},
-      {"appearanceBraveDefaultImagesOptionLabel",
-       IDS_SETTINGS_APPEARANCE_SETTINGS_BRAVE_DEFAULT_IMAGES_OPTION_LABEL},
 #if defined(TOOLKIT_VIEWS)
       {"appearanceSettingsToolbarSection",
        IDS_SETTINGS_APPEARANCE_SETTINGS_TOOLBAR_SECTION},
@@ -175,19 +164,6 @@ void BraveAddCommonStrings(content::WebUIDataSource* html_source,
        IDS_SETTINGS_APPEARANCE_SETTINGS_BRAVE_TAB_HOVER_MODE_TOOLTIP},
       {"appearanceSettingsSharedPinnedTab",
        IDS_SETTINGS_APPEARANCE_SETTINGS_BRAVE_SHARED_PINNED_TAB},
-      {"sideBar", IDS_SETTINGS_APPEARNCE_SETTINGS_SIDEBAR_PART_TITLE},
-      {"appearanceSettingsShowOptionTitle",
-       IDS_SETTINGS_SIDEBAR_SHOW_OPTION_TITLE},
-      {"appearanceSettingsShowSidebarButton",
-       IDS_SETTINGS_APPEARANCE_SETTINGS_SHOW_SIDEBAR_BUTTON},
-      {"appearanceSettingsShowOptionAlways", IDS_SIDEBAR_SHOW_OPTION_ALWAYS},
-      {"appearanceSettingsShowOptionMouseOver",
-       IDS_SIDEBAR_SHOW_OPTION_MOUSEOVER},
-      {"appearanceSettingsShowOptionNever", IDS_SIDEBAR_SHOW_OPTION_NEVER},
-      {"appearanceSettingsSidebarEnabledDesc",
-       IDS_SETTINGS_APPEARANCE_SETTINGS_SIDEBAR_ENABLED_DESC},
-      {"appearanceSettingsSidebarDisabledDesc",
-       IDS_SETTINGS_APPEARANCE_SETTINGS_SIDEBAR_DISABLED_DESC},
       {"contentSettingsContentSection",
        IDS_SETTINGS_APPEARANCE_SETTINGS_CONTENT_SECTION},
 #endif  // defined(TOOLKIT_VIEWS)
@@ -204,8 +180,6 @@ void BraveAddCommonStrings(content::WebUIDataSource* html_source,
       {"autofillInPrivateSettingDesc",
        IDS_SETTINGS_BRAVE_AUTOFILL_PRIVATE_WINDOWS_DESC},
       {"mruCyclingSettingLabel", IDS_SETTINGS_BRAVE_MRU_CYCLING_LABEL},
-      {"speedreaderSettingLabel", IDS_SETTINGS_SPEEDREADER_LABEL},
-      {"speedreaderSettingSubLabel", IDS_SETTINGS_SPEEDREADER_SUB_LABEL},
       {"deAmpSettingLabel", IDS_SETTINGS_DE_AMP_LABEL},
       {"deAmpSettingSubLabel", IDS_SETTINGS_DE_AMP_SUB_LABEL},
       {"debounceSettingLabel", IDS_SETTINGS_DEBOUNCE_LABEL},
@@ -366,8 +340,6 @@ void BraveAddCommonStrings(content::WebUIDataSource* html_source,
       {"braveWeb3", IDS_BRAVE_WEB3_SETTINGS_SECTION},
       {"braveWeb3Domains", IDS_BRAVE_WEB3_DOMAINS_SETTINGS_SECTION},
       {"braveWallet", IDS_BRAVE_WALLET_SETTINGS_SECTION},
-      {"braveWaybackMachineLabel",
-       IDS_SETTINGS_SHOW_BRAVE_WAYBACK_MACHINE_PROMPT},
       {"braveWarnBeforeClosingWindow",
        IDS_SETTINGS_WINDOW_CLOSING_CONFIRM_OPTION_LABEL},
       {"braveClosingLastTab", IDS_SETTINGS_CLOSING_LAST_TAB_OPTION_LABEL},
@@ -482,7 +454,6 @@ void BraveAddCommonStrings(content::WebUIDataSource* html_source,
       {"showSearchTabsBtn", IDS_SETTINGS_TABS_SEARCH_SHOW},
       {"onExitPageTitle", IDS_SETTINGS_BRAVE_ON_EXIT},
       {"braveDefaultExtensions", IDS_SETTINGS_BRAVE_DEFAULT_EXTENSIONS_TITLE},
-      {"webTorrentEnabledDesc", IDS_SETTINGS_WEBTORRENT_ENABLED_DESC},
       {"defaultEthereumWalletDesc", IDS_SETTINGS_DEFAULT_ETHEREUM_WALLET_DESC},
       {"defaultSolanaWalletDesc", IDS_SETTINGS_DEFAULT_SOLANA_WALLET_DESC},
       {"defaultBaseCurrencyDesc", IDS_SETTINGS_DEFAULT_BASE_CURRENCY_DESC},
@@ -692,7 +663,6 @@ void BraveAddCommonStrings(content::WebUIDataSource* html_source,
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   html_source->AddString("webDiscoveryLearnMoreURL", kWebDiscoveryLearnMoreUrl);
 #endif
-  html_source->AddString("speedreaderLearnMoreURL", kSpeedreaderLearnMoreUrl);
   html_source->AddString(
       "getMoreExtensionsUrl",
       base::ASCIIToUTF16(
@@ -894,23 +864,6 @@ void BraveAddLocalizedStrings(content::WebUIDataSource* html_source,
       "serviceWorkerSize",
       brave_l10n::GetLocalizedResourceUTF16String(
           IDS_SETTINGS_COOKIES_LOCAL_STORAGE_SIZE_ON_DISK_LABEL));
-
-#if BUILDFLAG(ENABLE_PLAYLIST)
-  // We add strings regardless of the FeatureFlag state to prevent crash
-
-  // At this moment, the feature name is DNT.
-  html_source->AddString("playlist", "Playlist");
-
-  html_source->AddString("bravePlaylistEnablePlaylistLabel",
-                         brave_l10n::GetLocalizedResourceUTF16String(
-                             IDS_SETTINGS_PLAYLIST_ENABLE_PLAYLIST_LABEL));
-  html_source->AddString("bravePlaylistCacheByDefaultLabel",
-                         brave_l10n::GetLocalizedResourceUTF16String(
-                             IDS_SETTINGS_PLAYLIST_CACHE_BY_DEFAULT_LABEL));
-  html_source->AddString("bravePlaylistCacheByDefaultSubLabel",
-                         brave_l10n::GetLocalizedResourceUTF16String(
-                             IDS_SETTINGS_PLAYLIST_CACHE_BY_DEFAULT_SUB_LABEL));
-#endif
 }
 
 }  // namespace settings

@@ -15,7 +15,6 @@
 #include "brave/components/brave_wallet/common/features.h"
 #include "brave/components/de_amp/common/features.h"
 #include "brave/components/debounce/core/common/features.h"
-#include "brave/components/ntp_background_images/browser/features.h"
 #include "brave/components/skus/common/features.h"
 #include "brave/ios/browser/playlist/features.h"
 #include "build/build_config.h"
@@ -150,16 +149,6 @@
           FEATURE_VALUE_TYPE(brave_component_updater::kUseDevUpdaterUrl),      \
       },                                                                       \
       {                                                                        \
-          "brave-ntp-branded-wallpaper-demo",                                  \
-          "New Tab Page Demo Branded Wallpaper",                               \
-          "Force dummy data for the Branded Wallpaper New Tab Page "           \
-          "Experience. View rate and user opt-in conditionals will still be "  \
-          "followed to decide when to display the Branded Wallpaper.",         \
-          flags_ui::kOsIos,                                                    \
-          FEATURE_VALUE_TYPE(                                                  \
-              ntp_background_images::features::kBraveNTPBrandedWallpaperDemo), \
-      },                                                                       \
-      {                                                                        \
           "brave-debounce",                                                    \
           "Enable debouncing",                                                 \
           "Enable support for skipping top-level redirect tracking URLs",      \
@@ -172,14 +161,6 @@
           "Enable De-AMPing feature",                                          \
           flags_ui::kOsIos,                                                    \
           FEATURE_VALUE_TYPE(de_amp::features::kBraveDeAMP),                   \
-      },                                                                       \
-      {                                                                        \
-          "brave-super-referral",                                              \
-          "Enable Brave Super Referral",                                       \
-          "Use custom theme for Brave Super Referral",                         \
-          flags_ui::kOsIos,                                                    \
-          FEATURE_VALUE_TYPE(ntp_background_images::features::                 \
-                                 kBraveNTPSuperReferralWallpaper),             \
       },                                                                       \
       {                                                                        \
           "brave-rewards-verbose-logging",                                     \

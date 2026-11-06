@@ -24,8 +24,6 @@
     return "BraveReferrers";                            \
   case PermissionType::BRAVE_COOKIES:                   \
     return "BraveCookies";                              \
-  case PermissionType::BRAVE_SPEEDREADER:               \
-    return "BraveSpeedreaders";                         \
   case PermissionType::BRAVE_GOOGLE_SIGN_IN:            \
     return "BraveGoogleSignInPermission";               \
   case PermissionType::BRAVE_LOCALHOST_ACCESS:          \
@@ -41,7 +39,6 @@
   case PermissionType::BRAVE_SHIELDS:                   \
   case PermissionType::BRAVE_REFERRERS:                 \
   case PermissionType::BRAVE_COOKIES:                   \
-  case PermissionType::BRAVE_SPEEDREADER:               \
   case PermissionType::BRAVE_GOOGLE_SIGN_IN:            \
   case PermissionType::BRAVE_LOCALHOST_ACCESS:          \
     return std::nullopt

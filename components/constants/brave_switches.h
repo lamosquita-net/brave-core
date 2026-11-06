@@ -27,14 +27,6 @@ inline constexpr char kDisableBraveExtension[] = "disable-brave-extension";
 // This switch disables update module(Sparkle).
 inline constexpr char kDisableBraveUpdate[] = "disable-brave-update";
 
-// Allows disabling the WebTorrent extension.
-inline constexpr char kDisableWebTorrentExtension[] =
-    "disable-webtorrent-extension";
-
-// Allows disabling the Wayback Machine extension.
-inline constexpr char kDisableBraveWaybackMachineExtension[] =
-    "disable-brave-wayback-machine-extension";
-
 // Allows disabling encryption on Windows for cookies, passwords, settings...
 // WARNING! Use ONLY if your hard drive is encrypted or if you know
 // what you are doing.
@@ -45,11 +37,6 @@ inline constexpr char kDisableMachineId[] = "disable-machine-id";
 
 // Override update feed url. Only valid on macOS.
 inline constexpr char kUpdateFeedURL[] = "update-feed-url";
-
-// Don't set kShowAlways for non-stable channel.
-// It's useful to test SidebarShowAlwaysOnStable w/o griffin.
-inline constexpr char kDontShowSidebarOnNonStable[] =
-    "dont-show-on-sidebar-non-stable";
 
 }  // namespace switches
 

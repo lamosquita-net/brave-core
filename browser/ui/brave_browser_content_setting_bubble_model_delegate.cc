@@ -5,16 +5,17 @@
 
 #include "brave/browser/ui/brave_browser_content_setting_bubble_model_delegate.h"
 
+#include "base/check_deref.h"
 #include "base/strings/strcat.h"
 #include "brave/components/constants/url_constants.h"
-#include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_tabstrip.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 
 BraveBrowserContentSettingBubbleModelDelegate::
-BraveBrowserContentSettingBubbleModelDelegate(Browser* browser) :
-    BrowserContentSettingBubbleModelDelegate(browser),
-    browser_(browser) {
-}
+    BraveBrowserContentSettingBubbleModelDelegate(
+        BrowserWindowInterface* browser)
+    : BrowserContentSettingBubbleModelDelegate(browser),
+      browser_(CHECK_DEREF(browser)) {}
 
 BraveBrowserContentSettingBubbleModelDelegate::
     ~BraveBrowserContentSettingBubbleModelDelegate() = default;
@@ -22,7 +23,7 @@ BraveBrowserContentSettingBubbleModelDelegate::
 void
 BraveBrowserContentSettingBubbleModelDelegate::ShowWidevineLearnMorePage() {
   GURL learn_more_url = GURL(kWidevineTOS);
-  chrome::AddSelectedTabWithURL(browser_, learn_more_url,
+  chrome::AddSelectedTabWithURL(&*browser_, learn_more_url,
                                 ui::PAGE_TRANSITION_LINK);
 }
 
@@ -30,6 +31,6 @@ void BraveBrowserContentSettingBubbleModelDelegate::ShowLearnMorePage(
     ContentSettingsType type) {
   // TODO(yrliou): Use specific support pages for each content setting type
   GURL learn_more_url(base::StrCat({kFlyWebHelpURL, "#permisos"}));
-  chrome::AddSelectedTabWithURL(browser_, learn_more_url,
+  chrome::AddSelectedTabWithURL(&*browser_, learn_more_url,
                                 ui::PAGE_TRANSITION_LINK);
 }

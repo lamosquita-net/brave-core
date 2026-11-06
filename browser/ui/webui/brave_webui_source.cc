@@ -14,6 +14,8 @@
 #include "brave/components/webui/webui_resources.h"
 #include "build/build_config.h"
 #include "chrome/browser/profiles/profile.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+#include "chrome/browser/ui/browser_window/public/profile_browser_collection.h"
 #include "components/grit/brave_components_resources.h"
 #include "components/grit/brave_components_strings.h"
 #include "components/grit/components_resources.h"
@@ -25,7 +27,6 @@
 
 #if !BUILDFLAG(IS_ANDROID)
 #include "brave/browser/ui/webui/navigation_bar_data_provider.h"
-#include "chrome/browser/ui/browser_finder.h"
 #include "chrome/browser/ui/browser_window.h"
 #include "chrome/browser/ui/color/chrome_color_id.h"
 #include "chrome/grit/branded_strings.h"
@@ -53,8 +54,7 @@ void CustomizeWebUIHTMLSource(content::WebUI* web_ui,
 content::WebUIDataSource* CreateWebUIDataSource(
     content::WebUI* web_ui,
     const std::string& name,
-    const webui::ResourcePath* resource_map,
-    size_t resource_map_size,
+    base::span<const webui::ResourcePath> resource_paths,
     int html_resource_id,
     bool disable_trusted_types_csp) {
   content::WebUIDataSource* source =
@@ -78,10 +78,8 @@ content::WebUIDataSource* CreateWebUIDataSource(
 
   source->UseStringsJs();
   source->SetDefaultResource(html_resource_id);
-  // Add generated resource paths
-  for (size_t i = 0; i < resource_map_size; ++i) {
-    source->AddResourcePath(resource_map[i].path, resource_map[i].id);
-  }
+  // Add generated resource paths (156's grit maps no longer carry a size).
+  source->AddResourcePaths(resource_paths);
   CustomizeWebUIHTMLSource(web_ui, name, source);
   return source;
 }
@@ -91,13 +89,12 @@ content::WebUIDataSource* CreateWebUIDataSource(
 content::WebUIDataSource* CreateAndAddWebUIDataSource(
     content::WebUI* web_ui,
     const std::string& name,
-    const webui::ResourcePath* resource_map,
-    size_t resource_map_size,
+    base::span<const webui::ResourcePath> resource_paths,
     int html_resource_id,
     bool disable_trusted_types_csp) {
   content::WebUIDataSource* data_source =
-      CreateWebUIDataSource(web_ui, name, resource_map, resource_map_size,
-                            html_resource_id, disable_trusted_types_csp);
+      CreateWebUIDataSource(web_ui, name, resource_paths, html_resource_id,
+                            disable_trusted_types_csp);
   return data_source;
 }
 
@@ -119,9 +116,11 @@ void AddBackgroundColorToSource(content::WebUIDataSource* source,
     // which is fine for color provider.
     Profile* profile =
         Profile::FromBrowserContext(contents->GetBrowserContext());
-    const Browser* browser = chrome::FindBrowserWithProfile(profile);
+    BrowserWindowInterface* browser =
+        ProfileBrowserCollection::GetForProfile(profile)
+            ->GetLastActiveBrowser();
     if (browser) {
-      browser_window = browser->window();
+      browser_window = BrowserWindow::FromBrowser(browser);
     }
   }
   if (!browser_window) {

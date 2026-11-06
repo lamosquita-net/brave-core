@@ -10,7 +10,6 @@
 #include <utility>
 
 #include "base/feature_list.h"
-#include "brave/browser/ntp_background/view_counter_service_factory.h"
 #include "brave/browser/resources/settings/grit/brave_settings_resources.h"
 #include "brave/browser/resources/settings/grit/brave_settings_resources_map.h"
 #include "brave/browser/resources/settings/shortcuts_page/grit/commands_generated_map.h"
@@ -23,12 +22,8 @@
 #include "brave/browser/ui/webui/settings/brave_privacy_handler.h"
 #include "brave/browser/ui/webui/settings/brave_sync_handler.h"
 #include "brave/browser/ui/webui/settings/default_brave_shields_handler.h"
-#include "brave/components/commander/common/features.h"
 #include "brave/components/commands/common/commands.mojom.h"
 #include "brave/components/commands/common/features.h"
-#include "brave/components/ntp_background_images/browser/view_counter_service.h"
-#include "brave/components/playlist/common/buildflags/buildflags.h"
-#include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "brave/components/version_info/version_info.h"
 #include "build/build_config.h"
 #include "chrome/browser/profiles/profile.h"
@@ -44,19 +39,9 @@
 #include "brave/browser/ui/webui/settings/pin_shortcut_handler.h"
 #endif
 
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-#include "brave/components/speedreader/common/features.h"
-#endif
-
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "brave/browser/ui/webui/settings/brave_extensions_manifest_v2_handler.h"
 #endif
-
-#if BUILDFLAG(ENABLE_PLAYLIST)
-#include "brave/components/playlist/common/features.h"
-#endif
-
-using ntp_background_images::ViewCounterServiceFactory;
 
 BraveSettingsUI::BraveSettingsUI(content::WebUI* web_ui,
                                  const std::string& host)
@@ -85,10 +70,7 @@ BraveSettingsUI::~BraveSettingsUI() = default;
 // static
 void BraveSettingsUI::AddResources(content::WebUIDataSource* html_source,
                                    Profile* profile) {
-  for (size_t i = 0; i < kBraveSettingsResourcesSize; ++i) {
-    html_source->AddResourcePath(kBraveSettingsResources[i].path,
-                                 kBraveSettingsResources[i].id);
-  }
+  html_source->AddResourcePaths(kBraveSettingsResources);
 
   // These resource files are generated from the files in
   // brave/browser/resources/settings/shortcuts_page
@@ -96,27 +78,16 @@ void BraveSettingsUI::AddResources(content::WebUIDataSource* html_source,
   // components, and the React DOM is mounted inside a Web Component, so it
   // doesn't interfere with the Polymer tree/styles.
   if (base::FeatureList::IsEnabled(commands::features::kBraveCommands)) {
-    for (size_t i = 0; i < kCommandsGeneratedSize; ++i) {
-      html_source->AddResourcePath(kCommandsGenerated[i].path,
-                                   kCommandsGenerated[i].id);
-    }
+    html_source->AddResourcePaths(kCommandsGenerated);
   }
 
   html_source->AddBoolean("isSyncDisabled", !syncer::IsSyncAllowedByFlag());
   html_source->AddString(
       "braveProductVersion", version_info::GetFlyWebVersion());
   NavigationBarDataProvider::Initialize(html_source, profile);
-  if (auto* service = ViewCounterServiceFactory::GetForProfile(profile)) {
-    service->InitializeWebUIDataSource(html_source);
-  }
   html_source->AddBoolean(
       "isIdleDetectionFeatureEnabled",
       base::FeatureList::IsEnabled(features::kIdleDetection));
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-  html_source->AddBoolean(
-      "isSpeedreaderFeatureEnabled",
-      base::FeatureList::IsEnabled(speedreader::kSpeedreaderFeature));
-#endif
   html_source->AddBoolean("isForgetFirstPartyStorageFeatureEnabled",
                           base::FeatureList::IsEnabled(
                               net::features::kBraveForgetFirstPartyStorage));
@@ -136,17 +107,6 @@ void BraveSettingsUI::AddResources(content::WebUIDataSource* html_source,
 
   html_source->AddBoolean("isLeoAssistantAllowed", false);
   html_source->AddBoolean("isLeoAssistantHistoryAllowed", false);
-
-#if BUILDFLAG(ENABLE_PLAYLIST)
-  html_source->AddBoolean(
-      "isPlaylistAllowed",
-      base::FeatureList::IsEnabled(playlist::features::kPlaylist));
-#else
-  html_source->AddBoolean("isPlaylistAllowed", false);
-#endif
-  html_source->AddBoolean(
-      "showCommandsInOmnibox",
-      base::FeatureList::IsEnabled(features::kBraveCommandsInOmnibox));
 }
 
 // static

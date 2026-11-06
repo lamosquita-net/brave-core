@@ -25,7 +25,6 @@
 #include "gin/arguments.h"
 #include "gin/function_template.h"
 #include "net/base/registry_controlled_domains/registry_controlled_domain.h"
-#include "third_party/blink/public/common/web_preferences/web_preferences.h"
 #include "third_party/blink/public/platform/browser_interface_broker_proxy.h"
 #include "third_party/blink/public/platform/scheduler/web_agent_group_scheduler.h"
 #include "third_party/blink/public/web/blink.h"
@@ -373,15 +372,11 @@ bool CosmeticFiltersJSHandler::ProcessURL(
       static_cast<content_settings::BraveContentSettingsAgentImpl*>(
           content_settings::ContentSettingsAgentImpl::Get(render_frame_));
 
-  const bool force_cosmetic_filtering =
-      render_frame_->GetBlinkPreferences().force_cosmetic_filtering;
-  if (!force_cosmetic_filtering &&
-      !content_settings->IsCosmeticFilteringEnabled(url_)) {
+  if (!content_settings->IsCosmeticFilteringEnabled(url_)) {
     return false;
   }
 
   enabled_1st_party_cf_ =
-      force_cosmetic_filtering ||
       render_frame_->GetWebFrame()->IsCrossOriginToOutermostMainFrame() ||
       content_settings->IsFirstPartyCosmeticFilteringEnabled(url_) ||
       net::registry_controlled_domains::SameDomainOrHost(

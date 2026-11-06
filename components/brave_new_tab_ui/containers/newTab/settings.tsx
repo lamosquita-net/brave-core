@@ -27,7 +27,6 @@ const BackgroundImageSettings = React.lazy(() => import('./settings/backgroundIm
 const BraveStatsSettings = React.lazy(() => import('./settings/braveStats'))
 const TopSitesSettings = React.lazy(() => import('./settings/topSites'))
 const ClockSettings = React.lazy(() => import('./settings/clock'))
-const CardsSettings = React.lazy(() => import('./settings/cards'))
 const SearchSettings = React.lazy(() => import('./settings/search'))
 
 export const SettingsDialog = styled(Dialog)`
@@ -44,27 +43,15 @@ export interface Props {
   toggleShowBackgroundImage: () => void
   toggleShowTopSites: () => void
   setMostVisitedSettings: (show: boolean, customize: boolean) => void
-  toggleShowRewards: () => void
-  toggleShowBraveTalk: () => void
-  toggleBrandedWallpaperOptIn: () => void
-  toggleCards: (show: boolean) => void
   chooseNewCustomImageBackground: () => void
   setCustomImageBackground: (selectedBackground: string) => void
   removeCustomImageBackground: (background: string) => void
   setBraveBackground: (selectedBackground: string) => void
   setColorBackground: (color: string, useRandomColor: boolean) => void
-  onEnableRewards: () => void
   showBackgroundImage: boolean
   showTopSites: boolean
   customLinksEnabled: boolean
-  brandedWallpaperOptIn: boolean
-  allowBackgroundCustomization: boolean
-  showRewards: boolean
-  showBraveTalk: boolean
-  braveRewardsSupported: boolean
-  braveTalkSupported: boolean
   setActiveTab?: TabType
-  cardsHidden: boolean
 }
 
 export enum TabType {
@@ -72,7 +59,6 @@ export enum TabType {
   BraveStats = 'braveStats',
   TopSites = 'topSites',
   Clock = 'clock',
-  Cards = 'cards',
   Search = 'search'
 }
 
@@ -84,7 +70,6 @@ const tabIcons: TabMap<string> = {
   [TabType.BraveStats]: 'bar-chart',
   [TabType.Clock]: 'clock',
   [TabType.TopSites]: 'window-content',
-  [TabType.Cards]: 'browser-ntp-widget',
   [TabType.Search]: 'search'
 }
 
@@ -93,18 +78,14 @@ const tabTranslationKeys: TabMap<string> = {
   [TabType.BraveStats]: 'statsTitle',
   [TabType.Clock]: 'clockTitle',
   [TabType.TopSites]: 'topSitesTitle',
-  [TabType.Cards]: 'cards',
   [TabType.Search]: 'searchTitle'
 }
 
 const featureFlagSearchWidget = loadTimeData.getBoolean('featureFlagSearchWidget')
 export default function Settings(props: Props) {
   const allowedTabTypes = React.useMemo(() => tabTypes.filter(t =>
-    (props.allowBackgroundCustomization || t !== TabType.BackgroundImage) &&
-    (featureFlagSearchWidget || t !== TabType.Search)), [props.allowBackgroundCustomization])
-  const [activeTab, setActiveTab] = React.useState(props.allowBackgroundCustomization
-    ? TabType.BackgroundImage
-    : TabType.BraveStats)
+    featureFlagSearchWidget || t !== TabType.Search), [])
+  const [activeTab, setActiveTab] = React.useState(TabType.BackgroundImage)
   const changeTab = React.useCallback((tab: TabType) => {
     setActiveTab(tab)
   }, [])
@@ -152,18 +133,14 @@ export default function Settings(props: Props) {
         <React.Suspense fallback={(<div />)}>
           {activeTab === TabType.BackgroundImage && <BackgroundImageSettings
             newTabData={props.newTabData}
-            toggleBrandedWallpaperOptIn={props.toggleBrandedWallpaperOptIn}
             toggleShowBackgroundImage={props.toggleShowBackgroundImage}
             chooseNewCustomImageBackground={props.chooseNewCustomImageBackground}
             setCustomImageBackground={props.setCustomImageBackground}
             removeCustomImageBackground={props.removeCustomImageBackground}
             setBraveBackground={props.setBraveBackground}
             setColorBackground={props.setColorBackground}
-            brandedWallpaperOptIn={props.brandedWallpaperOptIn}
             showBackgroundImage={props.showBackgroundImage}
             featureCustomBackgroundEnabled={props.featureCustomBackgroundEnabled}
-            onEnableRewards={props.onEnableRewards}
-            braveRewardsSupported={props.braveRewardsSupported}
           />}
           {activeTab === TabType.BraveStats && <BraveStatsSettings />}
           {activeTab === TabType.TopSites && <TopSitesSettings
@@ -173,16 +150,6 @@ export default function Settings(props: Props) {
             setMostVisitedSettings={props.setMostVisitedSettings}
           />}
           {activeTab === TabType.Clock && <ClockSettings />}
-          {activeTab === TabType.Cards && <CardsSettings
-            toggleCards={props.toggleCards}
-            cardsHidden={props.cardsHidden}
-            toggleShowBraveTalk={props.toggleShowBraveTalk}
-            showBraveTalk={props.showBraveTalk}
-            braveTalkSupported={props.braveTalkSupported}
-            toggleShowRewards={props.toggleShowRewards}
-            braveRewardsSupported={props.braveRewardsSupported}
-            showRewards={props.showRewards}
-          />}
           {activeTab === TabType.Search && <SearchSettings />}
         </React.Suspense>
       </SettingsFeatureBody>

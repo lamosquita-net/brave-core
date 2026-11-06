@@ -6,7 +6,7 @@
 #ifndef BRAVE_BROWSER_UI_BRAVE_PAGES_H_
 #define BRAVE_BROWSER_UI_BRAVE_PAGES_H_
 
-class Browser;
+class BrowserWindowInterface;
 
 namespace content {
 class WebContents;
@@ -14,18 +14,18 @@ class WebContents;
 
 namespace brave {
 
-void ShowBraveAdblock(Browser* browser);
-void ShowWebcompatReporter(Browser* browser);
+void ShowBraveAdblock(BrowserWindowInterface* browser);
+void ShowWebcompatReporter(BrowserWindowInterface* browser);
 // FlyWeb: opens flyweb.lamosquita.net's "report a problem" page in a new tab.
 void OpenFlyWebReportProblemPage(content::WebContents* initiator);
-void ShowBraveRewards(Browser* browser);
-void ShowBraveWallet(Browser* browser);
-void ShowBraveWalletOnboarding(Browser* browser);
-void ShowExtensionSettings(Browser* browser);
-void ShowWalletSettings(Browser* browser);
-void ShowSync(Browser* browser);
-void ShowShortcutsPage(Browser* browser);
-void ShowBraveTalk(Browser* browser);
+void ShowBraveRewards(BrowserWindowInterface* browser);
+void ShowBraveWallet(BrowserWindowInterface* browser);
+void ShowBraveWalletOnboarding(BrowserWindowInterface* browser);
+void ShowExtensionSettings(BrowserWindowInterface* browser);
+void ShowWalletSettings(BrowserWindowInterface* browser);
+void ShowSync(BrowserWindowInterface* browser);
+void ShowShortcutsPage(BrowserWindowInterface* browser);
+void ShowBraveTalk(BrowserWindowInterface* browser);
 
 }  // namespace brave
 

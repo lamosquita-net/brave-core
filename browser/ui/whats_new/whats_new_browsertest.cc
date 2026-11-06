@@ -12,7 +12,6 @@
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/chrome_version_service.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/common/chrome_switches.h"
 #include "chrome/test/base/in_process_browser_test.h"
@@ -76,7 +75,7 @@ IN_PROC_BROWSER_TEST_F(BraveWhatsNewBrowserTest,
 
   // Update profile created version to make this user already updated user.
   // Set lower version(1.51) than current version(1.52).
-  ChromeVersionService::SetVersion(browser()->profile()->GetPrefs(),
+  ChromeVersionService::SetVersion(browser()->GetProfile()->GetPrefs(),
                                    "112.1.51.12");
 }
 
@@ -99,7 +98,7 @@ IN_PROC_BROWSER_TEST_F(BraveWhatsNewBrowserTest,
             tab_model()->GetActiveWebContents()->GetVisibleURL());
 
   // Update profile created version to make this user as not updated user.
-  ChromeVersionService::SetVersion(browser()->profile()->GetPrefs(),
+  ChromeVersionService::SetVersion(browser()->GetProfile()->GetPrefs(),
                                    "112.1.52.12");
 }
 

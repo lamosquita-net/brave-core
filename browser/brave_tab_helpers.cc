@@ -13,13 +13,9 @@
 #include "brave/browser/brave_browser_process.h"
 #include "brave/browser/brave_shields/brave_shields_web_contents_observer.h"
 #include "brave/browser/ephemeral_storage/ephemeral_storage_tab_helper.h"
-#include "brave/browser/ntp_background/ntp_tab_helper.h"
 #include "brave/browser/ui/bookmark/brave_bookmark_tab_helper.h"
 #include "brave/components/brave_perf_predictor/browser/perf_predictor_tab_helper.h"
-#include "brave/components/brave_wayback_machine/buildflags/buildflags.h"
-#include "brave/components/playlist/common/buildflags/buildflags.h"
 #include "brave/components/request_otr/common/buildflags/buildflags.h"
-#include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "build/build_config.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/profile.h"
@@ -48,29 +44,14 @@
 #include "brave/browser/brave_drm_tab_helper.h"
 #endif
 
-#if BUILDFLAG(ENABLE_BRAVE_WAYBACK_MACHINE)
-#include "brave/components/brave_wayback_machine/brave_wayback_machine_tab_helper.h"
-#endif
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-#include "brave/browser/speedreader/speedreader_tab_helper.h"
-#endif
-
 #if BUILDFLAG(ENABLE_REQUEST_OTR)
 #include "brave/browser/request_otr/request_otr_tab_helper.h"
 #include "brave/components/request_otr/common/features.h"
 #endif
 
-#if BUILDFLAG(ENABLE_PLAYLIST)
-#include "brave/browser/playlist/playlist_service_factory.h"
-#include "brave/components/playlist/browser/playlist_tab_helper.h"
-#include "brave/components/playlist/common/features.h"
-#endif
-
 #if defined(TOOLKIT_VIEWS)
 #include "brave/browser/onboarding/onboarding_tab_helper.h"
 #include "brave/browser/ui/side_panel/brave_contextual_side_panel_tab_helper.h"
-#include "brave/browser/ui/sidebar/sidebar_tab_helper.h"
 #endif
 
 namespace brave {
@@ -95,23 +76,14 @@ void AttachTabHelpers(content::WebContents* web_contents) {
   BraveDrmTabHelper::CreateForWebContents(web_contents);
 #endif
 
-#if BUILDFLAG(ENABLE_BRAVE_WAYBACK_MACHINE)
-  BraveWaybackMachineTabHelper::CreateIfNeeded(web_contents);
-#endif
-
   brave_perf_predictor::PerfPredictorTabHelper::CreateForWebContents(
       web_contents);
 
   // FlyWeb: no WebDiscoveryTabHelper, so no infobar offering the Web
   // Discovery Project (it sends search data to Brave) on Brave Search.
 
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-  speedreader::SpeedreaderTabHelper::MaybeCreateForWebContents(web_contents);
-#endif
-
 #if defined(TOOLKIT_VIEWS)
   OnboardingTabHelper::MaybeCreateForWebContents(web_contents);
-  sidebar::SidebarTabHelper::MaybeCreateForWebContents(web_contents);
 #endif
 
   if (base::FeatureList::IsEnabled(net::features::kBraveEphemeralStorage)) {
@@ -120,7 +92,6 @@ void AttachTabHelpers(content::WebContents* web_contents) {
   }
 
   if (!web_contents->GetBrowserContext()->IsOffTheRecord()) {
-    ntp_background_images::NTPTabHelper::CreateForWebContents(web_contents);
 #if BUILDFLAG(ENABLE_REQUEST_OTR)
     if (base::FeatureList::IsEnabled(
             request_otr::features::kBraveRequestOTRTab)) {
@@ -128,17 +99,6 @@ void AttachTabHelpers(content::WebContents* web_contents) {
     }
 #endif
   }
-
-#if BUILDFLAG(ENABLE_PLAYLIST)
-  if (base::FeatureList::IsEnabled(playlist::features::kPlaylist)) {
-    if (auto* playlist_service =
-            playlist::PlaylistServiceFactory::GetForBrowserContext(
-                web_contents->GetBrowserContext())) {
-      playlist::PlaylistTabHelper::CreateForWebContents(web_contents,
-                                                        playlist_service);
-    }
-  }
-#endif  // BUILDFLAG(ENABLE_PLAYLIST)
 }
 
 }  // namespace brave

@@ -16,20 +16,8 @@
 
 class BraveActionsContainer;
 class BraveActionsContainerTest;
-class PlaylistActionIconView;
 class RewardsBrowserTest;
 class SkPath;
-
-namespace playlist {
-FORWARD_DECLARE_TEST(PlaylistBrowserTest, AddItemsToList);
-FORWARD_DECLARE_TEST(PlaylistBrowserTestWithSitesUsingMediaSource,
-                     MediaShouldBeExtractedFromBackground_SucceedInExtracting);
-FORWARD_DECLARE_TEST(PlaylistBrowserTestWithSitesUsingMediaSource,
-                     MediaShouldBeExtractedFromBackground_FailToExtract);
-FORWARD_DECLARE_TEST(
-    PlaylistBrowserTestWithSitesUsingMediaSource,
-    MediaShouldBeExtractedFromBackground_DynamicallyAddedMedia);
-}  // namespace playlist
 
 namespace policy {
 FORWARD_DECLARE_TEST(BraveRewardsPolicyTest, RewardsIconIsHidden);
@@ -61,7 +49,6 @@ class BraveLocationBarView : public LocationBarView {
   // Views that locates at left side of upstream's trailing views.
   std::vector<views::View*> GetLeftMostTrailingViews() override;
   void RefreshBackground() override;
-  void OnOmniboxBlurred() override;
 
   // views::View:
   gfx::Size CalculatePreferredSize(
@@ -78,24 +65,11 @@ class BraveLocationBarView : public LocationBarView {
     return brave_actions_;
   }
 
-  void ShowPlaylistBubble();
-
  private:
-  FRIEND_TEST_ALL_PREFIXES(playlist::PlaylistBrowserTest, AddItemsToList);
-  FRIEND_TEST_ALL_PREFIXES(
-      playlist::PlaylistBrowserTestWithSitesUsingMediaSource,
-      MediaShouldBeExtractedFromBackground_SucceedInExtracting);
-  FRIEND_TEST_ALL_PREFIXES(
-      playlist::PlaylistBrowserTestWithSitesUsingMediaSource,
-      MediaShouldBeExtractedFromBackground_FailToExtract);
-  FRIEND_TEST_ALL_PREFIXES(
-      playlist::PlaylistBrowserTestWithSitesUsingMediaSource,
-      MediaShouldBeExtractedFromBackground_DynamicallyAddedMedia);
   FRIEND_TEST_ALL_PREFIXES(policy::BraveRewardsPolicyTest, RewardsIconIsHidden);
   friend class ::BraveActionsContainerTest;
   friend class ::RewardsBrowserTest;
 
-  PlaylistActionIconView* GetPlaylistActionIconView();
   void SetupShadow();
 
   std::unique_ptr<ViewShadow> shadow_;

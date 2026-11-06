@@ -19,9 +19,9 @@
 #include "chrome/browser/profiles/profile_window.h"
 #include "chrome/browser/search_engines/template_url_service_factory.h"
 #include "chrome/browser/ui/browser.h"
-#include "chrome/browser/ui/browser_finder.h"
-#include "chrome/browser/ui/browser_list.h"
 #include "chrome/browser/ui/browser_list_observer.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+#include "chrome/browser/ui/browser_window/public/global_browser_collection.h"
 #include "chrome/browser/ui/views/frame/browser_view.h"
 #include "chrome/browser/ui/views/frame/toolbar_button_provider.h"
 #include "chrome/browser/ui/views/toolbar/browser_app_menu_button.h"
@@ -90,13 +90,13 @@ IN_PROC_BROWSER_TEST_F(BraveToolbarViewTest,
 
 IN_PROC_BROWSER_TEST_F(BraveToolbarViewTest, AvatarButtonIsShownGuestProfile) {
   // Open a Guest window.
-  EXPECT_EQ(1U, BrowserList::GetInstance()->size());
+  EXPECT_EQ(1U, GlobalBrowserCollection::GetInstance()->GetSize());
   ui_test_utils::BrowserChangeObserver browser_creation_observer(
       nullptr, ui_test_utils::BrowserChangeObserver::ChangeType::kAdded);
   profiles::SwitchToGuestProfile(base::DoNothing());
   base::RunLoop().RunUntilIdle();
   browser_creation_observer.Wait();
-  EXPECT_EQ(2U, BrowserList::GetInstance()->size());
+  EXPECT_EQ(2U, GlobalBrowserCollection::GetInstance()->GetSize());
 
   // Retrieve the new Guest profile.
   Profile* guest = g_browser_process->profile_manager()->GetProfileByPath(
@@ -128,14 +128,14 @@ IN_PROC_BROWSER_TEST_F(BraveToolbarViewTest,
   EXPECT_EQ(true, is_avatar_button_shown());
 
   // Open the new profile
-  EXPECT_EQ(1U, BrowserList::GetInstance()->size());
+  EXPECT_EQ(1U, GlobalBrowserCollection::GetInstance()->GetSize());
   ui_test_utils::BrowserChangeObserver browser_creation_observer(
       nullptr, ui_test_utils::BrowserChangeObserver::ChangeType::kAdded);
   profiles::OpenBrowserWindowForProfile(base::DoNothing(), false, true, true,
                                         &new_profile);
   base::RunLoop().RunUntilIdle();
   browser_creation_observer.Wait();
-  EXPECT_EQ(2U, BrowserList::GetInstance()->size());
+  EXPECT_EQ(2U, GlobalBrowserCollection::GetInstance()->GetSize());
 
   // Check it's shown in second profile
   Browser* browser = chrome::FindAnyBrowser(&new_profile, true);

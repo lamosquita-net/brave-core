@@ -12,12 +12,11 @@
 #include "base/check_is_test.h"
 #include "base/functional/bind.h"
 #include "brave/browser/ui/brave_browser.h"
+#include "brave/browser/ui/side_panel/brave_side_panel_prefs.h"
 #include "brave/browser/ui/color/brave_color_id.h"
 #include "brave/browser/ui/views/frame/brave_browser_view.h"
 #include "brave/browser/ui/views/frame/brave_contents_view_util.h"
 #include "brave/browser/ui/views/side_panel/brave_side_panel_resize_widget.h"
-#include "brave/components/sidebar/browser/constants.h"
-#include "brave/components/sidebar/browser/pref_names.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/color/chrome_color_id.h"
 #include "chrome/browser/ui/views/frame/browser_view.h"
@@ -34,9 +33,9 @@ BraveSidePanel::BraveSidePanel(BrowserView* browser_view,
 
   SetVisible(false);
   auto* prefs = browser_view_->GetProfile()->GetPrefs();
-  if (prefs->FindPreference(sidebar::kSidePanelWidth)) {
+  if (prefs->FindPreference(brave::kSidePanelWidth)) {
     side_panel_width_.Init(
-        sidebar::kSidePanelWidth, prefs,
+        brave::kSidePanelWidth, prefs,
         base::BindRepeating(&BraveSidePanel::OnSidePanelWidthChanged,
                             base::Unretained(this)));
     OnSidePanelWidthChanged();
@@ -99,7 +98,7 @@ void BraveSidePanel::OnThemeChanged() {
 
 gfx::Size BraveSidePanel::GetMinimumSize() const {
   // Use default width as a minimum width.
-  return gfx::Size(sidebar::kDefaultSidePanelWidth, 0);
+  return gfx::Size(brave::kDefaultSidePanelWidth, 0);
 }
 
 bool BraveSidePanel::IsClosing() {
@@ -118,13 +117,6 @@ void BraveSidePanel::Layout(PassKey) {
 
   // Panel contents is the only child.
   DCHECK_EQ(1UL, children().size());
-
-  if (fixed_contents_width_) {
-    gfx::Rect panel_contents_rect(0, 0, *fixed_contents_width_, height());
-    panel_contents_rect.Inset(GetInsets());
-    children()[0]->SetBoundsRect(panel_contents_rect);
-    return;
-  }
 
   children()[0]->SetBoundsRect(GetContentsBounds());
 }
@@ -147,7 +139,7 @@ void BraveSidePanel::OnResize(int resize_amount, bool done_resizing) {
 
   if (done_resizing) {
     starting_width_on_resize_ = std::nullopt;
-    // Before arriving resizing doen event, user could hide sidebar because
+    // Before arriving resizing doen event, user could hide the panel because
     // resizing done event is arrived a little bit later after user stops
     // resizing. And resizing done event is arrived as a result of
     // ResizeArea::OnMouseCaptureLost(). In this situation, just skip below

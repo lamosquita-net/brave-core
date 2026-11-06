@@ -8,10 +8,8 @@ import * as preferencesAPI from './api/preferences'
 import * as statsAPI from './api/stats'
 import * as topSitesAPI from './api/topSites'
 import * as privateTabDataAPI from './api/privateTabData'
-import * as newTabAdsDataAPI from './api/newTabAdsData'
 import getNTPBrowserAPI, { Background, CustomBackground } from './api/background'
 import { getInitialData } from './api/initialData'
-import * as backgroundData from './data/backgrounds'
 
 async function updatePreferences (prefData: NewTab.Preferences) {
   getActions().preferencesUpdated(prefData)
@@ -23,10 +21,6 @@ async function updateStats (statsData: statsAPI.Stats) {
 
 async function updatePrivateTabData (data: privateTabDataAPI.PrivateTabData) {
   getActions().privateTabDataUpdated(data)
-}
-
-async function updateNewTabAdsData (data: newTabAdsDataAPI.NewTabAdsData) {
-  getActions().newTabAdsDataUpdated(data)
 }
 
 async function onMostVisitedInfoChanged (topSites: topSitesAPI.MostVisitedInfoChanged) {
@@ -55,8 +49,6 @@ export function wireApiEventsToStore () {
     statsAPI.addChangeListener(updateStats)
     preferencesAPI.addChangeListener(updatePreferences)
     privateTabDataAPI.addChangeListener(updatePrivateTabData)
-    newTabAdsDataAPI.addChangeListener(updateNewTabAdsData)
-    backgroundData.updateImages(initialData.braveBackgrounds)
 
     getNTPBrowserAPI().addBackgroundUpdatedListener(onBackgroundUpdated)
     getNTPBrowserAPI().addCustomImageBackgroundsUpdatedListener(onCustomImageBackgroundsUpdated)

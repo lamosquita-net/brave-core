@@ -9,9 +9,6 @@ import { fondos } from '../components/default/flyweb/recursos'
 
 export const images: NewTab.BraveBackground[] = [...fondos]
 
-// FlyWeb: the component's images (Brave's photographers) are no longer used.
-export const updateImages = (_newImages: NewTab.BraveBackground[]) => {}
-
 export const defaultSolidBackgroundColor = '#151E9A'
 
 export const solidColorsForBackground: NewTab.ColorBackground[] = [

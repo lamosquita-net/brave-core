@@ -17,7 +17,6 @@
 #include "brave/components/debounce/core/browser/debounce_service.h"
 #include "brave/components/decentralized_dns/core/utils.h"
 #include "brave/components/l10n/common/prefs.h"
-#include "brave/components/ntp_background_images/browser/ntp_background_images_service.h"
 #include "brave/components/p3a/buildflags.h"
 #include "brave/components/p3a/p3a_service.h"
 #include "brave/components/p3a/star_randomness_meta.h"
@@ -50,8 +49,6 @@ void BraveRegisterLocalStatePrefs(PrefRegistrySimple* registry) {
   p3a::P3AService::RegisterPrefs(registry, false);
   p3a::StarRandomnessMeta::RegisterPrefsForMigration(registry);
 #endif
-  ntp_background_images::NTPBackgroundImagesService::RegisterLocalStatePrefs(
-      registry);
   brave_l10n::RegisterL10nLocalStatePrefs(registry);
   ai_chat::prefs::RegisterLocalStatePrefs(registry);
   ai_chat::AIChatMetrics::RegisterPrefs(registry);

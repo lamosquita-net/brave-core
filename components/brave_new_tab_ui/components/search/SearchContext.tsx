@@ -94,7 +94,6 @@ export function SearchContext(props: React.PropsWithChildren<{}>) {
     if (!engine) return
 
     setDefaultSearchEngine(engine)
-    getNTPBrowserAPI().newTabMetrics.reportNTPSearchDefaultEngine(engine.prepopulateId)
     setSearchEngineInternal(engine)
   }, [searchEngines]);
 
@@ -104,7 +103,6 @@ export function SearchContext(props: React.PropsWithChildren<{}>) {
 
     const match = filteredSearchEngines.find(s => s.host === getDefaultSearchEngine())
       ?? searchEngines[0]
-    getNTPBrowserAPI().newTabMetrics.reportNTPSearchDefaultEngine(match.prepopulateId)
     setSearchEngine(match)
   }, [filteredSearchEngines])
 

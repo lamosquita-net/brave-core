@@ -31,8 +31,7 @@ const generateGridSiteProperties = (
     id: topSiteId++,
     // In the legacy version of topSites the pinnedIndex
     // was the site index itself.
-    pinnedIndex: fromLegacyData ? index : undefined,
-    defaultSRTopSite: false
+    pinnedIndex: fromLegacyData ? index : undefined
   }
 }
 

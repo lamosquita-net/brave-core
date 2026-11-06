@@ -16,10 +16,6 @@
 #include "chrome/common/chrome_switches.h"
 #include "components/prefs/pref_service.h"
 
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-#include "brave/components/speedreader/speedreader_pref_names.h"
-#endif
-
 namespace {
 void EnableAdblockCookieList(base::WeakPtr<Profile> profile) {
   if (!profile) {
@@ -52,11 +48,6 @@ void MaybeEnableBraveFeatureForPerfTesting(Profile* profile) {
       !cmd->HasSwitch(::switches::kUserDataDir)) {
     return;
   }
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-  // Speedreader
-  profile->GetPrefs()->SetBoolean(speedreader::kSpeedreaderPrefEnabled, true);
-#endif
 
   // Adblock
   EnableAdblockCookieList(profile->GetWeakPtr());

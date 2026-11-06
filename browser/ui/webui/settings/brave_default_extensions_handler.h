@@ -34,7 +34,6 @@ class BraveDefaultExtensionsHandler : public settings::SettingsPageUIHandler
   void OnJavascriptDisallowed() override {}
 
   void GetRestartNeeded(const base::ListValue& args);
-  void SetWebTorrentEnabled(const base::ListValue& args);
   void SetMediaRouterEnabled(const base::ListValue& args);
   void SetWidevineEnabled(const base::ListValue& args);
   void IsWidevineEnabled(const base::ListValue& args);

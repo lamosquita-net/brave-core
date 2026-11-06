@@ -14,7 +14,6 @@ import Icon from '@brave/leo/react/icon';
 import ButtonMenu from '@brave/leo/react/buttonMenu';
 import { spacing } from '@brave/leo/tokens/css/variables';
 import { getLocale } from '$web-common/locale';
-import getNTPBrowserAPI from '../../api/background';
 
 const MenuContainer = styled(ButtonMenu).attrs({
   'data-theme': 'light'
@@ -91,12 +90,6 @@ function Swapper() {
 
 export default function SearchPlaceholder() {
   const [showSearchBox] = useNewTabPref('showSearchBox')
-
-  React.useEffect(() => {
-    if (!showSearchBox) {
-      getNTPBrowserAPI().newTabMetrics.reportNTPSearchDefaultEngine(null)
-    }
-  }, [showSearchBox]);
 
   if (!showSearchBox) return null
   return <SearchContext>

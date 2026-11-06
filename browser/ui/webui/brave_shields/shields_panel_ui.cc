@@ -17,7 +17,8 @@
 #include "brave/components/l10n/common/localization_util.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser.h"
-#include "chrome/browser/ui/browser_finder.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+#include "chrome/browser/ui/browser_window/public/profile_browser_collection.h"
 #include "chrome/browser/ui/webui/favicon_source.h"
 #include "chrome/browser/ui/webui/webui_util.h"
 #include "components/favicon_base/favicon_url_parser.h"
@@ -32,7 +33,8 @@
 ShieldsPanelUI::ShieldsPanelUI(content::WebUI* web_ui)
     : TopChromeWebUIController(web_ui, true),
       profile_(Profile::FromWebUI(web_ui)) {
-  browser_ = chrome::FindLastActiveWithProfile(profile_);
+  browser_ =
+      ProfileBrowserCollection::GetForProfile(profile_)->GetLastActiveBrowser();
 
   content::WebUIDataSource* source = content::WebUIDataSource::CreateAndAdd(
       web_ui->GetWebContents()->GetBrowserContext(), kShieldsPanelHost);
@@ -62,10 +64,10 @@ ShieldsPanelUI::ShieldsPanelUI(content::WebUI* web_ui)
       profile_, std::make_unique<FaviconSource>(
                     profile_, chrome::FaviconUrlFormat::kFavicon2));
 
-  webui::SetupWebUIDataSource(source,
-                              base::make_span(kBraveShieldsPanelGenerated,
-                                              kBraveShieldsPanelGeneratedSize),
-                              IDR_SHIELDS_PANEL_HTML);
+  webui::SetupWebUIDataSource(
+      source,
+      base::span<const webui::ResourcePath>(kBraveShieldsPanelGenerated),
+      IDR_SHIELDS_PANEL_HTML);
 }
 
 ShieldsPanelUI::~ShieldsPanelUI() = default;
@@ -87,7 +89,7 @@ void ShieldsPanelUI::CreatePanelHandler(
 
   panel_handler_ = std::make_unique<ShieldsPanelHandler>(
       std::move(panel_receiver), this,
-      static_cast<BraveBrowserWindow*>(browser_->window()), profile);
+      BraveBrowserWindow::FromBrowser(browser_), profile);
   data_handler_ = std::make_unique<ShieldsPanelDataHandler>(
       std::move(data_handler_receiver), this, browser_->tab_strip_model());
 }

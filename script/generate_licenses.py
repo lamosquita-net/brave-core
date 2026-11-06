@@ -4,7 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-import json
 import os
 import sys
 
@@ -137,62 +136,6 @@ def write_license_file(directory, contents):
     return True
 
 
-def list_ntp_backgrounds(metadata_file):
-    json_metadata = ''
-    with open(metadata_file, mode='rt', encoding='utf-8') as file_handle:
-        # Extract only the background images.
-        metadata = file_handle.readlines()[3:12]
-        # Hack to turn this TypeScript file into valid JSON
-        json_metadata = "".join(metadata) \
-            .replace("export const images: NewTab.BraveBackground[] = [",
-                     "[") \
-            .replace('"', '"').replace("'", '"')
-
-    images = json.loads(json_metadata)
-    return images
-
-
-def validated_data_field(data, field_name):
-    field_value = data[field_name]
-    if not field_value:
-        print(f"Missing {field_name} for background image {data['name']}")
-        sys.exit(1)
-
-    return field_value
-
-
-def generate_backgrounds_license(preamble, backgrounds):
-    notices = ''
-
-    for background in backgrounds:
-        if notices:
-            notices += '\n'
-
-        filename = validated_data_field(background, 'wallpaperImageUrl')
-        author_name = validated_data_field(background, 'author')
-        # Don't validate link. it can be empty.
-        author_link = background['link']
-        original_url = validated_data_field(background, 'originalUrl')
-        license_text = validated_data_field(background, 'license')
-        if license_text != 'used with permission' \
-           and license_text[0:8] != 'https://' \
-           and license_text[0:7] != 'http://':
-            print('Invalid license for background image ' \
-                  f"{background['name']}. It needs to be a URL or the " \
-                  'string "used with permission".')
-            sys.exit(1)
-
-        if author_link != '':
-            notices += f'File: {filename}\nAuthor: {author_name} ' \
-                f'({author_link})\nURL: {original_url}\n' \
-                f'License: {license_text}\n'
-        else:
-            notices += f'File: {filename}\nAuthor: {author_name}\n' \
-                f'URL: {original_url}\nLicense: {license_text}\n'
-
-    return f'{preamble}\n\n{notices}'
-
-
 def main():
     components_dir = os.path.join(SOURCE_ROOT, 'components')
     third_party_dir = os.path.join(components_dir, 'third_party')
@@ -225,20 +168,6 @@ def main():
             local_data_preamble, local_data_components)):
         print(f'- {len(local_data_components)} sub-components added in ' \
               'local_data/LICENSE')
-
-    # Brave New Tab UI component
-    ntp_data_dir = os.path.join(components_dir, 'brave_new_tab_ui', 'data')
-    ntp_backgrounds_preamble = 'These licenses do not apply to any of the ' \
-        'code shipped with the Brave Browser and instead apply to ' \
-        'background images used on the new tab page. The Brave Browser and ' \
-        'such data files are separate and independent works.'
-
-    ntp_backgrounds = list_ntp_backgrounds(
-        os.path.join(ntp_data_dir, 'backgrounds.ts'))
-    if write_license_file(ntp_data_dir, generate_backgrounds_license(
-            ntp_backgrounds_preamble, ntp_backgrounds)):
-        print(f'- {len(ntp_backgrounds)} sub-components added in ' \
-              'brave_new_tab_ui/data/LICENSE')
 
 
 if __name__ == '__main__':

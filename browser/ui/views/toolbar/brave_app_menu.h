@@ -24,10 +24,6 @@ class BraveAppMenu : public AppMenu {
   void RunMenu(views::MenuButtonController* host) override;
   void ExecuteCommand(int command_id, int mouse_event_flags) override;
   void OnMenuClosed(views::MenuItemView* menu) override;
-
- private:
-  // Update item's view as brave style.
-  void UpdateMenuItemView();
 };
 
 #endif  // BRAVE_BROWSER_UI_VIEWS_TOOLBAR_BRAVE_APP_MENU_H_

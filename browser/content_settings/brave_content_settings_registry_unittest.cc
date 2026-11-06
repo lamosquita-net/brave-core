@@ -90,7 +90,6 @@ TEST_F(BraveContentSettingsRegistryTest, Inheritance) {
       ContentSettingsType::BRAVE_SHIELDS,
       ContentSettingsType::BRAVE_REFERRERS,
       ContentSettingsType::BRAVE_COOKIES,
-      ContentSettingsType::BRAVE_SPEEDREADER,
       ContentSettingsType::BRAVE_GOOGLE_SIGN_IN,
       ContentSettingsType::BRAVE_HTTPS_UPGRADE,
       ContentSettingsType::BRAVE_REMEMBER_1P_STORAGE,
@@ -182,12 +181,6 @@ TEST_F(BraveContentSettingsRegistryTest, GetInitialDefaultSetting) {
   // {
   //   SCOPED_TRACE("Content setting: BRAVE_COOKIES");
   //   info = registry()->Get(ContentSettingsType::BRAVE_COOKIES);
-  //   EXPECT_EQ(CONTENT_SETTING_DEFAULT, info->GetInitialDefaultSetting());
-  // }
-
-  // {
-  //   SCOPED_TRACE("Content setting: BRAVE_SPEEDREADER");
-  //   info = registry()->Get(ContentSettingsType::BRAVE_SPEEDREADER);
   //   EXPECT_EQ(CONTENT_SETTING_DEFAULT, info->GetInitialDefaultSetting());
   // }
 }

@@ -26,63 +26,7 @@ describe('newTabReducer', () => {
   describe('NEW_TAB_PRIVATE_TAB_DATA_UPDATED', () => {
     // TODO
   })
-  describe('NEW_TAB_DISMISS_BRANDED_WALLPAPER_NOTIFICATION', () => {
-    // TODO
-  })
   describe('NEW_TAB_PREFERENCES_UPDATED', () => {
     // TODO
-  })
-  describe('rewards features inside new tab page', () => {
-    describe('CREATE_WALLET', () => {
-      // TODO
-    })
-    describe('ON_ENABLED_MAIN', () => {
-      // TODO
-    })
-    describe('CREATE_WALLET', () => {
-      // TODO
-    })
-    describe('ON_ENABLED_MAIN', () => {
-      // TODO
-    })
-    describe('ON_WALLET_INITIALIZED', () => {
-      // TODO
-    })
-    describe('WALLET_CORRUPT', () => {
-      // TODO
-    })
-    describe('WALLET_CREATED', () => {
-      // TODO
-    })
-    describe('OK', () => {
-      // TODO
-    })
-    describe('ON_ADS_ENABLED', () => {
-      // TODO
-    })
-    describe('ON_ADS_ESTIMATED_EARNINGS', () => {
-      // TODO
-    })
-    describe('ON_BALANCE_REPORT', () => {
-      // TODO
-    })
-    describe('DISMISS_NOTIFICATION', () => {
-      // TODO
-    })
-    describe('ON_PROMOTIONS', () => {
-      // TODO
-    })
-    describe('ON_BALANCE', () => {
-      // TODO
-    })
-    describe('ON_WALLET_EXISTS', () => {
-      // TODO
-    })
-    describe('SET_PRE_INITIAL_REWARDS_DATA', () => {
-      // TODO
-    })
-    describe('SET_INITIAL_REWARDS_DATA', () => {
-      // TODO
-    })
   })
 })

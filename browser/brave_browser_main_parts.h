@@ -17,7 +17,6 @@ class BraveBrowserMainParts : public ChromeBrowserMainParts {
   ~BraveBrowserMainParts() override;
 
   int PreMainMessageLoopRun() override;
-  void PreBrowserStart() override;
   void PostBrowserStart() override;
   void PreShutdown() override;
   void PreProfileInit() override;

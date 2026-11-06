@@ -76,13 +76,6 @@ inline constexpr const char* kAllowedUrlPrefixes[] = {
     "https://static1.brave.com/",
 };
 
-// Before adding to this list, get approval from the security team.
-inline constexpr const char* kAllowedUrlPatterns[] = {
-    // allowed because it's url for fetching super referral's mapping table
-    "https://mobile-data.s3.brave.com/superreferrer/map-table.json",
-    "https://mobile-data-dev.s3.brave.software/superreferrer/map-table.json",
-};
-
 }  // namespace brave
 
 #endif  // BRAVE_BROWSER_NET_BRAVE_NETWORK_AUDIT_ALLOWED_LISTS_H_

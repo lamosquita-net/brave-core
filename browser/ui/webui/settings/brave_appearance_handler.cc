@@ -9,10 +9,8 @@
 #include "base/metrics/histogram_macros.h"
 #include "base/strings/string_number_conversions.h"
 #include "brave/browser/new_tab/new_tab_shows_options.h"
-#include "brave/browser/profiles/profile_util.h"
 #include "brave/browser/themes/brave_dark_mode_utils.h"
 #include "brave/components/constants/pref_names.h"
-#include "brave/components/ntp_background_images/common/pref_names.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/search/instant_service.h"
@@ -94,11 +92,6 @@ void BraveAppearanceHandler::OnBraveDarkModeChanged() {
         "brave-theme-type-changed",
         base::Value(static_cast<int>(dark_mode::GetBraveDarkModeType())));
   }
-}
-
-void BraveAppearanceHandler::OnBackgroundPreferenceChanged(
-    const std::string& pref_name) {
-  brave::RecordSponsoredImagesEnabledP3A(profile_);
 }
 
 void BraveAppearanceHandler::OnPreferenceChanged(const std::string& pref_name) {

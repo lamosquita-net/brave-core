@@ -7,7 +7,6 @@
 
 #include <memory>
 
-#include "brave/components/constants/pref_names.h"
 #include "chrome/test/base/testing_profile.h"
 #include "components/prefs/pref_registry_simple.h"
 #include "components/prefs/testing_pref_service.h"
@@ -34,45 +33,13 @@ class NTPUtilsTest : public ::testing::Test {
   std::unique_ptr<TestingProfile> profile_;
 };
 
-TEST_F(NTPUtilsTest, MigratesHideWidgetTrue) {
-  // Note: The testing profile has already performed the prefs migration by the
-  // time this test runs, so undo its effects here for testing purposes
+TEST_F(NTPUtilsTest, ClearsObsoleteWidgetPrefs) {
   auto* prefs = GetPrefs();
-  prefs->ClearPref(kNewTabPageHideAllWidgets);
-  prefs->ClearPref(kNewTabPageShowRewards);
-  prefs->ClearPref(kNewTabPageShowBraveTalk);
-  // Manually turn all off
-  prefs->SetBoolean(kNewTabPageShowRewards, false);
-  prefs->SetBoolean(kNewTabPageShowBraveTalk, false);
-  // Migrate
-  new_tab_page::MigrateNewTabPagePrefs(GetPrefs());
-  // Expect migrated to off
-  EXPECT_TRUE(prefs->GetBoolean(kNewTabPageHideAllWidgets));
-}
-
-TEST_F(NTPUtilsTest, MigratesHideWidgetFalse) {
-  // Note: The testing profile has already performed the prefs migration by the
-  // time this test runs, so undo its effects here for testing purposes
-  auto* prefs = GetPrefs();
-  prefs->ClearPref(kNewTabPageHideAllWidgets);
-  prefs->ClearPref(kNewTabPageShowRewards);
-  prefs->ClearPref(kNewTabPageShowBraveTalk);
-  // Manually turn some off
-  prefs->SetBoolean(kNewTabPageShowRewards, false);
-  prefs->SetBoolean(kNewTabPageShowBraveTalk, true);
-  // Migrate
-  new_tab_page::MigrateNewTabPagePrefs(GetPrefs());
-  // Expect not migrated
-  EXPECT_FALSE(prefs->GetBoolean(kNewTabPageHideAllWidgets));
-}
-
-TEST_F(NTPUtilsTest, MigratesHideWidgetFalseDefault) {
-  // Note: The testing profile has already performed the prefs migration by the
-  // time this test runs, so undo its effects here for testing purposes
-  auto* prefs = GetPrefs();
-  prefs->ClearPref(kNewTabPageHideAllWidgets);
-  prefs->ClearPref(kNewTabPageShowRewards);
-  prefs->ClearPref(kNewTabPageShowBraveTalk);
-  // Don't manually change any settings and expect not migrated
-  EXPECT_FALSE(prefs->GetBoolean(kNewTabPageHideAllWidgets));
+  prefs->SetBoolean("brave.new_tab_page.show_rewards", false);
+  prefs->SetBoolean("brave.new_tab_page.show_together", true);
+  prefs->SetBoolean("brave.new_tab_page.hide_all_widgets", true);
+  new_tab_page::MigrateNewTabPagePrefs(prefs);
+  EXPECT_FALSE(prefs->HasPrefPath("brave.new_tab_page.show_rewards"));
+  EXPECT_FALSE(prefs->HasPrefPath("brave.new_tab_page.show_together"));
+  EXPECT_FALSE(prefs->HasPrefPath("brave.new_tab_page.hide_all_widgets"));
 }

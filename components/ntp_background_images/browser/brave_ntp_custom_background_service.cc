@@ -24,24 +24,14 @@ BraveNTPCustomBackgroundService::BraveNTPCustomBackgroundService(
 BraveNTPCustomBackgroundService::~BraveNTPCustomBackgroundService() = default;
 
 bool BraveNTPCustomBackgroundService::ShouldShowCustomBackground() const {
+  // FlyWeb: a chosen Brave photo is not "custom": the page always picks one
+  // of its own backgrounds (brave_new_tab_ui components/default/flyweb).
   return delegate_->IsCustomImageBackgroundEnabled() ||
-         delegate_->IsColorBackgroundEnabled() ||
-         delegate_->HasPreferredBraveBackground();
+         delegate_->IsColorBackgroundEnabled();
 }
 
 base::DictValue BraveNTPCustomBackgroundService::GetBackground() const {
   DCHECK(ShouldShowCustomBackground());
-
-  if (delegate_->HasPreferredBraveBackground()) {
-    auto background = delegate_->GetPreferredBraveBackground();
-    if (background.empty()) {
-      // Return empty value so that it falls back to random Brave background.
-      return background;
-    }
-
-    background.Set(kWallpaperRandomKey, false);
-    return background;
-  }
 
   // The |data| will be mapped to NewTab.BackgroundWallpaper type from JS side.
   // So we need to keep names of properties same.

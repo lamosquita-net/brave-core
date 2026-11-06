@@ -15,7 +15,6 @@
 #include "brave/browser/ui/webui/brave_adblock_ui.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/constants/webui_url_constants.h"
-#include "brave/components/playlist/common/buildflags/buildflags.h"
 #include "build/build_config.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/common/url_constants.h"
@@ -32,10 +31,6 @@
 #include "brave/browser/ui/webui/private_new_tab_page/brave_private_new_tab_ui.h"
 #include "brave/browser/ui/webui/welcome_page/brave_welcome_ui.h"
 #include "brave/components/commands/common/features.h"
-#endif
-
-#if BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
-#include "brave/browser/ui/webui/playlist_ui.h"
 #endif
 
 using content::WebUI;
@@ -95,7 +90,7 @@ WebUIFactoryFunction GetWebUIFactoryFunction(WebUI* web_ui,
       url.host() == chrome::kChromeUINewTabHost ||
       url.host() == chrome::kChromeUISettingsHost ||
       ((url.host() == kWelcomeHost ||
-        url.host() == chrome::kChromeUIWelcomeURL) &&
+        url.host() == kWelcomeURL) &&
        !profile->IsGuestSession()) ||
 #endif  // BUILDFLAG(IS_ANDROID)
       // FlyWeb: Brave Rewards WebUI removed (was the last term).
@@ -111,12 +106,6 @@ WebUIFactoryFunction GetWebUIFactoryFunction(WebUI* web_ui,
 WebUI::TypeID BraveWebUIControllerFactory::GetWebUIType(
     content::BrowserContext* browser_context,
     const GURL& url) {
-#if BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
-  if (playlist::PlaylistUI::ShouldBlockPlaylistWebUI(browser_context, url)) {
-    return WebUI::kNoWebUI;
-  }
-#endif
-
   // Early return to prevent upstream create its WebUI.
   if (url.host() == optimization_guide_internals::
                         kChromeUIOptimizationGuideInternalsHost &&

@@ -31,7 +31,6 @@
 #include "brave/components/debounce/core/common/features.h"
 #include "brave/components/https_upgrade_exceptions/browser/https_upgrade_exceptions_service.h"
 #include "brave/components/localhost_permission/localhost_permission_component.h"
-#include "brave/components/ntp_background_images/browser/ntp_background_images_service.h"
 #include "brave/components/webcompat/features.h"
 #include "brave/components/webcompat/webcompat_exceptions_service.h"
 #include "brave/services/network/public/cpp/system_request_handler.h"
@@ -39,6 +38,7 @@
 #include "chrome/browser/component_updater/component_updater_utils.h"
 #include "chrome/browser/net/system_network_context_manager.h"
 #include "chrome/browser/obsolete_system/obsolete_system.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/common/buildflags.h"
 #include "chrome/common/channel_info.h"
 #include "chrome/common/chrome_paths.h"
@@ -51,16 +51,11 @@
 #include "services/network/public/cpp/shared_url_loader_factory.h"
 #include "url/gurl.h"
 
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-#include "brave/components/speedreader/speedreader_rewriter_service.h"
-#endif
-
 #if BUILDFLAG(IS_ANDROID)
 #include "chrome/browser/flags/android/chrome_feature_list.h"
 #else
 #include "brave/browser/ui/brave_browser_command_controller.h"
 #include "chrome/browser/ui/browser.h"
-#include "chrome/browser/ui/browser_list.h"
 #endif
 
 #if BUILDFLAG(ENABLE_REQUEST_OTR)
@@ -69,7 +64,6 @@
 #endif
 
 using brave_component_updater::BraveComponent;
-using ntp_background_images::NTPBackgroundImagesService;
 
 namespace {
 
@@ -165,9 +159,6 @@ void BraveBrowserProcessImpl::StartBraveServices() {
 #if BUILDFLAG(ENABLE_REQUEST_OTR)
   request_otr_component_installer();
 #endif
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-  speedreader_rewriter_service();
-#endif
   URLSanitizerComponentInstaller();
   // Now start the local data files service, which calls all observers.
   local_data_files_service()->Start();
@@ -190,18 +181,6 @@ brave_shields::AdBlockService* BraveBrowserProcessImpl::ad_block_service() {
             profile_manager()->GetInitialProfileDir()));
   }
   return ad_block_service_.get();
-}
-
-NTPBackgroundImagesService*
-BraveBrowserProcessImpl::ntp_background_images_service() {
-  if (!ntp_background_images_service_) {
-    ntp_background_images_service_ =
-        std::make_unique<NTPBackgroundImagesService>(component_updater(),
-                                                     local_state());
-    ntp_background_images_service_->Init();
-  }
-
-  return ntp_background_images_service_.get();
 }
 
 https_upgrade_exceptions::HttpsUpgradeExceptionsService*
@@ -301,17 +280,6 @@ NotificationPlatformBridge*
 BraveBrowserProcessImpl::notification_platform_bridge() {
   return BrowserProcessImpl::notification_platform_bridge();
 }
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-speedreader::SpeedreaderRewriterService*
-BraveBrowserProcessImpl::speedreader_rewriter_service() {
-  if (!speedreader_rewriter_service_) {
-    speedreader_rewriter_service_ =
-        std::make_unique<speedreader::SpeedreaderRewriterService>();
-  }
-  return speedreader_rewriter_service_.get();
-}
-#endif  // BUILDFLAG(ENABLE_SPEEDREADER)
 
 brave::BraveFarblingService* BraveBrowserProcessImpl::brave_farbling_service() {
   if (!brave_farbling_service_) {

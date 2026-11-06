@@ -19,7 +19,6 @@
 #include "brave/components/brave_wallet/common/features.h"
 #include "brave/components/de_amp/common/features.h"
 #include "brave/components/debounce/core/common/features.h"
-#include "brave/components/ntp_background_images/browser/features.h"
 #include "brave/components/p3a/features.h"
 #include "brave/components/playlist/common/features.h"
 #include "brave/components/skus/common/features.h"
@@ -159,21 +158,6 @@
 + (Feature*)kBraveLocalhostAccessPermission {
   return [[Feature alloc] initWithFeature:&brave_shields::features::
                                               kBraveLocalhostAccessPermission];
-}
-
-+ (Feature*)kBraveNTPBrandedWallpaper {
-  return [[Feature alloc] initWithFeature:&ntp_background_images::features::
-                                              kBraveNTPBrandedWallpaper];
-}
-
-+ (Feature*)kBraveNTPBrandedWallpaperDemo {
-  return [[Feature alloc] initWithFeature:&ntp_background_images::features::
-                                              kBraveNTPBrandedWallpaperDemo];
-}
-
-+ (Feature*)kBraveNTPSuperReferralWallpaper {
-  return [[Feature alloc] initWithFeature:&ntp_background_images::features::
-                                              kBraveNTPSuperReferralWallpaper];
 }
 
 + (Feature*)kBraveNewsCardPeekFeature {

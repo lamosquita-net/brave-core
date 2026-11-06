@@ -41,24 +41,9 @@ declare namespace NewTab {
 
   export type BackgroundWallpaper = ColorBackground | ImageBackground | BraveBackground
 
-  export type BrandedWallpaperLogo = {
-    image: string
-    companyName: string
-    alt: string
-    destinationUrl: string
-  }
-
-  export type BrandedWallpaper = {
-    wallpaperImageUrl: string
-    isSponsored: boolean
-    creativeInstanceId: string
-    wallpaperId: string
-    logo: BrandedWallpaperLogo
-  }
-
+  // FlyWeb: only the user's own background comes from the browser.
   export interface Wallpaper {
-    backgroundWallpaper: BackgroundWallpaper
-    brandedWallpaper?: BrandedWallpaper
+    backgroundWallpaper?: BackgroundWallpaper
   }
 
   export interface ApplicationState {
@@ -73,7 +58,6 @@ declare namespace NewTab {
     favicon: string
     letter: string
     pinnedIndex: number | undefined
-    defaultSRTopSite: boolean | undefined
   }
 
   export interface Stats {
@@ -93,8 +77,6 @@ declare namespace NewTab {
     url: string
   }
 
-  export type StackWidget = 'rewards' | 'braveTalk' | 'bitcoinDotCom' | ''
-
   export interface GridSitesState {
     removedSites: Site[]
     gridSites: Site[]
@@ -105,41 +87,24 @@ declare namespace NewTab {
     showEmptyPage: boolean
   }
 
-  export interface RewardsState {
-    rewardsState: RewardsWidgetState
-  }
-
   export interface PersistentState {
-    braveRewardsSupported: boolean
-    braveTalkSupported: boolean
-    bitcoinDotComSupported: boolean
     showEmptyPage: boolean
-    rewardsState: RewardsWidgetState
-    currentStackWidget: StackWidget
-    removedStackWidgets: StackWidget[]
-    widgetStackOrder: StackWidget[]
   }
 
   export type Preferences = {
     showBackgroundImage: boolean
-    brandedWallpaperOptIn: boolean
     showStats: boolean
     showClock: boolean
     clockFormat: string
     showTopSites: boolean
-    showRewards: boolean
-    showBraveTalk: boolean
     showSearchBox: boolean
     promptEnableSearchSuggestions: boolean
     searchSuggestionsEnabled: boolean
-    hideAllWidgets: boolean
-    isBrandedWallpaperNotificationDismissed: boolean
   }
 
   export type EphemeralState = Preferences & {
     initialDataLoaded: boolean
     textDirection: string
-    featureFlagBraveNTPSponsoredImagesWallpaper: boolean
     searchPromotionEnabled: boolean
     featureCustomBackgroundEnabled: boolean
     isIncognito: boolean
@@ -150,53 +115,12 @@ declare namespace NewTab {
     showBackgroundImage: boolean
     customLinksEnabled: boolean
     customLinksNum: number
-    showBitcoinDotCom: boolean
     stats: Stats,
-    brandedWallpaper?: BrandedWallpaper
     backgroundWallpaper?: BackgroundWallpaper
     customImageBackgrounds: ImageBackground[]
   }
 
-  export interface RewardsWidgetState {
-    rewardsEnabled: boolean
-    userType: string
-    declaredCountry: string
-    balance?: number
-    externalWallet?: RewardsExtension.ExternalWallet
-    externalWalletProviders?: string[]
-    report?: RewardsBalanceReport
-    adsAccountStatement: AdsAccountStatement
-    dismissedNotifications: string[]
-    needsBrowserUpgradeToServeAds: boolean
-    parameters: RewardsParameters
-    totalContribution: number
-    publishersVisitedCount: number
-    selfCustodyInviteDismissed: boolean
-    isTermsOfServiceUpdateRequired: boolean
-  }
-
-  export const enum RewardsResult {
-    OK = 0,
-    FAILED = 1,
-    NO_PUBLISHER_STATE = 2,
-    NO_LEGACY_STATE = 3,
-    INVALID_PUBLISHER_STATE = 4,
-    CAPTCHA_FAILED = 6,
-    NO_PUBLISHER_LIST = 7,
-    TOO_MANY_RESULTS = 8,
-    NOT_FOUND = 9,
-    REGISTRATION_VERIFICATION_FAILED = 10,
-    BAD_REGISTRATION_RESPONSE = 11,
-    WALLET_CORRUPT = 17
-  }
-
-  export interface RewardsBalanceReport {
-    ads: number
-    contribute: number
-    monthly: number
-    tips: number
-  }
-
+  // Still named by the chrome.braveRewards declarations in chromel.d.ts.
   export interface AdsAccountStatement {
     nextPaymentDate: number
     adsReceivedThisMonth: number
@@ -206,27 +130,8 @@ declare namespace NewTab {
     maxEarningsLastMonth: number
   }
 
-  export type ProviderPayoutStatus = 'off' | 'processing' | 'complete'
-
-  export interface RewardsParameters {
-    rate: number
-    monthlyTipChoices: number[]
-    payoutStatus?: Record<string, ProviderPayoutStatus>
-    walletProviderRegions?: Record<string, { allow: string[], block: string[] } | undefined>
-    vbatDeadline: number | undefined
-    vbatExpired: boolean
-  }
-
-  export interface DefaultSuperReferralTopSite {
-    pinnedIndex: number
-    url: string
-    title: string
-    favicon: string
-  }
-
   interface StorybookStateExtras {
     forceSettingsTab?: string // SettingsTabType
-    readabilityThreshold?: number
   }
 
   // In-memory state is a superset of PersistentState

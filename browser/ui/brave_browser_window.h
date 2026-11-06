@@ -8,34 +8,20 @@
 
 #include <string>
 
-#include "brave/components/brave_wayback_machine/buildflags/buildflags.h"
-#include "brave/components/playlist/common/buildflags/buildflags.h"
-#include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "chrome/browser/ui/browser_window.h"
+
+class BrowserWindowInterface;
 
 namespace content {
 class WebContents;
 }  // namespace content
-
-#if defined(TOOLKIT_VIEWS)
-namespace sidebar {
-class Sidebar;
-}  // namespace sidebar
-#endif
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-namespace speedreader {
-class SpeedreaderBubbleView;
-class SpeedreaderTabHelper;
-enum class SpeedreaderBubbleLocation : int;
-}  // namespace speedreader
-#endif
 
 class BraveBrowserWindow : public BrowserWindow {
  public:
   ~BraveBrowserWindow() override {}
 
   static BraveBrowserWindow* From(BrowserWindow*);
+  static BraveBrowserWindow* FromBrowser(BrowserWindowInterface* browser);
 
   virtual void StartTabCycling() {}
 
@@ -44,30 +30,12 @@ class BraveBrowserWindow : public BrowserWindow {
   // the overall screen's height
   virtual gfx::Rect GetShieldsBubbleRect();
 
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-  virtual speedreader::SpeedreaderBubbleView* ShowSpeedreaderBubble(
-      speedreader::SpeedreaderTabHelper* tab_helper,
-      speedreader::SpeedreaderBubbleLocation location);
-  virtual void ShowReaderModeToolbar() {}
-  virtual void HideReaderModeToolbar() {}
-#endif
-
 #if defined(TOOLKIT_VIEWS)
-  virtual sidebar::Sidebar* InitSidebar();
-  virtual void ToggleSidebar();
   virtual bool HasSelectedURL() const;
   virtual void CleanAndCopySelectedURL();
 
   // Returns true when bubble is shown.
   virtual bool ShowBraveHelpBubbleView(const std::string& text);
-#endif
-
-#if BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
-  virtual void ShowPlaylistBubble() {}
-#endif
-
-#if BUILDFLAG(ENABLE_BRAVE_WAYBACK_MACHINE)
-  virtual void ShowWaybackMachineBubble() {}
 #endif
 
   // Returns true if all tabs in this window is being dragged.

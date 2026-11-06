@@ -22,13 +22,8 @@ class BrowserView;
 class SidePanelResizeWidget;
 class ViewShadow;
 
-namespace sidebar {
-class SidebarBrowserTest;
-}  // namespace sidebar
-
 // Replacement for chromium's SidePanel which defines a
 // unique inset and border style compared to Brave.
-// SidebarContainerView controls this panel's visibility.
 class BraveSidePanel : public views::View,
                        public views::ViewObserver,
                        public views::ResizeAreaDelegate {
@@ -57,10 +52,6 @@ class BraveSidePanel : public views::View,
   bool IsClosing();
   void DisableAnimationsForTesting() {}
 
-  void set_fixed_contents_width(std::optional<int> fixed_width) {
-    fixed_contents_width_ = fixed_width;
-  }
-
   // views::ResizeAreaDelegate:
   void OnResize(int resize_amount, bool done_resizing) override;
   void AddHeaderView(std::unique_ptr<views::View> view);
@@ -74,8 +65,6 @@ class BraveSidePanel : public views::View,
   void SetMinimumSidePanelContentsWidthForTesting(int width) {}
 
  private:
-  friend class sidebar::SidebarBrowserTest;
-
   // views::ViewObserver:
   void OnChildViewAdded(View* observed_view, View* child) override;
   void OnChildViewRemoved(View* observed_view, View* child) override;
@@ -94,10 +83,6 @@ class BraveSidePanel : public views::View,
   HorizontalAlignment horizontal_alignment_ = kHorizontalAlignLeft;
   std::optional<int> starting_width_on_resize_;
 
-  // If this is set, use this width for panel contents during the layout
-  // instead of using this panel's bounds. This is used to prevent panel
-  // contents layout while sidebar show/hide animation is in-progress.
-  std::optional<int> fixed_contents_width_;
   raw_ptr<BrowserView> browser_view_ = nullptr;
   IntegerPrefMember side_panel_width_;
   std::unique_ptr<SidePanelResizeWidget> resize_widget_;

@@ -6,32 +6,10 @@
 import("//brave/components/ntp_background_images/buildflags/buildflags.gni")
 
 static_library("browser") {
-  sources = [
-    "features.cc",
-    "features.h",
-    "ntp_background_images_component_installer.cc",
-    "ntp_background_images_component_installer.h",
-    "ntp_background_images_data.cc",
-    "ntp_background_images_data.h",
-    "ntp_background_images_service.cc",
-    "ntp_background_images_service.h",
-    "ntp_p3a_helper.h",
-    "ntp_sponsored_images_data.cc",
-    "ntp_sponsored_images_data.h",
-    "sponsored_images_component_data.cc",
-    "sponsored_images_component_data.h",
-    "switches.h",
-    "url_constants.h",
-  ]
+  sources = [ "url_constants.h" ]
 
   if (!is_ios) {
     sources += [
-      "ntp_background_images_source.cc",
-      "ntp_background_images_source.h",
-      "ntp_sponsored_images_source.cc",
-      "ntp_sponsored_images_source.h",
-      "view_counter_model.cc",
-      "view_counter_model.h",
       "view_counter_service.cc",
       "view_counter_service.h",
     ]
@@ -39,26 +17,15 @@ static_library("browser") {
 
   deps = [
     "//base",
-    "//brave/components/brave_component_updater/browser",
-    "//brave/components/l10n/common",
     "//brave/components/ntp_background_images/buildflags",
     "//brave/components/ntp_background_images/common",
-    "//brave/components/p3a_utils",
-    "//brave/components/time_period_storage",
-    "//components/component_updater",
     "//components/keyed_service/core",
     "//components/pref_registry:pref_registry",
     "//components/prefs",
-    "//crypto",
-    "//services/network/public/cpp",
-    "//ui/base",
-    "//ui/gfx/geometry",
     "//url",
   ]
 
-  if (is_ios) {
-    deps += [ "//brave/extensions:common" ]
-  } else {
+  if (!is_ios) {
     deps += [
       "//content/public/browser",
       "//content/public/common",

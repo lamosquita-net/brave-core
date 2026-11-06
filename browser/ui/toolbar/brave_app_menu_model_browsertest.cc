@@ -17,8 +17,8 @@
 #include "chrome/app/chrome_command_ids.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/profiles/profile_window.h"
-#include "chrome/browser/ui/browser_list.h"
 #include "chrome/browser/ui/browser_list_observer.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/tabs/recent_tabs_sub_menu_model.h"
 #include "chrome/browser/ui/views/frame/browser_view.h"
 #include "chrome/browser/ui/views/toolbar/toolbar_view.h"
@@ -134,9 +134,6 @@ IN_PROC_BROWSER_TEST_F(BraveAppMenuModelBrowserTest, MenuOrderTest) {
       IDC_NEW_WINDOW,
       IDC_NEW_INCOGNITO_WINDOW,
       IDC_SHOW_BRAVE_WALLET,
-#if defined(TOOLKIT_VIEWS)
-      IDC_SIDEBAR_SHOW_OPTION_MENU,
-#endif
       IDC_RECENT_TABS_MENU,
       IDC_BOOKMARKS_MENU,
       IDC_SHOW_DOWNLOADS,
@@ -183,9 +180,6 @@ IN_PROC_BROWSER_TEST_F(BraveAppMenuModelBrowserTest, MenuOrderTest) {
       IDC_NEW_WINDOW,
       IDC_NEW_INCOGNITO_WINDOW,
       IDC_SHOW_BRAVE_WALLET,
-#if defined(TOOLKIT_VIEWS)
-      IDC_SIDEBAR_SHOW_OPTION_MENU,
-#endif
       IDC_BOOKMARKS_MENU,
       IDC_SHOW_DOWNLOADS,
       IDC_EXTENSIONS_SUBMENU_MANAGE_EXTENSIONS,

@@ -20,7 +20,6 @@
 #include "base/time/time.h"
 #include "brave/browser/net/brave_network_audit_allowed_lists.h"
 #include "brave/browser/ui/brave_browser.h"
-#include "brave/components/playlist/common/buildflags/buildflags.h"
 #include "chrome/browser/password_manager/profile_password_store_factory.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser.h"
@@ -31,16 +30,6 @@
 #include "services/network/public/cpp/network_switches.h"
 #include "testing/gmock/include/gmock/gmock.h"
 #include "third_party/re2/src/re2/re2.h"
-
-#if defined(TOOLKIT_VIEWS)
-#include "brave/browser/ui/sidebar/sidebar_controller.h"
-#include "brave/browser/ui/sidebar/sidebar_model.h"
-#include "brave/components/sidebar/browser/sidebar_item.h"
-#endif
-
-#if BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
-#include "brave/components/playlist/common/features.h"
-#endif
 
 namespace brave {
 namespace {
@@ -154,15 +143,7 @@ bool PerformNetworkAuditProcess(base::ListValue* events) {
       }
     }
 
-    bool found_pattern = false;
-    for (const char* pattern : kAllowedUrlPatterns) {
-      if (RE2::FullMatch(url.spec(), pattern)) {
-        found_pattern = true;
-        break;
-      }
-    }
-
-    if (!found_prefix && !found_pattern) {
+    if (!found_prefix) {
       // Check if the URL is a private IP.
       if (isPrivateURL(url)) {
         // Warn but don't fail the audit.
@@ -191,11 +172,7 @@ void WriteNetworkAuditResultsToDisk(const base::DictValue& results_dic,
 
 class BraveNetworkAuditTest : public InProcessBrowserTest {
  public:
-  BraveNetworkAuditTest() {
-#if BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
-    scoped_feature_list_.InitAndEnableFeature(playlist::features::kPlaylist);
-#endif  // BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
-  }
+  BraveNetworkAuditTest() = default;
 
   BraveNetworkAuditTest(const BraveNetworkAuditTest&) = delete;
   BraveNetworkAuditTest& operator=(const BraveNetworkAuditTest&) = delete;
@@ -268,10 +245,6 @@ class BraveNetworkAuditTest : public InProcessBrowserTest {
 
   base::FilePath net_log_path_;
   base::FilePath audit_results_path_;
-
-#if BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
-  base::test::ScopedFeatureList scoped_feature_list_;
-#endif  // BUILDFLAG(ENABLE_PLAYLIST_WEBUI)
 };
 
 // Loads brave://welcome first to simulate a first run and then loads another
@@ -306,29 +279,6 @@ IN_PROC_BROWSER_TEST_F(BraveNetworkAuditTest, BasicTests) {
 
   ASSERT_TRUE(ui_test_utils::NavigateToURL(browser(), GURL("brave://wallet")));
   WaitForTimeout(kMaxTimeoutPerLoadedURL);
-
-#if defined(TOOLKIT_VIEWS)
-  auto* sidebar_controller =
-      static_cast<BraveBrowser*>(browser())->sidebar_controller();
-  auto* sidebar_model = sidebar_controller->model();
-  const auto& all_items = sidebar_model->GetAllSidebarItems();
-  const int item_num = all_items.size();
-  const int builtin_panel_item_total = 4;
-  int builtin_panel_item_count = 0;
-  for (int i = 0; i < item_num; ++i) {
-    auto item = all_items[i];
-    // Load all builtin panel items.
-    if (sidebar::IsBuiltInType(item) && item.open_in_panel) {
-      builtin_panel_item_count++;
-      sidebar_controller->ActivateItemAt(i);
-      WaitForTimeout(kMaxTimeoutPerLoadedURL);
-    }
-  }
-
-  // Currently, we have 4 builtin panel items.
-  // If it's increased, --test-launcher-time should be increased also.
-  EXPECT_EQ(builtin_panel_item_total, builtin_panel_item_count);
-#endif
 }
 
 }  // namespace

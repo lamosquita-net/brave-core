@@ -7,7 +7,6 @@
 #include "brave/browser/metrics/buildflags/buildflags.h"
 #include "brave/components/brave_shields/core/common/features.h"
 #include "brave/components/brave_shields/core/common/pref_names.h"
-#include "brave/components/brave_wayback_machine/buildflags/buildflags.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/ntp_background_images/buildflags/buildflags.h"
 #include "build/build_config.h"
@@ -27,10 +26,6 @@
 #include "components/spellcheck/browser/pref_names.h"
 #include "components/sync/base/pref_names.h"
 #include "content/public/test/browser_test.h"
-
-#if BUILDFLAG(ENABLE_BRAVE_WAYBACK_MACHINE)
-#include "brave/components/brave_wayback_machine/pref_names.h"
-#endif
 
 #if BUILDFLAG(IS_ANDROID)
 #include "chrome/test/base/android/android_browser_test.h"
@@ -74,12 +69,6 @@ IN_PROC_BROWSER_TEST_F(BraveProfilePrefsBrowserTest, MiscBravePrefs) {
                 brave_shields::prefs::kReduceLanguageEnabled),
             base::FeatureList::IsEnabled(
                 brave_shields::features::kBraveReduceLanguage));
-#if BUILDFLAG(ENABLE_BRAVE_WAYBACK_MACHINE)
-  EXPECT_TRUE(chrome_test_utils::GetProfile(this)->GetPrefs()->GetBoolean(
-      kWebTorrentEnabled));
-  EXPECT_TRUE(chrome_test_utils::GetProfile(this)->GetPrefs()->GetBoolean(
-      kBraveWaybackMachineEnabled));
-#endif
   EXPECT_FALSE(chrome_test_utils::GetProfile(this)->GetPrefs()->GetBoolean(
       kMRUCyclingEnabled));
 #if !BUILDFLAG(USE_GCM_FROM_PLATFORM)

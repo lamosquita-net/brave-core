@@ -16,6 +16,7 @@
 #include "brave/browser/ui/webui/brave_webui_source.h"
 #include "brave/browser/ui/webui/settings/brave_import_bulk_data_handler.h"
 #include "brave/browser/ui/webui/settings/brave_search_engines_handler.h"
+#include "brave/browser/ui/webui/welcome_page/brave_welcome_page_prefs.h"
 #include "brave/browser/ui/webui/welcome_page/welcome_dom_handler.h"
 #include "brave/common/brave_channel_info.h"
 #include "brave/components/brave_welcome/common/features.h"
@@ -24,9 +25,7 @@
 #include "brave/components/constants/webui_url_constants.h"
 #include "brave/components/l10n/common/localization_util.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
-#include "chrome/browser/ui/browser_finder.h"
-#include "chrome/browser/ui/webui/settings/privacy_sandbox_handler.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/webui/settings/settings_default_browser_handler.h"
 #include "chrome/common/pref_names.h"
 #include "chrome/grit/branded_strings.h"
@@ -34,6 +33,7 @@
 #include "components/grit/brave_components_resources.h"
 #include "components/grit/brave_components_strings.h"
 #include "components/prefs/pref_service.h"
+#include "components/regional_capabilities/regional_capabilities_prefs.h"
 #include "content/public/browser/gpu_data_manager.h"
 #include "content/public/browser/page_navigator.h"
 #include "content/public/browser/web_ui_data_source.h"
@@ -83,27 +83,12 @@ constexpr webui::LocalizedString kLocalizedStrings[] = {
     {"braveWelcomeHelpWDPAccept", IDS_BRAVE_WELCOME_HELP_WDP_ACCEPT},
     {"braveWelcomeHelpWDPReject", IDS_BRAVE_WELCOME_HELP_WDP_REJECT}};
 
-// Converts Chromium country ID to 2 digit country string
-// For more info see src/components/country_codes/country_codes.h
-std::string CountryIDToCountryString(int country_id) {
-  if (country_id == country_codes::kCountryIDUnknown) {
-    return std::string();
-  }
-
-  char chars[3] = {static_cast<char>(country_id >> 8),
-                   static_cast<char>(country_id), 0};
-  std::string country_string(chars);
-  DCHECK_EQ(country_string.size(), 2U);
-  return country_string;
-}
-
 }  // namespace
 
 BraveWelcomeUI::BraveWelcomeUI(content::WebUI* web_ui, const std::string& name)
     : WebUIController(web_ui) {
   content::WebUIDataSource* source = CreateAndAddWebUIDataSource(
-      web_ui, name, kBraveWelcomeGenerated, kBraveWelcomeGeneratedSize,
-      IDR_BRAVE_WELCOME_HTML,
+      web_ui, name, kBraveWelcomeGenerated, IDR_BRAVE_WELCOME_HTML,
       /*disable_trusted_types_csp=*/true);
 
   // Lottie animations tick on a worker thread and requires the document CSP to
@@ -126,7 +111,10 @@ BraveWelcomeUI::BraveWelcomeUI(content::WebUI* web_ui, const std::string& name)
       std::make_unique<settings::BraveSearchEnginesHandler>(profile));
 
   // FlyWeb: no extra brave.com tutorial tab for the Japanese region.
-  int country_id = country_codes::GetCountryIDFromPrefs(profile->GetPrefs());
+  // 156: country_codes::CountryId, read from regional_capabilities (as 1.98).
+  country_codes::CountryId country_id =
+      country_codes::CountryId::Deserialize(profile->GetPrefs()->GetInteger(
+          regional_capabilities::prefs::kCountryIDAtInstall));
 
   for (const auto& str : kLocalizedStrings) {
     std::u16string l10n_str =
@@ -135,7 +123,7 @@ BraveWelcomeUI::BraveWelcomeUI(content::WebUI* web_ui, const std::string& name)
   }
 
   // Variables considered when determining which onboarding cards to show
-  source->AddString("countryString", CountryIDToCountryString(country_id));
+  source->AddString("countryString", std::string(country_id.CountryCode()));
   // FlyWeb: the buttons take the colour of this channel's app icon: purple for
   // the development builds (not official, icon O1), orange for the rest (M1).
   source->AddBoolean("flywebDesarrollo",
@@ -148,7 +136,8 @@ BraveWelcomeUI::BraveWelcomeUI(content::WebUI* web_ui, const std::string& name)
       "hardwareAccelerationEnabledAtStartup",
       content::GpuDataManager::GetInstance()->HardwareAccelerationEnabled());
 
-  profile->GetPrefs()->SetBoolean(prefs::kHasSeenWelcomePage, true);
+  profile->GetPrefs()->SetBoolean(
+      brave_welcome_page::prefs::kHasSeenBraveWelcomePage, true);
 
   AddBackgroundColorToSource(source, web_ui->GetWebContents());
 }

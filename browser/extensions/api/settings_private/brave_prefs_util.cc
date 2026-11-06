@@ -9,15 +9,12 @@
 #include "brave/browser/ui/tabs/brave_tab_prefs.h"
 #include "brave/components/brave_shields/content/browser/brave_shields_util.h"
 #include "brave/components/brave_shields/core/common/pref_names.h"
-#include "brave/components/brave_wayback_machine/buildflags/buildflags.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/de_amp/common/pref_names.h"
 #include "brave/components/debounce/core/common/pref_names.h"
 #include "brave/components/ntp_background_images/common/pref_names.h"
 #include "brave/components/omnibox/browser/brave_omnibox_prefs.h"
-#include "brave/components/playlist/common/buildflags/buildflags.h"
 #include "brave/components/request_otr/common/pref_names.h"
-#include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "chrome/browser/content_settings/cookie_settings_factory.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/extensions/api/settings_private/prefs_util.h"
@@ -33,28 +30,9 @@
 #include "extensions/buildflags/buildflags.h"
 #include "url/gurl.h"
 
-#if BUILDFLAG(ENABLE_BRAVE_WAYBACK_MACHINE)
-#include "brave/components/brave_wayback_machine/pref_names.h"
-#endif
-
-#if defined(TOOLKIT_VIEWS)
-#include "brave/components/sidebar/browser/pref_names.h"
-#endif
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-#include "brave/components/speedreader/speedreader_pref_names.h"
-#endif
-
-#if BUILDFLAG(ENABLE_PLAYLIST)
-#include "brave/components/playlist/browser/pref_names.h"
-#endif
-
 namespace extensions {
 
 using ntp_background_images::prefs::kNewTabPageShowBackgroundImage;
-using ntp_background_images::prefs::
-    kNewTabPageShowSponsoredImagesBackgroundImage;
-using ntp_background_images::prefs::kNewTabPageSuperReferralThemesOption;
 
 namespace settings_api = api::settings_private;
 
@@ -104,7 +82,6 @@ const PrefsUtil::TypedPrefMap& BravePrefsUtil::GetAllowlistedKeys() {
 
   // appearance prefs
   (*s_brave_allowlist)[kShowBookmarksButton] = settings_api::PrefType::kBoolean;
-  (*s_brave_allowlist)[kShowSidePanelButton] = settings_api::PrefType::kBoolean;
   (*s_brave_allowlist)[kLocationBarIsWide] = settings_api::PrefType::kBoolean;
   (*s_brave_allowlist)[omnibox::kAutocompleteEnabled] =
       settings_api::PrefType::kBoolean;
@@ -114,11 +91,7 @@ const PrefsUtil::TypedPrefMap& BravePrefsUtil::GetAllowlistedKeys() {
       settings_api::PrefType::kBoolean;
   (*s_brave_allowlist)[omnibox::kBookmarkSuggestionsEnabled] =
       settings_api::PrefType::kBoolean;
-  (*s_brave_allowlist)[omnibox::kCommanderSuggestionsEnabled] =
-      settings_api::PrefType::kBoolean;
   (*s_brave_allowlist)[kAskEnableWidvine] = settings_api::PrefType::kBoolean;
-  (*s_brave_allowlist)[kNewTabPageSuperReferralThemesOption] =
-      settings_api::PrefType::kNumber;
   (*s_brave_allowlist)[kTabsSearchShow] = settings_api::PrefType::kBoolean;
   (*s_brave_allowlist)[brave_tabs::kTabHoverMode] =
       settings_api::PrefType::kNumber;
@@ -128,14 +101,6 @@ const PrefsUtil::TypedPrefMap& BravePrefsUtil::GetAllowlistedKeys() {
   (*s_brave_allowlist)[prefs::kShowFullscreenToolbar] =
       settings_api::PrefType::kBoolean;
 #endif
-#if defined(TOOLKIT_VIEWS)
-  (*s_brave_allowlist)[sidebar::kSidebarShowOption] =
-      settings_api::PrefType::kNumber;
-#endif
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-  (*s_brave_allowlist)[speedreader::kSpeedreaderPrefEnabled] =
-      settings_api::PrefType::kBoolean;
-#endif
   // De-AMP feature
   (*s_brave_allowlist)[de_amp::kDeAmpPrefEnabled] =
       settings_api::PrefType::kBoolean;
@@ -143,16 +108,10 @@ const PrefsUtil::TypedPrefMap& BravePrefsUtil::GetAllowlistedKeys() {
   (*s_brave_allowlist)[debounce::prefs::kDebounceEnabled] =
       settings_api::PrefType::kBoolean;
   // new tab prefs
-  (*s_brave_allowlist)[kNewTabPageShowSponsoredImagesBackgroundImage] =
-      settings_api::PrefType::kBoolean;
   (*s_brave_allowlist)[kNewTabPageShowBackgroundImage] =
       settings_api::PrefType::kBoolean;
   (*s_brave_allowlist)[kNewTabPageShowClock] = settings_api::PrefType::kBoolean;
   (*s_brave_allowlist)[kNewTabPageShowStats] = settings_api::PrefType::kBoolean;
-  (*s_brave_allowlist)[kNewTabPageShowRewards] =
-      settings_api::PrefType::kBoolean;
-  (*s_brave_allowlist)[kNewTabPageShowBraveTalk] =
-      settings_api::PrefType::kBoolean;
   (*s_brave_allowlist)[kNewTabPageShowsOptions] =
       settings_api::PrefType::kNumber;
 #if BUILDFLAG(ENABLE_EXTENSIONS)
@@ -183,12 +142,6 @@ const PrefsUtil::TypedPrefMap& BravePrefsUtil::GetAllowlistedKeys() {
   (*s_brave_allowlist)[kAlwaysShowBookmarkBarOnNTP] =
       settings_api::PrefType::kBoolean;
   (*s_brave_allowlist)[kMRUCyclingEnabled] = settings_api::PrefType::kBoolean;
-  // WebTorrent pref
-  (*s_brave_allowlist)[kWebTorrentEnabled] = settings_api::PrefType::kBoolean;
-#if BUILDFLAG(ENABLE_BRAVE_WAYBACK_MACHINE)
-  (*s_brave_allowlist)[kBraveWaybackMachineEnabled] =
-      settings_api::PrefType::kBoolean;
-#endif
   (*s_brave_allowlist)[kEnableWindowClosingConfirm] =
       settings_api::PrefType::kBoolean;
   (*s_brave_allowlist)[kEnableClosingLastTab] =
@@ -227,13 +180,6 @@ const PrefsUtil::TypedPrefMap& BravePrefsUtil::GetAllowlistedKeys() {
   (*s_brave_allowlist)[brave_tabs::kVerticalTabsOnRight] =
       settings_api::PrefType::kBoolean;
   (*s_brave_allowlist)[brave_tabs::kVerticalTabsShowScrollbar] =
-      settings_api::PrefType::kBoolean;
-#endif
-
-#if BUILDFLAG(ENABLE_PLAYLIST)
-  (*s_brave_allowlist)[playlist::kPlaylistEnabledPref] =
-      settings_api::PrefType::kBoolean;
-  (*s_brave_allowlist)[playlist::kPlaylistCacheByDefault] =
       settings_api::PrefType::kBoolean;
 #endif
 

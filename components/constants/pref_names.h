@@ -43,7 +43,6 @@ inline constexpr char kWeekOfInstallation[] =
 inline constexpr char kWidevineEnabled[] = "brave.widevine_opted_in";
 inline constexpr char kAskEnableWidvine[] = "brave.ask_widevine_install";
 inline constexpr char kShowBookmarksButton[] = "brave.show_bookmarks_button";
-inline constexpr char kShowSidePanelButton[] = "brave.show_side_panel_button";
 inline constexpr char kLocationBarIsWide[] = "brave.location_bar_is_wide";
 inline constexpr char kReferralDownloadID[] = "brave.referral.download_id";
 inline constexpr char kReferralTimestamp[] = "brave.referral.timestamp";
@@ -60,19 +59,12 @@ inline constexpr char kShieldsStatsBadgeVisible[] =
     "brave.shields.stats_badge_visible";
 inline constexpr char kAdControlType[] = "brave.ad_default";
 inline constexpr char kGoogleLoginControlType[] = "brave.google_login_default";
-inline constexpr char kWebTorrentEnabled[] = "brave.webtorrent_enabled";
 // Deprecated
 inline constexpr char kHangoutsEnabled[] = "brave.hangouts_enabled";
 inline constexpr char kNewTabPageShowClock[] = "brave.new_tab_page.show_clock";
 inline constexpr char kNewTabPageClockFormat[] =
     "brave.new_tab_page.clock_format";
 inline constexpr char kNewTabPageShowStats[] = "brave.new_tab_page.show_stats";
-inline constexpr char kNewTabPageShowRewards[] =
-    "brave.new_tab_page.show_rewards";
-inline constexpr char kNewTabPageShowBraveTalk[] =
-    "brave.new_tab_page.show_together";
-inline constexpr char kNewTabPageHideAllWidgets[] =
-    "brave.new_tab_page.hide_all_widgets";
 inline constexpr char kNewTabPageShowsOptions[] =
     "brave.new_tab_page.shows_options";
 inline constexpr char kAlwaysShowBookmarkBarOnNTP[] =

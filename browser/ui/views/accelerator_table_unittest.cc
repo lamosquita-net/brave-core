@@ -23,5 +23,5 @@ bool HasCommandID(int command_id) {
 }  // namespace
 
 TEST(AcceleratorTableTest, CheckBraveAccelerators) {
-  EXPECT_TRUE(HasCommandID(IDC_TOGGLE_SIDEBAR));
+  EXPECT_TRUE(HasCommandID(IDC_TOGGLE_TAB_MUTE));
 }

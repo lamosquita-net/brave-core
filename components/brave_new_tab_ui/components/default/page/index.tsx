@@ -35,18 +35,12 @@ type AppProps = {
 type PageProps = {
   showClock: boolean
   showStats: boolean
-  showCryptoContent: boolean
   showTopSites: boolean
-  showBrandedWallpaper: boolean
 } & HasImageProps
 
 function getItemRowCount(p: PageProps): number {
-  let right = (p.showClock ? 1 : 0) + (p.showCryptoContent ? 2 : 0)
-  let left = (p.showStats ? 1 : 0) + (p.showTopSites ? 1 : 0)
-  // Has space for branded logo to sit next to something on right?
-  if (p.showBrandedWallpaper && left >= right) {
-    left++
-  }
+  const right = p.showClock ? 1 : 0
+  const left = (p.showStats ? 1 : 0) + (p.showTopSites ? 1 : 0)
   return Math.max(left, right) + 1 // extra 1 for footer
 }
 
@@ -55,7 +49,6 @@ const StyledPage = styled('div') <PageProps>`
      so that the footer goes in the correct location always,
      yet can still merge upwards to previous rows. */
   --ntp-item-row-count: ${getItemRowCount};
-  --ntp-extra-footer-rows: ${p => p.showBrandedWallpaper ? 1 : 0};
   --ntp-space-rows: 0;
   --ntp-page-rows: calc(var(--ntp-item-row-count) + var(--ntp-space-rows));
   --ntp-page-padding: 12px;
@@ -183,36 +176,9 @@ export const GridItemClock = styled('section')`
   ${singleColumnSmallViewport}
 `
 
-export const GridItemWidgetStack = styled('section')`
-  grid-column: 3 / span 1;
-  grid-row-end: span 2;
-  @media screen and (max-width: ${breakpointLargeBlocks}) {
-    max-width: 284px;
-  }
-`
-
 export const GridItemTopSites = styled('section')`
   grid-column: 1;
   ${singleColumnSmallViewport}
-`
-
-export const GridItemSponsoredImageClickArea = styled.section<{ otherWidgetsHidden: boolean }>`
-  grid-column: 2;
-  grid-row: 2 / span calc(var(--ntp-page-rows) - 1);
-  height: calc(100% - 200px);
-  width: 100%;
-  position: relative;
-
-  @media screen and (max-width: ${breakpointEveryBlock}) {
-    ${(p) =>
-    p.otherWidgetsHidden
-      ? css`
-            flex-grow: 2;
-          `
-      : css`
-            display: none
-          `}
-  }
 `
 
 export const GridItemNotification = styled('section')`
@@ -228,7 +194,7 @@ export const GridItemCredits = styled('section')`
   --ntp-grid-item-credits-left-margin-narrow: 10px;
   --ntp-grid-item-credits-left-margin-wide: var(--ntp-grid-item-credits-bottom-margin-wide);
   grid-column: 1 / span 1;
-  grid-row: calc(-2 - var(--ntp-extra-footer-rows)) / span calc(1 + var(--ntp-extra-footer-rows));
+  grid-row: -2 / span 1;
   align-self: end;
 
   margin: 0 0 var(--ntp-grid-item-credits-bottom-margin-wide) var(--ntp-grid-item-credits-left-margin-wide);
@@ -237,30 +203,6 @@ export const GridItemCredits = styled('section')`
     margin: 0 auto 0 var(--ntp-grid-item-credits-left-margin-narrow);
     align-self: unset;
   }
-`
-
-export const GridItemBrandedLogo = styled(GridItemCredits)`
-  position: relative;
-
-  --ntp-grid-item-credits-left-margin-narrow: 0;
-  --ntp-grid-item-credits-bottom-margin-wide: -8px;
-  --ntp-grid-item-credits-left-margin-wide: 22px;
-
-  @media screen and (min-width: ${breakpointEveryBlock}) {
-    position: fixed;
-    bottom: var(--ntp-page-padding);
-    left: var(--ntp-page-padding);
-      // When page is also position: fixed, then we are relative to that
-      bottom: 0;
-      left: 0;
-  }
-`
-
-export const BrandedWallpaperNotification = styled('div')`
-  position: absolute;
-  bottom: 100%;
-  left: 34px;
-  width: 248px;
 `
 
 export const GridItemNavigation = styled('section')`

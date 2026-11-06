@@ -17,10 +17,7 @@
 #include "brave/browser/sync/brave_sync_alerts_service_factory.h"
 #include "brave/browser/url_sanitizer/url_sanitizer_service_factory.h"
 #include "brave/components/brave_perf_predictor/browser/named_third_party_registry_factory.h"
-#include "brave/components/commander/common/buildflags/buildflags.h"
-#include "brave/components/playlist/common/buildflags/buildflags.h"
 #include "brave/components/request_otr/common/buildflags/buildflags.h"
-#include "brave/components/speedreader/common/buildflags/buildflags.h"
 
 #if !BUILDFLAG(IS_ANDROID)
 #include "brave/browser/ui/bookmark/bookmark_prefs_service_factory.h"
@@ -31,25 +28,6 @@
 #else
 #include "brave/browser/brave_shields/cookie_list_opt_in_service_factory.h"
 #include "brave/browser/brave_shields/filter_list_service_factory.h"
-#include "brave/browser/ntp_background/android/ntp_background_images_bridge.h"
-#endif
-
-#if BUILDFLAG(ENABLE_PLAYLIST)
-#include "brave/browser/playlist/playlist_service_factory.h"
-#include "brave/components/playlist/common/features.h"
-#endif
-
-#if BUILDFLAG(ENABLE_COMMANDER)
-#include "brave/browser/ui/commander/commander_service_factory.h"
-#include "brave/components/commander/common/features.h"
-#endif
-
-#if defined(TOOLKIT_VIEWS)
-#include "brave/browser/ui/sidebar/sidebar_service_factory.h"
-#endif
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-#include "brave/browser/speedreader/speedreader_service_factory.h"
 #endif
 
 #if BUILDFLAG(ENABLE_REQUEST_OTR)
@@ -73,7 +51,6 @@ void EnsureBrowserContextKeyedServiceFactoriesBuilt() {
 #else
   brave_shields::CookieListOptInServiceFactory::GetInstance();
   brave_shields::FilterListServiceFactory::GetInstance();
-  ntp_background_images::NTPBackgroundImagesBridgeFactory::GetInstance();
 #endif
 
 #if !BUILDFLAG(IS_ANDROID)
@@ -82,19 +59,8 @@ void EnsureBrowserContextKeyedServiceFactoriesBuilt() {
   }
 #endif
 
-#if BUILDFLAG(ENABLE_COMMANDER)
-  if (base::FeatureList::IsEnabled(features::kBraveCommander)) {
-    commander::CommanderServiceFactory::GetInstance();
-  }
-#endif
-
   EphemeralStorageServiceFactory::GetInstance();
   PermissionLifetimeManagerFactory::GetInstance();
-#if BUILDFLAG(ENABLE_PLAYLIST)
-  if (base::FeatureList::IsEnabled(playlist::features::kPlaylist)) {
-    playlist::PlaylistServiceFactory::GetInstance();
-  }
-#endif
 #if BUILDFLAG(ENABLE_REQUEST_OTR)
   request_otr::RequestOTRServiceFactory::GetInstance();
 #endif
@@ -105,14 +71,6 @@ void EnsureBrowserContextKeyedServiceFactoriesBuilt() {
   if (base::FeatureList::IsEnabled(tabs::features::kBraveSharedPinnedTabs)) {
     SharedPinnedTabServiceFactory::GetInstance();
   }
-#endif
-
-#if defined(TOOLKIT_VIEWS)
-  sidebar::SidebarServiceFactory::GetInstance();
-#endif
-
-#if BUILDFLAG(ENABLE_SPEEDREADER)
-  speedreader::SpeedreaderServiceFactory::GetInstance();
 #endif
 }
 

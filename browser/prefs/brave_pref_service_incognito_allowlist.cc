@@ -16,7 +16,7 @@
 #endif
 
 #if defined(TOOLKIT_VIEWS)
-#include "brave/components/sidebar/browser/pref_names.h"
+#include "brave/browser/ui/side_panel/brave_side_panel_prefs.h"
 #endif
 
 namespace brave {
@@ -37,7 +37,7 @@ const std::vector<const char*>& GetBravePersistentPrefNames() {
       brave_tabs::kSharedPinnedTab,
 #endif
 #if defined(TOOLKIT_VIEWS)
-      sidebar::kSidePanelWidth,
+      brave::kSidePanelWidth,
 #endif
       brave::bookmarks::prefs::kShowAllBookmarksButton,
   });

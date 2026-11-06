@@ -27,7 +27,6 @@
 #include "chrome/common/pref_names.h"
 #include "components/grit/brave_components_resources.h"
 #include "components/strings/grit/components_strings.h"
-#include "content/public/browser/navigation_entry.h"
 #include "content/public/browser/url_data_source.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/browser/web_ui_data_source.h"
@@ -43,11 +42,6 @@ BraveNewTabUI::BraveNewTabUI(content::WebUI* web_ui, const std::string& name)
       page_factory_receiver_(this) {
   content::WebContents* web_contents = web_ui->GetWebContents();
   CHECK(web_contents);
-
-  content::NavigationEntry* navigation_entry =
-      web_contents->GetController().GetLastCommittedEntry();
-  const bool was_restored =
-      navigation_entry ? navigation_entry->IsRestored() : false;
 
   Profile* profile = Profile::FromWebUI(web_ui);
   const std::u16string new_tab_title =
@@ -66,8 +60,7 @@ BraveNewTabUI::BraveNewTabUI(content::WebUI* web_ui, const std::string& name)
 
   // Non blank NTP.
   content::WebUIDataSource* source = CreateAndAddWebUIDataSource(
-      web_ui, name, kBraveNewTabGenerated, kBraveNewTabGeneratedSize,
-      IDR_BRAVE_NEW_TAB_HTML);
+      web_ui, name, kBraveNewTabGenerated, IDR_BRAVE_NEW_TAB_HTML);
 
   AddBackgroundColorToSource(source, web_contents);
   source->AddString("newTabTitle", new_tab_title);
@@ -82,7 +75,7 @@ BraveNewTabUI::BraveNewTabUI(content::WebUI* web_ui, const std::string& name)
       base::FeatureList::IsEnabled(features::kBraveNtpSearchWidget));
 
   web_ui->AddMessageHandler(base::WrapUnique(
-      BraveNewTabMessageHandler::Create(source, profile, was_restored)));
+      BraveNewTabMessageHandler::Create(profile)));
   web_ui->AddMessageHandler(
       base::WrapUnique(new TopSitesMessageHandler(profile)));
 
@@ -121,16 +114,12 @@ void BraveNewTabUI::BindInterface(
 void BraveNewTabUI::CreatePageHandler(
     mojo::PendingRemote<brave_new_tab_page::mojom::Page> pending_page,
     mojo::PendingReceiver<brave_new_tab_page::mojom::PageHandler>
-        pending_page_handler,
-    mojo::PendingReceiver<brave_new_tab_page::mojom::NewTabMetrics>
-        pending_new_tab_metrics) {
+        pending_page_handler) {
   DCHECK(pending_page.is_valid());
   Profile* profile = Profile::FromWebUI(web_ui());
   page_handler_ = std::make_unique<BraveNewTabPageHandler>(
       std::move(pending_page_handler), std::move(pending_page), profile,
       web_ui()->GetWebContents());
-  // FlyWeb: misc_metrics removed; the NewTabMetrics receiver is dropped, so
-  // the page's metric calls are discarded.
 }
 
 WEB_UI_CONTROLLER_TYPE_IMPL(BraveNewTabUI)
