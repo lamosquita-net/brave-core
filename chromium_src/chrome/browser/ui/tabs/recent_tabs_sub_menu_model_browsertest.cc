@@ -7,7 +7,7 @@
 
 #include "base/containers/to_vector.h"
 
-#include "src/chrome/browser/ui/tabs/recent_tabs_sub_menu_model_browsertest.cc"
+#include <chrome/browser/ui/tabs/recent_tabs_sub_menu_model_browsertest.cc>
 
 // This override is in place because we must adjust the menu model to match our
 // expectations

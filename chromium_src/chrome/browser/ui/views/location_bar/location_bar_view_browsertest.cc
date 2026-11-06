@@ -3,12 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "chrome/browser/ui/views/location_bar/location_bar_view.h"
+
 #include <optional>
 
-#include "base/strings/string_util.h"
-#include "chrome/browser/ssl/security_state_tab_helper.h"
+#include "chrome/browser/ssl/chrome_security_state_util.h"
 #include "chrome/browser/ui/views/frame/browser_view.h"
-#include "chrome/browser/ui/views/location_bar/location_bar_view.h"
 #include "chrome/test/base/in_process_browser_test.h"
 #include "chrome/test/base/ui_test_utils.h"
 #include "components/omnibox/browser/location_bar_model_impl.h"
@@ -21,7 +21,7 @@
 #include "net/test/test_data_directory.h"
 #include "services/network/public/mojom/url_response_head.mojom.h"
 
-const char kMockSecureHostname[] = "example-secure.test";
+constexpr char kMockSecureHostname[] = "example-secure.test";
 struct SecurityIndicatorTestParams {
   bool use_secure_url;
   net::CertStatus cert_status;
@@ -62,8 +62,9 @@ class SecurityIndicatorTest
 
   bool InterceptURLLoad(net::CertStatus cert_status,
                         content::URLLoaderInterceptor::RequestParams* params) {
-    if (params->url_request.url.host() != kMockSecureHostname)
+    if (params->url_request.url.host() != kMockSecureHostname) {
       return false;
+    }
     net::SSLInfo ssl_info;
     ssl_info.cert = cert_;
     ssl_info.cert_status = cert_status;
@@ -100,15 +101,13 @@ IN_PROC_BROWSER_TEST_P(SecurityIndicatorTest, CheckIndicatorText) {
   content::WebContents* tab =
       browser()->tab_strip_model()->GetActiveWebContents();
   ASSERT_TRUE(tab);
-  SecurityStateTabHelper* helper = SecurityStateTabHelper::FromWebContents(tab);
-  ASSERT_TRUE(helper);
   LocationBarView* location_bar_view = GetLocationBarView();
 
   auto c = GetParam();
   SetUpInterceptor(c.cert_status);
   ASSERT_TRUE(ui_test_utils::NavigateToURL(
       browser(), c.use_secure_url ? kMockSecureURL : kMockNonsecureURL));
-  EXPECT_EQ(c.security_level, helper->GetSecurityLevel());
+  EXPECT_EQ(c.security_level, chrome_security_state::GetSecurityLevel(tab));
   EXPECT_EQ(c.should_show_text,
             location_bar_view->location_icon_view()->ShouldShowLabel());
   EXPECT_EQ(c.indicator_text,
