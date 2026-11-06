@@ -14,7 +14,6 @@ class SyncService;
 
 namespace autofill {
 class LogManager;
-class PersonalDataManager;
 bool IsCreditCardUploadEnabled(
     const syncer::SyncService* sync_service,
     const std::string& user_country,
@@ -22,16 +21,8 @@ bool IsCreditCardUploadEnabled(
     LogManager* log_manager) {
   return false;
 }
-bool IsCreditCardMigrationEnabled(PersonalDataManager* personal_data_manager,
-                                  syncer::SyncService* sync_service,
-                                  bool is_test_mode,
-                                  LogManager* log_manager) {
-  return false;
-}
 }  // namespace autofill
 
 #define IsCreditCardUploadEnabled IsCreditCardUploadEnabled_ChromiumImpl
-#define IsCreditCardMigrationEnabled IsCreditCardMigrationEnabled_ChromiumImpl
-#include "src/components/autofill/core/browser/autofill_experiments.cc"
+#include "src/components/autofill/core/browser/studies/autofill_experiments.cc"
 #undef IsCreditCardUploadEnabled
-#undef IsCreditCardMigrationEnabled
