@@ -6,11 +6,6 @@
 #include "brave/components/constants/webui_url_constants.h"
 #include "chrome/common/webui_url_constants.h"
 
-#define kChromeUIAttributionInternalsHost                                 \
-  kChromeUIAttributionInternalsHost, kAdblockHost, kAdblockInternalsHost, \
-      kWelcomeHost
-
+// Brave hosts are added to ChromeURLHosts() by
+// patches/chrome-common-webui_url_constants.cc.patch, as in 1.98.
 #include "src/chrome/common/webui_url_constants.cc"
-
-#undef kChromeUIAttributionInternalsHost
-
