@@ -49,7 +49,7 @@ function MainContainer () {
     mainEl = <p>Failed...</p>
   }
 
-  // FlyWeb: no "Help improve" step. P3A is compiled out and there is no
+  // FlyWeb: no "Help improve" step. FlyWeb has no telemetry and no
   // diagnostics server, so it would offer something that does not exist (and
   // its "Finish" turned both on). Reaching it ends the first run.
   React.useEffect(() => {

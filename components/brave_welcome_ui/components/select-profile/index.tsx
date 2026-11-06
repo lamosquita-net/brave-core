@@ -11,7 +11,7 @@ import LeftArrowSVG from '../svg/left-arrow'
 import AvatarIconSVG from '../svg/avatar-icon'
 import DataContext from '../../state/context'
 import { useViewTypeTransition } from '../../state/hooks'
-import { WelcomeBrowserProxyImpl, ImportDataBrowserProxyImpl, defaultImportTypes, P3APhase } from '../../api/welcome_browser_proxy'
+import { ImportDataBrowserProxyImpl, defaultImportTypes } from '../../api/welcome_browser_proxy'
 import { getLocale } from '$web-common/locale'
 
 interface ProfileItemProps {
@@ -88,7 +88,6 @@ function SelectProfile () {
     } else {
       ImportDataBrowserProxyImpl.getInstance().importDataBulk(entries, defaultImportTypes)
     }
-    WelcomeBrowserProxyImpl.getInstance().recordP3A(P3APhase.Consent)
   }
   const getImportEntryName = (entry: any) => {
     let name = entry.name

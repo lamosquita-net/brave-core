@@ -7,13 +7,6 @@ import { sendWithPromise } from 'chrome://resources/js/cr.js'
 import { DefaultBrowserBrowserProxyImpl } from './default_browser_browser_proxy'
 import { ImportDataBrowserProxyImpl, BrowserProfile as _BrowserProfile } from './import_data_browser_proxy'
 
-export enum P3APhase {
-  Welcome = 0,
-  Import = 1,
-  Consent = 2,
-  Finished = 3
-}
-
 export interface BrowserProfile extends _BrowserProfile {
   browserType?: string | undefined
 }
@@ -29,7 +22,6 @@ export const defaultImportTypes = {
 }
 
 export interface WelcomeBrowserProxy {
-  recordP3A: (phase: P3APhase) => void
   setMetricsReportingEnabled: (enabled: boolean) => void
   openSettingsPage: () => void
   getDefaultBrowser: () => Promise<string>
@@ -38,10 +30,6 @@ export interface WelcomeBrowserProxy {
 export { DefaultBrowserBrowserProxyImpl, ImportDataBrowserProxyImpl }
 
 export class WelcomeBrowserProxyImpl implements WelcomeBrowserProxy {
-  recordP3A (phase: P3APhase) {
-    chrome.send('recordP3A', [phase])
-  }
-
   setMetricsReportingEnabled (enabled: boolean) {
     chrome.send('setMetricsReportingEnabled', [enabled])
   }

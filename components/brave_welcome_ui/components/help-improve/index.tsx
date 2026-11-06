@@ -7,7 +7,7 @@ import * as React from 'react'
 
 import * as S from './style'
 import Button from '$web-components/button'
-import { P3APhase, WelcomeBrowserProxyImpl } from '../../api/welcome_browser_proxy'
+import { WelcomeBrowserProxyImpl } from '../../api/welcome_browser_proxy'
 import { getLocale, splitStringForTag } from '$web-common/locale'
 
 interface InputCheckboxProps {
@@ -42,7 +42,6 @@ function HelpImprove () {
 
   const handleFinish = () => {
     WelcomeBrowserProxyImpl.getInstance().setMetricsReportingEnabled(isMetricsReportingEnabled)
-    WelcomeBrowserProxyImpl.getInstance().recordP3A(P3APhase.Finished)
     window.open('chrome://newtab', '_self')
   }
 
@@ -74,7 +73,6 @@ function HelpImprove () {
             </a>
             {diagnosticReportsLabel.afterTag}
           </InputCheckbox>
-          {/* FlyWeb: no P3A checkbox; FlyWeb builds without P3A. */}
         </div>
       </S.Grid>
       <S.ActionBox>

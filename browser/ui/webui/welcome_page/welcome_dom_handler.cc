@@ -5,9 +5,6 @@
 
 #include "brave/browser/ui/webui/welcome_page/welcome_dom_handler.h"
 
-#include <algorithm>
-
-#include "base/metrics/histogram_macros.h"
 #include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
 #include "brave/common/importer/importer_constants.h"
@@ -33,21 +30,6 @@ constexpr char16_t kChromeBetaMacBrowserName[] = u"Chrome Beta";
 constexpr char16_t kChromeDevMacBrowserName[] = u"Chrome Dev";
 constexpr char16_t kChromeBetaLinuxBrowserName[] = u"Google Chrome (beta)";
 constexpr char16_t kChromeDevLinuxBrowserName[] = u"Google Chrome (unstable)";
-constexpr char kP3AOnboardingHistogramName[] =
-    "Brave.Welcome.InteractionStatus.2";
-constexpr size_t kMaxP3AOnboardingPhases = 3;
-
-// What was the last screen that you viewed during the browser onboarding
-// process?
-// 0. Only viewed the welcome screen, performed no action
-// 1. Viewed the profile import screen
-// 2. Viewed the diagnostic/analytics consent screen
-// 3. Finished the onboarding process
-void RecordP3AHistogram(size_t last_onboarding_phase) {
-  int answer = std::min(last_onboarding_phase, kMaxP3AOnboardingPhases);
-  UMA_HISTOGRAM_EXACT_LINEAR(kP3AOnboardingHistogramName, answer,
-                             kMaxP3AOnboardingPhases + 1);
-}
 
 bool IsChromeBeta(const std::u16string& browser_name) {
   return browser_name ==
@@ -73,9 +55,7 @@ WelcomeDOMHandler::WelcomeDOMHandler(Profile* profile) : profile_(profile) {
                          weak_ptr_factory_.GetWeakPtr()));
 }
 
-WelcomeDOMHandler::~WelcomeDOMHandler() {
-  RecordP3AHistogram(last_onboarding_phase_);
-}
+WelcomeDOMHandler::~WelcomeDOMHandler() = default;
 
 BrowserWindowInterface* WelcomeDOMHandler::GetBrowser() {
   return GlobalBrowserCollection::GetInstance()->FindBrowserWithTab(
@@ -87,9 +67,6 @@ void WelcomeDOMHandler::RegisterMessages() {
       "importNowRequested",
       base::BindRepeating(&WelcomeDOMHandler::HandleImportNowRequested,
                           base::Unretained(this)));
-  web_ui()->RegisterMessageCallback(
-      "recordP3A", base::BindRepeating(&WelcomeDOMHandler::HandleRecordP3A,
-                                       base::Unretained(this)));
   web_ui()->RegisterMessageCallback(
       "openSettingsPage",
       base::BindRepeating(&WelcomeDOMHandler::HandleOpenSettingsPage,
@@ -130,15 +107,6 @@ void WelcomeDOMHandler::OnGetDefaultBrowser(
     browser_name = base::UTF8ToUTF16(std::string(kGoogleChromeBrowserDev));
   }
   default_browser_name_ = browser_name;
-}
-
-void WelcomeDOMHandler::HandleRecordP3A(const base::ListValue& args) {
-  CHECK_EQ(1U, args.size());
-  CHECK(args[0].is_int());
-
-  last_onboarding_phase_ = args[0].GetInt();
-
-  RecordP3AHistogram(last_onboarding_phase_);
 }
 
 void WelcomeDOMHandler::HandleOpenSettingsPage(const base::ListValue& args) {

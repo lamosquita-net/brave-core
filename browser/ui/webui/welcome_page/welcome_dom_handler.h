@@ -30,7 +30,6 @@ class WelcomeDOMHandler : public content::WebUIMessageHandler {
 
  private:
   void HandleImportNowRequested(const base::ListValue& args);
-  void HandleRecordP3A(const base::ListValue& args);
   void HandleGetDefaultBrowser(const base::ListValue& args);
   void SetLocalStateBooleanEnabled(const std::string& path,
                                    const base::ListValue& args);
@@ -41,7 +40,6 @@ class WelcomeDOMHandler : public content::WebUIMessageHandler {
 
   BrowserWindowInterface* GetBrowser();
 
-  size_t last_onboarding_phase_ = 0;
   std::u16string default_browser_name_;
   raw_ptr<Profile> profile_ = nullptr;
   base::WeakPtrFactory<WelcomeDOMHandler> weak_ptr_factory_{this};
