@@ -6,7 +6,7 @@
 #ifndef BRAVE_BROWSER_UI_VIEWS_EXTENSIONS_BRAVE_EXTENSION_MENU_ITEM_VIEW_H_
 #define BRAVE_BROWSER_UI_VIEWS_EXTENSIONS_BRAVE_EXTENSION_MENU_ITEM_VIEW_H_
 
-#include <memory>
+#include <utility>
 
 #include "chrome/browser/ui/views/extensions/extensions_menu_item_view.h"
 #include "ui/base/metadata/metadata_header_macros.h"
@@ -16,22 +16,21 @@ class BraveExtensionMenuItemView : public ExtensionMenuItemView {
   METADATA_HEADER(BraveExtensionMenuItemView, ExtensionMenuItemView)
 
  public:
-  BraveExtensionMenuItemView(
-      Browser* browser,
-      bool is_enterprise,
-      std::unique_ptr<ToolbarActionViewController> controller,
-      base::RepeatingCallback<void(bool)> site_access_toggle_callback,
-      views::Button::PressedCallback site_permissions_button_callback);
+  template <typename... Args>
+  explicit BraveExtensionMenuItemView(Args&&... args)
+      : ExtensionMenuItemView(std::forward<Args>(args)...) {
+    Init();
+  }
 
   ~BraveExtensionMenuItemView() override;
 
   // ExtensionMenuItemView:
-  void UpdateContextMenuButton(bool is_action_pinned) override;
   void UpdatePinButton(bool is_force_pinned, bool is_pinned) override;
-  void OnThemeChanged() override;
 
  private:
-  void UpdatePinButtonIcon();
+  // Applies Brave-specific styling and refreshes the pin button after the
+  // upstream constructor has finished building the view.
+  void Init();
 };
 
 #endif  // BRAVE_BROWSER_UI_VIEWS_EXTENSIONS_BRAVE_EXTENSION_MENU_ITEM_VIEW_H_
