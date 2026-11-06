@@ -9,7 +9,7 @@
 #include "brave/components/constants/brave_paths.h"
 #include "build/build_config.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_features.h"
 #include "chrome/browser/ui/incognito_allowed_url.h"
 #include "chrome/browser/ui/navigator/browser_navigator.h"
 #include "chrome/browser/ui/navigator/browser_navigator_params.h"
@@ -20,8 +20,6 @@
 #include "components/prefs/pref_service.h"
 #include "components/user_prefs/user_prefs.h"
 #include "content/public/browser/navigation_entry.h"
-#include "content/public/browser/notification_service.h"
-#include "content/public/browser/notification_types.h"
 #include "content/public/common/url_constants.h"
 #include "content/public/test/browser_test.h"
 #include "content/public/test/browser_test_utils.h"
@@ -76,7 +74,7 @@ class BraveSchemeLoadBrowserTest : public InProcessBrowserTest,
 
   // Check loading |url| in guest window is not allowed for an url.
   void TestURLIsNotLoadedInGuestWindow(const GURL& url) {
-    Browser* guest_browser = CreateGuestBrowser();
+    BrowserWindowInterface* guest_browser = CreateGuestBrowser();
     TabStripModel* guest_model = guest_browser->tab_strip_model();
 
     // Check guest window has one blank tab.
@@ -92,10 +90,9 @@ class BraveSchemeLoadBrowserTest : public InProcessBrowserTest,
                       ->GetController()
                       .GetLastCommittedEntry();
     EXPECT_EQ(entry->GetPageType(), content::PageType::PAGE_TYPE_ERROR);
-    EXPECT_STREQ("about:blank",
-                 base::UTF16ToUTF8(
-                     browser()->location_bar_model()->GetFormattedFullURL())
-                     .c_str());
+    EXPECT_EQ("about:blank",
+              base::UTF16ToUTF8(
+                  LocationBarModel::From(browser())->GetFormattedFullURL()));
     EXPECT_EQ(1, browser()->tab_strip_model()->count());
   }
 
@@ -126,9 +123,8 @@ class BraveSchemeLoadBrowserTest : public InProcessBrowserTest,
 
     browser()->tab_strip_model()->RemoveObserver(this);
 
-    EXPECT_STREQ(url.c_str(),
-                 base::UTF16ToUTF8(browser()->location_bar_model()
-                      ->GetFormattedFullURL()).c_str());
+    EXPECT_EQ(url, base::UTF16ToUTF8(
+                       LocationBarModel::From(browser())->GetURLForDisplay()));
     EXPECT_EQ(2, browser()->tab_strip_model()->count());
     // Private window stays as initial state.
     EXPECT_EQ("about:blank",

@@ -9,6 +9,10 @@
 
 #include "chrome/browser/download/bubble/download_display_controller.h"
 
+#include <algorithm>
+#include <ranges>
+
+#include "base/check_op.h"
 #include "base/command_line.h"
 #include "base/files/file_path.h"
 #include "base/memory/raw_ptr.h"
@@ -24,7 +28,7 @@
 #include "chrome/browser/download/download_prefs.h"
 #include "chrome/browser/download/offline_item_model_manager_factory.h"
 #include "chrome/browser/offline_items_collection/offline_content_aggregator_factory.h"
-#include "chrome/browser/ui/browser.h"
+#include "chrome/browser/ui/browser_window/public/create_browser_window.h"
 #include "chrome/browser/ui/download/download_display.h"
 #include "chrome/common/chrome_switches.h"
 #include "chrome/test/base/test_browser_window.h"
@@ -115,11 +119,6 @@ class FakeDownloadDisplay : public DownloadDisplay {
   void ShowDetails() override { detail_shown_ = true; }
   void HideDetails() override { detail_shown_ = false; }
   bool IsShowingDetails() const override { return detail_shown_; }
-  bool OpenMostSpecificDialog(
-      const offline_items_collection::ContentId& content_id) override {
-    detail_shown_ = true;
-    return true;
-  }
   bool IsFullscreenWithParentViewHidden() const override {
     return is_fullscreen_;
   }
@@ -138,6 +137,7 @@ class FakeDownloadDisplay : public DownloadDisplay {
   void OpenSecuritySubpage(
       const offline_items_collection::ContentId&) override {}
 
+  void OnOfflineItemsInitialized() override {}
   void AnnounceAccessibleAlertNow(const std::u16string& alert_text) override {}
 
  private:
@@ -252,12 +252,10 @@ class MockDownloadBubbleUpdateService : public DownloadBubbleUpdateService {
   void AddModel(ModelType type) { model_types_.push_back(type); }
 
   void RemoveLastDownload() {
-    for (auto reverse_it = model_types_.rbegin();
-         reverse_it != model_types_.rend(); ++reverse_it) {
-      if (*reverse_it == ModelType::kDownloadItem) {
-        model_types_.erase(std::next(reverse_it).base());
-        break;
-      }
+    auto it = std::ranges::find(std::views::reverse(model_types_),
+                                ModelType::kDownloadItem);
+    if (it != model_types_.rend()) {
+      model_types_.erase(std::prev(it.base()));
     }
   }
 
@@ -332,11 +330,11 @@ class DownloadDisplayControllerTest : public testing::Test {
     EXPECT_CALL(*mock_update_service_, GetProgressInfo(_))
         .WillRepeatedly(Return(DownloadDisplay::ProgressInfo()));
     display_ = std::make_unique<FakeDownloadDisplay>();
-    window_ = std::make_unique<TestBrowserWindow>();
-    Browser::CreateParams params(profile_, true);
-    params.type = Browser::TYPE_NORMAL;
-    params.window = window_.get();
-    browser_ = std::unique_ptr<Browser>(Browser::Create(params));
+    auto window = std::make_unique<TestBrowserWindow>();
+    BrowserWindowCreateParams params(profile_, true);
+    params.type = BrowserWindowInterface::TYPE_NORMAL;
+    params.window = window.release();
+    browser_ = DeprecatedCreateOwnedBrowserWindowForTesting(std::move(params));
     bubble_controller_ = std::make_unique<DownloadBubbleUIController>(
         browser_.get(), mock_update_service_.get());
     controller_ = std::make_unique<DownloadDisplayController>(
@@ -350,7 +348,7 @@ class DownloadDisplayControllerTest : public testing::Test {
     mock_update_service_.reset();
   }
 
-  Browser* browser() { return browser_.get(); }
+  BrowserWindowInterface* browser() { return browser_.get(); }
 
  protected:
   download::MockDownloadItem& item(size_t index) { return *items_[index]; }
@@ -530,8 +528,7 @@ class DownloadDisplayControllerTest : public testing::Test {
   std::unique_ptr<DownloadBubbleUIController> bubble_controller_;
   TestingProfileManager testing_profile_manager_;
   raw_ptr<Profile> profile_;
-  std::unique_ptr<TestBrowserWindow> window_;
-  std::unique_ptr<Browser> browser_;
+  std::unique_ptr<BrowserWindowInterface> browser_;
   raw_ptr<MockDownloadCoreService> mock_download_core_service_;
   std::unique_ptr<ChromeDownloadManagerDelegate> delegate_;
 };

@@ -226,10 +226,10 @@ IN_PROC_BROWSER_TEST_F(SearchEngineProviderServiceTest,
   std::unique_ptr<BrandcodedDefaultSettings> master_settings(
       new BrandcodedDefaultSettings);
   ProfileResetterMockObject mock_object;
-  resetter.Reset(ProfileResetter::DEFAULT_SEARCH_ENGINE,
-                 std::move(master_settings),
-                 base::BindOnce(&ProfileResetterMockObject::StopLoop,
-                                base::Unretained(&mock_object)));
+  resetter.ResetSettings(ProfileResetter::DEFAULT_SEARCH_ENGINE,
+                         std::move(master_settings),
+                         base::BindOnce(&ProfileResetterMockObject::StopLoop,
+                                        base::Unretained(&mock_object)));
   mock_object.RunLoop();
   EXPECT_EQ(initial_private_provider_id,
             incognito_service->GetDefaultSearchProvider()->prepopulate_id());
@@ -307,7 +307,7 @@ std::unique_ptr<TemplateURLData> TestExtensionSearchEngine(Profile* profile) {
 IN_PROC_BROWSER_TEST_F(ExtensionBrowserTest,
                        ExtensionSearchProviderWithPrivateWindow) {
   TemplateURLService* url_service =
-      TemplateURLServiceFactory::GetForProfile(profile());
+      TemplateURLServiceFactory::GetForProfile(GetProfile());
   ASSERT_TRUE(url_service);
   EXPECT_TRUE(VerifyTemplateURLServiceLoad(url_service));
   const TemplateURL* default_provider = url_service->GetDefaultSearchProvider();

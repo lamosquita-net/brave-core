@@ -4,12 +4,14 @@
  * You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include <memory>
+#include <string_view>
 
 #include "base/functional/bind.h"
 #include "base/path_service.h"
 #include "base/strings/strcat.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/test/base/chrome_test_utils.h"
+#include "chrome/test/base/platform_browser_test.h"
 #include "components/content_settings/core/browser/cookie_settings.h"
 #include "components/content_settings/core/common/pref_names.h"
 #include "components/permissions/test/permission_request_observer.h"
@@ -109,8 +111,9 @@ class StorageAccessAPIBrowserTest : public PlatformBrowserTest {
   void SetCrossSiteCookieOnDomain(std::string_view domain) {
     GURL domain_url = GetURL(domain);
     std::string cookie = base::StrCat({"cross-site=", domain});
-    content::SetCookie(profile(), domain_url,
-                       base::StrCat({cookie, CookieAttributes(domain)}));
+    ASSERT_TRUE(
+        content::SetCookie(profile(), domain_url,
+                           base::StrCat({cookie, CookieAttributes(domain)})));
     ASSERT_THAT(content::GetCookies(profile(), domain_url),
                 testing::HasSubstr(cookie));
   }

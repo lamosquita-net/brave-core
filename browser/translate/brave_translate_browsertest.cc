@@ -6,20 +6,20 @@
 #include <algorithm>
 #include <memory>
 
+#include "base/check.h"
+#include "base/check_deref.h"
 #include "base/files/file_path.h"
 #include "base/path_service.h"
-#include "base/strings/stringprintf.h"
 #include "base/test/bind.h"
 #include "base/test/mock_callback.h"
 #include "base/test/scoped_feature_list.h"
 #include "brave/components/constants/brave_paths.h"
 #include "brave/components/constants/brave_services_key.h"
-#include "brave/components/l10n/common/localization_util.h"
 #include "brave/components/translate/core/common/brave_translate_features.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/translate/chrome_translate_client.h"
 #include "chrome/browser/translate/translate_test_utils.h"
-#include "chrome/browser/ui/browser.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_features.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/browser/ui/views/translate/translate_bubble_controller.h"
 #include "chrome/browser/ui/views/translate/translate_bubble_view.h"
@@ -43,7 +43,8 @@
 #include "services/network/public/cpp/network_switches.h"
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
-#include "url/gurl.h"
+#include "third_party/abseil-cpp/absl/strings/str_format.h"
+#include "ui/base/l10n/l10n_util.h"
 
 using ::testing::_;
 using ::testing::MockFunction;
@@ -52,7 +53,7 @@ using ::testing::Return;
 namespace translate {
 
 namespace {
-const char kTestScript[] = R"(
+constexpr char kTestScript[] = R"(
 var api_key = undefined;
 var google = {};
 google.translate = (function() {
@@ -159,14 +160,14 @@ class BraveTranslateBrowserTest : public InProcessBrowserTest {
         << "Found a request to google backend " << request.GetURL();
 
     if (request.GetURL().path() == "/translate") {
-      const auto query = request.GetURL().GetQuery();
-      EXPECT_NE(query.find(base::StringPrintf("&key=%s",
-                                              BUILDFLAG(BRAVE_SERVICES_KEY))),
+      EXPECT_NE(request.GetURL().query().find(
+                    absl::StrFormat("&key=%s", BUILDFLAG(BRAVE_SERVICES_KEY))),
                 std::string::npos)
           << "bad brave api key for request " << request.GetURL();
     }
 
-    const auto response = backend_request_.Call(request.GetURL().GetPath());
+    const auto response =
+        backend_request_.Call(std::string(request.GetURL().path()));
     if (std::get<0>(response) == 0)
       return nullptr;
 
@@ -209,7 +210,16 @@ class BraveTranslateBrowserTest : public InProcessBrowserTest {
                             "cr.googleTranslate.onTranslateElementLoad()")));
   }
 
-  void WaitUntilLanguageDetermined() { language_determined_waiter_->Wait(); }
+  // Waits until the active tab's source language is detected as
+  // |expected_lang|. Designed to skip unwanted language-determination events
+  // (e.g. the initial about:blank tab).
+  void WaitUntilLanguageDetermined(const std::string& expected_lang) {
+    while (GetChromeTranslateClient()->GetLanguageState().source_language() !=
+           expected_lang) {
+      language_determined_waiter_->Wait();
+      ResetObserver();
+    }
+  }
 
   void WaitUntilPageTranslated() {
     translate::CreateTranslateWaiter(
@@ -219,9 +229,9 @@ class BraveTranslateBrowserTest : public InProcessBrowserTest {
   }
 
   content::EvalJsResult EvalTranslateJs(const std::string& script) {
-    return content::EvalJs(
-        browser()->tab_strip_model()->GetActiveWebContents(), script.c_str(),
-        content::EXECUTE_SCRIPT_DEFAULT_OPTIONS, ISOLATED_WORLD_ID_TRANSLATE);
+    return content::EvalJs(browser()->tab_strip_model()->GetActiveWebContents(),
+                           script, content::EXECUTE_SCRIPT_DEFAULT_OPTIONS,
+                           ISOLATED_WORLD_ID_TRANSLATE);
   }
 
   ::testing::AssertionResult HasNoBadFlagsInfobar() {
@@ -253,23 +263,21 @@ class BraveTranslateBrowserTest : public InProcessBrowserTest {
 };
 
 IN_PROC_BROWSER_TEST_F(BraveTranslateBrowserTest, InternalTranslation) {
-  ResetObserver();
   ASSERT_TRUE(ui_test_utils::NavigateToURL(
       browser(), embedded_test_server()->GetURL("/espanol_page.html")));
-  WaitUntilLanguageDetermined();
+  WaitUntilLanguageDetermined("es");
 
   SetupTestScriptExpectations();
 
-  auto* bubble = TranslateBubbleController::FromWebContents(
-                     browser()->tab_strip_model()->GetActiveWebContents())
-                     ->GetTranslateBubble();
+  auto* bubble = CHECK_DEREF(TranslateBubbleController::From(browser()))
+                     .GetTranslateBubble();
   ASSERT_TRUE(bubble);
 
   // Check that the we see the translation bubble (not about the extension
   // installation).
-  ASSERT_EQ(bubble->GetWindowTitle(),
-            brave_l10n::GetLocalizedResourceUTF16String(
-                IDS_TRANSLATE_BUBBLE_BEFORE_TRANSLATE_TITLE));
+  ASSERT_EQ(
+      bubble->GetWindowTitle(),
+      l10n_util::GetStringUTF16(IDS_TRANSLATE_BUBBLE_BEFORE_TRANSLATE_TITLE));
 
   // Translate the page. Note: the event onTranslateElementLoad() is
   // called from main.js (see SetupTestScriptExpectations()).
@@ -288,7 +296,7 @@ IN_PROC_BROWSER_TEST_F(BraveTranslateBrowserTest, InternalTranslation) {
                                        "application/json", "[\"This\"]")));
   EXPECT_EQ(
       "[\"This\"]",
-      EvalTranslateJs(base::StringPrintf(
+      EvalTranslateJs(absl::StrFormat(
           kXhrPromiseTemplate, "response",
           "https://translate.googleapis.com/translate_a/t?query=something",
           "true")));
@@ -296,6 +304,7 @@ IN_PROC_BROWSER_TEST_F(BraveTranslateBrowserTest, InternalTranslation) {
   // Check that we haven't tried to update the language lists.
   auto* language_list =
       TranslateDownloadManager::GetInstance()->language_list();
+  language_list->RequestLanguageList();
   EXPECT_FALSE(language_list->HasOngoingLanguageListLoadingForTesting());
 
   // Check used urls.
@@ -318,20 +327,18 @@ IN_PROC_BROWSER_TEST_F(BraveTranslateBrowserTest, NoAutoTranslate) {
   GetChromeTranslateClient()
       ->GetTranslatePrefs()
       ->AddLanguagePairToAlwaysTranslateList("es", "en");
-  ResetObserver();
   ASSERT_TRUE(ui_test_utils::NavigateToURL(
       browser(), embedded_test_server()->GetURL("/espanol_page.html")));
-  WaitUntilLanguageDetermined();
+  WaitUntilLanguageDetermined("es");
 
-  auto* bubble = TranslateBubbleController::FromWebContents(
-                     browser()->tab_strip_model()->GetActiveWebContents())
-                     ->GetTranslateBubble();
+  auto* bubble = CHECK_DEREF(TranslateBubbleController::From(browser()))
+                     .GetTranslateBubble();
   ASSERT_TRUE(bubble);
 
   // Check that the we see BEFORE translation bubble (not in-progress bubble).
-  ASSERT_EQ(bubble->GetWindowTitle(),
-            brave_l10n::GetLocalizedResourceUTF16String(
-                IDS_TRANSLATE_BUBBLE_BEFORE_TRANSLATE_TITLE));
+  ASSERT_EQ(
+      bubble->GetWindowTitle(),
+      l10n_util::GetStringUTF16(IDS_TRANSLATE_BUBBLE_BEFORE_TRANSLATE_TITLE));
 }
 
 class BraveTranslateBrowserGoogleRedirectTest
@@ -350,18 +357,17 @@ class BraveTranslateBrowserGoogleRedirectTest
 
 IN_PROC_BROWSER_TEST_F(BraveTranslateBrowserGoogleRedirectTest,
                        JsRedirectionsSelectivity) {
-  ResetObserver();
-
   ASSERT_TRUE(ui_test_utils::NavigateToURL(
       browser(), embedded_test_server()->GetURL("/espanol_page.html")));
-  WaitUntilLanguageDetermined();
+  WaitUntilLanguageDetermined("es");
 
   SetupTestScriptExpectations();
   GetTranslateManager()->TranslatePage("es", "en", true);
   WaitUntilPageTranslated();
 
-  const char kTestURL[] = "https://translate.google.com/something.svg";
-  const char kTestSvg[] = R"(
+  static constexpr char kTestURL[] =
+      "https://translate.google.com/something.svg";
+  static constexpr char kTestSvg[] = R"(
     <svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"></svg>
   )";
 
@@ -370,7 +376,7 @@ IN_PROC_BROWSER_TEST_F(BraveTranslateBrowserGoogleRedirectTest,
                                              "image/svg+xml", kTestSvg)));
 
   const auto do_xhr_and_get_final_url =
-      base::StringPrintf(kXhrPromiseTemplate, "responseURL", kTestURL, "false");
+      absl::StrFormat(kXhrPromiseTemplate, "responseURL", kTestURL, "false");
 
   // Check that a page request is unaffected by the js redirections.
   EXPECT_EQ(kTestURL, content::EvalJs(
@@ -390,7 +396,7 @@ IN_PROC_BROWSER_TEST_F(BraveTranslateBrowserGoogleRedirectTest,
     });
   )";
 
-  const auto load_image = base::StringPrintf(kLoadImageTemplate, kTestURL);
+  const auto load_image = absl::StrFormat(kLoadImageTemplate, kTestURL);
 
   // Check that the image is loaded in the main world correctly.
   EXPECT_EQ(true, content::EvalJs(

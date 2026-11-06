@@ -21,8 +21,8 @@
 #include "chrome/browser/extensions/component_loader.h"
 #include "chrome/browser/extensions/extension_service.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_window.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_features.h"
 #include "chrome/common/buildflags.h"
 #include "chrome/common/webui_url_constants.h"
 #include "chrome/test/base/in_process_browser_test.h"
@@ -110,7 +110,7 @@ IN_PROC_BROWSER_TEST_F(BraveContentBrowserClientTest, CanLoadChromeURL) {
       ASSERT_TRUE(WaitForLoadStop(contents));
 
       EXPECT_STREQ(base::UTF16ToUTF8(
-                       browser()->location_bar_model()->GetFormattedFullURL())
+                       LocationBarModel::From(browser())->GetFormattedFullURL())
                        .c_str(),
                    ("brave://" + page).c_str());
       EXPECT_STREQ(contents->GetController()
@@ -143,7 +143,7 @@ IN_PROC_BROWSER_TEST_F(BraveContentBrowserClientTest, CanLoadAboutHost) {
     ASSERT_TRUE(WaitForLoadStop(contents));
 
     EXPECT_STREQ(base::UTF16ToUTF8(
-                     browser()->location_bar_model()->GetFormattedFullURL())
+                     LocationBarModel::From(browser())->GetFormattedFullURL())
                      .c_str(),
                  "brave://about");
     EXPECT_STREQ(contents->GetController()
@@ -174,7 +174,7 @@ IN_PROC_BROWSER_TEST_F(BraveContentBrowserClientTest, RewriteChromeSync) {
                                     GURL("chrome://sync"));
 
     EXPECT_STREQ(base::UTF16ToUTF8(
-                     browser()->location_bar_model()->GetFormattedFullURL())
+                     LocationBarModel::From(browser())->GetFormattedFullURL())
                      .c_str(),
                  "brave://sync");
     EXPECT_EQ(
@@ -197,10 +197,10 @@ IN_PROC_BROWSER_TEST_F(BraveContentBrowserClientTest, RewriteAdblock) {
     NavigateToURLAndWaitForRewrites(contents, GURL(scheme + "adblock"),
                                     GURL("chrome://settings/shields/filters"));
     EXPECT_STREQ(base::UTF16ToUTF8(
-                     browser()->location_bar_model()->GetFormattedFullURL())
+                     LocationBarModel::From(browser())->GetFormattedFullURL())
                      .c_str(),
                  "brave://settings/shields/filters");
-    EXPECT_EQ(browser()->location_bar_model()->GetURL(),
+    EXPECT_EQ(LocationBarModel::From(browser())->GetURL(),
               GURL("chrome://settings/shields/filters"));
     EXPECT_EQ(
         contents->GetController().GetLastCommittedEntry()->GetVirtualURL(),
@@ -297,7 +297,6 @@ IN_PROC_BROWSER_TEST_F(BraveContentBrowserClientTest, CheckExpectedExtensions) {
   // installation.
   std::set<std::string> expected_extensions = {
       brave_extension_id,
-      extensions::kWebStoreAppId,
       extension_misc::kPdfExtensionId,
   };
 

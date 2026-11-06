@@ -8,7 +8,6 @@
 #include "base/base64.h"
 #include "base/rand_util.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
 #include "chrome/test/base/in_process_browser_test.h"
 #include "components/sync/service/glue/sync_transport_data_prefs.h"
 #include "content/public/test/browser_test.h"
@@ -19,7 +18,7 @@ namespace {
 
 std::string GenerateCacheGUID() {
   // Generate a GUID with 128 bits of randomness.
-  const int kGuidBytes = 128 / 8;
+  constexpr int kGuidBytes = 128 / 8;
 
   return base::Base64Encode(base::RandBytesAsVector(kGuidBytes));
 }
@@ -45,7 +44,7 @@ class BraveBrowsingDataRemoverBrowserTest : public InProcessBrowserTest {
   void KeepSyncGuidAfterClear(uint64_t remove_mask) {
     // Setup sync prefs including cache_id
     signin::GaiaIdHash gaia_id_hash =
-        signin::GaiaIdHash::FromGaiaId("user_gaia_id");
+        signin::GaiaIdHash::FromGaiaId(GaiaId("user_gaia_id"));
     syncer::SyncTransportDataPrefs sync_transport_data_prefs(
         browser()->GetProfile()->GetPrefs(), gaia_id_hash);
     sync_transport_data_prefs.SetCacheGuid(GenerateCacheGUID());

@@ -6,13 +6,11 @@
 #include <memory>
 
 #include "base/path_service.h"
-#include "base/strings/stringprintf.h"
 #include "base/test/thread_test_helper.h"
 #include "brave/components/constants/brave_paths.h"
 #include "brave/components/constants/pref_names.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
 #include "chrome/test/base/in_process_browser_test.h"
 #include "chrome/test/base/ui_test_utils.h"
 #include "components/content_settings/core/browser/host_content_settings_map.h"
@@ -25,10 +23,10 @@
 #include "media/base/media_switches.h"
 #include "net/dns/mock_host_resolver.h"
 
-const char kVideoPlaying[] = "Video playing";
-const char kVideoPlayingDetect[] =
+constexpr char kVideoPlaying[] = "Video playing";
+constexpr char kVideoPlayingDetect[] =
     "document.getElementById('status').textContent;";
-const char kEmbeddedTestServerDirectory[] = "autoplay";
+constexpr char kEmbeddedTestServerDirectory[] = "autoplay";
 
 class AutoplayBrowserTest : public InProcessBrowserTest {
  public:
@@ -64,7 +62,8 @@ class AutoplayBrowserTest : public InProcessBrowserTest {
   }
 
   HostContentSettingsMap* content_settings() {
-    return HostContentSettingsMapFactory::GetForProfile(browser()->GetProfile());
+    return HostContentSettingsMapFactory::GetForProfile(
+        browser()->GetProfile());
   }
 
   void AllowAutoplay() {

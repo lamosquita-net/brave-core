@@ -3,40 +3,40 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#include <AppKit/AppKit.h>
+#include "brave/browser/brave_app_controller_mac.h"
 
+#include <AppKit/AppKit.h>
 #import <Cocoa/Cocoa.h>
 #import <Foundation/Foundation.h>
 #import <objc/runtime.h>
-
 #include <stddef.h>
+
 #include <string>
 
 #include "base/apple/foundation_util.h"
 #include "base/apple/scoped_objc_class_swizzler.h"
+#include "base/check.h"
 #include "base/test/scoped_feature_list.h"
 #include "brave/app/brave_command_ids.h"
-#include "brave/browser/brave_app_controller_mac.h"
 #include "brave/browser/brave_browser_features.h"
 #include "brave/browser/brave_browser_process.h"
-#include "brave/browser/profiles/profile_util.h"
 #include "brave/browser/ui/views/frame/brave_browser_view.h"
 #include "chrome/app/chrome_command_ids.h"
 #include "chrome/browser/bookmarks/bookmark_model_factory.h"
 #include "chrome/browser/browser_process.h"
-#include "chrome/browser/ui/browser.h"
+#include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser_commands.h"
 #include "chrome/browser/ui/browser_window.h"
 #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/browser_window/public/global_browser_collection.h"
 #include "chrome/browser/ui/cocoa/bookmarks/bookmark_menu_bridge.h"
 #include "chrome/browser/ui/location_bar/location_bar.h"
+#include "chrome/browser/ui/omnibox/omnibox_view.h"
 #include "chrome/test/base/in_process_browser_test.h"
 #include "chrome/test/base/ui_test_utils.h"
 #include "components/bookmarks/browser/bookmark_model.h"
 #include "components/bookmarks/browser/bookmark_utils.h"
 #include "components/bookmarks/test/bookmark_test_helpers.h"
-#include "components/omnibox/browser/omnibox_view.h"
 #include "components/policy/core/common/policy_pref_names.h"
 #include "content/public/test/browser_test.h"
 
@@ -45,7 +45,7 @@ using bookmarks::BookmarkNode;
 
 namespace {
 
-const char kTestingPage[] = "/empty.html";
+constexpr char kTestingPage[] = "/empty.html";
 
 class BraveAppControllerBrowserTest : public InProcessBrowserTest {
  public:
@@ -90,7 +90,7 @@ IN_PROC_BROWSER_TEST_F(BraveAppControllerCleanLinkFeatureDisabledBrowserTest,
   omnibox_view->SetFocus(true);
   omnibox_view->SelectAll(false);
   EXPECT_TRUE(omnibox_view->IsSelectAll());
-  EXPECT_TRUE(BraveBrowserWindow::From(browser()->window())->HasSelectedURL());
+  EXPECT_TRUE(BraveBrowserWindow::FromBrowser(browser())->HasSelectedURL());
 
   BraveAppController* ac = base::apple::ObjCCastStrict<BraveAppController>(
       [[NSApplication sharedApplication] delegate]);
@@ -122,7 +122,7 @@ IN_PROC_BROWSER_TEST_F(BraveAppControllerBrowserTest, CopyLinkItemVisible) {
   omnibox_view->SetFocus(true);
   omnibox_view->SelectAll(false);
   EXPECT_TRUE(omnibox_view->IsSelectAll());
-  EXPECT_TRUE(BraveBrowserWindow::From(browser()->window())->HasSelectedURL());
+  EXPECT_TRUE(BraveBrowserWindow::FromBrowser(browser())->HasSelectedURL());
 
   BraveAppController* ac = base::apple::ObjCCastStrict<BraveAppController>(
       [[NSApplication sharedApplication] delegate]);
@@ -148,7 +148,7 @@ IN_PROC_BROWSER_TEST_F(BraveAppControllerBrowserTest, CopyLinkItemVisible) {
 IN_PROC_BROWSER_TEST_F(BraveAppControllerBrowserTest, CopyLinkItemNotVisible) {
   EXPECT_EQ(1u, GlobalBrowserCollection::GetInstance()->GetSize());
   OmniboxView* omnibox_view =
-      browser()->window()->GetLocationBar()->GetOmniboxView();
+      BrowserWindow::FromBrowser(browser())->GetLocationBar()->GetOmniboxView();
   omnibox_view->SetUserText(u"any text");
   omnibox_view->SelectAll(false);
   EXPECT_TRUE(omnibox_view->IsSelectAll());
@@ -183,7 +183,7 @@ IN_PROC_BROWSER_TEST_F(BraveAppControllerBrowserTest,
       BraveBrowserView::GetBrowserViewForBrowser(browser()));
   OmniboxView* omnibox_view = browser_view->GetLocationBar()->GetOmniboxView();
   EXPECT_FALSE(omnibox_view->IsSelectAll());
-  EXPECT_FALSE(BraveBrowserWindow::From(browser()->window())->HasSelectedURL());
+  EXPECT_FALSE(BraveBrowserWindow::FromBrowser(browser())->HasSelectedURL());
 
   BraveAppController* ac = base::apple::ObjCCastStrict<BraveAppController>(
       [[NSApplication sharedApplication] delegate]);
@@ -205,7 +205,7 @@ IN_PROC_BROWSER_TEST_F(BraveAppControllerBrowserTest,
   [ac mainMenuCreated];
   [ac setLastProfile:browser()->GetProfile()];
 
-  // Added one bookmark item.
+  // Add one bookmark item.
   constexpr char kPersistBookmarkURL[] = "http://www.cnn.com/";
   constexpr char16_t kPersistBookmarkTitle[] = u"CNN";
   BookmarkModel* bookmark_model = WaitForBookmarkModel(browser()->GetProfile());
@@ -216,9 +216,9 @@ IN_PROC_BROWSER_TEST_F(BraveAppControllerBrowserTest,
   NSMenu* normal_window_submenu = [ac bookmarkMenuBridge]->BookmarkMenu();
   [[normal_window_submenu delegate] menuNeedsUpdate:normal_window_submenu];
 
-  // Total 5 items - basic 3 items(Bookmark Manager, Bookmark This Tab... and
-  // Bookmark All Tabs..), separator and bookmark item. and check last item is
-  // bookmark item.
+  // Total 5 items - basic 3 items (Bookmark Manager, Bookmark This Tab... and
+  // Bookmark All Tabs..), separator, and "Bookmarks" (which contains the new
+  // bookmark item).
   EXPECT_EQ(5, [normal_window_submenu numberOfItems]);
   EXPECT_EQ(
       std::u16string(kPersistBookmarkTitle),
@@ -226,7 +226,7 @@ IN_PROC_BROWSER_TEST_F(BraveAppControllerBrowserTest,
 
   // Create private browser and check bookmark menubar has same items.
   auto* private_browser = CreateIncognitoBrowser(browser()->GetProfile());
-  [ac setLastProfile:private_browser->profile()];
+  [ac setLastProfile:private_browser->GetProfile()];
   NSMenu* private_browser_submenu = [ac bookmarkMenuBridge]->BookmarkMenu();
   [[private_browser_submenu delegate] menuNeedsUpdate:private_browser_submenu];
   EXPECT_EQ(5, [private_browser_submenu numberOfItems]);
@@ -235,8 +235,9 @@ IN_PROC_BROWSER_TEST_F(BraveAppControllerBrowserTest,
                 [[private_browser_submenu itemAtIndex:4] title]));
 
   // Close private browser and check bookmark menubar still has same items.
+  ui_test_utils::BrowserDestroyedObserver observer(private_browser);
   chrome::CloseWindow(private_browser);
-  ui_test_utils::WaitForBrowserToClose();
+  observer.Wait();
 
   [ac setLastProfile:browser()->GetProfile()];
   [[normal_window_submenu delegate] menuNeedsUpdate:normal_window_submenu];
