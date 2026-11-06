@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+#include "base/check.h"
+#include "base/check_op.h"
 #include "brave/browser/ui/brave_view_ids.h"
 #include "brave/browser/ui/views/bookmarks/bookmark_bar_instructions_view.h"
 #include "components/bookmarks/browser/bookmark_model.h"
@@ -22,7 +24,7 @@ BookmarkBarInstructionsView* GetInstructionView(
 
 void LayoutBookmarkBarInstructionsView(views::View* bookmark_bar_view,
                                        bookmarks::BookmarkModel* model,
-                                       Browser* browser,
+                                       BrowserWindowInterface* browser,
                                        int button_height,
                                        int x,
                                        int max_x,
@@ -60,8 +62,8 @@ void LayoutBookmarkBarInstructionsView(views::View* bookmark_bar_view,
 
 }  // namespace
 
-#define BRAVE_LAYOUT                                                  \
-  LayoutBookmarkBarInstructionsView(this, bookmark_model_, browser(), \
-                                    button_height, x, max_x, y);
+#define BRAVE_LAYOUT                                                           \
+  LayoutBookmarkBarInstructionsView(this, bookmark_service_->bookmark_model(), \
+                                    browser(), button_height, x, max_x, y);
 #include "src/chrome/browser/ui/views/bookmarks/bookmark_bar_view.cc"
 #undef BRAVE_LAYOUT
