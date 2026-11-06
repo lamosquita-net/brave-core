@@ -5,6 +5,7 @@
 
 // @ts-nocheck TODO(petemill): Define types and remove ts-nocheck
 
+import 'chrome://resources/cr_elements/cr_icon/cr_icon.js';
 import 'chrome://resources/cr_elements/cr_button/cr_button.js';
 import 'chrome://resources/cr_elements/cr_icon_button/cr_icon_button.js';
 import 'chrome://resources/cr_elements/icons.html.js';
@@ -17,6 +18,7 @@ import './brave_sync_configure.js';
 import './brave_sync_setup.js';
 
 import {StatusAction, SyncBrowserProxyImpl} from '/shared/settings/people_page/sync_browser_proxy.js';
+import type {SyncPrefs} from '/shared/settings/people_page/sync_browser_proxy.js';
 import {I18nMixin} from 'chrome://resources/cr_elements/i18n_mixin.js';
 import {assert} from 'chrome://resources/js/assert.js';
 import {PolymerElement} from 'chrome://resources/polymer/v3_0/polymer/polymer_bundled.min.js';
@@ -24,7 +26,10 @@ import {PolymerElement} from 'chrome://resources/polymer/v3_0/polymer/polymer_bu
 import {Route, RouteObserverMixin, Router} from '../router.js';
 
 import {BraveSyncBrowserProxy} from './brave_sync_browser_proxy.js';
+import type {BraveSyncStatus} from './brave_sync_browser_proxy.js';
 import {getTemplate} from './brave_sync_subpage.html.js'
+
+type PageStatus = 'configure' | 'setup' | 'spinner'
 
 const SettingBraveSyncSubpageBase = I18nMixin(RouteObserverMixin(PolymerElement))
 
@@ -99,6 +104,15 @@ class SettingBraveSyncSubpage extends SettingBraveSyncSubpageBase {
       },
     }
   }
+
+  private declare pageStatus_: PageStatus
+  declare syncPrefs: SyncPrefs | undefined
+  declare syncStatus: BraveSyncStatus
+  declare syncCodeDialogType: 'qr' | 'words' | 'input' | 'choose' | null
+  private declare syncDisabledByAdmin_: boolean
+  private declare hasLockedSafeStorage_: boolean
+  private declare hasUnlockedSafeStorageCannotDecryptSeed_: boolean
+  private declare syncSectionDisabled_: boolean
 
   static get observers() {
     return [

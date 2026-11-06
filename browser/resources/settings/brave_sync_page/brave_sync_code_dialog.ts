@@ -83,7 +83,7 @@ export class SettingsBraveSyncCodeDialogElement extends SettingsBraveSyncCodeDia
   private declare syncCodeWordCount_: number;
   private declare hasCopiedSyncCode_: boolean;
   private declare qrCodeImageUrl_: string;
-  private declare hasCopiedSyncCodeTimer_: ReturnType<typeof window.setTimeout>;
+  private hasCopiedSyncCodeTimer_: ReturnType<typeof window.setTimeout>;
 
   syncBrowserProxy_: BraveSyncBrowserProxy = BraveSyncBrowserProxy.getInstance();
 

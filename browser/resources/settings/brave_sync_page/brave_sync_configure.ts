@@ -3,6 +3,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // you can obtain one at https://mozilla.org/MPL/2.0/.
 
+import 'chrome://resources/cr_elements/cr_button/cr_button.js';
+import 'chrome://resources/cr_elements/cr_icon_button/cr_icon_button.js';
+import '../people_page/sync_controls.js';
 import './brave_sync_code_dialog.js';
 import './brave_sync_delete_account_dialog.js';
 
@@ -139,7 +142,7 @@ export class SettingsBraveSyncConfigureElement extends SettingsBraveSyncConfigur
     router.navigateTo((router.getRoutes() as {BRAVE_SYNC: Route}).BRAVE_SYNC);
   }
 
-  async onPermanentlyDeleteSyncAccount_() {
+  onPermanentlyDeleteSyncAccount_() {
     // Clear sync code because after permanently deleting the chain user might
     // use the same page to create a new sync chain without reload. In worse
     // case, we will reload the sync code
