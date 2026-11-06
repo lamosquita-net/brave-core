@@ -10,7 +10,6 @@
 #include "base/feature_list.h"
 #include "base/logging.h"
 #include "base/notreached.h"
-#include "brave/components/brave_shields/content/browser/brave_shields_p3a.h"
 #include "brave/components/brave_shields/core/common/brave_shield_utils.h"
 #include "brave/components/brave_shields/core/common/features.h"
 #include "brave/components/brave_shields/core/common/pref_names.h"
@@ -39,16 +38,6 @@ using content::Referrer;
 namespace brave_shields {
 
 namespace {
-
-void RecordShieldsToggled(PrefService* local_state) {
-  ::brave_shields::MaybeRecordShieldsUsageP3A(::brave_shields::kShutOffShields,
-                                              local_state);
-}
-
-void RecordShieldsSettingChanged(PrefService* local_state) {
-  ::brave_shields::MaybeRecordShieldsUsageP3A(
-      ::brave_shields::kChangedPerSiteShields, local_state);
-}
 
 ContentSetting GetDefaultAllowFromControlType(ControlType type) {
   if (type == ControlType::DEFAULT) {
@@ -212,8 +201,6 @@ void SetBraveShieldsEnabled(HostContentSettingsMap* map,
       ContentSettingsType::BRAVE_SHIELDS,
       // this is 'allow_brave_shields' so 'enable' == 'allow'
       enable ? CONTENT_SETTING_ALLOW : CONTENT_SETTING_BLOCK);
-
-  RecordShieldsToggled(local_state);
 }
 
 void ResetBraveShieldsEnabled(HostContentSettingsMap* map, const GURL& url) {
@@ -268,7 +255,6 @@ void SetAdControlType(HostContentSettingsMap* map,
                                     ContentSettingsPattern::Wildcard(),
                                     ContentSettingsType::BRAVE_TRACKERS,
                                     GetDefaultBlockFromControlType(type));
-  RecordShieldsSettingChanged(local_state);
 }
 
 ControlType GetAdControlType(HostContentSettingsMap* map, const GURL& url) {
@@ -295,14 +281,6 @@ void SetCosmeticFilteringControlType(HostContentSettingsMap* map,
     return;
   }
 
-  ControlType prev_setting = GetCosmeticFilteringControlType(map, url);
-  content_settings::SettingInfo setting_info;
-  base::Value web_setting = map->GetWebsiteSetting(
-      url, GURL(), ContentSettingsType::BRAVE_COSMETIC_FILTERING,
-      &setting_info);
-  bool was_default =
-      web_setting.is_none() || setting_info.primary_pattern.MatchesAllHosts();
-
   map->SetContentSettingCustomScope(
       primary_pattern, ContentSettingsPattern::Wildcard(),
       ContentSettingsType::BRAVE_COSMETIC_FILTERING,
@@ -313,23 +291,6 @@ void SetCosmeticFilteringControlType(HostContentSettingsMap* map,
       ContentSettingsPattern::FromString("https://firstParty/*"),
       ContentSettingsType::BRAVE_COSMETIC_FILTERING,
       GetDefaultAllowFromControlType(type));
-
-  if (!map->IsOffTheRecord()) {
-    // Only report to P3A if not a guest/incognito profile
-    RecordShieldsSettingChanged(local_state);
-    if (url.is_empty()) {
-      // If global setting changed, report global setting and recalulate
-      // domain specific setting counts
-      RecordShieldsAdsSetting(type);
-      RecordShieldsDomainSettingCounts(profile_state, false, type);
-    } else {
-      // If domain specific setting changed, recalculate counts
-      ControlType global_setting = GetCosmeticFilteringControlType(map, GURL());
-      RecordShieldsDomainSettingCountsWithChange(
-          profile_state, false, global_setting,
-          was_default ? nullptr : &prev_setting, type);
-    }
-  }
 }
 
 ControlType GetCosmeticFilteringControlType(HostContentSettingsMap* map,
@@ -444,8 +405,6 @@ void SetCookieControlType(HostContentSettingsMap* map,
   if (!patterns.host_pattern.IsValid()) {
     return;
   }
-
-  RecordShieldsSettingChanged(local_state);
 
   if (patterns.host_pattern == ContentSettingsPattern::Wildcard()) {
     // Default settings.
@@ -567,13 +526,6 @@ void SetFingerprintingControlType(HostContentSettingsMap* map,
     return;
   }
 
-  ControlType prev_setting = GetFingerprintingControlType(map, url);
-  content_settings::SettingInfo setting_info;
-  base::Value web_setting = map->GetWebsiteSetting(
-      url, GURL(), ContentSettingsType::BRAVE_FINGERPRINTING_V2, &setting_info);
-  bool was_default =
-      web_setting.is_none() || setting_info.primary_pattern.MatchesAllHosts();
-
   ContentSetting content_setting;
   if (type == ControlType::DEFAULT || type == ControlType::BLOCK_THIRD_PARTY) {
     type = ControlType::DEFAULT;
@@ -585,22 +537,6 @@ void SetFingerprintingControlType(HostContentSettingsMap* map,
   map->SetContentSettingCustomScope(
       primary_pattern, ContentSettingsPattern::Wildcard(),
       ContentSettingsType::BRAVE_FINGERPRINTING_V2, content_setting);
-  if (!map->IsOffTheRecord()) {
-    // Only report to P3A if not a guest/incognito profile
-    RecordShieldsSettingChanged(local_state);
-    if (url.is_empty()) {
-      // If global setting changed, report global setting and recalulate
-      // domain specific setting counts
-      RecordShieldsFingerprintSetting(type);
-      RecordShieldsDomainSettingCounts(profile_state, true, type);
-    } else {
-      // If domain specific setting changed, recalculate counts
-      ControlType global_setting = GetFingerprintingControlType(map, GURL());
-      RecordShieldsDomainSettingCountsWithChange(
-          profile_state, true, global_setting,
-          was_default ? nullptr : &prev_setting, type);
-    }
-  }
 }
 
 ControlType GetFingerprintingControlType(HostContentSettingsMap* map,
@@ -680,8 +616,6 @@ void SetHttpsUpgradeControlType(HostContentSettingsMap* map,
     map->SetWebsiteSettingDefaultScope(
         secure_url, GURL(), ContentSettingsType::HTTP_ALLOWED, base::Value());
   }
-
-  RecordShieldsSettingChanged(local_state);
 }
 
 ControlType GetHttpsUpgradeControlType(HostContentSettingsMap* map,
@@ -761,7 +695,6 @@ void SetNoScriptControlType(HostContentSettingsMap* map,
       ContentSettingsType::JAVASCRIPT,
       type == ControlType::ALLOW ? CONTENT_SETTING_ALLOW
                                  : CONTENT_SETTING_BLOCK);
-  RecordShieldsSettingChanged(local_state);
 }
 
 ControlType GetNoScriptControlType(HostContentSettingsMap* map,
@@ -787,8 +720,6 @@ void SetForgetFirstPartyStorageEnabled(HostContentSettingsMap* map,
       primary_pattern, ContentSettingsPattern::Wildcard(),
       ContentSettingsType::BRAVE_REMEMBER_1P_STORAGE,
       is_enabled ? CONTENT_SETTING_BLOCK : CONTENT_SETTING_ALLOW);
-  RecordShieldsSettingChanged(local_state);
-  RecordForgetFirstPartySetting(map);
 }
 
 bool GetForgetFirstPartyStorageEnabled(HostContentSettingsMap* map,
@@ -876,7 +807,6 @@ void SetWebcompatFeatureSetting(HostContentSettingsMap* map,
   map->SetContentSettingCustomScope(primary_pattern,
                                     ContentSettingsPattern::Wildcard(),
                                     webcompat_settings_type, setting);
-  RecordShieldsSettingChanged(local_state);
 }
 
 }  // namespace brave_shields

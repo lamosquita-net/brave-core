@@ -13,7 +13,6 @@
 #include "brave/browser/metrics/metrics_reporting_util.h"
 #include "brave/browser/themes/brave_dark_mode_utils.h"
 #include "brave/components/brave_shields/content/browser/ad_block_service.h"
-#include "brave/components/brave_shields/content/browser/brave_shields_p3a.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/l10n/common/prefs.h"
 #include "brave/components/ntp_background_images/browser/view_counter_service.h"
@@ -64,7 +63,6 @@ void RegisterLocalStatePrefs(PrefRegistrySimple* registry) {
       metrics::prefs::kMetricsReportingEnabled,
       base::Value(GetDefaultPrefValueForMetricsReporting()));
 
-  brave_shields::RegisterShieldsP3ALocalPrefs(registry);
 #if !BUILDFLAG(IS_ANDROID)
   BraveWindowTracker::RegisterPrefs(registry);
   dark_mode::RegisterBraveDarkModeLocalStatePrefs(registry);

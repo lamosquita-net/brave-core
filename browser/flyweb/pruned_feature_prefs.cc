@@ -144,6 +144,27 @@ constexpr char kRequestOTRP3A[] = "brave.request_otr.p3a";
 constexpr char kPerfPredictorBandwidthSavedP3A[] =
     "brave.stats.daily_saving_predictions_bytes";
 
+// FlyWeb: P3A removed (3.0.0); clear stored values. Remove after 3.1.
+// Shields P3A: the usage status (local state), the first-report markers and
+// the per-domain setting counts (profile).
+constexpr char kShieldsUsageP3A[] = "brave_shields.p3a_usage";
+constexpr char kShieldsFirstReportedP3A[] =
+    "brave_shields.p3a_first_reported_v2";
+constexpr char kShieldsFirstReportedRevisionP3A[] =
+    "brave_shields.p3a_first_reported_revision";
+constexpr char kShieldsAdsStrictCountP3A[] =
+    "brave_shields.p3a_ads_strict_domain_count";
+constexpr char kShieldsAdsStandardCountP3A[] =
+    "brave_shields.p3a_ads_standard_domain_count";
+constexpr char kShieldsAdsAllowCountP3A[] =
+    "brave_shields.p3a_ads_allow_domain_count";
+constexpr char kShieldsFPStrictCountP3A[] =
+    "brave_shields.p3a_fp_strict_domain_count";
+constexpr char kShieldsFPStandardCountP3A[] =
+    "brave_shields.p3a_fp_standard_domain_count";
+constexpr char kShieldsFPAllowCountP3A[] =
+    "brave_shields.p3a_fp_allow_domain_count";
+
 // Brave's localhost access permission (removed 2026-11; Chromium's native
 // Local Network Access replaces it and the old grants are not carried over):
 // its content setting type.
@@ -207,6 +228,14 @@ constexpr const char* kProfilePrefs[] = {
     kRequestOTRP3A,
     kPerfPredictorBandwidthSavedP3A,
     kTopSiteSuggestionsEnabled,
+    kShieldsFirstReportedP3A,
+    kShieldsFirstReportedRevisionP3A,
+    kShieldsAdsStrictCountP3A,
+    kShieldsAdsStandardCountP3A,
+    kShieldsAdsAllowCountP3A,
+    kShieldsFPStrictCountP3A,
+    kShieldsFPStandardCountP3A,
+    kShieldsFPAllowCountP3A,
     kLocalhostAccessContentSettingExceptions,
     kLocalhostAccessContentSettingPartitionedExceptions,
     kLocalhostAccessContentSettingDefault,
@@ -222,6 +251,7 @@ constexpr const char* kLocalStatePrefs[] = {
     kAdBlockCookieListOptInShown,
     kBraveWallet,
     kBraveSearchConversion,
+    kShieldsUsageP3A,
 };
 
 }  // namespace
@@ -309,6 +339,16 @@ void RegisterPrunedFeatureProfilePrefs(
   // TopSitesProvider
   registry->RegisterBooleanPref(kTopSiteSuggestionsEnabled, true);
 
+  // Shields P3A
+  registry->RegisterBooleanPref(kShieldsFirstReportedP3A, false);
+  registry->RegisterIntegerPref(kShieldsFirstReportedRevisionP3A, 0);
+  registry->RegisterIntegerPref(kShieldsAdsStrictCountP3A, 0);
+  registry->RegisterIntegerPref(kShieldsAdsStandardCountP3A, 0);
+  registry->RegisterIntegerPref(kShieldsAdsAllowCountP3A, 0);
+  registry->RegisterIntegerPref(kShieldsFPStrictCountP3A, 0);
+  registry->RegisterIntegerPref(kShieldsFPStandardCountP3A, 0);
+  registry->RegisterIntegerPref(kShieldsFPAllowCountP3A, 0);
+
   // Brave's localhost access permission
   registry->RegisterDictionaryPref(kLocalhostAccessContentSettingExceptions);
   registry->RegisterDictionaryPref(
@@ -350,6 +390,9 @@ void RegisterPrunedFeatureLocalStatePrefs(PrefRegistrySimple* registry) {
 
   // Brave Search conversion promotion
   registry->RegisterDictionaryPref(kBraveSearchConversion);
+
+  // Shields P3A
+  registry->RegisterIntegerPref(kShieldsUsageP3A, -1);
 }
 
 void ClearPrunedFeatureLocalStatePrefs(PrefService* local_state) {

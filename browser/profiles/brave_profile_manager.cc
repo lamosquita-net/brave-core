@@ -57,7 +57,6 @@ void BraveProfileManager::InitProfileUserPrefs(Profile* profile) {
 #endif
 
   ProfileManager::InitProfileUserPrefs(profile);
-  brave::RecordInitialP3AValues(profile);
   brave::SetDefaultSearchVersion(profile, profile->IsNewProfile());
   brave::SetDefaultThirdPartyCookieBlockValue(profile);
   perf::MaybeEnableBraveFeatureForPerfTesting(profile);

@@ -18,7 +18,6 @@
 #include "brave/components/brave_search/browser/brave_search_default_host.h"
 #include "brave/components/brave_search/common/brave_search_utils.h"
 #include "brave/components/brave_shields/content/browser/brave_farbling_service.h"
-#include "brave/components/brave_shields/content/browser/brave_shields_p3a.h"
 #include "brave/components/brave_shields/core/common/pref_names.h"
 #include "brave/components/brave_sync/brave_sync_prefs.h"
 #include "brave/components/constants/pref_names.h"
@@ -140,9 +139,6 @@ void RegisterProfilePrefsForMigration(
   // Added 2023-11
   brave_sync::Prefs::RegisterProfilePrefsForMigration(registry);
 
-  // Added 2024-04
-  brave_shields::RegisterShieldsP3AProfilePrefsForMigration(registry);
-
   // Added 2024-07
   registry->RegisterBooleanPref(kHangoutsEnabled, false);
 
@@ -171,8 +167,6 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
   registry->RegisterBooleanPref(kTabMuteIndicatorNotClickable, false);
 
   brave_sync::Prefs::RegisterProfilePrefs(registry);
-
-  brave_shields::RegisterShieldsP3AProfilePrefs(registry);
 
   // TODO(shong): Migrate this to local state also and guard in ENABLE_WIDEVINE.
   // We don't need to display "don't ask widevine prompt option" in settings

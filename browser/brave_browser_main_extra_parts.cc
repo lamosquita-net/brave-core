@@ -7,7 +7,6 @@
 
 #include "base/metrics/histogram_macros.h"
 #include "brave/browser/brave_browser_process_impl.h"
-#include "brave/components/brave_shields/content/browser/brave_shields_p3a.h"
 #include "components/metrics/metrics_pref_names.h"
 #include "components/prefs/pref_service.h"
 #include "services/network/public/cpp/shared_url_loader_factory.h"
@@ -31,9 +30,6 @@ void RecordInitialP3AValues() {
     RecordImporterP3A(user_data_importer::ImporterType::TYPE_UNKNOWN);
   }
 #endif  // !BUILDFLAG(IS_ANDROID)
-
-  brave_shields::MaybeRecordShieldsUsageP3A(brave_shields::kNeverClicked,
-                                            g_browser_process->local_state());
 
   // Record crash reporting status stats.
   const bool crash_reports_enabled = g_browser_process->local_state()->

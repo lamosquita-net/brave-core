@@ -9,7 +9,6 @@
 #include "brave/browser/search/ntp_utils.h"
 #include "brave/browser/themes/brave_dark_mode_utils.h"
 #include "brave/browser/translate/brave_translate_prefs_migration.h"
-#include "brave/components/brave_shields/content/browser/brave_shields_p3a.h"
 #include "brave/components/brave_sync/brave_sync_prefs.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/ntp_background_images/browser/view_counter_service.h"
@@ -126,8 +125,6 @@ void MigrateObsoleteProfilePrefs(PrefService* profile_prefs,
   // Added 2023-09
   ntp_background_images::ViewCounterService::MigrateObsoleteProfilePrefs(
       profile_prefs);
-
-  brave_shields::MigrateObsoleteProfilePrefs(profile_prefs);
 
   // Added 2024-07
   profile_prefs->ClearPref(kHangoutsEnabled);

@@ -10,7 +10,7 @@
 #include <utility>
 
 #include "base/memory/raw_ptr.h"
-#include "brave/components/brave_shields/content/browser/brave_shields_p3a.h"
+#include "brave/components/brave_shields/content/browser/brave_shields_util.h"
 #include "brave/components/brave_shields/core/common/brave_shield_utils.h"
 #include "brave/components/constants/brave_constants.h"
 #include "brave/components/constants/pref_names.h"
@@ -26,14 +26,6 @@
 using brave_shields::ControlType;
 
 namespace brave {
-
-void RecordInitialP3AValues(Profile* profile) {
-  if (profile->IsRegularProfile()) {
-    brave_shields::MaybeRecordInitialShieldsSettings(
-        profile->GetPrefs(),
-        HostContentSettingsMapFactory::GetForProfile(profile));
-  }
-}
 
 void SetDefaultSearchVersion(Profile* profile, bool is_new_profile) {
   const PrefService::Preference* pref_default_search_version =
