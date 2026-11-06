@@ -1,31 +1,54 @@
 diff --git a/device/gamepad/game_controller_data_fetcher_mac.mm b/device/gamepad/game_controller_data_fetcher_mac.mm
-index b2ad408aa9c8736fbaa64fd02e6d6e4bf8b03182..5737c8933d45d909fc4110815d11811b60d6d927 100644
+index 2440fe56277d17f20142f0e7645c045cb968f4da..24b89582dafc8e9601ef27887b16c9e2502a0f23 100644
 --- a/device/gamepad/game_controller_data_fetcher_mac.mm
 +++ b/device/gamepad/game_controller_data_fetcher_mac.mm
-@@ -37,14 +37,18 @@ bool IsSupported(GCController* controller) {
+@@ -136,27 +136,31 @@ GameControllerMacOutcome GetSupportOutcome(GCController* controller) {
    // applications to detect the new devices. These gamepads are already
    // supported in Chrome through other data fetchers and must be blocked here to
    // avoid double-enumeration.
 -  NSString* product_category = controller.productCategory;
--  if ([product_category isEqualToString:@"HID"] ||
--      [product_category isEqualToString:@"Xbox One"] ||
--      [product_category isEqualToString:@"DualShock 4"] ||
--      [product_category isEqualToString:@"DualSense"] ||
--      [product_category isEqualToString:@"Switch Pro Controller"] ||
+-  if ([product_category isEqualToString:@"Switch Pro Controller"] ||
 -      [product_category isEqualToString:@"Nintendo Switch JoyCon (L/R)"]) {
--    return false;
+-    return GameControllerMacOutcome::kIsNintendoGamepad;
+-  }
 +  // FlyWeb (LOCAL-8): productCategory is macOS 10.15+ (unrecognized selector
 +  // on 10.14 when a gamepad connects). As in 116.
 +  if (@available(macOS 10.15, *)) {
 +    NSString* product_category = controller.productCategory;
-+    if ([product_category isEqualToString:@"HID"] ||
-+        [product_category isEqualToString:@"Xbox One"] ||
-+        [product_category isEqualToString:@"DualShock 4"] ||
-+        [product_category isEqualToString:@"DualSense"] ||
-+        [product_category isEqualToString:@"Switch Pro Controller"] ||
++    if ([product_category isEqualToString:@"Switch Pro Controller"] ||
 +        [product_category isEqualToString:@"Nintendo Switch JoyCon (L/R)"]) {
-+      return false;
++      return GameControllerMacOutcome::kIsNintendoGamepad;
++    }
+ 
+-  if ([product_category isEqualToString:@"HID"]) {
+-    return GameControllerMacOutcome::kIsHidDevice;
+-  }
++    if ([product_category isEqualToString:@"HID"]) {
++      return GameControllerMacOutcome::kIsHidDevice;
++    }
+ 
+-  if (!base::FeatureList::IsEnabled(
+-          features::kXboxUseGameControllerDataFetcherMac) &&
+-      [product_category isEqualToString:@"Xbox One"]) {
+-    return GameControllerMacOutcome::kXboxFeatureDisabled;
+-  }
++    if (!base::FeatureList::IsEnabled(
++            features::kXboxUseGameControllerDataFetcherMac) &&
++        [product_category isEqualToString:@"Xbox One"]) {
++      return GameControllerMacOutcome::kXboxFeatureDisabled;
++    }
+ 
+-  if (!base::FeatureList::IsEnabled(
+-          features::kPlayStationUseGameControllerDataFetcherMac) &&
+-      ([product_category isEqualToString:@"DualShock 4"] ||
+-       [product_category isEqualToString:@"DualSense"])) {
+-    return GameControllerMacOutcome::kPlayStationFeatureDisabled;
++    if (!base::FeatureList::IsEnabled(
++            features::kPlayStationUseGameControllerDataFetcherMac) &&
++        ([product_category isEqualToString:@"DualShock 4"] ||
++         [product_category isEqualToString:@"DualSense"])) {
++      return GameControllerMacOutcome::kPlayStationFeatureDisabled;
 +    }
    }
  
-   return true;
+   return GameControllerMacOutcome::kSuccess;
