@@ -7,7 +7,11 @@
 
 #include <utility>
 
+#include "base/check.h"
 #include "base/files/file_path.h"
+#include "base/functional/bind.h"
+#include "base/functional/callback.h"
+#include "base/logging.h"
 #include "brave/browser/ntp_background/constants.h"
 #include "brave/browser/ntp_background/custom_background_file_manager.h"
 #include "brave/browser/ntp_background/ntp_background_prefs.h"
