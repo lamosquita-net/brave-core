@@ -4,9 +4,13 @@
 # You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import argparse
+import json
 import os
+import re
 
 import override_utils
+
+from brave_chromium_utils import get_webui_overridden_but_referenced_files
 
 
 def is_gen_brave_dir(out_dir):
@@ -16,12 +20,25 @@ def is_gen_brave_dir(out_dir):
     return '/'.join(dirs[:2]) == GEN_BRAVE or '/'.join(dirs[1:3]) == GEN_BRAVE
 
 
+# WebUI "-chromium" overrides (see //brave/chromium_src/tools/grit/
+# preprocess_if_expr.py): compile the kept upstream foo-chromium.ts too.
+@override_utils.override_function(globals())
+def _write_tsconfig_json(original_function, gen_dir, tsconfig, tsconfig_file):
+    in_files = tsconfig['files']
+    in_folder = os.path.join(os.getcwd(), gen_dir)
+    tsconfig['files'].extend(
+        list(get_webui_overridden_but_referenced_files(in_folder, in_files)))
+    original_function(gen_dir, tsconfig, tsconfig_file)
+
+
 @override_utils.override_function(globals())
 def main(original_function, argv):
     # Parse only the arguments used by this override
     parser = argparse.ArgumentParser()
     parser.add_argument('--root_dir', required=True)
     parser.add_argument('--out_dir', required=True)
+    parser.add_argument('--output_suffix', required=True)
+    parser.add_argument('--gen_dir', required=True)
     parser.add_argument('--in_files', nargs='*')
     args, _ = parser.parse_known_args(argv)
 
@@ -34,9 +51,26 @@ def main(original_function, argv):
             #
             # "error TS5055: Cannot write file '...' because it would overwrite
             # input file."
-            if args.root_dir != args.out_dir and is_gen_brave_dir(args.out_dir):
+            if args.root_dir != args.out_dir and is_gen_brave_dir(
+                    args.out_dir):
                 to_check = os.path.join(args.out_dir, pathname + '.d.ts')
                 if os.path.exists(to_check):
                     os.remove(to_check)
 
     original_function(argv)
+
+    # Add the compiled foo-chromium.js files to the manifest, so that they are
+    # packed (grd) and minified alongside the overriding foo.js.
+    manifest_path = os.path.join(args.gen_dir,
+                                 f'{args.output_suffix}_manifest.json')
+    if os.path.exists(manifest_path) and args.in_files is not None:
+        with open(manifest_path, encoding='utf-8') as f:
+            manifest = json.load(f)
+
+        preprocess_dir = os.path.join(args.gen_dir, 'preprocessed')
+        for override_file in get_webui_overridden_but_referenced_files(
+                preprocess_dir, args.in_files):
+            manifest['files'].append(re.sub(r'\.ts$', '.js', override_file))
+
+        with open(manifest_path, 'w', encoding='utf-8') as f:
+            json.dump(manifest, f)
