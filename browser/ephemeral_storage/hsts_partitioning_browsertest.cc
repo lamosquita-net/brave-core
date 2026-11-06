@@ -6,12 +6,9 @@
 #include "base/path_service.h"
 #include "base/strings/pattern.h"
 #include "base/strings/strcat.h"
-#include "base/strings/string_util.h"
-#include "base/strings/stringprintf.h"
 #include "base/test/bind.h"
 #include "brave/components/brave_shields/content/browser/brave_shields_util.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/common/chrome_paths.h"
 #include "chrome/test/base/in_process_browser_test.h"
@@ -27,8 +24,10 @@
 #include "services/network/public/cpp/network_switches.h"
 #include "services/network/public/mojom/network_context.mojom.h"
 #include "testing/gmock/include/gmock/gmock.h"
+#include "third_party/abseil-cpp/absl/strings/str_format.h"
 #include "url/gurl.h"
 #include "url/origin.h"
+#include "url/url_constants.h"
 
 namespace {
 
@@ -77,10 +76,9 @@ class HSTSPartitioningBrowserTestBase : public InProcessBrowserTest {
     mock_cert_verifier_.SetUpCommandLine(command_line);
     command_line->AppendSwitchASCII(
         network::switches::kHostResolverRules,
-        base::StringPrintf("MAP *:80 127.0.0.1:%d,"
-                           "MAP *:443 127.0.0.1:%d",
-                           embedded_test_server()->port(),
-                           https_server_.port()));
+        absl::StrFormat("MAP *:80 127.0.0.1:%d,"
+                        "MAP *:443 127.0.0.1:%d",
+                        embedded_test_server()->port(), https_server_.port()));
   }
 
   void SetUpOnMainThread() override {
@@ -129,11 +127,18 @@ class HSTSPartitioningBrowserTestBase : public InProcessBrowserTest {
   }
 
   void ExpectPreloadWorks() {
+    GURL::Replacements upgrade_to_https;
+    upgrade_to_https.SetSchemeStr(url::kHttpsScheme);
     for (const auto* preloaded_host : {"brave.com", "accounts.google.com"}) {
       GURL url(base::StrCat({"http://", preloaded_host, "/simple.html"}));
       auto* rfh = ui_test_utils::NavigateToURL(browser(), url);
       ASSERT_TRUE(rfh);
-      EXPECT_TRUE(rfh->GetLastCommittedURL().SchemeIsCryptographic());
+      // Compare the whole URL rather than just the scheme: a bare
+      // SchemeIsCryptographic() check can't tell an un-upgraded navigation
+      // apart from one that never committed and left the previous document in
+      // place.
+      EXPECT_EQ(rfh->GetLastCommittedURL(),
+                url.ReplaceComponents(upgrade_to_https));
     }
   }
 
@@ -146,19 +151,34 @@ class HSTSPartitioningBrowserTestBase : public InProcessBrowserTest {
     run_loop.Run();
   }
 
-  bool NetworkContextIsHSTSActiveForHost(const std::string& host) {
+  bool NetworkContextIsHSTSActiveForHostWithTopLevelNav(const std::string& host,
+                                                        bool is_top_level_nav) {
     content::StoragePartition* partition =
         browser()->GetProfile()->GetDefaultStoragePartition();
     base::RunLoop run_loop;
     bool result = false;
     partition->GetNetworkContext()->IsHSTSActiveForHost(
-        host,
+        host, is_top_level_nav,
         base::BindLambdaForTesting([&run_loop, &result](bool is_hsts_active) {
           result = is_hsts_active;
           run_loop.Quit();
         }));
     run_loop.Run();
     return result;
+  }
+
+  bool NetworkContextIsHSTSActiveForHost(const std::string& host) {
+    if (!NetworkContextIsHSTSActiveForHostWithTopLevelNav(
+            host,
+            /*is_top_level_nav=*/true)) {
+      return false;
+    }
+    if (!NetworkContextIsHSTSActiveForHostWithTopLevelNav(
+            host,
+            /*is_top_level_nav=*/false)) {
+      return false;
+    }
+    return true;
   }
 
   base::DictValue NetworkContextGetHSTSState(const std::string& host) {
@@ -539,7 +559,7 @@ class HSTSSameDomainPartitionUsesOldFormatBrowserTest
   static bool IsPreTest() {
     const ::testing::TestInfo* const test_info =
         ::testing::UnitTest::GetInstance()->current_test_info();
-    return base::StartsWith(test_info->name(), "PRE_");
+    return std::string_view(test_info->name()).starts_with("PRE_");
   }
 
  private:

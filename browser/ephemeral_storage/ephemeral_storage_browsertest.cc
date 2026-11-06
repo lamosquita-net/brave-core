@@ -456,7 +456,7 @@ HostContentSettingsMap* EphemeralStorageBrowserTest::content_settings() {
 
 network::mojom::CookieManager* EphemeralStorageBrowserTest::CookieManager() {
   return browser()
-      ->profile()
+      ->GetProfile()
       ->GetDefaultStoragePartition()
       ->GetCookieManagerForBrowserProcess();
 }

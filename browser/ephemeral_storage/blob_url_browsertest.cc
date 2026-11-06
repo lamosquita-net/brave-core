@@ -5,13 +5,18 @@
 
 #include <string_view>
 
+#include "base/location.h"
 #include "base/memory/raw_ptr.h"
+#include "base/memory/scoped_refptr.h"
+#include "base/run_loop.h"
 #include "base/strings/pattern.h"
 #include "base/strings/string_number_conversions.h"
+#include "base/task/single_thread_task_runner.h"
+#include "base/test/test_timeouts.h"
+#include "base/time/time.h"
 #include "brave/browser/ephemeral_storage/ephemeral_storage_browsertest.h"
 #include "brave/components/brave_shields/content/browser/brave_shields_util.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/tabs/tab_enums.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/test/base/ui_test_utils.h"
@@ -21,7 +26,6 @@
 #include "content/public/test/browser_test_utils.h"
 #include "content/public/test/test_frame_navigation_observer.h"
 #include "content/public/test/test_navigation_observer.h"
-#include "content/public/test/test_utils.h"
 #include "extensions/buildflags/buildflags.h"
 #include "net/base/features.h"
 #include "net/test/embedded_test_server/embedded_test_server.h"
@@ -68,12 +72,19 @@ constexpr char kFetchBlobViaWorkerScript[] = R"(
   });
 )";
 
+void NonBlockingDelay(base::TimeDelta delay) {
+  base::RunLoop run_loop(base::RunLoop::Type::kNestableTasksAllowed);
+  base::SingleThreadTaskRunner::GetCurrentDefault()->PostDelayedTask(
+      FROM_HERE, run_loop.QuitWhenIdleClosure(), delay);
+  run_loop.Run();
+}
+
 }  // namespace
 
 class BlobUrlBrowserTestBase : public EphemeralStorageBrowserTest {
  public:
   struct RenderFrameHostBlobData {
-    raw_ptr<content::RenderFrameHost> rfh;
+    raw_ptr<content::RenderFrameHost, DanglingUntriaged> rfh;
     GURL blob_url;
   };
   using FramesWithRegisteredBlobs = std::vector<RenderFrameHostBlobData>;
@@ -85,17 +96,33 @@ class BlobUrlBrowserTestBase : public EphemeralStorageBrowserTest {
                     .ExtractString());
   }
 
+  // Fetches `url` using the Fetch API only. Unlike FetchBlob() the result is
+  // not cross-checked against a fetch from a dedicated worker, which makes this
+  // usable while a blob URL revocation is still in flight and the two fetches
+  // may legitimately disagree.
+  static content::EvalJsResult FetchBlobViaFetchApi(
+      content::RenderFrameHost* render_frame_host,
+      const GURL& url) {
+    return EvalJs(render_frame_host,
+                  content::JsReplace(kFetchBlobScript, url.spec()));
+  }
+
   static content::EvalJsResult FetchBlob(
       content::RenderFrameHost* render_frame_host,
       const GURL& url) {
-    auto fetch_result = EvalJs(
-        render_frame_host, content::JsReplace(kFetchBlobScript, url.spec()));
+    auto fetch_result = FetchBlobViaFetchApi(render_frame_host, url);
     auto fetch_via_webworker_result = EvalJs(
         render_frame_host,
         content::JsReplace(kFetchBlobViaWorkerScript,
                            content::JsReplace(kWorkerScript, url.spec())));
-    EXPECT_EQ(fetch_result.value, fetch_via_webworker_result.value);
-    EXPECT_EQ(fetch_result.error, fetch_via_webworker_result.error);
+    if (fetch_via_webworker_result.is_ok()) {
+      EXPECT_EQ(fetch_result,
+                std::move(fetch_via_webworker_result).TakeValue());
+    } else {
+      EXPECT_THAT(fetch_result,
+                  content::EvalJsResult::ErrorIs(
+                      testing::Eq(fetch_via_webworker_result.ExtractError())));
+    }
     return fetch_result;
   }
 
@@ -113,10 +140,10 @@ class BlobUrlBrowserTestBase : public EphemeralStorageBrowserTest {
       const FramesWithRegisteredBlobs& frames_with_registered_blobs,
       size_t rfh1_idx,
       size_t rfh2_idx) {
-    EXPECT_EQ(std::to_string(rfh2_idx),
+    EXPECT_EQ(base::NumberToString(rfh2_idx),
               FetchBlob(frames_with_registered_blobs[rfh1_idx].rfh,
                         frames_with_registered_blobs[rfh2_idx].blob_url));
-    EXPECT_EQ(std::to_string(rfh1_idx),
+    EXPECT_EQ(base::NumberToString(rfh1_idx),
               FetchBlob(frames_with_registered_blobs[rfh2_idx].rfh,
                         frames_with_registered_blobs[rfh1_idx].blob_url));
   }
@@ -141,9 +168,9 @@ class BlobUrlBrowserTestBase : public EphemeralStorageBrowserTest {
     for (size_t idx = 0; idx < rfhs.size(); ++idx) {
       auto* rfh = rfhs[idx];
       // Register blob.
-      GURL blob_url = RegisterBlob(rfh, std::to_string(idx));
+      GURL blob_url = RegisterBlob(rfh, base::NumberToString(idx));
       // Blob should be fetchable from the same frame.
-      EXPECT_EQ(std::to_string(idx), FetchBlob(rfh, blob_url));
+      EXPECT_EQ(base::NumberToString(idx), FetchBlob(rfh, blob_url));
 
       frames_with_registered_blobs.push_back({rfh, std::move(blob_url)});
     }
@@ -183,7 +210,7 @@ class BlobUrlBrowserTestBase : public EphemeralStorageBrowserTest {
     for (size_t idx = 0; idx < a_com2_registered_blobs.size(); ++idx) {
       auto* rfh = a_com2_registered_blobs[idx].rfh.get();
       // All blobs from another a.com tab should be avilable.
-      EXPECT_EQ(std::to_string(idx),
+      EXPECT_EQ(base::NumberToString(idx),
                 FetchBlob(rfh, a_com_registered_blobs[idx].blob_url));
 
       // No blobs from b.com should be available.
@@ -198,10 +225,34 @@ class BlobUrlBrowserTestBase : public EphemeralStorageBrowserTest {
     browser()->tab_strip_model()->CloseWebContentsAt(1,
                                                      TabCloseTypes::CLOSE_NONE);
     EXPECT_EQ(previous_tab_count - 1, browser()->tab_strip_model()->count());
-    content::RunAllTasksUntilIdle();
+    // Closing the tab destroys its RenderFrameHosts in the browser process
+    // right away, but the blob URL mappings are owned by the browser-side
+    // BlobURLStoreImpl objects, which remove their mappings from
+    // BlobUrlRegistry only when they are destroyed
+    // (BlobURLStoreImpl::~BlobURLStoreImpl). Each of those objects is kept
+    // alive by its mojo receiver, so it is destroyed only after the closed
+    // document is torn down in its renderer, which resets the BlobURLStore
+    // remote, and the resulting pipe disconnect is processed in the browser.
+    // Nothing on the browser side reports that renderer-side teardown, so poll
+    // until the blob URLs actually become unfetchable instead of assuming the
+    // revocation already happened. base::test::RunUntil() can't be used here
+    // because EvalJs() spins a nested run loop (see
+    // docs/best-practices/testing-async.md).
+    const base::TimeTicks deadline =
+        base::TimeTicks::Now() + TestTimeouts::action_max_timeout();
     for (size_t idx = 0; idx < a_com2_registered_blobs.size(); ++idx) {
       auto* rfh = a_com2_registered_blobs[idx].rfh.get();
-      EXPECT_EQ("error", FetchBlob(rfh, a_com_registered_blobs[idx].blob_url));
+      const GURL& blob_url = a_com_registered_blobs[idx].blob_url;
+      SCOPED_TRACE(blob_url.spec());
+      while (FetchBlobViaFetchApi(rfh, blob_url) != "error") {
+        ASSERT_LT(base::TimeTicks::Now(), deadline)
+            << "Timeout waiting for the blob URL of the closed tab to be "
+               "revoked";
+        NonBlockingDelay(base::Milliseconds(10));
+      }
+      // The blob URL is revoked, so it must be unavailable from a dedicated
+      // worker as well.
+      EXPECT_EQ("error", FetchBlob(rfh, blob_url));
     }
 
     // Ensure blobs are navigatable in same iframes.
@@ -246,20 +297,24 @@ IN_PROC_BROWSER_TEST_F(BlobUrlPartitionEnabledBrowserTest,
       RegisterBlobs(a_site_ephemeral_storage_url_);
 
   extensions::TestExtensionDir test_extension_dir;
+  // The extension's host permissions are what authorize the cross-origin blob
+  // fetch, so the test script must run in the extension page's main world (no
+  // isolated world). MV3 disallows relaxing the page CSP with 'unsafe-eval',
+  // but EvalJs injects a classic script (not eval()), so the default MV3 CSP
+  // is sufficient.
   test_extension_dir.WriteManifest(R"({
     "name": "Test",
-    "manifest_version": 2,
+    "manifest_version": 3,
     "version": "0.1",
-    "permissions": ["webRequest", "*://a.com/*", "*://b.com/*"],
-    "content_security_policy":
-      "script-src 'self' 'unsafe-eval'; object-src 'self'"
+    "host_permissions": ["*://a.com/*", "*://b.com/*"]
   })");
   test_extension_dir.WriteFile(FILE_PATH_LITERAL("empty.html"), "");
 
-  extensions::ChromeTestExtensionLoader extension_loader(browser()->GetProfile());
+  extensions::ChromeTestExtensionLoader extension_loader(
+      browser()->GetProfile());
   scoped_refptr<const extensions::Extension> extension =
       extension_loader.LoadExtension(test_extension_dir.UnpackedPath());
-  const GURL url = extension->GetResourceURL("/empty.html");
+  const GURL url = extension->ResolveExtensionURL("/empty.html");
   auto* extension_rfh = ui_test_utils::NavigateToURLWithDisposition(
       browser(), url, WindowOpenDisposition::NEW_FOREGROUND_TAB,
       ui_test_utils::BROWSER_TEST_WAIT_FOR_LOAD_STOP);
