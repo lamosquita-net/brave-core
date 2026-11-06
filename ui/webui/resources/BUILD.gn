@@ -47,15 +47,21 @@ if (include_polymer) {
         "br_elements/br_toolbar/br_toolbar_search_field.ts",
       ]
 
-      # All the cr_overrides we add should be included in the build.
-      foreach(cr_override, brave_override_cr_elements) {
-        web_component_files += [ "cr_elements/$cr_override/$cr_override.ts" ]
-      }
-
       ts_files = [
         "polymer_overriding.ts",
         "lit_overriding.ts",
       ]
+
+      # All the cr_overrides we add should be included in the build. In
+      # Chromium 156 cr-button and cr-toggle are Lit elements, so the
+      # overrides are Lit too: the template lives in a hand-written .html.ts
+      # (no html_to_wrapper) and they go in ts_files, like upstream's.
+      foreach(cr_override, brave_override_cr_elements) {
+        ts_files += [
+          "cr_elements/$cr_override/$cr_override.html.ts",
+          "cr_elements/$cr_override/$cr_override.ts",
+        ]
+      }
     }
 
     if (include_polymer) {
@@ -67,6 +73,11 @@ if (include_polymer) {
     }
 
     html_to_wrapper_template = "detect"
+
+    # FlyWeb: the Polymer overrides (polymer_overriding.ts, br_toolbar) are
+    # untyped (@ts-nocheck) and would fail Chromium 156's type-aware ESLint
+    # (no-explicit-any etc.); 1.98 exempts this folder in a patch instead.
+    enable_type_aware_eslint_checks = false
 
     ts_composite = true
     generate_grdp = true
