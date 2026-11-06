@@ -40,11 +40,9 @@
 #include "extensions/browser/crx_installer.h"
 #include "chrome/browser/extensions/extension_install_prompt.h"
 #include "chrome/browser/extensions/extension_service.h"
-#include "chrome/common/extensions/extension_constants.h"
 #include "components/crx_file/crx_verifier.h"
 #include "extensions/browser/crx_file_info.h"
 #include "extensions/browser/extension_dialog_auto_confirm.h"
-#include "extensions/browser/extension_system.h"
 #include "extensions/browser/test_extension_registry_observer.h"
 #endif
 
@@ -73,11 +71,9 @@ class BraveThemeServiceTest : public InProcessBrowserTest {
     extensions::TestExtensionRegistryObserver observer(
         extensions::ExtensionRegistry::Get(browser()->GetProfile()));
 
-    auto installer = extensions::CrxInstaller::CreateSilent(
-        extensions::ExtensionSystem::Get(browser()->GetProfile())
-            ->extension_service());
+    auto installer =
+        extensions::CrxInstaller::CreateSilent(browser()->GetProfile());
     installer->set_allow_silent_install(true);
-    installer->set_install_cause(extension_misc::INSTALL_CAUSE_USER_DOWNLOAD);
     installer->set_creation_flags(extensions::Extension::FROM_WEBSTORE);
 
     installer->InstallCrxFile(
@@ -89,6 +85,11 @@ class BraveThemeServiceTest : public InProcessBrowserTest {
 };
 
 namespace {
+
+bool IsNativeUiDark() {
+  return ui::NativeTheme::GetInstanceForNativeUi()->preferred_color_scheme() ==
+         ui::NativeTheme::PreferredColorScheme::kDark;
+}
 
 class TestNativeThemeObserver : public ui::NativeThemeObserver {
  public:
@@ -184,29 +185,25 @@ IN_PROC_BROWSER_TEST_F(BraveThemeServiceTest, ThemeObserverTest) {
 }
 
 IN_PROC_BROWSER_TEST_F(BraveThemeServiceTest, SystemThemeChangeTest) {
-  const bool initial_mode =
-      ui::NativeTheme::GetInstanceForNativeUi()->ShouldUseDarkColors();
+  const bool initial_mode = IsNativeUiDark();
 
   // Change to light.
   dark_mode::SetBraveDarkModeType(
       dark_mode::BraveDarkModeType::BRAVE_DARK_MODE_TYPE_LIGHT);
-  EXPECT_FALSE(
-      ui::NativeTheme::GetInstanceForNativeUi()->ShouldUseDarkColors());
+  EXPECT_FALSE(IsNativeUiDark());
 
   dark_mode::SetBraveDarkModeType(
       dark_mode::BraveDarkModeType::BRAVE_DARK_MODE_TYPE_DARK);
-  EXPECT_TRUE(ui::NativeTheme::GetInstanceForNativeUi()->ShouldUseDarkColors());
+  EXPECT_TRUE(IsNativeUiDark());
 
   dark_mode::SetBraveDarkModeType(
       dark_mode::BraveDarkModeType::BRAVE_DARK_MODE_TYPE_LIGHT);
-  EXPECT_FALSE(
-      ui::NativeTheme::GetInstanceForNativeUi()->ShouldUseDarkColors());
+  EXPECT_FALSE(IsNativeUiDark());
 
   if (dark_mode::SystemDarkModeEnabled()) {
     dark_mode::SetBraveDarkModeType(
         dark_mode::BraveDarkModeType::BRAVE_DARK_MODE_TYPE_DEFAULT);
-    EXPECT_EQ(initial_mode,
-              ui::NativeTheme::GetInstanceForNativeUi()->ShouldUseDarkColors());
+    EXPECT_EQ(initial_mode, IsNativeUiDark());
   }
 }
 
