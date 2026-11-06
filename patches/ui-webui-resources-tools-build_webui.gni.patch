@@ -28,3 +28,14 @@ index a540948cca3c88e9360357e216f4ec36df6cde88..98d1cd5d18f05fa945b92e09d38c403d
      }
    }
  
+@@ -318,6 +330,10 @@ template("build_webui") {
+     }
+   }
+ 
++  # Only read by the lint_ts and html_to_wrapper branches; a target without
++  # them (enable_type_aware_eslint_checks = false) would trip GN.
++  not_needed([ "is_ash_webui" ])
++
+   # Determine if there is a Lit and/or Polymer dependency. This information is
+   # used for determining the default template for html_to_wrapper() as well as
+   # the default tsconfig file for ts_library().
