@@ -4,6 +4,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "chrome/browser/profiles/profile_io_data.h"
+
+#include <string_view>
+
 #include "brave/components/constants/url_constants.h"
 
 #define IsHandledProtocol IsHandledProtocol_ChromiumImpl
@@ -12,9 +15,10 @@
 #undef IsHandledURL
 #undef IsHandledProtocol
 
-bool ProfileIOData::IsHandledProtocol(const std::string& scheme) {
-  if (scheme == kBraveUIScheme)
+bool ProfileIOData::IsHandledProtocol(std::string_view scheme) {
+  if (scheme == kBraveUIScheme) {
     return true;
+  }
   return IsHandledProtocol_ChromiumImpl(scheme);
 }
 
@@ -27,5 +31,5 @@ bool ProfileIOData::IsHandledURL(const GURL& url) {
     // We handle error cases.
     return true;
   }
-  return IsHandledProtocol(url.scheme());
+  return IsHandledProtocol(url.GetScheme());
 }
