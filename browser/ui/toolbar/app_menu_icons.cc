@@ -28,7 +28,6 @@ const std::map<int, const gfx::VectorIcon&>& GetCommandIcons() {
           {IDC_NEW_WINDOW, kLeoWindowTabNewIcon},
           {IDC_NEW_INCOGNITO_WINDOW, kLeoWindowTabPrivateIcon},
           {IDC_SHOW_BRAVE_REWARDS, kLeoProductBatOutlineIcon},
-          {IDC_SHOW_BRAVE_WALLET, kLeoProductBraveWalletIcon},
           {IDC_TOGGLE_AI_CHAT, kLeoProductBraveLeoIcon},
           {IDC_PASSWORDS_AND_AUTOFILL_MENU, kLeoKeyIcon},
           {IDC_RECENT_TABS_MENU, kLeoHistoryIcon},

@@ -10,11 +10,4 @@ chrome.test.runTests([
       chrome.test.succeed();
     }
   },
-  function notBraveShieldsHasNoWalletAccess() {
-    if (!chrome.braveWallet) {
-      chrome.test.succeed();
-    } else {
-      chrome.test.fail();
-    }
-  },
 ]);

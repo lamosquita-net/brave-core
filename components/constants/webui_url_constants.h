@@ -29,34 +29,9 @@ inline constexpr char kBraveTipPanelHost[] = "tip-panel.top-chrome";
 inline constexpr char kBraveNewTabJS[] = "brave_new_tab.js";
 inline constexpr char kBraveUIAdblockURL[] = "chrome://adblock/";
 inline constexpr char kBraveUIWebcompatReporterURL[] = "chrome://webcompat/";
-inline constexpr char kBraveUIWalletURL[] = "chrome://wallet/";
-inline constexpr char kBraveUIWalletOnboardingURL[] =
-    "flyweb://wallet/crypto/onboarding";
-inline constexpr char kBraveUIWalletAccountCreationURL[] =
-    "flyweb://wallet/crypto/accounts/add-account/create/";
-inline constexpr char kBraveUIWalletPanelURL[] =
-    "chrome://wallet-panel.top-chrome/";
-inline constexpr char kWalletPanelHost[] = "wallet-panel.top-chrome";
-inline constexpr char kBraveUIWalletPageURL[] = "chrome://wallet/";
-inline constexpr char kWalletPageHost[] = "wallet";
 inline constexpr char kExtensionSettingsURL[] = "flyweb://settings/extensions";
-inline constexpr char kWalletSettingsURL[] = "flyweb://settings/wallet";
 inline constexpr char kBraveSyncPath[] = "braveSync";
 inline constexpr char kBraveSyncSetupPath[] = "braveSync/setup";
-inline constexpr char kUntrustedLedgerHost[] = "ledger-bridge";
-inline constexpr char kUntrustedLedgerURL[] =
-    "chrome-untrusted://ledger-bridge/";
-inline constexpr char kUntrustedNftHost[] = "nft-display";
-inline constexpr char kUntrustedNftURL[] = "chrome-untrusted://nft-display/";
-inline constexpr char kUntrustedLineChartHost[] = "line-chart-display";
-inline constexpr char kUntrustedLineChartURL[] =
-    "chrome-untrusted://line-chart-display/";
-inline constexpr char kUntrustedMarketHost[] = "market-display";
-inline constexpr char kUntrustedMarketURL[] =
-    "chrome-untrusted://market-display/";
-inline constexpr char kUntrustedTrezorHost[] = "trezor-bridge";
-inline constexpr char kUntrustedTrezorURL[] =
-    "chrome-untrusted://trezor-bridge/";
 inline constexpr char kShieldsPanelURL[] = "chrome://brave-shields.top-chrome";
 inline constexpr char kShieldsPanelHost[] = "brave-shields.top-chrome";
 inline constexpr char kCookieListOptInHost[] = "cookie-list-opt-in.top-chrome";
@@ -71,8 +46,5 @@ inline constexpr char kChatUIHost[] = "chat";
 
 inline constexpr char kRewriterUIURL[] = "chrome://rewriter/";
 inline constexpr char kRewriterUIHost[] = "rewriter";
-
-inline constexpr char16_t kTransactionSimulationLearnMoreURL[] =
-    u"https://github.com/brave/brave-browser/wiki/Transaction-Simulation";
 
 #endif  // BRAVE_COMPONENTS_CONSTANTS_WEBUI_URL_CONSTANTS_H_

@@ -19,11 +19,11 @@
 #define IDC_SHOW_BRAVE_REWARDS 56000
 // 56002-56004 were the Tor commands (removed in FlyWeb); do not reuse them.
 #define IDC_SHOW_BRAVE_SYNC 56005
-#define IDC_SHOW_BRAVE_WALLET 56006
+// 56006 was IDC_SHOW_BRAVE_WALLET (removed in FlyWeb); do not reuse it.
 #define IDC_TOGGLE_AI_CHAT 56007
 #define IDC_SHOW_BRAVE_WEBCOMPAT_REPORTER 56009
-#define IDC_SHOW_BRAVE_WALLET_PANEL 56026
-#define IDC_CLOSE_BRAVE_WALLET_PANEL 56027
+// 56026-56027 were the Wallet panel commands (removed in FlyWeb); do not reuse
+// them.
 #define IDC_CONTENT_CONTEXT_FORCE_PASTE 56039
 #define IDC_COPY_CLEAN_LINK 56040
 #define IDC_TOGGLE_TAB_MUTE 56041

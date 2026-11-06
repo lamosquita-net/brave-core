@@ -17,8 +17,6 @@ inline constexpr char kP3ALearnMoreURL[] =
 inline constexpr char kP3ASettingsLink[] = "chrome://settings/privacy";
 inline constexpr char kImportDataHelpURL[] =
     "https://flyweb.lamosquita.net/ayuda/#importar";
-inline constexpr char kCryptoWalletsLearnMoreURL[] =
-    "https://flyweb.lamosquita.net/ayuda/";
 inline constexpr char kPermissionPromptLearnMoreUrl[] =
     "https://flyweb.lamosquita.net/ayuda/#permisos";
 inline constexpr char kPermissionPromptHardwareAccessPrivacyRisksURL[] =

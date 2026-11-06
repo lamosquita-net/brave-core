@@ -27,7 +27,6 @@ function getPageVisibility () {
       braveSync: false,
       getStarted: false,
       newTab: false,
-      braveWallet: false,
       braveWeb3: false,
       content: false,
     }
@@ -52,7 +51,6 @@ function getPageVisibility () {
     privacy: alwaysTrueProxy,
     // custom properties
     braveSync: !loadTimeData.getBoolean('isSyncDisabled'),
-    braveWallet: false,
     // FlyWeb: no Web3 section. Without the wallet only the Web3 domains (ENS,
     // SNS, Unstoppable) were left, and those resolve through the wallet's RPC
     // services, which FlyWeb removes.

@@ -68,20 +68,8 @@ void OpenFlyWebReportProblemPage(content::WebContents* initiator) {
       /*navigation_handle_callback=*/{});
 }
 
-void ShowBraveWallet(BrowserWindowInterface* browser) {
-  ShowSingletonTabOverwritingNTP(browser, GURL(kBraveUIWalletURL));
-}
-
-void ShowBraveWalletOnboarding(BrowserWindowInterface* browser) {
-  ShowSingletonTabOverwritingNTP(browser, GURL(kBraveUIWalletOnboardingURL));
-}
-
 void ShowExtensionSettings(BrowserWindowInterface* browser) {
   ShowSingletonTabOverwritingNTP(browser, GURL(kExtensionSettingsURL));
-}
-
-void ShowWalletSettings(BrowserWindowInterface* browser) {
-  ShowSingletonTabOverwritingNTP(browser, GURL(kWalletSettingsURL));
 }
 
 }  // namespace brave

@@ -309,18 +309,6 @@ IN_PROC_BROWSER_TEST_F(BraveSchemeLoadBrowserTest,
 }
 
 IN_PROC_BROWSER_TEST_F(BraveSchemeLoadBrowserTest,
-                       WalletPageIsNotAllowedInPrivateWindow) {
-  EXPECT_FALSE(IsURLAllowedInIncognito(GURL("chrome://wallet")));
-  EXPECT_TRUE(IsURLAllowedInIncognito(GURL("http://wallet")));
-  TestURLIsNotLoadedInPrivateWindow("brave://wallet");
-}
-
-IN_PROC_BROWSER_TEST_F(BraveSchemeLoadBrowserTest,
-                       WalletPageIsNotAllowedInGuestWindow) {
-  TestURLIsNotLoadedInGuestWindow(GURL("brave://wallet"));
-}
-
-IN_PROC_BROWSER_TEST_F(BraveSchemeLoadBrowserTest,
                        BraveSyncPageIsNotAllowedInPrivateWindow) {
   EXPECT_FALSE(IsURLAllowedInIncognito(GURL("chrome://sync")));
   EXPECT_TRUE(IsURLAllowedInIncognito(GURL("http://sync")));

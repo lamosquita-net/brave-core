@@ -76,6 +76,14 @@ constexpr char kShowSidePanelButton[] = "brave.show_side_panel_button";
 constexpr char kTargetUserForSidebarEnabledTest[] =
     "brave.sidebar.target_user_for_sidebar_enabled_test";
 
+// Brave Wallet (code removed earlier; its leftovers pruned 2026-11). Every
+// Wallet pref, in the profile (keyrings, encrypted mnemonic, networks,
+// assets, transactions, default wallets, toolbar button, auto-lock...) and in
+// local state (unlock times, P3A), lives under "brave.wallet", and nothing
+// else FlyWeb keeps does, so the whole dictionary is registered and cleared
+// at once instead of one pref per key.
+constexpr char kBraveWallet[] = "brave.wallet";
+
 constexpr const char* kProfilePrefs[] = {
     kPlaylistEnabled,
     kPlaylists,
@@ -108,6 +116,7 @@ constexpr const char* kProfilePrefs[] = {
     kSidebarSettingChangeInitialP3AReport,
     kSidebarAlignmentChangedTemporarily,
     kShowSidePanelButton,
+    kBraveWallet,
 };
 
 constexpr const char* kLocalStatePrefs[] = {
@@ -116,6 +125,7 @@ constexpr const char* kLocalStatePrefs[] = {
     kPlaylistUsedSecondDay,
     kPlaylistUsageWeeklyStorage,
     kTargetUserForSidebarEnabledTest,
+    kBraveWallet,
 };
 
 }  // namespace
@@ -165,6 +175,9 @@ void RegisterPrunedFeatureProfilePrefs(
   registry->RegisterBooleanPref(kSidebarSettingChangeInitialP3AReport, false);
   registry->RegisterBooleanPref(kSidebarAlignmentChangedTemporarily, false);
   registry->RegisterBooleanPref(kShowSidePanelButton, true);
+
+  // Brave Wallet
+  registry->RegisterDictionaryPref(kBraveWallet);
 }
 
 void ClearPrunedFeatureProfilePrefs(PrefService* profile_prefs) {
@@ -182,6 +195,9 @@ void RegisterPrunedFeatureLocalStatePrefs(PrefRegistrySimple* registry) {
 
   // Brave Sidebar
   registry->RegisterBooleanPref(kTargetUserForSidebarEnabledTest, false);
+
+  // Brave Wallet
+  registry->RegisterDictionaryPref(kBraveWallet);
 }
 
 void ClearPrunedFeatureLocalStatePrefs(PrefService* local_state) {

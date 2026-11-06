@@ -22,7 +22,6 @@ void NavigationBarDataProvider::Initialize(content::WebUIDataSource* source,
   source->AddLocalizedString("brToolbarHistoryTitle", IDS_HISTORY_TITLE);
   source->AddLocalizedString("brToolbarRewardsTitle",
                              IDS_BRAVE_UI_BRAVE_REWARDS);
-  source->AddLocalizedString("brToolbarWalletsTitle", IDS_WALLETS_TITLE);
 
   // FlyWeb: Brave Rewards is removed from the build.
   source->AddBoolean("brToolbarShowRewardsButton", false);

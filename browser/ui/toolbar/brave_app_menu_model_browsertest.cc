@@ -133,7 +133,6 @@ IN_PROC_BROWSER_TEST_F(BraveAppMenuModelBrowserTest, MenuOrderTest) {
       IDC_NEW_TAB,
       IDC_NEW_WINDOW,
       IDC_NEW_INCOGNITO_WINDOW,
-      IDC_SHOW_BRAVE_WALLET,
       IDC_RECENT_TABS_MENU,
       IDC_BOOKMARKS_MENU,
       IDC_SHOW_DOWNLOADS,
@@ -179,7 +178,6 @@ IN_PROC_BROWSER_TEST_F(BraveAppMenuModelBrowserTest, MenuOrderTest) {
       IDC_NEW_TAB,
       IDC_NEW_WINDOW,
       IDC_NEW_INCOGNITO_WINDOW,
-      IDC_SHOW_BRAVE_WALLET,
       IDC_BOOKMARKS_MENU,
       IDC_SHOW_DOWNLOADS,
       IDC_EXTENSIONS_SUBMENU_MANAGE_EXTENSIONS,
@@ -229,7 +227,6 @@ IN_PROC_BROWSER_TEST_F(BraveAppMenuModelBrowserTest, MenuOrderTest) {
                                      commands_in_order_for_guest_profile);
   std::vector<int> commands_disabled_for_guest_profile = {
       IDC_NEW_INCOGNITO_WINDOW,
-      IDC_SHOW_BRAVE_WALLET,
       IDC_RECENT_TABS_MENU,
       IDC_BOOKMARKS_MENU,
       IDC_EXTENSIONS_SUBMENU_MANAGE_EXTENSIONS,

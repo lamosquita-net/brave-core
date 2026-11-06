@@ -43,7 +43,7 @@ class BraveAppMenuModel : public AppMenuModel {
   std::optional<size_t> GetProperItemIndex(std::vector<int> commands_to_check,
                                            bool insert_next) const;
 
-  // Leo(not yet added), Wallet, VPN and IPFS.
+  // Leo.
   void BuildBraveProductsSection();
   size_t GetNextIndexOfBraveProductsSection() const;
 

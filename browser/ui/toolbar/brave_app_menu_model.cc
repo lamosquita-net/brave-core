@@ -105,12 +105,6 @@ void BraveAppMenuModel::BuildBraveProductsSection() {
     need_separator = true;
   }
 
-  if (IsCommandIdEnabled(IDC_SHOW_BRAVE_WALLET)) {
-    InsertItemWithStringIdAt(GetNextIndexOfBraveProductsSection(),
-                             IDC_SHOW_BRAVE_WALLET, IDS_SHOW_BRAVE_WALLET);
-    need_separator = true;
-  }
-
   if (need_separator) {
     InsertSeparatorAt(GetNextIndexOfBraveProductsSection(),
                       ui::NORMAL_SEPARATOR);
@@ -294,10 +288,8 @@ bool BraveAppMenuModel::IsCommandIdEnabled(int id) const {
 }
 
 size_t BraveAppMenuModel::GetNextIndexOfBraveProductsSection() const {
-  std::vector<int> commands_to_check = {IDC_SHOW_BRAVE_WALLET,
-                                        IDC_TOGGLE_AI_CHAT,
-                                        IDC_NEW_INCOGNITO_WINDOW,
-                                        IDC_NEW_WINDOW};
+  std::vector<int> commands_to_check = {
+      IDC_TOGGLE_AI_CHAT, IDC_NEW_INCOGNITO_WINDOW, IDC_NEW_WINDOW};
   const auto last_index_of_second_section =
       GetProperItemIndex(commands_to_check, false).value();
   const auto last_cmd_id_of_second_section =

@@ -157,7 +157,7 @@ bool BraveBrowserCommandController::UpdateCommandEnabled(int id, bool state) {
 }
 
 void BraveBrowserCommandController::InitBraveCommandState() {
-  // Sync, Rewards, and Wallet pages don't work in tor(guest) sessions.
+  // Sync and Rewards pages don't work in tor(guest) sessions.
   // They also don't work in private windows but they are redirected
   // to a normal window in this case.
   const bool is_guest_session = browser_->GetProfile()->IsGuestSession();
@@ -324,9 +324,6 @@ bool BraveBrowserCommandController::ExecuteBraveCommandWithDisposition(
       break;
     case IDC_SHOW_BRAVE_SYNC:
       brave::ShowSync(&*browser_);
-      break;
-    case IDC_SHOW_BRAVE_WALLET:
-      brave::ShowBraveWallet(&*browser_);
       break;
     case IDC_TOGGLE_AI_CHAT:
       break;

@@ -33,7 +33,7 @@ TEST(BraveContentSerializedNavigationDriverTest,
             driver->GetSanitizedPageStateForPickle(&navigation));
 
   // Check encoded data is empty.
-  navigation.set_virtual_url(GURL("chrome://wallet"));
+  navigation.set_virtual_url(GURL("chrome://settings"));
   EXPECT_EQ(std::string(), driver->GetSanitizedPageStateForPickle(&navigation));
 }
 
@@ -57,7 +57,7 @@ TEST(BraveContentSerializedNavigationDriverTest,
             driver->GetSanitizedPageStateForPickle(&navigation));
 
   // Check encoded data is empty.
-  navigation.set_virtual_url(GURL("chrome://wallet"));
+  navigation.set_virtual_url(GURL("chrome://settings"));
   EXPECT_EQ(std::string(), driver->GetSanitizedPageStateForPickle(&navigation));
 }
 
