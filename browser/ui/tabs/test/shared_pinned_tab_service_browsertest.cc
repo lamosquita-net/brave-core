@@ -18,14 +18,16 @@
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser_commands.h"
 #include "chrome/browser/ui/browser_tabstrip.h"
+#include "chrome/browser/ui/browser_web_contents_delegate/browser_web_contents_delegate.h"
 #include "chrome/browser/ui/browser_window.h"
-#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/browser_window/public/browser_window_interface_iterator.h"
 #include "chrome/browser/ui/browser_window/public/global_browser_collection.h"
 #include "chrome/browser/ui/navigator/browser_navigator_params.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/browser/ui/views/frame/browser_view.h"
-#include "chrome/test/base/in_process_browser_test.h"
+#include "chrome/test/base/platform_browser_test.h"
+#include "components/prefs/pref_service.h"
+#include "content/public/browser/navigation_controller.h"
 #include "content/public/browser/navigation_entry.h"
 #include "content/public/test/browser_test.h"
 #include "content/public/test/browser_test_utils.h"
@@ -38,17 +40,17 @@ SharedPinnedTabServiceBrowserTest::SharedPinnedTabServiceBrowserTest()
 SharedPinnedTabServiceBrowserTest::~SharedPinnedTabServiceBrowserTest() =
     default;
 
-Browser* SharedPinnedTabServiceBrowserTest::CreateNewBrowser() {
+BrowserWindowInterface* SharedPinnedTabServiceBrowserTest::CreateNewBrowser() {
   auto* new_browser =
       chrome::OpenEmptyWindow(browser()->GetProfile(),
                               /*should_trigger_session_restore= */ false);
-  browsers_.push_back(new_browser->AsWeakPtr());
+  browsers_.push_back(new_browser->GetWeakPtr());
   return new_browser;
 }
 
 SharedPinnedTabService* SharedPinnedTabServiceBrowserTest::GetForBrowser(
-    Browser* browser) {
-  return SharedPinnedTabServiceFactory::GetForProfile(browser->profile());
+    BrowserWindowInterface* browser) {
+  return SharedPinnedTabServiceFactory::GetForProfile(browser->GetProfile());
 }
 
 void SharedPinnedTabServiceBrowserTest::WaitUntil(
@@ -59,7 +61,7 @@ void SharedPinnedTabServiceBrowserTest::WaitUntil(
 
   base::RepeatingTimer scheduler;
   scheduler.Start(FROM_HERE, base::Milliseconds(100),
-                  base::BindLambdaForTesting([this, &condition]() {
+                  base::BindLambdaForTesting([this, &condition] {
                     if (condition.Run()) {
                       run_loop_->Quit();
                     }
@@ -76,12 +78,12 @@ void SharedPinnedTabServiceBrowserTest::Run() {
 void SharedPinnedTabServiceBrowserTest::TearDownOnMainThread() {
   for (auto& browser : browsers_) {
     if (browser) {
-      browser->window()->Close();
+      BrowserWindow::FromBrowser(browser.get())->Close();
     }
   }
 
   WaitUntil(base::BindLambdaForTesting([&]() {
-    return std::ranges::none_of(browsers_, [](const auto& b) { return b; });
+    return std::ranges::none_of(browsers_, [](const auto& b) { return !!b; });
   }));
 
   InProcessBrowserTest::TearDownOnMainThread();
@@ -113,7 +115,7 @@ void SharedPinnedTabServiceBrowserTest::SetUpOnMainThread() {
   ASSERT_TRUE(https_server_->Start());
 
   browser()->GetProfile()->GetPrefs()->SetBoolean(brave_tabs::kSharedPinnedTab,
-                                               true);
+                                                  true);
 }
 
 void SharedPinnedTabServiceBrowserTest::SetUpCommandLine(
@@ -163,7 +165,7 @@ IN_PROC_BROWSER_TEST_F(SharedPinnedTabServiceBrowserTest, PinAndUnpinTabs) {
       tab_strip_model_2->GetWebContentsAt(0)));
 
   // Test: Unpin the tab and see if it's synchronized
-  browser_1->window()->Show();
+  BrowserWindow::FromBrowser(browser_1)->Show();
   tab_strip_model_1->SetTabPinned(0, /* pinned= */ false);
   EXPECT_FALSE(tab_strip_model_1->IsTabPinned(0));
   WaitUntil(base::BindLambdaForTesting([&]() {
@@ -209,9 +211,10 @@ IN_PROC_BROWSER_TEST_F(SharedPinnedTabServiceBrowserTest, ActivatePinnedTab) {
 
   // Test: Activating a pinned tab in other browser(2) should bring the contents
   // from the browser(1).
-  browser_2->window()->Show();
+  BrowserWindow::FromBrowser(browser_2)->Show();
   ui::ListSelectionModel selection;
   selection.set_active(0);
+  selection.SetSelectedIndex(0);
   tab_strip_model_2->SetSelectionFromModel(selection);
 
   WaitUntil(base::BindLambdaForTesting([&]() {
@@ -249,45 +252,6 @@ IN_PROC_BROWSER_TEST_F(SharedPinnedTabServiceBrowserTest, NewBrowser) {
       tab_strip_model_2->GetWebContentsAt(0)));
   EXPECT_FALSE(shared_pinned_tab_service->IsSharedContents(
       tab_strip_model_2->GetWebContentsAt(0)));
-}
-
-IN_PROC_BROWSER_TEST_F(SharedPinnedTabServiceBrowserTest, BringAllTabs) {
-  // Given that there're multiple windows with shared pinned tabs
-  auto* browser_1 = browser();
-  auto* tab_strip_model_1 = browser_1->tab_strip_model();
-  tab_strip_model_1->SetTabPinned(0, /* pinned= */ true);
-  auto* shared_pinned_tab_service = GetForBrowser(browser_1);
-  ASSERT_TRUE(shared_pinned_tab_service);
-  ASSERT_TRUE(shared_pinned_tab_service->IsSharedContents(
-      tab_strip_model_1->GetWebContentsAt(0)));
-
-  auto* browser_2 = CreateNewBrowser();
-  auto* tab_strip_model_2 = browser_2->tab_strip_model();
-  WaitUntil(base::BindLambdaForTesting(
-      [&]() { return tab_strip_model_2->count() > 1; }));
-  ASSERT_TRUE(tab_strip_model_2->IsTabPinned(0));
-  browser_2->ActivateContents(tab_strip_model_2->GetWebContentsAt(0));
-  browser_2->window()->Show();
-  WaitUntil(base::BindLambdaForTesting([&]() {
-    return shared_pinned_tab_service->IsSharedContents(
-        tab_strip_model_2->GetWebContentsAt(0));
-  }));
-  ASSERT_TRUE(shared_pinned_tab_service->IsDummyContents(
-      tab_strip_model_1->GetWebContentsAt(0)));
-
-  // When running "Bring all tabs to this window".
-  brave::BringAllTabs(browser_1);
-
-  // Then only the target browser should be left with shared contents.
-  WaitUntil(base::BindLambdaForTesting([&]() {
-    return GlobalBrowserCollection::GetInstance()->GetSize() == 1u;
-  }));
-  EXPECT_EQ(browser_1, GetAllBrowserWindowInterfaces().front());
-  browser_1->window()->Show();
-  WaitUntil(base::BindLambdaForTesting([&]() {
-    return shared_pinned_tab_service->IsSharedContents(
-        tab_strip_model_1->GetWebContentsAt(0));
-  }));
 }
 
 IN_PROC_BROWSER_TEST_F(SharedPinnedTabServiceBrowserTest, SynchronizeURL) {
@@ -370,8 +334,8 @@ IN_PROC_BROWSER_TEST_F(SharedPinnedTabServiceBrowserTest, PreferenceChanged) {
   ASSERT_TRUE(browser_2->tab_strip_model()->IsTabPinned(1));
 
   // When disabling the shared pinned tab preference
-  browser_1->profile()->GetPrefs()->SetBoolean(brave_tabs::kSharedPinnedTab,
-                                               false);
+  browser_1->GetProfile()->GetPrefs()->SetBoolean(brave_tabs::kSharedPinnedTab,
+                                                  false);
 
   // Then all dummy contents should be gone.
   EXPECT_EQ(2, browser_1->tab_strip_model()->count());
@@ -383,8 +347,8 @@ IN_PROC_BROWSER_TEST_F(SharedPinnedTabServiceBrowserTest, PreferenceChanged) {
   EXPECT_FALSE(browser_2->tab_strip_model()->IsTabPinned(1));
 
   // When enabling the shared pinned tab preference
-  browser_1->profile()->GetPrefs()->SetBoolean(brave_tabs::kSharedPinnedTab,
-                                               true);
+  browser_1->GetProfile()->GetPrefs()->SetBoolean(brave_tabs::kSharedPinnedTab,
+                                                  true);
 
   // All pinned tabs should be synchronized
   EXPECT_EQ(3, browser_1->tab_strip_model()->count());
@@ -397,10 +361,49 @@ IN_PROC_BROWSER_TEST_F(SharedPinnedTabServiceBrowserTest, PreferenceChanged) {
 }
 
 #if !BUILDFLAG(IS_MAC)
+IN_PROC_BROWSER_TEST_F(SharedPinnedTabServiceBrowserTest, BringAllTabs) {
+  // Given that there're multiple windows with shared pinned tabs
+  auto* browser_1 = browser();
+  auto* tab_strip_model_1 = browser_1->tab_strip_model();
+  tab_strip_model_1->SetTabPinned(0, /* pinned= */ true);
+  auto* shared_pinned_tab_service = GetForBrowser(browser_1);
+  ASSERT_TRUE(shared_pinned_tab_service);
+  ASSERT_TRUE(shared_pinned_tab_service->IsSharedContents(
+      tab_strip_model_1->GetWebContentsAt(0)));
+
+  auto* browser_2 = CreateNewBrowser();
+  auto* tab_strip_model_2 = browser_2->tab_strip_model();
+  WaitUntil(base::BindLambdaForTesting(
+      [&]() { return tab_strip_model_2->count() > 1; }));
+  ASSERT_TRUE(tab_strip_model_2->IsTabPinned(0));
+  BrowserWebContentsDelegate::From(browser_2)->ActivateContents(
+      tab_strip_model_2->GetWebContentsAt(0));
+  BrowserWindow::FromBrowser(browser_2)->Show();
+  WaitUntil(base::BindLambdaForTesting([&]() {
+    return shared_pinned_tab_service->IsSharedContents(
+        tab_strip_model_2->GetWebContentsAt(0));
+  }));
+  ASSERT_TRUE(shared_pinned_tab_service->IsDummyContents(
+      tab_strip_model_1->GetWebContentsAt(0)));
+
+  // When running "Bring all tabs to this window".
+  brave::BringAllTabs(browser_1);
+
+  // Then only the target browser should be left with shared contents.
+  WaitUntil(base::BindLambdaForTesting([&]() {
+    return GlobalBrowserCollection::GetInstance()->GetSize() == 1u;
+  }));
+  BrowserWindow::FromBrowser(browser_1)->Show();
+  WaitUntil(base::BindLambdaForTesting([&]() {
+    return shared_pinned_tab_service->IsSharedContents(
+        tab_strip_model_1->GetWebContentsAt(0));
+  }));
+}
+
 IN_PROC_BROWSER_TEST_F(SharedPinnedTabServiceBrowserTest,
                        CloseTabShortCutShouldBeDisabled) {
   auto* browser = CreateNewBrowser();
-  chrome::NewTab(browser);
+  chrome::NewTab(browser, NewTabTypes::kNewTabCommand);
 
   EXPECT_EQ(browser->tab_strip_model()->count(), 2);
   EXPECT_EQ(browser->tab_strip_model()->active_index(), 1);
@@ -408,7 +411,8 @@ IN_PROC_BROWSER_TEST_F(SharedPinnedTabServiceBrowserTest,
   EXPECT_EQ(browser->tab_strip_model()->SetTabPinned(1, true), 0);
   EXPECT_EQ(browser->tab_strip_model()->active_index(), 0);
 
-  auto* browser_view = static_cast<BrowserView*>(browser->window());
+  auto* browser_view =
+      static_cast<BrowserView*>(BrowserWindow::FromBrowser(browser));
 
   // When Command + w is pressed
   browser_view->AcceleratorPressed(
@@ -420,7 +424,7 @@ IN_PROC_BROWSER_TEST_F(SharedPinnedTabServiceBrowserTest,
   // When other ways to close the tab are tried
   chrome::ExecuteCommand(browser, IDC_CLOSE_TAB);
 
-  // Then tabs should be closed
+  // Then tab should be closed
   EXPECT_EQ(browser->tab_strip_model()->count(), 1);
 }
 #endif  // !BUILDFLAG(IS_MAC)
