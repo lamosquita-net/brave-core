@@ -13,6 +13,7 @@
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/profiles/profile.h"
 #include "content/public/browser/navigation_handle.h"
+#include "content/public/browser/security_principal.h"
 #include "content/public/browser/site_instance.h"
 #include "content/public/browser/storage_partition.h"
 #include "content/public/browser/web_contents.h"
@@ -94,7 +95,8 @@ void EphemeralStorageTabHelper::CreateEphemeralStorageAreasForDomainAndURL(
   auto* site_instance = web_contents()->GetSiteInstance();
 
   tld_ephemeral_lifetime_ = TLDEphemeralLifetime::GetOrCreate(
-      browser_context, new_domain, site_instance->GetStoragePartitionConfig());
+      browser_context, new_domain,
+      site_instance->GetSecurityPrincipal().GetStoragePartitionConfig());
 }
 
 void EphemeralStorageTabHelper::UpdateShieldsState(const GURL& url) {
