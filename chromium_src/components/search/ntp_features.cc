@@ -18,6 +18,9 @@ OVERRIDE_FEATURE_DEFAULT_STATES({{
     {kNtpBackgroundImageErrorDetection, base::FEATURE_DISABLED_BY_DEFAULT},
     {kNtpChromeCartModule, base::FEATURE_DISABLED_BY_DEFAULT},
     {kNtpModulesMaxColumnCount, base::FEATURE_DISABLED_BY_DEFAULT},
+    // Can hide the bookmark bar on its own when it is set to show only on the
+    // NTP; the bar must change only when the user asks.
+    {kNtpSimplificationBookmarkBar, base::FEATURE_DISABLED_BY_DEFAULT},
 }});
 
 }  // namespace ntp_features
