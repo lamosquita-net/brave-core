@@ -29,13 +29,12 @@
 namespace {
 
 uint64_t getProfileBandwidthSaved(Browser* browser) {
-  return browser->profile()->GetPrefs()->GetUint64(
+  return browser->GetProfile()->GetPrefs()->GetUint64(
       brave_perf_predictor::prefs::kBandwidthSavedBytes);
 }
 
 uint64_t getProfileAdsBlocked(Browser* browser) {
-  return browser->profile()->GetPrefs()->GetUint64(
-      kAdsBlocked);
+  return browser->GetProfile()->GetPrefs()->GetUint64(kAdsBlocked);
 }
 
 }  // namespace
