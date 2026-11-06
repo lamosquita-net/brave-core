@@ -17,7 +17,8 @@
   BRAVE_REFERRERS,                  \
   BRAVE_COOKIES,                    \
   BRAVE_GOOGLE_SIGN_IN,             \
-  NUM
+  NUM,                              \
+  BRAVE_MIN_VALUE = BRAVE_ADS
 // clang-format on
 
 #include "src/third_party/blink/public/common/permissions/permission_utils.h"  // IWYU pragma: export

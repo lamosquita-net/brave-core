@@ -40,7 +40,29 @@
   case PermissionType::BRAVE_GOOGLE_SIGN_IN:            \
     return std::nullopt
 
+#define BRAVE_PERMISSION_UTIL_PERMISSION_DESCRIPTOR_INFO_TO_PERMISSION_TYPE \
+  case PermissionName::BRAVE_ADS:                                           \
+    return PermissionType::BRAVE_ADS;                                       \
+  case PermissionName::BRAVE_COSMETIC_FILTERING:                            \
+    return PermissionType::BRAVE_COSMETIC_FILTERING;                        \
+  case PermissionName::BRAVE_TRACKERS:                                      \
+    return PermissionType::BRAVE_TRACKERS;                                  \
+  case PermissionName::BRAVE_HTTP_UPGRADABLE_RESOURCES:                     \
+    return PermissionType::BRAVE_HTTP_UPGRADABLE_RESOURCES;                 \
+  case PermissionName::BRAVE_FINGERPRINTING_V2:                             \
+    return PermissionType::BRAVE_FINGERPRINTING_V2;                         \
+  case PermissionName::BRAVE_SHIELDS:                                       \
+    return PermissionType::BRAVE_SHIELDS;                                   \
+  case PermissionName::BRAVE_REFERRERS:                                     \
+    return PermissionType::BRAVE_REFERRERS;                                 \
+  case PermissionName::BRAVE_COOKIES:                                       \
+    return PermissionType::BRAVE_COOKIES;                                   \
+  case PermissionName::BRAVE_GOOGLE_SIGN_IN:                                \
+    return PermissionType::BRAVE_GOOGLE_SIGN_IN;
+
 #include "src/third_party/blink/common/permissions/permission_utils.cc"
+
+#undef BRAVE_PERMISSION_UTIL_PERMISSION_DESCRIPTOR_INFO_TO_PERMISSION_TYPE
 
 #undef kDisplayCapture
 #undef PERMISSION_UTIL_GET_PERMISSION_STRING
