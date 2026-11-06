@@ -9,7 +9,7 @@ namespace history {
 
 void HistoryService::GetKnownToSyncCount(
     base::OnceCallback<void(HistoryCountResult)> callback) {
-  backend_task_runner_->PostTaskAndReplyWithResult(
+  GetBackendTaskRunner()->PostTaskAndReplyWithResult(
       FROM_HERE,
       base::BindOnce(&HistoryBackend::GetKnownToSyncCount, history_backend_),
       std::move(callback));
