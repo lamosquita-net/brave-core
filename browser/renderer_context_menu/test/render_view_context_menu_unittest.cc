@@ -64,7 +64,7 @@ class BraveRenderViewContextMenuMock : public BraveRenderViewContextMenu {
 
   void SetBrowser(Browser* browser) { browser_ = browser; }
 
-  Browser* GetBrowser() const override {
+  BrowserWindowInterface* GetBrowser() const override {
     if (browser_) {
       return browser_;
     }
