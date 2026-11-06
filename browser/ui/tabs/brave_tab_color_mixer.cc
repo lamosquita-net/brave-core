@@ -10,6 +10,8 @@
 #include "ui/color/color_mixer.h"
 #include "ui/color/color_provider.h"
 #include "ui/color/color_provider_key.h"
+#include "ui/color/color_recipe.h"
+#include "ui/color/color_transform.h"
 
 namespace tabs {
 
