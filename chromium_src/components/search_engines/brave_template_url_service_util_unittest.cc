@@ -6,7 +6,9 @@
 #include <stddef.h>
 
 #include <memory>
+#include <vector>
 
+#include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/test/task_environment.h"
 #include "brave/components/search_engines/brave_prepopulated_engines.h"
@@ -18,7 +20,9 @@
 #include "components/search_engines/search_terms_data.h"
 #include "components/search_engines/template_url.h"
 #include "components/search_engines/template_url_prepopulate_data.h"
+#include "components/search_engines/template_url_data.h"
 #include "components/search_engines/template_url_service.h"
+#include "components/search_engines/template_url_starter_pack_data.h"
 #include "components/search_engines/util.h"
 #include "components/sync_preferences/testing_pref_service_syncable.h"
 #include "testing/gtest/include/gtest/gtest.h"
@@ -158,4 +162,29 @@ TEST_F(BraveTemplateURLServiceUtilTest,
   TestDefaultOrder(template_urls,
                    {":br", ":d", ":q", ":g", ":b", ":sp", ":e", ":ya",
                     "@bookmarks", "@history", "@tabs", "@gemini"});
+}
+
+// FlyWeb keeps only the starter packs that search local data, plus @gemini
+// (T7 decision): no @page (contextual search through Google) and no @aimode
+// (Google AI Mode). Their URLs use the flyweb:// scheme.
+TEST(BraveTemplateURLStarterPackDataTest, OnlyLocalStarterPacksAndGemini) {
+  using template_url_starter_pack_data::StarterPackId;
+
+  std::vector<int> ids;
+  for (const auto& engine :
+       template_url_starter_pack_data::GetStarterPackEngines()) {
+    ids.push_back(engine->starter_pack_id);
+    EXPECT_FALSE(base::StartsWith(engine->url(), "chrome://",
+                                  base::CompareCase::INSENSITIVE_ASCII))
+        << engine->url();
+  }
+  EXPECT_EQ(ids, (std::vector<int>{static_cast<int>(StarterPackId::kBookmarks),
+                                   static_cast<int>(StarterPackId::kHistory),
+                                   static_cast<int>(StarterPackId::kTabs),
+                                   static_cast<int>(StarterPackId::kGemini)}));
+
+  // The FlyWeb list has its own data version on top of upstream's, so that
+  // profiles that already merged upstream's list drop @page and @aimode.
+  EXPECT_GT(template_url_starter_pack_data::GetDataVersion(),
+            template_url_starter_pack_data::kCurrentDataVersion);
 }
