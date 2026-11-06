@@ -7,7 +7,6 @@
 
 #include <initializer_list>
 
-#include "base/strings/string_util.h"
 #include "brave/browser/brave_browser_features.h"
 #include "brave/browser/ui/brave_ui_features.h"
 #include "brave/browser/ui/tabs/features.h"
@@ -22,12 +21,11 @@
 #include "build/build_config.h"
 #include "chrome/browser/ui/ui_features.h"
 #include "components/content_settings/core/common/features.h"
-#include "components/flags_ui/feature_entry.h"
-#include "components/flags_ui/feature_entry_macros.h"
-#include "components/flags_ui/flags_state.h"
 #include "components/history/core/browser/features.h"
 #include "components/omnibox/common/omnibox_features.h"
-#include "components/translate/core/browser/translate_prefs.h"
+#include "components/webui/flags/feature_entry.h"
+#include "components/webui/flags/feature_entry_macros.h"
+#include "components/webui/flags/flags_state.h"
 #include "net/base/features.h"
 #include "third_party/blink/public/common/features.h"
 
@@ -470,13 +468,6 @@
           FEATURE_VALUE_TYPE(blink::features::kBraveRoundTimeStamps),          \
       },                                                                       \
       {                                                                        \
-          "translate",                                                         \
-          "Enable Chromium Translate feature",                                 \
-          "Should be used with brave-translate-go, see the description here.", \
-          kOsDesktop | kOsAndroid,                                             \
-          FEATURE_VALUE_TYPE(translate::kTranslate),                           \
-      },                                                                       \
-      {                                                                        \
           "restrict-event-source-pool",                                        \
           "Restrict Event Source Pool",                                        \
           "Limits simultaneous active WebSockets connections per eTLD+1",      \
@@ -567,14 +558,6 @@ namespace {
   static_assert(
       std::initializer_list<FeatureEntry>{BRAVE_ABOUT_FLAGS_FEATURE_ENTRIES}
           .size());
-}
-
-// Called to skip feature entries on flyweb://flags page without affecting
-// features state.
-bool BraveShouldSkipConditionalFeatureEntry(
-    const flags_ui::FlagsStorage* storage,
-    const FeatureEntry& entry) {
-  return false;
 }
 
 }  // namespace
