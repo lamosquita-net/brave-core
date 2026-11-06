@@ -1,8 +1,8 @@
 diff --git a/components/remote_cocoa/app_shim/menu_controller_cocoa_delegate_impl.mm b/components/remote_cocoa/app_shim/menu_controller_cocoa_delegate_impl.mm
-index 2844661b381f9b82887bf32c90fd74757e0018af..c1e3da0cf0e126353eba16691dcbf66e783878e3 100644
+index 5dd3ae5dff160834524c013594f76f59ad7e2fdd..3c13d31642cb3191f63f4a0b76b87a51f0d84aec 100644
 --- a/components/remote_cocoa/app_shim/menu_controller_cocoa_delegate_impl.mm
 +++ b/components/remote_cocoa/app_shim/menu_controller_cocoa_delegate_impl.mm
-@@ -123,6 +123,26 @@ NSImage* IPHDotImage(const remote_cocoa::mojom::MenuControllerParams& params) {
+@@ -124,6 +124,26 @@ NSImage* IPHDotImage(const remote_cocoa::mojom::MenuControllerParams& params) {
  
  // --- Private API end ---
  
@@ -29,11 +29,11 @@ index 2844661b381f9b82887bf32c90fd74757e0018af..c1e3da0cf0e126353eba16691dcbf66e
  @implementation MenuControllerCocoaDelegateImpl {
    NSMutableArray* __strong _menuObservers;
    remote_cocoa::mojom::MenuControllerParamsPtr _params;
-@@ -149,13 +169,20 @@ NSImage* IPHDotImage(const remote_cocoa::mojom::MenuControllerParams& params) {
+@@ -150,13 +170,20 @@ NSImage* IPHDotImage(const remote_cocoa::mojom::MenuControllerParams& params) {
    if (model->IsNewFeatureAt(index)) {
      NSTextAttachment* attachment = [[NSTextAttachment alloc] initWithData:nil
                                                                     ofType:nil];
--    attachment.image = NewTagImage(*_params);
+-    attachment.image = NewBadgeImage(*_params);
 -    NSSize newTagSize = attachment.image.size;
 -
 -    // The baseline offset of the badge image to the menu text baseline.
@@ -41,7 +41,7 @@ index 2844661b381f9b82887bf32c90fd74757e0018af..c1e3da0cf0e126353eba16691dcbf66e
 -    attachment.bounds = NSMakeRect(0, kBadgeBaselineOffset, newTagSize.width,
 -                                   newTagSize.height);
 +    if (@available(macOS 10.15, *)) {
-+      attachment.image = NewTagImage(*_params);
++      attachment.image = NewBadgeImage(*_params);
 +      NSSize newTagSize = attachment.image.size;
 +
 +      // The baseline offset of the badge image to the menu text baseline.
@@ -51,7 +51,7 @@ index 2844661b381f9b82887bf32c90fd74757e0018af..c1e3da0cf0e126353eba16691dcbf66e
 +    } else {
 +      FlyWebNewTagAttachmentCell* cell =
 +          [[FlyWebNewTagAttachmentCell alloc] init];
-+      cell.image = NewTagImage(*_params);
++      cell.image = NewBadgeImage(*_params);
 +      attachment.attachmentCell = cell;
 +    }
  
