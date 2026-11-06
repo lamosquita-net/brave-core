@@ -50,15 +50,11 @@
 
 #if defined(TOOLKIT_VIEWS)
 #include "brave/browser/onboarding/onboarding_tab_helper.h"
-#include "brave/browser/ui/side_panel/brave_contextual_side_panel_tab_helper.h"
 #endif
 
 namespace brave {
 
 void AttachTabHelpers(content::WebContents* web_contents) {
-#if defined(TOOLKIT_VIEWS)
-  BraveContextualSidePanelTabHelper::CreateForWebContents(web_contents);
-#endif
   brave_shields::BraveShieldsWebContentsObserver::CreateForWebContents(
       web_contents);
 #if BUILDFLAG(IS_ANDROID)
