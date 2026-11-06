@@ -3,148 +3,48 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // you can obtain one at https://mozilla.org/MPL/2.0/.
 
+// FlyWeb: in Chromium 156 settings-appearance-page is a Lit element, so the
+// Polymer template modifications this file used to register never ran. As in
+// Brave 1.98, the upstream controls Brave moves elsewhere (or does not offer)
+// are hidden with CSS injected into the element's styles; hiding instead of
+// removing also keeps the nodes the element itself references ($ cache,
+// focus config). Brave 1.98 inserts <settings-brave-appearance-theme> into
+// the template with a lit_mangler script; FlyWeb has no such mechanism, so
+// that row is not shown here (see the T11 report).
+
 import '../brave_appearance_page/brave_theme.js'
 
-import {RegisterPolymerTemplateModifications} from 'chrome://resources/brave/polymer_overriding.js'
-import {getTrustedHTML} from 'chrome://resources/js/static_types.js'
+import {injectStyle} from '//resources/brave/lit_overriding.js'
+import {css} from '//resources/lit/v3_0/lit.rollup.js'
 
-RegisterPolymerTemplateModifications({
-  'settings-appearance-page': (templateContent) => {
-    const theme = templateContent.getElementById('themeRow')
-    if (!theme) {
-      console.error(`[Settings] Couldn't find #themeRow`)
-    } else {
-      const useDefaultButtonTemplate = templateContent.querySelector(
-        'template[is=dom-if][if="[[prefs.extensions.theme.id.value]]"]')
-      if (!useDefaultButtonTemplate) {
-        console.error(
-          '[Settings] Appearance Page cannot find use default' +
-          ' theme button template')
-      } else {
-        useDefaultButtonTemplate.setAttribute('restamp', 'true')
-      }
-      theme.setAttribute('class', 'settings-row hr')
-      theme.insertAdjacentHTML(
-        'beforebegin',
-        getTrustedHTML`
-          <settings-brave-appearance-theme prefs="{{prefs}}">
-          </settings-brave-appearance-theme>
-        `)
-    }
+import {SettingsAppearancePageElement} from '../appearance_page/appearance_page.js'
 
-    // Remove home button toggle & options template as it's moved into
-    // address bar sub section
-    const homeButtonToggle = templateContent.querySelector(
-      '[pref="{{prefs.browser.show_home_button}}"]')
-    if (!homeButtonToggle) {
-      console.error(
-        `[Settings] Couldn't find home button toggle`)
-    } else {
-      homeButtonToggle.remove()
-    }
-    const homeButtonOptionsTemplate = templateContent.querySelector(
-        'template[is=dom-if][if="[[prefs.browser.show_home_button.value]]"]')
-    if (!homeButtonOptionsTemplate) {
-      console.error(
-        `[Settings] Couldn't find home button options template`)
-    } else {
-      homeButtonOptionsTemplate.remove()
-    }
+injectStyle(SettingsAppearancePageElement, css`
+  /* Colour scheme: Brave's own theme setting replaces it. */
+  #colorSchemeModeRow,
 
-    // Hide or remove upstream's font options.
-    const defaultFontSize = templateContent.querySelector(
-      '.cr-row:has(#defaultFontSize)')
-    if (!defaultFontSize) {
-      console.error(`[Settings] Couldn't find default font size option`)
-    } else {
-      // Just hide instead of removing as upstream js refers this.
-      defaultFontSize.setAttribute('hidden', 'true')
-    }
-    const customizeFontsSubpageTrigger = templateContent.getElementById('customize-fonts-subpage-trigger')
-    if (!customizeFontsSubpageTrigger) {
-      console.error(`[Settings] Couldn't find customize fonts subpage trigger`)
-    } else {
-      customizeFontsSubpageTrigger.remove()
-    }
-    const customizeFontsTemplate = templateContent.querySelector(
-        'template[is=dom-if][route-path="/fonts"]')
-    if (!customizeFontsTemplate) {
-      console.error(`[Settings] Couldn't find customize fonts subpage template`)
-    } else {
-      customizeFontsTemplate.remove()
-    }
-    const pageZoom = templateContent.querySelector('.cr-row:has(#pageZoom)')
-    if (!pageZoom) {
-      console.error(`[Settings] Couldn't find page zoom`)
-    } else {
-      pageZoom.remove()
-    }
+  /* Home button: moved into the address bar section. */
+  settings-toggle-button[pref-key="browser.show_home_button"],
+  #home-button-options,
 
-    const hrsToHide = templateContent.querySelectorAll(
-      'div.hr:not(#themeRow):not([hidden="[[!pageVisibility.bookmarksBar]]"])')
-    // We only want to hide two hrs now from upstream appearance_page.html.
-    if (hrsToHide.length !== 2) {
-      console.error(`[Settings] detected more than two hrs to hide`)
-    } else {
-      for (const hr of hrsToHide) {
-        hr.setAttribute('hidden', 'true')
-      }
-    }
+  /* Font size, custom fonts and page zoom. */
+  .cr-row:has(#defaultFontSize),
+  #customize-fonts-subpage-trigger,
+  .cr-row:has(#pageZoom),
 
-    // <if expr="is_macosx">
-    const confirmToQuit = templateContent.querySelector(
-      '[pref="{{prefs.browser.confirm_to_quit}}"]')
-    if (!confirmToQuit) {
-      console.error(`[Settings] Couldn't find confirm to quit`)
-    } else {
-      confirmToQuit.remove()
-    }
+  /* macOS: confirm to quit and tabs to links live elsewhere in Brave. */
+  settings-toggle-button[pref-key="browser.confirm_to_quit"],
+  settings-toggle-button[pref-key="webkit.webprefs.tabs_to_links"],
 
-    const tabsToLinks = templateContent.querySelector(
-      '[pref="{{prefs.webkit.webprefs.tabs_to_links}}"]')
-    if (!tabsToLinks) {
-      console.error(`[Settings] Couldn't find tabs to links`)
-    } else {
-      tabsToLinks.remove()
-    }
-    // </if>
+  /* Hover card toggles: already in the Tabs settings. */
+  div.hr:has(+ #hoverCardMemoryUsageToggle),
+  #hoverCardMemoryUsageToggle,
+  .cr-row:has(+ .list-frame #hoverCardImagesToggle),
+  .list-frame:has(#hoverCardImagesToggle),
 
-    // Remove show images on tab hover toggle and tab memory usage toggle as we
-    // already have settings for these in the Tabs settings.
-    const hoverCardImagesTemplateNotShow = templateContent.querySelector(
-      'template[is=dom-if][if="[[!showHoverCardImagesOption_]]"]')
-    if (!hoverCardImagesTemplateNotShow) {
-      console.error(
-        '[Settings] Appearance Page cannot find hover card' +
-        ' images template with !showHoverCardImagesOption_')
-    } else {
-      hoverCardImagesTemplateNotShow.remove()
-    }
-    const hoverCardImagesTemplateShow = templateContent.querySelector(
-      'template[is=dom-if][if="[[showHoverCardImagesOption_]]"]')
-    if (!hoverCardImagesTemplateShow) {
-      console.error(
-        '[Settings] Appearance Page cannot find hover card' +
-        ' images template with showHoverCardImagesOption_')
-    } else {
-      hoverCardImagesTemplateShow.remove()
-    }
-    const colorSchemeModeRow = templateContent.getElementById(
-      'colorSchemeModeRow')
-    if (!colorSchemeModeRow) {
-      console.error(`[Settings] Couldn't find colorSchemeModeRow`)
-    } else {
-      colorSchemeModeRow.remove()
-    }
-
-    // Remove upstream side panel header and dropdown from Appearance as we
-    // have our own separate side panel section
-    const sidePanelPosition =
-      templateContent.getElementById('sidePanelPosition')
-    if (!sidePanelPosition) {
-      console.error(`[Settings] Couldn't find sidePanelPosition`)
-    } else if (sidePanelPosition.parentNode) {
-      sidePanelPosition.parentNode.setAttribute('hidden', 'true')
-    }
+  /* Side panel position: Brave has its own side panel section. */
+  .cr-row:has(+ .list-frame #sidePanelPosition),
+  .list-frame:has(#sidePanelPosition) {
+    display: none !important;
   }
-})
+`)
