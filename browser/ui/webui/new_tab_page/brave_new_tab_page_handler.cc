@@ -28,6 +28,7 @@
 #include "components/prefs/pref_service.h"
 #include "components/search_engines/search_engine_type.h"
 #include "components/search_engines/template_url.h"
+#include "components/search_engines/template_url_service.h"
 #include "content/public/browser/browser_task_traits.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/page_navigator.h"
