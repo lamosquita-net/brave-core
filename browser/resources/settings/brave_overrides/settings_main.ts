@@ -118,8 +118,10 @@ RegisterPolymerTemplateModifications({
 
     // Appearance: Brave's Toolbar and Tabs cards, after the upstream
     // (Lit) appearance plugin, in the same view.
-    const appearanceView = templateContent.querySelector<HTMLTemplateElement>(
-      'template[is=dom-if][if="[[showPage_(pageVisibility_.appearance)]]"]')
+    // templateContent is untyped (any), so cast instead of a type argument.
+    const appearanceView = templateContent.querySelector(
+      'template[is=dom-if][if="[[showPage_(pageVisibility_.appearance)]]"]'
+    ) as HTMLTemplateElement | null
     const appearanceDiv = appearanceView?.content.querySelector('#appearance')
     if (!appearanceDiv) {
       console.error('[Settings] Missing appearance view on settings-main')
