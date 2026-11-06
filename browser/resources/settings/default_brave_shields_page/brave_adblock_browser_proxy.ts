@@ -7,12 +7,35 @@
 
 import { sendWithPromise, addWebUiListener } from 'chrome://resources/js/cr.js';
 
+// Types as in Brave 1.98 (plus last_updated_pretty_text, which our handler
+// still sends).
+export interface FilterList {
+  uuid: string
+  url: string
+  title: string
+  desc: string
+  support_url: string
+  component_id: string
+  base64_public_key: string
+  enabled: boolean
+}
+
+export interface SubscriptionInfo {
+  subscription_url: string
+  last_update_attempt: number
+  last_successful_update_attempt: number
+  last_updated_pretty_text?: string
+  enabled: boolean
+  title?: string
+  homepage?: string
+}
+
 export interface BraveAdblockBrowserProxy {
-  getRegionalLists(): Promise<any[]> // TODO(petemill): Define the expected type
+  getRegionalLists(): Promise<FilterList[]>
   enableFilterList(uuid: string, enabled: boolean)
   updateFilterList(uuid: string): Promise<boolean>
-  getListSubscriptions(): Promise<any> // TODO(petemill): Define the expected type
-  getCustomFilters(): Promise<any> // TODO(petemill): Define the expected type
+  getListSubscriptions(): Promise<SubscriptionInfo[]>
+  getCustomFilters(): Promise<string>
   setSubscriptionEnabled(url: string, enabled: boolean)
   addSubscription(url: string)
   addWebUiListener(eventName: string, callback: Function)
@@ -28,17 +51,18 @@ export class BraveAdblockBrowserProxyImpl implements BraveAdblockBrowserProxy {
 
   /** @returns {Promise} */
   getRegionalLists () {
-    return sendWithPromise<any[]>('brave_adblock.getRegionalLists')
+    return sendWithPromise<FilterList[]>('brave_adblock.getRegionalLists')
   }
 
   /** @returns {Promise} */
   getListSubscriptions () {
-    return sendWithPromise<any>('brave_adblock.getListSubscriptions')
+    return sendWithPromise<SubscriptionInfo[]>(
+        'brave_adblock.getListSubscriptions')
   }
 
   /** @returns {Promise} */
   getCustomFilters () {
-    return sendWithPromise<any>('brave_adblock.getCustomFilters')
+    return sendWithPromise<string>('brave_adblock.getCustomFilters')
   }
 
   enableFilterList (uuid, enabled) {

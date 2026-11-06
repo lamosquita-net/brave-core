@@ -5,6 +5,10 @@
 
 // @ts-nocheck TODO(petemill): Define types and remove ts-nocheck
 
+import 'chrome://resources/cr_elements/cr_checkbox/cr_checkbox.js';
+import 'chrome://resources/cr_elements/cr_icon/cr_icon.js';
+import 'chrome://resources/cr_elements/cr_input/cr_input.js';
+import 'chrome://resources/cr_elements/cr_spinner_style.css.js';
 import 'chrome://resources/cr_elements/cr_button/cr_button.js';
 import 'chrome://resources/cr_elements/icons.html.js';
 import './components/brave_adblock_subscribe_dropdown.js';
@@ -17,13 +21,14 @@ import {PolymerElement} from 'chrome://resources/polymer/v3_0/polymer/polymer_bu
 import {BaseMixin} from '../base_mixin.js';
 
 import {BraveAdblockBrowserProxyImpl} from './brave_adblock_browser_proxy.js'
+import type {FilterList, SubscriptionInfo} from './brave_adblock_browser_proxy.js'
 import {getTemplate} from './brave_adblock_subpage.html.js'
 
 const AdBlockSubpageBase = PrefsMixin(I18nMixin(BaseMixin(PolymerElement)))
 
 class AdBlockSubpage extends AdBlockSubpageBase {
   static get is() {
-    return 'adblock-subpage'
+    return 'brave-adblock-subpage'
   }
 
   static get template() {
@@ -43,6 +48,13 @@ class AdBlockSubpage extends AdBlockSubpageBase {
       },
     }
   }
+
+  private declare filterList_: FilterList[]
+  private declare subscriptionList_: SubscriptionInfo[]
+  private declare customFilters_: string
+  private declare subscribeUrl_: string
+  private declare listsUpdatingState_: string
+  private declare hasListExpanded_: boolean
 
   browserProxy_ = BraveAdblockBrowserProxyImpl.getInstance()
 

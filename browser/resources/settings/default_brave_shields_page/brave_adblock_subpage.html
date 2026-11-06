@@ -1,4 +1,4 @@
-<style include="cr-shared-style settings-shared iron-flex">
+<style include="cr-shared-style settings-shared cr-spinner-style iron-flex">
   :root {
     --brave-primary-hover: #ff977d;
     --selected-background-color: #F8F9FA;
@@ -163,8 +163,12 @@
     padding: 5px;
   }
 
-  #search-box iron-icon {
+  #search-box cr-icon {
     --iron-icon-fill-color: var(--google-grey-500);
+  }
+
+  cr-button .spinner {
+    --cr-spinner-size: 16px;
   }
 </style>
 
@@ -183,7 +187,7 @@
           value="{{filterListTitle}}"
         >
           <span id="search-box" slot="inline-suffix">
-            <iron-icon icon="brave_leo:magnifying-glass"></iron-icon>
+            <cr-icon icon="search"></cr-icon>
           </span>
         </cr-input>
         <div class$="filter-list-box expanded-[[hasListExpanded_]]">
@@ -210,19 +214,19 @@
             </template>
             <template is="dom-if" if="[[isEqual_(listsUpdatingState_, 'updating')]]">
               <cr-button on-click="handleUpdateLists_">
-                <leo-progressring slot="prefix-icon"></leo-progressring>
+                <div class="spinner" slot="prefix-icon"></div>
                 <span>$i18n{adblockUpdateListsUpdatingButtonLabel}</span>
               </cr-button>
             </template>
             <template is="dom-if" if="[[isEqual_(listsUpdatingState_, 'updated')]]">
               <cr-button on-click="handleUpdateLists_">
-                <leo-icon name="check-circle-outline" slot="prefix-icon"></leo-icon>
+                <cr-icon icon="check-circle-outline" slot="prefix-icon"></cr-icon>
                 <span>$i18n{adblockUpdateListsUpdatedButtonLabel}</span>
               </cr-button>
             </template>
             <template is="dom-if" if="[[isEqual_(listsUpdatingState_, 'failed')]]">
               <cr-button on-click="handleUpdateLists_">
-                <leo-icon name="warning-circle-outline" slot="prefix-icon"></leo-icon>
+                <cr-icon icon="warning-circle-outline" slot="prefix-icon"></cr-icon>
                 <span>$i18n{adblockUpdateListsRetryButtonLabel}</span>
               </cr-button>
             </template>
@@ -306,11 +310,11 @@
                   <span>[[item.last_updated_pretty_text]]</span>
                 </template>
               </span>
-              <adblock-subscribe-dropdown
+              <brave-adblock-subscribe-dropdown
                 on-update-subscription="handleUpdateSubscription_"
                 on-view-subscription="handleViewSubscription_"
                 on-delete-subscription="handleDeleteSubscription_"
-              ></adblock-subscribe-dropdown>
+              ></brave-adblock-subscribe-dropdown>
             </div>
           </template>
         </div>
@@ -323,9 +327,9 @@
       $i18n{adblockCustomFiltersLabel}
     </div>
     <div class="label secondary shields-secondary-title" inner-h-t-m-l="[[getStringHtml_('adblockCustomFiltersDesc', 'https://flyweb.lamosquita.net/ayuda/#escudos')]]"></div>
-    <adblock-filter-editor
+    <brave-adblock-editor
       value="{{customFilters_}}"
       on-save="handleSave_"
-    ></adblock-filter-editor>
+    ></brave-adblock-editor>
   </div>
 </div>

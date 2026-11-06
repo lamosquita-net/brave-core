@@ -5,6 +5,8 @@
 
 // @ts-nocheck TODO(petemill): Define types and remove ts-nocheck
 
+import 'chrome://resources/cr_elements/cr_link_row/cr_link_row.js'
+import '../controls/settings_toggle_button.js'
 import './brave_adblock_subpage.js'
 import '//resources/cr_elements/md_select.css.js'
 
@@ -23,6 +25,11 @@ import {CookieControlsMode} from '../site_settings/constants.js'
 
 import {DefaultBraveShieldsBrowserProxyImpl} from './default_brave_shields_browser_proxy.js'
 import {getTemplate} from './default_brave_shields_page.html.js'
+
+interface ControlType {
+  value: string
+  name: string
+}
 
 const BraveShieldsPageBase = WebUiListenerMixin(I18nMixin(PrefsMixin(SettingsViewMixin(PolymerElement))))
 
@@ -122,6 +129,22 @@ class BraveShieldsPage extends BraveShieldsPageBase {
       }
     }
   }
+
+  private declare adControlTypes_: ControlType[]
+  private declare cookieControlTypes_: ControlType[]
+  private declare fingerprintingControlTypes_: ControlType[]
+  private declare httpsUpgradeControlTypes_: ControlType[]
+  private declare adControlType_: string
+  private declare cookieControlType_: string
+  private declare fingerprintingControlType_: string
+  private declare httpsUpgradeControlType_: string
+  private declare isHttpsByDefaultEnabled_: boolean
+  private declare showStrictFingerprintingMode_: boolean
+  private declare isForgetFirstPartyStorageFeatureEnabled_: boolean
+  private declare isForgetFirstPartyStorageEnabled_:
+      chrome.settingsPrivate.PrefObject<boolean>
+  private declare isFingerprintingEnabled_:
+      chrome.settingsPrivate.PrefObject<boolean>
 
   browserProxy_ = DefaultBraveShieldsBrowserProxyImpl.getInstance()
 
