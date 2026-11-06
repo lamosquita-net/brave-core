@@ -45,10 +45,6 @@ int DevChannelDeprecationInfoBarDelegate::GetButtons() const {
   return BUTTON_NONE;
 }
 
-std::vector<int> DevChannelDeprecationInfoBarDelegate::GetButtonsOrder() const {
-  return {};
-}
-
 bool DevChannelDeprecationInfoBarDelegate::ShouldExpire(
     const NavigationDetails& details) const {
   // Since deprecation infobar communicates critical state, it should persist

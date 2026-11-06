@@ -6,8 +6,6 @@
 #ifndef BRAVE_BROWSER_INFOBARS_DEV_CHANNEL_DEPRECATION_INFOBAR_DELEGATE_H_
 #define BRAVE_BROWSER_INFOBARS_DEV_CHANNEL_DEPRECATION_INFOBAR_DELEGATE_H_
 
-#include <vector>
-
 #include "brave/components/infobars/core/brave_confirm_infobar_delegate.h"
 
 class DevChannelDeprecationInfoBarDelegate
@@ -29,7 +27,6 @@ class DevChannelDeprecationInfoBarDelegate
   infobars::InfoBarDelegate::InfoBarIdentifier GetIdentifier() const override;
   std::u16string GetMessageText() const override;
   int GetButtons() const override;
-  std::vector<int> GetButtonsOrder() const override;
   bool ShouldExpire(const NavigationDetails& details) const override;
   std::u16string GetLinkText() const override;
   GURL GetLinkURL() const override;

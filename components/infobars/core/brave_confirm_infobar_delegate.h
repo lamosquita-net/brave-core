@@ -6,8 +6,8 @@
 #ifndef BRAVE_COMPONENTS_INFOBARS_CORE_BRAVE_CONFIRM_INFOBAR_DELEGATE_H_
 #define BRAVE_COMPONENTS_INFOBARS_CORE_BRAVE_CONFIRM_INFOBAR_DELEGATE_H_
 
+#include <cstddef>
 #include <string>
-#include <vector>
 
 #include "components/infobars/core/confirm_infobar_delegate.h"
 
@@ -25,11 +25,8 @@ class BraveConfirmInfoBarDelegate : public ConfirmInfoBarDelegate {
   // Then closing will be cancelled and delegate should remove infobar
   // after doing something.
   virtual bool InterceptClosing();
-  virtual std::vector<int> GetButtonsOrder() const;
-  virtual bool IsProminent(int id) const;
-  virtual bool ExtraButtonPressed();
-
-  int GetButtons() const override;
+  virtual bool ShouldSupportMultiLine() const;
+  virtual size_t GetMaxLines() const;
 
  protected:
   BraveConfirmInfoBarDelegate();

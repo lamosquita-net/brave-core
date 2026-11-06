@@ -14,7 +14,6 @@
 #include "brave/components/constants/webui_url_constants.h"
 #include "brave/components/l10n/common/localization_util.h"
 #include "brave/grit/brave_generated_resources.h"
-#include "chrome/browser/infobars/confirm_infobar_creator.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/chrome_pages.h"
 #include "components/infobars/content/content_infobar_manager.h"
@@ -47,14 +46,9 @@ void BraveSyncAccountDeletedInfoBarDelegate::Create(
     return;
   }
 
-  // Create custom confirm infobar
-  std::unique_ptr<infobars::InfoBar> infobar(
-      std::make_unique<BraveSyncAccountDeletedInfoBar>(
-          base::WrapUnique<ConfirmInfoBarDelegate>(
-              new BraveSyncAccountDeletedInfoBarDelegate(profile))));
-
-  // Show infobar
-  infobar_manager->AddInfoBar(std::move(infobar));
+  infobar_manager->AddInfoBar(std::make_unique<BraveSyncAccountDeletedInfoBar>(
+      base::WrapUnique<BraveConfirmInfoBarDelegate>(
+          new BraveSyncAccountDeletedInfoBarDelegate(profile))));
 }
 
 // Start class impl
