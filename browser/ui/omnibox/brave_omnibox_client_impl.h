@@ -11,6 +11,7 @@
 #include "brave/components/time_period_storage/weekly_storage.h"
 #include "chrome/browser/ui/omnibox/chrome_omnibox_client.h"
 
+class BrowserWindowInterface;
 class PrefRegistrySimple;
 class Profile;
 class SearchEngineTracker;
@@ -18,7 +19,7 @@ class SearchEngineTracker;
 class BraveOmniboxClientImpl : public ChromeOmniboxClient {
  public:
   BraveOmniboxClientImpl(LocationBar* location_bar,
-                         Browser* browser,
+                         BrowserWindowInterface* browser,
                          Profile* profile);
   BraveOmniboxClientImpl(const BraveOmniboxClientImpl&) = delete;
   BraveOmniboxClientImpl& operator=(const BraveOmniboxClientImpl&) = delete;
@@ -35,14 +36,13 @@ class BraveOmniboxClientImpl : public ChromeOmniboxClient {
       TemplateURLRef::PostContent* post_content,
       WindowOpenDisposition disposition,
       ui::PageTransition transition,
-      AutocompleteMatchType::Type match_type,
+      omnibox::AutocompleteMatchType match_type,
       base::TimeTicks match_selection_timestamp,
       bool destination_url_entered_without_scheme,
       bool destination_url_entered_with_http_scheme,
       const std::u16string& text,
       const AutocompleteMatch& match,
-      const AutocompleteMatch& alternative_nav_match,
-      IDNA2008DeviationCharacter deviation_char_in_hostname) override;
+      const AutocompleteMatch& alternative_nav_match) override;
 
  private:
   raw_ptr<Profile> profile_ = nullptr;

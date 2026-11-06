@@ -32,14 +32,14 @@ constexpr char kSearchCountPrefName[] = "brave.weekly_storage.search_count";
 
 bool IsSearchEvent(const AutocompleteMatch& match) {
   switch (match.type) {
-    case AutocompleteMatchType::SEARCH_WHAT_YOU_TYPED:
-    case AutocompleteMatchType::SEARCH_HISTORY:
-    case AutocompleteMatchType::SEARCH_SUGGEST:
-    case AutocompleteMatchType::SEARCH_SUGGEST_ENTITY:
-    case AutocompleteMatchType::SEARCH_SUGGEST_TAIL:
-    case AutocompleteMatchType::SEARCH_SUGGEST_PERSONALIZED:
-    case AutocompleteMatchType::SEARCH_SUGGEST_PROFILE:
-    case AutocompleteMatchType::SEARCH_OTHER_ENGINE:
+    case omnibox::AutocompleteMatchType::kSearchWhatYouTyped:
+    case omnibox::AutocompleteMatchType::kSearchHistory:
+    case omnibox::AutocompleteMatchType::kSearchSuggest:
+    case omnibox::AutocompleteMatchType::kSearchSuggestEntity:
+    case omnibox::AutocompleteMatchType::kSearchSuggestTail:
+    case omnibox::AutocompleteMatchType::kSearchSuggestPersonalized:
+    case omnibox::AutocompleteMatchType::kSearchSuggestProfile:
+    case omnibox::AutocompleteMatchType::kSearchOtherEngine:
       return true;
     default:
       return false;
@@ -55,7 +55,7 @@ void RecordSearchEventP3A(uint64_t number_of_searches) {
 }  // namespace
 
 BraveOmniboxClientImpl::BraveOmniboxClientImpl(LocationBar* location_bar,
-                                               Browser* browser,
+                                               BrowserWindowInterface* browser,
                                                Profile* profile)
     : ChromeOmniboxClient(location_bar, browser, profile),
       profile_(profile),
@@ -95,14 +95,13 @@ void BraveOmniboxClientImpl::OnAutocompleteAccept(
     TemplateURLRef::PostContent* post_content,
     WindowOpenDisposition disposition,
     ui::PageTransition transition,
-    AutocompleteMatchType::Type match_type,
+    omnibox::AutocompleteMatchType match_type,
     base::TimeTicks match_selection_timestamp,
     bool destination_url_entered_without_scheme,
     bool destination_url_entered_with_http_scheme,
     const std::u16string& text,
     const AutocompleteMatch& match,
-    const AutocompleteMatch& alternative_nav_match,
-    IDNA2008DeviationCharacter deviation_char_in_hostname) {
+    const AutocompleteMatch& alternative_nav_match) {
   if (IsSearchEvent(match)) {
     // TODO(iefremov): Optimize this.
     search_storage_.AddDelta(1);
@@ -115,5 +114,5 @@ void BraveOmniboxClientImpl::OnAutocompleteAccept(
       destination_url, post_content, disposition, transition, match_type,
       match_selection_timestamp, destination_url_entered_without_scheme,
       destination_url_entered_with_http_scheme, text, match,
-      alternative_nav_match, deviation_char_in_hostname);
+      alternative_nav_match);
 }
