@@ -8,13 +8,14 @@
 #include <optional>
 #include <string_view>
 #include <tuple>
+#include <utility>
 
 #include "base/containers/flat_set.h"
+#include "base/containers/map_util.h"
 #include "base/functional/bind.h"
 #include "base/json/json_reader.h"
 #include "base/logging.h"
 #include "base/metrics/histogram_macros.h"
-#include "base/strings/string_util.h"
 #include "base/task/thread_pool.h"
 #include "base/values.h"
 #include "brave/components/brave_perf_predictor/browser/bandwidth_linreg_parameters.h"
@@ -27,22 +28,24 @@ namespace brave_perf_predictor {
 
 namespace {
 
-std::tuple<base::flat_map<std::string, std::string>,
-           base::flat_map<std::string, std::string>>
-ParseMappings(const std::string_view entities, bool discard_irrelevant) {
-  base::flat_map<std::string, std::string> entity_by_domain;
-  base::flat_map<std::string, std::string> entity_by_root_domain;
+std::pair<base::flat_map<std::string, std::string>,
+          base::flat_map<std::string, std::string>>
+ParseMappings(std::string_view entities, bool discard_irrelevant) {
+  std::pair<base::flat_map<std::string, std::string>,
+            base::flat_map<std::string, std::string>>
+      result;
+  auto& [entity_by_domain, entity_by_root_domain] = result;
 
   // Parse the JSON
-  std::optional<base::Value> document =
-      base::JSONReader::Read(entities, base::JSON_PARSE_CHROMIUM_EXTENSIONS);
-  if (!document || !document->is_list()) {
+  std::optional<base::ListValue> document = base::JSONReader::ReadList(
+      entities, base::JSON_PARSE_CHROMIUM_EXTENSIONS);
+  if (!document) {
     LOG(ERROR) << "Cannot parse the third-party entities list";
     return {};
   }
 
   // Collect the mappings
-  for (auto& item : document->GetList()) {
+  for (auto& item : *document) {
     const auto& entity = item.GetDict();
 
     const std::string* entity_name = entity.FindString("name");
@@ -84,11 +87,11 @@ ParseMappings(const std::string_view entities, bool discard_irrelevant) {
 
   entity_by_domain.shrink_to_fit();
   entity_by_root_domain.shrink_to_fit();
-  return std::make_tuple(entity_by_domain, entity_by_root_domain);
+  return result;
 }
 
-std::tuple<base::flat_map<std::string, std::string>,
-           base::flat_map<std::string, std::string>>
+std::pair<base::flat_map<std::string, std::string>,
+          base::flat_map<std::string, std::string>>
 ParseFromResource(int resource_id) {
   // TODO(AndriusA): insert trace event here
   SCOPED_UMA_HISTOGRAM_TIMER(
@@ -102,14 +105,14 @@ ParseFromResource(int resource_id) {
 
 }  // namespace
 
-bool NamedThirdPartyRegistry::LoadMappings(const std::string_view entities,
+bool NamedThirdPartyRegistry::LoadMappings(std::string_view entities,
                                            bool discard_irrelevant) {
   // Reset previous mappings
   entity_by_domain_.clear();
   entity_by_root_domain_.clear();
   initialized_ = false;
 
-  tie(entity_by_domain_, entity_by_root_domain_) =
+  std::tie(entity_by_domain_, entity_by_root_domain_) =
       ParseMappings(entities, discard_irrelevant);
   if (entity_by_domain_.size() == 0 || entity_by_root_domain_.size() == 0)
     return false;
@@ -119,16 +122,17 @@ bool NamedThirdPartyRegistry::LoadMappings(const std::string_view entities,
 }
 
 void NamedThirdPartyRegistry::UpdateMappings(
-    std::tuple<base::flat_map<std::string, std::string>,
-               base::flat_map<std::string, std::string>> entity_mappings) {
-  tie(entity_by_domain_, entity_by_root_domain_) = entity_mappings;
+    std::pair<base::flat_map<std::string, std::string>,
+              base::flat_map<std::string, std::string>> entity_mappings) {
+  std::tie(entity_by_domain_, entity_by_root_domain_) =
+      std::move(entity_mappings);
   VLOG(2) << "Loaded " << entity_by_domain_.size() << " mappings by domain and "
           << entity_by_root_domain_.size() << " by root domain; size";
   initialized_ = true;
 }
 
 std::optional<std::string> NamedThirdPartyRegistry::GetThirdParty(
-    const std::string_view request_url) const {
+    std::string_view request_url) const {
   if (!IsInitialized()) {
     VLOG(2) << "Named Third Party Registry not initialized";
     return std::nullopt;
@@ -139,16 +143,17 @@ std::optional<std::string> NamedThirdPartyRegistry::GetThirdParty(
     return std::nullopt;
 
   if (url.has_host()) {
-    auto domain_entry = entity_by_domain_.find(url.host());
-    if (domain_entry != entity_by_domain_.end())
-      return domain_entry->second;
+    if (const auto* entity = base::FindOrNull(entity_by_domain_, url.host())) {
+      return *entity;
+    }
 
     auto root_domain = net::registry_controlled_domains::GetDomainAndRegistry(
         url, net::registry_controlled_domains::INCLUDE_PRIVATE_REGISTRIES);
 
-    auto root_domain_entry = entity_by_root_domain_.find(root_domain);
-    if (root_domain_entry != entity_by_root_domain_.end())
-      return root_domain_entry->second;
+    if (const auto* entity =
+            base::FindOrNull(entity_by_root_domain_, root_domain)) {
+      return *entity;
+    }
   }
 
   return std::nullopt;
