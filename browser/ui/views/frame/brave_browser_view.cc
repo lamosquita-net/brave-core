@@ -26,7 +26,6 @@
 #include "brave/browser/ui/views/brave_actions/brave_actions_container.h"
 #include "brave/browser/ui/views/brave_actions/brave_shields_action_view.h"
 #include "brave/browser/ui/views/brave_help_bubble/brave_help_bubble_host_view.h"
-#include "brave/browser/ui/views/brave_shields/cookie_list_opt_in_bubble_host.h"
 #include "brave/browser/ui/views/frame/brave_contents_view_util.h"
 #include "brave/browser/ui/views/location_bar/brave_location_bar_view.h"
 #include "brave/browser/ui/views/omnibox/brave_omnibox_view_views.h"
@@ -186,9 +185,6 @@ BraveBrowserView::BraveBrowserView(std::unique_ptr<Browser> browser)
                           base::Unretained(this)));
   // Show the correct value in settings on initial start
   UpdateSearchTabsButtonState();
-
-  brave_shields::CookieListOptInBubbleHost::MaybeCreateForBrowser(
-      browser_.get());
 
 #if defined(USE_AURA)
   // Host view for the side panel resize widget.

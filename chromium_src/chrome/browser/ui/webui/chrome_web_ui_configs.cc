@@ -13,7 +13,6 @@
 #undef RegisterChromeWebUIConfigs
 
 #if !BUILDFLAG(IS_ANDROID)
-#include "brave/browser/ui/webui/brave_shields/cookie_list_opt_in_ui.h"
 #include "brave/browser/ui/webui/brave_shields/shields_panel_ui.h"
 #endif  // !BUILDFLAG(IS_ANDROID)
 
@@ -22,7 +21,6 @@ void RegisterChromeWebUIConfigs() {
 
 #if !BUILDFLAG(IS_ANDROID)
   auto& map = content::WebUIConfigMap::GetInstance();
-  map.AddWebUIConfig(std::make_unique<CookieListOptInUIConfig>());
   map.AddWebUIConfig(std::make_unique<ShieldsPanelUIConfig>());
 #endif  // !BUILDFLAG(IS_ANDROID)
 }

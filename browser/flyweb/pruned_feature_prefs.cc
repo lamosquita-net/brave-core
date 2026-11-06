@@ -92,6 +92,10 @@ constexpr char kVerticalTabsOnRight[] = "brave.tabs.vertical_tabs_on_right";
 constexpr char kVerticalTabsShowScrollbar[] =
     "brave.tabs.vertical_tabs_show_scrollbar";
 
+// Shields' cookie list opt-in bubble (removed 2026-11).
+constexpr char kAdBlockCookieListOptInShown[] =
+    "brave.ad_block.cookie_list_opt_in_shown";
+
 // Brave Wallet (code removed earlier; its leftovers pruned 2026-11). Every
 // Wallet pref, in the profile (keyrings, encrypted mnemonic, networks,
 // assets, transactions, default wallets, toolbar button, auto-lock...) and in
@@ -148,6 +152,7 @@ constexpr const char* kLocalStatePrefs[] = {
     kPlaylistUsedSecondDay,
     kPlaylistUsageWeeklyStorage,
     kTargetUserForSidebarEnabledTest,
+    kAdBlockCookieListOptInShown,
     kBraveWallet,
 };
 
@@ -234,6 +239,9 @@ void RegisterPrunedFeatureLocalStatePrefs(PrefRegistrySimple* registry) {
 
   // Brave Sidebar
   registry->RegisterBooleanPref(kTargetUserForSidebarEnabledTest, false);
+
+  // Shields' cookie list opt-in bubble
+  registry->RegisterBooleanPref(kAdBlockCookieListOptInShown, false);
 
   // Brave Wallet
   registry->RegisterDictionaryPref(kBraveWallet);

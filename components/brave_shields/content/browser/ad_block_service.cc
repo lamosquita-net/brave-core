@@ -385,7 +385,6 @@ base::SequencedTaskRunner* AdBlockService::GetTaskRunner() {
 }
 
 void RegisterPrefsForAdBlockService(PrefRegistrySimple* registry) {
-  registry->RegisterBooleanPref(prefs::kAdBlockCookieListOptInShown, false);
   registry->RegisterBooleanPref(prefs::kAdBlockCookieListSettingTouched, false);
   registry->RegisterBooleanPref(
       prefs::kAdBlockMobileNotificationsListSettingTouched, false);

@@ -13,8 +13,6 @@ inline constexpr char kAdBlockCheckedDefaultRegion[] =
     "brave.ad_block.checked_default_region";
 inline constexpr char kAdBlockCheckedAllDefaultRegions[] =
     "brave.ad_block.checked_all_default_regions";
-inline constexpr char kAdBlockCookieListOptInShown[] =
-    "brave.ad_block.cookie_list_opt_in_shown";
 inline constexpr char kAdBlockCookieListSettingTouched[] =
     "brave.ad_block.cookie_list_setting_touched";
 inline constexpr char kAdBlockMobileNotificationsListSettingTouched[] =

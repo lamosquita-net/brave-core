@@ -65,10 +65,6 @@
     "META": {"sizes": {"includes": [10]}},
     "includes": [63460],
   },
-  "<(SHARED_INTERMEDIATE_DIR)/brave/web-ui-cookie_list_opt_in/cookie_list_opt_in.grd": {
-    "META": {"sizes": {"includes": [10]}},
-    "includes": [63580],
-  },
   "<(SHARED_INTERMEDIATE_DIR)/brave/web-ui-brave_adblock_internals/brave_adblock_internals.grd": {
     "META": {"sizes": {"includes": [10]}},
     "includes": [63600],
