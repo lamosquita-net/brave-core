@@ -7,7 +7,6 @@
 
 #include "base/notreached.h"
 #include "base/numerics/safe_conversions.h"
-#include "brave/browser/themes/brave_dark_mode_utils.h"
 #include "brave/browser/ui/color/brave_color_id.h"
 #include "brave/browser/ui/color/color_palette.h"
 #include "brave/browser/ui/color/leo/colors.h"
@@ -375,16 +374,6 @@ void AddBraveLightThemeColorMixer(ui::ColorProvider* provider,
   mixer[kColorDialogDontAskAgainButton] = {SkColorSetRGB(0x86, 0x8E, 0x96)};
   mixer[kColorDialogDontAskAgainButtonHovered] = {
       SkColorSetRGB(0x49, 0x50, 0x57)};
-  mixer[kColorSidebarPanelHeaderSeparator] = {
-      leo::GetColor(leo::Color::kColorDividerSubtle, leo::Theme::kLight)};
-  mixer[kColorSidebarPanelHeaderBackground] = {
-      leo::GetColor(leo::Color::kColorContainerBackground, leo::Theme::kLight)};
-  mixer[kColorSidebarPanelHeaderTitle] = {
-      leo::GetColor(leo::Color::kColorTextPrimary, leo::Theme::kLight)};
-  mixer[kColorSidebarPanelHeaderButton] = {
-      leo::GetColor(leo::Color::kColorIconDefault, leo::Theme::kLight)};
-  mixer[kColorSidebarPanelHeaderButtonHovered] = {
-      leo::GetColor(leo::Color::kColorGray60, leo::Theme::kLight)};
 
   if (!HasCustomToolbarColor(key)) {
     mixer[kColorToolbarButtonActivated] = {
@@ -412,9 +401,6 @@ void AddBraveLightThemeColorMixer(ui::ColorProvider* provider,
   mixer[kColorFeaturePromoBubbleForeground] = {SkColorSetRGB(0x42, 0x45, 0x52)};
   mixer[kColorFeaturePromoBubbleCloseButtonInkDrop] = {
       kColorToolbarInkDropHover};
-
-  mixer[kColorTabGroupBackgroundAlpha] = {
-      SkColorSetA(SK_ColorBLACK, 0.15 * 255)};
 
   mixer[kColorBraveExtensionMenuIcon] = {
       leo::GetColor(leo::Color::kColorIconActive, leo::Theme::kLight)};
@@ -454,20 +440,6 @@ void AddBraveDarkThemeColorMixer(ui::ColorProvider* provider,
   mixer[kColorDialogDontAskAgainButton] = {SkColorSetRGB(0x84, 0x88, 0x9C)};
   mixer[kColorDialogDontAskAgainButtonHovered] = {
       SkColorSetRGB(0xC2, 0xC4, 0xCF)};
-  mixer[kColorSidebarPanelHeaderSeparator] = {
-      leo::GetColor(leo::Color::kColorDividerSubtle, leo::Theme::kDark)};
-
-  // To align with upstream's panel backround color, use |kGogleGreay900|.
-  // When we apply our style to panel webui, use below color for header.
-  // leo::GetColor(leo::Color::kColorContainerBackground, leo::Theme::kDark).
-  // Or delete when panel webui renders header view also.
-  mixer[kColorSidebarPanelHeaderBackground] = {gfx::kGoogleGrey900};
-  mixer[kColorSidebarPanelHeaderTitle] = {
-      leo::GetColor(leo::Color::kColorTextPrimary, leo::Theme::kDark)};
-  mixer[kColorSidebarPanelHeaderButton] = {
-      leo::GetColor(leo::Color::kColorIconDefault, leo::Theme::kDark)};
-  mixer[kColorSidebarPanelHeaderButtonHovered] = {
-      leo::GetColor(leo::Color::kColorGray60, leo::Theme::kDark)};
 
   if (!HasCustomToolbarColor(key)) {
     mixer[kColorToolbarButtonActivated] = {
@@ -495,9 +467,6 @@ void AddBraveDarkThemeColorMixer(ui::ColorProvider* provider,
   mixer[kColorFeaturePromoBubbleCloseButtonInkDrop] = {
       kColorToolbarInkDropHover};
 
-  mixer[kColorTabGroupBackgroundAlpha] = {
-      SkColorSetA(SK_ColorBLACK, 0.25 * 255)};
-
   mixer[kColorBraveExtensionMenuIcon] = {
       leo::GetColor(leo::Color::kColorIconActive, leo::Theme::kDark)};
 
@@ -523,30 +492,6 @@ void AddBravePrivateThemeColorMixer(ui::ColorProvider* provider,
   mixer[kColorForTest] = {kPrivateColorForTest};
 
   mixer[kColorToolbarButtonActivated] = {SkColorSetRGB(0x7C, 0x91, 0xFF)};
-
-  // |key.color_mode| always dark as we use dark native theme for
-  // private/tor/guest profile. See BraveBrowserWidget::GetColorProviderKey().
-  // Exceptionally, below side panel header colors should be brave theme
-  // specific because side panel header colors should be aligned with
-  // side panel contents.
-  const bool is_dark = dark_mode::GetActiveBraveDarkModeType() ==
-                       dark_mode::BraveDarkModeType::BRAVE_DARK_MODE_TYPE_DARK;
-  mixer[kColorSidebarPanelHeaderSeparator] = {
-      leo::GetColor(leo::Color::kColorDividerSubtle,
-                    is_dark ? leo::Theme::kDark : leo::Theme::kLight)};
-  mixer[kColorSidebarPanelHeaderBackground] = {
-      is_dark ? gfx::kGoogleGrey900
-              : leo::GetColor(leo::Color::kColorContainerBackground,
-                              leo::Theme::kLight)};
-  mixer[kColorSidebarPanelHeaderTitle] = {
-      leo::GetColor(leo::Color::kColorTextPrimary,
-                    is_dark ? leo::Theme::kDark : leo::Theme::kLight)};
-  mixer[kColorSidebarPanelHeaderButton] = {
-      leo::GetColor(leo::Color::kColorIconDefault,
-                    is_dark ? leo::Theme::kDark : leo::Theme::kLight)};
-  mixer[kColorSidebarPanelHeaderButtonHovered] = {
-      leo::GetColor(leo::Color::kColorGray60,
-                    is_dark ? leo::Theme::kDark : leo::Theme::kLight)};
   mixer[kColorTabDividerFrameInactive] = {SkColorSetRGB(0x3F, 0x32, 0x56)};
   mixer[kColorTabDividerFrameActive] = {SkColorSetRGB(0x3F, 0x32, 0x56)};
 }

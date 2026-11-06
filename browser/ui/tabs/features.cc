@@ -19,12 +19,4 @@ BASE_FEATURE(kBraveSharedPinnedTabs,
              "BraveSharedPinnedTabs",
              base::FEATURE_ENABLED_BY_DEFAULT);
 
-BASE_FEATURE(kBraveHorizontalTabsUpdate,
-             "BraveHorizontalTabsUpdate",
-             base::FEATURE_ENABLED_BY_DEFAULT);
-
-bool HorizontalTabsUpdateEnabled() {
-  return base::FeatureList::IsEnabled(kBraveHorizontalTabsUpdate);
-}
-
 }  // namespace tabs::features

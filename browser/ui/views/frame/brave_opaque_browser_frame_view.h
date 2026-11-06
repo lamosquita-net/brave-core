@@ -14,7 +14,7 @@
 class BraveOpaqueBrowserFrameView : public OpaqueBrowserFrameView {
   METADATA_HEADER(BraveOpaqueBrowserFrameView, OpaqueBrowserFrameView)
  public:
-  BraveOpaqueBrowserFrameView(BrowserFrame* frame,
+  BraveOpaqueBrowserFrameView(BrowserWidget* widget,
                               BrowserView* browser_view,
                               OpaqueBrowserFrameViewLayout* layout);
   ~BraveOpaqueBrowserFrameView() override;

@@ -9,7 +9,6 @@
 
 #include "brave/browser/ui/views/tabs/brave_compound_tab_container.h"
 #include "brave/browser/ui/views/tabs/brave_tab.h"
-#include "brave/browser/ui/views/tabs/brave_tab_group_header.h"
 #include "brave/browser/ui/views/tabs/brave_tab_hover_card_controller.h"
 #include "chrome/browser/ui/ui_features.h"
 #include "chrome/browser/ui/views/tabs/browser_tab_strip_controller.h"
@@ -21,8 +20,10 @@
 #include "ui/gfx/win/hwnd_util.h"
 #endif
 
-#define AddTab(TAB, MODEL_INDEX, PINNED) \
-  AddTab(std::make_unique<BraveTab>(this), MODEL_INDEX, PINNED)
+// Overrides TabContainer::TabInsertionParams construction in
+// TabStrip::AddTabsAt.
+#define param(TAB, MODEL_INDEX, PINNED) \
+  param(std::make_unique<BraveTab>(tab_data.handle, this), MODEL_INDEX, PINNED)
 #define CompoundTabContainer BraveCompoundTabContainer
 #define TabContainerImpl BraveTabContainer
 #define TabHoverCardController BraveTabHoverCardController
@@ -45,4 +46,4 @@
 #undef TabHoverCardController
 #undef CompoundTabContainer
 #undef TabContainerImpl
-#undef AddTab
+#undef param

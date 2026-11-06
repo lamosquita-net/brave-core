@@ -16,18 +16,6 @@
 
 BraveBrowserViewLayout::~BraveBrowserViewLayout() = default;
 
-void BraveBrowserViewLayout::LayoutSidePanelView(
-    views::View* side_panel,
-    gfx::Rect& contents_container_bounds) {
-  if (contents_background_) {
-    contents_background_->SetBoundsRect(contents_container_bounds);
-  }
-
-  BrowserViewLayout::LayoutSidePanelView(side_panel, contents_container_bounds);
-
-  contents_container_bounds.Inset(GetContentsMargins());
-}
-
 gfx::Insets BraveBrowserViewLayout::GetContentsMargins() const {
   if (!BraveBrowser::ShouldUseBraveWebViewRoundedCorners(
           browser_view_->browser())) {

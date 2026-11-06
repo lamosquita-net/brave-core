@@ -80,10 +80,6 @@
 #include "brave/components/request_otr/browser/request_otr_service.h"
 #endif
 
-#if defined(TOOLKIT_VIEWS)
-#include "brave/browser/ui/side_panel/brave_side_panel_prefs.h"
-#endif
-
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "extensions/common/feature_switch.h"
 using extensions::FeatureSwitch;
@@ -395,8 +391,6 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
 
 #if defined(TOOLKIT_VIEWS)
   bookmarks::prefs::RegisterProfilePrefs(registry);
-  registry->RegisterIntegerPref(brave::kSidePanelWidth,
-                                brave::kDefaultSidePanelWidth);
 #endif
 
   registry->SetDefaultPrefValue(prefs::kSearchSuggestEnabled,

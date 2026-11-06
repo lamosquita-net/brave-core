@@ -58,8 +58,7 @@ constexpr char kWaybackMachineEnabled[] = "brave.wayback_machine_enabled";
 constexpr char kCommanderSuggestionsEnabled[] =
     "brave.omnibox.commander_suggestions_enabled";
 
-// Brave Sidebar (removed 2026-11). brave.sidebar.side_panel_width stays: the
-// side panel still uses it.
+// Brave Sidebar (removed 2026-11).
 constexpr char kSidebarItems[] = "brave.sidebar.sidebar_items";
 constexpr char kSidebarHiddenBuiltInItems[] =
     "brave.sidebar.hidden_built_in_items";
@@ -77,6 +76,10 @@ constexpr char kSidebarAlignmentChangedTemporarily[] =
 constexpr char kShowSidePanelButton[] = "brave.show_side_panel_button";
 constexpr char kTargetUserForSidebarEnabledTest[] =
     "brave.sidebar.target_user_for_sidebar_enabled_test";
+
+// Brave's resizable side panel (removed 2026-11; Chromium's native side panel
+// keeps its own width).
+constexpr char kSidePanelWidth[] = "brave.sidebar.side_panel_width";
 
 // Brave vertical tabs (removed 2026-11; Chromium's native vertical tabs
 // replace them).
@@ -136,6 +139,7 @@ constexpr const char* kProfilePrefs[] = {
     kSidebarSettingChangeInitialP3AReport,
     kSidebarAlignmentChangedTemporarily,
     kShowSidePanelButton,
+    kSidePanelWidth,
     kVerticalTabsEnabled,
     kVerticalTabsCollapsed,
     kVerticalTabsShowTitleOnWindow,
@@ -203,6 +207,9 @@ void RegisterPrunedFeatureProfilePrefs(
   registry->RegisterBooleanPref(kSidebarSettingChangeInitialP3AReport, false);
   registry->RegisterBooleanPref(kSidebarAlignmentChangedTemporarily, false);
   registry->RegisterBooleanPref(kShowSidePanelButton, true);
+
+  // Brave's resizable side panel
+  registry->RegisterIntegerPref(kSidePanelWidth, 320);
 
   // Brave vertical tabs
   registry->RegisterBooleanPref(kVerticalTabsEnabled, false);

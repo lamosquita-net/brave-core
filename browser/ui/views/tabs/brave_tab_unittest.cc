@@ -29,7 +29,7 @@ class BraveTabTest : public ChromeViewsTestBase {
 
 TEST_F(BraveTabTest, ExtraPaddingLayoutTest) {
   FakeTabSlotController tab_slot_controller;
-  BraveTab tab(&tab_slot_controller);
+  BraveTab tab(tabs::TabHandle(1), &tab_slot_controller);
 
   // Our tab should have extra padding always.
   // See the comment at BraveTab::GetInsets().

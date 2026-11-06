@@ -15,10 +15,6 @@
 #include "brave/browser/ui/tabs/brave_tab_prefs.h"
 #endif
 
-#if defined(TOOLKIT_VIEWS)
-#include "brave/browser/ui/side_panel/brave_side_panel_prefs.h"
-#endif
-
 namespace brave {
 
 const std::vector<const char*>& GetBravePersistentPrefNames() {
@@ -28,9 +24,6 @@ const std::vector<const char*>& GetBravePersistentPrefNames() {
       prefs::kSidePanelHorizontalAlignment,
       kTabMuteIndicatorNotClickable,
       brave_tabs::kSharedPinnedTab,
-#endif
-#if defined(TOOLKIT_VIEWS)
-      brave::kSidePanelWidth,
 #endif
       brave::bookmarks::prefs::kShowAllBookmarksButton,
   });

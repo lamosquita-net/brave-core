@@ -8,6 +8,7 @@
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_commands.h"
+#include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/test/base/in_process_browser_test.h"
 #include "components/prefs/pref_service.h"
 #include "content/public/test/browser_test.h"
@@ -18,8 +19,8 @@ IN_PROC_BROWSER_TEST_F(BraveTabStripModelTest, MRUCyclingBasic) {
   TabStripModel* tab_strip_model = browser()->tab_strip_model();
 
   // Open 3 tabs
-  chrome::NewTab(browser());
-  chrome::NewTab(browser());
+  chrome::NewTab(browser(), NewTabTypes::kNewTabCommand);
+  chrome::NewTab(browser(), NewTabTypes::kNewTabCommand);
   EXPECT_EQ(browser()->tab_strip_model()->count(), 3);
   EXPECT_EQ(browser()->tab_strip_model()->active_index(), 2);
 
@@ -52,9 +53,9 @@ IN_PROC_BROWSER_TEST_F(BraveTabStripModelTest, TabClosingWhileMRUCycling) {
   TabStripModel* tab_strip_model = browser()->tab_strip_model();
 
   // Open 3 tabs
-  chrome::NewTab(browser());
-  chrome::NewTab(browser());
-  chrome::NewTab(browser());
+  chrome::NewTab(browser(), NewTabTypes::kNewTabCommand);
+  chrome::NewTab(browser(), NewTabTypes::kNewTabCommand);
+  chrome::NewTab(browser(), NewTabTypes::kNewTabCommand);
   EXPECT_EQ(browser()->tab_strip_model()->count(), 4);
   EXPECT_EQ(browser()->tab_strip_model()->active_index(), 3);
 
