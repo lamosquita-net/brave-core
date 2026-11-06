@@ -8,6 +8,7 @@
 #include <string>
 #include <utility>
 
+#include "base/i18n/number_formatting.h"
 #include "base/metrics/histogram_macros.h"
 #include "base/strings/utf_string_conversions.h"
 #include "brave/browser/brave_shields/brave_shields_web_contents_observer.h"
@@ -22,6 +23,7 @@
 #include "components/favicon/content/content_favicon_driver.h"
 #include "content/public/browser/navigation_controller.h"
 #include "content/public/browser/navigation_handle.h"
+#include "content/public/browser/reload_type.h"
 #include "content/public/browser/web_contents.h"
 #include "net/base/features.h"
 #include "net/base/url_util.h"
