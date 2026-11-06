@@ -3,10 +3,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // you can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "chrome/browser/ui/views/toolbar/toolbar_button.h"
+
 #include <utility>
 
+#include "base/check.h"
 #include "brave/browser/ui/color/brave_color_id.h"
-#include "chrome/browser/ui/views/toolbar/toolbar_button.h"
 #include "ui/views/controls/highlight_path_generator.h"
 
 #define ToolbarButton ToolbarButton_ChromiumImpl
@@ -42,7 +44,7 @@ void ToolbarButton::OnThemeChanged() {
   // Reset ink drop config as inkdrop has different config per themes.
   // Don't need to remove the observation for previous inkdrop before
   // destroying it as it's unchecked observer list.
-  ConfigureInkDropForToolbar(this);
+  ConfigureInkDrop(this);
   views::InkDrop::Get(this)->GetInkDrop()->AddObserver(this);
 
   SetHighlighted(activated_);
