@@ -434,7 +434,6 @@ void BraveAddCommonStrings(content::WebUIDataSource* html_source,
       {"braveRewardsShowBraveRewardsButtonLabel",
        IDS_SETTINGS_BRAVE_REWARDS_SHOW_BRAVE_REWARDS_BUTTON_LABEL},
       // Misc (TODO: Organize this)
-      {"showSearchTabsBtn", IDS_SETTINGS_TABS_SEARCH_SHOW},
       {"onExitPageTitle", IDS_SETTINGS_BRAVE_ON_EXIT},
       {"braveDefaultExtensions", IDS_SETTINGS_BRAVE_DEFAULT_EXTENSIONS_TITLE},
       {"googleLoginForExtensionsDesc",
