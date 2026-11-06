@@ -19,7 +19,6 @@ class BraveBrowserFrameViewMac : public BrowserFrameViewMac {
 
  private:
   // BrowserFrameViewMac overrides:
-  int GetTopInset(bool restored) const override;
   int NonClientHitTest(const gfx::Point& point) override;
 };
 

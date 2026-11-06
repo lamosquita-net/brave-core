@@ -7,6 +7,8 @@
 #define BRAVE_BROWSER_UI_TABS_FEATURES_H_
 
 #include "base/feature_list.h"
+#include "build/build_config.h"
+
 namespace tabs::features {
 
 #if BUILDFLAG(IS_LINUX)
@@ -16,10 +18,6 @@ BASE_DECLARE_FEATURE(kBraveChangeActiveTabOnScrollEvent);
 #endif  // BUILDFLAG(IS_LINUX)
 
 BASE_DECLARE_FEATURE(kBraveSharedPinnedTabs);
-
-BASE_DECLARE_FEATURE(kBraveHorizontalTabsUpdate);
-
-bool HorizontalTabsUpdateEnabled();
 
 }  // namespace tabs::features
 

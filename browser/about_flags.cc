@@ -139,13 +139,6 @@
           "Pinned tabs are shared across windows",                        \
           kOsWin | kOsMac | kOsLinux,                                     \
           FEATURE_VALUE_TYPE(tabs::features::kBraveSharedPinnedTabs),     \
-      },                                                                  \
-      {                                                                   \
-          "brave-horizontal-tabs-update",                                 \
-          "Updated horizontal tabs design",                               \
-          "Updates the look and feel or horizontal tabs",                 \
-          kOsWin | kOsMac | kOsLinux,                                     \
-          FEATURE_VALUE_TYPE(tabs::features::kBraveHorizontalTabsUpdate), \
       })
 #else
 #define BRAVE_TABS_FEATURE_ENTRIES

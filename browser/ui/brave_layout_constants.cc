@@ -5,12 +5,8 @@
 
 #include "brave/browser/ui/brave_layout_constants.h"
 
-#include "brave/browser/ui/tabs/brave_tab_layout_constants.h"
-#include "brave/browser/ui/tabs/features.h"
 #include "chrome/browser/ui/layout_constants.h"
 #include "ui/base/pointer/touch_ui_controller.h"
-
-using tabs::features::HorizontalTabsUpdateEnabled;
 
 std::optional<gfx::Insets> GetBraveLayoutInsets(LayoutInset inset) {
   const bool touch_ui = ui::TouchUiController::Get()->touch_ui();
@@ -35,35 +31,8 @@ std::optional<gfx::Insets> GetBraveLayoutInsets(LayoutInset inset) {
 std::optional<int> GetBraveLayoutConstant(LayoutConstant constant) {
   const bool touch = ui::TouchUiController::Get()->touch_ui();
   switch (constant) {
-    case TAB_HEIGHT: {
-      if (HorizontalTabsUpdateEnabled()) {
-        return brave_tabs::kHorizontalTabHeight;
-      }
-      return (touch ? 41 : 30) + GetLayoutConstant(TABSTRIP_TOOLBAR_OVERLAP);
-    }
-    case TAB_STRIP_HEIGHT: {
-      if (HorizontalTabsUpdateEnabled()) {
-        return brave_tabs::kHorizontalTabStripHeight;
-      }
-      return std::nullopt;
-    }
-    case TAB_STRIP_PADDING: {
-      if (HorizontalTabsUpdateEnabled()) {
-        return brave_tabs::kHorizontalTabVerticalSpacing;
-      }
-      return std::nullopt;
-    }
-    case TABSTRIP_TOOLBAR_OVERLAP: {
-      if (!HorizontalTabsUpdateEnabled()) {
-        return std::nullopt;
-      }
-      return 0;
-    }
     case LOCATION_BAR_CHILD_CORNER_RADIUS:
       return 4;
-    case TAB_SEPARATOR_HEIGHT: {
-      return 16;
-    }
     case TOOLBAR_BUTTON_HEIGHT: {
       return touch ? 48 : 28;
     }

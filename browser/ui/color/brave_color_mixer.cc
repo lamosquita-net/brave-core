@@ -402,9 +402,6 @@ void AddBraveLightThemeColorMixer(ui::ColorProvider* provider,
   mixer[kColorFeaturePromoBubbleCloseButtonInkDrop] = {
       kColorToolbarInkDropHover};
 
-  mixer[kColorTabGroupBackgroundAlpha] = {
-      SkColorSetA(SK_ColorBLACK, 0.15 * 255)};
-
   mixer[kColorBraveExtensionMenuIcon] = {
       leo::GetColor(leo::Color::kColorIconActive, leo::Theme::kLight)};
 
@@ -469,9 +466,6 @@ void AddBraveDarkThemeColorMixer(ui::ColorProvider* provider,
   mixer[kColorFeaturePromoBubbleForeground] = {SkColorSetRGB(0xC6, 0xC8, 0xD0)};
   mixer[kColorFeaturePromoBubbleCloseButtonInkDrop] = {
       kColorToolbarInkDropHover};
-
-  mixer[kColorTabGroupBackgroundAlpha] = {
-      SkColorSetA(SK_ColorBLACK, 0.25 * 255)};
 
   mixer[kColorBraveExtensionMenuIcon] = {
       leo::GetColor(leo::Color::kColorIconActive, leo::Theme::kDark)};

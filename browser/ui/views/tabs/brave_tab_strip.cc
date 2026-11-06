@@ -47,40 +47,6 @@ BraveTabStrip::BraveTabStrip(std::unique_ptr<TabStripController> controller)
 
 BraveTabStrip::~BraveTabStrip() = default;
 
-bool BraveTabStrip::ShouldDrawStrokes() const {
-  // TODO(simonhong): We can return false always here as horizontal tab design
-  // doesn't need additional stroke.
-  // Delete all below code when horizontal tab feature flag is removed.
-  if (tabs::features::HorizontalTabsUpdateEnabled()) {
-    // We never automatically draw strokes around tabs. For pinned tabs, we draw
-    // the stroke when generating the tab drawing path.
-    return false;
-  }
-
-  if (!TabStrip::ShouldDrawStrokes()) {
-    return false;
-  }
-
-  // Use a little bit lower minimum contrast ratio as our ratio is 1.08162
-  // between default tab background and frame color of light theme.
-  // With upstream's 1.3f minimum ratio, strokes are drawn and it causes weird
-  // border lines in the tab group.
-  // Set 1.0816f as a minimum ratio to prevent drawing stroke.
-  // We don't need the stroke for our default light theme.
-  // NOTE: We don't need to check features::kTabOutlinesInLowContrastThemes
-  // enabled state. Although TabStrip::ShouldDrawStrokes() has related code,
-  // that feature is already expired since cr82. See
-  // chrome/browser/flag-metadata.json.
-  const SkColor background_color = TabStyle::Get()->GetTabBackgroundColor(
-      TabStyle::TabSelectionState::kActive, /*hovered=*/false,
-      /*frame_active*/ true, *GetColorProvider());
-  const SkColor frame_color =
-      controller_->GetFrameColor(BrowserFrameActiveState::kActive);
-  const float contrast_ratio =
-      color_utils::GetContrastRatio(background_color, frame_color);
-  return contrast_ratio < kBraveMinimumContrastRatioForOutlines;
-}
-
 void BraveTabStrip::UpdateHoverCard(Tab* tab, HoverCardUpdateType update_type) {
   if (brave_tabs::AreTooltipsEnabled(controller_->GetProfile()->GetPrefs())) {
     return;

@@ -18,9 +18,6 @@ class BraveTabHoverCardController;
   friend class BraveTabStrip;     \
   void UpdateHoverCard
 
-#define ShouldDrawStrokes   \
-  UnUsed() { return true; } \
-  virtual bool ShouldDrawStrokes
 #define GetDragContext                                                  \
   Unused_GetDragContext() {                                             \
     return nullptr;                                                     \
@@ -36,7 +33,6 @@ class BraveTabHoverCardController;
 #include "src/chrome/browser/ui/views/tabs/tab_strip.h"  // IWYU pragma: export
 #undef TabHoverCardController
 #undef GetDragContext
-#undef ShouldDrawStrokes
 #undef UpdateHoverCard
 
 static_assert(TabStrip::IsUsingBraveTabHoverCardController(),
