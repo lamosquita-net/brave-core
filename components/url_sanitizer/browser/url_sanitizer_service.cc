@@ -7,6 +7,8 @@
 
 #include <memory>
 #include <optional>
+#include <string>
+#include <string_view>
 #include <vector>
 
 #include "base/json/json_reader.h"
@@ -202,7 +204,7 @@ void URLSanitizerService::OnConfigReady(
 // Remove tracking query parameters from a GURL, leaving all
 // other parts untouched.
 std::string URLSanitizerService::StripQueryParameter(
-    const std::string& query,
+    std::string_view query,
     const base::flat_set<std::string>& trackers) {
   // We are using custom query string parsing code here. See
   // https://github.com/brave/brave-core/pull/13726#discussion_r897712350
@@ -228,7 +230,7 @@ std::string URLSanitizerService::StripQueryParameter(
   if (disallowed_count > 0) {
     return base::JoinString(output_kv_strings, "&");
   } else {
-    return query;
+    return std::string(query);
   }
 }
 

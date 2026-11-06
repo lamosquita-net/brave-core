@@ -7,6 +7,7 @@
 #define BRAVE_COMPONENTS_URL_SANITIZER_BROWSER_URL_SANITIZER_SERVICE_H_
 
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -83,7 +84,7 @@ class URLSanitizerService : public KeyedService,
 
   void UpdateConfig(Config config);
 
-  std::string StripQueryParameter(const std::string& query,
+  std::string StripQueryParameter(std::string_view query,
                                   const base::flat_set<std::string>& trackers);
 
  private:
