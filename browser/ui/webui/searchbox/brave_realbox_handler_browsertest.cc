@@ -6,24 +6,25 @@
 #include <memory>
 #include <string>
 
+#include "base/test/bind.h"
 #include "base/time/time.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/search_engines/template_url_service_factory.h"
-#include "chrome/browser/ui/browser.h"
+#include "chrome/browser/ui/omnibox/omnibox_controller.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/browser/ui/webui/searchbox/realbox_handler.h"
+#include "chrome/browser/ui/webui/searchbox/searchbox_test_utils.h"
 #include "chrome/test/base/in_process_browser_test.h"
 #include "chrome/test/base/search_test_utils.h"
 #include "components/omnibox/browser/autocomplete_match.h"
 #include "components/omnibox/browser/autocomplete_match_type.h"
 #include "components/omnibox/browser/omnibox_client.h"
-#include "components/omnibox/browser/omnibox_controller.h"
 #include "components/search_engines/template_url_service.h"
-#include "components/url_formatter/spoof_checks/idna_metrics.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/test/browser_task_environment.h"
 #include "content/public/test/browser_test.h"
 #include "content/public/test/browser_test_utils.h"
+#include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
 #include "ui/base/page_transition_types.h"
 #include "ui/base/window_open_disposition.h"
@@ -41,16 +42,21 @@ class BraveRealboxHandlerTest : public InProcessBrowserTest {
 
   void OnAutocompleteAccept(const GURL& url, const std::u16string& keyword) {
     mojo::Remote<searchbox::mojom::PageHandler> remote_page_handler;
-    RealboxHandler handler(remote_page_handler.BindNewPipeAndPassReceiver(),
-                           browser()->GetProfile(), contents(), nullptr, nullptr,
-                           nullptr);
+    testing::NiceMock<MockSearchboxPage> page;
+    RealboxHandler handler(
+        remote_page_handler.BindNewPipeAndPassReceiver(),
+        page.BindAndGetRemote(), browser()->GetProfile(), contents(),
+        base::BindLambdaForTesting(
+            []() -> contextual_search::ContextualSearchSessionHandle* {
+              return nullptr;
+            }));
     AutocompleteMatch match;
     match.keyword = keyword;
     handler.omnibox_controller()->client()->OnAutocompleteAccept(
         url, nullptr, WindowOpenDisposition::CURRENT_TAB,
         ui::PageTransition::PAGE_TRANSITION_TYPED,
-        AutocompleteMatchType::SEARCH_SUGGEST, base::TimeTicks::Now(), false,
-        false, u"", match, match, IDNA2008DeviationCharacter::kNone);
+        omnibox::AutocompleteMatchType::kSearchSuggest, base::TimeTicks::Now(),
+        false, false, u"", match, match);
     content::WaitForLoadStop(contents());
   }
 
