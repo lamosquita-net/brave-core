@@ -3,14 +3,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 import { color, radius, spacing } from '@brave/leo/tokens/css/variables'
-import { AutocompleteMatch, AutocompleteResult, OmniboxPopupSelection } from 'gen/ui/webui/resources/cr_components/searchbox/searchbox.mojom.m';
+import { AutocompleteMatch, AutocompleteResult, OmniboxPopupSelection } from 'chrome://resources/mojo/components/omnibox/browser/searchbox.mojom-webui.js';
 import * as React from 'react'
 import styled from 'styled-components'
 import SearchResult from './SearchResult'
 import getNTPBrowserAPI from '../../api/background'
 import { omniboxController, search, useSearchContext } from './SearchContext'
 import { braveSearchHost } from './config'
-import { stringToMojoString16 } from 'gen/ui/webui/resources/tsc/js/mojo_type_util';
 import { handleOpenURLClick, validateScheme } from '$web-common/SecureLink';
 import MaybePromptEnableSuggestions from './MaybePromptEnableSuggestions';
 
@@ -36,14 +35,19 @@ const Container = styled.div`
 
 // Handles opening an autocomplete match, which may or may not be part of an
 // autocomplete result.
-const openMatch = (match: AutocompleteMatch, line: number, event: React.MouseEvent | KeyboardEvent) => {
+const openMatch = (resultSequenceId: number, match: AutocompleteMatch, line: number, event: React.MouseEvent | KeyboardEvent) => {
   if (line === -1) {
-    handleOpenURLClick(match.destinationUrl.url, event)
+    handleOpenURLClick(match.destinationUrl, event)
     return
   }
 
   const button = 'button' in event ? event.button : 0
-  omniboxController.openAutocompleteMatch(line, match.destinationUrl, true, button, event.altKey, event.ctrlKey, event.metaKey, event.shiftKey)
+  omniboxController.openAutocompleteMatch(resultSequenceId, line, match.destinationUrl, true, button, {
+    altKey: event.altKey,
+    ctrlKey: event.ctrlKey,
+    metaKey: event.metaKey,
+    shiftKey: event.shiftKey,
+  }, event instanceof KeyboardEvent)
 }
 
 const useUrlWhatYouTyped = (query: string) => React.useMemo(() => {
@@ -62,11 +66,9 @@ const useUrlWhatYouTyped = (query: string) => React.useMemo(() => {
     validateScheme(url.toString())
 
     return {
-      destinationUrl: {
-        url: url.toString()
-      },
-      contents: stringToMojoString16(url.toString()),
-      description: stringToMojoString16(''),
+      destinationUrl: url.toString(),
+      contents: url.toString(),
+      description: '',
       imageUrl: `chrome://favicon/size/64@1x/${q.toString()}`,
       allowedToBeDefaultMatch: true
     } as AutocompleteMatch
@@ -161,7 +163,7 @@ export default function SearchResults() {
         return;
       }
 
-      openMatch(match, result?.matches.indexOf(match) ?? -1, e)
+      openMatch(result?.sequenceId ?? 0, match, result?.matches.indexOf(match) ?? -1, e)
     }
     document.addEventListener('keydown', handler)
     return () => {
@@ -171,7 +173,7 @@ export default function SearchResults() {
 
   const onSearchResultClick = (match: AutocompleteMatch) => {
     const line = result?.matches.indexOf(match) ?? -1
-    return (e: React.MouseEvent) => openMatch(match, line, e)
+    return (e: React.MouseEvent) => openMatch(result?.sequenceId ?? 0, match, line, e)
   }
 
   return matches.length ? <Container data-theme="dark" className='search-results'>
