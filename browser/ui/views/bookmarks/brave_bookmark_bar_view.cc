@@ -7,16 +7,20 @@
 
 #include "brave/browser/ui/bookmark/brave_bookmark_prefs.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
+#include "chrome/browser/ui/bookmarks/controllers/bookmark_bar_ui_controller.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "components/bookmarks/browser/bookmark_model.h"
 #include "ui/base/metadata/metadata_impl_macros.h"
+#include "ui/views/controls/button/menu_button.h"
 
-BraveBookmarkBarView::BraveBookmarkBarView(Browser* browser,
-                                           BrowserView* browser_view)
-    : BookmarkBarView(browser, browser_view) {
+BraveBookmarkBarView::BraveBookmarkBarView(
+    BrowserWindowInterface* browser,
+    std::unique_ptr<BookmarkBarUIController> controller,
+    BrowserView* browser_view)
+    : BookmarkBarView(browser, std::move(controller), browser_view) {
   show_all_bookmarks_button_pref_.Init(
       brave::bookmarks::prefs::kShowAllBookmarksButton,
-      browser_->profile()->GetPrefs(),
+      browser_->GetProfile()->GetPrefs(),
       base::BindRepeating(
           &BraveBookmarkBarView::OnShowAllBookmarksButtonPrefChanged,
           base::Unretained(this)));
@@ -27,7 +31,8 @@ BraveBookmarkBarView::BraveBookmarkBarView(Browser* browser,
 BraveBookmarkBarView::~BraveBookmarkBarView() = default;
 
 void BraveBookmarkBarView::MaybeUpdateOtherAndManagedButtonsVisibility() {
-  if (bookmark_model_ && bookmark_model_->loaded()) {
+  if (bookmark_service_ && bookmark_service_->bookmark_model() &&
+      bookmark_service_->bookmark_model()->loaded()) {
     UpdateOtherAndManagedButtonsVisibility();
   }
 }
