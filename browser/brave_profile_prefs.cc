@@ -36,7 +36,6 @@
 #include "chrome/browser/prefetch/pref_names.h"
 #include "chrome/browser/prefs/session_startup_pref.h"
 #include "chrome/browser/preloading/preloading_prefs.h"
-#include "chrome/browser/ui/webui/new_tab_page/ntp_pref_names.h"
 #include "chrome/common/pref_names.h"
 #include "components/content_settings/core/common/pref_names.h"
 #include "components/embedder_support/pref_names.h"
@@ -47,7 +46,6 @@
 #include "components/policy/core/common/policy_pref_names.h"
 #include "components/pref_registry/pref_registry_syncable.h"
 #include "components/prefs/pref_registry_simple.h"
-#include "components/privacy_sandbox/privacy_sandbox_prefs.h"
 #include "components/safe_browsing/core/common/safe_browsing_prefs.h"
 #include "components/search_engines/search_engines_pref_names.h"
 #include "components/signin/public/base/signin_pref_names.h"
@@ -72,6 +70,7 @@
 #include "brave/browser/ui/tabs/brave_tab_prefs.h"
 #include "brave/browser/ui/webui/welcome_page/brave_welcome_page_prefs.h"
 #include "brave/components/brave_private_new_tab_ui/common/pref_names.h"
+#include "chrome/browser/new_tab_page/prefs/ntp_pref_names.h"
 #include "chrome/browser/ui/webui/bookmarks/bookmark_prefs.h"
 #include "chrome/browser/ui/webui/side_panel/bookmarks/bookmarks.mojom.h"
 #endif
@@ -264,20 +263,9 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
       base::Value(
           static_cast<int>(prefetch::NetworkPredictionOptions::kDisabled)));
 
-  // Disable cloud print
-  // Cloud Print: Don't allow this browser to act as Cloud Print server
-  registry->SetDefaultPrefValue(prefs::kCloudPrintProxyEnabled,
-                                base::Value(false));
-
   // Disable default webstore icons in topsites or apps.
   registry->SetDefaultPrefValue(policy::policy_prefs::kHideWebStoreIcon,
                                 base::Value(true));
-
-  // Disable Chromium's privacy sandbox
-  registry->SetDefaultPrefValue(prefs::kPrivacySandboxApisEnabled,
-                                base::Value(false));
-  registry->SetDefaultPrefValue(prefs::kPrivacySandboxApisEnabledV2,
-                                base::Value(false));
 
   // Disable ScrollToText (Copy link to text).
   registry->SetDefaultPrefValue(prefs::kScrollToTextFragmentEnabled,
@@ -353,8 +341,8 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
 
   // Turn on most visited mode on NTP by default.
   // We can turn customization mode on when we have add-shortcut feature.
-  registry->SetDefaultPrefValue(ntp_prefs::kNtpUseMostVisitedTiles,
-                                base::Value(true));
+  registry->SetDefaultPrefValue(ntp_prefs::kNtpCustomLinksVisible,
+                                base::Value(false));
   registry->RegisterBooleanPref(kEnableWindowClosingConfirm, true);
   registry->RegisterBooleanPref(kEnableClosingLastTab, true);
   registry->RegisterBooleanPref(kShowFullscreenReminder, true);
