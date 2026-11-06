@@ -156,10 +156,10 @@ IN_PROC_BROWSER_TEST_F(SearchEngineProviderServiceTest,
 // https://github.com/brave/brave-browser/issues/1452
 IN_PROC_BROWSER_TEST_F(SearchEngineProviderServiceTest,
                        MultiplePrivateWindowTest) {
-  Browser* private_window_1 = CreateIncognitoBrowser();
+  BrowserWindowInterface* private_window_1 = CreateIncognitoBrowser();
   CloseBrowserSynchronously(private_window_1);
 
-  Browser* private_window_2 = CreateIncognitoBrowser();
+  BrowserWindowInterface* private_window_2 = CreateIncognitoBrowser();
   CloseBrowserSynchronously(private_window_2);
 }
 
