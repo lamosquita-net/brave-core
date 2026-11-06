@@ -9,12 +9,12 @@
 #include "brave/browser/ui/geolocation/brave_geolocation_permission_tab_helper.h"
 #include "brave/components/constants/brave_paths.h"
 #include "chrome/browser/ssl/cert_verifier_browser_test.h"
-#include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_commands.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/common/chrome_paths.h"
 #include "chrome/test/base/in_process_browser_test.h"
 #include "chrome/test/base/ui_test_utils.h"
+#include "components/permissions/permission_request_manager.h"
 #include "content/public/test/browser_test.h"
 #include "content/public/test/browser_test_utils.h"
 #include "content/public/test/test_navigation_observer.h"
@@ -55,11 +55,16 @@ IN_PROC_BROWSER_TEST_F(GeolocationPermissionRequestBrowserTest,
       BraveGeolocationPermissionTabHelper::FromWebContents(active_contents());
   EXPECT_FALSE(tab_helper->enable_high_accuracy());
 
+  // Auto-accept any permissions prompts
+  permissions::PermissionRequestManager::FromWebContents(active_contents())
+      ->set_auto_response_for_test(
+          permissions::PermissionRequestManager::AutoResponseType::ACCEPT_ALL);
+
   const std::string get_current_position_js_with_high =
       "navigator.geolocation.getCurrentPosition(() => {}, () => {}, { "
       "enableHighAccuracy : true })";
-  ASSERT_EQ(nullptr, content::EvalJs(active_contents(),
-                                     get_current_position_js_with_high));
+  ASSERT_EQ(base::Value(), content::EvalJs(active_contents(),
+                                           get_current_position_js_with_high));
   content::RunAllTasksUntilIdle();
   EXPECT_TRUE(tab_helper->enable_high_accuracy());
 
@@ -72,8 +77,9 @@ IN_PROC_BROWSER_TEST_F(GeolocationPermissionRequestBrowserTest,
   const std::string get_current_position_js_without_high =
       "navigator.geolocation.getCurrentPosition(() => {}, () => {}, { "
       "enableHighAccuracy : false })";
-  ASSERT_EQ(nullptr, content::EvalJs(active_contents(),
-                                     get_current_position_js_without_high));
+  ASSERT_EQ(
+      base::Value(),
+      content::EvalJs(active_contents(), get_current_position_js_without_high));
   content::RunAllTasksUntilIdle();
   EXPECT_FALSE(tab_helper->enable_high_accuracy());
 }

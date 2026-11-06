@@ -5,6 +5,7 @@
 
 #include "chrome/browser/profile_resetter/reset_report_uploader.h"
 
+#include "base/memory/scoped_refptr.h"
 #include "base/test/bind.h"
 #include "base/test/task_environment.h"
 #include "services/network/public/cpp/weak_wrapper_shared_url_loader_factory.h"
@@ -35,11 +36,10 @@ class ResetReportUploaderTest : public testing::Test {
 TEST_F(ResetReportUploaderTest, NoFetch) {
   bool network_access_occurred = false;
   test_url_loader_factory()->SetInterceptor(
-    base::BindLambdaForTesting([&](const network::ResourceRequest& request) {
-                                   network_access_occurred = true;
-                               }));
-  ResetReportUploader* uploader =
-    new ResetReportUploader(shared_url_loader_factory());
-  uploader->DispatchReportInternal("");
+      base::BindLambdaForTesting([&](const network::ResourceRequest& request) {
+        network_access_occurred = true;
+      }));
+  ResetReportUploader uploader(shared_url_loader_factory());
+  uploader.DispatchReportInternal("");
   EXPECT_FALSE(network_access_occurred);
 }
