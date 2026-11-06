@@ -9,10 +9,13 @@
 #include <utility>
 #include <vector>
 
+#include "base/functional/bind.h"
 #include "base/json/json_reader.h"
 #include "base/json/json_writer.h"
 #include "base/logging.h"
+#include "base/notreached.h"
 #include "base/strings/strcat.h"
+#include "base/strings/string_util.h"
 #include "brave/components/body_sniffer/body_sniffer_url_loader.h"
 #include "brave/components/de_amp/browser/de_amp_util.h"
 #include "brave/components/de_amp/common/features.h"
@@ -20,6 +23,7 @@
 #include "components/prefs/pref_service.h"
 #include "components/user_prefs/user_prefs.h"
 #include "content/public/browser/browser_context.h"
+#include "content/public/browser/navigation_controller.h"
 #include "content/public/browser/navigation_entry.h"
 #include "content/public/browser/page_navigator.h"
 #include "services/network/public/mojom/url_response_head.mojom.h"
@@ -215,12 +219,19 @@ bool DeAmpBodyHandler::OpenCanonicalURL(const GURL& new_url) {
     return false;
   }
 
+  // A renderer-initiated navigation must carry an initiator origin, so derive
+  // the flag from it. This keeps a pending canonical navigation out of the
+  // omnibox for renderer-driven loads (otherwise the pending entry would be
+  // shown, spoofing the address bar); direct omnibox loads have no initiator
+  // and stay browser-initiated.
+  const bool is_renderer_initiated = request_.request_initiator.has_value();
+
   content::OpenURLParams params(
       new_url,
       content::Referrer::SanitizeForRequest(new_url, entry->GetReferrer()),
       contents->GetPrimaryMainFrame()->GetFrameTreeNodeId(),
       WindowOpenDisposition::CURRENT_TAB, ui::PAGE_TRANSITION_CLIENT_REDIRECT,
-      false);
+      is_renderer_initiated);
 
   params.initiator_origin = request_.request_initiator;
   params.user_gesture = request_.has_user_gesture;
