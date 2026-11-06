@@ -1,13 +1,11 @@
 diff --git a/content/browser/renderer_host/file_utilities_host_impl.cc b/content/browser/renderer_host/file_utilities_host_impl.cc
-index bc5537200df029545ed7a3d28bbfcda65d7f9df8..accf3873f473c7f80e5828fe5778379bd7552961 100644
+index b0566c79d2b53e6a4f243c0a6774bf3141bf0827..c13a145383ca3aa84aebcb67e812028182f1da4c 100644
 --- a/content/browser/renderer_host/file_utilities_host_impl.cc
 +++ b/content/browser/renderer_host/file_utilities_host_impl.cc
-@@ -9,10 +9,19 @@
- #include <utility>
- 
+@@ -11,9 +11,17 @@
  #include "base/files/file_util.h"
-+#include "build/build_config.h"
- #include "content/browser/child_process_security_policy_impl.h"
+ #include "build/build_config.h"
+ #include "content/browser/security/cpsp/child_process_security_policy_impl.h"
 +#include "mojo/public/cpp/bindings/message.h"
  #include "mojo/public/cpp/bindings/pending_receiver.h"
  #include "mojo/public/cpp/bindings/self_owned_receiver.h"
@@ -21,8 +19,8 @@ index bc5537200df029545ed7a3d28bbfcda65d7f9df8..accf3873f473c7f80e5828fe5778379b
 +
  namespace content {
  
- FileUtilitiesHostImpl::FileUtilitiesHostImpl(int process_id)
-@@ -45,4 +54,38 @@ void FileUtilitiesHostImpl::GetFileInfo(const base::FilePath& path,
+ FileUtilitiesHostImpl::FileUtilitiesHostImpl(ChildProcessId process_id)
+@@ -60,4 +68,38 @@ void FileUtilitiesHostImpl::GetFileInfo(const base::FilePath& path,
    }
  }
  
