@@ -10,26 +10,12 @@
 
 #include "base/functional/bind.h"
 #include "base/memory/scoped_refptr.h"
-#include "base/no_destructor.h"
 #include "components/update_client/net/network_chromium.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/storage_partition.h"
 #include "url/gurl.h"
 
-
 namespace extensions {
-
-namespace {
-
-using FactoryCallback = ChromeUpdateClientConfig::FactoryCallback;
-
-// static
-static FactoryCallback& GetFactoryCallback() {
-  static base::NoDestructor<FactoryCallback> factory;
-  return *factory;
-}
-
-}  // namespace
 
 std::string BraveUpdateClientConfig::GetChannel() const {
   return std::string("stable");
@@ -59,11 +45,8 @@ BraveUpdateClientConfig::~BraveUpdateClientConfig() = default;
 // static
 scoped_refptr<ChromeUpdateClientConfig> BraveUpdateClientConfig::Create(
     content::BrowserContext* context,
-    std::optional<GURL> update_url_override) {
-  FactoryCallback& factory = GetFactoryCallback();
-  return factory.is_null() ? base::MakeRefCounted<BraveUpdateClientConfig>(
-                                 context, update_url_override)
-                           : factory.Run(context);
+    std::optional<GURL> url_override) {
+  return base::MakeRefCounted<BraveUpdateClientConfig>(context, url_override);
 }
 
 }  // namespace extensions
