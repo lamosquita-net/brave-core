@@ -93,6 +93,10 @@ module.exports = async function (env, argv) {
       syncWebAssembly: true,
       outputModule: Boolean(env.output_module)
     },
+    // Chromium 156 bindings import //resources/... (scheme-relative). The web
+    // preset would treat those as external module URLs before prefixReplacer
+    // maps them, so turn it off; real externals are handled below.
+    externalsPresets: { web: false },
     externals: [
       function ({ context, request }, callback) {
         if (env.output_module) {
@@ -131,7 +135,7 @@ module.exports = async function (env, argv) {
       }),
       provideNodeGlobals,
       ...Object.keys(pathMap)
-        .filter(p => p.startsWith('chrome://'))
+        .filter(p => p.startsWith('chrome://') || p.startsWith('//'))
         .map(p => prefixReplacer(p, pathMap[p])),
     ],
     module: {

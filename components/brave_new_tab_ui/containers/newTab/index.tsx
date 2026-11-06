@@ -36,7 +36,6 @@ import GridWidget from './gridWidget'
 import { setIconBasePath } from '@brave/leo/react/icon'
 setIconBasePath('chrome://resources/brave-icons')
 
-import * as style from './style'
 
 const SearchPlaceholder = React.lazy(() => import('../../components/search/SearchPlaceholder'))
 

@@ -18,6 +18,7 @@ module.exports = function (genPath) {
     // to minimize knowledge of specific gen/ paths and easily allow us to not
     // bundle
     // them in the future for certain build configuration, just like chromium.
+    'chrome://resources/mojo/mojo/public/js': path.join(genPath, 'mojo/public/js'),
     'chrome://resources/brave/fonts': path.join(
       genPath,
       'brave/ui/webui/resources/fonts'),
@@ -26,6 +27,11 @@ module.exports = function (genPath) {
       'brave/ui/webui/resources/tsc'),
     'chrome://resources': path.join(
       genPath, 'ui/webui/resources/tsc'),
+    // Chromium 156 mojom-webui bindings import scheme-relative //resources/.
+    // Only bindings.d.ts is copied under tsc/; the JS is generated in gen/.
+    '//resources/mojo/mojo/public/js': path.join(genPath, 'mojo/public/js'),
+    '//resources/brave': path.join(genPath, 'brave/ui/webui/resources/tsc'),
+    '//resources': path.join(genPath, 'ui/webui/resources/tsc'),
     // We import brave-ui direct from source and not from package repo, so we need
     // direct path to the src/ directory.
     'brave-ui': path.resolve(__dirname, '../../node_modules/@brave/brave-ui'),
