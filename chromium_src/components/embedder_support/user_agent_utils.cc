@@ -52,6 +52,8 @@ blink::UserAgentMetadata GetUserAgentMetadata_ChromiumImpl(
 #define GetUserAgentMetadata GetUserAgentMetadata_ChromiumImpl
 // Inside the original, BuildModelInfo is the renamed one; the empty override
 // above wins, and HardwareModelName() is not used for the model.
+// Declared before the define, so the macro only touches the call.
+#include "base/system/sys_info.h"
 #define HardwareModelName() HardwareModelName() == "" ? "" : ""
 #define BuildModelInfo BuildModelInfo_ChromiumImpl
 #include "src/components/embedder_support/user_agent_utils.cc"

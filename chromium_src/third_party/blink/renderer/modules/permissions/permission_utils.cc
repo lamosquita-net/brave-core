@@ -4,6 +4,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "third_party/blink/renderer/modules/permissions/permission_utils.h"
+// ContentSettingsType also has a WEB_PRINTING value, which local_frame.h pulls
+// in: include it before the define, so the macro only touches the switch
+// (through local_frame.h, which Blink's include rules allow here).
+#include "third_party/blink/renderer/core/frame/local_frame.h"
 
 #define WEB_PRINTING                                    \
   BRAVE_ADS:                                            \

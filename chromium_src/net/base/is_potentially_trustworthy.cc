@@ -4,6 +4,9 @@
  * You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "net/base/is_potentially_trustworthy.h"
+// IsLocalhost() is declared there: include it before the define, so the
+// macro only touches the calls.
+#include "net/base/url_util.h"
 
 #define IsLocalhost(URL) IsLocalhostOrOnion(URL)
 
