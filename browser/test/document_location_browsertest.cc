@@ -7,7 +7,6 @@
 #include <utility>
 #include <vector>
 
-#include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/test/base/in_process_browser_test.h"
 #include "chrome/test/base/ui_test_utils.h"
@@ -25,11 +24,10 @@
 
 namespace {
 
-const char kAddIframeScript[] =
+constexpr char kAddIframeScript[] =
     "var frame = document.createElement('iframe');\n"
     "frame.src = $1;\n"
     "document.body.appendChild(frame);\n";
-
 }
 
 class DocumentLocationBrowserTest : public InProcessBrowserTest {

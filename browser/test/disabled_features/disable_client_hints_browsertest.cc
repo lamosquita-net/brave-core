@@ -14,7 +14,6 @@
 #include "base/path_service.h"
 #include "base/run_loop.h"
 #include "base/strings/string_util.h"
-#include "base/strings/stringprintf.h"
 #include "base/task/bind_post_task.h"
 #include "base/task/sequenced_task_runner.h"
 #include "base/test/scoped_feature_list.h"
@@ -27,25 +26,22 @@
 #include "net/test/embedded_test_server/http_request.h"
 #include "services/network/public/cpp/client_hints.h"
 #include "services/network/public/mojom/web_client_hints_types.mojom-shared.h"
+#include "third_party/abseil-cpp/absl/strings/str_format.h"
 #include "third_party/blink/public/common/features.h"
 
 namespace {
-const char kNoClientHintsHeaders[] = "/simple.html";
-const char kClientHints[] = "/ch.html";
-const char kClientHintsDelegationMerge[] = "/ch_delegation_merge.html";
-const char KClientHintsMetaHTTPEquivAcceptCH[] =
+constexpr char kNoClientHintsHeaders[] = "/simple.html";
+constexpr char kClientHints[] = "/ch.html";
+constexpr char kClientHintsDelegationMerge[] = "/ch_delegation_merge.html";
+constexpr char kClientHintsMetaHTTPEquivAcceptCH[] =
     "/ch-meta-http-equiv-accept-ch.html";
-const char KClientHintsMetaNameAcceptCH[] = "/ch-meta-name-accept-ch.html";
+constexpr char kClientHintsMetaNameAcceptCH[] = "/ch-meta-name-accept-ch.html";
 
 const std::reference_wrapper<const base::Feature> kTestFeatures[] = {
     // Individual hints features
-    blink::features::kClientHintsDeviceMemory,
     blink::features::kClientHintsDeviceMemory_DEPRECATED,
-    blink::features::kClientHintsDPR,
     blink::features::kClientHintsDPR_DEPRECATED,
-    blink::features::kClientHintsResourceWidth,
     blink::features::kClientHintsResourceWidth_DEPRECATED,
-    blink::features::kClientHintsViewportWidth,
     blink::features::kClientHintsViewportWidth_DEPRECATED,
     blink::features::kViewportHeightClientHintHeader,
 };
@@ -95,9 +91,9 @@ class ClientHintsBrowserTest : public InProcessBrowserTest,
     client_hints_delegation_merge_url_ =
         https_server_.GetURL(kClientHintsDelegationMerge);
     client_hints_meta_http_equiv_accept_ch_url_ =
-        https_server_.GetURL(KClientHintsMetaHTTPEquivAcceptCH);
+        https_server_.GetURL(kClientHintsMetaHTTPEquivAcceptCH);
     client_hints_meta_name_accept_ch_url_ =
-        https_server_.GetURL(KClientHintsMetaNameAcceptCH);
+        https_server_.GetURL(kClientHintsMetaNameAcceptCH);
 
     host_resolver()->AddRule("*", "127.0.0.1");
     InProcessBrowserTest::SetUpOnMainThread();
@@ -303,6 +299,6 @@ INSTANTIATE_TEST_SUITE_P(
     ClientHintsBrowserTest,
     ::testing::Bool(),
     [](const testing::TestParamInfo<ClientHintsBrowserTest::ParamType>& info) {
-      return base::StringPrintf("ChromiumCHFeatures_%s",
-                                info.param ? "Enabled" : "Disabled");
+      return absl::StrFormat("ChromiumCHFeatures_%s",
+                             info.param ? "Enabled" : "Disabled");
     });
