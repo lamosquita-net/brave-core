@@ -10,14 +10,11 @@
 #include "brave/components/brave_extension/grit/brave_extension.h"
 #include "brave/components/constants/brave_switches.h"
 #include "chrome/browser/profiles/profile.h"
-#include "components/prefs/pref_service.h"
 
 namespace extensions {
 
 BraveComponentLoader::BraveComponentLoader(Profile* profile)
-    : ComponentLoader(profile),
-      profile_(profile),
-      profile_prefs_(profile->GetPrefs()) {}
+    : ComponentLoader(profile) {}
 
 BraveComponentLoader::~BraveComponentLoader() = default;
 

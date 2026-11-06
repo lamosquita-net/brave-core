@@ -6,10 +6,8 @@
 #ifndef BRAVE_BROWSER_EXTENSIONS_BRAVE_COMPONENT_LOADER_H_
 #define BRAVE_BROWSER_EXTENSIONS_BRAVE_COMPONENT_LOADER_H_
 
-#include "base/memory/raw_ptr.h"
 #include "chrome/browser/extensions/component_loader.h"
 
-class PrefService;
 class Profile;
 
 namespace extensions {
@@ -27,10 +25,6 @@ class BraveComponentLoader : public ComponentLoader {
   // be loaded unless we are in signed user session (ChromeOS). For all other
   // platforms this |skip_session_components| is expected to be unset.
   void AddDefaultComponentExtensions(bool skip_session_components) override;
-
- private:
-  raw_ptr<Profile> profile_ = nullptr;
-  raw_ptr<PrefService> profile_prefs_ = nullptr;
 };
 
 }  // namespace extensions
