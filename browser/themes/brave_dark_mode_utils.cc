@@ -72,7 +72,8 @@ bool SystemDarkModeEnabled() {
     return g_system_dark_mode_enabled_in_test_;
 
 #if BUILDFLAG(IS_LINUX)
-  return HasCachedSystemDarkModeType();
+  // Linux has no "same as system" option since DarkModeManagerLinux is gone.
+  return false;
 #else
   return ui::NativeTheme::GetInstanceForNativeUi()->SystemDarkModeSupported();
 #endif
