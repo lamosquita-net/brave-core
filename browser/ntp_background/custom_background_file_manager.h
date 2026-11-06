@@ -10,12 +10,12 @@
 #include <string>
 #include <type_traits>
 
+#include "base/check.h"
 #include "base/files/file_path.h"
 #include "base/functional/callback.h"
 #include "base/memory/ref_counted_memory.h"
 #include "base/memory/weak_ptr.h"
-#include "base/strings/string_util.h"
-#include "base/strings/utf_string_conversions.h"
+#include "base/strings/strcat.h"
 #include "brave/components/ntp_background_images/browser/url_constants.h"
 #include "url/gurl.h"
 #include "url/url_util.h"
@@ -26,15 +26,11 @@
 
 namespace base {
 class FilePath;
-}
+}  // namespace base
 
 namespace gfx {
 class Image;
 }  // namespace gfx
-
-namespace image_fetcher {
-class ImageDecoder;
-}  // namespace image_fetcher
 
 class Profile;
 
@@ -80,8 +76,7 @@ class CustomBackgroundFileManager final {
                        CustomBackgroundFileManager* file_manager = nullptr)
         : file_manager_(file_manager) {
       if constexpr (std::is_same_v<FromT, std::string>) {
-        DCHECK(!base::StartsWith(value,
-                                 ntp_background_images::kCustomWallpaperURL))
+        DCHECK(!value.starts_with(ntp_background_images::kCustomWallpaperURL))
             << "URLs should be passed in as a GURL";
         value_ = value;
       } else if constexpr (std::is_same_v<FromT, GURL>) {
@@ -95,11 +90,8 @@ class CustomBackgroundFileManager final {
         // remove leading slash
         const auto path = value.path().substr(1);
         DCHECK(!path.empty()) << "URL path is empty " << value;
-        url::RawCanonOutputT<char16_t> decoded_value;
-        url::DecodeURLEscapeSequences(
-            path, url::DecodeURLMode::kUTF8OrIsomorphic, &decoded_value);
-        value_ = base::UTF16ToUTF8(
-            std::u16string(decoded_value.data(), decoded_value.length()));
+        value_ = url::DecodeUrlEscapeSequences(
+            path, url::DecodeUrlMode::kUtf8OrIsomorphic);
       } else {
         // FilePath(local file path) -> std::string(prefs value)
         static_assert(std::is_same_v<FromT, base::FilePath>,
@@ -111,7 +103,7 @@ class CustomBackgroundFileManager final {
 #if defined(OS_WIN)
         auto file_name = base::SysWideToUTF8(value.BaseName().value());
 #else
-        auto file_name = std::string(value.BaseName().value().c_str());
+        auto file_name = value.BaseName().value();
 #endif
         DCHECK(!file_name.empty())
             << "Couldn't extract file name from the given path " << value;
@@ -135,9 +127,9 @@ class CustomBackgroundFileManager final {
         // Do percent encoding and compose it with base url so that it can
         // be used as webui data url.
         url::RawCanonOutputT<char> encoded;
-        url::EncodeURIComponent(value_, &encoded);
-        return GURL(ntp_background_images::kCustomWallpaperURL +
-                    std::string(encoded.data(), encoded.length()));
+        url::EncodeUriComponent(value_, &encoded);
+        return GURL(base::StrCat(
+            {ntp_background_images::kCustomWallpaperURL, encoded.view()}));
       } else {
         static_assert(std::is_same_v<ToT, base::FilePath>,
                       "ToT must be one of std::string, GURL, base::FilePath");
@@ -193,8 +185,6 @@ class CustomBackgroundFileManager final {
                       const gfx::Image& image);
 
   raw_ptr<Profile> profile_ = nullptr;
-
-  std::unique_ptr<image_fetcher::ImageDecoder> image_decoder_;
 
   base::WeakPtrFactory<CustomBackgroundFileManager> weak_factory_{this};
 };
