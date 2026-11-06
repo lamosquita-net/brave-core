@@ -5,10 +5,11 @@
 
 #include "brave/browser/ui/views/tabs/brave_tab_hover_card_controller.h"
 
+#include <memory>
+
 #include "base/functional/bind.h"
 #include "brave/browser/ui/tabs/brave_tab_prefs.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/views/tabs/hovercard/tab_hover_card_bubble_view.h"
 #include "chrome/browser/ui/views/tabs/hovercard/tab_hover_card_controller.h"
 #include "chrome/browser/ui/views/tabs/hovercard/tab_hover_card_thumbnail_observer.h"
@@ -17,20 +18,21 @@
 
 BraveTabHoverCardController::~BraveTabHoverCardController() = default;
 
-void BraveTabHoverCardController::CreateHoverCard(Tab* tab) {
+void BraveTabHoverCardController::CreateHoverCard(
+    HoverCardAnchorTarget* anchor_target) {
   hover_card_image_previews_enabled_ =
       AreHoverCardImagesEnabled() ||
       brave_tabs::AreCardPreviewsEnabled(
-          tab->controller()->GetBrowser()->profile()->GetPrefs());
+          browser_window_interface_->GetProfile()->GetPrefs());
 
-  TabHoverCardController::CreateHoverCard(tab);
+  TabHoverCardController::CreateHoverCard(anchor_target);
 }
 
 void BraveTabHoverCardController::OnHovercardImagesEnabledChanged() {
   hover_card_image_previews_enabled_ =
       AreHoverCardImagesEnabled() ||
       brave_tabs::AreCardPreviewsEnabled(
-          tab_strip_->GetBrowser()->profile()->GetPrefs());
+          browser_window_interface_->GetProfile()->GetPrefs());
   if (!hover_card_image_previews_enabled_) {
     thumbnail_subscription_ = base::CallbackListSubscription();
     thumbnail_observer_.reset();

@@ -20,11 +20,11 @@ class BraveTabStrip : public TabStrip {
   BraveTabStrip& operator=(const BraveTabStrip&) = delete;
 
   // TabStrip:
-  void UpdateHoverCard(Tab* tab, HoverCardUpdateType update_type) override;
-  void MaybeStartDrag(
-      TabSlotView* source,
-      const ui::LocatedEvent& event,
-      const ui::ListSelectionModel& original_selection) override;
+  void UpdateHoverCard(HoverCardAnchorTarget* anchor_target,
+                       HoverCardUpdateType update_type) override;
+  void MaybeStartDrag(TabSlotView* source,
+                      const ui::LocatedEvent& event,
+                      ui::ListSelectionModel original_selection) override;
 };
 
 #endif  // BRAVE_BROWSER_UI_VIEWS_TABS_BRAVE_TAB_STRIP_H_

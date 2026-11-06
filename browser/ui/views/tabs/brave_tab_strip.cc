@@ -19,6 +19,7 @@
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/themes/theme_service.h"
 #include "chrome/browser/themes/theme_service_factory.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/color/chrome_color_id.h"
 #include "chrome/browser/ui/views/tabs/tab.h"
 #include "chrome/browser/ui/views/tabs/tab_slot_view.h"
@@ -32,17 +33,18 @@ BraveTabStrip::BraveTabStrip(std::unique_ptr<TabStripController> controller)
 
 BraveTabStrip::~BraveTabStrip() = default;
 
-void BraveTabStrip::UpdateHoverCard(Tab* tab, HoverCardUpdateType update_type) {
-  if (brave_tabs::AreTooltipsEnabled(controller_->GetProfile()->GetPrefs())) {
+void BraveTabStrip::UpdateHoverCard(HoverCardAnchorTarget* anchor_target,
+                                    HoverCardUpdateType update_type) {
+  if (brave_tabs::AreTooltipsEnabled(
+          controller_->GetBrowserWindowInterface()->GetProfile()->GetPrefs())) {
     return;
   }
-  TabStrip::UpdateHoverCard(tab, update_type);
+  TabStrip::UpdateHoverCard(anchor_target, update_type);
 }
 
-void BraveTabStrip::MaybeStartDrag(
-    TabSlotView* source,
-    const ui::LocatedEvent& event,
-    const ui::ListSelectionModel& original_selection) {
+void BraveTabStrip::MaybeStartDrag(TabSlotView* source,
+                                   const ui::LocatedEvent& event,
+                                   ui::ListSelectionModel original_selection) {
   if (base::FeatureList::IsEnabled(tabs::features::kBraveSharedPinnedTabs)) {
     // When source tab is bound for dummy web contents for a shared pinned tab,
     // we shouldn't kick off drag-and-drop session as the web contents will be
@@ -50,11 +52,11 @@ void BraveTabStrip::MaybeStartDrag(
     if (source->GetTabSlotViewType() == TabSlotView::ViewType::kTab &&
         static_cast<Tab*>(source)->data().pinned) {
       auto index = GetModelIndexOf(source).value();
-      auto* browser = controller_->GetBrowser();
+      auto* browser = controller_->GetBrowserWindowInterface();
       DCHECK(browser);
 
       auto* shared_pinned_tab_service =
-          SharedPinnedTabServiceFactory::GetForProfile(browser->profile());
+          SharedPinnedTabServiceFactory::GetForProfile(browser->GetProfile());
       DCHECK(shared_pinned_tab_service);
       if (shared_pinned_tab_service->IsDummyContents(
               browser->tab_strip_model()->GetWebContentsAt(index))) {
