@@ -11,11 +11,19 @@
 #include "brave/browser/ui/views/toolbar/brave_toolbar_view.h"
 #include "brave/components/constants/pref_names.h"
 #include "chrome/browser/ui/browser_commands.h"
+#include "chrome/browser/ui/exclusive_access/exclusive_access_context.h"
 
 #define InfoBarContainerView BraveInfoBarContainerView
 #define ToolbarView BraveToolbarView
 #define BookmarkBarView BraveBookmarkBarView
-#define UpdateExclusiveAccessBubble UpdateExclusiveAccessBubble_ChromiumImpl
+
+// 156 moved UpdateExclusiveAccessBubble() from BrowserView to
+// BrowserView::ExclusiveAccessContextImpl. The chromium_src override of
+// exclusive_access_context.h adds the virtual _ChromiumImpl that the upstream
+// body becomes here.
+#define UpdateExclusiveAccessBubble(...)             \
+  UpdateExclusiveAccessBubble(__VA_ARGS__) override; \
+  virtual void UpdateExclusiveAccessBubble_ChromiumImpl(__VA_ARGS__)
 
 #include "src/chrome/browser/ui/views/frame/browser_view.cc"
 
@@ -24,7 +32,7 @@
 #undef ToolbarView
 #undef InfoBarContainerView
 
-void BrowserView::UpdateExclusiveAccessBubble(
+void BrowserView::ExclusiveAccessContextImpl::UpdateExclusiveAccessBubble(
     const ExclusiveAccessBubbleParams& params,
     ExclusiveAccessBubbleHideCallback first_hide_callback) {
   // Show/Hide full screen reminder bubble based on our settings preference

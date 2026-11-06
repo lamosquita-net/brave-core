@@ -20,12 +20,6 @@
 #define MaybeShowReadingListInSidePanelIPH \
   virtual MaybeShowReadingListInSidePanelIPH
 
-#define UpdateExclusiveAccessBubble                           \
-  UpdateExclusiveAccessBubble_ChromiumImpl(                   \
-      const ExclusiveAccessBubbleParams& params,              \
-      ExclusiveAccessBubbleHideCallback first_hide_callback); \
-  void UpdateExclusiveAccessBubble
-
 #if BUILDFLAG(IS_WIN)
 // On Windows <winuser.h> defines LoadAccelerators
 // Using push_macro seems to be causing #undef not to work in Chromium 125.
@@ -42,7 +36,6 @@
 // #pragma pop_macro("LoadAccelerators")
 #endif
 
-#undef UpdateExclusiveAccessBubble
 #undef MaybeShowReadingListInSidePanelIPH
 #undef BookmarkBarView
 #undef BrowserWindow
