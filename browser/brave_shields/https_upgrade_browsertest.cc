@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+#include "base/memory/scoped_refptr.h"
 #include "base/test/scoped_feature_list.h"
 #include "brave/browser/brave_browser_process.h"
 #include "brave/components/brave_shields/content/browser/brave_shields_util.h"
@@ -12,9 +13,11 @@
 #include "chrome/browser/interstitials/security_interstitial_page_test_utils.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ssl/https_upgrades_interceptor.h"
+#include "chrome/browser/ui/tabs/public/tab_features.h"
 #include "chrome/common/chrome_features.h"
 #include "chrome/common/pref_names.h"
 #include "chrome/test/base/chrome_test_utils.h"
+#include "chrome/test/base/platform_browser_test.h"
 #include "components/prefs/pref_service.h"
 #include "content/public/test/browser_test.h"
 #include "content/public/test/browser_test_utils.h"
@@ -25,11 +28,9 @@
 #include "net/dns/mock_host_resolver.h"
 #include "url/gurl.h"
 
-#if BUILDFLAG(IS_ANDROID)
-#include "chrome/test/base/android/android_browser_test.h"
-#else
+#if !BUILDFLAG(IS_ANDROID)
+#include "chrome/browser/ssl/ask_before_http_dialog_controller.h"
 #include "chrome/browser/ui/navigator/browser_navigator_params.h"
-#include "chrome/test/base/in_process_browser_test.h"
 #include "chrome/test/base/ui_test_utils.h"
 #endif
 
@@ -63,9 +64,9 @@ constexpr TestCase kTestCases[] = {
     {false, "broken1.com", kNonexistent, ControlType::ALLOW, false,
      PageResult::kHttp},
     {false, "broken2.com", kNonexistent, ControlType::BLOCK_THIRD_PARTY, false,
-     PageResult::kHttp},
+     PageResult::kHttps},
     {false, "broken3.com", kNonexistent, ControlType::BLOCK, false,
-     PageResult::kInterstitial},
+     PageResult::kHttps},
     {false, "upgradable1.com", kSimple, ControlType::ALLOW, false,
      PageResult::kHttp},
     {false, "upgradable2.com", kSimple, ControlType::BLOCK_THIRD_PARTY, false,
@@ -196,6 +197,21 @@ class HttpsUpgradeBrowserTest : public PlatformBrowserTest {
         chrome_test_utils::GetProfile(this));
   }
 
+#if !BUILDFLAG(IS_ANDROID)
+  bool IsAskBeforeHttpDialogShowing(content::WebContents* web_contents) {
+    auto* const tab = tabs::TabInterface::MaybeGetFromContents(web_contents);
+    if (!tab) {
+      return false;
+    }
+    AskBeforeHttpDialogController* dialog_controller =
+        tab->GetTabFeatures()->ask_before_http_dialog_controller();
+    if (!dialog_controller) {
+      return false;
+    }
+    return dialog_controller->HasOpenDialog();
+  }
+#endif
+
  protected:
   base::test::ScopedFeatureList feature_list_;
   net::EmbeddedTestServer* http_server() { return &http_server_; }
@@ -223,12 +239,16 @@ IN_PROC_BROWSER_TEST_F(HttpsUpgradeBrowserTest, CheckUpgrades) {
     for (const TestCase& test_case : kTestCases) {
       RunTestCaseNavigation(true, global_setting, test_case,
                             test_case.type_url);
-      bool interstitial_showing =
+      bool interstitial_or_dialog_showing =
+#if !BUILDFLAG(IS_ANDROID)
+          IsAskBeforeHttpDialogShowing(Contents());
+#else
           chrome_browser_interstitials::IsShowingInterstitial(Contents());
+#endif
       if (test_case.expected_result == PageResult::kInterstitial) {
-        EXPECT_TRUE(interstitial_showing);
+        EXPECT_TRUE(interstitial_or_dialog_showing);
       } else {
-        EXPECT_FALSE(interstitial_showing);
+        EXPECT_FALSE(interstitial_or_dialog_showing);
         GURL final_url =
             (test_case.expected_result == PageResult::kHttp ? http_server()
                                                             : https_server())

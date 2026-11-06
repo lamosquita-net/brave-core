@@ -25,6 +25,7 @@
 #include "content/public/browser/web_contents.h"
 #include "content/public/test/browser_test.h"
 #include "content/public/test/browser_test_utils.h"
+#include "content/public/common/isolated_world_ids.h"
 #include "content/public/test/test_navigation_observer.h"
 #include "url/gurl.h"
 
@@ -68,7 +69,7 @@ class DomainBlockTestBase : public AdBlockServiceTest {
     content::RenderFrameHost* frame = web_contents()->GetPrimaryMainFrame();
     frame->ExecuteJavaScriptForTests(
         base::ASCIIToUTF16("document.getElementById('" + id + "').click();\n"),
-        base::NullCallback());
+        base::NullCallback(), content::ISOLATED_WORLD_ID_GLOBAL);
   }
 
   void ClickAndWaitForNavigation(const std::string& id) {

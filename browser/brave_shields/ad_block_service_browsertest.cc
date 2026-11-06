@@ -51,6 +51,7 @@
 #include "content/public/test/browser_test.h"
 #include "content/public/test/browser_test_utils.h"
 #include "net/dns/mock_host_resolver.h"
+#include "net/test/embedded_test_server/install_default_websocket_handlers.h"
 #include "net/test/test_data_directory.h"
 #include "services/network/host_resolver.h"
 
@@ -210,7 +211,7 @@ base::FilePath AdBlockServiceTest::MakeTestDataCopy(
   EXPECT_TRUE(dir->CreateUniqueTempDir());
   auto temp_path = dir->GetPath();
 
-  EXPECT_TRUE(base::CopyDirectoryExcl(source_location, temp_path, true));
+  EXPECT_TRUE(base::CopyDirectory(source_location, temp_path, true));
 
   temp_dirs_.push_back(std::move(dir));
 
@@ -683,19 +684,20 @@ IN_PROC_BROWSER_TEST_F(AdBlockServiceTest, ServiceWorkerRequest) {
 IN_PROC_BROWSER_TEST_F(AdBlockServiceTest, MAYBE_WebSocketBlocking) {
   UpdateAdBlockInstanceWithRules("*$websocket");
 
-  net::SpawnedTestServer ws_server(net::SpawnedTestServer::TYPE_WS,
-                                   net::GetWebSocketTestDataDirectory());
+  net::EmbeddedTestServer ws_server(net::EmbeddedTestServer::TYPE_HTTPS);
+  net::test_server::InstallDefaultWebSocketHandlers(&ws_server);
   ASSERT_TRUE(ws_server.Start());
 
   GURL url = embedded_test_server()->GetURL(kAdBlockTestPage);
   NavigateToURL(url);
   content::WebContents* contents = web_contents();
 
-  GURL ws_url = ws_server.GetURL("echo-with-no-extension");
+  GURL ws_url =
+      net::test_server::GetWebSocketURL(ws_server, "/echo-with-no-extension");
 
-  EXPECT_EQ(false, EvalJs(contents,
-                          base::StringPrintf("checkWebsocketConnection(\"%s\")",
-                                             ws_url.spec().c_str())));
+  EXPECT_EQ(false,
+            EvalJs(contents, content::JsReplace("checkWebsocketConnection($1)",
+                                                ws_url.spec())));
 }
 
 // Load a page with an ad image which is matched by a filter in the additional
@@ -1956,18 +1958,18 @@ IN_PROC_BROWSER_TEST_F(AdBlockServiceTest, CosmeticFilteringSimple) {
 
   auto result_first =
       EvalJs(contents, R"(waitCSSSelector('#ad-banner', 'display', 'none'))");
-  ASSERT_TRUE(result_first.error.empty());
-  EXPECT_EQ(base::Value(true), result_first.value);
+  ASSERT_TRUE(result_first.is_ok());
+  EXPECT_EQ(base::Value(true), result_first);
 
   auto result_second =
       EvalJs(contents, R"(waitCSSSelector('.ad-banner', 'display', 'block'))");
-  ASSERT_TRUE(result_second.error.empty());
-  EXPECT_EQ(base::Value(true), result_second.value);
+  ASSERT_TRUE(result_second.is_ok());
+  EXPECT_EQ(base::Value(true), result_second);
 
   auto result_third =
       EvalJs(contents, R"(waitCSSSelector('.ad', 'display', 'none'))");
-  ASSERT_TRUE(result_third.error.empty());
-  EXPECT_EQ(base::Value(true), result_third.value);
+  ASSERT_TRUE(result_third.is_ok());
+  EXPECT_EQ(base::Value(true), result_third);
 }
 
 // Test that cosmetic filtering is applied independently in a third-party child
@@ -1995,13 +1997,13 @@ IN_PROC_BROWSER_TEST_F(AdBlockServiceTest, CosmeticFilteringFrames) {
           const style = window.getComputedStyle(testdiv);
           style['display'] === 'none'
         )");
-  ASSERT_TRUE(frame_result.error.empty());
-  EXPECT_EQ(base::Value(true), frame_result.value);
+  ASSERT_TRUE(frame_result.is_ok());
+  EXPECT_EQ(base::Value(true), frame_result);
 
   auto main_result =
       EvalJs(contents, R"(checkSelector('.ad', 'display', 'block'))");
-  ASSERT_TRUE(main_result.error.empty());
-  EXPECT_EQ(base::Value(true), main_result.value);
+  ASSERT_TRUE(main_result.is_ok());
+  EXPECT_EQ(base::Value(true), main_result);
 }
 
 // Test cosmetic filtering ignores rules with the `:has` pseudoclass in standard
@@ -2100,8 +2102,8 @@ IN_PROC_BROWSER_TEST_F(AdBlockServiceTest, CosmeticFilteringHide1pContent) {
 
   auto result =
       EvalJs(contents, R"(waitCSSSelector('.fpsponsored', 'display', 'none'))");
-  ASSERT_TRUE(result.error.empty());
-  EXPECT_EQ(base::Value(true), result.value);
+  ASSERT_TRUE(result.is_ok());
+  EXPECT_EQ(base::Value(true), result);
 }
 
 // Test cosmetic filtering on elements added dynamically
@@ -2117,20 +2119,20 @@ IN_PROC_BROWSER_TEST_F(AdBlockServiceTest, CosmeticFilteringDynamic) {
   auto result_first = EvalJs(contents,
                              R"(addElementsDynamically();
         waitCSSSelector('.blockme', 'display', 'none'))");
-  ASSERT_TRUE(result_first.error.empty());
-  EXPECT_EQ(base::Value(true), result_first.value);
+  ASSERT_TRUE(result_first.is_ok());
+  EXPECT_EQ(base::Value(true), result_first);
 
   auto result_second = EvalJs(
       contents, R"(waitCSSSelector('.dontblockme', 'display', 'block'))");
-  ASSERT_TRUE(result_second.error.empty());
-  EXPECT_EQ(base::Value(true), result_second.value);
+  ASSERT_TRUE(result_second.is_ok());
+  EXPECT_EQ(base::Value(true), result_second);
 
   // this class is added by setting an element's innerHTML, which doesn't
   // trigger a MutationObserver update
   auto result_third = EvalJs(
       contents, R"(waitCSSSelector('.hide-innerhtml', 'display', 'none'))");
-  ASSERT_TRUE(result_third.error.empty());
-  EXPECT_EQ(base::Value(true), result_third.value);
+  ASSERT_TRUE(result_third.is_ok());
+  EXPECT_EQ(base::Value(true), result_third);
 }
 
 // Test cosmetic filtering on elements added dynamically, using a rule from the
@@ -2149,13 +2151,13 @@ IN_PROC_BROWSER_TEST_F(AdBlockServiceTest, CosmeticFilteringDynamicCustom) {
   auto result_first = EvalJs(contents,
                              R"(addElementsDynamically();
         waitCSSSelector('.blockme', 'display', 'none'))");
-  ASSERT_TRUE(result_first.error.empty());
-  EXPECT_EQ(base::Value(true), result_first.value);
+  ASSERT_TRUE(result_first.is_ok());
+  EXPECT_EQ(base::Value(true), result_first);
 
   auto result_second = EvalJs(
       contents, R"(waitCSSSelector('.dontblockme', 'display', 'block'))");
-  ASSERT_TRUE(result_second.error.empty());
-  EXPECT_EQ(base::Value(true), result_second.value);
+  ASSERT_TRUE(result_second.is_ok());
+  EXPECT_EQ(base::Value(true), result_second);
 }
 
 // Test cosmetic filtering ignores generic cosmetic rules in the presence of a
@@ -2195,8 +2197,8 @@ IN_PROC_BROWSER_TEST_F(AdBlockServiceTest, CosmeticFilteringCustomStyle) {
 
   auto result =
       EvalJs(contents, R"(waitCSSSelector('.ad', 'padding-bottom', '10px'))");
-  ASSERT_TRUE(result.error.empty());
-  EXPECT_EQ(base::Value(true), result.value);
+  ASSERT_TRUE(result.is_ok());
+  EXPECT_EQ(base::Value(true), result);
 }
 
 IN_PROC_BROWSER_TEST_F(AdBlockServiceTest, CosmeticFilteringRemoveStatic) {
@@ -2226,8 +2228,8 @@ IN_PROC_BROWSER_TEST_F(AdBlockServiceTest, CosmeticFilteringRemoveDynamic) {
                        "addElementsDynamically();\n"
                        "wait('.dontblockme', existence(true)).then(() =>"
                        "wait('.blockme', existence(false)))");
-  ASSERT_TRUE(result.error.empty());
-  EXPECT_EQ(base::Value(true), result.value);
+  ASSERT_TRUE(result.is_ok());
+  EXPECT_EQ(base::Value(true), result);
 }
 
 IN_PROC_BROWSER_TEST_F(AdBlockServiceTest, CosmeticFilteringRemoveAttribute) {
@@ -2264,8 +2266,8 @@ IN_PROC_BROWSER_TEST_F(AdBlockServiceTest,
   auto result = EvalJs(contents,
                        "addElementsDynamically();\n"
                        "wait('img.blockme', attributes(['class']))");
-  ASSERT_TRUE(result.error.empty());
-  EXPECT_EQ(base::Value(true), result.value);
+  ASSERT_TRUE(result.is_ok());
+  EXPECT_EQ(base::Value(true), result);
 }
 
 IN_PROC_BROWSER_TEST_F(AdBlockServiceTest, CosmeticFilteringRemoveClass) {
@@ -2299,13 +2301,13 @@ IN_PROC_BROWSER_TEST_F(AdBlockServiceTest, CosmeticFilteringUnhide) {
 
   auto result_first =
       EvalJs(contents, R"(waitCSSSelector('.ad', 'display', 'block'))");
-  ASSERT_TRUE(result_first.error.empty());
-  EXPECT_EQ(base::Value(true), result_first.value);
+  ASSERT_TRUE(result_first.is_ok());
+  EXPECT_EQ(base::Value(true), result_first);
 
   auto result_second =
       EvalJs(contents, R"(waitCSSSelector('#ad-banner', 'display', 'none'))");
-  ASSERT_TRUE(result_second.error.empty());
-  EXPECT_EQ(base::Value(true), result_second.value);
+  ASSERT_TRUE(result_second.is_ok());
+  EXPECT_EQ(base::Value(true), result_second);
 }
 
 // Test scriptlet injection that modifies window attributes
@@ -2334,8 +2336,8 @@ IN_PROC_BROWSER_TEST_F(AdBlockServiceTest, CosmeticFilteringWindowScriptlet) {
 
   auto result = EvalJs(
       contents, R"(waitCSSSelector('.ad', 'color', 'Impossible value'))");
-  ASSERT_TRUE(result.error.empty());
-  EXPECT_EQ(base::Value(true), result.value);
+  ASSERT_TRUE(result.is_ok());
+  EXPECT_EQ(base::Value(true), result);
 }
 
 // Test that permissioned scriptlets can only be injected from appropriately
@@ -2368,7 +2370,7 @@ IN_PROC_BROWSER_TEST_F(AdBlockServiceTest, ScriptletInjectionPermissions) {
 
   {
     auto result = EvalJs(contents, R"(window.success === undefined)");
-    EXPECT_EQ(base::Value(true), result.value);
+    EXPECT_EQ(base::Value(true), result);
   }
 
   // Add a list with different but still insufficient permissions
@@ -2379,7 +2381,7 @@ IN_PROC_BROWSER_TEST_F(AdBlockServiceTest, ScriptletInjectionPermissions) {
 
   {
     auto result = EvalJs(contents, R"(window.success === undefined)");
-    EXPECT_EQ(base::Value(true), result.value);
+    EXPECT_EQ(base::Value(true), result);
   }
 
   // Finally add a list with sufficient permissions
@@ -2390,7 +2392,7 @@ IN_PROC_BROWSER_TEST_F(AdBlockServiceTest, ScriptletInjectionPermissions) {
 
   {
     auto result = EvalJs(contents, R"(window.success)");
-    EXPECT_EQ(base::Value(true), result.value);
+    EXPECT_EQ(base::Value(true), result);
   }
 }
 
@@ -2459,8 +2461,8 @@ IN_PROC_BROWSER_TEST_F(AdBlockServiceTest, CheckForDeAmpPref) {
   NavigateToURL(url);
   auto result1 =
       EvalJs(web_contents(), R"(waitCSSSelector('body', 'color', 'green'))");
-  ASSERT_TRUE(result1.error.empty());
-  EXPECT_EQ(base::Value(true), result1.value);
+  ASSERT_TRUE(result1.is_ok());
+  EXPECT_EQ(base::Value(true), result1);
 
   PrefService* prefs = profile()->GetPrefs();
   prefs->SetBoolean(de_amp::kDeAmpPrefEnabled, false);
@@ -2470,8 +2472,8 @@ IN_PROC_BROWSER_TEST_F(AdBlockServiceTest, CheckForDeAmpPref) {
 
   auto result2 =
       EvalJs(web_contents(), R"(waitCSSSelector('body', 'color', 'red'))");
-  ASSERT_TRUE(result2.error.empty());
-  EXPECT_EQ(base::Value(true), result2.value);
+  ASSERT_TRUE(result2.is_ok());
+  EXPECT_EQ(base::Value(true), result2);
 }
 
 // Test scriptlet injection that modifies window attributes
@@ -2513,8 +2515,8 @@ IN_PROC_BROWSER_TEST_F(AdBlockServiceTest,
   auto result_first = EvalJs(
       contents,
       R"(waitCSSSelector('#inline-block-important', 'display', 'none'))");
-  ASSERT_TRUE(result_first.error.empty());
-  EXPECT_EQ(base::Value(true), result_first.value);
+  ASSERT_TRUE(result_first.is_ok());
+  EXPECT_EQ(base::Value(true), result_first);
 }
 
 // Test cosmetic filtering on an element that already has an `!important`
@@ -2533,8 +2535,8 @@ IN_PROC_BROWSER_TEST_F(AdBlockServiceTest,
   auto result_first = EvalJs(
       contents,
       R"(waitCSSSelector('#inline-block-important', 'display', 'none'))");
-  ASSERT_TRUE(result_first.error.empty());
-  EXPECT_EQ(base::Value(true), result_first.value);
+  ASSERT_TRUE(result_first.is_ok());
+  EXPECT_EQ(base::Value(true), result_first);
 }
 
 class CookieListPrefObserver {

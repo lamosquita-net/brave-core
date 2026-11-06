@@ -3,12 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "base/memory/scoped_refptr.h"
 #include "brave/components/brave_shields/content/browser/brave_shields_util.h"
 #include "build/build_config.h"
 #include "chrome/browser/content_settings/cookie_settings_factory.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/test/base/chrome_test_utils.h"
+#include "chrome/test/base/platform_browser_test.h"
 #include "components/content_settings/core/browser/cookie_settings.h"
 #include "components/content_settings/core/common/content_settings.h"
 #include "components/content_settings/core/common/pref_names.h"
@@ -16,10 +18,7 @@
 #include "content/public/test/browser_test.h"
 #include "url/gurl.h"
 
-#if BUILDFLAG(IS_ANDROID)
-#include "chrome/test/base/android/android_browser_test.h"
-#else
-#include "chrome/test/base/in_process_browser_test.h"
+#if !BUILDFLAG(IS_ANDROID)
 #include "chrome/test/base/ui_test_utils.h"
 #endif
 
@@ -33,11 +32,11 @@ class CookiePrefServiceTest : public PlatformBrowserTest {
   Profile* profile() { return chrome_test_utils::GetProfile(this); }
 
   HostContentSettingsMap* content_settings() {
-    return HostContentSettingsMapFactory::GetForProfile(profile());
+    return HostContentSettingsMapFactory::GetForProfile(GetProfile());
   }
 
   scoped_refptr<content_settings::CookieSettings> cookie_settings() {
-    return CookieSettingsFactory::GetForProfile(profile());
+    return CookieSettingsFactory::GetForProfile(GetProfile());
   }
 
   ContentSetting GetCookiePref() {
