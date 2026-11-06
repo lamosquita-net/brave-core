@@ -14,6 +14,7 @@
 #include "base/base64url.h"
 #include "base/json/json_reader.h"
 #include "base/strings/escape.h"
+#include "base/strings/string_util.h"
 #include "base/strings/stringprintf.h"
 #include "base/types/expected.h"
 #include "components/prefs/pref_service.h"
@@ -199,7 +200,7 @@ bool DebounceRule::CheckPrefForRule(const PrefService* prefs) const {
 
 bool DebounceRule::ValidateAndParsePatternRegex(
     const std::string& pattern,
-    const std::string& path,
+    std::string_view path,
     std::string* parsed_value) const {
   if (pattern.length() > kMaxLengthRegexPattern) {
     VLOG(1) << "Debounce regex pattern exceeds max length: "
