@@ -7,6 +7,9 @@
 #define BRAVE_CHROMIUM_SRC_CHROME_BROWSER_UI_VIEWS_TABS_TAB_H_
 
 #include "chrome/browser/ui/views/tabs/tab/alert_indicator_button.h"
+// Included before the IsApparentlyActive macro below: TabStyleViews also
+// declares IsApparentlyActive() and must not get the injected override.
+#include "chrome/browser/ui/views/tabs/tab_style_views.h"
 
 class BraveTabTest;
 class BraveTab;
