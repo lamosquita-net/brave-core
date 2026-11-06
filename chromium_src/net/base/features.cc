@@ -19,6 +19,8 @@ OVERRIDE_FEATURE_DEFAULT_STATES({{
     // Enable NIK-partitioning by default.
     {kPartitionConnectionsByNetworkIsolationKey,
      base::FEATURE_ENABLED_BY_DEFAULT},
+    // As 1.98: no Trust Anchor IDs advertised in the TLS ClientHello.
+    {kTLSTrustAnchorIDs, base::FEATURE_DISABLED_BY_DEFAULT},
 }});
 
 BASE_FEATURE(kBraveEphemeralStorage,
