@@ -95,6 +95,9 @@ constexpr char kVerticalTabsOnRight[] = "brave.tabs.vertical_tabs_on_right";
 constexpr char kVerticalTabsShowScrollbar[] =
     "brave.tabs.vertical_tabs_show_scrollbar";
 
+// Brave's What's New tab (removed 2026-11).
+constexpr char kWhatsNewLastVersion[] = "brave.whats_new.last_version";
+
 // Shields' cookie list opt-in bubble (removed 2026-11).
 constexpr char kAdBlockCookieListOptInShown[] =
     "brave.ad_block.cookie_list_opt_in_shown";
@@ -156,6 +159,7 @@ constexpr const char* kLocalStatePrefs[] = {
     kPlaylistUsedSecondDay,
     kPlaylistUsageWeeklyStorage,
     kTargetUserForSidebarEnabledTest,
+    kWhatsNewLastVersion,
     kAdBlockCookieListOptInShown,
     kBraveWallet,
 };
@@ -246,6 +250,9 @@ void RegisterPrunedFeatureLocalStatePrefs(PrefRegistrySimple* registry) {
 
   // Brave Sidebar
   registry->RegisterBooleanPref(kTargetUserForSidebarEnabledTest, false);
+
+  // Brave's What's New tab
+  registry->RegisterDoublePref(kWhatsNewLastVersion, 0);
 
   // Shields' cookie list opt-in bubble
   registry->RegisterBooleanPref(kAdBlockCookieListOptInShown, false);

@@ -5,16 +5,13 @@
 
 #include "chrome/browser/ui/webui/whats_new/whats_new_fetcher.h"
 
-#include "brave/browser/ui/whats_new/whats_new_util.h"
-
 #define StartWhatsNewFetch StartWhatsNewFetch_UnUsed
 #include "src/chrome/browser/ui/webui/whats_new/whats_new_fetcher.cc"
 #undef StartWhatsNewFetch
 
 namespace whats_new {
 
-void StartWhatsNewFetch(Browser* browser) {
-  StartBraveWhatsNew(browser);
-}
+// Never fetch Chrome's What's New page from Google.
+void StartWhatsNewFetch(BrowserWindowInterface* browser) {}
 
 }  // namespace whats_new

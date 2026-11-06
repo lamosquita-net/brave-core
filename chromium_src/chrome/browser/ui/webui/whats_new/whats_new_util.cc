@@ -5,17 +5,17 @@
 
 #include "chrome/browser/ui/webui/whats_new/whats_new_util.h"
 
-#include "brave/browser/ui/whats_new/whats_new_util.h"
-
 #define ShouldShowForState ShouldShowForState_UnUsed
 #include "src/chrome/browser/ui/webui/whats_new/whats_new_util.cc"
 #undef ShouldShowForState
 
 namespace whats_new {
 
+// FlyWeb never opens a What's New tab on startup: Chrome's would load Google's
+// page.
 bool ShouldShowForState(PrefService* local_state,
                         bool promotional_tabs_enabled) {
-  return ShouldShowBraveWhatsNewForState(local_state);
+  return false;
 }
 
 }  // namespace whats_new

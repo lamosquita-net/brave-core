@@ -28,13 +28,10 @@ inline constexpr char kWidevineLearnMoreUrl[] =
     "https://flyweb.lamosquita.net/ayuda/#drm";
 
 // FlyWeb: our help page (softmac FlyWeb/docs/web-flyweb.md, W8), the page that
-// explains how to report a problem (it replaces Brave's webcompat reporter) and
-// the release notes.
+// explains how to report a problem (it replaces Brave's webcompat reporter).
 inline constexpr char kFlyWebHelpURL[] = "https://flyweb.lamosquita.net/ayuda/";
 inline constexpr char kFlyWebReportProblemURL[] =
     "https://flyweb.lamosquita.net/ayuda/#informar";
-inline constexpr char kFlyWebReleaseNotesURL[] =
-    "https://flyweb.lamosquita.net/descargas/#novedades";
 
 inline constexpr char kDownloadBraveUrl[] =
     "https://flyweb.lamosquita.net/descargas/";
