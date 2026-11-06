@@ -7,9 +7,10 @@
 
 #include <utility>
 
-#include "base/logging.h"
+#include "base/check.h"
+#include "base/check_op.h"
+#include "base/notreached.h"
 #include "brave/browser/ui/color/brave_color_id.h"
-#include "brave/browser/ui/color/leo/colors.h"
 #include "brave/browser/ui/views/omnibox/brave_omnibox_popup_view_views.h"
 #include "brave/browser/ui/views/omnibox/brave_omnibox_result_view.h"
 #include "brave/components/brave_search_conversion/p3a.h"
@@ -30,6 +31,7 @@
 #include "components/strings/grit/components_strings.h"
 #include "components/vector_icons/vector_icons.h"
 #include "third_party/skia/include/core/SkPath.h"
+#include "third_party/skia/include/core/SkPathBuilder.h"
 #include "ui/accessibility/ax_enums.mojom.h"
 #include "ui/accessibility/ax_node_data.h"
 #include "ui/base/l10n/l10n_util.h"
@@ -41,6 +43,7 @@
 #include "ui/gfx/geometry/skia_conversions.h"
 #include "ui/gfx/range/range.h"
 #include "ui/gfx/skia_paint_util.h"
+#include "ui/views/accessibility/view_accessibility.h"
 #include "ui/views/background.h"
 #include "ui/views/cascading_property.h"
 #include "ui/views/controls/button/image_button.h"
@@ -191,17 +194,15 @@ class CloseButton : public views::ImageButton {
   explicit CloseButton(PressedCallback callback = PressedCallback())
       : ImageButton(std::move(callback)) {
     views::ConfigureVectorImageButton(this);
+
+    // Although this appears visually as a button, expose as a list box option
+    // so that it matches the other options within its list box container.
+    GetViewAccessibility().SetRole(ax::mojom::Role::kListBoxOption);
+    GetViewAccessibility().SetName(brave_l10n::GetLocalizedResourceUTF16String(
+        IDS_ACC_BRAVE_SEARCH_CONVERSION_DISMISS_BUTTON));
   }
   CloseButton(const CloseButton&) = delete;
   CloseButton& operator=(const CloseButton&) = delete;
-
-  void GetAccessibleNodeData(ui::AXNodeData* node_data) override {
-    // Although this appears visually as a button, expose as a list box option
-    // so that it matches the other options within its list box container.
-    node_data->role = ax::mojom::Role::kListBoxOption;
-    node_data->SetName(brave_l10n::GetLocalizedResourceUTF16String(
-        IDS_ACC_BRAVE_SEARCH_CONVERSION_DISMISS_BUTTON));
-  }
 };
 
 BEGIN_METADATA(CloseButton)
@@ -217,11 +218,9 @@ class BannerTypeContainer : public views::View {
 
   // views::View overrides:
   void OnPaint(gfx::Canvas* canvas) override {
-    SkPath mask;
-    mask.addRoundRect(gfx::RectToSkRect(GetLocalBounds()), kBannerTypeRadius,
-                      kBannerTypeRadius);
-    canvas->ClipPath(mask, true);
-
+    canvas->ClipPath(SkPath::RRect(gfx::RectToSkRect(GetLocalBounds()),
+                                   kBannerTypeRadius, kBannerTypeRadius),
+                     true);
     View::OnPaint(canvas);
   }
 };
@@ -272,17 +271,17 @@ class BraveOmniboxResultSelectionIndicator : public views::View {
   // represented using a fill path. This matches the style and implementation
   // used in Tab Groups.
   SkPath GetPath() const {
-    SkPath path;
-
-    path.moveTo(0, 0);
-    path.arcTo(kStrokeThickness, kStrokeThickness, 0, SkPath::kSmall_ArcSize,
-               SkPathDirection::kCW, kStrokeThickness, kStrokeThickness);
-    path.lineTo(kStrokeThickness, height() - kStrokeThickness);
-    path.arcTo(kStrokeThickness, kStrokeThickness, 0, SkPath::kSmall_ArcSize,
-               SkPathDirection::kCW, 0, height());
-    path.close();
-
-    return path;
+    return SkPathBuilder()
+        .moveTo(0, 0)
+        .arcTo({kStrokeThickness, kStrokeThickness}, 0,
+               SkPathBuilder::kSmall_ArcSize, SkPathDirection::kCW,
+               {kStrokeThickness, kStrokeThickness})
+        .lineTo(kStrokeThickness, height() - kStrokeThickness)
+        .arcTo({kStrokeThickness, kStrokeThickness}, 0,
+               SkPathBuilder::kSmall_ArcSize, SkPathDirection::kCW,
+               {0, static_cast<float>(height())})
+        .close()
+        .detach();
   }
 };
 
@@ -478,7 +477,7 @@ void BraveSearchConversionPromotionView::ConfigureForBannerType() {
   views::SetImageFromVectorIconWithColor(
       close_button, kLeoCloseIcon,
       (UseDDG() ? kBannerTypeCloseButtonSizeDDG : kBannerTypeCloseButtonSize),
-      GetCloseButtonColor(), gfx::kPlaceholderColor);
+      {GetCloseButtonColor(), gfx::kPlaceholderColor});
   views::InstallCircleHighlightPathGenerator(close_button);
   views::FocusRing::Install(close_button);
   close_button->SetProperty(views::kMarginsKey,
@@ -617,7 +616,7 @@ void BraveSearchConversionPromotionView::UpdateHoverState() {
 int BraveSearchConversionPromotionView::GetBannerTypeTitleStringResourceId() {
   switch (type_) {
     case ConversionType::kBannerTypeA:
-      NOTREACHED_NORETURN();
+      NOTREACHED();
     case ConversionType::kBannerTypeB:
       return IDS_BRAVE_SEARCH_CONVERSION_PROMOTION_BANNER_TYPE_B_TITLE;
     case ConversionType::kBannerTypeC:
@@ -626,7 +625,7 @@ int BraveSearchConversionPromotionView::GetBannerTypeTitleStringResourceId() {
       return IDS_BRAVE_SEARCH_CONVERSION_PROMOTION_BANNER_TYPE_D_TITLE;
     case ConversionType::kDDGBannerTypeA:
       // DDG Type A doesn't use title.
-      NOTREACHED_NORETURN();
+      NOTREACHED();
     case ConversionType::kDDGBannerTypeB:
       return IDS_BRAVE_SEARCH_CONVERSION_PROMOTION_BANNER_TYPE_B_DDG_TITLE;
     case ConversionType::kDDGBannerTypeC:
@@ -637,13 +636,13 @@ int BraveSearchConversionPromotionView::GetBannerTypeTitleStringResourceId() {
       break;
   }
 
-  NOTREACHED_NORETURN();
+  NOTREACHED();
 }
 
 int BraveSearchConversionPromotionView::GetBannerTypeDescStringResourceId() {
   switch (type_) {
     case ConversionType::kBannerTypeA:
-      NOTREACHED_NORETURN();
+      NOTREACHED();
     case ConversionType::kBannerTypeB:
       return IDS_BRAVE_SEARCH_CONVERSION_PROMOTION_BANNER_TYPE_B_DESC;
     case ConversionType::kBannerTypeC:
@@ -662,7 +661,7 @@ int BraveSearchConversionPromotionView::GetBannerTypeDescStringResourceId() {
       break;
   }
 
-  NOTREACHED_NORETURN();
+  NOTREACHED();
 }
 
 bool BraveSearchConversionPromotionView::UseDDG() const {
@@ -687,7 +686,8 @@ std::optional<int> BraveSearchConversionPromotionView::GetBackgroundGraphic()
   }
 
   const bool use_dark =
-      ui::NativeTheme::GetInstanceForNativeUi()->ShouldUseDarkColors();
+      ui::NativeTheme::GetInstanceForNativeUi()->preferred_color_scheme() ==
+      ui::NativeTheme::PreferredColorScheme::kDark;
   if (!UseDDG()) {
     return use_dark ? IDR_BRAVE_SEARCH_CONVERSION_BANNER_GRAPHIC_DARK
                     : IDR_BRAVE_SEARCH_CONVERSION_BANNER_GRAPHIC;
