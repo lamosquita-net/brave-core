@@ -9,21 +9,25 @@
 #include <memory>
 #include <utility>
 
+#include "base/check.h"
+#include "base/check_op.h"
 #include "base/functional/bind.h"
 #include "brave/app/brave_command_ids.h"
+#include "brave/browser/ui/views/location_bar/brave_location_bar_view.h"
 #include "brave/browser/ui/views/toolbar/bookmark_button.h"
 #include "brave/components/constants/pref_names.h"
 #include "chrome/app/chrome_command_ids.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/defaults.h"
 #include "chrome/browser/profiles/profile_manager.h"
-#include "chrome/browser/ui/bookmarks/bookmark_bubble_sign_in_delegate.h"
-#include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_commands.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/layout_constants.h"
 #include "chrome/browser/ui/ui_features.h"
 #include "chrome/browser/ui/views/bookmarks/bookmark_bubble_view.h"
-#include "chrome/browser/ui/views/toolbar/pinned_toolbar_actions_container.h"
+#include "chrome/browser/ui/views/profiles/avatar_toolbar_button.h"
+#include "chrome/browser/ui/views/toolbar/browser_app_menu_button.h"
+#include "chrome/browser/ui/views/toolbar/toolbar_divider.h"
 #include "chrome/browser/ui/views/toolbar/toolbar_view.h"
 #include "components/bookmarks/common/bookmark_pref_names.h"
 #include "components/prefs/pref_service.h"
@@ -31,6 +35,7 @@
 #include "ui/base/metadata/metadata_impl_macros.h"
 #include "ui/base/window_open_disposition_utils.h"
 #include "ui/events/event.h"
+#include "ui/views/bubble/bubble_anchor.h"
 #include "ui/views/window/hit_test_utils.h"
 
 #if BUILDFLAG(IS_LINUX)
@@ -107,7 +112,28 @@ bool IsAvatarButtonHideable(Profile* profile) {
 
 }  // namespace
 
-BraveToolbarView::BraveToolbarView(Browser* browser, BrowserView* browser_view)
+// Keeps BraveLocationBarView from laying out with the intermediate (wide)
+// bounds that upstream's flex layout gives it before ResetLocationBarBounds().
+class BraveToolbarView::LayoutGuard {
+ public:
+  explicit LayoutGuard(BraveLocationBarView* b) : bar_(b) {}
+  ~LayoutGuard() { set_ignore_layout(false); }
+
+  LayoutGuard(const LayoutGuard&) = delete;
+  LayoutGuard& operator=(const LayoutGuard&) = delete;
+
+  void set_ignore_layout(bool ignore) {
+    if (bar_) {
+      bar_->set_ignore_layout({}, ignore);
+    }
+  }
+
+ private:
+  raw_ptr<BraveLocationBarView> bar_ = nullptr;
+};
+
+BraveToolbarView::BraveToolbarView(BrowserWindowInterface* browser,
+                                   BrowserView* browser_view)
     : ToolbarView(browser, browser_view) {}
 
 BraveToolbarView::~BraveToolbarView() = default;
@@ -119,16 +145,14 @@ void BraveToolbarView::Init() {
   // See brave_non_client_hit_test_helper.h
   views::SetHitTestComponent(this, HTCAPTION);
 
-  DCHECK(location_bar_);
-  // Get ToolbarView's container_view as a parent of location_bar_ because
-  // container_view's type in ToolbarView is internal to toolbar_view.cc.
-  views::View* container_view = location_bar_->parent();
-  DCHECK(container_view);
-
-  views::SetHitTestComponent(container_view, HTCAPTION);
-
   // For non-normal mode, we don't have to more.
-  if (display_mode_ != DisplayMode::NORMAL) {
+  if (display_mode_ != DisplayMode::kNormal) {
+    brave_initialized_ = true;
+    return;
+  }
+
+  // Only the WebUI location bar (force-disabled by us) leaves this null.
+  if (!location_bar_view_) {
     brave_initialized_ = true;
     return;
   }
@@ -139,7 +163,7 @@ void BraveToolbarView::Init() {
   // buttons. Upstream conditionally creates |toolbar_divider_|, they check
   // whether it's null or not. So safe to make remove here.
   if (toolbar_divider_) {
-    container_view->RemoveChildView(toolbar_divider_.get());
+    auto view = RemoveChildViewT(toolbar_divider_.get());
     toolbar_divider_ = nullptr;
   }
 
@@ -154,7 +178,7 @@ void BraveToolbarView::Init() {
       base::BindRepeating(&BraveToolbarView::OnEditBookmarksEnabledChanged,
                           base::Unretained(this)));
   show_bookmarks_button_.Init(
-      kShowBookmarksButton, browser_->profile()->GetPrefs(),
+      kShowBookmarksButton, profile->GetPrefs(),
       base::BindRepeating(&BraveToolbarView::OnShowBookmarksButtonChanged,
                           base::Unretained(this)));
 
@@ -164,41 +188,37 @@ void BraveToolbarView::Init() {
       base::BindRepeating(&BraveToolbarView::OnLocationBarIsWideChanged,
                           base::Unretained(this)));
 
-  const auto callback = [](Browser* browser, int command,
+  const auto callback = [](BrowserWindowInterface* browser, int command,
                            const ui::Event& event) {
     chrome::ExecuteCommandWithDisposition(
         browser, command, ui::DispositionFromEventFlags(event.flags()));
   };
 
-  bookmark_ = container_view->AddChildViewAt(
-      std::make_unique<BraveBookmarkButton>(
-          base::BindRepeating(callback, browser_, IDC_BOOKMARK_THIS_TAB)),
-      *container_view->GetIndexOf(location_bar_));
+  bookmark_ =
+      AddChildViewAt(std::make_unique<BraveBookmarkButton>(base::BindRepeating(
+                         callback, browser_, IDC_BOOKMARK_THIS_TAB)),
+                     *GetIndexOf(location_bar_view_));
   bookmark_->SetTriggerableEventFlags(ui::EF_LEFT_MOUSE_BUTTON |
                                       ui::EF_MIDDLE_MOUSE_BUTTON);
   bookmark_->UpdateImageAndText();
 
   // Make sure that avatar button should be located right before the app menu.
-  if (auto* avatar = GetAvatarToolbarButton()) {
-    container_view->ReorderChildView(
-        avatar, *container_view->GetIndexOf(GetAppMenuButton()) - 1);
+  if (auto* avatar_button = static_cast<AvatarToolbarButton*>(
+          GetAvatarToolbarButtonInterface());
+      avatar_button && app_menu_button_) {
+    ReorderChildView(avatar_button, *GetIndexOf(app_menu_button_) - 1);
   }
+
+  // Side panel pin buttons are kept out of the toolbar by the
+  // PinnedToolbarActionsContainer override (only downloads and send tab to
+  // self show ephemerally). Since 156 the container also hosts the downloads
+  // button, so it is no longer removed here.
 
   brave_initialized_ = true;
-
-  // We want to hide pin action buttons(side panel's pin button) in toolbar.
-  // As toolbar is shared for different types of windows, this action button
-  // container could be null. So Upstream code has assumption that
-  // |pinned_toolbar_actions_container_| could be null.
-  // If it's changed, we should check again.
-  if (pinned_toolbar_actions_container_) {
-    RemoveChildView(pinned_toolbar_actions_container_.get());
-    pinned_toolbar_actions_container_ = nullptr;
-  }
 }
 
 void BraveToolbarView::OnEditBookmarksEnabledChanged() {
-  DCHECK_EQ(DisplayMode::NORMAL, display_mode_);
+  DCHECK_EQ(DisplayMode::kNormal, display_mode_);
   Update(nullptr);
 }
 
@@ -210,7 +230,7 @@ void BraveToolbarView::OnShowBookmarksButtonChanged() {
 }
 
 void BraveToolbarView::OnLocationBarIsWideChanged() {
-  DCHECK_EQ(DisplayMode::NORMAL, display_mode_);
+  DCHECK_EQ(DisplayMode::kNormal, display_mode_);
 
   DeprecatedLayoutImmediately();
   SchedulePaint();
@@ -222,13 +242,8 @@ void BraveToolbarView::OnThemeChanged() {
   if (!brave_initialized_)
     return;
 
-  if (display_mode_ == DisplayMode::NORMAL && bookmark_)
+  if (display_mode_ == DisplayMode::kNormal && bookmark_)
     bookmark_->UpdateImageAndText();
-}
-
-views::View* BraveToolbarView::GetAnchorView(
-    std::optional<PageActionIconType> type) {
-  return ToolbarView::GetAnchorView(type);
 }
 
 void BraveToolbarView::OnProfileAdded(const base::FilePath& profile_path) {
@@ -254,9 +269,10 @@ void BraveToolbarView::Update(content::WebContents* tab) {
 
   // Remove avatar menu if only a single user profile exists.
   // Always show if private / tor / guest window, as an indicator.
-  auto* avatar_button = GetAvatarToolbarButton();
+  auto* avatar_button =
+      static_cast<AvatarToolbarButton*>(GetAvatarToolbarButtonInterface());
   if (avatar_button) {
-    auto* profile = browser_->profile();
+    auto* profile = browser_->GetProfile();
     const bool should_show_profile =
         !IsAvatarButtonHideable(profile) || HasMultipleUserProfiles();
     avatar_button->SetVisible(should_show_profile);
@@ -267,7 +283,7 @@ void BraveToolbarView::UpdateBookmarkVisibility() {
   if (!bookmark_)
     return;
 
-  DCHECK_EQ(DisplayMode::NORMAL, display_mode_);
+  DCHECK_EQ(DisplayMode::kNormal, display_mode_);
   bookmark_->SetVisible(browser_defaults::bookmarks_enabled &&
                         edit_bookmarks_enabled_.GetValue() &&
                         show_bookmarks_button_.GetValue());
@@ -278,28 +294,24 @@ void BraveToolbarView::ShowBookmarkBubble(const GURL& url,
   // Show BookmarkBubble attached to Brave's bookmark button
   // or the location bar if there is no bookmark button
   // (i.e. in non-normal display mode).
-  views::View* anchor_view = location_bar_;
-  if (bookmark_ && bookmark_->GetVisible())
+  views::View* anchor_view = location_bar_view_;
+  if (bookmark_ && bookmark_->GetVisible()) {
     anchor_view = bookmark_;
+  }
 
-  std::unique_ptr<BubbleSignInPromoDelegate> delegate;
-  delegate =
-      std::make_unique<BookmarkBubbleSignInDelegate>(browser()->GetProfile());
-  BookmarkBubbleView::ShowBubble(anchor_view, GetWebContents(), bookmark_,
-                                 std::move(delegate), browser_, url,
-                                 already_bookmarked);
+  // Passing `nullptr` to `highlighted_button` as this argument only gets used
+  // by the legacy page action framework.
+  BookmarkBubbleView::ShowBubble(
+      views::BubbleAnchor(anchor_view), GetWebContents(),
+      /*highlighted_button=*/nullptr, browser_, url, already_bookmarked);
 }
 
 void BraveToolbarView::ViewHierarchyChanged(
     const views::ViewHierarchyChangedDetails& details) {
   ToolbarView::ViewHierarchyChanged(details);
 
-  // Upstream has two more children |background_view_left_| and
-  // |background_view_right_| behind the container view.
-  const int container_view_index = 2;
-
-  if (details.is_add && children().size() > container_view_index &&
-      details.parent == children()[container_view_index]) {
+  // Since 156 the toolbar buttons are direct children of ToolbarView.
+  if (details.is_add && details.parent == this) {
     // Mark children of the container view as client area so that they are not
     // perceived as caption area. See brave_non_client_hit_test_helper.h
     views::SetHitTestComponent(details.child, HTCLIENT);
@@ -307,38 +319,53 @@ void BraveToolbarView::ViewHierarchyChanged(
 }
 
 void BraveToolbarView::Layout(PassKey) {
-  LayoutSuperclass<ToolbarView>(this);
-
-  if (!brave_initialized_)
-    return;
-
-  // ToolbarView::Layout() handles below modes. So just return.
-  if (display_mode_ == DisplayMode::CUSTOM_TAB ||
-      display_mode_ == DisplayMode::LOCATION) {
+  if (!brave_initialized_ || display_mode_ != DisplayMode::kNormal ||
+      !location_bar_view_) {
+    LayoutSuperclass<ToolbarView>(this);
     return;
   }
 
+  // In this Layout, location bar's rect is set twice: first by upstream's
+  // flex layout (fits the wide address bar) and, if the wide address bar
+  // option is off, again by ResetLocationBarBounds(). The omnibox popup is
+  // anchored to the location bar, so skip the location bar layout for the
+  // first rect.
+  LayoutGuard guard(static_cast<BraveLocationBarView*>(location_bar_view_));
   if (!location_bar_is_wide_.GetValue()) {
+    guard.set_ignore_layout(true);
+  }
+
+  LayoutSuperclass<ToolbarView>(this);
+
+  if (!location_bar_is_wide_.GetValue()) {
+    guard.set_ignore_layout(false);
     ResetLocationBarBounds();
-    ResetButtonBounds();
+    ResetBookmarkButtonBounds();
   }
 }
 
 void BraveToolbarView::ResetLocationBarBounds() {
-  DCHECK_EQ(DisplayMode::NORMAL, display_mode_);
+  DCHECK_EQ(DisplayMode::kNormal, display_mode_);
 
   // Calculate proper location bar's margin and set its bounds.
   const gfx::Insets margin = CalcLocationBarMargin(
-      width(), location_bar_->width(), location_bar_->GetMinimumSize().width(),
-      location_bar_->x());
+      width(), location_bar_view_->width(),
+      location_bar_view_->GetMinimumSize().width(), location_bar_view_->x());
 
-  location_bar_->SetBounds(
-      location_bar_->x() + margin.left(), location_bar_->y(),
-      location_bar_->width() - margin.width(), location_bar_->height());
+  // At minimum width the margin is empty and SetBounds() exits early without
+  // laying out, which would leave children at stale positions.
+  if (margin.IsEmpty()) {
+    location_bar_view_->views::View::InvalidateLayout(
+        /*avoid_propagate_during_layout*/ true);
+  }
+  location_bar_view_->SetBounds(location_bar_view_->x() + margin.left(),
+                                location_bar_view_->y(),
+                                location_bar_view_->width() - margin.width(),
+                                location_bar_view_->height());
 }
 
-void BraveToolbarView::ResetButtonBounds() {
-  DCHECK_EQ(DisplayMode::NORMAL, display_mode_);
+void BraveToolbarView::ResetBookmarkButtonBounds() {
+  DCHECK_EQ(DisplayMode::kNormal, display_mode_);
 
   int button_right_margin =
       GetLayoutConstant(LayoutConstant::kLocationBarMargin);
@@ -346,7 +373,7 @@ void BraveToolbarView::ResetButtonBounds() {
   if (bookmark_ && bookmark_->GetVisible()) {
     const int bookmark_width = bookmark_->GetPreferredSize().width();
     const int bookmark_x =
-        location_bar_->x() - bookmark_width - button_right_margin;
+        location_bar_view_->x() - bookmark_width - button_right_margin;
     bookmark_->SetX(bookmark_x);
   }
 }

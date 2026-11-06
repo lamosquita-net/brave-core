@@ -6,6 +6,7 @@
 #ifndef BRAVE_BROWSER_UI_VIEWS_TOOLBAR_BRAVE_TOOLBAR_VIEW_H_
 #define BRAVE_BROWSER_UI_VIEWS_TOOLBAR_BRAVE_TOOLBAR_VIEW_H_
 
+#include "base/gtest_prod_util.h"
 #include "base/memory/raw_ptr.h"
 #include "base/scoped_observation.h"
 #include "chrome/browser/profiles/profile_attributes_storage.h"
@@ -14,12 +15,16 @@
 #include "ui/base/metadata/metadata_header_macros.h"
 
 class BraveBookmarkButton;
+class BrowserWindowInterface;
 
 class BraveToolbarView : public ToolbarView,
                          public ProfileAttributesStorage::Observer {
   METADATA_HEADER(BraveToolbarView, ToolbarView)
  public:
-  explicit BraveToolbarView(Browser* browser, BrowserView* browser_view);
+  class LayoutGuard;
+
+  explicit BraveToolbarView(BrowserWindowInterface* browser,
+                            BrowserView* browser_view);
   ~BraveToolbarView() override;
 
   BraveBookmarkButton* bookmark_button() const { return bookmark_; }
@@ -40,18 +45,15 @@ class BraveToolbarView : public ToolbarView,
 
   void LoadImages() override;
   void ResetLocationBarBounds();
-  void ResetButtonBounds();
+  void ResetBookmarkButtonBounds();
   void UpdateBookmarkVisibility();
-
-  // ToolbarButtonProvider:
-  views::View* GetAnchorView(std::optional<PageActionIconType> type) override;
 
   // ProfileAttributesStorage::Observer:
   void OnProfileAdded(const base::FilePath& profile_path) override;
   void OnProfileWasRemoved(const base::FilePath& profile_path,
                            const std::u16string& profile_name) override;
 
-  views::View* toolbar_divider_for_testing() { return toolbar_divider_; }
+  ToolbarDivider* toolbar_divider_for_testing() { return toolbar_divider_; }
 
   raw_ptr<BraveBookmarkButton> bookmark_ = nullptr;
   // Tracks the preference to determine whether bookmark editing is allowed.
