@@ -534,8 +534,8 @@ const int TopSitesProvider::kRelevance = 100;
 
 
 TopSitesProvider::TopSitesProvider(AutocompleteProviderClient* client)
-    : AutocompleteProvider(AutocompleteProvider::TYPE_SEARCH), client_(client) {
-}
+    : AutocompleteProvider(AutocompleteProvider::Type::kSearch),
+      client_(client) {}
 
 void TopSitesProvider::Start(const AutocompleteInput& input,
                             bool minimal_changes) {
@@ -610,7 +610,7 @@ void TopSitesProvider::AddMatch(const std::u16string& match_string,
                                 const ACMatchClassifications& styles) {
   constexpr const std::u16string_view kScheme(u"https://");
   AutocompleteMatch match(this, kRelevance, false,
-                          AutocompleteMatchType::SEARCH_WHAT_YOU_TYPED);
+                          omnibox::AutocompleteMatchType::kSearchWhatYouTyped);
   match.fill_into_edit = match_string;
   match.destination_url = GURL(base::StrCat({kScheme, match_string}));
   match.contents = match_string;
