@@ -17,28 +17,26 @@ namespace storage {
 
 void BlobURLStoreImpl::ResolveAsURLLoaderFactory(
     const GURL& url,
-    mojo::PendingReceiver<network::mojom::URLLoaderFactory> receiver,
-    ResolveAsURLLoaderFactoryCallback callback) {
+    mojo::PendingReceiver<network::mojom::URLLoaderFactory> receiver) {
   if (!IsBlobResolvable(url)) {
-    std::move(callback).Run(std::nullopt, std::nullopt);
+    BlobURLLoaderFactory::Create(mojo::NullRemote(), url, std::move(receiver));
     return;
   }
 
-  BlobURLStoreImpl_ChromiumImpl::ResolveAsURLLoaderFactory(
-      url, std::move(receiver), std::move(callback));
+  BlobURLStoreImpl_ChromiumImpl::ResolveAsURLLoaderFactory(url,
+                                                           std::move(receiver));
 }
 
-void BlobURLStoreImpl::ResolveForNavigation(
+void BlobURLStoreImpl::ResolveAsBlobURLToken(
     const GURL& url,
     mojo::PendingReceiver<blink::mojom::BlobURLToken> token,
-    ResolveForNavigationCallback callback) {
+    bool is_top_level_navigation) {
   if (!IsBlobResolvable(url)) {
-    std::move(callback).Run(std::nullopt);
     return;
   }
 
-  BlobURLStoreImpl_ChromiumImpl::ResolveForNavigation(url, std::move(token),
-                                                      std::move(callback));
+  BlobURLStoreImpl_ChromiumImpl::ResolveAsBlobURLToken(url, std::move(token),
+                                                       is_top_level_navigation);
 }
 
 bool BlobURLStoreImpl::IsBlobResolvable(const GURL& url) const {
@@ -48,7 +46,8 @@ bool BlobURLStoreImpl::IsBlobResolvable(const GURL& url) const {
                               ? BlobUrlUtils::ClearUrlFragment(url)
                               : url;
   constexpr std::string_view kChromeExtensionScheme = "chrome-extension";
-  return (registry_ && registry_->IsUrlMapped(clean_url, storage_key_)) ||
+  return (registry_ && registry_->IsUrlMapped(clean_url, storage_key_) ==
+                           BlobUrlRegistry::MappingStatus::kIsMapped) ||
          (url.SchemeIsBlob() &&
           (url::Origin::Create(url).scheme() == kChromeExtensionScheme ||
            storage_key_.origin().scheme() == kChromeExtensionScheme));

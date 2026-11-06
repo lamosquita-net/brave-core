@@ -17,9 +17,9 @@ using BlobURLStoreImpl_BraveImpl = BlobURLStoreImpl;
   friend BlobURLStoreImpl_BraveImpl; \
   bool BlobUrlIsValid
 
-#include <optional>
-
 #include "src/storage/browser/blob/blob_url_store_impl.h"  // IWYU pragma: export
+
+#include <optional>
 
 #undef BlobUrlIsValid
 #undef BlobURLStoreImpl
@@ -33,12 +33,12 @@ class COMPONENT_EXPORT(STORAGE_BROWSER) BlobURLStoreImpl
 
   void ResolveAsURLLoaderFactory(
       const GURL& url,
-      mojo::PendingReceiver<network::mojom::URLLoaderFactory> receiver,
-      ResolveAsURLLoaderFactoryCallback callback) override;
-  void ResolveForNavigation(
+      mojo::PendingReceiver<network::mojom::URLLoaderFactory> receiver)
+      override;
+  void ResolveAsBlobURLToken(
       const GURL& url,
       mojo::PendingReceiver<blink::mojom::BlobURLToken> token,
-      ResolveForNavigationCallback callback) override;
+      bool is_top_level_navigation) override;
 
  private:
   bool IsBlobResolvable(const GURL& url) const;
