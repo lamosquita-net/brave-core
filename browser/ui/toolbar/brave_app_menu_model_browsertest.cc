@@ -9,6 +9,7 @@
 #include <optional>
 #include <vector>
 
+#include "base/check.h"
 #include "base/functional/callback_helpers.h"
 #include "base/test/scoped_feature_list.h"
 #include "brave/app/brave_command_ids.h"
@@ -24,16 +25,15 @@
 #include "chrome/test/base/in_process_browser_test.h"
 #include "chrome/test/base/ui_test_utils.h"
 #include "components/sync/base/command_line_switches.h"
-#include "content/public/browser/notification_service.h"
 #include "content/public/test/browser_test.h"
 #include "content/public/test/test_utils.h"
 
 class BraveAppMenuModelBrowserTest : public InProcessBrowserTest {
  public:
-  BraveAppMenuModelBrowserTest() {
-  }
+  BraveAppMenuModelBrowserTest() = default;
 
-  void RunCommandFromAppMenuModel(Browser* browser, int command_id) {
+  void RunCommandFromAppMenuModel(BrowserWindowInterface* browser,
+                                  int command_id) {
     auto* browser_view = BrowserView::GetBrowserViewForBrowser(browser);
     BraveAppMenuModel model(browser_view->toolbar(), browser);
     model.Init();
@@ -50,7 +50,7 @@ void CheckCommandsAreDisabledInMenuModel(
 }
 
 void CheckCommandsAreDisabledInMenuModel(
-    Browser* browser,
+    BrowserWindowInterface* browser,
     const std::vector<int>& disabled_commands) {
   auto* browser_view = BrowserView::GetBrowserViewForBrowser(browser);
   BraveAppMenuModel model(browser_view->toolbar(), browser);
@@ -72,7 +72,7 @@ void CheckCommandsAreInOrderInMenuModel(
 }
 
 void CheckCommandsAreInOrderInMenuModel(
-    Browser* browser,
+    BrowserWindowInterface* browser,
     const std::vector<int>& commands_in_order) {
   auto* browser_view = BrowserView::GetBrowserViewForBrowser(browser);
   BraveAppMenuModel model(browser_view->toolbar(), browser);
@@ -81,7 +81,7 @@ void CheckCommandsAreInOrderInMenuModel(
 }
 
 void CheckMoreToolsCommandsAreInOrderInMenuModel(
-    Browser* browser,
+    BrowserWindowInterface* browser,
     const std::vector<int>& more_tools_commands_in_order) {
   auto* browser_view = BrowserView::GetBrowserViewForBrowser(browser);
   BraveAppMenuModel model(browser_view->toolbar(), browser);
@@ -94,7 +94,7 @@ void CheckMoreToolsCommandsAreInOrderInMenuModel(
 }
 
 void CheckMoreToolsCommandsAreDisabledInMenuModel(
-    Browser* browser,
+    BrowserWindowInterface* browser,
     const std::vector<int>& more_tools_disabled_commands) {
   auto* browser_view = BrowserView::GetBrowserViewForBrowser(browser);
   BraveAppMenuModel model(browser_view->toolbar(), browser);
@@ -107,7 +107,7 @@ void CheckMoreToolsCommandsAreDisabledInMenuModel(
 }
 
 void CheckHelpCommandsAreInOrderInMenuModel(
-    Browser* browser,
+    BrowserWindowInterface* browser,
     const std::vector<int>& help_commands_in_order) {
   auto* browser_view = BrowserView::GetBrowserViewForBrowser(browser);
   BraveAppMenuModel model(browser_view->toolbar(), browser);
@@ -163,10 +163,7 @@ IN_PROC_BROWSER_TEST_F(BraveAppMenuModelBrowserTest, MenuOrderTest) {
   };
 
   if (!syncer::IsSyncAllowedByFlag()) {
-    more_tools_in_order.erase(
-        std::remove(more_tools_in_order.begin(), more_tools_in_order.end(),
-                    IDC_SHOW_BRAVE_SYNC),
-        commands_in_order_for_normal_profile.end());
+    std::erase(more_tools_in_order, IDC_SHOW_BRAVE_SYNC);
     more_tools_in_order.push_back(IDC_SHOW_BRAVE_SYNC);
   }
 
@@ -202,13 +199,12 @@ IN_PROC_BROWSER_TEST_F(BraveAppMenuModelBrowserTest, MenuOrderTest) {
   CheckMoreToolsCommandsAreInOrderInMenuModel(private_browser,
                                               more_tools_in_order);
 
-  ui_test_utils::BrowserChangeObserver browser_creation_observer(
-      nullptr, ui_test_utils::BrowserChangeObserver::ChangeType::kAdded);
+  ui_test_utils::BrowserCreatedObserver browser_creation_observer;
   profiles::SwitchToGuestProfile(base::DoNothing());
 
-  Browser* guest_browser = browser_creation_observer.Wait();
+  BrowserWindowInterface* guest_browser = browser_creation_observer.Wait();
   DCHECK(guest_browser);
-  EXPECT_TRUE(guest_browser->profile()->IsGuestSession());
+  EXPECT_TRUE(guest_browser->GetProfile()->IsGuestSession());
   std::vector<int> commands_in_order_for_guest_profile = {
       IDC_NEW_TAB,
       IDC_NEW_WINDOW,
@@ -249,7 +245,6 @@ IN_PROC_BROWSER_TEST_F(BraveAppMenuModelBrowserTest, MenuOrderTest) {
   };
   CheckMoreToolsCommandsAreDisabledInMenuModel(
       guest_browser, more_tools_disabled_for_guest_profile);
-
 }
 
 void CheckMenuIcons(ui::MenuModel* menu,
