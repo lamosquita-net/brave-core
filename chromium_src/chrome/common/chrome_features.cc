@@ -13,6 +13,8 @@ namespace features {
 
 OVERRIDE_FEATURE_DEFAULT_STATES({{
     {kChromeStructuredMetrics, base::FEATURE_DISABLED_BY_DEFAULT},
+    // The HTTPS upgrade setting of Shields decides HTTPS-First.
+    {kHttpsFirstBalancedMode, base::FEATURE_DISABLED_BY_DEFAULT},
     // kSCTAuditing is gone; hashdance is what remains of SCT auditing.
     {kSCTAuditingHashdance, base::FEATURE_DISABLED_BY_DEFAULT},
 #if !BUILDFLAG(IS_ANDROID)
