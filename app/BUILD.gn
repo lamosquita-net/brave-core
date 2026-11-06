@@ -10,6 +10,7 @@ import("//brave/resources/brave_grit.gni")
 import("//build/config/features.gni")
 import("//build/config/locales.gni")
 import("//extensions/buildflags/buildflags.gni")
+import("//pdf/features.gni")
 
 action("generate_command_metadata") {
   command_files = [ "//brave/app/brave_command_ids.h" ]
@@ -105,7 +106,9 @@ source_set("browser_tests") {
       "//chrome/app:command_ids",
       "//chrome/browser",
       "//chrome/browser/desktop_to_mobile_promos:utils",
+      "//chrome/browser/domain_reliability",
       "//chrome/browser/ui",
+      "//chrome/browser/ui:browser_window_header",
       "//chrome/common:non_code_constants",
       "//chrome/test",
       "//chrome/test:test_support",
@@ -142,6 +145,7 @@ source_set("unit_tests") {
     "//components/commerce/core:feature_list",
     "//components/compose/core/browser:features",
     "//components/embedder_support",
+    "//components/feed:feature_list",
     "//components/heap_profiling/in_process",
     "//components/history_clusters/core",
     "//components/lens",
@@ -186,6 +190,9 @@ source_set("unit_tests") {
   }
   if (enable_extensions_core) {
     deps += [ "//extensions/common" ]
+  }
+  if (enable_pdf) {
+    deps += [ "//pdf:features" ]
   }
 }
 
