@@ -28,8 +28,10 @@
 #include "ui/base/metadata/metadata_impl_macros.h"
 #include "ui/gfx/canvas.h"
 
-BraveTabStrip::BraveTabStrip(std::unique_ptr<TabStripController> controller)
-    : TabStrip(std::move(controller)) {}
+BraveTabStrip::BraveTabStrip(
+    std::unique_ptr<TabStripController> controller,
+    std::unique_ptr<BraveTabHoverCardController> hover_card_controller)
+    : TabStrip(std::move(controller), std::move(hover_card_controller)) {}
 
 BraveTabStrip::~BraveTabStrip() = default;
 

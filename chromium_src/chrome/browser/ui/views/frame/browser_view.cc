@@ -8,16 +8,12 @@
 #include "chrome/browser/ui/views/frame/browser_view.h"
 
 #include "brave/browser/ui/views/infobars/brave_infobar_container_view.h"
-#include "brave/browser/ui/views/tabs/brave_browser_tab_strip_controller.h"
-#include "brave/browser/ui/views/tabs/brave_tab_strip.h"
 #include "brave/browser/ui/views/toolbar/brave_toolbar_view.h"
 #include "brave/components/constants/pref_names.h"
 #include "chrome/browser/ui/browser_commands.h"
 
 #define InfoBarContainerView BraveInfoBarContainerView
 #define ToolbarView BraveToolbarView
-#define BrowserTabStripController BraveBrowserTabStripController
-#define TabStrip BraveTabStrip
 #define BookmarkBarView BraveBookmarkBarView
 #define UpdateExclusiveAccessBubble UpdateExclusiveAccessBubble_ChromiumImpl
 
@@ -25,8 +21,6 @@
 
 #undef UpdateExclusiveAccessBubble
 #undef BookmarkBarView
-#undef TabStrip
-#undef BrowserTabStripController
 #undef ToolbarView
 #undef InfoBarContainerView
 

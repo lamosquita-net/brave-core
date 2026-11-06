@@ -10,11 +10,14 @@
 
 #include "chrome/browser/ui/views/tabs/tab_strip.h"
 
+class BraveTabHoverCardController;
 class Tab;
 class BraveTabStrip : public TabStrip {
   METADATA_HEADER(BraveTabStrip, TabStrip)
  public:
-  explicit BraveTabStrip(std::unique_ptr<TabStripController> controller);
+  BraveTabStrip(
+      std::unique_ptr<TabStripController> controller,
+      std::unique_ptr<BraveTabHoverCardController> hover_card_controller);
   ~BraveTabStrip() override;
   BraveTabStrip(const BraveTabStrip&) = delete;
   BraveTabStrip& operator=(const BraveTabStrip&) = delete;
