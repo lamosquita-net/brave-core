@@ -15,7 +15,7 @@
 #include "brave/components/constants/pref_names.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/test/base/in_process_browser_test.h"
 #include "chrome/test/base/ui_test_utils.h"
 #include "components/prefs/pref_service.h"
@@ -28,12 +28,12 @@
 
 namespace {
 
-uint64_t getProfileBandwidthSaved(Browser* browser) {
+uint64_t getProfileBandwidthSaved(BrowserWindowInterface* browser) {
   return browser->GetProfile()->GetPrefs()->GetUint64(
       brave_perf_predictor::prefs::kBandwidthSavedBytes);
 }
 
-uint64_t getProfileAdsBlocked(Browser* browser) {
+uint64_t getProfileAdsBlocked(BrowserWindowInterface* browser) {
   return browser->GetProfile()->GetPrefs()->GetUint64(kAdsBlocked);
 }
 
