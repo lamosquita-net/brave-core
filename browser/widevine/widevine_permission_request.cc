@@ -7,6 +7,8 @@
 
 #include <memory>
 
+#include "base/functional/bind.h"
+#include "base/task/sequenced_task_runner.h"
 #include "brave/browser/widevine/widevine_utils.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/l10n/common/localization_util.h"
@@ -67,7 +69,7 @@ void WidevinePermissionRequest::PermissionDecided(
     const permissions::PermissionPromptDecision& decision,
     const permissions::PermissionRequestData& request_data) {
   // Permission granted
-  if (decision.overall_decision == permissions::PermissionDecision::kAllow) {
+  if (decision.overall_decision == PermissionDecision::kAllow) {
     if (!for_restart_) {
       EnableWidevineCdm();
     } else {
@@ -83,8 +85,7 @@ void WidevinePermissionRequest::PermissionDecided(
       }
     }
     // Permission denied
-  } else if (decision.overall_decision ==
-             permissions::PermissionDecision::kDeny) {
+  } else if (decision.overall_decision == PermissionDecision::kDeny) {
     Profile* profile =
         static_cast<Profile*>(web_contents_->GetBrowserContext());
     profile->GetPrefs()->SetBoolean(kAskEnableWidvine, !get_dont_ask_again());
