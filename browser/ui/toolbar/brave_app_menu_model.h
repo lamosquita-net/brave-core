@@ -14,7 +14,9 @@
 
 #include "base/gtest_prod_util.h"
 #include "chrome/browser/ui/toolbar/app_menu_model.h"
-#include "ui/base/models/simple_menu_model.h"
+#include "ui/menus/simple_menu_model.h"
+
+class BrowserWindowInterface;
 
 namespace ui {
 class ButtonMenuItemModel;
@@ -23,7 +25,7 @@ class ButtonMenuItemModel;
 class BraveAppMenuModel : public AppMenuModel {
  public:
   BraveAppMenuModel(ui::AcceleratorProvider* provider,
-                    Browser* browser,
+                    BrowserWindowInterface* browser,
                     AppMenuIconController* app_menu_icon_controller = nullptr,
                     AlertMenuItem alert_item = AlertMenuItem::kNone);
   ~BraveAppMenuModel() override;
@@ -53,6 +55,9 @@ class BraveAppMenuModel : public AppMenuModel {
   // Insert profile, sync and cast entries into existing more tools
   // sub menu.
   void BuildMoreToolsSubMenu();
+
+  // Inserts items under Passwords and Autofill submenu.
+  void BuildPasswordsAndAutofillSubmenu();
 
   // About brave, help center and report broken site items.
   void BuildHelpSubMenu();

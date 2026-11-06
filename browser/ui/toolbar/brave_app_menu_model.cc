@@ -9,20 +9,21 @@
 #include <optional>
 #include <string>
 
+#include "base/check.h"
+#include "base/check_op.h"
 #include "base/memory/raw_ptr.h"
 #include "base/notreached.h"
-#include "base/strings/utf_string_conversions.h"
 #include "brave/app/brave_command_ids.h"
 #include "brave/browser/ui/toolbar/app_menu_icons.h"
-#include "brave/components/l10n/common/localization_util.h"
 #include "chrome/app/chrome_command_ids.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/toolbar/app_menu_model.h"
 #include "chrome/browser/ui/ui_features.h"
 #include "chrome/grit/branded_strings.h"
 #include "chrome/grit/generated_resources.h"
 #include "components/grit/brave_components_strings.h"
+#include "ui/base/l10n/l10n_util.h"
 #include "ui/base/models/button_menu_item_model.h"
 #include "ui/base/models/menu_separator_types.h"
 #include "ui/base/ui_base_features.h"
@@ -50,12 +51,10 @@ class BraveHelpMenuModel : public ui::SimpleMenuModel {
 }  // namespace
 BraveAppMenuModel::BraveAppMenuModel(
     ui::AcceleratorProvider* provider,
-    Browser* browser,
+    BrowserWindowInterface* browser,
     AppMenuIconController* app_menu_icon_controller,
     AlertMenuItem alert_item)
-    : AppMenuModel(provider, browser, app_menu_icon_controller, alert_item)
-{
-}
+    : AppMenuModel(provider, browser, app_menu_icon_controller, alert_item) {}
 
 BraveAppMenuModel::~BraveAppMenuModel() = default;
 
@@ -70,6 +69,7 @@ void BraveAppMenuModel::Build() {
   BuildBraveProductsSection();
   BuildBrowserSection();
   BuildMoreToolsSubMenu();
+  BuildPasswordsAndAutofillSubmenu();
   BuildHelpSubMenu();
 
   ApplyLeoIcons(this);
@@ -87,11 +87,33 @@ void BraveAppMenuModel::Build() {
 
   if (const auto reading_list_submenu_index =
           bookmark_sub_menu_model()->GetIndexOfCommandId(
-              IDC_READING_LIST_MENU)) {
+              kReadingListMenuPlaceholder)) {
     auto* reading_list_submenu = bookmark_sub_menu_model()->GetSubmenuModelAt(
         *reading_list_submenu_index);
     CHECK(reading_list_submenu);
     ApplyLeoIcons(static_cast<ui::SimpleMenuModel*>(reading_list_submenu));
+  }
+}
+
+void BraveAppMenuModel::BuildPasswordsAndAutofillSubmenu() {
+  if (!GetIndexOfCommandId(kPasswordsAndAutofillMenuPlaceholder)) {
+    return;
+  }
+
+  auto* autofill_menu_model =
+      static_cast<ui::SimpleMenuModel*>(GetSubmenuModelAt(
+          GetIndexOfCommandId(kPasswordsAndAutofillMenuPlaceholder).value()));
+  CHECK(autofill_menu_model);
+
+  if (IsCommandIdEnabled(IDC_SHOW_IDENTITY_DOCS)) {
+    autofill_menu_model->RemoveItemAt(
+        autofill_menu_model->GetIndexOfCommandId(IDC_SHOW_IDENTITY_DOCS)
+            .value());
+  }
+
+  if (IsCommandIdEnabled(IDC_SHOW_TRAVEL)) {
+    autofill_menu_model->RemoveItemAt(
+        autofill_menu_model->GetIndexOfCommandId(IDC_SHOW_TRAVEL).value());
   }
 }
 
@@ -124,7 +146,7 @@ void BraveAppMenuModel::BuildBrowserSection() {
   // Downloads
   // Extensions
   std::optional<size_t> bookmark_item_index =
-      GetIndexOfCommandId(IDC_BOOKMARKS_MENU);
+      GetIndexOfCommandId(kBookmarksMenuPlaceholder);
 
   // If bookmark is not used, we don't need to adjust download item.
   if (bookmark_item_index.has_value()) {
@@ -134,30 +156,12 @@ void BraveAppMenuModel::BuildBrowserSection() {
     InsertItemWithStringIdAt(bookmark_item_index.value(), IDC_SHOW_DOWNLOADS,
                              IDS_SHOW_DOWNLOADS);
   }
-
-  // Use this command's enabled state to not having it in guest window.
-  // It's disabled in guest window. Upstream's guest window has extensions
-  // menu in app menu, but we hide it.
-  if (IsCommandIdEnabled(IDC_MANAGE_EXTENSIONS)) {
-    // Upstream enabled extensions submenu by default.
-    CHECK(features::IsExtensionMenuInRootAppMenu());
-
-    // Use IDC_EXTENSIONS_SUBMENU_MANAGE_EXTENSIONS instead of
-    // IDC_MANAGE_EXTENSIONS because executing it from private(tor) window
-    // causes crash as LogSafetyHubInteractionMetrics() tries to refer
-    // SafetyHubMenuNotificationService. But it's not instantiated in private
-    // window. Upstream also has this crash if ExtensionsMenuInAppMenu feature
-    // is disabled.
-    InsertItemWithStringIdAt(
-        GetIndexOfCommandId(IDC_SHOW_DOWNLOADS).value() + 1,
-        IDC_EXTENSIONS_SUBMENU_MANAGE_EXTENSIONS, IDS_SHOW_EXTENSIONS);
-  }
 }
 
 void BraveAppMenuModel::BuildMoreToolsSubMenu() {
   ui::SimpleMenuModel* more_tools_menu_model =
-      static_cast<ui::SimpleMenuModel*>(
-          GetSubmenuModelAt(GetIndexOfCommandId(IDC_MORE_TOOLS_MENU).value()));
+      static_cast<ui::SimpleMenuModel*>(GetSubmenuModelAt(
+          GetIndexOfCommandId(kMoreToolsMenuPlaceholder).value()));
   DCHECK(more_tools_menu_model);
 
   size_t next_target_index = 0;
@@ -196,8 +200,8 @@ void BraveAppMenuModel::BuildMoreToolsSubMenu() {
     need_separator = false;
   }
 
-  if (auto index =
-          more_tools_menu_model->GetIndexOfCommandId(IDC_TASK_MANAGER)) {
+  if (auto index = more_tools_menu_model->GetIndexOfCommandId(
+          IDC_TASK_MANAGER_APP_MENU)) {
     more_tools_menu_model->InsertItemWithStringIdAt(*index, IDC_DEV_TOOLS,
                                                     IDS_DEV_TOOLS);
   }
@@ -207,27 +211,21 @@ void BraveAppMenuModel::BuildHelpSubMenu() {
   // Put help sub menu above the settings menu.
   if (const auto index = GetIndexOfCommandId(IDC_OPTIONS)) {
     sub_menus().push_back(std::make_unique<BraveHelpMenuModel>(this));
-    InsertSubMenuWithStringIdAt(*index, IDC_HELP_MENU, IDS_HELP_MENU,
+    InsertSubMenuWithStringIdAt(*index, kHelpMenuPlaceholder, IDS_HELP_MENU,
                                 sub_menus().back().get());
   }
 }
 
 void BraveAppMenuModel::RemoveUpstreamMenus() {
-  ui::SimpleMenuModel* more_tools_model = static_cast<ui::SimpleMenuModel*>(
-      GetSubmenuModelAt(GetIndexOfCommandId(IDC_MORE_TOOLS_MENU).value()));
+  ui::SimpleMenuModel* more_tools_model =
+      static_cast<ui::SimpleMenuModel*>(GetSubmenuModelAt(
+          GetIndexOfCommandId(kMoreToolsMenuPlaceholder).value()));
   DCHECK(more_tools_model);
-
-  // Remove upstream's extensions item. It'll be added into top level third
-  // section. Upstream enabled extensions submenu by default.
-  CHECK(features::IsExtensionMenuInRootAppMenu());
-  // Hide extensions sub menu.
-  DCHECK(GetIndexOfCommandId(IDC_EXTENSIONS_SUBMENU).has_value());
-  RemoveItemAt(GetIndexOfCommandId(IDC_EXTENSIONS_SUBMENU).value());
 
   {
     // Remove upstream's profile menu. "Add new profile" will be added into more
     // tools sub menu.
-    auto index = GetIndexOfCommandId(IDC_PROFILE_MENU_IN_APP_MENU);
+    auto index = GetIndexOfCommandId(kProfileMenuPlaceholder);
     CHECK(index);
     RemoveItemAt(*index);
 
@@ -246,6 +244,12 @@ void BraveAppMenuModel::RemoveUpstreamMenus() {
     RemoveItemAt(*index);
   }
 
+  // Remove upstream's "Tab groups" menu item, as this functionality is already
+  // available in multiple other places
+  if (const auto index = GetIndexOfCommandId(kSavedTabGroupsMenuPlaceholder)) {
+    RemoveItemAt(*index);
+  }
+
   // Remove upstream's dev tools menu and associated separator.
   // It'll be changed its position in more tools.
   if (const auto index = more_tools_model->GetIndexOfCommandId(IDC_DEV_TOOLS)) {
@@ -253,7 +257,8 @@ void BraveAppMenuModel::RemoveUpstreamMenus() {
     // item. Otherwise, remove separator and item both.
     DCHECK_EQ(ui::MenuModel::TYPE_SEPARATOR,
               more_tools_model->GetTypeAt((*index) - 1));
-    if (!more_tools_model->GetIndexOfCommandId(IDC_TASK_MANAGER).has_value()) {
+    if (!more_tools_model->GetIndexOfCommandId(IDC_TASK_MANAGER_APP_MENU)
+             .has_value()) {
       more_tools_model->RemoveItemAt((*index) - 1);
     } else {
       more_tools_model->RemoveItemAt(*index);
@@ -262,8 +267,19 @@ void BraveAppMenuModel::RemoveUpstreamMenus() {
   }
 
   // Remove upstream's `Reading Mode` item as we have our own `Speed reader`.
+  // Also remove associated separator.
   if (const auto index = more_tools_model->GetIndexOfCommandId(
           IDC_SHOW_READING_MODE_SIDE_PANEL)) {
+    CHECK_EQ(ui::MenuModel::TYPE_SEPARATOR,
+             more_tools_model->GetTypeAt(*index + 1));
+    more_tools_model->RemoveItemAt(*index + 1);
+    more_tools_model->RemoveItemAt(*index);
+  }
+
+  // Remove upstream's "Customize Chrome" menu item, as we plan to enhance this
+  // feature before exposing it to users
+  if (const auto index = more_tools_model->GetIndexOfCommandId(
+          IDC_SHOW_CUSTOMIZE_CHROME_SIDE_PANEL)) {
     more_tools_model->RemoveItemAt(*index);
   }
 
@@ -278,12 +294,6 @@ void BraveAppMenuModel::ExecuteCommand(int id, int event_flags) {
 }
 
 bool BraveAppMenuModel::IsCommandIdEnabled(int id) const {
-  if (id == IDC_EXTENSIONS_SUBMENU_MANAGE_EXTENSIONS) {
-    // Always returns true as this command id is only added when it could be
-    // used.
-    return true;
-  }
-
   return AppMenuModel::IsCommandIdEnabled(id);
 }
 

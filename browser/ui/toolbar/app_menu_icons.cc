@@ -12,9 +12,9 @@
 #include "brave/components/vector_icons/vector_icons.h"
 #include "chrome/app/chrome_command_ids.h"
 #include "ui/base/models/image_model.h"
-#include "ui/base/models/simple_menu_model.h"
 #include "ui/color/color_id.h"
 #include "ui/gfx/vector_icon_types.h"
+#include "ui/menus/simple_menu_model.h"
 
 namespace {
 
@@ -65,7 +65,7 @@ const std::map<int, const gfx::VectorIcon&>& GetCommandIcons() {
           // The `Passwords and autofill` submenu
           {IDC_SHOW_PASSWORD_MANAGER, kLeoKeyIcon},
           {IDC_SHOW_PAYMENT_METHODS, kLeoCreditCardIcon},
-          {IDC_SHOW_ADDRESSES, kLeoLocationOnIcon},
+          {IDC_SHOW_CONTACT_INFO, kLeoLocationOnIcon},
 
           // The `Find and edit` submenu
           {IDC_FIND, kLeoSearchIcon},
@@ -94,7 +94,7 @@ const std::map<int, const gfx::VectorIcon&>& GetCommandIcons() {
           {IDC_NAME_WINDOW, kLeoEditBoxIcon},
           {IDC_PERFORMANCE, kLeoNetworkSpeedFastIcon},
           {IDC_DEV_TOOLS, kLeoCodeIcon},
-          {IDC_TASK_MANAGER, kLeoWindowBinaryCodeIcon},
+          {IDC_TASK_MANAGER_APP_MENU, kLeoWindowBinaryCodeIcon},
           {IDC_SHOW_BRAVE_SYNC, kLeoProductSyncIcon},
           {IDC_ROUTE_MEDIA, kLeoChromeCastIcon},
       });
