@@ -1,5 +1,5 @@
 diff --git a/ui/display/mac/screen_mac.mm b/ui/display/mac/screen_mac.mm
-index cd08cb3b7c95a8fd418524652bb345945291112a..278ef4f3f816f27da4978e7bad42bdab21a1fda4 100644
+index 76263f51c2716c264e852ef4bcca3849e052fd85..0cf8963a5435ade8b902dafb15e342a4cbc9e0f6 100644
 --- a/ui/display/mac/screen_mac.mm
 +++ b/ui/display/mac/screen_mac.mm
 @@ -7,9 +7,12 @@
@@ -15,15 +15,15 @@ index cd08cb3b7c95a8fd418524652bb345945291112a..278ef4f3f816f27da4978e7bad42bdab
  #include <map>
  #include <memory>
  
-@@ -20,6 +23,7 @@
+@@ -22,6 +25,7 @@
  #include "base/i18n/rtl.h"
  #include "base/logging.h"
  #include "base/mac/mac_util.h"
 +#include "base/mac/scoped_ioobject.h"
+ #include "base/notimplemented.h"
  #include "base/strings/sys_string_conversions.h"
  #include "base/timer/timer.h"
- #include "base/trace_event/trace_event.h"
-@@ -74,6 +78,99 @@ const std::vector<Display> DisplaysFromDisplaysMac(
+@@ -81,6 +85,99 @@ const std::vector<Display> DisplaysFromDisplaysMac(
    return displays;
  }
  
@@ -123,33 +123,14 @@ index cd08cb3b7c95a8fd418524652bb345945291112a..278ef4f3f816f27da4978e7bad42bdab
  DisplayMac BuildDisplayForScreen(NSScreen* screen) {
    TRACE_EVENT0("ui", "BuildDisplayForScreen");
    NSRect frame = screen.frame;
-@@ -105,8 +202,12 @@ DisplayMac BuildDisplayForScreen(NSScreen* screen) {
-   // Examine the presence of HDR.
-   bool enable_hdr = false;
-   float hdr_max_lum_relative = 1.f;
--  const float max_potential_edr_value =
--      screen.maximumPotentialExtendedDynamicRangeColorComponentValue;
-+  // FlyWeb (LOCAL-6, 21-10): la propiedad es de macOS 10.15; en 10.14, sin HDR.
-+  float max_potential_edr_value = 1.f;
-+  if (@available(macOS 10.15, *)) {
-+    max_potential_edr_value =
-+        screen.maximumPotentialExtendedDynamicRangeColorComponentValue;
-+  }
-   const float max_edr_value =
-       screen.maximumExtendedDynamicRangeColorComponentValue;
-   if (max_potential_edr_value > 1.f) {
-@@ -200,7 +301,13 @@ DisplayMac BuildDisplayForScreen(NSScreen* screen) {
-     SetInternalDisplayIds({display_id});
-   }
+@@ -210,6 +307,10 @@ DisplayMac BuildDisplayForScreen(NSScreen* screen) {
  
--  display.set_label(base::SysNSStringToUTF8(screen.localizedName));
-+  if (@available(macOS 10.15, *)) {  // FlyWeb (LOCAL-6, 21-10): 10.15+
-+    display.set_label(base::SysNSStringToUTF8(screen.localizedName));
+   if (@available(macOS 10.15, *)) {  // FlyWeb B1b
+     display.set_label(base::SysNSStringToUTF8(screen.localizedName));
 +  } else {
 +    // FlyWeb (FM.42 b3): the 116 path for 10.14.
 +    display.set_label(
 +        DisplayNameFromDisplayInfo(GetDisplayInfoFromIOService(display_id)));
-+  }
+   }
  
    return DisplayMac{display, screen};
- }
