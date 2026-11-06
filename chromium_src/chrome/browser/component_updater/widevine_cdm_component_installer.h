@@ -6,6 +6,8 @@
 #ifndef BRAVE_CHROMIUM_SRC_CHROME_BROWSER_COMPONENT_UPDATER_WIDEVINE_CDM_COMPONENT_INSTALLER_H_
 #define BRAVE_CHROMIUM_SRC_CHROME_BROWSER_COMPONENT_UPDATER_WIDEVINE_CDM_COMPONENT_INSTALLER_H_
 
+#include "base/functional/callback.h"
+#include "base/functional/callback_helpers.h"
 #include "services/network/public/cpp/shared_url_loader_factory.h"
 
 #define RegisterWidevineCdmComponent(cus) \
