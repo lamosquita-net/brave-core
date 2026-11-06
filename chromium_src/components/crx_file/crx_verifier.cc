@@ -12,39 +12,31 @@
 
 namespace {
 
-// The Brave publisher key that is accepted in addition to upstream's
-// kPublisherKeyHash. This key may be used to verify updates of the browser
-// itself. If you change this constant, then you will likely also need to change
-// the associated file crx-private-key.der, which is not in Git.
-constexpr uint8_t kBravePublisherKeyHash[] = {
-    0x93, 0x74, 0xd6, 0x2a, 0x32, 0x76, 0x74, 0x74, 0xac, 0x99, 0xd9,
-    0xc0, 0x55, 0xea, 0xf2, 0x6e, 0x10, 0x7,  0x45, 0x6,  0xb9, 0xd5,
-    0x35, 0xc8, 0x35, 0x8,  0x28, 0x97, 0x5f, 0x7a, 0xc1, 0x97};
-
-// FlyWeb: publisher key of FlyWeb's own components (signed on bak). Accepted in
-// addition to Brave's, never instead of it.
+// FlyWeb: publisher key of FlyWeb's own components (signed on bak), the only
+// publisher key accepted besides upstream's kPublisherKeyHash. Brave's
+// publisher key is not accepted. Must match `publicador_sha256` in softmac
+// FlyWeb/servidor/componentes/claves-publicas.json.
 constexpr uint8_t kFlyWebPublisherKeyHash[] = {
     0xb3, 0xa3, 0x57, 0x66, 0x0e, 0xb4, 0x98, 0x58, 0xf8, 0xa3, 0x23,
     0x01, 0xe9, 0xaa, 0x79, 0x80, 0x66, 0xe6, 0xdd, 0x74, 0x5c, 0x7a,
     0x06, 0x08, 0xd7, 0xc8, 0x9f, 0x0d, 0x5e, 0x2a, 0xc7, 0x30};
 
-base::span<uint8_t> GetBravePublisherKeyHash() {
-  static auto brave_publisher_key = std::to_array(kBravePublisherKeyHash);
-  return base::span(brave_publisher_key);
+base::span<uint8_t> GetFlyWebPublisherKeyHash() {
+  static auto flyweb_publisher_key = std::to_array(kFlyWebPublisherKeyHash);
+  return base::span(flyweb_publisher_key);
 }
 
 // Used in the patch in crx_verifier.cc.
-bool IsBravePublisher(base::span<const uint8_t> key_hash) {
-  return base::span<const uint8_t>(GetBravePublisherKeyHash()) == key_hash ||
-         base::span<const uint8_t>(kFlyWebPublisherKeyHash) == key_hash;
+bool IsFlyWebPublisher(base::span<const uint8_t> key_hash) {
+  return base::span<const uint8_t>(GetFlyWebPublisherKeyHash()) == key_hash;
 }
 
 }  // namespace
 
 namespace crx_file {
 
-void SetBravePublisherKeyHashForTesting(base::span<const uint8_t> test_key) {
-  GetBravePublisherKeyHash().copy_from(test_key);
+void SetFlyWebPublisherKeyHashForTesting(base::span<const uint8_t> test_key) {
+  GetFlyWebPublisherKeyHash().copy_from(test_key);
 }
 
 }  // namespace crx_file

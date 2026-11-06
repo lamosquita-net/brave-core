@@ -172,7 +172,7 @@ IN_PROC_BROWSER_TEST_F(BraveCrxGenerationTest,
   for (auto test_key : {publisher_test_key_path, alt_publisher_test_key_path}) {
     const auto public_key_hash = GetPublicKeyHash(test_key);
     ASSERT_GT(public_key_hash.size(), 0u);
-    crx_file::SetBravePublisherKeyHashForTesting(public_key_hash);
+    crx_file::SetFlyWebPublisherKeyHashForTesting(public_key_hash);
 
     const auto crx_path = CreateTestCrx();
 

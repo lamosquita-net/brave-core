@@ -12,7 +12,7 @@
 
 namespace crx_file {
 
-void SetBravePublisherKeyHashForTesting(base::span<const uint8_t> test_key);
+void SetFlyWebPublisherKeyHashForTesting(base::span<const uint8_t> test_key);
 
 }  // namespace crx_file
 
