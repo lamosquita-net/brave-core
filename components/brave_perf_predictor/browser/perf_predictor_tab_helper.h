@@ -10,7 +10,6 @@
 #include <string>
 
 #include "brave/components/brave_perf_predictor/browser/bandwidth_savings_predictor.h"
-#include "brave/components/brave_perf_predictor/browser/p3a_bandwidth_savings_tracker.h"
 #include "content/public/browser/web_contents_observer.h"
 #include "content/public/browser/web_contents_user_data.h"
 #include "url/gurl.h"
@@ -89,7 +88,6 @@ class PerfPredictorTabHelper
 
   int64_t navigation_id_ = -1;
   std::unique_ptr<BandwidthSavingsPredictor> bandwidth_predictor_;
-  std::unique_ptr<P3ABandwidthSavingsTracker> bandwidth_tracker_;
 
   WEB_CONTENTS_USER_DATA_KEY_DECL();
 };

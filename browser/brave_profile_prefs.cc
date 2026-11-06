@@ -15,7 +15,6 @@
 #include "brave/browser/translate/brave_translate_prefs_migration.h"
 #include "brave/browser/ui/bookmark/brave_bookmark_prefs.h"
 #include "brave/browser/ui/omnibox/brave_omnibox_client_impl.h"
-#include "brave/components/brave_perf_predictor/browser/p3a_bandwidth_savings_tracker.h"
 #include "brave/components/brave_perf_predictor/browser/perf_predictor_tab_helper.h"
 #include "brave/components/brave_search/browser/brave_search_default_host.h"
 #include "brave/components/brave_search/common/brave_search_utils.h"
@@ -164,8 +163,6 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
       registry);
 
   brave_perf_predictor::PerfPredictorTabHelper::RegisterProfilePrefs(registry);
-  brave_perf_predictor::P3ABandwidthSavingsTracker::RegisterProfilePrefs(
-      registry);
   // autofill
   registry->RegisterBooleanPref(kBraveAutofillPrivateWindows, true);
   // appearance
