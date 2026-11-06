@@ -1,10 +1,10 @@
 diff --git a/media/capture/video/apple/video_capture_device_avfoundation.mm b/media/capture/video/apple/video_capture_device_avfoundation.mm
-index 70b6bc8993045e3c10c09175372e8ca79955d7c4..e4ca8420274abbbb9f9c472a07a1ae35f4ae472e 100644
+index bd876ba0588aa438bcb1023f6bbf952f96d2754a..86d15548ec5ddafb824d75dee01ee758d55c2666 100644
 --- a/media/capture/video/apple/video_capture_device_avfoundation.mm
 +++ b/media/capture/video/apple/video_capture_device_avfoundation.mm
-@@ -247,7 +247,9 @@ AVCaptureDeviceFormat* FindBestCaptureFormat(
-   // When enabled, converts captured frames to NV12.
-   std::unique_ptr<media::SampleBufferTransformer> _sampleBufferTransformer;
+@@ -263,7 +263,9 @@ AVCaptureDeviceFormat* FindBestCaptureFormat(
+   // in case the color space cannot be correclty determined from the buffer.
+   std::optional<gfx::ColorSpace> _colorSpaceAfterTransform;
  
 -  AVCapturePhotoOutput* __strong _photoOutput;
 +  // FlyWeb (FM.42 a2): AVCapturePhotoOutput on macOS 10.15+; on 10.14 it is an
@@ -13,7 +13,7 @@ index 70b6bc8993045e3c10c09175372e8ca79955d7c4..e4ca8420274abbbb9f9c472a07a1ae35
  
    // Only accessed on the main thread. The takePhoto() operation is considered
    // pending until we're ready to take another photo, which involves a PostTask
-@@ -625,7 +627,13 @@ AVCaptureDeviceFormat* FindBestCaptureFormat(
+@@ -641,7 +643,13 @@ AVCaptureDeviceFormat* FindBestCaptureFormat(
    {
      // `_lock` is needed since `_photoOutput` may be read from non-main thread.
      base::AutoLock lock(_lock);
@@ -22,13 +22,13 @@ index 70b6bc8993045e3c10c09175372e8ca79955d7c4..e4ca8420274abbbb9f9c472a07a1ae35
 +      // FlyWeb (FM.42 a2): AVCapturePhotoOutput is macOS 10.15+; the 116
 +      // AVCaptureStillImageOutput path (10.7) on 10.14.
 +      _photoOutput = [[AVCaptureStillImageOutput alloc] init];
-+    } else if (@available(macOS 10.15, *)) {
++    } else {
 +      _photoOutput = [[AVCapturePhotoOutput alloc] init];
 +    }
    }
-   if (![_captureSession canAddOutput:_photoOutput]) {
-     {
-@@ -662,12 +670,80 @@ AVCaptureDeviceFormat* FindBestCaptureFormat(
+   // FlyWeb B1d: AVCapturePhotoOutput is macOS 10.15+ (nil class on 10.14).
+   if (!_photoOutput || ![_captureSession canAddOutput:_photoOutput]) {
+@@ -680,12 +688,87 @@ AVCaptureDeviceFormat* FindBestCaptureFormat(
  
  #pragma mark Private methods
  
@@ -54,41 +54,48 @@ index 70b6bc8993045e3c10c09175372e8ca79955d7c4..e4ca8420274abbbb9f9c472a07a1ae35
 +#if BUILDFLAG(IS_MAC)
 +  if ([self useLegacyStillImageApi]) {
 +    // FlyWeb (FM.42 a2, from 116): `_photoOutput` is an
-+    // AVCaptureStillImageOutput. This block retains `self`, which is fine
-+    // because it is called one time and then discarded.
++    // AVCaptureStillImageOutput. As in
++    // captureOutput:didFinishProcessingPhoto:error:, a result for an output
++    // that is no longer current is ignored.
++    AVCaptureStillImageOutput* image_output =
++        static_cast<AVCaptureStillImageOutput*>(_photoOutput);
++    __weak VideoCaptureDeviceAVFoundation* weakSelf = self;
 +    const auto handler = ^(CMSampleBufferRef sampleBuffer, NSError* error) {
++      VideoCaptureDeviceAVFoundation* sSelf = weakSelf;
++      if (!sSelf) {
++        return;
++      }
 +      {
-+        base::AutoLock lock(self->_lock);
-+        if (self->_frameReceiver) {
-+          char* baseAddress = nullptr;
-+          size_t length = 0;
++        base::AutoLock lock(sSelf->_lock);
++        if (image_output != sSelf->_photoOutput) {
++          return;
++        }
++        if (sSelf->_frameReceiver) {
 +          // The default output settings are JPEG.
-+          if (!error && sampleBuffer &&
-+              media::ExtractBaseAddressAndLength(&baseAddress, &length,
-+                                                 sampleBuffer)) {
-+            self->_frameReceiver->OnPhotoTaken(
-+                reinterpret_cast<uint8_t*>(baseAddress), length,
-+                "image/jpeg");
++          std::optional<base::span<const uint8_t>> data;
++          if (!error && sampleBuffer) {
++            data = media::ExtractDataSpan(sampleBuffer);
++          }
++          if (data) {
++            sSelf->_frameReceiver->OnPhotoTaken(data->data(), data->size(),
++                                                "image/jpeg");
 +          } else {
-+            self->_frameReceiver->OnPhotoError();
++            sSelf->_frameReceiver->OnPhotoError();
 +          }
 +        }
 +      }
 +      // Whether we succeeded or failed, we need to resolve the pending
 +      // takePhoto() operation.
-+      self->_mainThreadTaskRunner->PostTask(
-+          FROM_HERE,
-+          base::BindOnce(
-+              [](base::WeakPtr<SelfHolder> weakSelf) {
-+                if (!weakSelf.get()) {
-+                  return;
-+                }
-+                [weakSelf.get()->the_self takePhotoResolved];
-+              },
-+              self->_weakPtrHolderForTakePhoto.weak_ptr_factory.GetWeakPtr()));
++      sSelf->_mainThreadTaskRunner->PostTask(
++          FROM_HERE, base::BindOnce(
++                         [](VideoCaptureDeviceAVFoundation* __weak wSelf) {
++                           VideoCaptureDeviceAVFoundation* strongSelf = wSelf;
++                           if (strongSelf) {
++                             [strongSelf takePhotoResolved];
++                           }
++                         },
++                         weakSelf));
 +    };
-+    AVCaptureStillImageOutput* image_output =
-+        static_cast<AVCaptureStillImageOutput*>(_photoOutput);
 +    AVCaptureConnection* const connection =
 +        image_output.connections.firstObject;
 +    if (!connection) {
@@ -105,7 +112,7 @@ index 70b6bc8993045e3c10c09175372e8ca79955d7c4..e4ca8420274abbbb9f9c472a07a1ae35
 +                                              completionHandler:handler];
 +    return;
 +  }
-+#endif
++#endif  // BUILDFLAG(IS_MAC)
    @try {
      // Asynchronous success or failure is handled inside
      // captureOutput:didFinishProcessingPhoto:error on an unknown thread.
