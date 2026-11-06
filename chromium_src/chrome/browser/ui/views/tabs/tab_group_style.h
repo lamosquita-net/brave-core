@@ -14,15 +14,11 @@ class TabGroupStyle : public TabGroupStyle_ChromiumImpl {
  public:
   using TabGroupStyle_ChromiumImpl::TabGroupStyle_ChromiumImpl;
 
-  static const int kStrokeThicknessForVerticalTabs;
-
   bool TabGroupUnderlineShouldBeHidden() const override;
 
   bool TabGroupUnderlineShouldBeHidden(
       const views::View* leading_view,
       const views::View* trailing_view) const override;
-
-  SkPath GetUnderlinePath(gfx::Rect local_bounds) const override;
 
   gfx::Insets GetInsetsForHeaderChip(bool should_show_sync_icon) const override;
 
@@ -31,9 +27,6 @@ class TabGroupStyle : public TabGroupStyle_ChromiumImpl {
   int GetChipCornerRadius() const override;
 
   float GetEmptyChipSize() const override;
-
- private:
-  bool ShouldShowVerticalTabs() const;
 };
 
 #endif  // BRAVE_CHROMIUM_SRC_CHROME_BROWSER_UI_VIEWS_TABS_TAB_GROUP_STYLE_H_

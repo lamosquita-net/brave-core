@@ -16,8 +16,7 @@
 
 #define BrowserViewLayoutDelegateImpl \
   BrowserViewLayoutDelegateImpl;      \
-  friend class BraveBrowserView;      \
-  void SetNativeWindowPropertyForWidget(views::Widget* widget)
+  friend class BraveBrowserView
 #define BrowserWindow BraveBrowserWindow
 #define BrowserViewLayout BraveBrowserViewLayout
 #define SidePanel BraveSidePanel
@@ -27,11 +26,6 @@
   virtual MaybeShowReadingListInSidePanelIPH
 
 #define UpdateDevToolsForContents virtual UpdateDevToolsForContents
-#define GetTabStripVisible virtual GetTabStripVisible
-
-#define GetTabSearchBubbleHost     \
-  GetTabSearchBubbleHost_Unused(); \
-  virtual TabSearchBubbleHost* GetTabSearchBubbleHost
 
 #define UpdateExclusiveAccessBubble                           \
   UpdateExclusiveAccessBubble_ChromiumImpl(                   \
@@ -40,8 +34,6 @@
   void UpdateExclusiveAccessBubble
 
 #if BUILDFLAG(IS_WIN)
-#define GetSupportsTitle virtual GetSupportsTitle
-
 // On Windows <winuser.h> defines LoadAccelerators
 // Using push_macro seems to be causing #undef not to work in Chromium 125.
 // Unclear what causes this.
@@ -55,12 +47,9 @@
 #undef LoadAccelerators
 #if BUILDFLAG(IS_WIN)
 // #pragma pop_macro("LoadAccelerators")
-#undef GetSupportsTitle
 #endif
 
 #undef UpdateExclusiveAccessBubble
-#undef GetTabSearchBubbleHost
-#undef GetTabStripVisible
 #undef UpdateDevToolsForContents
 #undef MaybeShowReadingListInSidePanelIPH
 #undef BookmarkBarView

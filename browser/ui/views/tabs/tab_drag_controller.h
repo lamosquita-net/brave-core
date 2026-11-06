@@ -6,10 +6,8 @@
 #ifndef BRAVE_BROWSER_UI_VIEWS_TABS_TAB_DRAG_CONTROLLER_H_
 #define BRAVE_BROWSER_UI_VIEWS_TABS_TAB_DRAG_CONTROLLER_H_
 
-#include <optional>
 #include <vector>
 
-#include "brave/browser/ui/views/frame/vertical_tab_strip_region_view.h"
 #include "chrome/browser/ui/views/tabs/tab_drag_controller.h"
 
 class TabDragController : public TabDragControllerChromium {
@@ -29,38 +27,7 @@ class TabDragController : public TabDragControllerChromium {
                 ui::mojom::DragEventSource event_source);
 
   // TabDragControllerChromium:
-  gfx::Point GetAttachedDragPoint(const gfx::Point& point_in_screen) override;
-  void MoveAttached(const gfx::Point& point_in_screen,
-                    bool just_attached) override;
-  views::Widget* GetAttachedBrowserWidget() override;
-
-  Liveness GetLocalProcessWindow(const gfx::Point& screen_point,
-                                 bool exclude_dragged_view,
-                                 gfx::NativeWindow* window) override;
-
-  void DetachAndAttachToNewContext(ReleaseCapture release_capture,
-                                   TabDragContext* target_context,
-                                   const gfx::Point& point_in_screen,
-                                   bool set_capture = true) override;
-
-  gfx::Rect CalculateNonMaximizedDraggedBrowserBounds(
-      views::Widget* widget,
-      const gfx::Point& point_in_screen) override;
-  gfx::Rect CalculateDraggedBrowserBounds(
-      TabDragContext* source,
-      const gfx::Point& point_in_screen,
-      std::vector<gfx::Rect>* drag_bounds) override;
-
   void InitDragData(TabSlotView* view, TabDragData* drag_data) override;
-
- private:
-  gfx::Vector2d GetVerticalTabStripWidgetOffset();
-
-  bool is_showing_vertical_tabs_ = false;
-
-  VerticalTabStripRegionView::ScopedStateResetter vertical_tab_state_resetter_;
-
-  base::WeakPtrFactory<TabDragController> weak_factory_{this};
 };
 
 #endif  // BRAVE_BROWSER_UI_VIEWS_TABS_TAB_DRAG_CONTROLLER_H_

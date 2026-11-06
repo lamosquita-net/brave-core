@@ -19,8 +19,6 @@ BASE_DECLARE_FEATURE(kBraveSharedPinnedTabs);
 
 BASE_DECLARE_FEATURE(kBraveHorizontalTabsUpdate);
 
-BASE_DECLARE_FEATURE(kBraveVerticalTabScrollBar);
-
 bool HorizontalTabsUpdateEnabled();
 
 }  // namespace tabs::features

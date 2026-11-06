@@ -9,7 +9,6 @@
 
 #include "brave/browser/ui/tabs/brave_tab_layout_constants.h"
 #include "brave/browser/ui/tabs/features.h"
-#include "brave/browser/ui/views/tabs/vertical_tab_utils.h"
 #include "brave/components/vector_icons/vector_icons.h"
 #include "chrome/browser/ui/layout_constants.h"
 #include "chrome/browser/ui/views/tabs/tab_strip_control_button.h"
@@ -36,15 +35,11 @@ void BraveTabStripRegionView::UpdateTabStripMargin() {
   TabStripRegionView::UpdateTabStripMargin();
 
   gfx::Insets margins;
-  bool vertical_tabs =
-      tabs::utils::ShouldShowVerticalTabs(tab_strip_->GetBrowser());
 
-  // In horizontal mode, take the current right margin. It is required so that
-  // the new tab button will not be covered by the frame grab handle.
-  if (!vertical_tabs) {
-    if (auto* current = tab_strip_container_->GetProperty(views::kMarginsKey)) {
-      margins.set_right(current->right());
-    }
+  // Take the current right margin. It is required so that the new tab button
+  // will not be covered by the frame grab handle.
+  if (auto* current = tab_strip_container_->GetProperty(views::kMarginsKey)) {
+    margins.set_right(current->right());
   }
 
   // Ensure that the correct amount of left margin is applied to the tabstrip.
@@ -52,7 +47,7 @@ void BraveTabStripRegionView::UpdateTabStripMargin() {
   // the frame edge so that the leftmost tab can be selected at the edge of the
   // screen.
   if (tabs::features::HorizontalTabsUpdateEnabled()) {
-    if (!tab_strip_->controller()->IsFrameCondensed() && !vertical_tabs) {
+    if (!tab_strip_->controller()->IsFrameCondensed()) {
       margins.set_left(brave_tabs::kHorizontalTabStripLeftMargin);
     } else {
       margins.set_left(0);

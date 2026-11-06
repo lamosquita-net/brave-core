@@ -7,9 +7,7 @@
 #define BRAVE_BROWSER_UI_VIEWS_TABS_BRAVE_TAB_STRIP_H_
 
 #include <memory>
-#include <optional>
 
-#include "base/gtest_prod_util.h"
 #include "base/memory/weak_ptr.h"
 #include "chrome/browser/ui/views/tabs/tab_strip.h"
 
@@ -22,8 +20,6 @@ class BraveTabStrip : public TabStrip {
   BraveTabStrip(const BraveTabStrip&) = delete;
   BraveTabStrip& operator=(const BraveTabStrip&) = delete;
 
-  bool IsVerticalTabsFloating() const;
-
   // TabStrip:
   void UpdateHoverCard(Tab* tab, HoverCardUpdateType update_type) override;
   void MaybeStartDrag(
@@ -31,20 +27,12 @@ class BraveTabStrip : public TabStrip {
       const ui::LocatedEvent& event,
       const ui::ListSelectionModel& original_selection) override;
   void AddedToWidget() override;
-  std::optional<int> GetCustomBackgroundId(
-      BrowserFrameActiveState active_state) const override;
 
  private:
-  FRIEND_TEST_ALL_PREFIXES(VerticalTabStripBrowserTest, ScrollBarVisibility);
-
   void UpdateTabContainer();
-  bool ShouldShowVerticalTabs() const;
-
-  TabContainer* GetTabContainerForTesting();
 
   // TabStrip overrides:
   bool ShouldDrawStrokes() const override;
-  void Layout(PassKey) override;
 
   // Exposed for testing.
   static constexpr float kBraveMinimumContrastRatioForOutlines = 1.0816f;

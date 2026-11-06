@@ -5,7 +5,6 @@
 
 #include "brave/browser/ui/tabs/brave_tab_prefs.h"
 
-#include "brave/browser/ui/tabs/features.h"
 #include "components/prefs/pref_registry_simple.h"
 #include "components/prefs/pref_service.h"
 
@@ -13,31 +12,8 @@ namespace brave_tabs {
 
 void RegisterBraveProfilePrefs(PrefRegistrySimple* registry) {
   registry->RegisterIntegerPref(kTabHoverMode, TabHoverMode::CARD);
-  registry->RegisterBooleanPref(kVerticalTabsEnabled, false);
-  registry->RegisterBooleanPref(kVerticalTabsCollapsed, false);
-#if BUILDFLAG(IS_WIN)
-  // On Windows, we show window title by default
-  // https://github.com/brave/brave-browser/issues/30027
-  registry->RegisterBooleanPref(kVerticalTabsShowTitleOnWindow, true);
-#else
-  registry->RegisterBooleanPref(kVerticalTabsShowTitleOnWindow, false);
-#endif
-  registry->RegisterBooleanPref(kVerticalTabsFloatingEnabled, true);
-  registry->RegisterIntegerPref(kVerticalTabsExpandedWidth, 220);
-  registry->RegisterBooleanPref(kVerticalTabsOnRight, false);
-  registry->RegisterBooleanPref(kVerticalTabsShowScrollbar, false);
-
   // FlyWeb: pinned tabs are shared across windows by default (F7.8).
   registry->RegisterBooleanPref(kSharedPinnedTab, true);
-}
-
-void MigrateBraveProfilePrefs(PrefService* prefs) {
-  if (auto* pref = prefs->FindPreference(kVerticalTabsShowScrollbar);
-      pref && pref->IsDefaultValue() &&
-      base::FeatureList::IsEnabled(
-          tabs::features::kBraveVerticalTabScrollBar)) {
-    prefs->SetBoolean(kVerticalTabsShowScrollbar, true);
-  }
 }
 
 bool AreTooltipsEnabled(PrefService* prefs) {

@@ -28,11 +28,8 @@
 #include "brave/browser/ui/views/brave_help_bubble/brave_help_bubble_host_view.h"
 #include "brave/browser/ui/views/brave_shields/cookie_list_opt_in_bubble_host.h"
 #include "brave/browser/ui/views/frame/brave_contents_view_util.h"
-#include "brave/browser/ui/views/frame/vertical_tab_strip_region_view.h"
-#include "brave/browser/ui/views/frame/vertical_tab_strip_widget_delegate_view.h"
 #include "brave/browser/ui/views/location_bar/brave_location_bar_view.h"
 #include "brave/browser/ui/views/omnibox/brave_omnibox_view_views.h"
-#include "brave/browser/ui/views/tabs/vertical_tab_utils.h"
 #include "brave/browser/ui/views/toolbar/bookmark_button.h"
 #include "brave/browser/ui/views/toolbar/brave_toolbar_view.h"
 #include "brave/browser/ui/views/window_closing_confirm_dialog_view.h"
@@ -197,24 +194,13 @@ BraveBrowserView::BraveBrowserView(std::unique_ptr<Browser> browser)
   // Host view for the side panel resize widget.
   if (browser_->is_type_normal()) {
     side_panel_host_view_ = AddChildView(std::make_unique<views::View>());
+
+    // Make sure |find_bar_host_view_| is the last child of BrowserView by
+    // re-ordering. FindBarHost widgets uses this view as a  kHostViewKey.
+    // See the comments of BrowserView::find_bar_host_view().
+    ReorderChildView(find_bar_host_view_, -1);
   }
 #endif
-
-  const bool supports_vertical_tabs =
-      tabs::utils::SupportsVerticalTabs(browser_.get());
-  if (supports_vertical_tabs) {
-    vertical_tab_strip_host_view_ =
-        AddChildView(std::make_unique<views::View>());
-  }
-
-  if (!supports_vertical_tabs && !side_panel_host_view_) {
-    return;
-  }
-
-  // Make sure |find_bar_host_view_| is the last child of BrowserView by
-  // re-ordering. FindBarHost widgets uses this view as a  kHostViewKey.
-  // See the comments of BrowserView::find_bar_host_view().
-  ReorderChildView(find_bar_host_view_, -1);
 }
 
 void BraveBrowserView::OnPreferenceChanged(const std::string& pref_name) {
@@ -261,24 +247,6 @@ gfx::Rect BraveBrowserView::GetShieldsBubbleRect() {
 
   return bubble_widget->GetClientAreaBoundsInScreen();
 }
-
-bool BraveBrowserView::GetTabStripVisible() const {
-  if (tabs::utils::ShouldShowVerticalTabs(browser())) {
-    return false;
-  }
-
-  return BrowserView::GetTabStripVisible();
-}
-
-#if BUILDFLAG(IS_WIN)
-bool BraveBrowserView::GetSupportsTitle() const {
-  if (tabs::utils::SupportsVerticalTabs(browser())) {
-    return true;
-  }
-
-  return BrowserView::GetSupportsTitle();
-}
-#endif
 
 void BraveBrowserView::SetStarredState(bool is_starred) {
   BraveBookmarkButton* button =
@@ -367,23 +335,6 @@ void BraveBrowserView::AddedToWidget() {
   GetBrowserViewLayout()->set_contents_background(contents_background_view_);
 
   UpdateWebViewRoundedCorners();
-
-  if (vertical_tab_strip_host_view_) {
-    vertical_tab_strip_widget_delegate_view_ =
-        VerticalTabStripWidgetDelegateView::Create(
-            this, vertical_tab_strip_host_view_);
-
-    // By setting this property to the widget for vertical tabs,
-    // BrowserView::GetBrowserViewForNativeWindow() will return browser view
-    // properly even when we pass the native window for vertical tab strip.
-    // As a result, we don't have to call GetTopLevelWidget() in order to
-    // get browser view from the vertical tab strip's widget.
-    SetNativeWindowPropertyForWidget(
-        vertical_tab_strip_widget_delegate_view_->GetWidget());
-
-    GetBrowserViewLayout()->set_vertical_tab_strip_host(
-        vertical_tab_strip_host_view_.get());
-  }
 }
 
 bool BraveBrowserView::ShowBraveHelpBubbleView(const std::string& text) {
@@ -498,37 +449,6 @@ void BraveBrowserView::UpdateDevToolsForContents(
   BrowserView::UpdateDevToolsForContents(web_contents,
                                          update_devtools_web_contents);
   UpdateWebViewRoundedCorners();
-}
-
-bool BraveBrowserView::ShouldShowWindowTitle() const {
-  if (BrowserView::ShouldShowWindowTitle()) {
-    return true;
-  }
-
-  if (tabs::utils::ShouldShowWindowTitleForVerticalTabs(browser())) {
-    return true;
-  }
-
-  return false;
-}
-
-void BraveBrowserView::OnThemeChanged() {
-  BrowserView::OnThemeChanged();
-  if (vertical_tab_strip_host_view_) {
-    const auto background_color = GetColorProvider()->GetColor(kColorToolbar);
-    vertical_tab_strip_host_view_->SetBackground(
-        views::CreateSolidBackground(background_color));
-  }
-}
-
-TabSearchBubbleHost* BraveBrowserView::GetTabSearchBubbleHost() {
-  if (!tabs::utils::ShouldShowVerticalTabs(browser())) {
-    return BrowserView::GetTabSearchBubbleHost();
-  }
-
-  return vertical_tab_strip_widget_delegate_view_
-      ->vertical_tab_strip_region_view()
-      ->GetTabSearchBubbleHost();
 }
 
 bool BraveBrowserView::AcceleratorPressed(const ui::Accelerator& accelerator) {

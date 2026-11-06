@@ -8,7 +8,6 @@
 #include "brave/browser/ui/tabs/brave_tab_layout_constants.h"
 #include "brave/browser/ui/tabs/features.h"
 #include "brave/browser/ui/views/tabs/brave_tab_group_underline.h"
-#include "brave/browser/ui/views/tabs/vertical_tab_utils.h"
 
 #define TabGroupUnderline BraveTabGroupUnderline
 #define TabGroupStyle TabGroupStyle_ChromiumImpl
@@ -17,8 +16,6 @@
 
 #undef TabGroupStyle
 #undef TabGroupUnderline
-
-const int TabGroupStyle::kStrokeThicknessForVerticalTabs = 4;
 
 bool TabGroupStyle::TabGroupUnderlineShouldBeHidden() const {
   return false;
@@ -32,49 +29,14 @@ bool TabGroupStyle::TabGroupUnderlineShouldBeHidden(
   return false;
 }
 
-SkPath TabGroupStyle::GetUnderlinePath(gfx::Rect local_bounds) const {
-  if (!ShouldShowVerticalTabs()) {
-    return TabGroupStyle_ChromiumImpl::GetUnderlinePath(local_bounds);
-  }
-
-  // In vertical tabs, underline is not actually "underline'. It's vertical line
-  // at the left side of the tab group. And it has half rounded corners.
-  //
-  // +   group header   | '+' is the underline.
-  // ++  tab 1          | Drawing starts from top-right and goes
-  // ++  tab 2          | counter-clockwise
-  // +   tab 3          |
-  //
-  SkPath path;
-  path.arcTo(/* rx = */ kStrokeThicknessForVerticalTabs,
-             /* ry = */ kStrokeThicknessForVerticalTabs,
-             /* angle = */ 180.f, SkPath::kSmall_ArcSize, SkPathDirection::kCW,
-             /* x = */ kStrokeThicknessForVerticalTabs,
-             /* y = */ kStrokeThicknessForVerticalTabs);
-  path.lineTo(kStrokeThicknessForVerticalTabs,
-              local_bounds.height() - kStrokeThicknessForVerticalTabs);
-  path.arcTo(/* rx = */ kStrokeThicknessForVerticalTabs,
-             /* ry = */ kStrokeThicknessForVerticalTabs,
-             /* angle = */ 180.f, SkPath::kSmall_ArcSize, SkPathDirection::kCW,
-             /* x = */ 0,
-             /* y = */ local_bounds.height());
-  path.close();
-
-  return path;
-}
-
 gfx::Insets TabGroupStyle::GetInsetsForHeaderChip(
     bool should_show_sync_icon) const {
-  auto insets =
-      TabGroupStyle_ChromiumImpl::GetInsetsForHeaderChip(should_show_sync_icon);
   if (!tabs::features::HorizontalTabsUpdateEnabled()) {
-    return insets;
+    return TabGroupStyle_ChromiumImpl::GetInsetsForHeaderChip(
+        should_show_sync_icon);
   }
-  if (!ShouldShowVerticalTabs()) {
-    return gfx::Insets::VH(brave_tabs::kTabGroupTitleVerticalInset,
-                           brave_tabs::kTabGroupTitleHorizontalInset);
-  }
-  return insets;
+  return gfx::Insets::VH(brave_tabs::kTabGroupTitleVerticalInset,
+                         brave_tabs::kTabGroupTitleHorizontalInset);
 }
 
 gfx::Point TabGroupStyle::GetTitleChipOffset(
@@ -84,10 +46,6 @@ gfx::Point TabGroupStyle::GetTitleChipOffset(
   }
   return gfx::Point(brave_tabs::kHorizontalTabInset,
                     brave_tabs::kHorizontalTabVerticalSpacing);
-}
-
-bool TabGroupStyle::ShouldShowVerticalTabs() const {
-  return tabs::utils::ShouldShowVerticalTabs(tab_group_views_->GetBrowser());
 }
 
 float TabGroupStyle::GetEmptyChipSize() const {

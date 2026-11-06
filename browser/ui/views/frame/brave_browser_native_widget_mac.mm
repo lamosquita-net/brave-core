@@ -9,12 +9,10 @@
 #include "brave/app/brave_command_ids.h"
 #include "brave/browser/ui/tabs/brave_tab_prefs.h"
 #include "brave/browser/ui/tabs/features.h"
-#include "brave/browser/ui/views/tabs/vertical_tab_utils.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/browser/ui/views/frame/browser_view.h"
-#include "chrome/browser/ui/views/toolbar/toolbar_view.h"
 #include "components/prefs/pref_service.h"
 #include "components/remote_cocoa/common/native_widget_ns_window_host.mojom.h"
 
@@ -26,29 +24,6 @@ BraveBrowserNativeWidgetMac::BraveBrowserNativeWidgetMac(
       browser_view_(browser_view->GetAsWeakPtr()) {}
 
 BraveBrowserNativeWidgetMac::~BraveBrowserNativeWidgetMac() = default;
-
-void BraveBrowserNativeWidgetMac::GetWindowFrameTitlebarHeight(
-    bool* override_titlebar_height,
-    float* titlebar_height) {
-  if (BrowserView* browser_view = browser_view_.get()) {
-    BrowserWindowInterface* browser = browser_view->browser();
-    if (tabs::utils::ShouldShowVerticalTabs(browser)) {
-      if (!tabs::utils::ShouldShowWindowTitleForVerticalTabs(browser)) {
-        // In this case, titlbar height should be the same as toolbar height.
-        *titlebar_height = browser_view->toolbar()->GetPreferredSize().height();
-        *override_titlebar_height = true;
-        return;
-      }
-
-      // Otherwise, don't override titlebar height. The titlbar will be aligned
-      // to the center of the given height automatically.
-      return;
-    }
-  }
-
-  BrowserNativeWidgetMac::GetWindowFrameTitlebarHeight(override_titlebar_height,
-                                                       titlebar_height);
-}
 
 void BraveBrowserNativeWidgetMac::ValidateUserInterfaceItem(
     int32_t tag,

@@ -47,7 +47,6 @@ class BraveTabContextMenuContents : public ui::SimpleMenuModel::Delegate {
   void RunMenuAt(const gfx::Point& point, ui::MenuSourceType source_type);
 
   // ui::SimpleMenuModel::Delegate overrides:
-  bool IsCommandIdChecked(int command_id) const override;
   bool IsCommandIdEnabled(int command_id) const override;
   bool IsCommandIdVisible(int command_id) const override;
   bool GetAcceleratorForCommandId(int command_id,
@@ -55,9 +54,6 @@ class BraveTabContextMenuContents : public ui::SimpleMenuModel::Delegate {
   void ExecuteCommand(int command_id, int event_flags) override;
 
  private:
-  FRIEND_TEST_ALL_PREFIXES(VerticalTabStripStringBrowserTest,
-                           ContextMenuString);
-
   bool IsBraveCommandIdEnabled(int command_id) const;
   void ExecuteBraveCommand(int command_id);
   void BringAllTabsToThisWindow();
@@ -65,6 +61,7 @@ class BraveTabContextMenuContents : public ui::SimpleMenuModel::Delegate {
   bool IsBraveCommandId(int command_id) const;
   bool IsValidContextMenu() const;
   void OnMenuClosed();
+
   std::unique_ptr<BraveTabMenuModel> model_;
   std::unique_ptr<views::MenuRunner> menu_runner_;
 

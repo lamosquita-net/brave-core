@@ -17,11 +17,6 @@ void AddBraveTabLightThemeColorMixer(ui::ColorProvider* provider,
 void AddBraveTabDarkThemeColorMixer(ui::ColorProvider* provider,
                                     const ui::ColorProviderKey& key);
 
-// Called from
-// //brave/browser/themes/brave_private_window_theme_supplier.cc
-void AddBraveTabPrivateThemeColorMixer(ui::ColorProvider* provider,
-                                       const ui::ColorProviderKey& key);
-
 }  // namespace tabs
 
 #endif  // BRAVE_BROWSER_UI_TABS_BRAVE_TAB_COLOR_MIXER_H_

@@ -126,36 +126,6 @@ void CopyLinkWithStrictCleaning(BrowserWindowInterface* browser,
   scw.WriteText(base::UTF8ToUTF16(final_url.spec()));
 }
 
-void ToggleWindowTitleVisibilityForVerticalTabs(
-    BrowserWindowInterface* browser) {
-  auto* prefs = browser->GetProfile()->GetOriginalProfile()->GetPrefs();
-  prefs->SetBoolean(
-      brave_tabs::kVerticalTabsShowTitleOnWindow,
-      !prefs->GetBoolean(brave_tabs::kVerticalTabsShowTitleOnWindow));
-}
-
-void ToggleVerticalTabStrip(BrowserWindowInterface* browser) {
-  auto* profile = browser->GetProfile()->GetOriginalProfile();
-  auto* prefs = profile->GetPrefs();
-  const bool was_using_vertical_tab_strip =
-      prefs->GetBoolean(brave_tabs::kVerticalTabsEnabled);
-  prefs->SetBoolean(brave_tabs::kVerticalTabsEnabled,
-                    !was_using_vertical_tab_strip);
-}
-
-void ToggleVerticalTabStripFloatingMode(BrowserWindowInterface* browser) {
-  auto* prefs = browser->GetProfile()->GetOriginalProfile()->GetPrefs();
-  prefs->SetBoolean(
-      brave_tabs::kVerticalTabsFloatingEnabled,
-      !prefs->GetBoolean(brave_tabs::kVerticalTabsFloatingEnabled));
-}
-
-void ToggleVerticalTabStripExpanded(BrowserWindowInterface* browser) {
-  auto* prefs = browser->GetProfile()->GetPrefs();
-  prefs->SetBoolean(brave_tabs::kVerticalTabsCollapsed,
-                    !prefs->GetBoolean(brave_tabs::kVerticalTabsCollapsed));
-}
-
 void ToggleActiveTabAudioMute(BrowserWindowInterface* browser) {
   WebContents* contents = browser->tab_strip_model()->GetActiveWebContents();
   if (!contents || !contents->IsCurrentlyAudible()) {

@@ -20,15 +20,9 @@ class BraveTab;
 
 #define ActiveStateChanged virtual ActiveStateChanged
 #define GetGroupColor virtual GetGroupColor
-#define UpdateIconVisibility virtual UpdateIconVisibility
-#define ShouldRenderAsNormalTab virtual ShouldRenderAsNormalTab
-#define MaybeAdjustLeftForPinnedTab virtual MaybeAdjustLeftForPinnedTab
 
 #include "src/chrome/browser/ui/views/tabs/tab.h"  // IWYU pragma: export
 
-#undef MaybeAdjustLeftForPinnedTab
-#undef ShouldRenderAsNormalTab
-#undef UpdateIconVisibility
 #undef GetGroupColor
 #undef ActiveStateChanged
 #undef GetWidthOfLargestSelectableRegion

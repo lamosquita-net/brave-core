@@ -8,7 +8,6 @@
 
 #define GetTabStripAvailableWidth                   \
   GetTabStripAvailableWidth_Unused() { return {}; } \
-  friend class VerticalTabStripRegionView;          \
   friend class BraveTabStrip;                       \
   int GetTabStripAvailableWidth
 

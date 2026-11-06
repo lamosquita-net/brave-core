@@ -26,7 +26,6 @@ class BraveTabMenuModel : public TabMenuModel {
     CommandStart = TabStripModel::CommandLast,
     CommandRestoreTab,
     CommandBookmarkAllTabs,
-    CommandShowVerticalTabs,
     CommandToggleTabMuted,
     CommandBringAllTabsToThisWindow,
     CommandCloseDuplicateTabs,
@@ -36,16 +35,12 @@ class BraveTabMenuModel : public TabMenuModel {
   BraveTabMenuModel(ui::SimpleMenuModel::Delegate* delegate,
                     TabMenuModelDelegate* tab_menu_model_delegate,
                     TabStripModel* tab_strip_model,
-                    int index,
-                    bool is_vertical_tab);
+                    int index);
   BraveTabMenuModel(const BraveTabMenuModel&) = delete;
   BraveTabMenuModel& operator=(const BraveTabMenuModel&) = delete;
   ~BraveTabMenuModel() override;
 
   bool all_muted() const { return all_muted_; }
-
-  // TabMenuModel:
-  std::u16string GetLabelAt(size_t index) const override;
 
  private:
   void Build(const std::vector<int>& indices);
@@ -54,8 +49,6 @@ class BraveTabMenuModel : public TabMenuModel {
   raw_ptr<content::WebContents> web_contents_ = nullptr;
   raw_ptr<sessions::TabRestoreService> restore_service_ = nullptr;
   bool all_muted_;
-
-  bool is_vertical_tab_ = false;
 };
 
 #endif  // BRAVE_BROWSER_UI_TABS_BRAVE_TAB_MENU_MODEL_H_

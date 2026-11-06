@@ -8,7 +8,7 @@
 #include "brave/browser/ui/tabs/brave_tab_layout_constants.h"
 #include "brave/browser/ui/tabs/features.h"
 #include "brave/browser/ui/views/tabs/brave_tab_group_header.h"
-#include "brave/browser/ui/views/tabs/vertical_tab_utils.h"
+#include "brave/browser/ui/views/tabs/brave_tab_strip_layout_helper.h"
 #include "chrome/browser/ui/views/tabs/tab_slot_controller.h"
 
 #define BRAVE_GM2_TAB_STYLE_H \

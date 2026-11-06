@@ -14,7 +14,6 @@
 #include "brave/browser/ui/views/side_panel/brave_side_panel_coordinator.h"
 #include "brave/browser/ui/views/tabs/brave_browser_tab_strip_controller.h"
 #include "brave/browser/ui/views/tabs/brave_tab_strip.h"
-#include "brave/browser/ui/views/tabs/vertical_tab_utils.h"
 #include "brave/browser/ui/views/toolbar/brave_toolbar_view.h"
 #include "brave/components/constants/pref_names.h"
 #include "chrome/browser/ui/browser_commands.h"
@@ -34,14 +33,7 @@
 #define BookmarkBarView BraveBookmarkBarView
 #define UpdateExclusiveAccessBubble UpdateExclusiveAccessBubble_ChromiumImpl
 
-// 156 moved ConvertedHitTest() from browser_view_layout.cc to browser_view.cc.
-#define BRAVE_BROWSER_VIEW_LAYOUT_CONVERTED_HIT_TEST \
-  if (dst->GetWidget() != src->GetWidget()) {        \
-    return false;                                    \
-  }
-
 #include "src/chrome/browser/ui/views/frame/browser_view.cc"
-#undef BRAVE_BROWSER_VIEW_LAYOUT_CONVERTED_HIT_TEST
 
 #undef UpdateExclusiveAccessBubble
 #undef BookmarkBarView
@@ -55,16 +47,6 @@
 #undef ToolbarView
 #undef BrowserViewLayout
 #undef InfoBarContainerView
-
-void BrowserView::SetNativeWindowPropertyForWidget(views::Widget* widget) {
-  // Sets a kBrowserWindowKey to given child |widget| so that we can get
-  // BrowserView from the |widget|.
-  DCHECK(GetWidget());
-  DCHECK_EQ(GetWidget(), widget->GetTopLevelWidget())
-      << "The |widget| should be child of BrowserView's widget.";
-
-  widget->SetNativeWindowProperty(kBrowserViewKey, this);
-}
 
 void BrowserView::UpdateExclusiveAccessBubble(
     const ExclusiveAccessBubbleParams& params,

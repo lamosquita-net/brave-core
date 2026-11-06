@@ -20,16 +20,7 @@
 #include "brave/browser/ui/views/frame/brave_opaque_browser_frame_view.h"
 #define OpaqueBrowserFrameView BraveOpaqueBrowserFrameView
 
-#if BUILDFLAG(IS_LINUX)
-#include "brave/browser/ui/views/frame/brave_browser_frame_view_linux_native.h"
-#define BrowserFrameViewLinuxNative BraveBrowserFrameViewLinuxNative
-#endif  // BUILDFLAG(IS_LINUX)
-
 #include "src/chrome/browser/ui/views/frame/browser_non_client_frame_view_factory_views.cc"
-
-#if BUILDFLAG(IS_LINUX)
-#undef BrowserFrameViewLinuxNative
-#endif  // BUILDFLAG(IS_LINUX)
 
 #undef OpaqueBrowserFrameView
 

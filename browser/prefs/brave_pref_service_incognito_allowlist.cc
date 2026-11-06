@@ -27,13 +27,6 @@ const std::vector<const char*>& GetBravePersistentPrefNames() {
 #if !BUILDFLAG(IS_ANDROID)
       prefs::kSidePanelHorizontalAlignment,
       kTabMuteIndicatorNotClickable,
-      brave_tabs::kVerticalTabsExpandedWidth,
-      brave_tabs::kVerticalTabsEnabled,
-      brave_tabs::kVerticalTabsCollapsed,
-      brave_tabs::kVerticalTabsFloatingEnabled,
-      brave_tabs::kVerticalTabsShowTitleOnWindow,
-      brave_tabs::kVerticalTabsOnRight,
-      brave_tabs::kVerticalTabsShowScrollbar,
       brave_tabs::kSharedPinnedTab,
 #endif
 #if defined(TOOLKIT_VIEWS)

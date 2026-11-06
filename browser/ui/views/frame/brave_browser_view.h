@@ -29,7 +29,6 @@ class WebContents;
 
 class BraveBrowser;
 class ViewShadow;
-class VerticalTabStripWidgetDelegateView;
 class BraveHelpBubbleHostView;
 
 class BraveBrowserView : public BrowserView,
@@ -48,13 +47,6 @@ class BraveBrowserView : public BrowserView,
   void Layout(PassKey) override;
   void StartTabCycling() override;
   gfx::Rect GetShieldsBubbleRect() override;
-  bool GetTabStripVisible() const override;
-#if BUILDFLAG(IS_WIN)
-  bool GetSupportsTitle() const override;
-#endif
-  bool ShouldShowWindowTitle() const override;
-  void OnThemeChanged() override;
-  TabSearchBubbleHost* GetTabSearchBubbleHost() override;
   bool AcceleratorPressed(const ui::Accelerator& accelerator) override;
   bool IsInTabDragging() const override;
 
@@ -62,10 +54,6 @@ class BraveBrowserView : public BrowserView,
   views::View* side_panel_host_view() { return side_panel_host_view_; }
 #endif
 
-  VerticalTabStripWidgetDelegateView*
-  vertical_tab_strip_widget_delegate_view() {
-    return vertical_tab_strip_widget_delegate_view_;
-  }
   bool ShowBraveHelpBubbleView(const std::string& text) override;
 
   // commands::AcceleratorService:
@@ -74,12 +62,6 @@ class BraveBrowserView : public BrowserView,
  private:
   class TabCyclingEventHandler;
   friend class WindowClosingConfirmBrowserTest;
-  friend class VerticalTabStripDragAndDropBrowserTest;
-
-  FRIEND_TEST_ALL_PREFIXES(VerticalTabStripBrowserTest, VisualState);
-  FRIEND_TEST_ALL_PREFIXES(VerticalTabStripBrowserTest, Fullscreen);
-  FRIEND_TEST_ALL_PREFIXES(VerticalTabStripDragAndDropBrowserTest,
-                           DragTabToReorder);
 
   static void SetDownloadConfirmReturnForTesting(bool allow);
 
@@ -112,9 +94,6 @@ class BraveBrowserView : public BrowserView,
   bool closing_confirm_dialog_activated_ = false;
   raw_ptr<BraveHelpBubbleHostView> brave_help_bubble_host_view_ = nullptr;
   raw_ptr<views::View> contents_background_view_ = nullptr;
-  raw_ptr<views::View> vertical_tab_strip_host_view_ = nullptr;
-  raw_ptr<VerticalTabStripWidgetDelegateView>
-      vertical_tab_strip_widget_delegate_view_ = nullptr;
 
 #if defined(USE_AURA)
   raw_ptr<views::View> side_panel_host_view_ = nullptr;

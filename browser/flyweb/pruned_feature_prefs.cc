@@ -6,6 +6,8 @@
 #include "brave/browser/flyweb/pruned_feature_prefs.h"
 
 #include "base/time/time.h"
+#include "build/build_config.h"
+#include "chrome/common/pref_names.h"
 #include "components/pref_registry/pref_registry_syncable.h"
 #include "components/prefs/pref_registry_simple.h"
 #include "components/prefs/pref_service.h"
@@ -76,6 +78,20 @@ constexpr char kShowSidePanelButton[] = "brave.show_side_panel_button";
 constexpr char kTargetUserForSidebarEnabledTest[] =
     "brave.sidebar.target_user_for_sidebar_enabled_test";
 
+// Brave vertical tabs (removed 2026-11; Chromium's native vertical tabs
+// replace them).
+constexpr char kVerticalTabsEnabled[] = "brave.tabs.vertical_tabs_enabled";
+constexpr char kVerticalTabsCollapsed[] = "brave.tabs.vertical_tabs_collapsed";
+constexpr char kVerticalTabsShowTitleOnWindow[] =
+    "brave.tabs.vertical_tabs_show_title_on_window";
+constexpr char kVerticalTabsFloatingEnabled[] =
+    "brave.tabs.vertical_tabs_floating_enabled";
+constexpr char kVerticalTabsExpandedWidth[] =
+    "brave.tabs.vertical_tabs_expanded_width";
+constexpr char kVerticalTabsOnRight[] = "brave.tabs.vertical_tabs_on_right";
+constexpr char kVerticalTabsShowScrollbar[] =
+    "brave.tabs.vertical_tabs_show_scrollbar";
+
 // Brave Wallet (code removed earlier; its leftovers pruned 2026-11). Every
 // Wallet pref, in the profile (keyrings, encrypted mnemonic, networks,
 // assets, transactions, default wallets, toolbar button, auto-lock...) and in
@@ -116,6 +132,13 @@ constexpr const char* kProfilePrefs[] = {
     kSidebarSettingChangeInitialP3AReport,
     kSidebarAlignmentChangedTemporarily,
     kShowSidePanelButton,
+    kVerticalTabsEnabled,
+    kVerticalTabsCollapsed,
+    kVerticalTabsShowTitleOnWindow,
+    kVerticalTabsFloatingEnabled,
+    kVerticalTabsExpandedWidth,
+    kVerticalTabsOnRight,
+    kVerticalTabsShowScrollbar,
     kBraveWallet,
 };
 
@@ -176,11 +199,27 @@ void RegisterPrunedFeatureProfilePrefs(
   registry->RegisterBooleanPref(kSidebarAlignmentChangedTemporarily, false);
   registry->RegisterBooleanPref(kShowSidePanelButton, true);
 
+  // Brave vertical tabs
+  registry->RegisterBooleanPref(kVerticalTabsEnabled, false);
+  registry->RegisterBooleanPref(kVerticalTabsCollapsed, false);
+  registry->RegisterBooleanPref(kVerticalTabsShowTitleOnWindow, false);
+  registry->RegisterBooleanPref(kVerticalTabsFloatingEnabled, true);
+  registry->RegisterIntegerPref(kVerticalTabsExpandedWidth, 220);
+  registry->RegisterBooleanPref(kVerticalTabsOnRight, false);
+  registry->RegisterBooleanPref(kVerticalTabsShowScrollbar, false);
+
   // Brave Wallet
   registry->RegisterDictionaryPref(kBraveWallet);
 }
 
 void ClearPrunedFeatureProfilePrefs(PrefService* profile_prefs) {
+#if !BUILDFLAG(IS_ANDROID)
+  // Users of Brave's vertical tabs get Chromium's native ones instead.
+  if (profile_prefs->GetBoolean(kVerticalTabsEnabled)) {
+    profile_prefs->SetBoolean(prefs::kVerticalTabsEnabled, true);
+  }
+#endif  // !BUILDFLAG(IS_ANDROID)
+
   for (const char* pref : kProfilePrefs) {
     profile_prefs->ClearPref(pref);
   }

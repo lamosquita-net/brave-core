@@ -6,16 +6,12 @@
 #ifndef BRAVE_CHROMIUM_SRC_CHROME_BROWSER_UI_VIEWS_FRAME_TAB_STRIP_REGION_VIEW_H_
 #define BRAVE_CHROMIUM_SRC_CHROME_BROWSER_UI_VIEWS_FRAME_TAB_STRIP_REGION_VIEW_H_
 
-#include "base/gtest_prod_util.h"
-
-#define IsPositionInWindowCaption                                   \
-  Unused_IsPositionInWindowCaption() {                              \
-    return false;                                                   \
-  }                                                                 \
-  friend class VerticalTabStripRegionView;                          \
-  friend class BraveTabStrip;                                       \
-  friend class BraveTabStripRegionView;                             \
-  FRIEND_TEST_ALL_PREFIXES(VerticalTabStripBrowserTest, MinHeight); \
+#define IsPositionInWindowCaption       \
+  Unused_IsPositionInWindowCaption() {  \
+    return false;                       \
+  }                                     \
+  friend class BraveTabStrip;           \
+  friend class BraveTabStripRegionView; \
   bool IsPositionInWindowCaption
 
 #define UpdateTabStripMargin virtual UpdateTabStripMargin

@@ -11,8 +11,6 @@
 
 #include "base/functional/bind.h"
 #include "brave/app/brave_command_ids.h"
-#include "brave/browser/ui/tabs/brave_tab_prefs.h"
-#include "brave/browser/ui/views/tabs/vertical_tab_utils.h"
 #include "brave/browser/ui/views/toolbar/bookmark_button.h"
 #include "brave/components/constants/pref_names.h"
 #include "chrome/app/chrome_command_ids.h"
@@ -166,25 +164,6 @@ void BraveToolbarView::Init() {
       base::BindRepeating(&BraveToolbarView::OnLocationBarIsWideChanged,
                           base::Unretained(this)));
 
-  if (tabs::utils::SupportsVerticalTabs(browser_)) {
-    show_vertical_tabs_.Init(
-        brave_tabs::kVerticalTabsEnabled,
-        profile->GetOriginalProfile()->GetPrefs(),
-        base::BindRepeating(&BraveToolbarView::UpdateHorizontalPadding,
-                            base::Unretained(this)));
-    show_title_bar_on_vertical_tabs_.Init(
-        brave_tabs::kVerticalTabsShowTitleOnWindow,
-        profile->GetOriginalProfile()->GetPrefs(),
-        base::BindRepeating(&BraveToolbarView::UpdateHorizontalPadding,
-                            base::Unretained(this)));
-#if BUILDFLAG(IS_LINUX)
-    use_custom_chrome_frame_.Init(
-        prefs::kUseCustomChromeFrame, profile->GetOriginalProfile()->GetPrefs(),
-        base::BindRepeating(&BraveToolbarView::UpdateHorizontalPadding,
-                            base::Unretained(this)));
-#endif  // BUILDFLAG(IS_LINUX)
-  }
-
   const auto callback = [](Browser* browser, int command,
                            const ui::Event& event) {
     chrome::ExecuteCommandWithDisposition(
@@ -206,7 +185,6 @@ void BraveToolbarView::Init() {
   }
 
   brave_initialized_ = true;
-  UpdateHorizontalPadding();
 
   // We want to hide pin action buttons(side panel's pin button) in toolbar.
   // As toolbar is shared for different types of windows, this action button
@@ -293,28 +271,6 @@ void BraveToolbarView::UpdateBookmarkVisibility() {
   bookmark_->SetVisible(browser_defaults::bookmarks_enabled &&
                         edit_bookmarks_enabled_.GetValue() &&
                         show_bookmarks_button_.GetValue());
-}
-
-void BraveToolbarView::UpdateHorizontalPadding() {
-  if (!brave_initialized_) {
-    return;
-  }
-
-  // Get ToolbarView's container_view as a parent of location_bar_ because
-  // container_view's type in ToolbarView is internal to toolbar_view.cc.
-  DCHECK(location_bar_ && location_bar_->parent());
-  views::View* container_view = location_bar_->parent();
-
-  if (!tabs::utils::ShouldShowVerticalTabs(browser()) ||
-      tabs::utils::ShouldShowWindowTitleForVerticalTabs(browser())) {
-    container_view->SetBorder(nullptr);
-  } else {
-    auto [leading, trailing] =
-        tabs::utils::GetLeadingTrailingCaptionButtonWidth(
-            browser_view_->browser_widget());
-    container_view->SetBorder(views::CreateEmptyBorder(
-        gfx::Insets().set_left(leading).set_right(trailing)));
-  }
 }
 
 void BraveToolbarView::ShowBookmarkBubble(const GURL& url,

@@ -59,17 +59,17 @@ TabStyle::TabColors BraveTabStyleViews::CalculateTargetColors() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// BraveVerticalTabStyle
+// BraveHorizontalTabStyle
 //
-// This class deals with tab styling when vertical tab strip feature flag is
-// enabled.
+// This class deals with tab styling when the updated horizontal tabs design
+// (kBraveHorizontalTabsUpdate) is enabled.
 //
-class BraveVerticalTabStyle : public BraveTabStyleViews {
+class BraveHorizontalTabStyle : public BraveTabStyleViews {
  public:
-  explicit BraveVerticalTabStyle(Tab* tab);
-  BraveVerticalTabStyle(const BraveVerticalTabStyle&) = delete;
-  BraveVerticalTabStyle& operator=(const BraveVerticalTabStyle&) = delete;
-  ~BraveVerticalTabStyle() override = default;
+  explicit BraveHorizontalTabStyle(Tab* tab);
+  BraveHorizontalTabStyle(const BraveHorizontalTabStyle&) = delete;
+  BraveHorizontalTabStyle& operator=(const BraveHorizontalTabStyle&) = delete;
+  ~BraveHorizontalTabStyle() override = default;
 
   // BraveTabStyleViews:
   SkPath GetPath(TabStyle::PathType path_type,
@@ -84,23 +84,17 @@ class BraveVerticalTabStyle : public BraveTabStyleViews {
   int GetStrokeThickness(bool should_paint_as_active = false) const override;
   void PaintTab(gfx::Canvas* canvas) const override;
 
- private:
-  bool ShouldShowVerticalTabs() const;
-
-  SkColor GetTargetTabBackgroundColor(
-      TabStyle::TabSelectionState selection_state,
-      bool hovered) const override;
 };
 
-BraveVerticalTabStyle::BraveVerticalTabStyle(Tab* tab)
+BraveHorizontalTabStyle::BraveHorizontalTabStyle(Tab* tab)
     : BraveTabStyleViews(tab) {}
 
-SkPath BraveVerticalTabStyle::GetPath(
+SkPath BraveHorizontalTabStyle::GetPath(
     TabStyle::PathType path_type,
     float scale,
     bool force_active,
     TabStyle::RenderUnits render_units) const {
-  if (!HorizontalTabsUpdateEnabled() && !ShouldShowVerticalTabs()) {
+  if (!HorizontalTabsUpdateEnabled()) {
     return BraveTabStyleViews::GetPath(path_type, scale, force_active,
                                        render_units);
   }
@@ -120,50 +114,48 @@ SkPath BraveVerticalTabStyle::GetPath(
   }
 #endif
 
-  if (!ShouldShowVerticalTabs()) {
-    // Horizontal tabs should have a visual gap between them, even if their view
-    // bounds are touching or slightly overlapping. Create a visual gap by
-    // insetting the bounds of the tab by the required gap plus overlap before
-    // drawing the rectangle.
-    aligned_bounds.Inset(
-        gfx::InsetsF::VH(brave_tabs::kHorizontalTabVerticalSpacing * scale,
-                         brave_tabs::kHorizontalTabInset * scale));
+  // Horizontal tabs should have a visual gap between them, even if their view
+  // bounds are touching or slightly overlapping. Create a visual gap by
+  // insetting the bounds of the tab by the required gap plus overlap before
+  // drawing the rectangle.
+  aligned_bounds.Inset(
+      gfx::InsetsF::VH(brave_tabs::kHorizontalTabVerticalSpacing * scale,
+                       brave_tabs::kHorizontalTabInset * scale));
 
-    // For hit testing, expand the rectangle so that the visual margins around
-    // tabs can be used to select the tab. This will ensure that there is no
-    // "dead space" between tabs, or between the tab shape and the tab hover
-    // card.
-    if (path_type == TabStyle::PathType::kHitTest) {
-      auto hit_test_outsets =
-          gfx::OutsetsF::VH(brave_tabs::kHorizontalTabVerticalSpacing * scale,
-                            brave_tabs::kHorizontalTabGap / 2 * scale);
+  // For hit testing, expand the rectangle so that the visual margins around
+  // tabs can be used to select the tab. This will ensure that there is no
+  // "dead space" between tabs, or between the tab shape and the tab hover
+  // card.
+  if (path_type == TabStyle::PathType::kHitTest) {
+    auto hit_test_outsets =
+        gfx::OutsetsF::VH(brave_tabs::kHorizontalTabVerticalSpacing * scale,
+                          brave_tabs::kHorizontalTabGap / 2 * scale);
 
-      // Note that upstream's `ShouldExtendHitTest` does not currently take into
-      // account some "condensed" frame scenarios on Linux.
-      bool frame_condensed =
-          IsBrowserFrameCondensed(tab()->controller()->GetBrowser());
+    // Note that upstream's `ShouldExtendHitTest` does not currently take into
+    // account some "condensed" frame scenarios on Linux.
+    bool frame_condensed =
+        IsBrowserFrameCondensed(tab()->controller()->GetBrowser());
 
-      // We should only extend the hit test bounds into the top margin if the
-      // browser frame is "condensed" (e.g. maximized, fullscreen, or otherwise
-      // occupying the entire screen area). Otherwise, we want the space above
-      // the visual tab shape to be available for window-dragging.
-      if (!frame_condensed) {
-        hit_test_outsets.set_top(0);
-      }
-
-      // We also want the first tab (taking RTL into account) to be selectable
-      // in maximized or fullscreen mode by clicking at the very edge of the
-      // screen.
-      if (frame_condensed && tab()->controller()->IsTabFirst(tab())) {
-        if (tab()->GetMirrored()) {
-          hit_test_outsets.set_right(brave_tabs::kHorizontalTabInset * scale);
-        } else {
-          hit_test_outsets.set_left(brave_tabs::kHorizontalTabInset * scale);
-        }
-      }
-
-      aligned_bounds.Outset(hit_test_outsets);
+    // We should only extend the hit test bounds into the top margin if the
+    // browser frame is "condensed" (e.g. maximized, fullscreen, or otherwise
+    // occupying the entire screen area). Otherwise, we want the space above
+    // the visual tab shape to be available for window-dragging.
+    if (!frame_condensed) {
+      hit_test_outsets.set_top(0);
     }
+
+    // We also want the first tab (taking RTL into account) to be selectable
+    // in maximized or fullscreen mode by clicking at the very edge of the
+    // screen.
+    if (frame_condensed && tab()->controller()->IsTabFirst(tab())) {
+      if (tab()->GetMirrored()) {
+        hit_test_outsets.set_right(brave_tabs::kHorizontalTabInset * scale);
+      } else {
+        hit_test_outsets.set_left(brave_tabs::kHorizontalTabInset * scale);
+      }
+    }
+
+    aligned_bounds.Outset(hit_test_outsets);
   }
 
   const bool is_pinned = tab()->data().pinned;
@@ -221,7 +213,7 @@ SkPath BraveVerticalTabStyle::GetPath(
   return path;
 }
 
-gfx::Insets BraveVerticalTabStyle::GetContentsInsets() const {
+gfx::Insets BraveHorizontalTabStyle::GetContentsInsets() const {
   if (!HorizontalTabsUpdateEnabled()) {
     return BraveTabStyleViews::GetContentsInsets();
   }
@@ -230,7 +222,7 @@ gfx::Insets BraveVerticalTabStyle::GetContentsInsets() const {
   return tab_style()->GetContentsInsets();
 }
 
-TabStyle::SeparatorBounds BraveVerticalTabStyle::GetSeparatorBounds(
+TabStyle::SeparatorBounds BraveHorizontalTabStyle::GetSeparatorBounds(
     float scale) const {
   if (!HorizontalTabsUpdateEnabled()) {
     return BraveTabStyleViews::GetSeparatorBounds(scale);
@@ -256,12 +248,8 @@ TabStyle::SeparatorBounds BraveVerticalTabStyle::GetSeparatorBounds(
   return bounds;
 }
 
-float BraveVerticalTabStyle::GetSeparatorOpacity(bool for_layout,
+float BraveHorizontalTabStyle::GetSeparatorOpacity(bool for_layout,
                                                  bool leading) const {
-  if (ShouldShowVerticalTabs()) {
-    return 0;
-  }
-
   if (!HorizontalTabsUpdateEnabled()) {
     return BraveTabStyleViews::GetSeparatorOpacity(for_layout, leading);
   }
@@ -305,26 +293,18 @@ float BraveVerticalTabStyle::GetSeparatorOpacity(bool for_layout,
   return visible_opacity;
 }
 
-int BraveVerticalTabStyle::GetStrokeThickness(
+int BraveHorizontalTabStyle::GetStrokeThickness(
     bool should_paint_as_active) const {
-  if (!HorizontalTabsUpdateEnabled() && !ShouldShowVerticalTabs()) {
+  if (!HorizontalTabsUpdateEnabled()) {
     return BraveTabStyleViews::GetStrokeThickness(should_paint_as_active);
   }
   return 0;
 }
 
-void BraveVerticalTabStyle::PaintTab(gfx::Canvas* canvas) const {
-  if (ShouldShowVerticalTabs()) {
-    // For vertical tabs, bypass the upstream logic to paint theme backgrounds,
-    // as this can cause crashes due to the vertical tabstrip living in a
-    // different widget hierarchy.
-    PaintTabBackground(canvas, GetSelectionState(), IsHoverAnimationActive(),
-                       std::nullopt, 0);
-  } else {
-    BraveTabStyleViews::PaintTab(canvas);
-  }
+void BraveHorizontalTabStyle::PaintTab(gfx::Canvas* canvas) const {
+  BraveTabStyleViews::PaintTab(canvas);
 
-  if (!HorizontalTabsUpdateEnabled() && !ShouldShowVerticalTabs()) {
+  if (!HorizontalTabsUpdateEnabled()) {
     return;
   }
 
@@ -333,12 +313,9 @@ void BraveVerticalTabStyle::PaintTab(gfx::Canvas* canvas) const {
     const auto* widget = tab()->GetWidget();
     CHECK(widget);
 
-    ui::ColorId color_id = widget->ShouldPaintAsActive()
-                               ? kColorTabStrokeFrameActive
-                               : kColorTabStrokeFrameInactive;
-    if (ShouldShowVerticalTabs()) {
-      color_id = kColorBraveVerticalTabSeparator;
-    }
+    const ui::ColorId color_id = widget->ShouldPaintAsActive()
+                                     ? kColorTabStrokeFrameActive
+                                     : kColorTabStrokeFrameInactive;
 
     SkPath stroke_path =
         GetPath(TabStyle::PathType::kBorder, canvas->image_scale(), false);
@@ -354,36 +331,8 @@ void BraveVerticalTabStyle::PaintTab(gfx::Canvas* canvas) const {
   }
 }
 
-SkColor BraveVerticalTabStyle::GetTargetTabBackgroundColor(
-    TabStyle::TabSelectionState selection_state,
-    bool hovered) const {
-  if (!ShouldShowVerticalTabs()) {
-    return BraveTabStyleViews::GetTargetTabBackgroundColor(selection_state,
-                                                           hovered);
-  }
-
-  if (selection_state == TabStyle::TabSelectionState::kSelected) {
-    // Use the same color if th tab is selected via multiselection.
-    return BraveTabStyleViews::GetTargetTabBackgroundColor(selection_state,
-                                                           hovered);
-  }
-
-  const ui::ColorProvider* cp = tab()->GetColorProvider();
-  if (!cp) {
-    return gfx::kPlaceholderColor;
-  }
-
-  return cp->GetColor(selection_state == TabStyle::TabSelectionState::kActive
-                          ? kColorBraveVerticalTabActiveBackground
-                          : kColorBraveVerticalTabInactiveBackground);
-}
-
-bool BraveVerticalTabStyle::ShouldShowVerticalTabs() const {
-  return tabs::utils::ShouldShowVerticalTabs(tab()->controller()->GetBrowser());
-}
-
 }  // namespace
 
 std::unique_ptr<TabStyleViews> TabStyleViews::CreateForTab(Tab* tab) {
-  return std::make_unique<BraveVerticalTabStyle>(tab);
+  return std::make_unique<BraveHorizontalTabStyle>(tab);
 }

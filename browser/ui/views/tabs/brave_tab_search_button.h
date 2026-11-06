@@ -20,8 +20,6 @@ class BraveTabSearchButton : public TabSearchButton {
   BraveTabSearchButton(const BraveTabSearchButton&) = delete;
   BraveTabSearchButton& operator=(const BraveTabSearchButton&) = delete;
 
-  void SetBubbleArrow(views::BubbleBorder::Arrow arrow);
-
   // TabSearchButton:
   void UpdateColors() override;
   int GetCornerRadius() const override;

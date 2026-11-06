@@ -9,14 +9,9 @@
 #define WebAppOpaqueBrowserFrameViewWindowControlsOverlayTest \
   WebAppOpaqueBrowserFrameViewWindowControlsOverlayTest;      \
   friend class BraveOpaqueBrowserFrameView
-#define UpdateCaptionButtonPlaceholderContainerBackground \
-  virtual UpdateCaptionButtonPlaceholderContainerBackground
-#define PaintClientEdge virtual PaintClientEdge
 
 #include "src/chrome/browser/ui/views/frame/opaque_browser_frame_view.h"  // IWYU pragma: export
 
-#undef PaintClientEdge
-#undef UpdateCaptionButtonPlaceholderContainerBackground
 #undef WebAppOpaqueBrowserFrameViewWindowControlsOverlayTest
 
 #endif  // BRAVE_CHROMIUM_SRC_CHROME_BROWSER_UI_VIEWS_FRAME_OPAQUE_BROWSER_FRAME_VIEW_H_

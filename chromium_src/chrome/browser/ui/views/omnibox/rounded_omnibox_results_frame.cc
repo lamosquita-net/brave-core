@@ -12,9 +12,3 @@
 #include "src/chrome/browser/ui/views/omnibox/rounded_omnibox_results_frame.cc"
 
 #undef kOmniboxExpandedRadius
-
-// static
-int RoundedOmniboxResultsFrame::GetShadowElevation() {
-  // Expose a constant defined in cc file.
-  return kElevation;
-}

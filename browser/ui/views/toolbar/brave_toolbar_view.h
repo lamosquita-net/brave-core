@@ -24,8 +24,6 @@ class BraveToolbarView : public ToolbarView,
 
   BraveBookmarkButton* bookmark_button() const { return bookmark_; }
 
-  void UpdateHorizontalPadding();
-
   void Init() override;
   void Layout(PassKey) override;
   void Update(content::WebContents* tab) override;
@@ -62,12 +60,6 @@ class BraveToolbarView : public ToolbarView,
   BooleanPrefMember show_bookmarks_button_;
 
   BooleanPrefMember location_bar_is_wide_;
-
-  BooleanPrefMember show_vertical_tabs_;
-  BooleanPrefMember show_title_bar_on_vertical_tabs_;
-#if BUILDFLAG(IS_LINUX)
-  BooleanPrefMember use_custom_chrome_frame_;
-#endif  // BUILDFLAG(IS_LINUX)
 
   // Whether this toolbar has been initialized.
   bool brave_initialized_ = false;

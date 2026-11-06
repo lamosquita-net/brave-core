@@ -45,18 +45,6 @@
     E_CPONLY(kColorSidebarPanelHeaderButton)                  \
     E_CPONLY(kColorSidebarPanelHeaderButtonHovered)
 
-// Unfortunately, we can't have a defined(TOOLKIT_VIEWS) guard here
-// as brave_color_mixer depends on this without deps to //ui/views:flags.
-// But it's safe have without the guard as this file is included only when
-// !is_android.
-#define BRAVE_VERTICAL_TAB_COLOR_IDS                   \
-    E_CPONLY(kColorBraveVerticalTabSeparator)          \
-    E_CPONLY(kColorBraveVerticalTabActiveBackground)   \
-    E_CPONLY(kColorBraveVerticalTabInactiveBackground) \
-    E_CPONLY(kColorBraveVerticalTabNTBIconColor)       \
-    E_CPONLY(kColorBraveVerticalTabNTBTextColor)       \
-    E_CPONLY(kColorBraveVerticalTabNTBShortcutTextColor)
-
 #define BRAVE_SHARED_PINNED_TAB_COLOR_IDS                    \
     E_CPONLY(kColorBraveSharedPinnedTabDummyViewBackground)  \
     E_CPONLY(kColorBraveSharedPinnedTabDummyViewTitle)       \
@@ -77,7 +65,6 @@
     BRAVE_COMMON_COLOR_IDS            \
     BRAVE_SEARCH_CONVERSION_COLOR_IDS \
     BRAVE_SIDEBAR_COLOR_IDS           \
-    BRAVE_VERTICAL_TAB_COLOR_IDS      \
     BRAVE_SHARED_PINNED_TAB_COLOR_IDS \
     BRAVE_OMNIBOX_COLOR_IDS           \
     BRAVE_EXTENSION_MENU_COLOR_IDS    \

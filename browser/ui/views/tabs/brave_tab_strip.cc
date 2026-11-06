@@ -17,13 +17,10 @@
 #include "brave/browser/ui/tabs/shared_pinned_tab_service.h"
 #include "brave/browser/ui/tabs/shared_pinned_tab_service_factory.h"
 #include "brave/browser/ui/views/frame/brave_browser_view.h"
-#include "brave/browser/ui/views/frame/vertical_tab_strip_region_view.h"
-#include "brave/browser/ui/views/frame/vertical_tab_strip_widget_delegate_view.h"
 #include "brave/browser/ui/views/tabs/brave_compound_tab_container.h"
 #include "brave/browser/ui/views/tabs/brave_tab.h"
 #include "brave/browser/ui/views/tabs/brave_tab_container.h"
 #include "brave/browser/ui/views/tabs/brave_tab_hover_card_controller.h"
-#include "brave/browser/ui/views/tabs/vertical_tab_utils.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/themes/theme_service.h"
 #include "chrome/browser/themes/theme_service_factory.h"
@@ -50,42 +47,7 @@ BraveTabStrip::BraveTabStrip(std::unique_ptr<TabStripController> controller)
 
 BraveTabStrip::~BraveTabStrip() = default;
 
-bool BraveTabStrip::IsVerticalTabsFloating() const {
-  if (!ShouldShowVerticalTabs()) {
-    // Can happen when switching the orientation
-    return false;
-  }
-
-  auto* browser = GetBrowser();
-  DCHECK(browser);
-  auto* browser_view = static_cast<BraveBrowserView*>(
-      BrowserView::GetBrowserViewForBrowser(browser));
-  if (!browser_view) {
-    // Could be null during the start-up.
-    return false;
-  }
-
-  auto* vertical_region_view =
-      browser_view->vertical_tab_strip_widget_delegate_view()
-          ->vertical_tab_strip_region_view();
-  DCHECK(vertical_region_view);
-
-  return vertical_region_view->state() ==
-             VerticalTabStripRegionView::State::kFloating ||
-         (vertical_region_view->is_animating() &&
-          vertical_region_view->last_state() ==
-              VerticalTabStripRegionView::State::kFloating &&
-          vertical_region_view->state() ==
-              VerticalTabStripRegionView::State::kCollapsed);
-}
-
 bool BraveTabStrip::ShouldDrawStrokes() const {
-  if (ShouldShowVerticalTabs()) {
-    // Prevent root view from drawing lines. For vertical tabs stroke , we
-    // ignore this method and always draw strokes in GetStrokeThickness().
-    return false;
-  }
-
   // TODO(simonhong): We can return false always here as horizontal tab design
   // doesn't need additional stroke.
   // Delete all below code when horizontal tab feature flag is removed.
@@ -130,19 +92,6 @@ void BraveTabStrip::MaybeStartDrag(
     TabSlotView* source,
     const ui::LocatedEvent& event,
     const ui::ListSelectionModel& original_selection) {
-  if (ShouldShowVerticalTabs()) {
-    // When it's vertical tab strip, all the dragged tabs are either pinned or
-    // unpinned.
-    const bool source_is_pinned =
-        source->GetTabSlotViewType() == TabSlotView::ViewType::kTab &&
-        static_cast<Tab*>(source)->data().pinned;
-    for (size_t index : original_selection.selected_indices()) {
-      if (controller_->IsTabPinned(index) != source_is_pinned) {
-        return;
-      }
-    }
-  }
-
   if (base::FeatureList::IsEnabled(tabs::features::kBraveSharedPinnedTabs)) {
     // When source tab is bound for dummy web contents for a shared pinned tab,
     // we shouldn't kick off drag-and-drop session as the web contents will be
@@ -180,31 +129,9 @@ void BraveTabStrip::AddedToWidget() {
   }
 }
 
-std::optional<int> BraveTabStrip::GetCustomBackgroundId(
-    BrowserFrameActiveState active_state) const {
-  if (!ShouldShowVerticalTabs()) {
-    return TabStrip::GetCustomBackgroundId(active_state);
-  }
-
-  // When vertical tab strip mode is enabled, the tab strip could be reattached
-  // to the original parent during destruction. In this case, theme changing
-  // could occur. But unfortunately, some of native widget's implementation
-  // doesn't check the validity of pointer, which causes crash.
-  // e.g. DesktopNativeWidgetAura's many methods desktop_tree_host without
-  //      checking it's validity.
-  // In order to avoid accessing invalid pointer, filters here.
-  if (auto* widget = GetWidget();
-      !widget || widget->IsClosed() || !widget->native_widget()) {
-    return {};
-  }
-
-  return TabStrip::GetCustomBackgroundId(active_state);
-}
-
 void BraveTabStrip::UpdateTabContainer() {
-  const bool using_vertical_tabs = ShouldShowVerticalTabs();
   const bool should_use_compound_tab_container =
-      using_vertical_tabs || base::FeatureList::IsEnabled(tabs::kSplitTabStrip);
+      base::FeatureList::IsEnabled(tabs::kSplitTabStrip);
   const bool is_using_compound_tab_container =
       views::IsViewClass<BraveCompoundTabContainer>(
           base::to_address(tab_container_));
@@ -230,8 +157,6 @@ void BraveTabStrip::UpdateTabContainer() {
       tab_container_ = *brave_tab_container;
       layout_lock =
           base::ScopedClosureRunner(brave_tab_container->LockLayout());
-
-      brave_tab_container->SetScrollEnabled(using_vertical_tabs);
 
       // Make dragged views on top of container's layer.
       drag_context->SetPaintToLayer();
@@ -314,72 +239,29 @@ void BraveTabStrip::UpdateTabContainer() {
   // Update layout of TabContainer
   auto* browser = GetBrowser();
   DCHECK(browser);
-  if (using_vertical_tabs) {
+  if (base::FeatureList::IsEnabled(tabs::kScrollableTabStrip)) {
     auto* browser_view = static_cast<BraveBrowserView*>(
         BrowserView::GetBrowserViewForBrowser(browser));
     DCHECK(browser_view);
-    auto* vertical_region_view =
-        browser_view->vertical_tab_strip_widget_delegate_view()
-            ->vertical_tab_strip_region_view();
-    // `vertical_region_view` can be null if it's in destruction.
-    if (vertical_region_view) {
-      SetAvailableWidthCallback(base::BindRepeating(
-          &VerticalTabStripRegionView::GetAvailableWidthForTabContainer,
-          base::Unretained(vertical_region_view)));
-    }
+    auto* scroll_container = static_cast<TabStripScrollContainer*>(
+        browser_view->tab_strip_region_view()->tab_strip_container_);
+    DCHECK(scroll_container);
+    SetAvailableWidthCallback(base::BindRepeating(
+        &TabStripScrollContainer::GetTabStripAvailableWidth,
+        base::Unretained(scroll_container)));
   } else {
-    if (base::FeatureList::IsEnabled(tabs::kScrollableTabStrip)) {
-      auto* browser_view = static_cast<BraveBrowserView*>(
-          BrowserView::GetBrowserViewForBrowser(browser));
-      DCHECK(browser_view);
-      auto* scroll_container = static_cast<TabStripScrollContainer*>(
-          browser_view->tab_strip_region_view()->tab_strip_container_);
-      DCHECK(scroll_container);
-      SetAvailableWidthCallback(base::BindRepeating(
-          &TabStripScrollContainer::GetTabStripAvailableWidth,
-          base::Unretained(scroll_container)));
-    } else {
-      SetAvailableWidthCallback(base::NullCallback());
-    }
-
-    if (should_use_compound_tab_container) {
-      // Upstream's compound tab container lay out its sub containers manually.
-      tab_container_->SetLayoutManager(nullptr);
-    }
+    SetAvailableWidthCallback(base::NullCallback());
   }
 
-  hover_card_controller_->SetIsVerticalTabs(using_vertical_tabs);
+  if (should_use_compound_tab_container) {
+    // Upstream's compound tab container lay out its sub containers manually.
+    tab_container_->SetLayoutManager(nullptr);
+  }
 
   if (const auto active_index = GetActiveIndex(); active_index) {
     // In order to update shadow state, call ActiveStateChanged().
     tab_at(active_index.value())->ActiveStateChanged();
   }
-}
-
-bool BraveTabStrip::ShouldShowVerticalTabs() const {
-  return tabs::utils::ShouldShowVerticalTabs(GetBrowser());
-}
-
-TabContainer* BraveTabStrip::GetTabContainerForTesting() {
-  return &tab_container_.get();  // IN-TEST
-}
-
-void BraveTabStrip::Layout(PassKey) {
-  if (ShouldShowVerticalTabs()) {
-    // Chromium implementation limits the height of tab strip, which we don't
-    // want.
-    auto bounds = GetLocalBounds();
-    for (views::View* view : children()) {
-      if (view->bounds() != bounds) {
-        view->SetBoundsRect(GetLocalBounds());
-      } else if (view == &tab_container_.get()) {
-        view->DeprecatedLayoutImmediately();
-      }
-    }
-    return;
-  }
-
-  LayoutSuperclass<TabStrip>(this);
 }
 
 BEGIN_METADATA(BraveTabStrip)

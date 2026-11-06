@@ -26,7 +26,6 @@
 
 #if !BUILDFLAG(IS_ANDROID)
 #include "brave/browser/search_engines/search_engine_provider_util.h"
-#include "brave/browser/ui/tabs/brave_tab_prefs.h"
 #include "brave/browser/ui/webui/welcome_page/brave_welcome_page_prefs.h"
 #endif
 
@@ -130,11 +129,6 @@ void MigrateObsoleteProfilePrefs(PrefService* profile_prefs,
       profile_prefs);
 
   brave_shields::MigrateObsoleteProfilePrefs(profile_prefs);
-
-#if !BUILDFLAG(IS_ANDROID)
-  // Added 2024-01
-  brave_tabs::MigrateBraveProfilePrefs(profile_prefs);
-#endif  // !BUILDFLAG(IS_ANDROID)
 
   // Added 2024-07
   profile_prefs->ClearPref(kHangoutsEnabled);

@@ -6,10 +6,7 @@
 #ifndef BRAVE_BROWSER_UI_VIEWS_FRAME_BRAVE_BROWSER_FRAME_VIEW_WIN_H_
 #define BRAVE_BROWSER_UI_VIEWS_FRAME_BRAVE_BROWSER_FRAME_VIEW_WIN_H_
 
-#include <memory>
-
 #include "chrome/browser/ui/views/frame/browser_frame_view_win.h"
-#include "components/prefs/pref_member.h"
 
 class BraveBrowserFrameViewWin : public BrowserFrameViewWin {
  public:
@@ -19,19 +16,9 @@ class BraveBrowserFrameViewWin : public BrowserFrameViewWin {
   BraveBrowserFrameViewWin(const BraveBrowserFrameViewWin&) = delete;
   BraveBrowserFrameViewWin& operator=(const BraveBrowserFrameViewWin&) = delete;
 
-  bool ShouldCaptionButtonsBeDrawnOverToolbar() const;
-
  private:
-  void OnVerticalTabsPrefsChanged();
-
-  // BraveBrowserFrameViewWin overrides:
-  int GetTopInset(bool restored) const override;
+  // BrowserFrameViewWin overrides:
   int NonClientHitTest(const gfx::Point& point) override;
-  bool ShouldShowWindowTitle(TitlebarType type) const override;
-  void LayoutCaptionButtons() override;
-
-  BooleanPrefMember using_vertical_tabs_;
-  BooleanPrefMember showing_window_title_for_vertical_tabs_;
 };
 
 #endif  // BRAVE_BROWSER_UI_VIEWS_FRAME_BRAVE_BROWSER_FRAME_VIEW_WIN_H_

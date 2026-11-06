@@ -169,20 +169,6 @@ const PrefsUtil::TypedPrefMap& BravePrefsUtil::GetAllowlistedKeys() {
   (*s_brave_allowlist)[kEnableMediaRouterOnRestart] =
       settings_api::PrefType::kBoolean;
 
-#if defined(TOOLKIT_VIEWS)
-  // Vertical tab strip prefs
-  (*s_brave_allowlist)[brave_tabs::kVerticalTabsEnabled] =
-      settings_api::PrefType::kBoolean;
-  (*s_brave_allowlist)[brave_tabs::kVerticalTabsFloatingEnabled] =
-      settings_api::PrefType::kBoolean;
-  (*s_brave_allowlist)[brave_tabs::kVerticalTabsShowTitleOnWindow] =
-      settings_api::PrefType::kBoolean;
-  (*s_brave_allowlist)[brave_tabs::kVerticalTabsOnRight] =
-      settings_api::PrefType::kBoolean;
-  (*s_brave_allowlist)[brave_tabs::kVerticalTabsShowScrollbar] =
-      settings_api::PrefType::kBoolean;
-#endif
-
 #if !BUILDFLAG(IS_ANDROID)
   (*s_brave_allowlist)[brave_tabs::kSharedPinnedTab] =
       settings_api::PrefType::kBoolean;

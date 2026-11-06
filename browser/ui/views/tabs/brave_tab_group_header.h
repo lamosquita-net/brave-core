@@ -18,20 +18,14 @@ class BraveTabGroupHeader : public TabGroupHeader {
   METADATA_HEADER(BraveTabGroupHeader, TabGroupHeader)
  public:
 
-  constexpr static int kPaddingForGroup = 4;
-
   using TabGroupHeader::TabGroupHeader;
   ~BraveTabGroupHeader() override;
 
   // TabGroupHeader:
-  void AddedToWidget() override;
   void VisualsChanged() override;
   int GetDesiredWidth() const override;
-  void Layout(PassKey) override;
 
  private:
-  bool ShouldShowVerticalTabs() const;
-  void LayoutTitleChipForVerticalTabs();
   SkColor GetGroupColor() const;
   std::optional<SkColor> GetChipBackgroundColor() const;
 };

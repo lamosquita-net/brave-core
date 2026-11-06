@@ -19,8 +19,6 @@ class BraveBrowserNativeWidgetMac : public BrowserNativeWidgetMac {
   ~BraveBrowserNativeWidgetMac() override;
 
   // BrowserNativeWidgetMac:
-  void GetWindowFrameTitlebarHeight(bool* override_titlebar_height,
-                                    float* titlebar_height) override;
   void ValidateUserInterfaceItem(
       int32_t command,
       remote_cocoa::mojom::ValidateUserInterfaceItemResult* result) override;

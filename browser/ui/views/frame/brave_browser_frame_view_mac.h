@@ -6,8 +6,6 @@
 #ifndef BRAVE_BROWSER_UI_VIEWS_FRAME_BRAVE_BROWSER_FRAME_VIEW_MAC_H_
 #define BRAVE_BROWSER_UI_VIEWS_FRAME_BRAVE_BROWSER_FRAME_VIEW_MAC_H_
 
-#include <memory>
-
 #include "chrome/browser/ui/views/frame/browser_frame_view_mac.h"
 
 class BraveBrowserFrameViewMac : public BrowserFrameViewMac {
@@ -18,21 +16,11 @@ class BraveBrowserFrameViewMac : public BrowserFrameViewMac {
 
   BraveBrowserFrameViewMac(const BraveBrowserFrameViewMac&) = delete;
   BraveBrowserFrameViewMac& operator=(const BraveBrowserFrameViewMac&) = delete;
-  gfx::Size GetMinimumSize() const override;
 
  private:
-  bool ShouldShowWindowTitleForVerticalTabs() const;
-  void UpdateWindowTitleVisibility();
-  void UpdateWindowTitleAndControls();
-  void UpdateWindowTitleColor();
-
   // BrowserFrameViewMac overrides:
   int GetTopInset(bool restored) const override;
   int NonClientHitTest(const gfx::Point& point) override;
-  void OnThemeChanged() override;
-
-  BooleanPrefMember show_vertical_tabs_;
-  BooleanPrefMember show_title_bar_on_vertical_tabs_;
 };
 
 #endif  // BRAVE_BROWSER_UI_VIEWS_FRAME_BRAVE_BROWSER_FRAME_VIEW_MAC_H_

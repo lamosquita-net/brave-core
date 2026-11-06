@@ -16,9 +16,6 @@ class BraveOmniboxPopupViewViews : public OmniboxPopupViewViews {
   ~BraveOmniboxPopupViewViews() override;
 
   int GetLocationBarViewWidth() const;
-
-  // OmniboxPopupViewViews:
-  gfx::Rect GetTargetBounds() const override;
 };
 
 #endif  // BRAVE_BROWSER_UI_VIEWS_OMNIBOX_BRAVE_OMNIBOX_POPUP_VIEW_VIEWS_H_

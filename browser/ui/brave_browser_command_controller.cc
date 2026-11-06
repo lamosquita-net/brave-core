@@ -167,10 +167,6 @@ void BraveBrowserCommandController::InitBraveCommandState() {
 
   UpdateCommandEnabled(IDC_BRAVE_BOOKMARK_BAR_SUBMENU, true);
 
-  UpdateCommandEnabled(IDC_TOGGLE_VERTICAL_TABS, true);
-  UpdateCommandEnabled(IDC_TOGGLE_VERTICAL_TABS_WINDOW_TITLE, true);
-  UpdateCommandEnabled(IDC_TOGGLE_VERTICAL_TABS_EXPANDED, true);
-
   UpdateCommandEnabled(
       IDC_CONFIGURE_SHORTCUTS,
       base::FeatureList::IsEnabled(commands::features::kBraveCommands));
@@ -288,15 +284,6 @@ bool BraveBrowserCommandController::ExecuteBraveCommandWithDisposition(
       break;
     case IDC_TOGGLE_TAB_MUTE:
       brave::ToggleActiveTabAudioMute(&*browser_);
-      break;
-    case IDC_TOGGLE_VERTICAL_TABS:
-      brave::ToggleVerticalTabStrip(&*browser_);
-      break;
-    case IDC_TOGGLE_VERTICAL_TABS_WINDOW_TITLE:
-      brave::ToggleWindowTitleVisibilityForVerticalTabs(&*browser_);
-      break;
-    case IDC_TOGGLE_VERTICAL_TABS_EXPANDED:
-      brave::ToggleVerticalTabStripExpanded(&*browser_);
       break;
     case IDC_CONFIGURE_SHORTCUTS:
       brave::ShowShortcutsPage(&*browser_);

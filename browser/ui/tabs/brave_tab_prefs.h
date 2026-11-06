@@ -15,25 +15,9 @@ enum TabHoverMode { TOOLTIP = 0, CARD = 1, CARD_WITH_PREVIEW = 2 };
 
 inline constexpr char kTabHoverMode[] = "brave.tabs.hover_mode";
 
-inline constexpr char kVerticalTabsEnabled[] =
-    "brave.tabs.vertical_tabs_enabled";
-inline constexpr char kVerticalTabsCollapsed[] =
-    "brave.tabs.vertical_tabs_collapsed";
-inline constexpr char kVerticalTabsShowTitleOnWindow[] =
-    "brave.tabs.vertical_tabs_show_title_on_window";
-inline constexpr char kVerticalTabsFloatingEnabled[] =
-    "brave.tabs.vertical_tabs_floating_enabled";
-inline constexpr char kVerticalTabsExpandedWidth[] =
-    "brave.tabs.vertical_tabs_expanded_width";
-inline constexpr char kVerticalTabsOnRight[] =
-    "brave.tabs.vertical_tabs_on_right";
-inline constexpr char kVerticalTabsShowScrollbar[] =
-    "brave.tabs.vertical_tabs_show_scrollbar";
-
 inline constexpr char kSharedPinnedTab[] = "brave.tabs.shared_pinned_tab";
 
 void RegisterBraveProfilePrefs(PrefRegistrySimple* registry);
-void MigrateBraveProfilePrefs(PrefService* prefs);
 
 bool AreTooltipsEnabled(PrefService* prefs);
 bool AreCardPreviewsEnabled(PrefService* prefs);

@@ -20,7 +20,6 @@
 #include "brave/browser/ui/tabs/brave_tab_prefs.h"
 #include "brave/browser/ui/tabs/brave_tab_strip_model.h"
 #include "brave/browser/ui/views/tabs/brave_browser_tab_strip_controller.h"
-#include "brave/browser/ui/views/tabs/vertical_tab_utils.h"
 #include "chrome/browser/defaults.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/sessions/tab_restore_service_factory.h"
@@ -44,11 +43,9 @@ BraveTabContextMenuContents::BraveTabContextMenuContents(
       tab_index_(index),
       browser_(const_cast<Browser*>(controller->browser())),
       controller_(controller) {
-  const bool is_vertical_tab = tabs::utils::ShouldShowVerticalTabs(browser_);
-
   model_ = std::make_unique<BraveTabMenuModel>(
       this, controller->browser()->tab_menu_model_delegate(),
-      controller->model(), index, is_vertical_tab);
+      controller->model(), index);
   restore_service_ =
       TabRestoreServiceFactory::GetForProfile(browser_->profile());
   menu_runner_ = std::make_unique<views::MenuRunner>(
@@ -71,18 +68,6 @@ void BraveTabContextMenuContents::RunMenuAt(const gfx::Point& point,
                           views::MenuAnchorPosition::kTopLeft, source_type);
 }
 
-bool BraveTabContextMenuContents::IsCommandIdChecked(int command_id) const {
-  if (!IsValidContextMenu()) {
-    return false;
-  }
-
-  if (command_id == BraveTabMenuModel::CommandShowVerticalTabs) {
-    return tabs::utils::ShouldShowVerticalTabs(browser_);
-  }
-
-  return ui::SimpleMenuModel::Delegate::IsCommandIdChecked(command_id);
-}
-
 bool BraveTabContextMenuContents::IsCommandIdEnabled(int command_id) const {
   // This could be called after tab is closed.
   if (!IsValidContextMenu()) {
@@ -100,10 +85,6 @@ bool BraveTabContextMenuContents::IsCommandIdEnabled(int command_id) const {
 bool BraveTabContextMenuContents::IsCommandIdVisible(int command_id) const {
   if (!IsValidContextMenu()) {
     return false;
-  }
-
-  if (command_id == BraveTabMenuModel::CommandShowVerticalTabs) {
-    return tabs::utils::SupportsVerticalTabs(browser_);
   }
 
   if (command_id == BraveTabMenuModel::CommandBringAllTabsToThisWindow) {
@@ -173,8 +154,6 @@ bool BraveTabContextMenuContents::IsBraveCommandIdEnabled(
     }
     case BraveTabMenuModel::CommandCloseDuplicateTabs:
       return brave::HasDuplicateTabs(browser_);
-    case BraveTabMenuModel::CommandShowVerticalTabs:
-      [[fallthrough]];
     case BraveTabMenuModel::CommandBringAllTabsToThisWindow:
       return true;
     default:
@@ -194,11 +173,6 @@ void BraveTabContextMenuContents::ExecuteBraveCommand(int command_id) {
     case BraveTabMenuModel::CommandBookmarkAllTabs:
       chrome::BookmarkAllTabs(browser_);
       return;
-    case BraveTabMenuModel::CommandShowVerticalTabs: {
-      brave::ToggleVerticalTabStrip(browser_);
-      BrowserView::GetBrowserViewForBrowser(browser_)->InvalidateLayout();
-      return;
-    }
     case BraveTabMenuModel::CommandToggleTabMuted: {
       auto* model = static_cast<BraveTabStripModel*>(controller_->model());
       auto indices = model->GetTabIndicesForCommandAt(tab_index_);

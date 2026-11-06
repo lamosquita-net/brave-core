@@ -6,7 +6,6 @@
 #include "brave/browser/themes/brave_private_window_theme_supplier.h"
 
 #include "brave/browser/ui/color/brave_color_mixer.h"
-#include "brave/browser/ui/tabs/brave_tab_color_mixer.h"
 #include "ui/color/color_provider_key.h"
 
 BravePrivateWindowThemeSupplier::BravePrivateWindowThemeSupplier()
@@ -18,6 +17,5 @@ void BravePrivateWindowThemeSupplier::AddColorMixers(
     ui::ColorProvider* provider,
     const ui::ColorProviderKey& key) const {
   AddPrivateThemeColorMixer(provider, key);
-  tabs::AddBraveTabPrivateThemeColorMixer(provider, key);
   AddBraveOmniboxPrivateThemeColorMixer(provider, key);
 }

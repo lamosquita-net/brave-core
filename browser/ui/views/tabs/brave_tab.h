@@ -34,17 +34,11 @@ class BraveTab : public Tab {
 
   std::optional<SkColor> GetGroupColor() const override;
 
-  void UpdateIconVisibility() override;
-  bool ShouldRenderAsNormalTab() const override;
-  void Layout(PassKey) override;
-  void MaybeAdjustLeftForPinnedTab(gfx::Rect* bounds,
-                                   int visual_width) const override;
   gfx::Insets GetInsets() const override;
 
  private:
   friend class BraveTabTest;
 
-  bool IsAtMinWidthForVerticalTabStrip() const;
   void UpdateShadowForActiveTab();
 
   std::unique_ptr<ui::Layer> shadow_layer_;

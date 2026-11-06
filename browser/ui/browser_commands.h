@@ -24,12 +24,6 @@ void CopySanitizedURL(BrowserWindowInterface* browser, const GURL& url);
 void CopyLinkWithStrictCleaning(BrowserWindowInterface* browser,
                                 const GURL& url);
 
-void ToggleWindowTitleVisibilityForVerticalTabs(
-    BrowserWindowInterface* browser);
-void ToggleVerticalTabStrip(BrowserWindowInterface* browser);
-void ToggleVerticalTabStripFloatingMode(BrowserWindowInterface* browser);
-void ToggleVerticalTabStripExpanded(BrowserWindowInterface* browser);
-
 void ToggleActiveTabAudioMute(BrowserWindowInterface* browser);
 
 void ToggleShieldsEnabled(BrowserWindowInterface* browser);

@@ -24,10 +24,8 @@ BraveTabMenuModel::BraveTabMenuModel(
     ui::SimpleMenuModel::Delegate* delegate,
     TabMenuModelDelegate* tab_menu_model_delegate,
     TabStripModel* tab_strip_model,
-    int index,
-    bool is_vertical_tab)
-    : TabMenuModel(delegate, tab_menu_model_delegate, tab_strip_model, index),
-      is_vertical_tab_(is_vertical_tab) {
+    int index)
+    : TabMenuModel(delegate, tab_menu_model_delegate, tab_strip_model, index) {
   web_contents_ = tab_strip_model->GetWebContentsAt(index);
   CHECK(web_contents_);
   BrowserWindowInterface* browser =
@@ -71,23 +69,6 @@ int BraveTabMenuModel::GetRestoreTabCommandStringId() const {
   return id;
 }
 
-std::u16string BraveTabMenuModel::GetLabelAt(size_t index) const {
-  if (!is_vertical_tab_) {
-    return TabMenuModel::GetLabelAt(index);
-  }
-
-  if (auto command_id = GetCommandIdAt(index);
-      command_id == TabStripModel::CommandNewTabToRight) {
-    return l10n_util::GetStringUTF16(
-        IDS_TAB_CXMENU_NEWTABTORIGHT_VERTICAL_TABS);
-  } else if (command_id == TabStripModel::CommandCloseTabsToRight) {
-    return l10n_util::GetStringUTF16(
-        IDS_TAB_CXMENU_CLOSETABSTORIGHT_VERTICAL_TABS);
-  }
-
-  return TabMenuModel::GetLabelAt(index);
-}
-
 void BraveTabMenuModel::Build(const std::vector<int>& indices) {
   auto selected_tab_count = indices.size();
 
@@ -106,10 +87,6 @@ void BraveTabMenuModel::Build(const std::vector<int>& indices) {
   AddItemWithStringId(CommandBookmarkAllTabs, IDS_TAB_CXMENU_BOOKMARK_ALL_TABS);
   AddItemWithStringId(CommandBringAllTabsToThisWindow,
                       IDS_TAB_CXMENU_BRING_ALL_TABS_TO_THIS_WINDOW);
-
-  AddSeparator(ui::NORMAL_SEPARATOR);
-  AddCheckItemWithStringId(CommandShowVerticalTabs,
-                           IDS_TAB_CXMENU_SHOW_VERTICAL_TABS);
 
   auto close_other_tabs_index =
       GetIndexOfCommandId(TabStripModel::CommandCloseOtherTabs);

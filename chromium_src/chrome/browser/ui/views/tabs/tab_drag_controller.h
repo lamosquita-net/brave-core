@@ -14,33 +14,15 @@ using TabDragControllerBrave = TabDragController;
 
 #define TabDragController TabDragControllerChromium
 
-#define GetAttachedDragPoint                   \
-  Unused_GetAttachedDragPoint() { return {}; } \
-  virtual gfx::Point GetAttachedDragPoint
-
 #define InitDragData             \
   Unused_MoveUattached() {}      \
   friend TabDragControllerBrave; \
   virtual void InitDragData
-#define GetAttachedBrowserWidget                   \
-  GetAttachedBrowserWidget_Unused() { return {}; } \
-  virtual views::Widget* GetAttachedBrowserWidget
-#define GetLocalProcessWindow virtual GetLocalProcessWindow
-#define DetachAndAttachToNewContext virtual DetachAndAttachToNewContext
-#define CalculateNonMaximizedDraggedBrowserBounds \
-  virtual CalculateNonMaximizedDraggedBrowserBounds
-#define CalculateDraggedBrowserBounds virtual CalculateDraggedBrowserBounds
 
 #include "src/chrome/browser/ui/views/tabs/tab_drag_controller.h"  // IWYU pragma: export
 
-#undef CalculateDraggedBrowserBounds
-#undef CalculateNonMaximizedDraggedBrowserBounds
-#undef DetachAndAttachToNewContext
-#undef GetLocalProcessWindow
-#undef GetAttachedBrowserWidget
 #undef TabDragController
 #undef InitDragData
-#undef GetAttachedDragPoint
 
 #include "brave/browser/ui/views/tabs/tab_drag_controller.h"
 
