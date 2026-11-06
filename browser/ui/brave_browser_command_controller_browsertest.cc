@@ -9,6 +9,8 @@
 #include <optional>
 
 #include "base/functional/callback_helpers.h"
+#include "base/run_loop.h"
+#include "base/task/single_thread_task_runner.h"
 #include "base/test/scoped_feature_list.h"
 #include "brave/app/brave_command_ids.h"
 #include "brave/browser/ui/browser_commands.h"
@@ -16,11 +18,12 @@
 #include "chrome/browser/policy/configuration_policy_handler_list_factory.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/profiles/profile_window.h"
+#include "chrome/browser/tab_group_sync/tab_group_sync_service_factory.h"
 #include "chrome/browser/ui/browser_command_controller.h"
 #include "chrome/browser/ui/browser_commands.h"
-#include "chrome/browser/ui/browser_list_observer.h"
 #include "chrome/browser/ui/browser_tabstrip.h"
 #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+#include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/test/base/in_process_browser_test.h"
 #include "chrome/test/base/ui_test_utils.h"
 #include "components/policy/core/browser/browser_policy_connector.h"
@@ -28,32 +31,31 @@
 #include "components/policy/core/common/policy_map.h"
 #include "components/policy/policy_constants.h"
 #include "components/prefs/pref_service.h"
+#include "components/saved_tab_groups/public/tab_group_sync_service.h"
 #include "components/sync/base/command_line_switches.h"
-#include "content/public/browser/notification_service.h"
+#include "content/public/browser/web_contents.h"
 #include "content/public/test/browser_test.h"
 #include "content/public/test/test_utils.h"
 
-#if defined(TOOLKIT_VIEWS)
-#include "chrome/browser/ui/views/frame/browser_view.h"
-#include "chrome/browser/ui/views/side_panel/side_panel_coordinator.h"
-#include "chrome/browser/ui/views/side_panel/side_panel_entry.h"
-#include "chrome/browser/ui/views/side_panel/side_panel_entry_id.h"
-#include "chrome/browser/ui/views/side_panel/side_panel_entry_key.h"
-#include "chrome/browser/ui/views/side_panel/side_panel_enums.h"
-#include "chrome/browser/ui/views/side_panel/side_panel_test_utils.h"
-#include "chrome/browser/ui/views/side_panel/side_panel_ui.h"
-#endif
-
 class BraveBrowserCommandControllerTest : public InProcessBrowserTest {
  public:
-  BraveBrowserCommandControllerTest() {
-  }
+  BraveBrowserCommandControllerTest() = default;
+
   void SetUpInProcessBrowserTestFixture() override {
     InProcessBrowserTest::SetUpInProcessBrowserTestFixture();
     provider_.SetDefaultReturns(
         /*is_initialization_complete_return=*/true,
         /*is_first_policy_load_complete_return=*/true);
     policy::BrowserPolicyConnector::SetPolicyProviderForTesting(&provider_);
+  }
+
+  void WaitForPostedTasks() {
+    // Post a dummy task in the current thread and wait for its completion so
+    // that any already posted tasks are completed.
+    base::RunLoop run_loop;
+    base::SingleThreadTaskRunner::GetCurrentDefault()->PostTask(
+        FROM_HERE, run_loop.QuitClosure());
+    run_loop.Run();
   }
 
  private:
@@ -65,7 +67,7 @@ class BraveBrowserCommandControllerTest : public InProcessBrowserTest {
 IN_PROC_BROWSER_TEST_F(BraveBrowserCommandControllerTest,
                        BraveCommandsEnableTest) {
   // Test normal browser's brave commands status.
-  auto* command_controller = browser()->command_controller();
+  auto* command_controller = chrome::BrowserCommandController::From(browser());
   if (syncer::IsSyncAllowedByFlag()) {
     EXPECT_TRUE(command_controller->IsCommandEnabled(IDC_SHOW_BRAVE_SYNC));
   } else {
@@ -82,7 +84,8 @@ IN_PROC_BROWSER_TEST_F(BraveBrowserCommandControllerTest,
 IN_PROC_BROWSER_TEST_F(BraveBrowserCommandControllerTest,
                        BraveCommandsEnableTestPrivateWindow) {
   auto* private_browser = CreateIncognitoBrowser();
-  auto* command_controller = private_browser->command_controller();
+  auto* command_controller =
+      chrome::BrowserCommandController::From(private_browser);
   if (syncer::IsSyncAllowedByFlag()) {
     EXPECT_TRUE(command_controller->IsCommandEnabled(IDC_SHOW_BRAVE_SYNC));
   } else {
@@ -98,14 +101,14 @@ IN_PROC_BROWSER_TEST_F(BraveBrowserCommandControllerTest,
 // Create guest browser and test its brave commands status.
 IN_PROC_BROWSER_TEST_F(BraveBrowserCommandControllerTest,
                        BraveCommandsEnableTestGuestWindow) {
-  ui_test_utils::BrowserChangeObserver browser_creation_observer(
-      nullptr, ui_test_utils::BrowserChangeObserver::ChangeType::kAdded);
+  ui_test_utils::BrowserCreatedObserver browser_creation_observer;
   profiles::SwitchToGuestProfile(base::DoNothing());
 
-  Browser* guest_browser = browser_creation_observer.Wait();
+  BrowserWindowInterface* guest_browser = browser_creation_observer.Wait();
   DCHECK(guest_browser);
-  EXPECT_TRUE(guest_browser->profile()->IsGuestSession());
-  auto* command_controller = guest_browser->command_controller();
+  EXPECT_TRUE(guest_browser->GetProfile()->IsGuestSession());
+  auto* command_controller =
+      chrome::BrowserCommandController::From(guest_browser);
   EXPECT_FALSE(command_controller->IsCommandEnabled(IDC_SHOW_BRAVE_SYNC));
 
   EXPECT_FALSE(command_controller->IsCommandEnabled(IDC_ADD_NEW_PROFILE));
@@ -116,7 +119,7 @@ IN_PROC_BROWSER_TEST_F(BraveBrowserCommandControllerTest,
 
 IN_PROC_BROWSER_TEST_F(BraveBrowserCommandControllerTest,
                        BraveCommandsCloseTabsToLeft) {
-  auto* command_controller = browser()->command_controller();
+  auto* command_controller = chrome::BrowserCommandController::From(browser());
 
   // Browser starts with a single about:blank page. Shouldn't be able to close
   // tabs to the left because there's nothing to the left.
@@ -148,7 +151,7 @@ IN_PROC_BROWSER_TEST_F(BraveBrowserCommandControllerTest,
 IN_PROC_BROWSER_TEST_F(BraveBrowserCommandControllerTest,
                        BraveCommandsCloseUnpinnedTabs) {
   auto* tsm = browser()->tab_strip_model();
-  auto* command_controller = browser()->command_controller();
+  auto* command_controller = chrome::BrowserCommandController::From(browser());
   // Should start with one open tab which isn't pinned.
   EXPECT_TRUE(
       command_controller->IsCommandEnabled(IDC_WINDOW_CLOSE_UNPINNED_TABS));
@@ -186,8 +189,17 @@ IN_PROC_BROWSER_TEST_F(BraveBrowserCommandControllerTest,
 
 IN_PROC_BROWSER_TEST_F(BraveBrowserCommandControllerTest,
                        BraveCommandsAddAllToNewGroup) {
-  auto* command_controller = browser()->command_controller();
+  auto* command_controller = chrome::BrowserCommandController::From(browser());
   auto* tsm = browser()->tab_strip_model();
+
+  // Initialize TabGroupSyncService early so it does not race with the browser
+  // being destroyed on exit (as 1.98).
+  tab_groups::TabGroupSyncService* service =
+      tab_groups::TabGroupSyncServiceFactory::GetForProfile(
+          browser()->GetProfile());
+  ASSERT_TRUE(service);
+  service->SetIsInitializedForTesting(true);
+  EXPECT_EQ(0u, service->GetAllGroups().size());
 
   GURL url("https://example.com");
   chrome::AddTabAt(browser(), url, 1, false);
@@ -198,6 +210,10 @@ IN_PROC_BROWSER_TEST_F(BraveBrowserCommandControllerTest,
   EXPECT_EQ(5, tsm->count());
   command_controller->ExecuteCommand(IDC_WINDOW_ADD_ALL_TABS_TO_NEW_GROUP);
   EXPECT_EQ(5, tsm->count());
+  // Make sure TabGroupSyncService completed all its tasks so that it doesn't
+  // have to wait on anything when the test exits.
+  WaitForPostedTasks();
+  EXPECT_EQ(1u, service->GetAllGroups().size());
 
   // All tabs should have the same group.
   auto group = tsm->GetTabGroupForTab(0);
