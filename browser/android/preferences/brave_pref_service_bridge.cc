@@ -186,7 +186,8 @@ void JNI_BravePrefServiceBridge_SetOldHttpsUpgradesCount(
   }
   Profile* profile = Profile::FromJavaObject(j_profile);
   profile->GetPrefs()->SetUint64(
-      kHttpsUpgrades, count + profile->GetPrefs()->GetUint64(kHttpsUpgrades));
+      kHttpsUpgradesStat,
+      count + profile->GetPrefs()->GetUint64(kHttpsUpgradesStat));
 }
 
 void JNI_BravePrefServiceBridge_SetSafetynetCheckFailed(JNIEnv* env,
