@@ -13,6 +13,7 @@
 #include <utility>
 #include <vector>
 
+#include "base/check.h"
 #include "base/feature_list.h"
 #include "base/functional/callback_helpers.h"
 #include "base/strings/utf_string_conversions.h"
@@ -45,6 +46,7 @@
 #include "chrome/browser/ui/tabs/tab_enums.h"
 #include "chrome/browser/ui/tabs/tab_group_model.h"
 #include "chrome/browser/ui/tabs/tab_model.h"
+#include "chrome/browser/ui/tabs/tab_muted_utils.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/browser/ui/tabs/tab_utils.h"
 #include "chrome/browser/ui/unload_controller.h"
@@ -52,6 +54,7 @@
 #include "chrome/common/pref_names.h"
 #include "components/tab_groups/tab_group_visual_data.h"
 #include "components/tabs/public/tab_group.h"
+#include "components/tabs/public/tab_interface.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/web_contents.h"
 #include "ui/base/clipboard/clipboard_buffer.h"
@@ -133,8 +136,8 @@ void ToggleActiveTabAudioMute(BrowserWindowInterface* browser) {
   }
 
   bool mute_tab = !contents->IsAudioMuted();
-  chrome::SetTabAudioMuted(contents, mute_tab, TabMutedReason::AUDIO_INDICATOR,
-                           std::string());
+  SetTabAudioMuted(contents, mute_tab, TabMutedReason::kAudioIndicator,
+                   std::string());
 }
 
 bool HasSelectedURL(BrowserWindowInterface* browser) {
@@ -281,7 +284,9 @@ void UngroupCurrentGroup(BrowserWindowInterface* browser) {
 
   auto* group = tsm->group_model()->GetTabGroup(group_id.value());
   std::vector<int> indices(group->tab_count());
-  std::iota(indices.begin(), indices.end(), group->GetFirstTab().value());
+  tabs::TabInterface* first_tab = group->GetFirstTab();
+  DCHECK(first_tab);
+  std::iota(indices.begin(), indices.end(), tsm->GetIndexOfTab(first_tab));
   tsm->RemoveFromGroup(indices);
 }
 
@@ -566,7 +571,8 @@ bool CanCloseTabsToLeft(BrowserWindowInterface* browser) {
     return false;
   }
 
-  int left_selected = *(selection.selected_indices().begin());
+  int left_selected =
+      *(selection.GetListSelectionModel().selected_indices().begin());
   return left_selected > 0;
 }
 
@@ -577,7 +583,8 @@ void CloseTabsToLeft(BrowserWindowInterface* browser) {
     return;
   }
 
-  int left_selected = *(selection.selected_indices().begin());
+  int left_selected =
+      *(selection.GetListSelectionModel().selected_indices().begin());
   for (int i = left_selected - 1; i >= 0; --i) {
     tsm->CloseWebContentsAt(i, TabCloseTypes::CLOSE_CREATE_HISTORICAL_TAB |
                                    TabCloseTypes::CLOSE_USER_GESTURE);
