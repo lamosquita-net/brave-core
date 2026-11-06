@@ -267,8 +267,6 @@ bool BraveBrowserCommandController::ExecuteBraveCommandWithDisposition(
     case IDC_SHOW_BRAVE_SYNC:
       brave::ShowSync(&*browser_);
       break;
-    case IDC_TOGGLE_AI_CHAT:
-      break;
     case IDC_COPY_CLEAN_LINK:
       brave::CopySanitizedURL(
           &*browser_,

@@ -46,8 +46,6 @@ class BraveAppMenuModel : public AppMenuModel {
                                            bool insert_next) const;
 
   // Leo.
-  void BuildBraveProductsSection();
-  size_t GetNextIndexOfBraveProductsSection() const;
 
   // History, bookmarks, downloads and extensions.
   void BuildBrowserSection();

@@ -66,7 +66,6 @@ void BraveAppMenuModel::Build() {
   AppMenuModel::Build();
 
   RemoveUpstreamMenus();
-  BuildBraveProductsSection();
   BuildBrowserSection();
   BuildMoreToolsSubMenu();
   BuildPasswordsAndAutofillSubmenu();
@@ -114,22 +113,6 @@ void BraveAppMenuModel::BuildPasswordsAndAutofillSubmenu() {
   if (IsCommandIdEnabled(IDC_SHOW_TRAVEL)) {
     autofill_menu_model->RemoveItemAt(
         autofill_menu_model->GetIndexOfCommandId(IDC_SHOW_TRAVEL).value());
-  }
-}
-
-void BraveAppMenuModel::BuildBraveProductsSection() {
-  // Needs to add separator as this section is brave specific section.
-  bool need_separator = false;
-
-  if (IsCommandIdEnabled(IDC_TOGGLE_AI_CHAT)) {
-    InsertItemWithStringIdAt(GetNextIndexOfBraveProductsSection(),
-                             IDC_TOGGLE_AI_CHAT, IDS_TOGGLE_AI_CHAT);
-    need_separator = true;
-  }
-
-  if (need_separator) {
-    InsertSeparatorAt(GetNextIndexOfBraveProductsSection(),
-                      ui::NORMAL_SEPARATOR);
   }
 }
 
@@ -295,27 +278,6 @@ void BraveAppMenuModel::ExecuteCommand(int id, int event_flags) {
 
 bool BraveAppMenuModel::IsCommandIdEnabled(int id) const {
   return AppMenuModel::IsCommandIdEnabled(id);
-}
-
-size_t BraveAppMenuModel::GetNextIndexOfBraveProductsSection() const {
-  std::vector<int> commands_to_check = {
-      IDC_TOGGLE_AI_CHAT, IDC_NEW_INCOGNITO_WINDOW, IDC_NEW_WINDOW};
-  const auto last_index_of_second_section =
-      GetProperItemIndex(commands_to_check, false).value();
-  const auto last_cmd_id_of_second_section =
-      GetCommandIdAt(last_index_of_second_section);
-
-  // If |last_cmd_id_of_second_section| is from new tab & windows section,
-  // no item is added to second section yet.
-  if (last_cmd_id_of_second_section == IDC_NEW_INCOGNITO_WINDOW ||
-      last_cmd_id_of_second_section == IDC_NEW_WINDOW) {
-    // Used additional "+1" to skip separator.
-    DCHECK_EQ(ui::MenuModel::TYPE_SEPARATOR,
-              GetTypeAt(last_index_of_second_section + 1));
-    return last_index_of_second_section + 2;
-  }
-
-  return last_index_of_second_section + 1;
 }
 
 std::optional<size_t> BraveAppMenuModel::GetProperItemIndex(
