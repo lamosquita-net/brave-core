@@ -1,0 +1,40 @@
+<style include="settings-shared">
+  cr-view-manager [hidden-by-search],
+  cr-view-manager[show-all] [slot=view][data-parent-view-id] {
+    display: none;
+  }
+
+  /* Several views ("cards") are shown at the same time. */
+  cr-view-manager [slot=view]:not(.closing) {
+    position: initial;
+  }
+</style>
+
+<cr-view-manager id="viewManager" class="cr-centered-card-container"
+    show-all$="[[shouldShowAll]]">
+  <settings-people-page slot="view" id="people"
+      route-path="/getStarted">
+  </settings-people-page>
+
+  <settings-default-browser-page slot="view" id="defaultBrowser">
+  </settings-default-browser-page>
+
+<if expr="enable_pin_shortcut">
+  <settings-section slot="view" id="pinShortcut"
+      page-title="$i18n{braveGetStartedTitle}">
+    <settings-pin-shortcut-page></settings-pin-shortcut-page>
+  </settings-section>
+</if>
+
+  <settings-on-startup-page slot="view" id="onStartup">
+  </settings-on-startup-page>
+
+  <settings-section slot="view" id="newTab" page-title="$i18n{braveNewTab}">
+    <settings-brave-new-tab-page prefs="{{prefs}}">
+    </settings-brave-new-tab-page>
+  </settings-section>
+
+  <settings-manage-profile slot="view" id="manageProfile"
+      data-parent-view-id="people" route-path="/manageProfile">
+  </settings-manage-profile>
+</cr-view-manager>

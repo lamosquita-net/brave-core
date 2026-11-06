@@ -22,9 +22,14 @@ export default function addBraveRoutes(r: Partial<SettingsRoutes>) {
     // We re-section people page into getStarted section (see people_page Brave
     // override), so we need to adjust the route accordingly in order for the
     // direct navigation to flyweb://settings/importData to work.
+    // FlyWeb: in Chromium 156 settings-main only renders the plugin whose
+    // route contains the current one, so reparent it as well.
     if (r.IMPORT_DATA) {
       r.IMPORT_DATA.section = 'getStarted'
+      r.IMPORT_DATA.parent = r.GET_STARTED
     }
+    // FlyWeb: the new tab page card is a view of the getStarted plugin.
+    r.BRAVE_NEW_TAB = r.GET_STARTED.createChild('/newTab')
   }
   r.SHIELDS = r.BASIC.createSection('/shields', 'shields')
   r.SHIELDS_ADBLOCK = r.SHIELDS.createChild('/shields/filters')
@@ -35,7 +40,6 @@ export default function addBraveRoutes(r: Partial<SettingsRoutes>) {
       console.error('[Brave Settings Overrides] Routes: could not find SYSTEM page')
     }
   }
-  r.SOCIAL_BLOCKING = r.BASIC.createSection('/socialBlocking', 'socialBlocking')
   r.EXTENSIONS = r.BASIC.createSection('/extensions', 'extensions')
   if (pageVisibility.braveSync) {
     r.BRAVE_SYNC = r.BASIC.createSection('/braveSync', 'braveSync')
@@ -44,7 +48,6 @@ export default function addBraveRoutes(r: Partial<SettingsRoutes>) {
   if (pageVisibility.braveWeb3) {
     r.BRAVE_WEB3 = r.BASIC.createSection('/web3', 'web3')
   }
-  r.BRAVE_NEW_TAB = r.BASIC.createSection('/newTab', 'newTab')
 
   if (pageVisibility.content) {
     r.BRAVE_CONTENT = r.BASIC.createSection('/braveContent', 'content')
@@ -89,5 +92,13 @@ export default function addBraveRoutes(r: Partial<SettingsRoutes>) {
   // Delete storage access
   if (r.SITE_SETTINGS_STORAGE_ACCESS) {
     delete r.SITE_SETTINGS_STORAGE_ACCESS
+  }
+  // Google sync setup (as Brave 1.98): its people plugin is not shown, and
+  // FlyWeb's own sync lives in BRAVE_SYNC.
+  if (r.SYNC) {
+    delete r.SYNC
+  }
+  if (r.SYNC_ADVANCED) {
+    delete r.SYNC_ADVANCED
   }
 }

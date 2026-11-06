@@ -1,233 +1,55 @@
-// Copyright (c) 2021 The Brave Authors. All rights reserved.
-// This Source Code Form is subject to the terms of the Mozilla Public
-// License, v. 2.0. If a copy of the MPL was not distributed with this file,
-// you can obtain one at https://mozilla.org/MPL/2.0/.
+/* Copyright (c) 2021 The Brave Authors. All rights reserved.
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-import {html, RegisterPolymerTemplateModifications} from 'chrome://resources/brave/polymer_overriding.js'
+import {RegisterPolymerTemplateModifications} from 'chrome://resources/brave/polymer_overriding.js'
 import {getTrustedHTML} from 'chrome://resources/js/static_types.js'
-import {loadTimeData} from '../i18n_setup.js'
 
-function InsertGoogleSignInSubpage (pages: Element)
-{
-  pages.appendChild(
-    html`
-      <template is="dom-if" route-path="/content/googleSignIn" no-search>
-        <settings-subpage
-          associated-control="[[$$('#googleSignIn')]]"
-          page-title="${loadTimeData.getString('siteSettingsGoogleSignIn')}">
-          <settings-category-default-radio-group
-              id="googleSignInDefault"
-              category="[[contentSettingsTypesEnum_.GOOGLE_SIGN_IN]]"
-              block-option-label=
-                "${loadTimeData.getString('siteSettingsGoogleSignInBlock')}"
-              allow-option-label=
-                "${loadTimeData.getString('siteSettingsGoogleSignInAsk')}"
-              allow-option-icon="user"
-              block-option-icon="user-off">
-          </settings-category-default-radio-group>
-          <category-setting-exceptions
-            id="googleSignInExceptions"
-            category="[[contentSettingsTypesEnum_.GOOGLE_SIGN_IN]]"
-            block-header=
-              "${loadTimeData.getString(
-                'siteSettingsGoogleSignInBlockExceptions')}"
-            allow-header=
-              "${loadTimeData.getString(
-                'siteSettingsGoogleSignInAllowExceptions')}">
-          </category-setting-exceptions>
-        </settings-subpage>
-      </template>
-    `)
-}
+// FlyWeb: Brave 1.98's version for Chromium 156 (settings-privacy-page is a
+// single settings-section now). The Brave site settings subpages this file
+// used to add (autoplay, Google sign-in, Shields status, localhost access)
+// were settings-animated-pages children; in Chromium 156 they would be views
+// of settings-privacy-page-index and are not ported (see the T11 report).
 
-function InsertLocalhostAccessSubpage (pages: Element)
-{
-  pages.appendChild(
-    html`
-      <template is="dom-if" route-path="/content/localhostAccess" no-search>
-        <settings-subpage
-          associated-control="[[$$('#localhostAccess')]]"
-          page-title="${loadTimeData.getString('siteSettingsLocalhostAccess')}">
-          <settings-category-default-radio-group
-              id="localhostAccessDefault"
-              category="[[contentSettingsTypesEnum_.LOCALHOST_ACCESS]]"
-              block-option-label=
-                "${loadTimeData.getString('siteSettingsLocalhostAccessBlock')}"
-              allow-option-label=
-                "${loadTimeData.getString('siteSettingsLocalhostAccessAsk')}"
-              allow-option-icon="smartphone-desktop"
-              block-option-icon="smartphone-desktop-off">
-          </settings-category-default-radio-group>
-          <category-setting-exceptions
-            id="localhostExceptions"
-            category="[[contentSettingsTypesEnum_.LOCALHOST_ACCESS]]"
-            block-header=
-              "${loadTimeData.getString(
-                'siteSettingsLocalhostAccessBlockExceptions')}"
-            allow-header=
-              "${loadTimeData.getString(
-                'siteSettingsLocalhostAccessAllowExceptions')}">
-          </category-setting-exceptions>
-        </settings-subpage>
-      </template>
-    `)
-}
-
-function InsertAutoplaySubpage (pages: Element)
-{
-  pages.appendChild(
-    html`
-      <template is="dom-if" route-path="/content/autoplay" no-search>
-        <settings-subpage
-          associated-control="[[$$('#autoplay')]]"
-          page-title="${loadTimeData.getString('siteSettingsAutoplay')}">
-          <settings-category-default-radio-group
-              id="autoplayDefault"
-              category="[[contentSettingsTypesEnum_.AUTOPLAY]]"
-              block-option-label=
-                "${loadTimeData.getString('siteSettingsAutoplayBlock')}"
-              allow-option-label=
-                "${loadTimeData.getString('siteSettingsAutoplayAllow')}"
-              allow-option-icon="autoplay-on"
-              block-option-icon="autoplay-off">
-          </settings-category-default-radio-group>
-          <category-setting-exceptions
-            id="autoplayExceptions"
-            category="[[contentSettingsTypesEnum_.AUTOPLAY]]"
-            block-header="${loadTimeData.getString('siteSettingsBlock')}"
-            allow-header="${loadTimeData.getString('siteSettingsAllow')}">
-          </category-setting-exceptions>
-        </settings-subpage>
-      </template>
-    `)
-}
-
-function InsertShieldsSubpage (pages: Element)
-{
-  pages.appendChild(
-    html`
-      <template is="dom-if" route-path="/content/braveShields" no-search>
-        <settings-subpage
-          associated-control="[[$$('#braveShields')]]"
-          page-title="${loadTimeData.getString('siteSettingsShieldsStatus')}">
-          <category-setting-exceptions
-            id="shieldsExceptions"
-            category="[[contentSettingsTypesEnum_.BRAVE_SHIELDS]]"
-            block-header="${loadTimeData.getString('siteSettingsShieldsDown')}"
-            allow-header="${loadTimeData.getString('siteSettingsShieldsUp')}">
-          </category-setting-exceptions>
-        </settings-subpage>
-      </template>
-    `)
-}
+// Registers <settings-brave-personalization-options>, which is inserted into
+// the template below.
+import '../brave_privacy_page/brave_personalization_options.js'
 
 RegisterPolymerTemplateModifications({
   'settings-privacy-page': (templateContent) => {
-    const pages = templateContent.getElementById('pages')
-    if (!pages) {
+    const section = templateContent.querySelector('settings-section')
+    if (!section) {
       console.error(
-        `[Brave Settings Overrides] Couldn't find privacy_page #pages`)
-    } else {
-      if (!loadTimeData.getBoolean('isIdleDetectionFeatureEnabled')) {
-        const idleDetection = templateContent.querySelector(
-          '[route-path="/content/idleDetection"]')
-        if (!idleDetection) {
-          console.error(
-            `[Brave Settings Overrides] Couldn't find idle detection template`)
-        } else {
-          idleDetection.content.firstElementChild.hidden = true
-        }
-      }
-      const isGoogleSignInFeatureEnabled =
-        loadTimeData.getBoolean('isGoogleSignInFeatureEnabled')
-      if (isGoogleSignInFeatureEnabled) {
-        InsertGoogleSignInSubpage(pages)
-      }
-      const isLocalhostAccessFeatureEnabled =
-        loadTimeData.getBoolean('isLocalhostAccessFeatureEnabled')
-      if (isLocalhostAccessFeatureEnabled) {
-        InsertLocalhostAccessSubpage(pages)
-      }
-      InsertAutoplaySubpage(pages)
-      InsertShieldsSubpage(pages)
-      const permissionsLinkRow =
-        templateContent.getElementById('permissionsLinkRow')
-      if (!permissionsLinkRow) {
-        console.error(
-          '[Brave Settings Overrides] Couldn\'t find permissionsLinkRow')
-      } else {
-        permissionsLinkRow.insertAdjacentHTML(
-          'afterend',
-          getTrustedHTML`
-            <settings-brave-personalization-options prefs="{{prefs}}">
-            </settings-brave-personalization-options>
-          `)
-      }
-      const cookiesTemplate = templateContent.querySelector(
-        'template[is="dom-if"][if="[[!is3pcdRedesignEnabled_]]"]')
-      if (!cookiesTemplate) {
-        console.error(
-          '[Brave Settings Overrides] Couldn\'t find cookies template')
-      } else {
-        const cookiesLinkRow = cookiesTemplate.content.
-          getElementById('thirdPartyCookiesLinkRow')
-        if (!cookiesLinkRow) {
-          console.error(
-            '[Brave Settings Overrides] ' +
-            'Couldn\'t find thirdPartyCookiesLinkRow')
-        } else {
-          cookiesLinkRow.setAttribute('hidden', 'true')
-        }
-      }
+        `[Settings] Couldn't find privacy_page settings-section`)
+      return
     }
-    if (!loadTimeData.getBoolean('isPrivacySandboxRestricted')) {
-      const privacySandboxSettings3Template = templateContent.
-        querySelector(`template[if*='isPrivacySandboxSettings3Enabled_']`)
-      if (!privacySandboxSettings3Template) {
-        console.error(
-          '[Brave Settings Overrides] Could not find template with ' +
-          'if*=isPrivacySandboxSettings3Enabled_ on privacy page.')
-      } else {
-        const privacySandboxLinkRow = privacySandboxSettings3Template.content.
-          getElementById('privacySandboxLinkRow')
-        if (!privacySandboxLinkRow) {
-          console.error(
-            '[Brave Settings Overrides] Could not find privacySandboxLinkRow' +
-            ' id on privacy page.')
-        } else {
-          privacySandboxLinkRow.setAttribute('hidden', 'true')
-        }
-        const privacySandboxLink = privacySandboxSettings3Template.content.
-          getElementById('privacySandboxLink')
-        if (!privacySandboxLink) {
-          console.error(
-            '[Brave Settings Overrides] Could not find privacySandboxLink id' +
-            ' on privacy page.')
-        } else {
-          privacySandboxSettings3Template.setAttribute('hidden', 'true')
-        }
-      }
-      const privacySandboxSettings4Template = templateContent.
-        querySelector(`template[if*='isPrivacySandboxSettings4Enabled_']`)
-      if (!privacySandboxSettings4Template) {
-        console.error(
-          '[Brave Settings Overrides] Could not find template with ' +
-          'if*=isPrivacySandboxSettings4Enabled_ on privacy page.')
-      } else {
-        const privacySandboxLinkRow = privacySandboxSettings4Template.content.
-          getElementById('privacySandboxLinkRow')
-        if (!privacySandboxLinkRow) {
-          console.error(
-            '[Brave Settings Overrides] Could not find privacySandboxLinkRow ' +
-            'id on privacy page.')
-        } else {
-          privacySandboxLinkRow.setAttribute('hidden', 'true')
-        }
-      }
+
+    const siteSettingsLinkRow =
+      templateContent.getElementById('siteSettingsLinkRow')
+    if (!siteSettingsLinkRow) {
+      console.error(
+        '[Brave Settings Overrides] Couldn\'t find siteSettingsLinkRow')
+    } else {
+      siteSettingsLinkRow.insertAdjacentHTML(
+        'afterend',
+        getTrustedHTML`
+          <settings-brave-personalization-options prefs="{{prefs}}">
+          </settings-brave-personalization-options>
+        `)
+    }
+    const thirdPartyCookiesLinkRow =
+      templateContent.getElementById('thirdPartyCookiesLinkRow')
+    if (!thirdPartyCookiesLinkRow) {
+      console.error(
+        '[Brave Settings Overrides] Could not find ' +
+        'thirdPartyCookiesLinkRow id on privacy page.')
+    } else {
+      thirdPartyCookiesLinkRow.setAttribute('hidden', 'true')
     }
 
     const showPrivacyGuideEntryPointTemplate =
-        templateContent.querySelector(`template[if*='isPrivacyGuideAvailable']`)
+      templateContent.querySelector(`template[if*='isPrivacyGuideAvailable']`)
     if (!showPrivacyGuideEntryPointTemplate) {
       console.error(
         '[Brave Settings Overrides] Could not find template with' +
@@ -243,15 +65,5 @@ RegisterPolymerTemplateModifications({
         privacyGuideLinkRow.setAttribute('hidden', 'true')
       }
     }
-
-    const sotrageAccessTemplate = templateContent.querySelector(
-      `template[is=dom-if][route-path='/content/storageAccess'`)
-    if (!sotrageAccessTemplate) {
-      console.error(
-        '[Brave Settings Overrides] Could not find template with' +
-        ' route-path=/content/storageAccess on privacy page.')
-    } else {
-      sotrageAccessTemplate.remove()
-    }
-  },
+  }
 })

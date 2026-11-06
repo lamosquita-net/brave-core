@@ -44,6 +44,9 @@ function getPageVisibility () {
     ...chromiumPageVisibility,
     // overrides
     a11y: false,
+    // FlyWeb: no AI section (Chromium 156's AI page offers Google's AI
+    // features), as in Brave 1.98.
+    ai: false,
     people: false,
     defaultBrowser: false,
     onStartup: false,

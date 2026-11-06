@@ -15,14 +15,16 @@ import {WebUiListenerMixin} from 'chrome://resources/cr_elements/web_ui_listener
 import {assertNotReached} from 'chrome://resources/js/assert.js'
 
 import {loadTimeData} from '../i18n_setup.js'
-import {RouteObserverMixin, Router} from '../router.js'
+import {Router} from '../router.js'
+import '../settings_page/settings_section.js'
+import {SettingsViewMixin} from '../settings_page/settings_view_mixin.js'
 import {routes} from '../route.js'
 import {CookieControlsMode} from '../site_settings/constants.js'
 
 import {DefaultBraveShieldsBrowserProxyImpl, DefaultBraveShieldsBrowserProxyImpl} from './default_brave_shields_browser_proxy.js'
 import {getTemplate} from './default_brave_shields_page.html.js'
 
-const BraveShieldsPageBase = WebUiListenerMixin(I18nMixin(PrefsMixin(RouteObserverMixin(PolymerElement))))
+const BraveShieldsPageBase = WebUiListenerMixin(I18nMixin(PrefsMixin(SettingsViewMixin(PolymerElement))))
 
 /**
 * 'settings-default-brave-shields-page' is the settings page containing brave's
@@ -90,10 +92,6 @@ class BraveShieldsPage extends BraveShieldsPageBase {
       cookieControlType_: String,
       fingerprintingControlType_: String,
       httpsUpgradeControlType_: String,
-      isAdBlockRoute_: {
-        type: Boolean,
-        value: false
-      },
       isHttpsByDefaultEnabled_: {
         type: Boolean,
         value: loadTimeData.getBoolean('isHttpsByDefaultEnabled')
@@ -136,10 +134,15 @@ class BraveShieldsPage extends BraveShieldsPageBase {
       () => { this.onShieldsSettingsChanged_() })
   }
 
-  /** @protected */
-  override currentRouteChanged () {
-    const router = Router.getInstance()
-    this.isAdBlockRoute_ = (router.getCurrentRoute() == router.getRoutes().SHIELDS_ADBLOCK)
+  // SettingsViewMixin: the content filters subpage is a sibling view in
+  // settings-shields-page-index.
+  override getAssociatedControlFor (childViewId: string): HTMLElement {
+    switch (childViewId) {
+      case 'adblock':
+        return this.shadowRoot!.querySelector('#contentFiltersRow')!
+      default:
+        throw new Error(`Unknown child view id: ${childViewId}`)
+    }
   }
 
   onAdblockPageClick_() {

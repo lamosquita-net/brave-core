@@ -11,18 +11,21 @@ import {RegisterPolymerTemplateModifications, RegisterStyleOverride} from 'chrom
 import {html} from 'chrome://resources/polymer/v3_0/polymer/polymer_bundled.min.js'
 
 import {loadTimeData} from '../i18n_setup.js'
+import {pageVisibility} from './page_visibility.js'
 import 'chrome://resources/brave/leo.bundle.js'
 
 function createMenuElement(title, href, iconName, pageVisibilitySection) {
   const menuEl = document.createElement('a')
   if (pageVisibilitySection) {
-    menuEl.setAttribute('hidden', `[[!pageVisibility.${pageVisibilitySection}]]`)
+    // FlyWeb: settings-menu's property is pageVisibility_ in Chromium 156;
+    // read our page visibility directly, as Brave 1.98 does.
+    menuEl.hidden = !pageVisibility[pageVisibilitySection]
   }
   menuEl.href = href
   menuEl.setAttribute('role', 'menuitem')
   menuEl.setAttribute('class', 'cr-nav-menu-item')
 
-  const icon = document.createElement('iron-icon')
+  const icon = document.createElement('cr-icon')
   icon.setAttribute('icon', iconName)
   menuEl.appendChild(icon)
 
@@ -125,11 +128,11 @@ RegisterStyleOverride(
         font-weight: 400 !important;
       }
 
-      a:hover, iron-icon:hover {
+      a:hover, cr-icon:hover {
         color: #444DD0 !important;
       }
 
-      iron-icon, leo-icon {
+      cr-icon, leo-icon {
         margin-inline-end: 14px !important;
         width: 24px;
         height: 24px;
@@ -153,7 +156,7 @@ RegisterStyleOverride(
           color: #FB5930;
         }
 
-        a:hover, iron-icon:hover {
+        a:hover, cr-icon:hover {
           color: #A6ABE9 !important;
         }
       }
@@ -170,7 +173,7 @@ RegisterStyleOverride(
         border: none !important;
       }
 
-      #advancedButton > iron-icon {
+      #advancedButton > cr-icon {
         margin-inline-end: 0 !important;
       }
 
@@ -229,11 +232,15 @@ RegisterPolymerTemplateModifications({
       'rocket',
       'getStarted'
     )
-    peopleEl.insertAdjacentElement('afterend', getStartedEl)
+    if (peopleEl) {
+      peopleEl.insertAdjacentElement('afterend', getStartedEl)
+    }
 
     // Move Appearance item
     const appearanceBrowserEl = getMenuElement(templateContent, '/appearance')
-    getStartedEl.insertAdjacentElement('afterend', appearanceBrowserEl)
+    if (appearanceBrowserEl) {
+      getStartedEl.insertAdjacentElement('afterend', appearanceBrowserEl)
+    }
 
     // Add Content item
     const contentEl = createMenuElement(
@@ -242,7 +249,8 @@ RegisterPolymerTemplateModifications({
       'content-big',
       'content',
     )
-    appearanceBrowserEl.insertAdjacentElement('afterend', contentEl)
+    ;(appearanceBrowserEl ?? getStartedEl).insertAdjacentElement(
+      'afterend', contentEl)
 
     // Add Shields item
     const shieldsEl = createMenuElement(
@@ -255,16 +263,11 @@ RegisterPolymerTemplateModifications({
 
     // Add privacy item
     const privacyEl = getMenuElement(templateContent, '/privacy')
-    shieldsEl.insertAdjacentElement('afterend', privacyEl)
+    if (privacyEl) {
+      shieldsEl.insertAdjacentElement('afterend', privacyEl)
+    }
 
-    // Add web3 item
-    const web3El = createMenuElement(
-      loadTimeData.getString('braveWeb3'),
-      '/web3',
-      'product-brave-wallet',
-      'braveWeb3',
-    )
-    privacyEl.insertAdjacentElement('afterend', web3El)
+    // FlyWeb: no Web3 item (no wallet).
 
     // Add Sync item
     const syncEl = createMenuElement(
@@ -273,11 +276,13 @@ RegisterPolymerTemplateModifications({
       'product-sync',
       'braveSync',
     )
-    web3El.insertAdjacentElement('afterend', syncEl)
+    ;(privacyEl ?? shieldsEl).insertAdjacentElement('afterend', syncEl)
 
     // Add search item
     const searchEl = getMenuElement(templateContent, '/search')
-    syncEl.insertAdjacentElement('afterend', searchEl)
+    if (searchEl) {
+      syncEl.insertAdjacentElement('afterend', searchEl)
+    }
 
     // Add Extensions item
     const extensionEl = createMenuElement(
@@ -286,21 +291,23 @@ RegisterPolymerTemplateModifications({
       'browser-extensions',
       'extensions',
     )
-    searchEl.insertAdjacentElement('afterend', extensionEl)
+    ;(searchEl ?? syncEl).insertAdjacentElement('afterend', extensionEl)
 
     // Move autofill to advanced
     const autofillEl = getMenuElement(templateContent, '/autofill')
     const languagesEl = getMenuElement(templateContent, '/languages')
-    languagesEl.insertAdjacentElement('beforebegin', autofillEl)
-    // Allow Accessibility to be removed :-(
-    const a11yEl = getMenuElement(templateContent, '/accessibility')
-    a11yEl.setAttribute('hidden', '[[!pageVisibility.a11y]')
+    if (autofillEl && languagesEl) {
+      languagesEl.insertAdjacentElement('beforebegin', autofillEl)
+    }
+    // Accessibility: Chromium 156's own item is already hidden through
+    // pageVisibility_.a11y.
     // Remove extensions link
     const extensionsLinkEl = templateContent.querySelector('#extensionsLink')
     if (!extensionsLinkEl) {
       console.error('[Brave Settings Overrides] Could not find extensionsLinkEl to remove')
+    } else {
+      extensionsLinkEl.remove()
     }
-    extensionsLinkEl.remove()
     // Add version number to 'about' link
     const aboutEl = templateContent.querySelector('#about-menu')
     if (!aboutEl) {

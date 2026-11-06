@@ -1,0 +1,39 @@
+<style include="cr-shared-style settings-shared">
+  cr-view-manager [hidden-by-search],
+  cr-view-manager[show-all] [slot=view][data-parent-view-id] {
+    display: none;
+  }
+
+  cr-view-manager [slot=view]:not(.closing) {
+    position: initial;
+  }
+</style>
+
+<!-- No cr-centered-card-container here: settings-system-page already carries
+     it on its own section, so it goes on each of the other views. -->
+<cr-view-manager id="viewManager" show-all$="[[shouldShowAll]]">
+  <settings-system-page slot="view" id="system">
+  </settings-system-page>
+
+  <settings-brave-system-extras slot="view" id="braveSystem"
+      class="cr-centered-card-container" prefs="{{prefs}}">
+  </settings-brave-system-extras>
+
+  <settings-memory-page slot="view" id="memory"
+      class="cr-centered-card-container">
+  </settings-memory-page>
+
+  <settings-battery-page slot="view" id="battery"
+      class="cr-centered-card-container"
+      hidden="[[!showBatterySettings_]]">
+  </settings-battery-page>
+
+  <template is="dom-if" if="[[showShortcutsPage_]]">
+    <settings-subpage slot="view" id="shortcuts"
+        class="cr-centered-card-container"
+        data-parent-view-id="braveSystem" route-path="/system/shortcuts"
+        page-title="$i18n{braveShortcutsPage}">
+      <settings-shortcuts-page></settings-shortcuts-page>
+    </settings-subpage>
+  </template>
+</cr-view-manager>
