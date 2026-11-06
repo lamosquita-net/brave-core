@@ -25,7 +25,6 @@
 #include "chrome/browser/ui/select_file_policy/chrome_select_file_policy.h"
 #include "chrome/common/pref_names.h"
 #include "chrome/grit/generated_resources.h"
-#include "components/omnibox/browser/omnibox_view.h"
 #include "components/prefs/pref_service.h"
 #include "components/search_engines/search_engine_type.h"
 #include "components/search_engines/template_url.h"

@@ -10,7 +10,7 @@
 #include "brave/components/constants/brave_paths.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/constants/url_constants.h"
-#include "chrome/browser/extensions/crx_installer.h"
+#include "extensions/browser/crx_installer.h"
 #include "chrome/browser/extensions/extension_browsertest.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser.h"

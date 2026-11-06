@@ -9,7 +9,7 @@
 #include "base/path_service.h"
 #include "base/run_loop.h"
 #include "brave/components/constants/brave_paths.h"
-#include "chrome/browser/extensions/crx_installer.h"
+#include "extensions/browser/crx_installer.h"
 #include "chrome/browser/extensions/install_tracker.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser.h"
