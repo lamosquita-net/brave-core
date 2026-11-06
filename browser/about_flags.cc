@@ -44,10 +44,6 @@
 #include "sandbox/policy/features.h"
 #endif
 
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-#include "brave/browser/ui/webui/settings/brave_extensions_manifest_v2_handler.h"
-#endif
-
 #define EXPAND_FEATURE_ENTRIES(...) __VA_ARGS__,
 
 #define REQUEST_OTR_FEATURE_ENTRIES                                           \
@@ -173,16 +169,6 @@
           kOsWin | kOsLinux | kOsMac | kOsAndroid,                            \
           FEATURE_VALUE_TYPE(history::kHistoryMoreSearchResults),             \
       })
-
-#define BRAVE_EXTENSIONS_MANIFEST_V2                                        \
-  IF_BUILDFLAG(ENABLE_EXTENSIONS,                                           \
-               EXPAND_FEATURE_ENTRIES({                                     \
-                   "brave-extensions-manifest-v2",                          \
-                   "Brave Extensions manifest V2",                          \
-                   "Enables Brave support for some manifest V2 extensions", \
-                   kOsDesktop,                                              \
-                   FEATURE_VALUE_TYPE(kExtensionsManifestV2),               \
-               }))
 
 // Keep the last item empty.
 #define LAST_BRAVE_FEATURE_ENTRIES_ITEM
@@ -542,7 +528,6 @@
   BRAVE_TABS_FEATURE_ENTRIES                                                   \
   BRAVE_OMNIBOX_FEATURES                                                       \
   BRAVE_MIDDLE_CLICK_AUTOSCROLL_FEATURE_ENTRY                                  \
-  BRAVE_EXTENSIONS_MANIFEST_V2                                                 \
   LAST_BRAVE_FEATURE_ENTRIES_ITEM  // Keep it as the last item.
 namespace flags_ui {
 namespace {
