@@ -54,19 +54,19 @@ BraveBrowserCommandController::BraveBrowserCommandController(
 
 BraveBrowserCommandController::~BraveBrowserCommandController() = default;
 
-void BraveBrowserCommandController::TabChangedAt(content::WebContents* contents,
-                                                 int index,
-                                                 TabChangeType type) {
+void BraveBrowserCommandController::OnTabChangedAt(tabs::TabInterface* tab,
+                                                   TabChangeType change_type) {
+  BrowserCommandController::OnTabChangedAt(tab, change_type);
   UpdateCommandEnabled(IDC_CLOSE_DUPLICATE_TABS,
                        brave::HasDuplicateTabs(&*browser_));
   UpdateCommandsForTabs();
   UpdateCommandsForSend();
 }
 
-void BraveBrowserCommandController::TabPinnedStateChanged(
-    TabStripModel* tab_strip_model,
-    content::WebContents* contents,
+void BraveBrowserCommandController::OnTabPinnedStateChanged(
+    tabs::TabInterface* tab,
     int index) {
+  BrowserCommandController::OnTabPinnedStateChanged(tab, index);
   UpdateCommandsForPin();
 }
 
@@ -101,14 +101,16 @@ bool BraveBrowserCommandController::IsCommandEnabled(int id) const {
                              : BrowserCommandController::IsCommandEnabled(id);
 }
 
-bool BraveBrowserCommandController::ExecuteCommandWithDisposition(
+bool BraveBrowserCommandController::ExecuteCommandWithDispositionAndContext(
     int id,
     WindowOpenDisposition disposition,
+    std::optional<actions::ActionInvocationContext> context,
     base::TimeTicks time_stamp) {
   return IsBraveCommands(id)
              ? ExecuteBraveCommandWithDisposition(id, disposition, time_stamp)
-             : BrowserCommandController::ExecuteCommandWithDisposition(
-                   id, disposition, time_stamp);
+             : BrowserCommandController::
+                   ExecuteCommandWithDispositionAndContext(
+                       id, disposition, std::move(context), time_stamp);
 }
 
 void BraveBrowserCommandController::AddCommandObserver(

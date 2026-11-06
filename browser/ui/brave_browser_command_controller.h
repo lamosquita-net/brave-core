@@ -35,12 +35,9 @@ class BraveBrowserCommandController : public chrome::BrowserCommandController {
   ~BraveBrowserCommandController() override;
 
  protected:
-  void TabChangedAt(content::WebContents* contents,
-                    int index,
-                    TabChangeType change) override;
-  void TabPinnedStateChanged(TabStripModel* tab_strip_model,
-                             content::WebContents* contents,
-                             int index) override;
+  void OnTabChangedAt(tabs::TabInterface* tab,
+                      TabChangeType change_type) override;
+  void OnTabPinnedStateChanged(tabs::TabInterface* tab, int index) override;
   void OnTabStripModelChanged(
       TabStripModel* tab_strip_model,
       const TabStripModelChange& change,
@@ -55,10 +52,11 @@ class BraveBrowserCommandController : public chrome::BrowserCommandController {
   // Overriden from CommandUpdater:
   bool SupportsCommand(int id) const override;
   bool IsCommandEnabled(int id) const override;
-  bool ExecuteCommandWithDisposition(
+  bool ExecuteCommandWithDispositionAndContext(
       int id,
       WindowOpenDisposition disposition,
-      base::TimeTicks time_stamp = base::TimeTicks::Now()) override;
+      std::optional<actions::ActionInvocationContext> context,
+      base::TimeTicks time_stamp) override;
   void AddCommandObserver(int id, CommandObserver* observer) override;
   void RemoveCommandObserver(int id, CommandObserver* observer) override;
   void RemoveCommandObserver(CommandObserver* observer) override;
