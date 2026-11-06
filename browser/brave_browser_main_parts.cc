@@ -35,9 +35,9 @@
 
 #if !BUILDFLAG(IS_ANDROID)
 #include "brave/browser/infobars/brave_sync_account_deleted_infobar_delegate.h"
-#include "brave/browser/infobars/sync_cannot_run_infobar_delegate.h"
-#include "chrome/browser/ui/browser.h"
-#include "chrome/browser/ui/browser_finder.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface_iterator.h"
+#include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "components/infobars/content/content_infobar_manager.h"
 #include "components/sync/service/sync_service.h"
 #include "components/sync/service/sync_user_settings.h"
@@ -78,22 +78,23 @@ void BraveBrowserMainParts::PostBrowserStart() {
   ChromeBrowserMainParts::PostBrowserStart();
 
 #if !BUILDFLAG(IS_ANDROID)
-  Browser* browser = chrome::FindLastActive();
+  BrowserWindowInterface* browser =
+      GetLastActiveBrowserWindowInterfaceWithAnyProfile();
   content::WebContents* active_web_contents = nullptr;
 
   if (browser) {
-    active_web_contents = browser->tab_strip_model()->GetActiveWebContents();
+    active_web_contents = browser->GetTabStripModel()->GetActiveWebContents();
 
     if (active_web_contents) {
-      Profile* profile =
-          Profile::FromBrowserContext(active_web_contents->GetBrowserContext());
+      Profile* profile = browser->GetProfile();
       infobars::ContentInfoBarManager* infobar_manager =
           infobars::ContentInfoBarManager::FromWebContents(active_web_contents);
-      if (profile && infobar_manager) {
-        SyncCannotRunInfoBarDelegate::Create(infobar_manager, profile, browser);
-
+      if (infobar_manager) {
+        // The sync seed is decrypted asynchronously now (os_crypt_async):
+        // SyncCannotRunInfoBarDelegate is shown by BraveSyncAlertsService once
+        // the encryptor is ready.
         BraveSyncAccountDeletedInfoBarDelegate::Create(active_web_contents,
-                                                       profile, browser);
+                                                       profile);
       }
     }
   }

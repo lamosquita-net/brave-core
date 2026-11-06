@@ -7,9 +7,13 @@
 
 #include "base/feature_override.h"
 
+namespace switches {
+
+// kVerifyRequestInitiatorForMirrorHeaders is iOS-only in 156, so the old
+// desktop override is gone. kSyncEnableBookmarksInTransportMode moved here
+// from components/sync/base/features.cc: keep it off, as before.
 OVERRIDE_FEATURE_DEFAULT_STATES({{
-#if BUILDFLAG(ENABLE_MIRROR) && !BUILDFLAG(IS_IOS)
-    {kVerifyRequestInitiatorForMirrorHeaders,
-     base::FEATURE_DISABLED_BY_DEFAULT},
-#endif  // BUILDFLAG(ENABLE_MIRROR) && !BUILDFLAG(IS_IOS)
+    {kSyncEnableBookmarksInTransportMode, base::FEATURE_DISABLED_BY_DEFAULT},
 }});
+
+}  // namespace switches

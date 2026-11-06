@@ -9,6 +9,10 @@
 #include <vector>
 
 #include "base/auto_reset.h"
+#include "base/base64.h"
+#include "base/check.h"
+#include "base/check_is_test.h"
+#include "base/check_op.h"
 #include "base/logging.h"
 #include "base/metrics/histogram_functions.h"
 #include "base/strings/string_util.h"
@@ -17,11 +21,14 @@
 #include "brave/components/sync/service/brave_sync_auth_manager.h"
 #include "brave/components/sync/service/sync_service_impl_delegate.h"
 #include "build/build_config.h"
+#include "components/os_crypt/async/browser/os_crypt_async.h"
 #include "components/prefs/pref_service.h"
 #include "components/sync/engine/sync_protocol_error.h"
 #include "components/sync/model/type_entities_count.h"
 
 namespace syncer {
+
+using GetSeedStatusEnum = BraveSyncServiceImpl::GetSeedStatusEnum;
 
 void BraveSyncServiceImpl::SyncedObjectsCountContext::Reset(
     size_t types_requested_init) {
@@ -32,22 +39,15 @@ void BraveSyncServiceImpl::SyncedObjectsCountContext::Reset(
 
 BraveSyncServiceImpl::BraveSyncServiceImpl(
     InitParams init_params,
-    std::unique_ptr<SyncServiceImplDelegate> sync_service_impl_delegate)
+    std::unique_ptr<SyncServiceImplDelegate> sync_service_impl_delegate,
+    os_crypt_async::OSCryptAsync* os_crypt_async)
     : SyncServiceImpl(std::move(init_params)),
       brave_sync_prefs_(sync_client_->GetPrefService()),
       sync_service_impl_delegate_(std::move(sync_service_impl_delegate)),
       weak_ptr_factory_(this) {
-  brave_sync_prefs_change_registrar_.Init(sync_client_->GetPrefService());
-  brave_sync_prefs_change_registrar_.Add(
-      brave_sync::Prefs::GetSeedPath(),
-      base::BindRepeating(&BraveSyncServiceImpl::OnBraveSyncPrefsChanged,
-                          base::Unretained(this)));
-
-  bool failed_to_decrypt = false;
-  GetBraveSyncAuthManager()->DeriveSigningKeys(
-      brave_sync_prefs_.GetSeed(&failed_to_decrypt));
-  DCHECK(!failed_to_decrypt);
-
+  os_crypt_async->GetInstance(
+      base::BindOnce(&BraveSyncServiceImpl::OnOsCryptAsyncReady,
+                     weak_ptr_factory_.GetWeakPtr()));
   sync_service_impl_delegate_->set_profile_sync_service(this);
 }
 
@@ -55,15 +55,142 @@ BraveSyncServiceImpl::~BraveSyncServiceImpl() {
   brave_sync_prefs_change_registrar_.RemoveAll();
 }
 
-void BraveSyncServiceImpl::Initialize() {
+void BraveSyncServiceImpl::OnOsCryptAsyncReady(
+    scoped_refptr<os_crypt_async::Encryptor> encryptor) {
+  encryptor_ = std::move(encryptor);
+
+  brave_sync_prefs_change_registrar_.Init(sync_client_->GetPrefService());
+  brave_sync_prefs_change_registrar_.Add(
+      brave_sync::Prefs::GetSeedPath(),
+      base::BindRepeating(&BraveSyncServiceImpl::OnBraveSyncPrefsChanged,
+                          base::Unretained(this)));
+
+  // DeriveSigningKeys → TryStart → GetInstance would re-enter OSCryptAsync
+  // while is_initializing_ is still true. Post to run after this callback
+  // returns.
+  base::SequencedTaskRunner::GetCurrentDefault()->PostTask(
+      FROM_HERE, base::BindOnce(&BraveSyncServiceImpl::OnEncryptorReady,
+                                weak_ptr_factory_.GetWeakPtr()));
+}
+
+void BraveSyncServiceImpl::OnEncryptorReady() {
+  CHECK(has_encryptor());
+  auto seed = GetSeed();
+  if (!seed.has_value()) {
+    // Seed decryption failed at startup. This can happen when the OS keychain
+    // is locked (e.g. user cancelled the unlock dialog on Linux/GNOME), the key
+    // was rotated, or the data was encrypted on a different machine. We do not
+    // crash here because the failure is often temporary (locked keychain) and
+    // SecretPortalKeyProvider may report kPermanentlyUnavailable even for a
+    // locked keychain when the user cancels, making DecryptFlags unreliable for
+    // distinguishing temporary from permanent failures at startup.
+    // Notify observers so BraveSyncAlertsService can show SyncCannotRunInfoBar.
+    NotifyObservers();
+    return;
+  }
+  GetBraveSyncAuthManager()->DeriveSigningKeys(*seed);
+}
+
+bool BraveSyncServiceImpl::has_encryptor() const {
+  return encryptor_ != nullptr;
+}
+
+scoped_refptr<os_crypt_async::Encryptor>
+BraveSyncServiceImpl::SetEncryptorForTesting(
+    scoped_refptr<os_crypt_async::Encryptor> encryptor_for_tests) {
+  CHECK_IS_TEST();
+  scoped_refptr<os_crypt_async::Encryptor> old_encryptor =
+      std::move(encryptor_);
+
+  encryptor_ = std::move(encryptor_for_tests);
+
+  return old_encryptor;
+}
+
+void BraveSyncServiceImpl::ResetEncryptorForTesting() {
+  CHECK_IS_TEST();
+  encryptor_.reset();
+}
+
+void BraveSyncServiceImpl::RemoveAllPrefsChangeRegistrarForTesting() {
+  CHECK_IS_TEST();
+  brave_sync_prefs_change_registrar_.RemoveAll();
+}
+
+bool BraveSyncServiceImpl::IsEncryptionAvailable() const {
+  if (!has_encryptor()) {
+    return false;
+  }
+
+  return encryptor_->IsEncryptionAvailable();
+}
+
+base::expected<std::string, GetSeedStatusEnum> BraveSyncServiceImpl::GetSeed()
+    const {
+  if (!has_encryptor()) {
+    return base::unexpected(GetSeedStatusEnum::kEncryptorIsNotSet);
+  }
+
+  const auto& encoded_seed = brave_sync_prefs_.GetEncryptedSeed();
+  if (encoded_seed.empty()) {
+    return std::string();
+  }
+
+  std::string encrypted_seed;
+  if (!base::Base64Decode(encoded_seed, &encrypted_seed)) {
+    LOG(ERROR) << "base64 decode sync seed failure";
+    return base::unexpected(GetSeedStatusEnum::kDecryptFailed);
+  }
+
+  std::string seed;
+  if (!encryptor_->DecryptString(encrypted_seed, &seed)) {
+    LOG(ERROR) << "Decrypt sync seed failure";
+    return base::unexpected(GetSeedStatusEnum::kDecryptFailed);
+  }
+  return seed;
+}
+
+bool BraveSyncServiceImpl::SetSeed(const std::string& seed) {
+  DCHECK(!seed.empty());
+  std::string encrypted_seed;
+  if (!encryptor_->EncryptString(seed, &encrypted_seed)) {
+    LOG(ERROR) << "Encrypt sync seed failure";
+    return false;
+  }
+  // String stored in prefs has to be UTF8 string so we use base64 to encode it.
+  brave_sync_prefs_.SetEncryptedSeed(base::Base64Encode(encrypted_seed));
+  brave_sync_prefs_.SetSyncAccountDeletedNoticePending(false);
+  return true;
+}
+
+bool BraveSyncServiceImpl::SetSeedForTesting(const std::string& seed) {
+  CHECK_IS_TEST();
+  return SetSeed(seed);
+}
+
+void BraveSyncServiceImpl::Initialize(
+    DataTypeController::TypeVector controllers) {
   base::AutoReset<bool> is_initializing_resetter(&is_initializing_, true);
-
-  SyncServiceImpl::Initialize();
-
-  // P3A ping for those who have sync disabled
+  SyncServiceImpl::Initialize(std::move(controllers));
   if (!user_settings_->IsInitialSyncFeatureSetupComplete()) {
     base::UmaHistogramExactLinear("Brave.Sync.Status.2", 0, 3);
   }
+}
+
+DataTypeSet BraveSyncServiceImpl::GetPreferredDataTypes() const {
+  if (!has_encryptor() || is_initializing_) {
+    // Encryptor not ready (desktop: async keychain) or Initialize() is still
+    // running (Android: encryptor fires synchronously but DeriveSigningKeys()
+    // hasn't been called yet via PostTask). Return all types to prevent
+    // ClearMetadataWhileStoppedExceptFor() from wiping DeviceInfo metadata
+    // before the correct auth state is established.
+    const std::string& raw_seed = sync_client_->GetPrefService()->GetString(
+        brave_sync::Prefs::GetSeedPath());
+    if (!raw_seed.empty()) {
+      return DataTypeSet::All();
+    }
+  }
+  return SyncServiceImpl::GetPreferredDataTypes();
 }
 
 bool BraveSyncServiceImpl::IsSetupInProgress() const {
@@ -71,7 +198,17 @@ bool BraveSyncServiceImpl::IsSetupInProgress() const {
          !user_settings_->IsInitialSyncFeatureSetupComplete();
 }
 
-void BraveSyncServiceImpl::StopAndClear() {
+void BraveSyncServiceImpl::StopAndClear(ResetEngineReason reset_engine_reason) {
+  if ((!has_encryptor() || is_initializing_) &&
+      reset_engine_reason == ResetEngineReason::kNotSignedIn) {
+    // kNotSignedIn fires during Initialize() because DeriveSigningKeys() hasn't
+    // run yet (desktop: encryptor not ready; Android: encryptor fires
+    // synchronously but DeriveSigningKeys() is still in the PostTask queue).
+    // SyncServiceImpl::StopAndClear() would call
+    // ClearInitialSyncFeatureSetupComplete() and Prefs::Clear() would wipe the
+    // seed. Skip — OnEncryptorReady() will establish the correct auth state.
+    return;
+  }
   // StopAndClear is invoked during |SyncServiceImpl::Initialize| even if sync
   // is not enabled. This adds lots of useless lines into
   // `brave_sync_v2.diag.leave_chain_details`
@@ -80,30 +217,27 @@ void BraveSyncServiceImpl::StopAndClear() {
   }
   // Clear prefs before StopAndClear() to make NotifyObservers() be invoked
   brave_sync_prefs_.Clear();
-  SyncServiceImpl::StopAndClear();
+  SyncServiceImpl::StopAndClear(reset_engine_reason);
 }
 
 std::string BraveSyncServiceImpl::GetOrCreateSyncCode() {
-  bool failed_to_decrypt = false;
-  std::string sync_code = brave_sync_prefs_.GetSeed(&failed_to_decrypt);
-
-  if (failed_to_decrypt) {
+  auto sync_code = GetSeed();
+  if (!sync_code.has_value()) {
     // Do not try to re-create seed when OSCrypt fails, for example on macOS
     // when the keyring is locked.
-    DCHECK(sync_code.empty());
     return std::string();
   }
 
-  if (sync_code.empty()) {
+  if (sync_code->empty()) {
     std::vector<uint8_t> seed = brave_sync::crypto::GetSeed();
-    sync_code = brave_sync::crypto::PassphraseFromBytes32(seed);
+    *sync_code = brave_sync::crypto::PassphraseFromBytes32(seed);
   }
 
-  CHECK(!sync_code.empty()) << "Attempt to return empty sync code";
-  CHECK(brave_sync::crypto::IsPassphraseValid(sync_code))
+  CHECK(!sync_code->empty()) << "Attempt to return empty sync code";
+  CHECK(brave_sync::crypto::IsPassphraseValid(*sync_code))
       << "Attempt to return non-valid sync code";
 
-  return sync_code;
+  return std::move(sync_code).value();
 }
 
 bool BraveSyncServiceImpl::SetSyncCode(const std::string& sync_code) {
@@ -112,7 +246,7 @@ bool BraveSyncServiceImpl::SetSyncCode(const std::string& sync_code) {
   if (!brave_sync::crypto::IsPassphraseValid(sync_code_trimmed)) {
     return false;
   }
-  if (!brave_sync_prefs_.SetSeed(sync_code_trimmed)) {
+  if (!this->SetSeed(sync_code_trimmed)) {
     return false;
   }
 
@@ -135,14 +269,14 @@ void BraveSyncServiceImpl::OnSelfDeviceInfoDeleted(base::OnceClosure cb) {
   // ---
   // BraveSyncServiceImplDelegate::OnDeviceInfoChange()
   // ...
-  // ClientTagBasedModelTypeProcessor::ClearAllMetadataAndResetStateImpl()
+  // ClientTagBasedDataTypeProcessor::ClearAllMetadataAndResetStateImpl()
   // ...
-  // ClientTagBasedModelTypeProcessor::OnSyncStarting()
+  // ClientTagBasedDataTypeProcessor::OnSyncStarting()
   // ---
   // Note that `ClearAllTrackedMetadataAndResetState` will only be called during
   // init when sync seed decryption key mismatched.
   if (GetTransportState() != TransportState::CONFIGURING) {
-    StopAndClear();
+    StopAndClear(ResetEngineReason::kResetLocalData);
   }
 
   std::move(cb).Run();
@@ -155,12 +289,11 @@ BraveSyncAuthManager* BraveSyncServiceImpl::GetBraveSyncAuthManager() {
 void BraveSyncServiceImpl::OnBraveSyncPrefsChanged(const std::string& path) {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
   if (path == brave_sync::Prefs::GetSeedPath()) {
-    bool failed_to_decrypt = false;
-    const std::string seed = brave_sync_prefs_.GetSeed(&failed_to_decrypt);
-    DCHECK(!failed_to_decrypt);
+    auto seed = GetSeed();
+    CHECK(seed.has_value());
 
-    if (!seed.empty()) {
-      GetBraveSyncAuthManager()->DeriveSigningKeys(seed);
+    if (!seed.value().empty()) {
+      GetBraveSyncAuthManager()->DeriveSigningKeys(*seed);
       // Default enabled types: Bookmarks
 
       // Related Chromium change: 33441a0f3f9a591693157f2fd16852ce072e6f9d
@@ -208,28 +341,38 @@ void BraveSyncServiceImpl::OnEngineInitialized(
     return;
   }
 
-  bool failed_to_decrypt = false;
-  std::string passphrase = brave_sync_prefs_.GetSeed(&failed_to_decrypt);
-  DCHECK(!failed_to_decrypt);
-  if (passphrase.empty()) {
+  auto passphrase = GetSeed();
+  CHECK(passphrase.has_value());
+  if (passphrase->empty()) {
     return;
   }
 
   if (sync_user_settings->IsPassphraseRequired()) {
     bool set_passphrase_result =
-        sync_user_settings->SetDecryptionPassphrase(passphrase);
+        sync_user_settings->SetDecryptionPassphrase(*passphrase);
     VLOG(1) << "Forced set decryption passphrase result is "
             << set_passphrase_result;
   }
 }
 
-SyncServiceCrypto* BraveSyncServiceImpl::GetCryptoForTests() {
+SyncServiceCrypto* BraveSyncServiceImpl::GetCryptoForTesting() {
+  CHECK_IS_TEST();
   return &crypto_;
 }
 
+DataTypeManager* BraveSyncServiceImpl::GetDataTypeManagerForTesting() {
+  CHECK_IS_TEST();
+  return data_type_manager_.get();
+}
+
+void BraveSyncServiceImpl::SetInitializingForTesting() {
+  CHECK_IS_TEST();
+  is_initializing_ = true;
+}
+
 namespace {
-const int kMaxPermanentlyDeleteSyncAccountAttempts = 5;
-const int kDelayBetweenDeleteSyncAccountAttemptsMsec = 500;
+constexpr int kMaxPermanentlyDeleteSyncAccountAttempts = 5;
+constexpr int kDelayBetweenDeleteSyncAccountAttemptsMsec = 500;
 }  // namespace
 
 void BraveSyncServiceImpl::OnAccountDeleted(
@@ -243,7 +386,7 @@ void BraveSyncServiceImpl::OnAccountDeleted(
     // The code below cleans all on an initiator device. Other devices in the
     // chain will be cleaned at BraveSyncServiceImpl::ResetEngine
     DCHECK(initiated_delete_account_);
-    BraveSyncServiceImpl::StopAndClear();
+    BraveSyncServiceImpl::StopAndClear(ResetEngineReason::kDisabledAccount);
   } else if (current_attempt < kMaxPermanentlyDeleteSyncAccountAttempts) {
     // Server responded failure, but we need to try more
     base::SequencedTaskRunner::GetCurrentDefault()->PostDelayedTask(
@@ -304,14 +447,14 @@ std::unique_ptr<SyncEngine> BraveSyncServiceImpl::ResetEngine(
     brave_sync_prefs_.AddLeaveChainDetail(__FILE__, __LINE__, __func__);
     brave_sync_prefs_.SetSyncAccountDeletedNoticePending(true);
     // Forcing stop and clear, because sync account was deleted
-    BraveSyncServiceImpl::StopAndClear();
+    BraveSyncServiceImpl::StopAndClear(ResetEngineReason::kResetLocalData);
   } else if (shutdown_reason == ShutdownReason::DISABLE_SYNC_AND_CLEAR_DATA &&
              reset_reason == ResetEngineReason::kDisabledAccount &&
              sync_disabled_by_admin_ && initiated_join_chain_) {
     brave_sync_prefs_.AddLeaveChainDetail(__FILE__, __LINE__, __func__);
     // Forcing stop and clear, because we are trying to join the sync chain, but
     // sync account was deleted
-    BraveSyncServiceImpl::StopAndClear();
+    BraveSyncServiceImpl::StopAndClear(ResetEngineReason::kResetLocalData);
     // When it will be merged into master, iOS code will be a bit behind,
     // so don't expect join_chain_result_callback_ is set, but get CHECK back
     // once iOS changes will handle this
@@ -343,9 +486,9 @@ void BraveSyncServiceImpl::LocalDeviceAppeared() {
 
 namespace {
 // Typical cycle takes 30 sec, let's send P3A updates each ~30 minutes
-const int kCyclesBeforeUpdateP3AObjects = 60;
+constexpr int kCyclesBeforeUpdateP3AObjects = 60;
 // And Let's do the first update in ~5 minutes after sync start
-const int kCyclesBeforeFirstUpdatesP3A = 10;
+constexpr int kCyclesBeforeFirstUpdatesP3A = 10;
 }  // namespace
 
 void BraveSyncServiceImpl::OnSyncCycleCompleted(
@@ -361,23 +504,9 @@ void BraveSyncServiceImpl::OnSyncCycleCompleted(
 void BraveSyncServiceImpl::UpdateP3AObjectsNumber() {
   synced_objects_context_.Reset(GetUserSettings()->GetSelectedTypes().size());
 
-  for (UserSelectableType user_selected_type :
-       GetUserSettings()->GetSelectedTypes()) {
-    ModelType model_type =
-        UserSelectableTypeToCanonicalModelType(user_selected_type);
-
-    ModelTypeController::TypeMap::const_iterator it =
-        model_type_controllers_.find(model_type);
-    DCHECK(it != model_type_controllers_.end())
-        << "Missing controller for type " << ModelTypeToDebugString(model_type);
-    if (it != model_type_controllers_.end()) {
-      ModelTypeController* controller = it->second.get();
-
-      controller->GetTypeEntitiesCount(
-          base::BindOnce(&BraveSyncServiceImpl::OnGetTypeEntitiesCount,
-                         weak_ptr_factory_.GetWeakPtr()));
-    }
-  }
+  data_type_manager_->GetEntityCountsForDebugging(
+      base::BindRepeating(&BraveSyncServiceImpl::OnGetTypeEntitiesCount,
+                          weak_ptr_factory_.GetWeakPtr()));
 }
 
 void BraveSyncServiceImpl::OnGetTypeEntitiesCount(
@@ -403,12 +532,29 @@ void BraveSyncServiceImpl::OnGetTypeEntitiesCount(
   }
 }
 
-void BraveSyncServiceImpl::OnSelectedTypesPrefChange() {
-  SyncServiceImpl::OnSelectedTypesPrefChange();
+void BraveSyncServiceImpl::OnSelectedTypesChanged() {
+  SyncServiceImpl::OnSelectedTypesChanged();
 
   brave_sync::p3a::RecordEnabledTypes(
       GetUserSettings()->IsSyncEverythingEnabled(),
       GetUserSettings()->GetSelectedTypes());
 }
+
+void BraveSyncServiceImpl::StopAndClearWithShutdownReason() {
+  StopAndClear(ResetEngineReason::kShutdown);
+}
+
+void BraveSyncServiceImpl::StopAndClearWithResetLocalDataReason() {
+  StopAndClear(ResetEngineReason::kResetLocalData);
+}
+
+void BraveSyncServiceImpl::OnAccountsCookieDeletedByUserAction() {}
+
+void BraveSyncServiceImpl::OnAccountsInCookieUpdated(
+    const signin::AccountsInCookieJarInfo& accounts_in_cookie_jar_info,
+    const GoogleServiceAuthError& error) {}
+
+void BraveSyncServiceImpl::OnPrimaryAccountChanged(
+    const signin::PrimaryAccountChangeEvent& event_details) {}
 
 }  // namespace syncer

@@ -3,9 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "components/os_crypt/common/keychain_password_mac.h"
+
 #include "base/command_line.h"
 #include "chrome/test/base/in_process_browser_test.h"
-#include "components/os_crypt/sync/keychain_password_mac.h"
 #include "content/public/test/browser_test.h"
 
 namespace {
@@ -15,11 +16,14 @@ struct TestParams {
   const char* account_name;
 };
 
-static const TestParams kTestVectors[] = {
+constexpr TestParams kTestVectors[] = {
+    // FlyWeb: the `v10` key of every FlyWeb profile lives here (§11.8 M1 of
+    // brave-propio.md in softmac). Changing it makes Chromium create a new
+    // random key and every `v10` value becomes unreadable.
     {
         nullptr,
-        "Brave Safe Storage",
-        "Brave",
+        "FlyWeb Safe Storage",
+        "FlyWeb",
     },
     {
         "import-brave",
@@ -58,10 +62,8 @@ IN_PROC_BROWSER_TEST_P(BraveKeychainPasswordTest, ServiceAndAccountName) {
     base::CommandLine::ForCurrentProcess()->AppendSwitch(
         test_data.switch_to_append);
   }
-  EXPECT_STREQ(KeychainPassword::GetServiceName().c_str(),
-               test_data.service_name);
-  EXPECT_STREQ(KeychainPassword::GetAccountName().c_str(),
-               test_data.account_name);
+  EXPECT_EQ(KeychainPassword::GetServiceName(), test_data.service_name);
+  EXPECT_EQ(KeychainPassword::GetAccountName(), test_data.account_name);
 }
 
 INSTANTIATE_TEST_SUITE_P(/*no prefix*/,

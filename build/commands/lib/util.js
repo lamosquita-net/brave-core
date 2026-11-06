@@ -78,6 +78,9 @@ async function applyPatches() {
     // FlyWeb 2.4.0: QUIC version_information with the RFC 9368 codepoint, as
     // Chrome 135 (QUICHE f4690dbf with quic_version_negotiation_rfc on).
     path.join('net', 'third_party', 'quiche', 'src'),
+    // Base 156: prepopulated_engines.json lives in this separate repo; Brave's
+    // engine removals (DuckDuckGo, Qwant: defined by Brave) are patched here.
+    path.join('third_party', 'search_engines_data', 'resources'),
   ]
   const flywebPatchStatus = []
   for (const repo of flywebRepos) {

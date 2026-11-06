@@ -9,6 +9,9 @@
 #include <string>
 #include <vector>
 
+#include "base/check.h"
+#include "base/check_op.h"
+#include "base/compiler_specific.h"
 #include "base/containers/span.h"
 #include "base/logging.h"
 #include "base/notreached.h"
@@ -29,6 +32,12 @@ static constexpr char kWordsv1SunsetDate[] = "Mon, 1 Aug 2022 00:00:00 GMT";
 static constexpr char kWordsv2Epoch[] = "Tue, 10 May 2022 00:00:00 GMT";
 
 static constexpr size_t kWordsV2Count = 25u;
+
+std::vector<std::string> SplitWords(const std::string& words_string) {
+  return base::SplitString(words_string, " \n\t",
+                           base::WhitespaceHandling::TRIM_WHITESPACE,
+                           base::SplitResult::SPLIT_WANT_NONEMPTY);
+}
 
 }  // namespace
 
@@ -57,10 +66,7 @@ int TimeLimitedWords::GetIndexByWord(const std::string& word) {
   std::string word_prepared = base::ToLowerASCII(word);
 
   struct words* mnemonic_w = nullptr;
-  if (bip39_get_wordlist(nullptr, &mnemonic_w) != WALLY_OK) {
-    DCHECK(false);
-    return -1;
-  }
+  CHECK_EQ(bip39_get_wordlist(nullptr, &mnemonic_w), WALLY_OK);
 
   DCHECK_NE(mnemonic_w, nullptr);
   size_t idx = wordlist_lookup_word(mnemonic_w, word_prepared.c_str());
@@ -142,16 +148,15 @@ TimeLimitedWords::ParseImpl(const std::string& time_limited_words,
 
   auto now = Time::Now();
 
-  std::vector<std::string> words = base::SplitString(
-      time_limited_words, " ", base::WhitespaceHandling::TRIM_WHITESPACE,
-      base::SplitResult::SPLIT_WANT_NONEMPTY);
+  std::vector<std::string> words = SplitWords(time_limited_words);
 
   size_t num_words = words.size();
 
   if (num_words == kPureWordsCount) {
     if (now < GetWordsV1SunsetDay()) {
       std::string recombined_pure_words = base::JoinString(
-          base::span<std::string>(words.begin(), kPureWordsCount), " ");
+          UNSAFE_TODO(base::span<std::string>(words.begin(), kPureWordsCount)),
+          " ");
       if (crypto::IsPassphraseValid(recombined_pure_words)) {
         return recombined_pure_words;
       } else {
@@ -162,7 +167,8 @@ TimeLimitedWords::ParseImpl(const std::string& time_limited_words,
     }
   } else if (num_words == kWordsV2Count) {
     std::string recombined_pure_words = base::JoinString(
-        base::span<std::string>(words.begin(), kPureWordsCount), " ");
+        UNSAFE_TODO(base::span<std::string>(words.begin(), kPureWordsCount)),
+        " ");
     if (crypto::IsPassphraseValid(recombined_pure_words)) {
       int days_actual =
           GetRoundedDaysDiff(GetWordsV2Epoch(), now) % BIP39_WORDLIST_LEN;
@@ -186,7 +192,6 @@ TimeLimitedWords::ParseImpl(const std::string& time_limited_words,
   } else {
     return base::unexpected(ValidationStatus::kWrongWordsNumber);
   }
-
   NOTREACHED();
 }
 
@@ -213,9 +218,7 @@ std::string TimeLimitedWords::GenerateResultToText(
 // static
 base::Time TimeLimitedWords::GetNotAfter(
     const std::string& time_limited_words) {
-  std::vector<std::string> words = base::SplitString(
-      time_limited_words, " ", base::WhitespaceHandling::TRIM_WHITESPACE,
-      base::SplitResult::SPLIT_WANT_NONEMPTY);
+  std::vector<std::string> words = SplitWords(time_limited_words);
   size_t num_words = words.size();
   if (num_words != kWordsV2Count) {
     return base::Time();

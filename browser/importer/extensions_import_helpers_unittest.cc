@@ -74,7 +74,7 @@ TEST_F(ExtensionsImportHelperstUnitTest, ImportStorages) {
   EXPECT_FALSE(ReadStore(GetExtensionLocalSettingsPath("Brave", "id1"), "id1"));
 
   EXPECT_EQ(ReadStore(GetExtensionLocalSettingsPath("Brave", "id0"), "id0"),
-            base::JSONReader::Read(R"({
+            base::JSONReader::ReadDict(R"({
     "a": "a",
     "c": "c",
     "id": "id0"
@@ -82,7 +82,7 @@ TEST_F(ExtensionsImportHelperstUnitTest, ImportStorages) {
                                    base::JSON_PARSE_CHROMIUM_EXTENSIONS));
 
   EXPECT_EQ(ReadStore(GetExtensionLocalSettingsPath("Brave", "id2"), "id2"),
-            base::JSONReader::Read(R"({
+            base::JSONReader::ReadDict(R"({
     "a": "b",
     "c": "d",
     "id": "id2"

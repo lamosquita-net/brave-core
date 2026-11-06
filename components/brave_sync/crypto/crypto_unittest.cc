@@ -9,7 +9,6 @@
 #include <string>
 
 #include "base/strings/string_number_conversions.h"
-#include "base/strings/string_util.h"
 #include "crypto/random.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
@@ -115,10 +114,8 @@ TEST(CryptoTest, HKDFSha512) {
     std::vector<uint8_t> info;
     if (base::HexStringToBytes(c.info, &info))
       info_ptr = &info;
-    EXPECT_EQ(c.out_key,
-              base::ToLowerASCII(base::HexEncode(
-                  HKDFSha512(ikm, salt_ptr, info_ptr, c.key_size).data(),
-                  c.key_size)));
+    EXPECT_EQ(c.out_key, base::HexEncodeLower(
+                             HKDFSha512(ikm, salt_ptr, info_ptr, c.key_size)));
   }
 }
 
@@ -138,13 +135,11 @@ TEST(CryptoTest, Ed25519KeyDerivation) {
   std::vector<uint8_t> info = {0};
   DeriveSigningKeysFromSeed(seed, &HKDF_SALT, &info, &public_key, &private_key);
   EXPECT_EQ("f58ca446f0c33ee7e8e9874466da442b2e764afd77ad46034bdff9e01f9b87d4",
-            base::ToLowerASCII(
-                base::HexEncode(public_key.data(), public_key.size())));
+            base::HexEncodeLower(public_key));
   EXPECT_EQ(
       "b5abda6940984c5153a2ba3653f047f98dfb19e39c3e02f07c8bbb0bd8e8872ef58ca446"
       "f0c33ee7e8e9874466da442b2e764afd77ad46034bdff9e01f9b87d4",
-      base::ToLowerASCII(
-          base::HexEncode(private_key.data(), private_key.size())));
+      base::HexEncodeLower(private_key));
 
   std::vector<uint8_t> message(128);
   ::crypto::RandBytes(message);
@@ -166,8 +161,7 @@ TEST(CryptoTest, GetNonce) {
   EXPECT_EQ(nonce[1], 0);
   EXPECT_EQ(nonce[22], 0);
   EXPECT_EQ(nonce[23], 0);
-  previous_nonces.insert(
-      base::ToLowerASCII(base::HexEncode(nonce.data(), nonce.size())));
+  previous_nonces.insert(base::HexEncodeLower(nonce));
 
   // gets a nonce with counter 1000
   ::crypto::RandBytes(nonce_bytes);
@@ -177,8 +171,7 @@ TEST(CryptoTest, GetNonce) {
   EXPECT_EQ(nonce[1], 232);
   EXPECT_EQ(nonce[22], 0);
   EXPECT_EQ(nonce[23], 0);
-  previous_nonces.insert(
-      base::ToLowerASCII(base::HexEncode(nonce.data(), nonce.size())));
+  previous_nonces.insert(base::HexEncodeLower(nonce));
 
   // no duplicate nonces
   for (size_t i = 0; i < 100; ++i) {
@@ -189,8 +182,7 @@ TEST(CryptoTest, GetNonce) {
     EXPECT_EQ(nonce[1], 1);
     EXPECT_EQ(nonce[22], 0);
     EXPECT_EQ(nonce[23], 0);
-    const std::string nonce_hex =
-        base::ToLowerASCII(base::HexEncode(nonce.data(), nonce.size()));
+    const std::string nonce_hex = base::HexEncodeLower(nonce);
     EXPECT_EQ(previous_nonces.find(nonce_hex), previous_nonces.end());
     previous_nonces.insert(nonce_hex);
   }
@@ -217,8 +209,7 @@ TEST(CryptoTest, EncryptAndDecrypt) {
   ::crypto::RandBytes(message);
   EXPECT_TRUE(Encrypt(message, nonce, key, &ciphertext));
   EXPECT_TRUE(Decrypt(ciphertext, nonce, key, &out_message));
-  EXPECT_EQ(base::HexEncode(message.data(), message.size()),
-            base::HexEncode(out_message.data(), out_message.size()));
+  EXPECT_EQ(base::HexEncode(message), base::HexEncode(out_message));
 }
 
 TEST(CryptoTest, Passphrase) {
@@ -229,8 +220,7 @@ TEST(CryptoTest, Passphrase) {
   EXPECT_TRUE(!passphrase.empty());
   std::vector<uint8_t> to_bytes;
   EXPECT_TRUE(PassphraseToBytes32(passphrase, &to_bytes));
-  EXPECT_EQ(base::HexEncode(bytes.data(), bytes.size()),
-            base::HexEncode(to_bytes.data(), to_bytes.size()));
+  EXPECT_EQ(base::HexEncode(bytes), base::HexEncode(to_bytes));
 
   // original passphrase can be recovered
   std::vector<uint8_t> bip_bytes;

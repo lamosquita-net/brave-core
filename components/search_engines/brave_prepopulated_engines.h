@@ -6,11 +6,9 @@
 #ifndef BRAVE_COMPONENTS_SEARCH_ENGINES_BRAVE_PREPOPULATED_ENGINES_H_
 #define BRAVE_COMPONENTS_SEARCH_ENGINES_BRAVE_PREPOPULATED_ENGINES_H_
 
-#include <cstddef>
-#include <map>
-
+#include "base/containers/fixed_flat_map.h"
 #include "build/build_config.h"
-#include "components/search_engines/prepopulated_engines.h"
+#include "third_party/search_engines_data/resources/definitions/prepopulated_engines.h"
 
 namespace TemplateURLPrepopulateData {
 
@@ -104,14 +102,30 @@ extern const PrepopulatedEngine duckduckgo_lite;
 #endif
 extern const PrepopulatedEngine brave_ecosia;
 extern const PrepopulatedEngine qwant;
-extern const PrepopulatedEngine startpage;
+extern const PrepopulatedEngine brave_startpage;
 extern const PrepopulatedEngine brave_yandex;
 extern const PrepopulatedEngine brave_search;
 extern const PrepopulatedEngine brave_search_tor;
 extern const PrepopulatedEngine brave_bing;
+extern const PrepopulatedEngine brave_google;
 
-const std::map<BravePrepopulatedEngineID, const PrepopulatedEngine*>&
-GetBraveEnginesMap();
+// Maps BravePrepopulatedEngineID to Chromium's PrepopulatedEngine.
+inline constexpr auto kBraveEngines =
+    base::MakeFixedFlatMap<BravePrepopulatedEngineID,
+                           const PrepopulatedEngine*>({
+        {PREPOPULATED_ENGINE_ID_GOOGLE, &brave_google},
+        {PREPOPULATED_ENGINE_ID_YANDEX, &brave_yandex},
+        {PREPOPULATED_ENGINE_ID_BING, &brave_bing},
+        {PREPOPULATED_ENGINE_ID_NAVER, &naver},
+        {PREPOPULATED_ENGINE_ID_DAUM, &daum},
+        {PREPOPULATED_ENGINE_ID_DUCKDUCKGO, &duckduckgo},
+        {PREPOPULATED_ENGINE_ID_DUCKDUCKGO_DE, &duckduckgo_de},
+        {PREPOPULATED_ENGINE_ID_DUCKDUCKGO_AU_NZ_IE, &duckduckgo_au_nz_ie},
+        {PREPOPULATED_ENGINE_ID_QWANT, &qwant},
+        {PREPOPULATED_ENGINE_ID_STARTPAGE, &brave_startpage},
+        {PREPOPULATED_ENGINE_ID_ECOSIA, &brave_ecosia},
+        {PREPOPULATED_ENGINE_ID_BRAVE, &brave_search},
+    });
 
 }  // namespace TemplateURLPrepopulateData
 

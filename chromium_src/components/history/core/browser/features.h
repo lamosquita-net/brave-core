@@ -6,12 +6,14 @@
 #ifndef BRAVE_CHROMIUM_SRC_COMPONENTS_HISTORY_CORE_BROWSER_FEATURES_H_
 #define BRAVE_CHROMIUM_SRC_COMPONENTS_HISTORY_CORE_BROWSER_FEATURES_H_
 
-#include "base/feature_list.h"
-
 #include "src/components/history/core/browser/features.h"  // IWYU pragma: export
+
+#include "base/component_export.h"
+#include "base/feature_list.h"
 
 namespace history {
 
+COMPONENT_EXPORT(HISTORY_FEATURES)
 BASE_DECLARE_FEATURE(kHistoryMoreSearchResults);
 
 }  // namespace history

@@ -14,11 +14,7 @@
 #include "base/json/json_reader.h"
 #include "base/values.h"
 #include "brave/common/importer/importer_constants.h"
-#include "brave/common/importer/scoped_copy_file.h"
-#include "chrome/common/importer/importer_data_types.h"
-#include "components/webdata/common/webdata_constants.h"
-#include "sql/database.h"
-#include "sql/statement.h"
+#include "components/user_data_importer/common/importer_data_types.h"
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "extensions/common/extension.h"
@@ -106,25 +102,6 @@ std::optional<base::DictValue> GetChromeExtensionsList(
 }
 #endif
 
-bool HasPaymentMethods(const base::FilePath& payments_path) {
-  if (!base::PathExists(payments_path))
-    return false;
-
-  ScopedCopyFile copy_payments_file(payments_path);
-  if (!copy_payments_file.copy_success())
-    return false;
-
-  sql::Database db;
-  if (!db.Open(copy_payments_file.copied_file_path())) {
-    return false;
-  }
-
-  constexpr char query[] = "SELECT name_on_card FROM credit_cards;";
-  sql::Statement s(db.GetUniqueStatement(query));
-  // Will return false if there is no payment info.
-  return s.Step();
-}
-
 bool IsLastActiveProfile(const std::string& profile,
                          const base::ListValue& last_active_profiles) {
   for (const auto& it : last_active_profiles) {
@@ -198,31 +175,25 @@ base::ListValue GetChromeSourceProfiles(
 bool ChromeImporterCanImport(const base::FilePath& profile,
                              uint16_t* services_supported) {
   DCHECK(services_supported);
-  *services_supported = importer::NONE;
+  *services_supported = user_data_importer::NONE;
 
   base::FilePath bookmarks =
     profile.Append(base::FilePath::StringType(FILE_PATH_LITERAL("Bookmarks")));
   base::FilePath history =
     profile.Append(base::FilePath::StringType(FILE_PATH_LITERAL("History")));
-  base::FilePath passwords = profile.Append(
-      base::FilePath::StringType(FILE_PATH_LITERAL("Login Data")));
-  base::FilePath passwords_for_account = profile.Append(
-      base::FilePath::StringType(FILE_PATH_LITERAL("Login Data For Account")));
   if (base::PathExists(bookmarks))
-    *services_supported |= importer::FAVORITES;
+    *services_supported |= user_data_importer::FAVORITES;
   if (base::PathExists(history))
-    *services_supported |= importer::HISTORY;
-  if (base::PathExists(passwords) || base::PathExists(passwords_for_account)) {
-    *services_supported |= importer::PASSWORDS;
-  }
-  if (HasPaymentMethods(profile.Append(kWebDataFilename)))
-    *services_supported |= importer::PAYMENTS;
+    *services_supported |= user_data_importer::HISTORY;
+  // FlyWeb (156): passwords and payment methods are no longer imported from
+  // Chromium-based browsers. The utility-process ChromeImporter decrypted them
+  // with os_crypt/sync, which no longer exists (Brave 1.98 dropped them too).
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   if (HasImportableExtensions(profile))
-    *services_supported |= importer::EXTENSIONS;
+    *services_supported |= user_data_importer::EXTENSIONS;
 #endif
 
-  return *services_supported != importer::NONE;
+  return *services_supported != user_data_importer::NONE;
 }
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)

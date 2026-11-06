@@ -187,7 +187,6 @@ TEST(FeatureDefaultsTest, DisabledFeatures) {
       &features::kWebOTP,
       &heap_profiling::kHeapProfilerReporting,
       &history::kOrganicRepeatableQueries,
-      &history::kSyncSegmentsData,
       &history_clusters::kSidePanelJourneys,
       &history_clusters::features::kOnDeviceClustering,
       &history_clusters::features::kOnDeviceClusteringKeywordFiltering,
@@ -268,7 +267,7 @@ TEST(FeatureDefaultsTest, DisabledFeatures) {
       &shared_highlighting::kIOSSharedHighlightingV2,
       &shared_highlighting::kSharedHighlightingManager,
       &subresource_filter::kAdTagging,
-      &syncer::kSyncEnableBookmarksInTransportMode,
+      &switches::kSyncEnableBookmarksInTransportMode,
 #if !BUILDFLAG(IS_ANDROID)
       &translate::kTFLiteLanguageDetectionEnabled,
 #endif

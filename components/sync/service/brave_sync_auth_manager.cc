@@ -6,12 +6,15 @@
 #include "brave/components/sync/service/brave_sync_auth_manager.h"
 
 #include "base/base64.h"
+#include "base/check.h"
+#include "base/logging.h"
 #include "base/strings/strcat.h"
 #include "base/strings/string_number_conversions.h"
 #include "brave/components/brave_sync/crypto/crypto.h"
 #include "brave/components/brave_sync/network_time_helper.h"
 #include "brave/components/constants/brave_services_key.h"
 #include "brave/components/constants/network_constants.h"
+#include "google_apis/gaia/gaia_id.h"
 
 namespace syncer {
 
@@ -24,11 +27,11 @@ std::string AppendBraveServiceKeyHeaderString() {
 
 BraveSyncAuthManager::BraveSyncAuthManager(
     signin::IdentityManager* identity_manager,
-    const AccountStateChangedCallback& account_state_changed,
-    const CredentialsChangedCallback& credentials_changed)
+    SyncAuthManager::Delegate* delegate,
+    base::TimeDelta account_managed_status_finder_timeout)
     : SyncAuthManager(identity_manager,
-                      account_state_changed,
-                      credentials_changed) {}
+                      delegate,
+                      account_managed_status_finder_timeout) {}
 
 BraveSyncAuthManager::~BraveSyncAuthManager() = default;
 
@@ -72,13 +75,13 @@ void BraveSyncAuthManager::RequestAccessToken() {
                      weak_ptr_factory_.GetWeakPtr()));
 }
 
-SyncAccountInfo BraveSyncAuthManager::DetermineAccountToUse() const {
+SyncAccountInfo BraveSyncAuthManager::DetermineAccountToUse(
+    const signin::IdentityManager* identity_manager) const {
   if (!public_key_.empty()) {
-    const std::string client_id =
-        base::HexEncode(public_key_.data(), public_key_.size());
-    AccountInfo account_info;
+    const std::string client_id = base::HexEncode(public_key_);
+    CoreAccountInfo account_info;
     account_info.account_id = CoreAccountId::FromString(client_id);
-    account_info.gaia = client_id;
+    account_info.gaia = GaiaId(client_id);
     // about:sync-internals needs space separator in order to confine table
     // data within specific width. (ex. client_version and encrypted_types)
     account_info.email =
@@ -91,16 +94,14 @@ SyncAccountInfo BraveSyncAuthManager::DetermineAccountToUse() const {
   }
 }
 
-std::string BraveSyncAuthManager::GenerateAccessToken(
+signin::AccessTokenInfo BraveSyncAuthManager::GenerateAccessToken(
     const std::string& timestamp) {
   VLOG(1) << "timestamp=" << timestamp;
 
   DCHECK(!timestamp.empty() && !public_key_.empty() && !private_key_.empty());
-  const std::string public_key_hex =
-      base::HexEncode(public_key_.data(), public_key_.size());
+  const std::string public_key_hex = base::HexEncode(public_key_);
 
-  const std::string timestamp_hex =
-      base::HexEncode(timestamp.data(), timestamp.size());
+  const std::string timestamp_hex = base::HexEncode(timestamp);
 
   std::vector<uint8_t> timestamp_bytes;
   base::HexStringToBytes(timestamp_hex, &timestamp_bytes);
@@ -108,8 +109,7 @@ std::string BraveSyncAuthManager::GenerateAccessToken(
   brave_sync::crypto::Sign(timestamp_bytes, private_key_, &signature);
   DCHECK(brave_sync::crypto::Verify(timestamp_bytes, signature, public_key_));
 
-  const std::string signed_timestamp_hex =
-      base::HexEncode(signature.data(), signature.size());
+  const std::string signed_timestamp_hex = base::HexEncode(signature);
 
   // base64(timestamp_hex|signed_timestamp_hex|public_key_hex)
   const std::string access_token =
@@ -117,18 +117,21 @@ std::string BraveSyncAuthManager::GenerateAccessToken(
   std::string encoded_access_token = base::Base64Encode(access_token);
   DCHECK(!encoded_access_token.empty());
 
-  return encoded_access_token + AppendBraveServiceKeyHeaderString();
+  signin::AccessTokenInfo access_token_info;
+  access_token_info.token =
+      encoded_access_token + AppendBraveServiceKeyHeaderString();
+  return access_token_info;
 }
 
 void BraveSyncAuthManager::OnNetworkTimeFetched(const base::Time& time) {
   std::string timestamp =
-      std::to_string(int64_t(time.InMillisecondsFSinceUnixEpoch()));
+      base::NumberToString(int64_t(time.InMillisecondsFSinceUnixEpoch()));
   if (public_key_.empty() || private_key_.empty()) {
     return;
   }
-  access_token_ = GenerateAccessToken(timestamp);
+  access_token_info_ = GenerateAccessToken(timestamp);
   if (registered_for_auth_notifications_) {
-    credentials_changed_callback_.Run();
+    delegate_->SyncAuthCredentialsChanged();
   }
 }
 

@@ -1,8 +1,8 @@
 diff --git a/net/extras/sqlite/sqlite_persistent_cookie_store_unittest.cc b/net/extras/sqlite/sqlite_persistent_cookie_store_unittest.cc
-index c09639585b0ca4822b18e9cbff824ea4a9d3e304..b75e74c12d181e2bdec16363444dfa842e5376cd 100644
+index 9c6aa55ee76c5479bdb8b24521ac466a9dbc1ea0..a52307ba7548ffc8712b663b63002eb2aeb0ba9b 100644
 --- a/net/extras/sqlite/sqlite_persistent_cookie_store_unittest.cc
 +++ b/net/extras/sqlite/sqlite_persistent_cookie_store_unittest.cc
-@@ -1147,6 +1147,51 @@ TEST_F(SQLitePersistentCookieStoreTest, UpdateToEncryption) {
+@@ -1294,6 +1294,50 @@ TEST_F(SQLitePersistentCookieStoreTest, UpdateToEncryption) {
    EXPECT_EQ(contents.find("something456ABC"), std::string::npos);
  }
  
@@ -15,18 +15,17 @@ index c09639585b0ca4822b18e9cbff824ea4a9d3e304..b75e74c12d181e2bdec16363444dfa84
 +            base::Time::Now() + base::Microseconds(10));
 +  DestroyStore();
 +
-+  auto set_encrypted_value = [&](const char* name, const char* value) {
-+    sql::Database db;
++  auto set_encrypted_value = [&](const char* name, std::string_view value) {
++    sql::Database db(sql::test::kTestTag);
 +    ASSERT_TRUE(db.Open(temp_dir_.GetPath().Append(kCookieFilename)));
 +    sql::Statement smt(db.GetUniqueStatement(
 +        "UPDATE cookies SET encrypted_value = ? WHERE name = ?"));
-+    smt.BindBlob(0,
-+                 base::as_bytes(base::make_span(std::string_view(value))));
++    smt.BindBlob(0, base::as_byte_span(value));
 +    smt.BindString(1, name);
 +    ASSERT_TRUE(smt.Run());
 +  };
 +  auto count_rows = [&]() {
-+    sql::Database db;
++    sql::Database db(sql::test::kTestTag);
 +    EXPECT_TRUE(db.Open(temp_dir_.GetPath().Append(kCookieFilename)));
 +    sql::Statement smt(db.GetUniqueStatement("SELECT COUNT(*) FROM cookies"));
 +    EXPECT_TRUE(smt.Step());
@@ -53,4 +52,4 @@ index c09639585b0ca4822b18e9cbff824ea4a9d3e304..b75e74c12d181e2bdec16363444dfa84
 +
  bool CompareCookies(const std::unique_ptr<CanonicalCookie>& a,
                      const std::unique_ptr<CanonicalCookie>& b) {
-   return a->PartialCompare(*b);
+   CHECK(a);

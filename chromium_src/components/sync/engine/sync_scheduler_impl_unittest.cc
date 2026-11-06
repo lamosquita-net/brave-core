@@ -9,13 +9,13 @@ namespace syncer {
 
 namespace {
 
-void SimulatePollFailedRegularTransientError(ModelTypeSet requested_types,
+void SimulatePollFailedRegularTransientError(DataTypeSet requested_types,
                                              SyncCycle* cycle) {
   cycle->mutable_status_controller()->set_last_download_updates_result(
       SyncerError::ProtocolError(TRANSIENT_ERROR));
 }
 
-void SimulatePollFailedNigoryNotReady(ModelTypeSet requested_types,
+void SimulatePollFailedNigoryNotReady(DataTypeSet requested_types,
                                       SyncCycle* cycle) {
   cycle->mutable_status_controller()->set_last_download_updates_result(
       SyncerError::ProtocolError(TRANSIENT_ERROR));
@@ -33,9 +33,9 @@ TEST_F(SyncSchedulerImplTest, BraveNoBackoffOnNigoriError) {
 
   SyncShareTimes times;
   EXPECT_CALL(*syncer(), PollSyncShare)
-      .WillOnce(DoAll(Invoke(SimulatePollFailedNigoryNotReady),
+      .WillOnce(DoAll(SimulatePollFailedNigoryNotReady,
                       RecordSyncShare(&times, false)))
-      .WillOnce(DoAll(Invoke(SimulatePollFailedRegularTransientError),
+      .WillOnce(DoAll(SimulatePollFailedRegularTransientError,
                       RecordSyncShare(&times, false)));
 
   StartSyncScheduler(base::Time());

@@ -41,11 +41,11 @@ class ImportEndedObserver : public importer::ImporterProgressObserver {
   void ImportStarted() override {}
 
   // Invoked when data for the specified item is about to be collected.
-  void ImportItemStarted(importer::ImportItem item) override {}
+  void ImportItemStarted(user_data_importer::ImportItem item) override {}
 
   // Invoked when data for the specified item has been collected from the
   // source profile and is now ready for further processing.
-  void ImportItemEnded(importer::ImportItem item) override {
+  void ImportItemEnded(user_data_importer::ImportItem item) override {
     std::move(callback_).Run();
   }
 
@@ -129,10 +129,10 @@ class BraveExternalProcessImporterHostUnitTest : public testing::Test {
     expected_extensions_ = expected_extensions;
   }
 
-  void LaunchExtensionsImportAndWait(importer::SourceProfile source_profile) {
+  void LaunchExtensionsImportAndWait(user_data_importer::SourceProfile source_profile) {
     external_process_host()->DoNotLaunchImportForTesting();
     external_process_host()->StartImportSettings(source_profile, GetProfile(),
-                                                 importer::EXTENSIONS, nullptr);
+                                                 user_data_importer::EXTENSIONS, nullptr);
     base::RunLoop loop;
     ImportEndedObserver observer(base::BindLambdaForTesting([&loop, this]() {
       external_process_host_ = nullptr;
@@ -152,10 +152,10 @@ class BraveExternalProcessImporterHostUnitTest : public testing::Test {
 };
 
 TEST_F(BraveExternalProcessImporterHostUnitTest, ImportExtensionsSettings) {
-  importer::SourceProfile source_profile;
+  user_data_importer::SourceProfile source_profile;
   source_profile.source_path = GetProductProfilePath("Chrome");
-  source_profile.importer_type = importer::TYPE_CHROME;
-  source_profile.services_supported = importer::EXTENSIONS;
+  source_profile.importer_type = user_data_importer::TYPE_CHROME;
+  source_profile.services_supported = user_data_importer::EXTENSIONS;
   SetInstallationResults(
       {{"id0", false}, {"id1", true}, {"id2", true}, {"id3", true}});
   LaunchExtensionsImportAndWait(source_profile);

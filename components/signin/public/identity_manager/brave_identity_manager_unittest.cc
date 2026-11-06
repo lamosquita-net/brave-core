@@ -4,8 +4,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <utility>
-#include <vector>
 
+#include "base/check.h"
 #include "base/command_line.h"
 #include "base/files/scoped_temp_dir.h"
 #include "base/memory/raw_ptr.h"
@@ -13,13 +13,14 @@
 #include "base/test/task_environment.h"
 #include "build/build_config.h"
 #include "components/image_fetcher/core/fake_image_decoder.h"
+#include "components/metrics/profile_metrics_service.h"
 #include "components/signin/internal/identity_manager/account_fetcher_service.h"
 #include "components/signin/internal/identity_manager/account_tracker_service.h"
 #include "components/signin/internal/identity_manager/accounts_cookie_mutator_impl.h"
 #include "components/signin/internal/identity_manager/accounts_mutator_impl.h"
 #include "components/signin/internal/identity_manager/device_accounts_synchronizer_impl.h"
 #include "components/signin/internal/identity_manager/diagnostics_provider_impl.h"
-#include "components/signin/internal/identity_manager/fake_account_capabilities_fetcher_factory.h"
+#include "components/signin/internal/identity_manager/fake_account_fetcher_factory.h"
 #include "components/signin/internal/identity_manager/fake_profile_oauth2_token_service.h"
 #include "components/signin/internal/identity_manager/gaia_cookie_manager_service.h"
 #include "components/signin/internal/identity_manager/primary_account_manager.h"
@@ -34,17 +35,13 @@
 #include "components/sync_preferences/testing_pref_service_syncable.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
-#if BUILDFLAG(IS_ANDROID)
-#include "components/signin/internal/identity_manager/child_account_info_fetcher_android.h"
-#endif
-
 namespace signin {
 namespace {
 
-const char kTestGaiaId[] = "dummyId";
-const char kTestGaiaId2[] = "dummyId2";
-const char kTestEmail[] = "me@gmail.com";
-const char kTestEmail2[] = "me2@gmail.com";
+constexpr char kTestGaiaId[] = "dummyId";
+constexpr char kTestGaiaId2[] = "dummyId2";
+constexpr char kTestEmail[] = "me@gmail.com";
+constexpr char kTestEmail2[] = "me2@gmail.com";
 
 }  // namespace
 
@@ -68,8 +65,8 @@ class BraveIdentityManagerTest : public testing::Test {
   BraveIdentityManagerTest& operator=(const BraveIdentityManagerTest&) = delete;
 
   void SetUp() override {
-    primary_account_id_ =
-        identity_manager_->PickAccountIdForAccount(kTestGaiaId, kTestEmail);
+    primary_account_id_ = identity_manager_->PickAccountIdForAccount(
+        GaiaId(kTestGaiaId), kTestEmail);
   }
 
   IdentityManager* identity_manager() { return identity_manager_.get(); }
@@ -96,9 +93,8 @@ class BraveIdentityManagerTest : public testing::Test {
 
     ASSERT_TRUE(temp_profile_dir_.CreateUniqueTempDir());
 
-    auto account_tracker_service = std::make_unique<AccountTrackerService>();
-    account_tracker_service->Initialize(&pref_service_,
-                                        temp_profile_dir_.GetPath());
+    auto account_tracker_service = std::make_unique<AccountTrackerService>(
+        &pref_service_, temp_profile_dir_.GetPath());
     auto token_service =
         std::make_unique<FakeProfileOAuth2TokenService>(&pref_service_);
 
@@ -112,18 +108,21 @@ class BraveIdentityManagerTest : public testing::Test {
     account_fetcher_service->Initialize(
         &signin_client_, token_service.get(), account_tracker_service.get(),
         std::make_unique<image_fetcher::FakeImageDecoder>(),
-        std::make_unique<FakeAccountCapabilitiesFetcherFactory>());
+        std::make_unique<FakeAccountFetcherFactory>(*token_service,
+                                                    *signin_client()));
 
+    metrics::ProfileMetricsContext context = metrics::ProfileMetricsContext();
+    profile_metrics_service_ =
+        std::make_unique<metrics::ProfileMetricsService>(context);
     auto primary_account_manager = std::make_unique<PrimaryAccountManager>(
-        &signin_client_, token_service.get(), account_tracker_service.get());
+        &signin_client_, token_service.get(), account_tracker_service.get(),
+        profile_metrics_service_.get());
 
     // Passing this switch ensures that the new PrimaryAccountManager starts
     // with a clean slate. Otherwise PrimaryAccountManager::Initialize will use
     // the account id stored in prefs::kGoogleServicesAccountId.
     base::CommandLine* cmd_line = base::CommandLine::ForCurrentProcess();
     cmd_line->AppendSwitch(switches::kClearTokenService);
-
-    primary_account_manager->Initialize();
 
     IdentityManager::InitParameters init_params;
 
@@ -165,14 +164,6 @@ class BraveIdentityManagerTest : public testing::Test {
         std::make_unique<TestIdentityManagerObserver>(identity_manager_.get());
   }
 
-  void TriggerListAccounts() {
-    std::vector<gaia::ListedAccount> signed_in_accounts;
-    std::vector<gaia::ListedAccount> signed_out_accounts;
-    bool accounts_are_fresh = gaia_cookie_manager_service()->ListAccounts(
-        &signed_in_accounts, &signed_out_accounts);
-    static_cast<void>(accounts_are_fresh);
-  }
-
   const CoreAccountId& primary_account_id() const {
     return primary_account_id_;
   }
@@ -189,6 +180,7 @@ class BraveIdentityManagerTest : public testing::Test {
   sync_preferences::TestingPrefServiceSyncable pref_service_;
   network::TestURLLoaderFactory test_url_loader_factory_;
   TestSigninClient signin_client_;
+  std::unique_ptr<metrics::ProfileMetricsService> profile_metrics_service_;
   std::unique_ptr<IdentityManager> identity_manager_;
   std::unique_ptr<TestIdentityManagerObserver> identity_manager_observer_;
   CoreAccountId primary_account_id_;
@@ -202,22 +194,22 @@ TEST_F(BraveIdentityManagerTest, GetAccountsInCookieJarWithNoAccounts) {
 
   SetListAccountsResponseNoAccounts(test_url_loader_factory());
 
-  TriggerListAccounts();
+  gaia_cookie_manager_service()->TriggerListAccounts();
   const AccountsInCookieJarInfo& accounts_in_cookie_jar =
       identity_manager()->GetAccountsInCookieJar();
-  EXPECT_FALSE(accounts_in_cookie_jar.accounts_are_fresh);
-  EXPECT_TRUE(accounts_in_cookie_jar.signed_in_accounts.empty());
-  EXPECT_TRUE(accounts_in_cookie_jar.signed_out_accounts.empty());
+  EXPECT_FALSE(accounts_in_cookie_jar.AreAccountsFresh());
+  EXPECT_TRUE(accounts_in_cookie_jar.GetSignedInAccounts().empty());
+  EXPECT_TRUE(accounts_in_cookie_jar.GetSignedOutAccounts().empty());
 
   run_loop.Run();
 
-  TriggerListAccounts();
+  gaia_cookie_manager_service()->TriggerListAccounts();
   const AccountsInCookieJarInfo updated_accounts_in_cookie_jar =
       identity_manager()->GetAccountsInCookieJar();
 
-  EXPECT_FALSE(updated_accounts_in_cookie_jar.accounts_are_fresh);
-  EXPECT_TRUE(updated_accounts_in_cookie_jar.signed_in_accounts.empty());
-  EXPECT_TRUE(updated_accounts_in_cookie_jar.signed_out_accounts.empty());
+  EXPECT_FALSE(updated_accounts_in_cookie_jar.AreAccountsFresh());
+  EXPECT_TRUE(updated_accounts_in_cookie_jar.GetSignedInAccounts().empty());
+  EXPECT_TRUE(updated_accounts_in_cookie_jar.GetSignedOutAccounts().empty());
 }
 
 TEST_F(BraveIdentityManagerTest, GetAccountsInCookieJarWithOneAccount) {
@@ -225,25 +217,25 @@ TEST_F(BraveIdentityManagerTest, GetAccountsInCookieJarWithOneAccount) {
   identity_manager_observer()->SetOnAccountsInCookieUpdatedCallback(
       run_loop.QuitClosure());
 
-  SetListAccountsResponseOneAccount(kTestEmail, kTestGaiaId,
+  SetListAccountsResponseOneAccount(kTestEmail, GaiaId(kTestGaiaId),
                                     test_url_loader_factory());
 
-  TriggerListAccounts();
+  gaia_cookie_manager_service()->TriggerListAccounts();
   const AccountsInCookieJarInfo& accounts_in_cookie_jar =
       identity_manager()->GetAccountsInCookieJar();
-  EXPECT_FALSE(accounts_in_cookie_jar.accounts_are_fresh);
-  EXPECT_TRUE(accounts_in_cookie_jar.signed_in_accounts.empty());
-  EXPECT_TRUE(accounts_in_cookie_jar.signed_out_accounts.empty());
+  EXPECT_FALSE(accounts_in_cookie_jar.AreAccountsFresh());
+  EXPECT_TRUE(accounts_in_cookie_jar.GetSignedInAccounts().empty());
+  EXPECT_TRUE(accounts_in_cookie_jar.GetSignedOutAccounts().empty());
 
   run_loop.Run();
 
-  TriggerListAccounts();
+  gaia_cookie_manager_service()->TriggerListAccounts();
   const AccountsInCookieJarInfo& updated_accounts_in_cookie_jar =
       identity_manager()->GetAccountsInCookieJar();
 
-  EXPECT_FALSE(updated_accounts_in_cookie_jar.accounts_are_fresh);
-  EXPECT_TRUE(updated_accounts_in_cookie_jar.signed_in_accounts.empty());
-  EXPECT_TRUE(updated_accounts_in_cookie_jar.signed_out_accounts.empty());
+  EXPECT_FALSE(updated_accounts_in_cookie_jar.AreAccountsFresh());
+  EXPECT_TRUE(updated_accounts_in_cookie_jar.GetSignedInAccounts().empty());
+  EXPECT_TRUE(updated_accounts_in_cookie_jar.GetSignedOutAccounts().empty());
 }
 
 TEST_F(BraveIdentityManagerTest, GetAccountsInCookieJarWithTwoAccounts) {
@@ -251,25 +243,26 @@ TEST_F(BraveIdentityManagerTest, GetAccountsInCookieJarWithTwoAccounts) {
   identity_manager_observer()->SetOnAccountsInCookieUpdatedCallback(
       run_loop.QuitClosure());
 
-  SetListAccountsResponseTwoAccounts(kTestEmail, kTestGaiaId, kTestEmail2,
-                                     kTestGaiaId2, test_url_loader_factory());
+  SetListAccountsResponseTwoAccounts(kTestEmail, GaiaId(kTestGaiaId),
+                                     kTestEmail2, GaiaId(kTestGaiaId2),
+                                     test_url_loader_factory());
 
-  TriggerListAccounts();
+  gaia_cookie_manager_service()->TriggerListAccounts();
   const AccountsInCookieJarInfo& accounts_in_cookie_jar =
       identity_manager()->GetAccountsInCookieJar();
-  EXPECT_FALSE(accounts_in_cookie_jar.accounts_are_fresh);
-  EXPECT_TRUE(accounts_in_cookie_jar.signed_in_accounts.empty());
-  EXPECT_TRUE(accounts_in_cookie_jar.signed_out_accounts.empty());
+  EXPECT_FALSE(accounts_in_cookie_jar.AreAccountsFresh());
+  EXPECT_TRUE(accounts_in_cookie_jar.GetSignedInAccounts().empty());
+  EXPECT_TRUE(accounts_in_cookie_jar.GetSignedOutAccounts().empty());
 
   run_loop.Run();
 
-  TriggerListAccounts();
+  gaia_cookie_manager_service()->TriggerListAccounts();
   const AccountsInCookieJarInfo& updated_accounts_in_cookie_jar =
       identity_manager()->GetAccountsInCookieJar();
 
-  EXPECT_FALSE(updated_accounts_in_cookie_jar.accounts_are_fresh);
-  EXPECT_TRUE(updated_accounts_in_cookie_jar.signed_in_accounts.empty());
-  EXPECT_TRUE(updated_accounts_in_cookie_jar.signed_out_accounts.empty());
+  EXPECT_FALSE(updated_accounts_in_cookie_jar.AreAccountsFresh());
+  EXPECT_TRUE(updated_accounts_in_cookie_jar.GetSignedInAccounts().empty());
+  EXPECT_TRUE(updated_accounts_in_cookie_jar.GetSignedOutAccounts().empty());
 }
 
 }  // namespace signin

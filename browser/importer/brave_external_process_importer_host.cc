@@ -25,7 +25,7 @@
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "brave/browser/importer/extensions_import_helpers.h"
 #include "chrome/browser/extensions/webstore_install_with_prompt.h"
-#include "chrome/common/extensions/webstore_install_result.h"
+#include "extensions/browser/webstore_install_result.h"
 #include "extensions/browser/extension_file_task_runner.h"
 #endif
 
@@ -42,8 +42,7 @@ class WebstoreInstallerForImporting
  private:
   ~WebstoreInstallerForImporting() override = default;
 
-  std::unique_ptr<ExtensionInstallPrompt::Prompt>
-      CreateInstallPrompt() const override {
+  std::unique_ptr<InstallPromptData> CreateInstallPrompt() const override {
     return nullptr;
   }
   bool ShouldShowPostInstallUI() const override { return false; }
@@ -120,7 +119,7 @@ void BraveExternalProcessImporterHost::ImportExtensions(
   }
 
   if (!ids.empty() && observer_)
-    observer_->ImportItemEnded(importer::EXTENSIONS);
+    observer_->ImportItemEnded(user_data_importer::EXTENSIONS);
 
   ExternalProcessImporterHost::NotifyImportEnded();
 }
@@ -153,7 +152,7 @@ void BraveExternalProcessImporterHost::NotifyImportEnded() {
   // Handling extensions importing after finishing all other properties makes
   // logic simpler.
   // Don't import if cancelled.
-  if (!cancelled_ && (items_ & importer::EXTENSIONS)) {
+  if (!cancelled_ && (items_ & user_data_importer::EXTENSIONS)) {
     LaunchExtensionsImport();
     return;
   }

@@ -1,12 +1,12 @@
 diff --git a/components/os_crypt/async/common/encryptor.cc b/components/os_crypt/async/common/encryptor.cc
-index 5e558043ad231a31190de555c4b1e7d0469ce87d..304d4c19ea18a764c8942728774a66bfe3529b11 100644
+index 0bd25dd97ca9d51cb5b73d57411ace815d703e14..a442f5c6c13a41a39af0d28b52d428903828da7f 100644
 --- a/components/os_crypt/async/common/encryptor.cc
 +++ b/components/os_crypt/async/common/encryptor.cc
 @@ -251,6 +251,7 @@ std::optional<std::string> Encryptor::DecryptData(
-     }
+   if (data.empty()) {
+     return std::string();
    }
++  BRAVE_ENCRYPTOR_DECRYPT_DATA
  
-+  BRAVE_ENCRYPTOR_DECRYPT_DATA_BEFORE_OS_CRYPT_FALLBACK
-   // No keys are loaded, or no suitable provider was found, or decryption
-   // failed. Fallback to using legacy OSCrypt to attempt decryption.
-   std::string string_data(data.begin(), data.end());
+   for (const auto& [provider, key] : keys_) {
+     if (data.size() < provider.size()) {

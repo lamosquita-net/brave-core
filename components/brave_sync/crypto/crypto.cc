@@ -1,12 +1,14 @@
 /* Copyright 2019 The Brave Authors. All rights reserved.
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "brave/components/brave_sync/crypto/crypto.h"
 
 #include <cmath>
 
+#include "base/check.h"
+#include "base/check_op.h"
 #include "base/logging.h"
 #include "brave/third_party/bip39wally-core-native/include/wally_bip39.h"
 #include "brave/vendor/bat-native-tweetnacl/tweetnacl.h"
@@ -35,7 +37,7 @@ std::vector<uint8_t> HKDFSha512(const std::vector<uint8_t>& ikm,
       HKDF(derived_key.data(), derived_key.size(), EVP_sha512(), ikm.data(),
            ikm.size(), salt ? salt->data() : nullptr, salt ? salt->size() : 0,
            info ? info->data() : nullptr, info ? info->size() : 0);
-  DCHECK(result);
+  CHECK(result);
   return derived_key;
 }
 
@@ -132,11 +134,9 @@ std::string PassphraseFromBytes32(const std::vector<uint8_t>& bytes) {
   DCHECK_EQ(bytes.size(), (size_t)DEFAULT_SEED_SIZE);
   char* words = nullptr;
   std::string passphrase;
-  if (bip39_mnemonic_from_bytes(nullptr, bytes.data(), bytes.size(), &words) !=
-      WALLY_OK) {
-    CHECK(false) << "bip39_mnemonic_from_bytes failed";
-    return passphrase;
-  }
+  CHECK_EQ(
+      bip39_mnemonic_from_bytes(nullptr, bytes.data(), bytes.size(), &words),
+      WALLY_OK);
   passphrase = words;
   wally_free_string(words);
 

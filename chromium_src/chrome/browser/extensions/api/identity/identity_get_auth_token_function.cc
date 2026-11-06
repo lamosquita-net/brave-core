@@ -3,11 +3,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+#include "chrome/browser/extensions/api/identity/identity_get_auth_token_function.h"
+
 #include <optional>
 
-#include "chrome/browser/extensions/api/identity/identity_get_auth_token_function.h"
+#include "base/check.h"
+#include "base/feature_list.h"
 #include "chrome/browser/extensions/api/identity/identity_token_cache.h"
+#include "components/signin/public/base/signin_switches.h"
 #include "google_apis/google_api_keys.h"
+#include "url/origin.h"
 
 // Use the embedded Google OAuth flow only if Google Chrome API key is used.
 // Otherwise, fallback to the web OAuth flow.
@@ -38,6 +43,11 @@
           (params->details && params->details->interactive.value_or(false)) || \
           IsInteractionAllowed(interactivity_status_for_signin_);              \
       if (!google_apis::IsGoogleChromeAPIKeyUsed()) {                          \
+        std::optional<url::Origin> initiator_origin =                          \
+            base::FeatureList::IsEnabled(                                      \
+                switches::kExtensionWebAuthFlowInitiatorOrigin)                \
+                ? std::make_optional(extension()->origin())                    \
+                : std::nullopt;                                                \
         StartWebAuthFlow(                                                      \
             GetProfile(),                                                      \
             base::BindOnce(                                                    \
@@ -49,7 +59,8 @@
             base::BindOnce(                                                    \
                 &IdentityGetAuthTokenFunction::CompleteFunctionWithResult,     \
                 weak_ptr_factory_.GetWeakPtr()),                               \
-            oauth2_client_id_, token_key_, interactive, user_gesture());       \
+            oauth2_client_id_, token_key_, interactive, user_gesture(),        \
+            std::move(initiator_origin));                                      \
         return;                                                                \
       }                                                                        \
     } else {                                                                   \
@@ -64,7 +75,7 @@
     }                                                                          \
   }                                                                            \
   IdentityTokenCacheValue::CacheValueStatus
-#include "src/chrome/browser/extensions/api/identity/identity_get_auth_token_function.cc"
+#include <chrome/browser/extensions/api/identity/identity_get_auth_token_function.cc>
 #undef CacheValueStatus
 #undef BRAVE_START_MINT_TOKEN_FLOW_ELSE
 #undef BRAVE_START_MINT_TOKEN_FLOW_IF

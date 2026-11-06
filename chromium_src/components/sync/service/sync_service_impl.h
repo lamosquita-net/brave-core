@@ -8,6 +8,8 @@
 
 #include "base/gtest_prod_util.h"
 #include "components/signin/public/identity_manager/identity_manager.h"
+#include "components/sync/engine/sync_engine_host.h"
+#include "components/sync/service/sync_service.h"
 
 #define BRAVE_SYNC_SERVICE_IMPL_H_                                             \
  private:                                                                      \
@@ -20,7 +22,17 @@
                            OnAccountDeleted_FailureAndRetry);                  \
   FRIEND_TEST_ALL_PREFIXES(BraveSyncServiceImplTest, JoinDeletedChain);        \
   FRIEND_TEST_ALL_PREFIXES(BraveSyncServiceImplTest,                           \
-                           ForcedSetDecryptionPassphrase);
+                           ForcedSetDecryptionPassphrase);                     \
+  FRIEND_TEST_ALL_PREFIXES(                                                    \
+      BraveSyncServiceImplTest,                                                \
+      StopAndClearWithNotSignedInDoNotWipePrefsWhenIsInitializing);            \
+  FRIEND_TEST_ALL_PREFIXES(                                                    \
+      BraveSyncServiceImplTest,                                                \
+      StopAndClearWithoutNotSignedInDoesWipePrefsWhenIsInitializing);
+
+#define GetUserActionableError(...)                       \
+  GetUserActionableError_ChromiumImpl(__VA_ARGS__) const; \
+  UserActionableError GetUserActionableError(__VA_ARGS__)
 
 // Forcing this include before define virtual to avoid error of
 // "duplicate 'virtual' declaration specifier" at SyncEngine's
@@ -31,11 +43,14 @@
 #include "components/sync/engine/sync_engine.h"
 #define Initialize virtual Initialize
 #define ResetEngine virtual ResetEngine
+#define StopAndClear virtual StopAndClear
 
-#include "src/components/sync/service/sync_service_impl.h"  // IWYU pragma: export
+#include <components/sync/service/sync_service_impl.h>  // IWYU pragma: export
 
+#undef GetUserActionableError
 #undef ResetEngine
 #undef Initialize
+#undef StopAndClear
 
 #undef BRAVE_SYNC_SERVICE_IMPL_H_
 

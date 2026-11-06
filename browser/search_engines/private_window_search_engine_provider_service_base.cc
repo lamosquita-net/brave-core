@@ -21,6 +21,7 @@
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "extensions/browser/extension_prefs.h"
+#include "extensions/browser/install_prefs_helper.h"
 #endif
 
 PrivateWindowSearchEngineProviderServiceBase::
@@ -69,7 +70,7 @@ void PrivateWindowSearchEngineProviderServiceBase::
     auto extension_id = extension_provider_url->GetExtensionId();
     extensions::ExtensionPrefs* prefs =
         extensions::ExtensionPrefs::Get(otr_profile_->GetOriginalProfile());
-    auto time = prefs->GetLastUpdateTime(extension_id);
+    auto time = extensions::GetLastUpdateTime(prefs, extension_id);
 
     auto turl =
         std::make_unique<TemplateURL>(data, type, extension_id, time, true);
@@ -96,12 +97,12 @@ void PrivateWindowSearchEngineProviderServiceBase::
   // search provider.
   // Howeveer, we manually set |kDefaultSearchProviderDataPrefName|. So,
   // It's replaced with qwant provider. It was extension search provider.
-  // This only happens when |kSyncedDefaultSearchProviderGUID| and favicon
+  // This only happens when |kDefaultSearchProviderGUID| and favicon
   // udpated search provider is same. (See the condition in
   // TemplateURLService::MaybeUpdateDSEViaPrefs())
   // And there is no side-effect when this prefs update is skipped because
   // it can be updated again when qwant is default search provider.
-  otr_profile_->GetPrefs()->SetString(prefs::kSyncedDefaultSearchProviderGUID,
+  otr_profile_->GetPrefs()->SetString(prefs::kDefaultSearchProviderGUID,
                                       data.sync_guid);
 
   otr_profile_->GetPrefs()->SetDict(

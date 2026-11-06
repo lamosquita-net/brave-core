@@ -8,14 +8,20 @@
 
 #include <memory>
 #include <string>
-#include <vector>
 
 #include "base/gtest_prod_util.h"
+#include "base/memory/scoped_refptr.h"
 #include "base/memory/weak_ptr.h"
+#include "base/types/expected.h"
 #include "brave/components/brave_sync/brave_sync_prefs.h"
 #include "components/prefs/pref_change_registrar.h"
 #include "components/sync/engine/sync_protocol_error.h"
 #include "components/sync/service/sync_service_impl.h"
+
+namespace os_crypt_async {
+class Encryptor;
+class OSCryptAsync;
+}  // namespace os_crypt_async
 
 namespace syncer {
 
@@ -29,12 +35,14 @@ class BraveSyncServiceImpl : public SyncServiceImpl {
  public:
   explicit BraveSyncServiceImpl(
       InitParams init_params,
-      std::unique_ptr<SyncServiceImplDelegate> sync_service_impl_delegate);
+      std::unique_ptr<SyncServiceImplDelegate> sync_service_impl_delegate,
+      os_crypt_async::OSCryptAsync* os_crypt_async);
   ~BraveSyncServiceImpl() override;
 
   // SyncServiceImpl implementation
   bool IsSetupInProgress() const override;
-  void StopAndClear() override;
+  void StopAndClear(ResetEngineReason reset_engine_reason) override;
+  DataTypeSet GetPreferredDataTypes() const override;
 
   // SyncEngineHost override.
   void OnEngineInitialized(bool success,
@@ -42,7 +50,7 @@ class BraveSyncServiceImpl : public SyncServiceImpl {
   void OnSyncCycleCompleted(const SyncCycleSnapshot& snapshot) override;
 
   // SyncPrefObserver implementation.
-  void OnSelectedTypesPrefChange() override;
+  void OnSelectedTypesChanged() override;
 
   std::string GetOrCreateSyncCode();
   bool SetSyncCode(const std::string& sync_code);
@@ -57,7 +65,15 @@ class BraveSyncServiceImpl : public SyncServiceImpl {
   void SuspendDeviceObserverForOwnReset();
   void ResumeDeviceObserver();
 
-  void Initialize() override;
+  void Initialize(DataTypeController::TypeVector controllers) override;
+  bool has_encryptor() const;
+  bool IsEncryptionAvailable() const;
+
+  enum class GetSeedStatusEnum {
+    kEncryptorIsNotSet = 1,
+    kDecryptFailed = 2,
+  };
+  base::expected<std::string, GetSeedStatusEnum> GetSeed() const;
 
   const brave_sync::Prefs& prefs() const { return brave_sync_prefs_; }
   brave_sync::Prefs& prefs() { return brave_sync_prefs_; }
@@ -67,10 +83,24 @@ class BraveSyncServiceImpl : public SyncServiceImpl {
 
   void SetJoinChainResultCallback(base::OnceCallback<void(bool)> callback);
 
+  // Calls `StopAndClear` with a specific listed reason, as the overriden
+  // function cannot be called from outside this class' scope.
+  void StopAndClearWithShutdownReason();
+  void StopAndClearWithResetLocalDataReason();
+
+  // Returns the original encryptor
+  scoped_refptr<os_crypt_async::Encryptor> SetEncryptorForTesting(
+      scoped_refptr<os_crypt_async::Encryptor> encryptor_for_tests);
+  void ResetEncryptorForTesting();
+  void RemoveAllPrefsChangeRegistrarForTesting();
+  SyncServiceCrypto* GetCryptoForTesting();
+  bool SetSeedForTesting(const std::string& seed);
+  DataTypeManager* GetDataTypeManagerForTesting();
+  void SetInitializingForTesting();
+
  private:
+  friend class BraveSyncServiceImplGACookiesTest;
   friend class BraveSyncServiceImplTest;
-  FRIEND_TEST_ALL_PREFIXES(BraveSyncServiceImplTest,
-                           ForcedSetDecryptionPassphrase);
   FRIEND_TEST_ALL_PREFIXES(BraveSyncServiceImplTest, OnAccountDeleted_Success);
   FRIEND_TEST_ALL_PREFIXES(BraveSyncServiceImplTest,
                            OnAccountDeleted_FailureAndRetry);
@@ -81,9 +111,11 @@ class BraveSyncServiceImpl : public SyncServiceImpl {
                            P3aForHistoryThroughDelegate);
 
   BraveSyncAuthManager* GetBraveSyncAuthManager();
-  SyncServiceCrypto* GetCryptoForTests();
 
   void OnBraveSyncPrefsChanged(const std::string& path);
+
+  void OnOsCryptAsyncReady(scoped_refptr<os_crypt_async::Encryptor> encryptor);
+  void OnEncryptorReady();
 
   void PermanentlyDeleteAccountImpl(
       const int current_attempt,
@@ -110,6 +142,19 @@ class BraveSyncServiceImpl : public SyncServiceImpl {
   void UpdateP3AObjectsNumber();
   void OnGetTypeEntitiesCount(const TypeEntitiesCount& count);
 
+  // IdentityManager::Observer implementation.
+  // Override with an empty implementation.
+  // We need this to avoid device cache guid regeneration once any Google
+  // Account cookie gets deleted, for example when user signs out from GMail
+  void OnAccountsCookieDeletedByUserAction() override;
+  void OnAccountsInCookieUpdated(
+      const signin::AccountsInCookieJarInfo& accounts_in_cookie_jar_info,
+      const GoogleServiceAuthError& error) override;
+  void OnPrimaryAccountChanged(
+      const signin::PrimaryAccountChangeEvent& event_details) override;
+
+  bool SetSeed(const std::string& seed);
+
   brave_sync::Prefs brave_sync_prefs_;
 
   PrefChangeRegistrar brave_sync_prefs_change_registrar_;
@@ -134,6 +179,8 @@ class BraveSyncServiceImpl : public SyncServiceImpl {
   // reason is that upstream SyncServiceImpl::Initialize() can invoke
   // StopAndClear, but we don't want to invoke AddLeaveChainDetail in that case
   bool is_initializing_ = false;
+
+  scoped_refptr<os_crypt_async::Encryptor> encryptor_;
 
   std::unique_ptr<SyncServiceImplDelegate> sync_service_impl_delegate_;
   base::OnceCallback<void(bool)> join_chain_result_callback_;

@@ -6,6 +6,8 @@
 #define BRAVE_SYNC_SCHEDULER_IMPL_HANDLE_FAILURE \
   HandleBraveConfigurationFailure(model_neutral_state);
 
+#include "base/logging.h"
+
 #include "src/components/sync/engine/sync_scheduler_impl.cc"
 #include "base/functional/callback_forward.h"
 
@@ -24,8 +26,8 @@ void SyncSchedulerImpl::HandleBraveConfigurationFailure(
       kNigoriFolderNotReadyError) {
     VLOG(1) << "Got nigori root folder error from sync server. Override wait "
                "interval to 3 sec";
-    wait_interval_ = std::make_unique<WaitInterval>(
-        WaitInterval::BlockingMode::kThrottled, base::Seconds(3));
+    wait_interval_.emplace(WaitInterval::BlockingMode::kThrottled,
+                           base::Seconds(3));
   }
 }
 
@@ -43,7 +45,7 @@ void SyncSchedulerImpl::PermanentlyDeleteAccountImpl(
     base::OnceCallback<void(const SyncProtocolError&)> callback) {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
-  SyncCycle cycle(cycle_context_, this);
+  SyncCycle cycle(cycle_context_, this, signin::AccessTokenInfo());
   BraveSyncServerCommands::PermanentlyDeleteAccount(&cycle,
                                                     std::move(callback));
 }

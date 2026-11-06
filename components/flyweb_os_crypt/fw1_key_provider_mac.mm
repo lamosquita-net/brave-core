@@ -7,6 +7,7 @@
 
 #include <Security/Security.h>
 
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -14,13 +15,14 @@
 #include "base/apple/osstatus_logging.h"
 #include "base/base64.h"
 #include "base/command_line.h"
+#include "base/containers/span.h"
 #include "base/functional/bind.h"
 #include "base/logging.h"
 #include "base/metrics/histogram_functions.h"
 #include "base/task/thread_pool.h"
 #include "components/os_crypt/async/common/algorithm.mojom.h"
-#include "components/os_crypt/sync/os_crypt_switches.h"
-#include "crypto/apple_keychain.h"
+#include "components/os_crypt/common/os_crypt_switches.h"
+#include "crypto/apple/keychain_v2.h"
 #include "crypto/random.h"
 #include "third_party/boringssl/src/include/openssl/mem.h"
 
@@ -34,6 +36,7 @@ constexpr char kServiceName[] = "FlyWeb Safe Storage";
 constexpr char kAccountName[] = "FlyWeb fw1";
 
 // Recorded once per startup, to see how often `fw1` falls back to `v10`.
+// Same values as in 2.x.
 enum class Fw1KeyResult {
   kFound = 0,
   kCreated = 1,
@@ -56,65 +59,67 @@ void Cleanse(std::vector<uint8_t>& v) {
   OPENSSL_cleanse(v.data(), v.size());
 }
 
-std::optional<Encryptor::Key> GetKeyOnThreadPool(
-    std::unique_ptr<crypto::AppleKeychain> keychain) {
-  if (!keychain) {
-    // Same switch OSCrypt sync honours; tests must not touch the real
-    // keychain. No `fw1` key then: the Encryptor keeps writing `v10`.
-    if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-            os_crypt::switches::kUseMockKeychain)) {
-      RecordResult(Fw1KeyResult::kMockKeychain);
-      return std::nullopt;
-    }
-    keychain = std::make_unique<crypto::AppleKeychain>();
+base::unexpected<KeyProvider::KeyError> Unavailable(Fw1KeyResult result) {
+  RecordResult(result);
+  // Never kPermanentlyUnavailable: the key may load on the next start (the
+  // user unlocks the keychain or allows access) and callers may delete data
+  // they think is lost for good. `v10` encrypts meanwhile.
+  return base::unexpected(KeyProvider::KeyError::kTemporarilyUnavailable);
+}
+
+base::expected<Encryptor::Key, KeyProvider::KeyError> GetKeyOnThreadPool(
+    crypto::apple::KeychainV2* keychain_for_testing) {
+  if (keychain_for_testing) {
+    return Fw1KeyProvider::GetOrCreateKey(*keychain_for_testing);
   }
-  return Fw1KeyProvider::GetOrCreateKey(*keychain);
+  // Same switch upstream's KeychainKeyProvider honours; tests must not touch
+  // the real keychain. No `fw1` key then: the Encryptor writes `v10`.
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          os_crypt::switches::kUseMockKeychain)) {
+    return Unavailable(Fw1KeyResult::kMockKeychain);
+  }
+  return Fw1KeyProvider::GetOrCreateKey(
+      crypto::apple::KeychainV2::GetInstance());
 }
 
 }  // namespace
 
 Fw1KeyProvider::Fw1KeyProvider() = default;
 
-Fw1KeyProvider::Fw1KeyProvider(std::unique_ptr<crypto::AppleKeychain> keychain)
-    : keychain_for_testing_(std::move(keychain)) {}
+Fw1KeyProvider::Fw1KeyProvider(crypto::apple::KeychainV2* keychain)
+    : keychain_for_testing_(keychain) {}
 
 Fw1KeyProvider::~Fw1KeyProvider() = default;
 
 // static
-std::optional<Encryptor::Key> Fw1KeyProvider::GetOrCreateKey(
-    const crypto::AppleKeychain& keychain) {
-  UInt32 length = 0;
-  void* data = nullptr;
-  OSStatus status = keychain.FindGenericPassword(
-      strlen(kServiceName), kServiceName, strlen(kAccountName), kAccountName,
-      &length, &data, nullptr);
-
+base::expected<Encryptor::Key, KeyProvider::KeyError>
+Fw1KeyProvider::GetOrCreateKey(crypto::apple::KeychainV2& keychain) {
   std::string encoded;
   bool created = false;
-  if (status == noErr) {
-    encoded.assign(static_cast<const char*>(data), length);
-    OPENSSL_cleanse(data, length);
-    keychain.ItemFreeContent(data);
-  } else if (status == errSecItemNotFound) {
+  auto found = keychain.FindGenericPassword(kServiceName, kAccountName);
+  if (found.has_value()) {
+    encoded.assign(found->begin(), found->end());
+    Cleanse(*found);
+  } else if (found.error() == errSecItemNotFound) {
     std::vector<uint8_t> raw =
         crypto::RandBytesAsVector(Encryptor::Key::kAES256GCMKeySize);
     encoded = base::Base64Encode(raw);
     Cleanse(raw);
-    status = keychain.AddGenericPassword(
-        strlen(kServiceName), kServiceName, strlen(kAccountName), kAccountName,
-        encoded.size(), encoded.data(), nullptr);
+    // KeychainV2 updates an existing item instead of adding one; it is only
+    // reached here when the item was not found.
+    OSStatus status = keychain.AddGenericPassword(
+        kServiceName, kAccountName, base::as_byte_span(encoded));
     if (status != noErr) {
       OSSTATUS_LOG(ERROR, status) << "fw1: could not add the keychain item";
       Cleanse(encoded);
-      RecordResult(Fw1KeyResult::kAddFailed);
-      return std::nullopt;
+      return Unavailable(Fw1KeyResult::kAddFailed);
     }
     created = true;
   } else {
     // Denied by the user, locked keychain, etc. Not fatal: `v10` is used.
-    OSSTATUS_LOG(WARNING, status) << "fw1: could not read the keychain item";
-    RecordResult(Fw1KeyResult::kFindFailed);
-    return std::nullopt;
+    OSSTATUS_LOG(WARNING, found.error())
+        << "fw1: could not read the keychain item";
+    return Unavailable(Fw1KeyResult::kFindFailed);
   }
 
   std::optional<std::vector<uint8_t>> raw = base::Base64Decode(encoded);
@@ -126,13 +131,11 @@ std::optional<Encryptor::Key> Fw1KeyProvider::GetOrCreateKey(
     if (raw) {
       Cleanse(*raw);
     }
-    RecordResult(Fw1KeyResult::kBadItem);
-    return std::nullopt;
+    return Unavailable(Fw1KeyResult::kBadItem);
   }
 
   RecordResult(created ? Fw1KeyResult::kCreated : Fw1KeyResult::kFound);
-  std::optional<Encryptor::Key> key(
-      std::in_place, *raw, mojom::Algorithm::kAES256GCM);
+  Encryptor::Key key(*raw, mojom::Algorithm::kAES256GCM);
   Cleanse(*raw);
   return key;
 }
@@ -141,20 +144,12 @@ void Fw1KeyProvider::GetKey(KeyCallback callback) {
   // The keychain may block (and show a dialog): keep it off the UI thread.
   base::ThreadPool::PostTaskAndReplyWithResult(
       FROM_HERE, {base::MayBlock(), base::TaskPriority::USER_BLOCKING},
-      base::BindOnce(&GetKeyOnThreadPool, std::move(keychain_for_testing_)),
-      base::BindOnce(
-          [](KeyCallback callback, std::optional<Encryptor::Key> key) {
-            std::move(callback).Run(kKeyTag, std::move(key));
-          },
-          std::move(callback)));
+      base::BindOnce(&GetKeyOnThreadPool, keychain_for_testing_.get()),
+      base::BindOnce(std::move(callback), std::string(kKeyTag)));
 }
 
 bool Fw1KeyProvider::UseForEncryption() {
   return true;
-}
-
-bool Fw1KeyProvider::IsCompatibleWithOsCryptSync() {
-  return false;
 }
 
 }  // namespace os_crypt_async
