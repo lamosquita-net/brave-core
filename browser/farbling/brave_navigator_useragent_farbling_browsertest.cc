@@ -351,12 +351,11 @@ IN_PROC_BROWSER_TEST_F(BraveNavigatorUserAgentFarblingBrowserTest,
   ASSERT_TRUE(ui_test_utils::NavigateToURL(browser(), url));
   const content::EvalJsResult result =
       EvalJs(contents(), kGetHighEntropyValuesScript);
-  EXPECT_TRUE(result.error.empty());
-  const base::DictValue* values = result.value.GetIfDict();
-  ASSERT_NE(nullptr, values);
+  ASSERT_TRUE(result.is_dict()) << result;
+  const base::DictValue& values = result.ExtractDict();
 
   // Check brands versions
-  const base::ListValue* brands_list = values->FindList("brands");
+  const base::ListValue* brands_list = values.FindList("brands");
   ASSERT_NE(nullptr, brands_list);
 
   // Expected major version for Brave and Chromium.
@@ -369,7 +368,7 @@ IN_PROC_BROWSER_TEST_F(BraveNavigatorUserAgentFarblingBrowserTest,
 
   // Check full versions
   const base::ListValue* full_version_list =
-      values->FindList("fullVersionList");
+      values.FindList("fullVersionList");
   ASSERT_NE(nullptr, full_version_list);
 
   // Expected version string for Brave and Chromium.
@@ -388,7 +387,7 @@ IN_PROC_BROWSER_TEST_F(BraveNavigatorUserAgentFarblingBrowserTest,
       });
 
   // Check auFullVersion
-  const std::string* ua_full_version = values->FindString("uaFullVersion");
+  const std::string* ua_full_version = values.FindString("uaFullVersion");
   ASSERT_NE(nullptr, ua_full_version);
   EXPECT_EQ(expected_full_version, *ua_full_version);
 }
