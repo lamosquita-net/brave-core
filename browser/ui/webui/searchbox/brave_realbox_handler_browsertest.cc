@@ -82,7 +82,7 @@ IN_PROC_BROWSER_TEST_F(BraveRealboxHandlerTest,
   EXPECT_TRUE(VerifyTemplateURLServiceLoad());
 
   GURL match_url(
-      "https://search.brave.com/search?q=hello+world&source=desktop");
+      "https://search.brave.com/search?q=hello+world");
   OnAutocompleteAccept(match_url, u":br");
   EXPECT_EQ(match_url, contents()->GetLastCommittedURL());
   EXPECT_EQ(std::string::npos,
@@ -95,7 +95,7 @@ IN_PROC_BROWSER_TEST_F(BraveRealboxHandlerTest,
   EXPECT_TRUE(VerifyTemplateURLServiceLoad());
 
   GURL match_url(
-      "https://search.brave.com/search?q=hello+world&source=desktop");
+      "https://search.brave.com/search?q=hello+world");
   OnAutocompleteAccept(match_url, u"");
   EXPECT_EQ(match_url, contents()->GetLastCommittedURL());
 }
@@ -105,7 +105,7 @@ IN_PROC_BROWSER_TEST_F(BraveRealboxHandlerTest, NonBraveSearchIsUnaffected) {
   EXPECT_TRUE(VerifyTemplateURLServiceLoad());
 
   GURL match_url(
-      "https://search.brave.com/search?q=hello+world&source=desktop");
+      "https://search.brave.com/search?q=hello+world");
   OnAutocompleteAccept(match_url, u":d");
   EXPECT_EQ(match_url, contents()->GetLastCommittedURL());
 }

@@ -16,9 +16,10 @@ namespace TemplateURLPrepopulateData {
 
 // IMPORTANT! Make sure to bump this value if you make changes to the
 // engines below or add/remove engines.
-// FlyWeb: 29 drops DuckDuckGo's t= (it identified the browser as Brave), so
-// stored profiles pick up the new search URLs.
-const int kBraveCurrentDataVersion = 29;
+// FlyWeb: 29 drops DuckDuckGo's t= (it identified the browser as Brave), and
+// 30 drops Brave Search's source=, so stored profiles pick up the new search
+// URLs.
+const int kBraveCurrentDataVersion = 30;
 // DO NOT CHANGE THIS ONE. Used for backfilling kBraveDefaultSearchVersion.
 const int kBraveFirstTrackedDataVersion = 6;
 
@@ -206,15 +207,11 @@ const PrepopulatedEngine brave_search = MakeBravePrepopulatedEngine(
     u":br",
     "https://cdn.search.brave.com/serp/favicon.ico",
     "IDR_SEARCH_ENGINE_BRAVE",
-    "https://search.brave.com/search?q={searchTerms}&source="
-#if BUILDFLAG(IS_ANDROID)
-    "android",
-#else
-    "desktop",
-#endif
+    // FlyWeb: no source= (the engine does not need to know where a search
+    // comes from).
+    "https://search.brave.com/search?q={searchTerms}",
     "UTF-8",
-    "https://search.brave.com/api/"
-    "suggest?q={searchTerms}&rich=true&source=browser",
+    "https://search.brave.com/api/suggest?q={searchTerms}&rich=true",
     SEARCH_ENGINE_OTHER,
     PREPOPULATED_ENGINE_ID_BRAVE);
 
