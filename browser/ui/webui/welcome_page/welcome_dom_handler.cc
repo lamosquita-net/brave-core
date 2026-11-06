@@ -8,13 +8,13 @@
 #include <algorithm>
 
 #include "base/metrics/histogram_macros.h"
+#include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
 #include "brave/common/importer/importer_constants.h"
 #include "brave/components/constants/pref_names.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/metrics/metrics_reporting_state.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/browser_window/public/global_browser_collection.h"
 #include "chrome/browser/ui/browser_window/public/profile_browser_collection.h"
@@ -22,6 +22,9 @@
 #include "chrome/common/webui_url_constants.h"
 #include "chrome/grit/branded_strings.h"
 #include "components/prefs/pref_service.h"
+#include "content/public/browser/page_navigator.h"
+#include "content/public/browser/web_contents.h"
+#include "content/public/browser/web_ui.h"
 #include "ui/base/l10n/l10n_util.h"
 
 namespace {
@@ -163,7 +166,7 @@ void WelcomeDOMHandler::HandleSetMetricsReportingEnabled(
   }
   bool enabled = args[0].GetBool();
   ChangeMetricsReportingState(
-      enabled, ChangeMetricsReportingStateCalledFrom::kUiSettings);
+      enabled, metrics::ChangeMetricsReportingStateCalledFrom::kUiSettings);
 }
 
 void WelcomeDOMHandler::HandleEnableWebDiscovery(const base::ListValue& args) {
