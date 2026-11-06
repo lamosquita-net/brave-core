@@ -5,38 +5,50 @@
 
 #include "third_party/blink/public/common/origin_trials/origin_trials.h"
 
-#include <algorithm>
 #include <string_view>
 
-namespace blink {
-namespace origin_trials {
+#include "base/check.h"
+#include "base/containers/fixed_flat_set.h"
+
+namespace blink::origin_trials {
 bool IsTrialValid_ChromiumImpl(std::string_view trial_name);
-}  // namespace origin_trials
-}  // namespace blink
+}  // namespace blink::origin_trials
 
 #define IsTrialValid IsTrialValid_ChromiumImpl
 #include "../gen/third_party/blink/common/origin_trials/origin_trials.cc"
 #undef IsTrialValid
 
-namespace blink {
-namespace origin_trials {
+namespace blink::origin_trials {
+
+namespace {
+
+// When updating also update the array in the overload below.
+constexpr auto kBraveDisabledTrialNames =
+    base::MakeFixedFlatSet<std::string_view>({
+        "AdInterestGroupAPI",
+        "DeviceAttributes",
+        "DigitalGoodsV2",
+        "InterestCohortAPI",
+        "FencedFrames",
+        "Fledge",
+        "Parakeet",
+        "Prerender2CrossOriginIframes",
+        "SignedExchangeSubresourcePrefetch",
+        "SubresourceWebBundles",
+    });
+
+constexpr auto kBraveDisabledTrialFeatures =
+    base::MakeFixedFlatSet<blink::mojom::OriginTrialFeature>({
+        blink::mojom::OriginTrialFeature::kAdInterestGroupAPI,
+        blink::mojom::OriginTrialFeature::kDigitalGoods,
+        blink::mojom::OriginTrialFeature::kParakeet,
+        blink::mojom::OriginTrialFeature::kPrerender2CrossOriginIframes,
+    });
+
+}  // namespace
 
 bool IsTrialDisabledInBrave(std::string_view trial_name) {
-  // When updating also update the array in the overload below.
-  static const char* const kBraveDisabledTrialNames[] = {
-      "AdInterestGroupAPI",
-      "DeviceAttributes",
-      "DigitalGoodsV2",
-      "InterestCohortAPI",
-      "FencedFrames",
-      "Fledge",
-      "Parakeet",
-      "SignedExchangeSubresourcePrefetch",
-      "SubresourceWebBundles",
-      "TrustTokens",
-  };
-
-  if (std::ranges::contains(kBraveDisabledTrialNames, trial_name)) {
+  if (kBraveDisabledTrialNames.contains(trial_name)) {
     // Check if this is still a valid trial name in Chromium. If not, it needs
     // to be changed as in Chromium or removed.
     DCHECK(IsTrialValid_ChromiumImpl(trial_name));
@@ -48,15 +60,7 @@ bool IsTrialDisabledInBrave(std::string_view trial_name) {
 
 bool IsTrialDisabledInBrave(blink::mojom::OriginTrialFeature feature) {
   // When updating also update the array in the overload above.
-  static const blink::mojom::OriginTrialFeature kBraveDisabledTrialFeatures[] =
-      {
-          blink::mojom::OriginTrialFeature::kAdInterestGroupAPI,
-          blink::mojom::OriginTrialFeature::kDigitalGoods,
-          blink::mojom::OriginTrialFeature::kParakeet,
-          blink::mojom::OriginTrialFeature::kPrivateStateTokens,
-      };
-
-  return std::ranges::contains(kBraveDisabledTrialFeatures, feature);
+  return kBraveDisabledTrialFeatures.contains(feature);
 }
 
 bool IsTrialValid(std::string_view trial_name) {
@@ -66,5 +70,4 @@ bool IsTrialValid(std::string_view trial_name) {
   return IsTrialValid_ChromiumImpl(trial_name);
 }
 
-}  // namespace origin_trials
-}  // namespace blink
+}  // namespace blink::origin_trials
