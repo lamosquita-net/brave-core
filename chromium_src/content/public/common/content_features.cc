@@ -18,17 +18,10 @@ BASE_FEATURE(kIdleDetection,
              base::FEATURE_DISABLED_BY_DEFAULT);
 
 OVERRIDE_FEATURE_DEFAULT_STATES({{
-    {kCookieDeprecationFacilitatedTesting, base::FEATURE_DISABLED_BY_DEFAULT},
     {kDigitalGoodsApi, base::FEATURE_DISABLED_BY_DEFAULT},
-    {kDIPS, base::FEATURE_DISABLED_BY_DEFAULT},
     {kFedCm, base::FEATURE_DISABLED_BY_DEFAULT},
-    {kNotificationTriggers, base::FEATURE_DISABLED_BY_DEFAULT},
     {kPrivacySandboxAdsAPIsOverride, base::FEATURE_DISABLED_BY_DEFAULT},
-    {kSignedHTTPExchange, base::FEATURE_DISABLED_BY_DEFAULT},
     {kWebIdentityDigitalCredentials, base::FEATURE_DISABLED_BY_DEFAULT},
-#if BUILDFLAG(IS_ANDROID)
-    {kWebNfc, base::FEATURE_DISABLED_BY_DEFAULT},
-#endif
     {kWebOTP, base::FEATURE_DISABLED_BY_DEFAULT},
 }});
 
