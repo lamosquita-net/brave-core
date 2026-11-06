@@ -10,22 +10,21 @@
 #include <string>
 #include <utility>
 
+#include "base/check.h"
 #include "base/strings/string_number_conversions.h"
 #include "brave/app/vector_icons/vector_icons.h"
 #include "brave/browser/ui/color/color_palette.h"
-#include "brave/browser/ui/views/profiles/brave_avatar_toolbar_button_delegate.h"
-#include "brave/components/l10n/common/localization_util.h"
 #include "brave/components/vector_icons/vector_icons.h"
-#include "brave/grit/brave_generated_resources.h"
 #include "build/build_config.h"
 #include "chrome/app/vector_icons/vector_icons.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/themes/theme_properties.h"
-#include "chrome/browser/ui/browser.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+#include "chrome/browser/ui/browser_window/public/global_browser_collection.h"
 #include "chrome/browser/ui/layout_constants.h"
 #include "chrome/browser/ui/views/chrome_layout_provider.h"
-#include "chrome/browser/ui/views/frame/browser_view.h"
 #include "chrome/browser/ui/views/profiles/avatar_toolbar_button.h"
+#include "chrome/browser/ui/views/profiles/avatar_toolbar_button_state_manager.h"
 #include "chrome/browser/ui/views/toolbar/toolbar_ink_drop_util.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/metadata/metadata_impl_macros.h"
@@ -70,18 +69,19 @@ class BraveAvatarButtonHighlightPathGenerator
 
 }  // namespace
 
-BraveAvatarToolbarButton::BraveAvatarToolbarButton(BrowserView* browser_view)
-    : AvatarToolbarButton(browser_view) {
+BraveAvatarToolbarButton::BraveAvatarToolbarButton(
+    BrowserWindowInterface* browser)
+    : AvatarToolbarButton(browser) {
   // Our toolbar button height is 28.
-  // Icon image size 18 + vertical insets 10(5x2).
+  // Icon image size 20 + vertical insets 8(4x2).
   // However, avatar button's icon image size is 16.
   // So, set delta insets to make its height to 28.
 #if BUILDFLAG(IS_LINUX)
-  // On linux, only add horizontal delta as its size is 26x28.
+  // Linux requires only 1px vertical padding and 2px horizontal padding.
   // TODO(simonhong): check why it's different from other platforms.
-  SetLayoutInsetDelta(gfx::Insets::VH(0, 1));
+  SetLayoutInsetDelta(gfx::Insets::VH(1, 2));
 #else
-  SetLayoutInsetDelta(gfx::Insets(1));
+  SetLayoutInsetDelta(gfx::Insets(2));
 #endif
 }
 
@@ -91,14 +91,29 @@ void BraveAvatarToolbarButton::SetHighlight(
     const std::u16string& highlight_text,
     std::optional<SkColor> highlight_color) {
   std::u16string revised_highlight_text;
-  if (browser_->profile()->IsIncognitoProfile()) {
+
+  // We put window count to otr window's profile icon.
+  int window_count = 0;
+  Profile* const profile = state_manager_.browser()->GetProfile();
+  if (profile->IsOffTheRecord()) {
+    GlobalBrowserCollection::GetInstance()->ForEach(
+        [profile, &window_count](BrowserWindowInterface* browser) {
+          if (browser->GetProfile()->IsSameOrParent(profile) &&
+              browser->GetProfile()->IsOffTheRecord() &&
+              browser->GetType() !=
+                  BrowserWindowInterface::Type::TYPE_DEVTOOLS) {
+            ++window_count;
+          }
+          return true;
+        });
+  }
+  if (profile->IsIncognitoProfile()) {
     // We only want the icon and count for Incognito profiles.
     revised_highlight_text = std::u16string();
-    if (delegate_->GetWindowCount() > 1) {
-      revised_highlight_text =
-          base::NumberToString16(delegate_->GetWindowCount());
+    if (window_count > 1) {
+      revised_highlight_text = base::NumberToString16(window_count);
     }
-  } else if (browser_->profile()->IsGuestSession()) {
+  } else if (profile->IsGuestSession()) {
     // We only want the icon for Guest profiles.
     revised_highlight_text = std::u16string();
   } else {
@@ -113,8 +128,8 @@ void BraveAvatarToolbarButton::OnThemeChanged() {
 
   constexpr int kNormalProfileHighlightRadius = 36;
   int radius = kNormalProfileHighlightRadius;
-  bool is_private = browser_->profile()->IsOffTheRecord() ||
-                    browser_->profile()->IsGuestSession();
+  bool is_private = state_manager_.browser()->GetProfile()->IsOffTheRecord() ||
+                    state_manager_.browser()->GetProfile()->IsGuestSession();
   if (is_private) {
     radius = ChromeLayoutProvider::Get()->GetCornerRadiusMetric(
         views::Emphasis::kMaximum, {});
@@ -126,9 +141,13 @@ void BraveAvatarToolbarButton::OnThemeChanged() {
                 weak_ptr_factory_.GetWeakPtr(), radius));
 }
 
+int BraveAvatarToolbarButton::GetIconSize() const {
+  return GetLayoutConstant(LayoutConstant::kLocationBarIconSize);
+}
+
 void BraveAvatarToolbarButton::UpdateColorsAndInsets() {
   // Use custom bg/border for private window.
-  if (browser_->profile()->IsOffTheRecord()) {
+  if (state_manager_.browser()->GetProfile()->IsOffTheRecord()) {
     const auto text_color = SkColorSetRGB(0xcc, 0xBE, 0xFE);
     SetEnabledTextColors(text_color);
     SetTextColor(views::Button::STATE_DISABLED, text_color);
@@ -164,7 +183,7 @@ void BraveAvatarToolbarButton::UpdateColorsAndInsets() {
     return;
   }
 
-  if (browser_->profile()->IsGuestSession()) {
+  if (state_manager_.browser()->GetProfile()->IsGuestSession()) {
     gfx::Insets target_insets = ::GetLayoutInsets(TOOLBAR_BUTTON);
     SetBorder(views::CreateEmptyBorder(target_insets));
     return;
