@@ -8,20 +8,26 @@
 
 #include "base/memory/raw_ptr.h"
 #include "chrome/browser/ui/views/toolbar/app_menu.h"
+#include "ui/base/mojom/menu_source_type.mojom.h"
 
 class BraveAppMenu : public AppMenu {
  public:
-  BraveAppMenu(Browser* browser, ui::MenuModel* model, int run_types);
+  BraveAppMenu(BrowserWindowInterface* browser,
+               ui::MenuModel* model,
+               int run_types,
+               base::RepeatingClosure on_menu_closed_callback);
   ~BraveAppMenu() override;
 
   BraveAppMenu(const BraveAppMenu&) = delete;
   BraveAppMenu& operator=(const BraveAppMenu&) = delete;
 
-  Browser* browser() { return browser_; }
-  const Browser* browser() const { return browser_; }
+  BrowserWindowInterface* browser() { return browser_; }
+  const BrowserWindowInterface* browser() const { return browser_; }
 
   // AppMenu overrides:
-  void RunMenu(views::MenuButtonController* host) override;
+  void RunMenu(views::MenuButtonController* host,
+               ui::mojom::MenuSourceType source_type =
+                   ui::mojom::MenuSourceType::kNone) override;
   void ExecuteCommand(int command_id, int mouse_event_flags) override;
   void OnMenuClosed(views::MenuItemView* menu) override;
 };
