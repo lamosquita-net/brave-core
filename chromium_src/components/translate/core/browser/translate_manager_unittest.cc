@@ -119,9 +119,6 @@ class TranslateManagerTest : public ::testing::Test {
         mock_language_model_({MockLanguageModel::LanguageDetails("en", 1.0)}) {}
 
   void SetUp() override {
-    // Ensure we're not requesting a server-side translate language list.
-    TranslateLanguageList::DisableUpdate();
-
     manager_->ResetForTesting();
   }
 

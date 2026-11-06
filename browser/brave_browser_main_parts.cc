@@ -14,7 +14,6 @@
 #include "brave/components/brave_sync/features.h"
 #include "brave/components/constants/brave_constants.h"
 #include "brave/components/constants/pref_names.h"
-#include "brave/components/translate/core/common/brave_translate_features.h"
 #include "build/build_config.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/profile.h"
@@ -22,7 +21,6 @@
 #include "components/component_updater/component_updater_service.h"
 #include "components/prefs/pref_service.h"
 #include "components/sync/base/command_line_switches.h"
-#include "components/translate/core/browser/translate_language_list.h"
 #include "content/public/browser/render_frame_host.h"
 #include "extensions/buildflags/buildflags.h"
 #include "media/base/media_switches.h"
@@ -99,9 +97,6 @@ void BraveBrowserMainParts::PreProfileInit() {
     command_line->RemoveSwitch(syncer::kDisableSync);
   }
 #endif
-
-  if (!translate::ShouldUpdateLanguagesList())
-    translate::TranslateLanguageList::DisableUpdate();
 }
 
 void BraveBrowserMainParts::PostProfileInit(Profile* profile,
