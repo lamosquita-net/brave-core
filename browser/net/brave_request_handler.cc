@@ -12,7 +12,6 @@
 #include "brave/browser/net/brave_ad_block_csp_network_delegate_helper.h"
 #include "brave/browser/net/brave_ad_block_tp_network_delegate_helper.h"
 #include "brave/browser/net/brave_common_static_redirect_network_delegate_helper.h"
-#include "brave/browser/net/brave_localhost_permission_network_delegate_helper.h"
 #include "brave/browser/net/brave_reduce_language_network_delegate_helper.h"
 #include "brave/browser/net/brave_service_key_network_delegate_helper.h"
 #include "brave/browser/net/brave_site_hacks_network_delegate_helper.h"
@@ -57,13 +56,6 @@ void BraveRequestHandler::SetupCallbacks() {
   callback =
       base::BindRepeating(brave::OnBeforeURLRequest_CommonStaticRedirectWork);
   before_url_request_callbacks_.push_back(callback);
-
-  if (base::FeatureList::IsEnabled(
-          brave_shields::features::kBraveLocalhostAccessPermission)) {
-    callback =
-        base::BindRepeating(brave::OnBeforeURLRequest_LocalhostPermissionWork);
-    before_url_request_callbacks_.push_back(callback);
-  }
 
   brave::OnBeforeStartTransactionCallback start_transaction_callback =
       base::BindRepeating(brave::OnBeforeStartTransaction_SiteHacksWork);

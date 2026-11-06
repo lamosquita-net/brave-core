@@ -46,15 +46,6 @@ public class BraveContentSettingsResources extends ContentSettingsResources {
                         R.string.website_settings_category_google_sign_in_ask,
                         R.string.website_settings_category_google_sign_in_block,
                         0);
-            case ContentSettingsType.BRAVE_LOCALHOST_ACCESS:
-                return new ResourceItem(
-                        R.drawable.ic_desktop_windows,
-                        R.string.localhost_title,
-                        ContentSettingValues.ASK,
-                        ContentSettingValues.BLOCK,
-                        R.string.website_settings_category_localhost_ask,
-                        R.string.website_settings_category_localhost_block,
-                        0);
         }
 
         return (ResourceItem)

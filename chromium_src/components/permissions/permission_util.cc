@@ -11,19 +11,18 @@
 
 // Since we don't do UMA just reuse an existing UMA type instead of adding one.
 // In 156 the UMA request type mapping moved from permission_uma_util.cc here.
-#define BRAVE_GET_UMA_VALUE_FOR_REQUEST_TYPE         \
-  case RequestType::kWidevine:                       \
-  case RequestType::kBraveGoogleSignInPermission:    \
-  case RequestType::kBraveLocalhostAccessPermission: \
+#define BRAVE_GET_UMA_VALUE_FOR_REQUEST_TYPE      \
+  case RequestType::kWidevine:                    \
+  case RequestType::kBraveGoogleSignInPermission: \
     return RequestTypeForUma::PERMISSION_VR;
 
 // These requests may be batched together, so we must handle them explicitly as
 // GetUmaValueForMultipleRequests expects only a few specific request types to
 // be batched.
-#define BRAVE_GET_UMA_VALUE_FOR_REQUESTS                               \
-  if (first_request >= RequestType::kWidevine &&                       \
-      first_request <= RequestType::kBraveLocalhostAccessPermission) { \
-    return GetUmaValueForRequestType(first_request);                   \
+#define BRAVE_GET_UMA_VALUE_FOR_REQUESTS                            \
+  if (first_request >= RequestType::kWidevine &&                    \
+      first_request <= RequestType::kBraveGoogleSignInPermission) { \
+    return GetUmaValueForRequestType(first_request);                \
   }
 
 #define PERMISSION_UTIL_PERMISSION_TYPE_TO_CONTENT_SETTINGS_TYPE \
@@ -44,9 +43,7 @@
   case PermissionType::BRAVE_COOKIES:                            \
     return ContentSettingsType::BRAVE_COOKIES;                   \
   case PermissionType::BRAVE_GOOGLE_SIGN_IN:                     \
-    return ContentSettingsType::BRAVE_GOOGLE_SIGN_IN;            \
-  case PermissionType::BRAVE_LOCALHOST_ACCESS:                   \
-    return ContentSettingsType::BRAVE_LOCALHOST_ACCESS;
+    return ContentSettingsType::BRAVE_GOOGLE_SIGN_IN;
 
 #include "src/components/permissions/permission_util.cc"
 #undef PermissionUtil
@@ -62,8 +59,6 @@ std::string PermissionUtil::GetPermissionString(
   switch (content_type) {
     case ContentSettingsType::BRAVE_GOOGLE_SIGN_IN:
       return "BraveGoogleSignInPermission";
-    case ContentSettingsType::BRAVE_LOCALHOST_ACCESS:
-      return "BraveLocalhostAccessPermission";
     default:
       return PermissionUtil_ChromiumImpl::GetPermissionString(content_type);
   }
@@ -76,10 +71,6 @@ bool PermissionUtil::GetPermissionType(ContentSettingsType type,
     *out = PermissionType::BRAVE_GOOGLE_SIGN_IN;
     return true;
   }
-  if (type == ContentSettingsType::BRAVE_LOCALHOST_ACCESS) {
-    *out = PermissionType::BRAVE_LOCALHOST_ACCESS;
-    return true;
-  }
 
   return PermissionUtil_ChromiumImpl::GetPermissionType(type, out);
 }
@@ -88,7 +79,6 @@ bool PermissionUtil::GetPermissionType(ContentSettingsType type,
 bool PermissionUtil::IsPermission(ContentSettingsType type) {
   switch (type) {
     case ContentSettingsType::BRAVE_GOOGLE_SIGN_IN:
-    case ContentSettingsType::BRAVE_LOCALHOST_ACCESS:
       return true;
     default:
       return PermissionUtil_ChromiumImpl::IsPermission(type);
@@ -116,8 +106,6 @@ PermissionType PermissionUtil::ContentSettingsTypeToPermissionType(
       return PermissionType::BRAVE_COOKIES;
     case ContentSettingsType::BRAVE_GOOGLE_SIGN_IN:
       return PermissionType::BRAVE_GOOGLE_SIGN_IN;
-    case ContentSettingsType::BRAVE_LOCALHOST_ACCESS:
-      return PermissionType::BRAVE_LOCALHOST_ACCESS;
     default:
       return PermissionUtil_ChromiumImpl::ContentSettingsTypeToPermissionType(
           permission);

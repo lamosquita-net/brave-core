@@ -27,7 +27,6 @@
   {ContentSettingsType::BRAVE_GOOGLE_SIGN_IN, "googleSignIn"},        \
   {ContentSettingsType::BRAVE_HTTPS_UPGRADE, nullptr},                \
   {ContentSettingsType::BRAVE_REMEMBER_1P_STORAGE, nullptr},          \
-  {ContentSettingsType::BRAVE_LOCALHOST_ACCESS, "localhostAccess"},   \
   {ContentSettingsType::BRAVE_WEBCOMPAT_NONE, nullptr}, \
   {ContentSettingsType::BRAVE_WEBCOMPAT_AUDIO, nullptr}, \
   {ContentSettingsType::BRAVE_WEBCOMPAT_CANVAS, nullptr}, \
@@ -87,9 +86,6 @@ bool HasRegisteredGroupName(ContentSettingsType type) {
     return true;
   if (type == ContentSettingsType::BRAVE_GOOGLE_SIGN_IN)
     return true;
-  if (type == ContentSettingsType::BRAVE_LOCALHOST_ACCESS) {
-    return true;
-  }
   if (type == ContentSettingsType::BRAVE_SHIELDS)
     return true;
   return HasRegisteredGroupName_ChromiumImpl(type);
@@ -101,7 +97,6 @@ std::vector<ContentSettingsType> GetVisiblePermissionCategories(
   static constexpr ContentSettingsType extra_types[] = {
       ContentSettingsType::AUTOPLAY,
       ContentSettingsType::BRAVE_GOOGLE_SIGN_IN,
-      ContentSettingsType::BRAVE_LOCALHOST_ACCESS,
   };
 
   auto types = GetVisiblePermissionCategories_ChromiumImpl(origin, profile);

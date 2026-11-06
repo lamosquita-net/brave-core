@@ -31,6 +31,7 @@
 #include "components/prefs/pref_registry_simple.h"
 #include "components/prefs/pref_service.h"
 #include "net/base/registry_controlled_domains/registry_controlled_domain.h"
+#include "services/network/public/cpp/features.h"
 #include "url/origin.h"
 
 namespace brave_shields {
@@ -316,8 +317,13 @@ AdBlockService::AdBlockService(
   custom_filters_provider_ =
       std::make_unique<AdBlockCustomFiltersProvider>(local_state_);
 
+  // FlyWeb: as in 1.98, the localhost filters follow Chromium's native Local
+  // Network Access (only when it actually blocks), not Brave's own permission.
   if (base::FeatureList::IsEnabled(
-          brave_shields::features::kBraveLocalhostAccessPermission)) {
+          network::features::kLocalNetworkAccessChecks) &&
+      !network::features::kLocalNetworkAccessChecksWarn.Get() &&
+      base::FeatureList::IsEnabled(
+          network::features::kLocalNetworkAccessChecksWebSockets)) {
     localhost_filters_provider_ =
         std::make_unique<AdBlockLocalhostFiltersProvider>();
   }

@@ -155,11 +155,6 @@
       initWithFeature:&brave_shields::features::kBraveDomainBlock1PES];
 }
 
-+ (Feature*)kBraveLocalhostAccessPermission {
-  return [[Feature alloc] initWithFeature:&brave_shields::features::
-                                              kBraveLocalhostAccessPermission];
-}
-
 + (Feature*)kBraveNewsCardPeekFeature {
   return [[Feature alloc]
       initWithFeature:&brave_news::features::kBraveNewsCardPeekFeature];

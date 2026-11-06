@@ -25,9 +25,7 @@
   case PermissionType::BRAVE_COOKIES:                   \
     return "BraveCookies";                              \
   case PermissionType::BRAVE_GOOGLE_SIGN_IN:            \
-    return "BraveGoogleSignInPermission";               \
-  case PermissionType::BRAVE_LOCALHOST_ACCESS:          \
-    return "BraveLocalhostAccessPermission";
+    return "BraveGoogleSignInPermission";
 
 #define kDisplayCapture                                 \
   kDisplayCapture;                                      \
@@ -40,7 +38,6 @@
   case PermissionType::BRAVE_REFERRERS:                 \
   case PermissionType::BRAVE_COOKIES:                   \
   case PermissionType::BRAVE_GOOGLE_SIGN_IN:            \
-  case PermissionType::BRAVE_LOCALHOST_ACCESS:          \
     return std::nullopt
 
 #include "src/third_party/blink/common/permissions/permission_utils.cc"

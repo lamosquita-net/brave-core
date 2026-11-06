@@ -24,13 +24,11 @@
 #include "brave/components/brave_shields/content/browser/ad_block_service.h"
 #include "brave/components/brave_shields/content/browser/ad_block_subscription_service_manager.h"
 #include "brave/components/brave_shields/content/browser/brave_farbling_service.h"
-#include "brave/components/brave_shields/core/common/features.h"
 #include "brave/components/brave_sync/network_time_helper.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/debounce/core/browser/debounce_component_installer.h"
 #include "brave/components/debounce/core/common/features.h"
 #include "brave/components/https_upgrade_exceptions/browser/https_upgrade_exceptions_service.h"
-#include "brave/components/localhost_permission/localhost_permission_component.h"
 #include "brave/components/webcompat/features.h"
 #include "brave/components/webcompat/webcompat_exceptions_service.h"
 #include "brave/services/network/public/cpp/system_request_handler.h"
@@ -145,11 +143,6 @@ void BraveBrowserProcessImpl::StartBraveServices() {
   }
 
   if (base::FeatureList::IsEnabled(
-          brave_shields::features::kBraveLocalhostAccessPermission)) {
-    localhost_permission_component();
-  }
-
-  if (base::FeatureList::IsEnabled(
           webcompat::features::kBraveWebcompatExceptionsService)) {
     webcompat::WebcompatExceptionsService::CreateInstance(
         local_data_files_service());
@@ -191,21 +184,6 @@ BraveBrowserProcessImpl::https_upgrade_exceptions_service() {
             local_data_files_service());
   }
   return https_upgrade_exceptions_service_.get();
-}
-
-localhost_permission::LocalhostPermissionComponent*
-BraveBrowserProcessImpl::localhost_permission_component() {
-  if (!base::FeatureList::IsEnabled(
-          brave_shields::features::kBraveLocalhostAccessPermission)) {
-    return nullptr;
-  }
-
-  if (!localhost_permission_component_) {
-    localhost_permission_component_ =
-        std::make_unique<localhost_permission::LocalhostPermissionComponent>(
-            local_data_files_service());
-  }
-  return localhost_permission_component_.get();
 }
 
 debounce::DebounceComponentInstaller*

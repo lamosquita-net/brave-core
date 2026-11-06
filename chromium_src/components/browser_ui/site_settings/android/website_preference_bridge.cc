@@ -13,9 +13,8 @@
   case ContentSettingsType::BACKGROUND_SYNC
 
 // Default is ASK
-#define CLIPBOARD_READ_WRITE                        \
-  BRAVE_GOOGLE_SIGN_IN:                             \
-  case ContentSettingsType::BRAVE_LOCALHOST_ACCESS: \
+#define CLIPBOARD_READ_WRITE \
+  BRAVE_GOOGLE_SIGN_IN:      \
   case ContentSettingsType::CLIPBOARD_READ_WRITE
 
 #include "src/components/browser_ui/site_settings/android/website_preference_bridge.cc"

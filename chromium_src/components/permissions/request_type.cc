@@ -22,28 +22,24 @@ constexpr auto kAndroidStorageAccess = IDR_ANDROID_STORAGE_ACCESS;
 #endif
 
 // Add Brave cases into GetIconIdAndroid.
-#define IDR_ANDROID_STORAGE_ACCESS                   \
-  kAndroidStorageAccess;                             \
-  case RequestType::kWidevine:                       \
-  case RequestType::kBraveGoogleSignInPermission:    \
-  case RequestType::kBraveLocalhostAccessPermission: \
+#define IDR_ANDROID_STORAGE_ACCESS                \
+  kAndroidStorageAccess;                          \
+  case RequestType::kWidevine:                    \
+  case RequestType::kBraveGoogleSignInPermission: \
     return IDR_ANDROID_INFOBAR_PERMISSION_COOKIE
 
 // Add Brave cases into GetIconIdDesktop.
-#define kStorageAccessIcon                           \
-  kStorageAccessIcon;                                \
-  case RequestType::kWidevine:                       \
-  case RequestType::kBraveGoogleSignInPermission:    \
-  case RequestType::kBraveLocalhostAccessPermission: \
+#define kStorageAccessIcon                        \
+  kStorageAccessIcon;                             \
+  case RequestType::kWidevine:                    \
+  case RequestType::kBraveGoogleSignInPermission: \
     return vector_icons::kExtensionIcon
 
-#define BRAVE_PERMISSION_KEY_FOR_REQUEST_TYPE                     \
-  case permissions::RequestType::kWidevine:                       \
-    return "widevine";                                            \
-  case permissions::RequestType::kBraveGoogleSignInPermission:    \
-    return "brave_google_sign_in";                                \
-  case permissions::RequestType::kBraveLocalhostAccessPermission: \
-    return "brave_localhost_access";
+#define BRAVE_PERMISSION_KEY_FOR_REQUEST_TYPE                  \
+  case permissions::RequestType::kWidevine:                    \
+    return "widevine";                                         \
+  case permissions::RequestType::kBraveGoogleSignInPermission: \
+    return "brave_google_sign_in";
 
 #define ContentSettingsTypeToRequestType \
   ContentSettingsTypeToRequestType_ChromiumImpl
@@ -69,8 +65,6 @@ RequestType ContentSettingsTypeToRequestType(
   switch (content_settings_type) {
     case ContentSettingsType::BRAVE_GOOGLE_SIGN_IN:
       return RequestType::kBraveGoogleSignInPermission;
-    case ContentSettingsType::BRAVE_LOCALHOST_ACCESS:
-      return RequestType::kBraveLocalhostAccessPermission;
     case ContentSettingsType::DEFAULT:
       // Currently we have only one DEFAULT type that is
       // not mapped, which is Widevine, it's used for
@@ -87,8 +81,6 @@ std::optional<ContentSettingsType> RequestTypeToContentSettingsType(
   switch (request_type) {
     case RequestType::kBraveGoogleSignInPermission:
       return ContentSettingsType::BRAVE_GOOGLE_SIGN_IN;
-    case RequestType::kBraveLocalhostAccessPermission:
-      return ContentSettingsType::BRAVE_LOCALHOST_ACCESS;
     default:
       return RequestTypeToContentSettingsType_ChromiumImpl(request_type);
   }
@@ -97,7 +89,6 @@ std::optional<ContentSettingsType> RequestTypeToContentSettingsType(
 bool IsRequestablePermissionType(ContentSettingsType content_settings_type) {
   switch (content_settings_type) {
     case ContentSettingsType::BRAVE_GOOGLE_SIGN_IN:
-    case ContentSettingsType::BRAVE_LOCALHOST_ACCESS:
       return true;
     default:
       return IsRequestablePermissionType_ChromiumImpl(content_settings_type);

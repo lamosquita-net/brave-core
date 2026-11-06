@@ -16,7 +16,6 @@
   case PermissionType::BRAVE_REFERRERS:                 \
   case PermissionType::BRAVE_COOKIES:                   \
   case PermissionType::BRAVE_GOOGLE_SIGN_IN:            \
-  case PermissionType::BRAVE_LOCALHOST_ACCESS:          \
   case PermissionType::NUM
 
 #include "src/content/shell/browser/shell_permission_manager.cc"

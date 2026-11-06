@@ -15,8 +15,6 @@ std::optional<RequestType> ContentSettingsTypeToRequestTypeIfExists_BraveImpl(
   switch (content_settings_type) {
     case ContentSettingsType::BRAVE_GOOGLE_SIGN_IN:
       return RequestType::kBraveGoogleSignInPermission;
-    case ContentSettingsType::BRAVE_LOCALHOST_ACCESS:
-      return RequestType::kBraveLocalhostAccessPermission;
     default:
       return ContentSettingsTypeToRequestTypeIfExists(content_settings_type);
   }
