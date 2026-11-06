@@ -26,6 +26,7 @@
 
 #if !BUILDFLAG(IS_ANDROID)
 #include "brave/browser/search_engines/search_engine_provider_util.h"
+#include "brave/browser/ui/bookmark/bookmark_helper.h"
 #include "brave/browser/ui/webui/welcome_page/brave_welcome_page_prefs.h"
 #endif
 
@@ -134,6 +135,12 @@ void MigrateObsoleteProfilePrefs(PrefService* profile_prefs,
 
   // Added 2026-11: features pruned in the Chromium 156 port.
   flyweb::ClearPrunedFeatureProfilePrefs(profile_prefs);
+
+  // Added 2026-11: Brave's bookmark bar state to Chromium's
+  // kBookmarkBarVisibilityState.
+#if !BUILDFLAG(IS_ANDROID)
+  brave::MigrateBookmarkState(profile_prefs);
+#endif
 
   // END_MIGRATE_OBSOLETE_PROFILE_PREFS
 }

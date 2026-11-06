@@ -5,14 +5,9 @@
 
 #include "brave/browser/prefs/brave_pref_service_incognito_allowlist.h"
 
-#include "brave/components/constants/pref_names.h"
-#include "components/bookmarks/common/bookmark_pref_names.h"
-
 #define GetIncognitoPersistentPrefsAllowlist \
   GetIncognitoPersistentPrefsAllowlist_ChromiumImpl
-#define kShowBookmarkBar kShowBookmarkBar, kAlwaysShowBookmarkBarOnNTP
 #include "src/chrome/browser/prefs/pref_service_incognito_allowlist.cc"
-#undef kShowBookmarkBar
 #undef GetIncognitoPersistentPrefsAllowlist
 
 namespace prefs {

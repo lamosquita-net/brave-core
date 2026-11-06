@@ -37,6 +37,7 @@
 #include "chrome/browser/prefs/session_startup_pref.h"
 #include "chrome/browser/preloading/preloading_prefs.h"
 #include "chrome/common/pref_names.h"
+#include "components/bookmarks/common/bookmark_pref_names.h"
 #include "components/content_settings/core/common/pref_names.h"
 #include "components/embedder_support/pref_names.h"
 // FlyWeb: kOfferTranslateEnabled is used on every platform (step 39), not only Android.
@@ -146,6 +147,13 @@ void RegisterProfilePrefsForMigration(
 
   // Added 2024-07
   registry->RegisterBooleanPref(kHangoutsEnabled, false);
+
+  // Added 2026-11: Brave's bookmark bar state, migrated to Chromium's
+  // bookmarks::prefs::kBookmarkBarVisibilityState.
+#if !BUILDFLAG(IS_ANDROID)
+  registry->RegisterBooleanPref(::bookmarks::prefs::kAlwaysShowBookmarkBarOnNTP,
+                                true);
+#endif
 
   // Added 2026-11: features pruned in the Chromium 156 port.
   flyweb::RegisterPrunedFeatureProfilePrefs(registry);

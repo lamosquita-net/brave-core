@@ -5,27 +5,68 @@
 
 #include "brave/browser/ui/bookmark/bookmark_helper.h"
 
-#include "brave/browser/ui/bookmark/bookmark_prefs_service_factory.h"
 #include "components/bookmarks/browser/bookmark_utils.h"
+#include "components/bookmarks/common/bookmark_bar_visibility_state.h"
+#include "components/bookmarks/common/bookmark_pref_names.h"
 #include "components/sync_preferences/testing_pref_service_syncable.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
-TEST(BookmarkStateUnittest, SetState) {
-  sync_preferences::TestingPrefServiceSyncable service;
-  BookmarkPrefsServiceFactory::GetInstance()->RegisterProfilePrefs(
-      service.registry());
-  bookmarks::RegisterProfilePrefs(service.registry());
-  // By default only NTP is enabled.
-  EXPECT_EQ(brave::GetBookmarkBarState(&service),
-            brave::BookmarkBarState::kNtp);
+namespace {
 
-  // Show bookmark bar always.
-  brave::SetBookmarkState(brave::BookmarkBarState::kAlways, &service);
-  EXPECT_EQ(brave::GetBookmarkBarState(&service),
-            brave::BookmarkBarState::kAlways);
+class BookmarkStateMigrationTest : public testing::Test {
+ public:
+  void SetUp() override {
+    bookmarks::RegisterProfilePrefs(prefs_.registry());
+    prefs_.registry()->RegisterBooleanPref(
+        bookmarks::prefs::kAlwaysShowBookmarkBarOnNTP, true);
+  }
 
-  // Never show bookmark bar.
-  brave::SetBookmarkState(brave::BookmarkBarState::kNever, &service);
-  EXPECT_EQ(brave::GetBookmarkBarState(&service),
-            brave::BookmarkBarState::kNever);
+  bookmarks::BookmarkBarVisibilityState GetVisibilityState() {
+    return static_cast<bookmarks::BookmarkBarVisibilityState>(
+        prefs_.GetInteger(bookmarks::prefs::kBookmarkBarVisibilityState));
+  }
+
+ protected:
+  sync_preferences::TestingPrefServiceSyncable prefs_;
+};
+
+}  // namespace
+
+TEST_F(BookmarkStateMigrationTest, DefaultStateIsNotMigrated) {
+  brave::MigrateBookmarkState(&prefs_);
+  EXPECT_TRUE(
+      prefs_.FindPreference(bookmarks::prefs::kBookmarkBarVisibilityState)
+          ->IsDefaultValue());
+  EXPECT_EQ(GetVisibilityState(),
+            bookmarks::BookmarkBarVisibilityState::kOnlyShowOnNtp);
+}
+
+TEST_F(BookmarkStateMigrationTest, MigrateAlways) {
+  brave::SetBookmarkStateForTesting(brave::BookmarkBarState::kAlways, &prefs_);
+  brave::MigrateBookmarkState(&prefs_);
+  EXPECT_EQ(GetVisibilityState(),
+            bookmarks::BookmarkBarVisibilityState::kAlwaysShow);
+  EXPECT_TRUE(
+      prefs_.FindPreference(bookmarks::prefs::kAlwaysShowBookmarkBarOnNTP)
+          ->IsDefaultValue());
+}
+
+TEST_F(BookmarkStateMigrationTest, MigrateNtp) {
+  brave::SetBookmarkStateForTesting(brave::BookmarkBarState::kNtp, &prefs_);
+  brave::MigrateBookmarkState(&prefs_);
+  EXPECT_EQ(GetVisibilityState(),
+            bookmarks::BookmarkBarVisibilityState::kOnlyShowOnNtp);
+  EXPECT_TRUE(
+      prefs_.FindPreference(bookmarks::prefs::kAlwaysShowBookmarkBarOnNTP)
+          ->IsDefaultValue());
+}
+
+TEST_F(BookmarkStateMigrationTest, MigrateNever) {
+  brave::SetBookmarkStateForTesting(brave::BookmarkBarState::kNever, &prefs_);
+  brave::MigrateBookmarkState(&prefs_);
+  EXPECT_EQ(GetVisibilityState(),
+            bookmarks::BookmarkBarVisibilityState::kAlwaysHide);
+  EXPECT_TRUE(
+      prefs_.FindPreference(bookmarks::prefs::kAlwaysShowBookmarkBarOnNTP)
+          ->IsDefaultValue());
 }

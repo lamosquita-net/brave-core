@@ -134,8 +134,6 @@ const PrefsUtil::TypedPrefMap& BravePrefsUtil::GetAllowlistedKeys() {
       settings_api::PrefType::kBoolean;
   (*s_brave_allowlist)[browsing_data::prefs::kDeleteBraveLeoHistoryOnExit] =
       settings_api::PrefType::kBoolean;
-  (*s_brave_allowlist)[kAlwaysShowBookmarkBarOnNTP] =
-      settings_api::PrefType::kBoolean;
   (*s_brave_allowlist)[kMRUCyclingEnabled] = settings_api::PrefType::kBoolean;
   (*s_brave_allowlist)[kEnableWindowClosingConfirm] =
       settings_api::PrefType::kBoolean;

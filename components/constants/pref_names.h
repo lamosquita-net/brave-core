@@ -67,8 +67,6 @@ inline constexpr char kNewTabPageClockFormat[] =
 inline constexpr char kNewTabPageShowStats[] = "brave.new_tab_page.show_stats";
 inline constexpr char kNewTabPageShowsOptions[] =
     "brave.new_tab_page.shows_options";
-inline constexpr char kAlwaysShowBookmarkBarOnNTP[] =
-    "brave.always_show_bookmark_bar_on_ntp";
 inline constexpr char kBraveDarkMode[] = "brave.dark_mode";
 inline constexpr char kBraveShieldsSettingsVersion[] =
     "brave.shields_settings_version";
