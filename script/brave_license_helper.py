@@ -159,11 +159,6 @@ def AddBraveCredits(root, prune_paths, special_cases, prune_dirs,
             "URL": "https://github.com/brave/brave-extension",
             "License": "MPL-2.0",
         },
-        os.path.join('brave', 'vendor', 'web-discovery-project'): {
-            "Name": "Web Discovery Project",
-            "URL": "https://github.com/brave/web-discovery-project",
-            "License": "MPL-2.0",
-        },
         os.path.join('brave', 'vendor', 'omaha'): {
             "Name": "Omaha",
             "URL": "https://github.com/brave/omaha",

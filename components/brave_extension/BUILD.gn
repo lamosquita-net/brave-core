@@ -14,38 +14,6 @@ pack_web_resources("generated_resources") {
   deps = [ "extension/brave_extension" ]
 }
 
-action("web_discovery_project_resources") {
-  script = "//brave/script/web_discovery_project.py"
-
-  gen_build_dir = "$root_gen_dir/brave/web-discovery-project"
-
-  args = [
-    "--build",
-    "--output_path",
-    rebase_path(gen_build_dir),
-  ]
-
-  inputs = [
-    # If you are making manual changes to WDP scripts in-place
-    # then you'll have to touch any of these files to cause a rebuild.
-    # TODO(petemill): Have WDP use webpack (or another way) to spit out
-    # a depfile which automatically lists all the input files used to generate
-    # the WDP build.
-    "//brave/vendor/web-discovery-project/.git/HEAD",
-    "//brave/vendor/web-discovery-project/package.json",
-  ]
-
-  outputs = [
-    # There are more outputs than this, and they are catered to as inputs
-    # by the extension JS webpack build which generates a depfile. These
-    # are the outputs needed to be included by the GRD.
-    "$gen_build_dir/core/content-script.bundle.js",
-    "$gen_build_dir/hpnv2/worker.asmjs.bundle.js",
-    "$gen_build_dir/hpnv2/worker.wasm.bundle.js",
-    "$gen_build_dir/star.wasm",
-  ]
-}
-
 brave_grit("static_resources") {
   source = "extension/resources.grd"
 
@@ -56,10 +24,7 @@ brave_grit("static_resources") {
     "brave_extension_static.pak",
   ]
 
-  deps = [
-    ":web_discovery_project_resources",
-    "extension/brave_extension",
-  ]
+  deps = [ "extension/brave_extension" ]
 }
 
 repack("resources") {

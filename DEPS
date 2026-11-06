@@ -16,7 +16,6 @@ deps = {
   },
   "vendor/bat-native-tweetnacl": "https://github.com/brave-intl/bat-native-tweetnacl.git@800f9d40b7409239ff192e0be634764e747c7a75",
   "vendor/gn-project-generators": "https://github.com/brave/gn-project-generators.git@b76e14b162aa0ce40f11920ec94bfc12da29e5d0",
-  "vendor/web-discovery-project": "https://github.com/brave/web-discovery-project@e58b8e46e062200a4c4d0fb147cb2e88536f5d43",
   "third_party/bip39wally-core-native": "https://github.com/brave-intl/bat-native-bip39wally-core.git@0d3a8713a2b388d2156fe49a70ef3f7cdb44b190",
   "third_party/reclient_configs/src": "https://github.com/EngFlow/reclient-configs.git@21c8fe69ff771956c179847b8c1d9fd216181967",
   'third_party/android_deps/libs/com_google_android_play_core': {
@@ -104,13 +103,6 @@ hooks = [
     'pattern': '.',
     'condition': 'checkout_win',
     'action': ['vpython3', 'build/win/download_brave_vpn_wireguard_binaries.py', 'v0.5.3', 'brave-vpn-wireguard-tunnel-dlls'],
-  },
-  {
-    # Install Web Discovery Project dependencies for Windows, Linux, and macOS
-    'name': 'web_discovery_project_npm_deps',
-    'pattern': '.',
-    'condition': 'checkout_linux or checkout_mac or checkout_win',
-    'action': ['vpython3', 'script/web_discovery_project.py', '--install'],
   },
   {
     'name': 'generate_licenses',
