@@ -6,7 +6,6 @@
 #include "base/containers/adapters.h"
 #include "brave/browser/ui/omnibox/brave_omnibox_client_impl.h"
 #include "brave/browser/ui/views/omnibox/brave_omnibox_view_views.h"
-#include "brave/browser/ui/views/page_action/brave_page_action_icon_container_view.h"
 #include "chrome/browser/ui/color/chrome_color_id.h"
 #include "chrome/browser/ui/views/omnibox/omnibox_view_views.h"
 #include "ui/views/style/typography.h"
@@ -38,7 +37,6 @@
 
 #define OmniboxViewViews BraveOmniboxViewViews
 #define ChromeOmniboxClient BraveOmniboxClientImpl
-#define PageActionIconContainerView BravePageActionIconContainerView
 #define STYLE_BODY_4_EMPHASIS STYLE_PRIMARY
 
 // We don't use different hover color when omnibox doesn't have focus but still
@@ -47,7 +45,6 @@
 #include "src/chrome/browser/ui/views/location_bar/location_bar_view.cc"
 #undef STYLE_BODY_4_EMPHASIS
 #undef kColorOmniboxResultsBackgroundHovered
-#undef PageActionIconContainerView
 #undef ChromeOmniboxClient
 #undef OmniboxViewViews
 #undef BRAVE_LAYOUT_LEFT_MOST_TRAILING_DECORATIONS
