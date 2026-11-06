@@ -13,13 +13,22 @@ injectStyle(CrIconElement, css`:host {
   --leo-icon-color: var(--iron-icon-fill-color, currentColor);
 }`)
 
-const old = CrIconElement.prototype.updateIcon
-CrIconElement.prototype.updateIcon = function (...args: any) {
+// FlyWeb: in Chromium 156 the method is the private updateIcon_ (as Brave
+// 1.98 does in its cr_icon override), reached through a cast.
+interface CrIconInternals {
+  updateIcon_: (this: CrIconElement, ...args: unknown[]) => void
+}
+const proto = CrIconElement.prototype as unknown as CrIconInternals
+const old = proto.updateIcon_
+proto.updateIcon_ = function (this: CrIconElement, ...args: unknown[]) {
   const removeAllOfType = (type: string) => {
     for (const node of this.shadowRoot!.querySelectorAll(type)) node.remove()
   }
 
-  const name = iconMap[this.icon]
+  // Upstream's kWebUIRoundedIcons rollout may add a legacy "-old" suffix to
+  // the icon name; both refer to the same icon (as in Brave 1.98).
+  const unroundedIcon = this.icon.replace(/-old$/, '')
+  const name = iconMap[this.icon] ?? iconMap[unroundedIcon]
   if (name || leoIcons.has(this.icon)) {
     removeAllOfType('svg') 
 

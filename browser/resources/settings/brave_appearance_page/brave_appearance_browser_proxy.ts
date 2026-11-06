@@ -32,7 +32,7 @@ export class BraveAppearanceBrowserProxyImpl implements
   }
 
   getBraveThemeType() {
-    return sendWithPromise('getBraveThemeType');
+    return sendWithPromise<number>('getBraveThemeType');
   }
 
   setBraveThemeType(value: number) {

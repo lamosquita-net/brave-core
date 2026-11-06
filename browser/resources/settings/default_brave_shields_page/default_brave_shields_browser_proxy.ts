@@ -78,7 +78,7 @@ export interface DefaultBraveShieldsBrowserProxy {
 export class DefaultBraveShieldsBrowserProxyImpl implements DefaultBraveShieldsBrowserProxy {
   /** @override */
   isAdControlEnabled () {
-    return sendWithPromise('isAdControlEnabled')
+    return sendWithPromise<boolean>('isAdControlEnabled')
   }
 
   /** @override */
@@ -88,7 +88,7 @@ export class DefaultBraveShieldsBrowserProxyImpl implements DefaultBraveShieldsB
 
   /** @override */
   isFirstPartyCosmeticFilteringEnabled () {
-    return sendWithPromise('isFirstPartyCosmeticFilteringEnabled')
+    return sendWithPromise<boolean>('isFirstPartyCosmeticFilteringEnabled')
   }
 
   /** @override */
@@ -98,7 +98,7 @@ export class DefaultBraveShieldsBrowserProxyImpl implements DefaultBraveShieldsB
 
   /** @override */
   getCookieControlType () {
-    return sendWithPromise('getCookieControlType');
+    return sendWithPromise<string>('getCookieControlType');
   }
 
   /** @override */
@@ -108,7 +108,7 @@ export class DefaultBraveShieldsBrowserProxyImpl implements DefaultBraveShieldsB
 
   /** @override */
   getFingerprintingControlType () {
-    return sendWithPromise('getFingerprintingControlType');
+    return sendWithPromise<string>('getFingerprintingControlType');
   }
 
   /** @override */
@@ -118,7 +118,7 @@ export class DefaultBraveShieldsBrowserProxyImpl implements DefaultBraveShieldsB
 
   /** @override */
   getFingerprintingBlockEnabled () {
-    return sendWithPromise('getFingerprintingBlockEnabled')
+    return sendWithPromise<boolean>('getFingerprintingBlockEnabled')
   }
 
   /** @override */
@@ -128,7 +128,7 @@ export class DefaultBraveShieldsBrowserProxyImpl implements DefaultBraveShieldsB
 
   /** @override */
   getHttpsUpgradeControlType () {
-    return sendWithPromise('getHttpsUpgradeControlType')
+    return sendWithPromise<string>('getHttpsUpgradeControlType')
   }
 
   /** @override */
@@ -143,7 +143,7 @@ export class DefaultBraveShieldsBrowserProxyImpl implements DefaultBraveShieldsB
 
   /** @override */
   getForgetFirstPartyStorageEnabled () {
-    return sendWithPromise('getForgetFirstPartyStorageEnabled')
+    return sendWithPromise<boolean>('getForgetFirstPartyStorageEnabled')
   }
 
   /** @override */

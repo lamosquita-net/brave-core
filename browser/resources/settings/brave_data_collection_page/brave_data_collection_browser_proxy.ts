@@ -23,7 +23,7 @@ implements BraveDataCollectionBrowserProxy
   }
 
   getMetricsReporting() {
-    return sendWithPromise('getMetricsReporting')
+    return sendWithPromise<MetricsReporting>('getMetricsReporting')
   }
 }
 

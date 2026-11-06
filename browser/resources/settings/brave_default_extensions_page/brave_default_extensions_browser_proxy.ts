@@ -25,11 +25,11 @@ export class BraveDefaultExtensionsBrowserProxyImpl implements BraveDefaultExten
   }
 
   isWidevineEnabled() {
-    return sendWithPromise('isWidevineEnabled')
+    return sendWithPromise<boolean>('isWidevineEnabled')
   }
 
   getRestartNeeded() {
-    return sendWithPromise('getRestartNeeded')
+    return sendWithPromise<boolean>('getRestartNeeded')
   }
 
   wasSignInEnabledAtStartup() {

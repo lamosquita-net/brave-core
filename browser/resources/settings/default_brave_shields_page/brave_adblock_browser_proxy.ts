@@ -28,17 +28,17 @@ export class BraveAdblockBrowserProxyImpl implements BraveAdblockBrowserProxy {
 
   /** @returns {Promise} */
   getRegionalLists () {
-    return sendWithPromise('brave_adblock.getRegionalLists')
+    return sendWithPromise<any[]>('brave_adblock.getRegionalLists')
   }
 
   /** @returns {Promise} */
   getListSubscriptions () {
-    return sendWithPromise('brave_adblock.getListSubscriptions')
+    return sendWithPromise<any>('brave_adblock.getListSubscriptions')
   }
 
   /** @returns {Promise} */
   getCustomFilters () {
-    return sendWithPromise('brave_adblock.getCustomFilters')
+    return sendWithPromise<any>('brave_adblock.getCustomFilters')
   }
 
   enableFilterList (uuid, enabled) {
@@ -47,7 +47,7 @@ export class BraveAdblockBrowserProxyImpl implements BraveAdblockBrowserProxy {
 
   /** @returns {Promise<boolean>} */
   updateFilterLists () {
-    return sendWithPromise('brave_adblock.updateFilterLists')
+    return sendWithPromise<boolean>('brave_adblock.updateFilterLists')
   }
 
   setSubscriptionEnabled (url, enabled) {

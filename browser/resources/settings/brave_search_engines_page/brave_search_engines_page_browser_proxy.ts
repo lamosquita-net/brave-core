@@ -11,7 +11,7 @@ export interface BraveSearchEnginesPageBrowserProxy {
  
 export class BraveSearchEnginesPageBrowserProxyImpl implements BraveSearchEnginesPageBrowserProxy {
   getPrivateSearchEnginesList() {
-    return sendWithPromise('getPrivateSearchEnginesList');
+    return sendWithPromise<any[]>('getPrivateSearchEnginesList');
   }
   static getInstance() {
     return instance || (instance = new BraveSearchEnginesPageBrowserProxyImpl())
