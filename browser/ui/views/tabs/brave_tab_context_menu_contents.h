@@ -12,12 +12,12 @@
 #include "base/gtest_prod_util.h"
 #include "base/memory/raw_ptr.h"
 #include "base/memory/weak_ptr.h"
-#include "ui/base/models/simple_menu_model.h"
-#include "ui/base/ui_base_types.h"
+#include "ui/base/mojom/menu_source_type.mojom-forward.h"
+#include "ui/menus/simple_menu_model.h"
 
 class BraveBrowserTabStripController;
 class BraveTabMenuModel;
-class Browser;
+class BrowserWindowInterface;
 class Tab;
 
 namespace gfx {
@@ -44,7 +44,8 @@ class BraveTabContextMenuContents : public ui::SimpleMenuModel::Delegate {
 
   void Cancel();
 
-  void RunMenuAt(const gfx::Point& point, ui::MenuSourceType source_type);
+  void RunMenuAt(const gfx::Point& point,
+                 ui::mojom::MenuSourceType source_type);
 
   // ui::SimpleMenuModel::Delegate overrides:
   bool IsCommandIdEnabled(int command_id) const override;
@@ -72,7 +73,7 @@ class BraveTabContextMenuContents : public ui::SimpleMenuModel::Delegate {
   // If it's set to true, this instance will not be used anymore because
   // new instance is created when showing context menu.
   bool menu_closed_ = false;
-  raw_ptr<Browser> browser_ = nullptr;
+  raw_ptr<BrowserWindowInterface> browser_ = nullptr;
   raw_ptr<sessions::TabRestoreService> restore_service_ = nullptr;
   raw_ptr<BraveBrowserTabStripController> controller_ = nullptr;
 

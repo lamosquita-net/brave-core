@@ -5,23 +5,20 @@
 
 #include "brave/browser/ui/views/tabs/brave_browser_tab_strip_controller.h"
 
-#include <utility>
-
 #include "brave/browser/ui/views/tabs/brave_tab_context_menu_contents.h"
-#include "chrome/browser/ui/views/frame/browser_view.h"
 #include "chrome/browser/ui/views/tabs/tab_strip.h"
+#include "components/tabs/public/tab_interface.h"
+#include "ui/base/mojom/menu_source_type.mojom-shared.h"
 
 BraveBrowserTabStripController::BraveBrowserTabStripController(
     TabStripModel* model,
-    BrowserView* browser_view,
-    std::unique_ptr<TabMenuModelFactory> menu_model_factory_override)
-    : BrowserTabStripController(model,
-                                browser_view,
-                                std::move(menu_model_factory_override)) {}
+    BrowserView* browser_view)
+    : BrowserTabStripController(model, browser_view) {}
 
 BraveBrowserTabStripController::~BraveBrowserTabStripController() {
-  if (context_menu_contents_)
+  if (context_menu_contents_) {
     context_menu_contents_->Cancel();
+  }
 }
 
 const std::optional<int> BraveBrowserTabStripController::GetModelIndexOf(
@@ -29,13 +26,43 @@ const std::optional<int> BraveBrowserTabStripController::GetModelIndexOf(
   return tabstrip_->GetModelIndexOf(tab);
 }
 
+tabs::TabInterface* BraveBrowserTabStripController::GetTabInterface(
+    const Tab* tab) {
+  const std::optional<int> index = tabstrip_->GetModelIndexOf(tab);
+  if (!index || !model_->ContainsIndex(*index)) {
+    return nullptr;
+  }
+  return model_->GetTabAtIndex(*index);
+}
+
+bool BraveBrowserTabStripController::IsCommandEnabledForTab(
+    TabStripModel::ContextMenuCommand command_id,
+    const Tab* tab) {
+  tabs::TabInterface* tab_interface = GetTabInterface(tab);
+  return tab_interface &&
+         IsContextMenuCommandEnabled(tab_interface, command_id);
+}
+
+void BraveBrowserTabStripController::ExecuteCommandForTab(
+    TabStripModel::ContextMenuCommand command_id,
+    const Tab* tab,
+    int event_flags) {
+  if (tabs::TabInterface* tab_interface = GetTabInterface(tab)) {
+    ExecuteContextMenuCommand(tab_interface, command_id, event_flags);
+  }
+}
+
+bool BraveBrowserTabStripController::GetAcceleratorForCommandId(
+    int command_id,
+    ui::Accelerator* accelerator) {
+  return GetContextMenuAccelerator(command_id, accelerator);
+}
+
 void BraveBrowserTabStripController::ShowContextMenuForTab(
     Tab* tab,
     const gfx::Point& p,
-    ui::MenuSourceType source_type) {
-  BrowserView* browser_view =
-      BrowserView::GetBrowserViewForBrowser(browser());
-  const auto tab_index = browser_view->tabstrip()->GetModelIndexOf(tab);
+    ui::mojom::MenuSourceType source_type) {
+  const auto tab_index = tabstrip_->GetModelIndexOf(tab);
   if (!tab_index) {
     return;
   }

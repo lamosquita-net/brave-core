@@ -23,13 +23,12 @@
 #include "chrome/browser/defaults.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/sessions/tab_restore_service_factory.h"
-#include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_commands.h"
-#include "chrome/browser/ui/browser_tabstrip.h"
 #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/tabs/tab_enums.h"
+#include "chrome/browser/ui/tabs/tab_menu_model_delegate.h"
+#include "chrome/browser/ui/tabs/tab_muted_utils.h"
 #include "chrome/browser/ui/tabs/tab_strip_model_observer.h"
-#include "chrome/browser/ui/tabs/tab_utils.h"
 #include "chrome/browser/ui/views/tabs/tab.h"
 #include "components/sessions/core/tab_restore_service.h"
 #include "content/public/browser/web_contents.h"
@@ -41,13 +40,12 @@ BraveTabContextMenuContents::BraveTabContextMenuContents(
     int index)
     : tab_(tab),
       tab_index_(index),
-      browser_(const_cast<Browser*>(controller->browser())),
+      browser_(controller->GetBrowserWindowInterface()),
       controller_(controller) {
   model_ = std::make_unique<BraveTabMenuModel>(
-      this, controller->browser()->tab_menu_model_delegate(),
-      controller->model(), index);
+      this, TabMenuModelDelegate::From(browser_), controller->model(), index);
   restore_service_ =
-      TabRestoreServiceFactory::GetForProfile(browser_->profile());
+      TabRestoreServiceFactory::GetForProfile(browser_->GetProfile());
   menu_runner_ = std::make_unique<views::MenuRunner>(
       model_.get(),
       views::MenuRunner::HAS_MNEMONICS | views::MenuRunner::CONTEXT_MENU,
@@ -61,8 +59,9 @@ void BraveTabContextMenuContents::Cancel() {
   controller_ = nullptr;
 }
 
-void BraveTabContextMenuContents::RunMenuAt(const gfx::Point& point,
-                                            ui::MenuSourceType source_type) {
+void BraveTabContextMenuContents::RunMenuAt(
+    const gfx::Point& point,
+    ui::mojom::MenuSourceType source_type) {
   menu_runner_->RunMenuAt(tab_->GetWidget(), nullptr,
                           gfx::Rect(point, gfx::Size()),
                           views::MenuAnchorPosition::kTopLeft, source_type);
@@ -105,12 +104,7 @@ bool BraveTabContextMenuContents::GetAcceleratorForCommandId(
     return false;
   }
 
-  int browser_cmd;
-  views::Widget* widget =
-      BrowserView::GetBrowserViewForBrowser(browser_)->GetWidget();
-  return TabStripModel::ContextMenuCommandToBrowserCommand(command_id,
-                                                           &browser_cmd) &&
-         widget->GetAccelerator(browser_cmd, accelerator);
+  return controller_->GetAcceleratorForCommandId(command_id, accelerator);
 }
 
 void BraveTabContextMenuContents::ExecuteCommand(int command_id,
@@ -126,7 +120,8 @@ void BraveTabContextMenuContents::ExecuteCommand(int command_id,
   // Executing the command destroys |this|, and can also end up destroying
   // |controller_|. So stop the highlights before executing the command.
   controller_->ExecuteCommandForTab(
-      static_cast<TabStripModel::ContextMenuCommand>(command_id), tab_);
+      static_cast<TabStripModel::ContextMenuCommand>(command_id), tab_,
+      event_flags);
 }
 
 bool BraveTabContextMenuContents::IsBraveCommandIdEnabled(
@@ -183,9 +178,8 @@ void BraveTabContextMenuContents::ExecuteBraveCommand(int command_id) {
 
       auto all_muted = model_->all_muted();
       for (auto* contents : contentses) {
-        chrome::SetTabAudioMuted(contents, !all_muted,
-                                 TabMutedReason::AUDIO_INDICATOR,
-                                 /*extension_id=*/std::string());
+        SetTabAudioMuted(contents, !all_muted, TabMutedReason::kAudioIndicator,
+                         /*extension_id=*/std::string());
       }
       return;
     }
