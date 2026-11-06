@@ -16,10 +16,11 @@ namespace TemplateURLPrepopulateData {
 
 // IMPORTANT! Make sure to bump this value if you make changes to the
 // engines below or add/remove engines.
-// FlyWeb: 29 drops DuckDuckGo's t= (it identified the browser as Brave), and
-// 30 drops Brave Search's source=, so stored profiles pick up the new search
-// URLs.
-const int kBraveCurrentDataVersion = 30;
+// FlyWeb: 29 drops DuckDuckGo's t= (it identified the browser as Brave), 30
+// drops Brave Search's source=, and 31 drops Brave's partner codes from
+// Ecosia (tt=, addon=), Qwant (client=), Startpage (segment=) and Yandex
+// (clid=, srv=), so stored profiles pick up the new search URLs.
+const int kBraveCurrentDataVersion = 31;
 // DO NOT CHANGE THIS ONE. Used for backfilling kBraveDefaultSearchVersion.
 const int kBraveFirstTrackedDataVersion = 6;
 
@@ -151,13 +152,7 @@ const PrepopulatedEngine brave_ecosia =
     ModifyEngineParams(ecosia,
                        nullptr,
                        u":e",
-                       "https://www.ecosia.org/search?tt="
-#if BUILDFLAG(IS_ANDROID)
-                       "42b8ae98"
-#else
-                       "e8eb07a6"
-#endif
-                       "&q={searchTerms}&addon=brave",
+                       "https://www.ecosia.org/search?q={searchTerms}",
                        "https://ac.ecosia.org/?q={searchTerms}",
                        nullptr,
                        PREPOPULATED_ENGINE_ID_ECOSIA);
@@ -167,7 +162,7 @@ const PrepopulatedEngine qwant = MakeBravePrepopulatedEngine(
     u":q",
     "https://www.qwant.com/favicon.ico",
     "IDR_SEARCH_ENGINE_QWANT",
-    "https://www.qwant.com/?q={searchTerms}&client=brz-brave",
+    "https://www.qwant.com/?q={searchTerms}",
     "UTF-8",
     "https://api.qwant.com/api/suggest/?q={searchTerms}&client=opensearch",
     SEARCH_ENGINE_QWANT,
@@ -179,8 +174,7 @@ const PrepopulatedEngine brave_startpage =
     ModifyEngineParams(startpage,
                        u"Startpage",
                        u":sp",
-                       "https://www.startpage.com/do/"
-                       "search?q={searchTerms}&segment=startpage.brave",
+                       "https://www.startpage.com/do/search?q={searchTerms}",
                        "https://www.startpage.com/cgi-bin/"
                        "csuggest?query={searchTerms}&limit=10&format=json",
                        nullptr,
@@ -190,15 +184,9 @@ const PrepopulatedEngine brave_yandex =
     ModifyEngineParams(yandex_com,
                        u"Yandex",
                        nullptr,
-                       "https://yandex.ru/search/?clid="
-#if BUILDFLAG(IS_ANDROID)
-                       "2423859"
-#else
-                       "2353835"
-#endif
-                       "&text={searchTerms}",
+                       "https://yandex.ru/search/?text={searchTerms}",
                        "https://suggest.yandex.ru/suggest-ff.cgi?"
-                       "part={searchTerms}&v=3&sn=5&srv=brave_desktop",
+                       "part={searchTerms}&v=3&sn=5",
                        nullptr,
                        PREPOPULATED_ENGINE_ID_YANDEX);
 
