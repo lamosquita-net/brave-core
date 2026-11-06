@@ -9,6 +9,7 @@
 #include <list>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "base/memory/weak_ptr.h"
@@ -59,7 +60,7 @@ class BraveSearchFallbackHost final
   void OnURLLoaderComplete(
       SimpleURLLoaderList::iterator iter,
       BraveSearchFallbackHost::FetchBackupResultsCallback callback,
-      const std::unique_ptr<std::string> response_body);
+      std::optional<std::string> response_body);
   SimpleURLLoaderList url_loaders_;
   scoped_refptr<network::SharedURLLoaderFactory> shared_url_loader_factory_;
   base::WeakPtrFactory<BraveSearchFallbackHost> weak_factory_;

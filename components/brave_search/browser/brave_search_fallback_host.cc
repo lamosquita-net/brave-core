@@ -115,13 +115,9 @@ void BraveSearchFallbackHost::FetchBackupResults(
 void BraveSearchFallbackHost::OnURLLoaderComplete(
     SimpleURLLoaderList::iterator iter,
     BraveSearchFallbackHost::FetchBackupResultsCallback callback,
-    const std::unique_ptr<std::string> response_body) {
+    std::optional<std::string> response_body) {
   url_loaders_.erase(iter);
-  if (response_body) {
-    std::move(callback).Run(*response_body);
-  } else {
-    std::move(callback).Run("");
-  }
+  std::move(callback).Run(std::move(response_body).value_or(std::string()));
 }
 
 }  // namespace brave_search
