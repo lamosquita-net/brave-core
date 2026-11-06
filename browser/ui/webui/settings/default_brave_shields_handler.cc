@@ -10,7 +10,6 @@
 #include "base/functional/bind.h"
 #include "base/values.h"
 #include "brave/components/brave_shields/content/browser/brave_shields_util.h"
-#include "chrome/browser/browser_process.h"
 #include "chrome/browser/content_settings/cookie_settings_factory.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/profiles/profile.h"
@@ -163,8 +162,7 @@ void DefaultBraveShieldsHandler::SetAdControlType(const base::ListValue& args) {
 
   brave_shields::SetAdControlType(
       HostContentSettingsMapFactory::GetForProfile(profile_),
-      value ? ControlType::BLOCK : ControlType::ALLOW, GURL(),
-      g_browser_process->local_state());
+      value ? ControlType::BLOCK : ControlType::ALLOW, GURL());
 }
 
 void DefaultBraveShieldsHandler::IsFirstPartyCosmeticFilteringEnabled(
@@ -187,8 +185,7 @@ void DefaultBraveShieldsHandler::SetCosmeticFilteringControlType(
 
   brave_shields::SetCosmeticFilteringControlType(
       HostContentSettingsMapFactory::GetForProfile(profile_),
-      ControlTypeFromString(value), GURL(), g_browser_process->local_state(),
-      profile_->GetPrefs());
+      ControlTypeFromString(value), GURL());
 }
 
 void DefaultBraveShieldsHandler::GetCookieControlType(
@@ -213,8 +210,7 @@ void DefaultBraveShieldsHandler::SetCookieControlType(
 
   brave_shields::SetCookieControlType(
       HostContentSettingsMapFactory::GetForProfile(profile_),
-      profile_->GetPrefs(), ControlTypeFromString(value), GURL(),
-      g_browser_process->local_state());
+      profile_->GetPrefs(), ControlTypeFromString(value), GURL());
 }
 
 void DefaultBraveShieldsHandler::GetFingerprintingControlType(
@@ -238,8 +234,7 @@ void DefaultBraveShieldsHandler::SetFingerprintingControlType(
 
   brave_shields::SetFingerprintingControlType(
       HostContentSettingsMapFactory::GetForProfile(profile_),
-      ControlTypeFromString(value), GURL(), g_browser_process->local_state(),
-      profile_->GetPrefs());
+      ControlTypeFromString(value), GURL());
 }
 
 void DefaultBraveShieldsHandler::GetFingerprintingBlockEnabled(
@@ -262,8 +257,7 @@ void DefaultBraveShieldsHandler::SetFingerprintingBlockEnabled(
 
   brave_shields::SetFingerprintingControlType(
       HostContentSettingsMapFactory::GetForProfile(profile_),
-      value ? ControlType::DEFAULT : ControlType::ALLOW, GURL(),
-      g_browser_process->local_state());
+      value ? ControlType::DEFAULT : ControlType::ALLOW, GURL());
 }
 
 void DefaultBraveShieldsHandler::GetHttpsUpgradeControlType(
@@ -287,7 +281,7 @@ void DefaultBraveShieldsHandler::SetHttpsUpgradeControlType(
 
   brave_shields::SetHttpsUpgradeControlType(
       HostContentSettingsMapFactory::GetForProfile(profile_),
-      ControlTypeFromString(value), GURL(), g_browser_process->local_state());
+      ControlTypeFromString(value), GURL());
 }
 
 void DefaultBraveShieldsHandler::SetNoScriptControlType(
@@ -298,8 +292,7 @@ void DefaultBraveShieldsHandler::SetNoScriptControlType(
 
   brave_shields::SetNoScriptControlType(
       HostContentSettingsMapFactory::GetForProfile(profile_),
-      value ? ControlType::BLOCK : ControlType::ALLOW, GURL(),
-      g_browser_process->local_state());
+      value ? ControlType::BLOCK : ControlType::ALLOW, GURL());
 }
 
 void DefaultBraveShieldsHandler::SetForgetFirstPartyStorageEnabled(
@@ -309,8 +302,7 @@ void DefaultBraveShieldsHandler::SetForgetFirstPartyStorageEnabled(
   bool value = args[0].GetBool();
 
   brave_shields::SetForgetFirstPartyStorageEnabled(
-      HostContentSettingsMapFactory::GetForProfile(profile_), value, GURL(),
-      g_browser_process->local_state());
+      HostContentSettingsMapFactory::GetForProfile(profile_), value, GURL());
 }
 
 void DefaultBraveShieldsHandler::GetForgetFirstPartyStorageEnabled(

@@ -84,7 +84,7 @@ class BraveNavigatorKeyboardAPIBrowserTest : public InProcessBrowserTest {
     brave_shields::SetWebcompatFeatureSetting(
         content_settings(),
         ContentSettingsType::BRAVE_WEBCOMPAT_HARDWARE_CONCURRENCY,
-        ControlType::ALLOW, top_level_page_url_, nullptr);
+        ControlType::ALLOW, top_level_page_url_);
   }
 
  private:

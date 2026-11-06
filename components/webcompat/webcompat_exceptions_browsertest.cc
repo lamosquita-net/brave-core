@@ -164,17 +164,15 @@ IN_PROC_BROWSER_TEST_F(WebcompatExceptionsBrowserTest, RemoteSettingsTest) {
     EXPECT_EQ(observed_setting_cross_site, CONTENT_SETTING_ASK);
 
     // Check that manual setting can override the remote setting
-    brave_shields::SetWebcompatFeatureSetting(map, test_case.type,
-                                              ControlType::BLOCK,
-                                              GURL("https://a.test"), nullptr);
+    brave_shields::SetWebcompatFeatureSetting(
+        map, test_case.type, ControlType::BLOCK, GURL("https://a.test"));
     const auto observed_setting_override1 =
         map->GetContentSetting(GURL("https://a.test"), GURL(), test_case.type);
     EXPECT_EQ(observed_setting_override1, CONTENT_SETTING_BLOCK);
 
     // Check that manual setting can override the remote setting
-    brave_shields::SetWebcompatFeatureSetting(map, test_case.type,
-                                              ControlType::ALLOW,
-                                              GURL("https://b.test"), nullptr);
+    brave_shields::SetWebcompatFeatureSetting(
+        map, test_case.type, ControlType::ALLOW, GURL("https://b.test"));
     const auto observed_setting_override2 =
         map->GetContentSetting(GURL("https://b.test"), GURL(), test_case.type);
     EXPECT_EQ(observed_setting_override2, CONTENT_SETTING_ALLOW);

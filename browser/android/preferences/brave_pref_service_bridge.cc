@@ -18,7 +18,6 @@
 #include "brave/components/de_amp/common/pref_names.h"
 #include "brave/components/decentralized_dns/core/pref_names.h"
 #include "build/build_config.h"
-#include "chrome/browser/browser_process.h"
 #include "chrome/browser/content_settings/cookie_settings_factory.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/profiles/profile.h"
@@ -82,7 +81,7 @@ void JNI_BravePrefServiceBridge_SetCookiesBlockType(
       GetOriginalProfile()->GetPrefs(),
       brave_shields::ControlTypeFromString(
           base::android::ConvertJavaStringToUTF8(env, type)),
-      GURL(), g_browser_process->local_state());
+      GURL());
 }
 
 base::android::ScopedJavaLocalRef<jstring>

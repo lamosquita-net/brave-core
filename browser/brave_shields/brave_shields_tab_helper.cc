@@ -14,7 +14,6 @@
 #include "brave/browser/brave_shields/brave_shields_web_contents_observer.h"
 #include "brave/components/brave_shields/content/browser/brave_shields_util.h"
 #include "brave/components/brave_shields/core/common/brave_shield_constants.h"
-#include "chrome/browser/browser_process.h"
 #include "chrome/browser/content_settings/cookie_settings_factory.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/profiles/profile.h"
@@ -173,8 +172,7 @@ void BraveShieldsTabHelper::SetBraveShieldsEnabled(bool is_enabled) {
                                     nullptr) == is_enabled) {
     brave_shields::ResetBraveShieldsEnabled(map, GetCurrentSiteURL());
   } else {
-    brave_shields::SetBraveShieldsEnabled(map, is_enabled, GetCurrentSiteURL(),
-                                          g_browser_process->local_state());
+    brave_shields::SetBraveShieldsEnabled(map, is_enabled, GetCurrentSiteURL());
   }
   ReloadWebContents();
 }
@@ -305,15 +303,10 @@ void BraveShieldsTabHelper::SetAdBlockMode(AdBlockMode mode) {
     control_type_cosmetic = ControlType::ALLOW;  // allow
   }
 
-  brave_shields::SetAdControlType(map, control_type_ad, GetCurrentSiteURL(),
-                                  g_browser_process->local_state());
+  brave_shields::SetAdControlType(map, control_type_ad, GetCurrentSiteURL());
 
-  PrefService* profile_prefs =
-      Profile::FromBrowserContext(web_contents()->GetBrowserContext())
-          ->GetPrefs();
-  brave_shields::SetCosmeticFilteringControlType(
-      map, control_type_cosmetic, GetCurrentSiteURL(),
-      g_browser_process->local_state(), profile_prefs);
+  brave_shields::SetCosmeticFilteringControlType(map, control_type_cosmetic,
+                                                 GetCurrentSiteURL());
 
   ReloadWebContents();
 }
@@ -329,12 +322,9 @@ void BraveShieldsTabHelper::SetFingerprintMode(FingerprintMode mode) {
     control_type = ControlType::DEFAULT;  // STANDARD_MODE
   }
 
-  PrefService* profile_prefs =
-      Profile::FromBrowserContext(web_contents()->GetBrowserContext())
-          ->GetPrefs();
   brave_shields::SetFingerprintingControlType(
       GetHostContentSettingsMap(web_contents()), control_type,
-      GetCurrentSiteURL(), g_browser_process->local_state(), profile_prefs);
+      GetCurrentSiteURL());
 
   ReloadWebContents();
 }
@@ -357,8 +347,7 @@ void BraveShieldsTabHelper::SetCookieBlockMode(CookieBlockMode mode) {
   }
 
   brave_shields::SetCookieControlType(GetHostContentSettingsMap(web_contents()),
-                                      prefs, control_type, GetCurrentSiteURL(),
-                                      g_browser_process->local_state());
+                                      prefs, control_type, GetCurrentSiteURL());
 
   ReloadWebContents();
 }
@@ -376,7 +365,7 @@ void BraveShieldsTabHelper::SetHttpsUpgradeMode(HttpsUpgradeMode mode) {
   }
   brave_shields::SetHttpsUpgradeControlType(
       GetHostContentSettingsMap(web_contents()), control_type,
-      GetCurrentSiteURL(), g_browser_process->local_state());
+      GetCurrentSiteURL());
 
   ReloadWebContents();
 }
@@ -392,7 +381,7 @@ void BraveShieldsTabHelper::SetIsNoScriptEnabled(bool is_enabled) {
 
   brave_shields::SetNoScriptControlType(
       GetHostContentSettingsMap(web_contents()), control_type,
-      GetCurrentSiteURL(), g_browser_process->local_state());
+      GetCurrentSiteURL());
 
   ReloadWebContents();
 }
@@ -400,7 +389,7 @@ void BraveShieldsTabHelper::SetIsNoScriptEnabled(bool is_enabled) {
 void BraveShieldsTabHelper::SetForgetFirstPartyStorageEnabled(bool is_enabled) {
   brave_shields::SetForgetFirstPartyStorageEnabled(
       GetHostContentSettingsMap(web_contents()), is_enabled,
-      GetCurrentSiteURL(), g_browser_process->local_state());
+      GetCurrentSiteURL());
 }
 
 void BraveShieldsTabHelper::BlockAllowedScripts(

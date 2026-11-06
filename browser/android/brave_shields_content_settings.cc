@@ -11,7 +11,6 @@
 #include "base/android/jni_android.h"
 #include "base/android/jni_string.h"
 #include "brave/build/android/jni_headers/BraveShieldsContentSettings_jni.h"
-#include "chrome/browser/browser_process.h"
 #include "chrome/browser/content_settings/cookie_settings_factory.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/profiles/profile.h"
@@ -91,8 +90,7 @@ void JNI_BraveShieldsContentSettings_SetBraveShieldsEnabled(JNIEnv* env,
   brave_shields::SetBraveShieldsEnabled(
       HostContentSettingsMapFactory::GetForProfile(
           Profile::FromJavaObject(j_profile)),
-      enabled, GURL(base::android::ConvertJavaStringToUTF8(env, url)),
-      g_browser_process->local_state());
+      enabled, GURL(base::android::ConvertJavaStringToUTF8(env, url)));
 }
 
 jboolean JNI_BraveShieldsContentSettings_GetBraveShieldsEnabled(JNIEnv* env,
@@ -113,8 +111,7 @@ void JNI_BraveShieldsContentSettings_SetAdControlType(JNIEnv* env,
           Profile::FromJavaObject(j_profile)),
       brave_shields::ControlTypeFromString(
           base::android::ConvertJavaStringToUTF8(env, type)),
-      GURL(base::android::ConvertJavaStringToUTF8(env, url)),
-      g_browser_process->local_state());
+      GURL(base::android::ConvertJavaStringToUTF8(env, url)));
 }
 
 base::android::ScopedJavaLocalRef<jstring>
@@ -140,8 +137,7 @@ void JNI_BraveShieldsContentSettings_SetCookieControlType(JNIEnv* env,
       Profile::FromJavaObject(j_profile)->GetPrefs(),
       brave_shields::ControlTypeFromString(
           base::android::ConvertJavaStringToUTF8(env, type)),
-      GURL(base::android::ConvertJavaStringToUTF8(env, url)),
-      g_browser_process->local_state());
+      GURL(base::android::ConvertJavaStringToUTF8(env, url)));
 }
 
 void JNI_BraveShieldsContentSettings_SetCosmeticFilteringControlType(
@@ -154,9 +150,7 @@ void JNI_BraveShieldsContentSettings_SetCosmeticFilteringControlType(
           Profile::FromJavaObject(j_profile)),
       brave_shields::ControlTypeFromString(
           base::android::ConvertJavaStringToUTF8(env, type)),
-      GURL(base::android::ConvertJavaStringToUTF8(env, url)),
-      g_browser_process->local_state(),
-      Profile::FromJavaObject(j_profile)->GetPrefs());
+      GURL(base::android::ConvertJavaStringToUTF8(env, url)));
 }
 
 base::android::ScopedJavaLocalRef<jstring>
@@ -183,9 +177,7 @@ void JNI_BraveShieldsContentSettings_SetFingerprintingControlType(JNIEnv* env,
           Profile::FromJavaObject(j_profile)),
       brave_shields::ControlTypeFromString(
           base::android::ConvertJavaStringToUTF8(env, type)),
-      GURL(base::android::ConvertJavaStringToUTF8(env, url)),
-      g_browser_process->local_state(),
-      Profile::FromJavaObject(j_profile)->GetPrefs());
+      GURL(base::android::ConvertJavaStringToUTF8(env, url)));
 }
 
 base::android::ScopedJavaLocalRef<jstring>
@@ -212,8 +204,7 @@ void JNI_BraveShieldsContentSettings_SetHttpsUpgradeControlType(
           Profile::FromJavaObject(j_profile)),
       brave_shields::ControlTypeFromString(
           base::android::ConvertJavaStringToUTF8(env, type)),
-      GURL(base::android::ConvertJavaStringToUTF8(env, url)),
-      g_browser_process->local_state());
+      GURL(base::android::ConvertJavaStringToUTF8(env, url)));
 }
 
 base::android::ScopedJavaLocalRef<jstring>
@@ -255,8 +246,7 @@ void JNI_BraveShieldsContentSettings_SetNoScriptControlType(JNIEnv* env,
           Profile::FromJavaObject(j_profile)),
       brave_shields::ControlTypeFromString(
           base::android::ConvertJavaStringToUTF8(env, type)),
-      GURL(base::android::ConvertJavaStringToUTF8(env, url)),
-      g_browser_process->local_state());
+      GURL(base::android::ConvertJavaStringToUTF8(env, url)));
 }
 
 base::android::ScopedJavaLocalRef<jstring>
@@ -281,8 +271,7 @@ void JNI_BraveShieldsContentSettings_SetForgetFirstPartyStorageEnabled(
   brave_shields::SetForgetFirstPartyStorageEnabled(
       HostContentSettingsMapFactory::GetForProfile(
           Profile::FromJavaObject(j_profile)),
-      enabled, GURL(base::android::ConvertJavaStringToUTF8(env, url)),
-      g_browser_process->local_state());
+      enabled, GURL(base::android::ConvertJavaStringToUTF8(env, url)));
 }
 
 jboolean JNI_BraveShieldsContentSettings_GetForgetFirstPartyStorageEnabled(

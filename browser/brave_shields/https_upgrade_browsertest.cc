@@ -8,7 +8,6 @@
 #include "brave/browser/brave_browser_process.h"
 #include "brave/components/brave_shields/content/browser/brave_shields_util.h"
 #include "brave/components/https_upgrade_exceptions/browser/https_upgrade_exceptions_service.h"
-#include "chrome/browser/browser_process.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/interstitials/security_interstitial_page_test_utils.h"
 #include "chrome/browser/profiles/profile.h"
@@ -175,11 +174,10 @@ class HttpsUpgradeBrowserTest : public PlatformBrowserTest {
             ? https_server()->GetURL(test_case.domain, test_case.path)
             : http_server()->GetURL(test_case.domain, test_case.path);
     brave_shields::SetBraveShieldsEnabled(ContentSettings(), shields_enabled,
-                                          initial_url, nullptr);
+                                          initial_url);
     brave_shields::SetHttpsUpgradeControlType(
         ContentSettings(), test_case.control_type,
-        global_setting ? GURL() : initial_url,
-        g_browser_process->local_state());
+        global_setting ? GURL() : initial_url);
     // Run navigation twice to ensure that the behavior doesn't
     // change after first run.
     for (int i = 0; i < 2; ++i) {

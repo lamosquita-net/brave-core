@@ -336,8 +336,7 @@ IN_PROC_BROWSER_TEST_F(WebSocketsPoolLimitBrowserTest,
   // Enable webcompat exception.
   brave_shields::SetWebcompatFeatureSetting(
       content_settings(), ContentSettingsType::BRAVE_WEBCOMPAT_WEB_SOCKETS_POOL,
-      brave_shields::ControlType::ALLOW, https_server_.GetURL("a.com", "/"),
-      nullptr);
+      brave_shields::ControlType::ALLOW, https_server_.GetURL("a.com", "/"));
 
   auto* a_com_rfh = ui_test_utils::NavigateToURLWithDisposition(
       browser(), url, WindowOpenDisposition::NEW_FOREGROUND_TAB,

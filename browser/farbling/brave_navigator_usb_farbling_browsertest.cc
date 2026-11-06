@@ -309,7 +309,7 @@ IN_PROC_BROWSER_TEST_F(BraveNavigatorUsbFarblingBrowserTest,
   brave_shields::SetWebcompatFeatureSetting(
       content_settings(),
       ContentSettingsType::BRAVE_WEBCOMPAT_USB_DEVICE_SERIAL_NUMBER,
-      ControlType::ALLOW, GURL(url_b), nullptr);
+      ControlType::ALLOW, GURL(url_b));
 
   ASSERT_TRUE(ui_test_utils::NavigateToURL(browser(), url_b));
 

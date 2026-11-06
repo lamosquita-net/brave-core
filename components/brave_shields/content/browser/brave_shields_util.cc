@@ -165,8 +165,7 @@ ControlType ControlTypeFromString(const std::string& string) {
 
 void SetBraveShieldsEnabled(HostContentSettingsMap* map,
                             bool enable,
-                            const GURL& url,
-                            PrefService* local_state) {
+                            const GURL& url) {
   if (url.is_valid() && !url.SchemeIsHTTPOrHTTPS()) {
     return;
   }
@@ -238,8 +237,7 @@ bool GetBraveShieldsEnabled(HostContentSettingsMap* map, const GURL& url) {
 
 void SetAdControlType(HostContentSettingsMap* map,
                       ControlType type,
-                      const GURL& url,
-                      PrefService* local_state) {
+                      const GURL& url) {
   DCHECK(type != ControlType::BLOCK_THIRD_PARTY);
   auto primary_pattern = GetPatternFromURL(url);
 
@@ -272,9 +270,7 @@ ControlType GetAdControlType(HostContentSettingsMap* map, const GURL& url) {
 
 void SetCosmeticFilteringControlType(HostContentSettingsMap* map,
                                      ControlType type,
-                                     const GURL& url,
-                                     PrefService* local_state,
-                                     PrefService* profile_state) {
+                                     const GURL& url) {
   auto primary_pattern = GetPatternFromURL(url);
 
   if (!primary_pattern.IsValid()) {
@@ -399,8 +395,7 @@ DomainBlockingType GetDomainBlockingType(HostContentSettingsMap* map,
 void SetCookieControlType(HostContentSettingsMap* map,
                           PrefService* profile_state,
                           ControlType type,
-                          const GURL& url,
-                          PrefService* local_state) {
+                          const GURL& url) {
   auto patterns = content_settings::CreateShieldsCookiesPatterns(url);
   if (!patterns.host_pattern.IsValid()) {
     return;
@@ -517,9 +512,7 @@ bool AreReferrersAllowed(HostContentSettingsMap* map, const GURL& url) {
 
 void SetFingerprintingControlType(HostContentSettingsMap* map,
                                   ControlType type,
-                                  const GURL& url,
-                                  PrefService* local_state,
-                                  PrefService* profile_state) {
+                                  const GURL& url) {
   auto primary_pattern = GetPatternFromURL(url);
 
   if (!primary_pattern.IsValid()) {
@@ -579,8 +572,7 @@ bool IsShowStrictFingerprintingModeEnabled() {
 
 void SetHttpsUpgradeControlType(HostContentSettingsMap* map,
                                 ControlType type,
-                                const GURL& url,
-                                PrefService* local_state) {
+                                const GURL& url) {
   if (!url.SchemeIsHTTPOrHTTPS() && !url.is_empty()) {
     return;
   }
@@ -681,8 +673,7 @@ bool ShouldForceHttps(HostContentSettingsMap* map, const GURL& url) {
 
 void SetNoScriptControlType(HostContentSettingsMap* map,
                             ControlType type,
-                            const GURL& url,
-                            PrefService* local_state) {
+                            const GURL& url) {
   DCHECK(type != ControlType::BLOCK_THIRD_PARTY);
   auto primary_pattern = GetPatternFromURL(url);
 
@@ -708,8 +699,7 @@ ControlType GetNoScriptControlType(HostContentSettingsMap* map,
 
 void SetForgetFirstPartyStorageEnabled(HostContentSettingsMap* map,
                                        bool is_enabled,
-                                       const GURL& url,
-                                       PrefService* local_state) {
+                                       const GURL& url) {
   auto primary_pattern = content_settings::CreateDomainPattern(url);
 
   if (!primary_pattern.IsValid()) {
@@ -780,8 +770,7 @@ ShieldsSettingCounts GetAdsSettingCount(HostContentSettingsMap* map) {
 void SetWebcompatFeatureSetting(HostContentSettingsMap* map,
                                 ContentSettingsType webcompat_settings_type,
                                 ControlType type,
-                                const GURL& url,
-                                PrefService* local_state) {
+                                const GURL& url) {
   DCHECK(map);
 
   if (!url.SchemeIsHTTPOrHTTPS() && !url.is_empty()) {

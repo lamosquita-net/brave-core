@@ -164,7 +164,7 @@ IN_PROC_BROWSER_TEST_F(BraveWebGLFarblingBrowserTest,
     SetFingerprintingDefault(domain);
     brave_shields::SetWebcompatFeatureSetting(
         content_settings(), ContentSettingsType::BRAVE_WEBCOMPAT_WEBGL,
-        ControlType::ALLOW, url, nullptr);
+        ControlType::ALLOW, url);
     ASSERT_TRUE(ui_test_utils::NavigateToURL(browser(), url));
     std::vector<int64_t> real_values2 =
         SplitStringAsInts(EvalJs(contents(), kTitleScript).ExtractString());

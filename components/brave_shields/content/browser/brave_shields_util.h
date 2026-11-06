@@ -57,23 +57,19 @@ ControlType ControlTypeFromString(const std::string& string);
 
 void SetBraveShieldsEnabled(HostContentSettingsMap* map,
                             bool enable,
-                            const GURL& url,
-                            PrefService* local_state = nullptr);
+                            const GURL& url);
 // reset to the default value
 void ResetBraveShieldsEnabled(HostContentSettingsMap* map, const GURL& url);
 bool GetBraveShieldsEnabled(HostContentSettingsMap* map, const GURL& url);
 
 void SetAdControlType(HostContentSettingsMap* map,
                       ControlType type,
-                      const GURL& url,
-                      PrefService* local_state = nullptr);
+                      const GURL& url);
 ControlType GetAdControlType(HostContentSettingsMap* map, const GURL& url);
 
 void SetCosmeticFilteringControlType(HostContentSettingsMap* map,
                                      ControlType type,
-                                     const GURL& url,
-                                     PrefService* local_state = nullptr,
-                                     PrefService* profile_state = nullptr);
+                                     const GURL& url);
 ControlType GetCosmeticFilteringControlType(HostContentSettingsMap* map,
                                             const GURL& url);
 bool IsFirstPartyCosmeticFilteringEnabled(HostContentSettingsMap* map,
@@ -91,8 +87,7 @@ DomainBlockingType GetDomainBlockingType(HostContentSettingsMap* map,
 void SetCookieControlType(HostContentSettingsMap* map,
                           PrefService* profile_state,
                           ControlType type,
-                          const GURL& url,
-                          PrefService* local_state = nullptr);
+                          const GURL& url);
 ControlType GetCookieControlType(
     HostContentSettingsMap* map,
     content_settings::CookieSettings* cookie_settings,
@@ -104,9 +99,7 @@ bool AreReferrersAllowed(HostContentSettingsMap* map, const GURL& url);
 
 void SetFingerprintingControlType(HostContentSettingsMap* map,
                                   ControlType type,
-                                  const GURL& url,
-                                  PrefService* local_state = nullptr,
-                                  PrefService* profile_state = nullptr);
+                                  const GURL& url);
 ControlType GetFingerprintingControlType(HostContentSettingsMap* map,
                                          const GURL& url);
 bool IsBraveShieldsManaged(PrefService* prefs,
@@ -116,8 +109,7 @@ bool IsBraveShieldsManaged(PrefService* prefs,
 bool IsHttpsByDefaultFeatureEnabled();
 void SetHttpsUpgradeControlType(HostContentSettingsMap* map,
                                 ControlType type,
-                                const GURL& url,
-                                PrefService* local_state = nullptr);
+                                const GURL& url);
 ControlType GetHttpsUpgradeControlType(HostContentSettingsMap* map,
                                        const GURL& url);
 bool ShouldUpgradeToHttps(
@@ -131,15 +123,13 @@ bool IsShowStrictFingerprintingModeEnabled();
 
 void SetNoScriptControlType(HostContentSettingsMap* map,
                             ControlType type,
-                            const GURL& url,
-                            PrefService* local_state = nullptr);
+                            const GURL& url);
 ControlType GetNoScriptControlType(HostContentSettingsMap* map,
                                    const GURL& url);
 
 void SetForgetFirstPartyStorageEnabled(HostContentSettingsMap* map,
                                        bool is_enabled,
-                                       const GURL& url,
-                                       PrefService* local_state = nullptr);
+                                       const GURL& url);
 bool GetForgetFirstPartyStorageEnabled(HostContentSettingsMap* map,
                                        const GURL& url);
 
@@ -147,8 +137,7 @@ bool GetForgetFirstPartyStorageEnabled(HostContentSettingsMap* map,
 void SetWebcompatFeatureSetting(HostContentSettingsMap* map,
                                 ContentSettingsType webcompat_settings_type,
                                 ControlType type,
-                                const GURL& url,
-                                PrefService* local_state);
+                                const GURL& url);
 
 bool IsSameOriginNavigation(const GURL& referrer, const GURL& target_url);
 
