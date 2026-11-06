@@ -6,7 +6,8 @@
 import {PolymerElement} from 'chrome://resources/polymer/v3_0/polymer/polymer_bundled.min.js'
 
 import '../people_page/people_page.js'
-import '../settings_page/settings_animated_pages.js'
+// FlyWeb: Chromium 156 removed settings-animated-pages (sections now use
+// cr-view-manager page indexes); the wrapper in the template stays inert.
 import '../default_browser_page/default_browser_page.js'
 import '../on_startup_page/on_startup_page.js'
 import {getTemplate} from './getting_started.html.js'

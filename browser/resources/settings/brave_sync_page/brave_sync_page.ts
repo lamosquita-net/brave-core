@@ -5,7 +5,8 @@
 
 import 'chrome://resources/cr_elements/cr_dialog/cr_dialog.js';
 import 'chrome://resources/cr_elements/icons.html.js';
-import '../settings_page/settings_animated_pages.js';
+// FlyWeb: Chromium 156 removed settings-animated-pages (sections now use
+// cr-view-manager page indexes); the wrapper in the template stays inert.
 import '../settings_page/settings_subpage.js';
 import '../settings_shared.css.js';
 import '../settings_vars.css.js';
