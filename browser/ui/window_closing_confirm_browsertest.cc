@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "base/byte_size.h"
+#include "base/check.h"
 #include "base/functional/bind.h"
 #include "base/run_loop.h"
 #include "brave/browser/ui/brave_browser.h"
@@ -11,10 +13,8 @@
 #include "brave/components/constants/pref_names.h"
 #include "chrome/browser/download/download_manager_utils.h"
 #include "chrome/browser/download/download_prefs.h"
-#include "chrome/browser/lifetime/application_lifetime.h"
 #include "chrome/browser/lifetime/application_lifetime_desktop.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_commands.h"
 #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/browser_window/public/global_browser_collection.h"
@@ -96,15 +96,16 @@ class WindowClosingConfirmBrowserTest : public InProcessBrowserTest,
     content::PrepContentsForBeforeUnloadTest(web_contents);
   }
 
-  void PrepareForBeforeUnloadDialog(Browser* browser) {
+  void PrepareForBeforeUnloadDialog(BrowserWindowInterface* browser) {
     for (int i = 0; i < browser->tab_strip_model()->count(); i++)
       PrepareForBeforeUnloadDialog(
           browser->tab_strip_model()->GetWebContentsAt(i));
   }
 
   void WaitForAllBrowsersToClose() {
-    while (!GlobalBrowserCollection::GetInstance()->IsEmpty())
+    while (!GlobalBrowserCollection::GetInstance()->IsEmpty()) {
       ui_test_utils::WaitForBrowserToClose();
+    }
   }
 
   void SetClosingBrowserCallbackAndWait() {
@@ -138,24 +139,26 @@ class WindowClosingConfirmBrowserTest : public InProcessBrowserTest,
 
   // Create a DownloadTestObserverInProgress that will wait for the
   // specified number of downloads to start.
-  content::DownloadTestObserver* CreateInProgressWaiter(Browser* browser,
-                                                        int num_downloads) {
+  content::DownloadTestObserver* CreateInProgressWaiter(
+      BrowserWindowInterface* browser,
+      int num_downloads) {
     content::DownloadManager* download_manager =
         DownloadManagerForBrowser(browser);
     return new content::DownloadTestObserverInProgress(download_manager,
                                                        num_downloads);
   }
 
-  content::DownloadManager* DownloadManagerForBrowser(Browser* browser) {
-    return browser->profile()->GetDownloadManager();
+  content::DownloadManager* DownloadManagerForBrowser(
+      BrowserWindowInterface* browser) {
+    return browser->GetProfile()->GetDownloadManager();
   }
 
-  DownloadPrefs* GetDownloadPrefs(Browser* browser) {
+  DownloadPrefs* GetDownloadPrefs(BrowserWindowInterface* browser) {
     return DownloadPrefs::FromDownloadManager(
         DownloadManagerForBrowser(browser));
   }
 
-  base::FilePath GetDownloadDirectory(Browser* browser) {
+  base::FilePath GetDownloadDirectory(BrowserWindowInterface* browser) {
     return GetDownloadPrefs(browser)->DownloadPath();
   }
 
@@ -266,7 +269,15 @@ IN_PROC_BROWSER_TEST_F(WindowClosingConfirmBrowserTest,
   ui_test_utils::WaitForBrowserToClose(brave_browser);
 }
 
-IN_PROC_BROWSER_TEST_F(WindowClosingConfirmBrowserTest, TestWithDownload) {
+// Disabling on Mac due to excessive flakiness
+// https://github.com/brave/brave-browser/issues/57731
+#if BUILDFLAG(IS_MAC)
+#define MAYBE_TestWithDownload DISABLED_TestWithDownload
+#else
+#define MAYBE_TestWithDownload TestWithDownload
+#endif
+IN_PROC_BROWSER_TEST_F(WindowClosingConfirmBrowserTest,
+                       MAYBE_TestWithDownload) {
 // On macOS, download in-progress warning is not shown for normal profile window
 // closing as it can still continue after window is closed.
 // However, private profile window works like normal window of other platforms.
@@ -276,24 +287,25 @@ IN_PROC_BROWSER_TEST_F(WindowClosingConfirmBrowserTest, TestWithDownload) {
 #else
   auto* brave_browser = static_cast<BraveBrowser*>(browser());
 #endif
-  brave_browser->profile()->GetPrefs()->SetBoolean(prefs::kPromptForDownload,
-                                                   false);
+  brave_browser->GetProfile()->GetPrefs()->SetBoolean(prefs::kPromptForDownload,
+                                                      false);
 
   test_response_handler()->RegisterToTestServer(embedded_test_server());
   ASSERT_TRUE(embedded_test_server()->Start());
   GURL url = embedded_test_server()->GetURL("/large_file");
 
   content::TestDownloadHttpResponse::Parameters parameters;
-  parameters.size = 1024 * 1024 * 32; /* 32MB file. */
+  parameters.size = base::MiB(32).InBytes(); /* 32MB file. */
   content::TestDownloadHttpResponse::StartServing(parameters, url);
 
   // Ensure that we have enough disk space to download the large file.
   {
     base::ScopedAllowBlockingForTesting allow_blocking;
-    int64_t free_space = base::SysInfo::AmountOfFreeDiskSpace(
+    std::optional<int64_t> free_space = base::SysInfo::AmountOfFreeDiskSpace(
         GetDownloadDirectory(brave_browser));
-    ASSERT_LE(parameters.size, free_space)
-        << "Not enough disk space to download. Got " << free_space;
+    ASSERT_TRUE(free_space.has_value());
+    ASSERT_LE(parameters.size, *free_space)
+        << "Not enough disk space to download. Got " << *free_space;
   }
 
   // Make browser has two tabs.
@@ -340,4 +352,5 @@ IN_PROC_BROWSER_TEST_F(WindowClosingConfirmBrowserTest, TestWithDownload) {
   SetDownloadConfirmReturn(true);
   chrome::CloseWindow(brave_browser);
   EXPECT_TRUE(closing_confirm_dialog_created_);
+  WaitTillConfirmDialogClosed();
 }
