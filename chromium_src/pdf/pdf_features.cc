@@ -13,6 +13,7 @@ OVERRIDE_FEATURE_DEFAULT_STATES({{
 #if BUILDFLAG(ENABLE_PDF_SAVE_TO_DRIVE)
     // Save to Google Drive from the PDF viewer.
     {kPdfSaveToDrive, base::FEATURE_DISABLED_BY_DEFAULT},
+    {kPdfSaveToDriveSurvey, base::FEATURE_DISABLED_BY_DEFAULT},
 #endif
 }});
 

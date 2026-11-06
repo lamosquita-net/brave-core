@@ -40,6 +40,7 @@
 // FlyWeb: kOfferTranslateEnabled is used on every platform (step 39), not only Android.
 #include "components/translate/core/browser/translate_pref_names.h"
 #include "components/gcm_driver/gcm_buildflags.h"
+#include "components/omnibox/browser/omnibox_pref_names.h"
 #include "components/password_manager/core/common/password_manager_pref_names.h"
 #include "components/policy/core/common/policy_pref_names.h"
 #include "components/pref_registry/pref_registry_syncable.h"
@@ -220,11 +221,6 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
                                 base::Value(false));
   registry->SetDefaultPrefValue(feed::prefs::kEnableSnippetsByDse,
                                 base::Value(false));
-
-  // Explicitly disable safe browsing extended reporting by default in case they
-  // change it in upstream.
-  registry->SetDefaultPrefValue(prefs::kSafeBrowsingScoutReportingEnabled,
-                                base::Value(false));
 #endif
 
   // Restore last profile on restart
@@ -247,6 +243,15 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
   // Disable safebrowsing reporting
   registry->SetDefaultPrefValue(
       prefs::kSafeBrowsingExtendedReportingOptInAllowed, base::Value(false));
+
+  // Explicitly disable safe browsing extended reporting by default in case they
+  // change it in upstream.
+  registry->SetDefaultPrefValue(prefs::kSafeBrowsingScoutReportingEnabled,
+                                base::Value(false));
+
+  // Disable safe browsing deep scanning per security/privacy team.
+  registry->SetDefaultPrefValue(prefs::kSafeBrowsingDeepScanningEnabled,
+                                base::Value(false));
 
 #if defined(TOOLKIT_VIEWS)
   // Disable side search by default.
@@ -359,6 +364,22 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
   // (DIAL/SSDP to port 8008) while idle; users can turn it on in Settings.
   registry->SetDefaultPrefValue(prefs::kEnableMediaRouter, base::Value(false));
   registry->RegisterBooleanPref(kEnableMediaRouterOnRestart, false);
+
+  // Disable @aimode search keyword
+  // Currently, upstream only defines an int kAIModeAllowed = 0 value and check
+  // against it (see components/omnibox/browser/aim_eligibility_service.cc).
+  registry->SetDefaultPrefValue(omnibox::kAIModeSettings, base::Value(-1));
+
+  // Disabled due to crash with tab group dragging.
+  // TODO(https://github.com/brave/brave-browser/issues/49752): Re-enable.
+  registry->SetDefaultPrefValue(prefs::kSplitViewDragAndDropEnabled,
+                                base::Value(false));
+
+  // Disables WebRTC logs collection.
+  registry->SetDefaultPrefValue(prefs::kWebRtcEventLogCollectionAllowed,
+                                base::Value(false));
+  registry->SetDefaultPrefValue(prefs::kWebRtcTextLogCollectionAllowed,
+                                base::Value(false));
 
   BraveFarblingService::RegisterProfilePrefs(registry);
 

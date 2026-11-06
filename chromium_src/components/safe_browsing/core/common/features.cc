@@ -11,6 +11,8 @@
 namespace safe_browsing {
 
 OVERRIDE_FEATURE_DEFAULT_STATES({{
+    // Antivirus telemetry about downloads sent to Google.
+    {kAntivirusTelemetryForDownloads, base::FEATURE_DISABLED_BY_DEFAULT},
     {kClientSideDetectionClipboardCopyApi, base::FEATURE_DISABLED_BY_DEFAULT},
     {kGooglePlayProtectInApkTelemetry, base::FEATURE_DISABLED_BY_DEFAULT},
     // Telemetry about notifications sent to Google.

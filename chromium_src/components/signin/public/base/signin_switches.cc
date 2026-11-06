@@ -13,6 +13,10 @@ namespace switches {
 // desktop override is gone. kSyncEnableBookmarksInTransportMode moved here
 // from components/sync/base/features.cc: keep it off, as before.
 OVERRIDE_FEATURE_DEFAULT_STATES({{
+#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
+    // The refreshed first run pushes Google sign-in.
+    {kFirstRunDesktopRefresh, base::FEATURE_DISABLED_BY_DEFAULT},
+#endif
     {kSyncEnableBookmarksInTransportMode, base::FEATURE_DISABLED_BY_DEFAULT},
 }});
 

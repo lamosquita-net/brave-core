@@ -18,6 +18,8 @@
 #include "build/build_config.h"
 #include "chrome/browser/browser_features.h"
 #include "chrome/browser/devtools/features.h"
+#include "chrome/browser/history_embeddings/history_embeddings_utils.h"
+#include "chrome/browser/ui/omnibox/omnibox_next_features.h"
 #include "chrome/browser/ui/ui_features.h"
 #include "chrome/common/chrome_features.h"
 #include "components/attribution_reporting/features.h"
@@ -48,10 +50,13 @@
 #include "components/search/ntp_features.h"
 #include "components/segmentation_platform/public/features.h"
 #include "components/signin/public/base/signin_switches.h"
+#include "components/skills/features.h"
 #include "components/subresource_filter/core/common/common_features.h"
+#include "components/sync/base/features.h"
 #include "components/webapps/browser/features.h"
 #include "content/common/features.h"
 #include "content/public/common/content_features.h"
+#include "extensions/buildflags/buildflags.h"
 #include "gpu/config/gpu_finch_features.h"
 #include "media/base/media_switches.h"
 #include "net/base/features.h"
@@ -62,7 +67,12 @@
 #include "third_party/blink/public/common/features.h"
 
 #if !BUILDFLAG(IS_ANDROID)
+#include "chrome/browser/enterprise/data_protection/data_protection_features.h"
 #include "chrome/browser/sharing_hub/sharing_hub_features.h"
+#endif
+
+#if BUILDFLAG(ENABLE_EXTENSIONS_CORE)
+#include "extensions/common/extension_features.h"
 #endif
 
 #if BUILDFLAG(ENABLE_PDF)
@@ -100,15 +110,26 @@ TEST(FeatureDefaultsTest, DisabledFeatures) {
       &blink::features::kAllowURNsInIframes,
       &blink::features::kBackgroundResourceFetch,
       &blink::features::kFencedFrames,
+      &blink::features::kPreloadingEagerViewportHeuristics,
 #if BUILDFLAG(ENABLE_PDF) && BUILDFLAG(ENABLE_PDF_SAVE_TO_DRIVE)
       &chrome_pdf::features::kPdfSaveToDrive,
+      &chrome_pdf::features::kPdfSaveToDriveSurvey,
 #endif
       &commerce::kCommerceAllowOnDemandBookmarkUpdates,
       &commerce::kCommerceMerchantViewer,
+      &commerce::kPriceAnnotations,
       &commerce::kRetailCoupons,
       &commerce::kShoppingList,
       &commerce::kShoppingPDPMetrics,
       &compose::features::kEnableCompose,
+#if !BUILDFLAG(IS_ANDROID)
+      &enterprise_data_protection::kEnableForceDownloadToCloud,
+#endif
+#if BUILDFLAG(ENABLE_EXTENSIONS_CORE)
+      &extensions_features::kApiDesktopAndroidNativeMessaging,
+      &extensions_features::kApiGlicPrivate,
+#endif
+      &features::kBookmarkTriggerForPrefetch,
       &features::kChromeStructuredMetrics,
       &features::kDestroyProfileOnBrowserClose,
       &features::kDevToolsAiAssistanceAccessibilityAgent,
@@ -138,12 +159,14 @@ TEST(FeatureDefaultsTest, DisabledFeatures) {
       &features::kFewerUpdateConfirmations,
 #endif
       &features::kHttpsFirstBalancedMode,
+      &features::kIndigo,
       &features::kNewTabPageTriggerForPrerender2,
       &features::kPrefetchProxy,
       &features::kPrivacySandboxAdsAPIsM1Override,
       &features::kPrivacySandboxAdsAPIsOverride,
       &features::kSCTAuditingHashdance,
       &features::kServiceWorkerAutoPreload,
+      &features::kSkillsEnabled,
       &features::kTabHoverCardImages,
 #if !BUILDFLAG(IS_ANDROID)
       &features::kTrustSafetySentimentSurvey,
@@ -166,11 +189,16 @@ TEST(FeatureDefaultsTest, DisabledFeatures) {
       &history_clusters::internal::kJourneys,
       &history_clusters::internal::kJourneysImages,
       &history_clusters::internal::kOmniboxHistoryClusterProvider,
+      &history_embeddings::kLaunchedHistoryEmbeddings,
       &lens::features::kLensOverlay,
+      &lens::features::kLensOverlayOmniboxEntryPoint,
       &lens::features::kLensStandalone,
+      &media::kAutoplayBypassForMicCamera,
+      &media::kGetDisplayMediaConfersActivation,
       &media::kLiveCaption,
       &metrics::features::kStructuredMetrics,
       &metrics::structured::kPhoneHubStructuredMetrics,
+      &net::features::kEnableWebTransportDraft07,
       &net::features::kTLSTrustAnchorIDs,
       &network::features::kBrowsingTopics,
       &network_time::kNetworkTimeServiceQuerying,
@@ -178,10 +206,15 @@ TEST(FeatureDefaultsTest, DisabledFeatures) {
       &ntp_features::kCustomizeChromeWallpaperSearch,
       &ntp_features::kNtpAlphaBackgroundCollections,
       &ntp_features::kNtpBackgroundImageErrorDetection,
+      &ntp_features::kNtpCalendarModule,
       &ntp_features::kNtpChromeCartModule,
+      &ntp_features::kNtpDriveModule,
+      &ntp_features::kNtpDriveModuleLink,
       &ntp_features::kNtpSimplificationBookmarkBar,
       &ntp_tiles::kNtpMostLikelyFaviconsFromServerFeature,
       &ntp_tiles::kPopularSitesBakedInContentFeature,
+      &omnibox::internal::kWebUIOmniboxAimPopup,
+      &omnibox::internal::kWebUIOmniboxPopup,
       &omnibox::kAimEnabled,
       &omnibox::kMlUrlScoring,
       &omnibox::kRichAutocompletion,
@@ -190,6 +223,7 @@ TEST(FeatureDefaultsTest, DisabledFeatures) {
       &optimization_guide::features::kOptimizationGuideModelExecution,
       &optimization_guide::features::kOptimizationHints,
       &passage_embeddings::kPassageEmbedder,
+      &permissions::features::kCpssUseTfliteSignatureRunner,
       &permissions::features::kPermissionOnDeviceNotificationPredictions,
       &permissions::features::kPermissionPredictionsV2,
 #if !BUILDFLAG(IS_ANDROID)
@@ -199,6 +233,7 @@ TEST(FeatureDefaultsTest, DisabledFeatures) {
       &personal_context::features::kPersonalContext,
       &privacy_sandbox::kEnforcePrivacySandboxAttestations,
       &private_ai::kPrivateAi,
+      &safe_browsing::kAntivirusTelemetryForDownloads,
       &safe_browsing::kClientSideDetectionClipboardCopyApi,
       &safe_browsing::kGooglePlayProtectInApkTelemetry,
       &safe_browsing::kNotificationTelemetry,
@@ -206,7 +241,13 @@ TEST(FeatureDefaultsTest, DisabledFeatures) {
       &segmentation_platform::features::kSegmentationPlatformFeature,
       &segmentation_platform::features::kSegmentationPlatformTimeDelaySampling,
       &subresource_filter::kAdTagging,
+#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
+      &switches::kFirstRunDesktopRefresh,
+#endif
       &switches::kSyncEnableBookmarksInTransportMode,
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
+      &syncer::kSyncAutofillValuableMetadata,
+#endif
       &webapps::features::kWebAppsEnableMLModelForPromotion,
   };
 
@@ -224,6 +265,7 @@ TEST(FeatureDefaultsTest, EnabledFeatures) {
       &features::kBookmarkTriggerForPrerender2KillSwitch,
       &features::kCertificateTransparencyAskBeforeEnabling,
       &features::kLocationProviderManager,
+      &features::kSensorsAllowAskBlockPermissionModel,
       &media::kEnableTabMuting,
       &net::features::kPartitionConnectionsByNetworkIsolationKey,
       &omnibox::kAblateSearchProviderWarmup,
@@ -283,4 +325,10 @@ TEST(FeatureDefaultsTest, DefaultFeatureParameters) {
   EXPECT_EQ(features::kLocationProviderManagerParam.default_value,
             device::mojom::LocationProviderManagerMode::kPlatformOnly);
 #endif
+}
+
+// kLensOverlayOmniboxEntryPoint is also gated by a feature param, so check the
+// helper that reads both.
+TEST(FeatureDefaultsTest, IsOmniboxEntryPointEnabled) {
+  EXPECT_FALSE(lens::features::IsOmniboxEntryPointEnabled());
 }

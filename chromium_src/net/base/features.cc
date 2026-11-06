@@ -12,8 +12,7 @@ namespace net {
 namespace features {
 
 // In 156 kCompressionDictionaryTransportRequireKnownRootCert and the new ALPS
-// codepoints are enabled and kEnableWebTransportDraft07 disabled upstream, and
-// the 3PCD/First-Party Sets features (kTopLevelTpcdOriginTrial,
+// codepoints are enabled upstream, and the 3PCD/First-Party Sets features (kTopLevelTpcdOriginTrial,
 // kTpcdMetadataGrants, kWaitForFirstPartySetsInit) are gone.
 OVERRIDE_FEATURE_DEFAULT_STATES({{
     // Enable NIK-partitioning by default.
@@ -21,6 +20,8 @@ OVERRIDE_FEATURE_DEFAULT_STATES({{
      base::FEATURE_ENABLED_BY_DEFAULT},
     // As 1.98: no Trust Anchor IDs advertised in the TLS ClientHello.
     {kTLSTrustAnchorIDs, base::FEATURE_DISABLED_BY_DEFAULT},
+    // As 1.98: pinned off (already off upstream).
+    {kEnableWebTransportDraft07, base::FEATURE_DISABLED_BY_DEFAULT},
 }});
 
 BASE_FEATURE(kBraveEphemeralStorage,

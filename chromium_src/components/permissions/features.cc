@@ -16,6 +16,7 @@ BASE_FEATURE(kPermissionLifetime,
              base::FEATURE_ENABLED_BY_DEFAULT);
 
 OVERRIDE_FEATURE_DEFAULT_STATES({{
+    {kCpssUseTfliteSignatureRunner, base::FEATURE_DISABLED_BY_DEFAULT},
     {kPermissionOnDeviceNotificationPredictions,
      base::FEATURE_DISABLED_BY_DEFAULT},
     // Permission predictions ask a Google server.

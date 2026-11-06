@@ -19,6 +19,8 @@ OVERRIDE_FEATURE_DEFAULT_STATES({{
     {kAllowURNsInIframes, base::FEATURE_DISABLED_BY_DEFAULT},
     {kBackgroundResourceFetch, base::FEATURE_DISABLED_BY_DEFAULT},
     {kFencedFrames, base::FEATURE_DISABLED_BY_DEFAULT},
+    // As 1.98: no eager viewport-based preloading (already off on desktop).
+    {kPreloadingEagerViewportHeuristics, base::FEATURE_DISABLED_BY_DEFAULT},
 }});
 
 BASE_FEATURE(kFileSystemAccessAPI,

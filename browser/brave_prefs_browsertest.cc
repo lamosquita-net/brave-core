@@ -20,6 +20,8 @@
 #include "chrome/test/base/platform_browser_test.h"
 #include "components/embedder_support/pref_names.h"
 #include "components/gcm_driver/gcm_buildflags.h"
+#include "components/omnibox/browser/aim_eligibility_service.h"
+#include "components/omnibox/browser/omnibox_pref_names.h"
 #include "components/policy/core/common/policy_pref_names.h"
 #include "components/prefs/pref_service.h"
 #include "components/safe_browsing/core/common/safe_browsing_prefs.h"
@@ -99,6 +101,10 @@ IN_PROC_BROWSER_TEST_F(BraveProfilePrefsBrowserTest,
       spellcheck::prefs::kSpellCheckUseSpellingService));
   EXPECT_FALSE(chrome_test_utils::GetProfile(this)->GetPrefs()->GetBoolean(
       prefs::kSafeBrowsingExtendedReportingOptInAllowed));
+  EXPECT_FALSE(chrome_test_utils::GetProfile(this)->GetPrefs()->GetBoolean(
+      prefs::kSafeBrowsingScoutReportingEnabled));
+  EXPECT_FALSE(chrome_test_utils::GetProfile(this)->GetPrefs()->GetBoolean(
+      prefs::kSafeBrowsingDeepScanningEnabled));
 #if !BUILDFLAG(IS_ANDROID)
   EXPECT_FALSE(chrome_test_utils::GetProfile(this)->GetPrefs()->GetBoolean(
       prefs::kSearchSuggestEnabled));
@@ -114,13 +120,29 @@ IN_PROC_BROWSER_TEST_F(BraveProfilePrefsBrowserTest,
 #endif
   EXPECT_TRUE(chrome_test_utils::GetProfile(this)->GetPrefs()->GetBoolean(
       policy::policy_prefs::kHideWebStoreIcon));
+
+  EXPECT_FALSE(chrome_test_utils::GetProfile(this)->GetPrefs()->GetBoolean(
+      prefs::kSplitViewDragAndDropEnabled));
+
+  EXPECT_FALSE(chrome_test_utils::GetProfile(this)->GetPrefs()->GetBoolean(
+      prefs::kWebRtcEventLogCollectionAllowed));
+  EXPECT_FALSE(chrome_test_utils::GetProfile(this)->GetPrefs()->GetBoolean(
+      prefs::kWebRtcTextLogCollectionAllowed));
 }
 
+// FlyWeb: Media Router is off by default (see brave_profile_prefs.cc).
 IN_PROC_BROWSER_TEST_F(BraveProfilePrefsBrowserTest, MediaRouterPrefTest) {
-  EXPECT_TRUE(chrome_test_utils::GetProfile(this)->GetPrefs()->GetBoolean(
+  EXPECT_FALSE(chrome_test_utils::GetProfile(this)->GetPrefs()->GetBoolean(
       ::prefs::kEnableMediaRouter));
-  EXPECT_TRUE(chrome_test_utils::GetProfile(this)->GetPrefs()->GetBoolean(
+  EXPECT_FALSE(chrome_test_utils::GetProfile(this)->GetPrefs()->GetBoolean(
       kEnableMediaRouterOnRestart));
+}
+
+IN_PROC_BROWSER_TEST_F(BraveProfilePrefsBrowserTest, AIModePrefTest) {
+  EXPECT_EQ(-1, chrome_test_utils::GetProfile(this)->GetPrefs()->GetInteger(
+                    ::omnibox::kAIModeSettings));
+  EXPECT_FALSE(AimEligibilityService::IsAimAllowedByPolicy(
+      chrome_test_utils::GetProfile(this)->GetPrefs()));
 }
 
 IN_PROC_BROWSER_TEST_F(BraveLocalStatePrefsBrowserTest, DefaultLocalStateTest) {

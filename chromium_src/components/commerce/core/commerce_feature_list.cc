@@ -12,6 +12,7 @@ namespace commerce {
 OVERRIDE_FEATURE_DEFAULT_STATES({{
     {kCommerceAllowOnDemandBookmarkUpdates, base::FEATURE_DISABLED_BY_DEFAULT},
     {kCommerceMerchantViewer, base::FEATURE_DISABLED_BY_DEFAULT},
+    {kPriceAnnotations, base::FEATURE_DISABLED_BY_DEFAULT},
     {kShoppingList, base::FEATURE_DISABLED_BY_DEFAULT},
     {kShoppingPDPMetrics, base::FEATURE_DISABLED_BY_DEFAULT},
     {kRetailCoupons, base::FEATURE_DISABLED_BY_DEFAULT},

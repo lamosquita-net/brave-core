@@ -16,7 +16,11 @@ OVERRIDE_FEATURE_DEFAULT_STATES({{
     {kCustomizeChromeWallpaperSearch, base::FEATURE_DISABLED_BY_DEFAULT},
     {kNtpAlphaBackgroundCollections, base::FEATURE_DISABLED_BY_DEFAULT},
     {kNtpBackgroundImageErrorDetection, base::FEATURE_DISABLED_BY_DEFAULT},
+    // Google Calendar and Google Drive cards on the NTP.
+    {kNtpCalendarModule, base::FEATURE_DISABLED_BY_DEFAULT},
     {kNtpChromeCartModule, base::FEATURE_DISABLED_BY_DEFAULT},
+    {kNtpDriveModule, base::FEATURE_DISABLED_BY_DEFAULT},
+    {kNtpDriveModuleLink, base::FEATURE_DISABLED_BY_DEFAULT},
     {kNtpModulesMaxColumnCount, base::FEATURE_DISABLED_BY_DEFAULT},
     // Can hide the bookmark bar on its own when it is set to show only on the
     // NTP; the bar must change only when the user asks.

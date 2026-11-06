@@ -10,6 +10,7 @@
 namespace features {
 
 OVERRIDE_FEATURE_DEFAULT_STATES({{
+    {kBookmarkTriggerForPrefetch, base::FEATURE_DISABLED_BY_DEFAULT},
     // Bookmark-triggered prerendering is now gated by a kill switch.
     {kBookmarkTriggerForPrerender2KillSwitch, base::FEATURE_ENABLED_BY_DEFAULT},
     {kCertificateTransparencyAskBeforeEnabling,

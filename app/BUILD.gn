@@ -9,6 +9,7 @@ import("//brave/components/text_recognition/common/buildflags/buildflags.gni")
 import("//brave/resources/brave_grit.gni")
 import("//build/config/features.gni")
 import("//build/config/locales.gni")
+import("//extensions/buildflags/buildflags.gni")
 
 action("generate_command_metadata") {
   command_files = [ "//brave/app/brave_command_ids.h" ]
@@ -134,6 +135,7 @@ source_set("unit_tests") {
     "//chrome/browser/devtools",
     "//chrome/browser/ui",
     "//chrome/browser/ui:ui_features",
+    "//chrome/browser/ui/omnibox",
     "//chrome/common:chrome_features",
     "//components/attribution_reporting:features",
     "//components/autofill/core/common",
@@ -159,9 +161,11 @@ source_set("unit_tests") {
     "//components/search",
     "//components/segmentation_platform/public",
     "//components/signin/public/base",
+    "//components/skills:features",
     "//components/subresource_filter/core/common",
     "//components/sync/base:features",
     "//components/webapps/browser",
+    "//extensions/buildflags",
     "//gpu/config",
     "//pdf:buildflags",
     "//services/device/public/cpp:device_features",
@@ -175,9 +179,13 @@ source_set("unit_tests") {
       ":command_ids",
       "//brave/components/commands/common",
       "//chrome/app:command_ids",
+      "//chrome/browser/enterprise",
       "//chrome/browser/sharing_hub",
       "//chrome/browser/ui:accelerator_table",
     ]
+  }
+  if (enable_extensions_core) {
+    deps += [ "//extensions/common" ]
   }
 }
 
