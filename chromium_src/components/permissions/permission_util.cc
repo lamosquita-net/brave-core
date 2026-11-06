@@ -19,10 +19,10 @@
 // These requests may be batched together, so we must handle them explicitly as
 // GetUmaValueForMultipleRequests expects only a few specific request types to
 // be batched.
-#define BRAVE_GET_UMA_VALUE_FOR_REQUESTS                            \
-  if (first_request >= RequestType::kWidevine &&                    \
-      first_request <= RequestType::kBraveGoogleSignInPermission) { \
-    return GetUmaValueForRequestType(first_request);                \
+#define BRAVE_GET_UMA_VALUE_FOR_REQUESTS              \
+  if (first_request >= RequestType::kBraveMinValue && \
+      first_request <= RequestType::kBraveMaxValue) { \
+    return GetUmaValueForRequestType(first_request);  \
   }
 
 #define PERMISSION_UTIL_PERMISSION_TYPE_TO_CONTENT_SETTINGS_TYPE \
