@@ -8,9 +8,11 @@
 
 #include "src/components/crx_file/crx_verifier.h"  // IWYU pragma: export
 
+#include "base/containers/span.h"
+
 namespace crx_file {
 
-void SetBravePublisherKeyHashForTesting(const std::vector<uint8_t>& test_key);
+void SetBravePublisherKeyHashForTesting(base::span<const uint8_t> test_key);
 
 }  // namespace crx_file
 
