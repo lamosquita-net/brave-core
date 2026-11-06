@@ -18,7 +18,7 @@
 #include "chrome/browser/profile_resetter/profile_resetter_test_base.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/profiles/profile_window.h"
-#include "chrome/browser/search_engine_choice/search_engine_choice_service_factory.h"
+#include "chrome/browser/regional_capabilities/regional_capabilities_service_factory.h"
 #include "chrome/browser/search_engines/template_url_service_factory.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
@@ -28,7 +28,8 @@
 #include "chrome/test/base/testing_browser_process.h"
 #include "chrome/test/base/ui_test_utils.h"
 #include "components/country_codes/country_codes.h"
-#include "components/search_engines/search_engine_choice/search_engine_choice_service.h"
+#include "components/regional_capabilities/regional_capabilities_prefs.h"
+#include "components/regional_capabilities/regional_capabilities_service.h"
 #include "components/search_engines/search_engines_pref_names.h"
 #include "components/search_engines/search_engines_test_util.h"
 #include "components/search_engines/template_url_data_util.h"
@@ -69,10 +70,11 @@ TemplateURLData CreateTestSearchEngine() {
 
 std::string GetBraveSearchProviderSyncGUID(Profile* profile) {
   CHECK(profile);
-  search_engines::SearchEngineChoiceService* search_engine_choice_service =
-      search_engines::SearchEngineChoiceServiceFactory::GetForProfile(profile);
   auto data = TemplateURLPrepopulateData::GetPrepopulatedEngine(
-      profile->GetPrefs(), search_engine_choice_service,
+      *profile->GetPrefs(),
+      regional_capabilities::RegionalCapabilitiesServiceFactory::GetForProfile(
+          profile)
+          ->GetRegionalPrepopulatedEngines(),
       TemplateURLPrepopulateData::PREPOPULATED_ENGINE_ID_BRAVE);
   DCHECK(data);
   return data->sync_guid;
@@ -87,12 +89,14 @@ bool PrepopulatedDataHasDDG(Profile* profile) {
               PREPOPULATED_ENGINE_ID_DUCKDUCKGO_AU_NZ_IE};
 
   CHECK(profile);
-  search_engines::SearchEngineChoiceService* search_engine_choice_service =
-      search_engines::SearchEngineChoiceServiceFactory::GetForProfile(profile);
+  const auto& regional_engines =
+      regional_capabilities::RegionalCapabilitiesServiceFactory::GetForProfile(
+          profile)
+          ->GetRegionalPrepopulatedEngines();
 
   for (const auto& id : alt_search_providers) {
     if (TemplateURLPrepopulateData::GetPrepopulatedEngine(
-            profile->GetPrefs(), search_engine_choice_service, id)) {
+            *profile->GetPrefs(), regional_engines, id)) {
       return true;
     }
   }
@@ -106,22 +110,24 @@ bool PrepopulatedDataHasDDG(Profile* profile) {
 // launching.
 IN_PROC_BROWSER_TEST_F(SearchEngineProviderServiceTest,
                        PRE_PrivateSearchProviderMigrationTest) {
-  auto* prefs = browser()->profile()->GetPrefs();
+  auto* prefs = browser()->GetProfile()->GetPrefs();
   // Set "US" to make prepopluated data include DDG because this migration test
   // is for checking alternative search provider(DDG) is set to private search
   // provider properly.
-  prefs->SetInteger(country_codes::kCountryIDAtInstall, 'U' << 8 | 'S');
+  prefs->SetInteger(regional_capabilities::prefs::kCountryIDAtInstall,
+                    country_codes::CountryId("US").Serialize());
 
-  ASSERT_TRUE(PrepopulatedDataHasDDG(browser()->profile()));
+  ASSERT_TRUE(PrepopulatedDataHasDDG(browser()->GetProfile()));
   prefs->SetBoolean(kShowAlternativePrivateSearchEngineProviderToggle, true);
   prefs->SetBoolean(kUseAlternativePrivateSearchEngineProvider, true);
 }
 
 IN_PROC_BROWSER_TEST_F(SearchEngineProviderServiceTest,
                        PrivateSearchProviderMigrationTest) {
-  auto* prefs = browser()->profile()->GetPrefs();
-  prefs->SetInteger(country_codes::kCountryIDAtInstall, 'U' << 8 | 'S');
-  ASSERT_TRUE(PrepopulatedDataHasDDG(browser()->profile()));
+  auto* prefs = browser()->GetProfile()->GetPrefs();
+  prefs->SetInteger(regional_capabilities::prefs::kCountryIDAtInstall,
+                    country_codes::CountryId("US").Serialize());
+  ASSERT_TRUE(PrepopulatedDataHasDDG(browser()->GetProfile()));
 
   EXPECT_FALSE(
       prefs->GetBoolean(kShowAlternativePrivateSearchEngineProviderToggle));
@@ -130,14 +136,14 @@ IN_PROC_BROWSER_TEST_F(SearchEngineProviderServiceTest,
 
 IN_PROC_BROWSER_TEST_F(SearchEngineProviderServiceTest,
                        PRE_InvalidPrivateSearchProviderRestoreTest) {
-  auto* profile = browser()->profile();
+  auto* profile = browser()->GetProfile();
   profile->GetPrefs()->SetString(prefs::kSyncedDefaultPrivateSearchProviderGUID,
                                  "invalid_id");
 }
 
 IN_PROC_BROWSER_TEST_F(SearchEngineProviderServiceTest,
                        InvalidPrivateSearchProviderRestoreTest) {
-  auto* profile = browser()->profile();
+  auto* profile = browser()->GetProfile();
   auto* service = TemplateURLServiceFactory::GetForProfile(profile);
   EXPECT_TRUE(VerifyTemplateURLServiceLoad(service));
 
@@ -160,7 +166,7 @@ IN_PROC_BROWSER_TEST_F(SearchEngineProviderServiceTest,
 // Check default search provider in private/tor window.
 IN_PROC_BROWSER_TEST_F(SearchEngineProviderServiceTest,
                        CheckDefaultSearchProviderTest) {
-  Profile* profile = browser()->profile();
+  Profile* profile = browser()->GetProfile();
   Profile* incognito_profile =
       profile->GetPrimaryOTRProfile(/*create_if_needed=*/true);
 
@@ -261,12 +267,14 @@ const int kTestExtensionPrepopulatedId = 83;
 // chrome/test/data/extensions/settings_override/manifest.json
 std::unique_ptr<TemplateURLData> TestExtensionSearchEngine(Profile* profile) {
   PrefService* prefs = profile->GetPrefs();
-  search_engines::SearchEngineChoiceService* search_engine_choice_service =
-      search_engines::SearchEngineChoiceServiceFactory::GetForProfile(profile);
+  const auto& regional_engines =
+      regional_capabilities::RegionalCapabilitiesServiceFactory::GetForProfile(
+          profile)
+          ->GetRegionalPrepopulatedEngines();
   // Enforcing that `kTestExtensionPrepopulatedId` is not part of the
   // prepopulated set for the current profile's country.
   for (auto& data : TemplateURLPrepopulateData::GetPrepopulatedEngines(
-           prefs, search_engine_choice_service)) {
+           *prefs, regional_engines)) {
     EXPECT_NE(data->prepopulate_id, kTestExtensionPrepopulatedId);
   }
 
@@ -286,7 +294,8 @@ std::unique_ptr<TemplateURLData> TestExtensionSearchEngine(Profile* profile) {
 
   std::unique_ptr<TemplateURLData> prepopulated =
       TemplateURLPrepopulateData::GetPrepopulatedEngineFromFullList(
-          prefs, search_engine_choice_service, kTestExtensionPrepopulatedId);
+          *prefs, regional_engines,
+          /*regional_variants=*/{}, kTestExtensionPrepopulatedId);
   CHECK(prepopulated);
   // Values below do not exist in extension manifest and are taken from
   // prepopulated engine with prepopulated_id set in extension manifest.
