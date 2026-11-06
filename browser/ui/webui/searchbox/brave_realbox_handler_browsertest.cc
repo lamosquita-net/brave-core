@@ -74,15 +74,19 @@ class BraveRealboxHandlerTest : public InProcessBrowserTest {
   }
 };
 
-IN_PROC_BROWSER_TEST_F(BraveRealboxHandlerTest, BraveSearchUsesNewTabSource) {
+// FlyWeb: a search from the new tab page does not tell the search engine
+// where it came from (no source=newtab, unlike Brave).
+IN_PROC_BROWSER_TEST_F(BraveRealboxHandlerTest,
+                       BraveSearchDoesNotGetNewTabSource) {
   EXPECT_EQ(GURL("about:blank"), contents()->GetVisibleURL());
   EXPECT_TRUE(VerifyTemplateURLServiceLoad());
 
-  OnAutocompleteAccept(
-      GURL("https://search.brave.com/search?q=hello+world&source=desktop"),
-      u":br");
-  EXPECT_EQ(GURL("https://search.brave.com/search?q=hello+world&source=newtab"),
-            contents()->GetLastCommittedURL());
+  GURL match_url(
+      "https://search.brave.com/search?q=hello+world&source=desktop");
+  OnAutocompleteAccept(match_url, u":br");
+  EXPECT_EQ(match_url, contents()->GetLastCommittedURL());
+  EXPECT_EQ(std::string::npos,
+            contents()->GetLastCommittedURL().spec().find("source=newtab"));
 }
 
 IN_PROC_BROWSER_TEST_F(BraveRealboxHandlerTest,
