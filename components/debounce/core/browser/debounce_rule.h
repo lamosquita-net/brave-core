@@ -16,11 +16,14 @@
 #include "base/json/json_value_converter.h"
 #include "base/strings/escape.h"
 #include "base/types/expected.h"
-#include "base/values.h"
 #include "components/prefs/pref_service.h"
 #include "extensions/common/url_pattern_set.h"
 
 class GURL;
+
+namespace base {
+class Value;
+}  // namespace base
 
 namespace debounce {
 
@@ -28,7 +31,8 @@ enum DebounceAction {
   kDebounceNoAction,
   kDebounceRedirectToParam,
   kDebounceRegexPath,
-  kDebounceBase64DecodeAndRedirectToParam
+  kDebounceBase64DecodeAndRedirectToParam,
+  kDebounceRegexPathTemplate
 };
 
 enum DebouncePrependScheme {
@@ -53,8 +57,8 @@ class DebounceRule {
   static base::expected<std::pair<std::vector<std::unique_ptr<DebounceRule>>,
                                   base::flat_set<std::string>>,
                         std::string>
-  ParseRules(const std::string& contents);
-  static const std::string GetETLDForDebounce(const std::string& host);
+  ParseRules(std::string_view contents);
+  static const std::string GetETLDForDebounce(std::string_view host);
   static bool IsSameETLDForDebounce(const GURL& url1, const GURL& url2);
   static bool GetURLPatternSetFromValue(const base::Value* value,
                                         extensions::URLPatternSet* result);
@@ -68,15 +72,17 @@ class DebounceRule {
 
  private:
   bool CheckPrefForRule(const PrefService* prefs) const;
-  bool ValidateAndParsePatternRegex(const std::string& pattern,
-                                    std::string_view path,
-                                    std::string* parsed_value) const;
+  bool ValidateAndParsePatternRegex(
+      std::string_view pattern,
+      std::string_view path,
+      std::vector<std::string>& captured_groups) const;
   extensions::URLPatternSet include_pattern_set_;
   extensions::URLPatternSet exclude_pattern_set_;
   DebounceAction action_;
   DebouncePrependScheme prepend_scheme_;
   std::string param_;
   std::string pref_;
+  std::string redirect_url_template_;
 };
 
 }  // namespace debounce
