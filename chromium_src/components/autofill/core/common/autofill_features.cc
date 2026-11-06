@@ -11,7 +11,9 @@ namespace autofill {
 namespace features {
 
 OVERRIDE_FEATURE_DEFAULT_STATES({{
-    {test::kAutofillServerCommunication, base::FEATURE_DISABLED_BY_DEFAULT},
+    // AutofillAI asks a Google server model about the forms.
+    {kAutofillAiServerModel, base::FEATURE_DISABLED_BY_DEFAULT},
+    {kAutofillAiWithDataSchema, base::FEATURE_DISABLED_BY_DEFAULT},
 }});
 
 }  // namespace features
