@@ -19,7 +19,6 @@
 #include "base/json/json_writer.h"
 #include "base/memory/raw_ptr.h"
 #include "base/metrics/histogram_functions.h"
-#include "base/rust_buildflags.h"
 #include "base/strings/string_split.h"
 #include "base/task/thread_pool.h"
 #include "base/time/time.h"
@@ -31,9 +30,7 @@
 #include "services/network/public/cpp/resource_request.h"
 #include "services/network/public/cpp/shared_url_loader_factory.h"
 #include "services/network/public/mojom/url_response_head.mojom.h"
-
-static_assert(BUILDFLAG(BUILD_RUST_JSON_READER),
-              "To use Rust sanitizer BUILD_RUST_JSON_READER should be enabled");
+#include "url/gurl_debug.h"
 
 namespace api_request_helper {
 
@@ -51,8 +48,8 @@ void ParseJsonUsingRust(
     const scoped_refptr<base::SequencedTaskRunner>& task_runner) {
   task_runner->PostTaskAndReplyWithResult(
       FROM_HERE,
-      base::BindOnce(&base::DecodeJSONInRust, std::move(json),
-                     base::JSON_PARSE_RFC),
+      base::BindOnce(&base::JSONReader::ReadAndReturnValueWithError,
+                     std::move(json), base::JSON_PARSE_RFC),
       base::BindOnce(
           [](data_decoder::DataDecoder::ValueParseCallback callback,
              base::JSONReader::Result result) {
