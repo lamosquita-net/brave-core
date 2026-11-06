@@ -5,6 +5,8 @@
 
 #include "brave/browser/ui/color/brave_color_mixer.h"
 
+#include <cmath>
+
 #include "base/notreached.h"
 #include "base/numerics/safe_conversions.h"
 #include "brave/browser/ui/color/brave_color_id.h"
@@ -489,6 +491,11 @@ void AddBraveOmniboxColorMixer(ui::ColorProvider* provider,
   mixer[kColorOmniboxResultsButtonIcon] = {kColorOmniboxResultsIcon};
   mixer[kColorOmniboxResultsButtonIconSelected] = {
       kColorOmniboxResultsIconSelected};
+  mixer[kColorOmniboxIconHover] = {
+      ui::SetAlpha(kColorOmniboxText, std::ceil(0.10f * 255.0f))};
+
+  // We don't use bg color for location icon view.
+  mixer[kColorOmniboxIconBackground] = {SK_ColorTRANSPARENT};
 
   if (key.custom_theme) {
     return;

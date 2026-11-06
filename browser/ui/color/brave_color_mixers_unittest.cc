@@ -8,6 +8,7 @@
 #include "chrome/browser/ui/color/chrome_color_id.h"
 #include "chrome/browser/ui/color/chrome_color_mixers.h"
 #include "testing/gtest/include/gtest/gtest.h"
+#include "third_party/skia/include/core/SkColor.h"
 #include "ui/color/color_provider.h"
 #include "ui/color/color_provider_key.h"
 
@@ -32,7 +33,7 @@ TEST_F(BraveColorMixersTest, ColorOverrideTest) {
 
   EXPECT_EQ(color_provider().GetColor(kColorToolbar),
             color_provider().GetColor(kColorInfoBarBackground));
-  EXPECT_EQ(color_provider().GetColor(kColorPageInfoIconHover),
+  EXPECT_EQ(color_provider().GetColor(kColorOmniboxIconHover),
             SkColorSetA(color_provider().GetColor(kColorOmniboxText),
                         std::ceil(0.10f * 255.0f)));
 }
