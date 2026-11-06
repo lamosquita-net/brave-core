@@ -29,9 +29,9 @@ void CrxUpdateService::OnDemandUpdate(const std::vector<std::string>& ids,
   }
 
   auto crx_data_callback = base::BindOnce(&CrxUpdateService::GetCrxComponents,
-                                          base::Unretained(this));
+                                          weak_ptr_factory_.GetWeakPtr());
   auto update_complete_callback = base::BindOnce(
-      &CrxUpdateService::OnUpdateComplete, base::Unretained(this),
+      &CrxUpdateService::OnUpdateComplete, weak_ptr_factory_.GetWeakPtr(),
       std::move(callback), base::TimeTicks::Now());
 
   update_client_->Update(ids, std::move(crx_data_callback), {},
@@ -42,7 +42,7 @@ void CrxUpdateService::OnDemandUpdate(const std::vector<std::string>& ids,
 void OnDemandUpdater::OnDemandUpdate(const std::vector<std::string>& ids,
                                      Priority priority,
                                      Callback callback) {
-  NOTREACHED_NORETURN();
+  NOTREACHED();
 }
 
 }  // namespace component_updater
