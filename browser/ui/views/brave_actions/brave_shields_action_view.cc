@@ -9,6 +9,7 @@
 #include <string>
 #include <utility>
 
+#include "base/check_deref.h"
 #include "base/memory/weak_ptr.h"
 #include "brave/browser/ui/brave_icon_with_badge_image_source.h"
 #include "brave/browser/ui/webui/brave_shields/shields_panel_ui.h"
@@ -17,6 +18,7 @@
 #include "brave/components/constants/webui_url_constants.h"
 #include "brave/components/l10n/common/localization_util.h"
 #include "chrome/browser/profiles/profile.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/layout_constants.h"
 #include "chrome/browser/ui/omnibox/omnibox_theme.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
@@ -65,13 +67,15 @@ class BraveShieldsActionViewHighlightPathGenerator
 DEFINE_CLASS_ELEMENT_IDENTIFIER_VALUE(BraveShieldsActionView,
                                       kShieldsActionIcon);
 
-BraveShieldsActionView::BraveShieldsActionView(Profile& profile,
-                                               TabStripModel& tab_strip_model)
+BraveShieldsActionView::BraveShieldsActionView(
+    BrowserWindowInterface* browser_window_interface)
     : LabelButton(base::BindRepeating(&BraveShieldsActionView::ButtonPressed,
                                       base::Unretained(this)),
                   std::u16string()),
-      profile_(profile),
-      tab_strip_model_(tab_strip_model) {
+      browser_window_interface_(browser_window_interface),
+      profile_(CHECK_DEREF(browser_window_interface->GetProfile())),
+      tab_strip_model_(
+          CHECK_DEREF(browser_window_interface->GetTabStripModel())) {
   auto* web_contents = tab_strip_model_->GetActiveWebContents();
   if (web_contents) {
     brave_shields::BraveShieldsTabHelper::FromWebContents(web_contents)
@@ -119,9 +123,7 @@ SkPath BraveShieldsActionView::GetHighlightPath() const {
   rect.Inset(highlight_insets);
   const int radii = ChromeLayoutProvider::Get()->GetCornerRadiusMetric(
       views::Emphasis::kHigh, rect.size());
-  SkPath path;
-  path.addRoundRect(gfx::RectToSkRect(rect), radii, radii);
-  return path;
+  return SkPath::RRect(gfx::RectToSkRect(rect), radii, radii);
 }
 
 std::unique_ptr<IconWithBadgeImageSource>
@@ -212,7 +214,7 @@ void BraveShieldsActionView::ButtonPressed() {
 
   if (!webui_bubble_manager_) {
     webui_bubble_manager_ = WebUIBubbleManager::Create<ShieldsPanelUI>(
-        this, &*profile_, GURL(kShieldsPanelURL), IDS_BRAVE_SHIELDS);
+        browser_window_interface_, GURL(kShieldsPanelURL), IDS_BRAVE_SHIELDS);
   }
 
   if (webui_bubble_manager_->GetBubbleWidget()) {
@@ -220,7 +222,7 @@ void BraveShieldsActionView::ButtonPressed() {
     return;
   }
 
-  webui_bubble_manager_->ShowBubble();
+  webui_bubble_manager_->ShowBubble(this);
 }
 
 bool BraveShieldsActionView::SchemeIsLocal(GURL url) {
@@ -238,7 +240,7 @@ BraveShieldsActionView::CreateDefaultBorder() const {
   return border;
 }
 
-std::u16string BraveShieldsActionView::GetTooltipText(
+std::u16string BraveShieldsActionView::GetRenderedTooltipText(
     const gfx::Point& p) const {
   auto* web_contents = tab_strip_model_->GetActiveWebContents();
 

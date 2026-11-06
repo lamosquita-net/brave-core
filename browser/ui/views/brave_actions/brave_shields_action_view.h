@@ -18,8 +18,10 @@
 #include "ui/views/controls/button/menu_button_controller.h"
 #include "ui/views/widget/widget.h"
 
-class TabStripModel;
+class BrowserWindowInterface;
 class IconWithBadgeImageSource;
+class Profile;
+class TabStripModel;
 
 class BraveShieldsActionView
     : public views::LabelButton,
@@ -28,8 +30,8 @@ class BraveShieldsActionView
   METADATA_HEADER(BraveShieldsActionView, views::LabelButton)
  public:
   DECLARE_CLASS_ELEMENT_IDENTIFIER_VALUE(kShieldsActionIcon);
-  explicit BraveShieldsActionView(Profile& profile,
-                                  TabStripModel& tab_strip_model);
+  explicit BraveShieldsActionView(
+      BrowserWindowInterface* browser_window_interface);
   BraveShieldsActionView(const BraveShieldsActionView&) = delete;
   BraveShieldsActionView& operator=(const BraveShieldsActionView&) = delete;
   ~BraveShieldsActionView() override;
@@ -40,12 +42,13 @@ class BraveShieldsActionView
   // views::LabelButton:
   std::unique_ptr<views::LabelButtonBorder> CreateDefaultBorder()
       const override;
-  std::u16string GetTooltipText(const gfx::Point& p) const override;
+  std::u16string GetRenderedTooltipText(const gfx::Point& p) const override;
   void OnThemeChanged() override;
 
   SkPath GetHighlightPath() const;
   views::Widget* GetBubbleWidget() {
-    return webui_bubble_manager_->GetBubbleWidget();
+    return webui_bubble_manager_ ? webui_bubble_manager_->GetBubbleWidget()
+                                 : nullptr;
   }
 
  private:
@@ -66,6 +69,7 @@ class BraveShieldsActionView
       const TabStripSelectionChange& selection) override;
 
   raw_ptr<views::MenuButtonController> menu_button_controller_ = nullptr;
+  const raw_ptr<BrowserWindowInterface> browser_window_interface_;
   raw_ref<Profile> profile_;
   raw_ref<TabStripModel> tab_strip_model_;
   std::unique_ptr<WebUIBubbleManager> webui_bubble_manager_;

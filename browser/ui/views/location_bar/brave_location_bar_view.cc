@@ -9,6 +9,7 @@
 #include <optional>
 #include <utility>
 
+#include "base/check.h"
 #include "base/feature_list.h"
 #include "brave/app/vector_icons/vector_icons.h"
 #include "brave/browser/themes/brave_theme_service.h"
@@ -22,14 +23,15 @@
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/themes/theme_service_factory.h"
 #include "chrome/browser/ui/layout_constants.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+#include "chrome/browser/ui/omnibox/omnibox_controller.h"
+#include "chrome/browser/ui/omnibox/omnibox_edit_model.h"
 #include "chrome/browser/ui/omnibox/omnibox_theme.h"
 #include "chrome/browser/ui/views/chrome_layout_provider.h"
 #include "chrome/browser/ui/views/location_bar/location_bar_view.h"
 #include "chrome/browser/ui/views/omnibox/omnibox_view_views.h"
-#include "chrome/browser/ui/views/page_action/page_action_icon_controller.h"
 #include "chrome/grit/branded_strings.h"
 #include "components/grit/brave_components_strings.h"
-#include "components/omnibox/browser/omnibox_edit_model.h"
 #include "components/version_info/channel.h"
 #include "content/public/browser/navigation_entry.h"
 #include "ui/base/metadata/metadata_impl_macros.h"
@@ -39,9 +41,7 @@
 #include "ui/gfx/geometry/skia_conversions.h"
 #include "ui/gfx/image/image_skia.h"
 #include "ui/gfx/paint_vector_icon.h"
-#include "ui/views/animation/ink_drop.h"
 #include "ui/views/controls/highlight_path_generator.h"
-#include "ui/views/view_utils.h"
 
 namespace {
 
@@ -72,7 +72,7 @@ std::optional<BraveColorIds> GetFocusRingColor(Profile* profile) {
 
 }  // namespace
 
-BraveLocationBarView::BraveLocationBarView(Browser* browser,
+BraveLocationBarView::BraveLocationBarView(BrowserWindowInterface* browser,
                                            Profile* profile,
                                            CommandUpdater* command_updater,
                                            Delegate* delegate,
@@ -94,14 +94,14 @@ void BraveLocationBarView::Init() {
     focus_ring->SetPathGenerator(
         std::make_unique<
             BraveLocationBarViewFocusRingHighlightPathGenerator>());
-    if (const auto color_id = GetFocusRingColor(profile())) {
+    if (const auto color_id = GetFocusRingColor(GetProfile())) {
       focus_ring->SetColorId(color_id.value());
     }
   }
 
   // brave action buttons
   brave_actions_ = AddChildView(
-      std::make_unique<BraveActionsContainer>(browser_, profile()));
+      std::make_unique<BraveActionsContainer>(browser_, GetProfile()));
   brave_actions_->Init();
   // Call Update again to cause a Layout
   Update(nullptr);
@@ -120,6 +120,22 @@ void BraveLocationBarView::Update(content::WebContents* contents) {
   }
 
   LocationBarView::Update(contents);
+}
+
+void BraveLocationBarView::Layout(PassKey) {
+  if (ignore_layout_) {
+    return;
+  }
+
+  LayoutSuperclass<LocationBarView>(this);
+}
+
+void BraveLocationBarView::OnVisibleBoundsChanged() {
+  if (ignore_layout_) {
+    return;
+  }
+
+  LocationBarView::OnVisibleBoundsChanged();
 }
 
 void BraveLocationBarView::OnChanged() {
@@ -151,23 +167,47 @@ void BraveLocationBarView::RefreshBackground() {
 
   if (shadow_) {
     const bool show_shadow =
-        IsMouseHovered() && !omnibox_view_->model()->is_caret_visible();
+        IsMouseHovered() &&
+        !GetOmniboxController()->edit_model()->is_caret_visible();
     shadow_->SetVisible(show_shadow);
     return;
   }
 }
 
-gfx::Size BraveLocationBarView::CalculatePreferredSize(
-    const views::SizeBounds& available_size) const {
-  gfx::Size min_size = LocationBarView::CalculatePreferredSize(available_size);
+int BraveLocationBarView::GetMinimumTrailingWidth() const {
+  int trailing_width = LocationBarView::GetMinimumTrailingWidth();
+  const int elem_pad =
+      GetLayoutConstant(LayoutConstant::kLocationBarElementPadding);
+
   if (brave_actions_ && brave_actions_->GetVisible()) {
-    const int brave_actions_min = brave_actions_->GetMinimumSize().width();
-    const int extra_width =
-        brave_actions_min +
-        GetLayoutConstant(LayoutConstant::kLocationBarElementPadding);
-    min_size.Enlarge(extra_width, 0);
+    trailing_width += brave_actions_->GetMinimumSize().width() + elem_pad;
   }
 
+  return trailing_width;
+}
+
+gfx::Size BraveLocationBarView::GetMinimumSize() const {
+  gfx::Size min_size = LocationBarView::GetMinimumSize();
+  if (!IsInitialized()) {
+    return min_size;
+  }
+
+  // Skip the additive formula for non-normal browser windows (popups, apps):
+  // a minimum wider than the width requested by window.open() would push the
+  // clamped popup partially outside the work area.
+  if (browser_->GetType() != BrowserWindowInterface::Type::TYPE_NORMAL) {
+    return min_size;
+  }
+
+  // Unlike upstream which uses max(omnibox, leading+trailing), reserve space
+  // for all children simultaneously so the omnibox always has its minimum
+  // alongside all visible decorations.
+  const int padding =
+      GetLayoutConstant(LayoutConstant::kLocationBarElementPadding);
+  const int width = GetInsets().width() + GetMinimumLeadingWidth() + padding +
+                    omnibox_view_->GetMinimumSize().width() +
+                    GetMinimumTrailingWidth();
+  min_size.set_width(width);
   return min_size;
 }
 
@@ -220,9 +260,10 @@ int BraveLocationBarView::GetBorderRadius() const {
       views::Emphasis::kMaximum, size());
 }
 
-void BraveLocationBarView::FocusLocation(bool is_user_initiated) {
+void BraveLocationBarView::FocusLocation(bool is_user_initiated,
+                                         bool clear_focus_if_failed) {
   if (base::FeatureList::IsEnabled(tabs::features::kBraveSharedPinnedTabs) &&
-      browser_->profile()->GetPrefs()->GetBoolean(
+      browser_->GetProfile()->GetPrefs()->GetBoolean(
           brave_tabs::kSharedPinnedTab)) {
     // When updating dummy contents, this could be called even when the widget
     // is inactive. We shouldn't focus the omnibox in that case.
@@ -236,8 +277,7 @@ void BraveLocationBarView::FocusLocation(bool is_user_initiated) {
 
 SkPath BraveLocationBarView::GetFocusRingHighlightPath() const {
   const SkScalar radius = GetBorderRadius();
-  return SkPath().addRoundRect(gfx::RectToSkRect(GetLocalBounds()), radius,
-                               radius);
+  return SkPath::RRect(gfx::RectToSkRect(GetLocalBounds()), radius, radius);
 }
 
 ContentSettingImageView*

@@ -14,6 +14,7 @@
   virtual std::vector<views::View*> GetRightMostTrailingViews(); \
   virtual std::vector<views::View*> GetLeftMostTrailingViews();
 
+#define GetMinimumTrailingWidth virtual GetMinimumTrailingWidth
 #define OnOmniboxBlurred virtual OnOmniboxBlurred
 #define GetBorderRadius virtual GetBorderRadius
 #define RefreshBackground virtual RefreshBackground
@@ -21,6 +22,7 @@
 #undef RefreshBackground
 #undef GetBorderRadius
 #undef OnOmniboxBlurred
+#undef GetMinimumTrailingWidth
 #undef BRAVE_LOCATION_BAR_VIEW_H_
 
 #endif  // BRAVE_CHROMIUM_SRC_CHROME_BROWSER_UI_VIEWS_LOCATION_BAR_LOCATION_BAR_VIEW_H_

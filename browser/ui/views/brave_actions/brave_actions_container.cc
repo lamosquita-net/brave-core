@@ -13,15 +13,17 @@
 #include "brave/browser/ui/views/rounded_separator.h"
 #include "brave/components/constants/pref_names.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/layout_constants.h"
 #include "components/prefs/pref_service.h"
 #include "ui/base/metadata/metadata_impl_macros.h"
 #include "ui/views/layout/box_layout.h"
 #include "ui/views/view.h"
 
-BraveActionsContainer::BraveActionsContainer(Browser* browser, Profile* profile)
-    : browser_(browser) {}
+BraveActionsContainer::BraveActionsContainer(
+    BrowserWindowInterface* browser_window_interface,
+    Profile* profile)
+    : browser_window_interface_(browser_window_interface) {}
 
 BraveActionsContainer::~BraveActionsContainer() = default;
 
@@ -54,10 +56,8 @@ void BraveActionsContainer::Init() {
 }
 
 void BraveActionsContainer::AddActionViewForShields() {
-  shields_action_btn_ =
-      AddChildViewAt(std::make_unique<BraveShieldsActionView>(
-                         *browser_->profile(), *browser_->tab_strip_model()),
-                     1);
+  shields_action_btn_ = AddChildViewAt(
+      std::make_unique<BraveShieldsActionView>(browser_window_interface_), 1);
   shields_action_btn_->SetPreferredSize(GetActionSize());
   shields_action_btn_->Init();
 }
