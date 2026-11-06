@@ -5,12 +5,12 @@
 
 #include "brave/browser/themes/brave_dark_mode_utils.h"
 
+#include <optional>
 #include <utility>
 
 #include "base/check_is_test.h"
 #include "base/command_line.h"
 #include "base/strings/string_util.h"
-#include "brave/browser/themes/brave_dark_mode_utils_internal.h"
 #include "brave/components/constants/brave_switches.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/l10n/common/localization_util.h"
@@ -75,7 +75,9 @@ bool SystemDarkModeEnabled() {
   // Linux has no "same as system" option since DarkModeManagerLinux is gone.
   return false;
 #else
-  return ui::NativeTheme::GetInstanceForNativeUi()->SystemDarkModeSupported();
+  // Every macOS and Windows version supported by Chromium 156 has a system
+  // dark mode.
+  return true;
 #endif
 }
 
@@ -131,7 +133,9 @@ BraveDarkModeType GetActiveBraveDarkModeType() {
     if (!SystemDarkModeEnabled())
       return GetDarkModeTypeBasedOnChannel();
 
-    return ui::NativeTheme::GetInstanceForNativeUi()->ShouldUseDarkColors()
+    return ui::NativeTheme::GetInstanceForNativeUi()
+                       ->preferred_color_scheme() ==
+                   ui::NativeTheme::PreferredColorScheme::kDark
                ? BraveDarkModeType::BRAVE_DARK_MODE_TYPE_DARK
                : BraveDarkModeType::BRAVE_DARK_MODE_TYPE_LIGHT;
   }
@@ -190,5 +194,19 @@ base::ListValue GetBraveDarkModeTypeList() {
 
   return list;
 }
+
+#if !BUILDFLAG(IS_MAC)
+void SetSystemDarkMode(BraveDarkModeType type) {
+  // Dark or light chosen in FlyWeb takes precedence over the OS setting for
+  // every NativeTheme instance; the default follows the OS again.
+  std::optional<ui::NativeTheme::PreferredColorScheme> scheme;
+  if (type == BraveDarkModeType::BRAVE_DARK_MODE_TYPE_DARK) {
+    scheme = ui::NativeTheme::PreferredColorScheme::kDark;
+  } else if (type == BraveDarkModeType::BRAVE_DARK_MODE_TYPE_LIGHT) {
+    scheme = ui::NativeTheme::PreferredColorScheme::kLight;
+  }
+  ui::NativeTheme::SetPreferredColorSchemeOverride(scheme);
+}
+#endif  // !BUILDFLAG(IS_MAC)
 
 }  // namespace dark_mode
