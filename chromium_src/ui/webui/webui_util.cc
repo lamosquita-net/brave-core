@@ -1,15 +1,16 @@
 /* Copyright (c) 2020 The Brave Authors. All rights reserved.
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#include "chrome/browser/ui/webui/webui_util.h"
+#include "ui/webui/webui_util.h"
+
 #include "base/no_destructor.h"
 #include "base/strings/strcat.h"
 #include "content/public/common/url_constants.h"
 
 #define SetupWebUIDataSource SetupWebUIDataSource_ChromiumImpl
-#include "src/chrome/browser/ui/webui/webui_util.cc"
+#include "src/ui/webui/webui_util.cc"
 #undef SetupWebUIDataSource
 
 namespace webui {
@@ -22,9 +23,7 @@ bool IsChromeUntrustedDataSource(content::WebUIDataSource* source) {
       base::StrCat(
           {content::kChromeUIUntrustedScheme, url::kStandardSchemeSeparator}));
 
-  return base::StartsWith(source->GetSource(),
-                          *kChromeUntrustedSourceNamePrefix,
-                          base::CompareCase::SENSITIVE);
+  return source->GetSource().starts_with(*kChromeUntrustedSourceNamePrefix);
 }
 
 constexpr char kBraveCSP[] =
