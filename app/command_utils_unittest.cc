@@ -12,10 +12,11 @@
 #include "brave/components/commands/common/features.h"
 #include "chrome/app/chrome_command_ids.h"
 #include "chrome/browser/ui/accelerator_table.h"
+#include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 // Note: If this test fails because an accelerated command isn't present just
-// add the missing command to |commands::GetCommands| in command_utils.h.
+// add the missing command to //brave/app/generate_command_metadata.py
 TEST(CommandUtilsUnitTest, AllAcceleratedCommandsShouldBeAvailable) {
   base::test::ScopedFeatureList features;
   features.InitAndEnableFeature(commands::features::kBraveCommands);
@@ -36,7 +37,7 @@ TEST(CommandUtilsUnitTest, NoTranslationsIncludeAmpersand) {
 
   for (const auto& command : commands::GetCommands()) {
     auto translation = commands::GetCommandName(command);
-    EXPECT_FALSE(translation.contains("&"))
+    EXPECT_THAT(translation, testing::Not(testing::HasSubstr("&")))
         << translation
         << " contains an '&' character. If this '&' is meant to be in the "
            "translation then this might be a false positive, in which case the "

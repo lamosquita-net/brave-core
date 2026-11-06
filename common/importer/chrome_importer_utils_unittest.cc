@@ -1,14 +1,17 @@
-/* Copyright 2020 The Brave Authors. All rights reserved.
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+// Copyright (c) 2020 The Brave Authors. All rights reserved.
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this file,
+// You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "brave/common/importer/chrome_importer_utils.h"
+
+#include <string>
+
 #include "base/files/file_path.h"
 #include "base/files/file_util.h"
 #include "base/files/scoped_temp_dir.h"
-#include "base/json/json_reader.h"
 #include "base/path_service.h"
+#include "base/test/values_test_util.h"
 #include "brave/common/importer/importer_constants.h"
 #include "brave/components/constants/brave_paths.h"
 #include "components/user_data_importer/common/importer_data_types.h"
@@ -84,31 +87,25 @@ TEST_F(BraveChromeImporterUtilsTest, GetChromeUserDataFolder) {
   CopyTestFileToProfile("Local State", "Local State");
 
   EXPECT_EQ(GetChromeSourceProfiles(base::FilePath(FILE_PATH_LITERAL("fake"))),
-            base::JSONReader::Read(R"([{"id": "", "name": "Default" }])",
-                                   base::JSON_PARSE_CHROMIUM_EXTENSIONS)
-                ->GetList());
+            base::test::ParseJsonList(R"([{"id": "", "name": "Default" }])"));
 
   EXPECT_EQ(GetChromeSourceProfiles(GetTestProfilePath().Append(
                 base::FilePath::StringType(FILE_PATH_LITERAL("Local State")))),
-            base::JSONReader::Read(R"([
+            base::test::ParseJsonList(R"([
         {"id": "Default", "name": "Profile 1"},
         {"id": "Profile 2", "name": "Profile 2"}
-      ])",
-                                   base::JSON_PARSE_CHROMIUM_EXTENSIONS)
-                ->GetList());
+      ])"));
   CopyTestFileToProfile("No Profile Local State", "No Profile Local State");
   EXPECT_EQ(GetChromeSourceProfiles(
                 GetTestProfilePath().Append(base::FilePath::StringType(
                     FILE_PATH_LITERAL("No Profile Local State")))),
-            base::JSONReader::Read(R"([{"id": "", "name": "Default" }])",
-                                   base::JSON_PARSE_CHROMIUM_EXTENSIONS)
-                ->GetList());
+            base::test::ParseJsonList(R"([{"id": "", "name": "Default" }])"));
 
   CopyTestFileToProfile("Local State With Avatar", "Local State With Avatar");
   EXPECT_EQ(GetChromeSourceProfiles(
                 GetTestProfilePath().Append(base::FilePath::StringType(
                     FILE_PATH_LITERAL("Local State With Avatar")))),
-            base::JSONReader::Read(R"([
+            base::test::ParseJsonList(R"([
         {
           "id": "Default",
           "name": "Profile 1",
@@ -121,9 +118,7 @@ TEST_F(BraveChromeImporterUtilsTest, GetChromeUserDataFolder) {
           "name": "Profile 2",
           "last_active": false
         }
-      ])",
-                                   base::JSON_PARSE_CHROMIUM_EXTENSIONS)
-                ->GetList());
+      ])"));
 }
 
 TEST_F(BraveChromeImporterUtilsTest, ChromeImporterCanImport) {
