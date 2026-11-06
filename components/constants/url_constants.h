@@ -26,8 +26,6 @@ inline constexpr char kWebDiscoveryLearnMoreUrl[] =
 inline constexpr char kBraveSearchHost[] = "search.brave.com";
 inline constexpr char kWidevineLearnMoreUrl[] =
     "https://flyweb.lamosquita.net/ayuda/#drm";
-inline constexpr char kDevChannelDeprecationLearnMoreUrl[] =
-    "https://flyweb.lamosquita.net/ayuda/";
 
 // FlyWeb: our help page (softmac FlyWeb/docs/web-flyweb.md, W8), the page that
 // explains how to report a problem (it replaces Brave's webcompat reporter) and
