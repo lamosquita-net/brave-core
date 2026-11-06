@@ -8,7 +8,6 @@
 #include "base/containers/fixed_flat_map.h"
 #include "base/no_destructor.h"
 #include "brave/browser/ui/color/brave_color_id.h"
-#include "brave/browser/ui/color/color_palette.h"
 #include "brave/browser/ui/color/leo/colors.h"
 #include "chrome/browser/ui/color/chrome_color_id.h"
 #include "ui/color/color_mixer.h"
@@ -37,8 +36,6 @@ std::optional<ChromeColorIds> GetMappedChromeColorId(
                kColorTabForegroundInactiveFrameActive},
               {kColorBraveVerticalTabNTBShortcutTextColor,
                kColorTabForegroundInactiveFrameActive},
-              {kColorBraveSplitViewTileBackground,
-               kColorTabBackgroundInactiveFrameActive},
           });
 
   auto iter = kChromiumColorMap.find(brave_color_id);
@@ -95,7 +92,6 @@ void AddBraveTabLightThemeColorMixer(ui::ColorProvider* provider,
           {kColorBraveVerticalTabNTBTextColor, SkColorSetRGB(0x6B, 0x70, 0x84)},
           {kColorBraveVerticalTabNTBShortcutTextColor,
            SkColorSetRGB(0x85, 0x89, 0x89)},
-          {kColorBraveSplitViewTileBackground, SkColorSetRGB(0xDA, 0xDF, 0xE1)},
           {kColorBraveSharedPinnedTabDummyViewBackground,
            leo::GetColor(leo::Color::kColorContainerBackgroundDesktop,
                          leo::Theme::kLight)},
@@ -105,20 +101,6 @@ void AddBraveTabLightThemeColorMixer(ui::ColorProvider* provider,
            leo::GetColor(leo::Color::kColorTextSecondary, leo::Theme::kLight)},
           {kColorBraveSharedPinnedTabDummyViewThumbnailBorder,
            leo::GetColor(leo::Color::kColorDividerSubtle, leo::Theme::kLight)},
-          {kColorBraveSplitViewMenuButtonIcon,
-           leo::GetColor(leo::Color::kColorIconInteractive,
-                         leo::Theme::kLight)},
-          {kColorBraveSplitViewMenuButtonBackground,
-           leo::GetColor(leo::Color::kColorContainerBackground,
-                         leo::Theme::kLight)},
-          {kColorBraveSplitViewMenuButtonBorder,
-           leo::GetColor(leo::Color::kColorDividerSubtle, leo::Theme::kLight)},
-          {kColorBraveSplitViewActiveWebViewBorder,
-           leo::GetColor(leo::Color::kColorIconInteractive,
-                         leo::Theme::kLight)},
-          {kColorBraveSplitViewInactiveWebViewBorder, kLightFrame},
-          {kColorBraveSplitViewMenuItemIcon,
-           leo::GetColor(leo::Color::kColorIconDefault, leo::Theme::kLight)},
       });
   for (const auto& [color_id, default_color] : *kDefaultColorMap) {
     mixer[color_id] =
@@ -143,7 +125,6 @@ void AddBraveTabDarkThemeColorMixer(ui::ColorProvider* provider,
           {kColorBraveVerticalTabNTBTextColor, SkColorSetRGB(0x8C, 0x90, 0xA1)},
           {kColorBraveVerticalTabNTBShortcutTextColor,
            SkColorSetRGB(0x68, 0x6D, 0x7D)},
-          {kColorBraveSplitViewTileBackground, SkColorSetRGB(0x0D, 0x12, 0x14)},
           {kColorBraveSharedPinnedTabDummyViewBackground,
            leo::GetColor(leo::Color::kColorContainerBackgroundDesktop,
                          leo::Theme::kDark)},
@@ -153,18 +134,6 @@ void AddBraveTabDarkThemeColorMixer(ui::ColorProvider* provider,
            leo::GetColor(leo::Color::kColorTextSecondary, leo::Theme::kDark)},
           {kColorBraveSharedPinnedTabDummyViewThumbnailBorder,
            leo::GetColor(leo::Color::kColorDividerSubtle, leo::Theme::kDark)},
-          {kColorBraveSplitViewMenuButtonIcon,
-           leo::GetColor(leo::Color::kColorIconInteractive, leo::Theme::kDark)},
-          {kColorBraveSplitViewMenuButtonBackground,
-           leo::GetColor(leo::Color::kColorContainerBackground,
-                         leo::Theme::kDark)},
-          {kColorBraveSplitViewMenuButtonBorder,
-           leo::GetColor(leo::Color::kColorDividerSubtle, leo::Theme::kDark)},
-          {kColorBraveSplitViewActiveWebViewBorder,
-           leo::GetColor(leo::Color::kColorIconInteractive, leo::Theme::kDark)},
-          {kColorBraveSplitViewInactiveWebViewBorder, kDarkFrame},
-          {kColorBraveSplitViewMenuItemIcon,
-           leo::GetColor(leo::Color::kColorIconDefault, leo::Theme::kDark)},
       });
   for (const auto& [color_id, default_color] : *kDefaultColorMap) {
     auto color =
@@ -187,7 +156,6 @@ void AddBraveTabPrivateThemeColorMixer(ui::ColorProvider* provider,
       mixer.GetResultColor(kColorTabBackgroundActiveFrameActive)};
   mixer[kColorBraveVerticalTabInactiveBackground] = {
       mixer.GetResultColor(kColorToolbar)};
-  mixer[kColorBraveSplitViewTileBackground] = {SkColorSetRGB(0x2A, 0xD, 0x58)};
 }
 
 }  // namespace tabs

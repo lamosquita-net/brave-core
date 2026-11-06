@@ -64,11 +64,3 @@
 #undef CompoundTabContainer
 #undef TabContainerImpl
 #undef AddTab
-
-bool TabStrip::IsTabTiled(const Tab* tab) const {
-  return false;
-}
-
-bool TabStrip::IsFirstTabInTile(const Tab* tab) const {
-  return false;
-}

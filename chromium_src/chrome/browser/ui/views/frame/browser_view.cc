@@ -8,7 +8,6 @@
 #include "chrome/browser/ui/views/frame/browser_view.h"
 
 #include "brave/browser/ui/views/frame/brave_browser_view_layout.h"
-#include "brave/browser/ui/views/frame/brave_contents_layout_manager.h"
 #include "brave/browser/ui/views/frame/brave_tab_strip_region_view.h"
 #include "brave/browser/ui/views/infobars/brave_infobar_container_view.h"
 #include "brave/browser/ui/views/side_panel/brave_side_panel.h"
@@ -33,7 +32,6 @@
 #define kAlignRight kHorizontalAlignRight
 #define SidePanelCoordinator BraveSidePanelCoordinator
 #define BookmarkBarView BraveBookmarkBarView
-#define ContentsLayoutManager BraveContentsLayoutManager
 #define UpdateExclusiveAccessBubble UpdateExclusiveAccessBubble_ChromiumImpl
 
 // 156 moved ConvertedHitTest() from browser_view_layout.cc to browser_view.cc.
@@ -46,7 +44,6 @@
 #undef BRAVE_BROWSER_VIEW_LAYOUT_CONVERTED_HIT_TEST
 
 #undef UpdateExclusiveAccessBubble
-#undef ContentsLayoutManager
 #undef BookmarkBarView
 #undef SidePanelCoordinator
 #undef kAlignLeft

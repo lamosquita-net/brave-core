@@ -9,7 +9,6 @@
 
 #include "base/strings/string_util.h"
 #include "brave/browser/brave_browser_features.h"
-#include "brave/browser/brave_features_internal_names.h"
 #include "brave/browser/ui/brave_ui_features.h"
 #include "brave/browser/ui/tabs/features.h"
 #include "brave/components/brave_component_updater/browser/features.h"
@@ -154,13 +153,6 @@
           "Shows scroll bar on vertical tab strip when it overflows",     \
           kOsWin | kOsMac | kOsLinux,                                     \
           FEATURE_VALUE_TYPE(tabs::features::kBraveVerticalTabScrollBar), \
-      },                                                                  \
-      {                                                                   \
-          kSplitViewFeatureInternalName,                                  \
-          "Enable split view",                                            \
-          "Enables split view",                                           \
-          kOsWin | kOsMac | kOsLinux,                                     \
-          FEATURE_VALUE_TYPE(tabs::features::kBraveSplitView),            \
       })
 #else
 #define BRAVE_TABS_FEATURE_ENTRIES

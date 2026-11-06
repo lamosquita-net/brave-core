@@ -6,8 +6,6 @@
 // This file must be included inside tab_style_views.cc as classes here are
 // depending on what's defined in anonymous namespace of tab_style_views.cc
 
-#include "brave/browser/ui/tabs/split_view_browser_data.h"
-
 namespace {
 
 using tabs::features::HorizontalTabsUpdateEnabled;
@@ -88,7 +86,6 @@ class BraveVerticalTabStyle : public BraveTabStyleViews {
 
  private:
   bool ShouldShowVerticalTabs() const;
-  bool IsTabTiled(const Tab* tab) const;
 
   SkColor GetTargetTabBackgroundColor(
       TabStyle::TabSelectionState selection_state,
@@ -169,15 +166,6 @@ SkPath BraveVerticalTabStyle::GetPath(
     }
   }
 
-  const bool is_tab_tiled = IsTabTiled(tab());
-
-  if (is_tab_tiled && !tab()->IsActive() &&
-      (path_type == TabStyle::PathType::kBorder ||
-       path_type == TabStyle::PathType::kFill)) {
-    // We don't want inactive tab in a tile to have border or fill.
-    return SkPath();
-  }
-
   const bool is_pinned = tab()->data().pinned;
 
   // Calculate the bounds of the actual path.
@@ -213,25 +201,6 @@ SkPath BraveVerticalTabStyle::GetPath(
       tab_right -= scale + scale * 0.5;
       tab_bottom -= scale + scale * 0.5;
       radius -= scale;
-    }
-  }
-
-  if (is_tab_tiled && path_type != TabStyle::PathType::kHitTest) {
-    if (ShouldShowVerticalTabs()) {
-      constexpr auto kPaddingForVerticalTab = 4;
-      tab_top += scale * kPaddingForVerticalTab;
-      tab_bottom -= scale * kPaddingForVerticalTab;
-      tab_left += scale * kPaddingForVerticalTab;
-      tab_right -= scale * kPaddingForVerticalTab;
-    } else {
-      // As the horizontal tab has padding already we only gives 1 dip padding.
-      // Accumulative padding will be 4 dips.
-      constexpr auto kPaddingForHorizontalTab = 1;
-      tab_top += scale * kPaddingForHorizontalTab;
-      tab_bottom -= scale * kPaddingForHorizontalTab;
-      tab()->controller()->IsFirstTabInTile(tab())
-          ? tab_left += scale* kPaddingForHorizontalTab
-          : tab_right -= scale * kPaddingForHorizontalTab;
     }
   }
 
@@ -293,16 +262,6 @@ float BraveVerticalTabStyle::GetSeparatorOpacity(bool for_layout,
     return 0;
   }
 
-  if (IsTabTiled(tab())) {
-    return 0;
-  }
-
-  const Tab* const next_tab = tab()->controller()->GetAdjacentTab(tab(), 1);
-  const auto is_next_tab_tiled = IsTabTiled(next_tab);
-  if (is_next_tab_tiled) {
-    return 0;
-  }
-
   if (!HorizontalTabsUpdateEnabled()) {
     return BraveTabStyleViews::GetSeparatorOpacity(for_layout, leading);
   }
@@ -323,6 +282,7 @@ float BraveVerticalTabStyle::GetSeparatorOpacity(bool for_layout,
     return 0;
   }
 
+  const Tab* const next_tab = tab()->controller()->GetAdjacentTab(tab(), 1);
   const float visible_opacity =
       GetHoverInterpolatedSeparatorOpacity(for_layout, next_tab);
 
@@ -420,22 +380,6 @@ SkColor BraveVerticalTabStyle::GetTargetTabBackgroundColor(
 
 bool BraveVerticalTabStyle::ShouldShowVerticalTabs() const {
   return tabs::utils::ShouldShowVerticalTabs(tab()->controller()->GetBrowser());
-}
-
-bool BraveVerticalTabStyle::IsTabTiled(const Tab* tab) const {
-  if (!tab) {
-    return false;
-  }
-
-  auto is_tab_tiled = false;
-  if (auto* browser = tab->controller()->GetBrowser()) {
-    // browser can be null during tests.
-    if (auto* data = SplitViewBrowserData::FromBrowser(browser);
-        data && tab->controller()->IsTabTiled(tab)) {
-      is_tab_tiled = true;
-    }
-  }
-  return is_tab_tiled;
 }
 
 }  // namespace

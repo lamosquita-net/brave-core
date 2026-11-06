@@ -20,8 +20,6 @@ namespace sessions {
 class TabRestoreService;
 }  // namespace sessions
 
-class Browser;
-
 class BraveTabMenuModel : public TabMenuModel {
  public:
   enum BraveTabContextMenuCommand {
@@ -32,10 +30,6 @@ class BraveTabMenuModel : public TabMenuModel {
     CommandToggleTabMuted,
     CommandBringAllTabsToThisWindow,
     CommandCloseDuplicateTabs,
-    CommandNewSplitView,
-    CommandTileTabs,
-    CommandBreakTile,
-    CommandSwapTabsInTile,
     CommandLast,
   };
 
@@ -54,12 +48,7 @@ class BraveTabMenuModel : public TabMenuModel {
   std::u16string GetLabelAt(size_t index) const override;
 
  private:
-  void Build(Browser* browser,
-             TabStripModel* tab_strip_model,
-             const std::vector<int>& indices);
-  void BuildItemsForSplitView(Browser* browser,
-                              TabStripModel* tab_strip_model,
-                              const std::vector<int>& indices);
+  void Build(const std::vector<int>& indices);
   int GetRestoreTabCommandStringId() const;
 
   raw_ptr<content::WebContents> web_contents_ = nullptr;

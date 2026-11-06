@@ -16,7 +16,6 @@
 #include "brave/browser/ui/tabs/features.h"
 #include "brave/browser/ui/tabs/shared_pinned_tab_service.h"
 #include "brave/browser/ui/tabs/shared_pinned_tab_service_factory.h"
-#include "brave/browser/ui/tabs/split_view_browser_data.h"
 #include "brave/browser/ui/views/frame/brave_browser_view.h"
 #include "brave/browser/ui/views/frame/vertical_tab_strip_region_view.h"
 #include "brave/browser/ui/views/frame/vertical_tab_strip_widget_delegate_view.h"
@@ -164,24 +163,7 @@ void BraveTabStrip::MaybeStartDrag(
     }
   }
 
-  auto new_selection = original_selection;
-  if (source->GetTabSlotViewType() == TabSlotView::ViewType::kTab) {
-    auto* tab = static_cast<Tab*>(source);
-    if (auto tile = GetTileForTab(tab)) {
-      // Make a pair of tabs in a tile selected together so that they move
-      // together during drag and drop.
-      auto* tab_strip_model = controller_->GetBrowser()->tab_strip_model();
-      // Make sure both tiled tabs are in selection.
-      new_selection.AddIndexToSelection(
-          tab_strip_model->GetIndexOfTab(tile->first));
-      new_selection.AddIndexToSelection(
-          tab_strip_model->GetIndexOfTab(tile->second));
-      new_selection.set_active(tab_strip_model->active_index());
-      tab_strip_model->SetSelectionFromModel(new_selection);
-    }
-  }
-
-  TabStrip::MaybeStartDrag(source, event, new_selection);
+  TabStrip::MaybeStartDrag(source, event, original_selection);
 }
 
 void BraveTabStrip::AddedToWidget() {
@@ -217,59 +199,6 @@ std::optional<int> BraveTabStrip::GetCustomBackgroundId(
   }
 
   return TabStrip::GetCustomBackgroundId(active_state);
-}
-
-bool BraveTabStrip::IsTabTiled(const Tab* tab) const {
-  return GetTileForTab(tab).has_value();
-}
-
-bool BraveTabStrip::IsFirstTabInTile(const Tab* tab) const {
-  auto* browser = GetBrowser();
-  if (browser->IsBrowserClosing()) {
-    return false;
-  }
-
-  auto index = tab_container_->GetModelIndexOf(tab);
-  if (!index) {
-    return false;
-  }
-
-  auto tile = GetTileForTab(tab);
-  DCHECK(tile) << "This must be called only when IsTabTiled() returned true";
-  return browser->tab_strip_model()->GetIndexOfTab(tile->first) == *index;
-}
-
-TabTiledState BraveTabStrip::GetTiledStateForTab(int index) const {
-  auto* tab = tab_at(index);
-  if (!IsTabTiled(tab)) {
-    return TabTiledState::kNone;
-  }
-
-  return IsFirstTabInTile(tab) ? TabTiledState::kFirst : TabTiledState::kSecond;
-}
-
-std::optional<SplitViewBrowserData::Tile> BraveTabStrip::GetTileForTab(
-    const Tab* tab) const {
-  auto* browser = GetBrowser();
-  auto* data = SplitViewBrowserData::FromBrowser(browser);
-  if (!data) {
-    return std::nullopt;
-  }
-
-  if (browser->IsBrowserClosing()) {
-    return std::nullopt;
-  }
-  auto index = tab_container_->GetModelIndexOf(tab);
-  if (!index) {
-    return std::nullopt;
-  }
-
-  if (!browser->tab_strip_model()->ContainsIndex(*index)) {
-    // Happens on start-up
-    return std::nullopt;
-  }
-
-  return data->GetTile(browser->tab_strip_model()->GetTabHandleAt(*index));
 }
 
 void BraveTabStrip::UpdateTabContainer() {

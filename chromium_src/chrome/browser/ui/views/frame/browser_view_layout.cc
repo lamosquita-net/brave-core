@@ -20,7 +20,3 @@
 #include "src/chrome/browser/ui/views/frame/browser_view_layout.cc"
 #undef SidePanel
 #undef SupportsWindowFeature
-
-void BrowserViewLayout::NotifyDialogPositionRequiresUpdate() {
-  dialog_host_->NotifyPositionRequiresUpdate();
-}

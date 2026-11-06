@@ -11,7 +11,6 @@
 
 #include "base/gtest_prod_util.h"
 #include "base/memory/weak_ptr.h"
-#include "brave/browser/ui/tabs/split_view_browser_data.h"
 #include "chrome/browser/ui/views/tabs/tab_strip.h"
 
 class Tab;
@@ -24,7 +23,6 @@ class BraveTabStrip : public TabStrip {
   BraveTabStrip& operator=(const BraveTabStrip&) = delete;
 
   bool IsVerticalTabsFloating() const;
-  TabTiledState GetTiledStateForTab(int index) const;
 
   // TabStrip:
   void UpdateHoverCard(Tab* tab, HoverCardUpdateType update_type) override;
@@ -35,16 +33,12 @@ class BraveTabStrip : public TabStrip {
   void AddedToWidget() override;
   std::optional<int> GetCustomBackgroundId(
       BrowserFrameActiveState active_state) const override;
-  bool IsTabTiled(const Tab* tab) const override;
-  bool IsFirstTabInTile(const Tab* tab) const override;
 
  private:
   FRIEND_TEST_ALL_PREFIXES(VerticalTabStripBrowserTest, ScrollBarVisibility);
 
   void UpdateTabContainer();
   bool ShouldShowVerticalTabs() const;
-
-  std::optional<SplitViewBrowserData::Tile> GetTileForTab(const Tab* tab) const;
 
   TabContainer* GetTabContainerForTesting();
 

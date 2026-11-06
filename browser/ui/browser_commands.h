@@ -6,12 +6,8 @@
 #ifndef BRAVE_BROWSER_UI_BROWSER_COMMANDS_H_
 #define BRAVE_BROWSER_UI_BROWSER_COMMANDS_H_
 
-#include <optional>
-#include <vector>
-
-#include "chrome/browser/ui/tabs/tab_model.h"
-
-class BrowserWindowInterface;
+class
+ BrowserWindowInterface;
 class GURL;
 
 namespace brave {
@@ -83,23 +79,6 @@ void ScrollTabToTop(BrowserWindowInterface* browser);
 void ScrollTabToBottom(BrowserWindowInterface* browser);
 
 void ToggleAllBookmarksButtonVisibility(BrowserWindowInterface* browser);
-
-// In case |tab| is not provided, the active tab will be used.
-bool CanOpenNewSplitViewForTab(
-    BrowserWindowInterface* browser,
-    std::optional<tabs::TabHandle> tab = std::nullopt);
-void NewSplitViewForTab(BrowserWindowInterface* browser,
-                        std::optional<tabs::TabHandle> tab = std::nullopt);
-// In case |indices| empty, selected tabs will be used.
-void TileTabs(BrowserWindowInterface* browser,
-              const std::vector<int>& indices = {});
-void BreakTiles(BrowserWindowInterface* browser,
-                const std::vector<int>& indices = {});
-bool IsTabsTiled(BrowserWindowInterface* browser,
-                 const std::vector<int>& indices = {});
-bool CanTileTabs(BrowserWindowInterface* browser,
-                 const std::vector<int>& indices = {});
-void SwapTabsInTile(BrowserWindowInterface* browser);
 
 }  // namespace brave
 

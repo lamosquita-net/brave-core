@@ -63,16 +63,6 @@
     E_CPONLY(kColorBraveSharedPinnedTabDummyViewDescription) \
     E_CPONLY(kColorBraveSharedPinnedTabDummyViewThumbnailBorder)
 
-
-#define BRAVE_SPLIT_VIEW_COLOR_IDS \
-    E_CPONLY(kColorBraveSplitViewTileBackground)        \
-    E_CPONLY(kColorBraveSplitViewActiveWebViewBorder) \
-    E_CPONLY(kColorBraveSplitViewInactiveWebViewBorder) \
-    E_CPONLY(kColorBraveSplitViewMenuButtonIcon)        \
-    E_CPONLY(kColorBraveSplitViewMenuButtonBackground)  \
-    E_CPONLY(kColorBraveSplitViewMenuButtonBorder)      \
-    E_CPONLY(kColorBraveSplitViewMenuItemIcon)
-
 #define BRAVE_OMNIBOX_COLOR_IDS \
     E_CPONLY(kColorBraveOmniboxResultViewSeparator) \
     E_CPONLY(kColorBravePlayerActionViewBorder)
@@ -89,7 +79,6 @@
     BRAVE_SIDEBAR_COLOR_IDS           \
     BRAVE_VERTICAL_TAB_COLOR_IDS      \
     BRAVE_SHARED_PINNED_TAB_COLOR_IDS \
-    BRAVE_SPLIT_VIEW_COLOR_IDS        \
     BRAVE_OMNIBOX_COLOR_IDS           \
     BRAVE_EXTENSION_MENU_COLOR_IDS    \
     BRAVE_APP_MENU_COLOR_IDS

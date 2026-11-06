@@ -65,14 +65,6 @@ class BraveTabContextMenuContents : public ui::SimpleMenuModel::Delegate {
   bool IsBraveCommandId(int command_id) const;
   bool IsValidContextMenu() const;
   void OnMenuClosed();
-
-  void NewSplitView();
-  void TileSelectedTabs();
-  void BreakSelectedTile();
-  void SwapTabsInTile();
-
-  std::vector<int> GetTabIndicesForSplitViewCommand() const;
-
   std::unique_ptr<BraveTabMenuModel> model_;
   std::unique_ptr<views::MenuRunner> menu_runner_;
 

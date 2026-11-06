@@ -17,8 +17,6 @@
 #include "brave/browser/profiles/profile_util.h"
 #include "brave/browser/ui/brave_pages.h"
 #include "brave/browser/ui/browser_commands.h"
-#include "brave/browser/ui/tabs/features.h"
-#include "brave/browser/ui/tabs/split_view_browser_data.h"
 #include "brave/components/commands/common/features.h"
 #include "brave/components/constants/pref_names.h"
 #include "chrome/app/chrome_command_ids.h"
@@ -86,26 +84,11 @@ void BraveBrowserCommandController::OnTabStripModelChanged(
   UpdateCommandsForTabs();
   UpdateCommandsForSend();
   UpdateCommandsForPin();
-
-  if (base::FeatureList::IsEnabled(tabs::features::kBraveSplitView) &&
-      browser_->GetType() == BrowserWindowInterface::TYPE_NORMAL &&
-      selection.active_tab_changed()) {
-    UpdateCommandForSplitView();
-  }
 }
 
 void BraveBrowserCommandController::OnTabGroupChanged(
     const TabGroupChange& change) {
   UpdateCommandsForTabs();
-}
-
-void BraveBrowserCommandController::OnTileTabs(
-    const SplitViewBrowserData::Tile& tile) {
-  UpdateCommandForSplitView();
-}
-void BraveBrowserCommandController::OnWillBreakTile(
-    const SplitViewBrowserData::Tile& tile) {
-  UpdateCommandForSplitView();
 }
 
 bool BraveBrowserCommandController::SupportsCommand(int id) const {
@@ -217,11 +200,6 @@ void BraveBrowserCommandController::InitBraveCommandState() {
     UpdateCommandEnabled(IDC_READING_LIST_MENU_ADD_TAB, true);
     UpdateCommandEnabled(IDC_READING_LIST_MENU_SHOW_UI, true);
   }
-
-  if (base::FeatureList::IsEnabled(tabs::features::kBraveSplitView) &&
-      browser_->GetType() == BrowserWindowInterface::TYPE_NORMAL) {
-    UpdateCommandForSplitView();
-  }
 }
 
 void BraveBrowserCommandController::UpdateCommandForBraveRewards() {
@@ -271,30 +249,6 @@ void BraveBrowserCommandController::UpdateCommandsForSend() {
 void BraveBrowserCommandController::UpdateCommandsForPin() {
   UpdateCommandEnabled(IDC_WINDOW_CLOSE_UNPINNED_TABS,
                        brave::CanCloseUnpinnedTabs(&*browser_));
-}
-
-void BraveBrowserCommandController::UpdateCommandForSplitView() {
-  auto* split_view_browser_data =
-      SplitViewBrowserData::FromBrowser(base::to_address(browser_));
-  if (!split_view_browser_data) {
-    // Can happen on start up.
-    return;
-  }
-
-  if (!split_view_browser_data_observation_.IsObserving()) {
-    split_view_browser_data_observation_.Observe(split_view_browser_data);
-  }
-
-  UpdateCommandEnabled(IDC_NEW_SPLIT_VIEW, brave::CanOpenNewSplitViewForTab(
-                                               base::to_address(browser_)));
-  UpdateCommandEnabled(IDC_TILE_TABS,
-                       brave::CanTileTabs(base::to_address(browser_)));
-
-  const auto is_tab_tiled = brave::IsTabsTiled(base::to_address(browser_));
-  for (auto command_enabled_when_tab_is_tiled :
-       {IDC_BREAK_TILE, IDC_SWAP_SPLIT_VIEW}) {
-    UpdateCommandEnabled(command_enabled_when_tab_is_tiled, is_tab_tiled);
-  }
 }
 
 void BraveBrowserCommandController::UpdateCommandForBraveSync() {
@@ -427,18 +381,6 @@ bool BraveBrowserCommandController::ExecuteBraveCommandWithDisposition(
       break;
     case IDC_WINDOW_BRING_ALL_TABS:
       brave::BringAllTabs(&*browser_);
-      break;
-    case IDC_NEW_SPLIT_VIEW:
-      brave::NewSplitViewForTab(&*browser_);
-      break;
-    case IDC_TILE_TABS:
-      brave::TileTabs(&*browser_);
-      break;
-    case IDC_BREAK_TILE:
-      brave::BreakTiles(&*browser_);
-      break;
-    case IDC_SWAP_SPLIT_VIEW:
-      brave::SwapTabsInTile(&*browser_);
       break;
     default:
       LOG(WARNING) << "Received Unimplemented Command: " << id;
