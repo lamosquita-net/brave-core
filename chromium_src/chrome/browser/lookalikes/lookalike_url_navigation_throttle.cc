@@ -5,12 +5,11 @@
 
 #include "chrome/browser/lookalikes/lookalike_url_navigation_throttle.h"
 
-#define MaybeCreateNavigationThrottle MaybeCreateNavigationThrottle_ChromiumImpl
+#define MaybeCreateAndAdd MaybeCreateAndAdd_ChromiumImpl
 #include "src/chrome/browser/lookalikes/lookalike_url_navigation_throttle.cc"
-#undef MaybeCreateNavigationThrottle
+#undef MaybeCreateAndAdd
 
-std::unique_ptr<LookalikeUrlNavigationThrottle>
-LookalikeUrlNavigationThrottle::MaybeCreateNavigationThrottle(
-    content::NavigationHandle* navigation_handle) {
-  return nullptr;
-}
+// Lookalike interstitials are disabled; see
+// https://github.com/brave/brave-browser/issues/4304
+void LookalikeUrlNavigationThrottle::MaybeCreateAndAdd(
+    content::NavigationThrottleRegistry& registry) {}

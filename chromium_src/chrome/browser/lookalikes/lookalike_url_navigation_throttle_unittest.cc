@@ -7,11 +7,12 @@
 
 #include "chrome/test/base/chrome_render_view_host_test_harness.h"
 #include "content/public/test/mock_navigation_handle.h"
+#include "content/public/test/mock_navigation_throttle_registry.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 class LookalikeThrottleTest : public ChromeRenderViewHostTestHarness {};
 
-// Tests that MaybeCreateNavigationThrottle will always return nullptr as we
+// Tests that MaybeCreateAndAdd never adds a throttle as we
 // don't want to use this feature. See
 // https://github.com/brave/brave-browser/issues/4304
 TEST_F(LookalikeThrottleTest, ThrottleDisabled) {
@@ -19,7 +20,10 @@ TEST_F(LookalikeThrottleTest, ThrottleDisabled) {
   content::MockNavigationHandle handle(url, main_rfh());
   handle.set_page_transition(ui::PAGE_TRANSITION_TYPED);
 
-  auto throttle =
-      LookalikeUrlNavigationThrottle::MaybeCreateNavigationThrottle(&handle);
-  EXPECT_EQ(nullptr, throttle);
+  content::MockNavigationThrottleRegistry registry(
+      &handle,
+      content::MockNavigationThrottleRegistry::RegistrationMode::kHold);
+
+  LookalikeUrlNavigationThrottle::MaybeCreateAndAdd(registry);
+  EXPECT_TRUE(registry.throttles().empty());
 }
