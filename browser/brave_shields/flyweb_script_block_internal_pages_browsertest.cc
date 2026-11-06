@@ -64,7 +64,8 @@ class FlyWebScriptBlockInternalPagesBrowserTest : public InProcessBrowserTest {
 
  protected:
   HostContentSettingsMap* map() {
-    return HostContentSettingsMapFactory::GetForProfile(browser()->profile());
+    return HostContentSettingsMapFactory::GetForProfile(
+        browser()->GetProfile());
   }
 
   bool NavigateAndCheck(const GURL& url, const char* condition) {
@@ -72,7 +73,7 @@ class FlyWebScriptBlockInternalPagesBrowserTest : public InProcessBrowserTest {
       return false;
     }
     content::WebContents* web_contents =
-        browser()->tab_strip_model()->GetActiveWebContents();
+        browser()->GetTabStripModel()->GetActiveWebContents();
     return content::EvalJs(web_contents, PageScriptsRan(condition))
         .ExtractBool();
   }
