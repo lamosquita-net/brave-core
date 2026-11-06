@@ -12,6 +12,7 @@
 #include "ui/views/background.h"
 #include "ui/views/border.h"
 #include "ui/views/controls/highlight_path_generator.h"
+#include "ui/views/widget/widget.h"
 
 namespace tab_groups {
 
@@ -59,8 +60,8 @@ void BraveSavedTabGroupButton::UpdateButtonLayout() {
 
   // Use the tab group color for text in all cases (even when the browser is
   // not the active window).
-  SetEnabledTextColorIds(text_color);
-  SetTextColorId(STATE_DISABLED, text_color);
+  SetEnabledTextColors(text_color);
+  SetTextColor(STATE_DISABLED, text_color);
 
   SetBackground(views::CreateRoundedRectBackground(
       SkColorSetA(cp->GetColor(text_color), 0.15 * 255), kBorderRadius,
