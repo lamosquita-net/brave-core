@@ -11,9 +11,10 @@
 #include "ui/base/hit_test.h"
 #include "ui/gfx/geometry/rect.h"
 
-BraveBrowserFrameViewWin::BraveBrowserFrameViewWin(BrowserFrame* frame,
-                                                   BrowserView* browser_view)
-    : BrowserFrameViewWin(frame, browser_view) {}
+BraveBrowserFrameViewWin::BraveBrowserFrameViewWin(
+    BrowserWidget* browser_widget,
+    BrowserView* browser_view)
+    : BrowserFrameViewWin(browser_widget, browser_view) {}
 
 BraveBrowserFrameViewWin::~BraveBrowserFrameViewWin() = default;
 

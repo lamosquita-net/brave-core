@@ -61,7 +61,7 @@ void BraveTabStrip::MaybeStartDrag(TabSlotView* source,
           SharedPinnedTabServiceFactory::GetForProfile(browser->GetProfile());
       DCHECK(shared_pinned_tab_service);
       if (shared_pinned_tab_service->IsDummyContents(
-              browser->tab_strip_model()->GetWebContentsAt(index))) {
+              browser->GetTabStripModel()->GetWebContentsAt(index))) {
         return;
       }
     }

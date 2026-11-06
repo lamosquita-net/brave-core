@@ -10,7 +10,8 @@
 
 class BraveBrowserFrameViewWin : public BrowserFrameViewWin {
  public:
-  BraveBrowserFrameViewWin(BrowserFrame* frame, BrowserView* browser_view);
+  BraveBrowserFrameViewWin(BrowserWidget* browser_widget,
+                           BrowserView* browser_view);
   ~BraveBrowserFrameViewWin() override;
 
   BraveBrowserFrameViewWin(const BraveBrowserFrameViewWin&) = delete;
