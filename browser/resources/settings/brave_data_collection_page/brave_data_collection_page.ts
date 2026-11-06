@@ -52,8 +52,8 @@ extends SettingBraveDataCollectionPageElementBase
     }
   }
 
-  private metricsReportingPref_: chrome.settingsPrivate.PrefObject<boolean>
-  private showRestartForMetricsReporting_: boolean
+  private declare metricsReportingPref_: chrome.settingsPrivate.PrefObject<boolean>
+  private declare showRestartForMetricsReporting_: boolean
 
   browserProxy_ = BraveDataCollectionBrowserProxyImpl.getInstance()
 

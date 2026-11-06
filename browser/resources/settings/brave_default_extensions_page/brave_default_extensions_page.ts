@@ -52,8 +52,8 @@ export class SettingBraveDefaultExtensionsPageElement extends SettingBraveDefaul
   }
 
   private browserProxy_ = BraveDefaultExtensionsBrowserProxyImpl.getInstance()
-  showRestartToast_: boolean
-  widevineEnabledPref_: chrome.settingsPrivate.PrefObject
+  declare showRestartToast_: boolean
+  declare widevineEnabledPref_: chrome.settingsPrivate.PrefObject
 
   override ready() {
     super.ready()

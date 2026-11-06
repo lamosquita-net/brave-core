@@ -70,10 +70,10 @@ export class SettingsBravePersonalizationOptions extends SettingsBravePersonaliz
     }
   }
 
-  private webRTCPolicies_: Object[]
-  private webRTCPolicy_: String
-  private requestOTRActions_: Object[]
-  private requestOTRAction_: String
+  private declare webRTCPolicies_: Object[]
+  private declare webRTCPolicy_: String
+  private declare requestOTRActions_: Object[]
+  private declare requestOTRAction_: String
 
   browserProxy_: BravePrivacyBrowserProxy = BravePrivacyBrowserProxyImpl.getInstance()
 

@@ -18,7 +18,7 @@ export class BraveAddSiteDialogElement extends BaseElement {
     })
     return extended
   }
-  sitePlaceholder: string
+  declare sitePlaceholder: string
   override ready() {
     super.ready()
     const is_brave_shields = this.category === 'braveShields'
