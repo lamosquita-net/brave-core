@@ -1,0 +1,14 @@
+# Copyright (c) 2026 The Brave Authors. All rights reserved.
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at https://mozilla.org/MPL/2.0/.
+
+# Brave counterpart to Chromium's `allow_circular_includes_from_untriaged`
+# (as in Brave 1.98). Chromium 156 only lets targets in
+# allow_circular_includes_from_allowlist (.gn) use allow_circular_includes_from.
+allow_circular_includes_from_brave = [
+  # FlyWeb: brave_chrome_browser_sources live in //chrome/browser:core (via
+  # patches/chrome-browser-BUILD.gn.patch), which depends on
+  # //brave/browser/ui; //brave/browser/ui includes their headers back.
+  "//chrome/browser:core",
+]
