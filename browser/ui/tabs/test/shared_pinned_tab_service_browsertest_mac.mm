@@ -7,16 +7,16 @@
 
 #include <AppKit/AppKit.h>
 
-#include "brave/browser/ui/views/frame/brave_browser_native_widget_mac.h"
 #include "chrome/app/chrome_command_ids.h"
 #include "chrome/browser/ui/browser_commands.h"
-#import "chrome/browser/ui/views/frame/browser_frame_mac.h"
+#import "chrome/browser/ui/views/frame/browser_native_widget_mac.h"
 #include "chrome/browser/ui/views/frame/browser_view.h"
+#include "chrome/test/base/interactive_test_utils.h"
 
 IN_PROC_BROWSER_TEST_F(SharedPinnedTabServiceBrowserTest,
                        CloseTabShortCutShouldBeDisabled) {
   auto* browser = CreateNewBrowser();
-  chrome::NewTab(browser);
+  chrome::NewTab(browser, NewTabTypes::kNewTabCommand);
 
   EXPECT_EQ(browser->tab_strip_model()->count(), 2);
   EXPECT_EQ(browser->tab_strip_model()->active_index(), 1);
@@ -24,7 +24,15 @@ IN_PROC_BROWSER_TEST_F(SharedPinnedTabServiceBrowserTest,
   EXPECT_EQ(browser->tab_strip_model()->SetTabPinned(1, true), 0);
   EXPECT_EQ(browser->tab_strip_model()->active_index(), 0);
 
-  auto* browser_view = static_cast<BrowserView*>(browser->window());
+  auto* browser_view =
+      static_cast<BrowserView*>(BrowserWindow::FromBrowser(browser));
+
+  // The window must be key for AppKit's key-equivalent dispatch to route the
+  // event to this window and for the "Close Tab" menu item's enabled state
+  // (which is what actually gates whether Cmd+W fires) to be refreshed.
+  ASSERT_TRUE(ui_test_utils::ShowAndFocusNativeWindow(
+      browser_view->GetWidget()->GetNativeWindow()));
+
   auto* ns_window =
       browser_view->GetWidget()->GetNativeWindow().GetNativeNSWindow();
 
@@ -47,6 +55,6 @@ IN_PROC_BROWSER_TEST_F(SharedPinnedTabServiceBrowserTest,
   // When other ways to close the tab are tried
   chrome::ExecuteCommand(browser, IDC_CLOSE_TAB);
 
-  // Then tabs should be closed
+  // Then tab should be closed
   EXPECT_EQ(browser->tab_strip_model()->count(), 1);
 }
