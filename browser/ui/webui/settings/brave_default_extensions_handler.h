@@ -6,17 +6,10 @@
 #ifndef BRAVE_BROWSER_UI_WEBUI_SETTINGS_BRAVE_DEFAULT_EXTENSIONS_HANDLER_H_
 #define BRAVE_BROWSER_UI_WEBUI_SETTINGS_BRAVE_DEFAULT_EXTENSIONS_HANDLER_H_
 
-#include <string>
-
-#include "base/memory/raw_ptr.h"
-#include "base/memory/weak_ptr.h"
-#include "base/scoped_observation.h"
+#include "base/values.h"
 #include "chrome/browser/ui/webui/settings/settings_page_ui_handler.h"
-#include "chrome/common/extensions/webstore_install_result.h"
 #include "components/prefs/pref_change_registrar.h"
 #include "third_party/widevine/cdm/buildflags.h"
-
-class Profile;
 
 class BraveDefaultExtensionsHandler : public settings::SettingsPageUIHandler
 {
@@ -34,18 +27,12 @@ class BraveDefaultExtensionsHandler : public settings::SettingsPageUIHandler
   void OnJavascriptDisallowed() override {}
 
   void GetRestartNeeded(const base::ListValue& args);
-  void SetMediaRouterEnabled(const base::ListValue& args);
   void SetWidevineEnabled(const base::ListValue& args);
   void IsWidevineEnabled(const base::ListValue& args);
   void OnWidevineEnabledChanged();
 
   void InitializePrefCallbacks();
 
-  bool IsExtensionInstalled(const std::string& extension_id) const;
-  void OnInstallResult(const std::string& pref_name,
-                       bool success,
-                       const std::string& error,
-                       extensions::webstore_install::Result result);
   void OnRestartNeededChanged();
   bool IsRestartNeeded();
 
@@ -53,9 +40,6 @@ class BraveDefaultExtensionsHandler : public settings::SettingsPageUIHandler
   PrefChangeRegistrar local_state_change_registrar_;
   bool was_widevine_enabled_ = false;
 #endif
-  raw_ptr<Profile> profile_ = nullptr;
-  PrefChangeRegistrar pref_change_registrar_;
-  base::WeakPtrFactory<BraveDefaultExtensionsHandler> weak_ptr_factory_;
 };
 
 #endif  // BRAVE_BROWSER_UI_WEBUI_SETTINGS_BRAVE_DEFAULT_EXTENSIONS_HANDLER_H_

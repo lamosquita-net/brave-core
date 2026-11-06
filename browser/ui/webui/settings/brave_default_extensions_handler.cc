@@ -5,46 +5,18 @@
 
 #include "brave/browser/ui/webui/settings/brave_default_extensions_handler.h"
 
-#include <memory>
-#include <string>
-
+#include "base/check_op.h"
 #include "base/functional/bind.h"
-#include "base/strings/utf_string_conversions.h"
 #include "base/values.h"
-#include "brave/browser/extensions/brave_component_loader.h"
-#include "brave/components/constants/pref_names.h"
-#include "brave/components/l10n/common/localization_util.h"
-#include "chrome/browser/about_flags.h"
 #include "chrome/browser/browser_process.h"
-#include "chrome/browser/extensions/component_loader.h"
-#include "chrome/browser/extensions/extension_service.h"
-#include "chrome/browser/extensions/webstore_install_with_prompt.h"
-#include "chrome/browser/lifetime/application_lifetime.h"
-#include "chrome/browser/media/router/media_router_feature.h"
-#include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
-#include "chrome/browser/ui/browser_window.h"
-#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
-#include "chrome/browser/ui/chrome_select_file_policy.h"
-#include "chrome/common/chrome_switches.h"
-#include "chrome/common/pref_names.h"
-#include "components/flags_ui/flags_ui_constants.h"
-#include "components/flags_ui/pref_service_flags_storage.h"
-#include "components/grit/brave_components_strings.h"
-#include "components/prefs/pref_service.h"
 #include "content/public/browser/web_ui.h"
-#include "extensions/browser/extension_registry.h"
-#include "extensions/browser/extension_system.h"
-#include "extensions/common/constants.h"
-#include "extensions/common/feature_switch.h"
-#include "ui/shell_dialogs/selected_file_info.h"
 
 #if BUILDFLAG(ENABLE_WIDEVINE)
 #include "brave/browser/widevine/widevine_utils.h"
+#include "brave/components/constants/pref_names.h"
 #endif
 
-BraveDefaultExtensionsHandler::BraveDefaultExtensionsHandler()
-    : weak_ptr_factory_(this) {
+BraveDefaultExtensionsHandler::BraveDefaultExtensionsHandler() {
 #if BUILDFLAG(ENABLE_WIDEVINE)
   was_widevine_enabled_ = ::IsWidevineEnabled();
 #endif
@@ -53,7 +25,6 @@ BraveDefaultExtensionsHandler::BraveDefaultExtensionsHandler()
 BraveDefaultExtensionsHandler::~BraveDefaultExtensionsHandler() = default;
 
 void BraveDefaultExtensionsHandler::RegisterMessages() {
-  profile_ = Profile::FromWebUI(web_ui());
   // TODO(petemill): If anything outside this handler is responsible for causing
   // restart-neccessary actions, then this should be moved to a generic handler
   // and the flag should be moved to somewhere more static / singleton-like.
@@ -101,24 +72,6 @@ void BraveDefaultExtensionsHandler::GetRestartNeeded(
 
   AllowJavascript();
   ResolveJavascriptCallback(args[0], base::Value(IsRestartNeeded()));
-}
-
-bool BraveDefaultExtensionsHandler::IsExtensionInstalled(
-    const std::string& extension_id) const {
-  extensions::ExtensionRegistry* registry = extensions::ExtensionRegistry::Get(
-      static_cast<content::BrowserContext*>(profile_));
-  return registry && registry->GetInstalledExtension(extension_id);
-}
-
-void BraveDefaultExtensionsHandler::OnInstallResult(
-    const std::string& pref_name,
-    bool success,
-    const std::string& error,
-    extensions::webstore_install::Result result) {
-  if (result != extensions::webstore_install::Result::SUCCESS &&
-      result != extensions::webstore_install::Result::LAUNCH_IN_PROGRESS) {
-    profile_->GetPrefs()->SetBoolean(pref_name, false);
-  }
 }
 
 void BraveDefaultExtensionsHandler::OnRestartNeededChanged() {
