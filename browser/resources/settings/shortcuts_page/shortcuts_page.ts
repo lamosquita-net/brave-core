@@ -15,15 +15,24 @@ import { loadTimeData } from "chrome://resources/js/load_time_data.js"
 // it expects loadTimeData to be on the globalThis. The settings page has been
 // migrated to use the ESModule version of loadTimeData and strings.m.js. For
 // now, this provides a shim between the old and the new system.
-(window as any).loadTimeData = loadTimeData
+interface ShortcutsWindow {
+  loadTimeData: typeof loadTimeData
+  mountCommands: (root: ShadowRoot | null) => void
+}
+
+(window as unknown as ShortcutsWindow).loadTimeData = loadTimeData
 
 class ShortcutsPage extends HTMLElement {
   connectedCallback() {
     this.attachShadow({ mode: 'open' })
 
 
-    import('/commands.bundle.js' as any)
-      .then(() => (window as any).mountCommands(this.shadowRoot))
+    // A variable, so that TypeScript does not try to resolve the bundle (as
+    // Brave 1.98 does).
+    const bundlePath = '/commands.bundle.js'
+    import(bundlePath)
+      .then(() => (window as unknown as ShortcutsWindow).mountCommands(
+        this.shadowRoot))
       .catch(() => {})
   }
 }
