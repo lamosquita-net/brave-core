@@ -5,18 +5,14 @@
 
 #include "chrome/browser/ui/views/frame/browser_view_layout.h"
 
-#include "brave/browser/ui/views/side_panel/brave_side_panel.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/views/frame/browser_view.h"
 #include "chrome/browser/ui/views/frame/browser_view_layout_delegate.h"
-#include "chrome/browser/ui/views/side_panel/side_panel.h"
 
 // Double check if the tab strip is actually visible to calculate constraints.
 #define SupportsWindowFeature(FEATURE)                                       \
   SupportsWindowFeature(FEATURE) && (FEATURE != Browser::FEATURE_TABSTRIP || \
                                      delegate_->ShouldDrawTabStrip());
 
-#define SidePanel BraveSidePanel
 #include "src/chrome/browser/ui/views/frame/browser_view_layout.cc"
-#undef SidePanel
 #undef SupportsWindowFeature

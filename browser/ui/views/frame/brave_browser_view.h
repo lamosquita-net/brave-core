@@ -51,7 +51,6 @@ class BraveBrowserView : public BrowserView,
   bool IsInTabDragging() const override;
 
 #if defined(USE_AURA)
-  views::View* side_panel_host_view() { return side_panel_host_view_; }
 #endif
 
   bool ShowBraveHelpBubbleView(const std::string& text) override;
@@ -96,7 +95,6 @@ class BraveBrowserView : public BrowserView,
   raw_ptr<views::View> contents_background_view_ = nullptr;
 
 #if defined(USE_AURA)
-  raw_ptr<views::View> side_panel_host_view_ = nullptr;
 #endif
 
   std::unique_ptr<TabCyclingEventHandler> tab_cycling_event_handler_;

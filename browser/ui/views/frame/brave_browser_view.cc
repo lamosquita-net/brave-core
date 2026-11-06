@@ -185,18 +185,6 @@ BraveBrowserView::BraveBrowserView(std::unique_ptr<Browser> browser)
                           base::Unretained(this)));
   // Show the correct value in settings on initial start
   UpdateSearchTabsButtonState();
-
-#if defined(USE_AURA)
-  // Host view for the side panel resize widget.
-  if (browser_->is_type_normal()) {
-    side_panel_host_view_ = AddChildView(std::make_unique<views::View>());
-
-    // Make sure |find_bar_host_view_| is the last child of BrowserView by
-    // re-ordering. FindBarHost widgets uses this view as a  kHostViewKey.
-    // See the comments of BrowserView::find_bar_host_view().
-    ReorderChildView(find_bar_host_view_, -1);
-  }
-#endif
 }
 
 void BraveBrowserView::OnPreferenceChanged(const std::string& pref_name) {

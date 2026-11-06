@@ -17,10 +17,6 @@ class BraveBrowserViewLayout : public BrowserViewLayout {
     contents_background_ = contents_background;
   }
 
-  // BrowserViewLayout:
-  void LayoutSidePanelView(views::View* side_panel,
-                           gfx::Rect& contents_container_bounds) override;
-
  private:
   gfx::Insets GetContentsMargins() const;
   bool IsFullscreenForTab() const;

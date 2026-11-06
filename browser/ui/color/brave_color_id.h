@@ -38,13 +38,6 @@
     E_CPONLY(kColorSearchConversionBannerTypeBackgroundGradientTo)    \
     E_CPONLY(kColorSearchConversionBannerTypeDescText)
 
-#define BRAVE_SIDEBAR_COLOR_IDS                               \
-    E_CPONLY(kColorSidebarPanelHeaderSeparator)               \
-    E_CPONLY(kColorSidebarPanelHeaderBackground)              \
-    E_CPONLY(kColorSidebarPanelHeaderTitle)                   \
-    E_CPONLY(kColorSidebarPanelHeaderButton)                  \
-    E_CPONLY(kColorSidebarPanelHeaderButtonHovered)
-
 #define BRAVE_SHARED_PINNED_TAB_COLOR_IDS                    \
     E_CPONLY(kColorBraveSharedPinnedTabDummyViewBackground)  \
     E_CPONLY(kColorBraveSharedPinnedTabDummyViewTitle)       \
@@ -64,7 +57,6 @@
 #define BRAVE_COLOR_IDS               \
     BRAVE_COMMON_COLOR_IDS            \
     BRAVE_SEARCH_CONVERSION_COLOR_IDS \
-    BRAVE_SIDEBAR_COLOR_IDS           \
     BRAVE_SHARED_PINNED_TAB_COLOR_IDS \
     BRAVE_OMNIBOX_COLOR_IDS           \
     BRAVE_EXTENSION_MENU_COLOR_IDS    \
