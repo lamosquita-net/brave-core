@@ -3,6 +3,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // you can obtain one at https://mozilla.org/MPL/2.0/.
 
+import '../controls/settings_toggle_button.js'
 import {PolymerElement} from 'chrome://resources/polymer/v3_0/polymer/polymer_bundled.min.js'
 import {getTemplate} from './social_blocking_page.html.js'
 import {loadTimeData} from '../i18n_setup.js';
@@ -27,6 +28,8 @@ export class BraveSettingsSocialBlockingPage extends PolymerElement {
       },
     };
   }
+
+  private declare isGoogleSignInFeatureEnabled_: boolean
 }
 
 customElements.define(BraveSettingsSocialBlockingPage.is, BraveSettingsSocialBlockingPage);
