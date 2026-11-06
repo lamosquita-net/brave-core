@@ -3,29 +3,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#include "components/omnibox/browser/omnibox_controller.h"
+#include "chrome/browser/ui/omnibox/omnibox_controller.h"
 
 #include "brave/components/omnibox/browser/brave_omnibox_prefs.h"
 #include "components/prefs/pref_service.h"
 
 namespace {
 
+// Used by patches/chrome-browser-ui-omnibox-omnibox_controller.cc.patch, which
+// also turns StartZeroSuggestPrefetch() into a no-op (no zero-suggest
+// prefetch requests to the search engine).
 bool IsAutocompleteEnabled(const PrefService* prefs) {
   return prefs->GetBoolean(omnibox::kAutocompleteEnabled);
 }
 
 }  // namespace
 
-#define StartAutocomplete StartAutocomplete_ChromiumImpl
-#include "src/components/omnibox/browser/omnibox_controller.cc"
-#undef StartAutocomplete
-
-void OmniboxController::StartAutocomplete(
-    const AutocompleteInput& input) const {
-  if (!IsAutocompleteEnabled(client_->GetPrefs())) {
-    ClearPopupKeywordMode();
-    return;
-  }
-
-  StartAutocomplete_ChromiumImpl(input);
-}
+#include "src/chrome/browser/ui/omnibox/omnibox_controller.cc"

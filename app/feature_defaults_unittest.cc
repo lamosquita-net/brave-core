@@ -231,7 +231,6 @@ TEST(FeatureDefaultsTest, DisabledFeatures) {
       &omnibox::kOmniboxSteadyStateHeight,
       &omnibox::kRichAutocompletion,
       &omnibox::kStarterPackExpansion,
-      &omnibox::kZeroSuggestPrefetching,
       &optimization_guide::features::kOptimizationGuideFetchingForSRP,
       &optimization_guide::features::kOptimizationGuidePersonalizedFetching,
       &optimization_guide::features::kOptimizationHints,
