@@ -6,9 +6,10 @@
 #include "brave/components/de_amp/browser/de_amp_body_handler.h"
 
 #include <string>
+#include <string_view>
 #include <utility>
-#include <vector>
 
+#include "base/check.h"
 #include "base/functional/bind.h"
 #include "base/json/json_reader.h"
 #include "base/json/json_writer.h"
@@ -38,35 +39,43 @@ constexpr const char kDeAmpHeaderName[] = "X-Brave-De-AMP";
 constexpr size_t kMaxBytesToCheck = 3 * 65536;
 constexpr size_t kMaxRedirectHops = 7;
 
-base::Value LoadNavigationChain(const network::ResourceRequest& request) {
+base::ListValue LoadNavigationChain(const network::ResourceRequest& request) {
   std::optional<std::string> de_amp_header =
       request.headers.GetHeader(kDeAmpHeaderName);
   if (!de_amp_header) {
-    return base::Value(
-        base::ListValue().Append(base::Value(request.url.spec())));
+    return base::ListValue().Append(base::Value(request.url.spec()));
   }
-  auto value = base::JSONReader::Read(*de_amp_header,
-                                      base::JSON_PARSE_CHROMIUM_EXTENSIONS);
-  if (!value || !value->is_list()) {
-    return base::Value(
-        base::ListValue().Append(base::Value(request.url.spec())));
+  auto value = base::JSONReader::ReadList(*de_amp_header,
+                                          base::JSON_PARSE_CHROMIUM_EXTENSIONS);
+  if (!value) {
+    return base::ListValue().Append(base::Value(request.url.spec()));
   }
-  DCHECK(value->GetList().size() < kMaxRedirectHops);
+  DCHECK(value->size() < kMaxRedirectHops);
   return std::move(*value);
 }
 
-bool FindUrlInNavigationChain(const GURL& url, const base::Value& chain) {
-  const auto& list = chain.GetList();
-  for (const auto& entry : list) {
-    if (entry.GetString() == url.spec()) {
+bool CheckUrlsAreEquivalent(std::string_view left, std::string_view right) {
+  if (!left.empty() && left.back() == '/') {
+    left.remove_suffix(1);
+  }
+  if (!right.empty() && right.back() == '/') {
+    right.remove_suffix(1);
+  }
+  return left == right;
+}
+
+bool FindUrlInNavigationChain(const GURL& url, const base::ListValue& chain) {
+  for (const auto& entry : chain) {
+    const std::string& entry_url = entry.GetString();
+    if (CheckUrlsAreEquivalent(entry_url, url.spec())) {
       return true;
     }
   }
   return false;
 }
 
-std::string AddUrlToNavigationChain(const GURL& url, base::Value chain) {
-  chain.GetList().Append(url.spec());
+std::string AddUrlToNavigationChain(const GURL& url, base::ListValue chain) {
+  chain.Append(url.spec());
   return base::WriteJson(chain).value_or(std::string());
 }
 
@@ -117,7 +126,7 @@ bool DeAmpBodyHandler::ShouldProcess(
   }
   *defer = true;
   response_url_ = response_url;
-  return navigation_chain_.GetList().size() < kMaxRedirectHops;
+  return navigation_chain_.size() < kMaxRedirectHops;
 }
 
 void DeAmpBodyHandler::OnComplete() {}
@@ -133,7 +142,7 @@ DeAmpBodyHandler::Action DeAmpBodyHandler::OnBodyUpdated(
 
   switch (state_) {
     case State::kCheckForAmp:
-      if (!CheckIfAmpPage(body)) {
+      if (!CheckIfAmpPage(std::string_view(body).substr(0, kMaxBytesToCheck))) {
         // if we did find AMP, complete the load.
         return DeAmpBodyHandler::Action::kComplete;
       }
@@ -167,7 +176,8 @@ void DeAmpBodyHandler::UpdateResponseHead(
     network::mojom::URLResponseHead* response_head) {}
 
 bool DeAmpBodyHandler::MaybeRedirectToCanonicalLink(const std::string& body) {
-  const auto canonical_link = FindCanonicalAmpUrl(body);
+  const auto canonical_link =
+      FindCanonicalAmpUrl(std::string_view(body).substr(0, kMaxBytesToCheck));
   if (!canonical_link.has_value()) {
     VLOG(2) << __func__ << canonical_link.error();
     return false;
