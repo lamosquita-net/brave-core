@@ -541,14 +541,6 @@
           kOsAll,                                                              \
           FEATURE_VALUE_TYPE(                                                  \
               webcompat::features::kBraveWebcompatExceptionsService),          \
-      },                                                                       \
-      {                                                                        \
-          "brave-web-view-rounded-corners",                                    \
-          "Use rounded corners on main content areas",                         \
-          "Renders the main content area and sidebar panel with rounded "      \
-          "corners, padding, and a drop shadow",                               \
-          kOsWin | kOsLinux | kOsMac,                                          \
-          FEATURE_VALUE_TYPE(features::kBraveWebViewRoundedCorners),           \
       })                                                                       \
   REQUEST_OTR_FEATURE_ENTRIES                                                  \
   BRAVE_MODULE_FILENAME_PATCH                                                  \

@@ -28,7 +28,6 @@ class WebContents;
 }  // namespace content
 
 class BraveBrowser;
-class ViewShadow;
 class BraveHelpBubbleHostView;
 
 class BraveBrowserView : public BrowserView,
@@ -44,7 +43,6 @@ class BraveBrowserView : public BrowserView,
   void ShowUpdateChromeDialog() override;
 
   // BrowserView overrides:
-  void Layout(PassKey) override;
   void StartTabCycling() override;
   gfx::Rect GetShieldsBubbleRect() override;
   bool AcceleratorPressed(const ui::Accelerator& accelerator) override;
@@ -65,7 +63,6 @@ class BraveBrowserView : public BrowserView,
   static void SetDownloadConfirmReturnForTesting(bool allow);
 
   // BrowserView overrides:
-  void AddedToWidget() override;
   void LoadAccelerators() override;
   void OnTabStripModelChanged(
       TabStripModel* tab_strip_model,
@@ -77,28 +74,23 @@ class BraveBrowserView : public BrowserView,
       Browser::DownloadCloseType dialog_type,
       base::OnceCallback<void(bool)> callback) override;
   void MaybeShowReadingListInSidePanelIPH() override;
-  void UpdateDevToolsForContents(content::WebContents* web_contents,
-                                 bool update_devtools_web_contents) override;
 
   void StopTabCycling();
   void UpdateSearchTabsButtonState();
   void OnPreferenceChanged(const std::string& pref_name);
   void OnWindowClosingConfirmResponse(bool allowed_to_close);
   BraveBrowser* GetBraveBrowser() const;
-  void UpdateWebViewRoundedCorners();
 
   bool HasSelectedURL() const override;
   void CleanAndCopySelectedURL() override;
 
   bool closing_confirm_dialog_activated_ = false;
   raw_ptr<BraveHelpBubbleHostView> brave_help_bubble_host_view_ = nullptr;
-  raw_ptr<views::View> contents_background_view_ = nullptr;
 
 #if defined(USE_AURA)
 #endif
 
   std::unique_ptr<TabCyclingEventHandler> tab_cycling_event_handler_;
-  std::unique_ptr<ViewShadow> contents_shadow_;
 
   PrefChangeRegistrar pref_change_registrar_;
   base::ScopedObservation<commands::AcceleratorService,
