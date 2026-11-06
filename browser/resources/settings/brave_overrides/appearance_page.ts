@@ -51,17 +51,6 @@ RegisterPolymerTemplateModifications({
       homeButtonOptionsTemplate.remove()
     }
 
-    const bookmarkBarToggle = templateContent.querySelector(
-      '[pref="{{prefs.bookmark_bar.show_on_all_tabs}}"]')
-    if (!bookmarkBarToggle) {
-      console.error(
-        `[Settings] Couldn't find bookmark bar toggle`)
-    } else {
-      // Remove Chromium bookmark toggle becasue it is replaced by
-      // settings-brave-appearance-bookmark-bar
-      bookmarkBarToggle.remove()
-    }
-
     // Hide or remove upstream's font options.
     const defaultFontSize = templateContent.querySelector(
       '.cr-row:has(#defaultFontSize)')

@@ -13,7 +13,6 @@ import {routes} from '../route.js';
 
 import '../settings_shared.css.js'
 import '../settings_vars.css.js'
-import './bookmark_bar.js'
 
 const SettingsBraveAppearanceToolbarElementBase = RouteObserverMixin(I18nMixin(PolymerElement))
 
