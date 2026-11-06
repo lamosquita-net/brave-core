@@ -16,11 +16,12 @@ namespace flyweb {
 // hints): the last complete engine level (3.0.0: 156, the real engine; it
 // can go above the real major once FlyWeb ports features again). Raised only
 // when every Baseline feature Chrome shipped up to that version is in FlyWeb
-// (softmac FlyWeb/docs/motor.md). Components and the updaters keep using the
-// real version; extensions check minimum_chrome_version (and the Web Store's
-// prodversionmin) against the declared full version, kFlyWebEngineFullVersion
-// (softmac FlyWeb/docs/extensiones.md, option A). Set in
-// brave/build/config.gni (flyweb_engine_level).
+// (softmac FlyWeb/docs/motor.md). Components, the updaters and extensions
+// (minimum_chrome_version, the Web Store's prodversion) use the real version:
+// while the declared level is the real engine they match. If the declared
+// level goes above the real one, extensions need the declared full version
+// again, kFlyWebEngineFullVersion (softmac FlyWeb/docs/extensiones.md, option
+// A). Set in brave/build/config.gni (flyweb_engine_level).
 inline constexpr int kDeclaredEngineLevel =
     version_info::constants::kFlyWebEngineLevel;
 
