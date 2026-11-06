@@ -3,10 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#include "src/components/webui/flags/flags_state_unittest.cc"
-
 #include <algorithm>
 #include <string_view>
+
+#include <components/webui/flags/flags_state_unittest.cc>
 
 namespace flags_ui {
 
@@ -26,7 +26,7 @@ TEST_F(FlagsStateTest, ShowDefaultState) {
   flags_state_->GetFlagFeatureEntries(&flags_storage_, kGeneralAccessFlagsOnly,
                                       supported_entries, unsupported_entries,
                                       base::BindRepeating(&SkipFeatureEntry));
-  ASSERT_EQ(11u, supported_entries.size());
+  ASSERT_EQ(14u, supported_entries.size());
 
   auto check_default_option_description =
       [&](std::string_view name, std::string_view expected_description) {
