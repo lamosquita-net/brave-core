@@ -9,7 +9,6 @@
 #include "brave/browser/search/ntp_utils.h"
 #include "brave/browser/themes/brave_dark_mode_utils.h"
 #include "brave/browser/translate/brave_translate_prefs_migration.h"
-#include "brave/components/brave_search_conversion/p3a.h"
 #include "brave/components/brave_shields/content/browser/brave_shields_p3a.h"
 #include "brave/components/brave_sync/brave_sync_prefs.h"
 #include "brave/components/constants/pref_names.h"
@@ -154,8 +153,6 @@ void MigrateObsoleteLocalStatePrefs(PrefService* local_state) {
   // Added 10/2022
   local_state->ClearPref(kDefaultBrowserPromptEnabled);
 #endif
-
-  brave_search_conversion::p3a::MigrateObsoleteLocalStatePrefs(local_state);
 
   // FlyWeb: added 11/2026 (T5), NTP sponsored images and super referrals.
   ntp_background_images::ViewCounterService::MigrateObsoleteLocalStatePrefs(

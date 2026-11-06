@@ -14,7 +14,6 @@
 class BrowserWindowInterface;
 class PrefRegistrySimple;
 class Profile;
-class SearchEngineTracker;
 
 class BraveOmniboxClientImpl : public ChromeOmniboxClient {
  public:
@@ -28,8 +27,6 @@ class BraveOmniboxClientImpl : public ChromeOmniboxClient {
   static void RegisterProfilePrefs(PrefRegistrySimple* prefs);
 
   const AutocompleteSchemeClassifier& GetSchemeClassifier() const override;
-
-  void OnURLOpenedFromOmnibox(OmniboxLog* log) override;
 
   void OnAutocompleteAccept(
       const GURL& destination_url,
@@ -46,7 +43,6 @@ class BraveOmniboxClientImpl : public ChromeOmniboxClient {
 
  private:
   raw_ptr<Profile> profile_ = nullptr;
-  raw_ptr<SearchEngineTracker> search_engine_tracker_ = nullptr;
   BraveAutocompleteSchemeClassifier scheme_classifier_;
   WeeklyStorage search_storage_;
 };

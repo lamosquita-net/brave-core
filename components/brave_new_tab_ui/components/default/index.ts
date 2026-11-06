@@ -8,7 +8,6 @@ import { AddSiteTile, Tile, TileActionsContainer, TileAction, TileImageContainer
 import { SiteRemovalNotification, SiteRemovalText, SiteRemovalAction } from './notification'
 import { Clock } from './clock'
 import EditTopSite from './editTopSite'
-import SearchPromotion from './searchPromotion'
 import createWidget from './widget'
 
 export * from './page'
@@ -30,6 +29,5 @@ export {
   SiteRemovalAction,
   Clock,
   createWidget,
-  EditTopSite,
-  SearchPromotion
+  EditTopSite
 }

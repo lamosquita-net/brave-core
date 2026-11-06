@@ -23,8 +23,7 @@ namespace brave_search {
 // TODO(petemill): rename this to BraveSearchFrameJSHandler
 class BraveSearchDefaultJSHandler {
  public:
-  BraveSearchDefaultJSHandler(content::RenderFrame* render_frame,
-                              bool can_always_set_default);
+  explicit BraveSearchDefaultJSHandler(content::RenderFrame* render_frame);
   BraveSearchDefaultJSHandler(const BraveSearchDefaultJSHandler&) = delete;
   BraveSearchDefaultJSHandler& operator=(const BraveSearchDefaultJSHandler&) =
       delete;
@@ -55,7 +54,6 @@ class BraveSearchDefaultJSHandler {
       const bool response);
 
   raw_ptr<content::RenderFrame> render_frame_ = nullptr;
-  const bool can_always_set_default_ = false;
   mojo::Remote<brave_search::mojom::BraveSearchDefault> brave_search_default_;
 };
 

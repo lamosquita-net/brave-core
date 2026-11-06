@@ -7,12 +7,10 @@
 #define BRAVE_COMPONENTS_BRAVE_SEARCH_RENDERER_BRAVE_SEARCH_RENDER_FRAME_OBSERVER_H_
 
 #include <memory>
-#include <optional>
 
 #include "brave/components/brave_search/renderer/brave_search_default_js_handler.h"
 #include "content/public/renderer/render_frame.h"
 #include "content/public/renderer/render_frame_observer.h"
-#include "third_party/blink/public/web/web_navigation_type.h"
 #include "v8/include/v8.h"
 
 namespace brave_search {
@@ -30,9 +28,6 @@ class BraveSearchRenderFrameObserver : public content::RenderFrameObserver {
   // RenderFrameObserver implementation.
   void DidCreateScriptContext(v8::Local<v8::Context> context,
                               int32_t world_id) override;
-  void DidStartNavigation(
-      const GURL& url,
-      std::optional<blink::WebNavigationType> navigation_type) override;
 
  private:
   // RenderFrameObserver implementation.
@@ -41,7 +36,6 @@ class BraveSearchRenderFrameObserver : public content::RenderFrameObserver {
   // Handle to "handler" JavaScript object functionality.
   std::unique_ptr<BraveSearchDefaultJSHandler> native_javascript_handle_;
   int32_t world_id_;
-  GURL url_;
 };
 
 }  // namespace brave_search

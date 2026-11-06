@@ -24,7 +24,6 @@ class BraveSearchDefaultHostPrivate final
   ~BraveSearchDefaultHostPrivate() override;
 
   // brave_search::mojom::BraveSearchDefault:
-  void SetCanAlwaysSetDefault() override;
   void GetCanSetDefaultSearchProvider(
       GetCanSetDefaultSearchProviderCallback callback) override;
   void SetIsDefaultSearchProvider() override;

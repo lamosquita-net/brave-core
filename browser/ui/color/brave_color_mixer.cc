@@ -346,21 +346,6 @@ void AddBraveLightThemeColorMixer(ui::ColorProvider* provider,
   mixer[kColorBookmarkBarInstructionsLink] = {PickColorContrastingToToolbar(
       key, mixer, leo::light::kColorTextInteractive,
       leo::dark::kColorTextInteractive)};
-  // It's "Themeable/Blue/10" but leo/color.h doesn't have it.
-  mixer[kColorSearchConversionBannerTypeBackground] = {
-      SkColorSetRGB(0xEA, 0xF1, 0xFF)};
-  mixer[kColorSearchConversionCloseButton] = {
-      leo::GetColor(leo::Color::kColorIconDefault, leo::Theme::kLight)};
-  mixer[kColorSearchConversionBannerTypeDescText] = {
-      SkColorSetRGB(0x2E, 0x30, 0x39)};
-  mixer[kColorSearchConversionBannerTypeBackgroundBorder] = {
-      SkColorSetRGB(0xE2, 0xE3, 0xF8)};
-  mixer[kColorSearchConversionBannerTypeBackgroundBorderHovered] = {
-      SkColorSetRGB(0x83, 0x89, 0xE0)};
-  mixer[kColorSearchConversionBannerTypeBackgroundGradientFrom] = {
-      SkColorSetARGB(104, 0xFF, 0xFF, 0xFF)};
-  mixer[kColorSearchConversionBannerTypeBackgroundGradientTo] = {
-      SkColorSetRGB(0xEF, 0xEF, 0xFB)};
 
   if (!HasCustomToolbarColor(key)) {
     mixer[kColorToolbarButtonActivated] = {
@@ -395,21 +380,6 @@ void AddBraveDarkThemeColorMixer(ui::ColorProvider* provider,
   mixer[kColorBookmarkBarInstructionsLink] = {PickColorContrastingToToolbar(
       key, mixer, leo::light::kColorTextInteractive,
       leo::dark::kColorTextInteractive)};
-  // It's "Themeable/Blue/10" but leo/color.h doesn't have it.
-  mixer[kColorSearchConversionBannerTypeBackground] = {
-      SkColorSetRGB(0x00, 0x1C, 0x37)};
-  mixer[kColorSearchConversionCloseButton] = {
-      leo::GetColor(leo::Color::kColorIconDefault, leo::Theme::kDark)};
-  mixer[kColorSearchConversionBannerTypeDescText] = {
-      SkColorSetRGB(0xE2, 0xE3, 0xE7)};
-  mixer[kColorSearchConversionBannerTypeBackgroundBorder] = {
-      SkColorSetRGB(0x1F, 0x25, 0x7A)};
-  mixer[kColorSearchConversionBannerTypeBackgroundBorderHovered] = {
-      SkColorSetRGB(0x5F, 0x67, 0xD7)};
-  mixer[kColorSearchConversionBannerTypeBackgroundGradientFrom] = {
-      SkColorSetARGB(104, 0x17, 0x19, 0x1E)};
-  mixer[kColorSearchConversionBannerTypeBackgroundGradientTo] = {
-      SkColorSetARGB(104, 0x1F, 0x25, 0x7A)};
 
   if (!HasCustomToolbarColor(key)) {
     mixer[kColorToolbarButtonActivated] = {

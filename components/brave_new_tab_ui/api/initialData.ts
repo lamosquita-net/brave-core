@@ -15,7 +15,6 @@ export type InitialData = {
   privateTabData: privateTabDataAPI.PrivateTabData
   wallpaperData?: NewTab.Wallpaper
   customImageBackgrounds: NewTab.ImageBackground[]
-  searchPromotionEnabled: boolean
 }
 
 const isIncognito: boolean = chrome.extension.inIncognitoContext
@@ -29,14 +28,12 @@ export async function getInitialData (): Promise<InitialData> {
       stats,
       privateTabData,
       wallpaperData,
-      searchPromotionEnabled,
       customImageBackgrounds
     ] = await Promise.all([
       preferencesAPI.getPreferences(),
       statsAPI.getStats(),
       privateTabDataAPI.getPrivateTabData(),
       !isIncognito ? wallpaper.getWallpaper() : Promise.resolve(undefined),
-      getNTPBrowserAPI().pageHandler.isSearchPromotionEnabled().then(({ enabled }) => enabled),
       getNTPBrowserAPI().pageHandler.getCustomImageBackgrounds().then(({ backgrounds }) => {
         return backgrounds.map(background => ({ type: 'image', wallpaperImageUrl: background.url.url }))
       })
@@ -47,8 +44,7 @@ export async function getInitialData (): Promise<InitialData> {
       stats,
       privateTabData,
       wallpaperData,
-      customImageBackgrounds,
-      searchPromotionEnabled
+      customImageBackgrounds
     } as InitialData
   } catch (e) {
     console.error(e)

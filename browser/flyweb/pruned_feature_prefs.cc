@@ -123,6 +123,12 @@ constexpr char kBraveRewards[] = "brave.rewards";
 constexpr char kBraveRewardsShowButton[] = "brave.show_brave_rewards_button";
 constexpr char kBraveRewardsHideButton[] = "brave.hide_brave_rewards_button";
 
+// Brave Search conversion promotion (removed 2026-11): the omnibox banner and
+// the NTP promo. Its profile prefs (dismissed, maybe later, DDG banner) and
+// its P3A local state prefs all live under "brave.brave_search_conversion".
+// The NTP search box keeps its own "brave.brave_search" prefs.
+constexpr char kBraveSearchConversion[] = "brave.brave_search_conversion";
+
 constexpr const char* kProfilePrefs[] = {
     kPlaylistEnabled,
     kPlaylists,
@@ -170,6 +176,7 @@ constexpr const char* kProfilePrefs[] = {
     kBraveRewards,
     kBraveRewardsShowButton,
     kBraveRewardsHideButton,
+    kBraveSearchConversion,
 };
 
 constexpr const char* kLocalStatePrefs[] = {
@@ -181,6 +188,7 @@ constexpr const char* kLocalStatePrefs[] = {
     kWhatsNewLastVersion,
     kAdBlockCookieListOptInShown,
     kBraveWallet,
+    kBraveSearchConversion,
 };
 
 }  // namespace
@@ -255,6 +263,9 @@ void RegisterPrunedFeatureProfilePrefs(
   registry->RegisterDictionaryPref(kBraveRewards);
   registry->RegisterBooleanPref(kBraveRewardsShowButton, true);
   registry->RegisterBooleanPref(kBraveRewardsHideButton, false);
+
+  // Brave Search conversion promotion
+  registry->RegisterDictionaryPref(kBraveSearchConversion);
 }
 
 void ClearPrunedFeatureProfilePrefs(PrefService* profile_prefs) {
@@ -288,6 +299,9 @@ void RegisterPrunedFeatureLocalStatePrefs(PrefRegistrySimple* registry) {
 
   // Brave Wallet
   registry->RegisterDictionaryPref(kBraveWallet);
+
+  // Brave Search conversion promotion
+  registry->RegisterDictionaryPref(kBraveSearchConversion);
 }
 
 void ClearPrunedFeatureLocalStatePrefs(PrefService* local_state) {

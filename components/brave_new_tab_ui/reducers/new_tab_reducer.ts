@@ -38,7 +38,6 @@ export const newTabReducer: Reducer<NewTab.State | undefined> = (state: NewTab.S
         ...initialDataPayload.preferences,
         stats: initialDataPayload.stats,
         ...initialDataPayload.privateTabData,
-        searchPromotionEnabled: initialDataPayload.searchPromotionEnabled,
         customImageBackgrounds: initialDataPayload.customImageBackgrounds
       }
 
@@ -71,13 +70,6 @@ export const newTabReducer: Reducer<NewTab.State | undefined> = (state: NewTab.S
       state = {
         ...state,
         stats
-      }
-      break
-
-    case types.SEARCH_PROMOTION_DISABLED:
-      state = {
-        ...state,
-        searchPromotionEnabled: false
       }
       break
 

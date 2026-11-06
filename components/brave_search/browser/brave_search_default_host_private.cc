@@ -11,8 +11,6 @@ namespace brave_search {
 
 BraveSearchDefaultHostPrivate::~BraveSearchDefaultHostPrivate() = default;
 
-void BraveSearchDefaultHostPrivate::SetCanAlwaysSetDefault() {}
-
 void BraveSearchDefaultHostPrivate::GetCanSetDefaultSearchProvider(
     GetCanSetDefaultSearchProviderCallback callback) {
   std::move(callback).Run(false);

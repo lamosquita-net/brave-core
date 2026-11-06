@@ -40,6 +40,3 @@ export const customBackgroundUpdated = (background: Background) =>
 
 export const customImageBackgroundsUpdated = (backgrounds: CustomBackground[]) =>
   action(types.CUSTOM_IMAGE_BACKGROUNDS_UPDATED, backgrounds)
-
-export const searchPromotionDisabled = () =>
-  action(types.SEARCH_PROMOTION_DISABLED, {})

@@ -18,7 +18,6 @@
 #include "brave/components/brave_perf_predictor/browser/perf_predictor_tab_helper.h"
 #include "brave/components/brave_search/browser/brave_search_default_host.h"
 #include "brave/components/brave_search/common/brave_search_utils.h"
-#include "brave/components/brave_search_conversion/utils.h"
 #include "brave/components/brave_shields/content/browser/brave_farbling_service.h"
 #include "brave/components/brave_shields/content/browser/brave_shields_p3a.h"
 #include "brave/components/brave_shields/core/common/pref_names.h"
@@ -283,6 +282,8 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
   registry->RegisterBooleanPref(kNewTabPageShowClock, false);
   registry->RegisterStringPref(kNewTabPageClockFormat, "");
   registry->RegisterBooleanPref(kNewTabPageShowStats, true);
+  registry->RegisterBooleanPref(kNewTabPageShowSearchBox, true);
+  registry->RegisterBooleanPref(kNewTabPagePromptEnableSearchSuggestions, true);
 
 // Private New Tab Page
 #if !BUILDFLAG(IS_ANDROID)
@@ -353,8 +354,6 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
       bookmarks_webui::prefs::kBookmarksViewType,
       base::Value(static_cast<int>(side_panel::mojom::ViewType::kCompact)));
 #endif
-
-  brave_search_conversion::RegisterPrefs(registry);
 
   // Enabled by default after fixing
   // https://github.com/brave/brave-browser/issues/18017

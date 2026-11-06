@@ -13,7 +13,6 @@
 #include "brave/browser/metrics/metrics_reporting_util.h"
 #include "brave/browser/search_engines/search_engine_tracker.h"
 #include "brave/browser/themes/brave_dark_mode_utils.h"
-#include "brave/components/brave_search_conversion/p3a.h"
 #include "brave/components/brave_shields/content/browser/ad_block_service.h"
 #include "brave/components/brave_shields/content/browser/brave_shields_p3a.h"
 #include "brave/components/constants/pref_names.h"
@@ -45,8 +44,6 @@ void RegisterLocalStatePrefsForMigration(PrefRegistrySimple* registry) {
   // Added 10/2022
   registry->RegisterBooleanPref(kDefaultBrowserPromptEnabled, true);
 #endif
-
-  brave_search_conversion::p3a::RegisterLocalStatePrefsForMigration(registry);
 
   // FlyWeb: added 11/2026 (T5), NTP sponsored images and super referrals.
   ntp_background_images::ViewCounterService::
@@ -87,8 +84,6 @@ void RegisterLocalStatePrefs(PrefRegistrySimple* registry) {
 #endif
 
   RegisterLocalStatePrefsForMigration(registry);
-
-  brave_search_conversion::p3a::RegisterLocalStatePrefs(registry);
 }
 
 }  // namespace brave

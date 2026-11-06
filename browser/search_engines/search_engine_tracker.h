@@ -100,8 +100,6 @@ class SearchEngineTracker : public KeyedService,
   SearchEngineTracker(const SearchEngineTracker&) = delete;
   SearchEngineTracker& operator=(const SearchEngineTracker&) = delete;
 
-  void RecordLocationBarQuery();
-
  private:
   // TemplateURLServiceObserver overrides:
   void OnTemplateURLServiceChanged() override;

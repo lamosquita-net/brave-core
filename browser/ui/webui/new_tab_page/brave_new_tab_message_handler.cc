@@ -22,7 +22,6 @@
 #include "brave/browser/search_engines/pref_names.h"
 #include "brave/browser/ui/webui/new_tab_page/brave_new_tab_ui.h"
 #include "brave/components/brave_perf_predictor/common/pref_names.h"
-#include "brave/components/brave_search_conversion/pref_names.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/ntp_background_images/browser/view_counter_service.h"
 #include "brave/components/ntp_background_images/common/pref_names.h"
@@ -66,12 +65,9 @@ base::DictValue GetPreferencesDictionary(PrefService* prefs) {
   pref_data.Set("showClock", prefs->GetBoolean(kNewTabPageShowClock));
   pref_data.Set("clockFormat", prefs->GetString(kNewTabPageClockFormat));
   pref_data.Set("showStats", prefs->GetBoolean(kNewTabPageShowStats));
-  pref_data.Set(
-      "showSearchBox",
-      prefs->GetBoolean(brave_search_conversion::prefs::kShowNTPSearchBox));
+  pref_data.Set("showSearchBox", prefs->GetBoolean(kNewTabPageShowSearchBox));
   pref_data.Set("promptEnableSearchSuggestions",
-                prefs->GetBoolean(
-                    brave_search_conversion::prefs::kPromptEnableSuggestions));
+                prefs->GetBoolean(kNewTabPagePromptEnableSearchSuggestions));
   pref_data.Set("searchSuggestionsEnabled",
                 prefs->GetBoolean(prefs::kSearchSuggestEnabled));
   return pref_data;
@@ -176,11 +172,11 @@ void BraveNewTabMessageHandler::OnJavascriptAllowed() {
       base::BindRepeating(&BraveNewTabMessageHandler::OnPreferencesChanged,
                           base::Unretained(this)));
   pref_change_registrar_.Add(
-      brave_search_conversion::prefs::kShowNTPSearchBox,
+      kNewTabPageShowSearchBox,
       base::BindRepeating(&BraveNewTabMessageHandler::OnPreferencesChanged,
                           base::Unretained(this)));
   pref_change_registrar_.Add(
-      brave_search_conversion::prefs::kPromptEnableSuggestions,
+      kNewTabPagePromptEnableSearchSuggestions,
       base::BindRepeating(&BraveNewTabMessageHandler::OnPreferencesChanged,
                           base::Unretained(this)));
   pref_change_registrar_.Add(
@@ -276,9 +272,9 @@ void BraveNewTabMessageHandler::HandleSaveNewTabPagePref(
   } else if (settingsKeyInput == "showStats") {
     settingsKey = kNewTabPageShowStats;
   } else if (settingsKeyInput == "showSearchBox") {
-    settingsKey = brave_search_conversion::prefs::kShowNTPSearchBox;
+    settingsKey = kNewTabPageShowSearchBox;
   } else if (settingsKeyInput == "promptEnableSearchSuggestions") {
-    settingsKey = brave_search_conversion::prefs::kPromptEnableSuggestions;
+    settingsKey = kNewTabPagePromptEnableSearchSuggestions;
   } else if (settingsKeyInput == "searchSuggestionsEnabled") {
     settingsKey = prefs::kSearchSuggestEnabled;
   } else {

@@ -14,7 +14,6 @@ export const defaultState: NewTab.State = {
   initialDataLoaded: false,
   textDirection: loadTimeData.getString('textdirection'),
   featureCustomBackgroundEnabled: loadTimeData.getBoolean('featureCustomBackgroundEnabled'),
-  searchPromotionEnabled: false,
   showBackgroundImage: false,
   showStats: false,
   showClock: false,

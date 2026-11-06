@@ -5,7 +5,6 @@
 
 #include "chrome/browser/ui/views/omnibox/omnibox_row_view.h"
 
-#include "brave/browser/ui/views/omnibox/brave_omnibox_result_view.h"
 #include "chrome/browser/ui/omnibox/omnibox_controller.h"
 #include "chrome/browser/ui/omnibox/omnibox_edit_model.h"
 #include "chrome/browser/ui/views/omnibox/omnibox_header_view.h"
@@ -15,13 +14,9 @@
 #include "components/omnibox/browser/omnibox_field_trial.h"
 #include "components/omnibox/browser/omnibox_popup_selection.h"
 
-// This substitution is being added to have OmniboxRowView adding a
-// BraveOmniboxResultView instance as a child view, in the constructor code.
-#define OmniboxResultView BraveOmniboxResultView
 #define GetInsets GetInsets_UnUsed
 #include "src/chrome/browser/ui/views/omnibox/omnibox_row_view.cc"
 #undef GetInsets
-#undef OmniboxResultView
 
 gfx::Insets OmniboxRowView::GetInsets() const {
   return gfx::Insets();

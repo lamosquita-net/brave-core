@@ -5,7 +5,6 @@
 
 #include "brave/browser/ui/webui/new_tab_page/brave_new_tab_page_handler.h"
 
-#include <optional>
 #include <utility>
 #include <vector>
 
@@ -18,17 +17,9 @@
 #include "brave/browser/ntp_background/constants.h"
 #include "brave/browser/ntp_background/custom_background_file_manager.h"
 #include "brave/browser/ntp_background/ntp_background_prefs.h"
-#include "brave/browser/ntp_background/view_counter_service_factory.h"
 #include "brave/browser/ui/webui/new_tab_page/brave_new_tab_ui.h"
-#include "brave/components/brave_search_conversion/p3a.h"
-#include "brave/components/brave_search_conversion/pref_names.h"
-#include "brave/components/brave_search_conversion/types.h"
-#include "brave/components/brave_search_conversion/utils.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/l10n/common/localization_util.h"
-#include "brave/components/ntp_background_images/browser/url_constants.h"
-#include "brave/components/ntp_background_images/browser/view_counter_service.h"
-#include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/search_engines/template_url_service_factory.h"
 #include "chrome/browser/ui/chrome_select_file_policy.h"
@@ -52,33 +43,6 @@
 #include "url/gurl.h"
 #include "url/origin.h"
 
-namespace {
-
-bool IsNTPPromotionEnabled(Profile* profile) {
-  if (!brave_search_conversion::IsNTPPromotionEnabled(
-          profile->GetPrefs(),
-          TemplateURLServiceFactory::GetForProfile(profile))) {
-    return false;
-  }
-
-  auto* service =
-      ntp_background_images::ViewCounterServiceFactory::GetForProfile(profile);
-  if (!service) {
-    return false;
-  }
-
-  std::optional<base::DictValue> data = service->GetCurrentWallpaper();
-  if (data) {
-    if (const auto is_background =
-            data->FindBool(ntp_background_images::kIsBackgroundKey)) {
-      return is_background.value();
-    }
-  }
-  return false;
-}
-
-}  // namespace
-
 BraveNewTabPageHandler::BraveNewTabPageHandler(
     mojo::PendingReceiver<brave_new_tab_page::mojom::PageHandler>
         pending_page_handler,
@@ -90,34 +54,9 @@ BraveNewTabPageHandler::BraveNewTabPageHandler(
       profile_(profile),
       web_contents_(web_contents),
       file_manager_(std::make_unique<CustomBackgroundFileManager>(profile_)),
-      weak_factory_(this) {
-  InitForSearchPromotion();
-}
+      weak_factory_(this) {}
 
 BraveNewTabPageHandler::~BraveNewTabPageHandler() = default;
-
-void BraveNewTabPageHandler::InitForSearchPromotion() {
-  // If promotion is disabled for this loading, we do nothing.
-  // If some condition is changed and it can be enabled, promotion
-  // will be shown at the next NTP loading.
-  if (!IsNTPPromotionEnabled(profile_)) {
-    return;
-  }
-
-  // Observing user's dismiss or default search provider change to hide
-  // promotion from NTP while NTP is loaded.
-  pref_change_registrar_.Init(profile_->GetPrefs());
-  pref_change_registrar_.Add(
-      brave_search_conversion::prefs::kDismissed,
-      base::BindRepeating(&BraveNewTabPageHandler::OnSearchPromotionDismissed,
-                          base::Unretained(this)));
-  template_url_service_observation_.Observe(
-      TemplateURLServiceFactory::GetForProfile(profile_));
-
-  brave_search_conversion::p3a::RecordPromoShown(
-      g_browser_process->local_state(),
-      brave_search_conversion::ConversionType::kNTP);
-}
 
 void BraveNewTabPageHandler::ChooseLocalCustomBackground() {
   // Early return if the select file dialog is already active.
@@ -197,49 +136,6 @@ void BraveNewTabPageHandler::UseBraveBackground(
   pref.SetShouldUseRandomValue(selected_background.empty());
 
   OnBackgroundUpdated();
-}
-
-void BraveNewTabPageHandler::TryBraveSearchPromotion(const std::string& input,
-                                                     bool open_new_tab) {
-  const GURL promo_url = brave_search_conversion::GetPromoURL(input);
-  auto window_open_disposition = WindowOpenDisposition::CURRENT_TAB;
-  if (open_new_tab) {
-    window_open_disposition = WindowOpenDisposition::NEW_BACKGROUND_TAB;
-  }
-
-  web_contents_->OpenURL(
-      content::OpenURLParams(
-          promo_url, content::Referrer(), window_open_disposition,
-          ui::PageTransition::PAGE_TRANSITION_FORM_SUBMIT, false),
-      /*navigation_handle_callback=*/{});
-
-  brave_search_conversion::p3a::RecordPromoTrigger(
-      g_browser_process->local_state(),
-      brave_search_conversion::ConversionType::kNTP);
-}
-
-void BraveNewTabPageHandler::DismissBraveSearchPromotion() {
-  brave_search_conversion::SetDismissed(profile_->GetPrefs());
-}
-
-void BraveNewTabPageHandler::IsSearchPromotionEnabled(
-    IsSearchPromotionEnabledCallback callback) {
-  std::move(callback).Run(IsNTPPromotionEnabled(profile_));
-}
-
-void BraveNewTabPageHandler::NotifySearchPromotionDisabledIfNeeded() const {
-  // If enabled, we don't do anything. When NTP is reloaded or opened,
-  // user will see promotion.
-  if (IsNTPPromotionEnabled(profile_)) {
-    return;
-  }
-
-  // Hide promotion when it's disabled.
-  page_->OnSearchPromotionDisabled();
-}
-
-void BraveNewTabPageHandler::OnSearchPromotionDismissed() {
-  NotifySearchPromotionDisabledIfNeeded();
 }
 
 void BraveNewTabPageHandler::UseColorBackground(const std::string& color,
@@ -457,10 +353,3 @@ void BraveNewTabPageHandler::FileSelectionCanceled() {
   select_file_dialog_ = nullptr;
 }
 
-void BraveNewTabPageHandler::OnTemplateURLServiceChanged() {
-  NotifySearchPromotionDisabledIfNeeded();
-}
-
-void BraveNewTabPageHandler::OnTemplateURLServiceShuttingDown() {
-  template_url_service_observation_.Reset();
-}

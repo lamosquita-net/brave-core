@@ -6,10 +6,9 @@
 import * as React from 'react'
 
 // Components
-import getNTPBrowserAPI from '../../api/background'
 import { addNewTopSite, editTopSite } from '../../api/topSites'
 import {
-  Clock, EditTopSite, OverrideReadabilityColor, SearchPromotion
+  Clock, EditTopSite, OverrideReadabilityColor
 } from '../../components/default'
 import FooterInfo from '../../components/default/footer/footer'
 import * as Page from '../../components/default/page'
@@ -59,8 +58,6 @@ interface State {
   targetTopSiteForEditing?: NewTab.Site
   backgroundHasLoaded: boolean
   activeSettingsTab: SettingsTabType | null
-  showSearchPromotion: boolean
-  forceToHideWidget: boolean
 }
 
 function GetBackgroundImageSrc (props: Props) {
@@ -76,27 +73,12 @@ function GetBackgroundImageSrc (props: Props) {
   return undefined
 }
 
-function GetShouldShowSearchPromotion (props: Props, showSearchPromotion: boolean) {
-  return props.newTabData.searchPromotionEnabled && showSearchPromotion
-}
-
-function GetShouldForceToHideWidget (props: Props, showSearchPromotion: boolean) {
-  if (!GetShouldShowSearchPromotion(props, showSearchPromotion)) {
-    return false
-  }
-
-  // Avoid promotion popup and other widgets overlap with narrow window.
-  return window.innerWidth < 1000
-}
-
 class NewTabPage extends React.Component<Props, State> {
   state: State = {
     showSettingsMenu: false,
     showEditTopSite: false,
     backgroundHasLoaded: false,
-    activeSettingsTab: null,
-    showSearchPromotion: false,
-    forceToHideWidget: false
+    activeSettingsTab: null
   }
 
   imgCache: HTMLImageElement
@@ -108,17 +90,10 @@ class NewTabPage extends React.Component<Props, State> {
     this.imageSource = GetBackgroundImageSrc(this.props)
     this.trackCachedImage()
     this.checkShouldOpenSettings()
-    const searchPromotionEnabled = this.props.newTabData.searchPromotionEnabled
-    this.setState({
-      showSearchPromotion: searchPromotionEnabled,
-      forceToHideWidget: GetShouldForceToHideWidget(this.props, searchPromotionEnabled)
-    })
-    window.addEventListener('resize', this.handleResize)
     window.navigation.addEventListener('currententrychange', this.checkShouldOpenSettings)
   }
 
   componentWillUnmount () {
-    window.removeEventListener('resize', this.handleResize)
     window.navigation.removeEventListener('currententrychange', this.checkShouldOpenSettings)
   }
 
@@ -139,12 +114,6 @@ class NewTabPage extends React.Component<Props, State> {
 
   shouldOverrideReadabilityColor (newTabData: NewTab.State) {
     return newTabData.backgroundWallpaper?.type === 'color' && !isReadableOnBackground(newTabData.backgroundWallpaper)
-  }
-
-  handleResize = () => {
-    this.setState({
-      forceToHideWidget: GetShouldForceToHideWidget(this.props, this.state.showSearchPromotion)
-    })
   }
 
   trackCachedImage () {
@@ -233,13 +202,6 @@ class NewTabPage extends React.Component<Props, State> {
     })
   }
 
-  closeSearchPromotion = () => {
-    this.setState({
-      showSearchPromotion: false,
-      forceToHideWidget: false
-    })
-  }
-
   saveNewTopSite = (title: string, url: string, newUrl: string) => {
     if (url) {
       editTopSite(title, url, newUrl === url ? '' : newUrl)
@@ -256,23 +218,9 @@ class NewTabPage extends React.Component<Props, State> {
     })
   }
 
-  renderSearchPromotion () {
-    if (!GetShouldShowSearchPromotion(this.props, this.state.showSearchPromotion)) {
-      return null
-    }
-
-    const onClose = () => { this.closeSearchPromotion() }
-    const onDismiss = () => { getNTPBrowserAPI().pageHandler.dismissBraveSearchPromotion() }
-    const onTryBraveSearch = (input: string, openNewTab: boolean) => { getNTPBrowserAPI().pageHandler.tryBraveSearchPromotion(input, openNewTab) }
-
-    return (
-      <SearchPromotion textDirection={this.props.newTabData.textDirection} onTryBraveSearch={onTryBraveSearch} onClose={onClose} onDismiss={onDismiss} />
-    )
-  }
-
   render () {
     const { newTabData, gridSitesData, actions } = this.props
-    const { showSettingsMenu, showEditTopSite, targetTopSiteForEditing, forceToHideWidget } = this.state
+    const { showSettingsMenu, showEditTopSite, targetTopSiteForEditing } = this.state
 
     if (!newTabData) {
       return null
@@ -288,17 +236,12 @@ class NewTabPage extends React.Component<Props, State> {
 
     const showAddNewSiteMenuItem = newTabData.customLinksNum < MAX_GRID_SIZE
 
-    let { showTopSites, showStats, showClock } = newTabData
+    const { showStats, showClock } = newTabData
+    let { showTopSites } = newTabData
     // In favorites mode, add site tile is visible by default if there is no
     // item. In frecency, top sites widget is hidden with empty tiles.
     if (showTopSites && !newTabData.customLinksEnabled) {
       showTopSites = this.props.gridSitesData.gridSites.length !== 0
-    }
-
-    if (forceToHideWidget) {
-      showTopSites = false
-      showStats = false
-      showClock = false
     }
 
     return (
@@ -322,7 +265,6 @@ class NewTabPage extends React.Component<Props, State> {
             sinVelo={!!coloresFlyWeb}
             showTopSites={showTopSites}
         >
-          {this.renderSearchPromotion()}
           <GridWidget
             pref='showStats'
             container={Page.GridItemStats}

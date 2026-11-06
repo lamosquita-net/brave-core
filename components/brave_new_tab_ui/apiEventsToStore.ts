@@ -52,7 +52,6 @@ export function wireApiEventsToStore () {
 
     getNTPBrowserAPI().addBackgroundUpdatedListener(onBackgroundUpdated)
     getNTPBrowserAPI().addCustomImageBackgroundsUpdatedListener(onCustomImageBackgroundsUpdated)
-    getNTPBrowserAPI().addSearchPromotionDisabledListener(() => getActions().searchPromotionDisabled())
   })
   .catch(e => {
     console.error('New Tab Page fatal error:', e)

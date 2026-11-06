@@ -25,10 +25,8 @@
 namespace brave_search {
 
 BraveSearchDefaultJSHandler::BraveSearchDefaultJSHandler(
-    content::RenderFrame* render_frame,
-    bool can_always_set_default)
-    : render_frame_(render_frame),
-      can_always_set_default_(can_always_set_default) {}
+    content::RenderFrame* render_frame)
+    : render_frame_(render_frame) {}
 
 BraveSearchDefaultJSHandler::~BraveSearchDefaultJSHandler() = default;
 
@@ -36,8 +34,6 @@ bool BraveSearchDefaultJSHandler::EnsureConnected() {
   if (!brave_search_default_.is_bound()) {
     render_frame_->GetBrowserInterfaceBroker().GetInterface(
         brave_search_default_.BindNewPipeAndPassReceiver());
-    if (can_always_set_default_)
-      brave_search_default_->SetCanAlwaysSetDefault();
   }
 
   return brave_search_default_.is_bound();

@@ -7,26 +7,16 @@
 
 #include "base/values.h"
 #include "brave/browser/autocomplete/brave_autocomplete_scheme_classifier.h"
-#include "brave/browser/search_engines/search_engine_tracker.h"
-#include "brave/components/brave_search_conversion/p3a.h"
-#include "brave/components/brave_search_conversion/utils.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/omnibox/browser/brave_omnibox_prefs.h"
-#include "brave/components/omnibox/browser/promotion_utils.h"
 #include "brave/components/p3a_utils/bucket.h"
-#include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/omnibox/chrome_omnibox_client.h"
 #include "components/omnibox/browser/autocomplete_match.h"
-#include "components/omnibox/browser/autocomplete_result.h"
-#include "components/omnibox/browser/omnibox_log.h"
 #include "components/prefs/pref_registry_simple.h"
 #include "components/prefs/pref_service.h"
 
 namespace {
-
-using brave_search_conversion::ConversionType;
-using brave_search_conversion::GetConversionType;
 
 constexpr char kSearchCountPrefName[] = "brave.weekly_storage.search_count";
 
@@ -59,8 +49,6 @@ BraveOmniboxClientImpl::BraveOmniboxClientImpl(LocationBar* location_bar,
                                                Profile* profile)
     : ChromeOmniboxClient(location_bar, browser, profile),
       profile_(profile),
-      search_engine_tracker_(
-          SearchEngineTrackerFactory::GetForBrowserContext(profile)),
       scheme_classifier_(profile),
       search_storage_(profile_->GetPrefs(), kSearchCountPrefName) {
   // Record initial search count p3a value.
@@ -79,17 +67,6 @@ BraveOmniboxClientImpl::GetSchemeClassifier() const {
   return scheme_classifier_;
 }
 
-void BraveOmniboxClientImpl::OnURLOpenedFromOmnibox(OmniboxLog* log) {
-  if (log->selection.line <= 0) {
-    return;
-  }
-  const auto match = log->result->match_at(log->selection.line);
-  if (IsBraveSearchPromotionMatch(match)) {
-    brave_search_conversion::p3a::RecordPromoTrigger(
-        g_browser_process->local_state(), GetConversionTypeFromMatch(match));
-  }
-}
-
 void BraveOmniboxClientImpl::OnAutocompleteAccept(
     const GURL& destination_url,
     TemplateURLRef::PostContent* post_content,
@@ -106,9 +83,6 @@ void BraveOmniboxClientImpl::OnAutocompleteAccept(
     // TODO(iefremov): Optimize this.
     search_storage_.AddDelta(1);
     RecordSearchEventP3A(search_storage_.GetWeeklySum());
-    if (search_engine_tracker_ != nullptr) {
-      search_engine_tracker_->RecordLocationBarQuery();
-    }
   }
   ChromeOmniboxClient::OnAutocompleteAccept(
       destination_url, post_content, disposition, transition, match_type,

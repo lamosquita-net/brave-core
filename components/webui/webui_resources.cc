@@ -147,18 +147,6 @@ base::span<const webui::LocalizedString> GetWebUILocalizedStrings(
                {"refreshBackgroundOnNewTab",
                 IDS_BRAVE_NEW_TAB_REFRESH_BACKGROUND_ON_NEW_TAB},
 
-               // search promotion
-               {"searchPromotionNTPPopupTitle1",
-                IDS_BRAVE_NEW_TAB_SEARCH_PROMOTION_POPUP_TITLE_1},
-               {"searchPromotionNTPPopupTitle2",
-                IDS_BRAVE_NEW_TAB_SEARCH_PROMOTION_POPUP_TITLE_2},
-               {"searchPromotionNTPPopupDesc",
-                IDS_BRAVE_NEW_TAB_SEARCH_PROMOTION_POPUP_DESC},
-               {"searchPromotionNTPPopupBottom",
-                IDS_BRAVE_NEW_TAB_SEARCH_PROMOTION_POPUP_BOTTOM},
-               {"searchPromotionSearchBoxPlaceholderLabel",
-                IDS_BRAVE_NEW_TAB_SEARCH_PROMOTION_SEARCH_BOX_PLACEHOLDER},
-
                {"hideWidget", IDS_BRAVE_NEW_TAB_WIDGET_HIDE},
 #if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
                // Private Tab - General

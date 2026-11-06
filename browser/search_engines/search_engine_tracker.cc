@@ -8,9 +8,6 @@
 #include "base/metrics/histogram_macros.h"
 #include "base/no_destructor.h"
 #include "base/strings/string_util.h"
-#include "brave/components/brave_search_conversion/features.h"
-#include "brave/components/brave_search_conversion/p3a.h"
-#include "brave/components/brave_search_conversion/utils.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/search_engines/template_url_service_factory.h"
@@ -176,12 +173,6 @@ SearchEngineTracker::SearchEngineTracker(
 
 SearchEngineTracker::~SearchEngineTracker() = default;
 
-void SearchEngineTracker::RecordLocationBarQuery() {
-  if (current_default_engine_ == SearchEngineP3A::kBrave) {
-    brave_search_conversion::p3a::RecordLocationBarQuery(local_state_);
-  }
-}
-
 void SearchEngineTracker::OnTemplateURLServiceChanged() {
   const TemplateURL* template_url =
       template_url_service_->GetDefaultSearchProvider();
@@ -190,19 +181,13 @@ void SearchEngineTracker::OnTemplateURLServiceChanged() {
         template_url_service_->search_terms_data();
     const GURL& url = template_url->GenerateSearchURL(search_terms);
     if (url != default_search_url_) {
-      SearchEngineP3A last_default_engine = current_default_engine_;
-      current_default_engine_ = GetSearchEngineProvider(
+        current_default_engine_ = GetSearchEngineProvider(
           url, template_url->GetEngineType(search_terms));
 
       UMA_HISTOGRAM_ENUMERATION(kDefaultSearchEngineMetric,
                                 current_default_engine_);
 
       default_search_url_ = url;
-
-      if (last_default_engine != current_default_engine_ &&
-          last_default_engine == SearchEngineP3A::kBrave) {
-        brave_search_conversion::p3a::RecordDefaultEngineChurn(local_state_);
-      }
     }
     RecordSwitchP3A(url);
   }
@@ -224,18 +209,7 @@ void SearchEngineTracker::RecordSwitchP3A(const GURL& url) {
     answer = SearchEngineSwitchP3AMapAnswer(url, previous_search_url_);
     previous_search_url_ = url;
     switch_record_.Add(static_cast<int>(answer));
-
-    if (url.DomainIs(kBraveDomain)) {
-      brave_search_conversion::p3a::RecordDefaultEngineConversion(local_state_);
-    }
   }
 
-  if (brave_search_conversion::IsBraveSearchConversionFeatureEnabled() ||
-      base::FeatureList::IsEnabled(brave_search_conversion::features::kNTP)) {
-    // Do not report if search conversion promo is enabled, to prevent metric
-    // overlap with conversion metrics.
-    UMA_HISTOGRAM_EXACT_LINEAR(kSwitchSearchEngineMetric, INT_MAX - 1, 8);
-    return;
-  }
   UMA_HISTOGRAM_ENUMERATION(kSwitchSearchEngineMetric, answer);
 }

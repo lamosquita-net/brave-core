@@ -65,6 +65,12 @@ inline constexpr char kNewTabPageShowClock[] = "brave.new_tab_page.show_clock";
 inline constexpr char kNewTabPageClockFormat[] =
     "brave.new_tab_page.clock_format";
 inline constexpr char kNewTabPageShowStats[] = "brave.new_tab_page.show_stats";
+// The NTP search box prefs keep the keys they had under Brave Search
+// conversion so that existing profiles keep their choice.
+inline constexpr char kNewTabPageShowSearchBox[] =
+    "brave.brave_search.show-ntp-search";
+inline constexpr char kNewTabPagePromptEnableSearchSuggestions[] =
+    "brave.brave_search.ntp-search_prompt_enable_suggestions";
 inline constexpr char kNewTabPageShowsOptions[] =
     "brave.new_tab_page.shows_options";
 inline constexpr char kBraveDarkMode[] = "brave.dark_mode";

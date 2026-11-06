@@ -105,7 +105,6 @@ declare namespace NewTab {
   export type EphemeralState = Preferences & {
     initialDataLoaded: boolean
     textDirection: string
-    searchPromotionEnabled: boolean
     featureCustomBackgroundEnabled: boolean
     isIncognito: boolean
     useAlternativePrivateSearchEngine: boolean

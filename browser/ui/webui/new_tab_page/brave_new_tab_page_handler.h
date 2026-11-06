@@ -12,12 +12,8 @@
 
 #include "base/memory/raw_ptr.h"
 #include "base/memory/weak_ptr.h"
-#include "base/scoped_observation.h"
 #include "brave/browser/ui/webui/new_tab_page/brave_new_tab_ui.h"
 #include "brave/components/brave_new_tab_ui/brave_new_tab_page.mojom.h"
-#include "components/prefs/pref_change_registrar.h"
-#include "components/search_engines/template_url_service.h"
-#include "components/search_engines/template_url_service_observer.h"
 #include "mojo/public/cpp/bindings/receiver.h"
 #include "mojo/public/cpp/bindings/remote.h"
 #include "ui/shell_dialogs/select_file_dialog.h"
@@ -35,8 +31,7 @@ class NtpCustomBackgroundService;
 class Profile;
 
 class BraveNewTabPageHandler : public brave_new_tab_page::mojom::PageHandler,
-                               public ui::SelectFileDialog::Listener,
-                               public TemplateURLServiceObserver {
+                               public ui::SelectFileDialog::Listener {
  public:
   BraveNewTabPageHandler(
       mojo::PendingReceiver<brave_new_tab_page::mojom::PageHandler>
@@ -59,11 +54,6 @@ class BraveNewTabPageHandler : public brave_new_tab_page::mojom::PageHandler,
   void RemoveCustomImageBackground(const std::string& background) override;
 
   void UseBraveBackground(const std::string& selected_background) override;
-  void TryBraveSearchPromotion(const std::string& input,
-                               bool open_new_tab) override;
-  void DismissBraveSearchPromotion() override;
-  void IsSearchPromotionEnabled(
-      IsSearchPromotionEnabledCallback callback) override;
   void UseColorBackground(const std::string& color,
                           bool use_random_color) override;
   void GetSearchEngines(GetSearchEnginesCallback callback) override;
@@ -84,22 +74,11 @@ class BraveNewTabPageHandler : public brave_new_tab_page::mojom::PageHandler,
       const std::vector<ui::SelectedFileInfo>& files) override;
   void FileSelectionCanceled() override;
 
-  // TemplateURLServiceObserver overrides:
-  void OnTemplateURLServiceChanged() override;
-  void OnTemplateURLServiceShuttingDown() override;
-
   bool IsCustomBackgroundImageEnabled() const;
   bool IsColorBackgroundEnabled() const;
   void OnSavedCustomImage(const base::FilePath& path);
   void OnRemoveCustomImageBackground(const base::FilePath& path, bool success);
 
-  void OnSearchPromotionDismissed();
-  void NotifySearchPromotionDisabledIfNeeded() const;
-  void InitForSearchPromotion();
-
-  PrefChangeRegistrar pref_change_registrar_;
-  base::ScopedObservation<TemplateURLService, TemplateURLServiceObserver>
-      template_url_service_observation_{this};
   mojo::Receiver<brave_new_tab_page::mojom::PageHandler> page_handler_;
   mojo::Remote<brave_new_tab_page::mojom::Page> page_;
   raw_ptr<Profile> profile_ = nullptr;
