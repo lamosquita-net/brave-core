@@ -6,6 +6,7 @@
 #include "base/time/time.h"
 #include "components/history/core/browser/url_database.h"
 #include "components/history/core/browser/visit_database.h"
+#include "sql/test/test_helpers.h"
 #include "testing/gtest/include/gtest/gtest.h"
 #include "testing/platform_test.h"
 
@@ -18,7 +19,7 @@ class BraveVisitDatabaseTest : public PlatformTest,
                                public URLDatabase,
                                public VisitDatabase {
  public:
-  BraveVisitDatabaseTest() {}
+  BraveVisitDatabaseTest() : db_(sql::test::kTestTag) {}
 
  private:
   // Test setup.
@@ -48,7 +49,8 @@ TEST_F(BraveVisitDatabaseTest, BraveGetKnownToSyncCount) {
   for (VisitID i = 1; i <= 3; i++) {
     VisitRow original(i, Time::Now(), 23, ui::PageTransitionFromInt(0), 19,
                       false, 0);
-    AddVisit(&original, SOURCE_BROWSED);
+    original.source = SOURCE_BROWSED;
+    AddVisit(&original);
     ASSERT_EQ(i, original.visit_id);  // Verifies that we added 1, 2, and 3
   }
 

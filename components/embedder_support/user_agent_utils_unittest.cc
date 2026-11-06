@@ -4,8 +4,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "components/embedder_support/user_agent_utils.h"
+
+#include <string>
+
 #include "base/command_line.h"
 #include "base/feature_list.h"
+#include "base/strings/string_number_conversions.h"
 #include "base/test/scoped_command_line.h"
 #include "components/embedder_support/switches.h"
 #include "components/version_info/version_info.h"
@@ -31,11 +35,16 @@ bool ContainsBrandVersion(const blink::UserAgentBrandList& brand_list,
 TEST(UserAgentUtilsTest, UserAgentMetadata) {
   auto metadata = GetUserAgentMetadata();
 
-  const std::string major_version = version_info::GetMajorVersionNumber();
-  const blink::UserAgentBrandVersion product_brand_version = {"Brave",
-                                                              major_version};
-  EXPECT_TRUE(
-      ContainsBrandVersion(metadata.brand_version_list, product_brand_version));
+  // FlyWeb declares the engine level and no own brand (only "Chromium" plus
+  // the GREASE brand, like an unbranded Chromium).
+  const std::string declared_major =
+      base::NumberToString(version_info::constants::kFlyWebEngineLevel);
+  EXPECT_TRUE(ContainsBrandVersion(metadata.brand_version_list,
+                                   {"Chromium", declared_major}));
+  for (const auto& brand_version : metadata.brand_version_list) {
+    EXPECT_NE(brand_version.brand, "Brave");
+    EXPECT_NE(brand_version.brand, "FlyWeb");
+  }
 }
 
 TEST(UserAgentUtilsTest, UserAgentFromCommandLine) {
@@ -47,7 +56,7 @@ TEST(UserAgentUtilsTest, UserAgentFromCommandLine) {
                                                           kCmdUserAgentValue);
   ASSERT_TRUE(
       base::FeatureList::IsEnabled(blink::features::kUACHOverrideBlank));
-  const auto brave_metadata = GetUserAgentMetadata(nullptr);
+  const auto brave_metadata = GetUserAgentMetadata();
   const blink::UserAgentMetadata empty_metadata;
 
   EXPECT_EQ(GetUserAgent(), kCmdUserAgentValue);
