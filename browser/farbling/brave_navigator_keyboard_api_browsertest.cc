@@ -16,6 +16,7 @@
 #include "content/public/test/browser_test.h"
 #include "content/public/test/browser_test_utils.h"
 #include "net/dns/mock_host_resolver.h"
+#include "testing/gmock/include/gmock/gmock.h"
 #include "url/gurl.h"
 
 using brave_shields::ControlType;
@@ -104,15 +105,17 @@ IN_PROC_BROWSER_TEST_F(BraveNavigatorKeyboardAPIBrowserTest,
   SetFingerprintingDefault();
   EXPECT_TRUE(ui_test_utils::NavigateToURL(browser(), test_url()));
   auto result_standard = EvalJs(contents(), kGetLayoutMapScript);
-  EXPECT_TRUE(result_standard.error.contains(
-      "Cannot read properties of null (reading 'getLayoutMap')"));
+  EXPECT_THAT(result_standard,
+              content::EvalJsResult::ErrorIs(testing::HasSubstr(
+                  "Cannot read properties of null (reading 'getLayoutMap')")));
 
   // Fingerprinting level: blocked (same as standard for this test)
   BlockFingerprinting();
   EXPECT_TRUE(ui_test_utils::NavigateToURL(browser(), test_url()));
   auto result_blocked = EvalJs(contents(), kGetLayoutMapScript);
-  EXPECT_TRUE(result_blocked.error.contains(
-      "Cannot read properties of null (reading 'getLayoutMap')"));
+  EXPECT_THAT(result_blocked,
+              content::EvalJsResult::ErrorIs(testing::HasSubstr(
+                  "Cannot read properties of null (reading 'getLayoutMap')")));
 
   // Fingerprinting level: default, but with webcompat exception enabled
   // get real navigator.keyboard.getLayoutMap key

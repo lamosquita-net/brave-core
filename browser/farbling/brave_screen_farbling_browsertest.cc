@@ -15,11 +15,13 @@
 #include "chrome/browser/extensions/chrome_test_extension_loader.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser_window.h"
-#include "chrome/common/chrome_paths.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+#include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/test/base/in_process_browser_test.h"
 #include "chrome/test/base/ui_test_utils.h"
 #include "content/public/test/browser_test.h"
 #include "content/public/test/browser_test_utils.h"
+#include "extensions/test/test_extension_dir.h"
 #include "net/dns/mock_host_resolver.h"
 #include "net/test/embedded_test_server/embedded_test_server.h"
 #include "net/test/embedded_test_server/http_request.h"
@@ -126,9 +128,10 @@ class BraveScreenFarblingBrowserTest : public InProcessBrowserTest {
 
   content::RenderFrameHost* IFrame() const { return ChildFrameAt(Parent(), 0); }
 
-  Browser* OpenPopup(const std::string& script, bool from_iframe) const {
+  BrowserWindowInterface* OpenPopup(const std::string& script,
+                                    bool from_iframe) const {
     content::ExecuteScriptAsync(from_iframe ? Parent() : IFrame(), script);
-    Browser* popup = ui_test_utils::WaitForBrowserToOpen();
+    BrowserWindowInterface* popup = ui_test_utils::WaitForBrowserToOpen();
     EXPECT_NE(popup, browser());
     auto* popup_contents = popup->tab_strip_model()->GetActiveWebContents();
     EXPECT_TRUE(WaitForRenderFrameReady(popup_contents->GetPrimaryMainFrame()));
@@ -138,9 +141,9 @@ class BraveScreenFarblingBrowserTest : public InProcessBrowserTest {
   virtual bool IsFlagDisabled() const = 0;
 
   gfx::Rect SetBounds(const gfx::Rect& bounds) {
-    browser()->window()->SetBounds(bounds);
+    BrowserWindow::FromBrowser(browser())->SetBounds(bounds);
     content::RunAllPendingInMessageLoop();
-    return browser()->window()->GetBounds();
+    return BrowserWindow::FromBrowser(browser())->GetBounds();
   }
 
   void FarbleScreenSize(const GURL& url, bool content_scheme) {
@@ -269,10 +272,10 @@ class BraveScreenFarblingBrowserTest : public InProcessBrowserTest {
             "width=${outerWidth + 20},"
             "height=${outerHeight + 20}"
             "`);";
-        Browser* popup = OpenPopup(script, test_iframe);
+        BrowserWindowInterface* popup = OpenPopup(script, test_iframe);
         auto* popup_contents = popup->tab_strip_model()->GetActiveWebContents();
         content::WaitForLoadStop(popup_contents);
-        gfx::Rect child_bounds = popup->window()->GetBounds();
+        gfx::Rect child_bounds = BrowserWindow::FromBrowser(popup)->GetBounds();
         if (!allow_fingerprinting && !IsFlagDisabled()) {
           EXPECT_GE(child_bounds.x(), parent_bounds.x());
           EXPECT_GE(child_bounds.y(), parent_bounds.y());
@@ -288,23 +291,23 @@ class BraveScreenFarblingBrowserTest : public InProcessBrowserTest {
         }
         if (!test_iframe) {
           auto* widget = views::Widget::GetWidgetForNativeWindow(
-              popup->window()->GetNativeWindow());
+              BrowserWindow::FromBrowser(popup)->GetNativeWindow());
 
-          auto bounds_before = popup->window()->GetBounds();
+          auto bounds_before = BrowserWindow::FromBrowser(popup)->GetBounds();
           auto waiter1 = WidgetBoundsChangeWaiter(widget, 10);
           ASSERT_TRUE(ExecJs(popup_contents,
                              "resizeTo(outerWidth - 13, outerHeight - 14)"));
           waiter1.Wait();
-          auto bounds_after = popup->window()->GetBounds();
+          auto bounds_after = BrowserWindow::FromBrowser(popup)->GetBounds();
           EXPECT_EQ(-13, bounds_after.width() - bounds_before.width());
           EXPECT_EQ(-14, bounds_after.height() - bounds_before.height());
 
-          bounds_before = popup->window()->GetBounds();
+          bounds_before = BrowserWindow::FromBrowser(popup)->GetBounds();
           auto waiter2 = WidgetBoundsChangeWaiter(widget, 10);
           ASSERT_TRUE(
               ExecJs(popup_contents, "moveTo(screenX + 11, screenY + 12)"));
           waiter2.Wait();
-          bounds_after = popup->window()->GetBounds();
+          bounds_after = BrowserWindow::FromBrowser(popup)->GetBounds();
           EXPECT_EQ(11, bounds_after.x() - bounds_before.x());
           EXPECT_EQ(12, bounds_after.y() - bounds_before.y());
         }
@@ -423,12 +426,16 @@ IN_PROC_BROWSER_TEST_F(BraveScreenFarblingBrowserTest_EnableFlag,
   FarbleScreenSize(GURL("chrome:version"), false);
 
   // chrome-extension: URI (don't farble)
-  base::FilePath test_data_dir;
-  base::PathService::Get(chrome::DIR_TEST_DATA, &test_data_dir);
-  std::string extension_id =
-      LoadExtension(test_data_dir.AppendASCII("extensions")
-                        .AppendASCII("ui")
-                        .AppendASCII("browser_action_popup"));
+  extensions::TestExtensionDir test_extension_dir;
+  test_extension_dir.WriteManifest(R"({
+    "name": "Browser Action Popup",
+    "manifest_version": 3,
+    "version": "0.1",
+    "action": { "default_popup": "popup.html" }
+  })");
+  test_extension_dir.WriteFile(FILE_PATH_LITERAL("popup.html"),
+                               "<!doctype html><html>This is a popup</html>");
+  std::string extension_id = LoadExtension(test_extension_dir.UnpackedPath());
   base::RunLoop().RunUntilIdle();  // Ensure the extension is fully loaded.
   const GURL extension_url("chrome-extension://" + extension_id +
                            "/popup.html");
