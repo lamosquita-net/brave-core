@@ -5,7 +5,12 @@
 
 #include "chrome/browser/ui/views/tabs/tab.h"
 
+#include "brave/components/constants/pref_names.h"
+#include "chrome/browser/profiles/profile.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/layout_constants.h"
+#include "chrome/browser/ui/views/tabs/tab_slot_controller.h"
+#include "components/prefs/pref_service.h"
 
 // Upstream is no longer centering the tab favicon vertically within the tab
 // view (likely due to the fact that their tab contents rect happens to be the
@@ -34,3 +39,10 @@
 #undef BRAVE_UI_VIEWS_TABS_TAB_UPDATE_ICON_VISIBILITY
 #undef BRAVE_UI_VIEWS_TABS_TAB_ALERT_INDICATOR_POSITION
 #undef BRAVE_UI_VIEWS_TABS_TAB_LAYOUT_ADJUST_ICON_POSITION
+
+bool Tab::IsTabMuteIndicatorNotClickable() {
+  auto* browser = controller()->GetBrowserWindowInterface();
+  // Note: |browser| is |nullptr| in some unit_tests.
+  return browser && browser->GetProfile()->GetPrefs()->GetBoolean(
+                        kTabMuteIndicatorNotClickable);
+}

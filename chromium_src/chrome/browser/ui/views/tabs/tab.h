@@ -6,6 +6,8 @@
 #ifndef BRAVE_CHROMIUM_SRC_CHROME_BROWSER_UI_VIEWS_TABS_TAB_H_
 #define BRAVE_CHROMIUM_SRC_CHROME_BROWSER_UI_VIEWS_TABS_TAB_H_
 
+#include "chrome/browser/ui/views/tabs/tab/alert_indicator_button.h"
+
 class BraveTabTest;
 class BraveTab;
 
@@ -20,8 +22,14 @@ class BraveTab;
 
 #define ActiveStateChanged virtual ActiveStateChanged
 
+// AlertIndicatorButton::Delegate, extended in our alert_indicator_button.h.
+#define IsApparentlyActive                   \
+  IsTabMuteIndicatorNotClickable() override; \
+  bool IsApparentlyActive
+
 #include "src/chrome/browser/ui/views/tabs/tab.h"  // IWYU pragma: export
 
+#undef IsApparentlyActive
 #undef ActiveStateChanged
 #undef GetWidthOfLargestSelectableRegion
 #undef kMinimumContentsWidthForCloseButtons
