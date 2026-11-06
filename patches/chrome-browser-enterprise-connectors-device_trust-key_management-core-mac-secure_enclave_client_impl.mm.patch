@@ -1,8 +1,8 @@
 diff --git a/chrome/browser/enterprise/connectors/device_trust/key_management/core/mac/secure_enclave_client_impl.mm b/chrome/browser/enterprise/connectors/device_trust/key_management/core/mac/secure_enclave_client_impl.mm
-index 5cca3780cf56ce2fb9eae863c7f9f49a18261243..b1fd2df00ab45a3112ccbb50b4efc44ad50c53c0 100644
+index f225a003aa10f37e5d4964ea7223b0f186562e72..915d3e99a65bf919c2e60653e439317fe47e2141 100644
 --- a/chrome/browser/enterprise/connectors/device_trust/key_management/core/mac/secure_enclave_client_impl.mm
 +++ b/chrome/browser/enterprise/connectors/device_trust/key_management/core/mac/secure_enclave_client_impl.mm
-@@ -74,15 +74,20 @@ NSDictionary* CreateAttributesForKey() {
+@@ -71,15 +71,20 @@ NSDictionary* CreateAttributesForKey() {
  // Creates the query used for querying the keychain for the secure key
  // reference.
  NSDictionary* CreateQueryForKey(SecureEnclaveClient::KeyType type) {
@@ -25,8 +25,8 @@ index 5cca3780cf56ce2fb9eae863c7f9f49a18261243..b1fd2df00ab45a3112ccbb50b4efc44a
 +  return query;
  }
  
- // Converts an external representation of an EC public key from ANSI X9.63
-@@ -134,6 +139,11 @@ SecureEnclaveClientImpl::~SecureEnclaveClientImpl() = default;
+ }  // namespace
+@@ -93,6 +98,11 @@ SecureEnclaveClientImpl::~SecureEnclaveClientImpl() = default;
  
  base::apple::ScopedCFTypeRef<SecKeyRef>
  SecureEnclaveClientImpl::CreatePermanentKey() {
@@ -38,7 +38,7 @@ index 5cca3780cf56ce2fb9eae863c7f9f49a18261243..b1fd2df00ab45a3112ccbb50b4efc44a
    NSDictionary* attributes = CreateAttributesForKey();
    if (!attributes)
      return base::apple::ScopedCFTypeRef<SecKeyRef>();
-@@ -273,7 +283,8 @@ bool SecureEnclaveClientImpl::SignDataWithKey(SecKeyRef key,
+@@ -237,7 +247,8 @@ bool SecureEnclaveClientImpl::SignDataWithKey(SecKeyRef key,
  }
  
  bool SecureEnclaveClientImpl::VerifySecureEnclaveSupported() {
