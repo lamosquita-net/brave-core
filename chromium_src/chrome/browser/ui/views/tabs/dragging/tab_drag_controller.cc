@@ -3,10 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "chrome/browser/ui/views/tabs/tab_drag_controller.h"
+#include "chrome/browser/ui/views/tabs/dragging/tab_drag_controller.h"
 
 #define TabDragController TabDragControllerChromium
 
-#include "src/chrome/browser/ui/views/tabs/tab_drag_controller.cc"
+#include "src/chrome/browser/ui/views/tabs/dragging/tab_drag_controller.cc"
 
 #undef TabDragController
