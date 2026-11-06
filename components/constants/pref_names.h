@@ -75,10 +75,6 @@ inline constexpr char kBraveShieldsSettingsVersion[] =
 inline constexpr char kDefaultBrowserPromptEnabled[] =
     "brave.default_browser_prompt_enabled";
 
-inline constexpr char kWebDiscoveryEnabled[] = "brave.web_discovery_enabled";
-inline constexpr char kWebDiscoveryCTAState[] = "brave.web_discovery.cta_state";
-inline constexpr char kDontAskEnableWebDiscovery[] =
-    "brave.dont_ask_enable_web_discovery";
 inline constexpr char kBraveSearchVisitCount[] =
     "brave.brave_search_visit_count";
 

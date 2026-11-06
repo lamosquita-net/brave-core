@@ -155,10 +155,6 @@ void BraveAddCommonStrings(content::WebUIDataSource* html_source,
       {"showToolbarInFullScreen", IDS_SHOW_TOOLBAR_IN_FULL_SCREEN},
 #endif
   // Search settings
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-      {"braveWebDiscoveryLabel", IDS_SETTINGS_WEB_DISCOVERY_LABEL},
-      {"braveWebDiscoverySubLabel", IDS_SETTINGS_WEB_DISCOVERY_SUBLABEL},
-#endif
       {"autofillInPrivateSettingLabel",
        IDS_SETTINGS_BRAVE_AUTOFILL_PRIVATE_WINDOWS_LABEL},
       {"autofillInPrivateSettingDesc",
@@ -529,9 +525,6 @@ void BraveAddCommonStrings(content::WebUIDataSource* html_source,
   html_source->AddString("googleLoginLearnMoreURL", kGoogleLoginLearnMoreURL);
   html_source->AddString("deAmpLearnMoreURL", kDeAmpLearnMoreUrl);
   html_source->AddString("debounceLearnMoreURL", kDebounceLearnMoreUrl);
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-  html_source->AddString("webDiscoveryLearnMoreURL", kWebDiscoveryLearnMoreUrl);
-#endif
   html_source->AddString(
       "getMoreExtensionsUrl",
       base::ASCIIToUTF16(

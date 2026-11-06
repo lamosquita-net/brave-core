@@ -113,10 +113,6 @@ const PrefsUtil::TypedPrefMap& BravePrefsUtil::GetAllowlistedKeys() {
   (*s_brave_allowlist)[kNewTabPageShowStats] = settings_api::PrefType::kBoolean;
   (*s_brave_allowlist)[kNewTabPageShowsOptions] =
       settings_api::PrefType::kNumber;
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-  // Web discovery prefs
-  (*s_brave_allowlist)[kWebDiscoveryEnabled] = settings_api::PrefType::kBoolean;
-#endif
   // Clear browsing data on exit prefs.
   (*s_brave_allowlist)[browsing_data::prefs::kDeleteBrowsingHistoryOnExit] =
       settings_api::PrefType::kBoolean;

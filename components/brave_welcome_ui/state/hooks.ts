@@ -110,9 +110,6 @@ export function useViewTypeTransition(currentViewType: ViewType | undefined) : V
       [ViewType.ImportFailed]: {
         forward: ViewType.HelpImprove
       },
-      [ViewType.HelpWDP]: {  // unreachable; kept so every ViewType has a state
-        forward: ViewType.HelpImprove
-      },
       [ViewType.HelpImprove]: {
         forward: ViewType.HelpImprove   // The end state view
       },

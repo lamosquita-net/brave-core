@@ -152,15 +152,3 @@ IN_PROC_BROWSER_TEST_F(SearchEngineProviderP3ATest, SwitchSearchEngineP3A) {
 
   histogram_tester_->ExpectTotalCount(kSwitchSearchEngineMetric, 8);
 }
-
-IN_PROC_BROWSER_TEST_F(SearchEngineProviderP3ATest, WebDiscoveryEnabledP3A) {
-  histogram_tester_->ExpectBucketCount(kWebDiscoveryEnabledMetric, 0, 1);
-
-  PrefService* prefs = browser()->GetProfile()->GetPrefs();
-  prefs->SetBoolean(kWebDiscoveryEnabled, true);
-
-  histogram_tester_->ExpectBucketCount(kWebDiscoveryEnabledMetric, 1, 1);
-
-  prefs->SetBoolean(kWebDiscoveryEnabled, false);
-  histogram_tester_->ExpectBucketCount(kWebDiscoveryEnabledMetric, 0, 2);
-}

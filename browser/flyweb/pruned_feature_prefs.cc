@@ -102,6 +102,12 @@ constexpr char kWhatsNewLastVersion[] = "brave.whats_new.last_version";
 constexpr char kAdBlockCookieListOptInShown[] =
     "brave.ad_block.cookie_list_opt_in_shown";
 
+// Web Discovery Project (removed 2026-11): search telemetry sent to Brave.
+constexpr char kWebDiscoveryEnabled[] = "brave.web_discovery_enabled";
+constexpr char kWebDiscoveryCTAState[] = "brave.web_discovery.cta_state";
+constexpr char kDontAskEnableWebDiscovery[] =
+    "brave.dont_ask_enable_web_discovery";
+
 // Brave Wallet (code removed earlier; its leftovers pruned 2026-11). Every
 // Wallet pref, in the profile (keyrings, encrypted mnemonic, networks,
 // assets, transactions, default wallets, toolbar button, auto-lock...) and in
@@ -150,6 +156,9 @@ constexpr const char* kProfilePrefs[] = {
     kVerticalTabsExpandedWidth,
     kVerticalTabsOnRight,
     kVerticalTabsShowScrollbar,
+    kWebDiscoveryEnabled,
+    kWebDiscoveryCTAState,
+    kDontAskEnableWebDiscovery,
     kBraveWallet,
 };
 
@@ -223,6 +232,11 @@ void RegisterPrunedFeatureProfilePrefs(
   registry->RegisterIntegerPref(kVerticalTabsExpandedWidth, 220);
   registry->RegisterBooleanPref(kVerticalTabsOnRight, false);
   registry->RegisterBooleanPref(kVerticalTabsShowScrollbar, false);
+
+  // Web Discovery Project
+  registry->RegisterBooleanPref(kWebDiscoveryEnabled, false);
+  registry->RegisterDictionaryPref(kWebDiscoveryCTAState);
+  registry->RegisterBooleanPref(kDontAskEnableWebDiscovery, false);
 
   // Brave Wallet
   registry->RegisterDictionaryPref(kBraveWallet);

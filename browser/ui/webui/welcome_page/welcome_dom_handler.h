@@ -38,7 +38,6 @@ class WelcomeDOMHandler : public content::WebUIMessageHandler {
                            const std::u16string& name);
   void HandleOpenSettingsPage(const base::ListValue& args);
   void HandleSetMetricsReportingEnabled(const base::ListValue& args);
-  void HandleEnableWebDiscovery(const base::ListValue& args);
 
   BrowserWindowInterface* GetBrowser();
 
