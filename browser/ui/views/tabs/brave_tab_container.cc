@@ -9,7 +9,6 @@
 #include <optional>
 #include <vector>
 
-#include "base/functional/bind.h"
 #include "chrome/browser/ui/views/tabs/tab.h"
 #include "ui/base/metadata/metadata_impl_macros.h"
 
@@ -30,34 +29,6 @@ BraveTabContainer::~BraveTabContainer() {
   // animation for the last removed tab could have been scheduled but not
   // finished yet. In this case, stop the animation.
   CancelAnimation();
-  DCHECK(!layout_locked_)
-      << "The lock returned by LockLayout() shouldn't outlive this object";
-}
-
-base::OnceClosure BraveTabContainer::LockLayout() {
-  DCHECK(!layout_locked_) << "LockLayout() doesn't allow reentrance";
-  layout_locked_ = true;
-  return base::BindOnce(&BraveTabContainer::OnUnlockLayout,
-                        base::Unretained(this));
-}
-
-gfx::Size BraveTabContainer::CalculatePreferredSize(
-    const views::SizeBounds& available_size) const {
-  // We might be in the middle of replacing the tab container.
-  if (layout_locked_) {
-    return {};
-  }
-
-  return TabContainerImpl::CalculatePreferredSize(available_size);
-}
-
-void BraveTabContainer::StartInsertTabAnimation(int model_index) {
-  // We might be in the middle of replacing the tab container.
-  if (layout_locked_) {
-    return;
-  }
-
-  TabContainerImpl::StartInsertTabAnimation(model_index);
 }
 
 void BraveTabContainer::OnTabCloseAnimationCompleted(Tab* tab) {
@@ -69,20 +40,7 @@ void BraveTabContainer::OnTabCloseAnimationCompleted(Tab* tab) {
   }
 }
 
-void BraveTabContainer::OnUnlockLayout() {
-  layout_locked_ = false;
-
-  InvalidateIdealBounds();
-  PreferredSizeChanged();
-  CompleteAnimationAndLayout();
-}
-
 void BraveTabContainer::CompleteAnimationAndLayout() {
-  // We might be in the middle of replacing the tab container.
-  if (layout_locked_) {
-    return;
-  }
-
   TabContainerImpl::CompleteAnimationAndLayout();
 
   // Should force tabs to layout as they might not change bounds, which makes

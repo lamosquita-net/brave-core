@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * you can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef BRAVE_CHROMIUM_SRC_CHROME_BROWSER_UI_VIEWS_TABS_TAB_HOVER_CARD_BUBBLE_VIEW_H_
-#define BRAVE_CHROMIUM_SRC_CHROME_BROWSER_UI_VIEWS_TABS_TAB_HOVER_CARD_BUBBLE_VIEW_H_
+#ifndef BRAVE_CHROMIUM_SRC_CHROME_BROWSER_UI_VIEWS_TABS_HOVERCARD_TAB_HOVER_CARD_BUBBLE_VIEW_H_
+#define BRAVE_CHROMIUM_SRC_CHROME_BROWSER_UI_VIEWS_TABS_HOVERCARD_TAB_HOVER_CARD_BUBBLE_VIEW_H_
 
 // Inject a protected method that will have access to the private members of the
 // base class. Then, we can call this method from the subclass' override.
@@ -12,17 +12,17 @@
 
 class TabHoverCardBubbleView;
 
-#define BRAVE_TAB_HOVER_CARD_BUBBLE_VIEW_H_             \
-  bool has_thumbnail_view() { return thumbnail_view_; } \
-                                                        \
- protected:                                             \
-  void BraveUpdateCardContent(const Tab* tab);
+#define BRAVE_TAB_HOVER_CARD_BUBBLE_VIEW_H_ \
+  bool HasThumbnailView() const;            \
+                                            \
+ protected:                                 \
+  void BraveUpdateCardContent(const HoverCardAnchorTarget* anchor_target);
 
 #define TabHoverCardBubbleView TabHoverCardBubbleView_ChromiumImpl
 #define UpdateCardContent virtual UpdateCardContent
 #define SetTargetTabImage virtual SetTargetTabImage
 #define SetPlaceholderImage virtual SetPlaceholderImage
-#include "src/chrome/browser/ui/views/tabs/tab_hover_card_bubble_view.h"  // IWYU pragma: export
+#include "src/chrome/browser/ui/views/tabs/hovercard/tab_hover_card_bubble_view.h"  // IWYU pragma: export
 #undef SetPlaceholderImage
 #undef SetTargetTabImage
 #undef UpdateCardContent
@@ -37,9 +37,9 @@ class TabHoverCardBubbleView : public TabHoverCardBubbleView_ChromiumImpl {
   TabHoverCardBubbleView(const TabHoverCardBubbleView&) = delete;
   TabHoverCardBubbleView& operator=(const TabHoverCardBubbleView&) = delete;
 
-  void UpdateCardContent(const Tab* tab) override;
+  void UpdateCardContent(const HoverCardAnchorTarget* anchor_target) override;
   void SetTargetTabImage(gfx::ImageSkia preview_image) override;
   void SetPlaceholderImage() override;
 };
 
-#endif  // BRAVE_CHROMIUM_SRC_CHROME_BROWSER_UI_VIEWS_TABS_TAB_HOVER_CARD_BUBBLE_VIEW_H_
+#endif  // BRAVE_CHROMIUM_SRC_CHROME_BROWSER_UI_VIEWS_TABS_HOVERCARD_TAB_HOVER_CARD_BUBBLE_VIEW_H_

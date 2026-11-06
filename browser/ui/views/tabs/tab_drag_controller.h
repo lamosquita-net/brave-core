@@ -8,7 +8,7 @@
 
 #include <vector>
 
-#include "chrome/browser/ui/views/tabs/tab_drag_controller.h"
+#include "chrome/browser/ui/views/tabs/dragging/tab_drag_controller.h"
 
 class TabDragController : public TabDragControllerChromium {
  public:
@@ -17,17 +17,12 @@ class TabDragController : public TabDragControllerChromium {
 
   // Making this virtual method is really painful as "Init" is too common name.
   // So, just hide Chromium's Init and make clients use this version
-  Liveness Init(TabDragContext* source_context,
-                TabSlotView* source_view,
-                const std::vector<raw_ptr<TabSlotView, VectorExperimental>>&
-                    dragging_views,
-                const gfx::Point& mouse_offset,
-                int source_view_offset,
-                ui::ListSelectionModel initial_selection_model,
-                ui::mojom::DragEventSource event_source);
-
-  // TabDragControllerChromium:
-  void InitDragData(TabSlotView* view, TabDragData* drag_data) override;
+  [[nodiscard]] Liveness Init(TabDragContext* source_context,
+                              TabSlotView* source_view,
+                              const std::vector<TabSlotView*>& dragging_views,
+                              const gfx::Point& offset_from_source_view,
+                              ui::ListSelectionModel initial_selection_model,
+                              ui::mojom::DragEventSource event_source);
 };
 
 #endif  // BRAVE_BROWSER_UI_VIEWS_TABS_TAB_DRAG_CONTROLLER_H_

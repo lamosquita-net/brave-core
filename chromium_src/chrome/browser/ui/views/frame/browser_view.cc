@@ -7,17 +7,14 @@
 // therefore avoid undef before use.
 #include "chrome/browser/ui/views/frame/browser_view.h"
 
-#include "brave/browser/ui/views/frame/brave_browser_view_layout.h"
 #include "brave/browser/ui/views/infobars/brave_infobar_container_view.h"
 #include "brave/browser/ui/views/tabs/brave_browser_tab_strip_controller.h"
 #include "brave/browser/ui/views/tabs/brave_tab_strip.h"
 #include "brave/browser/ui/views/toolbar/brave_toolbar_view.h"
 #include "brave/components/constants/pref_names.h"
 #include "chrome/browser/ui/browser_commands.h"
-#include "chrome/browser/ui/views/frame/browser_view_layout.h"
 
 #define InfoBarContainerView BraveInfoBarContainerView
-#define BrowserViewLayout BraveBrowserViewLayout
 #define ToolbarView BraveToolbarView
 #define BrowserTabStripController BraveBrowserTabStripController
 #define TabStrip BraveTabStrip
@@ -31,7 +28,6 @@
 #undef TabStrip
 #undef BrowserTabStripController
 #undef ToolbarView
-#undef BrowserViewLayout
 #undef InfoBarContainerView
 
 void BrowserView::UpdateExclusiveAccessBubble(

@@ -25,9 +25,6 @@ class BraveBrowser : public Browser {
   BraveBrowser(const BraveBrowser&) = delete;
   BraveBrowser& operator=(const BraveBrowser&) = delete;
 
-  static bool ShouldUseBraveWebViewRoundedCorners(
-      BrowserWindowInterface* browser);
-
   // Browser overrides:
   // 156 moved FinishWarnBeforeClosing(), TryToCloseWindow() and
   // ResetTryToCloseWindow() to UnloadController (confirmed_to_close lives there

@@ -26,7 +26,6 @@
 #include "brave/browser/ui/views/brave_actions/brave_actions_container.h"
 #include "brave/browser/ui/views/brave_actions/brave_shields_action_view.h"
 #include "brave/browser/ui/views/brave_help_bubble/brave_help_bubble_host_view.h"
-#include "brave/browser/ui/views/frame/brave_contents_view_util.h"
 #include "brave/browser/ui/views/location_bar/brave_location_bar_view.h"
 #include "brave/browser/ui/views/omnibox/brave_omnibox_view_views.h"
 #include "brave/browser/ui/views/toolbar/bookmark_button.h"
@@ -38,9 +37,6 @@
 #include "chrome/browser/app_mode/app_mode_utils.h"
 #include "chrome/browser/ui/browser_commands.h"
 #include "chrome/browser/ui/browser_window/public/browser_window_features.h"
-#include "chrome/browser/ui/color/chrome_color_id.h"
-#include "chrome/browser/ui/exclusive_access/exclusive_access_manager.h"
-#include "chrome/browser/ui/exclusive_access/fullscreen_controller.h"
 #include "chrome/browser/ui/frame/window_frame_util.h"
 #include "chrome/browser/ui/views/frame/browser_view.h"
 #include "chrome/browser/ui/views/frame/browser_widget.h"
@@ -57,13 +53,9 @@
 #include "ui/base/accelerators/accelerator_manager.h"
 #include "ui/base/metadata/metadata_header_macros.h"
 #include "ui/base/metadata/metadata_impl_macros.h"
-#include "ui/compositor/layer.h"
 #include "ui/events/event_observer.h"
-#include "ui/gfx/geometry/rounded_corners_f.h"
 #include "ui/views/bubble/bubble_dialog_delegate_view.h"
-#include "ui/views/controls/native/native_view_host.h"
 #include "ui/views/event_monitor.h"
-#include "ui/views/layout/fill_layout.h"
 
 #if BUILDFLAG(ENABLE_SPARKLE)
 #include "brave/browser/ui/views/update_recommended_message_box_mac.h"
@@ -78,19 +70,6 @@ bool IsUnsupportedCommand(int command_id, Browser* browser) {
          !chrome::IsCommandAllowedInAppMode(command_id,
                                             browser->is_type_popup());
 }
-
-// A view that paints a background under the content area of the browser view so
-// that the web content area can be displayed with rounded corners and a shadow.
-class ContentsBackground : public views::View {
-  METADATA_HEADER(ContentsBackground, views::View)
- public:
-  ContentsBackground() {
-    SetBackground(views::CreateThemedSolidBackground(kColorToolbar));
-    SetEnabled(false);
-  }
-};
-BEGIN_METADATA(ContentsBackground)
-END_METADATA
 
 }  // namespace
 
@@ -169,15 +148,6 @@ class BraveBrowserView::TabCyclingEventHandler : public ui::EventObserver,
 
 BraveBrowserView::BraveBrowserView(std::unique_ptr<Browser> browser)
     : BrowserView(std::move(browser)) {
-  if (BraveBrowser::ShouldUseBraveWebViewRoundedCorners(browser_.get())) {
-    // Collapse the separator line between the toolbar or bookmark bar and the
-    // views below.
-    contents_separator_->SetPreferredSize(gfx::Size());
-    contents_shadow_ = BraveContentsViewUtil::CreateShadow(contents_container_);
-    contents_background_view_ =
-        AddChildView(std::make_unique<ContentsBackground>());
-  }
-
   pref_change_registrar_.Init(GetProfile()->GetPrefs());
   pref_change_registrar_.Add(
       kTabsSearchShow,
@@ -312,15 +282,6 @@ void BraveBrowserView::OnAcceleratorsChanged(
   }
 }
 
-void BraveBrowserView::AddedToWidget() {
-  BrowserView::AddedToWidget();
-  // we must call all new views once BraveBrowserView is added to widget
-
-  GetBrowserViewLayout()->set_contents_background(contents_background_view_);
-
-  UpdateWebViewRoundedCorners();
-}
-
 bool BraveBrowserView::ShowBraveHelpBubbleView(const std::string& text) {
   auto* shields_action_view =
       static_cast<BraveLocationBarView*>(GetLocationBarView())
@@ -427,14 +388,6 @@ void BraveBrowserView::MaybeShowReadingListInSidePanelIPH() {
   // Do nothing.
 }
 
-void BraveBrowserView::UpdateDevToolsForContents(
-    content::WebContents* web_contents,
-    bool update_devtools_web_contents) {
-  BrowserView::UpdateDevToolsForContents(web_contents,
-                                         update_devtools_web_contents);
-  UpdateWebViewRoundedCorners();
-}
-
 bool BraveBrowserView::AcceleratorPressed(const ui::Accelerator& accelerator) {
   if (base::FeatureList::IsEnabled(tabs::features::kBraveSharedPinnedTabs) &&
       browser()->GetProfile()->GetPrefs()->GetBoolean(
@@ -458,68 +411,6 @@ bool BraveBrowserView::IsInTabDragging() const {
 
 BraveBrowser* BraveBrowserView::GetBraveBrowser() const {
   return static_cast<BraveBrowser*>(browser_.get());
-}
-
-void BraveBrowserView::UpdateWebViewRoundedCorners() {
-  if (!BraveBrowser::ShouldUseBraveWebViewRoundedCorners(browser_.get())) {
-    return;
-  }
-
-  gfx::RoundedCornersF corners(BraveContentsViewUtil::kBorderRadius);
-
-  // In fullscreen-for-tab mode (e.g. full-screen video), no corners should be
-  // rounded.
-  if (auto* exclusive_access_manager = GetExclusiveAccessManager()) {
-    if (auto* controller = exclusive_access_manager->fullscreen_controller()) {
-      if (controller->IsWindowFullscreenForTabOrPending()) {
-        corners = gfx::RoundedCornersF(0);
-      }
-    }
-  }
-
-  // Set the appropriate corner radius for the view that contains both the web
-  // contents and devtools.
-  contents_container_->layer()->SetRoundedCornerRadius(corners);
-
-  // In addition to giving the contents container rounded corners, we also
-  // need to round the corners of the native view holder that displays the web
-  // contents.
-
-  // Devtools lies underneath the contents webview. Round all four corners.
-  if (auto* devtools_holder = devtools_web_view_->holder()) {
-    devtools_holder->SetCornerRadii(corners);
-  }
-
-  // In order to make the contents web view and devtools appear to be
-  // contained within a single rounded-corner view, square the contents
-  // webview corners that are adjacent to devtools.
-  switch (devtools_docked_placement()) {
-    case DevToolsDockedPlacement::kLeft:
-      corners.set_upper_left(0);
-      corners.set_lower_left(0);
-      break;
-    case DevToolsDockedPlacement::kRight:
-      corners.set_upper_right(0);
-      corners.set_lower_right(0);
-      break;
-    case DevToolsDockedPlacement::kBottom:
-      corners.set_lower_left(0);
-      corners.set_lower_right(0);
-      break;
-    case DevToolsDockedPlacement::kNone:
-      break;
-    case DevToolsDockedPlacement::kUnknown:
-      break;
-  }
-
-  if (auto* contents_holder = contents_web_view_->holder()) {
-    contents_holder->SetCornerRadii(corners);
-  }
-}
-
-void BraveBrowserView::Layout(PassKey) {
-  LayoutSuperclass<BrowserView>(this);
-  UpdateWebViewRoundedCorners();
 }
 
 void BraveBrowserView::StartTabCycling() {

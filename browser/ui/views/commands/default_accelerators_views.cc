@@ -9,7 +9,7 @@
 #include "brave/browser/ui/commands/default_accelerators.h"
 
 #include "brave/browser/ui/commands/accelerator_service.h"
-#include "chrome/browser/ui/views/accelerator_table.h"
+#include "chrome/browser/ui/accelerator_table.h"
 #include "ui/base/accelerators/accelerator.h"
 
 #if BUILDFLAG(IS_MAC)

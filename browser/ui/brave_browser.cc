@@ -12,7 +12,6 @@
 #include "base/feature_list.h"
 #include "base/functional/bind.h"
 #include "base/functional/callback_helpers.h"
-#include "brave/browser/brave_browser_features.h"
 #include "brave/browser/ui/brave_browser_window.h"
 #include "brave/browser/ui/tabs/brave_tab_prefs.h"
 #include "brave/browser/ui/tabs/features.h"
@@ -38,13 +37,6 @@ bool g_suppress_dialog_for_testing = false;
 // static
 void BraveBrowser::SuppressBrowserWindowClosingDialogForTesting(bool suppress) {
   g_suppress_dialog_for_testing = suppress;
-}
-
-// static
-bool BraveBrowser::ShouldUseBraveWebViewRoundedCorners(
-    BrowserWindowInterface* browser) {
-  return base::FeatureList::IsEnabled(features::kBraveWebViewRoundedCorners) &&
-         browser->GetType() == BrowserWindowInterface::TYPE_NORMAL;
 }
 
 BraveBrowser::BraveBrowser(BrowserWindowCreateParams params)
