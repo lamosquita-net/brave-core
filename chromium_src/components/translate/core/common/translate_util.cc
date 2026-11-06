@@ -3,17 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "brave/components/translate/core/common/brave_translate_constants.h"
+#include "components/translate/core/common/translate_util.h"
 
-#define GetTranslateSecurityOrigin GetTranslateSecurityOrigin_Chromium
+#define IsTFLiteLanguageDetectionEnabled \
+  IsTFLiteLanguageDetectionEnabled_Chromium
 #include "src/components/translate/core/common/translate_util.cc"
-#undef GetTranslateSecurityOrigin
+#undef IsTFLiteLanguageDetectionEnabled
 
 namespace translate {
 
-// FlyWeb: Google's own origin (Chromium's), never translate.brave.com.
-GURL GetTranslateSecurityOrigin() {
-  return GetTranslateSecurityOrigin_Chromium();
+// The TFLite language detection model is downloaded through Google's
+// optimization guide; keep using the bundled CLD3 detector instead.
+bool IsTFLiteLanguageDetectionEnabled() {
+  return false;
 }
 
 }  // namespace translate
