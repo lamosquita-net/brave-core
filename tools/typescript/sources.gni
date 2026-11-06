@@ -4,6 +4,17 @@
 # You can obtain one at https://mozilla.org/MPL/2.0/.
 
 brave_path_mappings = [
+  # FlyWeb: the Leo bundle is built by webpack, not tsc; point its side-effect
+  # imports at a type stub (Chromium 156 enables noUncheckedSideEffectImports).
+  # Exact entries win over the wildcard ones below.
+  [
+    "chrome://resources/brave/leo.bundle.js|",
+    "//brave/ui/webui/resources/leo/leo.bundle.d.ts",
+  ],
+  [
+    "//resources/brave/leo.bundle.js|",
+    "//brave/ui/webui/resources/leo/leo.bundle.d.ts",
+  ],
   [
     "chrome://resources/brave/*|",
     "$root_gen_dir/brave/ui/webui/resources/tsc/*",
