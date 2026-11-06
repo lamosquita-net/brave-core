@@ -3,20 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+#include "base/memory/scoped_refptr.h"
 #include "base/path_service.h"
-#include "base/strings/utf_string_conversions.h"
 #include "base/test/thread_test_helper.h"
 #include "brave/browser/extensions/brave_extension_functional_test.h"
 #include "brave/components/constants/brave_paths.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/constants/url_constants.h"
-#include "extensions/browser/crx_installer.h"
 #include "chrome/browser/extensions/extension_browsertest.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
 #include "chrome/test/base/ui_test_utils.h"
 #include "content/public/test/browser_test.h"
 #include "content/public/test/browser_test_utils.h"
+#include "extensions/browser/crx_installer.h"
 
 class BraveExtensionProviderTest : public extensions::ExtensionFunctionalTest {
  public:
@@ -56,8 +55,8 @@ IN_PROC_BROWSER_TEST_F(BraveExtensionProviderTest, ExtensionsCanGetCookies) {
   GetTestDataDir(&test_data_dir);
   scoped_refptr<const extensions::Extension> extension =
       InstallExtensionSilently(
-      extension_service(),
-      test_data_dir.AppendASCII("extension-compat-test-extension.crx"));
+          extension_service(),
+          test_data_dir.AppendASCII("extension-compat-test-extension.crx"));
   GURL url = GURL(std::string(kChromeExtensionScheme) + "://" +
                   extension->id() + "/blocking.html");
 
@@ -75,8 +74,8 @@ IN_PROC_BROWSER_TEST_F(BraveExtensionProviderTest, ExtensionsCanSetCookies) {
   GetTestDataDir(&test_data_dir);
   scoped_refptr<const extensions::Extension> extension =
       InstallExtensionSilently(
-      extension_service(),
-      test_data_dir.AppendASCII("extension-compat-test-extension.crx"));
+          extension_service(),
+          test_data_dir.AppendASCII("extension-compat-test-extension.crx"));
   GURL url = GURL(std::string(kChromeExtensionScheme) + "://" +
                   extension->id() + "/blocking.html");
 

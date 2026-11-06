@@ -3,11 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#include "base/functional/callback_helpers.h"
+#include "base/check.h"
 #include "base/memory/raw_ptr.h"
 #include "base/path_service.h"
 #include "base/scoped_observation.h"
-#include "base/strings/stringprintf.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/test/bind.h"
 #include "base/test/scoped_feature_list.h"
@@ -26,7 +25,6 @@
 #include "chrome/browser/history/history_service_factory.h"
 #include "chrome/browser/interstitials/security_interstitial_page_test_utils.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/test/base/in_process_browser_test.h"
 #include "chrome/test/base/testing_browser_process.h"
@@ -51,8 +49,8 @@ using ::testing::_;
 
 namespace {
 
-const char kTestDataDirectory[] = "request-otr-data";
-const char kRequestOTRResponseHeader[] = "Request-OTR";
+constexpr char kTestDataDirectory[] = "request-otr-data";
+constexpr char kRequestOTRResponseHeader[] = "Request-OTR";
 
 class TestObserver : public infobars::InfoBarManager::Observer {
  public:
@@ -117,7 +115,7 @@ class RequestOTRBrowserTestBase : public BaseLocalDataFilesBrowserTest {
   // BaseLocalDataFilesBrowserTest overrides
   const char* test_data_directory() override { return kTestDataDirectory; }
   const char* embedded_test_server_directory() override { return ""; }
-  LocalDataFilesObserver* service() override {
+  brave_component_updater::LocalDataFilesObserver* service() override {
     return g_brave_browser_process->request_otr_component_installer();
   }
 
@@ -135,7 +133,7 @@ class RequestOTRBrowserTestBase : public BaseLocalDataFilesBrowserTest {
 
   void SetRequestOTRPref(RequestOTRService::RequestOTRActionOption value) {
     browser()->GetProfile()->GetPrefs()->SetInteger(kRequestOTRActionOption,
-                                                 static_cast<int>(value));
+                                                    static_cast<int>(value));
   }
 
   bool IsShowingInterstitial() {
@@ -152,7 +150,7 @@ class RequestOTRBrowserTestBase : public BaseLocalDataFilesBrowserTest {
     content::RenderFrameHost* frame = web_contents()->GetPrimaryMainFrame();
     frame->ExecuteJavaScriptForTests(
         base::ASCIIToUTF16("document.getElementById('" + id + "').click();\n"),
-        base::NullCallback());
+        base::NullCallback(), content::ISOLATED_WORLD_ID_GLOBAL);
   }
 
   void ClickAndWaitForNavigation(const std::string& id) {
@@ -172,6 +170,7 @@ class RequestOTRBrowserTestBase : public BaseLocalDataFilesBrowserTest {
     history_service->GetHistoryCount(
         /*begin_time=*/base::Time::UnixEpoch(),
         /*end_time=*/base::Time::Now(),
+        history::VisitQuery404sPolicy::kInclude404s,
         base::BindLambdaForTesting([&](history::HistoryCountResult result) {
           ASSERT_TRUE(result.success);
           history_count = result.count;
@@ -364,7 +363,7 @@ IN_PROC_BROWSER_TEST_F(RequestOTRBrowserTest,
   NavigateTo(embedded_test_server()->GetURL("sensitive.a.com", "/simple.html"));
   ASSERT_TRUE(content::ExecJs(
       web_contents(), "window.open('notsensitive.b.com/simple.html');"));
-  ASSERT_NE(content::EvalJs(web_contents(), "window.opener"), nullptr);
+  ASSERT_NE(content::EvalJs(web_contents(), "window.opener"), base::Value());
 }
 
 IN_PROC_BROWSER_TEST_F(RequestOTRBrowserTest,
@@ -372,7 +371,7 @@ IN_PROC_BROWSER_TEST_F(RequestOTRBrowserTest,
   NavigateTo(embedded_test_server()->GetURL("sensitive.a.com", "/simple.html"));
   ASSERT_TRUE(
       content::ExecJs(web_contents(), "window.open('a.com/simple.html');"));
-  ASSERT_NE(content::EvalJs(web_contents(), "window.opener"), nullptr);
+  ASSERT_NE(content::EvalJs(web_contents(), "window.opener"), base::Value());
 }
 
 IN_PROC_BROWSER_TEST_F(RequestOTRBrowserTest,
@@ -385,7 +384,7 @@ IN_PROC_BROWSER_TEST_F(RequestOTRBrowserTest,
   NavigateTo(embedded_test_server()->GetURL("sensitive.a.com", "/simple.html"));
   ASSERT_TRUE(content::ExecJs(
       web_contents(), "window.open('notsensitive.b.com/simple.html');"));
-  ASSERT_EQ(content::EvalJs(web_contents(), "window.opener"), nullptr);
+  ASSERT_EQ(content::EvalJs(web_contents(), "window.opener"), base::Value());
 }
 
 IN_PROC_BROWSER_TEST_F(RequestOTRBrowserTest,
@@ -398,7 +397,7 @@ IN_PROC_BROWSER_TEST_F(RequestOTRBrowserTest,
   NavigateTo(embedded_test_server()->GetURL("sensitive.a.com", "/simple.html"));
   ASSERT_TRUE(
       content::ExecJs(web_contents(), "window.open('a.com/simple.html');"));
-  ASSERT_EQ(content::EvalJs(web_contents(), "window.opener"), nullptr);
+  ASSERT_EQ(content::EvalJs(web_contents(), "window.opener"), base::Value());
 }
 
 // Define a subclass that disables the feature so we can ensure that nothing

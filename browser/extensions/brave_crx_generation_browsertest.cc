@@ -3,25 +3,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "base/check.h"
 #include "base/command_line.h"
+#include "base/containers/to_vector.h"
 #include "base/files/file_util.h"
-#include "base/files/scoped_file.h"
+#include "base/files/scoped_temp_dir.h"
+#include "base/logging.h"
 #include "base/path_service.h"
 #include "base/run_loop.h"
 #include "brave/components/constants/brave_paths.h"
-#include "extensions/browser/crx_installer.h"
-#include "chrome/browser/extensions/install_tracker.h"
+#include "chrome/browser/extensions/install_tracker_factory.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
 #include "chrome/test/base/in_process_browser_test.h"
 #include "components/crx_file/crx_verifier.h"
 #include "content/public/test/browser_test.h"
 #include "content/public/test/test_utils.h"
-#include "crypto/rsa_private_key.h"
+#include "crypto/keypair.h"
 #include "crypto/sha2.h"
 #include "extensions/browser/crx_file_info.h"
+#include "extensions/browser/crx_installer.h"
 #include "extensions/browser/extension_creator.h"
 #include "extensions/browser/extension_system.h"
+#include "extensions/browser/install_tracker.h"
 #include "extensions/common/extension.h"
 
 namespace extensions {
@@ -39,18 +42,14 @@ std::vector<uint8_t> GetPublicKeyHash(const base::FilePath& pem_path) {
   if (!Extension::ParsePEMKeyBytes(private_key_contents, &private_key_bytes))
     return {};
 
-  auto private_key = crypto::RSAPrivateKey::CreateFromPrivateKeyInfo(
-      std::vector<uint8_t>(private_key_bytes.begin(), private_key_bytes.end()));
+  auto private_key = crypto::keypair::PrivateKey::FromPrivateKeyInfo(
+      base::as_byte_span(private_key_bytes));
   if (!private_key)
     return {};
 
-  std::vector<uint8_t> public_key;
-  private_key->ExportPublicKey(&public_key);
+  auto public_key = private_key->ToSubjectPublicKeyInfo();
 
-  std::vector<uint8_t> key_hash(crypto::kSHA256Length);
-  crypto::SHA256HashString(std::string(public_key.begin(), public_key.end()),
-                           key_hash.data(), key_hash.size());
-  return key_hash;
+  return base::ToVector(crypto::SHA256Hash(public_key));
 }
 
 }  // namespace
@@ -58,16 +57,17 @@ std::vector<uint8_t> GetPublicKeyHash(const base::FilePath& pem_path) {
 class InstallCrxFileWaiter : public extensions::InstallObserver {
  public:
   explicit InstallCrxFileWaiter(Profile* profile) : profile_(profile) {
-    InstallTracker::Get(profile_)->AddObserver(this);
+    InstallTrackerFactory::GetForBrowserContext(profile_)->AddObserver(this);
   }
 
   ~InstallCrxFileWaiter() override {
-    InstallTracker::Get(profile_)->RemoveObserver(this);
+    InstallTrackerFactory::GetForBrowserContext(profile_)->RemoveObserver(this);
   }
 
   void OnFinishCrxInstall(content::BrowserContext* context,
-                          const extensions::CrxInstaller& installer,
+                          const base::FilePath& source_file,
                           const std::string& extension_id,
+                          const Extension* extension,
                           bool success) override {
     did_install_extension_ = success;
     run_loop_.Quit();
@@ -90,10 +90,8 @@ class BraveCrxGenerationTest : public InProcessBrowserTest {
 
   bool InstallExtension(const base::FilePath& crx_path,
                         crx_file::VerifierFormat format) {
-    auto installer = CrxInstaller::CreateSilent(
-        ExtensionSystem::Get(browser()->GetProfile())->extension_service());
+    auto installer = CrxInstaller::CreateSilent(browser()->GetProfile());
     installer->set_allow_silent_install(true);
-    installer->set_install_cause(extension_misc::INSTALL_CAUSE_USER_DOWNLOAD);
     installer->set_creation_flags(Extension::FROM_WEBSTORE);
 
     InstallCrxFileWaiter waiter(browser()->GetProfile());

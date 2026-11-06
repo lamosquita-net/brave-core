@@ -24,7 +24,6 @@
 #include "chrome/browser/ui/browser.h"
 #include "chrome/test/base/in_process_browser_test.h"
 #include "chrome/test/base/ui_test_utils.h"
-#include "content/public/browser/notification_service.h"
 #include "content/public/common/content_client.h"
 #include "content/public/test/browser_test.h"
 #include "content/public/test/browser_test_utils.h"
@@ -33,7 +32,7 @@
 #include "third_party/blink/public/common/loader/url_loader_throttle.h"
 
 namespace {
-const char kTestDataDirectory[] = "debounce-data";
+constexpr char kTestDataDirectory[] = "debounce-data";
 static base::NoDestructor<std::string> gLastSiteForCookies("");
 }  // namespace
 
@@ -94,7 +93,7 @@ class SpyContentBrowserClient : public BraveContentBrowserClient {
       content::BrowserContext* browser_context,
       const base::RepeatingCallback<content::WebContents*()>& wc_getter,
       content::NavigationUIData* navigation_ui_data,
-      int frame_tree_node_id,
+      content::FrameTreeNodeId frame_tree_node_id,
       std::optional<int64_t> navigation_id) override {
     std::vector<std::unique_ptr<blink::URLLoaderThrottle>> throttles =
         BraveContentBrowserClient::CreateURLLoaderThrottles(
@@ -116,7 +115,7 @@ class DebounceBrowserTest : public BaseLocalDataFilesBrowserTest {
   // BaseLocalDataFilesBrowserTest overrides
   const char* test_data_directory() override { return kTestDataDirectory; }
   const char* embedded_test_server_directory() override { return ""; }
-  LocalDataFilesObserver* service() override {
+  brave_component_updater::LocalDataFilesObserver* service() override {
     return g_brave_browser_process->debounce_component_installer();
   }
 
