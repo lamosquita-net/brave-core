@@ -129,6 +129,11 @@ constexpr char kBraveRewardsHideButton[] = "brave.hide_brave_rewards_button";
 // The NTP search box keeps its own "brave.brave_search" prefs.
 constexpr char kBraveSearchConversion[] = "brave.brave_search_conversion";
 
+// Brave's fixed top sites suggestions in the omnibox (TopSitesProvider,
+// removed 2026-11).
+constexpr char kTopSiteSuggestionsEnabled[] =
+    "brave.top_site_suggestions_enabled";
+
 // P3A counters whose metrics are gone (removed 2026-11): the omnibox weekly
 // search count, the default search engine switches, Request-OTR's
 // interstitial and session counts (all under "brave.request_otr.p3a") and
@@ -191,6 +196,7 @@ constexpr const char* kProfilePrefs[] = {
     kSearchEngineSwitchP3A,
     kRequestOTRP3A,
     kPerfPredictorBandwidthSavedP3A,
+    kTopSiteSuggestionsEnabled,
 };
 
 constexpr const char* kLocalStatePrefs[] = {
@@ -286,6 +292,9 @@ void RegisterPrunedFeatureProfilePrefs(
   registry->RegisterListPref(kSearchEngineSwitchP3A);
   registry->RegisterDictionaryPref(kRequestOTRP3A);
   registry->RegisterListPref(kPerfPredictorBandwidthSavedP3A);
+
+  // TopSitesProvider
+  registry->RegisterBooleanPref(kTopSiteSuggestionsEnabled, true);
 }
 
 void ClearPrunedFeatureProfilePrefs(PrefService* profile_prefs) {

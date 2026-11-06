@@ -14,11 +14,6 @@ namespace omnibox {
 // the individual prefs listed below.
 inline constexpr char kAutocompleteEnabled[] = "brave.autocomplete_enabled";
 
-// Determines whether top sites show up in the omnibox results. See
-// |TopsitesProvider|.
-inline constexpr char kTopSiteSuggestionsEnabled[] =
-    "brave.top_site_suggestions_enabled";
-
 // Determines whether history suggestions show up in the omnibox results. This
 // includes:
 // 1. Results from the |HistoryURLProvider|, which aren't "What-You-Typed".
