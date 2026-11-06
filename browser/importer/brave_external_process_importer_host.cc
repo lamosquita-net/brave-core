@@ -42,7 +42,8 @@ class WebstoreInstallerForImporting
  private:
   ~WebstoreInstallerForImporting() override = default;
 
-  std::unique_ptr<InstallPromptData> CreateInstallPrompt() const override {
+  std::unique_ptr<extensions::InstallPromptData> CreateInstallPrompt()
+      const override {
     return nullptr;
   }
   bool ShouldShowPostInstallUI() const override { return false; }
