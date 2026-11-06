@@ -10,14 +10,12 @@
 #define DoFinalInitForServices virtual DoFinalInitForServices
 #define SetNonPersonalProfilePrefs virtual SetNonPersonalProfilePrefs
 #define IsAllowedProfilePath virtual IsAllowedProfilePath
-#define LoadProfileByPath virtual LoadProfileByPath
 #define TestingProfileManager \
   TestingProfileManager;      \
   friend class BraveProfileManager
 
 #include "src/chrome/browser/profiles/profile_manager.h"  // IWYU pragma: export
 #undef TestingProfileManager
-#undef LoadProfileByPath
 #undef IsAllowedProfilePath
 #undef SetNonPersonalProfilePrefs
 #undef DoFinalInitForServices

@@ -6,8 +6,6 @@
 #ifndef BRAVE_BROWSER_PROFILES_BRAVE_PROFILE_MANAGER_H_
 #define BRAVE_BROWSER_PROFILES_BRAVE_PROFILE_MANAGER_H_
 
-#include <string>
-
 #include "chrome/browser/profiles/profile_manager.h"
 
 class BraveProfileManager : public ProfileManager {
@@ -19,16 +17,10 @@ class BraveProfileManager : public ProfileManager {
   void InitProfileUserPrefs(Profile* profile) override;
   void SetNonPersonalProfilePrefs(Profile* profile) override;
   bool IsAllowedProfilePath(const base::FilePath& path) const override;
-  bool LoadProfileByPath(const base::FilePath& profile_path,
-                         bool incognito,
-                         ProfileLoadedCallback callback) override;
 
  protected:
   void DoFinalInitForServices(Profile* profile,
                               bool go_off_the_record) override;
-
- private:
-  void MigrateProfileNames();
 };
 
 class BraveProfileManagerWithoutInit : public BraveProfileManager {
