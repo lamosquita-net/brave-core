@@ -6,20 +6,18 @@
 #ifndef BRAVE_CHROMIUM_SRC_UI_VIEWS_INPUT_EVENT_ACTIVATION_PROTECTOR_H_
 #define BRAVE_CHROMIUM_SRC_UI_VIEWS_INPUT_EVENT_ACTIVATION_PROTECTOR_H_
 
-#include "ui/views/windows_stationarity_monitor.h"
-
-#define OnWindowStationaryStateChanged(...)                  \
-  OnWindowStationaryStateChanged_ChromiumImpl(__VA_ARGS__);  \
+#define OnWidgetStationaryStateChanged(...)                  \
+  OnWidgetStationaryStateChanged_ChromiumImpl(__VA_ARGS__);  \
   void IgnoreNextWindowStationaryStateChanged();             \
                                                              \
  private:                                                    \
-  bool ignore_next_window_stationary_state_changed_ = false; \
+  bool ignore_next_widget_stationary_state_changed_ = false; \
                                                              \
  public:                                                     \
-  void OnWindowStationaryStateChanged(__VA_ARGS__)
+  void OnWidgetStationaryStateChanged(__VA_ARGS__)
 
 #include "src/ui/views/input_event_activation_protector.h"  // IWYU pragma: export
 
-#undef OnWindowStationaryStateChanged
+#undef OnWidgetStationaryStateChanged
 
 #endif  // BRAVE_CHROMIUM_SRC_UI_VIEWS_INPUT_EVENT_ACTIVATION_PROTECTOR_H_

@@ -5,25 +5,25 @@
 
 #include "ui/views/input_event_activation_protector.h"
 
-#define OnWindowStationaryStateChanged(...) \
-  OnWindowStationaryStateChanged_ChromiumImpl(__VA_ARGS__)
+#define OnWidgetStationaryStateChanged(...) \
+  OnWidgetStationaryStateChanged_ChromiumImpl(__VA_ARGS__)
 
 #include "src/ui/views/input_event_activation_protector.cc"
 
-#undef OnWindowStationaryStateChanged
+#undef OnWidgetStationaryStateChanged
 
 namespace views {
 
 void InputEventActivationProtector::IgnoreNextWindowStationaryStateChanged() {
-  ignore_next_window_stationary_state_changed_ = true;
+  ignore_next_widget_stationary_state_changed_ = true;
 }
 
-void InputEventActivationProtector::OnWindowStationaryStateChanged() {
-  if (ignore_next_window_stationary_state_changed_) {
-    ignore_next_window_stationary_state_changed_ = false;
+void InputEventActivationProtector::OnWidgetStationaryStateChanged() {
+  if (ignore_next_widget_stationary_state_changed_) {
+    ignore_next_widget_stationary_state_changed_ = false;
     return;
   }
-  OnWindowStationaryStateChanged_ChromiumImpl();
+  OnWidgetStationaryStateChanged_ChromiumImpl();
 }
 
 }  // namespace views
