@@ -26,7 +26,6 @@
 #include "ui/base/webui/web_ui_util.h"
 
 #if !BUILDFLAG(IS_ANDROID)
-#include "brave/browser/ui/webui/navigation_bar_data_provider.h"
 #include "chrome/browser/ui/browser_window.h"
 #include "chrome/browser/ui/color/chrome_color_id.h"
 #include "chrome/grit/branded_strings.h"
@@ -38,15 +37,8 @@
 
 namespace {
 
-void CustomizeWebUIHTMLSource(content::WebUI* web_ui,
-                              const std::string& name,
+void CustomizeWebUIHTMLSource(const std::string& name,
                               content::WebUIDataSource* source) {
-#if !BUILDFLAG(IS_ANDROID)
-  if (name == "rewards") {
-    NavigationBarDataProvider::Initialize(source, Profile::FromWebUI(web_ui));
-  }
-#endif
-
   source->AddResourcePaths(brave::GetWebUIResources(name));
   source->AddLocalizedStrings(brave::GetWebUILocalizedStrings(name));
 }
@@ -80,7 +72,7 @@ content::WebUIDataSource* CreateWebUIDataSource(
   source->SetDefaultResource(html_resource_id);
   // Add generated resource paths (156's grit maps no longer carry a size).
   source->AddResourcePaths(resource_paths);
-  CustomizeWebUIHTMLSource(web_ui, name, source);
+  CustomizeWebUIHTMLSource(name, source);
   return source;
 }
 

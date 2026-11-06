@@ -198,7 +198,7 @@ export default async ({ config, mode }) => {
 
   config.plugins.push(
     provideNodeGlobals,
-    useMockedModules(['bridge', 'brave_rewards_api_proxy']),
+    useMockedModules(['bridge']),
     ...Object.keys(pathMap)
       .filter((prefix) => prefix.startsWith('chrome://'))
       .map((prefix) => prefixReplacer(prefix, pathMap[prefix]))

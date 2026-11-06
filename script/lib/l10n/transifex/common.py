@@ -35,7 +35,6 @@ transifex_handled_slugs = [
     'brave_generated_resources',
     'brave_components_resources',
     'brave_extension',
-    'rewards_extension',
     'ethereum_remote_client_extension'
 ]
 
@@ -58,8 +57,6 @@ def transifex_name_from_filename(source_file_path, filename):
         return transifex_name_from_greaselion_script_name(source_file_path)
     if 'brave_extension' in source_file_path:
         return 'brave_extension'
-    if 'brave_rewards' in source_file_path:
-        return 'rewards_extension'
     assert False, ('JSON files should be mapped explicitly, this '
                    f'one is not: {source_file_path}')
 # pylint: enable=inconsistent-return-statements

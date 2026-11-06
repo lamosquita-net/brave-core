@@ -35,11 +35,6 @@ struct BraveRequestInfo;
 using ResponseCallback = base::RepeatingCallback<void()>;
 }  // namespace brave
 
-namespace brave_rewards {
-int OnBeforeURLRequest(const brave::ResponseCallback& next_callback,
-                       std::shared_ptr<brave::BraveRequestInfo> ctx);
-}  // namespace brave_rewards
-
 namespace brave {
 
 enum BraveNetworkDelegateEventType {

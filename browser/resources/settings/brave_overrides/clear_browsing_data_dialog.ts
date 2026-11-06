@@ -19,10 +19,6 @@ RegisterStyleOverride(
       :host {
         --body-container-height: 372px !important;
       }
-      #rewards-reset-data {
-        display: block;
-        margin-top: 10px;
-      }
     </style>
   `
 )
@@ -71,26 +67,6 @@ RegisterPolymerTemplateModifications({
       console.error('[Settings] missing save button')
     } else {
       saveButton.textContent = loadTimeData.getString('save')
-    }
-
-    // Append rewards reset data link
-    const body = templateContent.querySelector('[slot="body"]')
-    if (!body) {
-      console.error(
-        '[Settings] missing \'slot="body"\' in clear-browsing-data-dialog')
-      return
-    }
-    body.insertAdjacentHTML(
-      'beforeend',
-      getTrustedHTML`
-        <a id="rewards-reset-data" href="chrome://rewards/#reset"></a>
-      `)
-    const rewardsResetLink =
-      templateContent.getElementById('rewards-reset-data')
-    if (!rewardsResetLink) {
-      console.error('[Settings] missing Rewards reset link')
-    } else {
-      rewardsResetLink.textContent = loadTimeData.getString('resetRewardsData')
     }
 
     // Append Leo reset checkbox

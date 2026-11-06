@@ -66,8 +66,6 @@ IN_PROC_BROWSER_TEST_F(BraveBrowserCommandControllerTest,
                        BraveCommandsEnableTest) {
   // Test normal browser's brave commands status.
   auto* command_controller = browser()->command_controller();
-  EXPECT_TRUE(command_controller->IsCommandEnabled(IDC_SHOW_BRAVE_REWARDS));
-
   if (syncer::IsSyncAllowedByFlag()) {
     EXPECT_TRUE(command_controller->IsCommandEnabled(IDC_SHOW_BRAVE_SYNC));
   } else {
@@ -85,8 +83,6 @@ IN_PROC_BROWSER_TEST_F(BraveBrowserCommandControllerTest,
                        BraveCommandsEnableTestPrivateWindow) {
   auto* private_browser = CreateIncognitoBrowser();
   auto* command_controller = private_browser->command_controller();
-  EXPECT_TRUE(command_controller->IsCommandEnabled(IDC_SHOW_BRAVE_REWARDS));
-
   if (syncer::IsSyncAllowedByFlag()) {
     EXPECT_TRUE(command_controller->IsCommandEnabled(IDC_SHOW_BRAVE_SYNC));
   } else {
@@ -110,8 +106,6 @@ IN_PROC_BROWSER_TEST_F(BraveBrowserCommandControllerTest,
   DCHECK(guest_browser);
   EXPECT_TRUE(guest_browser->profile()->IsGuestSession());
   auto* command_controller = guest_browser->command_controller();
-  EXPECT_FALSE(command_controller->IsCommandEnabled(IDC_SHOW_BRAVE_REWARDS));
-
   EXPECT_FALSE(command_controller->IsCommandEnabled(IDC_SHOW_BRAVE_SYNC));
 
   EXPECT_FALSE(command_controller->IsCommandEnabled(IDC_ADD_NEW_PROFILE));

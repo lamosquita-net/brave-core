@@ -10,8 +10,6 @@ inline constexpr char kChromeExtensionScheme[] = "chrome-extension";
 inline constexpr char kBraveUIScheme[] = "flyweb";
 inline constexpr char kMagnetScheme[] = "magnet";
 inline constexpr char kWidevineTOS[] = "https://policies.google.com/terms";
-inline constexpr char kRewardsUpholdSupport[] =
-    "https://uphold.com/en/brave/support";
 inline constexpr char kP3ALearnMoreURL[] =
     "https://flyweb.lamosquita.net/ayuda/#privacidad";
 inline constexpr char kP3ASettingsLink[] = "chrome://settings/privacy";

@@ -89,11 +89,6 @@ Polymer({
       type: Boolean,
       reflectToAttribute: true,
     },
-
-    shouldShowRewardsButton_: {
-      type: Boolean,
-      value: true,
-    },
   },
 
   /** @return {!CrToolbarSearchFieldElement} */
@@ -189,13 +184,6 @@ Polymer({
     })
   },
 
-  getLoadTimeDataBoolean: function(value: string) {
-    if (loadTimeData.data_) {
-      return loadTimeData.getBoolean(value)
-    }
-    return window.loadTimeData.getBoolean(value)
-  },
-
   getLoadTimeDataString: function(value: string) {
     if (loadTimeData.data_) {
       return loadTimeData.getString(value)
@@ -208,13 +196,10 @@ Polymer({
     this.settingsTitle = this.getLoadTimeDataString('brToolbarSettingsTitle')
     this.bookmarksTitle = this.getLoadTimeDataString('brToolbarBookmarksTitle')
     this.downloadsTitle = this.getLoadTimeDataString('brToolbarDownloadsTitle')
-    this.braveRewardsTitle = this.getLoadTimeDataString('brToolbarRewardsTitle')
   },
 
   /** @override */
   attached: function () {
-    this.shouldShowRewardsButton_ =
-      this.getLoadTimeDataBoolean('brToolbarShowRewardsButton')
     this.initSlotFilledDetection()
     this.initStrings()
     this.initFontLoadDetection()

@@ -116,6 +116,13 @@ constexpr char kDontAskEnableWebDiscovery[] =
 // at once instead of one pref per key.
 constexpr char kBraveWallet[] = "brave.wallet";
 
+// Brave Rewards (code removed earlier; its leftovers pruned 2026-11). Its
+// profile prefs (wallet seed, external wallets, notifications, P3A counts...)
+// live under "brave.rewards", plus two older toolbar button prefs.
+constexpr char kBraveRewards[] = "brave.rewards";
+constexpr char kBraveRewardsShowButton[] = "brave.show_brave_rewards_button";
+constexpr char kBraveRewardsHideButton[] = "brave.hide_brave_rewards_button";
+
 constexpr const char* kProfilePrefs[] = {
     kPlaylistEnabled,
     kPlaylists,
@@ -160,6 +167,9 @@ constexpr const char* kProfilePrefs[] = {
     kWebDiscoveryCTAState,
     kDontAskEnableWebDiscovery,
     kBraveWallet,
+    kBraveRewards,
+    kBraveRewardsShowButton,
+    kBraveRewardsHideButton,
 };
 
 constexpr const char* kLocalStatePrefs[] = {
@@ -240,6 +250,11 @@ void RegisterPrunedFeatureProfilePrefs(
 
   // Brave Wallet
   registry->RegisterDictionaryPref(kBraveWallet);
+
+  // Brave Rewards
+  registry->RegisterDictionaryPref(kBraveRewards);
+  registry->RegisterBooleanPref(kBraveRewardsShowButton, true);
+  registry->RegisterBooleanPref(kBraveRewardsHideButton, false);
 }
 
 void ClearPrunedFeatureProfilePrefs(PrefService* profile_prefs) {

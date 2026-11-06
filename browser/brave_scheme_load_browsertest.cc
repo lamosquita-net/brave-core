@@ -298,17 +298,6 @@ IN_PROC_BROWSER_TEST_F(BraveSchemeLoadBrowserTest,
 }
 
 IN_PROC_BROWSER_TEST_F(BraveSchemeLoadBrowserTest,
-                       RewardsPageIsNotAllowedInPrivateWindow) {
-  // Check webui host with non chrome scheme is allowed to load in private
-  // window. chrome scheme is used because brave scheme is already replaced with
-  // chrome when IsURLAllowedInIncognito() is called. Verify brave scheme url
-  // with TestURLIsNotLoadedInPrivateWindow().
-  EXPECT_FALSE(IsURLAllowedInIncognito(GURL("chrome://rewards")));
-  EXPECT_TRUE(IsURLAllowedInIncognito(GURL("http://rewards")));
-  TestURLIsNotLoadedInPrivateWindow("brave://rewards");
-}
-
-IN_PROC_BROWSER_TEST_F(BraveSchemeLoadBrowserTest,
                        BraveSyncPageIsNotAllowedInPrivateWindow) {
   EXPECT_FALSE(IsURLAllowedInIncognito(GURL("chrome://sync")));
   EXPECT_TRUE(IsURLAllowedInIncognito(GURL("http://sync")));

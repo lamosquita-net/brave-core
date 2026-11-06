@@ -204,9 +204,6 @@ const Config = function () {
   this.safeBrowsingApiEndpoint = getEnvConfig(['safebrowsing_api_endpoint']) || ''
   this.updaterProdEndpoint = getEnvConfig(['updater_prod_endpoint']) || ''
   this.updaterDevEndpoint = getEnvConfig(['updater_dev_endpoint']) || ''
-  this.rewardsGrantDevEndpoint = getEnvConfig(['rewards_grant_dev_endpoint']) || ''
-  this.rewardsGrantStagingEndpoint = getEnvConfig(['rewards_grant_staging_endpoint']) || ''
-  this.rewardsGrantProdEndpoint = getEnvConfig(['rewards_grant_prod_endpoint']) || ''
   // FlyWeb: off by default (Brave turns it on for local non-release builds,
   // which shows 1.69.0 in flyweb://version and swaps build.sh's LASTCHANGE for
   // a dummy one). Still available through the env config.
@@ -413,9 +410,6 @@ Config.prototype.buildArgs = function () {
     brave_variations_server_url: this.braveVariationsServerUrl,
     updater_prod_endpoint: this.updaterProdEndpoint,
     updater_dev_endpoint: this.updaterDevEndpoint,
-    rewards_grant_dev_endpoint: this.rewardsGrantDevEndpoint,
-    rewards_grant_staging_endpoint: this.rewardsGrantStagingEndpoint,
-    rewards_grant_prod_endpoint: this.rewardsGrantProdEndpoint,
     enable_hangout_services_extension: this.enable_hangout_services_extension,
     enable_cdm_host_verification: this.enableCDMHostVerification(),
     enable_pseudolocales: this.enable_pseudolocales,
@@ -1049,18 +1043,6 @@ Config.prototype.update = function (options) {
 
   if (options.updater_dev_endpoint) {
     this.updaterDevEndpoint = options.updater_dev_endpoint
-  }
-
-  if (options.rewards_grant_dev_endpoint) {
-    this.rewardsGrantDevEndpoint = options.rewards_grant_dev_endpoint
-  }
-
-  if (options.rewards_grant_staging_endpoint) {
-    this.rewardsGrantStagingEndpoint = options.rewards_grant_staging_endpoint
-  }
-
-  if (options.rewards_grant_prod_endpoint) {
-    this.rewardsGrantProdEndpoint = options.rewards_grant_prod_endpoint
   }
 
   if (options.brave_stats_api_key) {

@@ -247,9 +247,8 @@ class BraveNetworkAuditTest : public InProcessBrowserTest {
   base::FilePath audit_results_path_;
 };
 
-// Loads brave://welcome first to simulate a first run and then loads another
-// URL, and finally enables brave rewards, waiting some time after each load to
-// allow gathering network requests.
+// Loads brave://welcome first to simulate a first run and then loads other
+// URLs, waiting some time after each load to allow gathering network requests.
 IN_PROC_BROWSER_TEST_F(BraveNetworkAuditTest, BasicTests) {
   // Load the Welcome page.
   ASSERT_TRUE(ui_test_utils::NavigateToURL(browser(), GURL("brave://welcome")));

@@ -9,7 +9,6 @@
 #include <memory>
 #include <string>
 
-#include "base/feature_list.h"
 #include "base/memory/raw_ptr.h"
 #include "base/task/single_thread_task_runner.h"
 #include "brave/browser/brave_browser_features.h"
@@ -19,7 +18,6 @@
 #include "brave/browser/ui/webui/welcome_page/brave_welcome_page_prefs.h"
 #include "brave/browser/ui/webui/welcome_page/welcome_dom_handler.h"
 #include "brave/common/brave_channel_info.h"
-#include "brave/components/brave_welcome/common/features.h"
 #include "brave/components/brave_welcome/resources/grit/brave_welcome_generated_map.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/constants/webui_url_constants.h"
@@ -122,10 +120,6 @@ BraveWelcomeUI::BraveWelcomeUI(content::WebUI* web_ui, const std::string& name)
   // the development builds (not official, icon O1), orange for the rest (M1).
   source->AddBoolean("flywebDesarrollo",
                      brave::GetChannelName() == "developer");
-  source->AddBoolean(
-      "showRewardsCard",
-      base::FeatureList::IsEnabled(brave_welcome::features::kShowRewardsCard));
-
   source->AddBoolean(
       "hardwareAccelerationEnabledAtStartup",
       content::GpuDataManager::GetInstance()->HardwareAccelerationEnabled());

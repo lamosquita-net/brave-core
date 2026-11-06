@@ -9,19 +9,13 @@
 #include <memory>
 #include <vector>
 
-#include "base/gtest_prod_util.h"
 #include "brave/browser/ui/views/view_shadow.h"
 #include "chrome/browser/ui/views/location_bar/location_bar_view.h"
 #include "ui/base/metadata/metadata_header_macros.h"
 
 class BraveActionsContainer;
 class BraveActionsContainerTest;
-class RewardsBrowserTest;
 class SkPath;
-
-namespace policy {
-FORWARD_DECLARE_TEST(BraveRewardsPolicyTest, RewardsIconIsHidden);
-}
 
 // The purposes of this subclass are to:
 // - Add the BraveActionsContainer to the location bar
@@ -66,9 +60,7 @@ class BraveLocationBarView : public LocationBarView {
   }
 
  private:
-  FRIEND_TEST_ALL_PREFIXES(policy::BraveRewardsPolicyTest, RewardsIconIsHidden);
   friend class ::BraveActionsContainerTest;
-  friend class ::RewardsBrowserTest;
 
   void SetupShadow();
 

@@ -395,7 +395,6 @@ void BraveAddCommonStrings(content::WebUIDataSource* html_source,
 
       // New Tab Page
       {"braveNewTab", IDS_SETTINGS_NEW_TAB},
-      {"braveNewTabBraveRewards", IDS_SETTINGS_NEW_TAB_BRAVE_REWARDS},
       {"braveNewTabNewTabPageShows", IDS_SETTINGS_NEW_TAB_NEW_TAB_PAGE_SHOWS},
       {"braveNewTabNewTabCustomizeWidgets",
        IDS_SETTINGS_NEW_TAB_NEW_TAB_CUSTOMIZE_WIDGETS},
@@ -408,14 +407,6 @@ void BraveAddCommonStrings(content::WebUIDataSource* html_source,
 #endif
       {"shortcutPinned", IDS_SETTINGS_SHORTCUT_PINNED},
 #endif
-      // Rewards page
-      {"braveRewards", IDS_SETTINGS_BRAVE_REWARDS_TITLE},
-      {"braveRewardsDisabledLabel", IDS_SETTINGS_BRAVE_REWARDS_DISABLED_LABEL},
-      {"braveRewardsDisabledSubLabel",
-       IDS_SETTINGS_BRAVE_REWARDS_DISABLED_SUB_LABEL},
-      {"braveRewardsPageLabel", IDS_SETTINGS_BRAVE_REWARDS_PAGE_LABEL},
-      {"braveRewardsShowBraveRewardsButtonLabel",
-       IDS_SETTINGS_BRAVE_REWARDS_SHOW_BRAVE_REWARDS_BUTTON_LABEL},
       // Misc (TODO: Organize this)
       {"onExitPageTitle", IDS_SETTINGS_BRAVE_ON_EXIT},
       {"braveDefaultExtensions", IDS_SETTINGS_BRAVE_DEFAULT_EXTENSIONS_TITLE},
@@ -440,7 +431,6 @@ void BraveAddCommonStrings(content::WebUIDataSource* html_source,
       {"p3aEnableTitle", IDS_BRAVE_P3A_ENABLE_SETTING},
       {"p3aEnabledDesc", IDS_BRAVE_P3A_ENABLE_SETTING_SUBITEM},
       {"siteSettings", IDS_SETTINGS_SITE_AND_SHIELDS_SETTINGS},
-      {"resetRewardsData", IDS_SETTINGS_RESET_REWARDS_DATA},
       {"showFullUrls", IDS_SETTINGS_ALWAYS_SHOW_FULL_URLS},
       {"adblockContentFilteringLabel",
        IDS_BRAVE_ADBLOCK_CONTENT_FILTERING_LABEL},

@@ -53,13 +53,12 @@ std::optional<tabs::TabData> MaybeGetSharedPinnedTabData(
   return std::nullopt;
 }
 
-// Don't themify the favicons of some Brave WebUIs.
+// Don't themify the favicon of the welcome WebUI.
 tabs::TabData MaybeApplyBraveTabDataOverrides(tabs::TabInterface* tab,
                                               tabs::TabData data) {
   if (data.should_themify_favicon) {
     const GURL& url = tab->GetContents()->GetVisibleURL();
-    if (url.SchemeIs(content::kChromeUIScheme) &&
-        (url.host() == kWelcomeHost || url.host() == kRewardsPageHost)) {
+    if (url.SchemeIs(content::kChromeUIScheme) && url.host() == kWelcomeHost) {
       data.should_themify_favicon = false;
     }
   }

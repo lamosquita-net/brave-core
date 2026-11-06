@@ -16,7 +16,7 @@
 // PLEASE DO NOT CHANGE THE VALUE OF EXISTING VALUE.
 // That could break custom shortcut feature
 #define IDC_BRAVE_COMMANDS_START 56000
-#define IDC_SHOW_BRAVE_REWARDS 56000
+// 56000 was IDC_SHOW_BRAVE_REWARDS (removed in FlyWeb); do not reuse it.
 // 56002-56004 were the Tor commands (removed in FlyWeb); do not reuse them.
 #define IDC_SHOW_BRAVE_SYNC 56005
 // 56006 was IDC_SHOW_BRAVE_WALLET (removed in FlyWeb); do not reuse it.
@@ -34,7 +34,7 @@
 
 #define IDC_CONFIGURE_SHORTCUTS 56048
 
-#define IDC_SHOW_BRAVE_TALK 56049
+// 56049 was IDC_SHOW_BRAVE_TALK (removed in FlyWeb); do not reuse it.
 #define IDC_CONTENT_CONTEXT_IMPORT_IPNS_KEYS_START 56100
 #define IDC_CONTENT_CONTEXT_IMPORT_IPNS_KEYS_END 56199
 

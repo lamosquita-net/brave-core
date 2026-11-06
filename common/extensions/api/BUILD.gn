@@ -10,10 +10,7 @@ import("//tools/json_schema_compiler/json_schema_api.gni")
 json_features("api_features") {
   feature_type = "APIFeature"
   method_name = "AddBraveAPIFeatures"
-  sources = [
-    "_api_features.json",
-    "_brave_talk_api_features.json",
-  ]
+  sources = [ "_api_features.json" ]
 }
 
 json_features("permission_features") {
@@ -36,7 +33,6 @@ json_features("behavior_features") {
 
 brave_extensions_api_schema_sources = [
   "brave_shields.json",
-  "brave_talk.json",
   "brave_theme.json",
 ]
 
@@ -73,15 +69,13 @@ function_registration("generated_api_registration") {
   # Since Chromium 156, function_registration expects
   # <impl_dir>/<schema>/<schema>_api.h unless the schema is listed here. Ours
   # all set "implemented_in" in their compiler_options, so list them and pass
-  # their headers as inputs (as Brave does for brave_theme and brave_talk).
+  # their headers as inputs (as Brave does for brave_theme).
   custom_impl_schemas = [
     "brave_shields",
-    "brave_talk",
     "brave_theme",
   ]
   inputs = [
     "//brave/browser/extensions/api/brave_shields_api.h",
-    "//brave/browser/extensions/api/brave_talk_api.h",
     "//brave/browser/extensions/api/brave_theme_api.h",
   ]
 

@@ -129,44 +129,6 @@ IN_PROC_BROWSER_TEST_F(BraveContentBrowserClientTest, CanLoadChromeURL) {
   }
 }
 
-IN_PROC_BROWSER_TEST_F(BraveContentBrowserClientTest, CanLoadCustomBravePages) {
-  std::vector<std::string> pages{
-      "rewards",
-  };
-
-  std::vector<std::string> schemes{
-      "brave://",
-      "chrome://",
-  };
-
-  for (const std::string& page : pages) {
-    for (const std::string& scheme : schemes) {
-      content::WebContents* contents =
-          browser()->tab_strip_model()->GetActiveWebContents();
-      ASSERT_TRUE(
-          ui_test_utils::NavigateToURL(browser(), GURL(scheme + page + "/")));
-      ASSERT_TRUE(WaitForLoadStop(contents));
-
-      EXPECT_STREQ(base::UTF16ToUTF8(
-                       browser()->location_bar_model()->GetFormattedFullURL())
-                       .c_str(),
-                   ("brave://" + page).c_str());
-      EXPECT_STREQ(contents->GetController()
-                       .GetLastCommittedEntry()
-                       ->GetVirtualURL()
-                       .spec()
-                       .c_str(),
-                   ("chrome://" + page + "/").c_str());
-      EXPECT_STREQ(contents->GetController()
-                       .GetLastCommittedEntry()
-                       ->GetURL()
-                       .spec()
-                       .c_str(),
-                   ("chrome://" + page + "/").c_str());
-    }
-  }
-}
-
 IN_PROC_BROWSER_TEST_F(BraveContentBrowserClientTest, CanLoadAboutHost) {
   std::vector<std::string> schemes{
       "chrome://",

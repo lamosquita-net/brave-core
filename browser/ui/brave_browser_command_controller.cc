@@ -171,7 +171,6 @@ void BraveBrowserCommandController::InitBraveCommandState() {
       IDC_CONFIGURE_SHORTCUTS,
       base::FeatureList::IsEnabled(commands::features::kBraveCommands));
 
-  UpdateCommandEnabled(IDC_SHOW_BRAVE_TALK, true);
   UpdateCommandEnabled(IDC_TOGGLE_SHIELDS, true);
   UpdateCommandEnabled(IDC_TOGGLE_JAVASCRIPT, true);
 
@@ -196,10 +195,6 @@ void BraveBrowserCommandController::InitBraveCommandState() {
     UpdateCommandEnabled(IDC_READING_LIST_MENU_ADD_TAB, true);
     UpdateCommandEnabled(IDC_READING_LIST_MENU_SHOW_UI, true);
   }
-}
-
-void BraveBrowserCommandController::UpdateCommandForBraveRewards() {
-  UpdateCommandEnabled(IDC_SHOW_BRAVE_REWARDS, true);
 }
 
 void BraveBrowserCommandController::UpdateCommandForWebcompatReporter() {
@@ -266,9 +261,6 @@ bool BraveBrowserCommandController::ExecuteBraveCommandWithDisposition(
   DCHECK(IsCommandEnabled(id)) << "Invalid/disabled command " << id;
 
   switch (id) {
-    case IDC_SHOW_BRAVE_REWARDS:
-      brave::ShowBraveRewards(&*browser_);
-      break;
     case IDC_SHOW_BRAVE_WEBCOMPAT_REPORTER:
       brave::ShowWebcompatReporter(&*browser_);
       break;
@@ -287,9 +279,6 @@ bool BraveBrowserCommandController::ExecuteBraveCommandWithDisposition(
       break;
     case IDC_CONFIGURE_SHORTCUTS:
       brave::ShowShortcutsPage(&*browser_);
-      break;
-    case IDC_SHOW_BRAVE_TALK:
-      brave::ShowBraveTalk(&*browser_);
       break;
     case IDC_TOGGLE_SHIELDS:
       brave::ToggleShieldsEnabled(&*browser_);

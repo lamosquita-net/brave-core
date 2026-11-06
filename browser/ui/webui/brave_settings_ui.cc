@@ -81,8 +81,6 @@ void BraveSettingsUI::AddResources(content::WebUIDataSource* html_source,
   html_source->AddBoolean("isForgetFirstPartyStorageFeatureEnabled",
                           base::FeatureList::IsEnabled(
                               net::features::kBraveForgetFirstPartyStorage));
-  // FlyWeb: Brave Rewards is removed from the build.
-  html_source->AddBoolean("isBraveRewardsSupported", false);
   html_source->AddBoolean(
       "areShortcutsSupported",
       base::FeatureList::IsEnabled(commands::features::kBraveCommands));

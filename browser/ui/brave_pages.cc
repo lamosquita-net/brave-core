@@ -22,14 +22,6 @@
 
 namespace brave {
 
-namespace {
-constexpr char kBraveTalkURL[] = "https://talk.brave.com/widget";
-}  // namespace
-
-void ShowBraveRewards(BrowserWindowInterface* browser) {
-  ShowSingletonTabOverwritingNTP(browser, GURL(kRewardsPageURL));
-}
-
 void ShowBraveAdblock(BrowserWindowInterface* browser) {
   ShowSingletonTabOverwritingNTP(browser, GURL(kBraveUIAdblockURL));
 }
@@ -41,10 +33,6 @@ void ShowSync(BrowserWindowInterface* browser) {
 
 void ShowShortcutsPage(BrowserWindowInterface* browser) {
   ShowSingletonTabOverwritingNTP(browser, GURL(kShortcutsURL));
-}
-
-void ShowBraveTalk(BrowserWindowInterface* browser) {
-  ShowSingletonTabOverwritingNTP(browser, GURL(kBraveTalkURL));
 }
 
 void ShowWebcompatReporter(BrowserWindowInterface* browser) {

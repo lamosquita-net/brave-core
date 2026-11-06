@@ -120,16 +120,6 @@ declare namespace NewTab {
     customImageBackgrounds: ImageBackground[]
   }
 
-  // Still named by the chrome.braveRewards declarations in chromel.d.ts.
-  export interface AdsAccountStatement {
-    nextPaymentDate: number
-    adsReceivedThisMonth: number
-    minEarningsThisMonth: number
-    maxEarningsThisMonth: number
-    minEarningsLastMonth: number
-    maxEarningsLastMonth: number
-  }
-
   interface StorybookStateExtras {
     forceSettingsTab?: string // SettingsTabType
   }
