@@ -35,17 +35,18 @@
 #include "brave/components/constants/pref_names.h"
 #include "chrome/app/chrome_command_ids.h"
 #include "chrome/browser/app_mode/app_mode_utils.h"
+#include "chrome/browser/ui/bookmarks/bookmark_tab_helper.h"
 #include "chrome/browser/ui/browser_commands.h"
 #include "chrome/browser/ui/browser_window/public/browser_window_features.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/frame/window_frame_util.h"
+#include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/browser/ui/views/frame/browser_view.h"
 #include "chrome/browser/ui/views/frame/browser_widget.h"
-#include "chrome/browser/ui/views/frame/tab_strip_region_view.h"
 #include "chrome/browser/ui/views/frame/top_container_view.h"
-#include "chrome/browser/ui/views/tabs/tab_search_button.h"
-#include "chrome/browser/ui/views/tabs/tab_strip.h"
 #include "chrome/browser/ui/views/toolbar/browser_app_menu_button.h"
 #include "chrome/common/pref_names.h"
+#include "components/tabs/public/tab_interface.h"
 #include "content/public/browser/page_navigator.h"
 #include "content/public/browser/web_contents.h"
 #include "extensions/buildflags/buildflags.h"
@@ -65,10 +66,11 @@ namespace {
 
 std::optional<bool> g_download_confirm_return_allow_for_testing;
 
-bool IsUnsupportedCommand(int command_id, Browser* browser) {
-  return chrome::IsRunningInForcedAppMode() &&
-         !chrome::IsCommandAllowedInAppMode(command_id,
-                                            browser->is_type_popup());
+bool IsUnsupportedCommand(int command_id, BrowserWindowInterface* browser) {
+  return IsRunningInForcedAppMode() &&
+         !IsCommandAllowedInAppMode(
+             command_id,
+             browser->GetType() == BrowserWindowInterface::Type::TYPE_POPUP);
 }
 
 }  // namespace
@@ -146,34 +148,8 @@ class BraveBrowserView::TabCyclingEventHandler : public ui::EventObserver,
   std::unique_ptr<views::EventMonitor> monitor_;
 };
 
-BraveBrowserView::BraveBrowserView(std::unique_ptr<Browser> browser)
-    : BrowserView(std::move(browser)) {
-  pref_change_registrar_.Init(GetProfile()->GetPrefs());
-  pref_change_registrar_.Add(
-      kTabsSearchShow,
-      base::BindRepeating(&BraveBrowserView::OnPreferenceChanged,
-                          base::Unretained(this)));
-  // Show the correct value in settings on initial start
-  UpdateSearchTabsButtonState();
-}
-
-void BraveBrowserView::OnPreferenceChanged(const std::string& pref_name) {
-  if (pref_name == kTabsSearchShow) {
-    UpdateSearchTabsButtonState();
-    return;
-  }
-}
-
-void BraveBrowserView::UpdateSearchTabsButtonState() {
-  if (auto* tab_search_container =
-          tab_strip_region_view()->tab_search_container()) {
-    if (auto* button = tab_search_container->tab_search_button()) {
-      auto is_tab_search_visible =
-          GetProfile()->GetPrefs()->GetBoolean(kTabsSearchShow);
-      button->SetVisible(is_tab_search_visible);
-    }
-  }
-}
+BraveBrowserView::BraveBrowserView(BrowserWindowInterface* browser)
+    : BrowserView(browser) {}
 
 BraveBrowserView::~BraveBrowserView() {
   tab_cycling_event_handler_.reset();
@@ -207,6 +183,60 @@ void BraveBrowserView::SetStarredState(bool is_starred) {
       static_cast<BraveToolbarView*>(toolbar())->bookmark_button();
   if (button) {
     button->SetToggled(is_starred);
+  }
+}
+
+void BraveBrowserView::URLStarredChanged(content::WebContents* web_contents,
+                                         bool starred) {
+  if (web_contents == GetActiveWebContents()) {
+    SetStarredState(starred);
+  }
+}
+
+void BraveBrowserView::ObserveBookmarkTabHelper(
+    content::WebContents* contents) {
+  bookmark_tab_helper_observation_.Reset();
+  if (auto* bookmark_helper =
+          contents ? BookmarkTabHelper::FromWebContents(contents) : nullptr) {
+    bookmark_tab_helper_observation_.Observe(bookmark_helper);
+    SetStarredState(bookmark_helper->is_starred());
+  } else {
+    SetStarredState(false);
+  }
+}
+
+void BraveBrowserView::OnActiveTabWillDiscardContents(
+    tabs::TabInterface* tab,
+    content::WebContents* old_contents,
+    content::WebContents* new_contents) {
+  ObserveBookmarkTabHelper(new_contents);
+}
+
+void BraveBrowserView::OnActiveTabWillDetach(
+    tabs::TabInterface* tab,
+    tabs::TabInterface::DetachReason reason) {
+  bookmark_tab_helper_observation_.Reset();
+}
+
+void BraveBrowserView::OnActiveTabChanged(content::WebContents* old_contents,
+                                          content::WebContents* new_contents,
+                                          int index,
+                                          int reason) {
+  BrowserView::OnActiveTabChanged(old_contents, new_contents, index, reason);
+
+  ObserveBookmarkTabHelper(new_contents);
+  active_tab_will_discard_contents_subscription_ = {};
+  active_tab_will_detach_subscription_ = {};
+  if (auto* tab = new_contents
+                      ? tabs::TabInterface::GetFromContents(new_contents)
+                      : nullptr) {
+    active_tab_will_discard_contents_subscription_ =
+        tab->RegisterWillDiscardContents(base::BindRepeating(
+            &BraveBrowserView::OnActiveTabWillDiscardContents,
+            base::Unretained(this)));
+    active_tab_will_detach_subscription_ =
+        tab->RegisterWillDetach(base::BindRepeating(
+            &BraveBrowserView::OnActiveTabWillDetach, base::Unretained(this)));
   }
 }
 
@@ -339,7 +369,7 @@ views::CloseRequestResult BraveBrowserView::OnWindowCloseRequested() {
   if (GetBraveBrowser()->ShouldAskForBrowserClosingBeforeHandlers()) {
     if (!closing_confirm_dialog_activated_) {
       WindowClosingConfirmDialogView::Show(
-          browser(),
+          GetBraveBrowser(),
           base::BindOnce(&BraveBrowserView::OnWindowClosingConfirmResponse,
                          weak_ptr_.GetWeakPtr()));
       closing_confirm_dialog_activated_ = true;
@@ -370,7 +400,7 @@ void BraveBrowserView::OnWindowClosingConfirmResponse(bool allowed_to_close) {
 
 void BraveBrowserView::ConfirmBrowserCloseWithPendingDownloads(
     int download_count,
-    Browser::DownloadCloseType dialog_type,
+    DownloadCloseType dialog_type,
     base::OnceCallback<void(bool)> callback) {
   // Simulate user response.
   if (g_download_confirm_return_allow_for_testing) {
@@ -384,17 +414,13 @@ void BraveBrowserView::ConfirmBrowserCloseWithPendingDownloads(
       download_count, dialog_type, std::move(callback));
 }
 
-void BraveBrowserView::MaybeShowReadingListInSidePanelIPH() {
-  // Do nothing.
-}
-
 bool BraveBrowserView::AcceleratorPressed(const ui::Accelerator& accelerator) {
   if (base::FeatureList::IsEnabled(tabs::features::kBraveSharedPinnedTabs) &&
       browser()->GetProfile()->GetPrefs()->GetBoolean(
           brave_tabs::kSharedPinnedTab)) {
     if (int command_id; FindCommandIdForAccelerator(accelerator, &command_id) &&
                         command_id == IDC_CLOSE_TAB) {
-      auto* tab_strip_model = browser()->tab_strip_model();
+      auto* tab_strip_model = browser()->GetTabStripModel();
       if (tab_strip_model->IsTabPinned(tab_strip_model->active_index())) {
         // Ignore CLOSE TAB command via accelerator if the tab is shared/dummy
         // pinned tab.
@@ -419,7 +445,7 @@ void BraveBrowserView::StartTabCycling() {
 
 void BraveBrowserView::StopTabCycling() {
   tab_cycling_event_handler_.reset();
-  static_cast<BraveTabStripModel*>(browser()->tab_strip_model())
+  static_cast<BraveTabStripModel*>(browser()->GetTabStripModel())
       ->StopMRUCycling();
 }
 

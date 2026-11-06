@@ -17,9 +17,6 @@
 #define BrowserWindow BraveBrowserWindow
 #define BookmarkBarView BraveBookmarkBarView
 
-#define MaybeShowReadingListInSidePanelIPH \
-  virtual MaybeShowReadingListInSidePanelIPH
-
 #if BUILDFLAG(IS_WIN)
 // On Windows <winuser.h> defines LoadAccelerators
 // Using push_macro seems to be causing #undef not to work in Chromium 125.
@@ -36,7 +33,6 @@
 // #pragma pop_macro("LoadAccelerators")
 #endif
 
-#undef MaybeShowReadingListInSidePanelIPH
 #undef BookmarkBarView
 #undef BrowserWindow
 #undef BrowserViewLayoutDelegateImpl
