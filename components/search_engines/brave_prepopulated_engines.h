@@ -91,7 +91,6 @@ enum BravePrepopulatedEngineID : unsigned int {
   PREPOPULATED_ENGINE_ID_YAHOO_VN,
 
   PREPOPULATED_ENGINE_ID_BRAVE,
-  PREPOPULATED_ENGINE_ID_BRAVE_TOR,
 };
 
 extern const PrepopulatedEngine duckduckgo;
@@ -105,7 +104,6 @@ extern const PrepopulatedEngine qwant;
 extern const PrepopulatedEngine brave_startpage;
 extern const PrepopulatedEngine brave_yandex;
 extern const PrepopulatedEngine brave_search;
-extern const PrepopulatedEngine brave_search_tor;
 extern const PrepopulatedEngine brave_bing;
 extern const PrepopulatedEngine brave_google;
 

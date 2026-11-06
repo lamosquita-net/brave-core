@@ -215,19 +215,6 @@ const PrepopulatedEngine brave_search = MakeBravePrepopulatedEngine(
     SEARCH_ENGINE_OTHER,
     PREPOPULATED_ENGINE_ID_BRAVE);
 
-const PrepopulatedEngine brave_search_tor = ModifyEngineParams(
-    brave_search,
-    nullptr,
-    u":search.brave4u7jddbv7cyviptqjc7jusxh72uik7zt6adtckl5f4nwy2v72qd.onion",
-    "https://"
-    "search.brave4u7jddbv7cyviptqjc7jusxh72uik7zt6adtckl5f4nwy2v72qd.onion/"
-    "search?q={searchTerms}",
-    "https://"
-    "search.brave4u7jddbv7cyviptqjc7jusxh72uik7zt6adtckl5f4nwy2v72qd.onion/api/"
-    "suggest?q={searchTerms}",
-    nullptr,
-    PREPOPULATED_ENGINE_ID_BRAVE_TOR);
-
 const PrepopulatedEngine brave_bing = ModifyEngineParams(
     bing,
     u"Bing",
