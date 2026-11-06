@@ -11,6 +11,7 @@
 #include "base/files/file_path.h"
 #include "base/files/file_util.h"
 #include "base/functional/bind.h"
+#include "base/containers/span.h"
 #include "base/memory/ref_counted_memory.h"
 #include "base/strings/stringprintf.h"
 #include "base/task/thread_pool.h"
@@ -70,11 +71,8 @@ void NTPCustomImagesSource::GetImageFile(const base::FilePath& image_file_path,
 
 void NTPCustomImagesSource::OnGotImageFile(GotDataCallback callback,
                                            const std::string& input) {
-  scoped_refptr<base::RefCountedMemory> bytes;
-  bytes = new base::RefCountedBytes(
-      reinterpret_cast<const unsigned char*>(input.c_str()), input.length());
-  std::move(callback).Run(std::move(bytes));
-  return;
+  std::move(callback).Run(
+      base::MakeRefCounted<base::RefCountedBytes>(base::as_byte_span(input)));
 }
 
 }  // namespace ntp_background_images
