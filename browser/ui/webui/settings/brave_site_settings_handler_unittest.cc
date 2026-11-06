@@ -37,10 +37,12 @@ base::DictValue GetResponsePayload(bool valid, const std::string& message) {
 }
 }  // namespace
 
-class BraveSiteSettingsHandlerTest : public testing::Test {
+// Named as the friend in BraveSiteSettingsHandler, so it can reach the
+// protected WebUIMessageHandler::set_web_ui().
+class TestBraveSiteSettingsHandlerUnittest : public testing::Test {
  public:
-  BraveSiteSettingsHandlerTest() = default;
-  ~BraveSiteSettingsHandlerTest() override = default;
+  TestBraveSiteSettingsHandlerUnittest() = default;
+  ~TestBraveSiteSettingsHandlerUnittest() override = default;
 
   void SetUp() override {
     TestingBrowserProcess::GetGlobal()->SetUpGlobalFeaturesForTesting(
@@ -54,7 +56,7 @@ class BraveSiteSettingsHandlerTest : public testing::Test {
     test_web_ui_.set_web_contents(web_contents_.get());
 
     handler_ = std::make_unique<BraveSiteSettingsHandler>(profile_.get());
-    handler_->set_web_ui_for_testing(&test_web_ui_);
+    handler_->set_web_ui(&test_web_ui_);
     handler_->RegisterMessages();
   }
 
@@ -62,7 +64,7 @@ class BraveSiteSettingsHandlerTest : public testing::Test {
     testing::Test::TearDown();
     // The test handler unusually owns its own TestWebUI, so we make sure to
     // unbind it from the base class before the derived class is destroyed.
-    handler_->set_web_ui_for_testing(nullptr);
+    handler_->set_web_ui(nullptr);
     handler_.reset();
 
     web_contents_.reset();
@@ -90,7 +92,7 @@ class BraveSiteSettingsHandlerTest : public testing::Test {
   content::TestWebUI test_web_ui_;
 };
 
-TEST_F(BraveSiteSettingsHandlerTest, InValidShieldsType) {
+TEST_F(TestBraveSiteSettingsHandlerUnittest, InValidShieldsType) {
   base::ListValue args;
   args.Append(base::Value("id"));
   args.Append(base::Value("[*.]brave.com"));
@@ -105,7 +107,7 @@ TEST_F(BraveSiteSettingsHandlerTest, InValidShieldsType) {
                 l10n_util::GetStringUTF8(IDS_BRAVE_SHIELDS_NOT_VALID_ADDRESS)));
 }
 
-TEST_F(BraveSiteSettingsHandlerTest, ValidShieldsType) {
+TEST_F(TestBraveSiteSettingsHandlerUnittest, ValidShieldsType) {
   base::ListValue args;
   args.Append(base::Value("id"));
   args.Append(base::Value("brave.com"));
@@ -117,7 +119,7 @@ TEST_F(BraveSiteSettingsHandlerTest, ValidShieldsType) {
   EXPECT_EQ(*data->arg3(), GetResponsePayload(true, std::string()));
 }
 
-TEST_F(BraveSiteSettingsHandlerTest, ValidNonShieldsType) {
+TEST_F(TestBraveSiteSettingsHandlerUnittest, ValidNonShieldsType) {
   base::ListValue args;
   args.Append(base::Value("id"));
   args.Append(base::Value("[*.]brave.com"));
@@ -129,7 +131,8 @@ TEST_F(BraveSiteSettingsHandlerTest, ValidNonShieldsType) {
   EXPECT_EQ(*data->arg3(), GetResponsePayload(true, std::string()));
 }
 
-TEST_F(BraveSiteSettingsHandlerTest, IsPatternValidForBraveContentType) {
+TEST_F(TestBraveSiteSettingsHandlerUnittest,
+       IsPatternValidForBraveContentType) {
   EXPECT_FALSE(IsPatternValidForBraveContentType(
       ContentSettingsType::BRAVE_SHIELDS, "*.*"));
   EXPECT_FALSE(IsPatternValidForBraveContentType(
