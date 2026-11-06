@@ -3,16 +3,29 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+// Contains constants for known URLs and portions thereof.
+// Except for WebUI UI/Host/SubPage constants. Those go in
+// chrome/common/webui_url_constants.h.
+//
+// - The constants are divided into sections: Cross platform, platform-specific,
+//   and feature-specific.
+// - When adding platform/feature specific constants, if there already exists an
+//   appropriate #if block, use that.
+// - Keep the constants sorted by name within its section.
+
 #ifndef BRAVE_CHROMIUM_SRC_CHROME_COMMON_URL_CONSTANTS_H_
 #define BRAVE_CHROMIUM_SRC_CHROME_COMMON_URL_CONSTANTS_H_
 
-#include <stddef.h>
-
 #include "build/branding_buildflags.h"
 #include "build/build_config.h"
+#include "chrome/common/buildflags.h"
 #include "chrome/common/webui_url_constants.h"
+#include "content/public/common/url_constants.h"
 #include "net/net_buildflags.h"
-#include "ppapi/buildflags/buildflags.h"
+
+#if BUILDFLAG(IS_CHROMEOS)
+#include "ash/constants/chrome_url_constants.h"
+#endif  // BUILDFLAG(IS_CHROMEOS)
 
 namespace chrome {
 
@@ -42,15 +55,11 @@ inline constexpr char kBrowserSettingsSearchEngineURL[] =
     "chrome://settings/search";
 
 // "Learn more" URL for Battery Saver Mode.
-inline constexpr char kBatterySaverModeLearnMoreUrl[] =
-    "https://flyweb.lamosquita.net/ayuda/#rendimiento";
+inline constexpr char16_t kBatterySaverModeLearnMoreUrl[] =
+    u"https://flyweb.lamosquita.net/ayuda/#rendimiento";
 
 // The URL for providing help when the Bluetooth adapter is off.
 inline constexpr char kBluetoothAdapterOffHelpURL[] =
-    "https://flyweb.lamosquita.net/ayuda/";
-
-// "Learn more" URL shown in the dialog to enable cloud services for Cast.
-inline constexpr char kCastCloudServicesHelpURL[] =
     "https://flyweb.lamosquita.net/ayuda/";
 
 // The URL for the help center article to show when no Cast destination has been
@@ -74,10 +83,6 @@ inline constexpr char kChooserUsbOverviewURL[] =
 inline constexpr char kChromeBetaForumURL[] =
     "https://flyweb.lamosquita.net/ayuda/";
 
-// The URL for the help center article to fix Chrome update problems.
-inline constexpr char16_t kChromeFixUpdateProblems[] =
-    u"https://flyweb.lamosquita.net/ayuda/#actualizaciones";
-
 // General help links for Chrome, opened using various actions.
 inline constexpr char kChromeHelpViaKeyboardURL[] =
     "https://flyweb.lamosquita.net/ayuda/";
@@ -87,25 +92,24 @@ inline constexpr char kChromeHelpViaMenuURL[] =
 
 inline constexpr char kChromeHelpViaWebUIURL[] =
     "https://flyweb.lamosquita.net/ayuda/";
-
-inline constexpr char kFirstPartySetsLearnMoreURL[] =
-    "https://flyweb.lamosquita.net/ayuda/#permisos";
-
-// The isolated-app: scheme is used for Isolated Web Apps. A public explainer
-// can be found here: https://github.com/reillyeon/isolated-web-apps
-inline constexpr char kIsolatedAppScheme[] = "isolated-app";
-inline constexpr char16_t kIsolatedAppSchemeUtf16[] = u"isolated-app";
+#if BUILDFLAG(IS_CHROMEOS)
+inline constexpr char kChromeOsHelpViaWebUIURL[] =
+    "https://flyweb.lamosquita.net/ayuda/";
+#endif  // BUILDFLAG(IS_CHROMEOS)
 
 // The chrome-native: scheme is used show pages rendered with platform specific
 // widgets instead of using HTML.
 inline constexpr char kChromeNativeScheme[] = "chrome-native";
 
-// The URL of safe section in Chrome page.
+// The chrome-experimental-site-token-provider: scheme is used to retrieve
+// site-specific tokens.
+inline constexpr char kChromeExperimentalSiteTokenProviderScheme[] =
+    "chrome-experimental-site-token-provider";
+inline constexpr char kChromeExperimentalSiteTokenHost[] = "token";
+
+// The URL of safe section in Chrome page (https://www.google.com/chrome).
 inline constexpr char16_t kChromeSafePageURL[] =
     u"https://flyweb.lamosquita.net/ayuda/#seguridad";
-
-// Pages under chrome-search.
-inline constexpr char kChromeSearchLocalNtpHost[] = "local-ntp";
 
 // Host and URL for most visited iframes used on the Instant Extended NTP.
 inline constexpr char kChromeSearchMostVisitedHost[] = "most-visited";
@@ -148,6 +152,10 @@ inline constexpr char kChromeUIUntrustedNewTabPageUrl[] =
 
 // The URL for the Chromium project used in the About dialog.
 inline constexpr char16_t kChromiumProjectURL[] = u"https://www.chromium.org/";
+#if BUILDFLAG(IS_CHROMEOS)
+static_assert(std::u16string_view(kChromiumProjectURL) ==
+              ash::chrome_external_urls::kChromiumProjectURL);
+#endif
 
 inline constexpr char16_t kContentSettingsExceptionsLearnMoreURL[] =
     u"https://flyweb.lamosquita.net/ayuda/#permisos";
@@ -172,6 +180,10 @@ inline constexpr char16_t kDiscardRingTreatmentLearnMoreUrl[] =
 inline constexpr char16_t kDoNotTrackLearnMoreURL[] =
     u"https://flyweb.lamosquita.net/ayuda/#privacidad";
 
+// "Learn more" URL for Universal Opt-Out.
+inline constexpr char16_t kUniversalOptOutLearnMoreURL[] =
+    u"https://flyweb.lamosquita.net/ayuda/";
+
 // The URL for the "Learn more" page for interrupted downloads.
 inline constexpr char kDownloadInterruptedLearnMoreURL[] =
     "https://flyweb.lamosquita.net/ayuda/#descargas";
@@ -191,10 +203,6 @@ inline constexpr char kDownloadBlockedLearnMoreURL[] =
 inline constexpr char kExtensionControlledSettingLearnMoreURL[] =
     "https://flyweb.lamosquita.net/ayuda/#extensiones";
 
-// URL used to indicate that an extension resource load request was invalid.
-inline constexpr char kExtensionInvalidRequestURL[] =
-    "chrome-extension://invalid/";
-
 // Link for creating family group with Google Families.
 inline constexpr char16_t kFamilyGroupCreateURL[] =
     u"https://flyweb.lamosquita.net/ayuda/";
@@ -203,9 +211,9 @@ inline constexpr char16_t kFamilyGroupCreateURL[] =
 inline constexpr char16_t kFamilyGroupViewURL[] =
     u"https://flyweb.lamosquita.net/ayuda/";
 
-// Url to a blogpost about Flash deprecation.
-inline constexpr char kFlashDeprecationLearnMoreURL[] =
-    "https://blog.chromium.org/2017/07/so-long-and-thanks-for-all-flash.html";
+// "Learn more" URL for related website sets.
+inline constexpr char kRelatedWebsiteSetsLearnMoreURL[] =
+    "https://flyweb.lamosquita.net/ayuda/";
 
 // URL of the 'Activity controls' section of the privacy settings page.
 inline constexpr char kGoogleAccountActivityControlsURL[] =
@@ -232,15 +240,34 @@ inline constexpr char kGoogleAccountChooserURL[] =
 inline constexpr char kGoogleAccountDeviceActivityURL[] =
     "https://flyweb.lamosquita.net/ayuda/";
 
+// URL of the Google Account home address page.
+inline constexpr char kGoogleAccountHomeAddressURL[] =
+    "https://flyweb.lamosquita.net/ayuda/";
+
+// URL of the Google Account work address page.
+inline constexpr char kGoogleAccountWorkAddressURL[] =
+    "https://flyweb.lamosquita.net/ayuda/";
+
+// URL of the change Google Account name page.
+inline constexpr char kGoogleAccountNameEmailAddressEditURL[] =
+    "https://flyweb.lamosquita.net/ayuda/";
+
+// URL of the two factor authentication setup required intersitial.
+inline constexpr char kGoogleTwoFactorIntersitialURL[] =
+    "https://flyweb.lamosquita.net/ayuda/";
+
 // URL of the Google Password Manager.
 inline constexpr char kGooglePasswordManagerURL[] =
     "https://flyweb.lamosquita.net/ayuda/#contrasenas";
 
-// The URL for the "Learn more" link for the High Efficiency Mode.
-inline constexpr char kMemorySaverModeLearnMoreUrl[] =
-    "https://flyweb.lamosquita.net/ayuda/#rendimiento";
+// URL of the Google Photos.
+inline constexpr char kGooglePhotosURL[] = "https://photos.google.com";
 
-// The URL in the help text for the High Efficiency Mode tab discarding
+// The URL for the "Learn more" link for the Memory Saver Mode.
+inline constexpr char16_t kMemorySaverModeLearnMoreUrl[] =
+    u"https://flyweb.lamosquita.net/ayuda/#rendimiento";
+
+// The URL in the help text for the Memory Saver Mode tab discarding
 // exceptions add dialog.
 inline constexpr char16_t kMemorySaverModeTabDiscardingHelpUrl[] =
     u"https://flyweb.lamosquita.net/ayuda/#rendimiento";
@@ -249,17 +276,14 @@ inline constexpr char16_t kMemorySaverModeTabDiscardingHelpUrl[] =
 inline constexpr char16_t kIncognitoHelpCenterURL[] =
     u"https://flyweb.lamosquita.net/ayuda/#privacidad";
 
-// The URL for the Help Center page about IP Protection.
-inline constexpr char kIpProtectionHelpCenterURL[] =
-    "https://support.google.com/chrome?p=ip_protection";
+// "Learn more" URL for the web app installation flow, linked from installation
+// dialog and options view.
+inline constexpr char kInstallDialogFlowLearnMoreURL[] =
+    "https://flyweb.lamosquita.net/ayuda/";
 
 // The URL for the "Learn more" page for the usage/crash reporting option in the
 // first run dialog.
 inline constexpr char kLearnMoreReportingURL[] =
-    "https://flyweb.lamosquita.net/ayuda/#privacidad";
-
-// The URL for the Help Center page about managing third-party cookies.
-inline constexpr char kManage3pcHelpCenterURL[] =
     "https://flyweb.lamosquita.net/ayuda/#privacidad";
 
 // The URL for the tab group sync help center page.
@@ -274,9 +298,40 @@ inline constexpr char16_t kManagedUiLearnMoreUrl[] =
 inline constexpr char kInsecureDownloadBlockingLearnMoreUrl[] =
     "https://flyweb.lamosquita.net/ayuda/#descargas";
 
-// "myactivity.google.com" URL for the history checkbox in ClearBrowsingData.
+// "myactivity.google.com" URLs with their respective UTM sources.
+// - In the Clear Browsing Data footer.
+// - In the Clear Browsing Data "notice about other forms of history".
+// - On the history page.
 inline constexpr char16_t kMyActivityUrlInClearBrowsingData[] =
     u"https://flyweb.lamosquita.net/ayuda/#privacidad";
+inline constexpr char16_t kMyActivityUrlInClearBrowsingDataNotice[] =
+    u"https://flyweb.lamosquita.net/ayuda/";
+inline constexpr char16_t kMyActivityUrlInHistory[] =
+    u"https://flyweb.lamosquita.net/ayuda/";
+
+// The URL for the Gemini Personal Context page.
+inline constexpr char16_t kGeminiPersonalContextUrl[] =
+    u"https://flyweb.lamosquita.net/ayuda/";
+
+// The URL for "Your Gemini Apps Activity" page.
+inline constexpr char16_t kMyActivityGeminiAppsUrl[] =
+    u"https://flyweb.lamosquita.net/ayuda/";
+
+// The URL for Glic activity button.
+inline constexpr char kGlicActivityUrl[] =
+    "https://flyweb.lamosquita.net/ayuda/";
+
+inline constexpr char16_t kMyActivityAiModeUrl[] =
+    u"https://flyweb.lamosquita.net/ayuda/";
+
+inline constexpr char16_t kMyActivitySearchServicesAppsUrl[] =
+    u"https://flyweb.lamosquita.net/ayuda/";
+
+#if BUILDFLAG(GOOGLE_CHROME_BRANDING)
+// "Learn more" URL for On-Device AI.
+inline constexpr char16_t kOnDeviceAiLearnMoreUrl[] =
+    u"https://flyweb.lamosquita.net/ayuda/";
+#endif
 
 // Help URL for the Omnibox setting.
 inline constexpr char16_t kOmniboxLearnMoreURL[] =
@@ -285,6 +340,10 @@ inline constexpr char16_t kOmniboxLearnMoreURL[] =
 // "What do these mean?" URL for the Page Info bubble.
 inline constexpr char kPageInfoHelpCenterURL[] =
     "https://flyweb.lamosquita.net/ayuda/#seguridad";
+
+// Help center article URL for automated password change.
+inline constexpr char16_t kPasswordChangeLearnMoreURL[] =
+    u"https://flyweb.lamosquita.net/ayuda/";
 
 // Help URL for the bulk password check.
 inline constexpr char kPasswordCheckLearnMoreURL[] =
@@ -309,29 +368,55 @@ inline constexpr char kPasswordSharingLearnMoreURL[] =
 inline constexpr char kPasswordSharingTroubleshootURL[] =
     "https://flyweb.lamosquita.net/ayuda/#contrasenas";
 
-// Help URL for the Payment methods page of the Google Pay site.
-inline constexpr char16_t kPaymentMethodsURL[] =
-    u"https://flyweb.lamosquita.net/ayuda/#autorrelleno";
-
-// Help URL for the newer GPay Web site instead of the legacy Payments Center.
-inline constexpr char16_t kPaymentMethodsURLForGPayWeb[] =
-    u"https://flyweb.lamosquita.net/ayuda/#autorrelleno";
-
 // The URL for the "Fill out forms automatically" support page.
 inline constexpr char kAddressesAndPaymentMethodsLearnMoreURL[] =
     "https://flyweb.lamosquita.net/ayuda/#autorrelleno";
+
+// The URL for the "Pay over time" support page.
+inline constexpr char16_t kPayOverTimeLearnMoreUrl[] =
+    u"https://flyweb.lamosquita.net/ayuda/";
+
+// The URL for the Wallet website.
+inline constexpr char16_t kWalletUrl[] =
+    u"https://flyweb.lamosquita.net/ayuda/";
+
+// Help URL for Autofill AI.
+inline constexpr char16_t kAutofillAiLearnMoreURL[] =
+    u"https://flyweb.lamosquita.net/ayuda/";
+
+// "Learn more" URL for the autofill show card benefits setting.
+inline constexpr char16_t kCardBenefitsLearnMoreURL[] =
+    u"https://flyweb.lamosquita.net/ayuda/";
+
+// "Learn more" URL for the Gmail OTP filling setting.
+inline constexpr char16_t kGmailOtpFillingLearnMoreURL[] =
+    u"https://flyweb.lamosquita.net/ayuda/";
+
+// URL for Gmail general settings.
+inline constexpr char16_t kGmailSettingsURL[] =
+    u"https://flyweb.lamosquita.net/ayuda/";
+
+// URL for Gmail smart features settings.
+inline constexpr char16_t kGmailSmartFeaturesURL[] =
+    u"https://flyweb.lamosquita.net/ayuda/";
 
 // "Learn more" URL for the performance intervention notification setting.
 inline constexpr char16_t kPerformanceInterventionLearnMoreUrl[] =
     u"https://flyweb.lamosquita.net/ayuda/#rendimiento";
 
 // "Learn more" URL for the preloading section in Performance settings.
-inline constexpr char kPreloadingLearnMoreUrl[] =
-    "https://flyweb.lamosquita.net/ayuda/#privacidad";
+inline constexpr char16_t kPreloadingLearnMoreUrl[] =
+    u"https://flyweb.lamosquita.net/ayuda/#privacidad";
 
 // "Learn more" URL for the Privacy section under Options.
 inline constexpr char kPrivacyLearnMoreURL[] =
     "https://flyweb.lamosquita.net/ayuda/#privacidad";
+
+// "Chrome Settings" URL for Ad Topics page
+inline constexpr char kPrivacySandboxAdTopicsURL[] = "";
+
+// "Chrome Settings" URL for Managing Topics page
+inline constexpr char kPrivacySandboxManageTopicsURL[] = "";
 
 // The URL for the Learn More link of the non-CWS bubble.
 inline constexpr char kRemoveNonCWSExtensionURL[] =
@@ -345,6 +430,10 @@ inline constexpr char kResetProfileSettingsLearnMoreURL[] =
 inline constexpr char kSafeBrowsingHelpCenterURL[] =
     "https://flyweb.lamosquita.net/ayuda/#seguridad";
 
+// "Learn more" URL for unsafe site warnings.
+inline constexpr char kUnsafeSiteWarningHelpCenterURL[] =
+    "https://flyweb.lamosquita.net/ayuda/";
+
 // Updated "Info icon" URL for Safebrowsing
 inline constexpr char kSafeBrowsingHelpCenterUpdatedURL[] =
     "https://flyweb.lamosquita.net/ayuda/#seguridad";
@@ -353,7 +442,7 @@ inline constexpr char kSafeBrowsingHelpCenterUpdatedURL[] =
 inline constexpr char16_t kSafeBrowsingInChromeHelpCenterURL[] =
     u"https://flyweb.lamosquita.net/ayuda/#seguridad";
 
-// The URL of Safe Browsing p-tour.
+// The URL for Safe Browsing link in Safety Check page.
 inline constexpr char16_t kSafeBrowsingUseInChromeURL[] =
     u"https://flyweb.lamosquita.net/ayuda/#seguridad";
 
@@ -382,6 +471,10 @@ inline constexpr char16_t kSettingsSearchHelpURL[] =
 // The URL for the Learn More page about Sync and Google services.
 inline constexpr char kSyncAndGoogleServicesLearnMoreURL[] =
     "https://flyweb.lamosquita.net/ayuda/sincronizar";
+#if BUILDFLAG(IS_CHROMEOS)
+static_assert(std::string_view(kSyncAndGoogleServicesLearnMoreURL) ==
+              ash::chrome_external_urls::kSyncAndGoogleServicesLearnMoreURL);
+#endif
 
 // The URL for the "Learn more" page on sync encryption.
 inline constexpr char16_t kSyncEncryptionHelpURL[] =
@@ -391,25 +484,71 @@ inline constexpr char16_t kSyncEncryptionHelpURL[] =
 inline constexpr char kSyncErrorsHelpURL[] =
     "https://flyweb.lamosquita.net/ayuda/sincronizar";
 
-inline constexpr char kSyncGoogleDashboardURL[] =
-    "https://flyweb.lamosquita.net/ayuda/sincronizar";
+// Legacy URL to the sync google dashboard.
+inline constexpr char kLegacySyncGoogleDashboardURL[] =
+    "https://flyweb.lamosquita.net/ayuda/";
+#if BUILDFLAG(IS_CHROMEOS)
+static_assert(std::string_view(kLegacySyncGoogleDashboardURL) ==
+              ash::chrome_external_urls::kLegacySyncGoogleDashboardURL);
+#endif
+
+// New URL to the sync google dashboard.
+inline constexpr char kNewSyncGoogleDashboardURL[] =
+    "https://flyweb.lamosquita.net/ayuda/";
+#if BUILDFLAG(IS_CHROMEOS)
+static_assert(std::string_view(kNewSyncGoogleDashboardURL) ==
+              ash::chrome_external_urls::kNewSyncGoogleDashboardURL);
+#endif
 
 // The URL for the "Learn more" page for sync setup on the personal stuff page.
 inline constexpr char16_t kSyncLearnMoreURL[] =
     u"https://flyweb.lamosquita.net/ayuda/sincronizar";
 
+// The URL for the "Learn more" page for signing in to chrome with expanded
+// section on "Sign in and turn on sync" in the Computer/Desktop tab.
+inline constexpr char kSigninOnDesktopLearnMoreURL[] =
+    "https://flyweb.lamosquita.net/ayuda/";
+
+// The URL for the "Learn more" page for adding a new profile to Chrome.
+inline constexpr char kAddNewProfileOnDesktopLearnMoreURL[] =
+    "https://flyweb.lamosquita.net/ayuda/";
+
+// The URL for the "Learn more" page for AI settings for managed users.
+inline constexpr char16_t kAiSettingsLearnMorePageManagedUrl[] =
+    u"https://flyweb.lamosquita.net/ayuda/";
+
 // The URL for the "Learn more" page for Help me Write.
 inline constexpr char kComposeLearnMorePageURL[] =
     "https://flyweb.lamosquita.net/ayuda/";
 
+// The URL for the "Learn more" page for Help me Write for managed users.
+inline constexpr char kComposeLearnMorePageManagedURL[] =
+    "https://flyweb.lamosquita.net/ayuda/";
+
 // The URL for the "Learn more" links for pages related to History search.
-// TODO(crbug.com/328300718): Update help article URL.
 inline constexpr char kHistorySearchLearnMorePageURL[] =
+    "https://flyweb.lamosquita.net/ayuda/";
+
+// The URL for the "Learn more" links for pages related to History search for
+// managed users.
+inline constexpr char kHistorySearchLearnMorePageManagedURL[] =
     "https://flyweb.lamosquita.net/ayuda/";
 
 // The URL for the Settings page to enable history search.
 inline constexpr char16_t kHistorySearchSettingURL[] =
     u"chrome://settings/historySearch";
+
+// The URL for the "Learn more" page for Wallpaper Search.
+inline constexpr char kWallpaperSearchLearnMorePageURL[] =
+    "https://flyweb.lamosquita.net/ayuda/";
+
+// The URL for the passed in Google Wallet.
+inline constexpr char kWalletPassesPageURL[] =
+    "https://flyweb.lamosquita.net/ayuda/";
+
+// The help center article URL on using Wallet private passes across Google.
+inline constexpr char kWalletPrivatePassHelpCenterURL[] =
+    "https://flyweb.lamosquita.net/ayuda/";
 
 // The URL for the "Learn more" link in the enterprise disclaimer for managed
 // profile in the Signin Intercept bubble.
@@ -426,10 +565,6 @@ inline constexpr char kSyncTrustedVaultOptInURL[] =
 inline constexpr char kSyncTrustedVaultLearnMoreURL[] =
     "https://flyweb.lamosquita.net/ayuda/sincronizar";
 
-// The URL for the Help Center page about Tracking Protection settings.
-inline constexpr char16_t kTrackingProtectionHelpCenterURL[] =
-    u"https://flyweb.lamosquita.net/ayuda/#privacidad";
-
 // The URL for the Help Center page about User Bypass.
 inline constexpr char16_t kUserBypassHelpCenterURL[] =
     u"https://flyweb.lamosquita.net/ayuda/#privacidad";
@@ -445,12 +580,44 @@ inline constexpr char16_t kWhoIsMyAdministratorHelpURL[] =
 inline constexpr char16_t kCwsEnhancedSafeBrowsingLearnMoreURL[] =
     u"https://flyweb.lamosquita.net/ayuda/#seguridad";
 
-#if BUILDFLAG(IS_ANDROID)
+// The URL path to Google's Privacy Policy page.
+inline constexpr char kPrivacyPolicyURL[] =
+    "https://flyweb.lamosquita.net/ayuda/";
+
+// The URL path to Google's Privacy Policy page for users in China.
+inline constexpr char kPrivacyPolicyURLChina[] =
+    "https://flyweb.lamosquita.net/ayuda/";
+
+// The URL path to Google's Embedded Privacy Policy page.
+inline constexpr char kPrivacyPolicyOnlineURLPath[] =
+    "https://flyweb.lamosquita.net/ayuda/";
+
+// The URL path to Google's Embedded Privacy Policy page for users in China.
+inline constexpr char kPrivacyPolicyEmbeddedURLPathChina[] =
+    "https://flyweb.lamosquita.net/ayuda/";
+
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_CHROMEOS)
 // "Learn more" URL for the enhanced playback notification dialog.
 inline constexpr char kEnhancedPlaybackNotificationLearnMoreURL[] =
-    // Keep in sync with chrome/android/java/strings/android_chrome_strings.grd
-    "https://community.brave.com";
+    "https://flyweb.lamosquita.net/ayuda/";
 #endif
+
+#if BUILDFLAG(IS_CHROMEOS)
+// Chrome OS default pre-defined custom handlers
+inline constexpr char kChromeOSDefaultMailtoHandler[] =
+    "https://mail.google.com/mail/?extsrc=mailto&amp;url=%s";
+inline constexpr char kChromeOSDefaultWebcalHandler[] =
+    "https://www.google.com/calendar/render?cid=%s";
+
+// The URL for the "Account recovery" page.
+inline constexpr char kAccountRecoveryURL[] =
+    "https://accounts.google.com/signin/recovery";
+
+// The URL for the Learn More page about enterprise enrolled devices.
+inline constexpr char kLearnMoreEnterpriseURL[] =
+    "https://flyweb.lamosquita.net/ayuda/";
+
+#endif  // BUILDFLAG(IS_CHROMEOS)
 
 #if BUILDFLAG(IS_MAC)
 // "Learn more" URL for the enterprise sign-in confirmation dialog.
@@ -470,15 +637,9 @@ inline constexpr char kWindowsXPVistaDeprecationURL[] =
 // The URL for the Windows 7/8.1 deprecation help center article.
 inline constexpr char kWindows78DeprecationURL[] =
     "https://flyweb.lamosquita.net/ayuda/";
-#endif  // BUILDFLAG(IS_WIN)
 
-// "Learn more" URL for the one click signin infobar.
-inline constexpr char kChromeSyncLearnMoreURL[] =
-    "https://flyweb.lamosquita.net/ayuda/sincronizar";
-
-#if BUILDFLAG(ENABLE_PLUGINS)
-// The URL for the "Learn more" page for the outdated plugin infobar.
-inline constexpr char kOutdatedPluginLearnMoreURL[] =
+// The URL for the "Learn more" page for process isolation.
+inline constexpr char kProcessIsolationLearnMoreUrl[] =
     "https://flyweb.lamosquita.net/ayuda/";
 #endif
 
@@ -489,11 +650,17 @@ inline constexpr char kChromeAppsDeprecationLearnMoreURL[] =
 #endif
 
 #if BUILDFLAG(CHROME_ROOT_STORE_SUPPORTED)
-// TODO(b/1339340): add help center link when help center link is created.
 inline constexpr char kChromeRootStoreSettingsHelpCenterURL[] =
-    "https://chromium.googlesource.com/chromium/src/+/main/net/data/ssl/"
-    "chrome_root_store/root_store.md";
+    "https://chromium.googlesource.com/chromium/src/+/main/net/data/ssl/chrome_root_store/root_store.md";
 #endif
+
+#if BUILDFLAG(ENABLE_PDF_SAVE_TO_DRIVE)
+// "Learn more" URL for how to save PDF to Google Drive from the PDF viewer.
+inline constexpr char kPdfViewerSaveToDriveHelpCenterURL[] =
+    "https://flyweb.lamosquita.net/ayuda/";
+#endif
+
+// Please do not append entries here. See the comments at the top of the file.
 
 }  // namespace chrome
 
