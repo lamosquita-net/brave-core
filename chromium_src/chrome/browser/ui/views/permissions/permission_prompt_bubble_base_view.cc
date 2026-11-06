@@ -7,6 +7,8 @@
 
 #include <vector>
 
+#include "base/check.h"
+#include "base/check_op.h"
 #include "base/feature_list.h"
 #include "base/memory/raw_ptr.h"
 #include "base/memory/raw_ref.h"
@@ -16,12 +18,10 @@
 #include "brave/browser/ui/views/infobars/custom_styled_label.h"
 #include "brave/components/constants/url_constants.h"
 #include "brave/components/constants/webui_url_constants.h"
-#include "brave/components/l10n/common/localization_util.h"
 #include "brave/components/permissions/permission_lifetime_utils.h"
 #include "brave/components/permissions/permission_widevine_utils.h"
 #include "brave/components/vector_icons/vector_icons.h"
 #include "brave/grit/brave_generated_resources.h"
-#include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_tabstrip.h"
 #include "chrome/browser/ui/chrome_pages.h"
 #include "chrome/browser/ui/views/chrome_layout_provider.h"
@@ -39,6 +39,7 @@
 #include "ui/base/metadata/metadata_impl_macros.h"
 #include "ui/base/models/combobox_model.h"
 #include "ui/base/models/image_model.h"
+#include "ui/base/ui_base_types.h"
 #include "ui/gfx/text_constants.h"
 #include "ui/views/bubble/bubble_dialog_delegate_view.h"
 #include "ui/views/controls/button/checkbox.h"
@@ -48,7 +49,7 @@
 #include "ui/views/controls/styled_label.h"
 #include "ui/views/layout/box_layout.h"
 #include "ui/views/style/typography.h"
-#include "ui/views/window/dialog_client_view.h"
+#include "ui/views/widget/widget.h"
 #include "ui/views/window/dialog_delegate.h"
 
 #if BUILDFLAG(ENABLE_WIDEVINE)
@@ -81,17 +82,17 @@ class DontAskAgainCheckbox : public views::Checkbox {
  private:
   void ButtonPressed();
 
-  raw_ptr<WidevinePermissionRequest> request_ = nullptr;
+  raw_ptr<WidevinePermissionRequest, DanglingUntriaged> request_ = nullptr;
 };
 
 BEGIN_METADATA(DontAskAgainCheckbox)
 END_METADATA
 
 DontAskAgainCheckbox::DontAskAgainCheckbox(WidevinePermissionRequest* request)
-    : views::Checkbox(brave_l10n::GetLocalizedResourceUTF16String(
-                          IDS_WIDEVINE_DONT_ASK_AGAIN_CHECKBOX),
-                      base::BindRepeating(&DontAskAgainCheckbox::ButtonPressed,
-                                          base::Unretained(this))),
+    : views::Checkbox(
+          l10n_util::GetStringUTF16(IDS_WIDEVINE_DONT_ASK_AGAIN_CHECKBOX),
+          base::BindRepeating(&DontAskAgainCheckbox::ButtonPressed,
+                              base::Unretained(this))),
       request_(request) {}
 
 void DontAskAgainCheckbox::ButtonPressed() {
@@ -100,13 +101,14 @@ void DontAskAgainCheckbox::ButtonPressed() {
 
 void AddAdditionalWidevineViewControlsIfNeeded(
     views::BubbleDialogDelegateView* dialog_delegate_view,
-    const std::vector<raw_ptr<permissions::PermissionRequest,
-                              VectorExperimental>>& requests) {
+    const std::vector<std::unique_ptr<permissions::PermissionRequest>>&
+        requests) {
   if (!HasWidevinePermissionRequest(requests)) {
     return;
   }
 
-  auto* widevine_request = static_cast<WidevinePermissionRequest*>(requests[0]);
+  auto* widevine_request =
+      static_cast<WidevinePermissionRequest*>(requests[0].get());
   views::Label* text = new views::Label(
       widevine_request->GetExplanatoryMessageText(),
       views::style::CONTEXT_LABEL, views::style::STYLE_SECONDARY);
@@ -126,13 +128,12 @@ void AddAdditionalWidevineViewControlsIfNeeded(
 
 void AddWidevineFootnoteView(
     views::BubbleDialogDelegateView* dialog_delegate_view,
-    Browser* browser) {
-  const std::u16string footnote = brave_l10n::GetLocalizedResourceUTF16String(
-      IDS_WIDEVINE_PERMISSIONS_BUBBLE_FOOTNOTE_TEXT);
+    BrowserWindowInterface* browser) {
+  const std::u16string footnote =
+      l10n_util::GetStringUTF16(IDS_WIDEVINE_PERMISSIONS_BUBBLE_FOOTNOTE_TEXT);
   const std::vector<std::u16string> replacements{
-      brave_l10n::GetLocalizedResourceUTF16String(
-          IDS_WIDEVINE_PERMISSIONS_BUBBLE_LEARN_MORE),
-      brave_l10n::GetLocalizedResourceUTF16String(
+      l10n_util::GetStringUTF16(IDS_WIDEVINE_PERMISSIONS_BUBBLE_LEARN_MORE),
+      l10n_util::GetStringUTF16(
           IDS_PERMISSIONS_BUBBLE_SETTINGS_EXTENSIONS_LINK)};
   const std::vector<GURL> urls{GURL(kWidevineLearnMoreUrl),
                                GURL(kExtensionSettingsURL)};
@@ -144,8 +145,8 @@ void AddWidevineFootnoteView(
 #else
 void AddAdditionalWidevineViewControlsIfNeeded(
     views::BubbleDialogDelegateView* dialog_delegate_view,
-    const std::vector<raw_ptr<permissions::PermissionRequest,
-                              VectorExperimental>>& requests) {}
+    const std::vector<std::unique_ptr<permissions::PermissionRequest>>&
+        requests) {}
 #endif
 
 // Custom combobox, shows permission lifetime options and applies selected value
@@ -155,16 +156,14 @@ class PermissionLifetimeCombobox : public views::Combobox,
   METADATA_HEADER(PermissionLifetimeCombobox, views::Combobox)
  public:
   explicit PermissionLifetimeCombobox(
-      views::BubbleDialogDelegateView& dialog_delegate_view,
       permissions::PermissionPrompt::Delegate& delegate)
-      : dialog_delegate_view_(dialog_delegate_view),
-        delegate_(delegate),
+      : delegate_(delegate),
         lifetime_options_(permissions::CreatePermissionLifetimeOptions()) {
     SetCallback(base::BindRepeating(&PermissionLifetimeCombobox::OnItemSelected,
                                     base::Unretained(this)));
     SetModel(this);
     OnItemSelected();
-    SetAccessibleName(brave_l10n::GetLocalizedResourceUTF16String(
+    SetAccessibleName(l10n_util::GetStringUTF16(
         IDS_PERMISSIONS_BUBBLE_LIFETIME_COMBOBOX_LABEL));
   }
 
@@ -183,15 +182,10 @@ class PermissionLifetimeCombobox : public views::Combobox,
   void OnItemSelected() {
     SetRequestsLifetime(lifetime_options_, GetSelectedIndex().value(),
                         &*delegate_);
-    // Workaround an upstream issue when a ComboBox close prevents any
-    // interaction with the Permission bubble for 500ms.
-    if (auto* dialog = dialog_delegate_view_->GetDialogClientView()) {
-      dialog->IgnoreNextWindowStationaryStateChanged();
-    }
   }
 
-  const raw_ref<views::BubbleDialogDelegateView> dialog_delegate_view_;
-  const raw_ref<permissions::PermissionPrompt::Delegate> delegate_;
+  const raw_ref<permissions::PermissionPrompt::Delegate, DanglingUntriaged>
+      delegate_;
   std::vector<permissions::PermissionLifetimeOption> lifetime_options_;
 };
 
@@ -199,7 +193,7 @@ BEGIN_METADATA(PermissionLifetimeCombobox)
 END_METADATA
 
 std::unique_ptr<views::View> CreateGeolocationDescLabel(
-    Browser* browser,
+    BrowserWindowInterface* browser,
     bool enable_high_accuracy,
     bool location_service_is_on) {
   // The text shown in dialog is different depending on if person has location
@@ -246,7 +240,7 @@ std::unique_ptr<views::View> CreateGeolocationDescLabel(
   // that |browser| and bubble is destroyed earlier than browser.
   views::StyledLabel::RangeStyleInfo learn_more_style =
       views::StyledLabel::RangeStyleInfo::CreateForLink(base::BindRepeating(
-          [](Browser* browser) {
+          [](BrowserWindowInterface* browser) {
             chrome::AddSelectedTabWithURL(
                 browser, GURL(kGeolocationPermissionLearnMoreURL),
                 ui::PAGE_TRANSITION_AUTO_TOPLEVEL);
@@ -278,7 +272,7 @@ std::unique_ptr<views::View> CreateGeolocationDescIcon(
 
 void AddGeolocationDescription(
     views::BubbleDialogDelegateView* dialog_delegate_view,
-    Browser* browser,
+    BrowserWindowInterface* browser,
     bool enable_high_accuracy,
     bool location_service_is_on) {
   auto container = std::make_unique<views::View>();
@@ -300,7 +294,7 @@ void AddGeolocationDescription(
 void AddGeolocationDescriptionIfNeeded(
     PermissionPromptBubbleBaseView* bubble_base_view,
     permissions::PermissionPrompt::Delegate* delegate,
-    Browser* browser) {
+    BrowserWindowInterface* browser) {
   if (!geolocation::CanGiveDetailedGeolocationRequestInfo()) {
     return;
   }
@@ -310,7 +304,7 @@ void AddGeolocationDescriptionIfNeeded(
     return;
   }
 
-  auto requests = delegate->Requests();
+  const auto& requests = delegate->Requests();
 
   // Geolocation permission is not grouped with others.
   if (requests.empty() ||
@@ -329,8 +323,8 @@ void AddGeolocationDescriptionIfNeeded(
 
   geolocation::IsSystemLocationSettingEnabled(base::BindOnce(
       [](base::WeakPtr<views::WidgetDelegate> widget_delegate,
-         base::WeakPtr<Browser> browser, bool enable_high_accuracy,
-         bool settings_enabled) {
+         base::WeakPtr<BrowserWindowInterface> browser,
+         bool enable_high_accuracy, bool settings_enabled) {
         // Browser or Bubble is already gone.
         if (!browser || !widget_delegate) {
           return;
@@ -345,7 +339,7 @@ void AddGeolocationDescriptionIfNeeded(
         // To update widget layout after adding another child view.
         bubble_base_view->UpdateAnchorPosition();
       },
-      bubble_base_view->AsWeakPtr(), browser->AsWeakPtr(),
+      bubble_base_view->GetWeakPtr(), browser->GetWeakPtr(),
       enable_high_accuracy));
 }
 
@@ -365,8 +359,7 @@ views::View* AddPermissionLifetimeComboboxIfNeeded(
 
   // Add the label.
   auto label = std::make_unique<views::Label>(
-      brave_l10n::GetLocalizedResourceUTF16String(
-          IDS_PERMISSIONS_BUBBLE_LIFETIME_COMBOBOX_LABEL),
+      l10n_util::GetStringUTF16(IDS_PERMISSIONS_BUBBLE_LIFETIME_COMBOBOX_LABEL),
       views::style::CONTEXT_LABEL, views::style::STYLE_SECONDARY);
   label->SetMultiLine(true);
   label->SetHorizontalAlignment(gfx::ALIGN_LEFT);
@@ -374,9 +367,8 @@ views::View* AddPermissionLifetimeComboboxIfNeeded(
 
   // Add the combobox.
   DCHECK(delegate);
-  auto* combobox =
-      container->AddChildView(std::make_unique<PermissionLifetimeCombobox>(
-          *dialog_delegate_view, *delegate));
+  auto* combobox = container->AddChildView(
+      std::make_unique<PermissionLifetimeCombobox>(*delegate));
   static_cast<views::BoxLayout*>(container->GetLayoutManager())
       ->SetFlexForView(combobox, 1);
 
@@ -386,9 +378,9 @@ views::View* AddPermissionLifetimeComboboxIfNeeded(
 
 void AddFootnoteViewIfNeeded(
     views::BubbleDialogDelegateView* dialog_delegate_view,
-    const std::vector<
-        raw_ptr<permissions::PermissionRequest, VectorExperimental>>& requests,
-    Browser* browser) {
+    const std::vector<std::unique_ptr<permissions::PermissionRequest>>&
+        requests,
+    BrowserWindowInterface* browser) {
 #if BUILDFLAG(ENABLE_WIDEVINE)
   // Widevine permission bubble has custom footnote.
   if (HasWidevinePermissionRequest(requests)) {
@@ -402,12 +394,11 @@ void AddFootnoteViewIfNeeded(
     return;
   }
 
-  const std::u16string footnote = brave_l10n::GetLocalizedResourceUTF16String(
-      IDS_PERMISSIONS_BUBBLE_FOOTNOTE_TEXT);
+  const std::u16string footnote =
+      l10n_util::GetStringUTF16(IDS_PERMISSIONS_BUBBLE_FOOTNOTE_TEXT);
   const std::vector<std::u16string> replacements{
-      brave_l10n::GetLocalizedResourceUTF16String(
-          IDS_PERMISSIONS_BUBBLE_SITE_PERMISSION_LINK),
-      brave_l10n::GetLocalizedResourceUTF16String(IDS_LEARN_MORE)};
+      l10n_util::GetStringUTF16(IDS_PERMISSIONS_BUBBLE_SITE_PERMISSION_LINK),
+      l10n_util::GetStringUTF16(IDS_LEARN_MORE)};
   const std::vector<GURL> urls{
       chrome::GetSettingsUrl(chrome::kContentSettingsSubPage),
       GURL(kPermissionPromptLearnMoreUrl)};
@@ -419,19 +410,74 @@ void AddFootnoteViewIfNeeded(
 
 }  // namespace
 
-#define BRAVE_PERMISSION_PROMPT_BUBBLE_BASE_VIEW                          \
-  AddAdditionalWidevineViewControlsIfNeeded(this, delegate_->Requests()); \
-  auto* permission_lifetime_view =                                        \
-      AddPermissionLifetimeComboboxIfNeeded(this, delegate_.get());       \
-  AddFootnoteViewIfNeeded(this, delegate_->Requests(), browser());        \
-  if (permission_lifetime_view) {                                         \
-    set_fixed_width(                                                      \
-        std::max(GetPreferredSize().width(),                              \
-                 permission_lifetime_view->GetPreferredSize().width()) +  \
-        margins().width());                                               \
-    set_should_ignore_snapping(true);                                     \
-  }                                                                       \
-  AddGeolocationDescriptionIfNeeded(this, delegate_.get(), browser());
+// PermissionPromptBubbleZOrderManager implementation
+// ------------------------------------------------------------
+
+PermissionPromptBubbleZOrderManager::PermissionPromptBubbleZOrderManager(
+    PermissionPromptBubbleBaseView& permission_prompt_bubble)
+    : permission_prompt_bubble_(permission_prompt_bubble) {
+  auto* widget = permission_prompt_bubble_->GetWidget();
+  CHECK(widget);
+  prompt_widget_observation_.Observe(widget);
+
+  if (widget->IsActive()) {
+    ElevateZOrder();
+  }
+}
+
+PermissionPromptBubbleZOrderManager::~PermissionPromptBubbleZOrderManager() =
+    default;
+
+void PermissionPromptBubbleZOrderManager::OnWidgetDestroying(
+    views::Widget* widget) {
+  CHECK_EQ(widget, permission_prompt_bubble_->GetWidget());
+  RestoreZOrder();
+  prompt_widget_observation_.Reset();
+}
+
+void PermissionPromptBubbleZOrderManager::OnWidgetActivationChanged(
+    views::Widget* widget,
+    bool active) {
+  CHECK_EQ(widget, permission_prompt_bubble_->GetWidget());
+  if (active) {
+    ElevateZOrder();
+  } else {
+    RestoreZOrder();
+  }
+}
+
+void PermissionPromptBubbleZOrderManager::ElevateZOrder() {
+  if (z_order_elevated_) {
+    return;
+  }
+
+  auto* widget = permission_prompt_bubble_->GetWidget();
+  CHECK(widget);
+  auto* parent_widget = widget->parent();
+  CHECK(parent_widget);
+  z_order_elevated_ = false;
+
+  // Store current z-order level to restore later.
+  widget_z_order_level_ = widget->GetZOrderLevel();
+  parent_widget_z_order_level_ = parent_widget->GetZOrderLevel();
+
+  parent_widget->SetZOrderLevel(ui::ZOrderLevel::kSecuritySurface);
+  widget->SetZOrderLevel(ui::ZOrderLevel::kSecuritySurface);
+  z_order_elevated_ = true;
+}
+
+void PermissionPromptBubbleZOrderManager::RestoreZOrder() {
+  if (!z_order_elevated_) {
+    return;
+  }
+  auto* widget = permission_prompt_bubble_->GetWidget();
+  CHECK(widget);
+  auto* parent_widget = widget->parent();
+  CHECK(parent_widget);
+
+  parent_widget->SetZOrderLevel(parent_widget_z_order_level_);
+  widget->SetZOrderLevel(widget_z_order_level_);
+  z_order_elevated_ = false;
+}
 
 #include "src/chrome/browser/ui/views/permissions/permission_prompt_bubble_base_view.cc"
-#undef BRAVE_PERMISSION_PROMPT_BUBBLE_BASE_VIEW
