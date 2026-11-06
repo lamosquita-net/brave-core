@@ -11,7 +11,6 @@
 #include "brave/browser/flyweb/pruned_feature_prefs.h"
 #include "brave/browser/metrics/buildflags/buildflags.h"
 #include "brave/browser/metrics/metrics_reporting_util.h"
-#include "brave/browser/search_engines/search_engine_tracker.h"
 #include "brave/browser/themes/brave_dark_mode_utils.h"
 #include "brave/components/brave_shields/content/browser/ad_block_service.h"
 #include "brave/components/brave_shields/content/browser/brave_shields_p3a.h"

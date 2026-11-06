@@ -14,7 +14,6 @@
 #include "brave/browser/themes/brave_dark_mode_utils.h"
 #include "brave/browser/translate/brave_translate_prefs_migration.h"
 #include "brave/browser/ui/bookmark/brave_bookmark_prefs.h"
-#include "brave/browser/ui/omnibox/brave_omnibox_client_impl.h"
 #include "brave/components/brave_perf_predictor/browser/perf_predictor_tab_helper.h"
 #include "brave/components/brave_search/browser/brave_search_default_host.h"
 #include "brave/components/brave_search/common/brave_search_utils.h"
@@ -336,8 +335,6 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
   debounce::DebounceService::RegisterProfilePrefs(registry);
 
 #if !BUILDFLAG(IS_ANDROID)
-  BraveOmniboxClientImpl::RegisterProfilePrefs(registry);
-
   // Turn on most visited mode on NTP by default.
   // We can turn customization mode on when we have add-shortcut feature.
   registry->SetDefaultPrefValue(ntp_prefs::kNtpCustomLinksVisible,

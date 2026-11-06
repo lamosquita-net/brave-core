@@ -13,7 +13,6 @@
 #include "brave/browser/permissions/permission_lifetime_manager_factory.h"
 #include "brave/browser/profiles/brave_renderer_updater_factory.h"
 #include "brave/browser/search_engines/search_engine_provider_service_factory.h"
-#include "brave/browser/search_engines/search_engine_tracker.h"
 #include "brave/browser/sync/brave_sync_alerts_service_factory.h"
 #include "brave/browser/url_sanitizer/url_sanitizer_service_factory.h"
 #include "brave/components/brave_perf_predictor/browser/named_third_party_registry_factory.h"
@@ -41,7 +40,6 @@ void EnsureBrowserContextKeyedServiceFactoriesBuilt() {
   brave::URLSanitizerServiceFactory::GetInstance();
   BraveRendererUpdaterFactory::GetInstance();
   SearchEngineProviderServiceFactory::GetInstance();
-  SearchEngineTrackerFactory::GetInstance();
   ntp_background_images::ViewCounterServiceFactory::GetInstance();
 
 #if BUILDFLAG(IS_ANDROID)

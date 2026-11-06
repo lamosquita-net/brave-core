@@ -129,6 +129,16 @@ constexpr char kBraveRewardsHideButton[] = "brave.hide_brave_rewards_button";
 // The NTP search box keeps its own "brave.brave_search" prefs.
 constexpr char kBraveSearchConversion[] = "brave.brave_search_conversion";
 
+// P3A counters whose metrics are gone (removed 2026-11): the omnibox weekly
+// search count, the default search engine switches, Request-OTR's
+// interstitial and session counts (all under "brave.request_otr.p3a") and
+// the perf predictor's daily bandwidth savings.
+constexpr char kOmniboxSearchCountP3A[] = "brave.weekly_storage.search_count";
+constexpr char kSearchEngineSwitchP3A[] = "brave.search.p3a_default_switch";
+constexpr char kRequestOTRP3A[] = "brave.request_otr.p3a";
+constexpr char kPerfPredictorBandwidthSavedP3A[] =
+    "brave.stats.daily_saving_predictions_bytes";
+
 constexpr const char* kProfilePrefs[] = {
     kPlaylistEnabled,
     kPlaylists,
@@ -177,6 +187,10 @@ constexpr const char* kProfilePrefs[] = {
     kBraveRewardsShowButton,
     kBraveRewardsHideButton,
     kBraveSearchConversion,
+    kOmniboxSearchCountP3A,
+    kSearchEngineSwitchP3A,
+    kRequestOTRP3A,
+    kPerfPredictorBandwidthSavedP3A,
 };
 
 constexpr const char* kLocalStatePrefs[] = {
@@ -266,6 +280,12 @@ void RegisterPrunedFeatureProfilePrefs(
 
   // Brave Search conversion promotion
   registry->RegisterDictionaryPref(kBraveSearchConversion);
+
+  // Orphaned P3A counters
+  registry->RegisterListPref(kOmniboxSearchCountP3A);
+  registry->RegisterListPref(kSearchEngineSwitchP3A);
+  registry->RegisterDictionaryPref(kRequestOTRP3A);
+  registry->RegisterListPref(kPerfPredictorBandwidthSavedP3A);
 }
 
 void ClearPrunedFeatureProfilePrefs(PrefService* profile_prefs) {
