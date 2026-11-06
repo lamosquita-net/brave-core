@@ -163,7 +163,8 @@ gfx::Size BraveLocationBarView::CalculatePreferredSize(
   if (brave_actions_ && brave_actions_->GetVisible()) {
     const int brave_actions_min = brave_actions_->GetMinimumSize().width();
     const int extra_width =
-        brave_actions_min + GetLayoutConstant(LOCATION_BAR_ELEMENT_PADDING);
+        brave_actions_min +
+        GetLayoutConstant(LayoutConstant::kLocationBarElementPadding);
     min_size.Enlarge(extra_width, 0);
   }
 

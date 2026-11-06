@@ -145,7 +145,7 @@ BraveShieldsActionView::GetImageSource() {
   std::unique_ptr<IconWithBadgeImageSource> image_source(
       new brave::BraveIconWithBadgeImageSource(
           preferred_size, std::move(get_color_provider_callback),
-          GetLayoutConstant(LOCATION_BAR_TRAILING_ICON_SIZE),
+          GetLayoutConstant(LayoutConstant::kLocationBarTrailingIconSize),
           kBraveActionLeftMarginExtra));
   std::unique_ptr<IconWithBadgeImageSource::Badge> badge;
   bool is_enabled = false;
