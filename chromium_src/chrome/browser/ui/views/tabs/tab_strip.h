@@ -18,24 +18,9 @@ class BraveTabHoverCardController;
   friend class BraveTabStrip;     \
   void UpdateHoverCard
 
-#define GetDragContext                                                  \
-  Unused_GetDragContext() {                                             \
-    return nullptr;                                                     \
-  }                                                                     \
-  friend class BraveTabStrip;                                           \
-  friend class BraveTabDragContext;                                     \
-  static constexpr bool IsUsingBraveTabHoverCardController() {          \
-    return std::is_same_v<std::unique_ptr<BraveTabHoverCardController>, \
-                          decltype(TabStrip::hover_card_controller_)>;  \
-  }                                                                     \
-  virtual TabDragContext* GetDragContext
 #define TabHoverCardController BraveTabHoverCardController
 #include "src/chrome/browser/ui/views/tabs/tab_strip.h"  // IWYU pragma: export
 #undef TabHoverCardController
-#undef GetDragContext
 #undef UpdateHoverCard
-
-static_assert(TabStrip::IsUsingBraveTabHoverCardController(),
-              "Should use BraveTabHoverCardController");
 
 #endif  // BRAVE_CHROMIUM_SRC_CHROME_BROWSER_UI_VIEWS_TABS_TAB_STRIP_H_

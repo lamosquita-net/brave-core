@@ -26,21 +26,8 @@
 #define TabContainerImpl BraveTabContainer
 #define TabHoverCardController BraveTabHoverCardController
 
-// Macros for TabDragContextImpl. TabDragContextImpl is in anonymous namespace
-// and it's used in the tab_strip.cc file at the same time. Because of this,
-// the class is really hard to be extended with inheritance, so using patch file
-// seems to be the most efficient way for now. If we could split this into
-// another file or child class, that'd be great.
-#define BRAVE_TAB_DRAG_CONTEXT_IMPL_PAINT_CHILDREN                      \
-  for (const ZOrderableTabContainerElement& child : orderable_children) \
-    if (!child.view()->layer()) {                                       \
-      child.view()->Paint(paint_info);                                  \
-    }                                                                   \
-  return;
-
 #include "src/chrome/browser/ui/views/tabs/tab_strip.cc"
 
-#undef BRAVE_TAB_DRAG_CONTEXT_IMPL_PAINT_CHILDREN
 #undef TabHoverCardController
 #undef TabContainerImpl
 #undef param

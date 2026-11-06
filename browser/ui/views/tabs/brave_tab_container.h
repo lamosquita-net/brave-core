@@ -13,15 +13,13 @@ class BraveTabContainer : public TabContainerImpl {
  public:
   BraveTabContainer(TabContainerController& controller,
                     TabHoverCardController* hover_card_controller,
-                    TabDragContextBase* drag_context,
-                    TabSlotController& tab_slot_controller,
-                    views::View* scroll_contents_view);
+                    TabDragPositioningDelegateBase* drag_position_delegate,
+                    TabSlotController& tab_slot_controller);
   ~BraveTabContainer() override;
 
   // TabContainerImpl:
   void OnTabCloseAnimationCompleted(Tab* tab) override;
   void CompleteAnimationAndLayout() override;
-  void PaintChildren(const views::PaintInfo& paint_info) override;
   void SetTabSlotVisibility() override;
 };
 
