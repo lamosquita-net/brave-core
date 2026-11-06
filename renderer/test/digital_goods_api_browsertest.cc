@@ -6,7 +6,6 @@
 #include "base/path_service.h"
 #include "brave/components/constants/brave_paths.h"
 #include "build/build_config.h"
-#include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/test/base/in_process_browser_test.h"
 #include "chrome/test/base/ui_test_utils.h"
@@ -75,16 +74,14 @@ IN_PROC_BROWSER_TEST_P(DigitalGoodsAPIBrowserTest, DISABLED_DigitalGoods) {
   auto result =
       content::EvalJs(primary_main_frame(), "window.getDigitalGoodsService()");
   if (IsDigitalGoodsAPIEnabled()) {
-    EXPECT_TRUE(result.error.find(
+    EXPECT_THAT(result,
+                content::EvalJsResult::ErrorIs(testing::HasSubstr(
                     "Failed to execute 'getDigitalGoodsService' on "
-                    "'Window': 1 argument required, but only 0 present.") !=
-                std::string::npos)
-        << result.error;
+                    "'Window': 1 argument required, but only 0 present.")));
   } else {
-    EXPECT_TRUE(
-        result.error.find("window.getDigitalGoodsService is not a function") !=
-        std::string::npos)
-        << result.error;
+    EXPECT_THAT(result,
+                content::EvalJsResult::ErrorIs(testing::HasSubstr(
+                    "window.getDigitalGoodsService is not a function")));
   }
 }
 

@@ -15,7 +15,6 @@
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/profiles/profile_manager.h"
 #include "chrome/browser/profiles/profile_test_util.h"
-#include "chrome/browser/ui/browser.h"
 #include "chrome/test/base/in_process_browser_test.h"
 #include "chrome/test/base/testing_browser_process.h"
 #include "chrome/test/base/ui_test_utils.h"
@@ -42,19 +41,19 @@ using net::test_server::EmbeddedTestServer;
 
 namespace {
 
-const char kAccountsGoogleUrl[] = "https://accounts.google.com";
-const char kEmbeddingPageUrl[] = "/google_sign_in_link.html";
-const char kTestDomain[] = "a.com";
-const char kThirdPartyTestDomain[] = "b.com";
+constexpr char kAccountsGoogleUrl[] = "https://accounts.google.com";
+constexpr char kEmbeddingPageUrl[] = "/google_sign_in_link.html";
+constexpr char kTestDomain[] = "a.com";
+constexpr char kThirdPartyTestDomain[] = "b.com";
 
 // Used to identify the buttons on the test page.
-const char kGoogleAuthButtonHtmlId[] = "auth-button-google";
-const char kFirebaseAuthButtonHtmlId[] = "auth-button-firebase";
-const char kGoogleAuthButtonWithoutParamHtmlId[] =
+constexpr char kGoogleAuthButtonHtmlId[] = "auth-button-google";
+constexpr char kFirebaseAuthButtonHtmlId[] = "auth-button-firebase";
+constexpr char kGoogleAuthButtonWithoutParamHtmlId[] =
     "auth-button-google-without-param";
-const char kFirebaseAuthButtonDiffParamHtmlId[] =
+constexpr char kFirebaseAuthButtonDiffParamHtmlId[] =
     "auth-button-firebase-diff-param";
-const char kGoogleAuthButtonPopupHtmlId[] = "auth-button-google-popup";
+constexpr char kGoogleAuthButtonPopupHtmlId[] = "auth-button-google-popup";
 
 }  // namespace
 
@@ -103,7 +102,8 @@ class GoogleSignInBrowserTest : public InProcessBrowserTest {
   }
 
   HostContentSettingsMap* content_settings() {
-    return HostContentSettingsMapFactory::GetForProfile(browser()->GetProfile());
+    return HostContentSettingsMapFactory::GetForProfile(
+        browser()->GetProfile());
   }
 
   permissions::PermissionRequestManager* GetPermissionRequestManager() {
@@ -133,9 +133,11 @@ class GoogleSignInBrowserTest : public InProcessBrowserTest {
     return prompt_factory_.get();
   }
 
-  Browser* browser() { return current_browser_; }
+  BrowserWindowInterface* browser() { return current_browser_; }
 
-  void SetBrowser(Browser* browser) { current_browser_ = browser; }
+  void SetBrowser(BrowserWindowInterface* browser) {
+    current_browser_ = browser;
+  }
 
   void SetPromptFactory(permissions::PermissionRequestManager* manager) {
     prompt_factory_ =
@@ -192,7 +194,7 @@ class GoogleSignInBrowserTest : public InProcessBrowserTest {
 
   void SetGoogleSignInPref(bool value) {
     browser()->GetProfile()->GetPrefs()->SetBoolean(kGoogleLoginControlType,
-                                                 value);
+                                                    value);
   }
 
   void ClickButtonWithId(const std::string& id) {
@@ -335,7 +337,7 @@ class GoogleSignInBrowserTest : public InProcessBrowserTest {
   content::ContentMockCertVerifier mock_cert_verifier_;
   std::unique_ptr<net::EmbeddedTestServer> https_server_;
   base::test::ScopedFeatureList feature_list_;
-  raw_ptr<Browser> current_browser_;
+  raw_ptr<BrowserWindowInterface, DanglingUntriaged> current_browser_;
 
  private:
   std::unique_ptr<permissions::MockPermissionPromptFactory> prompt_factory_;
@@ -458,7 +460,7 @@ IN_PROC_BROWSER_TEST_F(GoogleSignInBrowserTest,
 
 IN_PROC_BROWSER_TEST_F(GoogleSignInBrowserTest, IncognitoModeDoesNotLeak) {
   // Permission set in Incognito does not leak back to normal mode.
-  Browser* original_browser = browser();
+  BrowserWindowInterface* original_browser = browser();
   BrowserWindowInterface* incognito_browser = CreateIncognitoBrowser();
   SetBrowser(incognito_browser);
   SetPromptFactory(GetPermissionRequestManager());

@@ -3,12 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "base/check.h"
 #include "base/path_service.h"
 #include "brave/components/brave_shields/core/common/brave_shield_constants.h"
 #include "brave/components/constants/brave_paths.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_commands.h"
 #include "chrome/common/chrome_paths.h"
 #include "chrome/test/base/in_process_browser_test.h"
@@ -20,6 +20,7 @@
 #include "content/public/test/browser_test.h"
 #include "content/public/test/browser_test_utils.h"
 #include "net/dns/mock_host_resolver.h"
+#include "net/http/http_response_headers.h"
 
 using content::NavigationHandle;
 using content::WebContents;
@@ -73,7 +74,8 @@ class BraveNetworkDelegateBaseBrowserTest : public InProcessBrowserTest {
   }
 
   HostContentSettingsMap* content_settings() {
-    return HostContentSettingsMapFactory::GetForProfile(browser()->GetProfile());
+    return HostContentSettingsMapFactory::GetForProfile(
+        browser()->GetProfile());
   }
 
  private:

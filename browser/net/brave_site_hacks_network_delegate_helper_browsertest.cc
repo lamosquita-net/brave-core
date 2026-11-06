@@ -13,11 +13,11 @@
 #include "brave/components/constants/brave_paths.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+#include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/test/base/in_process_browser_test.h"
 #include "chrome/test/base/ui_test_utils.h"
 #include "components/content_settings/core/browser/host_content_settings_map.h"
-#include "content/public/browser/notification_service.h"
 #include "content/public/test/browser_test.h"
 #include "content/public/test/browser_test_utils.h"
 #include "content/public/test/content_mock_cert_verifier.h"
@@ -197,11 +197,11 @@ class BraveSiteHacksNetworkDelegateBrowserTest : public InProcessBrowserTest {
     return last_origin_[internal_url];
   }
 
-  content::WebContents* contents(Browser* browser) {
+  content::WebContents* contents(BrowserWindowInterface* browser) {
     return browser->tab_strip_model()->GetActiveWebContents();
   }
 
-  void NavigateToURLAndWaitForRedirects(Browser* browser,
+  void NavigateToURLAndWaitForRedirects(BrowserWindowInterface* browser,
                                         const GURL& original_url,
                                         const GURL& landing_url) {
     ui_test_utils::UrlLoadObserver load_complete(landing_url);

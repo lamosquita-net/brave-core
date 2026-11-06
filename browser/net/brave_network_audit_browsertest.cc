@@ -20,13 +20,15 @@
 #include "base/time/time.h"
 #include "brave/browser/net/brave_network_audit_allowed_lists.h"
 #include "brave/browser/ui/brave_browser.h"
-#include "chrome/browser/password_manager/profile_password_store_factory.h"
+#include "chrome/browser/password_manager/factories/profile_password_store_factory.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
 #include "chrome/test/base/in_process_browser_test.h"
 #include "chrome/test/base/ui_test_utils.h"
+#include "components/password_manager/core/browser/password_store/password_form_converters.h"
+#include "components/password_manager/core/browser/password_string.h"
 #include "components/prefs/pref_service.h"
 #include "content/public/test/browser_test.h"
+#include "net/base/switches.h"
 #include "services/network/public/cpp/network_switches.h"
 #include "testing/gmock/include/gmock/gmock.h"
 #include "third_party/re2/src/re2/re2.h"
@@ -194,8 +196,7 @@ class BraveNetworkAuditTest : public InProcessBrowserTest {
     audit_results_path_ =
         source_root_path.AppendASCII("network_audit_results.json");
 
-    command_line->AppendSwitchPath(network::switches::kLogNetLog,
-                                   net_log_path_);
+    command_line->AppendSwitchPath(net::switches::kLogNetLog, net_log_path_);
     command_line->AppendSwitchASCII(network::switches::kNetLogCaptureMode,
                                     "Everything");
   }
@@ -264,8 +265,8 @@ IN_PROC_BROWSER_TEST_F(BraveNetworkAuditTest, BasicTests) {
   signin_form.url = GURL("https://www.facebook.com/");
   signin_form.action = GURL("https://www.facebook.com/");
   signin_form.username_value = u"john";
-  signin_form.password_value = u"password1";
-  password_store->AddLogin(signin_form);
+  signin_form.password_value = password_manager::PasswordString(u"password1");
+  password_store->AddLogin(password_manager::FromPasswordForm(signin_form));
 
   // Load the NTP to check requests made from the JS widgets.
   ASSERT_TRUE(ui_test_utils::NavigateToURL(browser(), GURL("brave://newtab")));

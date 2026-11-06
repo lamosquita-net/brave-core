@@ -4,10 +4,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "base/path_service.h"
-#include "base/strings/string_util.h"
 #include "base/test/scoped_feature_list.h"
 #include "brave/components/constants/brave_paths.h"
-#include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/test/base/in_process_browser_test.h"
 #include "chrome/test/base/ui_test_utils.h"
@@ -72,15 +70,14 @@ IN_PROC_BROWSER_TEST_P(FileSystemAccessBrowserTest, FilePicker) {
   ASSERT_TRUE(ui_test_utils::NavigateToURL(browser(), url));
 
   if (IsFileSystemAccessAPIEnabled()) {
-    auto result =
-        content::EvalJs(primary_main_frame(), "typeof self.showOpenFilePicker");
-    EXPECT_EQ(result.value.GetString(), "function");
+    EXPECT_EQ(
+        content::EvalJs(primary_main_frame(), "typeof self.showOpenFilePicker"),
+        base::Value("function"));
   } else {
-    auto result =
-        content::EvalJs(primary_main_frame(), "self.showOpenFilePicker()");
-    EXPECT_TRUE(
-        result.error.contains("self.showOpenFilePicker is not a function"))
-        << result.error;
+    EXPECT_THAT(
+        content::EvalJs(primary_main_frame(), "self.showOpenFilePicker()"),
+        content::EvalJsResult::ErrorIs(
+            testing::HasSubstr("self.showOpenFilePicker is not a function")));
   }
 }
 
