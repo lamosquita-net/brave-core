@@ -13,7 +13,6 @@
 #include "brave/browser/brave_browser_process.h"
 #include "brave/browser/brave_shields/brave_shields_web_contents_observer.h"
 #include "brave/browser/ephemeral_storage/ephemeral_storage_tab_helper.h"
-#include "brave/browser/ui/bookmark/brave_bookmark_tab_helper.h"
 #include "brave/components/brave_perf_predictor/browser/perf_predictor_tab_helper.h"
 #include "brave/components/request_otr/common/buildflags/buildflags.h"
 #include "build/build_config.h"
@@ -61,7 +60,6 @@ void AttachTabHelpers(content::WebContents* web_contents) {
   BackgroundVideoPlaybackTabHelper::CreateForWebContents(web_contents);
 #else
   // Add tab helpers here unless they are intended for android too
-  BraveBookmarkTabHelper::CreateForWebContents(web_contents);
   brave_shields::BraveShieldsTabHelper::CreateForWebContents(web_contents);
   BraveGeolocationPermissionTabHelper::CreateForWebContents(web_contents);
 #endif
