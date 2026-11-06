@@ -7,12 +7,11 @@
 
 #include <cmath>
 
-#include "brave/browser/ui/views/tabs/brave_compound_tab_container.h"
 #include "brave/browser/ui/views/tabs/brave_tab.h"
+#include "brave/browser/ui/views/tabs/brave_tab_container.h"
 #include "brave/browser/ui/views/tabs/brave_tab_hover_card_controller.h"
 #include "chrome/browser/ui/ui_features.h"
 #include "chrome/browser/ui/views/tabs/browser_tab_strip_controller.h"
-#include "chrome/browser/ui/views/tabs/compound_tab_container.h"
 #include "chrome/browser/ui/views/tabs/tab_container.h"
 #include "chrome/browser/ui/views/tabs/tab_container_impl.h"
 
@@ -24,7 +23,6 @@
 // TabStrip::AddTabsAt.
 #define param(TAB, MODEL_INDEX, PINNED) \
   param(std::make_unique<BraveTab>(tab_data.handle, this), MODEL_INDEX, PINNED)
-#define CompoundTabContainer BraveCompoundTabContainer
 #define TabContainerImpl BraveTabContainer
 #define TabHoverCardController BraveTabHoverCardController
 
@@ -44,6 +42,5 @@
 
 #undef BRAVE_TAB_DRAG_CONTEXT_IMPL_PAINT_CHILDREN
 #undef TabHoverCardController
-#undef CompoundTabContainer
 #undef TabContainerImpl
 #undef param

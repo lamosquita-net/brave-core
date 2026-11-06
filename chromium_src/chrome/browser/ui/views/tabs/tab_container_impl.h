@@ -13,11 +13,8 @@
   friend class BraveTabContainer; \
   void ExitTabClosingMode
 
-#define StartInsertTabAnimation virtual StartInsertTabAnimation
-
 #include "src/chrome/browser/ui/views/tabs/tab_container_impl.h"  // IWYU pragma: export
 
-#undef StartInsertTabAnimation
 #undef ExitTabClosingMode
 
 #endif  // BRAVE_CHROMIUM_SRC_CHROME_BROWSER_UI_VIEWS_TABS_TAB_CONTAINER_IMPL_H_

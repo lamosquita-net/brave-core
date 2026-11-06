@@ -8,7 +8,6 @@
 
 #include <memory>
 
-#include "base/memory/weak_ptr.h"
 #include "chrome/browser/ui/views/tabs/tab_strip.h"
 
 class Tab;
@@ -26,12 +25,6 @@ class BraveTabStrip : public TabStrip {
       TabSlotView* source,
       const ui::LocatedEvent& event,
       const ui::ListSelectionModel& original_selection) override;
-  void AddedToWidget() override;
-
- private:
-  void UpdateTabContainer();
-
-  base::WeakPtrFactory<BraveTabStrip> weak_factory_{this};
 };
 
 #endif  // BRAVE_BROWSER_UI_VIEWS_TABS_BRAVE_TAB_STRIP_H_
