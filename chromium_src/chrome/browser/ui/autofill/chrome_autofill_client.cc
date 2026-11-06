@@ -8,16 +8,18 @@
 #include "base/memory/ptr_util.h"
 #include "brave/components/constants/pref_names.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/autofill/payments/webauthn_dialog_controller_impl.h"
 #include "chrome/browser/ui/page_info/page_info_dialog.h"
-#include "components/autofill/core/browser/browser_autofill_manager.h"
-#include "components/autofill/core/browser/form_data_importer.h"
+#include "components/autofill/core/browser/foundations/browser_autofill_manager.h"
+#include "components/autofill/core/browser/form_import/form_data_importer.h"
 #include "components/optimization_guide/core/optimization_guide_features.h"
+#include "components/prefs/pref_service.h"
+#include "components/profile_metrics/browser_profile_type.h"
 #include "mojo/public/cpp/bindings/associated_receiver.h"
 
 namespace autofill {
 
 namespace {
+
 bool IsPrivateProfile(content::WebContents* web_contents) {
   if (!web_contents) {
     return false;
@@ -27,19 +29,23 @@ bool IsPrivateProfile(content::WebContents* web_contents) {
   if (!profile) {
     return false;
   }
-  return profile_metrics::GetBrowserProfileType(profile) ==
-         profile_metrics::BrowserProfileType::kIncognito;
+  return (profile_metrics::GetBrowserProfileType(profile) ==
+          profile_metrics::BrowserProfileType::kIncognito) ||
+         profile->IsEnterpriseIsolatedModeProfile();
 }
 
 }  // namespace
 
+// Built by ChromeAutofillClient::CreateForWebContents (see
+// patches/chrome-browser-ui-autofill-chrome_autofill_client.cc.patch).
 class BraveChromeAutofillClient : public ChromeAutofillClient {
  public:
   using ChromeAutofillClient::ChromeAutofillClient;
 
-  AutofillOptimizationGuide* GetAutofillOptimizationGuide() const override {
+  AutofillOptimizationGuideDecider* GetAutofillOptimizationGuideDecider()
+      const override {
     if (optimization_guide::features::IsOptimizationHintsEnabled()) {
-      return ChromeAutofillClient::GetAutofillOptimizationGuide();
+      return ChromeAutofillClient::GetAutofillOptimizationGuideDecider();
     }
     return nullptr;
   }
@@ -52,31 +58,23 @@ class BraveChromeAutofillClient : public ChromeAutofillClient {
     enabled = enabled && GetPrefs()->GetBoolean(kBraveAutofillPrivateWindows);
     return enabled;
   }
-};
 
-class BraveBrowserAutofillManager : public BrowserAutofillManager {
- public:
-  using BrowserAutofillManager::BrowserAutofillManager;
-
+  // In 156 BrowserAutofillManager asks the client, so the private-window
+  // check moves here from the old BraveBrowserAutofillManager.
   bool IsAutofillEnabled() const override {
-    auto enabled = BrowserAutofillManager::IsAutofillEnabled();
-    if (client().GetProfileType() !=
-            profile_metrics::BrowserProfileType::kIncognito &&
-        client().GetProfileType() !=
+    auto enabled = ChromeAutofillClient::IsAutofillEnabled();
+    if (GetProfileType() != profile_metrics::BrowserProfileType::kIncognito &&
+        GetProfileType() !=
+            profile_metrics::BrowserProfileType::kEnterpriseIsolated &&
+        GetProfileType() !=
             profile_metrics::BrowserProfileType::kOtherOffTheRecordProfile) {
       return enabled;
     }
-    enabled = enabled &&
-              client().GetPrefs()->GetBoolean(kBraveAutofillPrivateWindows);
+    enabled = enabled && GetPrefs()->GetBoolean(kBraveAutofillPrivateWindows);
     return enabled;
   }
 };
 
 }  // namespace autofill
 
-#define WrapUnique WrapUnique(new autofill::BraveChromeAutofillClient(web_contents))); \
-  if (0) std::unique_ptr<autofill::ChromeAutofillClient> dummy(
-#define BrowserAutofillManager BraveBrowserAutofillManager
 #include "src/chrome/browser/ui/autofill/chrome_autofill_client.cc"
-#undef BrowserAutofillManager
-#undef WrapUnique
