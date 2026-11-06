@@ -24,7 +24,6 @@ OVERRIDE_FEATURE_DEFAULT_STATES({{
     {kFledge, base::FEATURE_DISABLED_BY_DEFAULT},
     {kParakeet, base::FEATURE_DISABLED_BY_DEFAULT},
     {kPrerender2, base::FEATURE_DISABLED_BY_DEFAULT},
-    {kPrivateStateTokens, base::FEATURE_DISABLED_BY_DEFAULT},
     {kReduceUserAgentMinorVersion, base::FEATURE_ENABLED_BY_DEFAULT},
     {kTextFragmentAnchor, base::FEATURE_DISABLED_BY_DEFAULT},
 }});
