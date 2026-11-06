@@ -144,6 +144,16 @@ constexpr char kRequestOTRP3A[] = "brave.request_otr.p3a";
 constexpr char kPerfPredictorBandwidthSavedP3A[] =
     "brave.stats.daily_saving_predictions_bytes";
 
+// Brave's localhost access permission (removed 2026-11; Chromium's native
+// Local Network Access replaces it and the old grants are not carried over):
+// its content setting type.
+constexpr char kLocalhostAccessContentSettingExceptions[] =
+    "profile.content_settings.exceptions.brave_localhost_access";
+constexpr char kLocalhostAccessContentSettingPartitionedExceptions[] =
+    "profile.content_settings.partitioned_exceptions.brave_localhost_access";
+constexpr char kLocalhostAccessContentSettingDefault[] =
+    "profile.default_content_setting_values.brave_localhost_access";
+
 constexpr const char* kProfilePrefs[] = {
     kPlaylistEnabled,
     kPlaylists,
@@ -197,6 +207,9 @@ constexpr const char* kProfilePrefs[] = {
     kRequestOTRP3A,
     kPerfPredictorBandwidthSavedP3A,
     kTopSiteSuggestionsEnabled,
+    kLocalhostAccessContentSettingExceptions,
+    kLocalhostAccessContentSettingPartitionedExceptions,
+    kLocalhostAccessContentSettingDefault,
 };
 
 constexpr const char* kLocalStatePrefs[] = {
@@ -295,6 +308,12 @@ void RegisterPrunedFeatureProfilePrefs(
 
   // TopSitesProvider
   registry->RegisterBooleanPref(kTopSiteSuggestionsEnabled, true);
+
+  // Brave's localhost access permission
+  registry->RegisterDictionaryPref(kLocalhostAccessContentSettingExceptions);
+  registry->RegisterDictionaryPref(
+      kLocalhostAccessContentSettingPartitionedExceptions);
+  registry->RegisterIntegerPref(kLocalhostAccessContentSettingDefault, 0);
 }
 
 void ClearPrunedFeatureProfilePrefs(PrefService* profile_prefs) {
