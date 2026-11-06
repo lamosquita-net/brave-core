@@ -8,8 +8,9 @@
 #include "components/version_info/version_info.h"
 
 // FlyWeb: the Safe Browsing client (requests to our proxy, via
-// GetV4ProtocolConfig) declares the Chrome version of the declared engine
-// level, as the User-Agent does, not Brave's "128.1.69.x".
+// GetSBProtocolConfig, in v4_protocol_manager_util.cc before 156) declares
+// the Chrome version of the declared engine level, as the User-Agent does,
+// not the product version.
 namespace version_info {
 constexpr std::string_view FlyWebDeclaredVersionNumber() {
   return constants::kFlyWebEngineFullVersion;
@@ -17,5 +18,5 @@ constexpr std::string_view FlyWebDeclaredVersionNumber() {
 }  // namespace version_info
 
 #define GetVersionNumber FlyWebDeclaredVersionNumber
-#include "src/components/safe_browsing/core/browser/db/v4_protocol_manager_util.cc"
+#include "src/components/safe_browsing/core/browser/db/sb_protocol_config.cc"
 #undef GetVersionNumber

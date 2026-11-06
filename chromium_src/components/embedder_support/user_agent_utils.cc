@@ -29,8 +29,18 @@
 // not Brave's zeroed "major.0.0.0", which no Chrome sends.
 #define BRAVE_BRAND_VERSION_OVERRIDE_FOR_FULL_BRAND_VERSION_TYPE full_version
 
-// Brave 1.98 anchor (patch) for Android; nothing to change on desktop.
-#define BRAVE_GET_ANDROID_OS_INFO
+// No device model in the User-Agent or the client hints (it was
+// content/common/user_agent.cc before 156; as 1.98). BuildModelInfo() is
+// already empty on desktop; this keeps it empty everywhere.
+#define BRAVE_GET_ANDROID_OS_INFO \
+  include_android_model = IncludeAndroidModel::Exclude;
+
+namespace embedder_support {
+std::string BuildModelInfo_ChromiumImpl();
+std::string BuildModelInfo() {
+  return std::string();
+}
+}  // namespace embedder_support
 
 // The original's own calls go to the renamed one: declare it, with the
 // header's default argument, before the include.
@@ -40,7 +50,13 @@ blink::UserAgentMetadata GetUserAgentMetadata_ChromiumImpl(
 }  // namespace embedder_support
 
 #define GetUserAgentMetadata GetUserAgentMetadata_ChromiumImpl
+// Inside the original, BuildModelInfo is the renamed one; the empty override
+// above wins, and HardwareModelName() is not used for the model.
+#define HardwareModelName() HardwareModelName() == "" ? "" : ""
+#define BuildModelInfo BuildModelInfo_ChromiumImpl
 #include "src/components/embedder_support/user_agent_utils.cc"
+#undef BuildModelInfo
+#undef HardwareModelName
 #undef GetUserAgentMetadata
 #undef BRAVE_GET_ANDROID_OS_INFO
 #undef BRAVE_BRAND_VERSION_OVERRIDE_FOR_FULL_BRAND_VERSION_TYPE
