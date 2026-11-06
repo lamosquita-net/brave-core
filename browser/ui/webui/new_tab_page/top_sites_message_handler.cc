@@ -10,17 +10,20 @@
 #include <string>
 #include <utility>
 
+#include "base/check.h"
 #include "base/i18n/rtl.h"
 #include "base/strings/utf_string_conversions.h"
+#include "base/values.h"
 #include "brave/browser/profiles/profile_util.h"
 #include "brave/browser/ui/webui/new_tab_page/brave_new_tab_ui.h"
 #include "brave/browser/ui/webui/new_tab_page/brave_new_tab_ui_utils.h"
 #include "brave/components/constants/pref_names.h"
+#include "chrome/browser/new_tab_page/prefs/ntp_pref_names.h"
 #include "chrome/browser/ntp_tiles/chrome_most_visited_sites_factory.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/webui/new_tab_page/ntp_pref_names.h"
 #include "components/ntp_tiles/constants.h"
 #include "components/ntp_tiles/most_visited_sites.h"
+#include "components/ntp_tiles/tile_type.h"
 #include "components/prefs/pref_service.h"
 
 TopSitesMessageHandler::TopSitesMessageHandler(Profile* profile)
@@ -29,7 +32,9 @@ TopSitesMessageHandler::TopSitesMessageHandler(Profile* profile)
           ChromeMostVisitedSitesFactory::NewForProfile(profile)) {
   // most_visited_sites_ can be nullptr if profile is OTR.
   if (most_visited_sites_) {
-    most_visited_sites_->EnableCustomLinks(IsCustomLinksEnabled());
+    most_visited_sites_->EnableTileTypes(
+        ntp_tiles::MostVisitedSites::EnableTileTypesOptions().with_custom_links(
+            IsCustomLinksEnabled()));
     most_visited_sites_->SetShortcutsVisible(IsShortcutsVisible());
     most_visited_sites_->AddMostVisitedURLsObserver(
         this, ntp_tiles::kMaxNumMostVisited);
@@ -132,7 +137,7 @@ int TopSitesMessageHandler::GetCustomLinksNum() const {
 }
 
 bool TopSitesMessageHandler::IsCustomLinksEnabled() const {
-  return !profile_->GetPrefs()->GetBoolean(ntp_prefs::kNtpUseMostVisitedTiles);
+  return profile_->GetPrefs()->GetBoolean(ntp_prefs::kNtpCustomLinksVisible);
 }
 
 bool TopSitesMessageHandler::IsShortcutsVisible() const {
@@ -244,9 +249,11 @@ void TopSitesMessageHandler::HandleSetMostVisitedSettings(
 
   bool old_custom_links_enabled = IsCustomLinksEnabled();
   if (old_custom_links_enabled != custom_links_enabled) {
-    profile_->GetPrefs()->SetBoolean(ntp_prefs::kNtpUseMostVisitedTiles,
-                                     !custom_links_enabled);
-    most_visited_sites_->EnableCustomLinks(IsCustomLinksEnabled());
+    profile_->GetPrefs()->SetBoolean(ntp_prefs::kNtpCustomLinksVisible,
+                                     custom_links_enabled);
+    most_visited_sites_->EnableTileTypes(
+        ntp_tiles::MostVisitedSites::EnableTileTypesOptions().with_custom_links(
+            IsCustomLinksEnabled()));
   }
 }
 
@@ -275,8 +282,10 @@ void TopSitesMessageHandler::HandleEditTopSite(const base::ListValue& args) {
 
   // when user modifies current top sites, change to favorite mode.
   if (!most_visited_sites_->IsCustomLinksEnabled()) {
-    profile_->GetPrefs()->SetBoolean(ntp_prefs::kNtpUseMostVisitedTiles, false);
-    most_visited_sites_->EnableCustomLinks(IsCustomLinksEnabled());
+    profile_->GetPrefs()->SetBoolean(ntp_prefs::kNtpCustomLinksVisible, true);
+    most_visited_sites_->EnableTileTypes(
+        ntp_tiles::MostVisitedSites::EnableTileTypesOptions().with_custom_links(
+            IsCustomLinksEnabled()));
   }
 
   GURL gurl(url);
@@ -312,8 +321,10 @@ void TopSitesMessageHandler::HandleAddNewTopSite(const base::ListValue& args) {
   // If the user tries to add a new site in top sites mode, change to favorite
   // mode.
   if (!most_visited_sites_->IsCustomLinksEnabled()) {
-    profile_->GetPrefs()->SetBoolean(ntp_prefs::kNtpUseMostVisitedTiles, false);
-    most_visited_sites_->EnableCustomLinks(IsCustomLinksEnabled());
+    profile_->GetPrefs()->SetBoolean(ntp_prefs::kNtpCustomLinksVisible, true);
+    most_visited_sites_->EnableTileTypes(
+        ntp_tiles::MostVisitedSites::EnableTileTypesOptions().with_custom_links(
+            IsCustomLinksEnabled()));
   }
 
   most_visited_sites_->AddCustomLink(GURL(url), base::UTF8ToUTF16(title));
