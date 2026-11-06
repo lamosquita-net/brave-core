@@ -10,7 +10,8 @@
 #include "brave/browser/ui/tabs/brave_tab_prefs.h"
 #include "brave/browser/ui/tabs/features.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+#include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "components/prefs/pref_service.h"
 
 namespace chrome {
@@ -18,14 +19,14 @@ namespace chrome {
 bool BraveTabStripModelDelegate::CanMoveTabsToWindow(
     const std::vector<int>& indices) {
   if (!base::FeatureList::IsEnabled(tabs::features::kBraveSharedPinnedTabs) ||
-      !browser_->profile()->GetPrefs()->GetBoolean(
+      !browser_->GetProfile()->GetPrefs()->GetBoolean(
           brave_tabs::kSharedPinnedTab)) {
     return BrowserTabStripModelDelegate::CanMoveTabsToWindow(indices);
   }
 
   // Shared pinned tabs shouldn't be moved.
   return std::ranges::none_of(indices, [this](const auto& index) {
-    return browser_->tab_strip_model()->IsTabPinned(index);
+    return browser_->GetTabStripModel()->IsTabPinned(index);
   });
 }
 
