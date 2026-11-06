@@ -5,7 +5,6 @@
 
 #include "brave/browser/widevine/widevine_utils.h"
 
-#include <memory>
 #include <string>
 
 #include "brave/browser/widevine/widevine_permission_request.h"
@@ -63,14 +62,6 @@ int GetWidevinePermissionRequestTextFrangmentResourceId(bool for_restart) {
 #else
   return IDS_WIDEVINE_PERMISSION_REQUEST_TEXT_FRAGMENT;
 #endif
-}
-
-void RequestWidevinePermission(content::WebContents* web_contents,
-                               bool for_restart) {
-  permissions::PermissionRequestManager::FromWebContents(web_contents)
-      ->AddRequest(web_contents->GetPrimaryMainFrame(),
-                   std::make_unique<WidevinePermissionRequest>(web_contents,
-                                                               for_restart));
 }
 
 void RegisterWidevineLocalstatePrefs(PrefRegistrySimple* registry) {

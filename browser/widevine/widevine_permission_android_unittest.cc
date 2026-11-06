@@ -52,8 +52,12 @@ class WidevinePermissionAndroidTest : public ChromeRenderViewHostTestHarness {
     brave_drm_tab_helper()->DidStartNavigation(&test_handle);
   }
 
+  // BraveDrmTabHelper::OnWidevineKeySystemAccessRequest() can only resolve the
+  // requesting frame while a mojo message is being dispatched, so tests that
+  // don't go through the renderer name the frame explicitly.
   void SimulateWidevineKeySystemAccessRequest() {
-    brave_drm_tab_helper()->OnWidevineKeySystemAccessRequest();
+    brave_drm_tab_helper()->OnWidevineKeySystemAccessRequestForFrame(
+        web_contents()->GetPrimaryMainFrame());
   }
 
  protected:
@@ -187,8 +191,8 @@ TEST_F(WidevinePermissionAndroidTest, PermissionWidevineUtilsTest) {
   EXPECT_TRUE(profile()->GetPrefs()->GetBoolean(kAskEnableWidvine));
 
   std::vector<std::unique_ptr<permissions::PermissionRequest>> requests;
-  requests.push_back(
-      std::make_unique<WidevinePermissionRequest>(web_contents(), false));
+  requests.push_back(std::make_unique<WidevinePermissionRequest>(
+      profile()->GetPrefs(), web_contents()->GetLastCommittedURL(), false));
   EXPECT_TRUE(HasWidevinePermissionRequest(requests));
 
   requests.push_back(std::make_unique<DownloadPermissionRequest>(

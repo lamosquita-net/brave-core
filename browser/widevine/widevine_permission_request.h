@@ -12,13 +12,12 @@
 #include "base/memory/raw_ptr.h"
 #include "url/gurl.h"
 
-namespace content {
-class WebContents;
-}
+class PrefService;
 
 class WidevinePermissionRequest : public permissions::PermissionRequest {
  public:
-  WidevinePermissionRequest(content::WebContents* web_contents,
+  WidevinePermissionRequest(PrefService* prefs,
+                            const GURL& requesting_origin,
                             bool for_restart);
 
   WidevinePermissionRequest(const WidevinePermissionRequest&) = delete;
@@ -45,9 +44,9 @@ class WidevinePermissionRequest : public permissions::PermissionRequest {
       const permissions::PermissionPromptDecision& decision,
       const permissions::PermissionRequestData& request_data);
 
-  // It's safe to use this raw |web_contents_| because this request is owned
-  // by the PermissionRequestManager that is tied with this |web_contents_|.
-  raw_ptr<content::WebContents> web_contents_ = nullptr;
+  // The profile's prefs outlive this request, which is owned by the
+  // PermissionRequestManager of one of the profile's tabs.
+  raw_ptr<PrefService> prefs_ = nullptr;
 
   // Only can be true on linux.
   // On linux, browser will use another permission request buble after finishing

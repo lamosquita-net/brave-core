@@ -16,6 +16,28 @@
 
 namespace component_updater {
 
+namespace {
+
+// Upstream allows plaintext because the CRX payload is signature verified.
+// Require TLS anyway, so the request doesn't announce on the wire that this
+// user is installing Widevine (as Brave 1.98 does).
+class BraveWidevineCdmComponentInstallerPolicy final
+    : public WidevineCdmComponentInstallerPolicy {
+ public:
+  BraveWidevineCdmComponentInstallerPolicy() = default;
+  BraveWidevineCdmComponentInstallerPolicy(
+      const BraveWidevineCdmComponentInstallerPolicy&) = delete;
+  BraveWidevineCdmComponentInstallerPolicy& operator=(
+      const BraveWidevineCdmComponentInstallerPolicy&) = delete;
+  ~BraveWidevineCdmComponentInstallerPolicy() override = default;
+
+ private:
+  // ComponentInstallerPolicy:
+  bool RequiresNetworkEncryption() const override { return true; }
+};
+
+}  // namespace
+
 void RegisterWidevineCdmComponent(ComponentUpdateService* cus,
                                   base::OnceClosure callback) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
@@ -23,7 +45,7 @@ void RegisterWidevineCdmComponent(ComponentUpdateService* cus,
     return;
   }
   auto installer = base::MakeRefCounted<component_updater::ComponentInstaller>(
-      std::make_unique<WidevineCdmComponentInstallerPolicy>());
+      std::make_unique<BraveWidevineCdmComponentInstallerPolicy>());
   installer->Register(cus, std::move(callback));
 }
 
