@@ -10,6 +10,8 @@
 namespace omnibox {
 
 OVERRIDE_FEATURE_DEFAULT_STATES({{
+    // No warm-up connection to the search provider.
+    {kAblateSearchProviderWarmup, base::FEATURE_ENABLED_BY_DEFAULT},
     {kMlUrlScoring, base::FEATURE_DISABLED_BY_DEFAULT},
     {kRichAutocompletion, base::FEATURE_DISABLED_BY_DEFAULT},
     {kStarterPackExpansion, base::FEATURE_DISABLED_BY_DEFAULT},
