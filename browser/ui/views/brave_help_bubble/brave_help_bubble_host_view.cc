@@ -5,6 +5,7 @@
 
 #include "brave/browser/ui/views/brave_help_bubble/brave_help_bubble_host_view.h"
 
+#include "base/check.h"
 #include "cc/paint/paint_shader.h"
 #include "extensions/common/constants.h"
 #include "third_party/skia/include/core/SkColor.h"
@@ -41,7 +42,11 @@ constexpr SkColor4f kColors[] = {{0.65f, 0.54f, 1, 1},
 // These are positions for each element in kColors
 constexpr SkScalar kPositions[] = {0.0, 0.43, 0.93};
 
-sk_sp<cc::PaintShader> kBraveGradient =
+// TODO(https://github.com/brave/brave-browser/issues/48713): This is a case of
+// `-Wexit-time-destructors` violation and `[[clang::no_destroy]]` has been
+// added in the meantime to fix the build error. Remove this attribute and
+// provide a proper fix.
+[[clang::no_destroy]] sk_sp<cc::PaintShader> kBraveGradient =
     cc::PaintShader::MakeLinearGradient(kPts,
                                         kColors,
                                         kPositions,
@@ -176,11 +181,11 @@ void BraveHelpBubbleHostView::OnViewIsDeleting(views::View* observed_view) {
 
 void BraveHelpBubbleHostView::OnViewVisibilityChanged(
     views::View* observed_view,
-    views::View* starting_view) {
+    views::View* starting_view,
+    bool visible) {
   // Close help bubble when |tracked_element_| gets hidden.
   // It could be in-visible when its ancestor is hidden.
-  if (!observed_view->GetVisible() ||
-      (starting_view && !starting_view->GetVisible())) {
+  if (!visible) {
     Hide();
   }
 }

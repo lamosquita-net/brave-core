@@ -5,12 +5,15 @@
 
 #include "brave/browser/ui/views/brave_help_bubble/brave_help_bubble_delegate_view.h"
 
+#include <array>
 #include <utility>
 
+#include "base/check.h"
 #include "base/strings/utf_string_conversions.h"
 #include "components/grit/brave_components_strings.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/metadata/metadata_impl_macros.h"
+#include "ui/base/mojom/dialog_button.mojom.h"
 #include "ui/gfx/canvas.h"
 #include "ui/gfx/scoped_canvas.h"
 #include "ui/views/border.h"
@@ -23,7 +26,7 @@
 using views::BubbleBorder;
 using views::BubbleDialogDelegateView;
 using views::BubbleFrameView;
-using views::NonClientFrameView;
+using views::FrameView;
 
 namespace {
 constexpr SkColor kBgColor = SkColorSetARGB(0xFF, 0x20, 0x4A, 0xE3);
@@ -34,10 +37,9 @@ class BorderWithArrow : public views::BubbleBorder {
  public:
   enum BubbleArrowPart { kFill, kBorder };
 
-  explicit BorderWithArrow(Arrow arrow, ui::ColorId color_id)
-      : views::BubbleBorder(arrow,
-                            BubbleBorder::Shadow::STANDARD_SHADOW,
-                            color_id) {
+  explicit BorderWithArrow(Arrow arrow, ui::ColorVariant color_id)
+      : views::BubbleBorder(arrow, BubbleBorder::Shadow::STANDARD_SHADOW) {
+    set_color(color_id);
     set_visible_arrow(true);
   }
 
@@ -86,7 +88,7 @@ class BorderWithArrow : public views::BubbleBorder {
         GetVisibleArrowPath(arrow(), arrow_bounds, BubbleArrowPart::kBorder),
         flags);
 
-    flags.setColor(color());
+    flags.setColor(color().ResolveToSkColor(view.GetColorProvider()));
     flags.setStyle(cc::PaintFlags::kFill_Style);
     flags.setStrokeWidth(1.0);
     flags.setAntiAlias(true);
@@ -100,7 +102,7 @@ class BorderWithArrow : public views::BubbleBorder {
                              BubbleArrowPart part) {
     constexpr size_t kNumPoints = 4;
     gfx::RectF bounds_f(bounds);
-    SkPoint points[kNumPoints];
+    std::array<SkPoint, kNumPoints> points;
     switch (GetBubbleArrowSide(arrow)) {
       case views::BubbleArrowSide::kRight:
         points[0] = {bounds_f.x(), bounds_f.y()};
@@ -136,7 +138,7 @@ class BorderWithArrow : public views::BubbleBorder {
         break;
     }
 
-    return SkPath::Polygon(points, kNumPoints, part == BubbleArrowPart::kFill);
+    return SkPath::Polygon(points, part == BubbleArrowPart::kFill);
   }
 };
 }  // namespace
@@ -145,10 +147,10 @@ BraveHelpBubbleDelegateView::BraveHelpBubbleDelegateView(
     View* anchor_view,
     const std::string& text)
     : BubbleDialogDelegateView(anchor_view, BubbleBorder::Arrow::TOP_CENTER) {
-  SetButtons(ui::DIALOG_BUTTON_NONE);
-  set_shadow(BubbleBorder::Shadow::STANDARD_SHADOW);
+  SetButtons(static_cast<int>(ui::mojom::DialogButton::kNone));
+  set_shadow_config({.shadow_type = BubbleBorder::Shadow::STANDARD_SHADOW});
   set_corner_radius(10);
-  set_color(kBgColor);
+  SetBackgroundColor(kBgColor);
   SetLayoutManager(std::make_unique<views::BoxLayout>(
       views::BoxLayout::Orientation::kVertical));
 
@@ -170,18 +172,17 @@ BraveHelpBubbleDelegateView::BraveHelpBubbleDelegateView(
 
 BraveHelpBubbleDelegateView::~BraveHelpBubbleDelegateView() = default;
 
-std::unique_ptr<NonClientFrameView>
-BraveHelpBubbleDelegateView::CreateNonClientFrameView(views::Widget* widget) {
-  std::unique_ptr<NonClientFrameView> frame =
-      BubbleDialogDelegateView::CreateNonClientFrameView(widget);
+std::unique_ptr<FrameView> BraveHelpBubbleDelegateView::CreateFrameView(
+    views::Widget* widget) {
+  std::unique_ptr<FrameView> frame =
+      BubbleDialogDelegateView::CreateFrameView(widget);
   CHECK(frame);
 
   std::unique_ptr<BorderWithArrow> border =
-      std::make_unique<BorderWithArrow>(arrow(), color());
-  border->SetColor(color());
+      std::make_unique<BorderWithArrow>(arrow(), background_color());
 
   if (GetParams().round_corners) {
-    border->SetCornerRadius(GetCornerRadius());
+    border->set_rounded_corners(gfx::RoundedCornersF(GetCornerRadius()));
   }
 
   static_cast<BubbleFrameView*>(frame.get())
