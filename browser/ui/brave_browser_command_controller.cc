@@ -167,8 +167,6 @@ void BraveBrowserCommandController::InitBraveCommandState() {
   UpdateCommandEnabled(IDC_COPY_CLEAN_LINK, true);
   UpdateCommandEnabled(IDC_TOGGLE_TAB_MUTE, true);
 
-  UpdateCommandEnabled(IDC_BRAVE_BOOKMARK_BAR_SUBMENU, true);
-
   UpdateCommandEnabled(
       IDC_CONFIGURE_SHORTCUTS,
       base::FeatureList::IsEnabled(commands::features::kBraveCommands));

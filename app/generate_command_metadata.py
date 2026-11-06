@@ -171,10 +171,6 @@ EXCLUDE_COMMANDS = [
     # These commands are in a submenu, which we can't trigger
     "_SUBMENU",
 
-    # Not useful menu commands - mostly these are submenu commands, which do
-    # nothing unless the parent menu is open.
-    "IDC_BRAVE_BOOKMARK_BAR_SUBMENU",
-
     # Not actually commands
     "IDC_BRAVE_COMMANDS_START",
     "IDC_BRAVE_COMMANDS_LAST",

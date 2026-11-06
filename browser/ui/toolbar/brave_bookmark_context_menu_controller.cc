@@ -16,7 +16,7 @@
 #include "chrome/browser/bookmarks/bookmark_model_factory.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/bookmarks/bookmark_context_menu_controller.h"
-#include "chrome/browser/ui/browser.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/grit/generated_resources.h"
 #include "components/bookmarks/browser/bookmark_model.h"
 #include "components/prefs/pref_service.h"
@@ -25,25 +25,24 @@
 BraveBookmarkContextMenuController::BraveBookmarkContextMenuController(
     gfx::NativeWindow parent_window,
     BookmarkContextMenuControllerDelegate* delegate,
-    Browser* browser,
+    BrowserWindowInterface* browser,
     Profile* profile,
     BookmarkLaunchLocation opened_from,
-    const bookmarks::BookmarkNode* parent,
     const std::vector<
-        raw_ptr<const bookmarks::BookmarkNode, VectorExperimental>>& selection)
+        raw_ptr<const bookmarks::BookmarkNode, VectorExperimental>>& selection,
+    bool can_paste)
     : BookmarkContextMenuController(parent_window,
                                     delegate,
                                     browser,
                                     profile,
                                     opened_from,
-                                    parent,
-                                    selection),
+                                    selection,
+                                    can_paste),
       browser_(browser),
-      prefs_(browser_ ? browser_->profile()->GetPrefs() : nullptr) {
+      prefs_(browser_ ? browser_->GetProfile()->GetPrefs() : nullptr) {
   if (!browser_) {
     CHECK_IS_TEST();
   }
-  AddBraveBookmarksSubmenu(profile);
   AddShowAllBookmarksButtonMenu();
   bookmark_model_ = BookmarkModelFactory::GetForBrowserContext(profile);
 }
@@ -51,27 +50,8 @@ BraveBookmarkContextMenuController::BraveBookmarkContextMenuController(
 BraveBookmarkContextMenuController::~BraveBookmarkContextMenuController() =
     default;
 
-void BraveBookmarkContextMenuController::AddBraveBookmarksSubmenu(
-    Profile* profile) {
-  auto index = menu_model()->GetIndexOfCommandId(IDC_BOOKMARK_BAR_ALWAYS_SHOW);
-  if (!index.has_value()) {
-    return;
-  }
-  menu_model()->RemoveItemAt(index.value());
-  brave_bookmarks_submenu_model_ =
-      std::make_unique<BookmarkBarSubMenuModel>(profile);
-
-  menu_model()->InsertSubMenuWithStringIdAt(
-      index.value(), IDC_BRAVE_BOOKMARK_BAR_SUBMENU, IDS_SHOW_BOOKMARK_BAR,
-      brave_bookmarks_submenu_model_.get());
-}
-
 bool BraveBookmarkContextMenuController::IsCommandIdChecked(
     int command_id) const {
-  if (brave_bookmarks_submenu_model_->GetIndexOfCommandId(command_id)) {
-    return brave_bookmarks_submenu_model_->IsCommandIdChecked(command_id);
-  }
-
   if (command_id == IDC_TOGGLE_ALL_BOOKMARKS_BUTTON_VISIBILITY) {
     // Even test sets prefs for testing, there could be timing when prefs_ is
     // nullptr on creation.
@@ -87,10 +67,6 @@ bool BraveBookmarkContextMenuController::IsCommandIdChecked(
 
 bool BraveBookmarkContextMenuController::IsCommandIdEnabled(
     int command_id) const {
-  if (brave_bookmarks_submenu_model_->GetIndexOfCommandId(command_id)) {
-    return brave_bookmarks_submenu_model_->IsCommandIdEnabled(command_id);
-  }
-
   if (command_id == IDC_TOGGLE_ALL_BOOKMARKS_BUTTON_VISIBILITY) {
     return true;
   }
@@ -100,10 +76,6 @@ bool BraveBookmarkContextMenuController::IsCommandIdEnabled(
 
 bool BraveBookmarkContextMenuController::IsCommandIdVisible(
     int command_id) const {
-  if (brave_bookmarks_submenu_model_->GetIndexOfCommandId(command_id)) {
-    return brave_bookmarks_submenu_model_->IsCommandIdVisible(command_id);
-  }
-
   if (command_id == IDC_TOGGLE_ALL_BOOKMARKS_BUTTON_VISIBILITY) {
     // If the 'Other Bookmarks' node has no children, then hiding the 'Show all
     // bookmarks button' option from drop down as showing the option and the
@@ -117,11 +89,6 @@ bool BraveBookmarkContextMenuController::IsCommandIdVisible(
 
 void BraveBookmarkContextMenuController::ExecuteCommand(int command_id,
                                                         int event_flags) {
-  if (brave_bookmarks_submenu_model_->GetIndexOfCommandId(command_id)) {
-    brave_bookmarks_submenu_model_->ExecuteCommand(command_id, event_flags);
-    return;
-  }
-
   if (command_id == IDC_TOGGLE_ALL_BOOKMARKS_BUTTON_VISIBILITY) {
     if (!browser_) {
       CHECK_IS_TEST();
@@ -136,20 +103,11 @@ void BraveBookmarkContextMenuController::ExecuteCommand(int command_id,
 
 std::u16string BraveBookmarkContextMenuController::GetLabelForCommandId(
     int command_id) const {
-  if (brave_bookmarks_submenu_model_->GetIndexOfCommandId(command_id)) {
-    return brave_bookmarks_submenu_model_->GetLabelForCommandId(command_id);
-  }
-
   if (command_id == IDC_TOGGLE_ALL_BOOKMARKS_BUTTON_VISIBILITY) {
     return l10n_util::GetStringUTF16(IDS_SHOW_ALL_BOOKMARKS_BUTTON);
   }
 
   return BookmarkContextMenuController::GetLabelForCommandId(command_id);
-}
-
-BookmarkBarSubMenuModel*
-BraveBookmarkContextMenuController::GetBookmarkSubmenuModel() {
-  return brave_bookmarks_submenu_model_.get();
 }
 
 void BraveBookmarkContextMenuController::AddShowAllBookmarksButtonMenu() {
