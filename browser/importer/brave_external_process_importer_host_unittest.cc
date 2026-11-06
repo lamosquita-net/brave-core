@@ -21,7 +21,7 @@
 #include "brave/common/importer/importer_constants.h"
 #include "brave/components/constants/brave_paths.h"
 #include "chrome/browser/importer/importer_progress_observer.h"
-#include "chrome/common/extensions/webstore_install_result.h"
+#include "extensions/browser/webstore_install_result.h"
 #include "chrome/test/base/testing_profile.h"
 #include "components/value_store/test_value_store_factory.h"
 #include "components/value_store/value_store.h"
