@@ -30,6 +30,10 @@
 #endif  // defined(REDIRECT_CC_AS_REWRAPPER)
 
 const base::FilePath::StringViewType kIncludeFlag = FILE_PATH_LITERAL("-I");
+// FlyWeb: //brave/build puts chromium_src on the quoted include path with
+// -iquote (as Brave 1.98); accept it as well as -I.
+const base::FilePath::StringViewType kQuoteIncludeFlag =
+    FILE_PATH_LITERAL("-iquote");
 const base::FilePath::StringViewType kBraveChromiumSrc =
     FILE_PATH_LITERAL("brave/chromium_src");
 const base::FilePath::StringViewType kGen = FILE_PATH_LITERAL("gen");
@@ -94,14 +98,20 @@ class RedirectCC {
     // Find directories to work with first.
     for (const auto* arg : args_.subspan(first_compiler_arg_idx)) {
       base::FilePath::StringViewType arg_piece(arg);
-      if (base::StartsWith(arg_piece, kIncludeFlag) &&
-          base::EndsWith(arg_piece, kBraveChromiumSrc)) {
-        arg_piece.remove_prefix(kIncludeFlag.size());
-        brave_chromium_src_dir = base::FilePath::StringType(arg_piece);
-        arg_piece.remove_suffix(kBraveChromiumSrc.size());
-        chromium_src_dir_with_slash = base::FilePath::StringType(arg_piece);
-        break;
+      if (!base::EndsWith(arg_piece, kBraveChromiumSrc)) {
+        continue;
       }
+      if (base::StartsWith(arg_piece, kQuoteIncludeFlag)) {
+        arg_piece.remove_prefix(kQuoteIncludeFlag.size());
+      } else if (base::StartsWith(arg_piece, kIncludeFlag)) {
+        arg_piece.remove_prefix(kIncludeFlag.size());
+      } else {
+        continue;
+      }
+      brave_chromium_src_dir = base::FilePath::StringType(arg_piece);
+      arg_piece.remove_suffix(kBraveChromiumSrc.size());
+      chromium_src_dir_with_slash = base::FilePath::StringType(arg_piece);
+      break;
     }
 
     if (chromium_src_dir_with_slash.empty()) {
