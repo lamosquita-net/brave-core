@@ -7,13 +7,14 @@
 
 #include "brave/browser/ui/tabs/features.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+#include "chrome/browser/ui/views/frame/browser_view.h"
 #include "ui/base/metadata/metadata_impl_macros.h"
 
 BraveBrowserRootView::BraveBrowserRootView(BrowserView* browser_view,
                                            views::Widget* widget)
     : BrowserRootView(browser_view, widget), browser_(browser_view->browser()) {
-  if (!browser_->profile()->IsRegularProfile()) {
+  if (!browser_->GetProfile()->IsRegularProfile()) {
     theme_observation_.Observe(ui::NativeTheme::GetInstanceForNativeUi());
   }
 }

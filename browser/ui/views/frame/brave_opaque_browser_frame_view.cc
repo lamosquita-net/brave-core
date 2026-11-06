@@ -11,10 +11,10 @@
 #include "ui/base/metadata/metadata_impl_macros.h"
 
 BraveOpaqueBrowserFrameView::BraveOpaqueBrowserFrameView(
-    BrowserFrame* frame,
+    BrowserWidget* widget,
     BrowserView* browser_view,
     OpaqueBrowserFrameViewLayout* layout)
-    : OpaqueBrowserFrameView(frame, browser_view, layout) {}
+    : OpaqueBrowserFrameView(widget, browser_view, layout) {}
 
 BraveOpaqueBrowserFrameView::~BraveOpaqueBrowserFrameView() = default;
 
