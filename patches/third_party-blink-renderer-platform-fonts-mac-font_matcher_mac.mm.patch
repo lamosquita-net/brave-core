@@ -1,17 +1,8 @@
 diff --git a/third_party/blink/renderer/platform/fonts/mac/font_matcher_mac.mm b/third_party/blink/renderer/platform/fonts/mac/font_matcher_mac.mm
-index f8d0d59d4bba46a917f9db9349243e17a7518ac9..537021f259133fdd44a78d640ac65df4e2068a76 100644
+index 93f6eb62e3648119315300be026fe6b9fccfa4f4..a868e1d83bf2a45eb40c6179fd259442ddb3460a 100644
 --- a/third_party/blink/renderer/platform/fonts/mac/font_matcher_mac.mm
 +++ b/third_party/blink/renderer/platform/fonts/mac/font_matcher_mac.mm
-@@ -65,7 +65,7 @@ using base::apple::ScopedCFTypeRef;
- // We don't need localized variation axis name, so we can use
- // `CTFontCopyVariationAxesInternal()` instead.
- // Request for public API: FB13788219.
--extern "C" CFArrayRef CTFontCopyVariationAxesInternal(CTFontRef);
-+extern "C" CFArrayRef CTFontCopyVariationAxesInternal(CTFontRef) __attribute__((weak_import));  // FlyWeb (LOCAL-6, 21-10): solo se usa en macOS 13+
- 
- namespace blink {
- 
-@@ -223,6 +223,72 @@ bool BetterChoiceCT(CTFontSymbolicTraits desired_traits,
+@@ -226,6 +226,72 @@ bool BetterChoiceCT(CTFontSymbolicTraits desired_traits,
    return candidate_weight_delta_magnitude < chosen_weight_delta_magnitude;
  }
  
@@ -84,31 +75,9 @@ index f8d0d59d4bba46a917f9db9349243e17a7518ac9..537021f259133fdd44a78d640ac65df4
  // This function is similar to `BestStyleMatchForFamily` except
  // it uses AppKit `availableMembersOfFontFamily` instead of CoreText API
  // to retrieve information about the fonts from the desired family.
-@@ -239,45 +305,67 @@ ScopedCFTypeRef<CTFontRef> BestStyleMatchForFamilyNS(
-     float size) {
-   DCHECK(!RuntimeEnabledFeatures::FontFamilyStyleMatchingCTMigrationEnabled());
-   NSFontManager* font_manager = NSFontManager.sharedFontManager;
--  NSArray<NSArray*>* fonts =
--      [font_manager availableMembersOfFontFamily:CFToNSPtrCast(family_name)];
-+  NSMutableArray<NSArray*>* fonts = [[font_manager
-+      availableMembersOfFontFamily:CFToNSPtrCast(family_name)] mutableCopy];
-+
-+  // FlyWeb (FM.47): if the best member cannot be loaded in the renderer, drop
-+  // it and take the next best one of the family instead of drawing LastResort
-+  // or a substitute font.
-+  NSString* first_choice;
-+  while (fonts.count) {
-+    NSString* matched_font_name;
-+    NSUInteger matched_index = 0;
-+    CTFontSymbolicTraits chosen_traits;
-+    int chosen_weight;
-+    for (NSUInteger i = 0; i < fonts.count; ++i) {
-+      NSArray* font_info = fonts[i];
-+      int candidate_weight = kNormalWeightValue;
-+      NSNumber* candidate_weight_ns = font_info[2];
-+      if (candidate_weight_ns) {
-+        candidate_weight = AppKitToCSSFontWeight(candidate_weight_ns.intValue);
-+      }
+@@ -254,42 +320,66 @@ ScopedCFTypeRef<CTFontRef> BestStyleMatchForFamilyNS(
+                                    size);
+   }
  
 -  NSString* matched_font_name;
 -  CTFontSymbolicTraits chosen_traits;
@@ -119,16 +88,46 @@ index f8d0d59d4bba46a917f9db9349243e17a7518ac9..537021f259133fdd44a78d640ac65df4
 -    if (candidate_weight_ns) {
 -      candidate_weight = AppKitToCSSFontWeight(candidate_weight_ns.intValue);
 -    }
+-
+-    CTFontSymbolicTraits candidate_traits = kCTNormalTraitsValue;
+-    NSNumber* candidate_traits_ns = font_info[3];
+-    if (candidate_traits_ns) {
+-      candidate_traits = candidate_traits_ns.intValue & kImportantTraitsMask;
+-    }
++  // FlyWeb (FM.47): if the best member cannot be loaded in the renderer, drop
++  // it and take the next best one of the family instead of drawing LastResort
++  // or a substitute font.
++  NSMutableArray<NSArray*>* candidates = [fonts mutableCopy];
++  NSString* first_choice;
++  while (candidates.count) {
++    NSString* matched_font_name;
++    NSUInteger matched_index = 0;
++    CTFontSymbolicTraits chosen_traits;
++    int chosen_weight;
++    for (NSUInteger i = 0; i < candidates.count; ++i) {
++      NSArray* font_info = candidates[i];
++      int candidate_weight = kNormalWeightValue;
++      NSNumber* candidate_weight_ns = font_info[2];
++      if (candidate_weight_ns) {
++        candidate_weight = AppKitToCSSFontWeight(candidate_weight_ns.intValue);
++      }
+ 
+-    if (!matched_font_name ||
+-        BetterChoiceCT(desired_traits, desired_weight, chosen_traits,
+-                       chosen_weight, candidate_traits, candidate_weight)) {
+-      matched_font_name = font_info[0];
+-      chosen_traits = candidate_traits;
+-      chosen_weight = candidate_weight;
 +      CTFontSymbolicTraits candidate_traits = kCTNormalTraitsValue;
 +      NSNumber* candidate_traits_ns = font_info[3];
 +      if (candidate_traits_ns) {
 +        candidate_traits = candidate_traits_ns.intValue & kImportantTraitsMask;
 +      }
  
--    CTFontSymbolicTraits candidate_traits = kCTNormalTraitsValue;
--    NSNumber* candidate_traits_ns = font_info[3];
--    if (candidate_traits_ns) {
--      candidate_traits = candidate_traits_ns.intValue & kImportantTraitsMask;
+-      if (chosen_weight == desired_weight &&
+-          (chosen_traits & kImportantTraitsMask) ==
+-              (desired_traits & kImportantTraitsMask)) {
+-        break;
 +      if (!matched_font_name ||
 +          BetterChoiceCT(desired_traits, desired_weight, chosen_traits,
 +                         chosen_weight, candidate_traits, candidate_weight)) {
@@ -142,40 +141,28 @@ index f8d0d59d4bba46a917f9db9349243e17a7518ac9..537021f259133fdd44a78d640ac65df4
 +                (desired_traits & kImportantTraitsMask)) {
 +          break;
 +        }
-+      }
-+    }
+       }
+     }
 +    if (!matched_font_name) {
 +      break;
 +    }
 +    if (!first_choice) {
 +      first_choice = matched_font_name;
-     }
- 
--    if (!matched_font_name ||
--        BetterChoiceCT(desired_traits, desired_weight, chosen_traits,
--                       chosen_weight, candidate_traits, candidate_weight)) {
--      matched_font_name = font_info[0];
--      chosen_traits = candidate_traits;
--      chosen_weight = candidate_weight;
--
--      if (chosen_weight == desired_weight &&
--          (chosen_traits & kImportantTraitsMask) ==
--              (desired_traits & kImportantTraitsMask)) {
--        break;
--      }
++    }
++
 +    ScopedCFTypeRef<CTFontRef> matched_font =
 +        CreateLoadableFontWithName(matched_font_name, size);
 +    if (matched_font) {
 +      return matched_font;
-     }
-+    [fonts removeObjectAtIndex:matched_index];
++    }
++    [candidates removeObjectAtIndex:matched_index];
    }
 -  if (!matched_font_name) {
-+  // No member passed the check: keep the 128 result for the best one.
++  // No member passed the check: keep Chromium's result for the best one.
 +  if (!first_choice) {
      return ScopedCFTypeRef<CTFontRef>(nullptr);
    }
--
+ 
    return ScopedCFTypeRef<CTFontRef>(
 -      CTFontCreateWithName(NSToCFPtrCast(matched_font_name), size, nullptr));
 +      CTFontCreateWithName(NSToCFPtrCast(first_choice), size, nullptr));
