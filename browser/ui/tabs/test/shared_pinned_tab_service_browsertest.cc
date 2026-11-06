@@ -40,7 +40,7 @@ SharedPinnedTabServiceBrowserTest::~SharedPinnedTabServiceBrowserTest() =
 
 Browser* SharedPinnedTabServiceBrowserTest::CreateNewBrowser() {
   auto* new_browser =
-      chrome::OpenEmptyWindow(browser()->profile(),
+      chrome::OpenEmptyWindow(browser()->GetProfile(),
                               /*should_trigger_session_restore= */ false);
   browsers_.push_back(new_browser->AsWeakPtr());
   return new_browser;
@@ -112,7 +112,7 @@ void SharedPinnedTabServiceBrowserTest::SetUpOnMainThread() {
       }));
   ASSERT_TRUE(https_server_->Start());
 
-  browser()->profile()->GetPrefs()->SetBoolean(brave_tabs::kSharedPinnedTab,
+  browser()->GetProfile()->GetPrefs()->SetBoolean(brave_tabs::kSharedPinnedTab,
                                                true);
 }
 

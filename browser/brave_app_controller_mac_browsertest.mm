@@ -203,12 +203,12 @@ IN_PROC_BROWSER_TEST_F(BraveAppControllerBrowserTest,
   AppController* ac =
       base::apple::ObjCCastStrict<AppController>([NSApp delegate]);
   [ac mainMenuCreated];
-  [ac setLastProfile:browser()->profile()];
+  [ac setLastProfile:browser()->GetProfile()];
 
   // Added one bookmark item.
   constexpr char kPersistBookmarkURL[] = "http://www.cnn.com/";
   constexpr char16_t kPersistBookmarkTitle[] = u"CNN";
-  BookmarkModel* bookmark_model = WaitForBookmarkModel(browser()->profile());
+  BookmarkModel* bookmark_model = WaitForBookmarkModel(browser()->GetProfile());
   bookmarks::AddIfNotBookmarked(bookmark_model, GURL(kPersistBookmarkURL),
                                 kPersistBookmarkTitle);
 
@@ -225,7 +225,7 @@ IN_PROC_BROWSER_TEST_F(BraveAppControllerBrowserTest,
       base::SysNSStringToUTF16([[normal_window_submenu itemAtIndex:4] title]));
 
   // Create private browser and check bookmark menubar has same items.
-  auto* private_browser = CreateIncognitoBrowser(browser()->profile());
+  auto* private_browser = CreateIncognitoBrowser(browser()->GetProfile());
   [ac setLastProfile:private_browser->profile()];
   NSMenu* private_browser_submenu = [ac bookmarkMenuBridge]->BookmarkMenu();
   [[private_browser_submenu delegate] menuNeedsUpdate:private_browser_submenu];
@@ -238,7 +238,7 @@ IN_PROC_BROWSER_TEST_F(BraveAppControllerBrowserTest,
   chrome::CloseWindow(private_browser);
   ui_test_utils::WaitForBrowserToClose();
 
-  [ac setLastProfile:browser()->profile()];
+  [ac setLastProfile:browser()->GetProfile()];
   [[normal_window_submenu delegate] menuNeedsUpdate:normal_window_submenu];
   EXPECT_EQ(5, [normal_window_submenu numberOfItems]);
   EXPECT_EQ(

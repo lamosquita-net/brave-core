@@ -42,10 +42,10 @@ class BraveTabContextMenuContentsTest : public InProcessBrowserTest {
   Browser* CreateBrowser(bool incognito) {
     if (incognito) {
       return chrome::OpenEmptyWindow(
-          browser()->profile()->GetPrimaryOTRProfile(/*create_if_needed=*/true),
+          browser()->GetProfile()->GetPrimaryOTRProfile(/*create_if_needed=*/true),
           /*should_trigger_session_restore=*/false);
     }
-    return chrome::OpenEmptyWindow(browser()->profile(),
+    return chrome::OpenEmptyWindow(browser()->GetProfile(),
                                    /*should_trigger_session_restore=*/false);
   }
 

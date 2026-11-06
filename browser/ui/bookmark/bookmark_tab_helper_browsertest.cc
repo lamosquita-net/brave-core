@@ -59,7 +59,7 @@ void AddBookmarkNode(Profile* profile) {
 }  // namespace
 
 IN_PROC_BROWSER_TEST_F(BookmarkTabHelperBrowserTest, BookmarkBarOnNTPTest) {
-  auto* profile = browser()->profile();
+  auto* profile = browser()->GetProfile();
   auto* contents = browser()->tab_strip_model()->GetActiveWebContents();
 
   // Check Bookmark bar is hidden by default for non NTP.

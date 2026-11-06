@@ -71,10 +71,10 @@ class BraveThemeServiceTest : public InProcessBrowserTest {
         GetTestDataDir().AppendASCII("extensions").AppendASCII(filename);
 
     extensions::TestExtensionRegistryObserver observer(
-        extensions::ExtensionRegistry::Get(browser()->profile()));
+        extensions::ExtensionRegistry::Get(browser()->GetProfile()));
 
     auto installer = extensions::CrxInstaller::CreateSilent(
-        extensions::ExtensionSystem::Get(browser()->profile())
+        extensions::ExtensionSystem::Get(browser()->GetProfile())
             ->extension_service());
     installer->set_allow_silent_install(true);
     installer->set_install_cause(extension_misc::INSTALL_CAUSE_USER_DOWNLOAD);
@@ -119,7 +119,7 @@ class BraveThemeServiceTestWithoutSystemTheme : public InProcessBrowserTest {
 
 IN_PROC_BROWSER_TEST_F(BraveThemeServiceTestWithoutSystemTheme,
                        BraveThemeChangeTest) {
-  Profile* profile = browser()->profile();
+  Profile* profile = browser()->GetProfile();
   auto test_theme_color = kColorForTest;
 
   // Test light theme
@@ -251,7 +251,7 @@ IN_PROC_BROWSER_TEST_F(BraveThemeServiceTest, ColorProviderTest) {
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   // Check frame color is not ours when theme extension is installed.
   ThemeService* theme_service =
-      ThemeServiceFactory::GetForProfile(browser()->profile());
+      ThemeServiceFactory::GetForProfile(browser()->GetProfile());
   test::ThemeServiceChangedWaiter waiter(theme_service);
 
   EXPECT_FALSE(UsingCustomTheme(*theme_service));

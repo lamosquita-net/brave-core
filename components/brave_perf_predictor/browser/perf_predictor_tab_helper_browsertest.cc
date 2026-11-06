@@ -52,7 +52,7 @@ class PerfPredictorTabHelperTest : public InProcessBrowserTest {
     host_resolver()->AddRule("*", "127.0.0.1");
 
     auto* content_settings =
-        HostContentSettingsMapFactory::GetForProfile(browser()->profile());
+        HostContentSettingsMapFactory::GetForProfile(browser()->GetProfile());
 
     // Most tests are written for aggressive mode. Individual tests should reset
     // this using `DisableAggressiveMode` if they are testing standard mode

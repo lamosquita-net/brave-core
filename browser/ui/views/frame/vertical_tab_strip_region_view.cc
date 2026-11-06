@@ -131,7 +131,7 @@ class VerticalTabSearchButton : public BraveTabSearchButton {
 
     vertical_tab_on_right_.Init(
         brave_tabs::kVerticalTabsOnRight,
-        region_view->browser()->profile()->GetPrefs(),
+        region_view->browser()->GetProfile()->GetPrefs(),
         base::BindRepeating(&VerticalTabSearchButton::UpdateBubbleArrow,
                             base::Unretained(this)));
     UpdateBubbleArrow();
@@ -470,7 +470,7 @@ class VerticalTabStripRegionView::HeaderView : public views::View {
 
     vertical_tab_on_right_.Init(
         brave_tabs::kVerticalTabsOnRight,
-        region_view_->browser()->profile()->GetPrefs(),
+        region_view_->browser()->GetProfile()->GetPrefs(),
         base::BindRepeating(&HeaderView::OnVerticalTabPositionChanged,
                             base::Unretained(this)));
     OnVerticalTabPositionChanged();
@@ -655,7 +655,7 @@ VerticalTabStripRegionView::VerticalTabStripRegionView(
 #endif
 
   vertical_tab_on_right_.Init(
-      brave_tabs::kVerticalTabsOnRight, browser()->profile()->GetPrefs(),
+      brave_tabs::kVerticalTabsOnRight, browser()->GetProfile()->GetPrefs(),
       base::BindRepeating(
           &VerticalTabStripRegionView::OnVerticalTabPositionChanged,
           base::Unretained(this)));

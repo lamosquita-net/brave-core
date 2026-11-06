@@ -23,7 +23,7 @@ BraveBrowserFrameViewWin::BraveBrowserFrameViewWin(BrowserFrame* frame,
                                                    BrowserView* browser_view)
     : BrowserFrameViewWin(frame, browser_view) {
   DCHECK(browser_view->browser());
-  auto* prefs = browser_view->browser()->profile()->GetPrefs();
+  auto* prefs = browser_view->browser()->GetProfile()->GetPrefs();
   using_vertical_tabs_.Init(
       brave_tabs::kVerticalTabsEnabled, prefs,
       base::BindRepeating(&BraveBrowserFrameViewWin::OnVerticalTabsPrefsChanged,

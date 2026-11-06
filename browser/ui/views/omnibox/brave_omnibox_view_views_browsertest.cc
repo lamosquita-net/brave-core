@@ -62,7 +62,7 @@ class BraveOmniboxViewViewsTest : public InProcessBrowserTest {
 
     auto* url_sanitizer_service =
         brave::URLSanitizerServiceFactory::GetForBrowserContext(
-            browser()->profile());
+            browser()->GetProfile());
     url_sanitizer_service->SetInitializationCallbackForTesting(
         loop.QuitClosure());
     brave::URLSanitizerComponentInstaller::RawConfig config;
@@ -107,7 +107,7 @@ IN_PROC_BROWSER_TEST_F(BraveOmniboxViewViewsTest, PasteAndSearchTest) {
   EXPECT_TRUE(brave_omnibox_view->GetClipboardTextForPasteAndSearch());
 
   auto* service =
-      TemplateURLServiceFactory::GetForProfile(browser()->profile());
+      TemplateURLServiceFactory::GetForProfile(browser()->GetProfile());
   EXPECT_TRUE(VerifyTemplateURLServiceLoad(service));
 
   // Set custom search provider to normal profile.

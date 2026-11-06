@@ -112,7 +112,7 @@ class CookieListOptInBrowserTest : public InProcessBrowserTest {
   }
 
   void WaitForSessionRestore() {
-    if (SessionRestore::IsRestoring(browser()->profile())) {
+    if (SessionRestore::IsRestoring(browser()->GetProfile())) {
       base::RunLoop run_loop;
       auto subscription = SessionRestore::RegisterOnSessionRestoredCallback(
           base::BindLambdaForTesting(
@@ -171,7 +171,7 @@ IN_PROC_BROWSER_TEST_F(CookieListOptInBrowserTest, PRE_MultipleWindowRestore) {
   EXPECT_TRUE(GetBubbleWebContents());
 
   // Create another browser window.
-  CreateBrowser(browser()->profile());
+  CreateBrowser(browser()->GetProfile());
 
   // Before closing, reset the "show" pref so that the opt-in will be displayed
   // again.
@@ -207,10 +207,10 @@ IN_PROC_BROWSER_TEST_F(CookieListOptInBrowserTest, FirstRun) {
   StartupBrowserCreatorImpl creator(base::FilePath(), command_line,
                                     chrome::startup::IsFirstRun::kYes);
 
-  creator.Launch(browser()->profile(), chrome::startup::IsProcessStartup::kNo,
+  creator.Launch(browser()->GetProfile(), chrome::startup::IsProcessStartup::kNo,
                  nullptr, /*restore_tabbed_browser=*/true);
 
-  Browser* new_browser = chrome::FindBrowserWithProfile(browser()->profile());
+  Browser* new_browser = chrome::FindBrowserWithProfile(browser()->GetProfile());
   ASSERT_TRUE(new_browser);
   TabStripModel* tab_strip = new_browser->tab_strip_model();
   ASSERT_EQ(1, tab_strip->count());

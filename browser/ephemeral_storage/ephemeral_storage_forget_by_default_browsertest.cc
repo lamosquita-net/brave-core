@@ -59,7 +59,7 @@ IN_PROC_BROWSER_TEST_F(EphemeralStorageForgetByDefaultBrowserTest,
   EXPECT_EQ(
       brave_shields::GetCookieControlType(
           content_settings(),
-          CookieSettingsFactory::GetForProfile(browser()->profile()).get(),
+          CookieSettingsFactory::GetForProfile(browser()->GetProfile()).get(),
           a_site_ephemeral_storage_url_),
       brave_shields::ControlType::BLOCK_THIRD_PARTY);
 
@@ -87,7 +87,7 @@ IN_PROC_BROWSER_TEST_F(EphemeralStorageForgetByDefaultBrowserTest,
   EXPECT_EQ(
       brave_shields::GetCookieControlType(
           content_settings(),
-          CookieSettingsFactory::GetForProfile(browser()->profile()).get(),
+          CookieSettingsFactory::GetForProfile(browser()->GetProfile()).get(),
           a_site_ephemeral_storage_url_),
       brave_shields::ControlType::BLOCK_THIRD_PARTY);
 
@@ -120,7 +120,7 @@ IN_PROC_BROWSER_TEST_F(EphemeralStorageForgetByDefaultBrowserTest,
   EXPECT_EQ(
       brave_shields::GetCookieControlType(
           content_settings(),
-          CookieSettingsFactory::GetForProfile(browser()->profile()).get(),
+          CookieSettingsFactory::GetForProfile(browser()->GetProfile()).get(),
           sub_a_site_ephemeral_storage_url),
       brave_shields::ControlType::BLOCK_THIRD_PARTY);
 
@@ -150,7 +150,7 @@ IN_PROC_BROWSER_TEST_F(EphemeralStorageForgetByDefaultBrowserTest,
   EXPECT_EQ(
       brave_shields::GetCookieControlType(
           content_settings(),
-          CookieSettingsFactory::GetForProfile(browser()->profile()).get(),
+          CookieSettingsFactory::GetForProfile(browser()->GetProfile()).get(),
           sub_a_site_ephemeral_storage_url),
       brave_shields::ControlType::BLOCK_THIRD_PARTY);
 
@@ -232,10 +232,10 @@ IN_PROC_BROWSER_TEST_F(EphemeralStorageForgetByDefaultBrowserTest,
   WebContents* site_b = LoadURLInNewTab(b_site_ephemeral_storage_url_);
 
   // Default cookie storage request should return non empty results.
-  EXPECT_FALSE(content::GetCookies(browser()->profile(),
+  EXPECT_FALSE(content::GetCookies(browser()->GetProfile(),
                                    https_server_.GetURL("a.com", "/"))
                    .empty());
-  EXPECT_FALSE(content::GetCookies(browser()->profile(),
+  EXPECT_FALSE(content::GetCookies(browser()->GetProfile(),
                                    https_server_.GetURL("b.com", "/"))
                    .empty());
 
@@ -523,7 +523,7 @@ IN_PROC_BROWSER_TEST_F(EphemeralStorageForgetByDefaultDisabledBrowserTest,
   EXPECT_EQ(
       brave_shields::GetCookieControlType(
           content_settings(),
-          CookieSettingsFactory::GetForProfile(browser()->profile()).get(),
+          CookieSettingsFactory::GetForProfile(browser()->GetProfile()).get(),
           a_site_set_cookie_url),
       brave_shields::ControlType::BLOCK_THIRD_PARTY);
 
@@ -563,7 +563,7 @@ IN_PROC_BROWSER_TEST_F(EphemeralStorageForgetByDefaultDisabledBrowserTest,
   EXPECT_EQ(
       brave_shields::GetCookieControlType(
           content_settings(),
-          CookieSettingsFactory::GetForProfile(browser()->profile()).get(),
+          CookieSettingsFactory::GetForProfile(browser()->GetProfile()).get(),
           a_com_empty),
       brave_shields::ControlType::BLOCK_THIRD_PARTY);
 

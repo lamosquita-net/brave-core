@@ -258,9 +258,9 @@ IN_PROC_BROWSER_TEST_F(EphemeralStorage1pBrowserTest,
   WebContents* site_b = LoadURLInNewTab(b_site_ephemeral_storage_url_);
 
   // Default cookie storage request should return empty results.
-  EXPECT_TRUE(content::GetCookies(browser()->profile(), GURL("https://a.com/"))
+  EXPECT_TRUE(content::GetCookies(browser()->GetProfile(), GURL("https://a.com/"))
                   .empty());
-  EXPECT_TRUE(content::GetCookies(browser()->profile(), GURL("https://b.com/"))
+  EXPECT_TRUE(content::GetCookies(browser()->GetProfile(), GURL("https://b.com/"))
                   .empty());
 
   // JS cookie request should return valid results.
@@ -290,7 +290,7 @@ IN_PROC_BROWSER_TEST_F(EphemeralStorage1pBrowserTest,
 
   // The cookie set in the ephemeral area should not be visible in the main
   // cookie storage.
-  EXPECT_TRUE(content::GetCookies(browser()->profile(), GURL("https://b.com/"))
+  EXPECT_TRUE(content::GetCookies(browser()->GetProfile(), GURL("https://b.com/"))
                   .empty());
   EXPECT_EQ("name=bcom", GetCookiesInFrame(site_b->GetPrimaryMainFrame()));
 

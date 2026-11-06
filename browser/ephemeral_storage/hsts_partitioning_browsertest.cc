@@ -139,7 +139,7 @@ class HSTSPartitioningBrowserTestBase : public InProcessBrowserTest {
 
   void NetworkContextAddHSTS(const std::string& host) {
     content::StoragePartition* partition =
-        browser()->profile()->GetDefaultStoragePartition();
+        browser()->GetProfile()->GetDefaultStoragePartition();
     base::RunLoop run_loop;
     partition->GetNetworkContext()->AddHSTS(
         host, base::Time::Now() + base::Days(1), false, run_loop.QuitClosure());
@@ -148,7 +148,7 @@ class HSTSPartitioningBrowserTestBase : public InProcessBrowserTest {
 
   bool NetworkContextIsHSTSActiveForHost(const std::string& host) {
     content::StoragePartition* partition =
-        browser()->profile()->GetDefaultStoragePartition();
+        browser()->GetProfile()->GetDefaultStoragePartition();
     base::RunLoop run_loop;
     bool result = false;
     partition->GetNetworkContext()->IsHSTSActiveForHost(
@@ -163,7 +163,7 @@ class HSTSPartitioningBrowserTestBase : public InProcessBrowserTest {
 
   base::DictValue NetworkContextGetHSTSState(const std::string& host) {
     content::StoragePartition* partition =
-        browser()->profile()->GetDefaultStoragePartition();
+        browser()->GetProfile()->GetDefaultStoragePartition();
     base::RunLoop run_loop;
     base::DictValue result;
     partition->GetNetworkContext()->GetHSTSState(
@@ -178,7 +178,7 @@ class HSTSPartitioningBrowserTestBase : public InProcessBrowserTest {
 
   bool NetworkContextDeleteDynamicDataForHost(const std::string& host) {
     content::StoragePartition* partition =
-        browser()->profile()->GetDefaultStoragePartition();
+        browser()->GetProfile()->GetDefaultStoragePartition();
     base::RunLoop run_loop;
     bool result = false;
     partition->GetNetworkContext()->DeleteDynamicDataForHost(

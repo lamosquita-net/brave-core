@@ -98,7 +98,7 @@ class URLSanitizerTestBase : public InProcessBrowserTest {
 
   brave::URLSanitizerService* GetSanitizer() {
     return brave::URLSanitizerServiceFactory::GetForBrowserContext(
-        browser()->profile());
+        browser()->GetProfile());
   }
 
   void SetSanitizerRules(const std::string& matchers,

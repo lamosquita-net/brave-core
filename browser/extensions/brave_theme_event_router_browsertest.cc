@@ -35,9 +35,9 @@ IN_PROC_BROWSER_TEST_F(BraveThemeEventRouterBrowserTest,
       dark_mode::BraveDarkModeType::BRAVE_DARK_MODE_TYPE_DARK);
 
   extensions::MockBraveThemeEventRouter* mock_router =
-      new extensions::MockBraveThemeEventRouter(browser()->profile());
+      new extensions::MockBraveThemeEventRouter(browser()->GetProfile());
   BraveThemeService* service = static_cast<BraveThemeService*>(
-      ThemeServiceFactory::GetForProfile(browser()->profile()));
+      ThemeServiceFactory::GetForProfile(browser()->GetProfile()));
   service->SetBraveThemeEventRouterForTesting(mock_router);
 
   EXPECT_CALL(*mock_router, Notify()).Times(1);

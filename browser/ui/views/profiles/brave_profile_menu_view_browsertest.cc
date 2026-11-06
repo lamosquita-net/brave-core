@@ -77,7 +77,7 @@ class BraveProfileMenuViewTest : public InProcessBrowserTest {
   }
 
   std::u16string GetProfileName() {
-    Profile* profile = browser()->profile();
+    Profile* profile = browser()->GetProfile();
     ProfileAttributesEntry* profile_attributes =
         g_browser_process->profile_manager()
             ->GetProfileAttributesStorage()

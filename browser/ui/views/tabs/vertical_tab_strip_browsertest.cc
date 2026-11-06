@@ -236,7 +236,7 @@ IN_PROC_BROWSER_TEST_F(VerticalTabStripBrowserTest, WindowTitle) {
   ToggleVerticalTabStrip();
 
 #if BUILDFLAG(IS_LINUX)
-  browser()->profile()->GetPrefs()->SetBoolean(prefs::kUseCustomChromeFrame,
+  browser()->GetProfile()->GetPrefs()->SetBoolean(prefs::kUseCustomChromeFrame,
                                                true);
 #endif
 
@@ -345,7 +345,7 @@ IN_PROC_BROWSER_TEST_F(VerticalTabStripBrowserTest, VisualState) {
   ASSERT_EQ(State::kExpanded, region_view->state());
 
   // Try Expanding / collapsing
-  auto* prefs = browser()->profile()->GetOriginalProfile()->GetPrefs();
+  auto* prefs = browser()->GetProfile()->GetOriginalProfile()->GetPrefs();
   prefs->SetBoolean(brave_tabs::kVerticalTabsCollapsed, true);
   EXPECT_EQ(State::kCollapsed, region_view->state());
   prefs->SetBoolean(brave_tabs::kVerticalTabsCollapsed, false);
@@ -499,7 +499,7 @@ IN_PROC_BROWSER_TEST_F(VerticalTabStripBrowserTest, LayoutSanity) {
 IN_PROC_BROWSER_TEST_F(VerticalTabStripBrowserTest, ScrollBarVisibility) {
   ToggleVerticalTabStrip();
 
-  auto* prefs = browser()->profile()->GetPrefs();
+  auto* prefs = browser()->GetProfile()->GetPrefs();
   auto* pref = prefs->FindPreference(brave_tabs::kVerticalTabsShowScrollbar);
 
   // Check if the default value is false
@@ -635,7 +635,7 @@ IN_PROC_BROWSER_TEST_F(VerticalTabStripBrowserTest, OriginalTabSearchButton) {
   EXPECT_TRUE(original_tab_search_button->GetVisible());
 
   // Turn off the button with a preference.
-  browser()->profile()->GetPrefs()->SetBoolean(kTabsSearchShow, false);
+  browser()->GetProfile()->GetPrefs()->SetBoolean(kTabsSearchShow, false);
   EXPECT_FALSE(original_tab_search_button->GetVisible());
 
   // Turn on and off vertical tab strip
@@ -820,7 +820,7 @@ IN_PROC_BROWSER_TEST_F(VerticalTabStripDragAndDropBrowserTest,
                 auto* browser_list = BrowserList::GetInstance();
                 EXPECT_EQ(2,
                           std::ranges::count_if(*browser_list, [&](Browser* b) {
-                            return b->profile() == browser()->profile();
+                            return b->profile() == browser()->GetProfile();
                           }));
                 ReleaseMouse();
                 auto* new_browser = browser_list->GetLastActive();
@@ -897,7 +897,7 @@ IN_PROC_BROWSER_TEST_F(VerticalTabStripWithScrollableTabBrowserTest, Sanity) {
   // Make sure browser works with both vertical tab and scrollable tab strip
   // https://github.com/brave/brave-browser/issues/28877
   ToggleVerticalTabStrip();
-  Browser::Create(Browser::CreateParams(browser()->profile(), true));
+  Browser::Create(Browser::CreateParams(browser()->GetProfile(), true));
 }
 
 // * Non-type argument of 'float' or 'double' for template is unsupported
@@ -921,7 +921,7 @@ IN_PROC_BROWSER_TEST_F(VerticalTabStripWithScrollableTabBrowserTest, Sanity) {
                                                                           \
   IN_PROC_BROWSER_TEST_F(DPI##VerticalTabStripBrowserTest, DPI) {         \
     /* Manipulate size and state */                                       \
-    auto* prefs = browser()->profile()->GetOriginalProfile()->GetPrefs(); \
+    auto* prefs = browser()->GetProfile()->GetOriginalProfile()->GetPrefs(); \
     browser_view()->Maximize();                                           \
     prefs->SetBoolean(brave_tabs::kVerticalTabsCollapsed, true);          \
     prefs->SetBoolean(brave_tabs::kVerticalTabsCollapsed, false);         \
@@ -983,7 +983,7 @@ class VerticalTabStripScrollBarFlagTest : public VerticalTabStripBrowserTest {
 };
 
 IN_PROC_BROWSER_TEST_F(VerticalTabStripScrollBarFlagTest, MigrationTest) {
-  auto* prefs = browser()->profile()->GetPrefs();
+  auto* prefs = browser()->GetProfile()->GetPrefs();
   auto* pref = prefs->FindPreference(brave_tabs::kVerticalTabsShowScrollbar);
   ASSERT_TRUE(pref);
 

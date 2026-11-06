@@ -61,7 +61,7 @@ class WindowClosingConfirmBrowserTest : public InProcessBrowserTest,
 
     InProcessBrowserTest::SetUpOnMainThread();
 
-    PrefService* prefs = browser()->profile()->GetPrefs();
+    PrefService* prefs = browser()->GetProfile()->GetPrefs();
     // Enabled by default.
     EXPECT_TRUE(prefs->GetBoolean(kEnableWindowClosingConfirm));
 
@@ -226,7 +226,7 @@ IN_PROC_BROWSER_TEST_F(WindowClosingConfirmBrowserTest,
 
   // However, should not ask for profile deletion.
   closing_confirm_dialog_created_ = false;
-  webui::DeleteProfileAtPath(browser()->profile()->GetPath(),
+  webui::DeleteProfileAtPath(browser()->GetProfile()->GetPath(),
                              ProfileMetrics::DELETE_PROFILE_SETTINGS);
   ui_test_utils::WaitForBrowserToClose(browser());
   EXPECT_FALSE(closing_confirm_dialog_created_);

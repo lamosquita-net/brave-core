@@ -64,7 +64,7 @@ IN_PROC_BROWSER_TEST_F(BraveBrowserBrowserTest, DisabledFeatureURLLoadTest) {
 
 IN_PROC_BROWSER_TEST_F(BraveBrowserBrowserTest, OpenNewTabWhenTabStripIsEmpty) {
   ASSERT_TRUE(embedded_test_server()->Start());
-  Browser* new_browser = OpenNewBrowser(browser()->profile());
+  Browser* new_browser = OpenNewBrowser(browser()->GetProfile());
   ASSERT_TRUE(new_browser);
   new_browser->profile()->GetPrefs()->SetBoolean(kEnableClosingLastTab, false);
   TabStripModel* tab_strip = new_browser->tab_strip_model();
@@ -110,7 +110,7 @@ IN_PROC_BROWSER_TEST_F(BraveBrowserBrowserTest, OpenNewTabWhenTabStripIsEmpty) {
 IN_PROC_BROWSER_TEST_F(BraveBrowserBrowserTest,
                        DoNotOpenNewTabWhenTabStripIsEmpty) {
   ASSERT_TRUE(embedded_test_server()->Start());
-  Browser* new_browser = OpenNewBrowser(browser()->profile());
+  Browser* new_browser = OpenNewBrowser(browser()->GetProfile());
   ASSERT_TRUE(new_browser);
   new_browser->profile()->GetPrefs()->SetBoolean(kEnableClosingLastTab, true);
   TabStripModel* tab_strip = new_browser->tab_strip_model();
@@ -132,7 +132,7 @@ IN_PROC_BROWSER_TEST_F(BraveBrowserBrowserTest,
   // Given that kEnableClosingLastTab is false, which normally creates a new tab
   // when tab strip is empty.
   ASSERT_TRUE(embedded_test_server()->Start());
-  Browser* new_browser = OpenNewBrowser(browser()->profile());
+  Browser* new_browser = OpenNewBrowser(browser()->GetProfile());
   ASSERT_TRUE(new_browser);
   new_browser->profile()->GetPrefs()->SetBoolean(kEnableClosingLastTab, false);
 

@@ -135,7 +135,7 @@ void BraveToolbarView::Init() {
     return;
   }
 
-  Profile* profile = browser()->profile();
+  Profile* profile = browser()->GetProfile();
 
   // We don't use divider between extensions container and other toolbar
   // buttons. Upstream conditionally creates |toolbar_divider_|, they check
@@ -328,7 +328,7 @@ void BraveToolbarView::ShowBookmarkBubble(const GURL& url,
 
   std::unique_ptr<BubbleSignInPromoDelegate> delegate;
   delegate =
-      std::make_unique<BookmarkBubbleSignInDelegate>(browser()->profile());
+      std::make_unique<BookmarkBubbleSignInDelegate>(browser()->GetProfile());
   BookmarkBubbleView::ShowBubble(anchor_view, GetWebContents(), bookmark_,
                                  std::move(delegate), browser_, url,
                                  already_bookmarked);

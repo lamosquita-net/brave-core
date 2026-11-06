@@ -37,7 +37,7 @@ class BraveCheckClientDownloadRequestBaseBrowserTest
 
     host_resolver()->AddRule("*", "127.0.0.1");
 
-    browser()->profile()->GetPrefs()->SetBoolean(prefs::kPromptForDownload,
+    browser()->GetProfile()->GetPrefs()->SetBoolean(prefs::kPromptForDownload,
                                                  false);
 
     base::PathService::Get(brave::DIR_TEST_DATA, &test_data_dir_);

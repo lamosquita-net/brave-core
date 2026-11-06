@@ -118,7 +118,7 @@ IN_PROC_BROWSER_TEST_F(BraveToolbarViewTest,
   ProfileManager* profile_manager = g_browser_process->profile_manager();
   ProfileAttributesStorage& storage =
       profile_manager->GetProfileAttributesStorage();
-  base::FilePath current_profile_path = browser()->profile()->GetPath();
+  base::FilePath current_profile_path = browser()->GetProfile()->GetPath();
   base::FilePath new_path = profile_manager->GenerateNextProfileDirectoryPath();
   Profile& new_profile =
       profiles::testing::CreateProfileSync(profile_manager, new_path);
@@ -160,7 +160,7 @@ IN_PROC_BROWSER_TEST_F(BraveToolbarViewTest,
 
 IN_PROC_BROWSER_TEST_F(BraveToolbarViewTest,
                        BookmarkButtonCanBeToggledWithPref) {
-  auto* prefs = browser()->profile()->GetPrefs();
+  auto* prefs = browser()->GetProfile()->GetPrefs();
 
   // By default, the button should be shown.
   EXPECT_TRUE(prefs->GetBoolean(kShowBookmarksButton));

@@ -30,7 +30,7 @@ IN_PROC_BROWSER_TEST_F(BraveSessionRestoreBrowserTest,
   auto* tab_model = browser()->tab_strip_model();
   auto* web_contents = tab_model->GetActiveWebContents();
   SessionService* const session_service =
-      SessionServiceFactory::GetForProfile(browser()->profile());
+      SessionServiceFactory::GetForProfile(browser()->GetProfile());
   ui_test_utils::NavigateToURLBlockUntilNavigationsComplete(
       browser(), GURL("brave://newtab/"), 1);
   ASSERT_EQ(true, EvalJs(web_contents,
@@ -73,7 +73,7 @@ IN_PROC_BROWSER_TEST_F(BraveSessionRestoreBrowserTest,
   auto* tab_model = browser()->tab_strip_model();
   auto* web_contents = tab_model->GetActiveWebContents();
   SessionService* const session_service =
-      SessionServiceFactory::GetForProfile(browser()->profile());
+      SessionServiceFactory::GetForProfile(browser()->GetProfile());
   ui_test_utils::NavigateToURLBlockUntilNavigationsComplete(
       browser(), GURL("brave://rewards/"), 1);
   ASSERT_EQ(true, EvalJs(web_contents,

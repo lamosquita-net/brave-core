@@ -44,7 +44,7 @@ IN_PROC_BROWSER_TEST_F(BraveThemeAPIBrowserTest,
       new BraveThemeGetBraveThemeTypeFunction());
   get_function->set_extension(extension().get());
   auto value = RunFunctionAndReturnSingleResult(
-      get_function.get(), std::string("[]"), browser()->profile());
+      get_function.get(), std::string("[]"), browser()->GetProfile());
   ASSERT_TRUE(value);
   EXPECT_EQ(value->GetString(), "Light");
 }

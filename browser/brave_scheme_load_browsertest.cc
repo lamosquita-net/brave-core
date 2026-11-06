@@ -39,7 +39,7 @@ class BraveSchemeLoadBrowserTest : public InProcessBrowserTest,
   }
 
   PrefService* prefs() {
-    return user_prefs::UserPrefs::Get(browser()->profile());
+    return user_prefs::UserPrefs::Get(browser()->GetProfile());
   }
 
   // TabStripModelObserver overrides:

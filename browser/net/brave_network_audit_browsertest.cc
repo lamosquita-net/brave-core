@@ -204,7 +204,7 @@ class BraveNetworkAuditTest : public InProcessBrowserTest {
     VerifyNetworkAuditLog();
   }
 
-  Profile* profile() { return browser()->profile(); }
+  Profile* profile() { return browser()->GetProfile(); }
 
  private:
   // Verify that the netlog file was written, appears to be well formed, and
@@ -258,7 +258,7 @@ IN_PROC_BROWSER_TEST_F(BraveNetworkAuditTest, BasicTests) {
   // Add a password to the password manager.
   password_manager::PasswordStoreInterface* password_store =
       ProfilePasswordStoreFactory::GetForProfile(
-          browser()->profile(), ServiceAccessType::IMPLICIT_ACCESS)
+          browser()->GetProfile(), ServiceAccessType::IMPLICIT_ACCESS)
           .get();
   password_manager::PasswordForm signin_form;
   signin_form.signon_realm = "https://www.facebook.com/";

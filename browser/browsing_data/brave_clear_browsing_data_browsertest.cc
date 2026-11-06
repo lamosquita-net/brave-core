@@ -208,7 +208,7 @@ IN_PROC_BROWSER_TEST_F(BraveClearDataOnExitTest, NoPrefsSet) {
 IN_PROC_BROWSER_TEST_F(BraveClearDataOnExitTest, VerifyRemovalMasks) {
   // Set all clear data on exit preferences and corresponding expected remove
   // mask and origin flags.
-  SetClearAll(browser()->profile()->GetPrefs());
+  SetClearAll(browser()->GetProfile()->GetPrefs());
 
   // Given those preferences the following removal mask is expected.
   SetExpectedRemoveDataRemovalMasks(GetRemoveMaskAll(), GetOriginMaskAll());
@@ -299,7 +299,7 @@ class BraveClearDataOnExitTwoBrowsersTest : public BraveClearDataOnExitTest {
   }
 
   void SetDeleteBrowsingHistoryOnExit() {
-    SetDeleteBrowsingHistoryOnExit(browser()->profile());
+    SetDeleteBrowsingHistoryOnExit(browser()->GetProfile());
   }
 
  private:
@@ -313,7 +313,7 @@ IN_PROC_BROWSER_TEST_F(BraveClearDataOnExitTwoBrowsersTest, SameProfile) {
   SetExepectedRemoveDataCallCount(1);
 
   // Open a second browser window.
-  Browser* second_window = NewBrowserWindow(browser()->profile());
+  Browser* second_window = NewBrowserWindow(browser()->GetProfile());
   // Close second browser window
   CloseBrowserWindow(second_window);
   EXPECT_EQ(0, remove_data_call_count());
@@ -330,7 +330,7 @@ IN_PROC_BROWSER_TEST_F(BraveClearDataOnExitTwoBrowsersTest, OneOTR) {
 
   // Open a second browser window with OTR profile.
   Browser* second_window = NewBrowserWindow(
-      browser()->profile()->GetPrimaryOTRProfile(/*create_if_needed=*/true));
+      browser()->GetProfile()->GetPrimaryOTRProfile(/*create_if_needed=*/true));
   // Close second browser window
   CloseBrowserWindow(second_window);
   EXPECT_EQ(0, remove_data_call_count());
@@ -347,7 +347,7 @@ IN_PROC_BROWSER_TEST_F(BraveClearDataOnExitTwoBrowsersTest, OneOTRExitsLast) {
 
   // Open a second browser window with OTR profile.
   Browser* second_window = NewBrowserWindow(
-      browser()->profile()->GetPrimaryOTRProfile(/*create_if_needed=*/true));
+      browser()->GetProfile()->GetPrimaryOTRProfile(/*create_if_needed=*/true));
 
   // Close regular profile window.
   CloseBrowserWindow(browser());

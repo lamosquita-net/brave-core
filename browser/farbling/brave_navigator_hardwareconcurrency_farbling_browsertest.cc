@@ -54,7 +54,7 @@ class BraveNavigatorHardwareConcurrencyFarblingBrowserTest
   const GURL& farbling_url() { return farbling_url_; }
 
   HostContentSettingsMap* content_settings() {
-    return HostContentSettingsMapFactory::GetForProfile(browser()->profile());
+    return HostContentSettingsMapFactory::GetForProfile(browser()->GetProfile());
   }
 
   void AllowFingerprinting() {

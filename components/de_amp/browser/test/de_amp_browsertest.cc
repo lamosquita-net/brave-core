@@ -131,7 +131,7 @@ class DeAmpBrowserTest : public InProcessBrowserTest {
     InProcessBrowserTest::SetUpOnMainThread();
     mock_cert_verifier_.mock_cert_verifier()->set_default_result(net::OK);
     host_resolver()->AddRule("*", "127.0.0.1");
-    prefs_ = browser()->profile()->GetPrefs();
+    prefs_ = browser()->GetProfile()->GetPrefs();
 
     content::SetupCrossSiteRedirector(https_server_.get());
   }
@@ -369,7 +369,7 @@ IN_PROC_BROWSER_TEST_F(DeAmpBrowserTest, RestoreTab) {
   SetRequestHandler(kTestAmpPage, Amp(kTestCanonicalPage));
   StartServer();
   NavigateToURLAndWaitForRedirects(kTestAmpPage, kTestCanonicalPage);
-  Profile* profile = browser()->profile();
+  Profile* profile = browser()->GetProfile();
 
   ScopedKeepAlive test_keep_alive(KeepAliveOrigin::PANEL_VIEW,
                                   KeepAliveRestartOption::DISABLED);

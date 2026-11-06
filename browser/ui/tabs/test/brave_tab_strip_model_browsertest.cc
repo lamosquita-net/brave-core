@@ -28,7 +28,7 @@ IN_PROC_BROWSER_TEST_F(BraveTabStripModelTest, MRUCyclingBasic) {
   EXPECT_EQ(tab_strip_model->active_index(), 0);
 
   // Activate MRU cycling
-  browser()->profile()->GetPrefs()->SetBoolean(kMRUCyclingEnabled, true);
+  browser()->GetProfile()->GetPrefs()->SetBoolean(kMRUCyclingEnabled, true);
 
   // MRU cycling, 0 -> 2
   chrome::ExecuteCommand(browser(), IDC_SELECT_NEXT_TAB);
@@ -47,7 +47,7 @@ IN_PROC_BROWSER_TEST_F(BraveTabStripModelTest, MRUCyclingBasic) {
 // second Ctrl + tab should restart mru cycling.
 IN_PROC_BROWSER_TEST_F(BraveTabStripModelTest, TabClosingWhileMRUCycling) {
   // Activate MRU cycling
-  browser()->profile()->GetPrefs()->SetBoolean(kMRUCyclingEnabled, true);
+  browser()->GetProfile()->GetPrefs()->SetBoolean(kMRUCyclingEnabled, true);
 
   TabStripModel* tab_strip_model = browser()->tab_strip_model();
 

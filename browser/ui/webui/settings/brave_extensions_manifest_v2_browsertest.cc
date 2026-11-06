@@ -68,18 +68,18 @@ class BraveExtensionsManifestV2BrowserTest : public InProcessBrowserTest {
   void SimulateInstall() {
     scoped_refptr<const extensions::Extension> extension(
         extensions::ExtensionBuilder("extension").SetID(kExtensionId).Build());
-    extensions::ExtensionSystem::Get(browser()->profile())
+    extensions::ExtensionSystem::Get(browser()->GetProfile())
         ->extension_service()
         ->AddExtension(extension.get());
   }
 
   void EnableExtension(bool enable) {
     if (enable) {
-      extensions::ExtensionSystem::Get(browser()->profile())
+      extensions::ExtensionSystem::Get(browser()->GetProfile())
           ->extension_service()
           ->EnableExtension(kExtensionId);
     } else {
-      extensions::ExtensionSystem::Get(browser()->profile())
+      extensions::ExtensionSystem::Get(browser()->GetProfile())
           ->extension_service()
           ->DisableExtension(kExtensionId,
                              extensions::disable_reason::DISABLE_USER_ACTION);
@@ -87,7 +87,7 @@ class BraveExtensionsManifestV2BrowserTest : public InProcessBrowserTest {
   }
 
   bool IsExtensionInstalled() {
-    return extensions::ExtensionRegistry::Get(browser()->profile())
+    return extensions::ExtensionRegistry::Get(browser()->GetProfile())
         ->GetInstalledExtension(kExtensionId);
   }
 

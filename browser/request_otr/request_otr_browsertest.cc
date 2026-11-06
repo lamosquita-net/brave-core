@@ -134,7 +134,7 @@ class RequestOTRBrowserTestBase : public BaseLocalDataFilesBrowserTest {
   }
 
   void SetRequestOTRPref(RequestOTRService::RequestOTRActionOption value) {
-    browser()->profile()->GetPrefs()->SetInteger(kRequestOTRActionOption,
+    browser()->GetProfile()->GetPrefs()->SetInteger(kRequestOTRActionOption,
                                                  static_cast<int>(value));
   }
 
@@ -164,7 +164,7 @@ class RequestOTRBrowserTestBase : public BaseLocalDataFilesBrowserTest {
   int GetHistoryCount() {
     history::HistoryService* history_service =
         HistoryServiceFactory::GetForProfile(
-            browser()->profile(), ServiceAccessType::IMPLICIT_ACCESS);
+            browser()->GetProfile(), ServiceAccessType::IMPLICIT_ACCESS);
     CHECK(history_service);
     int history_count = 0;
     base::RunLoop loop;

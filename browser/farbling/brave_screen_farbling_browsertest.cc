@@ -99,7 +99,7 @@ class BraveScreenFarblingBrowserTest : public InProcessBrowserTest {
   }
 
   std::string LoadExtension(const base::FilePath& path) {
-    extensions::ChromeTestExtensionLoader loader(browser()->profile());
+    extensions::ChromeTestExtensionLoader loader(browser()->GetProfile());
     scoped_refptr<const extensions::Extension> extension =
         loader.LoadExtension(path);
     EXPECT_TRUE(extension);
@@ -107,7 +107,7 @@ class BraveScreenFarblingBrowserTest : public InProcessBrowserTest {
   }
 
   HostContentSettingsMap* ContentSettings() {
-    return HostContentSettingsMapFactory::GetForProfile(browser()->profile());
+    return HostContentSettingsMapFactory::GetForProfile(browser()->GetProfile());
   }
 
   void SetFingerprintingSetting(bool allow) {

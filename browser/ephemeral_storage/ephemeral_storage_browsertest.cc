@@ -408,7 +408,7 @@ void EphemeralStorageBrowserTest::SetCookieSetting(
     const GURL& url,
     ContentSetting content_setting) {
   auto* host_content_settings_map =
-      HostContentSettingsMapFactory::GetForProfile(browser()->profile());
+      HostContentSettingsMapFactory::GetForProfile(browser()->GetProfile());
   host_content_settings_map->SetContentSettingCustomScope(
       ContentSettingsPattern::FromString(
           base::StrCat({"[*.]", url.host(), ":*"})),
@@ -450,7 +450,7 @@ content::EvalJsResult EphemeralStorageBrowserTest::SetIDBValue(
 }
 
 HostContentSettingsMap* EphemeralStorageBrowserTest::content_settings() {
-  return HostContentSettingsMapFactory::GetForProfile(browser()->profile());
+  return HostContentSettingsMapFactory::GetForProfile(browser()->GetProfile());
 }
 
 network::mojom::CookieManager* EphemeralStorageBrowserTest::CookieManager() {
@@ -795,7 +795,7 @@ IN_PROC_BROWSER_TEST_F(EphemeralStorageBrowserTest,
 
   // A browser with the same profile should share all values with the
   // first browser, including ephemeral storage values.
-  Browser* same_profile_browser = CreateBrowser(browser()->profile());
+  Browser* same_profile_browser = CreateBrowser(browser()->GetProfile());
   ASSERT_TRUE(ui_test_utils::NavigateToURL(same_profile_browser,
                                            a_site_ephemeral_storage_url_));
   auto* same_profile_web_contents =
@@ -853,9 +853,9 @@ IN_PROC_BROWSER_TEST_F(EphemeralStorageBrowserTest,
       ui_test_utils::NavigateToURL(browser(), a_site_ephemeral_storage_url_));
 
   std::string a_cookie =
-      content::GetCookies(browser()->profile(), GURL("https://a.com/"));
+      content::GetCookies(browser()->GetProfile(), GURL("https://a.com/"));
   std::string b_cookie =
-      content::GetCookies(browser()->profile(), GURL("https://b.com/"));
+      content::GetCookies(browser()->GetProfile(), GURL("https://b.com/"));
   EXPECT_EQ("name=acom", a_cookie);
   EXPECT_EQ("name=bcom", b_cookie);
 
@@ -880,7 +880,7 @@ IN_PROC_BROWSER_TEST_F(EphemeralStorageBrowserTest,
 
   // The cookie set in the ephemeral area should not be visible in the main
   // cookie storage.
-  b_cookie = content::GetCookies(browser()->profile(), GURL("https://b.com/"));
+  b_cookie = content::GetCookies(browser()->GetProfile(), GURL("https://b.com/"));
   EXPECT_EQ("name=bcom", b_cookie);
 
   // Navigating to a new TLD should clear all ephemeral cookies after keep-alive

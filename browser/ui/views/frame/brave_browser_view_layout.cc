@@ -213,7 +213,7 @@ bool BraveBrowserViewLayout::ShouldPushBookmarkBarForVerticalTabs() {
   // we should lay out vertical tab strip next to bookmarks bar so that
   // the tab strip doesn't move when changing the active tab.
   return bookmark_bar_ &&
-         !browser_view_->browser()->profile()->GetPrefs()->GetBoolean(
+         !browser_view_->browser()->GetProfile()->GetPrefs()->GetBoolean(
              bookmarks::prefs::kShowBookmarkBar) &&
          delegate_->IsBookmarkBarVisible();
 }
