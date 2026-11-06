@@ -20,7 +20,9 @@ BASE_FEATURE(kIdleDetection,
 OVERRIDE_FEATURE_DEFAULT_STATES({{
     {kDigitalGoodsApi, base::FEATURE_DISABLED_BY_DEFAULT},
     {kFedCm, base::FEATURE_DISABLED_BY_DEFAULT},
+    {kPrefetchProxy, base::FEATURE_DISABLED_BY_DEFAULT},
     {kPrivacySandboxAdsAPIsOverride, base::FEATURE_DISABLED_BY_DEFAULT},
+    {kServiceWorkerAutoPreload, base::FEATURE_DISABLED_BY_DEFAULT},
     {kWebIdentityDigitalCredentials, base::FEATURE_DISABLED_BY_DEFAULT},
     {kWebOTP, base::FEATURE_DISABLED_BY_DEFAULT},
 }});

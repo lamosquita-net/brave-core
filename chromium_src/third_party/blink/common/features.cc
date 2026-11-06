@@ -16,15 +16,9 @@ OVERRIDE_FEATURE_DEFAULT_STATES({{
     {kReducedReferrerGranularity, base::FEATURE_ENABLED_BY_DEFAULT},
     {kUACHOverrideBlank, base::FEATURE_ENABLED_BY_DEFAULT},
 
-    {kAdInterestGroupAPI, base::FEATURE_DISABLED_BY_DEFAULT},
     {kAllowURNsInIframes, base::FEATURE_DISABLED_BY_DEFAULT},
     {kBackgroundResourceFetch, base::FEATURE_DISABLED_BY_DEFAULT},
-    {kControlledFrame, base::FEATURE_DISABLED_BY_DEFAULT},
     {kFencedFrames, base::FEATURE_DISABLED_BY_DEFAULT},
-    {kFledge, base::FEATURE_DISABLED_BY_DEFAULT},
-    {kParakeet, base::FEATURE_DISABLED_BY_DEFAULT},
-    {kPrerender2, base::FEATURE_DISABLED_BY_DEFAULT},
-    {kReduceUserAgentMinorVersion, base::FEATURE_ENABLED_BY_DEFAULT},
 }});
 
 BASE_FEATURE(kFileSystemAccessAPI,
