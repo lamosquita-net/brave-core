@@ -17,16 +17,21 @@
 #include "chrome/browser/profiles/profile_test_util.h"
 #include "chrome/browser/profiles/profiles_state.h"
 #include "chrome/browser/sync/sync_service_factory.h"
-#include "chrome/browser/ui/browser.h"
+#include "chrome/browser/ui/browser_window/public/create_browser_window.h"
 #include "chrome/test/base/in_process_browser_test.h"
 #include "content/public/test/browser_test.h"
+#include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 // Profiles are not supported on Android and iOS, so can't do the test
 static_assert(!BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS));
 
+using testing::IsEmpty;
+using testing::Not;
+using testing::Optional;
+
 namespace {
-const char kValidSyncCode[] =
+constexpr char kValidSyncCode[] =
     "fringe digital begin feed equal output proof cheap "
     "exotic ill sure question trial squirrel glove celery "
     "awkward push jelly logic broccoli almost grocery drift";
@@ -51,7 +56,7 @@ IN_PROC_BROWSER_TEST_F(DeleteProfileHelperBrowserTest,
                   .GetProfileAttributesWithPath(profile_path_to_delete));
   // Set the profile as last-used, so that the callback of
   // `MaybeScheduleProfileForDeletion()` is called.
-  Browser::Create(Browser::CreateParams(&profile_to_delete, true));
+  CreateBrowserWindow(BrowserWindowCreateParams(&profile_to_delete, true));
   profiles::SetLastUsedProfile(profile_path_to_delete.BaseName());
   // Schedule profile deletion.
   ProfileKeepAliveAddedWaiter keep_alive_added_waiter(
@@ -65,11 +70,9 @@ IN_PROC_BROWSER_TEST_F(DeleteProfileHelperBrowserTest,
   // Set the sync code to ensure it will be cleared on profile deletion
   EXPECT_TRUE(brave_sync_service->SetSyncCode(kValidSyncCode));
 
-  brave_sync::Prefs brave_sync_prefs(profile_to_delete.GetPrefs());
-  bool failed_to_decrypt;
-  std::string seed = brave_sync_prefs.GetSeed(&failed_to_decrypt);
-  ASSERT_FALSE(failed_to_decrypt);
-  EXPECT_FALSE(seed.empty());
+  auto seed = brave_sync_service->GetSeed();
+  ASSERT_TRUE(seed.has_value());
+  EXPECT_THAT(seed.value(), Not(IsEmpty()));
 
   base::RunLoop loop;
   profile_manager->GetDeleteProfileHelper().MaybeScheduleProfileForDeletion(
@@ -83,7 +86,6 @@ IN_PROC_BROWSER_TEST_F(DeleteProfileHelperBrowserTest,
   // Ensure that we've invoked BraveSyncServiceImpl::StopAndClear() from
   // DisableSyncForProfileDeletion at delete_profile_helper.cc, so
   // now seed should be empty
-  seed = brave_sync_prefs.GetSeed(&failed_to_decrypt);
-  ASSERT_FALSE(failed_to_decrypt);
-  EXPECT_TRUE(seed.empty());
+  seed = brave_sync_service->GetSeed();
+  EXPECT_THAT(seed, Optional(IsEmpty()));
 }
