@@ -23,9 +23,7 @@ class BraveRenderViewContextMenu;
   RegisterMenuShownCallbackForTesting(                           \
       base::OnceCallback<void(BraveRenderViewContextMenu*)> cb); \
   static void RegisterMenuShownCallbackForTesting_unused
-#define AppendReadingModeItem virtual AppendReadingModeItem
 #include "src/chrome/browser/renderer_context_menu/render_view_context_menu.h"  // IWYU pragma: export
-#undef AppendReadingModeItem
 #undef RegisterMenuShownCallbackForTesting
 #undef RenderViewContextMenu
 #undef BRAVE_RENDER_VIEW_CONTEXT_MENU_H_
@@ -36,7 +34,9 @@ class BraveRenderViewContextMenu : public RenderViewContextMenu_Chromium {
   // Non-const reference passed in the parent class upstream
   // NOLINTNEXTLINE(runtime/references)
   BraveRenderViewContextMenu(content::RenderFrameHost& render_frame_host,
-                             const content::ContextMenuParams& params);
+                             const content::ContextMenuParams& params,
+                             bool is_paste_enabled,
+                             bool is_paste_and_match_style_enabled);
   ~BraveRenderViewContextMenu() override;
   // RenderViewContextMenuBase:
   bool IsCommandIdEnabled(int command_id) const override;
@@ -46,8 +46,6 @@ class BraveRenderViewContextMenu : public RenderViewContextMenu_Chromium {
   static void AddSpellCheckServiceItem(ui::SimpleMenuModel* menu,
                                        bool is_checked);
   void AddAccessibilityLabelsServiceItem(bool is_checked) override;
-  // Do nothing as we have our own speed reader
-  void AppendReadingModeItem() override {}
 
  private:
   friend class BraveRenderViewContextMenuTest;

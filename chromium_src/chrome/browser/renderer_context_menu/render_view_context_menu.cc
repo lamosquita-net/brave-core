@@ -23,6 +23,7 @@
 #include "chrome/common/channel_info.h"
 #include "components/omnibox/browser/autocomplete_classifier.h"
 #include "components/omnibox/browser/autocomplete_controller.h"
+#include "components/omnibox/browser/autocomplete_controller_config.h"
 #include "components/omnibox/browser/autocomplete_match_type.h"
 #include "content/public/browser/web_contents.h"
 #include "net/base/filename_util.h"
@@ -49,7 +50,9 @@ AutocompleteMatch GetAutocompleteMatchForText(Profile* profile,
   AutocompleteClassifier classifier(
       std::make_unique<AutocompleteController>(
           std::make_unique<ChromeAutocompleteProviderClient>(profile),
-          AutocompleteClassifier::DefaultOmniboxProviders()),
+          AutocompleteControllerConfig{
+              .provider_types =
+                  AutocompleteClassifier::DefaultOmniboxProviders()}),
       std::make_unique<BraveAutocompleteSchemeClassifier>(profile));
   classifier.Classify(text, false, false,
                       metrics::OmniboxEventProto::INVALID_SPEC, &match, NULL);
@@ -64,7 +67,7 @@ GURL GetSelectionNavigationURL(Profile* profile, const std::u16string& text) {
 std::optional<GURL> GetSelectedURL(Profile* profile,
                                    const std::u16string& text) {
   auto match = GetAutocompleteMatchForText(profile, text);
-  if (match.type != AutocompleteMatchType::URL_WHAT_YOU_TYPED) {
+  if (match.type != omnibox::AutocompleteMatchType::kUrlWhatYouTyped) {
     return std::nullopt;
   }
   return match.destination_url;
@@ -124,8 +127,13 @@ void OnGetImageForTextCopy(base::WeakPtr<content::WebContents> web_contents,
 
 BraveRenderViewContextMenu::BraveRenderViewContextMenu(
     content::RenderFrameHost& render_frame_host,
-    const content::ContextMenuParams& params)
-    : RenderViewContextMenu_Chromium(render_frame_host, params) {}
+    const content::ContextMenuParams& params,
+    bool is_paste_enabled,
+    bool is_paste_and_match_style_enabled)
+    : RenderViewContextMenu_Chromium(render_frame_host,
+                                     params,
+                                     is_paste_enabled,
+                                     is_paste_and_match_style_enabled) {}
 
 BraveRenderViewContextMenu::~BraveRenderViewContextMenu() = default;
 
@@ -164,12 +172,22 @@ void BraveRenderViewContextMenu::ExecuteCommand(int id, int event_flags) {
       brave::CopyLinkWithStrictCleaning(GetBrowser(), link_url);
     }; break;
     case IDC_CONTENT_CONTEXT_FORCE_PASTE: {
-      std::u16string result;
+      std::unique_ptr<ui::DataTransferEndpoint> data_dst =
+          CreateDataEndpoint(/*notify_if_restricted=*/true);
       ui::Clipboard::GetForCurrentThread()->ReadText(
           ui::ClipboardBuffer::kCopyPaste,
-          CreateDataEndpoint(/*notify_if_restricted=*/true).get(), &result);
-      // Replace works just like Paste, but it doesn't trigger onpaste handlers
-      source_web_contents_->Replace(result);
+          data_dst ? std::make_optional(*data_dst) : std::nullopt,
+          base::BindOnce(
+              [](base::WeakPtr<content::WebContents> web_contents,
+                 std::u16string result) {
+                if (!web_contents || result.empty()) {
+                  return;
+                }
+                // Replace works just like Paste, but it doesn't trigger
+                // onpaste handlers.
+                web_contents->Replace(result);
+              },
+              source_web_contents_->GetWeakPtr()));
     }; break;
 #if BUILDFLAG(ENABLE_TEXT_RECOGNITION)
     case IDC_CONTENT_CONTEXT_COPY_TEXT_FROM_IMAGE:
