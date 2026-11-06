@@ -1,7 +1,7 @@
-/* Copyright 2019 The Brave Authors. All rights reserved.
+/* Copyright (c) 2019 The Brave Authors. All rights reserved.
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "brave/browser/renderer_context_menu/brave_spelling_options_submenu_observer.h"
 
@@ -9,10 +9,8 @@
 
 #include "base/values.h"
 #include "brave/browser/renderer_context_menu/brave_mock_render_view_context_menu.h"
-#include "brave/components/constants/pref_names.h"
 #include "chrome/app/chrome_command_ids.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
 #include "chrome/test/base/in_process_browser_test.h"
 #include "components/language/core/browser/pref_names.h"
 #include "components/prefs/pref_service.h"
@@ -27,12 +25,12 @@ namespace {
 // accesses resources.
 class BraveSpellingOptionsSubMenuObserverTest : public InProcessBrowserTest {
  public:
-  BraveSpellingOptionsSubMenuObserverTest() {}
+  BraveSpellingOptionsSubMenuObserverTest() = default;
   BraveSpellingOptionsSubMenuObserverTest(
       const BraveSpellingOptionsSubMenuObserverTest&) = delete;
   BraveSpellingOptionsSubMenuObserverTest& operator=(
       const BraveSpellingOptionsSubMenuObserverTest&) = delete;
-  ~BraveSpellingOptionsSubMenuObserverTest() override {}
+  ~BraveSpellingOptionsSubMenuObserverTest() override = default;
 
   void Clear() {
     if (menu_)
@@ -45,10 +43,10 @@ class BraveSpellingOptionsSubMenuObserverTest : public InProcessBrowserTest {
              BraveSpellingOptionsSubMenuObserver::GtestMode gtest_mode =
                  BraveSpellingOptionsSubMenuObserver::GTEST_MODE_NORMAL) {
     Clear();
-    menu_.reset(new BraveMockRenderViewContextMenu(
+    menu_ = std::make_unique<BraveMockRenderViewContextMenu>(
         incognito ? browser()->GetProfile()->GetPrimaryOTRProfile(
                         /*create_if_needed=*/true)
-                  : browser()->GetProfile()));
+                  : browser()->GetProfile());
     std::unique_ptr<BraveSpellingOptionsSubMenuObserver> observer =
         std::make_unique<BraveSpellingOptionsSubMenuObserver>(menu_.get(),
                                                               menu_.get(), 1);
@@ -133,7 +131,8 @@ IN_PROC_BROWSER_TEST_F(BraveSpellingOptionsSubMenuObserverTest,
   EXPECT_EQ(1U, menu()->GetMenuSize());
   BraveMockRenderViewContextMenu::MockMenuItem item;
   menu()->GetMenuItem(0, &item);
-  EXPECT_EQ(IDC_SPELLCHECK_MENU, item.command_id);
+  EXPECT_EQ(SpellingOptionsSubMenuObserver::kSubMenuPlaceholder,
+            item.command_id);
   EXPECT_FALSE(item.enabled);
 }
 

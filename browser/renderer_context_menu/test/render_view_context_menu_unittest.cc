@@ -7,13 +7,14 @@
 
 #include <optional>
 
+#include "base/check.h"
 #include "brave/app/brave_command_ids.h"
+#include "chrome/app/chrome_command_ids.h"
 #include "chrome/browser/autocomplete/autocomplete_classifier_factory.h"
 #include "chrome/browser/autocomplete/chrome_autocomplete_provider_client.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry_factory.h"
 #include "chrome/browser/search_engines/template_url_service_factory.h"
-#include "chrome/browser/ui/browser.h"
-#include "chrome/test/base/scoped_testing_local_state.h"
+#include "chrome/browser/ui/browser_window/public/create_browser_window.h"
 #include "chrome/test/base/test_browser_window.h"
 #include "chrome/test/base/testing_browser_process.h"
 #include "chrome/test/base/testing_profile.h"
@@ -25,6 +26,7 @@
 #include "content/public/test/browser_task_environment.h"
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
+#include "ui/base/clipboard/clipboard.h"
 
 namespace {
 
@@ -62,7 +64,7 @@ class BraveRenderViewContextMenuMock : public BraveRenderViewContextMenu {
 
   void Show() override {}
 
-  void SetBrowser(Browser* browser) { browser_ = browser; }
+  void SetBrowser(BrowserWindowInterface* browser) { browser_ = browser; }
 
   BrowserWindowInterface* GetBrowser() const override {
     if (browser_) {
@@ -72,13 +74,12 @@ class BraveRenderViewContextMenuMock : public BraveRenderViewContextMenu {
   }
 
  private:
-  raw_ptr<Browser> browser_ = nullptr;
+  raw_ptr<BrowserWindowInterface> browser_ = nullptr;
 };
 
 class BraveRenderViewContextMenuTest : public testing::Test {
  protected:
-  BraveRenderViewContextMenuTest()
-      : testing_local_state_(TestingBrowserProcess::GetGlobal()) {}
+  BraveRenderViewContextMenuTest() = default;
   content::WebContents* GetWebContents() { return web_contents_.get(); }
 
   // Returns a test context menu.
@@ -86,21 +87,26 @@ class BraveRenderViewContextMenuTest : public testing::Test {
       content::WebContents* web_contents,
       content::ContextMenuParams params,
       bool is_pwa_browser = false) {
+    ResetBrowser();
     auto menu = std::make_unique<BraveRenderViewContextMenuMock>(
         *web_contents->GetPrimaryMainFrame(), params,
         /*is_paste_enabled=*/false, /*is_paste_and_match_style_enabled=*/false);
 
-    Browser::CreateParams create_params(
-        is_pwa_browser ? Browser::Type::TYPE_APP : Browser::Type::TYPE_NORMAL,
+    BrowserWindowCreateParams create_params(
+        is_pwa_browser ? BrowserWindowInterface::Type::TYPE_APP
+                       : BrowserWindowInterface::Type::TYPE_NORMAL,
         profile_.get(), true);
-    auto test_window = std::make_unique<TestBrowserWindow>();
-    create_params.window = test_window.get();
-    browser_.reset(Browser::Create(create_params));
+    auto browser_window = std::make_unique<TestBrowserWindow>();
+    create_params.window = browser_window.release();
+    browser_ =
+        DeprecatedCreateOwnedBrowserWindowForTesting(std::move(create_params));
     menu->SetBrowser(browser_.get());
 
     menu->Init();
     return menu;
   }
+
+  void ResetBrowser() { browser_.reset(); }
 
   void SetUp() override {
     TestingProfile::Builder builder;
@@ -127,18 +133,22 @@ class BraveRenderViewContextMenuTest : public testing::Test {
     registry_.reset();
     web_contents_.reset();
     client_.reset();
-    browser_.reset();
+    ResetBrowser();
     profile_.reset();
+
+    // We run into a DCHECK on Windows. The scenario is addressed explicitly
+    // in Chromium's source for MessageWindow::WindowClass::~WindowClass().
+    // See base/win/message_window.cc for more information.
+    ui::Clipboard::DestroyClipboardForCurrentThread();
   }
 
   PrefService* GetPrefs() { return profile_->GetPrefs(); }
 
  private:
   content::BrowserTaskEnvironment browser_task_environment;
-  ScopedTestingLocalState testing_local_state_;
   std::unique_ptr<TestingProfile> profile_;
   std::unique_ptr<custom_handlers::ProtocolHandlerRegistry> registry_;
-  std::unique_ptr<Browser> browser_;
+  std::unique_ptr<BrowserWindowInterface> browser_;
   std::unique_ptr<ChromeAutocompleteProviderClient> client_;
   std::unique_ptr<content::WebContents> web_contents_;
 };
