@@ -6,7 +6,9 @@
 // Chromium 156 privacy plugin (settings-privacy-page-index): as in Brave
 // 1.98, hide the privacy guide promo, add FlyWeb's data collection card
 // (crash reports, usage ping) after the privacy card and add the site
-// settings subpages FlyWeb keeps (autoplay, Shields status) as views.
+// settings subpages FlyWeb keeps (autoplay, Google sign-in, Shields status)
+// as views. Chromium's auto-verify (anti-abuse) view goes with its route
+// (brave_routes.ts).
 //
 // Every view of a privacy child route must carry slot="view" and a
 // route-path equal to the route's path: getViewIdsForRoute_() looks the view
@@ -15,6 +17,7 @@
 import '../brave_data_collection_page/brave_data_collection_page.js'
 import '../settings_page/settings_section.js'
 import '../site_settings/site_settings_autoplay.js'
+import '../site_settings/site_settings_google.js'
 import '../site_settings/site_settings_shields.js'
 
 import {
@@ -66,9 +69,36 @@ RegisterPolymerTemplateModifications({
       </settings-section>
     `)
 
-    // FlyWeb: Brave's site settings subpages, as in Brave 1.98 (its Google
-    // sign-in subpage is not kept: in Chromium 156 FedCM and Storage Access
-    // cover it; nor the localhost access one, whose permission is gone).
+    // FlyWeb: the route of this view is deleted in brave_routes.ts (Private
+    // State Tokens are off), so drop the view as well: in search mode
+    // renderView_() would still stamp it.
+    let antiAbuseRemoved = false
+    for (const t of templateContent.querySelectorAll('template[is=dom-if]')) {
+      if (t.content.querySelector('settings-anti-abuse-page')) {
+        t.remove()
+        antiAbuseRemoved = true
+      }
+    }
+    if (!antiAbuseRemoved) {
+      console.error('[Settings] Missing settings-anti-abuse-page template')
+    }
+
+    // FlyWeb: Brave's site settings subpages, as in Brave 1.98 (not the
+    // localhost access one, whose permission is gone).
+    if (loadTimeData.getBoolean('isGoogleSignInFeatureEnabled')) {
+      viewManager.appendChild(html`
+        <template is="dom-if" if="[[renderView_(
+            routes_.SITE_SETTINGS_GOOGLE_SIGN_IN, currentRoute,
+            inSearchMode)]]" update-when-false>
+          <site-settings-google-page
+              id="${ContentSettingsTypes.GOOGLE_SIGN_IN}"
+              route-path$="[[routes_.SITE_SETTINGS_GOOGLE_SIGN_IN.path]]"
+              data-parent-view-id="privacy"
+              slot="view">
+          </site-settings-google-page>
+        </template>
+      `)
+    }
     viewManager.appendChild(html`
       <template is="dom-if" if="[[renderView_(
           routes_.SITE_SETTINGS_SHIELDS_STATUS, currentRoute,

@@ -40,7 +40,7 @@ RegisterPolymerTemplateModifications({
             icon="autoplay-on">
           </site-details-permission>
         `)
-      const curChild = 1
+      let curChild = 1
       const autoplaySettings = templateContent.
         querySelector(`div.list-frame > site-details-permission:nth-child(${curChild})`)
       if (!autoplaySettings) {
@@ -51,8 +51,29 @@ RegisterPolymerTemplateModifications({
         autoplaySettings.setAttribute(
           'label', loadTimeData.getString('siteSettingsAutoplay'))
       }
-      // FlyWeb: no Google sign-in permission (in Chromium 156 FedCM and
-      // Storage Access cover it) and no localhost access one (gone).
+      curChild++
+      // Google Sign-In permission, as Brave 1.98.
+      if (loadTimeData.getBoolean('isGoogleSignInFeatureEnabled')) {
+        firstPermissionItem.insertAdjacentHTML(
+          'beforebegin',
+          getTrustedHTML`
+            <site-details-permission
+              category="[[contentSettingsTypesEnum_.GOOGLE_SIGN_IN]]"
+              icon="user">
+            </site-details-permission>
+          `)
+        const googleSignInSettings = templateContent.querySelector(
+          `div.list-frame > site-details-permission:nth-child(${curChild})`)
+        if (!googleSignInSettings) {
+          console.error(
+            '[Brave Settings Overrides] Couldn\'t find Google signin settings')
+        } else {
+          googleSignInSettings.setAttribute(
+            'label', loadTimeData.getString('siteSettingsGoogleSignIn'))
+        }
+        curChild++
+      }
+      // FlyWeb: no localhost access permission (gone).
     }
 
     // As Brave 1.98: no ad personalization line in the clear storage

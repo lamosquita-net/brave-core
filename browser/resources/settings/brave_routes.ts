@@ -66,15 +66,27 @@ export default function addBraveRoutes(r: Partial<SettingsRoutes>) {
   if (r.SITE_SETTINGS) {
     // FlyWeb: each of these routes needs its view in
     // settings-privacy-page-index (brave_overrides/privacy_page_index.ts),
-    // with the same route-path. No Google sign-in route (in Chromium 156
-    // FedCM and Storage Access cover it) and no localhost access route (the
-    // permission is gone).
+    // with the same route-path. No localhost access route (the permission is
+    // gone).
     r.SITE_SETTINGS_AUTOPLAY = r.SITE_SETTINGS.createChild('autoplay')
+    if (loadTimeData.getBoolean('isGoogleSignInFeatureEnabled')) {
+      r.SITE_SETTINGS_GOOGLE_SIGN_IN =
+        r.SITE_SETTINGS.createChild('googleSignIn')
+    }
     r.SITE_SETTINGS_SHIELDS_STATUS = r.SITE_SETTINGS.createChild('braveShields')
     if (r.SITE_SETTINGS_ADS) {
       delete r.SITE_SETTINGS_ADS
     } else {
       console.error('[Brave Settings Overrides] could not find expected route site_settings_ads')
+    }
+    // As Brave 1.98: no auto-verify (anti-abuse) subpage. Its only setting
+    // gates Private State Tokens, which FlyWeb ships disabled (the
+    // PrivateStateTokens runtime feature and its origin trial). Its view in
+    // settings-privacy-page-index is removed in privacy_page_index.ts.
+    if (r.SITE_SETTINGS_AUTO_VERIFY) {
+      delete r.SITE_SETTINGS_AUTO_VERIFY
+    } else {
+      console.error('[Brave Settings Overrides] could not find expected route site_settings_auto_verify')
     }
   } else if (!isGuest) {
     console.error('[Brave Settings Overrides] Routes: could not find SITE_SETTINGS page')
@@ -90,10 +102,8 @@ export default function addBraveRoutes(r: Partial<SettingsRoutes>) {
   if (r.PERFORMANCE) {
     delete r.PERFORMANCE
   }
-  // Delete storage access
-  if (r.SITE_SETTINGS_STORAGE_ACCESS) {
-    delete r.SITE_SETTINGS_STORAGE_ACCESS
-  }
+  // FlyWeb: unlike Brave, the Storage Access subpage stays (Chromium 156's
+  // own route and view in settings-privacy-page-index).
   // Google sync setup (as Brave 1.98): its people plugin is not shown, and
   // FlyWeb's own sync lives in BRAVE_SYNC.
   if (r.SYNC) {

@@ -79,6 +79,7 @@ RegisterPolymerTemplateModifications({
 const BRAVE_SITE_SETTINGS_VIEW_IDS: string[] = [
   ContentSettingsTypes.AUTOPLAY,
   ContentSettingsTypes.BRAVE_SHIELDS,
+  ContentSettingsTypes.GOOGLE_SIGN_IN,
 ]
 
 RegisterPolymerPrototypeModification({

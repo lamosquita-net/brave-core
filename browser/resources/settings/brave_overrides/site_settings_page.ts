@@ -15,14 +15,16 @@ import {routes} from '../route.js'
 import {ContentSettingsTypes} from '../site_settings/constants.js'
 import {SettingsSiteSettingsPageElement} from '../site_settings/site_settings_page.js'
 
-const PERMISSIONS_BASIC_REMOVE_IDS = [
-  ContentSettingsTypes.STORAGE_ACCESS,
-]
+// FlyWeb: unlike Brave, the Storage Access item stays.
+const PERMISSIONS_BASIC_REMOVE_IDS: string[] = []
 const PERMISSIONS_ADVANCED_REMOVE_IDS = [
   ContentSettingsTypes.BACKGROUND_SYNC,
 ]
 const CONTENT_ADVANCED_REMOVE_IDS = [
   ContentSettingsTypes.ADS,
+  // As Brave 1.98: its subpage (route SITE_SETTINGS_AUTO_VERIFY) only gates
+  // Private State Tokens, which FlyWeb ships disabled (brave_routes.ts).
+  ContentSettingsTypes.ANTI_ABUSE,
   ContentSettingsTypes.PERFORMANCE,
 ]
 
@@ -107,9 +109,19 @@ RegisterPolymerComponentReplacement(
               disabledLabel: 'siteSettingsAutoplayBlock'
             }
             lists_.permissionsAdvanced.splice(indexForAutoplay, 0, autoplayItem)
-            // FlyWeb: no Google sign-in item (in Chromium 156 FedCM and
-            // Storage Access cover it) and no localhost access item (the
-            // permission is gone).
+            if (loadTimeData.getBoolean('isGoogleSignInFeatureEnabled')) {
+              const googleSignInItem = {
+                route: routes.SITE_SETTINGS_GOOGLE_SIGN_IN,
+                id: ContentSettingsTypes.GOOGLE_SIGN_IN,
+                label: 'siteSettingsGoogleSignIn',
+                icon: 'user',
+                enabledLabel: 'siteSettingsGoogleSignInAsk',
+                disabledLabel: 'siteSettingsGoogleSignInBlock'
+              }
+              lists_.permissionsAdvanced.splice(indexForAutoplay + 1, 0,
+                googleSignInItem)
+            }
+            // FlyWeb: no localhost access item (the permission is gone).
           }
         }
         lists_.shieldsBasic = [
