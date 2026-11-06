@@ -57,8 +57,6 @@ class RequestOTRStorageTabHelper
   friend class content::WebContentsUserData<RequestOTRStorageTabHelper>;
   WEB_CONTENTS_USER_DATA_KEY_DECL();
 
-  void RecordSessionStats();
-
   // Flag stores whether we are in the middle of a proceed action.
   bool is_proceeding_ = false;
   // Flag stores whether we have offered going OTR for this tab.

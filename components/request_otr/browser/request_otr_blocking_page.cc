@@ -12,11 +12,9 @@
 #include "base/strings/string_number_conversions.h"
 #include "brave/components/l10n/common/localization_util.h"
 #include "brave/components/request_otr/browser/request_otr_controller_client.h"
-#include "brave/components/request_otr/browser/request_otr_p3a.h"
 #include "components/grit/brave_components_resources.h"
 #include "components/grit/brave_components_strings.h"
 #include "components/security_interstitials/content/security_interstitial_controller_client.h"
-#include "components/user_prefs/user_prefs.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/web_contents.h"
 #include "url/origin.h"
@@ -36,18 +34,12 @@ RequestOTRBlockingPage::RequestOTRBlockingPage(
         controller)
     : security_interstitials::SecurityInterstitialPage(web_contents,
                                                        request_url,
-                                                       std::move(controller)),
-      start_time_(base::Time::Now()),
-      profile_prefs_(
-          user_prefs::UserPrefs::Get(web_contents->GetBrowserContext())) {
-  p3a::RecordInterstitialShown(profile_prefs_, true);
+                                                       std::move(controller)) {
 }
 
 RequestOTRBlockingPage::~RequestOTRBlockingPage() = default;
 
-void RequestOTRBlockingPage::OnInterstitialClosing() {
-  p3a::RecordInterstitialEnd(profile_prefs_, start_time_);
-}
+void RequestOTRBlockingPage::OnInterstitialClosing() {}
 
 void RequestOTRBlockingPage::CommandReceived(const std::string& command) {
   if (command == "\"pageLoadComplete\"") {
@@ -64,11 +56,9 @@ void RequestOTRBlockingPage::CommandReceived(const std::string& command) {
 
   switch (cmd) {
     case security_interstitials::CMD_DONT_PROCEED:
-      p3a::RecordInterstitialEnd(profile_prefs_, start_time_);
       request_otr_controller->Proceed();
       break;
     case security_interstitials::CMD_PROCEED:
-      p3a::RecordInterstitialEnd(profile_prefs_, start_time_);
       request_otr_controller->ProceedOTR();
       break;
     case security_interstitials::CMD_DO_REPORT:

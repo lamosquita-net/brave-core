@@ -13,7 +13,6 @@
 #include "base/containers/flat_set.h"
 #include "base/json/json_value_converter.h"
 #include "base/memory/weak_ptr.h"
-#include "base/timer/wall_clock_timer.h"
 #include "base/values.h"
 #include "brave/components/request_otr/browser/request_otr_component_installer.h"
 #include "brave/components/request_otr/browser/request_otr_rule.h"
@@ -22,7 +21,6 @@
 
 class GURL;
 class PrefRegistrySimple;
-class PrefService;
 
 namespace request_otr {
 
@@ -39,7 +37,7 @@ class RequestOTRService : public KeyedService,
 
   static void RegisterProfilePrefs(PrefRegistrySimple* registry);
 
-  explicit RequestOTRService(PrefService* profile_prefs);
+  RequestOTRService();
   RequestOTRService(const RequestOTRService&) = delete;
   RequestOTRService& operator=(const RequestOTRService&) = delete;
   ~RequestOTRService() override;
@@ -48,13 +46,8 @@ class RequestOTRService : public KeyedService,
   bool ShouldBlock(const GURL& url) const;
 
  private:
-  void UpdateP3AMetrics();
-
   std::vector<std::unique_ptr<RequestOTRRule>> rules_;
   base::flat_set<std::string> host_cache_;
-
-  raw_ptr<PrefService> profile_prefs_;
-  base::WallClockTimer p3a_timer_;
 
   base::WeakPtrFactory<RequestOTRService> weak_factory_{this};
 };

@@ -14,7 +14,6 @@
 #include "brave/components/request_otr/browser/request_otr_service.h"
 #include "brave/components/request_otr/common/features.h"
 #include "chrome/browser/profiles/incognito_helpers.h"
-#include "chrome/browser/profiles/profile.h"
 #include "components/keyed_service/content/browser_context_dependency_manager.h"
 #include "components/keyed_service/core/keyed_service.h"
 
@@ -48,8 +47,7 @@ RequestOTRServiceFactory::BuildServiceInstanceForBrowserContext(
     return nullptr;
   }
 
-  auto service = std::make_unique<RequestOTRService>(
-      Profile::FromBrowserContext(context)->GetPrefs());
+  auto service = std::make_unique<RequestOTRService>();
   request_otr::RequestOTRComponentInstallerPolicy* component_installer =
       nullptr;
   // Brave browser process may be null if we are being created within a unit
