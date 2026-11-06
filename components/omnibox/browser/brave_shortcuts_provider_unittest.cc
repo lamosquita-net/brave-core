@@ -3,18 +3,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "brave/components/omnibox/browser/brave_shortcuts_provider.h"
+
 #include <memory>
 #include <string_view>
 #include <vector>
 
 #include "base/files/file_path.h"
+#include "base/files/scoped_temp_dir.h"
 #include "base/memory/scoped_refptr.h"
+#include "base/strings/utf_string_conversions.h"
 #include "base/test/task_environment.h"
 #include "base/time/time.h"
 #include "brave/components/omnibox/browser/brave_fake_autocomplete_provider_client.h"
 #include "brave/components/omnibox/browser/brave_omnibox_prefs.h"
-#include "brave/components/omnibox/browser/brave_shortcuts_provider.h"
+#include "components/history/core/browser/history_database_params.h"
 #include "components/history/core/browser/history_service.h"
+#include "components/history/core/test/history_service_test_util.h"
+#include "components/history/core/test/test_history_database.h"
 #include "components/omnibox/browser/autocomplete_input.h"
 #include "components/omnibox/browser/autocomplete_match.h"
 #include "components/omnibox/browser/shortcuts_backend.h"
@@ -22,14 +28,21 @@
 #include "components/omnibox/browser/shortcuts_provider.h"
 #include "components/omnibox/browser/test_scheme_classifier.h"
 #include "components/prefs/pref_service.h"
+#include "components/search_engines/search_engines_test_environment.h"
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
 #include "ui/base/page_transition_types.h"
 
 class MockHistoryService : public history::HistoryService {
  public:
-  MockHistoryService() = default;
+  MockHistoryService() {
+    CHECK(history_dir_.CreateUniqueTempDir());
+    Init(history::TestHistoryDatabaseParamsForPath(history_dir_.GetPath()));
+  }
   MOCK_METHOD1(DeleteURLs, void(const std::vector<GURL>&));
+
+ private:
+  base::ScopedTempDir history_dir_;
 };
 
 class BraveShortcutsProviderTest : public testing::Test {
@@ -49,6 +62,8 @@ class BraveShortcutsProviderTest : public testing::Test {
     EXPECT_CALL(client_, GetHistoryService())
         .WillRepeatedly(testing::Return(&history_service_));
 
+    client_.set_template_url_service(
+        search_engines_test_environment_.template_url_service());
     backend_ = base::MakeRefCounted<ShortcutsBackend>(
         client_.GetTemplateURLService(), std::make_unique<SearchTermsData>(),
         client_.GetHistoryService(), base::FilePath(), true);
@@ -62,7 +77,7 @@ class BraveShortcutsProviderTest : public testing::Test {
             u"hello", GURL("https://example.com"),
             AutocompleteMatch::DocumentType::NONE, u"hello World", "0,0",
             u"hello world", "0,4", ui::PageTransition::PAGE_TRANSITION_TYPED,
-            AutocompleteMatch::Type::HISTORY_TITLE, u""),
+            AutocompleteMatch::Type::kHistoryTitle, u""),
         base::Time::Now(), 5);
     backend_->AddShortcut(shortcut);
 
@@ -71,10 +86,18 @@ class BraveShortcutsProviderTest : public testing::Test {
     provider_ = base::MakeRefCounted<BraveShortcutsProvider>(&client_);
   }
 
+  void TearDown() override {
+    provider_ = nullptr;
+    history::BlockUntilHistoryProcessesPendingRequests(
+        client_.GetHistoryService());
+    task_environment_.RunUntilIdle();
+  }
+
   PrefService* prefs() { return client_.GetPrefs(); }
 
  protected:
   base::test::TaskEnvironment task_environment_;
+  search_engines::SearchEnginesTestEnvironment search_engines_test_environment_;
 
   MockHistoryService history_service_;
   TestSchemeClassifier classifier_;

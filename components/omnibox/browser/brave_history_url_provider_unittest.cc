@@ -12,7 +12,9 @@
 #include <string_view>
 #include <utility>
 
+#include "base/check.h"
 #include "base/run_loop.h"
+#include "base/strings/utf_string_conversions.h"
 #include "base/test/task_environment.h"
 #include "base/time/time.h"
 #include "brave/components/omnibox/browser/brave_omnibox_prefs.h"
@@ -26,6 +28,7 @@
 #include "components/omnibox/browser/in_memory_url_index.h"
 #include "components/omnibox/browser/test_scheme_classifier.h"
 #include "components/prefs/testing_pref_service.h"
+#include "components/sync_preferences/testing_pref_service_syncable.h"
 #include "testing/gtest/include/gtest/gtest.h"
 #include "third_party/metrics_proto/omnibox_event.pb.h"
 #include "third_party/metrics_proto/omnibox_input_type.pb.h"
@@ -66,13 +69,17 @@ class BraveHistoryURLProviderTest : public testing::Test,
   void TearDown() override {
     autocomplete_ = nullptr;
     client_.reset();
+    // Process InMemoryURLIndex pending tasks to avoid false-positive
+    // memory leaks on shutdown (LSan).
+    task_environment_.RunUntilIdle();
   }
 
   // Does the real setup.
   [[nodiscard]] bool SetUpImpl(bool create_history_db) {
     client_ = std::make_unique<FakeAutocompleteProviderClient>();
-    auto* registry =
-        static_cast<TestingPrefServiceSimple*>(client_->GetPrefs())->registry();
+    auto* registry = static_cast<sync_preferences::TestingPrefServiceSyncable*>(
+                         client_->GetPrefs())
+                         ->registry();
     omnibox::RegisterBraveProfilePrefs(registry);
 
     CHECK(history_dir_.CreateUniqueTempDir());

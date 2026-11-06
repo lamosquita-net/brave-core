@@ -3,12 +3,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include <string>
-
 #include "base/feature_list.h"
 #include "base/memory/scoped_refptr.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/test/scoped_feature_list.h"
+#include "brave/components/omnibox/browser/open_here_action.h"
 #include "components/omnibox/browser/actions/omnibox_action_concepts.h"
 #include "components/omnibox/browser/actions/tab_switch_action.h"
 #include "components/omnibox/browser/autocomplete_match.h"
@@ -25,7 +24,7 @@ class BraveAutocompleteResultTest : public testing::Test {
 
 AutocompleteMatch CreateMatch(const GURL& url, bool has_tab_match) {
   AutocompleteMatch result(nullptr, 0, false,
-                           AutocompleteMatchType::HISTORY_TITLE);
+                           omnibox::AutocompleteMatchType::kHistoryTitle);
   result.contents = base::UTF8ToUTF16(url.spec());
   result.destination_url = url;
   result.has_tab_match = has_tab_match;
@@ -79,7 +78,7 @@ TEST_F(BraveAutocompleteResultTest,
     auto* match = result.match_at(i);
     EXPECT_TRUE(match->has_tab_match.value_or(false));
     EXPECT_EQ(1u, match->actions.size());
-    EXPECT_EQ(OmniboxActionId::UNKNOWN, match->actions[0]->ActionId());
+    EXPECT_EQ(OmniboxActionId::OPEN_HERE, match->actions[0]->ActionId());
     EXPECT_TRUE(match->takeover_action);
     EXPECT_EQ(OmniboxActionId::TAB_SWITCH, match->takeover_action->ActionId());
   }
@@ -109,7 +108,7 @@ TEST_F(BraveAutocompleteResultTest,
     if (should_be_match) {
       EXPECT_TRUE(match->has_tab_match.value_or(false));
       EXPECT_EQ(1u, match->actions.size());
-      EXPECT_EQ(OmniboxActionId::UNKNOWN, match->actions[0]->ActionId());
+      EXPECT_EQ(OmniboxActionId::OPEN_HERE, match->actions[0]->ActionId());
       EXPECT_TRUE(match->takeover_action);
       EXPECT_EQ(OmniboxActionId::TAB_SWITCH,
                 match->takeover_action->ActionId());
@@ -119,4 +118,24 @@ TEST_F(BraveAutocompleteResultTest,
       EXPECT_FALSE(match->takeover_action);
     }
   }
+}
+
+// Regression tests for the "Open Here" action crash fix:
+// GetOmniboxEventResultType must not hit NOTREACHED() when the match has an
+// OpenHereAction.
+TEST_F(BraveAutocompleteResultTest,
+       GetOmniboxEventResultTypeWithOpenHereActionDoesNotCrash) {
+  AutocompleteMatch match(nullptr, 0, false,
+                          omnibox::AutocompleteMatchType::kHistoryTitle);
+  match.destination_url = GURL("https://example.com");
+  match.actions.push_back(
+      base::MakeRefCounted<OpenHereAction>(match.destination_url));
+
+  ASSERT_EQ(1u, match.actions.size());
+  EXPECT_EQ(OmniboxActionId::OPEN_HERE, match.actions[0]->ActionId());
+
+  // This would previously hit NOTREACHED() when the action reported UNKNOWN.
+  // With OPEN_HERE handled in the switch, it falls through to match-type logic.
+  auto result_type = match.GetOmniboxEventResultType(0);
+  EXPECT_EQ(result_type, metrics::OmniboxEventProto::Suggestion::HISTORY_TITLE);
 }

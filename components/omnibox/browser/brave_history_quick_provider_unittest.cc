@@ -14,6 +14,7 @@
 #include <string>
 #include <vector>
 
+#include "base/check.h"
 #include "base/memory/raw_ptr.h"
 #include "base/run_loop.h"
 #include "base/test/task_environment.h"
@@ -28,6 +29,7 @@
 #include "components/omnibox/browser/fake_autocomplete_provider_client.h"
 #include "components/omnibox/browser/history_test_util.h"
 #include "components/prefs/testing_pref_service.h"
+#include "components/sync_preferences/testing_pref_service_syncable.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 namespace {
@@ -88,8 +90,9 @@ class BraveHistoryQuickProviderTest : public testing::Test {
 
   void SetUp() override {
     client_ = std::make_unique<FakeAutocompleteProviderClient>();
-    auto* registry =
-        static_cast<TestingPrefServiceSimple*>(client_->GetPrefs())->registry();
+    auto* registry = static_cast<sync_preferences::TestingPrefServiceSyncable*>(
+                         client_->GetPrefs())
+                         ->registry();
     omnibox::RegisterBraveProfilePrefs(registry);
     CHECK(history_dir_.CreateUniqueTempDir());
 
@@ -119,6 +122,7 @@ class BraveHistoryQuickProviderTest : public testing::Test {
 
   // Fills test data into the history system.
   void FillData() {
+    std::vector<history::URLRow> rows;
     history::URLRow row{GURL("http://example.com/")};
     ASSERT_TRUE(row.url().is_valid());
     row.set_title(u"Example");
@@ -126,7 +130,8 @@ class BraveHistoryQuickProviderTest : public testing::Test {
     row.set_typed_count(3);
     row.set_last_visit(base::Time::Now());
 
-    AddFakeURLToHistoryDB(history_backend()->db(), row);
+    rows.push_back(row);
+    history::AddFakeURLsToHistoryService(client_->GetHistoryService(), rows);
   }
 
   // Runs an autocomplete query on |text| and checks to see that the returned
