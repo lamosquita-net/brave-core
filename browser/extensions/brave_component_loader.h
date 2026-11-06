@@ -6,9 +6,6 @@
 #ifndef BRAVE_BROWSER_EXTENSIONS_BRAVE_COMPONENT_LOADER_H_
 #define BRAVE_BROWSER_EXTENSIONS_BRAVE_COMPONENT_LOADER_H_
 
-#include <string>
-
-#include "base/files/file_path.h"
 #include "base/memory/raw_ptr.h"
 #include "chrome/browser/extensions/component_loader.h"
 
@@ -20,8 +17,7 @@ namespace extensions {
 // For registering, loading, and unloading component extensions.
 class BraveComponentLoader : public ComponentLoader {
  public:
-  BraveComponentLoader(ExtensionSystem* extension_system,
-                       Profile* browser_context);
+  explicit BraveComponentLoader(Profile* browser_context);
   BraveComponentLoader(const BraveComponentLoader&) = delete;
   BraveComponentLoader& operator=(const BraveComponentLoader&) = delete;
   ~BraveComponentLoader() override;
@@ -31,19 +27,8 @@ class BraveComponentLoader : public ComponentLoader {
   // be loaded unless we are in signed user session (ChromeOS). For all other
   // platforms this |skip_session_components| is expected to be unset.
   void AddDefaultComponentExtensions(bool skip_session_components) override;
-  void OnComponentRegistered(std::string extension_id);
-
-  void OnComponentReady(std::string extension_id,
-                        bool allow_file_access,
-                        const base::FilePath& install_dir,
-                        const std::string& manifest);
-  void AddExtension(const std::string& id,
-                    const std::string& name,
-                    const std::string& public_key);
 
  private:
-  void ReinstallAsNonComponent(std::string extension_id);
-
   raw_ptr<Profile> profile_ = nullptr;
   raw_ptr<PrefService> profile_prefs_ = nullptr;
 };

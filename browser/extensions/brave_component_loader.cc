@@ -5,84 +5,21 @@
 
 #include "brave/browser/extensions/brave_component_loader.h"
 
-#include <string>
-
 #include "base/command_line.h"
-#include "base/feature_list.h"
-#include "base/functional/bind.h"
-#include "brave/components/brave_component_updater/browser/brave_component_installer.h"
-#include "brave/components/brave_component_updater/browser/brave_on_demand_updater.h"
+#include "base/files/file_path.h"
 #include "brave/components/brave_extension/grit/brave_extension.h"
 #include "brave/components/constants/brave_switches.h"
-#include "brave/components/constants/pref_names.h"
-#include "chrome/browser/browser_process.h"
-#include "chrome/browser/extensions/extension_service.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/common/pref_names.h"
-#include "components/grit/brave_components_resources.h"
-#include "components/prefs/pref_change_registrar.h"
 #include "components/prefs/pref_service.h"
-#include "extensions/browser/extension_prefs.h"
-#include "extensions/browser/extension_registry.h"
-#include "extensions/browser/extension_system.h"
-#include "extensions/common/constants.h"
-#include "extensions/common/mojom/manifest.mojom.h"
-
-using extensions::mojom::ManifestLocation;
 
 namespace extensions {
 
-BraveComponentLoader::BraveComponentLoader(ExtensionSystem* extension_system,
-                                           Profile* profile)
-    : ComponentLoader(extension_system, profile),
+BraveComponentLoader::BraveComponentLoader(Profile* profile)
+    : ComponentLoader(profile),
       profile_(profile),
       profile_prefs_(profile->GetPrefs()) {}
 
 BraveComponentLoader::~BraveComponentLoader() = default;
-
-void BraveComponentLoader::OnComponentRegistered(std::string extension_id) {
-  brave_component_updater::BraveOnDemandUpdater::GetInstance()->OnDemandUpdate(
-      extension_id);
-}
-
-void BraveComponentLoader::OnComponentReady(std::string extension_id,
-                                            bool allow_file_access,
-                                            const base::FilePath& install_dir,
-                                            const std::string& manifest) {
-  Add(manifest, install_dir);
-  if (allow_file_access) {
-    ExtensionPrefs::Get(profile_)->SetAllowFileAccess(extension_id, true);
-  }
-}
-
-void BraveComponentLoader::ReinstallAsNonComponent(
-    const std::string extension_id) {
-  extensions::ExtensionService* service =
-      extensions::ExtensionSystem::Get(profile_)->extension_service();
-  extensions::ExtensionRegistry* registry =
-      extensions::ExtensionRegistry::Get(profile_);
-  const Extension* extension = registry->GetInstalledExtension(extension_id);
-  DCHECK(extension);
-  if (extension->location() == ManifestLocation::kComponent) {
-    service->RemoveComponentExtension(extension_id);
-    std::string error;
-    scoped_refptr<Extension> normal_extension = Extension::Create(
-        extension->path(), ManifestLocation::kExternalPref,
-        *extension->manifest()->value(), extension->creation_flags(), &error);
-    service->AddExtension(normal_extension.get());
-  }
-}
-
-void BraveComponentLoader::AddExtension(const std::string& extension_id,
-                                        const std::string& name,
-                                        const std::string& public_key) {
-  brave::RegisterComponent(
-      g_browser_process->component_updater(), name, public_key,
-      base::BindOnce(&BraveComponentLoader::OnComponentRegistered,
-                     base::Unretained(this), extension_id),
-      base::BindRepeating(&BraveComponentLoader::OnComponentReady,
-                          base::Unretained(this), extension_id, true));
-}
 
 void BraveComponentLoader::AddDefaultComponentExtensions(
     bool skip_session_components) {
