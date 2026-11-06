@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+import 'chrome://resources/cr_elements/cr_button/cr_button.js'
+import '../controls/settings_toggle_button.js'
 import {PrefsMixin} from '/shared/settings/prefs/prefs_mixin.js'
 import {WebUiListenerMixin} from 'chrome://resources/cr_elements/web_ui_listener_mixin.js'
 

@@ -3,6 +3,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
+import '../controls/settings_dropdown_menu.js'
+import '../controls/settings_toggle_button.js'
 import '../settings_shared.css.js'
 import '../settings_vars.css.js'
 

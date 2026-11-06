@@ -3,6 +3,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // you can obtain one at https://mozilla.org/MPL/2.0/.
 
+import '/shared/settings/controls/extension_controlled_indicator.js'
+import '../appearance_page/home_url_input.js'
+import '../controls/controlled_radio_button.js'
+import '../controls/settings_checkbox.js'
+import '../controls/settings_radio_group.js'
+import '../controls/settings_toggle_button.js'
 import { afterNextRender, PolymerElement } from 'chrome://resources/polymer/v3_0/polymer/polymer_bundled.min.js'
 import { I18nMixin, I18nMixinInterface } from 'chrome://resources/cr_elements/i18n_mixin.js'
 import { getTemplate } from './toolbar.html.js'

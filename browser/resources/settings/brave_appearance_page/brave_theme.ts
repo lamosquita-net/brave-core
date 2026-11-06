@@ -37,6 +37,13 @@ export class SettingsBraveAppearanceThemeElement extends SettingsBraveAppearance
     return getTemplate()
   }
 
+  static get properties() {
+    return {
+      braveThemeList_: Array,
+      braveThemeType_: Number,
+    }
+  }
+
   static get observers() {
     return [
       'updateSelected_(braveThemeType_, braveThemeList_)',
