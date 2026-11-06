@@ -7,13 +7,12 @@
 #include "net/base/url_util.h"
 #include "testing/gtest/include/gtest/gtest.h"
 #include "url/gurl.h"
-#include "extensions/buildflags/buildflags.h"
 
 // This test covers all cases that upstream and our version of
 // CanAddURLToHistory().
 TEST(HistoryUtilsTest, VariousURLTest) {
   EXPECT_TRUE(CanAddURLToHistory(GURL("https://www.brave.com/")));
-  EXPECT_FALSE(CanAddURLToHistory(GURL("brave://sync/")));
+  EXPECT_FALSE(CanAddURLToHistory(GURL("flyweb://sync/")));
   EXPECT_FALSE(CanAddURLToHistory(GURL("javascript://test")));
   EXPECT_FALSE(CanAddURLToHistory(GURL("about://test")));
   EXPECT_FALSE(CanAddURLToHistory(GURL("content://test")));
@@ -23,8 +22,5 @@ TEST(HistoryUtilsTest, VariousURLTest) {
   EXPECT_FALSE(CanAddURLToHistory(GURL("chrome-native://test")));
   EXPECT_FALSE(CanAddURLToHistory(GURL("chrome-search://test")));
   EXPECT_FALSE(CanAddURLToHistory(GURL("chrome-distiller://test")));
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-  EXPECT_FALSE(CanAddURLToHistory(
-      GURL("chrome-extension://odbfpeeihdkbihmopkbjmoonfanlbfcl/home.html")));
-#endif
+  EXPECT_FALSE(CanAddURLToHistory(GURL("chrome-untrusted://test")));
 }

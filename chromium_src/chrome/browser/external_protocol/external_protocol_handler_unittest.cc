@@ -7,24 +7,19 @@
 
 #include "chrome/browser/external_protocol/external_protocol_handler.h"
 
-#include "chrome/test/base/testing_browser_process.h"
 #include "chrome/test/base/testing_profile.h"
 #include "content/public/test/browser_task_environment.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
-class ExternalProtocolHandlerTest : public testing::Test {
+class BraveExternalProtocolHandlerTest : public testing::Test {
  protected:
   void SetUp() override { profile_ = std::make_unique<TestingProfile>(); }
-
-  void TearDown() override {
-    TestingBrowserProcess::GetGlobal()->SetLocalState(nullptr);
-  }
 
   content::BrowserTaskEnvironment task_environment_;
   std::unique_ptr<TestingProfile> profile_;
 };
 
-TEST_F(ExternalProtocolHandlerTest, TestGetBlockStateMailto) {
+TEST_F(BraveExternalProtocolHandlerTest, TestGetBlockStateMailto) {
   ExternalProtocolHandler::BlockState block_state =
       ExternalProtocolHandler::GetBlockState("mailto", nullptr, profile_.get());
   EXPECT_EQ(ExternalProtocolHandler::UNKNOWN, block_state);
