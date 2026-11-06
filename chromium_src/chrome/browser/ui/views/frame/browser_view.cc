@@ -12,6 +12,9 @@
 #include "brave/components/constants/pref_names.h"
 #include "chrome/browser/ui/browser_commands.h"
 #include "chrome/browser/ui/exclusive_access/exclusive_access_context.h"
+// BrowserViewLayoutViews holds InfoBarContainerView/BookmarkBarView
+// pointers; include it before the renaming defines below.
+#include "chrome/browser/ui/views/frame/layout/browser_view_layout.h"
 
 #define InfoBarContainerView BraveInfoBarContainerView
 #define ToolbarView BraveToolbarView

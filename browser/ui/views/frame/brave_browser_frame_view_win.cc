@@ -38,7 +38,7 @@ int BraveBrowserFrameViewWin::NonClientHitTest(const gfx::Point& point) {
     }
   }
 
-  if (auto overridden_result = brave::NonClientHitTest(browser_view(), point);
+  if (auto overridden_result = brave::NonClientHitTest(GetBrowserView(), point);
       overridden_result != HTNOWHERE) {
     return overridden_result;
   }

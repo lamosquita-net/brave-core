@@ -19,7 +19,7 @@ BraveOpaqueBrowserFrameView::BraveOpaqueBrowserFrameView(
 BraveOpaqueBrowserFrameView::~BraveOpaqueBrowserFrameView() = default;
 
 int BraveOpaqueBrowserFrameView::NonClientHitTest(const gfx::Point& point) {
-  if (auto res = brave::NonClientHitTest(browser_view(), point);
+  if (auto res = brave::NonClientHitTest(GetBrowserView(), point);
       res != HTNOWHERE) {
     return res;
   }
