@@ -11,15 +11,14 @@
 #include "ui/base/metadata/metadata_header_macros.h"
 #include "ui/views/window/dialog_delegate.h"
 
-class Browser;
+class BrowserWindowInterface;
 class PrefService;
 class DontAskAgainCheckbox;
 
 class WindowClosingConfirmDialogView : public views::DialogDelegateView {
   METADATA_HEADER(WindowClosingConfirmDialogView, views::DialogDelegateView)
  public:
-
-  static void Show(Browser* browser,
+  static void Show(BrowserWindowInterface* browser,
                    base::OnceCallback<void(bool)> response_callback);
 
   WindowClosingConfirmDialogView(const WindowClosingConfirmDialogView&) =
@@ -35,7 +34,7 @@ class WindowClosingConfirmDialogView : public views::DialogDelegateView {
           creation_callback);
 
   explicit WindowClosingConfirmDialogView(
-      Browser* browser,
+      BrowserWindowInterface* browser,
       base::OnceCallback<void(bool)> response_callback);
   ~WindowClosingConfirmDialogView() override;
 
@@ -44,12 +43,12 @@ class WindowClosingConfirmDialogView : public views::DialogDelegateView {
   void OnClosing();
 
   // views::DialogDelegate overrides:
-  ui::ModalType GetModalType() const override;
+  ui::mojom::ModalType GetModalType() const override;
   bool ShouldShowCloseButton() const override;
   bool ShouldShowWindowTitle() const override;
 
   bool close_window_ = true;
-  raw_ptr<Browser> browser_ = nullptr;
+  raw_ptr<BrowserWindowInterface> browser_ = nullptr;
   base::OnceCallback<void(bool)> response_callback_;
   raw_ptr<PrefService> prefs_ = nullptr;
   raw_ptr<DontAskAgainCheckbox> dont_ask_again_checkbox_ = nullptr;

@@ -6,6 +6,8 @@
 #ifndef BRAVE_CHROMIUM_SRC_UI_VIEWS_WINDOW_DIALOG_DELEGATE_H_
 #define BRAVE_CHROMIUM_SRC_UI_VIEWS_WINDOW_DIALOG_DELEGATE_H_
 
+#include "ui/views/widget/widget_delegate.h"
+
 #define ResetViewShownTimeStampForTesting                                 \
   set_should_ignore_snapping(bool should_ignore_snapping) {               \
     should_ignore_snapping_ = should_ignore_snapping;                     \
@@ -18,8 +20,24 @@
  public:                                                                  \
   void ResetViewShownTimeStampForTesting
 
+class CrashReportPermissionAskDialogView;
+class WindowClosingConfirmDialogView;
+class TextRecognitionDialogView;
+class ObsoleteSystemConfirmDialogView;
+
+// Brave's DialogDelegateView subclasses need the (private) default
+// constructor, like upstream's grandfathered friends.
+#define CreatePassKey                                \
+  CreatePassKey_Unused();                            \
+  friend class ::CrashReportPermissionAskDialogView; \
+  friend class ::WindowClosingConfirmDialogView;     \
+  friend class ::TextRecognitionDialogView;          \
+  friend class ::ObsoleteSystemConfirmDialogView;    \
+  static DdvPassKey CreatePassKey
+
 #include "src/ui/views/window/dialog_delegate.h"  // IWYU pragma: export
 
+#undef CreatePassKey
 #undef ResetViewShownTimeStampForTesting
 
 #endif  // BRAVE_CHROMIUM_SRC_UI_VIEWS_WINDOW_DIALOG_DELEGATE_H_
