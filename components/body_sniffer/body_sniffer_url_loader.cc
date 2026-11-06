@@ -7,6 +7,7 @@
 
 #include <optional>
 #include <utility>
+#include <variant>
 
 #include "base/functional/bind.h"
 #include "brave/components/body_sniffer/body_sniffer_throttle.h"
@@ -83,7 +84,7 @@ void BodySnifferURLLoader::Start(
     return;
   }
 
-  if (auto* producer = absl::get_if<BodyProducerPtr>(&handler_)) {
+  if (auto* producer = std::get_if<BodyProducerPtr>(&handler_)) {
     buffered_body_ = (*producer)->TakeContent();
   }
 
@@ -173,13 +174,10 @@ void BodySnifferURLLoader::OnComplete(
     case State::kAborted:
       NOTREACHED();
   }
-  NOTREACHED();
 }
 
 void BodySnifferURLLoader::FollowRedirect(
-    const std::vector<std::string>& removed_headers,
-    const net::HttpRequestHeaders& modified_headers,
-    const net::HttpRequestHeaders& modified_cors_exempt_headers,
+    network::HttpRequestHeadersUpdateParams headers_update_params,
     const std::optional<GURL>& new_url) {
   // BodySnifferURLLoader starts handling the request after
   // OnReceivedResponse(). A redirect response is not expected.
@@ -192,20 +190,6 @@ void BodySnifferURLLoader::SetPriority(net::RequestPriority priority,
     return;
   }
   source_url_loader_->SetPriority(priority, intra_priority_value);
-}
-
-void BodySnifferURLLoader::PauseReadingBodyFromNet() {
-  if (state_ == State::kAborted) {
-    return;
-  }
-  source_url_loader_->PauseReadingBodyFromNet();
-}
-
-void BodySnifferURLLoader::ResumeReadingBodyFromNet() {
-  if (state_ == State::kAborted) {
-    return;
-  }
-  source_url_loader_->ResumeReadingBodyFromNet();
 }
 
 void BodySnifferURLLoader::OnBodyReadable(MojoResult) {
@@ -244,8 +228,8 @@ void BodySnifferURLLoader::OnBodyReadable(MojoResult) {
 
   auto overall_action = BodyHandler::Action::kNone;
 
-  CHECK(absl::holds_alternative<BodyHandlersPtr>(handler_));
-  auto& body_handlers = absl::get<BodyHandlersPtr>(handler_);
+  CHECK(std::holds_alternative<BodyHandlersPtr>(handler_));
+  auto& body_handlers = std::get<BodyHandlersPtr>(handler_);
 
   for (auto& handler : body_handlers) {
     const auto action =
@@ -314,7 +298,7 @@ void BodySnifferURLLoader::CompleteSniffing(bool remove_first,
   DCHECK_EQ(State::kSniffing, state_);
   DCHECK(buffered_body_.empty());
 
-  if (auto* body_handlers = absl::get_if<BodyHandlersPtr>(&handler_)) {
+  if (auto* body_handlers = std::get_if<BodyHandlersPtr>(&handler_)) {
     if (remove_first && !body_handlers->empty()) {
       complete_handlers_.push_back(std::move(*body_handlers->begin()));
       body_handlers->erase(body_handlers->begin());
@@ -370,7 +354,7 @@ void BodySnifferURLLoader::CompleteSending() {
   body_consumer_handle_.reset();
   body_producer_handle_.reset();
 
-  if (auto* producer = absl::get_if<BodyProducerPtr>(&handler_)) {
+  if (auto* producer = std::get_if<BodyProducerPtr>(&handler_)) {
     (*producer)->OnComplete();
   }
 

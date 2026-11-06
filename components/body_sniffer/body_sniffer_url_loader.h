@@ -10,6 +10,7 @@
 #include <optional>
 #include <string>
 #include <tuple>
+#include <variant>
 #include <vector>
 
 #include "base/memory/scoped_refptr.h"
@@ -22,10 +23,10 @@
 #include "mojo/public/cpp/system/data_pipe.h"
 #include "mojo/public/cpp/system/simple_watcher.h"
 #include "net/base/request_priority.h"
+#include "services/network/public/cpp/http_request_headers_update_params.h"
 #include "services/network/public/mojom/early_hints.mojom-forward.h"
 #include "services/network/public/mojom/url_loader.mojom.h"
 #include "services/network/public/mojom/url_response_head.mojom-forward.h"
-#include "third_party/abseil-cpp/absl/types/variant.h"
 #include "url/gurl.h"
 
 namespace net {
@@ -110,7 +111,7 @@ class BodySnifferThrottle;
 
 using BodyHandlersPtr = std::vector<std::unique_ptr<BodyHandler>>;
 using BodyProducerPtr = std::unique_ptr<BodyProducer>;
-using Handler = absl::variant<BodyProducerPtr, BodyHandlersPtr>;
+using Handler = std::variant<BodyProducerPtr, BodyHandlersPtr>;
 
 // When created with BodyHandlersPtr the BodySnifferURLLoader continuously
 // receives the content of the page and passes every chunk to handlers. If all
@@ -171,14 +172,10 @@ class BodySnifferURLLoader : public network::mojom::URLLoaderClient,
   // network::mojom::URLLoader implementation (called from the destination of
   // the response):
   void FollowRedirect(
-      const std::vector<std::string>& removed_headers,
-      const net::HttpRequestHeaders& modified_headers,
-      const net::HttpRequestHeaders& modified_cors_exempt_headers,
+      network::HttpRequestHeadersUpdateParams headers_update_params,
       const std::optional<GURL>& new_url) override;
   void SetPriority(net::RequestPriority priority,
                    int32_t intra_priority_value) override;
-  void PauseReadingBodyFromNet() override;
-  void ResumeReadingBodyFromNet() override;
 
   void OnBodyReadable(MojoResult);
   void OnBodyWritable(MojoResult);
