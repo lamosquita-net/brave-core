@@ -22,8 +22,10 @@ class TabRestoreService;
 
 class BraveTabMenuModel : public TabMenuModel {
  public:
+  // 156 has no CommandLast sentinel in tabs::TabContextMenuCommand; its last
+  // command is CommandToggleFocusGroup, so Brave's commands follow it.
   enum BraveTabContextMenuCommand {
-    CommandStart = TabStripModel::CommandLast,
+    CommandStart = TabStripModel::CommandToggleFocusGroup,
     CommandRestoreTab,
     CommandBookmarkAllTabs,
     CommandToggleTabMuted,
