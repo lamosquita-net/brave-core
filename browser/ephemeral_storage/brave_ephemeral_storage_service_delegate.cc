@@ -8,6 +8,7 @@
 #include <utility>
 
 #include "base/functional/callback_helpers.h"
+#include "base/strings/strcat.h"
 #include "brave/components/brave_shields/content/browser/brave_shields_util.h"
 #include "chrome/browser/browsing_data/chrome_browsing_data_remover_constants.h"
 #include "components/content_settings/core/browser/host_content_settings_map.h"
@@ -75,6 +76,7 @@ void BraveEphemeralStorageServiceDelegate::CleanupTLDEphemeralArea(
           kThirdPartiesOnly);
   filter_builder->AddOrigin(url::Origin::Create(https_url));
   filter_builder->AddOrigin(url::Origin::Create(http_url));
+  filter_builder->SetStoragePartitionConfig(key.second);
 
   content::BrowsingDataRemover* remover = context_->GetBrowsingDataRemover();
   remover->RemoveWithFilter(base::Time(), base::Time::Max(), data_to_remove,
@@ -94,7 +96,6 @@ void BraveEphemeralStorageServiceDelegate::CleanupFirstPartyStorageArea(
       content::BrowsingDataRemover::DATA_TYPE_CACHE |
       content::BrowsingDataRemover::DATA_TYPE_MEDIA_LICENSES |
       content::BrowsingDataRemover::DATA_TYPE_DOM_STORAGE |
-      content::BrowsingDataRemover::DATA_TYPE_ATTRIBUTION_REPORTING |
       content::BrowsingDataRemover::DATA_TYPE_PRIVACY_SANDBOX |
       content::BrowsingDataRemover::DATA_TYPE_PRIVACY_SANDBOX_INTERNAL |
       chrome_browsing_data_remover::DATA_TYPE_SITE_DATA;
