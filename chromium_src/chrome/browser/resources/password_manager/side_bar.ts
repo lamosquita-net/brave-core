@@ -6,6 +6,10 @@
 // Replaces password_manager/side_bar.ts (upstream kept as side_bar-chromium.ts
 // by //brave/chromium_src/tools/grit/preprocess_if_expr.py), as in Brave 1.98.
 
+import 'chrome://resources/cr_elements/cr_icon/cr_icon.js';
+import 'chrome://resources/cr_elements/cr_menu_selector/cr_menu_selector.js';
+import 'chrome://resources/cr_elements/cr_ripple/cr_ripple.js';
+
 import {RegisterPolymerTemplateModifications, RegisterStyleOverride} from '//resources/brave/polymer_overriding.js'
 import {html} from '//resources/polymer/v3_0/polymer/polymer_bundled.min.js'
 
