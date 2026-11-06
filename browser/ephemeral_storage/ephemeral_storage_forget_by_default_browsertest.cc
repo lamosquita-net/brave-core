@@ -177,12 +177,12 @@ IN_PROC_BROWSER_TEST_F(EphemeralStorageForgetByDefaultBrowserTest,
 
 IN_PROC_BROWSER_TEST_F(EphemeralStorageForgetByDefaultBrowserTest,
                        ForgetFirstPartyInheritedInIncognito) {
-  Browser* incognito_browser = CreateIncognitoBrowser(nullptr);
+  BrowserWindowInterface* incognito_browser = CreateIncognitoBrowser(nullptr);
   EXPECT_EQ(
       brave_shields::GetCookieControlType(
           HostContentSettingsMapFactory::GetForProfile(
-              incognito_browser->profile()),
-          CookieSettingsFactory::GetForProfile(incognito_browser->profile())
+              incognito_browser->GetProfile()),
+          CookieSettingsFactory::GetForProfile(incognito_browser->GetProfile())
               .get(),
           a_site_ephemeral_storage_url_),
       brave_shields::ControlType::BLOCK_THIRD_PARTY);
@@ -192,7 +192,7 @@ IN_PROC_BROWSER_TEST_F(EphemeralStorageForgetByDefaultBrowserTest,
 
   EXPECT_TRUE(brave_shields::GetForgetFirstPartyStorageEnabled(
       HostContentSettingsMapFactory::GetForProfile(
-          incognito_browser->profile()),
+          incognito_browser->GetProfile()),
       a_site_ephemeral_storage_url_));
 
   ASSERT_TRUE(ui_test_utils::NavigateToURL(incognito_browser,

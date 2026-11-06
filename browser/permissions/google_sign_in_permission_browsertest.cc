@@ -404,7 +404,7 @@ IN_PROC_BROWSER_TEST_F(GoogleSignInBrowserTest, IncognitoModeInheritAllow) {
   // Allowed permission for a website is inherited in incognito
   CheckAskAndAcceptFlow();
   Profile* profile = browser()->GetProfile();
-  Browser* incognito_browser = CreateIncognitoBrowser(profile);
+  BrowserWindowInterface* incognito_browser = CreateIncognitoBrowser(profile);
   SetBrowser(incognito_browser);
   SetPromptFactory(GetPermissionRequestManager());
   CheckAllowedFlow();
@@ -414,7 +414,7 @@ IN_PROC_BROWSER_TEST_F(GoogleSignInBrowserTest, IncognitoModeInheritBlock) {
   // Blocked permission for a website is inherited in incognito
   CheckAskAndDenyFlow();
   Profile* profile = browser()->GetProfile();
-  Browser* incognito_browser = CreateIncognitoBrowser(profile);
+  BrowserWindowInterface* incognito_browser = CreateIncognitoBrowser(profile);
   SetBrowser(incognito_browser);
   SetPromptFactory(GetPermissionRequestManager());
   CheckBlockedFlow();
@@ -459,7 +459,7 @@ IN_PROC_BROWSER_TEST_F(GoogleSignInBrowserTest,
 IN_PROC_BROWSER_TEST_F(GoogleSignInBrowserTest, IncognitoModeDoesNotLeak) {
   // Permission set in Incognito does not leak back to normal mode.
   Browser* original_browser = browser();
-  Browser* incognito_browser = CreateIncognitoBrowser();
+  BrowserWindowInterface* incognito_browser = CreateIncognitoBrowser();
   SetBrowser(incognito_browser);
   SetPromptFactory(GetPermissionRequestManager());
   CheckAskAndAcceptFlow();

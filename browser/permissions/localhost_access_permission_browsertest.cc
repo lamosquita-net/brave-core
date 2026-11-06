@@ -322,7 +322,7 @@ IN_PROC_BROWSER_TEST_F(LocalhostAccessBrowserTest, IncognitoModeInheritAllow) {
   CheckAskAndAcceptFlow(target_url);
   // Check incognito mode.
   Profile* profile = browser()->GetProfile();
-  Browser* incognito_browser = CreateIncognitoBrowser(profile);
+  BrowserWindowInterface* incognito_browser = CreateIncognitoBrowser(profile);
   SetBrowser(incognito_browser);
   CheckCurrentStatusIs(ContentSetting::CONTENT_SETTING_ASK);
 }
@@ -335,7 +335,7 @@ IN_PROC_BROWSER_TEST_F(LocalhostAccessBrowserTest, IncognitoModeInheritBlock) {
   CheckAskAndDenyFlow(target_url);
   // Check Incognito mode.
   Profile* profile = browser()->GetProfile();
-  Browser* incognito_browser = CreateIncognitoBrowser(profile);
+  BrowserWindowInterface* incognito_browser = CreateIncognitoBrowser(profile);
   SetBrowser(incognito_browser);
   CheckCurrentStatusIs(ContentSetting::CONTENT_SETTING_ASK);
 }
@@ -343,7 +343,7 @@ IN_PROC_BROWSER_TEST_F(LocalhostAccessBrowserTest, IncognitoModeInheritBlock) {
 IN_PROC_BROWSER_TEST_F(LocalhostAccessBrowserTest, IncognitoModeDoesNotLeak) {
   // Permission set in Incognito does not leak back to normal mode.
   Browser* original_browser = browser();
-  Browser* incognito_browser = CreateIncognitoBrowser();
+  BrowserWindowInterface* incognito_browser = CreateIncognitoBrowser();
   SetBrowser(incognito_browser);
   SetPromptFactory(GetPermissionRequestManager());
   std::string test_domain = "localhost";
