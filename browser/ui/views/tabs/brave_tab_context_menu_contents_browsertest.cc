@@ -9,9 +9,10 @@
 
 #include "brave/browser/ui/tabs/brave_tab_menu_model.h"
 #include "brave/browser/ui/views/tabs/brave_browser_tab_strip_controller.h"
-#include "chrome/browser/ui/browser.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/browser_commands.h"
 #include "chrome/browser/ui/browser_tabstrip.h"
+#include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/browser/ui/views/frame/browser_view.h"
 #include "chrome/browser/ui/views/tabs/browser_tab_strip_controller.h"
 #include "chrome/browser/ui/views/tabs/tab_strip.h"
@@ -28,28 +29,28 @@ class BraveTabContextMenuContentsTest : public InProcessBrowserTest {
 
  protected:
   std::unique_ptr<BraveTabContextMenuContents> CreateMenu() {
-    TabStrip* tabstrip =
-        BrowserView::GetBrowserViewForBrowser(browser())->tabstrip();
+    TabStrip* tabstrip = BrowserView::GetBrowserViewForBrowser(browser())
+                             ->horizontal_tab_strip_for_testing();
     return std::make_unique<BraveTabContextMenuContents>(
         tabstrip->tab_at(0),
-        static_cast<BraveBrowserTabStripController*>(
-            BrowserView::GetBrowserViewForBrowser(browser())
-                ->tabstrip()
-                ->controller()),
+        static_cast<BraveBrowserTabStripController*>(tabstrip->controller()),
         0);
   }
 
-  Browser* CreateBrowser(bool incognito) {
+  BrowserWindowInterface* CreateBrowser(bool incognito) {
     if (incognito) {
       return chrome::OpenEmptyWindow(
-          browser()->GetProfile()->GetPrimaryOTRProfile(/*create_if_needed=*/true),
+          browser()->GetProfile()->GetPrimaryOTRProfile(
+              /*create_if_needed=*/true),
           /*should_trigger_session_restore=*/false);
     }
     return chrome::OpenEmptyWindow(browser()->GetProfile(),
                                    /*should_trigger_session_restore=*/false);
   }
 
-  void AddTabs(Browser* browser, int new_tab_count, int pinned_tab_count) {
+  void AddTabs(BrowserWindowInterface* browser,
+               int new_tab_count,
+               int pinned_tab_count) {
     std::vector expected = {browser->tab_strip_model()->GetWebContentsAt(0)};
     for (int i = 0; i < new_tab_count; ++i) {
       expected.push_back(chrome::AddAndReturnTabAt(browser, GURL(),
@@ -61,7 +62,8 @@ class BraveTabContextMenuContentsTest : public InProcessBrowserTest {
     }
   }
 
-  std::vector<content::WebContents*> GetWebContentses(Browser* browser) {
+  std::vector<content::WebContents*> GetWebContentses(
+      BrowserWindowInterface* browser) {
     std::vector<content::WebContents*> web_contentses;
     const auto count = browser->tab_strip_model()->count();
     for (int i = 0; i < count; i++) {
@@ -79,7 +81,7 @@ IN_PROC_BROWSER_TEST_F(BraveTabContextMenuContentsTest, Basics) {
   EXPECT_FALSE(
       menu->IsCommandIdEnabled(BraveTabMenuModel::CommandBookmarkAllTabs));
 
-  chrome::NewTab(browser());
+  chrome::NewTab(browser(), NewTabTypes::kNewTabCommand);
   // Still restore tab menu is disabled because there is no closed tab.
   EXPECT_FALSE(menu->IsCommandIdEnabled(BraveTabMenuModel::CommandRestoreTab));
   // Bookmark all tabs item is enabled if the number of tabs are 2 or more.

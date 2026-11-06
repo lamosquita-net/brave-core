@@ -4,6 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <stddef.h>
+
 #include <memory>
 #include <utility>
 
@@ -12,8 +13,8 @@
 #include "brave/browser/ui/tabs/brave_tab_prefs.h"
 #include "brave/browser/ui/views/tabs/brave_tab_hover_card_controller.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
-#include "chrome/browser/ui/tabs/tab_renderer_data.h"
+#include "chrome/browser/ui/tabs/tab_data.h"
+#include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/browser/ui/thumbnails/thumbnail_tab_helper.h"
 #include "chrome/browser/ui/ui_features.h"
 #include "chrome/browser/ui/views/frame/browser_view.h"
@@ -25,7 +26,6 @@
 #include "chrome/test/base/in_process_browser_test.h"
 #include "components/prefs/pref_service.h"
 #include "content/public/browser/web_contents.h"
-#include "content/public/browser/web_contents_user_data.h"
 #include "content/public/test/browser_test.h"
 #include "testing/gtest/include/gtest/gtest.h"
 #include "ui/gfx/animation/animation_test_api.h"
@@ -51,17 +51,20 @@ class BraveTabHoverTest : public InProcessBrowserTest {
   }
 
   TabHoverCardBubbleView* hover_card() {
-    return tabstrip()->hover_card_controller_->hover_card_;
+    return horizontal_tab_strip_for_testing()
+        ->hover_card_controller_->hover_card_;
   }
 
-  TabStrip* tabstrip() {
-    auto* browser_view = static_cast<BrowserView*>(browser()->window());
-    return browser_view->tabstrip();
+  TabStrip* horizontal_tab_strip_for_testing() {
+    auto* browser_view =
+        static_cast<BrowserView*>(BrowserWindow::FromBrowser(browser()));
+    return browser_view->horizontal_tab_strip_for_testing();
   }
 
   Tab* active_tab() {
     TabStripModel* tab_strip_model = browser()->tab_strip_model();
-    return tabstrip()->tab_at(tab_strip_model->active_index());
+    return horizontal_tab_strip_for_testing()->tab_at(
+        tab_strip_model->active_index());
   }
 
   void HoverOverTab(Tab* tab) {
@@ -71,8 +74,8 @@ class BraveTabHoverTest : public InProcessBrowserTest {
     // Additionally, triggering the test with
     // GetFocusManager()->SetFocusedView(tab) is flakey, and fails semi
     // regularly. Thus, we have to trigger the hover directly.
-    tabstrip()->UpdateHoverCard(tab,
-                                TabSlotController::HoverCardUpdateType::kHover);
+    horizontal_tab_strip_for_testing()->UpdateHoverCard(
+        tab, TabSlotController::HoverCardUpdateType::kHover);
   }
 
  private:
@@ -80,66 +83,52 @@ class BraveTabHoverTest : public InProcessBrowserTest {
       animation_mode_reset_;
 };
 
-// There should be no tooltip unless the mode is |TOOLTIP|, as otherwise we'll
-// get a tooltip AND a card showing up.
-IN_PROC_BROWSER_TEST_F(BraveTabHoverTest,
-                       GetTooltipOnlyHasTextWhenHoverModeIsTooltip) {
-  TabRendererData data;
-  data.visible_url = GURL("https://example.com");
-  data.title = u"Hello World";
-  tabstrip()->SetTabData(browser()->tab_strip_model()->active_index(), data);
-  EXPECT_EQ(u"Hello World", active_tab()->data().title);
-
-  browser()->GetProfile()->GetPrefs()->SetInteger(brave_tabs::kTabHoverMode,
-                                               brave_tabs::TabHoverMode::CARD);
-  EXPECT_EQ(u"", active_tab()->GetTooltipText(gfx::Point()));
-
-  browser()->GetProfile()->GetPrefs()->SetInteger(
-      brave_tabs::kTabHoverMode, brave_tabs::TabHoverMode::CARD_WITH_PREVIEW);
-  EXPECT_EQ(u"", active_tab()->GetTooltipText(gfx::Point()));
-
-  browser()->GetProfile()->GetPrefs()->SetInteger(
-      brave_tabs::kTabHoverMode, brave_tabs::TabHoverMode::TOOLTIP);
-  EXPECT_EQ(u"Hello World", active_tab()->GetTooltipText(gfx::Point()));
-}
-
 // The ThumbnailTabHelper needs to be attached in all |TabHoverModes| so that
 // we can change between modes safely without restarting.
 IN_PROC_BROWSER_TEST_F(BraveTabHoverTest, ThumbnailHelperIsAlwaysAttached) {
-  browser()->GetProfile()->GetPrefs()->SetInteger(brave_tabs::kTabHoverMode,
-                                               brave_tabs::TabHoverMode::CARD);
-  TabRendererData data;
+  browser()->GetProfile()->GetPrefs()->SetInteger(
+      brave_tabs::kTabHoverMode, brave_tabs::TabHoverMode::CARD);
+  std::vector<TabStrip::AddTabData> data_list;
+  tabs::TabData data;
   data.visible_url = GURL("https://card.com");
   data.title = u"Hello World";
-  tabstrip()->AddTabAt(0, data);
+  data_list.push_back(
+      {.index = 0, .handle = tabs::TabHandle(0), .is_pinned = false});
+  horizontal_tab_strip_for_testing()->AddTabsAt(data_list);
+  horizontal_tab_strip_for_testing()->tab_at(0)->SetDataForTesting(data);
   EXPECT_EQ(0, browser()->tab_strip_model()->active_index());
   EXPECT_EQ(data.visible_url, active_tab()->data().visible_url);
-  EXPECT_NE(nullptr,
-            content::WebContentsUserData<ThumbnailTabHelper>::FromWebContents(
-                contents()));
+  EXPECT_NE(nullptr, ThumbnailTabHelper::From(
+                         browser()->tab_strip_model()->GetTabAtIndex(0)));
 
   browser()->GetProfile()->GetPrefs()->SetInteger(
       brave_tabs::kTabHoverMode, brave_tabs::TabHoverMode::CARD_WITH_PREVIEW);
+  data_list = {};
   data.visible_url = GURL("https://card-with-preview.com");
   data.title = u"Foo Bar";
-  tabstrip()->AddTabAt(0, data);
+  data_list.push_back(
+      {.index = 0, .handle = tabs::TabHandle(1), .is_pinned = false});
+  horizontal_tab_strip_for_testing()->AddTabsAt(data_list);
+  horizontal_tab_strip_for_testing()->tab_at(0)->SetDataForTesting(data);
   EXPECT_EQ(0, browser()->tab_strip_model()->active_index());
   EXPECT_EQ(data.visible_url, active_tab()->data().visible_url);
-  EXPECT_NE(nullptr,
-            content::WebContentsUserData<ThumbnailTabHelper>::FromWebContents(
-                contents()));
+  EXPECT_NE(nullptr, ThumbnailTabHelper::From(
+                         browser()->tab_strip_model()->GetTabAtIndex(0)));
 
   browser()->GetProfile()->GetPrefs()->SetInteger(
       brave_tabs::kTabHoverMode, brave_tabs::TabHoverMode::TOOLTIP);
 
+  data_list = {};
   data.visible_url = GURL("https://tooltip.com");
   data.title = u"Baf Baz";
-  tabstrip()->AddTabAt(0, data);
-  EXPECT_EQ(0, tabstrip()->GetActiveIndex());
+  data_list.push_back(
+      {.index = 0, .handle = tabs::TabHandle(2), .is_pinned = false});
+  horizontal_tab_strip_for_testing()->AddTabsAt(data_list);
+  horizontal_tab_strip_for_testing()->tab_at(0)->SetDataForTesting(data);
+  EXPECT_EQ(0, horizontal_tab_strip_for_testing()->GetActiveIndex());
   EXPECT_EQ(data.visible_url, active_tab()->data().visible_url);
-  EXPECT_NE(nullptr,
-            content::WebContentsUserData<ThumbnailTabHelper>::FromWebContents(
-                contents()));
+  EXPECT_NE(nullptr, ThumbnailTabHelper::From(
+                         browser()->tab_strip_model()->GetTabAtIndex(0)));
 }
 
 // This is based on |TabHoverCardBubbleViewBrowserTest|. Unfortunately, all the
@@ -155,14 +144,14 @@ IN_PROC_BROWSER_TEST_F(BraveTabHoverTest,
                        MAYBE_HoverModesAreCorrectlyConfigured) {
   // In Card mode, the widget should become visible but the thumbnail should not
   // be created.
-  browser()->GetProfile()->GetPrefs()->SetInteger(brave_tabs::kTabHoverMode,
-                                               brave_tabs::TabHoverMode::CARD);
+  browser()->GetProfile()->GetPrefs()->SetInteger(
+      brave_tabs::kTabHoverMode, brave_tabs::TabHoverMode::CARD);
   HoverOverTab(active_tab());
 
   Widget* widget = hover_card()->GetWidget();
   ASSERT_NE(nullptr, widget);
   views::test::WidgetVisibleWaiter(widget).Wait();
-  EXPECT_FALSE(hover_card()->has_thumbnail_view());
+  EXPECT_FALSE(hover_card()->HasThumbnailView());
   EXPECT_TRUE(widget->IsVisible());
 
   // Clear focus, to reset the bubble.
@@ -177,7 +166,7 @@ IN_PROC_BROWSER_TEST_F(BraveTabHoverTest,
   widget = hover_card()->GetWidget();
   ASSERT_NE(nullptr, widget);
   views::test::WidgetVisibleWaiter(widget).Wait();
-  EXPECT_TRUE(hover_card()->has_thumbnail_view());
+  EXPECT_TRUE(hover_card()->HasThumbnailView());
   EXPECT_TRUE(widget->IsVisible());
 
   // Clear focus, to hide the bubble.
@@ -219,14 +208,14 @@ IN_PROC_BROWSER_TEST_F(BraveTabHoverTestWithChromeFlag,
 
   // In Card mode, the widget should become visible and because the
   // |kTabHoverCardImages| feature is enabled, the preview should be created.
-  browser()->GetProfile()->GetPrefs()->SetInteger(brave_tabs::kTabHoverMode,
-                                               brave_tabs::TabHoverMode::CARD);
+  browser()->GetProfile()->GetPrefs()->SetInteger(
+      brave_tabs::kTabHoverMode, brave_tabs::TabHoverMode::CARD);
   HoverOverTab(active_tab());
 
   Widget* widget = hover_card()->GetWidget();
   ASSERT_NE(nullptr, widget);
   views::test::WidgetVisibleWaiter(widget).Wait();
-  EXPECT_TRUE(hover_card()->has_thumbnail_view());
+  EXPECT_TRUE(hover_card()->HasThumbnailView());
   EXPECT_TRUE(widget->IsVisible());
 
   // Clear focus, to hide the bubble.
@@ -241,7 +230,7 @@ IN_PROC_BROWSER_TEST_F(BraveTabHoverTestWithChromeFlag,
   widget = hover_card()->GetWidget();
   ASSERT_NE(nullptr, widget);
   views::test::WidgetVisibleWaiter(widget).Wait();
-  EXPECT_TRUE(hover_card()->has_thumbnail_view());
+  EXPECT_TRUE(hover_card()->HasThumbnailView());
   EXPECT_TRUE(widget->IsVisible());
 
   // Clear focus, to hide the bubble.
