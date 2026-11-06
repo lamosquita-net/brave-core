@@ -16,8 +16,11 @@
 #include "content/public/browser/navigation_controller.h"
 #include "content/public/browser/permission_controller.h"
 #include "content/public/browser/permission_descriptor_util.h"
+#include "content/public/browser/permission_request_description.h"
 #include "content/public/browser/permission_result.h"
+#include "content/public/browser/reload_type.h"
 #include "content/public/browser/web_contents.h"
+#include "net/base/net_errors.h"
 #include "net/base/url_util.h"
 #include "third_party/blink/public/common/permissions/permission_utils.h"
 
