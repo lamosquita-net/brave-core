@@ -24,12 +24,14 @@
 #include "chrome/test/base/ui_test_utils.h"
 #include "chrome/test/permissions/permission_request_manager_test_api.h"
 #include "components/prefs/pref_service.h"
+#include "components/update_client/crx_update_item.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/test/browser_test.h"
 #include "content/public/test/browser_test_utils.h"
 #include "content/public/test/test_navigation_observer.h"
 #include "content/public/test/test_utils.h"
 #include "net/dns/mock_host_resolver.h"
+#include "testing/gmock/include/gmock/gmock.h"
 #include "ui/views/bubble/bubble_dialog_delegate_view.h"
 #include "ui/views/widget/widget.h"
 #include "url/gurl.h"
@@ -189,9 +191,10 @@ IN_PROC_BROWSER_TEST_F(WidevinePermissionRequestBrowserTest,
   content::RunAllTasksUntilIdle();
 
   WidevinePermissionRequest::is_test_ = true;
-  GetBraveDrmTabHelper()->OnEvent(component_updater::ComponentUpdateService::
-                                      Observer ::Events::COMPONENT_UPDATED,
-                                  kWidevineComponentId);
+  update_client::CrxUpdateItem item;
+  item.id = kWidevineComponentId;
+  item.state = update_client::ComponentState::kUpdated;
+  GetBraveDrmTabHelper()->OnEvent(item);
   content::RunAllTasksUntilIdle();
 
   // Check two permission bubble are created.
@@ -272,7 +275,8 @@ IN_PROC_BROWSER_TEST_F(ScriptTriggerWidevinePermissionRequestBrowserTest,
   const std::string widevine_js = content::JsReplace(drm_js,
                                                      "com.widevine.alpha");
 
-  EXPECT_EQ(js_error, content::EvalJs(active_contents(), widevine_js).error);
+  EXPECT_THAT(content::EvalJs(active_contents(), widevine_js),
+              content::EvalJsResult::ErrorIs(testing::Eq(js_error)));
   content::RunAllTasksUntilIdle();
   EXPECT_TRUE(IsPermissionBubbleShown());
   ResetBubbleState();
@@ -293,16 +297,16 @@ IN_PROC_BROWSER_TEST_F(ScriptTriggerWidevinePermissionRequestBrowserTest,
   ResetBubbleState();
 
   // Check that non-widevine DRM is ignored.
-  EXPECT_EQ(js_error,
-            content::EvalJs(active_contents(),
-                            content::JsReplace(drm_js, "org.w3.clearkey"))
-                .error);
+  EXPECT_THAT(content::EvalJs(active_contents(),
+                              content::JsReplace(drm_js, "org.w3.clearkey")),
+              content::EvalJsResult::ErrorIs(testing::Eq(js_error)));
   content::RunAllTasksUntilIdle();
   EXPECT_FALSE(IsPermissionBubbleShown());
   ResetBubbleState();
 
   // Finally check the widevine request.
-  EXPECT_EQ(js_error, content::EvalJs(active_contents(), widevine_js).error);
+  EXPECT_THAT(content::EvalJs(active_contents(), widevine_js),
+              content::EvalJsResult::ErrorIs(testing::Eq(js_error)));
   content::RunAllTasksUntilIdle();
   EXPECT_TRUE(IsPermissionBubbleShown());
 }

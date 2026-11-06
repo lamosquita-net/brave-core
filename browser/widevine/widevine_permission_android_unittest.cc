@@ -11,7 +11,6 @@
 #include "brave/components/permissions/permission_widevine_utils.h"
 #include "chrome/browser/download/download_permission_request.h"
 #include "chrome/test/base/chrome_render_view_host_test_harness.h"
-#include "chrome/test/base/scoped_testing_local_state.h"
 #include "chrome/test/base/testing_browser_process.h"
 #include "chrome/test/base/testing_profile_manager.h"
 #include "components/permissions/permission_prompt.h"
@@ -53,6 +52,10 @@ class WidevinePermissionAndroidTest : public ChromeRenderViewHostTestHarness {
     brave_drm_tab_helper()->DidStartNavigation(&test_handle);
   }
 
+  void SimulateWidevineKeySystemAccessRequest() {
+    brave_drm_tab_helper()->OnWidevineKeySystemAccessRequest();
+  }
+
  protected:
   void SetUp() override {
     ChromeRenderViewHostTestHarness::SetUp();
@@ -81,8 +84,8 @@ class WidevinePermissionAndroidTest : public ChromeRenderViewHostTestHarness {
     ChromeRenderViewHostTestHarness::TearDown();
   }
 
-  TestingPrefServiceSimple* local_state() {
-    return profile_manager_->local_state()->Get();
+  PrefService* local_state() {
+    return TestingBrowserProcess::GetGlobal()->local_state();
   }
   Profile* profile() { return profile_; }
   content::WebContents* web_contents() const { return web_contents_.get(); }
@@ -103,7 +106,7 @@ TEST_F(WidevinePermissionAndroidTest, BraveDrmTabHelperTest) {
   permissions::PermissionRequestManager* manager = permission_request_manager();
   EXPECT_FALSE(brave_drm_tab_helper()->ShouldShowWidevineOptIn());
 
-  brave_drm_tab_helper()->OnWidevineKeySystemAccessRequest();
+  SimulateWidevineKeySystemAccessRequest();
   base::RunLoop().RunUntilIdle();
   EXPECT_TRUE(brave_drm_tab_helper()->ShouldShowWidevineOptIn());
 
@@ -113,7 +116,7 @@ TEST_F(WidevinePermissionAndroidTest, BraveDrmTabHelperTest) {
   // After navigation
   SimulateNavigation();
   EXPECT_FALSE(brave_drm_tab_helper()->ShouldShowWidevineOptIn());
-  brave_drm_tab_helper()->OnWidevineKeySystemAccessRequest();
+  SimulateWidevineKeySystemAccessRequest();
   base::RunLoop().RunUntilIdle();
   EXPECT_TRUE(brave_drm_tab_helper()->ShouldShowWidevineOptIn());
 
@@ -144,18 +147,19 @@ TEST_F(WidevinePermissionAndroidTest, WidevinePermissionRequestTest) {
   permissions::PermissionRequestManager* manager = permission_request_manager();
 
   // Accept
-  brave_drm_tab_helper()->OnWidevineKeySystemAccessRequest();
+  SimulateWidevineKeySystemAccessRequest();
   base::RunLoop().RunUntilIdle();
 
   EXPECT_TRUE(manager->has_pending_requests() &&
               GetPendingRequestQueue()->size() == 1);
-  GetPendingRequestQueue()->Pop()->PermissionGranted(false /* is_one_time */);
+  GetPendingRequestQueue()->Pop()->PermissionGranted(
+      /*prompt_options=*/std::monostate(), /*is_one_time=*/false);
   EXPECT_TRUE(local_state()->GetBoolean(kWidevineEnabled));
 
   // Deny
   local_state()->SetBoolean(kWidevineEnabled, false);
   SimulateNavigation();
-  brave_drm_tab_helper()->OnWidevineKeySystemAccessRequest();
+  SimulateWidevineKeySystemAccessRequest();
   base::RunLoop().RunUntilIdle();
 
   EXPECT_TRUE(manager->has_pending_requests() &&
@@ -165,7 +169,7 @@ TEST_F(WidevinePermissionAndroidTest, WidevinePermissionRequestTest) {
 
   // Cancel
   SimulateNavigation();
-  brave_drm_tab_helper()->OnWidevineKeySystemAccessRequest();
+  SimulateWidevineKeySystemAccessRequest();
   base::RunLoop().RunUntilIdle();
 
   EXPECT_TRUE(manager->has_pending_requests() &&
@@ -182,12 +186,12 @@ TEST_F(WidevinePermissionAndroidTest, PermissionWidevineUtilsTest) {
   profile()->GetPrefs()->SetBoolean(kAskEnableWidvine, true);
   EXPECT_TRUE(profile()->GetPrefs()->GetBoolean(kAskEnableWidvine));
 
-  std::vector<raw_ptr<permissions::PermissionRequest, VectorExperimental>>
-      requests;
-  requests.push_back(new WidevinePermissionRequest(web_contents(), false));
+  std::vector<std::unique_ptr<permissions::PermissionRequest>> requests;
+  requests.push_back(
+      std::make_unique<WidevinePermissionRequest>(web_contents(), false));
   EXPECT_TRUE(HasWidevinePermissionRequest(requests));
 
-  requests.push_back(new DownloadPermissionRequest(
+  requests.push_back(std::make_unique<DownloadPermissionRequest>(
       nullptr, url::Origin::Create(GURL("https://example.com"))));
   EXPECT_FALSE(HasWidevinePermissionRequest(requests));
 
