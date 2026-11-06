@@ -1,59 +1,73 @@
 diff --git a/chrome/browser/resources/settings/privacy_page/personalization_options.html b/chrome/browser/resources/settings/privacy_page/personalization_options.html
-index 90943cda4959b3e2eb2559652db3fb14de5af6ac..94262a26c04a8d7db5fb5d7ee7fb58fe5ab2787e 100644
+index f4968fb7c8f1463279e9284551b02d5c8eb03081..b88c9b63c35f466bdd5e69e14e5880972188e748 100644
 --- a/chrome/browser/resources/settings/privacy_page/personalization_options.html
 +++ b/chrome/browser/resources/settings/privacy_page/personalization_options.html
-@@ -23,7 +23,7 @@
-       }
+@@ -5,6 +5,7 @@ import {RestartType} from '../relaunch_mixin_lit.js';
+ // </if>
+ #html_wrapper_imports_end -->
  
-     </style>
--
 +<if expr="_google_chrome">
  <if expr="not is_chromeos">
      <div id="chromeSigninUserChoiceSetting" class="hr cr-row" role="group"
-         hidden="[[!chromeSigninUserChoiceInfo_.shouldShowSettings]]"
-@@ -66,6 +66,7 @@
+         ?hidden="${!this.chromeSigninUserChoiceInfo_?.shouldShowSettings}"
+@@ -47,6 +48,7 @@ import {RestartType} from '../relaunch_mixin_lit.js';
          no-set-pref>
      </settings-toggle-button>
- </if><!-- not chromeos and not lacros -->
+ </if><!-- not chromeos -->
 +</if>
  <if expr="_google_chrome">
- <if expr="chromeos_ash">
+ <if expr="is_chromeos">
      <!-- Ash Browser settings show a link to the OS settings instead. -->
-@@ -75,6 +76,7 @@
-         on-click="onMetricsReportingLinkClick_" external>
-     </cr-link-row>
+@@ -58,6 +60,8 @@ import {RestartType} from '../relaunch_mixin_lit.js';
+       </cr-link-row>
+     ` : ''}
  </if><!-- chromeos -->
 +</if><!-- _google_chrome -->
- <if expr="not chromeos_ash">
-     <settings-toggle-button id="metricsReportingControl"
-         class="hr"
-@@ -90,7 +92,7 @@
-       </template>
-     </settings-toggle-button>
++<if expr="_google_chrome">
+ <if expr="not is_chromeos">
+     ${!this.shouldUseMetricsConsentRestructure_ ? html`
+       <div class="cr-row hr">
+@@ -88,12 +92,14 @@ import {RestartType} from '../relaunch_mixin_lit.js';
+     ` : ''}
  </if><!-- not chromeos -->
--</if><!-- _google_chrome -->
+ </if><!-- _google_chrome -->
 +<if expr="_google_chrome">
      <settings-toggle-button id="urlCollectionToggle"
          class="hr"
-         pref="{{prefs.url_keyed_anonymized_data_collection.enabled}}"
-@@ -116,6 +118,7 @@
-           on-click="onHistorySearchRowClick_">
-       </cr-link-row>
-     </template>
+         pref-key="url_keyed_anonymized_data_collection.enabled"
+         label="$i18n{urlKeyedAnonymizedDataCollection}"
+         sub-label="$i18n{urlKeyedAnonymizedDataCollectionDesc}">
+     </settings-toggle-button>
 +</if>
  <if expr="_google_chrome">
- <if expr="not chromeos_ash">
+ <if expr="not is_chromeos">
      <settings-toggle-button id="spellCheckControl"
-@@ -167,6 +170,7 @@
+@@ -118,6 +124,7 @@ import {RestartType} from '../relaunch_mixin_lit.js';
+     </cr-link-row>
+ </if><!-- chromeos -->
+ </if><!-- _google_chrome -->
++<if expr="_google_chrome">
+     ${this.showSearchSuggestToggle_() ? html`
+       <settings-toggle-button id="searchSuggestToggle"
+           class="hr"
+@@ -126,6 +133,7 @@ import {RestartType} from '../relaunch_mixin_lit.js';
+           sub-label="$i18n{searchSuggestPrefDesc}">
        </settings-toggle-button>
-     </template>
+     ` : ''}
++</if><!-- _google_chrome -->
+ 
+     <!-- This toggle is only shown for users with the appropriate enterprise
+         policy enabled. The state is not changeable by the user, so when shown,
+@@ -149,6 +157,7 @@ import {RestartType} from '../relaunch_mixin_lit.js';
+       </settings-toggle-button>
+     ` : ''}
  
 +<if expr="_google_chrome">
-     <template is="dom-if" if="[[showSignoutDialog_]]" restamp>
-       <settings-signout-dialog sync-status="[[syncStatus]]"
-           on-close="onSignoutDialogClosed_">
-@@ -184,3 +188,4 @@
-           on-close="onRelaunchDialogClose"></relaunch-confirmation-dialog>
-     </template>
+     ${this.showSignoutDialog_ ? html`
+       <settings-signout-dialog .syncStatus="${this.syncStatus}"
+           @close="${this.onSignoutDialogClose_}">
+@@ -169,3 +178,4 @@ import {RestartType} from '../relaunch_mixin_lit.js';
+       <div>$i18n{chromeSigninChoiceToast}</div>
+     </cr-toast>
  </if>
 +</if>
