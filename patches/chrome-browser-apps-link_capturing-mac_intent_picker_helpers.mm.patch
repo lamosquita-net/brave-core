@@ -1,8 +1,8 @@
 diff --git a/chrome/browser/apps/link_capturing/mac_intent_picker_helpers.mm b/chrome/browser/apps/link_capturing/mac_intent_picker_helpers.mm
-index 4b3fa101820912f6682db0d4a5ff4a4c986b4d16..de89612db576100198b6371da8b7ac52a0eeadb6 100644
+index 0cfc7a3febf4bf60310361e593636eac9d0d6038..64fd97cdccae7e808ead71f84ed410f541e4b9d2 100644
 --- a/chrome/browser/apps/link_capturing/mac_intent_picker_helpers.mm
 +++ b/chrome/browser/apps/link_capturing/mac_intent_picker_helpers.mm
-@@ -88,10 +88,14 @@ std::optional<IntentPickerAppInfo> FindMacAppForUrl(const GURL& url) {
+@@ -103,10 +103,14 @@ std::optional<MacAppInfo> FindMacAppForUrl(const GURL& url,
      return std::nullopt;
    }
  
@@ -13,9 +13,9 @@ index 4b3fa101820912f6682db0d4a5ff4a4c986b4d16..de89612db576100198b6371da8b7ac52
 +    SFUniversalLink* link = [[SFUniversalLink alloc] initWithWebpageURL:nsurl];
  
 -  if (link) {
--    return AppInfoForAppUrl(link.applicationURL);
+-    return AppInfoForAppUrl(link.applicationURL, icon_sizes);
 +    if (link) {
-+      return AppInfoForAppUrl(link.applicationURL);
++      return AppInfoForAppUrl(link.applicationURL, icon_sizes);
 +    }
    }
  
