@@ -10,7 +10,9 @@
 // PrefetchClientHints and PrefetchServiceWorker (off) in
 // content/browser/preloading/prefetch/prefetch_features.cc and
 // FileSystemAccessDirectoryIterationBlocklistCheck (off) in
-// content/browser/file_system_access/features.cc.
+// content/browser/file_system_access/features.cc. Also not listed, as 156
+// declares it only in the .cc: NtpModulesMaxColumnCount (off) in
+// components/search/ntp_features.cc.
 
 #include "base/feature_list.h"
 #include "build/build_config.h"
@@ -177,7 +179,6 @@ TEST(FeatureDefaultsTest, DisabledFeatures) {
       &ntp_features::kNtpAlphaBackgroundCollections,
       &ntp_features::kNtpBackgroundImageErrorDetection,
       &ntp_features::kNtpChromeCartModule,
-      &ntp_features::kNtpModulesMaxColumnCount,
       &ntp_features::kNtpSimplificationBookmarkBar,
       &ntp_tiles::kNtpMostLikelyFaviconsFromServerFeature,
       &ntp_tiles::kPopularSitesBakedInContentFeature,
