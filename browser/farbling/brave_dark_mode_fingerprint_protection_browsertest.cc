@@ -3,12 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "base/memory/raw_ptr.h"
 #include "base/path_service.h"
 #include "base/strings/stringprintf.h"
 #include "base/test/scoped_feature_list.h"
 #include "base/test/thread_test_helper.h"
-#include "brave/browser/brave_content_browser_client.h"
 #include "brave/browser/extensions/brave_base_local_data_files_browsertest.h"
 #include "brave/components/brave_component_updater/browser/local_data_files_service.h"
 #include "brave/components/brave_shields/content/browser/brave_shields_util.h"
@@ -21,7 +19,6 @@
 #include "chrome/test/base/in_process_browser_test.h"
 #include "chrome/test/base/ui_test_utils.h"
 #include "content/public/browser/render_frame_host.h"
-#include "content/public/common/content_client.h"
 #include "content/public/test/browser_test.h"
 #include "content/public/test/browser_test_utils.h"
 #include "net/dns/mock_host_resolver.h"
@@ -29,7 +26,8 @@
 #include "ui/color/color_provider_key.h"
 #include "ui/color/color_provider_manager.h"
 #include "ui/color/color_provider_source.h"
-#include "ui/native_theme/test_native_theme.h"
+#include "ui/native_theme/mock_os_settings_provider.h"
+#include "ui/native_theme/native_theme.h"
 
 using brave_shields::ControlType;
 using brave_shields::features::kBraveDarkModeBlock;
@@ -44,19 +42,6 @@ class BraveDarkModeFingerprintProtectionTest : public InProcessBrowserTest {
     feature_list_.InitAndEnableFeature(
         brave_shields::features::kBraveShowStrictFingerprintingMode);
   }
-
-  class BraveContentBrowserClientWithWebTheme
-      : public BraveContentBrowserClient {
-   public:
-    explicit BraveContentBrowserClientWithWebTheme(const ui::NativeTheme* theme)
-        : theme_(theme) {}
-
-   protected:
-    const ui::NativeTheme* GetWebTheme() const override { return theme_; }
-
-   private:
-    const raw_ptr<const ui::NativeTheme> theme_;
-  };
 
   class MockColorProviderSource : public ui::ColorProviderSource {
    public:
@@ -93,9 +78,6 @@ class BraveDarkModeFingerprintProtectionTest : public InProcessBrowserTest {
 
   void SetUpOnMainThread() override {
     InProcessBrowserTest::SetUpOnMainThread();
-
-    content::SetBrowserClientForTesting(
-        new BraveContentBrowserClientWithWebTheme(&test_theme_));
 
     host_resolver()->AddRule("*", "127.0.0.1");
     content::SetupCrossSiteRedirector(embedded_test_server());
@@ -134,7 +116,12 @@ class BraveDarkModeFingerprintProtectionTest : public InProcessBrowserTest {
   }
 
   void SetDarkMode(bool dark_mode) {
-    test_theme_.SetDarkMode(dark_mode);
+    // 156 dropped ui::TestNativeTheme and the browser client's
+    // GetWebTheme(); the OS-level scheme is mocked instead (as upstream's
+    // PrefersColorSchemeTest).
+    os_settings_provider_.SetPreferredColorScheme(
+        dark_mode ? ui::NativeTheme::PreferredColorScheme::kDark
+                  : ui::NativeTheme::PreferredColorScheme::kLight);
     browser()
         ->tab_strip_model()
         ->GetActiveWebContents()
@@ -172,7 +159,7 @@ class BraveDarkModeFingerprintProtectionTest : public InProcessBrowserTest {
   }
 
  protected:
-  ui::TestNativeTheme test_theme_;
+  ui::MockOsSettingsProvider os_settings_provider_;
   MockColorProviderSource dark_color_provider_source_{true};
   MockColorProviderSource light_color_provider_source_{false};
 
