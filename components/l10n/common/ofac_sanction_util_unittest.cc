@@ -8,10 +8,10 @@
 #include <string>
 
 #include "base/strings/string_util.h"
-#include "base/strings/stringprintf.h"
 #include "brave/components/l10n/common/locale_util.h"
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
+#include "third_party/abseil-cpp/absl/strings/str_format.h"
 
 // npm run test -- brave_unit_tests --filter=OFACSanctionUtilTest*
 
@@ -25,7 +25,13 @@ struct ParamInfo final {
   std::string expected_language_code;
   std::string expected_country_code;
   bool expected_is_ofac_sanctioned;
-} kTests[] = {
+};
+
+// TODO(https://github.com/brave/brave-browser/issues/48713): This is a case of
+// `-Wexit-time-destructors` violation and `[[clang::no_destroy]]` has been
+// added in the meantime to fix the build error. Remove this attribute and
+// provide a proper fix.
+[[clang::no_destroy]] const ParamInfo kTests[] = {
     {{}, false, "en", "US", false},
     {{}, true, "en", "US", false},
 
@@ -187,9 +193,8 @@ std::string TestParamToString(
           ? "WhenShouldSanctionUNM49CodesIsSetToTrue"
           : "WhenShouldSanctionUNM49CodesIsSetToFalse";
 
-  return base::StringPrintf("%s_%s_%s", is_ofac_sanctioned.c_str(),
-                            locale.c_str(),
-                            should_sanction_un_m49_codes.c_str());
+  return absl::StrFormat("%s_%s_%s", is_ofac_sanctioned, locale,
+                         should_sanction_un_m49_codes);
 }
 
 INSTANTIATE_TEST_SUITE_P(,

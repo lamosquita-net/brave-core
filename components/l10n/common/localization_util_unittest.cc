@@ -21,7 +21,7 @@ TEST(LocalizationUtilTest, GetLocalizedResourceUTF16String) {
   const std::u16string localized_resource =
       GetLocalizedResourceUTF16String(IDS_BRAVE_NEW_TAB_STATS);
 
-  EXPECT_EQ(u"Brave Stats", localized_resource);
+  EXPECT_EQ(u"FlyWeb Stats", localized_resource);
 }
 
 TEST(LocalizationUtilTest,

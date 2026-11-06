@@ -137,7 +137,10 @@ class BraveSyncServiceImplTest : public testing::Test {
   }
 
   void TearDown() override {
-    brave_sync::NetworkTimeHelper::GetInstance()->Shutdown();
+    // FlyWeb's NetworkTimeHelper has no Shutdown(): drop the tracker, which
+    // the fixture owns, so the singleton does not keep a dangling pointer.
+    brave_sync::NetworkTimeHelper::GetInstance()->SetNetworkTimeTracker(
+        nullptr, nullptr);
     testing::Test::TearDown();
   }
 
