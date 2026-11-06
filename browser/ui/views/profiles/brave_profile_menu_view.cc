@@ -24,33 +24,8 @@
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/models/image_model.h"
 
-void BraveProfileMenuView::BuildIdentity() {
-  ProfileMenuView::BuildIdentity();
-  Profile* profile = &this->profile();
-  ProfileAttributesEntry* profile_attributes =
-      g_browser_process->profile_manager()
-          ->GetProfileAttributesStorage()
-          .GetProfileAttributesWithPath(profile->GetPath());
-  // Reset IdentityInfo to get rid of the subtitle string
-  // IDS_PROFILES_LOCAL_PROFILE_STATE("Not signed in").
-  SetProfileIdentityInfo(
-      /*profile_name=*/std::u16string(),
-      profile_attributes->GetProfileThemeColors().profile_highlight_color,
-      /*edit_button_params=*/std::nullopt,
-      ui::ImageModel::FromImage(profile_attributes->GetAvatarIcon()),
-      ui::ImageModel(),
-      /*title=*/profile_attributes->GetName());
-}
-
-// We don't want autofill buttons in this menu.
-void BraveProfileMenuView::BuildAutofillButtons() {}
-
-// We don't want to show any Chromium sync info.
-void BraveProfileMenuView::BuildSyncInfo() {}
-
-// We don't want feature buttons to manage google account
-void BraveProfileMenuView::BuildFeatureButtons() {
-  Profile* profile = &this->profile();
+void BraveProfileMenuView::MaybeBuildCloseBrowsersButton() {
+  Profile* profile = browser().GetProfile();
   int window_count =
       ProfileBrowserCollection::GetForProfile(profile)->GetSize();
   if (!profile->IsOffTheRecord() && profile->HasPrimaryOTRProfile()) {
@@ -59,27 +34,24 @@ void BraveProfileMenuView::BuildFeatureButtons() {
             profile->GetPrimaryOTRProfile(/*create_if_needed=*/true))
             ->GetSize();
   }
+
+  int button_title_id = IDS_PROFILE_MENU_CLOSE_PROFILE_X_WINDOWS_BUTTON;
   if (profile->IsGuestSession()) {
-    AddFeatureButton(
-        l10n_util::GetPluralStringFUTF16(IDS_GUEST_PROFILE_MENU_CLOSE_BUTTON,
-                                         window_count),
-        base::BindRepeating(&ProfileMenuView::OnExitProfileButtonClicked,
-                            base::Unretained(this)),
-        vector_icons::kCloseIcon);
+    button_title_id = IDS_GUEST_PROFILE_MENU_CLOSE_X_WINDOWS_BUTTON;
   } else {
-    if (window_count > 1) {
-      AddFeatureButton(
-          l10n_util::GetPluralStringFUTF16(IDS_PROFILES_CLOSE_X_WINDOWS_BUTTON,
-                                           window_count),
-          base::BindRepeating(&ProfileMenuView::OnExitProfileButtonClicked,
-                              base::Unretained(this)),
-          vector_icons::kCloseIcon);
+    if (window_count <= 1) {
+      return;
     }
   }
+
+  AddFeatureButton(
+      l10n_util::GetPluralStringFUTF16(button_title_id, window_count),
+      base::BindRepeating(&ProfileMenuView::OnExitProfileButtonClicked,
+                          base::Unretained(this)),
+      vector_icons::kCloseOldIcon);
 }
 
-gfx::ImageSkia BraveProfileMenuView::GetSyncIcon() const {
-  // We don't need sync overlay.
-  return gfx::ImageSkia();
+// We don't want feature buttons to manage google account
+void BraveProfileMenuView::BuildFeatureButtons() {
+  MaybeBuildCloseBrowsersButton();
 }
-

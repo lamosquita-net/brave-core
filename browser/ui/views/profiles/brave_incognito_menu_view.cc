@@ -5,30 +5,22 @@
 
 #include "brave/browser/ui/views/profiles/brave_incognito_menu_view.h"
 
-#include <memory>
-#include <optional>
+#include <cmath>
 #include <utility>
 
-#include "brave/components/l10n/common/localization_util.h"
+#include "brave/app/vector_icons/vector_icons.h"
 #include "brave/grit/brave_generated_resources.h"
-#include "chrome/app/vector_icons/vector_icons.h"
-#include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/profiles/profile_manager.h"
-#include "chrome/browser/profiles/profile_window.h"
-#include "chrome/browser/ui/browser.h"
-#include "chrome/browser/ui/browser_window/public/profile_browser_collection.h"
 #include "chrome/browser/ui/views/chrome_layout_provider.h"
-#include "chrome/grit/generated_resources.h"
 #include "components/vector_icons/vector_icons.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/models/image_model.h"
 
 void BraveIncognitoMenuView::BuildMenu() {
   AddFeatureButton(
-      brave_l10n::GetLocalizedResourceUTF16String(IDS_PROFILES_EXIT_PRIVATE),
+      l10n_util::GetStringUTF16(IDS_PROFILES_EXIT_PRIVATE),
       base::BindRepeating(&BraveIncognitoMenuView::OnExitButtonClicked,
                           base::Unretained(this)),
-      vector_icons::kCloseIcon);
+      vector_icons::kCloseOldIcon);
 }
 
 void BraveIncognitoMenuView::AddedToWidget() {
@@ -40,17 +32,11 @@ void BraveIncognitoMenuView::AddedToWidget() {
   const ui::ColorId icon_color = provider->GetTypographyProvider().GetColorId(
       views::style::CONTEXT_LABEL, views::style::STYLE_PRIMARY);
 
-  int window_count =
-      ProfileBrowserCollection::GetForProfile(profile().GetOriginalProfile())
-          ->GetOffTheRecordBrowserCount();
-  SetProfileIdentityInfo(
-      /*profile_name=*/std::u16string(),
-      /*profile_background_color=*/SK_ColorTRANSPARENT,
-      /*edit_button_params=*/std::nullopt,
-      ui::ImageModel::FromVectorIcon(kIncognitoProfileIcon, icon_color),
-      ui::ImageModel(),
-      brave_l10n::GetLocalizedResourceUTF16String(IDS_PRIVATE_PROFILE_NAME),
-      window_count > 1 ? l10n_util::GetPluralStringFUTF16(
-                             IDS_INCOGNITO_WINDOW_COUNT_MESSAGE, window_count)
-                       : std::u16string());
+  IdentitySectionParams params;
+  params.title = l10n_util::GetStringUTF16(IDS_PRIVATE_PROFILE_NAME);
+  params.profile_image_padding = std::nearbyint(kIdentityInfoImageSize * 0.25f);
+  params.profile_image =
+      ui::ImageModel::FromVectorIcon(kIncognitoProfileIcon, icon_color);
+  SetProfileIdentityWithCallToAction(std::move(params));
+  AddBottomMargin();
 }

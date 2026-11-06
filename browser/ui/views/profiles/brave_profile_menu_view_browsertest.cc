@@ -3,24 +3,33 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+#include "base/files/file_path.h"
+#include "base/functional/callback_helpers.h"
+#include "base/logging.h"
+#include "base/test/run_until.h"
 #include "build/build_config.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/profiles/profile_attributes_entry.h"
 #include "chrome/browser/profiles/profile_attributes_storage.h"
 #include "chrome/browser/profiles/profile_manager.h"
+#include "chrome/browser/profiles/profile_test_util.h"
+#include "chrome/browser/profiles/profile_window.h"
+#include "chrome/browser/ui/browser_window/public/global_browser_collection.h"
 #include "chrome/browser/ui/views/frame/browser_view.h"
 #include "chrome/browser/ui/views/profiles/avatar_toolbar_button.h"
 #include "chrome/browser/ui/views/profiles/profile_menu_coordinator.h"
 #include "chrome/browser/ui/views/profiles/profile_menu_view_base.h"
 #include "chrome/browser/ui/views/toolbar/toolbar_view.h"
 #include "chrome/test/base/in_process_browser_test.h"
+#include "chrome/test/base/ui_test_utils.h"
 #include "content/public/test/browser_test.h"
 #include "ui/events/base_event_utils.h"
 #include "ui/events/event.h"
 #include "ui/gfx/geometry/point.h"
 #include "ui/views/controls/label.h"
 #include "ui/views/test/widget_activation_waiter.h"
+#include "ui/views/test/widget_test.h"
 #include "ui/views/widget/widget.h"
 
 class BraveProfileMenuViewTest : public InProcessBrowserTest {
@@ -31,39 +40,24 @@ class BraveProfileMenuViewTest : public InProcessBrowserTest {
   ~BraveProfileMenuViewTest() override = default;
 
  protected:
-  void ClickAvatarButton() {
+  void ClickAvatarToolbarButton(AvatarToolbarButton* avatar_toolbar_button) {
     ui::MouseEvent press(ui::EventType::kMousePressed, gfx::Point(),
                          gfx::Point(), ui::EventTimeForNow(),
                          ui::EF_LEFT_MOUSE_BUTTON, 0);
     ui::MouseEvent release(ui::EventType::kMouseReleased, gfx::Point(),
                            gfx::Point(), ui::EventTimeForNow(),
                            ui::EF_LEFT_MOUSE_BUTTON, 0);
-    BrowserView* browser_view =
-        BrowserView::GetBrowserViewForBrowser(browser());
-    AvatarToolbarButton* button =
-        browser_view->toolbar_button_provider()->GetAvatarToolbarButton();
-    ASSERT_TRUE(button);
-    button->OnMousePressed(press);
-    button->OnMousePressed(release);
+    avatar_toolbar_button->OnMousePressed(press);
+    avatar_toolbar_button->OnMouseReleased(release);
   }
 
-  ProfileMenuViewBase* profile_menu() {
-    auto* coordinator = ProfileMenuCoordinator::FromBrowser(browser());
-    return coordinator ? coordinator->GetProfileMenuViewBaseForTesting()
-                       : nullptr;
-  }
-
-  void OpenProfileMenuView() {
-    ClickAvatarButton();
-
-    ProfileMenuViewBase* menu = profile_menu();
-    ASSERT_TRUE(menu);
-    menu->set_close_on_deactivate(false);
-
+  void WaitForMenuToBeActive(ProfileMenuViewBase* profile_menu_view) {
+    ASSERT_TRUE(profile_menu_view);
+    profile_menu_view->set_close_on_deactivate(false);
 #if BUILDFLAG(IS_MAC)
     base::RunLoop().RunUntilIdle();
 #else
-    views::Widget* menu_widget = menu->GetWidget();
+    views::Widget* menu_widget = profile_menu_view->GetWidget();
     ASSERT_TRUE(menu_widget);
     if (menu_widget->CanActivate()) {
       views::test::WaitForWidgetActive(menu_widget, /*active=*/true);
@@ -71,13 +65,36 @@ class BraveProfileMenuViewTest : public InProcessBrowserTest {
       LOG(ERROR) << "menu_widget can not be activated";
     }
 #endif
+  }
 
-    auto* coordinator = ProfileMenuCoordinator::FromBrowser(browser());
+  ProfileMenuViewBase* profile_menu_view(BrowserWindowInterface* browser) {
+    auto* coordinator = ProfileMenuCoordinator::From(browser);
+    return coordinator ? coordinator->GetProfileMenuViewBaseForTesting()
+                       : nullptr;
+  }
+
+  void OpenProfileMenu(BrowserWindowInterface* browser) {
+    BrowserView* browser_view = BrowserView::GetBrowserViewForBrowser(browser);
+    auto* avatar_toolbar_button = static_cast<AvatarToolbarButton*>(
+        browser_view->toolbar_button_provider()
+            ->GetAvatarToolbarButtonInterface());
+    views::test::WidgetVisibleWaiter(avatar_toolbar_button->GetWidget()).Wait();
+    ASSERT_TRUE(avatar_toolbar_button);
+    ClickAvatarToolbarButton(avatar_toolbar_button);
+    if (auto* menu = profile_menu_view(browser)) {
+      menu->set_close_on_deactivate(false);
+    }
+    // `ProfileMenuCoordinator::Show()` may compute avatar button promo info
+    // asynchronously before creating the bubble, so it can still be null right
+    // after the click.
+    ASSERT_TRUE(base::test::RunUntil(
+        [&]() { return profile_menu_view(browser) != nullptr; }));
+    ASSERT_NO_FATAL_FAILURE(WaitForMenuToBeActive(profile_menu_view(browser)));
+    auto* coordinator = ProfileMenuCoordinator::From(browser);
     EXPECT_TRUE(coordinator->IsShowing());
   }
 
-  std::u16string GetProfileName() {
-    Profile* profile = browser()->GetProfile();
+  std::u16string GetProfileName(Profile* profile) {
     ProfileAttributesEntry* profile_attributes =
         g_browser_process->profile_manager()
             ->GetProfileAttributesStorage()
@@ -85,24 +102,52 @@ class BraveProfileMenuViewTest : public InProcessBrowserTest {
     return profile_attributes->GetName();
   }
 
-  void CheckIdentity() {
-    ProfileMenuViewBase* menu = profile_menu();
-    // Profile image and title container.
+  void CheckIdentity(BrowserWindowInterface* browser) {
+    ProfileMenuViewBase* menu = profile_menu_view(browser);
+    ASSERT_TRUE(menu);
+    // Profile image and title container
     EXPECT_EQ(2u, menu->identity_info_container_->children().size());
-    // Profile image should have 1 child - header and image container.
-    EXPECT_EQ(1u,
+    // Profile image has no children
+    EXPECT_EQ(0u,
               menu->identity_info_container_->children()[0]->children().size());
-    // Title container should have 1 child - title, which is the profile name.
+    // Title container has no children
     const auto* title_container_view =
         menu->identity_info_container_->children()[1].get();
-    EXPECT_EQ(1u, title_container_view->children().size());
-    const auto* title_view = title_container_view->children()[0].get();
-    EXPECT_EQ(GetProfileName(),
-              static_cast<const views::Label*>(title_view)->GetText());
+    EXPECT_EQ(0u, title_container_view->children().size());
+    if (!browser->GetProfile()->IsGuestSession()) {
+      EXPECT_EQ(
+          GetProfileName(browser->GetProfile()),
+          static_cast<const views::Label*>(title_container_view)->GetText());
+    }
+  }
+
+  void CreateAdditionalProfile() {
+    ProfileManager* profile_manager = g_browser_process->profile_manager();
+    size_t starting_number_of_profiles = profile_manager->GetNumberOfProfiles();
+
+    base::FilePath new_path =
+        profile_manager->GenerateNextProfileDirectoryPath();
+    profiles::testing::CreateProfileSync(profile_manager, new_path);
+    EXPECT_EQ(starting_number_of_profiles + 1,
+              profile_manager->GetNumberOfProfiles());
   }
 };
 
 IN_PROC_BROWSER_TEST_F(BraveProfileMenuViewTest, TestCurrentProfileView) {
-  OpenProfileMenuView();
-  CheckIdentity();
+  // Avatar menu button is not visible unless we have more than one profile.
+  CreateAdditionalProfile();
+
+  ASSERT_NO_FATAL_FAILURE(OpenProfileMenu(browser()));
+  CheckIdentity(browser());
+}
+
+IN_PROC_BROWSER_TEST_F(BraveProfileMenuViewTest, OpenGuestWindowProfile) {
+  // Open a Guest window.
+  EXPECT_EQ(1U, GlobalBrowserCollection::GetInstance()->GetSize());
+  profiles::SwitchToGuestProfile(base::DoNothing());
+  BrowserWindowInterface* guest_browser = ui_test_utils::WaitForBrowserToOpen();
+  EXPECT_EQ(2U, GlobalBrowserCollection::GetInstance()->GetSize());
+
+  ASSERT_NO_FATAL_FAILURE(OpenProfileMenu(guest_browser));
+  CheckIdentity(guest_browser);
 }
