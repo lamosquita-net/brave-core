@@ -532,7 +532,6 @@ constexpr std::array<std::string_view, 502> kTopSites = {
 // Search Secondary Provider (suggestion)                              |  100++
 const int TopSitesProvider::kRelevance = 100;
 
-
 TopSitesProvider::TopSitesProvider(AutocompleteProviderClient* client)
     : AutocompleteProvider(AutocompleteProvider::Type::kSearch),
       client_(client) {}
