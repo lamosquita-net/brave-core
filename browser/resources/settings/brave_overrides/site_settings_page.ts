@@ -100,49 +100,22 @@ RegisterPolymerComponentReplacement(
             indexForAutoplay++
             const autoplayItem = {
               route: routes.SITE_SETTINGS_AUTOPLAY,
-              id: 'autoplay',
+              id: ContentSettingsTypes.AUTOPLAY,
               label: 'siteSettingsAutoplay',
               icon: 'autoplay-on',
               enabledLabel: 'siteSettingsAutoplayAllow',
               disabledLabel: 'siteSettingsAutoplayBlock'
             }
             lists_.permissionsAdvanced.splice(indexForAutoplay, 0, autoplayItem)
-            let currentIndex = indexForAutoplay
-            const isGoogleSignInFeatureEnabled = loadTimeData.getBoolean('isGoogleSignInFeatureEnabled')
-            if (isGoogleSignInFeatureEnabled) {
-              currentIndex++
-              const googleSignInItem = {
-                route: routes.SITE_SETTINGS_GOOGLE_SIGN_IN,
-                id: 'googleSignIn',
-                label: 'siteSettingsGoogleSignIn',
-                icon: 'user',
-                enabledLabel: 'siteSettingsGoogleSignInAsk',
-                disabledLabel: 'siteSettingsGoogleSignInBlock'
-              }
-              lists_.permissionsAdvanced.splice(currentIndex, 0,
-                googleSignInItem)
-            }
-            const isLocalhostAccessFeatureEnabled =
-              loadTimeData.getBoolean('isLocalhostAccessFeatureEnabled')
-            if (isLocalhostAccessFeatureEnabled) {
-              currentIndex++
-              const localhostAccessItem = {
-                route: routes.SITE_SETTINGS_LOCALHOST_ACCESS,
-                id: 'localhostAccess',
-                label: 'siteSettingsLocalhostAccess',
-                icon: 'smartphone-desktop',
-                enabledLabel: 'siteSettingsLocalhostAccessAsk',
-                disabledLabel: 'siteSettingsLocalhostAccessBlock'
-              }
-              lists_.permissionsAdvanced.splice(currentIndex, 0,
-                localhostAccessItem)
-            }
+            // FlyWeb: no Google sign-in item (in Chromium 156 FedCM and
+            // Storage Access cover it) and no localhost access item (the
+            // permission is gone).
           }
         }
         lists_.shieldsBasic = [
           {
             route: routes.SITE_SETTINGS_SHIELDS_STATUS,
-            id: 'braveShields',
+            id: ContentSettingsTypes.BRAVE_SHIELDS,
             label: 'siteSettingsShieldsStatus',
             icon: 'shield-done',
             enabledLabel: 'siteSettingsShieldsDescription',

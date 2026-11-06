@@ -3,14 +3,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-import {RegisterPolymerTemplateModifications} from 'chrome://resources/brave/polymer_overriding.js'
+import {
+  RegisterPolymerPrototypeModification,
+  RegisterPolymerTemplateModifications
+} from 'chrome://resources/brave/polymer_overriding.js'
 import {getTrustedHTML} from 'chrome://resources/js/static_types.js'
 
+import {ContentSettingsTypes} from '../site_settings/constants.js'
+
 // FlyWeb: Brave 1.98's version for Chromium 156 (settings-privacy-page is a
-// single settings-section now). The Brave site settings subpages this file
-// used to add (autoplay, Google sign-in, Shields status, localhost access)
-// were settings-animated-pages children; in Chromium 156 they would be views
-// of settings-privacy-page-index and are not ported (see the T11 report).
+// single settings-section now). The Brave site settings subpages (autoplay,
+// Shields status) are views of settings-privacy-page-index
+// (privacy_page_index.ts).
 
 // Registers <settings-brave-personalization-options>, which is inserted into
 // the template below.
@@ -64,6 +68,31 @@ RegisterPolymerTemplateModifications({
       } else {
         privacyGuideLinkRow.setAttribute('hidden', 'true')
       }
+    }
+  }
+})
+
+// FlyWeb: the site settings subpages added in privacy_page_index.ts name
+// "privacy" as their parent view. When a search hits one of them,
+// SearchableViewContainerMixin asks this page for the control that leads to
+// it; upstream only knows its own ids and would hit assertNotReached().
+const BRAVE_SITE_SETTINGS_VIEW_IDS: string[] = [
+  ContentSettingsTypes.AUTOPLAY,
+  ContentSettingsTypes.BRAVE_SHIELDS,
+]
+
+RegisterPolymerPrototypeModification({
+  'settings-privacy-page': (prototype) => {
+    const oldGetAssociatedControlFor = prototype.getAssociatedControlFor
+    prototype.getAssociatedControlFor = function(childViewId: string) {
+      if (BRAVE_SITE_SETTINGS_VIEW_IDS.includes(childViewId)) {
+        const control =
+          this.shadowRoot.querySelector('#siteSettingsLinkRow')
+        if (control) {
+          return control
+        }
+      }
+      return oldGetAssociatedControlFor.call(this, childViewId)
     }
   }
 })

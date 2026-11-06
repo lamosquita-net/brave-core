@@ -24,9 +24,15 @@ export default function addBraveRoutes(r: Partial<SettingsRoutes>) {
     // direct navigation to flyweb://settings/importData to work.
     // FlyWeb: in Chromium 156 settings-main only renders the plugin whose
     // route contains the current one, so reparent it as well.
+    // Without the people section (page_visibility.ts) Chromium 156 does not
+    // create the route at all, so create it here as Brave 1.98 does.
     if (r.IMPORT_DATA) {
       r.IMPORT_DATA.section = 'getStarted'
       r.IMPORT_DATA.parent = r.GET_STARTED
+      r.IMPORT_DATA.depth = r.GET_STARTED.depth + 1
+    } else {
+      r.IMPORT_DATA = r.GET_STARTED.createChild('/importData')
+      r.IMPORT_DATA.isNavigableDialog = true
     }
     // FlyWeb: the new tab page card is a view of the getStarted plugin.
     r.BRAVE_NEW_TAB = r.GET_STARTED.createChild('/newTab')
@@ -58,17 +64,12 @@ export default function addBraveRoutes(r: Partial<SettingsRoutes>) {
     r.FONTS = r.BRAVE_CONTENT.createChild('/fonts');
   }
   if (r.SITE_SETTINGS) {
+    // FlyWeb: each of these routes needs its view in
+    // settings-privacy-page-index (brave_overrides/privacy_page_index.ts),
+    // with the same route-path. No Google sign-in route (in Chromium 156
+    // FedCM and Storage Access cover it) and no localhost access route (the
+    // permission is gone).
     r.SITE_SETTINGS_AUTOPLAY = r.SITE_SETTINGS.createChild('autoplay')
-    const isGoogleSignInFeatureEnabled = loadTimeData.getBoolean('isGoogleSignInFeatureEnabled')
-    if (isGoogleSignInFeatureEnabled) {
-      r.SITE_SETTINGS_GOOGLE_SIGN_IN = r.SITE_SETTINGS.createChild('googleSignIn')
-    }
-    const isLocalhostAccessFeatureEnabled =
-      loadTimeData.getBoolean('isLocalhostAccessFeatureEnabled')
-    if (isLocalhostAccessFeatureEnabled) {
-      r.SITE_SETTINGS_LOCALHOST_ACCESS = r.SITE_SETTINGS
-        .createChild('localhostAccess')
-    }
     r.SITE_SETTINGS_SHIELDS_STATUS = r.SITE_SETTINGS.createChild('braveShields')
     if (r.SITE_SETTINGS_ADS) {
       delete r.SITE_SETTINGS_ADS

@@ -21,7 +21,7 @@ import {SettingsViewMixin} from '../settings_page/settings_view_mixin.js'
 import {routes} from '../route.js'
 import {CookieControlsMode} from '../site_settings/constants.js'
 
-import {DefaultBraveShieldsBrowserProxyImpl, DefaultBraveShieldsBrowserProxyImpl} from './default_brave_shields_browser_proxy.js'
+import {DefaultBraveShieldsBrowserProxyImpl} from './default_brave_shields_browser_proxy.js'
 import {getTemplate} from './default_brave_shields_page.html.js'
 
 const BraveShieldsPageBase = WebUiListenerMixin(I18nMixin(PrefsMixin(SettingsViewMixin(PolymerElement))))

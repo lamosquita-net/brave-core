@@ -40,7 +40,7 @@ RegisterPolymerTemplateModifications({
             icon="autoplay-on">
           </site-details-permission>
         `)
-      let curChild = 1
+      const curChild = 1
       const autoplaySettings = templateContent.
         querySelector(`div.list-frame > site-details-permission:nth-child(${curChild})`)
       if (!autoplaySettings) {
@@ -51,54 +51,19 @@ RegisterPolymerTemplateModifications({
         autoplaySettings.setAttribute(
           'label', loadTimeData.getString('siteSettingsAutoplay'))
       }
-      curChild++
-      // Google Sign-In feature
-      const isGoogleSignInFeatureEnabled =
-        loadTimeData.getBoolean('isGoogleSignInFeatureEnabled')
-      if (isGoogleSignInFeatureEnabled) {
-        firstPermissionItem.insertAdjacentHTML(
-          'beforebegin',
-          getTrustedHTML`
-            <site-details-permission
-              category="[[contentSettingsTypesEnum_.GOOGLE_SIGN_IN]]"
-              icon="user">
-            </site-details-permission>
-          `)
-        const googleSignInSettings = templateContent.
-          querySelector(`div.list-frame > site-details-permission:nth-child(${curChild})`)
-        if (!googleSignInSettings) {
-          console.error(
-            '[Brave Settings Overrides] Couldn\'t find Google signin settings')
-        }
-        else {
-          googleSignInSettings.setAttribute(
-            'label', loadTimeData.getString('siteSettingsGoogleSignIn'))
-        }
-        curChild++
-      }
-      // Localhost Access feature
-      const isLocalhostAccessFeatureEnabled =
-        loadTimeData.getBoolean('isLocalhostAccessFeatureEnabled')
-      if (isLocalhostAccessFeatureEnabled) {
-        firstPermissionItem.insertAdjacentHTML(
-          'beforebegin',
-          getTrustedHTML`
-            <site-details-permission
-              category="[[contentSettingsTypesEnum_.LOCALHOST_ACCESS]]"
-              icon="smartphone-desktop">
-            </site-details-permission>
-          `)
-        const localhostAccessSettings = templateContent.querySelector(
-          `div.list-frame > site-details-permission:nth-child(${curChild})`)
-        if (!localhostAccessSettings) {
-          console.error(
-            '[Brave Settings Overrides] Localhost access settings not found')
-        } else {
-          localhostAccessSettings.setAttribute(
-            'label', loadTimeData.getString('siteSettingsLocalhostAccess'))
-        }
-        curChild++
-      }
+      // FlyWeb: no Google sign-in permission (in Chromium 156 FedCM and
+      // Storage Access cover it) and no localhost access one (gone).
+    }
+
+    // As Brave 1.98: no ad personalization line in the clear storage
+    // dialog (FlyWeb has no Google ad personalization).
+    const adPersonalization =
+      templateContent.querySelector('#adPersonalization')
+    if (!adPersonalization) {
+      console.error(
+        '[Brave Settings Overrides] Could not find adPersonalization element')
+    } else {
+      adPersonalization.remove()
     }
 
     // In Chromium, the VR and AR icons are the same but we want to have separate ones.
