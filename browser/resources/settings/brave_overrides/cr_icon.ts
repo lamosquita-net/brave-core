@@ -22,7 +22,7 @@ const proto = CrIconElement.prototype as unknown as CrIconInternals
 const old = proto.updateIcon_
 proto.updateIcon_ = function (this: CrIconElement, ...args: unknown[]) {
   const removeAllOfType = (type: string) => {
-    for (const node of this.shadowRoot!.querySelectorAll(type)) node.remove()
+    for (const node of this.shadowRoot.querySelectorAll(type)) node.remove()
   }
 
   // Upstream's kWebUIRoundedIcons rollout may add a legacy "-old" suffix to
@@ -32,10 +32,10 @@ proto.updateIcon_ = function (this: CrIconElement, ...args: unknown[]) {
   if (name || leoIcons.has(this.icon)) {
     removeAllOfType('svg') 
 
-    let leoIcon = this.shadowRoot!.querySelector('leo-icon')
+    let leoIcon = this.shadowRoot.querySelector('leo-icon')
     if (!leoIcon) {
       leoIcon = document.createElement('leo-icon')
-      this.shadowRoot!.append(leoIcon)
+      this.shadowRoot.append(leoIcon)
     }
     leoIcon.setAttribute('name', name ?? this.icon)
   } else {
