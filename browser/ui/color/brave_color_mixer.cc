@@ -37,15 +37,6 @@ constexpr SkColor kDarkLocationBarBgBase = kDarkFrame;
 constexpr float kOmniboxOpacityHovered = 0.10f;
 constexpr float kOmniboxOpacitySelected = 0.16f;
 
-SkColor PickColorContrastingToOmniboxResultsBackground(
-    const ui::ColorProviderKey& key,
-    const ui::ColorMixer& mixer,
-    SkColor color1,
-    SkColor color2) {
-  auto bg_color = mixer.GetResultColor(kColorOmniboxResultsBackground);
-  return color_utils::PickContrastingColor(color1, color2, bg_color);
-}
-
 SkColor PickColorContrastingToToolbar(const ui::ColorProviderKey& key,
                                       const ui::ColorMixer& mixer,
                                       SkColor color1,
@@ -289,7 +280,8 @@ SkColor GetOmniboxResultBackground(int id, bool dark, bool priv) {
   ui::NativeTheme* native_theme = ui::NativeTheme::GetInstanceForNativeUi();
 #endif  // !defined(USE_AURA)
   bool high_contrast =
-      native_theme && native_theme->UserHasContrastPreference();
+      native_theme && native_theme->preferred_contrast() ==
+                          ui::NativeTheme::PreferredContrast::kMore;
   float omnibox_opacity = 0.0f;
   if (id == kColorOmniboxResultsBackgroundHovered) {
     omnibox_opacity = kOmniboxOpacityHovered;
@@ -354,7 +346,6 @@ void AddBraveLightThemeColorMixer(ui::ColorProvider* provider,
   mixer[kColorBookmarkBarInstructionsLink] = {PickColorContrastingToToolbar(
       key, mixer, leo::light::kColorTextInteractive,
       leo::dark::kColorTextInteractive)};
-  mixer[kColorMenuItemSubText] = {SkColorSetRGB(0x86, 0x8E, 0x96)};
   // It's "Themeable/Blue/10" but leo/color.h doesn't have it.
   mixer[kColorSearchConversionBannerTypeBackground] = {
       SkColorSetRGB(0xEA, 0xF1, 0xFF)};
@@ -371,21 +362,10 @@ void AddBraveLightThemeColorMixer(ui::ColorProvider* provider,
   mixer[kColorSearchConversionBannerTypeBackgroundGradientTo] = {
       SkColorSetRGB(0xEF, 0xEF, 0xFB)};
 
-  mixer[kColorDialogDontAskAgainButton] = {SkColorSetRGB(0x86, 0x8E, 0x96)};
-  mixer[kColorDialogDontAskAgainButtonHovered] = {
-      SkColorSetRGB(0x49, 0x50, 0x57)};
-
   if (!HasCustomToolbarColor(key)) {
     mixer[kColorToolbarButtonActivated] = {
         leo::GetColor(leo::Color::kColorIconInteractive, leo::Theme::kLight)};
   }
-
-  mixer[kColorWebDiscoveryInfoBarBackground] = {
-      SkColorSetRGB(0xFF, 0xFF, 0xFF)};
-  mixer[kColorWebDiscoveryInfoBarMessage] = {SkColorSetRGB(0x1D, 0x1F, 0x25)};
-  mixer[kColorWebDiscoveryInfoBarLink] = {SkColorSetRGB(0x4C, 0x54, 0xD2)};
-  mixer[kColorWebDiscoveryInfoBarNoThanks] = {SkColorSetRGB(0x6B, 0x70, 0x84)};
-  mixer[kColorWebDiscoveryInfoBarClose] = {SkColorSetRGB(0x6B, 0x70, 0x84)};
 
   mixer[kColorLocationBarHoveredShadow] = {
       SkColorSetA(SK_ColorBLACK, 0.07 * 255)};
@@ -400,7 +380,6 @@ void AddBraveLightThemeColorMixer(ui::ColorProvider* provider,
   mixer[kColorBraveExtensionMenuIcon] = {
       leo::GetColor(leo::Color::kColorIconActive, leo::Theme::kLight)};
 
-  mixer[kColorBraveAppMenuAccentColor] = {SkColorSetRGB(0xDF, 0xE1, 0xFF)};
 }
 
 void AddBraveDarkThemeColorMixer(ui::ColorProvider* provider,
@@ -416,7 +395,6 @@ void AddBraveDarkThemeColorMixer(ui::ColorProvider* provider,
   mixer[kColorBookmarkBarInstructionsLink] = {PickColorContrastingToToolbar(
       key, mixer, leo::light::kColorTextInteractive,
       leo::dark::kColorTextInteractive)};
-  mixer[kColorMenuItemSubText] = {SkColorSetRGB(0x84, 0x88, 0x9C)};
   // It's "Themeable/Blue/10" but leo/color.h doesn't have it.
   mixer[kColorSearchConversionBannerTypeBackground] = {
       SkColorSetRGB(0x00, 0x1C, 0x37)};
@@ -432,22 +410,11 @@ void AddBraveDarkThemeColorMixer(ui::ColorProvider* provider,
       SkColorSetARGB(104, 0x17, 0x19, 0x1E)};
   mixer[kColorSearchConversionBannerTypeBackgroundGradientTo] = {
       SkColorSetARGB(104, 0x1F, 0x25, 0x7A)};
-  mixer[kColorDialogDontAskAgainButton] = {SkColorSetRGB(0x84, 0x88, 0x9C)};
-  mixer[kColorDialogDontAskAgainButtonHovered] = {
-      SkColorSetRGB(0xC2, 0xC4, 0xCF)};
 
   if (!HasCustomToolbarColor(key)) {
     mixer[kColorToolbarButtonActivated] = {
         leo::GetColor(leo::Color::kColorIconInteractive, leo::Theme::kDark)};
   }
-  mixer[kColorWebDiscoveryInfoBarBackground] = {
-      SkColorSetRGB(0x1A, 0x1C, 0x22)};
-  mixer[kColorWebDiscoveryInfoBarMessage] = {SkColorSetRGB(0xFF, 0xFF, 0xFF)};
-  mixer[kColorWebDiscoveryInfoBarLink] = {SkColorSetRGB(0xA6, 0xAB, 0xEC)};
-  mixer[kColorWebDiscoveryInfoBarNoThanks] = {
-      SkColorSetARGB(0xBF, 0xEC, 0xEF, 0xF2)};
-  mixer[kColorWebDiscoveryInfoBarClose] = {
-      SkColorSetARGB(0xBF, 0x8C, 0x90, 0xA1)};
 
   mixer[kColorLocationBarHoveredShadow] = {
       SkColorSetA(SK_ColorBLACK, 0.4 * 255)};
@@ -462,7 +429,6 @@ void AddBraveDarkThemeColorMixer(ui::ColorProvider* provider,
   mixer[kColorBraveExtensionMenuIcon] = {
       leo::GetColor(leo::Color::kColorIconActive, leo::Theme::kDark)};
 
-  mixer[kColorBraveAppMenuAccentColor] = {SkColorSetRGB(0x37, 0x2C, 0xBF)};
 }
 
 // Handling dark or light theme on normal profile.
@@ -541,27 +507,11 @@ void AddBraveOmniboxPrivateThemeColorMixer(ui::ColorProvider* provider,
   mixer[kColorOmniboxResultsBackgroundSelected] = {
       GetOmniboxResultBackground(kColorOmniboxResultsBackgroundSelected,
                                  /*dark*/ false, /*incognito*/ true)};
-  mixer[kColorPageInfoBackground] = {SK_ColorTRANSPARENT};
 }
 
 void AddBraveOmniboxColorMixer(ui::ColorProvider* provider,
                                const ui::ColorProviderKey& key) {
   ui::ColorMixer& mixer = provider->AddMixer();
-
-  auto pick_color = [&](leo::Color color) {
-    if (!key.custom_theme) {
-      return leo::GetColor(color, leo::Theme::kDark);
-    }
-
-    return PickColorContrastingToOmniboxResultsBackground(
-        key, mixer, leo::GetColor(color, leo::Theme::kLight),
-        leo::GetColor(color, leo::Theme::kDark));
-  };
-
-  mixer[kColorBraveOmniboxResultViewSeparator] = {
-      pick_color(leo::Color::kColorDividerSubtle)};
-  mixer[kColorBravePlayerActionViewBorder] = {
-      pick_color(leo::Color::kColorDividerSubtle)};
 
   // Re-apply non-material color.
   mixer[kColorOmniboxResultsButtonBorder] = ui::BlendTowardMaxContrast(
@@ -569,11 +519,7 @@ void AddBraveOmniboxColorMixer(ui::ColorProvider* provider,
   mixer[kColorOmniboxResultsButtonIcon] = {kColorOmniboxResultsIcon};
   mixer[kColorOmniboxResultsButtonIconSelected] = {
       kColorOmniboxResultsIconSelected};
-  mixer[kColorPageInfoIconHover] = {
-      ui::SetAlpha(kColorOmniboxText, std::ceil(0.10f * 255.0f))};
 
-  // We don't use bg color for location icon view.
-  mixer[kColorPageInfoBackground] = {SK_ColorTRANSPARENT};
   if (key.custom_theme) {
     return;
   }

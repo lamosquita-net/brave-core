@@ -13,18 +13,10 @@
 #define BRAVE_COMMON_COLOR_IDS                       \
     E_CPONLY(kColorForTest)                          \
     E_CPONLY(kColorIconBase)                         \
-    E_CPONLY(kColorMenuItemSubText)                  \
     E_CPONLY(kColorBookmarkBarInstructionsText)      \
     E_CPONLY(kColorBookmarkBarInstructionsLink)      \
     E_CPONLY(kColorLocationBarFocusRing)             \
     E_CPONLY(kColorLocationBarHoveredShadow)         \
-    E_CPONLY(kColorDialogDontAskAgainButton)         \
-    E_CPONLY(kColorDialogDontAskAgainButtonHovered)  \
-    E_CPONLY(kColorWebDiscoveryInfoBarBackground)    \
-    E_CPONLY(kColorWebDiscoveryInfoBarMessage)       \
-    E_CPONLY(kColorWebDiscoveryInfoBarLink)          \
-    E_CPONLY(kColorWebDiscoveryInfoBarNoThanks)      \
-    E_CPONLY(kColorWebDiscoveryInfoBarClose)         \
     E_CPONLY(kColorToolbarButtonActivated)
 
 #define BRAVE_SEARCH_CONVERSION_COLOR_IDS                             \
@@ -42,23 +34,14 @@
     E_CPONLY(kColorBraveSharedPinnedTabDummyViewDescription) \
     E_CPONLY(kColorBraveSharedPinnedTabDummyViewThumbnailBorder)
 
-#define BRAVE_OMNIBOX_COLOR_IDS \
-    E_CPONLY(kColorBraveOmniboxResultViewSeparator) \
-    E_CPONLY(kColorBravePlayerActionViewBorder)
-
 #define BRAVE_EXTENSION_MENU_COLOR_IDS \
     E_CPONLY(kColorBraveExtensionMenuIcon)
-
-#define BRAVE_APP_MENU_COLOR_IDS \
-    E_CPONLY(kColorBraveAppMenuAccentColor)
 
 #define BRAVE_COLOR_IDS               \
     BRAVE_COMMON_COLOR_IDS            \
     BRAVE_SEARCH_CONVERSION_COLOR_IDS \
     BRAVE_SHARED_PINNED_TAB_COLOR_IDS \
-    BRAVE_OMNIBOX_COLOR_IDS           \
-    BRAVE_EXTENSION_MENU_COLOR_IDS    \
-    BRAVE_APP_MENU_COLOR_IDS
+    BRAVE_EXTENSION_MENU_COLOR_IDS
 
 #include "ui/color/color_id_macros.inc"
 
