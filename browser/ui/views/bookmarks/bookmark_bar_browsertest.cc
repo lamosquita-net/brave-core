@@ -11,14 +11,15 @@
 #include "chrome/app/chrome_command_ids.h"
 #include "chrome/browser/bookmarks/bookmark_model_factory.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/views/bookmarks/bookmark_bar_view.h"
 #include "chrome/browser/ui/views/frame/browser_view.h"
 #include "chrome/test/base/in_process_browser_test.h"
 #include "components/bookmarks/browser/bookmark_model.h"
 #include "components/bookmarks/browser/bookmark_utils.h"
 #include "components/bookmarks/common/bookmark_pref_names.h"
+#include "components/prefs/pref_service.h"
 #include "content/public/test/browser_test.h"
+#include "ui/views/controls/button/menu_button.h"
 #include "ui/views/view_observer.h"
 #include "url/gurl.h"
 
@@ -34,7 +35,8 @@ class InstructionViewVisibilityObserver : public views::ViewObserver {
 
   // views::ViewObserver
   void OnViewVisibilityChanged(views::View* observed_view,
-                               views::View* starting_view) override;
+                               views::View* starting_view,
+                               bool visible) override;
 
  protected:
   bool visibility_changed_ = false;
@@ -53,7 +55,8 @@ InstructionViewVisibilityObserver::~InstructionViewVisibilityObserver() {
 
 void InstructionViewVisibilityObserver::OnViewVisibilityChanged(
     views::View* observed_view,
-    views::View* starting_view) {
+    views::View* starting_view,
+    bool visible) {
   visibility_changed_ = true;
   if (run_loop_.running()) {
     run_loop_.Quit();
@@ -100,8 +103,8 @@ IN_PROC_BROWSER_TEST_F(BookmarkBarTest, InstructionsViewTest) {
 
   bookmarks::BookmarkModel* model =
       BookmarkModelFactory::GetForBrowserContext(browser()->GetProfile());
-  bookmarks::AddIfNotBookmarked(model, GURL("http://example.com/"), u"bookmark",
-                                model->bookmark_bar_node());
+  model->AddURL(model->bookmark_bar_node(), 0, u"bookmark",
+                GURL("http://example.com"));
   observer.Wait();
   EXPECT_FALSE(GetInstructionView()->GetVisible());
 }
@@ -117,8 +120,9 @@ IN_PROC_BROWSER_TEST_F(BookmarkBarTest, AllBookmarksButtonVisibility) {
 
   bookmarks::BookmarkModel* model =
       BookmarkModelFactory::GetForBrowserContext(browser()->GetProfile());
-  auto* node = bookmarks::AddIfNotBookmarked(model, GURL("http://example.com/"),
-                                             u"bookmark", model->other_node());
+  const auto* node = model->AddURL(model->bookmark_bar_node(), 0, u"bookmark",
+                                   GURL("http://example.com"));
+  model->Move(node, model->other_node(), 0);
   EXPECT_TRUE(is_all_bookmarks_button_visible());
 
   // Toggling the visibility preference should be applied

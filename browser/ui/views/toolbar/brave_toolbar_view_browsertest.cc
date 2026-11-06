@@ -5,6 +5,7 @@
 
 #include "brave/browser/ui/views/toolbar/brave_toolbar_view.h"
 
+#include "base/check.h"
 #include "base/functional/callback_helpers.h"
 #include "base/memory/raw_ptr.h"
 #include "base/test/scoped_feature_list.h"
@@ -18,12 +19,12 @@
 #include "chrome/browser/profiles/profile_test_util.h"
 #include "chrome/browser/profiles/profile_window.h"
 #include "chrome/browser/search_engines/template_url_service_factory.h"
-#include "chrome/browser/ui/browser.h"
-#include "chrome/browser/ui/browser_list_observer.h"
 #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/browser_window/public/global_browser_collection.h"
+#include "chrome/browser/ui/layout_constants.h"
 #include "chrome/browser/ui/views/frame/browser_view.h"
 #include "chrome/browser/ui/views/frame/toolbar_button_provider.h"
+#include "chrome/browser/ui/views/profiles/avatar_toolbar_button.h"
 #include "chrome/browser/ui/views/toolbar/browser_app_menu_button.h"
 #include "chrome/browser/ui/views/toolbar/toolbar_view.h"
 #include "chrome/test/base/in_process_browser_test.h"
@@ -34,10 +35,10 @@
 #include "components/policy/core/common/policy_map.h"
 #include "components/policy/policy_constants.h"
 #include "components/prefs/pref_service.h"
-#include "content/public/browser/notification_service.h"
 #include "content/public/test/browser_test.h"
 #include "content/public/test/test_utils.h"
 #include "ui/views/view.h"
+#include "ui/views/view_utils.h"
 
 class BraveToolbarViewTest : public InProcessBrowserTest {
  public:
@@ -49,7 +50,7 @@ class BraveToolbarViewTest : public InProcessBrowserTest {
   // InProcessBrowserTest override
   void SetUpOnMainThread() override { Init(browser()); }
 
-  void Init(Browser* browser) {
+  void Init(BrowserWindowInterface* browser) {
     BrowserView* browser_view = BrowserView::GetBrowserViewForBrowser(browser);
     ASSERT_NE(browser_view, nullptr);
 
@@ -62,7 +63,8 @@ class BraveToolbarViewTest : public InProcessBrowserTest {
 
  protected:
   bool is_avatar_button_shown() {
-    views::View* button = toolbar_button_provider_->GetAvatarToolbarButton();
+    auto* button = static_cast<AvatarToolbarButton*>(
+        toolbar_button_provider_->GetAvatarToolbarButtonInterface());
     DCHECK(button);
     return button->GetVisible();
   }
@@ -75,7 +77,6 @@ class BraveToolbarViewTest : public InProcessBrowserTest {
 
   raw_ptr<ToolbarButtonProvider> toolbar_button_provider_ = nullptr;
   raw_ptr<BraveToolbarView> toolbar_view_ = nullptr;
-
 };
 
 IN_PROC_BROWSER_TEST_F(BraveToolbarViewTest, ToolbarDividerNotShownTest) {
@@ -91,8 +92,7 @@ IN_PROC_BROWSER_TEST_F(BraveToolbarViewTest,
 IN_PROC_BROWSER_TEST_F(BraveToolbarViewTest, AvatarButtonIsShownGuestProfile) {
   // Open a Guest window.
   EXPECT_EQ(1U, GlobalBrowserCollection::GetInstance()->GetSize());
-  ui_test_utils::BrowserChangeObserver browser_creation_observer(
-      nullptr, ui_test_utils::BrowserChangeObserver::ChangeType::kAdded);
+  ui_test_utils::BrowserCreatedObserver browser_creation_observer;
   profiles::SwitchToGuestProfile(base::DoNothing());
   base::RunLoop().RunUntilIdle();
   browser_creation_observer.Wait();
@@ -103,7 +103,7 @@ IN_PROC_BROWSER_TEST_F(BraveToolbarViewTest, AvatarButtonIsShownGuestProfile) {
       ProfileManager::GetGuestProfilePath());
 
   // Access the browser with the Guest profile and re-init test for it.
-  Browser* browser = chrome::FindAnyBrowser(guest, true);
+  BrowserWindowInterface* browser = ui_test_utils::FindAnyBrowser(guest, true);
   EXPECT_TRUE(browser);
   Init(browser);
   EXPECT_EQ(true, is_avatar_button_shown());
@@ -129,32 +129,41 @@ IN_PROC_BROWSER_TEST_F(BraveToolbarViewTest,
 
   // Open the new profile
   EXPECT_EQ(1U, GlobalBrowserCollection::GetInstance()->GetSize());
-  ui_test_utils::BrowserChangeObserver browser_creation_observer(
-      nullptr, ui_test_utils::BrowserChangeObserver::ChangeType::kAdded);
-  profiles::OpenBrowserWindowForProfile(base::DoNothing(), false, true, true,
-                                        &new_profile);
+  ui_test_utils::BrowserCreatedObserver browser_creation_observer;
+  profiles::OpenBrowserWindowForProfile(
+      base::DoNothing(),
+      /*always_create=*/false,
+      /*is_new_profile=*/true, /*open_command_line_urls=*/false, &new_profile);
   base::RunLoop().RunUntilIdle();
   browser_creation_observer.Wait();
   EXPECT_EQ(2U, GlobalBrowserCollection::GetInstance()->GetSize());
 
   // Check it's shown in second profile
-  Browser* browser = chrome::FindAnyBrowser(&new_profile, true);
+  BrowserWindowInterface* browser =
+      ui_test_utils::FindAnyBrowser(&new_profile, true);
   EXPECT_TRUE(browser);
   Init(browser);
   EXPECT_EQ(true, is_avatar_button_shown());
 
   // Check avatar is positioned at the right before app menu button.
-  views::View* avatar = toolbar_button_provider_->GetAvatarToolbarButton();
+  // 156 has no toolbar container view: both are direct toolbar children.
+  auto* avatar = static_cast<AvatarToolbarButton*>(
+      toolbar_button_provider_->GetAvatarToolbarButtonInterface());
   ASSERT_TRUE(!!avatar);
-  views::View* container = avatar->parent();
-  ASSERT_TRUE(!!container);
-  views::View* app_menu = toolbar_button_provider_->GetAppMenuButton();
+  views::View* app_menu = nullptr;
+  for (views::View* child : toolbar_view_->children()) {
+    if (views::IsViewClass<BrowserAppMenuButton>(child)) {
+      app_menu = child;
+      break;
+    }
+  }
   ASSERT_TRUE(!!app_menu);
-  EXPECT_EQ(container->GetIndexOf(avatar).value(),
-            container->GetIndexOf(app_menu).value() - 1ul);
+  EXPECT_EQ(toolbar_view_->GetIndexOf(avatar).value(),
+            toolbar_view_->GetIndexOf(app_menu).value() - 1ul);
 
   // Check avatar button's size.
-  const int avatar_size = GetLayoutConstant(TOOLBAR_BUTTON_HEIGHT);
+  const int avatar_size =
+      GetLayoutConstant(LayoutConstant::kToolbarButtonHeight);
   EXPECT_EQ(gfx::Size(avatar_size, avatar_size), avatar->size());
 }
 
