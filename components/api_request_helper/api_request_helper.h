@@ -29,10 +29,6 @@ namespace network {
 class SharedURLLoaderFactory;
 }  // namespace network
 
-namespace data_decoder {
-class DataDecoder;
-}
-
 namespace api_request_helper {
 
 class APIRequestResult {
@@ -151,7 +147,7 @@ class APIRequestHelper {
 
     // This is used for one shot responses
     void OnResponse(ResponseConversionCallback conversion_callback,
-                    const std::unique_ptr<std::string> response_body);
+                    std::optional<std::string> response_body);
 
     // Decode one shot responses
     void OnParseJsonResponse(APIRequestResult result,
@@ -167,12 +163,6 @@ class APIRequestHelper {
 
     bool is_sse_ = false;
 
-    // To ensure ordered processing of stream chunks, we create our own
-    // instance of DataDecoder per request. This avoids the issue
-    // of unordered chunks that can occur when calling the static function,
-    // which creates a new instance of the process for each call. By using a
-    // single instance of the parser, we can reuse it for consecutive calls.
-    std::unique_ptr<data_decoder::DataDecoder> data_decoder_;
     // Keep track of number of in-progress data decoding operations
     // so that we can know if any are still in-progress when the request
     // completes.

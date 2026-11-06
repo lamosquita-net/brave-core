@@ -38,10 +38,6 @@ namespace {
 
 const unsigned int kRetriesCountOnNetworkChange = 1;
 
-BASE_FEATURE(kUseBraveRustJSONSanitizer,
-             "UseBraveRustJSONSanitizer",
-             base::FEATURE_ENABLED_BY_DEFAULT);
-
 void ParseJsonUsingRust(
     std::string json,
     data_decoder::DataDecoder::ValueParseCallback callback,
@@ -387,17 +383,9 @@ void APIRequestHelper::URLLoaderHandler::send_sse_data_for_testing(
 void APIRequestHelper::URLLoaderHandler::ParseJsonImpl(
     std::string json,
     base::OnceCallback<void(ValueOrError)> callback) {
-  if (base::FeatureList::IsEnabled(kUseBraveRustJSONSanitizer)) {
-    ParseJsonUsingRust(std::move(json), std::move(callback), task_runner_);
-    return;
-  }
-
-  if (!data_decoder_) {
-    VLOG(1) << "Creating DataDecoder for APIRequestHelper";
-    data_decoder_ = std::make_unique<data_decoder::DataDecoder>();
-  }
-
-  data_decoder_->ParseJson(json, std::move(callback));
+  // DataDecoder::ParseJson is gone in 156; base::JSONReader is the Rust
+  // parser, so parse on the worker task runner (as 1.98 does).
+  ParseJsonUsingRust(std::move(json), std::move(callback), task_runner_);
 }
 
 void APIRequestHelper::URLLoaderHandler::OnDataReceived(
@@ -445,7 +433,7 @@ void APIRequestHelper::URLLoaderHandler::OnRetry(
 
 void APIRequestHelper::URLLoaderHandler::OnResponse(
     ResponseConversionCallback conversion_callback,
-    const std::unique_ptr<std::string> response_body) {
+    std::optional<std::string> response_body) {
   VLOG(1) << "[[" << __func__ << "]]"
           << " Response received\n";
   DCHECK(result_callback_);
@@ -511,8 +499,7 @@ void APIRequestHelper::URLLoaderHandler::MaybeSendResult() {
   // Verify that counting hasn't gone wrong - it should never be less than 0.
   DCHECK_LE(0, current_decoding_operation_count_);
   // Don't allow completion if decoding is still in progress so that
-  // we don't delete the reference to |data_decoder_| which would cancel the
-  // operations.
+  // pending parse callbacks still find their handler.
   // Response must be complete to know that decoding is definitely complete
   // since streaming responses may get more reponse chunks which need decoding.
   const bool decoding_is_complete = (current_decoding_operation_count_ == 0);
@@ -590,13 +577,8 @@ void APIRequestHelper::SetUrlLoaderFactoryForTesting(
 
 void SanitizeAndParseJson(std::string json,
                           base::OnceCallback<void(ValueOrError)> callback) {
-  if (base::FeatureList::IsEnabled(kUseBraveRustJSONSanitizer)) {
-    ParseJsonUsingRust(std::move(json), std::move(callback),
-                       MakeDecoderTaskRunner());
-    return;
-  }
-
-  data_decoder::DataDecoder::ParseJsonIsolated(json, std::move(callback));
+  ParseJsonUsingRust(std::move(json), std::move(callback),
+                     MakeDecoderTaskRunner());
 }
 
 }  // namespace api_request_helper
