@@ -13,6 +13,8 @@ namespace features {
 OVERRIDE_FEATURE_DEFAULT_STATES({{
     {kOptimizationGuideFetchingForSRP, base::FEATURE_DISABLED_BY_DEFAULT},
     {kOptimizationGuidePersonalizedFetching, base::FEATURE_DISABLED_BY_DEFAULT},
+    // Server-side model execution (Google).
+    {kOptimizationGuideModelExecution, base::FEATURE_DISABLED_BY_DEFAULT},
     {kOptimizationHints, base::FEATURE_DISABLED_BY_DEFAULT},
 }});
 
