@@ -7,7 +7,7 @@
 #define BRAVE_BROWSER_UI_WEBUI_BRAVE_SHIELDS_SHIELDS_PANEL_UI_H_
 
 #include <memory>
-#include <string>
+#include <string_view>
 
 #include "brave/browser/ui/webui/brave_shields/shields_panel_data_handler.h"
 #include "brave/browser/ui/webui/brave_shields/shields_panel_handler.h"
@@ -17,8 +17,6 @@
 #include "chrome/browser/ui/webui/top_chrome/top_chrome_webui_config.h"
 #include "mojo/public/cpp/bindings/pending_receiver.h"
 #include "mojo/public/cpp/bindings/receiver.h"
-
-class BrowserWindowInterface;
 
 namespace content {
 class BrowserContext;
@@ -38,7 +36,7 @@ class ShieldsPanelUI : public TopChromeWebUIController,
       mojo::PendingReceiver<brave_shields::mojom::PanelHandlerFactory>
           receiver);
 
-  static constexpr std::string GetWebUIName() { return "ShieldsPanel"; }
+  static constexpr std::string_view GetWebUIName() { return "ShieldsPanel"; }
 
  private:
   void CreatePanelHandler(
@@ -53,7 +51,6 @@ class ShieldsPanelUI : public TopChromeWebUIController,
       panel_factory_receiver_{this};
 
   raw_ptr<Profile> profile_ = nullptr;
-  raw_ptr<BrowserWindowInterface> browser_ = nullptr;
 
   WEB_UI_CONTROLLER_TYPE_DECL();
 };

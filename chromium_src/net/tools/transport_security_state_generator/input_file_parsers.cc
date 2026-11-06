@@ -390,26 +390,6 @@ constexpr std::string_view kBraveHstsJson = R"brave_hsts_json({
       "mode": "force-https",
       "policy": "custom"
     },
-    {
-      "name": "collector.wdp.brave.com",
-      "mode": "force-https",
-      "policy": "custom"
-    },
-    {
-      "name": "patterns.wdp.brave.com",
-      "mode": "force-https",
-      "policy": "custom"
-    },
-    {
-      "name": "quorum.wdp.brave.com",
-      "mode": "force-https",
-      "policy": "custom"
-    },
-    {
-      "name": "star.wdp.brave.com",
-      "mode": "force-https",
-      "policy": "custom"
-    },
 
     // Premium
     {

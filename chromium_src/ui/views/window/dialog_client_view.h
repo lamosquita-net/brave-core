@@ -6,18 +6,14 @@
 #ifndef BRAVE_CHROMIUM_SRC_UI_VIEWS_WINDOW_DIALOG_CLIENT_VIEW_H_
 #define BRAVE_CHROMIUM_SRC_UI_VIEWS_WINDOW_DIALOG_CLIENT_VIEW_H_
 
-class WebDiscoveryDialogClientView;
-
 #define SetupLayout                              \
   SetupLayout_UnUsed() {}                        \
-  friend class ::WebDiscoveryDialogClientView;   \
-  void SetupButtonsLayoutVertically();           \
                                                  \
  public:                                         \
   void IgnoreNextWindowStationaryStateChanged(); \
                                                  \
  private:                                        \
-  virtual void SetupLayout
+  void SetupLayout
 
 #include "src/ui/views/window/dialog_client_view.h"  // IWYU pragma: export
 

@@ -155,10 +155,6 @@ void BraveAddCommonStrings(content::WebUIDataSource* html_source,
       {"showToolbarInFullScreen", IDS_SHOW_TOOLBAR_IN_FULL_SCREEN},
 #endif
   // Search settings
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-      {"braveWebDiscoveryLabel", IDS_SETTINGS_WEB_DISCOVERY_LABEL},
-      {"braveWebDiscoverySubLabel", IDS_SETTINGS_WEB_DISCOVERY_SUBLABEL},
-#endif
       {"autofillInPrivateSettingLabel",
        IDS_SETTINGS_BRAVE_AUTOFILL_PRIVATE_WINDOWS_LABEL},
       {"autofillInPrivateSettingDesc",
@@ -447,11 +443,6 @@ void BraveAddCommonStrings(content::WebUIDataSource* html_source,
       {"widevineEnabledDesc", IDS_SETTINGS_ENABLE_WIDEVINE_DESC},
       {"restartNotice", IDS_SETTINGS_RESTART_NOTICE},
       {"relaunchButtonLabel", IDS_SETTINGS_RELAUNCH_BUTTON_LABEL},
-      {"manageExtensionsV2Label", IDS_SETTINGS_MANAGE_EXTENSIONS_V2_LABEL},
-      {"manageExtensionsV2SubLabel",
-       IDS_SETTINGS_MANAGE_EXTENSIONS_V2_SUBLABEL},
-      {"extensionsV2ToastConfirmButtonLabel",
-       IDS_SETTINGS_MANAGE_EXTENSIONS_V2_TOAST_CONFIRM},
       {"manageExtensionsLabel", IDS_SETTINGS_MANAGE_EXTENSIONS_LABEL},
       {"keyboardShortcuts", IDS_EXTENSIONS_SIDEBAR_KEYBOARD_SHORTCUTS},
       {"getMoreExtensionsLabel", IDS_BRAVE_SETTINGS_GET_MORE_EXTENSIONS_LABEL},
@@ -534,9 +525,6 @@ void BraveAddCommonStrings(content::WebUIDataSource* html_source,
   html_source->AddString("googleLoginLearnMoreURL", kGoogleLoginLearnMoreURL);
   html_source->AddString("deAmpLearnMoreURL", kDeAmpLearnMoreUrl);
   html_source->AddString("debounceLearnMoreURL", kDebounceLearnMoreUrl);
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-  html_source->AddString("webDiscoveryLearnMoreURL", kWebDiscoveryLearnMoreUrl);
-#endif
   html_source->AddString(
       "getMoreExtensionsUrl",
       base::ASCIIToUTF16(

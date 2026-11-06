@@ -16,7 +16,6 @@ import java.lang.annotation.RetentionPolicy;
     BraveInfoBarIdentifier.INVALID,
     BraveInfoBarIdentifier.BRAVE_CONFIRM_P3A_INFOBAR_DELEGATE,
     BraveInfoBarIdentifier.SYNC_CANNOT_RUN_INFOBAR,
-    BraveInfoBarIdentifier.WEB_DISCOVERY_INFOBAR_DELEGATE,
     BraveInfoBarIdentifier.BRAVE_SYNC_ACCOUNT_DELETED_INFOBAR
 })
 @Retention(RetentionPolicy.SOURCE)
@@ -27,6 +26,6 @@ public @interface BraveInfoBarIdentifier {
     //  int SYNC_V2_MIGRATE_INFOBAR_DELEGATE = 503; - deprecated
     //  int ANDROID_SYSTEM_SYNC_DISABLED_INFOBAR = 504; - deprecated
     int SYNC_CANNOT_RUN_INFOBAR = 505;
-    int WEB_DISCOVERY_INFOBAR_DELEGATE = 506;
+    // int WEB_DISCOVERY_INFOBAR_DELEGATE = 506; - deprecated
     int BRAVE_SYNC_ACCOUNT_DELETED_INFOBAR = 507;
 }

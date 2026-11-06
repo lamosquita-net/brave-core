@@ -31,10 +31,4 @@ provideStrings({
   braveWelcomeSelectThemeSystemLabel: 'Match system setting',
   braveWelcomeSelectThemeLightLabel: 'Light mode',
   braveWelcomeSelectThemeDarkLabel: 'Dark mode',
-  braveWelcomeHelpWDPTitle: 'Want better search results?',
-  braveWelcomeHelpWDPSubtitle: 'Join the movement, contribute to Brave Search.',
-  braveWelcomeHelpWDPDescription: 'Help us fix the web by participating in Brave’s Web Discovery Project. By sharing completely anonymous search signals, you can help Brave grow the search index.',
-  braveWelcomeHelpWDPLearnMore: 'Learn More.',
-  braveWelcomeHelpWDPAccept: `Sure, I'll help`,
-  braveWelcomeHelpWDPReject: 'Maybe later',
 })

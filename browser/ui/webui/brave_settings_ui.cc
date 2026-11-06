@@ -39,10 +39,6 @@
 #include "brave/browser/ui/webui/settings/pin_shortcut_handler.h"
 #endif
 
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-#include "brave/browser/ui/webui/settings/brave_extensions_manifest_v2_handler.h"
-#endif
-
 BraveSettingsUI::BraveSettingsUI(content::WebUI* web_ui,
                                  const std::string& host)
     : SettingsUI(web_ui) {
@@ -54,12 +50,6 @@ BraveSettingsUI::BraveSettingsUI(content::WebUI* web_ui,
   web_ui->AddMessageHandler(std::make_unique<BraveAppearanceHandler>());
   web_ui->AddMessageHandler(std::make_unique<BraveSyncHandler>());
   web_ui->AddMessageHandler(std::make_unique<BraveAdBlockHandler>());
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-  if (base::FeatureList::IsEnabled(kExtensionsManifestV2)) {
-    web_ui->AddMessageHandler(
-        std::make_unique<BraveExtensionsManifestV2Handler>());
-  }
-#endif
 #if BUILDFLAG(ENABLE_PIN_SHORTCUT)
   web_ui->AddMessageHandler(std::make_unique<PinShortcutHandler>());
 #endif
@@ -101,9 +91,6 @@ void BraveSettingsUI::AddResources(content::WebUIDataSource* html_source,
                           ShouldExposeElementsForTesting());
 
   html_source->AddBoolean("enable_extensions", BUILDFLAG(ENABLE_EXTENSIONS));
-
-  html_source->AddBoolean("extensionsManifestV2Feature",
-                          base::FeatureList::IsEnabled(kExtensionsManifestV2));
 
   html_source->AddBoolean("isLeoAssistantAllowed", false);
   html_source->AddBoolean("isLeoAssistantHistoryAllowed", false);

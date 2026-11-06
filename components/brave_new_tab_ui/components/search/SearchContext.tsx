@@ -4,8 +4,12 @@
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import usePromise from '$web-common/usePromise';
-import { AutocompleteResult, OmniboxPopupSelection, PageHandler, PageHandlerRemote, PageInterface, PageReceiver } from 'gen/ui/webui/resources/cr_components/searchbox/searchbox.mojom.m';
-import { stringToMojoString16 } from 'chrome://resources/js/mojo_type_util.js';
+import { AutocompleteResult, FreState, InputKeywordModel, InputMethod, OmniboxPopupSelection, PageHandlerFactory, PageHandlerRemote, PageInterface, PageReceiver, SelectedFileInfo, SelectionDirection, SelectionStep, TabInfo } from 'chrome://resources/mojo/components/omnibox/browser/searchbox.mojom-webui.js';
+import { SuggestInventory } from 'chrome://resources/mojo/components/omnibox/browser/fusebox_action.mojom-webui.js';
+import { ContextUploadErrorType, ContextUploadStatus, InputState } from 'chrome://resources/mojo/components/omnibox/composebox/composebox_query.mojom-webui.js';
+import { WindowOpenDisposition } from 'chrome://resources/mojo/ui/base/mojom/window_open_disposition.mojom-webui.js';
+import { Size } from 'chrome://resources/mojo/ui/gfx/geometry/mojom/geometry.mojom-webui.js';
+import { Url } from 'chrome://resources/mojo/url/mojom/url.mojom-webui.js';
 import * as React from 'react';
 import getNTPBrowserAPI, { SearchEngineInfo } from '../../api/background';
 import { getDefaultSearchEngine, isSearchEngineEnabled, setDefaultSearchEngine } from './config';
@@ -34,8 +38,11 @@ const Context = React.createContext<Context>({
 
 export const searchEnginesPromise = getNTPBrowserAPI().pageHandler.getSearchEngines().then(r => r.searchEngines)
 
-export const omniboxController: PageHandlerRemote = PageHandler.getRemote();
+export const omniboxController: PageHandlerRemote = new PageHandlerRemote();
 (window as any).omnibox = omniboxController;
+
+// Tracks the latest query sent for autocompletion, to tell stale results.
+let activeQueryId = 0;
 
 class SearchPage implements PageInterface {
   private receiver = new PageReceiver(this)
@@ -44,7 +51,10 @@ class SearchPage implements PageInterface {
   private selectionListeners: Array<(selection: OmniboxPopupSelection) => void> = []
 
   constructor() {
-    omniboxController.setPage(this.receiver.$.bindNewPipeAndPassRemote())
+    PageHandlerFactory.getRemote().createPageHandler(
+      this.receiver.$.bindNewPipeAndPassRemote(),
+      omniboxController.$.bindNewPipeAndPassReceiver(),
+    )
   }
 
   addResultListener(listener: (result?: AutocompleteResult) => void) {
@@ -69,12 +79,35 @@ class SearchPage implements PageInterface {
     for (const listener of this.resultListeners) listener(result)
   }
 
-  updateSelection(selection: OmniboxPopupSelection) {
+  updateSelection(oldSelection: OmniboxPopupSelection, selection: OmniboxPopupSelection) {
     for (const listener of this.selectionListeners) listener(selection)
   }
 
-  setInputText(inputText: string) {}
-  setThumbnail(thumbnailUrl: string) {}
+  // Composebox, AIM, Lens and tab-context hooks that the FlyWeb search
+  // widget does not use.
+  setFreState(state: FreState) { }
+  stepSelection(direction: SelectionDirection, step: SelectionStep) { }
+  openCurrentSelection(disposition: WindowOpenDisposition) { }
+  setAimButtonVisible(visible: boolean) { }
+  setAimButtonConfig(text: string, tooltip: string, a11yLabel: string, iconUrl: Url) { }
+  setInputText(inputText: string) { }
+  setKeywordSpaceTriggeringEnabled(enabled: boolean) { }
+  setAvailableKeywordModels(models: InputKeywordModel[], defaultSearchProviderKeyword: string) { }
+  setThumbnail(thumbnailUrl: string, isDeletable: boolean) { }
+  onContextualInputStatusChanged(token: unknown, status: ContextUploadStatus, errorType: ContextUploadErrorType | null) { }
+  onTabStripChanged() { }
+  onInputStateChanged(inputState: InputState) { }
+  addFileContext(token: unknown, fileInfo: SelectedFileInfo) { }
+  updateAutoSuggestedTabContext(tab: TabInfo | null, invocationSource: string | null) { }
+  updateLensSearchEligibility(eligible: boolean) { }
+  updateContentSharingPolicy(enabled: boolean) { }
+  updateAimPopupEligibility(eligible: boolean) { }
+  updateSmartTabSharingActive(active: boolean) { }
+  onPermissionPromptChanged(isShowing: boolean, promptSize: Size) { }
+  setRestoredTabIds(ids: number[]) { }
+  setAimThreadRestoredTabs(tabs: TabInfo[]) { }
+  onScreenshotMenuClosed() { }
+  updateProfileInfo(avatarUrl: Url, name: string, email: string) { }
 }
 
 export const search = new SearchPage()
@@ -110,7 +143,7 @@ export function SearchContext(props: React.PropsWithChildren<{}>) {
   React.useEffect(() => {
     if (query) {
       const keywordQuery = `${searchEngine?.keyword} ${query}`
-      omniboxController.queryAutocomplete(stringToMojoString16(keywordQuery), false);
+      omniboxController.queryAutocomplete(activeQueryId++, null, keywordQuery, false, keywordQuery.length, SuggestInventory.kDefault, false, '', InputMethod.kKeyboard);
     } else {
       omniboxController.stopAutocomplete(true)
     }

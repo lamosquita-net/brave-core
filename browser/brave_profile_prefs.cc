@@ -110,7 +110,6 @@ void RegisterProfilePrefsForMigration(
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   // Added 11/2022
-  registry->RegisterBooleanPref(kDontAskEnableWebDiscovery, false);
   registry->RegisterIntegerPref(kBraveSearchVisitCount, 0);
 #endif
 
@@ -326,12 +325,6 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
   registry->RegisterIntegerPref(
       prefs::kBraveDefaultSearchVersion,
       TemplateURLPrepopulateData::kBraveCurrentDataVersion);
-
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-  // Web discovery extension, default false
-  registry->RegisterBooleanPref(kWebDiscoveryEnabled, false);
-  registry->RegisterDictionaryPref(kWebDiscoveryCTAState);
-#endif
 
   de_amp::RegisterProfilePrefs(registry);
   debounce::DebounceService::RegisterProfilePrefs(registry);

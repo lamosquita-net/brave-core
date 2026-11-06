@@ -24,14 +24,16 @@
 #include "brave/components/ntp_background_images/browser/ntp_custom_images_source.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/search_engines/template_url_service_factory.h"
+#include "chrome/browser/ui/webui/searchbox/realbox_handler.h"
 #include "chrome/common/pref_names.h"
 #include "components/grit/brave_components_resources.h"
+#include "components/omnibox/browser/searchbox.mojom.h"
+#include "components/prefs/pref_service.h"
 #include "components/strings/grit/components_strings.h"
 #include "content/public/browser/url_data_source.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/browser/web_ui_data_source.h"
 #include "mojo/public/cpp/bindings/pending_receiver.h"
-#include "ui/webui/resources/cr_components/searchbox/searchbox.mojom.h"
 
 using ntp_background_images::NTPCustomImagesSource;
 
@@ -101,14 +103,23 @@ void BraveNewTabUI::BindInterface(
 }
 
 void BraveNewTabUI::BindInterface(
-    mojo::PendingReceiver<searchbox::mojom::PageHandler> pending_page_handler) {
-  auto* profile = Profile::FromWebUI(web_ui());
-  DCHECK(profile);
+    mojo::PendingReceiver<searchbox::mojom::PageHandlerFactory>
+        pending_receiver) {
+  if (searchbox_page_factory_receiver_.is_bound()) {
+    searchbox_page_factory_receiver_.reset();
+  }
+  searchbox_page_factory_receiver_.Bind(std::move(pending_receiver));
+}
 
+void BraveNewTabUI::CreatePageHandler(
+    mojo::PendingRemote<searchbox::mojom::Page> pending_page,
+    mojo::PendingReceiver<searchbox::mojom::PageHandler> pending_page_handler) {
+  // FlyWeb: no contextual search session (Lens/AI context uploads); the
+  // handler copes with a null callback.
   realbox_handler_ = std::make_unique<RealboxHandler>(
-      std::move(pending_page_handler), profile, web_ui()->GetWebContents(),
-      /*metrics_reporter=*/nullptr, /*lens_searchbox_client=*/nullptr,
-      /*omnibox_controller=*/nullptr);
+      std::move(pending_page_handler), std::move(pending_page),
+      Profile::FromWebUI(web_ui()), web_ui()->GetWebContents(),
+      GetSessionHandleCallback());
 }
 
 void BraveNewTabUI::CreatePageHandler(

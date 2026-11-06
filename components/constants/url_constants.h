@@ -21,8 +21,6 @@ inline constexpr char kPermissionPromptLearnMoreUrl[] =
     "https://flyweb.lamosquita.net/ayuda/#permisos";
 inline constexpr char kPermissionPromptHardwareAccessPrivacyRisksURL[] =
     "https://flyweb.lamosquita.net/ayuda/#permisos";
-inline constexpr char kWebDiscoveryLearnMoreUrl[] =
-    "https://flyweb.lamosquita.net/ayuda/#privacidad";
 inline constexpr char kBraveSearchHost[] = "search.brave.com";
 inline constexpr char kWidevineLearnMoreUrl[] =
     "https://flyweb.lamosquita.net/ayuda/#drm";

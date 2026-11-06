@@ -102,10 +102,6 @@ void WelcomeDOMHandler::RegisterMessages() {
       "getDefaultBrowser",
       base::BindRepeating(&WelcomeDOMHandler::HandleGetDefaultBrowser,
                           base::Unretained(this)));
-  web_ui()->RegisterMessageCallback(
-      "enableWebDiscovery",
-      base::BindRepeating(&WelcomeDOMHandler::HandleEnableWebDiscovery,
-                          base::Unretained(this)));
 }
 
 void WelcomeDOMHandler::HandleImportNowRequested(const base::ListValue& args) {
@@ -167,11 +163,6 @@ void WelcomeDOMHandler::HandleSetMetricsReportingEnabled(
   bool enabled = args[0].GetBool();
   ChangeMetricsReportingState(
       enabled, metrics::ChangeMetricsReportingStateCalledFrom::kUiSettings);
-}
-
-void WelcomeDOMHandler::HandleEnableWebDiscovery(const base::ListValue& args) {
-  // FlyWeb: the Web Discovery Project sends search data to Brave; it can
-  // never be turned on (the welcome step that called this is gone).
 }
 
 void WelcomeDOMHandler::SetLocalStateBooleanEnabled(

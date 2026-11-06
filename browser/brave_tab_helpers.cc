@@ -71,9 +71,6 @@ void AttachTabHelpers(content::WebContents* web_contents) {
   brave_perf_predictor::PerfPredictorTabHelper::CreateForWebContents(
       web_contents);
 
-  // FlyWeb: no WebDiscoveryTabHelper, so no infobar offering the Web
-  // Discovery Project (it sends search data to Brave) on Brave Search.
-
 #if defined(TOOLKIT_VIEWS)
   OnboardingTabHelper::MaybeCreateForWebContents(web_contents);
 #endif

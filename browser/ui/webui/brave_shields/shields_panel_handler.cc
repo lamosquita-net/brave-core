@@ -12,19 +12,18 @@
 #include "brave/components/constants/pref_names.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser_tabstrip.h"
-#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/webui/top_chrome/top_chrome_web_ui_controller.h"
+#include "chrome/browser/ui/webui/webui_embedding_context.h"
+#include "components/prefs/pref_service.h"
+#include "content/public/browser/web_ui.h"
 #include "ui/gfx/geometry/vector2d.h"
 
 ShieldsPanelHandler::ShieldsPanelHandler(
     mojo::PendingReceiver<brave_shields::mojom::PanelHandler> receiver,
     TopChromeWebUIController* webui_controller,
-    BraveBrowserWindow* brave_browser_window,
     Profile* profile)
     : receiver_(this, std::move(receiver)),
       webui_controller_(webui_controller),
-      brave_browser_window_(brave_browser_window),
       profile_(profile) {}
 
 ShieldsPanelHandler::~ShieldsPanelHandler() = default;
@@ -47,10 +46,16 @@ void ShieldsPanelHandler::CloseUI() {
 }
 
 void ShieldsPanelHandler::GetPosition(GetPositionCallback callback) {
-  gfx::Vector2d vec =
-      gfx::Vector2d(brave_browser_window_->GetShieldsBubbleRect().x(),
-                    brave_browser_window_->GetShieldsBubbleRect().y());
-  std::move(callback).Run(vec);
+  auto* browser = webui::GetBrowserWindowInterface(
+      webui_controller_->web_ui()->GetWebContents());
+  auto* brave_browser_window =
+      browser ? BraveBrowserWindow::FromBrowser(browser) : nullptr;
+  if (!brave_browser_window) {
+    std::move(callback).Run(gfx::Vector2d());
+    return;
+  }
+  const gfx::Rect rect = brave_browser_window->GetShieldsBubbleRect();
+  std::move(callback).Run(gfx::Vector2d(rect.x(), rect.y()));
 }
 
 void ShieldsPanelHandler::SetAdvancedViewEnabled(bool is_enabled) {
