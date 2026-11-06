@@ -7,7 +7,7 @@
 #include "base/path_service.h"
 #include "brave/browser/extensions/brave_extension_functional_test.h"
 #include "brave/components/constants/brave_paths.h"
-#include "chrome/browser/ui/browser.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/common/webui_url_constants.h"
 #include "chrome/test/base/in_process_browser_test.h"
@@ -93,7 +93,6 @@ IN_PROC_BROWSER_TEST_F(BraveNewTabUIBrowserTest, NewTabPageLocationOverride) {
   ASSERT_TRUE(ui_test_utils::NavigateToURL(browser(), new_tab_url));
   WaitForLoadStop(contents);
 
-  std::string inner_text;
   ASSERT_EQ("New tab override!",
             content::EvalJs(contents, "document.body.innerText;"));
 }

@@ -9,8 +9,9 @@
 #include <string>
 
 #include "base/values.h"
-#include "brave/components/brave_shields/content/browser/brave_shields_util.h"
+#include "brave/components/brave_shields/core/common/brave_shield_utils.h"
 #include "chrome/browser/ui/webui/settings/site_settings_helper.h"
+#include "chrome/test/base/testing_browser_process.h"
 #include "chrome/test/base/testing_profile.h"
 #include "components/content_settings/core/common/content_settings_types.h"
 #include "components/grit/brave_components_strings.h"
@@ -36,9 +37,14 @@ base::DictValue GetResponsePayload(bool valid, const std::string& message) {
 }
 }  // namespace
 
-class TestBraveSiteSettingsHandlerUnittest : public testing::Test {
+class BraveSiteSettingsHandlerTest : public testing::Test {
  public:
-  TestBraveSiteSettingsHandlerUnittest() {
+  BraveSiteSettingsHandlerTest() = default;
+  ~BraveSiteSettingsHandlerTest() override = default;
+
+  void SetUp() override {
+    TestingBrowserProcess::GetGlobal()->SetUpGlobalFeaturesForTesting(
+        /*profile_manager=*/false);
     TestingProfile::Builder builder;
 
     profile_ = builder.Build();
@@ -48,14 +54,21 @@ class TestBraveSiteSettingsHandlerUnittest : public testing::Test {
     test_web_ui_.set_web_contents(web_contents_.get());
 
     handler_ = std::make_unique<BraveSiteSettingsHandler>(profile_.get());
-    handler_->set_web_ui(&test_web_ui_);
+    handler_->set_web_ui_for_testing(&test_web_ui_);
     handler_->RegisterMessages();
   }
-  ~TestBraveSiteSettingsHandlerUnittest() override {
+
+  void TearDown() override {
+    testing::Test::TearDown();
     // The test handler unusually owns its own TestWebUI, so we make sure to
     // unbind it from the base class before the derived class is destroyed.
-    handler_->set_web_ui(nullptr);
+    handler_->set_web_ui_for_testing(nullptr);
     handler_.reset();
+
+    web_contents_.reset();
+    profile_.reset();
+
+    TestingBrowserProcess::GetGlobal()->TearDownGlobalFeaturesForTesting();
   }
   content::TestWebUI* web_ui() { return &test_web_ui_; }
   PrefService* prefs() { return profile_->GetPrefs(); }
@@ -77,7 +90,7 @@ class TestBraveSiteSettingsHandlerUnittest : public testing::Test {
   content::TestWebUI test_web_ui_;
 };
 
-TEST_F(TestBraveSiteSettingsHandlerUnittest, InValidShieldsType) {
+TEST_F(BraveSiteSettingsHandlerTest, InValidShieldsType) {
   base::ListValue args;
   args.Append(base::Value("id"));
   args.Append(base::Value("[*.]brave.com"));
@@ -92,7 +105,7 @@ TEST_F(TestBraveSiteSettingsHandlerUnittest, InValidShieldsType) {
                 l10n_util::GetStringUTF8(IDS_BRAVE_SHIELDS_NOT_VALID_ADDRESS)));
 }
 
-TEST_F(TestBraveSiteSettingsHandlerUnittest, ValidShieldsType) {
+TEST_F(BraveSiteSettingsHandlerTest, ValidShieldsType) {
   base::ListValue args;
   args.Append(base::Value("id"));
   args.Append(base::Value("brave.com"));
@@ -104,7 +117,7 @@ TEST_F(TestBraveSiteSettingsHandlerUnittest, ValidShieldsType) {
   EXPECT_EQ(*data->arg3(), GetResponsePayload(true, std::string()));
 }
 
-TEST_F(TestBraveSiteSettingsHandlerUnittest, ValidNonShieldsType) {
+TEST_F(BraveSiteSettingsHandlerTest, ValidNonShieldsType) {
   base::ListValue args;
   args.Append(base::Value("id"));
   args.Append(base::Value("[*.]brave.com"));
@@ -116,8 +129,7 @@ TEST_F(TestBraveSiteSettingsHandlerUnittest, ValidNonShieldsType) {
   EXPECT_EQ(*data->arg3(), GetResponsePayload(true, std::string()));
 }
 
-TEST_F(TestBraveSiteSettingsHandlerUnittest,
-       IsPatternValidForBraveContentType) {
+TEST_F(BraveSiteSettingsHandlerTest, IsPatternValidForBraveContentType) {
   EXPECT_FALSE(IsPatternValidForBraveContentType(
       ContentSettingsType::BRAVE_SHIELDS, "*.*"));
   EXPECT_FALSE(IsPatternValidForBraveContentType(

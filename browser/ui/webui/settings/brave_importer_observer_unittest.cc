@@ -8,7 +8,6 @@
 #include <memory>
 #include <utility>
 
-#include "base/logging.h"
 #include "base/test/bind.h"
 #include "base/test/values_test_util.h"
 #include "brave/browser/importer/brave_external_process_importer_host.h"
@@ -24,8 +23,9 @@ class BraveImporterObserverUnitTest : public testing::Test {
   }
   void SetExpectedCalls(int value) { expected_calls_ = value; }
   int GetExpectedCalls() { return expected_calls_; }
-  void NotifyImportProgress(const user_data_importer::SourceProfile& source_profile,
-                            const base::DictValue& info) {
+  void NotifyImportProgress(
+      const user_data_importer::SourceProfile& source_profile,
+      const base::DictValue& info) {
     EXPECT_EQ(expected_info_, info);
     expected_calls_++;
   }
@@ -43,7 +43,8 @@ TEST_F(BraveImporterObserverUnitTest, ImportEvents) {
   source_profile.importer_name = u"importer_name";
   source_profile.importer_type = user_data_importer::TYPE_CHROME;
   source_profile.source_path = base::FilePath(FILE_PATH_LITERAL("test"));
-  auto imported_items = user_data_importer::AUTOFILL_FORM_DATA | user_data_importer::PASSWORDS;
+  auto imported_items =
+      user_data_importer::AUTOFILL_FORM_DATA | user_data_importer::PASSWORDS;
   std::unique_ptr<BraveImporterObserver> observer =
       std::make_unique<BraveImporterObserver>(
           importer_host, source_profile, imported_items,
@@ -123,7 +124,8 @@ TEST_F(BraveImporterObserverUnitTest, DestroyObserverEarly) {
   source_profile.importer_name = u"importer_name";
   source_profile.importer_type = user_data_importer::TYPE_CHROME;
   source_profile.source_path = base::FilePath(FILE_PATH_LITERAL("test"));
-  auto imported_items = user_data_importer::AUTOFILL_FORM_DATA | user_data_importer::PASSWORDS;
+  auto imported_items =
+      user_data_importer::AUTOFILL_FORM_DATA | user_data_importer::PASSWORDS;
   std::unique_ptr<BraveImporterObserver> observer =
       std::make_unique<BraveImporterObserver>(
           importer_host, source_profile, imported_items,
