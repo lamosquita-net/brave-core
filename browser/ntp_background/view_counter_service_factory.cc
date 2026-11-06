@@ -5,6 +5,8 @@
 
 #include "brave/browser/ntp_background/view_counter_service_factory.h"
 
+#include <memory>
+
 #include "base/no_destructor.h"
 #include "brave/components/ntp_background_images/browser/view_counter_service.h"
 #include "brave/components/ntp_background_images/buildflags/buildflags.h"
@@ -43,7 +45,8 @@ ViewCounterServiceFactory::ViewCounterServiceFactory()
 
 ViewCounterServiceFactory::~ViewCounterServiceFactory() = default;
 
-KeyedService* ViewCounterServiceFactory::BuildServiceInstanceFor(
+std::unique_ptr<KeyedService>
+ViewCounterServiceFactory::BuildServiceInstanceForBrowserContext(
     content::BrowserContext* browser_context) const {
   // Only NTP in normal profile shows backgrounds.
   if (!Profile::FromBrowserContext(browser_context)->IsRegularProfile()) {
@@ -51,7 +54,7 @@ KeyedService* ViewCounterServiceFactory::BuildServiceInstanceFor(
   }
 
   Profile* profile = Profile::FromBrowserContext(browser_context);
-  return new ViewCounterService(
+  return std::make_unique<ViewCounterService>(
 #if BUILDFLAG(ENABLE_CUSTOM_BACKGROUND)
       BraveNTPCustomBackgroundServiceFactory::GetForContext(profile),
 #else
