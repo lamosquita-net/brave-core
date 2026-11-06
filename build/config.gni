@@ -24,8 +24,9 @@ declare_args() {
   sparkle_eddsa_public_key = ""
 
   # FlyWeb: build number of our own releases (1.0 = 0). Appended to
-  # CFBundleVersion (169.168 -> 169.168.N), which Sparkle compares: every
-  # FlyWeb update must raise it while the Brave base stays at 1.69.168.
+  # CFBundleVersion (198.63 -> 198.63.N since 3.0.0; 169.168.N before), which
+  # Sparkle compares: every FlyWeb update must raise it while the Brave base
+  # stays at 1.98.63.
   flyweb_build_number = 0
 
   # FlyWeb: brave-core commit this build comes from (build.sh passes it). The
@@ -84,30 +85,33 @@ brave_version = "$brave_version_major.$brave_version_minor.$brave_version_build"
 # FlyWeb: version shown to the user (Info.plist CFBundleShortVersionString,
 # About, flyweb://version, appcast --visible). The minor follows the engine
 # level: 1.0 = Chromium 116, 1.1 = level 117, 1.2 = level 118...; fixes on the
-# same level are 1.1.1, 1.1.2... 2.0.0 is the Chromium 128 base (engine level
-# 131); 2.1 = level 132, 2.2 = level 133, 2.3 = level 134, 2.4 = level 135, 2.5 = level 136, 2.6 = level 137, 2.7 = level 138... Every release also raises flyweb_build_number (CFBundleVersion, what
-# Sparkle compares).
-flyweb_version = "2.7.0"
+# same level are 1.1.1, 1.1.2... 2.0.0 was the Chromium 128 base (engine level
+# 131; 2.N = level 131+N up to 2.7 = level 138). 3.0.0 is the Chromium 156
+# base, with the native 156 engine; later fixes are 3.0.x. Every release also
+# raises flyweb_build_number (CFBundleVersion, what Sparkle compares).
+flyweb_version = "3.0.0"
 
 # FlyWeb: engine level, the Chrome version whose web platform features are all
 # in this build (softmac FlyWeb/docs/motor.md). It is the major version
 # declared to websites, to every site (no per-site exceptions). Raised only
 # when the whole level is in and tested.
-flyweb_engine_level = 138
+flyweb_engine_level = 156
 
 # FlyWeb: full Chrome version declared in the client hints (uaFullVersion,
 # fullVersionList): a real Chrome release of flyweb_engine_level for Mac, so
 # the hints a site asks for with Accept-CH match the declared major. Raised
-# together with flyweb_engine_level.
-flyweb_engine_full_version = "138.0.7204.185"
+# together with flyweb_engine_level. The last Stable of the level for Mac in
+# Google's versionhistory (156: .82, checked 05-11-2026; the base is .90).
+flyweb_engine_full_version = "156.0.8078.82"
 
 # FlyWeb: lowest macOS the declared Chrome runs on. The platformVersion client
 # hint is the real macOS version, raised to this one when it is older (Chrome
 # 127 on Mojave does not exist). Changes with the level: 127-128 "10.15.7",
-# 129-138 "11.7.10", 139+ "12.7.6" (check Chrome's published requirements).
+# 129-138 "11.7.10", 139-150 "12.7.6", 151+ the last macOS 13 (13.7.8, build
+# 22H730, checked by LOCAL on 06-11-2026; Titin's principle 13, 12-10).
 # Decided by the HUMANO (12-10, F4.8) for privacy: 10.14.6 is a rare value that
 # identifies the user; 10.15.7 is what the frozen User-Agent already says.
-flyweb_min_macos_version = "11.7.10"
+flyweb_min_macos_version = "13.7.8"
 
 if (brave_exe == "") {
   brave_exe = brave_product_name

@@ -13,8 +13,9 @@
 namespace flyweb {
 
 // Chrome major version FlyWeb declares to websites (User-Agent and client
-// hints): the last complete engine level, not the real 116. Raised only when
-// every Baseline feature Chrome shipped up to that version is in FlyWeb
+// hints): the last complete engine level (3.0.0: 156, the real engine; it
+// can go above the real major once FlyWeb ports features again). Raised only
+// when every Baseline feature Chrome shipped up to that version is in FlyWeb
 // (softmac FlyWeb/docs/motor.md). Components and the updaters keep using the
 // real version; extensions check minimum_chrome_version (and the Web Store's
 // prodversionmin) against the declared full version, kFlyWebEngineFullVersion
@@ -23,7 +24,7 @@ namespace flyweb {
 inline constexpr int kDeclaredEngineLevel =
     version_info::constants::kFlyWebEngineLevel;
 
-// "117"
+// "156"
 std::string DeclaredMajor();
 
 // Real major -> declared major: "116" -> "117", "116.0.5845.188" ->

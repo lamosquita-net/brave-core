@@ -5,11 +5,13 @@
 
 #include "components/embedder_support/user_agent_utils.h"
 
-#include "base/command_line.h"
+#include <optional>
+#include <string>
+
 #include "base/strings/string_number_conversions.h"
 #include "base/version.h"
 #include "build/build_config.h"
-#include "components/embedder_support/switches.h"
+#include "components/version_info/version_info.h"
 
 // Chromium uses `version_info::GetProductName()` to get the browser's "brand"
 // name, but on MacOS we use different names for different channels (adding Beta
@@ -27,59 +29,52 @@
 // not Brave's zeroed "major.0.0.0", which no Chrome sends.
 #define BRAVE_BRAND_VERSION_OVERRIDE_FOR_FULL_BRAND_VERSION_TYPE full_version
 
-// The one-argument overload of the original calls the two-argument one, which
-// the define renames too: declare the renamed one before it is used.
+// Brave 1.98 anchor (patch) for Android; nothing to change on desktop.
+#define BRAVE_GET_ANDROID_OS_INFO
+
+// The original's own calls go to the renamed one: declare it, with the
+// header's default argument, before the include.
 namespace embedder_support {
 blink::UserAgentMetadata GetUserAgentMetadata_ChromiumImpl(
-    const PrefService* pref_service,
-    bool only_low_entropy_ch);
+    bool only_low_entropy_ch = false);
 }  // namespace embedder_support
 
 #define GetUserAgentMetadata GetUserAgentMetadata_ChromiumImpl
 #include "src/components/embedder_support/user_agent_utils.cc"
 #undef GetUserAgentMetadata
+#undef BRAVE_GET_ANDROID_OS_INFO
 #undef BRAVE_BRAND_VERSION_OVERRIDE_FOR_FULL_BRAND_VERSION_TYPE
 #undef BRAVE_GET_USER_AGENT_BRAND_LIST
 
 namespace embedder_support {
 
 blink::UserAgentMetadata GetUserAgentMetadata(bool only_low_entropy_ch) {
-  return GetUserAgentMetadata(nullptr, only_low_entropy_ch);
-}
-
-blink::UserAgentMetadata GetUserAgentMetadata(const PrefService* pref_service,
-                                              bool only_low_entropy_ch) {
   blink::UserAgentMetadata metadata =
-      GetUserAgentMetadata_ChromiumImpl(pref_service, only_low_entropy_ch);
-  base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
-  if (command_line->HasSwitch(kUserAgent)) {
+      GetUserAgentMetadata_ChromiumImpl(only_low_entropy_ch);
+  // A user-agent override on the command line keeps Chromium's answer (low
+  // entropy only, or blank with kUACHOverrideBlank).
+  if (GetUserAgentFromCommandLine().has_value()) {
     return metadata;
   }
   // FlyWeb (F4.8): the client hints declare the engine level, built the way
   // Chromium builds them for that version (the GREASE brand is seeded by the
   // major version), so Sec-CH-UA, navigator.userAgentData and the User-Agent
-  // agree. Every caller goes through here: the request headers
-  // (client_hints::ClientHints) and the renderer (ContentBrowserClient).
+  // agree. With level 156 on Chromium 156 this equals Chromium's own answer,
+  // apart from the full version (the last Mac Stable of the level). Every
+  // caller goes through here: request headers and the renderer.
   const std::string declared_major =
       base::NumberToString(version_info::constants::kFlyWebEngineLevel);
   const std::string declared_full =
       version_info::constants::kFlyWebEngineFullVersion;
-  bool enable_updated_grease_by_policy = true;
-  if (pref_service &&
-      pref_service->HasPrefPath(
-          policy::policy_prefs::kUserAgentClientHintsGREASEUpdateEnabled)) {
-    enable_updated_grease_by_policy = pref_service->GetBoolean(
-        policy::policy_prefs::kUserAgentClientHintsGREASEUpdateEnabled);
-  }
   metadata.brand_version_list = GetUserAgentBrandList(
-      declared_major, enable_updated_grease_by_policy, declared_full,
-      blink::UserAgentBrandVersionType::kMajorVersion);
+      declared_major, declared_full,
+      blink::UserAgentBrandVersionType::kMajorVersion, std::nullopt);
   if (only_low_entropy_ch) {
     return metadata;
   }
   metadata.brand_full_version_list = GetUserAgentBrandList(
-      declared_major, enable_updated_grease_by_policy, declared_full,
-      blink::UserAgentBrandVersionType::kFullVersion);
+      declared_major, declared_full,
+      blink::UserAgentBrandVersionType::kFullVersion, std::nullopt);
   metadata.full_version = declared_full;
 #if BUILDFLAG(IS_MAC)
   // FlyWeb (F4.8): never a macOS older than the declared Chrome supports.
