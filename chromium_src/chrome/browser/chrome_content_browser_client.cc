@@ -9,12 +9,6 @@
 #include "extensions/buildflags/buildflags.h"
 #include "ui/gfx/image/image_skia.h"
 
-#if BUILDFLAG(IS_MAC)
-#include "brave/browser/brave_browser_main_parts_mac.h"
-#undef ChromeBrowserMainPartsMac
-#define ChromeBrowserMainPartsMac BraveBrowserMainPartsMac
-#endif  // BUILDFLAG(IS_MAC)
-
 #if !BUILDFLAG(ENABLE_EXTENSIONS)
 #define CHROME_BROWSER_WEB_APPLICATIONS_POLICY_WEB_APP_POLICY_MANAGER_H_
 // NOLINTNEXTLINE
@@ -43,6 +37,3 @@ bool HandleNewTabURLReverseRewrite(GURL* url, content::BrowserContext* bc) {
 #undef CHROME_BROWSER_WEB_APPLICATIONS_WEB_APP_PROVIDER_H_
 #undef CHROME_BROWSER_WEB_APPLICATIONS_SYSTEM_WEB_APPS_SYSTEM_WEB_APP_MANAGER_H_
 #endif  // BUILDFLAG(ENABLE_EXTENSIONS)
-#if BUILDFLAG(IS_MAC)
-#undef ChromeBrowserMainPartsMac
-#endif  // BUILDFLAG(IS_MAC)
