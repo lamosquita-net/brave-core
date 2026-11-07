@@ -8,21 +8,22 @@
 
 #include "base/feature_list.h"
 
-// FlyWeb: Chromium's IsSupportedVideoType() and IsDefaultSupportedVideoType()
-// become *_ChromiumImpl(); FlyWeb's versions (see the .cc) wrap them. The .cc
-// defines the macros before including this header, so they are only
-// undefined here when this header defined them.
-#if !defined(IsDefaultSupportedVideoType)
-#define IsDefaultSupportedVideoType IsDefaultSupportedVideoType_ChromiumImpl
-#define IsSupportedVideoType IsSupportedVideoType_ChromiumImpl
+// FlyWeb: Chromium's IsDecoderSupportedVideoType() and
+// IsDefaultDecoderSupportedVideoType() become *_ChromiumImpl(); FlyWeb's
+// versions (see the .cc) wrap them. The .cc defines the macros before including
+// this header, so they are only undefined here when this header defined them.
+#if !defined(IsDefaultDecoderSupportedVideoType)
+#define IsDefaultDecoderSupportedVideoType \
+  IsDefaultDecoderSupportedVideoType_ChromiumImpl
+#define IsDecoderSupportedVideoType IsDecoderSupportedVideoType_ChromiumImpl
 #define FLYWEB_UNDEF_SUPPORTED_VIDEO_TYPE
 #endif
 
 #include "src/media/base/supported_types.h"  // IWYU pragma: export
 
 #if defined(FLYWEB_UNDEF_SUPPORTED_VIDEO_TYPE)
-#undef IsDefaultSupportedVideoType
-#undef IsSupportedVideoType
+#undef IsDefaultDecoderSupportedVideoType
+#undef IsDecoderSupportedVideoType
 #undef FLYWEB_UNDEF_SUPPORTED_VIDEO_TYPE
 #endif
 
@@ -36,8 +37,8 @@ namespace media {
 // h264ify extension). WebRTC does not use this path.
 MEDIA_EXPORT BASE_DECLARE_FEATURE(kFlyWebSoftwareVp9Av1);
 
-MEDIA_EXPORT bool IsSupportedVideoType(const VideoType& type);
-MEDIA_EXPORT bool IsDefaultSupportedVideoType(const VideoType& type);
+MEDIA_EXPORT bool IsDecoderSupportedVideoType(const VideoType& type);
+MEDIA_EXPORT bool IsDefaultDecoderSupportedVideoType(const VideoType& type);
 
 }  // namespace media
 

@@ -3,11 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#define IsDefaultSupportedVideoType IsDefaultSupportedVideoType_ChromiumImpl
-#define IsSupportedVideoType IsSupportedVideoType_ChromiumImpl
+#define IsDefaultDecoderSupportedVideoType \
+  IsDefaultDecoderSupportedVideoType_ChromiumImpl
+#define IsDecoderSupportedVideoType IsDecoderSupportedVideoType_ChromiumImpl
 #include "src/media/base/supported_types.cc"
-#undef IsSupportedVideoType
-#undef IsDefaultSupportedVideoType
+#undef IsDecoderSupportedVideoType
+#undef IsDefaultDecoderSupportedVideoType
 
 namespace media {
 
@@ -25,14 +26,16 @@ bool FlyWebHidesCodec(const VideoType& type) {
 }  // namespace
 
 // Both: renderers ask through their media client (ContentRendererClient ->
-// IsDefaultSupportedVideoType), other processes through IsSupportedVideoType.
-bool IsSupportedVideoType(const VideoType& type) {
-  return !FlyWebHidesCodec(type) && IsSupportedVideoType_ChromiumImpl(type);
+// IsDefaultDecoderSupportedVideoType), other processes through
+// IsDecoderSupportedVideoType.
+bool IsDecoderSupportedVideoType(const VideoType& type) {
+  return !FlyWebHidesCodec(type) &&
+         IsDecoderSupportedVideoType_ChromiumImpl(type);
 }
 
-bool IsDefaultSupportedVideoType(const VideoType& type) {
+bool IsDefaultDecoderSupportedVideoType(const VideoType& type) {
   return !FlyWebHidesCodec(type) &&
-         IsDefaultSupportedVideoType_ChromiumImpl(type);
+         IsDefaultDecoderSupportedVideoType_ChromiumImpl(type);
 }
 
 }  // namespace media
