@@ -36,19 +36,43 @@
 #define CHROME_BROWSER_WEB_APPLICATIONS_WEB_APP_PROVIDER_H_
 #endif  // !BUILDFLAG(ENABLE_EXTENSIONS)
 
-// The renames below must not reach other classes' static
-// MigrateObsoleteProfilePrefs, which 156 calls from browser_prefs.cc: include
-// their headers first.
+// 156's browser_prefs.cc also calls other classes' static
+// MigrateObsoleteProfilePrefs (PageColorsController, and CdmPrefServiceHelper
+// on Windows), and the rename below reaches those calls too. Route them
+// through shims that provide the renamed name and forward to the real one
+// (validated on Mac by LOCAL-19).
 #include "build/build_config.h"
 #include "chrome/browser/accessibility/page_colors_controller.h"
 #if BUILDFLAG(IS_WIN)
 #include "chrome/browser/media/cdm_pref_service_helper.h"
 #endif
 
+class BravePageColorsControllerShim : public PageColorsController {
+ public:
+  static void MigrateObsoleteProfilePrefs_ChromiumImpl(PrefService* prefs) {
+    PageColorsController::MigrateObsoleteProfilePrefs(prefs);
+  }
+};
+#define PageColorsController BravePageColorsControllerShim
+
+#if BUILDFLAG(IS_WIN)
+class BraveCdmPrefServiceHelperShim : public CdmPrefServiceHelper {
+ public:
+  static void MigrateObsoleteProfilePrefs_ChromiumImpl(PrefService* prefs) {
+    CdmPrefServiceHelper::MigrateObsoleteProfilePrefs(prefs);
+  }
+};
+#define CdmPrefServiceHelper BraveCdmPrefServiceHelperShim
+#endif
+
 #define MigrateObsoleteProfilePrefs MigrateObsoleteProfilePrefs_ChromiumImpl
 #define MigrateObsoleteLocalStatePrefs \
   MigrateObsoleteLocalStatePrefs_ChromiumImpl
 #include "src/chrome/browser/prefs/browser_prefs.cc"
+#if BUILDFLAG(IS_WIN)
+#undef CdmPrefServiceHelper
+#endif
+#undef PageColorsController
 #undef MigrateObsoleteProfilePrefs
 #undef MigrateObsoleteLocalStatePrefs
 
