@@ -153,6 +153,8 @@ def main(original_function, argv):
         pass
 
     if depfile and depfile_output:
+        # The depfile's directory is not there yet in a clean out dir.
+        os.makedirs(os.path.dirname(os.path.abspath(depfile)), exist_ok=True)
         with open(depfile, 'w', encoding='utf-8', newline='\n') as f:
             f.write(depfile_output.replace(' ', '\\ ') + ': ' +
                     ' '.join(i.replace(' ', '\\ ')
