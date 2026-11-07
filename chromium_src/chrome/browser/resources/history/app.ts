@@ -14,8 +14,12 @@ import 'chrome://resources/cr_elements/cr_lazy_render/cr_lazy_render_lit.js';
 import 'chrome://resources/cr_elements/cr_page_selector/cr_page_selector.js';
 import 'chrome://resources/cr_elements/cr_tabs/cr_tabs.js';
 import './history_embeddings_promo.js';
+// <if expr="not is_chromeos">
 import './history_cross_device_signin_promo.js';
+// </if>
+// <if expr="not is_chromeos">
 import './history_sync_promo.js';
+// </if>
 import './history_list.js';
 import './history_toolbar.js';
 import './history_filter_chips.js';

@@ -7,12 +7,16 @@
 // @webui-eslint/web-component-missing-deps sees them (same imports as the
 // upstream file, now kept as -chromium.ts).
 import './icons.html.js';
+// <if expr="_google_chrome">
 import './internal/icons.html.js';
+// </if>
 import 'chrome://resources/cr_elements/cr_action_menu/cr_action_menu.js';
 import 'chrome://resources/cr_elements/cr_button/cr_button.js';
 import 'chrome://resources/cr_elements/cr_icon/cr_icon.js';
 import 'chrome://resources/cr_elements/cr_icon_button/cr_icon_button.js';
+// <if expr="_google_chrome">
 import 'chrome://resources/cr_elements/cr_link_row/cr_link_row.js';
+// </if>
 import 'chrome://resources/cr_elements/cr_progress/cr_progress.js';
 import 'chrome://resources/cr_elements/icons.html.js';
 import 'chrome://resources/js/action_link.js';

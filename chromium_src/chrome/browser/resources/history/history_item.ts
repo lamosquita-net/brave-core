@@ -6,7 +6,9 @@
 // Elements used by the upstream template, imported explicitly so that
 // @webui-eslint/web-component-missing-deps sees them (same imports as the
 // upstream file, now kept as -chromium.ts).
+// <if expr="_google_chrome">
 import './internal/icons.html.js';
+// </if>
 import './searched_label.js';
 import './shared_icons.html.js';
 import '/strings.m.js';
