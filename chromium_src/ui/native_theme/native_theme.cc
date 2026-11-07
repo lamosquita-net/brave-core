@@ -8,6 +8,12 @@
 #include "ui/gfx/color_palette.h"
 #include "ui/gfx/color_utils.h"
 
+// As 1.98: native_theme_mac.h declares GetSystemButtonPressedColor too, so it
+// must be seen before the rename below.
+#if BUILDFLAG(IS_MAC)
+#include "ui/native_theme/native_theme_mac.h"
+#endif
+
 #define GetSystemButtonPressedColor GetSystemButtonPressedColor_ChromiumImpl
 #include "src/ui/native_theme/native_theme.cc"
 #undef GetSystemButtonPressedColor
