@@ -267,7 +267,11 @@ Config.prototype.isBraveReleaseBuild = function () {
     return isBraveReleaseBuildValue === '1'
   }
 
-  return false
+  // FlyWeb: a Release build is always the real release build (PGO always,
+  // COORDINACION-31), so without is_brave_release_build it keeps the official
+  // defaults (chrome_pgo_phase, mojom id scrambling, dSYMs) instead of Brave's
+  // developer shortcuts. Static, ASan and Component builds keep them.
+  return this.isReleaseBuild()
 }
 
 Config.prototype.isComponentBuild = function () {
@@ -445,8 +449,9 @@ Config.prototype.buildArgs = function () {
     }
   }
 
-  if (this.ignorePatchVersionNumber) {
-    assert(!this.isBraveReleaseBuild())
+  // FlyWeb: ignorePatchVersionNumber is computed before the build config is
+  // known, so a Release build just ignores it instead of asserting.
+  if (this.ignorePatchVersionNumber && !this.isBraveReleaseBuild()) {
 
     // Allow dummy LASTCHANGE to be set. When the real LASTCHANGE is used, ~2300
     // targets are rebuilt with each version bump.
