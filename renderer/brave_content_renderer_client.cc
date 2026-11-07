@@ -55,6 +55,18 @@ void BraveContentRendererClient::
       SetRuntimeFeaturesDefaultsBeforeBlinkInitialization();
 
   blink::WebRuntimeFeatures::EnableFledge(false);
+  // FlyWeb: the rest of Protected Audience off as well. The json5 patch's
+  // base_feature_status "disabled" only changes the base::Feature default,
+  // which leaves a "stable" Blink feature on (copied_from_base_feature_if
+  // "enabled_or_overridden" copies a disabled state only when overridden), so
+  // on 156 navigator.joinAdInterestGroup, getInterestGroupAdAuctionData and
+  // protectedAudience were exposed. AdInterestGroupAPI gates the whole
+  // Navigator partial interface; FledgeBiddingAndAuctionServerAPI has no base
+  // feature at all.
+  blink::WebRuntimeFeatures::EnableFeatureFromString("AdInterestGroupAPI",
+                                                     false);
+  blink::WebRuntimeFeatures::EnableFeatureFromString(
+      "FledgeBiddingAndAuctionServerAPI", false);
   blink::WebRuntimeFeatures::EnableWebGPUExperimentalFeatures(false);
   blink::WebRuntimeFeatures::EnableWebNFC(false);
 

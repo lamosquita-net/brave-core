@@ -31,6 +31,7 @@ constexpr auto kBraveDisabledTrialNames =
         "InterestCohortAPI",
         "FencedFrames",
         "Fledge",
+        "FledgeBiddingAndAuctionServer",
         "Parakeet",
         "Prerender2CrossOriginIframes",
         "SignedExchangeSubresourcePrefetch",
