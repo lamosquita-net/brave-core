@@ -1,49 +1,20 @@
 diff --git a/content/browser/renderer_host/navigation_request.cc b/content/browser/renderer_host/navigation_request.cc
-index c90fd914ef5b041ff86e6467c985df32ba7b0b43..76b2ba0cfccf18ae660478f538dabbfb068051be 100644
+index 6baf465bd2106a85fbc045e2489746e69efc2d5f..25870674fe9fe7c2c8b599ab88459c0b27348fad 100644
 --- a/content/browser/renderer_host/navigation_request.cc
 +++ b/content/browser/renderer_host/navigation_request.cc
-@@ -160,6 +160,7 @@
- #include "services/network/public/cpp/cross_origin_resource_policy.h"
- #include "services/network/public/cpp/features.h"
- #include "services/network/public/cpp/header_util.h"
-+#include "services/network/public/cpp/integrity_policy.h"
- #include "services/network/public/cpp/is_potentially_trustworthy.h"
- #include "services/network/public/cpp/resource_request_body.h"
- #include "services/network/public/cpp/supports_loading_mode/supports_loading_mode_parser.h"
-@@ -2902,14 +2903,18 @@ bool NavigationRequest::ShouldAddCookieChangeListener() {
-   // activation, since in these cases, an existing `RenderFrameHost` will be
-   // used, and it would already have an existing listener, so we should skip the
-   // initialization.
--  // (4) the navigation is a primary main frame navigation, as the cookie
--  // change information will only be used in the inactive document control
--  // logic.
-+  // (4) the navigation is a primary main frame navigation or it's for
-+  // prerendering a main frame, as the cookie change information will only be
-+  // used to determined if a page can be restored from back/forward cache, so
-+  // subframe navigation can be ignored.
-+  // FlyWeb: upstream c287a87a87 (crbug.com/417215501), needed since FlyWeb
-+  // lets no-store pages into the back/forward cache (level 136).
-   return frame_tree_node_->navigator()
-              .controller()
-              .GetBackForwardCache()
-              .should_allow_storing_pages_with_cache_control_no_store() &&
--         !IsPageActivation() && !IsSameDocument() && IsInPrimaryMainFrame() &&
-+         !IsPageActivation() && !IsSameDocument() &&
-+         (IsInPrimaryMainFrame() || IsInPrerenderedMainFrame()) &&
-          common_params_->url.SchemeIsHTTPOrHTTPS();
- }
- 
-@@ -3458,6 +3463,7 @@ void NavigationRequest::OnRequestRedirected(
+@@ -3996,6 +3996,9 @@ void NavigationRequest::OnRequestRedirected(
    common_params_->url = redirect_info.new_url;
    common_params_->method = redirect_info.new_method;
    common_params_->referrer->url = GURL(redirect_info.new_referrer);
-+  BRAVE_ONREQUESTREDIRECTED_MAYBEHIDEREFERRER
++  GetContentClient()->browser()->MaybeHideReferrer(
++      browser_context, common_params_->url,
++      GetTopDocumentGURL(frame_tree_node_), &common_params_->referrer);
    common_params_->referrer = Referrer::SanitizeForRequest(
        common_params_->url, *common_params_->referrer);
  
-@@ -5189,12 +5195,13 @@ void NavigationRequest::OnStartChecksComplete(
+@@ -6041,12 +6044,13 @@ void NavigationRequest::OnStartChecksComplete(
    // comment in the header for |loader_|.
-   DCHECK(!loader_);
+   CHECK(!loader_);
  
 -  // Only initialize the ServiceWorkerMainResourceHandle if it can be created
 -  // for this frame.
@@ -60,40 +31,23 @@ index c90fd914ef5b041ff86e6467c985df32ba7b0b43..76b2ba0cfccf18ae660478f538dabbfb
    if (can_create_service_worker) {
      ServiceWorkerContextWrapper* service_worker_context =
          static_cast<ServiceWorkerContextWrapper*>(
-@@ -5234,6 +5241,7 @@ void NavigationRequest::OnStartChecksComplete(
-   headers.MergeFrom(TakeModifiedRequestHeaders());
-   begin_params_->headers = headers.ToString();
+@@ -6165,6 +6169,9 @@ void NavigationRequest::OnStartChecksComplete(
+   bool is_visible = GetWebContents() &&
+                     GetWebContents()->GetVisibility() == Visibility::VISIBLE;
  
-+  BRAVE_ONSTARTCHECKSCOMPLETE_MAYBEHIDEREFERRER
-   // TODO(clamy): Avoid cloning the navigation params and create the
-   // ResourceRequest directly here.
-   std::vector<std::unique_ptr<NavigationLoaderInterceptor>> interceptor;
-@@ -5821,9 +5829,55 @@ void NavigationRequest::OnWillCommitWithoutUrlLoaderChecksComplete(
-   // Cases with a UrlLoader are handled in OnStartChecksComplete.
-   MaybeDispatchNavigateEventForCrossDocumentTraversal();
++  GetContentClient()->browser()->MaybeHideReferrer(
++      browser_context, common_params_->url,
++      GetTopDocumentGURL(frame_tree_node_), &common_params_->referrer);
+   loader_ = NavigationURLLoader::Create(
+       browser_context, partition,
+       std::make_unique<NavigationRequestInfo>(
+@@ -6848,9 +6855,13 @@ void NavigationRequest::InheritServiceWorkerControllerFromParentIfNeeded() {
+     return;
+   }
  
-+  InheritServiceWorkerControllerFromParentIfNeeded();
-+
-   CommitNavigation();
- }
- 
-+void NavigationRequest::InheritServiceWorkerControllerFromParentIfNeeded() {
-+  if (!base::FeatureList::IsEnabled(features::kServiceWorkerSrcdocSupport)) {
-+    return;
-+  }
-+
-+  CHECK(!loader_);
-+  CHECK(!service_worker_handle_);
-+  RenderFrameHostImpl* parent = frame_tree_node()->parent();
-+  if (!parent || !GetURL().IsAboutSrcdoc()) {
-+    return;
-+  }
-+  base::WeakPtr<ServiceWorkerClient> parent_service_worker_client =
-+      parent->GetLastCommittedServiceWorkerClient();
-+  if (!parent_service_worker_client) {
-+    return;
-+  }
-+
+-  if ((frame_tree_node_->pending_frame_policy().sandbox_flags &
+-       network::mojom::WebSandboxFlags::kOrigin) ==
+-      network::mojom::WebSandboxFlags::kOrigin) {
 +  // Do not inherit the parent's service worker controller if this frame is a
 +  // PDF content frame or has an opaque sandboxed origin. PDF content frames run
 +  // in a restricted PDF renderer process that must not receive service worker
@@ -101,90 +55,6 @@ index c90fd914ef5b041ff86e6467c985df32ba7b0b43..76b2ba0cfccf18ae660478f538dabbfb
 +  if (IsPdf() || (frame_tree_node_->pending_frame_policy().sandbox_flags &
 +                  network::mojom::WebSandboxFlags::kOrigin) ==
 +                     network::mojom::WebSandboxFlags::kOrigin) {
-+    return;
-+  }
-+  StoragePartition* partition = GetStoragePartitionWithCurrentSiteInfo();
-+  auto* service_worker_context = static_cast<ServiceWorkerContextWrapper*>(
-+      partition->GetServiceWorkerContext());
-+  // ServiceWorkerMainResourceHandle is not used for intercepting the srcdoc
-+  // iframe main resource. (FlyWeb: the 128 constructor has no
-+  // fetch_event_client_id.)
-+  service_worker_handle_ = std::make_unique<ServiceWorkerMainResourceHandle>(
-+      service_worker_context, base::DoNothing(), parent_service_worker_client);
-+  service_worker_handle_->set_service_worker_client(
-+      service_worker_context->context()
-+          ->service_worker_client_owner()
-+          .CreateServiceWorkerClientForWindow(
-+              IsSecureFrame(frame_tree_node_->parent()),
-+              frame_tree_node_->frame_tree_node_id()));
-+  service_worker_handle_->service_worker_client()->InheritControllerFrom(
-+      *parent_service_worker_client, net::SimplifyUrlForRequest(GetURL()));
-+}
-+
- void NavigationRequest::RunCommitDeferringConditions() {
-   commit_deferrer_->RegisterDeferringConditions(*this);
-   commit_deferrer_->ProcessChecks();
-@@ -6152,6 +6206,19 @@ void NavigationRequest::CommitNavigation() {
-       service_worker_container_info;
-   blink::mojom::ControllerServiceWorkerInfoPtr controller;
- 
-+  // The decision to create `service_worker_handle_` was made before the
-+  // request was sent, based only on the sandbox flags inherited from the frame
-+  // owner element. If the response delivered a `Content-Security-Policy:
-+  // sandbox` header without `allow-same-origin`, the document will commit with
-+  // an opaque origin and is not eligible to use service workers, so drop the
-+  // handle now instead of creating a container host for the committed document.
-+  if (service_worker_handle_ &&
-+      (policy_container_builder_->FinalPolicies().sandbox_flags &
-+       network::mojom::WebSandboxFlags::kOrigin) ==
-+          network::mojom::WebSandboxFlags::kOrigin) {
-+    service_worker_handle_.reset();
-+  }
-+
-   // Notify the service worker navigation handle that navigation commit is
-   // about to go.
-   if (service_worker_handle_ &&
-@@ -8279,7 +8346,7 @@ void NavigationRequest::WriteIntoTrace(
-   ctx->set_navigation_id(navigation_id_);
-   ctx->set_has_committed(HasCommitted());
-   ctx->set_is_error_page(IsErrorPage());
--  ctx.Set(TraceProto::kFrameTreeNode, frame_tree_node_);
-+  ctx.Set(TraceProto::kFrameTreeNode, frame_tree_node());
-   if (state_ >= WILL_PROCESS_RESPONSE)
-     ctx.Set(TraceProto::kRenderFrameHost, GetRenderFrameHost());
- 
-@@ -9106,6 +9173,21 @@ NavigationRequest::ComputeCrossOriginEmbedderPolicy() {
-   return network::CrossOriginEmbedderPolicy();
- }
- 
-+NavigationRequest::IntegrityPolicies
-+NavigationRequest::ComputeIntegrityPolicies() {
-+  IntegrityPolicies policies;
-+  if (!base::FeatureList::IsEnabled(
-+          network::features::kIntegrityPolicyScript)) {
-+    return policies;
-+  }
-+  if (response_head_ && response_head_->parsed_headers) {
-+    policies.enforced = response_head_->parsed_headers->integrity_policy;
-+    policies.report_only =
-+        response_head_->parsed_headers->integrity_policy_report_only;
-+  }
-+  return policies;
-+}
-+
- // [spec]:
- // https://html.spec.whatwg.org/C/#check-a-navigation-response's-adherence-to-its-embedder-policy
- //
-@@ -9620,6 +9702,12 @@ void NavigationRequest::ComputePoliciesToCommit() {
-   policy_container_builder_->SetCrossOriginEmbedderPolicy(
-       ComputeCrossOriginEmbedderPolicy());
- 
-+  IntegrityPolicies integrity_policies = ComputeIntegrityPolicies();
-+  policy_container_builder_->SetIntegrityPolicy(
-+      std::move(integrity_policies.enforced));
-+  policy_container_builder_->SetIntegrityPolicyReportOnly(
-+      std::move(integrity_policies.report_only));
-+
-   // If the navigation is the result of a network response, set DIP to the
-   // one in the network response. Otherwise, DIP should follow normal rules of
-   // policy inheritance, which should be handled by the policy container.
+     return;
+   }
+   GetContentClient()->browser()->LogWebFeatureForCurrentPage(
