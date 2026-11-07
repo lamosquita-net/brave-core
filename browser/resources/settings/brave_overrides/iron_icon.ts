@@ -81,6 +81,13 @@ export const iconMap: { [key: string]: string } = {
   'settings20:lightbulb': 'idea',
   'cr:delete': 'trash', // delete browsing data
   'cr:security': 'lock',
+  // FlyWeb: these used to go to the brave_settings iconset of
+  // brave_icons.html (removed); same Leo icons as Brave 1.98's cr_icon.ts.
+  'settings:performance': 'cpu-chip',
+  'settings20:incognito': 'product-private-window',
+  'cr:search': 'search',
+  'cr:file-download': 'download',
+  'cr:print': 'print',
 }
 
 RegisterStyleOverride('iron-icon', html`
