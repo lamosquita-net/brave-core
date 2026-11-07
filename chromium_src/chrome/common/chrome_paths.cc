@@ -27,6 +27,23 @@ bool BravePathProvider(int key, base::FilePath* result) {
       }
       break;
 
+#if BUILDFLAG(IS_MAC)
+    // FlyWeb: machine-wide external extensions come from FlyWeb's own folder,
+    // next to the profile, not from the one an installer left for Google
+    // Chrome (Chromium hardcodes "Google/Chrome" here on Mac, and Brave 1.98
+    // and FlyWeb 2.x kept it). One folder for every channel, as Chrome does.
+    // Brave's provider is registered after Chromium's, so PathService asks it
+    // first; the admin-ownership check of ExternalPrefLoader still applies.
+    case chrome::DIR_EXTERNAL_EXTENSIONS:
+      if (!chrome::GetGlobalApplicationSupportDirectory(&cur)) {
+        return false;
+      }
+      cur = cur.Append(FILE_PATH_LITERAL("LaMosquita"))
+                .Append(FILE_PATH_LITERAL("FlyWeb"))
+                .Append(FILE_PATH_LITERAL("External Extensions"));
+      break;
+#endif
+
     default:
       return false;
   }
