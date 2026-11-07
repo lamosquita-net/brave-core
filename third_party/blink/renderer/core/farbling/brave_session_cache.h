@@ -6,10 +6,12 @@
 #ifndef BRAVE_THIRD_PARTY_BLINK_RENDERER_CORE_FARBLING_BRAVE_SESSION_CACHE_H_
 #define BRAVE_THIRD_PARTY_BLINK_RENDERER_CORE_FARBLING_BRAVE_SESSION_CACHE_H_
 
+#include <memory>
 #include <optional>
 #include <string>
 
 #include "base/containers/span.h"
+#include "brave/third_party/blink/renderer/bindings/core/webgl/webgl_farbled_extension_handler.h"
 #include "brave/third_party/blink/renderer/brave_farbling_constants.h"
 #include "brave/third_party/blink/renderer/platform/brave_audio_farbling_helper.h"
 #include "components/content_settings/core/common/content_settings_types.h"
@@ -101,6 +103,22 @@ class CORE_EXPORT BraveSessionCache final
   std::optional<blink::BraveAudioFarblingHelper> GetAudioFarblingHelper() {
     return audio_farbling_helper_;
   }
+  // Returns a non owning reference to the underlying webgl/webgl2 handler.
+  // Callers must not delete it. If a prior call to create this was already made
+  // then this method will crash, otherwise handler is created and its
+  // non-owning reference is returned. If you are only looking to get a
+  // previously created handler then call the getter method
+  // get_webgl_farbled_extension_handler.
+  blink::WebGLFarbledExtensionHandler* CreateWebGLFarbledExtensionHandler(
+      const bool is_webgl2);
+
+  // Returns a non owning reference to the underlying webgl/webgl2 handler if
+  // it's already created. Callers must not delete it.
+  blink::WebGLFarbledExtensionHandler* get_webgl_farbled_extension_handler(
+      bool is_webgl2) {
+    return is_webgl2 ? webgl2_farbled_extension_handler_.get()
+                     : webgl_farbled_extension_handler_.get();
+  }
 
  private:
   bool farbling_enabled_;
@@ -109,6 +127,12 @@ class CORE_EXPORT BraveSessionCache final
   blink::HashMap<FarbleKey, int> farbled_integers_;
   BraveFarblingLevel farbling_level_;
   std::optional<blink::BraveAudioFarblingHelper> audio_farbling_helper_;
+  // A handler to farble the webgl supported extensions.
+  std::unique_ptr<blink::WebGLFarbledExtensionHandler>
+      webgl_farbled_extension_handler_;
+  // A handler to farble the webgl2 supported extensions.
+  std::unique_ptr<blink::WebGLFarbledExtensionHandler>
+      webgl2_farbled_extension_handler_;
   blink::HashMap<ContentSettingsType, BraveFarblingLevel> farbling_levels_;
 
   void PerturbPixelsInternal(const unsigned char* data,

@@ -9,6 +9,7 @@
 #include <cmath>
 #include <cstring>
 #include <string_view>
+#include <utility>
 
 #include "base/command_line.h"
 #include "base/compiler_specific.h"
@@ -492,6 +493,40 @@ bool BraveSessionCache::AllowFontFamily(
       NOTREACHED();
   }
   return true;
+}
+
+blink::WebGLFarbledExtensionHandler*
+BraveSessionCache::CreateWebGLFarbledExtensionHandler(const bool is_webgl2) {
+  auto level = GetBraveFarblingLevel(
+      is_webgl2 ? ContentSettingsType::BRAVE_WEBCOMPAT_WEBGL2
+                : ContentSettingsType::BRAVE_WEBCOMPAT_WEBGL);
+  DCHECK(base::FeatureList::IsEnabled(
+             blink::features::kWebGLBalancedFingerprintingProtection) &&
+         level == BraveFarblingLevel::BALANCED);
+
+  // Check no handler was created before.
+  if (is_webgl2) {
+    CHECK(!webgl2_farbled_extension_handler_);
+  } else {
+    CHECK(!webgl_farbled_extension_handler_);
+  }
+
+  // FlyWeb: 1.98 seeds with the low half of the per eTLD+1 farbling token; our
+  // equivalent is the per eTLD+1 session PRNG (BALANCED implies the domain key
+  // is set).
+  std::unique_ptr<blink::WebGLFarbledExtensionHandler>
+      farbled_extension_handler =
+          blink::WebGLFarbledExtensionHandler::CreateHandler(
+              MakePseudoRandomGenerator()());
+
+  if (is_webgl2) {
+    webgl2_farbled_extension_handler_ = std::move(farbled_extension_handler);
+  } else {
+    webgl_farbled_extension_handler_ = std::move(farbled_extension_handler);
+  }
+
+  return is_webgl2 ? webgl2_farbled_extension_handler_.get()
+                   : webgl_farbled_extension_handler_.get();
 }
 
 FarblingPRNG BraveSessionCache::MakePseudoRandomGenerator(FarbleKey key) {
