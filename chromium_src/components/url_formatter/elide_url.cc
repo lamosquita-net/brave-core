@@ -16,8 +16,10 @@ namespace url_formatter {
 std::u16string FormatOriginForSecurityDisplay(
     const url::Origin& origin,
     const SchemeDisplay scheme_display) {
+  // FlyWeb: chrome:// is shown as flyweb:// (content::kBraveUIScheme; not
+  // reachable from components/url_formatter).
   const url::Origin updated_origin = url::Origin::CreateFromNormalizedTuple(
-      origin.scheme() == "chrome" ? "brave" : origin.scheme(), origin.host(),
+      origin.scheme() == "chrome" ? "flyweb" : origin.scheme(), origin.host(),
       origin.port());
   return FormatOriginForSecurityDisplay_ChromiumImpl(updated_origin,
                                                      scheme_display);
