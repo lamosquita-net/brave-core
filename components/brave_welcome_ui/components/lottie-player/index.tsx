@@ -4,7 +4,7 @@
 // you can obtain one at https://mozilla.org/MPL/2.0/.
 
 import * as React from 'react'
-// import { CrLottieElement } from 'chrome://resources/cr_elements/cr_lottie/cr_lottie'
+// import { CrLottieElement } from 'chrome://resources/cr_components/cr_lottie/cr_lottie'
 
 interface LottiePlayerProps {
   animationUrl: string
@@ -25,7 +25,7 @@ function LottiePlayer (props: LottiePlayerProps) {
       lottieEl.addEventListener('cr-lottie-playing', () => props.onPlaying?.())
       lottieEl.addEventListener('cr-lottie-paused', () => props.onPaused?.())
       lottieEl.addEventListener('cr-lottie-stopped', () => props.onStopped?.())
-      lottieEl.addEventListener('cr-lottie-complete', () => props.onComplete?.())
+      lottieEl.addEventListener('cr-lottie-completed', () => props.onComplete?.())
       // @ts-expect-error
       lottieEl.animationUrl = props.animationUrl
       // @ts-expect-error
