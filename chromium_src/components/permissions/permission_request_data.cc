@@ -22,12 +22,9 @@ std::optional<RequestType> ContentSettingsTypeToRequestTypeIfExists_BraveImpl(
 
 }  // namespace permissions
 
-#define PermissionContextBase PermissionContextBase_ChromiumImpl
-
 #define ContentSettingsTypeToRequestTypeIfExists \
   ContentSettingsTypeToRequestTypeIfExists_BraveImpl
 
 #include "src/components/permissions/permission_request_data.cc"
 
 #undef ContentSettingsTypeToRequestTypeIfExists
-#undef PermissionContextBase
