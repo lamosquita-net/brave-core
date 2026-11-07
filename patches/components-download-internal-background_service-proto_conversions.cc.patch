@@ -1,20 +1,22 @@
 diff --git a/components/download/internal/background_service/proto_conversions.cc b/components/download/internal/background_service/proto_conversions.cc
-index b27e7b9908ee381d1ca19006e6646deafb10cd5f..450f3df4d7b6e3c4c7e43daedfe5d2461f793e0e 100644
+index d7076f9a09f0b5aa558114520daf0eb2c3ef5d64..bfba3290783b9b3b5baf7c316a43af6e7fd2392b 100644
 --- a/components/download/internal/background_service/proto_conversions.cc
 +++ b/components/download/internal/background_service/proto_conversions.cc
-@@ -79,6 +79,7 @@ protodb::DownloadClient ProtoConversions::DownloadClientToProto(
-       return protodb::DownloadClient::BRUSCHETTA;
-     case DownloadClient::BOUNDARY:
-       return protodb::DownloadClient::BOUNDARY;
-+    BRAVE_DOWNLOAD_CLIENT_TO_PROTO
-   }
- 
-   NOTREACHED_IN_MIGRATION();
-@@ -112,6 +113,7 @@ DownloadClient ProtoConversions::DownloadClientFromProto(
-       return DownloadClient::BRUSCHETTA;
-     case protodb::DownloadClient::BOUNDARY:
-       return DownloadClient::BOUNDARY;
-+    BRAVE_DOWNLOAD_CLIENT_FROM_PROTO
-   }
- 
-   NOTREACHED_IN_MIGRATION();
+@@ -53,6 +53,8 @@ Entry::State ProtoConversions::RequestStateFromProto(
+ protodb::DownloadClient ProtoConversions::DownloadClientToProto(
+     DownloadClient client) {
+   switch (client) {
++    case DownloadClient::CUSTOM_LIST_SUBSCRIPTIONS:
++      return protodb::DownloadClient::CUSTOM_LIST_SUBSCRIPTIONS;
+     case DownloadClient::INVALID:
+       return protodb::DownloadClient::INVALID;
+     case DownloadClient::TEST:
+@@ -85,6 +87,8 @@ protodb::DownloadClient ProtoConversions::DownloadClientToProto(
+ DownloadClient ProtoConversions::DownloadClientFromProto(
+     protodb::DownloadClient client) {
+   switch (client) {
++    case protodb::DownloadClient::CUSTOM_LIST_SUBSCRIPTIONS:
++      return DownloadClient::CUSTOM_LIST_SUBSCRIPTIONS;
+     case protodb::DownloadClient::INVALID:
+       return DownloadClient::INVALID;
+     case protodb::DownloadClient::TEST:
