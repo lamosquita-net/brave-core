@@ -10,18 +10,23 @@
 
 #define BRAVE_RENDER_VIEW_CONTEXT_MENU_H_ \
   private: \
-    friend class BraveRenderViewContextMenu; \
+    friend RenderViewContextMenu_BraveImpl; \
   public:
 // define BRAVE_RENDER_VIEW_CONTEXT_MENU_H_
+
+// As 1.98: our subclass takes the upstream name, so every user of
+// RenderViewContextMenu gets it without a trailing #define (which broke
+// render_view_context_menu_browsertest_util.cc). The alias names it inside
+// the block where RenderViewContextMenu means the Chromium class.
+class RenderViewContextMenu;
+using RenderViewContextMenu_BraveImpl = RenderViewContextMenu;
 
 // Get the Chromium declaration.
 #define RenderViewContextMenu RenderViewContextMenu_Chromium
 
-class BraveRenderViewContextMenu;
-
 #define RegisterMenuShownCallbackForTesting                      \
   RegisterMenuShownCallbackForTesting(                           \
-      base::OnceCallback<void(BraveRenderViewContextMenu*)> cb); \
+      base::OnceCallback<void(RenderViewContextMenu_BraveImpl*)> cb); \
   static void RegisterMenuShownCallbackForTesting_unused
 #include "src/chrome/browser/renderer_context_menu/render_view_context_menu.h"  // IWYU pragma: export
 #undef RegisterMenuShownCallbackForTesting
@@ -29,15 +34,15 @@ class BraveRenderViewContextMenu;
 #undef BRAVE_RENDER_VIEW_CONTEXT_MENU_H_
 
 // Declare our own subclass with overridden methods.
-class BraveRenderViewContextMenu : public RenderViewContextMenu_Chromium {
+class RenderViewContextMenu : public RenderViewContextMenu_Chromium {
  public:
   // Non-const reference passed in the parent class upstream
   // NOLINTNEXTLINE(runtime/references)
-  BraveRenderViewContextMenu(content::RenderFrameHost& render_frame_host,
+  RenderViewContextMenu(content::RenderFrameHost& render_frame_host,
                              const content::ContextMenuParams& params,
                              bool is_paste_enabled,
                              bool is_paste_and_match_style_enabled);
-  ~BraveRenderViewContextMenu() override;
+  ~RenderViewContextMenu() override;
   // RenderViewContextMenuBase:
   bool IsCommandIdEnabled(int command_id) const override;
   void ExecuteCommand(int id, int event_flags) override;
@@ -57,8 +62,5 @@ class BraveRenderViewContextMenu : public RenderViewContextMenu_Chromium {
   void CopyTextFromImage();
 #endif
 };
-
-// Use our own subclass as the real RenderViewContextMenu.
-#define RenderViewContextMenu BraveRenderViewContextMenu
 
 #endif  // BRAVE_CHROMIUM_SRC_CHROME_BROWSER_RENDERER_CONTEXT_MENU_RENDER_VIEW_CONTEXT_MENU_H_

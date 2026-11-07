@@ -34,7 +34,7 @@ BraveRenderViewContextMenuViews::Create(
 
 void BraveRenderViewContextMenuViews::Show() {
   // Removes duplicated separator if any. The duplicated separator may appear
-  // in |BraveRenderViewContextMenu::InitMenu| after remove the translate menu
+  // in |RenderViewContextMenu::InitMenu| after remove the translate menu
   // item.
   RemoveAdjacentSeparators();
   RenderViewContextMenuViews::Show();

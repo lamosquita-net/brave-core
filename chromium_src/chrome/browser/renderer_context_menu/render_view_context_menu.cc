@@ -37,8 +37,8 @@
 #include "base/mac/mac_util.h"
 #endif
 
-// Our .h file creates a masquerade for RenderViewContextMenu.  Switch
-// back to the Chromium one for the Chromium implementation.
+// Inside the upstream .cc, RenderViewContextMenu must mean the Chromium
+// class (our subclass takes that name in the .h, as 1.98).
 #undef RenderViewContextMenu
 #define RenderViewContextMenu RenderViewContextMenu_Chromium
 
@@ -73,10 +73,10 @@ std::optional<GURL> GetSelectedURL(Profile* profile,
   return match.destination_url;
 }
 
-base::OnceCallback<void(BraveRenderViewContextMenu*)>*
+base::OnceCallback<void(RenderViewContextMenu_BraveImpl*)>*
 BraveGetMenuShownCallback() {
   static base::NoDestructor<
-      base::OnceCallback<void(BraveRenderViewContextMenu*)>>
+      base::OnceCallback<void(RenderViewContextMenu_BraveImpl*)>>
       callback;
   return callback.get();
 }
@@ -84,7 +84,7 @@ BraveGetMenuShownCallback() {
 }  // namespace
 
 void RenderViewContextMenu::RegisterMenuShownCallbackForTesting(
-    base::OnceCallback<void(BraveRenderViewContextMenu*)> cb) {
+    base::OnceCallback<void(RenderViewContextMenu_BraveImpl*)> cb) {
   *BraveGetMenuShownCallback() = std::move(cb);
 }
 
@@ -125,7 +125,7 @@ void OnGetImageForTextCopy(base::WeakPtr<content::WebContents> web_contents,
 
 }  // namespace
 
-BraveRenderViewContextMenu::BraveRenderViewContextMenu(
+RenderViewContextMenu::RenderViewContextMenu(
     content::RenderFrameHost& render_frame_host,
     const content::ContextMenuParams& params,
     bool is_paste_enabled,
@@ -135,9 +135,9 @@ BraveRenderViewContextMenu::BraveRenderViewContextMenu(
                                      is_paste_enabled,
                                      is_paste_and_match_style_enabled) {}
 
-BraveRenderViewContextMenu::~BraveRenderViewContextMenu() = default;
+RenderViewContextMenu::~RenderViewContextMenu() = default;
 
-bool BraveRenderViewContextMenu::IsCommandIdEnabled(int id) const {
+bool RenderViewContextMenu::IsCommandIdEnabled(int id) const {
   switch (id) {
 #if BUILDFLAG(ENABLE_TEXT_RECOGNITION)
     case IDC_CONTENT_CONTEXT_COPY_TEXT_FROM_IMAGE:
@@ -156,7 +156,7 @@ bool BraveRenderViewContextMenu::IsCommandIdEnabled(int id) const {
   }
 }
 
-void BraveRenderViewContextMenu::ExecuteCommand(int id, int event_flags) {
+void RenderViewContextMenu::ExecuteCommand(int id, int event_flags) {
   switch (id) {
     case IDC_COPY_CLEAN_LINK: {
       GURL link_url = params_.link_url;
@@ -200,7 +200,7 @@ void BraveRenderViewContextMenu::ExecuteCommand(int id, int event_flags) {
 }
 
 #if BUILDFLAG(ENABLE_TEXT_RECOGNITION)
-void BraveRenderViewContextMenu::CopyTextFromImage() {
+void RenderViewContextMenu::CopyTextFromImage() {
   RenderFrameHost* frame_host = GetRenderFrameHost();
   if (frame_host) {
     frame_host->GetImageAt(params_.x, params_.y,
@@ -210,7 +210,7 @@ void BraveRenderViewContextMenu::CopyTextFromImage() {
 }
 #endif
 
-void BraveRenderViewContextMenu::AddSpellCheckServiceItem(bool is_checked) {
+void RenderViewContextMenu::AddSpellCheckServiceItem(bool is_checked) {
   // Call our implementation, not the one in the base class.
   // Assumption:
   // Use of spelling service is disabled in Brave profile preferences.
@@ -220,18 +220,18 @@ void BraveRenderViewContextMenu::AddSpellCheckServiceItem(bool is_checked) {
 }
 
 // static
-void BraveRenderViewContextMenu::AddSpellCheckServiceItem(
+void RenderViewContextMenu::AddSpellCheckServiceItem(
     ui::SimpleMenuModel* menu,
     bool is_checked) {
   // Suppress adding "Spellcheck->Ask Brave for suggestions" item.
 }
 
-void BraveRenderViewContextMenu::AddAccessibilityLabelsServiceItem(
+void RenderViewContextMenu::AddAccessibilityLabelsServiceItem(
     bool is_checked) {
   // Suppress adding "Get image descriptions from Brave"
 }
 
-void BraveRenderViewContextMenu::InitMenu() {
+void RenderViewContextMenu::InitMenu() {
   RenderViewContextMenu_Chromium::InitMenu();
 
   std::optional<size_t> index = menu_model_.GetIndexOfCommandId(
@@ -280,7 +280,7 @@ void BraveRenderViewContextMenu::InitMenu() {
   }
 }
 
-void BraveRenderViewContextMenu::NotifyMenuShown() {
+void RenderViewContextMenu::NotifyMenuShown() {
   auto* cb = BraveGetMenuShownCallback();
   if (!cb->is_null()) {
     std::move(*cb).Run(this);

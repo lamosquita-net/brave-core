@@ -58,9 +58,9 @@ std::unique_ptr<KeyedService> BuildProtocolHandlerRegistry(
 
 }  // namespace
 
-class BraveRenderViewContextMenuMock : public BraveRenderViewContextMenu {
+class BraveRenderViewContextMenuMock : public RenderViewContextMenu {
  public:
-  using BraveRenderViewContextMenu::BraveRenderViewContextMenu;
+  using RenderViewContextMenu::RenderViewContextMenu;
 
   void Show() override {}
 
@@ -70,7 +70,7 @@ class BraveRenderViewContextMenuMock : public BraveRenderViewContextMenu {
     if (browser_) {
       return browser_;
     }
-    return BraveRenderViewContextMenu::GetBrowser();
+    return RenderViewContextMenu::GetBrowser();
   }
 
  private:
