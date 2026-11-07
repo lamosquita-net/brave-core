@@ -5,6 +5,9 @@
 
 #include "content/browser/renderer_host/render_frame_host_impl.h"
 
+#include "base/check.h"
+#include "base/logging.h"
+
 #define BRAVE_RENDER_FRAME_HOST_IMPL_COMPUTE_ISOLATION_INFO_INTERNAL \
   SetEphemeralStorageToken(top_frame_origin);
 
@@ -16,8 +19,11 @@
 #define BRAVE_RENDER_FRAME_HOST_IMPL_CREATE_NEW_WINDOW \
   params->no_javascript_access = no_javascript_access;
 
+#define BindTrustTokenQueryAnswerer BindTrustTokenQueryAnswerer_ChromiumImpl
+
 #include "src/content/browser/renderer_host/render_frame_host_impl.cc"
 
+#undef BindTrustTokenQueryAnswerer
 #undef BRAVE_RENDER_FRAME_HOST_IMPL_CREATE_NEW_WINDOW
 #undef BRAVE_RENDER_FRAME_HOST_IMPL_COMPUTE_ISOLATION_INFO_INTERNAL
 #undef BRAVE_RENDER_FRAME_HOST_IMPL_COMPUTE_NONCE
@@ -61,6 +67,14 @@ RenderFrameHostImpl::GetEphemeralStorageToken() const {
       << "RenderFrameHostImpl::SetEphemeralStorageToken wasn't called for the "
          "main frame";
   return main_rfh->ephemeral_storage_token_;
+}
+
+void RenderFrameHostImpl::BindTrustTokenQueryAnswerer(
+    mojo::PendingReceiver<network::mojom::TrustTokenQueryAnswerer> receiver) {
+  mojo::ReportBadMessage(
+      "Attempted to get a TrustTokenQueryAnswerer with Private State Tokens "
+      "disabled.");
+  return;
 }
 
 }  // namespace content
