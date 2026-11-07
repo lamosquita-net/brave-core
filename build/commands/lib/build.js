@@ -30,7 +30,7 @@ const build = async (buildConfig = config.defaultBuildConfig, options = {}) => {
 
   util.touchOverriddenFiles()
   util.updateBranding()
-  await util.buildNativeRedirectCC()
+  util.hardlinkSisoConfig()
 
   if (options.prepare_only) {
     return
