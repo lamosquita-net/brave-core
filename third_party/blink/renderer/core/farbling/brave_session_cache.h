@@ -9,6 +9,7 @@
 #include <optional>
 #include <string>
 
+#include "base/containers/span.h"
 #include "brave/third_party/blink/renderer/brave_farbling_constants.h"
 #include "brave/third_party/blink/renderer/platform/brave_audio_farbling_helper.h"
 #include "components/content_settings/core/common/content_settings_types.h"
@@ -81,7 +82,7 @@ class CORE_EXPORT BraveSessionCache final
 
   BraveFarblingLevel GetBraveFarblingLevel(
       ContentSettingsType webcompat_settings_type);
-  void FarbleAudioChannel(float* dst, size_t count);
+  void FarbleAudioChannel(base::span<float> dst);
   // |bytes_per_channel| is 1 for 8-bit RGBA, 2 for half float (F16) and 4 for
   // float (F32) pixels.
   void PerturbPixels(const unsigned char* data,

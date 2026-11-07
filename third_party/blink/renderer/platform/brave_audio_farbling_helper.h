@@ -9,6 +9,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "base/containers/span.h"
+#include "third_party/blink/renderer/platform/audio/audio_array.h"
 #include "third_party/blink/renderer/platform/platform_export.h"
 
 namespace blink {
@@ -18,26 +20,26 @@ class PLATFORM_EXPORT BraveAudioFarblingHelper final {
   BraveAudioFarblingHelper(double fudge_factor, uint64_t seed, bool max);
   ~BraveAudioFarblingHelper();
 
-  void FarbleAudioChannel(float* dst, size_t count) const;
-  void FarbleFloatTimeDomainData(const float* input_buffer,
-                                 float* destination,
+  void FarbleAudioChannel(base::span<float> dst) const;
+  void FarbleFloatTimeDomainData(const AudioFloatArray& input_buffer,
+                                 base::span<float>& destination,
                                  size_t len,
                                  unsigned write_index,
                                  unsigned fft_size,
                                  unsigned input_buffer_size) const;
-  void FarbleByteTimeDomainData(const float* input_buffer,
-                                unsigned char* destination,
+  void FarbleByteTimeDomainData(const AudioFloatArray& input_buffer,
+                                base::span<unsigned char>& destination,
                                 size_t len,
                                 unsigned write_index,
                                 unsigned fft_size,
                                 unsigned input_buffer_size) const;
-  void FarbleConvertToByteData(const float* source,
-                               unsigned char* destination,
+  void FarbleConvertToByteData(const AudioFloatArray& source,
+                               base::span<unsigned char>& destination,
                                size_t len,
                                double min_decibels,
                                double range_scale_factor) const;
-  void FarbleConvertFloatToDb(const float* source,
-                              float* destination,
+  void FarbleConvertFloatToDb(const AudioFloatArray& source,
+                              base::span<float>& destination,
                               size_t len) const;
 
  private:

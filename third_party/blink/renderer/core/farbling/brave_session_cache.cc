@@ -343,9 +343,10 @@ void BraveSessionCache::Init() {
   RegisterAllowFontFamilyCallback(base::BindRepeating(&brave::AllowFontFamily));
 }
 
-void BraveSessionCache::FarbleAudioChannel(float* dst, size_t count) {
-  if (audio_farbling_helper_)
-    audio_farbling_helper_->FarbleAudioChannel(dst, count);
+void BraveSessionCache::FarbleAudioChannel(base::span<float> dst) {
+  if (audio_farbling_helper_) {
+    audio_farbling_helper_->FarbleAudioChannel(dst);
+  }
 }
 
 void BraveSessionCache::PerturbPixels(const unsigned char* data,

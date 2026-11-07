@@ -7,6 +7,7 @@
 
 #include <limits.h>
 
+#include "base/compiler_specific.h"
 #include "third_party/blink/renderer/platform/audio/audio_utilities.h"
 
 namespace blink {
@@ -28,25 +29,24 @@ BraveAudioFarblingHelper::BraveAudioFarblingHelper(double fudge_factor,
 
 BraveAudioFarblingHelper::~BraveAudioFarblingHelper() = default;
 
-void BraveAudioFarblingHelper::FarbleAudioChannel(float* dst,
-                                                  size_t count) const {
+void BraveAudioFarblingHelper::FarbleAudioChannel(base::span<float> dst) const {
   if (max_) {
     uint64_t v = seed_;
-    for (size_t i = 0; i < count; i++) {
+    for (auto& value : dst) {
       v = lfsr_next(v);
-      dst[i] = (v / maxUInt64AsDouble) / 10;
+      value = (v / maxUInt64AsDouble) / 10;
     }
   } else {
-    for (size_t i = 0; i < count; i++) {
-      dst[i] = dst[i] * fudge_factor_;
+    for (auto& value : dst) {
+      value = value * fudge_factor_;
     }
   }
 }
 
 // Calculate values for RealtimeAnalyser::GetFloatTimeDomainData
 void BraveAudioFarblingHelper::FarbleFloatTimeDomainData(
-    const float* input_buffer,
-    float* destination,
+    const AudioFloatArray& input_buffer,
+    base::span<float>& destination,
     size_t len,
     unsigned write_index,
     unsigned fft_size,
@@ -73,8 +73,8 @@ void BraveAudioFarblingHelper::FarbleFloatTimeDomainData(
 
 // Calculate values for RealtimeAnalyser::GetByteTimeDomainData
 void BraveAudioFarblingHelper::FarbleByteTimeDomainData(
-    const float* input_buffer,
-    unsigned char* destination,
+    const AudioFloatArray& input_buffer,
+    base::span<unsigned char>& destination,
     size_t len,
     unsigned write_index,
     unsigned fft_size,
@@ -124,8 +124,8 @@ void BraveAudioFarblingHelper::FarbleByteTimeDomainData(
 
 // Calculate values for RealtimeAnalyser::ConvertToByteData
 void BraveAudioFarblingHelper::FarbleConvertToByteData(
-    const float* source,
-    unsigned char* destination,
+    const AudioFloatArray& source,
+    base::span<unsigned char>& destination,
     size_t len,
     double min_decibels,
     double range_scale_factor) const {
@@ -175,9 +175,10 @@ void BraveAudioFarblingHelper::FarbleConvertToByteData(
 }
 
 // Calculate values for RealtimeAnalyser::ConvertFloatToDb
-void BraveAudioFarblingHelper::FarbleConvertFloatToDb(const float* source,
-                                                      float* destination,
-                                                      size_t len) const {
+void BraveAudioFarblingHelper::FarbleConvertFloatToDb(
+    const AudioFloatArray& source,
+    base::span<float>& destination,
+    size_t len) const {
   if (max_) {
     uint64_t v = seed_;
     for (size_t i = 0; i < len; ++i) {
