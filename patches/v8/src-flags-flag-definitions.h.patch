@@ -1,8 +1,8 @@
 diff --git a/src/flags/flag-definitions.h b/src/flags/flag-definitions.h
-index a1902cc69a46f2cc6c507e637c53d548c3c66d12..1bf8e2ca46523c876410ab922fffe2649a3cd0e2 100644
+index 528cf0e9c059e9be7c000eb4c655961311d79c8f..232218359cfc863fb3a98e05baa396b6a8e5c65f 100644
 --- a/src/flags/flag-definitions.h
 +++ b/src/flags/flag-definitions.h
-@@ -538,7 +538,9 @@ DEFINE_BOOL(force_emit_interrupt_budget_checks, false,
+@@ -516,7 +516,9 @@ DEFINE_BOOL(force_emit_interrupt_budget_checks, false,
              "force emit tier-up logic from all non-turbofan code, even if it "
              "is the top enabled tier")
  #ifdef V8_ENABLE_MAGLEV
@@ -13,13 +13,13 @@ index a1902cc69a46f2cc6c507e637c53d548c3c66d12..1bf8e2ca46523c876410ab922fffe264
  #if !ENABLE_MAGLEV
  // Enable Maglev on Future for platforms in which it's not enabled by default
  // (eg, Android).
-@@ -631,7 +633,8 @@ DEFINE_WEAK_VALUE_IMPLICATION(turbofan,
- DEFINE_WEAK_VALUE_IMPLICATION(turbofan, min_maglev_inlining_frequency, 0.95)
+@@ -658,7 +660,8 @@ DEFINE_WEAK_VALUE_IMPLICATION(maglev_as_top_tier,
+ 
  DEFINE_BOOL(maglev_reuse_stack_slots, true,
              "reuse stack slots in the maglev optimizing compiler")
 -DEFINE_BOOL(maglev_untagged_phis, true,
 +// FlyWeb: off, as upstream did for CVE-2026-3910 (v8 7076ba1, crbug 491410818).
 +DEFINE_BOOL(maglev_untagged_phis, false,
              "enable phi untagging in the maglev optimizing compiler")
- DEFINE_BOOL(maglev_hoist_osr_value_phi_untagging, true,
-             "enable phi untagging to hoist untagging of osr values")
+ DEFINE_INT(maglev_untagged_phis_bisect_limit, -1,
+            "limit the number of Phis we untag in Maglev phi untagging (-1 for "
