@@ -8,9 +8,33 @@ CVE-2026-121068). On top, from main:
 - **b56fe9b** (568794851, CVE-2026-121228): no switches or jump tables in dead code. Clean. Changes bytecode, so
   **cache epoch 30 -> 31**. Test `regress/regress-568794851.js`.
 - 2481396 (same bug): DCHECK only, not needed in Release.
-- **Not ported, CVE-2026-121082 (567222737):** 1aae39c conflicts in `parser-base.h` (it needs main's
-  ConditionalChain `else_found` and the removal of `ValidateAsExpression`), and 7f9cb9e/87fabc8 belong to the
-  same fix. Left for a separate analysis (3.0.2), not hand-ported into the parser.
+- **CVE-2026-121082 (567222737), branch `seg/3.0.1-parser` only (proposal, on top of `seg/3.0.1`):** the bug
+  is a parser hardening campaign of 20 commits on main (Oct 2026), not 3. None is merged to 15.6. In date order
+  on 15.6.75.50 + b56fe9b, 19 apply clean; 1aae39c needs 48baedfda first ("Disallow conditional chaining after
+  non-short-circuit expressions", no bug of its own) and then applies clean. Total 21 commits, src +194/-158 in
+  6 files (`expression-scope.h`, `parser-base.h`, `parser.{h,cc}`, `preparser.cc`, `scoped-list.h`), 21 new
+  mjsunit tests. The cache epoch stays 31 (the same release bumps it). Upstream order (our cherry-picks):
+  - a15eb890c [parser] Parse dynamic import arguments as AssignmentExpression
+  - 4fd0673c7 [parser] Preserve strict arrow parameter errors across nested parens
+  - a196b18e3 [parser] Validate non-arrow call arguments as expressions
+  - 507386e2a [parser] Parse yield operand as AssignmentExpression
+  - 9eefdd7be [parser] Preserve strict parameter errors when reparsing lazy arrow functions
+  - 13627da01 [parser] Consolidate and remove redundant AcceptINScopes
+  - 647db5d5b [preparser] Validate formal parameters even when body has syntax error
+  - 1ea636d06 [parser] Validate non-pattern sub-expressions in patterns and arrow heads
+  - cf59165c1 [parser] Fix error validation in object rest/spread properties
+  - 7681b4e74 [parser] Report kStrictEvalArguments in destructuring sub-patterns
+  - d59d17acd [parser] Parse bracketed property keys and template spans as expressions
+  - b48bd1f28 [parser] Validate expression before rewriting invalid for-in/of LHS
+  - 667816fb2 [parser] Fix arrow head declaration and pattern error validation
+  - 5c77db809 [parser] Check IsIdentifier for `for (async of ...)` restriction
+  - 638adbc78 [parser] Validate expression errors before rewriting invalid LHS
+  - 7b9c5a37f [parser] Restrict arrow cover-grammar extensions to arrow head scopes
+  - 1573f5126 Reland "[parser] Only classify arrow parameters and set initializers in arrow heads"
+  - 113ade0ab [parser] Preserve first strict parameter and arrow declaration error
+  - 647555485 [parser] Fix spread errors in async() calls inside async arrow params
+  - 92c78618c [parser] Disallow conditional chaining after non-short-circuit expressions
+  - 4002a9df0 [parser] Fix over-marking variables as assigned in ValidatePattern
 
 # FlyWeb: FS.38 (rule 17 of level 137), post-137 V8 fixes on 13.7.152.17
 

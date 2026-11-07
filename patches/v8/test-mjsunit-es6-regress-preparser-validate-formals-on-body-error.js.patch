@@ -1,0 +1,34 @@
+diff --git a/test/mjsunit/es6/regress-preparser-validate-formals-on-body-error.js b/test/mjsunit/es6/regress-preparser-validate-formals-on-body-error.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..a119b1a9b47d18d6831268c366a4fc4e6f59845e
+--- /dev/null
++++ b/test/mjsunit/es6/regress-preparser-validate-formals-on-body-error.js
+@@ -0,0 +1,28 @@
++// Copyright 2026 the V8 project authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++// Lazy functions must validate formal parameters and propagate body strict
++// mode even when the function body has a syntax error, matching eager
++// parsing and reporting the earlier parameter error first.
++
++assertThrows(
++    () => eval('function f(eval) { "use strict"; break; }'),
++    SyntaxError,
++    "Unexpected eval or arguments in strict mode");
++assertThrows(
++    () => eval('function f(a, a) { "use strict"; break; }'),
++    SyntaxError,
++    "Duplicate parameter name not allowed in this context");
++assertThrows(
++    () => eval('function f(eval, a = 1) { "use strict"; }'),
++    SyntaxError,
++    "Unexpected eval or arguments in strict mode");
++assertThrows(
++    () => eval('let f = (eval, a = 1) => { "use strict"; };'),
++    SyntaxError,
++    "Unexpected eval or arguments in strict mode");
++assertThrows(
++    () => eval('let f = (eval) => { "use strict"; break; };'),
++    SyntaxError,
++    "Unexpected eval or arguments in strict mode");
