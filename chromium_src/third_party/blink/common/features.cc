@@ -45,6 +45,11 @@ OVERRIDE_FEATURE_DEFAULT_STATES({{
     {kReduceUserAgentMinorVersion, base::FEATURE_ENABLED_BY_DEFAULT},
     {kTranslationAPI, base::FEATURE_DISABLED_BY_DEFAULT},
     {kUserMediaElement, base::FEATURE_DISABLED_BY_DEFAULT},
+    // FlyWeb 3.0.1 (FS.42): html-in-canvas is experimental upstream (origin
+    // trial HTMLInCanvas, which FlyWeb cannot validate because Brave replaces the
+    // trial public key). Keep it off even with the experimental web platform
+    // features flag: its CVE-2026-121038/-121052/-121123 fixes are not ported.
+    {kCanvasDrawElement, base::FEATURE_DISABLED_BY_DEFAULT},
 }});
 
 BASE_FEATURE(kFileSystemAccessAPI,

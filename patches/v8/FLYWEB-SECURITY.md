@@ -1,3 +1,17 @@
+# FlyWeb: 3.0.1 (FS.42), post-156.0.8078.90 V8 fixes on 15.6.75.50
+
+SEGURIDAD-PORTES-19, 07-11-2026 (brave-core `seg/3.0.1` on `nube/b2-porte-t11` bf4262a094). Base: V8 6500240d22 =
+15.6.75.50, the `v8_revision` of Chrome 156.0.8078.96 (the DEPS roll lives in the Chromium series,
+`FlyWeb/seguridad/3.0.1/` in softmac). The 14 `[M156]` merges after .90 come with the roll (5efaafc =
+CVE-2026-121068). On top, from main:
+
+- **b56fe9b** (568794851, CVE-2026-121228): no switches or jump tables in dead code. Clean. Changes bytecode, so
+  **cache epoch 30 -> 31**. Test `regress/regress-568794851.js`.
+- 2481396 (same bug): DCHECK only, not needed in Release.
+- **Not ported, CVE-2026-121082 (567222737):** 1aae39c conflicts in `parser-base.h` (it needs main's
+  ConditionalChain `else_found` and the removal of `ValidateAsExpression`), and 7f9cb9e/87fabc8 belong to the
+  same fix. Left for a separate analysis (3.0.2), not hand-ported into the parser.
+
 # FlyWeb: FS.38 (rule 17 of level 137), post-137 V8 fixes on 13.7.152.17
 
 SEGURIDAD-PORTES-15, 30-10-2026 (brave-core `seg/fs38-v8` on `nube/motor-137` 78237a70). Base: 13.7.152.17 + the 240

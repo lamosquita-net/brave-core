@@ -1,0 +1,14 @@
+diff --git a/src/interpreter/bytecode-array-writer.cc b/src/interpreter/bytecode-array-writer.cc
+index e9b93787ad74576421cf46dfc2a9d21293000941..de8f1b2c499557d2bf1610df85e5fc199e152c35 100644
+--- a/src/interpreter/bytecode-array-writer.cc
++++ b/src/interpreter/bytecode-array-writer.cc
+@@ -170,8 +170,8 @@ void BytecodeArrayWriter::WriteJumpLoop(BytecodeNode* node,
+ void BytecodeArrayWriter::WriteSwitch(BytecodeNode* node,
+                                       BytecodeJumpTable* jump_table) {
+   DCHECK(Bytecodes::IsSwitch(node->bytecode()));
++  CHECK(!exit_seen_in_block_);
+ 
+-  if (exit_seen_in_block_) return;  // Don't emit dead code.
+   UpdateExitSeenInBlock(node->bytecode());
+   MaybeElideLastBytecode(node->bytecode(), node->source_info().is_valid());
+ 
