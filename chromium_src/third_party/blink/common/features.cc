@@ -21,6 +21,30 @@ OVERRIDE_FEATURE_DEFAULT_STATES({{
     {kFencedFrames, base::FEATURE_DISABLED_BY_DEFAULT},
     // As 1.98: no eager viewport-based preloading (already off on desktop).
     {kPreloadingEagerViewportHeuristics, base::FEATURE_DISABLED_BY_DEFAULT},
+
+    // FlyWeb: Blink runtime features Brave 1.98 ships off (its plaster
+    // rewrite of runtime_enabled_features.json5). On 156 the generated
+    // UpdateStatusFromBaseFeatures() copies a disabled base::Feature to a
+    // "stable" Blink feature only when the feature counts as overridden;
+    // base_feature_status in the json5 patch alone is not, and these listed
+    // here are (//brave/chromium_src/base/feature_list.cc).
+    {kAdInterestGroupAPI, base::FEATURE_DISABLED_BY_DEFAULT},
+    {kAIPromptAPI, base::FEATURE_DISABLED_BY_DEFAULT},
+    {kAIPromptAPIMultimodalInput, base::FEATURE_DISABLED_BY_DEFAULT},
+    {kAIProofreadingAPI, base::FEATURE_DISABLED_BY_DEFAULT},
+    {kAIRewriterAPI, base::FEATURE_DISABLED_BY_DEFAULT},
+    {kAISummarizationAPI, base::FEATURE_DISABLED_BY_DEFAULT},
+    {kAIWriterAPI, base::FEATURE_DISABLED_BY_DEFAULT},
+    {kControlledFrame, base::FEATURE_DISABLED_BY_DEFAULT},
+    {kExtensionScriptTagging, base::FEATURE_DISABLED_BY_DEFAULT},
+    {kFencedFramesRuntime, base::FEATURE_DISABLED_BY_DEFAULT},
+    {kFledge, base::FEATURE_DISABLED_BY_DEFAULT},
+    {kLanguageDetectionAPI, base::FEATURE_DISABLED_BY_DEFAULT},
+    {kParakeet, base::FEATURE_DISABLED_BY_DEFAULT},
+    {kPrerender2, base::FEATURE_DISABLED_BY_DEFAULT},
+    {kReduceUserAgentMinorVersion, base::FEATURE_ENABLED_BY_DEFAULT},
+    {kTranslationAPI, base::FEATURE_DISABLED_BY_DEFAULT},
+    {kUserMediaElement, base::FEATURE_DISABLED_BY_DEFAULT},
 }});
 
 BASE_FEATURE(kFileSystemAccessAPI,
