@@ -5,6 +5,7 @@
 
 #include "brave/app/brave_command_ids.h"
 #include "brave/grit/brave_generated_resources.h"
+#include "chrome/app/chrome_command_ids.h"
 #include "chrome/grit/generated_resources.h"
 #include "components/dom_distiller/core/dom_distiller_features.h"
 #include "components/grit/brave_components_strings.h"
@@ -14,14 +15,18 @@ constexpr int kPasteMacResourceId = IDS_PASTE_MAC;
 constexpr int kMuteSiteResourceId = IDS_MUTE_SITE_MAC;
 constexpr int kCloseOtherTabsResourceId = IDS_TAB_CXMENU_CLOSEOTHERTABS;
 constexpr int kHelpMacResourceId = IDS_HELP_MAC;
+constexpr int kShowGoogleLensShortcut = IDC_SHOW_GOOGLE_LENS_SHORTCUT;
+constexpr int kShowAIModeOmniboxButton = IDC_SHOW_AI_MODE_OMNIBOX_BUTTON;
+constexpr int kShowSearchTools = IDC_SHOW_SEARCH_TOOLS;
 }  // namespace
 
-// Insert "Report Broken Site" in "Help" menu
+// Insert "Report Broken Site" in "Help" menu. In 156 the Help items are
+// added one by one with items.push_back(), as 1.98 handles it.
 #undef IDS_HELP_MAC
-#define IDS_HELP_MAC                                    \
-  IDS_REPORT_BROKEN_SITE_MAC)                           \
-        .command_id(IDC_SHOW_BRAVE_WEBCOMPAT_REPORTER), \
-  Item(kHelpMacResourceId
+#define IDS_HELP_MAC                                     \
+  IDS_REPORT_BROKEN_SITE_MAC)                            \
+        .command_id(IDC_SHOW_BRAVE_WEBCOMPAT_REPORTER)); \
+  items.push_back(Item(kHelpMacResourceId
 
 #undef IDS_PASTE_MAC
 #define IDS_PASTE_MAC IDS_COPY_CLEAN_LINK) \
@@ -39,7 +44,23 @@ IDS_MUTE_TAB_MAC).command_id(IDC_TOGGLE_TAB_MUTE), \
 IDS_TAB_CXMENU_CLOSE_DUPLICATE_TABS).command_id(IDC_CLOSE_DUPLICATE_TABS), \
               Item(kCloseOtherTabsResourceId
 
+// Remove "Always Show Google Lens Shortcut", "Always Show AI Mode" and "Show
+// Search Shortcuts" (Google features), as 1.98.
+#undef IDC_SHOW_GOOGLE_LENS_SHORTCUT
+#define IDC_SHOW_GOOGLE_LENS_SHORTCUT \
+  kShowGoogleLensShortcut).remove_if(true
+#undef IDC_SHOW_AI_MODE_OMNIBOX_BUTTON
+#define IDC_SHOW_AI_MODE_OMNIBOX_BUTTON \
+  kShowAIModeOmniboxButton).remove_if(true
+#undef IDC_SHOW_SEARCH_TOOLS
+#define IDC_SHOW_SEARCH_TOOLS \
+  kShowSearchTools).remove_if(true
+
 #include "src/chrome/browser/ui/cocoa/main_menu_builder.mm"
+
+#undef IDC_SHOW_SEARCH_TOOLS
+#undef IDC_SHOW_AI_MODE_OMNIBOX_BUTTON
+#undef IDC_SHOW_GOOGLE_LENS_SHORTCUT
 
 #undef IDS_MUTE_SITE_MAC
 #define IDS_MUTE_SITE_MAC kMuteSiteResourceId
