@@ -75,18 +75,34 @@ class NoOverridesException(Exception):
 
 @override_utils.override_function(globals())
 def main(original_function, argv):
+    # FlyWeb: the GN template (tools-grit-preprocess_if_expr.gni.patch) passes
+    # --brave-depfile so that ninja reruns this action when a chromium_src
+    # override changes. 1.98 relies on its siso handler for that; FlyWeb builds
+    # with ninja. Strip it before upstream's argparse sees it.
+    depfile = None
+    if '--brave-depfile' in argv:
+        i = argv.index('--brave-depfile')
+        depfile = argv[i + 1]
+        argv = argv[:i] + argv[i + 2:]
+
     # Run the preprocessor as normal, to preprocess the upstream files.
     original_function(argv)
 
     manifest_data = {}
     manifest_path = None
+    depfile_output = None
+    depfile_inputs = []
 
     # When we rerun the processor, we detect files which should be overridden.
     @override_utils.override_method(argparse.ArgumentParser)
     # pylint: disable=unused-variable
     def parse_args(self, original_method, argv):
-        nonlocal manifest_path, manifest_data
+        nonlocal manifest_path, manifest_data, depfile_output, depfile_inputs
         args = original_method(self, argv)
+        if args.in_files:
+            # First output of the GN action, relative to the build directory.
+            depfile_output = os.path.normpath(
+                os.path.join(args.out_folder, args.in_files[0]))
 
         cwd = os.getcwd()
         out_folder = os.path.normpath(os.path.join(cwd, args.out_folder))
@@ -102,6 +118,10 @@ def main(original_function, argv):
 
         override_root_folder = brave_chromium_utils.get_chromium_src_override(
             in_folder)
+        depfile_inputs = [
+            os.path.relpath(os.path.join(override_root_folder, f), cwd)
+            for f in overrides
+        ]
 
         if args.out_manifest:
             manifest_path = os.path.join(cwd, args.out_manifest)
@@ -131,3 +151,9 @@ def main(original_function, argv):
     except NoOverridesException:
         # we throw an exception when there are no overrides, so we don't reparse
         pass
+
+    if depfile and depfile_output:
+        with open(depfile, 'w', encoding='utf-8', newline='\n') as f:
+            f.write(depfile_output.replace(' ', '\\ ') + ': ' +
+                    ' '.join(i.replace(' ', '\\ ')
+                             for i in depfile_inputs) + '\n')

@@ -1,0 +1,18 @@
+diff --git a/tools/grit/preprocess_if_expr.gni b/tools/grit/preprocess_if_expr.gni
+index e3eb9942d9959a9942cb1ad79e5df526fd2c933d..27d184450960fe79d812437777414f59be722e42 100644
+--- a/tools/grit/preprocess_if_expr.gni
++++ b/tools/grit/preprocess_if_expr.gni
+@@ -71,5 +71,13 @@ template("preprocess_if_expr") {
+         invoker.enable_removal_comments) {
+       args += [ "--enable_removal_comments" ]
+     }
++
++    # Brave (FlyWeb): rerun when a //brave/chromium_src override of an input
++    # changes; the override script lists them in this depfile.
++    depfile = "$target_gen_dir/$target_name.d"
++    args += [
++      "--brave-depfile",
++      rebase_path(depfile, root_build_dir),
++    ]
+   }
+ }
