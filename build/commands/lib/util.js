@@ -673,6 +673,15 @@ const util = {
       reclient_bin_dir: config.realRewrapperDir,
       real_rewrapper: path.join(config.realRewrapperDir, 'rewrapper'),
     }
+    if (config.getTargetOS() === 'mac') {
+      // FlyWeb: same macOS target as the main build (10.14, from build.sh's
+      // --gn args), or //base's deprecation warnings (launch_application.mm)
+      // break redirect_cc under -Werror.
+      buildArgs.mac_deployment_target =
+        config.extraGnArgs.mac_deployment_target || '10.14'
+      buildArgs.mac_min_system_version =
+        config.extraGnArgs.mac_min_system_version || '10.14'
+    }
 
     util.runGnGen(config.nativeRedirectCCDir, buildArgs)
     await util.buildTargets(['brave/tools/redirect_cc'], mergeWithDefault({outputDir: config.nativeRedirectCCDir}))
