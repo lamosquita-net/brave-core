@@ -1,101 +1,16 @@
 diff --git a/content/browser/renderer_host/render_frame_host_impl.cc b/content/browser/renderer_host/render_frame_host_impl.cc
-index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..5b5699e6fa55276fcd513124019300a550bd1376 100644
+index 410948963a049c056bc605867a9fa5866347c435..5d045a3a28a619a61e149c47af09abf38fe889e5 100644
 --- a/content/browser/renderer_host/render_frame_host_impl.cc
 +++ b/content/browser/renderer_host/render_frame_host_impl.cc
-@@ -9,6 +9,7 @@
- #include <limits>
- #include <memory>
- #include <optional>
-+#include <set>
- #include <string_view>
- #include <tuple>
- #include <unordered_map>
-@@ -250,6 +251,7 @@
- #include "third_party/blink/public/common/messaging/transferable_message.h"
- #include "third_party/blink/public/common/navigation/navigation_params_mojom_traits.h"
- #include "third_party/blink/public/common/page/browsing_context_group_info.h"
-+#include "third_party/blink/public/common/page_state/page_state_serialization.h"
- #include "third_party/blink/public/common/permissions/permission_utils.h"
- #include "third_party/blink/public/common/permissions_policy/document_policy.h"
- #include "third_party/blink/public/common/permissions_policy/permissions_policy.h"
-@@ -736,6 +738,20 @@ DetermineAfterCommitWhetherToForbidTrustTokenOperation(
-   return network::mojom::TrustTokenOperationPolicyVerdict::kForbid;
- }
- 
-+bool IsOriginSandboxedWithAllowSameSiteNoneCookiesValue(
-+    network::mojom::WebSandboxFlags sandbox_flags) {
-+  if (sandbox_flags == network::mojom::WebSandboxFlags::kNone) {
-+    return false;
-+  }
-+  if ((sandbox_flags & network::mojom::WebSandboxFlags::kOrigin) ==
-+      network::mojom::WebSandboxFlags::kNone) {
-+    return false;
-+  }
-+  return (sandbox_flags &
-+          network::mojom::WebSandboxFlags::kAllowSameSiteNoneCookies) ==
-+         network::mojom::WebSandboxFlags::kNone;
-+}
-+
- // Verify that |browser_side_origin| and |renderer_side_origin| match.  See also
- // https://crbug.com/888079.
- void VerifyThatBrowserAndRendererCalculatedOriginsToCommitMatch(
-@@ -1456,6 +1472,17 @@ class RenderFrameHostImpl::SubresourceLoaderFactoriesConfig {
-             ? ukm::kInvalidSourceId
-             : frame.GetPageUkmSourceId());
- 
-+    // Determine if the frame's sandboxing policy contains the
-+    // `allow-same-site-none-cookies` value and a CookieSettingOverride should
-+    // be applied so SameSite=None cookies are included in requests from this
-+    // context. See
-+    // https://github.com/explainers-by-googlers/csp-sandbox-allow-same-site-none-cookies
-+    if (IsOriginSandboxedWithAllowSameSiteNoneCookiesValue(
-+            frame.active_sandbox_flags()) &&
-+        frame.AncestorsAllowSameSiteNoneCookiesOverride(result.origin())) {
-+      result.cookie_setting_overrides_.Put(
-+          net::CookieSettingOverride::kAllowSameSiteNoneCookiesInSandbox);
-+    }
-     return result;
-   }
- 
-@@ -1497,6 +1524,20 @@ class RenderFrameHostImpl::SubresourceLoaderFactoriesConfig {
-               navigation_request.GetRenderFrameHost(),
-               navigation_request.commit_params(), result.origin(),
-               network::mojom::TrustTokenOperationType::kIssuance);
-+
-+      // Determine if the frame's sandboxing policy contains the
-+      // `allow-same-site-none-cookies` value and a CookieSettingOverride should
-+      // be applied so SameSite=None cookies are included in requests from this
-+      // context. See
-+      // https://github.com/explainers-by-googlers/csp-sandbox-allow-same-site-none-cookies
-+      if (!navigation_request.IsSameDocument() &&
-+          IsOriginSandboxedWithAllowSameSiteNoneCookiesValue(
-+              navigation_request.SandboxFlagsToCommit()) &&
-+          navigation_request.GetRenderFrameHost()
-+              ->AncestorsAllowSameSiteNoneCookiesOverride(result.origin())) {
-+        result.cookie_setting_overrides_.Put(
-+            net::CookieSettingOverride::kAllowSameSiteNoneCookiesInSandbox);
-+      }
-     }
- 
-     return result;
-@@ -3411,6 +3452,8 @@ void RenderFrameHostImpl::InitializePolicyContainerHost(
-             parent_policies.cross_origin_opener_policy,
-             parent_policies.cross_origin_embedder_policy,
-             parent_policies.document_isolation_policy,
-+            parent_policies.integrity_policy,
-+            parent_policies.integrity_policy_report_only,
-             network::mojom::WebSandboxFlags::kNone,
-             /*is_credentialless=*/false,
-             /*can_navigate_top_without_user_gesture=*/true,
-@@ -4584,6 +4627,7 @@ net::IsolationInfo RenderFrameHostImpl::ComputeIsolationInfoInternal(
+@@ -5673,6 +5673,7 @@ net::IsolationInfo RenderFrameHostImpl::ComputeIsolationInfoInternal(
      candidate_site_for_cookies = net::SiteForCookies(top_frame_site);
    }
  
 +  BRAVE_RENDER_FRAME_HOST_IMPL_COMPUTE_ISOLATION_INFO_INTERNAL
    std::optional<base::UnguessableToken> nonce =
        ComputeNonce(is_credentialless, fenced_frame_nonce_for_navigation);
-   return net::IsolationInfo::Create(request_type, top_frame_origin,
-@@ -4594,6 +4638,7 @@ net::IsolationInfo RenderFrameHostImpl::ComputeIsolationInfoInternal(
+   return net::IsolationInfo::Create(
+@@ -5684,6 +5685,7 @@ net::IsolationInfo RenderFrameHostImpl::ComputeIsolationInfoInternal(
  std::optional<base::UnguessableToken> RenderFrameHostImpl::ComputeNonce(
      bool is_credentialless,
      std::optional<base::UnguessableToken> fenced_frame_nonce_for_navigation) {
@@ -103,166 +18,11 @@ index 83f9f7bc9ece3f3c1c4b21287881470fe188fe8b..5b5699e6fa55276fcd513124019300a5
    // If it's a credentialless frame tree, use its nonce even if it's within a
    // fenced frame tree to maintain the guarantee that a credentialless frame
    // tree has a unique nonce.
-@@ -5356,8 +5401,14 @@ void RenderFrameHostImpl::DidCommitPageActivation(
-   });
- #endif
- 
-+  // FlyWeb (FS.39, upstream 8ed77b6a0d7): this RFH may be deleted after
-+  // DidCommitNavigationInternal due to a nested message loop.
-+  base::WeakPtr<RenderFrameHostImpl> weak_ptr = GetWeakPtr();
-   DidCommitNavigationInternal(std::move(owned_request), std::move(params),
-                               /*same_document_params=*/nullptr);
-+  if (!weak_ptr) {
-+    return;
-+  }
- 
-   // If any load events occurred pre-activation and were deferred until
-   // activation, dispatch them now. This must happen before DidStopLoading() is
-@@ -6017,6 +6068,29 @@ void RenderFrameHostImpl::SetSubframeUnloadTimeoutForTesting(
-   subframe_unload_timeout_ = timeout;
- }
- 
-+bool RenderFrameHostImpl::AncestorsAllowSameSiteNoneCookiesOverride(
-+    const url::Origin& frame_origin) const {
-+  // Use precursor for cases where the current or parent frames are sandboxed
-+  // and have an opaque origin.
-+  const url::SchemeHostPort scheme_host_port =
-+      frame_origin.GetTupleOrPrecursorTupleIfOpaque();
-+
-+  // Use |parent_| (not `GetParentOrOuterDocument()`) when checking ancestor
-+  // frames are same-site since the `allow-same-site-none-cookies` value is
-+  // disallowed in Fenced Frame contexts.
-+  for (const RenderFrameHostImpl* frame = parent_; frame;
-+       frame = frame->parent_) {
-+    url::SchemeHostPort parent_scheme_host_port =
-+        frame->last_committed_origin_.GetTupleOrPrecursorTupleIfOpaque();
-+    if ((scheme_host_port != parent_scheme_host_port) ||
-+        (net::SchemefulSite(scheme_host_port.GetURL()) !=
-+         net::SchemefulSite(parent_scheme_host_port.GetURL()))) {
-+      return false;
-+    }
-+  }
-+  return true;
-+}
-+
- #if BUILDFLAG(IS_ANDROID)
- void RenderFrameHostImpl::RequestSmartClipExtract(
-     ExtractSmartClipDataCallback callback,
-@@ -8785,6 +8859,13 @@ void RenderFrameHostImpl::CreateNewWindow(
-   TRACE_EVENT2("navigation", "RenderFrameHostImpl::CreateNewWindow",
-                "render_frame_host", this, "url", params->target_url);
- 
-+  // FlyWeb (FS.39, upstream eb3896190a2, crbug.com/487768779): the renderer
-+  // must be able to read the files in the form submission body.
-+  if (!VerifyCreateNewWindowParams(*this, *params)) {
-+    std::move(callback).Run(mojom::CreateNewWindowStatus::kBlocked, nullptr);
-+    return;
-+  }
-+
-   // Only top-most frames can open picture-in-picture windows.
-   if (params->disposition == WindowOpenDisposition::NEW_PICTURE_IN_PICTURE &&
-       GetParentOrOuterDocumentOrEmbedder()) {
-@@ -8881,6 +8962,8 @@ void RenderFrameHostImpl::CreateNewWindow(
+@@ -10695,6 +10697,7 @@ void RenderFrameHostImpl::CreateNewWindow(
          dom_storage_context, params->session_storage_namespace_id);
    }
  
-+  params->no_javascript_access = no_javascript_access;
-+
++  BRAVE_RENDER_FRAME_HOST_IMPL_CREATE_NEW_WINDOW
    if (IsCredentialless() || IsNestedWithinFencedFrame() ||
        CoopSuppressOpener(/*opener=*/this)) {
      params->opener_suppressed = true;
-@@ -10406,6 +10489,15 @@ CanCommitStatus RenderFrameHostImpl::CanCommitOriginAndUrl(
-   // (e.g. "http://localhost"). In such cases, don't verify the URL, but require
-   // the URL to commit in the process of the main frame.
-   if (IsMhtmlSubframe()) {
-+    // Documents derived from an MHTML archive are behind sandbox flags, so
-+    // their origin is opaque. The early-return below validates neither URL
-+    // nor origin, so a compromised renderer could otherwise launder an
-+    // arbitrary non-opaque origin past this point via
-+    // DidCommitSameDocumentNavigation (FlyWeb FS.39, upstream 176da1f0c7b).
-+    if (!origin.opaque()) {
-+      LogCanCommitOriginAndUrlFailureReason("mhtml_subframe_non_opaque_origin");
-+      return CanCommitStatus::CANNOT_COMMIT_ORIGIN;
-+    }
-     RenderFrameHostImpl* main_frame = GetMainFrame();
-     if (IsSameSiteInstance(main_frame)) {
-       return CanCommitStatus::CAN_COMMIT_ORIGIN_AND_URL;
-@@ -12157,8 +12249,29 @@ RenderFrameHostImpl* RenderFrameHostImpl::GetOutermostMainFrame() {
- 
- bool RenderFrameHostImpl::CanAccessFilesOfPageState(
-     const blink::PageState& state) {
-+  // FlyWeb (FS.39): ensure that all of the files in the PageState were
-+  // actually listed in the GetReferencedFiles list, using a set to prune
-+  // duplicates (upstream cf3b685c0d5, crbug.com/487383169).
-+  std::vector<base::FilePath> all_files;
-+  if (!blink::GetAllFilesInPageState(state.ToEncodedData(), &all_files)) {
-+    // All files in the PageState weren't recovered due to parsing failures.
-+    // The renderer should be killed instead of proceeding with a PageState that
-+    // might still contain files that could be used without being validated.
-+    return false;
-+  }
-+  std::vector<base::FilePath> referenced_files = state.GetReferencedFiles();
-+  std::set<base::FilePath> referenced_file_set(referenced_files.begin(),
-+                                               referenced_files.end());
-+  for (const base::FilePath& file : all_files) {
-+    if (!referenced_file_set.contains(file)) {
-+      // Found a file that was not in the list to be validated, so the renderer
-+      // should be killed.
-+      return false;
-+    }
-+  }
-+
-   return ChildProcessSecurityPolicyImpl::GetInstance()->CanReadAllFiles(
--      GetProcess()->GetID(), state.GetReferencedFiles());
-+      GetProcess()->GetID(), referenced_files);
- }
- 
- void RenderFrameHostImpl::GrantFileAccessFromPageState(
-@@ -14310,10 +14423,18 @@ bool RenderFrameHostImpl::DidCommitNavigationInternal(
-   }
- 
-   // TODO(crbug.com/40150370): Do not pass |params| to DidNavigate().
--  NavigationRequest* raw_navigation_request = navigation_request.get();
--  raw_navigation_request->frame_tree_node()->navigator().DidNavigate(
-+  FrameTreeNode* frame_tree_node = navigation_request->frame_tree_node();
-+  base::WeakPtr<RenderFrameHostImpl> weak_ptr = GetWeakPtr();
-+  frame_tree_node->navigator().DidNavigate(
-       this, *params, std::move(navigation_request),
-       is_same_document_navigation);
-+  if (!weak_ptr) {
-+    // This RFH may be deleted after DidNavigate due to a nested message loop
-+    // (FlyWeb FS.39, upstream 8ed77b6a0d7). That occurs before the navigation
-+    // has actually committed, so return false to indicate that the commit did
-+    // not succeed.
-+    return false;
-+  }
- 
-   // Run any deferred shared storage operations from response headers now that
-   // commit has occurred.
-@@ -14961,8 +15082,24 @@ void RenderFrameHostImpl::DidCommitNavigation(
-   // BackForwardCache (see the check IsInactiveAndDisallowActivation in
-   // RFH::DidCommitSameDocumentNavigation() and RFH::BeginNavigation()) so it
-   // isn't possible to get a DidCommitNavigation IPC from the renderer in
--  // kInBackForwardCache state.
--  DCHECK(!IsInBackForwardCache());
-+  // kInBackForwardCache state. Trigger a renderer kill if we receive an
-+  // unexpected DidCommit message (FlyWeb FS.39, upstream 9971d3de459 and
-+  // 0dcb0580163).
-+  if (IsInBackForwardCache()) {
-+    if (render_view_host()->DidReceiveBackForwardCacheAck()) {
-+      bad_message::ReceivedBadMessage(
-+          GetProcess(), bad_message::RFH_DID_COMMIT_NAVIGATION_WHILE_BFCACHED);
-+    } else {
-+      // The renderer might not have realized that it's in BFCache when it sent
-+      // the DidCommitNavigation call, since we haven't received the BFCache
-+      // ACK. In this case, just evict from BFCache instead of killing the
-+      // renderer.
-+      IsInactiveAndDisallowActivation(
-+          DisallowActivationReasonId::kDidCommitNavigation);
-+    }
-+    // Return early in any case.
-+    return;
-+  }
- 
-   std::unique_ptr<NavigationRequest> request;
-   // TODO(crbug.com/40546539): a `committing_navigation_request` is not
