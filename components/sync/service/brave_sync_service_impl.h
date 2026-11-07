@@ -74,6 +74,8 @@ class BraveSyncServiceImpl : public SyncServiceImpl {
     kDecryptFailed = 2,
   };
   base::expected<std::string, GetSeedStatusEnum> GetSeed() const;
+  // FlyWeb: a seed is stored but OSCrypt cannot decrypt it right now.
+  bool SeedFailsToDecrypt() const;
 
   const brave_sync::Prefs& prefs() const { return brave_sync_prefs_; }
   brave_sync::Prefs& prefs() { return brave_sync_prefs_; }

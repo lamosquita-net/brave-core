@@ -198,9 +198,17 @@ bool BraveSyncServiceImpl::IsSetupInProgress() const {
          !user_settings_->IsInitialSyncFeatureSetupComplete();
 }
 
+bool BraveSyncServiceImpl::SeedFailsToDecrypt() const {
+  auto seed = GetSeed();
+  return !seed.has_value() && seed.error() == GetSeedStatusEnum::kDecryptFailed;
+}
+
 void BraveSyncServiceImpl::StopAndClear(ResetEngineReason reset_engine_reason) {
-  if ((!has_encryptor() || is_initializing_) &&
-      reset_engine_reason == ResetEngineReason::kNotSignedIn) {
+  // FlyWeb: also when the seed is there but cannot be decrypted (keychain
+  // locked or not reachable, e.g. a start over SSH): Prefs::Clear() would
+  // wipe a seed that decrypts fine on the next start.
+  if (reset_engine_reason == ResetEngineReason::kNotSignedIn &&
+      (!has_encryptor() || is_initializing_ || SeedFailsToDecrypt())) {
     // kNotSignedIn fires during Initialize() because DeriveSigningKeys() hasn't
     // run yet (desktop: encryptor not ready; Android: encryptor fires
     // synchronously but DeriveSigningKeys() is still in the PostTask queue).
@@ -290,7 +298,12 @@ void BraveSyncServiceImpl::OnBraveSyncPrefsChanged(const std::string& path) {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
   if (path == brave_sync::Prefs::GetSeedPath()) {
     auto seed = GetSeed();
-    CHECK(seed.has_value());
+    // FlyWeb: a seed that cannot be decrypted (no keychain) must not bring the
+    // browser down; sync just stays off until it can.
+    if (!seed.has_value()) {
+      LOG(ERROR) << "Brave Sync: the seed changed but cannot be decrypted";
+      return;
+    }
 
     if (!seed.value().empty()) {
       GetBraveSyncAuthManager()->DeriveSigningKeys(*seed);
