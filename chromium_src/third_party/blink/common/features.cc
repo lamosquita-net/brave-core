@@ -55,6 +55,12 @@ BASE_FEATURE(kBraveRoundTimeStamps,
              "BraveRoundTimeStamps",
              base::FEATURE_ENABLED_BY_DEFAULT);
 
+// Enables protection against WebGL debug info fingerprinting on balanced
+// farbling (as 1.98: off by default, switch in brave://flags).
+BASE_FEATURE(kWebGLBalancedFingerprintingProtection,
+             "WebGLBalancedFingerprintingProtection",
+             base::FEATURE_DISABLED_BY_DEFAULT);
+
 // Enables the Global Privacy Control header and navigator APIs.
 BASE_FEATURE(kBraveGlobalPrivacyControl,
              "BraveGlobalPrivacyControl",
