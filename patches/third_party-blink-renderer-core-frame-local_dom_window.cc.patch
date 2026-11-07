@@ -1,32 +1,8 @@
 diff --git a/third_party/blink/renderer/core/frame/local_dom_window.cc b/third_party/blink/renderer/core/frame/local_dom_window.cc
-index 98896006653dfc7e691f51d5a9934ce7c185e1cc..5d7016a55cc8ed128c9a59a50faba74ea154197f 100644
+index 8285e3768996571cdae7409078a502a8f18bda89..55722cbf31ca471d80675743a19fbd74e34a2c08 100644
 --- a/third_party/blink/renderer/core/frame/local_dom_window.cc
 +++ b/third_party/blink/renderer/core/frame/local_dom_window.cc
-@@ -92,6 +92,7 @@
- #include "third_party/blink/renderer/core/frame/bar_prop.h"
- #include "third_party/blink/renderer/core/frame/csp/content_security_policy.h"
- #include "third_party/blink/renderer/core/frame/document_policy_violation_report_body.h"
-+#include "third_party/blink/renderer/core/frame/dom_viewport.h"
- #include "third_party/blink/renderer/core/frame/dom_visual_viewport.h"
- #include "third_party/blink/renderer/core/frame/event_handler_registry.h"
- #include "third_party/blink/renderer/core/frame/external.h"
-@@ -146,6 +147,7 @@
- #include "third_party/blink/renderer/platform/bindings/exception_messages.h"
- #include "third_party/blink/renderer/platform/bindings/script_state.h"
- #include "third_party/blink/renderer/platform/bindings/source_location.h"
-+#include "third_party/blink/renderer/platform/blob/blob_url.h"
- #include "third_party/blink/renderer/platform/heap/garbage_collected.h"
- #include "third_party/blink/renderer/platform/loader/fetch/resource_fetcher.h"
- #include "third_party/blink/renderer/platform/network/network_state_notifier.h"
-@@ -239,6 +241,7 @@ LocalDOMWindow::LocalDOMWindow(LocalFrame& frame, WindowAgent* agent)
-           *this,
-           *static_cast<LocalWindowProxyManager*>(
-               frame.GetWindowProxyManager()))),
-+      viewport_(MakeGarbageCollected<DOMViewport>(this)),
-       visualViewport_(MakeGarbageCollected<DOMVisualViewport>(this)),
-       should_print_when_finished_loading_(false),
-       input_method_controller_(
-@@ -486,6 +489,7 @@ bool LocalDOMWindow::CanExecuteScripts(
+@@ -497,6 +497,7 @@ bool LocalDOMWindow::CanExecuteScripts(
      return false;
    }
    bool script_enabled = GetFrame()->ScriptEnabled();
@@ -34,39 +10,3 @@ index 98896006653dfc7e691f51d5a9934ce7c185e1cc..5d7016a55cc8ed128c9a59a50faba74e
    if (!script_enabled && reason == kAboutToExecuteScript) {
      WebContentSettingsClient* settings_client =
          GetFrame()->GetContentSettingsClient();
-@@ -1666,6 +1670,10 @@ double LocalDOMWindow::scrollY() const {
-                                              GetFrame()->LayoutZoomFactor());
- }
- 
-+DOMViewport* LocalDOMWindow::viewport() {
-+  return viewport_.Get();
-+}
-+
- DOMVisualViewport* LocalDOMWindow::visualViewport() {
-   return visualViewport_.Get();
- }
-@@ -2243,6 +2251,16 @@ DOMWindow* LocalDOMWindow::open(v8::Isolate* isolate,
-   // In fenced frames, we should always use `noopener`.
-   if (GetFrame()->IsInFencedFrameTree()) {
-     window_features.noopener = true;
-+  } else if (base::FeatureList::IsEnabled(
-+                 features::kEnforceNoopenerOnBlobURLNavigation) &&
-+             completed_url.ProtocolIs("blob")) {
-+    auto blob_url_site =
-+        BlinkSchemefulSite(SecurityOrigin::Create(completed_url));
-+    BlinkSchemefulSite top_level_site =
-+        entered_window->GetStorageKey().GetTopLevelSite();
-+    if (top_level_site != blob_url_site) {
-+      window_features.noopener = true;
-+    }
-   }
- 
-   FrameLoadRequest frame_request(entered_window,
-@@ -2403,6 +2421,7 @@ void LocalDOMWindow::Trace(Visitor* visitor) const {
-   visitor->Trace(custom_elements_);
-   visitor->Trace(external_);
-   visitor->Trace(navigation_);
-+  visitor->Trace(viewport_);
-   visitor->Trace(visualViewport_);
-   visitor->Trace(event_listener_observers_);
-   visitor->Trace(current_event_);
