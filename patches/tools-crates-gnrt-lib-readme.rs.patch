@@ -1,24 +1,26 @@
 diff --git a/tools/crates/gnrt/lib/readme.rs b/tools/crates/gnrt/lib/readme.rs
-index 311f85f64281dffe29c0d0e7501c3096824c6f15..738697d0d9841e0adb80665d332a0682ff1dc1d2 100644
+index d8c24875fe1e2fb86a2da99d8ed5b043766e104e..1bba8fc0a0680c35c5e1dca0cdd83f8c587acdc9 100644
 --- a/tools/crates/gnrt/lib/readme.rs
 +++ b/tools/crates/gnrt/lib/readme.rs
-@@ -193,7 +193,7 @@ pub fn readme_file_from_package<'a>(
+@@ -118,7 +118,8 @@ fn readme_file_from_package<'a>(
+         &crate_vendor_dir,
+         config_license_files,
+         package.license(),
+-    )?;
++    )
++    .unwrap_or_default();
  
- // Allowed licenses, in the format they are specified in Cargo.toml files from
- // crates.io, and the format to write to README.chromium.
--static ALLOWED_LICENSES: [(&str, &str); 20] = [
-+static ALLOWED_LICENSES: [(&str, &str); 24] = [
-     // ("Cargo.toml string", "License for README.chromium")
-     ("Apache-2.0", "Apache 2.0"),
-     ("MIT OR Apache-2.0", "Apache 2.0"),
-@@ -218,6 +218,10 @@ static ALLOWED_LICENSES: [(&str, &str); 20] = [
-         "Apache 2.0 AND Unicode License Agreement - Data Files and Software (2016)",
-     ),
-     ("Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT", "Apache 2.0"),
-+    ("CC0-1.0 OR MIT-0 OR Apache-2.0", "Apache 2.0"),
-+    ("MIT OR Apache-2.0 OR BSD-1-Clause", "Apache 2.0"),
-+    ("BSD-2-Clause", "BSD 2-Clause"),
-+    ("MPL-2.0", "Mozilla Public License 2.0"),
- ];
+     let revision = {
+         if let Ok(file) = std::fs::File::open(
+@@ -284,6 +285,11 @@ enum LicenseKind {
+     /// https://spdx.org/licenses/CC0-1.0.html
+     #[strum(serialize = "CC0-1.0")]
+     CC0_1,
++    #[strum(serialize = "Unicode-DFS-2016")]
++    UnicodeDfs2016,
++
++    #[strum(serialize = "BSD-2-Clause")]
++    BSD2,
+ }
  
- static EXPECTED_LICENSE_FILE: [(&str, &str); 20] = [
+ impl<'a> TryFrom<&'a spdx::LicenseReq> for LicenseKind {
