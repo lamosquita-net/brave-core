@@ -650,19 +650,33 @@ const util = {
     }
   },
 
-  // Same as the hardlink_brave_siso_config hook in DEPS (as Brave 1.98), so
-  // that src/build/config/siso/main.star finds brave_siso_config.star even
-  // when the build was not preceded by gclient runhooks.
-  hardlinkSisoConfig: () => {
-    const src = path.join(config.braveCoreDir, 'build', 'config', 'siso', 'brave_siso_config.star')
-    const dst = path.join(config.srcDir, 'build', 'config', 'siso', 'brave_siso_config.star')
-    if (fs.existsSync(dst)) {
-      if (fs.statSync(dst).ino === fs.statSync(src).ino) {
-        return
-      }
-      fs.unlinkSync(dst)
+  buildNativeRedirectCC: async () => {
+    // Expected path to redirect_cc.
+    const redirectCC = path.join(config.nativeRedirectCCDir, util.appendExeIfWin32('redirect_cc'))
+
+    // Only build if the source has changed.
+    if (fs.existsSync(redirectCC) &&
+        fs.statSync(redirectCC).mtime >=
+        fs.statSync(path.join(config.braveCoreDir, 'tools', 'redirect_cc', 'redirect_cc.cc')).mtime) {
+      return
     }
-    fs.linkSync(src, dst)
+
+    Log.progressStart('build redirect_cc')
+    const buildArgs = {
+      'import("//brave/tools/redirect_cc/args.gni")': null,
+      // FlyWeb: 156 turns siso on by default and siso refuses Brave's
+      // non-default rbe_exec_root. Ninja until the .cc wrappers batch
+      // (redirect_cc out, siso config as 1.98: nube/b2-redirect-cc).
+      use_siso: false,
+      use_remoteexec: config.useRemoteExec,
+      rbe_exec_root: config.rbeExecRoot,
+      reclient_bin_dir: config.realRewrapperDir,
+      real_rewrapper: path.join(config.realRewrapperDir, 'rewrapper'),
+    }
+
+    util.runGnGen(config.nativeRedirectCCDir, buildArgs)
+    await util.buildTargets(['brave/tools/redirect_cc'], mergeWithDefault({outputDir: config.nativeRedirectCCDir}))
+    Log.progressFinish('build redirect_cc')
   },
 
   runGnGen: (outputDir, buildArgs, extraGnGenOpts = [], options = config.defaultOptions) => {

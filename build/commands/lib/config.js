@@ -226,6 +226,9 @@ const Config = function () {
   this.rbeService = getEnvConfig(['rbe_service']) || ''
   this.rbeTlsClientAuthCert = getEnvConfig(['rbe_tls_client_auth_cert']) || ''
   this.rbeTlsClientAuthKey = getEnvConfig(['rbe_tls_client_auth_key']) || ''
+  // Make sure "src/" is a part of RBE "exec_root" to allow "src/" files as inputs.
+  this.rbeExecRoot = this.rootDir
+  this.realRewrapperDir = process.env.RBE_DIR || path.join(this.srcDir, 'buildtools', 'reclient')
   this.braveStatsApiKey = getEnvConfig(['brave_stats_api_key']) || ''
   this.braveStatsUpdaterUrl = getEnvConfig(['brave_stats_updater_url']) || ''
   this.ignore_compile_failure = false
@@ -246,6 +249,7 @@ const Config = function () {
   this.braveAndroidKeystorePassword = getEnvConfig(['brave_android_keystore_password'])
   this.braveAndroidKeyPassword = getEnvConfig(['brave_android_key_password'])
   this.braveVariationsServerUrl = getEnvConfig(['brave_variations_server_url']) || ''
+  this.nativeRedirectCCDir = path.join(this.srcDir, 'out', 'redirect_cc')
   this.useRemoteExec = getEnvConfig(['use_remoteexec']) || false
   this.offline = getEnvConfig(['offline']) || false
   this.use_libfuzzer = false
@@ -356,6 +360,10 @@ Config.prototype.buildArgs = function () {
     // Our copy of signature_generator.py doesn't support --ignore_missing_cert:
     ignore_missing_widevine_signing_cert: false,
     target_cpu: this.targetArch,
+    // FlyWeb: 156 turns siso on by default and siso refuses Brave's
+    // non-default rbe_exec_root. Ninja until the .cc wrappers batch
+    // (redirect_cc out, siso config as 1.98: nube/b2-redirect-cc).
+    use_siso: false,
     is_official_build: this.isOfficialBuild(),
     is_debug: this.isDebug(),
     dcheck_always_on: getEnvConfig(['dcheck_always_on']) || this.isComponentBuild(),
@@ -507,6 +515,13 @@ Config.prototype.buildArgs = function () {
       args.use_thin_lto = true
     }
     args.enable_precompiled_headers = false
+  }
+
+  if (this.useRemoteExec) {
+    args.rbe_exec_root = this.rbeExecRoot
+    args.reclient_bin_dir = path.join(this.nativeRedirectCCDir)
+  } else {
+    args.cc_wrapper = path.join(this.nativeRedirectCCDir, 'redirect_cc')
   }
 
   if (this.getTargetOS() === 'linux' && this.targetArch === 'x86') {
