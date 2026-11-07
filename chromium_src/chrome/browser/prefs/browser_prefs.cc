@@ -36,6 +36,15 @@
 #define CHROME_BROWSER_WEB_APPLICATIONS_WEB_APP_PROVIDER_H_
 #endif  // !BUILDFLAG(ENABLE_EXTENSIONS)
 
+// The renames below must not reach other classes' static
+// MigrateObsoleteProfilePrefs, which 156 calls from browser_prefs.cc: include
+// their headers first.
+#include "build/build_config.h"
+#include "chrome/browser/accessibility/page_colors_controller.h"
+#if BUILDFLAG(IS_WIN)
+#include "chrome/browser/media/cdm_pref_service_helper.h"
+#endif
+
 #define MigrateObsoleteProfilePrefs MigrateObsoleteProfilePrefs_ChromiumImpl
 #define MigrateObsoleteLocalStatePrefs \
   MigrateObsoleteLocalStatePrefs_ChromiumImpl
