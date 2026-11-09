@@ -43,7 +43,10 @@ def _RemoveKeys(plist, *keys):
             pass
 
 
-def _OverrideVersionKey(plist, brave_version, flyweb_build=0):
+def _OverrideVersionKey(plist,
+                        brave_version,
+                        flyweb_build=0,
+                        flyweb_bundle_version_base=None):
     """ `minor.build` version string is used for update.
     When we begin to use the Major version component, Brave version string will
     be `1.0.0` for example and `Minor.Build` (`0.0`) would be used for update
@@ -52,6 +55,16 @@ def _OverrideVersionKey(plist, brave_version, flyweb_build=0):
 
     To ensure minor version is higher than existing minor versions, we can
     multiply the major version by 100 and set it to `CFBundleVersion`."""
+    # FlyWeb: frozen base (198.63) since 3.0.2, independent of Brave.
+    if flyweb_bundle_version_base:
+        base_values = flyweb_bundle_version_base.split('.')
+        if len(base_values) != 2 or not all(v.isdigit() for v in base_values):
+            raise ValueError('flyweb_bundle_version_base must be "N.N": ' +
+                             flyweb_bundle_version_base)
+        plist['CFBundleVersion'] = flyweb_bundle_version_base
+        if flyweb_build > 0:
+            plist['CFBundleVersion'] += '.' + str(flyweb_build)
+        return
     version_values = brave_version.split('.')
     if int(version_values[0]) >= 1:
         adjusted_minor = int(version_values[1]) + (100 * int(version_values[0]))
@@ -84,6 +97,9 @@ def Main():
         default=None, help='brave version string')
     parser.add_argument('--flyweb_build', dest='flyweb_build', type=int,
         default=0, help='FlyWeb release build number (1.0 = 0)')
+    parser.add_argument('--flyweb_bundle_version_base',
+        dest='flyweb_bundle_version_base', action='store', default=None,
+        help='Frozen major.minor of CFBundleVersion (198.63)')
     parser.add_argument('--flyweb_version', dest='flyweb_version',
         action='store', default=None,
         help='FlyWeb version shown to the user (1.1)')
@@ -125,7 +141,8 @@ def Main():
     if args.brave_eddsa_key:
         plist['SUPublicEDKey'] = args.brave_eddsa_key
 
-    _OverrideVersionKey(plist, args.brave_version, args.flyweb_build)
+    _OverrideVersionKey(plist, args.brave_version, args.flyweb_build,
+                        args.flyweb_bundle_version_base)
     # FlyWeb: Finder and the update status (sparkle_glue.mm compares it with
     # version_info::GetFlyWebVersion()) show our version, not Chromium's.
     if args.flyweb_version:
