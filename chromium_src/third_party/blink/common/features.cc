@@ -63,6 +63,10 @@ OVERRIDE_FEATURE_DEFAULT_STATES({{
     // by default from Chrome 158 (459923263d). Its default allowlist is *, so
     // it only blocks focus() in frames whose embedder sets it to 'none'.
     {kBlockingFocusWithoutUserActivation, base::FEATURE_ENABLED_BY_DEFAULT},
+    // FlyWeb 3.0.2: WebHID off (navigator.hid). Stable on desktop in 156 and
+    // left on by Brave; Firefox and Safari reject it. Raw HID access is
+    // attack surface and a fingerprinting vector (rule 20).
+    {kWebHID, base::FEATURE_DISABLED_BY_DEFAULT},
 }});
 
 BASE_FEATURE(kFileSystemAccessAPI,
