@@ -1,3 +1,11 @@
+# FlyWeb: 3.0.2, V8 15.6.75.51
+
+SEGURIDAD-PORTES-20, 09-11-2026 (brave-core `seg/3.0.2`). The roll 6500240d22 -> 182f13107b (15.6.75.51, the
+`v8_revision` of Chrome 156.0.8078.98) lives in the Chromium series (lamosquita-net/chromium `seg/3.0.2`). It adds
+one `[M156]` merge: **34ad010** (579278668), self-referential DeadValue in EscapeAnalysisReducer, an out-of-bounds
+access in the Turboshaft OperationBuffer. Compiler only, no bytecode change: cache epoch stays at 31. The patches
+in this directory apply unchanged (none touches `src/compiler/`).
+
 # FlyWeb: 3.0.1 (FS.42), post-156.0.8078.90 V8 fixes on 15.6.75.50
 
 SEGURIDAD-PORTES-19, 07-11-2026 (brave-core `seg/3.0.1` on `nube/b2-porte-t11` bf4262a094). Base: V8 6500240d22 =
