@@ -23,6 +23,7 @@
 #include "brave/components/constants/brave_switches.h"
 #include "brave/components/version_info/version_info.h"
 #include "chrome/common/channel_info.h"
+#include "chrome/common/chrome_switches.h"
 
 #if !defined(__has_feature) || !__has_feature(objc_arc)
 #error "This file requires ARC support."
@@ -51,6 +52,21 @@ std::string GetDescriptionFromAppcastItem(id item) {
   return base::SysNSStringToUTF8(description);
 }
 
+// FlyWeb: Sparkle only makes sense inside a real FlyWeb.app. Test binaries
+// (browser_tests and friends run from out/<dir>, with --test-type) have no
+// app bundle and no CFBundleVersion, and Sparkle's background check then
+// throws SUNoVersionException and crashes the test.
+bool CanUseSparkle() {
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kTestType)) {
+    return false;
+  }
+  NSBundle* outer_bundle = base::apple::OuterBundle();
+  if (![outer_bundle.bundlePath.pathExtension isEqualToString:@"app"]) {
+    return false;
+  }
+  return [outer_bundle objectForInfoDictionaryKey:@"CFBundleVersion"] != nil;
+}
+
 }  // namespace
 
 @implementation SparkleGlue
@@ -73,7 +89,8 @@ std::string GetDescriptionFromAppcastItem(id item) {
   static bool sTriedCreatingSharedSparkleGlue = false;
   static SparkleGlue* shared = nil;
 
-  if (brave::UpdateEnabled() && !sTriedCreatingSharedSparkleGlue) {
+  if (brave::UpdateEnabled() && !sTriedCreatingSharedSparkleGlue &&
+      CanUseSparkle()) {
     sTriedCreatingSharedSparkleGlue = true;
 
     shared = [[SparkleGlue alloc] init];
