@@ -16,7 +16,6 @@
 #include "base/strings/strcat.h"
 #include "brave/browser/ui/webui/brave_settings_ui.h"
 #include "brave/browser/ui/webui/brave_shields/shields_panel_ui.h"
-#include "brave/browser/ui/webui/private_new_tab_page/brave_private_new_tab_ui.h"
 #include "chrome/common/webui_url_constants.h"
 #include "content/public/common/url_constants.h"
 #include "url/gurl.h"
@@ -35,13 +34,7 @@ void RegisterChromeWebUIConfigs() {
   map.RemoveConfig(GURL(base::StrCat({content::kChromeUIScheme,
                                       url::kStandardSchemeSeparator,
                                       chrome::kChromeUISettingsHost})));
-  // Same for Chromium's NewTabUIConfig (incognito/guest New Tab page):
-  // private windows got Chromium's page instead of BravePrivateNewTabUI.
-  map.RemoveConfig(GURL(base::StrCat({content::kChromeUIScheme,
-                                      url::kStandardSchemeSeparator,
-                                      chrome::kChromeUINewTabHost})));
   map.AddWebUIConfig(std::make_unique<BraveSettingsUIConfig>());
-  map.AddWebUIConfig(std::make_unique<BravePrivateNewTabUIConfig>());
   map.AddWebUIConfig(std::make_unique<ShieldsPanelUIConfig>());
 #endif  // !BUILDFLAG(IS_ANDROID)
 }
