@@ -1,0 +1,20 @@
+diff --git a/src/utils/scoped-list.h b/src/utils/scoped-list.h
+index 7bc0da372ef7f2c59e490f36c2142bff8e3bf60a..6d9a57f4aff26dcd3394eb002e1994c3189063c7 100644
+--- a/src/utils/scoped-list.h
++++ b/src/utils/scoped-list.h
+@@ -40,10 +40,12 @@ class V8_NODISCARD ScopedList final {
+ 
+   ~ScopedList() { Rewind(); }
+ 
+-  void Rewind() {
++  void Rewind(int length = 0) {
+     DCHECK_EQ(buffer_.size(), end_);
+-    buffer_.resize(start_);
+-    end_ = start_;
++    DCHECK_LE(0, length);
++    DCHECK_LE(start_ + length, end_);
++    end_ = start_ + length;
++    buffer_.resize(end_);
+   }
+ 
+   void MergeInto(ScopedList* parent) {
