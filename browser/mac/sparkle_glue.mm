@@ -24,6 +24,7 @@
 #include "brave/components/version_info/version_info.h"
 #include "chrome/common/channel_info.h"
 #include "chrome/common/chrome_switches.h"
+#include "content/public/common/content_switches.h"
 
 #if !defined(__has_feature) || !__has_feature(objc_arc)
 #error "This file requires ARC support."
