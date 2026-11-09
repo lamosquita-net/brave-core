@@ -60,7 +60,8 @@ WebUIController* NewWebUI(WebUI* web_ui, const GURL& url) {
     return new BraveSettingsUI(web_ui);
   } else if (host == chrome::kChromeUINewTabHost) {
     if (profile->IsIncognitoProfile() || profile->IsGuestSession()) {
-      return new BravePrivateNewTabUI(web_ui, url.GetHost());
+      // FlyWeb: normally created through BravePrivateNewTabUIConfig.
+      return new BravePrivateNewTabUI(web_ui);
     }
     return new BraveNewTabUI(web_ui, url.GetHost());
 #endif  // !BUILDFLAG(IS_ANDROID)
