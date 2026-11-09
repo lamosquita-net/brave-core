@@ -19,14 +19,22 @@
 #include "components/strings/grit/components_strings.h"
 #include "content/public/browser/web_ui_data_source.h"
 
-BravePrivateNewTabUI::BravePrivateNewTabUI(content::WebUI* web_ui,
-                                           const std::string& name)
+bool BravePrivateNewTabUIConfig::IsWebUIEnabled(
+    content::BrowserContext* browser_context) {
+  Profile* profile = Profile::FromBrowserContext(browser_context);
+  // Same profiles as Brave 1.98, minus Tor (not in FlyWeb).
+  return profile->IsIncognitoProfile() || profile->IsGuestSession() ||
+         profile->IsEnterpriseIsolatedModeProfile();
+}
+
+BravePrivateNewTabUI::BravePrivateNewTabUI(content::WebUI* web_ui)
     : ui::MojoWebUIController(web_ui, false) {
   web_ui->OverrideTitle(
       brave_l10n::GetLocalizedResourceUTF16String(IDS_NEW_INCOGNITO_TAB_TITLE));
 
   content::WebUIDataSource* source =
-      CreateAndAddWebUIDataSource(web_ui, name, kBravePrivateNewTabGenerated,
+      CreateAndAddWebUIDataSource(web_ui, chrome::kChromeUINewTabHost,
+                                  kBravePrivateNewTabGenerated,
                                   IDR_BRAVE_PRIVATE_NEW_TAB_HTML);
 
   for (const auto& str : brave_private_new_tab::kLocalizedStrings) {
