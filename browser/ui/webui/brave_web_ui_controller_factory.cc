@@ -55,7 +55,9 @@ WebUIController* NewWebUI(WebUI* web_ui, const GURL& url) {
   } else if (host == kWelcomeHost && !profile->IsGuestSession()) {
     return new BraveWelcomeUI(web_ui, url.GetHost());
   } else if (host == chrome::kChromeUISettingsHost) {
-    return new BraveSettingsUI(web_ui, url.GetHost());
+    // FlyWeb: normally created through BraveSettingsUIConfig (see
+    // chrome_web_ui_configs.cc); kept so both paths build the same UI.
+    return new BraveSettingsUI(web_ui);
   } else if (host == chrome::kChromeUINewTabHost) {
     if (profile->IsIncognitoProfile() || profile->IsGuestSession()) {
       return new BravePrivateNewTabUI(web_ui, url.GetHost());
