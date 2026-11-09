@@ -50,6 +50,23 @@ OVERRIDE_FEATURE_DEFAULT_STATES({{
     // trial public key). Keep it off even with the experimental web platform
     // features flag: its CVE-2026-121038/-121052/-121123 fixes are not ported.
     {kCanvasDrawElement, base::FEATURE_DISABLED_BY_DEFAULT},
+    // FlyWeb 3.0.2: XSLT off (XSLTProcessor and <?xml-stylesheet?>), as
+    // upstream does from Chrome 158 (61634354c2). libxslt is attack surface
+    // with little use left. EnableXSLTForCAPAlerts goes too: it turns XSLT back
+    // on for any XML document in the CAP namespace, which any page can serve.
+    // The XSLTEnabled enterprise policy can still turn it on. Brave's
+    // GetStateIfOverridden reports these defaults as overridden, so the Blink
+    // runtime flags follow them (content/child/runtime_features.cc).
+    {kXSLT, base::FEATURE_DISABLED_BY_DEFAULT},
+    {kEnableXSLTForCAPAlerts, base::FEATURE_DISABLED_BY_DEFAULT},
+    // FlyWeb 3.0.2: the focus-without-user-activation permissions policy, on
+    // by default from Chrome 158 (459923263d). Its default allowlist is *, so
+    // it only blocks focus() in frames whose embedder sets it to 'none'.
+    {kBlockingFocusWithoutUserActivation, base::FEATURE_ENABLED_BY_DEFAULT},
+    // FlyWeb 3.0.2: WebHID off (navigator.hid). Stable on desktop in 156 and
+    // left on by Brave; Firefox and Safari reject it. Raw HID access is
+    // attack surface and a fingerprinting vector (rule 20).
+    {kWebHID, base::FEATURE_DISABLED_BY_DEFAULT},
 }});
 
 BASE_FEATURE(kFileSystemAccessAPI,
