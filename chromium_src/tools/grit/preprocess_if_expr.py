@@ -99,10 +99,17 @@ def main(original_function, argv):
     def parse_args(self, original_method, argv):
         nonlocal manifest_path, manifest_data, depfile_output, depfile_inputs
         args = original_method(self, argv)
+        # First output of the GN action, relative to the build directory.
+        # build_webui's preprocess_static_files gets an empty --in-files when
+        # its static_files are only images (*.png/*.svg/*.jpg are not
+        # preprocessed); its only output is then the manifest. Without this
+        # fallback no depfile was written, ninja saw it "missing" and reran
+        # the action (and everything after it) on every build.
         if args.in_files:
-            # First output of the GN action, relative to the build directory.
             depfile_output = os.path.normpath(
                 os.path.join(args.out_folder, args.in_files[0]))
+        elif args.out_manifest:
+            depfile_output = os.path.normpath(args.out_manifest)
 
         cwd = os.getcwd()
         out_folder = os.path.normpath(os.path.join(cwd, args.out_folder))
