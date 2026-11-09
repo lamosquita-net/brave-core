@@ -45,7 +45,7 @@ class BravePrivateNewTabPageHandler
       override;
   void SetDisclaimerDismissed(bool dismissed) override;
   void GetDisclaimerDismissed(GetDisclaimerDismissedCallback callback) override;
-  void GoToBraveSearch(const std::string& input, bool open_new_tab) override;
+  void GoToSearch(const std::string& input, bool open_new_tab) override;
 
  private:
   // Handle back to the page by which we can pass results.

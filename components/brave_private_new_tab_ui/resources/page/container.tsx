@@ -56,16 +56,16 @@ function Container () {
     </BadgePrivateWindow>
   )
 
+  // FlyWeb: only headerText1. headerText2 ends by suggesting a private window with Tor, in
+  // every translation, and FlyWeb has no Tor.
   const dialogContent = (
     <p>
       {getLocale('headerText1')}
-      {' '}
-      {getLocale('headerText2')}
     </p>
   )
 
   const handleSearchSubmit = (value: string, openNewTab: boolean) => {
-    getPageHandlerInstance().pageHandler.goToBraveSearch(value, openNewTab)
+    getPageHandlerInstance().pageHandler.goToSearch(value, openNewTab)
   }
 
   const handleDialogClose = () => {

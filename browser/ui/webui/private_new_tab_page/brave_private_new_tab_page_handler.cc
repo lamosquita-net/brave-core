@@ -9,13 +9,12 @@
 
 #include "base/strings/utf_string_conversions.h"
 #include "brave/components/brave_private_new_tab_ui/common/pref_names.h"
-#include "brave/components/search_engines/brave_prepopulated_engines.h"
 #include "chrome/browser/profiles/profile.h"
+#include "chrome/browser/search_engines/template_url_service_factory.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "components/prefs/pref_service.h"
 #include "components/search_engines/template_url.h"
-#include "components/search_engines/template_url_data_util.h"
 #include "components/search_engines/template_url_service.h"
 #include "content/public/browser/page_navigator.h"
 #include "content/public/browser/web_contents.h"
@@ -52,18 +51,29 @@ void BravePrivateNewTabPageHandler::GetDisclaimerDismissed(
   std::move(callback).Run(dismissed);
 }
 
-void BravePrivateNewTabPageHandler::GoToBraveSearch(const std::string& input,
-                                                    bool open_new_tab) {
+void BravePrivateNewTabPageHandler::GoToSearch(const std::string& input,
+                                               bool open_new_tab) {
   DCHECK(profile_);
 
-  auto provider_data = TemplateURLDataFromPrepopulatedEngine(
-      TemplateURLPrepopulateData::brave_search);
-  auto t_url = std::make_unique<TemplateURL>(*provider_data);
-  SearchTermsData search_terms_data;
+  // FlyWeb: search with the user's default search engine, not a hardcoded Brave Search.
+  // For an off-the-record profile the factory returns the original profile's service.
+  TemplateURLService* template_url_service =
+      TemplateURLServiceFactory::GetForProfile(profile_);
+  if (!template_url_service) {
+    return;
+  }
+  const TemplateURL* t_url = template_url_service->GetDefaultSearchProvider();
+  if (!t_url || !t_url->url_ref().SupportsReplacement(
+                    template_url_service->search_terms_data())) {
+    return;
+  }
 
   auto url = GURL(t_url->url_ref().ReplaceSearchTerms(
       TemplateURLRef::SearchTermsArgs(base::UTF8ToUTF16(input)),
-      search_terms_data));
+      template_url_service->search_terms_data()));
+  if (!url.is_valid()) {
+    return;
+  }
 
   auto window_open_disposition = WindowOpenDisposition::CURRENT_TAB;
 
