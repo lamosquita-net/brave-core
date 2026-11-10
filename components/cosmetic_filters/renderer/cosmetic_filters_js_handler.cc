@@ -5,6 +5,7 @@
 
 #include "brave/components/cosmetic_filters/renderer/cosmetic_filters_js_handler.h"
 
+#include <cinttypes>
 #include <optional>
 #include <string_view>
 #include <utility>
@@ -14,6 +15,8 @@
 #include "base/json/json_writer.h"
 #include "base/metrics/histogram_macros.h"
 #include "base/no_destructor.h"
+#include "base/rand_util.h"
+#include "base/strings/string_util.h"
 #include "base/strings/stringprintf.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/trace_event/trace_event.h"
@@ -44,6 +47,100 @@ static base::NoDestructor<std::vector<std::string>> g_vetted_search_engines(
 // Entry point to content_cosmetic.ts script.
 const char kObservingScriptletEntryPoint[] =
     "window.content_cosmetic.tryScheduleQueuePump()";
+
+// FlyWeb: hide selectors that test the style attribute (`div[style^="..."]`)
+// never go into a stylesheet. With one of them in any stylesheet of the
+// document, Blink serializes the inline style of every element it matches,
+// on every style recalc (ElementRuleCollector::CollectMatchingRulesInternal,
+// RuleSet::HasBucketForStyleAttribute): 22 % of the main thread in MotionMark
+// Multiply, and the same on any page that animates with element.style. The
+// generic lists bring about two dozen such rules to every page.
+// content_cosmetic.ts matches them on added nodes and in a slow sweep instead,
+// and marks each match with an attribute that one user stylesheet rule hides.
+// Invalid selectors are dropped here, as insertRule() would have rejected them.
+constexpr char kStyleAttrSelectorsInjectScript[] =
+    R"((function() {
+          const CC = window.content_cosmetic;
+          CC.styleAttrMarker = '%s';
+          CC.styleAttrSelectors = CC.styleAttrSelectors || new Set();
+          CC.styleAttrForceSelectors = CC.styleAttrForceSelectors || new Set();
+          CC.firstRunQueue = CC.firstRunQueue || new Set();
+          const force = %s;
+          const target = force ? CC.styleAttrForceSelectors : CC.styleAttrSelectors;
+          const probe = document.createDocumentFragment();
+          for (const selector of %s) {
+            if (typeof selector !== 'string') {
+              continue;
+            }
+            try {
+              probe.querySelector(selector);
+              target.add(selector);
+              // As in kHideSelectorsInjectScript: the queues decide whether
+              // the selector matches first-party content and gets unhidden.
+              if (!force && !CC.hide1pContent) {
+                CC.firstRunQueue.add(selector);
+              }
+            } catch (e) {
+              /* Not a valid selector */
+            }
+          }
+          CC.applyStyleAttrSelectors?.();
+        })();)";
+
+// True if |selector| has an attribute selector on `style` anywhere. Wider than
+// Blink's rule (only the rightmost compound without an id or class creates the
+// [style] bucket), but a complex selector keyed by class or id can still end in
+// such a compound, and deferring a few more selectors is harmless.
+bool HasStyleAttributeSelector(std::string_view selector) {
+  constexpr std::string_view kStyle = "style";
+  for (size_t i = 0; i < selector.size(); ++i) {
+    if (selector[i] != '[') {
+      continue;
+    }
+    size_t j = i + 1;
+    while (j < selector.size() && base::IsAsciiWhitespace(selector[j])) {
+      ++j;
+    }
+    if (selector.size() - j < kStyle.size() ||
+        !base::EqualsCaseInsensitiveASCII(selector.substr(j, kStyle.size()),
+                                          kStyle)) {
+      continue;
+    }
+    j += kStyle.size();
+    if (j == selector.size()) {
+      return true;
+    }
+    const char c = selector[j];
+    if (c == ']' || c == '=' || c == '~' || c == '|' || c == '^' || c == '$' ||
+        c == '*' || base::IsAsciiWhitespace(c)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool IsStyleAttributeSelector(const base::Value& selector) {
+  return selector.is_string() && HasStyleAttributeSelector(selector.GetString());
+}
+
+// Moves the selectors of |selectors| that test the style attribute to the
+// returned list (nothing with --disable-features=FlyWebDeferStyleAttrSelectors).
+base::ListValue TakeStyleAttributeSelectors(base::ListValue& selectors) {
+  base::ListValue taken;
+  if (!base::FeatureList::IsEnabled(
+          brave_shields::features::kFlyWebDeferStyleAttrSelectors)) {
+    return taken;
+  }
+  for (const auto& selector : selectors) {
+    if (IsStyleAttributeSelector(selector)) {
+      taken.Append(selector.Clone());
+    }
+  }
+  if (!taken.empty()) {
+    selectors.EraseIf(IsStyleAttributeSelector);
+  }
+  return taken;
+}
 
 constexpr char kScriptletInitScript[] =
     R"((function() {
@@ -258,6 +355,7 @@ void CosmeticFiltersJSHandler::AddJavaScriptObjectToFrame(
 
   CreateWorkerObject(isolate, context);
   bundle_injected_ = false;
+  style_attr_sheet_injected_ = false;
 }
 
 // Stylesheets injected this way will be able to override `!important` styles
@@ -272,6 +370,34 @@ void CosmeticFiltersJSHandler::InjectStylesheet(const std::string& stylesheet) {
       blink::WebString::FromUtf8(stylesheet);
   web_frame->GetDocument().InsertStyleSheet(
       stylesheet_webstring, style_sheet_key, blink::WebCssOrigin::kUser);
+}
+
+void CosmeticFiltersJSHandler::DeferStyleAttrSelectors(base::ListValue selectors,
+                                                       bool force) {
+  if (selectors.empty()) {
+    return;
+  }
+  if (style_attr_marker_.empty()) {
+    style_attr_marker_ =
+        base::StringPrintf("data-fw%016" PRIx64, base::RandUint64());
+  }
+  if (!style_attr_sheet_injected_) {
+    // A user stylesheet, like the hide rules of aggressive mode: it beats
+    // `!important` in page styles.
+    InjectStylesheet("[" + style_attr_marker_ + "]{display:none !important}");
+    style_attr_sheet_injected_ = true;
+  }
+  std::string json_selectors;
+  if (!base::JSONWriter::Write(selectors, &json_selectors)) {
+    return;
+  }
+  std::string script = base::StringPrintf(
+      kStyleAttrSelectorsInjectScript, style_attr_marker_.c_str(),
+      force ? "true" : "false", json_selectors.c_str());
+  render_frame_->GetWebFrame()->ExecuteScriptInIsolatedWorld(
+      isolated_world_id_,
+      blink::WebScriptSource(blink::WebString::FromUtf8(script)),
+      blink::BackForwardCacheAware::kAllow);
 }
 
 void CosmeticFiltersJSHandler::CreateWorkerObject(
@@ -539,16 +665,19 @@ void CosmeticFiltersJSHandler::CSSRulesRoutine(
   std::string stylesheet = "";
 
   if (hide_selectors_list && !hide_selectors_list->empty()) {
+    base::ListValue hide_selectors = hide_selectors_list->Clone();
+    DeferStyleAttrSelectors(TakeStyleAttributeSelectors(hide_selectors),
+                            /*force=*/enabled_1st_party_cf_);
     // treat `hide_selectors` the same as `force_hide_selectors` if aggressive
     // mode is enabled.
     if (enabled_1st_party_cf_) {
-      for (auto& selector : *hide_selectors_list) {
+      for (auto& selector : hide_selectors) {
         DCHECK(selector.is_string());
         stylesheet += selector.GetString() + "{display:none !important}";
       }
     } else {
       std::string json_selectors;
-      base::JSONWriter::Write(*hide_selectors_list, &json_selectors);
+      base::JSONWriter::Write(hide_selectors, &json_selectors);
       if (json_selectors.empty()) {
         json_selectors = "[]";
       }
@@ -566,7 +695,10 @@ void CosmeticFiltersJSHandler::CSSRulesRoutine(
   const auto* force_hide_selectors_list =
       resources_dict.FindList("force_hide_selectors");
   if (force_hide_selectors_list) {
-    for (auto& selector : *force_hide_selectors_list) {
+    base::ListValue force_hide_selectors = force_hide_selectors_list->Clone();
+    DeferStyleAttrSelectors(TakeStyleAttributeSelectors(force_hide_selectors),
+                            /*force=*/true);
+    for (auto& selector : force_hide_selectors) {
       DCHECK(selector.is_string());
       stylesheet += selector.GetString() + "{display:none !important}";
     }
@@ -613,6 +745,8 @@ void CosmeticFiltersJSHandler::OnHiddenClassIdSelectors(
       result.FindList("force_hide_selectors");
   DCHECK(force_hide_selectors);
 
+  DeferStyleAttrSelectors(TakeStyleAttributeSelectors(*force_hide_selectors),
+                          /*force=*/true);
   if (force_hide_selectors->size() != 0) {
     std::string stylesheet = "";
     for (auto& selector : *force_hide_selectors) {
@@ -627,6 +761,8 @@ void CosmeticFiltersJSHandler::OnHiddenClassIdSelectors(
   if (!enabled_1st_party_cf_ && IsVettedSearchEngine(url_))
     return;
 
+  DeferStyleAttrSelectors(TakeStyleAttributeSelectors(*hide_selectors),
+                          /*force=*/enabled_1st_party_cf_);
   if (enabled_1st_party_cf_) {
     std::string stylesheet = "";
     for (auto& selector : *hide_selectors) {

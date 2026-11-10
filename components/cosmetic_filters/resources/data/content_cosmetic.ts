@@ -78,6 +78,26 @@ CC.fetchNewClassIdRulesThrottlingMs =
 
 CC.hasRemovals = CC.hasRemovals || false
 
+// FlyWeb: hide selectors that test the style attribute (`div[style^="..."]`).
+// cosmetic_filters_js_handler.cc keeps them out of every stylesheet, because
+// with one of them in the document Blink serializes the inline style of every
+// element on each style recalc. They are matched here instead: on added nodes,
+// and in a sweep every |styleAttrSweepIntervalMs| for style changes made after
+// insertion. A match gets the |CC.styleAttrMarker| attribute, which a user
+// stylesheet rule hides. |CC.styleAttrSelectors| also go through the queues,
+// like any generic rule: once pumpCosmeticFilterQueues() finds one matching
+// first-party content (CC.alreadyUnhiddenSelectors) it stops hiding.
+// |CC.styleAttrForceSelectors| skip that check, like `force_hide_selectors`
+// and the rules of aggressive mode.
+CC.styleAttrSelectors = CC.styleAttrSelectors || new Set<string>()
+CC.styleAttrForceSelectors = CC.styleAttrForceSelectors || new Set<string>()
+const styleAttrSweepIntervalMs = 1000
+let styleAttrCombo = ''
+let styleAttrForceCombo = ''
+// CC.alreadyUnhiddenSelectors.size when |styleAttrCombo| was built.
+let styleAttrUnhiddenCount = -1
+let styleAttrSweepTimeoutId: number | undefined
+
 /**
  * Provides a new function which can only be scheduled once at a time.
  *
@@ -283,6 +303,17 @@ const onMutations = (mutations: MutationRecord[], observer: MutationObserver) =>
 
   if (!ShouldThrottleFetchNewClassIdsRules()) {
     fetchNewClassIdRules()
+  }
+
+  if (currentStyleAttrCombo() !== '' || styleAttrForceCombo !== '') {
+    for (const aMutation of mutations) {
+      for (const node of aMutation.addedNodes) {
+        const element = asElement(node)
+        if (element) {
+          markStyleAttrMatches(element)
+        }
+      }
+    }
   }
 
   if (CC.hasRemovals) {
@@ -743,3 +774,92 @@ const executeRemovals = (added?: Element[]) => {
 };
 
 if (CC.hasRemovals) executeRemovals();
+
+// The non-forced [style] selectors that the queues have not unhidden.
+const currentStyleAttrCombo = (): string => {
+  if (CC.alreadyUnhiddenSelectors.size !== styleAttrUnhiddenCount) {
+    styleAttrUnhiddenCount = CC.alreadyUnhiddenSelectors.size
+    styleAttrCombo = Array.from(CC.styleAttrSelectors)
+      .filter(selector => !CC.alreadyUnhiddenSelectors.has(selector))
+      .join(',')
+  }
+  return styleAttrCombo
+}
+
+const findStyleAttrMatches = (combo: string, root?: Element): Element[] => {
+  if (combo === '') {
+    return []
+  }
+  if (root === undefined) {
+    return Array.from(document.querySelectorAll(combo))
+  }
+  const found: Element[] = []
+  if (root.matches(combo)) {
+    found.push(root)
+  }
+  if (root.firstElementChild !== null) {
+    found.push(...root.querySelectorAll(combo))
+  }
+  return found
+}
+
+// Marks the elements in |root| (or in the whole document) that match a
+// deferred [style] selector.
+const markStyleAttrMatches = (root?: Element) => {
+  const marker = CC.styleAttrMarker
+  if (marker === undefined) {
+    return
+  }
+  for (const combo of [styleAttrForceCombo, currentStyleAttrCombo()]) {
+    for (const elm of findStyleAttrMatches(combo, root)) {
+      if (!elm.hasAttribute(marker)) {
+        elm.setAttribute(marker, '')
+      }
+    }
+  }
+}
+
+// A stylesheet rule stops hiding an element when its style no longer matches;
+// do the same for the marker.
+const unmarkStaleStyleAttrMatches = () => {
+  const marker = CC.styleAttrMarker
+  if (marker === undefined) {
+    return
+  }
+  const combo = currentStyleAttrCombo()
+  for (const elm of document.querySelectorAll(`[${marker}]`)) {
+    if (!(styleAttrForceCombo !== '' && elm.matches(styleAttrForceCombo)) &&
+        !(combo !== '' && elm.matches(combo))) {
+      elm.removeAttribute(marker)
+    }
+  }
+}
+
+const scheduleStyleAttrSweep = () => {
+  if (styleAttrSweepTimeoutId !== undefined ||
+      (CC.styleAttrSelectors.size === 0 && styleAttrForceCombo === '')) {
+    return
+  }
+  styleAttrSweepTimeoutId = window.setTimeout(() => {
+    styleAttrSweepTimeoutId = undefined
+    if (!document.hidden) {
+      unmarkStaleStyleAttrMatches()
+      markStyleAttrMatches()
+    }
+    scheduleStyleAttrSweep()
+  }, styleAttrSweepIntervalMs)
+}
+
+const applyStyleAttrSelectors = () => {
+  styleAttrUnhiddenCount = -1
+  styleAttrForceCombo = Array.from(CC.styleAttrForceSelectors).join(',')
+  markStyleAttrMatches()
+  scheduleStyleAttrSweep()
+}
+
+CC.applyStyleAttrSelectors = applyStyleAttrSelectors
+
+// The selectors may have arrived before this script.
+if (CC.styleAttrSelectors.size !== 0 || CC.styleAttrForceSelectors.size !== 0) {
+  applyStyleAttrSelectors()
+}

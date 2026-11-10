@@ -71,6 +71,9 @@ class CosmeticFiltersJSHandler {
   void OnEventEnd(const std::string& event_name, int);
 
   void InjectStylesheet(const std::string& stylesheet);
+  // FlyWeb: hands the selectors that test the style attribute to
+  // content_cosmetic.ts instead of a stylesheet (see the .cc).
+  void DeferStyleAttrSelectors(base::ListValue selectors, bool force);
 
   bool generichide_ = false;
 
@@ -85,6 +88,12 @@ class CosmeticFiltersJSHandler {
 
   // True if the content_cosmetic.bundle.js has injected in the current frame.
   bool bundle_injected_ = false;
+
+  // FlyWeb: attribute that content_cosmetic.ts sets on the elements matched by
+  // a deferred [style] selector, and whether the user stylesheet rule that
+  // hides it is in the current document.
+  std::string style_attr_marker_;
+  bool style_attr_sheet_injected_ = false;
 
   std::unique_ptr<class CosmeticFilterPerfTracker> perf_tracker_;
 

@@ -33,6 +33,9 @@ BASE_DECLARE_FEATURE(kBraveShowStrictFingerprintingMode);
 BASE_DECLARE_FEATURE(kCosmeticFilteringExtraPerfMetrics);
 BASE_DECLARE_FEATURE(kCosmeticFilteringJsPerformance);
 BASE_DECLARE_FEATURE(kCosmeticFilteringSyncLoad);
+// FlyWeb: hide selectors on the style attribute are matched by
+// content_cosmetic.ts instead of a stylesheet (cosmetic_filters_js_handler.cc).
+BASE_DECLARE_FEATURE(kFlyWebDeferStyleAttrSelectors);
 extern const base::FeatureParam<int> kComponentUpdateCheckIntervalMins;
 extern const base::FeatureParam<std::string>
     kCosmeticFilteringSubFrameFirstSelectorsPollingDelayMs;

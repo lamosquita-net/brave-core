@@ -96,6 +96,10 @@ BASE_FEATURE(kCosmeticFilteringSyncLoad,
              "CosmeticFilterSyncLoad",
              base::FEATURE_ENABLED_BY_DEFAULT);
 
+BASE_FEATURE(kFlyWebDeferStyleAttrSelectors,
+             "FlyWebDeferStyleAttrSelectors",
+             base::FEATURE_ENABLED_BY_DEFAULT);
+
 // Enables extra TRACE_EVENTs in content filter js. The feature is
 // primary designed for local debugging.
 BASE_FEATURE(kCosmeticFilteringExtraPerfMetrics,
