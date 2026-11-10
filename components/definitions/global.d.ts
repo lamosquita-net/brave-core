@@ -48,6 +48,10 @@ declare global {
       classesToRemoveBySelector: Map<string, string[]> | undefined
       attributesToRemoveBySelector: Map<string, string[]> | undefined
       hasRemovals: boolean
+      styleAttrMarker: string | undefined
+      styleAttrSelectors: Set<string>
+      styleAttrForceSelectors: Set<string>
+      applyStyleAttrSelectors: (() => void) | undefined
     }
   }
 }
