@@ -15,6 +15,7 @@
 #include "brave/components/constants/webui_url_constants.h"
 #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
+#include "chrome/common/webui_url_constants.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/common/url_constants.h"
 #include "url/gurl.h"
@@ -53,12 +54,19 @@ std::optional<tabs::TabData> MaybeGetSharedPinnedTabData(
   return std::nullopt;
 }
 
-// Don't themify the favicon of the welcome WebUI.
+// Don't themify the favicon of the welcome WebUI, nor the new tab page's.
+// FlyWeb: both show the colored fly (IDR_NTP_FAVICON is replaced with it in
+// app/theme/*/common/favicon_ntp.png). Chromium themifies the NTP because its
+// own icon is a monochrome glyph; with the fly, ThemeFavicon() would turn it
+// into a flat silhouette on light tabs (contrast 2.2-2.9, threshold 3.0).
 tabs::TabData MaybeApplyBraveTabDataOverrides(tabs::TabInterface* tab,
                                               tabs::TabData data) {
   if (data.should_themify_favicon) {
     const GURL& url = tab->GetContents()->GetVisibleURL();
-    if (url.SchemeIs(content::kChromeUIScheme) && url.host() == kWelcomeHost) {
+    if (url.SchemeIs(content::kChromeUIScheme) &&
+        (url.host() == kWelcomeHost ||
+         url.host() == chrome::kChromeUINewTabHost ||
+         url.host() == chrome::kChromeUINewTabPageHost)) {
       data.should_themify_favicon = false;
     }
   }
