@@ -1,8 +1,8 @@
 diff --git a/content/browser/renderer_host/navigation_request.cc b/content/browser/renderer_host/navigation_request.cc
-index 6baf465bd2106a85fbc045e2489746e69efc2d5f..25870674fe9fe7c2c8b599ab88459c0b27348fad 100644
+index b5c1aae409ffab44f41d57fdcb46560053938f4f..20949682edef849ea1d1b704479e55b25106444d 100644
 --- a/content/browser/renderer_host/navigation_request.cc
 +++ b/content/browser/renderer_host/navigation_request.cc
-@@ -3996,6 +3996,9 @@ void NavigationRequest::OnRequestRedirected(
+@@ -4007,6 +4007,9 @@ void NavigationRequest::OnRequestRedirected(
    common_params_->url = redirect_info.new_url;
    common_params_->method = redirect_info.new_method;
    common_params_->referrer->url = GURL(redirect_info.new_referrer);
@@ -12,7 +12,7 @@ index 6baf465bd2106a85fbc045e2489746e69efc2d5f..25870674fe9fe7c2c8b599ab88459c0b
    common_params_->referrer = Referrer::SanitizeForRequest(
        common_params_->url, *common_params_->referrer);
  
-@@ -6041,12 +6044,13 @@ void NavigationRequest::OnStartChecksComplete(
+@@ -6052,12 +6055,13 @@ void NavigationRequest::OnStartChecksComplete(
    // comment in the header for |loader_|.
    CHECK(!loader_);
  
@@ -22,16 +22,16 @@ index 6baf465bd2106a85fbc045e2489746e69efc2d5f..25870674fe9fe7c2c8b599ab88459c0b
 +  // for this frame. PDF content frames run in a restricted PDF renderer process
 +  // that must not receive service worker capabilities for the hosting origin.
    bool can_create_service_worker =
--      (frame_tree_node_->pending_frame_policy().sandbox_flags &
+-      (commit_params_->frame_policy.sandbox_flags &
 -       network::mojom::WebSandboxFlags::kOrigin) !=
 -      network::mojom::WebSandboxFlags::kOrigin;
-+      !IsPdf() && (frame_tree_node_->pending_frame_policy().sandbox_flags &
++      !IsPdf() && (commit_params_->frame_policy.sandbox_flags &
 +                   network::mojom::WebSandboxFlags::kOrigin) !=
 +                      network::mojom::WebSandboxFlags::kOrigin;
    if (can_create_service_worker) {
      ServiceWorkerContextWrapper* service_worker_context =
          static_cast<ServiceWorkerContextWrapper*>(
-@@ -6165,6 +6169,9 @@ void NavigationRequest::OnStartChecksComplete(
+@@ -6176,6 +6180,9 @@ void NavigationRequest::OnStartChecksComplete(
    bool is_visible = GetWebContents() &&
                      GetWebContents()->GetVisibility() == Visibility::VISIBLE;
  
@@ -41,18 +41,18 @@ index 6baf465bd2106a85fbc045e2489746e69efc2d5f..25870674fe9fe7c2c8b599ab88459c0b
    loader_ = NavigationURLLoader::Create(
        browser_context, partition,
        std::make_unique<NavigationRequestInfo>(
-@@ -6848,9 +6855,13 @@ void NavigationRequest::InheritServiceWorkerControllerFromParentIfNeeded() {
+@@ -6859,9 +6866,13 @@ void NavigationRequest::InheritServiceWorkerControllerFromParentIfNeeded() {
      return;
    }
  
--  if ((frame_tree_node_->pending_frame_policy().sandbox_flags &
+-  if ((commit_params_->frame_policy.sandbox_flags &
 -       network::mojom::WebSandboxFlags::kOrigin) ==
 -      network::mojom::WebSandboxFlags::kOrigin) {
 +  // Do not inherit the parent's service worker controller if this frame is a
 +  // PDF content frame or has an opaque sandboxed origin. PDF content frames run
 +  // in a restricted PDF renderer process that must not receive service worker
 +  // capabilities for the hosting origin.
-+  if (IsPdf() || (frame_tree_node_->pending_frame_policy().sandbox_flags &
++  if (IsPdf() || (commit_params_->frame_policy.sandbox_flags &
 +                  network::mojom::WebSandboxFlags::kOrigin) ==
 +                     network::mojom::WebSandboxFlags::kOrigin) {
      return;
