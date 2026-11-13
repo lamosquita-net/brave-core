@@ -1,0 +1,760 @@
+<style include="cr-shared-style settings-shared">
+  :host
+  {
+    display: block;
+  }
+  h2
+  {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+  }
+  p
+  {
+    margin: 8px 0;
+  }
+  .fw-screen
+  {
+    padding: 12px 0;
+  }
+  .fw-actions
+  {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0;
+  }
+  .fw-field
+  {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 12px 0;
+    max-width: 420px;
+  }
+  .fw-field label
+  {
+    font-weight: 500;
+  }
+  .fw-input
+  {
+    background: var(--cr-input-background-color, transparent);
+    border: 1px solid var(--cr-separator-color);
+    border-radius: 4px;
+    box-sizing: border-box;
+    color: var(--cr-primary-text-color);
+    font: inherit;
+    padding: 6px 8px;
+  }
+  .fw-words
+  {
+    background: var(--cr-input-background-color, transparent);
+    border: 1px solid var(--cr-separator-color);
+    border-radius: 6px;
+    box-sizing: border-box;
+    color: var(--cr-primary-text-color);
+    font-family: inherit;
+    font-size: 15px;
+    line-height: 24px;
+    min-height: 110px;
+    padding: 10px 14px;
+    resize: vertical;
+    width: 100%;
+  }
+  .fw-hint
+  {
+    color: var(--cr-secondary-text-color);
+    font-size: 12px;
+  }
+  .fw-error
+  {
+    color: var(--cr-input-error-color, rgb(217, 48, 37));
+  }
+  .fw-info
+  {
+    color: var(--cr-secondary-text-color);
+  }
+  .fw-banner
+  {
+    border: 1px solid var(--cr-separator-color);
+    border-radius: 6px;
+    margin: 12px 0;
+    padding: 12px 16px;
+  }
+  .fw-banner.fw-alert
+  {
+    border-color: var(--cr-input-error-color, rgb(217, 48, 37));
+  }
+  .fw-device
+  {
+    align-items: center;
+    border-bottom: var(--cr-separator-line);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: space-between;
+    padding: 10px 0;
+  }
+  .fw-device .fw-actions
+  {
+    margin: 0;
+  }
+  .fw-device-name
+  {
+    font-weight: 600;
+  }
+  .fw-badge
+  {
+    border: 1px solid var(--cr-separator-color);
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 500;
+    margin-inline-start: 6px;
+    padding: 1px 8px;
+  }
+  .strength-0,
+  .strength-1
+  {
+    color: var(--cr-input-error-color, rgb(217, 48, 37));
+  }
+  .strength-2
+  {
+    color: var(--cr-secondary-text-color);
+  }
+  .strength-3,
+  .strength-4
+  {
+    color: var(--cr-checked-color, rgb(26, 115, 232));
+  }
+</style>
+
+<template is="dom-if" if="[[!is_(screen_, 'none')]]">
+
+  <!-- «Sin red»: what was known last, and Reintentar (§9). -->
+  <template is="dom-if" if="[[showOffline_(accountStatus)]]">
+    <div class="fw-banner" role="status">
+      <div>[[offlineText_(accountStatus)]]</div>
+      <div class="fw-actions">
+        <cr-button on-click="onRefresh_"
+            disabled="[[busy_(accountStatus, pending_)]]">
+          $i18n{flywebAccountRetry}
+        </cr-button>
+      </div>
+    </div>
+  </template>
+
+  <!-- «¿Has sido tú?» (§6.2) -->
+  <template is="dom-if" if="[[showWarnings_(accountStatus, screen_)]]">
+    <div class="fw-banner fw-alert" role="alert">
+      <h2>$i18n{flywebAccountWarningsTitle}</h2>
+      <template is="dom-repeat" items="[[accountStatus.warnings]]">
+        <p>
+          [[warningText_(item)]]
+          <span class="fw-hint">[[warningDate_(item)]]</span>
+        </p>
+      </template>
+      <div class="fw-actions">
+        <cr-button class="action-button" on-click="onNotMe_"
+            disabled="[[busy_(accountStatus, pending_)]]">
+          $i18n{flywebAccountWarningNotMeButton}
+        </cr-button>
+        <cr-button on-click="onWasMe_"
+            disabled="[[busy_(accountStatus, pending_)]]">
+          $i18n{flywebAccountWarningWasMe}
+        </cr-button>
+      </div>
+    </div>
+  </template>
+
+  <!-- After «No he sido yo»: what comes next (§6.2). -->
+  <template is="dom-if" if="[[notMeDone_]]">
+    <div class="fw-banner" role="status">
+      <p>$i18n{flywebAccountNotMeDone}</p>
+      <div class="fw-actions">
+        <cr-button class="action-button" on-click="onChangePassword_"
+            disabled="[[busy_(accountStatus, pending_)]]">
+          $i18n{flywebAccountChangePassword}
+        </cr-button>
+        <cr-button on-click="onChangeKey_">
+          $i18n{flywebAccountChangeKey}
+        </cr-button>
+        <cr-button on-click="onChangeEmail_">
+          $i18n{flywebAccountChangeEmail}
+        </cr-button>
+        <cr-button on-click="onNotMeClose_">
+          $i18n{flywebAccountClose}
+        </cr-button>
+      </div>
+    </div>
+  </template>
+
+  <!-- cargando -->
+  <template is="dom-if" if="[[is_(screen_, 'loading')]]">
+    <div class="fw-screen">
+      <p>$i18n{flywebAccountLoading}</p>
+      <div class="fw-actions">
+        <cr-button on-click="onRefresh_">$i18n{flywebAccountRetry}</cr-button>
+      </div>
+    </div>
+  </template>
+
+  <!-- sin cuenta (§5.1, §8) -->
+  <template is="dom-if" if="[[is_(screen_, 'no-account')]]">
+    <div class="fw-screen">
+      <h2>$i18n{flywebAccountNoAccountTitle}</h2>
+      <template is="dom-if" if="[[hasChain_(accountStatus)]]">
+        <p>$i18n{flywebAccountLinkDesc}</p>
+        <div class="fw-actions">
+          <cr-button class="action-button" on-click="onCreate_"
+              disabled="[[busy_(accountStatus, pending_)]]">
+            $i18n{flywebAccountCreate}
+          </cr-button>
+          <cr-button on-click="onViewRecovery_">
+            $i18n{flywebAccountViewRecovery}
+          </cr-button>
+        </div>
+      </template>
+      <template is="dom-if" if="[[!hasChain_(accountStatus)]]">
+        <p>$i18n{flywebAccountNoAccountDesc}</p>
+        <div class="fw-actions">
+          <cr-button class="action-button" on-click="onCreate_"
+              disabled="[[busy_(accountStatus, pending_)]]">
+            $i18n{flywebAccountCreate}
+          </cr-button>
+          <cr-button on-click="onLogin_"
+              disabled="[[busy_(accountStatus, pending_)]]">
+            $i18n{flywebAccountLogin}
+          </cr-button>
+          <cr-button on-click="onHaveRecoveryKey_"
+              disabled="[[busy_(accountStatus, pending_)]]">
+            $i18n{flywebAccountHaveRecoveryKey}
+          </cr-button>
+        </div>
+        <div class="fw-actions">
+          <cr-button on-click="onForgot_">
+            $i18n{flywebAccountForgotPassword}
+          </cr-button>
+        </div>
+      </template>
+    </div>
+  </template>
+
+  <!-- Crear cuenta: the email -->
+  <template is="dom-if" if="[[is_(screen_, 'create')]]">
+    <div class="fw-screen">
+      <h2>$i18n{flywebAccountCreate}</h2>
+      <template is="dom-if" if="[[hasChain_(accountStatus)]]">
+        <p>$i18n{flywebAccountLinkDesc}</p>
+      </template>
+      <p>$i18n{flywebAccountEmailCodeDesc}</p>
+      <div class="fw-field">
+        <label for="createEmail">$i18n{flywebAccountEmailLabel}</label>
+        <input id="createEmail" class="fw-input" type="email"
+            autocomplete="email" spellcheck="false"
+            value="{{email_::input}}">
+      </div>
+      <div class="fw-actions">
+        <cr-button class="action-button" on-click="onCreateStart_"
+            disabled="[[!canSendEmail_(email_, pending_, accountStatus)]]">
+          $i18n{flywebAccountSendCode}
+        </cr-button>
+        <cr-button on-click="onBack_">$i18n{flywebAccountBack}</cr-button>
+      </div>
+    </div>
+  </template>
+
+  <!-- Entrar: email and password (§5.1) -->
+  <template is="dom-if" if="[[is_(screen_, 'login')]]">
+    <div class="fw-screen">
+      <h2>$i18n{flywebAccountLogin}</h2>
+      <p>$i18n{flywebAccountLoginDesc}</p>
+      <div class="fw-field">
+        <label for="loginEmail">$i18n{flywebAccountEmailLabel}</label>
+        <input id="loginEmail" class="fw-input" type="email"
+            autocomplete="username" spellcheck="false"
+            value="{{email_::input}}">
+      </div>
+      <div class="fw-field">
+        <label for="loginPassword">$i18n{flywebAccountPasswordLabel}</label>
+        <input id="loginPassword" class="fw-input" type="password"
+            autocomplete="current-password" value="{{password_::input}}">
+      </div>
+      <div class="fw-actions">
+        <cr-button class="action-button" on-click="onLoginStart_"
+            disabled="[[!canLogin_(email_, password_, pending_, accountStatus)]]">
+          $i18n{flywebAccountSendCode}
+        </cr-button>
+        <cr-button on-click="onForgot_">
+          $i18n{flywebAccountForgotPassword}
+        </cr-button>
+        <cr-button on-click="onBack_">$i18n{flywebAccountBack}</cr-button>
+      </div>
+    </div>
+  </template>
+
+  <!-- Tengo mi clave de recuperación (§6.6) -->
+  <template is="dom-if" if="[[is_(screen_, 'words')]]">
+    <div class="fw-screen">
+      <h2>$i18n{flywebAccountHaveRecoveryKey}</h2>
+      <p>$i18n{flywebAccountWordsDesc}</p>
+      <textarea class="fw-words" spellcheck="false" autocomplete="off"
+          aria-label="$i18n{flywebAccountRecoveryTitle}"
+          value="{{words_::input}}"></textarea>
+      <div class="fw-hint">[[wordCountText_(words_)]]</div>
+      <div class="fw-actions">
+        <cr-button class="action-button" on-click="onJoinWithWords_"
+            disabled="[[!canJoin_(words_, pending_, accountStatus)]]">
+          $i18n{flywebAccountJoin}
+        </cr-button>
+        <cr-button on-click="onBack_">$i18n{flywebAccountBack}</cr-button>
+      </div>
+    </div>
+  </template>
+
+  <!-- He olvidado la contraseña, on a Mac without sync (§5.1, §6.1, §6.4) -->
+  <template is="dom-if" if="[[is_(screen_, 'forgot')]]">
+    <div class="fw-screen">
+      <h2>$i18n{flywebAccountForgotPassword}</h2>
+      <p>$i18n{flywebAccountForgotWithMac}</p>
+      <p>$i18n{flywebAccountForgotNoMac}</p>
+      <div class="fw-actions">
+        <cr-button class="action-button" on-click="onHaveRecoveryKey_">
+          $i18n{flywebAccountHaveRecoveryKey}
+        </cr-button>
+      </div>
+      <p>$i18n{flywebAccountForgotNothing}</p>
+      <p class="fw-hint">$i18n{flywebAccountDelayWarning}</p>
+      <div class="fw-actions">
+        <cr-button on-click="onStartOver_">
+          $i18n{flywebAccountStartOver}
+        </cr-button>
+        <cr-button on-click="onMailboxDelete_">
+          $i18n{flywebAccountMailboxDelete}
+        </cr-button>
+        <cr-button on-click="onBack_">$i18n{flywebAccountBack}</cr-button>
+      </div>
+    </div>
+  </template>
+
+  <!-- Empezar de cero: the email (§6.4) -->
+  <template is="dom-if" if="[[is_(screen_, 'start-over')]]">
+    <div class="fw-screen">
+      <h2>$i18n{flywebAccountStartOver}</h2>
+      <p>$i18n{flywebAccountDelayWarning}</p>
+      <p>$i18n{flywebAccountEmailCodeDesc}</p>
+      <div class="fw-field">
+        <label for="startOverEmail">$i18n{flywebAccountEmailLabel}</label>
+        <input id="startOverEmail" class="fw-input" type="email"
+            autocomplete="email" spellcheck="false"
+            value="{{email_::input}}">
+      </div>
+      <div class="fw-actions">
+        <cr-button class="action-button" on-click="onStartOverStart_"
+            disabled="[[!canSendEmail_(email_, pending_, accountStatus)]]">
+          $i18n{flywebAccountSendCode}
+        </cr-button>
+        <cr-button on-click="onBack_">$i18n{flywebAccountBack}</cr-button>
+      </div>
+    </div>
+  </template>
+
+  <!-- Borrar la cuenta por email (§6.4, §7) -->
+  <template is="dom-if" if="[[is_(screen_, 'mailbox-delete')]]">
+    <div class="fw-screen">
+      <h2>$i18n{flywebAccountMailboxDelete}</h2>
+      <p>$i18n{flywebAccountDelayWarning}</p>
+      <p>$i18n{flywebAccountEmailCodeDesc}</p>
+      <div class="fw-field">
+        <label for="mailboxDeleteEmail">$i18n{flywebAccountEmailLabel}</label>
+        <input id="mailboxDeleteEmail" class="fw-input" type="email"
+            autocomplete="email" spellcheck="false"
+            value="{{email_::input}}">
+      </div>
+      <div class="fw-actions">
+        <cr-button class="action-button" on-click="onMailboxDeleteStart_"
+            disabled="[[!canSendEmail_(email_, pending_, accountStatus)]]">
+          $i18n{flywebAccountSendCode}
+        </cr-button>
+        <cr-button on-click="onBack_">$i18n{flywebAccountBack}</cr-button>
+      </div>
+    </div>
+  </template>
+
+  <!-- «Falta el código del email» (§9), for every flow -->
+  <template is="dom-if" if="[[is_(screen_, 'flow')]]">
+    <div class="fw-screen">
+      <h2>[[flowTitle_(accountStatus)]]</h2>
+      <p>[[codeSentText_(accountStatus)]]</p>
+      <p>[[flowDesc_(accountStatus)]]</p>
+      <div class="fw-field">
+        <label for="flowCode">$i18n{flywebAccountCodeLabel}</label>
+        <input id="flowCode" class="fw-input" type="text"
+            autocomplete="one-time-code" spellcheck="false" maxlength="16"
+            value="{{code_::input}}">
+        <span class="fw-hint">$i18n{flywebAccountCodeNotArrived}</span>
+      </div>
+      <template is="dom-if" if="[[flowNeedsPassword_(accountStatus)]]">
+        <div class="fw-field">
+          <label for="flowPassword">
+            $i18n{flywebAccountNewPasswordLabel}
+          </label>
+          <input id="flowPassword" class="fw-input" type="password"
+              autocomplete="new-password" value="{{password_::input}}">
+          <span class="fw-hint">[[passwordHint_(accountStatus)]]</span>
+          <template is="dom-if" if="[[showStrength_(strength_)]]">
+            <span class$="[[strengthClass_(strength_)]]" role="status">
+              [[strengthText_(strength_)]]
+            </span>
+          </template>
+        </div>
+      </template>
+      <template is="dom-if" if="[[flowNeedsName_(accountStatus)]]">
+        <div class="fw-field">
+          <label for="flowDeviceName">$i18n{flywebAccountDeviceNameLabel}</label>
+          <input id="flowDeviceName" class="fw-input" type="text"
+              autocomplete="off" maxlength="64"
+              value="{{deviceName_::input}}">
+          <span class="fw-hint">$i18n{flywebAccountDeviceNameHint}</span>
+        </div>
+      </template>
+      <div class="fw-actions">
+        <cr-button class="action-button" on-click="onFlowConfirm_"
+            disabled="[[!canConfirmFlow_(accountStatus, code_, password_, pending_)]]">
+          $i18n{confirm}
+        </cr-button>
+        <cr-button on-click="onResend_"
+            disabled="[[busy_(accountStatus, pending_)]]">
+          $i18n{flywebAccountResend}
+        </cr-button>
+        <cr-button on-click="onFlowCancel_">$i18n{cancel}</cr-button>
+      </div>
+    </div>
+  </template>
+
+  <!-- Clave de recuperación (§6.6, §8): confirm it is saved before going on -->
+  <template is="dom-if" if="[[is_(screen_, 'recovery')]]">
+    <div class="fw-screen">
+      <h2>$i18n{flywebAccountRecoveryTitle}</h2>
+      <p>$i18n{flywebAccountRecoveryDesc}</p>
+      <template is="dom-if" if="[[recoveryIsNew_]]">
+        <p><b>$i18n{flywebAccountRecoveryNew}</b></p>
+      </template>
+      <template is="dom-if" if="[[recoveryInfo_]]">
+        <p>[[recoveryInfo_]]</p>
+      </template>
+      <textarea class="fw-words" readonly spellcheck="false"
+          aria-label="$i18n{flywebAccountRecoveryTitle}"
+          value="[[recoveryWords_]]"></textarea>
+      <div class="fw-hint">[[wordCountText_(recoveryWords_)]]</div>
+      <template is="dom-if" if="[[recoveryMustConfirm_]]">
+        <cr-checkbox checked="{{recoverySaved_}}">
+          $i18n{flywebAccountRecoverySavedCheck}
+        </cr-checkbox>
+        <div class="fw-actions">
+          <cr-button class="action-button" on-click="onRecoveryDone_"
+              disabled="[[!canCloseRecovery_(recoveryMustConfirm_, recoverySaved_)]]">
+            $i18n{flywebAccountContinue}
+          </cr-button>
+        </div>
+      </template>
+      <template is="dom-if" if="[[!recoveryMustConfirm_]]">
+        <div class="fw-actions">
+          <cr-button class="action-button" on-click="onRecoveryDone_">
+            $i18n{flywebAccountClose}
+          </cr-button>
+          <cr-button on-click="onOldVersionCode_">
+            $i18n{flywebAccountOldVersionCode}
+          </cr-button>
+        </div>
+        <p class="fw-hint">$i18n{flywebAccountOldVersionCodeDesc}</p>
+      </template>
+    </div>
+  </template>
+
+  <!-- sincronizado, and borrado programado (§6, §7, §9) -->
+  <template is="dom-if" if="[[is_(screen_, 'synced')]]">
+    <div class="fw-screen">
+      <template is="dom-if"
+          if="[[isState_(accountStatus, 'borrado-programado')]]">
+        <div class="fw-banner fw-alert" role="alert">
+          <p>[[deletionText_(accountStatus)]]</p>
+          <p class="fw-hint">$i18n{flywebAccountDeletionNotYou}</p>
+          <div class="fw-actions">
+            <cr-button class="action-button" on-click="onCancelDeletion_"
+                disabled="[[busy_(accountStatus, pending_)]]">
+              $i18n{flywebAccountCancelDeletion}
+            </cr-button>
+          </div>
+        </div>
+      </template>
+
+      <p><b>[[accountEmailText_(accountStatus)]]</b></p>
+      <template is="dom-if"
+          if="[[showLastError_(accountStatus, error_, pending_)]]">
+        <p class="fw-error">[[lastErrorText_(accountStatus)]]</p>
+        <div class="fw-actions">
+          <cr-button on-click="onRefresh_"
+              disabled="[[busy_(accountStatus, pending_)]]">
+            $i18n{flywebAccountRetry}
+          </cr-button>
+        </div>
+      </template>
+
+      <h2>$i18n{flywebAccountDevicesTitle}</h2>
+      <template is="dom-if" if="[[!hasDevices_(accountStatus)]]">
+        <p class="fw-hint">$i18n{flywebAccountDevicesEmpty}</p>
+        <div class="fw-actions">
+          <cr-button on-click="onReloadDevices_"
+              disabled="[[busy_(accountStatus, pending_)]]">
+            $i18n{flywebAccountRetry}
+          </cr-button>
+        </div>
+      </template>
+      <template is="dom-repeat" items="[[devices_(accountStatus)]]">
+        <div class="fw-device">
+          <div>
+            <template is="dom-if" if="[[!isRenaming_(item, renamingId_)]]">
+              <div>
+                <span class="fw-device-name">[[item.nombre]]</span>
+                <template is="dom-if" if="[[item.este]]">
+                  <span class="fw-badge">$i18n{flywebAccountDeviceThis}</span>
+                </template>
+              </div>
+            </template>
+            <template is="dom-if" if="[[isRenaming_(item, renamingId_)]]">
+              <input class="fw-input" type="text" autocomplete="off"
+                  maxlength="64"
+                  aria-label="$i18n{flywebAccountDeviceNameLabel}"
+                  value="{{renameValue_::input}}">
+            </template>
+            <div class="fw-hint">[[item.modelo]]</div>
+            <div class="fw-hint">
+              [[deviceAddedText_(item)]] · [[deviceLastUsedText_(item)]]
+            </div>
+          </div>
+          <div class="fw-actions">
+            <template is="dom-if" if="[[isRenaming_(item, renamingId_)]]">
+              <cr-button class="action-button" on-click="onRenameSave_"
+                  disabled="[[!canSaveName_(renameValue_, pending_)]]">
+                $i18n{flywebAccountSave}
+              </cr-button>
+              <cr-button on-click="onRenameCancel_">$i18n{cancel}</cr-button>
+            </template>
+            <template is="dom-if" if="[[!isRenaming_(item, renamingId_)]]">
+              <cr-button on-click="onRenameDevice_" data-id$="[[item.id]]"
+                  disabled="[[busy_(accountStatus, pending_)]]">
+                $i18n{flywebAccountRename}
+              </cr-button>
+              <template is="dom-if" if="[[!item.este]]">
+                <cr-button on-click="onRemoveDevice_" data-id$="[[item.id]]"
+                    disabled="[[busy_(accountStatus, pending_)]]">
+                  $i18n{flywebAccountRemoveFromList}
+                </cr-button>
+              </template>
+            </template>
+          </div>
+        </div>
+      </template>
+
+      <div class="fw-actions">
+        <cr-button on-click="onChangePassword_"
+            disabled="[[busy_(accountStatus, pending_)]]">
+          $i18n{flywebAccountChangePassword}
+        </cr-button>
+        <cr-button on-click="onChangePassword_"
+            disabled="[[busy_(accountStatus, pending_)]]">
+          $i18n{flywebAccountForgotPassword}
+        </cr-button>
+        <cr-button on-click="onChangeEmail_"
+            disabled="[[busy_(accountStatus, pending_)]]">
+          $i18n{flywebAccountChangeEmail}
+        </cr-button>
+        <cr-button on-click="onChangeKey_"
+            disabled="[[busy_(accountStatus, pending_)]]">
+          $i18n{flywebAccountChangeKey}
+        </cr-button>
+        <cr-button on-click="onViewRecovery_">
+          $i18n{flywebAccountViewRecovery}
+        </cr-button>
+      </div>
+      <div class="fw-actions">
+        <cr-button on-click="onLeave_"
+            disabled="[[busy_(accountStatus, pending_)]]">
+          $i18n{flywebAccountLeave}
+        </cr-button>
+        <cr-button on-click="onDeleteEverywhere_"
+            disabled="[[busy_(accountStatus, pending_)]]">
+          $i18n{flywebAccountDeleteEverywhere}
+        </cr-button>
+      </div>
+    </div>
+  </template>
+
+  <!-- Cambiar el email (§6.5) -->
+  <template is="dom-if" if="[[is_(screen_, 'change-email')]]">
+    <div class="fw-screen">
+      <h2>$i18n{flywebAccountChangeEmail}</h2>
+      <p>$i18n{flywebAccountChangeEmailDesc}</p>
+      <div class="fw-field">
+        <label for="changeEmailPassword">$i18n{flywebAccountPasswordLabel}</label>
+        <input id="changeEmailPassword" class="fw-input" type="password"
+            autocomplete="current-password" value="{{password_::input}}">
+      </div>
+      <div class="fw-field">
+        <label for="changeEmailNew">$i18n{flywebAccountNewEmailLabel}</label>
+        <input id="changeEmailNew" class="fw-input" type="email"
+            autocomplete="email" spellcheck="false"
+            value="{{newEmail_::input}}">
+      </div>
+      <p class="fw-hint">$i18n{flywebAccountForgotFirst}</p>
+      <div class="fw-actions">
+        <cr-button class="action-button" on-click="onChangeEmailStart_"
+            disabled="[[!canChangeEmail_(newEmail_, password_, pending_, accountStatus)]]">
+          $i18n{flywebAccountSendCode}
+        </cr-button>
+        <cr-button on-click="onBack_">$i18n{flywebAccountBack}</cr-button>
+      </div>
+    </div>
+  </template>
+
+  <!-- Cambiar la clave de sincronización (§6.3) -->
+  <template is="dom-if" if="[[is_(screen_, 'change-key')]]">
+    <div class="fw-screen">
+      <h2>$i18n{flywebAccountChangeKey}</h2>
+      <p>$i18n{flywebAccountChangeKeyDesc}</p>
+      <div class="fw-field">
+        <label for="changeKeyPassword">$i18n{flywebAccountPasswordLabel}</label>
+        <input id="changeKeyPassword" class="fw-input" type="password"
+            autocomplete="current-password" value="{{password_::input}}">
+      </div>
+      <p class="fw-hint">$i18n{flywebAccountForgotFirst}</p>
+      <div class="fw-actions">
+        <cr-button class="action-button" on-click="onChangeKeyConfirm_"
+            disabled="[[!canChangeKey_(password_, pending_, accountStatus)]]">
+          $i18n{flywebAccountChangeKey}
+        </cr-button>
+        <cr-button on-click="onBack_">$i18n{flywebAccountBack}</cr-button>
+      </div>
+    </div>
+  </template>
+
+  <!-- Claves ilegibles (§6.1, §9) -->
+  <template is="dom-if" if="[[is_(screen_, 'keys')]]">
+    <div class="fw-screen">
+      <p><b>$i18n{flywebAccountKeysUnreadable}</b></p>
+      <p>$i18n{flywebAccountKeysUnreadableDesc}</p>
+      <div class="fw-actions">
+        <cr-button class="action-button" on-click="onRejoin_">
+          $i18n{flywebAccountRejoin}
+        </cr-button>
+      </div>
+    </div>
+  </template>
+
+  <template is="dom-if" if="[[is_(screen_, 'rejoin')]]">
+    <div class="fw-screen">
+      <h2>$i18n{flywebAccountRejoin}</h2>
+      <p>$i18n{flywebAccountKeysUnreadableDesc}</p>
+      <div class="fw-actions">
+        <cr-button class="action-button" on-click="onLogin_"
+            disabled="[[busy_(accountStatus, pending_)]]">
+          $i18n{flywebAccountLogin}
+        </cr-button>
+        <cr-button on-click="onHaveRecoveryKey_"
+            disabled="[[busy_(accountStatus, pending_)]]">
+          $i18n{flywebAccountHaveRecoveryKey}
+        </cr-button>
+        <cr-button on-click="onBack_">$i18n{flywebAccountBack}</cr-button>
+      </div>
+    </div>
+  </template>
+
+  <!-- Cuenta borrada desde otro Mac (§9) -->
+  <template is="dom-if" if="[[is_(screen_, 'deleted')]]">
+    <div class="fw-screen">
+      <p><b>$i18n{flywebAccountAccountDeleted}</b></p>
+      <p>$i18n{flywebAccountDataKept}</p>
+      <div class="fw-actions">
+        <cr-button class="action-button" on-click="onLoginAgain_"
+            disabled="[[busy_(accountStatus, pending_)]]">
+          $i18n{flywebAccountLoginAgain}
+        </cr-button>
+        <cr-button on-click="onUnderstood_"
+            disabled="[[busy_(accountStatus, pending_)]]">
+          $i18n{flywebAccountUnderstood}
+        </cr-button>
+        <!-- The account went away while this chain lives on (§9). -->
+        <template is="dom-if" if="[[hasChain_(accountStatus)]]">
+          <cr-button on-click="onViewRecovery_">
+            $i18n{flywebAccountViewRecovery}
+          </cr-button>
+        </template>
+      </div>
+    </div>
+  </template>
+
+  <!-- Clave cambiada desde otro Mac (§6.3) -->
+  <template is="dom-if" if="[[is_(screen_, 'key-changed')]]">
+    <div class="fw-screen">
+      <p><b>$i18n{flywebAccountKeyChangedInfobar}</b></p>
+      <p>$i18n{flywebAccountDataKept}</p>
+      <div class="fw-actions">
+        <cr-button class="action-button" on-click="onLoginAgain_"
+            disabled="[[busy_(accountStatus, pending_)]]">
+          $i18n{flywebAccountLoginAgain}
+        </cr-button>
+        <cr-button on-click="onUnderstood_"
+            disabled="[[busy_(accountStatus, pending_)]]">
+          $i18n{flywebAccountUnderstood}
+        </cr-button>
+      </div>
+    </div>
+  </template>
+
+  <!-- The call in progress, its error and its way out (§9, P10) -->
+  <div aria-live="polite">
+    <template is="dom-if" if="[[pending_]]">
+      <p class="fw-info">[[pendingText_(pendingPassword_)]]</p>
+    </template>
+    <template is="dom-if" if="[[error_]]">
+      <p class="fw-error" role="alert">[[error_]]</p>
+      <template is="dom-if" if="[[canRetry_]]">
+        <div class="fw-actions">
+          <cr-button on-click="onRetry_">$i18n{flywebAccountRetry}</cr-button>
+        </div>
+      </template>
+    </template>
+    <template is="dom-if" if="[[info_]]">
+      <p class="fw-info">[[info_]]</p>
+    </template>
+  </div>
+</template>
+
+<template is="dom-if" if="[[confirm_]]" restamp>
+  <cr-dialog show-on-attach on-close="onConfirmCancel_">
+    <div slot="title">[[confirm_.title]]</div>
+    <div slot="body">
+      <p>[[confirm_.body]]</p>
+      <template is="dom-if" if="[[confirm_.body2]]">
+        <p>[[confirm_.body2]]</p>
+      </template>
+    </div>
+    <div slot="button-container">
+      <cr-button class="cancel-button" on-click="onConfirmCancel_">
+        $i18n{cancel}
+      </cr-button>
+      <cr-button class="action-button" on-click="onConfirmAccept_">
+        [[confirm_.button]]
+      </cr-button>
+    </div>
+  </cr-dialog>
+</template>
+
+<template is="dom-if" if="[[oldVersionCodeDialogType_]]" restamp>
+  <settings-brave-sync-code-dialog
+    sync-code="[[oldVersionCode_]]"
+    code-type="{{oldVersionCodeDialogType_}}"
+    on-done="onOldVersionCodeDone_">
+  </settings-brave-sync-code-dialog>
+</template>

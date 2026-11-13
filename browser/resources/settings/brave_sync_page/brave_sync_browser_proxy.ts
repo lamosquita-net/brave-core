@@ -25,6 +25,87 @@ export interface BraveSyncStatus extends SyncStatus {
   isOsEncryptionAvailable: boolean
 }
 
+// FlyWeb 3.2: «Cuenta y sincronización». The contract with
+// BraveSyncHandler (FlyWebAccount* messages) and
+// flyweb_sync::AccountService::GetStatus().
+export type FlyWebAccountState = 'cargando' | 'sin-cuenta' | 'sincronizado' |
+    'borrado-programado' | 'claves-ilegibles' | 'cuenta-borrada' |
+    'clave-cambiada'
+
+export type FlyWebAccountFlowKind = 'crear' | 'entrar' | 'contrasena' |
+    'email' | 'borrar-por-email' | 'empezar-de-cero'
+
+export interface FlyWebAccountFlow {
+  kind: FlyWebAccountFlowKind
+  email: string
+}
+
+export interface FlyWebAccountWarning {
+  n: number
+  type: string
+  date: number
+  mac: string
+  model: string
+  count: number
+  since: number
+  when: number
+}
+
+export interface FlyWebAccountDevice {
+  id: string
+  modelo: string
+  nombre: string
+  alta: number
+  ultimo_uso: number
+  este: boolean
+}
+
+export interface FlyWebAccountStatus {
+  state: FlyWebAccountState
+  email: string
+  hasChain: boolean
+  hasAccount: boolean
+  deletionDate: number
+  offline: boolean
+  lastError: string
+  lastContact: number
+  busy: boolean
+  model: string
+  minPasswordLength: number
+  flow?: FlyWebAccountFlow
+  warnings: FlyWebAccountWarning[]
+  devices: FlyWebAccountDevice[]
+}
+
+export interface FlyWebAccountResultData {
+  recoveryWords?: string
+  fecha?: number
+  aparatos?: FlyWebAccountDevice[]
+}
+
+// Every FlyWebAccount* call resolves (never rejects) with this.
+export interface FlyWebAccountResult {
+  ok: boolean
+  error: string
+  until: number
+  data: FlyWebAccountResultData
+}
+
+export type FlyWebAccountMessage = 'FlyWebAccountRefresh' |
+    'FlyWebAccountCreateStart' | 'FlyWebAccountCreateFinish' |
+    'FlyWebAccountLoginStart' | 'FlyWebAccountLoginFinish' |
+    'FlyWebAccountJoinWithWords' | 'FlyWebAccountResendCode' |
+    'FlyWebAccountCancelFlow' | 'FlyWebAccountPasswordStart' |
+    'FlyWebAccountPasswordFinish' | 'FlyWebAccountEmailStart' |
+    'FlyWebAccountEmailFinish' | 'FlyWebAccountChainChange' |
+    'FlyWebAccountListDevices' | 'FlyWebAccountRemoveDevice' |
+    'FlyWebAccountRenameDevice' | 'FlyWebAccountNotMe' |
+    'FlyWebAccountDismissWarnings' | 'FlyWebAccountDismissNotice' |
+    'FlyWebAccountDeleteEverywhere' | 'FlyWebAccountCancelDeletion' |
+    'FlyWebAccountLeave' | 'FlyWebAccountMailboxDeleteStart' |
+    'FlyWebAccountMailboxDeleteFinish' | 'FlyWebAccountStartOverStart' |
+    'FlyWebAccountStartOverFinish'
+
 export class BraveSyncBrowserProxy {
   getSyncCode(): Promise<string> {
     return sendWithPromise('SyncSetupGetSyncCode');
@@ -52,6 +133,19 @@ export class BraveSyncBrowserProxy {
   }
   permanentlyDeleteSyncAccount(): Promise<boolean>  {
     return sendWithPromise('SyncPermanentlyDeleteAccount');
+  }
+  // FlyWeb 3.2: null when the profile has no account service.
+  getFlyWebAccountStatus(): Promise<FlyWebAccountStatus|null> {
+    return sendWithPromise('FlyWebAccountGetStatus');
+  }
+  // 0–4 (zxcvbn). Only an indicator: nothing but the length is enforced.
+  getFlyWebPasswordStrength(password: string): Promise<number> {
+    return sendWithPromise('FlyWebAccountPasswordStrength', password);
+  }
+  // All the arguments are strings, in the order of the contract.
+  flywebAccountCall(message: FlyWebAccountMessage, ...args: string[]):
+      Promise<FlyWebAccountResult> {
+    return sendWithPromise(message, ...args);
   }
   static getInstance() {
     return instance || (instance = new BraveSyncBrowserProxy())

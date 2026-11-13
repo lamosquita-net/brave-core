@@ -16,6 +16,7 @@ import '../settings_vars.css.js';
 import '../people_page/sync_controls.js';
 import './brave_sync_configure.js';
 import './brave_sync_setup.js';
+import './flyweb_sync_account.js';
 
 import {StatusAction, SyncBrowserProxyImpl} from '/shared/settings/people_page/sync_browser_proxy.js';
 import type {SyncPrefs} from '/shared/settings/people_page/sync_browser_proxy.js';
@@ -26,7 +27,7 @@ import {PolymerElement} from 'chrome://resources/polymer/v3_0/polymer/polymer_bu
 import {Route, RouteObserverMixin, Router} from '../router.js';
 
 import {BraveSyncBrowserProxy} from './brave_sync_browser_proxy.js';
-import type {BraveSyncStatus} from './brave_sync_browser_proxy.js';
+import type {BraveSyncStatus, FlyWebAccountStatus} from './brave_sync_browser_proxy.js';
 import {getTemplate} from './brave_sync_subpage.html.js'
 
 type PageStatus = 'configure' | 'setup' | 'spinner'
@@ -72,6 +73,16 @@ class SettingBraveSyncSubpage extends SettingBraveSyncSubpageBase {
         notify: true,
       },
 
+      /**
+       * FlyWeb 3.2: the account status, from settings-flyweb-sync-account
+       * (null without an account service in this profile).
+       * @private
+       */
+      flywebAccountStatus_: {
+        type: Object,
+        value: null,
+      },
+
       /** @private */
       syncDisabledByAdmin_: {
         type: Boolean,
@@ -113,6 +124,7 @@ class SettingBraveSyncSubpage extends SettingBraveSyncSubpageBase {
   private declare hasLockedSafeStorage_: boolean
   private declare hasUnlockedSafeStorageCannotDecryptSeed_: boolean
   private declare syncSectionDisabled_: boolean
+  private declare flywebAccountStatus_: FlyWebAccountStatus | null
 
   static get observers() {
     return [
@@ -233,6 +245,7 @@ class SettingBraveSyncSubpage extends SettingBraveSyncSubpageBase {
     const router = Router.getInstance();
     if (router.getCurrentRoute() == router.getRoutes().BRAVE_SYNC_SETUP) {
       this.onNavigateToPage_()
+      this.refreshFlyWebAccount_()
       return
     }
 
@@ -241,6 +254,34 @@ class SettingBraveSyncSubpage extends SettingBraveSyncSubpageBase {
     }
 
     this.onNavigateAwayFromPage_()
+  }
+
+  /** FlyWeb 3.2 */
+  isFlyWebAccountAvailable_(status) {
+    return !!status
+  }
+
+  /** FlyWeb 3.2 */
+  hasFlyWebAccount_(status) {
+    return !!status && status.hasAccount
+  }
+
+  /**
+  * FlyWeb 3.2: the sync types under the account while this Mac syncs a
+  * chain; without an account service, as before.
+  */
+  showConfigure_(pageStatus, status) {
+    return pageStatus === 'configure' && (!status || status.hasChain)
+  }
+
+  /** FlyWeb 3.2: the old setup only without an account service. */
+  showOldSetup_(pageStatus, status) {
+    return pageStatus === 'setup' && !status
+  }
+
+  /** FlyWeb 3.2: the account has its own «Volver a unir este Mac». */
+  showOldRejoin_(hasUnlockedSafeStorageCannotDecryptSeed, status) {
+    return hasUnlockedSafeStorageCannotDecryptSeed && !status
   }
 
   /**
@@ -278,6 +319,18 @@ class SettingBraveSyncSubpage extends SettingBraveSyncSubpageBase {
 
     this.unloadCallback_ = this.onNavigateAwayFromPage_.bind(this)
     window.addEventListener('unload', this.unloadCallback_)
+  }
+
+  /**
+  * FlyWeb 3.2: §11 reads the account events «al abrir la página».
+  * @private
+  */
+  refreshFlyWebAccount_() {
+    const account = this.shadowRoot &&
+      this.shadowRoot.querySelector('settings-flyweb-sync-account')
+    if (account) {
+      account.refresh()
+    }
   }
 
   /** @private */

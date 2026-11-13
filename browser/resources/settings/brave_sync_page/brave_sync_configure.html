@@ -86,6 +86,8 @@
 </style>
 
 <!-- Device list goes here -->
+<!-- FlyWeb 3.2: with an account, the account's list replaces this one. -->
+<template is="dom-if" if="[[!hasFlywebAccount]]">
 <section class="devices">
   <h1>$i18n{braveSyncDeviceListTitle}</h1>
   <p class="subtitle" id="DeviceListCaption">$i18n{braveSyncDeviceListSubtitle}</p>
@@ -126,6 +128,8 @@
     </tbody>
   </table>
 
+  <!-- FlyWeb 3.2: the account part shows the recovery key instead. -->
+  <template is="dom-if" if="[[!flywebAccountAvailable]]">
   <div class="device-actions">
     <cr-button on-click="onViewSyncCode_">
       $i18n{braveSyncViewCodeButton}
@@ -135,7 +139,9 @@
       $i18n{braveSyncAddDevice}
     </cr-button>
   </div>
+  </template>
 </section>
+</template>
 
 <!-- Sync Settings -->
 <section class="settings">
@@ -145,6 +151,9 @@
   </settings-sync-controls>
 </section>
 
+<!-- FlyWeb 3.2: with an account, «Salir de la sincronización en este Mac» and
+     «Borrar la cuenta y los datos en todos» replace these two. -->
+<template is="dom-if" if="[[!hasFlywebAccount]]">
 <div class="chain-actions" >
   <section class="cancel">
     <cr-button class="action-button"
@@ -160,6 +169,7 @@
     </cr-button>
   </section>
 </div>
+</template>
 
 <template is="dom-if" if="[[syncCodeDialogType_]]" restamp>
   <settings-brave-sync-code-dialog

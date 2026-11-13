@@ -1,4 +1,9 @@
 <style include="cr-shared-style settings-shared iron-flex">
+  #flyweb-account-section
+  {
+    padding-inline-end: var(--cr-section-padding);
+    padding-inline-start: var(--cr-section-indent-padding);
+  }
   #sync-separator
   {
     border-bottom: var(--cr-separator-line);
@@ -35,6 +40,16 @@
   </div>
 </div>
 
+<!-- FlyWeb 3.2: the account (FlyWeb/docs/sync-cuenta.md §9). Without an
+     account service in this profile it shows nothing and the old setup
+     below stays. -->
+<div id="flyweb-account-section" hidden="[[syncDisabledByAdmin_]]">
+  <settings-flyweb-sync-account id="flywebAccount"
+      account-status="{{flywebAccountStatus_}}"
+      on-setup-success="onSetupSuccess_">
+  </settings-flyweb-sync-account>
+</div>
+
 <!-- Sync words decryption error, safe storage locked-->
 <div class="cr-row first" hidden="[[!hasLockedSafeStorage_]]">
   <div class="flex cr-padded-text">
@@ -43,7 +58,10 @@
 </div>
 
 <!-- Sync words decryption error, safe storage unlocked-->
-<div class="cr-row first" hidden="[[!hasUnlockedSafeStorageCannotDecryptSeed_]]">
+<!-- FlyWeb 3.2: with the account, «claves ilegibles» and «Volver a unir este
+     Mac» are the account's (§9). -->
+<div class="cr-row first"
+    hidden="[[!showOldRejoin_(hasUnlockedSafeStorageCannotDecryptSeed_, flywebAccountStatus_)]]">
   <div class="flex cr-padded-text">
     <p>$i18nRaw{braveSyncPassphraseDecryptionErrorUnlockedSsMessage}</p>
     <div class="actions">
@@ -67,12 +85,19 @@
       $i18n{syncLoading}
     </div>
 
-    <template is="dom-if" if="[[isStatus_('configure', pageStatus_)]]">
-      <settings-brave-sync-configure syncStatus="[[syncStatus]]">
+    <!-- FlyWeb 3.2: the sync types stay as they were, under the account,
+         while this Mac syncs a chain. -->
+    <template is="dom-if"
+        if="[[showConfigure_(pageStatus_, flywebAccountStatus_)]]">
+      <settings-brave-sync-configure syncStatus="[[syncStatus]]"
+          flyweb-account-available="[[isFlyWebAccountAvailable_(flywebAccountStatus_)]]"
+          has-flyweb-account="[[hasFlyWebAccount_(flywebAccountStatus_)]]">
       </settings-brave-sync-configure>
     </template>
 
-    <template is="dom-if" if="[[isStatus_('setup', pageStatus_)]]">
+    <!-- FlyWeb 3.2: «Empezar una cadena» and «Tengo un código» give way to
+         the account (decision 9); they stay for a profile without it. -->
+    <template is="dom-if" if="[[showOldSetup_(pageStatus_, flywebAccountStatus_)]]">
       <settings-brave-sync-setup on-setup-success="onSetupSuccess_"
        sync-code-dialog-type="{{syncCodeDialogType}}">
       </settings-brave-sync-setup>

@@ -16,7 +16,9 @@
 #include "base/logging.h"
 #include "base/notreached.h"
 #include "base/strings/string_number_conversions.h"
+#include "brave/browser/sync/account/flyweb_sync_account_service_factory.h"
 #include "brave/components/brave_sync/brave_sync_prefs.h"
+#include "brave/components/brave_sync/crypto/account_crypto.h"
 #include "brave/components/brave_sync/crypto/crypto.h"
 #include "brave/components/brave_sync/qr_code_data.h"
 #include "brave/components/brave_sync/sync_service_impl_helper.h"
@@ -35,6 +37,10 @@
 #include "content/public/browser/web_ui.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/webui/web_ui_util.h"
+
+#include "third_party/zxcvbn-cpp/native-src/zxcvbn/matching.hpp"
+#include "third_party/zxcvbn-cpp/native-src/zxcvbn/scoring.hpp"
+#include "third_party/zxcvbn-cpp/native-src/zxcvbn/time_estimates.hpp"
 
 using brave_sync::TimeLimitedWords;
 
@@ -101,6 +107,8 @@ void BraveSyncHandler::RegisterMessages() {
       "SyncPermanentlyDeleteAccount",
       base::BindRepeating(&BraveSyncHandler::HandlePermanentlyDeleteAccount,
                           base::Unretained(this)));
+
+  RegisterAccountMessages();
 }
 
 void BraveSyncHandler::OnJavascriptAllowed() {
@@ -110,10 +118,196 @@ void BraveSyncHandler::OnJavascriptAllowed() {
     device_info_tracker_observer_.Reset();
     device_info_tracker_observer_.Observe(tracker);
   }
+  account_observation_.Reset();
+  if (auto* account = GetAccountService()) {
+    account_observation_.Observe(account);
+  }
 }
 
 void BraveSyncHandler::OnJavascriptDisallowed() {
   device_info_tracker_observer_.Reset();
+  account_observation_.Reset();
+}
+
+void BraveSyncHandler::OnAccountStatusChanged() {
+  if (IsJavascriptAllowed()) {
+    if (auto* account = GetAccountService()) {
+      FireWebUIListener("flyweb-account-status-changed", account->GetStatus());
+    }
+  }
+}
+
+// --- FlyWeb 3.2: «Cuenta y sincronización» ---
+
+namespace {
+
+// Messages with only string arguments, all resolved with an AccountResult.
+constexpr const char* kAccountMessages[] = {
+    "FlyWebAccountRefresh",          "FlyWebAccountCreateStart",
+    "FlyWebAccountCreateFinish",     "FlyWebAccountLoginStart",
+    "FlyWebAccountLoginFinish",      "FlyWebAccountJoinWithWords",
+    "FlyWebAccountResendCode",       "FlyWebAccountCancelFlow",
+    "FlyWebAccountPasswordStart",    "FlyWebAccountPasswordFinish",
+    "FlyWebAccountEmailStart",       "FlyWebAccountEmailFinish",
+    "FlyWebAccountChainChange",      "FlyWebAccountListDevices",
+    "FlyWebAccountRemoveDevice",     "FlyWebAccountRenameDevice",
+    "FlyWebAccountNotMe",            "FlyWebAccountDismissWarnings",
+    "FlyWebAccountDismissNotice",    "FlyWebAccountDeleteEverywhere",
+    "FlyWebAccountCancelDeletion",   "FlyWebAccountLeave",
+    "FlyWebAccountMailboxDeleteStart", "FlyWebAccountMailboxDeleteFinish",
+    "FlyWebAccountStartOverStart",   "FlyWebAccountStartOverFinish",
+};
+
+// args[0] is the callback id; the rest are strings.
+std::string Arg(const base::ListValue& args, size_t i) {
+  if (i < args.size() && args[i].is_string()) {
+    return args[i].GetString();
+  }
+  return std::string();
+}
+
+}  // namespace
+
+void BraveSyncHandler::RegisterAccountMessages() {
+  web_ui()->RegisterMessageCallback(
+      "FlyWebAccountGetStatus",
+      base::BindRepeating(&BraveSyncHandler::HandleAccountGetStatus,
+                          base::Unretained(this)));
+  web_ui()->RegisterMessageCallback(
+      "FlyWebAccountPasswordStrength",
+      base::BindRepeating(&BraveSyncHandler::HandleAccountPasswordStrength,
+                          base::Unretained(this)));
+  for (const char* message : kAccountMessages) {
+    web_ui()->RegisterMessageCallback(
+        message, base::BindRepeating(&BraveSyncHandler::HandleAccountCall,
+                                     base::Unretained(this),
+                                     std::string(message)));
+  }
+}
+
+flyweb_sync::AccountService* BraveSyncHandler::GetAccountService() const {
+  return flyweb_sync::AccountServiceFactory::GetForBrowserContext(profile_);
+}
+
+void BraveSyncHandler::HandleAccountGetStatus(const base::ListValue& args) {
+  AllowJavascript();
+  CHECK_GE(args.size(), 1U);
+  auto* account = GetAccountService();
+  ResolveJavascriptCallback(args[0], account ? base::Value(account->GetStatus())
+                                             : base::Value());
+}
+
+// §4: an indicator, nothing enforced but the length. zxcvbn, as the password
+// manager's weak check (capped at 40 code points: its cost explodes above).
+void BraveSyncHandler::HandleAccountPasswordStrength(
+    const base::ListValue& args) {
+  AllowJavascript();
+  CHECK_GE(args.size(), 1U);
+  std::string password = Arg(args, 1);
+  std::u16string capped = base::UTF8ToUTF16(password);
+  brave_sync::crypto::account::WipeString(password);
+  if (capped.size() > 40) {
+    capped.resize(40);
+  }
+  std::string capped8 = base::UTF16ToUTF8(capped);
+  std::fill(capped.begin(), capped.end(), u'\0');
+  int score = 0;
+  if (!capped8.empty()) {
+    std::vector<zxcvbn::Match> matches = zxcvbn::omnimatch(capped8);
+    zxcvbn::ScoringResult result =
+        zxcvbn::most_guessable_match_sequence(capped8, matches);
+    score = zxcvbn::estimate_attack_times(result.guesses).score;
+  }
+  brave_sync::crypto::account::WipeString(capped8);
+  ResolveJavascriptCallback(args[0], base::Value(score));
+}
+
+void BraveSyncHandler::ResolveAccountResult(
+    base::Value callback_id,
+    flyweb_sync::AccountResult result) {
+  if (!IsJavascriptAllowed()) {
+    return;
+  }
+  base::DictValue r;
+  r.Set("ok", result.ok);
+  r.Set("error", result.error);
+  r.Set("until", static_cast<double>(result.until));
+  r.Set("data", std::move(result.data));
+  ResolveJavascriptCallback(callback_id, r);
+}
+
+void BraveSyncHandler::HandleAccountCall(const std::string& message,
+                                         const base::ListValue& args) {
+  AllowJavascript();
+  CHECK_GE(args.size(), 1U);
+  auto* account = GetAccountService();
+  if (!account) {
+    ResolveAccountResult(args[0].Clone(),
+                         flyweb_sync::AccountResult::Error("llavero"));
+    return;
+  }
+  auto done = base::BindOnce(&BraveSyncHandler::ResolveAccountResult,
+                             weak_ptr_factory_.GetWeakPtr(), args[0].Clone());
+  // Passwords go by value into the service, which wipes them; the copies in
+  // `args` belong to the WebUI and cannot be wiped from here.
+  if (message == "FlyWebAccountRefresh") {
+    account->Refresh(std::move(done));
+  } else if (message == "FlyWebAccountCreateStart") {
+    account->CreateAccountStart(Arg(args, 1), std::move(done));
+  } else if (message == "FlyWebAccountCreateFinish") {
+    account->CreateAccountFinish(Arg(args, 1), Arg(args, 2), Arg(args, 3), std::move(done));
+  } else if (message == "FlyWebAccountLoginStart") {
+    account->LoginStart(Arg(args, 1), Arg(args, 2), std::move(done));
+  } else if (message == "FlyWebAccountLoginFinish") {
+    account->LoginFinish(Arg(args, 1), Arg(args, 2), std::move(done));
+  } else if (message == "FlyWebAccountJoinWithWords") {
+    account->JoinWithRecoveryKey(Arg(args, 1), std::move(done));
+  } else if (message == "FlyWebAccountResendCode") {
+    account->ResendCode(std::move(done));
+  } else if (message == "FlyWebAccountCancelFlow") {
+    account->CancelFlow();
+    std::move(done).Run(flyweb_sync::AccountResult::Ok());
+  } else if (message == "FlyWebAccountPasswordStart") {
+    account->PasswordChangeStart(std::move(done));
+  } else if (message == "FlyWebAccountPasswordFinish") {
+    account->PasswordChangeFinish(Arg(args, 1), Arg(args, 2), std::move(done));
+  } else if (message == "FlyWebAccountEmailStart") {
+    account->EmailChangeStart(Arg(args, 1), Arg(args, 2), std::move(done));
+  } else if (message == "FlyWebAccountEmailFinish") {
+    account->EmailChangeFinish(Arg(args, 1), std::move(done));
+  } else if (message == "FlyWebAccountChainChange") {
+    account->ChainChange(Arg(args, 1), std::move(done));
+  } else if (message == "FlyWebAccountListDevices") {
+    account->ListDevices(std::move(done));
+  } else if (message == "FlyWebAccountRemoveDevice") {
+    account->RemoveDevice(Arg(args, 1), std::move(done));
+  } else if (message == "FlyWebAccountRenameDevice") {
+    account->RenameDevice(Arg(args, 1), Arg(args, 2), std::move(done));
+  } else if (message == "FlyWebAccountNotMe") {
+    account->NotMe(std::move(done));
+  } else if (message == "FlyWebAccountDismissWarnings") {
+    account->DismissWarnings();
+    std::move(done).Run(flyweb_sync::AccountResult::Ok());
+  } else if (message == "FlyWebAccountDismissNotice") {
+    account->DismissNotice();
+    std::move(done).Run(flyweb_sync::AccountResult::Ok());
+  } else if (message == "FlyWebAccountDeleteEverywhere") {
+    account->DeleteEverywhere(std::move(done));
+  } else if (message == "FlyWebAccountCancelDeletion") {
+    account->CancelDeletion(std::move(done));
+  } else if (message == "FlyWebAccountLeave") {
+    account->LeaveOnThisMac(std::move(done));
+  } else if (message == "FlyWebAccountMailboxDeleteStart") {
+    account->MailboxDeleteStart(Arg(args, 1), std::move(done));
+  } else if (message == "FlyWebAccountMailboxDeleteFinish") {
+    account->MailboxDeleteFinish(Arg(args, 1), std::move(done));
+  } else if (message == "FlyWebAccountStartOverStart") {
+    account->StartOverStart(Arg(args, 1), std::move(done));
+  } else if (message == "FlyWebAccountStartOverFinish") {
+    account->StartOverFinish(Arg(args, 1), Arg(args, 2), std::move(done));
+  } else {
+    NOTREACHED() << message;
+  }
 }
 
 void BraveSyncHandler::OnDeviceInfoChange() {

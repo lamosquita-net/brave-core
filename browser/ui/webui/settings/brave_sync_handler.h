@@ -10,6 +10,7 @@
 #include "base/memory/weak_ptr.h"
 #include "base/scoped_observation.h"
 #include "base/values.h"
+#include "brave/browser/sync/account/flyweb_sync_account_service.h"
 #include "chrome/browser/ui/webui/settings/settings_page_ui_handler.h"
 #include "components/sync/engine/sync_protocol_error.h"
 #include "components/sync_device_info/device_info_tracker.h"
@@ -22,7 +23,8 @@ class BraveSyncServiceImpl;
 class Profile;
 
 class BraveSyncHandler : public settings::SettingsPageUIHandler,
-                         public syncer::DeviceInfoTracker::Observer {
+                         public syncer::DeviceInfoTracker::Observer,
+                         public flyweb_sync::AccountService::Observer {
  public:
   BraveSyncHandler();
   BraveSyncHandler(const BraveSyncHandler&) = delete;
@@ -31,6 +33,9 @@ class BraveSyncHandler : public settings::SettingsPageUIHandler,
 
   // syncer::DeviceInfoTracker::Observer
   void OnDeviceInfoChange() override;
+
+  // flyweb_sync::AccountService::Observer
+  void OnAccountStatusChanged() override;
 
  private:
   // SettingsPageUIHandler overrides:
@@ -47,6 +52,17 @@ class BraveSyncHandler : public settings::SettingsPageUIHandler,
   void HandleReset(const base::ListValue& args);
   void HandleDeleteDevice(const base::ListValue& args);
   void HandlePermanentlyDeleteAccount(const base::ListValue& args);
+
+  // FlyWeb 3.2: «Cuenta y sincronización» (sync-cuenta.md §9, §11). Every
+  // message resolves (never rejects) with {ok, error, until, data}.
+  void RegisterAccountMessages();
+  void HandleAccountGetStatus(const base::ListValue& args);
+  void HandleAccountPasswordStrength(const base::ListValue& args);
+  void HandleAccountCall(const std::string& message,
+                         const base::ListValue& args);
+  void ResolveAccountResult(base::Value callback_id,
+                            flyweb_sync::AccountResult result);
+  flyweb_sync::AccountService* GetAccountService() const;
 
   void OnResetDone(base::Value callback_id);
   void OnAccountPermanentlyDeleted(base::Value callback_id,
@@ -65,6 +81,10 @@ class BraveSyncHandler : public settings::SettingsPageUIHandler,
   base::ScopedObservation<syncer::DeviceInfoTracker,
                           syncer::DeviceInfoTracker::Observer>
       device_info_tracker_observer_{this};
+
+  base::ScopedObservation<flyweb_sync::AccountService,
+                          flyweb_sync::AccountService::Observer>
+      account_observation_{this};
 
   base::WeakPtrFactory<BraveSyncHandler> weak_ptr_factory_;
 };

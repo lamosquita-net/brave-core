@@ -72,6 +72,24 @@ export class SettingsBraveSyncConfigureElement extends SettingsBraveSyncConfigur
         type: Boolean,
         value: false
       },
+      /**
+       * FlyWeb 3.2: the page has the account part (flyweb_sync_account.ts),
+       * which shows the recovery key; «Añadir aparato» is gone with
+       * «Unirse con un código» (decision 9 of sync-cuenta.md).
+       */
+      flywebAccountAvailable: {
+        type: Boolean,
+        value: false
+      },
+      /**
+       * FlyWeb 3.2: this chain has an account. Its device list, «Salir» and
+       * «Borrar en todos» are the account's: leaving or deleting the chain
+       * from here would not tell the account (§9).
+       */
+      hasFlywebAccount: {
+        type: Boolean,
+        value: false
+      },
     };
   }
 
@@ -80,6 +98,8 @@ export class SettingsBraveSyncConfigureElement extends SettingsBraveSyncConfigur
   private declare deviceList_: BraveDeviceInfo[];
   private declare syncCodeDialogType_: string | null;
   private declare syncDoingDeleteAccount_: Boolean | false;
+  private declare flywebAccountAvailable: boolean;
+  private declare hasFlywebAccount: boolean;
 
   browserProxy_: BraveSyncBrowserProxy = BraveSyncBrowserProxy.getInstance();
 
