@@ -7,6 +7,8 @@
 
 #include "base/check.h"
 #include "brave/browser/infobars/brave_sync_account_deleted_infobar_delegate.h"
+#include "brave/browser/infobars/flyweb_sync_account_infobar_delegate.h"
+#include "brave/browser/sync/account/flyweb_sync_account_service_factory.h"
 #include "brave/components/brave_sync/brave_sync_prefs.h"
 #include "brave/components/sync/service/brave_sync_service_impl.h"
 #include "build/build_config.h"
@@ -37,6 +39,10 @@ BraveSyncAlertsService::BraveSyncAlertsService(Profile* profile)
       sync_service_observer_.AddObservation(service);
     }
   }
+  if (auto* account =
+          flyweb_sync::AccountServiceFactory::GetForBrowserContext(profile)) {
+    account_observation_.Observe(account);
+  }
 }
 
 BraveSyncAlertsService::~BraveSyncAlertsService() {}
@@ -48,7 +54,15 @@ void BraveSyncAlertsService::OnStateChanged(SyncService* service) {
   brave_sync::Prefs prefs(profile_->GetPrefs());
 
   if (prefs.IsSyncAccountDeletedNoticePending()) {
-    ShowInfobar();
+    // FlyWeb: while the account service asks the server whether the key was
+    // changed from another Mac, «account deleted» may be the wrong message.
+    auto* account =
+        flyweb_sync::AccountServiceFactory::GetForBrowserContext(profile_);
+    if (account && account->resolving_chain_disabled()) {
+      account_deleted_deferred_ = true;
+    } else {
+      ShowInfobar();
+    }
   }
 
 #if !BUILDFLAG(IS_ANDROID)
@@ -65,6 +79,56 @@ void BraveSyncAlertsService::OnStateChanged(SyncService* service) {
       ShowSyncCannotRunInfobar();
     }
   }
+#endif
+}
+
+void BraveSyncAlertsService::OnAccountStatusChanged() {
+  auto* account =
+      flyweb_sync::AccountServiceFactory::GetForBrowserContext(profile_);
+  if (!account || account->resolving_chain_disabled()) {
+    return;
+  }
+  if (account_deleted_deferred_) {
+    account_deleted_deferred_ = false;
+    // Still pending unless the key-changed answer cleared it.
+    if (brave_sync::Prefs(profile_->GetPrefs())
+            .IsSyncAccountDeletedNoticePending()) {
+      ShowInfobar();
+    }
+  }
+  if (account->state() == flyweb_sync::AccountService::State::kChainChanged) {
+    if (!key_changed_notice_shown_) {
+      key_changed_notice_shown_ = true;
+      ShowAccountInfobar(/*key_changed=*/true, {});
+    }
+  } else {
+    key_changed_notice_shown_ = false;
+  }
+}
+
+void BraveSyncAlertsService::OnAccountWarnings(
+    const std::vector<flyweb_sync::AccountEvent>& events) {
+  auto* account =
+      flyweb_sync::AccountServiceFactory::GetForBrowserContext(profile_);
+  // All the pending ones, not only the new: the bar says how many.
+  ShowAccountInfobar(/*key_changed=*/false,
+                     account ? account->warnings() : events);
+}
+
+void BraveSyncAlertsService::ShowAccountInfobar(
+    bool key_changed,
+    const std::vector<flyweb_sync::AccountEvent>& warnings) {
+#if !BUILDFLAG(IS_ANDROID)
+  BrowserWindowInterface* browser =
+      GetLastActiveBrowserWindowInterfaceWithAnyProfile();
+  if (!browser || browser->GetProfile() != profile_) {
+    return;
+  }
+  FlyWebSyncAccountInfoBarDelegate::Create(
+      browser->GetTabStripModel()->GetActiveWebContents(), profile_,
+      key_changed ? FlyWebSyncAccountInfoBarDelegate::Kind::kKeyChanged
+                  : FlyWebSyncAccountInfoBarDelegate::Kind::kWarnings,
+      warnings);
 #endif
 }
 

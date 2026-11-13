@@ -8,6 +8,7 @@
 #include <memory>
 
 #include "base/no_destructor.h"
+#include "brave/browser/sync/account/flyweb_sync_account_service_factory.h"
 #include "brave/browser/sync/brave_sync_alerts_service.h"
 #include "chrome/browser/profiles/incognito_helpers.h"
 #include "chrome/browser/profiles/profile.h"
@@ -33,6 +34,7 @@ BraveSyncAlertsServiceFactory::BraveSyncAlertsServiceFactory()
           "BraveSyncAlertsService",
           BrowserContextDependencyManager::GetInstance()) {
   DependsOn(SyncServiceFactory::GetInstance());
+  DependsOn(flyweb_sync::AccountServiceFactory::GetInstance());
 }
 
 BraveSyncAlertsServiceFactory::~BraveSyncAlertsServiceFactory() {}
