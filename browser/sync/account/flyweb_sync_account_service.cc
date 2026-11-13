@@ -39,7 +39,6 @@
 #include "components/sync/base/command_line_switches.h"
 #include "components/sync/service/sync_user_settings.h"
 #include "content/public/browser/storage_partition.h"
-#include "crypto/random.h"
 #include "net/base/load_flags.h"
 #include "net/base/url_util.h"
 #include "net/http/http_response_headers.h"
@@ -63,9 +62,10 @@ constexpr char kPrefToken[] = "flyweb_sync_account.token";
 constexpr char kPrefLastEvent[] = "flyweb_sync_account.last_event";
 constexpr char kPrefNotice[] = "flyweb_sync_account.notice";
 constexpr char kPrefWarnings[] = "flyweb_sync_account.warnings";
-// K3 (SEGURIDAD-PORTES-23, with C1 of #977): a secret per device, made here,
-// that proves the author of an operation. The wire format is not fixed yet:
-// it is generated and kept, and AddDeviceSecret() is where it will be sent.
+// K3 (SEGURIDAD-PORTES-23, C1 of #977 at 60cc1d0): the server gives each
+// device a secret («secreto», base64url of 32 bytes) when it is added. It is
+// kept like the token and proves the author in aparatos/renovar,
+// contrasena/cambiar and cadena/cambiar. It never expires.
 constexpr char kPrefDeviceSecret[] = "flyweb_sync_account.device_secret";
 
 constexpr char kPathPrefix[] = "/cuenta/v1/";
@@ -334,23 +334,12 @@ void AccountService::LoadPrefs() {
   LoadWarnings();
 }
 
-// K3: one per device, created the first time it is needed, kept encrypted.
-const std::string& AccountService::DeviceSecret() {
-  if (device_secret_.empty()) {
-    std::array<uint8_t, 32> raw;
-    ::crypto::RandBytes(raw);
-    device_secret_ = base::Base64UrlEncode(
-        raw, base::Base64UrlEncodePolicy::OMIT_PADDING);
-    std::ranges::fill(raw, 0);
-    StoreString(kPrefDeviceSecret, device_secret_);
+// K3: the device id and its secret go together in the calls that renew the
+// token or carry the author.
+void AccountService::AddDeviceSecret(base::DictValue& body) const {
+  if (!device_id_.empty() && !device_secret_.empty()) {
+    body.Set("secreto", device_secret_);
   }
-  return device_secret_;
-}
-
-void AccountService::AddDeviceSecret(base::DictValue& body) {
-  // Pending the format of #977-C1 (SYNC-NUBE-1 via COORDINACIÓN-41): the field
-  // name and where it goes. Until then nothing is sent.
-  (void)body;
 }
 
 std::optional<std::string> AccountService::LoadString(const char* path) const {
@@ -384,7 +373,10 @@ void AccountService::StoreString(const char* path, const std::string& value) {
 void AccountService::StoreAccount(const std::string& account_id,
                                   const std::string& email,
                                   const std::string& device_id,
-                                  const std::string& token) {
+                                  const std::string& token,
+                                  const std::string& secret) {
+  device_secret_ = secret;
+  StoreString(kPrefDeviceSecret, device_secret_);
   account_id_ = account_id;
   email_ = email;
   device_id_ = device_id;
@@ -1097,6 +1089,7 @@ void AccountService::RenewToken(AccountCallback callback) {
   spec.op = "aparatos-renovar";
   spec.auth = Auth::kProof;
   spec.body.Set("aparato", device_id_);
+  AddDeviceSecret(spec.body);
   Call(std::move(spec),
        base::BindOnce(
            [](base::WeakPtr<AccountService> self, AccountCallback callback,
@@ -1107,12 +1100,16 @@ void AccountService::RenewToken(AccountCallback callback) {
              if (r.ok) {
                self->StoreToken(GetStr(r.data, "aparato"),
                                 GetStr(r.data, "token"));
-             } else if (r.error == "aparato") {
-               // Removed from the list by another Mac: register again only
-               // if the user asks (the page offers it); events still work
-               // with the chain proof.
+             } else if (r.error == "aparato" || r.error == "credenciales") {
+               // Removed from the list by another Mac («aparato»), or this
+               // device's secret is not valid («credenciales», K3): forget the
+               // device. Events still work with the chain proof, and the next
+               // poll adds this Mac again, which warns every Mac («Mac
+               // añadido»).
                self->device_id_.clear();
+               self->device_secret_.clear();
                self->StoreString(kPrefDevice, std::string());
+               self->StoreString(kPrefDeviceSecret, std::string());
              }
              std::move(callback).Run(std::move(r));
            },
@@ -1142,6 +1139,8 @@ void AccountService::RegisterThisMac(AccountCallback callback) {
                }
                self->StoreToken(GetStr(r.data, "aparato"),
                                 GetStr(r.data, "token"));
+               self->device_secret_ = GetStr(r.data, "secreto");
+               self->StoreString(kPrefDeviceSecret, self->device_secret_);
                self->UpdateState();
                self->NotifyStatus();
              }
@@ -1435,7 +1434,8 @@ void AccountService::CreateAccountFinish(const std::string& code,
                       self->CancelFlow();
                       self->StoreAccount(GetStr(r.data, "cuenta"), email,
                                          GetStr(r.data, "aparato"),
-                                         GetStr(r.data, "token"));
+                                         GetStr(r.data, "token"),
+                                         GetStr(r.data, "secreto"));
                       if (!new_chain) {
                         self->Poll(base::DoNothing());
                         std::move(callback).Run(AccountResult::Ok());
@@ -1596,16 +1596,18 @@ void AccountService::LoginFinish(const std::string& code,
             const std::string account_id = GetStr(r.data, "cuenta");
             const std::string device_id = GetStr(r.data, "aparato");
             const std::string token = GetStr(r.data, "token");
+            const std::string secret = GetStr(r.data, "secreto");
             auto join = base::BindOnce(
                 [](base::WeakPtr<AccountService> self,
                    std::unique_ptr<account::SecretKey> seed,
                    std::string account_id, std::string email,
                    std::string device_id, std::string token,
-                   AccountCallback callback) {
+                   std::string secret, AccountCallback callback) {
                   if (!self) {
                     return;
                   }
-                  self->StoreAccount(account_id, email, device_id, token);
+                  self->StoreAccount(account_id, email, device_id, token,
+                                     secret);
                   account::ChainKeys keys =
                       account::ChainKeys::FromSeed(seed->bytes());
                   if (!self->chain_keys_.empty() &&
@@ -1617,7 +1619,7 @@ void AccountService::LoginFinish(const std::string& code,
                   self->JoinChain(*seed, std::move(callback));
                 },
                 self, std::move(seed_ptr), account_id, email, device_id, token,
-                std::move(callback));
+                secret, std::move(callback));
             // Another chain here: leave it first; its data stays in the
             // profile and is combined on joining (§9, «Combinar»).
             std::array<uint8_t, account::kSeedSize> current;
@@ -1782,6 +1784,7 @@ void AccountService::PasswordChangeFinishImpl(const std::string& code,
             spec.body.Set("envoltura", B64(wrapped));
             if (!self->device_id_.empty()) {
               spec.body.Set("aparato", self->device_id_);
+              self->AddDeviceSecret(spec.body);
             }
             // §4.6, third safeguard: Reintentar repeats the same kl and wrap.
             self->Call(
@@ -2005,6 +2008,7 @@ void AccountService::ChainChangeImpl(std::string password,
             spec.body.Set("envoltura", B64(wrapped));
             if (!self->device_id_.empty()) {
               spec.body.Set("aparato", self->device_id_);
+              self->AddDeviceSecret(spec.body);
             }
             // From here this Mac switches chains itself: the old chain's
             // DISABLED_BY_ADMIN is not «cuenta borrada».

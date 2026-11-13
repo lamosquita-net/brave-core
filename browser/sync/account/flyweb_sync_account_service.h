@@ -227,7 +227,8 @@ class AccountService : public KeyedService,
   void StoreAccount(const std::string& account_id,
                     const std::string& email,
                     const std::string& device_id,
-                    const std::string& token);
+                    const std::string& token,
+                    const std::string& secret);
   void StoreToken(const std::string& device_id, const std::string& token);
   void StoreString(const char* path, const std::string& value);
   std::optional<std::string> LoadString(const char* path) const;
@@ -297,8 +298,7 @@ class AccountService : public KeyedService,
   void LeaveChainThen(base::OnceClosure then);
   void RefreshEmail(AccountCallback then);
   void SaveWarnings();
-  const std::string& DeviceSecret();
-  void AddDeviceSecret(base::DictValue& body);
+  void AddDeviceSecret(base::DictValue& body) const;
   void LoadWarnings();
   void PasswordChangeFinishImpl(const std::string& code,
                                 std::string new_password,
@@ -332,7 +332,7 @@ class AccountService : public KeyedService,
   std::string email_;
   std::string device_id_;
   std::string token_;
-  std::string device_secret_;  // K3, base64url of 32 random bytes
+  std::string device_secret_;  // K3: «secreto» from the server
   int64_t last_event_ = 0;
   std::string server_state_;  // activa, borrado-programado, ...
   int64_t deletion_date_ = 0;
