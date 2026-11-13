@@ -49,6 +49,8 @@ export interface FlyWebAccountWarning {
   count: number
   since: number
   when: number
+  // cadena-ligada: the email of the account the chain was linked to (K1).
+  email?: string
 }
 
 export interface FlyWebAccountDevice {

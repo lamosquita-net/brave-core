@@ -39,6 +39,7 @@
 #include "components/sync/base/command_line_switches.h"
 #include "components/sync/service/sync_user_settings.h"
 #include "content/public/browser/storage_partition.h"
+#include "crypto/random.h"
 #include "net/base/load_flags.h"
 #include "net/base/url_util.h"
 #include "net/http/http_response_headers.h"
@@ -61,6 +62,11 @@ constexpr char kPrefDevice[] = "flyweb_sync_account.device";
 constexpr char kPrefToken[] = "flyweb_sync_account.token";
 constexpr char kPrefLastEvent[] = "flyweb_sync_account.last_event";
 constexpr char kPrefNotice[] = "flyweb_sync_account.notice";
+constexpr char kPrefWarnings[] = "flyweb_sync_account.warnings";
+// K3 (SEGURIDAD-PORTES-23, with C1 of #977): a secret per device, made here,
+// that proves the author of an operation. The wire format is not fixed yet:
+// it is generated and kept, and AddDeviceSecret() is where it will be sent.
+constexpr char kPrefDeviceSecret[] = "flyweb_sync_account.device_secret";
 
 constexpr char kPathPrefix[] = "/cuenta/v1/";
 // §9: no call waits more than 30 s. The server gives up a scrypt turn at 25 s.
@@ -172,6 +178,7 @@ base::DictValue AccountEvent::ToValue() const {
   v.Set("count", static_cast<double>(count));
   v.Set("since", static_cast<double>(since));
   v.Set("when", static_cast<double>(when));
+  v.Set("email", email);
   return v;
 }
 
@@ -193,6 +200,8 @@ struct AccountService::Flow {
   std::optional<account::AccountKeys> keys;
   // kEmailChange: KL of the current email, to send the code again.
   std::optional<account::SecretKey> current_login_key;
+  // kPasswordChange: the wrap last sent, for a retry (O-a).
+  std::vector<uint8_t> sent_wrap;
 
   const char* Name() const {
     switch (kind) {
@@ -228,6 +237,8 @@ void AccountService::RegisterProfilePrefs(PrefRegistrySimple* registry) {
   registry->RegisterStringPref(kPrefToken, std::string());
   registry->RegisterStringPref(kPrefLastEvent, std::string());
   registry->RegisterStringPref(kPrefNotice, std::string());
+  registry->RegisterStringPref(kPrefWarnings, std::string());
+  registry->RegisterStringPref(kPrefDeviceSecret, std::string());
 }
 
 AccountService::AccountService(Profile* profile) : profile_(profile) {
@@ -317,6 +328,29 @@ void AccountService::LoadPrefs() {
     last_event_ = 0;
   }
   notice_ = profile_->GetPrefs()->GetString(kPrefNotice);
+  if (const auto secret = LoadString(kPrefDeviceSecret)) {
+    device_secret_ = *secret;
+  }
+  LoadWarnings();
+}
+
+// K3: one per device, created the first time it is needed, kept encrypted.
+const std::string& AccountService::DeviceSecret() {
+  if (device_secret_.empty()) {
+    std::array<uint8_t, 32> raw;
+    ::crypto::RandBytes(raw);
+    device_secret_ = base::Base64UrlEncode(
+        raw, base::Base64UrlEncodePolicy::OMIT_PADDING);
+    std::ranges::fill(raw, 0);
+    StoreString(kPrefDeviceSecret, device_secret_);
+  }
+  return device_secret_;
+}
+
+void AccountService::AddDeviceSecret(base::DictValue& body) {
+  // Pending the format of #977-C1 (SYNC-NUBE-1 via COORDINACIÓN-41): the field
+  // name and where it goes. Until then nothing is sent.
+  (void)body;
 }
 
 std::optional<std::string> AccountService::LoadString(const char* path) const {
@@ -385,8 +419,9 @@ void AccountService::ForgetAccount(bool keep_email) {
   deletion_date_ = 0;
   devices_ = base::ListValue();
   warnings_.clear();
-  for (const char* path :
-       {kPrefAccountId, kPrefDevice, kPrefToken, kPrefLastEvent}) {
+  device_secret_.clear();
+  for (const char* path : {kPrefAccountId, kPrefDevice, kPrefToken,
+                           kPrefLastEvent, kPrefWarnings, kPrefDeviceSecret}) {
     profile_->GetPrefs()->ClearPref(path);
   }
   if (!keep_email) {
@@ -490,9 +525,17 @@ void AccountService::OnChainDisabled(account::ChainKeys old_keys) {
                return;
              }
              self->resolving_chain_disabled_ = false;
-             const bool changed =
-                 r.ok && GetStr(r.data, "estado") == "cadena-sustituida";
+             const std::string estado = r.ok ? GetStr(r.data, "estado") : "";
+             const bool changed = estado == "cadena-sustituida";
              self->ForgetAccount(/*keep_email=*/true);
+             if (estado == "activa" || estado == "borrado-programado") {
+               // O-c: the account and the chain live on; this Mac left by
+               // itself (Brave's «Leave Sync Chain», the old reset). Not
+               // «cuenta borrada».
+               self->UpdateState();
+               self->NotifyStatus();
+               return;
+             }
              self->SetNotice(changed ? "cadena-cambiada" : "cuenta-borrada");
              if (changed) {
                // Brave's «account deleted» bar would say the wrong thing.
@@ -892,10 +935,15 @@ void AccountService::OnEvents(AccountCallback callback,
   // activa or borrado-programado. A Mac that joined with the words learns the
   // account here and registers itself (decision 11 of §10.1).
   const std::string account_id = GetStr(result.data, "cuenta");
+  bool discovered = false;
   if (account_id_.empty() && !account_id.empty()) {
+    // K1 (SEGURIDAD-PORTES-23): learning the account here is never silent.
+    // Whoever has the chain can link it to an account with their own email;
+    // the bar names that email. Only events older than this Mac's joining
+    // (when known) are skipped.
     account_id_ = account_id;
     StoreString(kPrefAccountId, account_id_);
-    baseline_pending_ = true;
+    discovered = true;
   }
   const std::string email = GetStr(result.data, "email");
   if (!email.empty() && email != email_) {
@@ -908,6 +956,8 @@ void AccountService::OnEvents(AccountCallback callback,
   }
 
   std::vector<AccountEvent> fresh;
+  bool email_changed = false;
+  bool linked_warning = false;
   const base::ListValue* events = result.data.FindList("eventos");
   const size_t count = events ? events->size() : 0;
   if (events) {
@@ -932,8 +982,23 @@ void AccountService::OnEvents(AccountCallback callback,
         continue;
       }
       last_event_ = e.n;
+      if (e.type == "email-cambiado") {
+        // K2: the stored email (the scrypt salt) is old now; the next poll
+        // goes with the chain proof and brings the new one (S2).
+        email_.clear();
+        profile_->GetPrefs()->ClearPref(kPrefEmail);
+        email_changed = true;
+      }
       if (baseline_pending_ || !IsWarningType(e.type)) {
         continue;
+      }
+      if (discovered && !joined_chain_at_.is_null() &&
+          base::Time::FromSecondsSinceUnixEpoch(e.date) < joined_chain_at_) {
+        continue;
+      }
+      if (e.type == "cadena-ligada") {
+        e.email = email_;
+        linked_warning = true;
       }
       if (!e.device.empty() && e.device == device_id_) {
         // Done by this Mac: the server names the author only when it is
@@ -944,23 +1009,82 @@ void AccountService::OnEvents(AccountCallback callback,
     }
   }
   StoreString(kPrefLastEvent, base::NumberToString(last_event_));
+  if (discovered && !linked_warning && !baseline_pending_) {
+    // The «cadena-ligada» event is older than this Mac's joining, or gone
+    // (30 days): say it anyway, with the email of the account.
+    AccountEvent e;
+    e.type = "cadena-ligada";
+    e.date =
+        static_cast<int64_t>(base::Time::Now().InSecondsFSinceUnixEpoch());
+    e.email = email_;
+    fresh.push_back(std::move(e));
+  }
+  if (!fresh.empty()) {
+    warnings_.insert(warnings_.end(), fresh.begin(), fresh.end());
+    SaveWarnings();
+    for (Observer& o : observers_) {
+      o.OnAccountWarnings(fresh);
+    }
+  }
   if (count >= kEventsPage) {
     // More pages: keep reading now.
     Poll(std::move(callback));
     return;
   }
   baseline_pending_ = false;
-
   UpdateState();
   SchedulePoll(false);
-  if (!fresh.empty()) {
-    warnings_.insert(warnings_.end(), fresh.begin(), fresh.end());
-    for (Observer& o : observers_) {
-      o.OnAccountWarnings(fresh);
-    }
-  }
   NotifyStatus();
   std::move(callback).Run(AccountResult::Ok());
+  if (email_changed) {
+    poll_timer_.FireNow();  // with the proof: brings the new email (K2)
+  }
+}
+
+// O-b (SEGURIDAD-PORTES-23): the warnings not yet answered survive a restart,
+// encrypted like the other account prefs (they hold Mac names and the email).
+void AccountService::SaveWarnings() {
+  base::ListValue list;
+  for (const AccountEvent& e : warnings_) {
+    base::DictValue v = e.ToValue();
+    v.Set("device", e.device);
+    v.Set("email", e.email);
+    list.Append(std::move(v));
+  }
+  std::string json;
+  base::JSONWriter::Write(list, &json);
+  StoreString(kPrefWarnings, warnings_.empty() ? std::string() : json);
+}
+
+void AccountService::LoadWarnings() {
+  warnings_.clear();
+  const auto json = LoadString(kPrefWarnings);
+  if (!json || json->empty()) {
+    return;
+  }
+  std::optional<base::Value> list =
+      base::JSONReader::Read(*json, base::JSON_PARSE_RFC);
+  if (!list || !list->is_list()) {
+    return;
+  }
+  for (const base::Value& v : list->GetList()) {
+    if (!v.is_dict()) {
+      continue;
+    }
+    const base::DictValue& d = v.GetDict();
+    AccountEvent e;
+    e.n = GetInt(d, "n");
+    e.type = GetStr(d, "type");
+    e.date = GetInt(d, "date");
+    e.mac = GetStr(d, "mac");
+    e.model = GetStr(d, "model");
+    e.count = GetInt(d, "count");
+    e.since = GetInt(d, "since");
+    e.when = GetInt(d, "when");
+    e.device = GetStr(d, "device");
+    e.email = GetStr(d, "email");
+    warnings_.push_back(std::move(e));
+  }
 }
 
 void AccountService::RenewToken(AccountCallback callback) {
@@ -1097,6 +1221,7 @@ void AccountService::JoinChain(const account::SecretKey& seed,
   own_chain_change_ = true;
   const bool ok = sync->SetSyncCode(words);
   own_chain_change_ = false;
+  joined_chain_at_ = base::Time::Now() - base::Minutes(1);
   account::WipeString(words);
   if (!ok) {
     std::move(callback).Run(AccountResult::Error("llavero"));
@@ -1579,8 +1704,8 @@ void AccountService::PasswordChangeStart(AccountCallback callback) {
   ResendCode(std::move(callback));
 }
 
-void AccountService::PasswordChangeFinish(const std::string& code,
-                                          std::string new_password,
+void AccountService::PasswordChangeFinishImpl(const std::string& code,
+                                              std::string new_password,
                                           AccountCallback callback) {
   if (!flow_ || flow_->kind != Flow::Kind::kPasswordChange ||
       flow_->request_id.empty()) {
@@ -1624,12 +1749,25 @@ void AccountService::PasswordChangeFinish(const std::string& code,
                   AccountResult::Error(keys ? "llavero" : "interno"));
               return;
             }
-            std::vector<uint8_t> wrapped =
-                account::WrapSeed(keys->wrap_key, seed, self->email_);
+            // O-a (SEGURIDAD-PORTES-23): a retry after a lost answer sends
+            // the same wrap, so the server repeats its answer (§4.6). Reused
+            // only if it opens with this KU to this seed (same password).
+            std::vector<uint8_t> wrapped;
+            if (const auto& sent = self->flow_->sent_wrap; !sent.empty()) {
+              auto opened =
+                  account::UnwrapSeed(keys->wrap_key, sent, self->email_);
+              if (opened && std::ranges::equal(opened->bytes(), seed)) {
+                wrapped = sent;
+              }
+            }
+            if (wrapped.empty()) {
+              wrapped = account::WrapSeed(keys->wrap_key, seed, self->email_);
+            }
             const bool opens =
                 account::UnwrapSeed(keys->wrap_key, wrapped, self->email_)
                     .has_value();
             std::ranges::fill(seed, 0);
+            self->flow_->sent_wrap = wrapped;
             if (!opens) {
               std::move(callback).Run(AccountResult::Error("interno"));
               return;
@@ -1645,10 +1783,7 @@ void AccountService::PasswordChangeFinish(const std::string& code,
             if (!self->device_id_.empty()) {
               spec.body.Set("aparato", self->device_id_);
             }
-            // §4.6, third safeguard: if the answer is lost, the page offers
-            // Reintentar; the server answers the same to the same kl and
-            // wrap, but this repeats the derivation with a new random nonce
-            // in the wrap, so a retry is a new change, which is harmless.
+            // §4.6, third safeguard: Reintentar repeats the same kl and wrap.
             self->Call(
                 std::move(spec),
                 base::BindOnce(
@@ -1674,8 +1809,8 @@ void AccountService::PasswordChangeFinish(const std::string& code,
 
 // --- change the email (§6.5) ---
 
-void AccountService::EmailChangeStart(std::string password,
-                                      const std::string& new_email,
+void AccountService::EmailChangeStartImpl(std::string password,
+                                          const std::string& new_email,
                                       AccountCallback callback) {
   const auto normalized = account::NormalizeEmail(new_email);
   if (!normalized || email_.empty()) {
@@ -1823,8 +1958,8 @@ void AccountService::EmailChangeFinish(const std::string& code,
 
 // --- change the sync key (§6.3) ---
 
-void AccountService::ChainChange(std::string password,
-                                 AccountCallback callback) {
+void AccountService::ChainChangeImpl(std::string password,
+                                     AccountCallback callback) {
   if (account_id_.empty() || !HasChain() || email_.empty()) {
     account::WipeString(password);
     std::move(callback).Run(AccountResult::Error("sin-cuenta"));
@@ -1936,6 +2071,93 @@ void AccountService::ChainChange(std::string password,
           weak_ptr_factory_.GetWeakPtr(), std::move(callback)));
 }
 
+// --- K2 (SEGURIDAD-PORTES-23): the email is the scrypt salt, and another Mac
+// may have changed it. Every operation that derives from the password asks
+// for it first with the chain proof (S2 only gives it with the proof).
+
+void AccountService::RefreshEmail(AccountCallback then) {
+  CallSpec spec;
+  spec.route = "eventos";
+  spec.op = "eventos";
+  spec.auth = Auth::kProof;
+  // Events after last_event_ come back too; they are left for the poll.
+  spec.body.Set("desde", static_cast<double>(last_event_));
+  Call(std::move(spec),
+       base::BindOnce(
+           [](base::WeakPtr<AccountService> self, AccountCallback then,
+              AccountResult r) {
+             if (!self) {
+               return;
+             }
+             if (r.ok) {
+               const std::string email = GetStr(r.data, "email");
+               if (!email.empty() && email != self->email_) {
+                 self->email_ = email;
+                 self->StoreString(kPrefEmail, email);
+               }
+             }
+             std::move(then).Run(std::move(r));
+           },
+           weak_ptr_factory_.GetWeakPtr(), std::move(then)));
+}
+
+void AccountService::PasswordChangeFinish(const std::string& code,
+                                          std::string new_password,
+                                          AccountCallback callback) {
+  auto secret = std::make_unique<std::string>(std::move(new_password));
+  RefreshEmail(base::BindOnce(
+      [](base::WeakPtr<AccountService> self, std::string code,
+         std::unique_ptr<std::string> secret, AccountCallback callback,
+         AccountResult r) {
+        if (!self || !r.ok) {
+          account::WipeString(*secret);
+          std::move(callback).Run(std::move(r));
+          return;
+        }
+        self->PasswordChangeFinishImpl(code, std::move(*secret),
+                                       std::move(callback));
+      },
+      weak_ptr_factory_.GetWeakPtr(), code, std::move(secret),
+      std::move(callback)));
+}
+
+void AccountService::EmailChangeStart(std::string password,
+                                      const std::string& new_email,
+                                      AccountCallback callback) {
+  auto secret = std::make_unique<std::string>(std::move(password));
+  RefreshEmail(base::BindOnce(
+      [](base::WeakPtr<AccountService> self, std::string new_email,
+         std::unique_ptr<std::string> secret, AccountCallback callback,
+         AccountResult r) {
+        if (!self || !r.ok) {
+          account::WipeString(*secret);
+          std::move(callback).Run(std::move(r));
+          return;
+        }
+        self->EmailChangeStartImpl(std::move(*secret), new_email,
+                                   std::move(callback));
+      },
+      weak_ptr_factory_.GetWeakPtr(), new_email, std::move(secret),
+      std::move(callback)));
+}
+
+void AccountService::ChainChange(std::string password,
+                                 AccountCallback callback) {
+  auto secret = std::make_unique<std::string>(std::move(password));
+  RefreshEmail(base::BindOnce(
+      [](base::WeakPtr<AccountService> self,
+         std::unique_ptr<std::string> secret, AccountCallback callback,
+         AccountResult r) {
+        if (!self || !r.ok) {
+          account::WipeString(*secret);
+          std::move(callback).Run(std::move(r));
+          return;
+        }
+        self->ChainChangeImpl(std::move(*secret), std::move(callback));
+      },
+      weak_ptr_factory_.GetWeakPtr(), std::move(secret), std::move(callback)));
+}
+
 // --- devices ---
 
 void AccountService::ListDevices(AccountCallback callback) {
@@ -2029,6 +2251,7 @@ void AccountService::NotMe(AccountCallback callback) {
                self->token_.clear();
                self->StoreString(kPrefToken, std::string());
                self->warnings_.clear();
+               self->SaveWarnings();
                self->Poll(base::DoNothing());
              }
              std::move(callback).Run(std::move(r));
@@ -2038,6 +2261,7 @@ void AccountService::NotMe(AccountCallback callback) {
 
 void AccountService::DismissWarnings() {
   warnings_.clear();
+  SaveWarnings();
   NotifyStatus();
 }
 

@@ -46,7 +46,8 @@ class FlyWebSyncAccountInfoBarDelegate : public ConfirmInfoBarDelegate {
  private:
   FlyWebSyncAccountInfoBarDelegate(Profile* profile,
                                    Kind kind,
-                                   std::u16string message);
+                                   std::u16string message,
+                                   bool linked);
 
   // ConfirmInfoBarDelegate:
   infobars::InfoBarDelegate::InfoBarIdentifier GetIdentifier() const override;
@@ -66,6 +67,8 @@ class FlyWebSyncAccountInfoBarDelegate : public ConfirmInfoBarDelegate {
   raw_ptr<Profile> profile_;
   const Kind kind_;
   const std::u16string message_;
+  // The newest warning is «cadena-ligada» (K1): «No la he ligado yo».
+  const bool linked_;
 };
 
 #endif  // BRAVE_BROWSER_INFOBARS_FLYWEB_SYNC_ACCOUNT_INFOBAR_DELEGATE_H_

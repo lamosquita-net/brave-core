@@ -402,7 +402,10 @@ export class SettingsFlyWebSyncAccountElement
       case 'cadena-cambiada':
         return this.i18n('flywebAccountWarningChainChanged')
       case 'cadena-ligada':
-        return this.i18n('flywebAccountWarningChainLinked')
+        // K1: say which account, and that the remedy is «Borrar en todos».
+        return w.email ?
+            this.i18n('flywebAccountWarningChainLinkedEmail', w.email) :
+            this.i18n('flywebAccountWarningChainLinked')
       case 'aparato-quitado':
         return this.i18n('flywebAccountWarningDeviceRemoved', name)
       case 'no-he-sido-yo':

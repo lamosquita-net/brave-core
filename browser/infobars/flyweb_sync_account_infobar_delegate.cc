@@ -62,6 +62,13 @@ std::u16string FlyWebSyncAccountInfoBarDelegate::WarningText(
         IDS_FLYWEB_SYNC_ACCOUNT_WARNING_CHAIN_CHANGED);
   }
   if (e.type == "cadena-ligada") {
+    // K1: whoever has the chain can link it to an account with their own
+    // email; the bar says which.
+    if (!e.email.empty()) {
+      return l10n_util::GetStringFUTF16(
+          IDS_FLYWEB_SYNC_ACCOUNT_WARNING_CHAIN_LINKED_EMAIL,
+          base::UTF8ToUTF16(e.email));
+    }
     return l10n_util::GetStringUTF16(
         IDS_FLYWEB_SYNC_ACCOUNT_WARNING_CHAIN_LINKED);
   }
@@ -126,16 +133,22 @@ void FlyWebSyncAccountInfoBarDelegate::Create(
     message =
         l10n_util::GetStringUTF16(IDS_FLYWEB_SYNC_ACCOUNT_KEY_CHANGED_INFOBAR);
   }
+  const bool linked = kind == Kind::kWarnings &&
+                      warnings.back().type == "cadena-ligada";
   manager->AddInfoBar(
       CreateConfirmInfoBar(base::WrapUnique(new FlyWebSyncAccountInfoBarDelegate(
-          profile, kind, std::move(message)))));
+          profile, kind, std::move(message), linked))));
 }
 
 FlyWebSyncAccountInfoBarDelegate::FlyWebSyncAccountInfoBarDelegate(
     Profile* profile,
     Kind kind,
-    std::u16string message)
-    : profile_(profile), kind_(kind), message_(std::move(message)) {}
+    std::u16string message,
+    bool linked)
+    : profile_(profile),
+      kind_(kind),
+      message_(std::move(message)),
+      linked_(linked) {}
 
 FlyWebSyncAccountInfoBarDelegate::~FlyWebSyncAccountInfoBarDelegate() =
     default;
@@ -173,9 +186,12 @@ int FlyWebSyncAccountInfoBarDelegate::GetButtons() const {
 
 std::u16string FlyWebSyncAccountInfoBarDelegate::GetButtonLabel(
     InfoBarButton button) const {
+  if (button == BUTTON_OK) {
+    return l10n_util::GetStringUTF16(IDS_FLYWEB_SYNC_ACCOUNT_WARNING_WAS_ME);
+  }
   return l10n_util::GetStringUTF16(
-      button == BUTTON_OK ? IDS_FLYWEB_SYNC_ACCOUNT_WARNING_WAS_ME
-                          : IDS_FLYWEB_SYNC_ACCOUNT_WARNING_NOT_ME_BUTTON);
+      linked_ ? IDS_FLYWEB_SYNC_ACCOUNT_WARNING_NOT_LINKED_BY_ME
+              : IDS_FLYWEB_SYNC_ACCOUNT_WARNING_NOT_ME_BUTTON);
 }
 
 std::u16string FlyWebSyncAccountInfoBarDelegate::GetLinkText() const {
@@ -196,8 +212,12 @@ bool FlyWebSyncAccountInfoBarDelegate::Accept() {
 
 // «No he sido yo»: at once (§6.2), and the page for what comes next.
 bool FlyWebSyncAccountInfoBarDelegate::Cancel() {
-  if (auto* account = GetAccountService()) {
-    account->NotMe(base::DoNothing());
+  // «No la he ligado yo» (K1): the remedy is «Borrar la cuenta y los datos en
+  // todos» on the page, with its confirmation; nothing is done from the bar.
+  if (!linked_) {
+    if (auto* account = GetAccountService()) {
+      account->NotMe(base::DoNothing());
+    }
   }
   chrome::ShowSettingsSubPageForProfile(profile_, kBraveSyncSetupPath);
   return true;

@@ -97,6 +97,7 @@ struct AccountEvent {
   int64_t since = 0;  // contrasena-fallos: desde
   int64_t when = 0;   // borrado-pedido: fecha
   std::string device;  // the device that did it, if the server says it
+  std::string email;   // cadena-ligada: the email of the account (K1)
   base::DictValue ToValue() const;
 };
 
@@ -294,6 +295,18 @@ class AccountService : public KeyedService,
   void JoinChain(const brave_sync::crypto::account::SecretKey& seed,
                  AccountCallback callback);
   void LeaveChainThen(base::OnceClosure then);
+  void RefreshEmail(AccountCallback then);
+  void SaveWarnings();
+  const std::string& DeviceSecret();
+  void AddDeviceSecret(base::DictValue& body);
+  void LoadWarnings();
+  void PasswordChangeFinishImpl(const std::string& code,
+                                std::string new_password,
+                                AccountCallback callback);
+  void EmailChangeStartImpl(std::string password,
+                            const std::string& new_email,
+                            AccountCallback callback);
+  void ChainChangeImpl(std::string password, AccountCallback callback);
   std::string CurrentEmail() const;
 
   raw_ptr<Profile> profile_;
@@ -319,6 +332,7 @@ class AccountService : public KeyedService,
   std::string email_;
   std::string device_id_;
   std::string token_;
+  std::string device_secret_;  // K3, base64url of 32 random bytes
   int64_t last_event_ = 0;
   std::string server_state_;  // activa, borrado-programado, ...
   int64_t deletion_date_ = 0;
@@ -339,6 +353,8 @@ class AccountService : public KeyedService,
   // After joining an account, the first poll only reads up to the newest
   // event: the history of the account is not a warning for this Mac.
   bool baseline_pending_ = false;
+  // When this Mac joined its chain by itself (null: before this run).
+  base::Time joined_chain_at_;
 
   base::WeakPtrFactory<AccountService> weak_ptr_factory_{this};
 };
