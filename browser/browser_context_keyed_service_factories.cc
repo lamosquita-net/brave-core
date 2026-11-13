@@ -13,6 +13,7 @@
 #include "brave/browser/permissions/permission_lifetime_manager_factory.h"
 #include "brave/browser/profiles/brave_renderer_updater_factory.h"
 #include "brave/browser/search_engines/search_engine_provider_service_factory.h"
+#include "brave/browser/sync/account/flyweb_sync_account_service_factory.h"
 #include "brave/browser/sync/brave_sync_alerts_service_factory.h"
 #include "brave/browser/url_sanitizer/url_sanitizer_service_factory.h"
 #include "brave/components/brave_perf_predictor/browser/named_third_party_registry_factory.h"
@@ -59,6 +60,7 @@ void EnsureBrowserContextKeyedServiceFactoriesBuilt() {
 #endif
 
   BraveSyncAlertsServiceFactory::GetInstance();
+  flyweb_sync::AccountServiceFactory::GetInstance();
 
 #if !BUILDFLAG(IS_ANDROID)
   if (base::FeatureList::IsEnabled(tabs::features::kBraveSharedPinnedTabs)) {
