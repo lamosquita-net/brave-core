@@ -10,6 +10,7 @@
 
 #include "base/functional/callback_helpers.h"
 #include "base/i18n/time_formatting.h"
+#include "base/i18n/unicodestring.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/time/time.h"
@@ -24,8 +25,32 @@
 #include "content/public/browser/web_contents.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/views/vector_icons.h"
+#include "third_party/icu/source/i18n/unicode/dtptngen.h"
+#include "third_party/icu/source/i18n/unicode/smpdtfmt.h"
 
 namespace {
+
+// «14 de noviembre» in Spanish, «November 14» in English: the ICU pattern
+// for the skeleton "dMMMM" in the UI locale (no fixed pattern, so every
+// language gets its own order and words). base::LocalizedTimeFormatWithPattern
+// is not in the 156.
+std::u16string FormatDayAndMonth(base::Time time) {
+  UErrorCode status = U_ZERO_ERROR;
+  std::unique_ptr<icu::DateTimePatternGenerator> generator(
+      icu::DateTimePatternGenerator::createInstance(status));
+  if (U_FAILURE(status) || !generator) {
+    return base::TimeFormatShortDate(time);
+  }
+  const icu::UnicodeString pattern =
+      generator->getBestPattern(icu::UnicodeString("dMMMM"), status);
+  icu::SimpleDateFormat format(pattern, status);
+  if (U_FAILURE(status)) {
+    return base::TimeFormatShortDate(time);
+  }
+  icu::UnicodeString out;
+  format.format(static_cast<UDate>(time.InMillisecondsFSinceUnixEpoch()), out);
+  return base::i18n::UnicodeStringToString16(out);
+}
 
 std::u16string Name(const flyweb_sync::AccountEvent& e) {
   return base::UTF8ToUTF16(e.mac.empty() ? e.model : e.mac);
@@ -82,8 +107,7 @@ std::u16string FlyWebSyncAccountInfoBarDelegate::WarningText(
   if (e.type == "borrado-pedido") {
     return l10n_util::GetStringFUTF16(
         IDS_FLYWEB_SYNC_ACCOUNT_WARNING_DELETION_REQUESTED,
-        base::LocalizedTimeFormatWithPattern(
-            base::Time::FromSecondsSinceUnixEpoch(e.when), "d MMMM"));
+        FormatDayAndMonth(base::Time::FromSecondsSinceUnixEpoch(e.when)));
   }
   return l10n_util::GetStringUTF16(
       IDS_FLYWEB_SYNC_ACCOUNT_WARNING_DELETION_CANCELLED);

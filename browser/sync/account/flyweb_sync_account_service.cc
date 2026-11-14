@@ -2503,7 +2503,9 @@ void AccountService::StartOverFinish(const std::string& code,
                       self->email_ = email;
                       self->StoreString(kPrefEmail, email);
                       AccountResult ok = AccountResult::Ok();
-                      ok.data.Set("fecha", GetInt(r.data, "fecha"));
+                      // Seconds since 1970: exact in a double (53-bit mantissa).
+                      ok.data.Set("fecha",
+                                  static_cast<double>(GetInt(r.data, "fecha")));
                       ok.data.Set("recoveryWords",
                                   brave_sync::crypto::PassphraseFromBytes32(
                                       std::vector<uint8_t>(

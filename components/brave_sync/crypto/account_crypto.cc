@@ -47,6 +47,11 @@ constexpr uint8_t kChainHkdfSalt[] = {
     234, 28,  135, 54,  42,  9,   243, 39,  30,  179, 147, 194, 211,
     212, 239, 225, 52,  192, 219, 145, 40,  95,  19,  142, 98};
 constexpr char kChainHkdfInfo[] = "sync-auth-key";
+// The Ed25519 seed. BoringSSL of the 156 has no ED25519_SEED_LEN; the private
+// key is seed || public key.
+constexpr size_t kEd25519SeedLen = 32;
+static_assert(kEd25519SeedLen * 2 == ED25519_PRIVATE_KEY_LEN);
+static_assert(kEd25519SeedLen == ED25519_PUBLIC_KEY_LEN);
 
 std::array<uint8_t, SHA256_DIGEST_LENGTH> Sha256(base::span<const uint8_t> in) {
   std::array<uint8_t, SHA256_DIGEST_LENGTH> out;
@@ -202,7 +207,7 @@ ChainKeys ChainKeys::FromSeed(base::span<const uint8_t, kSeedSize> seed) {
   const std::vector<uint8_t> info(std::begin(kChainHkdfInfo),
                                   std::end(kChainHkdfInfo) - 1);
   std::vector<uint8_t> ed_seed =
-      HKDFSha512(seed_v, &salt, &info, ED25519_SEED_LEN);
+      HKDFSha512(seed_v, &salt, &info, kEd25519SeedLen);
   ChainKeys keys;
   ED25519_keypair_from_seed(keys.public_key_.data(), keys.private_key_.data(),
                             ed_seed.data());
