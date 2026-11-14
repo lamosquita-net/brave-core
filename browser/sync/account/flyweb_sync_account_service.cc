@@ -23,6 +23,7 @@
 #include "base/strings/utf_string_conversions.h"
 #include "base/system/sys_info.h"
 #include "base/task/thread_pool.h"
+#include "base/timer/elapsed_timer.h"
 #include "brave/components/brave_sync/brave_sync_prefs.h"
 #include "brave/components/brave_sync/crypto/crypto.h"
 #include "brave/components/brave_sync/sync_service_impl_helper.h"
@@ -1198,7 +1199,14 @@ void AccountService::DeriveKeys(
           [](std::unique_ptr<std::string> secret, std::string email) {
             std::string normalized = account::NormalizePassword(*secret);
             account::WipeString(*secret);
+            // P23: the real cost on each Mac, without a separate tool.
+            // Only the time and the outcome: no email, no key material.
+            // --enable-logging=stderr --vmodule=flyweb_sync_account_service=1
+            const base::ElapsedTimer timer;
             auto keys = account::DeriveAccountKeys(normalized, email);
+            VLOG(1) << "FlyWeb sync account: key derivation "
+                    << (keys ? "ok" : "failed") << " in "
+                    << timer.Elapsed().InMilliseconds() << " ms";
             account::WipeString(normalized);
             return keys;
           },
