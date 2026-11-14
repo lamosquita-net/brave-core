@@ -121,7 +121,7 @@ void FarblePlugins(blink::LocalDOMWindow* window,
               "PLUGIN_1_FILENAME", 16),
           BraveSessionCache::From(*window).GenerateRandomString(
               "PLUGIN_1_DESCRIPTION", 32),
-          std::vector<const char*>{""},
+          std::vector<const char*>{"", ""},
           BraveSessionCache::From(*window).GenerateRandomString(
               "MIME_1_DESCRIPTION", 32),
           BraveSessionCache::From(*window)
@@ -137,7 +137,7 @@ void FarblePlugins(blink::LocalDOMWindow* window,
               "PLUGIN_2_FILENAME", 15),
           BraveSessionCache::From(*window).GenerateRandomString(
               "PLUGIN_2_DESCRIPTION", 31),
-          std::vector<const char*>{""},
+          std::vector<const char*>{"", ""},
           BraveSessionCache::From(*window).GenerateRandomString(
               "MIME_2_DESCRIPTION", 32),
           BraveSessionCache::From(*window)
