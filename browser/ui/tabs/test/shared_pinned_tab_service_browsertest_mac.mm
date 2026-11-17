@@ -52,7 +52,11 @@ IN_PROC_BROWSER_TEST_F(SharedPinnedTabServiceBrowserTest,
   // Then the tab should not be closed.
   EXPECT_EQ(browser->tab_strip_model()->count(), 2);
 
-  // When other ways to close the tab are tried
+  // When other ways to close the tab are tried. Since Chromium 156, closing a
+  // pinned tab with IDC_CLOSE_TAB first shows a confirmation toast
+  // (ToastId::kClosePinnedTab) and only the second command closes it.
+  chrome::ExecuteCommand(browser, IDC_CLOSE_TAB);
+  EXPECT_EQ(browser->tab_strip_model()->count(), 2);
   chrome::ExecuteCommand(browser, IDC_CLOSE_TAB);
 
   // Then tab should be closed
