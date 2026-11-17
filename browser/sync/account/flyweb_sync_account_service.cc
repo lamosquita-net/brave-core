@@ -73,6 +73,13 @@ constexpr char kPrefWarnings[] = "flyweb_sync_account.warnings";
 // kept like the token and proves the author in aparatos/renovar,
 // contrasena/cambiar and cadena/cambiar. It never expires.
 constexpr char kPrefDeviceSecret[] = "flyweb_sync_account.device_secret";
+// Until when (seconds since the epoch) the first read of a newly joined
+// account counts the events as history, not as warnings. 0: none pending.
+constexpr char kPrefBaselineUntil[] = "flyweb_sync_account.baseline_until";
+// The joining's own events (the login, this Mac's registration) are within a
+// few seconds of it; the margin also covers a clock some minutes off. A later
+// event is a warning even if the first successful read comes days later.
+constexpr base::TimeDelta kBaselineMargin = base::Minutes(10);
 
 constexpr char kPathPrefix[] = "/cuenta/v1/";
 // §9: no call waits more than 30 s. The server gives up a scrypt turn at 25 s.
@@ -245,6 +252,7 @@ void AccountService::RegisterProfilePrefs(PrefRegistrySimple* registry) {
   registry->RegisterStringPref(kPrefNotice, std::string());
   registry->RegisterStringPref(kPrefWarnings, std::string());
   registry->RegisterStringPref(kPrefDeviceSecret, std::string());
+  registry->RegisterInt64Pref(kPrefBaselineUntil, 0);
 }
 
 AccountService::AccountService(Profile* profile) : profile_(profile) {
@@ -334,6 +342,9 @@ void AccountService::LoadPrefs() {
     last_event_ = 0;
   }
   notice_ = profile_->GetPrefs()->GetString(kPrefNotice);
+  // The first read survives a restart: it lasts until it succeeds.
+  baseline_until_ = profile_->GetPrefs()->GetInt64(kPrefBaselineUntil);
+  baseline_pending_ = baseline_until_ != 0;
   if (const auto secret = LoadString(kPrefDeviceSecret)) {
     device_secret_ = *secret;
   }
@@ -388,7 +399,7 @@ void AccountService::StoreAccount(const std::string& account_id,
   device_id_ = device_id;
   token_ = token;
   last_event_ = 0;
-  baseline_pending_ = true;
+  StartBaseline();
   keys_unreadable_ = false;  // every account pref is written again here
   StoreString(kPrefAccountId, account_id_);
   StoreString(kPrefEmail, email_);
@@ -408,11 +419,25 @@ void AccountService::StoreToken(const std::string& device_id,
   StoreString(kPrefToken, token_);
 }
 
+void AccountService::StartBaseline() {
+  baseline_pending_ = true;
+  baseline_until_ = static_cast<int64_t>(
+      (base::Time::Now() + kBaselineMargin).InSecondsFSinceUnixEpoch());
+  profile_->GetPrefs()->SetInt64(kPrefBaselineUntil, baseline_until_);
+}
+
+void AccountService::EndBaseline() {
+  baseline_pending_ = false;
+  baseline_until_ = 0;
+  profile_->GetPrefs()->ClearPref(kPrefBaselineUntil);
+}
+
 void AccountService::ForgetAccount(bool keep_email) {
   account_id_.clear();
   device_id_.clear();
   token_.clear();
   last_event_ = 0;
+  EndBaseline();
   server_state_.clear();
   deletion_date_ = 0;
   devices_ = base::ListValue();
@@ -1001,7 +1026,11 @@ void AccountService::OnEvents(AccountCallback callback,
         profile_->GetPrefs()->ClearPref(kPrefEmail);
         email_changed = true;
       }
-      if (baseline_pending_ || !IsWarningType(e.type)) {
+      if (!IsWarningType(e.type)) {
+        continue;
+      }
+      if (baseline_pending_ && e.date <= baseline_until_) {
+        // History of the account, up to this Mac's own joining.
         continue;
       }
       if (discovered && !joined_chain_at_.is_null() &&
@@ -1043,7 +1072,7 @@ void AccountService::OnEvents(AccountCallback callback,
     Poll(std::move(callback));
     return;
   }
-  baseline_pending_ = false;
+  EndBaseline();
   UpdateState();
   SchedulePoll(false);
   NotifyStatus();
@@ -2066,7 +2095,7 @@ void AccountService::ChainChangeImpl(std::string password,
                         self->StoreToken(GetStr(r.data, "aparato"), token);
                       }
                       self->last_event_ = 0;
-                      self->baseline_pending_ = true;
+                      self->StartBaseline();
                       AccountResult ok = AccountResult::Ok();
                       ok.data.Set("recoveryWords",
                                   brave_sync::crypto::PassphraseFromBytes32(

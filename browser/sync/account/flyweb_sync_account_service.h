@@ -232,6 +232,9 @@ class AccountService : public KeyedService,
   void StoreToken(const std::string& device_id, const std::string& token);
   void StoreString(const char* path, const std::string& value);
   std::optional<std::string> LoadString(const char* path) const;
+  // The first read of a newly joined account (see baseline_pending_).
+  void StartBaseline();
+  void EndBaseline();
   void ForgetAccount(bool keep_email);
   void SetNotice(const std::string& notice);
   void UpdateState();
@@ -350,9 +353,12 @@ class AccountService : public KeyedService,
   base::TimeDelta poll_backoff_;
   bool polling_ = false;
   bool registering_ = false;
-  // After joining an account, the first poll only reads up to the newest
-  // event: the history of the account is not a warning for this Mac.
+  // After joining an account, the first successful poll reads the account's
+  // history without warnings: events up to `baseline_until_` (the joining
+  // plus kBaselineMargin). Kept in a pref until that poll succeeds, so a
+  // restart or a failed poll does not turn the history into warnings.
   bool baseline_pending_ = false;
+  int64_t baseline_until_ = 0;
   // When this Mac joined its chain by itself (null: before this run).
   base::Time joined_chain_at_;
 
