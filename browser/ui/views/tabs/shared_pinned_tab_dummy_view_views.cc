@@ -61,11 +61,17 @@ void SharedPinnedTabDummyView::CreateAndInstall(
 SharedPinnedTabDummyViewViews::SharedPinnedTabDummyViewViews(
     content::WebContents* shared_contents,
     content::WebContents* dummy_contents)
-    : SharedPinnedTabDummyView(shared_contents, dummy_contents),
-      thumbnail_(ThumbnailTabHelper::From(
-                     tabs::TabInterface::GetFromContents(dummy_contents))
-                     ->thumbnail()),
-      subscription_(thumbnail_->Subscribe()) {
+    : SharedPinnedTabDummyView(shared_contents, dummy_contents) {
+  // FlyWeb: the 156 tree has no BraveTabFeatures, so with
+  // kTabHoverCardImages off (Brave's default) no tab has a ThumbnailTabHelper.
+  // Without one, show the dummy view without the preview instead of
+  // dereferencing null.
+  if (auto* thumbnail_helper = ThumbnailTabHelper::From(
+          tabs::TabInterface::GetFromContents(dummy_contents))) {
+    thumbnail_ = thumbnail_helper->thumbnail();
+    subscription_ = thumbnail_->Subscribe();
+  }
+
   SetPaintToLayer();
   SetLayoutManager(std::make_unique<views::FlexLayout>())
       ->SetOrientation(views::LayoutOrientation::kVertical)
@@ -85,6 +91,7 @@ SharedPinnedTabDummyViewViews::SharedPinnedTabDummyViewViews(
 
   views::Builder<SharedPinnedTabDummyViewViews>(this)
       .AddChild(views::Builder<views::View>()
+                    .CopyAddressTo(&thumbnail_box_)
                     .SetBorder(views::CreateRoundedRectBorder(
                         kThumbnailBorderThickness, kThumbnailRadius,
                         kColorBraveSharedPinnedTabDummyViewThumbnailBorder))
@@ -114,6 +121,11 @@ SharedPinnedTabDummyViewViews::SharedPinnedTabDummyViewViews(
               .SetEnabledColor(kColorBraveSharedPinnedTabDummyViewDescription)
               .SetProperty(views::kMarginsKey, gfx::Insets().set_top(8)))
       .BuildChildren();
+
+  if (!subscription_) {
+    thumbnail_box_->SetVisible(false);
+    return;
+  }
 
   thumbnail_view_->SetClipPath(SkPath::RRect(
       SkRect::MakeWH(kThumbnailImageSize.width(), kThumbnailImageSize.height()),

@@ -35,9 +35,11 @@ class SharedPinnedTabDummyViewViews : public SharedPinnedTabDummyView,
   SharedPinnedTabDummyViewViews(content::WebContents* shared_contents,
                                 content::WebContents* dummy_contents);
 
+  // Null when the tab has no ThumbnailTabHelper; the box is then hidden.
   scoped_refptr<ThumbnailImage> thumbnail_;
   std::unique_ptr<ThumbnailImage::Subscription> subscription_;
 
+  raw_ptr<views::View> thumbnail_box_;
   raw_ptr<views::ImageView> thumbnail_view_;
 
   raw_ptr<views::Label> title_label_;
