@@ -29,6 +29,7 @@
 #include "brave/components/brave_sync/sync_service_impl_helper.h"
 #include "brave/components/brave_sync/time_limited_words.h"
 #include "brave/components/sync/service/brave_sync_service_impl.h"
+#include "build/build_config.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/sync/device_info_sync_service_factory.h"
@@ -48,6 +49,10 @@
 #include "services/network/public/cpp/shared_url_loader_factory.h"
 #include "services/network/public/cpp/simple_url_loader.h"
 #include "services/network/public/mojom/url_response_head.mojom.h"
+
+#if BUILDFLAG(IS_MAC)
+#include "base/posix/sysctl.h"
+#endif
 
 namespace flyweb_sync {
 
@@ -642,6 +647,14 @@ void AccountService::OnSyncShutdown(syncer::SyncService* sync) {
 // static
 std::string AccountService::DeviceModel() {
   std::string model = base::SysInfo::HardwareModelName();
+#if BUILDFLAG(IS_MAC)
+  if (model.empty()) {
+    // HardwareModelName() reads hw.product, which macOS has only from 11 on;
+    // on 10.14 and 10.15 it is empty. hw.model has the same identifier
+    // (e.g. MacPro6,1) there.
+    model = base::StringSysctlByName("hw.model").value_or(std::string());
+  }
+#endif
   std::erase_if(model, [](char c) {
     return !(base::IsAsciiAlphaNumeric(c) || c == ',' || c == '.' ||
              c == '_' || c == ' ' || c == '-');
