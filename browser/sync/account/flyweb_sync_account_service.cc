@@ -694,7 +694,10 @@ void AccountService::Call(CallSpec spec, AccountCallback callback) {
     return;
   }
   std::string body;
-  base::JSONWriter::Write(spec.body, &body);
+  // Whole numbers as integers: `desde` went out as 0.0 (LOCAL-19, ns2).
+  base::JSONWriter::WriteWithOptions(
+      spec.body, base::JSONWriter::OPTIONS_OMIT_DOUBLE_TYPE_PRESERVATION,
+      &body);
   std::vector<std::pair<std::string, std::string>> headers;
   if ((spec.auth == Auth::kToken || spec.attach_token) && !token_.empty()) {
     headers.emplace_back("Authorization", "Bearer " + token_);
@@ -719,7 +722,10 @@ void AccountService::CallWithNonce(CallSpec spec,
     return;
   }
   std::string body;
-  base::JSONWriter::Write(spec.body, &body);
+  // Whole numbers as integers: `desde` went out as 0.0 (LOCAL-19, ns2).
+  base::JSONWriter::WriteWithOptions(
+      spec.body, base::JSONWriter::OPTIONS_OMIT_DOUBLE_TYPE_PRESERVATION,
+      &body);
   const std::string path = RoutePath(spec.route);
   const std::string account_id =
       spec.empty_account_in_proof
