@@ -1,3 +1,23 @@
+# FlyWeb: 3.1.5, V8 15.6.75.66 + 659b8bf + three Chrome 158 Mediums
+
+SEGURIDAD-PORTES-25, 18-11-2026 (softmac `FlyWeb/seguridad/3.1.5/`). None is merged to 15.6; all three apply
+clean on 15.6.75.66 with the patches above:
+
+- **19048d3** (571348848, CVE-2026-131087, type confusion): Turboshaft wasm `AssertNotNullTypecheck` keeps the
+  `AssertNotNull` result and `WasmTypeCheckOp` gets `CanDependOnChecks()`, so a type check cannot be scheduled
+  above its null check. Test `regress/wasm/regress-571348848.js`.
+- **33ab43a** (576225189, CVE-2026-131097): the regexp results cache no longer hands groups objects of one native
+  context to a replace callback in another (cache hit only if created in the current native context). Test
+  `regress/regress-576225189.js`.
+- **65afc9f** (577305505, CVE-2026-130988, OOB read): wasm Proxy-on-Prototype trap inlining reads the trap from
+  the actual holder, requires a stable handler map and records the dependencies. Test
+  `regress/wasm/regress-577305505.js`.
+- Not ported: 1942561 (568908052, CVE-2026-130923), Android stack size only.
+- `kFlyWebCacheEpoch` 32 -> **33** (compiler and runtime changes; one epoch for the whole release).
+
+To check (D8-LINUX): `d8` and mjsunit with and without Maglev, especially the three new tests, `wasm/gc*`,
+`wasm/*proxy*`, `regexp*` and `es6/string-replace*`.
+
 # FlyWeb: 3.1.4, V8 15.6.75.66 + 659b8bf
 
 SEGURIDAD-PORTES-24, 18-11-2026 (brave-core `seg/3.1.4`). Inventory in softmac `FlyWeb/seguridad/3.1.4/INVENTARIO.md`.

@@ -1,0 +1,14 @@
+diff --git a/src/compiler/turboshaft/operations.h b/src/compiler/turboshaft/operations.h
+index 6e87f793f6a09003160c73a2c405a6199e39f277..c39f612643704726df238f0318d5a755a2b6f6ed 100644
+--- a/src/compiler/turboshaft/operations.h
++++ b/src/compiler/turboshaft/operations.h
+@@ -7814,7 +7814,8 @@ struct RttCanonOp : FixedArityOperationT<1, RttCanonOp> {
+ struct WasmTypeCheckOp : OperationT<WasmTypeCheckOp> {
+   WasmTypeCheckConfig config;
+ 
+-  static constexpr OpEffects effects = OpEffects().AssumesConsistentHeap();
++  static constexpr OpEffects effects =
++      OpEffects().AssumesConsistentHeap().CanDependOnChecks();
+ 
+   WasmTypeCheckOp(V<Object> object, OptionalV<Map> rtt,
+                   WasmTypeCheckConfig config)
