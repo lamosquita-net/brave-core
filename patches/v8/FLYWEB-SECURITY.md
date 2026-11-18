@@ -1,3 +1,17 @@
+# FlyWeb: 3.1.4, V8 15.6.75.66 + 5787048 (branch fix of 15.6.75.67)
+
+SEGURIDAD-PORTES-26, 18-11-2026 (softmac `FlyWeb/seguridad/3.1.5/brave-core/0003`; the `3.1.5/` folder is part 3
+of 3.1.4). The 8078 branch rolled V8 to 15.6.75.67 after the .110 tag; its only change is this one. The V8 gitlink
+stays at .66 and the fix goes in as a patch, like the others:
+
+- **5787048** (577323082, [M156] merge of d4f0bef5aa): `JSCallReducer::Finalize` calls `Revisit(node)` for
+  in-place reductions, so new inputs are visited and the other reducers (dead code elimination, inlining
+  heuristic) run on the updated node. Test `compiler/regress-577323082.js`.
+- `kFlyWebCacheEpoch` 33 -> **34** (optimized code changes).
+
+To check (D8-LINUX): `d8` and mjsunit with and without Maglev, especially `compiler/regress-577323082.js` and
+`compiler/*`.
+
 # FlyWeb: 3.1.5, V8 15.6.75.66 + 659b8bf + three Chrome 158 Mediums
 
 SEGURIDAD-PORTES-25, 18-11-2026 (softmac `FlyWeb/seguridad/3.1.5/`). None is merged to 15.6; all three apply

@@ -1,0 +1,15 @@
+diff --git a/src/compiler/js-call-reducer.cc b/src/compiler/js-call-reducer.cc
+index ef2524264c242df6c4ba88c291fd4f0d895f0050..6df633eaf213550fac3523e0006ea1e370f6b531 100644
+--- a/src/compiler/js-call-reducer.cc
++++ b/src/compiler/js-call-reducer.cc
+@@ -3137,7 +3137,9 @@ void JSCallReducer::Finalize() {
+       Reduction const reduction = Reduce(node);
+       if (reduction.Changed()) {
+         Node* replacement = reduction.replacement();
+-        if (replacement != node) {
++        if (replacement == node) {
++          Revisit(node);
++        } else {
+           Replace(node, replacement, max_id);
+         }
+       }
