@@ -1,3 +1,22 @@
+# FlyWeb: 3.1.4 part 5, two Chrome 157 Mediums
+
+SEGURIDAD-PORTES-27, 18-11-2026 (softmac `FlyWeb/seguridad/3.1.4/parte5/brave-core/0001`). On top of part 4
+(V8 15.6.75.66 with the patches below; gitlink unchanged):
+
+- **42d78d0f3d** (564190098, CVE-2026-121132, information leak): `WasmEngine` reuses a cached `Script` for a
+  native module only when the source URL matches; a module compiled again with another URL gets its own `Script`
+  (`std::vector<WeakScriptHandle>` per module). `include/v8-wasm.h` only changes a comment. Unit test left out.
+- **b1457bd47a** (568010379, CVE-2026-121218, type confusion): Maglev only treats `PREVIOUS_INDEX` context loads as
+  non-aliasing when rooted at the incoming `InitialValue` context. Test `turbolev/regress-568010379.js`.
+- Both change generated code: `kFlyWebCacheEpoch` must move past the shipped 3.1.3 value (34). This patch does not
+  set it; the 3.1.4 integration sets a single final epoch above the part 4 one (35).
+
+Not taken: 41c77763fd (same bug as "Bug:", an optimization refactor, no fix); dd1db91ac1 (567169222) is already in
+15.6.75.66; a2181b6968 (570104009) only touches `d8`.
+
+To check (D8-LINUX): `d8` and mjsunit with and without Maglev, especially `turbolev/regress-568010379.js`,
+`maglev/*`, `turbolev/*` and `wasm/*`.
+
 # FlyWeb: 3.1.4, V8 15.6.75.66 + the 8078 branch fixes of 15.6.75.68 and .69
 
 SEGURIDAD-PORTES-29, 18-11-2026 (softmac `FlyWeb/seguridad/3.1.4/parte4/brave-core/0001`). After 3bd3db9df2 the
