@@ -1,3 +1,24 @@
+# FlyWeb: 3.1.4 part 6, V8 15.6.75.66 + four Chrome 158 Lows
+
+SEGURIDAD-PORTES-28, 18-11-2026 (softmac `FlyWeb/seguridad/3.1.4/parte6/brave-core/0001`, on top of part 4). None is merged to 15.6;
+all four apply cleanly on the .66 with the earlier patches. The V8 gitlink stays at .66:
+
+- **0b3bd2b** (553263303, CVE-2026-130916): `Runtime.getHeapUsage` and `Runtime.getIsolateId` only for fully
+  trusted inspector clients (not `chrome.debugger` extensions). Tests `inspector/runtime/get-heap-usage.js` and
+  `get-isolate-id.js`.
+- **336a6b3** (568986689, CVE-2026-131005): the deep serialization dedup map keeps indices, bounds-checked on
+  lookup, instead of raw pointers in sandbox memory. Test `inspector/regress/regress-crbug-568986689.js`.
+- **fb3bcc3** (572312093, CVE-2026-130950): `V8Console` data in a `CppHeapExternal` instead of a `v8::Array`; the
+  inspector tags move to the non-wrappable list of `cppheap-pointer-tag.h` (V8-internal).
+- **0ac2b27** (574412712, CVE-2026-131098): Maglev `StringLengthStaticLowerBound` only trusts static constants (the
+  bound is cached on `StringConcat` across merges); the graph verifier checks the cached bound in debug builds.
+  Test `maglev/regress-574412712.js`.
+- `kFlyWebCacheEpoch` 35 -> **36** (0ac2b27 changes optimized code).
+
+To check (D8-LINUX): `d8` and mjsunit with and without Maglev, especially `maglev/regress-574412712.js` and
+`maglev/*`; if the inspector suite runs, `inspector/runtime/get-heap-usage.js`, `get-isolate-id.js` and
+`regress/regress-crbug-568986689.js`.
+
 # FlyWeb: 3.1.4 part 5, two Chrome 157 Mediums
 
 SEGURIDAD-PORTES-27, 18-11-2026 (softmac `FlyWeb/seguridad/3.1.4/parte5/brave-core/0001`). On top of part 4

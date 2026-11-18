@@ -1,0 +1,17 @@
+diff --git a/src/maglev/maglev-ir.h b/src/maglev/maglev-ir.h
+index c1b16a843499f102d8d724ba9a3ef9c560e1f1d4..853a1a02b49c5f437f785330cafc4325127aa0dd 100644
+--- a/src/maglev/maglev-ir.h
++++ b/src/maglev/maglev-ir.h
+@@ -9930,6 +9930,12 @@ class StringConcat : public FixedInputValueNodeT<2, StringConcat> {
+     }
+     return cur;
+   }
++
++  std::optional<uint32_t> cached_min_length() const {
++    uint32_t cur = MinLengthField::decode(bitfield());
++    if (cur == kNoMinLength) return {};
++    return cur;
++  }
+ };
+ 
+ /*

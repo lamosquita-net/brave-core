@@ -1,0 +1,13 @@
+diff --git a/src/maglev/maglev-compiler.cc b/src/maglev/maglev-compiler.cc
+index 74236225fc0a8078322e81f3661ad772661c37cf..a6b0ec1cad58d207429a85c25eafdbeef3face22 100644
+--- a/src/maglev/maglev-compiler.cc
++++ b/src/maglev/maglev-compiler.cc
+@@ -72,6 +72,8 @@ void PrintGraph(Graph* graph, bool condition, MaglevPhase phase) {
+ 
+ void VerifyGraph(Graph* graph, MaglevPhase phase) {
+ #ifdef DEBUG
++  compiler::UnparkedScopeIfNeeded unparked_scope(
++      graph->broker()->local_isolate());
+   GraphProcessor<MaglevGraphVerifier> verifier(graph->compilation_info(),
+                                                phase);
+   verifier.ProcessGraph(graph);

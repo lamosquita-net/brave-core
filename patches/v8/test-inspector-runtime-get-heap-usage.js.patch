@@ -1,0 +1,17 @@
+diff --git a/test/inspector/runtime/get-heap-usage.js b/test/inspector/runtime/get-heap-usage.js
+index 8330001315b62e2fdd20f61c64c0cf23d47db188..dd06bdbdfe20d3796da30ff1682ae7113fc8fbc3 100644
+--- a/test/inspector/runtime/get-heap-usage.js
++++ b/test/inspector/runtime/get-heap-usage.js
+@@ -11,5 +11,12 @@ const {session, contextGroup, Protocol} = InspectorTest.start('Checks that Runti
+   console.assert(usedSize > 0);
+   console.assert(totalSize > 0);
+   console.assert(totalSize >= usedSize);
++
++  InspectorTest.log('getHeapUsage is not allowed for untrusted clients');
++  const untrustedSession = contextGroup.connect(/* isFullyTrusted */ false);
++  InspectorTest.logMessage(
++      await untrustedSession.Protocol.Runtime.getHeapUsage());
++  untrustedSession.disconnect();
++
+   InspectorTest.completeTest();
+ })();
