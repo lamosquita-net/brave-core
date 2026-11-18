@@ -1,3 +1,19 @@
+# FlyWeb: 3.1.4 integration (parts 4 -> 5 -> 6), V8 15.6.75.70 fix and final cache epoch
+
+SEGURIDAD-PORTES-30, 18-11-2026 (softmac `FlyWeb/seguridad/3.1.4/integracion/brave-core/0001`). On top of parts 4,
+5 and 6 in that order (V8 15.6.75.66 with all the patches below; gitlink unchanged):
+
+- **fdbb7b1** (577314726; V8 15.6.75.70 on the 8078 branch, from 740f16ea23): object literal boilerplates that were
+  normalized to a `NameDictionary` are walked in enumeration order, so the nested `AllocationSite` list stays in
+  sync with `DeepWalk` (ElementsKind feedback was attributed to the wrong site). `src/runtime/runtime-literals.cc`
+  is identical in .66 and .69: clean cherry-pick. Test `regress/regress-577314726.js`.
+- **`kFlyWebCacheEpoch` -> 37**, the single final value for 3.1.4 (part 5 left it alone; part 6 set 36).
+
+Not taken: 229a53b (15.6.75.71, bug 574749469) only adds the `v8::Object::TryGetWithNoSideEffects()` API for a
+Blink change that is not on the 8078 branch yet; it changes nothing on its own.
+
+To check (D8-LINUX): `d8` and mjsunit with and without Maglev, especially `regress/regress-577314726.js`.
+
 # FlyWeb: 3.1.4 part 6, V8 15.6.75.66 + four Chrome 158 Lows
 
 SEGURIDAD-PORTES-28, 18-11-2026 (softmac `FlyWeb/seguridad/3.1.4/parte6/brave-core/0001`, on top of part 4). None is merged to 15.6;
