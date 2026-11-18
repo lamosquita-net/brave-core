@@ -1,0 +1,18 @@
+diff --git a/src/compiler/turboshaft/register-allocation-phase.h b/src/compiler/turboshaft/register-allocation-phase.h
+index d81b7d563dee94057007412d8fd33758ae01e0a7..2e37f79e15a0474fe7c3ecfaed1d0a60d4f6363c 100644
+--- a/src/compiler/turboshaft/register-allocation-phase.h
++++ b/src/compiler/turboshaft/register-allocation-phase.h
+@@ -200,10 +200,10 @@ struct JumpThreadingPhase {
+   DECL_TURBOSHAFT_PHASE_CONSTANTS_WITH_LEGACY_NAME(JumpThreading)
+   static constexpr bool kOutputIsTraceableGraph = false;
+ 
+-  void Run(PipelineData* data, Zone* temp_zone, bool frame_at_start) {
++  void Run(PipelineData* data, Zone* temp_zone) {
+     ZoneVector<RpoNumber> result(temp_zone);
+-    if (JumpThreading::ComputeForwarding(temp_zone, &result, data->sequence(),
+-                                         frame_at_start)) {
++    if (JumpThreading::ComputeForwarding(temp_zone, &result,
++                                         data->sequence())) {
+       JumpThreading::ApplyForwarding(temp_zone, result, data->sequence());
+     }
+   }

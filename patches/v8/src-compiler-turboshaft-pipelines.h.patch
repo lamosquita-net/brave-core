@@ -1,0 +1,18 @@
+diff --git a/src/compiler/turboshaft/pipelines.h b/src/compiler/turboshaft/pipelines.h
+index c20139a58fe5fbb84354d2e6280e2bf4c6857c42..c244268b477d63fc685c828f0d859701258f644d 100644
+--- a/src/compiler/turboshaft/pipelines.h
++++ b/src/compiler/turboshaft/pipelines.h
+@@ -406,12 +406,9 @@ class V8_EXPORT_PRIVATE Pipeline {
+ 
+     RUN_MAYBE_ABORT(FrameElisionPhase);
+ 
+-    // TODO(mtrofin): move this off to the register allocator.
+-    bool generate_frame_at_start =
+-        data_->sequence()->instruction_blocks().front()->must_construct_frame();
+     // Optimimize jumps.
+     if (v8_flags.turbo_jt) {
+-      RUN_MAYBE_ABORT(JumpThreadingPhase, generate_frame_at_start);
++      RUN_MAYBE_ABORT(JumpThreadingPhase);
+     }
+ 
+     EndPhaseKind();

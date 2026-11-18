@@ -1,8 +1,16 @@
 diff --git a/src/runtime/runtime-regexp.cc b/src/runtime/runtime-regexp.cc
-index 2a1ba0758cba214b408468a5159871fb98df3ca6..ec17453cda41a35da6e906bed89630c201bcf5f6 100644
+index 2a1ba0758cba214b408468a5159871fb98df3ca6..41060a34fa9aed3c4bba4c2c253bdf5fb8bf1ba5 100644
 --- a/src/runtime/runtime-regexp.cc
 +++ b/src/runtime/runtime-regexp.cc
-@@ -1308,6 +1308,21 @@ DirectHandle<FixedArray> CopyMatches(Isolate* isolate,
+@@ -832,6 +832,7 @@ StringReplaceGlobalRegExpWithEmptyString(
+   int delta = allocated_string_size - string_size;
+ 
+   answer->set_length(position);
++  answer->ClearPadding();
+   if (delta == 0) return *answer;
+ 
+   Address end_of_string = answer->address() + string_size;
+@@ -1308,6 +1309,21 @@ DirectHandle<FixedArray> CopyMatches(Isolate* isolate,
    return copy;
  }
  
@@ -24,7 +32,7 @@ index 2a1ba0758cba214b408468a5159871fb98df3ca6..ec17453cda41a35da6e906bed89630c2
  // Only called from Runtime_RegExpExecMultiple so it doesn't need to maintain
  // separate last match info.  See comment on that function.
  template <bool has_capture>
-@@ -1349,23 +1364,30 @@ static Tagged<UnionOf<ExceptionHole, Null, FixedArray>> SearchRegExpMultiple(
+@@ -1349,23 +1365,30 @@ static Tagged<UnionOf<ExceptionHole, Null, FixedArray>> SearchRegExpMultiple(
          isolate->heap(), *subject, regexp_data->wrapper(), &last_match_cache,
          regexp::ResultsCache::REGEXP_MULTIPLE_INDICES);
      if (IsFixedArray(cached_answer)) {

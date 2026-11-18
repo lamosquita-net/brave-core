@@ -1,3 +1,20 @@
+# FlyWeb: 3.1.4, V8 15.6.75.66 + the 8078 branch fixes of 15.6.75.68 and .69
+
+SEGURIDAD-PORTES-29, 18-11-2026 (softmac `FlyWeb/seguridad/3.1.4/parte4/brave-core/0001`). After 3bd3db9df2 the
+8078 branch rolled V8 from 15.6.75.67 to .69 (bd0e1ecfa, ahead of the .111 tag). Of its three merges, b18f156 is
+659b8bf (already here); the other two go in as patches, like the rest. The V8 gitlink stays at .66:
+
+- **46c1404** (581561827, [M156] merge of 14a5145e4f): `JumpThreading::ComputeForwarding` no longer forwards jumps
+  across frame construction or deconstruction (a loop back edge forwarded into a block that builds the frame
+  re-ran the prologue until stack overflow). Touches the Turboshaft register allocation phase too. Test
+  `regress/wasm/regress-simd-581561827.js` (the cctest change stays out).
+- **c9afe36** (576957750, [M156] merge of f4563ea807): regexp `replace` clears the padding after trimming the
+  result string. Test `regress/regress-576957750.js`.
+- `kFlyWebCacheEpoch` 34 -> **35** (optimized code changes).
+
+To check (D8-LINUX): `d8` and mjsunit with and without Maglev, especially the two new tests, `compiler/*`,
+`regexp*` and `wasm/*simd*`.
+
 # FlyWeb: 3.1.4, V8 15.6.75.66 + 5787048 (branch fix of 15.6.75.67)
 
 SEGURIDAD-PORTES-26, 18-11-2026 (softmac `FlyWeb/seguridad/3.1.5/brave-core/0003`; the `3.1.5/` folder is part 3
