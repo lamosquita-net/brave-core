@@ -1,0 +1,22 @@
+diff --git a/src/regexp/regexp-nodes.h b/src/regexp/regexp-nodes.h
+index 82d79366d4f00f445b8ee9ec50a76b363822eb0c..bd2483b87b85aab76f683a364afb86fe37732bd6 100644
+--- a/src/regexp/regexp-nodes.h
++++ b/src/regexp/regexp-nodes.h
+@@ -137,7 +137,7 @@ struct EatsAtLeastInfo final {
+   uint8_t from_not_start;
+ };
+ 
+-class EmitResult final {
++class V8_NODISCARD EmitResult final {
+  public:
+   static EmitResult Success() { return EmitResult(kSuccess); }
+   static EmitResult Error() { return EmitResult(kError); }
+@@ -402,7 +402,7 @@ class V8_EXPORT_PRIVATE Node : public ZoneObject {
+   virtual bool IsBacktrack() const { return false; }
+ 
+  protected:
+-  enum LimitResult { DONE, CONTINUE };
++  enum LimitResult { DONE, CONTINUE, FAILED };
+   Node* replacement_;
+ 
+   LimitResult LimitVersions(Compiler* compiler, Trace* trace);

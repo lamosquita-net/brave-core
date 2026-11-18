@@ -1,3 +1,18 @@
+# FlyWeb: 3.1.4, V8 15.6.75.66 + 659b8bf
+
+SEGURIDAD-PORTES-24, 18-11-2026 (brave-core `seg/3.1.4`). Inventory in softmac `FlyWeb/seguridad/3.1.4/INVENTARIO.md`.
+
+- **659b8bf** (573263262, CVE-2026-131042, High, Chrome 158; not merged to 15.6): regexp code generation errors from
+  `Trace::Flush` are no longer ignored. `Node::LimitVersions` returns the new `FAILED`, the four `Emit` callers return
+  `EmitResult::Error()`, `ActionNode::Emit` returns the `Flush` result, `EmitResult` is `V8_NODISCARD` and
+  `Compiler::Assemble` CHECKs instead of reporting "too big". Clean on 15.6.75.66; every `Emit`/`Flush` caller in
+  15.6's `regexp-compiler.cc` already uses the result, so `V8_NODISCARD` adds no warning. With
+  `regress/regress-573263262.js`.
+- `kFlyWebCacheEpoch` 31 -> **32**.
+
+To check (D8-LINUX): `d8` and mjsunit with and without Maglev, especially `regress/regress-573263262.js` and
+`regexp*`, `harmony/regexp*`, `es6/unicode-regexp*`.
+
 # FlyWeb: 3.0.2, V8 15.6.75.51
 
 SEGURIDAD-PORTES-20, 09-11-2026 (brave-core `seg/3.0.2`). The roll 6500240d22 -> 182f13107b (15.6.75.51, the
