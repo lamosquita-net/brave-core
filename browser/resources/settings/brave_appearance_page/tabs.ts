@@ -29,14 +29,30 @@ export class SettingsBraveAppearanceTabsElement extends SettingsBraveAppearanceT
     return getTemplate()
   }
 
-  private tabTooltipModes_ = [
-    { value: 1, name: this.i18n('appearanceSettingsTabHoverModeCard') },
-    {
-      value: 2,
-      name: this.i18n('appearanceSettingsTabHoverModeCardWithPreview')
-    },
-    { value: 0, name: this.i18n('appearanceSettingsTabHoverModeTooltip') }
-  ]
+  // FlyWeb: declared as a Polymer property. Since the 156 port TypeScript
+  // targets ESNext, so a class field initializer is defined on the instance
+  // and hides the accessor Polymer creates for [[tabTooltipModes_]]: the
+  // dropdown got no options. The value function runs per instance, after
+  // I18nMixin is ready.
+  static get properties() {
+    return {
+      tabTooltipModes_: {
+        type: Array,
+        value(this: SettingsBraveAppearanceTabsElement) {
+          return [
+            {value: 1, name: this.i18n('appearanceSettingsTabHoverModeCard')},
+            {
+              value: 2,
+              name: this.i18n('appearanceSettingsTabHoverModeCardWithPreview'),
+            },
+            {value: 0, name: this.i18n('appearanceSettingsTabHoverModeTooltip')},
+          ]
+        },
+      },
+    }
+  }
+
+  private declare tabTooltipModes_: Array<{value: number, name: string}>
 
 }
 
