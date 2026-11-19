@@ -7,6 +7,7 @@
 
 #include <optional>
 
+#include "brave/browser/ui/views/location_bar/brave_location_bar_view.h"
 #include "chrome/browser/ssl/chrome_security_state_util.h"
 #include "chrome/browser/ui/omnibox/omnibox_controller.h"
 #include "chrome/browser/ui/omnibox/omnibox_edit_model.h"
@@ -23,6 +24,7 @@
 #include "net/test/cert_test_util.h"
 #include "net/test/test_data_directory.h"
 #include "services/network/public/mojom/url_response_head.mojom.h"
+#include "ui/views/controls/focus_ring.h"
 
 constexpr char kMockSecureHostname[] = "example-secure.test";
 struct SecurityIndicatorTestParams {
@@ -182,4 +184,26 @@ IN_PROC_BROWSER_TEST_F(BraveLocationBarViewColorOverridesTest,
                   ->edit_model()
                   ->user_input_in_progress());
   EXPECT_EQ(default_color, GetOmniboxView()->GetBackgroundColor());
+}
+
+// FlyWeb 3.2.0: in a regular window the URL field has no focus ring; a glow
+// view, the last child so it paints on top, replaces it and stays hidden while
+// the field is not focused.
+IN_PROC_BROWSER_TEST_F(BraveLocationBarViewColorOverridesTest,
+                       FlyWebFocusGlowReplacesFocusRing) {
+  auto* location_bar = static_cast<BraveLocationBarView*>(
+      BrowserView::GetBrowserViewForBrowser(browser())->GetLocationBarView());
+  EXPECT_EQ(nullptr, views::FocusRing::Get(location_bar));
+
+  views::View* glow = location_bar->focus_glow_for_testing();
+  ASSERT_TRUE(glow);
+  EXPECT_EQ(glow, location_bar->children().back());
+
+  ui_test_utils::NavigateToURLBlockUntilNavigationsComplete(
+      browser(), GURL("https://example.com"), 1);
+  EXPECT_FALSE(GetLocationBar()
+                   ->GetOmniboxController()
+                   ->edit_model()
+                   ->is_caret_visible());
+  EXPECT_FALSE(glow->GetVisible());
 }

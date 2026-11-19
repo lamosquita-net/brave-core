@@ -64,6 +64,7 @@ class BraveLocationBarView : public LocationBarView {
   BraveActionsContainer* brave_actions_contatiner_view() {
     return brave_actions_;
   }
+  views::View* focus_glow_for_testing() { return focus_glow_; }
 
   void set_ignore_layout(base::PassKey<BraveToolbarView::LayoutGuard>,
                          bool ignore) {
@@ -81,6 +82,8 @@ class BraveLocationBarView : public LocationBarView {
   bool ignore_layout_ = false;
   std::unique_ptr<ViewShadow> shadow_;
   raw_ptr<BraveActionsContainer> brave_actions_ = nullptr;
+  // FlyWeb inner glow of the focused URL field (regular and guest windows).
+  raw_ptr<views::View> focus_glow_ = nullptr;
 };
 
 #endif  // BRAVE_BROWSER_UI_VIEWS_LOCATION_BAR_BRAVE_LOCATION_BAR_VIEW_H_

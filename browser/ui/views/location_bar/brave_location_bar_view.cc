@@ -11,6 +11,7 @@
 
 #include "base/check.h"
 #include "base/feature_list.h"
+#include "base/numerics/safe_conversions.h"
 #include "brave/app/vector_icons/vector_icons.h"
 #include "brave/browser/themes/brave_theme_service.h"
 #include "brave/browser/ui/color/brave_color_id.h"
@@ -20,6 +21,7 @@
 #include "brave/browser/ui/views/toolbar/brave_toolbar_view.h"
 #include "brave/components/l10n/common/localization_util.h"
 #include "brave/grit/brave_theme_resources.h"
+#include "cc/paint/paint_flags.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/themes/theme_service_factory.h"
 #include "chrome/browser/ui/layout_constants.h"
@@ -34,16 +36,92 @@
 #include "components/grit/brave_components_strings.h"
 #include "components/version_info/channel.h"
 #include "content/public/browser/navigation_entry.h"
+#include "ui/base/metadata/metadata_header_macros.h"
 #include "ui/base/metadata/metadata_impl_macros.h"
 #include "ui/base/resource/resource_bundle.h"
 #include "ui/compositor/layer.h"
+#include "ui/gfx/canvas.h"
+#include "ui/gfx/geometry/rect_f.h"
 #include "ui/gfx/geometry/size.h"
 #include "ui/gfx/geometry/skia_conversions.h"
 #include "ui/gfx/image/image_skia.h"
 #include "ui/gfx/paint_vector_icon.h"
+#include "ui/views/controls/focus_ring.h"
 #include "ui/views/controls/highlight_path_generator.h"
 
 namespace {
+
+// FlyWeb 3.2.0 interface (softmac FlyWeb/branding/interfaz-3.2.0): instead of
+// the colored focus ring, the focused URL field shows a soft gray inner glow.
+// The values are meant to be adjusted in tests with Titín.
+// Width of the glow from the edge inwards, in dip.
+constexpr float kFlyWebOmniboxFocusGlowThickness = 2.0f;
+// Color of the glow at the very edge; it fades to transparent inwards.
+constexpr SkColor kFlyWebOmniboxFocusGlowColor =
+    SkColorSetRGB(0x80, 0x80, 0x80);
+// Opacity of the glow at the very edge, 0-1.
+constexpr float kFlyWebOmniboxFocusGlowOpacity = 0.30f;
+// Number of rings that draw the fade. Plain strokes, no blur filter, so the
+// cost is the same on old GPUs (MacPro5,1).
+constexpr int kFlyWebOmniboxFocusGlowSteps = 4;
+
+// Transparent view on top of the location bar children that paints the inner
+// glow. It must be above the omnibox textfield, which has an opaque
+// background. It ignores events and accessibility.
+class FlyWebOmniboxFocusGlowView : public views::View {
+  METADATA_HEADER(FlyWebOmniboxFocusGlowView, views::View)
+
+ public:
+  FlyWebOmniboxFocusGlowView() {
+    SetCanProcessEventsWithinSubtree(false);
+    GetViewAccessibility().SetIsIgnored(true);
+    SetVisible(false);
+  }
+  FlyWebOmniboxFocusGlowView(const FlyWebOmniboxFocusGlowView&) = delete;
+  FlyWebOmniboxFocusGlowView& operator=(const FlyWebOmniboxFocusGlowView&) =
+      delete;
+  ~FlyWebOmniboxFocusGlowView() override = default;
+
+  void set_corner_radius(float radius) { corner_radius_ = radius; }
+
+  // views::View:
+  void OnPaint(gfx::Canvas* canvas) override {
+    const float step =
+        kFlyWebOmniboxFocusGlowThickness / kFlyWebOmniboxFocusGlowSteps;
+    cc::PaintFlags flags;
+    flags.setAntiAlias(true);
+    flags.setStyle(cc::PaintFlags::kStroke_Style);
+    flags.setStrokeWidth(step);
+    for (int i = 0; i < kFlyWebOmniboxFocusGlowSteps; ++i) {
+      const float inset = (i + 0.5f) * step;
+      gfx::RectF ring(GetLocalBounds());
+      ring.Inset(inset);
+      if (ring.IsEmpty()) {
+        break;
+      }
+      // Quadratic fade from the edge inwards.
+      const float fade =
+          1.0f - static_cast<float>(i) / kFlyWebOmniboxFocusGlowSteps;
+      const float opacity = kFlyWebOmniboxFocusGlowOpacity * fade * fade;
+      flags.setColor(SkColorSetA(kFlyWebOmniboxFocusGlowColor,
+                                 base::ClampRound<SkAlpha>(opacity * 255)));
+      canvas->DrawRoundRect(ring, std::max(corner_radius_ - inset, 0.0f),
+                            flags);
+    }
+  }
+
+ private:
+  float corner_radius_ = 0;
+};
+
+BEGIN_METADATA(FlyWebOmniboxFocusGlowView)
+END_METADATA
+
+// Regular and guest windows use the FlyWeb glow. Private and Tor windows keep
+// Brave's focus ring and its color.
+bool UsesFlyWebFocusGlow(Profile* profile) {
+  return profile->IsRegularProfile() || profile->IsGuestSession();
+}
 
 class BraveLocationBarViewFocusRingHighlightPathGenerator
     : public views::HighlightPathGenerator {
@@ -88,6 +166,14 @@ BraveLocationBarView::~BraveLocationBarView() = default;
 void BraveLocationBarView::Init() {
   // base method calls Update and Layout
   LocationBarView::Init();
+  // FlyWeb: regular and guest windows show the inner glow instead of the
+  // focus ring. Chromium only installs the focus ring outside popup mode.
+  const bool use_focus_glow =
+      views::FocusRing::Get(this) && UsesFlyWebFocusGlow(GetProfile());
+  if (use_focus_glow) {
+    views::FocusRing::Remove(this);
+  }
+
   // Change focus ring highlight path
   views::FocusRing* focus_ring = views::FocusRing::Get(this);
   if (focus_ring) {
@@ -103,6 +189,12 @@ void BraveLocationBarView::Init() {
   brave_actions_ = AddChildView(
       std::make_unique<BraveActionsContainer>(browser_, GetProfile()));
   brave_actions_->Init();
+
+  // Added after every other child so the glow paints on top of them.
+  if (use_focus_glow) {
+    focus_glow_ = AddChildView(std::make_unique<FlyWebOmniboxFocusGlowView>());
+  }
+
   // Call Update again to cause a Layout
   Update(nullptr);
 
@@ -128,6 +220,12 @@ void BraveLocationBarView::Layout(PassKey) {
   }
 
   LayoutSuperclass<LocationBarView>(this);
+
+  if (focus_glow_) {
+    focus_glow_->SetBoundsRect(GetLocalBounds());
+    static_cast<FlyWebOmniboxFocusGlowView*>(focus_glow_.get())
+        ->set_corner_radius(GetBorderRadius());
+  }
 }
 
 void BraveLocationBarView::OnVisibleBoundsChanged() {
@@ -164,6 +262,15 @@ std::vector<views::View*> BraveLocationBarView::GetLeftMostTrailingViews() {
 
 void BraveLocationBarView::RefreshBackground() {
   LocationBarView::RefreshBackground();
+
+  // Chromium calls RefreshBackground() on focus, blur and popup changes. Same
+  // condition as Chromium's focus ring: visibly focused and popup closed (an
+  // open popup and the field are drawn as one piece).
+  if (focus_glow_) {
+    focus_glow_->SetVisible(
+        GetOmniboxController()->edit_model()->is_caret_visible() &&
+        !GetOmniboxController()->IsPopupOpen());
+  }
 
   if (shadow_) {
     const bool show_shadow =
