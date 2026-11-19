@@ -1,0 +1,20 @@
+diff --git a/src/execution/isolate.cc b/src/execution/isolate.cc
+index aa4f4fe23e58b14f8e5198afca7b6b091108a445..d3e3fd6f61a8c184e05c4f7cdf575f9e9f5fe9de 100644
+--- a/src/execution/isolate.cc
++++ b/src/execution/isolate.cc
+@@ -8739,5 +8739,15 @@ void Isolate::PrintNumberStringCacheStats(const char* comment,
+   PrintF("\n");
+ }
+ 
++void Isolate::MarkContextSlotNotAssignedIsUnreliable() {
++  if (is_context_slot_not_assigned_unreliable()) return;
++  context_slot_not_assigned_is_unreliable_.store(true,
++                                                 std::memory_order_relaxed);
++  // Abort any in-flight concurrent compilations that may have relied on
++  // kNotAssigned and deoptimize existing optimized code.
++  AbortConcurrentOptimization(BlockingBehavior::kBlock);
++  Deoptimizer::DeoptimizeAll(this);
++}
++
+ }  // namespace internal
+ }  // namespace v8

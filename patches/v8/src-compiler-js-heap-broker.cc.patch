@@ -1,0 +1,19 @@
+diff --git a/src/compiler/js-heap-broker.cc b/src/compiler/js-heap-broker.cc
+index 9c629176c82ba82eda4f1ebf72de00066980c330..f3aecae78a699cba93b6ceff3ffd0eaebed07d2f 100644
+--- a/src/compiler/js-heap-broker.cc
++++ b/src/compiler/js-heap-broker.cc
+@@ -672,9 +672,11 @@ ProcessedFeedback const& JSHeapBroker::ReadFeedbackForGlobalAccess(
+     OptionalObjectRef contents = context.get(broker, context_slot_index);
+     if (contents.has_value()) CHECK(!contents->IsTdzHole());
+ 
+-    return *zone()->New<GlobalAccessFeedback>(
+-        context, context_slot_index,
+-        FeedbackNexus::ImmutabilityBit::decode(number), nexus.kind());
++    // Lexical script-context const slots can be mutated via the debugger.
++    bool immutable = FeedbackNexus::ImmutabilityBit::decode(number) &&
++                     !isolate()->is_context_slot_not_assigned_unreliable();
++    return *zone()->New<GlobalAccessFeedback>(context, context_slot_index,
++                                              immutable, nexus.kind());
+   }
+ 
+   CHECK(IsPropertyCell(*feedback_value));

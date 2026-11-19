@@ -1,3 +1,23 @@
+# FlyWeb: pending for the next release, V8 15.6.75.72 fix d68cecd900 (crbug 583479274)
+
+SEGURIDAD-PORTES-32, 19-11-2026 (softmac `FlyWeb/seguridad/pendiente/brave-core/0001`). Not in 3.1.4 (build 47
+was already published): it waits for the next FlyWeb release. On top of `local/3.1.4-adapt` (V8 15.6.75.66 with all
+the patches below; gitlink unchanged):
+
+- **d68cecd900** (583479274, 587681789; V8 15.6.75.72 on the 8078 branch, cherry-pick of b30c1cdb7f): when the
+  debugger stores into a context slot that the parser marked `kNotAssigned`, the isolate now records that
+  `kNotAssigned` is no longer reliable, deoptimizes existing code, and TurboFan (`bytecode-graph-builder.cc`,
+  `js-heap-broker.cc`) and Maglev (`maglev-reducer-inl.h`) stop constant-folding those slots. Only reachable with
+  the debugger attached (DevTools or `chrome.debugger`). The seven source files are byte-identical in 15.6.75.66
+  and in the fix's parent (a97fec97ff, .71), and no other `patches/v8` file touches them: clean cherry-pick.
+  Test: `test/inspector/debugger/context-set-unassigned-optimized.js`.
+
+**Cache epoch:** every V8 patch bumps `kFlyWebCacheEpoch` (`docs/SEGURIDAD.md`). It is NOT bumped here because the
+target release is not decided yet; whoever integrates this into the next release sets the epoch for that release.
+
+To check (D8-LINUX): `d8`, mjsunit with and without Maglev, and the `inspector` suite, especially
+`debugger/context-set-unassigned-optimized`.
+
 # FlyWeb: 3.1.4 integration (parts 4 -> 5 -> 6), V8 15.6.75.70 fix and final cache epoch
 
 SEGURIDAD-PORTES-30, 18-11-2026 (softmac `FlyWeb/seguridad/3.1.4/integracion/brave-core/0001`). On top of parts 4,

@@ -1,0 +1,15 @@
+diff --git a/src/maglev/maglev-reducer-inl.h b/src/maglev/maglev-reducer-inl.h
+index 50d7d2263784112525a27cc77f5fff0f54699725..59f7c9c87323b20bd83f34aaf8288185575c14c5 100644
+--- a/src/maglev/maglev-reducer-inl.h
++++ b/src/maglev/maglev-reducer-inl.h
+@@ -739,6 +739,10 @@ MaybeAssignedFlag MaglevReducer<BaseT>::GetContextMaybeAssigned(
+   }
+   int var_index = index - header_length;
+   *mode = scope_info.ContextLocalMode(var_index);
++  // The debugger may have mutated a kNotAssigned context slot at runtime.
++  if (broker()->isolate()->is_context_slot_not_assigned_unreliable()) {
++    return kMaybeAssigned;
++  }
+   return scope_info.ContextLocalMaybeAssignedFlag(var_index);
+ }
+ 
