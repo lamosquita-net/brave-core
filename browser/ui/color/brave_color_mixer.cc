@@ -575,8 +575,8 @@ void AddPrivateThemeColorMixer(ui::ColorProvider* provider,
   mixer[kColorNewTabButtonBackgroundFrameActive] = {ui::kColorFrameActive};
   mixer[kColorNewTabButtonBackgroundFrameInactive] = {ui::kColorFrameInactive};
   mixer[kColorNewTabPageBackground] = {kPrivateFrame};
-  mixer[kColorTabBackgroundActiveFrameActive] = {
-      leo::kColorPrimitivePrivateWindow80};
+  // FlyWeb: the active tab and the toolbar are one piece of the same color.
+  mixer[kColorTabBackgroundActiveFrameActive] = {kColorToolbar};
   mixer[kColorTabBackgroundActiveFrameInactive] = {
       kColorTabBackgroundActiveFrameActive};
   mixer[kColorTabBackgroundInactiveFrameActive] = {ui::kColorFrameActive};
@@ -589,13 +589,13 @@ void AddPrivateThemeColorMixer(ui::ColorProvider* provider,
       SkColorSetRGB(0xCC, 0xBE, 0xFE)};
   mixer[kColorTabForegroundInactiveFrameActive] = {
       SkColorSetRGB(0xCC, 0xBE, 0xFE)};
-  mixer[kColorToolbar] = {leo::kColorPrimitivePrivateWindow90};
+  mixer[kColorToolbar] = {kFlyWebPrivateDarkToolbar};
   mixer[kColorToolbarButtonIcon] = {leo::kColorPrimitivePrivateWindow40};
   mixer[kColorToolbarButtonIconInactive] = {
       ui::SetAlpha(kColorToolbarButtonIcon, kBraveDisabledControlAlpha)};
   mixer[kColorToolbarContentAreaSeparator] = {kColorToolbar};
-  mixer[ui::kColorFrameActive] = {kPrivateFrame};
-  mixer[ui::kColorFrameInactive] = {kPrivateFrame};
+  mixer[ui::kColorFrameActive] = {kFlyWebPrivateFrame};
+  mixer[ui::kColorFrameInactive] = {kFlyWebPrivateFrame};
 }
 
 void AddBraveOmniboxPrivateThemeColorMixer(ui::ColorProvider* provider,

@@ -266,7 +266,12 @@ IN_PROC_BROWSER_TEST_F(BraveThemeServiceTest, ColorProviderTest) {
   browser_view = BrowserView::GetBrowserViewForBrowser(private_browser);
   cp = browser_view->GetColorProvider();
   frame_active_color = cp->GetColor(ui::kColorFrameActive);
-  EXPECT_EQ(kPrivateFrame, frame_active_color);
+  EXPECT_EQ(kFlyWebPrivateFrame, frame_active_color);
+
+  // FlyWeb 3.2.0: private window toolbar and active tab, one color.
+  EXPECT_EQ(kFlyWebPrivateDarkToolbar, cp->GetColor(kColorToolbar));
+  EXPECT_EQ(kFlyWebPrivateDarkToolbar,
+            cp->GetColor(kColorTabBackgroundActiveFrameActive));
 }
 
 #if BUILDFLAG(IS_WIN)

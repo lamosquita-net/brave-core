@@ -56,6 +56,16 @@ constexpr SkColor kFlyWebOmniboxSelectionOnLight =
 
 constexpr SkColor kPrivateFrame = SkColorSetRGB(0x13, 0x05, 0x2A);
 
+// FlyWeb 3.2.0: private window active tab and toolbar (Titín, 19-11), one
+// piece of the same color as in regular windows. Private windows are always in
+// dark mode (ThemeService forces it for incognito profiles); Titín's light
+// value, #AFA6D2, waits for the decision on whether they follow the system.
+constexpr SkColor kFlyWebPrivateDarkToolbar = SkColorSetRGB(0x57, 0x1E, 0x73);
+// Private window frame (Titín, 19-11), so the private window is not the same
+// as a regular window in dark mode. Only the frame: the URL field and the new
+// tab page keep kPrivateFrame.
+constexpr SkColor kFlyWebPrivateFrame = SkColorSetRGB(0x27, 0x27, 0x26);
+
 constexpr SkColor kBraveNewTabBackgroundDark = SkColorSetRGB(0x33, 0x36, 0x39);
 constexpr SkColor kBraveNewTabBackgroundLight = SkColorSetRGB(0x6B, 0x70, 0x84);
 
