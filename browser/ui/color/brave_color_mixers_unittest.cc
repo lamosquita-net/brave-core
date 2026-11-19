@@ -12,6 +12,7 @@
 #include "third_party/skia/include/core/SkColor.h"
 #include "ui/color/color_provider.h"
 #include "ui/color/color_provider_key.h"
+#include "ui/gfx/color_utils.h"
 
 class BraveColorMixersTest : public testing::Test {
  public:
@@ -50,7 +51,17 @@ TEST_F(BraveColorMixersTest, FlyWebLightColors) {
   EXPECT_EQ(color_provider().GetColor(kColorTabBackgroundActiveFrameActive),
             kFlyWebLightToolbar);
   EXPECT_EQ(color_provider().GetColor(ui::kColorFrameActive), kLightFrame);
-  EXPECT_EQ(color_provider().GetColor(ui::kColorFrameInactive), kLightFrame);
+  // Window without focus: dimmer, with Chromium's recipe.
+  EXPECT_NE(color_provider().GetColor(ui::kColorFrameInactive), kLightFrame);
+  EXPECT_EQ(color_provider().GetColor(kColorToolbarButtonIcon),
+            kFlyWebLightToolbarIcon);
+  EXPECT_EQ(color_provider().GetColor(kColorBookmarkFolderIcon),
+            kFlyWebLightToolbarIcon);
+  EXPECT_EQ(color_provider().GetColor(kColorTabForegroundActiveFrameActive),
+            kFlyWebLightTabText);
+  EXPECT_EQ(color_provider().GetColor(kColorTabForegroundInactiveFrameActive),
+            color_utils::AlphaBlend(kFlyWebLightTabText, kLightFrame,
+                                    kFlyWebInactiveTabTextAlpha));
   EXPECT_EQ(color_provider().GetColor(kColorLocationBarBackground),
             kFlyWebLocationBarBackground);
 }
@@ -63,7 +74,14 @@ TEST_F(BraveColorMixersTest, FlyWebDarkColors) {
   EXPECT_EQ(color_provider().GetColor(kColorTabBackgroundActiveFrameActive),
             kFlyWebDarkToolbar);
   EXPECT_EQ(color_provider().GetColor(ui::kColorFrameActive), kDarkFrame);
-  EXPECT_EQ(color_provider().GetColor(ui::kColorFrameInactive), kDarkFrame);
+  EXPECT_NE(color_provider().GetColor(ui::kColorFrameInactive), kDarkFrame);
+  EXPECT_EQ(color_provider().GetColor(kColorToolbarButtonIcon),
+            kFlyWebDarkToolbarIcon);
+  EXPECT_EQ(color_provider().GetColor(kColorTabForegroundActiveFrameActive),
+            kFlyWebDarkTabText);
+  EXPECT_EQ(color_provider().GetColor(kColorTabForegroundInactiveFrameActive),
+            color_utils::AlphaBlend(kFlyWebDarkTabText, kDarkFrame,
+                                    kFlyWebInactiveTabTextAlpha));
 
   if (kFlyWebLightOmniboxInDarkMode) {
     // White URL field and popup, with dark text.

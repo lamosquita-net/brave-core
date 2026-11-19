@@ -65,6 +65,29 @@ bool HasCustomToolbarColor(const ui::ColorProviderKey& key) {
                                     &custom_toolbar_color);
 }
 
+// FlyWeb tab text, regular windows only (called from
+// AddBravifiedTabStripColorMixer(), which private windows skip because their
+// theme supplier is a custom theme): black or white on
+// the active tab in both window states; inactive tabs use it at
+// kFlyWebInactiveTabTextAlpha over the tab strip, made opaque, as Chromium's
+// tab code expects.
+void AddFlyWebTabTextColorMixer(ui::ColorProvider* provider,
+                                const ui::ColorProviderKey& key) {
+  ui::ColorMixer& mixer = provider->AddMixer();
+  mixer[kColorTabForegroundActiveFrameActive] = {
+      key.color_mode == ui::ColorProviderKey::ColorMode::kDark
+          ? kFlyWebDarkTabText
+          : kFlyWebLightTabText};
+  mixer[kColorTabForegroundActiveFrameInactive] = {
+      kColorTabForegroundActiveFrameActive};
+  mixer[kColorTabForegroundInactiveFrameActive] = ui::AlphaBlend(
+      {kColorTabForegroundActiveFrameActive},
+      {kColorTabBackgroundInactiveFrameActive}, kFlyWebInactiveTabTextAlpha);
+  mixer[kColorTabForegroundInactiveFrameInactive] = ui::AlphaBlend(
+      {kColorTabForegroundActiveFrameInactive},
+      {kColorTabBackgroundInactiveFrameInactive}, kFlyWebInactiveTabTextAlpha);
+}
+
 void AddChromeLightThemeColorMixer(ui::ColorProvider* provider,
                                    const ui::ColorProviderKey& key) {
   ui::ColorMixer& mixer = provider->AddMixer();
@@ -88,15 +111,17 @@ void AddChromeLightThemeColorMixer(ui::ColorProvider* provider,
   mixer[kColorTabStrokeFrameActive] = {SkColorSetA(SK_ColorBLACK, 0.07 * 255)};
   mixer[kColorTabStrokeFrameInactive] = {kColorTabStrokeFrameActive};
   mixer[kColorToolbar] = {kFlyWebLightToolbar};
-  mixer[kColorToolbarButtonIcon] = {leo::kColorPrimitiveGray50};
+  mixer[kColorToolbarButtonIcon] = {kFlyWebLightToolbarIcon};
   mixer[kColorToolbarButtonIconInactive] = {
       ui::SetAlpha(kColorToolbarButtonIcon, kBraveDisabledControlAlpha)};
   mixer[kColorToolbarContentAreaSeparator] = {ui::kColorFrameActive};
   mixer[kColorToolbarTopSeparatorFrameActive] = {kColorToolbar};
   mixer[kColorToolbarTopSeparatorFrameInactive] = {kColorToolbar};
   mixer[ui::kColorFrameActive] = {kLightFrame};
-  // FlyWeb: the window without focus keeps the same frame color.
-  mixer[ui::kColorFrameInactive] = {kLightFrame};
+  // FlyWeb: the window without focus is a little dimmer, with Chromium's
+  // recipe for the inactive header (ui/color/sys_color_mixer.cc).
+  mixer[ui::kColorFrameInactive] =
+      ui::AlphaBlend({kLightFrame}, {ui::kColorRefNeutral98}, 0x48);
   mixer[ui::kColorToggleButtonThumbOff] = {SK_ColorWHITE};
   mixer[ui::kColorToggleButtonThumbOn] = {SkColorSetRGB(0x4C, 0x54, 0xD2)};
   mixer[ui::kColorToggleButtonTrackOff] = {SkColorSetRGB(0xDA, 0xDC, 0xE8)};
@@ -144,14 +169,16 @@ void AddChromeDarkThemeColorMixer(ui::ColorProvider* provider,
   mixer[kColorTabStrokeFrameActive] = {kColorToolbar};
   mixer[kColorTabStrokeFrameInactive] = {kColorToolbar};
   mixer[kColorToolbar] = {kFlyWebDarkToolbar};
-  mixer[kColorToolbarButtonIcon] = {leo::kColorPrimitiveGray40};
+  mixer[kColorToolbarButtonIcon] = {kFlyWebDarkToolbarIcon};
   mixer[kColorToolbarButtonIconInactive] = {
       ui::SetAlpha(kColorToolbarButtonIcon, kBraveDisabledControlAlpha)};
   mixer[kColorToolbarContentAreaSeparator] = {kColorToolbar};
   mixer[kColorToolbarTopSeparatorFrameActive] = {kColorToolbar};
   mixer[kColorToolbarTopSeparatorFrameInactive] = {kColorToolbar};
   mixer[ui::kColorFrameActive] = {kDarkFrame};
-  mixer[ui::kColorFrameInactive] = {kDarkFrame};
+  // FlyWeb: dimmer without focus, Chromium's recipe (see the light mixer).
+  mixer[ui::kColorFrameInactive] =
+      ui::AlphaBlend({kDarkFrame}, {ui::kColorRefNeutral25}, 0x99);
   mixer[ui::kColorToggleButtonThumbOff] = {SK_ColorWHITE};
   mixer[ui::kColorToggleButtonThumbOn] = {SkColorSetRGB(0x44, 0x36, 0xE1)};
   mixer[ui::kColorToggleButtonTrackOff] = {SkColorSetRGB(0x5E, 0x61, 0x75)};
@@ -191,6 +218,9 @@ void AddChromeColorMixerForAllThemes(ui::ColorProvider* provider,
   if (key.custom_theme) {
     return;
   }
+
+  // FlyWeb: bookmark folders in the same flat color as the toolbar icons.
+  mixer[kColorBookmarkFolderIcon] = {kColorToolbarButtonIcon};
 
   mixer[kColorLocationBarBackground] = {kColorToolbarBackgroundSubtleEmphasis};
   mixer[kColorLocationBarBackgroundHovered] = {kColorLocationBarBackground};
@@ -641,4 +671,10 @@ void AddBravifiedTabStripColorMixer(ui::ColorProvider* provider,
       {kColorTabBackgroundInactiveFrameActive}, 0.75 * 0xff);
   mixer[kColorTabDividerFrameInactive] = {divider_color};
   mixer[kColorTabDividerFrameActive] = {divider_color};
+
+  // FlyWeb tab text. It goes here, not with the other FlyWeb colors in
+  // AddBravifiedChromeThemeColorMixer(), because Chromium's
+  // AddTabStripColorMixer() runs after the chrome mixers and recomputes the
+  // tab foregrounds from kColorToolbarText.
+  AddFlyWebTabTextColorMixer(provider, key);
 }

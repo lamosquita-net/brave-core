@@ -28,6 +28,15 @@ constexpr SkColor kDarkOmniboxText = SkColorSetRGB(0xff, 0xff, 0xff);
 constexpr SkColor kFlyWebLightToolbar = SkColorSetRGB(0xF4, 0xF5, 0xF6);
 constexpr SkColor kFlyWebDarkToolbar = SkColorSetRGB(0x65, 0x66, 0x66);
 
+// Toolbar icons and tab text (Titín, 19-11).
+constexpr SkColor kFlyWebLightToolbarIcon = SkColorSetRGB(0x65, 0x66, 0x66);
+constexpr SkColor kFlyWebDarkToolbarIcon = SkColorSetRGB(0xED, 0xEE, 0xF1);
+constexpr SkColor kFlyWebLightTabText = SK_ColorBLACK;
+constexpr SkColor kFlyWebDarkTabText = SK_ColorWHITE;
+// Inactive tabs: the active tab text at this opacity, composited over the tab
+// strip so the result is opaque (Chromium's tab code expects opaque colors).
+constexpr SkAlpha kFlyWebInactiveTabTextAlpha = 0x80;  // 50%
+
 // URL field background, in light and dark mode.
 constexpr SkColor kFlyWebLocationBarBackground = SK_ColorWHITE;
 
