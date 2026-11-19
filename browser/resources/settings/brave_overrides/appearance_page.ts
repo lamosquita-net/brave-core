@@ -9,13 +9,15 @@
 // are hidden with CSS injected into the element's styles; hiding instead of
 // removing also keeps the nodes the element itself references ($ cache,
 // focus config). Brave 1.98 inserts <settings-brave-appearance-theme> into
-// the template with a lit_mangler script; FlyWeb has no such mechanism, so
-// that row is not shown here (see the T11 report).
+// the template with a lit_mangler script; FlyWeb has no such mechanism, so it
+// is inserted into the rendered DOM once, after the first render (as
+// about_page.ts does), right after the colour scheme row it replaces.
 
 import '../brave_appearance_page/brave_theme.js'
 
 import {injectStyle} from '//resources/brave/lit_overriding.js'
 import {css} from '//resources/lit/v3_0/lit.rollup.js'
+import type {PropertyValues} from '//resources/lit/v3_0/lit.rollup.js'
 
 import {SettingsAppearancePageElement} from '../appearance_page/appearance_page.js'
 
@@ -48,3 +50,36 @@ injectStyle(SettingsAppearancePageElement, css`
     display: none !important;
   }
 `)
+
+// FlyWeb: Brave's theme row (light / dark / same as macOS). It writes Brave's
+// own dark mode setting through BraveAppearanceHandler (setBraveThemeType).
+// #colorSchemeModeRow is a static node of the 156 template (not inside a
+// conditional part), so Lit never re-creates it and the inserted sibling
+// stays. The row is a Polymer element with its own data, so it needs no
+// properties from the page.
+function insertBraveThemeRow(root: ShadowRoot) {
+  if (root.querySelector('settings-brave-appearance-theme')) {
+    return
+  }
+  const colorSchemeModeRow = root.querySelector('#colorSchemeModeRow')
+  if (!colorSchemeModeRow) {
+    console.error('[FlyWeb] appearance page: #colorSchemeModeRow not found')
+    return
+  }
+  colorSchemeModeRow.after(
+      document.createElement('settings-brave-appearance-theme'))
+}
+
+// `firstUpdated` is `protected` on ReactiveElement, so reach it through an
+// untyped view of the prototype to patch it from outside the class hierarchy.
+const proto = SettingsAppearancePageElement.prototype as unknown as {
+  firstUpdated?: (changedProperties: PropertyValues) => void
+}
+const originalFirstUpdated = proto.firstUpdated
+proto.firstUpdated = function(
+    this: SettingsAppearancePageElement, changedProperties: PropertyValues) {
+  originalFirstUpdated?.call(this, changedProperties)
+  if (this.shadowRoot) {
+    insertBraveThemeRow(this.shadowRoot)
+  }
+}
