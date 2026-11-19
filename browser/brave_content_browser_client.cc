@@ -307,6 +307,19 @@ void BraveContentBrowserClient::RegisterTrustedWebUIInterfaceBrokers(
   if (base::FeatureList::IsEnabled(features::kBraveNtpSearchWidget)) {
     ntp_registration.Add<searchbox::mojom::PageHandlerFactory>();
   }
+
+  // FlyWeb: since Chromium 156 chrome://settings binds through a per-WebUI
+  // broker (settings::SettingsUI's, which BraveSettingsUI shares because
+  // GetType() is final in SettingsUI) and no longer looks at the frame
+  // binder map below. Without this the shortcuts subpage of
+  // brave://settings/system asked for CommandsService and the page was killed
+  // with a bad message. Same registration as Brave; ForWebUI() for an
+  // already registered type is allowed by
+  // chromium_src/content/public/browser/web_ui_browser_interface_broker_registry.h.
+  if (base::FeatureList::IsEnabled(commands::features::kBraveCommands)) {
+    registry.ForWebUI<BraveSettingsUI>()
+        .Add<commands::mojom::CommandsService>();
+  }
 #endif
 }
 

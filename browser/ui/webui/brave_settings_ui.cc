@@ -98,6 +98,14 @@ bool& BraveSettingsUI::ShouldExposeElementsForTesting() {
   return expose_elements;
 }
 
+// FlyWeb: BraveSettingsUI shares SettingsUI's WebUI type (GetType() is final),
+// so its per-WebUI binders may be called on a plain SettingsUI. Keep it
+// member-free. (The broker's GetAs<BraveSettingsUI>() only compares that
+// shared type; with no extra members the cast never reaches past the base
+// object. If BraveSettingsUI ever needs data members, replace this with a real
+// runtime check, e.g. a virtual marker in SettingsUI.)
+static_assert(sizeof(BraveSettingsUI) == sizeof(settings::SettingsUI));
+
 void BraveSettingsUI::BindInterface(
     mojo::PendingReceiver<commands::mojom::CommandsService> pending_receiver) {
   commands::AcceleratorServiceFactory::GetForContext(

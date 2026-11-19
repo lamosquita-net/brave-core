@@ -185,6 +185,38 @@ IN_PROC_BROWSER_TEST_F(BraveContentBrowserClientTest, RewriteChromeSync) {
   }
 }
 
+// FlyWeb: Chromium 156 binds chrome://settings through a per-WebUI broker.
+// The shortcuts subpage of brave://settings/system asks for CommandsService;
+// when the broker lacked it the renderer was killed with a bad message
+// ("Per WebUI interface binder missing for: commands.mojom.CommandsService").
+// The other pages use SettingsUI's own interfaces (color scheme, sign-in,
+// help bubble), which must keep working on the shared broker.
+IN_PROC_BROWSER_TEST_F(BraveContentBrowserClientTest,
+                       SettingsPagesBindTheirInterfaces) {
+  const std::vector<std::string> pages{
+      "chrome://settings/",
+      "chrome://settings/system",
+      "chrome://settings/system/shortcuts",
+      "chrome://settings/appearance",
+      "chrome://settings/braveSync",
+  };
+  content::WebContents* contents =
+      browser()->tab_strip_model()->GetActiveWebContents();
+  for (const std::string& page : pages) {
+    SCOPED_TRACE(page);
+    ASSERT_TRUE(ui_test_utils::NavigateToURL(browser(), GURL(page)));
+    ASSERT_TRUE(WaitForLoadStop(contents));
+    // Give the lazily loaded subpages (commands.bundle.js) time to request
+    // their interfaces. A killed renderer makes EvalJs fail.
+    EXPECT_EQ(true, content::EvalJs(contents,
+                                    "new Promise(r => setTimeout(() => "
+                                    "r(!!document.querySelector('settings-ui')),"
+                                    " 2000))"));
+    EXPECT_FALSE(contents->IsCrashed());
+    EXPECT_TRUE(contents->GetPrimaryMainFrame()->IsRenderFrameLive());
+  }
+}
+
 IN_PROC_BROWSER_TEST_F(BraveContentBrowserClientTest, RewriteAdblock) {
   std::vector<std::string> schemes{
       "brave://",
