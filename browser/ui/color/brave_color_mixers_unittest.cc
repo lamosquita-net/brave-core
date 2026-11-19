@@ -5,6 +5,7 @@
 
 #include <cmath>
 
+#include "brave/browser/ui/color/color_palette.h"
 #include "chrome/browser/ui/color/chrome_color_id.h"
 #include "chrome/browser/ui/color/chrome_color_mixers.h"
 #include "testing/gtest/include/gtest/gtest.h"
@@ -17,6 +18,9 @@ class BraveColorMixersTest : public testing::Test {
   BraveColorMixersTest() = default;
 
   ui::ColorProvider& color_provider() { return color_provider_; }
+  void SetDarkMode() {
+    color_provider_key_.color_mode = ui::ColorProviderKey::ColorMode::kDark;
+  }
 
   void AddColorMixers() {
     // AddChromeColorMixers() calls all our mixers.
@@ -36,4 +40,39 @@ TEST_F(BraveColorMixersTest, ColorOverrideTest) {
   EXPECT_EQ(color_provider().GetColor(kColorOmniboxIconHover),
             SkColorSetA(color_provider().GetColor(kColorOmniboxText),
                         std::ceil(0.10f * 255.0f)));
+}
+
+// FlyWeb 3.2.0 interface colors (FlyWeb/branding/interfaz-3.2.0 in softmac).
+TEST_F(BraveColorMixersTest, FlyWebLightColors) {
+  AddColorMixers();
+
+  EXPECT_EQ(color_provider().GetColor(kColorToolbar), kFlyWebLightToolbar);
+  EXPECT_EQ(color_provider().GetColor(kColorTabBackgroundActiveFrameActive),
+            kFlyWebLightToolbar);
+  EXPECT_EQ(color_provider().GetColor(ui::kColorFrameActive), kLightFrame);
+  EXPECT_EQ(color_provider().GetColor(ui::kColorFrameInactive), kLightFrame);
+  EXPECT_EQ(color_provider().GetColor(kColorLocationBarBackground),
+            kFlyWebLocationBarBackground);
+}
+
+TEST_F(BraveColorMixersTest, FlyWebDarkColors) {
+  SetDarkMode();
+  AddColorMixers();
+
+  EXPECT_EQ(color_provider().GetColor(kColorToolbar), kFlyWebDarkToolbar);
+  EXPECT_EQ(color_provider().GetColor(kColorTabBackgroundActiveFrameActive),
+            kFlyWebDarkToolbar);
+  EXPECT_EQ(color_provider().GetColor(ui::kColorFrameActive), kDarkFrame);
+  EXPECT_EQ(color_provider().GetColor(ui::kColorFrameInactive), kDarkFrame);
+
+  if (kFlyWebLightOmniboxInDarkMode) {
+    // White URL field and popup, with dark text.
+    EXPECT_EQ(color_provider().GetColor(kColorLocationBarBackground),
+              kFlyWebLocationBarBackground);
+    EXPECT_EQ(color_provider().GetColor(kColorOmniboxResultsBackground),
+              kFlyWebLocationBarBackground);
+    EXPECT_EQ(color_provider().GetColor(kColorOmniboxText), kLightOmniboxText);
+    EXPECT_EQ(color_provider().GetColor(kColorOmniboxResultsTextSelected),
+              kLightOmniboxText);
+  }
 }

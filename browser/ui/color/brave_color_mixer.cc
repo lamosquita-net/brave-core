@@ -6,6 +6,7 @@
 #include "brave/browser/ui/color/brave_color_mixer.h"
 
 #include <cmath>
+#include <optional>
 
 #include "base/notreached.h"
 #include "base/numerics/safe_conversions.h"
@@ -22,6 +23,7 @@
 #include "ui/color/color_provider.h"
 #include "ui/color/color_provider_key.h"
 #include "ui/color/color_recipe.h"
+#include "ui/color/color_transform.h"
 #include "ui/gfx/color_palette.h"
 #include "ui/gfx/color_utils.h"
 #include "ui/native_theme/native_theme.h"
@@ -30,8 +32,10 @@ namespace {
 
 // Location bar colors
 constexpr SkColor kPrivateLocationBarBgBase = kPrivateFrame;
-constexpr SkColor kLightLocationBarBgBase = SK_ColorWHITE;
-constexpr SkColor kDarkLocationBarBgBase = kDarkFrame;
+constexpr SkColor kLightLocationBarBgBase = kFlyWebLocationBarBackground;
+constexpr SkColor kDarkLocationBarBgBase =
+    kFlyWebLightOmniboxInDarkMode ? kFlyWebLocationBarBackground
+                                  : kBraveDarkLocationBarBackground;
 
 // Copied from //chrome/browser/ui/omnibox//omnibox_theme.h
 // As below values are not changed for several years, it would be safe to copy.
@@ -83,7 +87,7 @@ void AddChromeLightThemeColorMixer(ui::ColorProvider* provider,
       leo::GetColor(leo::Color::kColorTextSecondary, leo::Theme::kLight)};
   mixer[kColorTabStrokeFrameActive] = {SkColorSetA(SK_ColorBLACK, 0.07 * 255)};
   mixer[kColorTabStrokeFrameInactive] = {kColorTabStrokeFrameActive};
-  mixer[kColorToolbar] = {leo::kColorPrimitiveGray1};
+  mixer[kColorToolbar] = {kFlyWebLightToolbar};
   mixer[kColorToolbarButtonIcon] = {leo::kColorPrimitiveGray50};
   mixer[kColorToolbarButtonIconInactive] = {
       ui::SetAlpha(kColorToolbarButtonIcon, kBraveDisabledControlAlpha)};
@@ -91,7 +95,7 @@ void AddChromeLightThemeColorMixer(ui::ColorProvider* provider,
   mixer[kColorToolbarTopSeparatorFrameActive] = {kColorToolbar};
   mixer[kColorToolbarTopSeparatorFrameInactive] = {kColorToolbar};
   mixer[ui::kColorFrameActive] = {kLightFrame};
-  // TODO(simonhong): Should we adjust frame color for inactive window?
+  // FlyWeb: the window without focus keeps the same frame color.
   mixer[ui::kColorFrameInactive] = {kLightFrame};
   mixer[ui::kColorToggleButtonThumbOff] = {SK_ColorWHITE};
   mixer[ui::kColorToggleButtonThumbOn] = {SkColorSetRGB(0x4C, 0x54, 0xD2)};
@@ -139,7 +143,7 @@ void AddChromeDarkThemeColorMixer(ui::ColorProvider* provider,
       leo::GetColor(leo::Color::kColorTextSecondary, leo::Theme::kDark)};
   mixer[kColorTabStrokeFrameActive] = {kColorToolbar};
   mixer[kColorTabStrokeFrameInactive] = {kColorToolbar};
-  mixer[kColorToolbar] = {leo::kColorPrimitiveGray90};
+  mixer[kColorToolbar] = {kFlyWebDarkToolbar};
   mixer[kColorToolbarButtonIcon] = {leo::kColorPrimitiveGray40};
   mixer[kColorToolbarButtonIconInactive] = {
       ui::SetAlpha(kColorToolbarButtonIcon, kBraveDisabledControlAlpha)};
@@ -259,6 +263,109 @@ void AddBraveOmniboxDarkThemeColorMixer(ui::ColorProvider* provider,
   mixer[kColorOmniboxResultsUrlSelected] = {kColorOmniboxResultsUrl};
 }
 
+// FlyWeb: dark mode with a white URL field and popup
+// (kFlyWebLightOmniboxInDarkMode). Chromium's CR2023 omnibox colors come from
+// the ui::kColorSys* tokens, which are meant for a dark field in dark mode.
+// Use instead Chromium's own contrast-based recipes (omnibox_color_mixer.cc,
+// the path for custom themes), so every color follows the field and popup
+// backgrounds and the text color set by the light omnibox mixer.
+void AddFlyWebLightOmniboxOnDarkColorMixer(ui::ColorProvider* provider,
+                                           const ui::ColorProviderKey& key) {
+  ui::ColorMixer& mixer = provider->AddMixer();
+  const float contrast_ratio = color_utils::kMinimumReadableContrastRatio;
+
+  // Text.
+  mixer[kColorOmniboxResultsTextSelected] = {kColorOmniboxText};
+  mixer[kColorOmniboxContextEntrypointText] =
+      ui::GetColorWithMaxContrast(kColorToolbarBackgroundSubtleEmphasis);
+  const auto blend_with_clamped_contrast =
+      [contrast_ratio](ui::ColorId foreground_id, ui::ColorId background_id) {
+        return ui::BlendForMinContrast(
+            foreground_id, foreground_id,
+            ui::BlendForMinContrast(background_id, background_id, std::nullopt,
+                                    contrast_ratio),
+            contrast_ratio);
+      };
+  mixer[kColorOmniboxTextDimmed] = blend_with_clamped_contrast(
+      kColorOmniboxText, kColorToolbarBackgroundSubtleEmphasisHovered);
+  mixer[kColorOmniboxResultsTextDimmed] = blend_with_clamped_contrast(
+      kColorOmniboxText, kColorOmniboxResultsBackgroundHovered);
+  mixer[kColorOmniboxResultsTextDimmedSelected] = blend_with_clamped_contrast(
+      kColorOmniboxResultsTextSelected, kColorOmniboxResultsBackgroundSelected);
+  mixer[kColorOmniboxResultsTextAnswer] = {kColorOmniboxResultsUrl};
+  mixer[kColorOmniboxForegroundDisabled] = {kColorOmniboxTextDimmed};
+  mixer[kColorOmniboxKeywordSelected] = {kColorOmniboxResultsUrl};
+  mixer[kColorOmniboxKeywordSeparator] = {kColorOmniboxText};
+
+  // Text selection. A dark field (private windows) keeps Chromium's colors.
+  mixer[kColorOmniboxSelectionBackground] = ui::SelectBasedOnDarkInput(
+      kColorToolbarBackgroundSubtleEmphasis, ui::kColorSysStateTextHighlight,
+      kFlyWebOmniboxSelectionOnLight);
+  mixer[kColorOmniboxSelectionForeground] = ui::SelectBasedOnDarkInput(
+      kColorToolbarBackgroundSubtleEmphasis, ui::kColorSysStateOnTextHighlight,
+      ui::GetColorWithMaxContrast(kColorOmniboxSelectionBackground));
+
+  // Popup.
+  mixer[kColorOmniboxResultsBackgroundIph] = {
+      kColorOmniboxResultsBackgroundHovered};
+  mixer[kColorOmniboxResultsBackgroundHoverOverlay] = {
+      ui::SetAlpha(ui::GetColorWithMaxContrast(kColorOmniboxResultsBackground),
+                   std::ceil(0.08f * 255.0f))};
+  mixer[kColorOmniboxResultsFocusIndicator] = {
+      ui::kColorFocusableBorderFocused};
+
+  // Icons.
+  const auto results_icon = [contrast_ratio](ui::ColorId text_id,
+                                             ui::ColorId background_id) {
+    return ui::BlendForMinContrast(ui::DeriveDefaultIconColor(text_id),
+                                   background_id, std::nullopt, contrast_ratio);
+  };
+  mixer[kColorOmniboxResultsIcon] =
+      results_icon(kColorOmniboxText, kColorOmniboxResultsBackground);
+  mixer[kColorOmniboxResultsIconSelected] = results_icon(
+      kColorOmniboxResultsTextSelected, kColorOmniboxResultsBackgroundSelected);
+  mixer[kColorOmniboxResultsIconHovered] =
+      ui::SetAlpha({kColorOmniboxResultsIcon}, std::ceil(0.128f * 255.0f));
+  mixer[kColorOmniboxResultsStarterPackIcon] = ui::BlendForMinContrast(
+      gfx::kGoogleBlue600, kColorOmniboxResultsBackground, std::nullopt,
+      color_utils::kMinimumVisibleContrastRatio);
+  mixer[kColorOmniboxActionIcon] = {kColorOmniboxResultsIcon};
+  mixer[kColorOmniboxActionIconHover] = {kColorOmniboxIconHover};
+  mixer[kColorOmniboxIconBackgroundTonal] = {SK_ColorTRANSPARENT};
+  mixer[kColorOmniboxIconForeground] =
+      ui::DeriveDefaultIconColor(kColorOmniboxText);
+  mixer[kColorOmniboxIconForegroundTonal] = {kColorOmniboxIconForeground};
+  mixer[kColorOmniboxIconPressed] = {
+      ui::SetAlpha(kColorOmniboxText, std::ceil(0.16f * 255.0f))};
+
+  // Suggestion chips (action buttons).
+  mixer[kColorOmniboxResultsButtonInkDrop] =
+      ui::GetColorWithMaxContrast(kColorOmniboxResultsBackgroundHovered);
+  mixer[kColorOmniboxResultsButtonInkDropSelected] =
+      ui::GetColorWithMaxContrast(kColorOmniboxResultsBackgroundSelected);
+  mixer[kColorOmniboxResultsButtonInkDropRowHovered] = {ui::SetAlpha(
+      kColorOmniboxResultsButtonInkDrop, std::ceil(0.10f * 255.0f))};
+  mixer[kColorOmniboxResultsButtonInkDropSelectedRowHovered] = {ui::SetAlpha(
+      kColorOmniboxResultsButtonInkDrop, std::ceil(0.16f * 255.0f))};
+  mixer[kColorOmniboxResultsButtonInkDropRowSelected] = {ui::SetAlpha(
+      kColorOmniboxResultsButtonInkDropSelected, std::ceil(0.10f * 255.0f))};
+  mixer[kColorOmniboxResultsButtonInkDropSelectedRowSelected] = {ui::SetAlpha(
+      kColorOmniboxResultsButtonInkDropSelected, std::ceil(0.16f * 255.0f))};
+
+  // Security chip.
+  mixer[kColorOmniboxSecurityChipDangerousBackground] =
+      ui::SelectBasedOnDarkInput(kColorOmniboxResultsBackground,
+                                 gfx::kGoogleRed300, gfx::kGoogleRed800);
+  mixer[kColorOmniboxSecurityChipText] = ui::SelectBasedOnDarkInput(
+      kColorOmniboxSecurityChipDangerousBackground,
+      ui::GetColorWithMaxContrast(kColorOmniboxSecurityChipDangerousBackground),
+      gfx::kGoogleRed800);
+  mixer[kColorOmniboxSecurityChipInkDropHover] = {
+      ui::SetAlpha(kColorOmniboxSecurityChipText, std::ceil(0.10f * 255.0f))};
+  mixer[kColorOmniboxSecurityChipInkDropRipple] = {
+      ui::SetAlpha(kColorOmniboxSecurityChipText, std::ceil(0.16f * 255.0f))};
+}
+
 }  // namespace
 
 SkColor GetLocationBarBackground(bool dark, bool priv) {
@@ -296,10 +403,10 @@ SkColor GetOmniboxResultBackground(int id, bool dark, bool priv) {
     color = high_contrast ? color_utils::HSLShift(kPrivateLocationBarBgBase,
                                                   {-1, -1, 0.45})
                           : kPrivateLocationBarBgBase;
-  } else if (dark) {
+  } else if (dark && !kFlyWebLightOmniboxInDarkMode) {
     color = high_contrast ? gfx::kGoogleGrey900 : kDarkLocationBarBgBase;
   } else {
-    color = SK_ColorWHITE;
+    color = kFlyWebLocationBarBackground;
   }
   return color_utils::BlendTowardMaxContrast(
       color, base::ClampRound(omnibox_opacity * 0xff));
@@ -501,9 +608,15 @@ void AddBraveOmniboxColorMixer(ui::ColorProvider* provider,
     return;
   }
 
-  key.color_mode == ui::ColorProviderKey::ColorMode::kDark
-      ? AddBraveOmniboxDarkThemeColorMixer(provider, key)
-      : AddBraveOmniboxLightThemeColorMixer(provider, key);
+  const bool dark = key.color_mode == ui::ColorProviderKey::ColorMode::kDark;
+  if (dark && !kFlyWebLightOmniboxInDarkMode) {
+    AddBraveOmniboxDarkThemeColorMixer(provider, key);
+    return;
+  }
+  AddBraveOmniboxLightThemeColorMixer(provider, key);
+  if (dark) {
+    AddFlyWebLightOmniboxOnDarkColorMixer(provider, key);
+  }
 }
 
 void AddBravifiedTabStripColorMixer(ui::ColorProvider* provider,
@@ -513,11 +626,10 @@ void AddBravifiedTabStripColorMixer(ui::ColorProvider* provider,
   }
 
   ui::ColorMixer& mixer = provider->AddMixer();
-  const bool is_dark = key.color_mode == ui::ColorProviderKey::ColorMode::kDark;
 
   mixer[kColorNewTabButtonFocusRing] = {ui::kColorFocusableBorderFocused};
-  mixer[kColorTabBackgroundActiveFrameActive] = {
-      is_dark ? leo::kColorPrimitiveGray80 : SK_ColorWHITE};
+  // FlyWeb: the active tab and the toolbar are one piece of the same color.
+  mixer[kColorTabBackgroundActiveFrameActive] = {kColorToolbar};
   mixer[kColorTabBackgroundActiveFrameInactive] = {
       kColorTabBackgroundActiveFrameActive};
 
