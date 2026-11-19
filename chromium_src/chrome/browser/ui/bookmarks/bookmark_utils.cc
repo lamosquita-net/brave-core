@@ -4,13 +4,14 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "chrome/browser/ui/bookmarks/bookmark_utils.h"
+
+#include <utility>
+
+#include "brave/app/vector_icons/vector_icons.h"
 #include "build/build_config.h"
-#include "chrome/grit/theme_resources.h"
-#include "ui/base/resource/resource_bundle.h"
-#include "ui/color/color_id.h"
-#include "ui/color/color_provider.h"
+#include "components/vector_icons/vector_icons.h"
+#include "ui/base/models/image_model.h"
 #include "ui/color/color_variant.h"
-#include "ui/gfx/color_utils.h"
 
 #define IsAppsShortcutEnabled IsAppsShortcutEnabled_Unused
 #define ShouldShowAppsShortcutInBookmarkBar \
@@ -39,46 +40,17 @@ bool ShouldShowAppsShortcutInBookmarkBar(Profile* profile) {
 }
 
 #if defined(TOOLKIT_VIEWS)
+// FlyWeb 3.2.0 interface: a flat vector folder from Titín's design, in the
+// color asked for by the caller (kColorBookmarkFolderIcon = the toolbar icon
+// color), instead of Brave's PNG folders with a gradient.
 ui::ImageModel GetBookmarkFolderIcon(BookmarkFolderIconType icon_type,
                                      ui::ColorVariant color) {
-  int default_id =
-#if BUILDFLAG(IS_WIN)
-      IDR_BRAVE_BOOKMARK_FOLDER_CLOSED_WIN_LIGHT;
-#elif BUILDFLAG(IS_LINUX)
-      IDR_BRAVE_BOOKMARK_FOLDER_CLOSED_LIN_LIGHT;
-#else
-      IDR_BRAVE_BOOKMARK_FOLDER_CLOSED_LIGHT;
-#endif
-
-  const auto generator = [](int default_id, BookmarkFolderIconType icon_type,
-                            ui::ColorVariant color,
-                            const ui::ColorProvider* color_provider) {
-    gfx::ImageSkia folder;
-    // 156: ui::ColorVariant replaces absl::variant<int, SkColor> (as 1.98).
-    const SkColor sk_color = color.ResolveToSkColor(color_provider);
-
-    const int resource_id = color_utils::IsDark(sk_color)
-#if BUILDFLAG(IS_WIN)
-                                ? IDR_BRAVE_BOOKMARK_FOLDER_CLOSED_WIN_LIGHT
-                                : IDR_BRAVE_BOOKMARK_FOLDER_CLOSED_WIN_DARK;
-#elif BUILDFLAG(IS_LINUX)
-                                ? IDR_BRAVE_BOOKMARK_FOLDER_CLOSED_LIN_LIGHT
-                                : IDR_BRAVE_BOOKMARK_FOLDER_CLOSED_LIN_DARK;
-#else
-                                ? IDR_BRAVE_BOOKMARK_FOLDER_CLOSED_LIGHT
-                                : IDR_BRAVE_BOOKMARK_FOLDER_CLOSED_DARK;
-#endif
-    folder = *ui::ResourceBundle::GetSharedInstance()
-                  .GetNativeImageNamed(resource_id)
-                  .ToImageSkia();
-    return gfx::ImageSkia(std::make_unique<RTLFlipSource>(folder),
-                          folder.size());
-  };
-  const gfx::Size size =
-      ui::ResourceBundle::GetSharedInstance().GetImageNamed(default_id).Size();
-  return ui::ImageModel::FromImageGenerator(
-      base::BindRepeating(generator, default_id, icon_type, std::move(color)),
-      size);
+  constexpr int kFolderIconSize = 16;
+  return ui::ImageModel::FromVectorIcon(
+      icon_type == BookmarkFolderIconType::kNormal
+          ? kFlywebBookmarkFolderIcon
+          : vector_icons::kFolderManagedRefreshOldIcon,
+      std::move(color), kFolderIconSize);
 }
 #endif
 
