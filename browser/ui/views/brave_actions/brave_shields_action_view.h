@@ -55,7 +55,9 @@ class BraveShieldsActionView
   void ButtonPressed();
   bool SchemeIsLocal(GURL url);
   void UpdateIconState();
-  gfx::ImageSkia GetIconImage(bool is_enabled);
+  // FlyWeb 3.2.0: Shields state shown by the color of the shield outline.
+  enum class ShieldsIconState { kNotApplicable, kEnabled, kDisabled };
+  gfx::ImageSkia GetIconImage(ShieldsIconState state, int count_inside);
   std::unique_ptr<IconWithBadgeImageSource> GetImageSource();
 
   // brave_shields::BraveShieldsTabHelper
