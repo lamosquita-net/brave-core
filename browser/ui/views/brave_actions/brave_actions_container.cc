@@ -9,6 +9,7 @@
 #include <utility>
 
 #include "base/feature_list.h"
+#include "brave/browser/ui/brave_layout_constants.h"
 #include "brave/browser/ui/views/brave_actions/brave_shields_action_view.h"
 #include "brave/browser/ui/views/rounded_separator.h"
 #include "brave/components/constants/pref_names.h"
@@ -84,7 +85,10 @@ void BraveActionsContainer::UpdateVisibility() {
 }
 
 gfx::Size BraveActionsContainer::GetActionSize() const {
+  // FlyWeb: the URL field is kFlyWebLocationBarTopTrim shorter than
+  // kLocationBarHeight (BraveToolbarView::Layout); keep the same padding.
   return {34, GetLayoutConstant(LayoutConstant::kLocationBarHeight) -
+                  kFlyWebLocationBarTopTrim -
                   2 * GetLayoutConstant(
                           LayoutConstant::kLocationBarElementPadding)};
 }

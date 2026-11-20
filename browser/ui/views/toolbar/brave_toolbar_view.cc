@@ -15,6 +15,7 @@
 #include "brave/app/brave_command_ids.h"
 #include "brave/browser/ui/views/location_bar/brave_location_bar_view.h"
 #include "brave/browser/ui/views/toolbar/bookmark_button.h"
+#include "brave/browser/ui/brave_layout_constants.h"
 #include "brave/components/constants/pref_names.h"
 #include "chrome/app/chrome_command_ids.h"
 #include "chrome/browser/browser_process.h"
@@ -341,6 +342,16 @@ void BraveToolbarView::Layout(PassKey) {
     guard.set_ignore_layout(false);
     ResetLocationBarBounds();
     ResetBookmarkButtonBounds();
+  }
+
+  // FlyWeb: take kFlyWebLocationBarTopTrim off the top of the URL field. Done
+  // after both rects above, so it applies once per layout pass whether the
+  // wide address bar is on or off.
+  gfx::Rect location_bar_bounds = location_bar_view_->bounds();
+  if (location_bar_bounds.height() > kFlyWebLocationBarTopTrim) {
+    location_bar_bounds.Inset(
+        gfx::Insets::TLBR(kFlyWebLocationBarTopTrim, 0, 0, 0));
+    location_bar_view_->SetBoundsRect(location_bar_bounds);
   }
 }
 

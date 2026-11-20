@@ -13,4 +13,10 @@
 std::optional<gfx::Insets> GetBraveLayoutInsets(LayoutInset inset);
 std::optional<int> GetBraveLayoutConstant(LayoutConstant constant);
 
+// FlyWeb 3.2.0 interface (Titín, 20-11): the URL field is this many dip
+// shorter, taken from the top, so it sits a bit further from the tabs. The
+// toolbar keeps its height and the field keeps its bottom edge. Provisional,
+// adjusted with Titín on screenshots.
+inline constexpr int kFlyWebLocationBarTopTrim = 3;
+
 #endif  // BRAVE_BROWSER_UI_BRAVE_LAYOUT_CONSTANTS_H_
