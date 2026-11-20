@@ -1,8 +1,8 @@
 diff --git a/src/utils/version.cc b/src/utils/version.cc
-index 550db661144947dbc31b5eb62c0da7ea2e6e1139..d8e88e5ace213928873fe24b96638d91d51a3405 100644
+index 550db661144947dbc31b5eb62c0da7ea2e6e1139..9bf7d57d3a9dcaf2dc04d2bd9ee80b824a076e29 100644
 --- a/src/utils/version.cc
 +++ b/src/utils/version.cc
-@@ -27,9 +27,54 @@ bool Version::candidate_ = (V8_IS_CANDIDATE_VERSION != 0);
+@@ -27,9 +27,59 @@ bool Version::candidate_ = (V8_IS_CANDIDATE_VERSION != 0);
  const char* Version::soname_ = SONAME;
  const char* Version::version_string_ = V8_VERSION_STRING;
  
@@ -48,8 +48,13 @@ index 550db661144947dbc31b5eb62c0da7ea2e6e1139..d8e88e5ace213928873fe24b96638d91
 +// (inspector) and 0ac2b27 (Maglev StringLengthStaticLowerBound, which changes
 +// optimized code). 37 = the final FlyWeb 3.1.4 (parts 4-6 integrated: also the
 +// Chrome 157 Mediums 42d78d0f3d and b1457bd47a, and the 8078 branch V8
-+// 15.6.75.70 fix fdbb7b1, NameDictionary literal walk order).
-+constexpr int kFlyWebCacheEpoch = 37;
++// 15.6.75.70 fix fdbb7b1, NameDictionary literal walk order). 38 = FlyWeb
++// 3.2.0 (the 8078 branch V8 fixes d68cecd900, debugger stores into
++// kNotAssigned context slots, and ceb90d38eb, SHA-256 source hash of the code
++// cache, which changes its format; the M159 merges a0f2c9f8c3 and 51512210b3,
++// which change bytecode and optimized code; and LIBC_MATH in base/ieee754.cc,
++// which changes the code of the Math builtins).
++constexpr int kFlyWebCacheEpoch = 38;
 +
  uint32_t Version::Hash() {
    base::Hasher hasher;

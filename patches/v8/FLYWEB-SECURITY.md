@@ -1,3 +1,12 @@
+# FlyWeb 3.2.0: final cache epoch
+
+MOTOR-47, 20-11-2026 (softmac `FlyWeb/parches/3.2-v8/0002`, order agreed with SEGURIDAD-PORTES-33). The 3.2.0 changes
+V8 on top of 3.1.4 with the pending fixes below (`pendiente/brave-core/0001`-`0004`: d68cecd900, the M159 merges
+a0f2c9f8c3 and 51512210b3, which change bytecode and optimized code, and ceb90d38eb, the SHA-256 source hash of the
+code cache, which changes its format) and with `src-base-ieee754.cc.patch` (LIBC_MATH, softmac
+`3.2-renderer-webgl/0003`). All of them change generated code or the cache format, so **`kFlyWebCacheEpoch` 37 -> 38**,
+once, for the whole release.
+
 # FlyWeb: pending for the next release, V8 fix 51512210b3 (crbug 585614984), ported from the M159 merge
 
 SEGURIDAD-PORTES-33, 20-11-2026 (softmac `FlyWeb/seguridad/pendiente/brave-core/0004`). Not in 3.1.4: it waits for
