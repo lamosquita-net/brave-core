@@ -64,8 +64,13 @@ constexpr float kFlyWebOmniboxFocusGlowThickness = 4.0f;
 // Color of the shadow; its opacity fades to transparent inwards.
 constexpr SkColor kFlyWebOmniboxFocusGlowColor =
     SkColorSetRGB(0x80, 0x80, 0x80);
-// Opacity at the very edge, 0-1.
+// Opacity at the very edge, 0-1, while the field has the caret (typing).
 constexpr float kFlyWebOmniboxFocusGlowOpacity = 0.37f;
+// Titín (20-11, bt-320c): the shadow is always inside the field. With the
+// mouse over the field and no caret it shows the same shadow, softer (about
+// #ED at the edge at 1x, against #DD with the caret). Brave's outer hover
+// shadow is not used in these windows. Opacity at the very edge, 0-1.
+constexpr float kFlyWebOmniboxHoverGlowOpacity = 0.20f;
 // Distance, in dip, over which the opacity halves.
 constexpr float kFlyWebOmniboxFocusGlowHalvingDistance = 1.0f;
 // Number of rings that draw the fade (0.5 dip each, smooth on Retina too).
@@ -92,6 +97,16 @@ class FlyWebOmniboxFocusGlowView : public views::View {
 
   void set_corner_radius(float radius) { corner_radius_ = radius; }
 
+  // Opacity at the very edge: kFlyWebOmniboxFocusGlowOpacity or
+  // kFlyWebOmniboxHoverGlowOpacity.
+  void set_edge_opacity(float opacity) {
+    if (edge_opacity_ == opacity) {
+      return;
+    }
+    edge_opacity_ = opacity;
+    SchedulePaint();
+  }
+
   // views::View:
   void OnPaint(gfx::Canvas* canvas) override {
     const float step =
@@ -109,7 +124,7 @@ class FlyWebOmniboxFocusGlowView : public views::View {
       }
       // Exponential fade from the edge inwards, sampled at the ring center.
       const float opacity =
-          kFlyWebOmniboxFocusGlowOpacity *
+          edge_opacity_ *
           std::exp2(-inset / kFlyWebOmniboxFocusGlowHalvingDistance);
       flags.setColor(SkColorSetA(kFlyWebOmniboxFocusGlowColor,
                                  base::ClampRound<SkAlpha>(opacity * 255)));
@@ -120,6 +135,7 @@ class FlyWebOmniboxFocusGlowView : public views::View {
 
  private:
   float corner_radius_ = 0;
+  float edge_opacity_ = kFlyWebOmniboxFocusGlowOpacity;
 };
 
 BEGIN_METADATA(FlyWebOmniboxFocusGlowView)
@@ -271,13 +287,20 @@ std::vector<views::View*> BraveLocationBarView::GetLeftMostTrailingViews() {
 void BraveLocationBarView::RefreshBackground() {
   LocationBarView::RefreshBackground();
 
-  // Chromium calls RefreshBackground() on focus, blur and popup changes. Same
-  // condition as Chromium's focus ring: visibly focused and popup closed (an
-  // open popup and the field are drawn as one piece).
+  // Chromium calls RefreshBackground() on focus, blur, popup and hover
+  // changes. With the caret: same condition as Chromium's focus ring, visibly
+  // focused and popup closed (an open popup and the field are drawn as one
+  // piece). Without it: the softer shadow while the mouse is over the field,
+  // where Brave showed its outer shadow.
   if (focus_glow_) {
-    focus_glow_->SetVisible(
-        GetOmniboxController()->edit_model()->is_caret_visible() &&
-        !GetOmniboxController()->IsPopupOpen());
+    const bool caret_visible =
+        GetOmniboxController()->edit_model()->is_caret_visible();
+    const bool popup_open = GetOmniboxController()->IsPopupOpen();
+    static_cast<FlyWebOmniboxFocusGlowView*>(focus_glow_.get())
+        ->set_edge_opacity(caret_visible ? kFlyWebOmniboxFocusGlowOpacity
+                                         : kFlyWebOmniboxHoverGlowOpacity);
+    focus_glow_->SetVisible(!popup_open &&
+                            (caret_visible || IsMouseHovered()));
   }
 
   if (shadow_) {
@@ -355,6 +378,14 @@ void BraveLocationBarView::ChildVisibilityChanged(views::View* child) {
 }
 
 void BraveLocationBarView::SetupShadow() {
+  // FlyWeb: regular and guest windows, which have the inner glow, have no
+  // outer hover shadow (Titín, 20-11: the shadow is always inside the field).
+  // Checked by profile, since this can run before Init() adds the glow.
+  if (UsesFlyWebFocusGlow(GetProfile())) {
+    shadow_.reset();
+    return;
+  }
+
   const auto* const color_provider = GetColorProvider();
   if (!color_provider) {
     return;
