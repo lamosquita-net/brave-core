@@ -1,3 +1,19 @@
+# FlyWeb: pending for the next release, V8 15.6.75.76 fix c37ab55c4a (crbug 579314138)
+
+SEGURIDAD-PORTES-33, 20-11-2026 (softmac `FlyWeb/seguridad/pendiente/brave-core/0005`). For FlyWeb 3.2.0, on top of
+`FlyWeb/parches/3.2-v8/0002` (the 3.2.0 cache epoch; V8 15.6.75.66 with all the patches below; gitlink unchanged).
+
+- **c37ab55c4a** [M156] "[sandbox] Bound length in String::ToStdString and ToCString" (bugs 587681388, 585869521,
+  579314138; V8 15.6.75.76 on the 8078 branch, cherry-pick of 133ba8e4a9). A string corrupted inside the V8 sandbox
+  could make `ToStdString`/`ToCString` compute 0xFFFFFFFF UTF-8 bytes, which ICU then truncated to -1 (out-of-bounds
+  write in `ultag_parse`). Two `SBXCHECK_LE(length, String::kMaxLength)` close it. Applied to 15.6.75.66 the three
+  files are byte-identical to upstream 15.6.75.76; no other `patches/v8` file touches them.
+- **Cache epoch:** not needed for this one (runtime C++ only, no bytecode or generated code change); the 3.2.0
+  bump to 38 above covers the release anyway.
+
+To check (D8-LINUX): `d8`, mjsunit `sandbox/regress/regress-579314138-1` and `-2` (they need `--sandbox-testing`,
+i.e. a build with `v8_enable_sandbox` and the sandbox testing mode; skip and say so if unavailable).
+
 # FlyWeb 3.2.0: final cache epoch
 
 MOTOR-47, 20-11-2026 (softmac `FlyWeb/parches/3.2-v8/0002`, order agreed with SEGURIDAD-PORTES-33). The 3.2.0 changes

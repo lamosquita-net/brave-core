@@ -1,0 +1,25 @@
+diff --git a/test/mjsunit/sandbox/regress/regress-579314138-2.js b/test/mjsunit/sandbox/regress/regress-579314138-2.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..6a8b6fcbd0de17ec29aae83579e32f28b0aaa8ff
+--- /dev/null
++++ b/test/mjsunit/sandbox/regress/regress-579314138-2.js
+@@ -0,0 +1,19 @@
++// Copyright 2026 the V8 project authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++// Flags: --sandbox-testing --allow-natives-syntax
++
++let s = '\u0800'.repeat(16);
++for (let i = 0; i < 27; i++) {
++  s = s + s;
++  Sandbox.corruptObjectField(s, 'length', 32);
++}
++Sandbox.corruptObjectField(s, 'length', 0x55555555);
++
++if (typeof Intl !== 'undefined') {
++  new Intl.DisplayNames('en', {type: 'language'}).of(s);
++} else {
++  %StringToCString(s);
++}
++assertUnreachable('Corrupted String length should be caught by SBXCHECK');
