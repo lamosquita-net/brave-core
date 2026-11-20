@@ -12,13 +12,33 @@
 #include "chrome/browser/ui/views/tabs/tab_slot_controller.h"
 #include "components/prefs/pref_service.h"
 
+namespace {
+
+// FlyWeb 3.2.0 interface (Titín, 20-11): the favicon and title of inactive
+// tabs (pinned ones too) sit this many dip lower; they go back up when the
+// tab becomes active (Tab::ActiveStateChanged() lays the tab out at once, and
+// the title animation only runs when the favicon appears or disappears).
+// Only the horizontal tab strip: 156's vertical tabs use their own views.
+// Provisional, adjusted with Titín on screenshots.
+constexpr int kFlyWebInactiveTabContentOffset = 4;
+
+int FlyWebInactiveTabContentOffset(const Tab* tab) {
+  return tab->IsActive() ? 0 : kFlyWebInactiveTabContentOffset;
+}
+
+}  // namespace
+
 // Upstream is no longer centering the tab favicon vertically within the tab
 // view (likely due to the fact that their tab contents rect happens to be the
 // same height as the favicon). Ensure that the favicon is centered vertically
 // within the tab.
 #define BRAVE_UI_VIEWS_TABS_TAB_LAYOUT_ADJUST_ICON_POSITION \
   favicon_bounds.set_y(contents_rect.y() +                  \
-                       Center(contents_rect.height(), gfx::kFaviconSize));
+                       Center(contents_rect.height(), gfx::kFaviconSize) + \
+                       FlyWebInactiveTabContentOffset(this));
+
+#define BRAVE_UI_VIEWS_TABS_TAB_TITLE_Y_OFFSET \
+  +FlyWebInactiveTabContentOffset(this)
 
 // Set alert indicator's pos to start of the title and
 // move title after the alert indicator.
@@ -37,6 +57,7 @@
 #include "src/chrome/browser/ui/views/tabs/tab.cc"
 
 #undef BRAVE_UI_VIEWS_TABS_TAB_UPDATE_ICON_VISIBILITY
+#undef BRAVE_UI_VIEWS_TABS_TAB_TITLE_Y_OFFSET
 #undef BRAVE_UI_VIEWS_TABS_TAB_ALERT_INDICATOR_POSITION
 #undef BRAVE_UI_VIEWS_TABS_TAB_LAYOUT_ADJUST_ICON_POSITION
 

@@ -1,5 +1,5 @@
 diff --git a/chrome/browser/ui/views/tabs/tab.cc b/chrome/browser/ui/views/tabs/tab.cc
-index 7a77fc7f0bbe94113080e1f96d9cf61fe81d23f6..b32670b5470ed10984efe7e67b4bbcd91fb64299 100644
+index 7a77fc7f0bbe94113080e1f96d9cf61fe81d23f6..a7e66748a603c1eda6a326fbf6de5d4ac009da6c 100644
 --- a/chrome/browser/ui/views/tabs/tab.cc
 +++ b/chrome/browser/ui/views/tabs/tab.cc
 @@ -513,6 +513,7 @@ void Tab::Layout(PassKey) {
@@ -18,6 +18,15 @@ index 7a77fc7f0bbe94113080e1f96d9cf61fe81d23f6..b32670b5470ed10984efe7e67b4bbcd9
      } else if (showing_close_button_) {
        // Allow the title to overlay the close button's empty border padding.
        title_right = close_x - after_title_padding;
+@@ -624,7 +626,7 @@ void Tab::Layout(PassKey) {
+     const int title_width = std::max(title_right - title_left, 0);
+     // The Label will automatically center the font's cap height within the
+     // provided vertical space.
+-    const gfx::Rect title_bounds(title_left, GetLocalBounds().y(), title_width,
++    const gfx::Rect title_bounds(title_left, GetLocalBounds().y() BRAVE_UI_VIEWS_TABS_TAB_TITLE_Y_OFFSET, title_width,
+                                  GetLocalBounds().height());
+     show_title = title_width > 0;
+ 
 @@ -1418,6 +1420,7 @@ void Tab::UpdateIconVisibility() {
          !(declutter_eligible &&
            available_width <=
