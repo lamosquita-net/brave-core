@@ -113,6 +113,9 @@ TEST_F(BraveColorMixersTest, FlyWebDarkColors) {
     EXPECT_EQ(
         color_provider().GetColor(kColorOmniboxResultsBackgroundSelected),
         kFlyWebDarkOmniboxResultsSelected);
+    EXPECT_EQ(
+        color_provider().GetColor(kColorOmniboxResultsBackgroundHovered),
+        kFlyWebDarkOmniboxResultsHovered);
     EXPECT_EQ(color_provider().GetColor(kColorOmniboxText),
               kFlyWebDarkOmniboxText);
     EXPECT_EQ(color_provider().GetColor(kColorOmniboxResultsTextDimmed),

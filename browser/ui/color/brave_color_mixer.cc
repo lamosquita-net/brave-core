@@ -319,17 +319,15 @@ void AddFlyWebDarkOmniboxColorMixer(ui::ColorProvider* provider,
   mixer[kColorOmniboxResultsBackground] = {GetOmniboxResultBackground(
       kColorOmniboxResultsBackground, /*dark*/ true, /*incognito*/ false)};
   mixer[kColorOmniboxResultsBackgroundHovered] = {
-      GetOmniboxResultBackground(kColorOmniboxResultsBackgroundHovered,
-                                 /*dark*/ true, /*incognito*/ false)};
+      kFlyWebDarkOmniboxResultsHovered};
   mixer[kColorOmniboxResultsBackgroundSelected] = {
       kFlyWebDarkOmniboxResultsSelected};
 }
 
-// The popup on #909294 with white text, as on the mockup. White on it is
-// about 3.1:1, so Chromium's contrast recipes (which aim at 4.5:1) would turn
-// the secondary text and the URLs dark; they stay white instead. Icons are
-// white (non-text, 3:1). The selected row (#542671) is white on purple,
-// 11:1.
+// The popup on #767676 with white text (Titín, 20-11: 4.5:1, AA; the
+// mockup's #909294 gave 3.1:1). The secondary text, the URLs and the icons
+// are white too, 4.5:1 on the popup and 5.4:1 on a hovered row. The
+// selected row (#542671) is white on purple, 11:1.
 void AddFlyWebDarkOmniboxPopupColorMixer(ui::ColorProvider* provider,
                                          const ui::ColorProviderKey& key) {
   ui::ColorMixer& mixer = provider->AddMixer();

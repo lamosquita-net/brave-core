@@ -60,8 +60,15 @@ constexpr SkColor kBraveDarkLocationBarBackground =
 // use their own theme. White text on the field and the popup.
 constexpr SkColor kFlyWebDarkLocationBarBackground =
     SkColorSetRGB(0x4D, 0x4D, 0x4D);
+// Titín, 20-11 (DIRECTIVAS #1160): #767676 instead of the mockup's #909294,
+// so white text reaches 4.5:1 (AA).
 constexpr SkColor kFlyWebDarkOmniboxResultsBackground =
-    SkColorSetRGB(0x90, 0x92, 0x94);
+    SkColorSetRGB(0x76, 0x76, 0x76);
+// Row under the pointer: the popup 10% toward black (white text 5.4:1).
+// Chromium's BlendTowardMaxContrast() would go toward white here (#848484,
+// 3.7:1).
+constexpr SkColor kFlyWebDarkOmniboxResultsHovered =
+    SkColorSetRGB(0x6A, 0x6A, 0x6A);
 constexpr SkColor kFlyWebDarkOmniboxResultsSelected =
     SkColorSetRGB(0x54, 0x26, 0x71);
 // The light mark at the left of the selected row (about #AFA8D3 on the
