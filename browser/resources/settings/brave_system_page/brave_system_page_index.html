@@ -7,6 +7,15 @@
   cr-view-manager [slot=view]:not(.closing) {
     position: initial;
   }
+
+  /* FlyWeb: .cr-centered-card-container sets display: block from this tree,
+     which wins over cr-view-manager's ::slotted(display: none), so the views
+     that carry it never hid: the shortcuts subpage showed below the system
+     and memory cards. Hide them again when they are not the active view. */
+  cr-view-manager:not([show-all])
+      [slot=view].cr-centered-card-container:not(.active):not(.closing) {
+    display: none;
+  }
 </style>
 
 <!-- No cr-centered-card-container here: settings-system-page already carries
