@@ -26,8 +26,11 @@
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest-spi.h"
 #include "ui/color/color_provider.h"
+#include "ui/color/color_provider_key.h"
+#include "ui/color/color_provider_manager.h"
 #include "ui/native_theme/native_theme.h"
 #include "ui/native_theme/native_theme_observer.h"
+#include "ui/views/widget/widget.h"
 
 #if BUILDFLAG(IS_WIN)
 #include "base/run_loop.h"
@@ -225,7 +228,18 @@ IN_PROC_BROWSER_TEST_F(BraveThemeServiceTest, OmniboxColorTest) {
   dark_mode::SetBraveDarkModeType(
       dark_mode::BraveDarkModeType::BRAVE_DARK_MODE_TYPE_DARK);
   dark = true;
-  color_provider = browser_view->GetColorProvider();
+  // FlyWeb: on Mac, SetBraveDarkModeType() only changes NSApp's appearance and
+  // the native theme follows asynchronously, so the window's provider can still
+  // be the light one here (as in ThemeObserverTest and SystemThemeChangeTest).
+  // Until 3.2.0 the dark URL field was white like the light one, so this
+  // passed by chance. Read the colors from the provider for the window's own
+  // key in dark mode instead.
+  ui::ColorProviderKey dark_key =
+      browser_view->GetWidget()->GetColorProviderKeyForTesting();
+  dark_key.color_mode = ui::ColorProviderKey::ColorMode::kDark;
+  color_provider =
+      ui::ColorProviderManager::Get().GetColorProviderFor(dark_key);
+  ASSERT_TRUE(color_provider);
   EXPECT_EQ(GetLocationBarBackground(dark, false /* incognito */),
             color_provider->GetColor(kColorToolbarBackgroundSubtleEmphasis));
   // Check color is different on dark mode and incognito mode.
