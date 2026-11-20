@@ -24,6 +24,15 @@ constexpr float kFlyWebTabBottomCornerRadius = 0.0f;
 // bottom corners are square. The hit test path is not changed. In dip.
 constexpr float kFlyWebHighlightBottomCornerRadius = 0.0f;
 
+// FlyWeb 3.2.0 interface (Titín, 20-11, bt-320e: «la pestaña en roll over
+// debía ser más baja, como en mi maqueta»): on maqueta-claro-hd.webp the hover
+// of the first inactive tab starts about 5 px below the top of the active tab
+// (y 50.5 against 45.5) and reaches the same base. The active tab is 38.5 px
+// high there and 34 dip in the browser, so that is about 4.4 dip. Only for
+// inactive tabs (hover and selected fills); the active tab keeps its full
+// height (kHighlight is also its child clip path). In dip.
+constexpr float kFlyWebHoverTabTopInset = 4.0f;
+
 }  // namespace
 
 #define BRAVE_HORIZONTAL_TAB_STYLE_VIEWS_GET_PATH_HIGHLIGHT                 \
@@ -37,6 +46,13 @@ constexpr float kFlyWebHighlightBottomCornerRadius = 0.0f;
     bottom_right_corner_radius = kFlyWebHighlightBottomCornerRadius * scale; \
   }
 
+#define BRAVE_HORIZONTAL_TAB_STYLE_VIEWS_GET_PATH_HIGHLIGHT_TOP       \
+  if (path_type == TabStyle::PathType::kHighlight &&                  \
+      !delegate_->IsActive()) {                                       \
+    top += kFlyWebHoverTabTopInset * scale;                           \
+    tab_height -= kFlyWebHoverTabTopInset * scale;                    \
+  }
+
 #define BRAVE_HORIZONTAL_TAB_STYLE_VIEWS_GET_PATH_BOTTOM_CORNER_RADIUS \
   extension_corner_radius = std::clamp(extension_corner_radius, 0.0f,  \
                                        kFlyWebTabBottomCornerRadius * scale);
@@ -45,3 +61,4 @@ constexpr float kFlyWebHighlightBottomCornerRadius = 0.0f;
 
 #undef BRAVE_HORIZONTAL_TAB_STYLE_VIEWS_GET_PATH_BOTTOM_CORNER_RADIUS
 #undef BRAVE_HORIZONTAL_TAB_STYLE_VIEWS_GET_PATH_HIGHLIGHT
+#undef BRAVE_HORIZONTAL_TAB_STYLE_VIEWS_GET_PATH_HIGHLIGHT_TOP
