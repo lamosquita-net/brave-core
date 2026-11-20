@@ -23,6 +23,7 @@
 #include "chrome/browser/sessions/session_restore.h"
 #include "chrome/browser/sessions/tab_restore_service_factory.h"
 #include "chrome/browser/ui/browser_tabstrip.h"
+#include "chrome/browser/ui/browser_ui_controller/browser_ui_controller.h"
 #include "chrome/browser/ui/browser_window.h"
 #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/browser_window/public/global_browser_collection.h"
@@ -505,8 +506,20 @@ void SharedPinnedTabService::OnTabChangedAt(tabs::TabInterface* tab,
       continue;
     }
 
-    tab_strip_model->UpdateWebContentsState(
-        tab_strip_model->GetWebContentsAt(index), change_type);
+    // FlyWeb: in 156 a tab view takes its TabData from its TabDataObserver,
+    // which recomputes it only when the tab's TabUIHelper notifies.
+    // UpdateWebContentsState() reaches TabStripModelObservers only, so the
+    // dummy tabs kept the title and favicon they had when their view was
+    // created. NotifyTabUIChanged() does both: it notifies the observers, as
+    // before, and the TabUIHelper, so TabData::FromTabInterface() runs again
+    // and returns |renderer_data| for the dummy (chromium_src tab_data.cc).
+    if (auto* browser_ui_controller = BrowserUiController::From(browser)) {
+      browser_ui_controller->NotifyTabUIChanged(
+          tab_strip_model->GetTabAtIndex(index), change_type);
+    } else {
+      tab_strip_model->UpdateWebContentsState(
+          tab_strip_model->GetWebContentsAt(index), change_type);
+    }
   }
 }
 

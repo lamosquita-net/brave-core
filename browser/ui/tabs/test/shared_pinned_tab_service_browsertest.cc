@@ -26,6 +26,8 @@
 #include "chrome/browser/ui/navigator/browser_navigator_params.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/browser/ui/views/frame/browser_view.h"
+#include "chrome/browser/ui/views/tabs/tab.h"
+#include "chrome/browser/ui/views/tabs/tab_strip.h"
 #include "chrome/test/base/platform_browser_test.h"
 #include "components/prefs/pref_service.h"
 #include "content/public/browser/navigation_controller.h"
@@ -293,6 +295,39 @@ IN_PROC_BROWSER_TEST_F(SharedPinnedTabServiceBrowserTest, SynchronizeURL) {
                 ->GetController()
                 .GetVisibleEntry()
                 ->GetVirtualURL());
+}
+
+// FlyWeb: the tab view of a dummy pinned tab follows the shared contents
+// (title here; favicon and loading state go the same way).
+IN_PROC_BROWSER_TEST_F(SharedPinnedTabServiceBrowserTest,
+                       DummyTabViewFollowsSharedContents) {
+  // Given that there're multiple windows with shared pinned tabs
+  auto* browser_1 = browser();
+  auto* tab_strip_model_1 = browser_1->tab_strip_model();
+  tab_strip_model_1->SetTabPinned(0, /* pinned= */ true);
+
+  auto* browser_2 = CreateNewBrowser();
+  auto* tab_strip_model_2 = browser_2->GetTabStripModel();
+  WaitUntil(base::BindLambdaForTesting(
+      [&]() { return tab_strip_model_2->count() > 1; }));
+  ASSERT_TRUE(tab_strip_model_2->IsTabPinned(0));
+  ASSERT_TRUE(GetForBrowser(browser_2)->IsDummyContents(
+      tab_strip_model_2->GetWebContentsAt(0)));
+
+  // When the shared pinned tab gets a new title,
+  ASSERT_TRUE(content::NavigateToURL(
+      tab_strip_model_1->GetWebContentsAt(0),
+      GURL("data:text/html,<title>FlyWeb shared title</title>")));
+
+  // Then the dummy tab's view in the other window shows it.
+  Tab* dummy_tab = BrowserView::GetBrowserViewForBrowser(browser_2)
+                       ->horizontal_tab_strip_for_testing()
+                       ->tab_at(0);
+  ASSERT_TRUE(dummy_tab);
+  WaitUntil(base::BindLambdaForTesting([&]() {
+    return dummy_tab->data().title == u"FlyWeb shared title";
+  }));
+  EXPECT_EQ(u"FlyWeb shared title", dummy_tab->data().title);
 }
 
 IN_PROC_BROWSER_TEST_F(SharedPinnedTabServiceBrowserTest,
