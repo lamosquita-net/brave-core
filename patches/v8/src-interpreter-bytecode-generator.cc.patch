@@ -1,5 +1,5 @@
 diff --git a/src/interpreter/bytecode-generator.cc b/src/interpreter/bytecode-generator.cc
-index f6651020361a0eefdc275ca997234f2c4ff9042c..792aedfade0742642e2198b350126f4cae2bf697 100644
+index 1d5a0334e74525dd8b2c406b01caf0d05ef4e8ad..08d8578f3daee2a1afecdf4dbd8d454b2db5e5c0 100644
 --- a/src/interpreter/bytecode-generator.cc
 +++ b/src/interpreter/bytecode-generator.cc
 @@ -289,7 +289,7 @@ class V8_NODISCARD BytecodeGenerator::ControlScope::DeferredCommands final {
@@ -11,7 +11,7 @@ index f6651020361a0eefdc275ca997234f2c4ff9042c..792aedfade0742642e2198b350126f4c
  
      BytecodeLabel fall_through_from_try_block;
  
-@@ -2763,10 +2763,16 @@ bool IsSwitchOptimizable(SwitchStatement* stmt, SwitchInfo* info) {
+@@ -2764,10 +2764,16 @@ bool IsSwitchOptimizable(SwitchStatement* stmt, SwitchInfo* info) {
  //   <out = 19, break>
  
  void BytecodeGenerator::VisitSwitchStatement(SwitchStatement* stmt) {
@@ -28,7 +28,7 @@ index f6651020361a0eefdc275ca997234f2c4ff9042c..792aedfade0742642e2198b350126f4c
    SwitchInfo info;
    BytecodeJumpTable* jump_table = nullptr;
    bool use_jump_table = IsSwitchOptimizable(stmt, &info);
-@@ -2790,9 +2796,6 @@ void BytecodeGenerator::VisitSwitchStatement(SwitchStatement* stmt) {
+@@ -2791,9 +2797,6 @@ void BytecodeGenerator::VisitSwitchStatement(SwitchStatement* stmt) {
    SwitchBuilder switch_builder(builder(), block_coverage_builder_, stmt,
                                 n_comp_cases, jump_table);
    ControlScopeForBreakable scope(this, stmt, &switch_builder);
@@ -38,7 +38,7 @@ index f6651020361a0eefdc275ca997234f2c4ff9042c..792aedfade0742642e2198b350126f4c
  
    if (use_jump_table) {
      // Release temps so that they can be reused in clauses.
-@@ -6127,6 +6130,7 @@ void BytecodeGenerator::BuildSuspendPoint(int position) {
+@@ -6128,6 +6131,7 @@ void BytecodeGenerator::BuildSuspendPoint(int position) {
  void BytecodeGenerator::VisitYield(Yield* expr) {
    builder()->SetExpressionPosition(expr);
    VisitForAccumulatorValue(expr->expression());
@@ -46,7 +46,7 @@ index f6651020361a0eefdc275ca997234f2c4ff9042c..792aedfade0742642e2198b350126f4c
  
    bool is_async = IsAsyncGeneratorFunction(function_kind());
    // If this is not the first yield
-@@ -6294,6 +6298,7 @@ void BytecodeGenerator::VisitYieldStar(YieldStar* expr) {
+@@ -6301,6 +6305,7 @@ void BytecodeGenerator::VisitYieldStar(YieldStar* expr) {
      RegisterAllocationScope register_scope(this);
      RegisterList iterator_and_input = register_allocator()->NewRegisterList(2);
      VisitForAccumulatorValue(expr->expression());
@@ -54,3 +54,43 @@ index f6651020361a0eefdc275ca997234f2c4ff9042c..792aedfade0742642e2198b350126f4c
      IteratorRecord iterator = BuildGetIteratorRecord(
          register_allocator()->NewRegister() /* next method */,
          iterator_and_input[0], iterator_type);
+@@ -6858,12 +6863,18 @@ void BytecodeGenerator::VisitKeyedSuperPropertyLoad(Property* property,
+ 
+ template <typename ExpressionFunc>
+ void BytecodeGenerator::BuildOptionalChain(ExpressionFunc expression_func) {
++  BuildOptionalChain(expression_func, [this]() { builder()->LoadUndefined(); });
++}
++
++template <typename ExpressionFunc, typename ElseFunc>
++void BytecodeGenerator::BuildOptionalChain(ExpressionFunc expression_func,
++                                           ElseFunc else_func) {
+   BytecodeLabel done;
+   OptionalChainNullLabelScope label_scope(this);
+   expression_func();
+   builder()->Jump(&done);
+   label_scope.labels()->Bind(builder());
+-  builder()->LoadUndefined();
++  else_func();
+   builder()->Bind(&done);
+ }
+ 
+@@ -7014,10 +7025,15 @@ void BytecodeGenerator::VisitCall(Call* expr) {
+     case Call::PRIVATE_OPTIONAL_CHAIN_CALL: {
+       OptionalChain* chain = callee_expr->AsOptionalChain();
+       Property* property = chain->expression()->AsProperty();
+-      BuildOptionalChain([&]() {
+-        VisitAndPushIntoRegisterList(property->obj(), &args);
+-        VisitPropertyLoad(args.last_register(), property);
+-      });
++      BuildOptionalChain(
++          [&]() {
++            VisitAndPushIntoRegisterList(property->obj(), &args);
++            VisitPropertyLoad(args.last_register(), property);
++          },
++          [&]() {
++            builder()->LoadUndefined().StoreAccumulatorInRegister(
++                args.last_register());
++          });
+       builder()->StoreAccumulatorInRegister(callee);
+       break;
+     }

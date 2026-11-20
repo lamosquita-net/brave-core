@@ -1,5 +1,5 @@
 diff --git a/src/maglev/maglev-graph-builder.cc b/src/maglev/maglev-graph-builder.cc
-index 69fe4b26b5ef19e168e9dbde6525739d5623d34d..d1f32c917ea339c7657a7ef2fe1992c8e296fb0d 100644
+index 69fe4b26b5ef19e168e9dbde6525739d5623d34d..ad34e3586ce2f158572b6eb8f259c185a5c342f9 100644
 --- a/src/maglev/maglev-graph-builder.cc
 +++ b/src/maglev/maglev-graph-builder.cc
 @@ -1807,9 +1807,13 @@ bool IsConsString(ValueNode* string) {
@@ -65,3 +65,23 @@ index 69fe4b26b5ef19e168e9dbde6525739d5623d34d..d1f32c917ea339c7657a7ef2fe1992c8
  
    // If the right hand side is a ConsString, then we can create a ConsString.
    // This doesn't work with the left hand side, since the right hand side of a
+@@ -15800,9 +15807,16 @@ ReduceResult MaglevGraphBuilder::VisitSwitchOnGeneratorState() {
+       generator, new_state, offsetof(JSGeneratorObject, continuation_),
+       StoreTaggedMode::kDefault));
+ 
+-  // Guarantee that we have something in the accumulator.
+-  MoveNodeBetweenRegisters(iterator_.GetRegisterOperand(0),
+-                           interpreter::Register::virtual_accumulator());
++  // Guarantee that we have something in the accumulator and registers for the
++  // resume targets (which will overwrite live registers and the accumulator in
++  // VisitResumeGenerator).
++  ValueNode* optimized_out = GetRootConstant(RootIndex::kOptimizedOut);
++  current_interpreter_frame_.set_accumulator(optimized_out);
++  for (int i = 0; i < register_count(); i++) {
++    if (i != iterator_.GetRegisterOperand(0).index()) {
++      current_interpreter_frame_.set(interpreter::Register(i), optimized_out);
++    }
++  }
+ 
+   // Switch on generator state.
+   int case_value_base = (*offsets.begin()).case_value;

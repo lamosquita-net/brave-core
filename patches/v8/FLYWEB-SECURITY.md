@@ -1,3 +1,32 @@
+# FlyWeb: pending for the next release, V8 fix 51512210b3 (crbug 585614984), ported from the M159 merge
+
+SEGURIDAD-PORTES-33, 20-11-2026 (softmac `FlyWeb/seguridad/pendiente/brave-core/0004`). Not in 3.1.4: it waits for
+the next FlyWeb release. On top of `pendiente/brave-core/0003`. **Not merged to V8 15.6 upstream yet**: ported from
+the M159 merge 202e0e7f26 (V8 15.9.128.22, bugs 587681919 and 585614984; cherry-pick of 51512210b3 from main).
+
+- In `BytecodeGenerator::VisitCall`, optional-chain property calls such as `(a?.foo().bar)()` left the receiver
+  register unwritten on the null/undefined short-circuit path while `CallAnyReceiver` still read it, and
+  `BytecodeAnalysis` then treated that register as live across preceding `try/catch` blocks. The fix stores
+  `undefined` into the receiver register on that path (new `BuildOptionalChain` overload), checks exception-edge
+  liveness in `LivenessIsValid` (DEBUG only), and makes Maglev clear dead registers and the accumulator in
+  `InterpreterFrameState::CopyFrom` (except for dummy units) and fill the resume targets in
+  `VisitSwitchOnGeneratorState` with the optimized-out constant.
+- Same content as upstream for every hunk; one hunk is re-anchored: in 15.6 `InterpreterFrameState::CopyFrom`
+  also calls `known_node_aspects_->virtual_objects().Snapshot()` inside the `if (known_node_aspects_)` block, and
+  the new block goes right after that `if`, as upstream. Every API it uses exists in 15.6.75.66
+  (`HandlerTable::LookupHandlerIndexForRange`, the `BytecodeLivenessState` iterator, `GetRootConstant`,
+  `MaglevCompilationUnit::NewDummy`, `SubgraphBase`).
+- `src-interpreter-bytecode-generator.cc.patch` and `src-maglev-maglev-graph-builder.cc.patch` already existed:
+  they are regenerated against 15.6.75.66 with the previous changes plus this fix (the old interpreter patch had
+  an older preimage and applied with a one-line offset). The rest are new files.
+
+**Cache epoch:** every V8 patch bumps `kFlyWebCacheEpoch` (`docs/SEGURIDAD.md`); bytecode changes in particular
+must not reuse old code caches. It is NOT bumped here; whoever integrates this sets the epoch for that release.
+
+To check (D8-LINUX): `d8`, mjsunit with and without Maglev, especially `maglev/regress-585614984`, in release and
+debug (debug runs the new exception-edge liveness check and the new `DCHECK_NOT_NULL` on Maglev frame reads, which
+would catch any 15.6-only path that reads a cleared register).
+
 # FlyWeb: pending for the next release, V8 15.6.75.74 fix ceb90d38eb (SHA-256 code-cache source hash)
 
 SEGURIDAD-PORTES-33, 20-11-2026 (softmac `FlyWeb/seguridad/pendiente/brave-core/0003`). Not in 3.1.4: it waits for
