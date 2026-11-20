@@ -48,9 +48,27 @@ constexpr SkColor kFlyWebLocationBarBackground = SK_ColorWHITE;
 // focused URL field with the popup background (kColorOmniboxResultsBackground)
 // and both share the text color ids, so a white field needs a white popup.
 // false: Brave's dark omnibox (kBraveDarkLocationBarBackground).
-constexpr bool kFlyWebLightOmniboxInDarkMode = true;
+// Titín, 20-11 (maqueta-oscuro-desplegable-hd.webp): replaced by a dark URL
+// field and popup in dark mode, «en la gama del entorno» (the kFlyWebDark*
+// omnibox colors below). Kept false so the white-on-dark path is not used.
+constexpr bool kFlyWebLightOmniboxInDarkMode = false;
 constexpr SkColor kBraveDarkLocationBarBackground =
     SkColorSetRGB(0x0D, 0x0F, 0x14);
+
+// FlyWeb 3.2.0, dark mode omnibox (Titín, 20-11), measured on
+// maqueta-oscuro-desplegable-hd.webp. Regular windows only: private windows
+// use their own theme. White text on the field and the popup.
+constexpr SkColor kFlyWebDarkLocationBarBackground =
+    SkColorSetRGB(0x4D, 0x4D, 0x4D);
+constexpr SkColor kFlyWebDarkOmniboxResultsBackground =
+    SkColorSetRGB(0x90, 0x92, 0x94);
+constexpr SkColor kFlyWebDarkOmniboxResultsSelected =
+    SkColorSetRGB(0x54, 0x26, 0x71);
+// The light mark at the left of the selected row (about #AFA8D3 on the
+// mockup, Titín's #AFA6D2).
+constexpr SkColor kFlyWebDarkOmniboxFocusIndicator =
+    SkColorSetRGB(0xAF, 0xA6, 0xD2);
+constexpr SkColor kFlyWebDarkOmniboxText = SK_ColorWHITE;
 
 // Text selection in a white URL field while the window is in dark mode
 // (Chromium's selection color for dark mode is meant for a dark field).

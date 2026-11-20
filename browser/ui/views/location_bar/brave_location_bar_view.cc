@@ -24,6 +24,7 @@
 #include "brave/grit/brave_theme_resources.h"
 #include "cc/paint/paint_flags.h"
 #include "chrome/browser/profiles/profile.h"
+#include "chrome/browser/ui/color/chrome_color_id.h"
 #include "chrome/browser/themes/theme_service_factory.h"
 #include "chrome/browser/ui/layout_constants.h"
 #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
@@ -40,8 +41,10 @@
 #include "ui/base/metadata/metadata_header_macros.h"
 #include "ui/base/metadata/metadata_impl_macros.h"
 #include "ui/base/resource/resource_bundle.h"
+#include "ui/color/color_provider.h"
 #include "ui/compositor/layer.h"
 #include "ui/gfx/canvas.h"
+#include "ui/gfx/color_utils.h"
 #include "ui/gfx/geometry/rect_f.h"
 #include "ui/gfx/geometry/size.h"
 #include "ui/gfx/geometry/skia_conversions.h"
@@ -71,6 +74,12 @@ constexpr float kFlyWebOmniboxFocusGlowOpacity = 0.37f;
 // #ED at the edge at 1x, against #DD with the caret). Brave's outer hover
 // shadow is not used in these windows. Opacity at the very edge, 0-1.
 constexpr float kFlyWebOmniboxHoverGlowOpacity = 0.20f;
+// Titín, 20-11 (maqueta-oscuro-desplegable-hd.webp): on the dark field of dark
+// mode the shadow is darker than the field, not gray: about #3A-#41 at the
+// edge on #4D4D4D, so black at these edge opacities (same fade).
+constexpr SkColor kFlyWebOmniboxFocusGlowColorOnDark = SK_ColorBLACK;
+constexpr float kFlyWebOmniboxFocusGlowOpacityOnDark = 0.22f;
+constexpr float kFlyWebOmniboxHoverGlowOpacityOnDark = 0.12f;
 // Distance, in dip, over which the opacity halves.
 constexpr float kFlyWebOmniboxFocusGlowHalvingDistance = 1.0f;
 // Number of rings that draw the fade (0.5 dip each, smooth on Retina too).
@@ -97,12 +106,14 @@ class FlyWebOmniboxFocusGlowView : public views::View {
 
   void set_corner_radius(float radius) { corner_radius_ = radius; }
 
-  // Opacity at the very edge: kFlyWebOmniboxFocusGlowOpacity or
-  // kFlyWebOmniboxHoverGlowOpacity.
-  void set_edge_opacity(float opacity) {
-    if (edge_opacity_ == opacity) {
+  // Color and opacity at the very edge: kFlyWebOmniboxFocusGlow* or
+  // kFlyWebOmniboxHoverGlowOpacity*, gray on a light field and black on a
+  // dark one.
+  void set_edge(SkColor color, float opacity) {
+    if (edge_color_ == color && edge_opacity_ == opacity) {
       return;
     }
+    edge_color_ = color;
     edge_opacity_ = opacity;
     SchedulePaint();
   }
@@ -126,7 +137,7 @@ class FlyWebOmniboxFocusGlowView : public views::View {
       const float opacity =
           edge_opacity_ *
           std::exp2(-inset / kFlyWebOmniboxFocusGlowHalvingDistance);
-      flags.setColor(SkColorSetA(kFlyWebOmniboxFocusGlowColor,
+      flags.setColor(SkColorSetA(edge_color_,
                                  base::ClampRound<SkAlpha>(opacity * 255)));
       canvas->DrawRoundRect(ring, std::max(corner_radius_ - inset, 0.0f),
                             flags);
@@ -135,6 +146,7 @@ class FlyWebOmniboxFocusGlowView : public views::View {
 
  private:
   float corner_radius_ = 0;
+  SkColor edge_color_ = kFlyWebOmniboxFocusGlowColor;
   float edge_opacity_ = kFlyWebOmniboxFocusGlowOpacity;
 };
 
@@ -296,9 +308,37 @@ void BraveLocationBarView::RefreshBackground() {
   if (focus_glow_) {
     const bool caret_visible =
         GetOmniboxController()->edit_model()->is_caret_visible();
+    const SkColor field_color =
+        GetColorProvider()
+            ? GetColorProvider()->GetColor(kColorLocationBarBackground)
+            : SK_ColorWHITE;
+    const bool dark_field = color_utils::IsDark(field_color);
+
+    // FlyWeb 3.2.0 (Titín, 20-11): Chromium paints the focused field with
+    // the popup background. In dark mode they differ (#4D4D4D field, #909294
+    // popup): keep the field's own color while it has the caret.
+    if (caret_visible && GetColorProvider() &&
+        field_color !=
+            GetColorProvider()->GetColor(kColorOmniboxResultsBackground)) {
+      SetBackground(CreateRoundRectBackground(
+          field_color, SK_ColorTRANSPARENT, size(),
+          /*blend_mode=*/SkBlendMode::kSrcOver,
+          /*antialias=*/true, /*should_border_scale=*/true));
+      omnibox_view_->SetBackgroundColor(field_color);
+    }
+
+    float opacity;
+    if (dark_field) {
+      opacity = caret_visible ? kFlyWebOmniboxFocusGlowOpacityOnDark
+                              : kFlyWebOmniboxHoverGlowOpacityOnDark;
+    } else {
+      opacity = caret_visible ? kFlyWebOmniboxFocusGlowOpacity
+                              : kFlyWebOmniboxHoverGlowOpacity;
+    }
     static_cast<FlyWebOmniboxFocusGlowView*>(focus_glow_.get())
-        ->set_edge_opacity(caret_visible ? kFlyWebOmniboxFocusGlowOpacity
-                                         : kFlyWebOmniboxHoverGlowOpacity);
+        ->set_edge(dark_field ? kFlyWebOmniboxFocusGlowColorOnDark
+                              : kFlyWebOmniboxFocusGlowColor,
+                   opacity);
     focus_glow_->SetVisible(caret_visible || IsMouseHovered());
   }
 

@@ -104,5 +104,20 @@ TEST_F(BraveColorMixersTest, FlyWebDarkColors) {
     EXPECT_EQ(color_provider().GetColor(kColorOmniboxText), kLightOmniboxText);
     EXPECT_EQ(color_provider().GetColor(kColorOmniboxResultsTextSelected),
               kLightOmniboxText);
+  } else {
+    // FlyWeb 3.2.0 (Titín, 20-11): dark URL field and popup, white text.
+    EXPECT_EQ(color_provider().GetColor(kColorLocationBarBackground),
+              kFlyWebDarkLocationBarBackground);
+    EXPECT_EQ(color_provider().GetColor(kColorOmniboxResultsBackground),
+              kFlyWebDarkOmniboxResultsBackground);
+    EXPECT_EQ(
+        color_provider().GetColor(kColorOmniboxResultsBackgroundSelected),
+        kFlyWebDarkOmniboxResultsSelected);
+    EXPECT_EQ(color_provider().GetColor(kColorOmniboxText),
+              kFlyWebDarkOmniboxText);
+    EXPECT_EQ(color_provider().GetColor(kColorOmniboxResultsTextDimmed),
+              kFlyWebDarkOmniboxText);
+    EXPECT_EQ(color_provider().GetColor(kColorOmniboxResultsFocusIndicator),
+              kFlyWebDarkOmniboxFocusIndicator);
   }
 }

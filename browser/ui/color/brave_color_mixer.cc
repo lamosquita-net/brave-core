@@ -35,7 +35,7 @@ constexpr SkColor kPrivateLocationBarBgBase = kPrivateFrame;
 constexpr SkColor kLightLocationBarBgBase = kFlyWebLocationBarBackground;
 constexpr SkColor kDarkLocationBarBgBase =
     kFlyWebLightOmniboxInDarkMode ? kFlyWebLocationBarBackground
-                                  : kBraveDarkLocationBarBackground;
+                                  : kFlyWebDarkLocationBarBackground;
 
 // Copied from //chrome/browser/ui/omnibox//omnibox_theme.h
 // As below values are not changed for several years, it would be safe to copy.
@@ -275,8 +275,10 @@ void AddBraveOmniboxLightThemeColorMixer(ui::ColorProvider* provider,
   mixer[kColorOmniboxResultsUrlSelected] = {kColorOmniboxResultsUrl};
 }
 
-void AddBraveOmniboxDarkThemeColorMixer(ui::ColorProvider* provider,
-                                        const ui::ColorProviderKey& key) {
+// FlyWeb: unused since the dark omnibox of 3.2.0 (Brave's dark field).
+[[maybe_unused]] void AddBraveOmniboxDarkThemeColorMixer(
+    ui::ColorProvider* provider,
+    const ui::ColorProviderKey& key) {
   ui::ColorMixer& mixer = provider->AddMixer();
 
   // Apply bravified color when there is no custom theme.
@@ -299,6 +301,49 @@ void AddBraveOmniboxDarkThemeColorMixer(ui::ColorProvider* provider,
   mixer[kColorOmniboxResultsUrl] = {
       leo::GetColor(leo::Color::kColorTextInteractive, leo::Theme::kDark)};
   mixer[kColorOmniboxResultsUrlSelected] = {kColorOmniboxResultsUrl};
+}
+
+// FlyWeb 3.2.0: dark mode URL field and popup in the dark range (Titín,
+// 20-11, maqueta-oscuro-desplegable-hd.webp). Sets the backgrounds and the
+// text; AddFlyWebLightOmniboxOnDarkColorMixer() then derives the field's
+// other colors from them, and AddFlyWebDarkOmniboxPopupColorMixer() sets the
+// popup's own.
+void AddFlyWebDarkOmniboxColorMixer(ui::ColorProvider* provider,
+                                    const ui::ColorProviderKey& key) {
+  ui::ColorMixer& mixer = provider->AddMixer();
+  mixer[kColorToolbarBackgroundSubtleEmphasis] = {
+      kFlyWebDarkLocationBarBackground};
+  mixer[kColorToolbarBackgroundSubtleEmphasisHovered] = {
+      kColorToolbarBackgroundSubtleEmphasis};
+  mixer[kColorOmniboxText] = {kFlyWebDarkOmniboxText};
+  mixer[kColorOmniboxResultsBackground] = {GetOmniboxResultBackground(
+      kColorOmniboxResultsBackground, /*dark*/ true, /*incognito*/ false)};
+  mixer[kColorOmniboxResultsBackgroundHovered] = {
+      GetOmniboxResultBackground(kColorOmniboxResultsBackgroundHovered,
+                                 /*dark*/ true, /*incognito*/ false)};
+  mixer[kColorOmniboxResultsBackgroundSelected] = {
+      kFlyWebDarkOmniboxResultsSelected};
+}
+
+// The popup on #909294 with white text, as on the mockup. White on it is
+// about 3.1:1, so Chromium's contrast recipes (which aim at 4.5:1) would turn
+// the secondary text and the URLs dark; they stay white instead. Icons are
+// white (non-text, 3:1). The selected row (#542671) is white on purple,
+// 11:1.
+void AddFlyWebDarkOmniboxPopupColorMixer(ui::ColorProvider* provider,
+                                         const ui::ColorProviderKey& key) {
+  ui::ColorMixer& mixer = provider->AddMixer();
+  mixer[kColorOmniboxResultsTextSelected] = {kFlyWebDarkOmniboxText};
+  mixer[kColorOmniboxResultsTextDimmed] = {kFlyWebDarkOmniboxText};
+  mixer[kColorOmniboxResultsTextDimmedSelected] = {kFlyWebDarkOmniboxText};
+  mixer[kColorOmniboxResultsUrl] = {kFlyWebDarkOmniboxText};
+  mixer[kColorOmniboxResultsUrlSelected] = {kFlyWebDarkOmniboxText};
+  mixer[kColorOmniboxResultsTextAnswer] = {kFlyWebDarkOmniboxText};
+  mixer[kColorOmniboxKeywordSelected] = {kFlyWebDarkOmniboxText};
+  mixer[kColorOmniboxResultsIcon] = {kFlyWebDarkOmniboxText};
+  mixer[kColorOmniboxResultsIconSelected] = {kFlyWebDarkOmniboxText};
+  mixer[kColorOmniboxResultsFocusIndicator] = {
+      kFlyWebDarkOmniboxFocusIndicator};
 }
 
 // FlyWeb: dark mode with a white URL field and popup
@@ -442,7 +487,10 @@ SkColor GetOmniboxResultBackground(int id, bool dark, bool priv) {
                                                   {-1, -1, 0.45})
                           : kPrivateLocationBarBgBase;
   } else if (dark && !kFlyWebLightOmniboxInDarkMode) {
-    color = high_contrast ? gfx::kGoogleGrey900 : kDarkLocationBarBgBase;
+    // FlyWeb 3.2.0: the dark popup is lighter than the dark field (Titín,
+    // 20-11).
+    color = high_contrast ? gfx::kGoogleGrey900
+                          : kFlyWebDarkOmniboxResultsBackground;
   } else {
     color = kFlyWebLocationBarBackground;
   }
@@ -647,13 +695,15 @@ void AddBraveOmniboxColorMixer(ui::ColorProvider* provider,
   }
 
   const bool dark = key.color_mode == ui::ColorProviderKey::ColorMode::kDark;
-  if (dark && !kFlyWebLightOmniboxInDarkMode) {
-    AddBraveOmniboxDarkThemeColorMixer(provider, key);
-    return;
-  }
   AddBraveOmniboxLightThemeColorMixer(provider, key);
   if (dark) {
+    if (!kFlyWebLightOmniboxInDarkMode) {
+      AddFlyWebDarkOmniboxColorMixer(provider, key);
+    }
     AddFlyWebLightOmniboxOnDarkColorMixer(provider, key);
+    if (!kFlyWebLightOmniboxInDarkMode) {
+      AddFlyWebDarkOmniboxPopupColorMixer(provider, key);
+    }
   }
 }
 
