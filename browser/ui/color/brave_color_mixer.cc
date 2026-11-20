@@ -86,6 +86,14 @@ void AddFlyWebTabTextColorMixer(ui::ColorProvider* provider,
   mixer[kColorTabForegroundInactiveFrameInactive] = ui::AlphaBlend(
       {kColorTabForegroundActiveFrameInactive},
       {kColorTabBackgroundInactiveFrameInactive}, kFlyWebInactiveTabTextAlpha);
+
+  // Inactive tab under the pointer (Titín, 20-11), in both window states.
+  mixer[kColorTabBackgroundInactiveHoverFrameActive] = {
+      key.color_mode == ui::ColorProviderKey::ColorMode::kDark
+          ? kFlyWebDarkInactiveTabHover
+          : kFlyWebLightInactiveTabHover};
+  mixer[kColorTabBackgroundInactiveHoverFrameInactive] = {
+      kColorTabBackgroundInactiveHoverFrameActive};
 }
 
 void AddChromeLightThemeColorMixer(ui::ColorProvider* provider,

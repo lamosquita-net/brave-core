@@ -62,6 +62,12 @@ TEST_F(BraveColorMixersTest, FlyWebLightColors) {
   EXPECT_EQ(color_provider().GetColor(kColorTabForegroundInactiveFrameActive),
             color_utils::AlphaBlend(kFlyWebLightTabText, kLightFrame,
                                     kFlyWebInactiveTabTextAlpha));
+  EXPECT_EQ(
+      color_provider().GetColor(kColorTabBackgroundInactiveHoverFrameActive),
+      kFlyWebLightInactiveTabHover);
+  EXPECT_EQ(
+      color_provider().GetColor(kColorTabBackgroundInactiveHoverFrameInactive),
+      kFlyWebLightInactiveTabHover);
   EXPECT_EQ(color_provider().GetColor(kColorLocationBarBackground),
             kFlyWebLocationBarBackground);
 }
@@ -82,6 +88,12 @@ TEST_F(BraveColorMixersTest, FlyWebDarkColors) {
   EXPECT_EQ(color_provider().GetColor(kColorTabForegroundInactiveFrameActive),
             color_utils::AlphaBlend(kFlyWebDarkTabText, kDarkFrame,
                                     kFlyWebInactiveTabTextAlpha));
+  EXPECT_EQ(
+      color_provider().GetColor(kColorTabBackgroundInactiveHoverFrameActive),
+      kFlyWebDarkInactiveTabHover);
+  EXPECT_EQ(
+      color_provider().GetColor(kColorTabBackgroundInactiveHoverFrameInactive),
+      kFlyWebDarkInactiveTabHover);
 
   if (kFlyWebLightOmniboxInDarkMode) {
     // White URL field and popup, with dark text.

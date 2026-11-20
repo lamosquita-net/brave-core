@@ -36,6 +36,9 @@ constexpr SkColor kFlyWebDarkTabText = SK_ColorWHITE;
 // Inactive tabs: the active tab text at this opacity, composited over the tab
 // strip so the result is opaque (Chromium's tab code expects opaque colors).
 constexpr SkAlpha kFlyWebInactiveTabTextAlpha = 0x80;  // 50%
+// Inactive tab under the pointer (Titín, 20-11).
+constexpr SkColor kFlyWebLightInactiveTabHover = SkColorSetRGB(0xEB, 0xEB, 0xEB);
+constexpr SkColor kFlyWebDarkInactiveTabHover = SkColorSetRGB(0x58, 0x59, 0x59);
 
 // URL field background, in light and dark mode.
 constexpr SkColor kFlyWebLocationBarBackground = SK_ColorWHITE;
