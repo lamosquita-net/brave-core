@@ -1,3 +1,22 @@
+# FlyWeb: pending for the next release, V8 15.6.75.74 fix ceb90d38eb (SHA-256 code-cache source hash)
+
+SEGURIDAD-PORTES-33, 20-11-2026 (softmac `FlyWeb/seguridad/pendiente/brave-core/0003`). Not in 3.1.4: it waits for
+the next FlyWeb release. On top of `pendiente/brave-core/0002` (V8 15.6.75.66 with all the patches below; gitlink
+unchanged).
+
+- **ceb90d38eb** [M156] "[snapshot] Ship --code-cache-source-hash-sha256 by default" (bugs 587680873, 568907349,
+  582651043, 582260175; V8 15.6.75.74 on the 8078 branch). Backport of three trunk changes: the code cache's
+  source hash becomes a SHA-256 of the full source and wrapped arguments (with one-byte/two-byte domain separation)
+  instead of the source length, and the flag is shipped on. A code cache made for one script can no longer be
+  accepted for a different script of the same length. Applied to 15.6.75.66 the five files come out byte-identical
+  to upstream 15.6.75.74; no other `patches/v8` file touches them; `src/utils/sha-256.h` is already in 15.6.75.66.
+- Side effect: the serialized code-cache format changes, so every existing code cache is rejected once and rebuilt.
+
+**Cache epoch:** every V8 patch bumps `kFlyWebCacheEpoch` (`docs/SEGURIDAD.md`). It is NOT bumped here; whoever
+integrates this into the next release sets the epoch for that release.
+
+To check (D8-LINUX): `d8`, mjsunit (especially `code-cache-sha256`), `cctest/test-serialize/*` (code cache tests).
+
 # FlyWeb: pending for the next release, V8 fix a0f2c9f8c3 (crbug 585625642), ported from the M159 merge
 
 SEGURIDAD-PORTES-33, 20-11-2026 (softmac `FlyWeb/seguridad/pendiente/brave-core/0002`). Not in 3.1.4: it waits for
