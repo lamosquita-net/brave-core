@@ -288,19 +288,18 @@ void BraveLocationBarView::RefreshBackground() {
   LocationBarView::RefreshBackground();
 
   // Chromium calls RefreshBackground() on focus, blur, popup and hover
-  // changes. With the caret: same condition as Chromium's focus ring, visibly
-  // focused and popup closed (an open popup and the field are drawn as one
-  // piece). Without it: the softer shadow while the mouse is over the field,
-  // where Brave showed its outer shadow.
+  // changes. With the caret: the inner shadow, also while the suggestions
+  // popup is open (Titín, 20-11, bt-320e: the field keeps its inner shadow
+  // when typing; the popup shows the field through its cutout). Without it:
+  // the softer shadow while the mouse is over the field, where Brave showed
+  // its outer shadow.
   if (focus_glow_) {
     const bool caret_visible =
         GetOmniboxController()->edit_model()->is_caret_visible();
-    const bool popup_open = GetOmniboxController()->IsPopupOpen();
     static_cast<FlyWebOmniboxFocusGlowView*>(focus_glow_.get())
         ->set_edge_opacity(caret_visible ? kFlyWebOmniboxFocusGlowOpacity
                                          : kFlyWebOmniboxHoverGlowOpacity);
-    focus_glow_->SetVisible(!popup_open &&
-                            (caret_visible || IsMouseHovered()));
+    focus_glow_->SetVisible(caret_visible || IsMouseHovered());
   }
 
   if (shadow_) {
