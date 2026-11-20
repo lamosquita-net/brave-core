@@ -6,6 +6,7 @@
 #include "brave/browser/ui/views/location_bar/brave_location_bar_view.h"
 
 #include <algorithm>
+#include <cmath>
 #include <optional>
 #include <utility>
 
@@ -54,16 +55,23 @@ namespace {
 // FlyWeb 3.2.0 interface (softmac FlyWeb/branding/interfaz-3.2.0): instead of
 // the colored focus ring, the focused URL field shows a soft gray inner glow.
 // The values are meant to be adjusted in tests with Titín.
-// Width of the glow from the edge inwards, in dip.
-constexpr float kFlyWebOmniboxFocusGlowThickness = 2.0f;
-// Color of the glow at the very edge; it fades to transparent inwards.
+// Titín (20-11, maqueta-claro-foco-hd.webp): a blurred gray inner shadow of
+// 3-4 px on the four sides, the same in light and dark mode (the field is
+// white in both). Its opacity halves every dip from the edge inwards, which
+// at 1x gives about #DD, #EE, #F6, #FB over white, as in the mockup.
+// Width of the shadow from the edge inwards, in dip.
+constexpr float kFlyWebOmniboxFocusGlowThickness = 4.0f;
+// Color of the shadow; its opacity fades to transparent inwards.
 constexpr SkColor kFlyWebOmniboxFocusGlowColor =
     SkColorSetRGB(0x80, 0x80, 0x80);
-// Opacity of the glow at the very edge, 0-1.
-constexpr float kFlyWebOmniboxFocusGlowOpacity = 0.30f;
-// Number of rings that draw the fade. Plain strokes, no blur filter, so the
-// cost is the same on old GPUs (MacPro5,1).
-constexpr int kFlyWebOmniboxFocusGlowSteps = 4;
+// Opacity at the very edge, 0-1.
+constexpr float kFlyWebOmniboxFocusGlowOpacity = 0.37f;
+// Distance, in dip, over which the opacity halves.
+constexpr float kFlyWebOmniboxFocusGlowHalvingDistance = 1.0f;
+// Number of rings that draw the fade (0.5 dip each, smooth on Retina too).
+// Plain strokes, no blur filter, so the cost is the same on old GPUs
+// (MacPro5,1).
+constexpr int kFlyWebOmniboxFocusGlowSteps = 8;
 
 // Transparent view on top of the location bar children that paints the inner
 // glow. It must be above the omnibox textfield, which has an opaque
@@ -99,10 +107,10 @@ class FlyWebOmniboxFocusGlowView : public views::View {
       if (ring.IsEmpty()) {
         break;
       }
-      // Quadratic fade from the edge inwards.
-      const float fade =
-          1.0f - static_cast<float>(i) / kFlyWebOmniboxFocusGlowSteps;
-      const float opacity = kFlyWebOmniboxFocusGlowOpacity * fade * fade;
+      // Exponential fade from the edge inwards, sampled at the ring center.
+      const float opacity =
+          kFlyWebOmniboxFocusGlowOpacity *
+          std::exp2(-inset / kFlyWebOmniboxFocusGlowHalvingDistance);
       flags.setColor(SkColorSetA(kFlyWebOmniboxFocusGlowColor,
                                  base::ClampRound<SkAlpha>(opacity * 255)));
       canvas->DrawRoundRect(ring, std::max(corner_radius_ - inset, 0.0f),
