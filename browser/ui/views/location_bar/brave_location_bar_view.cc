@@ -401,8 +401,9 @@ void BraveLocationBarView::SetupShadow() {
 }
 
 int BraveLocationBarView::GetBorderRadius() const {
-  return ChromeLayoutProvider::Get()->GetCornerRadiusMetric(
-      views::Emphasis::kMaximum, size());
+  // FlyWeb: the subtle radius of the mockups (ComputeBorderRadius() in
+  // chromium_src location_bar_view.cc), the same for the inner glow.
+  return ComputeBorderRadius(size());
 }
 
 void BraveLocationBarView::FocusLocation(bool is_user_initiated,

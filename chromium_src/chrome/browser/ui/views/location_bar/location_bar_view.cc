@@ -7,6 +7,7 @@
 
 #include <ranges>
 
+#include "brave/browser/ui/brave_layout_constants.h"
 #include "brave/browser/ui/omnibox/brave_omnibox_client_impl.h"
 #include "brave/browser/ui/views/omnibox/brave_omnibox_view_views.h"
 #include "chrome/browser/ui/color/chrome_color_id.h"
@@ -43,6 +44,12 @@
         /*edge_padding=*/trailing_decorations_edge_padding);         \
   }
 
+// FlyWeb: the field (its background, the popup cutout and the focus ring
+// all use ComputeBorderRadius()) has the subtle radius of the mockups instead
+// of a pill.
+#define BRAVE_LOCATION_BAR_VIEW_COMPUTE_BORDER_RADIUS \
+  return kFlyWebLocationBarCornerRadius;
+
 #define OmniboxViewViews BraveOmniboxViewViews
 #define ChromeOmniboxClient BraveOmniboxClientImpl
 #define STYLE_BODY_4_EMPHASIS STYLE_PRIMARY
@@ -54,6 +61,7 @@
 
 #include "src/chrome/browser/ui/views/location_bar/location_bar_view.cc"
 #undef STYLE_BODY_4_EMPHASIS
+#undef BRAVE_LOCATION_BAR_VIEW_COMPUTE_BORDER_RADIUS
 #undef kColorOmniboxResultsBackgroundHovered
 #undef ChromeOmniboxClient
 #undef OmniboxViewViews

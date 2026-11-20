@@ -19,4 +19,10 @@ std::optional<int> GetBraveLayoutConstant(LayoutConstant constant);
 // adjusted with Titín on screenshots.
 inline constexpr int kFlyWebLocationBarTopTrim = 3;
 
+// FlyWeb 3.2.0 interface (Titín, 20-11, maqueta-oscuro-desplegable-hd.webp and
+// maqueta-claro-url-sutil.png): the URL field and the suggestions popup have a
+// very subtle corner radius, not a pill (about 1-2 px on the mockups, where
+// 1 px is about 1 dip), and form one piece of the same width. In dip.
+inline constexpr int kFlyWebLocationBarCornerRadius = 2;
+
 #endif  // BRAVE_BROWSER_UI_BRAVE_LAYOUT_CONSTANTS_H_

@@ -1,8 +1,16 @@
 diff --git a/chrome/browser/ui/views/location_bar/location_bar_view.cc b/chrome/browser/ui/views/location_bar/location_bar_view.cc
-index bac174d0b227aa593d369b6e2e7f7b58179f2c16..61db98a474efbab36c023e9204c2afac6b2dfee8 100644
+index bac174d0b227aa593d369b6e2e7f7b58179f2c16..0f11887796e470c87ba8b2689460961275c72fc0 100644
 --- a/chrome/browser/ui/views/location_bar/location_bar_view.cc
 +++ b/chrome/browser/ui/views/location_bar/location_bar_view.cc
-@@ -802,6 +802,7 @@ void LocationBarView::Layout(PassKey) {
+@@ -530,6 +530,7 @@ int LocationBarView::GetBorderRadius() const {
+ 
+ // static
+ int LocationBarView::ComputeBorderRadius(gfx::Size size) {
++  BRAVE_LOCATION_BAR_VIEW_COMPUTE_BORDER_RADIUS
+   return ChromeLayoutProvider::Get()->GetCornerRadiusMetric(
+       views::Emphasis::kMaximum, size);
+ }
+@@ -802,6 +803,7 @@ void LocationBarView::Layout(PassKey) {
                                    .indent_input_when_popup_closed) &&
                               !location_icon_view_->ShouldShowLabel() &&
                               !ShouldShowKeywordBubble();
@@ -10,7 +18,7 @@ index bac174d0b227aa593d369b6e2e7f7b58179f2c16..61db98a474efbab36c023e9204c2afac
    if (should_indent) {
      icon_left += 7 /*icon_indent*/;
      icon_left += omnibox_feature_configs::AdjustOmniboxIndent()
-@@ -894,6 +895,7 @@ void LocationBarView::Layout(PassKey) {
+@@ -894,6 +896,7 @@ void LocationBarView::Layout(PassKey) {
      }
    };
  
@@ -18,7 +26,7 @@ index bac174d0b227aa593d369b6e2e7f7b58179f2c16..61db98a474efbab36c023e9204c2afac
    if (features::IsPageActionsElevatedToolbarEnabled()) {
      if (page_action_container_ && page_action_container_->GetVisible()) {
        const bool is_capsule_active = page_action_container_->IsCapsuleActive();
-@@ -934,6 +936,7 @@ void LocationBarView::Layout(PassKey) {
+@@ -934,6 +937,7 @@ void LocationBarView::Layout(PassKey) {
  
    add_trailing_decoration(clear_all_button_, /*intra_item_padding=*/0,
                            /*edge_padding=*/trailing_decorations_edge_padding);
