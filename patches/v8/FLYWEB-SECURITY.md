@@ -1,3 +1,33 @@
+# FlyWeb: pending for the next release, V8 fix a0f2c9f8c3 (crbug 585625642), ported from the M159 merge
+
+SEGURIDAD-PORTES-33, 20-11-2026 (softmac `FlyWeb/seguridad/pendiente/brave-core/0002`). Not in 3.1.4: it waits for
+the next FlyWeb release. On top of `pendiente/brave-core/0001` (V8 15.6.75.66 with all the patches below; gitlink
+unchanged). **Not merged to V8 15.6 upstream yet**: ported from the M159 merge 27e138a575 (V8 15.9.128.21, bugs
+587680496 and 585625642; cherry-pick of a0f2c9f8c3 from main).
+
+- TurboFan lowered `JSLoadContextNoCell`, `JSStoreContextNoCell` and `JSHasContextExtension` with
+  `graph()->start()` as control, so context loads could be scheduled before a resumable loop's
+  `SwitchOnGeneratorState` (generators and async functions) and read the wrong context. The operators now take a
+  control input, `JSTypedLowering` uses the node's own control, and `JSNativeContextSpecialization` passes it.
+- `src/compiler/js-typed-lowering.cc`, `js-operator.cc` and `js-native-context-specialization.cc` are
+  byte-identical in 15.6.75.66 and in the 15.6 branch head (.73), and no other `patches/v8` file touches them. They
+  differ from 15.9 elsewhere, but every upstream hunk applies to 15.6.75.66 with line offsets only and the same
+  content (patch-id checked), plus the mjsunit test `compiler/regress-585625642.js` and the
+  `js-typed-lowering-unittest.cc` changes. In 15.6 no other site builds these nodes with explicit inputs
+  (`bytecode-graph-builder.cc` adds control from the operator; `js-context-specialization.cc` uses `ChangeOp`).
+- **FlyWeb adaptation (test only):** in 15.6 the context-specialization tests still live in
+  `test/cctest/compiler/test-js-context-specialization.cc` (upstream later moved them to
+  `test/unittests/compiler/js-context-specialization-unittest.cc`). The upstream hunks for that unittest apply
+  cleanly to the cctest and are carried there, so every `LoadContextNoCell` node in it gets a control input.
+
+**Cache epoch:** every V8 patch bumps `kFlyWebCacheEpoch` (`docs/SEGURIDAD.md`). It is NOT bumped here; whoever
+integrates this into the next release sets the epoch for that release.
+
+To check (D8-LINUX): `d8`, mjsunit with and without Maglev (especially `compiler/regress-585625642`, with
+`--allow-natives-syntax`), `cctest/test-js-context-specialization/*` and
+`unittests --gtest_filter='JSTypedLoweringTest.*'`, in release and debug (debug runs the graph verifier on the
+new input counts).
+
 # FlyWeb: pending for the next release, V8 15.6.75.72 fix d68cecd900 (crbug 583479274)
 
 SEGURIDAD-PORTES-32, 19-11-2026 (softmac `FlyWeb/seguridad/pendiente/brave-core/0001`). Not in 3.1.4 (build 47

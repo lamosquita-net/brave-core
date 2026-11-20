@@ -1,0 +1,39 @@
+diff --git a/src/compiler/js-typed-lowering.cc b/src/compiler/js-typed-lowering.cc
+index 77b5ff4320a4f545cbdb413d03cc8b169b6dc829..f5dcb1d7cd95769493fb0544caeb782656a1423e 100644
+--- a/src/compiler/js-typed-lowering.cc
++++ b/src/compiler/js-typed-lowering.cc
+@@ -1591,7 +1591,7 @@ Reduction JSTypedLowering::ReduceJSHasContextExtension(Node* node) {
+   Node* effect = NodeProperties::GetEffectInput(node);
+   TNode<Context> context =
+       TNode<Context>::UncheckedCast(NodeProperties::GetContextInput(node));
+-  Node* control = graph()->start();
++  Node* control = NodeProperties::GetControlInput(node);
+ 
+   JSGraphAssembler gasm(broker(), jsgraph_, jsgraph_->zone(),
+                         BranchSemantics::kJS);
+@@ -1626,7 +1626,7 @@ Reduction JSTypedLowering::ReduceJSLoadContextNoCell(Node* node) {
+   ContextAccess const& access = ContextAccessOf(node->op());
+   Node* effect = NodeProperties::GetEffectInput(node);
+   Node* context = NodeProperties::GetContextInput(node);
+-  Node* control = graph()->start();
++  Node* control = NodeProperties::GetControlInput(node);
+   for (size_t i = 0; i < access.depth(); ++i) {
+     context = effect = graph()->NewNode(
+         simplified()->LoadField(
+@@ -1635,7 +1635,6 @@ Reduction JSTypedLowering::ReduceJSLoadContextNoCell(Node* node) {
+   }
+   node->ReplaceInput(0, context);
+   node->ReplaceInput(1, effect);
+-  node->AppendInput(jsgraph()->zone(), control);
+   NodeProperties::ChangeOp(
+       node,
+       simplified()->LoadField(AccessBuilder::ForContextSlot(access.index())));
+@@ -1716,7 +1715,7 @@ Reduction JSTypedLowering::ReduceJSStoreContextNoCell(Node* node) {
+   ContextAccess const& access = ContextAccessOf(node->op());
+   Node* effect = NodeProperties::GetEffectInput(node);
+   Node* context = NodeProperties::GetContextInput(node);
+-  Node* control = graph()->start();
++  Node* control = NodeProperties::GetControlInput(node);
+   Node* value = NodeProperties::GetValueInput(node, 0);
+   for (size_t i = 0; i < access.depth(); ++i) {
+     context = effect = graph()->NewNode(
