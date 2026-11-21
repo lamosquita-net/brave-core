@@ -330,6 +330,38 @@ IN_PROC_BROWSER_TEST_F(SharedPinnedTabServiceBrowserTest,
   EXPECT_EQ(u"FlyWeb shared title", dummy_tab->data().title);
 }
 
+// FlyWeb (from Brave master): closing a shared pinned tab closes its dummy in
+// every other window; when the dummy is that window's last tab, the window
+// closes and leaves the set of browsers while it is being iterated.
+IN_PROC_BROWSER_TEST_F(SharedPinnedTabServiceBrowserTest,
+                       ClosingSharedTabClosesWindowWithOnlyItsDummy) {
+  auto* browser_1 = browser();
+  auto* tab_strip_model_1 = browser_1->tab_strip_model();
+  chrome::AddTabAt(browser_1, GURL(), /*index=*/-1, /*foreground=*/true);
+  tab_strip_model_1->SetTabPinned(0, /* pinned= */ true);
+
+  auto* browser_2 = CreateNewBrowser();
+  auto* tab_strip_model_2 = browser_2->GetTabStripModel();
+  WaitUntil(base::BindLambdaForTesting(
+      [&]() { return tab_strip_model_2->count() > 1; }));
+  ASSERT_TRUE(tab_strip_model_2->IsTabPinned(0));
+
+  // Leave only the dummy pinned tab in the second window.
+  while (tab_strip_model_2->count() > 1) {
+    tab_strip_model_2->CloseWebContentsAt(tab_strip_model_2->count() - 1,
+                                          /* close_type= */ 0);
+  }
+  ASSERT_EQ(1, tab_strip_model_2->count());
+  base::WeakPtr<BrowserWindowInterface> weak_browser_2 =
+      browser_2->GetWeakPtr();
+
+  // Closing the shared pinned tab closes the second window, without a crash.
+  tab_strip_model_1->CloseWebContentsAt(0, /* close_type= */ 0);
+  WaitUntil(base::BindLambdaForTesting([&]() { return !weak_browser_2; }));
+  EXPECT_FALSE(weak_browser_2);
+  EXPECT_FALSE(tab_strip_model_1->IsTabPinned(0));
+}
+
 IN_PROC_BROWSER_TEST_F(SharedPinnedTabServiceBrowserTest,
                        CloseWindowWhenAllTabsAreSharedPinnedTabs) {
   // Given that there're multiple windows with shared pinned tabs

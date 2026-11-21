@@ -752,7 +752,16 @@ void SharedPinnedTabService::SynchronizeDeletedPinnedTab(int index) {
   DVLOG(2) << __FUNCTION__;
   DCHECK(change_source_model_);
 
-  for (auto* browser : browsers_) {
+  // FlyWeb (from Brave master): closing a browser's last tab closes the
+  // browser, which erases it from |browsers_| via BrowserClosing() while this
+  // loop runs, so iterate over a copy and skip browsers already gone.
+  const std::vector<BrowserWindowInterface*> browsers(browsers_.begin(),
+                                                      browsers_.end());
+  for (auto* browser : browsers) {
+    if (!browsers_.contains(browser)) {
+      continue;
+    }
+
     auto* model = browser->GetTabStripModel();
     if (model == change_source_model_) {
       continue;
