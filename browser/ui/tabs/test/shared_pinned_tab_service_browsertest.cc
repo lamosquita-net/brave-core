@@ -362,6 +362,38 @@ IN_PROC_BROWSER_TEST_F(SharedPinnedTabServiceBrowserTest,
   EXPECT_FALSE(tab_strip_model_1->IsTabPinned(0));
 }
 
+// FlyWeb (from Brave master): a window synchronized right after it unpinned a
+// tab, before the posted OnTabUnpinned() runs, must not be taken as out of
+// sync and get a stray dummy pinned tab.
+IN_PROC_BROWSER_TEST_F(SharedPinnedTabServiceBrowserTest,
+                       SynchronizeRightAfterUnpinAddsNoStrayPinnedTab) {
+  auto* browser_1 = browser();
+  auto* tab_strip_model_1 = browser_1->tab_strip_model();
+  chrome::AddTabAt(browser_1, GURL(), /*index=*/-1, /*foreground=*/true);
+  tab_strip_model_1->SetTabPinned(0, /* pinned= */ true);
+
+  auto* browser_2 = CreateNewBrowser();
+  auto* tab_strip_model_2 = browser_2->GetTabStripModel();
+  WaitUntil(base::BindLambdaForTesting(
+      [&]() { return tab_strip_model_2->count() > 1; }));
+  ASSERT_TRUE(tab_strip_model_2->IsTabPinned(0));
+
+  // Unpin in the first window and synchronize it at once, as activating it
+  // would, before the posted OnTabUnpinned() runs.
+  auto* shared_pinned_tab_service = GetForBrowser(browser_1);
+  tab_strip_model_1->SetTabPinned(0, /* pinned= */ false);
+  shared_pinned_tab_service->OnBrowserActivated(browser_1);
+
+  // Once the posted tasks have run, no window has a pinned tab.
+  WaitUntil(base::BindLambdaForTesting([&]() {
+    return tab_strip_model_1->IndexOfFirstNonPinnedTab() == 0 &&
+           tab_strip_model_2->IndexOfFirstNonPinnedTab() == 0;
+  }));
+  base::RunLoop().RunUntilIdle();
+  EXPECT_EQ(0, tab_strip_model_1->IndexOfFirstNonPinnedTab());
+  EXPECT_EQ(0, tab_strip_model_2->IndexOfFirstNonPinnedTab());
+}
+
 IN_PROC_BROWSER_TEST_F(SharedPinnedTabServiceBrowserTest,
                        CloseWindowWhenAllTabsAreSharedPinnedTabs) {
   // Given that there're multiple windows with shared pinned tabs

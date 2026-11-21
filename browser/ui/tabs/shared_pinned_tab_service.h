@@ -10,6 +10,8 @@
 #include <vector>
 
 #include "base/callback_list.h"
+#include "base/memory/raw_ptr.h"
+#include "base/memory/weak_ptr.h"
 #include "base/scoped_observation.h"
 #include "chrome/browser/profiles/profile_observer.h"
 #include "chrome/browser/ui/browser_window/public/browser_collection_observer.h"
@@ -82,6 +84,7 @@ class SharedPinnedTabService : public KeyedService,
   void OnTabPinnedStateChanged(tabs::TabInterface* tab, int index) override;
   void OnTabChangedAt(tabs::TabInterface* tab,
                       TabChangeType change_type) override;
+  void OnTabStripModelDestroyed(TabStripModel* tab_strip_model) override;
 
   // ProfileWillBeDestroyed;
   void OnProfileWillBeDestroyed(Profile* profile) override;
@@ -103,6 +106,10 @@ class SharedPinnedTabService : public KeyedService,
   void SynchronizeDeletedPinnedTab(int index);
   void SynchronizeMovedPinnedTab(int from, int to);
   void SynchronizeNewBrowser(BrowserWindowInterface* browser);
+  // FlyWeb (from Brave master): retries SynchronizeNewBrowser() for a browser
+  // whose synchronization was deferred behind a pending unpin.
+  void SynchronizeDeferredBrowser(
+      base::WeakPtr<BrowserWindowInterface> browser);
 
   void MoveSharedWebContentsToActiveBrowser(int index);
   void MoveSharedWebContentsToBrowser(BrowserWindowInterface* browser,
@@ -140,6 +147,12 @@ class SharedPinnedTabService : public KeyedService,
   std::vector<PinnedTabData> pinned_tab_data_;
 
   raw_ptr<TabStripModel> change_source_model_ = nullptr;
+
+  // FlyWeb (from Brave master): models that unpinned a tab whose posted
+  // OnTabUnpinned() has not run yet. Until it runs, such a model has one
+  // pinned tab fewer than |pinned_tab_data_|, which must not be mistaken for
+  // an out-of-sync browser. One entry per pending unpin.
+  std::vector<raw_ptr<TabStripModel>> pending_unpin_models_;
 
   bool profile_will_be_destroyed_ = false;
 
