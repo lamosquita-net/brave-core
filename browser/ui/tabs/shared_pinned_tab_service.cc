@@ -698,12 +698,21 @@ void SharedPinnedTabService::OnTabUnpinned(
     TabStripModel* tab_strip_model,
     base::WeakPtr<content::WebContents> contents,
     int index) {
-  if (auto pending = std::ranges::find(pending_unpin_models_, tab_strip_model);
-      pending != pending_unpin_models_.end()) {
-    pending_unpin_models_.erase(pending);
+  // FlyWeb (SEGURIDAD-PORTES-33): the model is only known to be alive while it
+  // is pending; it leaves the list when it is destroyed
+  // (OnTabStripModelDestroyed()) or when the feature is turned off
+  // (OnSharedPinnedTabDisabled(), which also clears |pinned_tab_data_|). In
+  // both cases there is nothing left to do, and going on would use a freed
+  // model or dereference an end() iterator.
+  auto pending = std::ranges::find(pending_unpin_models_, tab_strip_model);
+  if (pending == pending_unpin_models_.end()) {
+    return;
   }
+  pending_unpin_models_.erase(pending);
 
-  DCHECK(contents);
+  if (!contents) {
+    return;
+  }
 
   LOCK_REENTRANCE(tab_strip_model);
 
@@ -1048,6 +1057,9 @@ void SharedPinnedTabService::OnSharedPinnedTabDisabled() {
   last_active_browser_ = nullptr;
   closing_browsers_.clear();
   restored_browsers_.clear();
+  // FlyWeb: the models are no longer observed, so a pending OnTabUnpinned()
+  // must find nothing to do (and no dangling entry stays here).
+  pending_unpin_models_.clear();
   pinned_tab_data_.clear();
 }
 
