@@ -1,3 +1,11 @@
+# FlyWeb 3.2.1: cache epoch
+
+SEGURIDAD-PORTES-33, 21-11-2026 (softmac `FlyWeb/seguridad/siguiente/brave-core/0002`, same pattern as MOTOR-47's
+`3.2-v8/0002`; asked by COORDINACIÓN-57). Titín decided (21-11, softmac `docs/DIRECTIVAS.md`, #1166) that the 3.2.0
+ships without `siguiente/` and that all of it is the 3.2.1. The 3.2.1 changes V8 on top of 3.2.0 only with
+`siguiente/brave-core/0001` (352e9c46c2, crbug 585624828), which changes optimized code, so **`kFlyWebCacheEpoch`
+38 -> 39**, once, for the whole release. Any other V8 change added to the 3.2.1 is covered by this same bump.
+
 # FlyWeb: pending (after the 3.2.0 batch unless Titín decides otherwise), V8 fix 352e9c46c2 (crbug 585624828), ported from the M159 merge
 
 SEGURIDAD-PORTES-33, 21-11-2026 (softmac `FlyWeb/seguridad/siguiente/brave-core/0001`). On top of

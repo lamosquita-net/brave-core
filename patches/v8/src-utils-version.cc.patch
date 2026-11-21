@@ -1,8 +1,8 @@
 diff --git a/src/utils/version.cc b/src/utils/version.cc
-index 550db661144947dbc31b5eb62c0da7ea2e6e1139..9bf7d57d3a9dcaf2dc04d2bd9ee80b824a076e29 100644
+index 550db661144947dbc31b5eb62c0da7ea2e6e1139..21af9650bd871721c1ae127818dd9016d67abc53 100644
 --- a/src/utils/version.cc
 +++ b/src/utils/version.cc
-@@ -27,9 +27,59 @@ bool Version::candidate_ = (V8_IS_CANDIDATE_VERSION != 0);
+@@ -27,9 +27,61 @@ bool Version::candidate_ = (V8_IS_CANDIDATE_VERSION != 0);
  const char* Version::soname_ = SONAME;
  const char* Version::version_string_ = V8_VERSION_STRING;
  
@@ -53,8 +53,10 @@ index 550db661144947dbc31b5eb62c0da7ea2e6e1139..9bf7d57d3a9dcaf2dc04d2bd9ee80b82
 +// kNotAssigned context slots, and ceb90d38eb, SHA-256 source hash of the code
 +// cache, which changes its format; the M159 merges a0f2c9f8c3 and 51512210b3,
 +// which change bytecode and optimized code; and LIBC_MATH in base/ieee754.cc,
-+// which changes the code of the Math builtins).
-+constexpr int kFlyWebCacheEpoch = 38;
++// which changes the code of the Math builtins). 39 = FlyWeb 3.2.1 (the M159
++// TurboFan merge 352e9c46c2, TruncateFloat64ToInt64 for inputs that may be
++// minus zero, which changes optimized code).
++constexpr int kFlyWebCacheEpoch = 39;
 +
  uint32_t Version::Hash() {
    base::Hasher hasher;
