@@ -33,8 +33,7 @@ TopSitesMessageHandler::TopSitesMessageHandler(Profile* profile)
   // most_visited_sites_ can be nullptr if profile is OTR.
   if (most_visited_sites_) {
     most_visited_sites_->EnableTileTypes(
-        ntp_tiles::MostVisitedSites::EnableTileTypesOptions().with_custom_links(
-            IsCustomLinksEnabled()));
+        GetEnabledTileTypes());
     most_visited_sites_->SetShortcutsVisible(IsShortcutsVisible());
     most_visited_sites_->AddMostVisitedURLsObserver(
         this, ntp_tiles::kMaxNumMostVisited);
@@ -134,6 +133,20 @@ int TopSitesMessageHandler::GetCustomLinksNum() const {
   }
 
   return custom_links_num;
+}
+
+// FlyWeb: since Chromium 156, MostVisitedSites::EnableTileTypesOptions has
+// enable_top_sites false by default, and the most visited tiles are only built
+// with it on (MostVisitedSites::ShouldQueryTopSites()). Brave only set
+// with_custom_links(), so in most visited mode (Brave's default, custom links
+// off) the NTP got no tiles at all. As Chromium's own NTP, one type or the
+// other: Chromium's desktop NTP does not mix them.
+ntp_tiles::MostVisitedSites::EnableTileTypesOptions
+TopSitesMessageHandler::GetEnabledTileTypes() const {
+  const bool custom_links = IsCustomLinksEnabled();
+  return ntp_tiles::MostVisitedSites::EnableTileTypesOptions()
+      .with_top_sites(!custom_links)
+      .with_custom_links(custom_links);
 }
 
 bool TopSitesMessageHandler::IsCustomLinksEnabled() const {
@@ -252,8 +265,7 @@ void TopSitesMessageHandler::HandleSetMostVisitedSettings(
     profile_->GetPrefs()->SetBoolean(ntp_prefs::kNtpCustomLinksVisible,
                                      custom_links_enabled);
     most_visited_sites_->EnableTileTypes(
-        ntp_tiles::MostVisitedSites::EnableTileTypesOptions().with_custom_links(
-            IsCustomLinksEnabled()));
+        GetEnabledTileTypes());
   }
 }
 
@@ -284,8 +296,7 @@ void TopSitesMessageHandler::HandleEditTopSite(const base::ListValue& args) {
   if (!most_visited_sites_->IsCustomLinksEnabled()) {
     profile_->GetPrefs()->SetBoolean(ntp_prefs::kNtpCustomLinksVisible, true);
     most_visited_sites_->EnableTileTypes(
-        ntp_tiles::MostVisitedSites::EnableTileTypesOptions().with_custom_links(
-            IsCustomLinksEnabled()));
+        GetEnabledTileTypes());
   }
 
   GURL gurl(url);
@@ -323,8 +334,7 @@ void TopSitesMessageHandler::HandleAddNewTopSite(const base::ListValue& args) {
   if (!most_visited_sites_->IsCustomLinksEnabled()) {
     profile_->GetPrefs()->SetBoolean(ntp_prefs::kNtpCustomLinksVisible, true);
     most_visited_sites_->EnableTileTypes(
-        ntp_tiles::MostVisitedSites::EnableTileTypesOptions().with_custom_links(
-            IsCustomLinksEnabled()));
+        GetEnabledTileTypes());
   }
 
   most_visited_sites_->AddCustomLink(GURL(url), base::UTF8ToUTF16(title));

@@ -48,6 +48,8 @@ class TopSitesMessageHandler : public content::WebUIMessageHandler,
   void OnIconMadeAvailable(const GURL& site_url) override;
 
   int GetCustomLinksNum() const;
+  ntp_tiles::MostVisitedSites::EnableTileTypesOptions GetEnabledTileTypes()
+      const;
   bool IsCustomLinksEnabled() const;
   bool IsShortcutsVisible() const;
 
