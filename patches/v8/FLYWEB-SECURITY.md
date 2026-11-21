@@ -1,3 +1,27 @@
+# FlyWeb: pending (after the 3.2.0 batch unless Titín decides otherwise), V8 fix 352e9c46c2 (crbug 585624828), ported from the M159 merge
+
+SEGURIDAD-PORTES-33, 21-11-2026 (softmac `FlyWeb/seguridad/siguiente/brave-core/0001`). On top of
+`pendiente/brave-core/0005`. **Not merged to V8 15.6 upstream yet**: ported from the M159 merge 5b7c1a1f0f (V8
+15.9.128.27, bugs 588203225 and 585624828; cherry-pick of 352e9c46c2 from main).
+
+- In `RepresentationChanger::GetWord64RepresentationFor`, a float or tagged number of type
+  `kDoubleRepresentableInt64OrMinusZero` with a use that identifies +0 and -0 was converted with
+  `ChangeFloat64ToInt64`/`ChangeTaggedToInt64`. Both lower to `ReversibleFloat64ToInt64`, which assumes the Int64 can
+  be converted back to the same Float64; that is false for -0.0. Now `TruncateFloat64ToInt64` is used in that case
+  (unboxing tagged inputs with `ChangeTaggedToFloat64` first), and `SimplifiedLoweringVerifier` propagates truncations
+  through it.
+- `representation-change.cc` and `simplified-lowering-verifier.cc` are byte-identical in 15.6.75.66 and in the patched
+  tree; no other `patches/v8` file touches them; same diff as upstream (patch-id checked), plus the mjsunit test
+  `compiler/regress-585624828.js`. **Not carried:** the upstream unittest changes (`representation-change-unittest.cc`,
+  which in 15.6 is the cctest `test-representation-change.cc` with different helpers, and a new Turboshaft
+  `machine-optimization-reducer-unittest.cc` case that checks existing reducer behaviour, not the fix).
+
+**Cache epoch:** this changes optimized code. If it ships in 3.2.0, the 3.2.0 bump to 38 covers it; if it ships later,
+that release must bump `kFlyWebCacheEpoch` again.
+
+To check (D8-LINUX): `d8`, mjsunit with and without Maglev, especially `compiler/regress-585624828`, and
+`cctest/test-representation-change/*`, in release and debug.
+
 # FlyWeb: pending for the next release, V8 15.6.75.76 fix c37ab55c4a (crbug 579314138)
 
 SEGURIDAD-PORTES-33, 20-11-2026 (softmac `FlyWeb/seguridad/pendiente/brave-core/0005`). For FlyWeb 3.2.0, on top of
