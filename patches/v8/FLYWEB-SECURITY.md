@@ -1,3 +1,13 @@
+# FlyWeb 3.2.1: cctest adaptation for 46c1404 (test only)
+
+SEGURIDAD-PORTES-33, 21-11-2026 (softmac `FlyWeb/seguridad/siguiente/brave-core/0003`; asked by COORDINACIÓN-58 after
+D8-LINUX-5 found it). The 3.1.4 patch for **46c1404** (581561827) removed the `frame_at_start` parameter of
+`JumpThreading::ComputeForwarding` but left out its cctest change, so `test/cctest/compiler/test-jump-threading.cc`
+did not compile. This adds that change: the call in `VerifyForwarding` drops the last argument. Applied to 15.6.75.66
+the file is byte-identical to upstream 15.6.75.76. Test code only: no change to d8 or the browser, no cache epoch.
+
+To check (D8-LINUX): cctest builds; `cctest/test-jump-threading/*`.
+
 # FlyWeb 3.2.1: cache epoch
 
 SEGURIDAD-PORTES-33, 21-11-2026 (softmac `FlyWeb/seguridad/siguiente/brave-core/0002`, same pattern as MOTOR-47's
