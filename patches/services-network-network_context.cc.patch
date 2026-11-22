@@ -1,0 +1,32 @@
+diff --git a/services/network/network_context.cc b/services/network/network_context.cc
+index 7711c34957e7c2a32f7f3f7ce85e5afad2fd880b..d5eec1d5952678d1a9fd486765146b957d688705 100644
+--- a/services/network/network_context.cc
++++ b/services/network/network_context.cc
+@@ -309,6 +309,10 @@ class CookieOSCryptAsyncDelegate : public net::CookieCryptoDelegate {
+                      std::string* ciphertext) override;
+   bool DecryptString(const std::string& ciphertext,
+                      std::string* plaintext) override;
++  bool DecryptStringWithTemporaryFailure(
++      const std::string& ciphertext,
++      std::string* plaintext,
++      bool* temporarily_unavailable) override;
+ 
+  private:
+   void InitCallback(
+@@ -343,6 +347,16 @@ bool CookieOSCryptAsyncDelegate::DecryptString(const std::string& ciphertext,
+   return instance_->DecryptString(ciphertext, plaintext);
+ }
+ 
++bool CookieOSCryptAsyncDelegate::DecryptStringWithTemporaryFailure(
++    const std::string& ciphertext,
++    std::string* plaintext,
++    bool* temporarily_unavailable) {
++  os_crypt_async::Encryptor::DecryptFlags flags;
++  const bool ok = instance_->DecryptString(ciphertext, plaintext, &flags);
++  *temporarily_unavailable = !ok && flags.temporarily_unavailable;
++  return ok;
++}
++
+ void CookieOSCryptAsyncDelegate::InitCallback(
+     mojo::Remote<network::mojom::CookieEncryptionProvider> lifetime,
+     scoped_refptr<os_crypt_async::Encryptor> encryptor) {

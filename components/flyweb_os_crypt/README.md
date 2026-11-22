@@ -17,9 +17,16 @@ porte a Chromium 156, `FlyWeb/docs/brave-propio.md` §11.8.2 y §12.
   proveedor (`vNN`, `fwN`) nunca sale en claro. Pruebas en `encryptor_legacy_unittest.cc`.
 - Contraseñas: `patches/...login_database.cc.patch`: una fila `fw1` o `v10` que no se descifra nunca se borra
   (`IsEncryptionAvailable()` solo mira el proveedor de cifrado; el otro puede faltar).
-- Cookies: `patches/net-extras-sqlite-sqlite_persistent_cookie_store.cc.patch`: una cookie `fw1` ilegible se pierde sola
-  (se borra su fila con el mecanismo de las no canónicas de la 156), no todo su eTLD+1. Como en la 2.x, también con el
-  llavero denegado.
+- Cookies: `patches/net-extras-sqlite-sqlite_persistent_cookie_store.cc.patch`:
+  - **Clave solo ausente en ese arranque** (llavero o Secret Service bloqueado o denegado, cualquier formato): la fila no se
+    carga ni se borra, y no tira su eTLD+1. Se vuelve a leer en un arranque con clave. Si en la sesión hay una escritura
+    para su `host_key`, antes se borran las filas guardadas de ese `host_key`: así no choca con el índice único y no reaparece
+    un valor viejo. Sin escritura para ese `host_key`, un cierre de sesión que solo caduque esa cookie puede no verse
+    hasta el siguiente arranque con clave. El delegado lo sabe por
+    `CookieCryptoDelegate::DecryptStringWithTemporaryFailure` (`patches/net-extras-sqlite-cookie_crypto_delegate.h.patch`,
+    `patches/services-network-network_context.cc.patch`, con `Encryptor::DecryptFlags::temporarily_unavailable`).
+  - **Valor `fw1` ilegible con la clave presente** (valor corrupto, o proveedor no registrado): se pierde esa cookie sola
+    (se borra su fila con el mecanismo de las no canónicas de la 156), no todo su eTLD+1.
 
 Para cambiar de algoritmo (agilidad): proveedor nuevo con etiqueta nueva (`fw2`) y precedencia mayor; `fw1` se queda
 registrado para leer lo antiguo, igual que `v10`.

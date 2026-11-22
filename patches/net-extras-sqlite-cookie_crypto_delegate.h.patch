@@ -1,0 +1,24 @@
+diff --git a/net/extras/sqlite/cookie_crypto_delegate.h b/net/extras/sqlite/cookie_crypto_delegate.h
+index 61648f2cea51fae1a41c1a86cc09f4eb44872ed8..0b37839251eb4879070999eb2137a13f23303c8a 100644
+--- a/net/extras/sqlite/cookie_crypto_delegate.h
++++ b/net/extras/sqlite/cookie_crypto_delegate.h
+@@ -41,6 +41,19 @@ class COMPONENT_EXPORT(NET_EXTRAS) CookieCryptoDelegate {
+   // callback from `Init` has run. This method can be called on any sequence.
+   virtual bool DecryptString(const std::string& ciphertext,
+                              std::string* plaintext) = 0;
++
++  // FlyWeb: like `DecryptString`, and on failure also reports in
++  // `temporarily_unavailable` whether the key needed for `ciphertext` is only
++  // missing for now (e.g. keychain or Secret Service locked or denied at
++  // startup) and might be available again later. Such a value must be kept,
++  // not deleted. The default never reports a temporary failure.
++  virtual bool DecryptStringWithTemporaryFailure(
++      const std::string& ciphertext,
++      std::string* plaintext,
++      bool* temporarily_unavailable) {
++    *temporarily_unavailable = false;
++    return DecryptString(ciphertext, plaintext);
++  }
+ };
+ 
+ }  // namespace net

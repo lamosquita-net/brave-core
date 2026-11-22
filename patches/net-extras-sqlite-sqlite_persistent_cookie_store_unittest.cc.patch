@@ -1,8 +1,58 @@
 diff --git a/net/extras/sqlite/sqlite_persistent_cookie_store_unittest.cc b/net/extras/sqlite/sqlite_persistent_cookie_store_unittest.cc
-index 9c6aa55ee76c5479bdb8b24521ac466a9dbc1ea0..a52307ba7548ffc8712b663b63002eb2aeb0ba9b 100644
+index 9c6aa55ee76c5479bdb8b24521ac466a9dbc1ea0..f9fb7b2c579e7efcf0d9733d9da0727c474a09a4 100644
 --- a/net/extras/sqlite/sqlite_persistent_cookie_store_unittest.cc
 +++ b/net/extras/sqlite/sqlite_persistent_cookie_store_unittest.cc
-@@ -1294,6 +1294,50 @@ TEST_F(SQLitePersistentCookieStoreTest, UpdateToEncryption) {
+@@ -6,6 +6,7 @@
+ 
+ #include <stdint.h>
+ 
++#include <algorithm>
+ #include <map>
+ #include <memory>
+ #include <optional>
+@@ -25,6 +26,7 @@
+ #include "base/memory/weak_ptr.h"
+ #include "base/run_loop.h"
+ #include "base/sequence_checker.h"
++#include "base/strings/strcat.h"
+ #include "base/strings/stringprintf.h"
+ #include "base/synchronization/waitable_event.h"
+ #include "base/task/sequenced_task_runner.h"
+@@ -75,6 +77,12 @@ class CookieCryptor : public CookieCryptoDelegate {
+                      std::string* ciphertext) override;
+   bool DecryptString(const std::string& ciphertext,
+                      std::string* plaintext) override;
++  // FlyWeb: values starting with `kTemporarilyUnavailablePrefix` fail as if
++  // their key were only temporarily unavailable.
++  bool DecryptStringWithTemporaryFailure(
++      const std::string& ciphertext,
++      std::string* plaintext,
++      bool* temporarily_unavailable) override;
+ 
+   // Obtain a closure that can be called to trigger an initialize. If this
+   // instance has already been destructed then the returned base::OnceClosure
+@@ -170,6 +178,20 @@ bool CookieCryptor::DecryptString(const std::string& ciphertext,
+   return false;
+ }
+ 
++constexpr std::string_view kTemporarilyUnavailablePrefix = "tmp-no-key";
++
++bool CookieCryptor::DecryptStringWithTemporaryFailure(
++    const std::string& ciphertext,
++    std::string* plaintext,
++    bool* temporarily_unavailable) {
++  *temporarily_unavailable = false;
++  if (ciphertext.starts_with(kTemporarilyUnavailablePrefix)) {
++    *temporarily_unavailable = true;
++    return false;
++  }
++  return DecryptString(ciphertext, plaintext);
++}
++
+ void CookieCryptor::InitComplete() {
+   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+   init_ = true;
+@@ -1294,6 +1316,150 @@ TEST_F(SQLitePersistentCookieStoreTest, UpdateToEncryption) {
    EXPECT_EQ(contents.find("something456ABC"), std::string::npos);
  }
  
@@ -48,6 +98,106 @@ index 9c6aa55ee76c5479bdb8b24521ac466a9dbc1ea0..a52307ba7548ffc8712b663b63002eb2
 +  EXPECT_EQ(0U, cookies.size());
 +  DestroyStore();
 +  EXPECT_EQ(0, count_rows());
++}
++
++// FlyWeb: a value whose key is only temporarily unavailable is neither
++// loaded nor deleted, and does not drop its eTLD+1. Without a write for its
++// host_key it is read again on a later start with the key; the first write
++// for its host_key deletes it before the write, so the write is stored and
++// the stale value does not come back.
++TEST_F(SQLitePersistentCookieStoreTest, TemporarilyUndecryptableRowIsKept) {
++  InitializeStore(/*crypt=*/true, /*restore_old_session_cookies=*/false);
++  const base::Time t0 = base::Time::Now();
++  AddCookie("locked", "old", "foo.bar", "/", t0);
++  AddCookie("readable", "value2", "foo.bar", "/", t0 + base::Microseconds(10));
++  AddCookie("other", "value3", "www.foo.bar", "/", t0 + base::Microseconds(20));
++  DestroyStore();
++
++  auto read_encrypted_value = [&](const char* name) {
++    sql::Database db(sql::test::kTestTag);
++    EXPECT_TRUE(db.Open(temp_dir_.GetPath().Append(kCookieFilename)));
++    sql::Statement smt(db.GetUniqueStatement(
++        "SELECT encrypted_value FROM cookies WHERE name = ?"));
++    smt.BindString(0, name);
++    EXPECT_TRUE(smt.Step());
++    return smt.ColumnString(0);
++  };
++  auto set_encrypted_value = [&](const char* name, std::string_view value) {
++    sql::Database db(sql::test::kTestTag);
++    ASSERT_TRUE(db.Open(temp_dir_.GetPath().Append(kCookieFilename)));
++    sql::Statement smt(db.GetUniqueStatement(
++        "UPDATE cookies SET encrypted_value = ? WHERE name = ?"));
++    smt.BindBlob(0, base::as_byte_span(value));
++    smt.BindString(1, name);
++    ASSERT_TRUE(smt.Run());
++  };
++  auto count_rows = [&](const char* name) {
++    sql::Database db(sql::test::kTestTag);
++    EXPECT_TRUE(db.Open(temp_dir_.GetPath().Append(kCookieFilename)));
++    sql::Statement smt(
++        db.GetUniqueStatement("SELECT COUNT(*) FROM cookies WHERE name = ?"));
++    smt.BindString(0, name);
++    EXPECT_TRUE(smt.Step());
++    return smt.ColumnInt(0);
++  };
++  auto names = [](const CanonicalCookieVector& cookies) {
++    std::vector<std::string> result;
++    for (const auto& cookie : cookies) {
++      result.push_back(cookie->Name());
++    }
++    std::sort(result.begin(), result.end());
++    return result;
++  };
++
++  const std::string good_value = read_encrypted_value("locked");
++  const std::string locked_value =
++      base::StrCat({kTemporarilyUnavailablePrefix, good_value});
++
++  // 1. Key missing at load, no write: the row stays and nothing else of the
++  // eTLD+1 is lost.
++  set_encrypted_value("locked", locked_value);
++  CanonicalCookieVector cookies = CreateAndLoad(
++      /*crypt_cookies=*/true, /*restore_old_session_cookies=*/false);
++  EXPECT_THAT(names(cookies), testing::ElementsAre("other", "readable"));
++  cookies.clear();
++  DestroyStore();
++  EXPECT_EQ(1, count_rows("locked"));
++  EXPECT_EQ(1, count_rows("readable"));
++  EXPECT_EQ(1, count_rows("other"));
++
++  // 2. Key back on a later start: the cookie loads with its old value.
++  set_encrypted_value("locked", good_value);
++  cookies = CreateAndLoad(/*crypt_cookies=*/true,
++                          /*restore_old_session_cookies=*/false);
++  EXPECT_THAT(names(cookies),
++              testing::ElementsAre("locked", "other", "readable"));
++  for (const auto& cookie : cookies) {
++    if (cookie->Name() == "locked") {
++      EXPECT_EQ("old", cookie->Value());
++    }
++  }
++  cookies.clear();
++  DestroyStore();
++
++  // 3. Key missing again, and the site writes the same cookie: the stale row
++  // is deleted first, so the new value is stored (no unique-index clash).
++  set_encrypted_value("locked", locked_value);
++  cookies = CreateAndLoad(/*crypt_cookies=*/true,
++                          /*restore_old_session_cookies=*/false);
++  EXPECT_THAT(names(cookies), testing::ElementsAre("other", "readable"));
++  cookies.clear();
++  AddCookie("locked", "new", "foo.bar", "/", t0 + base::Microseconds(30));
++  DestroyStore();
++  EXPECT_EQ(1, count_rows("locked"));
++  cookies = CreateAndLoad(/*crypt_cookies=*/true,
++                          /*restore_old_session_cookies=*/false);
++  EXPECT_THAT(names(cookies),
++              testing::ElementsAre("locked", "other", "readable"));
++  for (const auto& cookie : cookies) {
++    if (cookie->Name() == "locked") {
++      EXPECT_EQ("new", cookie->Value());
++    }
++  }
 +}
 +
  bool CompareCookies(const std::unique_ptr<CanonicalCookie>& a,

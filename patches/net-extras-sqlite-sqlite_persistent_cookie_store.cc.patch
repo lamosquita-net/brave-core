@@ -1,28 +1,77 @@
 diff --git a/net/extras/sqlite/sqlite_persistent_cookie_store.cc b/net/extras/sqlite/sqlite_persistent_cookie_store.cc
-index 8bdfeca14640ef6820df6f22451ff0f77fcc8393..29b71fe8460b53b12967ac9fe19144b41cf90fa1 100644
+index 8bdfeca14640ef6820df6f22451ff0f77fcc8393..61c09e07707874bc4a34b4b9b55819a9c142970d 100644
 --- a/net/extras/sqlite/sqlite_persistent_cookie_store.cc
 +++ b/net/extras/sqlite/sqlite_persistent_cookie_store.cc
-@@ -1046,6 +1046,23 @@ bool SQLitePersistentCookieStore::Backend::MakeCookiesFromSQLStatement(
-       bool decrypt_ok = crypto_->DecryptString(encrypted_value, &value);
+@@ -525,6 +525,15 @@ class SQLitePersistentCookieStore::Backend
+   // Crypto instance, or nullptr if encryption is disabled.
+   std::unique_ptr<CookieCryptoDelegate> crypto_;
+ 
++  // FlyWeb: rows left on disk without loading because the key for their
++  // encrypted value was only temporarily unavailable, by host_key. On the
++  // first write for one of those host_keys this session, they are deleted
++  // before it (the in-memory jar is then the truth for that host), so the
++  // write does not hit the unique index and stale values do not come back.
++  // Only used on the background sequence.
++  std::map<std::string, std::vector<NonCanonicalCookieDeleteInfo>>
++      flyweb_unloaded_rows_;
++
+   // If true, LoadAndNotifyInBackground has not yet been called.
+   bool first_load_and_notify_in_background_ = true;
+ };
+@@ -1043,9 +1052,38 @@ bool SQLitePersistentCookieStore::Backend::MakeCookiesFromSQLStatement(
+         ok = false;
+         continue;
+       }
+-      bool decrypt_ok = crypto_->DecryptString(encrypted_value, &value);
++      bool temporarily_unavailable = false;
++      bool decrypt_ok = crypto_->DecryptStringWithTemporaryFailure(
++          encrypted_value, &value, &temporarily_unavailable);
        if (!decrypt_ok) {
          RecordCookieLoadProblem(CookieLoadProblem::kDecryptFailed);
-+        // FlyWeb: an unreadable `fw1` value (key item deleted, keychain
-+        // denied) loses only that cookie: its row is deleted like a
-+        // non-canonical one, so CookieMonster and the database stay in sync.
-+        // An unreadable value of any other format still drops the whole
-+        // eTLD+1, as upstream.
++        NonCanonicalCookieDeleteInfo row_key{
++            .name = statement.ColumnString(3),
++            .host_key = domain,
++            .top_frame_site_key = statement.ColumnString(2),
++            .path = statement.ColumnString(5),
++            .source_scheme = statement.ColumnInt(15),
++            .source_port = statement.ColumnInt(16),
++            .has_cross_site_ancestor = statement.ColumnBool(19),
++        };
++        // FlyWeb: the key is only missing for now (keychain or Secret
++        // Service locked or denied at startup). Keep the row on disk and do
++        // not fail the load, or upstream would drop the whole eTLD+1; it is
++        // read again on a later start with the key, unless a write for its
++        // host_key this session deletes it first (see DoCommit).
++        if (temporarily_unavailable) {
++          flyweb_unloaded_rows_[domain].push_back(std::move(row_key));
++          continue;
++        }
++        // FlyWeb: an unreadable `fw1` value with its key present (corrupt
++        // value, or provider not registered) loses only that cookie: its
++        // row is deleted like a non-canonical one, so CookieMonster and the
++        // database stay in sync. An unreadable value of any other format
++        // still drops the whole eTLD+1, as upstream.
 +        if (base::StartsWith(encrypted_value, "fw1")) {
-+          non_canonical_cookies_to_delete.push_back({
-+              .name = statement.ColumnString(3),
-+              .host_key = domain,
-+              .top_frame_site_key = statement.ColumnString(2),
-+              .path = statement.ColumnString(5),
-+              .source_scheme = statement.ColumnInt(15),
-+              .source_port = statement.ColumnInt(16),
-+              .has_cross_site_ancestor = statement.ColumnBool(19),
-+          });
++          non_canonical_cookies_to_delete.push_back(std::move(row_key));
 +          continue;
 +        }
          ok = false;
          continue;
        }
+@@ -1348,6 +1386,16 @@ void SQLitePersistentCookieStore::Backend::DoCommit() {
+         continue;
+       }
+ 
++      // FlyWeb: first write for a host_key with rows kept unloaded (key
++      // temporarily unavailable at load): delete those rows before it.
++      if (!flyweb_unloaded_rows_.empty()) {
++        auto unloaded = flyweb_unloaded_rows_.find(po->cc().Domain());
++        if (unloaded != flyweb_unloaded_rows_.end()) {
++          DeleteNonCanonicalCookies(unloaded->second);
++          flyweb_unloaded_rows_.erase(unloaded);
++        }
++      }
++
+       switch (po->op()) {
+         case PendingOperation::OperationType::kAdd:
+           add_statement.Reset(true);
