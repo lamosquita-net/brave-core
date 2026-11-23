@@ -1,0 +1,23 @@
+diff --git a/src/api/api.cc b/src/api/api.cc
+index 568671193c5ad61c81889fa9959eed12ac85536c..b2601820c1137ac9014a6942eb9dc06729a94394 100644
+--- a/src/api/api.cc
++++ b/src/api/api.cc
+@@ -4977,6 +4977,18 @@ MaybeLocal<Value> v8::Object::Get(Local<Context> context, uint32_t index) {
+       i::JSReceiver::GetElement(i_isolate, self, index));
+ }
+ 
++MaybeLocal<Value> v8::Object::TryGetWithNoSideEffects(Local<Context> context,
++                                                      Local<Name> key) {
++  auto i_isolate = i::Isolate::Current();
++  EnterV8NoScriptScope<InternalEscapableScope> api_scope{
++      i_isolate, context, RCCId::kAPI_Object_TryGetWithNoSideEffects};
++  auto self = Utils::OpenDirectHandle(this);
++  auto key_obj = Utils::OpenDirectHandle(*key);
++  i::PropertyKey lookup_key(i_isolate, key_obj);
++  i::LookupIterator it(i_isolate, self, lookup_key, self);
++  return api_scope.EscapeMaybe(i::JSReceiver::TryGetDataProperty(&it));
++}
++
+ MaybeLocal<Value> v8::Object::GetPrivate(Local<Context> context,
+                                          Local<Private> key) {
+   return Get(context, key.UnsafeAs<Value>());

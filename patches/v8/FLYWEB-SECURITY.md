@@ -1,3 +1,18 @@
+# FlyWeb: release after 3.2.1 (softmac `seguridad/siguiente-2`), V8 API 229a53b537 (v8::Object::TryGetWithNoSideEffects), the M156 merge needed by the Blink fix for crbug 574749469
+
+SEGURIDAD-PORTES-33, 23-11-2026 (softmac `FlyWeb/seguridad/siguiente-2/brave-core/0005`). **Merged to V8 15.6
+upstream** on 18-11 (after 15.6.75.66). It adds `v8::Object::TryGetWithNoSideEffects()`, which reads a property
+without calling accessor getters, `Proxy` traps or interceptors (a read that would need one returns empty). Blink's
+ad tracker uses it in the M156 fix 56957c2512 (crbug 574749469, `siguiente-2/chromium/0005`), which does not build
+without it.
+
+- The upstream diff applies unchanged to 15.6.75.66 (`git apply --check` clean): `include/v8-object.h`,
+  `src/api/api.cc`, `src/objects/js-objects.{h,cc}`, `src/logging/runtime-call-stats.h` and the unittest
+  `v8-object-unittest.cc`. No other `patches/v8` file touches them.
+- New API only; no change to generated code or bytecode. The bump to 40 in `0002` covers the release anyway.
+
+To check (D8-LINUX): `v8_unittests --gtest_filter='*TryGetWithNoSideEffects*'`.
+
 # FlyWeb: release after 3.2.1 (softmac `seguridad/siguiente-2`), V8 fix 5dde7daf0a (crbug 585624832), the M156 merge of V8 15.6.75.79
 
 SEGURIDAD-PORTES-33, 23-11-2026 (softmac `FlyWeb/seguridad/siguiente-2/brave-core/0004`). **Merged to V8 15.6
