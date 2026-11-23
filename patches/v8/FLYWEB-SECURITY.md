@@ -1,3 +1,21 @@
+# FlyWeb: release after 3.2.1 (softmac `seguridad/siguiente-2`), V8 fix 4db782064e (crbug 581962456), the M156 merge of V8 15.6.75.80
+
+SEGURIDAD-PORTES-33, 23-11-2026 (softmac `FlyWeb/seguridad/siguiente-2/brave-core/0006`). **Merged to V8 15.6
+upstream** as 15.6.75.80 (bugs 587682266 and 581962456; cherry-pick of d560c735c7 from main). Severity not published.
+
+- `ParallelMove::PrepareInsertAfter` and `MoveOptimizer`'s `OperandSet` assumed stack operands only alias when their
+  slot indices match. In tail calls with `stack_param_delta > 0`, a multi-slot outgoing argument (Simd128/Simd256)
+  can overlap several narrower caller spill slots; a second overwritten spill move could survive, and the move
+  optimizer could miss the overlap, giving wrong moves (wrong values or stack corruption). Now multi-slot stack
+  aliasing is checked by slot ranges, and the register allocator verifier knows about it.
+- Applies to 15.6.75.66 on top of `0004` (5dde7daf0a): upstream's `instruction.h` context already has that change.
+  `src-compiler-backend-instruction.h.patch` now holds both changes, from the pristine 15.6.75.66 file. No other
+  `patches/v8` file touches the rest. Plus the unittests and the mjsunit test `regress/wasm/regress-simd-581962456.js`.
+
+**Cache epoch:** this changes generated code; covered by the bump to 40 in `0002`.
+
+To check (D8-LINUX): mjsunit `regress/wasm/regress-simd-581962456`; `v8_unittests --gtest_filter='*MoveOptimizer*:*InstructionTest*'`.
+
 # FlyWeb: release after 3.2.1 (softmac `seguridad/siguiente-2`), V8 API 229a53b537 (v8::Object::TryGetWithNoSideEffects), the M156 merge needed by the Blink fix for crbug 574749469
 
 SEGURIDAD-PORTES-33, 23-11-2026 (softmac `FlyWeb/seguridad/siguiente-2/brave-core/0005`). **Merged to V8 15.6
