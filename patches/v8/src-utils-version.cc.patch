@@ -1,8 +1,8 @@
 diff --git a/src/utils/version.cc b/src/utils/version.cc
-index 550db661144947dbc31b5eb62c0da7ea2e6e1139..21af9650bd871721c1ae127818dd9016d67abc53 100644
+index 550db661144947dbc31b5eb62c0da7ea2e6e1139..473a39216e7d37cfc5c730b28f8bf5e49094975d 100644
 --- a/src/utils/version.cc
 +++ b/src/utils/version.cc
-@@ -27,9 +27,61 @@ bool Version::candidate_ = (V8_IS_CANDIDATE_VERSION != 0);
+@@ -27,9 +27,64 @@ bool Version::candidate_ = (V8_IS_CANDIDATE_VERSION != 0);
  const char* Version::soname_ = SONAME;
  const char* Version::version_string_ = V8_VERSION_STRING;
  
@@ -55,8 +55,11 @@ index 550db661144947dbc31b5eb62c0da7ea2e6e1139..21af9650bd871721c1ae127818dd9016
 +// which change bytecode and optimized code; and LIBC_MATH in base/ieee754.cc,
 +// which changes the code of the Math builtins). 39 = FlyWeb 3.2.1 (the M159
 +// TurboFan merge 352e9c46c2, TruncateFloat64ToInt64 for inputs that may be
-+// minus zero, which changes optimized code).
-+constexpr int kFlyWebCacheEpoch = 39;
++// minus zero, which changes optimized code). 40 = the FlyWeb release after
++// 3.2.1 (softmac seguridad/siguiente-2: the M159 Turboshaft merge a92c222bca,
++// map loads are only constant-folded for tagged, non-atomic loads of a tagged
++// representation, which changes optimized code).
++constexpr int kFlyWebCacheEpoch = 40;
 +
  uint32_t Version::Hash() {
    base::Hasher hasher;

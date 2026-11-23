@@ -1,3 +1,24 @@
+# FlyWeb: release after 3.2.1 (softmac `seguridad/siguiente-2`), V8 fix a92c222bca (crbug 585625644), ported from the M159 merge
+
+SEGURIDAD-PORTES-33, 23-11-2026 (softmac `FlyWeb/seguridad/siguiente-2/brave-core/0002`). **Not merged to V8 15.6
+upstream yet**: ported from the M159 merge a92c222bca (V8 15.9.128.29, bugs 588195794 and 585625644; cherry-pick of
+a7644692f0 from main). Severity not published.
+
+- `MachineOptimizationReducer::ReduceLoad` constant-folded any offset-0 load from a HeapObject constant into the
+  object's map, as a Tagged HeapConstant. In unreachable code, load elimination and index adjustments can leave a
+  raw or non-tagged load (e.g. a Float64 element load whose byte offset folds to 0) on such a constant; folding it
+  gave a Tagged value where a Float64 (or other untagged) one was expected. Now the map is folded only for
+  `kind.tagged_base`, non-atomic loads whose `loaded_rep` is `TaggedPointer` or `AnyTagged`.
+- `machine-optimization-reducer.h` is byte-identical in 15.6.75.66 and at the tip of 15.6; no other `patches/v8`
+  file touches it. Same change as upstream for the map fold. **Not carried:** the upstream guard on the `String`
+  length fold, because 15.6 does not have that fold. Plus the mjsunit test `wasm/turboshaft/regress-585625644.js`.
+
+**Cache epoch:** this changes optimized code, so **`kFlyWebCacheEpoch` 39 -> 40**, once, for the release that
+carries `siguiente-2`. Any other V8 change added to that release is covered by this same bump.
+
+To check (D8-LINUX): `d8`, mjsunit `wasm/turboshaft/regress-585625644` and `compiler/*`, `wasm/*` with and without
+Maglev.
+
 # FlyWeb 3.2.1: cctest adaptation for 46c1404 (test only)
 
 SEGURIDAD-PORTES-33, 21-11-2026 (softmac `FlyWeb/seguridad/siguiente/brave-core/0003`; asked by COORDINACIÓN-58 after
