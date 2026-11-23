@@ -1,3 +1,22 @@
+# FlyWeb: release after 3.2.1 (softmac `seguridad/siguiente-2`), V8 fix df4a1dd5f5 (crbug 585614985), the M156 merge of V8 15.6.75.77
+
+SEGURIDAD-PORTES-33, 23-11-2026 (softmac `FlyWeb/seguridad/siguiente-2/brave-core/0003`). **Merged to V8 15.6
+upstream** as 15.6.75.77 (bugs 588740103 and 585614985; cherry-pick of cb621e4b70 from main). Severity not published.
+The V8 gitlink stays at 15.6.75.66 and the fix goes in as a patch, like the others; the upstream diff applies
+unchanged to 15.6.75.66 (`git apply --check` clean).
+
+- During inlining, DeadCodeElimination can replace a Checkpoint's FrameState input, or a FrameState's locals, with
+  DeadValue while that node is still on the GraphReducer stack. `JSInliningHeuristic::TryReuseDispatch` then read and
+  wrote out of bounds (release builds) when it wrapped that state. Now it bails out when the Checkpoint's frame state
+  is not a FrameState or when `CollectStateValuesOwnedUses` meets a DeadValue locals input, and `FrameState::locals()`
+  accepts DeadValue like `parameters()` and `outer_frame_state()`.
+- No other `patches/v8` file touches `common-operator.h` or `js-inlining-heuristic.cc`. Plus the mjsunit tests
+  `compiler/regress-585614985-1.js` and `-2.js`.
+
+**Cache epoch:** this changes optimized code; covered by the bump to 40 in `siguiente-2/brave-core/0002`.
+
+To check (D8-LINUX): `d8`, mjsunit `compiler/regress-585614985-*` and `compiler/*` with and without Maglev.
+
 # FlyWeb: release after 3.2.1 (softmac `seguridad/siguiente-2`), V8 fix a92c222bca (crbug 585625644), ported from the M159 merge
 
 SEGURIDAD-PORTES-33, 23-11-2026 (softmac `FlyWeb/seguridad/siguiente-2/brave-core/0002`). **Not merged to V8 15.6
