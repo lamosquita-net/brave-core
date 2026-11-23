@@ -1,0 +1,19 @@
+diff --git a/src/compiler/backend/loong64/code-generator-loong64.cc b/src/compiler/backend/loong64/code-generator-loong64.cc
+index 680494ed7388a8ef60acb84dca796678a419f232..66c911d1b29d47df57f713b87eff14e9c7fe1847 100644
+--- a/src/compiler/backend/loong64/code-generator-loong64.cc
++++ b/src/compiler/backend/loong64/code-generator-loong64.cc
+@@ -5566,14 +5566,6 @@ void CodeGenerator::SetPendingMove(MoveOperands* move) {
+ 
+ namespace {
+ 
+-bool Is32BitOperand(InstructionOperand* operand) {
+-  DCHECK(operand->IsStackSlot() || operand->IsRegister());
+-  MachineRepresentation mr = LocationOperand::cast(operand)->representation();
+-  return mr == MachineRepresentation::kWord32 ||
+-         mr == MachineRepresentation::kCompressed ||
+-         mr == MachineRepresentation::kCompressedPointer;
+-}
+-
+ // When we need only 32 bits, move only 32 bits, otherwise the destination
+ // register' upper 32 bits may contain dirty data.
+ bool Use32BitMove(InstructionOperand* source, InstructionOperand* destination) {

@@ -1,0 +1,19 @@
+diff --git a/src/compiler/backend/x64/code-generator-x64.cc b/src/compiler/backend/x64/code-generator-x64.cc
+index 5d387a41f68203e6aed6a34f1838b3f1df0c531f..1f11632794561baceb5ee99baf244d7cc3586dde 100644
+--- a/src/compiler/backend/x64/code-generator-x64.cc
++++ b/src/compiler/backend/x64/code-generator-x64.cc
+@@ -8832,14 +8832,6 @@ void CodeGenerator::SetPendingMove(MoveOperands* move) {
+ 
+ namespace {
+ 
+-bool Is32BitOperand(InstructionOperand* operand) {
+-  DCHECK(operand->IsStackSlot() || operand->IsRegister());
+-  MachineRepresentation mr = LocationOperand::cast(operand)->representation();
+-  return mr == MachineRepresentation::kWord32 ||
+-         mr == MachineRepresentation::kCompressed ||
+-         mr == MachineRepresentation::kCompressedPointer;
+-}
+-
+ // When we need only 32 bits, move only 32 bits. Benefits:
+ // - Save a byte here and there (depending on the destination
+ //   register; "movl eax, ..." is smaller than "movq rax, ...").

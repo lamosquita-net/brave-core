@@ -1,3 +1,20 @@
+# FlyWeb: release after 3.2.1 (softmac `seguridad/siguiente-2`), V8 fix 5dde7daf0a (crbug 585624832), the M156 merge of V8 15.6.75.79
+
+SEGURIDAD-PORTES-33, 23-11-2026 (softmac `FlyWeb/seguridad/siguiente-2/brave-core/0004`). **Merged to V8 15.6
+upstream** as 15.6.75.79 (bugs 587681266 and 585624832; cherry-pick of e1b2c1bc74 from main). Severity not published.
+The upstream diff applies unchanged to 15.6.75.66 (`git apply --check` clean).
+
+- `GapResolver::PerformCycle` picked the destination representation for general-purpose temporaries. On x64, a
+  64-bit-to-32-bit move resolved through `kScratchRegister` was emitted as `movl` on both legs, zeroing the upper
+  32 bits that a later 64-bit instruction still read. Now the temporary uses `WiderGpRepresentation(src_rep,
+  dst_rep)`, and the code generators (x64; also loong64, mips64, riscv, not built for FlyWeb) honour it.
+- No other `patches/v8` file touches `gap-resolver.cc`, `instruction.h`, the code generators or
+  `test-code-generator.cc`. Plus the cctest change and the mjsunit test `wasm/regress-585624832.js`.
+
+**Cache epoch:** this changes generated code; covered by the bump to 40 in `siguiente-2/brave-core/0002`.
+
+To check (D8-LINUX): `d8`, mjsunit `wasm/regress-585624832`, cctest `test-code-generator/*`, and `compiler/*`, `wasm/*`.
+
 # FlyWeb: release after 3.2.1 (softmac `seguridad/siguiente-2`), V8 fix df4a1dd5f5 (crbug 585614985), the M156 merge of V8 15.6.75.77
 
 SEGURIDAD-PORTES-33, 23-11-2026 (softmac `FlyWeb/seguridad/siguiente-2/brave-core/0003`). **Merged to V8 15.6

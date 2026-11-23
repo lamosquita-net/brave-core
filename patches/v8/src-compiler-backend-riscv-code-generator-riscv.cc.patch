@@ -1,0 +1,18 @@
+diff --git a/src/compiler/backend/riscv/code-generator-riscv.cc b/src/compiler/backend/riscv/code-generator-riscv.cc
+index cf91893bc0efdacd5df0e5aab8b12553caa1980c..ba3fe1643925773ed62db43011e1881dcd820377 100644
+--- a/src/compiler/backend/riscv/code-generator-riscv.cc
++++ b/src/compiler/backend/riscv/code-generator-riscv.cc
+@@ -5825,13 +5825,6 @@ void CodeGenerator::SetPendingMove(MoveOperands* move) {
+ }
+ 
+ namespace {
+-bool Is32BitOperand(InstructionOperand* operand) {
+-  DCHECK(operand->IsStackSlot() || operand->IsRegister());
+-  MachineRepresentation mr = LocationOperand::cast(operand)->representation();
+-  return mr == MachineRepresentation::kWord32 ||
+-         mr == MachineRepresentation::kCompressed ||
+-         mr == MachineRepresentation::kCompressedPointer;
+-}
+ 
+ // When we need only 32 bits, move only 32 bits, otherwise the destination
+ // register' upper 32 bits may contain dirty data.
